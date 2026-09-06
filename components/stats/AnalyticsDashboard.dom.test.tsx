@@ -26,7 +26,7 @@ vi.mock('recharts', () => {
       : `${numerator}/${denominator}`;
     const modelValue = (value?: number | null) => value === undefined ? undefined : value === null ? 'not modelled' : String(value);
     return (
-      <div
+      <svg
         role="img"
         aria-label={props['aria-label'] as string | undefined}
         data-tooltip-denominators={data.map(row => row.denominator).filter(value => value !== undefined).join(',') || undefined}
@@ -39,7 +39,7 @@ vi.mock('recharts', () => {
         data-actual-rates={data.map(row => row.actualRate).filter(value => value !== undefined).join(',') || undefined}
       >
         {children}
-      </div>
+      </svg>
     );
   };
   const Series = ({ children, data, dataKey, isAnimationActive, name, stackId }: React.PropsWithChildren<Record<string, unknown>>) => (

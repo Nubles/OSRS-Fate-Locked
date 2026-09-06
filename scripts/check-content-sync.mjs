@@ -86,6 +86,7 @@ export function buildReport({ quests, cas, diaries }) {
     lines.push('- Watch the wiki total: an increase means a new quest was released — add it to `data/questData.ts`.');
   } else {
     lines.push(`- App: **${quests.app}** quest entries. (Wiki count unavailable this run.)`);
+    actions.push('Quests: source unavailable — freshness could not be verified; retry the source check.');
   }
   lines.push('');
 
@@ -106,6 +107,7 @@ export function buildReport({ quests, cas, diaries }) {
     lines.push('| Tier | App |', '| --- | --- |');
     for (const tier of CA_TIERS) lines.push(`| ${tier} | ${cas.app[tier] ?? 0} |`);
     lines.push('', '_(Wiki counts unavailable this run.)_');
+    actions.push('Combat Achievements: source unavailable — freshness could not be verified; retry the source check.');
   }
   lines.push('');
 
@@ -122,7 +124,7 @@ export function buildReport({ quests, cas, diaries }) {
   lines.push(actions.length ? actions.map(a => `- ⚠️ ${a}`).join('\n') : '- ✅ Nothing — all tracked counts are consistent.');
   lines.push('');
 
-  return { markdown: lines.join('\n'), actions };
+  return { markdown: lines.join('\n'), actions, sourceUnavailable: !quests.wiki || !cas.wiki };
 }
 
 // ---------- main ----------------------------------------------------------
@@ -134,13 +136,14 @@ async function main() {
   try { quests.wiki = await wikiQuestCounts(); } catch (e) { console.warn('[content:check] quest counts failed:', e.message); }
   try { cas.wiki = await wikiCaCounts(); } catch (e) { console.warn('[content:check] CA counts failed:', e.message); }
 
-  const { markdown, actions } = buildReport({ quests, cas, diaries });
+  const { markdown, actions, sourceUnavailable } = buildReport({ quests, cas, diaries });
   writeFileSync(new URL('../docs/SYNC_STATUS.md', import.meta.url), markdown);
 
   console.log('[content:check] wrote docs/SYNC_STATUS.md');
   console.log(`[content:check] quests wiki=${quests.wiki?.total ?? '?'} app=${quests.app}`);
   if (cas.wiki) console.log('[content:check] CA per-tier:', CA_TIERS.map(t => `${t} ${cas.wiki[t]}/${cas.app[t] ?? 0}`).join('  '));
   console.log(actions.length ? `[content:check] ACTION NEEDED:\n  ${actions.join('\n  ')}` : '[content:check] all counts consistent.');
+  if (sourceUnavailable) process.exitCode = 1;
 }
 
 // Run as a script, but stay importable for tests.

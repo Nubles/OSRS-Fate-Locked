@@ -43,7 +43,7 @@ export const STANCES: Record<Style, Stance[]> = {
 };
 
 // ── Prayers (multiplicative on the relevant level) ───────────────────────────
-export interface Prayer { id: string; label: string; atkMult: number; strMult: number }
+export interface Prayer { id: string; label: string; atkMult: number; strMult: number; magicDmgPct?: number }
 
 export const PRAYERS: Record<Style, Prayer[]> = {
   melee: [
@@ -59,8 +59,8 @@ export const PRAYERS: Record<Style, Prayer[]> = {
   ],
   magic: [
     { id: 'none', label: 'No prayer', atkMult: 1, strMult: 1 },
-    { id: 'mystic', label: 'Mystic Might', atkMult: 1.15, strMult: 1 },
-    { id: 'augury', label: 'Augury', atkMult: 1.25, strMult: 1 },
+    { id: 'mystic', label: 'Mystic Might', atkMult: 1.15, strMult: 1, magicDmgPct: 2 },
+    { id: 'augury', label: 'Augury', atkMult: 1.25, strMult: 1, magicDmgPct: 4 },
   ],
 };
 
@@ -165,12 +165,11 @@ export const computeDps = (input: DpsInput): DpsResult => {
   const atkBase = style === 'melee' ? levels.attack : style === 'ranged' ? levels.ranged : levels.magic;
   const strBase = style === 'melee' ? levels.strength : style === 'ranged' ? levels.ranged : levels.magic;
 
-  const boost = potionBoost(Math.max(atkBase, strBase), potion);
-  const effAtk = effectiveLevel(atkBase, prayer.atkMult, boost, stance.atk);
-  const effStr = effectiveLevel(strBase, prayer.strMult, boost, stance.str);
+  const effAtk = effectiveLevel(atkBase, prayer.atkMult, potionBoost(atkBase, potion), stance.atk);
+  const effStr = effectiveLevel(strBase, prayer.strMult, potionBoost(strBase, potion), stance.str);
 
   const maxHit = style === 'magic'
-    ? maxHitMagic(input.baseSpellMax, gear.magicDmgPct)
+    ? maxHitMagic(input.baseSpellMax, gear.magicDmgPct + (prayer.magicDmgPct ?? 0))
     : maxHitFromStr(effStr, style === 'ranged' ? gear.rangedStr : gear.meleeStr);
 
   const aRoll = attackRoll(effAtk, gear.accuracy);

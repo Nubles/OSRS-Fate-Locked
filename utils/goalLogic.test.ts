@@ -27,3 +27,29 @@ describe('calculateGoalProgress region groups', () => {
     ).missing).not.toContain('Region: Wilderness');
   });
 });
+
+
+describe('canonical pinned goal readiness', () => {
+  it('preserves uncertainty when a legacy goal has no complete access model', () => {
+    const progress = calculateGoalProgress({ id: 'Ectoplasmator', category: TableType.MINIGAMES,
+      regions: [], skills: {} }, { ...unlocks([]), minigames: ['Ectoplasmator'] });
+    expect(progress.percentage).toBeLessThan(100);
+    expect(progress.missing.join(' ')).toContain('review');
+  });
+  it('uses canonical quest requirements and attained levels instead of legacy summaries', () => {
+    const progress = calculateGoalProgress({ id: 'Cook\'s Assistant', category: TableType.QUESTS,
+      regions: ['Unknown legacy area'], skills: { Cooking: 99 } }, unlocks(['Lumbridge']));
+    expect(progress.percentage).toBeLessThan(100);
+    expect(progress.missing.join(' ')).not.toContain('legacy');
+    expect(progress.missing.join(' ')).toContain('Egg');
+  });
+});
+
+
+it('ignores obsolete strategy skill and quest gates for a canonical activity', () => {
+  const state = { ...unlocks([]), arcana: ['Arceuus Spellbook'] };
+  const progress = calculateGoalProgress({ id: 'Arceuus Spellbook', category: TableType.ARCANA,
+    regions: ['Unknown obsolete area'], skills: { Magic: 99 }, quests: ['Unknown obsolete quest'] }, state);
+  expect(progress.missing.join(' ')).not.toContain('obsolete');
+  expect(progress.missing.join(' ')).not.toContain('Magic');
+});

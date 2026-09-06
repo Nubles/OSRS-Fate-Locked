@@ -83,7 +83,7 @@ describe('evaluateActivityReadiness', () => {
       req,
       unlocked({ chunks: ['39,55'] }),
       'chunked',
-    )).toEqual({ status: 'READY' });
+    )).toEqual({ status: 'NEEDS_CONFIRMATION', checks: ['Barbarian Assault tutorial completed and a team formed for the selected role and wave'] });
   });
 
   it('enforces Soul Wars combat 40, total level 500, and tutorial confirmation', () => {
@@ -175,7 +175,10 @@ describe('evaluateActivityReadiness', () => {
       unlocked(),
     )).toEqual({
       status: 'NEEDS_CONFIRMATION',
-      checks: ['A complete Frozen key from all four God Wars Dungeon generals'],
+      checks: expect.arrayContaining([
+        'The Frozen Door has been permanently opened with the assembled frozen key',
+        'A legal route into God Wars Dungeon and the Ancient Prison is available',
+      ]),
     });
   });
 
@@ -210,5 +213,36 @@ describe('evaluateActivityReadiness', () => {
       status: 'NEEDS_CONFIRMATION',
       checks: ['Confirm a key'],
     });
+  });
+});
+
+
+describe('activity coverage and total-level regressions', () => {
+  it('does not count invented skills or non-finite levels towards a total-level gate', () => {
+    const req = { totalLevel: 500 };
+    expect(evaluateActivityReadiness(true, req, unlocked({ levels: { Fake: 9999, Attack: Number.NaN } })).status).toBe('NOT_READY');
+    expect(evaluateActivityReadiness(true, req, unlocked({ levels: { Attack: Number.POSITIVE_INFINITY } })).status).toBe('NOT_READY');
+  });
+  it('uses the same default attained levels as individual skill gates', () => {
+    expect(evaluateActivityReadiness(true, { totalLevel: SKILLS_LIST.length + 9 }, unlocked()).status).toBe('READY');
+  });
+});
+
+
+describe('reviewed prayer and storage gates', () => {
+  it.each(['Rigour', 'Augury'])('%s requires actual Defence and learned prayer confirmation', name => {
+    const req = getActivityReq(name);
+    expect(evaluateActivityReadiness(true, req, unlocked({ levels: { Prayer: 99, Defence: 69 } })).status).toBe('NOT_READY');
+    expect(evaluateActivityReadiness(true, req, unlocked({ skills: { Defence: 1 }, levels: { Prayer: 99, Defence: 70 } })).status).toBe('NEEDS_CONFIRMATION');
+  });
+  it('does not grant Preserve from Prayer level alone', () => {
+    expect(evaluateActivityReadiness(true, getActivityReq('Preserve'), unlocked({ levels: { Prayer: 55 } })).status).toBe('NEEDS_CONFIRMATION');
+  });
+  it('locates seed vault access in the Farming Guild, not behind Bone Voyage', () => {
+    expect(evaluateActivityReadiness(true, getActivityReq('Seed Vault'), unlocked({ levels: { Farming: 45 }, regions: ['Farming Guild'] })).status).toBe('NEEDS_CONFIRMATION');
+    expect(evaluateActivityReadiness(true, getActivityReq('Seed Vault'), unlocked({ quests: ['Bone Voyage'], regions: ['Fossil Island'], levels: { Farming: 45 } })).status).toBe('NOT_READY');
+  });
+  it('does not impose a crafting or Slayer level on use of an acquired Slayer ring', () => {
+    expect(evaluateActivityReadiness(true, getActivityReq('Slayer Ring'), unlocked()).status).toBe('NEEDS_CONFIRMATION');
   });
 });

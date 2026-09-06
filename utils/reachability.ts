@@ -2,12 +2,12 @@ import { UnlockState } from '../types';
 import { isFreeArea } from './freeAreas';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
-import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
+import { AREA_CATALOG, AREA_INDEX, areaId, areaName, areaUnlockIds, type AreaId } from '../data/areaCatalog';
 import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
 import { resolveModeRules } from '../config/gameModes';
 import type { GameModeRules } from '../config/gameModes';
 import { bankId } from '../data/banks';
-import { AREA_ALIAS_POLICIES, canonicalAreaName } from '../data/areaMapPolicy';
+import { AREA_ALIAS_POLICIES } from '../data/areaMapPolicy';
 
 /**
  * Is a named region/sub-area reachable in Chunked mode: true if ANY chunk
@@ -20,7 +20,8 @@ import { AREA_ALIAS_POLICIES, canonicalAreaName } from '../data/areaMapPolicy';
  */
 export const isNamedAreaReachableViaChunks = (name: string, unlockedChunkKeys: readonly string[]): boolean => {
   const policy = AREA_ALIAS_POLICIES[name as keyof typeof AREA_ALIAS_POLICIES];
-  const canonical = canonicalAreaName(name);
+  const canonical = areaName(name);
+  if (!canonical) return false;
   const chunks = policy?.kind === 'surface-overlap'
     ? policy.chunks
     : (SUB_AREA_CHUNKS[canonical] || REGION_CHUNKS[canonical]);
@@ -38,24 +39,16 @@ export const isAreaReachable = (name: string, unlocks: UnlockState, gameModeId?:
   if (gameModeId === 'chunked') {
     return isNamedAreaReachableViaChunks(name, unlocks.chunks ?? []);
   }
-  const canonical = canonicalAreaName(name);
-  if (canonical === 'Misthalin' || Object.hasOwn(REGION_GROUPS, canonical)) {
-    return isRegionUnlocked(canonical, unlocks.regions);
-  }
-  return isFreeArea(canonical)
-    || unlocks.regions.some((unlocked) => canonicalAreaName(unlocked) === canonical);
+  const id = areaId(name);
+  if (!id) return false;
+  const area = AREA_INDEX.byId.get(id)!;
+  if (!area.parentId) return isRegionUnlocked(id, unlocks.regions);
+  return isFreeArea(area.name) || areaUnlockIds(unlocks.regions).has(id);
 };
 
-// Maps a leaf/sub-region back to its continent, derived once from
-// REGION_GROUPS + MISTHALIN_AREAS.
-const PARENT_CONTINENT: Record<string, string> = (() => {
-  const parents: Record<string, string> = {};
-  for (const [continent, subs] of Object.entries(REGION_GROUPS)) {
-    for (const sub of subs) parents[sub] = continent;
-  }
-  for (const area of MISTHALIN_AREAS) parents[area] = 'Misthalin';
-  return parents;
-})();
+const CHILDREN = new Map<AreaId, readonly AreaId[]>(AREA_CATALOG.filter(area => !area.parentId).map(parent => [
+  parent.id, AREA_CATALOG.filter(area => area.parentId === parent.id).map(area => area.id),
+]));
 
 /**
  * Non-chunked map-tint semantics for a named region — richer than
@@ -70,18 +63,15 @@ const PARENT_CONTINENT: Record<string, string> = (() => {
  * utils/runelitePluginParity.test.ts pins the two together.
  */
 export const isRegionUnlocked = (region: string, unlocks: string[]): boolean => {
-  if (isFreeArea(region)) return true;
-  if (unlocks.includes(region)) return true;
-  const continent = PARENT_CONTINENT[region];
-  if (continent) {
-    if (isFreeArea(continent)) return true;
-    if (unlocks.includes(continent)) return true;
-    const siblings = continent === 'Misthalin' ? MISTHALIN_AREAS : (REGION_GROUPS[continent] ?? []);
-    if (siblings.length > 0 && siblings.every(s => unlocks.includes(s) || isFreeArea(s))) return true;
-  }
-  const children = region === 'Misthalin' ? MISTHALIN_AREAS : REGION_GROUPS[region];
-  if (children && children.length > 0 && children.every(s => unlocks.includes(s) || isFreeArea(s))) return true;
-  return false;
+  const id = areaId(region);
+  if (!id) return false;
+  const owned = areaUnlockIds(unlocks);
+  const isOwnedOrFree = (key: AreaId): boolean => owned.has(key) || isFreeArea(AREA_INDEX.byId.get(key)!.name);
+  if (isOwnedOrFree(id)) return true;
+  const parent = AREA_INDEX.byId.get(id)!.parentId;
+  if (parent && isOwnedOrFree(parent)) return true;
+  const children = CHILDREN.get(parent ?? id);
+  return !!children?.length && children.every(isOwnedOrFree);
 };
 
 /**

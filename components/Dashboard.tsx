@@ -67,10 +67,15 @@ import { RegionAdvisorPanel } from './RegionAdvisorPanel';
 import { FrontierAdvisorPanel } from './FrontierAdvisorPanel';
 import { SkillAdvisorPanel } from './SkillAdvisorPanel';
 import { showChunkOnMap } from '../utils/chunkLocations';
-import { runeProofAvailability } from '../utils/questRoutes/featureFlag';
+
 
 // Code-split: the run card pulls in html2canvas only when actually opened.
 const ShareModal = lazyWithRetry(() => import('./ShareModal').then(m => ({ default: m.ShareModal })));
+// Only explicit private-preview builds include the unfinished quest workspace.
+const runeProofPreview = import.meta.env.MODE === 'runeproof-preview' || import.meta.env.MODE === 'test';
+const RuneProofWorkspace = runeProofPreview
+  ? lazyWithRetry(() => import('../features/runeproof/RuneProofWorkspace').then(m => ({ default: m.RuneProofWorkspace })))
+  : null;
 // Goal Planner modal — pulls in the full quest/diary datasets, so load on demand.
 const GoalPlannerModal = lazyWithRetry(() => import('./GoalPlannerModal').then(m => ({ default: m.GoalPlannerModal })));
 // Achievements modal — pulls in the quest/diary/CA datasets via the engine.
@@ -193,6 +198,13 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
   readiness,
   suspendModals = false,
 }) => {
+  const { unlocks, gameModeId } = useGame();
+  const requiredAreas = req?.requiredAreas ?? [];
+  // The continent label summarizes the actual access routes, not ownership of
+  // every area in that continent. Each route below keeps its own lock state.
+  const locationAccessible = requiredAreas.length > 0
+    ? requiredAreas.some(area => isAreaReachable(area, unlocks, gameModeId))
+    : !!region && isAreaReachable(region, unlocks, gameModeId);
   // Image priority: a hand-picked sprite/icon → the item's real OSRS wiki image
   // (fetched + cached via WikiService) → the globe placeholder. Self-heals: if a
   // source 404s it advances to the next, so a stale curated filename still ends
@@ -260,18 +272,23 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
             </div>
             {subText && <div className="text-[10px] text-gray-500 leading-tight mt-0.5">{subText}</div>}
             {region && (
-                <div className="flex items-center gap-1 text-[10px] text-emerald-400/80 leading-tight mt-0.5">
+                <div className={`flex items-center gap-1 text-[10px] leading-tight mt-0.5 ${locationAccessible ? 'text-emerald-400/80' : 'text-red-400'}`} title={locationAccessible ? 'Location unlocked' : 'Requires location unlock'}>
                     <MapPin size={9} className="shrink-0" />
                     <span className="truncate">{region}</span>
+                    {!locationAccessible && <span>— Requires unlock</span>}
                 </div>
             )}
             {req && (req.skills || req.quests || req.requiredAreas) && (
                 <div className="flex flex-wrap items-center gap-1 mt-1">
-                    {req.requiredAreas && req.requiredAreas.map(area => (
-                        <span key={area} className="text-[9px] px-1 py-0.5 rounded bg-emerald-900/20 border border-emerald-500/20 text-emerald-300/90 leading-none flex items-center gap-0.5" title={`Requires access to ${area}`}>
-                            <MapPin size={8} className="shrink-0" />{area}
+                    {requiredAreas.map(area => {
+                      const accessible = isAreaReachable(area, unlocks, gameModeId);
+                      return (
+                        <span key={area} className={`text-[9px] px-1 py-0.5 rounded border leading-none flex items-center gap-0.5 ${accessible ? 'bg-emerald-900/20 border-emerald-500/20 text-emerald-300/90' : 'bg-red-900/20 border-red-500/30 text-red-300'}`} title={accessible ? `${area} unlocked` : `Requires unlock: ${area}`}>
+                            {accessible ? <MapPin size={8} className="shrink-0" /> : <Lock size={8} className="shrink-0" />}<span>{area}</span>
+                            {!accessible && <span>— Requires unlock</span>}
                         </span>
-                    ))}
+                      );
+                    })}
                     {req.skills && Object.entries(req.skills).map(([sk, lvl]) => (
                         <span key={sk} className="text-[9px] px-1 py-0.5 rounded bg-amber-900/20 border border-amber-500/20 text-amber-300/90 leading-none font-mono" title={`Requires ${lvl} ${sk}`}>{sk} {lvl}</span>
                     ))}
@@ -343,10 +360,9 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) => {
   const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode } = useGame();
-  const runeProofMode = runeProofAvailability((import.meta as any).env ?? {});
-  const goalPlannerEntry = runeProofMode !== 'OFF'
-    ? { label: 'RuneProof', title: 'Get the next reviewed action for your run' }
-    : { label: 'Goal Planner', title: 'Plan the route to any quest, diary, or region' };
+  const goalPlannerEntry = runeProofPreview
+    ? { label: 'RuneProof', title: 'Explore quest requirements' }
+    : { label: 'Goal Planner', title: 'Plan your next unlock' };
   const activeMode = getGameMode(gameModeId);
   const [activeTab, setActiveTab] = useState('CHARACTER');
 
@@ -375,6 +391,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const [worldView, setWorldView] = useState<'LIST' | 'MAP'>('MAP');
   const [showRunCard, setShowRunCard] = useState(false);
   const [showGoalPlanner, setShowGoalPlanner] = useState(false);
+  const [showRuneProof, setShowRuneProof] = useState(false);
   const [goalTarget, setGoalTarget] = useState<{ kind: 'quest' | 'diary' | 'region'; id: string } | null>(null);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showForecast, setShowForecast] = useState(false);
@@ -439,7 +456,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         return;
       }
       const opens: Record<string, (v: boolean) => void> = {
-        'open:goal': setShowGoalPlanner,
+        'open:goal': runeProofPreview ? setShowRuneProof : setShowGoalPlanner,
         'open:achievements': setShowAchievements,
         'open:forecast': setShowForecast,
         'open:rival': setShowRival,
@@ -456,7 +473,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   useEffect(() => {
     const onPlanGoal = (e: Event) => {
       const d = (e as CustomEvent<{ kind?: 'quest' | 'diary' | 'region'; id?: string }>).detail;
-      if (d?.kind && d.id) { setGoalTarget({ kind: d.kind, id: d.id }); setShowGoalPlanner(true); }
+      if (d?.kind && d.id) { setGoalTarget({ kind: d.kind, id: d.id }); if (runeProofPreview && d.kind === 'quest') setShowRuneProof(true); else setShowGoalPlanner(true); }
     };
     window.addEventListener('fate:plan-goal', onPlanGoal);
     return () => window.removeEventListener('fate:plan-goal', onPlanGoal);
@@ -1070,11 +1087,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
              </h2>
              <div className="flex flex-wrap items-center justify-end gap-3">
                <button
-                 onClick={() => setShowGoalPlanner(true)}
+                 onClick={() => runeProofPreview ? setShowRuneProof(true) : setShowGoalPlanner(true)}
                  className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-cyan-500/30 bg-cyan-950/30 hover:bg-cyan-900/40 text-cyan-300 text-[11px] font-medium whitespace-nowrap transition-colors"
                   title={goalPlannerEntry.title}
                 >
-                  <Route size={12} />
+                  {runeProofPreview ? <img src={`${import.meta.env.BASE_URL}runeproof/quest.png`} alt="" width={14} height={14} draggable={false} /> : <Route size={14} />}
                   {goalPlannerEntry.label}
                 </button>
                <button
@@ -1218,6 +1235,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       </Suspense>
     )}
 
+    {!suspendModals && showRuneProof && RuneProofWorkspace && (
+      <Suspense fallback={<ModalFallback label="Opening RuneProof…" />}>
+        <PanelErrorBoundary name="RuneProof">
+          <RuneProofWorkspace onClose={() => { setShowRuneProof(false); setGoalTarget(null); }} initialQuestId={goalTarget?.kind === 'quest' ? goalTarget.id : undefined} />
+        </PanelErrorBoundary>
+      </Suspense>
+    )}
     {!suspendModals && showGoalPlanner && (
       <Suspense fallback={<ModalFallback label="Loading planner…" />}>
         <GoalPlannerModal

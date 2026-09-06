@@ -94,10 +94,15 @@ const isProhibitedPluginSourceArtifact = (relativePath: string, content: string)
   jvmOrBuildArtifactPattern.test(relativePath) ||
   (pluginMetadataPathPattern.test(relativePath) && pluginDistributionSignaturePattern.test(content)) ||
   isProhibitedPluginDistribution(relativePath);
+// Offline Quest Helper evidence tooling is not the Fate Locked companion plugin.
+// Keep these exceptions exact: all other JVM source/distribution paths stay forbidden.
+const questEvidenceExporter = 'scripts/quest-helper-export/RuneProofExportTest.java';
+const questEvidenceReadme = 'scripts/quest-helper-export/README.md';
 const trackedCommandSurfaces = (): CommandSurface[] => {
   const trackedCommandFiles = trackedFiles().filter(
     (relativePath) =>
       !archivedBoundaryReferencePath(relativePath) &&
+      relativePath !== questEvidenceReadme &&
       (relativePath.startsWith('scripts/') || /\.ya?ml$/i.test(relativePath)),
   );
   const packageJson = JSON.parse(readFileSync(atRoot('package.json'), 'utf8')) as {
@@ -117,6 +122,15 @@ const trackedCommandSurfaces = (): CommandSurface[] => {
 };
 
 describe('RuneLite repository ownership boundary', () => {
+  it('limits the Quest Helper exception to an offline evidence test', () => {
+    const source = readFileSync(atRoot(questEvidenceExporter), 'utf8');
+    expect(source).toContain('package com.questhelper;');
+    expect(source).toContain('class RuneProofExportTest extends MockedTest');
+    expect(source).toContain('RUNEPROOF_EXPORT_OUT');
+    expect(source).not.toMatch(/extends\s+Plugin\b|@PluginDescriptor|net\.runelite\.client\.plugins\.fatelocked/);
+    expect(isProhibitedPluginDistribution(source)).toBe(false);
+  });
+
   it.each([
     'runelite-plugin',
     '.github/workflows/runelite-plugin.yml',
@@ -283,6 +297,7 @@ describe('RuneLite repository ownership boundary', () => {
     const prohibitedArtifacts = trackedFiles().filter(
       (relativePath) =>
         !retainedWebAppIntegrationPaths.includes(relativePath) &&
+        relativePath !== questEvidenceExporter &&
         isProhibitedPluginSourceArtifact(relativePath, readFileSync(atRoot(relativePath), 'utf8')),
     );
 

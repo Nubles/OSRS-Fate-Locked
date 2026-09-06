@@ -46,32 +46,18 @@ export const hashEntry = (entry: LogEntry, prevHash: string): string => {
   return simpleHash(prevHash + '|' + canonicalize(entry));
 };
 
-// Lazily fills in prevHash/hash for any entry missing them, without
-// mutating inputs. Preserves any existing chain links so re-running is
-// idempotent. Existing broken links are left as-is so verifyChain can
-// flag them.
+// Only wholly legacy histories may be initialized. Preserve mixed/partial
+// links verbatim so malformed imports cannot be silently repaired into validity.
 export const ensureChain = (history: LogEntry[]): LogEntry[] => {
-  let needsRebuild = false;
-  for (const e of history) {
-    if (!e.hash) { needsRebuild = true; break; }
-  }
-  if (!needsRebuild) return history;
-
-  const out: LogEntry[] = [];
+  if (history.some(e => e.hash !== undefined || e.prevHash !== undefined)) return history;
   let prev = GENESIS;
-  for (const e of history) {
-    if (e.hash && e.prevHash) {
-      out.push(e);
-      prev = e.hash;
-      continue;
-    }
-    const prevHash = e.prevHash ?? prev;
-    const hash = e.hash ?? hashEntry(e, prevHash);
-    const filled = { ...e, prevHash, hash };
-    out.push(filled);
+  return history.map((e, index) => {
+    const entry = index === 0 ? { ...e, meta: { ...e.meta, integrityLegacyChain: true } } : e;
+    const prevHash = prev;
+    const hash = hashEntry(entry, prevHash);
     prev = hash;
-  }
-  return out;
+    return { ...entry, prevHash, hash };
+  });
 };
 
 export interface ChainReport {
@@ -85,7 +71,10 @@ export const verifyChain = (history: LogEntry[]): ChainReport => {
   let prev = GENESIS;
   for (let i = 0; i < history.length; i++) {
     const e = history[i];
-    if (!e.hash || !e.prevHash) continue;
+    if (typeof e.hash !== 'string' || !e.hash || typeof e.prevHash !== 'string' || !e.prevHash) {
+      brokenAt.push(i);
+      continue;
+    }
     if (e.prevHash !== prev) brokenAt.push(i);
     else if (hashEntry(e, e.prevHash) !== e.hash) brokenAt.push(i);
     prev = e.hash ?? prev;
@@ -118,7 +107,7 @@ export interface ReplayState {
 // Doesn't prove the *roll values* are honest — a determined editor can
 // rewrite consistently — but catches naive tampering and any inconsistency
 // introduced by hand-editing isolated fields.
-export const replayInvariants = (history: LogEntry[], startKeys = 3): { violations: InvariantViolation[]; final: ReplayState } => {
+export const replayInvariants = (history: LogEntry[], startKeys = 3, rules?: GameModeRules): { violations: InvariantViolation[]; final: ReplayState; uncertainAt: number[] } => {
   const recordedFateAward = (entry: LogEntry): number => {
     const award = entry.meta?.fatePointsEarned;
     return typeof award === 'number' && Number.isFinite(award) && award >= 0
@@ -134,7 +123,7 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
       : null;
   const recordedPityThreshold = (entry: LogEntry): number =>
     validPityThreshold(entry.meta?.pityThreshold) ?? 50;
-  const fateCap = history
+  const fateCap = rules?.pityEnabled === false ? Infinity : validPityThreshold(rules?.pityThreshold) ?? history
     .filter(entry => entry.type === 'PITY')
     .map(entry => validPityThreshold(entry.meta?.pityThreshold))
     .find((threshold): threshold is number => threshold !== null) ?? 50;
@@ -159,7 +148,11 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
     pities: 0,
   };
   const violations: InvariantViolation[] = [];
+  const uncertainAt: number[] = [];
   const check = (idx: number) => {
+    // Old ritual events do not record the rules or exact balance changes.
+    // Keep estimates for legacy display, but never accuse a run on that basis.
+    if (uncertainAt.length) return;
     if (s.keys < 0) violations.push({ index: idx, kind: 'KEYS_NEGATIVE', message: `keys went negative (${s.keys})` });
     if (s.specialKeys < 0) violations.push({ index: idx, kind: 'SPECIAL_NEGATIVE', message: `specialKeys went negative` });
     if (s.chaosKeys < 0) violations.push({ index: idx, kind: 'CHAOS_NEGATIVE', message: `chaosKeys went negative` });
@@ -209,12 +202,25 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
         s.unlocks += 1;
         break;
       }
-      case 'ALTAR':
+      case 'ALTAR': {
+        const delta = e.meta?.ritualDelta;
+        if (delta && typeof delta === 'object' && !Array.isArray(delta)
+          && ['keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'unlocks'].every(key =>
+            typeof delta[key] === 'number' && Number.isSafeInteger(delta[key]))) {
+          s.keys += delta.keys as number;
+          s.specialKeys += delta.specialKeys as number;
+          s.chaosKeys += delta.chaosKeys as number;
+          s.fatePoints += delta.fatePoints as number;
+          s.unlocks += delta.unlocks as number;
+          break;
+        }
+        uncertainAt.push(i);
         if (/Clarity/.test(e.message)) s.fatePoints -= 15;
         else if (/Greed/.test(e.message)) s.fatePoints -= 30;
         else if (/Chaos/.test(e.message)) { s.fatePoints -= 25; s.chaosKeys += 1; }
         else if (/Transmut/.test(e.message)) { s.keys -= 5; s.specialKeys += 1; }
         break;
+      }
       case 'LEVEL_UP': {
         const chaosAwarded = e.meta?.chaosKeysAwarded;
         if (typeof chaosAwarded === 'number'
@@ -256,7 +262,7 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
     }
     check(i);
   }
-  return { violations, final: s };
+  return { violations, final: s, uncertainAt };
 };
 
 // --- Run audit (import verdict) -----------------------------------------
@@ -274,22 +280,23 @@ export interface RunAudit {
   chain: ChainReport;
   violations: InvariantViolation[];
   final: ReplayState;
+  uncertainAt: number[];
 }
 
 /**
  * Classify a run's history for display at import time. Combines the hash-chain
  * check with the invariant replay into a single traffic-light verdict.
- * A history with no hash links at all (very old saves) chains cleanly from
- * GENESIS and reads as intact — we only flag links that are actually broken.
+ * Legacy initialization preserves chain consistency but cannot establish
+ * pre-migration integrity. Keep that distinction after migration and export.
  */
-export const auditHistory = (history: LogEntry[]): RunAudit => {
+export const auditHistory = (history: LogEntry[], rules?: GameModeRules): RunAudit => {
   const chained = ensureChain(history);
   const chain = verifyChain(chained);
-  const { violations, final } = replayInvariants(chained);
+  const { violations, final, uncertainAt } = replayInvariants(chained, 3, rules);
   let verdict: RunVerdict = 'verified';
   if (!chain.ok) verdict = 'tampered';
-  else if (violations.length > 0) verdict = 'warning';
-  return { verdict, chain, violations, final };
+  else if (violations.length > 0 || uncertainAt.length > 0 || chained.some(entry => entry.meta?.integrityLegacyChain === true)) verdict = 'warning';
+  return { verdict, chain, violations, final, uncertainAt };
 };
 
 // --- Run ID & SHA-256 commitment ----------------------------------------
@@ -317,6 +324,9 @@ export interface VerifiedBundle {
   mode?: RunMode;
   history: LogEntry[];
   finalState: ReplayState;
+  /** Whether historical balances are estimates because old ritual deltas are missing. */
+  replayUncertainAt: number[];
+  verdict: RunVerdict;
   chainReport: ChainReport;
   commitmentHash: string;
 }
@@ -327,7 +337,8 @@ export const buildVerifiedBundle = async (
 ): Promise<VerifiedBundle> => {
   const chained = ensureChain(history);
   const chainReport = verifyChain(chained);
-  const { final } = replayInvariants(chained);
+  const audit = auditHistory(chained, mode?.rules);
+  const final = audit.final;
   const runId = computeRunId(chained) ?? 'run-empty';
   // The mode is part of what's committed to — a run isn't fully verified
   // without the ruleset it was played under.
@@ -339,6 +350,8 @@ export const buildVerifiedBundle = async (
     ...(mode ? { mode } : {}),
     history: chained,
     finalState: final,
+    replayUncertainAt: audit.uncertainAt,
+    verdict: audit.verdict,
     chainReport,
     commitmentHash,
   };

@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => ({
     unlocks: {
       equipment: {},
       skills: { Attack: 10, Strength: 10, Defence: 10, Hitpoints: 10, Prayer: 10, Ranged: 10, Magic: 10, Slayer: 6 },
-      levels: { Attack: 99, Strength: 99, Defence: 99, Hitpoints: 99, Prayer: 99, Ranged: 99, Magic: 99, Slayer: 99 },
+      levels: { Attack: 99, Strength: 99, Defence: 99, Hitpoints: 99, Prayer: 99, Ranged: 99, Magic: 99, Slayer: 60 },
       regions: ['Wyrmscraig'],
       chunks: [],
       mobility: [],

@@ -7,6 +7,7 @@ import type { UnlockState } from '../types';
 
 const state = vi.hoisted(() => ({
   unlocks: null as UnlockState | null,
+  gameModeId: 'vanilla',
 }));
 
 const freshUnlocks = (): UnlockState => ({
@@ -25,7 +26,7 @@ vi.mock('../context/GameContext', async () => {
     useGame: () => ({
       ...actual.initialState,
       unlocks: state.unlocks ?? freshUnlocks(),
-      gameModeId: 'vanilla',
+      gameModeId: state.gameModeId,
       customMode: undefined,
       levelUpSkill: vi.fn(),
       unlockContent: vi.fn(),
@@ -47,6 +48,7 @@ import { Dashboard } from './Dashboard';
 afterEach(() => {
   cleanup();
   state.unlocks = freshUnlocks();
+  state.gameModeId = 'vanilla';
 });
 
 const openBosses = async () => {
@@ -57,6 +59,37 @@ const openBosses = async () => {
 };
 
 describe('Dashboard activity cards', () => {
+  it('marks locked boss locations red even when the boss is owned', async () => {
+    state.unlocks = { ...freshUnlocks(), bosses: ['The Mad Angel'] };
+    const card = await openBosses();
+
+    expect(within(card).getByTitle('Requires location unlock').className).toContain('text-red-400');
+    expect(within(card).getByTitle('Requires unlock: Wyrmscraig').className).toContain('text-red-300');
+    expect(within(card).getAllByText('— Requires unlock')).toHaveLength(2);
+  });
+
+  it('marks the location green when its access area is unlocked without requiring the whole continent', async () => {
+    state.unlocks = { ...freshUnlocks(), regions: ['Wyrmscraig'] };
+    const card = await openBosses();
+
+    expect(within(card).getByTitle('Location unlocked').className).toContain('text-emerald-400');
+    expect(within(card).getByTitle('Wyrmscraig unlocked').className).toContain('text-emerald-300');
+    expect(within(card).queryByText('— Requires unlock')).toBeNull();
+  });
+
+  it('uses chunk ownership instead of region ownership for boss locations in chunked mode', async () => {
+    state.gameModeId = 'chunked';
+    state.unlocks = { ...freshUnlocks(), regions: ['Wyrmscraig'] };
+    const lockedCard = await openBosses();
+    expect(within(lockedCard).getByTitle('Requires unlock: Wyrmscraig').className).toContain('text-red-300');
+
+    cleanup();
+    state.unlocks = { ...freshUnlocks(), chunks: ['39,34'] };
+    const unlockedCard = await openBosses();
+    expect(within(unlockedCard).getByTitle('Wyrmscraig unlocked').className).toContain('text-emerald-300');
+    expect(within(unlockedCard).getByTitle('Location unlocked').className).toContain('text-emerald-400');
+  });
+
   it('shows The Mad Angel tier and all authored access metadata when unowned', async () => {
     const card = await openBosses();
 

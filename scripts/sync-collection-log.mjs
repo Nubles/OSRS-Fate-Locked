@@ -16,6 +16,8 @@
 //     so it just reports it for a human to place (then re-run). After placing an
 //     empty page `'X': { name: 'X', items: [] }`, a re-run fills its items.
 import { readFileSync, writeFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
+import { createClogIdAllocator } from '../utils/clogIdAllocation.mjs';
 
 const FILE = 'data/collectionLogData.ts';
 const API = 'https://oldschool.runescape.wiki/api.php';
@@ -85,11 +87,7 @@ async function loadWiki() {
   return pages;
 }
 
-function alignItems(appItems, wikiItems, log, page) {
-  const P = Math.floor(appItems[0].id / 1000) * 1000;
-  const used = new Set(appItems.map(i => i.id - P));
-  let next = Math.max(...appItems.map(i => i.id - P)) + 1;
-  const mint = () => { while (used.has(next)) next++; used.add(next); return P + next; };
+function alignItems(appItems, wikiItems, log, page, mint) {
   const pool = wikiItems.map(n => ({ n, used: false }));
   const out = [];
   for (const ai of appItems) {
@@ -105,13 +103,21 @@ function alignItems(appItems, wikiItems, log, page) {
 
 const run = async () => {
   const wikiPages = await loadWiki();
+  const { text, log, newPages } = syncCollectionLogText(readFileSync(FILE, 'utf8'), wikiPages);
+  writeFileSync(FILE, text);
+  reportSync(log, newPages, wikiPages);
+};
+
+/** Pure transform: all identities are allocated before the caller writes anything. */
+export function syncCollectionLogText(source, wikiPages) {
   const wikiByNorm = {}; for (const p of Object.keys(wikiPages)) wikiByNorm[norm(p)] = p;
-  const lines = readFileSync(FILE, 'utf8').split(/\r?\n/);
+  const lines = source.split(/\r?\n/);
   const tabRe = /^  '([^']+)': \{$/;
   const pageRe = /^(      ')((?:[^'\\]|\\.)*)('?: \{ name: ')((?:[^'\\]|\\.)*)(', items: \[)(.*)(\] \},?\s*)$/;
   const itemRe = /\{id: (\d+), name: '((?:[^'\\]|\\.)*)'\}/g;
   const log = { renames: [], adds: [], kept: [] };
   const matchedWiki = new Set();
+  const allocatePage = createClogIdAllocator([...source.matchAll(/\{id: (\d+),/g)].map(match => Number(match[1])));
 
   for (let i = 0; i < lines.length; i++) {
     const pm = lines[i].match(pageRe);
@@ -123,15 +129,16 @@ const run = async () => {
     const target = PAGE_MATCH[pageName] || wikiByNorm[norm(pageName)];
     if (!target || !wikiPages[target]) { log.kept.push(`[page ${pageName}] no wiki match — left as-is`); continue; }
     matchedWiki.add(target);
-    const aligned = appItems.length ? alignItems(appItems, wikiPages[target], log, pageName)
-      : wikiPages[target].map((n, k) => ({ id: Math.floor(appItems[0]?.id / 1000) * 1000 + k + 1, name: n }));
+    const aligned = alignItems(appItems, wikiPages[target], log, pageName, allocatePage(appItems.map(item => item.id)));
     const items = aligned.map(it => `{id: ${it.id}, name: '${esc(it.name)}'}`).join(', ');
     lines[i] = `${pm[1]}${esc(unesc(pm[2]))}${pm[3]}${esc(pageName)}${pm[5]}${items}${pm[7]}`;
   }
 
   const newPages = Object.keys(wikiPages).filter(p => !matchedWiki.has(p));
-  writeFileSync(FILE, lines.join('\n'));
+  return { text: lines.join('\n'), log, newPages };
+}
 
+function reportSync(log, newPages, wikiPages) {
   console.log(`[clog:sync] renames ${log.renames.length}, items added ${log.adds.length}, kept-without-wiki-match ${log.kept.length}`);
   for (const r of log.renames) console.log('  RENAME ' + r);
   for (const a of log.adds) console.log('  ADD    ' + a);
@@ -153,4 +160,6 @@ const run = async () => {
   console.log(`\n[clog:sync] done. Review the diff, run \`npm test\`, and commit.`);
 };
 
-run().catch(e => { console.error('[clog:sync] failed:', e.message); process.exit(1); });
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  run().catch(e => { console.error('[clog:sync] failed:', e.message); process.exit(1); });
+}

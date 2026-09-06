@@ -65,7 +65,7 @@ export const FrontierAdvisorPanel: React.FC = () => {
       items={items}
       accent="cyan"
       heading="Frontier Advisor"
-      subheading="What your rollable chunks are worth — hope for the top ones"
+      subheading="Potential progress after this change. Quest and diary checks still need confirmation."
       caption="by foothold impact"
       icon={<Compass size={13} />}
       maxShown={5}

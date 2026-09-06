@@ -7,7 +7,8 @@ import { Map, CheckCircle2, Lock, Sparkles, BookOpen, ChevronDown, CheckSquare, 
 import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
 import { diaryUnmet, isAlmostThere } from '../utils/journalProgress';
 import { isAreaReachable } from '../utils/reachability';
-import { effectiveSkillLevel } from '../utils/slayerReach';
+import { actualSkillLevel } from '../utils/skillLevels';
+import { completedQuestIds, questId } from '../data/questCatalog';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
@@ -29,6 +30,7 @@ interface DiaryLogProps {
 
 export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch = '', suspendModals = false }) => {
   const { unlocks, completeDiaryTask, completeDiaryTier, advisorsEnabled, gameModeId } = useGame();
+  const completedQuests = useMemo(() => completedQuestIds(unlocks.quests), [unlocks.quests]);
   // Filter state persisted across sessions.
   const [filterRegion, setFilterRegion] = useLocalStorage<string>('jrnl:diary:region', 'ALL');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -212,6 +214,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
         {sortedDiaries.map(diary => {
           const isCompleted = diary.status === 'COMPLETED';
           const isAvailable = diary.status === 'AVAILABLE';
+          const needsConfirmation = diary.status === 'NEEDS_CONFIRMATION';
           const isSearching = searchTerm.length > 0;
           const isExpanded = expandedId === diary.id || isSearching;
           const color = diary.tier === 'Elite' ? 'text-purple-400' : diary.tier === 'Hard' ? 'text-red-400' : diary.tier === 'Medium' ? 'text-blue-400' : 'text-green-400';
@@ -278,6 +281,8 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                   {/* Locked summary: req progress bar + missing quest chips.
                       Replaces the old plain-text "Region/Skill/Quest Locked" labels
                       with an at-a-glance % bar and clickable prereq chips. */}
+                  {diary.status === 'UNKNOWN' && <div className="text-xs text-amber-300">Requirements unknown: review the task details below</div>}
+                  {needsConfirmation && <div className="text-xs text-cyan-300">Needs confirmation: inventory, account mode, or manual task conditions</div>}
                   {!isCompleted && !isAvailable && !isExpanded && dTotalReqs > 0 && (
                     <div className="mt-1.5 space-y-1.5">
                       <div className="flex items-center gap-2">
@@ -338,6 +343,13 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                       {tasks.map(task => {
                           const isTaskDone = unlocks.completedTasks.includes(task.id);
                           const taskEligibility = evaluateDiaryTaskEligibility(task, unlocks, gameModeId);
+                          const unknownChecks = [...new Set(taskEligibility.unknownChecks)];
+                          const manualChecks = [...new Set(taskEligibility.manualChecks)];
+                          const hardChecks = [...new Set(taskEligibility.blockers.map(blocker => blocker.label))]
+                            .filter(label => !unknownChecks.includes(label));
+                          const taskStatus = unknownChecks.length ? 'Requirements unknown'
+                            : hardChecks.length ? 'Requirements not met'
+                              : manualChecks.length ? 'Needs confirmation' : 'Ready';
                           const alternativeLabel = task.oneOf?.length
                             ? task.oneOf.map(diaryRequirementOptionLabel).join(' or ')
                             : undefined;
@@ -380,6 +392,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                 onClick={(e) => handleTaskToggle(task, e)}
                                 disabled={isCompleted || isTaskDone}
                                 aria-label={completionLabel}
+                                aria-describedby={!isTaskDone && !isCompleted ? `diary-task-checks-${task.id}` : undefined}
                                 className={`min-w-0 flex-1 flex items-start gap-3 text-left ${(isCompleted || isTaskDone) ? 'cursor-default' : 'cursor-pointer'}`}
                               >
                                 <div className={`mt-0.5 ${isTaskDone ? 'text-green-400' : 'text-gray-600 group-hover:text-gray-400'}`}>
@@ -400,7 +413,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                         </span>
                                       ))}
                                       {task.quests?.map(q => {
-                                        const met = unlocks.quests.includes(q);
+                                        const met = completedQuests.has(questId(q)!);
                                         return (
                                           <span key={q} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${met ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
                                             <BookOpen size={8} /> {q}
@@ -412,11 +425,6 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                         const met = !taskEligibility.blockers.some(blocker => blocker.label === label);
                                         return <span className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${met ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}><BookOpen size={8} /> {label}</span>;
                                       })()}
-                                      {task.manualRequirements?.map(requirement => (
-                                        <span key={requirement} className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-cyan-500/30 text-cyan-300 bg-cyan-900/10">
-                                          <BookOpen size={8} /> Confirm: {requirement}
-                                        </span>
-                                      ))}
                                       {alternativeLabel && (
                                         <span className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${taskEligibility.blockers.some(blocker => blocker.kind === 'alternative' && blocker.label === alternativeLabel) ? 'border-red-500/30 text-red-400 bg-red-900/10' : 'border-white/5 text-gray-500 bg-black/30'}`}>
                                           <BookOpen size={8} /> One of: {alternativeLabel}
@@ -447,10 +455,19 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                 <ExternalLink size={10} />
                               </a>
 
+                              {!isTaskDone && !isCompleted && (
+                                <div id={`diary-task-checks-${task.id}`} className="basis-full space-y-1 text-xs" aria-label="Task readiness">
+                                  <p className={unknownChecks.length ? 'font-semibold text-amber-300' : hardChecks.length ? 'font-semibold text-red-300' : manualChecks.length ? 'font-semibold text-cyan-300' : 'font-semibold text-emerald-300'}>{taskStatus}</p>
+                                  {hardChecks.map(label => <p key={'required:' + label} className="text-red-300">Required: {label}</p>)}
+                                  {unknownChecks.map(label => <p key={'unknown:' + label} className="text-amber-300">Unknown: {label}</p>)}
+                                  {manualChecks.map(label => <p key={'confirm:' + label} className="text-cyan-300">Confirm: {label}</p>)}
+                                </div>
+                              )}
+
                               {hasRequirementActions && !isTaskDone && (
                                 <div className="basis-full flex flex-wrap gap-1.5">
                                   {unmetSkillRequirements.map(([skill, level]) => {
-                                    const current = effectiveSkillLevel(unlocks, skill);
+                                    const current = actualSkillLevel(unlocks, skill);
                                     return (
                                       <button
                                         key={skill}

@@ -22,6 +22,7 @@ export interface Unmet {
 }
 
 const eligibilityBlockerToUnmet = (blocker: EligibilityBlocker): Unmet => {
+  if (blocker.kind === 'requirement') return { kind: 'manual', label: blocker.label };
   if (blocker.kind === 'combat') {
     return { kind: 'skill', label: blocker.label };
   }

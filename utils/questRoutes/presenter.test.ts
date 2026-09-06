@@ -372,3 +372,34 @@ describe('presentQuestAnalysis', () => {
     expect(presented.items[0].routes[0].steps[0].chunk).toBe('19,57');
   });
 });
+
+
+it('normalizes nullable item arrays to an incomplete presentation', () => {
+  const analysis = { questId: 'test', status: 'READY_NOW', items: null } as unknown as QuestRouteAnalysis;
+  const presented = presentQuestAnalysis(analysis);
+  expect(presented.items).toEqual([]);
+  expect(presented.heading).toBe('Analysis incomplete');
+});
+
+describe('malformed route analysis', () => {
+  const valid = () => analysis('READY_NOW', [{
+    requirement: requirement('Egg'), state: 'OBTAINABLE_NOW',
+    currentRoutes: [route('egg', 'Egg spawn')], missingChunkRoutes: [],
+    missingChunkOptions: [], dataNotes: [],
+  }]);
+
+  it.each([
+    ['null payload', () => null],
+    ['malformed walkthrough actions', (value: any) => { value.walkthrough.actions = [null]; return value; }],
+    ['null steps', (value: any) => { value.items[0].currentRoutes[0].steps = null; return value; }],
+    ['null step', (value: any) => { value.items[0].currentRoutes[0].steps = [null]; return value; }],
+    ['unknown blocker', (value: any) => { value.items[0].currentRoutes[0].blockers = [{ type: 'FUTURE', label: 'Gate' }]; return value; }],
+    ['invalid probability', (value: any) => { value.items[0].currentRoutes[0].probability = NaN; return value; }],
+    ['missing option chunks', (value: any) => { value.items[0].missingChunkOptions = [{ remainingGates: [], routeIds: [] }]; return value; }],
+    ['null option gate', (value: any) => { value.items[0].missingChunkOptions = [{ chunks: ['1,2'], remainingGates: [null], routeIds: [] }]; return value; }],
+    ['unknown status', (value: any) => { value.status = 'FUTURE'; return value; }],
+    ['invalid quantity', (value: any) => { value.items[0].requirement.quantity = -1; return value; }],
+  ])('returns incomplete instead of crashing or showing ready for %s', (_name, corrupt) => {
+    expect(presentQuestAnalysis(corrupt(valid()))).toMatchObject({ heading: 'Analysis incomplete', items: [] });
+  });
+});

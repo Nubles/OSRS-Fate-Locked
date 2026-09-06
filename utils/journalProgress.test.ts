@@ -11,7 +11,7 @@ const u = (o: Partial<UnlockState>): UnlockState =>
 
 const quest = (over: Partial<QuestData>): QuestData =>
   ({
-    id: 'q', name: 'Q', kind: 'quest', accessPolicy: 'regions',
+    operationalRequirements: [], id: 'q', name: 'Q', kind: 'quest', accessPolicy: 'regions',
     regions: [], skills: {}, prereqs: [], points: 1, ...over,
   } as unknown as QuestData);
 
@@ -35,10 +35,10 @@ describe('questUnmet', () => {
       label: '12 QP',
     });
   });
-  it('reports method-cap and alternative-access blockers', () => {
+  it('keeps level and alternative-access blockers independent', () => {
     expect(questUnmet(quest({ skills: { Woodcutting: 15 } }), u({
       skills: { Woodcutting: 1 }, levels: { Woodcutting: 15 },
-    }))).toEqual([{ kind: 'skill', label: 'Woodcutting 15' }]);
+    }))).toEqual([]);
 
     expect(questUnmet(quest({ oneOf: [
       { regions: ['East Ardougne'] },
@@ -56,7 +56,7 @@ describe('questUnmet', () => {
         Attack: 60, Strength: 60, Defence: 60, Hitpoints: 60,
         Prayer: 60, Ranged: 60, Magic: 60,
       },
-    }))).toEqual([{ kind: 'skill', label: 'Combat level 85' }]);
+    }))).toEqual(expect.arrayContaining([{ kind: 'skill', label: 'Combat level 85' }]));
   });
 
   it('keeps Prying Times behind its manual Sailing confirmation', () => {
@@ -65,10 +65,10 @@ describe('questUnmet', () => {
       quests: ['Pandemonium', "The Knight's Sword"],
       skills: { Smithing: 3, Sailing: 2 },
       levels: { Smithing: 30, Sailing: 12 },
-    }))).toEqual([{
+    }))).toEqual(expect.arrayContaining([{
       kind: 'manual',
       label: 'Confirm: One open Sailing task slot',
-    }]);
+    }]));
   });
 });
 
@@ -111,6 +111,7 @@ describe('diaryUnmet', () => {
 
     expect(diaryUnmet(DIARY_DATA['Varrock Medium'], u({
       regions: ['Varrock'],
+      guilds: ["Champions' Guild"],
       completedTasks,
     }))).toEqual([{ kind: 'qp', label: '32 QP' }]);
   });

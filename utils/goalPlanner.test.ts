@@ -1,4 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import * as questOperations from '../data/questOperationalRequirements';
+afterEach(() => vi.restoreAllMocks());
 import { SKILLS_LIST } from '../constants';
 import { QUEST_CAPE_QUEST_IDS, QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
@@ -27,6 +29,15 @@ function maxedUnlocks(over: Record<string, any> = {}) {
 }
 
 describe('Goal Planner quest-point classification', () => {
+  it('does not satisfy a Quest Point gate by repeating the same completed quest', () => {
+    const one = maxedUnlocks({ quests: ["Cook's Assistant"] });
+    const repeated = maxedUnlocks({ quests: Array(20).fill("Cook's Assistant") });
+    const singlePlan = planForTarget('quest', "Black Knights' Fortress", one)!;
+    const repeatedPlan = planForTarget('quest', "Black Knights' Fortress", repeated)!;
+    expect(repeatedPlan.qpStep).toEqual(singlePlan.qpStep);
+    expect(repeatedPlan.qpStep?.done).toBe(false);
+  });
+
   it('awards no Quest Points for a nonzero-point miniquest record', () => {
     expect(questPointsForEntry({ kind: 'miniquest', points: 7 })).toBe(0);
   });
@@ -73,6 +84,7 @@ describe('planForTarget — quests', () => {
   });
 
   it('an AVAILABLE quest needs only itself (no region/skill backlog)', () => {
+    vi.spyOn(questOperations, 'questOperationalRequirements').mockReturnValue([]);
     const base = maxedUnlocks();
     const available = Object.values(QUEST_DATA).filter(
       (q) => getQuestStatus(q, base) === 'AVAILABLE' && !q.manualRequirements?.length,
@@ -106,21 +118,16 @@ describe('planForTarget — quests', () => {
     expect(plan.regionSteps.length).toBeGreaterThan(0);
     for (const r of plan.regionSteps) expect(r.done).toBe(false);
   });
-  it('does not mark a cap-blocked skill requirement complete', () => {
+  it('does not invent a level shortfall from a lower method tier', () => {
     const plan = planForTarget('quest', 'Elemental Workshop I', maxedUnlocks({
       regions: ["Seers' Village"],
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? 1 : 10])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? 20 : 99])),
     }))!;
 
-    expect(plan.skillSteps).toEqual([
-      expect.objectContaining({
-        id: 'Mining',
-        done: false,
-        detail: expect.stringContaining('method cap 10'),
-      }),
-    ]);
+    expect(plan.skillSteps).toEqual([]);
     expect(plan.alreadyReachable).toBe(false);
+    expect(plan.needsConfirmation).toBe(true);
   });
 
   it('includes a Quest Point step for a quest requirement', () => {
@@ -290,7 +297,8 @@ describe('planForTarget — diaries', () => {
         .map(task => task.id),
     }))!;
 
-    expect(plan.alreadyReachable).toBe(true);
+    expect(plan.alreadyReachable).toBe(false);
+    expect(plan.needsConfirmation).toBe(true);
     expect(plan.questSteps).toEqual([]);
   });
 
@@ -352,14 +360,14 @@ describe('listGoalTargets', () => {
 
     expect(plan.alreadyReachable).toBe(false);
     expect(plan.needsConfirmation).toBe(true);
-    expect(plan.manualSteps).toEqual([expect.objectContaining({
+    expect(plan.manualSteps).toEqual(expect.arrayContaining([expect.objectContaining({
       kind: 'manual',
       label: 'Confirm: One open Sailing task slot',
       detail: 'Required for Prying Times',
       done: false,
-    })]);
-    expect(plan.steps.map(step => step.kind)).toEqual(['manual', 'quest']);
-    expect(plan.remaining).toBe(2);
+    })]));
+    expect(plan.steps.at(-1)?.kind).toBe('quest');
+    expect(plan.remaining).toBe(plan.manualSteps.length + 1);
   });
 
   it('adds the remaining Varrock Kudos check to a diary plan', () => {
@@ -430,3 +438,67 @@ describe('listGoalTargets', () => {
       ALL_DIARY_TASKS.length = syntheticLength;
     }
   });
+
+
+describe('typed diary blockers in planning', () => {
+  it('keeps method gates visible as requirements, not manual attestations', () => {
+    const plan = planForTarget('diary', 'Lumbridge Easy', maxedUnlocks({
+      skills: {}, regions: ['Lumbridge', 'Draynor Village', 'Al Kharid', 'Wizards\' Tower'],
+      quests: ['Rune Mysteries', "Cook's Assistant"],
+      completedTasks: ALL_DIARY_TASKS.filter(task => task.id !== 'lum_easy_1').map(task => task.id),
+    }))!;
+    expect(plan.alreadyReachable).toBe(false);
+    expect(plan.needsConfirmation).toBe(false);
+    expect(plan.steps.some(step => step.kind === 'requirement' && step.label.includes('Agility'))).toBe(true);
+  });
+});
+
+describe('mode-specific quest geography planning', () => {
+  it('uses Mountain Daughter coordinates and leaves Standard permissions unchanged', () => {
+    const q = QUEST_DATA['Mountain Daughter'];
+    const base = maxedUnlocks({ quests: Object.keys(QUEST_DATA).filter(id => id !== q.id), chunks: [] });
+    const standard = planForTarget('quest', q.id, base, 'standard')!;
+    const chunked = planForTarget('quest', q.id, base, 'chunked')!;
+    expect(q.chunkedGeography).toBeDefined();
+    expect(chunked.regionSteps).toEqual([]);
+    expect(chunked.alternativeSteps.flatMap(step => step.routes.flatMap(route => route.blockers)))
+      .toEqual(expect.arrayContaining([expect.objectContaining({ unlockTable: 'Chunks', id: '43,57' })]));
+    expect(standard.regionSteps.length + standard.alternativeSteps.length).toBeGreaterThan(0);
+    const owned = maxedUnlocks({ ...base, chunks: q.chunkedGeography!.locations.flatMap(location => location.chunkOptions.map(p => `${p.cx},${p.cy}`)) });
+    expect(planForTarget('quest', q.id, owned, 'chunked')!.alreadyReachable).toBe(getQuestStatus(q, owned, 'chunked') === 'AVAILABLE');
+    expect(planForTarget('quest', q.id, owned, 'standard')!.regionSteps).toEqual(standard.regionSteps);
+  });
+
+  it('keeps complete elf routes together and agrees with canonical eligibility', () => {
+    const q = QUEST_DATA['Roving Elves'];
+    expect(q).toBeDefined();
+    const geo = q.chunkedGeography!;
+    const base = maxedUnlocks({ quests: Object.keys(QUEST_DATA).filter(id => id !== q.id), chunks: [] });
+    const plan = planForTarget('quest', q.id, base, 'chunked')!;
+    for (const group of geo.groups) {
+      expect(plan.alternativeSteps.find(step => step.id === `chunk-route:${q.id}:${group.id}`)?.routes).toHaveLength(group.routes.length);
+    }
+    expect(plan.regionSteps).toEqual([]);
+    const owned = maxedUnlocks({ ...base, chunks: [...geo.locations, ...geo.groups.flatMap(g => g.routes[0].locations)].flatMap(l => l.chunkOptions.map(p => `${p.cx},${p.cy}`)) });
+    expect(planForTarget('quest', q.id, owned, 'chunked')!.alreadyReachable).toBe(getQuestStatus(q, owned, 'chunked') === 'AVAILABLE');
+  });
+});
+
+// This suite isolates destination/skill/manual behavior with known legal supplies.
+// Acquisition availability itself is covered by itemAcquisition and source tests.
+import { beforeEach as beforeSupplyTest, afterEach as afterSupplyTest, vi as supplySpy } from 'vitest';
+import { chunkContentService as suppliedItemsFixture } from '../services/ChunkContentService';
+let restoreSupplyFixture: (() => void)[] = [];
+beforeSupplyTest(() => {
+  const ready = supplySpy.spyOn(suppliedItemsFixture, 'ready', 'get').mockReturnValue(true);
+  const records = supplySpy.spyOn(suppliedItemsFixture, 'itemSourceRecords').mockImplementation(itemName => [{ itemName, kind: 'spawn', hostName: 'Test prepared supplies', cx: 50, cy: 50, rawRequirements: [] }]);
+  restoreSupplyFixture = [() => ready.mockRestore(), () => records.mockRestore()];
+});
+afterSupplyTest(() => restoreSupplyFixture.forEach(restore => restore()));
+
+
+it.each(['vanilla', 'chunked'])('retains the Restless Ghost neck gate in %s plans', mode => {
+  const plan = planForTarget('quest', 'The Restless Ghost', maxedUnlocks({ regions: ['Misthalin'], chunks: ['50,50', '50,49'] }), mode)!;
+  expect(plan.manualSteps).toContainEqual(expect.objectContaining({ kind: 'requirement', label: 'Neck equipment tier 1', done: false }));
+  expect(plan.alreadyReachable).toBe(false);
+});

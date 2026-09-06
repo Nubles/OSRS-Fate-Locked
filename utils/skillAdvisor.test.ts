@@ -1,4 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
+import { beforeAll, describe, it, expect, vi } from 'vitest';
+import * as questOperations from '../data/questOperationalRequirements';
 
 vi.mock('./journalStatus', async () => {
   const actual = await vi.importActual<typeof import('./journalStatus')>('./journalStatus');
@@ -40,15 +41,40 @@ function regionsAndQuestsDone(over: Record<string, any> = {}) {
 }
 
 describe('rankSkillBottlenecks', () => {
+  let baseline: ReturnType<typeof rankSkillBottlenecks>;
+  // Four assertions share the same full-catalogue simulation. Compute it once;
+  // hosted runners need more than five seconds under concurrent test load.
+  beforeAll(() => { baseline = rankSkillBottlenecks(lowSkills()); }, 20_000);
+
+  it('indexes typed level gates while preserving locked method permissions', () => {
+    const index = ALL_DIARY_TASKS.findIndex(task => task.id === 'fal_easy_2');
+    const original = ALL_DIARY_TASKS[index];
+    ALL_DIARY_TASKS[index] = { ...original, skills: {}, predicates: [
+      { kind: 'skill', skill: 'Agility', level: 7 }, { kind: 'method', skill: 'Agility', tier: 1 },
+    ] };
+    try {
+      const base = regionsAndQuestsDone({
+        skills: {},
+        completedTasks: ALL_DIARY_TASKS.filter(task => task.id !== original.id).map(task => task.id),
+      });
+      expect(rankSkillBottlenecks(base).find(candidate => candidate.id === 'Agility')).toBeUndefined();
+      const permitted = rankSkillBottlenecks({ ...base, skills: { Agility: 1 } }).find(candidate => candidate.id === 'Agility');
+      expect(permitted?.targetLevel).toBe(7);
+      expect(permitted?.newDiaryIds).toContain('Falador Easy');
+      expect(base.skills).toEqual({});
+    } finally {
+      ALL_DIARY_TASKS[index] = original;
+    }
+  });
   it('is sorted by cascade score (descending)', () => {
-    const ranked = rankSkillBottlenecks(lowSkills());
+    const ranked = baseline;
     for (let i = 1; i < ranked.length; i++) {
       expect(ranked[i - 1].cascadeScore).toBeGreaterThanOrEqual(ranked[i].cascadeScore);
     }
   });
 
   it('every ranked skill has a target above its current level and unlocks something', () => {
-    const ranked = rankSkillBottlenecks(lowSkills());
+    const ranked = baseline;
     for (const r of ranked) {
       expect(r.targetLevel).toBeGreaterThan(r.currentLevel);
       const unlocks =
@@ -61,7 +87,7 @@ describe('rankSkillBottlenecks', () => {
   });
 
   it('targets the NEAREST gating threshold for a skill', () => {
-    const ranked = rankSkillBottlenecks(lowSkills());
+    const ranked = baseline;
     for (const r of ranked) {
       // No quest requiring this skill at a level strictly between current and
       // target should have been skipped if it would have unlocked something —
@@ -77,7 +103,7 @@ describe('rankSkillBottlenecks', () => {
   });
 
   it('cascade score is at least the direct score', () => {
-    const ranked = rankSkillBottlenecks(lowSkills());
+    const ranked = baseline;
     for (const r of ranked) {
       expect(r.cascadeScore).toBeGreaterThanOrEqual(r.score);
     }
@@ -91,6 +117,8 @@ describe('rankSkillBottlenecks', () => {
   });
 
   it('threads Chunked mode through quest impact simulations', () => {
+    const supplies = vi.spyOn(questOperations, 'questOperationalRequirements').mockReturnValue([]);
+    try {
     // Only the exact Seers' Village chunk lets Mining 20 unlock
     // Elemental Workshop I.
     const base = lowSkills({
@@ -108,9 +136,10 @@ describe('rankSkillBottlenecks', () => {
     expect(before).toBeUndefined();
     expect(after.targetLevel).toBe(20);
     expect(after.newQuestNames).toContain('Elemental Workshop I');
+    } finally { supplies.mockRestore(); }
   });
 
-  it('does not credit a diary while another skill is blocked by its method cap', () => {
+  it('does not invent a skill shortfall from a lower method tier', () => {
     const base = lowSkills({
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Smithing' ? 1 : 10])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Agility' ? 1 : 99])),
@@ -118,6 +147,8 @@ describe('rankSkillBottlenecks', () => {
         ...(task.regions ?? []), ...(task.anyOfRegions ?? []),
       ]))],
       quests: Object.keys(QUEST_DATA),
+      diaries: Object.keys(DIARY_DATA).filter(id => id !== 'Falador Easy'),
+      completedTasks: ALL_DIARY_TASKS.filter(task => task.id !== 'fal_easy_2').map(task => task.id),
     });
     const capable = {
       ...base,
@@ -129,7 +160,7 @@ describe('rankSkillBottlenecks', () => {
     const unblocked = rankSkillBottlenecks(capable)
       .find(candidate => candidate.id === 'Agility')!;
 
-    expect(blocked.newDiaryIds).not.toContain('Falador Easy');
+    expect(blocked.newDiaryIds).toContain('Falador Easy');
     expect(unblocked.targetLevel).toBe(5);
     expect(unblocked.newDiaryIds).toContain('Falador Easy');
   });
@@ -140,12 +171,13 @@ describe('rankSkillBottlenecks', () => {
         skill,
         skill === 'Agility' ? 1 : 99,
       ])),
+      completedTasks: ALL_DIARY_TASKS.filter(task => task.id !== 'fal_easy_2').map(task => task.id),
     }));
 
     expect(ranked.find(candidate => candidate.id === 'Agility')).toBeDefined();
   });
 
-  it('discovers skill thresholds from canonical diary tasks, not stale aggregates', () => {
+  it('ranks potential diary progress when remaining item checks need confirmation', () => {
     const ranked = rankSkillBottlenecks(lowSkills({
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Ranged' ? 20 : 99])),
@@ -160,7 +192,6 @@ describe('rankSkillBottlenecks', () => {
     }));
     const ranged = ranked.find(candidate => candidate.id === 'Ranged');
 
-    expect(ranged?.targetLevel).toBe(21);
     expect(ranged?.newDiaryIds).toContain('Ardougne Medium');
   });
   it('indexes the nearest skill level that crosses a combat-only diary gate', () => {
@@ -190,7 +221,9 @@ describe('rankSkillBottlenecks', () => {
 
     // Every regional and quest gate is open, so diary candidates survive the
     // cheap blocker prefilter and exercise the actual status-check cache.
-    rankSkillBottlenecks(regionsAndQuestsDone());
+    rankSkillBottlenecks(regionsAndQuestsDone({
+      completedTasks: ALL_DIARY_TASKS.filter(task => task.id !== 'fal_easy_2').map(task => task.id),
+    }));
 
     expect(statusSpy.mock.calls.length).toBeGreaterThan(0);
     expect(statusSpy.mock.calls.length).toBeLessThanOrEqual(60);

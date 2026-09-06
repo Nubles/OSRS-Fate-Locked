@@ -29,13 +29,24 @@ describe('content-sync report builder', () => {
   });
 
   it('degrades gracefully when wiki counts are unavailable', () => {
-    const { markdown } = buildReport({
+    const { markdown, actions, sourceUnavailable } = buildReport({
       quests: { app: 205, wiki: null },
       cas: { app: { Easy: 41 }, wiki: null },
       diaries: base.diaries,
     });
     expect(markdown).toMatch(/Wiki count unavailable/);
     expect(markdown).toMatch(/Wiki counts unavailable/);
+    expect(actions).toHaveLength(2);
+    expect(sourceUnavailable).toBe(true);
+    expect(markdown).not.toContain('Nothing — all tracked counts are consistent');
+  });
+
+  it.each(['quests', 'cas'])('retains uncertainty when only %s is unavailable', missing => {
+    const input = { ...base, cas: { app: { Easy: 41 }, wiki: { Easy: 41 } } };
+    const result = buildReport({ ...input, [missing]: { ...input[missing as keyof typeof input], wiki: null } });
+    expect(result.sourceUnavailable).toBe(true);
+    expect(result.actions).toHaveLength(1);
+    expect(result.markdown).not.toContain('Nothing — all tracked counts are consistent');
   });
 
   it('is deterministic (no timestamps) so git only diffs on real change', () => {

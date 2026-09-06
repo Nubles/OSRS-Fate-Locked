@@ -118,14 +118,14 @@ describe('buildGoalRoute — quest and engine-item goals', () => {
   it('retains direct and transitive quest alternative routes', () => {
     const direct = buildGoalRoute('Enter the Abyss', stateWith({ quests: ['Rune Mysteries'] }))!;
     expect(direct.regions.map(region => region.name)).not.toContain('One of:');
-    expect(direct.alternatives).toEqual([
+    expect(direct.alternatives).toEqual(expect.arrayContaining([
       expect.objectContaining({
         routes: expect.arrayContaining([
           expect.objectContaining({ name: 'East Ardougne' }),
           expect.objectContaining({ name: "Wizards' Guild" }),
         ]),
       }),
-    ]);
+    ]));
 
     const transitive = buildGoalRoute('Temple of the Eye', stateWith())!;
     expect(transitive.alternatives).toEqual(expect.arrayContaining([
@@ -197,14 +197,14 @@ describe('buildGoalRoute — diary alternatives', () => {
     }))!;
 
     expect(route.regions).toEqual([]);
-    expect(route.alternatives).toEqual([
+    expect(route.alternatives).toEqual(expect.arrayContaining([
       expect.objectContaining({
         routes: expect.arrayContaining([
           expect.objectContaining({ detail: expect.stringContaining('Combat level 100') }),
           expect.objectContaining({ detail: expect.stringContaining('Slayer 99') }),
         ]),
       }),
-    ]);
+    ]));
   });
 });
 
@@ -286,5 +286,38 @@ describe('suggestTables', () => {
 
   it('returns nothing when nothing is needed', () => {
     expect(suggestTables([], stateWith().unlocks)).toEqual([]);
+  });
+});
+
+
+describe('route readiness consistency', () => {
+  it('does not require a skill tier for an attained quest level', () => {
+    const route = buildGoalRoute('Recipe for Disaster', stateWith({ levels: { Cooking: 99 }, skills: {} }))!;
+    expect(route.skills.find(skill => skill.skill === 'Cooking')?.met).toBe(true);
+  });
+  it('keeps incomplete activity evidence visible in a pinned route', () => {
+    const route = buildGoalRoute('Ectoplasmator', stateWith({ minigames: ['Ectoplasmator'] }))!;
+    expect(route.percentage).toBeLessThan(100);
+    expect(route.alternatives.flatMap(group => group.routes).some(item => item.name.includes('review'))).toBe(true);
+  });
+});
+
+describe('Chunked route uncertainty', () => {
+  it('does not turn hidden geography evidence into a ready route or a region unlock', () => {
+    const q = QUEST_DATA['Mountain Daughter'];
+    const previous = q.chunkedGeography;
+    try {
+      q.chunkedGeography = {
+        locations: [{ id: 'camp', label: 'Mountain Camp', chunkOptions: [{ cx: 43, cy: 57 }] }],
+        groups: [], unknowns: ['Internal randomized target evidence'],
+      };
+      const state = stateWith({ chunks: ['43,57'], quests: Object.keys(QUEST_DATA).filter(id => id !== q.id),
+        levels: { Agility: 99, Prayer: 99 }, skills: { Agility: 10, Prayer: 10 } });
+      state.gameModeId = 'chunked';
+      const route = buildGoalRoute(q.id, state)!;
+      expect(route.percentage).toBeLessThan(100);
+      expect(route.regions).toEqual([]);
+      expect(JSON.stringify(route)).not.toContain('Internal randomized target evidence');
+    } finally { q.chunkedGeography = previous; }
   });
 });

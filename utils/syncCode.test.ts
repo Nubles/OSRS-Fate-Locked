@@ -1,6 +1,6 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
 import { initialState } from '../context/GameContext';
-import { simpleHash } from './integrity';
+import { simpleHash, ensureChain, auditHistory } from './integrity';
 import { MAX_SAVE_BYTES } from './saveSchema';
 import {
   MAX_SYNC_CODE_CHARS,
@@ -28,6 +28,17 @@ const sampleState = {
     { id: 'b', timestamp: 2, type: 'ROLL_SUCCESS', message: 'Key Found!', prevHash: 'deadbeef', hash: 'cafef00d' },
   ],
 };
+
+it('preserves legacy integrity uncertainty through a validated sync-code round trip', async () => {
+  const history = ensureChain([{ id: 'legacy', timestamp: 1, type: 'ROLL_FAIL', message: 'No Key.' }]);
+  const code = await encodeSyncCode({ ...initialState, history });
+  const decoded = await decodeAndValidateSyncCode(code, initialState);
+  expect(decoded.ok).toBe(true);
+  if (decoded.ok) {
+    expect(decoded.state.history[0].meta?.integrityLegacyChain).toBe(true);
+    expect(auditHistory(decoded.state.history).verdict).toBe('warning');
+  }
+});
 
 const toBase64Url = (bytes: Uint8Array): string => {
   let binary = '';

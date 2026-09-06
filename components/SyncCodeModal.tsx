@@ -8,6 +8,7 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';
 import { encodeSyncCode, decodeAndValidateSyncCode } from '../utils/syncCode';
 import { makeQrSvg } from '../utils/qr';
+import { resolveModeRules } from '../config/gameModes';
 import { auditHistory, RunVerdict } from '../utils/integrity';
 import { BackupMeta } from '../utils/backups';
 import type { GameState } from '../types';
@@ -71,14 +72,14 @@ const previewOf = (state: GameState): RunPreview => {
 
 const VERDICT_UI: Record<RunVerdict, { label: string; sub: string; cls: string; Icon: typeof ShieldCheck }> = {
   verified: {
-    label: 'Verified run',
-    sub: 'Hash chain intact — no signs of tampering.',
+    label: 'History checks passed',
+    sub: 'Recorded links and replay checks pass. This checks local consistency, not independent proof of gameplay.',
     cls: 'text-emerald-300 bg-emerald-950/40 border-emerald-500/30',
     Icon: ShieldCheck,
   },
   warning: {
     label: 'Loadable, with warnings',
-    sub: 'Chain is intact but the replay hit an unusual state. Likely a legacy save.',
+    sub: 'The history includes unverified legacy entries or the replay found an unusual state.',
     cls: 'text-amber-300 bg-amber-950/40 border-amber-500/30',
     Icon: ShieldAlert,
   },
@@ -184,7 +185,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
   const decodedState = decoded?.value ?? null;
   const preview = useMemo(() => (decodedState ? previewOf(decodedState) : null), [decodedState]);
   const audit = useMemo(() => decodedState
-    ? auditHistory(decodedState.history)
+    ? auditHistory(decodedState.history, resolveModeRules(decodedState.gameModeId, decodedState.customMode))
     : null, [decodedState]);
 
   const invalidateSource = useCallback((next: string) => {

@@ -360,11 +360,14 @@ describe('official quest and miniquest audit coverage', () => {
     })).toEqual([]);
   });
 
-  it('leaves only the two concrete miniquest evidence conflicts unresolved', () => {
+  it('retains the Bear Your Soul route conflict after resolving the Enchanted Key sites', () => {
     expect(audit.entries
       .filter(entry => entry.kind === 'miniquest' && entry.status === 'unresolved')
       .map(entry => entry.id))
-      .toEqual(['Bear Your Soul', 'The Enchanted Key']);
+      .toEqual(['Bear Your Soul']);
+    const key = audit.entries.find(entry => entry.id === 'The Enchanted Key')!;
+    expect(key.status).toBe('verified-with-notes');
+    expect(QUEST_DATA['The Enchanted Key'].locations).toHaveLength(11);
   });
 
   it('records concrete source gaps for every generated discrepancy category', () => {
@@ -372,15 +375,11 @@ describe('official quest and miniquest audit coverage', () => {
     const cases = [
       {
         id: 'Desert Treasure I',
-        discrepancy: ['regions policy', 'Kharidian Desert', 'Bedabin Camp', '49,47', 'The Dig Site'],
+        discrepancy: ['locations policy', 'Kharidian Desert', 'Bedabin Camp', '49,47', 'The Dig Site'],
       },
       {
         id: 'Bear Your Soul',
         discrepancy: ['regions policy', 'Soul Altar', 'Blood Altar', '26,59'],
-      },
-      {
-        id: 'The Enchanted Key',
-        discrepancy: ['eleven fixed treasure sites', 'Falador', 'Grand Exchange', 'Jorral'],
       },
     ];
 

@@ -33,6 +33,7 @@ describe('analyzeJournalQuestRecommendations', () => {
       id: 'Automatic test quest',
       name: 'Automatic test quest',
       manualRequirements: [],
+      operationalRequirements: [],
     };
     const analysis = analyzeJournalQuestRecommendations(
       [automatic],

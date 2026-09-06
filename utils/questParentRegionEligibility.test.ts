@@ -46,7 +46,20 @@ describe('quest parent-region eligibility', () => {
       ...extras,
     }), 'vanilla');
 
-    expect(result.status).toBe('AVAILABLE');
+    expect(result.status).toBe('NEEDS_CONFIRMATION');
+    expect(result.machineEligible).toBe(true);
     expect(result.blockers).toEqual([]);
   });
 });
+
+// This suite isolates destination/skill/manual behavior with known legal supplies.
+// Acquisition availability itself is covered by itemAcquisition and source tests.
+import { beforeEach as beforeSupplyTest, afterEach as afterSupplyTest, vi as supplySpy } from 'vitest';
+import { chunkContentService as suppliedItemsFixture } from '../services/ChunkContentService';
+let restoreSupplyFixture: (() => void)[] = [];
+beforeSupplyTest(() => {
+  const ready = supplySpy.spyOn(suppliedItemsFixture, 'ready', 'get').mockReturnValue(true);
+  const records = supplySpy.spyOn(suppliedItemsFixture, 'itemSourceRecords').mockImplementation(itemName => [{ itemName, kind: 'spawn', hostName: 'Test prepared supplies', cx: 41, cy: 51, rawRequirements: [] }]);
+  restoreSupplyFixture = [() => ready.mockRestore(), () => records.mockRestore()];
+});
+afterSupplyTest(() => restoreSupplyFixture.forEach(restore => restore()));

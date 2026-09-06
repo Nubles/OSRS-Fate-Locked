@@ -36,7 +36,7 @@ export const RegionAdvisorPanel: React.FC = () => {
       items={items}
       accent="amber"
       heading="Region Advisor"
-      subheading="Unlock these regions for the most forward progress"
+      subheading="Potential progress after this change. Quest and diary checks still need confirmation."
       caption="by unlock chain"
       icon={<Map size={13} />}
       maxShown={4}

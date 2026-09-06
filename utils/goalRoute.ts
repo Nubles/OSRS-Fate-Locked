@@ -1,6 +1,7 @@
 import { GameState, TableType, UnlockState } from '../types';
 import { STRATEGY_DATABASE, ContentRequirement } from '../data/requirements';
 import { QUEST_DATA } from '../data/questData';
+import { canonicalQuestUnlocks, catalogQuest } from '../data/questCatalog';
 import { DIARY_DATA } from '../data/diaryData';
 import { RESOURCE_MAP } from '../data/resourceData';
 import { REGION_GROUPS } from '../constants';
@@ -10,8 +11,11 @@ import { calculateSupplyChain } from './supplyChain';
 import { getPoolAndStateKey, isValidUnlock } from './gameEngine';
 import { tierForLevel } from './skillTiers';
 import { planForTarget, type PlanStep } from './goalPlanner';
-import { evaluateDiaryTierEligibility } from './journalStatus';
-import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
+import { evaluateDiaryTierEligibility, evaluateQuestEligibility } from './journalStatus';
+import { actualCombatLevel } from './slayerReach';
+import { actualSkillLevel } from './skillLevels';
+import { calculateGoalProgress } from './goalLogic';
+import { getActivityReq } from '../data/activityRequirements';
 import { enforcedQuestAreas } from './questGeographyDisplay';
 
 /**
@@ -111,7 +115,11 @@ const isRegionMet = (r: string, unlocks: UnlockState, gameModeId?: string): bool
 /** Resolve a pinned goal id the same way GoalTracker does. */
 function resolveRequirement(goalId: string): { req: ContentRequirement | null; kind: GoalRoute['kind'] } {
   const strat = STRATEGY_DATABASE[goalId];
-  if (strat) return { req: strat, kind: 'strategy' };
+  if (strat) {
+    const activity = getActivityReq(strat.id);
+    return { req: activity ? { ...strat, regions: [], skills: activity.skills ?? {},
+      quests: activity.quests ?? [], diaries: [], items: [], alternatives: [] } : strat, kind: 'strategy' };
+  }
   const quest = QUEST_DATA[goalId];
   if (quest) {
     return {
@@ -146,7 +154,8 @@ export function expandQuestChain(seeds: string[]): string[] {
 }
 
 export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute | null {
-  const unlocks = gameState.unlocks;
+  const unlocks = canonicalQuestUnlocks(gameState.unlocks);
+  goalId = catalogQuest(goalId)?.data.id ?? goalId;
   const gameModeId = gameState.gameModeId;
   const diary = DIARY_DATA[goalId];
   if (diary) {
@@ -169,8 +178,8 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       routes: step.routes.map(route => ({
         name: route.label,
         met: route.blockers.length === 0,
-        detail: route.label + (route.blockers.length > 0
-          ? ': ' + route.blockers.map(blocker => (
+        detail: route.label + (route.blockers.some(blocker => !blocker.internalOnly)
+          ? ': ' + route.blockers.filter(blocker => !blocker.internalOnly).map(blocker => (
             blocker.label + (blocker.detail ? ' ' + blocker.detail : '')
           )).join(' + ')
           : ''),
@@ -181,7 +190,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       const isCombat = step.id === 'Combat level';
       const haveLevel = isCombat
         ? actualCombatLevel(unlocks)
-        : effectiveSkillLevel(unlocks, step.id);
+        : actualSkillLevel(unlocks, step.id);
       const tierHave = isCombat ? 0 : (unlocks.skills[step.id] ?? 0);
       return {
         skill: step.id,
@@ -193,6 +202,10 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
         met: step.done,
       };
     });
+    for (const step of plan.manualSteps) {
+      alternatives.push({ name: step.label, met: step.done,
+        routes: [{ name: step.label, met: step.done, detail: step.detail }] });
+    }
     const dependencies = tableDependenciesForSteps([
       ...plan.questSteps,
       ...plan.regionSteps,
@@ -222,7 +235,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
 
   // Pure quest goals use the canonical planner so direct and transitive one-of
   // access routes stay structured instead of being flattened into fake regions.
-  if (QUEST_DATA[goalId] && !STRATEGY_DATABASE[goalId]) {
+  if (QUEST_DATA[goalId]) {
     const quest = QUEST_DATA[goalId];
     const plan = planForTarget('quest', goalId, unlocks, gameModeId);
     if (!plan) return null;
@@ -238,8 +251,8 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       routes: step.routes.map(route => ({
         name: route.label,
         met: route.blockers.length === 0,
-        detail: route.label + (route.blockers.length > 0
-          ? ': ' + route.blockers.map(blocker => (
+        detail: route.label + (route.blockers.some(blocker => !blocker.internalOnly)
+          ? ': ' + route.blockers.filter(blocker => !blocker.internalOnly).map(blocker => (
             blocker.label + (blocker.detail ? ' ' + blocker.detail : '')
           )).join(' + ')
           : ''),
@@ -250,7 +263,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       const isCombat = step.id === 'Combat level';
       const haveLevel = isCombat
         ? actualCombatLevel(unlocks)
-        : effectiveSkillLevel(unlocks, step.id);
+        : actualSkillLevel(unlocks, step.id);
       const tierHave = isCombat ? 0 : (unlocks.skills[step.id] ?? 0);
       return {
         skill: step.id,
@@ -269,17 +282,25 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       ...plan.alternativeSteps.flatMap(step => step.routes.flatMap(route => route.blockers)),
     ]);
     const qpNeed = Number(plan.qpStep?.detail?.match(/\d+/)?.[0] ?? 0);
-    const qpHave = unlocks.quests.reduce(
+    const qpHave = [...new Set(unlocks.quests)].reduce(
       (total, id) => total + (QUEST_DATA[id]?.points ?? 0), 0,
     );
+    const canonicalProgress = calculateGoalProgress({ id: goalId, category: TableType.QUESTS, regions: [], skills: {} }, unlocks, gameModeId);
+    const hasInternalUncertainty = plan.manualSteps.some(step => step.internalOnly && !step.done)
+      || plan.alternativeSteps.some(step => !step.done && step.routes.some(route => route.blockers.some(blocker => blocker.internalOnly)));
+    for (const label of evaluateQuestEligibility(quest, unlocks, gameModeId).manualChecks) {
+      if (!plan.steps.some(step => step.label === label)) {
+        alternatives.push({ name: label, met: false, routes: [{ name: label, met: false }] });
+      }
+    }
     const totalSteps = Math.max(1, plan.steps.length);
     const completedSteps = plan.alreadyDone
       ? totalSteps
       : plan.steps.filter(step => step.done).length;
     return {
       goalId,
-      kind: 'quest',
-      description: quest.series ? 'Series: ' + quest.series : undefined,
+      kind: STRATEGY_DATABASE[goalId] ? 'strategy' : 'quest',
+      description: STRATEGY_DATABASE[goalId]?.description ?? (quest.series ? 'Series: ' + quest.series : undefined),
       quests,
       regions,
       skills,
@@ -290,7 +311,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       tables: suggestTables(dependencies, unlocks),
       totalSteps,
       completedSteps,
-      percentage: Math.round((completedSteps / totalSteps) * 100),
+      percentage: canonicalProgress.percentage === 100 && !hasInternalUncertainty ? 100 : Math.min(99, Math.round((completedSteps / totalSteps) * 100)),
     };
   }
 
@@ -377,13 +398,13 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       const isCombat = skill === 'Combat level';
       const have = isCombat
         ? actualCombatLevel(unlocks)
-        : effectiveSkillLevel(unlocks, skill);
+        : actualSkillLevel(unlocks, skill);
       const tierHave = isCombat ? 0 : (unlocks.skills[skill] ?? 0);
       const unlocked = isCombat || tierHave > 0;
       return {
         skill, needLevel: need, haveLevel: have, unlocked,
         tierNeeded: isCombat ? 0 : tierForLevel(need), tierHave,
-        met: unlocked && have >= need,
+        met: have >= need,
       };
     });
 
@@ -405,15 +426,15 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       routes: step.routes.map(route => ({
         name: route.label,
         met: route.blockers.length === 0,
-        detail: route.label + (route.blockers.length > 0
-          ? ': ' + route.blockers.map(blocker => (
+        detail: route.label + (route.blockers.some(blocker => !blocker.internalOnly)
+          ? ': ' + route.blockers.filter(blocker => !blocker.internalOnly).map(blocker => (
             blocker.label + (blocker.detail ? ' ' + blocker.detail : '')
           )).join(' + ')
           : ''),
       })),
     }));
 
-  const haveQp = unlocks.quests.reduce((acc, id) => acc + (QUEST_DATA[id]?.points ?? 0), 0);
+  const haveQp = [...new Set(unlocks.quests)].reduce((acc, id) => acc + (QUEST_DATA[id]?.points ?? 0), 0);
   const questPoints = qpNeed > 0 ? { need: qpNeed, have: haveQp, met: haveQp >= qpNeed } : undefined;
 
   // ── Which key tables help ────────────────────────────────────────────────
@@ -445,15 +466,19 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     ...quests, ...regions, ...skills, ...alternatives, ...diaries,
   ];
   if (questPoints) items.push({ met: questPoints.met });
-  const total = Math.max(1, items.length);
-  const done = items.filter(i => i.met).length;
+  const progress = calculateGoalProgress(req, unlocks, gameModeId);
+  const readinessChecks = progress.missing.filter(label =>
+    !items.some(item => 'name' in item && item.name === label));
+  alternatives.push(...readinessChecks.map(name => ({ name, met: false, routes: [{ name, met: false }] })));
+  const total = progress.totalSteps;
+  const done = progress.completedSteps;
 
   return {
     goalId, kind, description: req.description,
     quests, regions, skills, alternatives, diaries, questPoints,
     sources: [], tables,
     totalSteps: total, completedSteps: done,
-    percentage: Math.round((done / total) * 100),
+    percentage: progress.percentage,
   };
 }
 

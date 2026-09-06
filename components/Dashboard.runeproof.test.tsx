@@ -4,10 +4,6 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { UnlockState } from '../types';
 
-const featureState = vi.hoisted(() => ({
-  availability: 'PUBLIC' as 'OFF' | 'PUBLIC' | 'PREVIEW',
-}));
-
 const freshUnlocks = (): UnlockState => ({
   equipment: {}, skills: {}, levels: {}, regions: [], chunks: [],
   mobility: [], arcana: [], housing: [], merchants: [], minigames: [],
@@ -34,33 +30,15 @@ vi.mock('../services/WikiService', () => ({
   wikiService: { fetchImage: vi.fn(async () => null) },
 }));
 
-vi.mock('../utils/questRoutes/featureFlag', () => ({
-  runeProofAvailability: vi.fn(() => featureState.availability),
-}));
-
 import { Dashboard } from './Dashboard';
 
-afterEach(() => {
-  cleanup();
-  featureState.availability = 'PUBLIC';
-});
+afterEach(cleanup);
 
-describe('Dashboard RuneProof entry', () => {
-  it('labels the production entry RuneProof for the public pack', () => {
-    featureState.availability = 'PUBLIC';
+describe('Dashboard private RuneProof entry', () => {
+  it('exposes the preview entry in test mode', () => {
     render(<Dashboard suspendModals />);
-
     expect(screen.getByRole('button', { name: 'RuneProof' }).getAttribute('title'))
-      .toBe('Get the next reviewed action for your run');
-    expect(screen.queryByRole('button', { name: 'Goal Planner' })).toBeNull();
-  });
-
-  it('labels the same Dashboard entry RuneProof in private preview', () => {
-    featureState.availability = 'PREVIEW';
-    render(<Dashboard suspendModals />);
-
-    expect(screen.getByRole('button', { name: 'RuneProof' }).getAttribute('title'))
-      .toBe('Get the next reviewed action for your run');
+      .toBe('Explore quest requirements');
     expect(screen.queryByRole('button', { name: 'Goal Planner' })).toBeNull();
   });
 });

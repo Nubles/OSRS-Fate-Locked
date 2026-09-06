@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  simpleHash, hashEntry, ensureChain, verifyChain,
+  auditHistory, simpleHash, hashEntry, ensureChain, verifyChain,
   replayInvariants, computeRunId, buildVerifiedBundle, sha256Hex,
 } from './integrity';
 import { LogEntry } from '../types';
@@ -487,5 +487,59 @@ describe('buildVerifiedBundle', () => {
     const tampered = chained.map((e, i) => i === 1 ? { ...e, message: 'EDITED' } : e);
     const bundle = await buildVerifiedBundle(tampered);
     expect(bundle.chainReport.ok).toBe(false);
+  });
+});
+
+
+describe('malformed integrity links', () => {
+  it('retains legacy uncertainty across initialization and export', async () => {
+    const history = [fail()];
+    expect(auditHistory(history).verdict).toBe('warning');
+    const migrated = ensureChain(history);
+    expect(verifyChain(migrated).ok).toBe(true);
+    expect(auditHistory(migrated).verdict).toBe('warning');
+    const bundle = await buildVerifiedBundle(migrated);
+    expect(auditHistory(bundle.history).verdict).toBe('warning');
+    const strippedMarker = migrated.map(entry => ({ ...entry, meta: {} }));
+    expect(verifyChain(strippedMarker).ok).toBe(false);
+  });
+  it.each([
+    { hash: 'deadbeef' }, { prevHash: 'GENESIS' },
+    { hash: '', prevHash: 'GENESIS' }, { hash: null, prevHash: 'GENESIS' },
+  ])('does not repair partial fields: %j', fields => {
+    const history = [fail(fields as any)];
+    expect(ensureChain(history)).toBe(history);
+    expect(verifyChain(history).ok).toBe(false);
+    expect(auditHistory(history).verdict).toBe('tampered');
+  });
+  it('rejects a legacy entry inserted into an existing chain', () => {
+    const history = [...ensureChain([fail()]), fail()];
+    expect(ensureChain(history)).toBe(history);
+    expect(auditHistory(history).verdict).toBe('tampered');
+  });
+  it('does not verify unhashed history without explicit legacy initialization', () => {
+    expect(verifyChain([fail()]).ok).toBe(false);
+    expect(verifyChain(ensureChain([fail()])).ok).toBe(true);
+  });
+});
+
+
+describe('mode-aware and incomplete replay', () => {
+  const rules = { pityEnabled: true, pityThreshold: 100, ritualCostMultiplier: 1, omniChanceBase: 2, regionModifiers: false };
+  it('does not need a future Pity event to recognize a custom cap', () => {
+    expect(replayInvariants(Array.from({ length: 60 }, () => fail()), 3, rules).violations).toEqual([]);
+  });
+  it('does not enforce a Fate cap when Pity is disabled', () => {
+    expect(replayInvariants(Array.from({ length: 130 }, () => fail()), 3, { ...rules, pityEnabled: false }).violations).toEqual([]);
+  });
+  it('keeps legacy ritual uncertainty without falsely accusing negative balances', async () => {
+    const history = [...Array.from({ length: 8 }, () => fail()), mk({ type: 'ALTAR', message: 'Ritual of Clarity' })];
+    const replay = replayInvariants(history, 3, rules);
+    expect(replay.uncertainAt).toEqual([8]);
+    expect(replay.violations).toEqual([]);
+    expect(auditHistory(history, rules).verdict).toBe('warning');
+    const bundle = await buildVerifiedBundle(history, { id: 'custom', rules });
+    expect(bundle.replayUncertainAt).toEqual([8]);
+    expect(bundle.verdict).toBe('warning');
   });
 });

@@ -53,7 +53,7 @@ describe('buildChunkPermissionSnapshot', () => {
     );
 
     expect(locked.categories.QUESTS?.[0].status).toBe('LOCKED');
-    expect(available.categories.QUESTS?.[0].status).toBe('ALLOWED');
+    expect(available.categories.QUESTS?.[0].status).toBe('NOT_READY');
   });
   it('uses compact category-specific rows', () => {
     const view = buildChunkPermissionSnapshot(
@@ -81,7 +81,7 @@ describe('buildChunkPermissionSnapshot', () => {
     ]);
     expect(view.categories.QUESTS?.[0]).toMatchObject({
       name: "Cook's Assistant",
-      status: 'ALLOWED',
+      status: 'NOT_READY',
     });
     expect(view.categories.COMBAT?.[0]).toMatchObject({
       name: 'Goblin',
@@ -138,3 +138,15 @@ describe('buildChunkPermissionSnapshot', () => {
     }
   });
 });
+
+// This suite isolates destination/skill/manual behavior with known legal supplies.
+// Acquisition availability itself is covered by itemAcquisition and source tests.
+import { beforeEach as beforeSupplyTest, afterEach as afterSupplyTest, vi as supplySpy } from 'vitest';
+import { chunkContentService as suppliedItemsFixture } from '../services/ChunkContentService';
+let restoreSupplyFixture: (() => void)[] = [];
+beforeSupplyTest(() => {
+  const ready = supplySpy.spyOn(suppliedItemsFixture, 'ready', 'get').mockReturnValue(true);
+  const records = supplySpy.spyOn(suppliedItemsFixture, 'itemSourceRecords').mockImplementation(itemName => [{ itemName, kind: 'spawn', hostName: 'Test prepared supplies', cx: 50, cy: 50, rawRequirements: [] }]);
+  restoreSupplyFixture = [() => ready.mockRestore(), () => records.mockRestore()];
+});
+afterSupplyTest(() => restoreSupplyFixture.forEach(restore => restore()));

@@ -272,13 +272,79 @@ describe('audited current quest requirements', () => {
           },
           "Animal Magnetism": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "locations",
                 "regions": [
                       "Draynor Village",
                       "Burthorpe",
                       "Fenkenstrain's Castle"
                 ],
-                "locations": null,
+                "locations": [
+  {
+    "id": "draynor-manor",
+    "label": "Draynor Manor",
+    "standardAreas": [
+      "Draynor Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "alice-s-farm",
+    "label": "Alice's farm",
+    "standardAreas": [
+      "Port Phasmatys"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 56,
+        "cy": 55
+      }
+    ]
+  },
+  {
+    "id": "old-crone-s-house",
+    "label": "Old Crone's house",
+    "standardAreas": [
+      "Fenkenstrain's Castle"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 54,
+        "cy": 55
+      }
+    ]
+  },
+  {
+    "id": "rimmington-mine",
+    "label": "Rimmington mine",
+    "standardAreas": [
+      "Rimmington"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "burthorpe",
+    "label": "Burthorpe",
+    "standardAreas": [
+      "Burthorpe"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 55
+      }
+    ]
+  }
+],
                 "skills": {
                       "Slayer": 18,
                       "Crafting": 19,
@@ -298,12 +364,52 @@ describe('audited current quest requirements', () => {
           },
           "Another Slice of H.A.M.": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "locations",
                 "regions": [
                       "Lumbridge",
                       "Goblin Village"
                 ],
-                "locations": null,
+                "locations": [
+  {
+    "id": "location-1",
+    "label": "Lumbridge Castle / Dorgesh-Kaan entrance",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Goblin Village",
+    "standardAreas": [
+      "Goblin Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Lumbridge Swamp H.A.M. entrance",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 49,
+        "cy": 49
+      }
+    ]
+  }
+],
                 "skills": {
                       "Attack": 15,
                       "Prayer": 25
@@ -321,11 +427,64 @@ describe('audited current quest requirements', () => {
           },
           "At First Light": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "locations",
                 "regions": [
                       "Hunter's Guild"
                 ],
-                "locations": null,
+                "locations": [
+  {
+    "id": "hunter-guild",
+    "label": "Hunter Guild",
+    "standardAreas": [
+      "Hunter's Guild"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 24,
+        "cy": 47
+      }
+    ]
+  },
+  {
+    "id": "hunter-fox-and-crevice",
+    "label": "Hunter Fox and crevice",
+    "standardAreas": [
+      "Avium Savannah"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 25,
+        "cy": 46
+      }
+    ]
+  },
+  {
+    "id": "locus-oasis",
+    "label": "Locus Oasis",
+    "standardAreas": [
+      "Avium Savannah"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 26,
+        "cy": 46
+      }
+    ]
+  },
+  {
+    "id": "atza-workshop",
+    "label": "Atza workshop",
+    "standardAreas": [
+      "Civitas illa Fortis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 26,
+        "cy": 47
+      }
+    ]
+  }
+],
                 "skills": {
                       "Hunter": 46,
                       "Herblore": 30,
@@ -464,14 +623,93 @@ describe('audited current quest requirements', () => {
           },
           "Biohazard": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "locations",
                 "regions": [
                       "East Ardougne",
                       "West Ardougne",
                       "Rimmington",
                       "Varrock"
                 ],
-                "locations": null,
+                "locations": [
+  {
+    "id": "elena-house",
+    "label": "Elena house",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "jerico-and-ardougne-castle",
+    "label": "Jerico and Ardougne Castle",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "west-ardougne",
+    "label": "West Ardougne",
+    "standardAreas": [
+      "West Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "mourner-headquarters-yard",
+    "label": "Mourner headquarters yard",
+    "standardAreas": [
+      "West Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "rimmington-chemist",
+    "label": "Rimmington chemist",
+    "standardAreas": [
+      "Rimmington"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "guidor-and-dancing-donkey",
+    "label": "Guidor and Dancing Donkey",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 51,
+        "cy": 52
+      }
+    ]
+  }
+],
                 "skills": {},
                 "combatLevel": null,
                 "prereqs": [
@@ -550,12 +788,39 @@ describe('audited current quest requirements', () => {
           },
           "Cabin Fever": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "locations",
                 "regions": [
                       "Port Phasmatys",
                       "Mos Le'Harmless"
                 ],
-                "locations": null,
+                "locations": [
+  {
+    "id": "location-1",
+    "label": "Port Phasmatys inn",
+    "standardAreas": [
+      "Port Phasmatys"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 57,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Bill Teach ship",
+    "standardAreas": [
+      "Port Phasmatys"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 57,
+        "cy": 54
+      }
+    ]
+  }
+],
                 "skills": {
                       "Ranged": 40,
                       "Smithing": 50,
@@ -616,7 +881,7 @@ describe('audited current quest requirements', () => {
           },
           "Client of Kourend": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "locations",
                 "regions": [
                       "Shayzien",
                       "Lovakengj",
@@ -624,7 +889,99 @@ describe('audited current quest requirements', () => {
                       "Hosidius",
                       "Piscarilius"
                 ],
-                "locations": null,
+                "locations": [
+  {
+    "id": "port-piscarilius-docks",
+    "label": "Port Piscarilius docks",
+    "standardAreas": [
+      "Piscarilius"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 28,
+        "cy": 57
+      }
+    ]
+  },
+  {
+    "id": "piscarilius-general-store",
+    "label": "Piscarilius general store",
+    "standardAreas": [
+      "Piscarilius"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 28,
+        "cy": 58
+      }
+    ]
+  },
+  {
+    "id": "hosidius-general-store",
+    "label": "Hosidius general store",
+    "standardAreas": [
+      "Hosidius"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 27,
+        "cy": 56
+      }
+    ]
+  },
+  {
+    "id": "shayzien-general-store",
+    "label": "Shayzien general store",
+    "standardAreas": [
+      "Shayzien"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 23,
+        "cy": 56
+      }
+    ]
+  },
+  {
+    "id": "lovakengj-general-store",
+    "label": "Lovakengj general store",
+    "standardAreas": [
+      "Lovakengj"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 24,
+        "cy": 58
+      }
+    ]
+  },
+  {
+    "id": "arceuus-general-store",
+    "label": "Arceuus general store",
+    "standardAreas": [
+      "Arceuus"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 26,
+        "cy": 58
+      }
+    ]
+  },
+  {
+    "id": "dark-altar",
+    "label": "Dark Altar",
+    "standardAreas": [
+      "Arceuus"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 26,
+        "cy": 60
+      }
+    ]
+  }
+],
                 "skills": {},
                 "combatLevel": null,
                 "prereqs": [
@@ -736,13 +1093,66 @@ describe('audited current quest requirements', () => {
           },
           "Creature of Fenkenstrain": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "locations",
                 "regions": [
                       "Canifis",
                       "Fenkenstrain's Castle",
                       "Haunted Woods"
                 ],
-                "locations": null,
+                "locations": [
+  {
+    "id": "canifis-tavern",
+    "label": "Canifis tavern",
+    "standardAreas": [
+      "Canifis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 54,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "fenkenstrain-castle-and-experiment-entrance",
+    "label": "Fenkenstrain castle and experiment entrance",
+    "standardAreas": [
+      "Fenkenstrain's Castle"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 55,
+        "cy": 55
+      }
+    ]
+  },
+  {
+    "id": "haunted-woods-grave",
+    "label": "Haunted Woods grave",
+    "standardAreas": [
+      "Haunted Woods"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 56,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "mausoleum-graves",
+    "label": "Mausoleum graves",
+    "standardAreas": [
+      "Fenkenstrain's Castle"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 54,
+        "cy": 55
+      }
+    ]
+  }
+],
                 "skills": {
                       "Crafting": 20,
                       "Thieving": 25
@@ -780,7 +1190,7 @@ describe('audited current quest requirements', () => {
           },
           "Darkness of Hallowvale": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "locations",
                 "regions": [
                       "Burgh de Rott",
                       "Darkmeyer",
@@ -788,7 +1198,138 @@ describe('audited current quest requirements', () => {
                       "Varrock",
                       "Paterdomus"
                 ],
-                "locations": null,
+                "locations": [
+  {
+    "id": "burgh-de-rott-hideout",
+    "label": "Burgh de Rott hideout",
+    "standardAreas": [
+      "Burgh de Rott"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 54,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "burgh-de-rott-boat",
+    "label": "Burgh de Rott boat",
+    "standardAreas": [
+      "Burgh de Rott"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 55,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "meiyerditch-wall-landing",
+    "label": "Meiyerditch wall landing",
+    "standardAreas": [
+      "Meiyerditch"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 56,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "south-meiyerditch",
+    "label": "South Meiyerditch",
+    "standardAreas": [
+      "Meiyerditch"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 56,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "paterdomus",
+    "label": "Paterdomus",
+    "standardAreas": [
+      "Paterdomus"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 53,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "west-paterdomus-bushes",
+    "label": "West Paterdomus bushes",
+    "standardAreas": [
+      "Silvarea"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 52,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "varrock-castle",
+    "label": "Varrock Castle",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "north-meiyerditch-wall",
+    "label": "North Meiyerditch wall",
+    "standardAreas": [
+      "Meiyerditch"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 56,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "east-castle-drakan-wall",
+    "label": "East Castle Drakan wall",
+    "standardAreas": [
+      "Darkmeyer"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 56,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "castle-drakan-sketches",
+    "label": "Castle Drakan sketches",
+    "standardAreas": [
+      "Darkmeyer"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 55,
+        "cy": 52
+      }
+    ]
+  }
+],
                 "skills": {
                       "Construction": 5,
                       "Mining": 20,
@@ -924,12 +1465,91 @@ describe('audited current quest requirements', () => {
           },
           "Defender of Varrock": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "locations",
                 "regions": [
                       "Varrock",
                       "Goblin Village"
                 ],
-                "locations": null,
+                "locations": [
+  {
+    "id": "location-1",
+    "label": "Jolly Boar Inn and tracking",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 51,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Varrock north tracking / palace",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Zemouregal base entrance",
+    "standardAreas": [
+      "Silvarea"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 52,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "location-4",
+    "label": "Camdozaal entrance",
+    "standardAreas": [
+      "Goblin Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "location-5",
+    "label": "Varrock Square candidates",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "location-6",
+    "label": "Dimintheis house",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 51,
+        "cy": 53
+      }
+    ]
+  }
+],
                 "skills": {
                       "Smithing": 55,
                       "Hunter": 52
@@ -1020,7 +1640,7 @@ describe('audited current quest requirements', () => {
           },
           "Desert Treasure I": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "locations",
                 "regions": [
                       "Bandit Camp",
                       "Bedabin Camp",
@@ -1031,7 +1651,177 @@ describe('audited current quest requirements', () => {
                       "Canifis",
                       "Mort Myre Swamp"
                 ],
-                "locations": null,
+                "locations": [
+  {
+    "id": "bedabin-camp",
+    "label": "Bedabin Camp",
+    "standardAreas": [
+      "Bedabin Camp"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 49,
+        "cy": 47
+      }
+    ]
+  },
+  {
+    "id": "digsite-exam-centre",
+    "label": "Digsite Exam Centre",
+    "standardAreas": [
+      "Digsite"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 52,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "bandit-camp",
+    "label": "Bandit Camp",
+    "standardAreas": [
+      "Bandit Camp"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 49,
+        "cy": 46
+      }
+    ]
+  },
+  {
+    "id": "eblis-mirrors",
+    "label": "Eblis mirrors",
+    "standardAreas": [
+      "Bandit Camp"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 46
+      }
+    ]
+  },
+  {
+    "id": "smoke-dungeon-well",
+    "label": "Smoke Dungeon well",
+    "standardAreas": [
+      "Pollnivneach"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 51,
+        "cy": 46
+      }
+    ]
+  },
+  {
+    "id": "rasolo-and-shadow-dungeon-entrance",
+    "label": "Rasolo and Shadow Dungeon entrance",
+    "standardAreas": [
+      "Baxtorian Falls"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "canifis-tavern",
+    "label": "Canifis tavern",
+    "standardAreas": [
+      "Canifis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 54,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "draynor-sewer-entrance",
+    "label": "Draynor sewer entrance",
+    "standardAreas": [
+      "Draynor Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "entrana-church",
+    "label": "Entrana church",
+    "standardAreas": [
+      "Entrana"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "dessous-graveyard",
+    "label": "Dessous graveyard",
+    "standardAreas": [
+      "Mort Myre Swamp"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 55,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "ice-gate-and-kamil",
+    "label": "Ice gate and Kamil",
+    "standardAreas": [
+      "Mountain Camp"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 58
+      }
+    ]
+  },
+  {
+    "id": "ice-path-summit",
+    "label": "Ice Path summit",
+    "standardAreas": [
+      "Mountain Camp"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 59
+      }
+    ]
+  },
+  {
+    "id": "jaldraocht-pyramid",
+    "label": "Jaldraocht Pyramid",
+    "standardAreas": [
+      "Bandit Camp"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 45
+      }
+    ]
+  }
+],
                 "skills": {
                       "Thieving": 53,
                       "Firemaking": 50,
@@ -1054,7 +1844,7 @@ describe('audited current quest requirements', () => {
           },
           "Desert Treasure II": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "locations",
                 "regions": [
                       "Nardah",
                       "Goblin Village",
@@ -1062,7 +1852,164 @@ describe('audited current quest requirements', () => {
                       "The Stranglewood",
                       "Digsite"
                 ],
-                "locations": null,
+                "locations": [
+  {
+    "id": "ancient-vault",
+    "label": "Ancient Vault",
+    "standardAreas": [
+      "Nardah"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 54,
+        "cy": 46
+      }
+    ]
+  },
+  {
+    "id": "exam-centre",
+    "label": "Exam Centre",
+    "standardAreas": [
+      "Digsite"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 52,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "digsite-winch",
+    "label": "Digsite winch",
+    "standardAreas": [
+      "Digsite"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 52,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "wizards-tower",
+    "label": "Wizards' Tower",
+    "standardAreas": [
+      "Wizards' Tower"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "weiss-cave-entrance",
+    "label": "Weiss cave entrance",
+    "standardAreas": [
+      "Weiss"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 61
+      }
+    ]
+  },
+  {
+    "id": "camdozaal-entrance",
+    "label": "Camdozaal entrance",
+    "standardAreas": [
+      "Goblin Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "lovakengj-historian",
+    "label": "Lovakengj historian",
+    "standardAreas": [
+      "Lovakengj"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 22,
+        "cy": 59
+      }
+    ]
+  },
+  {
+    "id": "kasonde-s-house",
+    "label": "Kasonde's house",
+    "standardAreas": [
+      "Hosidius"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 27,
+        "cy": 56
+      }
+    ]
+  },
+  {
+    "id": "stranglewood-entrance",
+    "label": "Stranglewood entrance",
+    "standardAreas": [
+      "The Stranglewood"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 19,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "stranglewood-temple",
+    "label": "Stranglewood temple",
+    "standardAreas": [
+      "The Stranglewood"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 18,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "stranglewood-herb",
+    "label": "Stranglewood herb",
+    "standardAreas": [
+      "The Stranglewood"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 17,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "stranglewood-berry",
+    "label": "Stranglewood berry",
+    "standardAreas": [
+      "The Stranglewood"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 17,
+        "cy": 51
+      }
+    ]
+  }
+],
                 "skills": {
                       "Magic": 75,
                       "Firemaking": 75,
@@ -1325,12 +2272,52 @@ describe('audited current quest requirements', () => {
           },
           "Eagles' Peak": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "locations",
                 "regions": [
                       "Eagles' Peak",
                       "Varrock"
                 ],
-                "locations": null,
+                "locations": [
+  {
+    "id": "ardougne-zoo",
+    "label": "Ardougne Zoo",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "eagles-peak-camp-and-entrance",
+    "label": "Eagles Peak camp and entrance",
+    "standardAreas": [
+      "Eagles' Peak"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 36,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "varrock-fancy-clothes-store",
+    "label": "Varrock fancy clothes store",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 51,
+        "cy": 53
+      }
+    ]
+  }
+],
                 "skills": {
                       "Hunter": 27
                 },
@@ -1376,12 +2363,39 @@ describe('audited current quest requirements', () => {
           },
           "Elemental Workshop II": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "locations",
                 "regions": [
                       "Seers' Village",
                       "Varrock"
                 ],
-                "locations": null,
+                "locations": [
+  {
+    "id": "exam-centre",
+    "label": "Exam Centre",
+    "standardAreas": [
+      "Digsite"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 52,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "elemental-workshop-entrance",
+    "label": "Elemental Workshop entrance",
+    "standardAreas": [
+      "Seers' Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 42,
+        "cy": 54
+      }
+    ]
+  }
+],
                 "skills": {
                       "Magic": 20,
                       "Smithing": 30
@@ -2219,7 +3233,7 @@ describe('audited current quest requirements', () => {
       },
       "The Enchanted Key": {
         "kind": "miniquest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Rellekka",
               "Observatory",
@@ -2232,7 +3246,151 @@ describe('audited current quest requirements', () => {
               "Varrock",
               "Al Kharid"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "location-1",
+    "label": "South east of Rellekka.",
+    "standardAreas": [
+      "Rellekka"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 42,
+        "cy": 56
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "South east of Varrock.",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 51,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "South of Falador",
+    "standardAreas": [
+      "Falador"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "location-4",
+    "label": "North of Al Kharid",
+    "standardAreas": [
+      "Al Kharid"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 51,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "location-5",
+    "label": "Lumbridge Swamp.",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 49,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "location-6",
+    "label": "In the Grand Exchange.",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 49,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "location-7",
+    "label": "Near the Body Altar.",
+    "standardAreas": [
+      "Falador"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 47,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "location-8",
+    "label": "South west of the Tree Gnome Stronghold.",
+    "standardAreas": [
+      "Arandar"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 37,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "location-9",
+    "label": "North of Mudskipper Point.",
+    "standardAreas": [
+      "Port Sarim"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 47,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "location-10",
+    "label": "South of East Ardougne",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "location-11",
+    "label": "Centre of the Tree Gnome Stronghold.",
+    "standardAreas": [
+      "Tree Gnome Stronghold"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 38,
+        "cy": 53
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [
@@ -2378,11 +3536,25 @@ describe('audited current quest requirements', () => {
       },
       "The Frozen Door": {
         "kind": "miniquest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Burthorpe"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "god-wars-dungeon-entrance",
+    "label": "God Wars Dungeon entrance",
+    "standardAreas": [
+      "Burthorpe"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 58
+      }
+    ]
+  }
+],
         "skills": {
           "Agility": 70,
           "Hitpoints": 70,
@@ -2478,12 +3650,39 @@ describe('audited current quest requirements', () => {
       },
       "In Search of Knowledge": {
         "kind": "miniquest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Hosidius",
               "Arceuus"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "forthos-dungeon-entrance",
+    "label": "Forthos Dungeon entrance",
+    "standardAreas": [
+      "Hosidius"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 26,
+        "cy": 55
+      }
+    ]
+  },
+  {
+    "id": "arceuus-library",
+    "label": "Arceuus Library",
+    "standardAreas": [
+      "Arceuus"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 25,
+        "cy": 59
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
@@ -2525,11 +3724,25 @@ describe('audited current quest requirements', () => {
       },
       "Lair of Tarn Razorlor": {
         "kind": "miniquest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Haunted Mine"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "tarn-s-lair-entrance",
+    "label": "Tarn's Lair entrance",
+    "standardAreas": [
+      "Haunted Mine"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 53,
+        "cy": 50
+      }
+    ]
+  }
+],
         "skills": {
           "Slayer": 40
         },
@@ -2544,11 +3757,25 @@ describe('audited current quest requirements', () => {
       },
       "Mage Arena I": {
         "kind": "miniquest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
           "Mage Arena"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "mage-arena-entrance",
+    "label": "Mage Arena entrance",
+    "standardAreas": [
+      "Mage Arena"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 61
+      }
+    ]
+  }
+],
         "skills": {
           "Magic": 60
         },
@@ -2614,11 +3841,25 @@ describe('audited current quest requirements', () => {
       },
       "Vale Totems": {
         "kind": "miniquest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Auburnvale"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "auburnvale-totem",
+    "label": "Auburnvale totem",
+    "standardAreas": [
+      "Auburnvale"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 21,
+        "cy": 52
+      }
+    ]
+  }
+],
         "skills": {
           "Fletching": 20
         },
@@ -2760,12 +4001,39 @@ describe('audited current quest requirements', () => {
   },
   "Getting Ahead": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "Kebos Lowlands",
           "Molch"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "chunkOptions": [
+      {
+        "cx": 19,
+        "cy": 57
+      }
+    ],
+    "id": "river-molch-homestead",
+    "label": "River Molch homestead",
+    "standardAreas": [
+      "Molch"
+    ]
+  },
+  {
+    "chunkOptions": [
+      {
+        "cx": 18,
+        "cy": 56
+      }
+    ],
+    "id": "getting-ahead-cave",
+    "label": "Kebos cave entrance",
+    "standardAreas": [
+      "Kebos Lowlands"
+    ]
+  }
+],
     "skills": {
       "Construction": 26,
       "Crafting": 30
@@ -2779,12 +4047,71 @@ describe('audited current quest requirements', () => {
   },
   "Ghosts Ahoy": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "Port Phasmatys",
           "Fenkenstrain's Castle"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "ectofuntus-stairs",
+    "label": "Ectofuntus staircase",
+    "standardAreas": ["Port Phasmatys"],
+    "chunkOptions": [{ "cx": 57, "cy": 55 }]
+  },
+  {
+    "id": "port-phasmatys",
+    "label": "Port Phasmatys",
+    "standardAreas": [
+      "Port Phasmatys"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 57,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "old-crone-s-house",
+    "label": "Old Crone's house",
+    "standardAreas": [
+      "Fenkenstrain's Castle"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 54,
+        "cy": 55
+      }
+    ]
+  },
+  {
+    "id": "shipwreck",
+    "label": "Shipwreck",
+    "standardAreas": [
+      "Port Phasmatys"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 56,
+        "cy": 55
+      }
+    ]
+  },
+  {
+    "id": "dragontooth-island",
+    "label": "Dragontooth Island",
+    "standardAreas": [
+      "Dragontooth Island"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 59,
+        "cy": 55
+      }
+    ]
+  }
+],
     "skills": {
       "Agility": 25,
       "Cooking": 20
@@ -2830,12 +4157,65 @@ describe('audited current quest requirements', () => {
   },
   "Grim Tales": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "Taverley",
           "Goblin Village"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "location-1",
+    "label": "Sylas and beanstalk",
+    "standardAreas": [
+      "Taverley"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Grimgnash",
+    "standardAreas": [
+      "Taverley"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Rupert tower",
+    "standardAreas": [
+      "Goblin Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "location-4",
+    "label": "Witch house",
+    "standardAreas": [
+      "Taverley"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 54
+      }
+    ]
+  }
+],
     "skills": {
       "Farming": 45,
       "Herblore": 52,
@@ -2887,11 +4267,38 @@ describe('audited current quest requirements', () => {
   },
   "Hazeel Cult": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "East Ardougne"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "carnillean-mansion",
+    "label": "Carnillean mansion",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "cult-cave-and-valves",
+    "label": "Cult cave and valves",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 50
+      }
+    ]
+  }
+],
     "skills": {},
     "combatLevel": null,
     "prereqs": [],
@@ -2946,7 +4353,7 @@ describe('audited current quest requirements', () => {
   },
   "Holy Grail": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "Camelot",
           "Seers' Village",
@@ -2955,7 +4362,99 @@ describe('audited current quest requirements', () => {
           "Draynor Village",
           "Brimhaven"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "camelot-castle",
+    "label": "Camelot Castle",
+    "standardAreas": [
+      "Camelot"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "camelot-staircase",
+    "label": "Camelot staircase",
+    "standardAreas": [
+      "Camelot"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 42,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "entrana-church",
+    "label": "Entrana church",
+    "standardAreas": [
+      "Entrana"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "galahad-s-house",
+    "label": "Galahad's house",
+    "standardAreas": [
+      "Seers' Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "draynor-manor",
+    "label": "Draynor Manor",
+    "standardAreas": [
+      "Draynor Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "goblin-village",
+    "label": "Goblin Village",
+    "standardAreas": [
+      "Goblin Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "fisher-realm-entrance",
+    "label": "Fisher Realm entrance",
+    "standardAreas": [
+      "Brimhaven"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 42,
+        "cy": 50
+      }
+    ]
+  }
+],
     "skills": {
       "Attack": 20
     },
@@ -2970,11 +4469,51 @@ describe('audited current quest requirements', () => {
   },
   "Horror from the Deep": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "Lighthouse"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "lighthouse-entrance",
+    "label": "Lighthouse entrance",
+    "standardAreas": [
+      "Lighthouse"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 56
+      }
+    ]
+  },
+  {
+    "id": "lighthouse-bridge",
+    "label": "Lighthouse bridge",
+    "standardAreas": [
+      "Lighthouse"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 56
+      }
+    ]
+  },
+  {
+    "id": "barbarian-agility-course",
+    "label": "Barbarian agility course",
+    "standardAreas": [
+      "Barbarian Outpost"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 55
+      }
+    ]
+  }
+],
     "skills": {
       "Agility": 35
     },
@@ -2989,11 +4528,38 @@ describe('audited current quest requirements', () => {
   },
   "Icthlarin's Little Helper": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "Sophanem"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "wanderer-s-camp",
+    "label": "Wanderer's camp",
+    "standardAreas": [
+      "Agility Pyramid"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 51,
+        "cy": 44
+      }
+    ]
+  },
+  {
+    "id": "sophanem",
+    "label": "Sophanem",
+    "standardAreas": [
+      "Sophanem"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 51,
+        "cy": 43
+      }
+    ]
+  }
+],
     "skills": {},
     "combatLevel": null,
     "prereqs": [
@@ -3035,11 +4601,64 @@ describe('audited current quest requirements', () => {
   },
   "In Aid of the Myreque": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "Burgh de Rott"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "location-1",
+    "label": "Canifis Myreque passage",
+    "standardAreas": [
+      "Canifis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 54,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Burgh de Rott village",
+    "standardAreas": [
+      "Burgh de Rott"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 54,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Burgh de Rott furnace",
+    "standardAreas": [
+      "Burgh de Rott"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 55,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "location-4",
+    "label": "Paterdomus entrance",
+    "standardAreas": [
+      "Paterdomus"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 53,
+        "cy": 54
+      }
+    ]
+  }
+],
     "skills": {
       "Agility": 25,
       "Crafting": 25,
@@ -3057,13 +4676,53 @@ describe('audited current quest requirements', () => {
   },
   "In Search of the Myreque": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "Canifis",
           "Mort Myre Swamp",
           "Barrows"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "canifis",
+    "label": "Canifis",
+    "standardAreas": [
+      "Canifis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 54,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "mort-ton-boat",
+    "label": "Mort'ton boat",
+    "standardAreas": [
+      "Mort'ton"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 55,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "myreque-bridge-and-hideout-entrance",
+    "label": "Myreque bridge and hideout entrance",
+    "standardAreas": [
+      "Mort Myre Swamp"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 54,
+        "cy": 53
+      }
+    ]
+  }
+],
     "skills": {
       "Agility": 25
     },
@@ -3078,11 +4737,64 @@ describe('audited current quest requirements', () => {
   },
   "Jungle Potion": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "Tai Bwo Wannai"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "location-1",
+    "label": "Trufitus",
+    "standardAreas": [
+      "Tai Bwo Wannai"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Snake weed and sito foil",
+    "standardAreas": [
+      "Tai Bwo Wannai"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 47
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Ardrigal and cave entrance",
+    "standardAreas": [
+      "Tai Bwo Wannai"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "location-4",
+    "label": "Volencia moss",
+    "standardAreas": [
+      "Shilo Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 47
+      }
+    ]
+  }
+],
     "skills": {
       "Herblore": 3
     },
@@ -3097,14 +4809,80 @@ describe('audited current quest requirements', () => {
   },
   "King's Ransom": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "East Ardougne",
           "Seers' Village",
           "Camelot",
           "Edgeville"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "sinclair-mansion",
+    "label": "Sinclair Mansion",
+    "standardAreas": [
+      "Seers' Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 42,
+        "cy": 55
+      }
+    ]
+  },
+  {
+    "id": "seers-village-courthouse",
+    "label": "Seers Village courthouse",
+    "standardAreas": [
+      "Seers' Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 42,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "camelot-statue-and-castle",
+    "label": "Camelot statue and castle",
+    "standardAreas": [
+      "Camelot"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "black-knights-fortress-entrance",
+    "label": "Black Knights Fortress entrance",
+    "standardAreas": [
+      "Edgeville"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 47,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "wizard-cromperty",
+    "label": "Wizard Cromperty",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 41,
+        "cy": 51
+      }
+    ]
+  }
+],
     "skills": {
       "Magic": 45,
       "Defence": 65
@@ -3184,13 +4962,54 @@ describe('audited current quest requirements', () => {
   },
   "Lost City": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "Lumbridge",
           "Zanaris",
           "Entrana"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "location-1",
+    "label": "Swamp adventurers and leprechaun",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 49,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Entrana Dungeon entrance",
+    "standardAreas": [
+      "Entrana"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Zanaris shed",
+    "standardAreas": [
+      "Zanaris",
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 49
+      }
+    ]
+  }
+],
     "skills": {
       "Crafting": 31,
       "Woodcutting": 36
@@ -3234,7 +5053,7 @@ describe('audited current quest requirements', () => {
   },
   "Making Friends with My Arm": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "Burthorpe",
           "Rellekka",
@@ -3242,7 +5061,86 @@ describe('audited current quest requirements', () => {
           "Draynor Village",
           "Varrock"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "troll-stronghold-entrance",
+    "label": "Troll Stronghold entrance",
+    "standardAreas": [
+      "Burthorpe"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 57
+      }
+    ]
+  },
+  {
+    "id": "larry-boat",
+    "label": "Larry boat",
+    "standardAreas": [
+      "Rellekka"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 42,
+        "cy": 58
+      }
+    ]
+  },
+  {
+    "id": "weiss",
+    "label": "Weiss",
+    "standardAreas": [
+      "Weiss"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 61
+      }
+    ]
+  },
+  {
+    "id": "east-weiss",
+    "label": "East Weiss",
+    "standardAreas": [
+      "Weiss"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 61
+      }
+    ]
+  },
+  {
+    "id": "wise-old-man-house",
+    "label": "Wise Old Man house",
+    "standardAreas": [
+      "Draynor Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "varrock-apothecary",
+    "label": "Varrock Apothecary",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 49,
+        "cy": 53
+      }
+    ]
+  }
+],
     "skills": {
       "Firemaking": 66,
       "Mining": 72,
@@ -3284,11 +5182,77 @@ describe('audited current quest requirements', () => {
   },
   "Meat and Greet": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "Civitas illa Fortis"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "location-1",
+    "label": "Emelio and Renata",
+    "standardAreas": [
+      "Civitas illa Fortis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 27,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Fortis spice merchant",
+    "standardAreas": [
+      "Civitas illa Fortis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 26,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Alba farmhouse",
+    "standardAreas": [
+      "Civitas illa Fortis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 24,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "location-4",
+    "label": "Wolf Den entrance",
+    "standardAreas": [
+      "Cam Torum"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 23,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "location-5",
+    "label": "Fortis Colosseum entrance",
+    "standardAreas": [
+      "Civitas illa Fortis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 28,
+        "cy": 48
+      }
+    ]
+  }
+],
     "skills": {},
     "combatLevel": null,
     "prereqs": [
@@ -3301,7 +5265,7 @@ describe('audited current quest requirements', () => {
   },
   "Merlin's Crystal": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "Camelot",
           "Seers' Village",
@@ -3310,7 +5274,86 @@ describe('audited current quest requirements', () => {
           "Port Sarim",
           "Varrock"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "camelot-castle",
+    "label": "Camelot Castle",
+    "standardAreas": [
+      "Camelot"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "camelot-western-staircase",
+    "label": "Camelot western staircase",
+    "standardAreas": [
+      "Camelot"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 42,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "catherby-and-keep-le-faye",
+    "label": "Catherby and Keep Le Faye",
+    "standardAreas": [
+      "Catherby"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "lady-of-the-lake",
+    "label": "Lady of the Lake",
+    "standardAreas": [
+      "Taverley"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "port-sarim-jewellery-shop",
+    "label": "Port Sarim jewellery shop",
+    "standardAreas": [
+      "Port Sarim"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 47,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "varrock-zamorak-altar",
+    "label": "Varrock Zamorak altar",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 52
+      }
+    ]
+  }
+],
     "skills": {},
     "combatLevel": null,
     "prereqs": [],
@@ -3379,13 +5422,118 @@ describe('audited current quest requirements', () => {
   },
   "Monkey Madness I": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "Tree Gnome Stronghold",
           "Ship Yard",
           "Ape Atoll"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "grand-tree",
+    "label": "Grand Tree",
+    "standardAreas": [
+      "Tree Gnome Stronghold"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 38,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "karamja-ship-yard",
+    "label": "Karamja Ship Yard",
+    "standardAreas": [
+      "Ship Yard"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 47
+      }
+    ]
+  },
+  {
+    "id": "crash-island",
+    "label": "Crash Island",
+    "standardAreas": [
+      "Ape Atoll"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 42
+      }
+    ]
+  },
+  {
+    "id": "ape-atoll-valley",
+    "label": "Ape Atoll valley",
+    "standardAreas": [
+      "Ape Atoll"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 42,
+        "cy": 42
+      }
+    ]
+  },
+  {
+    "id": "marim",
+    "label": "Marim",
+    "standardAreas": [
+      "Ape Atoll"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 43
+      }
+    ]
+  },
+  {
+    "id": "ape-atoll-dungeon-entrance",
+    "label": "Ape Atoll dungeon entrance",
+    "standardAreas": [
+      "Ape Atoll"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 42
+      }
+    ]
+  },
+  {
+    "id": "monkey-child",
+    "label": "Monkey child",
+    "standardAreas": [
+      "Ape Atoll"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 42,
+        "cy": 43
+      }
+    ]
+  },
+  {
+    "id": "ardougne-zoo",
+    "label": "Ardougne Zoo",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 51
+      }
+    ]
+  }
+],
     "skills": {},
     "combatLevel": null,
     "prereqs": [
@@ -3494,12 +5642,39 @@ describe('audited current quest requirements', () => {
   },
   "Mourning's End Part II": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "Lletya",
           "West Ardougne"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "location-1",
+    "label": "Lletya / Arianwyn",
+    "standardAreas": [
+      "Lletya"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 36,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Mourner headquarters / Temple of Light passage",
+    "standardAreas": [
+      "West Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 51
+      }
+    ]
+  }
+],
     "skills": {
       "Agility": 65
     },
@@ -3556,13 +5731,79 @@ describe('audited current quest requirements', () => {
   },
   "My Arm's Big Adventure": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "locations",
     "regions": [
           "Burthorpe",
           "East Ardougne",
           "Tai Bwo Wannai"
     ],
-    "locations": null,
+    "locations": [
+  {
+    "id": "troll-stronghold",
+    "label": "Troll Stronghold",
+    "standardAreas": [
+      "Burthorpe"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 57
+      }
+    ]
+  },
+  {
+    "id": "death-plateau-cooking-pot",
+    "label": "Death Plateau cooking pot",
+    "standardAreas": [
+      "Burthorpe"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 56
+      }
+    ]
+  },
+  {
+    "id": "ardougne-dock",
+    "label": "Ardougne dock",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 41,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "brimhaven-dock",
+    "label": "Brimhaven dock",
+    "standardAreas": [
+      "Brimhaven"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "tai-bwo-wannai",
+    "label": "Tai Bwo Wannai",
+    "standardAreas": [
+      "Tai Bwo Wannai"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 48
+      }
+    ]
+  }
+],
     "skills": {
       "Woodcutting": 10,
       "Farming": 29
@@ -3707,11 +5948,25 @@ describe('audited current quest requirements', () => {
       },
       "Sheep Shearer": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Lumbridge"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "fred-farm",
+    "label": "Fred the Farmer",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 49,
+        "cy": 51
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
@@ -3782,14 +6037,67 @@ describe('audited current quest requirements', () => {
       },
       "Pirate's Treasure": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Port Sarim",
               "Falador",
               "Varrock",
               "Musa Point"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "port-sarim-rum",
+    "label": "Port Sarim docks and shop",
+    "standardAreas": [
+      "Port Sarim"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 47,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "musa-rum-crate",
+    "label": "Musa Point rum shop and crate",
+    "standardAreas": [
+      "Musa Point"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "pirate-chest",
+    "label": "Blue Moon Inn",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "falador-treasure",
+    "label": "Falador Park",
+    "standardAreas": [
+      "Falador"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 52
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
@@ -3855,14 +6163,80 @@ describe('audited current quest requirements', () => {
       },
       "Scorpion Catcher": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Barbarian Outpost",
               "Seers' Village",
               "Taverley",
               "Edgeville"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "sorcerers-tower",
+    "label": "Sorcerers Tower",
+    "standardAreas": [
+      "Seers' Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 42,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "seers-village",
+    "label": "Seers Village",
+    "standardAreas": [
+      "Seers' Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 42,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "taverley-dungeon-entrance",
+    "label": "Taverley Dungeon entrance",
+    "standardAreas": [
+      "Taverley"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "edgeville-monastery",
+    "label": "Edgeville Monastery",
+    "standardAreas": [
+      "Edgeville"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 47,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "barbarian-outpost",
+    "label": "Barbarian Outpost",
+    "standardAreas": [
+      "Barbarian Outpost"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 55
+      }
+    ]
+  }
+],
         "skills": {
           "Prayer": 31
         },
@@ -3877,11 +6251,38 @@ describe('audited current quest requirements', () => {
       },
       "Sheep Herder": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "East Ardougne"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "ardougne-church",
+    "label": "Ardougne church",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "sheep-enclosure-and-fields",
+    "label": "Sheep enclosure and fields",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 52
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
@@ -3978,12 +6379,65 @@ describe('audited current quest requirements', () => {
       },
       "Shilo Village": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Shilo Village",
               "Tai Bwo Wannai"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "shilo-village-and-ah-za-rhoon-entrance",
+    "label": "Shilo Village and Ah Za Rhoon entrance",
+    "standardAreas": [
+      "Shilo Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 46
+      }
+    ]
+  },
+  {
+    "id": "tai-bwo-wannai",
+    "label": "Tai Bwo Wannai",
+    "standardAreas": [
+      "Tai Bwo Wannai"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "cairn-isle-tomb-entrance",
+    "label": "Cairn Isle tomb entrance",
+    "standardAreas": [
+      "Shilo Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 46
+      }
+    ]
+  },
+  {
+    "id": "rashiliyia-tomb-entrance",
+    "label": "Rashiliyia tomb entrance",
+    "standardAreas": [
+      "Tai Bwo Wannai"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 48
+      }
+    ]
+  }
+],
         "skills": {
           "Crafting": 20,
           "Agility": 32
@@ -4196,7 +6650,7 @@ describe('audited current quest requirements', () => {
       },
       "One Small Favour": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Feldip Hills",
               "Port Khazard",
@@ -4212,7 +6666,268 @@ describe('audited current quest requirements', () => {
               "Lumbridge",
               "Varrock"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "shilo-village",
+    "label": "Shilo Village",
+    "standardAreas": [
+      "Shilo Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 46
+      }
+    ]
+  },
+  {
+    "id": "kharazi-forester",
+    "label": "Kharazi forester",
+    "standardAreas": [
+      "Kharazi Jungle"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 45
+      }
+    ]
+  },
+  {
+    "id": "port-sarim",
+    "label": "Port Sarim",
+    "standardAreas": [
+      "Port Sarim"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 47,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "draynor-village",
+    "label": "Draynor Village",
+    "standardAreas": [
+      "Draynor Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "h-a-m-hideout-entrance",
+    "label": "H.A.M. hideout entrance",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 49,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "fred-s-farm",
+    "label": "Fred's farm",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 49,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "seth-s-farm",
+    "label": "Seth's farm",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "varrock-armour-shop",
+    "label": "Varrock armour shop",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "varrock-apothecary",
+    "label": "Varrock Apothecary",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 49,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "barbarian-village",
+    "label": "Barbarian Village",
+    "standardAreas": [
+      "Barbarian Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "dwarven-mine-entrance",
+    "label": "Dwarven Mine entrance",
+    "standardAreas": [
+      "Dwarven Mine"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 47,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "taverley",
+    "label": "Taverley",
+    "standardAreas": [
+      "Taverley"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "white-wolf-mountain",
+    "label": "White Wolf Mountain",
+    "standardAreas": [
+      "Taverley"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "catherby",
+    "label": "Catherby",
+    "standardAreas": [
+      "Catherby"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "seers-village",
+    "label": "Seers' Village",
+    "standardAreas": [
+      "Seers' Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 42,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "goblin-cave-entrance",
+    "label": "Goblin cave entrance",
+    "standardAreas": [
+      "Hemenster"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 41,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "ardougne-north-east",
+    "label": "Ardougne north-east",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 41,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "port-khazard",
+    "label": "Port Khazard",
+    "standardAreas": [
+      "Port Khazard"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 41,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "rantz-s-clearing",
+    "label": "Rantz's clearing",
+    "standardAreas": [
+      "Feldip Hills"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 41,
+        "cy": 46
+      }
+    ]
+  },
+  {
+    "id": "feldip-gnome-glider",
+    "label": "Feldip gnome glider",
+    "standardAreas": [
+      "Feldip Hills"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 46
+      }
+    ]
+  }
+],
         "skills": {
           "Agility": 36,
           "Crafting": 25,
@@ -4263,12 +6978,27 @@ describe('audited current quest requirements', () => {
       },
       "Rum Deal": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Port Phasmatys",
               "Braindeath Island"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "location-1",
+    "label": "Pirate Pete / Braindeath Island passage",
+    "standardAreas": [
+      "Braindeath Island",
+      "Port Phasmatys"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 57,
+        "cy": 55
+      }
+    ]
+  }
+],
         "skills": {
           "Farming": 40,
           "Prayer": 47,
@@ -4352,11 +7082,25 @@ describe('audited current quest requirements', () => {
       },
       "RFD: The Cook": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Lumbridge"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "lumbridge-castle",
+    "label": "Lumbridge Castle",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 50
+      }
+    ]
+  }
+],
         "skills": {
           "Cooking": 10
         },
@@ -4371,12 +7115,39 @@ describe('audited current quest requirements', () => {
       },
       "RFD: Dwarf": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Taverley",
               "Falador"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "lumbridge-castle",
+    "label": "Lumbridge Castle",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "white-wolf-tunnel",
+    "label": "White Wolf Mountain tunnel",
+    "standardAreas": [
+      "Taverley"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 54
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [
@@ -4389,11 +7160,38 @@ describe('audited current quest requirements', () => {
       },
       "RFD: Goblins": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Goblin Village"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "lumbridge-castle",
+    "label": "Lumbridge Castle",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "goblin-village-kitchen-entrance",
+    "label": "Goblin Village kitchen entrance",
+    "standardAreas": [
+      "Goblin Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 54
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [
@@ -4406,11 +7204,38 @@ describe('audited current quest requirements', () => {
       },
       "RFD: Pirate Pete": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Port Khazard"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "lumbridge-castle",
+    "label": "Lumbridge Castle",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "port-khazard-diving-departure",
+    "label": "Port Khazard diving departure",
+    "standardAreas": [
+      "Port Khazard"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 41,
+        "cy": 49
+      }
+    ]
+  }
+],
         "skills": {
           "Cooking": 31
         },
@@ -4423,11 +7248,38 @@ describe('audited current quest requirements', () => {
       },
       "RFD: Lumbridge Guide": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Wizards' Tower"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "location-1",
+    "label": "Lumbridge Castle dining room",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Wizards Tower",
+    "standardAreas": [
+      "Wizards' Tower"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 49
+      }
+    ]
+  }
+],
         "skills": {
           "Cooking": 40
         },
@@ -4449,11 +7301,38 @@ describe('audited current quest requirements', () => {
       },
       "RFD: Evil Dave": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Edgeville"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "lumbridge-castle",
+    "label": "Lumbridge Castle",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "evil-dave-s-house",
+    "label": "Evil Dave's house",
+    "standardAreas": [
+      "Edgeville"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 54
+      }
+    ]
+  }
+],
         "skills": {
           "Cooking": 25
         },
@@ -4469,12 +7348,65 @@ describe('audited current quest requirements', () => {
       },
       "RFD: Skrach Uglogwee": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Feldip Hills",
               "Tai Bwo Wannai"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "location-1",
+    "label": "Lumbridge Castle dining room",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Rantz and jubbly hunting",
+    "standardAreas": [
+      "Feldip Hills"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 41,
+        "cy": 46
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Karamja coast fire",
+    "standardAreas": [
+      "Tai Bwo Wannai"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "location-4",
+    "label": "Feldip swamp bubbles",
+    "standardAreas": [
+      "Feldip Hills"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 46
+      }
+    ]
+  }
+],
         "skills": {
           "Cooking": 41,
           "Firemaking": 20
@@ -4490,13 +7422,53 @@ describe('audited current quest requirements', () => {
       },
       "RFD: Sir Amik Varze": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Kharazi Jungle",
               "Draynor Village",
               "Zanaris"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "lumbridge-castle",
+    "label": "Lumbridge Castle",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "draynor-village",
+    "label": "Draynor Village",
+    "standardAreas": [
+      "Draynor Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "zanaris-entrance",
+    "label": "Zanaris entrance",
+    "standardAreas": [
+      "Zanaris"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 49
+      }
+    ]
+  }
+],
         "skills": {
           "Quest Points": 107
         },
@@ -4511,11 +7483,77 @@ describe('audited current quest requirements', () => {
       },
       "RFD: King Awowogei": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Ape Atoll"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "lumbridge-castle",
+    "label": "Lumbridge Castle",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "marim-temple",
+    "label": "Marim temple",
+    "standardAreas": [
+      "Ape Atoll"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 43
+      }
+    ]
+  },
+  {
+    "id": "monkey-agility-course",
+    "label": "Monkey agility course",
+    "standardAreas": [
+      "Ape Atoll"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 42
+      }
+    ]
+  },
+  {
+    "id": "crash-island-snake-pit",
+    "label": "Crash Island snake pit",
+    "standardAreas": [
+      "Ape Atoll"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 42
+      }
+    ]
+  },
+  {
+    "id": "red-banana-tree",
+    "label": "Red banana tree",
+    "standardAreas": [
+      "Ape Atoll"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 42,
+        "cy": 43
+      }
+    ]
+  }
+],
         "skills": {
           "Cooking": 70,
           "Agility": 48
@@ -4531,11 +7569,25 @@ describe('audited current quest requirements', () => {
       },
       "RFD: Finale": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Lumbridge"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "location-1",
+    "label": "Lumbridge Castle portal",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 50
+      }
+    ]
+  }
+],
         "skills": {
           "Quest Points": 175
         },
@@ -4573,13 +7625,79 @@ describe('audited current quest requirements', () => {
       },
       "Swan Song": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Piscatoris Fishing Colony",
               "Yanille",
               "Draynor Village"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "piscatoris-fishing-colony",
+    "label": "Piscatoris Fishing Colony",
+    "standardAreas": [
+      "Piscatoris Fishing Colony"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 36,
+        "cy": 57
+      }
+    ]
+  },
+  {
+    "id": "draynor-village",
+    "label": "Draynor Village",
+    "standardAreas": [
+      "Draynor Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "wizards-guild-basement",
+    "label": "Wizards' Guild basement",
+    "standardAreas": [
+      "Yanille"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "malignius-mortifer",
+    "label": "Malignius Mortifer",
+    "standardAreas": [
+      "Falador"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "crafting-guild",
+    "label": "Crafting Guild",
+    "standardAreas": [
+      "Crafting Guild"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 51
+      }
+    ]
+  }
+],
         "skills": {
           "Quest Points": 100,
           "Magic": 66,
@@ -4766,7 +7884,7 @@ describe('audited current quest requirements', () => {
       },
       "Sins of the Father": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Paterdomus",
               "Burgh de Rott",
@@ -4774,7 +7892,164 @@ describe('audited current quest requirements', () => {
               "Darkmeyer",
               "Slepe"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "slepe",
+    "label": "Slepe",
+    "standardAreas": [
+      "Slepe"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 58,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "slepe-northern-trail",
+    "label": "Slepe northern trail",
+    "standardAreas": [
+      "Slepe"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 58,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "paterdomus",
+    "label": "Paterdomus",
+    "standardAreas": [
+      "Paterdomus"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 53,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "ivan-s-meeting",
+    "label": "Ivan's meeting",
+    "standardAreas": [
+      "Haunted Woods"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 55,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "burgh-de-rott",
+    "label": "Burgh de Rott",
+    "standardAreas": [
+      "Burgh de Rott"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 54,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "burgh-de-rott-boathouse",
+    "label": "Burgh de Rott boathouse",
+    "standardAreas": [
+      "Burgh de Rott"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 55,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "icyene-graveyard",
+    "label": "Icyene Graveyard",
+    "standardAreas": [
+      "Icyene Graveyard"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 57,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "meiyerditch-laboratory-entrance",
+    "label": "Meiyerditch laboratory entrance",
+    "standardAreas": [
+      "Meiyerditch"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 56,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "meiyerditch-hideout-entrance",
+    "label": "Meiyerditch hideout entrance",
+    "standardAreas": [
+      "Meiyerditch"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 56,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "darkmeyer-entrance",
+    "label": "Darkmeyer entrance",
+    "standardAreas": [
+      "Darkmeyer"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 56,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "lower-darkmeyer",
+    "label": "Lower Darkmeyer",
+    "standardAreas": [
+      "Darkmeyer"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 57,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "icyene-graveyard-north",
+    "label": "Icyene Graveyard north",
+    "standardAreas": [
+      "Icyene Graveyard"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 58,
+        "cy": 50
+      }
+    ]
+  }
+],
         "skills": {
           "Agility": 52,
           "Attack": 50,
@@ -4827,12 +8102,91 @@ describe('audited current quest requirements', () => {
       },
       "Secrets of the North": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "East Ardougne",
               "Weiss"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "carnillean-mansion",
+    "label": "Carnillean Mansion",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "fight-arena-bar",
+    "label": "Fight Arena bar",
+    "standardAreas": [
+      "Fight Arena"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "evelot-trail-and-hazeel-cave",
+    "label": "Evelot trail and Hazeel cave",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "evelot-encounter",
+    "label": "Evelot encounter",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 41,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "north-weiss",
+    "label": "North Weiss",
+    "standardAreas": [
+      "Weiss"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 61
+      }
+    ]
+  },
+  {
+    "id": "weiss-cave-entrance",
+    "label": "Weiss cave entrance",
+    "standardAreas": [
+      "Weiss"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 61
+      }
+    ]
+  }
+],
         "skills": {
           "Agility": 69,
           "Thieving": 64,
@@ -4888,11 +8242,51 @@ describe('audited current quest requirements', () => {
       },
       "Shadows of Custodia": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Auburnvale"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "auburnvale",
+    "label": "Auburnvale",
+    "standardAreas": [
+      "Auburnvale"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 21,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "custodia-cave-entrance",
+    "label": "Custodia cave entrance",
+    "standardAreas": [
+      "Auburnvale"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 20,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "ictus-in-east-auburnvale",
+    "label": "Ictus in east Auburnvale",
+    "standardAreas": [
+      "Auburnvale"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 22,
+        "cy": 52
+      }
+    ]
+  }
+],
         "skills": {
           "Slayer": 54,
           "Fishing": 45,
@@ -5172,13 +8566,79 @@ describe('audited current quest requirements', () => {
       },
       "Tale of the Righteous": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Mount Quidamortem",
               "Shayzien",
               "Arceuus"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "chunkOptions": [
+      {
+        "cx": 24,
+        "cy": 55
+      }
+    ],
+    "id": "phileas-house",
+    "label": "Phileas house",
+    "standardAreas": [
+      "Shayzien"
+    ]
+  },
+  {
+    "chunkOptions": [
+      {
+        "cx": 25,
+        "cy": 59
+      }
+    ],
+    "id": "arceuus-archive-entry",
+    "label": "Arceuus Library",
+    "standardAreas": [
+      "Arceuus"
+    ]
+  },
+  {
+    "chunkOptions": [
+      {
+        "cx": 23,
+        "cy": 56
+      }
+    ],
+    "id": "shayzien-war-tent",
+    "label": "Shayzien War Tent",
+    "standardAreas": [
+      "Shayzien"
+    ]
+  },
+  {
+    "chunkOptions": [
+      {
+        "cx": 19,
+        "cy": 55
+      }
+    ],
+    "id": "historian-duffy",
+    "label": "Historian Duffy",
+    "standardAreas": [
+      "Mount Quidamortem"
+    ]
+  },
+  {
+    "chunkOptions": [
+      {
+        "cx": 18,
+        "cy": 55
+      }
+    ],
+    "id": "quidamortem-crevice",
+    "label": "Quidamortem crevice",
+    "standardAreas": [
+      "Mount Quidamortem"
+    ]
+  }
+],
         "skills": {
           "Strength": 16,
           "Mining": 10
@@ -5232,11 +8692,51 @@ describe('audited current quest requirements', () => {
       },
       "Temple of Ikov": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Hemenster"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "ardougne-flying-horse-inn",
+    "label": "Ardougne Flying Horse Inn",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "temple-of-ikov-entrance",
+    "label": "Temple of Ikov entrance",
+    "standardAreas": [
+      "Hemenster"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 41,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "lucien-house",
+    "label": "Lucien house",
+    "standardAreas": [
+      "Edgeville"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 54
+      }
+    ]
+  }
+],
         "skills": {
           "Thieving": 42
         },
@@ -5249,13 +8749,66 @@ describe('audited current quest requirements', () => {
       },
       "Temple of the Eye": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Al Kharid",
               "Wizards' Tower",
               "Varrock"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "al-kharid",
+    "label": "Al Kharid",
+    "standardAreas": [
+      "Al Kharid"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 51,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "varrock-chaos-temple",
+    "label": "Varrock chaos temple",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "varrock-tea-seller",
+    "label": "Varrock tea seller",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 51,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "wizards-tower",
+    "label": "Wizards' Tower",
+    "standardAreas": [
+      "Wizards' Tower"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 49
+      }
+    ]
+  }
+],
         "skills": {
           "Runecraft": 10
         },
@@ -5270,11 +8823,103 @@ describe('audited current quest requirements', () => {
       },
       "The Ascent of Arceuus": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Arceuus"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "location-1",
+    "label": "Mori",
+    "standardAreas": [
+      "Arceuus"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 26,
+        "cy": 58
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Councillor Andrews",
+    "standardAreas": [
+      "Kourend Castle"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 25,
+        "cy": 57
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Tower of Magic",
+    "standardAreas": [
+      "Arceuus"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 24,
+        "cy": 59
+      }
+    ]
+  },
+  {
+    "id": "location-4",
+    "label": "Mount Karuulm entrance",
+    "standardAreas": [
+      "Mount Karuulm"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 20,
+        "cy": 59
+      }
+    ]
+  },
+  {
+    "id": "location-5",
+    "label": "Grave",
+    "standardAreas": [
+      "Lovakengj"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 21,
+        "cy": 58
+      }
+    ]
+  },
+  {
+    "id": "location-6",
+    "label": "Trapped soul tracking",
+    "standardAreas": [
+      "Mount Karuulm"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 20,
+        "cy": 58
+      }
+    ]
+  },
+  {
+    "id": "location-7",
+    "label": "Arceuus altar rocks",
+    "standardAreas": [
+      "Arceuus"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 26,
+        "cy": 60
+      }
+    ]
+  }
+],
         "skills": {
           "Hunter": 12
         },
@@ -5289,13 +8934,66 @@ describe('audited current quest requirements', () => {
       },
       "The Corsair Curse": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Rimmington",
               "Falador",
               "Corsair Cove"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "port-sarim-farm",
+    "label": "Port Sarim farm",
+    "standardAreas": [
+      "Falador"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 47,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "rimmington-departure",
+    "label": "Rimmington departure",
+    "standardAreas": [
+      "Rimmington"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "corsair-cove",
+    "label": "Corsair Cove",
+    "standardAreas": [
+      "Corsair Cove"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 44
+      }
+    ]
+  },
+  {
+    "id": "corsair-ship",
+    "label": "Corsair ship",
+    "standardAreas": [
+      "Corsair Cove"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 44
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
@@ -5333,12 +9031,52 @@ describe('audited current quest requirements', () => {
       },
       "The Depths of Despair": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Hosidius",
               "Arceuus"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "lord-hosidius-house",
+    "label": "Lord Hosidius house",
+    "standardAreas": [
+      "Hosidius"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 27,
+        "cy": 55
+      }
+    ]
+  },
+  {
+    "id": "arceuus-library",
+    "label": "Arceuus Library",
+    "standardAreas": [
+      "Arceuus"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 25,
+        "cy": 59
+      }
+    ]
+  },
+  {
+    "id": "crabclaw-caves-entrance",
+    "label": "Crabclaw Caves entrance",
+    "standardAreas": [
+      "Hosidius"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 25,
+        "cy": 53
+      }
+    ]
+  }
+],
         "skills": {
           "Agility": 18
         },
@@ -5353,12 +9091,52 @@ describe('audited current quest requirements', () => {
       },
       "The Dig Site": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Varrock",
               "Digsite"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "exam-centre",
+    "label": "Exam Centre",
+    "standardAreas": [
+      "Digsite"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 52,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "varrock-museum",
+    "label": "Varrock Museum",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "digsite",
+    "label": "Digsite",
+    "standardAreas": [
+      "Digsite"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 52,
+        "cy": 53
+      }
+    ]
+  }
+],
         "skills": {
           "Agility": 10,
           "Herblore": 10,
@@ -5373,13 +9151,92 @@ describe('audited current quest requirements', () => {
       },
       "The Eyes of Glouphrie": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Tree Gnome Stronghold",
               "Observatory",
               "Feldip Hills"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "brimstail-cave-entrance",
+    "label": "Brimstail cave entrance",
+    "standardAreas": [
+      "Tree Gnome Stronghold"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 37,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "hazelmere-island",
+    "label": "Hazelmere island",
+    "standardAreas": [
+      "Feldip Hills"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 41,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "grand-tree",
+    "label": "Grand Tree",
+    "standardAreas": [
+      "Tree Gnome Stronghold"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 38,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "northwest-gnome-stronghold",
+    "label": "Northwest Gnome Stronghold",
+    "standardAreas": [
+      "Tree Gnome Stronghold"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 37,
+        "cy": 55
+      }
+    ]
+  },
+  {
+    "id": "gnome-stronghold-entrance",
+    "label": "Gnome Stronghold entrance",
+    "standardAreas": [
+      "Tree Gnome Stronghold"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 38,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "gnome-stronghold-spirit-tree",
+    "label": "Gnome Stronghold spirit tree",
+    "standardAreas": [
+      "Tree Gnome Stronghold"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 38,
+        "cy": 53
+      }
+    ]
+  }
+],
         "skills": {
           "Construction": 5,
           "Magic": 46
@@ -5395,12 +9252,39 @@ describe('audited current quest requirements', () => {
       },
       "The Feud": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Al Kharid",
               "Pollnivneach"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "al-kharid",
+    "label": "Al Kharid",
+    "standardAreas": [
+      "Al Kharid"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 51,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "pollnivneach",
+    "label": "Pollnivneach",
+    "standardAreas": [
+      "Pollnivneach"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 52,
+        "cy": 46
+      }
+    ]
+  }
+],
         "skills": {
           "Thieving": 30
         },
@@ -5413,13 +9297,92 @@ describe('audited current quest requirements', () => {
       },
       "The Final Dawn": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Tlati Rainforest",
               "Civitas illa Fortis",
               "Ralos' Rise"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "location-1",
+    "label": "Sunrise Palace",
+    "standardAreas": [
+      "Civitas illa Fortis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 26,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Twilight Temple entrance",
+    "standardAreas": [
+      "Ralos' Rise"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 26,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Captain Vibia hideout",
+    "standardAreas": [
+      "Civitas illa Fortis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 25,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "location-4",
+    "label": "Cam Torum entrance",
+    "standardAreas": [
+      "Cam Torum"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 22,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "location-5",
+    "label": "Tal Teklan",
+    "standardAreas": [
+      "Tlati Rainforest"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 19,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "location-6",
+    "label": "Crypt of Tonali entrance",
+    "standardAreas": [
+      "Tlati Rainforest"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 20,
+        "cy": 47
+      }
+    ]
+  }
+],
         "skills": {
           "Thieving": 66,
           "Fletching": 52,
@@ -5437,11 +9400,51 @@ describe('audited current quest requirements', () => {
       },
       "The Forsaken Tower": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Lovakengj"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "lovakengj-assembly",
+    "label": "Lovakengj Assembly",
+    "standardAreas": [
+      "Lovakengj"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 23,
+        "cy": 58
+      }
+    ]
+  },
+  {
+    "id": "wintertodt-camp",
+    "label": "Wintertodt camp",
+    "standardAreas": [
+      "Wintertodt Camp"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 25,
+        "cy": 61
+      }
+    ]
+  },
+  {
+    "id": "forsaken-tower",
+    "label": "Forsaken Tower",
+    "standardAreas": [
+      "Lovakengj"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 21,
+        "cy": 59
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [
@@ -5481,13 +9484,79 @@ describe('audited current quest requirements', () => {
       },
       "The Fremennik Isles": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Rellekka",
               "Neitiznot",
               "Jatizso"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "location-1",
+    "label": "Mord Gunnars in Rellekka",
+    "standardAreas": [
+      "Rellekka"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 41,
+        "cy": 57
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Jatizso",
+    "standardAreas": [
+      "Jatizso"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 37,
+        "cy": 59
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Neitiznot",
+    "standardAreas": [
+      "Neitiznot"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 36,
+        "cy": 59
+      }
+    ]
+  },
+  {
+    "id": "location-4",
+    "label": "Neitiznot northern bridges",
+    "standardAreas": [
+      "Neitiznot"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 36,
+        "cy": 60
+      }
+    ]
+  },
+  {
+    "id": "location-5",
+    "label": "Ice Troll King cave entrance",
+    "standardAreas": [
+      "Neitiznot"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 37,
+        "cy": 60
+      }
+    ]
+  }
+],
         "skills": {
           "Construction": 20
         },
@@ -5517,11 +9586,64 @@ describe('audited current quest requirements', () => {
       },
       "The Garden of Death": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Molch"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "location-1",
+    "label": "Kebos camp garden",
+    "standardAreas": [
+      "Kebos Lowlands"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 20,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Molch Island garden",
+    "standardAreas": [
+      "Molch"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 21,
+        "cy": 56
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Xeric shrine garden",
+    "standardAreas": [
+      "Molch"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 20,
+        "cy": 56
+      }
+    ]
+  },
+  {
+    "id": "location-4",
+    "label": "Morra garden",
+    "standardAreas": [
+      "Shayzien"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 22,
+        "cy": 54
+      }
+    ]
+  }
+],
         "skills": {
           "Farming": 20
         },
@@ -5534,13 +9656,53 @@ describe('audited current quest requirements', () => {
       },
       "The Giant Dwarf": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Keldagrim",
               "Varrock",
               "Port Sarim"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "keldagrim-entrance",
+    "label": "Keldagrim entrance",
+    "standardAreas": [
+      "Keldagrim"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 42,
+        "cy": 58
+      }
+    ]
+  },
+  {
+    "id": "varrock-castle",
+    "label": "Varrock Castle",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "thurgo-s-hut",
+    "label": "Thurgo's hut",
+    "standardAreas": [
+      "Port Sarim"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 49
+      }
+    ]
+  }
+],
         "skills": {
           "Crafting": 12,
           "Firemaking": 16,
@@ -5575,13 +9737,66 @@ describe('audited current quest requirements', () => {
       },
       "The Grand Tree": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Tree Gnome Stronghold",
               "Feldip Hills",
               "Ship Yard"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "grand-tree-and-glough-house",
+    "label": "Grand Tree and Glough house",
+    "standardAreas": [
+      "Tree Gnome Stronghold"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 38,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "hazelmere-island",
+    "label": "Hazelmere island",
+    "standardAreas": [
+      "Feldip Hills"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 41,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "karamja-shipyard",
+    "label": "Karamja Shipyard",
+    "standardAreas": [
+      "Ship Yard"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 47
+      }
+    ]
+  },
+  {
+    "id": "anita-house",
+    "label": "Anita house",
+    "standardAreas": [
+      "Tree Gnome Stronghold"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 37,
+        "cy": 54
+      }
+    ]
+  }
+],
         "skills": {
           "Agility": 25
         },
@@ -5594,14 +9809,80 @@ describe('audited current quest requirements', () => {
       },
       "The Great Brain Robbery": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Canifis",
               "Mos Le'Harmless",
               "Harmony Island",
               "Edgeville"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "mos-le-harmless",
+    "label": "Mos Le'Harmless",
+    "standardAreas": [
+      "Mos Le'Harmless"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 57,
+        "cy": 46
+      }
+    ]
+  },
+  {
+    "id": "harmony-island",
+    "label": "Harmony Island",
+    "standardAreas": [
+      "Harmony Island"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 59,
+        "cy": 44
+      }
+    ]
+  },
+  {
+    "id": "monastery",
+    "label": "Monastery",
+    "standardAreas": [
+      "Edgeville"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 47,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "fenkenstrain-s-castle",
+    "label": "Fenkenstrain's Castle",
+    "standardAreas": [
+      "Fenkenstrain's Castle"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 55,
+        "cy": 55
+      }
+    ]
+  },
+  {
+    "id": "canifis",
+    "label": "Canifis",
+    "standardAreas": [
+      "Canifis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 54,
+        "cy": 54
+      }
+    ]
+  }
+],
         "skills": {
           "Crafting": 16,
           "Construction": 30,
@@ -5622,14 +9903,80 @@ describe('audited current quest requirements', () => {
       },
       "The Hand in the Sand": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Yanille",
               "Brimhaven",
               "Entrana",
               "Port Sarim"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "location-1",
+    "label": "Bert and Yanille pub",
+    "standardAreas": [
+      "Yanille"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Yanille Wizards Guild",
+    "standardAreas": [
+      "Yanille"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Sandy office",
+    "standardAreas": [
+      "Brimhaven"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "location-4",
+    "label": "Betty shop",
+    "standardAreas": [
+      "Port Sarim"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 47,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "location-5",
+    "label": "Entrana sand pit",
+    "standardAreas": [
+      "Entrana"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 52
+      }
+    ]
+  }
+],
         "skills": {
           "Thieving": 17,
           "Crafting": 49
@@ -5666,11 +10013,51 @@ describe('audited current quest requirements', () => {
       },
       "The Ides of Milk": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Lumbridge"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "cassius-s-pond",
+    "label": "Cassius's pond",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 49,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "gillie-s-cow-field",
+    "label": "Gillie's cow field",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "lumbridge-castle",
+    "label": "Lumbridge Castle",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 50
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
@@ -5681,14 +10068,67 @@ describe('audited current quest requirements', () => {
       },
       "The Knight's Sword": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Falador",
               "Port Sarim",
               "Asgarnian Ice Dungeon",
               "Varrock"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "location-1",
+    "label": "Falador Castle",
+    "standardAreas": [
+      "Falador"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Varrock Palace library",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Thurgo hut",
+    "standardAreas": [
+      "Port Sarim"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "location-4",
+    "label": "Asgarnian Ice Dungeon entrance",
+    "standardAreas": [
+      "Asgarnian Ice Dungeon"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 47,
+        "cy": 49
+      }
+    ]
+  }
+],
         "skills": {
           "Mining": 10
         },
@@ -5701,13 +10141,66 @@ describe('audited current quest requirements', () => {
       },
       "The Lost Tribe": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Lumbridge",
               "Varrock",
               "Goblin Village"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "lumbridge-castle",
+    "label": "Lumbridge Castle",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "varrock-castle-library",
+    "label": "Varrock Castle Library",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "goblin-village",
+    "label": "Goblin Village",
+    "standardAreas": [
+      "Goblin Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "ham-hideout-entrance",
+    "label": "HAM hideout entrance",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 49,
+        "cy": 50
+      }
+    ]
+  }
+],
         "skills": {
           "Agility": 13,
           "Mining": 17,
@@ -5751,12 +10244,52 @@ describe('audited current quest requirements', () => {
       },
       "The Queen of Thieves": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Hosidius",
               "Piscarilius"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "location-1",
+    "label": "Tomas Lawry",
+    "standardAreas": [
+      "Piscarilius"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 28,
+        "cy": 59
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Piscarilius streets / Warrens entrance",
+    "standardAreas": [
+      "Piscarilius"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 28,
+        "cy": 58
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Councillor Hughes house",
+    "standardAreas": [
+      "Hosidius"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 26,
+        "cy": 57
+      }
+    ]
+  }
+],
         "skills": {
           "Thieving": 20
         },
@@ -5791,11 +10324,64 @@ describe('audited current quest requirements', () => {
       },
       "The Restless Ghost": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Lumbridge"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "lumbridge-church",
+    "label": "Lumbridge church",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "urhney-hut",
+    "label": "Father Urhney hut",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 49,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "lumbridge-graveyard",
+    "label": "Lumbridge graveyard",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "ghost-skull-entry",
+    "label": "Wizards' Tower basement entrance",
+    "standardAreas": [
+      "Wizards' Tower"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 49
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
@@ -5806,11 +10392,25 @@ describe('audited current quest requirements', () => {
       },
       "The Ribbiting Tale": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Avium Savannah"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "locus-oasis",
+    "label": "Locus Oasis",
+    "standardAreas": [
+      "Avium Savannah"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 26,
+        "cy": 46
+      }
+    ]
+  }
+],
         "skills": {
           "Woodcutting": 15
         },
@@ -5871,11 +10471,38 @@ describe('audited current quest requirements', () => {
       },
       "Throne of Miscellania": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Miscellania & Etceteria"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "miscellania-castle",
+    "label": "Miscellania Castle",
+    "standardAreas": [
+      "Miscellania & Etceteria"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 60
+      }
+    ]
+  },
+  {
+    "id": "etceteria-castle",
+    "label": "Etceteria Castle",
+    "standardAreas": [
+      "Miscellania & Etceteria"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 60
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [
@@ -5889,11 +10516,25 @@ describe('audited current quest requirements', () => {
       },
       "Tower of Life": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "East Ardougne"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "location-1",
+    "label": "Tower of Life",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 41,
+        "cy": 50
+      }
+    ]
+  }
+],
         "skills": {
           "Construction": 10
         },
@@ -5906,11 +10547,51 @@ describe('audited current quest requirements', () => {
       },
       "Tree Gnome Village": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Gnome Village"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "khazard-battlefield",
+    "label": "Khazard battlefield",
+    "standardAreas": [
+      "Port Khazard"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "tree-gnome-village",
+    "label": "Tree Gnome Village",
+    "standardAreas": [
+      "Gnome Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "khazard-warlord",
+    "label": "Khazard warlord",
+    "standardAreas": [
+      "West Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 38,
+        "cy": 51
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
@@ -5921,12 +10602,39 @@ describe('audited current quest requirements', () => {
       },
       "Tribal Totem": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Brimhaven",
               "East Ardougne"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "brimhaven",
+    "label": "Brimhaven",
+    "standardAreas": [
+      "Brimhaven"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "ardougne-depot-and-mansion",
+    "label": "Ardougne depot and mansion",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 41,
+        "cy": 51
+      }
+    ]
+  }
+],
         "skills": {
           "Thieving": 21
         },
@@ -5939,12 +10647,78 @@ describe('audited current quest requirements', () => {
       },
       "Troll Romance": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Burthorpe",
               "Warriors' Guild"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "location-1",
+    "label": "Troll Stronghold entrance",
+    "standardAreas": [
+      "Burthorpe"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 57
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Tenzing",
+    "standardAreas": [
+      "Warriors' Guild"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 55
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Dunstan",
+    "standardAreas": [
+      "Burthorpe"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 55
+      }
+    ]
+  },
+  {
+    "id": "location-4",
+    "label": "Trollweiss cave entrance",
+    "standardAreas": [
+      "Mountain Camp"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 58
+      }
+    ]
+  },
+  {
+    "id": "location-5",
+    "label": "Trollweiss sled slope and flowers",
+    "standardAreas": [
+      "Mountain Camp"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 43,
+        "cy": 59
+      }
+    ]
+  }
+],
         "skills": {
           "Agility": 28
         },
@@ -5959,11 +10733,51 @@ describe('audited current quest requirements', () => {
       },
       "Troll Stronghold": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Burthorpe"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "burthorpe",
+    "label": "Burthorpe",
+    "standardAreas": [
+      "Burthorpe"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 55
+      }
+    ]
+  },
+  {
+    "id": "troll-arena",
+    "label": "Troll Arena",
+    "standardAreas": [
+      "Burthorpe"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 56
+      }
+    ]
+  },
+  {
+    "id": "troll-stronghold-entrance",
+    "label": "Troll Stronghold entrance",
+    "standardAreas": [
+      "Burthorpe"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 44,
+        "cy": 57
+      }
+    ]
+  }
+],
         "skills": {
           "Agility": 15
         },
@@ -5978,14 +10792,93 @@ describe('audited current quest requirements', () => {
       },
       "Troubled Tortugans": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Remote Island",
               "The Summer Shore",
               "The Great Conch",
               "The Little Pearl"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "remote-island",
+    "label": "Remote Island",
+    "standardAreas": [
+      "Remote Island"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 46,
+        "cy": 40
+      }
+    ]
+  },
+  {
+    "id": "summer-shore-docks",
+    "label": "Summer Shore docks",
+    "standardAreas": [
+      "The Summer Shore"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 49,
+        "cy": 37
+      }
+    ]
+  },
+  {
+    "id": "west-summer-shore",
+    "label": "West Summer Shore",
+    "standardAreas": [
+      "The Summer Shore"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 37
+      }
+    ]
+  },
+  {
+    "id": "great-conch-western-trail",
+    "label": "Great Conch western trail",
+    "standardAreas": [
+      "The Great Conch"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 38
+      }
+    ]
+  },
+  {
+    "id": "great-conch-grove",
+    "label": "Great Conch grove",
+    "standardAreas": [
+      "The Great Conch"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 49,
+        "cy": 38
+      }
+    ]
+  },
+  {
+    "id": "little-pearl",
+    "label": "Little Pearl",
+    "standardAreas": [
+      "The Little Pearl"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 52,
+        "cy": 34
+      }
+    ]
+  }
+],
         "skills": {
           "Slayer": 51,
           "Construction": 48,
@@ -6005,12 +10898,117 @@ describe('audited current quest requirements', () => {
       },
       "Twilight's Promise": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Ralos' Rise",
               "Civitas illa Fortis"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "location-1",
+    "label": "Sunrise Palace",
+    "standardAreas": [
+      "Civitas illa Fortis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 26,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Fortis temple and bazaar",
+    "standardAreas": [
+      "Civitas illa Fortis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 26,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Fortis knight and pub",
+    "standardAreas": [
+      "Civitas illa Fortis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 27,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "location-4",
+    "label": "Cothon crate",
+    "standardAreas": [
+      "Civitas illa Fortis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 27,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "location-5",
+    "label": "Colosseum entrance",
+    "standardAreas": [
+      "Civitas illa Fortis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 28,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "location-6",
+    "label": "Fortis fountain",
+    "standardAreas": [
+      "Civitas illa Fortis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 27,
+        "cy": 47
+      }
+    ]
+  },
+  {
+    "id": "location-7",
+    "label": "Kualti headquarters",
+    "standardAreas": [
+      "Civitas illa Fortis"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 25,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "location-8",
+    "label": "Teomat",
+    "standardAreas": [
+      "Ralos' Rise"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 22,
+        "cy": 49
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [
@@ -6023,12 +11021,39 @@ describe('audited current quest requirements', () => {
       },
       "Underground Pass": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "East Ardougne",
               "West Ardougne"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "east-ardougne-castle",
+    "label": "East Ardougne Castle",
+    "standardAreas": [
+      "East Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "underground-pass-entrance",
+    "label": "Underground Pass entrance",
+    "standardAreas": [
+      "West Ardougne"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 38,
+        "cy": 51
+      }
+    ]
+  }
+],
         "skills": {
           "Ranged": 25
         },
@@ -6043,12 +11068,52 @@ describe('audited current quest requirements', () => {
       },
       "Vampyre Slayer": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Draynor Village",
               "Varrock"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "morgan-house",
+    "label": "Morgan house",
+    "standardAreas": [
+      "Draynor Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "harlow-inn",
+    "label": "Blue Moon Inn",
+    "standardAreas": [
+      "Varrock"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "vampyre-manor",
+    "label": "Draynor Manor entrance",
+    "standardAreas": [
+      "Draynor Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 52
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
@@ -6084,11 +11149,64 @@ describe('audited current quest requirements', () => {
       },
       "Watchtower": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Yanille"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "watchtower-and-yanille-ogres",
+    "label": "Watchtower and Yanille ogres",
+    "standardAreas": [
+      "Yanille"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "southern-gu-tanoth-tunnel-entrance",
+    "label": "Southern Gu Tanoth tunnel entrance",
+    "standardAreas": [
+      "Feldip Hills"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 46
+      }
+    ]
+  },
+  {
+    "id": "gu-tanoth-island",
+    "label": "Gu Tanoth island",
+    "standardAreas": [
+      "Feldip Hills"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 47
+      }
+    ]
+  },
+  {
+    "id": "gu-tanoth-and-skavid-cave-entrances",
+    "label": "Gu Tanoth and Skavid cave entrances",
+    "standardAreas": [
+      "Feldip Hills"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 47
+      }
+    ]
+  }
+],
         "skills": {
           "Magic": 14,
           "Thieving": 15,
@@ -6105,12 +11223,52 @@ describe('audited current quest requirements', () => {
       },
       "Waterfall Quest": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Gnome Village",
               "Baxtorian Falls"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "baxtorian-falls",
+    "label": "Baxtorian Falls",
+    "standardAreas": [
+      "Baxtorian Falls"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "hadley-s-house-and-glarial-s-tomb",
+    "label": "Hadley's house and Glarial's Tomb",
+    "standardAreas": [
+      "Baxtorian Falls"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "tree-gnome-village-dungeon-entrance",
+    "label": "Tree Gnome Village dungeon entrance",
+    "standardAreas": [
+      "Gnome Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 49
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
@@ -6182,11 +11340,25 @@ describe('audited current quest requirements', () => {
       },
       "Witch's House": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Taverley"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "witch-s-house",
+    "label": "Witch's House",
+    "standardAreas": [
+      "Taverley"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 45,
+        "cy": 54
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
@@ -6226,13 +11398,66 @@ describe('audited current quest requirements', () => {
       },
       "X Marks the Spot": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Lumbridge",
               "Draynor Village",
               "Port Sarim"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "location-1",
+    "label": "Lumbridge pub and castle clues",
+    "standardAreas": [
+      "Lumbridge"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 50,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "location-2",
+    "label": "Draynor north clue",
+    "standardAreas": [
+      "Draynor Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "location-3",
+    "label": "Draynor market clue",
+    "standardAreas": [
+      "Draynor Village"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 48,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "location-4",
+    "label": "Veos in Port Sarim",
+    "standardAreas": [
+      "Port Sarim"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 47,
+        "cy": 50
+      }
+    ]
+  }
+],
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
@@ -6243,12 +11468,52 @@ describe('audited current quest requirements', () => {
       },
       "Zogre Flesh Eaters": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Feldip Hills",
               "Yanille"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "jiggig-entrance",
+    "label": "Jiggig entrance",
+    "standardAreas": [
+      "Feldip Hills"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 38,
+        "cy": 47
+      }
+    ]
+  },
+  {
+    "id": "east-yanille",
+    "label": "East Yanille",
+    "standardAreas": [
+      "Yanille"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 40,
+        "cy": 48
+      }
+    ]
+  },
+  {
+    "id": "west-yanille-dragon-inn",
+    "label": "West Yanille Dragon Inn",
+    "standardAreas": [
+      "Yanille"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 39,
+        "cy": 48
+      }
+    ]
+  }
+],
         "skills": {
           "Smithing": 4,
           "Herblore": 8,
@@ -6279,7 +11544,7 @@ describe('audited current quest requirements', () => {
       },
       "The Blood Moon Rises": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
               "Paterdomus",
               "Icyene Graveyard",
@@ -6290,7 +11555,138 @@ describe('audited current quest requirements', () => {
               "Burgh de Rott",
               "Barrows"
         ],
-        "locations": null,
+        "locations": [
+  {
+    "id": "icyene-graveyard",
+    "label": "Icyene Graveyard",
+    "standardAreas": [
+      "Icyene Graveyard"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 57,
+        "cy": 49
+      }
+    ]
+  },
+  {
+    "id": "old-man-ral-hideout-entrance",
+    "label": "Old Man Ral hideout entrance",
+    "standardAreas": [
+      "Meiyerditch"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 56,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "slepe-church",
+    "label": "Slepe church",
+    "standardAreas": [
+      "Slepe"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 58,
+        "cy": 51
+      }
+    ]
+  },
+  {
+    "id": "crombwick-manor",
+    "label": "Crombwick Manor",
+    "standardAreas": [
+      "Slepe"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 58,
+        "cy": 52
+      }
+    ]
+  },
+  {
+    "id": "paterdomus-entrance",
+    "label": "Paterdomus entrance",
+    "standardAreas": [
+      "Paterdomus"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 53,
+        "cy": 54
+      }
+    ]
+  },
+  {
+    "id": "haunted-woods",
+    "label": "Haunted Woods",
+    "standardAreas": [
+      "Haunted Woods"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 56,
+        "cy": 53
+      }
+    ]
+  },
+  {
+    "id": "burgh-de-rott-hideout",
+    "label": "Burgh de Rott hideout",
+    "standardAreas": [
+      "Burgh de Rott"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 54,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "theatre-of-blood",
+    "label": "Theatre of Blood",
+    "standardAreas": [
+      "Ver Sinhaza"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 57,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "abandoned-laboratory-entrance",
+    "label": "Abandoned laboratory entrance",
+    "standardAreas": [
+      "Burgh de Rott"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 55,
+        "cy": 50
+      }
+    ]
+  },
+  {
+    "id": "barrows-broken-fence",
+    "label": "Barrows broken fence",
+    "standardAreas": [
+      "Barrows"
+    ],
+    "chunkOptions": [
+      {
+        "cx": 55,
+        "cy": 51
+      }
+    ]
+  }
+],
         "skills": {
           "Slayer": 74,
           "Woodcutting": 74,

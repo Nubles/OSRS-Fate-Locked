@@ -44,6 +44,7 @@ describe('RelaySyncService', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
@@ -174,6 +175,74 @@ describe('RelaySyncService', () => {
     expect(service.enabled).toBe(false);
     expect(service.status).toBe('off');
     expect(removeItem).toHaveBeenCalledWith(SESSION_KEY);
+  });
+
+  it('serializes same-session writes and drops queued work invalidated by a newer profile', async () => {
+    const { RelaySyncService } = await import('./relaySync');
+    const service = new RelaySyncService();
+    service.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    const first = deferred<{ ok: boolean }>();
+    const fetchMock = vi.fn().mockReturnValueOnce(first.promise).mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+    let queuedCurrent = true;
+    const old = service.push('old');
+    const obsolete = service.push('obsolete', () => queuedCurrent);
+    const latest = service.push('latest');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    queuedCurrent = false;
+    first.resolve({ ok: true });
+    expect(await old).toBe(true);
+    expect(await obsolete).toBe(false);
+    expect(await latest).toBe(true);
+    expect(fetchMock.mock.calls.map(([, options]) => JSON.parse(options.body).payload)).toEqual(['old', 'latest']);
+  });
+
+  it('lets a new pairing publish while the old request never settles', async () => {
+    const { RelaySyncService } = await import('./relaySync');
+    const service = new RelaySyncService();
+    const stalled = deferred<{ ok: boolean }>();
+    const fetchMock = vi.fn().mockReturnValueOnce(stalled.promise).mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+    service.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    const old = service.push('old');
+    const queued = service.push('old queued');
+    service.adoptCode('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+    expect(await service.push('new')).toBe(true);
+    expect(await old).toBe(false);
+    expect(await queued).toBe(false);
+    expect(fetchMock.mock.calls[0][1].signal.aborted).toBe(true);
+    expect(fetchMock.mock.calls.map(([, options]) => JSON.parse(options.body).payload)).toEqual(['old', 'new']);
+    expect(service.status).toBe('synced');
+  });
+
+  it('bounds a stalled request and allows the queued current payload to proceed', async () => {
+    vi.useFakeTimers();
+    const { RelaySyncService } = await import('./relaySync');
+    const service = new RelaySyncService();
+    service.enable();
+    const fetchMock = vi.fn().mockReturnValueOnce(new Promise(() => {})).mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+    const old = service.push('old');
+    const latest = service.push('latest');
+    await vi.advanceTimersByTimeAsync(20_000);
+    expect(await old).toBe(false);
+    expect(await latest).toBe(true);
+    expect(fetchMock.mock.calls[0][1].signal.aborted).toBe(true);
+    expect(service.status).toBe('synced');
+  });
+
+  it('continues the publish queue after a failed older request', async () => {
+    const { RelaySyncService } = await import('./relaySync');
+    const service = new RelaySyncService();
+    service.enable();
+    const first = deferred<{ ok: boolean }>();
+    vi.stubGlobal('fetch', vi.fn().mockReturnValueOnce(first.promise).mockResolvedValue({ ok: true }));
+    const old = service.push('old');
+    const latest = service.push('latest');
+    first.reject(new Error('offline'));
+    expect(await old).toBe(false);
+    expect(await latest).toBe(true);
+    expect(service.status).toBe('synced');
   });
 });
 

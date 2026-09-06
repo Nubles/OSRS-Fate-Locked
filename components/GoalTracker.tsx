@@ -8,7 +8,6 @@ import { RESOURCE_MAP } from '../data/resourceData';
 import { TableType } from '../types';
 import { calculateGoalProgress, GoalProgress } from '../utils/goalLogic';
 import { calculateEngineItemProgress } from '../utils/supplyChain';
-import { evaluateDiaryTierEligibility } from '../utils/journalStatus';
 import { Pin, Trash2, CheckCircle2, AlertCircle, Route } from 'lucide-react';
 import { GoalRouteView } from './GoalRouteView';
 import { enforcedQuestAreas } from '../utils/questGeographyDisplay';
@@ -56,16 +55,7 @@ export const GoalTracker: React.FC = () => {
           let progress: GoalProgress;
           let description: string | undefined;
           if (diary) {
-            const eligibility = evaluateDiaryTierEligibility(diary, unlocks, gameModeId);
-            const total = eligibility.evidence.length + eligibility.blockers.length;
-            progress = {
-              percentage: eligibility.eligible || eligibility.status === 'COMPLETED'
-                ? 100
-                : total === 0 ? 0 : Math.round((eligibility.evidence.length / total) * 100),
-              missing: eligibility.blockers.map(blocker => blocker.label),
-              totalSteps: total,
-              completedSteps: eligibility.evidence.length,
-            };
+            progress = calculateGoalProgress({ id, category: TableType.DIARIES, regions: [], skills: {} }, unlocks, gameModeId);
             description = `Region: ${diary.region} | Difficulty: ${diary.tier}`;
           } else if (req) {
             progress = calculateGoalProgress(req, unlocks, gameModeId);

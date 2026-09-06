@@ -205,7 +205,7 @@ const gateKey = (gate: RouteGate): string => {
     case 'QUEST':
       return `QUEST:${gate.questId}`;
     case 'SKILL':
-      return `SKILL:${gate.skill}:${gate.level}`;
+      return `SKILL:${gate.semantics ?? 'method'}:${gate.skill}:${gate.level}`;
     case 'UNLOCK':
       return `UNLOCK:${gate.category}:${gate.id}`;
     case 'UNRESOLVED':
@@ -225,17 +225,19 @@ const uniqueGates = (gates: readonly RouteGate[]): RouteGate[] => {
 
 const routeRequirementCosts = (steps: readonly RouteStep[]) => {
   const requiredLevels = new Map<string, number>();
+  const methodSkills = new Set<string>();
   let consumedIngredientCost = 0;
   for (const step of steps) {
     if (step.consumed) consumedIngredientCost += step.quantity ?? 0;
     for (const gate of step.gates) {
       if (gate.type !== 'SKILL') continue;
+      if (gate.semantics !== 'actual') methodSkills.add(gate.skill);
       requiredLevels.set(gate.skill, Math.max(requiredLevels.get(gate.skill) ?? 0, gate.level));
     }
   }
   return {
     consumedIngredientCost,
-    skillUnlockCost: requiredLevels.size,
+    skillUnlockCost: methodSkills.size,
     skillLevelCost: [...requiredLevels.values()].reduce((sum, level) => sum + level, 0),
   };
 };
@@ -665,7 +667,7 @@ const stationCandidates = (
         const accessEvidenceMissing = stationRequirements === undefined;
         const gates = uniqueGates([
           ...recipe.gates,
-          ...compileRawRequirements(stationRequirements?.(name, station.entityKind, chunk) ?? []),
+          ...compileRawRequirements(stationRequirements?.(name, station.entityKind, chunk) ?? [], 'RECIPE'),
         ]);
         const evaluation = evaluateRouteGates(gates, snapshot.unlocks);
         resolved.push({
@@ -821,6 +823,7 @@ const combineStationChoices = (
   interface RouteFacts {
     chunkSequence: ChunkKey[];
     skillRequirements: Array<[string, number]>;
+    methodSkills: string[];
   }
   const routeFacts = new WeakMap<ItemRoute, RouteFacts>();
   const factsFor = (route: ItemRoute): RouteFacts => {
@@ -828,18 +831,21 @@ const combineStationChoices = (
     if (cached) return cached;
     const chunkSequence: ChunkKey[] = [];
     const requiredLevels = new Map<string, number>();
+    const methodSkills = new Set<string>();
     for (const step of route.steps) {
       if (step.chunk && chunkSequence[chunkSequence.length - 1] !== step.chunk) {
         chunkSequence.push(step.chunk);
       }
       for (const gate of step.gates) {
         if (gate.type !== 'SKILL') continue;
+        if (gate.semantics !== 'actual') methodSkills.add(gate.skill);
         requiredLevels.set(gate.skill, Math.max(requiredLevels.get(gate.skill) ?? 0, gate.level));
       }
     }
     const facts = {
       chunkSequence,
       skillRequirements: [...requiredLevels.entries()],
+      methodSkills: [...methodSkills],
     };
     routeFacts.set(route, facts);
     return facts;
@@ -855,6 +861,7 @@ const combineStationChoices = (
     const hasBlocker = station.blockers.length > 0
       || choices.some(choice => (choice.route?.blockers.length ?? 0) > 0);
     const requiredLevels = new Map<string, number>();
+    const methodSkills = new Set(station.gates.filter(gate => gate.type === 'SKILL' && gate.semantics !== 'actual').map(gate => (gate as Extract<RouteGate, {type: 'SKILL'}>).skill));
     const addSkillRequirements = (requirements: readonly [string, number][]) => {
       for (const [skill, level] of requirements) {
         requiredLevels.set(skill, Math.max(requiredLevels.get(skill) ?? 0, level));
@@ -869,6 +876,7 @@ const combineStationChoices = (
       if (!choice.route) continue;
       const facts = factsFor(choice.route);
       addSkillRequirements(facts.skillRequirements);
+      for (const skill of facts.methodSkills) methodSkills.add(skill);
       for (const chunk of facts.chunkSequence) {
         if (chunkSequence[chunkSequence.length - 1] !== chunk) chunkSequence.push(chunk);
       }
@@ -886,7 +894,7 @@ const combineStationChoices = (
       choices.reduce((cost, choice) => cost
         + (choice.dependency.consumed ? choice.dependency.quantity : 0)
         + (choice.route?.consumedIngredientCost ?? 0), 0),
-      requiredLevels.size,
+      methodSkills.size,
       [...requiredLevels.values()].reduce((sum, level) => sum + level, 0),
       preparedRanker.travelCostForChunks(chunkSequence).travelCost,
       probability == null ? (hasRemainingDependencies ? -1 : 1) : -probability,
