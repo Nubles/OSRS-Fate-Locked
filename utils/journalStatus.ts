@@ -222,7 +222,10 @@ export function evaluateQuestEligibility(
     if (predicate.kind === 'all' || predicate.kind === 'any') return predicate.of.flatMap(hardChecks);
     return evaluated.checks;
   };
-  const visibleOperationChecks = new Set(operationPredicates.flatMap(hardChecks));
+  const visibleOperationChecks = new Set(
+    operations.status === 'LOCKED' || operations.status === 'UNKNOWN'
+      ? operationPredicates.flatMap(hardChecks) : [],
+  );
   const manualChecks = [...(quest.manualRequirements ?? []), ...(operations.status === 'NEEDS_CONFIRMATION' ? operations.checks : [])];
   if (operations.status === 'LOCKED' || operations.status === 'UNKNOWN') blockers.push(...operations.checks.map(label => ({ kind: 'requirement' as const, label, ...(!visibleOperationChecks.has(label) ? { internalOnly: true } : {}) })));
   const status: QuestStatus = blockers.some(x => x.kind === 'region') ? 'LOCKED_REGION'

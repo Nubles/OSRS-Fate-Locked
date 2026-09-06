@@ -13,7 +13,7 @@
 import { canonicalQuestUnlocks } from '../data/questCatalog';
 import { QUEST_DATA } from '../data/questData';
 import { evaluateQuestEligibility } from './journalStatus';
-import { computeUnlockImpact } from './unlockImpact';
+import { computeUnlockImpact, prepareUnlockImpactContext } from './unlockImpact';
 
 export interface RankedQuest {
   id: string;
@@ -50,10 +50,12 @@ export function rankAvailableQuests(unlocks: any, gameModeId?: string): RankedQu
       && evaluateQuestEligibility(quest, unlocks, gameModeId).machineEligible,
   );
 
+  // Every candidate shares the same baseline; evaluate it once per ranking.
+  const context = prepareUnlockImpactContext(unlocks, gameModeId);
   return available
     .map((candidate): RankedQuest => {
       const simulated = { ...unlocks, quests: [...unlocks.quests, candidate.id] };
-      const impact = computeUnlockImpact(unlocks, simulated, gameModeId, { includeConditional: true });
+      const impact = computeUnlockImpact(unlocks, simulated, gameModeId, { includeConditional: true, context });
 
       return {
         id: candidate.id,
