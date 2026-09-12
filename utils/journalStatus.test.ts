@@ -257,7 +257,7 @@ describe('reported quest access', () => {
   it("requires Rimmington, not all Asgarnia, for Witch's Potion", () => {
     const quest = QUEST_DATA["Witch's Potion"];
 
-    expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Asgarnia'] })).status)
+    expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Falador'] })).status)
       .toBe('LOCKED_REGION');
     expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Rimmington'] })).status)
       .toBe('AVAILABLE');
@@ -268,7 +268,7 @@ describe('reported quest access', () => {
   it("requires Sinclair Mansion and Seers' Village, not all Kandarin, for Murder Mystery", () => {
     const quest = QUEST_DATA['Murder Mystery'];
 
-    expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Kandarin'] })).status)
+    expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Catherby'] })).status)
       .toBe('LOCKED_REGION');
     expect(evaluateQuestEligibility(quest, unlocked({ regions: ["Seers' Village"] })).status)
       .toBe('AVAILABLE');
@@ -299,7 +299,7 @@ describe('reported quest access', () => {
       points: 1,
       difficulty: DropSource.QUEST_NOVICE,
     } satisfies QuestData;
-    expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Asgarnia'] })))
+    expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Falador'] })))
       .toMatchObject({ status: 'LOCKED_REGION' });
     expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Rimmington'] })))
       .toMatchObject({ status: 'AVAILABLE' });

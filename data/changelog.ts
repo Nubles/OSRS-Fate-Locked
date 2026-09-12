@@ -19,6 +19,29 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-12-unlock-consistency',
+    title: 'Unlocks Stay Consistent',
+    date: '2026-09-12',
+    sections: {
+      fixed: [
+        'Random unlocks and their key cost are saved before the result appears. Reloading resumes the same reveal; Accept Destiny never charges twice.',
+        'The Strategy Guide preserves quest requirements, parent unlocks and diary gates. Activity cards show combat, Quest Point and external entry requirements.',
+        'Forecast and goal odds use the current eligible roll pool. Chunked territory now counts toward run completion and rival comparisons.',
+        'Resource inventory and plans stay with their own run. Unverified sources and access requirements no longer silently count as available.',
+        'Bank-name searches and Collection Log page aliases work correctly, and synchronized log totals refresh together.',
+        'Chunked location checks now require the exact chunk, legacy parent unlocks agree across panels, and Wilderness diary tasks check the actual activity locations.',
+        'Corrected transport, prayer, farming, housing and storage requirements, improved phone controls, and added keyboard access to unlock and Collection Log actions.',
+      ],
+      changed: [
+        'Tutorial Island is free onboarding and no longer costs an area unlock. Existing purchases are refunded automatically.',
+        'Khazard Battlefield and Chaos Altar have their own area unlocks. Existing owners keep access to the locations previously bundled with Port Khazard and Chaos Temple.',
+        'Generic region terrain now explains its completion requirement and lists the remaining area unlocks.',
+        'Collection Log unlock coverage now clearly describes source ownership; check activity readiness before attempting content.',
+        'Older shared resource plans can be copied into the run you choose from the Resource Engine.',
+      ],
+    },
+  },
+  {
     id: '2026-09-04-runelite-relay-reliability',
     title: 'RuneLite Relay Reliability',
     date: '2026-09-04',

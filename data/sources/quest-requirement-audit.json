@@ -3809,7 +3809,7 @@
           "The stable route is wholly on Tutorial Island: Gielinor Guide, survival expert, chefs, quest guide, mining instructor, combat instructor, bank, poll booth, church, magic instructor, then mainland travel."
         ],
         "instances": [
-          "Tutorial Island is rollable/selectable but intentionally mapping-exempt because normal accounts cannot return after leaving; its interiors and tutorial-only spaces remain documented rather than invented as a persistent area gate."
+          "Tutorial Island is completed onboarding, free in every mode and outside the paid area pool. It remains mapping-exempt because normal accounts cannot return after leaving; its interiors and tutorial-only spaces are not persistent area gates."
         ],
         "partialCompletion": [
           "The quest has no skill or quest prerequisite; completion remains strictly user-confirmed, while optional tutorial branches and the initial 48,48 surface chunk do not create a runtime gate."

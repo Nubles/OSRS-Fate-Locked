@@ -97,7 +97,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ onClose }) => {
   const previouslyFocused = useRef<HTMLElement | null>(typeof document === 'undefined' ? null : document.activeElement as HTMLElement | null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
-  const { history, unlocks, gameModeId } = useGame();
+  const { history, unlocks, gameModeId , customMode} = useGame();
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [query, setQuery] = useState(() => defaultFateAnalyticsQuery(Date.now()));
   const [sortConfig, setSortConfig] = useState<{ key: AnalyticsSortKey; direction: SortDirection }>({ key: 'attempts', direction: 'desc' });
@@ -232,7 +232,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ onClose }) => {
                   </table>
                 </div>
               </>}
-              <KeyEconomyEvidenceExport history={history} gameMode={gameModeId ?? 'vanilla'} completionPercent={completionPercent(unlocks)} appVersion={__BUILD_ID__} />
+              <KeyEconomyEvidenceExport history={history} gameMode={gameModeId ?? 'vanilla'} completionPercent={completionPercent(unlocks, gameModeId, customMode)} appVersion={__BUILD_ID__} />
           </section>
         </main>
       </div>

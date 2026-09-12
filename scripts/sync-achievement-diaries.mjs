@@ -205,6 +205,7 @@ const renderRequirementProperties = (requirement) => {
   if (requirement.anyOfRegions?.length > 0) {
     properties.push('anyOfRegions: ' + renderStringArray(requirement.anyOfRegions));
   }
+  if (requirement.locations?.length) properties.push('locations: ' + JSON.stringify(requirement.locations));
   if (requirement.questPoints) properties.push('questPoints: ' + requirement.questPoints);
   if (requirement.manualRequirements?.length > 0) {
     properties.push(
@@ -291,8 +292,16 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
       throw new Error('Invalid Diary requirement ' + field + ' duplicate skills: ' + context);
     }
   }
+  if (requirement.locations !== undefined && (
+    !Array.isArray(requirement.locations) || requirement.locations.length === 0
+    || requirement.locations.some(location => !location || typeof location.label !== 'string' || !location.label.trim()
+      || !Array.isArray(location.chunkOptions) || location.chunkOptions.length === 0
+      || location.chunkOptions.some(coord => !coord || !Number.isInteger(coord.cx) || !Number.isInteger(coord.cy)
+        || coord.cx < 0 || coord.cy < 0 || coord.cx > 255 || coord.cy > 255))
+  )) throw new Error('Invalid Diary requirement locations: ' + context);
   const hasRequirement = Boolean(
     requirement.label
+    || requirement.locations?.length
     || requirement.items?.length
     || Object.keys(requirement.skills ?? {}).length
     || requirement.quests?.length
@@ -382,6 +391,11 @@ export function renderDiaryTasks(snapshot) {
     || left.id.localeCompare(right.id)
   ));
   const lines = [
+    'export interface DiaryLocationRequirement {',
+    '  label: string;',
+    '  chunkOptions: Array<{ cx: number; cy: number }>;',
+    '}',
+    '',
     'export interface DiaryTaskRequirementOption {',
     '  label?: string;',
     '  skills?: Record<string, number>;',
@@ -389,6 +403,7 @@ export function renderDiaryTasks(snapshot) {
     '  quests?: string[];',
     '  cas?: string[];',
     '  regions?: string[];',
+    '  locations?: DiaryLocationRequirement[];',
     '  questPoints?: number;',
     '  manualRequirements?: string[];',
     '  combatLevel?: number;',
@@ -407,6 +422,7 @@ export function renderDiaryTasks(snapshot) {
     '  quests?: string[];',
     '  cas?: string[];',
     '  regions?: string[];',
+    '  locations?: DiaryLocationRequirement[];',
     '  anyOfRegions?: string[];',
     '  questPoints?: number;',
     '  manualRequirements?: string[];',

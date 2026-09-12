@@ -445,7 +445,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center justify-center gap-2 min-w-0 max-w-full">
              {/* Accept .fate files and legacy .json files */}
              <input type="file" ref={fileInputRef} className="hidden" accept=".json,.fate" onChange={handleFileChange} />
 

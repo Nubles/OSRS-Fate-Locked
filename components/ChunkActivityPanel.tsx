@@ -41,6 +41,7 @@ import { isAreaReachable, isBankReachable, bankLocksActive } from '../utils/reac
 import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST, MOBILITY_LIST, BOSSES_LIST } from '../constants';
 import type { ChunkCoord } from '../utils/mapCoords';
 import { WikiLink } from './WikiLink';
+import { chunkUnlockRequirement } from '../utils/chunkLocations';
 import { displayAreaName } from '../data/areaMapPolicy';
 import { ChunkInfoHeader } from './chunk-info/ChunkInfoHeader';
 import { ChunkInfoAccessCard, type ChunkInfoBankState } from './chunk-info/ChunkInfoAccessCard';
@@ -988,6 +989,13 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       />
       {/* Body */}
       <div ref={scrollBodyRef} className="min-w-0 flex-1 overflow-y-auto px-3 pb-3 text-[11px] custom-scrollbar" data-testid="chunk-info-scroll-body">
+        {mode === 'chunk' && (() => {
+          const access = chunkUnlockRequirement(chunk.cx, chunk.cy, unlocks, gameModeId);
+          return <div className="my-3 rounded border border-cyan-900/40 bg-black/20 p-2 text-gray-300" data-testid="chunk-ownership-requirement">
+            <p>{access.text}</p>
+            {access.remaining.length > 0 && <details className="mt-1"><summary className="cursor-pointer text-cyan-300">Remaining areas ({access.remaining.length})</summary><p className="mt-1 text-gray-400">{access.remaining.join(', ')}</p></details>}
+          </div>;
+        })()}
         {failed ? (
           <ChunkInfoBodyState kind="error" onRetry={() => setLoadAttempt(attempt => attempt + 1)} />
         ) : !chunkContentService.ready ? (

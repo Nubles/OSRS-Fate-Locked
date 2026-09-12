@@ -169,7 +169,7 @@ describe('findEasiestPath surfaces the closest unlock route', () => {
 
   it('returns null when the item is already obtainable', () => {
     // Logs are 'Any' region with Woodcutting 1 — available out of the box.
-    expect(findEasiestPath('Logs', emptyState)).toBeNull();
+    expect(findEasiestPath('Logs', { ...emptyState, unlocks: { ...emptyState.unlocks, skills: { Woodcutting: 1 }, levels: { Woodcutting: 1 } } })).toBeNull();
   });
 
   it('returns null for an unknown item', () => {
@@ -253,8 +253,8 @@ describe('calculateEngineItemProgress mirrors the GoalProgress shape', () => {
   });
 
   it('returns 100% for an already-obtainable item', () => {
-    // Logs are 'Any' region with Woodcutting 1 — obtainable on a fresh state.
-    const p = calculateEngineItemProgress('Logs', emptyState)!;
+    // The curated Woodcutting route requires the skill to be unlocked.
+    const p = calculateEngineItemProgress('Logs', { ...emptyState, unlocks: { ...emptyState.unlocks, skills: { Woodcutting: 1 }, levels: { Woodcutting: 1 } } })!;
     expect(p.percentage).toBe(100);
     expect(p.missing).toEqual([]);
   });

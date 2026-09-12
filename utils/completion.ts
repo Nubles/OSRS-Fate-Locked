@@ -11,6 +11,9 @@ import {
   BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST,
   SLAYER_UNLOCKS_LIST,
 } from '../constants';
+import { ALL_CHUNK_KEYS, CHUNKED_START_KEY } from './chunkAdjacency';
+import { bankLocksActive } from './reachability';
+import type { GameModeRules } from '../config/gameModes';
 import { UnlockState } from '../types';
 import { BANK_IDS } from '../data/banks';
 import { visibleAreaUnlocks } from '../data/areaMapPolicy';
@@ -28,17 +31,25 @@ export const COMPLETION_DENOMINATOR =
   // (A Custom banks-off run — no longer selectable — would cap just under 100%.)
   BANK_IDS.length;
 
+export const completionDenominator = (mode?: string, custom?: GameModeRules): number =>
+  COMPLETION_DENOMINATOR + (mode === 'chunked' ? ALL_CHUNK_KEYS.length - 1 - REGIONS_LIST.length : 0)
+  - (bankLocksActive(mode, custom) ? 0 : BANK_IDS.length);
+
 const sum = (o: Record<string, number> | undefined) =>
   o ? Object.values(o).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0) : 0;
 const len = (a: unknown[] | undefined) => (Array.isArray(a) ? a.length : 0);
 
 /** Unlock points the player has accrued. */
-export const playerUnlockPoints = (u: UnlockState): number =>
+export const playerUnlockPoints = (u: UnlockState, mode?: string, custom?: GameModeRules): number =>
   sum(u.skills) + sum(u.equipment) +
-  visibleAreaUnlocks(u.regions).length + len(u.mobility) + len(u.arcana) + len(u.housing) +
+  (mode === 'chunked' ? [...new Set(u.chunks ?? [])].filter(k => k !== CHUNKED_START_KEY && ALL_CHUNK_KEYS.includes(k)).length : visibleAreaUnlocks(u.regions).length) + len(u.mobility) + len(u.arcana) + len(u.housing) +
   len(u.merchants) + len(u.minigames) + len(u.bosses) + len(u.storage) +
-  len(u.guilds) + len(u.farming) + len(u.slayerUnlocks) + len(u.banks);
+  len(u.guilds) + len(u.farming) + len(u.slayerUnlocks) + (bankLocksActive(mode, custom) ? len(u.banks) : 0);
 
 /** Overall completion percentage (0–100, rounded). */
-export const completionPercent = (u: UnlockState): number =>
-  Math.round((playerUnlockPoints(u) / COMPLETION_DENOMINATOR) * 100);
+export const completionPercent = (u: UnlockState, mode?: string, custom?: GameModeRules): number => {
+  const points = playerUnlockPoints(u, mode, custom);
+  const total = completionDenominator(mode, custom);
+  // Do not award complete-run achievements while any unlock points remain.
+  return points >= total ? 100 : Math.max(0, Math.min(99, Math.round(points / total * 100)));
+};

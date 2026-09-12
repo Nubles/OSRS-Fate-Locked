@@ -1,3 +1,4 @@
+import { REGION_GROUPS } from './items';
 import type { ChunkCoord } from '../utils/mapCoords';
 
 export type AreaAliasPolicy =
@@ -161,9 +162,11 @@ export const canonicalizeAreaUnlocks = (
   return { regions, duplicateAliasRefunds, migrated };
 };
 
-/** Canonical, player-visible area ownership; pending aliases remain save credit. */
+/** Player-visible leaf ownership, including legacy parent entitlements; pending credits are excluded. */
 export const visibleAreaUnlocks = (names: readonly string[]): string[] =>
-  canonicalizeAreaUnlocks(names).regions;
+  [...new Set(canonicalizeAreaUnlocks(names).regions
+    .flatMap(name => Object.hasOwn(REGION_GROUPS, name) ? REGION_GROUPS[name] : [name]))]
+    .filter(name => name !== 'Tutorial Island');
 
 /**
  * Resolve duplicate canonical ownership only as far as the current key

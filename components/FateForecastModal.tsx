@@ -4,7 +4,7 @@ import { useGame } from '../context/GameContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';
 import { TableType } from '../types';
-import { getPoolAndStateKey, isValidUnlock } from '../utils/gameEngine';
+import { randomUnlockPool, randomUnlockTables } from '../utils/gameEngine';
 import { keyVelocity, forecastTarget, keysToTarget } from '../utils/fateForecast';
 import { tableDisplayName } from '../utils/tableDisplay';
 
@@ -37,19 +37,19 @@ const fmtDays = (d: number): string => {
 };
 
 export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
-  const { unlocks, keys, history } = useGame();
+  const { unlocks, keys, history, gameModeId, customMode } = useGame();
   useEscapeKey(onClose, true);
 
   const velocity = useMemo(() => keyVelocity(history), [history]);
 
   // One entry per category that still has locked items, with its remaining count.
   const categories = useMemo(() => {
-    return FORECAST_TABLES.map(({ table, singular }) => {
-      const { pool } = getPoolAndStateKey(table);
-      const remaining = pool.filter((item) => isValidUnlock(table, item, unlocks)).length;
+    return randomUnlockTables(gameModeId, customMode).filter(table => table !== TableType.SKILLS && table !== TableType.EQUIPMENT).map(table => {
+      const singular = FORECAST_TABLES.find(t => t.table === table)?.singular ?? 'unlock';
+      const remaining = randomUnlockPool(unlocks, gameModeId, 'key', table, customMode).length;
       return { table, label: tableDisplayName(table), singular, remaining, headline: keysToTarget(remaining).p50 };
     }).filter((c) => c.remaining > 0);
-  }, [unlocks]);
+  }, [unlocks, gameModeId, customMode]);
 
   const [selected, setSelected] = useState<TableType | null>(null);
   const active = useMemo(
@@ -58,11 +58,11 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
   );
 
   const forecast = useMemo(
-    () => (active ? forecastTarget(active.remaining, keys, velocity) : null),
+    () => (active && active.table !== TableType.CHUNKS ? forecastTarget(active.remaining, keys, velocity) : null),
     [active, keys, velocity],
   );
   const completeAll = useMemo(() => {
-    if (!active) return null;
+    if (!active || active.table === TableType.CHUNKS) return null;
     const keysToEarn = Math.max(0, active.remaining - Math.max(0, keys));
     const days = velocity.ok && velocity.keysPerDay > 0 ? keysToEarn / velocity.keysPerDay : null;
     return { totalKeys: active.remaining, days };
@@ -101,7 +101,7 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
         {categories.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-500 gap-3 px-6">
             <Sparkles size={28} className="text-fuchsia-500/40" />
-            <p className="text-[13px]">Every category is fully unlocked — Fate has nothing left to give. 🎉</p>
+            <p className="text-[13px]">No eligible unlocks in these categories right now. Check remaining unlocks and location requirements.</p>
           </div>
         ) : (
           <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2">
@@ -123,11 +123,11 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
                     >
                       <div className="flex-1 min-w-0">
                         <div className={`text-[13px] font-semibold truncate ${isActive ? 'text-fuchsia-200' : 'text-gray-200'}`}>{c.label}</div>
-                        <div className="text-[10px] text-gray-500">{c.remaining} locked</div>
+                        <div className="text-[10px] text-gray-500">{c.remaining} eligible now</div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-[13px] font-bold text-amber-300 leading-none">~{c.headline}</div>
-                        <div className="text-[9px] text-gray-600">keys</div>
+                        <div className="text-[13px] font-bold text-amber-300 leading-none">{c.table === TableType.CHUNKS ? `1/${c.remaining}` : `~${c.headline}`}</div>
+                        <div className="text-[9px] text-gray-600">{c.table === TableType.CHUNKS ? 'next roll odds' : 'keys'}</div>
                       </div>
                       <ChevronRight size={13} className={isActive ? 'text-fuchsia-300' : 'text-gray-600'} />
                     </button>
@@ -138,6 +138,7 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
 
             {/* Detail */}
             <div className="flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-4">
+              {active?.table === TableType.CHUNKS && <p className="text-sm text-gray-300">There are {active.remaining} adjacent chunks eligible now. Your next roll has a 1 in {active.remaining} chance for each. The frontier changes after every roll, so a fixed waiting-time estimate would be misleading.</p>}
               {active && forecast && (
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div>
@@ -168,20 +169,20 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
                       />
                       <div className="absolute top-0 h-full w-0.5 bg-fuchsia-300" style={{ left: `${(forecast.keys.p50 / forecast.keys.remaining) * 100}%` }} />
                     </div>
-                    <p className="text-[9px] text-gray-600 mt-2">Every locked {active.singular} is equally likely, so the wait is the same whichever one you're after.</p>
+                    <p className="text-[9px] text-gray-600 mt-2">Estimates apply to the currently eligible pool and assume no location changes or other spending. Ineligible entries have a 0% chance on the next roll.</p>
                   </div>
 
-                  {/* Complete the whole category */}
+                  {/* Clear the currently eligible pool */}
                   {completeAll && (
                     <div className="rounded-xl bg-[#1a1a1a] border border-white/10 p-4">
                       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-gray-500 mb-2">
-                        <Sparkles size={12} className="text-fuchsia-400" /> Complete all {completeAll.totalKeys}
+                        <Sparkles size={12} className="text-fuchsia-400" /> Clear {completeAll.totalKeys} eligible entries
                       </div>
                       <div className="flex items-baseline gap-2 flex-wrap">
                         <span className="text-xl font-black text-fuchsia-300 leading-none">{completeAll.totalKeys} keys</span>
                         {completeAll.days != null && <span className="text-[11px] text-gray-500">· ≈ {fmtDays(completeAll.days)} at your pace</span>}
                       </div>
-                      <p className="text-[10px] text-gray-600 mt-1">Clearing the category just takes {completeAll.totalKeys} spends here — no luck involved.</p>
+                      <p className="text-[10px] text-gray-600 mt-1">Clearing this eligible pool takes {completeAll.totalKeys} spends, assuming no new locations become accessible.</p>
                     </div>
                   )}
 

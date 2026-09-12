@@ -2,10 +2,12 @@ import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import { isAreaReachable } from './reachability';
+import { isChunkUnlocked } from './chunkAdjacency';
 import { UnlockState } from '../types';
 import type { ChunkCoord } from './mapCoords';
 import {
   AREA_ALIAS_POLICIES,
+  AREA_REFERENCES,
   canonicalAreaName,
   displayAreaName,
 } from '../data/areaMapPolicy';
@@ -43,6 +45,8 @@ export const chunkForPlace = (name: string): ChunkCoord | null => {
   const alias = AREA_ALIAS_POLICIES[trimmed as keyof typeof AREA_ALIAS_POLICIES];
   if (alias?.kind === 'surface-overlap') return alias.chunks[0];
   const canonical = canonicalAreaName(trimmed);
+  const reference = AREA_REFERENCES[canonical as keyof typeof AREA_REFERENCES];
+  if (reference) return reference.chunks[0];
   return PLACE_CHUNK[canonical.toLowerCase()] ?? null;
 };
 
@@ -81,6 +85,7 @@ const nameUnlocked = (name: string, unlocks: UnlockState, gameModeId?: string): 
 /** Sub-area-first unlock check, matching the world map's colouring. */
 export const chunkUnlocked = (cx: number, cy: number, unlocks: UnlockState, gameModeId?: string): boolean => {
   const k = key(cx, cy);
+  if (gameModeId === 'chunked') return isChunkUnlocked(k, unlocks.chunks ?? []);
   const sub = CHUNK_SUB[k];
   if (sub) return nameUnlocked(sub, unlocks, gameModeId);
   const region = CHUNK_REGION[k];
@@ -135,3 +140,23 @@ export const summarisePlaces = (
   return [...seen.values()].sort((a, b) =>
     Number(b.unlocked) - Number(a.unlocked) || a.label.localeCompare(b.label));
 };
+
+/** Explain the actual owner separately from the content dataset's place name. */
+export function chunkUnlockRequirement(cx: number, cy: number, unlocks: UnlockState, gameModeId?: string): {
+  text: string; remaining: string[];
+} {
+  if (gameModeId === 'chunked') return {
+    text: `Chunk ${cx}, ${cy}: ${chunkUnlocked(cx, cy, unlocks, gameModeId) ? 'unlocked' : 'unlock this exact chunk'}.`, remaining: [],
+  };
+  const place = placeOf(cx, cy);
+  if (place.subArea) return { text: `Area unlock: ${place.subArea}.`, remaining: [] };
+  if (!place.region) return { text: 'This location has no mapped area unlock.', remaining: [] };
+  const children = place.region === 'Misthalin' ? MISTHALIN_AREAS : REGION_GROUPS[place.region] ?? [];
+  const remaining = children.filter(area => !isAreaReachable(area, unlocks, gameModeId));
+  const owned = isAreaReachable(place.region, unlocks, gameModeId);
+  return {
+    text: owned ? `${place.region} terrain is unlocked.`
+      : `${place.region} terrain unlocks when all its named areas are unlocked (${children.length - remaining.length}/${children.length}). The region name is not a separate roll.`,
+    remaining: owned ? [] : remaining,
+  };
+}

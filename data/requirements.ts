@@ -18,6 +18,7 @@ export interface ContentRequirement {
   description?: string;
   items?: string[];      // Optional specific item requirements
   alternatives?: ContentAlternativeRequirement[]; // One complete route is sufficient.
+  accessRoutes?: Array<{ label: string; skills?: Record<string, number>; diaries?: string[] }>;
 }
 
 export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
@@ -401,7 +402,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES, // Activity
     regions: ['Wilderness'],
     skills: { 'Mining': 1, 'Fishing': 1, 'Woodcutting': 1 },
-    diaries: ['Wilderness Elite'], // Elite for free entry, otherwise coins
+    // Wilderness Elite waives the entry fee; it is not required to enter.
     description: 'Dark Crabs, Runite Ore, Magic Logs. Note: Pker Hotspot.'
   },
   'Fountain of Rune': {
@@ -453,10 +454,10 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     skills: {},
     description: 'Safe zone. Restoration pool, bank, LMS.'
   },
-  'Chaos Temple (Wilderness)': {
-    id: 'Chaos Temple (Wilderness)',
+  'Chaos Altar (Wilderness)': {
+    id: 'Chaos Altar (Wilderness)',
     category: TableType.MINIGAMES, // Activity
-    regions: ['Wilderness'],
+    regions: ['Chaos Altar'],
     skills: { 'Prayer': 1 },
     description: 'Chaos Altar. 50% chance to save bones (Best Prayer XP).'
   },
@@ -927,7 +928,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.ARCANA,
     regions: ['Misthalin'],
     skills: {},
-    diaries: ['Lumbridge Medium'], // Medium/Hard
+    diaries: ['Lumbridge Elite'],
     description: 'Free High Alchemy charges daily.'
   },
   'Morytania Legs (Burgh de Rott)': {
@@ -952,7 +953,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Kandarin'],
     skills: { 'Fletching': 1 },
     diaries: ['Kandarin Hard'], // Hard
-    description: 'Higher chance of saving enchanted bolt specials.'
+    description: '10% increased chance of enchanted bolt effects activating.'
   },
   'Fremennik Sea Boots (Notes)': {
     id: 'Fremennik Sea Boots Effect',
@@ -967,8 +968,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MOBILITY,
     regions: ['Kharidian Desert'],
     skills: {},
-    diaries: ['Desert Hard'], // Hard
-    description: 'Teleport to Nardah Statue (Elidinis Statuette).'
+    diaries: ['Desert Medium'],
+    description: 'One Nardah teleport daily; Elite grants unlimited teleports into the Elidinis shrine.'
   },
   'Kourend Blessing (Mount)': {
     id: 'Rada\'s Blessing',
@@ -999,12 +1000,15 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   // SPECIFIC BANK ACCESS (Region Locked)
   // ============================================================================
   'Crafting Guild Bank': {
-    id: 'Crafting Guild Bank',
+    id: 'Crafting Guild',
     category: TableType.GUILDS,
     regions: ['Asgarnia'],
-    skills: { 'Crafting': 99 }, // Or hard diary? Usually max cape or hard diary
-    diaries: ['Falador Hard'], // Hard
-    description: 'Closest bank to teleport (Crafting Cape/Diary).'
+    skills: { 'Crafting': 40 },
+    accessRoutes: [
+      { label: 'Falador Hard diary', diaries: ['Falador Hard'] },
+      { label: 'Crafting 99', skills: { Crafting: 99 } },
+    ],
+    description: 'Members bank: Falador Hard diary or 99 Crafting. Wear an apron or suitable cape/hood to enter the guild.'
   },
   'Farming Guild Bank': {
     id: 'Farming Guild Bank',
@@ -1556,8 +1560,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Islands & Others'],
     skills: {},
-    diaries: ['Morytania Hard'], // Hard? Or just Trouble Brewing reqs
-    description: 'Cave Horrors access.'
+    quests: ['Cabin Fever'],
+    description: 'Cave entry. Bring a light source unless the fire pit is lit, and a witchwood icon for protection. Cave horrors require 58 Slayer to kill.'
   },
   'Champions\' Challenge': {
     id: 'Champions\' Challenge',

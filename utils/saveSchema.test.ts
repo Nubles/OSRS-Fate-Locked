@@ -49,6 +49,7 @@ const VALID_RUN_ID = '123e4567-e89b-42d3-a456-426614174000';
 
 const defaultsFixture = (): GameState => ({
   version: CURRENT_SAVE_VERSION,
+  areaUnlockRevision: 1,
   runId: VALID_RUN_ID,
   runRevision: 0,
   keys: 3,
@@ -82,6 +83,7 @@ const defaultsFixture = (): GameState => ({
 
 const fullStateFixture = (): GameState => ({
   version: CURRENT_SAVE_VERSION,
+  areaUnlockRevision: 1,
   runId: VALID_RUN_ID,
   runRevision: 0,
   keys: 17,

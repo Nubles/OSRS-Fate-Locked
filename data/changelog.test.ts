@@ -19,11 +19,11 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-04-runelite-relay-reliability');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-12-unlock-consistency');
   });
 
-  it('announces the RuneLite relay reliability fixes exactly', () => {
-    expect(LATEST_CHANGELOG).toEqual({
+  it('retains the RuneLite relay reliability fixes', () => {
+    expect(CHANGELOG_RELEASES.find(release => release.id === '2026-09-04-runelite-relay-reliability')).toEqual({
       id: '2026-09-04-runelite-relay-reliability',
       title: 'RuneLite Relay Reliability',
       date: '2026-09-04',

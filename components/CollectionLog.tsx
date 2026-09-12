@@ -65,9 +65,9 @@ const Cell = ({ columnIndex, rowIndex, style, data }: any) => {
            group relative flex flex-col items-center justify-center p-1 rounded transition-all duration-200 cursor-pointer h-full border border-transparent
            ${isHighlighted ? 'bg-white/10 ring-1 ring-[#ff981f]' : 'hover:bg-white/5 hover:border-[#ff981f]/30'}
          `}
-         onClick={(e) => handleItemClick(e, item.id, item.name)}
          title={`${item.name} ${isUnlocked ? `(x${count})` : '(Locked)'}`}
        >
+         <button type="button" aria-label={`Log ${item.name}${count ? ` (owned ${count})` : ''}`} onClick={(e) => handleItemClick(e, item.id, item.name)} className="absolute inset-0 z-10 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400" />
          <div className="relative w-10 h-10 flex items-center justify-center">
            <div className={`transition-all duration-300 w-full h-full flex items-center justify-center ${isUnlocked ? 'opacity-100' : 'opacity-30 grayscale blur-[1px] group-hover:blur-0'}`}>
                <LogItemImage name={item.name} />
@@ -85,7 +85,7 @@ const Cell = ({ columnIndex, rowIndex, style, data }: any) => {
            )}
          </div>
          <span className={`text-[8px] mt-1 text-center leading-tight line-clamp-2 w-full ${isUnlocked ? 'text-green-400' : 'text-[#887]'} ${isHighlighted ? 'text-white font-bold' : ''}`}>
-           <WikiLink name={item.name} className="hover:underline decoration-dotted underline-offset-2" />
+           <WikiLink name={item.name} className="relative z-20 hover:underline decoration-dotted underline-offset-2" />
          </span>
          {item.sourcePage && (
              <span className="text-[7px] text-[#ff981f]/60 mt-0.5 text-center leading-none w-full truncate px-1">
@@ -272,7 +272,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
 
   // Reachable %: how much of the log is even obtainable given current unlocks
   // (boss/minigame sources), and which unlocks would open the most new slots.
-  const reach = useMemo(() => collogReachability(unlocks), [unlocks]);
+  const reach = useMemo(() => collogReachability(unlocks), [unlocks, syncVersion]);
   const [showReach, setShowReach] = useState(false);
 
   return (
@@ -299,10 +299,10 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
             </div>
             <button
               onClick={() => setShowReach(s => !s)}
-              title="How much of the log is obtainable with your current unlocks"
+              title="Collection Log source unlock coverage"
               className={`text-xs font-mono px-2 py-1 rounded border transition-colors ${showReach ? 'bg-emerald-900/40 border-emerald-500/50' : 'bg-black/30 border-[#5a5245] hover:border-emerald-500/40'}`}
             >
-              <span className="text-emerald-300">{reach.pct}%</span> <span className="text-[#d4c5b0]">reachable</span>
+              <span className="text-emerald-300">{reach.pct}%</span> <span className="text-[#d4c5b0]">unlock coverage</span>
             </button>
         </div>
       </div>
@@ -312,7 +312,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
         <div className="bg-[#2c241b] border-b-2 border-[#5a5245] px-3 py-2 shrink-0 text-[11px]">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
             <span className="text-[#d4c5b0]">
-              <span className="text-emerald-300 font-bold">{reach.obtainable}</span> / {reach.total} slots obtainable now
+              <span className="text-emerald-300 font-bold">{reach.obtainable}</span> / {reach.total} slots covered by source unlocks
             </span>
             <span className="text-[#d4c5b0]">
               Unlock-gated: <span className="text-white font-mono">{reach.gatedObtainable}/{reach.gatedTotal}</span>
@@ -323,7 +323,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
           </div>
           {reach.suggestions.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[#9a8a73] uppercase tracking-wide text-[9px]">Open most slots:</span>
+              <span className="text-[#9a8a73] uppercase tracking-wide text-[9px]">Expand unlock coverage:</span>
               {reach.suggestions.slice(0, 6).map(s => (
                 <span key={s.tab + s.page} className="px-1.5 py-0.5 rounded bg-black/30 border border-[#5a5245] text-[#d4c5b0]">
                   {s.kind === 'boss' ? '🗡' : '🎯'} {s.unlock} <span className="text-emerald-300 font-mono">+{s.items}</span>
@@ -332,7 +332,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
             </div>
           )}
           <div className="text-[9px] text-[#7a6f5e] mt-1.5 italic">
-            Based on boss/minigame unlocks. Clues &amp; Other slots are counted as always-available (no single gating source), so this % is approximate.
+            Measures source ownership only. Check activity readiness for areas, quests, levels and entry conditions before attempting content. Clues &amp; Other are an approximate baseline, not guaranteed obtainable slots.
           </div>
         </div>
       )}

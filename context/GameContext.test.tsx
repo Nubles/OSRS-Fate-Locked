@@ -2039,7 +2039,7 @@ describe('quest completion integration', () => {
 
   it("leaves the complete run unchanged when Witch's Potion is machine-blocked", () => {
     const current = renderStoredGame('blocked-witch-completion', {
-      unlocks: { regions: ['Asgarnia'] },
+      unlocks: { regions: ['Falador'] },
     });
     const before = providerSnapshot(current());
     let result: ReturnType<Game['completeQuest']> | undefined;
@@ -2059,7 +2059,7 @@ describe('quest completion integration', () => {
 
   it('leaves the complete run unchanged when Murder Mystery is machine-blocked', () => {
     const current = renderStoredGame('blocked-murder-mystery-completion', {
-      unlocks: { regions: ['Kandarin'] },
+      unlocks: { regions: ['Catherby'] },
     });
     const before = providerSnapshot(current());
     let result: ReturnType<Game['completeQuest']> | undefined;

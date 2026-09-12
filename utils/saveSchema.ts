@@ -1,8 +1,11 @@
 import { CUSTOM_RULE_BOUNDS, type GameModeRules } from '../config/gameModes';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { EQUIPMENT_SLOTS } from '../data/items';
+import { migrateAreaUnlocks } from './areaUnlockMigration';
 import { settleCanonicalAreaUnlocks } from '../data/areaMapPolicy';
 import type { FateCompensationState, GameState, LogEntry, RivalState, UnlockState } from '../types';
+import { TableType } from '../types';
+import { getPoolAndStateKey } from './gameEngine';
 import { migrateClogIds } from './clogIdMigrations';
 import { migrateCompletedTaskIds } from './taskIdMigrations';
 import {
@@ -760,7 +763,7 @@ const TOP_LEVEL_KEYS = new Set([
   'bossStandardKeysAwarded', 'clueStandardKeysAwarded',
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
-  'gameModeLocked', 'rngSeed', 'loadout', 'rival', 'linkedAccount',
+  'gameModeLocked', 'rngSeed', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
   'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'fateCompensation',
 ]);
 
@@ -991,6 +994,18 @@ const normalizeState = (
     state.rngSeed = checked.value;
   }
   const selectedCustom = readPreferred(input, defaultRecord, 'customMode');
+  // A reveal is an acknowledgement of an existing award, never a new award.
+  if (own(input, 'pendingUnlock')) {
+    const inspected = inspectRecord(readOwn(input, 'pendingUnlock'), new Set(['id', 'table', 'item', 'costType', 'cost']), 'invalid_field', 'pendingUnlock');
+    if (inspected.ok === false) return inspected;
+    const p = inspected.value;
+    if (typeof p.id !== 'string' || p.id.length === 0 || p.id.length > 200
+      || typeof p.item !== 'string' || !Object.values(TableType).includes(p.table as TableType)
+      || (!getPoolAndStateKey(p.table as TableType).pool.includes(p.item)
+        && !(p.table === TableType.REGIONS && p.item === 'Tutorial Island'))
+      || (p.costType !== 'key' && p.costType !== 'chaosKey') || p.cost !== 1) return invalid('invalid_field', 'pendingUnlock');
+    state.pendingUnlock = { id: p.id, table: p.table as TableType, item: p.item, costType: p.costType, cost: 1 };
+  }
   if (selectedCustom.present) {
     const checked = normalizeCustomMode(selectedCustom.value);
     if (checked.ok === false) return checked;
@@ -1016,11 +1031,17 @@ const normalizeState = (
     state[key] = checked.value;
   }
 
+  if (own(input, 'areaUnlockRevision') && readOwn(input, 'areaUnlockRevision') !== 1) {
+    return invalid('invalid_field', 'areaUnlockRevision');
+  }
+  state.areaUnlockRevision = own(input, 'areaUnlockRevision') ? 1 : undefined;
+  const areaMigrated = migrateAreaUnlocks(state, MAX_COUNTER);
+
   return {
     ok: true,
     value: {
       state,
-      migrated: sourceVersion < CURRENT_SAVE_VERSION
+      migrated: areaMigrated || sourceVersion < CURRENT_SAVE_VERSION
         || unlocks.value.migrated
         || !own(input, 'runId')
         || !own(input, 'runRevision')

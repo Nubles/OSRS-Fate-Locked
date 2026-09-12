@@ -9043,9 +9043,22 @@
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "None",
-      "regions": [
-        "Chaos Temple"
-      ]
+      "locations": [
+        {
+          "label": "Western Chaos Altar",
+          "chunkOptions": [
+            {
+              "cx": 46,
+              "cy": 59
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-09-12",
+        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+      }
     },
     {
       "id": "wilderness_easy_4",
@@ -9059,10 +9072,26 @@
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "Access to the Chaos Altar ( chaos talisman / tiara, catalytic talisman / tiara, or the Abyss )",
-      "anyOfRegions": [
-        "Chaos Temple",
-        "Edgeville"
-      ]
+      "locations": [
+        {
+          "label": "Chaos ruins or Abyss entrance",
+          "chunkOptions": [
+            {
+              "cx": 47,
+              "cy": 56
+            },
+            {
+              "cx": 48,
+              "cy": 55
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-09-12",
+        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+      }
     },
     {
       "id": "wild_easy_3",
@@ -9073,13 +9102,26 @@
       "description": "Kill a Mammoth in the Wilderness.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Ferox Enclave"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Kill a Mammoth.",
-      "sourceRequirements": "Weaponry"
+      "sourceRequirements": "Weaponry",
+      "locations": [
+        {
+          "label": "Wilderness mammoths",
+          "chunkOptions": [
+            {
+              "cx": 49,
+              "cy": 56
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-09-12",
+        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+      }
     },
     {
       "id": "wild_easy_4",
@@ -9109,13 +9151,26 @@
       "description": "Restore some prayer points at the demonic ruins.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Chaos Temple"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Restore points at the Chaos Altar.",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "locations": [
+        {
+          "label": "Demonic Ruins altar",
+          "chunkOptions": [
+            {
+              "cx": 51,
+              "cy": 60
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-09-12",
+        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+      }
     },
     {
       "id": "wilderness_easy_8",
@@ -9164,22 +9219,34 @@
       "classification": "preserved-semantic",
       "previousDescription": "Mine some Iron Ore in the Wilderness.",
       "sourceRequirements": "15 Mining Any pickaxe",
-      "anyOfRegions": [
-        "Ferox Enclave",
-        "Wilderness Volcano",
-        "Chaos Temple",
-        "Rogues' Castle",
-        "Lava Maze",
-        "Wilderness Bandit Camp",
-        "Dark Warriors' Fortress",
-        "Graveyard of Shadows",
-        "Forgotten Cemetery",
-        "Mage Arena",
-        "Scorpia's Cave",
-        "Fountain of Rune",
-        "Wilderness God Wars Dungeon",
-        "Daimon's Crater"
-      ]
+      "locations": [
+        {
+          "label": "Wilderness iron rocks",
+          "chunkOptions": [
+            {
+              "cx": 48,
+              "cy": 55
+            },
+            {
+              "cx": 48,
+              "cy": 58
+            },
+            {
+              "cx": 47,
+              "cy": 61
+            },
+            {
+              "cx": 49,
+              "cy": 61
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-09-12",
+        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+      }
     },
     {
       "id": "wilderness_easy_11",
@@ -9226,7 +9293,8 @@
         "Scorpia's Cave",
         "Fountain of Rune",
         "Wilderness God Wars Dungeon",
-        "Daimon's Crater"
+        "Daimon's Crater",
+        "Chaos Altar"
       ]
     },
     {
@@ -9243,22 +9311,30 @@
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "55 Mining Any pickaxe",
-      "anyOfRegions": [
-        "Ferox Enclave",
-        "Wilderness Volcano",
-        "Chaos Temple",
-        "Rogues' Castle",
-        "Lava Maze",
-        "Wilderness Bandit Camp",
-        "Dark Warriors' Fortress",
-        "Graveyard of Shadows",
-        "Forgotten Cemetery",
-        "Mage Arena",
-        "Scorpia's Cave",
-        "Fountain of Rune",
-        "Wilderness God Wars Dungeon",
-        "Daimon's Crater"
-      ]
+      "locations": [
+        {
+          "label": "Wilderness mithril rocks",
+          "chunkOptions": [
+            {
+              "cx": 48,
+              "cy": 58
+            },
+            {
+              "cx": 47,
+              "cy": 61
+            },
+            {
+              "cx": 49,
+              "cy": 61
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-09-12",
+        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+      }
     },
     {
       "id": "wilderness_med_2",
@@ -9274,22 +9350,26 @@
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "61 Woodcutting Any axe and weaponry",
-      "anyOfRegions": [
-        "Ferox Enclave",
-        "Wilderness Volcano",
-        "Chaos Temple",
-        "Rogues' Castle",
-        "Lava Maze",
-        "Wilderness Bandit Camp",
-        "Dark Warriors' Fortress",
-        "Graveyard of Shadows",
-        "Forgotten Cemetery",
-        "Mage Arena",
-        "Scorpia's Cave",
-        "Fountain of Rune",
-        "Wilderness God Wars Dungeon",
-        "Daimon's Crater"
-      ]
+      "locations": [
+        {
+          "label": "Wilderness Ents",
+          "chunkOptions": [
+            {
+              "cx": 50,
+              "cy": 57
+            },
+            {
+              "cx": 51,
+              "cy": 56
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-09-12",
+        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+      }
     },
     {
       "id": "wild_easy_2",
@@ -9351,22 +9431,42 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Protection from dragonfire recommended if not safe spotting and weaponry to slay it",
-      "anyOfRegions": [
-        "Ferox Enclave",
-        "Wilderness Volcano",
-        "Chaos Temple",
-        "Rogues' Castle",
-        "Lava Maze",
-        "Wilderness Bandit Camp",
-        "Dark Warriors' Fortress",
-        "Graveyard of Shadows",
-        "Forgotten Cemetery",
-        "Mage Arena",
-        "Scorpia's Cave",
-        "Fountain of Rune",
-        "Wilderness God Wars Dungeon",
-        "Daimon's Crater"
-      ]
+      "locations": [
+        {
+          "label": "Wilderness green dragons or Slayer Cave entrance",
+          "chunkOptions": [
+            {
+              "cx": 46,
+              "cy": 56
+            },
+            {
+              "cx": 48,
+              "cy": 59
+            },
+            {
+              "cx": 49,
+              "cy": 57
+            },
+            {
+              "cx": 52,
+              "cy": 57
+            },
+            {
+              "cx": 50,
+              "cy": 57
+            },
+            {
+              "cx": 51,
+              "cy": 58
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-09-12",
+        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+      }
     },
     {
       "id": "wilderness_med_6",
@@ -9555,9 +9655,22 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "67 Hunter Small fishing net and a rope",
-      "regions": [
-        "Chaos Temple"
-      ]
+      "locations": [
+        {
+          "label": "Boneyard black salamanders",
+          "chunkOptions": [
+            {
+              "cx": 51,
+              "cy": 57
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-09-12",
+        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+      }
     },
     {
       "id": "wild_hard_4",
@@ -9586,12 +9699,29 @@
       "description": "Kill a Lava Dragon.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Lava Maze"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Protection from dragonfire recommended if not safe spotting and weaponry to slay it"
+      "sourceRequirements": "Protection from dragonfire recommended if not safe spotting and weaponry to slay it",
+      "locations": [
+        {
+          "label": "Lava dragons",
+          "chunkOptions": [
+            {
+              "cx": 50,
+              "cy": 59
+            },
+            {
+              "cx": 50,
+              "cy": 60
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-09-12",
+        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+      }
     },
     {
       "id": "wild_hard_6",
@@ -9622,11 +9752,40 @@
       "classification": "preserved-semantic",
       "previousDescription": "Kill the Crazy Archaeologist, Chaos Fanatic & Scorpia.",
       "sourceRequirements": "See the individual strategy guides for the Crazy archaeologist, Chaos Fanatic, and Scorpia",
-      "regions": [
-        "Forgotten Cemetery",
-        "Chaos Temple",
-        "Scorpia's Cave"
-      ]
+      "locations": [
+        {
+          "label": "Crazy Archaeologist",
+          "chunkOptions": [
+            {
+              "cx": 46,
+              "cy": 57
+            }
+          ]
+        },
+        {
+          "label": "Chaos Fanatic",
+          "chunkOptions": [
+            {
+              "cx": 46,
+              "cy": 60
+            }
+          ]
+        },
+        {
+          "label": "Scorpia cave",
+          "chunkOptions": [
+            {
+              "cx": 50,
+              "cy": 61
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-09-12",
+        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+      }
     },
     {
       "id": "wild_hard_8",
@@ -9720,21 +9879,54 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of the Medium Wilderness diary is required to kill the greater versions, and completion of the Hard Wilderness diary is required to kill the lesser versions See the individual strategy guides for Callisto, Venenatis, and Vet'ion, or those for the weaker bosses Artio, Spindel, and Calvar'ion",
-      "anyOfRegions": [
-        "Ferox Enclave",
-        "Wilderness Volcano",
-        "Chaos Temple",
-        "Rogues' Castle",
-        "Lava Maze",
-        "Wilderness Bandit Camp",
-        "Dark Warriors' Fortress",
-        "Graveyard of Shadows",
-        "Forgotten Cemetery",
-        "Mage Arena",
-        "Scorpia's Cave",
-        "Fountain of Rune",
-        "Wilderness God Wars Dungeon",
-        "Daimon's Crater"
+      "locations": [
+        {
+          "label": "Callisto or Artio entrance",
+          "chunkOptions": [
+            {
+              "cx": 51,
+              "cy": 60
+            },
+            {
+              "cx": 48,
+              "cy": 57
+            }
+          ]
+        },
+        {
+          "label": "Venenatis or Spindel entrance",
+          "chunkOptions": [
+            {
+              "cx": 51,
+              "cy": 59
+            },
+            {
+              "cx": 49,
+              "cy": 58
+            }
+          ]
+        },
+        {
+          "label": "Vet'ion or Calvar'ion entrance",
+          "chunkOptions": [
+            {
+              "cx": 50,
+              "cy": 59
+            },
+            {
+              "cx": 49,
+              "cy": 57
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-09-12",
+        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+      },
+      "manualRequirements": [
+        "Meet the entry requirements for each chosen boss variant (diary completion or qualifying boss Slayer task)."
       ]
     },
     {
@@ -9753,9 +9945,22 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Desert Treasure I 96 Magic Ancient Magicks selected Means to cast Ghorrock Teleport ( )",
-      "regions": [
-        "Lava Maze"
-      ]
+      "locations": [
+        {
+          "label": "Ghorrock teleport destination",
+          "chunkOptions": [
+            {
+              "cx": 46,
+              "cy": 61
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-09-12",
+        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+      }
     },
     {
       "id": "wild_elite_3",

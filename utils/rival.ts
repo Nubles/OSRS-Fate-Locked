@@ -13,7 +13,8 @@
 import {
   REGIONS_LIST, BOSSES_LIST, MINIGAMES_LIST, GUILDS_LIST,
 } from '../constants';
-import { COMPLETION_DENOMINATOR } from './completion';
+import type { GameModeRules } from '../config/gameModes';
+import { completionDenominator } from './completion';
 import { RivalState } from '../types';
 
 const MS_PER_DAY = 86_400_000;
@@ -53,15 +54,15 @@ export const simulatedRivalKeys = (rival: RivalState, now: number): number => {
 };
 
 /** The rival's completion % right now (0–100). */
-export const rivalCompletion = (rival: RivalState, now: number): number => {
+export const rivalCompletion = (rival: RivalState, now: number, mode?: string, custom?: GameModeRules): number => {
   if (rival.mode === 'friend') return Math.min(100, Math.max(0, Math.round(rival.friendPct ?? 0)));
-  return Math.min(100, Math.round((simulatedRivalKeys(rival, now) / COMPLETION_DENOMINATOR) * 100));
+  return Math.min(100, Math.round((simulatedRivalKeys(rival, now) / completionDenominator(mode, custom)) * 100));
 };
 
 /** Days until a simulated rival reaches `targetPct` (null if already there / friend). */
-export const rivalDaysTo = (rival: RivalState, now: number, targetPct: number): number | null => {
+export const rivalDaysTo = (rival: RivalState, now: number, targetPct: number, mode?: string, custom?: GameModeRules): number | null => {
   if (rival.mode === 'friend' || rival.keysPerDay <= 0) return null;
-  const targetKeys = (targetPct / 100) * COMPLETION_DENOMINATOR;
+  const targetKeys = (targetPct / 100) * completionDenominator(mode, custom);
   const have = simulatedRivalKeys(rival, now);
   if (have >= targetKeys) return 0;
   return (targetKeys - have) / rival.keysPerDay;

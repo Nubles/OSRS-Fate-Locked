@@ -1,3 +1,4 @@
+import { getUtilityActivityReq } from '../utils/utilityReadiness';
 import { lazyWithRetry } from '../utils/lazyRetry';
 import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { 
@@ -116,7 +117,7 @@ const getSkillIcon = (skillName: string) => `https://oldschool.runescape.wiki/im
 // Header control: opens the Rival modal, and when a rival is set shows the live
 // standing (▲ you ahead / ▼ behind) — the ambient "pulse" of the race.
 const RivalHeaderButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
-  const { rival, unlocks } = useGame();
+  const { rival, unlocks , gameModeId, customMode} = useGame();
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     if (!rival || rival.mode === 'friend') return;
@@ -131,7 +132,7 @@ const RivalHeaderButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
       </button>
     );
   }
-  const st = rivalStanding(runCompletion(unlocks), rivalCompletion(rival, now));
+  const st = rivalStanding(runCompletion(unlocks, gameModeId, customMode), rivalCompletion(rival, now, gameModeId, customMode));
   const ahead = st.lead > 0, tie = st.lead === 0;
   return (
     <button
@@ -154,7 +155,7 @@ interface ProgressBarProps {
 }
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ current, total, colorClass }) => {
-  const { animationsEnabled } = useGame();
+  const { animationsEnabled , gameModeId, customMode} = useGame();
   const percent = Math.round((current / total) * 100);
   return (
     <div className="w-full bg-black/50 rounded-full h-2 mt-1 border border-white/5 relative overflow-hidden group">
@@ -220,7 +221,6 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
 
   return (
     <div 
-        onClick={!isUnlocked && canUnlock ? onClick : undefined}
         className={`
             relative flex items-center gap-3 p-2 rounded-lg border transition-all duration-200 group min-h-[60px]
             ${isUnlocked 
@@ -230,6 +230,7 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
                     : 'bg-[#151515] border-transparent opacity-60'}
         `}
     >
+        {!isUnlocked && canUnlock && <button type="button" aria-label={`Unlock ${item} with an Omni-Key`} onClick={onClick} className="absolute inset-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-300" />}
         <div className="absolute top-1 right-1 z-10">
             <NoteTrigger id={item} title={item} suspendModals={suspendModals} />
         </div>
@@ -248,7 +249,7 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
                     {item}
                 </span>
                 {(
-                    <a href={getWikiUrl(item)} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors p-0.5 shrink-0" onClick={e => e.stopPropagation()} title="Open Wiki">
+                    <a href={getWikiUrl(item)} target="_blank" rel="noopener noreferrer" className="relative z-10 text-gray-500 hover:text-white transition-colors p-0.5 shrink-0" onClick={e => e.stopPropagation()} title="Open Wiki">
                         <ExternalLink size={12} />
                     </a>
                 )}
@@ -265,8 +266,15 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
                     <span className="truncate">{region}</span>
                 </div>
             )}
-            {req && (req.skills || req.quests || req.requiredAreas) && (
+            {req && (
                 <div className="flex flex-wrap items-center gap-1 mt-1">
+                    {[
+                      ...(req.combatLevel ? [`Combat level ${req.combatLevel}`] : []),
+                      ...(req.totalLevel ? [`Total level ${req.totalLevel}`] : []),
+                      ...(req.questPoints ? [`${req.questPoints} Quest Points`] : []),
+                      ...(req.warriorsGuildEntry ? ['99 Attack or Strength, or 130 combined'] : []),
+                      ...(req.manualRequirements ?? []),
+                    ].map(label => <span key={label} className="text-[9px] text-amber-300/90 border border-amber-500/20 rounded px-1 py-0.5">{label}</span>)}
                     {req.requiredAreas && req.requiredAreas.map(area => (
                         <span key={area} className="text-[9px] px-1 py-0.5 rounded bg-emerald-900/20 border border-emerald-500/20 text-emerald-300/90 leading-none flex items-center gap-0.5" title={`Requires access to ${area}`}>
                             <MapPin size={8} className="shrink-0" />{area}
@@ -286,8 +294,8 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
             {req?.note && (
                 <div className="text-[9px] text-gray-500 italic leading-tight mt-0.5">{req.note}</div>
             )}
-            {(!req || (!req.skills && !req.quests && !req.requiredAreas && !req.note)) && (
-                <div className="text-[9px] text-gray-600 italic leading-tight mt-0.5">No unlock requirement</div>
+            {(!req || req.unverified) && (
+                <div className="text-[9px] text-gray-600 italic leading-tight mt-0.5">Access requirements not fully verified</div>
             )}
         </div>
         
@@ -342,7 +350,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) => {
-  const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode } = useGame();
+  const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode, pendingUnlock } = useGame();
   const runeProofMode = runeProofAvailability((import.meta as any).env ?? {});
   const goalPlannerEntry = runeProofMode !== 'OFF'
     ? { label: 'RuneProof', title: 'Get the next reviewed action for your run' }
@@ -388,7 +396,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const [selectedSkillForDetails, setSelectedSkillForDetails] = useState<{name: string, tier: number} | null>(null);
 
   const [unlockReveal, dismissReveal] = useUnlockReveal(unlocks, gameModeId);
-  const [achievementReveal, dismissAchievementReveal] = useAchievementReveal(unlocks);
+  const [achievementReveal, dismissAchievementReveal] = useAchievementReveal(unlocks, gameModeId, customMode);
 
   useEscapeKey(() => setShowRunCard(false), showRunCard && !suspendModals);
   useEscapeKey(() => setSelectedSkillForDetails(null), selectedSkillForDetails !== null && !suspendModals);
@@ -468,7 +476,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
 
   // Shared metric (utils/completion) so the header %, achievements, and the
   // Rival Ghost all measure progress identically.
-  const completionPercent = useMemo(() => runCompletion(unlocks), [unlocks]);
+  const completionPercent = useMemo(() => runCompletion(unlocks, gameModeId, customMode), [unlocks, gameModeId, customMode]);
 
   // --- Handlers ---
   const handleLevelUp = (skill: string) => {
@@ -665,11 +673,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {items.map(item => {
             const label = nameMap?.[item] ?? item;
-            if (searchQuery && !label.toLowerCase().includes(searchQuery.toLowerCase())) return null;
+            if (searchQuery && !`${item} ${label}`.toLowerCase().includes(searchQuery.toLowerCase())) return null;
             const isUnlocked = unlocked.includes(item);
             const canUnlock = !isUnlocked && specialKeys > 0 && isOmniDirectUnlockAvailable(type, item, unlocks, gameModeId);
             const sub = detailsMap ? detailsMap[item] : undefined;
-            const req = getActivityReq(label);
+            const req = getUtilityActivityReq(item, type, gameModeId);
             const readiness = evaluateActivityReadiness(
               isUnlocked,
               req,
@@ -722,6 +730,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                </div>
           </div>
 
+          <p className="px-2 pb-2 text-[10px] text-gray-400 shrink-0">Tutorial Island is completed onboarding: always free, with no area roll required.</p>
           {worldView === 'MAP' ? (
               <div className="flex-1 bg-[#050505] rounded-lg border border-white/10 overflow-hidden relative">
                   <PanelErrorBoundary name="Region map">
@@ -883,7 +892,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       // Search mode: span every category so a search isn't trapped in one tab.
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        const matching = categories.filter(c => c.list.some(i => i.toLowerCase().includes(q)));
+        const matching = categories.filter(c => c.list.some(i => `${i} ${c.nameMap?.[i] ?? i}`.toLowerCase().includes(q)));
         return (
           <div className="space-y-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10">
             {matching.length === 0 && (
@@ -1253,7 +1262,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
     )}
 
     {/* Celebratory reveal when a milestone is newly earned. */}
-    {!suspendModals && achievementReveal && (
+    {!suspendModals && !pendingUnlock && achievementReveal && (
       <AchievementReveal
         data={achievementReveal}
         onDismiss={dismissAchievementReveal}
@@ -1263,7 +1272,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
 
     {/* Unlock reveal — slides in from the right when a quest or region
         unlocks and shows what new content just became available. */}
-    {!suspendModals && unlockReveal && (
+    {!suspendModals && !pendingUnlock && unlockReveal && (
       <UnlockReveal
         data={unlockReveal}
         onDismiss={dismissReveal}

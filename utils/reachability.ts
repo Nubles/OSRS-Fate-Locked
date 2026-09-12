@@ -35,15 +35,12 @@ export const isNamedAreaReachableViaChunks = (name: string, unlockedChunkKeys: r
  * used all over the app before Chunked mode existed.
  */
 export const isAreaReachable = (name: string, unlocks: UnlockState, gameModeId?: string): boolean => {
+  if (name === 'Tutorial Island') return true;
   if (gameModeId === 'chunked') {
     return isNamedAreaReachableViaChunks(name, unlocks.chunks ?? []);
   }
   const canonical = canonicalAreaName(name);
-  if (canonical === 'Misthalin' || Object.hasOwn(REGION_GROUPS, canonical)) {
-    return isRegionUnlocked(canonical, unlocks.regions);
-  }
-  return isFreeArea(canonical)
-    || unlocks.regions.some((unlocked) => canonicalAreaName(unlocked) === canonical);
+  return isRegionUnlocked(canonical, unlocks.regions.map(canonicalAreaName));
 };
 
 // Maps a leaf/sub-region back to its continent, derived once from
@@ -58,8 +55,7 @@ const PARENT_CONTINENT: Record<string, string> = (() => {
 })();
 
 /**
- * Non-chunked map-tint semantics for a named region — richer than
- * isAreaReachable because chunks can be tagged at continent level.
+ * Shared non-chunked ownership semantics, including legacy parent unlocks.
  * A region is unlocked if:
  *  1. it's free at run start (mode-aware), or
  *  2. it appears directly in unlocks.regions, or

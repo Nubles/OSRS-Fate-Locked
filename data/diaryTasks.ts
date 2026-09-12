@@ -1,3 +1,8 @@
+export interface DiaryLocationRequirement {
+  label: string;
+  chunkOptions: Array<{ cx: number; cy: number }>;
+}
+
 export interface DiaryTaskRequirementOption {
   label?: string;
   skills?: Record<string, number>;
@@ -5,6 +10,7 @@ export interface DiaryTaskRequirementOption {
   quests?: string[];
   cas?: string[];
   regions?: string[];
+  locations?: DiaryLocationRequirement[];
   questPoints?: number;
   manualRequirements?: string[];
   combatLevel?: number;
@@ -23,6 +29,7 @@ export interface DiaryTask {
   quests?: string[];
   cas?: string[];
   regions?: string[];
+  locations?: DiaryLocationRequirement[];
   anyOfRegions?: string[];
   questPoints?: number;
   manualRequirements?: string[];
@@ -491,21 +498,21 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'west_elite_7', tierId: 'Western Elite', description: 'Pickpocket an Elf.', skills: { 'Thieving': 85 }, quests: ['Mourning\'s End Part I'], regions: ['Lletya'] },
   { id: 'wild_easy_1', tierId: 'Wilderness Easy', description: 'Cast Low Alchemy at the Fountain of Rune.', skills: { 'Magic': 21 }, regions: ['Fountain of Rune'] },
   { id: 'wilderness_easy_2', tierId: 'Wilderness Easy', description: 'Enter the Wilderness from the Ardougne or Edgeville lever.', anyOfRegions: ['East Ardougne', 'Edgeville'] },
-  { id: 'wilderness_easy_3', tierId: 'Wilderness Easy', description: 'Pray at the Chaos Altar in the Western Wilderness.', regions: ['Chaos Temple'] },
-  { id: 'wilderness_easy_4', tierId: 'Wilderness Easy', description: 'Enter the Chaos Runecrafting temple.', anyOfRegions: ['Chaos Temple', 'Edgeville'] },
-  { id: 'wild_easy_3', tierId: 'Wilderness Easy', description: 'Kill a Mammoth in the Wilderness.', regions: ['Ferox Enclave'] },
+  { id: 'wilderness_easy_3', tierId: 'Wilderness Easy', description: 'Pray at the Chaos Altar in the Western Wilderness.', locations: [{"label":"Western Chaos Altar","chunkOptions":[{"cx":46,"cy":59}]}] },
+  { id: 'wilderness_easy_4', tierId: 'Wilderness Easy', description: 'Enter the Chaos Runecrafting temple.', locations: [{"label":"Chaos ruins or Abyss entrance","chunkOptions":[{"cx":47,"cy":56},{"cx":48,"cy":55}]}] },
+  { id: 'wild_easy_3', tierId: 'Wilderness Easy', description: 'Kill a Mammoth in the Wilderness.', locations: [{"label":"Wilderness mammoths","chunkOptions":[{"cx":49,"cy":56}]}] },
   { id: 'wild_easy_4', tierId: 'Wilderness Easy', description: 'Kill an Earth Warrior in the Wilderness beneath Edgeville.', skills: { 'Agility': 15 }, regions: ['Edgeville'] },
-  { id: 'wild_easy_5', tierId: 'Wilderness Easy', description: 'Restore some prayer points at the demonic ruins.', regions: ['Chaos Temple'] },
+  { id: 'wild_easy_5', tierId: 'Wilderness Easy', description: 'Restore some prayer points at the demonic ruins.', locations: [{"label":"Demonic Ruins altar","chunkOptions":[{"cx":51,"cy":60}]}] },
   { id: 'wilderness_easy_8', tierId: 'Wilderness Easy', description: 'Enter the King Black Dragon\'s lair.', regions: ['Lava Maze'] },
   { id: 'wilderness_easy_9', tierId: 'Wilderness Easy', description: 'Collect 5 Red spiders\' eggs from the Wilderness', regions: ['Edgeville'] },
-  { id: 'wild_easy_10', tierId: 'Wilderness Easy', description: 'Mine some Iron ore in the Wilderness.', skills: { 'Mining': 15 }, anyOfRegions: ['Ferox Enclave', 'Wilderness Volcano', 'Chaos Temple', 'Rogues\' Castle', 'Lava Maze', 'Wilderness Bandit Camp', 'Dark Warriors\' Fortress', 'Graveyard of Shadows', 'Forgotten Cemetery', 'Mage Arena', 'Scorpia\'s Cave', 'Fountain of Rune', 'Wilderness God Wars Dungeon', 'Daimon\'s Crater'] },
+  { id: 'wild_easy_10', tierId: 'Wilderness Easy', description: 'Mine some Iron ore in the Wilderness.', skills: { 'Mining': 15 }, locations: [{"label":"Wilderness iron rocks","chunkOptions":[{"cx":48,"cy":55},{"cx":48,"cy":58},{"cx":47,"cy":61},{"cx":49,"cy":61}]}] },
   { id: 'wilderness_easy_11', tierId: 'Wilderness Easy', description: 'Have the Mage of Zamorak teleport you to the Abyss.', quests: ['Enter the Abyss'], regions: ['Edgeville'] },
-  { id: 'wild_easy_8', tierId: 'Wilderness Easy', description: 'Equip any team cape in the Wilderness.', anyOfRegions: ['Ferox Enclave', 'Wilderness Volcano', 'Chaos Temple', 'Rogues\' Castle', 'Lava Maze', 'Wilderness Bandit Camp', 'Dark Warriors\' Fortress', 'Graveyard of Shadows', 'Forgotten Cemetery', 'Mage Arena', 'Scorpia\'s Cave', 'Fountain of Rune', 'Wilderness God Wars Dungeon', 'Daimon\'s Crater'] },
-  { id: 'wilderness_med_1', tierId: 'Wilderness Medium', description: 'Mine some Mithril ore in the wilderness.', skills: { 'Mining': 55 }, anyOfRegions: ['Ferox Enclave', 'Wilderness Volcano', 'Chaos Temple', 'Rogues\' Castle', 'Lava Maze', 'Wilderness Bandit Camp', 'Dark Warriors\' Fortress', 'Graveyard of Shadows', 'Forgotten Cemetery', 'Mage Arena', 'Scorpia\'s Cave', 'Fountain of Rune', 'Wilderness God Wars Dungeon', 'Daimon\'s Crater'] },
-  { id: 'wilderness_med_2', tierId: 'Wilderness Medium', description: 'Chop some yew logs from a fallen Ent.', skills: { 'Woodcutting': 61 }, anyOfRegions: ['Ferox Enclave', 'Wilderness Volcano', 'Chaos Temple', 'Rogues\' Castle', 'Lava Maze', 'Wilderness Bandit Camp', 'Dark Warriors\' Fortress', 'Graveyard of Shadows', 'Forgotten Cemetery', 'Mage Arena', 'Scorpia\'s Cave', 'Fountain of Rune', 'Wilderness God Wars Dungeon', 'Daimon\'s Crater'] },
+  { id: 'wild_easy_8', tierId: 'Wilderness Easy', description: 'Equip any team cape in the Wilderness.', anyOfRegions: ['Ferox Enclave', 'Wilderness Volcano', 'Chaos Temple', 'Rogues\' Castle', 'Lava Maze', 'Wilderness Bandit Camp', 'Dark Warriors\' Fortress', 'Graveyard of Shadows', 'Forgotten Cemetery', 'Mage Arena', 'Scorpia\'s Cave', 'Fountain of Rune', 'Wilderness God Wars Dungeon', 'Daimon\'s Crater', 'Chaos Altar'] },
+  { id: 'wilderness_med_1', tierId: 'Wilderness Medium', description: 'Mine some Mithril ore in the wilderness.', skills: { 'Mining': 55 }, locations: [{"label":"Wilderness mithril rocks","chunkOptions":[{"cx":48,"cy":58},{"cx":47,"cy":61},{"cx":49,"cy":61}]}] },
+  { id: 'wilderness_med_2', tierId: 'Wilderness Medium', description: 'Chop some yew logs from a fallen Ent.', skills: { 'Woodcutting': 61 }, locations: [{"label":"Wilderness Ents","chunkOptions":[{"cx":50,"cy":57},{"cx":51,"cy":56}]}] },
   { id: 'wild_easy_2', tierId: 'Wilderness Medium', description: 'Enter the Wilderness Godwars Dungeon.', regions: ['Wilderness God Wars Dungeon'], oneOf: [{ skills: { 'Agility': 60 } }, { skills: { 'Strength': 60 } }] },
   { id: 'wild_med_1', tierId: 'Wilderness Medium', description: 'Complete a lap of the Wilderness Agility course.', skills: { 'Agility': 52 }, regions: ['Wilderness Agility Course'] },
-  { id: 'wild_med_2', tierId: 'Wilderness Medium', description: 'Kill a Green Dragon.', anyOfRegions: ['Ferox Enclave', 'Wilderness Volcano', 'Chaos Temple', 'Rogues\' Castle', 'Lava Maze', 'Wilderness Bandit Camp', 'Dark Warriors\' Fortress', 'Graveyard of Shadows', 'Forgotten Cemetery', 'Mage Arena', 'Scorpia\'s Cave', 'Fountain of Rune', 'Wilderness God Wars Dungeon', 'Daimon\'s Crater'] },
+  { id: 'wild_med_2', tierId: 'Wilderness Medium', description: 'Kill a Green Dragon.', locations: [{"label":"Wilderness green dragons or Slayer Cave entrance","chunkOptions":[{"cx":46,"cy":56},{"cx":48,"cy":59},{"cx":49,"cy":57},{"cx":52,"cy":57},{"cx":50,"cy":57},{"cx":51,"cy":58}]}] },
   { id: 'wilderness_med_6', tierId: 'Wilderness Medium', description: 'Kill an Ankou in the Wilderness.', regions: ['Forgotten Cemetery'] },
   { id: 'wild_med_5', tierId: 'Wilderness Medium', description: 'Charge an Earth Orb.', skills: { 'Magic': 60 }, regions: ['Edgeville'] },
   { id: 'wild_med_3', tierId: 'Wilderness Medium', description: 'Kill a Bloodveld in the Wilderness Godwars Dungeon.', skills: { 'Slayer': 50 }, regions: ['Wilderness God Wars Dungeon'], oneOf: [{ skills: { 'Agility': 60 } }, { skills: { 'Strength': 60 } }] },
@@ -514,16 +521,16 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'wild_med_7', tierId: 'Wilderness Medium', description: 'Open the Muddy Chest in the lava maze.', items: ['Muddy key'], regions: ['Lava Maze'], oneOf: [{ label: 'Slashing route', items: ['Knife or slashing weapon'] }, { label: 'Stepping Stone shortcut', skills: { 'Agility': 82 } }] },
   { id: 'wild_hard_1', tierId: 'Wilderness Hard', description: 'Cast any of the 3 God spells against another player in the Wilderness.', skills: { 'Magic': 60 }, quests: ['Mage Arena I'], regions: ['Mage Arena'] },
   { id: 'wild_hard_2', tierId: 'Wilderness Hard', description: 'Charge an Air Orb.', skills: { 'Magic': 66 }, regions: ['Edgeville'] },
-  { id: 'wild_hard_3', tierId: 'Wilderness Hard', description: 'Catch a Black Salamander in the Wilderness.', skills: { 'Hunter': 67 }, regions: ['Chaos Temple'] },
+  { id: 'wild_hard_3', tierId: 'Wilderness Hard', description: 'Catch a Black Salamander in the Wilderness.', skills: { 'Hunter': 67 }, locations: [{"label":"Boneyard black salamanders","chunkOptions":[{"cx":51,"cy":57}]}] },
   { id: 'wild_hard_4', tierId: 'Wilderness Hard', description: 'Smith an Adamant scimitar in the Resource Area.', skills: { 'Smithing': 75 }, regions: ['Resource Area'] },
-  { id: 'wild_hard_5', tierId: 'Wilderness Hard', description: 'Kill a Lava Dragon.', regions: ['Lava Maze'] },
+  { id: 'wild_hard_5', tierId: 'Wilderness Hard', description: 'Kill a Lava Dragon.', locations: [{"label":"Lava dragons","chunkOptions":[{"cx":50,"cy":59},{"cx":50,"cy":60}]}] },
   { id: 'wild_hard_6', tierId: 'Wilderness Hard', description: 'Kill the Chaos Elemental.', regions: ['Rogues\' Castle'] },
-  { id: 'wild_hard_7', tierId: 'Wilderness Hard', description: 'Kill the Crazy Arc., Chaos Fanatic & Scorpia.', regions: ['Forgotten Cemetery', 'Chaos Temple', 'Scorpia\'s Cave'] },
+  { id: 'wild_hard_7', tierId: 'Wilderness Hard', description: 'Kill the Crazy Arc., Chaos Fanatic & Scorpia.', locations: [{"label":"Crazy Archaeologist","chunkOptions":[{"cx":46,"cy":57}]},{"label":"Chaos Fanatic","chunkOptions":[{"cx":46,"cy":60}]},{"label":"Scorpia cave","chunkOptions":[{"cx":50,"cy":61}]}] },
   { id: 'wild_hard_8', tierId: 'Wilderness Hard', description: 'Take the agility shortcut from Trollheim into the Wilderness.', skills: { 'Agility': 64 }, regions: ['Wilderness God Wars Dungeon'], oneOf: [{ quests: ['Troll Stronghold'] }, { cas: ['Easy'] }] },
   { id: 'wild_hard_9', tierId: 'Wilderness Hard', description: 'Kill a Spiritual warrior in the Wilderness Godwars Dungeon.', skills: { 'Slayer': 68 }, regions: ['Wilderness God Wars Dungeon'], oneOf: [{ skills: { 'Agility': 60 } }, { skills: { 'Strength': 60 } }] },
   { id: 'wild_hard_10', tierId: 'Wilderness Hard', description: 'Fish some Raw Lava Eel in the Wilderness.', skills: { 'Fishing': 53, 'Herblore': 25 }, regions: ['Lava Maze'] },
-  { id: 'wild_elite_1', tierId: 'Wilderness Elite', description: 'Kill Callisto, Venenatis & Vet\'ion.', anyOfRegions: ['Ferox Enclave', 'Wilderness Volcano', 'Chaos Temple', 'Rogues\' Castle', 'Lava Maze', 'Wilderness Bandit Camp', 'Dark Warriors\' Fortress', 'Graveyard of Shadows', 'Forgotten Cemetery', 'Mage Arena', 'Scorpia\'s Cave', 'Fountain of Rune', 'Wilderness God Wars Dungeon', 'Daimon\'s Crater'] },
-  { id: 'wild_elite_2', tierId: 'Wilderness Elite', description: 'Teleport to Ghorrock.', skills: { 'Magic': 96 }, quests: ['Desert Treasure I'], regions: ['Lava Maze'] },
+  { id: 'wild_elite_1', tierId: 'Wilderness Elite', description: 'Kill Callisto, Venenatis & Vet\'ion.', locations: [{"label":"Callisto or Artio entrance","chunkOptions":[{"cx":51,"cy":60},{"cx":48,"cy":57}]},{"label":"Venenatis or Spindel entrance","chunkOptions":[{"cx":51,"cy":59},{"cx":49,"cy":58}]},{"label":"Vet'ion or Calvar'ion entrance","chunkOptions":[{"cx":50,"cy":59},{"cx":49,"cy":57}]}], manualRequirements: ['Meet the entry requirements for each chosen boss variant (diary completion or qualifying boss Slayer task).'] },
+  { id: 'wild_elite_2', tierId: 'Wilderness Elite', description: 'Teleport to Ghorrock.', skills: { 'Magic': 96 }, quests: ['Desert Treasure I'], locations: [{"label":"Ghorrock teleport destination","chunkOptions":[{"cx":46,"cy":61}]}] },
   { id: 'wild_elite_3', tierId: 'Wilderness Elite', description: 'Fish and Cook a Dark Crab in the Resource Area.', skills: { 'Cooking': 90, 'Fishing': 85 }, regions: ['Resource Area'] },
   { id: 'wild_elite_4', tierId: 'Wilderness Elite', description: 'Smith a rune scimitar from scratch in the Resource Area.', skills: { 'Mining': 85, 'Smithing': 90 }, regions: ['Resource Area'] },
   { id: 'wild_elite_5', tierId: 'Wilderness Elite', description: 'Steal from the Rogues\' chest.', skills: { 'Thieving': 84 }, regions: ['Rogues\' Castle'] },

@@ -14,6 +14,8 @@ export type SourceType =
   | 'CLUE';      // Treasure Trail rewards
 
 export interface ResourceSource {
+  requirementsUnverified?: boolean;
+  manualRequirements?: string[];
   type: SourceType;
   name: string; // e.g. "Chaos Druid", "Farming Patch", "General Store"
   regions: string[]; // List of regions where this specific source exists
@@ -2866,9 +2868,17 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
 
 // Merge auto-generated SHOP/DROP sources from the OSRS Wiki (see
 // scripts/buildSourceEnrichment.ts) into the curated map above.
+const curatedSources = Object.values(RESOURCE_MAP).flat();
+export const enrichResourceSource = (source: ResourceSource): ResourceSource => {
+  const known = curatedSources.find(s => s.name.toLowerCase() === source.name.toLowerCase() && s.type === source.type && !s.inputs);
+  // A drop-table name is not sufficient evidence of where/how it is obtained.
+  // Keep the route visible, but never turn missing metadata into permission.
+  return known ? { ...source, ...known, rarity: source.rarity, requirementsUnverified: true }
+    : { ...source, requirementsUnverified: true };
+};
 for (const [item, extra] of Object.entries(ENRICHED_SOURCES)) {
   const target = RESOURCE_MAP[item];
-  if (target) target.push(...extra);
+  if (target) target.push(...extra.map(enrichResourceSource));
 }
 
 // --- CATEGORY GROUPING -------------------------------------------------------

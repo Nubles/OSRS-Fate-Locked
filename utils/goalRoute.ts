@@ -1,3 +1,5 @@
+import { randomUnlockPool } from './gameEngine';
+import type { GameModeRules } from '../config/gameModes';
 import { GameState, TableType, UnlockState } from '../types';
 import { STRATEGY_DATABASE, ContentRequirement } from '../data/requirements';
 import { QUEST_DATA } from '../data/questData';
@@ -211,7 +213,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       alternatives,
       diaries: [],
       sources: [],
-      tables: suggestTables(dependencies, unlocks),
+      tables: suggestTables(dependencies, unlocks, gameModeId, gameState.customMode),
       totalSteps,
       completedSteps,
       percentage: eligibility.eligible || eligibility.status === 'COMPLETED'
@@ -287,7 +289,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       diaries: [],
       questPoints: qpNeed > 0 ? { need: qpNeed, have: qpHave, met: qpHave >= qpNeed } : undefined,
       sources: [],
-      tables: suggestTables(dependencies, unlocks),
+      tables: suggestTables(dependencies, unlocks, gameModeId, gameState.customMode),
       totalSteps,
       completedSteps,
       percentage: Math.round((completedSteps / totalSteps) * 100),
@@ -312,7 +314,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       for (const missing of source.status.missing) collectNeededFromMissing(missing, unlocks, dependencies, gameModeId);
       dependencies.push(...source.status.unlockDependencies);
     }
-    const tables = suggestTables(dependencies, unlocks);
+    const tables = suggestTables(dependencies, unlocks, gameModeId, gameState.customMode);
     const total = Math.max(1, sources.length);
     const done = sources.filter(s => s.available).length;
     return {
@@ -438,7 +440,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
   dependencies.push(...tableDependenciesForSteps(
     canonicalQuestPlan?.alternativeSteps.flatMap(step => step.routes.flatMap(route => route.blockers)) ?? [],
   ));
-  const tables = suggestTables(dependencies, unlocks);
+  const tables = suggestTables(dependencies, unlocks, gameModeId, gameState.customMode);
 
   // ── Totals ────────────────────────────────────────────────────────────────
   const items: { met: boolean }[] = [
@@ -498,6 +500,8 @@ function collectNeededFromMissing(
 export function suggestTables(
   dependencies: Iterable<TableDependency>,
   unlocks: UnlockState,
+  gameModeId = 'vanilla',
+  customMode?: GameModeRules,
 ): TableSuggestion[] {
   const neededByTable = new Map<TableType, Set<string>>();
   for (const { table, id } of dependencies) {
@@ -516,7 +520,7 @@ export function suggestTables(
       continue; // tables without a gacha pool (Quests, Diaries, CAs)
     }
     if (!pool || pool.length === 0) continue;
-    const remaining = pool.filter(item => isValidUnlock(table, item, unlocks));
+    const remaining = randomUnlockPool(unlocks, gameModeId, 'key', table, customMode).map(candidate => candidate.item);
     if (remaining.length === 0) continue;
     const needed = remaining.filter(item => neededNames.has(item));
     if (needed.length === 0) continue;

@@ -118,12 +118,12 @@ describe('journal completion decisions', () => {
   it("rejects Witch's Potion and Murder Mystery before their exact locations are accessible", () => {
     expect(questCompletionDecision(
       QUEST_DATA["Witch's Potion"],
-      unlocked({ regions: ['Asgarnia'] }),
+      unlocked({ regions: ['Falador'] }),
       'vanilla',
     )).toEqual({ ok: false, reason: 'Requires: Rimmington' });
     expect(questCompletionDecision(
       QUEST_DATA['Murder Mystery'],
-      unlocked({ regions: ['Kandarin'] }),
+      unlocked({ regions: ['Catherby'] }),
       'vanilla',
     )).toEqual({ ok: false, reason: "Requires: Sinclair Mansion, Seers' Village" });
   });
