@@ -10,8 +10,8 @@
  * "Chunked" mode doesn't fit this named-area model at all — its free baseline
  * is a single map-region chunk (see utils/chunkAdjacency.ts CHUNKED_START),
  * not a named region/sub-area. GameContext passes startArea='none' for it, so
- * no named area is free — every named-area check falls through to false, and
- * the chunk-level state is the actual source of truth for that mode.
+ * mainland named areas are not free; exact chunks own the terrain. Tutorial
+ * Island remains completed onboarding outside progression in every mode.
  */
 
 import { MISTHALIN_AREAS } from '../constants';
@@ -28,9 +28,9 @@ export const setStartArea = (startArea?: string): void => {
 };
 
 /** Is this region / sub-area free from the start of the run? */
-export const isFreeArea = (name: string): boolean => current.has(name);
+export const isFreeArea = (name: string): boolean => name === 'Tutorial Island' || current.has(name);
 
 /** The current free baseline as a list — exported to the RuneLite bundle so
  *  the plugin doesn't have to guess the mode's start area (it used to hardcode
  *  full Misthalin, which over-unlocked Lumbridge-only starts in-game). */
-export const getFreeAreas = (): string[] => [...current];
+export const getFreeAreas = (): string[] => ['Tutorial Island', ...current];

@@ -199,7 +199,19 @@ export interface UnlockState {
   collectionLog: Record<number, number>; // ItemID -> Count
 }
 
+export interface PendingUnlock {
+  id: string;
+  table: TableType;
+  item: string;
+  costType: 'key' | 'chaosKey';
+  cost: number;
+}
+
 export interface GameState {
+  /** Already charged and awarded; acceptance only dismisses its reveal. */
+  pendingUnlock?: PendingUnlock;
+  /** Ownership splits applied; absent on saves from before the map correction. */
+  areaUnlockRevision?: 1;
   /** Canonical reducer states are stamped at the strict save boundary. */
   version: number;
   /** Stable identity for one run across exports, restarts, and relay delivery. */

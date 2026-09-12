@@ -60,6 +60,13 @@ describe('placeOf', () => {
   });
 });
 
+it('links mapped underground entrances without assigning their surface ownership', () => {
+  expect(chunkForPlace('Wilderness God Wars Dungeon')).toEqual({ cx: 47, cy: 58 });
+  expect(chunkForPlace('Zanaris')).toEqual({ cx: 50, cy: 49 });
+  expect(placeOf(50, 49).subArea).toBe('Lumbridge');
+  expect(chunkForPlace('Tutorial Island')).toBeNull();
+});
+
 describe('chunkUnlocked', () => {
   it('Misthalin sub-areas are always free', () => {
     // 50,50 = Lumbridge

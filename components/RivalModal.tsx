@@ -29,10 +29,10 @@ const fmtDays = (d: number): string => {
 const KIND_EMOJI: Record<string, string> = { boss: '☠️', region: '🗺️', minigame: '🎲', guild: '🏛️' };
 
 export const RivalModal: React.FC<Props> = ({ onClose }) => {
-  const { unlocks, rival, setRival, clearRival, ackRival } = useGame();
+  const { unlocks, rival, setRival, clearRival, ackRival , gameModeId, customMode} = useGame();
   useEscapeKey(onClose, true);
 
-  const playerPct = useMemo(() => completionPercent(unlocks), [unlocks]);
+  const playerPct = useMemo(() => completionPercent(unlocks, gameModeId, customMode), [unlocks, gameModeId, customMode]);
 
   // Tick so a simulated rival's bar creeps while the modal is open.
   const [now, setNow] = useState(Date.now());
@@ -45,12 +45,12 @@ export const RivalModal: React.FC<Props> = ({ onClose }) => {
     return <Setup onClose={onClose} onStart={setRival} />;
   }
 
-  const rivalPct = rivalCompletion(rival, now);
+  const rivalPct = rivalCompletion(rival, now, gameModeId, customMode);
   const st = standing(playerPct, rivalPct);
   const headlines = rival.mode === 'sim' ? rivalHeadlines(rival, rivalPct) : [];
   const recent = headlines.slice(-3).reverse();
-  const reach100 = rivalDaysTo(rival, now, 100);
-  const catchUp = rival.mode === 'sim' && st.lead > 0 ? rivalDaysTo(rival, now, playerPct) : null;
+  const reach100 = rivalDaysTo(rival, now, 100, gameModeId, customMode);
+  const catchUp = rival.mode === 'sim' && st.lead > 0 ? rivalDaysTo(rival, now, playerPct, gameModeId, customMode) : null;
 
   // One-time taunt if the lead flipped since last view.
   const flipped = rival.lastSeenLead != null && Math.sign(rival.lastSeenLead) !== Math.sign(st.lead) && st.lead !== 0;
@@ -174,7 +174,7 @@ const Setup: React.FC<{ onClose: () => void; onStart: (r: ReturnType<typeof make
     if (!res.ok || !res.state) { setError(res.error ?? 'Could not read that code.'); return; }
     const u = (res.state as { unlocks?: UnlockState }).unlocks;
     if (!u) { setError('That code has no run data.'); return; }
-    onStart(makeFriendRival("Friend's run", completionPercent(u)));
+    onStart(makeFriendRival("Friend's run", completionPercent(u, (res.state as { gameModeId?: string }).gameModeId, (res.state as { customMode?: import('../config/gameModes').GameModeRules }).customMode)));
   };
 
   return (

@@ -491,14 +491,14 @@ export const ActionSection: React.FC = () => {
     <div className="h-full p-4 flex flex-col gap-3">
 
       {/* Sub-tab toggle */}
-      <div className="flex gap-1 bg-[#161616] border border-white/5 rounded-lg p-1 shrink-0">
+      <div className="grid grid-cols-2 gap-1 bg-[#161616] border border-white/5 rounded-lg p-1 shrink-0 min-w-0">
         {tabs.map(tab => {
           const isActive = subTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setSubTab(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all
+              className={`min-w-0 flex flex-wrap items-center justify-center gap-1 py-2 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all
                 ${isActive
                   ? 'bg-[#252525] text-gray-100 shadow-sm'
                   : 'text-gray-500 hover:text-gray-300 hover:bg-[#1d1d1d]'}`}

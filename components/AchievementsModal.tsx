@@ -39,10 +39,10 @@ const CATEGORY_ORDER: AchievementCategory[] = [
 ];
 
 export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
-  const { unlocks } = useGame();
+  const { unlocks , gameModeId, customMode} = useGame();
   useEscapeKey(onClose, true);
 
-  const all = useMemo(() => evaluateAchievements(unlocks), [unlocks]);
+  const all = useMemo(() => evaluateAchievements(unlocks, gameModeId, customMode), [unlocks, gameModeId, customMode]);
   const earnedCount = all.filter((a) => a.earned).length;
   const pct = all.length > 0 ? Math.round((earnedCount / all.length) * 100) : 0;
 

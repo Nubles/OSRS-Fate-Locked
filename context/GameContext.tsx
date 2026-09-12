@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { PendingUnlockReveal } from '../components/PendingUnlockReveal';
 import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type FailureFateAward, type FateCompensationChoice, type GameEventMeta as DetectedGameEventMeta, type RollAnalyticsMeta, type RollIntent } from '../types';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
@@ -14,7 +15,7 @@ import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { CA_DATA } from '../data/caData';
 import { ALL_CA_TASKS, CATask } from '../data/caTasks';
 import { QUEST_DATA } from '../data/questData';
-import { UNLOCK_COST } from '../utils/gameEngine';
+import { UNLOCK_COST, randomUnlockPool, pickRandomPoolEntry, isRandomUnlockEligible } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { drawFloat } from '../utils/seededRng';
 import { hashEntry, ensureChain } from '../utils/integrity';
@@ -196,6 +197,8 @@ interface GameContextType extends GameState {
     expected: DetectedEventIdentity,
   ) => boolean;
   unlockContent: (table: TableType, item: string, costType: 'key' | 'specialKey' | 'chaosKey', cost: number) => void;
+  rollUnlock: (table?: TableType) => void;
+  acknowledgeUnlock: (id: string) => void;
   performRitual: (type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE') => void;
   performGambit: () => void;
   performCartographer: (chunkKey: string, label: string) => void;
@@ -273,6 +276,7 @@ const getInitialUnlocks = (): UnlockState => ({
 
 export const initialState: GameState = {
   version: CURRENT_SAVE_VERSION,
+  areaUnlockRevision: 1,
   runId: newRunId(),
   runRevision: 0,
   keys: 3,
@@ -352,7 +356,8 @@ export type Action =
     };
   }
   | { type: 'SYNC_DETECTED_PROGRESS'; payload: DetectedProgress }
-  | { type: 'UNLOCK'; payload: { table: TableType; item: string; costType: 'key' | 'specialKey' | 'chaosKey'; cost: number } }
+  | { type: 'UNLOCK'; payload: { table: TableType; item: string; costType: 'key' | 'specialKey' | 'chaosKey'; cost: number; revealId?: string } }
+  | { type: 'ACKNOWLEDGE_UNLOCK'; payload: string }
   | { type: 'RITUAL_LUCK' }
   | { type: 'RITUAL_GREED' }
   | { type: 'RITUAL_CHAOS' }
@@ -1012,6 +1017,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     }
     case 'UNLOCK': {
       const { table, item, costType, cost } = action.payload;
+      if (action.payload.revealId && (state.pendingUnlock || costType === 'specialKey'
+        || (costType === 'key' ? state.keys < cost : state.chaosKeys < 1)
+        || !isRandomUnlockEligible(table, item, state.unlocks, state.gameModeId, costType))) return state;
 
       const newUnlocks = { ...state.unlocks };
       // Defensive helpers: pushing into an array category dedupes against the
@@ -1060,9 +1068,17 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
       return {
         ...newState,
+        ...(action.payload.revealId && costType !== 'specialKey' ? {
+          pendingUnlock: { id: action.payload.revealId, table, item, costType, cost },
+        } : {}),
         history: [...state.history, log],
-        lastEvent: { id: generateId(), type: 'UNLOCK', meta: { item, cost, category: table } }
+        lastEvent: action.payload.revealId ? null : { id: generateId(), type: 'UNLOCK', meta: { item, cost, category: table } }
       };
+    }
+    case 'ACKNOWLEDGE_UNLOCK': {
+      if (state.pendingUnlock?.id !== action.payload) return state;
+      const { pendingUnlock, ...rest } = state;
+      return { ...rest, lastEvent: { id: generateId(), type: 'UNLOCK', meta: { item: pendingUnlock.item, cost: pendingUnlock.cost, category: pendingUnlock.table } } };
     }
 
     case 'RITUAL_LUCK':
@@ -1953,6 +1969,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       return;
     }
     if (coordinator !== null) {
+      const authorization = authorizeOwnedWrite();
+      if (authorization.ok === false) {
+        blockPendingSave(storageKey, authorization.reason);
+        return;
+      }
       const snapshot = serializeCurrent();
       const mirrored = coordinator.mirrorLifecycle(snapshot);
       const durability = coordinator.getSnapshot();
@@ -1999,10 +2020,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   useEffect(() => {
     if (coordinator === null) return;
     return () => {
-      coordinator.dispose();
       const repository = recoveryRepositoryRef.current;
-      recoveryRepositoryRef.current = null;
-      repository?.close();
+      // StrictMode replays effect cleanup/setup on the same mounted provider.
+      // Only destroy the durable writer after an actual unmount, not that replay.
+      queueMicrotask(() => {
+        if (mountedRef.current && coordinatorRef.current === coordinator) return;
+        coordinator.dispose();
+        if (recoveryRepositoryRef.current === repository) recoveryRepositoryRef.current = null;
+        repository?.close();
+      });
     };
   }, [coordinator]);
 
@@ -2264,6 +2290,28 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const unlockContent = useCallback((table: TableType, item: string, costType: 'key' | 'specialKey' | 'chaosKey', cost: number) => {
     commitAction({ type: 'UNLOCK', payload: { table, item, costType, cost } });
   }, [commitAction]);
+
+  const rollUnlock = useCallback((table?: TableType) => {
+    const current = stateRef.current;
+    if (current.pendingUnlock) return;
+    const costType = table === undefined ? 'chaosKey' : 'key';
+    if ((costType === 'key' ? current.keys : current.chaosKeys) < UNLOCK_COST) return;
+    if (authorizeOwnership().ok === false) {
+      showToast('Save ownership is unavailable. Restore save access before rolling.');
+      return;
+    }
+    const pool = randomUnlockPool(current.unlocks, current.gameModeId, costType, table, current.customMode);
+    const selection = pickRandomPoolEntry(pool, () => nextFloat(costType === 'key' ? 'gacha' : 'chaos'));
+    if (!selection) { showToast('No eligible unlocks remain. Open more locations or choose another category.'); return; }
+    const next = commitAction({ type: 'UNLOCK', payload: { ...selection, costType, cost: UNLOCK_COST, revealId: generateId() } });
+    stageCoordinatedSnapshot(serializeGameState(next));
+    if (coordinator) void settleCoordinatedFlush();
+    else flushCurrentSave();
+  }, [authorizeOwnership, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
+  const acknowledgeUnlock = useCallback((id: string) => {
+    if (getPendingSave(storageKey) || (coordinator && coordinator.getSnapshot().primary !== 'saved')) return;
+    commitAction({ type: 'ACKNOWLEDGE_UNLOCK', payload: id });
+  }, [commitAction, coordinator, storageKey]);
 
   const performRitual = useCallback((type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE') => {
     if (type === 'LUCK') commitAction({ type: 'RITUAL_LUCK' });
@@ -2738,6 +2786,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     rollForKey,
     acceptDetectedEvent,
     unlockContent,
+    rollUnlock,
+    acknowledgeUnlock,
     performRitual,
     performGambit,
     performCartographer,
@@ -2783,6 +2833,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     rollForKey,
     acceptDetectedEvent,
     unlockContent,
+    rollUnlock,
+    acknowledgeUnlock,
     performRitual,
     performGambit,
     performCartographer,
@@ -2818,7 +2870,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({
 
   return (
     <GameContext.Provider value={contextValue}>
-      {children}
+      <div style={{ display: state.pendingUnlock && (saveStatus !== 'saved' || hasPendingChanges) ? 'none' : 'contents' }}>{children}</div>
+      {state.pendingUnlock && (saveStatus !== 'saved' || hasPendingChanges) ? (
+        <div role="status" className="fixed inset-0 z-[300] bg-[#121212] text-gray-100 flex flex-col items-center justify-center gap-4 p-6 text-center">
+          <p>{saveStatus === 'failed' ? 'Your roll is waiting to be saved. Retry to reveal the same result.' : 'Saving your roll…'}</p>
+          <button type="button" className="px-4 py-2 rounded border border-amber-400 text-amber-300" onClick={() => void retrySave()}>Retry save</button>
+        </div>
+      ) : state.pendingUnlock ? <PendingUnlockReveal pending={state.pendingUnlock} animationsEnabled={state.animationsEnabled} onAccept={acknowledgeUnlock} /> : null}
     </GameContext.Provider>
   );
 };

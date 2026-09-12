@@ -162,7 +162,7 @@ describe('web ↔ RuneLite plugin lock parity', () => {
   it('the bundle carries the mode free baseline and the chunked start matches', async () => {
     setStartArea('lumbridge');
     const bundle = await buildRuneliteBundle([], state);
-    expect(bundle.freeAreas).toEqual(['Lumbridge']);
+    expect(bundle.freeAreas).toEqual(['Tutorial Island', 'Lumbridge']);
     // Plugin CHUNKED_START (50,50) must equal the web's free start chunk.
     expect(CHUNKED_START_KEY).toBe('50,50');
     expect(isChunkUnlocked('50,50', [])).toBe(true);

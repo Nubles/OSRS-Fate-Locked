@@ -1,19 +1,15 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { TableType } from '../types';
 import { useGame } from '../context/GameContext';
 import { bankLocksActive } from '../utils/reachability';
-import { validateEmptyRandomPoolHandling } from '../data/activityAccess';
 import { BANK_IDS, BANK_BY_ID } from '../data/banks';
-import { checkUnlockAvailability, describeRandomPoolBlockers, getPoolAndStateKey, isRandomUnlockEligible, pickRandomPoolEntry, UNLOCK_COST } from '../utils/gameEngine';
+import { checkUnlockAvailability, getPoolAndStateKey } from '../utils/gameEngine';
 import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, POH_LIST, MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, UTILITY_ITEM_IDS } from '../constants';
-import { VoidReveal } from './VoidReveal';
-import { wikiService } from '../services/WikiService';
-import { showToast } from '../utils/toast';
 import { Sparkles, Dices, HelpCircle, Dna, Lock, Sprout, TrendingUp, AlertTriangle, Check, Key } from 'lucide-react';
 import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { openDashboardPool } from '../utils/dashboardPoolNavigation';
-import { ALL_CHUNK_KEYS, chunkLabel } from '../utils/chunkAdjacency';
+import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, chunkLabel } from '../utils/chunkAdjacency';
 import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
 
 // --- Inner Components ---
@@ -169,146 +165,19 @@ export const SpendCard: React.FC<SpendCardProps> = ({
 };
 
 export const GachaSection: React.FC = () => {
-  const { keys, specialKeys, chaosKeys, unlocks, unlockContent, animationsEnabled, gameModeId, customMode, nextFloat } = useGame();
+  const { keys, specialKeys, chaosKeys, unlocks, rollUnlock, pendingUnlock, animationsEnabled, gameModeId, customMode } = useGame();
   const isChunked = gameModeId === 'chunked';
   const bankLocks = bankLocksActive(gameModeId, customMode);
-  const [pendingReveal, setPendingReveal] = useState<{ 
-      item: string, 
-      tableType: TableType, 
-      image?: string, 
-      isChaos: boolean, 
-      costType: 'key'|'chaosKey', 
-      cost: number 
-  } | null>(null);
 
   const canUnlock = checkUnlockAvailability(unlocks);
-
-  // Helper to get image (mirrored from App.tsx/gameEngine logic)
-  const getUnlockImage = (table: string, item: string) => {
-    const baseUrl = 'https://oldschool.runescape.wiki/images/';
-    if (UTILITY_ITEM_IDS[item]) return `https://chisel.weirdgloop.org/static/img/osrs-sprite/${UTILITY_ITEM_IDS[item]}.png`;
-    
-    if (table === 'skill') return `${baseUrl}${item}_icon.png`;
-    if (table === 'equipment') return SLOT_CONFIG[item] ? `${baseUrl}${SLOT_CONFIG[item].file}` : undefined;
-    if (table === 'region') return REGION_ICONS[item] ? `${baseUrl}${REGION_ICONS[item]}` : `${baseUrl}Globe_icon.png`;
-    if (table === 'chunks') return `${baseUrl}World_map_icon.png`;
-    if (table === 'banks') return `${baseUrl}Bank_icon.png`;
-    return SPECIAL_ICONS[item] ? `${baseUrl}${SPECIAL_ICONS[item]}` : undefined;
-  };
-  
-  // Categories whose unlock items have wiki pages with images we can fetch.
-  // Keep this list in sync with the equivalent list in Dashboard.tsx.
-  const WIKI_FETCH_TYPES = [
-      'region', 'boss', 'minigame', 'storage', 'guild',
-      'mobility', 'housing', 'arcana', 'merchants', 'farming',
-  ];
 
   // Calculate Total Level for Display
   const totalLevel = useMemo(() => {
       return Object.values(unlocks.levels).reduce((a, b) => (a as number) + (b as number), 0) as number;
   }, [unlocks.levels]);
 
-  const handleUnlock = async (table: TableType) => {
-    if (pendingReveal) return; // Guard: Do not allow another roll while reveal is pending
-    if (keys <= 0) return;
-    const { pool, stateKey } = getPoolAndStateKey(table);
-    const candidates = pool.map(item => ({ table, item }));
-    const validPool = pool.filter(item => isRandomUnlockEligible(table, item, unlocks, gameModeId, 'key'));
-    
-    if (validPool.length === 0) {
-        validateEmptyRandomPoolHandling(gameModeId, 'key');
-        const blockers = describeRandomPoolBlockers(candidates, unlocks, gameModeId, 'key');
-        if (blockers.sample.length > 0) {
-            const suffix = blockers.remaining === 1 ? '' : 's';
-            showToast(`No accessible unlocks remain in this category. ${blockers.sample.join('; ')}. ${blockers.remaining} more location-locked unlock${suffix} remain.`);
-        } else {
-            showToast('Nothing left to unlock in this category!');
-        }
-        return;
-    }
-
-    // Seeded-run choke point: table picks must draw through nextFloat.
-    const item = pickRandomPoolEntry(validPool, () => nextFloat('gacha'));
-    if (item === undefined) return;
-    const cost = UNLOCK_COST;
-    let imageUrl = getUnlockImage(stateKey, item);
-
-    // Fetch dynamic image if applicable using WikiService and NO ID override was found
-    if (!UTILITY_ITEM_IDS[item] && WIKI_FETCH_TYPES.some(t => stateKey.toLowerCase().includes(t))) {
-         const wikiUrl = await wikiService.fetchImage(item);
-         if (wikiUrl) imageUrl = wikiUrl;
-    }
-
-    setPendingReveal({ item, tableType: table, image: imageUrl, isChaos: false, costType: 'key', cost });
-  };
-
-  const handleChaosUnlock = async () => {
-      if (pendingReveal) return; // Guard: Do not allow another roll while reveal is pending
-      if (chaosKeys <= 0) return;
-
-      // Build a global pool of all valid unlocks across all tables
-      const allTables = [
-          TableType.EQUIPMENT, TableType.SKILLS,
-          ...(isChunked ? [TableType.CHUNKS] : [TableType.REGIONS]),
-          TableType.MOBILITY, TableType.ARCANA, TableType.POH, TableType.MERCHANTS,
-          TableType.MINIGAMES, TableType.BOSSES, TableType.STORAGE, TableType.GUILDS,
-          TableType.FARMING_LAYERS, TableType.SLAYER_UNLOCKS,
-          ...(bankLocks ? [TableType.BANKS] : []),
-      ];
-
-      const globalPool: { item: string, tableType: TableType, stateKey: string }[] = [];
-      const candidates: { item: string, table: TableType }[] = [];
-
-      allTables.forEach(table => {
-          const { pool, stateKey } = getPoolAndStateKey(table);
-          pool.forEach(item => {
-              candidates.push({ item, table });
-              if (isRandomUnlockEligible(table, item, unlocks, gameModeId, 'chaosKey')) {
-                  globalPool.push({ item, tableType: table, stateKey });
-              }
-          });
-      });
-
-      if (globalPool.length === 0) {
-        validateEmptyRandomPoolHandling(gameModeId, 'chaosKey');
-          const blockers = describeRandomPoolBlockers(candidates, unlocks, gameModeId, 'chaosKey');
-          if (blockers.sample.length > 0) {
-              const suffix = blockers.remaining === 1 ? '' : 's';
-              showToast(`Fate has no accessible unlocks to offer. ${blockers.sample.join('; ')}. ${blockers.remaining} more location-locked unlock${suffix} remain.`);
-          } else {
-              showToast('Fate has nothing left to offer you — all content unlocked!');
-          }
-          return;
-      }
-
-      // Pick a random item from the global pool (seeded-run choke point).
-      const selection = pickRandomPoolEntry(globalPool, () => nextFloat('chaos'));
-      if (!selection) return;
-      
-      let imageUrl = getUnlockImage(selection.stateKey, selection.item);
-
-      // Resolve the wiki image BEFORE opening the reveal (same as handleUnlock)
-      // so the modal doesn't flash a missing icon and then pop in.
-      if (!UTILITY_ITEM_IDS[selection.item] && WIKI_FETCH_TYPES.some(t => selection.stateKey.toLowerCase().includes(t))) {
-          const url = await wikiService.fetchImage(selection.item);
-          if (url) imageUrl = url;
-      }
-
-      setPendingReveal({
-          item: selection.item, 
-          tableType: selection.tableType, 
-          image: imageUrl, 
-          isChaos: true, 
-          costType: 'chaosKey', 
-          cost: 1 
-      });
-  };
-
-  const finalizeReveal = () => {
-      if (!pendingReveal) return;
-      unlockContent(pendingReveal.tableType, pendingReveal.item, pendingReveal.costType, pendingReveal.cost);
-      setPendingReveal(null);
-  };
+  const handleUnlock = (table: TableType) => rollUnlock(table);
+  const handleChaosUnlock = () => rollUnlock();
 
   // How many distinct entries the player has unlocked per category, for the
   // per-card progress bars. Equipment/Skills count slots/skills started (tier>0).
@@ -316,9 +185,9 @@ export const GachaSection: React.FC = () => {
     Object.values(rec ?? {}).filter((v) => (v as number) > 0).length;
   const SPEND_CATEGORIES: { type: TableType; label: string; subLabel: string; iconSrc?: string; icon?: any; unlocked: number; total: number; can: boolean }[] = [
     { type: TableType.EQUIPMENT, label: 'Equipment', subLabel: 'Upgrade Gear', iconSrc: OSRS_GACHA_ICONS.EQUIPMENT, unlocked: tierCount(unlocks.equipment), total: EQUIPMENT_SLOTS.length, can: canUnlock.equipment },
-    { type: TableType.SKILLS, label: 'Skills', subLabel: '+10 Level Cap', iconSrc: OSRS_GACHA_ICONS.SKILLS, unlocked: tierCount(unlocks.skills), total: SKILLS_LIST.length, can: canUnlock.skills },
+    { type: TableType.SKILLS, label: 'Skills', subLabel: 'Unlock next methods tier', iconSrc: OSRS_GACHA_ICONS.SKILLS, unlocked: tierCount(unlocks.skills), total: SKILLS_LIST.length, can: canUnlock.skills },
     isChunked
-      ? { type: TableType.CHUNKS, label: 'Chunks', subLabel: 'Adjacent Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: (unlocks.chunks ?? []).length, total: ALL_CHUNK_KEYS.length, can: canUnlock.chunks }
+      ? { type: TableType.CHUNKS, label: 'Chunks', subLabel: 'Adjacent Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: ALL_CHUNK_KEYS.filter(key => key !== CHUNKED_START_KEY && (unlocks.chunks ?? []).includes(key)).length, total: ALL_CHUNK_KEYS.length - 1, can: canUnlock.chunks }
       : { type: TableType.REGIONS, label: 'Areas', subLabel: 'New Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: canonicalizeAreaUnlocks(unlocks.regions ?? []).regions.length, total: REGIONS_LIST.length, can: canUnlock.regions },
     { type: TableType.MOBILITY, label: 'Mobility', subLabel: 'Travel Networks', iconSrc: OSRS_GACHA_ICONS.MOBILITY, unlocked: (unlocks.mobility ?? []).length, total: MOBILITY_LIST.length, can: canUnlock.mobility },
     { type: TableType.ARCANA, label: COMBAT_POWERS_LABEL, subLabel: COMBAT_POWERS_DESCRIPTION, iconSrc: OSRS_GACHA_ICONS.ARCANA, unlocked: (unlocks.arcana ?? []).length, total: ARCANA_LIST.length, can: canUnlock.arcana },
@@ -335,17 +204,6 @@ export const GachaSection: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col relative p-4">
-      {pendingReveal && (
-          <VoidReveal
-             itemName={pendingReveal.tableType === TableType.CHUNKS ? chunkLabel(pendingReveal.item) : pendingReveal.tableType === TableType.BANKS ? (BANK_BY_ID[pendingReveal.item]?.name ?? pendingReveal.item) : pendingReveal.item}
-             itemType={pendingReveal.tableType} 
-             itemImage={pendingReveal.image} 
-             onComplete={finalizeReveal} 
-             isChaos={pendingReveal.isChaos} 
-             animationsEnabled={animationsEnabled} 
-          />
-      )}
-
       {/* Omni-Key hint — these aren't rolled here; they're spent by clicking a
           locked item directly in the Progression Dashboard. */}
       {specialKeys > 0 && (
@@ -415,7 +273,7 @@ export const GachaSection: React.FC = () => {
             subLabel={c.subLabel}
             unlocked={c.unlocked}
             total={c.total}
-            disabled={!c.can}
+            disabled={!c.can || !!pendingUnlock}
             keysAvailable={keys > 0}
             complete={!c.can}
             onViewPool={() => openDashboardPool(c.type)}

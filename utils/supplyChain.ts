@@ -12,6 +12,9 @@ import { isNamedAreaReachableViaChunks } from './reachability';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { canonicalAreaName } from '../data/areaMapPolicy';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
+import { getActivityReq } from '../data/activityRequirements';
+import { evaluateActivityReadiness } from './activityReadiness';
+import { isAreaReachable } from './reachability';
 
 export interface RouteStatus {
   isAvailable: boolean;
@@ -55,6 +58,7 @@ const MERCHANT_BY_NORM_NAME: Map<string, string> = new Map(
  * O(n) array scans.
  */
 export interface AvailabilityContext {
+  gameState: GameState;
   regions: Set<string>;
   quests: Set<string>;
   bosses: Set<string>;
@@ -88,6 +92,7 @@ export const buildAvailabilityContext = (gs: GameState): AvailabilityContext => 
       .map(canonicalAreaName))
     : new Set(u.regions.map(canonicalAreaName));
   return {
+    gameState: gs,
     regions,
     quests: new Set(u.quests),
     bosses: new Set(u.bosses),
@@ -140,6 +145,10 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
     if (collectMissing) missing.push(reason);
     return collectMissing; // keep going to collect all reasons when asked
   };
+  if (source.requirementsUnverified && !fail('Source access requirements have not been verified')) return result(false);
+  for (const check of source.manualRequirements ?? []) {
+    if (!fail(`Confirm: ${check}`)) return result(false);
+  }
 
   // 1. Region
   let hasRegion = false;
@@ -147,14 +156,10 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
     // Resource source geography is ownership metadata rather than a map-pin
     // instruction, so aliases intentionally resolve to their canonical owner.
     const r = canonicalAreaName(authoredRegion);
-    if (r === 'Any' || isFreeArea(r) || ctx.regions.has(r)) {
+    if (r === 'Any' || isAreaReachable(r, ctx.gameState.unlocks, ctx.gameState.gameModeId)) {
       hasRegion = true; break;
     }
-    const children = REGION_GROUPS[r];
-    if (children) {
-      for (const c of children) if (ctx.regions.has(c)) { hasRegion = true; break; }
-      if (hasRegion) break;
-    }
+
   }
   if (!hasRegion && !fail(`Region: ${source.regions.join(' or ')}`)) return result(false);
 
@@ -187,6 +192,12 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
     if (!ok) {
       if (dependency) unlockDependencies.push(dependency);
       if (!fail(`Unlock: ${u}`)) return result(false);
+    }
+    if (ok) {
+      const readiness = evaluateActivityReadiness(true, getActivityReq(u), ctx.gameState.unlocks, ctx.gameState.gameModeId);
+      const checks = readiness.status === 'NOT_READY' ? readiness.blockers.map(b => b.label)
+        : readiness.status === 'NEEDS_CONFIRMATION' ? readiness.checks : [];
+      for (const check of checks) if (!fail(check)) return result(false);
     }
   }
 

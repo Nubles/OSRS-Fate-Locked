@@ -150,7 +150,7 @@ describe('area map policy', () => {
     const referenced = Object.keys(AREA_REFERENCES);
     const exempted = Object.keys(INTENTIONALLY_UNMAPPABLE_AREAS);
     expect(referenced.filter((name) => !REGIONS_LIST.includes(name))).toEqual([]);
-    expect(exempted.filter((name) => !REGIONS_LIST.includes(name))).toEqual([]);
+    expect(exempted.filter((name) => REGIONS_LIST.includes(name))).toEqual([]);
     expect(referenced.filter((name) => exempted.includes(name))).toEqual([]);
   });
 

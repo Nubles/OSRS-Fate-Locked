@@ -9,7 +9,8 @@ import {
   QuestData, QuestLocationRequirement, QuestRequirementOption, QUEST_DATA,
   hasCompletedQuestCapeRequirements, questAccessPolicyStructureErrors,
 } from '../data/questData';
-import { ALL_DIARY_TASKS, DiaryTaskRequirementOption } from '../data/diaryTasks';
+import { chunkUnlocked, placeOf, chunkUnlockRequirement } from './chunkLocations';
+import { ALL_DIARY_TASKS, DiaryTaskRequirementOption, DiaryLocationRequirement } from '../data/diaryTasks';
 import { DiaryTier } from '../data/diaryData';
 import { UnlockState } from '../types';
 import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
@@ -30,7 +31,7 @@ export type SkillEligibilityRequirement =
   | { type: 'anyOf'; skills: string[]; level: number };
 
 export type DirectEligibilityBlocker =
-  | { kind: 'region'; label: string }
+  | { kind: 'region'; label: string; chunk?: { cx: number; cy: number } }
   | { kind: 'skill'; label: string; requirement?: SkillEligibilityRequirement }
   | { kind: 'combat'; label: string }
   | { kind: 'quest'; label: string };
@@ -233,6 +234,7 @@ export function getQuestStatus(
  * with few-but-blocked tasks never outranks one the player can finish today.
  */
 export interface DoableTask {
+  locations?: DiaryLocationRequirement[];
   id: string;
   skills?: Record<string, number>;
   items?: string[];
@@ -271,6 +273,7 @@ const requirementOptionParts = (option: DiaryTaskRequirementOption): string[] =>
   ] : []),
   ...(option.quests ?? []),
   ...(option.cas ?? []).map(tier => tier + ' Combat Achievements'),
+  ...(option.locations ?? []).map(location => location.label),
   ...(option.regions ?? []),
   ...(option.combatLevel ? ['Combat level ' + option.combatLevel] : []),
   ...(option.allQuests ? ['All quests'] : []),
@@ -318,6 +321,23 @@ const evaluateDiaryRequirement = (
   for (const region of requirement.regions ?? []) {
     if (isAreaReachable(region, unlocks, gameModeId)) evidence.push(region);
     else blockers.push({ kind: 'region', label: region });
+  }
+  for (const location of requirement.locations ?? []) {
+    if (location.chunkOptions.some(({ cx, cy }) => chunkUnlocked(cx, cy, unlocks, gameModeId))) evidence.push(location.label);
+    else blockers.push({
+      kind: 'alternative', label: location.label, blockerKinds: ['region'],
+      routes: location.chunkOptions.map(({ cx, cy }) => {
+        const place = placeOf(cx, cy);
+        const remaining = chunkUnlockRequirement(cx, cy, unlocks, gameModeId).remaining;
+        const areas = remaining.length ? remaining : [place.subArea ?? place.region ?? location.label];
+        return {
+          label: `${place.label} (${cx}, ${cy})`,
+          blockers: gameModeId === 'chunked'
+            ? [{ kind: 'region' as const, label: `Chunk ${cx}, ${cy}`, chunk: { cx, cy } }]
+            : areas.map(label => ({ kind: 'region' as const, label })),
+        };
+      }),
+    });
   }
   if (requirement.anyOfRegions?.length) {
     const reachableRegion = requirement.anyOfRegions.find(region => (

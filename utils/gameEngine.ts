@@ -2,23 +2,38 @@
 import { UnlockState, TableType } from '../types';
 import { SKILLS_LIST, EQUIPMENT_SLOTS, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST } from '../data/items';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
-import { ALL_CHUNK_KEYS, isFrontierChunk } from './chunkAdjacency';
+import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, isFrontierChunk } from './chunkAdjacency';
 import { BANK_IDS } from '../data/banks';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { getActivityAccess } from './activityAccess';
-import { canonicalAreaName, canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
+import { canonicalAreaName } from '../data/areaMapPolicy';
+import { bankLocksActive, isAreaReachable } from './reachability';
+import type { GameModeRules } from '../config/gameModes';
+
+/** The same tables and eligible entries drive rolls and their displayed odds. */
+export const randomUnlockTables = (mode?: string, custom?: GameModeRules): TableType[] => [
+    TableType.EQUIPMENT, TableType.SKILLS,
+    mode === 'chunked' ? TableType.CHUNKS : TableType.REGIONS,
+    TableType.MOBILITY, TableType.ARCANA, TableType.POH, TableType.MERCHANTS,
+    TableType.MINIGAMES, TableType.BOSSES, TableType.STORAGE, TableType.GUILDS,
+    TableType.FARMING_LAYERS, TableType.SLAYER_UNLOCKS,
+    ...(bankLocksActive(mode, custom) ? [TableType.BANKS] : []),
+];
+
+export const randomUnlockPool = (unlocks: UnlockState, mode = 'vanilla', costType: 'key' | 'chaosKey' = 'key', table?: TableType, custom?: GameModeRules): RandomUnlockCandidate[] =>
+    randomUnlockTables(mode, custom).filter(t => table === undefined || t === table).flatMap(t =>
+        getPoolAndStateKey(t).pool.filter(item => isRandomUnlockEligible(t, item, unlocks, mode, costType)).map(item => ({ table: t, item })));
 
 export const rollDice = (max: number = 100) => Math.floor(Math.random() * max) + 1;
 
 export const checkUnlockAvailability = (unlocks: UnlockState) => {
-    const canonicalRegions = canonicalizeAreaUnlocks(unlocks.regions).regions;
     const totalSkillTiers = (Object.values(unlocks.skills) as number[]).reduce((a, b) => a + b, 0);
     const totalEquipTiers = (Object.values(unlocks.equipment) as number[]).reduce((a, b) => a + b, 0);
     return {
         equipment: totalEquipTiers < (EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX),
         skills: totalSkillTiers < (SKILLS_LIST.length * 10),
-        regions: canonicalRegions.length < REGIONS_LIST.length,
-        chunks: (unlocks.chunks ?? []).length < ALL_CHUNK_KEYS.length,
+        regions: REGIONS_LIST.some(area => !isAreaReachable(area, unlocks)),
+        chunks: ALL_CHUNK_KEYS.some(key => key !== CHUNKED_START_KEY && !(unlocks.chunks ?? []).includes(key)),
         mobility: unlocks.mobility.length < MOBILITY_LIST.length,
         arcana: unlocks.arcana.length < ARCANA_LIST.length,
         poh: unlocks.housing.length < POH_LIST.length,
@@ -40,7 +55,7 @@ export const isValidUnlock = (table: TableType, item: string, unlocks: UnlockSta
         return true;
     }
     if (table === TableType.EQUIPMENT) return (unlocks.equipment[item] || 0) < EQUIPMENT_TIER_MAX;
-    if (table === TableType.REGIONS) return !canonicalizeAreaUnlocks(unlocks.regions).regions.includes(canonicalAreaName(item));
+    if (table === TableType.REGIONS) return !isAreaReachable(canonicalAreaName(item), unlocks);
     if (table === TableType.MOBILITY) return !unlocks.mobility.includes(item);
     if (table === TableType.ARCANA) return !unlocks.arcana.includes(item);
     if (table === TableType.POH) return !unlocks.housing.includes(item);

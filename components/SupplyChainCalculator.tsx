@@ -1,3 +1,4 @@
+import { resourcePlanningKey, readResourceQuantities, hasLegacyResourcePlanning, copyLegacyResourcePlanning } from '../utils/resourcePlanningStorage';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
@@ -12,9 +13,7 @@ import { EntityLocations } from './EntityLocations';
 import { SOURCE_TYPE_KINDS as SOURCE_KINDS } from '../utils/chunkLocations';
 
 const FAVORITES_KEY = 'FATE_RESOURCE_FAVORITES';
-const INVENTORY_KEY = 'FATE_RESOURCE_INVENTORY';
 const RECENT_KEY = 'FATE_RESOURCE_RECENT';
-const PLAN_KEY = 'FATE_RESOURCE_PLAN';
 const MAX_FAVORITES = 20;
 const MAX_RECENT = 10;
 
@@ -69,11 +68,19 @@ const ItemImage = ({ name, size = 'md', qty }: { name: string, size?: 'sm' | 'md
     );
 };
 
-export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClose, initialQuery }) => {
+export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = props => {
+  const { runId } = useGame();
+  return <RunSupplyChainCalculator key={runId} {...props} />;
+};
+
+const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClose, initialQuery }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
   const gameState = useGame();
-  const { togglePin, pinnedGoals } = gameState;
+  const { togglePin, pinnedGoals, runId } = gameState;
+  const INVENTORY_KEY = resourcePlanningKey('inventory', runId);
+  const PLAN_KEY = resourcePlanningKey('plan', runId);
+  const [legacyAvailable, setLegacyAvailable] = useState(() => hasLegacyResourcePlanning(localStorage));
   const [query, setQuery] = useState(initialQuery || '');
   const [targetQty, setTargetQty] = useState(1);
   const [history, setHistory] = useState<string[]>([]);
@@ -160,7 +167,7 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
     } catch {
       /* localStorage unavailable — inventory stays in-memory only */
     }
-  }, [inventory]);
+  }, [inventory, INVENTORY_KEY]);
 
   useEffect(() => {
     try { localStorage.setItem(RECENT_KEY, JSON.stringify(recent)); } catch {}
@@ -168,7 +175,7 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
 
   useEffect(() => {
     try { localStorage.setItem(PLAN_KEY, JSON.stringify(planTargets)); } catch {}
-  }, [planTargets]);
+  }, [planTargets, PLAN_KEY]);
 
   const trackRecent = (item: string) => {
     if (!RESOURCE_MAP[item]) return;
@@ -360,10 +367,17 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
             </div>
             <div>
                 <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">The Resource Engine <SectionGuide id="SUPPLY" /></h2>
+                {legacyAvailable && <button type="button" className="text-xs text-amber-300 underline" onClick={() => {
+                  if (copyLegacyResourcePlanning(localStorage, runId)) {
+                    setInventory(readResourceQuantities(localStorage, INVENTORY_KEY));
+                    setPlanTargets(readResourceQuantities(localStorage, PLAN_KEY));
+                    setLegacyAvailable(false);
+                  }
+                }}>Copy previous shared inventory and plan into this run</button>}
                 <p className="text-xs text-gray-500">Supply Chain Solver</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white">
+          <button aria-label="Close Resource Engine" onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white">
             <X size={20} />
           </button>
         </div>

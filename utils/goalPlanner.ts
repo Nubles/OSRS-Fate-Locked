@@ -145,7 +145,9 @@ function requirementOptionPlanSteps(option: any): PlanStep[] {
 }
 
 function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): PlanStep {
-  if (blocker.kind === 'region') return areaPlanStep(blocker.label);
+  if (blocker.kind === 'region') return blocker.chunk
+    ? { kind: 'region', id: `${blocker.chunk.cx},${blocker.chunk.cy}`, label: blocker.label, unlockTable: TableType.CHUNKS, done: false }
+    : areaPlanStep(blocker.label);
   if (blocker.kind === 'quest') {
     return { kind: 'quest', id: blocker.label, label: blocker.label, unlockTable: TableType.QUESTS, done: false };
   }

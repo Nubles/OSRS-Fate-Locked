@@ -159,7 +159,7 @@ export const REGION_GROUPS: Record<string, string[]> = {
   ],
   'Kandarin': [
     'East Ardougne', 'West Ardougne', 'Catherby', "Seers' Village", 'Camelot', 'Yanille',
-    'Port Khazard', 'Hemenster', 'Fishing Guild', "Legends' Guild",
+    'Port Khazard', 'Khazard Battlefield', 'Hemenster', 'Fishing Guild', "Legends' Guild",
     'Tree Gnome Stronghold', 'Gnome Village', 'Witchaven', 'Piscatoris Fishing Colony',
     'Feldip Hills', 'Baxtorian Falls', 'Barbarian Outpost', 'Fight Arena',
     'Castle Wars', 'Corsair Cove', "Eagles' Peak", 'Observatory', 'Ourania Altar',
@@ -192,7 +192,7 @@ export const REGION_GROUPS: Record<string, string[]> = {
     'Arandar', 'Gwenith', 'Iorwerth Camp', 'Poison Waste'
   ],
   'Wilderness': [
-    'Ferox Enclave', 'Wilderness Volcano', 'Chaos Temple', "Rogues' Castle", 'Lava Maze',
+    'Ferox Enclave', 'Wilderness Volcano', 'Chaos Temple', 'Chaos Altar', "Rogues' Castle", 'Lava Maze',
     "Wilderness Bandit Camp", "Dark Warriors' Fortress", 'Graveyard of Shadows',
     'Forgotten Cemetery', 'Mage Arena', "Scorpia's Cave", 'Fountain of Rune',
     'Wilderness God Wars Dungeon', "Daimon's Crater",
@@ -208,7 +208,7 @@ export const REGION_GROUPS: Record<string, string[]> = {
   , 'Tlati Rainforest', 'Auburnvale', 'Mistrock', 'Sunset Coast'
   ],
   'Islands & Others': [
-    'Fossil Island', 'Ape Atoll', 'Zanaris', 'Tutorial Island'
+    'Fossil Island', 'Ape Atoll', 'Zanaris'
   , 'Isle of Souls', 'Lithkren'
   ],
   'The Open Seas': [

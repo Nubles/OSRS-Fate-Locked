@@ -48,7 +48,7 @@ export default defineConfig(({ mode }) => {
     base: process.env.VITE_BASE || '/',
     ...{
       test: {
-        exclude: [...configDefaults.exclude, '**/.worktrees/**'],
+        exclude: [...configDefaults.exclude, '**/.worktrees/**', '**/output/**'],
       },
     },
     build: {

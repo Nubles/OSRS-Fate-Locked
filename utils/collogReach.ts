@@ -19,12 +19,14 @@ import { UnlockState } from '../types';
 // A few Collection Log boss pages display differently from the unlock table or
 // bundle several bosses; map each page to the BOSSES_LIST entry/entries it needs.
 const BOSS_PAGE_ALIASES: Record<string, string[]> = {
+  'Callisto & Artio': ['Callisto', 'Artio'],
+  'Thermonuclear smoke devil': ['Thermonuclear Smoke Devil'],
   'Barrows Chests': ['Barrows Brothers'],
-  'Fight Caves': ['TzHaar Fight Cave'],
+  'The Fight Caves': ['TzHaar Fight Cave'],
   'The Inferno': ['Inferno'],
   'Royal Titans': ['The Royal Titans'],
-  'Venenatis and Spindel': ['Venenatis', 'Spindel'],
-  "Vet'ion and Calvar'ion": ["Vet'ion", "Calvar'ion"],
+  'Venenatis & Spindel': ['Venenatis', 'Spindel'],
+  "Vet'ion & Calvar'ion": ["Vet'ion", "Calvar'ion"],
 };
 // Joke/novelty pages with no real unlock gate — treated as baseline-available.
 const BASELINE_BOSS_PAGES = new Set<string>(['Brutus']);
@@ -70,7 +72,7 @@ const bossPageObtainable = (page: string, bossSet: Set<string>, unlocked: Set<st
   const targets = bossSet.has(page) ? [page] : BOSS_PAGE_ALIASES[page];
   if (!targets) return { obtainable: true, gated: false }; // unknown source → don't penalise
   const obtainable = targets.some(t => unlocked.has(t));
-  return { obtainable, gated: true, missing: obtainable ? undefined : page };
+  return { obtainable, gated: true, missing: obtainable ? undefined : targets[0] };
 };
 
 export function collogReachability(unlocks: UnlockState): CollogReach {
@@ -94,7 +96,7 @@ export function collogReachability(unlocks: UnlockState): CollogReach {
       if (!gated) { tabObtainable += n; continue; } // Clues / Other → baseline
 
       if (tabName === 'Minigames') {
-        const ok = !miniSet.has(page.name) || unlockedMinis.has(page.name);
+        const ok = miniSet.has(page.name) && unlockedMinis.has(page.name);
         if (ok) tabObtainable += n;
         else suggestions.push({ page: page.name, tab: tabName, items: n, unlock: page.name, kind: 'minigame' });
         if (miniSet.has(page.name)) gatedTotal += n;

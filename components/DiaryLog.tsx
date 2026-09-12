@@ -4,7 +4,7 @@ import { useGame } from '../context/GameContext';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
 import { Map, CheckCircle2, Lock, Sparkles, BookOpen, ChevronDown, CheckSquare, Square, ExternalLink, ArrowUpRight, TrendingUp, MapPin } from 'lucide-react';
-import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
+import { chunkForPlace, chunkUnlocked, chunkUnlockRequirement, showChunkOnMap } from '../utils/chunkLocations';
 import { diaryUnmet, isAlmostThere } from '../utils/journalProgress';
 import { isAreaReachable } from '../utils/reachability';
 import { effectiveSkillLevel } from '../utils/slayerReach';
@@ -346,7 +346,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                             : undefined;
                           const hasReqs = Boolean(
                             Object.keys(task.skills ?? {}).length || task.items?.length || task.quests?.length
-                            || task.regions?.length || task.anyOfRegions?.length
+                            || task.regions?.length || task.anyOfRegions?.length || task.locations?.length
                             || task.oneOf?.length || task.combatLevel
                             || task.allQuests || task.anySkillLevel || task.questPoints !== undefined
                             || task.manualRequirements?.length,
@@ -363,7 +363,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                             chunk: chunkForPlace(region),
                           }));
                           const hasRequirementActions = unmetSkillRequirements.length > 0
-                            || regionRequirements.length > 0;
+                            || regionRequirements.length > 0 || (task.locations?.length ?? 0) > 0;
                           const completionLabel = task.description
                             ? `Complete diary task: ${task.description}`
                             : 'Complete diary task';
@@ -462,6 +462,18 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                       </button>
                                     );
                                   })}
+                                  {task.locations?.map(location => <div key={location.label} className="basis-full flex flex-wrap items-center gap-1.5">
+                                    <span className="text-[9px] text-gray-400">{location.label} — one of:</span>
+                                    {location.chunkOptions.map(({ cx, cy }) => {
+                                      const met = chunkUnlocked(cx, cy, unlocks, gameModeId);
+                                      return <button key={`${cx},${cy}`} type="button" onClick={() => showChunkOnMap(cx, cy)}
+                                        title={chunkUnlockRequirement(cx, cy, unlocks, gameModeId).text}
+                                        aria-label={`Show ${location.label} at ${cx}, ${cy} on the map`}
+                                        className={`rounded border px-1.5 py-0.5 text-[9px] ${met ? 'border-white/10 text-gray-400' : 'border-red-500/30 text-red-400'}`}>
+                                        <MapPin size={8} className="inline" /> {cx}, {cy}
+                                      </button>;
+                                    })}
+                                  </div>)}
                                   {regionRequirements.map(({ region, chunk }) => {
                                     const isUnlocked = isAreaReachable(region, unlocks, gameModeId);
                                     const cls = isUnlocked ? 'border-white/5 text-gray-500 bg-black/30 hover:bg-white/5' : 'border-red-500/30 text-red-400 bg-red-900/10 hover:bg-red-900/20';

@@ -1,3 +1,4 @@
+import type { GameModeRules } from '../config/gameModes';
 import { useState, useEffect, useRef } from 'react';
 import { Achievement, ACHIEVEMENTS, earnedIds } from '../utils/achievements';
 
@@ -9,12 +10,12 @@ import { Achievement, ACHIEVEMENTS, earnedIds } from '../utils/achievements';
  *
  * Returns [newlyEarned | null, dismiss].
  */
-export function useAchievementReveal(unlocks: any): [Achievement[] | null, () => void] {
+export function useAchievementReveal(unlocks: any, gameModeId?: string, customMode?: GameModeRules): [Achievement[] | null, () => void] {
   const prevRef = useRef<Set<string> | null>(null);
   const [newly, setNewly] = useState<Achievement[] | null>(null);
 
   useEffect(() => {
-    const earned = earnedIds(unlocks);
+    const earned = earnedIds(unlocks, gameModeId, customMode);
     const prev = prevRef.current;
     prevRef.current = earned;
 
@@ -23,7 +24,7 @@ export function useAchievementReveal(unlocks: any): [Achievement[] | null, () =>
 
     const fresh = ACHIEVEMENTS.filter((a) => earned.has(a.id) && !prev.has(a.id));
     if (fresh.length > 0) setNewly(fresh);
-  }, [unlocks]);
+  }, [unlocks, gameModeId, customMode]);
 
   const dismiss = () => setNewly(null);
   return [newly, dismiss];

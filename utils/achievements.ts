@@ -1,3 +1,4 @@
+import type { GameModeRules } from '../config/gameModes';
 /**
  * Achievements & milestones engine.
  *
@@ -36,7 +37,7 @@ export interface Achievement {
   category: AchievementCategory;
   icon: AchievementIcon;
   /** Current/target progress for this snapshot. Earned when current >= target. */
-  progress: (u: UnlockState) => { current: number; target: number };
+  progress: (u: UnlockState, mode?: string, custom?: GameModeRules) => { current: number; target: number };
 }
 
 export interface EvaluatedAchievement extends Achievement {
@@ -81,7 +82,7 @@ function tiers(
   baseId: string,
   category: AchievementCategory,
   defaultIcon: AchievementIcon,
-  metric: (u: UnlockState) => number,
+  metric: (u: UnlockState, mode?: string, custom?: GameModeRules) => number,
   steps: Array<{ title: string; description: string; target: number; icon?: AchievementIcon }>,
 ): Achievement[] {
   return steps.map((s) => ({
@@ -90,7 +91,7 @@ function tiers(
     description: s.description,
     category,
     icon: s.icon ?? defaultIcon,
-    progress: (u: UnlockState) => ({ current: metric(u), target: s.target }),
+    progress: (u: UnlockState, mode?: string, custom?: GameModeRules) => ({ current: metric(u, mode, custom), target: s.target }),
   }));
 }
 
@@ -175,9 +176,9 @@ export const ACHIEVEMENTS: Achievement[] = [
 ];
 
 /** Score every achievement against the snapshot. Pure — safe in useMemo. */
-export function evaluateAchievements(u: UnlockState): EvaluatedAchievement[] {
+export function evaluateAchievements(u: UnlockState, mode?: string, custom?: GameModeRules): EvaluatedAchievement[] {
   return ACHIEVEMENTS.map((a) => {
-    const { current, target } = a.progress(u);
+    const { current, target } = a.progress(u, mode, custom);
     const earned = current >= target;
     const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
     return { ...a, current, target, earned, pct };
@@ -185,10 +186,10 @@ export function evaluateAchievements(u: UnlockState): EvaluatedAchievement[] {
 }
 
 /** Set of earned achievement ids — used by the "newly earned" detector. */
-export function earnedIds(u: UnlockState): Set<string> {
+export function earnedIds(u: UnlockState, mode?: string, custom?: GameModeRules): Set<string> {
   const set = new Set<string>();
   for (const a of ACHIEVEMENTS) {
-    const { current, target } = a.progress(u);
+    const { current, target } = a.progress(u, mode, custom);
     if (current >= target) set.add(a.id);
   }
   return set;

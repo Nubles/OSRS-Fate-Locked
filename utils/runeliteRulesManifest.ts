@@ -18,7 +18,7 @@ import {
 } from './chunkPermissionSnapshot';
 import { entryBlockedGate } from './questDoability';
 import { bankLocksActive } from './reachability';
-import { visibleAreaUnlocks } from '../data/areaMapPolicy';
+import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
 const RULES_VERSION = '1';
 const CONTENT_VERSION = 1;
 const DETECTOR_CONTRACT_VERSION = 1;
@@ -158,7 +158,8 @@ export async function buildRuneliteRulesManifest(
     bankLocks: bankLocksActive(input.run.gameModeId, input.run.customMode),
     knownMobility: sorted(MOBILITY_LIST),
     unlocks: {
-      regions: sorted(visibleAreaUnlocks(unlocks.regions)),
+      // Keep explicit legacy parents in the wire format, matching the bundle root.
+      regions: sorted(canonicalizeAreaUnlocks(unlocks.regions).regions),
       chunks: sorted(unlocks.chunks),
       skills: sortedNumberRecord(unlocks.skills),
       levels: sortedNumberRecord(unlocks.levels),
