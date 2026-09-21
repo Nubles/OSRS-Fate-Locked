@@ -19,35 +19,35 @@ export const CA_DATA: Record<string, CATier> = {
   },
   'Medium': {
     id: 'Medium',
-    pointsRequired: 161,
+    pointsRequired: 169,
     recommendedStats: 'Base 70 Combat, 77 Slayer',
     keyUnlocks: ['Barrows', 'Giant Mole', 'Sarachnis', 'Dagannoth Kings', 'Hespori'],
     difficulty: DropSource.CA_MEDIUM
   },
   'Hard': {
     id: 'Hard',
-    pointsRequired: 419,
+    pointsRequired: 436,
     recommendedStats: 'Base 80 Combat, 85 Slayer',
     keyUnlocks: ['Zulrah', 'Vorkath', 'Grotesque Guardians', 'God Wars Dungeon', 'Muspah'],
     difficulty: DropSource.CA_HARD
   },
   'Elite': {
     id: 'Elite',
-    pointsRequired: 1075,
+    pointsRequired: 1100,
     recommendedStats: 'Base 90 Combat, 90 Slayer',
     keyUnlocks: ['Chambers of Xeric', 'Gauntlet', 'Hydra', 'Nightmare', 'Sire', 'Cerberus'],
     difficulty: DropSource.CA_ELITE
   },
   'Master': {
     id: 'Master',
-    pointsRequired: 1940,
+    pointsRequired: 1965,
     recommendedStats: 'Maxed Combat, 95 Slayer',
     keyUnlocks: ['Theatre of Blood', 'Inferno', 'Corrupted Gauntlet', 'Nex', 'Phosani'],
     difficulty: DropSource.CA_MASTER
   },
   'Grandmaster': {
     id: 'Grandmaster',
-    pointsRequired: 2672,
+    pointsRequired: 2697,
     recommendedStats: 'Maxed, BiS Gear',
     keyUnlocks: ['All Content (Speedruns & Perfect kills)'],
     difficulty: DropSource.CA_GRANDMASTER

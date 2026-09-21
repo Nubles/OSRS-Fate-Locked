@@ -70,8 +70,10 @@ export interface ResolverOptions {
 export const MAX_EXACT_ROUTE_COMBINATIONS = 200_000;
 /** Hard per-requirement guard across source, candidate, combination, and ranking work. */
 export const MAX_ROUTE_SEARCH_WORK_UNITS = 500_000;
-/** Stable four-pilot workload ceiling used instead of a runner-sensitive timer. */
-export const PILOT_ROUTE_SEARCH_WORK_UNIT_BUDGET = 30_000;
+/** Four-pilot ceiling for the September surface + interior source snapshot.
+ * More exact source records increase inspection work; production guards above
+ * and the separate combination-count regression remain unchanged. */
+export const PILOT_ROUTE_SEARCH_WORK_UNIT_BUDGET = 40_000;
 
 export const DEFAULT_RESOLVER_OPTIONS: Required<ResolverOptions> = {
   maxDepth: 12,
@@ -202,6 +204,7 @@ const uniqueNotes = (notes: readonly string[]): string[] => unique(notes.filter(
 
 const gateKey = (gate: RouteGate): string => {
   switch (gate.type) {
+    case 'RFD_SUBQUESTS': return `RFD_SUBQUESTS:${gate.count}`;
     case 'QUEST':
       return `QUEST:${gate.questId}`;
     case 'SKILL':

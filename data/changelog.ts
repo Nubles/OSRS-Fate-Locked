@@ -19,6 +19,29 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-21-content-and-access',
+    title: 'More Complete Content and Access Checks',
+    date: '2026-09-21',
+    sections: {
+      added: [
+        'Interior shops, monsters, resources and quest stages now appear at their entrances, with access requirements preserved.',
+        'Added A Ruff Situation, Crab Quest, nine Mad Angel combat achievements, and the latest collection-log drops.',
+        'The merchant directory includes tanning, taxidermy, decanting and pet adoption services, plus missing reward-shop inventories.',
+        'Keldagrim and the Blast Furnace now have a bank unlock at their surface entrance. Interior bank access retains its entry requirements.',
+      ],
+      fixed: [
+        'Shop access now checks quest and location requirements consistently in the directory, chunk panels and RuneLite permissions. The Mad Angel uses its boss unlock.',
+        'Slayer locations recognise monster families and retain location-specific assignments. Unverified access is shown as needing review.',
+        'Moved Venator collection-log entries retain their original progress and reward identity. Duplicate saved entries merge without adding their counts together.',
+        'Failed shop and Slayer content loads now offer a retry. Content checks report unavailable sources and new quests instead of a false all-clear.',
+      ],
+      changed: [
+        'In Chunked mode, completing Pandemonium and unlocking Sailing adds offshore land and documented boat landings to the frontier. The 624 land unlocks stay the same; ocean navigation does not spend a land unlock.',
+        'Removed historical shop inventories from active sources and labelled shops with no default stock. Item-source coverage remains partial wherever the source data cannot prove completeness.',
+      ],
+    },
+  },
+  {
     id: '2026-09-12-unlock-consistency',
     title: 'Unlocks Stay Consistent',
     date: '2026-09-12',

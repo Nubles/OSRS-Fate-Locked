@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => {
       init: vi.fn(async () => true),
       contentFor: vi.fn(() => state.content),
       aggregate: vi.fn(() => state.content),
+      entityLocations: vi.fn((): { locations: { cx: number; cy: number }[] } | null => null),
       entrancesFor: vi.fn(() => []),
       connectGraph: vi.fn(() => ({})),
       skillYields: vi.fn(() => ({})),
@@ -86,7 +87,7 @@ beforeEach(() => {
   mocks.state.skills = {};
   mocks.state.levels = {};
   mocks.state.content = { ...emptyContent(), monsters: [{ name: 'Rat', count: 3, slayer: null }] };
-  mocks.service.chunkEntryRequirements.mockReturnValue(['Dragon Slayer I']);
+  mocks.service.chunkEntryRequirements.mockReturnValue([]);
   mocks.service.entrancesFor.mockReturnValue([{
     location: 'Taverley Dungeon',
     label: 'Entrance to Taverley Dungeon',
@@ -102,6 +103,8 @@ beforeEach(() => {
   mocks.service.skillYields.mockReturnValue({});
   mocks.service.taskRequirements.mockReset();
   mocks.service.taskRequirements.mockReturnValue([]);
+  mocks.service.entityLocations.mockReset();
+  mocks.service.entityLocations.mockReturnValue(null);
 });
 
 describe('ChunkActivityPanel activity accordions', () => {
@@ -276,7 +279,7 @@ describe('ChunkActivityPanel activity accordions', () => {
     mocks.state.farming = ['Herb'];
     mocks.state.merchants = ['General Stores'];
     mocks.state.mobility = ['Fairy Rings'];
-    mocks.state.skills = { Slayer: 1, Woodcutting: 6 };
+    mocks.state.skills = { Slayer: 2, Woodcutting: 6 };
     mocks.state.levels = { Slayer: 15, Woodcutting: 60 };
     mocks.state.regions = ['Misthalin', 'Varrock'];
     mocks.service.connectGraph.mockReturnValue({ '12853': ['12854'] });
@@ -660,6 +663,7 @@ describe('ChunkActivityPanel activity accordions', () => {
     mocks.service.taskRequirements.mockImplementation(
       (_name: string, _kind: string, cx: number, _cy: number) => cx === 51 ? ['Dragon Slayer I'] : [],
     );
+    mocks.service.entityLocations.mockReturnValue({ locations: [{ cx: 51, cy: 53 }] });
 
     render(
       <ChunkActivityPanel

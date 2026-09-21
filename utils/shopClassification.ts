@@ -10,6 +10,8 @@
  * (specific before generic, e.g. pickaxe→Mining before axe→Axe).
  */
 const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
+  "martin thwait's lost and found": 'Claw Shops',
+  "quartermaster's stores": 'Halberd Shops',
   // Armour shops whose names do not reveal their actual speciality.
   'armour shop (jatizso)': 'Chainbody Shops',
   "scavvo's rune store": 'Chainbody Shops',

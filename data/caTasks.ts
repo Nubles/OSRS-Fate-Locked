@@ -9,9 +9,9 @@ export interface CATask {
 }
 
 // Generated from data/sources/combat-achievement-tasks.json.
-// Source API snapshot retrieved 2026-08-16T15:14:32.746Z.
-// The overview, authoritative Globals, and six tier task tables reconcile at 646 tasks; Maggot King Speed Chaser is Grandmaster.
-// Verified: 2026-08-16. Run npm run ca:sync; do not hand-edit.
+// Source API snapshot retrieved 2026-09-21T16:32:10.000Z.
+// The six official tier task tables and authoritative Globals reconcile at 655 tasks; nine tasks were added since the August baseline.
+// Verified: 2026-09-21. Run npm run ca:sync; do not hand-edit.
 export const ALL_CA_TASKS: CATask[] = [
   // EASY TIER (41)
   { id: 'ca_0', tierId: 'Easy', monster: 'Aberrant Spectre', name: 'Noxious Foe', description: 'Kill an Aberrant Spectre.' },
@@ -55,7 +55,7 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_625', tierId: 'Easy', monster: 'Shellbane gryphon', name: 'Shellbane Adept', description: 'Kill the Shellbane Gryphon 25 times.' },
   { id: 'ca_630', tierId: 'Easy', monster: 'Shellbane gryphon', name: 'Dry Cleaning', description: 'Kill the Shellbane Gryphon after clearing its corrosive spit from your armour.' },
   { id: 'ca_632', tierId: 'Easy', monster: 'Brutus', name: 'Brutus Novice', description: 'Kill Brutus.' },
-  // MEDIUM TIER (60)
+  // MEDIUM TIER (64)
   { id: 'ca_25', tierId: 'Medium', monster: 'Barrows', name: 'Barrows Champion', description: 'Open the Barrows chest 25 times.' },
   { id: 'ca_26', tierId: 'Medium', monster: 'Barrows', name: 'Can\'t Touch Me', description: 'Kill Dharok, Verac, Torag and Guthan without letting them attack you with melee.' },
   { id: 'ca_27', tierId: 'Medium', monster: 'Barrows', name: 'Pray for Success', description: 'Kill all six Barrows Brothers and loot the Barrows chest without taking any damage from any of the brothers.' },
@@ -116,7 +116,11 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_628', tierId: 'Medium', monster: 'Shellbane gryphon', name: 'Shellbane Speedrunner', description: 'Kill the Shellbane Gryphon 10 times within 12:30 minutes of entering the cave.' },
   { id: 'ca_633', tierId: 'Medium', monster: 'Brutus', name: 'Brutus Champion', description: 'Kill Brutus 10 times.' },
   { id: 'ca_635', tierId: 'Medium', monster: 'Brutus', name: 'Beef vs Beef', description: 'Kill Brutus whilst neither equipping nor consuming anything.' },
-  // HARD TIER (86)
+  { id: 'ca_646', tierId: 'Medium', monster: 'Mad Angel', name: 'Mad Angel Adept', description: 'Kill the Mad Angel 25 times.' },
+  { id: 'ca_651', tierId: 'Medium', monster: 'Mad Angel', name: 'Dancing Queen', description: 'Kill the Mad Angel after getting 6 consecutive enhanced attacks by dodging the sweep attack successfully during her enrage phase.' },
+  { id: 'ca_652', tierId: 'Medium', monster: 'Mad Angel', name: 'Smite Fight', description: 'Kill the Mad Angel after getting 3 consecutive enhanced attacks by successfully praying against the smite attacks during her enrage phase.' },
+  { id: 'ca_653', tierId: 'Medium', monster: 'Mad Angel', name: 'Juggling Act', description: 'Kill the Mad Angel after attacking her between each bounce of the blast attack during her enrage phase. This does not need to be done immediately prior to the Mad Angel dying; it just needs to be done at any point in the fight after she becomes enraged.' },
+  // HARD TIER (89)
   { id: 'ca_1', tierId: 'Hard', monster: 'Abyssal Sire', name: 'Abyssal Adept', description: 'Kill the Abyssal Sire 20 times.' },
   { id: 'ca_3', tierId: 'Hard', monster: 'Abyssal Sire', name: 'They Grow Up Too Fast', description: 'Kill the Abyssal Sire without letting any Scion mature.' },
   { id: 'ca_5', tierId: 'Hard', monster: 'Abyssal Sire', name: 'Don\'t Whip Me', description: 'Kill the Abyssal Sire without being hit by any external tentacles.' },
@@ -124,7 +128,7 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_9', tierId: 'Hard', monster: 'Kree\'arra', name: 'Kree\'arra Adept', description: 'Kill Kree\'arra 50 times.' },
   { id: 'ca_12', tierId: 'Hard', monster: 'Kree\'arra', name: 'Airborne Showdown', description: 'Finish off Kree\'arra whilst all of his bodyguards are dead.' },
   { id: 'ca_16', tierId: 'Hard', monster: 'General Graardor', name: 'General Graardor Adept', description: 'Kill General Graardor 50 times.' },
-  { id: 'ca_18', tierId: 'Hard', monster: 'General Graardor', name: 'Ourg Freezer', description: 'Kill General Graardor whilst he is immobilized.' },
+  { id: 'ca_18', tierId: 'Hard', monster: 'General Graardor', name: 'Ourg Freezer', description: 'Kill General Graardor whilst he is immobilized[sic].' },
   { id: 'ca_20', tierId: 'Hard', monster: 'General Graardor', name: 'General Showdown', description: 'Finish off General Graardor whilst all of his bodyguards are dead.' },
   { id: 'ca_29', tierId: 'Hard', monster: 'Barrows', name: 'Just Like That', description: 'Kill Karil using only damage dealt by special attacks.' },
   { id: 'ca_30', tierId: 'Hard', monster: 'Barrows', name: 'Faithless Crypt Run', description: 'Kill all six Barrows Brothers and loot the Barrows chest without ever having more than 0 prayer points.' },
@@ -203,7 +207,10 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_631', tierId: 'Hard', monster: 'Shellbane gryphon', name: 'Featherweight Fighter', description: 'Kill the Shellbane Gryphon 5 times without leaving the cave, while wearing gear weighing less than 40kg.' },
   { id: 'ca_636', tierId: 'Hard', monster: 'Brutus', name: 'Smarter than a Cow', description: 'Kill Brutus without being attacked.' },
   { id: 'ca_637', tierId: 'Hard', monster: 'Maggot King', name: 'Maggot Squasher', description: 'Kill the Maggot King.' },
-  // ELITE TIER (164)
+  { id: 'ca_647', tierId: 'Hard', monster: 'Mad Angel', name: 'Mad Angel Veteran', description: 'Kill the Mad Angel 50 times.' },
+  { id: 'ca_648', tierId: 'Hard', monster: 'Mad Angel', name: 'Perfect Mad Angel', description: 'Kill the Mad Angel without taking any avoidable damage.' },
+  { id: 'ca_650', tierId: 'Hard', monster: 'Mad Angel', name: 'Mad Angel Speed-Runner', description: 'Kill the Mad Angel 5 times within 10 minutes of entering her arena.' },
+  // ELITE TIER (166)
   { id: 'ca_2', tierId: 'Elite', monster: 'Abyssal Sire', name: 'Abyssal Veteran', description: 'Kill the Abyssal Sire 50 times.' },
   { id: 'ca_4', tierId: 'Elite', monster: 'Abyssal Sire', name: 'Respiratory Runner', description: 'Kill the Abyssal Sire after only stunning him once.' },
   { id: 'ca_6', tierId: 'Elite', monster: 'Abyssal Sire', name: 'Demonic Rebound', description: 'Use the Vengeance spell to reflect the damage from the Abyssal Sire\'s explosion back to him.' },
@@ -368,6 +375,8 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_634', tierId: 'Elite', monster: 'Brutus', name: 'Brutus Speed-Trialist', description: 'Kill Brutus in less than 2 seconds.' },
   { id: 'ca_638', tierId: 'Elite', monster: 'Maggot King', name: 'Maggot Exterminator', description: 'Kill the Maggot King 25 times.' },
   { id: 'ca_641', tierId: 'Elite', monster: 'Maggot King', name: 'Trying to fit in', description: 'Kill the Maggot King using only weapons that can be found in Vampyrium.' },
+  { id: 'ca_649', tierId: 'Elite', monster: 'Mad Angel', name: 'This Is Madness', description: 'Kill the Mad Angel 15 times without leaving her arena.' },
+  { id: 'ca_654', tierId: 'Elite', monster: 'Mad Angel', name: 'The Pen Is Mightier', description: 'Kill the Mad Angel without equipping any weapon.' },
   // MASTER TIER (173)
   { id: 'ca_11', tierId: 'Master', monster: 'Kree\'arra', name: 'Collateral Damage', description: 'Kill Kree\'arra in a private instance without ever attacking him directly.' },
   { id: 'ca_13', tierId: 'Master', monster: 'Kree\'arra', name: 'Swoop No More', description: 'Kill Kree\'arra in a private instance without taking any melee damage from the boss or his bodyguards.' },
@@ -552,8 +561,8 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_100', tierId: 'Grandmaster', monster: 'Corrupted Hunllef', name: 'Corrupted Gauntlet Grandmaster', description: 'Complete the Corrupted Gauntlet 50 times.' },
   { id: 'ca_104', tierId: 'Grandmaster', monster: 'Corrupted Hunllef', name: 'Egniol Diet II', description: 'Kill the Corrupted Hunllef without making an egniol potion within the Corrupted Gauntlet.' },
   { id: 'ca_106', tierId: 'Grandmaster', monster: 'Corrupted Hunllef', name: 'Wolf Puncher II', description: 'Kill the Corrupted Hunllef without making more than one attuned weapon.' },
-  { id: 'ca_108', tierId: 'Grandmaster', monster: 'Corrupted Hunllef', name: 'Corrupted Gauntlet Speed-Runner', description: 'Complete a Corrupted Gauntlet in less than 6 minutes and 30 seconds.' },
-  { id: 'ca_118', tierId: 'Grandmaster', monster: 'Crystalline Hunllef', name: 'Gauntlet Speed-Runner', description: 'Complete the Gauntlet in less than 4 minutes.' },
+  { id: 'ca_108', tierId: 'Grandmaster', monster: 'Corrupted Hunllef', name: 'Corrupted Gauntlet Speed-Runner', description: 'Complete a Corrupted Gauntlet in less than 6 minutes and 5 seconds.' },
+  { id: 'ca_118', tierId: 'Grandmaster', monster: 'Crystalline Hunllef', name: 'Gauntlet Speed-Runner', description: 'Complete the Gauntlet in less than 3 minutes and 45 seconds.' },
   { id: 'ca_143', tierId: 'Grandmaster', monster: 'Alchemical Hydra', name: 'No Pressure', description: 'Kill the Alchemical Hydra using only Dharok\'s Greataxe as a weapon whilst having no more than 10 Hitpoints throughout the entire fight.' },
   { id: 'ca_145', tierId: 'Grandmaster', monster: 'Alchemical Hydra', name: 'Alchemical Speed-Runner', description: 'Kill the Alchemical Hydra in less than 1 minute 20 seconds.' },
   { id: 'ca_151', tierId: 'Grandmaster', monster: 'TzTok-Jad', name: 'Denying the Healers II', description: 'Complete the Fight Caves without TzTok-Jad being healed by a Yt-HurKot.' },
@@ -664,5 +673,5 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_619', tierId: 'Grandmaster', monster: 'Doom of Mokhaiotl', name: 'Darkness Is Your Ally?', description: 'Defeat the Doom of Mokhaiotl levels 1-8 without equipping a demonbane weapon.' },
   { id: 'ca_623', tierId: 'Grandmaster', monster: 'Doom of Mokhaiotl', name: 'Doom Racer', description: 'Defeat the Doom of Mokhaiotl levels 1-8 in less than 7:15.' },
   { id: 'ca_624', tierId: 'Grandmaster', monster: 'Doom of Mokhaiotl', name: 'Mopping up', description: 'Clear at least 8 acid splats in a single Volatile Earth special attack.' },
-  { id: 'ca_640', tierId: 'Grandmaster', monster: 'Maggot King', name: 'Maggot King Speed Chaser', description: 'Kill the Maggot King 5 times in 9 minutes.' },
+  { id: 'ca_640', tierId: 'Grandmaster', monster: 'Maggot King', name: 'Maggot King Speed Chaser', description: 'Complete the first 5 kills of the Maggot King within 9 minutes after entering the arena.' },
 ];

@@ -33,7 +33,7 @@ export const checkUnlockAvailability = (unlocks: UnlockState) => {
         equipment: totalEquipTiers < (EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX),
         skills: totalSkillTiers < (SKILLS_LIST.length * 10),
         regions: REGIONS_LIST.some(area => !isAreaReachable(area, unlocks)),
-        chunks: ALL_CHUNK_KEYS.some(key => key !== CHUNKED_START_KEY && !(unlocks.chunks ?? []).includes(key)),
+        chunks: ALL_CHUNK_KEYS.some(key => isFrontierChunk(key, unlocks.chunks ?? [], unlocks)),
         mobility: unlocks.mobility.length < MOBILITY_LIST.length,
         arcana: unlocks.arcana.length < ARCANA_LIST.length,
         poh: unlocks.housing.length < POH_LIST.length,
@@ -66,7 +66,7 @@ export const isValidUnlock = (table: TableType, item: string, unlocks: UnlockSta
     if (table === TableType.GUILDS) return !unlocks.guilds.includes(item);
     if (table === TableType.FARMING_LAYERS) return !unlocks.farming.includes(item);
     if (table === TableType.SLAYER_UNLOCKS) return !unlocks.slayerUnlocks.includes(item);
-    if (table === TableType.CHUNKS) return isFrontierChunk(item, unlocks.chunks ?? []);
+    if (table === TableType.CHUNKS) return isFrontierChunk(item, unlocks.chunks ?? [], unlocks);
     if (table === TableType.BANKS) return !(unlocks.banks ?? []).includes(item);
     return true;
 };

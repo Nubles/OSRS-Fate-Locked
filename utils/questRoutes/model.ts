@@ -20,6 +20,7 @@ export interface RawRouteRequirement {
 
 export type RouteGate =
   | { type: 'QUEST'; questId: string; label: string }
+  | { type: 'RFD_SUBQUESTS'; count: number; label: string }
   | { type: 'SKILL'; skill: string; level: number; label: string }
   | { type: 'UNLOCK'; category: 'guilds' | 'merchants' | 'minigames' | 'mobility' | 'slayerUnlocks'; id: string; label: string }
   | { type: 'UNRESOLVED'; label: string; raw: string };
@@ -140,6 +141,9 @@ const validateRouteGate = (gate: RouteGate): RouteGate => {
   assertNonBlank(gate.label, 'gate label');
 
   switch (gate.type) {
+    case 'RFD_SUBQUESTS':
+      if (!Number.isInteger(gate.count) || gate.count < 1 || gate.count > 8) throw new Error('Invalid RFD subquest count');
+      break;
     case 'QUEST':
       assertNonBlank(gate.questId, 'quest id');
       break;

@@ -79,16 +79,22 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
 
     for (const [coords, lite] of Object.entries(bundle.chunkContent) as [string, any][]) {
       const [cx, cy] = coords.split(',').map(Number);
-      const full = (fullChunkContent as any).chunks[String(cx * 256 + cy)];
-      expect(full, `missing full record for lite chunk ${coords}`).toBeDefined();
+      const id = String(cx * 256 + cy);
+      const records = [
+        (fullChunkContent as any).chunks[id],
+        ...Object.values((fullChunkContent as any).interiors ?? {})
+          .filter((entry: any) => entry.entrances.some((route: any) => route.chunkId === id))
+          .map((entry: any) => entry.content),
+      ].filter(Boolean);
+      expect(records.length, `missing full record for lite chunk ${coords}`).toBeGreaterThan(0);
       expect((lite.mon ?? []).length).toBeLessThanOrEqual(6);
       expect((lite.shop ?? []).length).toBeLessThanOrEqual(8);
       expect((lite.farm ?? []).length).toBeLessThanOrEqual(8);
       expect((lite.poi ?? []).length).toBeLessThanOrEqual(8);
-      for (const name of lite.mon ?? []) expect(full.m.map(([item]: [string]) => item)).toContain(name);
-      for (const name of lite.shop ?? []) expect(full.s ?? []).toContain(name);
+      for (const name of lite.mon ?? []) expect(records.flatMap(row => (row.m ?? []).map(([item]: [string]) => item))).toContain(name);
+      for (const name of lite.shop ?? []) expect(records.flatMap(row => row.s ?? [])).toContain(name);
       for (const name of [...(lite.farm ?? []), ...(lite.poi ?? [])]) {
-        expect(full.o.map(([item]: [string]) => item)).toContain(name);
+        expect(records.flatMap(row => (row.o ?? []).map(([item]: [string]) => item))).toContain(name);
       }
     }
   });

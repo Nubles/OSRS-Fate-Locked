@@ -1606,6 +1606,26 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: { 'Construction': 38, 'Cooking': 36, 'Smithing': 35 }, prereqs: ['Children of the Sun'], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
+  'A Ruff Situation': {
+    kind: 'quest', accessPolicy: 'locations',
+    id: 'A Ruff Situation', name: 'A Ruff Situation',
+    regions: ['Edgeville', 'Varrock'],
+    locations: [
+      { id: 'dog-shelter', label: 'Dog Shelter', standardAreas: ['Edgeville'], chunkOptions: [{ cx: 47, cy: 54 }] },
+      { id: 'gertrudes-house', label: "Gertrude's house and Cooks' Guild", standardAreas: ['Varrock'], chunkOptions: [{ cx: 49, cy: 53 }] },
+      { id: 'outlaw-camp', label: 'Outlaw Camp', standardAreas: ['Varrock'], chunkOptions: [{ cx: 49, cy: 54 }] },
+      { id: 'shelter-road', label: 'Barbarian Village crossing', standardAreas: ['Barbarian Village'], chunkOptions: [{ cx: 48, cy: 53 }] },
+    ],
+    skills: { Crafting: 15 }, prereqs: [], points: 1,
+    difficulty: DropSource.QUEST_NOVICE
+  },
+  'Crab Quest': {
+    kind: 'quest', accessPolicy: 'regions',
+    id: 'Crab Quest', name: 'Crab Quest',
+    regions: ['Dognose Island'],
+    skills: { Sailing: 40, Fishing: 30 }, prereqs: ['Pandemonium'], points: 1,
+    difficulty: DropSource.QUEST_INTERMEDIATE
+  },
   'Pandemonium': {
     kind: 'quest', accessPolicy: 'locations',
     id: 'Pandemonium', name: 'Pandemonium',

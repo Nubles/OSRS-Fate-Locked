@@ -28,18 +28,18 @@ describe('pinned Chunk Picker source', () => {
       schemaVersion: 1,
       repository: 'source-chunk/chunk-picker-v2',
       branch: 'gh-pages',
-      commit: 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
-      blobSha: 'ffdcc10139dde0e11be29047c6c730fd762a33c8',
-      rawSha256: '2D75BF70C9E6540CECC1631783A0293D8F28B440D429F6081B2CD4EE4C21CA59',
-      rawBytes: 7518778,
-      policyVersion: 2,
-      reviewedAt: '2026-08-16',
+      commit: 'fa71ed3b207e6a501444987dee23b875ec27cacd',
+      blobSha: '8d14fdb3f2024a4068d2f742ea4cd274e071f10d',
+      rawSha256: 'C66BB47E4978B3F41115573EA825391E26E0A458B9D93903A4FA0DFF9AF5C48C',
+      rawBytes: 7611072,
+      policyVersion: 3,
+      reviewedAt: '2026-09-21',
     });
   });
 
   it('loads valid JSON from the committed gzip without network access', async () => {
     const { raw, data } = await readPinnedChunkSource();
-    expect(raw).toHaveLength(7518778);
+    expect(raw).toHaveLength(7611072);
     expect(data).toMatchObject({
       chunks: expect.any(Object),
       walkableChunks: expect.any(Array),
@@ -219,21 +219,21 @@ describe('pinned Chunk Picker source', () => {
       connections: 1110,
       slayerMasters: 10,
       shortcuts: 219,
-      shops: 435,
+      shops: 439,
       dropTables: 800,
       questSections: 134,
-      banks: 126,
+      banks: 127,
       tags: 27,
-      auditEvents: 27110,
+      auditEvents: 27531,
       unresolvedTaskUnlocks: 0,
     });
-    expect(taskUnlockTotals.source).toBe(1675);
+    expect(taskUnlockTotals.source).toBe(1959);
     expect(taskUnlockTotals.unresolved).toBe(0);
     expect(taskUnlockTotals.imported + taskUnlockTotals.normalized + taskUnlockTotals.excluded)
-      .toBe(1675);
+      .toBe(1959);
     expect(taskUnlockTotals).toEqual({
-      source: 1675,
-      imported: 1014,
+      source: 1959,
+      imported: 1298,
       normalized: 657,
       excluded: 4,
       unresolved: 0,
@@ -262,9 +262,9 @@ describe('pinned Chunk Picker source', () => {
     const representatives = [
       ['Monsters', 'Abyssal demon', 'Abyssal demon wilderness task', ['12857', '13114']],
       ['Shops', 'Crossbow Shop (Dwarven Mine)', 'F2P Only', ['12084', '12085']],
-      ['Objects', 'Barrel (beer)', 'Temple of Ikov', ['10549', '10550']],
+      ['Objects', 'Barrel (beer)', 'Temple of Ikov 4', ['10549', '10550']],
       ['Spawns', "Red spiders' eggs", 'F2P Only', ['12341', '12342']],
-      ['NPCs', 'Movario', 'Temple of Ikov', ['12848', '12850']],
+      ['NPCs', 'Movario', 'Temple of Ikov Complete the quest', ['12848', '12850']],
     ] as const;
     for (const [category, entity, requirement, expectedChunks] of representatives) {
       const actualChunks = chunksWithRequirement(taskUnlocks[category]?.[entity], requirement);
@@ -319,7 +319,7 @@ describe('pinned Chunk Picker source', () => {
       commit: { sha: 'new-upstream-sha' },
     }), { status: 200 }));
     expect(result).toEqual({
-      pinnedCommit: 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
+      pinnedCommit: 'fa71ed3b207e6a501444987dee23b875ec27cacd',
       latestCommit: 'new-upstream-sha',
       moved: true,
     });

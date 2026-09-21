@@ -34,6 +34,23 @@ const context = (
 });
 
 describe('buildChunkPermissionSnapshot', () => {
+  it('requires unlocked skill tiers as well as recorded levels for combat and travel', () => {
+    const unlocks = structuredClone(initialState.unlocks);
+    unlocks.levels.Slayer = 99; unlocks.levels.Agility = 99;
+    unlocks.skills.Slayer = 0; unlocks.skills.Agility = 0;
+    const fixture = content({ monsters: [{ name: 'Crawling hand', count: 1, slayer: 5 }] });
+    const settings = context({ unlocks, shortcuts: [{ name: 'Test shortcut', skill: 'Agility', level: 10, chunks: ['12850'], objects: ['Rock'] }] });
+    const view = () => buildChunkPermissionSnapshot(fixture, { cx: 50, cy: 50 }, settings);
+    expect(view().categories.COMBAT?.[0].status).toBe('NOT_READY');
+    expect(view().categories.TRAVEL?.[0].status).toBe('NOT_READY');
+    unlocks.skills.Slayer = 1; unlocks.skills.Agility = 1;
+    expect(view().categories.COMBAT?.[0].status).toBe('ALLOWED');
+    expect(view().categories.TRAVEL?.[0].status).toBe('ALLOWED');
+    fixture.monsters[0].slayer = 15;
+    expect(view().categories.COMBAT?.[0].status).toBe('NOT_READY');
+    unlocks.skills.Slayer = 2;
+    expect(view().categories.COMBAT?.[0].status).toBe('ALLOWED');
+  });
   it("ignores injected permission statuses and uses canonical Witch's Potion access", () => {
     const locked = buildChunkPermissionSnapshot(
       content({ quests: { "Witch's Potion": 'first' } }),

@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-09-21",
+  "note": "Named entrance overrides take precedence over general Connect edges, which may also include teleports. Other routes retain the source graph and its requirements; source coordinates remain separate from surface ownership.",
+  "locations": {
+    "Prifddinas": {
+      "requirements": [
+        "Song of the Elves Complete the quest"
+      ]
+    },
+    "Cam Torum": {
+      "requirements": [
+        "Perilous Moons: defeated the sulphur nagua and spoken to Attala"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Cam_Torum"
+    },
+    "Zanaris": {
+      "requirements": [
+        "Lost City Complete the quest"
+      ]
+    },
+    "Dorgesh-Kaan": {
+      "requirements": [
+        "Death to the Dorgeshuun Complete the quest"
+      ]
+    },
+    "Keldagrim": {
+      "requirements": [
+        "Started The Giant Dwarf"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Keldagrim",
+      "anchors": [
+        "11066"
+      ]
+    },
+    "Mor Ul Rek#Outer Area": {
+      "anchors": [
+        "11313"
+      ],
+      "requirements": []
+    },
+    "Mor Ul Rek#Inner Area": {
+      "anchors": [
+        "11313"
+      ],
+      "requirements": [
+        "Show a fire cape to enter inner Mor Ul Rek"
+      ]
+    },
+    "Motherlode Mine": {
+      "anchors": [
+        "12084"
+      ],
+      "requirements": []
+    },
+    "Ancient Cavern": {
+      "anchors": [
+        "10038"
+      ],
+      "requirements": [
+        "Completed the firemaking part of Barbarian Training"
+      ]
+    },
+    "Temple of the Eye": {
+      "requirements": [
+        "Temple of the Eye Complete the quest"
+      ]
+    },
+    "Alchemical Society": {
+      "anchors": [
+        "5421"
+      ],
+      "requirements": [
+        "Herblore level 60"
+      ]
+    },
+    "Hallowed Sepulchre": {
+      "requirements": [
+        "Sins of the Father Complete the quest",
+        "Agility level 52"
+      ]
+    },
+    "Varrock Rat Pits": {
+      "requirements": [
+        "Ratcatchers: completed Hooknosed Jack's section"
+      ]
+    },
+    "Keldagrim Rat Pits": {
+      "requirements": [
+        "Ratcatchers Complete the quest"
+      ]
+    }
+  }
+}

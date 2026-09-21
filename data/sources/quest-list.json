@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-16",
+  "reviewedAt": "2026-09-21",
   "listSource": {
     "url": "https://oldschool.runescape.wiki/w/index.php?title=Quests%2FList&oldid=15289823",
     "revision": 15289823,
     "revisionTimestamp": "2026-08-07T15:03:30Z"
   },
   "parsedCounts": {
-    "quests": 192,
+    "quests": 194,
     "miniquests": 19
   },
   "drift": {
     "runtimeEntriesMissingFromLiveList": [],
     "liveOnlyEntries": [],
-    "note": "The live official rows reconcile with the approved normalized 191/19 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
+    "note": "The live official rows reconcile with the approved normalized 193/19 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
   },
   "entries": [
     {
@@ -44,6 +44,16 @@
         "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Porcine_of_Interest&oldid=15272507",
         "revision": 15272507,
         "revisionTimestamp": "2026-07-22T18:36:02Z"
+      }
+    },
+    {
+      "id": "A Ruff Situation",
+      "kind": "quest",
+      "pageTitle": "A Ruff Situation",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Ruff_Situation&oldid=15350582",
+        "revision": 15350582,
+        "revisionTimestamp": "2026-09-18T21:05:25Z"
       }
     },
     {
@@ -274,6 +284,16 @@
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Cook's_Assistant&oldid=15240921",
         "revision": 15240921,
         "revisionTimestamp": "2026-06-27T13:04:37Z"
+      }
+    },
+    {
+      "id": "Crab Quest",
+      "kind": "quest",
+      "pageTitle": "Crab Quest",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Crab_Quest&oldid=15349390",
+        "revision": 15349390,
+        "revisionTimestamp": "2026-09-17T18:04:40Z"
       }
     },
     {

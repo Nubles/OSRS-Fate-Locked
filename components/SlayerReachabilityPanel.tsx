@@ -1,9 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { evaluateEntityAccess } from '../utils/entityAccess';
+import type { SlayerAssignment } from '../services/ChunkContentService';
+import React, { useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight, Skull, MapPin, Sword } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { chunkContentService } from '../services/ChunkContentService';
-import { chunkUnlocked, showChunkOnMap } from '../utils/chunkLocations';
+import { showChunkOnMap } from '../utils/chunkLocations';
 import { slayerReachability, SlayerStatus, SlayerTaskRow } from '../utils/slayerReach';
+import { useChunkContent } from '../hooks/useChunkContent';
 
 const STATUS_META: Record<SlayerStatus, { label: string; cls: string }> = {
   'ready':         { label: 'ready',      cls: 'bg-emerald-900/30 border-emerald-500/40 text-emerald-200' },
@@ -11,6 +14,8 @@ const STATUS_META: Record<SlayerStatus, { label: string; cls: string }> = {
   'slayer-locked': { label: 'Slayer',     cls: 'bg-rose-900/25 border-rose-500/40 text-rose-200' },
   'combat-locked': { label: 'Combat',     cls: 'bg-orange-900/25 border-orange-500/40 text-orange-200' },
   'quest-locked':  { label: 'quest',      cls: 'bg-violet-900/25 border-violet-500/40 text-violet-200' },
+  'access-unknown': { label: 'access needs review', cls: 'bg-amber-900/25 border-amber-500/40 text-amber-200' },
+  'access-blocked': { label: 'entry requirements', cls: 'bg-violet-900/25 border-violet-500/40 text-violet-200' },
   'no-location':   { label: '—',          cls: 'bg-white/5 border-white/10 text-gray-500' },
 };
 
@@ -45,30 +50,25 @@ const Row: React.FC<{ r: SlayerTaskRow }> = ({ r }) => {
  */
 export const SlayerReachabilityPanel: React.FC = () => {
   const { unlocks, gameModeId } = useGame();
-  const [ready, setReady] = useState(chunkContentService.ready);
+  const { ready, error, retry } = useChunkContent();
   const [open, setOpen] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!ready) chunkContentService.init().then(() => setReady(true));
-  }, [ready]);
 
   const reach = useMemo(() => {
     if (!ready) return null;
     const masters = chunkContentService.slayerMasters();
-    const locate = (task: string) => {
-      for (const cand of [task, task.replace(/s$/, '')]) {
-        const hit = chunkContentService.entityLocations(cand, ['monster']);
-        if (hit && hit.locations.length) {
-          const un = hit.locations.find(l => chunkUnlocked(l.cx, l.cy, unlocks, gameModeId));
-          const l = un ?? hit.locations[0];
-          return { cx: l.cx, cy: l.cy, unlocked: !!un };
-        }
-      }
-      return null;
+    const locate = (task: string, assignment?: SlayerAssignment, master?: string) => {
+      const locations = chunkContentService.slayerLocations(task, assignment, master);
+      const checked = locations.map(hit => ({ ...hit, access: evaluateEntityAccess(hit.name, 'monster', hit.location, unlocks, gameModeId) }));
+      const hit = checked.find(hit => hit.access.status === 'ALLOWED')
+        ?? checked.find(hit => hit.access.status === 'UNKNOWN')
+        ?? checked.find(hit => hit.access.status === 'NOT_READY') ?? checked[0];
+      return hit ? { cx: hit.location.cx, cy: hit.location.cy, unlocked: hit.access.status === 'ALLOWED', accessStatus: hit.access.status } : null;
     };
     return slayerReachability(masters, unlocks, locate, gameModeId);
   }, [ready, unlocks, gameModeId]);
 
+  if (error) return <div role="alert" className="mb-4 text-xs text-amber-300">Could not load Slayer locations. <button onClick={retry} className="underline">Retry Slayer locations</button></div>;
   if (!reach || reach.masters.length === 0) return null;
   const totalReady = reach.masters.reduce((a, m) => a + m.ready, 0);
 

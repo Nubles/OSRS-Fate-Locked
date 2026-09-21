@@ -1,3 +1,4 @@
+import { locateSlayerTask } from '../utils/slayerTaskLocations';
 /**
  * ChunkContentService — what's actually in each map chunk.
  *
@@ -17,6 +18,8 @@ import { classifyShop } from '../utils/shopClassification';
 
 export interface ChunkMonster { name: string; count: number; slayer: number | null }
 export interface ChunkContent {
+  /** Interior evidence shown at its entrance; these are not extra surface spawns. */
+  interiors?: { sourceId: string; name: string }[];
   name?: string;
   monsters: ChunkMonster[];
   npcs: string[];
@@ -47,6 +50,7 @@ interface RawEntry {
 /** A Slayer master's assignable monster: gating + assignment weight. */
 export interface SlayerAssignment {
   weight: number;
+  locations?: string[];
   /** Combat level needed before the master will assign it. */
   combat?: number;
   /** Slayer level needed to damage/be assigned it. */
@@ -118,11 +122,18 @@ interface RawDoc {
     namedLocationReviewedAt?: string;
   };
   chunks: Record<string, RawEntry>;
+  interiors?: Record<string, {
+    name: string;
+    content: RawEntry;
+    entrances: { chunkId: string; requirements: string[]; via?: string[] }[];
+    requirements: Partial<Record<EntityKind, Record<string, string[]>>>;
+  }>;
   entrances?: Record<string, ChunkEntrance[]>;
   connect?: ConnectGraph;
   slayerMasters?: SlayerMasters;
   shortcuts?: Shortcut[];
   shopItems?: Record<string, string[]>;
+  shopInfo?: Record<string, { status: string; source: { url: string; revision: number } }>;
   /** Monster name → the item names it drops. */
   drops?: Record<string, string[]>;
   /** Map marker overlays, keyed by category. */
@@ -205,6 +216,8 @@ export interface EntityLocation {
   count?: number;
   /** Quest entries only: does the quest start here or just have a step? */
   role?: 'first' | 'step';
+  sourceId?: string;
+  locationName?: string;
 }
 
 export interface EntityHit {
@@ -220,19 +233,29 @@ export interface ItemSourceRecord {
   cx: number;
   cy: number;
   rawRequirements: RawRouteRequirement[];
+  sourceId?: string;
 }
 
 // Bump when public/chunk-content.json changes so the fetch URL changes and
 // browsers don't serve a stale cached copy (the filename itself never changes).
-export const CHUNK_CONTENT_DATA_VERSION = 10;
+export const CHUNK_CONTENT_DATA_VERSION = 11;
 
-class ChunkContentService {
+export class ChunkContentService {
   private doc: RawDoc | null = null;
   private promise: Promise<boolean> | null = null;
   private index: Map<string, EntityHit> | null = null;
   error: string | null = null;
+  private listeners = new Set<() => void>();
+
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => { this.listeners.delete(listener); };
+  }
+  private emit() { for (const listener of this.listeners) listener(); }
 
   get ready() { return this.doc != null; }
+
+  shopInfo(name: string) { return this.doc?.shopInfo?.[name] ?? null; }
 
   sourceMetadata(): RawDoc['sourceMeta'] | null {
     return this.doc?.sourceMeta ?? null;
@@ -242,21 +265,29 @@ class ChunkContentService {
   init(): Promise<boolean> {
     if (this.doc) return Promise.resolve(true);
     if (!this.promise) {
+      this.error = null;
       const base = (import.meta as any).env?.BASE_URL ?? '/';
       this.promise = fetch(`${base}chunk-content.json?v=${CHUNK_CONTENT_DATA_VERSION}`)
         .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-        .then((doc: RawDoc) => { this.doc = doc; return true; })
+        .then((doc: RawDoc) => {
+          this.doc = doc; this.error = null;
+          this.index = null; this.interiorIndex = null; this.taskIdx = null;
+          this.itemSrcIdx = null; this.itemSourceRecordIdx = null; this.bankSet = null;
+          this.emit(); return true;
+        })
         .catch((err: Error) => {
           this.error = err.message;
           this.promise = null; // allow retry
+          this.emit();
           return false;
         });
+      this.emit();
     }
     return this.promise;
   }
 
   allChunkCoords(): { cx: number; cy: number }[] {
-    return Object.keys(this.doc?.chunks ?? {})
+    return [...new Set([...Object.keys(this.doc?.chunks ?? {}), ...this.interiorLocations().keys()])]
       .map((id) => {
         const value = Number(id);
         return { cx: Math.floor(value / 256), cy: value % 256 };
@@ -265,8 +296,27 @@ class ChunkContentService {
   }
 
   contentFor(cx: number, cy: number): ChunkContent | null {
-    const e = this.doc?.chunks[String(cx * 256 + cy)];
-    return e ? decode(e) : null;
+    const id = String(cx * 256 + cy);
+    const e = this.doc?.chunks[id];
+    const interiors = this.interiorLocations().get(id) ?? [];
+    if (!interiors.length) return e ? decode(e) : null;
+    return { ...aggregateContent([...(e ? [decode(e)] : []), ...interiors.map(({ entry }) => decode(entry.content))]),
+      name: e?.n, interiors: interiors.map(({ sourceId, entry }) => ({ sourceId, name: entry.name })) };
+  }
+
+  private interiorIndex: Map<string, { sourceId: string; entry: NonNullable<RawDoc['interiors']>[string]; requirements: string[] }[]> | null = null;
+  private interiorLocations() {
+    if (!this.interiorIndex) {
+      this.interiorIndex = new Map();
+      for (const [sourceId, entry] of Object.entries(this.doc?.interiors ?? {})) {
+        for (const route of entry.entrances) {
+          const rows = this.interiorIndex.get(route.chunkId) ?? [];
+          rows.push({ sourceId, entry, requirements: route.requirements });
+          this.interiorIndex.set(route.chunkId, rows);
+        }
+      }
+    }
+    return this.interiorIndex;
   }
 
   entrancesFor(cx: number, cy: number): ChunkEntrance[] {
@@ -278,11 +328,17 @@ class ChunkContentService {
   /** Region-level aggregate over a chunk list (missing chunks are skipped). */
   aggregate(chunks: { cx: number; cy: number }[]): ChunkContent {
     const entries: ChunkContent[] = [];
+    const seen = new Set<string>();
+    const interiors: NonNullable<ChunkContent['interiors']> = [];
     for (const { cx, cy } of chunks) {
-      const c = this.contentFor(cx, cy);
-      if (c) entries.push(c);
+      const id = String(cx * 256 + cy); const surface = this.doc?.chunks[id];
+      if (surface) entries.push(decode(surface));
+      for (const { sourceId, entry } of this.interiorLocations().get(id) ?? []) {
+        if (seen.has(sourceId)) continue; seen.add(sourceId);
+        entries.push(decode(entry.content)); interiors.push({ sourceId, name: entry.name });
+      }
     }
-    return aggregateContent(entries);
+    return { ...aggregateContent(entries), ...(interiors.length ? { interiors } : {}) };
   }
 
   // ── Entity → locations index ────────────────────────────────────────────
@@ -297,14 +353,17 @@ class ChunkContentService {
       if (hit) hit.locations.push(loc);
       else index.set(k, { name, kind, locations: [loc] });
     };
-    for (const [id, e] of Object.entries(this.doc?.chunks ?? {})) {
-      const cx = Math.floor(+id / 256), cy = +id % 256;
-      for (const [name, count] of (e.m ?? [])) add('monster', name, { cx, cy, count });
-      for (const [name, count] of (e.o ?? [])) add('object', name, { cx, cy, count });
-      for (const name of (e.p ?? [])) add('npc', name, { cx, cy });
-      for (const name of (e.i ?? [])) add('spawn', name, { cx, cy });
-      for (const name of (e.s ?? [])) add('shop', name, { cx, cy });
-      for (const [name, role] of Object.entries(e.q ?? {})) add('quest', name, { cx, cy, role });
+    const addEntry = (e: RawEntry, loc: EntityLocation) => {
+      for (const [name, count] of (e.m ?? [])) add('monster', name, { ...loc, count });
+      for (const [name, count] of (e.o ?? [])) add('object', name, { ...loc, count });
+      for (const name of (e.p ?? [])) add('npc', name, loc);
+      for (const name of (e.i ?? [])) add('spawn', name, loc);
+      for (const name of (e.s ?? [])) add('shop', name, loc);
+      for (const [name, role] of Object.entries(e.q ?? {})) add('quest', name, { ...loc, role });
+    };
+    for (const [id, e] of Object.entries(this.doc?.chunks ?? {})) addEntry(e, { cx: Math.floor(+id / 256), cy: +id % 256, locationName: e.n });
+    for (const [id, rows] of this.interiorLocations()) for (const { sourceId, entry } of rows) {
+      addEntry(entry.content, { cx: Math.floor(+id / 256), cy: +id % 256, sourceId, locationName: entry.name });
     }
     return index;
   }
@@ -377,7 +436,30 @@ class ChunkContentService {
    */
   taskRequirements(name: string, kind: EntityKind, cx: number, cy: number): string[] {
     const byChunk = this.getTaskIdx()?.get(`${TASK_CATEGORY[kind]}|${name.toLowerCase()}`);
-    return byChunk?.[String(cx * 256 + cy)] ?? [];
+    return [...new Set([...(byChunk?.['*'] ?? []), ...(byChunk?.[String(cx * 256 + cy)] ?? [])])];
+  }
+
+  /** Keep alternative host locations separate from unrelated interior requirements. */
+  entityRequirementOptions(name: string, kind: EntityKind, cx: number, cy: number, sourceId?: string): RawRouteRequirement[][] {
+    const hit = this.entityLocations(name, [kind]);
+    const locations = hit?.locations.filter(loc => loc.cx === cx && loc.cy === cy && (!sourceId || loc.sourceId === sourceId)) ?? [];
+    return (locations.length ? locations : [{ cx, cy }]).map(loc => this.requirementsForLocation(name, kind, loc));
+  }
+
+  private requirementsForLocation(name: string, kind: EntityKind, loc: EntityLocation): RawRouteRequirement[] {
+    const { cx, cy } = loc;
+    if (!loc.sourceId) return [
+      ...this.taskRequirements(name, kind, cx, cy).map(raw => ({ raw, origin: 'ENTITY' as const })),
+      ...this.chunkEntryRequirements(cx, cy).map(raw => ({ raw, origin: 'CHUNK_ENTRY' as const })),
+    ];
+      const interior = this.doc?.interiors?.[loc.sourceId];
+      const route = interior?.entrances.find(e => e.chunkId === String(cx * 256 + cy));
+      const entity = Object.entries(interior?.requirements[kind] ?? {}).find(([key]) => key.toLowerCase() === name.toLowerCase())?.[1] ?? [];
+      return [
+        ...entity.map(raw => ({ raw, origin: 'ENTITY' as const })),
+        ...(route?.requirements ?? []).map(raw => ({ raw, origin: 'CHUNK_ENTRY' as const })),
+        ...this.chunkEntryRequirements(cx, cy).map(raw => ({ raw, origin: 'CHUNK_ENTRY' as const })),
+      ];
   }
 
   /** Global wield/use requirement for an item (location-less). */
@@ -418,7 +500,7 @@ class ChunkContentService {
     const index = new Map<string, ItemSourceRecord[]>();
     const seen = new Set<string>();
     const add = (record: ItemSourceRecord) => {
-      const duplicateKey = `${record.itemName}\u0000${record.kind}\u0000${record.hostName}\u0000${record.cx}\u0000${record.cy}`;
+      const duplicateKey = `${record.itemName}\u0000${record.kind}\u0000${record.hostName}\u0000${record.cx}\u0000${record.cy}\u0000${record.sourceId ?? ''}`;
       if (seen.has(duplicateKey)) return;
       seen.add(duplicateKey);
       const key = record.itemName.toLowerCase();
@@ -466,6 +548,7 @@ class ChunkContentService {
       const hit = this.entityLocations(hostName, [kind]);
       if (!hit) return;
       for (const location of hit.locations) {
+        const option = this.requirementsForLocation(hostName, kind, location);
         for (const itemName of items) {
           add({
             itemName,
@@ -473,7 +556,8 @@ class ChunkContentService {
             hostName,
             cx: location.cx,
             cy: location.cy,
-            rawRequirements: requirementsFor(hostName, kind, location.cx, location.cy),
+            ...(location.sourceId ? { sourceId: location.sourceId } : {}),
+            rawRequirements: [...merchantRequirements(hostName, kind), ...option],
           });
         }
       }
@@ -483,6 +567,12 @@ class ChunkContentService {
     }
     for (const [monster, items] of Object.entries(this.doc?.drops ?? {})) {
       addHostItems(items, monster, 'monster');
+    }
+    for (const hit of this.entitiesOfKind('spawn')) {
+      for (const location of hit.locations.filter(loc => loc.sourceId)) {
+        add({ itemName: hit.name, hostName: hit.name, kind: 'spawn', cx: location.cx, cy: location.cy, sourceId: location.sourceId,
+          rawRequirements: this.requirementsForLocation(hit.name, 'spawn', location) });
+      }
     }
     return index;
   }
@@ -499,47 +589,32 @@ class ChunkContentService {
   }
 
   /** Coverage of the generated exact spawn, shop, and drop source families. */
-  itemSourceCoverage(): Coverage {
-    return this.doc ? 'COMPLETE' : 'PARTIAL';
+  itemSourceCoverage(_itemName?: string): Coverage {
+    // Located positive evidence remains usable; an incomplete community snapshot
+    // cannot prove that an item has no other sources in the game.
+    return 'PARTIAL';
   }
 
   /**
    * Slayer task → the chunks its monster appears in, for the RuneLite plugin's
    * locked-slayer warning. Keyed by a normalised task name (lowercased, trailing
    * 's' dropped) so the plugin can match the assignment chat. Built from the FULL
-   * (uncapped) monster index, so coverage is complete — unlike the slim
-   * chunkContentLite "mon" list which caps at a few per chunk.
+   * (uncapped) monster index rather than the slim chunkContentLite "mon" list.
+   * This preserves all indexed locations; source coverage is still partial.
    */
+  slayerLocations(task: string, assignment?: SlayerAssignment, master?: string) {
+    return locateSlayerTask(task, this.entitiesOfKind('monster'), assignment, master);
+  }
+
   slayerReachIndex(): Record<string, { cx: number; cy: number }[]> {
-    if (!this.doc) return {};
-    const norm = (s: string) => {
-      const t = s.toLowerCase().trim();
-      return t.endsWith('s') ? t.slice(0, -1) : t;
-    };
-    // normalised monster name → its chunks (full, uncapped)
-    const monIdx = new Map<string, { cx: number; cy: number }[]>();
-    for (const hit of this.entitiesOfKind('monster')) {
-      monIdx.set(norm(hit.name), hit.locations.map((l) => ({ cx: l.cx, cy: l.cy })));
-    }
-    // every assignable task name across all masters
-    const cats = new Set<string>();
-    for (const tasks of Object.values(this.slayerMasters())) {
-      for (const t of Object.keys(tasks)) cats.add(t);
-    }
     const out: Record<string, { cx: number; cy: number }[]> = {};
-    for (const cat of cats) {
-      const k = norm(cat);
-      let chunks = monIdx.get(k);
-      if (!chunks) {
-        // fall back to fuzzy containment (e.g. "fever spider" task vs "Fever spider")
-        const acc: { cx: number; cy: number }[] = [];
-        for (const [mn, ch] of monIdx) if (mn === k || mn.includes(k) || k.includes(mn)) acc.push(...ch);
-        chunks = acc;
-      }
-      if (chunks.length) {
-        const seen = new Set<string>();
-        out[k] = chunks.filter((c) => { const id = `${c.cx},${c.cy}`; if (seen.has(id)) return false; seen.add(id); return true; });
-      }
+    const entities = this.entitiesOfKind('monster');
+    for (const [master, tasks] of Object.entries(this.slayerMasters())) for (const [task, assignment] of Object.entries(tasks)) {
+      const norm = task.toLowerCase().trim().replace(/s$/, '');
+      const locations = locateSlayerTask(task, entities, assignment, master).map(hit => hit.location);
+      const unique = [...new Map(locations.map(({ cx, cy }) => [`${cx},${cy}`, { cx, cy }])).values()];
+      out[`${master.toLowerCase()}:${norm}`] = unique;
+      out[norm] = [...new Map([...(out[norm] ?? []), ...unique].map(loc => [`${loc.cx},${loc.cy}`, loc])).values()];
     }
     return out;
   }

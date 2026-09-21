@@ -149,6 +149,7 @@ const accountStateFingerprint = (
 
 const serializedGate = (gate: DeepReadonly<RouteGate>): object => {
   switch (gate.type) {
+    case 'RFD_SUBQUESTS': return { type: gate.type, count: gate.count, label: gate.label };
     case 'QUEST':
       return { type: gate.type, questId: gate.questId, label: gate.label };
     case 'SKILL':
@@ -190,6 +191,7 @@ const contentStateFingerprint = (snapshot: QuestRouteAnalysisSnapshot): string =
     hostName: record.hostName,
     cx: record.cx,
     cy: record.cy,
+    sourceId: record.sourceId,
     rawRequirements: serializedRawRequirements(record.rawRequirements),
   })),
   recipes: snapshot.recipes.map(recipe => ({

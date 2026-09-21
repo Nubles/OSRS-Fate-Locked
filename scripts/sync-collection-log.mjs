@@ -16,6 +16,7 @@
 //     so it just reports it for a human to place (then re-run). After placing an
 //     empty page `'X': { name: 'X', items: [] }`, a re-run fills its items.
 import { readFileSync, writeFileSync } from 'node:fs';
+import { createCollectionIdAllocator } from '../utils/collectionLogIds.mjs';
 
 const FILE = 'data/collectionLogData.ts';
 const API = 'https://oldschool.runescape.wiki/api.php';
@@ -85,11 +86,7 @@ async function loadWiki() {
   return pages;
 }
 
-function alignItems(appItems, wikiItems, log, page) {
-  const P = Math.floor(appItems[0].id / 1000) * 1000;
-  const used = new Set(appItems.map(i => i.id - P));
-  let next = Math.max(...appItems.map(i => i.id - P)) + 1;
-  const mint = () => { while (used.has(next)) next++; used.add(next); return P + next; };
+export function alignItems(appItems, wikiItems, log, page, mint) {
   const pool = wikiItems.map(n => ({ n, used: false }));
   const out = [];
   for (const ai of appItems) {
@@ -113,20 +110,42 @@ const run = async () => {
   const log = { renames: [], adds: [], kept: [] };
   const matchedWiki = new Set();
 
+  const pages = [];
+  let tab;
   for (let i = 0; i < lines.length; i++) {
-    const pm = lines[i].match(pageRe);
-    if (!pm) continue;
-    const pageName = unesc(pm[4]);
-    const appItems = [];
+    const tm = lines[i].match(tabRe); if (tm) tab = tm[1];
+    const pm = lines[i].match(pageRe); if (!pm) continue;
+    const name = unesc(pm[4]); const items = [];
     let m; itemRe.lastIndex = 0;
-    while ((m = itemRe.exec(pm[6])) !== null) appItems.push({ id: parseInt(m[1]), name: unesc(m[2]) });
-    const target = PAGE_MATCH[pageName] || wikiByNorm[norm(pageName)];
-    if (!target || !wikiPages[target]) { log.kept.push(`[page ${pageName}] no wiki match — left as-is`); continue; }
+    while ((m = itemRe.exec(pm[6])) !== null) items.push({ id: Number(m[1]), name: unesc(m[2]) });
+    pages.push({ i, pm, tab, name, items, target: PAGE_MATCH[name] || wikiByNorm[norm(name)], moved: 0 });
+  }
+  // Move only an unambiguous physical slot that no longer exists on its former
+  // wiki page. Legitimate shared drops on multiple pages keep their own slots.
+  for (const destination of pages) {
+    if (!destination.target) continue;
+    for (const name of wikiPages[destination.target]) {
+      if (destination.items.some(item => norm(item.name) === norm(name))) continue;
+      const candidates = pages.flatMap(page => page === destination ? [] : page.items
+        .filter(item => norm(item.name) === norm(name)
+          && !(wikiPages[page.target] ?? []).some(wikiName => norm(wikiName) === norm(name)))
+        .map(item => ({ page, item })));
+      if (candidates.length !== 1) continue;
+      const { page, item } = candidates[0];
+      page.items = page.items.filter(other => other.id !== item.id); page.moved++;
+      destination.items.push({ ...item, name });
+      console.log(`  MOVE   ${page.name} -> ${destination.name}: ${name} (#${item.id})`);
+    }
+  }
+  const allocator = createCollectionIdAllocator(pages);
+  for (const page of pages) {
+    const { i, pm, name, target } = page;
+    if (!page.items.length && page.moved && !target) { lines[i] = ''; continue; }
+    if (!target || !wikiPages[target]) { log.kept.push(`[page ${name}] no wiki match — left as-is`); continue; }
     matchedWiki.add(target);
-    const aligned = appItems.length ? alignItems(appItems, wikiPages[target], log, pageName)
-      : wikiPages[target].map((n, k) => ({ id: Math.floor(appItems[0]?.id / 1000) * 1000 + k + 1, name: n }));
+    const aligned = alignItems(page.items, wikiPages[target], log, name, allocator(page.tab, page.items));
     const items = aligned.map(it => `{id: ${it.id}, name: '${esc(it.name)}'}`).join(', ');
-    lines[i] = `${pm[1]}${esc(unesc(pm[2]))}${pm[3]}${esc(pageName)}${pm[5]}${items}${pm[7]}`;
+    lines[i] = `${pm[1]}${esc(unesc(pm[2]))}${pm[3]}${esc(name)}${pm[5]}${items}${pm[7]}`;
   }
 
   const newPages = Object.keys(wikiPages).filter(p => !matchedWiki.has(p));
@@ -153,4 +172,4 @@ const run = async () => {
   console.log(`\n[clog:sync] done. Review the diff, run \`npm test\`, and commit.`);
 };
 
-run().catch(e => { console.error('[clog:sync] failed:', e.message); process.exit(1); });
+if (process.argv[1]?.endsWith('sync-collection-log.mjs')) run().catch(e => { console.error('[clog:sync] failed:', e.message); process.exit(1); });

@@ -1,5 +1,10 @@
 import { buildEntranceIndex, indexNamedTaskUnlockRegistry } from './named-task-unlock-locations.mjs';
+import { readFileSync } from 'node:fs';
+import { buildInteriorContent } from './chunk-interiors.mjs';
+const shopOverrides = JSON.parse(readFileSync(new URL('../data/sources/shop-overrides.json', import.meta.url), 'utf8'));
+const contentAliases = JSON.parse(readFileSync(new URL('../data/contentAliases.json', import.meta.url), 'utf8'));
 const REASONS = new Set([
+  'interior-preserved', 'interior-unmapped',
   'base-record', 'section-merged', 'variant-name-cleaned', 'quest-subpath-collapsed',
   'subarea-suffix-collapsed', 'named-location-unmappable', 'non-walkable-content',
   'empty-walkable-chunk', 'broad-quest-gate-suppressed', 'lite-cap',
@@ -74,7 +79,7 @@ function mergeBlob(rec, blob, slayerReq, audit, sourceKey, isSection) {
   if (blob.Object) for (const [raw, count] of Object.entries(blob.Object)) { const name = cleanName(raw); noteClean(audit, 'chunks', sourceKey, raw, name); if (rec.objects.has(name)) audit.add('chunks', sourceKey, 'normalized', 'duplicate-deduped', [name], false); rec.objects.set(name, (rec.objects.get(name) ?? 0) + count); }
   if (blob.Shop) for (const raw of Object.keys(blob.Shop)) { const name = raw.replace(/\.$/, ''); if (rec.shops.has(name)) audit.add('chunks', sourceKey, 'normalized', 'duplicate-deduped', [name], false); rec.shops.add(name); }
   if (blob.Quest) for (const [raw, kind] of Object.entries(blob.Quest)) {
-    const base = cleanName(raw.split('/')[0]);
+    const base = contentAliases.quests[raw] ?? cleanName(raw.split('/')[0]);
     if (raw.includes('/')) audit.add('chunks', sourceKey, 'normalized', 'quest-subpath-collapsed', [base], false);
     noteClean(audit, 'chunks', sourceKey, raw, base);
     const prior = rec.quests.get(base);
@@ -124,6 +129,7 @@ function buildSlayerMasters(data, audit) {
     for (const { monster, info } of taskEntries) {
       const name = cleanName(monster); const entry = { weight: info.Weight ?? 1 };
       if (info.CombatLevel != null) entry.combat = info.CombatLevel;
+      if (info.Chunks?.length) entry.locations = info.Chunks;
       if (info.Level != null) entry.slayer = info.Level;
       const req = Object.keys(info.Tasks ?? {}).map(stripWiki); if (req.length) entry.req = req;
       result[name] = entry;
@@ -305,7 +311,7 @@ function buildTags(data, chunkRecs, shopItems, drops) { const add = (map, name, 
 
 function cleanReqs(values, audit, sourceKey, category) {
   const result = new Set(); let duplicated = false;
-  for (const value of values) for (const raw of Object.keys(value ?? {})) { const clean = tidyReq(raw); if (clean) { if (result.has(clean)) duplicated = true; result.add(clean); } }
+  for (const value of values) for (const raw of Object.keys(value ?? {})) { const clean = stripWiki(raw).replace(/\s+/g, ' ').trim(); if (clean) { if (result.has(clean)) duplicated = true; result.add(clean); } }
   if (duplicated) audit.add(category, sourceKey, 'normalized', 'duplicate-deduped', [...result], false);
   return [...result].sort();
 }
@@ -388,14 +394,20 @@ function buildLite(doc, audit) {
   const flat = (items) => (items ?? []).map((item) => Array.isArray(item) ? item[0] : item).filter(Boolean);
   const cap = (items, length, id, kind) => { const unique = [...new Set(items)]; if (unique.length > length) audit.add('lite', `${id}/${kind}`, 'normalized', 'lite-cap', unique.slice(0, length), false, `${unique.length} source values capped at ${length}`); return unique.slice(0, length); };
   const lite = {};
-  for (const [id, chunk] of Object.entries(doc.chunks ?? {})) {
+  const projected = Object.fromEntries(Object.entries(doc.chunks ?? {}).map(([id, chunk]) => [id, { ...chunk }]));
+  for (const interior of Object.values(doc.interiors ?? {})) for (const entrance of interior.entrances) {
+    const chunk = projected[entrance.chunkId] ??= {};
+    for (const field of ['m', 's', 'o']) chunk[field] = [...(chunk[field] ?? []), ...(interior.content[field] ?? [])];
+    chunk.inside = [...new Set([...(chunk.inside ?? []), interior.name])];
+  }
+  for (const [id, chunk] of Object.entries(projected)) {
     const region = +id; if (!Number.isFinite(region)) continue; const cx = region >> 8, cy = region & 255;
     const mon = cap([...(chunk.m ?? [])].sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0)).map((value) => value[0]).filter(Boolean), 6, id, 'mon');
     const shop = cap(flat(chunk.s), 8, id, 'shop'); const objects = flat(chunk.o);
     const farm = cap(objects.filter((name) => PATCH_RE.test(name)), 8, id, 'farm'); const poi = cap(objects.filter((name) => POI_RE.test(name) && !PATCH_RE.test(name)), 8, id, 'poi');
-    const entry = {}; if (mon.length) entry.mon = mon; if (shop.length) entry.shop = shop; if (farm.length) entry.farm = farm; if (poi.length) entry.poi = poi; if (Object.keys(entry).length) lite[`${cx},${cy}`] = entry;
+    const entry = {}; if (chunk.inside?.length) entry.inside = chunk.inside; if (mon.length) entry.mon = mon; if (shop.length) entry.shop = shop; if (farm.length) entry.farm = farm; if (poi.length) entry.poi = poi; if (Object.keys(entry).length) lite[`${cx},${cy}`] = entry;
   }
-  return `// AUTO-GENERATED by scripts/sync-chunk-content.mjs — do not edit by hand.\n// Slim per-chunk "what's here" summary for the RuneLite bundle export.\n// Keyed "cx,cy"; categories: mon(sters) / shop(s) / farm (patches) / poi (banks, altars…).\n\nexport type ChunkContentEntry = { mon?: string[]; shop?: string[]; farm?: string[]; poi?: string[] };\nexport const CHUNK_CONTENT_LITE: Record<string, ChunkContentEntry> = ${JSON.stringify(lite)};\n`;
+  return `// AUTO-GENERATED by scripts/sync-chunk-content.mjs — do not edit by hand.\n// Slim per-chunk "what's here" summary for the RuneLite bundle export.\n// Keyed "cx,cy"; categories: mon(sters) / shop(s) / farm (patches) / poi (banks, altars…).\n\nexport type ChunkContentEntry = { mon?: string[]; shop?: string[]; farm?: string[]; poi?: string[]; inside?: string[] };\nexport const CHUNK_CONTENT_LITE: Record<string, ChunkContentEntry> = ${JSON.stringify(lite)};\n`;
 }
 
 export function transformChunkContent(data, sourceManifest, namedLocationRegistry = null, bankLocationRegistry = null) {
@@ -403,9 +415,30 @@ export function transformChunkContent(data, sourceManifest, namedLocationRegistr
     ? indexNamedTaskUnlockRegistry(namedLocationRegistry) : new Map();
   const audit = createAudit(sourceManifest, buildSourceInventory(data)); const walkable = new Set((data.walkableChunks ?? []).map(String)); const slayerReq = new Map(Object.entries(data.slayerMonsters ?? {}));
   addBaseRecords(audit, 'walkableChunks', data.walkableChunks ?? []); addBaseRecords(audit, 'slayerMonsters', data.slayerMonsters ?? {});
+  const interiors = buildInteriorContent(data, namedLocationRegistry, (blob, id) => {
+    const rec = { monsters: new Map(), npcs: new Set(), objects: new Map(), shops: new Set(), quests: new Map(), diaries: new Map(), clues: new Map(), spawns: new Set() };
+    const quietAudit = { add() {} };
+    mergeBlob(rec, blob, slayerReq, quietAudit, id, false);
+    for (const section of Object.values(blob.Sections ?? {})) mergeBlob(rec, section, slayerReq, quietAudit, id, true);
+    const e = {};
+    if (rec.monsters.size) e.m = [...rec.monsters].map(([name, v]) => v.slayer == null ? [name, v.count] : [name, v.count, v.slayer]);
+    if (rec.npcs.size) e.p = [...rec.npcs].sort();
+    if (rec.objects.size) e.o = [...rec.objects];
+    if (rec.shops.size) e.s = [...rec.shops].sort();
+    if (rec.quests.size) e.q = Object.fromEntries(rec.quests);
+    if (rec.spawns.size) e.i = [...rec.spawns].sort();
+    if (rec.diaries.size) e.d = Object.fromEntries(rec.diaries);
+    if (rec.clues.size) e.c = Object.fromEntries(rec.clues);
+    return e;
+  });
   const chunks = {};
   for (const [id, chunk] of Object.entries(data.chunks ?? {})) {
-    if (!walkable.has(String(id))) { audit.add('chunks', id, 'excluded', 'non-walkable-content', []); continue; }
+    if (!walkable.has(String(id))) {
+      const interior = interiors[id];
+      audit.add('chunks', id, interior ? interior.entrances.length ? 'normalized' : 'unresolved' : 'excluded',
+        interior ? interior.entrances.length ? 'interior-preserved' : 'interior-unmapped' : 'non-walkable-content', interior ? [`interiors/${id}`] : []);
+      continue;
+    }
     const rec = { monsters: new Map(), npcs: new Set(), objects: new Map(), shops: new Set(), quests: new Map(), diaries: new Map(), clues: new Map(), spawns: new Set() };
     mergeBlob(rec, chunk, slayerReq, audit, id, false); for (const section of Object.values(chunk.Sections ?? {})) mergeBlob(rec, section, slayerReq, audit, id, true);
     const entry = {}, nick = chunk.Nickname ?? chunk.Name;
@@ -423,7 +456,28 @@ export function transformChunkContent(data, sourceManifest, namedLocationRegistr
   addBaseRecords(audit, 'searchTerms', data.searchTerms ?? {});
   const sourceMeta = { repository: sourceManifest.repository, commit: sourceManifest.commit, blobSha: sourceManifest.blobSha, rawSha256: sourceManifest.rawSha256, policyVersion: sourceManifest.policyVersion, namedLocationPolicyVersion: namedLocationRegistry?.policyVersion, namedLocationReviewedAt: namedLocationRegistry?.reviewedAt };
   const entrances = buildEntranceIndex(namedLocationRegistry ?? { locations: [] });
-  const full = { version: 9, source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)', sourceMeta, entrances, chunks, connect, slayerMasters, shortcuts, shopItems, drops, overlays, skillItems, taskUnlocks, questSections, banks, tags };
+  const shopInfo = {};
+  for (const override of shopOverrides.records) {
+    const located = Object.values(chunks).some(e => e.s?.includes(override.name) || override.npcNames?.some(n => e.p?.includes(n)))
+      || Object.entries(interiors).some(([id, e]) => e.content.s?.includes(override.name) || override.placementSourceIds?.includes(id));
+    if (!(override.name in shopItems) && !located) continue;
+    shopInfo[override.name] = { status: override.status, source: override.source };
+    if (override.status === 'removed') { delete shopItems[override.name]; continue; }
+    if (override.items) shopItems[override.name] = override.items;
+    if (override.aliasOf) {
+      shopItems[override.aliasOf] = [...new Set([...(shopItems[override.aliasOf] ?? []), ...(shopItems[override.name] ?? [])])];
+      delete shopItems[override.name];
+    }
+    for (const [id, entry] of Object.entries(chunks)) if (override.npcNames?.some(n => entry.p?.includes(n))) {
+      entry.s = [...new Set([...(entry.s ?? []), override.name])].sort();
+      if (override.requirements?.length) ((taskUnlocks.Shops ??= {})[override.name] ??= {})[id] = override.requirements;
+    }
+    for (const [id, entry] of Object.entries(interiors)) if (override.placementSourceIds?.includes(id) || override.npcNames?.some(n => entry.content.p?.includes(n))) {
+      entry.content.s = [...new Set([...(entry.content.s ?? []), override.name])].sort();
+      if (override.requirements?.length) (entry.requirements.shop ??= {})[override.name] = override.requirements;
+    }
+  }
+  const full = { version: 9, source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)', sourceMeta, entrances, chunks, interiors, shopInfo, connect, slayerMasters, shortcuts, shopItems, drops, overlays, skillItems, taskUnlocks, questSections, banks, tags };
   const liteSource = buildLite(full, audit); const finalAudit = audit.finish();
   return { full, liteSource, audit: finalAudit, upstreamBankCount };
 }

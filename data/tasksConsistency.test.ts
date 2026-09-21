@@ -47,7 +47,7 @@ const VALID_CA_TIER = new Set(Object.keys(CA_DATA));
 const VALID_DIARY_TIER = new Set(Object.keys(DIARY_DATA));
 
 describe('CA task list references resolve', () => {
-  it('pins the current 646-task Combat Achievement baseline', () => {
+  it('pins the current 655-task Combat Achievement baseline', () => {
     const counts = Object.fromEntries(
       Object.keys(CA_DATA).map(tier => [
         tier,
@@ -55,12 +55,12 @@ describe('CA task list references resolve', () => {
       ]),
     );
 
-    expect(ALL_CA_TASKS).toHaveLength(646);
+    expect(ALL_CA_TASKS).toHaveLength(655);
     expect(counts).toEqual({
       Easy: 41,
-      Medium: 60,
-      Hard: 86,
-      Elite: 164,
+      Medium: 64,
+      Hard: 89,
+      Elite: 166,
       Master: 173,
       Grandmaster: 122,
     });
@@ -168,10 +168,10 @@ describe('Quest data integrity', () => {
     ...(q.oneOf ?? []).flatMap(option => option.locations ?? []),
   ];
 
-  it('classifies all 210 journal entries with an explicit kind and access policy', () => {
+  it('classifies all 212 journal entries with an explicit kind and access policy', () => {
     const quests = Object.values(QUEST_DATA);
-    expect(quests).toHaveLength(210);
-    expect(quests.filter(quest => quest.kind === 'quest')).toHaveLength(191);
+    expect(quests).toHaveLength(212);
+    expect(quests.filter(quest => quest.kind === 'quest')).toHaveLength(193);
     expect(quests.filter(quest => quest.kind === 'miniquest')).toHaveLength(19);
     expect(quests.filter(quest =>
       !['quest', 'miniquest'].includes(quest.kind),

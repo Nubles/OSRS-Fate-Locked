@@ -1,0 +1,274 @@
+{
+  "reviewedAt": "2026-09-21",
+  "records": [
+    {
+      "name": "Grum's Gold Exchange",
+      "status": "zero-stock",
+      "items": [],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Grum's_Gold_Exchange.?oldid=15318605",
+        "revision": 15318605
+      }
+    },
+    {
+      "name": "Castle Wars Ticket Exchange",
+      "status": "stocked",
+      "items": [
+        "Decorative helm (red)",
+        "Decorative full helm (red)",
+        "Decorative armour (red platebody)",
+        "Decorative armour (red platelegs)",
+        "Decorative armour (red plateskirt)",
+        "Decorative boots (red)",
+        "Decorative shield (red)",
+        "Decorative sword (red)",
+        "Decorative helm (white)",
+        "Decorative full helm (white)",
+        "Decorative armour (white platebody)",
+        "Decorative armour (white platelegs)",
+        "Decorative armour (white plateskirt)",
+        "Decorative boots (white)",
+        "Decorative shield (white)",
+        "Decorative sword (white)",
+        "Decorative helm (gold)",
+        "Decorative full helm (gold)",
+        "Decorative armour (gold platebody)",
+        "Decorative armour (gold platelegs)",
+        "Decorative armour (gold plateskirt)",
+        "Decorative boots (gold)",
+        "Decorative shield (gold)",
+        "Decorative sword (gold)",
+        "Castlewars hood (Zamorak)",
+        "Castlewars cloak (Zamorak)",
+        "Castlewars hood (Saradomin)",
+        "Castlewars cloak (Saradomin)",
+        "Saradomin banner",
+        "Zamorak banner",
+        "Decorative armour (magic hat)",
+        "Decorative armour (magic top)",
+        "Decorative armour (magic legs)",
+        "Decorative armour (ranged top)",
+        "Decorative armour (ranged legs)",
+        "Decorative armour (quiver)",
+        "Saradomin halo",
+        "Zamorak halo",
+        "Guthix halo"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Castle_Wars_Ticket_Exchange?oldid=15318525",
+        "revision": 15318525
+      }
+    },
+    {
+      "name": "Davon's Amulet Store",
+      "status": "zero-stock",
+      "items": [],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Davon's_Amulet_Store.?oldid=15318538",
+        "revision": 15318538
+      }
+    },
+    {
+      "name": "Gabooty's Tai Bwo Wannai Drinky Store",
+      "status": "zero-stock",
+      "items": [],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Gabooty's_Tai_Bwo_Wannai_Drinky_Store.?oldid=15318588",
+        "revision": 15318588
+      }
+    },
+    {
+      "name": "The Haymaker's Arms",
+      "status": "removed",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/The_Haymaker's_Arms?oldid=15168245",
+        "revision": 15168245
+      }
+    },
+    {
+      "name": "Honest Jimmy's House of Stuff",
+      "status": "stocked",
+      "items": [
+        "Blue naval shirt",
+        "Blue tricorn hat",
+        "Blue navy slacks",
+        "Green naval shirt",
+        "Green tricorn hat",
+        "Green navy slacks",
+        "Red naval shirt",
+        "Red tricorn hat",
+        "Red navy slacks",
+        "Brown naval shirt",
+        "Brown tricorn hat",
+        "Brown navy slacks",
+        "Black naval shirt",
+        "Black tricorn hat",
+        "Black navy slacks",
+        "Purple naval shirt",
+        "Purple tricorn hat",
+        "Purple navy slacks",
+        "Grey naval shirt",
+        "Grey tricorn hat",
+        "Grey navy slacks",
+        "Cutthroat flag",
+        "Gilded smile flag",
+        "Bronze fist flag",
+        "Lucky shot flag",
+        "Treasure flag",
+        "Phasmatys flag",
+        "The stuff",
+        "Rum (red)",
+        "Rum (blue)"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Honest_Jimmy's_House_of_Stuff?oldid=15318616",
+        "revision": 15318616
+      }
+    },
+    {
+      "name": "Beach Cocktails",
+      "status": "removed",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Beach_Cocktails?oldid=15075831",
+        "revision": 15075831
+      }
+    },
+    {
+      "name": "Beach Kit",
+      "status": "removed",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Beach_Kit?oldid=15340322",
+        "revision": 15340322
+      }
+    },
+    {
+      "name": "Bunbridge General Store",
+      "status": "removed",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Bunbridge_General_Store?oldid=15165432",
+        "revision": 15165432
+      }
+    },
+    {
+      "name": "Soul Wars Reward Shop",
+      "status": "stocked",
+      "items": [
+        "Soul cape",
+        "Ectoplasmator",
+        "Spoils of War",
+        "Blighted entangle sack",
+        "Blighted teleport spell sack",
+        "Blighted vengeance sack",
+        "Blighted ancient ice sack",
+        "Blighted manta ray",
+        "Blighted anglerfish",
+        "Blighted karambwan",
+        "Blighted super restore(4)"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Soul_Wars_Reward_Shop?oldid=15337354",
+        "revision": 15337354
+      }
+    },
+    {
+      "name": "Forestry Shop",
+      "status": "stocked",
+      "items": [
+        "Forestry kit",
+        "Secateurs blade",
+        "Ritual mulch",
+        "Log brace",
+        "Clothes pouch blueprint",
+        "Cape pouch",
+        "Log basket",
+        "Felling axe handle",
+        "Twitcher's gloves",
+        "Funky shaped log",
+        "Sawmill voucher",
+        "Lumberjack boots",
+        "Lumberjack hat",
+        "Lumberjack legs",
+        "Lumberjack top",
+        "Forestry boots",
+        "Forestry hat",
+        "Forestry legs",
+        "Forestry top",
+        "Golden pheasant egg",
+        "Fox whistle"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Forestry_Shop?oldid=15214626",
+        "revision": 15214626
+      }
+    },
+    {
+      "name": "Ratpit bar (Port Sarim)",
+      "status": "stocked",
+      "placementSourceIds": [
+        "11926"
+      ],
+      "requirements": [
+        "Ratcatchers Complete the quest"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Ratpit_bar_(Port_Sarim)?oldid=14992448",
+        "revision": 14992448
+      }
+    },
+    {
+      "name": "Ratpit bar (Varrock)",
+      "status": "stocked",
+      "placementSourceIds": [
+        "11599"
+      ],
+      "requirements": [
+        "Ratcatchers: completed Hooknosed Jack's section"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Ratpit_bar_(Varrock)?oldid=14992008",
+        "revision": 14992008
+      }
+    },
+    {
+      "name": "Lost Property shop",
+      "status": "stocked",
+      "npcNames": [
+        "Perdu"
+      ],
+      "requirements": [
+        "Previously earned the replacement quest reward"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Lost_Property_shop?oldid=15349467",
+        "revision": 15349467
+      }
+    },
+    {
+      "name": "Sawmill",
+      "status": "stocked",
+      "aliasOf": "Construction supplies",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Sawmill?oldid=15203386",
+        "revision": 15203386
+      }
+    },
+    {
+      "name": "Armour store",
+      "status": "zero-stock",
+      "items": [],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Armour_store.?oldid=14991683",
+        "revision": 14991683
+      }
+    },
+    {
+      "name": "Hendor's Awesome Ores",
+      "status": "zero-stock",
+      "items": [],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Hendor's_Awesome_Ores?oldid=15318612",
+        "revision": 15318612
+      }
+    }
+  ]
+}

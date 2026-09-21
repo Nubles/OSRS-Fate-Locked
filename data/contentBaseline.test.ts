@@ -263,22 +263,22 @@ describe('deterministic current content baseline', () => {
       schemaVersion: 1,
       repository: 'source-chunk/chunk-picker-v2',
       branch: 'gh-pages',
-      commit: 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
-      blobSha: 'ffdcc10139dde0e11be29047c6c730fd762a33c8',
-      rawSha256: '2D75BF70C9E6540CECC1631783A0293D8F28B440D429F6081B2CD4EE4C21CA59',
-      rawBytes: 7518778,
-      policyVersion: 2,
-      reviewedAt: '2026-08-16',
+      commit: 'fa71ed3b207e6a501444987dee23b875ec27cacd',
+      blobSha: '8d14fdb3f2024a4068d2f742ea4cd274e071f10d',
+      rawSha256: 'C66BB47E4978B3F41115573EA825391E26E0A458B9D93903A4FA0DFF9AF5C48C',
+      rawBytes: 7611072,
+      policyVersion: 3,
+      reviewedAt: '2026-09-21',
     });
     const generatedChunkContent = fullChunkContent as typeof fullChunkContent & {
       entrances?: Record<string, Array<{ location: string; label: string }>>;
     };
     expect(generatedChunkContent.sourceMeta).toEqual({
       repository: 'source-chunk/chunk-picker-v2',
-      commit: 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
-      blobSha: 'ffdcc10139dde0e11be29047c6c730fd762a33c8',
-      rawSha256: '2D75BF70C9E6540CECC1631783A0293D8F28B440D429F6081B2CD4EE4C21CA59',
-      policyVersion: 2,
+      commit: 'fa71ed3b207e6a501444987dee23b875ec27cacd',
+      blobSha: '8d14fdb3f2024a4068d2f742ea4cd274e071f10d',
+      rawSha256: 'C66BB47E4978B3F41115573EA825391E26E0A458B9D93903A4FA0DFF9AF5C48C',
+      policyVersion: 3,
       namedLocationPolicyVersion: 1,
       namedLocationReviewedAt: '2026-08-03',
     });
@@ -313,21 +313,21 @@ describe('deterministic current content baseline', () => {
       connections: 1110,
       slayerMasters: 10,
       shortcuts: 219,
-      shops: 435,
+      shops: 439,
       dropTables: 800,
       questSections: 134,
-      banks: 126,
+      banks: 127,
       tags: 27,
-      auditEvents: 27110,
+      auditEvents: 27531,
       unresolvedTaskUnlocks: 0,
     });
-    expect(taskUnlockTotals.source).toBe(1675);
+    expect(taskUnlockTotals.source).toBe(1959);
     expect(taskUnlockTotals.unresolved).toBe(0);
     expect(taskUnlockTotals.imported + taskUnlockTotals.normalized + taskUnlockTotals.excluded)
-      .toBe(1675);
+      .toBe(1959);
     expect(taskUnlockTotals).toEqual({
-      source: 1675,
-      imported: 1014,
+      source: 1959,
+      imported: 1298,
       normalized: 657,
       excluded: 4,
       unresolved: 0,
@@ -335,7 +335,7 @@ describe('deterministic current content baseline', () => {
     const reviewedBankIds = [
       '5678', '6454', '6458', '6711', '6712', '6961', '7225', '8499',
       '8508', '8751', '8756', '8757', '8999', '9274', '10553', '11047',
-      '11056', '11062', '11572', '11578', '12082', '12337', '12838',
+      '11056', '11062', '11066', '11572', '11578', '12082', '12337', '12838',
       '12849', '14132',
     ];
     expect(fullChunkContent.banks).toEqual(expect.arrayContaining(reviewedBankIds));
@@ -553,39 +553,39 @@ describe('deterministic current content baseline', () => {
     expect(wording).not.toMatch(/inventory tracking|completion override|key rates?|Fate Points?|pity|balance changes?/i);
   });
 
-  it('pins 646 Combat Achievements, tier counts, thresholds, and provenance', () => {
+  it('pins 655 Combat Achievements, tier counts, thresholds, and provenance', () => {
     const tiers = ['Easy', 'Medium', 'Hard', 'Elite', 'Master', 'Grandmaster'] as const;
-    expect(ALL_CA_TASKS).toHaveLength(646);
+    expect(ALL_CA_TASKS).toHaveLength(655);
     expect(Object.fromEntries(tiers.map(tier => [
       tier,
       ALL_CA_TASKS.filter(task => task.tierId === tier).length,
     ]))).toEqual({
       Easy: 41,
-      Medium: 60,
-      Hard: 86,
-      Elite: 164,
+      Medium: 64,
+      Hard: 89,
+      Elite: 166,
       Master: 173,
       Grandmaster: 122,
     });
     expect(tiers.map(tier => CA_DATA[tier].pointsRequired))
-      .toEqual([41, 161, 419, 1075, 1940, 2672]);
+      .toEqual([41, 169, 436, 1100, 1965, 2697]);
     expect(caSource).toMatchObject({
-      verifiedAt: '2026-08-16',
+      verifiedAt: '2026-09-21',
       source: {
         url: 'https://oldschool.runescape.wiki/w/Combat_Achievements',
-        revision: 15296909,
-        revisionTimestamp: '2026-08-13T09:19:38Z',
-        officialRows: 646,
+        revision: 15347364,
+        revisionTimestamp: '2026-09-16T21:20:12Z',
+        officialRows: 655,
         authoritativeGlobals: {
           counts: {
             Easy: 41,
-            Medium: 60,
-            Hard: 86,
-            Elite: 164,
+            Medium: 64,
+            Hard: 89,
+            Elite: 166,
             Master: 173,
             Grandmaster: 122,
           },
-          thresholds: [41, 161, 419, 1075, 1940, 2672],
+          thresholds: [41, 169, 436, 1100, 1965, 2697],
         },
       },
     });
@@ -593,13 +593,13 @@ describe('deterministic current content baseline', () => {
     expect(caSource.source.tierSources.reduce(
       (total, source) => total + source.officialRows,
       0,
-    )).toBe(646);
+    )).toBe(655);
     expect(caSource.source.tierSources.every(source =>
       source.url.startsWith('https://oldschool.runescape.wiki/w/') &&
       source.revision > 0 &&
       /^202[5-6]-/.test(source.revisionTimestamp),
     )).toBe(true);
-    expect(caSource.tasks).toHaveLength(646);
+    expect(caSource.tasks).toHaveLength(655);
   });
 });
 
@@ -670,15 +670,15 @@ describe('independent generated-content contract', () => {
       Easy: 1, Medium: 2, Hard: 3, Elite: 4, Master: 5, Grandmaster: 6,
     });
     expect(CA_TIER_ORDER.map(tier => CA_DATA[tier].pointsRequired)).toEqual([
-      41, 161, 419, 1075, 1940, 2672,
+      41, 169, 436, 1100, 1965, 2697,
     ]);
     expect(ALL_CA_TASKS.reduce(
       (total, task) => total + CA_TASK_POINTS[task.tierId as keyof typeof CA_TASK_POINTS],
       0,
-    )).toBe(2672);
+    )).toBe(2697);
   });
 
-  it('keeps all 646 reviewed CA rows field-for-field aligned with generated data', () => {
+  it('keeps all 655 reviewed CA rows field-for-field aligned with generated data', () => {
     const generatedById = new Map(ALL_CA_TASKS.map(task => [task.id, task]));
     const mismatches = caSource.tasks.flatMap(sourceTask => {
       const generated = generatedById.get(sourceTask.id);
@@ -687,10 +687,10 @@ describe('independent generated-content contract', () => {
         : [sourceTask.id];
     });
 
-    expect(caSource.tasks).toHaveLength(646);
-    expect(new Set(caSource.tasks.map(task => task.id)).size).toBe(646);
+    expect(caSource.tasks).toHaveLength(655);
+    expect(new Set(caSource.tasks.map(task => task.id)).size).toBe(655);
     expect(caSource.tasks.every(task => /^ca_\d+$/.test(task.id))).toBe(true);
-    expect(generatedById.size).toBe(646);
+    expect(generatedById.size).toBe(655);
     expect(mismatches, 'CA rows whose generated form differs from the snapshot').toEqual([]);
   });
 
@@ -743,21 +743,21 @@ describe('independent generated-content contract', () => {
         text: '{{Globals|ca <tier> tasks}} and {{Globals|ca <tier> points}}',
         contentmodel: 'wikitext', prop: 'text', format: 'json',
       },
-      retrievedAt: '2026-08-16T15:14:32.746Z',
-      overviewDeclaredRows: 646,
+      retrievedAt: '2026-09-21T16:32:10.000Z',
+      overviewDeclaredRows: 655,
     });
     expect(caSource.source.discrepancy).toBe(
-      'The overview, authoritative Globals, and six tier task tables reconcile at 646 tasks; Maggot King Speed Chaser is Grandmaster.',
+      'The six official tier task tables and authoritative Globals reconcile at 655 tasks; nine tasks were added since the August baseline.',
     );
     expect(caSource.source.tierSources.map(source => [
       source.tier, source.revision, source.revisionTimestamp, source.officialRows,
     ])).toEqual([
       ['Easy', 15272565, '2026-07-22T19:56:56Z', 41],
-      ['Medium', 15135540, '2026-02-25T18:48:27Z', 60],
-      ['Hard', 15272569, '2026-07-22T19:58:23Z', 86],
-      ['Elite', 15272563, '2026-07-22T19:55:28Z', 164],
-      ['Master', 15272564, '2026-07-22T19:55:46Z', 173],
-      ['Grandmaster', 15025941, '2025-11-13T02:26:22Z', 122],
+      ['Medium', 15321194, '2026-08-26T17:04:05Z', 64],
+      ['Hard', 15321192, '2026-08-26T17:03:25Z', 89],
+      ['Elite', 15321189, '2026-08-26T17:02:37Z', 166],
+      ['Master', 15329081, '2026-09-02T23:22:12Z', 173],
+      ['Grandmaster', 15321195, '2026-08-26T17:04:58Z', 122],
     ]);
   });
 });

@@ -8,7 +8,7 @@ import {
   validateNamedTaskUnlockRegistry,
 } from './named-task-unlock-locations.mjs';
 
-const manifest = { commit: 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746' };
+const manifest = { commit: 'fa71ed3b207e6a501444987dee23b875ec27cacd' };
 
 const validRegistry = {
   schemaVersion: 1,
@@ -136,7 +136,7 @@ describe('named task-unlock registry', () => {
     registry.sourceCommit = 'stale';
 
     expect(() => validateNamedTaskUnlockRegistry(registry, context))
-      .toThrow('Named task-unlock source commit mismatch: expected a9a5c74760eb76dbe39f90d2b04f023fc1de3746, received stale');
+      .toThrow('Named task-unlock source commit mismatch: expected fa71ed3b207e6a501444987dee23b875ec27cacd, received stale');
   });
 
   it('rejects entrances outside the canonical chunk list', () => {

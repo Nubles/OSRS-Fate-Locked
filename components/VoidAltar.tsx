@@ -48,7 +48,7 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
 
   const openCartographer = () => {
     // Draw 3 distinct candidates from the live frontier (fewer if it's small).
-    const frontier = getChunkFrontier(unlocks.chunks ?? []);
+    const frontier = getChunkFrontier(unlocks.chunks ?? [], unlocks);
     // Partial Fisher–Yates through the seeded-run choke point: the 3 offered
     // chunks are deterministic per chain tip on a seeded run.
     const pool = [...frontier];

@@ -2,7 +2,8 @@ import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import { isAreaReachable } from './reachability';
-import { isChunkUnlocked } from './chunkAdjacency';
+import { OCEAN_CHUNK_KEYS, canNavigateOcean } from './oceanAccess';
+import { isChunkUnlocked, isOceanChunkReachable } from './chunkAdjacency';
 import { UnlockState } from '../types';
 import type { ChunkCoord } from './mapCoords';
 import {
@@ -67,7 +68,7 @@ export const placeOf = (cx: number, cy: number): ChunkPlace => {
   const subArea = CHUNK_SUB[k] ?? null;
   const region = CHUNK_REGION[k] ?? null;
   const displaySubArea = subArea ? displayAreaName(subArea) : null;
-  const label = displaySubArea && region && subArea !== region
+  const label = OCEAN_CHUNK_KEYS.has(k) ? `Open sea (${cx}, ${cy})` : displaySubArea && region && subArea !== region
     ? `${displaySubArea} · ${region}`
     : displaySubArea ?? region ?? `chunk (${cx}, ${cy})`;
   return { cx, cy, subArea, region, label };
@@ -85,6 +86,8 @@ const nameUnlocked = (name: string, unlocks: UnlockState, gameModeId?: string): 
 /** Sub-area-first unlock check, matching the world map's colouring. */
 export const chunkUnlocked = (cx: number, cy: number, unlocks: UnlockState, gameModeId?: string): boolean => {
   const k = key(cx, cy);
+  if (OCEAN_CHUNK_KEYS.has(k)) return gameModeId === 'chunked'
+    ? isOceanChunkReachable(k, unlocks.chunks ?? [], unlocks) : canNavigateOcean(unlocks);
   if (gameModeId === 'chunked') return isChunkUnlocked(k, unlocks.chunks ?? []);
   const sub = CHUNK_SUB[k];
   if (sub) return nameUnlocked(sub, unlocks, gameModeId);
@@ -133,8 +136,9 @@ export const summarisePlaces = (
   const seen = new Map<string, ChunkPlace & { unlocked: boolean }>();
   for (const { cx, cy } of chunks) {
     const place = placeOf(cx, cy);
-    if (!seen.has(place.label)) {
-      seen.set(place.label, { ...place, unlocked: chunkUnlocked(cx, cy, unlocks, gameModeId) });
+    const unlocked = chunkUnlocked(cx, cy, unlocks, gameModeId);
+    if (!seen.has(place.label) || (unlocked && !seen.get(place.label)!.unlocked)) {
+      seen.set(place.label, { ...place, unlocked });
     }
   }
   return [...seen.values()].sort((a, b) =>
@@ -145,6 +149,7 @@ export const summarisePlaces = (
 export function chunkUnlockRequirement(cx: number, cy: number, unlocks: UnlockState, gameModeId?: string): {
   text: string; remaining: string[];
 } {
+  if (OCEAN_CHUNK_KEYS.has(key(cx, cy))) return { text: 'Open sea: complete Pandemonium and unlock Sailing. In Chunked mode, sail from an owned coastal chunk. Islands retain their own locks.', remaining: [] };
   if (gameModeId === 'chunked') return {
     text: `Chunk ${cx}, ${cy}: ${chunkUnlocked(cx, cy, unlocks, gameModeId) ? 'unlocked' : 'unlock this exact chunk'}.`, remaining: [],
   };

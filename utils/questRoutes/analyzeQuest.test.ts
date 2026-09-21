@@ -468,6 +468,15 @@ describe('analyzeQuest', () => {
       .toBe('READY_NOW');
   });
 
+  it('invalidates cached routes when an interior source identity changes', () => {
+    const firstRecords = cookSources().map(record => ({ ...record, sourceId: 'first-interior' }));
+    const secondRecords = cookSources().map(record => ({ ...record, sourceId: 'second-interior' }));
+    const first = analyzeQuest("Cook's Assistant", fixture({ records: firstRecords }));
+    const second = analyzeQuest("Cook's Assistant", fixture({ records: secondRecords }));
+    expect(second).not.toBe(first);
+    expect(questRouteStatusForItems(second.items)).toBe('READY_NOW');
+  });
+
   it('keeps omitted Egg source and transformation evidence locally incomplete', () => {
     const analysis = analyzeQuest("Cook's Assistant", fixture({
       records: [source('Bucket of milk'), source('Pot of flour')],

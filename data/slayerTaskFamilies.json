@@ -1,0 +1,1003 @@
+{
+  "reviewedAt": "2026-09-21",
+  "runeliteSource": {
+    "url": "https://github.com/runelite/runelite/blob/master/runelite-client/src/main/java/net/runelite/client/plugins/slayer/Task.java",
+    "sha256": "3518aebf230a1bb448f03b2a9fa9bf09813dd0644b1bd762ddceb8d8f397fc68"
+  },
+  "sources": {
+    "Aberrant spectres": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FAberrant_spectres?oldid=15349360",
+      "revision": 15349360
+    },
+    "Abyssal demons": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FAbyssal_demons?oldid=15347479",
+      "revision": 15347479
+    },
+    "Ankous": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FAnkou?oldid=15329414",
+      "revision": 15329414
+    },
+    "Aquanites": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Araxytes": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FAraxytes?oldid=15322536",
+      "revision": 15322536
+    },
+    "Bandits": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FBandits?oldid=15250998",
+      "revision": 15250998
+    },
+    "Banshees": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FBanshees?oldid=15330527",
+      "revision": 15330527
+    },
+    "Basilisks": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FBasilisks?oldid=15341651",
+      "revision": 15341651
+    },
+    "Bats": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FBats?oldid=15333631",
+      "revision": 15333631
+    },
+    "Bears": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FBears?oldid=15250961",
+      "revision": 15250961
+    },
+    "Birds": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FBirds?oldid=15341657",
+      "revision": 15341657
+    },
+    "Black Knights": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Black demons": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FBlack_demons?oldid=15296848",
+      "revision": 15296848
+    },
+    "Black dragons": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FBlack_dragons?oldid=15341652",
+      "revision": 15341652
+    },
+    "Bloodvelds": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FBloodveld?oldid=15344399",
+      "revision": 15344399
+    },
+    "Blue dragons": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FBlue_dragons?oldid=15319394",
+      "revision": 15319394
+    },
+    "Brine rats": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Catablepon": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Cave bugs": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Cave crawlers": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Cave horrors": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FCave_horrors?oldid=15341650",
+      "revision": 15341650
+    },
+    "Cave krakens": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FCave_krakens?oldid=15332650",
+      "revision": 15332650
+    },
+    "Cave slimes": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Chaos druids": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Cockatrice": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Cows": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Crabs": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FCrabs?oldid=15250994",
+      "revision": 15250994
+    },
+    "Crawling Hands": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Crocodiles": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Custodian stalkers": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Dagannoths": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FDagannoth?oldid=15352280",
+      "revision": 15352280
+    },
+    "Dark beasts": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Dark warriors": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Dogs": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FDogs?oldid=15341658",
+      "revision": 15341658
+    },
+    "Drakes": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Dust devils": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FDust_devils?oldid=15352518",
+      "revision": 15352518
+    },
+    "Dwarves": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FDwarves?oldid=15250970",
+      "revision": 15250970
+    },
+    "Earth warriors": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FEarth_warriors?oldid=15251008",
+      "revision": 15251008
+    },
+    "Elves": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FElves?oldid=15264257",
+      "revision": 15264257
+    },
+    "Ents": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Fever spiders": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Fire giants": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Flesh Crawlers": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Fossil Island Wyverns": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Frost dragons": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Gargoyles": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FGargoyles?oldid=15316243",
+      "revision": 15316243
+    },
+    "Ghosts": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FGhosts?oldid=15250974",
+      "revision": 15250974
+    },
+    "Ghouls": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Goblins": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FGoblins?oldid=14871486",
+      "revision": 14871486
+    },
+    "Greater demons": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FGreater_demons?oldid=15270275",
+      "revision": 15270275
+    },
+    "Green dragons": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FGreen_dragons?oldid=15341655",
+      "revision": 15341655
+    },
+    "Gryphons": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FGryphons?oldid=15341628",
+      "revision": 15341628
+    },
+    "Harpie bug swarms": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Hellhounds": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FHellhounds?oldid=15351779",
+      "revision": 15351779
+    },
+    "Hill Giants": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FHill_giants?oldid=15272947",
+      "revision": 15272947
+    },
+    "Hobgoblins": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FHobgoblins?oldid=15251007",
+      "revision": 15251007
+    },
+    "Hydras": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FHydras?oldid=15317930",
+      "revision": 15317930
+    },
+    "Ice giants": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FIce_giants?oldid=15251009",
+      "revision": 15251009
+    },
+    "Ice warriors": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Icefiends": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FIcefiends?oldid=15336183",
+      "revision": 15336183
+    },
+    "Infernal Mages": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Jellies": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FJellies?oldid=15347496",
+      "revision": 15347496
+    },
+    "Jungle horrors": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Kalphites": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FKalphites?oldid=15344284",
+      "revision": 15344284
+    },
+    "Killerwatts": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Kurask": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Lava dragons": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Lesser Nagua": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FLesser_Nagua?oldid=15343878",
+      "revision": 15343878
+    },
+    "Lesser demons": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Lizards": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FLizards?oldid=15116877",
+      "revision": 15116877
+    },
+    "Magic axes": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Mammoths": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Metal dragons": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FMetal_dragons?oldid=15332692",
+      "revision": 15332692
+    },
+    "Minions of Scabaras": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Minotaurs": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Mogres": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Molanisks": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FMolanisks?oldid=15250984",
+      "revision": 15250984
+    },
+    "Monkeys": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FMonkeys?oldid=15250976",
+      "revision": 15250976
+    },
+    "Moss giants": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FMoss_giants?oldid=15250972",
+      "revision": 15250972
+    },
+    "Nechryael": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FNechryael?oldid=15347499",
+      "revision": 15347499
+    },
+    "Ogres": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FOgres?oldid=15320380",
+      "revision": 15320380
+    },
+    "Otherworldly beings": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Pirates": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Pyrefiends": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FPyrefiends?oldid=15285080",
+      "revision": 15285080
+    },
+    "Rats": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FRats?oldid=15251205",
+      "revision": 15251205
+    },
+    "Revenants": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Rockslugs": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Rogues": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Scorpions": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FScorpions?oldid=15316864",
+      "revision": 15316864
+    },
+    "Sea snakes": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FSea_snakes?oldid=15124331",
+      "revision": 15124331
+    },
+    "Shades": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FShades?oldid=15350347",
+      "revision": 15350347
+    },
+    "Shadow warriors": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Skeletal Wyverns": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Skeletons": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FSkeletons?oldid=15346469",
+      "revision": 15346469
+    },
+    "Smoke devils": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FSmoke_devils?oldid=15341653",
+      "revision": 15341653
+    },
+    "Sourhogs": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Spiders": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FSpiders?oldid=15250979",
+      "revision": 15250979
+    },
+    "Spiritual creatures": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FSpiritual_creatures?oldid=15287407",
+      "revision": 15287407
+    },
+    "Suqah": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Terror dogs": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Trolls": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FTrolls?oldid=15316236",
+      "revision": 15316236
+    },
+    "Turoths": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Vampyres": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FVampyres?oldid=15320360",
+      "revision": 15320360
+    },
+    "Venators": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FVenators?oldid=15327318",
+      "revision": 15327318
+    },
+    "Wall beasts": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Warped creatures": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FWarped_creatures?oldid=15322535",
+      "revision": 15322535
+    },
+    "Waterfiends": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FWaterfiends?oldid=15319421",
+      "revision": 15319421
+    },
+    "Werewolves": {
+      "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
+    },
+    "Wolves": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FWolves?oldid=14976155",
+      "revision": 14976155
+    },
+    "Wyrms": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FWyrms?oldid=15341647",
+      "revision": 15341647
+    },
+    "Zombies": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FZombies?oldid=15327782",
+      "revision": 15327782
+    },
+    "Zygomites": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FZygomites?oldid=15161085",
+      "revision": 15161085
+    }
+  },
+  "families": {
+    "aberrant spectres": [
+      "Aberrant spectre",
+      "Deviant spectre"
+    ],
+    "abyssal demons": [
+      "Abyssal Sire",
+      "Abyssal demon"
+    ],
+    "ankous": [
+      "Ankou"
+    ],
+    "aquanites": [
+      "Aquanite"
+    ],
+    "araxytes": [
+      "Araxxor",
+      "Araxyte"
+    ],
+    "bandits": [
+      "Bandit",
+      "Black Heather",
+      "Donny the lad",
+      "Guard Bandit",
+      "Speedy Keith"
+    ],
+    "banshees": [
+      "Banshee",
+      "Twisted Banshee"
+    ],
+    "basilisks": [
+      "Basilisk",
+      "Basilisk Knight"
+    ],
+    "bats": [
+      "Albino bat",
+      "Bat",
+      "Death wing",
+      "Giant bat"
+    ],
+    "bears": [
+      "Artio",
+      "Bear Cub",
+      "Black bear",
+      "Callisto",
+      "Grizzly bear",
+      "Grizzly bear (Escape Caves)",
+      "Grizzly bear cub"
+    ],
+    "birds": [
+      "Bird",
+      "Chicken",
+      "Chompy bird",
+      "Duck",
+      "Entrana firebird",
+      "Oomlie bird",
+      "Penguin (monster)",
+      "Rooster",
+      "Seagull",
+      "Terrorbird",
+      "Undead chicken",
+      "Vulture"
+    ],
+    "black knights": [
+      "Black Knight",
+      "Black knight (Port Sarim Jail)",
+      "Elite Black Knight"
+    ],
+    "black demons": [
+      "Balfrug Kreeyath",
+      "Black demon",
+      "Demonic gorilla",
+      "Skotizo"
+    ],
+    "black dragons": [
+      "Baby black dragon",
+      "Black dragon",
+      "Brutal black dragon",
+      "King Black Dragon"
+    ],
+    "bloodvelds": [
+      "Bloodveld",
+      "Mutated Bloodveld"
+    ],
+    "blue dragons": [
+      "Baby blue dragon",
+      "Blue dragon",
+      "Brutal blue dragon",
+      "Vorkath"
+    ],
+    "brine rats": [
+      "Brine rat"
+    ],
+    "catablepon": [
+      "Catablepon"
+    ],
+    "cave bugs": [
+      "Cave bug"
+    ],
+    "cave crawlers": [
+      "Cave crawler"
+    ],
+    "cave horrors": [
+      "Cave horror"
+    ],
+    "cave krakens": [
+      "Cave kraken",
+      "Kraken"
+    ],
+    "cave slimes": [
+      "Cave slime"
+    ],
+    "chaos druids": [
+      "Chaos druid",
+      "Chaos druid warrior",
+      "Elder Chaos druid"
+    ],
+    "cockatrice": [
+      "Cockatrice",
+      "Moonlight Cockatrice"
+    ],
+    "cows": [
+      "Brutus",
+      "Buffalo",
+      "Cow",
+      "Cow calf",
+      "Demonic Brutus",
+      "Undead cow"
+    ],
+    "crabs": [
+      "Ammonite Crab",
+      "Crab",
+      "Frost crab",
+      "Giant Rock Crab",
+      "King Sand Crab",
+      "Rock Crab",
+      "Sand Crab",
+      "Swamp Crab"
+    ],
+    "crawling hands": [
+      "Crawling Hand"
+    ],
+    "crocodiles": [
+      "Crocodile"
+    ],
+    "custodian stalkers": [
+      "Elder custodian stalker",
+      "Juvenile custodian stalker",
+      "Mature custodian stalker"
+    ],
+    "dagannoths": [
+      "Dagannoth",
+      "Dagannoth (Waterbirth Island)",
+      "Dagannoth Prime",
+      "Dagannoth fledgeling",
+      "Dagannoth spawn"
+    ],
+    "dark beasts": [
+      "Dark beast"
+    ],
+    "dark warriors": [
+      "Dark warrior"
+    ],
+    "dogs": [
+      "Guard dog",
+      "Jackal",
+      "Shadow Hound",
+      "Temple guardian",
+      "Wild dog"
+    ],
+    "drakes": [
+      "Drake"
+    ],
+    "dust devils": [
+      "Dust devil"
+    ],
+    "dwarves": [
+      "Black Guard",
+      "Black Guard Berserker",
+      "Chaos dwarf",
+      "Dwarf",
+      "Dwarf gang member",
+      "Guard (dwarf)"
+    ],
+    "earth warriors": [
+      "Earth warrior"
+    ],
+    "elves": [
+      "Elf Archer",
+      "Elf Warrior",
+      "Guard (Prifddinas)",
+      "Iorwerth Archer",
+      "Iorwerth Warrior",
+      "Mourner"
+    ],
+    "ents": [
+      "Ent"
+    ],
+    "fever spiders": [
+      "Fever spider"
+    ],
+    "fire giants": [
+      "Branda the Fire Queen",
+      "Fire giant"
+    ],
+    "flesh crawlers": [
+      "Flesh Crawler"
+    ],
+    "fossil island wyverns": [
+      "Ancient Wyvern",
+      "Long-tailed Wyvern",
+      "Spitting Wyvern",
+      "Taloned Wyvern"
+    ],
+    "frost dragons": [
+      "Frost dragon"
+    ],
+    "gargoyles": [
+      "Gargoyle"
+    ],
+    "ghosts": [
+      "Death wing",
+      "Forgotten Soul",
+      "Ghost",
+      "Tortured soul"
+    ],
+    "ghouls": [
+      "Ghoul"
+    ],
+    "goblins": [
+      "Cave goblin (monster)",
+      "Cave goblin guard",
+      "Cave goblin miner",
+      "Goblin",
+      "Goblin (Vault of War)",
+      "Sergeant Strongstack"
+    ],
+    "greater demons": [
+      "Greater demon",
+      "K'ril Tsutsaroth",
+      "Skotizo",
+      "Tormented Demon",
+      "Tstanon Karlak"
+    ],
+    "green dragons": [
+      "Green dragon"
+    ],
+    "gryphons": [
+      "Gryphon",
+      "Shellbane gryphon"
+    ],
+    "harpie bug swarms": [
+      "Harpie Bug Swarm"
+    ],
+    "hellhounds": [
+      "Cerberus",
+      "Greater Skeleton Hellhound (Calvar'ion)",
+      "Greater Skeleton Hellhound (Vet'ion)",
+      "Hellhound",
+      "Skeleton Hellhound (Calvar'ion)",
+      "Skeleton Hellhound (Vet'ion)"
+    ],
+    "hill giants": [
+      "Cyclops",
+      "Cyclops (God Wars Dungeon)",
+      "Hill Giant",
+      "Obor"
+    ],
+    "hobgoblins": [
+      "Hobgoblin"
+    ],
+    "hydras": [
+      "Alchemical Hydra",
+      "Hydra"
+    ],
+    "ice giants": [
+      "Eldric the Ice King",
+      "Ice giant"
+    ],
+    "ice warriors": [
+      "Ice warrior",
+      "Icelord"
+    ],
+    "icefiends": [
+      "Icefiend"
+    ],
+    "infernal mages": [
+      "Infernal Mage"
+    ],
+    "jellies": [
+      "Chilled jelly",
+      "Jelly",
+      "Warped Jelly"
+    ],
+    "jungle horrors": [
+      "Jungle horror"
+    ],
+    "kalphites": [
+      "Kalphite Guardian",
+      "Kalphite Queen",
+      "Kalphite Soldier",
+      "Kalphite Worker"
+    ],
+    "killerwatts": [
+      "Killerwatt"
+    ],
+    "kurask": [
+      "Kurask"
+    ],
+    "lava dragons": [
+      "Lava dragon"
+    ],
+    "lesser nagua": [
+      "Amoxliatl",
+      "Earthen Nagua",
+      "Frost Nagua",
+      "Sulphur Nagua"
+    ],
+    "lesser demons": [
+      "Lesser demon",
+      "Lesser demon (Melzar's Maze)",
+      "Zakl'n Gritch"
+    ],
+    "lizards": [
+      "Desert Lizard",
+      "Grimy Lizard",
+      "Lizard",
+      "Small Lizard",
+      "Sulphur Lizard"
+    ],
+    "magic axes": [
+      "Magic axe"
+    ],
+    "mammoths": [
+      "Mammoth"
+    ],
+    "metal dragons": [
+      "Adamant dragon",
+      "Bronze dragon",
+      "Iron dragon",
+      "Mithril dragon",
+      "Rune dragon",
+      "Steel dragon"
+    ],
+    "minions of scabaras": [
+      "Locust rider",
+      "Scarab mage",
+      "Scarab swarm",
+      "Small scarab"
+    ],
+    "minotaurs": [
+      "Minotaur"
+    ],
+    "mogres": [
+      "Mogre",
+      "Mogre (Sailing)"
+    ],
+    "molanisks": [
+      "Molanisk"
+    ],
+    "monkeys": [
+      "Demonic gorilla",
+      "Maniacal monkey",
+      "Monkey (monster)",
+      "Monkey Guard",
+      "Monkey Zombie",
+      "Monkey guard",
+      "Tortured gorilla"
+    ],
+    "moss giants": [
+      "Bryophyta",
+      "Moss giant",
+      "Moss giant (Iorwerth Dungeon)"
+    ],
+    "nechryael": [
+      "Greater Nechryael",
+      "Nechryael"
+    ],
+    "ogres": [
+      "Mogre",
+      "Ogre",
+      "Ogress Shaman",
+      "Ogress Warrior",
+      "Skogre",
+      "Zogre"
+    ],
+    "otherworldly beings": [
+      "Otherworldly being"
+    ],
+    "pirates": [
+      "Pirate",
+      "Pirate Guard"
+    ],
+    "pyrefiends": [
+      "Pyrefiend",
+      "Pyrelord"
+    ],
+    "rats": [
+      "Brine rat",
+      "Crypt rat",
+      "Dungeon rat",
+      "Giant crypt rat",
+      "Giant rat",
+      "Giant rat (Scurrius)",
+      "Rat",
+      "Scurrius",
+      "Zombie rat"
+    ],
+    "revenants": [
+      "Revenant cyclops",
+      "Revenant dark beast",
+      "Revenant demon",
+      "Revenant dragon",
+      "Revenant goblin",
+      "Revenant hellhound",
+      "Revenant hobgoblin",
+      "Revenant imp",
+      "Revenant knight",
+      "Revenant ork",
+      "Revenant pyrefiend"
+    ],
+    "rockslugs": [
+      "Rockslug"
+    ],
+    "rogues": [
+      "Rogue"
+    ],
+    "scorpions": [
+      "Giant lobster",
+      "Grave scorpion",
+      "King Scorpion",
+      "Lobstrosity",
+      "Pit Scorpion",
+      "Poison Scorpion",
+      "Scorpia",
+      "Scorpia's guardian",
+      "Scorpion"
+    ],
+    "sea snakes": [
+      "Sea Snake Hatchling",
+      "Sea Snake Young"
+    ],
+    "shades": [
+      "Asyn Shade",
+      "Fiyr Shade",
+      "Loar Shade",
+      "Phrin Shade",
+      "Riyl Shade",
+      "Shade",
+      "Urium Shade"
+    ],
+    "shadow warriors": [
+      "Shadow warrior"
+    ],
+    "skeletal wyverns": [
+      "Skeletal Wyvern"
+    ],
+    "skeletons": [
+      "Calvar'ion",
+      "Skeleton",
+      "Skeleton (Ape Atoll)",
+      "Skeleton (Barrows)",
+      "Skeleton (Draynor Manor)",
+      "Skeleton (Melzar's Maze)",
+      "Skeleton (Shayzien Crypts)",
+      "Skeleton (Tarn's Lair)",
+      "Skeleton (mage)",
+      "Skeleton Mage",
+      "Skogre",
+      "Vet'ion"
+    ],
+    "smoke devils": [
+      "Smoke devil",
+      "Thermonuclear smoke devil"
+    ],
+    "sourhogs": [
+      "Sourhog"
+    ],
+    "spiders": [
+      "Araxxor",
+      "Araxyte",
+      "Blessed spider",
+      "Crypt spider",
+      "Deadly red spider",
+      "Fever spider",
+      "Giant crypt spider",
+      "Giant spider",
+      "Ice spider",
+      "Jungle spider",
+      "Poison spider",
+      "Poison spider (Escape Caves)",
+      "Sarachnis",
+      "Shadow spider",
+      "Spider",
+      "Spider (Ape Atoll)",
+      "Spider (Ungael)",
+      "Spindel",
+      "Temple Spider",
+      "Venenatis"
+    ],
+    "spiritual creatures": [
+      "Spiritual mage",
+      "Spiritual ranger",
+      "Spiritual warrior"
+    ],
+    "suqah": [
+      "Suqah"
+    ],
+    "terror dogs": [
+      "Terror dog"
+    ],
+    "trolls": [
+      "Berry",
+      "Dad",
+      "Ice troll",
+      "Ice troll female",
+      "Ice troll grunt",
+      "Ice troll male",
+      "Ice troll runt",
+      "Kraka",
+      "Mountain troll",
+      "Pee Hat",
+      "River troll",
+      "Rock (Troll)",
+      "Stick",
+      "Thrower Troll",
+      "Thrower troll (Trollheim)",
+      "Troll general",
+      "Troll spectator",
+      "Twig"
+    ],
+    "turoths": [
+      "Turoth"
+    ],
+    "vampyres": [
+      "Feral Vampyre",
+      "Vampyre Juvenile",
+      "Vampyre Juvinate",
+      "Venator",
+      "Vyrewatch",
+      "Vyrewatch Sentinel"
+    ],
+    "venators": [
+      "Venator"
+    ],
+    "wall beasts": [
+      "Wall beast"
+    ],
+    "warped creatures": [
+      "Warped Terrorbird",
+      "Warped Tortoise"
+    ],
+    "waterfiends": [
+      "Waterfiend"
+    ],
+    "werewolves": [
+      "Werewolf"
+    ],
+    "wolves": [
+      "Big Wolf",
+      "Desert Wolf",
+      "Dire Wolf",
+      "Ice wolf",
+      "Jungle Wolf",
+      "White wolf",
+      "Wolf"
+    ],
+    "wyrms": [
+      "Lava Strykewyrm",
+      "Wyrm",
+      "Wyrmling"
+    ],
+    "zombies": [
+      "Armoured zombie (Zemouregal's Base)",
+      "Armoured zombie (Zemouregal's Fort)",
+      "Monkey Zombie",
+      "Sorebones",
+      "Undead Druid",
+      "Undead Lumberjack",
+      "Undead chicken",
+      "Undead cow",
+      "Undead one",
+      "Vorkath",
+      "Zogre",
+      "Zombie",
+      "Zombie pirate",
+      "Zombie pirate (Braindeath Island)",
+      "Zombie rat",
+      "Zombie swab"
+    ],
+    "zygomites": [
+      "Ancient Zygomite",
+      "Zygomite"
+    ]
+  }
+}
