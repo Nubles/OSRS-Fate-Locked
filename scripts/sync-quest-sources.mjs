@@ -17,14 +17,15 @@ const CHUNK_SOURCE_PATH = resolve(ROOT, 'data', 'sources', 'chunkpicker-chunkinf
 const WIKI_API = 'https://oldschool.runescape.wiki/api.php';
 const WIKI_LIST_TITLE = 'Quests/List';
 const LEGACY_CHUNK_SOURCE_COMMIT = 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926';
-const CURRENT_CHUNK_SOURCE_COMMIT = 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746';
+const CURRENT_CHUNK_SOURCE_COMMIT = 'fa71ed3b207e6a501444987dee23b875ec27cacd';
 const APPROVED_CHUNK_SOURCE_COMMITS = new Set([
   LEGACY_CHUNK_SOURCE_COMMIT,
+  'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
   CURRENT_CHUNK_SOURCE_COMMIT,
 ]);
-const RUNTIME_QUEST_COUNT = 191;
+const RUNTIME_QUEST_COUNT = 193;
 const RUNTIME_MINIQUEST_COUNT = 19;
-const OFFICIAL_PARSED_QUEST_COUNT = 192;
+const OFFICIAL_PARSED_QUEST_COUNT = 194;
 const REVIEWED_AT = new Date().toISOString().slice(0, 10);
 const USER_AGENT = 'OSRS-Fate-Locked quest provenance refresh/1.0 (https://github.com/Nubles/OSRS-Fate-Locked)';
 const WIKI_PAGE_TITLES = {
@@ -161,7 +162,7 @@ function assertExistingSnapshotsForRefresh(official, audit) {
   const questCount = official.entries.filter(entry => entry.kind === 'quest').length;
   const miniquestCount = official.entries.filter(entry => entry.kind === 'miniquest').length;
   if (miniquestCount !== RUNTIME_MINIQUEST_COUNT
-    || ![RUNTIME_QUEST_COUNT - 1, RUNTIME_QUEST_COUNT].includes(questCount)
+    || ![191, 192, RUNTIME_QUEST_COUNT].includes(questCount)
     || official.entries.length !== questCount + miniquestCount) {
     errors.push(`refresh baseline must contain either ${RUNTIME_QUEST_COUNT - 1} or ${RUNTIME_QUEST_COUNT} quests and ${RUNTIME_MINIQUEST_COUNT} miniquests; found ${questCount}/${miniquestCount}`);
   }

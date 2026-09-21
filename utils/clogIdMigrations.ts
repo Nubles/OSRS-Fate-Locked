@@ -14,6 +14,9 @@ export const CLOG_ID_MIGRATIONS: Record<number, number> = {
   // "Araxyte venom sac(k)" rename duplicate on the Araxxor page (July 2026):
   // 104011 was minted for the new spelling while 104002 kept the old one.
   104011: 104002,
+  // Runtime sync minted duplicates when Venators moved to Other / Slayer.
+  528089: 532001,
+  528090: 532002,
 };
 
 export function migrateClogIds(clog: Record<number, number>): Record<number, number> {

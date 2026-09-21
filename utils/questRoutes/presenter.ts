@@ -102,6 +102,8 @@ const SOURCE_KIND_TEXT: Record<SourceKind, string> = {
 const presentGate = (gate: RouteGate): PresentedBlocker => {
   switch (gate.type) {
     case 'SKILL': return { category: 'Skill', label: gate.label };
+    case 'RFD_SUBQUESTS':
+    case 'QUEST_PROGRESS':
     case 'QUEST': return { category: 'Quest', label: gate.label };
     case 'UNLOCK': return { category: 'Unlock', label: gate.label };
     case 'UNRESOLVED': return { category: 'Access / station', label: gate.label };

@@ -62,9 +62,9 @@ describe('pinned normalized chunk-source collisions', () => {
 
     expect(collisions).toHaveLength(59);
     expect(collisions.reduce((count, [, rows]) => count + rows.length, 0)).toBe(132);
-    expect(impacted).toHaveLength(50);
-    expect(impacted.reduce((count, [, rows]) => count + rows.length, 0)).toBe(113);
-    expect(lostItems).toHaveLength(533);
+    expect(impacted).toHaveLength(51);
+    expect(impacted.reduce((count, [, rows]) => count + rows.length, 0)).toBe(115);
+    expect(lostItems).toHaveLength(537);
 
     const result = transformChunkContent(data, manifest);
     const missing = dropRows.flatMap((row) => {
@@ -188,12 +188,12 @@ describe('pinned normalized chunk-source collisions', () => {
       contributions.map(({ rawItem, stage, rate }) => `${rawItem}\u0000${stage}\u0000${rate}`)
     ).size, 0);
 
-    expect(rows).toHaveLength(567);
-    expect(rawContributions).toBe(7_803);
-    expect(canonicalContributions).toBe(7_755);
-    expect(singletonItems.filter(({ evidence }) => evidence.size > 1)).toHaveLength(168);
+    expect(rows).toHaveLength(573);
+    expect(rawContributions).toBe(8227);
+    expect(canonicalContributions).toBe(8179);
+    expect(singletonItems.filter(({ evidence }) => evidence.size > 1)).toHaveLength(169);
     expect(singletonItems.filter(hasRepeatedRateAcrossStages)).toHaveLength(36);
-    expect(canonicalItems.filter(({ evidence }) => evidence.size > 1)).toHaveLength(305);
+    expect(canonicalItems.filter(({ evidence }) => evidence.size > 1)).toHaveLength(306);
     expect(canonicalItems.filter(hasRepeatedRateAcrossStages)).toHaveLength(54);
     expect(intraMethodItemCollisions.map(({ canonical, item, rawItems }) => ({
       canonical: canonical.replace('\u0000', '/'),

@@ -11,7 +11,7 @@ import {
 const ADDITION_IDS = [
   '5678', '6454', '6458', '6711', '6712', '6961', '7225', '8499',
   '8508', '8751', '8756', '8757', '8999', '9274', '10553', '11047',
-  '11056', '11062', '11572', '11578', '12082', '12337', '12838',
+  '11056', '11062', '11066', '11572', '11578', '12082', '12337', '12838',
   '12849', '14132',
 ];
 
@@ -67,7 +67,7 @@ describe('reviewed bank-location registry', () => {
     expect(() => validateBankLocationRegistry(registry, { validChunkIds, validBankIds })).not.toThrow();
     expect(registry.locations.map(({ id }: { id: string }) => id).sort((a: string, b: string) => +a - +b))
       .toEqual([...ADDITION_IDS].sort((a, b) => +a - +b));
-    expect(new Set(registry.locations.map(({ id }: { id: string }) => id)).size).toBe(25);
+    expect(new Set(registry.locations.map(({ id }: { id: string }) => id)).size).toBe(26);
   });
 
   it('keeps canonical coordinates, unique names, reviewed labels, and exclusions explicit', () => {
@@ -77,7 +77,7 @@ describe('reviewed bank-location registry', () => {
     for (const location of registry.locations) {
       expect(location.id).toBe(String(location.cx * 256 + location.cy));
     }
-    expect(new Set(registry.locations.map(({ name }: { name: string }) => name))).toHaveLength(25);
+    expect(new Set(registry.locations.map(({ name }: { name: string }) => name))).toHaveLength(26);
     expect(labels.get('10275')).toBe('Wyrmscraig bank chest');
     expect(labels.get('11830')).toBe('Ruins of Camdozaal (via Ice Mountain)');
     expect(registry.exclusions).toEqual(EXCLUSIONS);

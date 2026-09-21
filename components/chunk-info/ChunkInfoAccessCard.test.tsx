@@ -15,6 +15,14 @@ const entrance: ChunkEntrance = {
 };
 
 describe('ChunkInfoAccessCard', () => {
+  it('explains interior access separately from purchasing a bank unlock', () => {
+    render(<ChunkInfoAccessCard previewLocked={false} entryRequirements={[]} entrances={[]}
+      chunkUnlocked bankState="requirements" bankRequirements={['Started The Giant Dwarf']} />);
+    expect(screen.getByText('Bank access requirements')).toBeTruthy();
+    expect(screen.getByText('Started The Giant Dwarf')).toBeTruthy();
+    expect(screen.queryByText('Bank available')).toBeNull();
+    expect(screen.queryByText('Bank needs its own unlock')).toBeNull();
+  });
   it('combines preview, entry, entrance, route, and bank information in one card', () => {
     render(
       <ChunkInfoAccessCard

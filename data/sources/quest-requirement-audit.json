@@ -1,9 +1,10 @@
 {
   "schemaVersion": 2,
-  "reviewedAt": "2026-08-16",
+  "reviewedAt": "2026-09-21",
   "chunkSourceCommits": [
     "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-    "a9a5c74760eb76dbe39f90d2b04f023fc1de3746"
+    "a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+    "fa71ed3b207e6a501444987dee23b875ec27cacd"
   ],
   "entries": [
     {
@@ -175,6 +176,44 @@
           "The unavoidable start and farm stops are represented by Draynor Village and South Falador Farm; the Champions' Guild picker row at chunk 49,52 was reviewed as an intermediate activity marker and is not forced as a third completion gate."
         ],
         "instances": [],
+        "partialCompletion": []
+      }
+    },
+    {
+      "id": "A Ruff Situation",
+      "kind": "quest",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-09-21",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Ruff_Situation&oldid=15350582",
+        "revision": 15350582,
+        "revisionTimestamp": "2026-09-18T21:05:25Z"
+      },
+      "chunkSourceCommit": "fa71ed3b207e6a501444987dee23b875ec27cacd",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Edgeville\",\"Varrock\"],\"locations\":[{\"chunkOptions\":[{\"cx\":47,\"cy\":54}],\"id\":\"dog-shelter\",\"label\":\"Dog Shelter\",\"standardAreas\":[\"Edgeville\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":53}],\"id\":\"gertrudes-house\",\"label\":\"Gertrude's house and Cooks' Guild\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":54}],\"id\":\"outlaw-camp\",\"label\":\"Outlaw Camp\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":53}],\"id\":\"shelter-road\",\"label\":\"Barbarian Village crossing\",\"standardAreas\":[\"Barbarian Village\"]}],\"skills\":{\"Crafting\":15},\"prereqs\":[],\"points\":1}",
+      "chunkEvidence": [
+        {
+          "chunkId": "47,54",
+          "role": "first",
+          "place": "Edgeville Monastery"
+        },
+        {
+          "chunkId": "49,53",
+          "role": "step",
+          "place": "West Varrock"
+        }
+      ],
+      "notes": {
+        "items": [
+          "Needle (or costume needle), thread when using a regular needle, one suitable fur and grain; grain can be picked near the Cooks' Guild."
+        ],
+        "travel": [
+          "Dog Shelter, Barbarian Village crossing, western Varrock and the Outlaw Camp; exact chunks are required in Chunked mode."
+        ],
+        "instances": [
+          "Defeat the two quest outlaws, combat levels 22 and 23."
+        ],
         "partialCompletion": []
       }
     },
@@ -571,7 +610,7 @@
         "partialCompletion": []
       },
       "discrepancy": "Bear Your Soul uses the regions policy with runtime regions [Kourend & Kebos, Asgarnia]. The pinned Wiki requires the Arceuus Library, Aretha at the Soul Altar, the Arceuus church crypt, and the Key Master in Cerberus' Lair, while the pinned Chunk Picker records first Arceuus Library (chunk 25,59), step Blood Altar (chunk 26,59), and step South Taverley (chunk 45,53). The Blood Altar label does not identify the Wiki-required Soul Altar or church crypt, so the evidence cannot support a narrower exact-location policy without guessing.",
-        "conservativeReason": "Keeping Bear Your Soul's corrected regions policy requirements (regions [Arceuus, Taverley]; skills [none]; prerequisites [none]) prevents this source-label conflict from allowing premature completion/key-roll eligibility while avoiding the unsupported Client of Kourend prerequisite."
+      "conservativeReason": "Keeping Bear Your Soul's corrected regions policy requirements (regions [Arceuus, Taverley]; skills [none]; prerequisites [none]) prevents this source-label conflict from allowing premature completion/key-roll eligibility while avoiding the unsupported Client of Kourend prerequisite."
     },
     {
       "id": "Below Ice Mountain",
@@ -1189,6 +1228,37 @@
       }
     },
     {
+      "id": "Crab Quest",
+      "kind": "quest",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-09-21",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Crab_Quest&oldid=15349390",
+        "revision": 15349390,
+        "revisionTimestamp": "2026-09-17T18:04:40Z"
+      },
+      "chunkSourceCommit": "fa71ed3b207e6a501444987dee23b875ec27cacd",
+      "accessPolicy": "regions",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Dognose Island\"],\"skills\":{\"Fishing\":30,\"Sailing\":40},\"prereqs\":[\"Pandemonium\"],\"points\":1}",
+      "chunkEvidence": [
+        {
+          "chunkId": "47,41",
+          "role": "first",
+          "place": "Dognose Island"
+        }
+      ],
+      "notes": {
+        "items": [
+          "Big fishing net is obtainable during the quest."
+        ],
+        "travel": [
+          "Dognose Island; Sailing 40 and Fishing 30. Pandemonium is required to use Sailing, so the tracker retains it as the travel prerequisite."
+        ],
+        "instances": [],
+        "partialCompletion": []
+      }
+    },
+    {
       "id": "Creature of Fenkenstrain",
       "kind": "quest",
       "status": "verified-with-notes",
@@ -1719,7 +1789,7 @@
         ]
       },
       "discrepancy": "Desert Treasure I retains the regions policy with Kharidian Desert, Asgarnia, Kandarin, Morytania, and Misthalin plus prerequisite The Dig Site and Slayer 10. The pinned Wiki permits Slayer 10 or a gas mask, but item possession is not tracked; the pinned Chunk Picker includes Bedabin Camp (chunk 49,47), so the alternative cannot be encoded without weakening eligibility.",
-        "conservativeReason": "Keeping Desert Treasure I's regions policy, including Bedabin Camp and Slayer 10, prevents premature completion/key-roll eligibility when the gas-mask alternative cannot be observed by runtime state."
+      "conservativeReason": "Keeping Desert Treasure I's regions policy, including Bedabin Camp and Slayer 10, prevents premature completion/key-roll eligibility when the gas-mask alternative cannot be observed by runtime state."
     },
     {
       "id": "Desert Treasure II",
@@ -3389,7 +3459,7 @@
           "The pinned Wiki item requirements for Horror from the Deep were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "The lighthouse, bridge, and barbarian-outpost route remains covered by Fremennik; Alfred Grimhand’s Barcrawl is a required miniquest.",
+          "The lighthouse, bridge, and barbarian-outpost route remains covered by Fremennik; Alfred Grimhand\u2019s Barcrawl is a required miniquest.",
           "The catalogue-wide parent-region audit replaced Fremennik with the exact tracked access set: Lighthouse."
         ],
         "instances": [
@@ -3709,7 +3779,7 @@
           "The pinned Wiki item requirements for King's Ransom were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "The investigation crosses Sinclair Mansion, Camelot, Ardougne, and the Black Knights’ Fortress in Asgarnia.",
+          "The investigation crosses Sinclair Mansion, Camelot, Ardougne, and the Black Knights\u2019 Fortress in Asgarnia.",
           "The catalogue-wide parent-region audit replaced Kandarin, Asgarnia with the exact tracked access set: East Ardougne, Seers' Village, Camelot, Edgeville."
         ],
         "instances": [],
@@ -3866,7 +3936,7 @@
           "The pinned Wiki item requirements for Legends' Quest were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "The Legends’ Guild route enters the Kharazi Jungle, requiring both Kandarin and Karamja.",
+          "The Legends\u2019 Guild route enters the Kharazi Jungle, requiring both Kandarin and Karamja.",
           "The catalogue-wide parent-region audit replaced Kandarin, Karamja with the exact tracked access set: Legends' Guild, Kharazi Jungle, Tai Bwo Wannai."
         ],
         "instances": [],
@@ -3970,7 +4040,7 @@
           "The pinned Wiki item requirements for Lunar Diplomacy were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "Rellekka, Pirates’ Cove, Lunar Isle, and the dream instance remain covered by Fremennik; Herblore 5 is a listed requirement.",
+          "Rellekka, Pirates\u2019 Cove, Lunar Isle, and the dream instance remain covered by Fremennik; Herblore 5 is a listed requirement.",
           "The catalogue-wide parent-region audit replaced Fremennik with the exact tracked access set: Lunar Isle, Pirates' Cove, Rellekka."
         ],
         "instances": [
@@ -4274,7 +4344,7 @@
           "The pinned Wiki item requirements for Misthalin Mystery were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "The quest is confined to Abigail and Hewey’s island, represented by the pinned east Lumbridge Swamp chunk."
+          "The quest is confined to Abigail and Hewey\u2019s island, represented by the pinned east Lumbridge Swamp chunk."
         ],
         "instances": [],
         "partialCompletion": []
@@ -4595,7 +4665,7 @@
           "The pinned Wiki item requirements for Murder Mystery were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "The established Task 6 Sinclair Mansion and Seers’ Village exact-location conclusion is preserved unchanged."
+          "The established Task 6 Sinclair Mansion and Seers\u2019 Village exact-location conclusion is preserved unchanged."
         ],
         "instances": [],
         "partialCompletion": []
@@ -7264,7 +7334,7 @@
         "partialCompletion": []
       },
       "discrepancy": "The Enchanted Key uses the regions policy with runtime regions [Fremennik, Kandarin, Tirannwn, Asgarnia, Misthalin, Kharidian Desert]. The pinned Chunk Picker records Jorral's Outpost as first (chunk 38,52) and nine treasure steps, while the pinned Wiki starts from the enchanted key and requires eleven fixed treasure sites; the picker omits the Falador and Grand Exchange sites and its Jorral's Outpost first record is not one of those eleven sites. This conflict prevents a trustworthy exact-location policy.",
-        "conservativeReason": "Keeping The Enchanted Key's corrected regions policy requirements across the full Wiki route, including Rellekka, with prerequisite [Making History], prevents the missing and extra picker records from allowing premature completion/key-roll eligibility until exact location evidence agrees."
+      "conservativeReason": "Keeping The Enchanted Key's corrected regions policy requirements across the full Wiki route, including Rellekka, with prerequisite [Making History], prevents the missing and extra picker records from allowing premature completion/key-roll eligibility until exact location evidence agrees."
     },
     {
       "id": "The Eyes of Glouphrie",

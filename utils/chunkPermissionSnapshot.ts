@@ -1,7 +1,7 @@
+import { MERCHANT_SERVICES } from '../data/merchantServices';
 import type { GameModeRules } from '../config/gameModes';
 import { BANK_BY_ID } from '../data/banks';
-import { BOSSES_LIST, MINIGAMES_LIST } from '../data/items';
-import { QUEST_DATA } from '../data/questData';
+import { MINIGAMES_LIST } from '../data/items';
 import type {
   ChunkContent,
   Shortcut,
@@ -9,9 +9,10 @@ import type {
 import type { UnlockState } from '../types';
 import { resourceReqFor, resourceUsable } from './chunkResources';
 import { chunkUnlocked, placeOf } from './chunkLocations';
-import { getQuestStatus } from './journalStatus';
-import { classifyShop } from './merchantShops';
+import { getQuestStatus, meetsSkillRequirement } from './journalStatus';
 import { isBankReachable } from './reachability';
+import { canonicalBossId, resolveQuest } from './contentIdentity';
+import { evaluateEntityAccess, evaluateBankRequirements, type EntityAccessSource } from './entityAccess';
 
 export type PermissionStatus = 'ALLOWED' | 'NOT_READY' | 'LOCKED' | 'UNKNOWN';
 export type ChunkCategoryId =
@@ -42,6 +43,7 @@ export interface ChunkPermissionSnapshot {
 }
 
 export interface ChunkPermissionContext {
+  contentService?: EntityAccessSource;
   unlocks: UnlockState;
   gameModeId?: string;
   customMode?: GameModeRules;
@@ -78,8 +80,7 @@ function questStatus(
   name: string,
   context: ChunkPermissionContext,
 ): PermissionStatus {
-  const quest = QUEST_DATA[name]
-    ?? Object.values(QUEST_DATA).find((candidate) => candidate.name === name);
+  const quest = resolveQuest(name);
   if (!quest) return 'UNKNOWN';
   const status = getQuestStatus(quest, context.unlocks, context.gameModeId);
   if (status === 'COMPLETED' || status === 'AVAILABLE') return 'ALLOWED';
@@ -113,10 +114,18 @@ export function buildChunkPermissionSnapshot(
   const place = placeOf(coord.cx, coord.cy);
   const categories: Partial<Record<ChunkCategoryId, ChunkPermissionRow[]>> = {};
   const add = (category: ChunkCategoryId, row: ChunkPermissionRow) => {
+    const kind = category === 'COMBAT' || row.key.startsWith('boss:') ? 'monster'
+      : category === 'SKILLING' || category === 'FARMING' ? 'object' : null;
+    if (kind) {
+      const access = evaluateEntityAccess(row.name, kind, coord, context.unlocks, context.gameModeId, context.contentService, context.reachableChunks);
+      row.status = withEntry(row.status, access.status);
+      if (access.reasons.length) row.detail = [row.detail, ...access.reasons].filter(Boolean).join('; ');
+    }
     (categories[category] ??= []).push(row);
   };
 
   if (BANK_BY_ID[numericId]) {
+    const access = evaluateBankRequirements(content, coord, context.unlocks, context.contentService);
     add('BANKS', {
       key: `bank:${numericId}`,
       name: BANK_BY_ID[numericId].name,
@@ -128,23 +137,28 @@ export function buildChunkPermissionSnapshot(
           context.gameModeId,
           context.customMode,
         ) ? 'ALLOWED' : 'LOCKED',
-        entry,
+        withEntry(access.status, entry),
       ),
+      ...(access.reasons.length ? { detail: access.reasons.join('; ') } : {}),
       targetKind: 'BANK',
     });
   }
 
   for (const name of content.shops) {
-    const category = classifyShop(name);
-    const status: PermissionStatus = category == null
-      ? 'UNKNOWN'
-      : context.unlocks.merchants.includes(category) ? 'ALLOWED' : 'LOCKED';
+    const access = evaluateEntityAccess(name, 'shop', coord, context.unlocks, context.gameModeId, context.contentService, context.reachableChunks);
     add('SHOPS', {
       key: `shop:${name.toLowerCase()}`,
       name,
-      status: withEntry(status, entry),
+      status: withEntry(access.status, entry),
+      ...(access.reasons.length ? { detail: access.reasons.join('; ') } : {}),
       targetKind: 'SHOP',
     });
+  }
+
+  for (const name of content.npcs) {
+    if (!MERCHANT_SERVICES[name]) continue;
+    const access = evaluateEntityAccess(name, 'npc', coord, context.unlocks, context.gameModeId, context.contentService, context.reachableChunks);
+    add('SHOPS', { key: `service:${name.toLowerCase()}`, name, status: withEntry(access.status, entry), detail: access.reasons.join('; ') || 'NPC service', targetKind: 'NPC' });
   }
 
   for (const name of Object.keys(content.quests)) {
@@ -156,21 +170,21 @@ export function buildChunkPermissionSnapshot(
   }
 
   for (const monster of content.monsters) {
-    if (BOSSES_LIST.includes(monster.name)) {
+    const bossId = canonicalBossId(monster.name);
+    if (bossId) {
       add('ACTIVITIES', {
         key: `boss:${monster.name.toLowerCase()}`,
         name: monster.name,
         status: withEntry(
-          context.unlocks.bosses.includes(monster.name) ? 'ALLOWED' : 'LOCKED',
+          context.unlocks.bosses.includes(bossId) ? 'ALLOWED' : 'LOCKED',
           entry,
         ),
         targetKind: 'ACTIVITY',
       });
       continue;
     }
-    const slayerLevel = context.unlocks.levels.Slayer ?? 1;
     const status: PermissionStatus =
-      monster.slayer == null || slayerLevel >= monster.slayer
+      monster.slayer == null || meetsSkillRequirement(context.unlocks, 'Slayer', monster.slayer)
         ? 'ALLOWED'
         : 'NOT_READY';
     add('COMBAT', {
@@ -214,7 +228,7 @@ export function buildChunkPermissionSnapshot(
   for (const shortcut of context.shortcuts ?? []) {
     if (!shortcut.chunks.includes(numericId)) continue;
     const level = context.unlocks.levels[shortcut.skill] ?? 1;
-    const status: PermissionStatus = level >= shortcut.level
+    const status: PermissionStatus = meetsSkillRequirement(context.unlocks, shortcut.skill, shortcut.level)
       ? 'ALLOWED'
       : 'NOT_READY';
     add('TRAVEL', {

@@ -5,13 +5,13 @@ import { buildBankDefinitions, generateBankSource } from './gen-banks.mjs';
 import { generatedTextMatches } from './generated-text.mjs';
 
 describe('bank source generator', () => {
-  it('uses reviewed labels before chunk nicknames and appends the virtual bank after all 126 physical banks', () => {
+  it('uses reviewed labels before chunk nicknames and appends the virtual bank after all 127 physical banks', () => {
     const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
     const registry = readBankLocationRegistry();
     const defs = buildBankDefinitions(doc, registry);
     const byId = Object.fromEntries(defs.map(def => [def.id, def.name]));
 
-    expect(defs).toHaveLength(127);
+    expect(defs).toHaveLength(128);
     expect(defs.at(-1)).toEqual({
       id: 'woodcutting-leprechaun',
       name: 'Woodcutting Leprechaun (Forestry)',

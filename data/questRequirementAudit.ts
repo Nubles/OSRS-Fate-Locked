@@ -41,6 +41,7 @@ export interface QuestRequirementAuditEntry {
 const APPROVED_CHUNK_SOURCE_COMMITS = new Set([
   'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
   'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
+  'fa71ed3b207e6a501444987dee23b875ec27cacd',
 ]);
 const KINDS = new Set<QuestKind>(['quest', 'miniquest']);
 const ACCESS_POLICIES = new Set<QuestAccessPolicy>([

@@ -1243,7 +1243,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
           // real unlock unit is the individual chunk (see utils/chunkAdjacency.ts).
           const key = chunkKey({ cx, cy });
           if (isChunkUnlocked(key, chunkUnlocks)) fill = UNLOCKED_FILL;
-          else if (isFrontierChunk(key, chunkUnlocks)) fill = hotFrontier.has(key) ? HOT_FRONTIER_FILL : FRONTIER_FILL;
+          else if (isFrontierChunk(key, chunkUnlocks, unlocks)) fill = hotFrontier.has(key) ? HOT_FRONTIER_FILL : FRONTIER_FILL;
           else fill = LOCKED_FILL;
         } else {
           const unlocked = subArea ? isRegionUnlocked(subArea, regionUnlocks) : continentUnlocked;

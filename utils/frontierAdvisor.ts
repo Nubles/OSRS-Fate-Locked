@@ -68,7 +68,7 @@ export function rankFrontierChunks(
   if (gameModeId !== 'chunked') return [];
   const chunks: string[] = unlocks.chunks ?? [];
 
-  return getChunkFrontier(chunks)
+  return getChunkFrontier(chunks, unlocks)
     .map((c): RankedFrontierChunk => {
       const key = chunkKey(c);
 

@@ -1,0 +1,24 @@
+{
+  "quests": {
+    "Recipe for Disaster": "RFD: Finale",
+    "Recipe for Disaster/Another Cook's Quest": "RFD: The Cook",
+    "Recipe for Disaster/Freeing the Mountain Dwarf": "RFD: Dwarf",
+    "Recipe for Disaster/Freeing the Goblin generals": "RFD: Goblins",
+    "Recipe for Disaster/Freeing Pirate Pete": "RFD: Pirate Pete",
+    "Recipe for Disaster/Freeing the Lumbridge Guide": "RFD: Lumbridge Guide",
+    "Recipe for Disaster/Freeing Evil Dave": "RFD: Evil Dave",
+    "Recipe for Disaster/Freeing Skrach Uglogwee": "RFD: Skrach Uglogwee",
+    "Recipe for Disaster/Freeing Sir Amik Varze": "RFD: Sir Amik Varze",
+    "Recipe for Disaster/Freeing King Awowogei": "RFD: King Awowogei",
+    "Recipe for Disaster/Defeating the Culinaromancer": "RFD: Finale",
+    "Vale Totems (miniquest)": "Vale Totems",
+    "Desert Treasure II - The Fallen Empire": "Desert Treasure II",
+    "The Ribbiting Tale of a Lily Pad Labour Dispute": "The Ribbiting Tale",
+    "Forgettable Tale of a Drunken Dwarf": "Forgettable Tale...",
+    "Recipe for Disaster: Another Cook's Quest": "RFD: The Cook"
+  },
+  "bosses": {
+    "Mad Angel": "The Mad Angel",
+    "Thermonuclear smoke devil": "Thermonuclear Smoke Devil"
+  }
+}

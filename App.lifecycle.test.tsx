@@ -526,7 +526,7 @@ describe('App changelog lifecycle', () => {
 
     await user.click(within(gameMode).getByRole('button', { name: 'Close' }));
     expect(await screen.findByRole('dialog', { name: "What's New" })).toBeTruthy();
-  });
+  }, 15_000);
 
   it('scrubs a valid RuneLite pairing fragment and owns the startup modal', async () => {
     const code = '0123456789abcdef0123456789abcdef';

@@ -49,25 +49,25 @@ describe('Combat Achievement offline generator', () => {
     expect(snapshot.source.url).toBe(
       'https://oldschool.runescape.wiki/w/Combat_Achievements',
     );
-    expect(snapshot.source.revision).toBe(15296909);
-    expect(snapshot.source.revisionTimestamp).toBe('2026-08-13T09:19:38Z');
-    expect(snapshot.verifiedAt).toBe('2026-08-16');
-    expect(snapshot.source.retrievedAt).toBe('2026-08-16T15:14:32.746Z');
+    expect(snapshot.source.revision).toBe(15347364);
+    expect(snapshot.source.revisionTimestamp).toBe('2026-09-16T21:20:12Z');
+    expect(snapshot.verifiedAt).toBe('2026-09-21');
+    expect(snapshot.source.retrievedAt).toBe('2026-09-21T16:32:10.000Z');
     expect(snapshot.source.authoritativeGlobals.thresholds).toEqual([
-      41, 161, 419, 1075, 1940, 2672,
+      41, 169, 436, 1100, 1965, 2697,
     ]);
     expect(snapshot.source.discrepancy).toBe(
-      'The overview, authoritative Globals, and six tier task tables reconcile at 646 tasks; Maggot King Speed Chaser is Grandmaster.',
+      'The six official tier task tables and authoritative Globals reconcile at 655 tasks; nine tasks were added since the August baseline.',
     );
     expect(validated.counts).toEqual({
       Easy: 41,
-      Medium: 60,
-      Hard: 86,
-      Elite: 164,
+      Medium: 64,
+      Hard: 89,
+      Elite: 166,
       Master: 173,
       Grandmaster: 122,
     });
-    expect(validated.tasks).toHaveLength(646);
+    expect(validated.tasks).toHaveLength(655);
     expect(validated.tasks.find(task => task.id === 'ca_640')).toMatchObject({
       name: 'Maggot King Speed Chaser',
       tierId: 'Grandmaster',
@@ -152,6 +152,6 @@ describe('Combat Achievement offline generator', () => {
 
     const short = loadSnapshot();
     short.tasks.pop();
-    expect(() => renderCombatAchievementTasks(short)).toThrow(/count|646/i);
+    expect(() => renderCombatAchievementTasks(short)).toThrow(/count|655/i);
   });
 });

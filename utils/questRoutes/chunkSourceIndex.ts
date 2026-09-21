@@ -73,7 +73,7 @@ export const indexDirectItemSources = (
   };
   const mapRecord = (record: ItemSourceRecord, chunk: ChunkKey): ExactItemSource => (
     compileSourceRequirements({
-      id: `${record.kind}:${record.hostName}:${record.cx},${record.cy}:${item.key}`,
+      id: `${record.kind}:${record.hostName}:${record.cx},${record.cy}:${item.key}${record.sourceId ? `:${record.sourceId}` : ''}`,
       output: item,
       outputQuantity: 1,
       kind: record.kind === 'spawn' ? 'SPAWN' : record.kind === 'shop' ? 'SHOP' : 'DROP',

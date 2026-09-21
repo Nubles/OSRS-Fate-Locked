@@ -110,7 +110,7 @@ describe('collection log data integrity', () => {
       { id: 157002, name: 'Hallowfell' },
       { id: 157003, name: 'Ardeaglais teleport' },
       { id: 157004, name: 'Aggy' },
-      { id: 157005, name: 'Jar of light' },
+      { id: 157005, name: 'Jar of Light' },
     ]);
     expect(COLLECTION_LOG_DATA.Other.pages['All Pets'].items)
       .toEqual(expect.arrayContaining([
@@ -130,6 +130,6 @@ describe('collection log data integrity', () => {
     const counts = Object.fromEntries(
       Object.entries(COLLECTION_LOG_DATA).map(([k, t]) => [k, Object.keys(t.pages).length])
     );
-    expect(counts).toEqual({ Bosses: 57, Raids: 3, Clues: 11, Minigames: 22, Other: 32 });
+    expect(counts).toEqual({ Bosses: 57, Raids: 3, Clues: 11, Minigames: 22, Other: 31 });
   });
 });

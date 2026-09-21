@@ -1,0 +1,371 @@
+{
+  "schemaVersion": 2,
+  "reviewedAt": "2026-09-21",
+  "note": "Reviewed entrances take precedence over general Connect edges. Named rules also apply to their #Section records; record-specific rules add phase or entity restrictions. Mapped geography is not proof of every inventory, quest-stage or door requirement.",
+  "locations": {
+    "Prifddinas": {
+      "requirements": [
+        "Song of the Elves Complete the quest"
+      ]
+    },
+    "Cam Torum": {
+      "requirements": [
+        "Perilous Moons: defeated the sulphur nagua and spoken to Attala"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Cam_Torum"
+    },
+    "Zanaris": {
+      "requirements": [
+        "Lost City Complete the quest"
+      ]
+    },
+    "Dorgesh-Kaan": {
+      "requirements": [
+        "Death to the Dorgeshuun Complete the quest"
+      ]
+    },
+    "Keldagrim": {
+      "requirements": [
+        "Started The Giant Dwarf"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Keldagrim",
+      "anchors": [
+        "11066"
+      ]
+    },
+    "Mor Ul Rek#Outer Area": {
+      "anchors": [
+        "11313"
+      ],
+      "requirements": []
+    },
+    "Mor Ul Rek#Inner Area": {
+      "anchors": [
+        "11313"
+      ],
+      "requirements": [
+        "Show a fire cape to enter inner Mor Ul Rek"
+      ]
+    },
+    "Motherlode Mine": {
+      "anchors": [
+        "12084"
+      ],
+      "requirements": []
+    },
+    "Ancient Cavern": {
+      "anchors": [
+        "10038"
+      ],
+      "requirements": [
+        "Completed the firemaking part of Barbarian Training"
+      ]
+    },
+    "Temple of the Eye": {
+      "requirements": [
+        "Temple of the Eye Complete the quest"
+      ]
+    },
+    "Alchemical Society": {
+      "anchors": [
+        "5421"
+      ],
+      "requirements": [
+        "Herblore level 60"
+      ]
+    },
+    "Hallowed Sepulchre": {
+      "requirements": [
+        "Sins of the Father Complete the quest",
+        "Agility level 52"
+      ]
+    },
+    "Varrock Rat Pits": {
+      "requirements": [
+        "Ratcatchers: completed Hooknosed Jack's section"
+      ]
+    },
+    "Keldagrim Rat Pits": {
+      "requirements": [
+        "Ratcatchers Complete the quest"
+      ]
+    },
+    "Crabclaw Caves": {
+      "anchors": [
+        "6453"
+      ],
+      "requirements": [
+        "The Depths of Despair: read The Royal Accord of Twill"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/The_Depths_of_Despair?oldid=15316668",
+      "note": "The entrance is south of the Woodcutting Guild. Starting the quest alone is insufficient; the book must have been read.",
+      "coordinates": [
+        {
+          "x": 1644,
+          "y": 3449
+        }
+      ]
+    },
+    "Crash Site Cavern": {
+      "anchors": [
+        "9783"
+      ],
+      "requirements": [
+        "Monkey Madness II Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Crash_Site_Cavern?oldid=15173388",
+      "note": "The permanent gorilla cave is entered through the opening at 2436,3520. The Grand Tree and quest crash-site instance are separate records.",
+      "coordinates": [
+        {
+          "x": 2436,
+          "y": 3520
+        }
+      ]
+    },
+    "Kruk's Dungeon": {
+      "anchors": [
+        "10795"
+      ],
+      "requirements": [
+        "Monkey Madness II: reached Kruk's Dungeon"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Kruk%27s_Dungeon?oldid=15302416",
+      "note": "Use the jungle-grass trapdoor west of Marim. The aggregate Connect also lists other Ape Atoll points that are not this physical entrance.",
+      "coordinates": [
+        {
+          "x": 2715,
+          "y": 2789
+        }
+      ]
+    },
+    "Lumbridge Swamp Caves": {
+      "anchors": [
+        "12593"
+      ],
+      "requirements": [],
+      "source": "https://oldschool.runescape.wiki/w/Lumbridge_Swamp_Caves?oldid=15287282",
+      "note": "The swamp rope entrance is independent of The Lost Tribe. A light source and first-visit rope are still required in game.",
+      "coordinates": [
+        {
+          "x": 3169,
+          "y": 3172
+        }
+      ]
+    },
+    "Ancient Guthix Temple": {
+      "anchors": [
+        "12593"
+      ],
+      "requirements": [
+        "While Guthix Sleeps: reached the Ancient Guthixian Temple"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Ancient_Guthixian_Temple?oldid=15278879",
+      "note": "Reach the Chasm of Tears through the swamp caves, then descend using a light creature and sapphire lantern. Tormented demons are post-quest content.",
+      "entityRequirements": {
+        "monster": {
+          "Tormented Demon": [
+            "While Guthix Sleeps Complete the quest"
+          ]
+        }
+      }
+    },
+    "Waterbirth Island Dungeon": {
+      "anchors": [
+        "10042"
+      ],
+      "requirements": [],
+      "source": "https://oldschool.runescape.wiki/w/Waterbirth_Island_Dungeon?oldid=15240644",
+      "note": "The island surface Connect records 9886 and 10142 as entrances. Do not use the remote Lighthouse connection as ownership of this dungeon."
+    },
+    "Brimhaven Dungeon": {
+      "entrances": [
+        {
+          "chunkId": "10801",
+          "requirements": [
+            "Woodcutting level 10",
+            "Brimhaven Dungeon: Saniboch entry fee and an axe need confirmation"
+          ]
+        },
+        {
+          "chunkId": "11055",
+          "requirements": [
+            "Brimhaven Dungeon: Banisoch's one-time trading-stick payment needs confirmation"
+          ]
+        }
+      ],
+      "requirements": [],
+      "source": "https://oldschool.runescape.wiki/w/Brimhaven_Dungeon?oldid=15315215",
+      "coordinates": [
+        {
+          "x": 2744,
+          "y": 3155
+        },
+        {
+          "x": 2760,
+          "y": 3063
+        }
+      ],
+      "note": "Preserve independently owned entrances and their distinct entry requirements. Coins, prior entry payments and carried tools are not inferred from quest completion."
+    },
+    "Brimhaven Dungeon Entrance": {
+      "entrances": [
+        {
+          "chunkId": "10801",
+          "requirements": [
+            "Woodcutting level 10",
+            "Brimhaven Dungeon: Saniboch entry fee and an axe need confirmation"
+          ]
+        },
+        {
+          "chunkId": "11055",
+          "requirements": [
+            "Brimhaven Dungeon: Banisoch's one-time trading-stick payment needs confirmation"
+          ]
+        }
+      ],
+      "requirements": [],
+      "source": "https://oldschool.runescape.wiki/w/Brimhaven_Dungeon?oldid=15315215",
+      "coordinates": [
+        {
+          "x": 2744,
+          "y": 3155
+        },
+        {
+          "x": 2760,
+          "y": 3063
+        }
+      ],
+      "note": "Source 10643 contains Hieve and the upper metal-dragon chamber, not an overworld entrance. Retain its physical ID and Slayer-task restrictions."
+    },
+    "Underground Pass": {
+      "anchors": [
+        "9779",
+        "9266"
+      ],
+      "requirements": [
+        "Underground Pass: route and quest phase need confirmation"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Underground_Pass_(dungeon)?oldid=15302569",
+      "note": "The source contains several quest phases and distant rooms under this same name. Keep access unknown instead of treating completion as proof for every room. Westbound passage after the quest additionally requires starting Regicide."
+    },
+    "Mourner Tunnels & Temple of Light": {
+      "anchors": [
+        "10035"
+      ],
+      "requirements": [
+        "Mourning's End Part II: obtained the new key"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Mourner_Tunnels?oldid=15256429",
+      "note": "Entrance through the Mourner Headquarters trapdoor; the key, clothing and temple puzzle remain in-game requirements until the corresponding quest changes them.",
+      "coordinates": [
+        {
+          "x": 2542,
+          "y": 3327
+        }
+      ]
+    },
+    "Death altar": {
+      "anchors": [
+        "10035"
+      ],
+      "requirements": [
+        "Mourning's End Part II: reached the Death Altar",
+        "Death Altar: talisman, tiara or an alternative entry method needs confirmation"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Death_Altar?oldid=15347743",
+      "note": "This anchor describes the physical route through the Mourner Tunnels and Temple of Light. Abyss and Guardians of the Rift alternatives are not asserted by this record."
+    },
+    "Rune essence mine": {
+      "anchors": [
+        "12853",
+        "12337",
+        "10547"
+      ],
+      "requirements": [
+        "Rune Mysteries Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Rune_essence_mine?oldid=15236022",
+      "note": "Reviewed teleport hosts: Aubury in Varrock, Sedridor via the Wizards' Tower basement, and Cromperty in East Ardougne. Guild and Brimstail alternatives remain outside this reviewed set."
+    },
+    "God Wars Entrance": {
+      "anchors": [
+        "11578"
+      ],
+      "requirements": [
+        "God Wars Dungeon: entry route, rope and 60 Strength or Agility need confirmation"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/God_Wars_Dungeon?oldid=15348774",
+      "note": "Source 11346 contains Armadyl-area content. This establishes geography only; the dungeon and encampment gates are not inferred from chunk ownership.",
+      "coordinates": [
+        {
+          "x": 2918,
+          "y": 3745
+        }
+      ]
+    }
+  },
+  "records": {
+    "6808": {
+      "requirements": [
+        "The Depths of Despair: lower chamber before quest completion"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Crabclaw_Caves?oldid=15341061",
+      "note": "The quest-only lower chamber closes after completion. The chest coordinate 1700,9753 identifies source region 6808; the adjoining Sand Crab room remains usable.",
+      "evidence": [
+        "https://oldschool.runescape.wiki/w/Chest_(The_Depths_of_Despair)?oldid=14924461"
+      ]
+    },
+    "10643": {
+      "entityRequirements": {
+        "monster": {
+          "Bronze dragon": [
+            "Current Slayer assignment: Bronze dragon"
+          ],
+          "Iron dragon": [
+            "Current Slayer assignment: Iron dragon"
+          ],
+          "Steel dragon": [
+            "Current Slayer assignment: Steel dragon"
+          ]
+        }
+      },
+      "source": "https://oldschool.runescape.wiki/w/Hieve?oldid=15018104",
+      "note": "Hieve prevents attacking upper-chamber metal dragons without the corresponding current assignment. Slayer unlocks do not prove an active assignment."
+    },
+    "10899": {
+      "entityRequirements": {
+        "monster": {
+          "Iron dragon": [
+            "Current Slayer assignment: Iron dragon"
+          ],
+          "Steel dragon": [
+            "Current Slayer assignment: Steel dragon"
+          ]
+        }
+      },
+      "source": "https://oldschool.runescape.wiki/w/Hieve?oldid=15018104",
+      "note": "Continuation of the Hieve chamber, connected to 10643 in the pinned source."
+    },
+    "7492": {
+      "requirements": [
+        "Waterbirth Island Dungeon: deeper-room doors and route need confirmation"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Waterbirth_Island_Dungeon?oldid=15240644",
+      "note": "Entry into the deeper levels depends on doors, door supports, equipment/assistance or unlocked shortcuts; the tracker does not record those facts."
+    },
+    "11588": {
+      "requirements": [
+        "Waterbirth Island Dungeon: deeper-room doors and route need confirmation"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Waterbirth_Island_Dungeon?oldid=15240644",
+      "note": "Entry into the deeper levels depends on doors, door supports, equipment/assistance or unlocked shortcuts; the tracker does not record those facts."
+    },
+    "11589": {
+      "requirements": [
+        "Waterbirth Island Dungeon: deeper-room doors and route need confirmation"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Waterbirth_Island_Dungeon?oldid=15240644",
+      "note": "Entry into the deeper levels depends on doors, door supports, equipment/assistance or unlocked shortcuts; the tracker does not record those facts."
+    }
+  }
+}

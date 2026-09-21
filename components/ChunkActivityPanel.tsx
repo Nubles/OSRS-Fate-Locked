@@ -1,3 +1,6 @@
+import { evaluateBankRequirements, evaluateEntityRequirements } from '../utils/entityAccess';
+import { effectiveSkillLevel } from '../utils/slayerReach';
+import { canonicalBossId, resolveQuest } from '../utils/contentIdentity';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Lock,
@@ -374,13 +377,15 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     ? chunkContentService.chunkEntryRequirements(chunk.cx, chunk.cy)
     : [];
 
+  const bankAccess = content && mode === 'chunk' && chunkContentService.hasBank(chunk.cx, chunk.cy)
+    ? evaluateBankRequirements(content, chunk, unlocks) : null;
   const bankState: ChunkInfoBankState = mode !== 'chunk' || !chunkContentService.ready || !chunkContentService.hasBank(chunk.cx, chunk.cy)
     ? null
-    : !bankLocksActive(gameModeId, customMode)
-      ? 'present'
-      : isBankReachable(chunk.cx, chunk.cy, unlocks, gameModeId, customMode)
-        ? 'available'
-        : 'locked';
+    : !isBankReachable(chunk.cx, chunk.cy, unlocks, gameModeId, customMode)
+      ? 'locked'
+      : bankAccess?.status !== 'ALLOWED'
+        ? 'requirements'
+        : bankLocksActive(gameModeId, customMode) ? 'available' : 'present';
 
   // Transport links grouped by network (fairy ring / canoe / boat / …). A link
   // is only usable if both the destination area AND its transport network are
@@ -422,14 +427,14 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
 
   const totalLinks = useMemo(() => linkGroups.reduce((a, g) => a + g.dests.length, 0), [linkGroups]);
 
-  const slayerLevel = unlocks.levels['Slayer'] ?? 1;
+  const slayerLevel = effectiveSkillLevel(unlocks, 'Slayer');
   const slayerUnlocked = (unlocks.skills?.['Slayer'] ?? 0) > 0;
 
   const questRows = useMemo(() => {
     if (!content) return [];
     return Object.entries(content.quests)
       .map(([name, kind]) => {
-        const data = QUEST_DATA[name];
+        const data = resolveQuest(name);
         const status = data ? getQuestStatus(data, unlocks, gameModeId) : null;
         const eligibility = data ? evaluateQuestEligibility(data, unlocks, gameModeId) : null;
         return { name, kind, status, eligibility };
@@ -442,16 +447,18 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     if (!content) return null;
 
     const sources = mode === 'region' ? regionChunks : [chunk];
-    const requirementsFor = (name: string, kind: EntityKind): string[] => [
-      ...new Set(sources.flatMap(source =>
-        chunkContentService.taskRequirements(name, kind, source.cx, source.cy),
-      )),
-    ];
+    const requirementsFor = (name: string, kind: EntityKind): string[] => {
+      const hits = chunkContentService.entityLocations(name, [kind])?.locations
+        .filter(loc => sources.some(source => source.cx === loc.cx && source.cy === loc.cy));
+      const access = (hits?.length ? hits : sources).map(loc => evaluateEntityRequirements(name, kind, loc, unlocks));
+      return access.some(result => result.status === 'ALLOWED') ? [] : [...new Set(access.flatMap(result => result.reasons))];
+    };
     // Shops → merchant category gate.
     const shops = content.shops.map(name => {
       const category = classifyShop(name);
       const catUnlocked = category != null && unlocks.merchants.includes(category);
-      return { name, category, usable: catUnlocked, requirements: requirementsFor(name, 'shop') };
+      const requirements = requirementsFor(name, 'shop');
+      return { name, category, usable: catUnlocked, requirements };
     });
 
     // Monsters split: world bosses (gated by the Bosses table) vs the rest
@@ -460,8 +467,8 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     const monsters: Array<ChunkContent['monsters'][number] & { requirements: string[] }> = [];
     for (const m of content.monsters) {
       const requirements = requirementsFor(m.name, 'monster');
-      if (BOSS_SET.has(m.name.toLowerCase())) {
-        bosses.push({ name: m.name, count: m.count, usable: unlocks.bosses.includes(m.name), requirements });
+      if (canonicalBossId(m.name)) {
+        bosses.push({ name: m.name, count: m.count, usable: unlocks.bosses.includes(canonicalBossId(m.name)!), requirements });
       } else {
         monsters.push({ ...m, requirements });
       }
@@ -1002,9 +1009,10 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           <ChunkInfoBodyState kind="loading" />
         ) : (
           <>
+            {!!content?.interiors?.length && <details className="my-2 text-gray-400"><summary className="cursor-pointer text-cyan-300">Includes nearby interiors ({new Set(content.interiors.map(i => i.name)).size})</summary><p className="mt-1">Interior content is shown at its entrance. Each interior keeps its access requirements.</p><p>{[...new Set(content.interiors.map(i => i.name))].sort().join(', ')}</p></details>}
             {!emptyContentState && <ChunkInfoSummary summary={drawerSummary} />}
             {mode === 'chunk' && (
-              <ChunkInfoAccessCard previewLocked={!unlocked} entryRequirements={entryRequirements} entrances={entrances} chunkUnlocked={unlocked} bankState={bankState} />
+              <ChunkInfoAccessCard previewLocked={!unlocked} entryRequirements={entryRequirements} entrances={entrances} chunkUnlocked={unlocked} bankState={bankState} bankRequirements={bankAccess?.reasons} />
             )}
             {emptyContentState
               ? <ChunkInfoBodyState kind="empty" />

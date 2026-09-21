@@ -25,7 +25,7 @@ const manifestForRaw = (
   raw: Buffer,
   overrides: { commit?: string; countFloors?: Record<string, number> } = {},
 ) => ({
-  commit: 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
+  commit: 'fa71ed3b207e6a501444987dee23b875ec27cacd',
   rawBytes: raw.length,
   rawSha256: createHash('sha256').update(raw).digest('hex').toUpperCase(),
   blobSha: createHash('sha1').update(`blob ${raw.length}\0`).update(raw).digest('hex'),
@@ -140,8 +140,8 @@ describe('transformChunkContent', () => {
     expect(result.full.taskUnlocks).toEqual({
       Monsters: {
         'Cave beast': {
-          256: ['Quest One'],
-          513: ['Quest One'],
+          256: ['Quest One Complete the quest'],
+          513: ['Quest One Complete the quest'],
         },
       },
     });
@@ -243,7 +243,7 @@ describe('transformChunkContent', () => {
       walkableChunks: [2], chunks: { 1: { Monster: { Goblin: 1 } }, 2: {} }, slayerMonsters: {},
     }, manifest);
     expect(result.audit.events).toEqual(expect.arrayContaining([
-      expect.objectContaining({ category: 'chunks', sourceKey: '1', disposition: 'excluded', reason: 'non-walkable-content' }),
+      expect.objectContaining({ category: 'chunks', sourceKey: '1', disposition: 'unresolved', reason: 'interior-unmapped' }),
       expect.objectContaining({ category: 'chunks', sourceKey: '2', disposition: 'excluded', reason: 'empty-walkable-chunk' }),
     ]));
   });
@@ -258,7 +258,7 @@ describe('transformChunkContent', () => {
     }, manifest);
     expect(result.full.chunks['256']).toMatchObject({ m: [['Goblin', 1]], q: { 'Recipe for Disaster': 'step' } });
     expect(result.full.questSections).toEqual({ 256: ['Quest X'] });
-    expect(result.full.taskUnlocks).toEqual({ NPCs: { Banker: { 256: ['Quest X'] } } });
+    expect(result.full.taskUnlocks).toEqual({ NPCs: { Banker: { 256: ['Quest X Complete the quest'] } } });
     expect(result.audit.events).toEqual(expect.arrayContaining([
       expect.objectContaining({ reason: 'variant-name-cleaned', disposition: 'normalized' }),
       expect.objectContaining({ reason: 'quest-subpath-collapsed', disposition: 'normalized' }),
@@ -293,7 +293,7 @@ describe('transformChunkContent', () => {
       },
     }, manifest);
     expect(result.full.taskUnlocks).toEqual({
-      Items: { 'Medallion fragment': { 256: ['Quest One', 'Quest Two'] } },
+      Items: { 'Medallion fragment': { 256: ['Quest One Complete the quest', 'Quest Two Complete the quest'] } },
     });
     const terminal = result.audit.events.filter((event) => event.terminal && event.category === 'taskUnlocks');
     expect(terminal.map((event) => event.sourceKey).sort()).toEqual([

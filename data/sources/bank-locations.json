@@ -1,7 +1,9 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-08",
+  "reviewedAt": "2026-09-21",
   "sourceRevisions": [
+    { "title": "Keldagrim", "revision": 15147967, "url": "https://oldschool.runescape.wiki/w/Keldagrim" },
+    { "title": "Blast Furnace", "revision": 15351681, "url": "https://oldschool.runescape.wiki/w/Blast_Furnace" },
     { "title": "List of banks", "revision": 15282054, "url": "https://oldschool.runescape.wiki/w/List_of_banks" },
     { "title": "Bank Deposit Box", "revision": 15267085, "url": "https://oldschool.runescape.wiki/w/Bank_Deposit_Box" },
     { "title": "Sangvesti bank", "revision": 15262093, "url": "https://oldschool.runescape.wiki/w/Sangvesti_bank" },
@@ -9,6 +11,7 @@
     { "title": "Forestry event", "revision": 14430593, "url": "https://oldschool.runescape.wiki/w/Forestry_event" }
   ],
   "locations": [
+    { "id": "11066", "cx": 43, "cy": 58, "name": "Keldagrim bank and Blast Furnace chest", "referenceKind": "entrance", "accessVia": "Keldagrim entrance north-east of Rellekka; start The Giant Dwarf", "facilities": ["Keldagrim bank", "Blast Furnace bank chest"], "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim", "https://oldschool.runescape.wiki/w/Blast_Furnace"] },
     { "id": "5678", "cx": 22, "cy": 46, "name": "Aldarin dock deposit box", "referenceKind": "physical", "facilities": ["Aldarin dock deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
     { "id": "6454", "cx": 25, "cy": 54, "name": "East Woodcutting Guild deposit box", "referenceKind": "physical", "facilities": ["East Woodcutting Guild deposit box", "Ent dungeon bank chest"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box", "https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "6458", "cx": 25, "cy": 58, "name": "Arceuus bank and deposit box", "referenceKind": "physical", "facilities": ["Arceuus bank", "Arceuus deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks", "https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },

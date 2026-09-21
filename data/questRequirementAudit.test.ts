@@ -172,7 +172,8 @@ const expectReviewedBatch = (start: string, end?: string) => {
     if (!Number.isInteger(entry.source.revision) || entry.source.revision <= 0) {
       return [`${entry.id}:missing-source-revision`];
     }
-    const expectedChunkSourceCommit = entry.id === 'Fallen From Grace'
+    const expectedChunkSourceCommit = ['A Ruff Situation', 'Crab Quest'].includes(entry.id)
+      ? 'fa71ed3b207e6a501444987dee23b875ec27cacd' : entry.id === 'Fallen From Grace'
       ? 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746'
       : 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926';
     if (entry.chunkSourceCommit !== expectedChunkSourceCommit) {
@@ -204,11 +205,11 @@ describe('official quest and miniquest audit coverage', () => {
   });
 
   it('pins the current reviewed baseline by explicit kind', () => {
-    expect(official.entries).toHaveLength(210);
-    expect(audit.entries).toHaveLength(210);
-    expect(official.entries.filter(entry => entry.kind === 'quest')).toHaveLength(191);
+    expect(official.entries).toHaveLength(212);
+    expect(audit.entries).toHaveLength(212);
+    expect(official.entries.filter(entry => entry.kind === 'quest')).toHaveLength(193);
     expect(official.entries.filter(entry => entry.kind === 'miniquest')).toHaveLength(19);
-    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'quest')).toHaveLength(191);
+    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'quest')).toHaveLength(193);
     expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'miniquest')).toHaveLength(19);
   });
 
@@ -222,9 +223,10 @@ describe('official quest and miniquest audit coverage', () => {
     expect(snapshot.chunkSourceCommits).toEqual([
       'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
       'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
+      'fa71ed3b207e6a501444987dee23b875ec27cacd',
     ]);
-    expect([...new Set(snapshot.entries.map(entry => entry.chunkSourceCommit))])
-      .toEqual(snapshot.chunkSourceCommits);
+    expect([...new Set(snapshot.entries.map(entry => entry.chunkSourceCommit))].sort())
+      .toEqual([...snapshot.chunkSourceCommits].sort());
     expect(snapshot.entries.filter(entry =>
       entry.chunkSourceCommit === 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
     )).toHaveLength(209);
@@ -236,6 +238,7 @@ describe('official quest and miniquest audit coverage', () => {
     accepted.chunkSourceCommits = [
       'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
       'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
+      'fa71ed3b207e6a501444987dee23b875ec27cacd',
     ];
     accepted.entries[0].chunkSourceCommit = 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746';
     expect(validateQuestRequirementAudit(QUEST_DATA, official, accepted).errors).toEqual([]);

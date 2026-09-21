@@ -6,6 +6,10 @@ const mocks = vi.hoisted(() => ({
   service: {
     ready: true,
     init: vi.fn(async () => true),
+    subscribe: vi.fn(() => () => undefined),
+    taskRequirements: vi.fn(() => []),
+    chunkEntryRequirements: vi.fn(() => []),
+    slayerLocations: vi.fn(() => [{ name: 'Crawling', location: { cx: 40, cy: 35 } }]),
     slayerMasters: vi.fn(() => ({
       Mortimer: {
         Crawling: { weight: 10, slayer: 5 },

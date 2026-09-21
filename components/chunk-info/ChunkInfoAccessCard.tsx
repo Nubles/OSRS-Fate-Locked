@@ -3,7 +3,7 @@ import { Check, Landmark, Lock, Route } from 'lucide-react';
 import type { ChunkEntrance } from '../../services/ChunkContentService';
 import { WikiLink } from '../WikiLink';
 
-export type ChunkInfoBankState = 'present' | 'available' | 'locked' | null;
+export type ChunkInfoBankState = 'present' | 'available' | 'locked' | 'requirements' | null;
 
 interface Props {
   previewLocked: boolean;
@@ -11,6 +11,7 @@ interface Props {
   entrances: ChunkEntrance[];
   chunkUnlocked: boolean;
   bankState: ChunkInfoBankState;
+  bankRequirements?: string[];
 }
 
 const rowClass = 'flex items-start gap-2 py-1.5 text-[10px] text-gray-300';
@@ -22,6 +23,7 @@ export const ChunkInfoAccessCard: React.FC<Props> = ({
   entrances,
   chunkUnlocked,
   bankState,
+  bankRequirements = [],
 }) => {
   if (
     !previewLocked
@@ -91,14 +93,17 @@ export const ChunkInfoAccessCard: React.FC<Props> = ({
         <div className={rowClass}>
           <Landmark
             size={11}
-            className={`mt-px shrink-0 ${bankState === 'locked' ? 'text-rose-300' : 'text-emerald-300'}`}
+            className={`mt-px shrink-0 ${bankState === 'locked' ? 'text-rose-300' : bankState === 'requirements' ? 'text-amber-300' : 'text-emerald-300'}`}
           />
           <span>
             {bankState === 'locked'
               ? 'Bank needs its own unlock'
-              : bankState === 'available'
+              : bankState === 'requirements'
+                ? 'Bank access requirements'
+                : bankState === 'available'
                 ? 'Bank available'
                 : 'Bank in this chunk'}
+            {bankRequirements.length > 0 && <span className={detailClass}>{bankRequirements.join(', ')}</span>}
           </span>
         </div>
       )}

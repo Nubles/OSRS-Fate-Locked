@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "policyVersion": 1,
   "sourceRepository": "source-chunk/chunk-picker-v2",
-  "sourceCommit": "a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+  "sourceCommit": "fa71ed3b207e6a501444987dee23b875ec27cacd",
   "reviewedAt": "2026-08-03",
   "locations": [
     {

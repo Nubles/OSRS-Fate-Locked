@@ -15,85 +15,92 @@ const deepFreeze = value => {
 };
 
 export const EXPECTED_CA_PROVENANCE = deepFreeze({
-  verifiedAt: '2026-08-16',
-  source: {
-    url: 'https://oldschool.runescape.wiki/w/Combat_Achievements',
-    revision: 15296909,
-    revisionTimestamp: '2026-08-13T09:19:38Z',
-    endpoint: 'https://oldschool.runescape.wiki/api.php',
-    taskTableQuery: {
-      action: 'parse',
-      page: 'Combat Achievements/<tier>',
-      prop: 'text',
-      format: 'json',
+  "verifiedAt": "2026-09-21",
+  "source": {
+    "url": "https://oldschool.runescape.wiki/w/Combat_Achievements",
+    "revision": 15347364,
+    "revisionTimestamp": "2026-09-16T21:20:12Z",
+    "endpoint": "https://oldschool.runescape.wiki/api.php",
+    "taskTableQuery": {
+      "action": "parse",
+      "page": "Combat Achievements/<tier>",
+      "prop": "text",
+      "format": "json"
     },
-    globalsQuery: {
-      action: 'parse',
-      text: '{{Globals|ca <tier> tasks}} and {{Globals|ca <tier> points}}',
-      contentmodel: 'wikitext',
-      prop: 'text',
-      format: 'json',
+    "globalsQuery": {
+      "action": "parse",
+      "text": "{{Globals|ca <tier> tasks}} and {{Globals|ca <tier> points}}",
+      "contentmodel": "wikitext",
+      "prop": "text",
+      "format": "json"
     },
-    retrievedAt: '2026-08-16T15:14:32.746Z',
-    overviewDeclaredRows: 646,
-    officialRows: 646,
-    authoritativeGlobals: {
-      counts: {
-        Easy: 41,
-        Medium: 60,
-        Hard: 86,
-        Elite: 164,
-        Master: 173,
-        Grandmaster: 122,
+    "retrievedAt": "2026-09-21T16:32:10.000Z",
+    "overviewDeclaredRows": 655,
+    "officialRows": 655,
+    "authoritativeGlobals": {
+      "counts": {
+        "Easy": 41,
+        "Medium": 64,
+        "Hard": 89,
+        "Elite": 166,
+        "Master": 173,
+        "Grandmaster": 122
       },
-      thresholds: [41, 161, 419, 1075, 1940, 2672],
+      "thresholds": [
+        41,
+        169,
+        436,
+        1100,
+        1965,
+        2697
+      ]
     },
-    discrepancy: 'The overview, authoritative Globals, and six tier task tables reconcile at 646 tasks; Maggot King Speed Chaser is Grandmaster.',
-    tierSources: [
+    "discrepancy": "The six official tier task tables and authoritative Globals reconcile at 655 tasks; nine tasks were added since the August baseline.",
+    "tierSources": [
       {
-        tier: 'Easy',
-        url: 'https://oldschool.runescape.wiki/w/Combat_Achievements/Easy',
-        revision: 15272565,
-        revisionTimestamp: '2026-07-22T19:56:56Z',
-        officialRows: 41,
+        "tier": "Easy",
+        "url": "https://oldschool.runescape.wiki/w/Combat_Achievements/Easy",
+        "revision": 15272565,
+        "revisionTimestamp": "2026-07-22T19:56:56Z",
+        "officialRows": 41
       },
       {
-        tier: 'Medium',
-        url: 'https://oldschool.runescape.wiki/w/Combat_Achievements/Medium',
-        revision: 15135540,
-        revisionTimestamp: '2026-02-25T18:48:27Z',
-        officialRows: 60,
+        "tier": "Medium",
+        "url": "https://oldschool.runescape.wiki/w/Combat_Achievements/Medium",
+        "revision": 15321194,
+        "revisionTimestamp": "2026-08-26T17:04:05Z",
+        "officialRows": 64
       },
       {
-        tier: 'Hard',
-        url: 'https://oldschool.runescape.wiki/w/Combat_Achievements/Hard',
-        revision: 15272569,
-        revisionTimestamp: '2026-07-22T19:58:23Z',
-        officialRows: 86,
+        "tier": "Hard",
+        "url": "https://oldschool.runescape.wiki/w/Combat_Achievements/Hard",
+        "revision": 15321192,
+        "revisionTimestamp": "2026-08-26T17:03:25Z",
+        "officialRows": 89
       },
       {
-        tier: 'Elite',
-        url: 'https://oldschool.runescape.wiki/w/Combat_Achievements/Elite',
-        revision: 15272563,
-        revisionTimestamp: '2026-07-22T19:55:28Z',
-        officialRows: 164,
+        "tier": "Elite",
+        "url": "https://oldschool.runescape.wiki/w/Combat_Achievements/Elite",
+        "revision": 15321189,
+        "revisionTimestamp": "2026-08-26T17:02:37Z",
+        "officialRows": 166
       },
       {
-        tier: 'Master',
-        url: 'https://oldschool.runescape.wiki/w/Combat_Achievements/Master',
-        revision: 15272564,
-        revisionTimestamp: '2026-07-22T19:55:46Z',
-        officialRows: 173,
+        "tier": "Master",
+        "url": "https://oldschool.runescape.wiki/w/Combat_Achievements/Master",
+        "revision": 15329081,
+        "revisionTimestamp": "2026-09-02T23:22:12Z",
+        "officialRows": 173
       },
       {
-        tier: 'Grandmaster',
-        url: 'https://oldschool.runescape.wiki/w/Combat_Achievements/Grandmaster',
-        revision: 15025941,
-        revisionTimestamp: '2025-11-13T02:26:22Z',
-        officialRows: 122,
-      },
-    ],
-  },
+        "tier": "Grandmaster",
+        "url": "https://oldschool.runescape.wiki/w/Combat_Achievements/Grandmaster",
+        "revision": 15321195,
+        "revisionTimestamp": "2026-08-26T17:04:58Z",
+        "officialRows": 122
+      }
+    ]
+  }
 });
 
 export const EXPECTED_CA_COUNTS =
@@ -200,7 +207,7 @@ export function main() {
   writeFileSync(OUT, rendered);
   const { counts } = validateCombatAchievementSnapshot(snapshot);
   for (const tier of CA_TIERS) console.log(`[ca:sync] ${tier}: ${counts[tier]}`);
-  console.log('[ca:sync] wrote data/caTasks.ts: 646 tasks from the committed snapshot.');
+  console.log('[ca:sync] wrote data/caTasks.ts: 655 tasks from the committed snapshot.');
 }
 
 if (

@@ -8,6 +8,7 @@ import { assertChunkTransform, transformChunkContent } from './chunk-content-tra
 import { collectNamedTaskUnlockSourceInventory, readNamedTaskUnlockRegistry, validateNamedTaskUnlockRegistry } from './named-task-unlock-locations.mjs';
 import { readBankLocationRegistry, validateBankLocationRegistry } from './bank-locations.mjs';
 import { generatedTextMatches } from './generated-text.mjs';
+import { validateInteriorAccessPolicy } from './chunk-interiors.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUTPUTS = [
@@ -32,6 +33,7 @@ const args = process.argv.slice(2);
 if (args.some((arg) => arg !== '--check')) throw new Error('Usage: node scripts/sync-chunk-content.mjs [--check]');
 const checkOnly = args.includes('--check');
 const { manifest, data } = await readPinnedChunkSource();
+validateInteriorAccessPolicy(data);
 const namedLocationRegistry = readNamedTaskUnlockRegistry();
 const inventory = collectNamedTaskUnlockSourceInventory(data);
 validateNamedTaskUnlockRegistry(namedLocationRegistry, {

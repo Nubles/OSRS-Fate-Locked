@@ -107,7 +107,7 @@ describe('generated normalized source unions', () => {
         }),
       ]),
     );
-    expect(chunkContentService.itemSourceCoverage()).toBe('COMPLETE');
+    expect(chunkContentService.itemSourceCoverage()).toBe('PARTIAL');
   });
 
   it('does not expose mutable cached access evidence', () => {
@@ -136,7 +136,7 @@ describe('generated normalized source unions', () => {
   it('exposes merged skill stage/rate evidence and policy metadata', () => {
     const soil = chunkContentService.skillYields('Mining').Soil;
     expect(soil.find(([item]) => item === 'Bones')?.[1]).toContain('1 @ 1/12');
-    expect(chunkContentService.sourceMetadata()?.policyVersion).toBe(2);
+    expect(chunkContentService.sourceMetadata()?.policyVersion).toBe(3);
     expect(chunkContentService.sourceMetadata()?.namedLocationPolicyVersion).toBe(1);
     expect(chunkContentService.sourceMetadata()?.namedLocationReviewedAt).toBe('2026-08-03');
   });

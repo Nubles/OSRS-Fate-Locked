@@ -89,11 +89,33 @@ The reviewed Chunk Picker pin is recorded in
 repository, branch, commit, blob, byte count, and raw SHA-256. Never replace it
 with a moving branch response.
 
-The current August/Wyrmscraig pin is commit
-`a9a5c74760eb76dbe39f90d2b04f023fc1de3746`, reviewed on 2026-08-16. Its
-immutable export is additionally identified by blob `ffdcc10139dde0e11be29047c6c730fd762a33c8`
+The current September content pin is commit
+`fa71ed3b207e6a501444987dee23b875ec27cacd`, reviewed on 2026-09-21. Its
+immutable export is additionally identified by blob `8d14fdb3f2024a4068d2f742ea4cd274e071f10d`
 and raw SHA-256
-`2D75BF70C9E6540CECC1631783A0293D8F28B440D429F6081B2CD4EE4C21CA59`.
+`C66BB47E4978B3F41115573EA825391E26E0A458B9D93903A4FA0DFF9AF5C48C`.
+
+Interior records are retained separately in `public/chunk-content.json`, with
+their original IDs, entrance routes, and access requirements. Reviewed overrides
+live in `data/sources/interior-access.json`; incomplete entrance evidence stays
+unmapped rather than becoming an unconditional surface location. Merchant stock
+supplements, empty-stock shops, and removed content are reviewed in
+`data/sources/shop-overrides.json`. `data/slayerTaskFamilies.json` records exact
+task-family membership and its source references. See
+[the repair review](CONTENT_REPAIR_REVIEW.md) for coverage and remaining gaps.
+
+Interior policy schema 2 supports common named rules (including `#Section`
+records), record-specific requirements, separate requirements for each entrance,
+and per-entity restrictions. Coordinate evidence must resolve to the recorded
+surface chunk; `chunks:verify` rejects invalid anchors and unknown policy keys.
+Do not infer a current Slayer assignment, paid entry, quest phase or carried
+equipment from ownership. Add a reviewed quest-progress gate only when quest
+completion is known to satisfy or block that exact milestone; arbitrary
+quest-prefixed text stays unresolved.
+
+`chunks:sync` also regenerates the ocean navigation registry. Water is excluded
+from paid land rolls; Sailing and Pandemonium open connected water and reviewed
+boat landings. Actual quest and entity requirements still apply after a roll.
 
 `data/sources/chunk-content-transform-audit.json` is the transformation ledger.
 Before accepting a source refresh, review every `normalized`, `excluded`, and
@@ -109,9 +131,9 @@ full and RuneLite-lite outputs, then review the ledger diff before committing.
 
 ### Quest and miniquest evidence
 
-`data/sources/quest-list.json` is the reviewed official inventory: 191 runtime
-quests and 19 miniquests, for 210 runtime Journal entries. The official list
-contains 192 parsed quest rows because Recipe for Disaster remains one official
+`data/sources/quest-list.json` is the reviewed official inventory: 193 runtime
+quests and 19 miniquests, for 212 runtime Journal entries. The official list
+contains 194 parsed quest rows because Recipe for Disaster remains one official
 row while the runtime keeps its existing parent-step expansion.
 `data/sources/quest-requirement-audit.json` records one matching source and
 requirement decision for every canonical journal ID, including the three
@@ -197,7 +219,7 @@ quest/CA shipped" into a reviewable PR (`docs/SYNC_STATUS.md` is in its
 
 > The detector originally surfaced that the app tracked only 223 of the wiki's
 > then-current 637 combat achievements; a reviewed snapshot refresh followed by
-> `ca:sync` backfilled the full set (now 646/646 in `SYNC_STATUS.md`). Adding another content type later follows the same pattern:
+> `ca:sync` backfilled the full set (now 655/655 in `SYNC_STATUS.md`). Adding another content type later follows the same pattern:
 > a `sync-*` script (if fully wiki-defined) or a detector entry, joining the same
 > weekly PR automatically.
 
@@ -244,10 +266,10 @@ increase is seven, but the refresh is not a seven-row append.
 Combat Achievement tasks are generated offline from
 `data/sources/combat-achievement-tasks.json`. The reviewed baseline is pinned
 to the official [Combat Achievements](https://oldschool.runescape.wiki/w/Combat_Achievements)
-overview revision `15296909`, verified on 2026-08-16, plus the exact six tier
+overview revision `15296909`, verified on 2026-09-21, plus the exact six tier
 page revisions and official API queries recorded in the snapshot. The overview,
-authoritative Globals, and tier tables now reconcile at 646 tasks; Maggot King
-Speed Chaser is correctly recorded as Grandmaster.
+authoritative Globals, and tier tables now reconcile at 655 tasks, including
+nine Mad Angel tasks. Maggot King Speed Chaser remains Grandmaster.
 
 Regenerate the TypeScript list without network access:
 
@@ -256,8 +278,8 @@ npm run ca:sync
 ```
 
 The command validates the stable `ca_<official-id>` identity format, source
-metadata, unique IDs, exact 646-row total, and the official tier distribution
-(41 Easy, 60 Medium, 86 Hard, 164 Elite, 173 Master, 122 Grandmaster) before
+metadata, unique IDs, exact 655-row total, and the official tier distribution
+(41 Easy, 64 Medium, 89 Hard, 166 Elite, 173 Master, 122 Grandmaster) before
 writing `data/caTasks.ts`. It aborts before writing on any drift. The generated
 module is never hand-edited. `content:check` uses the network to detect upstream
 drift but never rewrites the snapshot. To refresh, fetch the official API data,

@@ -19,7 +19,9 @@ const compareChunkKeys = (left: ChunkKey, right: ChunkKey): number => {
 
 const gateKey = (gate: RouteGate): string => {
   switch (gate.type) {
+    case 'RFD_SUBQUESTS': return `RFD_SUBQUESTS:${gate.count}`;
     case 'QUEST': return `QUEST:${gate.questId}`;
+    case 'QUEST_PROGRESS': return `QUEST_PROGRESS:${gate.questId}:${gate.completion}:${gate.raw}`;
     case 'SKILL': return `SKILL:${gate.skill}:${gate.level}`;
     case 'UNLOCK': return `UNLOCK:${gate.category}:${gate.id}`;
     case 'UNRESOLVED': return `UNRESOLVED:${gate.raw}`;

@@ -1,3 +1,4 @@
+import { OCEAN_CHUNK_KEYS } from './oceanAccess';
 /**
  * Chunk reachability over the transport graph.
  *
@@ -35,6 +36,10 @@ const buildUniverse = () => {
   };
   eat(REGION_CHUNKS as Record<string, { cx: number; cy: number }[]>);
   eat(SUB_AREA_CHUNKS as Record<string, { cx: number; cy: number }[]>);
+  for (const key of OCEAN_CHUNK_KEYS) {
+    const [cx, cy] = key.split(',').map(Number); const id = idOf(cx, cy);
+    if (!seen.has(id)) { seen.add(id); out.push({ cx, cy, id }); }
+  }
   UNIVERSE = out;
   UNIVERSE_SET = seen;
 };

@@ -19,14 +19,14 @@
  *
  * Mirrors the fetch/cache pattern of services/GearService.ts.
  */
+import { createCollectionIdAllocator } from '../utils/collectionLogIds.mjs';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
 
 const API = 'https://oldschool.runescape.wiki/api.php';
 const DATA_TITLE = 'Module:Collection_log/data.json';
 const LUA_TITLE = 'Module:Collection_log'; // holds the display-override table
-// v2: v1 compared raw data.json names against the app's override-rendered names
-// and cached spurious duplicate additions — bumped to discard that stale cache.
-const CACHE_KEY = 'fate_clog_sync_v2';
+// v3 discards additions minted before relocation-aware global ID allocation.
+const CACHE_KEY = 'fate_clog_sync_v3';
 const CACHE_TTL = 1000 * 60 * 60 * 24 * 7; // 7 days
 
 // App page-name (normalised) -> wiki page name, only where they differ.
@@ -70,6 +70,7 @@ export function computeSync(wiki: WikiItem[], data: LogData, overrides: Record<n
     for (const page of Object.values(tabData.pages))
       appByNorm.set(norm(page.name), { tab, page });
 
+  const allocator = createCollectionIdAllocator([...appByNorm.values()].map(({ tab, page }) => ({ tab, items: page.items })));
   const additions: Addition[] = [];
   const newSources: NewSource[] = [];
 
@@ -81,15 +82,16 @@ export function computeSync(wiki: WikiItem[], data: LogData, overrides: Record<n
       continue;
     }
     const have = new Set(match.page.items.map(i => norm(i.name)));
-    const P = Math.floor(match.page.items[0].id / 1000) * 1000;
-    const used = new Set(match.page.items.map(i => i.id - P));
-    let next = Math.max(...match.page.items.map(i => i.id - P)) + 1;
+    const mint = allocator(match.tab, match.page.items);
     for (const name of items) {
       if (have.has(norm(name))) continue;
+      // Relocations need a reviewed build-time move, never a second save ID.
+      const relocated = [...appByNorm.values()].some(({ page }) => page !== match.page
+        && page.items.some(item => norm(item.name) === norm(name))
+        && !(wikiPages.get(PAGE_ALIAS[norm(page.name)] ?? page.name) ?? []).some(item => norm(item) === norm(name)));
+      if (relocated) continue;
       have.add(norm(name));
-      while (used.has(next)) next++;
-      used.add(next);
-      additions.push({ tab: match.tab, page: match.page.name, id: P + next, name });
+      additions.push({ tab: match.tab, page: match.page.name, id: mint(), name });
     }
   }
   return { additions, newSources };

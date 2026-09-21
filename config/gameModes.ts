@@ -69,8 +69,8 @@ export const GAME_MODES: GameMode[] = [
   {
     id: 'chunked',
     name: 'Chunked',
-    description: 'The classic "Chunked Ironman" format: you start in a single Lumbridge chunk and can only unlock a chunk that borders one you already hold. No named regions — Fate hands you a random adjacent tile of the map, one at a time.',
-    tagline: 'One chunk at a time, adjacent only',
+    description: 'The classic "Chunked Ironman" format: you start in a single Lumbridge chunk and unlock adjacent land one chunk at a time. After completing Pandemonium and unlocking Sailing, the frontier also includes land reached across open sea from your coast and documented boat landings. Ocean navigation does not cost a land unlock.',
+    tagline: 'Adjacent land and Sailing frontiers',
     rules: {
       pityEnabled: true,
       pityThreshold: 50,

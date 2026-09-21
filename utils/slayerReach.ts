@@ -1,3 +1,4 @@
+import { compileRawRequirements, evaluateRouteGates } from './questRoutes/accountRequirements';
 /**
  * Slayer task reachability.
  *
@@ -8,7 +9,7 @@
  */
 
 import { UnlockState } from '../types';
-import { SlayerMasters } from '../services/ChunkContentService';
+import { SlayerMasters, SlayerAssignment } from '../services/ChunkContentService';
 import { SLAYER_MASTER_REQUIREMENTS, type SlayerMasterRequirementOption } from '../data/slayerMasterRequirements';
 import { isAreaReachable } from './reachability';
 
@@ -18,6 +19,8 @@ export type SlayerStatus =
   | 'quest-locked'  // a quest unlock is missing
   | 'combat-locked' // combat level below the master's assignment floor
   | 'area-locked'   // requirements met, but no unlocked chunk has it
+  | 'access-blocked'
+  | 'access-unknown'
   | 'no-location';  // not found in the chunk dataset
 
 export type SlayerMasterBlocker = {
@@ -52,7 +55,9 @@ export interface SlayerReach {
 }
 
 /** Resolve a task name to a representative chunk (best-effort, may be null). */
-export type LocateFn = (taskName: string) => { cx: number; cy: number; unlocked: boolean } | null;
+export type LocateFn = (taskName: string, assignment?: SlayerAssignment, master?: string) => {
+  cx: number; cy: number; unlocked: boolean; accessStatus?: 'ALLOWED' | 'NOT_READY' | 'LOCKED' | 'UNKNOWN';
+} | null;
 
 /** Effective usable level after applying the currently unlocked method tier. */
 export const effectiveSkillLevel = (
@@ -83,12 +88,6 @@ export const combatLevel = (levels: Record<string, number>): number => {
 export const actualCombatLevel = (
   unlocks: Pick<UnlockState, 'levels'>,
 ): number => combatLevel(unlocks.levels ?? {});
-/** A req string like "Priest in Peril Complete the quest" → quest name. */
-const questFromReq = (req: string): string | null => {
-  const m = req.match(/^(.*?) Complete the quest$/);
-  return m ? m[1].trim() : null;
-};
-
 const masterBlocker = (
   master: string,
   unlocks: UnlockState,
@@ -133,27 +132,23 @@ export function slayerReachability(
   const combat = actualCombatLevel(unlocks);
   const questSet = new Set(unlocks.quests ?? []);
 
-  const reqMet = (req?: string[]): boolean => {
-    if (!req || req.length === 0) return true;
-    return req.every(r => {
-      const q = questFromReq(r);
-      // Non-quest requirements (rare) aren't gated — treat as met.
-      return q == null || questSet.has(q);
-    });
-  };
 
   const out: SlayerMasterReach[] = [];
   for (const [master, tasks] of Object.entries(masters)) {
     const masterGate = masterBlocker(master, unlocks, gameModeId, questSet, combat);
     const rows: SlayerTaskRow[] = [];
     for (const [monster, info] of Object.entries(tasks)) {
-      const loc = locate(monster);
+      const loc = locate(monster, info, master);
+      const gates = evaluateRouteGates(compileRawRequirements((info.req ?? []).map(raw => ({ raw, origin: 'ENTITY' as const }))), unlocks);
       let status: SlayerStatus;
       if (masterGate) status = masterGate.status;
       else if (!slayerUnlocked || (info.slayer != null && slayerLevel < info.slayer)) status = 'slayer-locked';
-      else if (!reqMet(info.req)) status = 'quest-locked';
+      else if (gates.hasDataGap) status = 'access-unknown';
+      else if (gates.blockers.length) status = 'quest-locked';
       else if (info.combat != null && combat < info.combat) status = 'combat-locked';
       else if (!loc) status = 'no-location';
+      else if (loc.accessStatus === 'UNKNOWN') status = 'access-unknown';
+      else if (loc.accessStatus === 'NOT_READY') status = 'access-blocked';
       else if (!loc.unlocked) status = 'area-locked';
       else status = 'ready';
 

@@ -19,6 +19,7 @@ import {
 import { entryBlockedGate } from './questDoability';
 import { bankLocksActive } from './reachability';
 import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
+import type { EntityAccessSource } from './entityAccess';
 const RULES_VERSION = '1';
 const CONTENT_VERSION = 1;
 const DETECTOR_CONTRACT_VERSION = 1;
@@ -56,7 +57,7 @@ export interface RuneliteRulesManifest {
   chunks: Record<string, ChunkPermissionSnapshot>;
 }
 
-export interface RulesContentSource {
+export interface RulesContentSource extends Partial<EntityAccessSource> {
   init(): Promise<boolean>;
   allChunkCoords(): { cx: number; cy: number }[];
   contentFor(cx: number, cy: number): ChunkContent | null;
@@ -134,6 +135,7 @@ export async function buildRuneliteRulesManifest(
       const content = service.contentFor(coord.cx, coord.cy);
       if (!content) continue;
       const snapshot = buildChunkPermissionSnapshot(content, coord, {
+        contentService: service.taskRequirements && service.chunkEntryRequirements ? service as RulesContentSource & EntityAccessSource : undefined,
         unlocks: input.unlocks,
         gameModeId: input.run.gameModeId,
         customMode: input.run.customMode,

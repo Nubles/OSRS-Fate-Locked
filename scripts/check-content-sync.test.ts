@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { buildReport } from './check-content-sync.mjs';
 
 const base = {
-  quests: { app: 205, wiki: { total: 180, p2p: 156, f2p: 24, questPoints: 335 } },
+  quests: { app: 205, official: 180, wiki: { total: 180, p2p: 156, f2p: 24, questPoints: 335 } },
   diaries: { app: { 'Ardougne Easy': 10, 'Ardougne Medium': 12 } },
 };
 
@@ -30,7 +30,7 @@ describe('content-sync report builder', () => {
 
   it('degrades gracefully when wiki counts are unavailable', () => {
     const { markdown } = buildReport({
-      quests: { app: 205, wiki: null },
+      quests: { app: 205, official: 180, wiki: null },
       cas: { app: { Easy: 41 }, wiki: null },
       diaries: base.diaries,
     });

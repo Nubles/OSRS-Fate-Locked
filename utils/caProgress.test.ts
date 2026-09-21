@@ -35,24 +35,24 @@ describe('Combat Achievement point progress', () => {
       Easy: 1, Medium: 2, Hard: 3, Elite: 4, Master: 5, Grandmaster: 6,
     });
     expect(CA_TIER_ORDER.map(tier => CA_DATA[tier].pointsRequired)).toEqual([
-      41, 161, 419, 1075, 1940, 2672,
+      41, 169, 436, 1100, 1965, 2697,
     ]);
   });
 
   it('keeps stored historical tiers while adding newly qualified tiers', () => {
-    expect(earnedCATiers(161, ['Master'])).toEqual([
+    expect(earnedCATiers(169, ['Master'])).toEqual([
       'Easy', 'Medium', 'Master',
     ]);
-    expect(newlyEarnedCATiers(161, ['Easy'])).toEqual(['Medium']);
+    expect(newlyEarnedCATiers(169, ['Easy'])).toEqual(['Medium']);
   });
 
   it('qualifies manual tier completion from cumulative points only', () => {
     expect(caTierCompletionDecision('Medium', 160, [])).toEqual({
       ok: false,
-      reason: 'Requires 161 Combat Achievement points',
+      reason: 'Requires 169 Combat Achievement points',
     });
-    expect(caTierCompletionDecision('Medium', 161, [])).toEqual({ ok: true });
-    expect(caTierCompletionDecision('Medium', 161, ['Medium'])).toEqual({
+    expect(caTierCompletionDecision('Medium', 169, [])).toEqual({ ok: true });
+    expect(caTierCompletionDecision('Medium', 169, ['Medium'])).toEqual({
       ok: false,
       reason: 'Already completed',
     });
