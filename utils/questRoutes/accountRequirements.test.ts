@@ -21,6 +21,32 @@ const entity = (raw: string) => ({ raw, origin: 'ENTITY' as const });
 const chunkEntry = (raw: string) => ({ raw, origin: 'CHUNK_ENTRY' as const });
 
 describe('account requirements', () => {
+  it('distinguishes an unrecorded quest stage from missing completion', () => {
+    const gates = compileRawRequirements([chunkEntry('Started The Giant Dwarf')]);
+    expect(gates).toEqual([{
+      type: 'QUEST_PROGRESS', questId: 'The Giant Dwarf', completion: 'satisfies',
+      label: 'Started The Giant Dwarf', raw: 'Started The Giant Dwarf',
+    }]);
+    expect(evaluateRouteGates(gates, unlocks())).toEqual({ blockers: gates, hasDataGap: true });
+    expect(evaluateRouteGates(gates, unlocks({ quests: ['The Giant Dwarf'] })))
+      .toEqual({ blockers: [], hasDataGap: false });
+  });
+
+  it('closes the Crabclaw quest chamber after completion while keeping the normal cave open', () => {
+    const cave = compileRawRequirements([chunkEntry('The Depths of Despair: read The Royal Accord of Twill')]);
+    const chamber = compileRawRequirements([chunkEntry('The Depths of Despair: lower chamber before quest completion')]);
+    const state = unlocks({ quests: ['The Depths of Despair'] });
+    expect(evaluateRouteGates(cave, state)).toEqual({ blockers: [], hasDataGap: false });
+    expect(evaluateRouteGates(chamber, state)).toEqual({ blockers: chamber, hasDataGap: false });
+    expect(evaluateRouteGates(chamber, unlocks())).toEqual({ blockers: chamber, hasDataGap: true });
+  });
+
+  it('does not use completion to satisfy unreviewed quest-prefixed conditions', () => {
+    const gates = compileRawRequirements([chunkEntry('Underground Pass: route and quest phase need confirmation')]);
+    expect(evaluateRouteGates(gates, unlocks({ quests: ['Underground Pass', 'Regicide'] })))
+      .toEqual({ blockers: gates, hasDataGap: true });
+  });
+
   it('compiles canonical quest-completion wording and reports an incomplete quest', () => {
     const gates = compileRawRequirements([entity('Priest in Peril Complete the quest')]);
     expect(gates).toEqual([{ type: 'QUEST', questId: 'Priest in Peril', label: 'Priest in Peril' }]);

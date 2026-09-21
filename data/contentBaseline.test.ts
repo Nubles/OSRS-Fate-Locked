@@ -318,7 +318,7 @@ describe('deterministic current content baseline', () => {
       questSections: 134,
       banks: 127,
       tags: 27,
-      auditEvents: 27531,
+      auditEvents: 27532,
       unresolvedTaskUnlocks: 0,
     });
     expect(taskUnlockTotals.source).toBe(1959);

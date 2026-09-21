@@ -238,7 +238,7 @@ export interface ItemSourceRecord {
 
 // Bump when public/chunk-content.json changes so the fetch URL changes and
 // browsers don't serve a stale cached copy (the filename itself never changes).
-export const CHUNK_CONTENT_DATA_VERSION = 11;
+export const CHUNK_CONTENT_DATA_VERSION = 12;
 
 export class ChunkContentService {
   private doc: RawDoc | null = null;
@@ -443,6 +443,9 @@ export class ChunkContentService {
   entityRequirementOptions(name: string, kind: EntityKind, cx: number, cy: number, sourceId?: string): RawRouteRequirement[][] {
     const hit = this.entityLocations(name, [kind]);
     const locations = hit?.locations.filter(loc => loc.cx === cx && loc.cy === cy && (!sourceId || loc.sourceId === sourceId)) ?? [];
+    // A missing explicit interior is not evidence for an unrestricted surface
+    // copy of that entity. Callers receive no positive access alternative.
+    if (sourceId && !locations.length) return [];
     return (locations.length ? locations : [{ cx, cy }]).map(loc => this.requirementsForLocation(name, kind, loc));
   }
 

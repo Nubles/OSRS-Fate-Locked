@@ -20,9 +20,9 @@
     "chunks": {
       "source": 2234,
       "imported": 445,
-      "normalized": 1219,
+      "normalized": 1249,
       "excluded": 387,
-      "unresolved": 183
+      "unresolved": 153
     },
     "questSections": {
       "source": 1345,
@@ -122772,8 +122772,8 @@
       "category": "chunks",
       "sourceKey": "10383",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/10383"
       ]
@@ -122782,8 +122782,8 @@
       "category": "chunks",
       "sourceKey": "10384",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/10384"
       ]
@@ -124134,8 +124134,8 @@
       "category": "chunks",
       "sourceKey": "10643",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/10643"
       ]
@@ -125378,8 +125378,8 @@
       "category": "chunks",
       "sourceKey": "10899",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/10899"
       ]
@@ -128562,8 +128562,8 @@
       "category": "chunks",
       "sourceKey": "11346",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/11346"
       ]
@@ -129826,8 +129826,8 @@
       "category": "chunks",
       "sourceKey": "11588",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/11588"
       ]
@@ -129836,8 +129836,8 @@
       "category": "chunks",
       "sourceKey": "11589",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/11589"
       ]
@@ -135214,8 +135214,8 @@
       "category": "chunks",
       "sourceKey": "12692",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/12692"
       ]
@@ -136804,8 +136804,8 @@
       "category": "chunks",
       "sourceKey": "12948",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/12948"
       ]
@@ -136814,8 +136814,8 @@
       "category": "chunks",
       "sourceKey": "12949",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/12949"
       ]
@@ -151514,8 +151514,8 @@
       "category": "chunks",
       "sourceKey": "6808",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/6808"
       ]
@@ -151524,8 +151524,8 @@
       "category": "chunks",
       "sourceKey": "6809",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/6809"
       ]
@@ -154278,8 +154278,8 @@
       "category": "chunks",
       "sourceKey": "7492",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/7492"
       ]
@@ -154298,8 +154298,8 @@
       "category": "chunks",
       "sourceKey": "7496",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/7496"
       ]
@@ -156500,8 +156500,8 @@
       "category": "chunks",
       "sourceKey": "8280",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/8280"
       ]
@@ -157524,8 +157524,8 @@
       "category": "chunks",
       "sourceKey": "8519",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/8519"
       ]
@@ -157544,8 +157544,8 @@
       "category": "chunks",
       "sourceKey": "8521",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/8521"
       ]
@@ -157632,8 +157632,8 @@
       "category": "chunks",
       "sourceKey": "8536",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/8536"
       ]
@@ -158828,8 +158828,8 @@
       "category": "chunks",
       "sourceKey": "8779",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/8779"
       ]
@@ -161336,8 +161336,8 @@
       "category": "chunks",
       "sourceKey": "9369",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/9369"
       ]
@@ -161346,8 +161346,8 @@
       "category": "chunks",
       "sourceKey": "9370",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/9370"
       ]
@@ -162590,8 +162590,8 @@
       "category": "chunks",
       "sourceKey": "9615",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/9615"
       ]
@@ -162600,8 +162600,8 @@
       "category": "chunks",
       "sourceKey": "9616",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/9616"
       ]
@@ -162640,8 +162640,8 @@
       "category": "chunks",
       "sourceKey": "9622",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/9622"
       ]
@@ -162650,8 +162650,8 @@
       "category": "chunks",
       "sourceKey": "9623",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/9623"
       ]
@@ -163820,8 +163820,8 @@
       "category": "chunks",
       "sourceKey": "9823",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/9823"
       ]
@@ -164028,8 +164028,8 @@
       "category": "chunks",
       "sourceKey": "Ancient Guthix Temple",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/Ancient Guthix Temple"
       ]
@@ -164530,8 +164530,8 @@
       "category": "chunks",
       "sourceKey": "Crash Site Cavern",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/Crash Site Cavern"
       ]
@@ -164560,8 +164560,8 @@
       "category": "chunks",
       "sourceKey": "Death altar",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/Death altar"
       ]
@@ -165946,8 +165946,8 @@
       "category": "chunks",
       "sourceKey": "Rune essence mine",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/Rune essence mine"
       ]
@@ -175804,13 +175804,13 @@
       "reason": "lite-cap",
       "targetKeys": [
         "Dark beast",
+        "Ghost",
         "Knight of Ardougne",
-        "Mourner",
         "Paladin",
-        "Woman (West Ardougne)",
-        "Zombie"
+        "Shadow",
+        "Woman (West Ardougne)"
       ],
-      "detail": "8 source values capped at 6"
+      "detail": "9 source values capped at 6"
     },
     {
       "category": "lite",
@@ -175858,7 +175858,7 @@
         "Rock lobster",
         "Wallasalki"
       ],
-      "detail": "8 source values capped at 6"
+      "detail": "14 source values capped at 6"
     },
     {
       "category": "lite",
@@ -176091,14 +176091,14 @@
       "disposition": "normalized",
       "reason": "lite-cap",
       "targetKeys": [
-        "Maniacal Monkey Archer",
-        "Maniacal monkey",
         "Monkey Archer",
+        "Monkey Guard",
         "Monkey Zombie",
+        "Scorpion",
         "Spider",
         "Spider (Ape Atoll)"
       ],
-      "detail": "12 source values capped at 6"
+      "detail": "9 source values capped at 6"
     },
     {
       "category": "lite",
@@ -176123,14 +176123,14 @@
       "disposition": "normalized",
       "reason": "lite-cap",
       "targetKeys": [
-        "Baby green dragon",
         "Baby red dragon",
         "Fire giant",
+        "Iron dragon",
         "Moss giant",
         "Red dragon",
-        "Wild dog"
+        "Steel dragon"
       ],
-      "detail": "17 source values capped at 6"
+      "detail": "19 source values capped at 6"
     },
     {
       "category": "lite",
@@ -176629,10 +176629,10 @@
         "Cave bug",
         "Cave slime",
         "Frog",
-        "Giant frog",
-        "Giant rat"
+        "Giant rat",
+        "Tormented Demon"
       ],
-      "detail": "8 source values capped at 6"
+      "detail": "11 source values capped at 6"
     },
     {
       "category": "lite",
@@ -177638,6 +177638,22 @@
     },
     {
       "category": "lite",
+      "sourceKey": "9266/mon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "lite-cap",
+      "targetKeys": [
+        "Blessed spider",
+        "Disciple of Iban",
+        "Rat",
+        "Soulless",
+        "Spider",
+        "Zombie"
+      ],
+      "detail": "23 source values capped at 6"
+    },
+    {
+      "category": "lite",
       "sourceKey": "9525/mon",
       "terminal": false,
       "disposition": "normalized",
@@ -177692,13 +177708,13 @@
       "reason": "lite-cap",
       "targetKeys": [
         "Blessed spider",
-        "Disciple of Iban",
         "Rat",
+        "Soulless",
         "Spider",
-        "Wolf",
-        "Woman (West Ardougne)"
+        "Woman (West Ardougne)",
+        "Zombie"
       ],
-      "detail": "15 source values capped at 6"
+      "detail": "30 source values capped at 6"
     },
     {
       "category": "lite",

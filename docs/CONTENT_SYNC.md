@@ -104,6 +104,15 @@ supplements, empty-stock shops, and removed content are reviewed in
 task-family membership and its source references. See
 [the repair review](CONTENT_REPAIR_REVIEW.md) for coverage and remaining gaps.
 
+Interior policy schema 2 supports common named rules (including `#Section`
+records), record-specific requirements, separate requirements for each entrance,
+and per-entity restrictions. Coordinate evidence must resolve to the recorded
+surface chunk; `chunks:verify` rejects invalid anchors and unknown policy keys.
+Do not infer a current Slayer assignment, paid entry, quest phase or carried
+equipment from ownership. Add a reviewed quest-progress gate only when quest
+completion is known to satisfy or block that exact milestone; arbitrary
+quest-prefixed text stays unresolved.
+
 `chunks:sync` also regenerates the ocean navigation registry. Water is excluded
 from paid land rolls; Sailing and Pandemonium open connected water and reviewed
 boat landings. Actual quest and entity requirements still apply after a roll.

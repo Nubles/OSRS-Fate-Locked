@@ -7,8 +7,8 @@ community snapshot contains every current OSRS entity or route.
 ## Coverage
 
 - 938 populated surface records retained.
-- 909 interior records preserved, including 726 with a surface entrance route.
-- 183 interior records retained without an established entrance; listed below.
+- 909 interior records preserved, including 756 with a surface entrance route.
+- 153 interior records retained without an established entrance; listed below.
 - 439 active shop stock records, all with indexed locations. Empty stock is
   explicit for shops that only resell player stock. NPC services have their own
   category mappings; removed seasonal shops are excluded.
@@ -64,14 +64,58 @@ instance, or quest stage. An indexed entrance is source evidence, not proof of a
 complete navigable route. The general transport graph remains a connectivity
 hint; precise entry and entity requirements must also pass.
 
-Started-quest and partial-stage requirements cannot always be decided from the
-app's completed-quest state. They remain unknown until supported evidence is
-available; the corresponding completed quest can prove a prerequisite stage.
+Started-quest and partial-stage requirements use explicit quest-progress gates.
+They remain unknown when the journal cannot establish the required stage.
+Completion proves only reviewed permanent milestones; it blocks access to the
+quest-only Crabclaw lower chamber. The app does not yet record intermediate
+quest progress or live inventory/door/assignment state.
 The Lost Property shop likewise cannot infer which replacement quest rewards a
 player has already earned. New quests have journal requirements and source
 evidence; this change does not invent walkthroughs for them.
 
+## Second entrance pass (local review, not deployed)
+
+The follow-up review establishes entrances for **30 additional records**, including
+all previously unlocated named interiors in this snapshot. The 153 remaining
+records have no source location name. Of those, 61 contain monsters, NPCs, shops
+or item spawns; 92 contain only object/quest/diary/clue evidence. These are source
+records, not a count of distinct active dungeons.
+
+| Content | Surface entrance(s) | Access evidence retained |
+| --- | --- | --- |
+| Crabclaw Caves | 25,53 | Read the quest book; the lower quest chamber closes on completion. |
+| Crash Site Cavern | 38,55 | Permanent gorillas require Monkey Madness II completion. |
+| Kruk's Dungeon | 42,43 | The actual jungle-grass trapdoor; the partial quest milestone stays unknown until proven. |
+| Lumbridge Swamp Caves and Ancient Guthixian Temple | 49,49 | The swamp entrance needs no Lost Tribe progress; temple and tormented-demon quest gates remain separate. |
+| Waterbirth Island Dungeon | 39,58 | Deeper-room doors and routes need confirmation. The Lighthouse connection is not an island entrance. |
+| Brimhaven Dungeon and Hieve's chamber | 42,49 or 43,47 | Separate payments/tool requirements; upper dragons also require a current matching Slayer assignment. |
+| Underground Pass | 38,51 or 36,50 | Room/quest phase remains unknown; completing the quest does not prove every route. |
+| Mourner Tunnels, Temple of Light and Death Altar | 39,51 | Reviewed Mourning's End Part II stages; altar entry equipment/alternative method remains unverified. |
+| God Wars source record 11346 | 45,58 | Geography established; entry and encampment conditions remain unverified. |
+| Rune essence mine | 50,53; 48,49; 41,51 | Three reviewed NPC teleport routes, each requiring Rune Mysteries. |
+
+The source registry records Wiki revision links and coordinate evidence where
+available. Curated coordinates are checked against their surface chunk before
+regeneration. Named dungeon rules also apply to their section records, and
+record-specific requirements are retained separately from other copies of an
+entity. A missing explicit interior source can no longer fall back to an
+unrestricted surface copy.
+
+A routing regression is also fixed: an indirect route discovered earlier could
+hide a later direct entrance to the same chunk, then be discarded as too long.
+The shortest recorded route now replaces it without inheriting unrelated gates.
+
+No save schema or RuneLite wire-format change is required. Existing quest and
+collection identities are unchanged. A fresh bundle includes the updated rows.
+The content cache version is incremented so browsers request the new snapshot.
+
 ## Validation
+
+The follow-up full suite passes all **3,283 tests**, run with two workers in the
+review workspace. The audit baseline increases by one event (an additional lite
+summary cap); the 30 newly mapped records change disposition without changing
+source identities or source totals. Typechecking, offline content verification,
+changelog verification and the production build also pass.
 
 Regression coverage exercises restored and gated shops, all retained stock hosts,
 RFD stages, boss aliases, constrained Slayer locations, all 624 land-frontier
@@ -97,18 +141,6 @@ No active shop stock table depends on these records.
 
 | Source ID | Source location |
 | --- | --- |
-| 12692 | Ancient Guthix Temple |
-| Ancient Guthix Temple | Ancient Guthix Temple |
-| 10899 | Brimhaven Dungeon |
-| 10643 | Brimhaven Dungeon Entrance |
-| 6808 | Crabclaw Caves |
-| 6809 | Crabclaw Caves |
-| 8280 | Crash Site Cavern |
-| 8536 | Crash Site Cavern |
-| Crash Site Cavern | Crash Site Cavern |
-| 8779 | Death altar |
-| Death altar | Death altar |
-| 11346 | God Wars Entrance |
 | 10055 | Interior 10055 |
 | 10056 | Interior 10056 |
 | 10058 | Interior 10058 |
@@ -262,21 +294,3 @@ No active shop stock table depends on these records.
 | 9802 | Interior 9802 |
 | 9806 | Interior 9806 |
 | 9812 | Interior 9812 |
-| 10383 | Kruk's Dungeon |
-| 10384 | Kruk's Dungeon |
-| 9615 | Kruk's Dungeon |
-| 9616 | Kruk's Dungeon |
-| 12948 | Lumbridge Swamp Caves |
-| 12949 | Lumbridge Swamp Caves |
-| 7496 | Mourner Tunnels & Temple of Light |
-| Rune essence mine | Rune essence mine |
-| 8519 | Underground Pass |
-| 8521 | Underground Pass |
-| 9369 | Underground Pass |
-| 9370 | Underground Pass |
-| 9622 | Underground Pass |
-| 9623 | Underground Pass |
-| 9823 | Underground Pass |
-| 11588 | Waterbirth Island Dungeon |
-| 11589 | Waterbirth Island Dungeon |
-| 7492 | Waterbirth Island Dungeon |

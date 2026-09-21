@@ -152,6 +152,8 @@ const serializedGate = (gate: DeepReadonly<RouteGate>): object => {
     case 'RFD_SUBQUESTS': return { type: gate.type, count: gate.count, label: gate.label };
     case 'QUEST':
       return { type: gate.type, questId: gate.questId, label: gate.label };
+    case 'QUEST_PROGRESS':
+      return { type: gate.type, questId: gate.questId, raw: gate.raw, label: gate.label, completion: gate.completion };
     case 'SKILL':
       return { type: gate.type, skill: gate.skill, level: gate.level, label: gate.label };
     case 'UNLOCK':

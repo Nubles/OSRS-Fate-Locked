@@ -48,6 +48,28 @@ const unresolved = (raw: string): RouteGate => ({ type: 'UNRESOLVED', label: raw
 
 const questGate = (questId: string): RouteGate => ({ type: 'QUEST', questId, label: questId });
 
+// Only reviewed milestones are inferred from completion. Arbitrary quest-prefixed
+// text may describe a temporary room or post-quest condition instead.
+const reviewedQuestProgress = new Map<string, [string, 'satisfies' | 'blocks']>([
+  ['Perilous Moons: defeated the sulphur nagua and spoken to Attala', ['Perilous Moons', 'satisfies']],
+  ["Ratcatchers: completed Hooknosed Jack's section", ['Ratcatchers', 'satisfies']],
+  ['The Depths of Despair: read The Royal Accord of Twill', ['The Depths of Despair', 'satisfies']],
+  ['The Depths of Despair: lower chamber before quest completion', ['The Depths of Despair', 'blocks']],
+  ["Monkey Madness II: reached Kruk's Dungeon", ['Monkey Madness II', 'satisfies']],
+  ['While Guthix Sleeps: reached the Ancient Guthixian Temple', ['While Guthix Sleeps', 'satisfies']],
+  ["Mourning's End Part II: obtained the new key", ["Mourning's End Part II", 'satisfies']],
+  ["Mourning's End Part II: reached the Death Altar", ["Mourning's End Part II", 'satisfies']],
+]);
+
+const parseQuestProgress = (raw: string): RouteGate | null => {
+  const reviewed = reviewedQuestProgress.get(raw);
+  const partial = raw.match(/^Started (.+)$/i) ?? raw.match(/^(.+?) \d[a-z0-9]*$/i);
+  const questId = canonicalQuestId(reviewed?.[0] ?? partial?.[1] ?? '');
+  if (!questId) return null;
+  const completion = reviewed?.[1] ?? 'satisfies';
+  return { type: 'QUEST_PROGRESS', questId, raw, completion, label: raw };
+};
+
 const parseQuest = (requirement: RawRouteRequirement): RouteGate | null => {
   const complete = requirement.raw.match(/^(.+?)\s+(?:complete the quest|completed)$/i);
   const candidate = complete?.[1];
@@ -91,7 +113,7 @@ export const compileRawRequirements = (rawRequirements: readonly RawRouteRequire
   const normalisedEvidence = { ...evidence, raw: requirement };
   const rfd = requirement.match(/^RFD Chest ([1-8]) Subquests?$/i);
   if (rfd) return { type: 'RFD_SUBQUESTS', count: Number(rfd[1]), label: `Complete ${rfd[1]} Recipe for Disaster rescues` };
-  return parseQuest(normalisedEvidence) ?? parseSkill(requirement) ?? parseUnlock(requirement) ?? unresolved(evidence.raw);
+  return parseQuest(normalisedEvidence) ?? parseQuestProgress(requirement) ?? parseSkill(requirement) ?? parseUnlock(requirement) ?? unresolved(evidence.raw);
 });
 
 /** Appends compiled gates while preserving the original structured source evidence. */
@@ -118,6 +140,15 @@ export const evaluateRouteGates = (
       case 'QUEST':
         if (!unlocks.quests.includes(gate.questId)) blockers.push(gate);
         break;
+      case 'QUEST_PROGRESS': {
+        const completed = unlocks.quests.includes(gate.questId);
+        if (completed && gate.completion === 'satisfies') break;
+        // A completion can close a quest-only room. Incomplete does not prove
+        // that the player has reached a particular stage of that quest.
+        if (!completed) hasDataGap = true;
+        blockers.push(gate);
+        break;
+      }
       case 'SKILL':
         if (!meetsSkillRequirement(unlocks, gate.skill, gate.level)) blockers.push(gate);
         break;
@@ -125,13 +156,6 @@ export const evaluateRouteGates = (
         if (!unlocks[gate.category].includes(gate.id)) blockers.push(gate);
         break;
       case 'UNRESOLVED': {
-        // A completed quest is sufficient evidence for a stated partial stage.
-        // An incomplete quest does not prove whether that stage was reached.
-        const partial = gate.raw.match(/^Started (.+)$/i) ?? gate.raw.match(/^(.+?) \d[a-z0-9]*$/i)
-          ?? (gate.raw === 'Perilous Moons: defeated the sulphur nagua and spoken to Attala' ? ['', 'Perilous Moons'] : null)
-          ?? (gate.raw === "Ratcatchers: completed Hooknosed Jack's section" ? ['', 'Ratcatchers'] : null);
-        const questId = partial && canonicalQuestId(partial[1]);
-        if (questId && unlocks.quests.includes(questId)) break;
         hasDataGap = true;
         blockers.push(gate);
         break;

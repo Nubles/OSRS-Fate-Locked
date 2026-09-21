@@ -20,6 +20,7 @@ export interface RawRouteRequirement {
 
 export type RouteGate =
   | { type: 'QUEST'; questId: string; label: string }
+  | { type: 'QUEST_PROGRESS'; questId: string; label: string; raw: string; completion: 'satisfies' | 'blocks' }
   | { type: 'RFD_SUBQUESTS'; count: number; label: string }
   | { type: 'SKILL'; skill: string; level: number; label: string }
   | { type: 'UNLOCK'; category: 'guilds' | 'merchants' | 'minigames' | 'mobility' | 'slayerUnlocks'; id: string; label: string }
@@ -146,6 +147,11 @@ const validateRouteGate = (gate: RouteGate): RouteGate => {
       break;
     case 'QUEST':
       assertNonBlank(gate.questId, 'quest id');
+      break;
+    case 'QUEST_PROGRESS':
+      assertNonBlank(gate.questId, 'quest id');
+      assertNonBlank(gate.raw, 'raw requirement');
+      if (gate.completion !== 'satisfies' && gate.completion !== 'blocks') throw new Error('Invalid quest completion effect');
       break;
     case 'SKILL':
       assertNonBlank(gate.skill, 'skill');

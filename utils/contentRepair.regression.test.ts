@@ -24,6 +24,85 @@ beforeAll(async () => {
 });
 
 describe('reviewed content repairs', () => {
+  it('maps all retained named interiors while keeping unnamed records outside permission indexes', () => {
+    const unlocated = Object.values(content.interiors).filter(entry => !entry.entrances.length);
+    expect(unlocated).toHaveLength(153);
+    expect(unlocated.every(entry => entry.name.startsWith('Interior '))).toBe(true);
+    expect(Object.keys(content.interiors)).toHaveLength(909);
+    expect(evaluateEntityAccess('Giant rat', 'monster', { cx: 50, cy: 50, sourceId: '12436' }, account(), 'chunked', service).status)
+      .toBe('UNKNOWN');
+  });
+
+  it('locates permanent demonic gorillas at the crash-site opening and requires Monkey Madness II', () => {
+    const hits = service.entityLocations('Demonic gorilla', ['monster'])!.locations;
+    expect(hits.filter(hit => hit.sourceId === '8280' || hit.sourceId === '8536'))
+      .toEqual(expect.arrayContaining([
+        expect.objectContaining({ cx: 38, cy: 55, sourceId: '8280' }),
+        expect.objectContaining({ cx: 38, cy: 55, sourceId: '8536' }),
+      ]));
+    const state = { ...account(), chunks: ['38,55'] };
+    const coord = { cx: 38, cy: 55 };
+    const status = () => buildChunkPermissionSnapshot(service.contentFor(38, 55)!, coord,
+      { unlocks: state, gameModeId: 'chunked', contentService: service })
+      .categories.COMBAT!.find(row => row.name === 'Demonic gorilla')!.status;
+    expect(status()).toBe('NOT_READY');
+    state.quests.push('Monkey Madness II');
+    expect(status()).toBe('ALLOWED');
+  });
+
+  it('does not unlock quest-only Crabclaw rooms when completing the quest', () => {
+    const state = { ...account(), chunks: ['25,53'], quests: ['The Depths of Despair'] };
+    expect(evaluateEntityAccess('Sand Crab', 'monster', { cx: 25, cy: 53, sourceId: '6809' }, state, 'chunked', service).status)
+      .toBe('ALLOWED');
+    expect(evaluateEntityAccess('Chest', 'object', { cx: 25, cy: 53, sourceId: '6808' }, state, 'chunked', service).status)
+      .toBe('NOT_READY');
+    state.quests = [];
+    expect(evaluateEntityAccess('Sand Crab', 'monster', { cx: 25, cy: 53, sourceId: '6809' }, state, 'chunked', service).status)
+      .toBe('UNKNOWN');
+  });
+
+  it('keeps post-quest tormented demons distinct from ordinary swamp cave access', () => {
+    const state = { ...account(), chunks: ['49,49'] };
+    const coord = { cx: 49, cy: 49, sourceId: '12692' };
+    expect(evaluateEntityAccess('Tormented Demon', 'monster', coord, state, 'chunked', service).status).not.toBe('ALLOWED');
+    state.quests.push('While Guthix Sleeps');
+    expect(evaluateEntityAccess('Tormented Demon', 'monster', coord, state, 'chunked', service).status).toBe('ALLOWED');
+    expect(service.entityLocations('Juna', ['npc'])!.locations).toContainEqual(expect.objectContaining({ cx: 49, cy: 49 }));
+  });
+
+  it('uses the physical Kruk trapdoor and does not infer its partial quest stage', () => {
+    const hits = service.entityLocations('Maniacal monkey', ['monster'])!.locations
+      .filter(hit => hit.locationName === "Kruk's Dungeon");
+    expect(hits.length).toBeGreaterThan(0);
+    expect(hits.every(hit => hit.cx === 42 && hit.cy === 43)).toBe(true);
+    const state = { ...account(), chunks: ['42,43'] };
+    expect(evaluateEntityAccess('Maniacal monkey', 'monster', hits[0], state, 'chunked', service).status).toBe('UNKNOWN');
+    state.quests.push('Monkey Madness II');
+    expect(evaluateEntityAccess('Maniacal monkey', 'monster', hits[0], state, 'chunked', service).status).toBe('ALLOWED');
+  });
+
+  it('indexes all reviewed essence teleport hosts while requiring Rune Mysteries', () => {
+    const hits = service.entityLocations('Rune Essence rock', ['object'])!.locations;
+    for (const [cx, cy] of [[50,53], [48,49], [41,51]]) {
+      const loc = hits.find(hit => hit.cx === cx && hit.cy === cy)!;
+      expect(loc).toBeTruthy();
+      const state = { ...account(), chunks: [`${cx},${cy}`] };
+      expect(evaluateEntityAccess('Rune Essence rock', 'object', loc, state, 'chunked', service).status).toBe('NOT_READY');
+      state.quests.push('Rune Mysteries');
+      expect(evaluateEntityAccess('Rune Essence rock', 'object', loc, state, 'chunked', service).status).toBe('ALLOWED');
+    }
+  });
+
+  it('preserves Hieve task restrictions and untracked deeper-dungeon conditions', () => {
+    const upper = service.entityRequirementOptions('Iron dragon', 'monster', 42, 49, '10899');
+    expect(upper.flat()).toContainEqual({ raw: 'Current Slayer assignment: Iron dragon', origin: 'ENTITY' });
+    const state = { ...account(), chunks: ['42,49', '39,58'], quests: ['Underground Pass', 'Regicide'] };
+    expect(evaluateEntityAccess('Iron dragon', 'monster', { cx: 42, cy: 49, sourceId: '10899' }, state, 'chunked', service).status)
+      .toBe('UNKNOWN');
+    expect(evaluateEntityAccess('Wallasalki', 'monster', { cx: 39, cy: 58, sourceId: '7492' }, state, 'chunked', service).status)
+      .toBe('UNKNOWN');
+  });
+
   it('restores Keldagrim banking while preserving its interior entry requirement', () => {
     const state = { ...account(), chunks: ['43,58'], banks: ['11066'] };
     const coord = { cx: 43, cy: 58 };
