@@ -983,6 +983,35 @@ describe('LEVEL_UP — Chunked milestone insurance', () => {
     expect(s.chunkedMilestoneClaimed).toBe(1);
   });
 
+  describe('new runs', () => {
+    const startTotal = Object.values(initialState.unlocks.levels).reduce((a, b) => a + b, 0);
+    const levelUp = (state: ReturnType<typeof base>) =>
+      gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
+    const newChunkedRun = () =>
+      gameReducer(base(), { type: 'SET_GAME_MODE', payload: { modeId: 'chunked' } });
+
+    it('count milestones from the starting total level, so the first level-up pays nothing', () => {
+      const run = newChunkedRun();
+      expect(run.chunkedMilestoneClaimed).toBe(Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL));
+      expect(levelUp(run).keys).toBe(run.keys);
+    });
+
+    it('pay their first milestone key at the next multiple of the interval', () => {
+      let run = newChunkedRun();
+      const firstPayout = CHUNKED_MILESTONE_INTERVAL * (Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL) + 1);
+      for (let total = startTotal; total < firstPayout - 1; total++) run = levelUp(run);
+      expect(run.keys).toBe(initialState.keys);
+      run = levelUp(run);
+      expect(run.keys).toBe(initialState.keys + 1);
+      expect(run.history.at(-1)?.message).toContain(`Total Level ${firstPayout}`);
+    });
+
+    it('leave runs that chose their mode before this rule on their original schedule', () => {
+      const existing = { ...chunkedIsolated(), gameModeLocked: true, chunkedMilestoneClaimed: 0 };
+      expect(levelUp(existing).keys).toBe(initialState.keys + 1);
+    });
+  });
+
   it('the two modes\' milestone counters are independent', () => {
     const state = { ...chunkedIsolated(), xtremeMilestoneClaimed: 3 };
     const s = gameReducer(state, {

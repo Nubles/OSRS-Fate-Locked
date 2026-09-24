@@ -777,11 +777,17 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       // The mode is permanent once chosen — or if the run already has history
       // (defensive, covers saves predating the lock flag).
       if (state.gameModeLocked || state.history.length > 0) return state;
+      // Milestone insurance counts from the run's starting total level, so a
+      // new run's first level-up is not a free key. Runs that chose their mode
+      // before this rule keep the counters they already have.
+      const startTotal = Object.values(state.unlocks.levels).reduce((a, b) => a + b, 0);
       return {
         ...state,
         gameModeId: action.payload.modeId,
         customMode: action.payload.customRules,
         gameModeLocked: true,
+        xtremeMilestoneClaimed: Math.max(state.xtremeMilestoneClaimed ?? 0, Math.floor(startTotal / XTREME_MILESTONE_INTERVAL)),
+        chunkedMilestoneClaimed: Math.max(state.chunkedMilestoneClaimed ?? 0, Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL)),
       };
     }
 

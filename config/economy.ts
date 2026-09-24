@@ -92,9 +92,11 @@ export const isSkillChaosMilestone = (level: number): boolean =>
 // unlocks.regions is still empty. It turns itself off the moment the run
 // unlocks a second region, so it never inflates the tuned earn:sink ratio for
 // Vanilla/Chill/Custom runs or for Xtreme runs that have already broken out.
-// A fresh account's total level is 32 (all skills at 1), so the first payout
-// at total 82 is real, Lumbridge-reachable grinding (WC/Mining/Fishing/
-// Cooking/Firemaking/Crafting/Prayer/Thieving/Farming), not a freebie.
+// Keys land on multiples of the interval. A fresh account starts at total
+// level 33 (24 skills at 1, Hitpoints 10), and choosing the mode counts the
+// multiples already passed, so the first Xtreme key comes at total 50: real,
+// Lumbridge-reachable grinding (WC/Mining/Fishing/Cooking/Firemaking/
+// Crafting/Prayer/Thieving/Farming), not a freebie.
 export const XTREME_MILESTONE_INTERVAL = 50; // total-level gap between guaranteed keys
 
 // Chunked mode is the same anti-softlock problem, worse: the frontier can be
@@ -102,7 +104,9 @@ export const XTREME_MILESTONE_INTERVAL = 50; // total-level gap between guarante
 // Xtreme's whole 6-chunk Lumbridge). Same deterministic-key mechanic, gated
 // on gameModeId === 'chunked' && unlocks.chunks.length === 0 (still on the
 // free start chunk, nothing rolled yet), but a tighter interval since the
-// training footprint is so much smaller.
+// training footprint is so much smaller. A new run's first key comes at total
+// 50; runs that chose Chunked before SET_GAME_MODE counted the start (the
+// 24 September 2026 release) were paid their first key on the first level-up.
 export const CHUNKED_MILESTONE_INTERVAL = 25; // total-level gap between guaranteed keys
 
 // ── Earning ──────────────────────────────────────────────────────────────────

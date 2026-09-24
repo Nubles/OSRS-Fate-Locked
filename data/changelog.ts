@@ -52,6 +52,7 @@ export const CHANGELOG_RELEASES = [
       ],
       balance: [
         'Quest difficulties now match the official OSRS ratings. At First Light is Novice, Recipe for Disaster\'s Sir Amik Varze and King Awowogei parts are Master, and its finale is Grandmaster, so their key odds change to match.',
+        'New Chunked runs no longer get a free key on their first level-up. While still in the start chunk, the first guaranteed key comes at total level 50, then every 25 levels. Existing runs keep their current schedule.',
       ],
       changed: [
         'Spend Keys cards show Blocked when a table\'s remaining unlocks are out of reach instead of offering a roll that cannot happen. Chunked no longer reads Done while land reached by Sailing remains, and Housing no longer counts the retired Aquarium.',
