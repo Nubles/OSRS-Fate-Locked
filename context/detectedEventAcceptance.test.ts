@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { gameReducerForTest, migrateSaveForTest, prepareDetectedEventAcceptanceAction } from './GameContext';
 import { DROP_RATES } from '../config/rules';
-import { failureFateForSkillLevel, failureFateForSource } from '../config/economy';
+import { CHUNKED_MILESTONE_INTERVAL, failureFateForSkillLevel, failureFateForSource, XTREME_MILESTONE_INTERVAL } from '../config/economy';
 import { resolveModeRules } from '../config/gameModes';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import { CA_DATA } from '../data/caData';
@@ -126,5 +126,68 @@ describe('detected event acceptance follows manual completion', () => {
     const audit = auditHistory(spent.history, resolveModeRules('vanilla'));
     expect(audit.violations.map(violation => violation.kind)).not.toContain('CHAOS_NEGATIVE');
     expect(audit.final.chaosKeys).toBe(0);
+  });
+});
+
+describe('detected level-ups and the start-area milestone Keys', () => {
+  it.each([
+    ['xtreme', XTREME_MILESTONE_INTERVAL, 'xtremeMilestoneClaimed', 'Xtreme milestone'],
+    ['chunked', CHUNKED_MILESTONE_INTERVAL, 'chunkedMilestoneClaimed', 'Chunked milestone'],
+  ] as const)('pays a %s run the milestone Key a manual level-up pays', (gameModeId, interval, claimedKey, message) => {
+    const fresh = run({ gameModeId });
+    const others = Object.entries(fresh.unlocks.levels)
+      .filter(([skill]) => skill !== 'Attack')
+      .reduce((total, [, level]) => total + level, 0);
+    // Attack sits one level below the next unclaimed milestone.
+    const milestone = Math.ceil((others + 3) / interval) * interval;
+    const attack = milestone - 1 - others;
+    const state = run({
+      gameModeId,
+      [claimedKey]: milestone / interval - 1,
+      unlocks: {
+        skills: { ...fresh.unlocks.skills, Attack: 10 },
+        levels: { ...fresh.unlocks.levels, Attack: attack },
+      },
+    });
+
+    const detected = accept(state, { kind: 'SKILL_LEVEL', skill: 'Attack', level: attack + 1 }, {
+      source: `Attack Level ${attack + 1}`, threshold: 1, failureFate: failureFateForSkillLevel(attack + 1),
+      target: `Attack Level ${attack + 1}`,
+    }, fail);
+    const manual = gameReducerForTest(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 1 } });
+
+    expect(manual.keys).toBe(state.keys + 1);
+    expect(detected.keys).toBe(manual.keys);
+    expect(detected[claimedKey]).toBe(milestone / interval);
+    expect(detected.history.at(-1)).toMatchObject({ type: 'XTREME_MILESTONE', meta: { gained: 1 } });
+    expect(detected.history.at(-1)?.message).toContain(message);
+    expect(auditHistory(detected.history, resolveModeRules(gameModeId)).final.keys)
+      .toBe(auditHistory(state.history, resolveModeRules(gameModeId)).final.keys + 1);
+  });
+
+  it('pays nothing once the run has left its start', () => {
+    const fresh = run({ gameModeId: 'xtreme' });
+    const others = Object.entries(fresh.unlocks.levels)
+      .filter(([skill]) => skill !== 'Attack')
+      .reduce((total, [, level]) => total + level, 0);
+    const milestone = Math.ceil((others + 3) / XTREME_MILESTONE_INTERVAL) * XTREME_MILESTONE_INTERVAL;
+    const attack = milestone - 1 - others;
+    const state = run({
+      gameModeId: 'xtreme',
+      xtremeMilestoneClaimed: milestone / XTREME_MILESTONE_INTERVAL - 1,
+      unlocks: {
+        regions: ['Asgarnia'],
+        skills: { ...fresh.unlocks.skills, Attack: 10 },
+        levels: { ...fresh.unlocks.levels, Attack: attack },
+      },
+    });
+
+    const detected = accept(state, { kind: 'SKILL_LEVEL', skill: 'Attack', level: attack + 1 }, {
+      source: `Attack Level ${attack + 1}`, threshold: 1, failureFate: failureFateForSkillLevel(attack + 1),
+      target: `Attack Level ${attack + 1}`,
+    }, fail);
+
+    expect(detected.keys).toBe(state.keys);
+    expect(detected.history.some(entry => entry.type === 'XTREME_MILESTONE')).toBe(false);
   });
 });

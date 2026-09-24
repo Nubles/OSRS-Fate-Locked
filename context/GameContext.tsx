@@ -695,6 +695,63 @@ const chainAppendedHistory = (prev: GameState['history'], next: GameState['histo
   return out;
 };
 
+/**
+ * Anti-softlock insurance for runs still stuck at their start: Xtreme Start
+ * (see XTREME_MILESTONE_INTERVAL in config/economy.ts) before any area is
+ * unlocked, and Chunked (CHUNKED_MILESTONE_INTERVAL, tighter because one
+ * chunk is a much smaller training footprint than Lumbridge) before any
+ * chunk is. A guaranteed Key every interval of total level; deterministic,
+ * not RNG. A manual level-up and a detected RuneLite level-up both pay it.
+ */
+const startMilestoneInsurance = (
+  state: GameState,
+  totalLevel: number,
+  now: number,
+): Pick<GameState, 'keys'> & {
+  xtremeMilestoneClaimed: number;
+  chunkedMilestoneClaimed: number;
+  entries: LogEntry[];
+} => {
+  let keys = state.keys;
+  const entries: LogEntry[] = [];
+  let xtremeMilestoneClaimed = state.xtremeMilestoneClaimed ?? 0;
+  if (state.gameModeId === 'xtreme' && visibleAreaUnlocks(state.unlocks.regions).length === 0) {
+    const eligible = Math.floor(totalLevel / XTREME_MILESTONE_INTERVAL);
+    if (eligible > xtremeMilestoneClaimed) {
+      const gained = eligible - xtremeMilestoneClaimed;
+      keys += gained;
+      xtremeMilestoneClaimed = eligible;
+      entries.push({
+        id: generateId(),
+        timestamp: now,
+        type: 'XTREME_MILESTONE',
+        message: `Xtreme milestone: Total Level ${eligible * XTREME_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
+        details: `Stuck at the start area with nothing else to roll — Fate steps in every ${XTREME_MILESTONE_INTERVAL} total levels.`,
+        meta: { totalLevel, gained }
+      });
+    }
+  }
+
+  let chunkedMilestoneClaimed = state.chunkedMilestoneClaimed ?? 0;
+  if (state.gameModeId === 'chunked' && (state.unlocks.chunks ?? []).length === 0) {
+    const eligible = Math.floor(totalLevel / CHUNKED_MILESTONE_INTERVAL);
+    if (eligible > chunkedMilestoneClaimed) {
+      const gained = eligible - chunkedMilestoneClaimed;
+      keys += gained;
+      chunkedMilestoneClaimed = eligible;
+      entries.push({
+        id: generateId(),
+        timestamp: now,
+        type: 'XTREME_MILESTONE',
+        message: `Chunked milestone: Total Level ${eligible * CHUNKED_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
+        details: `Stuck in the start chunk with nothing else to roll — Fate steps in every ${CHUNKED_MILESTONE_INTERVAL} total levels.`,
+        meta: { totalLevel, gained }
+      });
+    }
+  }
+  return { keys, xtremeMilestoneClaimed, chunkedMilestoneClaimed, entries };
+};
+
 const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
   const now = Date.now();
 
@@ -785,9 +842,6 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       if (!detectedEventIdentityMatches(state, action.payload.expected)) return state;
       const progress = action.payload.progress;
       if (progress.kind === 'COLLECTION_ITEM' && collectionItemNeedsIdentityReview(state.unlocks.collectionLog, progress.itemId, state.collectionLogIdentity)) return state;
-      const guaranteedChaosAwarded = progress.kind === 'SKILL_LEVEL'
-        && progress.level > (state.unlocks.levels[progress.skill] ?? 1)
-        && isSkillChaosMilestone(progress.level);
       const progressed = rawReducer(state, {
         type: 'SYNC_DETECTED_PROGRESS',
         payload: progress,
@@ -801,6 +855,18 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         type: 'ROLL_RESULT',
         payload: action.payload.rollResult,
       });
+      // A detected level-up pays the start-area milestone Keys a manual one does.
+      if (progress.kind === 'SKILL_LEVEL') {
+        const totalLevel = Object.values(rolled.unlocks.levels).reduce((a, b) => a + b, 0);
+        const insurance = startMilestoneInsurance(rolled, totalLevel, now);
+        return insurance.entries.length === 0 ? rolled : {
+          ...rolled,
+          keys: insurance.keys,
+          xtremeMilestoneClaimed: insurance.xtremeMilestoneClaimed,
+          chunkedMilestoneClaimed: insurance.chunkedMilestoneClaimed,
+          history: [...rolled.history, ...insurance.entries],
+        };
+      }
       // A task that completes its tier records the tier too, as the Journal does.
       if (progress.kind === 'CA_TASK') {
         return newlyEarnedCATiers(completedCAPoints(rolled.unlocks.completedTasks), rolled.unlocks.cas)
@@ -1240,48 +1306,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         });
       }
 
-      // Xtreme Start anti-softlock insurance — see XTREME_MILESTONE_INTERVAL in
-      // config/economy.ts. Deterministic, not RNG, and only accrues while the
-      // run is still stuck at just the start area.
-      let keys = state.keys;
-      let xtremeMilestoneClaimed = state.xtremeMilestoneClaimed ?? 0;
-      if (state.gameModeId === 'xtreme' && visibleAreaUnlocks(state.unlocks.regions).length === 0) {
-        const eligible = Math.floor(totalLevel / XTREME_MILESTONE_INTERVAL);
-        if (eligible > xtremeMilestoneClaimed) {
-          const gained = eligible - xtremeMilestoneClaimed;
-          keys += gained;
-          xtremeMilestoneClaimed = eligible;
-          logs.push({
-            id: generateId(),
-            timestamp: now,
-            type: 'XTREME_MILESTONE',
-            message: `Xtreme milestone: Total Level ${eligible * XTREME_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
-            details: `Stuck at the start area with nothing else to roll — Fate steps in every ${XTREME_MILESTONE_INTERVAL} total levels.`,
-            meta: { totalLevel, gained }
-          });
-        }
-      }
-
-      // Same insurance for Chunked mode — see CHUNKED_MILESTONE_INTERVAL.
-      // Tighter interval than Xtreme's since a single starting chunk is a
-      // much smaller training footprint than all of Lumbridge.
-      let chunkedMilestoneClaimed = state.chunkedMilestoneClaimed ?? 0;
-      if (state.gameModeId === 'chunked' && (state.unlocks.chunks ?? []).length === 0) {
-        const eligible = Math.floor(totalLevel / CHUNKED_MILESTONE_INTERVAL);
-        if (eligible > chunkedMilestoneClaimed) {
-          const gained = eligible - chunkedMilestoneClaimed;
-          keys += gained;
-          chunkedMilestoneClaimed = eligible;
-          logs.push({
-            id: generateId(),
-            timestamp: now,
-            type: 'XTREME_MILESTONE',
-            message: `Chunked milestone: Total Level ${eligible * CHUNKED_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
-            details: `Stuck in the start chunk with nothing else to roll — Fate steps in every ${CHUNKED_MILESTONE_INTERVAL} total levels.`,
-            meta: { totalLevel, gained }
-          });
-        }
-      }
+      const { keys, xtremeMilestoneClaimed, chunkedMilestoneClaimed, entries } =
+        startMilestoneInsurance(state, totalLevel, now);
+      logs.push(...entries);
 
       const eventMeta: LevelUpEventMeta = { skill, level: newLevel, totalLevel, chaosKeysAwarded, chaosKeyAwarded };
 
