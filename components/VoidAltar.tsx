@@ -4,7 +4,7 @@ import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { resolveModeRules } from '../config/gameModes';
-import { RITUALS } from '../config/economy';
+import { RITUALS, ritualFateCost } from '../config/economy';
 import { getChunkFrontier, chunkKey, chunkLabel } from '../utils/chunkAdjacency';
 import { chunkContentService } from '../services/ChunkContentService';
 import { X, ArrowRight } from 'lucide-react';
@@ -40,9 +40,9 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   // Cartographer chooser: null = closed, [] = frontier empty, else 3 options.
   const [chunkChoices, setChunkChoices] = useState<ChunkChoice[] | null>(null);
 
-  // Ritual fate costs scale with the run's game mode (see GameContext reducer).
+  // Ritual fate costs scale with the run's game mode, priced by the same
+  // ritualFateCost the engine checks against.
   const rules = resolveModeRules(gameModeId, customMode);
-  const ritualCost = (base: number) => Math.round(base * rules.ritualCostMultiplier);
 
   // Visual identity per ritual — name, effect and cost all come from
   // config/economy.ts (RITUALS), the same source the reducer and Codex use.
@@ -102,7 +102,7 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   const rituals = RITUALS
     .filter((r) => !r.chunkedOnly || gameModeId === 'chunked')
     .map((r) => {
-      const fate = r.fateCost ? ritualCost(r.fateCost) : 0;
+      const fate = ritualFateCost(r.id, rules.ritualCostMultiplier);
       const isGambit = r.id === 'GAMBIT';
       return {
         id: r.id,

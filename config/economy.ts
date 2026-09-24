@@ -410,6 +410,14 @@ export const RITUALS: Ritual[] = [
 
 export const getRitual = (id: Ritual['id']): Ritual => RITUALS.find(r => r.id === id)!;
 
+/**
+ * A ritual's Fate cost under the run's ritualCostMultiplier — for the Gambit,
+ * its minimum stake. The engine, the Void Altar and the Codex all price
+ * rituals through this, so what the Altar offers is what the engine accepts.
+ */
+export const ritualFateCost = (id: Ritual['id'], multiplier: number): number =>
+  Math.round((getRitual(id).fateCost ?? 0) * multiplier);
+
 export {
   BRUTUS_BOSS_NAME,
   CLUE_ONBOARDING_MINIMUMS,

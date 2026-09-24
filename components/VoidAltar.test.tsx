@@ -63,3 +63,19 @@ describe('VoidAltar buffs', () => {
     expect(screen.getByRole('button', { name: 'Close the Void Altar' })).toBeTruthy();
   });
 });
+
+describe('VoidAltar Gambit minimum stake', () => {
+  it.each([
+    ['casual', 10, 9, false],
+    ['hardcore', 20, 23, true],
+    ['vanilla', 15, 15, false],
+  ] as const)('shows and applies the %s minimum', async (gameModeId, fatePoints, minimum, disabled) => {
+    game.current = { ...game.current, gameModeId, fatePoints };
+    const { VoidAltar } = await import('./VoidAltar');
+    render(<VoidAltar onClose={vi.fn()} />);
+
+    const gambit = screen.getByRole('button', { name: /Void Gambit/ }) as HTMLButtonElement;
+    expect(within(gambit).getByText(`ALL Fate (min ${minimum})`)).toBeTruthy();
+    expect(gambit.disabled).toBe(disabled);
+  });
+});

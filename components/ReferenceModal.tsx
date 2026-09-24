@@ -7,7 +7,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
 import { REGION_MODIFIERS } from '../config/regionModifiers';
-import { CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, SKILL_CHAOS_MILESTONES, SPEND_TABLES, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL } from '../config/economy';
+import { CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { TableType } from '../types';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
@@ -80,7 +80,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
   const { gameModeId, customMode } = useGame();
   const activeMode = getGameMode(gameModeId);
   const rules = resolveModeRules(gameModeId, customMode);
-  const ritualCost = (base: number) => Math.round(base * rules.ritualCostMultiplier);
+  const ritualCost = (id: Ritual['id']) => ritualFateCost(id, rules.ritualCostMultiplier);
   const vanillaPolicyLabel = gameModeId === 'vanilla'
     ? 'Vanilla-only rules'
     : 'Vanilla-only (not active for this run)';
@@ -339,7 +339,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         {RITUALS.map(r => (
                                             <li key={r.id} className="flex justify-between gap-2">
                                                 <span>{r.name}</span>
-                                                <span className="font-mono text-gray-300 shrink-0">{r.fateCost ? `${ritualCost(r.fateCost)} Fate` : `${r.keyCost} Keys`}</span>
+                                                <span className="font-mono text-gray-300 shrink-0">{r.fateCost ? `${ritualCost(r.id)} Fate` : `${r.keyCost} Keys`}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -521,7 +521,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     <p className="text-xs text-gray-400 leading-relaxed">
                                         Every level has a separate {LEVEL_CHAOS_CHANCE}% Chaos chance on every level. Guaranteed Chaos Keys also arrive at levels {SKILL_CHAOS_MILESTONES.join(', ')}.
                                         <br/><br/>
-                                        Also obtainable via the Ritual of Chaos ({ritualCost(25)} Fate Points).
+                                        Also obtainable via the Ritual of Chaos ({ritualCost('CHAOS')} Fate Points).
                                     </p>
                                 </div>
                                 <div className="bg-black/20 p-4 rounded-lg border border-amber-500/30">
@@ -559,7 +559,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                             <h3 className={`${ui.color} font-bold text-lg mb-2`}>{r.name}</h3>
                                             <p className="text-sm text-gray-300 mb-4">{r.tagline}{r.chunkedOnly ? ' (Chunked mode only)' : ''}</p>
                                             <div className="text-xs font-mono bg-black/40 p-3 rounded border border-white/5 text-gray-400">
-                                                Cost: <span className="text-white font-bold">{r.fateCost ? `${ritualCost(r.fateCost)} Fate Points` : `${r.keyCost} Keys`}</span>
+                                                Cost: <span className="text-white font-bold">{r.fateCost ? `${ritualCost(r.id)} Fate Points` : `${r.keyCost} Keys`}</span>
                                                 <br/>
                                                 Effect: {r.effect}
                                             </div>

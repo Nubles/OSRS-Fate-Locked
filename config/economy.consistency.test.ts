@@ -7,6 +7,7 @@ import {
   VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule,
   FAILURE_FATE_BY_SOURCE, SKILL_CHAOS_MILESTONES,
   failureFateForSkillLevel, failureFateForSource, isSkillChaosMilestone,
+  ritualFateCost,
 } from './economy';
 import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
@@ -151,6 +152,15 @@ describe('economy ↔ engine consistency', () => {
   it('defines all six Void Altar rituals with a cost', () => {
     expect(RITUALS.map(r => r.id).sort()).toEqual(['CARTOGRAPHER', 'CHAOS', 'GAMBIT', 'GREED', 'LUCK', 'TRANSMUTE']);
     for (const r of RITUALS) expect((r.fateCost ?? 0) + (r.keyCost ?? 0)).toBeGreaterThan(0);
+  });
+
+  it("scales Fate ritual prices, including the Gambit's minimum stake, by the mode", () => {
+    const gambitMinimum = (mode: string) => ritualFateCost('GAMBIT', resolveModeRules(mode).ritualCostMultiplier);
+    expect(gambitMinimum('vanilla')).toBe(15);
+    expect(gambitMinimum('casual')).toBe(9);
+    expect(gambitMinimum('hardcore')).toBe(23);
+    expect(ritualFateCost('CHAOS', 0.6)).toBe(15);
+    expect(ritualFateCost('TRANSMUTE', 1.5)).toBe(0);
   });
 
   it('keeps the finite Vanilla boss reserve and every boss schedule aligned', () => {

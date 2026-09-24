@@ -8,7 +8,7 @@ import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
-import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, GAMBIT_KEYS_PER } from '../config/economy';
+import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, GAMBIT_KEYS_PER } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
@@ -706,12 +706,6 @@ const chainAppendedHistory = (prev: GameState['history'], next: GameState['histo
   }
   return out;
 };
-
-// Fate cost of a ritual after the run's mode multiplier. Costs live in
-// config/economy.ts (RITUALS) — the single source the Codex and Void Altar
-// also read, so the three can never disagree.
-const ritualFateCost = (id: 'LUCK' | 'GREED' | 'CHAOS' | 'CARTOGRAPHER', mult: number): number =>
-  Math.round((getRitual(id).fateCost ?? 0) * mult);
 
 const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
   const now = Date.now();
@@ -2425,8 +2419,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({
 
   /** Void Gambit: stake ALL fate on a coin flip (RNG here — reducer stays pure). */
   const performGambit = useCallback(() => {
-    const stake = stateRef.current.fatePoints;
-    const min = getRitual('GAMBIT').fateCost ?? 15;
+    const current = stateRef.current;
+    const stake = current.fatePoints;
+    // The minimum stake scales with the mode, exactly as the Altar shows it.
+    const min = ritualFateCost('GAMBIT', resolveModeRules(current.gameModeId, current.customMode).ritualCostMultiplier);
     if (stake < min) return;
     const won = nextFloat('gambit') < 0.5;
     const keysWon = Math.max(1, Math.floor(stake / GAMBIT_KEYS_PER));

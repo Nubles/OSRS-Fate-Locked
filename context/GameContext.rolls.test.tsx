@@ -96,3 +96,17 @@ it('keeps the durable writer usable after StrictMode effect replay', async () =>
   expect(current.saveStatus).toBe('saved');
   expect(JSON.parse(localStorage.getItem('strict-audit')!).userNotes.audit).toBe('Persist after replay');
 });
+
+it.each([
+  ['casual', 10, true],
+  ['hardcore', 20, false],
+  ['hardcore', 23, true],
+  ['vanilla', 14, false],
+] as const)('stakes a %s Gambit of %i Fate only at the mode-scaled minimum the Altar shows', async (mode, fate, accepted) => {
+  // Casual's minimum is 9 (15 x 0.6) and Hardcore's 23 (15 x 1.5); Vanilla's stays 15.
+  localStorage.setItem('roll-audit', JSON.stringify({ ...createFreshState(), fatePoints: fate, gameModeId: mode, gameModeLocked: true }));
+  mount(); await settle();
+  act(() => current.performGambit());
+  expect(current.fatePoints).toBe(accepted ? 0 : fate);
+  expect(current.history.filter(e => e.meta?.ritual === 'GAMBIT')).toHaveLength(accepted ? 1 : 0);
+});
