@@ -121,19 +121,29 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
   const isBroken = brokenSet.has(idx);
   const hasViolation = violationSet.has(idx);
   const totalIssues = chainReport.brokenAt.length + replay.violations.length;
+  // Same verdict as the share card (auditHistory): only a broken hash chain is
+  // "broken"; replay notes such as legacy ritual estimates are warnings.
+  const integrity: 'ok' | 'warning' | 'broken' = chainReport.brokenAt.length > 0
+    ? 'broken'
+    : replay.violations.length > 0 ? 'warning' : 'ok';
+  const pityRules = resolveModeRules(gameModeId, customMode);
   const day = toRunDay(current.timestamp, firstTs);
 
   return (
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Run timelapse" tabIndex={-1} className="fixed inset-0 z-[100] bg-black/95 flex flex-col">
       {/* Top banner — integrity status */}
-      <div className={`shrink-0 px-6 py-3 flex items-center justify-between border-b ${totalIssues === 0 ? 'border-emerald-500/40 bg-emerald-950/40' : 'border-red-500/50 bg-red-950/40'}`}>
+      <div className={`shrink-0 px-6 py-3 flex items-center justify-between border-b ${integrity === 'ok' ? 'border-emerald-500/40 bg-emerald-950/40' : integrity === 'warning' ? 'border-amber-500/40 bg-amber-950/30' : 'border-red-500/50 bg-red-950/40'}`}>
         <div className="flex items-center gap-3">
-          {totalIssues === 0
+          {integrity === 'ok'
             ? <ShieldCheck size={22} className="text-emerald-400" />
-            : <ShieldAlert size={22} className="text-red-400" />}
+            : <ShieldAlert size={22} className={integrity === 'warning' ? 'text-amber-400' : 'text-red-400'} />}
           <div>
-            <div className={`text-sm font-bold ${totalIssues === 0 ? 'text-emerald-300' : 'text-red-300'}`}>
-              {totalIssues === 0 ? 'INTEGRITY: OK' : `INTEGRITY: BROKEN — ${totalIssues} issue${totalIssues === 1 ? '' : 's'}`}
+            <div className={`text-sm font-bold ${integrity === 'ok' ? 'text-emerald-300' : integrity === 'warning' ? 'text-amber-300' : 'text-red-300'}`}>
+              {integrity === 'ok'
+                ? 'INTEGRITY: OK'
+                : integrity === 'warning'
+                  ? `REPLAY WARNING — ${replay.violations.length} note${replay.violations.length === 1 ? '' : 's'}`
+                  : `INTEGRITY: BROKEN — ${totalIssues} issue${totalIssues === 1 ? '' : 's'}`}
             </div>
             <div className="text-[10px] font-mono text-gray-400 tracking-wide">
               runId: <span className="text-gray-200">{runId ?? '—'}</span>
@@ -152,7 +162,7 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
             <Download size={13} />
             {bundleBusy ? 'Signing…' : 'Export Verified Bundle'}
           </button>
-          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-white"><X size={20} /></button>
+          <button onClick={onClose} aria-label="Close timelapse" className="p-1.5 text-gray-400 hover:text-white"><X size={20} /></button>
         </div>
       </div>
 
@@ -167,7 +177,7 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
         <Stat label="Keys" value={statsAtIdx.keys} />
         <Stat label="Omni-Keys" value={statsAtIdx.specialKeys} accent="text-amber-300" />
         <Stat label="Chaos" value={statsAtIdx.chaosKeys} accent="text-rose-300" />
-        <Stat label="Fate" value={`${statsAtIdx.fatePoints}/50`} />
+        <Stat label="Fate" value={pityRules.pityEnabled ? `${statsAtIdx.fatePoints}/${pityRules.pityThreshold}` : statsAtIdx.fatePoints} />
         <div className="ml-auto text-gray-400 font-mono text-[10px]">{idx + 1} / {chained.length}</div>
       </div>
 
