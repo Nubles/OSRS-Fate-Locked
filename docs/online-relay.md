@@ -20,8 +20,11 @@ fragment. After the player approves the current profile, the browser:
 
 1. stores the pairing session and its private write token;
 2. builds the current v4 profile;
-3. publishes it to the fixed relay endpoint; and
-4. republishes when that profile's authored state changes.
+3. publishes it to the fixed relay endpoint at once; and
+4. republishes when that profile's authored state changes. Each publish is a
+   full KV write, so changes are coalesced: the newest state is sent once they
+   pause for 5 seconds, or after a minute if they never pause, with one
+   request in flight at a time. Retry publishes at once.
 
 RuneLite performs only the fixed `GET` request, with optional ETag caching. A
 valid response replaces its imported snapshot. A malformed or unsupported

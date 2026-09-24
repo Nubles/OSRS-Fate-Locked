@@ -30,6 +30,11 @@ vi.mock('../utils/runeliteExport', () => ({
   buildBundlePayload: buildBundlePayloadMock,
 }));
 
+// The publish contract: wait for 5 s without changes, but never more than
+// 60 s during nonstop changes; pairing and Retry publish at once.
+const QUIET_MS = 5_000;
+const MAX_WAIT_MS = 60_000;
+
 const deferred = <T,>() => {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
@@ -40,9 +45,16 @@ const deferred = <T,>() => {
   return { promise, resolve, reject };
 };
 
+const advance = async (ms: number) => {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(ms);
+  });
+};
+
 describe('OnlineSyncDriver', () => {
   const storage: Record<string, string> = {};
   let fetchMock: ReturnType<typeof vi.fn>;
+  const sentPayloads = () => fetchMock.mock.calls.map(([, init]) => JSON.parse(init.body).payload);
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -79,15 +91,13 @@ describe('OnlineSyncDriver', () => {
     vi.restoreAllMocks();
   });
 
-  it('publishes again when pairing is replaced without a run change', async () => {
+  it('publishes a new pairing at once, without a run change', async () => {
     const codeA = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
     const codeB = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
     expect(relaySync.adoptCode(codeA)).toBe(true);
     render(<OnlineSyncDriver />);
 
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1500);
-    });
+    await advance(QUIET_MS);
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
       `https://relay.test/r/${codeA}`,
     );
@@ -95,9 +105,7 @@ describe('OnlineSyncDriver', () => {
     await act(async () => {
       expect(relaySync.adoptCode(codeB)).toBe(true);
     });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1500);
-    });
+    await advance(0);
     expect(fetchMock.mock.calls[1]?.[0]).toBe(
       `https://relay.test/r/${codeB}`,
     );
@@ -112,43 +120,34 @@ describe('OnlineSyncDriver', () => {
     relaySync.adoptCode(codeA);
     render(<OnlineSyncDriver />);
 
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1500);
-    });
+    await advance(QUIET_MS);
+    buildBundlePayloadMock.mockRejectedValueOnce(
+      new Error('current build'),
+    );
     await act(async () => {
       relaySync.adoptCode(codeB);
       buildA.reject(new Error('stale build'));
       await Promise.resolve();
     });
-    expect(report).not.toHaveBeenCalled();
-
-    buildBundlePayloadMock.mockRejectedValueOnce(
-      new Error('current build'),
-    );
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1500);
-    });
+    await advance(0);
+    expect(report).toHaveBeenCalledTimes(1);
     expect(report).toHaveBeenCalledWith(
       expect.objectContaining({ message: 'current build' }),
     );
   });
 
-  it('rebuilds current state when Retry requests another push', async () => {
+  it('rebuilds current state at once when Retry requests another push', async () => {
     const code = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
     relaySync.adoptCode(code);
     render(<OnlineSyncDriver />);
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1500);
-    });
+    await advance(QUIET_MS);
     expect(buildBundlePayloadMock).toHaveBeenCalledTimes(1);
 
     act(() => {
       relaySync.reportPushFailure(new Error('offline'));
       expect(relaySync.requestPush()).toBe(true);
     });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1500);
-    });
+    await advance(0);
 
     expect(buildBundlePayloadMock).toHaveBeenCalledTimes(2);
     expect(buildBundlePayloadMock.mock.calls[1]?.[1]).toMatchObject({
@@ -158,18 +157,87 @@ describe('OnlineSyncDriver', () => {
       customMode: null,
     });
   });
+
+  it('coalesces a burst of run changes into one publish of the newest state', async () => {
+    relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    const view = render(<OnlineSyncDriver />);
+    await advance(QUIET_MS);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // Ten actions two seconds apart, like rolls between reveal animations.
+    for (let revision = 10; revision < 20; revision += 1) {
+      stableGameState.runRevision = revision;
+      view.rerender(<OnlineSyncDriver />);
+      await advance(2_000);
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    await advance(QUIET_MS);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(buildBundlePayloadMock).toHaveBeenCalledTimes(2);
+    expect(buildBundlePayloadMock.mock.calls[1]?.[1]).toMatchObject({ runRevision: 19 });
+  });
+
+  it('still publishes once a minute while changes never pause', async () => {
+    relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    const view = render(<OnlineSyncDriver />);
+    await advance(QUIET_MS);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // A change every 2 s from t=5 s to t=73 s never leaves 5 s of quiet;
+    // the first of them is published by t=65 s regardless.
+    for (let step = 1; step <= 35; step += 1) {
+      stableGameState.runRevision = 9 + step;
+      view.rerender(<OnlineSyncDriver />);
+      await advance(2_000);
+      if (5_000 + step * 2_000 === QUIET_MS + MAX_WAIT_MS - 2_000) {
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+      }
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(buildBundlePayloadMock.mock.calls[1]?.[1]).toMatchObject({ runRevision: 39 });
+
+    await advance(QUIET_MS);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(buildBundlePayloadMock.mock.calls[2]?.[1]).toMatchObject({ runRevision: 44 });
+  });
+
+  it('keeps one publish in flight, then sends only the newest state', async () => {
+    const slow = deferred<{ json: string; compressed: string }>();
+    buildBundlePayloadMock.mockReturnValueOnce(slow.promise);
+    relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    const view = render(<OnlineSyncDriver />);
+    await advance(QUIET_MS);
+    expect(buildBundlePayloadMock).toHaveBeenCalledTimes(1);
+
+    for (const revision of [10, 11, 12]) {
+      stableGameState.runRevision = revision;
+      view.rerender(<OnlineSyncDriver />);
+      await advance(QUIET_MS + 1_000);
+    }
+    expect(buildBundlePayloadMock).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      slow.resolve({ json: '{}', compressed: 'revision-9' });
+    });
+    await advance(0);
+    expect(buildBundlePayloadMock).toHaveBeenCalledTimes(2);
+    expect(buildBundlePayloadMock.mock.calls[1]?.[1]).toMatchObject({ runRevision: 12 });
+    expect(sentPayloads()).toEqual(['revision-9', 'bundle']);
+  });
+
   it('does not publish an old profile build that completes after the new profile', async () => {
     const oldBuild = deferred<{ json: string; compressed: string }>();
     buildBundlePayloadMock.mockReturnValueOnce(oldBuild.promise).mockResolvedValueOnce({ json: '{}', compressed: 'profile-b' });
     relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
     const old = render(<OnlineSyncDriver />);
-    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    await advance(QUIET_MS);
     old.unmount();
     stableGameState.runId = 'run-b';
     render(<OnlineSyncDriver />);
-    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    await advance(QUIET_MS);
     await act(async () => { oldBuild.resolve({ json: '{}', compressed: 'profile-a' }); await Promise.resolve(); });
-    expect(fetchMock.mock.calls.map(([, init]) => JSON.parse(init.body).payload)).toEqual(['profile-b']);
+    expect(sentPayloads()).toEqual(['profile-b']);
   });
 
   it('serializes an already-sent old profile write before the new profile write', async () => {
@@ -178,15 +246,15 @@ describe('OnlineSyncDriver', () => {
     buildBundlePayloadMock.mockResolvedValueOnce({ json: '{}', compressed: 'profile-a' }).mockResolvedValueOnce({ json: '{}', compressed: 'profile-b' });
     relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
     const old = render(<OnlineSyncDriver />);
-    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    await advance(QUIET_MS);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     old.unmount();
     stableGameState.runId = 'run-b';
     render(<OnlineSyncDriver />);
-    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    await advance(QUIET_MS);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     await act(async () => { oldNetwork.resolve({ ok: true }); await Promise.resolve(); });
-    expect(fetchMock.mock.calls.map(([, init]) => JSON.parse(init.body).payload)).toEqual(['profile-a', 'profile-b']);
+    expect(sentPayloads()).toEqual(['profile-a', 'profile-b']);
     expect(relaySync.status).toBe('synced');
   });
 
