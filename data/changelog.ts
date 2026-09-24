@@ -43,7 +43,7 @@ export const CHANGELOG_RELEASES = [
         'Discord announcements no longer repeat unlocks that arrive with an imported save or sync code, and keep working after a save made on a device with a wrong clock.',
         'Collection Log prices recover after a failed price download, a full browser storage no longer crashes the app from the Roll Inbox, and feature reveal messages no longer repeat when storage is full.',
         'Skill cards respond to Enter and Space, the guided tour no longer skips a step when Enter presses Next, and the Codex and Timelapse close buttons are labelled for screen readers.',
-        'Auto-Roll errors and legacy mode descriptions no longer show garbled characters. Unlock share text uses the Fate Locked Ironman name and only reports a copy when it succeeds.',
+        'Auto-Roll errors and legacy mode descriptions no longer show garbled characters. Share text uses the Fate Locked Ironman name, and unlock sharing only reports a copy when it succeeds.',
       ],
       changed: [
         'Spend Keys cards show Blocked when a table\'s remaining unlocks are out of reach instead of offering a roll that cannot happen. Chunked no longer reads Done while land reached by Sailing remains, and Housing no longer counts the retired Aquarium.',

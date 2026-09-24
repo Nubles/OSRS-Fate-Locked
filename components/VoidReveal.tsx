@@ -140,7 +140,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
   }, [isChaos, animationsEnabled]);
 
   const handleCopyFlex = async () => {
-      const text = `Fate-Locked Ironman Update\nJust unlocked: **${itemName}** (${displayItemType})!\n#OSRS #FateLocked`;
+      const text = `Fate Locked Ironman Update\nJust unlocked: **${itemName}** (${displayItemType})!\n#OSRS #FateLocked`;
       try {
         await navigator.clipboard.writeText(text);
       } catch {

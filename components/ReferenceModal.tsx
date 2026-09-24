@@ -116,7 +116,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
              <div className="bg-osrs-gold/10 p-2 rounded-lg border border-osrs-gold/20">
                 <HelpCircle className="w-5 h-5 text-osrs-gold" />
              </div>
-            <h2 className="text-xl font-bold text-gray-100 tracking-wide">Fate-Locked Ironman: Codex</h2>
+            <h2 className="text-xl font-bold text-gray-100 tracking-wide">Fate Locked Ironman: Codex</h2>
             <span
               className="text-[10px] font-bold uppercase tracking-wider text-amber-200 bg-amber-900/40 px-2 py-1 rounded border border-amber-500/30"
               title={activeMode.description}

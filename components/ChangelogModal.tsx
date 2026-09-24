@@ -88,7 +88,7 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
           <div className="min-w-0 flex-1">
             <h2 id="whats-new-title" className="text-lg font-bold text-gray-100">What&apos;s New</h2>
             <p id="whats-new-summary" className="text-xs text-gray-500">
-              Release notes for Fate-Locked Ironman, newest first.
+              Release notes for Fate Locked Ironman, newest first.
             </p>
           </div>
           <button
