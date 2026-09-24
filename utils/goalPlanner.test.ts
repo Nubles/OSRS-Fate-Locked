@@ -168,6 +168,16 @@ describe('planForTarget — quests', () => {
     expect(mining('Elemental Workshop I', 2, 15).unlockTable).toBeUndefined();
   });
 
+  it('lists skill steps alphabetically', () => {
+    const plan = planForTarget('quest', "Legends' Quest", maxedUnlocks({
+      levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 1])),
+    }))!;
+    const ids = plan.skillSteps.map(step => step.id);
+
+    expect(ids.length).toBeGreaterThan(3);
+    expect(ids).toEqual([...ids].sort((a, b) => a.localeCompare(b)));
+  });
+
   it('includes a Quest Point step for a quest requirement', () => {
     const plan = planForTarget('quest', 'Black Knights\' Fortress', maxedUnlocks())!;
 

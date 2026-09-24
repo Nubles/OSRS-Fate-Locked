@@ -415,7 +415,7 @@ function buildPlanFromRequirements(
         unlockTable: skill !== 'Combat level' && methodCap < lvl ? TableType.SKILLS : undefined,
       };
     })
-    .sort((a, b) => Number(a.done) - Number(b.done) || b.id.localeCompare(a.id));
+    .sort((a, b) => Number(a.done) - Number(b.done) || a.id.localeCompare(b.id));
 
   // Quest steps (already in dependency order from the walk).
   const questSteps: PlanStep[] = reqs.order
