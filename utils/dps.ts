@@ -38,11 +38,13 @@ export const STANCES: Record<Style, Stance[]> = {
     { id: 'rapid', label: 'Rapid', atk: 0, str: 0, speedDelta: -1 },
     { id: 'longrange', label: 'Longrange', atk: 0, str: 0, speedDelta: 0 },
   ],
+  // Only Accurate adds Magic accuracy, and only 2 (Wiki DPS calculator,
+  // getPlayerMaxMagicAttackRoll).
   magic: [
     { id: 'standard', label: 'Manual / autocast', atk: 0, str: 0, speedDelta: 0 },
-    { id: 'longrange', label: 'Powered longrange', atk: 1, str: 0, speedDelta: 0 },
+    { id: 'longrange', label: 'Powered longrange', atk: 0, str: 0, speedDelta: 0 },
     { id: 'defensive', label: 'Defensive', atk: 0, str: 0, speedDelta: 0 },
-    { id: 'accurate', label: 'Accurate', atk: 3, str: 0, speedDelta: 0 },
+    { id: 'accurate', label: 'Accurate', atk: 2, str: 0, speedDelta: 0 },
   ],
 };
 

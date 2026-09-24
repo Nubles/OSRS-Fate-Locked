@@ -128,6 +128,16 @@ describe('dps formulas', () => {
     expect(computeDps({ ...baseInput(), style: 'ranged', attackType: 'ranged', stanceId: 'rapid' }).effAtk).toBe(107);
   });
 
+  it('gives Magic +2 accuracy on Accurate and none on Longrange', () => {
+    // Wiki DPS calculator, getPlayerMaxMagicAttackRoll: only Accurate adds 2.
+    const magic = (stanceId: string) => computeDps({
+      ...baseInput(), style: 'magic', attackType: 'magic', stanceId, baseSpellMax: 30,
+    }).effAtk;
+    expect(magic('accurate')).toBe(110); // 99 + 2 + 9
+    expect(magic('longrange')).toBe(108);
+    expect(magic('defensive')).toBe(108);
+  });
+
   it('rapid stance attacks faster (higher dps, shorter interval)', () => {
     const acc = computeDps({ ...baseInput(), style: 'ranged', stanceId: 'accurate', gear: { accuracy: 70, meleeStr: 0, rangedStr: 70, magicDmgPct: 0, speedTicks: 5 } });
     const rapid = computeDps({ ...baseInput(), style: 'ranged', stanceId: 'rapid', gear: { accuracy: 70, meleeStr: 0, rangedStr: 70, magicDmgPct: 0, speedTicks: 5 } });
