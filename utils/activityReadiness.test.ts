@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import type { UnlockState } from '../types';
 import { getActivityReq } from '../data/activityRequirements';
 import { SKILLS_LIST } from '../data/items';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { evaluateActivityReadiness } from './activityReadiness';
+import { evaluateDiaryTaskEligibility } from './journalStatus';
 
 const unlocked = (over: Partial<UnlockState> = {}): UnlockState => ({
   equipment: {}, skills: {}, levels: {}, regions: [], chunks: [], mobility: [],
@@ -203,6 +205,33 @@ describe('evaluateActivityReadiness', () => {
         { kind: 'combat', label: 'Combat level 40' },
       ],
     });
+  });
+
+  it("gates Warriors' Guild entry on tier-capped levels, as its diary task does", () => {
+    const task = ALL_DIARY_TASKS.find(candidate => candidate.id === 'fal_hard_10')!;
+    const profile = (skills: Record<string, number>, levels: Record<string, number>) =>
+      unlocked({ regions: ["Warriors' Guild"], skills, levels });
+    const cases = [
+      // Raw 70 + 60 is 130, but tier 5 caps both at 50.
+      profile({ Attack: 5, Strength: 5 }, { Attack: 70, Strength: 60 }),
+      profile({ Attack: 7, Strength: 6 }, { Attack: 70, Strength: 60 }),
+      // Raw 99 Attack capped at 90 by tier 9.
+      profile({ Attack: 9, Strength: 1 }, { Attack: 99, Strength: 1 }),
+      profile({ Attack: 10, Strength: 1 }, { Attack: 99, Strength: 1 }),
+      // A locked skill counts for nothing.
+      profile({ Strength: 10 }, { Attack: 99, Strength: 40 }),
+    ];
+
+    expect(evaluateActivityReadiness(true, getActivityReq("Warriors' Guild"), cases[0], 'vanilla')).toEqual({
+      status: 'NOT_READY',
+      blockers: [{ kind: 'skill', label: '99 Attack or Strength, or 130 combined' }],
+    });
+    expect(cases.map(unlocks => evaluateActivityReadiness(true, getActivityReq("Warriors' Guild"), unlocks, 'vanilla').status))
+      .toEqual(['NOT_READY', 'READY', 'NOT_READY', 'READY', 'NOT_READY']);
+    for (const unlocks of cases) {
+      expect(evaluateActivityReadiness(true, getActivityReq("Warriors' Guild"), unlocks, 'vanilla').status === 'READY')
+        .toBe(evaluateDiaryTaskEligibility(task, unlocks, 'vanilla').eligible);
+    }
   });
 
   it('deduplicates manual checks once machine gates are met', () => {

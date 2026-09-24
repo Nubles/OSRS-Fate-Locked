@@ -2,7 +2,7 @@ import type { ActivityReq } from '../data/activityRequirements';
 import type { UnlockState } from '../types';
 import { meetsSkillRequirement } from './journalStatus';
 import { isAreaReachable } from './reachability';
-import { actualCombatLevel } from './slayerReach';
+import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 import { QUEST_DATA } from '../data/questData';
 import { pendingQuestProgress } from '../data/questProgress';
 
@@ -34,9 +34,10 @@ export function evaluateActivityReadiness(
     if (points < requirement.questPoints) blockers.push({ kind: 'questPoints', label: `${requirement.questPoints} Quest Points` });
   }
   if (requirement?.warriorsGuildEntry) {
-    const attack = unlocks.levels.Attack ?? 1;
-    const strength = unlocks.levels.Strength ?? 1;
-    if (attack < 99 && strength < 99 && attack + strength < 130) blockers.push({ kind: 'skill', label: '99 Attack or Strength, or 130 combined' });
+    // Tier-capped, like the diary's "Enter the Warriors' Guild" task.
+    const oneAt99 = meetsSkillRequirement(unlocks, 'Attack', 99) || meetsSkillRequirement(unlocks, 'Strength', 99);
+    const combined = effectiveSkillLevel(unlocks, 'Attack') + effectiveSkillLevel(unlocks, 'Strength');
+    if (!oneAt99 && combined < 130) blockers.push({ kind: 'skill', label: '99 Attack or Strength, or 130 combined' });
   }
   const requiredAreas = requirement?.requiredAreas ?? [];
   if (
