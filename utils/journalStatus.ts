@@ -329,7 +329,9 @@ const evaluateDiaryRequirement = (
   gameModeId?: string,
 ): DiaryTaskEligibility => {
   const blockers: EligibilityBlocker[] = [];
-  const evidence: string[] = [...(requirement.items ?? [])];
+  // Items are never assumed to be in the player's bank: like Sheep Shearer's
+  // wool, each one is a one-tap confirmation before completion.
+  const evidence: string[] = [];
   const equipmentChecks: string[] = [];
 
   for (const merchant of requirement.merchants ?? []) {
@@ -461,7 +463,12 @@ const evaluateDiaryRequirement = (
     });
   }
 
-  const manual = readinessFields(blockers, [...(requirement.manualRequirements ?? []), ...equipmentChecks, ...pendingQuestProgress(requirement.questProgress, unlocks.quests)]);
+  const manual = readinessFields(blockers, [
+    ...(requirement.manualRequirements ?? []),
+    ...(requirement.items ?? []),
+    ...equipmentChecks,
+    ...pendingQuestProgress(requirement.questProgress, unlocks.quests),
+  ]);
   return { ...manual, blockers, evidence };
 };
 

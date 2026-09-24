@@ -126,7 +126,10 @@ describe('diary equipment and mobility permissions in Vanilla', () => {
   it('does not claim a net catch is doable with Weapon locked, but allows bare hands at 52 Hunter', () => {
     const u = skilledAccount({ equipment: {}, skills: { Hunter: 6 }, levels: { Hunter: 42 } });
     expect(evaluateDiaryTaskEligibility(task('lum_med_11'), u, 'vanilla').machineEligible).toBe(false);
-    expect(evaluateDiaryTaskEligibility(task('lum_med_11'), { ...u, levels: { Hunter: 52 } }, 'vanilla').eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(task('lum_med_11'), { ...u, levels: { Hunter: 52 } }, 'vanilla')).toMatchObject({
+      machineEligible: true,
+      manualChecks: ['Impling jar'],
+    });
   });
 
   it('requires actual wearable Raiments slots for a lower-level route, preserving the no-outfit route', () => {

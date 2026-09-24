@@ -403,7 +403,8 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                           <WikiIcon file={`${skill}_icon.png`} alt="" size={8} /> {skill} {level as number}
                                         </span>
                                       ))}
-                                      {task.items?.map(item => (
+                                      {/* Items awaiting confirmation appear once, as Confirm chips below. */}
+                                      {task.items?.filter(item => !taskEligibility.manualChecks.includes(item)).map(item => (
                                         <span key={item} className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-white/5 text-gray-500 bg-black/30">
                                           <WikiIcon file="Inventory.png" alt="" size={8} /> {item}
                                         </span>

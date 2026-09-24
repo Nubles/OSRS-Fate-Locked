@@ -126,7 +126,7 @@ describe('manual journal readiness', () => {
       id: 'manual-route-preference',
       oneOf: [
         { label: 'Manual route', manualRequirements: ['Manual check'] },
-        { label: 'Automatic route', items: ['Test item'] },
+        { label: 'Automatic route', skills: { Slayer: 1 } },
       ],
     }, unlocked());
 
@@ -136,7 +136,25 @@ describe('manual journal readiness', () => {
       manualChecks: [],
       blockers: [],
     });
-    expect(result.evidence).toContain('Automatic route: Test item');
+    expect(result.evidence).toContain('Automatic route: Slayer 1');
+  });
+
+  it('asks to confirm items instead of assuming the player has them', () => {
+    const result = evaluateDiaryTaskEligibility({
+      id: 'item-route',
+      oneOf: [
+        { label: 'Owned item', items: ['Test item'] },
+        { label: 'Locked route', skills: { Agility: 99 } },
+      ],
+    }, unlocked());
+
+    expect(result).toMatchObject({
+      machineEligible: true,
+      confirmable: true,
+      eligible: false,
+      manualChecks: ['Test item'],
+      blockers: [],
+    });
   });
 
   it('keeps machine blockers ahead of manual confirmation', () => {
@@ -605,7 +623,7 @@ describe('diary alternative requirement routes', () => {
     })).eligible).toBe(false);
   });
 
-  it('keeps common and route item requirements visible but non-blocking', () => {
+  it('asks to confirm common and route items without blocking the task', () => {
     const task = {
       id: 'muddy-chest',
       items: ['Muddy key'],
@@ -617,8 +635,9 @@ describe('diary alternative requirement routes', () => {
 
     const result = evaluateDiaryTaskEligibility(task as any, unlocked());
 
-    expect(result.eligible).toBe(true);
-    expect(result.evidence).toContain('Muddy key');
+    expect(result.machineEligible).toBe(true);
+    expect(result.eligible).toBe(false);
+    expect(result.manualChecks).toEqual(['Muddy key', 'Knife or slashing weapon']);
     expect(result.evidence).toContain('Slashing route: Knife or slashing weapon');
   });
 });
@@ -836,22 +855,24 @@ describe('audited diary route eligibility', () => {
       levels: { Woodcutting: 50 },
     };
 
-    expect(evaluateDiaryTaskEligibility(task('kar_med_8'), unlocked({
+    const kharazi = evaluateDiaryTaskEligibility(task('kar_med_8'), unlocked({
       ...shared,
       regions: ['Kharazi Jungle'],
-    })).eligible).toBe(true);
+    }));
+    expect(kharazi.machineEligible).toBe(true);
+    expect(kharazi.manualChecks).toContain('Any axe');
     expect(evaluateDiaryTaskEligibility(task('kar_med_9'), unlocked({
       ...shared,
       regions: ['Tai Bwo Wannai'],
       quests: ['Jungle Potion'],
-    })).eligible).toBe(true);
+    })).machineEligible).toBe(true);
   });
 
   it('allows Tai Bwo Wannai Cleanup without Shilo Village access', () => {
     expect(evaluateDiaryTaskEligibility(task('kar_med_19'), unlocked({
       skills: { Mining: 4 }, levels: { Mining: 40 },
       quests: ['Jungle Potion'], regions: ['Tai Bwo Wannai'],
-    })).eligible).toBe(true);
+    })).machineEligible).toBe(true);
   });
 
   it('does not require 79 Agility on the Kharazi machete route', () => {
@@ -862,7 +883,8 @@ describe('audited diary route eligibility', () => {
       regions: ['Kharazi Jungle'],
     }));
 
-    expect(result.eligible).toBe(true);
+    expect(result.machineEligible).toBe(true);
+    expect(result.blockers).toEqual([]);
   });
 
   it('requires the higher Fishing and Strength levels on the bare-handed shark route', () => {
@@ -892,7 +914,7 @@ describe('audited diary route eligibility', () => {
     expect(eligible.evidence.join(' ')).toContain('Access to Barbarian Fishing');
   });
 
-  it('models Morytania bare-handed fishing access as evidence while retaining its gates', () => {
+  it('asks to confirm Morytania bare-handed fishing access while retaining its gates', () => {
     const common = {
       quests: ['In Aid of the Myreque'], regions: ['Burgh de Rott'],
       skills: { Fishing: 10, Strength: 10 },
@@ -900,11 +922,11 @@ describe('audited diary route eligibility', () => {
     };
     const eligible = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked(common));
 
-    expect(eligible.eligible).toBe(true);
+    expect(eligible.machineEligible).toBe(true);
     expect(eligible.blockers).not.toContainEqual({
       kind: 'quest', label: 'Barbarian Training',
     });
-    expect(eligible.evidence).toContain('Access to Barbarian Fishing');
+    expect(eligible.manualChecks).toContain('Access to Barbarian Fishing');
 
     const missingQuest = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked({
       ...common, quests: [],
@@ -935,17 +957,20 @@ describe('audited diary route eligibility', () => {
     });
   });
 
-  it('allows a pre-cooked oomlie wrap without the cooking route', () => {
-    expect(evaluateDiaryTaskEligibility(task('kar_hard_3'), unlocked()).eligible)
-      .toBe(true);
+  it('allows a pre-cooked oomlie wrap without the cooking route, once confirmed', () => {
+    expect(evaluateDiaryTaskEligibility(task('kar_hard_3'), unlocked())).toMatchObject({
+      machineEligible: true,
+      eligible: false,
+      manualChecks: ['Cooked oomlie wrap'],
+    });
   });
 
-  it('allows an existing or mounted Digsite pendant without crafting Magic', () => {
+  it('allows an existing or mounted Digsite pendant without crafting Magic, once confirmed', () => {
     expect(evaluateDiaryTaskEligibility(task('var_med_7'), unlocked({
       quests: ['The Dig Site'], regions: ['Digsite'],
       mobility: ['Digsite Pendant'],
       skills: { Magic: 1 }, levels: { Magic: 1 },
-    })).eligible).toBe(true);
+    }))).toMatchObject({ machineEligible: true, eligible: false, manualChecks: ['Digsite pendant'] });
   });
 
   it('accepts each Warriors Guild skill route', () => {
