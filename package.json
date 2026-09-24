@@ -23,7 +23,7 @@
     "content:sync": "node scripts/sync-collection-log.mjs && node scripts/sync-combat-achievements.mjs && node scripts/check-content-sync.mjs",
     "content:verify": "npm run diary:verify && npm run chunks:verify && npm run quests:verify && npm run quest-routes:verify && npm run walkthroughs:verify && npm run quest-evidence:verify && vitest run data/contentBaseline.test.ts data/tasksConsistency.test.ts utils/taskIdMigrations.test.ts utils/caProgress.test.ts",
     "dev": "node scripts/gen-model-manifest.mjs && vite",
-    "build": "node scripts/gen-model-manifest.mjs && vite build",
+    "build": "node scripts/gen-model-manifest.mjs && vite build && node scripts/check-entry-budget.mjs",
     "build:runeproof-preview": "node scripts/gen-model-manifest.mjs && vite build --mode runeproof-preview --outDir dist-runeproof-preview",
     "preview": "vite preview",
     "changelog:verify": "node scripts/verify-player-facing-changelog.mjs",

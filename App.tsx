@@ -11,13 +11,7 @@ import { Dashboard } from './components/Dashboard';
 const LogViewer = lazyWithRetry(() => import('./components/LogViewer').then(m => ({ default: m.LogViewer })));
 import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { PopOnChange } from './components/PopOnChange';
-import { CommandPalette } from './components/CommandPalette';
-import { GuidedTour } from './components/GuidedTour';
-import { QuestCompleteOverlay } from './components/QuestCompleteOverlay';
 import { WikiIcon } from './components/WikiIcon';
-import { VoidAltar } from './components/VoidAltar';
-import { TransmutationEffect } from './components/TransmutationEffect';
-import { ClarityEffect, GreedEffect, ChaosEffect } from './components/RitualEffects';
 import { EffectsLayer } from './components/EffectsLayer';
 import { OnlineSyncDriver } from './components/OnlineSyncDriver';
 import {
@@ -40,7 +34,6 @@ import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE, FATE_EXPORT_HINT } from './
 import { isOwnershipConflictBlock } from './utils/profileWriterLease';
 import { useFeatureGates } from './hooks/useFeatureGates';
 import { flashElement } from './utils/flash';
-import { OnboardingWizard } from './components/OnboardingWizard';
 import { ProfileSwitcher } from './components/ProfileSwitcher';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
 import { UpdateBanner } from './components/UpdateBanner';
@@ -52,7 +45,7 @@ import { resolveModeRules } from './config/gameModes';
 import { showToast } from './utils/toast';
 import { importUiDecision, isCurrentImportRequest } from './utils/gamePersistence';
 import { prefetchHeavyChunks } from './utils/prefetch';
-import { CHANGELOG_RELEASES, LATEST_CHANGELOG } from './data/changelog';
+import { LATEST_CHANGELOG_ID } from './data/changelogLatest';
 import type { FateCompensationChoice } from './types';
 import {
   changelogVisibilityReducer, markChangelogSeen,
@@ -78,11 +71,28 @@ const GameModePicker = lazyWithRetry(() => import('./components/GameModePicker')
 const SyncCodeModal = lazyWithRetry(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
 const ModelGallery = lazyWithRetry(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
 const DiscordSettingsModal = lazyWithRetry(() => import('./components/DiscordSettingsModal'));
+// The release notes load with the modal; only the latest release's id is
+// needed up front, to decide whether What's New opens.
 const ChangelogModal = lazyWithRetry(() =>
-  import('./components/ChangelogModal').then(module => ({
-    default: module.ChangelogModal,
-  })),
+  Promise.all([import('./components/ChangelogModal'), import('./data/changelog')])
+    .then(([module, changelog]) => ({
+      default: (props: Omit<React.ComponentProps<typeof module.ChangelogModal>, 'releases'>) => (
+        <module.ChangelogModal {...props} releases={changelog.CHANGELOG_RELEASES} />
+      ),
+    })),
 );
+// Shown only on demand (onboarding, rituals, the altar) or mounted as idle
+// listeners (palette, tour, quest celebration), so they stay out of the entry
+// chunk.
+const OnboardingWizard = lazyWithRetry(() => import('./components/OnboardingWizard').then(m => ({ default: m.OnboardingWizard })));
+const VoidAltar = lazyWithRetry(() => import('./components/VoidAltar').then(m => ({ default: m.VoidAltar })));
+const TransmutationEffect = lazyWithRetry(() => import('./components/TransmutationEffect').then(m => ({ default: m.TransmutationEffect })));
+const ClarityEffect = lazyWithRetry(() => import('./components/RitualEffects').then(m => ({ default: m.ClarityEffect })));
+const GreedEffect = lazyWithRetry(() => import('./components/RitualEffects').then(m => ({ default: m.GreedEffect })));
+const ChaosEffect = lazyWithRetry(() => import('./components/RitualEffects').then(m => ({ default: m.ChaosEffect })));
+const CommandPalette = lazyWithRetry(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
+const GuidedTour = lazyWithRetry(() => import('./components/GuidedTour').then(m => ({ default: m.GuidedTour })));
+const QuestCompleteOverlay = lazyWithRetry(() => import('./components/QuestCompleteOverlay').then(m => ({ default: m.QuestCompleteOverlay })));
 const RunelitePluginGuide = lazyWithRetry(() =>
   import('./components/runelite-guide/RunelitePluginGuide').then(module => ({
     default: module.RunelitePluginGuide,
@@ -715,7 +725,7 @@ const GameLayout = () => {
     undefined,
     () => shouldAutoOpenChangelog({
       hasSeenOnboarding,
-      releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG.id),
+      releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG_ID),
       startupHash: typeof window === 'undefined' ? '' : window.location.hash,
       hasPendingGameModePrompt: recentlyCreatedId === activeProfileId,
       hasPendingGuidePrompt: directGuideRequested,
@@ -741,7 +751,7 @@ const GameLayout = () => {
     useState<string | undefined>(undefined);
 
   const changelogReturnFocusTarget = useRef<HTMLElement | null>(null);
-  const changelogAutoOpenKey = `${activeProfileId}:${LATEST_CHANGELOG.id}`;
+  const changelogAutoOpenKey = `${activeProfileId}:${LATEST_CHANGELOG_ID}`;
   const changelogAutoOpenedRelease = useRef<string | null>(
     showChangelog ? changelogAutoOpenKey : null,
   );
@@ -751,13 +761,13 @@ const GameLayout = () => {
   };
   const closeChangelog = () => {
     if (fateCompensation.status === 'pending') return;
-    markChangelogSeen(LATEST_CHANGELOG.id);
+    markChangelogSeen(LATEST_CHANGELOG_ID);
     dispatchChangelog({ type: 'DISMISS' });
     changelogReturnFocusTarget.current = null;
   };
   const resolveCompensation = (choice: FateCompensationChoice) => {
     resolveFateCompensation(choice);
-    markChangelogSeen(LATEST_CHANGELOG.id);
+    markChangelogSeen(LATEST_CHANGELOG_ID);
   };
 
   const openRuneliteGuide = (returnFocusTarget: HTMLElement | null = null) => {
@@ -918,7 +928,7 @@ const GameLayout = () => {
       || changelogAutoOpenedRelease.current === changelogAutoOpenKey
       || !shouldAutoOpenChangelog({
         hasSeenOnboarding,
-        releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG.id),
+        releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG_ID),
         startupHash,
         hasPendingGameModePrompt,
         hasPendingSyncPrompt,
@@ -978,17 +988,19 @@ const GameLayout = () => {
       <div id="reveal-bottom" className="fixed bottom-5 right-5 z-[9997] flex flex-col-reverse gap-3 items-end pointer-events-none" />
       <ToastNotification />
 
-      {!hasSeenOnboarding && !topLevelGuideOpen && <OnboardingWizard />}
+      <Suspense fallback={null}>
+        {!hasSeenOnboarding && !topLevelGuideOpen && <OnboardingWizard />}
 
-      {activeRitualAnim === 'TRANSMUTE' && <TransmutationEffect onComplete={() => setActiveRitualAnim('NONE')} />}
-      {activeRitualAnim === 'LUCK' && <ClarityEffect onComplete={() => setActiveRitualAnim('NONE')} />}
-      {activeRitualAnim === 'GREED' && <GreedEffect onComplete={() => setActiveRitualAnim('NONE')} />}
-      {activeRitualAnim === 'CHAOS' && <ChaosEffect onComplete={() => setActiveRitualAnim('NONE')} />}
+        {activeRitualAnim === 'TRANSMUTE' && <TransmutationEffect onComplete={() => setActiveRitualAnim('NONE')} />}
+        {activeRitualAnim === 'LUCK' && <ClarityEffect onComplete={() => setActiveRitualAnim('NONE')} />}
+        {activeRitualAnim === 'GREED' && <GreedEffect onComplete={() => setActiveRitualAnim('NONE')} />}
+        {activeRitualAnim === 'CHAOS' && <ChaosEffect onComplete={() => setActiveRitualAnim('NONE')} />}
+      </Suspense>
 
-      {modalRenderPolicy.renderAppModals && showAltar && <VoidAltar onClose={() => setShowAltar(false)} />}
       <Suspense fallback={<ModalFallback />}>
         {modalRenderPolicy.renderAppModals && (
           <>
+            {showAltar && <VoidAltar onClose={() => setShowAltar(false)} />}
             {showStats && <StatsModal onClose={() => setShowStats(false)} />}
             {showFateThread && <FateThread onClose={() => setShowFateThread(false)} />}
             {showReference && <ReferenceModal onClose={() => setShowReference(false)} />}
@@ -1009,7 +1021,6 @@ const GameLayout = () => {
         )}
         {showChangelog && (
           <ChangelogModal
-            releases={CHANGELOG_RELEASES}
             onClose={closeChangelog}
             compensation={fateCompensation}
             onResolveCompensation={resolveCompensation}
@@ -1047,12 +1058,14 @@ const GameLayout = () => {
 
       <SaveFailureBanner />
 
-      {/* Global ⌘K command palette — navigates via fate:nav events. */}
-      {modalRenderPolicy.renderGlobalDialogOverlays && <CommandPalette />}
-      {/* Replayable spotlight tour — start via fate:start-tour. */}
-      {modalRenderPolicy.renderGlobalDialogOverlays && <GuidedTour />}
-      {/* Quest-complete celebration with the wiki reward scroll. */}
-      {modalRenderPolicy.renderGlobalDialogOverlays && <QuestCompleteOverlay />}
+      <Suspense fallback={null}>
+        {/* Global ⌘K command palette — navigates via fate:nav events. */}
+        {modalRenderPolicy.renderGlobalDialogOverlays && <CommandPalette />}
+        {/* Replayable spotlight tour — start via fate:start-tour. */}
+        {modalRenderPolicy.renderGlobalDialogOverlays && <GuidedTour />}
+        {/* Quest-complete celebration with the wiki reward scroll. */}
+        {modalRenderPolicy.renderGlobalDialogOverlays && <QuestCompleteOverlay />}
+      </Suspense>
       {modalRenderPolicy.renderGlobalDialogOverlays && runelitePairCode && (
         <RunelitePairingDialog
           code={runelitePairCode}

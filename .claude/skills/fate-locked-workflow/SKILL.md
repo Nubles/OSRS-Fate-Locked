@@ -62,7 +62,7 @@ Run ALL of these for web changes, in this order, and paste real output:
 ```
 npx vitest run        # every test green (count grows over time; never skip)
 npx tsc --noEmit
-npx vite build        # eager index-*.js chunk stays ≈128 kB gzip
+npm run build         # vite build, then checks the eager index-*.js chunk against its gzip budget (scripts/check-entry-budget.mjs)
 ```
 
 Then, if the change is user-visible, drive it in the browser preview from a

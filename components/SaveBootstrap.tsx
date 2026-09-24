@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, type ReactNode } from 'react';
+import React, { Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import type { GameState } from '../types';
 import { downloadFateSave, type FateSaveDownloadResult } from '../utils/fateSaveFile';
@@ -35,10 +35,12 @@ import {
   type ValidatedRecoveryCandidate,
 } from '../utils/saveRecovery';
 import { MAX_SAVE_BYTES } from '../utils/saveSchema';
-import {
-  SaveRecoveryScreen,
-  type RecoveryActionResult,
-} from './SaveRecoveryScreen';
+import type { RecoveryActionResult } from './SaveRecoveryScreen';
+import { lazyWithRetry } from '../utils/lazyRetry';
+
+// Recovery is rare, so its screen loads only when startup needs it.
+const SaveRecoveryScreen = lazyWithRetry(() =>
+  import('./SaveRecoveryScreen').then(module => ({ default: module.SaveRecoveryScreen })));
 
 export interface SaveBootstrapResult {
   initialState: GameState;
@@ -822,6 +824,7 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
       ? activeView.decision.maxDurablePersistenceRevision
       : 0;
     return (
+      <Suspense fallback={<div role="status">Checking saved progress…</div>}>
       <SaveRecoveryLeaseGate storageKey={storageKey} leaseOptions={dependencies.leaseOptions}>
         {(authorizeWrite, recoveryActionsEnabled, recoveryStatusMessage) => (
           <SaveRecoveryScreen
@@ -955,6 +958,7 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
           />
         )}
       </SaveRecoveryLeaseGate>
+      </Suspense>
     );
   }
   if (activeView.phase === 'error') {
