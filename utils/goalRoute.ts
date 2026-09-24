@@ -552,7 +552,7 @@ export function suggestTables(
   for (const [table, neededNames] of neededByTable) {
     let pool: string[];
     try {
-      pool = getPoolAndStateKey(table).pool;
+      pool = getPoolAndStateKey(table, gameModeId, customMode).pool;
     } catch {
       continue; // tables without a gacha pool (Quests, Diaries, CAs)
     }

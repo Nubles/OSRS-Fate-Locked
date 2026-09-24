@@ -3,6 +3,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GameProvider } from '../context/GameContext';
 import { ReferenceModal } from './ReferenceModal';
+import { unlockableAreas } from '../utils/freeAreas';
+import { MISTHALIN_AREAS } from '../constants';
 
 type CodexTab = 'core' | 'economy' | 'drops' | 'unlocks';
 
@@ -68,5 +70,19 @@ describe('ReferenceModal Vanilla policy', () => {
 
   it('labels the Vanilla policy as inactive outside Vanilla', () => {
     expect(renderCodex('economy', 'chunked')).toContain('Vanilla-only (not active for this run)');
+  });
+});
+
+describe('ReferenceModal Areas table size', () => {
+  // The spend-table card's count badge, followed by its "Areas" heading.
+  const areasEntry = (markup: string) => markup.match(
+    /title="(\d+) entries">\d+<\/div><div class="min-w-0"><h4[^>]*>Areas<\/h4>/,
+  );
+
+  it("counts the run's own Areas list, including legacy Xtreme's locked Misthalin areas", () => {
+    const counts = (mode: string) => Number(areasEntry(renderCodex('unlocks', mode))?.[1]);
+    expect(counts('vanilla')).toBe(unlockableAreas('vanilla').length);
+    expect(counts('xtreme')).toBe(unlockableAreas('xtreme').length);
+    expect(counts('xtreme')).toBe(counts('vanilla') + MISTHALIN_AREAS.filter(area => area !== 'Lumbridge').length);
   });
 });

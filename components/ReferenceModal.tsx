@@ -11,6 +11,7 @@ import { CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, LEVEL_CHAOS_CHANCE, 
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { TableType } from '../types';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
+import { unlockableAreas } from '../utils/freeAreas';
 
 interface ReferenceModalProps {
   onClose: () => void;
@@ -87,12 +88,16 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
 
   // Chunked mode unlocks individual map chunks, not named regions — swap the
   // "Areas" entry for the real table/count/blurb so the Codex matches what
-  // Spend Keys actually shows (see components/GachaSection.tsx).
+  // Spend Keys actually shows (see components/GachaSection.tsx). Other modes
+  // count the run's own Areas list, which includes any Misthalin areas the
+  // mode leaves locked.
   const spendTables = gameModeId === 'chunked'
     ? SPEND_TABLES.map(t => t.type === TableType.REGIONS
         ? { ...t, type: TableType.CHUNKS, label: 'Chunks', count: ALL_CHUNK_KEYS.length - 1, blurb: 'Unlock a random frontier chunk: land next to your territory, plus coast reached by sea after Pandemonium and Sailing.' }
         : t)
-    : SPEND_TABLES;
+    : SPEND_TABLES.map(t => t.type === TableType.REGIONS
+        ? { ...t, count: unlockableAreas(gameModeId, customMode).length }
+        : t);
 
   const tabs: { id: TabId; label: string; icon: any }[] = [
     { id: 'core', label: 'Core Rules', icon: BookOpen },
