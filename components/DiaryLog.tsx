@@ -45,10 +45,12 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
 
   const focusCard = (id: string) => {
     setExpandedId(id);
-    // Clear filters so the target card is guaranteed to be visible.
+    // Clear filters, and the local search, so the target card is guaranteed
+    // to be visible.
     setFilterStatus('ALL');
     setFilterRegion('ALL');
     setFilterTier('ALL');
+    setLocalSearch('');
     setHighlightedId(id);
     // Align the card's top (header + border + first task in view) rather than
     // centring the now-expanded, tall card — and wait a frame longer so the
