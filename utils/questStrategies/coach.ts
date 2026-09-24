@@ -15,6 +15,7 @@ import type {
 import type { QuestGuideArticle } from '../../data/questGuideArticles';
 import type { QuestStrategyDefinition } from './model';
 import { guideTravelFor, type GuideTravelAccount, type GuideTravelLeg } from './travel';
+import { closeProvenActions } from './proofClosure';
 
 export type RuneProofCoachActionState =
   | 'COMPLETED'
@@ -118,24 +119,14 @@ const completeActions = (
   ordered: readonly StrategyAction[],
   input: RuneProofCoachInput,
 ): ReadonlySet<string> => {
-  const actionById = new Map(ordered.map(action => [action.id, action]));
-  const completed = new Set(ordered
+  const proven = new Set(ordered
     .filter(action => actionIsDirectlyProven(action, input))
     .map(action => action.id));
-
-  const closeDependencies = (actionId: string): void => {
-    const action = actionById.get(actionId);
-    if (!action) return;
-
-    action.dependsOn.forEach((dependencyId) => {
-      if (completed.has(dependencyId)) return;
-      completed.add(dependencyId);
-      closeDependencies(dependencyId);
-    });
-  };
-
-  [...completed].forEach(closeDependencies);
-  return completed;
+  return closeProvenActions(ordered, proven, action => (
+    action.coach.completion.kind === 'ITEM_CONFIRMED'
+    && !input.confirmedActionIds.has(action.id)
+    && !input.completedQuestIds.has(input.strategy.questId)
+  ));
 };
 
 const previousCompletedOrigin = (

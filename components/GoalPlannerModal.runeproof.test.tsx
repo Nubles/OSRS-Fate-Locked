@@ -1021,9 +1021,10 @@ describe('RuneProof Goal Planner integration', () => {
       unlocks: plannerUnlocks({ chunks: ['50,51'] }),
       gameModeId: 'chunked',
     };
+    // Ticking the egg step implies every step before it.
     window.localStorage.setItem(
-      runeProofPreviewStorageKey('run-a'),
-      JSON.stringify({ "Cook's Assistant": ['egg'] }),
+      runeProofPreviewActionStorageKey('run-a'),
+      JSON.stringify({ "Cook's Assistant": ['cooks-assistant:take-egg'] }),
     );
     const onClose = vi.fn();
     const onOpenWorldChunk = vi.fn();
@@ -1410,8 +1411,9 @@ describe('RuneProof Goal Planner integration', () => {
     renderGoalPlanner({ availability: 'PREVIEW', selectedQuest: "Cook's Assistant" });
 
     const current = await nextAction();
-    expect(current.getByText('Pick grain outside Mill Lane Mill.')).toBeTruthy();
-    expect(coachProgress("Cook's Assistant").value).toBe(5);
+    // An egg check completes only the egg step, not the earlier milk steps.
+    expect(current.getByText('Speak with the Cook in Lumbridge Castle to begin.')).toBeTruthy();
+    expect(coachProgress("Cook's Assistant").value).toBe(1);
     expect(screen.queryByRole('region', { name: 'Quest requirements' })).toBeNull();
     expect(JSON.parse(window.localStorage.getItem(runeProofPreviewStorageKey('run-a')) ?? '{}'))
       .toEqual({ "Cook's Assistant": ['egg'] });

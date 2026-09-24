@@ -49,7 +49,10 @@ describe('already owned wool in the Vanilla RuneProof guide', () => {
     expect(screen.queryByRole('button', { name: 'I already have 20 × Ball of wool' })).toBeNull();
     const completed = screen.getByText(spin.instruction).closest('li')!;
     expect(within(completed).getByText('Completed')).toBeTruthy();
+    // The wool is covered, but the quest still starts with Fred.
+    const start = screen.getByText('Ask Fred the Farmer, north of Lumbridge, for work.').closest('li')!;
+    expect(within(start).getByRole('button', { name: 'Mark action complete' })).toBeTruthy();
     const handIn = screen.getByText('Take 20 unnoted balls of wool back to Fred.').closest('li')!;
-    expect(within(handIn).getByRole('button', { name: 'Mark action complete' })).toBeTruthy();
+    expect(within(handIn).queryByText('Completed')).toBeNull();
   });
 });

@@ -42,6 +42,7 @@ export const CHANGELOG_RELEASES = [
         'The Quest Journal area filter lists every quest the chosen area gates. Choosing Varrock previously hid quests such as Demon Slayer and Rune Mysteries.',
         'The Cook\'s Assistant guide no longer marks later steps as needing checking because of items collected in earlier steps.',
         'Diary tasks that need an item, such as an axe, the Muddy key or Raiments of the Eye pieces, now ask you to confirm you have it instead of assuming you do.',
+        'In RuneProof guides, confirming an item you already have completes only the steps that make it. Having an egg no longer ticks off the milk steps in Cook\'s Assistant, and having balls of wool no longer ticks off asking Fred for work.',
         'Timelapse shows replay notes as warnings rather than broken integrity and uses your mode\'s pity threshold. Chunked quest doability starts from the free starting chunk, so a new Chunked run no longer shows every quest as stranded.',
         'Discord announcements no longer repeat unlocks that arrive with an imported save or sync code, and keep working after a save made on a device with a wrong clock.',
         'Collection Log prices recover after a failed price download, a full browser storage no longer crashes the app from the Roll Inbox, and feature reveal messages no longer repeat when storage is full.',

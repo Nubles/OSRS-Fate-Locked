@@ -116,15 +116,16 @@ describe('questStrategyProgress', () => {
     )).toEqual({ completed: 1, total: 9 });
   });
 
-  it('closes transitive dependencies for item confirmations', () => {
+  it('closes only the preparation of a confirmed item', () => {
     const strategy = strategyFor("Cook's Assistant");
 
+    // Pot of flour: the flour step, picking grain and taking the pot.
     expect(questStrategyProgress(
       strategy,
       new Set(),
       new Set(['pot of flour']),
       new Set(),
-    )).toEqual({ completed: 7, total: 9 });
+    )).toEqual({ completed: 3, total: 9 });
   });
 
   it('counts a preview-confirmed final quest action as completion', () => {

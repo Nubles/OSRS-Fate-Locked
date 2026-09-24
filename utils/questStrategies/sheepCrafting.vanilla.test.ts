@@ -56,13 +56,15 @@ describe('Sheep Shearer spinning permission in the Vanilla guide', () => {
     expect(guideNeeds(model).some(need => need.id === 'skill:Crafting:1')).toBe(false);
   });
 
-  it('skips the preparation actions when the player confirms already obtained balls of wool', () => {
+  it('skips the wool preparation when the player confirms already obtained balls of wool', () => {
     const { analysis, model } = modelFor(0, ['ball of wool'], []);
     expect(analysis.items.find(item => item.requirement.item.key === 'ball of wool')?.state).toBe('NO_CURRENT_SOURCE');
-    for (const id of [...preparationIds, spinId]) {
+    for (const id of ['sheep-shearer:shear-wool', spinId]) {
       expect(model.actions.find(action => action.id === id)?.state).toBe('COMPLETED');
     }
-    expect(model.nextAction).toMatchObject({ id: 'sheep-shearer:return-to-fred', confirmationAllowed: true });
+    // Owning the wool does not start the quest with Fred.
+    expect(model.actions.find(action => action.id === 'sheep-shearer:start-with-fred')?.state).not.toBe('COMPLETED');
+    expect(model.nextAction).toMatchObject({ id: 'sheep-shearer:start-with-fred', confirmationAllowed: true });
     expect(model.actions.find(action => action.id === 'sheep-shearer:complete')?.state).not.toBe('COMPLETED');
     expect(model.actions.find(action => action.id === spinId)?.ownedItemConfirmation).toBeUndefined();
     expect(guideNeeds(model).some(need => need.id === 'skill:Crafting:1')).toBe(false);
