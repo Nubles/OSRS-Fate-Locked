@@ -9,7 +9,7 @@ import { WikiIcon } from './WikiIcon';
 import { chunkContentService } from '../services/ChunkContentService';
 import { questLocations } from '../utils/questLocations';
 import { showChunkOnMap } from '../utils/chunkLocations';
-import { selectQuestGeography } from '../utils/questGeographyDisplay';
+import { enforcedQuestAreas, selectQuestGeography } from '../utils/questGeographyDisplay';
 import { isAlmostThere } from '../utils/journalProgress';
 import {
   evaluateQuestEligibility,
@@ -449,6 +449,15 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unlocks, gameModeId, chunkTick]);
 
+  // Area options come from what the quest engine actually gates on:
+  // location-policy quests keep broad `regions` only as a description.
+  const questRegions = useMemo(
+    () => Array.from(new Set(allQuests.flatMap((q) => enforcedQuestAreas(q)))).sort(),
+    [allQuests],
+  );
+  // A remembered area that is no longer offered would hide every quest.
+  const activeRegion = questRegions.includes(regionFilter) ? regionFilter : 'ALL';
+
   const filteredQuests = useMemo(() => {
     const diffRank = (d: DropSource) =>
       d === DropSource.QUEST_GRANDMASTER ? 5 : d === DropSource.QUEST_MASTER ? 4
@@ -456,7 +465,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
     const list = allQuests.filter(q => {
       const matchesSearch = q.name.toLowerCase().includes(searchTerm.toLowerCase());
       if (!matchesSearch) return false;
-      if (regionFilter !== 'ALL' && !q.regions.includes(regionFilter)) return false;
+      if (activeRegion !== 'ALL' && !enforcedQuestAreas(q).includes(activeRegion)) return false;
       if (diffFilter !== 'ALL' && getDifficultyLabel(q.difficulty) !== diffFilter) return false;
       if (filter !== 'ALL') return questFilterStatus(q) === filter;
       return true;
@@ -465,13 +474,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
     if (sortMode === 'QP') return [...list].sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
     if (sortMode === 'DIFFICULTY') return [...list].sort((a, b) => diffRank(a.difficulty) - diffRank(b.difficulty) || a.name.localeCompare(b.name));
     return list; // SMART: status-major order from allQuests
-  }, [allQuests, searchTerm, regionFilter, diffFilter, filter, sortMode]);
-
-  // Region pills built from the regions actually used by quests, sorted.
-  const questRegions = useMemo(
-    () => Array.from(new Set(allQuests.flatMap((q) => q.regions))).sort(),
-    [allQuests],
-  );
+  }, [allQuests, searchTerm, activeRegion, diffFilter, filter, sortMode]);
 
   // Counts per status for the bar's pills.
   const statusCounts = useMemo(() => ({
@@ -484,7 +487,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   // Quest Impact Advisor — ranked by unlock score. Only computed when the
   // panel is visible (advisor mode + not filtering) to avoid running O(n²)
   // simulations on every keystroke while the player is searching.
-  const showAdvisorStrip = advisorsEnabled && !searchTerm && filter === 'ALL' && regionFilter === 'ALL' && advisorMode;
+  const showAdvisorStrip = advisorsEnabled && !searchTerm && filter === 'ALL' && activeRegion === 'ALL' && advisorMode;
   const rankedQuests = useMemo(
     () => (showAdvisorStrip ? rankAvailableQuests(unlocks, gameModeId) : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -548,7 +551,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
         completed={completedMain + completedMinis}
         total={totalQuests + totalMinis}
         regions={questRegions}
-        activeRegion={regionFilter}
+        activeRegion={activeRegion}
         onRegionChange={setRegionFilter}
         tiers={[
           { id: 'Novice', colorClass: 'bg-green-900/40 text-green-300' },
