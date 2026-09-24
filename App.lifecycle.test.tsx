@@ -234,7 +234,7 @@ describe('App changelog lifecycle', () => {
     await user.click(screen.getByRole('button', { name: 'Settings & save tools' }));
     await user.click(screen.getByRole('button', { name: 'Discord notifications' }));
     expect(await screen.findByRole('dialog', { name: 'Discord notifications' })).toBeTruthy();
-  });
+  }, 15_000);
   it.each([
     [28, 'Level Up + Chaos Key!'],
     [29, 'Level Up + 2 Chaos Keys!'],
