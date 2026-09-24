@@ -46,7 +46,6 @@ import { useEscapeKey } from './hooks/useEscapeKey';
 import { resolveModeRules } from './config/gameModes';
 import { showToast } from './utils/toast';
 import { importUiDecision, isCurrentImportRequest } from './utils/gamePersistence';
-import { MAX_SAVE_BYTES } from './utils/saveSchema';
 import { prefetchHeavyChunks } from './utils/prefetch';
 import { CHANGELOG_RELEASES, LATEST_CHANGELOG } from './data/changelog';
 import type { FateCompensationChoice } from './types';
@@ -84,7 +83,7 @@ const RunelitePluginGuide = lazyWithRetry(() =>
     default: module.RunelitePluginGuide,
   })),
 );
-import { deobfuscateFateSave } from './utils/encryption';
+import { deobfuscateFateSave, MAX_FATE_FILE_BYTES } from './utils/encryption';
 import { Download, Upload, RotateCcw, BarChart3, HelpCircle, PlayCircle, PauseCircle, Search, Database, SlidersHorizontal, Link2, Radio, Settings, MessageCircle } from 'lucide-react';
 import { Key, Sparkles, Dna, Swords, ShoppingBag, ScrollText, Compass, Lightbulb } from './components/OsrsIcon';
 import { exportRuneliteBundle } from './utils/runeliteExport';
@@ -314,7 +313,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
     activeFileReaderRef.current?.abort();
 
     const clearInput = () => { input.value = ''; };
-    if (file.size > MAX_SAVE_BYTES) {
+    if (file.size > MAX_FATE_FILE_BYTES) {
       showToast('That save file is too large.');
       clearInput();
       return;
