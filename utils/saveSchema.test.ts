@@ -284,6 +284,57 @@ describe('save schema compatibility', () => {
     });
   });
 
+  const legacyNoviceFailures = (count: number) => Array.from({ length: count }, (_, index) => ({
+    id: `novice-${index}`,
+    timestamp: index,
+    type: 'ROLL_FAIL',
+    source: 'Quest (Novice)',
+    message: 'No Key.',
+    meta: { fatePointsEarned: 1 },
+  }));
+
+  it.each([
+    ['legacy Hardcore', { gameModeId: 'hardcore' }],
+    ['a Custom run with pity off', { customMode: { ...fullStateFixture().customMode!, pityEnabled: false } }],
+  ])('migrates %s without offering Pity Keys its mode never grants', (_label, mode) => {
+    const legacy = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    Object.assign(legacy, mode);
+    legacy.version = 3;
+    delete legacy.fateCompensation;
+    legacy.fatePoints = 60;
+    (legacy.unlocks as Record<string, unknown>).levels = { Attack: 1, Hitpoints: 10 };
+    legacy.history = legacyNoviceFailures(60);
+
+    const result = expectAccepted(validateAndMigrateSave(legacy, defaultsFixture()));
+
+    expect(result.state.fateCompensation).toEqual({
+      releaseId: LEGACY_FATE_COMPENSATION_ID,
+      status: 'not_eligible',
+      chaosKeys: 0,
+      pityKeys: 0,
+      fatePoints: 0,
+    });
+  });
+
+  it("migrates a legacy Casual run at its own 30-Fate pity threshold", () => {
+    const legacy = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    legacy.gameModeId = 'casual';
+    legacy.version = 3;
+    delete legacy.fateCompensation;
+    legacy.fatePoints = 35;
+    (legacy.unlocks as Record<string, unknown>).levels = { Attack: 1, Hitpoints: 10 };
+    legacy.history = legacyNoviceFailures(35);
+
+    const result = expectAccepted(validateAndMigrateSave(legacy, defaultsFixture()));
+
+    expect(result.state.fateCompensation).toEqual({
+      releaseId: LEGACY_FATE_COMPENSATION_ID,
+      status: 'pending',
+      chaosKeys: 0,
+      pityKeys: 1,
+      fatePoints: 5,
+    });
+  });
 
   it('freezes conservative fractional metadata through a v3-to-v4 save round trip', () => {
     const legacy = clone(fullStateFixture()) as unknown as Record<string, unknown>;

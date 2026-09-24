@@ -113,12 +113,16 @@ export interface ReplayState {
   pities: number;
 }
 
+/** The part of a run's ruleset that bounds its Fate. */
+export type ReplayRules = Pick<GameModeRules, 'pityEnabled' | 'pityThreshold'>;
+
 // Given the history alone, re-derive the running state and flag anything
 // physically impossible (negative keys, fate over cap, roll outside 0.01-100.0).
 // Doesn't prove the *roll values* are honest — a determined editor can
 // rewrite consistently — but catches naive tampering and any inconsistency
-// introduced by hand-editing isolated fields.
-export const replayInvariants = (history: LogEntry[], startKeys = 3): { violations: InvariantViolation[]; final: ReplayState } => {
+// introduced by hand-editing isolated fields. `rules` is the run's mode: with
+// pity off Fate has no cap, otherwise the cap is the mode's pity threshold.
+export const replayInvariants = (history: LogEntry[], startKeys = 3, rules?: ReplayRules): { violations: InvariantViolation[]; final: ReplayState } => {
   const recordedFateAward = (entry: LogEntry): number => {
     const award = entry.meta?.fatePointsEarned;
     return typeof award === 'number' && Number.isFinite(award) && award >= 0
@@ -132,12 +136,17 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
       && value <= CUSTOM_RULE_BOUNDS.pityThreshold.max
       ? value
       : null;
+  const modeThreshold = validPityThreshold(rules?.pityThreshold);
   const recordedPityThreshold = (entry: LogEntry): number =>
-    validPityThreshold(entry.meta?.pityThreshold) ?? 50;
-  const fateCap = history
-    .filter(entry => entry.type === 'PITY')
-    .map(entry => validPityThreshold(entry.meta?.pityThreshold))
-    .find((threshold): threshold is number => threshold !== null) ?? 50;
+    validPityThreshold(entry.meta?.pityThreshold) ?? modeThreshold ?? 50;
+  // Without the mode (older callers), the first Pity Key's recorded threshold
+  // or the historical 50 stands in for it.
+  const fateCap = rules?.pityEnabled === false
+    ? Number.POSITIVE_INFINITY
+    : modeThreshold ?? history
+      .filter(entry => entry.type === 'PITY')
+      .map(entry => validPityThreshold(entry.meta?.pityThreshold))
+      .find((threshold): threshold is number => threshold !== null) ?? 50;
   const detectedSkillChaosAward = (entry: LogEntry): number => {
     const award = entry.meta?.chaosKeysAwarded;
     return entry.meta?.detectorId === 'skill-level-v1'
@@ -314,11 +323,12 @@ export interface RunAudit {
  * check with the invariant replay into a single traffic-light verdict.
  * A history with no hash links at all (very old saves) chains cleanly from
  * GENESIS and reads as intact — we only flag links that are actually broken.
+ * Pass the run's mode rules so its Fate is held to that mode's pity rule.
  */
-export const auditHistory = (history: LogEntry[]): RunAudit => {
+export const auditHistory = (history: LogEntry[], rules?: ReplayRules): RunAudit => {
   const chained = ensureChain(history);
   const chain = verifyChain(chained);
-  const { violations, final } = replayInvariants(chained);
+  const { violations, final } = replayInvariants(chained, undefined, rules);
   let verdict: RunVerdict = 'verified';
   if (!chain.ok) verdict = 'tampered';
   else if (violations.length > 0) verdict = 'warning';
@@ -362,7 +372,7 @@ export const buildVerifiedBundle = async (
 ): Promise<VerifiedBundle> => {
   const chained = ensureChain(history);
   const chainReport = verifyChain(chained);
-  const { final, violations } = replayInvariants(chained);
+  const { final, violations } = replayInvariants(chained, undefined, mode?.rules);
   const runId = computeRunId(chained) ?? 'run-empty';
   // The mode is part of what's committed to — a run isn't fully verified
   // without the ruleset it was played under.

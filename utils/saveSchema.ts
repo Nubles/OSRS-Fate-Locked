@@ -1,4 +1,4 @@
-import { CUSTOM_RULE_BOUNDS, type GameModeRules } from '../config/gameModes';
+import { CUSTOM_RULE_BOUNDS, resolveModeRules, type GameModeRules } from '../config/gameModes';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { EQUIPMENT_SLOTS, RETIRED_POH_ITEMS } from '../data/items';
 import { migrateAreaUnlocks } from './areaUnlockMigration';
@@ -780,6 +780,34 @@ const normalizeFateCompensation = (value: unknown): Outcome<FateCompensationStat
   };
 };
 
+const notEligibleFateCompensation = (): FateCompensationState => ({
+  releaseId: LEGACY_FATE_COMPENSATION_ID,
+  status: 'not_eligible',
+  chaosKeys: 0,
+  pityKeys: 0,
+  fatePoints: 0,
+});
+
+/** Freeze the one-time offer for a save from before weighted Fate, under its own mode's pity rule. */
+const legacyFateCompensationOffer = (
+  state: Pick<GameState, 'unlocks' | 'history' | 'fatePoints' | 'gameModeId' | 'customMode'>,
+): FateCompensationState => {
+  const calculated = calculateLegacyFateCompensation(
+    state,
+    resolveModeRules(state.gameModeId, state.customMode),
+  );
+  const eligible = calculated.chaosKeys > 0
+    || calculated.pityKeys > 0
+    || calculated.fatePoints !== state.fatePoints;
+  return eligible
+    ? {
+      releaseId: LEGACY_FATE_COMPENSATION_ID,
+      status: 'pending',
+      ...calculated,
+    }
+    : notEligibleFateCompensation();
+};
+
 const RFC_4122_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const normalizeRuneProofProgress = (value: unknown): Outcome<RuneProofProgress> => {
@@ -985,33 +1013,13 @@ const normalizeState = (
   if (!selectedHistory.present) return invalid('invalid_history', 'history');
   const history = normalizeHistory(selectedHistory.value);
   if (history.ok === false) return history;
-  let fateCompensation: FateCompensationState;
-  if (sourceVersion < CURRENT_SAVE_VERSION) {
-    const calculated = calculateLegacyFateCompensation({
-      unlocks: unlocks.value.value,
-      history: history.value,
-      fatePoints: fatePoints.value,
-    });
-    const eligible = calculated.chaosKeys > 0
-      || calculated.pityKeys > 0
-      || calculated.fatePoints !== fatePoints.value;
-    fateCompensation = eligible
-      ? {
-        releaseId: LEGACY_FATE_COMPENSATION_ID,
-        status: 'pending',
-        ...calculated,
-      }
-      : {
-        releaseId: LEGACY_FATE_COMPENSATION_ID,
-        status: 'not_eligible',
-        chaosKeys: 0,
-        pityKeys: 0,
-        fatePoints: 0,
-      };
-  } else {
+  // Older saves have no stored offer; theirs is calculated once the run's
+  // mode is read below, because the mode's pity rule shapes it.
+  let storedCompensation: FateCompensationState | undefined;
+  if (sourceVersion >= CURRENT_SAVE_VERSION) {
     const checked = normalizeFateCompensation(readOwn(input, 'fateCompensation'));
     if (checked.ok === false) return checked;
-    fateCompensation = checked.value;
+    storedCompensation = checked.value;
   }
 
   const selectedGoals = readPreferred(input, defaultRecord, 'pinnedGoals');
@@ -1044,7 +1052,8 @@ const normalizeState = (
     specialKeys: specialKeys.value,
     chaosKeys: chaosKeys.value,
     fatePoints: fatePoints.value,
-    fateCompensation,
+    // Replaced below for saves without a stored offer, once the mode is known.
+    fateCompensation: storedCompensation ?? notEligibleFateCompensation(),
     bossStandardKeysAwarded,
     clueStandardKeysAwarded,
     activeBuff: selectedBuff.value,
@@ -1114,6 +1123,9 @@ const normalizeState = (
     const checked = normalizeCustomMode(selectedCustom.value);
     if (checked.ok === false) return checked;
     state.customMode = checked.value;
+  }
+  if (storedCompensation === undefined) {
+    state.fateCompensation = legacyFateCompensationOffer(state);
   }
   const selectedLoadout = readPreferred(input, defaultRecord, 'loadout');
   if (selectedLoadout.present) {

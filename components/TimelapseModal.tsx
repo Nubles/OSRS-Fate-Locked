@@ -31,9 +31,10 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
   const { gameModeId, customMode } = useGame();
+  const pityRules = resolveModeRules(gameModeId, customMode);
   const chained = useMemo(() => ensureChain(history), [history]);
   const chainReport = useMemo(() => verifyChain(chained), [chained]);
-  const replay = useMemo(() => replayInvariants(chained), [chained]);
+  const replay = useMemo(() => replayInvariants(chained, undefined, pityRules), [chained, pityRules]);
   const milestones = useMemo(() => detectMilestones(chained), [chained]);
   const runId = useMemo(() => computeRunId(chained), [chained]);
   const firstTs = chained[0]?.timestamp ?? Date.now();
@@ -75,7 +76,7 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
   const trail = chained.slice(Math.max(0, idx - 4), idx);
 
   // Running stats up to and including `idx` — replay once per index change.
-  const statsAtIdx = useMemo(() => replayInvariants(chained.slice(0, idx + 1)).final, [chained, idx]);
+  const statsAtIdx = useMemo(() => replayInvariants(chained.slice(0, idx + 1), undefined, pityRules).final, [chained, idx, pityRules]);
 
   const currentMilestone = milestones.find(m => m.index === idx);
   const jumpNextMilestone = () => {
@@ -88,7 +89,7 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
     try {
       const bundle = await buildVerifiedBundle(chained, {
         id: gameModeId ?? 'vanilla',
-        rules: resolveModeRules(gameModeId, customMode),
+        rules: pityRules,
       });
       const json = JSON.stringify(bundle, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
@@ -126,7 +127,6 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
   const integrity: 'ok' | 'warning' | 'broken' = chainReport.brokenAt.length > 0
     ? 'broken'
     : replay.violations.length > 0 ? 'warning' : 'ok';
-  const pityRules = resolveModeRules(gameModeId, customMode);
   const day = toRunDay(current.timestamp, firstTs);
 
   return (

@@ -9,7 +9,7 @@ import {
 } from '../utils/mapCoords';
 import { auditHistory, computeRunId } from '../utils/integrity';
 import { useFocusTrap } from '../hooks/useFocusTrap';
-import { getGameMode } from '../config/gameModes';
+import { getGameMode, resolveModeRules } from '../config/gameModes';
 import { chunkKey, isChunkUnlocked, ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { REGION_CHUNKS } from '../data/regionChunks';
@@ -436,7 +436,7 @@ const KeyChip: React.FC<{ label: string; count: number; color: 'amber' | 'purple
 // ---- modal / trigger --------------------------------------------------------
 
 export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }> = ({ onClose, embedded }) => {
-  const { history, unlocks, keys, specialKeys, chaosKeys, fatePoints, gameModeId } = useGame();
+  const { history, unlocks, keys, specialKeys, chaosKeys, fatePoints, gameModeId, customMode } = useGame();
   const { activeProfileName } = useProfiles();
   const cardRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -446,7 +446,8 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
   const [captured, setCaptured] = useState<string | null>(null);
   const [captureError, setCaptureError] = useState<string | null>(null);
 
-  const historyAudit = React.useMemo(() => auditHistory(history), [history]);
+  const modeRules = resolveModeRules(gameModeId, customMode);
+  const historyAudit = React.useMemo(() => auditHistory(history, modeRules), [history, modeRules]);
   const runId = React.useMemo(() => computeRunId(history), [history]);
   const firstTs = history[0]?.timestamp ?? Date.now();
   const integrityOk = history.length > 0 && historyAudit.verdict === 'verified';

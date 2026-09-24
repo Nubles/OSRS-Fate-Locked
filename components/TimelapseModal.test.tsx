@@ -6,12 +6,16 @@ import { ensureChain } from '../utils/integrity';
 import type { LogEntry } from '../types';
 import { TimelapseModal } from './TimelapseModal';
 
+const mode = vi.hoisted(() => ({ current: { gameModeId: 'vanilla', customMode: undefined as unknown } }));
 vi.mock('../context/GameContext', () => ({
-  useGame: () => ({ gameModeId: 'vanilla', customMode: undefined }),
+  useGame: () => mode.current,
 }));
 vi.mock('../hooks/useFocusTrap', () => ({ useFocusTrap: () => undefined }));
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  mode.current = { gameModeId: 'vanilla', customMode: undefined };
+});
 
 const legacyRitual: LogEntry = {
   id: 'old-ritual', timestamp: Date.parse('2026-06-01T00:00:00Z'), type: 'ALTAR', message: 'Ritual of Clarity',
@@ -31,5 +35,20 @@ describe('TimelapseModal integrity banner', () => {
     render(<TimelapseModal history={[{ ...entry, message: 'Edited after the fact' }]} onClose={vi.fn()} />);
 
     expect(screen.getByText(/INTEGRITY: BROKEN/)).toBeTruthy();
+  });
+});
+
+describe('TimelapseModal replay under the run mode', () => {
+  it("does not warn about Fate a pity-off run legitimately holds", () => {
+    // Legacy Hardcore has no pity: 30 failures at +2 reach 60 Fate.
+    mode.current = { gameModeId: 'hardcore', customMode: undefined };
+    const history = ensureChain(Array.from({ length: 30 }, (_, index): LogEntry => ({
+      id: `hardcore-fail-${index}`, timestamp: index + 1, type: 'ROLL_FAIL', message: 'No Key.',
+      meta: { fatePointsEarned: 2 },
+    })));
+    render(<TimelapseModal history={history} onClose={vi.fn()} />);
+
+    expect(screen.getByText('INTEGRITY: OK')).toBeTruthy();
+    expect(screen.queryByText(/REPLAY WARNING/)).toBeNull();
   });
 });

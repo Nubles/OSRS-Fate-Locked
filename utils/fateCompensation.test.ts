@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { resolveModeRules } from '../config/gameModes';
 import { DropSource, type GameState, type LogEntry } from '../types';
 import {
   calculateLegacyFateCompensation,
@@ -89,6 +90,30 @@ describe('calculateLegacyFateCompensation', () => {
     expect(calculateLegacyFateCompensation(state(history, {}, 45))).toMatchObject({
       pityKeys: 1,
       fatePoints: 5,
+    });
+  });
+
+  it('offers no Pity Keys to a run whose mode has pity off', () => {
+    // A pre-v4 legacy Hardcore save holding 60 Fate from 60 +1 failures.
+    const history = failures(60, DropSource.QUEST_NOVICE);
+
+    expect(calculateLegacyFateCompensation(state(history, {}, 60), resolveModeRules('hardcore'))).toEqual({
+      chaosKeys: 0,
+      pityKeys: 0,
+      fatePoints: 60,
+    });
+  });
+
+  it("places missed Pity Keys at the mode's own threshold", () => {
+    const history = failures(35, DropSource.QUEST_NOVICE);
+
+    expect(calculateLegacyFateCompensation(state(history, {}, 35), resolveModeRules('casual'))).toMatchObject({
+      pityKeys: 1,
+      fatePoints: 5,
+    });
+    expect(calculateLegacyFateCompensation(state(history, {}, 35), resolveModeRules('vanilla'))).toMatchObject({
+      pityKeys: 0,
+      fatePoints: 35,
     });
   });
 

@@ -65,6 +65,7 @@ describe('RunCardModal local history status', () => {
   beforeEach(() => {
     mockGame.current.history = [];
     mockGame.current.unlocks.regions = [];
+    mockGame.current.gameModeId = 'vanilla';
   });
 
   it('does not approve an impossible replay just because its hashes are valid', () => {
@@ -92,6 +93,19 @@ describe('RunCardModal local history status', () => {
     expect(markup).toContain('HISTORY CHECKED');
     expect(markup).toContain('not external verification');
     expect(markup).not.toContain('VERIFIED');
+    expect(markup).not.toContain('REPLAY WARNING');
+  });
+
+  it("checks a pity-off run's Fate against its own mode", () => {
+    // Legacy Hardcore has no pity: 30 failures at +2 legitimately reach 60 Fate.
+    mockGame.current.gameModeId = 'hardcore';
+    mockGame.current.history = ensureChain(Array.from({ length: 30 }, (_, index) => entry({
+      id: `hardcore-fail-${index}`, type: 'ROLL_FAIL', message: 'No Key.',
+      meta: { fatePointsEarned: 2 },
+    })));
+
+    const markup = renderCard();
+    expect(markup).toContain('HISTORY CHECKED');
     expect(markup).not.toContain('REPLAY WARNING');
   });
 

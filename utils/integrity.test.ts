@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
   simpleHash, hashEntry, ensureChain, verifyChain,
-  replayInvariants, computeRunId, buildVerifiedBundle, sha256Hex,
+  replayInvariants, computeRunId, buildVerifiedBundle, sha256Hex, auditHistory,
 } from './integrity';
 import { LogEntry } from '../types';
+import { resolveModeRules } from '../config/gameModes';
 
 // --- fixtures ---------------------------------------------------------------
 
@@ -418,6 +419,38 @@ describe('replayInvariants', () => {
     expect(violations.some(v => v.kind === 'FATE_OVERFLOW')).toBe(true);
   });
 
+  it('does not cap Fate for a run whose mode has pity off', () => {
+    // Legacy Hardcore: 30 failures at +2 Fate reach 60 with no Pity Key.
+    const fails = Array.from({ length: 30 }, () => fail({ meta: { fatePointsEarned: 2 } }));
+    const { final, violations } = replayInvariants(fails, 0, resolveModeRules('hardcore'));
+    expect(final.fatePoints).toBe(60);
+    expect(violations.some(v => v.kind === 'FATE_OVERFLOW')).toBe(false);
+  });
+
+  it("caps Fate at the mode's threshold before any Pity Key records it", () => {
+    // 26 failures at +2 Fate reach 52: legal at a Custom 100-Fate threshold only.
+    const fails = Array.from({ length: 26 }, () => fail({ meta: { fatePointsEarned: 2 } }));
+    const custom100 = { ...resolveModeRules('vanilla'), pityThreshold: 100 };
+    expect(replayInvariants(fails, 0, custom100).violations.some(v => v.kind === 'FATE_OVERFLOW')).toBe(false);
+    expect(replayInvariants(fails, 0, resolveModeRules('vanilla')).violations.some(v => v.kind === 'FATE_OVERFLOW')).toBe(true);
+    expect(replayInvariants([...fails.slice(0, 16)], 0, resolveModeRules('casual')).violations
+      .some(v => v.kind === 'FATE_OVERFLOW')).toBe(true);
+  });
+
+  it("subtracts the mode's threshold for a Pity Key that did not record one", () => {
+    // Legacy Casual pity at 30: 29 + 3 - 30 leaves 2 Fate, not the 50-Fate reading's 0.
+    const history = [
+      ...Array.from({ length: 29 }, () => fail()),
+      mk({ type: 'PITY', message: 'Pity Key', meta: { fatePointsEarned: 3 } }),
+    ];
+    expect(replayInvariants(history, 0, resolveModeRules('casual')).final.fatePoints).toBe(2);
+  });
+
+  it('audits a pity-off run against its own rules', () => {
+    const fails = ensureChain(Array.from({ length: 30 }, () => fail({ meta: { fatePointsEarned: 2 } })));
+    expect(auditHistory(fails, resolveModeRules('hardcore')).verdict).toBe('verified');
+  });
+
   it('flags roll values outside 0.1-100.0', () => {
     const zero = replayInvariants([fail({ rollValue: 0 })], 0).violations;
     const high = replayInvariants([fail({ rollValue: 100.1 })], 0).violations;
@@ -487,5 +520,11 @@ describe('buildVerifiedBundle', () => {
     const tampered = chained.map((e, i) => i === 1 ? { ...e, message: 'EDITED' } : e);
     const bundle = await buildVerifiedBundle(tampered);
     expect(bundle.chainReport.ok).toBe(false);
+  });
+  it("replays the bundle under the run's own mode", async () => {
+    const fails = Array.from({ length: 30 }, () => fail({ meta: { fatePointsEarned: 2 } }));
+    const bundle = await buildVerifiedBundle(fails, { id: 'hardcore', rules: resolveModeRules('hardcore') });
+    expect(bundle.replayWarnings).toBeUndefined();
+    expect(bundle.finalState.fatePoints).toBe(60);
   });
 });

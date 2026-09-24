@@ -6,6 +6,9 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SyncCodeModal } from './SyncCodeModal';
 import type { BackupMeta } from '../utils/backups';
+import { decodeAndValidateSyncCode } from '../utils/syncCode';
+import { ensureChain } from '../utils/integrity';
+import type { GameState } from '../types';
 
 const deferred = <T,>() => {
   let resolve!: (value: T) => void;
@@ -195,5 +198,40 @@ describe('SyncCodeModal tabs', () => {
 
     expect(screen.getByRole('button', { name: 'Import' })).toBe(importTab);
     expect(document.activeElement).toBe(importTab);
+  });
+});
+
+describe('SyncCodeModal import verdict', () => {
+  it("checks an imported run's Fate against that run's own mode", async () => {
+    // Legacy Hardcore has no pity, so 30 failures at +2 legitimately reach 60 Fate.
+    const history = ensureChain(Array.from({ length: 30 }, (_, index) => ({
+      id: `hardcore-fail-${index}`,
+      timestamp: index + 1,
+      type: 'ROLL_FAIL' as const,
+      message: 'No Key.',
+      meta: { fatePointsEarned: 2 },
+    })));
+    vi.mocked(decodeAndValidateSyncCode).mockResolvedValueOnce({
+      ok: true,
+      state: {
+        unlocks: { skills: {}, regions: [], quests: [] },
+        keys: 3, specialKeys: 0, chaosKeys: 0, fatePoints: 60,
+        history,
+        gameModeId: 'hardcore',
+      } as unknown as GameState,
+      checksumOk: true,
+      warnings: [],
+    });
+    const user = userEvent.setup();
+    render(<SyncCodeModal onClose={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Import' }));
+    fireEvent.change(screen.getByPlaceholderText('FLSYNC.g1.…'), {
+      target: { value: 'hardcore-code' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Verify code' }));
+
+    expect(await screen.findByText('Verified run')).toBeTruthy();
+    expect(screen.queryByText('Loadable, with warnings')).toBeNull();
   });
 });
