@@ -13,6 +13,8 @@ import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '..
 import { BOSSES_LIST } from '../data/items';
 import { describeVanillaRandomAccessPolicy, formatVanillaBossSchedule } from '../components/ReferenceModal';
 import { skillLevelKeyChance } from '../utils/keyRoll';
+import { createFreshState, prepareKeyRollAction } from '../context/GameContext';
+import { resolveModeRules } from './gameModes';
 
 /**
  * This is the anti-drift guarantee: the Codex / onboarding render from
@@ -36,6 +38,26 @@ describe('economy ↔ engine consistency', () => {
     );
     for (const s of expected) {
       expect(documented.has(s), `missing earn entry for "${s}"`).toBe(true);
+    }
+  });
+
+  it('documents exactly the Omni chance the roll engine applies to each source', () => {
+    const state = { ...createFreshState(), gameModeId: 'vanilla', lastEvent: null };
+    const base = resolveModeRules('vanilla').omniChanceBase;
+    const omniOn = (tier: typeof fixedTiers[number], omniDie: number): boolean => {
+      // Die 0 is the primary key roll (always a success here); die 2 is Omni.
+      const dice = (_purpose: string, index = 0, max = 100) => index === 0 ? 1 : index === 2 ? omniDie : max;
+      const action = prepareKeyRollAction(state, tier.source!, 100, failureFateForSource(tier.source!), dice);
+      return action?.payload.omni ?? false;
+    };
+    for (const tier of fixedTiers) {
+      const documented = tier.omni ?? base;
+      expect(omniOn(tier, documented), `${tier.source} at ${documented}%`).toBe(true);
+      expect(omniOn(tier, documented + 1), `${tier.source} above ${documented}%`).toBe(false);
+    }
+    const omniText = KEY_TYPES.find(k => k.id === 'omni')!.earn.join(' ');
+    for (const percent of new Set(fixedTiers.flatMap(t => t.omni ?? []))) {
+      expect(omniText, `Omni-Key text mentions ${percent}%`).toContain(`${percent}%`);
     }
   });
 

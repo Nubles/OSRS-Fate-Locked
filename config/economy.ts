@@ -15,7 +15,7 @@ import { BANK_IDS } from '../data/banks';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from './rules';
 import {
   SKILLS_LIST, EQUIPMENT_SLOTS, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST,
-  POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST,
+  ROLLABLE_POH_ITEMS, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST,
   GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST,
 } from '../data/items';
 import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
@@ -151,7 +151,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
       { tier: 'Intermediate', source: DropSource.QUEST_INTERMEDIATE, rate: DROP_RATES[DropSource.QUEST_INTERMEDIATE] },
       { tier: 'Experienced',  source: DropSource.QUEST_EXPERIENCED,  rate: DROP_RATES[DropSource.QUEST_EXPERIENCED] },
       { tier: 'Master',       source: DropSource.QUEST_MASTER,       rate: DROP_RATES[DropSource.QUEST_MASTER] },
-      { tier: 'Grandmaster',  source: DropSource.QUEST_GRANDMASTER,  rate: DROP_RATES[DropSource.QUEST_GRANDMASTER], omni: 20, bonus: 'Guaranteed Key + the best Omni odds in the game.' },
+      { tier: 'Grandmaster',  source: DropSource.QUEST_GRANDMASTER,  rate: DROP_RATES[DropSource.QUEST_GRANDMASTER], omni: 20, bonus: 'Guaranteed Key + the best Omni odds of any quest.' },
     ],
   },
   {
@@ -220,7 +220,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
       { tier: 'Low boss',  source: DropSource.BOSS_LOW,  rate: DROP_RATES[DropSource.BOSS_LOW] },
       { tier: 'Mid boss',  source: DropSource.BOSS_MID,  rate: DROP_RATES[DropSource.BOSS_MID] },
       { tier: 'High boss', source: DropSource.BOSS_HIGH, rate: DROP_RATES[DropSource.BOSS_HIGH], omni: 10, bonus: 'Top bosses keep elevated Omni odds.' },
-      { tier: 'Raid',      source: DropSource.RAID,      rate: DROP_RATES[DropSource.RAID], omni: 15, bonus: 'CoX / ToB / ToA — the best repeatable odds in the game.' },
+      { tier: 'Raid',      source: DropSource.RAID,      rate: DROP_RATES[DropSource.RAID], omni: 15, bonus: 'CoX / ToB / ToA — the best repeatable Omni odds.' },
     ],
   },
   {
@@ -313,7 +313,7 @@ export const KEY_TYPES: KeyTypeInfo[] = [
     accent: 'text-purple-400',
     tagline: 'Bend Fate to your will.',
     earn: [
-      'A lucky upgrade on a successful roll (mode base %, up to 20% on Grandmaster quests, 10% on Elite diaries & full CA/Diary sections).',
+      'A lucky upgrade on a successful roll (mode base %, raised to 25% on pet drops, 20% on Grandmaster quests, 15% on raids and 10% on Elite diaries and high-tier bosses).',
       'Ritual of Transmutation — fuse 5 standard Keys into 1.',
     ],
     spend: 'Hold one and the Dashboard lights up — click any locked skill, gear slot, region or boss to unlock EXACTLY it. No RNG, no table roll.',
@@ -350,8 +350,8 @@ export const SPEND_TABLES: SpendTable[] = [
   { type: TableType.REGIONS,         label: 'Areas',      count: REGIONS_LIST.length,    blurb: 'Open new map regions you’re allowed to enter.' },
   { type: TableType.MOBILITY,        label: 'Mobility',   count: MOBILITY_LIST.length,   blurb: 'Teleports, spirit trees, fairy rings and transport networks.' },
   { type: TableType.ARCANA,          label: COMBAT_POWERS_LABEL, count: ARCANA_LIST.length, blurb: COMBAT_POWERS_DESCRIPTION },
-  { type: TableType.STORAGE,         label: 'Storage',    count: STORAGE_LIST.length,    blurb: 'Looting bag, rune pouch, seed box — and rare bank access.' },
-  { type: TableType.POH,             label: 'Housing',    count: POH_LIST.length,        blurb: 'Player-owned house rooms and facilities.' },
+  { type: TableType.STORAGE,         label: 'Storage',    count: STORAGE_LIST.length,    blurb: 'Looting bag, rune pouch, seed box and other storage. Banks are their own table.' },
+  { type: TableType.POH,             label: 'Housing',    count: ROLLABLE_POH_ITEMS.length, blurb: 'Player-owned house rooms and facilities.' },
   { type: TableType.MERCHANTS,       label: 'Merchants',  count: MERCHANTS_LIST.length,  blurb: 'Shops and traders you’re permitted to use.' },
   { type: TableType.MINIGAMES,       label: 'Minigames',  count: MINIGAMES_LIST.length,  blurb: 'Activities, from Pest Control to the Inferno.' },
   { type: TableType.BOSSES,          label: 'Bosses',     count: BOSSES_LIST.length,     blurb: 'Permission to fight each major boss encounter.' },

@@ -90,7 +90,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
   // Spend Keys actually shows (see components/GachaSection.tsx).
   const spendTables = gameModeId === 'chunked'
     ? SPEND_TABLES.map(t => t.type === TableType.REGIONS
-        ? { ...t, type: TableType.CHUNKS, label: 'Chunks', count: ALL_CHUNK_KEYS.length, blurb: 'Unlock a random chunk directly adjacent to territory you already hold.' }
+        ? { ...t, type: TableType.CHUNKS, label: 'Chunks', count: ALL_CHUNK_KEYS.length - 1, blurb: 'Unlock a random frontier chunk: land next to your territory, plus coast reached by sea after Pandemonium and Sailing.' }
         : t)
     : SPEND_TABLES;
 
@@ -208,7 +208,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <div>
                                             <h4 className="font-bold text-gray-200">The Roll</h4>
                                             <p className="text-sm text-gray-400 mt-1">
-                                                The app draws to 0.1% precision, from 0.1 to 100.0.
+                                                The app draws to 0.1% precision, from 0.1 to 100.0 (Vanilla boss and clue rolls use 0.01%).
                                                 <br/>
                                                 <span className="text-green-400">Success:</span> Roll at or under the threshold to get a Key.
                                                 <br/>
@@ -313,9 +313,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="bg-gradient-to-br from-[#1d2230] to-[#222] p-6 rounded-xl border border-blue-500/20">
                                 <h3 className="text-blue-300 font-bold uppercase tracking-widest mb-4 flex items-center gap-2"><Dices size={18}/> A single roll, start to finish</h3>
                                 <ol className="space-y-3 text-sm text-gray-300">
-                                    <li><b className="text-white">1.</b> You finish <b>Dragon Slayer II</b> — a <b className="text-purple-400">Master</b> quest — and tick it off in the Journal.</li>
+                                    <li><b className="text-white">1.</b> You finish <b>Desert Treasure I</b> — a <b className="text-purple-400">Master</b> quest — and tick it off in the Journal.</li>
                                     <li><b className="text-white">2.</b> The app draws to <span className="font-mono">0.1%</span> precision against its <b className="text-purple-400">95.0%</b> threshold. You roll <span className="font-mono text-green-400">42.0</span> → a Key!</li>
-                                    <li><b className="text-white">3.</b> Every success then rolls for an upgrade. In {activeMode.name} mode that's a <b className="text-purple-400">{rules.omniChanceBase}%</b> Omni chance (up to 20% on this very quest). Miss it and you bank a Standard Key; hit it and you <i>also</i> pocket an <b className="text-purple-400">Omni-Key</b>.</li>
+                                    <li><b className="text-white">3.</b> Every success then rolls for an upgrade. In {activeMode.name} mode that's a <b className="text-purple-400">{rules.omniChanceBase}%</b> Omni chance (Grandmaster quests raise it to 20%). Miss it and you bank a Standard Key; hit it and you <i>also</i> pocket an <b className="text-purple-400">Omni-Key</b>.</li>
                                     <li><b className="text-white">4.</b> Take the Key to <b className="text-osrs-gold">Spend Keys</b>, choose the <b>Skills</b> table, and unlock a random skill tier — say Slayer. Those new Slayer levels open fresh tasks to roll on.</li>
                                     <li className="text-gray-500 text-xs pt-1">Roll <span className="font-mono">95.1–100.0</span> instead and you'd get no Key — but you would gain +3 Fate{rules.pityEnabled ? <>, inching toward a guaranteed Key at <b>{rules.pityThreshold}</b></> : ''}.</li>
                                 </ol>
@@ -358,7 +358,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Slayer is your engine.</b> It's the most repeatable roll — climb to higher masters (Konar 35%, Duradel 70%, Boss tasks 80%) as soon as you can survive them.</span></li>
                                     <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Save Omni-Keys for the big wishes.</b> Pick a must-have — a key region, a raid boss, a gear slot — rather than spending them where the table is tiny.</span></li>
                                     <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Bad luck still pays.</b> Every failed roll banks Fate. Spend it on Clarity before a high-stakes roll, or save toward a Chaos Key.</span></li>
-                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Grandmaster quests are the single best roll.</b> A guaranteed Key and the best Omni odds in the game — with Elite diaries and the top CA tiers close behind.</span></li>
+                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Grandmaster quests are the best journal roll.</b> A guaranteed Key with 20% Omni odds — only pet drops (25%) beat them. Raids (15%), Elite diaries and high-tier bosses (10%) also keep elevated Omni odds.</span></li>
                                 </ul>
                             </div>
                         </div>
@@ -509,7 +509,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     <p className="text-xs text-gray-400 leading-relaxed">
                                         Any successful key roll has a <b>{rules.omniChanceBase}% chance</b> to upgrade to an Omni-Key in <b>{activeMode.name}</b> mode.
                                         <br/><br/>
-                                        High-effort sources keep elevated odds: Grandmaster Quests <b>20%</b>, Elite Diaries / CA &amp; Diary completions <b>10%</b>.
+                                        High-effort sources keep elevated odds: pet drops <b>25%</b>, Grandmaster quests <b>20%</b>, raids <b>15%</b>, Elite diaries and high-tier bosses <b>10%</b>.
                                         {rules.regionModifiers && <><br/><br/><span className="text-emerald-400">Region bonuses add to this — see the Region Bonuses tab.</span></>}
                                     </p>
                                 </div>
@@ -583,7 +583,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     {rules.regionModifiers ? (
                                         <><b className="text-emerald-400">Active in {activeMode.name} mode.</b> A continent's passive switches on once you unlock any region inside it, and every active bonus stacks.</>
                                     ) : (
-                                        <><b className="text-gray-500">Inactive in {activeMode.name} mode.</b> Region passives only apply when a mode has Region Modifiers enabled — e.g. Region Rush, or a Custom mode with the toggle on.</>
+                                        <><b className="text-gray-500">Inactive in {activeMode.name} mode.</b> Region passives only apply to runs started under a mode with Region Modifiers — the retired Region Rush, or a legacy Custom run with the toggle on.</>
                                     )}
                                 </p>
                             </div>
@@ -697,8 +697,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                                 Chunked mode uses a different model entirely: no named regions.
                                                 You start in a single free chunk — the Lumbridge castle courtyard.
                                                 <br/>
-                                                1 Key = Unlock a <b>random chunk directly adjacent</b> to one you already
-                                                hold (map-region granularity, not a named area).
+                                                1 Key = Unlock a <b>random frontier chunk</b> next to one you already
+                                                hold (map-region granularity, not a named area). After Pandemonium and
+                                                Sailing, coast reached across open sea joins the frontier.
                                                 <br/>
                                                 You can only enter chunks you've unlocked, one step out from your
                                                 territory at a time — Fate hands you a random tile of the frontier,
@@ -708,7 +709,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                             <p className="text-sm text-gray-400 mt-1 leading-relaxed">
                                                 You start in <b>Misthalin</b> (Lumbridge/Varrock/Draynor).
                                                 <br/>
-                                                1 Key = Unlock a random named area (e.g. "Catherby", "Fremennik Province"). Vanilla named-area rolls can be scattered.
+                                                1 Key = Unlock a random named area (e.g. "Catherby", "Rellekka"). Vanilla named-area rolls can be scattered.
                                                 <br/>
                                                 Only Chunked mode enforces adjacent expansion. You can only enter unlocked regions.
                                             </p>
@@ -782,10 +783,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="bg-[#222] p-6 rounded-xl border border-white/5">
                                 <h3 className="font-bold text-gray-200 text-lg mb-4 flex items-center gap-2"><Package size={20}/> The Rules</h3>
                                 <ul className="space-y-4 text-sm text-gray-300 list-disc list-inside">
-                                    <li><b>No Banking</b> allowed by default (Ultimate Ironman).</li>
-                                    <li>However, you can unlock specific <b>Storage Containers</b> via the gacha.</li>
+                                    <li><b>Banks are locked</b> by default: each bank and deposit box is its own unlock on the <b>Banks</b> table.</li>
+                                    <li>You can also unlock specific <b>Storage Containers</b> from the Storage table.</li>
                                     <li>Unlockable items include: Looting Bag, Rune Pouch, Seed Box, etc.</li>
-                                    <li>If you unlock "Bank Access" (Rare), you may use banks in specific regions only.</li>
                                 </ul>
                             </div>
                         </div>

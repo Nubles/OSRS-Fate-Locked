@@ -2,16 +2,15 @@
 import React, { useMemo } from 'react';
 import { TableType } from '../types';
 import { useGame } from '../context/GameContext';
-import { bankLocksActive } from '../utils/reachability';
+import { bankLocksActive, isAreaReachable } from '../utils/reachability';
 import { BANK_IDS, BANK_BY_ID } from '../data/banks';
-import { checkUnlockAvailability, getPoolAndStateKey } from '../utils/gameEngine';
-import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, POH_LIST, MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, UTILITY_ITEM_IDS } from '../constants';
+import { checkUnlockAvailability, getPoolAndStateKey, randomUnlockPool } from '../utils/gameEngine';
+import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, ROLLABLE_POH_ITEMS, MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, UTILITY_ITEM_IDS } from '../constants';
 import { HelpCircle, Lock, TrendingUp, AlertTriangle, Check } from 'lucide-react';
 import { Sparkles, Dices, Dna, Sprout, Key } from './OsrsIcon';
 import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { openDashboardPool } from '../utils/dashboardPoolNavigation';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, chunkLabel } from '../utils/chunkAdjacency';
-import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
 
 // --- Inner Components ---
 interface Accent {
@@ -54,6 +53,8 @@ interface SpendCardProps {
   disabled: boolean;
   keysAvailable: boolean;
   complete: boolean;
+  /** Entries remain, but none is eligible to roll yet (e.g. location rules). */
+  blocked?: boolean;
   icon?: any;
   iconSrc?: string;
   onClick: () => void;
@@ -81,7 +82,7 @@ const OSRS_GACHA_ICONS = {
 };
 
 export const SpendCard: React.FC<SpendCardProps> = ({
-  type, label, subLabel, unlocked, total, disabled, keysAvailable, complete, icon: Icon, iconSrc, onClick, onViewPool, priceDisplay = "1", index = 0, animate = false,
+  type, label, subLabel, unlocked, total, disabled, keysAvailable, complete, blocked = false, icon: Icon, iconSrc, onClick, onViewPool, priceDisplay = "1", index = 0, animate = false,
 }) => {
   const a = ACCENTS[type] ?? DEFAULT_ACCENT;
   const isClickable = !disabled && keysAvailable && !complete;
@@ -99,6 +100,7 @@ export const SpendCard: React.FC<SpendCardProps> = ({
         onClick={onClick}
         disabled={!isClickable}
         aria-label={`Roll ${label}`}
+        title={blocked && !complete ? 'No entry here is eligible yet — open more locations or quests first.' : undefined}
         className={`relative overflow-hidden rounded-lg border-2 w-full text-left group flex flex-col p-2.5 min-h-[104px] transition-all duration-200 active:scale-[0.98]
         ${isClickable
           ? `bg-[#1f1c17] border-[#3a352c] ${a.hoverBorder} ${a.hoverShadow} hover:-translate-y-1`
@@ -118,6 +120,8 @@ export const SpendCard: React.FC<SpendCardProps> = ({
         </div>
         {complete ? (
            <span className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-900/40 text-emerald-300 text-[9px] font-bold uppercase rounded border border-emerald-700/50 tracking-wider"><Check size={10} strokeWidth={3} />Done</span>
+        ) : blocked ? (
+           <span className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-800/60 text-gray-400 text-[9px] font-bold uppercase rounded border border-white/10 tracking-wider"><Lock size={10} />Blocked</span>
         ) : (
            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/40 border border-white/10 shadow-sm">
               <Key size={10} className="text-osrs-gold" />
@@ -171,6 +175,16 @@ export const GachaSection: React.FC = () => {
   const bankLocks = bankLocksActive(gameModeId, customMode);
 
   const canUnlock = checkUnlockAvailability(unlocks);
+  // Roll-ability comes from the same pool the roll draws from, so a table
+  // whose remaining entries are all location-blocked can't offer "Roll".
+  const rollable = useMemo(() => {
+    const result = new Map<TableType, boolean>();
+    for (const table of Object.values(TableType)) {
+      result.set(table, randomUnlockPool(unlocks, gameModeId, 'key', table, customMode).length > 0);
+    }
+    return result;
+  }, [unlocks, gameModeId, customMode]);
+  const ownedChunks = ALL_CHUNK_KEYS.filter(key => key !== CHUNKED_START_KEY && (unlocks.chunks ?? []).includes(key)).length;
 
   // Calculate Total Level for Display
   const totalLevel = useMemo(() => {
@@ -188,12 +202,13 @@ export const GachaSection: React.FC = () => {
     { type: TableType.EQUIPMENT, label: 'Equipment', subLabel: 'Upgrade Gear', iconSrc: OSRS_GACHA_ICONS.EQUIPMENT, unlocked: tierCount(unlocks.equipment), total: EQUIPMENT_SLOTS.length, can: canUnlock.equipment },
     { type: TableType.SKILLS, label: 'Skills', subLabel: 'Unlock next methods tier', iconSrc: OSRS_GACHA_ICONS.SKILLS, unlocked: tierCount(unlocks.skills), total: SKILLS_LIST.length, can: canUnlock.skills },
     isChunked
-      ? { type: TableType.CHUNKS, label: 'Chunks', subLabel: 'Adjacent Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: ALL_CHUNK_KEYS.filter(key => key !== CHUNKED_START_KEY && (unlocks.chunks ?? []).includes(key)).length, total: ALL_CHUNK_KEYS.length - 1, can: canUnlock.chunks }
-      : { type: TableType.REGIONS, label: 'Areas', subLabel: 'New Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: canonicalizeAreaUnlocks(unlocks.regions ?? []).regions.length, total: REGIONS_LIST.length, can: canUnlock.regions },
+      // An empty frontier is not "Done": more land opens after Sailing.
+      ? { type: TableType.CHUNKS, label: 'Chunks', subLabel: 'Adjacent Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: ownedChunks, total: ALL_CHUNK_KEYS.length - 1, can: ownedChunks < ALL_CHUNK_KEYS.length - 1 }
+      : { type: TableType.REGIONS, label: 'Areas', subLabel: 'New Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: REGIONS_LIST.filter(area => isAreaReachable(area, unlocks, gameModeId)).length, total: REGIONS_LIST.length, can: canUnlock.regions },
     { type: TableType.MOBILITY, label: 'Mobility', subLabel: 'Travel Networks', iconSrc: OSRS_GACHA_ICONS.MOBILITY, unlocked: (unlocks.mobility ?? []).length, total: MOBILITY_LIST.length, can: canUnlock.mobility },
     { type: TableType.ARCANA, label: COMBAT_POWERS_LABEL, subLabel: COMBAT_POWERS_DESCRIPTION, iconSrc: OSRS_GACHA_ICONS.ARCANA, unlocked: (unlocks.arcana ?? []).length, total: ARCANA_LIST.length, can: canUnlock.arcana },
     { type: TableType.STORAGE, label: 'Storage', subLabel: 'Inventory Space', iconSrc: OSRS_GACHA_ICONS.STORAGE, unlocked: (unlocks.storage ?? []).length, total: STORAGE_LIST.length, can: canUnlock.storage },
-    { type: TableType.POH, label: 'Housing', subLabel: 'POH Facilities', iconSrc: OSRS_GACHA_ICONS.POH, unlocked: (unlocks.housing ?? []).length, total: POH_LIST.length, can: canUnlock.poh },
+    { type: TableType.POH, label: 'Housing', subLabel: 'POH Facilities', iconSrc: OSRS_GACHA_ICONS.POH, unlocked: ROLLABLE_POH_ITEMS.filter(item => (unlocks.housing ?? []).includes(item)).length, total: ROLLABLE_POH_ITEMS.length, can: canUnlock.poh },
     { type: TableType.MERCHANTS, label: 'Merchants', subLabel: 'Shops & Wares', iconSrc: OSRS_GACHA_ICONS.MERCHANTS, unlocked: (unlocks.merchants ?? []).length, total: MERCHANTS_LIST.length, can: canUnlock.merchants },
     { type: TableType.MINIGAMES, label: 'Minigames', subLabel: 'Activities & Fun', iconSrc: OSRS_GACHA_ICONS.MINIGAMES, unlocked: (unlocks.minigames ?? []).length, total: MINIGAMES_LIST.length, can: canUnlock.minigames },
     { type: TableType.BOSSES, label: 'Bosses', subLabel: 'Major Encounters', iconSrc: OSRS_GACHA_ICONS.BOSSES, unlocked: (unlocks.bosses ?? []).length, total: BOSSES_LIST.length, can: canUnlock.bosses },
@@ -217,7 +232,7 @@ export const GachaSection: React.FC = () => {
               {specialKeys} Omni-Key{specialKeys > 1 ? 's' : ''} Ready
             </h3>
             <p className="text-[11px] text-purple-300/70 font-mono leading-snug">
-              Omni-Keys aren't rolled here — click any locked skill, gear slot, region or boss in the <span className="text-purple-200">Progression Dashboard</span> to pick exactly what to unlock.
+              Omni-Keys aren't rolled here — click any locked skill, gear slot, {isChunked ? '' : 'region '}or boss in the <span className="text-purple-200">Progression Dashboard</span> to pick exactly what to unlock.
             </p>
           </div>
         </div>
@@ -273,9 +288,10 @@ export const GachaSection: React.FC = () => {
             subLabel={c.subLabel}
             unlocked={c.unlocked}
             total={c.total}
-            disabled={!c.can || !!pendingUnlock}
+            disabled={!c.can || !rollable.get(c.type) || !!pendingUnlock}
             keysAvailable={keys > 0}
             complete={!c.can}
+            blocked={c.can && !rollable.get(c.type)}
             onViewPool={() => openDashboardPool(c.type)}
             iconSrc={c.iconSrc}
             icon={c.icon}

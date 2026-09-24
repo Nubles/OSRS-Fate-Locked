@@ -31,8 +31,8 @@ Bad luck is cushioned by **Fate Points** (a pity timer) and the **Void Altar**, 
 - **Farm Keys** — Slayer master & Clue scroll roll cards with animated rolls, plus pointers to skill/journal/collection-log rolling.
 - **Spend Keys** — gacha-style unlock tables with reveal animations.
 - **Progression Dashboard** — Character (equipment tiers, skills), World (interactive region map), Activities & Utility (bosses, minigames, guilds… with region tags), Journal (quests, diaries, combat achievements), and Collection Log.
-- **Game Modes** — Vanilla, Casual, Hardcore, Region Rush, and a fully tunable Custom mode. The mode is chosen at the start of a run and locked in permanently.
-- **Region modifiers** — in Region Rush, every continent you unlock grants a passive bonus.
+- **Game Modes** — Vanilla (the supported ruleset) and the experimental Chunked mode, where land unlocks one map chunk at a time. The mode is chosen at the start of a run and locked in permanently. Runs started under the retired Casual, Hardcore, Region Rush, Xtreme Start and Custom modes keep their original rules.
+- **Region modifiers** — legacy Region Rush runs keep their per-continent passive bonuses.
 - **Region map authoring** — paint custom region/chunk layouts, export/import as JSON.
 - **Integrity & verification** — a tamper-evident hash chain over the run history, a deterministic run ID, invariant replay, and exportable verified bundles, so a completed run can be shared and checked.
 - **Shareable run card & timelapse** — generate an image of your run, or play its history back as a narrated timelapse.

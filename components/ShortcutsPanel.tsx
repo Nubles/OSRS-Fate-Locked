@@ -89,7 +89,7 @@ export const ShortcutsPanel: React.FC = () => {
                       <MapPin size={11} />
                     </button>
                   )}
-                  <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded border ${meta.cls}`}>{r.status === 'level' ? `Agility ${r.level}` : meta.label}</span>
+                  <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded border ${meta.cls}`}>{r.status === 'level' ? `${r.skill} ${r.level}` : meta.label}</span>
                 </div>
               );
             })}

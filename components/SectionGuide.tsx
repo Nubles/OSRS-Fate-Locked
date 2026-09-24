@@ -2,6 +2,7 @@ import React, { useState, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { HelpCircle, X } from 'lucide-react';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { SKILLS_LIST } from '../data/items';
 
 /**
  * A small "?" button that opens a short popover explaining a section: what it
@@ -102,7 +103,7 @@ export const GUIDES: Record<string, Guide> = {
 
   SKILLS: {
     title: 'Skills',
-    blurb: 'Your 23 skills — each unlocked and levelled through fate.',
+    blurb: `Your ${SKILLS_LIST.length} skills — each unlocked and levelled through fate.`,
     bullets: [
       'Spend an Omni-key on a locked skill to unlock it, then upgrade its tier to open higher-level methods and content.',
       'Level unlocked skills toward 99 as you train them in-game.',
