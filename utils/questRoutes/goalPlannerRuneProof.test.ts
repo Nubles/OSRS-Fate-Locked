@@ -29,8 +29,8 @@ const account = {
 
 describe('materializeQuestRouteSnapshot', () => {
   it('keeps an interior source beside the surface source at the same chunk', () => {
-    // Real data has this shape for the Cyclops at 44,55: the surface record needs
-    // Warriors' Guild access and the Warriors' Guild#Basement record does not.
+    // The Cyclops at 44,55 has a surface record and a Warriors' Guild#Basement
+    // interior record with different access; de-duplication must keep both.
     const surface: ItemSourceRecord = {
       itemName: 'Black bead',
       kind: 'monster',

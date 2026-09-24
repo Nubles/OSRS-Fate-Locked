@@ -517,9 +517,10 @@ describe('analyzeQuest', () => {
     ]);
   });
 
-  it("keeps Cook's Assistant's top milk route when the Misthalin Manor bucket surfaces", () => {
-    // Real data: the Misthalin Manor bucket at 50,49 records no entry requirement
-    // and used to be hidden behind the Zanaris record there.
+  it("keeps Cook's Assistant's top milk route, with the Misthalin Manor bucket gated", () => {
+    // Real data: the Misthalin Manor bucket at 50,49 once recorded no entry
+    // requirement and, kept apart from the Zanaris record there, read as free.
+    // Its interim review gates the manor behind confirmation.
     const walkthrough = publicQuestWalkthroughFor("Cook's Assistant")!;
     const snapshot = materializeQuestRouteSnapshot(
       "Cook's Assistant",
@@ -533,9 +534,15 @@ describe('analyzeQuest', () => {
 
     expect(milk.currentRoutes[0]?.id)
       .toBe('recipe:milk-cow:bucket of milk:q1:station=object:Dairy cow:50,51:deps=0=spawn:Bucket:50,51:bucket');
-    expect(milk.currentRoutes.map(route => route.id)).toContain(
-      'recipe:milk-cow:bucket of milk:q1:station=object:Dairy cow:50,49:deps=0=spawn:Bucket:50,49:bucket:Misthalin Manor',
-    );
+    const manorRoutes = [...milk.currentRoutes, ...milk.missingChunkRoutes]
+      .filter(route => route.id.endsWith(':Misthalin Manor'));
+    expect(manorRoutes.every(route => route.blockers.some(blocker => (
+      blocker.type === 'UNRESOLVED' && /Misthalin Mystery needs confirmation/.test(blocker.label)
+    )))).toBe(true);
+    expect(snapshot.itemSourceRecords
+      .filter(record => record.itemName === 'Bucket' && record.sourceId === 'Misthalin Manor')
+      .map(record => record.rawRequirements.map(requirement => requirement.raw)))
+      .toContainEqual(['Misthalin Manor: reaching the manor through Misthalin Mystery needs confirmation']);
   });
 
   it('invalidates cached routes when an interior source identity changes', () => {

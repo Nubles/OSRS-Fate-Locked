@@ -239,7 +239,7 @@ export interface ItemSourceRecord {
 
 // Bump when public/chunk-content.json changes so the fetch URL changes and
 // browsers don't serve a stale cached copy (the filename itself never changes).
-export const CHUNK_CONTENT_DATA_VERSION = 13;
+export const CHUNK_CONTENT_DATA_VERSION = 14;
 // A stalled request must fail, so its panels offer Retry instead of loading
 // forever. The file is about 300 kB gzipped, so this only ends a request that
 // has stopped, not a slow one.

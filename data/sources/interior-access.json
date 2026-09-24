@@ -111,6 +111,19 @@
         "Ratcatchers Complete the quest"
       ]
     },
+    "Warriors' Guild#Basement": {
+      "requirements": [
+        "Access the Warriors' Guild",
+        "Warriors' Guild basement: entry to the Cyclops basement needs confirmation"
+      ],
+      "note": "Interim review 2026-09-24, pending a wiki-verified requirement (the wiki was unreachable). The basement is below the guild, so it needs guild entry, and its own entry condition is gated behind confirmation instead of reading as free."
+    },
+    "Misthalin Manor": {
+      "requirements": [
+        "Misthalin Manor: reaching the manor through Misthalin Mystery needs confirmation"
+      ],
+      "note": "Interim review 2026-09-24, pending a wiki-verified requirement (the wiki was unreachable). The manor is reached through the Misthalin Mystery quest, so its access is gated behind confirmation instead of reading as free."
+    },
     "Crabclaw Caves": {
       "anchors": [
         "6453"
