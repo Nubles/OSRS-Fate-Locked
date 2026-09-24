@@ -31,6 +31,9 @@ const LOCATION_CHUNK_KEYS: ReadonlySet<string> = new Set(
     .flatMap(location => location.chunkOptions.map(chunkKey)),
 );
 
+/** Sort bonus per new named area a chunk gives a first foothold in. */
+const FOOTHOLD_BONUS = 3;
+
 export interface FrontierContent {
   monsters: number;
   shops: number;
@@ -52,7 +55,7 @@ export interface RankedFrontierChunk {
   score: number;
   cascadeScore: number;
   content?: FrontierContent;
-  /** Small chunk-local bonus used only for ranking ties. */
+  /** Small chunk-local bonus for ranking ties: at most 2.5, below one foothold's bonus. */
   contentScore: number;
   /**
    * What the row actually sorts by: cascade impact + content + a flat bonus
@@ -110,13 +113,14 @@ export function rankFrontierChunks(
             hasBank: bank,
           }
         : undefined;
-      // Banks and shops are worth more than yet-another-monster; capped so
-      // content alone never outranks a genuine new-area foothold.
+      // Banks and shops are worth more than yet-another-monster. At most 10,
+      // quartered to 2.5 so content alone never outranks a genuine new-area
+      // foothold (FOOTHOLD_BONUS).
       const contentScore = content
-        ? (content.hasBank ? 3 : 0)
+        ? ((content.hasBank ? 3 : 0)
           + Math.min(content.shops, 3)
           + Math.min(content.quests, 3)
-          + Math.min(content.monsters, 5) * 0.2
+          + Math.min(content.monsters, 5) * 0.2) / 4
         : 0;
 
       const cascadeScore = impact?.cascadeScore ?? 0;
@@ -132,7 +136,7 @@ export function rankFrontierChunks(
         cascadeScore,
         content,
         contentScore,
-        sortScore: cascadeScore + contentScore + newAreas.length * 3,
+        sortScore: cascadeScore + contentScore + newAreas.length * FOOTHOLD_BONUS,
       };
     })
     .sort(

@@ -108,10 +108,28 @@ describe('rankFrontierChunks', () => {
     const enriched = ranked.find((r) => r.content);
     expect(enriched).toBeDefined();
     expect(enriched!.content).toEqual({ monsters: 1, shops: 1, quests: 0, hasBank: true });
-    expect(enriched!.contentScore).toBeCloseTo(3 + 1 + 0 + 0.2);
-    // Content alone (max ~9.something) must stay below a real foothold's
-    // typical cascade weight — sanity-check the cap arithmetic holds.
-    expect(enriched!.contentScore).toBeLessThan(10);
+    // Bank 3 + one shop 1 + one monster 0.2, quartered.
+    expect(enriched!.contentScore).toBeCloseTo((3 + 1 + 0 + 0.2) / 4);
+  });
+
+  it('never lets chunk content alone outrank a new-area foothold', () => {
+    const footholds = new Set(rankFrontierChunks(baseUnlocks([]), 'chunked').filter(r => r.newAreas.length > 0).map(r => r.key));
+    // The most content a chunk can score, on every chunk that is no foothold.
+    const rich = (cx: number, cy: number) => footholds.has(`${cx},${cy}`) ? null : {
+      monsters: Array.from({ length: 9 }, () => ({ name: 'Goblin' })),
+      shops: ['A', 'B', 'C', 'D'],
+      quests: { a: 1, b: 1, c: 1, d: 1 },
+    };
+    const ranked = rankFrontierChunks(baseUnlocks([]), 'chunked', rich, (cx, cy) => !footholds.has(`${cx},${cy}`));
+    const bare = ranked.filter(r => r.newAreas.length === 0);
+    expect(footholds.size).toBeGreaterThan(0);
+    expect(bare.length).toBeGreaterThan(0);
+    for (const foothold of ranked.filter(r => r.newAreas.length > 0)) {
+      for (const tile of bare.filter(r => r.cascadeScore <= foothold.cascadeScore)) {
+        expect(ranked.indexOf(foothold)).toBeLessThan(ranked.indexOf(tile));
+      }
+    }
+    for (const tile of bare) expect(tile.contentScore).toBeLessThan(3);
   });
 
   it('sorts by sortScore (impact + content + per-foothold bonus), descending', () => {
