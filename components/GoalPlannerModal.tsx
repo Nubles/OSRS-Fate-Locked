@@ -350,7 +350,7 @@ const AlternativeSection: React.FC<{ steps: AlternativePlanStep[] }> = ({ steps 
                   <span>
                     <span className="text-gray-200">{route.label}</span>
                     {route.blockers.length > 0 && (
-                      <span className="text-gray-600"> ? {route.blockers.map(blocker => (
+                      <span className="text-gray-600"> — {route.blockers.map(blocker => (
                         blocker.label + (blocker.detail ? ' ' + blocker.detail : '')
                       )).join(' + ')}</span>
                     )}

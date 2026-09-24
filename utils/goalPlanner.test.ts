@@ -224,6 +224,27 @@ describe('planForTarget — quests', () => {
     ]);
     expect(plan.alreadyReachable).toBe(false);
   });
+  it("plans a route's own skill level, such as the Wizards' Guild's Magic 66", () => {
+    const plan = planForTarget('quest', 'Enter the Abyss', maxedUnlocks({
+      quests: ['Rune Mysteries'],
+      regions: ['Wilderness'],
+      skills: { ...maxedUnlocks().skills, Magic: 3 },
+      levels: { ...maxedUnlocks().levels, Magic: 12 },
+    }))!;
+
+    const guildRoute = plan.alternativeSteps[0].routes!
+      .find(route => route.label === "Wizards' Guild + Magic 66")!;
+    expect(guildRoute.blockers).toEqual([
+      expect.objectContaining({ kind: 'region', id: "Wizards' Guild", unlockTable: TableType.GUILDS }),
+      expect.objectContaining({
+        kind: 'skill', id: 'Magic', label: 'Magic',
+        detail: 'Lv 66 (have 12)', unlockTable: TableType.SKILLS,
+      }),
+    ]);
+    expect(plan.alternativeSteps[0].routes!
+      .find(route => route.label === 'East Ardougne')!.blockers
+      .some(blocker => blocker.kind === 'skill')).toBe(false);
+  });
 });
 
 describe('planForTarget — diaries', () => {

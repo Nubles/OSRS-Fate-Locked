@@ -172,6 +172,15 @@ function locationPlanSteps(targets: LocationUnlockTargets): PlanStep[] {
   }];
 }
 
+/** A single skill level to reach, with the Skills key it needs if its tier caps it below. */
+function skillLevelPlanStep(skill: string, required: number, unlocks: any): PlanStep {
+  return {
+    kind: 'skill', id: skill, label: skill, relatedIds: [skill],
+    unlockTable: skillCap(unlocks, skill) < required ? TableType.SKILLS : undefined,
+    detail: 'Lv ' + required + ' (have ' + effectiveSkillLevel(unlocks, skill) + ')', done: false,
+  };
+}
+
 function requirementOptionPlanSteps(option: any, unlocks: any, gameModeId?: string): PlanStep[] {
   return [
     ...(option.regions ?? []).map(areaPlanStep),
@@ -180,6 +189,10 @@ function requirementOptionPlanSteps(option: any, unlocks: any, gameModeId?: stri
     })),
     ...(option.locations ?? []).flatMap((location: any) => (
       locationPlanSteps(locationUnlockTargets(location, unlocks, gameModeId))
+    )),
+    // A route's own skill level, such as a guild's entry requirement.
+    ...Object.entries(option.skills ?? {}).map(([skill, level]) => (
+      skillLevelPlanStep(skill, level as number, unlocks)
     )),
   ];
 }
@@ -259,11 +272,7 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
   const required = requirement?.type === 'single'
     ? requirement.level
     : Number(match?.[2] ?? 1);
-  return {
-    kind: 'skill', id: skill, label: skill, relatedIds: [skill],
-    unlockTable: skillCap(unlocks, skill) < required ? TableType.SKILLS : undefined,
-    detail: 'Lv ' + required + ' (have ' + effectiveSkillLevel(unlocks, skill) + ')', done: false,
-  };
+  return skillLevelPlanStep(skill, required, unlocks);
 }
 
 /** A Quest Point requirement and the quest it gates (null: a diary task's own gate). */
