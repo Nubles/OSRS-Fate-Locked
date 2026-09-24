@@ -7,6 +7,9 @@ import {
   POH_LIST, STORAGE_LIST, MERCHANTS_LIST, FARMING_PATCH_LIST, SKILLS_LIST,
 } from './items';
 import { QUEST_DATA } from './questData';
+import { REGIONS_LIST, REGION_GROUPS } from './items';
+import { createFreshState } from '../context/GameContext';
+import { isAreaReachable } from '../utils/reachability';
 
 const ALL_ACTIVITY_ITEMS = new Set<string>([
   ...BOSSES_LIST, ...MINIGAMES_LIST, ...GUILDS_LIST, ...MOBILITY_LIST, ...ARCANA_LIST,
@@ -22,6 +25,20 @@ const CONTINENTS = new Set([
 ]);
 
 describe('activity requirements + regions consistency', () => {
+  it('names only areas a fully unlocked Vanilla run can reach', () => {
+    // An unknown area name can never be satisfied, so the activity could never
+    // read Ready (Champions' Guild once required the non-area "Champions' Guild").
+    const everything = {
+      ...createFreshState().unlocks,
+      regions: [...REGIONS_LIST, ...Object.keys(REGION_GROUPS)],
+    };
+    const unreachable = Object.entries(ACTIVITY_REQUIREMENTS).flatMap(([name, req]) =>
+      (req.requiredAreas ?? [])
+        .filter(area => !isAreaReachable(area, everything, 'vanilla'))
+        .map(area => `${name}: ${area}`));
+    expect(unreachable).toEqual([]);
+  });
+
   it('pins The Mad Angel access requirements and region', () => {
     expect(ACTIVITY_REGIONS['The Mad Angel']).toBe('The Open Seas');
     expect(ACTIVITY_REQUIREMENTS['The Mad Angel']).toEqual({

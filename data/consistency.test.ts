@@ -8,6 +8,7 @@ import {
 import { COLLECTION_LOG_DATA } from './collectionLogData';
 import { ACTIVITY_REGIONS } from './activityRegions';
 import { AREA_ALIASES } from './areaMapPolicy';
+import { CA_DATA } from './caData';
 
 /**
  * Data-consistency tests.
@@ -148,5 +149,16 @@ describe('collection log pages map to unlock tables', () => {
       unmapped,
       'collection-log minigame pages with no MINIGAMES_LIST entry — add them to MINIGAMES_LIST',
     ).toEqual([]);
+  });
+});
+
+describe('Combat Achievement reward tiers', () => {
+  it('name their key bosses exactly as the Bosses table does', () => {
+    // CALog colours each chip by unlocks.bosses, so an abbreviation such as
+    // "KBD" could never show as owned.
+    const bosses = new Set(BOSSES_LIST);
+    const unknown = Object.values(CA_DATA).flatMap(tier =>
+      tier.keyUnlocks.filter(name => !bosses.has(name)).map(name => `${tier.id}: ${name}`));
+    expect(unknown).toEqual([]);
   });
 });
