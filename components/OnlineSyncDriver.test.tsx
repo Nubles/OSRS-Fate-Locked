@@ -3,7 +3,7 @@
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { relaySync } from '../services/relaySync';
-import { OnlineSyncDriver } from './OnlineSyncDriver';
+import { NOT_SAVING_PUBLISH_MESSAGE, OnlineSyncDriver } from './OnlineSyncDriver';
 
 const stableGameState = vi.hoisted(() => ({
   unlocks: {},
@@ -18,6 +18,7 @@ const stableGameState = vi.hoisted(() => ({
   linkedAccount: 'Nubles UIM',
   gameModeId: 'standard',
   customMode: null,
+  saveOwnershipStatus: 'owner' as 'checking' | 'owner' | 'blocked',
 }));
 
 const buildBundlePayloadMock = vi.hoisted(() => vi.fn());
@@ -60,6 +61,7 @@ describe('OnlineSyncDriver', () => {
     vi.useFakeTimers();
     stableGameState.runId = 'run-current';
     stableGameState.runRevision = 9;
+    stableGameState.saveOwnershipStatus = 'owner';
     for (const key of Object.keys(storage)) delete storage[key];
     vi.stubGlobal('localStorage', {
       getItem: (key: string) => storage[key] ?? null,
@@ -289,6 +291,62 @@ describe('OnlineSyncDriver', () => {
 
     expect(buildBundlePayloadMock).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('publishes only from the tab saving this profile, and once it takes over', async () => {
+    stableGameState.saveOwnershipStatus = 'blocked';
+    relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    const view = render(<OnlineSyncDriver />);
+    await advance(QUIET_MS);
+    stableGameState.runRevision = 10;
+    view.rerender(<OnlineSyncDriver />);
+    await advance(MAX_WAIT_MS);
+    expect(buildBundlePayloadMock).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    // Keeping this tab's progress makes it the saving tab, which publishes.
+    stableGameState.saveOwnershipStatus = 'owner';
+    view.rerender(<OnlineSyncDriver />);
+    await advance(QUIET_MS);
+    expect(buildBundlePayloadMock).toHaveBeenCalledTimes(1);
+    expect(buildBundlePayloadMock.mock.calls[0]?.[1]).toMatchObject({ runRevision: 10 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("says why a tab that isn't saving doesn't publish, also on Retry", async () => {
+    stableGameState.saveOwnershipStatus = 'blocked';
+    const report = vi.spyOn(relaySync, 'reportPushFailure');
+    relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    render(<OnlineSyncDriver />);
+    await advance(QUIET_MS);
+
+    expect(relaySync.status).toBe('error');
+    expect(relaySync.lastError).toBe(NOT_SAVING_PUBLISH_MESSAGE);
+    expect(report).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      expect(relaySync.requestPush()).toBe(true);
+    });
+    await advance(0);
+    expect(relaySync.lastError).toBe(NOT_SAVING_PUBLISH_MESSAGE);
+    expect(report).toHaveBeenCalledTimes(2);
+    expect(buildBundlePayloadMock).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('waits while the save lease is still being checked', async () => {
+    stableGameState.saveOwnershipStatus = 'checking';
+    const report = vi.spyOn(relaySync, 'reportPushFailure');
+    relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    const view = render(<OnlineSyncDriver />);
+    await advance(QUIET_MS);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(report).not.toHaveBeenCalled();
+
+    stableGameState.saveOwnershipStatus = 'owner';
+    view.rerender(<OnlineSyncDriver />);
+    await advance(QUIET_MS);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('stops publishing when another tab disconnects', async () => {

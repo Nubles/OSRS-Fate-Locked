@@ -8,6 +8,9 @@ import { buildBundlePayload, type RuneliteRunInput } from '../utils/runeliteExpo
 const PUBLISH_QUIET_MS = 5_000;
 /** …but no longer than this while they never pause (RuneLite checks once a minute). */
 const PUBLISH_MAX_WAIT_MS = 60_000;
+/** Shown by a tab that is not saving this profile (the save banners say why). */
+export const NOT_SAVING_PUBLISH_MESSAGE =
+  "This tab isn't saving this profile, so it can't publish to RuneLite.";
 
 /**
  * Invisible, always-mounted driver: while paired, publishes the run bundle to
@@ -15,10 +18,12 @@ const PUBLISH_MAX_WAIT_MS = 60_000;
  * full KV write, so changes are coalesced: one publish of the newest state
  * once they pause, with at most one publish in flight. Pairing and Retry
  * publish at once. A bundle built from failed rules data is never sent: the
- * failure is shown as the relay error and the last good publish stays.
+ * failure is shown as the relay error and the last good publish stays. Only
+ * the tab that holds this profile's save lease publishes: another tab of the
+ * same profile may hold older progress, and RuneLite would enforce it.
  */
 export function OnlineSyncDriver() {
-  const { unlocks, runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode } = useGame() as any;
+  const { unlocks, runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode, saveOwnershipStatus } = useGame() as any;
   const [, force] = useState(0);
   useEffect(() => relaySync.subscribe(() => force((n) => n + 1)), []);
   const enabled = relaySync.enabled;
@@ -30,6 +35,8 @@ export function OnlineSyncDriver() {
   latestRun.current = [unlocks, { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId: gameModeId ?? 'vanilla', customMode }];
   const schedule = useRef<((immediate: boolean) => void) | null>(null);
   const seenPushRequest = useRef(pushRequestRevision);
+  const ownership = useRef(saveOwnershipStatus);
+  ownership.current = saveOwnershipStatus;
 
   // One publisher per pairing session; a new code or unmount cancels it.
   useEffect(() => {
@@ -46,6 +53,15 @@ export function OnlineSyncDriver() {
       if (timer != null) window.clearTimeout(timer);
       timer = null;
       pendingSince = null;
+      // Only the saving tab publishes. While the lease is still being checked,
+      // wait: a publish follows once this tab holds it. A blocked tab says why
+      // instead of showing "syncing" forever.
+      if (ownership.current !== 'owner') {
+        if (ownership.current === 'blocked' && relaySync.lastError !== NOT_SAVING_PUBLISH_MESSAGE) {
+          relaySync.reportPushFailure(new Error(NOT_SAVING_PUBLISH_MESSAGE));
+        }
+        return;
+      }
       if (inFlight) {
         again = true;
         return;
@@ -103,12 +119,12 @@ export function OnlineSyncDriver() {
     schedule.current?.(true);
   }, [pushRequestRevision]);
 
-  // Run changes: publish once they pause.
+  // Run changes, and this tab taking over saving: publish once they pause.
   useEffect(() => {
     schedule.current?.(false);
   }, [
     unlocks, runId, runRevision, keys, specialKeys, chaosKeys, fatePoints,
-    activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode,
+    activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode, saveOwnershipStatus,
   ]);
 
   return null;
