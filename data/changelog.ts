@@ -59,6 +59,10 @@ export const CHANGELOG_RELEASES = [
         'Keyboard focus stays put in Roll Inbox review choices, sync-code tabs and History filters. The guided tour keeps focus inside its card and returns it when the tour ends.',
         'Jumping to a quest or diary from a prerequisite chip or Next Best clears the filters and searches that would hide it.',
         'Wiki images that failed to load are tried again after a week instead of never.',
+        'The Boss Planner assumes only the attack prayers you can use: Piety, Chivalry and Rigour need their Arcana unlock and levels, otherwise it uses the best lower prayer, and the plan names the prayer and potion it assumed. Monsters whose max hit isn\'t listed show Unknown danger instead of Low, kill times round correctly (2m 0s, not 1m 60s), and Magic accuracy matches the OSRS Wiki DPS calculator.',
+        'The Frontier Advisor counts quests and diaries that need an exact chunk, and no longer ranks a chunk\'s content above reaching a new area. The Skill Advisor no longer suggests training a locked skill, and the Fate Forecast\'s key pace counts the gaps between keys, so its forecasts are no longer optimistic.',
+        'Goal plans suggest a Skills key only when your tier caps the skill, turn quest locations into the areas (or, in Chunked, the chunks) that unlock them instead of place names such as North Taverley, and list skill steps from A to Z. A pinned quest\'s route shows its real progress instead of 0%.',
+        'Warriors\' Guild readiness uses your tier-capped levels, matching its Falador diary task.',
       ],
       added: [
         'The Boss Planner has a version picker for bosses with several versions, such as post-quest and Awakened fights or boss phases. It starts on the post-quest, normal or solo fight, or the opening phase, and remembers your choice on this device.',
@@ -74,6 +78,7 @@ export const CHANGELOG_RELEASES = [
         '"Export encrypted save" is now "Export save file (.fate)". The file was never encrypted, so the menu and the export message now say that anyone you share it with can read it.',
         'RuneLite updates are sent once your changes pause for a few seconds, at least once a minute during nonstop play, and straight away when you switch away from the tab, instead of after every action.',
         'The app\'s first download is about 10% smaller: onboarding, the command palette, the altar and other on-demand screens load when first needed.',
+        'The Region Advisor ranks single areas you can roll instead of whole continents, and the Quest Advisor opens faster.',
       ],
     },
   },
