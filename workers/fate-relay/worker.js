@@ -41,6 +41,37 @@ function structuredResource(resource) {
   return null;
 }
 
+/**
+ * Read at most `limit` bytes of the request body. Oversized uploads are
+ * refused by their declared length, or cancelled once they pass the limit,
+ * instead of being buffered in full before the size check.
+ */
+async function readBodyWithin(request, limit) {
+  const declared = Number(request.headers.get('Content-Length'));
+  if (Number.isFinite(declared) && declared > limit) return null;
+  if (!request.body) return '';
+  const reader = request.body.getReader();
+  const chunks = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > limit) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bytes);
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -70,8 +101,8 @@ export default {
     }
 
     if (request.method === 'POST') {
-      const rawBody = await request.text();
-      if (new TextEncoder().encode(rawBody).byteLength > MAX_REQUEST_BYTES) {
+      const rawBody = await readBodyWithin(request, MAX_REQUEST_BYTES);
+      if (rawBody === null) {
         return new Response('payload too large', { status: 413, headers });
       }
       let body;

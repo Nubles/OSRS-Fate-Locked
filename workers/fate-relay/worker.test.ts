@@ -114,6 +114,47 @@ describe('Fate relay event resources', () => {
     })).status).toBe(413);
   });
 
+  it('refuses a declared oversized upload without reading its body', async () => {
+    let pulls = 0;
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulls += 1;
+        if (pulls > 320) controller.close();
+        else controller.enqueue(new Uint8Array(64 * 1024));
+      },
+    });
+    const response = await request('/r/ABCD', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': String(20 * 1024 * 1024) },
+      body,
+      duplex: 'half',
+    } as RequestInit);
+
+    expect(response.status).toBe(413);
+    expect(pulls).toBeLessThanOrEqual(1);
+  });
+
+  it('stops reading an undeclared stream once it passes the limit', async () => {
+    let sent = 0;
+    const chunk = new Uint8Array(64 * 1024);
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        sent += chunk.byteLength;
+        if (sent > 20 * 1024 * 1024) controller.close();
+        else controller.enqueue(chunk);
+      },
+    });
+    const response = await request('/r/ABCD', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+      duplex: 'half',
+    } as RequestInit);
+
+    expect(response.status).toBe(413);
+    expect(sent).toBeLessThan(1024 * 1024);
+  });
+
   it('can retry safely after a KV write failure', async () => {
     kv.failNextPut = true;
     await expect(post('/r/ABCD/events', { events: [event('evt-1')] }))
