@@ -28,7 +28,7 @@ const gameState = (overrides: Partial<GameState> = {}): GameState => ({
 
 const event = (
   eventType: FateEventType = 'QUEST',
-  canonicalLabel: string | null = 'Dragon Slayer I',
+  canonicalLabel: string | null = "Cook's Assistant",
   overrides: Partial<FateEventEnvelope> = {},
 ): FateEventEnvelope => ({
   protocolVersion: 1,
@@ -76,7 +76,7 @@ afterEach(cleanup);
 describe('RollInbox', () => {
   it('never rolls on ingest or render', async () => {
     const { acceptDetectedEvent } = setup();
-    expect(await screen.findByText('Dragon Slayer I')).toBeTruthy();
+    expect(await screen.findByText("Cook's Assistant")).toBeTruthy();
     expect(acceptDetectedEvent).not.toHaveBeenCalled();
   });
 
@@ -88,8 +88,8 @@ describe('RollInbox', () => {
 
     expect(acceptDetectedEvent).toHaveBeenCalledTimes(1);
     expect(acceptDetectedEvent).toHaveBeenCalledWith(
-      { kind: 'QUEST', questId: 'Dragon Slayer I' },
-      expect.objectContaining({ source: 'Quest (Experienced)', threshold: 75 }),
+      { kind: 'QUEST', questId: "Cook's Assistant" },
+      expect.objectContaining({ source: 'Quest (Novice)', threshold: 25 }),
       expect.objectContaining({ fateEventId: 'evt-1' }),
       expect.objectContaining({ runId: 'run-1', account: 'Nubles', runRevision: 7 }),
     );

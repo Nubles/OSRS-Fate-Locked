@@ -1,5 +1,6 @@
 
 import type { GameModeRules } from './config/gameModes';
+import type { KeyRollContext } from './config/vanillaKeyEconomy';
 
 export enum DropSource {
   QUEST_NOVICE = 'Quest (Novice)',
@@ -129,6 +130,8 @@ export interface RollIntent {
   threshold: number;
   failureFate: FailureFateAward;
   target: string;
+  /** Vanilla boss or clue context, as the Farm cards pass it to the roll. */
+  context?: KeyRollContext;
 }
 
 export interface GameEventMeta {

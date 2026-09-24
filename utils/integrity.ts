@@ -203,6 +203,7 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3, rules?: Rep
         s.rolls += 1; s.successes += 1;
         break;
       case 'PITY':
+        s.chaosKeys += detectedSkillChaosAward(e);
         s.keys += 1;
         s.fatePoints = Math.max(0, s.fatePoints + recordedFateAward(e) - recordedPityThreshold(e));
         s.rolls += 1; s.pities += 1;

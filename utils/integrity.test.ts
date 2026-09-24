@@ -406,6 +406,19 @@ describe('replayInvariants', () => {
     expect(tampered.chaosKeys).toBe(30);
   });
 
+  it("counts a detected skill level's Chaos Keys when its roll becomes a Pity Key", () => {
+    const { final, violations } = replayInvariants([
+      mk({
+        type: 'PITY', message: 'Pity Key',
+        meta: { detectorId: 'skill-level-v1', chaosKeysAwarded: 1, fatePointsEarned: 2 },
+      }),
+      mk({ type: 'UNLOCK', message: 'Unlocked', meta: { costType: 'chaosKey', cost: 1 } }),
+    ], 0);
+
+    expect(final.chaosKeys).toBe(0);
+    expect(violations.map(violation => violation.kind)).not.toContain('CHAOS_NEGATIVE');
+  });
+
   it('flags negative keys when over-spending', () => {
     const { violations } = replayInvariants(
       [mk({ type: 'UNLOCK', message: 'Unlocked', meta: { cost: 5, costType: 'key' } })], 0,

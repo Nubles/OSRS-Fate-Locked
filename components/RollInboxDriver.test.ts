@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { FateEventEnvelope } from '../services/fateEventProtocol';
 import type { RollInboxRow } from '../services/rollInboxStore';
+import { initialState } from '../context/GameContext';
 import { classifyRollInboxDriverRow } from './RollInboxDriver';
 
 const legacyRow: RollInboxRow = {
@@ -29,10 +30,11 @@ const legacyRow: RollInboxRow = {
 describe('RollInboxDriver legacy row support', () => {
   it('keeps older browser rows classifiable locally', () => {
     expect(classifyRollInboxDriverRow(legacyRow, {
+      ...initialState,
       runId: 'run-1',
       runRevision: 1,
       linkedAccount: 'Nubles',
       history: [],
-    } as never)).toBeDefined();
+    })).toBeDefined();
   });
 });

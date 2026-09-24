@@ -63,6 +63,7 @@ import {
 } from '../utils/journalCompletion';
 import type { CompletionAttestation, CompletionResult } from '../utils/journalCompletion';
 import {
+  caTaskCompletionDecision,
   caTierCompletionDecision,
   completedCAPoints,
   newlyEarnedCATiers,
@@ -574,17 +575,14 @@ export const prepareDetectedEventAcceptanceAction = (
     ? { chaosKeysAwarded: guaranteedChaosKeysAwarded + randomChaosKeysAwarded, guaranteedChaosKeysAwarded, randomChaosKeysAwarded }
     : undefined;
 
-  const rollResult = prepareKeyRollAction(
-    state,
-    intent.source,
-    intent.threshold,
-    intent.failureFate,
-    nextDice,
-    undefined,
-    undefined,
-    skillChaos ? { ...meta, ...skillChaos } : meta,
-  ).payload;
-  return { type: 'ACCEPT_DETECTED_EVENT', payload: { progress, rollResult, expected, skillChaos } };
+  const rollMeta = skillChaos ? { ...meta, ...skillChaos } : meta;
+  // A Vanilla boss or clue roll carries its context, exactly as the Farm card
+  // passes it, so the boss reserve and clue rates apply to detected events too.
+  const rollAction = intent.context
+    ? prepareKeyRollAction(state, intent.source, intent.threshold, intent.failureFate, nextDice, undefined, undefined, rollMeta, intent.context)
+    : prepareKeyRollAction(state, intent.source, intent.threshold, intent.failureFate, nextDice, undefined, undefined, rollMeta);
+  if (!rollAction) throw new Error('This boss has no Standard Keys left to award.');
+  return { type: 'ACCEPT_DETECTED_EVENT', payload: { progress, rollResult: rollAction.payload, expected, skillChaos } };
 };
 
 export const prepareCATaskCompletionActions = (
@@ -597,19 +595,9 @@ export const prepareCATaskCompletionActions = (
   result: CompletionResult;
   actions: TransitionAction[];
 } => {
-  if (state.unlocks.completedTasks.includes(task.id)) {
-    return {
-      result: { ok: false, reason: 'Already completed' },
-      actions: [],
-    };
-  }
+  const decision = caTaskCompletionDecision(task, state.unlocks.completedTasks);
+  if (decision.ok === false) return { result: decision, actions: [] };
   const tier = CA_DATA[task.tierId];
-  if (!tier) {
-    return {
-      result: { ok: false, reason: 'Unknown Combat Achievement tier' },
-      actions: [],
-    };
-  }
 
   const completedIds = [...state.unlocks.completedTasks, task.id];
   const points = completedCAPoints(completedIds);
@@ -804,13 +792,29 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         type: 'SYNC_DETECTED_PROGRESS',
         payload: progress,
       });
+      // As with manual completion, progress that is already recorded earns no roll.
+      if (progress.kind !== 'NONE' && progressed === state) return state;
       const rewarded = action.payload.skillChaos && progressed !== state
         ? { ...progressed, chaosKeys: progressed.chaosKeys + action.payload.skillChaos.chaosKeysAwarded }
         : progressed;
-      return rawReducer(rewarded, {
+      const rolled = rawReducer(rewarded, {
         type: 'ROLL_RESULT',
         payload: action.payload.rollResult,
       });
+      // A task that completes its tier records the tier too, as the Journal does.
+      if (progress.kind === 'CA_TASK') {
+        return newlyEarnedCATiers(completedCAPoints(rolled.unlocks.completedTasks), rolled.unlocks.cas)
+          .reduce((next, tierId) => rawReducer(next, { type: 'COMPLETE_CA', payload: tierId }), rolled);
+      }
+      if (progress.kind === 'DIARY_TASK') {
+        const tierId = ALL_DIARY_TASKS.find(task => task.id === progress.taskId)?.tierId;
+        if (tierId
+          && !rolled.unlocks.diaries.includes(tierId)
+          && canEarnDiaryTier(tierId, rolled.unlocks.completedTasks, ALL_DIARY_TASKS)) {
+          return rawReducer(rolled, { type: 'COMPLETE_DIARY', payload: tierId });
+        }
+      }
+      return rolled;
     }
     case 'SYNC_DETECTED_PROGRESS': {
       const progress = action.payload;
