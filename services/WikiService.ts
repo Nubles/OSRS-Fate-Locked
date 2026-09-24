@@ -13,7 +13,9 @@ const CACHE_TTL = 1000 * 60 * 60 * 24 * 7; // 7 Days
 const BASE_API = 'https://oldschool.runescape.wiki/api.php';
 
 class WikiService {
-  private memoryCache: Map<string, string | null>;
+  // Each entry keeps the time it was fetched, so saving never refreshes it
+  // and cached "no image" results still expire after CACHE_TTL.
+  private memoryCache: Map<string, WikiCacheEntry>;
   private batchQueue: Set<string>;
   private batchTimeout: number | null;
   private pendingResolvers: Map<string, ((url: string | null) => void)[]>;
@@ -34,7 +36,7 @@ class WikiService {
         const now = Date.now();
         Object.entries(parsed).forEach(([key, entry]) => {
           if (now - entry.timestamp < CACHE_TTL) {
-            this.memoryCache.set(key, entry.url);
+            this.memoryCache.set(key, { url: entry.url, timestamp: entry.timestamp });
           }
         });
       }
@@ -46,8 +48,8 @@ class WikiService {
   private saveCache() {
     try {
       const serializable: Record<string, WikiCacheEntry> = {};
-      this.memoryCache.forEach((val, key) => {
-        serializable[key] = { url: val, timestamp: Date.now() };
+      this.memoryCache.forEach((entry, key) => {
+        serializable[key] = entry;
       });
       localStorage.setItem(CACHE_KEY, JSON.stringify(serializable));
     } catch (e) {
@@ -81,8 +83,9 @@ class WikiService {
     if (!term) return null;
 
     // Check Cache
-    if (this.memoryCache.has(term)) {
-      return this.memoryCache.get(term) || null;
+    const cached = this.memoryCache.get(term);
+    if (cached) {
+      return cached.url || null;
     }
 
     // Queue Request
@@ -195,8 +198,9 @@ class WikiService {
         for (const t of stillNull) if (fileUrls[t]) resolved[t] = fileUrls[t];
       }
 
+      const fetchedAt = Date.now();
       titles.forEach(t => {
-        this.memoryCache.set(t, resolved[t]);
+        this.memoryCache.set(t, { url: resolved[t], timestamp: fetchedAt });
         this.resolvePending(t, resolved[t]);
       });
 
