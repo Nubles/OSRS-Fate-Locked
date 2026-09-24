@@ -5,6 +5,8 @@ import { GameState, TableType } from '../types';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { REGION_GROUPS } from '../constants';
 import { displayAreaName } from '../data/areaMapPolicy';
+import type { ContentRequirement } from '../data/requirements';
+import { calculateGoalProgress } from './goalLogic';
 
 /** Minimal game state with the bits the route builder reads. */
 const stateWith = (over: Partial<any> = {}): GameState => ({
@@ -280,6 +282,31 @@ describe('buildGoalRoute — geographic area aliases', () => {
       table: TableType.MINIGAMES,
       needed: expect.arrayContaining(['Mage Arena']),
     }));
+  });
+});
+
+describe('buildGoalRoute — quest progress', () => {
+  const card = (id: string, state: GameState) => calculateGoalProgress(
+    { id, category: TableType.QUESTS, regions: [], skills: {} } as ContentRequirement, state.unlocks, state.gameModeId,
+  );
+
+  it("reads a quest that's ready to do as done, like its tracker card", () => {
+    const state = stateWith();
+    expect(buildGoalRoute("Cook's Assistant", state)).toMatchObject({ completedSteps: 1, totalSteps: 1, percentage: 100 });
+    expect(card("Cook's Assistant", state)).toMatchObject({ completedSteps: 1, totalSteps: 1, percentage: 100 });
+  });
+
+  it('counts quest routes from eligibility evidence and blockers, as the tracker card does', () => {
+    const cases: Array<[string, GameState]> = [
+      ['Druidic Ritual', stateWith()],
+      ['Dragon Slayer I', stateWith({ quests: ["Cook's Assistant"] })],
+      ['Prying Times', stateWith({ quests: ['Pandemonium', "The Knight's Sword"], regions: ['The Open Seas'], skills: { Smithing: 3, Sailing: 2 }, levels: { Smithing: 30, Sailing: 12 } })],
+      ["Cook's Assistant", stateWith({ quests: ["Cook's Assistant"] })],
+    ];
+    for (const [id, state] of cases) {
+      const { completedSteps, totalSteps, percentage } = card(id, state);
+      expect(buildGoalRoute(id, state), id).toMatchObject({ completedSteps, totalSteps, percentage });
+    }
   });
 });
 
