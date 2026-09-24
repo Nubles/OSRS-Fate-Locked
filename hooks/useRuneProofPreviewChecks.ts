@@ -4,6 +4,7 @@ import {
   normalizeRuneProofPreviewChecks,
   readRuneProofPreviewChecks,
   type RuneProofPreviewChecks,
+  type RuneProofRequirementLookup,
   type RuneProofStorage,
   writeRuneProofPreviewChecks,
 } from '../utils/questRoutes/previewChecks';
@@ -41,28 +42,30 @@ export interface RuneProofPreviewCheckControls {
   setItemConfirmed(questId: string, itemKey: string, confirmed: boolean): void;
 }
 
+/** Without requirementsFor, only the built-in reviewed item lists are accepted. */
 export function useRuneProofPreviewChecks(
   runId: string,
   storage?: RuneProofStorage,
   canonical?: CanonicalRuneProofControls,
+  requirementsFor?: RuneProofRequirementLookup,
 ): RuneProofPreviewCheckControls {
   const activeStorage = canonical ? unavailableStorage : storage ?? defaultStorage();
   const [state, setState] = useState<RuneProofPreviewCheckState>(() => ({
     runId,
-    checks: readRuneProofPreviewChecks(activeStorage, runId),
+    checks: readRuneProofPreviewChecks(activeStorage, runId, requirementsFor),
   }));
 
   useEffect(() => {
     if (canonical) return;
     setState({
       runId,
-      checks: readRuneProofPreviewChecks(activeStorage, runId),
+      checks: readRuneProofPreviewChecks(activeStorage, runId, requirementsFor),
     });
-  }, [activeStorage, runId, canonical]);
+  }, [activeStorage, runId, canonical, requirementsFor]);
 
   const checks = useMemo(() => canonical
-    ? normalizeRuneProofPreviewChecks(canonical.progress?.items ?? {})
-    : checksForCurrentRun(state, runId), [canonical, state, runId]);
+    ? normalizeRuneProofPreviewChecks(canonical.progress?.items ?? {}, requirementsFor)
+    : checksForCurrentRun(state, runId), [canonical, state, runId, requirementsFor]);
   const isHydratedForRun = !!canonical || state.runId === runId;
 
   const confirmedItemKeys = useCallback(
@@ -72,7 +75,7 @@ export function useRuneProofPreviewChecks(
 
   const setItemConfirmed = useCallback((questId: string, itemKey: string, confirmed: boolean) => {
     if (canonical) {
-      if (normalizeRuneProofPreviewChecks({ [questId]: [itemKey] })[questId]?.includes(itemKey)) {
+      if (normalizeRuneProofPreviewChecks({ [questId]: [itemKey] }, requirementsFor)[questId]?.includes(itemKey)) {
         canonical.update(runId, { kind: 'ITEM', questId, id: itemKey, confirmed });
       }
       return;
@@ -83,11 +86,11 @@ export function useRuneProofPreviewChecks(
       const nextKeys = confirmed
         ? [...existing, itemKey]
         : existing.filter(key => key !== itemKey);
-      const next = normalizeRuneProofPreviewChecks({ ...currentChecks, [questId]: nextKeys });
-      writeRuneProofPreviewChecks(activeStorage, runId, next);
+      const next = normalizeRuneProofPreviewChecks({ ...currentChecks, [questId]: nextKeys }, requirementsFor);
+      writeRuneProofPreviewChecks(activeStorage, runId, next, requirementsFor);
       return { runId, checks: next };
     });
-  }, [activeStorage, runId, canonical]);
+  }, [activeStorage, runId, canonical, requirementsFor]);
 
   return { checks, isHydratedForRun, confirmedItemKeys, setItemConfirmed };
 }

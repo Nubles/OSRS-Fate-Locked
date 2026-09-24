@@ -1,4 +1,7 @@
-import { reviewedQuestRequirements } from '../../data/questItemRequirements';
+import {
+  reviewedQuestRequirements,
+  type ReviewedQuestRequirements,
+} from '../../data/questItemRequirements';
 
 export interface RuneProofStorage {
   getItem(key: string): string | null;
@@ -7,6 +10,9 @@ export interface RuneProofStorage {
 }
 
 export type RuneProofPreviewChecks = Record<string, string[]>;
+
+/** The reviewed item list for a guide; preview guide packs carry their own. */
+export type RuneProofRequirementLookup = (questId: string) => ReviewedQuestRequirements | null | undefined;
 
 export const RUNEPROOF_PREVIEW_MAX_CHARS = 65_536;
 
@@ -17,12 +23,15 @@ const isRecord = (value: unknown): value is Record<string, unknown> => (
   value !== null && typeof value === 'object' && !Array.isArray(value)
 );
 
-export function normalizeRuneProofPreviewChecks(value: unknown): RuneProofPreviewChecks {
+export function normalizeRuneProofPreviewChecks(
+  value: unknown,
+  requirementsFor: RuneProofRequirementLookup = reviewedQuestRequirements,
+): RuneProofPreviewChecks {
   if (!isRecord(value)) return {};
   const normalized: RuneProofPreviewChecks = {};
 
   for (const questId of Object.keys(value).sort()) {
-    const reviewed = reviewedQuestRequirements(questId);
+    const reviewed = requirementsFor(questId);
     const storedKeys = value[questId];
     if (!reviewed || !Array.isArray(storedKeys)) continue;
     const requested = new Set(storedKeys.filter((key): key is string => typeof key === 'string'));
@@ -39,11 +48,12 @@ export function normalizeRuneProofPreviewChecks(value: unknown): RuneProofPrevie
 export function readRuneProofPreviewChecks(
   storage: RuneProofStorage,
   runId: string,
+  requirementsFor?: RuneProofRequirementLookup,
 ): RuneProofPreviewChecks {
   try {
     const raw = storage.getItem(runeProofPreviewStorageKey(runId));
     if (raw === null || raw.length > RUNEPROOF_PREVIEW_MAX_CHARS) return {};
-    return normalizeRuneProofPreviewChecks(JSON.parse(raw));
+    return normalizeRuneProofPreviewChecks(JSON.parse(raw), requirementsFor);
   } catch {
     return {};
   }
@@ -53,8 +63,9 @@ export function writeRuneProofPreviewChecks(
   storage: RuneProofStorage,
   runId: string,
   checks: RuneProofPreviewChecks,
+  requirementsFor?: RuneProofRequirementLookup,
 ): void {
-  const normalized = normalizeRuneProofPreviewChecks(checks);
+  const normalized = normalizeRuneProofPreviewChecks(checks, requirementsFor);
   const key = runeProofPreviewStorageKey(runId);
   try {
     if (Object.keys(normalized).length === 0) storage.removeItem(key);

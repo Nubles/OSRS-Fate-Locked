@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { runeProofPreviewStorageKey, type RuneProofStorage } from '../utils/questRoutes/previewChecks';
+import type { RuneProofMutation } from '../utils/runeProofProgress';
 import { useRuneProofPreviewChecks } from './useRuneProofPreviewChecks';
 
 afterEach(cleanup);
@@ -121,6 +122,29 @@ describe('useRuneProofPreviewChecks', () => {
     act(() => result.current.setItemConfirmed("Cook's Assistant", 'egg', true));
     expect(result.current.checks).toEqual({ "Cook's Assistant": ['egg'] });
     expect([...result.current.confirmedItemKeys("Cook's Assistant")]).toEqual(['egg']);
+  });
+
+  it("saves and shows canonical item checks that a guide's own review lists", () => {
+    const witchesPotion = {
+      questId: "Witch's Potion",
+      wikiRevision: '15300000',
+      reviewedAt: '2026-09-23',
+      items: [
+        { item: { key: 'eye of newt', name: 'Eye of newt' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' as const },
+      ],
+    };
+    const requirementsFor = (questId: string) => questId === "Witch's Potion" ? witchesPotion : null;
+    const updates: RuneProofMutation[] = [];
+    const canonical = {
+      progress: { version: 1 as const, items: { "Witch's Potion": ['eye of newt'] }, actions: {} },
+      update: (_runId: string, change: RuneProofMutation) => { updates.push(change); return true; },
+    };
+    const { result } = renderHook(() => useRuneProofPreviewChecks('run-a', undefined, canonical, requirementsFor));
+
+    expect([...result.current.confirmedItemKeys("Witch's Potion")]).toEqual(['eye of newt']);
+    act(() => result.current.setItemConfirmed("Witch's Potion", 'eye of newt', false));
+    act(() => result.current.setItemConfirmed("Witch's Potion", 'unknown', true));
+    expect(updates).toEqual([{ kind: 'ITEM', questId: "Witch's Potion", id: 'eye of newt', confirmed: false }]);
   });
 
   it('ignores unsupported quests, quest-provided items, and unknown keys', () => {

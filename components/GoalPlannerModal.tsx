@@ -387,7 +387,6 @@ export const GoalPlannerModal: React.FC<Props> = ({
   const guideProgress = useMemo(() => updateRuneProof
     ? { progress: runeProofProgress, update: updateRuneProof } : undefined,
   [runeProofProgress, updateRuneProof]);
-  const previewChecks = useRuneProofPreviewChecks(runId, undefined, guideProgress);
   const runeProofIntegration = runeProof ?? DEFAULT_RUNEPROOF;
   const runeProofEnabled = runeProofIntegration.availability !== 'OFF';
   const runeProofContentService = runeProofIntegration.contentService;
@@ -397,6 +396,12 @@ export const GoalPlannerModal: React.FC<Props> = ({
   const [runeProofStrategies, setRuneProofStrategies] = useState<readonly QuestStrategyDefinition[]>(
     EMPTY_RUNE_PROOF_STRATEGIES,
   );
+  // Preview guide packs carry their own item lists; item checks must accept them too.
+  const guideRequirementsFor = React.useCallback((questId: string) => (
+    runeProofStrategies.find(strategy => strategy.questId === questId)?.requirementsReview
+      ?? reviewedQuestRequirements(questId)
+  ), [runeProofStrategies]);
+  const previewChecks = useRuneProofPreviewChecks(runId, undefined, guideProgress, guideRequirementsFor);
   const [runeProofCatalogueStatus, setRuneProofCatalogueStatus] = useState<RuneProofCatalogueStatus>('LOADING');
   const [runeProofCatalogueAttempt, setRuneProofCatalogueAttempt] = useState(0);
   const runeProofCatalogueLoaded = runeProofCatalogueStatus === 'LOADED';

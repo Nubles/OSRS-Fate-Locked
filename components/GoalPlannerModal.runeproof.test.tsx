@@ -1491,6 +1491,23 @@ describe('RuneProof Goal Planner integration', () => {
     expect(screen.getByText('Analysis unavailable')).toBeTruthy();
   });
 
+  it("confirms a preview guide pack's own item from the fallback checklist", async () => {
+    gameSnapshot = { ...gameSnapshot, gameModeId: 'vanilla' };
+    renderGoalPlanner({
+      availability: 'PREVIEW',
+      selectedQuest: "Witch's Potion",
+      contentService: loadedContent(async () => false),
+    });
+
+    const checklist = await screen.findByRole('region', { name: 'Quest requirements' });
+    const eyeOfNewt = within(checklist).getByRole('checkbox', { name: /Eye of newt/ }) as HTMLInputElement;
+    expect(eyeOfNewt.checked).toBe(false);
+    fireEvent.click(eyeOfNewt);
+    expect(eyeOfNewt.checked).toBe(true);
+    expect(JSON.parse(previewStorage.get(runeProofPreviewStorageKey('run-a'))!))
+      .toEqual({ "Witch's Potion": ['eye of newt'] });
+  });
+
   it('keeps the normal plan and localizes chunk-content load failure', async () => {
     const contentService = loadedContent(async () => false);
     render(
