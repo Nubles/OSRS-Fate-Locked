@@ -8,12 +8,13 @@ browser run or a script against the real data, or traced through the code,
 and is marked as such below.
 
 **Outcome:** 100 distinct findings, after merging duplicates between areas.
-48 are fixed on `claude/quirky-archimedes-aponk4`, and two more (U7, U17) are
+52 are fixed on `claude/quirky-archimedes-aponk4`, and two more (U7, U17) are
 partly fixed. Each behaviour fix is pinned by a test that fails on the old
 code, except the phone onboarding layout and the What's New ordering, which
-were verified in the browser instead. The other 50 are listed under
-[Open findings](#open-findings) with a recommended fix. Seven of those need an
-owner decision before any code. Nothing has been deployed.
+were verified in the browser instead. The other 46 are listed under
+[Open findings](#open-findings) with a recommended fix. Four of those wait on
+an owner decision; three earlier decisions are recorded under
+[Decisions](#decisions). Nothing has been deployed.
 
 Finding IDs by area: **E** engine, **B** modes and reachability, **P** saves
 and profiles, **U** interface, **J** journal data, **H** advisors and combat,
@@ -23,12 +24,12 @@ and profiles, **U** interface, **J** journal data, **H** advisors and combat,
 
 | Check | Base `6b7c301` | This branch |
 | --- | --- | --- |
-| `npx vitest run` | 311 files, 4,150 passed, **1 failed** (App lifecycle Discord invite test timed out at 5.2 s under load; fixed in `030975a`) | 323 files, **4,234 passed** |
+| `npx vitest run` | 311 files, 4,150 passed, **1 failed** (App lifecycle Discord invite test timed out at 5.2 s under load; fixed in `030975a`) | 325 files, **4,245 passed** |
 | `npx tsc --noEmit` | clean | clean |
 | `npm run content:verify` | passed | passed |
 | `npm run diary:verify` | current | current (after `npm run diary:sync`) |
 | `npm run changelog:verify` | n/a | passed (base `6b7c301`) |
-| `VITE_BASE=/OSRS-Fate-Locked/ vite build` | 239.5 kB gzip entry chunk | 242.3 kB gzip entry chunk; about 2.0 kB of that is the new What's New text |
+| `VITE_BASE=/OSRS-Fate-Locked/ vite build` | 239.5 kB gzip entry chunk | 242.8 kB gzip entry chunk; about 2.5 kB of that is the new What's New text |
 
 Browser checks ran in Chromium against the production build, starting from a
 fresh profile with localStorage and IndexedDB cleared:
@@ -83,6 +84,9 @@ found them sound:
 | `3bbaa0b`, `8dc88e1` | **H8**: max hit came from the first number in the text, so Tormented Demons read 0 (Low danger). | `MonsterService.test.ts` (parser table plus the real snapshot) |
 | `54ba21d` | **R11** (new): importing or restoring spliced history from the replaced run into legacy saves, or linked hash-less imports to the old run's chain. | `gameReducer.test.ts` |
 | `f73243f` | What's New release "Safer Saves, Fairer Keys and Accurate Planners". | `data/changelog.test.ts` |
+| `0405db5`, `9feb8b5` | **J2**: quest difficulties match the official OSRS ratings (four changed; see [Decisions](#decisions)). | `data/questDifficulty.source.test.ts` (every quest Quest Helper lists) |
+| `840c323` | **H1**: the Boss Planner has a version picker with a standard default. **H2**: the DPS Calculator selects the exact version picked. | `BossKillPlanner.version.test.tsx`, `bossPlanner.test.ts`, `MonsterService.test.ts`, `DpsCalc.weaponOptions.test.tsx` |
+| `ee94c9a` | **E4**: new Chunked runs no longer get a key on their first level-up; existing runs keep their schedule. | `gameReducer.test.ts` |
 
 Test failures during the work, all resolved: new reducer guards starved two
 tier-cap tests of keys, so their fixtures now start with enough keys. A diary
@@ -96,10 +100,8 @@ reverted and moved to the decisions list.
 ### Fix next
 
 - **P2** (high, reproduced) — `utils/saveCoordinator.ts:203,429`, `recoveryDatabase.ts:413`. A tab that takes over saving keeps the revision counter it loaded with, so the recovery database rejects its writes as `stale_revision` while the UI says "Saved". On reload the other tab's older state returns. Re-syncing the counter on takeover alone is not enough: when tab A simply closes, stale tab B re-takes the lease automatically and would then overwrite A's newer progress everywhere. The fix needs all three parts: assign the revision inside the `putHead` transaction (max of stored and local, plus 1); never report `stale_revision` as saved; and require the manual-takeover confirmation when a blocked tab with unsaved changes regains the lease, as the spec already asks.
-- **F1** (medium, security, reproduced) — `workers/fate-relay/worker.js:135-142`. The write token is stored only inside the 24-hour record. After it expires, anyone's first POST claims the code, and the owner then gets `403` forever. Fix: store an owner record (`own:<code>` holding a SHA-256 of the token) with a long TTL that refreshes on each write, and check it even when the payload has expired. This changes relay data retention, so `docs/online-relay.md` needs updating too.
+- **F1** (medium, security, reproduced) — `workers/fate-relay/worker.js:135-142`. The write token is stored only inside the 24-hour record. After it expires, anyone's first POST claims the code, and the owner then gets `403` forever. Fix: see the recommendation under [Decisions](#decisions).
 - **F14** (low, security, traced) — `utils/runelitePairing.ts:9-13`, `RunelitePairingDialog.tsx:55`. Any website can present a `#runelite-pair=` link, and the dialog says "RuneLite requested this connection". Confirming it lets the link's author read every future publish. Fix: neutral wording, and ask the player to match the code shown in RuneLite.
-- **H1** (high, reproduced) — `services/MonsterService.ts` `byName`. The Boss Planner uses the version with the most HP, so it plans Yama as "Glyphic Attenuation" (66 min instead of about 10) and Duke Sucellus, the Leviathan, the Whisperer and Vardorvis as Awakened. Fix: a curated standard version per boss (Post-quest, Normal or Solo), or let the player choose. See the decisions list.
-- **H2** (high, reproduced) — `MonsterService.ts` `byIdMap`, `DpsCalc.tsx`. The picker stores only the monster ID, and 26 IDs have several versions, so 41 of 2,850 targets resolve to a different version (for example, Duke Sucellus Awakened calculates as Post-quest). Fix: key by `${id}|${version}` and keep accepting stored numeric IDs.
 - **P5** (medium, reproduced) — `components/SaveBootstrap.tsx:531,705`. If IndexedDB exists but fails to open, the game stays closed with no retry or export, even though the localStorage save is valid. Clearing site data, the obvious workaround, deletes that save. Fix: offer Retry, Export and "continue with browser save", or degrade as the app already does when IndexedDB is missing.
 - **P7** (medium, reproduced) — `utils/profileWriterLease.ts:92-125`. A tab restored from the back-forward cache can re-take the lease for a deleted profile and write it back. Fix: refuse leases for profiles missing from the current list, and re-read the list on `pageshow`.
 - **F4** (medium, traced) — `services/relaySync.ts`. The relay pairing is shared by every tab, but each tab has its own active profile. A second tab on another profile publishes that profile to the paired RuneLite code. Fix: store the paired profile ID and publish only that profile, and listen for `storage` events on the session key.
@@ -115,20 +117,25 @@ reverted and moved to the decisions list.
 - **Saves and data:** **P9**: "Export encrypted save" is XOR obfuscation; relabel it or use AES-GCM. **R8**: the entry chunk is 242 kB gzip against the roughly 128 kB the project notes target; the largest eager modules are collection-log data, GameContext, Dashboard, App and the changelog. **R9**: `sync-content.yml` opens PRs with `GITHUB_TOKEN`, so CI does not run on them. **H8 remainder**: max-hit text with no number (3 rows: N/A, Varies, "? (melee)") still reads as 0 rather than unknown.
 - **Interface:** **U7** remainder: the tour card doesn't take or trap focus. **U11**: `RollInbox` defines `RowFrame` in render, so rows remount and lose focus. **U14**: unlock and achievement reveals aren't keyed, so a second reveal inherits the first's timer. **U15**: the pairing error state offers only Retry, leaving touch users stuck. **U17** remainder: `RunCard.tsx:344` still shows a fixed "/50" Fate.
 - **Relay:** **F7**: the overlay URL drops a custom relay address. **F8**: the overlay trusts the payload's shape and size. **F9**: a failed data load publishes an empty ruleset. **F10**: the bundle omits housing and storage. **F11**: legacy `/acks` can prune events without the events token. **F12**: relay POSTs have no timeout. **F13**: worker errors lack CORS headers, there is a KV write per action and no `Access-Control-Max-Age`.
-- **Engine:** **E4**: Chunked milestone insurance pays on the first level-up, because the fresh total of 33 counts from 0; see decisions. **E6**: a false `FATE_OVERFLOW` warning with pity off or a threshold above 50. **E7**: the Gambit minimum stake disagrees between engine and UI in legacy modes. **E10/J11**: dormant Roll Inbox acceptance paths ignore the manual rules; they are unreachable today.
+- **Engine:** **E6**: a false `FATE_OVERFLOW` warning with pity off or a threshold above 50. **E7**: the Gambit minimum stake disagrees between engine and UI in legacy modes. **E10/J11**: dormant Roll Inbox acceptance paths ignore the manual rules; they are unreachable today.
 - **Modes:** **B5**: area achievements can't be earned in Chunked. **B6**: legacy Xtreme can't roll the locked Misthalin areas. **B7**: the Region Advisor ranks whole continents. **B9**: goal plans turn location labels such as "North Taverley" into area steps (265 steps).
 - **Journal:** **J9**: Enter the Abyss's Wizards' Guild route ignores Magic 66. **J12**: jumping to a quest card doesn't clear the difficulty filter. **H11/J8**: Warriors' Guild readiness uses raw levels, while the diary uses tier-capped levels.
 - **Advisors:** **H9**: a locked skill is simulated as tier 1. **H10**: every skill step suggests a Skills key. **H14**: the forecast pace is off by one event. **H15**: small items (frontier scoring comment, Z→A skill sort, "1m 60s", a 1.2 s quest-advisor recompute).
 - **RuneProof:** **G4**: sources behind locked chunks rank above usable ones. **G5**: a guide revision bump drops valid checks. **G6**: a pinned quest's route header always reads 0%. **G7**: de-duplication drops distinct source access. **G8**: preview-only item lists ship in production.
 
-### Needs an owner decision
+### Decisions
 
-- **J2** — quest difficulty sets key odds. By OSRS difficulty, Vampyre Slayer and Observatory Quest should be Novice, and Troll Stronghold, Lost City, The Grand Tree and Shilo Village Experienced. The reviewer could not open the wiki from this sandbox, so this is unconfirmed. Changing it rebalances those quests' rolls.
-- **J3 / G1** — owned-item routes. Diary item-only routes (`kar_hard_3`, `var_med_7`) pass with no confirmation. In Cook's Assistant, "I already have X" also completes other ingredients' steps. Sheep Shearer asks for confirmation instead. Pick one policy; the current behaviour is pinned by tests as documented.
-- **H1** — which boss version counts as standard, per boss.
-- **E4** — whether fixing the milestone baseline should also apply to runs that have already been paid.
-- **P9** — relabel the export, or add real encryption.
-- **F1** — how long the relay may keep a token hash.
+Decided on 24 September and done on this branch:
+
+- **J2, match OSRS.** Quest Helper's list of official ratings (the pinned snapshot, and its current master) differs from the app for four quests: At First Light (now Novice), Recipe for Disaster's Sir Amik Varze and King Awowogei parts (now Master) and its finale (now Grandmaster). The reviewer had named six other quests; Quest Helper rates all six Intermediate, as the app already did, so they are unchanged. The wiki itself was unreachable, and web search results mixed in older RuneScape ratings. Three newer quests are not in the snapshot and keep their current rating.
+- **H1, add a version picker.** Done, with the post-quest, normal or solo fight (or a fight's opening phase) as the default. **H2** is fixed with it.
+- **E4, new runs only.** Choosing the game mode now starts the milestone counters from the run's starting total. Runs that already chose their mode keep their schedule.
+
+Still waiting on a decision, with recommendations:
+
+- **J3 / G1, owned-item confirmation (owner unsure).** Recommendation: require the same one-tap confirmation Sheep Shearer uses for every "already have it" route (Karamja Hard's oomlie wrap, Varrock Medium's Digsite pendant, the Cook's Assistant ingredients), and have it complete only that item's own steps. The app then never assumes what is in a player's bank. The cost is one extra tap for players who really have the item. Seven tests pin today's behaviour, so the change needs to update them.
+- **P9, encrypted export.** Recommendation: rename it to "Export save file (.fate)" and say in the export that anyone with the file can read its notes and linked account name. Don't add passphrase encryption. A forgotten passphrase would lock players out of their only off-device backup, and the file holds little that is sensitive.
+- **F1, relay ownership.** Recommendation: keep an owner record per code that holds only a SHA-256 hash of the write token, never the token. Give it a 90-day lifetime, refreshed on every publish, while the payload keeps its 24-hour lifetime. A code then stays claimed while in use, and can be reclaimed after 90 idle days, which is safe for 128-bit random codes. Existing codes gain their owner record on their first publish after deploy. Record the new retention in `docs/online-relay.md`, and fix F14's pairing wording in the same change. The relay deploys separately with `wrangler deploy`.
 
 ### Risks noted but not demonstrated
 
@@ -137,7 +144,7 @@ reverted and moved to the decisions list.
 
 ## Guards against drift
 
-The branch adds 12 test files and extends 26 more. The broad guards are:
+The branch adds 14 test files and extends 29 more. The broad guards are:
 
 - `scripts/source-encoding.test.ts`: every app source and data file must be strict UTF-8.
 - `config/economy.consistency.test.ts`: every Omni percentage the Codex documents must match the roll engine.
@@ -145,6 +152,7 @@ The branch adds 12 test files and extends 26 more. The broad guards are:
 - `data/consistency.test.ts`: CA reward chips must name real bosses.
 - `scripts/sync-achievement-diaries.test.ts`: level-1 skilling tasks must carry the skill gate, and the alternative-route list must match the audit.
 - `components/ChangelogModal.dom.test.tsx`: uses the real release list, so a claim buried in an old release can't pass again.
+- `data/questDifficulty.source.test.ts`: every quest's difficulty must match the official rating in the pinned Quest Helper snapshot, and new quests missing from it are named.
 
 ## Not covered
 
@@ -159,3 +167,4 @@ The branch adds 12 test files and extends 26 more. The broad guards are:
 - The monster catalogue's `normalizationVersion` is now 2, so cached catalogues are rebuilt once from the shipped file. No network request is needed.
 - Discord cursors saved by the old version reseed silently to the newest history entry on first run. No announcements are replayed.
 - Every player sees the new What's New release once.
+- The Chunked milestone change applies to runs whose mode is chosen after deploy. Boss Planner version choices are stored per device.
