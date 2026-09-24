@@ -60,14 +60,14 @@ describe('audited process repairs', () => {
 
   it('recovers legacy Gambit payout and Cartographer cost from their recorded messages', () => {
     const history: LogEntry[] = [
-      { id: '1', timestamp: 1, type: 'ALTAR', message: 'Void Gambit WON — 2 Keys!', details: 'Staked 30 Fate; the Void blinked.' },
+      { id: '1', timestamp: 1, type: 'ALTAR', message: 'Void Gambit WON â€” 2 Keys!', details: 'Staked 30 Fate; the Void blinked.' },
       { id: '2', timestamp: 2, type: 'ROLL_FAIL', message: 'No key', meta: { fatePointsEarned: 40 } },
-      { id: '3', timestamp: 3, type: 'ALTAR', message: 'Cartographer charted Falador', details: 'Chose a frontier chunk for 40 Fate — the one decision Fate allows.' },
+      { id: '3', timestamp: 3, type: 'ALTAR', message: 'Cartographer charted Falador', details: 'Chose a frontier chunk for 40 Fate â€” the one decision Fate allows.' },
     ];
     expect(auditHistory(history)).toMatchObject({ verdict: 'verified', final: { keys: 5, fatePoints: 0, unlocks: 1 } });
   });
 
-  it('accepts all valid 0.01–0.09 boss/clue rolls and rejects zero, non-finite and >100', () => {
+  it('accepts all valid 0.01â€“0.09 boss/clue rolls and rejects zero, non-finite and >100', () => {
     for (let i = 1; i < 10; i++) {
       const state = fresh();
       const action = prepareKeyRollAction(state, DropSource.CLUE_BEGINNER, 5, 1, (_p, index, max = 100) => index === 2 ? max : i, undefined, undefined, undefined, { kind: 'clue', clueTier: 'Beginner' })!;

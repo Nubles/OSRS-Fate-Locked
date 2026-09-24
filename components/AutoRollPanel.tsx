@@ -58,8 +58,8 @@ export async function fetchPlayer(name: string): Promise<Fetched> {
   const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
   const data = await res.json().catch(() => null);
   if (!res.ok) {
-    if (res.status === 429) throw new Error('Rate-limited by the API — wait a moment and retry.');
-    if (res.status === 404 || data?.code === 'HISCORES_USERNAME_NOT_FOUND') throw new Error(`"${name}" isn't on the OSRS hiscores — check the spelling.`);
+    if (res.status === 429) throw new Error('Rate-limited by the API â€” wait a moment and retry.');
+    if (res.status === 404 || data?.code === 'HISCORES_USERNAME_NOT_FOUND') throw new Error(`"${name}" isn't on the OSRS hiscores â€” check the spelling.`);
     throw new Error(`Could not refresh Wise Old Man hiscores (${res.status}).`);
   }
 

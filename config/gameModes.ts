@@ -94,9 +94,9 @@ export const DEFAULT_MODE_ID = 'vanilla';
 
 // Retired picker entries remain resolvable for existing saves. Definitions from 8b9eb2c^.
 const LEGACY_MODES: GameMode[] = [
-  { id: 'casual', name: 'Casual', description: 'Legacy Casual run.', tagline: 'Forgiving — good for a first run',
+  { id: 'casual', name: 'Casual', description: 'Legacy Casual run.', tagline: 'Forgiving â€” good for a first run',
     rules: { ...VANILLA_RULES, pityThreshold: 30, omniChanceBase: 4, ritualCostMultiplier: 0.6 } },
-  { id: 'hardcore', name: 'Hardcore', description: 'Legacy Hardcore run.', tagline: 'No pity — for veterans',
+  { id: 'hardcore', name: 'Hardcore', description: 'Legacy Hardcore run.', tagline: 'No pity â€” for veterans',
     rules: { ...VANILLA_RULES, pityEnabled: false, omniChanceBase: 1, ritualCostMultiplier: 1.5 } },
   { id: 'region-rush', name: 'Region Rush', description: 'Legacy Region Rush run.', tagline: 'Region passives ON',
     rules: { ...VANILLA_RULES, pityThreshold: 45, regionModifiers: true } },
