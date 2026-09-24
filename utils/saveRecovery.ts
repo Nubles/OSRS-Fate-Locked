@@ -377,8 +377,15 @@ export const resolveSaveRecovery = async (
   );
 
   const candidates = sortedCandidates(validCandidates);
-  const runIds = new Set(candidates.map(candidate => candidate.runId));
-  if (runIds.size > 1) {
+  // Only current save evidence can disagree about which run is active. Reset,
+  // import and restore deliberately keep a pre-replacement checkpoint of the
+  // run they replaced; counting it here made every later startup a recovery.
+  const currentRunIds = new Set(
+    [pending, head, primary]
+      .filter((candidate): candidate is ValidatedRecoveryCandidate => candidate !== null)
+      .map(candidate => candidate.runId),
+  );
+  if (currentRunIds.size > 1) {
     return recoveryRequired(
       input,
       candidates,
