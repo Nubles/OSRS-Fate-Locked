@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { SKILLS_LIST } from '../constants';
 import { QUEST_CAPE_QUEST_IDS, QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
-import { REGION_GROUPS } from '../data/items';
+import { MISTHALIN_AREAS, REGION_GROUPS } from '../data/items';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { planForTarget, listGoalTargets, questPointsForEntry } from './goalPlanner';
 import { getQuestStatus } from './journalStatus';
@@ -402,6 +402,58 @@ describe('planForTarget — diaries', () => {
     const step = plan.regionSteps.find(regionStep => regionStep.id === canonical);
     expect(step?.label).toContain(canonical);
     expect(step?.label).toContain(alias);
+  });
+});
+
+describe('planForTarget — quest locations', () => {
+  const unlockableAreas = new Set([
+    ...Object.keys(REGION_GROUPS), ...Object.values(REGION_GROUPS).flat(), 'Misthalin', ...MISTHALIN_AREAS,
+  ]);
+  const fresh = () => maxedUnlocks({ skills: {}, levels: {} });
+
+  it('plans the areas that unlock a location, never its place label', () => {
+    // Druidic Ritual needs "North Taverley" and "South Taverley", both in Taverley.
+    expect(planForTarget('quest', 'Druidic Ritual', fresh(), 'vanilla')!.regionSteps.map(step => step.id)).toEqual(['Taverley']);
+  });
+
+  it('plans only areas the Areas table can grant, for every quest', () => {
+    const notAreas = Object.keys(QUEST_DATA).flatMap(id => {
+      const plan = planForTarget('quest', id, fresh(), 'vanilla')!;
+      return [...plan.regionSteps, ...plan.alternativeSteps.flatMap(step => step.routes.flatMap(route => route.blockers))]
+        .filter(step => step.unlockTable === TableType.REGIONS && !unlockableAreas.has(step.id))
+        .map(step => `${id}: ${step.id}`);
+    });
+    expect(notAreas).toEqual([]);
+  });
+
+  it('plans a location as a choice of its exact chunks in Chunked mode', () => {
+    const plan = planForTarget('quest', 'Druidic Ritual', fresh(), 'chunked')!;
+    expect(plan.regionSteps).toEqual([]);
+    expect(plan.alternativeSteps.map(step => [step.label, step.routes.map(route => route.blockers)])).toEqual([
+      ['One of: North Taverley', [[expect.objectContaining({ kind: 'region', id: '45,54', unlockTable: TableType.CHUNKS })]]],
+      ['One of: South Taverley', [[expect.objectContaining({ kind: 'region', id: '45,53', unlockTable: TableType.CHUNKS })]]],
+    ]);
+  });
+
+  it('builds one-of routes from a location’s areas, or its chunks in Chunked mode', () => {
+    const id = '__location_route__';
+    QUEST_DATA[id] = {
+      ...QUEST_DATA['Druidic Ritual'], id, name: id, accessPolicy: 'regions', regions: [], locations: [],
+      oneOf: [
+        { locations: [{ id: 'crossing', label: 'Test crossing', standardAreas: ['Falador'], chunkOptions: [{ cx: 47, cy: 51 }, { cx: 46, cy: 51 }] }] },
+        { regions: ['Catherby'] },
+      ],
+    };
+    try {
+      expect(planForTarget('quest', id, fresh(), 'vanilla')!.alternativeSteps[0].routes[0].blockers).toEqual([
+        expect.objectContaining({ kind: 'region', id: 'Falador', unlockTable: TableType.REGIONS }),
+      ]);
+      expect(planForTarget('quest', id, fresh(), 'chunked')!.alternativeSteps[0].routes[0].blockers).toEqual([
+        expect.objectContaining({ kind: 'region', id: '47,51', relatedIds: ['47,51', '46,51'], unlockTable: TableType.CHUNKS }),
+      ]);
+    } finally {
+      delete QUEST_DATA[id];
+    }
   });
 });
 

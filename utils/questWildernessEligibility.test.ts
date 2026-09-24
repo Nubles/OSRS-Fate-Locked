@@ -57,6 +57,7 @@ describe('quest Wilderness access', () => {
       ...base, chunks: ['48,55'],
     }), 'chunked').blockers).toContainEqual({
       kind: 'region', label: 'Varrock south gate',
+      location: { areas: [], chunks: [{ cx: 50, cy: 52 }] },
     });
     expect(evaluateQuestEligibility(QUEST_DATA['Enter the Abyss'], unlocked({
       ...base, chunks: ['48,55', '50,52'],

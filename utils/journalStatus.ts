@@ -32,8 +32,17 @@ export type SkillEligibilityRequirement =
   | { type: 'combined'; skills: string[]; level: number }
   | { type: 'anyOf'; skills: string[]; level: number };
 
+/**
+ * What unlocks a named quest location: its unreachable standard areas, or in
+ * Chunked mode any one of its exact chunks. Its label is only a place name.
+ */
+export interface LocationUnlockTargets {
+  areas: string[];
+  chunks: Array<{ cx: number; cy: number }>;
+}
+
 export type DirectEligibilityBlocker =
-  | { kind: 'region'; label: string; chunk?: { cx: number; cy: number } }
+  | { kind: 'region'; label: string; chunk?: { cx: number; cy: number }; location?: LocationUnlockTargets }
   | { kind: 'skill'; label: string; requirement?: SkillEligibilityRequirement }
   | { kind: 'combat'; label: string }
   | { kind: 'equipment'; label: string; slot: EquipmentSlot; tier: number }
@@ -111,6 +120,16 @@ export const locationRequirementMet = (
   : location.standardAreas.every(area =>
       isAreaReachable(area, unlocks, gameModeId));
 
+export const locationUnlockTargets = (
+  location: QuestLocationRequirement,
+  unlocks: UnlockState,
+  gameModeId?: string,
+): LocationUnlockTargets => locationRequirementMet(location, unlocks, gameModeId)
+  ? { areas: [], chunks: [] }
+  : gameModeId === 'chunked'
+    ? { areas: [], chunks: location.chunkOptions }
+    : { areas: location.standardAreas.filter(area => !isAreaReachable(area, unlocks, gameModeId)), chunks: [] };
+
 export const questRequirementOptionMet = (
   option: QuestRequirementOption,
   unlocks: UnlockState,
@@ -186,7 +205,7 @@ export function evaluateQuestEligibility(
   }
   for (const location of enforceLocations ? (quest.locations ?? []) : []) {
     if (locationRequirementMet(location, unlocks, gameModeId)) evidence.push(location.label);
-    else blockers.push({ kind: 'region', label: location.label });
+    else blockers.push({ kind: 'region', label: location.label, location: locationUnlockTargets(location, unlocks, gameModeId) });
   }
   if (!questAlternativesMet(quest, unlocks, gameModeId)) {
     blockers.push({ kind: 'region', label: quest.oneOf!.map(questRequirementOptionLabel).join(' or ') });

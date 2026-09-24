@@ -4,6 +4,7 @@ import { QUEST_DATA } from '../data/questData';
 import { GameState, TableType } from '../types';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { REGION_GROUPS } from '../constants';
+import { displayAreaName } from '../data/areaMapPolicy';
 
 /** Minimal game state with the bits the route builder reads. */
 const stateWith = (over: Partial<any> = {}): GameState => ({
@@ -279,6 +280,15 @@ describe('buildGoalRoute — geographic area aliases', () => {
       table: TableType.MINIGAMES,
       needed: expect.arrayContaining(['Mage Arena']),
     }));
+  });
+});
+
+describe('buildGoalRoute — quest locations', () => {
+  it('routes a location through the area that unlocks it, not its place label', () => {
+    // Druidic Ritual needs "North Taverley" and "South Taverley", both in Taverley.
+    const route = buildGoalRoute('Druidic Ritual', stateWith())!;
+    expect(route.regions.map(region => region.name)).toEqual([displayAreaName('Taverley')]);
+    expect(route.tables).toContainEqual(expect.objectContaining({ table: TableType.REGIONS, needed: ['Taverley'] }));
   });
 });
 

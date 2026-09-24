@@ -21,8 +21,10 @@ import { TableType } from '../types';
 import {
   evaluateQuestEligibility, getDiaryStatus,
   evaluateDiaryTaskEligibility, questRequirementOptionLabel, DirectEligibilityBlocker,
+  locationUnlockTargets, type LocationUnlockTargets,
 } from './journalStatus';
 import { isAreaReachable } from './reachability';
+import { placeOf } from './chunkLocations';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 
 export type GoalKind = 'quest' | 'diary' | 'region';
@@ -151,13 +153,34 @@ function areaPlanStep(name: string): PlanStep {
   return { kind: 'region', id: canonical, label: displayAreaName(name), unlockTable: TableType.REGIONS, done: false };
 }
 
-function requirementOptionPlanSteps(option: any): PlanStep[] {
+/** An exact chunk to roll on the Chunks table, as diary chunk routes plan it. */
+function chunkPlanStep({ cx, cy }: { cx: number; cy: number }): PlanStep {
+  return { kind: 'region', id: `${cx},${cy}`, label: `Chunk ${cx}, ${cy}`, unlockTable: TableType.CHUNKS, done: false };
+}
+
+/**
+ * Steps that unlock a quest location: its areas, or (Chunked) one of its
+ * chunks. Its label is a place name, not an area any table can grant.
+ */
+function locationPlanSteps(targets: LocationUnlockTargets): PlanStep[] {
+  if (targets.chunks.length === 0) return targets.areas.map(areaPlanStep);
+  const keys = targets.chunks.map(({ cx, cy }) => `${cx},${cy}`);
+  return [{
+    ...chunkPlanStep(targets.chunks[0]),
+    label: `Chunk ${keys.map(key => key.replace(',', ', ')).join(' or ')}`,
+    relatedIds: keys,
+  }];
+}
+
+function requirementOptionPlanSteps(option: any, unlocks: any, gameModeId?: string): PlanStep[] {
   return [
     ...(option.regions ?? []).map(areaPlanStep),
     ...(option.guilds ?? []).map((label: string): PlanStep => ({
       kind: 'region', id: label, label, unlockTable: TableType.GUILDS, done: false,
     })),
-    ...(option.locations ?? []).map((location: any) => areaPlanStep(location.label)),
+    ...(option.locations ?? []).flatMap((location: any) => (
+      locationPlanSteps(locationUnlockTargets(location, unlocks, gameModeId))
+    )),
   ];
 }
 
@@ -314,11 +337,23 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
             kind: 'alternative', id: 'alternative:' + qid + ':' + label, label, done: false,
             routes: (q.oneOf ?? []).map(option => ({
               label: questRequirementOptionLabel(option),
-              blockers: requirementOptionPlanSteps(option),
+              blockers: requirementOptionPlanSteps(option, unlocks, gameModeId),
+            })),
+          });
+        } else if (blocker.location?.chunks.length) {
+          // Chunked: the location is any one of its exact chunks, as diary
+          // locations are planned.
+          const label = 'One of: ' + blocker.label;
+          alternatives.set(label, {
+            kind: 'alternative', id: 'alternative:' + qid + ':' + label, label, done: false,
+            routes: blocker.location.chunks.map(chunk => ({
+              label: `${placeOf(chunk.cx, chunk.cy).label} (${chunk.cx}, ${chunk.cy})`,
+              blockers: [chunkPlanStep(chunk)],
             })),
           });
         } else {
-          regions.add(canonicalAreaName(blocker.label));
+          // A location's label is a place name; plan the areas that unlock it.
+          for (const area of blocker.location?.areas ?? [blocker.label]) regions.add(canonicalAreaName(area));
         }
         continue;
       }
