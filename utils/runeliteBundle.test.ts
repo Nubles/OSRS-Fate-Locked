@@ -220,12 +220,13 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
       const body = JSON.stringify({ token: 'f'.repeat(32), payload: compressed });
       expect(new TextEncoder().encode(body).byteLength).toBeLessThan(256 * 1024 - 16 * 1024);
       const worker = (await import('../workers/fate-relay/worker.js')).default;
-      const put = vi.fn(async () => {});
+      const put = vi.fn(async (_key: string, _value: string, _options?: unknown) => {});
       const response = await worker.fetch(new Request('https://relay.test/r/catalogue-size', {
         method: 'POST', headers: { 'content-type': 'application/json' }, body,
       }), { RELAY: { get: async () => null, put } });
       expect(response.status).toBe(200);
-      expect(put).toHaveBeenCalledTimes(1);
+      // The profile record, then the code's owner record (a token hash).
+      expect(put.mock.calls.map(([key]) => key)).toEqual(['r:catalogue-size', 'own:r:catalogue-size']);
     } finally {
       vi.unstubAllGlobals();
       vi.resetModules();
