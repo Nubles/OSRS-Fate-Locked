@@ -12,6 +12,8 @@ import { isRunelitePairCode } from '../utils/runelitePairing';
 const DEFAULT_BASE = 'https://fate-relay.fatelocked.workers.dev';
 const SESSION_KEY = 'fate_relay_session_v1';
 const BASE_KEY = 'fate_relay_base';
+/** A stalled POST fails after this long instead of holding up later publishes. */
+const REQUEST_TIMEOUT_MS = 15_000;
 
 export type RelayStatus = 'off' | 'syncing' | 'synced' | 'error';
 
@@ -137,11 +139,7 @@ export class RelaySyncService {
     this.lastError = null;
     this.emit();
     try {
-      const res = await fetch(`${this.base()}/r/${session.code}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: session.token, payload }),
-      });
+      const res = await this.post(`/r/${session.code}`, { token: session.token, payload });
       if (!res.ok) throw new Error(`relay ${res.status}`);
       if (this.session !== session || !isCurrent()) return false;
       this.status = 'synced';
@@ -163,10 +161,8 @@ export class RelaySyncService {
     if (!this.session) return false;
     try {
       const suffix = path.startsWith('/') ? path : `/${path}`;
-      const res = await fetch(`${this.base()}/r/${this.session.code}${suffix}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: this.session.token, ...body }),
+      const res = await this.post(`/r/${this.session.code}${suffix}`, {
+        token: this.session.token, ...body,
       });
       return res.ok;
     } catch {
@@ -174,6 +170,31 @@ export class RelaySyncService {
     }
   }
 
+  /** JSON POST to the relay that rejects (and aborts) after REQUEST_TIMEOUT_MS. */
+  private async post(path: string, body: Record<string, unknown>): Promise<Response> {
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    // Race as well as abort, so a request that ignores the signal still ends.
+    const timedOut = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        controller.abort();
+        reject(new Error('relay timed out'));
+      }, REQUEST_TIMEOUT_MS);
+    });
+    try {
+      return await Promise.race([
+        fetch(`${this.base()}${path}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        }),
+        timedOut,
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
 }
 
 export const relaySync = new RelaySyncService();

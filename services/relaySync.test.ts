@@ -163,6 +163,38 @@ describe('RelaySyncService', () => {
     expect(service.lastError).toBeNull();
   });
 
+  it('times out a stalled POST as a failed publish and lets the queue continue', async () => {
+    vi.useFakeTimers();
+    try {
+      const { RelaySyncService } = await import('./relaySync');
+      const service = new RelaySyncService();
+      localStorage.setItem('fate_relay_base', 'https://relay.test');
+      const fetchMock = vi.fn()
+        .mockReturnValueOnce(new Promise(() => {}))
+        .mockResolvedValueOnce({ ok: true });
+      vi.stubGlobal('fetch', fetchMock);
+      service.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+      const seen: string[] = [];
+      service.subscribe(() => seen.push(`${service.status}:${service.lastError ?? ''}`));
+
+      const stalled = service.push('bundle-a');
+      const queued = service.push('bundle-b');
+      await vi.advanceTimersByTimeAsync(14_999);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(service.status).toBe('syncing');
+
+      await vi.advanceTimersByTimeAsync(1);
+      expect(fetchMock.mock.calls[0][1].signal.aborted).toBe(true);
+      await expect(stalled).resolves.toBe(false);
+      await expect(queued).resolves.toBe(true);
+      expect(seen).toContain('error:relay timed out');
+      expect(JSON.parse(fetchMock.mock.calls[1][1].body).payload).toBe('bundle-b');
+      expect(service.status).toBe('synced');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('keeps legacy enable and disable compatibility', async () => {
     const { RelaySyncService } = await import('./relaySync');
     const service = new RelaySyncService();
