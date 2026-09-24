@@ -221,6 +221,9 @@ const itemNotesFor = (
       if (preparation?.analysisState === 'DATA_INCOMPLETE' || !preparation) {
         return `Acquisition data is incomplete for ${item}; confirm a source before continuing.`;
       }
+      if (preparation.analysisState === 'PREPARED_BY_EARLIER_STEP') {
+        return `${item} comes from an earlier step of this guide.`;
+      }
       if (confirmedItemKeys.has(requirement.item.key)) return `${item} confirmed.`;
       if (preparation.obtainableNow) return `Obtain ${item} using the Preparation routes.`;
       return `Obtain ${item}; no current acquisition route is available.`;

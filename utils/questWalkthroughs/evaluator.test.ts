@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { questWalkthroughFor } from '../../data/questWalkthroughs';
+import { questWalkthroughFor as publicQuestWalkthroughFor } from '../../data/questWalkthroughs.public';
 import type { QuestItemRouteAnalysis, QuestRouteAnalysisSnapshot } from '../questRoutes/analyzeQuest';
 import type { ChunkKey, ItemRouteState, RouteGate } from '../questRoutes/model';
 import { evaluateQuestWalkthrough } from './evaluator';
+import { presentQuestWalkthrough } from './presenter';
 import { resolveQuestWalkthroughLocations } from './locationResolver';
 import type {
   QuestWalkthroughActionDefinition,
@@ -467,5 +469,38 @@ describe('quest walkthrough evaluation', () => {
 
     expect((result as QuestWalkthroughAnalysis & { readonly releaseStatus?: string }).releaseStatus)
       .toBe('APPROVED');
+  });
+});
+
+describe("Cook's Assistant items produced by earlier steps", () => {
+  it('treats the bucket, grain and pot as prepared rather than missing evidence', () => {
+    // Production builds serve the public catalogue (see vite.config.ts).
+    const definition = publicQuestWalkthroughFor("Cook's Assistant")!;
+    const result = evaluateQuestWalkthrough(
+      resolvedWithExactLocations(definition),
+      snapshot(['46,53']),
+      ['bucket of milk', 'egg', 'pot of flour'].map(key => itemAnalysis(key)),
+    );
+
+    expect(result.actions.filter(entry => entry.state === 'ITEM_EVIDENCE_INCOMPLETE')
+      .map(entry => entry.definition.id)).toEqual([]);
+    expect(result.status).toBe('READY');
+    const milk = result.actions.find(entry => entry.definition.id === 'cooks-assistant:milk-cow')!;
+    expect(milk.itemPreparation).toEqual([
+      { itemKey: 'bucket', analysisState: 'PREPARED_BY_EARLIER_STEP', obtainableNow: false },
+    ]);
+    const presented = presentQuestWalkthrough(result, new Set())
+      .actions.find(entry => entry.id === 'cooks-assistant:milk-cow')!;
+    expect(presented.itemNotes).toEqual(['1 Bucket comes from an earlier step of this guide.']);
+  });
+
+  it('still treats an item no step or analysis covers as missing evidence', () => {
+    const result = evaluateQuestWalkthrough(resolved([
+      action('use-mystery', undefined, {
+        items: [{ item: { key: 'mystery', name: 'Mystery' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' }],
+      }),
+    ]), snapshot(), []);
+
+    expect(result.actions[0].state).toBe('ITEM_EVIDENCE_INCOMPLETE');
   });
 });
