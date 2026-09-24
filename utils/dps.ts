@@ -98,12 +98,13 @@ export const potionBoost = (baseLevel: number, p: Potion): number =>
   p.flat + Math.floor(p.pct * baseLevel);
 
 /**
- * OSRS effective level: floor((base + boost) * prayerMult) + stance + 8.
+ * OSRS effective level: floor((base + boost) * prayerMult) + stance + 8, or
+ * + 9 for Magic accuracy (Wiki DPS calculator, getPlayerMaxMagicAttackRoll).
  * The prayer multiplier is applied as a whole percentage, as the game does:
  * 100 * 1.15 is 114.99999999999999 in floating point, which floored to 114.
  */
-export const effectiveLevel = (base: number, prayerMult: number, boost: number, stance: number): number =>
-  Math.floor(((base + boost) * Math.round(prayerMult * 100)) / 100) + stance + 8;
+export const effectiveLevel = (base: number, prayerMult: number, boost: number, stance: number, constant = 8): number =>
+  Math.floor(((base + boost) * Math.round(prayerMult * 100)) / 100) + stance + constant;
 
 /** Melee/ranged max hit from effective strength + gear strength bonus. */
 export const maxHitFromStr = (effStr: number, strBonus: number): number =>
@@ -190,7 +191,7 @@ export const computeDps = (input: DpsInput): DpsResult => {
   const atkBase = style === 'melee' ? levels.attack : style === 'ranged' ? levels.ranged : levels.magic;
   const strBase = style === 'melee' ? levels.strength : style === 'ranged' ? levels.ranged : levels.magic;
 
-  const effAtk = effectiveLevel(atkBase, prayer.atkMult, potionBoost(atkBase, potion), stance.atk);
+  const effAtk = effectiveLevel(atkBase, prayer.atkMult, potionBoost(atkBase, potion), stance.atk, style === 'magic' ? 9 : 8);
   const effStr = effectiveLevel(strBase, prayer.strMult, potionBoost(strBase, potion), stance.str);
 
   const maxHit = style === 'magic'

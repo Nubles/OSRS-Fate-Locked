@@ -115,6 +115,19 @@ describe('dps formulas', () => {
     expect(computeDps({ ...input, prayerId: 'augury', gear: { ...input.gear, magicDmgPct: 20 } }).maxHit).toBe(62);
   });
 
+  it('adds 9, not 8, to the effective Magic level for accuracy', () => {
+    // Wiki DPS calculator, PlayerVsNPCCalc.getPlayerMaxMagicAttackRoll: level × prayer + 9.
+    const magic = (over: Partial<DpsInput> = {}) => computeDps({
+      ...baseInput(), style: 'magic', attackType: 'magic', stanceId: 'standard', baseSpellMax: 30, ...over,
+    });
+    expect(magic().effAtk).toBe(108); // 99 + 9
+    expect(magic().attackRoll).toBe(108 * (82 + 64));
+    expect(magic({ prayerId: 'augury' }).effAtk).toBe(132); // floor(99 × 1.25) + 9
+    // Melee and ranged keep + 8.
+    expect(computeDps({ ...baseInput(), stanceId: 'defensive' }).effAtk).toBe(107);
+    expect(computeDps({ ...baseInput(), style: 'ranged', attackType: 'ranged', stanceId: 'rapid' }).effAtk).toBe(107);
+  });
+
   it('rapid stance attacks faster (higher dps, shorter interval)', () => {
     const acc = computeDps({ ...baseInput(), style: 'ranged', stanceId: 'accurate', gear: { accuracy: 70, meleeStr: 0, rangedStr: 70, magicDmgPct: 0, speedTicks: 5 } });
     const rapid = computeDps({ ...baseInput(), style: 'ranged', stanceId: 'rapid', gear: { accuracy: 70, meleeStr: 0, rangedStr: 70, magicDmgPct: 0, speedTicks: 5 } });
