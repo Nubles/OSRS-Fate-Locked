@@ -58,6 +58,10 @@ describe('Fate relay event resources', () => {
     env = { RELAY: kv };
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   const request = (path: string, init?: RequestInit) =>
     worker.fetch(new Request(`https://relay.test${path}`, init), env);
   const post = (path: string, body: unknown) =>
@@ -164,11 +168,33 @@ describe('Fate relay event resources', () => {
   });
 
   it('can retry safely after a KV write failure', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     kv.failNextPut = true;
-    await expect(post('/r/ABCD/events', { events: [event('evt-1')] }))
-      .rejects.toThrow('simulated put failure');
+    expect((await post('/r/ABCD/events', { events: [event('evt-1')] })).status).toBe(503);
     const retry = await post('/r/ABCD/events', { events: [event('evt-1')] });
     expect(await retry.json()).toMatchObject({ accepted: ['evt-1'], duplicates: [] });
+  });
+
+  it('answers a KV failure with a 503 that carries the CORS headers', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    kv.get = async () => {
+      throw new Error('simulated get failure');
+    };
+    const response = await request('/r/ABCD', { headers: { Origin: 'https://app.example.test' } });
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://app.example.test');
+    expect(response.headers.get('Access-Control-Expose-Headers')).toBe('ETag');
+  });
+
+  it('lets browsers cache preflights', async () => {
+    const preflight = await request('/r/ABCD', {
+      method: 'OPTIONS',
+      headers: { Origin: 'https://app.example.test', 'Access-Control-Request-Method': 'POST' },
+    });
+
+    expect(preflight.headers.get('Access-Control-Allow-Origin')).toBe('https://app.example.test');
+    expect(preflight.headers.get('Access-Control-Max-Age')).toBe('86400');
   });
 
   it.each(FATE_EVENT_TYPES)('accepts supported event type %s', async (eventType) => {

@@ -25,6 +25,9 @@ function cors(origin) {
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, If-None-Match',
     'Access-Control-Expose-Headers': 'ETag',
+    // Cache preflights (browsers cap this lower), so publishes and the
+    // overlay's conditional polls don't each cost an extra OPTIONS request.
+    'Access-Control-Max-Age': '86400',
     'Cache-Control': 'no-store',
   };
 }
@@ -128,7 +131,7 @@ async function recordOwner(env, key, owner) {
   }
 }
 
-export default {
+const routes = {
   async fetch(request, env) {
     const url = new URL(request.url);
     const headers = cors(request.headers.get('Origin'));
@@ -233,5 +236,24 @@ export default {
     }
 
     return new Response('method not allowed', { status: 405, headers });
+  },
+};
+
+export default {
+  /**
+   * An unexpected failure, such as a KV outage, answers 503 with the CORS
+   * headers. Without them the browser hides the status and reports only
+   * "Failed to fetch".
+   */
+  async fetch(request, env) {
+    try {
+      return await routes.fetch(request, env);
+    } catch (error) {
+      console.error('relay request failed', error);
+      return new Response('relay unavailable', {
+        status: 503,
+        headers: cors(request.headers.get('Origin')),
+      });
+    }
   },
 };
