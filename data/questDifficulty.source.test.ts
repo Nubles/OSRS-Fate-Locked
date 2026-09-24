@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-// @ts-expect-error Script modules are plain ESM without type declarations.
 import { readQuestHelperSource } from '../scripts/quest-helper-source.mjs';
 import { QUEST_DATA } from './questData';
 import { DropSource } from '../types';
