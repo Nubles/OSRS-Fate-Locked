@@ -38,6 +38,8 @@ describe('buildRuneliteRulesManifest', () => {
         mobility: ['Spirit Trees', 'Fairy Rings'],
         slayerUnlocks: ['Bigger and Badder'],
         banks: ['12850'],
+        housing: ['Portal Nexus', 'Jewellery Box'],
+        storage: ['Rune Pouch', 'Looting Bag'],
       },
       run: {
         runId: 'run-1',
@@ -84,6 +86,8 @@ describe('buildRuneliteRulesManifest', () => {
       farming: expect.any(Array),
       slayer: ['Bigger and Badder'],
       quests: expect.any(Array),
+      housing: ['Jewellery Box', 'Portal Nexus'],
+      storage: ['Looting Bag', 'Rune Pouch'],
     }));
     expect(manifest.itemRules['4151']).toEqual({ tier: 7, slot: 'Weapon' });
     expect(manifest.knownMobility).toEqual([...MOBILITY_LIST].sort());

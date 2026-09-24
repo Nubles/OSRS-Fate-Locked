@@ -154,6 +154,11 @@ the run, account, game mode, rules/content/detector versions, every unlock
 family, bank-lock state, and category-first chunk permission snapshots. Root
 fields from v3 remain for one compatibility release.
 
+`rules.unlocks.housing` and `rules.unlocks.storage` are exported too, but the
+current plugin has no fields for them: it ignores them and does not warn on
+player-owned house or storage unlocks yet. Like every manifest addition, they
+are optional and leave `rulesVersion` unchanged.
+
 Permission status is `ALLOWED`, `NOT_READY`, `LOCKED`, or `UNKNOWN`. `UNKNOWN`
 means the app cannot safely decide and must never become a blocking warning.
 RuneLite consumes these authored decisions without re-implementing quest,
