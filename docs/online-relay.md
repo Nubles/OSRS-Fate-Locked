@@ -26,6 +26,12 @@ fragment. After the player approves the current profile, the browser:
    pause for 5 seconds, or after a minute if they never pause, with one
    request in flight at a time. Retry publishes at once.
 
+The rules are built from the app's chunk and equipment data. If either fails
+to load, the browser publishes nothing: the relay keeps the last complete
+profile, and the app shows the error with Retry. (A profile built without
+that data would have empty rules, and RuneLite would allow everything.)
+Clipboard and file exports still build from whatever loaded.
+
 RuneLite performs only the fixed `GET` request, with optional ETag caching. A
 valid response replaces its imported snapshot. A malformed or unsupported
 response is rejected without replacing the last valid snapshot.

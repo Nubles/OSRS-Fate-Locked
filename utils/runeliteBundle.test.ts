@@ -234,6 +234,59 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
   });
 });
 
+describe('buildBundlePayload - failed rules data', () => {
+  it('refuses a relay build from failed chunk or equipment data, and retries on request', async () => {
+    // Fresh services, so no earlier test's loaded data or cool-down leaks in.
+    vi.resetModules();
+    vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => {} });
+    let online = false;
+    const catalogue = [{
+      id: 1205, name: 'Bronze dagger', slot: 'weapon', image: 'Bronze dagger.png',
+      speed: 4, offensive: { stab: 4 }, bonuses: { str: 3 },
+    }];
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (!online) return new Response('unavailable', { status: 503 });
+      if (url.includes('chunk-content.json')) {
+        return new Response(chunkContentJson, { status: 200, headers: { 'content-type': 'application/json' } });
+      }
+      if (url.includes(EQUIPMENT_CATALOGUE.asset)) {
+        return new Response(JSON.stringify(catalogue), { status: 200, headers: { 'content-type': 'application/json' } });
+      }
+      return new Response('{}', { status: 404 });
+    }));
+    const run = {
+      runId: 'run-offline', runRevision: 3, keys: 0, specialKeys: 0, chaosKeys: 0,
+      fatePoints: 0, activeBuff: 'NONE', gameModeId: 'vanilla',
+    };
+
+    try {
+      const { buildBundlePayload: buildFreshPayload } = await import('./runeliteExport');
+      // Both datasets down: a relay publish must not replace a complete profile.
+      await expect(buildFreshPayload(initialState.unlocks, run, { requireRulesData: true }))
+        .rejects.toThrow("Couldn't load chunk and equipment data, so the profile wasn't sent.");
+      // A manual export still degrades, as before.
+      const degraded = JSON.parse((await buildFreshPayload(initialState.unlocks, run)).json);
+      expect(degraded.rules.chunks).toEqual({});
+      expect(degraded.rules.itemRules).toEqual({});
+
+      // Back online, but equipment data is inside its failure cool-down.
+      online = true;
+      await expect(buildFreshPayload(initialState.unlocks, run, { requireRulesData: true }))
+        .rejects.toThrow("Couldn't load equipment data, so the profile wasn't sent.");
+      // An explicit retry skips the cool-down and builds the complete rules.
+      const full = JSON.parse((await buildFreshPayload(initialState.unlocks, run, {
+        requireRulesData: true, retryFailedLoads: true,
+      })).json);
+      expect(Object.keys(full.rules.chunks).length).toBeGreaterThan(100);
+      expect(full.rules.itemRules['1205']).toEqual({ tier: 1, slot: 'Weapon' });
+    } finally {
+      vi.unstubAllGlobals();
+      vi.resetModules();
+    }
+  });
+});
+
 describe('buildRuneliteBundle - canonical area names', () => {
   it('canonicalizes every overlapping surface alias in root and rules unlocks', async () => {
     const aliases = [

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { relaySync } from '../services/relaySync';
-import { buildBundlePayload } from '../utils/runeliteExport';
+import type { UnlockState } from '../types';
+import { buildBundlePayload, type RuneliteRunInput } from '../utils/runeliteExport';
 
 /** A publish waits until run changes have paused this long… */
 const PUBLISH_QUIET_MS = 5_000;
@@ -13,7 +14,8 @@ const PUBLISH_MAX_WAIT_MS = 60_000;
  * the relay. Every reducer action bumps runRevision and every publish is a
  * full KV write, so changes are coalesced: one publish of the newest state
  * once they pause, with at most one publish in flight. Pairing and Retry
- * publish at once.
+ * publish at once. A bundle built from failed rules data is never sent: the
+ * failure is shown as the relay error and the last good publish stays.
  */
 export function OnlineSyncDriver() {
   const { unlocks, runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode } = useGame() as any;
@@ -24,7 +26,7 @@ export function OnlineSyncDriver() {
   const pushRequestRevision = relaySync.pushRequestRevision;
 
   // A publish builds from the state current when it starts, not when scheduled.
-  const latestRun = useRef<Parameters<typeof buildBundlePayload>>(null!);
+  const latestRun = useRef<[UnlockState, RuneliteRunInput]>(null!);
   latestRun.current = [unlocks, { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId: gameModeId ?? 'vanilla', customMode }];
   const schedule = useRef<((immediate: boolean) => void) | null>(null);
   const seenPushRequest = useRef(pushRequestRevision);
@@ -37,6 +39,7 @@ export function OnlineSyncDriver() {
     let pendingSince: number | null = null;
     let inFlight = false;
     let again = false;
+    let explicit = false;
     const isCurrent = () => !cancelled && relaySync.code === sessionCode;
 
     const publish = async (): Promise<void> => {
@@ -48,8 +51,13 @@ export function OnlineSyncDriver() {
         return;
       }
       inFlight = true;
+      const retryFailedLoads = explicit;
+      explicit = false;
       try {
-        const { compressed } = await buildBundlePayload(...latestRun.current);
+        const [unlocks, run] = latestRun.current;
+        const { compressed } = await buildBundlePayload(unlocks, run, {
+          requireRulesData: true, retryFailedLoads,
+        });
         if (isCurrent()) await relaySync.push(compressed, isCurrent);
       } catch (error) {
         if (isCurrent()) relaySync.reportPushFailure(error);
@@ -64,6 +72,7 @@ export function OnlineSyncDriver() {
 
     schedule.current = (immediate) => {
       if (timer != null) window.clearTimeout(timer);
+      if (immediate) explicit = true;
       const now = Date.now();
       pendingSince ??= now;
       const delay = immediate

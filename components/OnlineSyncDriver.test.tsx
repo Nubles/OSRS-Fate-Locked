@@ -142,6 +142,10 @@ describe('OnlineSyncDriver', () => {
     render(<OnlineSyncDriver />);
     await advance(QUIET_MS);
     expect(buildBundlePayloadMock).toHaveBeenCalledTimes(1);
+    // Relay publishes never go out built from failed rules data.
+    expect(buildBundlePayloadMock.mock.calls[0]?.[2]).toEqual({
+      requireRulesData: true, retryFailedLoads: false,
+    });
 
     act(() => {
       relaySync.reportPushFailure(new Error('offline'));
@@ -156,6 +160,25 @@ describe('OnlineSyncDriver', () => {
       linkedAccount: 'Nubles UIM',
       customMode: null,
     });
+    // Retry is explicit, so it also skips a failed load's cool-down.
+    expect(buildBundlePayloadMock.mock.calls[1]?.[2]).toEqual({
+      requireRulesData: true, retryFailedLoads: true,
+    });
+  });
+
+  it('keeps the last good publish when the rules data fails to load', async () => {
+    const report = vi.spyOn(relaySync, 'reportPushFailure');
+    buildBundlePayloadMock.mockRejectedValueOnce(new Error(
+      "Couldn't load chunk data, so the profile wasn't sent. Check your connection and retry.",
+    ));
+    relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    render(<OnlineSyncDriver />);
+    await advance(QUIET_MS);
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(report).toHaveBeenCalledTimes(1);
+    expect(relaySync.status).toBe('error');
+    expect(relaySync.lastError).toMatch(/profile wasn't sent/);
   });
 
   it('coalesces a burst of run changes into one publish of the newest state', async () => {
