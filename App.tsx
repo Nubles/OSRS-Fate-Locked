@@ -1062,7 +1062,7 @@ const GameLayout = () => {
           phase={runelitePairPhase}
           error={runelitePairError}
           onConfirm={() => {
-            if (!relaySync.adoptCode(runelitePairCode)) {
+            if (!relaySync.adoptCode(runelitePairCode, activeProfileId)) {
               setRunelitePairPhase('confirm');
               setRunelitePairError(
                 'This connection could not be saved. Try again.',
@@ -1154,6 +1154,9 @@ const GameProviderBridge: React.FC<{ children: ReactNode }> = ({ children }) => 
     metadataReadOnly,
     storageKeyForActiveProfile,
   } = useProfiles();
+  // Every tab shares the RuneLite pairing; only a tab showing the paired
+  // profile publishes it. Set before anything below reads relaySync.enabled.
+  relaySync.setActiveProfile(activeProfileId);
   return (
     <SaveBootstrap profileId={activeProfileId} storageKey={storageKeyForActiveProfile}>
       {bootstrap => (

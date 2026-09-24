@@ -86,6 +86,7 @@ describe('OnlineSyncDriver', () => {
   afterEach(() => {
     cleanup();
     relaySync.disable();
+    relaySync.setActiveProfile(null);
     vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
@@ -247,6 +248,36 @@ describe('OnlineSyncDriver', () => {
     expect(buildBundlePayloadMock).toHaveBeenCalledTimes(2);
     expect(buildBundlePayloadMock.mock.calls[1]?.[1]).toMatchObject({ runRevision: 12 });
     expect(sentPayloads()).toEqual(['revision-9', 'bundle']);
+  });
+
+  it('does not publish from a tab showing another profile than the paired one', async () => {
+    relaySync.setActiveProfile('alt');
+    relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'main');
+    const view = render(<OnlineSyncDriver />);
+    await advance(QUIET_MS);
+    stableGameState.runRevision = 10;
+    view.rerender(<OnlineSyncDriver />);
+    await advance(MAX_WAIT_MS);
+
+    expect(buildBundlePayloadMock).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('stops publishing when another tab disconnects', async () => {
+    relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    const view = render(<OnlineSyncDriver />);
+    await advance(QUIET_MS);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      localStorage.removeItem('fate_relay_session_v1');
+      window.dispatchEvent(new StorageEvent('storage', { key: 'fate_relay_session_v1' }));
+    });
+    expect(relaySync.enabled).toBe(false);
+    stableGameState.runRevision = 10;
+    view.rerender(<OnlineSyncDriver />);
+    await advance(MAX_WAIT_MS);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('does not publish an old profile build that completes after the new profile', async () => {

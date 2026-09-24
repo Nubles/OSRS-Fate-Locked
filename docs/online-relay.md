@@ -26,6 +26,13 @@ fragment. After the player approves the current profile, the browser:
    pause for 5 seconds, or after a minute if they never pause, with one
    request in flight at a time. Retry publishes at once.
 
+The pairing belongs to the profile approved in the dialog. Every browser tab
+shares it, but only a tab showing that profile publishes; a tab on another
+profile shows RuneLite as not connected. Pairing again or pressing
+**Disconnect** in one tab applies to every open tab. A pairing saved before
+its profile was recorded is bound to the profile of the first tab that
+publishes it.
+
 The rules are built from the app's chunk and equipment data. If either fails
 to load, the browser publishes nothing: the relay keeps the last complete
 profile, and the app shows the error with Retry. (A profile built without

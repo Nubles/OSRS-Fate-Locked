@@ -561,6 +561,32 @@ describe('App changelog lifecycle', () => {
     })).toBeNull();
   });
 
+  it('pairs RuneLite with the profile the player approved', async () => {
+    const code = '0123456789abcdef0123456789abcdef';
+    window.history.replaceState(null, '', `/#runelite-pair=${code}`);
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      throw new TypeError('Failed to fetch');
+    }));
+    const { relaySync } = await import('./services/relaySync');
+    const user = userEvent.setup();
+    try {
+      render(<App />);
+      const dialog = await screen.findByRole('dialog', {
+        name: 'Connect RuneLite tracker',
+      });
+      await user.click(within(dialog).getByRole('button', {
+        name: 'Connect tracker',
+      }));
+
+      // Other tabs on other profiles see the pairing but don't publish it.
+      expect(JSON.parse(storage.getItem('fate_relay_session_v1')!))
+        .toMatchObject({ code, profileId: PROFILE_ID });
+      expect(relaySync.code).toBe(code);
+    } finally {
+      relaySync.disable();
+    }
+  });
+
   it('lets the player close the pairing dialog after the profile fails to send', async () => {
     const code = '0123456789abcdef0123456789abcdef';
     window.history.replaceState(null, '', `/#runelite-pair=${code}`);
