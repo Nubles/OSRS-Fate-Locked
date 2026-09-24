@@ -894,22 +894,21 @@ const GameLayout = () => {
   // The first profile is created implicitly, so new players reach the game via
   // the onboarding wizard rather than `createProfile`. Catch that finish-line:
   // when onboarding flips to complete on a still-empty run, prompt the mode pick.
-  const prevOnboarded = useRef(hasSeenOnboarding);
-  const onboardingJustCompleted = !prevOnboarded.current && hasSeenOnboarding && history.length === 0;
-  useEffect(() => {
-    if (onboardingJustCompleted) {
-      setShowGameMode(true);
-    }
-    prevOnboarded.current = hasSeenOnboarding;
-  }, [hasSeenOnboarding, onboardingJustCompleted]);
+  // This adjusts state during render rather than in an effect: saving the
+  // completion re-renders from the durability store before an effect's queued
+  // update applies, and in that render What's New auto-opened over the prompt.
+  const [onboardingSeenAtLastRender, setOnboardingSeenAtLastRender] = useState(hasSeenOnboarding);
+  if (onboardingSeenAtLastRender !== hasSeenOnboarding) {
+    setOnboardingSeenAtLastRender(hasSeenOnboarding);
+    if (hasSeenOnboarding && history.length === 0) setShowGameMode(true);
+  }
 
   const startupHash = typeof window === 'undefined' ? '' : window.location.hash;
   const hasPendingSyncPrompt = showSyncCode
     || (startupHash.startsWith('#sync=') && startupHash.length > '#sync='.length)
     || !!runelitePairCode;
   const hasPendingGameModePrompt = showGameMode
-    || recentlyCreatedId === activeProfileId
-    || onboardingJustCompleted;
+    || recentlyCreatedId === activeProfileId;
   useEffect(() => {
     if (
       showChangelog
