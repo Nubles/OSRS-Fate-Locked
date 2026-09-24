@@ -179,6 +179,12 @@ interface GameContextType extends GameState {
   saveOwnershipBlockReason: SaveOwnershipBlockReason;
   hasPendingChanges: boolean;
   saveDurability: SaveDurabilitySnapshot;
+  /**
+   * Wholesale run replacements (import, sync code, restore, reload, reset)
+   * this session. History watchers compare it to tell a replaced history
+   * from one that grew.
+   */
+  stateReplacements: number;
   retrySave: () => SaveRetryResult | Promise<SaveRetryResult>;
   stageForProfileEviction: () => void;
   takeOverSaveOwnership: () => Promise<boolean>;
@@ -1633,6 +1639,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     profileEvictedRef.current = false;
   }
   const [legacySaveStatus, setSaveStatus] = useState<SaveStatus>(() => getSaveStatus(storageKey));
+  const [stateReplacements, setStateReplacements] = useState(0);
   useSyncExternalStore(
     subscribeToPendingSaveChanges,
     getPendingSaveRevision,
@@ -2459,6 +2466,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const replaceState = useCallback((replacement: GameState) => {
     stateMutationRef.current += 1;
     stateRef.current = { ...replacement, lastEvent: null };
+    // Batched into the same render as the new history.
+    setStateReplacements(count => count + 1);
     dispatch({ type: 'LOAD_SAVE', payload: replacement });
   }, []);
   const reloadLatestSave = useCallback((): ImportResult => {
@@ -2726,6 +2735,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     }
     if (!isCurrent()) return;
     pushOwnedBackup(serializeCurrent(), 'Before reset');
+    setStateReplacements(count => count + 1);
     commitAction({ type: 'RESET' });
   }, [beginReplacement, commitAction, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, serializeCurrent, setSaveStatus, writeCoordinatedReplacement]);
   const togglePin = useCallback((id: string) => commitAction({ type: 'TOGGLE_PIN', payload: id }), [commitAction]);
@@ -2836,6 +2846,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     saveOwnershipBlockReason,
     hasPendingChanges,
     saveDurability,
+    stateReplacements,
     retrySave,
     stageForProfileEviction,
     takeOverSaveOwnership,
@@ -2884,6 +2895,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     saveOwnershipBlockReason,
     hasPendingChanges,
     saveDurability,
+    stateReplacements,
     retrySave,
     stageForProfileEviction,
     takeOverSaveOwnership,

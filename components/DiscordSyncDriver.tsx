@@ -3,7 +3,7 @@ import { useGame } from '../context/GameContext';
 import { useProfiles } from '../context/ProfileContext';
 import {
   readDiscordConfig, readCursor, writeCursor, isValidWebhookUrl,
-  pickNewUnlocks, unlockEmbed, postEmbeds,
+  planAnnouncements, unlockEmbed, postEmbeds,
 } from '../utils/discordWebhook';
 
 /**
@@ -11,35 +11,37 @@ import {
  * must stay ALWAYS-MOUNTED (RollInboxDriver rule): unlocks can happen from
  * any tab. Cursor semantics: advance BEFORE sending and regardless of the
  * outcome — a flaky network may drop an announcement, but a retry loop can
- * never spam the channel or double-post. First run with no cursor seeds to
- * the newest entry silently so enabling never floods the back-catalogue.
+ * never spam the channel or double-post. A missing cursor, or a run replaced
+ * by an import, sync code, restore or reset, reseeds silently to the newest
+ * entry, so neither enabling nor importing floods the channel.
  */
 export const DiscordSyncDriver: React.FC = () => {
-  const { history } = useGame();
+  const { history, stateReplacements } = useGame();
   const { storageKeyForActiveProfile: storageKey } = useProfiles();
   const busy = useRef(false);
+  const seenReplacements = useRef(stateReplacements);
 
   useEffect(() => {
+    const replaced = seenReplacements.current !== stateReplacements;
+    seenReplacements.current = stateReplacements;
+
     const cfg = readDiscordConfig(storageKey);
     if (!cfg.enabled || !isValidWebhookUrl(cfg.url)) return;
-    if (history.length === 0) return;
 
-    const newest = Math.max(...history.map((e) => e.timestamp));
-    const cursor = readCursor(storageKey);
-    if (cursor === 0) {
-      writeCursor(storageKey, newest); // first sight — never flood old unlocks
+    const plan = planAnnouncements(history, readCursor(storageKey), replaced);
+    if (plan.post.length === 0) {
+      if (plan.cursor) writeCursor(storageKey, plan.cursor);
       return;
     }
-
-    const fresh = pickNewUnlocks(history, cursor);
-    if (fresh.length === 0 || busy.current) return;
+    // Mid-post: leave the cursor so the next history change picks these up.
+    if (busy.current) return;
 
     busy.current = true;
-    writeCursor(storageKey, newest);
-    postEmbeds(cfg.url, fresh.map(unlockEmbed)).finally(() => {
+    if (plan.cursor) writeCursor(storageKey, plan.cursor);
+    postEmbeds(cfg.url, plan.post.map(unlockEmbed)).finally(() => {
       busy.current = false;
     });
-  }, [history, storageKey]);
+  }, [history, stateReplacements, storageKey]);
 
   return null;
 };

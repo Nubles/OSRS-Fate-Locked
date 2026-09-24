@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
-  isValidWebhookUrl, pickNewUnlocks, unlockEmbed, postEmbeds,
-  readDiscordConfig, writeDiscordConfig, readCursor, writeCursor,
+  isValidWebhookUrl, planAnnouncements, unlockEmbed, postEmbeds,
+  readDiscordConfig, writeDiscordConfig, readCursor, writeCursor, cursorAtNewest,
   MAX_EMBEDS_PER_POST,
 } from './discordWebhook';
+import { profileDiscordCursorKey } from './profileStorage';
 import type { LogEntry } from '../types';
 
 // Isolated in-memory localStorage (same pattern as backups.test.ts).
@@ -37,16 +38,35 @@ describe('isValidWebhookUrl', () => {
   });
 });
 
-describe('pickNewUnlocks', () => {
-  it('returns only UNLOCKs newer than the cursor, oldest first', () => {
-    const history: LogEntry[] = [
-      entry({ id: 'c', timestamp: 3000 }),
-      entry({ id: 'a', timestamp: 1000 }),
-      entry({ id: 'roll', timestamp: 2500, type: 'ROLL_SUCCESS' }),
-      entry({ id: 'b', timestamp: 2000 }),
-    ];
-    expect(pickNewUnlocks(history, 1000).map((e) => e.id)).toEqual(['b', 'c']);
-    expect(pickNewUnlocks(history, 9999)).toEqual([]);
+describe('planAnnouncements', () => {
+  const history: LogEntry[] = [
+    entry({ id: 'a', timestamp: 3000 }),
+    entry({ id: 'roll', timestamp: 1000, type: 'ROLL_SUCCESS' }),
+    entry({ id: 'b', timestamp: 2000 }),
+    entry({ id: 'c', timestamp: 500 }),
+  ];
+
+  it('posts the UNLOCKs after the cursor entry in history order, whatever their timestamps', () => {
+    const plan = planAnnouncements(history, { kind: 'after', id: 'a' }, false);
+    expect(plan.post.map((e) => e.id)).toEqual(['b', 'c']);
+    expect(plan.cursor).toEqual({ kind: 'after', id: 'c' });
+  });
+
+  it('leaves the cursor alone when nothing is new', () => {
+    expect(planAnnouncements(history, { kind: 'after', id: 'c' }, false)).toEqual({ cursor: null, post: [] });
+    expect(planAnnouncements([], { kind: 'start' }, false)).toEqual({ cursor: null, post: [] });
+  });
+
+  it('announces the whole history from a start cursor', () => {
+    expect(planAnnouncements(history, { kind: 'start' }, false).post.map((e) => e.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('reseeds silently for a replaced run, a missing cursor entry or no cursor', () => {
+    const silent = { cursor: { kind: 'after', id: 'c' }, post: [] };
+    expect(planAnnouncements(history, { kind: 'after', id: 'a' }, true)).toEqual(silent);
+    expect(planAnnouncements(history, { kind: 'after', id: 'gone' }, false)).toEqual(silent);
+    expect(planAnnouncements(history, { kind: 'unset' }, false)).toEqual(silent);
+    expect(planAnnouncements([], { kind: 'after', id: 'gone' }, true)).toEqual({ cursor: { kind: 'start' }, post: [] });
   });
 });
 
@@ -72,9 +92,18 @@ describe('config & cursor records', () => {
     expect(readDiscordConfig('K')).toEqual({ url: '', enabled: false });
     writeDiscordConfig('K', { url: 'https://discord.com/api/webhooks/1/t', enabled: true });
     expect(readDiscordConfig('K').enabled).toBe(true);
-    expect(readCursor('K')).toBe(0);
-    writeCursor('K', 123);
-    expect(readCursor('K')).toBe(123);
+    expect(readCursor('K')).toEqual({ kind: 'unset' });
+    writeCursor('K', { kind: 'after', id: '1700000000000' });
+    expect(readCursor('K')).toEqual({ kind: 'after', id: '1700000000000' });
+    writeCursor('K', cursorAtNewest([]));
+    expect(readCursor('K')).toEqual({ kind: 'start' });
+  });
+
+  it('treats an older timestamp cursor or junk as unset', () => {
+    localStorage.setItem(profileDiscordCursorKey('K'), '1727136000000');
+    expect(readCursor('K')).toEqual({ kind: 'unset' });
+    localStorage.setItem(profileDiscordCursorKey('K'), '{"after":42}');
+    expect(readCursor('K')).toEqual({ kind: 'unset' });
   });
 });
 

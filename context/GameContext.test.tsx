@@ -671,6 +671,28 @@ describe('ordinary save recovery', () => {
 
     expect(game.current().userNotes.goal).toBeUndefined();
     expect(events).toContain('checkpoint:pre-replacement');
+    expect(game.current().stateReplacements).toBe(1);
+  });
+
+  it('counts imports and resets as replacements, but not ordinary changes', async () => {
+    const game = renderGame('profile');
+    await settleOwnership();
+    const before = game.current().stateReplacements;
+
+    act(() => game.current().saveNote('goal', 'ordinary change'));
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+    expect(game.current().stateReplacements).toBe(before);
+
+    const candidate = JSON.parse(game.current().getExportData()) as GameState;
+    candidate.userNotes = { goal: 'imported' };
+    let result: ImportResult | undefined;
+    await act(async () => { result = await game.current().importSave(candidate); });
+    expect(result).toMatchObject({ ok: true });
+    expect(game.current().stateReplacements).toBe(before + 1);
+
+    await act(async () => { await game.current().resetGame(); });
+    expect(game.current().userNotes.goal).toBeUndefined();
+    expect(game.current().stateReplacements).toBe(before + 2);
   });
 
   it('creates changed interval checkpoints only after five minutes of durable head saves', async () => {
