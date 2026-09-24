@@ -4,7 +4,7 @@ import {
   computeUnlockImpact, prepareUnlockImpactContext, type UnlockImpactContext,
 } from './unlockImpact';
 import { rankAvailableQuests } from './questAdvisor';
-import { rankLockedRegions, UNLOCKABLE_REGIONS } from './regionAdvisor';
+import { rankLockedRegions } from './regionAdvisor';
 import { getQuestStatus } from './journalStatus';
 import { QUEST_DATA } from '../data/questData';
 
@@ -135,49 +135,78 @@ describe('rankAvailableQuests', () => {
 });
 
 describe('rankLockedRegions', () => {
-  it('ranks every locked region, sorted by cascade score', () => {
-    const ranked = rankLockedRegions(maxedUnlocks());
-    expect(ranked.length).toBe(UNLOCKABLE_REGIONS.length);
+  const ALL_AREAS = Object.values(REGION_GROUPS).flat();
+
+  it('ranks every area the Areas table can still roll, never a whole continent', () => {
+    const ranked = rankLockedRegions(maxedUnlocks(), 'vanilla');
+    expect(ranked.map(r => r.id).sort()).toEqual([...ALL_AREAS].sort());
+    expect(ranked.some(r => Object.hasOwn(REGION_GROUPS, r.id))).toBe(false);
+    for (const r of ranked) expect(REGION_GROUPS[r.region]).toContain(r.id);
     for (let i = 1; i < ranked.length; i++) {
       expect(ranked[i - 1].cascadeScore).toBeGreaterThanOrEqual(ranked[i].cascadeScore);
     }
   });
 
-  it('excludes already-unlocked regions', () => {
-    const someRegion = UNLOCKABLE_REGIONS[0];
-    const ranked = rankLockedRegions(maxedUnlocks({ regions: [someRegion] }));
-    expect(ranked.find((r) => r.id === someRegion)).toBeUndefined();
-    expect(ranked.length).toBe(UNLOCKABLE_REGIONS.length - 1);
+  it('excludes areas that are already reachable, including through a continent unlock', () => {
+    const one = rankLockedRegions(maxedUnlocks({ regions: ['Falador'] }), 'vanilla');
+    expect(one.find(r => r.id === 'Falador')).toBeUndefined();
+    expect(one.length).toBe(ALL_AREAS.length - 1);
+
+    const continent = rankLockedRegions(maxedUnlocks({ regions: ['Wilderness'] }), 'vanilla');
+    expect(continent.some(r => r.region === 'Wilderness')).toBe(false);
+    expect(continent.length).toBe(ALL_AREAS.length - REGION_GROUPS.Wilderness.length);
   });
 
-  it('excludes a region completed through all of its child areas', () => {
-    const ranked = rankLockedRegions(maxedUnlocks({
-      regions: [...REGION_GROUPS.Wilderness],
-    }));
-
-    expect(ranked.find((r) => r.id === 'Wilderness')).toBeUndefined();
-    expect(ranked.length).toBe(UNLOCKABLE_REGIONS.length - 1);
-  });
-
-  it('scores completing a continent through the child areas rolls can grant', () => {
-    const base = maxedUnlocks();
-    const ranked = rankLockedRegions(base).find((r) => r.id === 'Asgarnia')!;
-    const expected = computeUnlockImpact(base, {
-      ...base,
-      regions: [...REGION_GROUPS.Asgarnia],
+  it('scores one area as a single unlock grants it', () => {
+    // Black Knights' Fortress needs all of Asgarnia; Falador is the last area missing.
+    const base = maxedUnlocks({
+      regions: REGION_GROUPS.Asgarnia.filter(area => area !== 'Falador'),
+      quests: Object.keys(QUEST_DATA).filter(id => QUEST_DATA[id].kind === 'quest').slice(0, 30),
+      equipment: { Head: 1, Body: 1 },
     });
+    const falador = rankLockedRegions(base, 'vanilla').find(r => r.id === 'Falador')!;
+    const expected = computeUnlockImpact(base, { ...base, regions: [...base.regions, 'Falador'] }, 'vanilla');
 
-    expect(ranked.newQuestNames).toEqual(expected.directQuestNames);
-    expect(ranked.newDiaryIds).toEqual(expected.directDiaryIds);
-    expect(ranked.cascadeQuestNames).toEqual(expected.cascadeQuestNames);
-    expect(ranked.cascadeDiaryIds).toEqual(expected.cascadeDiaryIds);
-    expect(ranked.score).toBe(expected.directScore);
-    expect(ranked.cascadeScore).toBe(expected.cascadeScore);
+    expect(falador.region).toBe('Asgarnia');
+    expect(expected.directQuestNames.length).toBeGreaterThan(0);
+    expect(falador).toMatchObject({
+      newQuestNames: expected.directQuestNames, newDiaryIds: expected.directDiaryIds,
+      cascadeQuestNames: expected.cascadeQuestNames, cascadeDiaryIds: expected.cascadeDiaryIds,
+      score: expected.directScore, cascadeScore: expected.cascadeScore,
+    });
   });
 
-  it('a high-value region unlocks at least one quest in its cascade', () => {
-    const ranked = rankLockedRegions(maxedUnlocks());
-    // The top region should open up something downstream.
+  it('matches a full simulation of every area it ranks', () => {
+    // Areas it skips must open nothing, whether skills are maxed or still gating.
+    const states = [
+      maxedUnlocks({ regions: ['Falador', 'Port Sarim', 'Catherby', 'Al Kharid'], quests: ["Cook's Assistant"] }),
+      maxedUnlocks({
+        skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 5])),
+        levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 45])),
+        regions: ['Falador', 'Taverley', "Seers' Village"],
+        quests: Object.keys(QUEST_DATA).slice(0, 40),
+      }),
+    ];
+    for (const base of states) {
+      const context = prepareUnlockImpactContext(base, 'vanilla');
+      for (const row of rankLockedRegions(base, 'vanilla')) {
+        const full = computeUnlockImpact(base, { ...base, regions: [...base.regions, row.id] }, 'vanilla', { context });
+        expect(row, row.id).toMatchObject({
+          newQuestNames: full.directQuestNames, newDiaryIds: full.directDiaryIds,
+          cascadeQuestNames: full.cascadeQuestNames, cascadeDiaryIds: full.cascadeDiaryIds,
+          score: full.directScore, cascadeScore: full.cascadeScore,
+        });
+      }
+    }
+  }, 60_000);
+
+  it('a high-value area unlocks at least one quest in its cascade', () => {
+    const ranked = rankLockedRegions(maxedUnlocks(), 'vanilla');
+    // The top area should open up something downstream.
     expect(ranked[0].cascadeScore).toBeGreaterThan(0);
+  });
+
+  it('ranks nothing in Chunked mode, which has no Areas table', () => {
+    expect(rankLockedRegions(maxedUnlocks(), 'chunked')).toEqual([]);
   });
 });
