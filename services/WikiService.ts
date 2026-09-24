@@ -144,7 +144,7 @@ class WikiService {
     try {
       const res = await fetch(`${BASE_API}?${params.toString()}`, {
         signal: controller.signal,
-        headers: { 'Api-User-Agent': 'FateLockedUIM/1.0 (https://github.com/Nubles/flitest)' }
+        headers: { 'Api-User-Agent': 'FateLockedIronman/1.0 (https://github.com/Nubles/OSRS-Fate-Locked)' }
       });
       clearTimeout(timeoutId);
 
@@ -228,7 +228,7 @@ class WikiService {
     try {
       const res = await fetch(`${BASE_API}?${params.toString()}`, {
         signal: controller.signal,
-        headers: { 'Api-User-Agent': 'FateLockedUIM/1.0 (https://github.com/Nubles/flitest)' },
+        headers: { 'Api-User-Agent': 'FateLockedIronman/1.0 (https://github.com/Nubles/OSRS-Fate-Locked)' },
       });
       clearTimeout(timeoutId);
       if (!res.ok) return out;
