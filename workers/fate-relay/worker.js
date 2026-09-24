@@ -14,6 +14,9 @@ import {
 const TTL_SECONDS = 86400;
 const OWNER_TTL_SECONDS = 90 * 86400;
 const OWNER_REFRESH_MS = 86400 * 1000;
+// Versions count seconds from this instant. Never change it: clients hold
+// versions across deploys and accept only a higher one.
+const RELAY_VERSION_EPOCH_MS = Date.UTC(2026, 0, 1);
 const CODE_RE = /^\/r\/([A-Za-z0-9-]{4,40})(\/state|\/suggest|\/events|\/acks)?$/;
 
 function cors(origin) {
@@ -72,6 +75,20 @@ async function readBodyWithin(request, limit) {
     offset += chunk.byteLength;
   }
   return new TextDecoder().decode(bytes);
+}
+
+/**
+ * The version (and ETag) for a write: seconds since RELAY_VERSION_EPOCH_MS,
+ * or one more than the stored version when that is higher. A plain counter
+ * restarted at 1 when a record expired, so a client holding its ETag got 304
+ * for new content, and RuneLite, which imports only a version above the one
+ * it holds, kept the old profile. The clock keeps versions rising across
+ * expiry; the stored version keeps writes within one second distinct. Seconds
+ * since 2026 fit the plugin's Java int until 2094.
+ */
+function nextVersion(storedVersion) {
+  const seconds = Math.floor((Date.now() - RELAY_VERSION_EPOCH_MS) / 1000);
+  return Math.max(seconds, (storedVersion || 0) + 1);
 }
 
 async function tokenHash(token) {
@@ -161,7 +178,7 @@ export default {
         const owner = await authorizeWrite(env, key, existing, body.token);
         if (!owner) return new Response('forbidden', { status: 403, headers });
         const token = owner.token;
-        const version = (existing?.version || 0) + 1;
+        const version = nextVersion(existing?.version);
         const appended = structured.retainNewest
           ? appendUniqueNewest(existing?.records || [], incoming)
           : appendUnique(existing?.records || [], incoming);
@@ -182,7 +199,7 @@ export default {
             if (retained.length !== (eventQueue.records || []).length) {
               await env.RELAY.put(eventKey, JSON.stringify({
                 ...eventQueue,
-                version: (eventQueue.version || 0) + 1,
+                version: nextVersion(eventQueue.version),
                 records: retained,
               }), { expirationTtl: EVENT_TTL_SECONDS });
             }
@@ -206,7 +223,7 @@ export default {
       const owner = await authorizeWrite(env, key, existing, body.token);
       if (!owner) return new Response('forbidden', { status: 403, headers });
       const token = owner.token;
-      const version = (existing?.version || 0) + 1;
+      const version = nextVersion(existing?.version);
       await env.RELAY.put(key, JSON.stringify({ version, payload: body.payload, token }),
         { expirationTtl: TTL_SECONDS });
       await recordOwner(env, key, owner);

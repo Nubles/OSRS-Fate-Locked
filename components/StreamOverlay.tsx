@@ -100,7 +100,13 @@ export const StreamOverlay: React.FC = () => {
         if (etag.current) headers['If-None-Match'] = etag.current;
         const res = await fetch(`${base}/r/${encodeURIComponent(code)}`, { headers, cache: 'no-store' });
         if (res.status === 304) return;
-        if (res.status === 404) { if (alive) setError('Nothing is published yet — connect this profile from RuneLite first.'); return; }
+        if (res.status === 404) {
+          // The record expired; drop its ETag so the next publish can't be
+          // mistaken for it and answered with 304.
+          etag.current = null;
+          if (alive) setError('Nothing is published yet — connect this profile from RuneLite first.');
+          return;
+        }
         if (!res.ok) return; // transient — keep the last good frame
         etag.current = res.headers.get('ETag');
         const { payload } = await res.json();

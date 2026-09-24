@@ -69,6 +69,31 @@ use the same rule.
 The pairing dialog asks the player to continue only if they just pressed
 **Connect tracker** in RuneLite, because any website can open a pairing link.
 
+## Versions and ETags
+
+Every write gives the record a new `version`, which `GET` returns in the body
+and as the `ETag`. RuneLite imports a response only when the two match, the
+version is a positive whole number that fits a Java `int`, and it is greater
+than the version RuneLite last imported. Otherwise RuneLite keeps its current
+snapshot.
+
+The Worker therefore sets each version to the number of seconds since
+1 January 2026 (UTC), or to one more than the stored version when that is
+higher. Versions keep rising when a record expires and is published again. A
+plain counter restarted at 1 there: clients holding its ETag were told
+`304 Not Modified` about the new profile, and RuneLite kept enforcing the old
+one. For the same reason, the first publish after this rule was deployed
+outranks every counter version issued before it. The epoch must never change;
+seconds since 2026 fit a Java `int` until 2094. The legacy resources below use
+the same rule.
+
+One case remains: two writes to one code in the same second can read the same
+stored version and store the same number. The later write wins, and a client
+that fetched the earlier one can be told `304` until the next publish. Only
+the code's owner can write, and a browser tab sends its publishes one at a
+time, so this needs two of the owner's tabs or devices publishing within the
+same second.
+
 ## Legacy compatibility only
 
 The Worker temporarily retains these older routes so already-installed legacy
