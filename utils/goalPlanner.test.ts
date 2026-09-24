@@ -277,7 +277,7 @@ describe('planForTarget — Chunked area steps', () => {
     expect(routes.find(route => route.label === 'East Ardougne')!.blockers).toEqual([
       expect.objectContaining({ id: 'East Ardougne', unlockTable: TableType.CHUNKS }),
     ]);
-    expect(plan.steps.some(step => step.unlockTable === TableType.REGIONS)).toBe(false);
+    expect(plan.steps.some(step => 'unlockTable' in step && step.unlockTable === TableType.REGIONS)).toBe(false);
   });
 });
 
