@@ -523,7 +523,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'wild_easy_1', tierId: 'Wilderness Easy', description: 'Cast Low Alchemy at the Fountain of Rune.', skills: { 'Magic': 21 }, regions: ['Fountain of Rune'] },
   { id: 'wilderness_easy_2', tierId: 'Wilderness Easy', description: 'Enter the Wilderness from the Ardougne or Edgeville lever.', anyOfRegions: ['East Ardougne', 'Edgeville'] },
   { id: 'wilderness_easy_3', tierId: 'Wilderness Easy', description: 'Pray at the Chaos Altar in the Western Wilderness.', locations: [{"label":"Western Chaos Altar","chunkOptions":[{"cx":46,"cy":59}]}] },
-  { id: 'wilderness_easy_4', tierId: 'Wilderness Easy', description: 'Enter the Chaos Runecrafting temple.', locations: [{"label":"Chaos ruins or Abyss entrance","chunkOptions":[{"cx":47,"cy":56},{"cx":48,"cy":55}]}] },
+  { id: 'wilderness_easy_4', tierId: 'Wilderness Easy', description: 'Enter the Chaos Runecrafting temple.', oneOf: [{ label: 'Chaos Temple ruins', locations: [{"label":"Chaos Temple ruins","chunkOptions":[{"cx":47,"cy":56}]}] }, { label: 'The Abyss', quests: ['Enter the Abyss'], locations: [{"label":"Mage of Zamorak (Abyss)","chunkOptions":[{"cx":48,"cy":55}]}] }] },
   { id: 'wild_easy_3', tierId: 'Wilderness Easy', description: 'Kill a Mammoth in the Wilderness.', locations: [{"label":"Wilderness mammoths","chunkOptions":[{"cx":49,"cy":56}]}] },
   { id: 'wild_easy_4', tierId: 'Wilderness Easy', description: 'Kill an Earth Warrior in the Wilderness beneath Edgeville.', skills: { 'Agility': 15 }, regions: ['Edgeville'] },
   { id: 'wild_easy_5', tierId: 'Wilderness Easy', description: 'Restore some prayer points at the demonic ruins.', locations: [{"label":"Demonic Ruins altar","chunkOptions":[{"cx":51,"cy":60}]}] },

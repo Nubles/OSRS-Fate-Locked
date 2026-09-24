@@ -38,6 +38,21 @@ const unlocksReadyForPryingTimes = (): UnlockState => unlocked({
   levels: { Smithing: 30, Sailing: 12 },
 });
 
+describe('Wilderness Easy Chaos Altar access', () => {
+  const task = ALL_DIARY_TASKS.find(({ id }) => id === 'wilderness_easy_4')!;
+
+  it('takes the Abyss route only after Enter the Abyss, like the Mage of Zamorak task', () => {
+    expect(evaluateDiaryTaskEligibility(task, unlocked(), 'vanilla').eligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task, unlocked({ quests: ['Enter the Abyss'] }), 'vanilla').eligible)
+      .toBe(true);
+  });
+
+  it('still accepts the Chaos Temple ruins without the quest', () => {
+    expect(evaluateDiaryTaskEligibility(task, unlocked({ regions: ["Dark Warriors' Fortress"] }), 'vanilla').eligible)
+      .toBe(true);
+  });
+});
+
 describe('manual journal readiness', () => {
   it('allows a broad Wilderness task with any one Wilderness child area', () => {
     const task = ALL_DIARY_TASKS.find(({ id }) => id === 'wild_easy_8')!;

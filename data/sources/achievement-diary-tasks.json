@@ -10695,17 +10695,35 @@
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "Access to the Chaos Altar ( chaos talisman / tiara, catalytic talisman / tiara, or the Abyss )",
-      "locations": [
+      "oneOf": [
         {
-          "label": "Chaos ruins or Abyss entrance",
-          "chunkOptions": [
+          "label": "Chaos Temple ruins",
+          "locations": [
             {
-              "cx": 47,
-              "cy": 56
-            },
+              "label": "Chaos Temple ruins",
+              "chunkOptions": [
+                {
+                  "cx": 47,
+                  "cy": 56
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
             {
-              "cx": 48,
-              "cy": 55
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
             }
           ]
         }
@@ -10713,7 +10731,7 @@
       "geographyVerification": {
         "reviewedAt": "2026-09-12",
         "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
-        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required. The Abyss route also needs Enter the Abyss, matching wilderness_easy_11's Mage of Zamorak teleport."
       }
     },
     {

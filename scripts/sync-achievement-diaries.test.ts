@@ -531,7 +531,16 @@ describe('Achievement Diary id-classification audit', () => {
       'wild_hard_9',
       'wild_med_3',
       'wild_med_7',
+      'wilderness_easy_4',
     ]);
+    // The Mage of Zamorak only teleports into the Abyss after Enter the
+    // Abyss (wilderness_easy_11 gates the same teleport).
+    expect(byId.get('wilderness_easy_4')).toMatchObject({
+      oneOf: [
+        { label: 'Chaos Temple ruins' },
+        { label: 'The Abyss', quests: ['Enter the Abyss'] },
+      ],
+    });
     expect(byId.get('wild_med_3')).toMatchObject({
       skills: { Slayer: 50 },
       oneOf: [
