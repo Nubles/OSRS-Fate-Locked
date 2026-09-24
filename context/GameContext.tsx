@@ -1393,10 +1393,12 @@ export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, 
   if (action.type === 'COMMIT_STATE') return action.payload;
   const rawNext = rawReducer(state, action);
   if (rawNext === state) return state;
+  // A replacement brings its own history. Chaining it as an append would
+  // splice in, or link to, entries of the run it replaces.
+  if (action.type === 'LOAD_SAVE' || action.type === 'RESET') return rawNext;
   const next = rawNext.history === state.history
     ? rawNext
     : { ...rawNext, history: chainAppendedHistory(state.history, rawNext.history) };
-  if (action.type === 'LOAD_SAVE' || action.type === 'RESET') return next;
   return { ...next, runRevision: state.runRevision + 1 };
 };
 

@@ -25,6 +25,7 @@ export const CHANGELOG_RELEASES = [
     sections: {
       fixed: [
         'Resetting, importing or restoring a run no longer shows the recovery screen on every later visit. Earlier checkpoints stay restorable.',
+        'Importing or restoring a save no longer splices in history from the run it replaces, or breaks the history check of saves made before history checks existed.',
         'Long runs can export and re-import their .fate backup again; saves above about 2 MB were refused. Saves with an unusual game-mode value load as Vanilla instead of crashing, and runs saved during an Aquarium reveal load again.',
         'Oracle search no longer runs a developer check that could replace your run with test data when you searched for "test", and its area status shows your mode\'s real starting area.',
         'First-run setup fits phone screens, so Next stays reachable, and the game-mode choice now appears before What\'s New. Players still owed the legacy Fate compensation see its choices at the top of What\'s New instead of being unable to close it.',

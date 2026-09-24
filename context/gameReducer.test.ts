@@ -1017,6 +1017,43 @@ describe('LOAD_SAVE normalized replacement', () => {
     expect(replaced.rival).toBeUndefined();
     expect(replaced.lastEvent).toBeNull();
   });
+
+  const entry = (id: string, chain: Partial<LogEntry> = {}): LogEntry => ({
+    id, timestamp: 1, type: 'ROLL_SUCCESS', message: id, ...chain,
+  });
+
+  it('keeps an imported history whole when the current history predates hashes', () => {
+    const current = { ...base(), history: [entry('old-1'), entry('old-2')] };
+    const imported = {
+      ...structuredClone(initialState),
+      runId: 'imported-run',
+      history: [
+        entry('new-1', { prevHash: 'GENESIS', hash: 'h1' }),
+        entry('new-2', { prevHash: 'h1', hash: 'h2' }),
+        entry('new-3', { prevHash: 'h2', hash: 'h3' }),
+      ],
+    };
+
+    const replaced = gameReducer(current, { type: 'LOAD_SAVE', payload: imported });
+
+    expect(replaced.history).toEqual(imported.history);
+  });
+
+  it('does not link an imported history to the run it replaces', () => {
+    const current = {
+      ...base(),
+      history: [entry('old-1', { prevHash: 'GENESIS', hash: 'a1' }), entry('old-2', { prevHash: 'a1', hash: 'a2' })],
+    };
+    const imported = {
+      ...structuredClone(initialState),
+      runId: 'imported-run',
+      history: [entry('legacy-1'), entry('legacy-2'), entry('legacy-3')],
+    };
+
+    const replaced = gameReducer(current, { type: 'LOAD_SAVE', payload: imported });
+
+    expect(replaced.history).toEqual(imported.history);
+  });
 });
 
 describe('SET_GAME_MODE', () => {
