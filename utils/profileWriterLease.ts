@@ -1,3 +1,4 @@
+import type { ProfileMetadata } from '../types';
 import {
   parseProfileMetadata,
   PROFILE_METADATA_BACKUP_KEY,
@@ -118,19 +119,27 @@ const profileMetadataWriteProtection = (
   }
 
   const deletionIds = new Set<string>();
+  let newest: ProfileMetadata | null = null;
   for (const copy of copies) {
     if (copy.status !== 'current' && copy.status !== 'legacy') continue;
     const deletionId = copy.metadata.deletions.find(
       intent => intent.profileId === profileId,
     )?.deletionId;
     if (deletionId !== undefined) deletionIds.add(deletionId);
+    if (newest === null || copy.metadata.revision > newest.revision) newest = copy.metadata;
   }
   if (deletionIds.size > 1) return { ok: true, status: 'read_only' };
-  return {
-    ok: true,
-    status: 'writable',
-    deletionId: deletionIds.values().next().value ?? null,
-  };
+  const deletionId = deletionIds.values().next().value ?? null;
+  // Once a deletion finishes, its intent is gone too. A tab that missed it
+  // (for example one restored from the back-forward cache) must not write
+  // the profile back, so a profile the newest metadata no longer lists is
+  // read-only.
+  if (
+    deletionId === null
+    && newest !== null
+    && !newest.profiles.some(profile => profile.id === profileId)
+  ) return { ok: true, status: 'read_only' };
+  return { ok: true, status: 'writable', deletionId };
 };
 
 const writeWriterLease = (

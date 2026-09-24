@@ -1218,6 +1218,35 @@ describe('ProfileProvider validated async state', () => {
     unsubscribe();
   });
 
+  it('re-reads the registry when a page returns from the back-forward cache', async () => {
+    const rendered = renderTask6Profiles();
+    await settleTask6Initialization();
+    const evicted: string[] = [];
+    const unsubscribe = rendered.current().registerProfileEvictionHandler(profileId => {
+      evicted.push(profileId);
+    });
+    // Another tab deleted this profile while the page was frozen, so no
+    // storage event reached it.
+    storage.setItem(PROFILES_KEY, JSON.stringify({
+      version: 2,
+      revision: 3,
+      profiles: [metadata.profiles[1]],
+      activeProfileId: 'other',
+      deletions: [],
+    }));
+    expect(rendered.current().activeProfileId).toBe('target');
+
+    act(() => {
+      const pageshow = new Event('pageshow');
+      Object.defineProperty(pageshow, 'persisted', { value: true });
+      window.dispatchEvent(pageshow);
+    });
+
+    expect(evicted).toEqual(['target']);
+    expect(rendered.current().activeProfileId).toBe('other');
+    unsubscribe();
+  });
+
   it('installs remote removal without a mounted bridge and later delivers the queued eviction', async () => {
     const rendered = renderTask6Profiles();
     await settleTask6Initialization();

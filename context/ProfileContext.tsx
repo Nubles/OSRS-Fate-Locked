@@ -703,9 +703,30 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
     };
 
+    // A page restored from the back-forward cache missed every storage event
+    // while it was frozen, including a finished deletion of its own profile.
+    // Re-read the registry as if the newest one had just arrived.
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      let raw: string | null;
+      try {
+        raw = window.localStorage.getItem(PROFILES_KEY);
+      } catch {
+        return;
+      }
+      const parsed = parseProfileMetadata(raw);
+      const current = metadataRef.current;
+      if (parsed.status === 'current' && current !== null && parsed.metadata.revision <= current.revision) {
+        return;
+      }
+      onStorage(new StorageEvent('storage', { key: PROFILES_KEY, newValue: raw }));
+    };
+
     window.addEventListener('storage', onStorage);
+    window.addEventListener('pageshow', onPageShow);
     return () => {
       window.removeEventListener('storage', onStorage);
+      window.removeEventListener('pageshow', onPageShow);
     };
   }, [
     failClosedForIncomingPrimary,
