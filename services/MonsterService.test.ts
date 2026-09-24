@@ -48,6 +48,8 @@ describe('MonsterService pinned targets', () => {
     expect(service.ready).toBe(true);
     expect(service.search('', 10_000)).toHaveLength(2850); // Existing name+version deduplication.
     expect(service.byName('Menaphite Shadow')?.size).toBe(0); // Unknown-size upstream targets remain selectable.
+    // Max hits written with markup first used to parse as 0 (Danger: Low).
+    expect(service.byName('Tormented Demon')?.maxHit).toBe(45);
     expect(service.byId(2215)).toMatchObject({ name: 'General Graardor', hp: 255, maxHit: 60, defLevel: 250,
       magicLevel: 80, def: { stab: 90, slash: 90, crush: 90, magic: 298, ranged: 90 },
       rangedDefence: { light: 90, standard: 90, heavy: 90 } });
@@ -132,5 +134,25 @@ describe('MonsterService pinned targets', () => {
     await service.init();
     expect(service.ready).toBe(true);
     expect(service.byId(2215)?.hp).toBe(255);
+  });
+});
+
+describe('parseMaxHit', () => {
+  it.each([
+    ['60 (melee)', 60],
+    ['<div class="plainlist " >\n*31 (auto)\n*45 (special)\n</div>', 45],
+    ['26 (melee)<br/> 15x2 (ranged)<br/> 65 (special attack)', 65],
+    ['46-61 (Melee)', 61],
+    ['50/60 (Melee)', 60],
+    ['17x2 (default)', 17],
+    ['2 (x3)', 2],
+    ['70+ (x2) (Melee)', 70],
+    ['? (Magic)\n23 (Melee)', 23],
+    ['N/A', 0],
+    [12, 12],
+    [undefined, 0],
+  ])('reads %j as %i', async (raw, expected) => {
+    const { parseMaxHit } = await import('./MonsterService');
+    expect(parseMaxHit(raw)).toBe(expected);
   });
 });

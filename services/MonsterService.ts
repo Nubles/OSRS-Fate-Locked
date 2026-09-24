@@ -8,6 +8,19 @@ import { MONSTER_CATALOGUE, MONSTER_CACHE_SOURCE } from '../data/monsterCatalogu
 
 const CACHE_KEY = 'fate_osrs_monsters_v3';
 
+/**
+ * The largest single hit in the wiki's max-hit text, which can list several
+ * attacks, ranges ("46-61") and markup ("<div …>*31 (auto)*45 (special)").
+ * Hit counts ("17x2", "2 (x3)") are not hits. Text with no number reads as 0.
+ */
+export const parseMaxHit = (raw: unknown): number => {
+  if (typeof raw === 'number') return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 0;
+  const text = String(raw ?? '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/(^|[^a-z])[x×]\s?\d+/gi, '$1 ');
+  return Math.max(0, ...(text.match(/\d+/g) ?? []).map(Number));
+};
+
 export interface MonsterStats {
   id: number;
   name: string;
@@ -127,7 +140,7 @@ class MonsterService {
         imageFile: r.image ?? '',
         level: r.level ?? 0,
         hp,
-        maxHit: parseInt(String(r.max_hit ?? '0'), 10) || 0,
+        maxHit: parseMaxHit(r.max_hit),
         defLevel: r.skills?.def ?? 1,
         magicLevel: r.skills?.magic ?? 1,
         def: {
