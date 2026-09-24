@@ -405,10 +405,14 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   // focusCard is called from:
   //   • the "Next up" strip (same-tab, no filter clearing needed)
   //   • prereq quest chip clicks (may need to clear filters so the target is visible)
-  // We clear all filters first, then schedule the scroll after React re-renders.
+  //   • Next Best's "Open in the list" (via fate:journal-focus)
+  // We clear every filter that can hide a card (status, area, tier and the
+  // local search) first, then schedule the scroll after React re-renders.
   const focusCard = (id: string) => {
     setFilter('ALL');
     setRegionFilter('ALL');
+    setDiffFilter('ALL');
+    setLocalSearch('');
     setHighlightedId(id);
     // Brief timeout lets the state change flush + React re-render before we
     // query the DOM — ensures the card exists when we try to scroll to it.
