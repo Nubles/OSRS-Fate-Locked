@@ -1002,6 +1002,22 @@ describe('save schema numeric and enum boundaries', () => {
   });
 });
 
+describe('pending Areas reveal', () => {
+  const withPendingVarrock = (gameModeId: string) => candidate({
+    gameModeId,
+    pendingUnlock: { id: 'reveal-varrock', table: 'Regions', item: 'Varrock', costType: 'key', cost: 1 },
+  });
+
+  it("loads a legacy Xtreme reveal of a Misthalin area it rolled", () => {
+    const result = expectAccepted(validateAndMigrateSave(withPendingVarrock('xtreme'), defaultsFixture()));
+    expect(result.state.pendingUnlock).toMatchObject({ table: 'Regions', item: 'Varrock' });
+  });
+
+  it('still rejects a Misthalin reveal where Misthalin is free', () => {
+    expectRejected(withPendingVarrock('vanilla'), 'invalid_field', 'pendingUnlock');
+  });
+});
+
 describe('fate compensation validation', () => {
   const offer = (over: Record<string, unknown> = {}) => ({
     releaseId: LEGACY_FATE_COMPENSATION_ID,

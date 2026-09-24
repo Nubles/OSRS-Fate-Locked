@@ -3,9 +3,10 @@ import React, { useMemo } from 'react';
 import { TableType } from '../types';
 import { useGame } from '../context/GameContext';
 import { bankLocksActive, isAreaReachable } from '../utils/reachability';
+import { unlockableAreas } from '../utils/freeAreas';
 import { BANK_IDS, BANK_BY_ID } from '../data/banks';
 import { checkUnlockAvailability, getPoolAndStateKey, randomUnlockPool } from '../utils/gameEngine';
-import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, ROLLABLE_POH_ITEMS, MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, UTILITY_ITEM_IDS } from '../constants';
+import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, ROLLABLE_POH_ITEMS, MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, UTILITY_ITEM_IDS } from '../constants';
 import { HelpCircle, Lock, TrendingUp, AlertTriangle, Check } from 'lucide-react';
 import { Sparkles, Dices, Dna, Sprout, Key } from './OsrsIcon';
 import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
@@ -174,7 +175,8 @@ export const GachaSection: React.FC = () => {
   const isChunked = gameModeId === 'chunked';
   const bankLocks = bankLocksActive(gameModeId, customMode);
 
-  const canUnlock = checkUnlockAvailability(unlocks);
+  const canUnlock = checkUnlockAvailability(unlocks, gameModeId, customMode);
+  const areaPool = unlockableAreas(gameModeId, customMode);
   // Roll-ability comes from the same pool the roll draws from, so a table
   // whose remaining entries are all location-blocked can't offer "Roll".
   const rollable = useMemo(() => {
@@ -204,7 +206,7 @@ export const GachaSection: React.FC = () => {
     isChunked
       // An empty frontier is not "Done": more land opens after Sailing.
       ? { type: TableType.CHUNKS, label: 'Chunks', subLabel: 'Adjacent Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: ownedChunks, total: ALL_CHUNK_KEYS.length - 1, can: ownedChunks < ALL_CHUNK_KEYS.length - 1 }
-      : { type: TableType.REGIONS, label: 'Areas', subLabel: 'New Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: REGIONS_LIST.filter(area => isAreaReachable(area, unlocks, gameModeId)).length, total: REGIONS_LIST.length, can: canUnlock.regions },
+      : { type: TableType.REGIONS, label: 'Areas', subLabel: 'New Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: areaPool.filter(area => isAreaReachable(area, unlocks, gameModeId)).length, total: areaPool.length, can: canUnlock.regions },
     { type: TableType.MOBILITY, label: 'Mobility', subLabel: 'Travel Networks', iconSrc: OSRS_GACHA_ICONS.MOBILITY, unlocked: (unlocks.mobility ?? []).length, total: MOBILITY_LIST.length, can: canUnlock.mobility },
     { type: TableType.ARCANA, label: COMBAT_POWERS_LABEL, subLabel: COMBAT_POWERS_DESCRIPTION, iconSrc: OSRS_GACHA_ICONS.ARCANA, unlocked: (unlocks.arcana ?? []).length, total: ARCANA_LIST.length, can: canUnlock.arcana },
     { type: TableType.STORAGE, label: 'Storage', subLabel: 'Inventory Space', iconSrc: OSRS_GACHA_ICONS.STORAGE, unlocked: (unlocks.storage ?? []).length, total: STORAGE_LIST.length, can: canUnlock.storage },

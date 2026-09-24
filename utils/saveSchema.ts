@@ -1108,6 +1108,11 @@ const normalizeState = (
     state.rngSeed = checked.value;
   }
   const selectedCustom = readPreferred(input, defaultRecord, 'customMode');
+  if (selectedCustom.present) {
+    const checked = normalizeCustomMode(selectedCustom.value);
+    if (checked.ok === false) return checked;
+    state.customMode = checked.value;
+  }
   if (own(input, 'rngVersion')) {
     const version = readOwn(input, 'rngVersion');
     if (version !== 1 && version !== 2) return invalid('invalid_field', 'rngVersion');
@@ -1120,18 +1125,13 @@ const normalizeState = (
     const p = inspected.value;
     if (typeof p.id !== 'string' || p.id.length === 0 || p.id.length > 200
       || typeof p.item !== 'string' || !Object.values(TableType).includes(p.table as TableType)
-      || (!getPoolAndStateKey(p.table as TableType).pool.includes(p.item)
+      || (!getPoolAndStateKey(p.table as TableType, state.gameModeId, state.customMode).pool.includes(p.item)
         && !(p.table === TableType.REGIONS && p.item === 'Tutorial Island')
         // Already paid before Aquarium left the roll pool; retired items stay
         // valid in older saves, so the reveal must still load and complete.
         && !(p.table === TableType.POH && RETIRED_POH_ITEMS.includes(p.item)))
       || (p.costType !== 'key' && p.costType !== 'chaosKey') || p.cost !== 1) return invalid('invalid_field', 'pendingUnlock');
     state.pendingUnlock = { id: p.id, table: p.table as TableType, item: p.item, costType: p.costType, cost: 1 };
-  }
-  if (selectedCustom.present) {
-    const checked = normalizeCustomMode(selectedCustom.value);
-    if (checked.ok === false) return checked;
-    state.customMode = checked.value;
   }
   if (storedCompensation === undefined) {
     state.fateCompensation = legacyFateCompensationOffer(state);

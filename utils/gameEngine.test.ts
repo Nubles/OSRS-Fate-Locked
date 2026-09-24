@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableType, UnlockState } from '../types';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
-import { REGION_GROUPS, REGIONS_LIST } from '../data/items';
-import { setStartArea } from './freeAreas';
+import { MISTHALIN_AREAS, REGION_GROUPS, REGIONS_LIST } from '../data/items';
+import { setStartArea, unlockableAreas } from './freeAreas';
 import {
   checkUnlockAvailability,
   describeRandomPoolBlockers,
@@ -11,6 +11,7 @@ import {
   isOmniDirectUnlockAvailable,
   isValidUnlock,
   pickRandomPoolEntry,
+  randomUnlockPool,
 } from './gameEngine';
 
 const baseUnlocks: UnlockState = {
@@ -182,5 +183,48 @@ describe('canonical Regions unlock pool', () => {
     expect(checkUnlockAvailability(unlocks).regions).toBe(true);
     expect(isValidUnlock(TableType.REGIONS, 'Iorwerth Camp', unlocks)).toBe(false);
     expect(getPoolAndStateKey(TableType.REGIONS).pool).not.toContain('Elf Camp');
+  });
+});
+
+describe('areas a mode leaves locked in Misthalin', () => {
+  const lockedMisthalin = MISTHALIN_AREAS.filter(area => area !== 'Lumbridge');
+
+  it('adds legacy Xtreme\'s locked Misthalin areas to the Areas list, and nothing else', () => {
+    expect(unlockableAreas('xtreme')).toEqual([...lockedMisthalin, ...REGIONS_LIST]);
+    expect(unlockableAreas('xtreme')).not.toContain('Lumbridge');
+    expect(unlockableAreas('vanilla')).toEqual(REGIONS_LIST);
+    expect(unlockableAreas('chunked')).toEqual(REGIONS_LIST);
+    expect(unlockableAreas('custom', {
+      pityEnabled: true, pityThreshold: 50, omniChanceBase: 2, ritualCostMultiplier: 1,
+      regionModifiers: false, startArea: 'lumbridge',
+    })).toEqual([...lockedMisthalin, ...REGIONS_LIST]);
+  });
+
+  it('lets a legacy Xtreme run roll Varrock, Draynor and the rest of Misthalin', () => {
+    setStartArea('lumbridge');
+    const fresh = makeUnlocks();
+
+    const areas = randomUnlockPool(fresh, 'xtreme', 'key', TableType.REGIONS).map(entry => entry.item);
+    expect(areas).toEqual(expect.arrayContaining(lockedMisthalin));
+    expect(areas).not.toContain('Lumbridge');
+    expect(getPoolAndStateKey(TableType.REGIONS, 'xtreme').pool).toEqual(expect.arrayContaining(lockedMisthalin));
+
+    // Every area outside Misthalin owned: only Misthalin is left to roll.
+    const outside = makeUnlocks({ regions: [...REGIONS_LIST] });
+    expect(checkUnlockAvailability(outside, 'xtreme').regions).toBe(true);
+    expect(randomUnlockPool(outside, 'xtreme', 'key', TableType.REGIONS).map(entry => entry.item).sort())
+      .toEqual([...lockedMisthalin].sort());
+    expect(checkUnlockAvailability(makeUnlocks({ regions: [...REGIONS_LIST, ...lockedMisthalin] }), 'xtreme').regions)
+      .toBe(false);
+  });
+
+  it('keeps Misthalin out of the Vanilla and Chunked Areas pools', () => {
+    setStartArea(undefined);
+    const outside = makeUnlocks({ regions: [...REGIONS_LIST] });
+    expect(randomUnlockPool(makeUnlocks(), 'vanilla', 'key', TableType.REGIONS).map(entry => entry.item))
+      .not.toContain('Varrock');
+    expect(checkUnlockAvailability(outside, 'vanilla').regions).toBe(false);
+    expect(getPoolAndStateKey(TableType.REGIONS, 'vanilla').pool).toEqual(REGIONS_LIST);
+    expect(getPoolAndStateKey(TableType.REGIONS, 'chunked').pool).toEqual(REGIONS_LIST);
   });
 });

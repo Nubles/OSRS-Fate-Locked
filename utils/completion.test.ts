@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { REGIONS_LIST } from '../data/items';
-import { COMPLETION_DENOMINATOR, playerUnlockPoints } from './completion';
+import { ALL_CHUNK_KEYS } from './chunkAdjacency';
+import { COMPLETION_DENOMINATOR, completionDenominator, playerUnlockPoints } from './completion';
 
 describe('canonical area completion accounting', () => {
   it('pins physical-overlap area count in the global denominator', () => {
@@ -29,5 +30,13 @@ describe('canonical area completion accounting', () => {
     expect(playerUnlockPoints(base, 'vanilla')).toBe(0);
     expect(playerUnlockPoints({ ...base, housing: ['Aquarium', 'Kitchen', 'Kitchen'] }, 'vanilla')).toBe(1);
     expect(base.housing).toEqual(['Aquarium']);
+  });
+});
+
+describe('completion total per mode', () => {
+  it("counts legacy Xtreme's eight locked Misthalin areas", () => {
+    expect(completionDenominator('vanilla')).toBe(COMPLETION_DENOMINATOR);
+    expect(completionDenominator('xtreme')).toBe(COMPLETION_DENOMINATOR + 8);
+    expect(completionDenominator('chunked')).toBe(COMPLETION_DENOMINATOR + ALL_CHUNK_KEYS.length - 1 - REGIONS_LIST.length);
   });
 });

@@ -1,6 +1,6 @@
 
 import { UnlockState, TableType } from '../types';
-import { SKILLS_LIST, EQUIPMENT_SLOTS, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST } from '../data/items';
+import { SKILLS_LIST, EQUIPMENT_SLOTS, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST } from '../data/items';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, isFrontierChunk } from './chunkAdjacency';
 import { BANK_IDS } from '../data/banks';
@@ -8,6 +8,7 @@ import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '..
 import { getActivityAccess } from './activityAccess';
 import { canonicalAreaName } from '../data/areaMapPolicy';
 import { bankLocksActive, isAreaReachable } from './reachability';
+import { unlockableAreas } from './freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { ROLLABLE_POH_ITEMS } from '../data/items';
 
@@ -23,17 +24,17 @@ export const randomUnlockTables = (mode?: string, custom?: GameModeRules): Table
 
 export const randomUnlockPool = (unlocks: UnlockState, mode = 'vanilla', costType: 'key' | 'chaosKey' = 'key', table?: TableType, custom?: GameModeRules): RandomUnlockCandidate[] =>
     randomUnlockTables(mode, custom).filter(t => table === undefined || t === table).flatMap(t =>
-        getPoolAndStateKey(t).pool.filter(item => isRandomUnlockEligible(t, item, unlocks, mode, costType)).map(item => ({ table: t, item })));
+        getPoolAndStateKey(t, mode, custom).pool.filter(item => isRandomUnlockEligible(t, item, unlocks, mode, costType)).map(item => ({ table: t, item })));
 
 export const rollDice = (max: number = 100) => Math.floor(Math.random() * max) + 1;
 
-export const checkUnlockAvailability = (unlocks: UnlockState) => {
+export const checkUnlockAvailability = (unlocks: UnlockState, mode?: string, custom?: GameModeRules) => {
     const totalSkillTiers = (Object.values(unlocks.skills) as number[]).reduce((a, b) => a + b, 0);
     const totalEquipTiers = (Object.values(unlocks.equipment) as number[]).reduce((a, b) => a + b, 0);
     return {
         equipment: totalEquipTiers < (EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX),
         skills: totalSkillTiers < (SKILLS_LIST.length * 10),
-        regions: REGIONS_LIST.some(area => !isAreaReachable(area, unlocks)),
+        regions: unlockableAreas(mode, custom).some(area => !isAreaReachable(area, unlocks)),
         chunks: ALL_CHUNK_KEYS.some(key => isFrontierChunk(key, unlocks.chunks ?? [], unlocks)),
         mobility: unlocks.mobility.length < MOBILITY_LIST.length,
         arcana: unlocks.arcana.length < ARCANA_LIST.length,
@@ -148,11 +149,12 @@ export const pickRandomPoolEntry = <T>(pool: readonly T[], nextFloat: () => numb
     return pool[Math.floor(nextFloat() * pool.length)];
 };
 
-export const getPoolAndStateKey = (table: TableType) => {
+/** Each table's pool; the Areas pool depends on which areas the run's mode frees. */
+export const getPoolAndStateKey = (table: TableType, mode?: string, custom?: GameModeRules) => {
     switch (table) {
         case TableType.SKILLS: return { pool: SKILLS_LIST, stateKey: 'skill' };
         case TableType.EQUIPMENT: return { pool: EQUIPMENT_SLOTS, stateKey: 'equipment' };
-        case TableType.REGIONS: return { pool: REGIONS_LIST, stateKey: 'region' };
+        case TableType.REGIONS: return { pool: unlockableAreas(mode, custom), stateKey: 'region' };
         case TableType.MOBILITY: return { pool: MOBILITY_LIST, stateKey: 'mobility' };
         case TableType.ARCANA: return { pool: ARCANA_LIST, stateKey: 'arcana' };
         case TableType.POH: return { pool: ROLLABLE_POH_ITEMS, stateKey: 'housing' };
