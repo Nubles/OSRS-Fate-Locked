@@ -66,7 +66,12 @@ export function createRollInboxStore(
   }
 
   function save(): void {
-    storage.setItem(key, JSON.stringify(rows));
+    try {
+      storage.setItem(key, JSON.stringify(rows));
+    } catch {
+      // Full or blocked storage keeps the rows in memory for this session.
+      // Throwing here reached the root error boundary on every reload.
+    }
     for (const listener of listeners) listener();
   }
 
