@@ -39,6 +39,20 @@ fresh profile with localStorage and IndexedDB cleared:
 - Oracle search with "test" + Enter leaves the run ID and history unchanged, writes no backups and shows no diagnostics.
 - No page errors. The only console errors are blocked external wiki requests, because this sandbox has no wiki access.
 
+## Verified correct
+
+Each area review also checked the following against the code and data, and
+found them sound:
+
+- **Secrets and saves:** Discord webhooks, Discord cursors and relay tokens stay outside GameState, and the schema's field whitelist keeps them out of exports, sync codes, backups and checkpoints. Prototype-pollution keys are rejected at every depth. Sync-code and `.fate` decoding is size-bounded and strict. Profile IDs cannot collide with sidecar keys. The save coordinator validates, checksums and reads back both stores.
+- **Engine:** roll bins and die offsets are right. Clarity takes the lower of two rolls, Omni rolls only on success, and pity and Greed (including the boss-reserve clamp) behave as documented. Replay matches the reducer apart from the issues listed here. The hash chain survives a save round-trip. Seeded draws never collide, and gameplay never calls `Math.random` apart from the known `rollDice`.
+- **Modes:** the roll pool, roll action, reducer guard and forecasts share `randomUnlockPool`. Completion handles Aquarium, the Chunked start chunk and bank locks consistently. Every bank surface goes through `bankLocksActive`/`isBankReachable`. Vanilla location rules cover every boss and minigame.
+- **Interface:** components load through `lazyWithRetry`; the RuneProof data loader in G3 is the exception. Spend Keys and farm cards cannot double-spend. Drop rates, task figures, pity and ritual costs shown match config. Every command palette entry has a listener.
+- **Journal data:** there are no quest prerequisite cycles, and every quest, diary, skill and area reference resolves. One eligibility check drives every journal surface. Miniquests carry 0 QP, and the collection log covers 1,926/1,926 entries with everything unlocked.
+- **Combat maths:** max hit, effective levels, stance bonuses, prayer and potion multipliers, attack and defence rolls, DPS and time to kill match OSRS for non-negative rolls. There is no NaN or division by zero.
+- **RuneProof:** the preview/production boundary holds. Step confirmation re-checks permissions, and guide checks go through save ownership.
+- **Relay and Discord:** the token travels only in POST bodies, and pairing codes are 128-bit and validated. Discord URL validation rejects look-alike hosts, and embeds stay within Discord's limits. The overlay renders text only.
+
 ## Fixed
 
 | Commit | Findings fixed | Pinned by |
