@@ -32,7 +32,7 @@ import { ProfileRecoveryBanner } from './components/ProfileRecoveryBanner';
 import { SaveRecoveryGuard } from './components/SaveRecoveryGuard';
 import { SaveBootstrap } from './components/SaveBootstrap';
 import { DiscordSyncDriver } from './components/DiscordSyncDriver';
-import { downloadFateSave } from './utils/fateSaveFile';
+import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE, FATE_EXPORT_HINT } from './utils/fateSaveFile';
 import { useFeatureGates } from './hooks/useFeatureGates';
 import { flashElement } from './utils/flash';
 import { OnboardingWizard } from './components/OnboardingWizard';
@@ -393,7 +393,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
         showToast(result.message);
         return;
       }
-      showToast('Save exported');
+      showToast(FATE_EXPORT_DONE_MESSAGE);
   };
 
   return (
@@ -558,8 +558,8 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                         <button onClick={() => { setShowUtilMenu(false); fileInputRef.current?.click(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
                            <Upload size={13} /> Import save
                         </button>
-                        <button onClick={() => { setShowUtilMenu(false); handleExport(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
-                           <Download size={13} /> Export encrypted save
+                        <button onClick={() => { setShowUtilMenu(false); handleExport(); }} title={FATE_EXPORT_HINT} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
+                           <Download size={13} /> Export save file (.fate)
                         </button>
                         <button onClick={() => { setShowUtilMenu(false); setShowSyncCode(true); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-cyan-300">
                            <Link2 size={13} /> Sync code (move device)

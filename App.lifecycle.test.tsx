@@ -235,6 +235,21 @@ describe('App changelog lifecycle', () => {
     await user.click(screen.getByRole('button', { name: 'Discord notifications' }));
     expect(await screen.findByRole('dialog', { name: 'Discord notifications' })).toBeTruthy();
   }, 15_000);
+
+  it('offers the save export without claiming it is encrypted', async () => {
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    storage.setItem(profileBaseKey(PROFILE_ID), JSON.stringify(readyState));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Settings & save tools' }));
+
+    const exportButton = screen.getByRole('button', { name: 'Export save file (.fate)' });
+    expect(exportButton.getAttribute('title')).toContain("isn't encrypted");
+    expect(screen.queryByRole('button', { name: /encrypted/i })).toBeNull();
+  }, 15_000);
   it.each([
     [28, 'Level Up + Chaos Key!'],
     [29, 'Level Up + 2 Chaos Keys!'],

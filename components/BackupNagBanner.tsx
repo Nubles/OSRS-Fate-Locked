@@ -3,7 +3,7 @@ import { useGame } from '../context/GameContext';
 import { useProfiles } from '../context/ProfileContext';
 import { usePersistentStorage, type PersistentStorageStatus } from '../hooks/usePersistentStorage';
 import { shouldNag, snoozeNag, lastExportLabel } from '../utils/backupNag';
-import { downloadFateSave } from '../utils/fateSaveFile';
+import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE } from '../utils/fateSaveFile';
 import { showToast } from '../utils/toast';
 import { HardDriveDownload, X } from 'lucide-react';
 
@@ -34,7 +34,7 @@ export const BackupNagBanner: React.FC = () => {
       return;
     }
       setVisible(false);
-      showToast('Save exported — keep the .fate file somewhere safe');
+      showToast(FATE_EXPORT_DONE_MESSAGE);
   }, [getExportData, storageKey]);
 
   const handleLater = useCallback(() => {
