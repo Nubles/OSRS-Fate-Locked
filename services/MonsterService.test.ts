@@ -137,6 +137,27 @@ describe('MonsterService pinned targets', () => {
   });
 });
 
+describe('MonsterService versions', () => {
+  it('keeps every version of a monster selectable, including versions that share an NPC id', async () => {
+    mockStorage();
+    const rows = JSON.parse(readFileSync(new URL(`../public/${MONSTER_CATALOGUE.asset}`, import.meta.url), 'utf8'));
+    mockData(rows);
+    const service = await freshService();
+    await service.init();
+    const { monsterKey } = await import('./MonsterService');
+
+    const duke = service.versionsOf('duke sucellus');
+    expect(duke.map(version => version.version)).toEqual(['Awakened, Awake', 'Post-quest, Awake', 'Quest, Awake']);
+    expect(duke[0].id).toBe(duke[1].id);
+    expect(service.byKey(monsterKey(duke[0]))).toMatchObject({ version: 'Awakened, Awake', hp: 1697 });
+    expect(service.byKey(monsterKey(duke[1]))).toMatchObject({ version: 'Post-quest, Awake', hp: 485 });
+
+    const all = service.search('', 10_000);
+    expect(new Set(all.map(monsterKey)).size).toBe(all.length);
+    expect(all.every(monster => service.byKey(monsterKey(monster)) === monster)).toBe(true);
+  });
+});
+
 describe('parseMaxHit', () => {
   it.each([
     ['60 (melee)', 60],

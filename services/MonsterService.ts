@@ -39,6 +39,15 @@ export interface MonsterStats {
   attributes: string[];
 }
 
+/**
+ * Identity of one catalogue row. Several versions of a monster can share an
+ * NPC id (Duke Sucellus's post-quest and awakened fights, every Doom delve),
+ * and so can differently named rows (the two Nightmare totems), so neither
+ * the id nor the id and version alone select one row.
+ */
+export const monsterKey = (monster: Pick<MonsterStats, 'id' | 'name' | 'version'>): string =>
+  `${monster.id}|${monster.name}|${monster.version}`;
+
 interface RawMonster {
   id: number;
   name: string;
@@ -67,6 +76,7 @@ function validMonster(value: unknown): value is MonsterStats {
 class MonsterService {
   private list: MonsterStats[] = [];
   private byIdMap = new Map<number, MonsterStats>();
+  private byKeyMap = new Map<string, MonsterStats>();
   private initialized = false;
   private initPromise: Promise<void> | null = null;
   private lastFailAt = 0;
@@ -169,7 +179,11 @@ class MonsterService {
   private ingest(items: MonsterStats[]) {
     this.list = items;
     this.byIdMap.clear();
-    for (const m of items) this.byIdMap.set(m.id, m);
+    this.byKeyMap.clear();
+    for (const m of items) {
+      this.byIdMap.set(m.id, m);
+      this.byKeyMap.set(monsterKey(m), m);
+    }
   }
 
   private loadCache(): MonsterStats[] | null {
@@ -209,14 +223,23 @@ class MonsterService {
     return id == null ? undefined : this.byIdMap.get(id);
   }
 
-  /** Best monster for an exact (case-insensitive) name; prefers the highest-HP version. */
-  byName(name: string): MonsterStats | undefined {
+  /** One exact catalogue row, keyed by {@link monsterKey}. */
+  byKey(key: string | null | undefined): MonsterStats | undefined {
+    return key == null ? undefined : this.byKeyMap.get(key);
+  }
+
+  /** Every version of an exact (case-insensitive) name, in catalogue order. */
+  versionsOf(name: string): MonsterStats[] {
     const q = name.trim().toLowerCase();
-    let best: MonsterStats | undefined;
-    for (const m of this.list) {
-      if (m.name.toLowerCase() === q && (!best || m.hp > best.hp)) best = m;
-    }
-    return best;
+    return this.list.filter(m => m.name.toLowerCase() === q);
+  }
+
+  /**
+   * The first listed version of an exact name. Callers that plan a fight
+   * choose a version explicitly (see defaultBossVersion) instead.
+   */
+  byName(name: string): MonsterStats | undefined {
+    return this.versionsOf(name)[0];
   }
 }
 

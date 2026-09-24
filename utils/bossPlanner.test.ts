@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { planBoss, PlayerCombat, MonsterLite, BOSS_ALIASES } from './bossPlanner';
+import { planBoss, PlayerCombat, MonsterLite, BOSS_ALIASES, defaultBossVersion } from './bossPlanner';
 import { ZERO_BONUSES } from './gearStats';
 
 const monster = (over: Partial<MonsterLite> = {}): MonsterLite => ({
@@ -90,5 +90,30 @@ describe('legal weapon options', () => {
     const player = whipPlayer();
     const plan = planBoss({ ...player, gear: { ...player.gear, category: 'Spear' } }, monster());
     expect(['controlled', 'defensive']).toContain(plan.stanceId);
+  });
+});
+
+describe('defaultBossVersion', () => {
+  const versions = (name: string, labels: string[]) => labels.map(version => ({ name, version }));
+  const pick = (name: string, labels: string[]) => defaultBossVersion(versions(name, labels))?.version;
+
+  it('prefers the post-quest, normal or solo fight over harder variants', () => {
+    expect(pick('Vardorvis', ['Awakened', 'Post-quest', 'Quest'])).toBe('Post-quest');
+    expect(pick('Duke Sucellus', ['Awakened, Awake', 'Post-quest, Awake', 'Quest, Awake'])).toBe('Post-quest, Awake');
+    expect(pick('Yama', ['Normal', 'Phase 3', 'Glyphic Attenuation', 'Glyphic Attenuation, Phase 3'])).toBe('Normal');
+    expect(pick('Scurrius', ['Group', 'Solo'])).toBe('Solo');
+    expect(pick('Vorkath', ['Dragon Slayer II', 'Post-quest'])).toBe('Post-quest');
+  });
+
+  it('starts multi-phase bosses on their opening phase, not the first alphabetically', () => {
+    expect(pick('Zulrah', ['Magma', 'Serpentine', 'Tanzanite'])).toBe('Serpentine');
+    expect(pick('Alchemical Hydra', ['Electric', 'Extinguished', 'Fire', 'Serpentine'])).toBe('Serpentine');
+    expect(pick('Doom of Mokhaiotl', ['Deep Delve', 'Delve 1', 'Delve 2'])).toBe('Delve 1');
+  });
+
+  it('falls back to the unversioned or first listed entry', () => {
+    expect(pick('Abyssal Sire', ['Phase 1', 'Phase 2'])).toBe('Phase 1');
+    expect(pick('Giant Mole', [''])).toBe('');
+    expect(defaultBossVersion([])).toBeUndefined();
   });
 });

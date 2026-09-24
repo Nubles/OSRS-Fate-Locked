@@ -37,6 +37,7 @@ export const CHANGELOG_RELEASES = [
         'Champions\' Guild readiness can reach Ready once Varrock is unlocked, and Combat Achievement reward chips recognise the bosses you own.',
         'The Boss Planner and DPS Calculator count ammunition strength only for weapons that fire it, keep hit chance between 0% and 100%, and round prayer and magic bonuses as the game does. The 10% Attack and Strength prayers are labelled Improved Reflexes and Superhuman Strength.',
         'Monster max hits use the largest listed hit, so Tormented Demons, Dusk, Shellbane gryphons and other multi-attack bosses no longer read as low danger.',
+        'The DPS Calculator uses the exact monster version you pick. Versions that share a game ID, such as Awakened Duke Sucellus, previously calculated against another version.',
         'Goal plans no longer count a quest\'s own Quest Points, or those of quests that need it first, toward its Quest Point requirement.',
         'The Quest Journal area filter lists every quest the chosen area gates. Choosing Varrock previously hid quests such as Demon Slayer and Rune Mysteries.',
         'The Cook\'s Assistant guide no longer marks later steps as needing checking because of items collected in earlier steps.',
@@ -45,6 +46,9 @@ export const CHANGELOG_RELEASES = [
         'Collection Log prices recover after a failed price download, a full browser storage no longer crashes the app from the Roll Inbox, and feature reveal messages no longer repeat when storage is full.',
         'Skill cards respond to Enter and Space, the guided tour no longer skips a step when Enter presses Next, and the Codex and Timelapse close buttons are labelled for screen readers.',
         'Auto-Roll errors and legacy mode descriptions no longer show garbled characters. Share text uses the Fate Locked Ironman name, and unlock sharing only reports a copy when it succeeds.',
+      ],
+      added: [
+        'The Boss Planner has a version picker for bosses with several versions, such as post-quest and Awakened fights or boss phases. It starts on the post-quest, normal or solo fight, or the opening phase, and remembers your choice on this device.',
       ],
       balance: [
         'Quest difficulties now match the official OSRS ratings. At First Light is Novice, Recipe for Disaster\'s Sir Amik Varze and King Awowogei parts are Master, and its finale is Grandmaster, so their key odds change to match.',

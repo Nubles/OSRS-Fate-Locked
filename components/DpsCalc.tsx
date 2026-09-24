@@ -5,7 +5,7 @@ import { useGame } from '../context/GameContext';
 import { EQUIPMENT_SLOTS } from '../constants';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { gearService } from '../services/GearService';
-import { monsterService, MonsterStats } from '../services/MonsterService';
+import { monsterKey, monsterService, MonsterStats } from '../services/MonsterService';
 import { attackBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
 import {
   computeDps, STANCES, PRAYERS, POTIONS, Style, AttackType, DpsInput,
@@ -57,7 +57,8 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
   const [potionId, setPotionId] = useState('none');
   const [baseSpellMax, setBaseSpellMax] = useState(24);
   const [levels, setLevels] = useState({ attack: 99, strength: 99, ranged: 99, magic: 99 });
-  const [monsterId, setMonsterId] = useState<number | null>(null);
+  // The exact catalogue row: several versions can share an NPC id.
+  const [targetKey, setTargetKey] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
 
   // Prefill levels from the run once.
@@ -98,7 +99,7 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
     setStanceId(next.stanceId);
   }, [combatOptions, style, attackType, stanceId]);
 
-  const monster = monsterService.byId(monsterId ?? undefined);
+  const monster = monsterService.byKey(targetKey);
   const rangedType = rangedOverride === 'auto' ? gear.rangedDamageType ?? 'standard' : rangedOverride;
 
   const result = useMemo(() => {
@@ -231,9 +232,9 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
 
       {!suspendModals && pickerOpen && (
         <MonsterPicker
-          currentId={monsterId}
+          currentKey={targetKey}
           onClose={() => setPickerOpen(false)}
-          onPick={(id) => { setMonsterId(id); setPickerOpen(false); }}
+          onPick={(key) => { setTargetKey(key); setPickerOpen(false); }}
         />
       )}
     </div>
@@ -257,7 +258,7 @@ const fmtTtk = (s: number): string => {
 };
 
 // ── Monster picker popover ────────────────────────────────────────────────────
-const MonsterPicker: React.FC<{ currentId: number | null; onClose: () => void; onPick: (id: number) => void }> = ({ currentId, onClose, onPick }) => {
+const MonsterPicker: React.FC<{ currentKey: string | null; onClose: () => void; onPick: (key: string) => void }> = ({ currentKey, onClose, onPick }) => {
   useEscapeKey(onClose, true);
   const [query, setQuery] = useState('');
   const results = useMemo(() => monsterService.search(query, 80), [query]);
@@ -279,8 +280,8 @@ const MonsterPicker: React.FC<{ currentId: number | null; onClose: () => void; o
         <div className="flex-1 overflow-y-auto custom-scrollbar p-1.5 space-y-1">
           {results.length === 0 && <div className="text-center text-[11px] text-gray-600 py-10">No monsters match.</div>}
           {results.map((m) => (
-            <button key={`${m.id}-${m.version}`} onClick={() => onPick(m.id)}
-              className={`w-full flex items-center gap-2.5 rounded-lg px-2 py-1.5 border text-left transition-colors ${m.id === currentId ? 'border-red-500/40 bg-red-950/30' : 'border-transparent hover:bg-white/5'}`}>
+            <button key={monsterKey(m)} onClick={() => onPick(monsterKey(m))}
+              className={`w-full flex items-center gap-2.5 rounded-lg px-2 py-1.5 border text-left transition-colors ${monsterKey(m) === currentKey ? 'border-red-500/40 bg-red-950/30' : 'border-transparent hover:bg-white/5'}`}>
               <img src={monsterImg(m.imageFile)} alt="" className="w-7 h-7 object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden'; }} />
               <div className="min-w-0 flex-1">
                 <div className="text-[12px] font-semibold text-gray-200 truncate">{m.name}{m.version ? <span className="text-gray-500"> · {m.version}</span> : ''}</div>

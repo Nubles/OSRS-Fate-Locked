@@ -62,6 +62,35 @@ export const BOSS_ALIASES: Record<string, string> = {
   'Barrows Brothers': 'Ahrim the Blighted',
 };
 
+/** Multi-phase bosses whose opening phase is not first in the catalogue's alphabetical order. */
+const BOSS_OPENING_VERSIONS: Record<string, string> = {
+  'Alchemical Hydra': 'Serpentine',
+  'Zulrah': 'Serpentine',
+  'Kalphite Queen': 'Crawling',
+  'Galvek': 'Fire',
+  'Phantom Muspah': 'Ranged',
+  'Doom of Mokhaiotl': 'Delve 1',
+};
+const STANDARD_VERSIONS = ['Post-quest', 'Normal', 'Solo'];
+
+/**
+ * The version the Boss Planner assumes until the player picks one: the
+ * opening phase of a multi-phase fight, otherwise the post-quest, normal or
+ * solo fight, otherwise the unversioned or first listed row. Harder variants
+ * (Awakened, group, special modes) are only ever chosen by the player.
+ */
+export const defaultBossVersion = <T extends { name: string; version: string }>(
+  versions: readonly T[],
+): T | undefined => {
+  if (versions.length <= 1) return versions[0];
+  const opening = BOSS_OPENING_VERSIONS[versions[0].name];
+  const leading = (entry: T) => entry.version.split(',')[0].trim();
+  return versions.find(entry => opening !== undefined && entry.version === opening)
+    ?? STANDARD_VERSIONS.map(label => versions.find(entry => leading(entry) === label)).find(entry => entry !== undefined)
+    ?? versions.find(entry => entry.version === '')
+    ?? versions[0];
+};
+
 const accuracyFor = (b: GearBonuses, t: AttackType): number =>
   t === 'stab' ? b.stab : t === 'slash' ? b.slash : t === 'crush' ? b.crush : t === 'ranged' ? b.ranged : b.magic;
 const monDefFor = (m: MonsterLite, t: AttackType, rangedType: RangedDamageType): number =>

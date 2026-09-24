@@ -4,11 +4,12 @@ import { Swords, Shield, Zap, Skull, Crown, Heart, Box, Boxes, FlaskConical } fr
 import { useGame } from '../context/GameContext';
 import { EQUIPMENT_SLOTS } from '../constants';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SectionGuide } from './SectionGuide';
 import { gearService } from '../services/GearService';
 import { monsterService, MonsterStats } from '../services/MonsterService';
 import { attackBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
-import { planBoss, BossPlan, BOSS_ALIASES, PlayerCombat, Readiness, Danger } from '../utils/bossPlanner';
+import { planBoss, BossPlan, BOSS_ALIASES, defaultBossVersion, PlayerCombat, Readiness, Danger } from '../utils/bossPlanner';
 import { EntityModel } from './EntityModel';
 import { modelFor, orientationFor } from '../data/entityModels';
 import { WikiLink } from './WikiLink';
@@ -49,6 +50,11 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
   const [boostsOn, setBoostsOn] = useState(true);
   const [rangedOverride, setRangedOverride] = useState<'auto' | 'light' | 'standard' | 'heavy'>('auto');
   const [selected, setSelected] = useState<string | null>(null);
+  // The player's chosen version per boss (by version label), on this device.
+  const [storedVersions, setStoredVersions] = useLocalStorage<Record<string, string>>('bossplanner:versions', {});
+  const versionChoice = storedVersions !== null && typeof storedVersions === 'object' ? storedVersions : {};
+  const chooseVersion = (boss: string, version: string) =>
+    setStoredVersions(previous => ({ ...(previous !== null && typeof previous === 'object' ? previous : {}), [boss]: version }));
 
   useEffect(() => {
     let alive = true;
@@ -77,18 +83,19 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
 
   // Resolve unlocked bosses → monster + plan; split matched vs. encounters.
   const { ranked, encounters } = useMemo(() => {
-    const matched: { boss: string; monster: MonsterStats; plan: BossPlan }[] = [];
+    const matched: { boss: string; monster: MonsterStats; versions: MonsterStats[]; plan: BossPlan }[] = [];
     const enc: string[] = [];
     if (status === 'ready') {
       for (const boss of unlocks.bosses || []) {
-        const m = monsterService.byName(BOSS_ALIASES[boss] ?? boss);
-        if (m) matched.push({ boss, monster: m, plan: planBoss(player, m) });
+        const versions = monsterService.versionsOf(BOSS_ALIASES[boss] ?? boss);
+        const m = versions.find(version => version.version === versionChoice[boss]) ?? defaultBossVersion(versions);
+        if (m) matched.push({ boss, monster: m, versions, plan: planBoss(player, m) });
         else enc.push(boss);
       }
     }
     matched.sort((a, b) => READY_ORDER.indexOf(a.plan.readiness) - READY_ORDER.indexOf(b.plan.readiness) || b.plan.dps - a.plan.dps);
     return { ranked: matched, encounters: enc };
-  }, [unlocks.bosses, player, status]);
+  }, [unlocks.bosses, player, status, versionChoice]);
 
   const current = ranked.find((r) => r.boss === selected) ?? ranked[0];
 
@@ -166,7 +173,16 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
 
             {/* Detail */}
             <div className="flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-4">
-              {current && <Detail boss={current.boss} monster={current.monster} plan={current.plan} weaponName={gear.weaponName} />}
+              {current && (
+                <Detail
+                  boss={current.boss}
+                  monster={current.monster}
+                  versions={current.versions}
+                  onVersionChange={version => chooseVersion(current.boss, version)}
+                  plan={current.plan}
+                  weaponName={gear.weaponName}
+                />
+              )}
             </div>
           </div>
         )}
@@ -175,7 +191,14 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
   );
 };
 
-const Detail: React.FC<{ boss: string; monster: MonsterStats; plan: BossPlan; weaponName?: string }> = ({ boss, monster, plan, weaponName }) => {
+const Detail: React.FC<{
+  boss: string;
+  monster: MonsterStats;
+  versions: MonsterStats[];
+  onVersionChange: (version: string) => void;
+  plan: BossPlan;
+  weaponName?: string;
+}> = ({ boss, monster, versions, onVersionChange, plan, weaponName }) => {
   const r = READINESS[plan.readiness];
   const d = DANGER[plan.danger];
   const model = modelFor(boss);
@@ -213,7 +236,21 @@ const Detail: React.FC<{ boss: string; monster: MonsterStats; plan: BossPlan; we
         )}
         <div className="min-w-0">
           <h3 className="text-lg font-bold text-white leading-tight truncate"><WikiLink name={boss} icon /></h3>
-          <p className="text-[11px] text-gray-500">{monster.version ? `${monster.version} · ` : ''}Lvl {monster.level} · HP {monster.hp}</p>
+          {versions.length > 1 ? (
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 mt-0.5">
+              <select
+                value={monster.version}
+                onChange={e => onVersionChange(e.target.value)}
+                aria-label={`Version of ${boss}`}
+                className="max-w-full bg-[#1f1f1f] border border-white/10 rounded px-1.5 py-0.5 text-[11px] text-gray-200"
+              >
+                {versions.map(version => <option key={version.version} value={version.version}>{version.version || 'Standard'}</option>)}
+              </select>
+              <span>Lvl {monster.level} · HP {monster.hp}</span>
+            </div>
+          ) : (
+            <p className="text-[11px] text-gray-500">{monster.version ? `${monster.version} · ` : ''}Lvl {monster.level} · HP {monster.hp}</p>
+          )}
         </div>
         {model && !show3D && toggleBtn('ml-auto shrink-0')}
       </div>

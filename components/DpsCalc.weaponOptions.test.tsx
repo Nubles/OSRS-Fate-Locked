@@ -15,9 +15,20 @@ vi.mock('../services/GearService', () => ({ gearService: {
     speed: 4, twoHanded: false, imageFile: '', bonuses: { ...ZERO_BONUSES, slash: 82, meleeStr: 82 },
   } : undefined,
 } }));
-vi.mock('../services/MonsterService', () => ({ monsterService: {
-  ready: true, init: vi.fn().mockResolvedValue(undefined), byId: () => undefined,
-} }));
+const DUKE = vi.hoisted(() => ['Awakened, Awake', 'Post-quest, Awake'].map((version, index) => ({
+  id: 12191, name: 'Duke Sucellus', version, imageFile: '', level: 1, hp: index === 0 ? 1697 : 485, maxHit: 50,
+  defLevel: index === 0 ? 316 : 275, magicLevel: 1,
+  def: { stab: 0, slash: 0, crush: 0, magic: 0, ranged: 0 },
+  rangedDefence: { light: 0, standard: 0, heavy: 0 }, size: 5, attributes: [],
+})));
+vi.mock('../services/MonsterService', () => ({
+  monsterKey: (monster: { id: number; name: string; version: string }) => `${monster.id}|${monster.name}|${monster.version}`,
+  monsterService: {
+    ready: true, init: vi.fn().mockResolvedValue(undefined), byId: () => undefined,
+    search: () => DUKE,
+    byKey: (key: string | null | undefined) => DUKE.find(monster => `${monster.id}|${monster.name}|${monster.version}` === key),
+  },
+}));
 afterEach(cleanup);
 beforeEach(() => { fixture.category = 'Whip'; });
 
@@ -47,5 +58,11 @@ describe('Vanilla DPS weapon controls', () => {
     render(<DpsCalc />);
     fireEvent.click(await screen.findByRole('button', { name: 'Magic' }));
     await waitFor(() => expect(screen.getByText(/5t before stance/)).toBeTruthy());
+  });
+  it('calculates against the exact version picked when versions share an NPC id', async () => {
+    render(<DpsCalc />);
+    fireEvent.click(await screen.findByRole('button', { name: /target/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Awakened, Awake/ }));
+    expect(await screen.findByText(/HP 1697/)).toBeTruthy();
   });
 });
