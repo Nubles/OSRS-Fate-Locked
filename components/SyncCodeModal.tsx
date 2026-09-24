@@ -3,7 +3,7 @@ import {
   X, Link2, Copy, Check, ClipboardPaste, ShieldCheck, ShieldAlert,
   AlertTriangle, Loader2, ArrowDownToLine, Upload, QrCode, History, RotateCcw,
 } from 'lucide-react';
-import { initialState, useGame } from '../context/GameContext';
+import { createFreshState, useGame } from '../context/GameContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';
 import { encodeSyncCode, decodeAndValidateSyncCode } from '../utils/syncCode';
@@ -233,7 +233,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
     setStatus(null);
     setDecoded(null);
 
-    const result = await decodeAndValidateSyncCode(source, initialState);
+    const result = await decodeAndValidateSyncCode(source, createFreshState());
     if (!isCurrentImportRequest(verifyRequestRef.current, inputRef.current, request)) return;
 
     setDecoding(false);

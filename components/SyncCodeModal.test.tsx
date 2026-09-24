@@ -21,14 +21,14 @@ const game = vi.hoisted(() => ({
 }));
 
 vi.mock('../context/GameContext', () => ({
-  initialState: {
+  createFreshState: () => ({
     unlocks: { skills: {}, regions: [], quests: [] },
     keys: 0,
     specialKeys: 0,
     chaosKeys: 0,
     history: [],
     gameModeId: 'Vanilla',
-  },
+  }),
   useGame: () => game,
 }));
 vi.mock('../hooks/useEscapeKey', () => ({ useEscapeKey: () => undefined }));

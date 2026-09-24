@@ -6,4 +6,6 @@ const PERSONA_IMAGES: Record<string, string> = {
 };
 
 export const getRivalImage = (mode: string, personaId: string): string =>
-  mode === 'friend' ? 'Worn_Equipment.png' : PERSONA_IMAGES[personaId] ?? PERSONA_IMAGES.steady;
+  mode === 'friend'
+    ? 'Worn_Equipment.png'
+    : Object.hasOwn(PERSONA_IMAGES, personaId) ? PERSONA_IMAGES[personaId] : PERSONA_IMAGES.steady;

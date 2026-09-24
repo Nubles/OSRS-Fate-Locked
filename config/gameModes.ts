@@ -106,12 +106,15 @@ const LEGACY_MODES: GameMode[] = [
     rules: { ...VANILLA_RULES } },
 ];
 
-const MODE_BY_ID: Record<string, GameMode> = Object.fromEntries(
+// A Map, not a plain object: a saved or imported mode id such as
+// "constructor" must fall back to Vanilla rather than resolve to an
+// Object.prototype member and crash every render.
+const MODE_BY_ID = new Map<string, GameMode>(
   [...GAME_MODES, ...LEGACY_MODES].map(m => [m.id, m]),
 );
 
 export const getGameMode = (id?: string): GameMode =>
-  MODE_BY_ID[id ?? DEFAULT_MODE_ID] ?? MODE_BY_ID[DEFAULT_MODE_ID];
+  MODE_BY_ID.get(id ?? DEFAULT_MODE_ID) ?? MODE_BY_ID.get(DEFAULT_MODE_ID)!;
 
 /**
  * Resolve the active ruleset for a run. For the 'custom' mode the run carries
