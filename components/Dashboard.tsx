@@ -48,7 +48,7 @@ import { PanelErrorBoundary } from './PanelErrorBoundary';
 import { MerchantShopsPanel } from './MerchantShopsPanel';
 import { SlayerReachabilityPanel } from './SlayerReachabilityPanel';
 import { ShortcutsPanel } from './ShortcutsPanel';
-import { ModalFallback } from './LoadingFallback';
+import { ModalFallback, PaneFallback } from './LoadingFallback';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useUnlockReveal } from '../hooks/useUnlockReveal';
@@ -752,7 +752,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
           {worldView === 'MAP' ? (
               <div className="flex-1 bg-[#050505] rounded-lg border border-white/10 overflow-hidden relative">
                   <PanelErrorBoundary name="Region map">
-                    <Suspense fallback={<ModalFallback />}>
+                    <Suspense fallback={<PaneFallback />}>
                       <RegionMap />
                     </Suspense>
                   </PanelErrorBoundary>
@@ -1007,8 +1007,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
               </button>
           </div>
           {advisorsEnabled && <JournalNextBest onPick={setJournalSubTab} />}
-          <div className="flex-1 overflow-hidden p-2">
-              <Suspense fallback={<ModalFallback />}>
+          <div className="flex-1 overflow-hidden p-2 relative">
+              <Suspense fallback={<PaneFallback />}>
                   {journalSubTab === 'QUESTS' && <QuestLog searchTerm={searchQuery} suspendModals={suspendModals} />}
                   {journalSubTab === 'DIARIES' && <DiaryLog searchTerm={searchQuery} suspendModals={suspendModals} />}
                   {journalSubTab === 'CA' && <CALog searchTerm={searchQuery} />}
@@ -1219,20 +1219,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
               <GoalTracker />
           </Suspense>
           {/* Keyed by tab so the content gently slides in when you switch. */}
-          <div key={activeTab} className={`h-full ${animationsEnabled ? 'animate-fade-in-up' : ''}`}>
+          <div key={activeTab} className={`h-full relative ${animationsEnabled ? 'animate-fade-in-up' : ''}`}>
             {activeTab === 'CHARACTER' && renderCharacterTab()}
             {activeTab === 'WORLD' && renderWorldTab()}
             {activeTab === 'ACTIVITIES' && renderActivitiesTab()}
             {activeTab === 'JOURNAL' && renderJournalTab()}
             {activeTab === 'COLLECTION' && (
                 <div className="h-full p-2">
-                    <Suspense fallback={<ModalFallback />}>
+                    <Suspense fallback={<PaneFallback />}>
                         <CollectionLog searchTerm={searchQuery} />
                     </Suspense>
                 </div>
             )}
             {activeTab === 'AUTOROLL' && (
-                <Suspense fallback={<ModalFallback />}>
+                <Suspense fallback={<PaneFallback />}>
                     <AutoRollPanel />
                 </Suspense>
             )}
