@@ -166,6 +166,19 @@ export interface DpsResult {
   attackInterval: number; // seconds
 }
 
+/**
+ * Time to kill for display: tenths of a second under a minute, else whole
+ * minutes and seconds. Rounded before splitting, so 119.6 s reads "2m 0s",
+ * never "1m 60s".
+ */
+export const formatTimeToKill = (seconds: number): string => {
+  if (!Number.isFinite(seconds) || seconds <= 0) return '—';
+  const tenths = Math.round(seconds * 10);
+  if (tenths < 600) return `${(tenths / 10).toFixed(1)}s`;
+  const whole = Math.round(seconds);
+  return `${Math.floor(whole / 60)}m ${whole % 60}s`;
+};
+
 export const computeDps = (input: DpsInput): DpsResult => {
   const { style, levels, gear, monster } = input;
   const stance = pick(STANCES[style], input.stanceId);

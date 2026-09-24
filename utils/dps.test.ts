@@ -1,8 +1,24 @@
 import { describe, it, expect } from 'vitest';
 import {
   effectiveLevel, maxHitFromStr, maxHitMagic, attackRoll, defenceRoll,
-  hitChance, potionBoost, computeDps, POTIONS, DpsInput,
+  hitChance, potionBoost, computeDps, POTIONS, DpsInput, formatTimeToKill,
 } from './dps';
+
+describe('formatTimeToKill', () => {
+  it('rounds before splitting minutes from seconds', () => {
+    expect(formatTimeToKill(119.6)).toBe('2m 0s');
+    expect(formatTimeToKill(179.5)).toBe('3m 0s');
+    expect(formatTimeToKill(59.96)).toBe('1m 0s');
+    expect(formatTimeToKill(65)).toBe('1m 5s');
+  });
+
+  it('keeps tenths under a minute and a dash when there is no kill', () => {
+    expect(formatTimeToKill(59.94)).toBe('59.9s');
+    expect(formatTimeToKill(4.25)).toBe('4.3s');
+    expect(formatTimeToKill(Infinity)).toBe('—');
+    expect(formatTimeToKill(0)).toBe('—');
+  });
+});
 
 describe('dps formulas', () => {
   it('effective level: floor((base+boost)*prayer) + stance + 8', () => {

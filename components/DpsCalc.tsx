@@ -9,7 +9,7 @@ import { gearService } from '../services/GearService';
 import { monsterKey, monsterService, MonsterStats } from '../services/MonsterService';
 import { attackBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
 import {
-  computeDps, STANCES, PRAYERS, POTIONS, Style, AttackType, DpsInput,
+  computeDps, formatTimeToKill, STANCES, PRAYERS, POTIONS, Style, AttackType, DpsInput,
 } from '../utils/dps';
 import { WikiLink } from './WikiLink';
 import { rangedDefenceFor, type RangedDamageType } from '../utils/rangedDamage';
@@ -217,7 +217,7 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
             <Stat label="Max hit" value={result.maxHit} accent="text-red-300" Icon={Zap} />
             <Stat label="Hit chance" value={`${Math.round(result.hitChance * 100)}%`} accent="text-amber-300" Icon={Target} />
             <Stat label="DPS" value={result.dps.toFixed(2)} accent="text-emerald-300" Icon={Swords} />
-            <Stat label="Time to kill" value={fmtTtk(result.ttk)} accent="text-sky-300" Icon={Clock} />
+            <Stat label="Time to kill" value={formatTimeToKill(result.ttk)} accent="text-sky-300" Icon={Clock} />
           </div>
           <div className="grid grid-cols-3 gap-2 text-center pt-1 border-t border-white/5">
             <Mini label="Eff. atk" value={result.effAtk} />
@@ -251,12 +251,6 @@ const Stat: React.FC<{ label: string; value: React.ReactNode; accent: string; Ic
 const Mini: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
   <div><div className="text-[8px] uppercase tracking-widest text-gray-600">{label}</div><div className="text-[12px] font-bold text-gray-300 font-mono">{value}</div></div>
 );
-
-const fmtTtk = (s: number): string => {
-  if (!isFinite(s) || s <= 0) return '—';
-  if (s < 60) return `${s.toFixed(1)}s`;
-  return `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`;
-};
 
 // ── Monster picker popover ────────────────────────────────────────────────────
 const MonsterPicker: React.FC<{ currentKey: string | null; onClose: () => void; onPick: (key: string) => void }> = ({ currentKey, onClose, onPick }) => {

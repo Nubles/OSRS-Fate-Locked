@@ -9,6 +9,7 @@ import { SectionGuide } from './SectionGuide';
 import { gearService } from '../services/GearService';
 import { monsterService, MonsterStats } from '../services/MonsterService';
 import { attackBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
+import { formatTimeToKill } from '../utils/dps';
 import { planBoss, BossPlan, BOSS_ALIASES, bestBoostPrayers, defaultBossVersion, PlayerCombat, Readiness, Danger } from '../utils/bossPlanner';
 import { EntityModel } from './EntityModel';
 import { modelFor, orientationFor } from '../data/entityModels';
@@ -34,12 +35,6 @@ const DANGER: Record<Danger, { label: string; cls: string }> = {
   extreme: { label: 'Extreme', cls: 'text-red-400' },
 };
 const READY_ORDER: Readiness[] = ['excellent', 'good', 'workable', 'slow', 'undergeared', 'unverified'];
-
-const fmtTtk = (s: number): string => {
-  if (!isFinite(s) || s <= 0) return '—';
-  if (s < 60) return `${s.toFixed(1)}s`;
-  return `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`;
-};
 
 export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
   const { unlocks, loadout: rawLoadout, gameModeId } = useGame();
@@ -273,7 +268,7 @@ const Detail: React.FC<{
         <Stat label="Best DPS" value={plan.dps.toFixed(2)} accent="text-emerald-300" Icon={Swords} />
         <Stat label="Max hit" value={plan.maxHit} accent="text-red-300" Icon={Zap} />
         <Stat label="Hit chance" value={`${Math.round(plan.hitChance * 100)}%`} accent="text-amber-300" Icon={Crosshair} />
-        <Stat label="Time to kill" value={fmtTtk(plan.ttk)} accent="text-sky-300" Icon={Clock} />
+        <Stat label="Time to kill" value={formatTimeToKill(plan.ttk)} accent="text-sky-300" Icon={Clock} />
       </div>
 
       {/* Gear gap */}
