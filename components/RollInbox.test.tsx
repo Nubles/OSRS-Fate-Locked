@@ -172,6 +172,39 @@ describe('RollInbox', () => {
     expect(store.list()[0].reviewOutcome).toBe('CORRECTED');
   });
 
+  it('keeps the review select mounted and focused across re-renders', async () => {
+    const names = Object.values(COLLECTION_LOG_DATA)
+      .flatMap(tab => Object.values(tab.pages))
+      .flatMap(page => page.items.map(item => item.name.trim().toLowerCase()));
+    const ambiguous = names.find((name, index) => names.indexOf(name) !== index);
+    expect(ambiguous).toBeTruthy();
+    const store = createRollInboxStore(new MemoryStorage(), 'run-1');
+    store.ingest([event('COLLECTION_LOG', ambiguous!)]);
+    const state = gameState();
+    const acceptDetectedEvent = vi.fn().mockReturnValue(true);
+    const acknowledge = vi.fn().mockResolvedValue(true);
+    const view = render(
+      <RollInboxView store={store} game={{ state, acceptDetectedEvent }} acknowledge={acknowledge} />,
+    );
+
+    const select = await screen.findByRole('combobox') as HTMLSelectElement;
+    const choice = (screen.getAllByRole('option')[1] as HTMLOptionElement).value;
+    select.focus();
+    await userEvent.setup().selectOptions(select, choice);
+
+    expect(screen.getByRole('combobox')).toBe(select);
+    expect(document.activeElement).toBe(select);
+
+    // A relay event re-renders the inbox with a new game object.
+    view.rerender(
+      <RollInboxView store={store} game={{ state: { ...state }, acceptDetectedEvent }} acknowledge={acknowledge} />,
+    );
+
+    expect(screen.getByRole('combobox')).toBe(select);
+    expect(document.activeElement).toBe(select);
+    expect(select.value).toBe(choice);
+  });
+
   it('dismisses unsupported and duplicate rows without presenting Roll', async () => {
     const user = userEvent.setup();
     const blocked = setup(event('QUEST', 'Dragon Slayer I', { detectorVersion: 99 }));
