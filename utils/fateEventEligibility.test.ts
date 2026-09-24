@@ -234,6 +234,23 @@ describe('classifyFateEvent', () => {
     expect(vorkath(2)).toEqual({ state: 'BLOCKED', reason: 'This boss has no Standard Keys left to award.' });
   });
 
+  it('rolls Brutus as the Farm card does: always open in Vanilla, low tier elsewhere', () => {
+    const brutus = (awarded: number) => classifyFateEvent(event('BOSS_KILL', 'Brutus'), state(
+      { bossStandardKeysAwarded: awarded ? { Brutus: awarded } : {} },
+    ));
+    expect(brutus(0)).toMatchObject({
+      state: 'READY',
+      intent: {
+        source: DropSource.BOSS_LOW, threshold: 10,
+        context: { kind: 'boss', bossName: 'Brutus', bossClass: 'brutus' },
+      },
+    });
+    expect(brutus(1)).toEqual({ state: 'BLOCKED', reason: 'This boss has no Standard Keys left to award.' });
+    const chunked = classifyFateEvent(event('BOSS_KILL', 'Brutus'), state({ gameModeId: 'chunked' }));
+    expect(chunked).toMatchObject({ state: 'READY', intent: { source: DropSource.BOSS_LOW } });
+    expect(chunked.state === 'READY' && chunked.intent.context).toBeUndefined();
+  });
+
   it('rolls Vanilla clue caskets at the Clues card rates', () => {
     expect(classifyFateEvent(event('CLUE_CASKET', 'Casket (hard)'), state())).toMatchObject({
       state: 'READY',

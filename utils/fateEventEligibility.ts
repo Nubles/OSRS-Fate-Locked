@@ -1,9 +1,9 @@
 import { DROP_RATES } from '../config/rules';
 import { policyFor } from '../config/detectorPolicies';
 import { failureFateForSkillLevel, failureFateForSource } from '../config/economy';
-import { vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
+import { BRUTUS_BOSS_NAME, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
 import { ALL_CA_TASKS, type CATask } from '../data/caTasks';
-import { BOSS_TIERS, TIER_SOURCE } from '../data/bossKeyTiers';
+import { BOSS_TIERS, TIER_SOURCE, type BossTier } from '../data/bossKeyTiers';
 import { COLLECTION_LOG_DATA, type CollectionLogItem } from '../data/collectionLogData';
 import { collectionItemNeedsIdentityReview } from '../services/CollectionLogSyncService';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
@@ -77,8 +77,10 @@ for (const tab of Object.values(COLLECTION_LOG_DATA)) {
   }
 }
 
+// Brutus is the baseline Lumbridge boss: outside BOSS_TIERS, but on the Farm
+// card as a low-tier kill with its own Vanilla key reserve.
 const BOSS_INDEX = new Map(
-  Object.keys(BOSS_TIERS).map((name) => [normalize(name), name]),
+  [...Object.keys(BOSS_TIERS), BRUTUS_BOSS_NAME].map((name) => [normalize(name), name]),
 );
 
 const SLAYER_SOURCES = [
@@ -289,19 +291,21 @@ function classifyBoss(event: FateEventEnvelope, state: GameState): EventClassifi
   if (!event.canonicalLabel) return needsConfirmation('Choose the boss or raid.');
   const bossName = BOSS_INDEX.get(normalize(event.canonicalLabel));
   if (!bossName) return needsConfirmation('Boss or raid is not in the current rules.');
-  const tier = BOSS_TIERS[bossName];
+  const isBrutus = bossName === BRUTUS_BOSS_NAME;
+  const tier: BossTier = isBrutus ? 'low' : BOSS_TIERS[bossName];
   const expectedType = tier === 'raid' ? 'RAID_COMPLETION' : 'BOSS_KILL';
   if (event.eventType !== expectedType) {
     return needsConfirmation('The detected encounter type does not match this activity.');
   }
   if (state.gameModeId !== 'vanilla') return ready(TIER_SOURCE[tier], bossName, { kind: 'NONE' });
-  // Vanilla's Bossing list rolls only unlocked bosses, each from its own key reserve.
-  if (!state.unlocks.bosses.includes(bossName)) return blocked('Unlock this boss before its kills can roll.');
+  // Vanilla's Bossing list rolls only unlocked bosses (Brutus is always
+  // there), each from its own key reserve.
+  if (!isBrutus && !state.unlocks.bosses.includes(bossName)) return blocked('Unlock this boss before its kills can roll.');
   const stage = vanillaBossKeyStage(bossName, state.bossStandardKeysAwarded?.[bossName] ?? 0);
   if (stage.currentRate === null) return blocked('This boss has no Standard Keys left to award.');
   return ready(TIER_SOURCE[tier], bossName, { kind: 'NONE' }, {
     threshold: stage.currentRate,
-    context: { kind: 'boss', bossName, bossClass: tier },
+    context: { kind: 'boss', bossName, bossClass: isBrutus ? 'brutus' : tier },
   });
 }
 
