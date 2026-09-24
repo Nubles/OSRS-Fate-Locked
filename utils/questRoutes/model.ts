@@ -50,6 +50,8 @@ export interface ExactItemSource {
   deterministic: boolean;
   probability?: number;
   coverage: Coverage;
+  /** A later distinct source for the same host at the same chunk, usually an interior. */
+  accessVariant?: boolean;
 }
 
 export interface RouteStep {
@@ -83,6 +85,8 @@ export interface ItemRoute {
   travelCost: number;
   /** True when travel cost used a geometric fallback rather than graph data. */
   travelCostEstimated?: boolean;
+  /** Access-variant sources used; these rank after otherwise-equal routes. Absent means 0. */
+  accessVariantCost?: number;
   hasDataGap: boolean;
 }
 

@@ -74,6 +74,29 @@ describe('indexDirectItemSources', () => {
     ]));
   });
 
+  it('keeps the first source ID at a host and chunk and marks later interior variants', () => {
+    const cyclops = (sourceId?: string, raw: readonly string[] = []): ItemSourceRecord => ({
+      itemName: 'Plank', kind: 'monster', hostName: 'Cyclops', cx: 44, cy: 55,
+      ...(sourceId === undefined ? {} : { sourceId }),
+      rawRequirements: raw.map(requirement => ({ raw: requirement, origin: 'ENTITY' as const })),
+    });
+    const sourcesFor = (current: readonly ItemSourceRecord[]) => indexDirectItemSources(plank, {
+      unlockedChunks: new Set([chunkKey(44, 55)]),
+      recordsForClass: (_itemName, searchClass) => searchClass === 'current' ? current : [],
+      hasKnownOutsideSources: () => false,
+    }).currentSources.map(source => ({ id: source.id, accessVariant: source.accessVariant ?? false }));
+
+    expect(sourcesFor([cyclops(undefined, ["Access the Warriors' Guild"]), cyclops('11675')])).toEqual([
+      { id: 'monster:Cyclops:44,55:plank', accessVariant: false },
+      { id: 'monster:Cyclops:44,55:plank:11675', accessVariant: true },
+    ]);
+    // An interior that is the first source there keeps the ID it always had.
+    expect(sourcesFor([cyclops('11675'), cyclops('22000')])).toEqual([
+      { id: 'monster:Cyclops:44,55:plank', accessVariant: false },
+      { id: 'monster:Cyclops:44,55:plank:22000', accessVariant: true },
+    ]);
+  });
+
   it('does not invoke a class index after the work boundary', () => {
     let classLookups = 0;
     const result = indexDirectItemSources(plank, {

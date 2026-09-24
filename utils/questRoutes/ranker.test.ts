@@ -68,7 +68,18 @@ describe('route ranking', () => {
   it('uses route ID as the final stable tie-breaker', () => {
     expect(rankRoutes([route('route-z'), route('route-a')]).map(candidate => candidate.id))
       .toEqual(['route-a', 'route-z']);
-    expect(routeRankTuple(route('route-a'))).toEqual([0, 0, 0, 0, 0, 0, 0, 1, 'route-a']);
+    expect(routeRankTuple(route('route-a'))).toEqual([0, 0, 0, 0, 0, 0, 0, 1, 0, 'route-a']);
+  });
+
+  it('ranks a surfaced access variant after an otherwise-equal route, whatever its ID', () => {
+    expect(rankRoutes([
+      route('z-existing'),
+      route('a-interior-variant', { accessVariantCost: 1 }),
+    ]).map(candidate => candidate.id)).toEqual(['z-existing', 'a-interior-variant']);
+    expect(rankRoutes([
+      route('a-blocked', { blockers: [{ type: 'QUEST', questId: 'q', label: 'Quest' }] }),
+      route('z-usable-variant', { accessVariantCost: 1 }),
+    ]).map(candidate => candidate.id)).toEqual(['z-usable-variant', 'a-blocked']);
   });
 
   it('keeps a complete blocked witness ahead of incomplete evidence', () => {
@@ -104,7 +115,7 @@ describe('route ranking', () => {
       skillUnlockCost: 3,
       skillLevelCost: 4,
       travelCost: 5,
-    }))).toEqual([0, 0, 1, 2, 3, 4, 5, 1, 'mixed-costs']);
+    }))).toEqual([0, 0, 1, 2, 3, 4, 5, 1, 0, 'mixed-costs']);
   });
 });
 
@@ -115,6 +126,13 @@ describe('fallback route ranking', () => {
     '12852': ['12851', '12853'],
     '12853': ['12852'],
   };
+
+  it('ranks a surfaced access variant after an otherwise-equal fallback route', () => {
+    expect(rankFallbackRoutes([
+      routeAt('a-interior-variant', '50,50', { accessVariantCost: 1 }),
+      routeAt('z-existing', '50,50'),
+    ], graph, { origin: '50,50' }).map(candidate => candidate.id)).toEqual(['z-existing', 'a-interior-variant']);
+  });
 
   it('prefers the route with the shorter journey from the prior action origin', () => {
     const farSpawn = routeAt('far-spawn', '50,53');

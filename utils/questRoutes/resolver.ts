@@ -494,9 +494,14 @@ const directRoute = (
     recursiveCost: 0,
     ...routeRequirementCosts(steps),
     travelCost: 0,
+    ...(source.accessVariant ? { accessVariantCost: 1 } : {}),
     hasDataGap,
   };
 };
+
+const choicesAccessVariantCost = (choices: readonly DependencyChoice[]): number => (
+  choices.reduce((cost, choice) => cost + (choice.route?.accessVariantCost ?? 0), 0)
+);
 
 const isTraversalBoundaryNote = (note: string): boolean =>
   /cycle detected|maximum recursive depth|route budget/i.test(note);
@@ -897,6 +902,7 @@ const combineStationChoices = (
       [...requiredLevels.values()].reduce((sum, level) => sum + level, 0),
       preparedRanker.travelCostForChunks(chunkSequence).travelCost,
       probability == null ? (hasRemainingDependencies ? -1 : 1) : -probability,
+      choicesAccessVariantCost(choices),
       stationChoiceId(combination),
     ];
   };
@@ -1276,6 +1282,7 @@ const expandRecipe = (
       ...choices.flatMap(choice => choice.route?.chunks ?? []),
     ]);
     const steps = stationChoiceSteps(id, combination, snapshot, recipe.kind);
+    const accessVariantCost = choicesAccessVariantCost(choices);
     routes.push({
       id,
       item: recipe.output,
@@ -1293,6 +1300,7 @@ const expandRecipe = (
       recursiveCost: 1 + choices.reduce((cost, choice) => cost + (choice.route?.recursiveCost ?? 0), 0),
       ...routeRequirementCosts(steps),
       travelCost: chunks.length,
+      ...(accessVariantCost > 0 ? { accessVariantCost } : {}),
       hasDataGap: station.hasDataGap || choices.some(choice => (
         !choice.route || choice.analysisIncomplete || choice.route.hasDataGap
       )),
