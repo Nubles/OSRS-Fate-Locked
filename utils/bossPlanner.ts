@@ -21,7 +21,8 @@ import { meetsSkillRequirement } from './journalStatus';
 
 export interface MonsterLite {
   hp: number;
-  maxHit: number;
+  /** null when the catalogue gives no number ("Varies", "N/A"). */
+  maxHit: number | null;
   defLevel: number;
   magicLevel: number;
   def: { stab: number; slash: number; crush: number; magic: number; ranged: number };
@@ -40,7 +41,7 @@ export interface PlayerCombat {
 type PlannedStyle = 'melee' | 'ranged';
 
 export type Readiness = 'excellent' | 'good' | 'workable' | 'slow' | 'undergeared' | 'unverified';
-export type Danger = 'low' | 'medium' | 'high' | 'extreme';
+export type Danger = 'low' | 'medium' | 'high' | 'extreme' | 'unknown';
 
 export interface BossPlan {
   dps: number;
@@ -57,8 +58,8 @@ export interface BossPlan {
   killsPerHour: number;
   readiness: Readiness;
   danger: Danger;
-  /** Rough kills before a bank trip (no protection assumed). */
-  killsBeforeBank: number;
+  /** Rough kills before a bank trip (no protection assumed); null when the max hit is unknown. */
+  killsBeforeBank: number | null;
   /** Your DPS as a % of a strong reference setup (0..100). */
   gearGapPct: number;
 }
@@ -173,7 +174,8 @@ const readinessOf = (ttk: number, dps: number): Readiness => {
   return 'undergeared';
 };
 
-const dangerOf = (maxHit: number, hp: number): Danger => {
+const dangerOf = (maxHit: number | null, hp: number): Danger => {
+  if (maxHit === null) return 'unknown';
   const r = maxHit / Math.max(1, hp);
   if (r < 0.15) return 'low';
   if (r < 0.3) return 'medium';
@@ -204,8 +206,9 @@ export const planBoss = (player: PlayerCombat, monster: MonsterLite): BossPlan =
   const gearGapPct = ref.dps > 0 ? Math.min(100, Math.round((best.dps / ref.dps) * 100)) : 0;
 
   const killsPerHour = isFinite(best.ttk) && best.ttk > 0 ? Math.floor(3600 / (best.ttk + KILL_OVERHEAD_S)) : 0;
-  const dmgPerKill = Math.max(1, monster.maxHit * 1.5); // rough, no protection
-  const killsBeforeBank = Math.max(1, Math.floor(player.levels.hitpoints / dmgPerKill));
+  const killsBeforeBank = monster.maxHit === null
+    ? null
+    : Math.max(1, Math.floor(player.levels.hitpoints / Math.max(1, monster.maxHit * 1.5))); // rough, no protection
   const boosts = boostsFor(player, bestCombo.style);
 
   return {

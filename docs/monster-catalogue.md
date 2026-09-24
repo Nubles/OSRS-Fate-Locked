@@ -17,10 +17,12 @@ the blob identity; the source test verifies both complete byte fingerprints.
 The service retains existing name/version deduplication (2,850 picker rows)
 and separate light/standard/heavy ranged defences. Max hit is the largest
 single hit in the wiki text: markup and hit counts ("17x2", "2 (x3)") are
-ignored, and text with no number (N/A, Varies) reads as 0. That rule is
-normalization version 2; version 1 took the first number, so markup-first
-text such as Tormented Demons read as 0. This does not certify every
-statistic or add encounter mechanics.
+ignored, and text with no number (N/A, Varies, "? (melee)") is unknown
+(null), which the boss planner shows as an unknown danger rather than Low.
+That rule is normalization version 3. Version 2 read text with no number as
+0, and version 1 took the first number, so markup-first text such as
+Tormented Demons read as 0. This does not certify every statistic or add
+encounter mechanics.
 
 Normalized caches must match the source SHA-256 and normalization version and
 contain valid, nonempty targets. Unfingerprinted older caches refresh from the

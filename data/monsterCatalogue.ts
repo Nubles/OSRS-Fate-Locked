@@ -8,7 +8,7 @@ export const MONSTER_CATALOGUE = {
   verifiedAt: '2026-09-24',
   rowCount: 2860,
   // Increment if normalized fields, units, or selection semantics change.
-  normalizationVersion: 2,
+  normalizationVersion: 3,
 } as const;
 
 export const MONSTER_CACHE_SOURCE = `${MONSTER_CATALOGUE.sha256}:${MONSTER_CATALOGUE.normalizationVersion}`;

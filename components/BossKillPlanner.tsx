@@ -33,6 +33,7 @@ const DANGER: Record<Danger, { label: string; cls: string }> = {
   medium: { label: 'Medium', cls: 'text-amber-300' },
   high: { label: 'High', cls: 'text-orange-300' },
   extreme: { label: 'Extreme', cls: 'text-red-400' },
+  unknown: { label: 'Unknown', cls: 'text-gray-500' },
 };
 const READY_ORDER: Readiness[] = ['excellent', 'good', 'workable', 'slow', 'undergeared', 'unverified'];
 
@@ -287,10 +288,10 @@ const Detail: React.FC<{
       <div className="grid grid-cols-3 gap-2">
         <Mini label="Kills / hr" value={plan.killsPerHour || '—'} Icon={Crown} />
         <Mini label="Danger" value={d.label} cls={d.cls} Icon={Skull} />
-        <Mini label="Kills / trip" value={`~${plan.killsBeforeBank}`} Icon={Heart} />
+        <Mini label="Kills / trip" value={plan.killsBeforeBank === null ? '—' : `~${plan.killsBeforeBank}`} Icon={Heart} />
       </div>
       <div className="text-[10px] text-gray-500 flex items-start gap-1.5">
-        <Shield size={11} className="shrink-0 mt-0.5" /> Boss max hit <span className="text-gray-300 font-semibold">{monster.maxHit}</span>{monster.attributes.length ? ` · ${monster.attributes.join(', ')}` : ''}
+        <Shield size={11} className="shrink-0 mt-0.5" /> Boss max hit <span className="text-gray-300 font-semibold">{monster.maxHit ?? 'unknown'}</span>{monster.attributes.length ? ` · ${monster.attributes.join(', ')}` : ''}
       </div>
 
       <p className="text-[9px] text-gray-600 leading-relaxed flex items-start gap-1.5">

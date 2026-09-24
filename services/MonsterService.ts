@@ -11,14 +11,16 @@ const CACHE_KEY = 'fate_osrs_monsters_v3';
 /**
  * The largest single hit in the wiki's max-hit text, which can list several
  * attacks, ranges ("46-61") and markup ("<div …>*31 (auto)*45 (special)").
- * Hit counts ("17x2", "2 (x3)") are not hits. Text with no number reads as 0.
+ * Hit counts ("17x2", "2 (x3)") are not hits. Text with no number ("N/A",
+ * "Varies", "? (melee)") is unknown: null, never a max hit of 0.
  */
-export const parseMaxHit = (raw: unknown): number => {
-  if (typeof raw === 'number') return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 0;
+export const parseMaxHit = (raw: unknown): number | null => {
+  if (typeof raw === 'number') return Number.isFinite(raw) ? Math.max(0, Math.floor(raw)) : null;
   const text = String(raw ?? '')
     .replace(/<[^>]*>/g, ' ')
     .replace(/(^|[^a-z])[x×]\s?\d+/gi, '$1 ');
-  return Math.max(0, ...(text.match(/\d+/g) ?? []).map(Number));
+  const hits = (text.match(/\d+/g) ?? []).map(Number);
+  return hits.length ? Math.max(...hits) : null;
 };
 
 export interface MonsterStats {
@@ -28,8 +30,8 @@ export interface MonsterStats {
   imageFile: string;
   level: number;
   hp: number;
-  /** Highest single hit the monster can deal (parsed; 0 if unknown). */
-  maxHit: number;
+  /** Highest single hit the monster can deal (parsed; null when the wiki gives no number). */
+  maxHit: number | null;
   defLevel: number;
   magicLevel: number;
   /** Defensive bonuses by attack type. */
@@ -66,7 +68,8 @@ function validMonster(value: unknown): value is MonsterStats {
   const m = value as MonsterStats;
   return Number.isInteger(m.id) && typeof m.name === 'string' && !!m.name.trim()
     && typeof m.version === 'string' && typeof m.imageFile === 'string'
-    && [m.level, m.hp, m.maxHit, m.defLevel, m.magicLevel, m.size].every(Number.isFinite)
+    && [m.level, m.hp, m.defLevel, m.magicLevel, m.size].every(Number.isFinite)
+    && (m.maxHit === null || Number.isFinite(m.maxHit))
     && m.hp > 0 && m.size >= 0 // Upstream uses zero for unknown size on real targets.
     && !!m.def && ['stab', 'slash', 'crush', 'magic', 'ranged'].every(k => Number.isFinite(m.def[k as keyof MonsterStats['def']]))
     && !!m.rangedDefence && ['light', 'standard', 'heavy'].every(k => Number.isFinite(m.rangedDefence![k as 'light' | 'standard' | 'heavy']))

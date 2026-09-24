@@ -38,6 +38,14 @@ describe('boss kill planner', () => {
     expect(planBoss(whipPlayer(), monster({ maxHit: 70 })).danger).toBe('extreme');
   });
 
+  it('reports an unknown danger, not Low, when the boss max hit is unknown', () => {
+    const plan = planBoss(whipPlayer(), monster({ maxHit: null }));
+    expect(plan.danger).toBe('unknown');
+    expect(plan.killsBeforeBank).toBeNull();
+    expect(plan.dps).toBeGreaterThan(0);
+    expect(planBoss(whipPlayer(), monster({ maxHit: 0 }))).toMatchObject({ danger: 'low', killsBeforeBank: 99 });
+  });
+
   it('readiness reflects time-to-kill (fast kill on a weak target)', () => {
     const easy = planBoss(whipPlayer(true), monster({ hp: 40, defLevel: 1, def: { stab: 0, slash: 0, crush: 0, magic: 0, ranged: 0 } }));
     expect(['excellent', 'good']).toContain(easy.readiness);
