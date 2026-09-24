@@ -4,11 +4,11 @@
  * Chunked rolls are random-adjacent, so the player never *chooses* a chunk —
  * but knowing what the frontier is worth still matters: which rollable chunks
  * would give a first foothold in a new named area (opening its quests/diaries
- * via isNamedAreaReachableViaChunks), and which are just empty tiles. Named-
- * area footholds reuse the exact impact engine the Region Advisor runs on
- * (computeUnlockImpact is chunk-aware via gameModeId); chunk-local content
- * (bank/shops/monsters) is layered on as a tie-breaker so a bank chunk ranks
- * above bare wilderness even when neither opens a new area.
+ * via isNamedAreaReachableViaChunks) or reach an exact quest/diary location,
+ * and which are just empty tiles. Both reuse the exact impact engine the
+ * Region Advisor runs on (computeUnlockImpact is chunk-aware via gameModeId);
+ * chunk-local content (bank/shops/monsters) is layered on as a tie-breaker so
+ * a bank chunk ranks above bare wilderness even when neither opens a new area.
  *
  * Pure function — content comes in through the optional lookup callbacks so
  * the lazily-fetched ChunkContentService stays out of this module.
@@ -16,7 +16,20 @@
 
 import { getChunkFrontier, chunkKey, chunkLabel, chunkSubArea, chunkRegion } from './chunkAdjacency';
 import { isNamedAreaReachableViaChunks } from './reachability';
-import { computeUnlockImpact } from './unlockImpact';
+import { computeUnlockImpact, prepareUnlockImpactContext, type PreparedUnlockImpactContext } from './unlockImpact';
+import { QUEST_DATA } from '../data/questData';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+
+/**
+ * Chunks a quest or diary location names. In Chunked mode those locations are
+ * exact-chunk requirements, so such a chunk can open content without giving a
+ * foothold in any new named area.
+ */
+const LOCATION_CHUNK_KEYS: ReadonlySet<string> = new Set(
+  [...Object.values(QUEST_DATA), ...ALL_DIARY_TASKS]
+    .flatMap(entry => [...(entry.locations ?? []), ...(entry.oneOf ?? []).flatMap(option => option.locations ?? [])])
+    .flatMap(location => location.chunkOptions.map(chunkKey)),
+);
 
 export interface FrontierContent {
   monsters: number;
@@ -67,19 +80,24 @@ export function rankFrontierChunks(
 ): RankedFrontierChunk[] {
   if (gameModeId !== 'chunked') return [];
   const chunks: string[] = unlocks.chunks ?? [];
+  // Every simulation starts from the same snapshot, so its statuses are shared.
+  let context: PreparedUnlockImpactContext | undefined;
 
   return getChunkFrontier(chunks, unlocks)
     .map((c): RankedFrontierChunk => {
       const key = chunkKey(c);
 
-      // First-foothold check is cheap (set lookups), so it gates the expensive
-      // impact simulation: a chunk that opens no new named area cannot change
-      // any quest/diary status (those are keyed by named areas).
+      // First-foothold and location checks are cheap (set lookups), so they
+      // gate the expensive impact simulation: a chunk that opens no new named
+      // area and that no quest/diary location names cannot change any
+      // quest/diary status.
       const newAreas = [chunkSubArea(key), chunkRegion(key)]
         .filter((n): n is string => !!n && !isNamedAreaReachableViaChunks(n, chunks));
 
-      const impact = newAreas.length > 0
-        ? computeUnlockImpact(unlocks, { ...unlocks, chunks: [...chunks, key] }, gameModeId)
+      const impact = newAreas.length > 0 || LOCATION_CHUNK_KEYS.has(key)
+        ? computeUnlockImpact(unlocks, { ...unlocks, chunks: [...chunks, key] }, gameModeId, {
+            context: context ??= prepareUnlockImpactContext(unlocks, gameModeId),
+          })
         : null;
 
       const raw = contentFor?.(c.cx, c.cy) ?? null;

@@ -3,6 +3,8 @@ import { rankFrontierChunks } from './frontierAdvisor';
 import { ALL_CHUNK_KEYS, chunkKey, parseChunkKey, CHUNKED_START_KEY, getChunkFrontier, chunkSubArea } from './chunkAdjacency';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { isNamedAreaReachableViaChunks } from './reachability';
+import { computeUnlockImpact } from './unlockImpact';
+import { QUEST_DATA } from '../data/questData';
 
 // Minimal unlocks shape — the impact engine reads quests/diaries/levels etc.
 // through the journal status helpers, which tolerate empty collections.
@@ -73,6 +75,26 @@ describe('rankFrontierChunks', () => {
     expect(hit).toBeDefined();
     expect(hit!.newAreas.length).toBeGreaterThan(0);
     expect(hit!.newAreas).toContain(chunkSubArea(target!));
+  });
+
+  it('simulates frontier chunks that quest and diary locations name exactly', () => {
+    // West Falador (46,52) is one of Black Knights' Fortress's exact-chunk
+    // locations, but 46,53 already holds Falador, so it is no new foothold.
+    const quests: string[] = [];
+    for (const quest of Object.values(QUEST_DATA)) {
+      if (quests.reduce((sum, id) => sum + QUEST_DATA[id].points, 0) >= 12) break;
+      if (quest.kind === 'quest' && quest.id !== "Black Knights' Fortress") quests.push(quest.id);
+    }
+    const unlocks = { ...baseUnlocks(['46,53', '47,54']), quests, equipment: { Head: 1, Body: 1 } };
+    const expected = computeUnlockImpact(unlocks, { ...unlocks, chunks: [...unlocks.chunks, '46,52'] }, 'chunked');
+    expect(expected.directQuestNames).toContain("Black Knights' Fortress");
+
+    const row = rankFrontierChunks(unlocks, 'chunked').find(r => r.key === '46,52');
+    expect(row?.newAreas).toEqual([]);
+    expect(row?.newQuestNames).toEqual(expected.directQuestNames);
+    expect(row?.score).toBe(expected.directScore);
+    expect(row?.sortScore).toBeGreaterThanOrEqual(expected.cascadeScore);
+    expect(row?.sortScore).toBeGreaterThan(0);
   });
 
   it('layers chunk content in as a ranking tie-breaker with capped weight', () => {
