@@ -98,6 +98,41 @@ describe('rankSkillBottlenecks', () => {
     }
   });
 
+  it('never offers a locked skill as trainable', () => {
+    // Mining at tier 0 needs a Skills unlock before it can be levelled.
+    const quests = Object.keys(QUEST_DATA).filter(id => id !== "The Knight's Sword");
+    const skills = (mining: number) => Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? mining : 10]));
+    const levels = Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? 1 : 99]));
+    const locked = rankSkillBottlenecks(regionsAndQuestsDone({ quests, levels, skills: skills(0) }));
+    const unlocked = rankSkillBottlenecks(regionsAndQuestsDone({ quests, levels, skills: skills(1) }));
+
+    expect(locked.find(candidate => candidate.id === 'Mining')).toBeUndefined();
+    expect(unlocked.find(candidate => candidate.id === 'Mining')).toMatchObject({ targetLevel: 10 });
+    expect(unlocked.find(candidate => candidate.id === 'Mining')!.newQuestNames).toContain("The Knight's Sword");
+  });
+
+  it('does not reach a combat gate through a locked combat skill', () => {
+    // Attack 13 → 14 lifts combat level to Morytania Easy's gate, but a
+    // locked Attack can't be levelled.
+    const ranked = (attackTier: number) => rankSkillBottlenecks(lowSkills({
+      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Attack' ? attackTier : 10])),
+      levels: {
+        ...Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
+        Attack: 13, Strength: 40, Defence: 1, Hitpoints: 10,
+        Prayer: 1, Ranged: 1, Magic: 1, Slayer: 98,
+      },
+      regions: ['Canifis'],
+      quests: Object.keys(QUEST_DATA),
+      diaries: Object.keys(DIARY_DATA).filter(diary => diary !== 'Morytania Easy'),
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== 'Morytania Easy' || task.id !== 'mor_easy_3')
+        .map(task => task.id),
+    })).find(candidate => candidate.id === 'Attack');
+
+    expect(ranked(2)?.targetLevel).toBe(14);
+    expect(ranked(0)).toBeUndefined();
+  });
+
   it('with all regions + skills maxed, nothing is skill-gated', () => {
     const maxed = lowSkills({
       levels: Object.fromEntries(SKILLS_LIST.map((s) => [s, 99])),
