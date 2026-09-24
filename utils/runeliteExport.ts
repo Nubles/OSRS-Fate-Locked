@@ -138,7 +138,7 @@ export async function buildBundlePayload(
 
 export async function exportRuneliteBundle(unlocks: UnlockState, run: RuneliteRunInput): Promise<void> {
   // Clipboard gets the compressed (gzip+base64 "FLGZ:") form so we don't dump
-  // ~115 KB onto the clipboard; the file download stays plain readable JSON.
+  // ~1.3 MB onto the clipboard; the file download stays plain readable JSON.
   const { json, compressed: clip } = await buildBundlePayload(unlocks, run);
   navigator.clipboard?.writeText(clip).catch(() => { /* non-secure origin / no focus */ });
   // …and a file download kept as PLAIN, readable JSON (openable/inspectable, and
