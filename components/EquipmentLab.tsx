@@ -1,17 +1,16 @@
-import React, { useState, useMemo } from 'react';
-import {
-  X, Sparkles, ChevronsUp, Crown, AlertCircle,
-  Swords, RotateCcw, Plus, Minus, SlidersHorizontal, Lock,
-} from 'lucide-react';
+import React, { Suspense, useState, useMemo } from 'react';
+import { lazyWithRetry } from '../utils/lazyRetry';
+import { X, ChevronsUp, AlertCircle, RotateCcw, Plus, Minus, SlidersHorizontal, Lock } from 'lucide-react';
+import { Sparkles, Crown, Swords } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, SLOT_CONFIG } from '../constants';
 import { NoteTrigger } from './NoteTrigger';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { TIER_LABELS } from '../utils/combatPower';
 import { EQUIP_TIER_COLORS, equipTierColor } from '../utils/equipTiers';
-import { GearView } from './GearView';
+const GearView = lazyWithRetry(() => import('./GearView').then(module => ({ default: module.GearView })));
 import { SectionGuide } from './SectionGuide';
-import { DpsCalc } from './DpsCalc';
+const DpsCalc = lazyWithRetry(() => import('./DpsCalc').then(module => ({ default: module.DpsCalc })));
 
 const slotImg = (slot: string) =>
   `https://oldschool.runescape.wiki/images/${SLOT_CONFIG[slot]?.file ?? 'Globe_icon.png'}`;
@@ -105,9 +104,10 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
         </div>
       </div>
 
-      {mode === 'gear' && <GearView suspendModals={suspendModals} />}
-
-      {mode === 'dps' && <DpsCalc suspendModals={suspendModals} />}
+      <Suspense fallback={<p role="status" className="p-4 text-sm text-gray-400">Loading equipment tools…</p>}>
+        {mode === 'gear' && <GearView suspendModals={suspendModals} />}
+        {mode === 'dps' && <DpsCalc suspendModals={suspendModals} />}
+      </Suspense>
 
       {mode === 'tiers' && (
       <>

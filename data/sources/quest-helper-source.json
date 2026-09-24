@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "repository": "Zoinkwiz/quest-helper",
+  "commit": "a52646118f0e5ea63a6b3331cefa98087a7b4d6c",
+  "sourceUrl": "https://github.com/Zoinkwiz/quest-helper/tree/a52646118f0e5ea63a6b3331cefa98087a7b4d6c",
+  "archiveUrl": "https://codeload.github.com/Zoinkwiz/quest-helper/zip/a52646118f0e5ea63a6b3331cefa98087a7b4d6c",
+  "archiveSha256": "9df2c49db8abf3cb8f85974d409ac796ea8cef1f1d59edf679ee91601e635be3",
+  "pluginHubMarker": "repository=https://github.com/Zoinkwiz/quest-helper.git\ncommit=a52646118f0e5ea63a6b3331cefa98087a7b4d6c",
+  "licence": "BSD-2-Clause",
+  "licenceSha256": "a0b6a3d34fd44d5bdad3fd6f238bb0603fac2de950a2a535dae204f89a075d8c",
+  "rawSha256": "2d27a6c7fdbd177dfe041c5107f224434ce7bf3064212deb8986379c2a639b90",
+  "rawBytes": 7368216,
+  "fileCount": 369,
+  "scope": "helpers/quests and helpers/miniquests, plus seven supporting source files; excludes other helper categories",
+  "status": "SOURCE_SNAPSHOT_ONLY"
+}

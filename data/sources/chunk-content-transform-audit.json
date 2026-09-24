@@ -20,9 +20,9 @@
     "chunks": {
       "source": 2234,
       "imported": 445,
-      "normalized": 1249,
-      "excluded": 387,
-      "unresolved": 153
+      "normalized": 1276,
+      "excluded": 364,
+      "unresolved": 149
     },
     "questSections": {
       "source": 1345,
@@ -126804,8 +126804,8 @@
       "category": "chunks",
       "sourceKey": "11081",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/11081"
       ]
@@ -135204,8 +135204,8 @@
       "category": "chunks",
       "sourceKey": "12690",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/12690"
       ]
@@ -145610,8 +145610,8 @@
       "category": "chunks",
       "sourceKey": "5278",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/5278"
       ]
@@ -149490,8 +149490,8 @@
       "category": "chunks",
       "sourceKey": "6303",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "interior-unmapped",
+      "disposition": "normalized",
+      "reason": "interior-preserved",
       "targetKeys": [
         "interiors/6303"
       ]
@@ -164064,9 +164064,11 @@
       "category": "chunks",
       "sourceKey": "Ardougne Rat Pits",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Ardougne Rat Pits"
+      ]
     },
     {
       "category": "chunks",
@@ -164092,9 +164094,11 @@
       "category": "chunks",
       "sourceKey": "Barbarian Assault#Basement",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Barbarian Assault#Basement"
+      ]
     },
     {
       "category": "chunks",
@@ -164172,17 +164176,21 @@
       "category": "chunks",
       "sourceKey": "Brimhaven Agility Arena",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Brimhaven Agility Arena"
+      ]
     },
     {
       "category": "chunks",
       "sourceKey": "Brimhaven Dungeon",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Brimhaven Dungeon"
+      ]
     },
     {
       "category": "chunks",
@@ -164304,9 +164312,11 @@
       "category": "chunks",
       "sourceKey": "Burthorpe Games Room",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Burthorpe Games Room"
+      ]
     },
     {
       "category": "chunks",
@@ -164474,9 +164484,11 @@
       "category": "chunks",
       "sourceKey": "Cosmic altar",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Cosmic altar"
+      ]
     },
     {
       "category": "chunks",
@@ -164512,9 +164524,11 @@
       "category": "chunks",
       "sourceKey": "Crandor and Karamja Dungeon#South",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Crandor and Karamja Dungeon#South"
+      ]
     },
     {
       "category": "chunks",
@@ -164578,9 +164592,11 @@
       "category": "chunks",
       "sourceKey": "Deep Wilderness Dungeon",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Deep Wilderness Dungeon"
+      ]
     },
     {
       "category": "chunks",
@@ -164664,9 +164680,11 @@
       "category": "chunks",
       "sourceKey": "Dorgesh-Kaan-Keldagrim Train Platforms",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Dorgesh-Kaan-Keldagrim Train Platforms"
+      ]
     },
     {
       "category": "chunks",
@@ -164682,9 +164700,11 @@
       "category": "chunks",
       "sourceKey": "Draynor Sewers",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Draynor Sewers"
+      ]
     },
     {
       "category": "chunks",
@@ -164820,9 +164840,11 @@
       "category": "chunks",
       "sourceKey": "Falador Mole Lair",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Falador Mole Lair"
+      ]
     },
     {
       "category": "chunks",
@@ -165202,9 +165224,11 @@
       "category": "chunks",
       "sourceKey": "Jatizso mine",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Jatizso mine"
+      ]
     },
     {
       "category": "chunks",
@@ -165238,9 +165262,11 @@
       "category": "chunks",
       "sourceKey": "Kalphite Cave",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Kalphite Cave"
+      ]
     },
     {
       "category": "chunks",
@@ -165254,9 +165280,11 @@
       "category": "chunks",
       "sourceKey": "Kalphite Queen's Lair",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Kalphite Queen's Lair"
+      ]
     },
     {
       "category": "chunks",
@@ -165354,9 +165382,11 @@
       "category": "chunks",
       "sourceKey": "Lava Maze Dungeon",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Lava Maze Dungeon"
+      ]
     },
     {
       "category": "chunks",
@@ -165586,9 +165616,11 @@
       "category": "chunks",
       "sourceKey": "Mos Le'Harmless Cave",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Mos Le'Harmless Cave"
+      ]
     },
     {
       "category": "chunks",
@@ -165682,9 +165714,11 @@
       "category": "chunks",
       "sourceKey": "Nature altar",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Nature altar"
+      ]
     },
     {
       "category": "chunks",
@@ -165846,9 +165880,11 @@
       "category": "chunks",
       "sourceKey": "Puro-Puro",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Puro-Puro"
+      ]
     },
     {
       "category": "chunks",
@@ -165898,9 +165934,11 @@
       "category": "chunks",
       "sourceKey": "Revenant Caves",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Revenant Caves"
+      ]
     },
     {
       "category": "chunks",
@@ -166104,9 +166142,11 @@
       "category": "chunks",
       "sourceKey": "Smoke Devil Dungeon",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Smoke Devil Dungeon"
+      ]
     },
     {
       "category": "chunks",
@@ -166456,9 +166496,11 @@
       "category": "chunks",
       "sourceKey": "Varrock Museum#Natural History Exhibit",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Varrock Museum#Natural History Exhibit"
+      ]
     },
     {
       "category": "chunks",
@@ -166584,9 +166626,11 @@
       "category": "chunks",
       "sourceKey": "Werewolf Agility Dungeon",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Werewolf Agility Dungeon"
+      ]
     },
     {
       "category": "chunks",
@@ -166742,9 +166786,11 @@
       "category": "chunks",
       "sourceKey": "Wyvern Cave",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "interior-preserved",
+      "targetKeys": [
+        "interiors/Wyvern Cave"
+      ]
     },
     {
       "category": "chunks",
@@ -175749,6 +175795,1194 @@
       ]
     },
     {
+      "category": "interiorMetadata",
+      "sourceKey": "Abandoned Mine",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Abandoned Mine"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Abyss",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Abyss"
+      ],
+      "detail": "0 diary references and 2 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Abyssal Nexus",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Abyssal Nexus"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Air altar",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Air altar"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Ancient Cavern",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Ancient Cavern"
+      ],
+      "detail": "0 diary references and 2 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Ardougne Rat Pits",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Ardougne Rat Pits"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Asgarnian Ice Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Asgarnian Ice Dungeon"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Barbarian Assault#Basement",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Barbarian Assault#Basement"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Barrows Crypts",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Barrows Crypts"
+      ],
+      "detail": "1 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Blast Furnace",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Blast Furnace"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Braindeath Island",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Braindeath Island"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Brimhaven Agility Arena",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Brimhaven Agility Arena"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Brimhaven Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Brimhaven Dungeon"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Brimhaven Dungeon#Section 1",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Brimhaven Dungeon#Section 1"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Brimhaven Dungeon#Section 2",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Brimhaven Dungeon#Section 2"
+      ],
+      "detail": "2 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Brimhaven Dungeon#Section 3",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Brimhaven Dungeon#Section 3"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Brimhaven Dungeon#Section 4",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Brimhaven Dungeon#Section 4"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Brimstail's cave",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Brimstail's cave"
+      ],
+      "detail": "2 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Brine Rat Cavern",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Brine Rat Cavern"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Burthorpe Games Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Burthorpe Games Room"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Cam Torum",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Cam Torum"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Catacombs of Kourend",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Catacombs of Kourend"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Cerberus' Lair",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Cerberus' Lair"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Chaos altar",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Chaos altar"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Cosmic altar",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Cosmic altar"
+      ],
+      "detail": "1 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Cosmic entity's plane",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Cosmic entity's plane"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Crandor and Karamja Dungeon#North",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Crandor and Karamja Dungeon#North"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Crandor and Karamja Dungeon#South",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Crandor and Karamja Dungeon#South"
+      ],
+      "detail": "1 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Death altar",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Death altar"
+      ],
+      "detail": "1 diary references and 2 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Deep Wilderness Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Deep Wilderness Dungeon"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Dondakan's mine",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Dondakan's mine"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Dorgesh-Kaan",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Dorgesh-Kaan"
+      ],
+      "detail": "1 diary references and 3 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Dorgesh-Kaan South Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Dorgesh-Kaan South Dungeon"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Dorgesh-Kaan-Keldagrim Train Platforms",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Dorgesh-Kaan-Keldagrim Train Platforms"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Draynor Sewers",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Draynor Sewers"
+      ],
+      "detail": "2 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Dwarven Mine",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Dwarven Mine"
+      ],
+      "detail": "1 diary references and 3 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Earth altar",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Earth altar"
+      ],
+      "detail": "2 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Edgeville Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Edgeville Dungeon"
+      ],
+      "detail": "2 diary references and 2 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Edgeville Dungeon#Wilderness",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Edgeville Dungeon#Wilderness"
+      ],
+      "detail": "3 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Elemental Workshop",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Elemental Workshop"
+      ],
+      "detail": "2 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Enchanted Valley",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Enchanted Valley"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Falador Mole Lair",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Falador Mole Lair"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Fight Caves",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Fight Caves"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Fire altar",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Fire altar"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Fisher Realm",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Fisher Realm"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Forthos Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Forthos Dungeon"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Fortis Colosseum Underground",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Fortis Colosseum Underground"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Genie's Cave",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Genie's Cave"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "God Wars Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "God Wars Dungeon"
+      ],
+      "detail": "2 diary references and 2 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Grand Tree Tunnels",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Grand Tree Tunnels"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Heroes' Guild#Basement",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Heroes' Guild#Basement"
+      ],
+      "detail": "1 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Jaldraocht Pyramid",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Jaldraocht Pyramid"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Jatizso mine",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Jatizso mine"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Kalphite Cave",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Kalphite Cave"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Kalphite Queen's Lair",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Kalphite Queen's Lair"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Karuulm Slayer Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Karuulm Slayer Dungeon"
+      ],
+      "detail": "2 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Keldagrim",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Keldagrim"
+      ],
+      "detail": "3 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "King Black Dragon's Lair",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "King Black Dragon's Lair"
+      ],
+      "detail": "0 diary references and 2 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Lava Maze Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Lava Maze Dungeon"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Lizardman Temple",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Lizardman Temple"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Lumbridge Castle#Cellar",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Lumbridge Castle#Cellar"
+      ],
+      "detail": "2 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Lumbridge Swamp Caves",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Lumbridge Swamp Caves"
+      ],
+      "detail": "2 diary references and 2 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Mind altar",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Mind altar"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Mining Guild",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Mining Guild"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Miscellania and Etceteria Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Miscellania and Etceteria Dungeon"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Mor Ul Rek#Outer Area",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Mor Ul Rek#Outer Area"
+      ],
+      "detail": "3 diary references and 3 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Mos Le'Harmless Cave",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Mos Le'Harmless Cave"
+      ],
+      "detail": "1 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Motherlode Mine",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Motherlode Mine"
+      ],
+      "detail": "1 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Mourner Tunnels & Temple of Light",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Mourner Tunnels & Temple of Light"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Nature altar",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Nature altar"
+      ],
+      "detail": "2 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Nature Grotto Cave",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Nature Grotto Cave"
+      ],
+      "detail": "2 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Penguin Base",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Penguin Base"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Pothole Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Pothole Dungeon"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Puro-Puro",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Puro-Puro"
+      ],
+      "detail": "1 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Pyramid Plunder",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Pyramid Plunder"
+      ],
+      "detail": "0 diary references and 2 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Revenant Caves",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Revenant Caves"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Rogues' Den",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Rogues' Den"
+      ],
+      "detail": "1 diary references and 2 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Scorpia's Lair",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Scorpia's Lair"
+      ],
+      "detail": "0 diary references and 2 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Shadow Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Shadow Dungeon"
+      ],
+      "detail": "1 diary references and 2 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Shayzien Crypts",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Shayzien Crypts"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Sisterhood Sanctuary",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Sisterhood Sanctuary"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Skavid caves",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Skavid caves"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Skotizo's Lair",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Skotizo's Lair"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Smoke Devil Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Smoke Devil Dungeon"
+      ],
+      "detail": "1 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Smoke Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Smoke Dungeon"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Stronghold of Security",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Stronghold of Security"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Tarn's Lair",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Tarn's Lair"
+      ],
+      "detail": "1 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Taverley Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Taverley Dungeon"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "The Warrens",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "The Warrens"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Tower of Life#Basement",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Tower of Life#Basement"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Underground Pass",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Underground Pass"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Varrock Museum#Natural History Exhibit",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Varrock Museum#Natural History Exhibit"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Varrock Sewers",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Varrock Sewers"
+      ],
+      "detail": "1 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Varrock West Bank#Basement",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Varrock West Bank#Basement"
+      ],
+      "detail": "0 diary references and 2 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Viyeldi caves",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Viyeldi caves"
+      ],
+      "detail": "1 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Water altar",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Water altar"
+      ],
+      "detail": "2 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Waterbirth Island Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Waterbirth Island Dungeon"
+      ],
+      "detail": "1 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Waterfall Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Waterfall Dungeon"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Werewolf Agility Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Werewolf Agility Dungeon"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "White Wolf Tunnel",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "White Wolf Tunnel"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Wilderness God Wars Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Wilderness God Wars Dungeon"
+      ],
+      "detail": "3 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Wizards' Tower#Basement",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Wizards' Tower#Basement"
+      ],
+      "detail": "1 diary references and 2 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Wyvern Cave",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Wyvern Cave"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Yanille Agility Dungeon#Section 4",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Yanille Agility Dungeon#Section 4"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Yanille Agility Dungeon#Section 6",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Yanille Agility Dungeon#Section 6"
+      ],
+      "detail": "1 diary references and 0 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Yanille Agility Dungeon#Section 7",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Yanille Agility Dungeon#Section 7"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Yu'biusk",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Yu'biusk"
+      ],
+      "detail": "0 diary references and 1 clue steps conserved across physical peers and named supplements"
+    },
+    {
+      "category": "interiorMetadata",
+      "sourceKey": "Zanaris",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "interior-metadata-conserved",
+      "targetKeys": [
+        "Zanaris"
+      ],
+      "detail": "1 diary references and 3 clue steps conserved across physical peers and named supplements"
+    },
+    {
       "category": "lite",
       "sourceKey": "10031/mon",
       "terminal": false,
@@ -177250,19 +178484,35 @@
     },
     {
       "category": "lite",
+      "sourceKey": "5688/mon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "lite-cap",
+      "targetKeys": [
+        "Abyssal demon",
+        "Deviant spectre",
+        "Dust devil",
+        "Greater Nechryael",
+        "Hill Giant",
+        "Warped Jelly"
+      ],
+      "detail": "34 source values capped at 6"
+    },
+    {
+      "category": "lite",
       "sourceKey": "5689/mon",
       "terminal": false,
       "disposition": "normalized",
       "reason": "lite-cap",
       "targetKeys": [
-        "Ankou",
+        "Abyssal demon",
         "Black demon",
-        "Deviant spectre",
+        "Dust devil",
+        "Greater Nechryael",
         "Greater demon",
-        "King Sand Crab",
-        "Shade"
+        "Warped Jelly"
       ],
-      "detail": "28 source values capped at 6"
+      "detail": "41 source values capped at 6"
     },
     {
       "category": "lite",
@@ -177351,14 +178601,14 @@
       "disposition": "normalized",
       "reason": "lite-cap",
       "targetKeys": [
-        "Cyclops (Catacombs of Kourend)",
-        "Dwarf",
-        "Fire giant",
-        "Hellhound",
-        "King Sand Crab",
-        "Spider"
+        "Abyssal demon",
+        "Deviant spectre",
+        "Dust devil",
+        "Greater Nechryael",
+        "Spider",
+        "Warped Jelly"
       ],
-      "detail": "17 source values capped at 6"
+      "detail": "36 source values capped at 6"
     },
     {
       "category": "lite",
@@ -177384,13 +178634,13 @@
       "reason": "lite-cap",
       "targetKeys": [
         "Abyssal demon",
-        "Ghost",
+        "Deviant spectre",
+        "Dust devil",
         "Greater Nechryael",
-        "Greater demon",
         "Guard (Shayzien)",
-        "King Sand Crab"
+        "Warped Jelly"
       ],
-      "detail": "19 source values capped at 6"
+      "detail": "37 source values capped at 6"
     },
     {
       "category": "lite",
@@ -177433,14 +178683,14 @@
       "disposition": "normalized",
       "reason": "lite-cap",
       "targetKeys": [
-        "Dagannoth",
+        "Abyssal demon",
         "Dust devil",
-        "Skeleton (Forthos Ruin)",
+        "Greater Nechryael",
         "Temple Spider",
         "Undead Druid",
         "Warped Jelly"
       ],
-      "detail": "15 source values capped at 6"
+      "detail": "41 source values capped at 6"
     },
     {
       "category": "lite",
@@ -177482,13 +178732,13 @@
       "reason": "lite-cap",
       "targetKeys": [
         "Abyssal demon",
-        "Ghost",
+        "Deviant spectre",
+        "Dust devil",
+        "Fire giant",
         "Greater Nechryael",
-        "Greater demon",
-        "King Sand Crab",
-        "Lesser demon"
+        "Warped Jelly"
       ],
-      "detail": "17 source values capped at 6"
+      "detail": "34 source values capped at 6"
     },
     {
       "category": "lite",
@@ -177789,6 +179039,149 @@
       "targetKeys": [
         "Shooting Stars"
       ]
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "npc/Chase",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12086"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Chase?oldid=15350971"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "quest/Mourning's End Part I",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "8753"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Eluned?oldid=15319636"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "quest/Ratcatchers",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12597"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Ratcatchers?oldid=15351359"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "quest/RFD: Dwarf",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Freeing_the_Mountain_Dwarf?oldid=15323345"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "quest/RFD: Evil Dave",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Freeing_Evil_Dave?oldid=15294908"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "quest/RFD: Goblins",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Freeing_the_Goblin_generals?oldid=15292337"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "quest/RFD: King Awowogei",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Freeing_King_Awowogei?oldid=15331685"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "quest/RFD: Lumbridge Guide",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Freeing_the_Lumbridge_Guide?oldid=15297799"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "quest/RFD: Pirate Pete",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Freeing_Pirate_Pete?oldid=15292338"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "quest/RFD: Sir Amik Varze",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Freeing_Sir_Amik_Varze?oldid=15320990"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "quest/RFD: Skrach Uglogwee",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Freeing_Skrach_Uglogwee?oldid=15292343"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "quest/RFD: The Cook",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Another_Cook%27s_Quest?oldid=15302151"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "quest/Roving Elves",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "8753"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Roving_Elves?oldid=15315441"
     },
     {
       "category": "questSections",

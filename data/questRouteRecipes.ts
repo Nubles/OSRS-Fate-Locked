@@ -1,6 +1,7 @@
 import {
   canonicalItemKey,
   chunkKey,
+  validateEquipmentGate,
   type ChunkKey,
   type Coverage,
   type ItemRef,
@@ -93,6 +94,9 @@ const validateGate = (gate: RouteGate): void => {
     case 'SKILL':
       assertNonBlank(gate.skill, 'skill');
       assertPositive(gate.level, 'skill level');
+      return;
+    case 'EQUIPMENT':
+      validateEquipmentGate(gate);
       return;
     case 'UNLOCK':
       assertNonBlank(gate.id, 'unlock id');
@@ -216,7 +220,7 @@ export const routeRecipes: readonly RouteRecipe[] = validateRouteRecipes([
     ingredients: [{ item: item('Wool'), quantity: 1 }],
     tools: [],
     stations: [{ entityKind: 'object', names: ['Spinning wheel'] }],
-    gates: [],
+    gates: [{ type: 'SKILL', skill: 'Crafting', level: 1, label: 'Crafting level 1' }],
     deterministic: true,
     sourceRevision: '15271780',
   },

@@ -1,5 +1,8 @@
+import { createPortal } from 'react-dom';
+import { canonicalTierFromName } from '../utils/gearTiers';
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Search, Trash2, Lock, Loader2, AlertCircle, RefreshCw, Shirt } from 'lucide-react';
+import { X, Search, Trash2, Lock, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Shirt } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { EQUIPMENT_SLOTS, SLOT_CONFIG } from '../constants';
 import { useEscapeKey } from '../hooks/useEscapeKey';
@@ -8,7 +11,7 @@ import { chunkContentService } from '../services/ChunkContentService';
 import { GearItem, sumBonuses, BONUS_GROUPS, GearBonuses } from '../utils/gearStats';
 import { equipTierColor } from '../utils/equipTiers';
 import { itemObtainability } from '../utils/itemObtainability';
-import { MapPin } from 'lucide-react';
+import { MapPin } from './OsrsIcon';
 import { WikiLink } from './WikiLink';
 import { UnlockState } from '../types';
 
@@ -102,7 +105,7 @@ export const GearView: React.FC<GearViewProps> = ({ suspendModals = false }) => 
                   />
                   {item && (
                     <div className={`absolute -bottom-3 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold border shadow-md ${equipTierColor(gearService.tierOf(item.id))} text-black/80 border-black/20`}>
-                      T{gearService.tierOf(item.id)}
+                      {canonicalTierFromName(item.name) == null ? 'Est. ' : ''}T{gearService.tierOf(item.id)}
                     </div>
                   )}
                 </button>
@@ -139,7 +142,7 @@ export const GearView: React.FC<GearViewProps> = ({ suspendModals = false }) => 
           ))}
         </div>
         <p className="text-[9px] text-gray-600 mt-3 flex items-center gap-1">
-          <AlertCircle size={10} /> Items are gated by each slot's unlocked tier. Tiers are estimated from item power.
+          <AlertCircle size={10} /> Items use Fate's equipment tiers. Est. marks a stat-based estimate that has not been reviewed.
         </p>
       </div>
 
@@ -202,7 +205,8 @@ const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlock
   }, [all, query, unlockedTier]);
   const shown = filtered.slice(0, MAX_ROWS);
 
-  return (
+  // Escape dashboard animation/overflow ancestors so the dialog fits the viewport.
+  return createPortal(
     <div
       className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-150"
       onClick={onClose}
@@ -238,6 +242,8 @@ const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlock
           </div>
         </div>
 
+        <p className="px-3 py-1.5 text-[10px] text-gray-500 border-b border-white/5">Est. = a stat-based tier awaiting review.</p>
+
         {/* Body */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           {status === 'loading' && (
@@ -260,6 +266,8 @@ const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlock
               )}
               {shown.map((item) => {
                 const tier = gearService.tierOf(item.id);
+                const estimated = canonicalTierFromName(item.name) == null;
+                const tierLabel = `${estimated ? 'Est. ' : ''}T${tier}`;
                 const locked = tier > unlockedTier;
                 const isCurrent = item.id === currentItemId;
                 const obt = contentReady ? itemObtainability(item.name, unlocks) : 'unknown';
@@ -290,7 +298,7 @@ const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlock
                       <div className="text-[9px] text-gray-500 truncate">{topBonus(item.bonuses)}{item.twoHanded ? ' · 2H' : ''}</div>
                     </div>
                     <span className={`shrink-0 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${locked ? 'bg-[#1a1a1a] text-gray-500 border border-white/5' : `${equipTierColor(tier)} text-black/80`}`}>
-                      {locked ? <span className="flex items-center gap-0.5"><Lock size={8} /> T{tier}</span> : `T${tier}`}
+                      {locked ? <span className="flex items-center gap-0.5"><Lock size={8} /> {tierLabel}</span> : tierLabel}
                     </span>
                   </button>
                 );
@@ -302,6 +310,7 @@ const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlock
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

@@ -97,7 +97,7 @@ export const verifyChain = (history: LogEntry[]): ChainReport => {
 
 export interface InvariantViolation {
   index: number;
-  kind: 'KEYS_NEGATIVE' | 'SPECIAL_NEGATIVE' | 'CHAOS_NEGATIVE' | 'FATE_NEGATIVE' | 'FATE_OVERFLOW' | 'ROLL_OUT_OF_RANGE';
+  kind: 'KEYS_NEGATIVE' | 'SPECIAL_NEGATIVE' | 'CHAOS_NEGATIVE' | 'FATE_NEGATIVE' | 'FATE_OVERFLOW' | 'ROLL_OUT_OF_RANGE' | 'LEGACY_RITUAL_ESTIMATE';
   message: string;
 }
 
@@ -114,7 +114,7 @@ export interface ReplayState {
 }
 
 // Given the history alone, re-derive the running state and flag anything
-// physically impossible (negative keys, fate over cap, roll outside 0.1-100.0).
+// physically impossible (negative keys, fate over cap, roll outside 0.01-100.0).
 // Doesn't prove the *roll values* are honest — a determined editor can
 // rewrite consistently — but catches naive tampering and any inconsistency
 // introduced by hand-editing isolated fields.
@@ -159,21 +159,22 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
     pities: 0,
   };
   const violations: InvariantViolation[] = [];
+  let fateEstimate = false;
   const check = (idx: number) => {
     if (s.keys < 0) violations.push({ index: idx, kind: 'KEYS_NEGATIVE', message: `keys went negative (${s.keys})` });
     if (s.specialKeys < 0) violations.push({ index: idx, kind: 'SPECIAL_NEGATIVE', message: `specialKeys went negative` });
     if (s.chaosKeys < 0) violations.push({ index: idx, kind: 'CHAOS_NEGATIVE', message: `chaosKeys went negative` });
-    if (s.fatePoints < 0) violations.push({ index: idx, kind: 'FATE_NEGATIVE', message: `fatePoints went negative` });
-    if (s.fatePoints > fateCap) violations.push({ index: idx, kind: 'FATE_OVERFLOW', message: `fatePoints above cap (${s.fatePoints})` });
+    if (!fateEstimate && s.fatePoints < 0) violations.push({ index: idx, kind: 'FATE_NEGATIVE', message: `fatePoints went negative` });
+    if (!fateEstimate && s.fatePoints > fateCap) violations.push({ index: idx, kind: 'FATE_OVERFLOW', message: `fatePoints above cap (${s.fatePoints})` });
   };
 
   for (let i = 0; i < history.length; i++) {
     const e = history[i];
-    if (e.rollValue !== undefined && (e.rollValue < 0.1 || e.rollValue > 100)) {
+    if (e.rollValue !== undefined && (!Number.isFinite(e.rollValue) || e.rollValue < 0.01 || e.rollValue > 100)) {
       violations.push({
         index: i,
         kind: 'ROLL_OUT_OF_RANGE',
-        message: `roll ${e.rollValue} out of 0.1-100.0`,
+        message: `roll ${e.rollValue} out of 0.01-100.0`,
       });
     }
     switch (e.type) {
@@ -182,12 +183,14 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
         s.specialKeys += 1;
         s.keys += 1;
         s.fatePoints = 0;
+        fateEstimate = false;
         s.rolls += 1; s.successes += 1; s.omnis += 1;
         break;
       case 'ROLL_SUCCESS':
         s.chaosKeys += detectedSkillChaosAward(e);
         s.keys += (e.details && /\(Doubled\)/.test(e.message) ? 2 : 1);
         s.fatePoints = 0;
+        fateEstimate = false;
         s.rolls += 1; s.successes += 1;
         break;
       case 'PITY':
@@ -209,12 +212,38 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
         s.unlocks += 1;
         break;
       }
-      case 'ALTAR':
-        if (/Clarity/.test(e.message)) s.fatePoints -= 15;
-        else if (/Greed/.test(e.message)) s.fatePoints -= 30;
-        else if (/Chaos/.test(e.message)) { s.fatePoints -= 25; s.chaosKeys += 1; }
-        else if (/Transmut/.test(e.message)) { s.keys -= 5; s.specialKeys += 1; }
+      case 'ALTAR': {
+        const amount = (key: string, fallback: number | (() => number)): number => {
+          const value = e.meta?.[key];
+          return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
+            ? value : typeof fallback === 'function' ? fallback() : fallback;
+        };
+        // Old entries omitted the paid cost and custom multiplier. Do not rewrite
+        // their hashes or certify an estimate as an exact balance. The historical
+        // base prices changed in 46b0792 (2026-07-04); a stale client may differ.
+        const legacyCost = (before: number, after: number): number => {
+          if (typeof e.meta?.fateCost === 'number' && Number.isSafeInteger(e.meta.fateCost) && e.meta.fateCost >= 0) return e.meta.fateCost;
+          fateEstimate = true;
+          violations.push({ index: i, kind: 'LEGACY_RITUAL_ESTIMATE', message: 'Historical ritual did not record its paid cost; Fate balance is estimated until the next reset.' });
+          return e.timestamp < Date.parse('2026-07-04T13:34:16Z') ? before : after;
+        };
+        const ritual = e.meta?.ritual;
+        if (ritual === 'LUCK' || /Clarity/.test(e.message)) s.fatePoints -= legacyCost(15, 8);
+        else if (ritual === 'GREED' || /Greed/.test(e.message)) s.fatePoints -= legacyCost(30, 15);
+        else if (ritual === 'CHAOS' || /Chaos/.test(e.message)) {
+          s.fatePoints -= legacyCost(25, 25); s.chaosKeys += amount('chaosKeysAwarded', 1);
+        } else if (ritual === 'TRANSMUTE' || /Transmut/.test(e.message)) {
+          s.keys -= amount('keyCost', 5); s.specialKeys += amount('specialKeysAwarded', 1);
+        } else if (ritual === 'GAMBIT' || /Void Gambit/.test(e.message)) {
+          s.fatePoints = 0;
+          fateEstimate = false;
+          s.keys += amount('keysAwarded', Number(e.message.match(/WON.*?([0-9]+) Key/)?.[1] ?? 0));
+        } else if (ritual === 'CARTOGRAPHER' || /Cartographer/.test(e.message)) {
+          s.fatePoints -= amount('fateCost', () => Number(e.details?.match(/for ([0-9]+) Fate/)?.[1] ?? legacyCost(40, 40)));
+          s.unlocks += 1;
+        }
         break;
+      }
       case 'LEVEL_UP': {
         const chaosAwarded = e.meta?.chaosKeysAwarded;
         if (typeof chaosAwarded === 'number'
@@ -318,6 +347,8 @@ export interface VerifiedBundle {
   history: LogEntry[];
   finalState: ReplayState;
   chainReport: ChainReport;
+  /** Missing historical costs and other replay limitations must travel with the export. */
+  replayWarnings?: InvariantViolation[];
   commitmentHash: string;
 }
 
@@ -327,7 +358,7 @@ export const buildVerifiedBundle = async (
 ): Promise<VerifiedBundle> => {
   const chained = ensureChain(history);
   const chainReport = verifyChain(chained);
-  const { final } = replayInvariants(chained);
+  const { final, violations } = replayInvariants(chained);
   const runId = computeRunId(chained) ?? 'run-empty';
   // The mode is part of what's committed to — a run isn't fully verified
   // without the ruleset it was played under.
@@ -340,6 +371,7 @@ export const buildVerifiedBundle = async (
     history: chained,
     finalState: final,
     chainReport,
+    ...(violations.length ? { replayWarnings: violations } : {}),
     commitmentHash,
   };
 };

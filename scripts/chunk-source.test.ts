@@ -223,8 +223,8 @@ describe('pinned Chunk Picker source', () => {
       dropTables: 800,
       questSections: 134,
       banks: 127,
-      tags: 27,
-      auditEvents: 27532,
+      tags: 29,
+      auditEvents: 27654,
       unresolvedTaskUnlocks: 0,
     });
     expect(taskUnlockTotals.source).toBe(1959);

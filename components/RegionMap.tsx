@@ -3,8 +3,9 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom';
 import { useGame } from '../context/GameContext';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
-import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintbrush, Eye, EyeOff, ClipboardCopy, Trash2, FileDown, FileUp, Radio, Undo2, Redo2, Search, X, Target, ChevronLeft, ChevronRight, ChevronDown, Layers } from 'lucide-react';
+import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintbrush, Eye, EyeOff, ClipboardCopy, Trash2, FileDown, FileUp, Radio, Undo2, Redo2, Search, X, ChevronLeft, ChevronRight, ChevronDown, Layers, Target } from 'lucide-react';
 import { ChunkActivityPanel } from './ChunkActivityPanel';
+import { WikiIcon } from './WikiIcon';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { exportRuneliteBundle } from '../utils/runeliteExport';
@@ -15,7 +16,7 @@ import { chunkContentService, type OverlayPoint } from '../services/ChunkContent
 import { chunkReachability } from '../utils/chunkReach';
 import { entryBlockedGate } from '../utils/questDoability';
 import { QUEST_DATA } from '../data/questData';
-import { isChunkUnlocked, isFrontierChunk } from '../utils/chunkAdjacency';
+import { CHUNKED_START, isChunkUnlocked, isFrontierChunk } from '../utils/chunkAdjacency';
 import { rankFrontierChunks } from '../utils/frontierAdvisor';
 import { hasMixedAreaOwnership, isNamedAreaReachableViaChunks, isRegionUnlocked } from '../utils/reachability';
 import { displayAreaName, visibleAreaUnlocks } from '../data/areaMapPolicy';
@@ -596,7 +597,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     // Reachability mode: paint your OWNED chunks by whether they connect to home.
     if (lens.kind === 'reach') {
       const gate = entryBlockedGate(chunkContentService.questSections(), new Set(unlocks.quests as string[]), new Set(Object.keys(QUEST_DATA)));
-      const res = chunkReachability(chunkContentService.connectGraph(), unlocks, chunkForPlace('Lumbridge'), gate);
+      const res = chunkReachability(chunkContentService.connectGraph(), unlocks, isChunked ? CHUNKED_START : chunkForPlace('Lumbridge'), gate, isChunked ? 'chunked' : undefined);
       const chunks: { cx: number; cy: number; tone: LensTone }[] = [];
       for (const id of res.reachable) { const n = +id; chunks.push({ cx: Math.floor(n / 256), cy: n % 256, tone: 'good' }); }
       for (const id of res.stranded) { const n = +id; chunks.push({ cx: Math.floor(n / 256), cy: n % 256, tone: 'bad' }); }
@@ -1426,7 +1427,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
                     className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border transition-colors ${liveStarsOn ? 'border-amber-400/50 bg-amber-500/15 text-amber-200' : 'border-white/10 text-gray-400 hover:bg-white/5'}`}
                     title="Show live active shooting stars from the crowdsourced feed"
                   >
-                    <span style={{ color: '#facc15' }}>★</span> Live stars
+                    <WikiIcon file="Stardust_175.png" alt="" Fallback={Target} size={14} /> Live stars
                   </button>
                   {liveStarsOn && (
                     <input
@@ -1463,7 +1464,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
         >
           {hoverMarker.star ? (
             <div className="text-[10px] text-gray-300 leading-snug">
-              <div className="text-[11px] font-semibold text-amber-300 flex items-center gap-1">★ {hoverMarker.star.site}</div>
+              <div className="text-[11px] font-semibold text-amber-300 flex items-center gap-1"><WikiIcon file="Stardust_175.png" alt="" Fallback={Target} size={14} /> {hoverMarker.star.site}</div>
               <div>Size <span className="text-gray-100 font-mono">T{hoverMarker.star.tier}</span> · {hoverMarker.star.worlds} world{hoverMarker.star.worlds === 1 ? '' : 's'}</div>
               <div className="text-gray-400">{hoverMarker.star.landIn > 0 ? `lands in ~${hoverMarker.star.landIn} min` : 'landing now / active'}</div>
               <div className="mt-1 pt-1 border-t border-white/10 text-gray-500 uppercase tracking-wide text-[8px]">Worlds</div>

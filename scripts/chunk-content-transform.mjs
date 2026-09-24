@@ -1,10 +1,11 @@
 import { buildEntranceIndex, indexNamedTaskUnlockRegistry } from './named-task-unlock-locations.mjs';
 import { readFileSync } from 'node:fs';
-import { buildInteriorContent } from './chunk-interiors.mjs';
+import { buildInteriorContent, assertInteriorMetadataConservation } from './chunk-interiors.mjs';
 const shopOverrides = JSON.parse(readFileSync(new URL('../data/sources/shop-overrides.json', import.meta.url), 'utf8'));
 const contentAliases = JSON.parse(readFileSync(new URL('../data/contentAliases.json', import.meta.url), 'utf8'));
+const contentOverrides = JSON.parse(readFileSync(new URL('../data/sources/chunk-content-overrides.json', import.meta.url), 'utf8'));
 const REASONS = new Set([
-  'interior-preserved', 'interior-unmapped',
+  'interior-preserved', 'interior-unmapped', 'reviewed-content-override', 'interior-metadata-conserved',
   'base-record', 'section-merged', 'variant-name-cleaned', 'quest-subpath-collapsed',
   'subarea-suffix-collapsed', 'named-location-unmappable', 'non-walkable-content',
   'empty-walkable-chunk', 'broad-quest-gate-suppressed', 'lite-cap',
@@ -87,7 +88,7 @@ function mergeBlob(rec, blob, slayerReq, audit, sourceKey, isSection) {
     else if (!prior) rec.quests.set(base, 'step');
     else audit.add('chunks', sourceKey, 'normalized', 'duplicate-deduped', [base], false);
   }
-  if (blob.Diary) for (const [area, refs] of Object.entries(blob.Diary)) { if (rec.diaries.has(area)) audit.add('chunks', sourceKey, 'normalized', 'duplicate-deduped', [area], false); rec.diaries.set(area, rec.diaries.has(area) ? `${rec.diaries.get(area)}, ${refs}` : String(refs)); }
+  if (blob.Diary) for (const [area, refs] of Object.entries(blob.Diary)) { if (rec.diaries.has(area)) audit.add('chunks', sourceKey, 'normalized', 'duplicate-deduped', [area], false); rec.diaries.set(area, [...new Set([rec.diaries.get(area) ?? '', String(refs)].flatMap(value => value.split(',').map(ref => ref.trim()).filter(Boolean)))].join(', ')); }
   if (blob.Clue) for (const [tier, count] of Object.entries(blob.Clue)) { if (rec.clues.has(tier)) audit.add('chunks', sourceKey, 'normalized', 'duplicate-deduped', [tier], false); rec.clues.set(tier, (rec.clues.get(tier) ?? 0) + count); }
   if (blob.Spawn) for (const raw of Object.keys(blob.Spawn)) { const name = cleanName(raw); noteClean(audit, 'chunks', sourceKey, raw, name); if (rec.spawns.has(name)) audit.add('chunks', sourceKey, 'normalized', 'duplicate-deduped', [name], false); rec.spawns.add(name); }
   if (isSection) audit.add('chunks', sourceKey, 'normalized', 'section-merged', [sourceKey], false);
@@ -307,7 +308,65 @@ function buildBanks(data, audit, bankLocationRegistry) {
   for (const location of bankLocationRegistry?.locations ?? []) banks.add(String(location.id));
   return { banks: [...banks].sort(numericSort), upstreamCount: upstream.size };
 }
-function buildTags(data, chunkRecs, shopItems, drops) { const add = (map, name, id) => { const set = map.get(name) ?? new Set(); set.add(id); map.set(name, set); }; const Monsters = new Map(), NPCs = new Map(), Objects = new Map(), items = new Map(); for (const [id, entry] of Object.entries(chunkRecs)) { for (const monster of entry.m ?? []) { add(Monsters, monster[0], id); for (const item of drops[monster[0]] ?? []) add(items, item, id); } for (const name of entry.p ?? []) add(NPCs, name, id); for (const object of entry.o ?? []) add(Objects, object[0], id); for (const shop of entry.s ?? []) for (const item of shopItems[shop] ?? []) add(items, item, id); } const maps = { Items: items, Monsters, NPCs, Objects }, out = {}; for (const [key, names] of Object.entries(data.searchTerms ?? {})) { const [tag, type] = key.split('|'), map = maps[type]; if (!tag || !map) continue; const set = out[tag] ?? new Set(); for (const raw of Object.keys(names)) for (const id of map.get(cleanName(raw)) ?? []) set.add(id); if (set.size) out[tag] = set; } return Object.fromEntries(Object.entries(out).map(([tag, set]) => [tag, [...set].sort(numericSort)])); }
+function buildTags(data, chunkRecs, interiors, shopItems, drops) {
+  const maps = { Items: new Map(), Monsters: new Map(), NPCs: new Map(), Objects: new Map() };
+  const byHost = table => {
+    const result = new Map();
+    for (const [name, items] of Object.entries(table)) result.set(name.toLowerCase(), [...new Set([...(result.get(name.toLowerCase()) ?? []), ...items])]);
+    return result;
+  };
+  const monsterItems = byHost(drops), shopStock = byHost(shopItems);
+  const add = (map, name, id) => {
+    const key = name.toLowerCase(), set = map.get(key) ?? new Set();
+    set.add(id); map.set(key, set);
+  };
+  const index = (id, entry) => {
+    for (const [name] of entry.m ?? []) {
+      add(maps.Monsters, name, id);
+      for (const item of monsterItems.get(name.toLowerCase()) ?? []) add(maps.Items, item, id);
+    }
+    for (const name of entry.p ?? []) add(maps.NPCs, name, id);
+    for (const [name] of entry.o ?? []) add(maps.Objects, name, id);
+    for (const shop of entry.s ?? []) for (const item of shopStock.get(shop.toLowerCase()) ?? []) add(maps.Items, item, id);
+    for (const item of entry.i ?? []) add(maps.Items, item, id);
+  };
+  for (const [id, entry] of Object.entries(chunkRecs)) index(id, entry);
+  for (const interior of Object.values(interiors)) for (const entrance of interior.entrances) index(entrance.chunkId, interior.content);
+  const out = {};
+  for (const [key, names] of Object.entries(data.searchTerms ?? {})) {
+    const [tag, type] = key.split('|'), map = maps[type];
+    if (!tag || !map) continue;
+    const set = out[tag] ?? new Set();
+    for (const raw of Object.keys(names)) for (const id of map.get(cleanName(raw).toLowerCase()) ?? []) set.add(id);
+    if (set.size) out[tag] = set;
+  }
+  return Object.fromEntries(Object.entries(out).map(([tag, set]) => [tag, [...set].sort(numericSort)]));
+}
+
+function applyReviewedContent(data, chunks, interiors, taskUnlocks, audit) {
+  const validChunks = new Set((data.walkableChunks ?? []).map(String));
+  const entries = [...Object.values(chunks), ...Object.values(interiors).map(interior => interior.content)];
+  for (const override of contentOverrides.questStarts) {
+    // Tiny transform fixtures and unrelated future exports must not gain phantom locations.
+    const hasIdentity = entries.some(entry => override.name in (entry.q ?? {}));
+    const hasRfdParent = override.name.startsWith('RFD:') && entries.some(entry => Object.keys(entry.q ?? {}).some(name => name.startsWith('RFD:')));
+    if (!hasIdentity && !hasRfdParent) continue;
+    const targets = override.firstChunks.filter(id => validChunks.has(id));
+    if (!targets.length) continue;
+    if (override.replaceFirst) for (const entry of entries) if (entry.q?.[override.name] === 'first') entry.q[override.name] = 'step';
+    for (const id of targets) ((chunks[id] ??= {}).q ??= {})[override.name] = 'first';
+    audit.add('overrides', `quest/${override.name}`, 'normalized', 'reviewed-content-override', targets, false, override.source);
+  }
+  for (const override of contentOverrides.npcs) {
+    if (!validChunks.has(override.chunkId)) continue;
+    const expected = String(Math.floor(override.x / 64) * 256 + Math.floor(override.y / 64));
+    if (expected !== override.chunkId) throw new Error(`Reviewed NPC coordinate disagrees: ${override.name}`);
+    const entry = chunks[override.chunkId] ??= {};
+    entry.p = [...new Set([...(entry.p ?? []), override.name])].sort();
+    ((taskUnlocks.NPCs ??= {})[override.name] ??= {})[override.chunkId] = override.requirements;
+    audit.add('overrides', `npc/${override.name}`, 'normalized', 'reviewed-content-override', [override.chunkId], false, override.source);
+  }
+}
 
 function cleanReqs(values, audit, sourceKey, category) {
   const result = new Set(); let duplicated = false;
@@ -452,7 +511,6 @@ export function transformChunkContent(data, sourceManifest, namedLocationRegistr
   }
   const connect = buildConnect(data), slayerMasters = buildSlayerMasters(data, audit), shortcuts = buildShortcuts(data, audit), shopItems = buildShopItems(data, audit), drops = buildDrops(data, audit), overlays = buildOverlays(data, audit), skillItems = buildSkillItems(data, audit), taskUnlocks = buildTaskUnlocks(data, audit, namedLocationIndex), questSections = buildQuestSections(data, audit);
   const { banks, upstreamCount: upstreamBankCount } = buildBanks(data, audit, bankLocationRegistry);
-  const tags = buildTags(data, chunks, shopItems, drops);
   addBaseRecords(audit, 'searchTerms', data.searchTerms ?? {});
   const sourceMeta = { repository: sourceManifest.repository, commit: sourceManifest.commit, blobSha: sourceManifest.blobSha, rawSha256: sourceManifest.rawSha256, policyVersion: sourceManifest.policyVersion, namedLocationPolicyVersion: namedLocationRegistry?.policyVersion, namedLocationReviewedAt: namedLocationRegistry?.reviewedAt };
   const entrances = buildEntranceIndex(namedLocationRegistry ?? { locations: [] });
@@ -477,6 +535,12 @@ export function transformChunkContent(data, sourceManifest, namedLocationRegistr
       if (override.requirements?.length) (entry.requirements.shop ??= {})[override.name] = override.requirements;
     }
   }
+  applyReviewedContent(data, chunks, interiors, taskUnlocks, audit);
+  for (const evidence of assertInteriorMetadataConservation(data, chunks, interiors)) {
+    audit.add('interiorMetadata', evidence.id, 'normalized', 'interior-metadata-conserved', [evidence.id], false,
+      `${evidence.diaryReferences} diary references and ${evidence.clueSteps} clue steps conserved across physical peers and named supplements`);
+  }
+  const tags = buildTags(data, chunks, interiors, shopItems, drops);
   const full = { version: 9, source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)', sourceMeta, entrances, chunks, interiors, shopInfo, connect, slayerMasters, shortcuts, shopItems, drops, overlays, skillItems, taskUnlocks, questSections, banks, tags };
   const liteSource = buildLite(full, audit); const finalAudit = audit.finish();
   return { full, liteSource, audit: finalAudit, upstreamBankCount };

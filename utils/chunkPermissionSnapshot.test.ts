@@ -76,6 +76,7 @@ describe('buildChunkPermissionSnapshot', () => {
     const view = buildChunkPermissionSnapshot(
       content({
         monsters: [{ name: 'Goblin', count: 4, slayer: null }],
+        objects: [['Bank booth', 1]],
         shops: ['Lumbridge General Store'],
         quests: { "Cook's Assistant": 'first' },
       }),

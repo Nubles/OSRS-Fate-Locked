@@ -409,6 +409,8 @@ describe('ChunkActivityPanel activity accordions', () => {
       quests: { 'Sheep Shearer': 'first', Miniquest: 'step' },
     };
     mocks.state.regions = ['Misthalin'];
+    mocks.state.skills = { Crafting: 1 };
+    mocks.state.levels = { Crafting: 1 };
 
     render(<ChunkActivityPanel {...baseProps} wholeAreaOwnershipMixed />);
     await userEvent.click(screen.getByRole('button', { name: 'Whole area' }));
@@ -426,6 +428,8 @@ describe('ChunkActivityPanel activity accordions', () => {
       objects: [['Herb patch', 1], ['Yew tree', 2]],
     };
     mocks.state.regions = ['Misthalin'];
+    mocks.state.skills = { Crafting: 1 };
+    mocks.state.levels = { Crafting: 1 };
 
     render(<ChunkActivityPanel {...baseProps} />);
     await userEvent.click(screen.getByRole('button', { name: 'Whole area' }));
@@ -592,7 +596,10 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.getAllByText('Bronze dagger')).toHaveLength(2);
 
     await userEvent.click(screen.getByRole('button', { name: /Travel/ }));
-    await userEvent.click(screen.getByTitle('Needs the "Fairy Rings" network'));
+    expect(screen.getByText('Stairs & links')).toBeTruthy();
+    expect(screen.queryByTitle('Needs the "Fairy Rings" network')).toBeNull();
+    const travelSection = screen.getByRole('button', { name: /Travel/ }).closest('section') as HTMLElement;
+    await userEvent.click(within(travelSection).getByTitle(/^Reachable/));
     expect(onShowChunk).toHaveBeenCalledTimes(1);
 
     await userEvent.click(screen.getByRole('button', { name: /Other/ }));
@@ -691,9 +698,26 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.getByText('Needs unlocks').previousElementSibling?.textContent).toBe('0');
     await userEvent.click(screen.getByRole('button', { name: /Gathering/ }));
     await userEvent.click(screen.getByRole('button', { name: /Shops/ }));
-    expect(screen.getByTitle('Access requirement: Desert Treasure II - The Fallen Empire')).toBeTruthy();
+    expect(screen.getByTitle(/Access requirement: Desert Treasure II - The Fallen Empire/)).toBeTruthy();
     expect(screen.getByTitle('Access requirement: Access the Farming Guild#Beginner tier')).toBeTruthy();
     expect(screen.getByTitle('Access requirement: Dragon Slayer I')).toBeTruthy();
+  });
+
+  it('shows canonical boss requirements even when raw source requirements are empty', () => {
+    mocks.state.content = { ...emptyContent(), monsters: [{ name: 'General Graardor', count: 1, slayer: null }] };
+    mocks.state.bosses = ['General Graardor'];
+    mocks.state.regions = ['Burthorpe', 'Trollheim'];
+    mocks.state.skills = { Strength: 10 };
+    mocks.state.levels = { Strength: 69 };
+    const { rerender } = render(<ChunkActivityPanel {...baseProps} />);
+    expect(screen.getByTitle(/Access requirement:.*Strength 70/)).toBeTruthy();
+    expect(screen.getByText('Available now').previousElementSibling?.textContent).toBe('0');
+    mocks.state.levels.Strength = 70;
+    mocks.state.regions = ['Fremennik', 'Asgarnia'];
+    rerender(<ChunkActivityPanel {...baseProps} />);
+    expect(screen.queryByTitle(/Access requirement:.*Strength 70/)).toBeNull();
+    expect(screen.getByTitle(/Access requirement:.*kill-count/)).toBeTruthy();
+    expect(screen.getByText('Available now').previousElementSibling?.textContent).toBe('0');
   });
 
   it('counts requirement-bearing actionable rows as locked when the chunk is locked', () => {
@@ -750,6 +774,72 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(within(row as HTMLElement).queryByText('No merchant gate')).toBeNull();
     expect(screen.getByText('Available now').previousElementSibling?.textContent).toBe('0');
     expect(screen.getByText('Needs unlocks').previousElementSibling?.textContent).toBe('1');
+  });
+});
+
+describe('reviewed transport identities in the chunk drawer', () => {
+  const openSection = async (name: RegExp) => {
+    const button = screen.getByRole('button', { name });
+    if (button.getAttribute('aria-expanded') !== 'true') await userEvent.click(button);
+    return button.closest('section') as HTMLElement;
+  };
+
+  it('keeps unrelated scenery out of Travel and treats a spirit-tree plot as Farming', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      objects: [
+        ['Crashed glider', 1], ['Crashed glider (Sea charting)', 1],
+        ['Balloon toad pile', 1], ['Carpet hotspot', 12], ['Eagle lever', 4],
+        ['Spirit Tree Patch', 1],
+      ],
+    };
+    render(<ChunkActivityPanel {...baseProps} />);
+    expect(screen.queryByRole('button', { name: /^Travel,/ })).toBeNull();
+    const gathering = await openSection(/^Gathering,/);
+    expect(within(gathering).getByText('Spirit Tree Patch')).toBeTruthy();
+    const other = await openSection(/^Other,/);
+    for (const name of ['Crashed glider', 'Crashed glider (Sea charting)', 'Balloon toad pile', 'Carpet hotspot', 'Eagle lever']) {
+      expect(within(other).getByText(name)).toBeTruthy();
+    }
+  });
+
+  it('gates real NPC travel services once without inventing destinations or NPC counts', async () => {
+    mocks.state.content = {
+      ...emptyContent(), npcs: ['Trader Crewmember', 'Renu', 'Rug Merchant', 'Shopkeeper'],
+    };
+    mocks.state.regions = ['Misthalin', 'Varrock'];
+    const { rerender } = render(<ChunkActivityPanel {...baseProps} />);
+    const travel = await openSection(/^Travel,/);
+    expect(within(travel).getByText('Needs Charter Ship')).toBeTruthy();
+    expect(within(travel).getByText('Needs Quetzal Network')).toBeTruthy();
+    expect(within(travel).getByText('Needs Magic Carpet')).toBeTruthy();
+    expect(within(travel).queryByText('Destinations')).toBeNull();
+    for (const name of ['Trader Crewmember', 'Renu', 'Rug Merchant']) {
+      expect(screen.getAllByText(name)).toHaveLength(1);
+      expect(within(travel).getByText(name).closest('div')?.textContent).not.toContain('x1');
+    }
+    const other = await openSection(/^Other,/);
+    expect(within(other).getByText('Shopkeeper')).toBeTruthy();
+    expect(within(other).queryByText('Rug Merchant')).toBeNull();
+
+    mocks.state.mobility = ['Charter Ships', 'Quetzal Network', 'Magic Carpets'];
+    rerender(<ChunkActivityPanel {...baseProps} />);
+    expect(within(travel).getAllByText('Available')).toHaveLength(3);
+    expect(mocks.service.taskRequirements).toHaveBeenCalledWith('Renu', 'npc', 50, 53);
+  });
+
+  it('keeps an NPC travel requirement visible after its network is unlocked', async () => {
+    mocks.state.content = { ...emptyContent(), npcs: ['Auguste'] };
+    mocks.state.regions = ['Misthalin', 'Varrock'];
+    mocks.state.mobility = ['Balloon Transport'];
+    mocks.service.taskRequirements.mockImplementation((name, kind) => name === 'Auguste' && kind === 'npc' ? ['Enlightened Journey Complete the quest'] : []);
+    const { rerender } = render(<ChunkActivityPanel {...baseProps} />);
+    const travel = await openSection(/^Travel,/);
+    expect(within(travel).getByTitle(/Access requirement:.*Enlightened Journey/)).toBeTruthy();
+    expect(within(travel).queryByText('Available')).toBeNull();
+    mocks.state.completedQuests = ['Enlightened Journey'];
+    rerender(<ChunkActivityPanel {...baseProps} />);
+    expect(within(travel).getByText('Available')).toBeTruthy();
   });
 });
 describe('ChunkActivityPanel summary hierarchy', () => {

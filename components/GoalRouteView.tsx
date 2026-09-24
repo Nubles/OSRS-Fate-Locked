@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { CheckCircle2, Circle, Route, Dices, Map as MapIcon, BookOpen, Swords, Package } from 'lucide-react';
+import { CheckCircle2, Circle, Route } from 'lucide-react';
+import { Dices, Map as MapIcon, BookOpen, Swords, Package, Shield, Store } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { buildGoalRoute } from '../utils/goalRoute';
 import { WikiLink } from './WikiLink';
@@ -30,7 +31,7 @@ export const GoalRouteView: React.FC<{ goalId: string }> = ({ goalId }) => {
   const route = useMemo(
     () => buildGoalRoute(goalId, gameState as any),
     // unlocks is the only input the route reads that changes during play
-    [goalId, gameState.unlocks],
+    [goalId, gameState.unlocks, gameState.gameModeId, gameState.customMode],
   );
 
   if (!route) return null;
@@ -48,6 +49,16 @@ export const GoalRouteView: React.FC<{ goalId: string }> = ({ goalId }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+        {!!route.manualChecks?.length && (
+          <div className="md:col-span-2">
+            <Head icon={<BookOpen size={11} />} label="Confirm in game" done={met(route.manualChecks)} total={route.manualChecks.length} />
+            {route.manualChecks.map(check => (
+              <div key={check.name} className="flex items-start gap-1.5 py-px text-amber-200">
+                <Tick met={check.met} /><span>{check.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
         {route.quests.length > 0 && (
           <div className="md:col-span-2">
             <Head icon={<BookOpen size={11} />} label="Quest chain (in order)" done={met(route.quests)} total={route.quests.length} />
@@ -89,6 +100,55 @@ export const GoalRouteView: React.FC<{ goalId: string }> = ({ goalId }) => {
                     {route.detail && !route.met && <span className="text-gray-600 text-[9px]">({route.detail})</span>}
                   </div>
                 ))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {route.equipment.length > 0 && (
+          <div className="md:col-span-2">
+            <Head icon={<Shield size={11} />} label="Equipment slots" done={met(route.equipment)} total={route.equipment.length} />
+            {route.equipment.map(requirement => (
+              <div key={requirement.name} className="flex items-start gap-1.5 py-px">
+                <Tick met={requirement.met} />
+                <span className="text-gray-300">{requirement.name}</span>
+                {requirement.detail && <span className="text-gray-500 text-[9px]">{requirement.detail}</span>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!!route.arcana?.length && (
+          <div>
+            <Head icon={<BookOpen size={11} />} label="Arcana" done={met(route.arcana)} total={route.arcana.length} />
+            {route.arcana.map(requirement => (
+              <div key={requirement.name} className="flex items-start gap-1.5 py-px">
+                <Tick met={requirement.met} />
+                <span className="text-gray-300">{requirement.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!!route.mobility?.length && (
+          <div>
+            <Head icon={<Route size={11} />} label="Transport" done={met(route.mobility)} total={route.mobility.length} />
+            {route.mobility.map(requirement => (
+              <div key={requirement.name} className="flex items-start gap-1.5 py-px">
+                <Tick met={requirement.met} />
+                <span className="text-gray-300">{requirement.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!!route.merchants?.length && (
+          <div>
+            <Head icon={<Store size={11} />} label="Shops" done={met(route.merchants)} total={route.merchants.length} />
+            {route.merchants.map(requirement => (
+              <div key={requirement.name} className="flex items-start gap-1.5 py-px">
+                <Tick met={requirement.met} />
+                <span className="text-gray-300">{requirement.name}</span>
               </div>
             ))}
           </div>

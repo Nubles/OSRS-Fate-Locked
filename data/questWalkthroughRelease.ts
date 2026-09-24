@@ -27,12 +27,12 @@ const RELEASES: readonly QuestWalkthroughRelease[] = [
   },
   {
     questId: 'Sheep Shearer',
-    revision: '2aa93838959a1fd0c26ab45642b9bb39e5bad0321487129cdf2fb39f2bf971e2',
+    revision: '61adaed2635c9bfa09158c13dc25c906b3d5746e2cd20f849ed2a29cc552618d',
     releaseStatus: 'PREVIEW_ONLY',
   },
   {
     questId: 'The Restless Ghost',
-    revision: '10713567065dfb8118da8fa8bcd91413bad41070d9f42d3bed46666e756b1c7a',
+    revision: 'ac29fd792fcc21964d4ad9c274a28a6f9d5f119f45524b310231060e20cd6e16',
     releaseStatus: 'PREVIEW_ONLY',
   },
   {

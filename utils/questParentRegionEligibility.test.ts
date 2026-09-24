@@ -36,7 +36,8 @@ describe('quest parent-region eligibility', () => {
     ['Clock Tower', {}],
     ['Hazeel Cult', {}],
     ['Sheep Herder', {}],
-    ['Tower of Life', { skills: { Construction: 1 }, levels: { Construction: 10 } }],
+    ['Tower of Life', { skills: { Construction: 1 }, levels: { Construction: 10 },
+      equipment: { Head: 1, Body: 1, Legs: 1, Boots: 1 } }],
   ])('allows %s with East Ardougne instead of all Kandarin', (questId, extras) => {
     const quest = QUEST_DATA[questId];
     expect(quest.regions).toEqual(['East Ardougne']);

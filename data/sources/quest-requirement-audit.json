@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "reviewedAt": "2026-09-21",
+  "reviewedAt": "2026-09-22",
   "chunkSourceCommits": [
     "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
     "a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
@@ -416,15 +416,15 @@
       "id": "Animal Magnetism",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Animal_Magnetism&oldid=15276580",
-        "revision": 15276580,
-        "revisionTimestamp": "2026-07-27T13:40:28Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Animal_Magnetism&oldid=15327014",
+        "revision": 15327014,
+        "revisionTimestamp": "2026-09-01T06:32:15Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Draynor Village\",\"Burthorpe\",\"Fenkenstrain's Castle\"],\"skills\":{\"Crafting\":19,\"Ranged\":30,\"Slayer\":18,\"Woodcutting\":35},\"prereqs\":[\"The Restless Ghost\",\"Ernest the Chicken\",\"Priest in Peril\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Draynor Village\",\"Burthorpe\",\"Fenkenstrain's Castle\"],\"skills\":{\"Crafting\":19,\"Ranged\":30,\"Slayer\":18,\"Woodcutting\":35},\"equipmentRequirements\":[{\"reason\":\"Wear the ghostspeak amulet when speaking to the old crone\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"The Restless Ghost\",\"Ernest the Chicken\",\"Priest in Peril\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "45,55",
@@ -444,7 +444,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Animal Magnetism were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Animal Magnetism were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Fate equipment review 2026-09-22: Neck T1: Wear the ghostspeak amulet when speaking to the old crone. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
         ],
         "travel": [
           "The route visits Draynor Manor, Taverley, and Port Phasmatys, represented by Misthalin, Asgarnia, and Morytania.",
@@ -728,15 +729,15 @@
       "id": "Between a Rock...",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Between_a_Rock...&oldid=15265908",
-        "revision": 15265908,
-        "revisionTimestamp": "2026-07-17T06:23:17Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Between_a_Rock...&oldid=15342623",
+        "revision": 15342623,
+        "revisionTimestamp": "2026-09-13T10:13:58Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Keldagrim\",\"Dwarven Mine\",\"Taverley\"],\"skills\":{\"Defence\":30,\"Mining\":40,\"Smithing\":50},\"prereqs\":[\"Dwarf Cannon\",\"Fishing Contest\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Keldagrim\",\"Dwarven Mine\",\"Taverley\"],\"skills\":{\"Defence\":30,\"Mining\":40,\"Smithing\":50},\"equipmentRequirements\":[{\"reason\":\"Wear the gold helmet to enter the cannon\",\"slot\":\"Head\",\"tier\":1}],\"prereqs\":[\"Dwarf Cannon\",\"Fishing Contest\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "42,58",
@@ -756,7 +757,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Between a Rock... were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Between a Rock... were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Fate equipment review 2026-09-22: Head T1: Wear the gold helmet to enter the cannon. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
         ],
         "travel": [
           "The route crosses Keldagrim/Fremennik, Asgarnia, and Kandarin.",
@@ -802,15 +804,15 @@
       "id": "Biohazard",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Biohazard&oldid=15256425",
-        "revision": 15256425,
-        "revisionTimestamp": "2026-07-07T16:30:54Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Biohazard&oldid=15327977",
+        "revision": 15327977,
+        "revisionTimestamp": "2026-09-02T01:54:07Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"East Ardougne\",\"West Ardougne\",\"Rimmington\",\"Varrock\"],\"skills\":{},\"prereqs\":[\"Plague City\"],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"East Ardougne\",\"West Ardougne\",\"Rimmington\",\"Varrock\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the gas mask for the plague-sample route\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the medical gown to enter the Mourner headquarters\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear the priest gown to enter the Mourner headquarters\",\"slot\":\"Legs\",\"tier\":1}],\"prereqs\":[\"Plague City\"],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "39,51",
@@ -835,7 +837,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Biohazard were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Biohazard were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Fate equipment review 2026-09-22: Head T1: Wear the gas mask for the plague-sample route; Body T1: Wear the medical gown to enter the Mourner headquarters; Legs T1: Wear the priest gown to enter the Mourner headquarters. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
         ],
         "travel": [
           "The route crosses Ardougne/Kandarin, Asgarnia, and Varrock/Misthalin.",
@@ -849,15 +852,15 @@
       "id": "Black Knights' Fortress",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Black_Knights'_Fortress&oldid=15266892",
-        "revision": 15266892,
-        "revisionTimestamp": "2026-07-18T10:57:42Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Black_Knights'_Fortress&oldid=15350628",
+        "revision": 15350628,
+        "revisionTimestamp": "2026-09-18T22:58:46Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":46,\"cy\":52}],\"id\":\"west-falador\",\"label\":\"West Falador\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":54}],\"id\":\"black-knights-fortress\",\"label\":\"Black Knights' Fortress\",\"standardAreas\":[\"Edgeville\"]}],\"skills\":{\"Quest Points\":12},\"prereqs\":[],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":46,\"cy\":52}],\"id\":\"west-falador\",\"label\":\"West Falador\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":54}],\"id\":\"black-knights-fortress\",\"label\":\"Black Knights' Fortress\",\"standardAreas\":[\"Edgeville\"]}],\"skills\":{\"Quest Points\":12},\"equipmentRequirements\":[{\"reason\":\"Wear the bronze med helm for the guard disguise\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the iron chainbody for the guard disguise\",\"slot\":\"Body\",\"tier\":1}],\"prereqs\":[],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "46,52",
@@ -872,7 +875,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Black Knights' Fortress were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Black Knights' Fortress were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Fate equipment review 2026-09-22: Head T1: Wear the bronze med helm for the guard disguise; Body T1: Wear the iron chainbody for the guard disguise. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
         ],
         "travel": [
           "The fixed west Falador and fortress entrance rows are represented as exact locations.",
@@ -1575,15 +1579,15 @@
       "id": "Death to the Dorgeshuun",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Death_to_the_Dorgeshuun&oldid=15266903",
-        "revision": 15266903,
-        "revisionTimestamp": "2026-07-18T11:30:06Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Death_to_the_Dorgeshuun&oldid=15331188",
+        "revision": 15331188,
+        "revisionTimestamp": "2026-09-05T01:23:44Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lumbridge\"],\"skills\":{\"Agility\":23,\"Thieving\":23},\"prereqs\":[\"The Lost Tribe\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lumbridge\"],\"skills\":{\"Agility\":23,\"Thieving\":23},\"equipmentRequirements\":[{\"reason\":\"Wear the H.A.M. hood for the council meeting disguise\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the H.A.M. cloak for the council meeting disguise\",\"slot\":\"Cape\",\"tier\":1},{\"reason\":\"Wear the H.A.M. logo for the council meeting disguise\",\"slot\":\"Neck\",\"tier\":1},{\"reason\":\"Wear the H.A.M. shirt for the council meeting disguise\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear the H.A.M. robe for the council meeting disguise\",\"slot\":\"Legs\",\"tier\":1},{\"reason\":\"Wear the H.A.M. gloves for the council meeting disguise\",\"slot\":\"Gloves\",\"tier\":1},{\"reason\":\"Wear the H.A.M. boots for the council meeting disguise\",\"slot\":\"Boots\",\"tier\":1}],\"prereqs\":[\"The Lost Tribe\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "49,50",
@@ -1603,7 +1607,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Death to the Dorgeshuun were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Death to the Dorgeshuun were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Fate equipment review 2026-09-22: Head T1: Wear the H.A.M. hood for the council meeting disguise; Cape T1: Wear the H.A.M. cloak for the council meeting disguise; Neck T1: Wear the H.A.M. logo for the council meeting disguise; Body T1: Wear the H.A.M. shirt for the council meeting disguise; Legs T1: Wear the H.A.M. robe for the council meeting disguise; Gloves T1: Wear the H.A.M. gloves for the council meeting disguise; Boots T1: Wear the H.A.M. boots for the council meeting disguise. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
         ],
         "travel": [
           "The Lumbridge and Dorgesh-Kaan route remains represented by Misthalin.",
@@ -1659,15 +1664,15 @@
       "id": "Demon Slayer",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Demon_Slayer&oldid=15271182",
-        "revision": 15271182,
-        "revisionTimestamp": "2026-07-21T06:10:57Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Demon_Slayer&oldid=15309237",
+        "revision": 15309237,
+        "revisionTimestamp": "2026-08-19T19:54:26Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"varrock-square\",\"label\":\"Varrock square\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":54}],\"id\":\"varrock-palace\",\"label\":\"Varrock Palace\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":49}],\"id\":\"wizards-tower\",\"label\":\"Wizards' Tower\",\"standardAreas\":[\"Wizards' Tower\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":52}],\"id\":\"varrock-south-gate\",\"label\":\"Varrock south gate\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"varrock-square\",\"label\":\"Varrock square\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":54}],\"id\":\"varrock-palace\",\"label\":\"Varrock Palace\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":49}],\"id\":\"wizards-tower\",\"label\":\"Wizards' Tower\",\"standardAreas\":[\"Wizards' Tower\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":52}],\"id\":\"varrock-south-gate\",\"label\":\"Varrock south gate\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wield Silverlight to defeat Delrith\",\"slot\":\"Weapon\",\"tier\":2}],\"prereqs\":[],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "48,49",
@@ -1692,7 +1697,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Demon Slayer were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Demon Slayer were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Fate equipment review 2026-09-22: Weapon T2: Wield Silverlight to defeat Delrith. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
         ],
         "travel": [
           "The fixed Varrock and Wizards' Tower rows are represented as exact locations."
@@ -1707,15 +1713,15 @@
       "id": "Desert Treasure I",
       "kind": "quest",
       "status": "unresolved",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Desert_Treasure_I&oldid=15270961",
-        "revision": 15270961,
-        "revisionTimestamp": "2026-07-21T01:27:22Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Desert_Treasure_I&oldid=15350966",
+        "revision": 15350966,
+        "revisionTimestamp": "2026-09-19T15:50:32Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Bandit Camp\",\"Bedabin Camp\",\"Pollnivneach\",\"Entrana\",\"Burthorpe\",\"Baxtorian Falls\",\"Canifis\",\"Mort Myre Swamp\"],\"skills\":{\"Firemaking\":50,\"Magic\":50,\"Slayer\":10,\"Thieving\":53},\"prereqs\":[\"The Dig Site\",\"Temple of Ikov\",\"The Tourist Trap\",\"Troll Stronghold\",\"Priest in Peril\",\"Waterfall Quest\"],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Bandit Camp\",\"Bedabin Camp\",\"Pollnivneach\",\"Entrana\",\"Burthorpe\",\"Baxtorian Falls\",\"Canifis\",\"Mort Myre Swamp\"],\"skills\":{\"Firemaking\":50,\"Magic\":50,\"Slayer\":10,\"Thieving\":53},\"prereqs\":[\"The Dig Site\",\"Temple of Ikov\",\"The Tourist Trap\",\"Troll Stronghold\",\"Priest in Peril\",\"Waterfall Quest\"],\"skillAlternatives\":[{\"manualRequirements\":[\"Have a gas mask from Plague City for the smoke dungeon (alternative to Slayer 10)\"],\"quests\":[\"Plague City\"],\"skill\":\"Slayer\"}],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "39,53",
@@ -1785,7 +1791,7 @@
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
         ],
         "partialCompletion": [
-          "The source allows Slayer 10 or a gas mask; because item possession is untracked, Slayer 10 remains conservatively machine-enforced."
+          "Slayer 10 is one route; completed Plague City with a manually confirmed gas mask is an alternative, not an additional universal quest requirement."
         ]
       },
       "discrepancy": "Desert Treasure I retains the regions policy with Kharidian Desert, Asgarnia, Kandarin, Morytania, and Misthalin plus prerequisite The Dig Site and Slayer 10. The pinned Wiki permits Slayer 10 or a gas mask, but item possession is not tracked; the pinned Chunk Picker includes Bedabin Camp (chunk 49,47), so the alternative cannot be encoded without weakening eligibility.",
@@ -1795,15 +1801,15 @@
       "id": "Desert Treasure II",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Desert_Treasure_II_-_The_Fallen_Empire&oldid=15275383",
-        "revision": 15275383,
-        "revisionTimestamp": "2026-07-25T22:21:16Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Desert_Treasure_II_-_The_Fallen_Empire&oldid=15352463",
+        "revision": 15352463,
+        "revisionTimestamp": "2026-09-21T01:55:14Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Nardah\",\"Goblin Village\",\"Weiss\",\"The Stranglewood\",\"Digsite\"],\"skills\":{\"Construction\":60,\"Firemaking\":75,\"Herblore\":62,\"Magic\":75,\"Runecraft\":60,\"Thieving\":70},\"prereqs\":[\"Desert Treasure I\",\"Secrets of the North\",\"Enakhra's Lament\",\"Temple of the Eye\",\"The Garden of Death\",\"Below Ice Mountain\"],\"points\":5}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Nardah\",\"Goblin Village\",\"Weiss\",\"The Stranglewood\",\"Digsite\"],\"skills\":{\"Construction\":60,\"Firemaking\":75,\"Herblore\":62,\"Magic\":75,\"Runecraft\":60,\"Thieving\":70},\"prereqs\":[\"Desert Treasure I\",\"Secrets of the North\",\"Enakhra's Lament\",\"Temple of the Eye\",\"The Garden of Death\",\"Below Ice Mountain\",\"His Faithful Servants\"],\"points\":5}",
       "chunkEvidence": [],
       "notes": {
         "items": [
@@ -1816,7 +1822,9 @@
         "instances": [
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
         ],
-        "partialCompletion": []
+        "partialCompletion": [
+          "His Faithful Servants is a direct miniquest prerequisite in addition to the retained quest branches."
+        ]
       }
     },
     {
@@ -2691,15 +2699,15 @@
       "id": "Family Crest",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Family_Crest&oldid=15266192",
-        "revision": 15266192,
-        "revisionTimestamp": "2026-07-17T15:38:50Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Family_Crest&oldid=15352494",
+        "revision": 15352494,
+        "revisionTimestamp": "2026-09-21T04:43:46Z"
       },
-      "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
+      "chunkSourceCommit": "fa71ed3b207e6a501444987dee23b875ec27cacd",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\",\"Kandarin\",\"Misthalin\",\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":51,\"cy\":53}],\"id\":\"dimintheis-house\",\"label\":\"Dimintheis's house in south-east Varrock\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":42,\"cy\":51}],\"id\":\"witchaven\",\"label\":\"Witchaven\",\"standardAreas\":[\"Witchaven\"]},{\"chunkOptions\":[{\"cx\":44,\"cy\":53}],\"id\":\"catherby\",\"label\":\"Caleb's house in Catherby\",\"standardAreas\":[\"Catherby\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":54}],\"id\":\"dwarven-mine-boot\",\"label\":\"Boot in the Dwarven Mine\",\"standardAreas\":[\"Dwarven Mine\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":50}],\"id\":\"north-al-kharid\",\"label\":\"North Al Kharid\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":51}],\"id\":\"al-kharid-mine\",\"label\":\"Al Kharid mine\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"jolly-boar-inn\",\"label\":\"Jolly Boar Inn\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{\"Crafting\":40,\"Magic\":59,\"Mining\":40,\"Smithing\":40},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\",\"Kandarin\",\"Misthalin\",\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":51,\"cy\":53}],\"id\":\"dimintheis-house\",\"label\":\"Dimintheis's house in south-east Varrock\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":42,\"cy\":51}],\"id\":\"witchaven\",\"label\":\"Witchaven\",\"standardAreas\":[\"Witchaven\"]},{\"chunkOptions\":[{\"cx\":44,\"cy\":53}],\"id\":\"catherby\",\"label\":\"Caleb's house in Catherby\",\"standardAreas\":[\"Catherby\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":53},{\"cx\":47,\"cy\":52}],\"id\":\"dwarven-mine-boot\",\"label\":\"Boot in the Dwarven Mine\",\"standardAreas\":[\"Dwarven Mine\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":54}],\"id\":\"edgeville-dungeon-chronozon\",\"label\":\"Chronozon in Edgeville Dungeon\",\"standardAreas\":[\"Edgeville\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":50}],\"id\":\"north-al-kharid\",\"label\":\"North Al Kharid\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":51}],\"id\":\"al-kharid-mine\",\"label\":\"Al Kharid mine\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"jolly-boar-inn\",\"label\":\"Jolly Boar Inn\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{\"Crafting\":40,\"Magic\":59,\"Mining\":40,\"Smithing\":40},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "42,51",
@@ -2710,6 +2718,16 @@
           "chunkId": "44,53",
           "role": "step",
           "place": "East Catherby"
+        },
+        {
+          "chunkId": "47,52",
+          "role": "step",
+          "place": "Dwarven Mine via Falador; source 11929"
+        },
+        {
+          "chunkId": "47,53",
+          "role": "step",
+          "place": "Dwarven Mine via Ice Mountain; source 11929"
         },
         {
           "chunkId": "48,54",
@@ -2742,7 +2760,8 @@
           "The pinned Wiki item requirements for Family Crest were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "All seven pinned family-member and dungeon rows are represented as exact locations."
+          "Boot requires either the Falador 47,52 or Ice Mountain 47,53 mine entrance. Edgeville 48,54 remains a separate required visit to Chronozon, not a mine entrance.",
+          "Reviewed against Family Crest revision 15352494, Dwarven Mine revision 15241726 and the pinned source interior 11929 entrance projections."
         ],
         "instances": [],
         "partialCompletion": [
@@ -3046,15 +3065,15 @@
       "id": "Ghosts Ahoy",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Ghosts_Ahoy&oldid=15240987",
-        "revision": 15240987,
-        "revisionTimestamp": "2026-06-27T13:47:05Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Ghosts_Ahoy&oldid=15315208",
+        "revision": 15315208,
+        "revisionTimestamp": "2026-08-21T05:12:34Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Phasmatys\",\"Fenkenstrain's Castle\"],\"skills\":{\"Agility\":25,\"Cooking\":20},\"prereqs\":[\"Priest in Peril\",\"The Restless Ghost\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Phasmatys\",\"Fenkenstrain's Castle\"],\"skills\":{\"Agility\":25,\"Cooking\":20},\"equipmentRequirements\":[{\"reason\":\"Wear the enchanted ghostspeak amulet to command Necrovarus\",\"slot\":\"Neck\",\"tier\":1},{\"reason\":\"Wear the bedsheet disguise to gather signatures\",\"slot\":\"Head\",\"tier\":1}],\"prereqs\":[\"Priest in Peril\",\"The Restless Ghost\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "54,55",
@@ -3074,7 +3093,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Ghosts Ahoy were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Ghosts Ahoy were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Fate equipment review 2026-09-22: Neck T1: Wear the enchanted ghostspeak amulet to command Necrovarus; Head T1: Wear the bedsheet disguise to gather signatures. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
         ],
         "travel": [
           "Port Phasmatys, the Ectofuntus, and the mausoleum remain within Morytania.",
@@ -3459,7 +3479,7 @@
           "The pinned Wiki item requirements for Horror from the Deep were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "The lighthouse, bridge, and barbarian-outpost route remains covered by Fremennik; Alfred Grimhand\u2019s Barcrawl is a required miniquest.",
+          "The lighthouse, bridge, and barbarian-outpost route remains covered by Fremennik; Alfred Grimhand’s Barcrawl is a required miniquest.",
           "The catalogue-wide parent-region audit replaced Fremennik with the exact tracked access set: Lighthouse."
         ],
         "instances": [
@@ -3779,7 +3799,7 @@
           "The pinned Wiki item requirements for King's Ransom were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "The investigation crosses Sinclair Mansion, Camelot, Ardougne, and the Black Knights\u2019 Fortress in Asgarnia.",
+          "The investigation crosses Sinclair Mansion, Camelot, Ardougne, and the Black Knights’ Fortress in Asgarnia.",
           "The catalogue-wide parent-region audit replaced Kandarin, Asgarnia with the exact tracked access set: East Ardougne, Seers' Village, Camelot, Edgeville."
         ],
         "instances": [],
@@ -3936,7 +3956,7 @@
           "The pinned Wiki item requirements for Legends' Quest were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "The Legends\u2019 Guild route enters the Kharazi Jungle, requiring both Kandarin and Karamja.",
+          "The Legends’ Guild route enters the Kharazi Jungle, requiring both Kandarin and Karamja.",
           "The catalogue-wide parent-region audit replaced Kandarin, Karamja with the exact tracked access set: Legends' Guild, Kharazi Jungle, Tai Bwo Wannai."
         ],
         "instances": [],
@@ -3947,15 +3967,15 @@
       "id": "Lost City",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Lost_City&oldid=15240945",
-        "revision": 15240945,
-        "revisionTimestamp": "2026-06-27T13:12:15Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Lost_City&oldid=15326723",
+        "revision": 15326723,
+        "revisionTimestamp": "2026-08-31T23:25:06Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lumbridge\",\"Zanaris\",\"Entrana\"],\"skills\":{\"Crafting\":31,\"Woodcutting\":36},\"prereqs\":[],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lumbridge\",\"Zanaris\",\"Entrana\"],\"skills\":{\"Crafting\":31,\"Woodcutting\":36},\"equipmentRequirements\":[{\"reason\":\"Wield the dramen staff to enter Zanaris\",\"slot\":\"Weapon\",\"tier\":2}],\"prereqs\":[],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "44,52",
@@ -3975,7 +3995,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Lost City were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Lost City were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Fate equipment review 2026-09-22: Weapon T2: Wield the dramen staff to enter Zanaris. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
         ],
         "travel": [
           "The unavoidable route crosses Lumbridge Swamp/Misthalin, Entrana/Asgarnia, and Zanaris/Islands & Others.",
@@ -4040,7 +4061,7 @@
           "The pinned Wiki item requirements for Lunar Diplomacy were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "Rellekka, Pirates\u2019 Cove, Lunar Isle, and the dream instance remain covered by Fremennik; Herblore 5 is a listed requirement.",
+          "Rellekka, Pirates’ Cove, Lunar Isle, and the dream instance remain covered by Fremennik; Herblore 5 is a listed requirement.",
           "The catalogue-wide parent-region audit replaced Fremennik with the exact tracked access set: Lunar Isle, Pirates' Cove, Rellekka."
         ],
         "instances": [
@@ -4323,15 +4344,15 @@
       "id": "Misthalin Mystery",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Misthalin_Mystery&oldid=15240939",
-        "revision": 15240939,
-        "revisionTimestamp": "2026-06-27T13:08:44Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Misthalin_Mystery&oldid=15292395",
+        "revision": 15292395,
+        "revisionTimestamp": "2026-08-11T00:20:36Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":49}],\"id\":\"misthalin-mystery-island\",\"label\":\"Abigail and Hewey's island\",\"standardAreas\":[\"Lumbridge\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":49}],\"id\":\"misthalin-mystery-island\",\"label\":\"Abigail and Hewey's island\",\"standardAreas\":[\"Lumbridge\"]}],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wield the killer's knife to attack Abigale\",\"slot\":\"Weapon\",\"tier\":1}],\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "50,49",
@@ -4341,10 +4362,11 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Misthalin Mystery were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Misthalin Mystery were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Fate equipment review 2026-09-22: Weapon T1: Wield the killer's knife to attack Abigale. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
         ],
         "travel": [
-          "The quest is confined to Abigail and Hewey\u2019s island, represented by the pinned east Lumbridge Swamp chunk."
+          "The quest is confined to Abigail and Hewey’s island, represented by the pinned east Lumbridge Swamp chunk."
         ],
         "instances": [],
         "partialCompletion": []
@@ -4605,15 +4627,15 @@
       "id": "Mourning's End Part II",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Mourning's_End_Part_II&oldid=15265949",
-        "revision": 15265949,
-        "revisionTimestamp": "2026-07-17T10:27:14Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Mourning's_End_Part_II&oldid=15351344",
+        "revision": 15351344,
+        "revisionTimestamp": "2026-09-19T18:48:25Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lletya\",\"West Ardougne\"],\"skills\":{\"Agility\":65},\"prereqs\":[\"Mourning's End Part I\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lletya\",\"West Ardougne\"],\"skills\":{},\"prereqs\":[\"Mourning's End Part I\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "39,51",
@@ -4632,7 +4654,9 @@
         "instances": [
           "Mourning's End Part II's underground or instanced sequence was reviewed through its permanent Wiki route and pinned entrance/activity evidence."
         ],
-        "partialCompletion": []
+        "partialCompletion": [
+          "Agility 65 is a recommendation rather than a mandatory quest requirement; Part I remains required."
+        ]
       }
     },
     {
@@ -4665,7 +4689,7 @@
           "The pinned Wiki item requirements for Murder Mystery were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "The established Task 6 Sinclair Mansion and Seers\u2019 Village exact-location conclusion is preserved unchanged."
+          "The established Task 6 Sinclair Mansion and Seers’ Village exact-location conclusion is preserved unchanged."
         ],
         "instances": [],
         "partialCompletion": []
@@ -5032,15 +5056,15 @@
       "id": "Pirate's Treasure",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Pirate's_Treasure&oldid=15240936",
-        "revision": 15240936,
-        "revisionTimestamp": "2026-06-27T13:08:08Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Pirate's_Treasure&oldid=15315445",
+        "revision": 15315445,
+        "revisionTimestamp": "2026-08-21T06:41:42Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Sarim\",\"Falador\",\"Varrock\",\"Musa Point\"],\"skills\":{},\"prereqs\":[],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Sarim\",\"Falador\",\"Varrock\",\"Musa Point\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear a white apron to enter the grocery storeroom\",\"slot\":\"Body\",\"tier\":1}],\"prereqs\":[],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "45,49",
@@ -5065,7 +5089,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Pirate's Treasure were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Pirate's Treasure were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Fate equipment review 2026-09-22: Body T1: Wear a white apron to enter the grocery storeroom. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
         ],
         "travel": [
           "The compulsory rum-smuggling route crosses Port Sarim/Asgarnia, Musa Point/Karamja, Varrock/Misthalin, and Falador/Asgarnia.",
@@ -5079,15 +5104,15 @@
       "id": "Plague City",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Plague_City&oldid=15240959",
-        "revision": 15240959,
-        "revisionTimestamp": "2026-06-27T13:22:40Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Plague_City&oldid=15343824",
+        "revision": 15343824,
+        "revisionTimestamp": "2026-09-15T01:02:05Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":39,\"cy\":52}],\"id\":\"east-ardougne-edmond\",\"label\":\"Edmond's house in East Ardougne\",\"standardAreas\":[\"East Ardougne\"]},{\"chunkOptions\":[{\"cx\":39,\"cy\":51}],\"id\":\"west-ardougne\",\"label\":\"West Ardougne\",\"standardAreas\":[\"West Ardougne\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":39,\"cy\":52}],\"id\":\"east-ardougne-edmond\",\"label\":\"Edmond's house in East Ardougne\",\"standardAreas\":[\"East Ardougne\"]},{\"chunkOptions\":[{\"cx\":39,\"cy\":51}],\"id\":\"west-ardougne\",\"label\":\"West Ardougne\",\"standardAreas\":[\"West Ardougne\"]}],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the gas mask when entering West Ardougne from the sewer\",\"slot\":\"Head\",\"tier\":1}],\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "39,51",
@@ -5102,7 +5127,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Plague City were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Plague City were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Fate equipment review 2026-09-22: Head T1: Wear the gas mask when entering West Ardougne from the sewer. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
         ],
         "travel": [
           "Edmond's East Ardougne garden and West Ardougne are the fixed quest locations represented by the two pinned chunks."
@@ -5466,15 +5492,15 @@
       "id": "RFD: Dwarf",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_the_Mountain_Dwarf&oldid=15241018",
-        "revision": 15241018,
-        "revisionTimestamp": "2026-06-27T14:54:40Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_the_Mountain_Dwarf&oldid=15323345",
+        "revision": 15323345,
+        "revisionTimestamp": "2026-08-28T17:40:49Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Taverley\",\"Falador\"],\"skills\":{},\"prereqs\":[\"Fishing Contest\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Taverley\",\"Falador\"],\"skills\":{},\"prereqs\":[\"RFD: The Cook\",\"Fishing Contest\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "44,54",
@@ -5497,6 +5523,7 @@
         ],
         "instances": [],
         "partialCompletion": [
+          "The rescue requires Another Cook’s Quest (RFD: The Cook) before its existing subquest-specific requirements.",
           "Compatibility exception: RFD: Dwarf remains an existing completion ID and key-bearing save state, while revision 15241018 is also supporting chapter evidence for the RFD: Finale parent audit."
         ]
       }
@@ -5505,15 +5532,15 @@
       "id": "RFD: Evil Dave",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Evil_Dave&oldid=15166446",
-        "revision": 15166446,
-        "revisionTimestamp": "2026-04-06T13:33:49Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Evil_Dave&oldid=15294908",
+        "revision": 15294908,
+        "revisionTimestamp": "2026-08-12T22:22:21Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Edgeville\"],\"skills\":{\"Cooking\":25},\"prereqs\":[\"Gertrude's Cat\",\"Shadow of the Storm\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Edgeville\"],\"skills\":{},\"prereqs\":[\"RFD: The Cook\",\"Gertrude's Cat\",\"Shadow of the Storm\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "48,54",
@@ -5531,6 +5558,7 @@
         ],
         "instances": [],
         "partialCompletion": [
+          "Requires Another Cook’s Quest (RFD: The Cook), Gertrude’s Cat and Shadow of the Storm. Cooking 25 applies only to optional stew preparation.",
           "Compatibility exception: RFD: Evil Dave remains an existing completion ID and key-bearing save state, while revision 15166446 is also supporting chapter evidence for the RFD: Finale parent audit."
         ]
       }
@@ -5539,15 +5567,15 @@
       "id": "RFD: Finale",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FDefeating_the_Culinaromancer&oldid=15211243",
-        "revision": 15211243,
-        "revisionTimestamp": "2026-05-15T17:34:19Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FDefeating_the_Culinaromancer&oldid=15292344",
+        "revision": 15292344,
+        "revisionTimestamp": "2026-08-10T23:41:32Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lumbridge\"],\"skills\":{\"Quest Points\":175},\"prereqs\":[\"RFD: The Cook\",\"RFD: Dwarf\",\"RFD: Goblins\",\"RFD: Pirate Pete\",\"RFD: Lumbridge Guide\",\"RFD: Evil Dave\",\"RFD: Skrach Uglogwee\",\"RFD: Sir Amik Varze\",\"RFD: King Awowogei\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lumbridge\"],\"skills\":{\"Quest Points\":175},\"prereqs\":[\"RFD: The Cook\",\"RFD: Dwarf\",\"RFD: Goblins\",\"RFD: Pirate Pete\",\"RFD: Lumbridge Guide\",\"RFD: Evil Dave\",\"RFD: Skrach Uglogwee\",\"RFD: Sir Amik Varze\",\"RFD: King Awowogei\",\"Desert Treasure I\",\"Horror from the Deep\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "50,50",
@@ -5567,6 +5595,7 @@
           "The Culinaromancer fight is the parent quest's final boss instance in Lumbridge Castle."
         ],
         "partialCompletion": [
+          "Requires all rescue quests, 175 QP, Desert Treasure I and Horror from the Deep.",
           "Compatibility exception: RFD: Finale is the audit parent only. Existing chapter completion IDs, saves, and key rewards remain unchanged; supporting child oldids are RFD: Dwarf 15241018; RFD: Evil Dave 15166446; RFD: Goblins 15166443; RFD: King Awowogei 15242259; RFD: Lumbridge Guide 15266917; RFD: Pirate Pete 15266918; RFD: Sir Amik Varze 15266919; RFD: Skrach Uglogwee 15266920; RFD: The Cook 15241017."
         ]
       }
@@ -5575,15 +5604,15 @@
       "id": "RFD: Goblins",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_the_Goblin_generals&oldid=15166443",
-        "revision": 15166443,
-        "revisionTimestamp": "2026-04-06T13:33:28Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_the_Goblin_generals&oldid=15292337",
+        "revision": 15292337,
+        "revisionTimestamp": "2026-08-10T23:40:59Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Goblin Village\"],\"skills\":{},\"prereqs\":[\"Goblin Diplomacy\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Goblin Village\"],\"skills\":{},\"prereqs\":[\"RFD: The Cook\",\"Goblin Diplomacy\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "46,54",
@@ -5601,6 +5630,7 @@
         ],
         "instances": [],
         "partialCompletion": [
+          "The rescue requires Another Cook’s Quest (RFD: The Cook) before its existing subquest-specific requirements.",
           "Compatibility exception: RFD: Goblins remains an existing completion ID and key-bearing save state, while revision 15166443 is also supporting chapter evidence for the RFD: Finale parent audit."
         ]
       }
@@ -5609,15 +5639,15 @@
       "id": "RFD: King Awowogei",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_King_Awowogei&oldid=15242259",
-        "revision": 15242259,
-        "revisionTimestamp": "2026-06-29T20:12:44Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_King_Awowogei&oldid=15331685",
+        "revision": 15331685,
+        "revisionTimestamp": "2026-09-05T18:57:43Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Ape Atoll\"],\"skills\":{\"Agility\":48,\"Cooking\":70},\"prereqs\":[\"Monkey Madness I\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Ape Atoll\"],\"skills\":{\"Agility\":48,\"Cooking\":70},\"prereqs\":[\"RFD: The Cook\",\"Monkey Madness I\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "42,43",
@@ -5652,6 +5682,7 @@
           "The Ape Atoll dungeon and Big Snake cave are supporting parent-route instances."
         ],
         "partialCompletion": [
+          "The rescue requires Another Cook’s Quest (RFD: The Cook) before its existing subquest-specific requirements.",
           "Compatibility exception: RFD: King Awowogei remains an existing completion ID and key-bearing save state, while revision 15242259 is also supporting chapter evidence for the RFD: Finale parent audit."
         ]
       }
@@ -5660,15 +5691,15 @@
       "id": "RFD: Lumbridge Guide",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_the_Lumbridge_Guide&oldid=15266917",
-        "revision": 15266917,
-        "revisionTimestamp": "2026-07-18T12:54:07Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_the_Lumbridge_Guide&oldid=15297799",
+        "revision": 15297799,
+        "revisionTimestamp": "2026-08-13T21:28:02Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Wizards' Tower\"],\"skills\":{\"Cooking\":40},\"prereqs\":[\"Big Chompy Bird Hunting\",\"Biohazard\",\"Demon Slayer\",\"Murder Mystery\",\"Nature Spirit\",\"Priest in Peril\",\"The Restless Ghost\",\"Witch's House\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Wizards' Tower\"],\"skills\":{\"Cooking\":40},\"prereqs\":[\"RFD: The Cook\",\"Big Chompy Bird Hunting\",\"Biohazard\",\"Demon Slayer\",\"Murder Mystery\",\"Nature Spirit\",\"Priest in Peril\",\"The Restless Ghost\",\"Witch's House\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "48,49",
@@ -5686,6 +5717,7 @@
         ],
         "instances": [],
         "partialCompletion": [
+          "The rescue requires Another Cook’s Quest (RFD: The Cook) before its existing subquest-specific requirements.",
           "Compatibility exception: RFD: Lumbridge Guide remains an existing completion ID and key-bearing save state, while revision 15266917 is also supporting chapter evidence for the RFD: Finale parent audit."
         ]
       }
@@ -5694,15 +5726,15 @@
       "id": "RFD: Pirate Pete",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Pirate_Pete&oldid=15266918",
-        "revision": 15266918,
-        "revisionTimestamp": "2026-07-18T12:54:43Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Pirate_Pete&oldid=15292338",
+        "revision": 15292338,
+        "revisionTimestamp": "2026-08-10T23:41:05Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Khazard\"],\"skills\":{\"Cooking\":31},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Khazard\"],\"skills\":{\"Cooking\":31},\"prereqs\":[\"RFD: The Cook\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "41,49",
@@ -5722,6 +5754,7 @@
           "The underwater crab and mudskipper areas are supporting parent-route instances entered from Port Khazard."
         ],
         "partialCompletion": [
+          "The rescue requires Another Cook’s Quest (RFD: The Cook) before its existing subquest-specific requirements.",
           "Compatibility exception: RFD: Pirate Pete remains an existing completion ID and key-bearing save state, while revision 15266918 is also supporting chapter evidence for the RFD: Finale parent audit."
         ]
       }
@@ -5730,15 +5763,15 @@
       "id": "RFD: Sir Amik Varze",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Sir_Amik_Varze&oldid=15266919",
-        "revision": 15266919,
-        "revisionTimestamp": "2026-07-18T12:55:50Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Sir_Amik_Varze&oldid=15320990",
+        "revision": 15320990,
+        "revisionTimestamp": "2026-08-26T15:13:39Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kharazi Jungle\",\"Draynor Village\",\"Zanaris\"],\"skills\":{\"Quest Points\":107},\"prereqs\":[\"Legends' Quest\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kharazi Jungle\",\"Draynor Village\",\"Zanaris\"],\"skills\":{\"Quest Points\":107},\"prereqs\":[\"RFD: The Cook\",\"Family Crest\",\"Heroes' Quest\",\"Shilo Village\",\"Underground Pass\",\"Waterfall Quest\"],\"questProgress\":[{\"label\":\"Started Legends' Quest and gained access to the Kharazi Jungle\",\"quest\":\"Legends' Quest\"}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "44,45",
@@ -5768,6 +5801,7 @@
           "The Evil Chicken lair in Zanaris is supporting parent-route instance evidence."
         ],
         "partialCompletion": [
+          "Requires RFD: The Cook, Family Crest, Heroes’ Quest, Shilo Village, Underground Pass, Waterfall Quest and 107 QP; Legends’ Quest progress to access the Kharazi Jungle is manually confirmed, with full completion accepted as sufficient.",
           "Compatibility exception: RFD: Sir Amik Varze remains an existing completion ID and key-bearing save state, while revision 15266919 is also supporting chapter evidence for the RFD: Finale parent audit."
         ]
       }
@@ -5776,15 +5810,15 @@
       "id": "RFD: Skrach Uglogwee",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Skrach_Uglogwee&oldid=15266920",
-        "revision": 15266920,
-        "revisionTimestamp": "2026-07-18T12:57:41Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Skrach_Uglogwee&oldid=15292343",
+        "revision": 15292343,
+        "revisionTimestamp": "2026-08-10T23:41:28Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Feldip Hills\",\"Tai Bwo Wannai\"],\"skills\":{\"Cooking\":41,\"Firemaking\":20},\"prereqs\":[\"Big Chompy Bird Hunting\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Feldip Hills\",\"Tai Bwo Wannai\"],\"skills\":{\"Cooking\":41,\"Firemaking\":20},\"prereqs\":[\"RFD: The Cook\",\"Big Chompy Bird Hunting\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "41,46",
@@ -5807,6 +5841,7 @@
         ],
         "instances": [],
         "partialCompletion": [
+          "The rescue requires Another Cook’s Quest (RFD: The Cook) before its existing subquest-specific requirements.",
           "Compatibility exception: RFD: Skrach Uglogwee remains an existing completion ID and key-bearing save state, while revision 15266920 is also supporting chapter evidence for the RFD: Finale parent audit."
         ]
       }
@@ -6179,15 +6214,15 @@
       "id": "Secrets of the North",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Secrets_of_the_North&oldid=15277596",
-        "revision": 15277596,
-        "revisionTimestamp": "2026-07-28T14:58:34Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Secrets_of_the_North&oldid=15325015",
+        "revision": 15325015,
+        "revisionTimestamp": "2026-08-29T22:22:54Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"East Ardougne\",\"Weiss\"],\"skills\":{\"Agility\":69,\"Hunter\":56,\"Thieving\":64},\"prereqs\":[\"Hazeel Cult\",\"The General's Shadow\",\"Making Friends with My Arm\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"East Ardougne\",\"Weiss\"],\"skills\":{\"Agility\":69,\"Hunter\":56,\"Thieving\":64},\"prereqs\":[\"Hazeel Cult\",\"The General's Shadow\",\"Making Friends with My Arm\",\"Devious Minds\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "40,50",
@@ -6221,7 +6256,9 @@
         "instances": [
           "The Ghorrock Dungeon, assassin, and Strange Creature fights are attached to Weiss."
         ],
-        "partialCompletion": []
+        "partialCompletion": [
+          "Devious Minds is a direct prerequisite in addition to the retained Hazeel Cult, The General’s Shadow and Making Friends with My Arm branches."
+        ]
       }
     },
     {
@@ -6356,7 +6393,7 @@
       "id": "Sheep Shearer",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-23",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Sheep_Shearer&oldid=15271780",
         "revision": 15271780,
@@ -6364,11 +6401,12 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lumbridge\"],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lumbridge\"],\"skills\":{},\"preparationRequirements\":[{\"action\":\"spin wool\",\"alternative\":\"20 unnoted balls of wool obtained from a permitted source\",\"level\":1,\"skill\":\"Crafting\"}],\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Sheep Shearer were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Sheep Shearer were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Spinning wool requires Crafting level 1 and the corresponding Fate unlock. With Crafting locked, the Journal requires confirmation of 20 unnoted balls of wool from a permitted source; pre-obtained wool does not require Crafting."
         ],
         "travel": [
           "Fred's farm and Lumbridge Castle spinning wheel remain within Misthalin; pre-spun wool is an item alternative.",
@@ -8393,15 +8431,15 @@
       "id": "The Restless Ghost",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Restless_Ghost&oldid=15268042",
-        "revision": 15268042,
-        "revisionTimestamp": "2026-07-20T06:53:41Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Restless_Ghost&oldid=15331162",
+        "revision": 15331162,
+        "revisionTimestamp": "2026-09-05T00:42:30Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lumbridge\"],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lumbridge\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the ghostspeak amulet to speak to the ghost\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "49,49",
@@ -8421,7 +8459,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for The Restless Ghost were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for The Restless Ghost were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Fate equipment review 2026-09-22: Neck T1: Wear the ghostspeak amulet to speak to the ghost. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are West Lumbridge Swamp (49,49, step); East Lumbridge Swamp (50,49, step); Lumbridge Castle (50,50, first), and unavoidable travel remains represented by region gate Misthalin.",
@@ -8518,15 +8557,15 @@
       "id": "The Tourist Trap",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Tourist_Trap&oldid=15267714",
-        "revision": 15267714,
-        "revisionTimestamp": "2026-07-19T15:44:04Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Tourist_Trap&oldid=15350316",
+        "revision": 15350316,
+        "revisionTimestamp": "2026-09-18T12:46:11Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Bedabin Camp\",\"Shantay Pass\"],\"skills\":{\"Fletching\":10,\"Smithing\":20},\"prereqs\":[],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Bedabin Camp\",\"Shantay Pass\"],\"skills\":{\"Fletching\":10,\"Smithing\":20},\"equipmentRequirements\":[{\"reason\":\"Wear the slave shirt inside the mining camp\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear the slave robe inside the mining camp\",\"slot\":\"Legs\",\"tier\":1},{\"reason\":\"Wear the slave boots inside the mining camp\",\"slot\":\"Boots\",\"tier\":1}],\"prereqs\":[],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "49,47",
@@ -8546,7 +8585,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for The Tourist Trap were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for The Tourist Trap were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Fate equipment review 2026-09-22: Body T1: Wear the slave shirt inside the mining camp; Legs T1: Wear the slave robe inside the mining camp; Boots T1: Wear the slave boots inside the mining camp. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Bedabin Camp (49,47, step); Rocky Desert (50,47, step); Shantay Pass (51,48, first), and unavoidable travel remains represented by region gate Kharidian Desert.",
@@ -8603,15 +8643,15 @@
       "id": "Tower of Life",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-09-22",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Tower_of_Life&oldid=15271145",
-        "revision": 15271145,
-        "revisionTimestamp": "2026-07-21T04:31:25Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Tower_of_Life&oldid=15350496",
+        "revision": 15350496,
+        "revisionTimestamp": "2026-09-18T19:08:04Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"East Ardougne\"],\"skills\":{\"Construction\":10},\"prereqs\":[],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"East Ardougne\"],\"skills\":{\"Construction\":10},\"equipmentRequirements\":[{\"reason\":\"Wear the hard hat as part of the builder outfit\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the builder shirt to enter the tower\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear the builder trousers to enter the tower\",\"slot\":\"Legs\",\"tier\":1},{\"reason\":\"Wear the builder boots to enter the tower\",\"slot\":\"Boots\",\"tier\":1}],\"prereqs\":[],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "41,50",
@@ -8621,7 +8661,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Tower of Life were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Tower of Life were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Fate equipment review 2026-09-22: Head T1: Wear the hard hat as part of the builder outfit; Body T1: Wear the builder shirt to enter the tower; Legs T1: Wear the builder trousers to enter the tower; Boots T1: Wear the builder boots to enter the tower. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Tower of Life (41,50, first), and unavoidable travel remains represented by region gate Kandarin.",

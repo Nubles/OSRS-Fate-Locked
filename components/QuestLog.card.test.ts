@@ -106,3 +106,33 @@ describe('QuestCard reward metadata', () => {
     expect(renderQuest(QUEST_DATA["Alfred Grimhand's Barcrawl"])).not.toContain('Quest Point');
   });
 });
+
+describe('QuestCard mandatory equipment', () => {
+  const renderGhost = (equipment: Record<string, number>, completed = false) => {
+    const quest = {
+      ...QUEST_DATA['The Restless Ghost'],
+      accessPolicy: 'regions' as const, regions: ['Misthalin'], locations: [],
+      equipmentRequirements: [{ slot: 'Neck' as const, tier: 1, reason: 'Wear the Ghostspeak amulet' }],
+    };
+    const state = { ...unlocks, equipment, quests: completed ? [quest.id] : [] };
+    const eligibility = evaluateQuestEligibility(quest, state);
+    return renderToStaticMarkup(React.createElement(QuestCard, {
+      quest: { ...quest, status: eligibility.status, eligibility },
+      unlocks: state, currentQP: 0, onToggle: vi.fn(),
+    }));
+  };
+
+  it('shows the actual equipment blocker and counts it in requirement progress', () => {
+    const html = renderGhost({});
+    expect(html).toContain('Neck T1');
+    expect(html).toContain('Wear the Ghostspeak amulet');
+    expect(html).toContain('1/2 reqs');
+    expect(html).not.toContain('Ready to complete!');
+    expect(html).not.toContain('/w/Neck');
+  });
+
+  it('clears the equipment blocker after unlocking the slot and preserves completed quests', () => {
+    expect(renderGhost({ Neck: 1 })).toContain('Ready to complete!');
+    expect(renderGhost({}, true)).not.toContain('reqs');
+  });
+});

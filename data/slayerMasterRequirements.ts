@@ -3,6 +3,8 @@
  * generated assignment tables. Assignment requirements remain in the Chunk
  * Picker data; these rules determine whether a master can assign any task.
  */
+import type { QuestProgressRequirement } from './questProgress';
+
 export interface SlayerMasterRequirementOption {
   label: string;
   skills?: Record<string, number>;
@@ -12,6 +14,7 @@ export interface SlayerMasterRequirementOption {
 export interface SlayerMasterRequirement {
   areas?: string[];
   quests?: string[];
+  questProgress?: QuestProgressRequirement[];
   oneOf?: SlayerMasterRequirementOption[];
 }
 
@@ -73,7 +76,7 @@ export const SLAYER_MASTER_REQUIREMENTS: Record<string, SlayerMasterRequirement>
   },
   Mortimer: {
     areas: ['Wyrmscraig'],
-    quests: ['Fallen From Grace'],
+    questProgress: [{ quest: 'Fallen From Grace', label: 'Confirm you reached Mortimer during Fallen From Grace (full completion is not required)' }],
     oneOf: [
       { label: 'Slayer 99', skills: { Slayer: 99 } },
       { label: 'Slayer 70 + Combat 100', skills: { Slayer: 70 }, combatLevel: 100 },

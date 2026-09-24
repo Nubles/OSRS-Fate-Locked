@@ -7,7 +7,7 @@
 
 import {
   SKILLS_LIST, REGIONS_LIST, EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX,
-  MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST,
+  MOBILITY_LIST, ARCANA_LIST, ROLLABLE_POH_ITEMS, MERCHANTS_LIST, MINIGAMES_LIST,
   BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST,
   SLAYER_UNLOCKS_LIST,
 } from '../constants';
@@ -23,7 +23,7 @@ export const COMPLETION_DENOMINATOR =
   SKILLS_LIST.length * 10 +
   REGIONS_LIST.length +
   EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX +
-  MOBILITY_LIST.length + ARCANA_LIST.length + POH_LIST.length +
+  MOBILITY_LIST.length + ARCANA_LIST.length + ROLLABLE_POH_ITEMS.length +
   MERCHANTS_LIST.length + MINIGAMES_LIST.length + BOSSES_LIST.length +
   STORAGE_LIST.length + GUILDS_LIST.length + FARMING_PATCH_LIST.length +
   SLAYER_UNLOCKS_LIST.length +
@@ -42,7 +42,7 @@ const len = (a: unknown[] | undefined) => (Array.isArray(a) ? a.length : 0);
 /** Unlock points the player has accrued. */
 export const playerUnlockPoints = (u: UnlockState, mode?: string, custom?: GameModeRules): number =>
   sum(u.skills) + sum(u.equipment) +
-  (mode === 'chunked' ? [...new Set(u.chunks ?? [])].filter(k => k !== CHUNKED_START_KEY && ALL_CHUNK_KEYS.includes(k)).length : visibleAreaUnlocks(u.regions).length) + len(u.mobility) + len(u.arcana) + len(u.housing) +
+  (mode === 'chunked' ? [...new Set(u.chunks ?? [])].filter(k => k !== CHUNKED_START_KEY && ALL_CHUNK_KEYS.includes(k)).length : visibleAreaUnlocks(u.regions).length) + len(u.mobility) + len(u.arcana) + ROLLABLE_POH_ITEMS.filter(item => u.housing?.includes(item)).length +
   len(u.merchants) + len(u.minigames) + len(u.bosses) + len(u.storage) +
   len(u.guilds) + len(u.farming) + len(u.slayerUnlocks) + (bankLocksActive(mode, custom) ? len(u.banks) : 0);
 

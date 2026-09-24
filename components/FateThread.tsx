@@ -3,7 +3,8 @@ import { useGame } from '../context/GameContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { TableType } from '../types';
 import { categoryColor } from '../utils/rarity';
-import { X, Play, ZoomIn, ZoomOut, Sparkles, Maximize2 } from 'lucide-react';
+import { X, Play, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { Sparkles } from './OsrsIcon';
 
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';

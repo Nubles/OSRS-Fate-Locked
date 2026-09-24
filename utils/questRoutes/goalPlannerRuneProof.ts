@@ -94,6 +94,7 @@ export const materializeRuneProofAccount = (
     gameModeId,
     unlockedChunks: unlockedChunks as QuestRouteAnalysisSnapshot['unlockedChunks'],
     unlocks: {
+      equipment: { ...unlocks.equipment },
       skills: { ...unlocks.skills },
       levels: { ...unlocks.levels },
       regions: [...unlocks.regions],
@@ -111,6 +112,7 @@ export const materializeRuneProofAccount = (
 export const canonicalRuneProofAccountIdentity = (account: RuneProofAccountSnapshot): object => ({
   gameModeId: account.gameModeId ?? null,
   unlockedChunks: normalizedList(account.unlockedChunks),
+  equipment: normalizedLevels(account.unlocks.equipment ?? {}),
   skills: normalizedLevels(account.unlocks.skills),
   levels: normalizedLevels(account.unlocks.levels),
   regions: normalizedList(account.unlocks.regions),
@@ -130,7 +132,7 @@ export const materializeQuestRouteSnapshot = (
   chunkDataVersion: number,
   walkthrough: QuestWalkthroughDefinition,
 ): QuestRouteAnalysisSnapshot => {
-  const catalogue = reviewedQuestRequirements(questId);
+  const catalogue = walkthrough.requirementsReview ?? reviewedQuestRequirements(questId);
   if (!catalogue) throw new Error(`RuneProof has no reviewed item catalogue for ${questId}.`);
 
   const pending = catalogue.items.flatMap(requirement => [

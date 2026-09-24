@@ -106,6 +106,9 @@ export const QuestRoutePanel: React.FC<QuestRoutePanelProps> = ({
   const analysisWalkthrough = analysis && 'walkthrough' in analysis
     ? analysis.walkthrough
     : null;
+  const equipmentBlockers = analysis && 'equipmentBlockers' in analysis
+    ? analysis.equipmentBlockers ?? []
+    : [];
   const remainingAnalysis = useMemo(
     () => analysis
       ? remainingQuestRouteAnalysis(analysis, confirmedItemKeys)
@@ -161,6 +164,11 @@ export const QuestRoutePanel: React.FC<QuestRoutePanelProps> = ({
   const knownBlockerCount = useMemo(() => {
     if (!analysis || !remainingAnalysis) return 0;
     const identities = new Set<string>();
+    if ('equipmentBlockers' in analysis) {
+      analysis.equipmentBlockers?.forEach(blocker => (
+        identities.add(`EQUIPMENT:${blocker.slot}:${blocker.tier}`)
+      ));
+    }
     remainingAnalysis.items.forEach((item) => {
       if (item.state === 'ROUTE_BLOCKED' || item.state === 'NO_CURRENT_SOURCE') {
         identities.add(`ITEM:${item.requirement.item.key}`);
@@ -253,6 +261,14 @@ export const QuestRoutePanel: React.FC<QuestRoutePanelProps> = ({
           </p>
         )}
       </header>
+
+      {equipmentBlockers.length > 0 && (
+        <ul aria-label="Required equipment unlocks" className="space-y-1 text-[11px] text-amber-200">
+          {equipmentBlockers.map(blocker => (
+            <li key={`${blocker.slot}:${blocker.tier}`}>{blocker.label}</li>
+          ))}
+        </ul>
+      )}
 
       <QuestRequirementChecklist
         questId={questId}

@@ -19,7 +19,7 @@
 
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
-import { evaluateQuestEligibility, getDiaryStatus } from './journalStatus';
+import { evaluateQuestEligibility, evaluateDiaryTierEligibility } from './journalStatus';
 
 export interface UnlockImpact {
   /** Quests LOCKED → AVAILABLE in one step. */
@@ -74,7 +74,10 @@ export function prepareUnlockImpactContext(
     allQuests.map(q => [q.id, baseQuestEligibility.get(q.id)!.status]),
   );
   const baseDiaryStatus = new Map<string, string>(
-    allDiaries.map(d => [d.id, getDiaryStatus(d, baseUnlocks, gameModeId)]),
+    allDiaries.map(d => {
+      const result = evaluateDiaryTierEligibility(d, baseUnlocks, gameModeId);
+      return [d.id, result.status === 'AVAILABLE' && !result.eligible ? 'NEEDS_CONFIRMATION' : result.status];
+    }),
   );
   return {
     allQuests,
@@ -135,7 +138,7 @@ export function computeUnlockImpact(
     .filter(
       (d) =>
         !isOpen(baseDiaryStatus.get(d.id)) &&
-        getDiaryStatus(d, simulatedUnlocks, gameModeId) === 'AVAILABLE',
+        evaluateDiaryTierEligibility(d, simulatedUnlocks, gameModeId).eligible,
     )
     .map((d) => d.id);
 
@@ -174,7 +177,7 @@ export function computeUnlockImpact(
     .filter(
       (d) =>
         !isOpen(baseDiaryStatus.get(d.id)) &&
-        getDiaryStatus(d, finalSnap, gameModeId) === 'AVAILABLE',
+        evaluateDiaryTierEligibility(d, finalSnap, gameModeId).eligible,
     )
     .map((d) => d.id);
 

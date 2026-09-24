@@ -1,12 +1,12 @@
 /**
- * Loads the OSRS monster dataset (weirdgloop dps-calc) on demand for the DPS
+ * Loads the release-pinned OSRS Wiki DPS-calculator dataset on demand for the DPS
  * calculator: defence levels/bonuses + HP per monster. Lazy + localStorage
  * cached, mirroring services/GearService.ts.
  */
 
-const DATA_URL = 'https://raw.githubusercontent.com/weirdgloop/osrs-dps-calc/main/cdn/json/monsters.json';
-const CACHE_KEY = 'fate_osrs_monsters_v2';
-const CACHE_TTL = 1000 * 60 * 60 * 24 * 30; // 30 days
+import { MONSTER_CATALOGUE, MONSTER_CACHE_SOURCE } from '../data/monsterCatalogue';
+
+const CACHE_KEY = 'fate_osrs_monsters_v3';
 
 export interface MonsterStats {
   id: number;
@@ -21,6 +21,7 @@ export interface MonsterStats {
   magicLevel: number;
   /** Defensive bonuses by attack type. */
   def: { stab: number; slash: number; crush: number; magic: number; ranged: number };
+  rangedDefence?: Record<'light' | 'standard' | 'heavy', number>;
   size: number;
   attributes: string[];
 }
@@ -34,8 +35,20 @@ interface RawMonster {
   size?: number;
   max_hit?: string | number;
   skills?: { def?: number; hp?: number; magic?: number };
-  defensive?: { stab?: number; slash?: number; crush?: number; magic?: number; ranged?: number };
+  defensive?: { stab?: number; slash?: number; crush?: number; magic?: number; ranged?: number; light?: number; standard?: number; heavy?: number };
   attributes?: string[];
+}
+
+function validMonster(value: unknown): value is MonsterStats {
+  if (!value || typeof value !== 'object') return false;
+  const m = value as MonsterStats;
+  return Number.isInteger(m.id) && typeof m.name === 'string' && !!m.name.trim()
+    && typeof m.version === 'string' && typeof m.imageFile === 'string'
+    && [m.level, m.hp, m.maxHit, m.defLevel, m.magicLevel, m.size].every(Number.isFinite)
+    && m.hp > 0 && m.size >= 0 // Upstream uses zero for unknown size on real targets.
+    && !!m.def && ['stab', 'slash', 'crush', 'magic', 'ranged'].every(k => Number.isFinite(m.def[k as keyof MonsterStats['def']]))
+    && !!m.rangedDefence && ['light', 'standard', 'heavy'].every(k => Number.isFinite(m.rangedDefence![k as 'light' | 'standard' | 'heavy']))
+    && Array.isArray(m.attributes) && m.attributes.every(a => typeof a === 'string');
 }
 
 class MonsterService {
@@ -84,29 +97,30 @@ class MonsterService {
   private async fetchData(): Promise<RawMonster[]> {
     let lastErr: unknown;
     for (let attempt = 0; attempt < 2; attempt++) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 15000);
       try {
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 15000);
-        const res = await fetch(DATA_URL, { signal: ctrl.signal });
-        clearTimeout(timer);
+        const base = (import.meta as any).env?.BASE_URL ?? '/';
+        const res = await fetch(`${base}${MONSTER_CATALOGUE.asset}`, { signal: ctrl.signal });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return await res.json();
       } catch (e) { lastErr = e; }
+      finally { clearTimeout(timer); }
     }
     throw lastErr ?? new Error('fetch failed');
   }
 
   private normalize(raw: RawMonster[]): MonsterStats[] {
+    if (!Array.isArray(raw)) throw new Error('Invalid monster dataset');
     const seen = new Set<string>();
     const out: MonsterStats[] = [];
     for (const r of raw) {
-      if (!r || typeof r.id !== 'number' || !r.name) continue;
+      if (!r || !Number.isInteger(r.id) || typeof r.name !== 'string' || !r.name.trim()) continue;
       const hp = r.skills?.hp ?? 0;
       if (hp <= 0) continue; // non-attackable / props
       const key = `${r.name}|${r.version ?? ''}`;
       if (seen.has(key)) continue;
-      seen.add(key);
-      out.push({
+      const monster: MonsterStats = {
         id: r.id,
         name: r.name,
         version: r.version ?? '',
@@ -121,12 +135,21 @@ class MonsterService {
           slash: r.defensive?.slash ?? 0,
           crush: r.defensive?.crush ?? 0,
           magic: r.defensive?.magic ?? 0,
-          ranged: r.defensive?.ranged ?? 0,
+          ranged: r.defensive?.standard ?? r.defensive?.ranged ?? 0,
+        },
+        rangedDefence: {
+          light: r.defensive?.light ?? r.defensive?.ranged ?? 0,
+          standard: r.defensive?.standard ?? r.defensive?.ranged ?? 0,
+          heavy: r.defensive?.heavy ?? r.defensive?.ranged ?? 0,
         },
         size: r.size ?? 1,
         attributes: r.attributes ?? [],
-      });
+      };
+      if (!validMonster(monster)) continue;
+      seen.add(key);
+      out.push(monster);
     }
+    if (!out.length) throw new Error('Empty monster dataset');
     return out;
   }
 
@@ -140,15 +163,17 @@ class MonsterService {
     try {
       const saved = localStorage.getItem(CACHE_KEY);
       if (!saved) return null;
-      const { timestamp, data } = JSON.parse(saved);
-      if (Date.now() - timestamp > CACHE_TTL || !Array.isArray(data)) return null;
-      return data as MonsterStats[];
+      const { source, data } = JSON.parse(saved);
+      // The fixed source cannot age out. A new catalogue or normalizer invalidates
+      // this cache; unfingerprinted live-main caches are never reused as current.
+      if (source !== MONSTER_CACHE_SOURCE || !Array.isArray(data) || !data.length || !data.every(validMonster)) return null;
+      return data;
     } catch { return null; }
   }
 
   private saveCache(items: MonsterStats[]) {
     try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: items }));
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), source: MONSTER_CACHE_SOURCE, data: items }));
     } catch { /* quota — keep in memory */ }
   }
 

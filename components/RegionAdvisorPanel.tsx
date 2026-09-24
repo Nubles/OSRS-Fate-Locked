@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Map } from 'lucide-react';
+import { Map } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { rankLockedRegions } from '../utils/regionAdvisor';
 import { AdvisorList, AdvisorItem } from './AdvisorList';

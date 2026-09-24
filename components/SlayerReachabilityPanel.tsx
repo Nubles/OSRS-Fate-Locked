@@ -1,8 +1,10 @@
 import { evaluateEntityAccess } from '../utils/entityAccess';
 import type { SlayerAssignment } from '../services/ChunkContentService';
 import React, { useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, Skull, MapPin, Sword } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { Skull, MapPin, Sword } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
+import { WikiIcon } from './WikiIcon';
 import { chunkContentService } from '../services/ChunkContentService';
 import { showChunkOnMap } from '../utils/chunkLocations';
 import { slayerReachability, SlayerStatus, SlayerTaskRow } from '../utils/slayerReach';
@@ -79,7 +81,7 @@ export const SlayerReachabilityPanel: React.FC = () => {
         <span className="text-[11px] font-bold uppercase tracking-wide text-rose-200">Slayer Task Reachability</span>
         <span className="ml-auto flex items-center gap-3 text-[10px] font-mono text-gray-400">
           <span className="flex items-center gap-1"><Sword size={10} /> CB {reach.combatLevel}</span>
-          <span>Slayer {reach.slayerUnlocked ? reach.slayerLevel : '🔒'}</span>
+          <span className="inline-flex items-center gap-1"><WikiIcon file="Slayer_icon.png" alt="" Fallback={Skull} size={12} />Slayer {reach.slayerUnlocked ? reach.slayerLevel : 'locked'}</span>
           <span className="text-emerald-300">{totalReady} ready</span>
         </span>
       </div>

@@ -17,7 +17,7 @@ import { ALL_CA_TASKS, CATask } from '../data/caTasks';
 import { QUEST_DATA } from '../data/questData';
 import { UNLOCK_COST, randomUnlockPool, pickRandomPoolEntry, isRandomUnlockEligible } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
-import { drawFloat } from '../utils/seededRng';
+import { drawFloat, seededContext } from '../utils/seededRng';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import {
   getBackupDataById,
@@ -39,6 +39,7 @@ import {
   type ImportResult,
 } from '../utils/gamePersistence';
 import { CURRENT_SAVE_VERSION, MAX_COUNTER, parseAndMigrateSave, validateAndMigrateSave } from '../utils/saveSchema';
+import { emptyRuneProofProgress, migrateLocalRuneProofProgress, updateRuneProofProgress, type RuneProofMutation } from '../utils/runeProofProgress';
 import { checksumSave } from '../utils/saveIntegrity';
 import { openRecoveryDatabase } from '../utils/recoveryDatabase';
 import type {
@@ -53,6 +54,7 @@ import { profileBackupKey } from '../utils/profileStorage';
 import { showToast } from '../utils/toast';
 import { LEGACY_FATE_COMPENSATION_ID } from '../utils/fateCompensation';
 import { normalizeAccountName } from '../services/fateEventProtocol';
+import { collectionItemNeedsIdentityReview, emptyCollectionLogIdentity } from '../services/CollectionLogSyncService';
 import {
   canEarnDiaryTier,
   diaryTaskCompletionDecision,
@@ -213,7 +215,7 @@ interface GameContextType extends GameState {
   setSeed: (seed: string) => void;
   /**
    * Gameplay RNG choke point. On a seeded run this derives from
-   * (rngSeed, newest history hash, purpose, index) — deterministic and
+   * (rngSeed, versioned history context, purpose, index) — deterministic and
    * replayable; on an unseeded run it's Math.random. EVERY gameplay outcome
    * (rolls, table picks, gambles) must draw through here, never Math.random
    * directly — that's what makes seeded runs raceable and verifiable.
@@ -230,6 +232,7 @@ interface GameContextType extends GameState {
   restoreBackup: (id: string | number) => Promise<ImportResult>;
   togglePin: (id: string) => void;
   saveNote: (id: string, text: string) => void;
+  updateRuneProof: (expectedRunId: string, change: RuneProofMutation) => boolean;
   completeQuest: (id: string, x?: number, y?: number, attestation?: CompletionAttestation) => CompletionResult;
   completeDiaryTask: (id: string, x?: number, y?: number, attestation?: CompletionAttestation) => CompletionResult;
   completeDiaryTier: (id: string) => CompletionResult;
@@ -275,6 +278,8 @@ const getInitialUnlocks = (): UnlockState => ({
 });
 
 export const initialState: GameState = {
+  collectionLogIdentity: emptyCollectionLogIdentity(),
+  runeProofProgress: emptyRuneProofProgress(),
   version: CURRENT_SAVE_VERSION,
   areaUnlockRevision: 1,
   runId: newRunId(),
@@ -307,6 +312,8 @@ export const initialState: GameState = {
 
 export const createFreshState = (): GameState => ({
   ...initialState,
+  collectionLogIdentity: emptyCollectionLogIdentity(),
+  runeProofProgress: emptyRuneProofProgress(),
   unlocks: getInitialUnlocks(),
   history: [],
   pinnedGoals: [],
@@ -333,6 +340,7 @@ interface PreparedRollResult {
 }
 
 export type Action =
+  | { type: 'UPDATE_RUNEPROOF'; payload: { expectedRunId: string; change: RuneProofMutation } }
   | { type: 'LOAD_SAVE'; payload: GameState }
   | { type: 'RESET' }
   | { type: 'TOGGLE_ANIMATIONS' }
@@ -456,6 +464,9 @@ export function prepareKeyRollAction(
       ? `roll:clue:${vanillaClueContext.clueTier}:${clueAwarded}`
       : 'roll';
 
+  // Integer dice must land inside their float bin, not on its rounding edge.
+  // Keep the old conversion for existing seeded histories to preserve their stream.
+  const dieOffset = state.rngSeed && state.rngVersion !== 2 ? 1 : 0.5;
   let roll: number;
   let baseThreshold: number;
   let effectiveThreshold: number;
@@ -465,7 +476,7 @@ export function prepareKeyRollAction(
       ?? effectiveVanillaClueRate(threshold, clueAwarded);
     effectiveThreshold = normalizePercent(Math.max(0, Math.min(100, baseThreshold + successBonus)));
     const exactRoll = (index: number) => resolveKeyRoll(
-      (nextDice(rollPurpose, index, 10_000) - 1) / 10_000,
+      (nextDice(rollPurpose, index, 10_000) - dieOffset) / 10_000,
       effectiveThreshold,
     );
     const primary = exactRoll(0);
@@ -476,7 +487,7 @@ export function prepareKeyRollAction(
     roll = selected.roll;
     success = selected.success;
   } else {
-    const rollUnitToFloat = (unit: number): number => (unit - 1) / 1000;
+    const rollUnitToFloat = (unit: number): number => (unit - dieOffset) / 1000;
     const result = resolveKeyRoll({
       primaryFloat: rollUnitToFloat(nextDice(rollPurpose, 0, 1000)),
       advantageFloat: rollUnitToFloat(nextDice(rollPurpose, 1, 1000)),
@@ -701,6 +712,12 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
   const now = Date.now();
 
   switch (action.type) {
+    case 'UPDATE_RUNEPROOF': {
+      if (state.runId !== action.payload.expectedRunId) return state;
+      const current = state.runeProofProgress ?? emptyRuneProofProgress();
+      const progress = updateRuneProofProgress(current, action.payload.change);
+      return progress === current ? state : { ...state, runeProofProgress: progress };
+    }
     case 'LOAD_SAVE':
       return { ...action.payload, lastEvent: null };
 
@@ -768,12 +785,13 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       // Like the game mode, the seed is part of the run's identity — it can
       // be chosen or changed only while the run has no history.
       if (state.history.length > 0) return state;
-      return { ...state, rngSeed: action.payload || undefined };
+      return { ...state, rngSeed: action.payload || undefined, rngVersion: 2 };
     }
 
     case 'ACCEPT_DETECTED_EVENT': {
       if (!detectedEventIdentityMatches(state, action.payload.expected)) return state;
       const progress = action.payload.progress;
+      if (progress.kind === 'COLLECTION_ITEM' && collectionItemNeedsIdentityReview(state.unlocks.collectionLog, progress.itemId, state.collectionLogIdentity)) return state;
       const guaranteedChaosAwarded = progress.kind === 'SKILL_LEVEL'
         && progress.level > (state.unlocks.levels[progress.skill] ?? 1)
         && isSkillChaosMilestone(progress.level);
@@ -815,6 +833,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           },
         };
       }
+      if (collectionItemNeedsIdentityReview(state.unlocks.collectionLog, progress.itemId, state.collectionLogIdentity)) return state;
       const current = state.unlocks.collectionLog[progress.itemId] ?? 0;
       if (current >= 1) return state;
       return { ...state, unlocks: { ...state.unlocks, collectionLog: { ...state.unlocks.collectionLog, [progress.itemId]: 1 } } };
@@ -1086,7 +1105,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         ...state,
         fatePoints: state.fatePoints - ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
         activeBuff: 'LUCK',
-        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Clarity', details: 'Next roll has Advantage.' }],
+        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Clarity', details: 'Next roll has Advantage.', meta: { ritual: 'LUCK', fateCost: ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier) } }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'LUCK' } }
       };
 
@@ -1095,7 +1114,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         ...state,
         fatePoints: state.fatePoints - ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
         activeBuff: 'GREED',
-        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Greed', details: 'Next success gives 2 Keys.' }],
+        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Greed', details: 'Next success gives 2 Keys.', meta: { ritual: 'GREED', fateCost: ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier) } }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'GREED' } }
       };
 
@@ -1104,7 +1123,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         ...state,
         fatePoints: state.fatePoints - ritualFateCost('CHAOS', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
         chaosKeys: state.chaosKeys + 1,
-        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Chaos', details: 'Fate converted to Chaos Key.' }],
+        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Chaos', details: 'Fate converted to Chaos Key.', meta: { ritual: 'CHAOS', fateCost: ritualFateCost('CHAOS', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier), chaosKeysAwarded: 1 } }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'CHAOS' } }
       };
 
@@ -1113,7 +1132,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         ...state,
         keys: state.keys - (getRitual('TRANSMUTE').keyCost ?? 5),
         specialKeys: state.specialKeys + 1,
-        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Transmutation', details: '5 Keys fused into 1 Omni-Key.' }],
+        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Transmutation', details: '5 Keys fused into 1 Omni-Key.', meta: { ritual: 'TRANSMUTE', keyCost: getRitual('TRANSMUTE').keyCost ?? 5, specialKeysAwarded: 1 } }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'TRANSMUTE' } }
       };
 
@@ -1130,6 +1149,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           id: generateId(), timestamp: now, type: 'ALTAR',
           message: won ? `Void Gambit WON — ${keysWon} Key${keysWon > 1 ? 's' : ''}!` : 'Void Gambit lost.',
           details: won ? `Staked ${stake} Fate; the Void blinked.` : `Staked ${stake} Fate; the Void keeps it.`,
+          meta: { ritual: 'GAMBIT', fateCost: stake, keysAwarded: won ? keysWon : 0 },
         }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'GAMBIT', won } }
       };
@@ -1149,6 +1169,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         history: [...state.history, {
           id: generateId(), timestamp: now, type: 'ALTAR',
           message: `Cartographer charted ${label}`,
+          meta: { ritual: 'CARTOGRAPHER', fateCost: cost, chunk: chosen },
           details: `Chose a frontier chunk for ${cost} Fate — the one decision Fate allows.`,
         }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'CARTOGRAPHER', chunk: chosen } }
@@ -1329,6 +1350,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
     case 'LOG_ITEM': {
       const itemId = action.payload;
+      if (collectionItemNeedsIdentityReview(state.unlocks.collectionLog, itemId, state.collectionLogIdentity)) return state;
       const currentCount = state.unlocks.collectionLog[itemId] || 0;
 
       const newUnlocks = {
@@ -1502,6 +1524,11 @@ const profileIdFromStorageKey = (storageKey: string): string =>
     ? storageKey.slice('FATE_PROFILE_'.length)
     : storageKey;
 
+const hydrateLocalGuideProgress = (state: GameState): GameState => {
+  try { return migrateLocalRuneProofProgress(state, localStorage); }
+  catch { return state; }
+};
+
 export const GameProvider: React.FC<GameProviderProps> = ({
   children,
   storageKey,
@@ -1539,7 +1566,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
         persistedSnapshotRef.current = source.initialData === null
           ? null
           : serializeGameState(source.initialState);
-        return { ...source.initialState, lastEvent: null };
+        return { ...hydrateLocalGuideProgress(source.initialState), lastEvent: null };
       }
       const key = source;
       let saved: string | null = null;
@@ -1553,7 +1580,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       const pending = getPendingSave(key);
       if (pending) {
         const parsed = parseAndMigrateSave(pending.data, createFreshState());
-        if (parsed.ok === true) return { ...parsed.state, lastEvent: null };
+        if (parsed.ok === true) return { ...hydrateLocalGuideProgress(parsed.state), lastEvent: null };
         discardPendingSave(key);
         console.warn('Pending save failed validation', parsed.code, parsed.path ?? 'root');
       }
@@ -1562,7 +1589,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
         console.warn('Stored save could not be read');
       } else if (saved) {
         const parsed = parseAndMigrateSave(saved, createFreshState());
-        if (parsed.ok === true) return { ...parsed.state, lastEvent: null };
+        if (parsed.ok === true) return { ...hydrateLocalGuideProgress(parsed.state), lastEvent: null };
         initialLoadWarningRef.current = 'Saved run data was invalid, so a fresh run was started.';
         console.warn('Stored save failed validation', parsed.code, parsed.path ?? 'root');
       }
@@ -2256,6 +2283,19 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     return transition.state;
   }, []);
 
+  const updateRuneProof = useCallback((expectedRunId: string, change: RuneProofMutation): boolean => {
+    if (expectedRunId !== stateRef.current.runId || profileEvictedRef.current) return false;
+    const authorization = authorizeOwnedWrite();
+    if (authorization.ok === false && authorization.reason === 'ownership_conflict') {
+      if (change.kind !== 'BIND') showToast('Take over saving this profile before changing guide progress');
+      return false;
+    }
+    // Storage failures keep the new snapshot pending through the same visible
+    // retry/export/unload-protection path as every other saved run change.
+    commitAction({ type: 'UPDATE_RUNEPROOF', payload: { expectedRunId, change } });
+    return true;
+  }, [authorizeOwnedWrite, commitAction, saveOwnershipStatus]);
+
   // Gameplay RNG choke point (see GameContextType.nextFloat). Reads through
   // stateRef so one render's callbacks always draw against the latest chain
   // tip; the tip changes with every appended history entry, which is what
@@ -2263,7 +2303,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const nextFloat = useCallback((purpose: string, index = 0): number => {
     const s = stateRef.current;
     if (!s.rngSeed) return Math.random();
-    const tip = s.history[s.history.length - 1]?.hash ?? 'genesis';
+    const tip = seededContext(s);
     return drawFloat(s.rngSeed, tip, purpose, index);
   }, []);
   const nextDice = useCallback((purpose: string, index = 0, max = 100): number =>
@@ -2546,6 +2586,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
         },
       );
     }
+    if (!isCurrent()) return replacementStaleResult();
     const result = applyPreparedReplacement(data, {
       current: stateRef.current,
       defaults: createFreshState(),
@@ -2553,7 +2594,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       writeReplacement,
       replace: replaceState,
     });
-    return isCurrent() ? result : replacementStaleResult();
+    return result;
   }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, writeCoordinatedReplacement, writeReplacement]);
 
   const createBackup = useCallback((reason: string): BackupWriteResult | Promise<BackupWriteResult> => {
@@ -2634,13 +2675,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({
         },
       );
     }
+    if (!isCurrent()) return replacementStaleResult();
     const result = applyValidatedReplacement(parseAndMigrateSave(data, createFreshState()), {
       current: stateRef.current,
       writeBackup: current => pushOwnedBackup(current, 'Before restore'),
       writeReplacement,
       replace: replaceState,
     });
-    return isCurrent() ? result : replacementStaleResult();
+    return result;
   }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, profileId, replaceState, storageKey, writeCoordinatedReplacement, writeReplacement]);
 
   const resetGame = useCallback(async (): Promise<void> => {
@@ -2807,6 +2849,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     restoreBackup,
     togglePin,
     saveNote,
+    updateRuneProof,
     completeQuest,
     completeDiaryTask,
     completeDiaryTier,
@@ -2854,6 +2897,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     restoreBackup,
     togglePin,
     saveNote,
+    updateRuneProof,
     completeQuest,
     completeDiaryTask,
     completeDiaryTier,

@@ -1,6 +1,7 @@
 
 import {
   RESOURCE_MAP,
+  RESOURCE_ENTITY_SKILLS,
   resourceUnlockDependency,
   type ResourceSource,
   type ResourceUnlockDependency,
@@ -15,6 +16,9 @@ import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { getActivityReq } from '../data/activityRequirements';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { isAreaReachable } from './reachability';
+import { effectiveSkillLevel } from './slayerReach';
+import { classifyShop } from './shopClassification';
+import { MERCHANT_SERVICES } from '../data/merchantServices';
 
 export interface RouteStatus {
   isAvailable: boolean;
@@ -72,13 +76,16 @@ export interface AvailabilityContext {
   housing: Set<string>;
   levels: Record<string, number>;
   skillsUnlocked: Set<string>;
+  /** Explicit player inventory. Owning inputs permits crafting without a new supply route. */
+  owned: Readonly<Record<string, number>>;
+  availableItems: Set<string>;
 }
 
 // Every named region/sub-area name that could appear in a source's `regions`
 // list — used to build the Chunked-mode reachable set below.
 const ALL_NAMED_AREAS: string[] = [...new Set([...Object.keys(REGION_CHUNKS), ...Object.keys(SUB_AREA_CHUNKS)])];
 
-export const buildAvailabilityContext = (gs: GameState): AvailabilityContext => {
+export const buildAvailabilityContext = (gs: GameState, owned: Readonly<Record<string, number>> = {}): AvailabilityContext => {
   const u = gs.unlocks;
   const skillsUnlocked = new Set<string>();
   for (const [k, v] of Object.entries(u.skills || {})) if ((v as number) > 0) skillsUnlocked.add(k);
@@ -106,6 +113,8 @@ export const buildAvailabilityContext = (gs: GameState): AvailabilityContext => 
     housing: new Set(u.housing),
     levels: u.levels || {},
     skillsUnlocked,
+    owned,
+    availableItems: new Set(),
   };
 };
 
@@ -133,7 +142,7 @@ const hasTypedUnlock = (
  * for the detail UI; the missing array is only populated when needed (short-
  * circuited by `isSourceAvailable` for the boolean-only hot path).
  */
-const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collectMissing: boolean): RouteStatus => {
+const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collectMissing: boolean, path: ReadonlySet<string> = new Set(), quantity = 1, ownedRemaining: Record<string, number> = { ...ctx.owned }): RouteStatus => {
   const missing: string[] = [];
   const unlockDependencies: ResourceUnlockDependency[] = [];
   const result = (isAvailable: boolean): RouteStatus => ({
@@ -164,12 +173,16 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
   if (!hasRegion && !fail(`Region: ${source.regions.join(' or ')}`)) return result(false);
 
   // 2. Skills
-  if (source.skills) {
-    for (const [skill, req] of Object.entries(source.skills)) {
+  const requiredSkills = { ...source.skills };
+  for (const [skill, level] of Object.entries(RESOURCE_ENTITY_SKILLS[source.name] ?? {})) {
+    requiredSkills[skill] = Math.max(requiredSkills[skill] ?? 0, level);
+  }
+  if (Object.keys(requiredSkills).length) {
+    for (const [skill, req] of Object.entries(requiredSkills)) {
       if (!ctx.skillsUnlocked.has(skill)) {
         if (!fail(`Skill Locked: ${skill}`)) return result(false);
       } else {
-        const lvl = ctx.levels[skill] || 1;
+        const lvl = effectiveSkillLevel(ctx.gameState.unlocks, skill);
         if (lvl < (req as number) && !fail(`${skill} ${lvl}/${req}`)) return result(false);
       }
     }
@@ -202,14 +215,27 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
   }
 
   // 5. Implicit merchant
-  if ((source.type === 'SHOP' || source.type === 'MERCHANT') && !source.unlockId) {
+  const serviceCategory = source.merchantCategory ?? MERCHANT_SERVICES[source.name]?.category;
+  if (((source.type === 'SHOP' || source.type === 'MERCHANT') && source.unlockTable !== TableType.MERCHANTS) || serviceCategory) {
     const lower = source.name.toLowerCase();
-    let cat: string | undefined = PLURAL_MAPPINGS[lower] || MERCHANT_BY_NORM_NAME.get(normalize(source.name));
+    const cat = serviceCategory || PLURAL_MAPPINGS[lower] || MERCHANT_BY_NORM_NAME.get(normalize(source.name)) || classifyShop(source.name);
     if (cat === 'Charter Ships') {
       if (!ctx.mobility.has('Charter Ships') && !fail('Mobility: Charter Ships')) return result(false);
     } else if (cat) {
       if (!ctx.merchants.has(cat) && !fail(`Merchant: ${cat}`)) return result(false);
+    } else if (!fail('Shop category needs review')) {
+      return result(false);
     }
+  }
+
+  // Reachability is distinct from permission to perform the final action.
+  // Only success is memoized: a failure along a cycle can still have another route.
+  const actions = Math.ceil(quantity / (source.outputYield || 1));
+  for (const [item, inputQuantity] of Object.entries(source.inputs ?? {})) {
+    if (item === 'Coins') continue; // currency amounts are shown in the plan, not unlock gates
+    const needed = inputQuantity === 0 ? 1 : inputQuantity * actions;
+    const inventory = inputQuantity === 0 ? { ...ownedRemaining } : ownedRemaining;
+    if (!itemAvailable(item, ctx, path, needed, inventory) && !fail(`Ingredient: ${item}`)) return result(false);
   }
 
   return result(missing.length === 0);
@@ -219,14 +245,44 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
 const isSourceAvailable = (source: ResourceSource, ctx: AvailabilityContext): boolean =>
   analyzeSource(source, ctx, false).isAvailable;
 
-export const calculateSupplyChain = (itemName: string, gameState: GameState): SupplyChainResult | null => {
+const itemAvailable = (item: string, ctx: AvailabilityContext, path: ReadonlySet<string> = new Set(), quantity = 1, ownedRemaining: Record<string, number> = { ...ctx.owned }): boolean => {
+  // Only memoize inexhaustible routes. Inventory is finite and must not be spent
+  // twice by sibling ingredients or by different source alternatives.
+  const canCache = Object.keys(ctx.owned).length === 0;
+  if (canCache && ctx.availableItems.has(item)) return true;
+  // Reserve existing intermediate stock before acquiring only the shortfall.
+  // Keep the reservation local until a complete alternative succeeds, so a
+  // failed recipe cannot spend stock that a later alternative still needs.
+  const fromStock = Math.min(quantity, ownedRemaining[item] ?? 0);
+  const shortfall = quantity - fromStock;
+  const reserved = { ...ownedRemaining };
+  if (fromStock > 0) reserved[item] -= fromStock;
+  if (shortfall === 0) {
+    Object.assign(ownedRemaining, reserved);
+    return true;
+  }
+  if (!path.has(item)) {
+    const next = new Set(path); next.add(item);
+    for (const source of RESOURCE_MAP[item] ?? []) {
+      const attempt = { ...reserved };
+      if (analyzeSource(source, ctx, false, next, shortfall, attempt).isAvailable) {
+        Object.assign(ownedRemaining, attempt);
+        if (canCache) ctx.availableItems.add(item);
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+export const calculateSupplyChain = (itemName: string, gameState: GameState, owned: Readonly<Record<string, number>> = {}, quantity = 1): SupplyChainResult | null => {
   const sources = RESOURCE_MAP[itemName];
   if (!sources) return null;
-  const ctx = buildAvailabilityContext(gameState);
+  const ctx = buildAvailabilityContext(gameState, owned);
 
   const analyzedSources = sources.map((source) => ({
     source,
-    status: analyzeSource(source, ctx, true),
+    status: analyzeSource(source, ctx, true, new Set([itemName]), quantity),
   }));
 
   return {
@@ -244,7 +300,7 @@ export const isItemAvailable = (itemName: string, gameState: GameState): boolean
   const sources = RESOURCE_MAP[itemName];
   if (!sources) return false;
   const ctx = buildAvailabilityContext(gameState);
-  return sources.some((s) => isSourceAvailable(s, ctx));
+  return itemAvailable(itemName, ctx);
 };
 
 /**
@@ -255,7 +311,7 @@ export const isItemAvailable = (itemName: string, gameState: GameState): boolean
 export const isItemAvailableWithCtx = (itemName: string, ctx: AvailabilityContext): boolean => {
   const sources = RESOURCE_MAP[itemName];
   if (!sources) return false;
-  return sources.some((s) => isSourceAvailable(s, ctx));
+  return itemAvailable(itemName, ctx);
 };
 
 // --- Shortest-path-to-unlock -------------------------------------------------
@@ -350,8 +406,8 @@ export const findEasiestPathWithCtx = (itemName: string, ctx: AvailabilityContex
   return { source: best.source, missing: best.missing, cost: scalarCost(best.missing) };
 };
 
-export const findEasiestPath = (itemName: string, gameState: GameState): EasiestPath | null =>
-  findEasiestPathWithCtx(itemName, buildAvailabilityContext(gameState));
+export const findEasiestPath = (itemName: string, gameState: GameState, owned: Readonly<Record<string, number>> = {}): EasiestPath | null =>
+  findEasiestPathWithCtx(itemName, buildAvailabilityContext(gameState, owned));
 
 /**
  * Goal-tracker-compatible progress for a Resource Engine item. Same shape as
@@ -385,6 +441,7 @@ export const calculateEngineItemProgress = (itemName: string, gameState: GameSta
     s.regions.length +
     Object.keys(s.skills || {}).length +
     (s.quests?.length || 0) +
+    Object.keys(s.inputs ?? {}).filter(item => item !== 'Coins').length +
     (s.unlockId ? 1 : 0);
   const completed = Math.max(0, total - path.missing.length);
   let percentage = total === 0 ? 100 : Math.round((completed / total) * 100);
@@ -403,8 +460,8 @@ export interface AchievableItem {
   missing: string[];
   source: ResourceSource;
 }
-export const getNextAchievableItems = (gameState: GameState, limit: number = 8): AchievableItem[] => {
-  const ctx = buildAvailabilityContext(gameState);
+export const getNextAchievableItems = (gameState: GameState, limit: number = 8, owned: Readonly<Record<string, number>> = {}): AchievableItem[] => {
+  const ctx = buildAvailabilityContext(gameState, owned);
   const candidates: Array<AchievableItem & { gates: GateCost }> = [];
   for (const item of Object.keys(RESOURCE_MAP)) {
     const path = findEasiestPathWithCtx(item, ctx);
@@ -473,7 +530,7 @@ export const flattenRawMaterials = (node: MaterialNode): { item: string; qty: nu
       n.children.forEach(walk);
     }
   };
-  node.children.forEach(walk);
+  walk(node);
   return Object.entries(totals)
     .map(([item, qty]) => ({ item, qty }))
     .sort((a, b) => a.item.localeCompare(b.item));

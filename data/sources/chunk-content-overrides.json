@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-09-22",
+  "note": "Reviewed corrections to map roles and missing positive content. Canonical save identities and quest readiness remain owned by their existing registries.",
+  "questStarts": [
+    { "name": "Ratcatchers", "firstChunks": ["12597"], "replaceFirst": true, "source": "https://oldschool.runescape.wiki/w/Ratcatchers?oldid=15351359" },
+    { "name": "RFD: The Cook", "firstChunks": ["12850"], "source": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Another_Cook%27s_Quest?oldid=15302151" },
+    { "name": "RFD: Goblins", "firstChunks": ["12850"], "source": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Freeing_the_Goblin_generals?oldid=15292337" },
+    { "name": "RFD: Dwarf", "firstChunks": ["12850"], "source": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Freeing_the_Mountain_Dwarf?oldid=15323345" },
+    { "name": "RFD: Evil Dave", "firstChunks": ["12850"], "source": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Freeing_Evil_Dave?oldid=15294908" },
+    { "name": "RFD: Pirate Pete", "firstChunks": ["12850"], "source": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Freeing_Pirate_Pete?oldid=15292338" },
+    { "name": "RFD: Lumbridge Guide", "firstChunks": ["12850"], "source": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Freeing_the_Lumbridge_Guide?oldid=15297799" },
+    { "name": "RFD: Sir Amik Varze", "firstChunks": ["12850"], "source": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Freeing_Sir_Amik_Varze?oldid=15320990" },
+    { "name": "RFD: King Awowogei", "firstChunks": ["12850"], "source": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Freeing_King_Awowogei?oldid=15331685" },
+    { "name": "RFD: Skrach Uglogwee", "firstChunks": ["12850"], "source": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster/Freeing_Skrach_Uglogwee?oldid=15292343" },
+    { "name": "Roving Elves", "firstChunks": ["8753"], "source": "https://oldschool.runescape.wiki/w/Roving_Elves?oldid=15315441" },
+    { "name": "Mourning's End Part I", "firstChunks": ["8753"], "source": "https://oldschool.runescape.wiki/w/Eluned?oldid=15319636", "note": "The second pre-Song-of-the-Elves location; retain the existing first marker at 9009." }
+  ],
+  "npcs": [
+    { "name": "Chase", "chunkId": "12086", "x": 3037, "y": 3457, "requirements": ["A Ruff Situation Complete the quest"], "source": "https://oldschool.runescape.wiki/w/Chase?oldid=15350971" }
+  ]
+}

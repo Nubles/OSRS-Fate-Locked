@@ -52,6 +52,25 @@ const questIdsWorthAtLeast = (points: number): string[] => {
 };
 
 describe('evaluateQuestDoability', () => {
+  it('keeps the Ghostspeak amulet behind the Neck T1 unlock', () => {
+    const quest: QuestData = {
+      ...QUEST_DATA['The Restless Ghost'],
+      equipmentRequirements: [{ slot: 'Neck', tier: 1, reason: 'Wear the Ghostspeak amulet' }],
+    };
+    const locked = evaluateQuestDoability(quest, unlocks(), reachableChunk);
+    expect(locked.bucket).toBe('REQS');
+    expect(locked.missingEquipment).toEqual([
+      expect.objectContaining({ slot: 'Neck', tier: 1, have: 0 }),
+    ]);
+    expect(questDoabilityRequirementLabels(locked).join(' ')).toMatch(/Neck.*1.*Ghostspeak amulet/i);
+    const open = evaluateQuestDoability(quest, unlocks({ equipment: { Neck: 1 } }), reachableChunk);
+    expect(open.bucket).toBe('DOABLE');
+    expect(open.missingEquipment).toEqual([]);
+    const completed = evaluateQuestDoability(quest, unlocks({ quests: [quest.id] }), reachableChunk);
+    expect(completed.bucket).toBe('DONE');
+    expect(completed.missingEquipment).toEqual([]);
+  });
+
   it('does not report an evidence-free quest as doable', () => {
     const quest: QuestData = {
       id: 'Unknown location quest',
@@ -64,7 +83,10 @@ describe('evaluateQuestDoability', () => {
       points: 0,
       difficulty: DropSource.QUEST_NOVICE,
     };
-    expect(evaluateQuestDoability(quest, unlocks(), null).bucket).toBe('NO_DATA');
+    const row = evaluateQuestDoability(quest, unlocks(), null, [], 'vanilla');
+    expect(row.bucket).toBe('REQS');
+    expect(row.reqsMet).toBe(false);
+    expect(questDoabilityRequirementLabels(row)).toContain('Quest access requirements need review');
   });
 
   it('keeps explicit canonical access authoritative without chunk data', () => {

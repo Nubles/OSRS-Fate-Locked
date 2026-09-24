@@ -47,6 +47,10 @@ describe('RuneProof model invariants', () => {
     { type: 'SKILL', skill: '', level: 1, label: 'Skill access' },
     { type: 'SKILL', skill: 'Crafting', level: Infinity, label: 'Skill access' },
     { type: 'SKILL', skill: 'Crafting', level: 0, label: 'Skill access' },
+    { type: 'EQUIPMENT', slot: 'Neck', tier: 0, label: 'Equipment access' },
+    { type: 'EQUIPMENT', slot: 'Neck', tier: 0.5, label: 'Equipment access' },
+    { type: 'EQUIPMENT', slot: 'Neck', tier: 10, label: 'Equipment access' },
+    { type: 'EQUIPMENT', slot: 'Neck', tier: Infinity, label: 'Equipment access' },
     { type: 'QUEST', questId: 'druidic_ritual', label: '' },
     { type: 'UNRESOLVED', label: 'Check access', raw: '' },
   ];

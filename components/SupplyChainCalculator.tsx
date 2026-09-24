@@ -7,7 +7,8 @@ import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY } from '../data/resour
 import { calculateSupplyChain, isItemAvailableWithCtx, buildAvailabilityContext, computeFullBreakdown, flattenRawMaterials, flattenMultiBreakdown, findEasiestPath, getNextAchievableItems } from '../utils/supplyChain';
 import { wikiService } from '../services/WikiService';
 import { useFocusTrap } from '../hooks/useFocusTrap';
-import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin, Database, ExternalLink, RefreshCw, ArrowLeft, ArrowRight, Hammer, HelpCircle, Layers, Coins, Calculator, ListFilter, Star, ChevronDown, ChevronRight, Hand, ScrollText, Percent, Compass, Pin } from 'lucide-react';
+import { X, Search, CheckCircle2, Lock, Database, ExternalLink, RefreshCw, ArrowLeft, ArrowRight, HelpCircle, Layers, Calculator, ListFilter, ChevronDown, ChevronRight, Percent, Pin, Star } from 'lucide-react';
+import { Box, ShoppingBag, Sword, Sprout, MapPin, Hammer, Coins, Hand, ScrollText, Compass } from './OsrsIcon';
 import { WikiLink } from './WikiLink';
 import { EntityLocations } from './EntityLocations';
 import { SOURCE_TYPE_KINDS as SOURCE_KINDS } from '../utils/chunkLocations';
@@ -259,13 +260,13 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
   // makes each per-item check O(1) lookups instead of repeatedly scanning
   // arrays — far cheaper across 750+ items.
   const availabilityMap = useMemo(() => {
-    const ctx = buildAvailabilityContext(gameState);
+    const ctx = buildAvailabilityContext(gameState, inventory);
     const map: Record<string, boolean> = {};
     for (const key of Object.keys(RESOURCE_MAP)) {
       map[key] = isItemAvailableWithCtx(key, ctx);
     }
     return map;
-  }, [gameState]);
+  }, [gameState, inventory]);
 
   // Filter the database index by query, category, and availability toggle.
   const availableItems = useMemo(() => {
@@ -280,9 +281,9 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
   // If query matches an item exactly (or user clicks one), show detail
   const selectedResult = useMemo(() => {
       const exact = availableItems.find(i => i.toLowerCase() === query.toLowerCase());
-      if (exact) return calculateSupplyChain(exact, gameState);
+      if (exact) return calculateSupplyChain(exact, gameState, inventory, targetQty);
       return null;
-  }, [query, availableItems, gameState]);
+  }, [query, availableItems, gameState, inventory, targetQty]);
 
   // Calculate Reverse Dependencies ("Used In")
   const usedIn = useMemo(() => {
@@ -316,15 +317,15 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
   // wall of red "missing X" chips spread across every source card.
   const easiestPath = useMemo(() => {
       if (!selectedResult) return null;
-      return findEasiestPath(selectedResult.itemName, gameState);
-  }, [selectedResult, gameState]);
+      return findEasiestPath(selectedResult.itemName, gameState, inventory);
+  }, [selectedResult, gameState, inventory]);
 
   // Top-down recommendations: locked items the player is closest to unlocking,
   // ranked by the effort heuristic. Shown only in the empty/index state so it
   // doesn't compete with the detail view when an item is selected.
   const nextAchievable = useMemo(
-      () => getNextAchievableItems(gameState, 8),
-      [gameState],
+      () => getNextAchievableItems(gameState, 8, inventory),
+      [gameState, inventory],
   );
 
   const handleWikiOpen = (e: React.MouseEvent, name: string) => {
@@ -633,6 +634,8 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
                                             </div>
 
                                             {/* Recipe Ingredients Section */}
+                                            {entry.source.localOnly && <p className="mt-2 text-xs text-amber-300">Only usable inside {entry.source.localOnly}; cannot be taken out.</p>}
+                                            {entry.source.outputDoses && <p className="mt-2 text-xs text-gray-400">Quantities on this route use {entry.source.outputDoses}-dose bottles.</p>}
                                             {entry.source.inputs && Object.keys(entry.source.inputs).length > 0 && (
                                                 <div className="mt-4 pt-3 border-t border-white/5">
                                                     <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 flex items-center gap-1.5">
@@ -663,7 +666,7 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
                                                                     )}
                                                                     <div className="flex flex-col items-start leading-none">
                                                                         <span>{inputName}</span>
-                                                                        <span className="text-[9px] text-gray-500 font-mono mt-0.5">x{formatQty(totalRequired)}</span>
+                                                                        <span className="text-[9px] text-gray-500 font-mono mt-0.5">{qty === 0 ? 'Reusable tool' : `x${formatQty(totalRequired)}`}</span>
                                                                     </div>
                                                                     {isLinkable && <ArrowRight size={10} className="opacity-0 group-hover/ing:opacity-100 transition-opacity ml-1 text-emerald-400" />}
                                                                 </button>

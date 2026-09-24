@@ -8,19 +8,57 @@ import {
 } from './f2pQuestMembership';
 
 const EXPECTED = [
-  "Cook's Assistant", 'Sheep Shearer', 'The Restless Ghost', 'Rune Mysteries', 'Imp Catcher',
-  "Daddy's Home", 'X Marks the Spot', 'Romeo & Juliet', 'Demon Slayer', 'Ernest the Chicken',
-  "Doric's Quest", 'Goblin Diplomacy', "Witch's Potion", "The Knight's Sword", "Black Knights' Fortress",
-  'Vampyre Slayer', 'Prince Ali Rescue', "Pirate's Treasure", 'Misthalin Mystery', 'Below Ice Mountain',
-  'The Corsair Curse', 'Shield of Arrav', 'Dragon Slayer I',
+  "Cook's Assistant",
+  "Sheep Shearer",
+  "The Restless Ghost",
+  "Rune Mysteries",
+  "Imp Catcher",
+  "X Marks the Spot",
+  "Romeo & Juliet",
+  "Demon Slayer",
+  "Ernest the Chicken",
+  "Doric's Quest",
+  "Goblin Diplomacy",
+  "Witch's Potion",
+  "The Knight's Sword",
+  "Black Knights' Fortress",
+  "Vampyre Slayer",
+  "Prince Ali Rescue",
+  "Pirate's Treasure",
+  "Misthalin Mystery",
+  "Below Ice Mountain",
+  "The Corsair Curse",
+  "Shield of Arrav",
+  "Dragon Slayer I",
+  "Learning the Ropes",
+  "The Ides of Milk"
 ] as const;
 
 const EXPECTED_SLUGS = [
-  'cooks-assistant', 'sheep-shearer', 'the-restless-ghost', 'rune-mysteries', 'imp-catcher',
-  'daddys-home', 'x-marks-the-spot', 'romeo-juliet', 'demon-slayer', 'ernest-the-chicken',
-  'dorics-quest', 'goblin-diplomacy', 'witchs-potion', 'the-knights-sword', 'black-knights-fortress',
-  'vampyre-slayer', 'prince-ali-rescue', 'pirates-treasure', 'misthalin-mystery', 'below-ice-mountain',
-  'the-corsair-curse', 'shield-of-arrav', 'dragon-slayer-i',
+  "cooks-assistant",
+  "sheep-shearer",
+  "the-restless-ghost",
+  "rune-mysteries",
+  "imp-catcher",
+  "x-marks-the-spot",
+  "romeo-juliet",
+  "demon-slayer",
+  "ernest-the-chicken",
+  "dorics-quest",
+  "goblin-diplomacy",
+  "witchs-potion",
+  "the-knights-sword",
+  "black-knights-fortress",
+  "vampyre-slayer",
+  "prince-ali-rescue",
+  "pirates-treasure",
+  "misthalin-mystery",
+  "below-ice-mountain",
+  "the-corsair-curse",
+  "shield-of-arrav",
+  "dragon-slayer-i",
+  "learning-the-ropes",
+  "the-ides-of-milk"
 ] as const;
 
 type MembershipDocument = {
@@ -36,35 +74,29 @@ describe('authoritative F2P quest membership', () => {
   it('exposes the reviewed roster in progression order', () => {
     expect(f2pQuestMembership.map(entry => entry.questId)).toEqual(EXPECTED);
     expect(f2pQuestMembership.map(entry => entry.slug)).toEqual(EXPECTED_SLUGS);
-    expect(f2pQuestMembership.map(entry => entry.kind)).toEqual([
-      'quest', 'quest', 'quest', 'quest', 'quest', 'miniquest', 'quest', 'quest', 'quest', 'quest',
-      'quest', 'quest', 'quest', 'quest', 'quest', 'quest', 'quest', 'quest', 'quest', 'quest',
-      'quest', 'quest', 'quest',
-    ]);
-    expect(f2pQuestMembership.map(entry => entry.wave)).toEqual([
-      1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5,
-    ]);
+    expect(f2pQuestMembership.every(entry => entry.kind === 'quest')).toBe(true);
+    expect(f2pQuestMembership.map(entry => entry.wave)).toEqual([1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5]);
     expect(f2pQuestMembership.map(entry => entry.progressionPriority)).toEqual(
-      Array.from({ length: 23 }, (_value, index) => index + 1),
+      Array.from({ length: 24 }, (_value, index) => index + 1),
     );
     expect(f2pQuestMembership.map(entry => entry.wikiTitle)).toEqual(
-      EXPECTED.map(questId => `${questId}/Quick guide`),
+      EXPECTED.map(questId => questId === 'Learning the Ropes' ? questId : `${questId}/Quick guide`),
     );
     expect(f2pQuestMembership.map(entry => entry.evidenceQuestId)).toEqual(EXPECTED);
   });
 
-  it('classifies only Daddy\'s Home as a miniquest and excludes non-members', () => {
-    expect(f2pQuestMembershipFor("Daddy's Home")?.kind).toBe('miniquest');
+  it('contains only current F2P quests and excludes members miniquests', () => {
+    expect(f2pQuestMembershipFor("Daddy's Home")).toBeUndefined();
     expect(f2pQuestMembership.filter(entry => entry.kind === 'miniquest').map(entry => entry.questId))
-      .toEqual(["Daddy's Home"]);
-    expect(f2pQuestMembershipFor('Learning the Ropes')).toBeUndefined();
+      .toEqual([]);
+    expect(f2pQuestMembershipFor('Learning the Ropes')?.kind).toBe('quest');
     expect(f2pQuestMembershipFor('Elemental Workshop I')).toBeUndefined();
   });
 
   it('supports exact slug lookups', () => {
     expect(f2pQuestMembershipBySlug('cooks-assistant')?.questId).toBe("Cook's Assistant");
-    expect(f2pQuestMembershipBySlug('daddys-home')?.questId).toBe("Daddy's Home");
-    expect(f2pQuestMembershipBySlug('learning-the-ropes')).toBeUndefined();
+    expect(f2pQuestMembershipBySlug('daddys-home')).toBeUndefined();
+    expect(f2pQuestMembershipBySlug('learning-the-ropes')?.questId).toBe('Learning the Ropes');
   });
 
   it('validates the reviewed document metadata', () => {
@@ -89,7 +121,7 @@ const invalidCases: Array<{
   },
   {
     name: 'sparse quest arrays',
-    mutate: document => { document.quests = new Array(23); },
+    mutate: document => { document.quests = new Array(24); },
     error: 'quests must be a dense array',
   },
   {

@@ -3,7 +3,8 @@ import React, { useMemo, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { CA_DATA, CATier } from '../data/caData';
 import { ALL_CA_TASKS, CATask } from '../data/caTasks';
-import { Swords, CheckCircle2, Sparkles, Skull, Info, ChevronDown, CheckSquare, Square, Lock, ExternalLink } from 'lucide-react';
+import { CheckCircle2, Info, ChevronDown, CheckSquare, Square, Lock, ExternalLink } from 'lucide-react';
+import { Swords, Sparkles, Skull } from './OsrsIcon';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { CAInsights } from './JournalInsights';
@@ -83,13 +84,12 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
   };
 
   const filteredCAs = Object.values(CA_DATA).filter(ca => {
-      const isCompleted = earnedTierIds.includes(
-        ca.id as (typeof CA_TIER_ORDER)[number],
-      );
+      const isCompleted = unlocks.cas.includes(ca.id);
+      const isAvailable = !isCompleted && totalPoints >= ca.pointsRequired;
       if (filterTier !== 'ALL' && ca.id !== filterTier) return false;
       if (filterStatus === 'COMPLETED' && !isCompleted) return false;
-      if (filterStatus === 'AVAILABLE' && isCompleted) return false;
-      if (filterStatus === 'LOCKED' && isCompleted) return false;
+      if (filterStatus === 'AVAILABLE' && !isAvailable) return false;
+      if (filterStatus === 'LOCKED' && (isCompleted || isAvailable)) return false;
 
       if (!searchTerm) return true;
       const lowerSearch = searchTerm.toLowerCase();
@@ -100,14 +100,15 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
 
   const statusCounts = useMemo(() => {
     const total = CA_TIER_ORDER.length;
-    const completed = earnedTierIds.length;
+    const completed = CA_TIER_ORDER.filter(id => unlocks.cas.includes(id)).length;
+    const available = CA_TIER_ORDER.filter(id => !unlocks.cas.includes(id) && totalPoints >= CA_DATA[id].pointsRequired).length;
     return {
       ALL: total,
-      AVAILABLE: total - completed,
-      LOCKED: total - completed,
+      AVAILABLE: available,
+      LOCKED: total - completed - available,
       COMPLETED: completed,
     };
-  }, [earnedTierIds]);
+  }, [unlocks.cas, totalPoints]);
 
   // Lowest incomplete tiers — these are the player's next combat-achievement
   return (
@@ -122,7 +123,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
         status={filterStatus}
         onStatusChange={setFilterStatus}
         statusCounts={statusCounts}
-        completed={earnedTierIds.length}
+        completed={statusCounts.COMPLETED}
         total={Object.keys(CA_DATA).length}
         tiers={[
           { id: 'Easy', colorClass: 'bg-green-900/40 text-green-300' },
@@ -149,9 +150,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
       <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
         {filteredCAs.map(ca => {
             const isRecorded = unlocks.cas.includes(ca.id);
-            const isCompleted = earnedTierIds.includes(
-              ca.id as (typeof CA_TIER_ORDER)[number],
-            );
+            const isCompleted = isRecorded;
             const style = getStyle(ca.id);
             const isSearching = searchTerm.length > 0;
             const isExpanded = expandedId === ca.id || isSearching;

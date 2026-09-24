@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { CanonicalRuneProofControls } from '../utils/runeProofProgress';
 import {
   normalizeRuneProofPreviewChecks,
   readRuneProofPreviewChecks,
@@ -43,22 +44,26 @@ export interface RuneProofPreviewCheckControls {
 export function useRuneProofPreviewChecks(
   runId: string,
   storage?: RuneProofStorage,
+  canonical?: CanonicalRuneProofControls,
 ): RuneProofPreviewCheckControls {
-  const activeStorage = storage ?? defaultStorage();
+  const activeStorage = canonical ? unavailableStorage : storage ?? defaultStorage();
   const [state, setState] = useState<RuneProofPreviewCheckState>(() => ({
     runId,
     checks: readRuneProofPreviewChecks(activeStorage, runId),
   }));
 
   useEffect(() => {
+    if (canonical) return;
     setState({
       runId,
       checks: readRuneProofPreviewChecks(activeStorage, runId),
     });
-  }, [activeStorage, runId]);
+  }, [activeStorage, runId, canonical]);
 
-  const checks = checksForCurrentRun(state, runId);
-  const isHydratedForRun = state.runId === runId;
+  const checks = useMemo(() => canonical
+    ? normalizeRuneProofPreviewChecks(canonical.progress?.items ?? {})
+    : checksForCurrentRun(state, runId), [canonical, state, runId]);
+  const isHydratedForRun = !!canonical || state.runId === runId;
 
   const confirmedItemKeys = useCallback(
     (questId: string): ReadonlySet<string> => new Set(checks[questId] ?? []),
@@ -66,6 +71,12 @@ export function useRuneProofPreviewChecks(
   );
 
   const setItemConfirmed = useCallback((questId: string, itemKey: string, confirmed: boolean) => {
+    if (canonical) {
+      if (normalizeRuneProofPreviewChecks({ [questId]: [itemKey] })[questId]?.includes(itemKey)) {
+        canonical.update(runId, { kind: 'ITEM', questId, id: itemKey, confirmed });
+      }
+      return;
+    }
     setState(current => {
       const currentChecks = checksForCurrentRun(current, runId);
       const existing = currentChecks[questId] ?? [];
@@ -76,7 +87,7 @@ export function useRuneProofPreviewChecks(
       writeRuneProofPreviewChecks(activeStorage, runId, next);
       return { runId, checks: next };
     });
-  }, [activeStorage, runId]);
+  }, [activeStorage, runId, canonical]);
 
   return { checks, isHydratedForRun, confirmedItemKeys, setItemConfirmed };
 }

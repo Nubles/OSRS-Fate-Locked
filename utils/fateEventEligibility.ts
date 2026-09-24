@@ -4,6 +4,7 @@ import { failureFateForSkillLevel, failureFateForSource } from '../config/econom
 import { ALL_CA_TASKS, type CATask } from '../data/caTasks';
 import { BOSS_TIERS, TIER_SOURCE } from '../data/bossKeyTiers';
 import { COLLECTION_LOG_DATA, type CollectionLogItem } from '../data/collectionLogData';
+import { collectionItemNeedsIdentityReview } from '../services/CollectionLogSyncService';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { QUEST_DATA, type QuestData } from '../data/questData';
 import {
@@ -205,7 +206,13 @@ function classifyCombatAchievement(event: FateEventEnvelope): EventClassificatio
   return ready(source, task.name ?? task.description, { kind: 'CA_TASK', taskId: task.id });
 }
 
-function classifyCollectionLog(event: FateEventEnvelope): EventClassification {
+function collectionIdentityBlock(state: GameState, itemId: number): EventClassification | null {
+  return collectionItemNeedsIdentityReview(state.unlocks.collectionLog, itemId, state.collectionLogIdentity)
+    ? { state: 'BLOCKED', reason: 'Saved Collection Log entries need identity review before this item can be logged or rewarded.' }
+    : null;
+}
+
+function classifyCollectionLog(event: FateEventEnvelope, state: GameState): EventClassification {
   if (!event.canonicalLabel) return needsConfirmation('Choose the Collection Log item.');
   const matches = COLLECTION_INDEX.get(normalize(event.canonicalLabel)) ?? [];
   if (matches.length !== 1) {
@@ -221,7 +228,7 @@ function classifyCollectionLog(event: FateEventEnvelope): EventClassification {
     );
   }
   const { item } = matches[0];
-  return ready(DropSource.COLLECTION_LOG, item.name, {
+  return collectionIdentityBlock(state, item.id) ?? ready(DropSource.COLLECTION_LOG, item.name, {
     kind: 'COLLECTION_ITEM',
     itemId: item.id,
   });
@@ -295,7 +302,7 @@ export function classifyFateEvent(
     case 'COMBAT_ACHIEVEMENT':
       return classifyCombatAchievement(event);
     case 'COLLECTION_LOG':
-      return classifyCollectionLog(event);
+      return classifyCollectionLog(event, state);
     case 'CLUE_CASKET':
       return classifyClue(event);
     case 'BOSS_KILL':
@@ -311,6 +318,7 @@ export function classifyFateEventCandidate(
   target: string,
 ): EventClassification {
   const gate = classifyFateEvent(event, state);
+  if (gate.state === 'BLOCKED' || gate.state === 'DUPLICATE') return gate;
   if (
     gate.state !== 'NEEDS_CONFIRMATION'
     || gate.reason !== 'Detector version is not approved for exact handling.'
@@ -373,7 +381,7 @@ export function classifyFateEventCandidate(
       .flat()
       .find((candidate) => String(candidate.item.id) === target);
     return match
-      ? ready(DropSource.COLLECTION_LOG, match.item.name, {
+      ? collectionIdentityBlock(state, match.item.id) ?? ready(DropSource.COLLECTION_LOG, match.item.name, {
           kind: 'COLLECTION_ITEM',
           itemId: match.item.id,
         })

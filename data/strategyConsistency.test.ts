@@ -37,12 +37,13 @@ describe('STRATEGY_DATABASE references resolve', () => {
     expect(bad, 'strategy entries with unknown region tags').toEqual([]);
   });
 
-  it('every skill key is in SKILLS_LIST', () => {
+  it('every skill key is in SKILLS_LIST, with quest points represented separately', () => {
     const bad: string[] = [];
     for (const [key, e] of Object.entries(STRATEGY_DATABASE)) {
       for (const s of Object.keys(e.skills || {})) {
         if (!VALID_SKILL.has(s)) bad.push(`${key} -> "${s}"`);
       }
+      if (QUEST_DATA[key]) expect(e.questPoints).toBe(QUEST_DATA[key].skills['Quest Points']);
     }
     expect(bad, 'strategy entries referencing unknown skills').toEqual([]);
   });

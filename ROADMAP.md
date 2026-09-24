@@ -85,6 +85,52 @@ accepted.
 
 ### P0 — RuneProof Wave 1 release candidate (in progress)
 
+**Current testing scope (maintainer direction, 23 September 2026): Vanilla only.**
+Chunked mode is experimental and is not currently official. Use Vanilla for
+ongoing feature verification and release evidence; earlier Chunked test results
+do not establish Vanilla readiness. The local preview now uses the separate
+`Vanilla Preview` profile, preserving the earlier profile. Cook's Assistant and
+The Restless Ghost were checked there: their walking routes are available under
+Vanilla's area permissions, while the ghostspeak amulet still requires Neck T1.
+
+The approved 23 September guide simplification is available locally: one readiness
+message and a numbered walkthrough, with items, locations, map links, and unmet
+requirements beside the affected steps. Walking details and quest reference
+material are collapsed. Vanilla verification and limitations are recorded in
+`docs/reviews/2026-09-23-runeproof-simple-guide-verification.md`.
+The follow-up adds a compact Still needed summary above progress, with deduplicated
+requirements and links to their affected steps. It updates with account unlocks;
+unknown conditions remain labelled Needs checking. Vanilla verification is in
+`docs/reviews/2026-09-23-runeproof-still-needed-verification.md`.
+Requirement cards now include the canonical slot, skill, quest, or item artwork,
+plus local map crops for known missing chunks. Unknown locations keep a generic
+checking visual. See `docs/reviews/2026-09-23-runeproof-requirement-images-verification.md`.
+The local Vanilla preview now contains all 24 F2P quests (227 steps), with 19 new
+source-pinned packs behind the preview build boundary. The roster includes Learning
+the Ropes and The Ides of Milk and excludes members-only Daddy's Home. QP gates,
+step-specific equipment/Mining checks and manual Shield of Arrav partner checks are
+covered by 115 focused checks; all 24 guides opened in the browser. New walking
+connections still need review; Shield uses the Phoenix route and Tutorial Island
+is a reference. No public deployment. See
+`docs/reviews/2026-09-23-runeproof-all-f2p-preview-verification.md`.
+
+The 24 September Vanilla follow-up repairs Diary equipment and travel gates,
+guide backup/restore durability, equipment permission provenance, and legal
+weapon attack choices. Verification and remaining coverage are recorded in
+`docs/reviews/2026-09-24-vanilla-follow-up-repairs.md`. This remains a local
+preview; the public guide roster and deployment boundary are unchanged.
+
+A second local Vanilla review aligns quest doability with the Journal, corrects
+completion and Quest Cape accounting, and repairs share-card presentation and
+history status. Evidence and remaining review gaps are recorded in
+`docs/reviews/2026-09-24-vanilla-presentation-audit.md`.
+
+Community report fixes (23 September) now align White Knight gear with black at T2,
+gate Draynor rooftops on Agility and shop diary tasks on merchant unlocks, and
+separate Sheep Shearer's Crafting method from pre-obtained wool. Journal readiness
+and guide action checks agree; owned supplies can skip preparation with undo.
+See `docs/reviews/2026-09-23-community-report-fixes.md` for decisions and evidence.
+
 - Five independently reviewed F2P guides: Cook's Assistant, Sheep Shearer,
   The Restless Ghost, Rune Mysteries, and Imp Catcher.
 - Exact obtainable-item chains, ranked alternatives, blockers, requirement
@@ -92,8 +138,10 @@ accepted.
 - The normal build exposes only the independently authored public pack. Daddy's
   Home, Doric's Quest, Elemental Workshop I, and future unfinished guides remain
   private to the explicit `runeproof-preview` build mode.
-- Confirmations remain isolated by run outside Journal completion, Keys, Fate
-  rolls, rewards, exports, sync, and canonical save state.
+- Guide confirmations are isolated by run and remain separate from Journal
+  completion, Keys, Fate rolls, and rewards. They now travel with canonical
+  profile saves, exports, and recovery checkpoints; writer ownership and
+  pending-save recovery also apply to guide edits.
 - Exit gate: pass the complete release verifier, serve the production build
   locally, obtain the maintainer's final visual/play approval, and only then make
   a separate push, merge, deployment, and announcement decision.
@@ -292,3 +340,19 @@ Build-size watch: if the eager `dist/assets/index-*.js` grows past about
 130 kB gzip, something that should be lazy may have been imported eagerly.
 Inspect the built file for content markers rather than relying only on the
 import graph.
+
+
+## Equipment catalogue corrections — 23 September 2026 (local Vanilla preview)
+
+Fixed elemental staves split across T1/T4, imported magic damage at ten times its
+percentage, dropped exact item IDs, cosmetic/material name collisions and
+same-family armour/cape/ammunition inconsistencies. GearService now retains all
+5,436 source IDs while keeping 2,405 combat picker rows; v3 migrates both older
+cache versions and participates in quota recovery. Reviewed/material rules cover
+1,512 picker names; the remaining 893 display Est. beside their tier. These are
+Fate placements, not official OSRS equipment tiers. Equipment Lab labels now
+match the Codex, and the gear dialog escapes dashboard clipping.
+
+See [the equipment audit](docs/reviews/2026-09-23-equipment-catalogue-audit.md)
+for sources, exact scope, policy choices and regression evidence. Changes are
+local only; no public deployment or plugin release was performed.

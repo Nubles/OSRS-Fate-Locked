@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Coins, Eye, Dna, Zap } from 'lucide-react';
+import { Coins, Eye, Dna, Zap } from './OsrsIcon';
 
 interface EffectProps {
   onComplete: () => void;

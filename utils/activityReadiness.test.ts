@@ -173,9 +173,13 @@ describe('evaluateActivityReadiness', () => {
       true,
       req,
       unlocked(),
-    )).toEqual({
+    ).status).toBe('NOT_READY');
+    expect(evaluateActivityReadiness(true, req, unlocked({
+      skills: { Strength: 7, Agility: 7, Ranged: 7, Hitpoints: 7 },
+      levels: { Strength: 70, Agility: 70, Ranged: 70, Hitpoints: 70 },
+    }))).toMatchObject({
       status: 'NEEDS_CONFIRMATION',
-      checks: ['A complete Frozen key from all four God Wars Dungeon generals'],
+      checks: expect.arrayContaining([expect.stringContaining('Frozen Door')]),
     });
   });
 

@@ -35,6 +35,7 @@ export const buildQuestRequirementChecklist = (
 ): QuestRequirementChecklistRow[] => {
   const automatic = [
     ...plan.skillSteps,
+    ...plan.equipmentSteps,
     ...(plan.qpStep ? [plan.qpStep] : []),
     ...plan.questSteps.filter(step => step.id !== plan.targetId),
     ...plan.regionSteps,

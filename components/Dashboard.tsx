@@ -3,7 +3,7 @@ import { lazyWithRetry } from '../utils/lazyRetry';
 import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { 
   EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, MISTHALIN_AREAS, 
-  MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, POH_LIST, 
+  MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, ROLLABLE_POH_ITEMS,
   MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, SLAYER_UNLOCKS_LIST,
   FARMING_PATCH_LIST, FARMING_UNLOCK_DETAILS, EQUIPMENT_TIER_MAX,
   REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, wikiUrlFor, UTILITY_ITEM_IDS,
@@ -12,10 +12,8 @@ import {
 import { useGame } from '../context/GameContext';
 import { useFeatureGates } from '../hooks/useFeatureGates';
 import type { FeatureId } from '../utils/featureGates';
-import {
-  Sparkles, Search, User, Map, Swords, Package,
-  ExternalLink, Unlock, Lock, Compass, ChevronDown, ChevronsUp, AlertCircle, BookOpen, ScrollText, Globe, List, Filter, Info, Share2, MapPin, Route, Trophy, Skull
-} from 'lucide-react';
+import { Search, ExternalLink, Unlock, Lock, ChevronDown, ChevronsUp, AlertCircle, List, Filter, Info, Share2, Route } from 'lucide-react';
+import { Sparkles, User, Map, Swords, Package, Compass, BookOpen, ScrollText, Globe, MapPin, Trophy, Skull } from './OsrsIcon';
 import { VoidReveal } from './VoidReveal';
 import { ActivityAccessWarning } from './ActivityAccessWarning';
 import { isOmniDirectUnlockAvailable } from '../utils/gameEngine';
@@ -32,6 +30,7 @@ import { JournalNextBest } from './JournalNextBest';
 import { JournalProgressRings } from './JournalProgressRings';
 import { EquipmentLab } from './EquipmentLab';
 import { WikiIcon } from './WikiIcon';
+import { getRivalImage } from '../data/wikiRivalIcons';
 import { SectionGuide } from './SectionGuide';
 import { completionPercent as runCompletion } from '../utils/completion';
 import { rivalCompletion, standing as rivalStanding } from '../utils/rival';
@@ -140,7 +139,7 @@ const RivalHeaderButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
       title={`${rival.name}: ${st.lead > 0 ? `you +${st.lead}%` : st.lead < 0 ? `rival +${-st.lead}%` : 'tied'}`}
       className={`flex items-center gap-1.5 px-2.5 py-1 rounded border text-[11px] font-bold whitespace-nowrap transition-colors ${tie ? 'border-white/15 bg-white/5 text-gray-300' : ahead ? 'border-emerald-500/40 bg-emerald-950/30 text-emerald-300' : 'border-red-500/40 bg-red-950/30 text-red-300'}`}
     >
-      <span>{rival.emoji}</span>
+      <WikiIcon file={getRivalImage(rival.mode, rival.personaId)} alt="" Fallback={Swords} size={16} />
       <span>{tie ? 'TIE' : `${ahead ? '▲' : '▼'} ${Math.abs(st.lead)}%`}</span>
     </button>
   );
@@ -880,7 +879,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         { id: 'MOBILITY',  label: 'Mobility',           color: 'text-amber-400',  bar: 'bg-amber-500',  list: MOBILITY_LIST,      unlocked: unlocks.mobility,  type: TableType.MOBILITY },
         { id: 'GUILDS',    label: 'Guilds',             color: 'text-teal-400',   bar: 'bg-teal-500',   list: GUILDS_LIST,        unlocked: unlocks.guilds,    type: TableType.GUILDS },
         { id: 'ARCANA',    label: COMBAT_POWERS_LABEL,  color: 'text-violet-400', bar: 'bg-violet-500', list: ARCANA_LIST,        unlocked: unlocks.arcana,    type: TableType.ARCANA },
-        { id: 'POH',       label: 'Player Owned House', color: 'text-orange-400', bar: 'bg-orange-500', list: POH_LIST,           unlocked: unlocks.housing,   type: TableType.POH },
+        { id: 'POH',       label: 'Player Owned House', color: 'text-orange-400', bar: 'bg-orange-500', list: ROLLABLE_POH_ITEMS,  unlocked: ROLLABLE_POH_ITEMS.filter(item => unlocks.housing.includes(item)),   type: TableType.POH },
         { id: 'STORAGE',   label: 'Storage',            color: 'text-amber-600',  bar: 'bg-amber-600',  list: STORAGE_LIST,       unlocked: unlocks.storage,   type: TableType.STORAGE },
         { id: 'MERCHANTS', label: 'Merchants',          color: 'text-yellow-400', bar: 'bg-yellow-500', list: MERCHANTS_LIST,     unlocked: unlocks.merchants, type: TableType.MERCHANTS },
         { id: 'SLAYER',    label: 'Slayer Unlocks',     color: 'text-rose-400',   bar: 'bg-rose-500',   list: SLAYER_UNLOCKS_LIST, unlocked: unlocks.slayerUnlocks,   type: TableType.SLAYER_UNLOCKS },

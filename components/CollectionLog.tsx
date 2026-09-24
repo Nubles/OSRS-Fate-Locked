@@ -2,14 +2,16 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useGame } from '../context/GameContext';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
-import { Search, CheckCircle2, Lock, ListFilter, Coins, TrendingUp } from 'lucide-react';
+import { Search, CheckCircle2, Lock, ListFilter, TrendingUp } from 'lucide-react';
+import { Coins } from './OsrsIcon';
+import { WikiIcon } from './WikiIcon';
 import { DropSource } from '../types';
 import { DROP_RATES } from '../constants';
 import { failureFateForSource } from '../config/economy';
 import { FixedSizeGrid as Grid } from 'react-window';
 import { wikiService } from '../services/WikiService';
 import { priceService } from '../services/PriceService';
-import { collectionLogSync } from '../services/CollectionLogSyncService';
+import { collectionLogSync, collectionIdentityReview } from '../services/CollectionLogSyncService';
 import { WikiLink } from './WikiLink';
 import { collogReachability } from '../utils/collogReach';
 
@@ -49,12 +51,13 @@ const LogItemImage = ({ name }: { name: string }) => {
 };
 
 const Cell = ({ columnIndex, rowIndex, style, data }: any) => {
-  const { items, unlocks, searchTerm, handleItemClick } = data;
+  const { items, unlocks, searchTerm, handleItemClick, blockedIds } = data;
   const index = rowIndex * 4 + columnIndex; // 4 columns
   if (index >= items.length) return null;
   
   const item = items[index];
-  const count = unlocks.collectionLog[item.id] || 0;
+  const needsReview = blockedIds.has(item.id);
+  const count = needsReview ? 0 : unlocks.collectionLog[item.id] || 0;
   const isUnlocked = count > 0;
   const isHighlighted = searchTerm && item.name.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -65,9 +68,9 @@ const Cell = ({ columnIndex, rowIndex, style, data }: any) => {
            group relative flex flex-col items-center justify-center p-1 rounded transition-all duration-200 cursor-pointer h-full border border-transparent
            ${isHighlighted ? 'bg-white/10 ring-1 ring-[#ff981f]' : 'hover:bg-white/5 hover:border-[#ff981f]/30'}
          `}
-         title={`${item.name} ${isUnlocked ? `(x${count})` : '(Locked)'}`}
+         title={`${item.name} ${needsReview ? '(Saved identity needs review)' : isUnlocked ? `(x${count})` : '(Locked)'}`}
        >
-         <button type="button" aria-label={`Log ${item.name}${count ? ` (owned ${count})` : ''}`} onClick={(e) => handleItemClick(e, item.id, item.name)} className="absolute inset-0 z-10 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400" />
+         <button type="button" disabled={needsReview} aria-label={`Log ${item.name}${count ? ` (owned ${count})` : ''}`} onClick={(e) => handleItemClick(e, item.id, item.name)} className="absolute inset-0 z-10 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400" />
          <div className="relative w-10 h-10 flex items-center justify-center">
            <div className={`transition-all duration-300 w-full h-full flex items-center justify-center ${isUnlocked ? 'opacity-100' : 'opacity-30 grayscale blur-[1px] group-hover:blur-0'}`}>
                <LogItemImage name={item.name} />
@@ -98,7 +101,9 @@ const Cell = ({ columnIndex, rowIndex, style, data }: any) => {
 };
 
 export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' }) => {
-  const { unlocks, logCollectionItem, rollForKey } = useGame();
+  const { unlocks: savedUnlocks, collectionLogIdentity, logCollectionItem, rollForKey } = useGame();
+  const identityReview = useMemo(() => collectionIdentityReview(savedUnlocks.collectionLog, collectionLogIdentity ? [] : collectionLogSync.legacyMappings(), COLLECTION_LOG_DATA, collectionLogIdentity), [savedUnlocks.collectionLog, collectionLogIdentity]);
+  const unlocks = useMemo(() => ({ ...savedUnlocks, collectionLog: Object.fromEntries(Object.entries(savedUnlocks.collectionLog).filter(([id]) => !identityReview.blockedIds.has(Number(id)))) }), [savedUnlocks, identityReview]);
   const [activeTab, setActiveTab] = useState(Object.keys(COLLECTION_LOG_DATA)[0]);
   const [activePage, setActivePage] = useState<string>('');
   const [viewMode, setViewMode] = useState<'PAGE' | 'SEARCH_ALL'>('PAGE');
@@ -110,8 +115,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
-  // Runtime self-update: pull any newly-tracked wiki items into the live log.
-  // `syncVersion` bumps when additions land so the memos below recompute.
+  // Check for new Wiki entries without minting save identities at runtime.
   const [syncVersion, setSyncVersion] = useState(0);
   useEffect(() => {
     const unsub = collectionLogSync.subscribe(() => setSyncVersion(v => v + 1));
@@ -196,6 +200,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
   }, [searchTerm]);
 
   const handleItemClick = (e: React.MouseEvent, itemId: number, itemName: string) => {
+    if (identityReview.blockedIds.has(itemId)) return;
     const isNewUnlock = !unlocks.collectionLog[itemId];
     logCollectionItem(itemId);
     if (isNewUnlock) {
@@ -258,7 +263,8 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
     items: activeItems,
     unlocks,
     searchTerm,
-    handleItemClick
+    handleItemClick,
+    blockedIds: identityReview.blockedIds
   }), [activeItems, unlocks, searchTerm]);
 
   const globalStats = useMemo(() => {
@@ -275,8 +281,18 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
   const reach = useMemo(() => collogReachability(unlocks), [unlocks, syncVersion]);
   const [showReach, setShowReach] = useState(false);
 
+  const pendingReviewCount = collectionLogSync.pendingAdditions.length;
+
   return (
     <div className="flex flex-col h-full bg-[#3e3529] border-2 border-[#5a5245] rounded-lg overflow-hidden font-sans shadow-2xl relative text-[#ff981f]">
+      {(pendingReviewCount > 0 || collectionLogSync.newSources.length > 0 || identityReview.savedRecords > 0) && (
+        <div role="status" className="p-3 text-xs text-amber-200 bg-black/30 border-b border-amber-500/30">
+          {pendingReviewCount > 0 || collectionLogSync.newSources.length > 0
+            ? 'New Wiki collection entries are awaiting a reviewed app update before they can be logged. ' : ''}
+          {identityReview.savedRecords > 0
+            ? `${identityReview.savedRecords} earlier live-entry records are preserved in your save and need identity review. They have not been reassigned to new items.` : ''}
+        </div>
+      )}
       {/* Top Bar */}
       <div className="flex justify-between items-center p-2 bg-[#3e3529] border-b-2 border-[#5a5245] shadow-md shrink-0">
         <h2 className="text-[#ff981f] text-shadow font-bold px-2 text-sm uppercase tracking-wider">Collection Log</h2>
@@ -325,8 +341,8 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-[#9a8a73] uppercase tracking-wide text-[9px]">Expand unlock coverage:</span>
               {reach.suggestions.slice(0, 6).map(s => (
-                <span key={s.tab + s.page} className="px-1.5 py-0.5 rounded bg-black/30 border border-[#5a5245] text-[#d4c5b0]">
-                  {s.kind === 'boss' ? '🗡' : '🎯'} {s.unlock} <span className="text-emerald-300 font-mono">+{s.items}</span>
+                <span key={s.tab + s.page} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/30 border border-[#5a5245] text-[#d4c5b0]">
+                  <WikiIcon file={s.kind === 'boss' ? 'Slayer_icon.png' : 'Minigames.png'} alt="" Fallback={ListFilter} size={14} className="shrink-0" /> {s.unlock} <span className="text-emerald-300 font-mono">+{s.items}</span>
                 </span>
               ))}
             </div>
@@ -411,7 +427,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
              </div>
            </div>
 
-           <div className="flex-1 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')]" ref={containerRef}>
+           <div className="flex-1 bg-gradient-to-br from-[#25221d] to-[#191714]" ref={containerRef}>
              {activeItems.length > 0 && containerSize.width > 0 ? (
                <Grid
                  columnCount={4}

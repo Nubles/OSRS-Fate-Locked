@@ -12,7 +12,9 @@ import {
     POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, 
     GUILDS_LIST, FARMING_PATCH_LIST, MISTHALIN_AREAS
 } from '../constants';
-import { CheckCircle, XCircle, Lock, Map, BookOpen, AlertCircle, Compass, Target, Search, ScrollText, Filter, Pin, SlidersHorizontal, Check, ArrowUpRight, TrendingUp, Sparkles, BrainCircuit } from 'lucide-react';
+import { CheckCircle, XCircle, Lock, AlertCircle, Search, Filter, Pin, SlidersHorizontal, Check, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { Map, Compass, Target, ScrollText, Sparkles, BrainCircuit } from './OsrsIcon';
+import { WikiIcon } from './WikiIcon';
 import { evaluateDiaryTierEligibility, evaluateQuestEligibility, meetsSkillRequirement } from '../utils/journalStatus';
 import { getActivityReq } from '../data/activityRequirements';
 import { evaluateActivityReadiness } from '../utils/activityReadiness';
@@ -41,7 +43,7 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
     const missingRegions = canonical ? canonical.blockers.filter(b => b.kind === 'region').map(b => b.label)
         : req.regions.filter(r => !isAreaReachable(r, unlocks, gameModeId));
     const missingSkills = Object.entries(req.skills).filter(([skill, level]) => canonical
-        ? canonical.blockers.some(b => b.kind === 'skill' && b.label === `${skill} ${level}`)
+        ? canonical.blockers.some(b => b.kind === 'skill' && (b.label === `${skill} ${level}` || (b.requirement?.type === 'single' && b.requirement.skill === skill && b.requirement.level === level)))
         : !meetsSkillRequirement(unlocks, skill, level)).map(([skill, level]) => ({ skill, reqLevel: level,
             currentLevel: effectiveSkillLevel(unlocks, skill), isUnlocked: (unlocks.skills[skill] || 0) > 0 }));
     const missingQuests = canonical ? canonical.blockers.filter(b => b.kind === 'quest').map(b => b.label)
@@ -50,13 +52,14 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
     const activityRequirement = getActivityReq(req.id);
     const readiness = canonical || req.category === TableType.DIARIES || !activityRequirement ? null : evaluateActivityReadiness(true, activityRequirement, unlocks, gameModeId);
     const missingChecks = [...new Set([
+        ...(req.manualRequirements ?? []),
         ...(req.diaries ?? []).filter(d => !unlocks.diaries.includes(d)).map(d => `${d} diary`),
         ...(req.accessRoutes?.length && !req.accessRoutes.some(route =>
             (route.diaries ?? []).every(d => unlocks.diaries.includes(d))
             && Object.entries(route.skills ?? {}).every(([skill, level]) => meetsSkillRequirement(unlocks, skill, level)))
             ? ['One of: ' + req.accessRoutes.map(route => route.label).join(' or ')] : []),
         ...((canonical as { manualChecks?: string[] } | null)?.manualChecks ?? []),
-        ...(canonical?.blockers.filter(b => b.kind === 'combat' || b.kind === 'alternative').map(b => b.label) ?? []),
+        ...(canonical?.blockers.filter(b => b.kind === 'combat' || b.kind === 'alternative' || b.kind === 'equipment').map(b => b.label) ?? []),
         ...(readiness?.status === 'NOT_READY' ? readiness.blockers.map(b => b.label)
             : readiness?.status === 'NEEDS_CONFIRMATION' ? readiness.checks : []),
     ])];
@@ -91,7 +94,7 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
     const completionPercent = missingCount === 0 ? 100 : Math.max(0, Math.min(99, Math.round((1 - missingCount / Math.max(totalReqs, missingCount)) * 100)));
 
     return {
-        isFullyPlayable: missingRegions.length === 0 && missingSkills.length === 0
+        isFullyPlayable: (canonical?.eligible ?? true) && missingRegions.length === 0 && missingSkills.length === 0
             && missingQuests.length === 0 && missingAlternatives.length === 0 && missingChecks.length === 0 && isCategoryUnlocked,
         missingChecks,
         missingRegions,
@@ -165,6 +168,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
             database[d.id] = {
                 id: d.id,
                 category: TableType.DIARIES,
+                manualRequirements: eligibility.manualChecks,
                 regions: eligibility.blockers
                     .filter(blocker => blocker.kind === 'region')
                     .map(blocker => blocker.label),
@@ -350,7 +354,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                                 <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3 flex-1" title={content.description}>{content.description}</p>
                                                 <div className="pt-3 border-t border-white/5 flex gap-2 flex-wrap">
                                                     {content.regions.map(r => <span key={r} className="text-[9px] flex items-center gap-1 text-gray-400 bg-black/40 px-1.5 py-0.5 rounded border border-white/5"><Map size={10} /> {r}</span>)}
-                                                    {Object.keys(content.skills).map(s => <span key={s} className="text-[9px] flex items-center gap-1 text-gray-400 bg-black/40 px-1.5 py-0.5 rounded border border-white/5"><BookOpen size={10} /> {s}</span>)}
+                                                    {Object.keys(content.skills).map(s => <span key={s} className="text-[9px] flex items-center gap-1 text-gray-400 bg-black/40 px-1.5 py-0.5 rounded border border-white/5"><WikiIcon file={s === 'Quest Points' ? 'Quest_point_icon.png' : `${s}_icon.png`} alt="" size={10} /> {s}</span>)}
                                                 </div>
                                             </div>
                                         );
@@ -407,7 +411,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                                             const skillStatus = missingSkills.find(s => s.skill === skill);
                                                             const isMissing = !!skillStatus;
                                                             const isLocked = skillStatus && !skillStatus.isUnlocked;
-                                                            return <div key={skill} className={`flex items-center gap-1.5 px-2 py-1.5 rounded border text-xs font-mono transition-colors ${isMissing ? 'bg-red-900/20 border-red-500/30 text-red-400' : 'bg-green-900/10 border-green-500/20 text-green-500/70'}`}><BookOpen size={12} /><span>{skill} {level}</span>{isLocked ? <Lock size={10} /> : isMissing ? <span className="text-[9px] bg-red-500/20 px-1 rounded">{skillStatus?.currentLevel}</span> : <Check size={10} />}</div>
+                                                            return <div key={skill} className={`flex items-center gap-1.5 px-2 py-1.5 rounded border text-xs font-mono transition-colors ${isMissing ? 'bg-red-900/20 border-red-500/30 text-red-400' : 'bg-green-900/10 border-green-500/20 text-green-500/70'}`}><WikiIcon file={skill === 'Quest Points' ? 'Quest_point_icon.png' : `${skill}_icon.png`} alt="" size={12} /><span>{skill} {level}</span>{isLocked ? <Lock size={10} /> : isMissing ? <span className="text-[9px] bg-red-500/20 px-1 rounded">{skillStatus?.currentLevel}</span> : <Check size={10} />}</div>
                                                         })}
                                                         {content.quests && content.quests.map(q => {
                                                             const isMissing = missingQuests.includes(q);

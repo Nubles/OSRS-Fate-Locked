@@ -12,7 +12,7 @@ import type {
   WalkthroughActionKind,
   WalkthroughItemRef,
 } from '../utils/questWalkthroughs/model';
-import type { ChunkKey } from '../utils/questRoutes/model';
+import type { ChunkKey, RouteGate } from '../utils/questRoutes/model';
 
 const deepFreeze = <T>(value: T): T => {
   if (value && typeof value === 'object' && !Object.isFrozen(value)) {
@@ -62,6 +62,7 @@ interface PublicActionInput {
   readonly chunk: ChunkKey;
   readonly dependsOn?: readonly string[];
   readonly items?: readonly WalkthroughItemRef[];
+  readonly gates?: readonly RouteGate[];
   readonly coach: QuestActionCoachMetadata;
 }
 
@@ -73,6 +74,7 @@ const action = ({
   chunk,
   dependsOn = [],
   items = [],
+  gates = [],
   coach: actionCoach,
 }: PublicActionInput): QuestWalkthroughActionDefinition => ({
   id,
@@ -85,7 +87,7 @@ const action = ({
   dependsOn,
   entities: [],
   items,
-  gates: [],
+  gates,
   location: { kind: 'EXPLICIT_CHUNKS', chunks: [chunk] },
   coach: actionCoach,
 });
@@ -274,6 +276,7 @@ const sheepActions = [
     displayText: 'Spin the 20 wool into 20 balls of wool upstairs in Lumbridge Castle.',
     chunk: '50,50',
     dependsOn: ['sheep-shearer:shear-wool'],
+    gates: [{ type: 'SKILL', skill: 'Crafting', level: 1, label: 'Crafting level 1' }],
     coach: coach({
       consumes: [playerItem('wool', 'Wool', 20)],
       fulfils: [playerItem('ball of wool', 'Ball of wool', 20)],
@@ -329,6 +332,7 @@ const restlessGhostActions = [
     chunk: '50,49',
     dependsOn: ['the-restless-ghost:get-amulet'],
     items: [questItem('ghostspeak amulet', 'Ghostspeak amulet')],
+    gates: [{ type: 'EQUIPMENT', slot: 'Neck', tier: 1, label: 'Neck T1: Wear the ghostspeak amulet to speak to the ghost' }],
     coach: coach(),
   }),
   action({

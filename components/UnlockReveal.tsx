@@ -1,9 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  CheckCircle2, X, ChevronRight,
-  BookOpen, Map, Sparkles, Swords,
-} from 'lucide-react';
+import { CheckCircle2, X, ChevronRight } from 'lucide-react';
+import { BookOpen, Map, Sparkles, Swords } from './OsrsIcon';
 import { UnlockRevealData } from '../hooks/useUnlockReveal';
 import { usePortalHost } from '../hooks/usePortalHost';
 import { WikiLink } from './WikiLink';

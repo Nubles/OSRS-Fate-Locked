@@ -1,11 +1,19 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-09-21",
+  "reviewedAt": "2026-09-22",
+  "reviewedFacilities": [
+    { "id": "5939", "name": "Bank buffalo", "kind": "npc", "wiki": "https://oldschool.runescape.wiki/w/Bank_buffalo?oldid=15201075" },
+    { "id": "5427", "name": "Bank buffalo", "kind": "npc", "wiki": "https://oldschool.runescape.wiki/w/Bank_buffalo?oldid=15201075" },
+    { "id": "13354", "name": "Bank Camel", "kind": "npc", "requirements": ["Beneath Cursed Sands Complete the quest"], "wiki": "https://oldschool.runescape.wiki/w/Bank_Camel?oldid=15261945" },
+    { "id": "15151", "name": "Deposit Box", "kind": "object", "requirements": ["Cabin Fever Complete the quest"], "wiki": "https://oldschool.runescape.wiki/w/Deposit_Box?oldid=15329931" }
+  ],
   "sourceRevisions": [
+    { "title": "Peer the Seer", "revision": 15351041, "url": "https://oldschool.runescape.wiki/w/Peer_the_Seer" },
+    { "title": "God Wars Dungeon", "revision": 15348774, "url": "https://oldschool.runescape.wiki/w/God_Wars_Dungeon" },
     { "title": "Keldagrim", "revision": 15147967, "url": "https://oldschool.runescape.wiki/w/Keldagrim" },
     { "title": "Blast Furnace", "revision": 15351681, "url": "https://oldschool.runescape.wiki/w/Blast_Furnace" },
-    { "title": "List of banks", "revision": 15282054, "url": "https://oldschool.runescape.wiki/w/List_of_banks" },
-    { "title": "Bank Deposit Box", "revision": 15267085, "url": "https://oldschool.runescape.wiki/w/Bank_Deposit_Box" },
+    { "title": "List of banks", "revision": 15315317, "url": "https://oldschool.runescape.wiki/w/List_of_banks" },
+    { "title": "Bank Deposit Box", "revision": 15345896, "url": "https://oldschool.runescape.wiki/w/Bank_Deposit_Box" },
     { "title": "Sangvesti bank", "revision": 15262093, "url": "https://oldschool.runescape.wiki/w/Sangvesti_bank" },
     { "title": "Castle Drakan", "revision": 15283343, "url": "https://oldschool.runescape.wiki/w/Castle_Drakan" },
     { "title": "Forestry event", "revision": 14430593, "url": "https://oldschool.runescape.wiki/w/Forestry_event" }
@@ -26,12 +34,12 @@
     { "id": "8757", "cx": 34, "cy": 53, "name": "Gwenith deposit box", "referenceKind": "physical", "facilities": ["Gwenith deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
     { "id": "8999", "cx": 35, "cy": 39, "name": "Bank boat", "referenceKind": "physical", "facilities": ["Bank boat"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "9274", "cx": 36, "cy": 58, "name": "Neitiznot dock deposit box", "referenceKind": "physical", "facilities": ["Neitiznot dock deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
-    { "id": "10553", "cx": 41, "cy": 57, "name": "Peer the Seer deposit service", "referenceKind": "npc", "facilities": ["Peer the Seer"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "10553", "cx": 41, "cy": 57, "name": "Peer the Seer deposit service", "accessOptions": [{ "diaries": ["Fremennik Easy"] }, { "manual": ["Confirm Peer is offering the deposit service during his trial in The Fremennik Trials"] }], "referenceKind": "npc", "facilities": ["Peer the Seer"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box", "https://oldschool.runescape.wiki/w/Peer_the_Seer"] },
     { "id": "11047", "cx": 43, "cy": 39, "name": "Red Rock bank chest", "referenceKind": "physical", "facilities": ["Red Rock bank chest"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "11056", "cx": 43, "cy": 48, "name": "Rionasta deposit service", "referenceKind": "npc", "facilities": ["Rionasta"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
     { "id": "11062", "cx": 43, "cy": 54, "name": "Camelot PvP bank chest", "referenceKind": "physical", "facilities": ["Camelot PvP bank chest"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "11572", "cx": 45, "cy": 52, "name": "Falador west deposit box", "referenceKind": "physical", "facilities": ["Falador west deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
-    { "id": "11578", "cx": 45, "cy": 58, "name": "Ancient Prison bank", "referenceKind": "entrance", "accessVia": "God Wars Dungeon", "facilities": ["Ancient Prison bank"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "11578", "cx": 45, "cy": 58, "name": "Ancient Prison bank", "accessOptions": [{ "quests": ["The Frozen Door"], "manual": ["Confirm access to the Ancient Prison safe room using ancient kill count or an eligible bypass"] }], "referenceKind": "entrance", "accessVia": "God Wars Dungeon", "facilities": ["Ancient Prison bank"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks", "https://oldschool.runescape.wiki/w/God_Wars_Dungeon"] },
     { "id": "12082", "cx": 47, "cy": 50, "name": "Port Sarim deposit boxes", "referenceKind": "physical", "facilities": ["Port Sarim deposit boxes"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
     { "id": "12337", "cx": 48, "cy": 49, "name": "Guardians of the Rift bank and deposit pool", "referenceKind": "entrance", "accessVia": "Wizards' Tower route", "facilities": ["Guardians of the Rift bank chest", "Guardians of the Rift deposit pool"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks", "https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
     { "id": "12838", "cx": 50, "cy": 38, "name": "Great Conch Sacred Grove deposit box", "referenceKind": "physical", "facilities": ["Great Conch Sacred Grove deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },

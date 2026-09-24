@@ -3,11 +3,14 @@ const DISPOSABLE_CACHE_KEYS = [
   'fate_osrs_prices_v1',
   'fate_osrs_monsters_v1',
   'fate_osrs_monsters_v2',
+  'fate_osrs_monsters_v3',
   'fate_osrs_gear_v1',
+  'fate_osrs_gear_v2',
+  'fate_osrs_gear_v3',
   'fate_uim_wiki_cache_v2',
   'fate_uim_wiki_cache_v3',
-  'fate_clog_sync_v1',
-  'fate_clog_sync_v2',
+  // Older collection caches can be the only identity evidence for saved IDs.
+  'fate_clog_sync_v4',
 ] as const;
 
 export const isQuotaExceededError = (error: unknown): boolean =>

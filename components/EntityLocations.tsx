@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { chunkContentService, EntityKind } from '../services/ChunkContentService';
 import { summarisePlaces, showChunkOnMap } from '../utils/chunkLocations';
+import { findEntityLocations } from '../utils/entityLocationLookup';
 
 /**
  * "Where is it?" chips for any game entity (monster / object / NPC / item
@@ -29,7 +30,7 @@ export const EntityLocations: React.FC<Props> = ({ name, kinds, cap = 4, classNa
 
   const places = useMemo(() => {
     if (!chunkContentService.ready) return null;
-    const hit = chunkContentService.entityLocations(name, kinds);
+    const hit = findEntityLocations(chunkContentService, name, kinds);
     if (!hit) return [];
     return summarisePlaces(hit.locations, unlocks, gameModeId);
     // eslint-disable-next-line react-hooks/exhaustive-deps

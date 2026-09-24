@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { readPinnedChunkSource } from './chunk-source.mjs';
+import { generatedTextMatches } from './generated-text.mjs';
 const { data, manifest } = await readPinnedChunkSource();
 const regionSource = readFileSync(new URL('../data/regionChunks.ts', import.meta.url), 'utf8');
 const land = new Set([...regionSource.matchAll(/cx: (\d+), cy: (\d+)/g)].map(([, x, y]) => `${x},${y}`));
@@ -12,6 +13,6 @@ for (const id of keys) {
 const text = JSON.stringify({ sourceCommit: manifest.commit, keys: keys.sort((a,b) => a-b).map(id => `${id >> 8},${id & 255}`) }, null, 2) + '\n';
 const out = new URL('../data/oceanChunks.json', import.meta.url);
 if (process.argv.includes('--check')) {
-  if (readFileSync(out, 'utf8') !== text) throw new Error('Ocean navigation data is stale');
+  if (!generatedTextMatches(readFileSync(out, 'utf8'), text)) throw new Error('Ocean navigation data is stale');
 } else writeFileSync(out, text);
 console.log(`Ocean navigation: ${keys.length} chunks, excluded from the land roll pool.`);

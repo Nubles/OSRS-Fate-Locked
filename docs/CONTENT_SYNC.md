@@ -1,11 +1,19 @@
 # Keeping the app up to date with new OSRS content
 
+RuneProof walking connections are generated separately from transport links by
+`npm run quest-walking:generate`, using the pinned Chunk Picker source. This is
+included in `chunks:sync`; `chunks:verify` checks deterministic regeneration.
+The five guide revisions have reviewed section endpoints in `data/questGuideTravel.ts`.
+The walking generator preserves directed section/edge requirements and adds the
+reviewed Al Kharid toll condition missing from the source. Review these mappings
+and conditions whenever the pinned source or authored guide revision changes.
+
 > *"Can the app self-update — when a new quest / collection-log item / boss is
 > released, does it add itself?"*
 
-Short answer: **the collection log already self-updates live, and the rest is
-kept current automatically through a reviewed weekly pull request.** Here's the
-full picture and the reasoning behind it.
+The app **detects collection-log additions in the browser**, while changes to
+the playable catalogue ship through a reviewed build. A weekly repository
+workflow is configured to propose source updates as a pull request.
 
 ## The two layers
 
@@ -13,26 +21,24 @@ The app is a static site (React + Vite on GitHub Pages) whose game data lives in
 typed files under `data/`. "Self-updating" is solved with two complementary
 mechanisms:
 
-### 1. Runtime self-update — live, zero action (Collection Log)
+### 1. Runtime freshness notices (Collection Log)
 
-`services/CollectionLogSyncService.ts` runs in the browser the first time a
-player opens the Collection Log. It fetches the wiki's **authoritative** source
-— `Module:Collection_log/data.json`, the same data the wiki and the in-game log
-use — diffs it against the bundled snapshot, and **appends any newly-tracked
-items onto existing pages, in memory.** A drop Jagex adds and the wiki records
-shows up with **no redeploy**.
-
-It is deliberately constrained to stay safe:
+`services/CollectionLogSyncService.ts` runs when a player first opens the
+Collection Log. It compares the Wiki's `Module:Collection_log/data.json` and
+rendered-name overrides with the bundled catalogue, then reports new items and
+pages awaiting review. It never appends items, assigns save IDs, or changes the
+player's progress.
 
 | Property | Behaviour |
 |---|---|
-| **Additive only** | Only *appends* new items. Never renames or deletes — the reviewed build-time data owns those. |
-| **Fail-safe** | Any network/parse error leaves the bundled data untouched; the app just shows the snapshot. |
-| **Lazy + cached** | Fetched once on first open, cached in `localStorage` (works offline after), re-checked weekly. |
-| **ID-stable** | New items get fresh synthetic IDs that don't collide; existing IDs (and player progress) are untouched. |
+| **Read-only catalogue** | New items and pages become notices until reviewed build-time sync. |
+| **Fail-safe** | A network or parse error leaves the bundled catalogue usable. |
+| **Lazy + cached** | Notices are fetched on first open and cached for seven days. |
+| **Stable save identities** | The reviewed catalogue owns IDs; upstream order never assigns runtime save IDs. |
+| **Legacy evidence preserved** | Old v1-v3 cache mappings are retained to flag ambiguous saved identities for review. |
 
-Brand-new **pages** (a new boss's whole log) are *detected* (`newSources`) but
-**not** auto-added — see why below.
+Both additions to existing pages and brand-new pages require reviewed build-time
+updates before they become collectible slots.
 
 ### 2. Automated repo sync — reviewed, then auto-deployed (everything)
 
@@ -66,9 +72,13 @@ GitHub handoff live in the [release verification checklist](RELEASE_CHECKLIST.md
   reviewed explicitly.
 - `npm run quests:verify` is an offline, deterministic check of the committed
   official list, stable page revisions, evidence audit, and runtime fingerprints.
+- `npm run quest-evidence:verify` is an offline, deterministic check of the pinned
+  Quest Helper source and combined candidate step catalogue. See the
+  [quest source evidence guide](quest-source-evidence.md) for capture, generation,
+  review boundaries and the Restless Ghost pilot.
 - `npm run content:verify` is the offline, deterministic aggregate used by
-  pull-request and deploy CI. It includes Diary, chunk, quest, and baseline
-  verification and is read-only.
+  pull-request and deploy CI. It includes Diary, chunk, quest, route, walkthrough,
+  candidate step evidence and baseline verification and is read-only.
 - `npm run content:check` is a separate network-backed freshness inspection. It
   may contact the OSRS Wiki and update `docs/SYNC_STATUS.md`, so it stays out of
   required CI.
@@ -169,8 +179,8 @@ its generator, run the appropriate sync command, and review the resulting diff.
 
 | Content | New item on existing source | Brand-new source/entry |
 |---|---|---|
-| **Collection log items** | ✅ **Auto, live** (runtime sync) + baked in by CI | ⚠️ Detected; page added by `clog:sync` once a tab is chosen |
-| **Bosses** | ✅ new drops auto-add to the boss's log | ⚠️ **Detected** (new log page) → curate: model, drop-rate, key cost, gacha tier, `BOSSES_LIST` |
+| **Collection log items** | Detected at runtime; reviewed build-time update preserves IDs | Detected; review page identity, tab, and unlock mapping before shipping |
+| **Bosses** | New log drops are detected and await a reviewed build | ⚠️ **Detected** (new log page) → curate: model, drop-rate, key cost, gacha tier, `BOSSES_LIST` |
 | **Quests** | — | ✅ **Detected** by `content:check` (wiki `{{Globals\|quests}}` count) → curate: skill reqs, prereqs, region, QP, difficulty tier |
 | **Combat Achievements** | ✅ Offline render from the committed, reviewed snapshot via `ca:sync` | ✅ Network drift detection via `content:check` → explicitly fetch/review/update the snapshot, then run `ca:sync` |
 | **Diaries** | — | ✅ Reviewed 492-row snapshot; regenerate with `diary:sync` |
@@ -187,8 +197,8 @@ The curation gate is **intentional**, not a limitation:
 - **The wiki can be mid-edit or vandalised.** A test-gated PR means a bad upstream
   edit can't silently reach players.
 
-So: **fully hands-off where the data is self-describing (collection-log items),
-and detected-then-reviewed where real game-design curation is required.**
+Source checks detect changes; reviewed updates preserve player progress and
+keep new content consistent with unlock rules.
 
 ## Detecting new quests / CAs (implemented)
 

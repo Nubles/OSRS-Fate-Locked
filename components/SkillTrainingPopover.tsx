@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { ExternalLink, X, TrendingUp, BookOpen, ChevronRight } from 'lucide-react';
+import { ExternalLink, X, TrendingUp, ChevronRight } from 'lucide-react';
+import { BookOpen } from './OsrsIcon';
 import { TRAINING_TIPS, getWikiTrainingUrl, xpAtLevel, formatXP } from '../data/trainingTips';
 
 /**

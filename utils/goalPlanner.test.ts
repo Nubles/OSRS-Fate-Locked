@@ -6,6 +6,7 @@ import { REGION_GROUPS } from '../data/items';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { planForTarget, listGoalTargets, questPointsForEntry } from './goalPlanner';
 import { getQuestStatus } from './journalStatus';
+import { TableType } from '../types';
 
 // All skills unlocked & maxed, levels at 99 — so only regions, prereq quests,
 // and quest points gate availability. Mirrors the advisor test fixture.
@@ -33,6 +34,35 @@ describe('Goal Planner quest-point classification', () => {
 });
 
 describe('planForTarget — quests', () => {
+  it('plans the highest required equipment tier once across the incomplete prerequisite chain', () => {
+    const first = '__equipment_prerequisite__';
+    const target = '__equipment_target__';
+    QUEST_DATA[first] = {
+      ...QUEST_DATA['The Restless Ghost'], id: first, name: first,
+      regions: ['Misthalin'], locations: [], accessPolicy: 'regions',
+      equipmentRequirements: [{ slot: 'Neck', tier: 1, reason: 'First amulet' }],
+    };
+    QUEST_DATA[target] = {
+      ...QUEST_DATA[first], id: target, name: target, prereqs: [first],
+      equipmentRequirements: [{ slot: 'Neck', tier: 4, reason: 'Later amulet' }],
+    };
+    try {
+      const plan = planForTarget('quest', target, maxedUnlocks())!;
+      expect(plan.equipmentSteps).toEqual([expect.objectContaining({
+        kind: 'equipment', id: 'Neck', label: 'Neck T4', requiredTier: 4,
+        unlockTable: TableType.EQUIPMENT, done: false,
+      })]);
+      expect(plan.equipmentSteps[0].detail).toContain('First amulet');
+      expect(plan.equipmentSteps[0].detail).toContain('Later amulet');
+      expect(plan.steps.indexOf(plan.equipmentSteps[0])).toBeLessThan(plan.steps.indexOf(plan.questSteps[0]));
+      expect(planForTarget('quest', target, maxedUnlocks({ equipment: { Neck: 3 } }))!.equipmentSteps).toHaveLength(1);
+      expect(planForTarget('quest', target, maxedUnlocks({ equipment: { Neck: 4 } }))!.equipmentSteps).toEqual([]);
+      expect(planForTarget('quest', target, maxedUnlocks({ quests: [target] }))!.equipmentSteps).toEqual([]);
+    } finally {
+      delete QUEST_DATA[first];
+      delete QUEST_DATA[target];
+    }
+  });
   it('orders quest steps so prereqs come before the quests that need them', () => {
     const base = maxedUnlocks();
     for (const q of Object.values(QUEST_DATA)) {
@@ -283,6 +313,7 @@ describe('planForTarget — diaries', () => {
 
   it('does not require miniquests for the Quest cape diary task', () => {
     const plan = planForTarget('diary', 'Lumbridge Elite', maxedUnlocks({
+      equipment: { Cape: 6 },
       regions: ['Draynor Village'],
       quests: [...QUEST_CAPE_QUEST_IDS],
       completedTasks: ALL_DIARY_TASKS

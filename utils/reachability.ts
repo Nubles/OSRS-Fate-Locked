@@ -7,7 +7,7 @@ import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
 import { resolveModeRules } from '../config/gameModes';
 import type { GameModeRules } from '../config/gameModes';
 import { bankId } from '../data/banks';
-import { AREA_ALIAS_POLICIES, canonicalAreaName } from '../data/areaMapPolicy';
+import { AREA_ALIAS_POLICIES, AREA_REFERENCES, canonicalAreaName } from '../data/areaMapPolicy';
 
 /**
  * Is a named region/sub-area reachable in Chunked mode: true if ANY chunk
@@ -23,7 +23,9 @@ export const isNamedAreaReachableViaChunks = (name: string, unlockedChunkKeys: r
   const canonical = canonicalAreaName(name);
   const chunks = policy?.kind === 'surface-overlap'
     ? policy.chunks
-    : (SUB_AREA_CHUNKS[canonical] || REGION_CHUNKS[canonical]);
+    : (SUB_AREA_CHUNKS[canonical]
+      || AREA_REFERENCES[canonical as keyof typeof AREA_REFERENCES]?.chunks
+      || REGION_CHUNKS[canonical]);
   if (!chunks || chunks.length === 0) return false;
   return chunks.some((chunk) => isChunkUnlocked(chunkKey(chunk), unlockedChunkKeys));
 };

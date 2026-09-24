@@ -2,8 +2,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA, QuestData } from '../data/questData';
-import { WIKI_OVERRIDES } from '../constants';
-import { CheckCircle2, Lock, BookOpen, Sparkles, Scroll, Bookmark, Layers, List, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { WIKI_OVERRIDES, SLOT_CONFIG } from '../constants';
+import { CheckCircle2, Lock, Bookmark, Layers, List, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { BookOpen, Sparkles, Scroll } from './OsrsIcon';
+import { WikiIcon } from './WikiIcon';
 import { chunkContentService } from '../services/ChunkContentService';
 import { questLocations } from '../utils/questLocations';
 import { showChunkOnMap } from '../utils/chunkLocations';
@@ -84,6 +86,9 @@ export type QuestCardQuest = QuestData & {
     eligibility: QuestEligibility;
 };
 
+const questFilterStatus = (quest: QuestCardQuest): JournalStatus =>
+    quest.status === 'COMPLETED' ? 'COMPLETED' : quest.eligibility.eligible ? 'AVAILABLE' : 'LOCKED';
+
 interface QuestCardProps {
     quest: QuestCardQuest;
     unlocks: UnlockState;
@@ -99,13 +104,17 @@ interface QuestCardProps {
 
 export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, currentQP, onToggle, highlight, onPrereqClick, onSkillClick }) => {
     const isCompleted = quest.status === 'COMPLETED';
-    const isAvailable = quest.status === 'AVAILABLE';
+    const isAvailable = !isCompleted && quest.eligibility.eligible;
+    const needsConfirmation = !isCompleted && quest.eligibility.machineEligible && !quest.eligibility.eligible;
     const diffStyle = getDifficultyColor(quest.difficulty);
 
     const eligibility = quest.eligibility;
 
     // "Almost there" — locked by exactly one canonical requirement (a quick win).
-    const unmet = !isCompleted && !isAvailable ? eligibility.blockers : [];
+    const unmet = !isCompleted && !isAvailable ? [
+      ...eligibility.blockers,
+      ...eligibility.manualChecks.map(label => ({ kind: 'manual', label })),
+    ] : [];
     const almost = isAlmostThere(unmet);
 
     // Chunk-derived locations remain informational map links only. Canonical
@@ -121,12 +130,23 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
     const locationReqs = geography.locations;
     const metLocations = locationReqs.filter((location: { label: string }) =>
       eligibility.evidence.includes(location.label));
-    const skillReqs = Object.entries(quest.skills as Record<string, number>);
+    // The canonical evaluator replaces an accepted skill alternative with its
+    // own confirmation. Do not also present the replaced skill as mandatory.
+    const skillReqs = Object.entries(quest.skills as Record<string, number>).filter(([skill, level]) =>
+      isCompleted || !quest.skillAlternatives?.some(option => option.skill === skill)
+      || eligibility.evidence.includes(`${skill} ${level}`)
+      || eligibility.blockers.some(blocker => blocker.kind === 'skill'
+        && blocker.requirement?.type === 'single' && blocker.requirement.skill === skill));
     const metSkills = skillReqs.filter(([skill, lvl]) =>
       eligibility.evidence.includes(skill + ' ' + lvl));
     const combatReqs = quest.combatLevel === undefined ? [] : [quest.combatLevel];
     const metCombat = combatReqs.filter((level: number) =>
       eligibility.evidence.includes('Combat level ' + level));
+    const equipmentReqs = quest.equipmentRequirements ?? [];
+    const equipmentMet = (requirement: typeof equipmentReqs[number]) => isCompleted || !eligibility.blockers.some(
+      blocker => blocker.kind === 'equipment' && blocker.slot === requirement.slot && blocker.tier === requirement.tier,
+    );
+    const metEquipment = equipmentReqs.filter(equipmentMet);
     const prereqReqs: string[] = quest.prereqs || [];
     const metPrereqs = prereqReqs.filter((qid: string) =>
       eligibility.evidence.includes(qid));
@@ -139,9 +159,9 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
         blocker.kind === 'region' && blocker.label === alternativeLabel,
     );
     const totalReqs = regionReqs.length + locationReqs.length + skillReqs.length +
-      combatReqs.length + prereqReqs.length + (hasAlternative ? 1 : 0);
+      combatReqs.length + equipmentReqs.length + prereqReqs.length + (hasAlternative ? 1 : 0) + eligibility.manualChecks.length;
     const totalMet = metRegions.length + metLocations.length + metSkills.length +
-      metCombat.length + metPrereqs.length + (hasAlternative && alternativeMet ? 1 : 0);
+      metCombat.length + metEquipment.length + metPrereqs.length + (hasAlternative && alternativeMet ? 1 : 0);
     const reqPct = totalReqs === 0 ? 100 : Math.round((totalMet / totalReqs) * 100);
 
     return (
@@ -179,7 +199,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                       </span>
                       {quest.points > 0 && (
                           <span className="text-[9px] px-1.5 py-0.5 rounded border font-mono font-bold tracking-wide whitespace-nowrap flex items-center gap-1 text-amber-300 border-amber-500/30 bg-amber-900/10">
-                              <Sparkles size={8} /> {quest.points} {quest.points === 1 ? 'Quest Point' : 'Quest Points'}
+                              <WikiIcon file="Quest_point_icon.png" alt="" size={8} /> {quest.points} {quest.points === 1 ? 'Quest Point' : 'Quest Points'}
                           </span>
                       )}
                   </div>
@@ -205,15 +225,25 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                                 (met
                                   ? 'bg-black/30 text-gray-500 border-white/5'
                                   : 'bg-red-900/10 text-red-400 border-red-500/20')}>
-                                  <BookOpen size={8} /> Combat level {level}
+                                  <WikiIcon file="Combat_icon.png" alt="" size={8} /> Combat level {level}
                               </span>
                           );
                       })}
-                      {(quest.manualRequirements ?? []).map((requirement: string) => (
+                      {equipmentReqs.map(requirement => (
+                          <span key={'equipment:' + requirement.slot + ':' + requirement.tier}
+                            className={'text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border ' +
+                              (equipmentMet(requirement)
+                                ? 'bg-black/30 text-gray-500 border-white/5'
+                                : 'bg-red-900/10 text-red-400 border-red-500/20')}
+                            title={`Fate equipment unlock: ${requirement.slot} T${requirement.tier}. ${requirement.reason}`}>
+                              <WikiIcon file={SLOT_CONFIG[requirement.slot]?.file ?? "Worn_Equipment.png"} alt="" size={8} /> {requirement.slot} T{requirement.tier} — {requirement.reason}
+                          </span>
+                      ))}
+                      {eligibility.manualChecks.map((requirement: string) => (
                           <span key={'manual:' + requirement}
                             className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border bg-cyan-900/10 text-cyan-300/80 border-cyan-500/20"
-                            title="Manual requirement — shown for reference and not checked automatically">
-                              <Bookmark size={8} /> {requirement}
+                            title="Confirm this requirement before marking the quest complete">
+                              <Bookmark size={8} /> Needs confirmation: {requirement}
                           </span>
                       ))}
                       {hasAlternative && (
@@ -224,7 +254,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                           One of: {quest.oneOf.map(questRequirementOptionLabel).join(' or ')}
                         </span>
                       )}
-                      {Object.entries(quest.skills).map(([skill, lvl]) => {
+                      {skillReqs.map(([skill, lvl]) => {
                           const reqLevel = lvl as number;
                           let met = false;
                           let isLocked = false;
@@ -243,11 +273,14 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                           if (isCompleted || met) {
                               return (
                                   <span key={skill} className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border bg-black/30 text-gray-500 border-white/5">
-                                      {skill === 'Quest Points' ? <Sparkles size={8} /> : <BookOpen size={8} />}
+                                      <WikiIcon file={skill === 'Quest Points' ? 'Quest_point_icon.png' : `${skill}_icon.png`} alt="" size={8} />
                                       {skill === 'Quest Points' ? 'QP' : skill} {reqLevel}
                                   </span>
                               );
                           }
+                          // Preserve alternative-route wording from the canonical blocker.
+                          const blocker = eligibility.blockers.find(blocker => blocker.kind === 'skill'
+                            && blocker.requirement?.type === 'single' && blocker.requirement.skill === skill);
                           // Unmet skill → clickable button that opens the training popover
                           return (
                               <button
@@ -259,8 +292,8 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                                   className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border bg-red-900/10 text-red-400 border-red-500/20 hover:bg-red-900/20 hover:border-red-400/40 transition-colors cursor-pointer"
                                   title={`Training guide: ${skill}`}
                               >
-                                  {skill === 'Quest Points' ? <Sparkles size={8} /> : <BookOpen size={8} />}
-                                  {skill === 'Quest Points' ? 'QP' : skill} {reqLevel}
+                                  <WikiIcon file={skill === 'Quest Points' ? 'Quest_point_icon.png' : `${skill}_icon.png`} alt="" size={8} />
+                                  {blocker?.label ?? `${skill === 'Quest Points' ? 'QP' : skill} ${reqLevel}`}
                                   {isLocked && <Lock size={8} className="ml-0.5" />}
                                   <TrendingUp size={7} className="ml-0.5 opacity-60" />
                               </button>
@@ -301,7 +334,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                           ? 'bg-green-500 border-green-400 shadow-[0_0_10px_rgba(34,197,94,0.4)] cursor-default'
                           : 'bg-black/40 border-gray-700 hover:border-gray-500 hover:text-gray-400 cursor-pointer'}
                   `}
-                  title={isCompleted ? "Completed" : "Complete & Roll"}
+                  title={isCompleted ? "Completed" : needsConfirmation ? "Confirm & Complete" : "Complete & Roll"}
               >
                   <img
                       src="https://oldschool.runescape.wiki/images/Quests.png"
@@ -330,6 +363,12 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                   <span className="text-[9px] text-gray-500 font-mono whitespace-nowrap shrink-0">
                       {totalMet}/{totalReqs} reqs
                   </span>
+              </div>
+          )}
+
+          {needsConfirmation && (
+              <div className="mt-2 pt-2 border-t border-white/5 text-[10px] text-cyan-300 flex items-center gap-1">
+                  <Bookmark size={8} /> Check the requirement above before completing.
               </div>
           )}
 
@@ -403,8 +442,8 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
       const eligibility = questLogEligibility(q, unlocks, gameModeId);
       return { ...q, status: eligibility.status, eligibility };
     }).sort((a, b) => {
-        const score = (s: string) => s === 'AVAILABLE' ? 0 : s.includes('LOCKED') ? 1 : 2;
-        return score(a.status) - score(b.status) || a.name.localeCompare(b.name);
+        const score = (quest: QuestCardQuest) => questFilterStatus(quest) === 'AVAILABLE' ? 0 : questFilterStatus(quest) === 'LOCKED' ? 1 : 2;
+        return score(a) - score(b) || a.name.localeCompare(b.name);
     });
     // chunkTick: refresh informational map-location chips once the chunk index loads.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -419,9 +458,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
       if (!matchesSearch) return false;
       if (regionFilter !== 'ALL' && !q.regions.includes(regionFilter)) return false;
       if (diffFilter !== 'ALL' && getDifficultyLabel(q.difficulty) !== diffFilter) return false;
-      if (filter === 'COMPLETED') return q.status === 'COMPLETED';
-      if (filter === 'AVAILABLE') return q.status === 'AVAILABLE';
-      if (filter === 'LOCKED') return q.status.includes('LOCKED');
+      if (filter !== 'ALL') return questFilterStatus(q) === filter;
       return true;
     });
     if (sortMode === 'NAME') return [...list].sort((a, b) => a.name.localeCompare(b.name));
@@ -439,8 +476,8 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   // Counts per status for the bar's pills.
   const statusCounts = useMemo(() => ({
     ALL: allQuests.length,
-    AVAILABLE: allQuests.filter((q) => q.status === 'AVAILABLE').length,
-    LOCKED: allQuests.filter((q) => q.status.includes('LOCKED')).length,
+    AVAILABLE: allQuests.filter((q) => questFilterStatus(q) === 'AVAILABLE').length,
+    LOCKED: allQuests.filter((q) => questFilterStatus(q) === 'LOCKED').length,
     COMPLETED: allQuests.filter((q) => q.status === 'COMPLETED').length,
   }), [allQuests]);
 

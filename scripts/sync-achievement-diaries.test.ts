@@ -13,6 +13,7 @@ import {
   renderTaskIdMigrations,
   runDiaryMain,
   validateAudit,
+  validateSnapshot,
 } from './sync-achievement-diaries.mjs';
 
 const SIX_ROW_HTML = [
@@ -147,7 +148,7 @@ describe('Achievement Diary source parser', () => {
   it('renders frozen ids deterministically in Diary tier and ordinal order', () => {
     const snapshot: any = structuredClone(SIX_TASK_SNAPSHOT);
     snapshot.tasks[0].oneOf = [
-      { label: 'Dusty key' },
+      { label: 'Dusty key', manualRequirements: ['Have a dusty key'] },
       { skills: { Agility: 70 }, combatLevel: 100, allQuests: true, anySkillLevel: 99 },
       { quests: ['Ratcatchers'], cas: ['Easy'], regions: ['Asgarnia'] },
     ];
@@ -168,7 +169,7 @@ describe('Achievement Diary source parser', () => {
     expect(first).toContain('questPoints?: number;');
     expect(first).toContain('manualRequirements?: string[];');
     expect(first).toContain(
-      "oneOf: [{ label: 'Dusty key' }, { skills: { 'Agility': 70 }, combatLevel: 100, allQuests: true, anySkillLevel: 99 }, "
+      "oneOf: [{ label: 'Dusty key', manualRequirements: ['Have a dusty key'] }, { skills: { 'Agility': 70 }, combatLevel: 100, allQuests: true, anySkillLevel: 99 }, "
       + "{ quests: ['Ratcatchers'], cas: ['Easy'], regions: ['Asgarnia'] }], combatLevel: 70, allQuests: true",
     );
     expect(first).toContain(
@@ -186,6 +187,15 @@ describe('Achievement Diary source parser', () => {
       source: { ...SIX_TASK_SNAPSHOT.source, officialRows: 7 },
       tasks: [...SIX_TASK_SNAPSHOT.tasks, { ...SIX_TASK_SNAPSHOT.tasks[0] }],
     })).toThrow(/duplicate.*fal_med_3/i);
+  });
+
+  it('rejects a label-only exemption and invalid partial quest metadata', () => {
+    const snapshot: any = structuredClone(SIX_TASK_SNAPSHOT);
+    snapshot.tasks[0].oneOf = [{ label: 'Ultimate Ironman exemption' }, { quests: ['Ratcatchers'] }];
+    expect(() => renderDiaryTasks(snapshot)).toThrow(/Empty Diary requirement route/);
+    delete snapshot.tasks[0].oneOf;
+    snapshot.tasks[0].questProgress = [{ quest: 'Ratcatchers', label: '' }];
+    expect(() => renderDiaryTasks(snapshot)).toThrow(/questProgress/);
   });
 
   it('refuses unknown Diary tiers', () => {
@@ -445,6 +455,16 @@ describe('Achievement Diary id-classification audit', () => {
     expect(() => validateAudit(snapshot)).toThrow(/unknown.*NotASkill/i);
   });
 
+  it('retains merchant gates and rejects unknown shop categories', () => {
+    const snapshot = loadSnapshot();
+    snapshot.tasks[0].merchants = ['Clothes Shops'];
+    expect(renderDiaryTasks(snapshot)).toContain("merchants: ['Clothes Shops']");
+    snapshot.tasks[0].merchants = ['NotAShop'];
+    expect(() => validateAudit(snapshot)).toThrow(/unknown.*NotAShop/i);
+    snapshot.tasks[0].merchants = [42];
+    expect(() => renderDiaryTasks(snapshot)).toThrow(/merchants.*non-empty string/i);
+  });
+
   it('rejects unknown references nested inside an alternative route', () => {
     const snapshot = loadSnapshot();
     snapshot.tasks[0].oneOf = [
@@ -464,11 +484,14 @@ describe('Achievement Diary id-classification audit', () => {
       .sort();
 
     expect(alternativeIds).toEqual([
+      'ard_elite_5',
+      'ard_med_11',
       'ard_med_6',
       'fal_elite_1',
       'fal_elite_4',
       'fal_hard_1',
       'fal_hard_10',
+      'fal_med_10',
       'fal_med_4',
       'frem_easy_6',
       'frem_easy_9',
@@ -490,10 +513,13 @@ describe('Achievement Diary id-classification audit', () => {
       'kou_hard_7',
       'lum_elite_5',
       'lum_med_10',
+      'lum_med_11',
       'mor_easy_2',
       'mor_easy_3',
       'mor_easy_8',
       'mor_elite_6',
+      'mor_med_4',
+      'var_elite_3',
       'var_elite_5',
       'var_hard_1',
       'var_hard_5',
@@ -684,7 +710,7 @@ describe('Achievement Diary id-classification audit', () => {
     for (const [id, levels] of Object.entries(raimentRoutes)) {
       const task = byId.get(id);
       expect(task?.skills).toEqual({});
-      expect(task?.oneOf?.map(option => option.skills?.Runecraft)).toEqual(levels);
+      expect([...new Set(task?.oneOf?.map(option => option.skills?.Runecraft))]).toEqual(levels);
     }
     expect(byId.get('kou_hard_7')?.oneOf).toHaveLength(2);
     expect(byId.get('var_hard_5')?.oneOf).toHaveLength(2);
@@ -698,6 +724,22 @@ describe('Achievement Diary id-classification audit', () => {
     const questSnapshot = loadSnapshot();
     questSnapshot.classification.allQuestsRequirementsStructured -= 1;
     expect(() => validateAudit(questSnapshot)).toThrow(/allQuestsRequirementsStructured.*derived/i);
+  });
+
+  it('rejects malformed and unknown diary permission references', () => {
+    for (const tier of [0, 10, 1.5]) {
+      const snapshot = loadSnapshot();
+      snapshot.tasks[0].equipmentRequirements = [{ slot: 'Cape', tier, reason: 'Test cape' }];
+      expect(() => validateSnapshot(snapshot)).toThrow(/equipmentRequirements/);
+    }
+    for (const field of ['mobility', 'arcana']) {
+      const snapshot = loadSnapshot();
+      snapshot.tasks[0][field] = ['Invented unlock'];
+      expect(() => validateAudit(snapshot)).toThrow(/unknown/i);
+    }
+    const snapshot = loadSnapshot();
+    snapshot.tasks[0].equipmentRequirements = [{ slot: 'Invented slot', tier: 1, reason: 'Test' }];
+    expect(() => validateAudit(snapshot)).toThrow(/unknown/i);
   });
 
 

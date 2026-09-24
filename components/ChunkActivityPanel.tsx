@@ -2,26 +2,8 @@ import { evaluateBankRequirements, evaluateEntityRequirements } from '../utils/e
 import { effectiveSkillLevel } from '../utils/slayerReach';
 import { canonicalBossId, resolveQuest } from '../utils/contentIdentity';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Lock,
-  Check,
-  Swords,
-  Store,
-  Users,
-  Scroll,
-  Package,
-  BookOpen,
-  Sparkles,
-  Sprout,
-  Flag,
-  Gamepad2,
-  Pickaxe,
-  Skull,
-  Route,
-  ChevronDown,
-  ChevronRight,
-  Compass,
-} from 'lucide-react';
+import { Lock, Check, Route, ChevronDown, ChevronRight } from 'lucide-react';
+import { Pickaxe, Swords, Store, Users, Scroll, Package, BookOpen, Sparkles, Sprout, Flag, Gamepad2, Skull, Compass } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import {
   chunkContentService,
@@ -38,9 +20,10 @@ import {
 } from '../utils/journalStatus';
 import { classifyShop } from '../utils/merchantShops';
 import { resourceReqFor, resourceUsable } from '../utils/chunkResources';
-import { mobilityFor } from '../utils/chunkMobility';
+import { chunkTransportNodes, mobilityFor } from '../utils/chunkMobility';
 import { placeOf, chunkUnlocked, showChunkOnMap } from '../utils/chunkLocations';
 import { isAreaReachable, isBankReachable, bankLocksActive } from '../utils/reachability';
+import { farmingPatchFor } from '../utils/farmingPatches';
 import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST, MOBILITY_LIST, BOSSES_LIST } from '../constants';
 import type { ChunkCoord } from '../utils/mapCoords';
 import { WikiLink } from './WikiLink';
@@ -201,6 +184,7 @@ const QUEST_BADGE: Record<QuestStatus, { cls: string; label: string }> = {
   AVAILABLE: { cls: 'text-amber-300', label: 'requirements met — can do now' },
   LOCKED_REGION: { cls: 'text-gray-500', label: 'locked: region not unlocked' },
   LOCKED_SKILL: { cls: 'text-gray-500', label: 'locked: skill requirements not met' },
+  LOCKED_EQUIPMENT: { cls: 'text-gray-500', label: 'locked: required equipment tier not unlocked' },
   LOCKED_QUEST: { cls: 'text-gray-500', label: 'locked: prerequisite quest missing' },
 };
 
@@ -213,34 +197,7 @@ const rowStateCls = (state: ChunkInfoItemState): string => state === 'locked'
       : 'text-gray-100';
 
 
-// ── Farming patches: chunk object name → FARMING_PATCH_LIST unlock ─────────
-const PATCH_RULES: [RegExp, string][] = [
-  [/fruit tree patch/i, 'Fruit Tree'],
-  [/hardwood (tree )?patch/i, 'Hardwood Tree'],
-  [/spirit tree patch/i, 'Spirit Tree'],
-  [/crystal tree patch/i, 'Crystal Tree'],
-  [/celastrus/i, 'Celastrus'],
-  [/redwood (tree )?patch/i, 'Redwood'],
-  [/calquat/i, 'Calquat'],
-  [/tree patch/i, 'Wood Tree'],
-  [/herb patch/i, 'Herb'],
-  [/flower patch/i, 'Flower'],
-  [/hops patch/i, 'Hops'],
-  [/bush patch/i, 'Bush'],
-  [/cactus patch/i, 'Cactus'],
-  [/mushroom patch/i, 'Mushroom'],
-  [/belladonna/i, 'Belladonna'],
-  [/seaweed patch/i, 'Seaweed'],
-  [/hespori/i, 'Hespori Patch'],
-  [/anima patch/i, 'Anima'],
-  [/grape ?vine|vine patch/i, 'Vinery'],
-  [/coral nursery|coral patch/i, 'Coral Nursery'],
-  [/allotment/i, 'Allotment'],
-];
-const farmingPatchFor = (objectName: string): string | null => {
-  for (const [re, patch] of PATCH_RULES) if (re.test(objectName)) return patch;
-  return null;
-};
+// Shared with the permission snapshots exported to RuneLite.
 
 const norm = (s: string) => s.toLowerCase().replace(/[’]/g, "'");
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -378,7 +335,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     : [];
 
   const bankAccess = content && mode === 'chunk' && chunkContentService.hasBank(chunk.cx, chunk.cy)
-    ? evaluateBankRequirements(content, chunk, unlocks) : null;
+    ? evaluateBankRequirements(content, chunk, unlocks, chunkContentService, gameModeId ?? 'vanilla') : null;
   const bankState: ChunkInfoBankState = mode !== 'chunk' || !chunkContentService.ready || !chunkContentService.hasBank(chunk.cx, chunk.cy)
     ? null
     : !isBankReachable(chunk.cx, chunk.cy, unlocks, gameModeId, customMode)
@@ -402,14 +359,10 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     for (const s of sources) {
       const dests = expandLinks(graph, String(s.cx * 256 + s.cy), ownIds);
       if (!dests.length) continue;
-      // A recognised transport object in the source chunk names the network
-      // (fairy ring / canoe / boat …); otherwise classify by the connector.
-      const c = chunkContentService.contentFor(s.cx, s.cy);
-      const nets = new Set<string>();
-      for (const [obj] of c?.objects ?? []) { const n = mobilityFor(obj); if (n) nets.add(n); }
-      const sourceNet = nets.size === 1 ? [...nets][0] : null;
       for (const d of dests) {
-        const category = sourceNet ?? classifyVia(d.via);
+        // The graph does not identify which local service a link uses. A nearby
+        // pilot/ring must not turn unrelated stairs or caves into that network.
+        const category = classifyVia(d.via);
         if (!byCat.has(category)) byCat.set(category, new Map());
         const m = byCat.get(category)!;
         if (!m.has(d.label)) m.set(d.label, { cx: d.cx, cy: d.cy, unlocked: chunkUnlocked(d.cx, d.cy, unlocks, gameModeId) });
@@ -450,8 +403,8 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     const requirementsFor = (name: string, kind: EntityKind): string[] => {
       const hits = chunkContentService.entityLocations(name, [kind])?.locations
         .filter(loc => sources.some(source => source.cx === loc.cx && source.cy === loc.cy));
-      const access = (hits?.length ? hits : sources).map(loc => evaluateEntityRequirements(name, kind, loc, unlocks));
-      return access.some(result => result.status === 'ALLOWED') ? [] : [...new Set(access.flatMap(result => result.reasons))];
+      const access = (hits?.length ? hits : sources).map(loc => evaluateEntityRequirements(name, kind, loc, unlocks, chunkContentService, gameModeId ?? 'vanilla'));
+      return access.some(result => result.status === 'ALLOWED') ? [] : [...new Set(access.flatMap(result => result.reasons.length ? result.reasons : ['Access requirements need review']))];
     };
     // Shops → merchant category gate.
     const shops = content.shops.map(name => {
@@ -476,18 +429,21 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
 
     // Objects split four ways: Transport nodes (mobility gate), Farming patches
     // (own table), gatherable Resources (skill tier + level), and inert scenery.
-    const transport: Array<{ name: string; count: number; network: string; usable: boolean; requirements: string[] }> = [];
+    const transport = chunkTransportNodes(content).map(node => ({
+      ...node,
+      usable: unlocks.mobility.includes(node.network),
+      requirements: requirementsFor(node.name, node.kind),
+    }));
+    const npcs = content.npcs.filter(name => !mobilityFor(name, 'npc'));
     const farming: Array<{ name: string; count: number; patch: string; usable: boolean; requirements: string[] }> = [];
     const resources: Array<{ name: string; count: number; skill: string; level: number; usable: boolean; requirements: string[] }> = [];
     const objects: [string, number][] = [];
     for (const [name, count] of content.objects) {
-      const network = mobilityFor(name);
+      if (mobilityFor(name, 'object')) continue;
       const patch = farmingPatchFor(name);
       const req = resourceReqFor(name);
       const requirements = requirementsFor(name, 'object');
-      if (network && MOBILITY_LIST.includes(network)) {
-        transport.push({ name, count, network, usable: unlocks.mobility.includes(network), requirements });
-      } else if (patch && FARMING_PATCH_LIST.includes(patch)) {
+      if (patch && FARMING_PATCH_LIST.includes(patch)) {
         farming.push({ name, count, patch, usable: unlocks.farming.includes(patch), requirements });
       } else if (req) {
         resources.push({ name, count, skill: req.skill, level: req.level, usable: resourceUsable(req, unlocks), requirements });
@@ -516,7 +472,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     const minigames = matchListInText(MINIGAMES_LIST, haystack)
       .map(name => ({ name, usable: unlocks.minigames.includes(name) }));
 
-    return { shops, bosses, monsters, transport, farming, resources, objects, guilds, minigames, diaries };
+    return { shops, bosses, monsters, transport, farming, resources, objects, npcs, guilds, minigames, diaries };
   }, [content, subArea, unlocks, gameModeId, mode, regionChunks, chunk]);
 
   // Scope determines whether Whole area can make a trustworthy availability claim.
@@ -599,7 +555,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       ...activityPresentations.diaries.map(diary => diary.state),
       ...neutralRows(derived.objects.length),
       ...neutralRows(Object.keys(content.clues).length),
-      ...neutralRows(content.npcs.length),
+      ...neutralRows(derived.npcs.length),
       ...neutralRows(content.spawns.length),
     ];
     return { quests, combat, gathering, shops, travel, other };
@@ -789,10 +745,10 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       ? t.network.replace(/s$/, '')
       : t.state === 'available' ? 'Available' : t.usable ? 'Locked' : `Needs ${t.network.replace(/s$/, '')}`;
     return (
-      <div key={t.name} className="flex items-center justify-between gap-2 py-px"
+      <div key={`${t.kind}|${t.name}`} className="flex items-center justify-between gap-2 py-px"
         title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'neutral' ? 'Access requirements need evaluation' : visibleState === 'available' ? `${t.network} network unlocked` : t.usable ? 'Chunk locked' : `Needs the "${t.network}" mobility unlock`}>
         <span className={`truncate ${rowStateCls(visibleState)}`}>
-          <WikiLink name={t.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="no-underline text-gray-600">x{t.count}</span>
+          <WikiLink name={t.name} className="hover:underline decoration-dotted underline-offset-2" /> {t.count != null && <span className="no-underline text-gray-600">x{t.count}</span>}
         </span>
         <RequirementStateBadges requirements={t.requirements} state={t.state} label={transportLabel} />
       </div>
@@ -963,10 +919,10 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       </div>
     </>
   ) : null;
-  const npcRows = content?.npcs.length ? (
+  const npcRows = derived?.npcs.length ? (
     <>
-      <SectionHead icon={<Users size={11} />} label="NPCs" count={content.npcs.length} />
-      <CappedList cap={6} items={content.npcs.map(n => (
+      <SectionHead icon={<Users size={11} />} label="NPCs" count={derived.npcs.length} />
+      <CappedList cap={6} items={derived.npcs.map(n => (
         <div key={n} className={`truncate py-px ${rowStateCls('neutral')}`}><WikiLink name={n} /></div>
       ))} />
     </>

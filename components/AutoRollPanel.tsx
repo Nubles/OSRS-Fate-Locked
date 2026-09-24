@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Loader2, Search, Sparkles, Dice5, CheckCircle2, AlertTriangle, RefreshCw, Lock } from 'lucide-react';
+import { Loader2, Search, CheckCircle2, AlertTriangle, RefreshCw, Lock } from 'lucide-react';
+import { Sparkles, Dice5 } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { RollInbox } from './RollInbox';
 import { RuneLiteOnboarding } from './RuneLiteOnboarding';
+import { SKILLS_LIST } from '../data/items';
 
 /**
  * Auto-Roll (PROTOTYPE)
@@ -24,12 +26,7 @@ const WOM_BASE = 'https://api.wiseoldman.net/v2/players/';
 
 // App skill names in display order. WOM uses lowercase metric keys; the only
 // non-trivial remaps are runecrafting→Runecraft and the already-capitalised rest.
-const SKILLS = [
-  'Attack', 'Strength', 'Defence', 'Hitpoints', 'Ranged', 'Prayer', 'Magic',
-  'Runecraft', 'Construction', 'Agility', 'Herblore', 'Thieving', 'Crafting',
-  'Fletching', 'Slayer', 'Hunter', 'Mining', 'Smithing', 'Fishing', 'Cooking',
-  'Firemaking', 'Woodcutting', 'Farming',
-] as const;
+const SKILLS = SKILLS_LIST;
 
 const womMetric = (skill: string) =>
   skill === 'Runecraft' ? 'runecrafting' : skill.toLowerCase();
@@ -54,26 +51,16 @@ interface Fetched {
   updatedAt: string | null;
 }
 
-async function fetchPlayer(name: string): Promise<Fetched> {
+export async function fetchPlayer(name: string): Promise<Fetched> {
   const url = WOM_BASE + encodeURIComponent(name.trim());
-  // Read first (fast, works for already-tracked players).
-  let res = await fetch(url);
-  let data = res.ok ? await res.json() : null;
-
-  // If the player is unknown (404) or the read didn't carry a snapshot, POST to
-  // track + import them, which returns a full latestSnapshot for valid RSNs.
-  if (!data?.latestSnapshot) {
-    const post = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
-    if (post.ok) {
-      data = await post.json();
-    } else if (!data) {
-      // Both the read and the update failed → report the most useful reason.
-      if (post.status === 404 || res.status === 404) throw new Error(`"${name}" isn't on the OSRS hiscores.`);
-      if (post.status === 429) throw new Error('Rate-limited by the API — wait a moment and retry.');
-      const body = await post.json().catch(() => null);
-      if (body?.code === 'HISCORES_USERNAME_NOT_FOUND') throw new Error(`"${name}" isn't on the OSRS hiscores — check the spelling.`);
-      throw new Error(`Wise Old Man API error (${post.status}).`);
-    }
+  // POST refreshes an existing account as well as tracking a new one. Never
+  // silently present a cached GET as a successful Refresh.
+  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    if (res.status === 429) throw new Error('Rate-limited by the API � wait a moment and retry.');
+    if (res.status === 404 || data?.code === 'HISCORES_USERNAME_NOT_FOUND') throw new Error(`"${name}" isn't on the OSRS hiscores � check the spelling.`);
+    throw new Error(`Could not refresh Wise Old Man hiscores (${res.status}).`);
   }
 
   const snap = data?.latestSnapshot?.data?.skills;

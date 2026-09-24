@@ -15,6 +15,7 @@ import type {
 
 export type PresentedBlockerCategory =
   | 'Skill'
+  | 'Equipment'
   | 'Quest'
   | 'Unlock'
   | 'Access / station';
@@ -102,6 +103,7 @@ const SOURCE_KIND_TEXT: Record<SourceKind, string> = {
 const presentGate = (gate: RouteGate): PresentedBlocker => {
   switch (gate.type) {
     case 'SKILL': return { category: 'Skill', label: gate.label };
+    case 'EQUIPMENT': return { category: 'Equipment', label: gate.label };
     case 'RFD_SUBQUESTS':
     case 'QUEST_PROGRESS':
     case 'QUEST': return { category: 'Quest', label: gate.label };

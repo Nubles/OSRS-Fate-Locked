@@ -20,6 +20,10 @@ export const loadQuestWalkthroughFor = async (
   }
   if (availability !== 'PREVIEW') return undefined;
 
+  const preview: PreviewStrategyCatalogue = await import('./questWalkthroughs.preview-boundary');
+  const expanded = preview.questWalkthroughFor(release.questId);
+  if (expanded?.revision === release.revision) return expanded;
+  // Retain exact-revision access for existing private evidence consumers.
   const catalogue: PreviewWalkthroughCatalogue = await import('./questWalkthroughs');
   const walkthrough = catalogue.questWalkthroughFor(release.questId);
 

@@ -1,5 +1,6 @@
 
 import { DropSource } from '../types';
+import type { QuestProgressRequirement } from './questProgress';
 
 export interface QuestLocationRequirement {
   id: string;
@@ -17,6 +18,15 @@ export interface QuestRequirementOption {
 export type QuestKind = 'quest' | 'miniquest';
 export type QuestAccessPolicy = 'regions' | 'locations' | 'regions-and-locations';
 
+export type EquipmentSlot = 'Head' | 'Cape' | 'Neck' | 'Ammo' | 'Weapon' | 'Body' | 'Shield' | 'Legs' | 'Gloves' | 'Boots' | 'Ring';
+
+/** Fate permission to wear an item during a mandatory quest step, not item ownership. */
+export interface QuestEquipmentRequirement {
+  slot: EquipmentSlot;
+  tier: number;
+  reason: string;
+}
+
 export interface QuestData {
   id: string;
   name: string;
@@ -25,8 +35,15 @@ export interface QuestData {
   regions: string[];
   locations?: QuestLocationRequirement[];
   skills: Record<string, number>;
+  /** Kept separate from official OSRS level requirements and inventory-only items. */
+  equipmentRequirements?: QuestEquipmentRequirement[];
+  /** A preparation method can be replaced by confirming supplies obtained elsewhere. */
+  preparationRequirements?: Array<{ skill: string; level: number; action: string; alternative: string }>;
   combatLevel?: number;
   manualRequirements?: string[];
+  questProgress?: QuestProgressRequirement[];
+  /** A manually confirmed route that can replace the named skill gate. */
+  skillAlternatives?: Array<{ skill: string; quests: string[]; manualRequirements: string[] }>;
   prereqs: string[];
   points: number;
   series?: string;
@@ -110,6 +127,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Demon Slayer': {
     kind: 'quest', accessPolicy: 'locations',
     id: 'Demon Slayer', name: 'Demon Slayer',
+    equipmentRequirements: [{ slot: 'Weapon', tier: 2, reason: 'Wield Silverlight to defeat Delrith' }],
     regions: ["Misthalin"],
     locations: [
       { id: "varrock-square", label: "Varrock square", standardAreas: ["Varrock"], chunkOptions: [{ cx: 50, cy: 53 }] },
@@ -125,6 +143,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'The Restless Ghost', name: 'The Restless Ghost',
     regions: ['Lumbridge'],
     skills: {}, prereqs: [], points: 1,
+    equipmentRequirements: [{ slot: 'Neck', tier: 1, reason: 'Wear the ghostspeak amulet to speak to the ghost' }],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Romeo & Juliet': {
@@ -144,6 +163,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Sheep Shearer', name: 'Sheep Shearer',
     regions: ['Lumbridge'],
     skills: {}, prereqs: [], points: 1,
+    preparationRequirements: [{
+      skill: 'Crafting', level: 1, action: 'spin wool',
+      alternative: '20 unnoted balls of wool obtained from a permitted source',
+    }],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Shield of Arrav': {
@@ -205,6 +228,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Black Knights\' Fortress': {
     kind: 'quest', accessPolicy: 'locations',
     id: 'Black Knights\' Fortress', name: 'Black Knights\' Fortress',
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Wear the bronze med helm for the guard disguise' },
+      { slot: 'Body', tier: 1, reason: 'Wear the iron chainbody for the guard disguise' },
+    ],
     regions: ["Asgarnia"],
     locations: [
       { id: "west-falador", label: "West Falador", standardAreas: ["Falador"], chunkOptions: [{ cx: 46, cy: 52 }] },
@@ -245,6 +272,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Pirate\'s Treasure': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Pirate\'s Treasure', name: 'Pirate\'s Treasure',
+    equipmentRequirements: [{ slot: 'Body', tier: 1, reason: 'Wear a white apron to enter the grocery storeroom' }],
     regions: ['Port Sarim', 'Falador', 'Varrock', 'Musa Point'],
     skills: {}, prereqs: [], points: 2,
     difficulty: DropSource.QUEST_NOVICE
@@ -271,6 +299,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Misthalin Mystery': {
     kind: 'quest', accessPolicy: 'locations',
     id: 'Misthalin Mystery', name: 'Misthalin Mystery',
+    equipmentRequirements: [{ slot: 'Weapon', tier: 1, reason: "Wield the killer's knife to attack Abigale" }],
     regions: ['Misthalin'],
     locations: [
       { id: 'misthalin-mystery-island', label: "Abigail and Hewey's island", standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 50, cy: 49 }] },
@@ -323,6 +352,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Lost City': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Lost City', name: 'Lost City',
+    equipmentRequirements: [{ slot: 'Weapon', tier: 2, reason: 'Wield the dramen staff to enter Zanaris' }],
     regions: ['Lumbridge', 'Zanaris', 'Entrana'],
     skills: { 'Crafting': 31, 'Woodcutting': 36 }, prereqs: [], points: 3,
     difficulty: DropSource.QUEST_INTERMEDIATE
@@ -364,7 +394,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "dimintheis-house", label: "Dimintheis's house in south-east Varrock", standardAreas: ["Varrock"], chunkOptions: [{ cx: 51, cy: 53 }] },
       { id: "witchaven", label: "Witchaven", standardAreas: ["Witchaven"], chunkOptions: [{ cx: 42, cy: 51 }] },
       { id: "catherby", label: "Caleb's house in Catherby", standardAreas: ["Catherby"], chunkOptions: [{ cx: 44, cy: 53 }] },
-      { id: "dwarven-mine-boot", label: "Boot in the Dwarven Mine", standardAreas: ["Dwarven Mine"], chunkOptions: [{ cx: 48, cy: 54 }] },
+      { id: "dwarven-mine-boot", label: "Boot in the Dwarven Mine", standardAreas: ["Dwarven Mine"], chunkOptions: [{ cx: 47, cy: 53 }, { cx: 47, cy: 52 }] },
+      { id: "edgeville-dungeon-chronozon", label: "Chronozon in Edgeville Dungeon", standardAreas: ["Edgeville"], chunkOptions: [{ cx: 48, cy: 54 }] },
       { id: "north-al-kharid", label: "North Al Kharid", standardAreas: ["Al Kharid"], chunkOptions: [{ cx: 51, cy: 50 }] },
       { id: "al-kharid-mine", label: "Al Kharid mine", standardAreas: ["Al Kharid"], chunkOptions: [{ cx: 51, cy: 51 }] },
       { id: "jolly-boar-inn", label: "Jolly Boar Inn", standardAreas: ["Varrock"], chunkOptions: [{ cx: 51, cy: 54 }] },
@@ -448,6 +479,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Plague City': {
     kind: 'quest', accessPolicy: 'locations',
     id: 'Plague City', name: 'Plague City',
+    equipmentRequirements: [{ slot: 'Head', tier: 1, reason: 'Wear the gas mask when entering West Ardougne from the sewer' }],
     regions: ['Kandarin'],
     locations: [
       { id: 'east-ardougne-edmond', label: "Edmond's house in East Ardougne", standardAreas: ['East Ardougne'], chunkOptions: [{ cx: 39, cy: 52 }] },
@@ -477,6 +509,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Biohazard': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Biohazard', name: 'Biohazard',
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Wear the gas mask for the plague-sample route' },
+      { slot: 'Body', tier: 1, reason: 'Wear the medical gown to enter the Mourner headquarters' },
+      { slot: 'Legs', tier: 1, reason: 'Wear the priest gown to enter the Mourner headquarters' },
+    ],
     regions: ['East Ardougne', 'West Ardougne', 'Rimmington', 'Varrock'],
     skills: {}, prereqs: ['Plague City'], points: 3, series: 'Elf',
     difficulty: DropSource.QUEST_NOVICE
@@ -522,6 +559,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Tourist Trap': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Tourist Trap', name: 'The Tourist Trap',
+    equipmentRequirements: [
+      { slot: 'Body', tier: 1, reason: 'Wear the slave shirt inside the mining camp' },
+      { slot: 'Legs', tier: 1, reason: 'Wear the slave robe inside the mining camp' },
+      { slot: 'Boots', tier: 1, reason: 'Wear the slave boots inside the mining camp' },
+    ],
     regions: ['Bedabin Camp', 'Shantay Pass'],
     skills: { 'Fletching': 10, 'Smithing': 20 }, prereqs: [], points: 2,
     difficulty: DropSource.QUEST_INTERMEDIATE
@@ -747,6 +789,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Ghosts Ahoy': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Ghosts Ahoy', name: 'Ghosts Ahoy',
+    equipmentRequirements: [
+      { slot: 'Neck', tier: 1, reason: 'Wear the enchanted ghostspeak amulet to command Necrovarus' },
+      { slot: 'Head', tier: 1, reason: 'Wear the bedsheet disguise to gather signatures' },
+    ],
     regions: ['Port Phasmatys', 'Fenkenstrain\'s Castle'],
     skills: { 'Agility': 25, 'Cooking': 20 }, prereqs: ['Priest in Peril', 'The Restless Ghost'], points: 2,
     difficulty: DropSource.QUEST_INTERMEDIATE
@@ -769,6 +815,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Between a Rock...': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Between a Rock...', name: 'Between a Rock...',
+    equipmentRequirements: [{ slot: 'Head', tier: 1, reason: 'Wear the gold helmet to enter the cannon' }],
     regions: ['Keldagrim', 'Dwarven Mine', 'Taverley'],
     skills: { 'Defence': 30, 'Mining': 40, 'Smithing': 50 }, prereqs: ['Dwarf Cannon', 'Fishing Contest'], points: 2,
     difficulty: DropSource.QUEST_EXPERIENCED
@@ -790,6 +837,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Desert Treasure I': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Desert Treasure I', name: 'Desert Treasure I',
+    skillAlternatives: [{ skill: 'Slayer', quests: ['Plague City'], manualRequirements: ['Have a gas mask from Plague City for the smoke dungeon (alternative to Slayer 10)'] }],
     regions: ['Bandit Camp', 'Bedabin Camp', 'Pollnivneach', 'Entrana', 'Burthorpe', 'Baxtorian Falls', 'Canifis', 'Mort Myre Swamp'],
     skills: { 'Thieving': 53, 'Firemaking': 50, 'Slayer': 10, 'Magic': 50 }, prereqs: ['The Dig Site', 'Temple of Ikov', 'The Tourist Trap', 'Troll Stronghold', 'Priest in Peril', 'Waterfall Quest'], points: 3, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_MASTER
@@ -882,7 +930,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Mourning\'s End Part II', name: 'Mourning\'s End Part II',
     regions: ['Lletya', 'West Ardougne'],
-    skills: { 'Agility': 65 }, prereqs: ['Mourning\'s End Part I'], points: 2, series: 'Elf',
+    skills: {}, prereqs: ['Mourning\'s End Part I'], points: 2, series: 'Elf',
     difficulty: DropSource.QUEST_MASTER
   },
   'Rum Deal': {
@@ -972,63 +1020,64 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'RFD: Dwarf', name: 'RFD: Dwarf',
     regions: ['Taverley', 'Falador'],
-    skills: {}, prereqs: ['Fishing Contest'], points: 1, series: 'Recipe for Disaster',
+    skills: {}, prereqs: ['RFD: The Cook', 'Fishing Contest'], points: 1, series: 'Recipe for Disaster',
     difficulty: DropSource.QUEST_NOVICE
   },
   'RFD: Goblins': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'RFD: Goblins', name: 'RFD: Goblins',
     regions: ['Goblin Village'],
-    skills: {}, prereqs: ['Goblin Diplomacy'], points: 1, series: 'Recipe for Disaster',
+    skills: {}, prereqs: ['RFD: The Cook', 'Goblin Diplomacy'], points: 1, series: 'Recipe for Disaster',
     difficulty: DropSource.QUEST_NOVICE
   },
   'RFD: Pirate Pete': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'RFD: Pirate Pete', name: 'RFD: Pirate Pete',
     regions: ['Port Khazard'],
-    skills: { 'Cooking': 31 }, prereqs: [], points: 1, series: 'Recipe for Disaster',
+    skills: { 'Cooking': 31 }, prereqs: ['RFD: The Cook'], points: 1, series: 'Recipe for Disaster',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'RFD: Lumbridge Guide': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'RFD: Lumbridge Guide', name: 'RFD: Lumbridge Guide',
     regions: ['Wizards\' Tower'],
-    skills: { 'Cooking': 40 }, prereqs: ['Big Chompy Bird Hunting', 'Biohazard', 'Demon Slayer', 'Murder Mystery', 'Nature Spirit', 'Priest in Peril', 'The Restless Ghost', 'Witch\'s House'], points: 1, series: 'Recipe for Disaster',
+    skills: { 'Cooking': 40 }, prereqs: ['RFD: The Cook', 'Big Chompy Bird Hunting', 'Biohazard', 'Demon Slayer', 'Murder Mystery', 'Nature Spirit', 'Priest in Peril', 'The Restless Ghost', 'Witch\'s House'], points: 1, series: 'Recipe for Disaster',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'RFD: Evil Dave': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'RFD: Evil Dave', name: 'RFD: Evil Dave',
     regions: ['Edgeville'],
-    skills: { 'Cooking': 25 }, prereqs: ['Gertrude\'s Cat', 'Shadow of the Storm'], points: 1, series: 'Recipe for Disaster',
+    skills: {}, prereqs: ['RFD: The Cook', 'Gertrude\'s Cat', 'Shadow of the Storm'], points: 1, series: 'Recipe for Disaster',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'RFD: Skrach Uglogwee': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'RFD: Skrach Uglogwee', name: 'RFD: Skrach Uglogwee',
     regions: ['Feldip Hills', 'Tai Bwo Wannai'],
-    skills: { 'Cooking': 41, 'Firemaking': 20 }, prereqs: ['Big Chompy Bird Hunting'], points: 1, series: 'Recipe for Disaster',
+    skills: { 'Cooking': 41, 'Firemaking': 20 }, prereqs: ['RFD: The Cook', 'Big Chompy Bird Hunting'], points: 1, series: 'Recipe for Disaster',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'RFD: Sir Amik Varze': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'RFD: Sir Amik Varze', name: 'RFD: Sir Amik Varze',
     regions: ['Kharazi Jungle', 'Draynor Village', 'Zanaris'],
-    skills: { 'Quest Points': 107 }, prereqs: ['Legends\' Quest'], points: 1, series: 'Recipe for Disaster',
+    questProgress: [{ quest: "Legends' Quest", label: "Started Legends' Quest and gained access to the Kharazi Jungle" }],
+    skills: { 'Quest Points': 107 }, prereqs: ['RFD: The Cook', "Family Crest", "Heroes' Quest", 'Shilo Village', 'Underground Pass', 'Waterfall Quest'], points: 1, series: 'Recipe for Disaster',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'RFD: King Awowogei': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'RFD: King Awowogei', name: 'RFD: King Awowogei',
     regions: ['Ape Atoll'],
-    skills: { 'Cooking': 70, 'Agility': 48 }, prereqs: ['Monkey Madness I'], points: 1, series: 'Recipe for Disaster',
+    skills: { 'Cooking': 70, 'Agility': 48 }, prereqs: ['RFD: The Cook', 'Monkey Madness I'], points: 1, series: 'Recipe for Disaster',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'RFD: Finale': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'RFD: Finale', name: 'RFD: Finale',
     regions: ['Lumbridge'],
-    skills: { 'Quest Points': 175 }, prereqs: ['RFD: The Cook', 'RFD: Dwarf', 'RFD: Goblins', 'RFD: Pirate Pete', 'RFD: Lumbridge Guide', 'RFD: Evil Dave', 'RFD: Skrach Uglogwee', 'RFD: Sir Amik Varze', 'RFD: King Awowogei'], points: 1, series: 'Recipe for Disaster',
+    skills: { 'Quest Points': 175 }, prereqs: ['RFD: The Cook', 'RFD: Dwarf', 'RFD: Goblins', 'RFD: Pirate Pete', 'RFD: Lumbridge Guide', 'RFD: Evil Dave', 'RFD: Skrach Uglogwee', 'RFD: Sir Amik Varze', 'RFD: King Awowogei', 'Desert Treasure I', 'Horror from the Deep'], points: 1, series: 'Recipe for Disaster',
     difficulty: DropSource.QUEST_MASTER
   },
   'In Aid of the Myreque': {
@@ -1080,6 +1129,15 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Death to the Dorgeshuun': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Death to the Dorgeshuun', name: 'Death to the Dorgeshuun',
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Wear the H.A.M. hood for the council meeting disguise' },
+      { slot: 'Cape', tier: 1, reason: 'Wear the H.A.M. cloak for the council meeting disguise' },
+      { slot: 'Neck', tier: 1, reason: 'Wear the H.A.M. logo for the council meeting disguise' },
+      { slot: 'Body', tier: 1, reason: 'Wear the H.A.M. shirt for the council meeting disguise' },
+      { slot: 'Legs', tier: 1, reason: 'Wear the H.A.M. robe for the council meeting disguise' },
+      { slot: 'Gloves', tier: 1, reason: 'Wear the H.A.M. gloves for the council meeting disguise' },
+      { slot: 'Boots', tier: 1, reason: 'Wear the H.A.M. boots for the council meeting disguise' },
+    ],
     regions: ['Lumbridge'],
     skills: { 'Thieving': 23, 'Agility': 23 }, prereqs: ['The Lost Tribe'], points: 1, series: 'Dorgeshuun',
     difficulty: DropSource.QUEST_INTERMEDIATE
@@ -1162,6 +1220,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Animal Magnetism': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Animal Magnetism', name: 'Animal Magnetism',
+    equipmentRequirements: [{ slot: 'Neck', tier: 1, reason: 'Wear the ghostspeak amulet when speaking to the old crone' }],
     regions: ['Draynor Village', 'Burthorpe', 'Fenkenstrain\'s Castle'],
     skills: { 'Slayer': 18, 'Crafting': 19, 'Ranged': 30, 'Woodcutting': 35 }, prereqs: ['The Restless Ghost', 'Ernest the Chicken', 'Priest in Peril'], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
@@ -1195,6 +1254,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Tower of Life': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Tower of Life', name: 'Tower of Life',
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Wear the hard hat as part of the builder outfit' },
+      { slot: 'Body', tier: 1, reason: 'Wear the builder shirt to enter the tower' },
+      { slot: 'Legs', tier: 1, reason: 'Wear the builder trousers to enter the tower' },
+      { slot: 'Boots', tier: 1, reason: 'Wear the builder boots to enter the tower' },
+    ],
     regions: ['East Ardougne'],
     skills: { 'Construction': 10 }, prereqs: [], points: 2,
     difficulty: DropSource.QUEST_NOVICE
@@ -1452,14 +1517,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Secrets of the North', name: 'Secrets of the North',
     regions: ['East Ardougne', 'Weiss'],
     skills: { 'Agility': 69, 'Thieving': 64, 'Hunter': 56 },
-    prereqs: ['Hazeel Cult', 'The General\'s Shadow', 'Making Friends with My Arm'], points: 2, series: 'Mahjarrat',
+    prereqs: ['Hazeel Cult', 'The General\'s Shadow', 'Making Friends with My Arm', 'Devious Minds'], points: 2, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_MASTER
   },
   'Desert Treasure II': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Desert Treasure II', name: 'Desert Treasure II - The Fallen Empire',
     regions: ['Nardah', 'Goblin Village', 'Weiss', 'The Stranglewood', 'Digsite'],
-    skills: { 'Magic': 75, 'Firemaking': 75, 'Thieving': 70, 'Herblore': 62, 'Runecraft': 60, 'Construction': 60 }, prereqs: ['Desert Treasure I', 'Secrets of the North', 'Enakhra\'s Lament', 'Temple of the Eye', 'The Garden of Death', 'Below Ice Mountain'], points: 5, series: 'Mahjarrat',
+    skills: { 'Magic': 75, 'Firemaking': 75, 'Thieving': 70, 'Herblore': 62, 'Runecraft': 60, 'Construction': 60 }, prereqs: ['Desert Treasure I', 'Secrets of the North', 'Enakhra\'s Lament', 'Temple of the Eye', 'The Garden of Death', 'Below Ice Mountain', 'His Faithful Servants'], points: 5, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_GRANDMASTER
   },
   'The Path of Glouphrie': {

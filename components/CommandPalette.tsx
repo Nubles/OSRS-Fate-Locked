@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  Search, CornerDownLeft, ArrowUp, ArrowDown, User, Globe, Swords, BookOpen,
-  Library, Coins, ShoppingBag, ScrollText, Route, Trophy, Sparkles, Skull,
-  BarChart3, Map, Wand2, Share2, RefreshCw, Settings2, Gauge, Film, Zap, Compass,
-  type LucideIcon,
-} from 'lucide-react';
+import { Search, CornerDownLeft, ArrowUp, ArrowDown, Route, BarChart3, Share2, RefreshCw, Settings2, Gauge, Film, type LucideProps } from 'lucide-react';
+import { User, Globe, Swords, BookOpen, Library, Coins, ShoppingBag, ScrollText, Trophy, Sparkles, Skull, Map, Wand2, Zap, Compass } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 
 /**
@@ -30,7 +26,7 @@ interface Cmd {
   title: string;
   subtitle: string;
   group: 'Navigate' | 'Earn & Spend' | 'Plan' | 'Track' | 'Account' | 'Action' | 'World';
-  icon: LucideIcon;
+  icon: React.ComponentType<LucideProps>;
   keywords: string;
   run: () => void;
 }

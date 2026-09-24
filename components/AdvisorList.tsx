@@ -1,5 +1,6 @@
 import React from 'react';
-import { BookOpen, Map, ArrowDown, Sparkles, GitBranch } from 'lucide-react';
+import { ArrowDown, GitBranch } from 'lucide-react';
+import { BookOpen, Map, Sparkles } from './OsrsIcon';
 
 /**
  * Shared presentational component for the Quest & Region advisors.

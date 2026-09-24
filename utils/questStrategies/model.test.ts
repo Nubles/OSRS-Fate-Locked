@@ -1,3 +1,5 @@
+import { publicQuestWalkthroughReleaseFor } from '../../data/questWalkthroughPublicRelease';
+import { f2pQuestMembership } from '../../data/f2pQuestMembership';
 import { describe, expect, it } from 'vitest';
 import type { F2PQuestMembership } from '../../data/f2pQuestMembership';
 import { questWalkthroughReleaseFor } from '../../data/questWalkthroughRelease';
@@ -350,23 +352,17 @@ describe('preview strategy boundary', () => {
         availability: 'OFF' | 'PREVIEW',
       ) => Promise<readonly QuestStrategyDefinition[]>;
     };
-    const release = questWalkthroughReleaseFor("Cook's Assistant")!;
-    const sheepRelease = questWalkthroughReleaseFor('Sheep Shearer')!;
-    const restlessRelease = questWalkthroughReleaseFor('The Restless Ghost')!;
-    const runeMysteriesRelease = questWalkthroughReleaseFor('Rune Mysteries')!;
-    const impCatcherRelease = questWalkthroughReleaseFor('Imp Catcher')!;
+    const release = publicQuestWalkthroughReleaseFor("Cook's Assistant")!;
+    const sheepRelease = publicQuestWalkthroughReleaseFor('Sheep Shearer')!;
+    const restlessRelease = publicQuestWalkthroughReleaseFor('The Restless Ghost')!;
+    const runeMysteriesRelease = publicQuestWalkthroughReleaseFor('Rune Mysteries')!;
+    const impCatcherRelease = publicQuestWalkthroughReleaseFor('Imp Catcher')!;
 
     expect(boundary.questStrategyFor).toBeTypeOf('function');
     expect(loader.loadQuestStrategyFor).toBeTypeOf('function');
     expect(loader.loadQuestStrategyCatalogue).toBeTypeOf('function');
 
-    expect(boundary.questStrategyCatalogue?.map(strategy => strategy.questId)).toEqual([
-      "Cook's Assistant",
-      'Sheep Shearer',
-      'The Restless Ghost',
-      'Rune Mysteries',
-      'Imp Catcher',
-    ]);
+    expect(boundary.questStrategyCatalogue?.map(strategy => strategy.questId).sort()).toEqual(f2pQuestMembership.map(entry => entry.questId).sort());
     expect(Object.isFrozen(boundary.questStrategyCatalogue)).toBe(true);
     expect(boundary.questStrategyFor?.("Cook's Assistant")?.revision).toBe(release.revision);
     expect(boundary.questStrategyFor?.('Sheep Shearer')?.revision).toBe(sheepRelease.revision);

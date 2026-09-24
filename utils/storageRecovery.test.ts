@@ -15,6 +15,7 @@ describe('storage recovery helpers', () => {
     expect(removed).toEqual(expect.arrayContaining([
       'fate_osrs_mapping_v1',
       'fate_osrs_prices_v1',
+      'fate_osrs_gear_v3',
       'fate_uim_wiki_cache_v3',
     ]));
     expect(removed.some((key) => key.startsWith('FATE_PROFILE_'))).toBe(false);
@@ -33,7 +34,7 @@ describe('storage recovery helpers', () => {
     expect(removed).toEqual(expect.arrayContaining([
       'fate_osrs_mapping_v1',
       'fate_osrs_monsters_v1',
-      'fate_clog_sync_v2',
+      'fate_clog_sync_v4',
     ]));
   });
 

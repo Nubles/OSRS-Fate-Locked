@@ -29,7 +29,7 @@ export type GoalKind = 'quest' | 'diary' | 'region';
 
 export interface PlanStep {
   /** What kind of thing this step is. */
-  kind: 'quest' | 'region' | 'skill' | 'qp' | 'manual';
+  kind: 'quest' | 'region' | 'skill' | 'equipment' | 'merchant' | 'mobility' | 'arcana' | 'qp' | 'manual';
   /** Stable id: quest id, region name, skill name, or 'Quest Points'. */
   id: string;
   /** Display label. */
@@ -40,6 +40,8 @@ export interface PlanStep {
   detail?: string;
   /** Unlock table ids that can satisfy a composite step. */
   relatedIds?: string[];
+  /** Minimum Fate equipment tier, when this is an equipment-slot step. */
+  requiredTier?: number;
   /** Already satisfied in the current unlocks snapshot. */
   done: boolean;
 }
@@ -75,6 +77,12 @@ export interface GoalPlan {
   regionSteps: PlanStep[];
   /** Skill levels to train (highest required across the whole chain). */
   skillSteps: PlanStep[];
+  /** Fate equipment-slot tiers required across the incomplete quest chain. */
+  equipmentSteps: PlanStep[];
+  /** Merchant categories required by incomplete diary tasks. */
+  merchantSteps?: PlanStep[];
+  mobilitySteps?: PlanStep[];
+  arcanaSteps?: PlanStep[];
   /** Requirements where any one complete route is sufficient. */
   alternativeSteps: AlternativePlanStep[];
   /** Optional quest-point shortfall note. */
@@ -145,11 +153,27 @@ function requirementOptionPlanSteps(option: any): PlanStep[] {
 }
 
 function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): PlanStep {
+  if (blocker.kind === 'arcana') {
+    return { kind: 'arcana', id: blocker.label, label: blocker.label, unlockTable: TableType.ARCANA, detail: 'Unlock via Arcana', done: false };
+  }
+  if (blocker.kind === 'mobility') {
+    return { kind: 'mobility', id: blocker.label, label: blocker.label, unlockTable: TableType.MOBILITY, detail: 'Unlock via Mobility', done: false };
+  }
+  if (blocker.kind === 'merchant') {
+    return { kind: 'merchant', id: blocker.label, label: blocker.label, unlockTable: TableType.MERCHANTS, detail: 'Unlock via Merchants', done: false };
+  }
   if (blocker.kind === 'region') return blocker.chunk
     ? { kind: 'region', id: `${blocker.chunk.cx},${blocker.chunk.cy}`, label: blocker.label, unlockTable: TableType.CHUNKS, done: false }
     : areaPlanStep(blocker.label);
   if (blocker.kind === 'quest') {
     return { kind: 'quest', id: blocker.label, label: blocker.label, unlockTable: TableType.QUESTS, done: false };
+  }
+  if (blocker.kind === 'equipment') {
+    return {
+      kind: 'equipment', id: blocker.slot, label: `${blocker.slot} T${blocker.tier}`,
+      detail: `Unlock via Equipment (have T${unlocks.equipment?.[blocker.slot] ?? 0}): ${blocker.label}`,
+      unlockTable: TableType.EQUIPMENT, requiredTier: blocker.tier, done: false,
+    };
   }
   if (blocker.kind === 'combat') {
     const required = Number(blocker.label.match(/\d+/)?.[0] ?? 1);
@@ -221,6 +245,7 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
   const regions = new Set<string>();
   const alternatives = new Map<string, AlternativePlanStep>();
   const skills: Record<string, number> = {};
+  const equipment = new Map<string, { tier: number; labels: Set<string> }>();
   const manualSteps = new Map<string, PlanStep>();
   let qpRequired = 0;
 
@@ -253,6 +278,14 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
       .join(' or ');
 
     for (const blocker of eligibility.blockers) {
+      if (blocker.kind === 'equipment') {
+        const previous = equipment.get(blocker.slot);
+        equipment.set(blocker.slot, {
+          tier: Math.max(previous?.tier ?? 0, blocker.tier),
+          labels: new Set([...(previous?.labels ?? []), blocker.label]),
+        });
+        continue;
+      }
       if (blocker.kind === 'region') {
         if (alternativeLabel && blocker.label === alternativeLabel) {
           const label = 'One of: ' + blocker.label;
@@ -276,7 +309,8 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
       }
       if (blocker.kind === 'skill') {
         for (const [skill, level] of Object.entries(q.skills)) {
-          if (blocker.label !== skill + ' ' + level) continue;
+          if (blocker.label !== skill + ' ' + level
+            && !(blocker.requirement?.type === 'single' && blocker.requirement.skill === skill && blocker.requirement.level === level)) continue;
           if (skill === 'Quest Points') qpRequired = Math.max(qpRequired, level);
           else skills[skill] = Math.max(skills[skill] ?? 0, level);
         }
@@ -287,7 +321,7 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
   };
 
   visit(rootQuestId);
-  return { order, regions, alternatives, manualSteps, skills, qpRequired };
+  return { order, regions, alternatives, manualSteps, skills, equipment, qpRequired };
 }
 
 function buildPlanFromRequirements(
@@ -297,6 +331,10 @@ function buildPlanFromRequirements(
   reqs: {
     order: string[]; regions: Set<string>; alternatives: Map<string, AlternativePlanStep>;
     manualSteps: Map<string, PlanStep>; skills: Record<string, number>; qpRequired: number;
+    equipment: Map<string, { tier: number; labels: Set<string> }>;
+    merchants?: Set<string>;
+    mobility?: Set<string>;
+    arcana?: Set<string>;
   },
   unlocks: any,
   alreadyReachable: boolean,
@@ -309,6 +347,22 @@ function buildPlanFromRequirements(
   const alternativeSteps = [...reqs.alternatives.values()]
     .sort((a, b) => a.label.localeCompare(b.label));
   const manualSteps = [...reqs.manualSteps.values()];
+  const merchantSteps: PlanStep[] = [...(reqs.merchants ?? [])].sort().map(label => (
+    planStepForBlocker({ kind: 'merchant', label }, unlocks)
+  ));
+  const arcanaSteps: PlanStep[] = [...(reqs.arcana ?? [])].sort().map(label => (
+    planStepForBlocker({ kind: 'arcana', label }, unlocks)
+  ));
+  const mobilitySteps: PlanStep[] = [...(reqs.mobility ?? [])].sort().map(label => (
+    planStepForBlocker({ kind: 'mobility', label }, unlocks)
+  ));
+  const equipmentSteps: PlanStep[] = [...reqs.equipment.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([slot, requirement]) => ({
+      kind: 'equipment', id: slot, label: `${slot} T${requirement.tier}`,
+      detail: `Unlock via Equipment (have T${unlocks.equipment?.[slot] ?? 0}): ${[...requirement.labels].join('; ')}`,
+      unlockTable: TableType.EQUIPMENT, requiredTier: requirement.tier, done: false,
+    }));
 
   // Skill steps.
   const skillSteps: PlanStep[] = Object.entries(reqs.skills)
@@ -384,6 +438,10 @@ function buildPlanFromRequirements(
 
   const steps: Array<PlanStep | AlternativePlanStep> = [
     ...regionSteps,
+    ...equipmentSteps,
+    ...merchantSteps,
+    ...mobilitySteps,
+    ...arcanaSteps,
     ...skillSteps,
     ...alternativeSteps,
     ...(qpStep ? [qpStep] : []),
@@ -403,6 +461,10 @@ function buildPlanFromRequirements(
     manualSteps,
     regionSteps,
     skillSteps,
+    equipmentSteps,
+    merchantSteps,
+    mobilitySteps,
+    arcanaSteps,
     alternativeSteps,
     qpStep,
     steps,
@@ -452,6 +514,10 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       alternatives: new Map<string, AlternativePlanStep>(),
       manualSteps: new Map<string, PlanStep>(),
       skills: {} as Record<string, number>,
+      equipment: new Map<string, { tier: number; labels: Set<string> }>(),
+      merchants: new Set<string>(),
+      mobility: new Set<string>(),
+      arcana: new Set<string>(),
       qpRequired: 0,
     };
     if (status !== 'COMPLETED') {
@@ -463,6 +529,13 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
         for (const [key, step] of sub.manualSteps) merged.manualSteps.set(key, step);
         for (const [skill, level] of Object.entries(sub.skills)) {
           merged.skills[skill] = Math.max(merged.skills[skill] ?? 0, level);
+        }
+        for (const [slot, requirement] of sub.equipment) {
+          const previous = merged.equipment.get(slot);
+          merged.equipment.set(slot, {
+            tier: Math.max(previous?.tier ?? 0, requirement.tier),
+            labels: new Set([...(previous?.labels ?? []), ...requirement.labels]),
+          });
         }
         merged.qpRequired = Math.max(merged.qpRequired, sub.qpRequired);
         for (const questId of sub.order) {
@@ -487,6 +560,16 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
         }
         const blockers = eligibility.blockers;
         for (const blocker of blockers) {
+          if (blocker.kind === 'merchant') merged.merchants.add(blocker.label);
+          if (blocker.kind === 'arcana') merged.arcana.add(blocker.label);
+          if (blocker.kind === 'mobility') merged.mobility.add(blocker.label);
+          if (blocker.kind === 'equipment') {
+            const previous = merged.equipment.get(blocker.slot);
+            merged.equipment.set(blocker.slot, {
+              tier: Math.max(previous?.tier ?? 0, blocker.tier),
+              labels: new Set([...(previous?.labels ?? []), blocker.label]),
+            });
+          }
           if (blocker.kind === 'region') merged.regions.add(canonicalAreaName(blocker.label));
           if (blocker.kind === 'alternative') {
             const label = 'One of: ' + blocker.label;
@@ -544,6 +627,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
     questSteps: [],
     regionSteps: [regionStep],
     skillSteps: [],
+    equipmentSteps: [],
     alternativeSteps: [],
     steps: [regionStep],
     remaining: isUnlocked ? 0 : 1,

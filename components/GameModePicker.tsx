@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { X, Lock, Check, Settings2, Sparkles, ShieldOff, Gauge, Landmark, Dices, CalendarDays } from 'lucide-react';
+import { X, Lock, Check, Settings2, ShieldOff, Gauge, CalendarDays } from 'lucide-react';
+import { Sparkles, Landmark, Dices } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { weeklySeed, randomSeed, normalizeSeed } from '../utils/seededRng';
 import { useFocusTrap } from '../hooks/useFocusTrap';

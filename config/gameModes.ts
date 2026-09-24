@@ -92,8 +92,22 @@ export const GAME_MODES: GameMode[] = [
 
 export const DEFAULT_MODE_ID = 'vanilla';
 
+// Retired picker entries remain resolvable for existing saves. Definitions from 8b9eb2c^.
+const LEGACY_MODES: GameMode[] = [
+  { id: 'casual', name: 'Casual', description: 'Legacy Casual run.', tagline: 'Forgiving — good for a first run',
+    rules: { ...VANILLA_RULES, pityThreshold: 30, omniChanceBase: 4, ritualCostMultiplier: 0.6 } },
+  { id: 'hardcore', name: 'Hardcore', description: 'Legacy Hardcore run.', tagline: 'No pity — for veterans',
+    rules: { ...VANILLA_RULES, pityEnabled: false, omniChanceBase: 1, ritualCostMultiplier: 1.5 } },
+  { id: 'region-rush', name: 'Region Rush', description: 'Legacy Region Rush run.', tagline: 'Region passives ON',
+    rules: { ...VANILLA_RULES, pityThreshold: 45, regionModifiers: true } },
+  { id: 'xtreme', name: 'Xtreme Start', description: 'Legacy Xtreme Start run.', tagline: 'Lumbridge only at the start',
+    rules: { ...VANILLA_RULES, startArea: 'lumbridge' } },
+  { id: 'custom', name: 'Custom', description: 'Your saved custom rules.', tagline: 'Your rules, your run',
+    rules: { ...VANILLA_RULES } },
+];
+
 const MODE_BY_ID: Record<string, GameMode> = Object.fromEntries(
-  GAME_MODES.map(m => [m.id, m]),
+  [...GAME_MODES, ...LEGACY_MODES].map(m => [m.id, m]),
 );
 
 export const getGameMode = (id?: string): GameMode =>

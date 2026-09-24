@@ -1,5 +1,6 @@
 import React from 'react';
-import { Sparkles, ArrowDown } from 'lucide-react';
+import { ArrowDown } from 'lucide-react';
+import { Sparkles } from './OsrsIcon';
 
 /**
  * Pinned strip surfaced at the top of every Journal sub-tab (Quests /

@@ -2585,7 +2585,14 @@
             "name": "Spinning wheel"
           }
         ],
-        "gates": [],
+        "gates": [
+          {
+            "type": "SKILL",
+            "skill": "Crafting",
+            "level": 1,
+            "label": "Crafting level 1"
+          }
+        ],
         "id": "sheep-shearer:spin-wool",
         "items": [],
         "kind": "USE_ITEM",
@@ -2835,7 +2842,14 @@
             "name": "Restless ghost"
           }
         ],
-        "gates": [],
+        "gates": [
+          {
+            "type": "EQUIPMENT",
+            "slot": "Neck",
+            "tier": 1,
+            "label": "Neck T1: Wear the ghostspeak amulet to speak to the ghost"
+          }
+        ],
         "id": "the-restless-ghost:talk-to-ghost",
         "items": [
           {

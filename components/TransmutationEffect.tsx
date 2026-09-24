@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Key, Sparkles } from 'lucide-react';
+import { Key, Sparkles } from './OsrsIcon';
 
 interface TransmutationEffectProps {
   onComplete: () => void;

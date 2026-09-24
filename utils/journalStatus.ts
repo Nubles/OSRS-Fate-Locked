@@ -8,17 +8,19 @@
 import {
   QuestData, QuestLocationRequirement, QuestRequirementOption, QUEST_DATA,
   hasCompletedQuestCapeRequirements, questAccessPolicyStructureErrors,
+  type EquipmentSlot,
 } from '../data/questData';
 import { chunkUnlocked, placeOf, chunkUnlockRequirement } from './chunkLocations';
-import { ALL_DIARY_TASKS, DiaryTaskRequirementOption, DiaryLocationRequirement } from '../data/diaryTasks';
+import { ALL_DIARY_TASKS, DiaryTaskRequirementOption, DiaryLocationRequirement, DiaryEquipmentRequirement } from '../data/diaryTasks';
 import { DiaryTier } from '../data/diaryData';
 import { UnlockState } from '../types';
 import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
 import { isAreaReachable } from './reachability';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
+import { pendingQuestProgress, type QuestProgressRequirement } from '../data/questProgress';
 
-export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
-export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
+export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_QUEST';
+export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_MOBILITY' | 'LOCKED_ARCANA' | 'LOCKED_MERCHANT' | 'LOCKED_QUEST';
 
 export type DiaryStatusUnlocks =
   Omit<UnlockState, 'cas' | 'completedTasks'>
@@ -34,6 +36,10 @@ export type DirectEligibilityBlocker =
   | { kind: 'region'; label: string; chunk?: { cx: number; cy: number } }
   | { kind: 'skill'; label: string; requirement?: SkillEligibilityRequirement }
   | { kind: 'combat'; label: string }
+  | { kind: 'equipment'; label: string; slot: EquipmentSlot; tier: number }
+  | { kind: 'merchant'; label: string }
+  | { kind: 'mobility'; label: string }
+  | { kind: 'arcana'; label: string }
   | { kind: 'quest'; label: string };
 
 export interface AlternativeEligibilityRoute {
@@ -134,8 +140,8 @@ export const questRequirementOptionLabel = (
   ...(option.locations ?? []).map(location => location.label),
 ].join(' + ');
 
-const currentQuestPoints = (unlocks: UnlockState): number =>
-  unlocks.quests.reduce(
+export const currentQuestPoints = (unlocks: { readonly quests: readonly string[] }): number =>
+  [...new Set(unlocks.quests)].reduce(
     (total, id) => total + (
       QUEST_DATA[id]?.kind === 'quest' ? QUEST_DATA[id].points : 0
     ), 0);
@@ -185,6 +191,14 @@ export function evaluateQuestEligibility(
   if (!questAlternativesMet(quest, unlocks, gameModeId)) {
     blockers.push({ kind: 'region', label: quest.oneOf!.map(questRequirementOptionLabel).join(' or ') });
   }
+  const manualChecks = [...(quest.manualRequirements ?? []), ...pendingQuestProgress(quest.questProgress, unlocks.quests)];
+  for (const preparation of quest.preparationRequirements ?? []) {
+    if (meetsSkillRequirement(unlocks, preparation.skill, preparation.level)) {
+      evidence.push(`${preparation.skill} ${preparation.level} to ${preparation.action}`);
+    } else {
+      manualChecks.push(`Unlock ${preparation.skill} (level ${preparation.level}) to ${preparation.action}, or confirm ${preparation.alternative}`);
+    }
+  }
   const qp = currentQuestPoints(unlocks);
   for (const [skill, required] of Object.entries(quest.skills)) {
     const label = skill + ' ' + required;
@@ -193,9 +207,14 @@ export function evaluateQuestEligibility(
       else blockers.push({ kind: 'quest', label });
     } else if (meetsSkillRequirement(unlocks, skill, required)) {
       evidence.push(label);
+    } else if (quest.skillAlternatives?.some(option => option.skill === skill && option.quests.every(id => unlocks.quests.includes(id)))) {
+      const option = quest.skillAlternatives.find(option => option.skill === skill && option.quests.every(id => unlocks.quests.includes(id)))!;
+      manualChecks.push(...option.manualRequirements);
     } else {
       blockers.push({
-        kind: 'skill', label,
+        kind: 'skill', label: quest.skillAlternatives?.some(option => option.skill === skill)
+          ? label + ' or ' + quest.skillAlternatives.filter(option => option.skill === skill).map(option => option.quests.join(' + ') + ': ' + option.manualRequirements.join('; ')).join(' or ')
+          : label,
         requirement: { type: 'single', skill, level: required },
       });
     }
@@ -204,15 +223,22 @@ export function evaluateQuestEligibility(
     if (actualCombatLevel(unlocks) >= quest.combatLevel) evidence.push('Combat level ' + quest.combatLevel);
     else blockers.push({ kind: 'combat', label: 'Combat level ' + quest.combatLevel });
   }
+  for (const requirement of quest.equipmentRequirements ?? []) {
+    const label = `${requirement.slot} T${requirement.tier}: ${requirement.reason}`;
+    const tier = unlocks.equipment?.[requirement.slot] ?? 0;
+    if (Number.isFinite(tier) && tier >= requirement.tier) evidence.push(label);
+    else blockers.push({ kind: 'equipment', slot: requirement.slot, tier: requirement.tier, label });
+  }
   for (const prereq of quest.prereqs) {
     if (unlocks.quests.includes(prereq)) evidence.push(prereq);
     else blockers.push({ kind: 'quest', label: prereq });
   }
   const status: QuestStatus = blockers.some(x => x.kind === 'region') ? 'LOCKED_REGION'
     : blockers.some(x => x.kind === 'skill' || x.kind === 'combat') ? 'LOCKED_SKILL'
+    : blockers.some(x => x.kind === 'equipment') ? 'LOCKED_EQUIPMENT'
     : blockers.some(x => x.kind === 'quest') ? 'LOCKED_QUEST'
     : 'AVAILABLE';
-  const manual = readinessFields(blockers, quest.manualRequirements ?? []);
+  const manual = readinessFields(blockers, manualChecks);
   return { ...manual, status, blockers, evidence };
 }
 
@@ -238,12 +264,17 @@ export interface DoableTask {
   id: string;
   skills?: Record<string, number>;
   items?: string[];
+  merchants?: string[];
+  mobility?: string[];
+  arcana?: string[];
+  equipmentRequirements?: DiaryEquipmentRequirement[];
   quests?: string[];
   regions?: string[];
   anyOfRegions?: string[];
   cas?: string[];
   questPoints?: number;
   manualRequirements?: string[];
+  questProgress?: QuestProgressRequirement[];
   combatLevel?: number;
   allQuests?: true;
   anySkillLevel?: number;
@@ -265,6 +296,10 @@ export interface DiaryTaskEligibility extends ManualEligibility {
 const requirementOptionParts = (option: DiaryTaskRequirementOption): string[] => [
   ...Object.entries(option.skills ?? {}).map(([skill, level]) => skill + ' ' + level),
   ...(option.items ?? []),
+  ...(option.merchants ?? []),
+  ...(option.mobility ?? []),
+  ...(option.arcana ?? []),
+  ...(option.equipmentRequirements ?? []).map(item => `${item.slot} T${item.tier}: ${item.reason}${item.unlessDiary ? ` (unless ${item.unlessDiary} is complete)` : ''}`),
   ...(option.combinedSkillLevel ? [
     option.combinedSkillLevel.skills.join(' + ') + ' combined ' + option.combinedSkillLevel.level,
   ] : []),
@@ -295,6 +330,32 @@ const evaluateDiaryRequirement = (
 ): DiaryTaskEligibility => {
   const blockers: EligibilityBlocker[] = [];
   const evidence: string[] = [...(requirement.items ?? [])];
+  const equipmentChecks: string[] = [];
+
+  for (const merchant of requirement.merchants ?? []) {
+    if (unlocks.merchants?.includes(merchant)) evidence.push(merchant);
+    else blockers.push({ kind: 'merchant', label: merchant });
+  }
+
+  for (const arcana of requirement.arcana ?? []) {
+    if (unlocks.arcana?.includes(arcana)) evidence.push(arcana);
+    else blockers.push({ kind: 'arcana', label: arcana });
+  }
+  for (const mobility of requirement.mobility ?? []) {
+    if (unlocks.mobility?.includes(mobility)) evidence.push(mobility);
+    else blockers.push({ kind: 'mobility', label: mobility });
+  }
+  for (const item of requirement.equipmentRequirements ?? []) {
+    if (item.unlessDiary && unlocks.diaries.includes(item.unlessDiary)) {
+      evidence.push(`${item.reason}: ${item.unlessDiary} reward`);
+      continue;
+    }
+    if (item.manualCheck) equipmentChecks.push(item.manualCheck);
+    const label = `${item.slot} T${item.tier}: ${item.reason}`;
+    const tier = unlocks.equipment?.[item.slot] ?? 0;
+    if (Number.isFinite(tier) && tier >= item.tier) evidence.push(label);
+    else blockers.push({ kind: 'equipment', slot: item.slot, tier: item.tier, label });
+  }
 
   for (const [skill, required] of Object.entries(requirement.skills ?? {})) {
     const label = skill + ' ' + required;
@@ -400,7 +461,7 @@ const evaluateDiaryRequirement = (
     });
   }
 
-  const manual = readinessFields(blockers, requirement.manualRequirements ?? []);
+  const manual = readinessFields(blockers, [...(requirement.manualRequirements ?? []), ...equipmentChecks, ...pendingQuestProgress(requirement.questProgress, unlocks.quests)]);
   return { ...manual, blockers, evidence };
 };
 
@@ -459,7 +520,7 @@ export function taskEligibilityBlockers(
   return evaluateDiaryTaskEligibility(task, unlocks, gameModeId).blockers;
 }
 
-export interface DiaryTierEligibility {
+export interface DiaryTierEligibility extends ManualEligibility {
   eligible: boolean;
   status: DiaryStatus;
   blockers: EligibilityBlocker[];
@@ -482,7 +543,7 @@ export function evaluateDiaryTierEligibility(
   gameModeId?: string,
 ): DiaryTierEligibility {
   if (unlocks.diaries.includes(diary.id)) {
-    return { eligible: true, status: 'COMPLETED', blockers: [], evidence: ['Completed'] };
+    return { ...readinessFields([], []), status: 'COMPLETED', blockers: [], evidence: ['Completed'] };
   }
 
   const normalizedUnlocks: UnlockState = {
@@ -514,11 +575,19 @@ export function evaluateDiaryTierEligibility(
     : blockers.some(blocker => blocker.kind === 'skill' || blocker.kind === 'combat')
       || alternativeHasSkillRoute
       ? 'LOCKED_SKILL'
+      : blockers.some(blocker => blocker.kind === 'equipment')
+        ? 'LOCKED_EQUIPMENT'
+      : blockers.some(blocker => blocker.kind === 'mobility')
+        ? 'LOCKED_MOBILITY'
+      : blockers.some(blocker => blocker.kind === 'arcana')
+        ? 'LOCKED_ARCANA'
+      : blockers.some(blocker => blocker.kind === 'merchant')
+        ? 'LOCKED_MERCHANT'
       : blockers.some(blocker => blocker.kind === 'quest' || blocker.kind === 'alternative')
         ? 'LOCKED_QUEST'
         : 'AVAILABLE';
 
-  return { eligible: status === 'AVAILABLE', status, blockers, evidence };
+  return { ...readinessFields(blockers, taskResults.flatMap(result => result.manualChecks)), status, blockers, evidence };
 }
 
 export function getDiaryStatus(

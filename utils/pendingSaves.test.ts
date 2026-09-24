@@ -16,11 +16,13 @@ const DISPOSABLE_CACHE_KEYS = [
   'fate_osrs_prices_v1',
   'fate_osrs_monsters_v1',
   'fate_osrs_monsters_v2',
+  'fate_osrs_monsters_v3',
   'fate_osrs_gear_v1',
+  'fate_osrs_gear_v2',
+  'fate_osrs_gear_v3',
   'fate_uim_wiki_cache_v2',
   'fate_uim_wiki_cache_v3',
-  'fate_clog_sync_v1',
-  'fate_clog_sync_v2',
+  'fate_clog_sync_v4',
 ] as const;
 
 describe('pending save registry', () => {
@@ -62,15 +64,18 @@ describe('pending save registry', () => {
     expect(getPendingSave('profile-a')).toBeNull();
   });
 
-  it('reclaims a legacy disposable cache, preserves user data, and retries once', () => {
+  it('reclaims a detection-only cache, preserves user data, and retries once', () => {
     const values = new Map<string, string>([
-      ['fate_clog_sync_v1', 'large retired disposable cache'],
+      ['fate_clog_sync_v4', 'large disposable detection cache'],
+      ['fate_clog_sync_v1', 'historical item identities'],
+      ['fate_clog_sync_v2', 'historical item identities'],
+      ['fate_clog_sync_v3', 'historical item identities'],
       ['FATE_PROFILE_existing', '{"keys":2}'],
       ['user_note', 'keep me'],
     ]);
     const storage = {
       setItem: vi.fn((key: string, value: string) => {
-        if (values.has('fate_clog_sync_v1')) {
+        if (values.has('fate_clog_sync_v4')) {
           throw new DOMException('full', 'QuotaExceededError');
         }
         values.set(key, value);
@@ -84,7 +89,10 @@ describe('pending save registry', () => {
     expect(flushPendingSave(storage, 'FATE_PROFILE_quota', () => ({ ok: true })))
       .toEqual({ ok: true });
     expect(values.get('FATE_PROFILE_quota')).toBe('{"keys":3}');
-    expect(values.has('fate_clog_sync_v1')).toBe(false);
+    expect(values.has('fate_clog_sync_v4')).toBe(false);
+    for (const key of ['fate_clog_sync_v1', 'fate_clog_sync_v2', 'fate_clog_sync_v3']) {
+      expect(values.get(key)).toBe('historical item identities');
+    }
     expect(values.get('FATE_PROFILE_existing')).toBe('{"keys":2}');
     expect(values.get('user_note')).toBe('keep me');
     expect(storage.setItem).toHaveBeenCalledTimes(2);

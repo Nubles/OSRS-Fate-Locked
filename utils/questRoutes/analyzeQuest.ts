@@ -12,6 +12,8 @@ import type {
 } from '../../data/questRouteRecipes';
 import type { ConnectGraph, ItemSourceRecord } from '../../services/ChunkContentService';
 import type { UnlockState } from '../../types';
+import { QUEST_DATA } from '../../data/questData';
+import { evaluateQuestEligibility, type EligibilityBlocker } from '../journalStatus';
 import {
   resolveItemRequirement,
   type DirectRouteResolutionSnapshot,
@@ -70,6 +72,8 @@ export interface QuestPreparationRouteAnalysis {
 }
 
 export interface QuestRouteAnalysis extends QuestPreparationRouteAnalysis {
+  /** Completion permission, separate from obtaining the quest's required items. */
+  readonly equipmentBlockers?: readonly QuestEquipmentBlocker[];
   readonly walkthrough: QuestWalkthroughAnalysis;
   readonly generatedFrom: QuestPreparationRouteAnalysis['generatedFrom'] & Readonly<{
     walkthroughRevision: string;
@@ -78,7 +82,11 @@ export interface QuestRouteAnalysis extends QuestPreparationRouteAnalysis {
 
 export type RuneProofRouteAnalysis = QuestPreparationRouteAnalysis | QuestRouteAnalysis;
 
+export type QuestEquipmentBlocker = Extract<EligibilityBlocker, { kind: 'equipment' }>;
+
 export interface QuestRouteAccountSnapshot {
+  /** Older materialized snapshots omit equipment and are treated as having no slots. */
+  readonly equipment?: Readonly<Record<string, number>>;
   readonly skills: Readonly<Record<string, number>>;
   readonly levels: Readonly<Record<string, number>>;
   readonly regions: readonly string[];
@@ -135,6 +143,7 @@ const accountStateFingerprint = (
 ): string => JSON.stringify({
   gameModeId: gameModeId ?? null,
   unlockedChunks: normalizedList(unlockedChunks),
+  equipment: normalizedLevels(unlocks.equipment ?? {}),
   skills: normalizedLevels(unlocks.skills),
   levels: normalizedLevels(unlocks.levels),
   regions: normalizedList(unlocks.regions),
@@ -156,6 +165,8 @@ const serializedGate = (gate: DeepReadonly<RouteGate>): object => {
       return { type: gate.type, questId: gate.questId, raw: gate.raw, label: gate.label, completion: gate.completion };
     case 'SKILL':
       return { type: gate.type, skill: gate.skill, level: gate.level, label: gate.label };
+    case 'EQUIPMENT':
+      return { type: gate.type, slot: gate.slot, tier: gate.tier, label: gate.label };
     case 'UNLOCK':
       return {
         type: gate.type,
@@ -237,7 +248,7 @@ const contentStateFingerprint = (snapshot: QuestRouteAnalysisSnapshot): string =
 });
 
 const resolverUnlocks = (snapshot: QuestRouteAccountSnapshot): UnlockState => ({
-  equipment: {},
+  equipment: { ...snapshot.equipment },
   skills: Object.fromEntries(Object.entries(snapshot.skills)),
   levels: Object.fromEntries(Object.entries(snapshot.levels)),
   regions: [...snapshot.regions],
@@ -463,6 +474,7 @@ export const clearQuestRouteAnalysisCache = (): void => {
 const analyzeQuestItems = (
   questId: string,
   snapshot: QuestRouteAnalysisSnapshot,
+  requirementsReview?: QuestWalkthroughDefinition['requirementsReview'],
 ): {
   readonly reviewed: NonNullable<ReturnType<typeof reviewedQuestRequirements>>;
   readonly items: readonly QuestItemRouteAnalysis[];
@@ -470,7 +482,7 @@ const analyzeQuestItems = (
   readonly accountFingerprint: string;
   readonly contentFingerprint: string;
 } => {
-  const reviewed = reviewedQuestRequirements(questId);
+  const reviewed = requirementsReview ?? reviewedQuestRequirements(questId);
   if (!reviewed) throw new Error(`RuneProof has no reviewed item catalogue for ${questId}.`);
 
   const accountFingerprint = accountStateFingerprint(
@@ -541,7 +553,7 @@ export const analyzeQuest = (
   if (walkthroughDefinition.questId !== questId) {
     throw new Error(`RuneProof walkthrough identity does not match ${questId}.`);
   }
-  const reviewedForCache = reviewedQuestRequirements(questId);
+  const reviewedForCache = walkthroughDefinition.requirementsReview ?? reviewedQuestRequirements(questId);
   if (!reviewedForCache) throw new Error(`RuneProof has no reviewed item catalogue for ${questId}.`);
   const accountFingerprintForCache = accountStateFingerprint(
     snapshot.gameModeId,
@@ -560,16 +572,24 @@ export const analyzeQuest = (
   const cached = cacheGet(cacheKey);
   if (cached) return cached;
 
-  const { reviewed, items, itemStatus, accountFingerprint } = analyzeQuestItems(questId, snapshot);
+  const { reviewed, items, itemStatus, accountFingerprint } = analyzeQuestItems(questId, snapshot, walkthroughDefinition.requirementsReview);
 
   const resolvedWalkthrough = resolveQuestWalkthroughLocations(
     walkthroughDefinition,
     { entityLocations: snapshot.entityLocations },
   );
   const walkthrough = evaluateQuestWalkthrough(resolvedWalkthrough, snapshot, items);
+  const quest = QUEST_DATA[questId];
+  const equipmentBlockers = quest
+    ? evaluateQuestEligibility(quest, resolverUnlocks(snapshot.unlocks), snapshot.gameModeId)
+      .blockers.filter((blocker): blocker is QuestEquipmentBlocker => blocker.kind === 'equipment')
+    : [];
   const analysis = deepFreeze(clonePlain({
     questId,
-    status: combineQuestRouteStatus(itemStatus, walkthrough.status),
+    status: equipmentBlockers.length > 0
+      ? 'CANNOT_COMPLETE_YET'
+      : combineQuestRouteStatus(itemStatus, walkthrough.status),
+    equipmentBlockers,
     items,
     walkthrough,
     generatedFrom: {

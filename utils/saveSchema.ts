@@ -3,10 +3,11 @@ import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { EQUIPMENT_SLOTS } from '../data/items';
 import { migrateAreaUnlocks } from './areaUnlockMigration';
 import { settleCanonicalAreaUnlocks } from '../data/areaMapPolicy';
-import type { FateCompensationState, GameState, LogEntry, RivalState, UnlockState } from '../types';
+import type { CollectionLogIdentity, FateCompensationState, GameState, LogEntry, RivalState, RuneProofProgress, UnlockState } from '../types';
+import { captureCollectionLogIdentity } from '../services/CollectionLogSyncService';
 import { TableType } from '../types';
 import { getPoolAndStateKey } from './gameEngine';
-import { migrateClogIds } from './clogIdMigrations';
+import { CLOG_ID_MIGRATIONS, migrateClogIds } from './clogIdMigrations';
 import { migrateCompletedTaskIds } from './taskIdMigrations';
 import {
   isKnownVanillaBoss,
@@ -255,7 +256,8 @@ const mergeBoundedIntegerRecord = (
 const mergeCollectionLog = (
   defaults: unknown,
   input: unknown,
-): Outcome<{ value: Record<number, number>; migrated: boolean }> => {
+  savedIdentity?: CollectionLogIdentity,
+): Outcome<{ value: Record<number, number>; migrated: boolean; identity?: CollectionLogIdentity }> => {
   const path = 'unlocks.collectionLog';
   const base = dynamicRecord(defaults, 'invalid_unlocks', path, MAX_COLLECTION_LOG_ENTRIES);
   if (base.ok === false) return base;
@@ -279,10 +281,29 @@ const mergeCollectionLog = (
     if (count.ok === false) return count;
     validated[itemId] = count.value;
   }
-  const migratedValue = migrateClogIds(validated);
+  // Review raw IDs before a static migration can discard the historical cache key.
+  // Known aliases are compared against their intended target; conflicting evidence
+  // and an existing quarantine always preserve the original count and identity.
+  const identity = savedIdentity ?? captureCollectionLogIdentity(validated, CLOG_ID_MIGRATIONS);
+  const blockedIds = new Set(identity?.quarantinedIds);
+  const retained: Record<number, number> = {};
+  const eligible: Record<number, number> = {};
+  for (const [rawId, count] of Object.entries(validated)) {
+    const id = Number(rawId);
+    const target = CLOG_ID_MIGRATIONS[id];
+    if (blockedIds.has(id) || (target !== undefined && (blockedIds.has(target) || identity === undefined))) {
+      retained[id] = count;
+      if (identity !== undefined) blockedIds.add(id);
+    } else {
+      eligible[id] = count;
+    }
+  }
+  const migratedValue = { ...migrateClogIds(eligible), ...retained };
+  const reviewedIdentity = identity === undefined ? undefined
+    : { version: 1 as const, quarantinedIds: [...blockedIds].sort((a, b) => a - b) };
   const migrated = Object.getOwnPropertyNames(validated).some(key => !own(migratedValue, key))
     || Object.getOwnPropertyNames(migratedValue).some(key => validated[Number(key)] !== migratedValue[Number(key)]);
-  return { ok: true, value: { value: migratedValue, migrated } };
+  return { ok: true, value: { value: migratedValue, migrated, identity: reviewedIdentity } };
 };
 
 const UNLOCK_ARRAY_KEYS = [
@@ -300,7 +321,8 @@ const normalizeUnlocks = (
   defaults: UnlockState,
   sourceVersion: number,
   regularKeyRefundCapacity: number,
-): Outcome<{ value: UnlockState; migrated: boolean; regularKeyRefunds: number }> => {
+  collectionLogIdentity?: CollectionLogIdentity,
+): Outcome<{ value: UnlockState; migrated: boolean; regularKeyRefunds: number; collectionLogIdentity?: CollectionLogIdentity }> => {
   const allowed = new Set(CURRENT_UNLOCK_KEYS);
   if (sourceVersion === 0) {
     allowed.add('power');
@@ -384,6 +406,7 @@ const normalizeUnlocks = (
   const collection = mergeCollectionLog(
     readOwn(defaultRecord, 'collectionLog'),
     own(inspected.value, 'collectionLog') ? readOwn(inspected.value, 'collectionLog') : undefined,
+    collectionLogIdentity,
   );
   if (collection.ok === false) return collection;
   migrated ||= collection.value.migrated;
@@ -417,6 +440,7 @@ const normalizeUnlocks = (
       value: unlocks,
       migrated,
       regularKeyRefunds: settledRegions.duplicateAliasRefunds,
+      collectionLogIdentity: collection.value.identity,
     },
   };
 };
@@ -758,12 +782,66 @@ const normalizeFateCompensation = (value: unknown): Outcome<FateCompensationStat
 
 const RFC_4122_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+const normalizeRuneProofProgress = (value: unknown): Outcome<RuneProofProgress> => {
+  const path = 'runeProofProgress';
+  const root = inspectRecord(value, new Set(['version', 'items', 'actions']), 'invalid_field', path);
+  if (root.ok === false) return root;
+  if (root.value.version !== 1) return invalid('invalid_field', `${path}.version`);
+  const result: RuneProofProgress = { version: 1, items: {}, actions: {} };
+  for (const kind of ['items', 'actions'] as const) {
+    const entries = inspectRecord(root.value[kind], null, 'invalid_field', `${path}.${kind}`);
+    if (entries.ok === false) return entries;
+    if (Object.keys(entries.value).length > 250) return invalid('invalid_field', `${path}.${kind}`);
+    for (const [questId, entry] of Object.entries(entries.value)) {
+      const entryPath = `${path}.${kind}.${questId}`;
+      if (!questId || questId.length > MAX_IDENTIFIER_CHARS) return invalid('invalid_field', entryPath);
+      let idsValue = entry;
+      let revision: string | null = null;
+      if (kind === 'actions') {
+        const action = inspectRecord(entry, new Set(['revision', 'ids']), 'invalid_field', entryPath);
+        if (action.ok === false) return action;
+        const rawRevision = action.value.revision;
+        if (rawRevision !== null && (typeof rawRevision !== 'string' || !rawRevision || rawRevision.length > MAX_IDENTIFIER_CHARS)) {
+          return invalid('invalid_field', `${entryPath}.revision`);
+        }
+        revision = rawRevision as string | null;
+        idsValue = action.value.ids;
+      }
+      const bounded = inspectArray(idsValue, 'invalid_field', entryPath, 1000);
+      if (bounded.ok === false) return bounded;
+      const ids = identifierArray(bounded.value, entryPath, 'invalid_field');
+      if (ids.ok === false) return ids;
+      if (kind === 'items') result.items[questId] = ids.value;
+      else result.actions[questId] = { revision, ids: ids.value };
+    }
+  }
+  return { ok: true, value: result };
+};
+
+const normalizeCollectionLogIdentity = (value: unknown): Outcome<CollectionLogIdentity> => {
+  const path = 'collectionLogIdentity';
+  const root = inspectRecord(value, new Set(['version', 'quarantinedIds']), 'invalid_field', path);
+  if (root.ok === false) return root;
+  if (root.value.version !== 1) return invalid('invalid_field', `${path}.version`);
+  const ids = inspectArray(root.value.quarantinedIds, 'invalid_field', `${path}.quarantinedIds`, 2 * MAX_COLLECTION_LOG_ENTRIES);
+  if (ids.ok === false) return ids;
+  const quarantinedIds = new Set<number>();
+  for (let index = 0; index < ids.value.length; index++) {
+    const checked = boundedInteger(ids.value[index], `${path}.quarantinedIds[${index}]`, 0, MAX_COUNTER);
+    if (checked.ok === false) return checked;
+    quarantinedIds.add(checked.value);
+  }
+  return { ok: true, value: { version: 1, quarantinedIds: [...quarantinedIds].sort((a, b) => a - b) } };
+};
+
 const TOP_LEVEL_KEYS = new Set([
+  'collectionLogIdentity',
+  'runeProofProgress',
   'version', 'runId', 'runRevision', 'keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'activeBuff',
   'bossStandardKeysAwarded', 'clueStandardKeysAwarded',
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
-  'gameModeLocked', 'rngSeed', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
+  'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
   'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'fateCompensation',
 ]);
 
@@ -895,7 +973,13 @@ const normalizeState = (
   }
   const selectedUnlocks = readPreferred(input, defaultRecord, 'unlocks');
   if (!selectedUnlocks.present) return invalid('invalid_unlocks', 'unlocks');
-  const unlocks = normalizeUnlocks(selectedUnlocks.value, defaults.unlocks, sourceVersion, MAX_COUNTER - keys.value);
+  let savedCollectionIdentity: CollectionLogIdentity | undefined;
+  if (own(input, 'collectionLogIdentity')) {
+    const checked = normalizeCollectionLogIdentity(readOwn(input, 'collectionLogIdentity'));
+    if (checked.ok === false) return checked;
+    savedCollectionIdentity = checked.value;
+  }
+  const unlocks = normalizeUnlocks(selectedUnlocks.value, defaults.unlocks, sourceVersion, MAX_COUNTER - keys.value, savedCollectionIdentity);
   if (unlocks.ok === false) return unlocks;
   const selectedHistory = readPreferred(input, defaultRecord, 'history');
   if (!selectedHistory.present) return invalid('invalid_history', 'history');
@@ -970,6 +1054,18 @@ const normalizeState = (
     userNotes: userNotes.value,
   };
 
+  if (unlocks.value.collectionLogIdentity !== undefined) {
+    state.collectionLogIdentity = unlocks.value.collectionLogIdentity;
+  }
+
+  // Absence remains meaningful only for a local legacy migration. Import and
+  // restore stamp an explicit empty value before replacement is persisted.
+  if (own(input, 'runeProofProgress')) {
+    const checked = normalizeRuneProofProgress(readOwn(input, 'runeProofProgress'));
+    if (checked.ok === false) return checked;
+    state.runeProofProgress = checked.value;
+  }
+
   for (const key of [
     'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
     'hasSeenOnboarding', 'gameModeLocked',
@@ -994,6 +1090,11 @@ const normalizeState = (
     state.rngSeed = checked.value;
   }
   const selectedCustom = readPreferred(input, defaultRecord, 'customMode');
+  if (own(input, 'rngVersion')) {
+    const version = readOwn(input, 'rngVersion');
+    if (version !== 1 && version !== 2) return invalid('invalid_field', 'rngVersion');
+    state.rngVersion = version;
+  }
   // A reveal is an acknowledgement of an existing award, never a new award.
   if (own(input, 'pendingUnlock')) {
     const inspected = inspectRecord(readOwn(input, 'pendingUnlock'), new Set(['id', 'table', 'item', 'costType', 'cost']), 'invalid_field', 'pendingUnlock');

@@ -243,6 +243,7 @@ const ChecklistHarness = ({
       questSteps: [],
       regionSteps: [],
       skillSteps: [],
+      equipmentSteps: [],
       alternativeSteps: [],
       steps: [],
       remaining: 0,

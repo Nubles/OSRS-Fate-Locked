@@ -1,0 +1,4860 @@
+{
+  "schemaVersion": 1,
+  "status": "CANDIDATE_ONLY",
+  "sources": {
+    "chunkPicker": {
+      "repository": "source-chunk/chunk-picker-v2",
+      "commit": "fa71ed3b207e6a501444987dee23b875ec27cacd",
+      "sha256": "C66BB47E4978B3F41115573EA825391E26E0A458B9D93903A4FA0DFF9AF5C48C"
+    },
+    "questHelper": {
+      "repository": "Zoinkwiz/quest-helper",
+      "commit": "a52646118f0e5ea63a6b3331cefa98087a7b4d6c",
+      "sha256": "2d27a6c7fdbd177dfe041c5107f224434ce7bf3064212deb8986379c2a639b90",
+      "licence": "BSD-2-Clause"
+    },
+    "chunkRuntime": {
+      "version": 9,
+      "sha256": "cd37d8719e21fffdf21e9d9d63602307879bc5cd93d05b588a1ef24977081737"
+    }
+  },
+  "counts": {
+    "chunkPickerQuests": 211,
+    "chunkPickerTasks": 2218,
+    "questHelperSourceFiles": 362,
+    "questHelperCatalogueEntries": 214,
+    "stepDefinitions": 9647,
+    "literalStepCoordinates": 7590,
+    "conditionalGroups": 2098,
+    "conditionBranches": 7876,
+    "itemRequirements": 4819,
+    "equippedItemRequirements": 141,
+    "nameMatchedQuestGroups": 188,
+    "sourceIssues": 6727,
+    "automaticallyApprovedGuides": 0
+  },
+  "chunkPickerCounts": {
+    "quests": 211,
+    "tasks": 2218,
+    "tasksWithCandidates": 2104,
+    "unresolvedTasks": 54,
+    "tasksWithoutLocation": 60,
+    "candidateLocations": 4035,
+    "unresolvedReferences": 65
+  },
+  "unmatchedQuestGroups": [
+    "A Ruff Situation",
+    "Crab Quest",
+    "Desert Treasure I",
+    "Desert Treasure II - The Fallen Empire",
+    "Forgettable Tale of a Drunken Dwarf",
+    "Into the Tombs",
+    "Mage Arena I",
+    "Mage Arena II",
+    "Perilous Moons",
+    "Recipe for Disaster/Another Cook's Quest",
+    "Recipe for Disaster/Defeating the Culinaromancer",
+    "Recipe for Disaster/Freeing Evil Dave",
+    "Recipe for Disaster/Freeing King Awowogei",
+    "Recipe for Disaster/Freeing Pirate Pete",
+    "Recipe for Disaster/Freeing Sir Amik Varze",
+    "Recipe for Disaster/Freeing Skrach Uglogwee",
+    "Recipe for Disaster/Freeing the Goblin generals",
+    "Recipe for Disaster/Freeing the Lumbridge Guide",
+    "Recipe for Disaster/Freeing the Mountain Dwarf",
+    "Shield of Arrav",
+    "The Enchanted Key",
+    "The Frozen Door",
+    "Vale Totems (miniquest)"
+  ],
+  "helpers": [
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/alfredgrimhandsbarcrawl/AlfredGrimhandsBarcrawl.java",
+      "className": "AlfredGrimhandsBarcrawl",
+      "entryIds": [
+        "ALFRED_GRIMHANDS_BARCRAWL"
+      ],
+      "questMatches": [
+        "Alfred Grimhand's Barcrawl"
+      ],
+      "steps": 13,
+      "literalCoordinates": 13,
+      "branches": 12,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/barbariantraining/BarbarianTraining.java",
+      "className": "BarbarianTraining",
+      "entryIds": [
+        "BARBARIAN_TRAINING"
+      ],
+      "questMatches": [
+        "Barbarian Training"
+      ],
+      "steps": 37,
+      "literalCoordinates": 30,
+      "branches": 36,
+      "issues": 96,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/curseoftheemptylord/CurseOfTheEmptyLord.java",
+      "className": "CurseOfTheEmptyLord",
+      "entryIds": [
+        "CURSE_OF_THE_EMPTY_LORD"
+      ],
+      "questMatches": [
+        "Curse of the Empty Lord"
+      ],
+      "steps": 11,
+      "literalCoordinates": 6,
+      "branches": 15,
+      "issues": 7,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/daddyshome/DaddysHome.java",
+      "className": "DaddysHome",
+      "entryIds": [
+        "DADDYS_HOME"
+      ],
+      "questMatches": [
+        "Daddy's Home"
+      ],
+      "steps": 21,
+      "literalCoordinates": 21,
+      "branches": 16,
+      "issues": 10,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/enchantedkey/EnchantedKey.java",
+      "className": "EnchantedKey",
+      "entryIds": [
+        "ENCHANTED_KEY"
+      ],
+      "questMatches": [],
+      "steps": 1,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/enchantedkey/EnchantedKeyDigLocation.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/enchantedkey/EnchantedKeyDigStep.java",
+      "className": "EnchantedKeyDigStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/enchantedkey/EnchantedKeySolver.java",
+      "className": "EnchantedKeySolver",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 6,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/enchantedkey/EnchantedKeyTemperature.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/enchantedkey/EnchantedKeyTemperatureChange.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/familypest/FamilyPest.java",
+      "className": "FamilyPest",
+      "entryIds": [
+        "FAMILY_PEST"
+      ],
+      "questMatches": [
+        "Family Pest"
+      ],
+      "steps": 6,
+      "literalCoordinates": 6,
+      "branches": 4,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/hisfaithfulservants/BarrowsDoors.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/hisfaithfulservants/BarrowsHelper.java",
+      "className": "BarrowsHelper",
+      "entryIds": [
+        "BARROWS_HELPER"
+      ],
+      "questMatches": [],
+      "steps": 41,
+      "literalCoordinates": 32,
+      "branches": 41,
+      "issues": 35,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/hisfaithfulservants/BarrowsRooms.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/hisfaithfulservants/BarrowsRouteCalculator.java",
+      "className": "BarrowsRouteCalculator",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/hisfaithfulservants/HisFaithfulServants.java",
+      "className": "HisFaithfulServants",
+      "entryIds": [
+        "HIS_FAITHFUL_SERVANTS"
+      ],
+      "questMatches": [
+        "His Faithful Servants"
+      ],
+      "steps": 43,
+      "literalCoordinates": 35,
+      "branches": 40,
+      "issues": 34,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/hopespearswill/HopespearsWill.java",
+      "className": "HopespearsWill",
+      "entryIds": [
+        "HOPESPEARS_WILL"
+      ],
+      "questMatches": [
+        "Hopespear's Will"
+      ],
+      "steps": 30,
+      "literalCoordinates": 12,
+      "branches": 32,
+      "issues": 26,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/lairoftarnrazorlor/LairOfTarnRazorlor.java",
+      "className": "LairOfTarnRazorlor",
+      "entryIds": [
+        "LAIR_OF_TARN_RAZORLOR"
+      ],
+      "questMatches": [
+        "Lair of Tarn Razorlor"
+      ],
+      "steps": 3,
+      "literalCoordinates": 2,
+      "branches": 3,
+      "issues": 3,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/lairoftarnrazorlor/TarnRoute.java",
+      "className": "TarnRoute",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 28,
+      "literalCoordinates": 27,
+      "branches": 0,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/skippyandthemogres/SkippyAndTheMogres.java",
+      "className": "SkippyAndTheMogres",
+      "entryIds": [
+        "SKIPPY_AND_THE_MOGRES"
+      ],
+      "questMatches": [
+        "Skippy and the Mogres"
+      ],
+      "steps": 5,
+      "literalCoordinates": 3,
+      "branches": 2,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/thegeneralsshadow/TheGeneralsShadow.java",
+      "className": "TheGeneralsShadow",
+      "entryIds": [
+        "THE_GENERALS_SHADOW"
+      ],
+      "questMatches": [
+        "The General's Shadow"
+      ],
+      "steps": 13,
+      "literalCoordinates": 13,
+      "branches": 8,
+      "issues": 17,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/themagearenai/TheMageArenaI.java",
+      "className": "TheMageArenaI",
+      "entryIds": [
+        "THE_MAGE_ARENA"
+      ],
+      "questMatches": [],
+      "steps": 7,
+      "literalCoordinates": 7,
+      "branches": 4,
+      "issues": 7,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/themagearenaii/MA2Locator.java",
+      "className": "MA2Locator",
+      "entryIds": [
+        "MA2_LOCATOR"
+      ],
+      "questMatches": [],
+      "steps": 1,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/themagearenaii/MageArenaBossStep.java",
+      "className": "MageArenaBossStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 29,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/themagearenaii/MageArenaSolver.java",
+      "className": "MageArenaSolver",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 6,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/themagearenaii/MageArenaSpawnLocation.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/themagearenaii/MageArenaTemperature.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/themagearenaii/MageArenaTemperatureChange.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/themagearenaii/TheMageArenaII.java",
+      "className": "TheMageArenaII",
+      "entryIds": [
+        "THE_MAGE_ARENA_II"
+      ],
+      "questMatches": [],
+      "steps": 15,
+      "literalCoordinates": 11,
+      "branches": 12,
+      "issues": 17,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/miniquests/valetotems/ValeTotems.java",
+      "className": "ValeTotems",
+      "entryIds": [
+        "VALE_TOTEMS"
+      ],
+      "questMatches": [],
+      "steps": 17,
+      "literalCoordinates": 17,
+      "branches": 14,
+      "issues": 10,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/akingdomdivided/AKingdomDivided.java",
+      "className": "AKingdomDivided",
+      "entryIds": [
+        "A_KINGDOM_DIVIDED"
+      ],
+      "questMatches": [
+        "A Kingdom Divided"
+      ],
+      "steps": 128,
+      "literalCoordinates": 92,
+      "branches": 67,
+      "issues": 68,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/akingdomdivided/StatuePuzzle.java",
+      "className": "StatuePuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 9,
+      "literalCoordinates": 8,
+      "branches": 0,
+      "issues": 5,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/akingdomdivided/StonePuzzleStep.java",
+      "className": "StonePuzzleStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 7,
+      "literalCoordinates": 7,
+      "branches": 0,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/akingdomdivided/XericsLookoutStepper.java",
+      "className": "XericsLookoutStepper",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 11,
+      "literalCoordinates": 8,
+      "branches": 0,
+      "issues": 19,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/anightatthetheatre/ANightAtTheTheatre.java",
+      "className": "ANightAtTheTheatre",
+      "entryIds": [
+        "A_NIGHT_AT_THE_THEATRE"
+      ],
+      "questMatches": [
+        "A Night at the Theatre"
+      ],
+      "steps": 36,
+      "literalCoordinates": 21,
+      "branches": 20,
+      "issues": 19,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/animalmagnetism/AnimalMagnetism.java",
+      "className": "AnimalMagnetism",
+      "entryIds": [
+        "ANIMAL_MAGNETISM"
+      ],
+      "questMatches": [
+        "Animal Magnetism"
+      ],
+      "steps": 24,
+      "literalCoordinates": 18,
+      "branches": 4,
+      "issues": 7,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/animalmagnetism/PuzzleSolver.java",
+      "className": "PuzzleSolver",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 6,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/anothersliceofham/AnotherSliceOfHam.java",
+      "className": "AnotherSliceOfHam",
+      "entryIds": [
+        "ANOTHER_SLICE_OF_HAM"
+      ],
+      "questMatches": [
+        "Another Slice of H.A.M."
+      ],
+      "steps": 40,
+      "literalCoordinates": 36,
+      "branches": 37,
+      "issues": 45,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/aporcineofinterest/APorcineOfInterest.java",
+      "className": "APorcineOfInterest",
+      "entryIds": [
+        "A_PORCINE_OF_INTEREST"
+      ],
+      "questMatches": [
+        "A Porcine of Interest"
+      ],
+      "steps": 12,
+      "literalCoordinates": 10,
+      "branches": 4,
+      "issues": 3,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/asoulsbane/ASoulsBane.java",
+      "className": "ASoulsBane",
+      "entryIds": [
+        "A_SOULS_BANE"
+      ],
+      "questMatches": [
+        "A Soul's Bane"
+      ],
+      "steps": 20,
+      "literalCoordinates": 19,
+      "branches": 17,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/atailoftwocats/ATailOfTwoCats.java",
+      "className": "ATailOfTwoCats",
+      "entryIds": [
+        "A_TAIL_OF_TWO_CATS"
+      ],
+      "questMatches": [
+        "A Tail of Two Cats"
+      ],
+      "steps": 24,
+      "literalCoordinates": 17,
+      "branches": 11,
+      "issues": 19,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/atasteofhope/ATasteOfHope.java",
+      "className": "ATasteOfHope",
+      "entryIds": [
+        "A_TASTE_OF_HOPE"
+      ],
+      "questMatches": [
+        "A Taste of Hope"
+      ],
+      "steps": 72,
+      "literalCoordinates": 49,
+      "branches": 56,
+      "issues": 35,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/atfirstlight/AtFirstLight.java",
+      "className": "AtFirstLight",
+      "entryIds": [
+        "AT_FIRST_LIGHT"
+      ],
+      "questMatches": [
+        "At First Light"
+      ],
+      "steps": 33,
+      "literalCoordinates": 28,
+      "branches": 17,
+      "issues": 23,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/bearyoursoul/BearYourSoul.java",
+      "className": "BearYourSoul",
+      "entryIds": [
+        "BEAR_YOUR_SOUL"
+      ],
+      "questMatches": [
+        "Bear Your Soul"
+      ],
+      "steps": 6,
+      "literalCoordinates": 6,
+      "branches": 3,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/belowicemountain/BelowIceMountain.java",
+      "className": "BelowIceMountain",
+      "entryIds": [
+        "BELOW_ICE_MOUNTAIN"
+      ],
+      "questMatches": [
+        "Below Ice Mountain"
+      ],
+      "steps": 18,
+      "literalCoordinates": 15,
+      "branches": 12,
+      "issues": 25,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/beneathcursedsands/BeneathCursedSands.java",
+      "className": "BeneathCursedSands",
+      "entryIds": [
+        "BENEATH_CURSED_SANDS"
+      ],
+      "questMatches": [
+        "Beneath Cursed Sands"
+      ],
+      "steps": 83,
+      "literalCoordinates": 41,
+      "branches": 64,
+      "issues": 42,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/beneathcursedsands/TombRiddle.java",
+      "className": "TombRiddle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 7,
+      "literalCoordinates": 3,
+      "branches": 0,
+      "issues": 4,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/betweenarock/BetweenARock.java",
+      "className": "BetweenARock",
+      "entryIds": [
+        "BETWEEN_A_ROCK"
+      ],
+      "questMatches": [
+        "Between a Rock..."
+      ],
+      "steps": 46,
+      "literalCoordinates": 36,
+      "branches": 40,
+      "issues": 6,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/betweenarock/PuzzleStep.java",
+      "className": "PuzzleStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/bigchompybirdhunting/BigChompyBirdHunting.java",
+      "className": "BigChompyBirdHunting",
+      "entryIds": [
+        "BIG_CHOMPY_BIRD_HUNTING"
+      ],
+      "questMatches": [
+        "Big Chompy Bird Hunting"
+      ],
+      "steps": 34,
+      "literalCoordinates": 29,
+      "branches": 23,
+      "issues": 6,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/biohazard/Biohazard.java",
+      "className": "Biohazard",
+      "entryIds": [
+        "BIOHAZARD"
+      ],
+      "questMatches": [
+        "Biohazard"
+      ],
+      "steps": 31,
+      "literalCoordinates": 30,
+      "branches": 28,
+      "issues": 15,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/biohazard/GiveIngredientsToHelpersStep.java",
+      "className": "GiveIngredientsToHelpersStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 6,
+      "literalCoordinates": 3,
+      "branches": 0,
+      "issues": 15,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/blackknightfortress/BlackKnightFortress.java",
+      "className": "BlackKnightFortress",
+      "entryIds": [
+        "BLACK_KNIGHTS_FORTRESS"
+      ],
+      "questMatches": [
+        "Black Knights' Fortress"
+      ],
+      "steps": 33,
+      "literalCoordinates": 32,
+      "branches": 35,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/bonevoyage/BoneVoyage.java",
+      "className": "BoneVoyage",
+      "entryIds": [
+        "BONE_VOYAGE"
+      ],
+      "questMatches": [
+        "Bone Voyage"
+      ],
+      "steps": 24,
+      "literalCoordinates": 22,
+      "branches": 11,
+      "issues": 13,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/cabinfever/CabinFever.java",
+      "className": "CabinFever",
+      "entryIds": [
+        "CABIN_FEVER"
+      ],
+      "questMatches": [
+        "Cabin Fever"
+      ],
+      "steps": 84,
+      "literalCoordinates": 80,
+      "branches": 172,
+      "issues": 3,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/childrenofthesun/ChildrenOfTheSun.java",
+      "className": "ChildrenOfTheSun",
+      "entryIds": [
+        "CHILDREN_OF_THE_SUN"
+      ],
+      "questMatches": [
+        "Children of the Sun"
+      ],
+      "steps": 31,
+      "literalCoordinates": 17,
+      "branches": 13,
+      "issues": 37,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/clientofkourend/ClientOfKourend.java",
+      "className": "ClientOfKourend",
+      "entryIds": [
+        "CLIENT_OF_KOUREND"
+      ],
+      "questMatches": [
+        "Client of Kourend"
+      ],
+      "steps": 10,
+      "literalCoordinates": 9,
+      "branches": 7,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/clocktower/ClockTower.java",
+      "className": "ClockTower",
+      "entryIds": [
+        "CLOCK_TOWER"
+      ],
+      "questMatches": [
+        "Clock Tower"
+      ],
+      "steps": 31,
+      "literalCoordinates": 27,
+      "branches": 40,
+      "issues": 17,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/coldwar/ColdWar.java",
+      "className": "ColdWar",
+      "entryIds": [
+        "COLD_WAR"
+      ],
+      "questMatches": [
+        "Cold War"
+      ],
+      "steps": 59,
+      "literalCoordinates": 46,
+      "branches": 33,
+      "issues": 18,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/coldwar/PenguinEmote.java",
+      "className": "PenguinEmote",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/contact/Contact.java",
+      "className": "Contact",
+      "entryIds": [
+        "CONTACT"
+      ],
+      "questMatches": [
+        "Contact!"
+      ],
+      "steps": 17,
+      "literalCoordinates": 15,
+      "branches": 13,
+      "issues": 4,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/cooksassistant/CooksAssistant.java",
+      "className": "CooksAssistant",
+      "entryIds": [
+        "COOKS_ASSISTANT"
+      ],
+      "questMatches": [
+        "Cook's Assistant"
+      ],
+      "steps": 13,
+      "literalCoordinates": 13,
+      "branches": 14,
+      "issues": 11,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/creatureoffenkenstrain/CreatureOfFenkenstrain.java",
+      "className": "CreatureOfFenkenstrain",
+      "entryIds": [
+        "CREATURE_OF_FENKENSTRAIN"
+      ],
+      "questMatches": [
+        "Creature of Fenkenstrain"
+      ],
+      "steps": 37,
+      "literalCoordinates": 31,
+      "branches": 31,
+      "issues": 19,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/currentaffairs/CurrentAffairs.java",
+      "className": "CurrentAffairs",
+      "entryIds": [
+        "CURRENT_AFFAIRS"
+      ],
+      "questMatches": [
+        "Current Affairs"
+      ],
+      "steps": 25,
+      "literalCoordinates": 20,
+      "branches": 18,
+      "issues": 27,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/darknessofhallowvale/DarknessOfHallowvale.java",
+      "className": "DarknessOfHallowvale",
+      "entryIds": [
+        "DARKNESS_OF_HALLOWVALE"
+      ],
+      "questMatches": [
+        "Darkness of Hallowvale"
+      ],
+      "steps": 55,
+      "literalCoordinates": 54,
+      "branches": 64,
+      "issues": 23,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/deathontheisle/DeathOnTheIsle.java",
+      "className": "DeathOnTheIsle",
+      "entryIds": [
+        "DEATH_ON_THE_ISLE"
+      ],
+      "questMatches": [
+        "Death on the Isle"
+      ],
+      "steps": 69,
+      "literalCoordinates": 65,
+      "branches": 76,
+      "issues": 16,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/deathplateau/DeathPlateau.java",
+      "className": "DeathPlateau",
+      "entryIds": [
+        "DEATH_PLATEAU"
+      ],
+      "questMatches": [
+        "Death Plateau"
+      ],
+      "steps": 39,
+      "literalCoordinates": 33,
+      "branches": 25,
+      "issues": 12,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/deathtothedorgeshuun/DeathToTheDorgeshuun.java",
+      "className": "DeathToTheDorgeshuun",
+      "entryIds": [
+        "DEATH_TO_THE_DORGESHUUN"
+      ],
+      "questMatches": [
+        "Death to the Dorgeshuun"
+      ],
+      "steps": 60,
+      "literalCoordinates": 46,
+      "branches": 83,
+      "issues": 43,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/defenderofvarrock/DefenderOfVarrock.java",
+      "className": "DefenderOfVarrock",
+      "entryIds": [
+        "DEFENDER_OF_VARROCK"
+      ],
+      "questMatches": [
+        "Defender of Varrock"
+      ],
+      "steps": 56,
+      "literalCoordinates": 50,
+      "branches": 48,
+      "issues": 25,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/demonslayer/DemonSlayer.java",
+      "className": "DemonSlayer",
+      "entryIds": [
+        "DEMON_SLAYER"
+      ],
+      "questMatches": [
+        "Demon Slayer"
+      ],
+      "steps": 21,
+      "literalCoordinates": 20,
+      "branches": 17,
+      "issues": 8,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/demonslayer/IncantationStep.java",
+      "className": "IncantationStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 1,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/deserttreasure/DesertTreasure.java",
+      "className": "DesertTreasure",
+      "entryIds": [
+        "DESERT_TREASURE"
+      ],
+      "questMatches": [],
+      "steps": 61,
+      "literalCoordinates": 57,
+      "branches": 48,
+      "issues": 54,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/deserttreasure/GiveItems.java",
+      "className": "GiveItems",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/deserttreasureii/ChestCodeStep.java",
+      "className": "ChestCodeStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/deserttreasureii/DesertTreasureII.java",
+      "className": "DesertTreasureII",
+      "entryIds": [
+        "DESERT_TREASURE_II"
+      ],
+      "questMatches": [],
+      "steps": 62,
+      "literalCoordinates": 55,
+      "branches": 57,
+      "issues": 54,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/deserttreasureii/GolemPuzzleStep.java",
+      "className": "GolemPuzzleStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 4,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/deserttreasureii/GrowthPuzzleStep.java",
+      "className": "GrowthPuzzleStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/deserttreasureii/MemoryPuzzle.java",
+      "className": "MemoryPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 4,
+      "literalCoordinates": 4,
+      "branches": 0,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/deserttreasureii/PerseriyaSteps.java",
+      "className": "PerseriyaSteps",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 131,
+      "literalCoordinates": 79,
+      "branches": 91,
+      "issues": 107,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/deserttreasureii/SucellusSteps.java",
+      "className": "SucellusSteps",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 60,
+      "literalCoordinates": 37,
+      "branches": 0,
+      "issues": 53,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/deserttreasureii/VardorvisSteps.java",
+      "className": "VardorvisSteps",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 36,
+      "literalCoordinates": 26,
+      "branches": 10,
+      "issues": 37,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/deserttreasureii/WhispererSteps.java",
+      "className": "WhispererSteps",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 212,
+      "literalCoordinates": 92,
+      "branches": 66,
+      "issues": 345,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/deviousminds/DeviousMinds.java",
+      "className": "DeviousMinds",
+      "entryIds": [
+        "DEVIOUS_MINDS"
+      ],
+      "questMatches": [
+        "Devious Minds"
+      ],
+      "steps": 14,
+      "literalCoordinates": 12,
+      "branches": 8,
+      "issues": 9,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/doricsquest/DoricsQuest.java",
+      "className": "DoricsQuest",
+      "entryIds": [
+        "DORICS_QUEST"
+      ],
+      "questMatches": [
+        "Doric's Quest"
+      ],
+      "steps": 1,
+      "literalCoordinates": 1,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/dragonslayer/DragonSlayer.java",
+      "className": "DragonSlayer",
+      "entryIds": [
+        "DRAGON_SLAYER_I"
+      ],
+      "questMatches": [
+        "Dragon Slayer I"
+      ],
+      "steps": 57,
+      "literalCoordinates": 55,
+      "branches": 51,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/dragonslayerii/CryptPuzzle.java",
+      "className": "CryptPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 9,
+      "literalCoordinates": 9,
+      "branches": 0,
+      "issues": 8,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/dragonslayerii/DragonSlayerII.java",
+      "className": "DragonSlayerII",
+      "entryIds": [
+        "DRAGON_SLAYER_II"
+      ],
+      "questMatches": [
+        "Dragon Slayer II"
+      ],
+      "steps": 114,
+      "literalCoordinates": 97,
+      "branches": 122,
+      "issues": 27,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/dragonslayerii/MapPuzzle.java",
+      "className": "MapPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 4,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/dreammentor/CyrisusArmourSet.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/dreammentor/CyrisusBankConditional.java",
+      "className": "CyrisusBankConditional",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/dreammentor/CyrisusBankItem.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/dreammentor/DreamMentor.java",
+      "className": "DreamMentor",
+      "entryIds": [
+        "DREAM_MENTOR"
+      ],
+      "questMatches": [
+        "Dream Mentor"
+      ],
+      "steps": 33,
+      "literalCoordinates": 28,
+      "branches": 35,
+      "issues": 6,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/dreammentor/SelectingCombatGear.java",
+      "className": "SelectingCombatGear",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/druidicritual/DruidicRitual.java",
+      "className": "DruidicRitual",
+      "entryIds": [
+        "DRUIDIC_RITUAL"
+      ],
+      "questMatches": [
+        "Druidic Ritual"
+      ],
+      "steps": 14,
+      "literalCoordinates": 14,
+      "branches": 9,
+      "issues": 8,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/dwarfcannon/DwarfCannon.java",
+      "className": "DwarfCannon",
+      "entryIds": [
+        "DWARF_CANNON"
+      ],
+      "questMatches": [
+        "Dwarf Cannon"
+      ],
+      "steps": 30,
+      "literalCoordinates": 23,
+      "branches": 22,
+      "issues": 13,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/eadgarsruse/EadgarsRuse.java",
+      "className": "EadgarsRuse",
+      "entryIds": [
+        "EADGARS_RUSE"
+      ],
+      "questMatches": [
+        "Eadgar's Ruse"
+      ],
+      "steps": 71,
+      "literalCoordinates": 65,
+      "branches": 75,
+      "issues": 14,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/eaglespeak/EaglesPeak.java",
+      "className": "EaglesPeak",
+      "entryIds": [
+        "EAGLES_PEAK"
+      ],
+      "questMatches": [
+        "Eagles' Peak"
+      ],
+      "steps": 58,
+      "literalCoordinates": 56,
+      "branches": 52,
+      "issues": 10,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/elementalworkshopi/ElementalWorkshopI.java",
+      "className": "ElementalWorkshopI",
+      "entryIds": [
+        "ELEMENTAL_WORKSHOP_I"
+      ],
+      "questMatches": [
+        "Elemental Workshop I"
+      ],
+      "steps": 20,
+      "literalCoordinates": 17,
+      "branches": 28,
+      "issues": 3,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/elementalworkshopii/ConnectPipes.java",
+      "className": "ConnectPipes",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/elementalworkshopii/ElementalWorkshopII.java",
+      "className": "ElementalWorkshopII",
+      "entryIds": [
+        "ELEMENTAL_WORKSHOP_II"
+      ],
+      "questMatches": [
+        "Elemental Workshop II"
+      ],
+      "steps": 60,
+      "literalCoordinates": 55,
+      "branches": 85,
+      "issues": 28,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/enakhraslament/EnakhrasLament.java",
+      "className": "EnakhrasLament",
+      "entryIds": [
+        "ENAKHRAS_LAMENT"
+      ],
+      "questMatches": [
+        "Enakhra's Lament"
+      ],
+      "steps": 51,
+      "literalCoordinates": 47,
+      "branches": 56,
+      "issues": 21,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/enlightenedjourney/BalloonFlightStep.java",
+      "className": "BalloonFlightStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 6,
+      "literalCoordinates": 1,
+      "branches": 0,
+      "issues": 6,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/enlightenedjourney/CastleWarsBalloonFlight.java",
+      "className": "CastleWarsBalloonFlight",
+      "entryIds": [
+        "BALLOON_TRANSPORT_CASTLE_WARS"
+      ],
+      "questMatches": [],
+      "steps": 1,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/enlightenedjourney/CraftingGuildBalloonFlight.java",
+      "className": "CraftingGuildBalloonFlight",
+      "entryIds": [
+        "BALLOON_TRANSPORT_CRAFTING_GUILD"
+      ],
+      "questMatches": [],
+      "steps": 1,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/enlightenedjourney/EnlightenedJourney.java",
+      "className": "EnlightenedJourney",
+      "entryIds": [
+        "ENLIGHTENED_JOURNEY"
+      ],
+      "questMatches": [
+        "Enlightened Journey"
+      ],
+      "steps": 13,
+      "literalCoordinates": 9,
+      "branches": 5,
+      "issues": 11,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/enlightenedjourney/GiveAugusteItems.java",
+      "className": "GiveAugusteItems",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 5,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/enlightenedjourney/GrandTreeBalloonFlight.java",
+      "className": "GrandTreeBalloonFlight",
+      "entryIds": [
+        "BALLOON_TRANSPORT_GRAND_TREE"
+      ],
+      "questMatches": [],
+      "steps": 1,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/enlightenedjourney/TaverleyBalloonFlight.java",
+      "className": "TaverleyBalloonFlight",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 5,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 5,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/enlightenedjourney/VarrockBalloonFlight.java",
+      "className": "VarrockBalloonFlight",
+      "entryIds": [
+        "BALLOON_TRANSPORT_VARROCK"
+      ],
+      "questMatches": [],
+      "steps": 1,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/entertheabyss/EnterTheAbyss.java",
+      "className": "EnterTheAbyss",
+      "entryIds": [
+        "ENTER_THE_ABYSS"
+      ],
+      "questMatches": [
+        "Enter the Abyss"
+      ],
+      "steps": 8,
+      "literalCoordinates": 8,
+      "branches": 4,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/ernestthechicken/ErnestTheChicken.java",
+      "className": "ErnestTheChicken",
+      "entryIds": [
+        "ERNEST_THE_CHICKEN"
+      ],
+      "questMatches": [
+        "Ernest the Chicken"
+      ],
+      "steps": 44,
+      "literalCoordinates": 32,
+      "branches": 41,
+      "issues": 43,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/ethicallyacquiredantiquities/EthicallyAcquiredAntiquities.java",
+      "className": "EthicallyAcquiredAntiquities",
+      "entryIds": [
+        "ETHICALLY_ACQUIRED_ANTIQUITIES"
+      ],
+      "questMatches": [
+        "Ethically Acquired Antiquities"
+      ],
+      "steps": 22,
+      "literalCoordinates": 21,
+      "branches": 5,
+      "issues": 19,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/fairytalei/FairytaleI.java",
+      "className": "FairytaleI",
+      "entryIds": [
+        "FAIRYTALE_I__GROWING_PAINS"
+      ],
+      "questMatches": [
+        "Fairytale I - Growing Pains"
+      ],
+      "steps": 20,
+      "literalCoordinates": 18,
+      "branches": 11,
+      "issues": 5,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/fairytaleii/FairytaleII.java",
+      "className": "FairytaleII",
+      "entryIds": [
+        "FAIRYTALE_II__CURE_A_QUEEN"
+      ],
+      "questMatches": [
+        "Fairytale II - Cure a Queen"
+      ],
+      "steps": 33,
+      "literalCoordinates": 18,
+      "branches": 25,
+      "issues": 39,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/fallenfromgrace/FallenFromGrace.java",
+      "className": "FallenFromGrace",
+      "entryIds": [
+        "FALLEN_FROM_GRACE"
+      ],
+      "questMatches": [
+        "Fallen From Grace"
+      ],
+      "steps": 30,
+      "literalCoordinates": 21,
+      "branches": 32,
+      "issues": 24,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/familycrest/FamilyCrest.java",
+      "className": "FamilyCrest",
+      "entryIds": [
+        "FAMILY_CREST"
+      ],
+      "questMatches": [
+        "Family Crest"
+      ],
+      "steps": 29,
+      "literalCoordinates": 25,
+      "branches": 20,
+      "issues": 26,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/fightarena/FightArena.java",
+      "className": "FightArena",
+      "entryIds": [
+        "FIGHT_ARENA"
+      ],
+      "questMatches": [
+        "Fight Arena"
+      ],
+      "steps": 17,
+      "literalCoordinates": 17,
+      "branches": 10,
+      "issues": 10,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/fishingcontest/FishingContest.java",
+      "className": "FishingContest",
+      "entryIds": [
+        "FISHING_CONTEST"
+      ],
+      "questMatches": [
+        "Fishing Contest"
+      ],
+      "steps": 13,
+      "literalCoordinates": 12,
+      "branches": 10,
+      "issues": 4,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/forgettabletale/ForgettableTale.java",
+      "className": "ForgettableTale",
+      "entryIds": [
+        "FORGETTABLE_TALE"
+      ],
+      "questMatches": [],
+      "steps": 128,
+      "literalCoordinates": 75,
+      "branches": 136,
+      "issues": 107,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/gardenoftranquility/GardenOfTranquillity.java",
+      "className": "GardenOfTranquillity",
+      "entryIds": [
+        "GARDEN_OF_TRANQUILLITY"
+      ],
+      "questMatches": [
+        "Garden of Tranquillity"
+      ],
+      "steps": 50,
+      "literalCoordinates": 45,
+      "branches": 47,
+      "issues": 71,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/gertrudescat/GertrudesCat.java",
+      "className": "GertrudesCat",
+      "entryIds": [
+        "GERTRUDES_CAT"
+      ],
+      "questMatches": [
+        "Gertrude's Cat"
+      ],
+      "steps": 13,
+      "literalCoordinates": 11,
+      "branches": 7,
+      "issues": 15,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/gettingahead/GettingAhead.java",
+      "className": "GettingAhead",
+      "entryIds": [
+        "GETTING_AHEAD"
+      ],
+      "questMatches": [
+        "Getting Ahead"
+      ],
+      "steps": 32,
+      "literalCoordinates": 27,
+      "branches": 22,
+      "issues": 24,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/ghostsahoy/DyeShipSteps.java",
+      "className": "DyeShipSteps",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 9,
+      "literalCoordinates": 6,
+      "branches": 0,
+      "issues": 15,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/ghostsahoy/GhostsAhoy.java",
+      "className": "GhostsAhoy",
+      "entryIds": [
+        "GHOSTS_AHOY"
+      ],
+      "questMatches": [
+        "Ghosts Ahoy"
+      ],
+      "steps": 47,
+      "literalCoordinates": 40,
+      "branches": 44,
+      "issues": 40,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/goblindiplomacy/GoblinDiplomacy.java",
+      "className": "GoblinDiplomacy",
+      "entryIds": [
+        "GOBLIN_DIPLOMACY"
+      ],
+      "questMatches": [
+        "Goblin Diplomacy"
+      ],
+      "steps": 12,
+      "literalCoordinates": 8,
+      "branches": 10,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/grimtales/GrimTales.java",
+      "className": "GrimTales",
+      "entryIds": [
+        "GRIM_TALES"
+      ],
+      "questMatches": [
+        "Grim Tales"
+      ],
+      "steps": 51,
+      "literalCoordinates": 39,
+      "branches": 44,
+      "issues": 12,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/hauntedmine/HauntedMine.java",
+      "className": "HauntedMine",
+      "entryIds": [
+        "HAUNTED_MINE"
+      ],
+      "questMatches": [
+        "Haunted Mine"
+      ],
+      "steps": 46,
+      "literalCoordinates": 45,
+      "branches": 46,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/hazeelcult/HazeelCult.java",
+      "className": "HazeelCult",
+      "entryIds": [
+        "HAZEEL_CULT"
+      ],
+      "questMatches": [
+        "Hazeel Cult"
+      ],
+      "steps": 41,
+      "literalCoordinates": 41,
+      "branches": 40,
+      "issues": 20,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/hazeelcult/HazeelValves.java",
+      "className": "HazeelValves",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 11,
+      "literalCoordinates": 10,
+      "branches": 0,
+      "issues": 28,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/heroesquest/HeroesQuest.java",
+      "className": "HeroesQuest",
+      "entryIds": [
+        "HEROES_QUEST"
+      ],
+      "questMatches": [
+        "Heroes' Quest"
+      ],
+      "steps": 45,
+      "literalCoordinates": 37,
+      "branches": 42,
+      "issues": 42,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/holygrail/HolyGrail.java",
+      "className": "HolyGrail",
+      "entryIds": [
+        "HOLY_GRAIL"
+      ],
+      "questMatches": [
+        "Holy Grail"
+      ],
+      "steps": 33,
+      "literalCoordinates": 18,
+      "branches": 26,
+      "issues": 20,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/horrorfromthedeep/HorrorFromTheDeep.java",
+      "className": "HorrorFromTheDeep",
+      "entryIds": [
+        "HORROR_FROM_THE_DEEP"
+      ],
+      "questMatches": [
+        "Horror from the Deep"
+      ],
+      "steps": 24,
+      "literalCoordinates": 24,
+      "branches": 24,
+      "issues": 21,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/icthlarinslittlehelper/DoorPuzzleStep.java",
+      "className": "DoorPuzzleStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 17,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/icthlarinslittlehelper/IcthlarinsLittleHelper.java",
+      "className": "IcthlarinsLittleHelper",
+      "entryIds": [
+        "ICTHLARINS_LITTLE_HELPER"
+      ],
+      "questMatches": [
+        "Icthlarin's Little Helper"
+      ],
+      "steps": 55,
+      "literalCoordinates": 48,
+      "branches": 43,
+      "issues": 17,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/impcatcher/ImpCatcher.java",
+      "className": "ImpCatcher",
+      "entryIds": [
+        "IMP_CATCHER"
+      ],
+      "questMatches": [
+        "Imp Catcher"
+      ],
+      "steps": 4,
+      "literalCoordinates": 3,
+      "branches": 3,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/inaidofthemyreque/FillBurghCrate.java",
+      "className": "FillBurghCrate",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/inaidofthemyreque/InAidOfTheMyreque.java",
+      "className": "InAidOfTheMyreque",
+      "entryIds": [
+        "IN_AID_OF_THE_MYREQUE"
+      ],
+      "questMatches": [
+        "In Aid of the Myreque"
+      ],
+      "steps": 53,
+      "literalCoordinates": 48,
+      "branches": 35,
+      "issues": 14,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/insearchofknowledge/FeedingAimeri.java",
+      "className": "FeedingAimeri",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/insearchofknowledge/InSearchOfKnowledge.java",
+      "className": "InSearchOfKnowledge",
+      "entryIds": [
+        "IN_SEARCH_OF_KNOWLEDGE"
+      ],
+      "questMatches": [
+        "In Search of Knowledge"
+      ],
+      "steps": 12,
+      "literalCoordinates": 10,
+      "branches": 9,
+      "issues": 5,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/insearchofthemyreque/InSearchOfTheMyreque.java",
+      "className": "InSearchOfTheMyreque",
+      "entryIds": [
+        "IN_SEARCH_OF_THE_MYREQUE"
+      ],
+      "questMatches": [
+        "In Search of the Myreque"
+      ],
+      "steps": 40,
+      "literalCoordinates": 38,
+      "branches": 39,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/junglepotion/JunglePotion.java",
+      "className": "JunglePotion",
+      "entryIds": [
+        "JUNGLE_POTION"
+      ],
+      "questMatches": [
+        "Jungle Potion"
+      ],
+      "steps": 17,
+      "literalCoordinates": 7,
+      "branches": 2,
+      "issues": 12,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/kingsransom/KingsRansom.java",
+      "className": "KingsRansom",
+      "entryIds": [
+        "KINGS_RANSOM"
+      ],
+      "questMatches": [
+        "King's Ransom"
+      ],
+      "steps": 47,
+      "literalCoordinates": 39,
+      "branches": 35,
+      "issues": 12,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/kingsransom/LockpickPuzzle.java",
+      "className": "LockpickPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/landofthegoblins/LandOfTheGoblins.java",
+      "className": "LandOfTheGoblins",
+      "entryIds": [
+        "LAND_OF_THE_GOBLINS"
+      ],
+      "questMatches": [
+        "Land of the Goblins"
+      ],
+      "steps": 90,
+      "literalCoordinates": 57,
+      "branches": 96,
+      "issues": 86,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/legendsquest/LegendsQuest.java",
+      "className": "LegendsQuest",
+      "entryIds": [
+        "LEGENDS_QUEST"
+      ],
+      "questMatches": [
+        "Legends' Quest"
+      ],
+      "steps": 117,
+      "literalCoordinates": 77,
+      "branches": 134,
+      "issues": 65,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/lostcity/LostCity.java",
+      "className": "LostCity",
+      "entryIds": [
+        "LOST_CITY"
+      ],
+      "questMatches": [
+        "Lost City"
+      ],
+      "steps": 14,
+      "literalCoordinates": 10,
+      "branches": 14,
+      "issues": 10,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/lunardiplomacy/BringLunarItems.java",
+      "className": "BringLunarItems",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 8,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/lunardiplomacy/ChanceChallenge.java",
+      "className": "ChanceChallenge",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 7,
+      "literalCoordinates": 7,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/lunardiplomacy/LunarDiplomacy.java",
+      "className": "LunarDiplomacy",
+      "entryIds": [
+        "LUNAR_DIPLOMACY"
+      ],
+      "questMatches": [
+        "Lunar Diplomacy"
+      ],
+      "steps": 113,
+      "literalCoordinates": 89,
+      "branches": 107,
+      "issues": 30,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/lunardiplomacy/MemoryChallenge.java",
+      "className": "MemoryChallenge",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 3,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/lunardiplomacy/MimicChallenge.java",
+      "className": "MimicChallenge",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 6,
+      "literalCoordinates": 5,
+      "branches": 0,
+      "issues": 5,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/lunardiplomacy/NumberChallenge.java",
+      "className": "NumberChallenge",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 11,
+      "literalCoordinates": 10,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/makingfriendswithmyarm/MakingFriendsWithMyArm.java",
+      "className": "MakingFriendsWithMyArm",
+      "entryIds": [
+        "MAKING_FRIENDS_WITH_MY_ARM"
+      ],
+      "questMatches": [
+        "Making Friends with My Arm"
+      ],
+      "steps": 69,
+      "literalCoordinates": 63,
+      "branches": 52,
+      "issues": 7,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/makinghistory/MakingHistory.java",
+      "className": "MakingHistory",
+      "entryIds": [
+        "MAKING_HISTORY"
+      ],
+      "questMatches": [
+        "Making History"
+      ],
+      "steps": 14,
+      "literalCoordinates": 13,
+      "branches": 10,
+      "issues": 12,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/meatandgreet/MeatAndGreet.java",
+      "className": "MeatAndGreet",
+      "entryIds": [
+        "MEAT_AND_GREET"
+      ],
+      "questMatches": [
+        "Meat and Greet"
+      ],
+      "steps": 34,
+      "literalCoordinates": 25,
+      "branches": 22,
+      "issues": 30,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/merlinscrystal/MerlinsCrystal.java",
+      "className": "MerlinsCrystal",
+      "entryIds": [
+        "MERLINS_CRYSTAL"
+      ],
+      "questMatches": [
+        "Merlin's Crystal"
+      ],
+      "steps": 33,
+      "literalCoordinates": 28,
+      "branches": 26,
+      "issues": 17,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/misthalinmystery/MisthalinMystery.java",
+      "className": "MisthalinMystery",
+      "entryIds": [
+        "MISTHALIN_MYSTERY"
+      ],
+      "questMatches": [
+        "Misthalin Mystery"
+      ],
+      "steps": 57,
+      "literalCoordinates": 37,
+      "branches": 61,
+      "issues": 36,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/monkeymadnessi/MonkeyMadnessI.java",
+      "className": "MonkeyMadnessI",
+      "entryIds": [
+        "MONKEY_MADNESS_I"
+      ],
+      "questMatches": [
+        "Monkey Madness I"
+      ],
+      "steps": 83,
+      "literalCoordinates": 76,
+      "branches": 81,
+      "issues": 46,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/monkeymadnessii/AgilityDungeonSteps.java",
+      "className": "AgilityDungeonSteps",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 12,
+      "literalCoordinates": 9,
+      "branches": 0,
+      "issues": 74,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/monkeymadnessii/MM2AgilityNodes.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/monkeymadnessii/MM2Route.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/monkeymadnessii/MM2Sabotage.java",
+      "className": "MM2Sabotage",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 23,
+      "literalCoordinates": 23,
+      "branches": 0,
+      "issues": 41,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/monkeymadnessii/MonkeyMadnessII.java",
+      "className": "MonkeyMadnessII",
+      "entryIds": [
+        "MONKEY_MADNESS_II"
+      ],
+      "questMatches": [
+        "Monkey Madness II"
+      ],
+      "steps": 74,
+      "literalCoordinates": 61,
+      "branches": 47,
+      "issues": 18,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/monksfriend/MonksFriend.java",
+      "className": "MonksFriend",
+      "entryIds": [
+        "MONKS_FRIEND"
+      ],
+      "questMatches": [
+        "Monk's Friend"
+      ],
+      "steps": 11,
+      "literalCoordinates": 11,
+      "branches": 3,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/mountaindaughter/MountainDaughter.java",
+      "className": "MountainDaughter",
+      "entryIds": [
+        "MOUNTAIN_DAUGHTER"
+      ],
+      "questMatches": [
+        "Mountain Daughter"
+      ],
+      "steps": 34,
+      "literalCoordinates": 31,
+      "branches": 31,
+      "issues": 12,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/mourningsendparti/MourningsEndPartI.java",
+      "className": "MourningsEndPartI",
+      "entryIds": [
+        "MOURNINGS_END_PART_I"
+      ],
+      "questMatches": [
+        "Mourning's End Part I"
+      ],
+      "steps": 50,
+      "literalCoordinates": 41,
+      "branches": 46,
+      "issues": 32,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/mourningsendpartii/MourningsEndPartII.java",
+      "className": "MourningsEndPartII",
+      "entryIds": [
+        "MOURNINGS_END_PART_II"
+      ],
+      "questMatches": [
+        "Mourning's End Part II"
+      ],
+      "steps": 175,
+      "literalCoordinates": 171,
+      "branches": 212,
+      "issues": 29,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/murdermystery/MurderMystery.java",
+      "className": "MurderMystery",
+      "entryIds": [
+        "MURDER_MYSTERY"
+      ],
+      "questMatches": [
+        "Murder Mystery"
+      ],
+      "steps": 59,
+      "literalCoordinates": 32,
+      "branches": 55,
+      "issues": 51,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/myarmsbigadventure/AddCompost.java",
+      "className": "AddCompost",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/myarmsbigadventure/AddDung.java",
+      "className": "AddDung",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/myarmsbigadventure/MyArmsBigAdventure.java",
+      "className": "MyArmsBigAdventure",
+      "entryIds": [
+        "MY_ARMS_BIG_ADVENTURE"
+      ],
+      "questMatches": [
+        "My Arm's Big Adventure"
+      ],
+      "steps": 52,
+      "literalCoordinates": 45,
+      "branches": 42,
+      "issues": 16,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/naturespirit/NatureSpirit.java",
+      "className": "NatureSpirit",
+      "entryIds": [
+        "NATURE_SPIRIT"
+      ],
+      "questMatches": [
+        "Nature Spirit"
+      ],
+      "steps": 29,
+      "literalCoordinates": 25,
+      "branches": 23,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/observatoryquest/ObservatoryQuest.java",
+      "className": "ObservatoryQuest",
+      "entryIds": [
+        "OBSERVATORY_QUEST"
+      ],
+      "questMatches": [
+        "Observatory Quest"
+      ],
+      "steps": 31,
+      "literalCoordinates": 15,
+      "branches": 27,
+      "issues": 46,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/olafsquest/OlafsQuest.java",
+      "className": "OlafsQuest",
+      "entryIds": [
+        "OLAFS_QUEST"
+      ],
+      "questMatches": [
+        "Olaf's Quest"
+      ],
+      "steps": 26,
+      "literalCoordinates": 17,
+      "branches": 19,
+      "issues": 12,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/olafsquest/PaintingWall.java",
+      "className": "PaintingWall",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/onesmallfavour/OneSmallFavour.java",
+      "className": "OneSmallFavour",
+      "entryIds": [
+        "ONE_SMALL_FAVOUR"
+      ],
+      "questMatches": [
+        "One Small Favour"
+      ],
+      "steps": 107,
+      "literalCoordinates": 95,
+      "branches": 68,
+      "issues": 34,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/pandemonium/Pandemonium.java",
+      "className": "Pandemonium",
+      "entryIds": [
+        "PANDEMONIUM"
+      ],
+      "questMatches": [
+        "Pandemonium"
+      ],
+      "steps": 45,
+      "literalCoordinates": 27,
+      "branches": 39,
+      "issues": 17,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/perilousmoon/PerilousMoon.java",
+      "className": "PerilousMoon",
+      "entryIds": [
+        "PERILOUS_MOON"
+      ],
+      "questMatches": [],
+      "steps": 71,
+      "literalCoordinates": 52,
+      "branches": 38,
+      "issues": 37,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/piratestreasure/PiratesTreasure.java",
+      "className": "PiratesTreasure",
+      "entryIds": [
+        "PIRATES_TREASURE"
+      ],
+      "questMatches": [
+        "Pirate's Treasure"
+      ],
+      "steps": 7,
+      "literalCoordinates": 5,
+      "branches": 3,
+      "issues": 8,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/piratestreasure/RumSmugglingStep.java",
+      "className": "RumSmugglingStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 12,
+      "literalCoordinates": 10,
+      "branches": 0,
+      "issues": 23,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/plaguecity/PlagueCity.java",
+      "className": "PlagueCity",
+      "entryIds": [
+        "PLAGUE_CITY"
+      ],
+      "questMatches": [
+        "Plague City"
+      ],
+      "steps": 37,
+      "literalCoordinates": 35,
+      "branches": 42,
+      "issues": 9,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/priestinperil/BringDrezelPureEssenceStep.java",
+      "className": "BringDrezelPureEssenceStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/priestinperil/PriestInPeril.java",
+      "className": "PriestInPeril",
+      "entryIds": [
+        "PRIEST_IN_PERIL"
+      ],
+      "questMatches": [
+        "Priest in Peril"
+      ],
+      "steps": 28,
+      "literalCoordinates": 27,
+      "branches": 29,
+      "issues": 5,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/princealirescue/PrinceAliRescue.java",
+      "className": "PrinceAliRescue",
+      "entryIds": [
+        "PRINCE_ALI_RESCUE"
+      ],
+      "questMatches": [
+        "Prince Ali Rescue"
+      ],
+      "steps": 14,
+      "literalCoordinates": 13,
+      "branches": 11,
+      "issues": 20,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/pryingtimes/PryingTimes.java",
+      "className": "PryingTimes",
+      "entryIds": [
+        "PRYING_TIMES"
+      ],
+      "questMatches": [
+        "Prying Times"
+      ],
+      "steps": 12,
+      "literalCoordinates": 10,
+      "branches": 5,
+      "issues": 9,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/ragandboneman/RagAndBoneManI.java",
+      "className": "RagAndBoneManI",
+      "entryIds": [
+        "RAG_AND_BONE_MAN_I"
+      ],
+      "questMatches": [
+        "Rag and Bone Man I"
+      ],
+      "steps": 23,
+      "literalCoordinates": 17,
+      "branches": 12,
+      "issues": 26,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/ragandboneman/RagAndBoneManII.java",
+      "className": "RagAndBoneManII",
+      "entryIds": [
+        "RAG_AND_BONE_MAN_II"
+      ],
+      "questMatches": [
+        "Rag and Bone Man II"
+      ],
+      "steps": 80,
+      "literalCoordinates": 51,
+      "branches": 59,
+      "issues": 96,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/ragandboneman/RagBoneGroups.java",
+      "className": "RagBoneGroups",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/ragandboneman/RagBoneState.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 6,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/ratcatchers/RatCatchers.java",
+      "className": "RatCatchers",
+      "entryIds": [
+        "RATCATCHERS"
+      ],
+      "questMatches": [
+        "Ratcatchers"
+      ],
+      "steps": 46,
+      "literalCoordinates": 42,
+      "branches": 27,
+      "issues": 30,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/ratcatchers/RatCharming.java",
+      "className": "RatCharming",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 12,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 14,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recipefordisaster/AskAboutFishCake.java",
+      "className": "AskAboutFishCake",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recipefordisaster/GetRohakDrunk.java",
+      "className": "GetRohakDrunk",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recipefordisaster/MakeEvilStew.java",
+      "className": "MakeEvilStew",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 4,
+      "literalCoordinates": 2,
+      "branches": 0,
+      "issues": 6,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recipefordisaster/QuizSteps.java",
+      "className": "QuizSteps",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 3,
+      "literalCoordinates": 3,
+      "branches": 0,
+      "issues": 3,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recipefordisaster/RFDAwowogei.java",
+      "className": "RFDAwowogei",
+      "entryIds": [
+        "RECIPE_FOR_DISASTER_MONKEY_AMBASSADOR"
+      ],
+      "questMatches": [],
+      "steps": 22,
+      "literalCoordinates": 19,
+      "branches": 18,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recipefordisaster/RFDDwarf.java",
+      "className": "RFDDwarf",
+      "entryIds": [
+        "RECIPE_FOR_DISASTER_DWARF"
+      ],
+      "questMatches": [],
+      "steps": 13,
+      "literalCoordinates": 10,
+      "branches": 9,
+      "issues": 13,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recipefordisaster/RFDEvilDave.java",
+      "className": "RFDEvilDave",
+      "entryIds": [
+        "RECIPE_FOR_DISASTER_EVIL_DAVE"
+      ],
+      "questMatches": [],
+      "steps": 10,
+      "literalCoordinates": 9,
+      "branches": 4,
+      "issues": 5,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recipefordisaster/RFDFinal.java",
+      "className": "RFDFinal",
+      "entryIds": [
+        "RECIPE_FOR_DISASTER_FINALE"
+      ],
+      "questMatches": [],
+      "steps": 12,
+      "literalCoordinates": 12,
+      "branches": 11,
+      "issues": 6,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recipefordisaster/RFDGoblins.java",
+      "className": "RFDGoblins",
+      "entryIds": [
+        "RECIPE_FOR_DISASTER_WARTFACE_AND_BENTNOZE"
+      ],
+      "questMatches": [],
+      "steps": 11,
+      "literalCoordinates": 7,
+      "branches": 10,
+      "issues": 18,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recipefordisaster/RFDLumbridgeGuide.java",
+      "className": "RFDLumbridgeGuide",
+      "entryIds": [
+        "RECIPE_FOR_DISASTER_LUMBRIDGE_GUIDE"
+      ],
+      "questMatches": [],
+      "steps": 7,
+      "literalCoordinates": 5,
+      "branches": 5,
+      "issues": 8,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recipefordisaster/RFDPiratePete.java",
+      "className": "RFDPiratePete",
+      "entryIds": [
+        "RECIPE_FOR_DISASTER_PIRATE_PETE"
+      ],
+      "questMatches": [],
+      "steps": 27,
+      "literalCoordinates": 21,
+      "branches": 28,
+      "issues": 4,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recipefordisaster/RFDSirAmikVarze.java",
+      "className": "RFDSirAmikVarze",
+      "entryIds": [
+        "RECIPE_FOR_DISASTER_SIR_AMIK_VARZE"
+      ],
+      "questMatches": [],
+      "steps": 20,
+      "literalCoordinates": 10,
+      "branches": 17,
+      "issues": 15,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recipefordisaster/RFDSkrachUglogwee.java",
+      "className": "RFDSkrachUglogwee",
+      "entryIds": [
+        "RECIPE_FOR_DISASTER_SKRACH_UGLOGWEE"
+      ],
+      "questMatches": [],
+      "steps": 22,
+      "literalCoordinates": 16,
+      "branches": 12,
+      "issues": 16,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recipefordisaster/RFDStart.java",
+      "className": "RFDStart",
+      "entryIds": [
+        "RECIPE_FOR_DISASTER_START"
+      ],
+      "questMatches": [],
+      "steps": 4,
+      "literalCoordinates": 3,
+      "branches": 1,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recruitmentdrive/DoorPuzzle.java",
+      "className": "DoorPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recruitmentdrive/LadyTableStep.java",
+      "className": "LadyTableStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 13,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recruitmentdrive/MissCheeversStep.java",
+      "className": "MissCheeversStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 54,
+      "literalCoordinates": 3,
+      "branches": 0,
+      "issues": 55,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recruitmentdrive/MsHynnAnswerDialogQuizStep.java",
+      "className": "MsHynnAnswerDialogQuizStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recruitmentdrive/RecruitmentDrive.java",
+      "className": "RecruitmentDrive",
+      "entryIds": [
+        "RECRUITMENT_DRIVE"
+      ],
+      "questMatches": [
+        "Recruitment Drive"
+      ],
+      "steps": 43,
+      "literalCoordinates": 13,
+      "branches": 36,
+      "issues": 55,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/recruitmentdrive/SirRenItchoodStep.java",
+      "className": "SirRenItchoodStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 4,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 3,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/regicide/Regicide.java",
+      "className": "Regicide",
+      "entryIds": [
+        "REGICIDE"
+      ],
+      "questMatches": [
+        "Regicide"
+      ],
+      "steps": 77,
+      "literalCoordinates": 62,
+      "branches": 98,
+      "issues": 59,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/romeoandjuliet/RomeoAndJuliet.java",
+      "className": "RomeoAndJuliet",
+      "entryIds": [
+        "ROMEO__JULIET"
+      ],
+      "questMatches": [
+        "Romeo & Juliet"
+      ],
+      "steps": 11,
+      "literalCoordinates": 11,
+      "branches": 5,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/rovingelves/RovingElves.java",
+      "className": "RovingElves",
+      "entryIds": [
+        "ROVING_ELVES"
+      ],
+      "questMatches": [
+        "Roving Elves"
+      ],
+      "steps": 14,
+      "literalCoordinates": 12,
+      "branches": 9,
+      "issues": 12,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/royaltrouble/RoyalTrouble.java",
+      "className": "RoyalTrouble",
+      "entryIds": [
+        "ROYAL_TROUBLE"
+      ],
+      "questMatches": [
+        "Royal Trouble"
+      ],
+      "steps": 92,
+      "literalCoordinates": 81,
+      "branches": 86,
+      "issues": 13,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/rumdeal/RumDeal.java",
+      "className": "RumDeal",
+      "entryIds": [
+        "RUM_DEAL"
+      ],
+      "questMatches": [
+        "Rum Deal"
+      ],
+      "steps": 44,
+      "literalCoordinates": 40,
+      "branches": 73,
+      "issues": 5,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/rumdeal/SlugSteps.java",
+      "className": "SlugSteps",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 11,
+      "literalCoordinates": 11,
+      "branches": 9,
+      "issues": 5,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/runemysteries/RuneMysteries.java",
+      "className": "RuneMysteries",
+      "entryIds": [
+        "RUNE_MYSTERIES"
+      ],
+      "questMatches": [
+        "Rune Mysteries"
+      ],
+      "steps": 12,
+      "literalCoordinates": 12,
+      "branches": 9,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/scorpioncatcher/ScorpionCatcher.java",
+      "className": "ScorpionCatcher",
+      "entryIds": [
+        "SCORPION_CATCHER"
+      ],
+      "questMatches": [
+        "Scorpion Catcher"
+      ],
+      "steps": 19,
+      "literalCoordinates": 15,
+      "branches": 17,
+      "issues": 10,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/scrambled/EggSolver.java",
+      "className": "EggSolver",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 2,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 4,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/scrambled/Scrambled.java",
+      "className": "Scrambled",
+      "entryIds": [
+        "SCRAMBLED"
+      ],
+      "questMatches": [
+        "Scrambled!"
+      ],
+      "steps": 46,
+      "literalCoordinates": 42,
+      "branches": 42,
+      "issues": 42,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/seaslug/SeaSlug.java",
+      "className": "SeaSlug",
+      "entryIds": [
+        "SEA_SLUG"
+      ],
+      "questMatches": [
+        "Sea Slug"
+      ],
+      "steps": 25,
+      "literalCoordinates": 22,
+      "branches": 18,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/secretsofthenorth/ArrowChestPuzzleStep.java",
+      "className": "ArrowChestPuzzleStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/secretsofthenorth/AskAboutRitual.java",
+      "className": "AskAboutRitual",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/secretsofthenorth/SecretsOfTheNorth.java",
+      "className": "SecretsOfTheNorth",
+      "entryIds": [
+        "SECRETS_OF_THE_NORTH"
+      ],
+      "questMatches": [
+        "Secrets of the North"
+      ],
+      "steps": 80,
+      "literalCoordinates": 61,
+      "branches": 70,
+      "issues": 34,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/secretsofthenorth/SolveChestCode.java",
+      "className": "SolveChestCode",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/secretsofthenorth/SolveDoorCode.java",
+      "className": "SolveDoorCode",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/secretsofthenorth/TellAboutMurder.java",
+      "className": "TellAboutMurder",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/shadesofmortton/ShadesOfMortton.java",
+      "className": "ShadesOfMortton",
+      "entryIds": [
+        "SHADES_OF_MORTTON"
+      ],
+      "questMatches": [
+        "Shades of Mort'ton"
+      ],
+      "steps": 26,
+      "literalCoordinates": 23,
+      "branches": 16,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/shadowofthestorm/IncantationStep.java",
+      "className": "IncantationStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/shadowofthestorm/ShadowOfTheStorm.java",
+      "className": "ShadowOfTheStorm",
+      "entryIds": [
+        "SHADOW_OF_THE_STORM"
+      ],
+      "questMatches": [
+        "Shadow of the Storm"
+      ],
+      "steps": 50,
+      "literalCoordinates": 38,
+      "branches": 41,
+      "issues": 18,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/shadowsofcustodia/ShadowsOfCustodia.java",
+      "className": "ShadowsOfCustodia",
+      "entryIds": [
+        "SHADOWS_OF_CUSTODIA"
+      ],
+      "questMatches": [
+        "Shadows of Custodia"
+      ],
+      "steps": 23,
+      "literalCoordinates": 19,
+      "branches": 11,
+      "issues": 17,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/sheepherder/SheepHerder.java",
+      "className": "SheepHerder",
+      "entryIds": [
+        "SHEEP_HERDER"
+      ],
+      "questMatches": [
+        "Sheep Herder"
+      ],
+      "steps": 12,
+      "literalCoordinates": 11,
+      "branches": 9,
+      "issues": 52,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/sheepshearer/SheepShearer.java",
+      "className": "SheepShearer",
+      "entryIds": [
+        "SHEEP_SHEARER"
+      ],
+      "questMatches": [
+        "Sheep Shearer"
+      ],
+      "steps": 7,
+      "literalCoordinates": 7,
+      "branches": 5,
+      "issues": 7,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/shieldofarrav/ShieldOfArravBlackArmGang.java",
+      "className": "ShieldOfArravBlackArmGang",
+      "entryIds": [
+        "SHIELD_OF_ARRAV_BLACK_ARM_GANG"
+      ],
+      "questMatches": [],
+      "steps": 19,
+      "literalCoordinates": 15,
+      "branches": 15,
+      "issues": 8,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/shieldofarrav/ShieldOfArravPhoenixGang.java",
+      "className": "ShieldOfArravPhoenixGang",
+      "entryIds": [
+        "SHIELD_OF_ARRAV_PHOENIX_GANG"
+      ],
+      "questMatches": [],
+      "steps": 18,
+      "literalCoordinates": 15,
+      "branches": 12,
+      "issues": 10,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/shilovillage/ShiloVillage.java",
+      "className": "ShiloVillage",
+      "entryIds": [
+        "SHILO_VILLAGE"
+      ],
+      "questMatches": [
+        "Shilo Village"
+      ],
+      "steps": 30,
+      "literalCoordinates": 24,
+      "branches": 25,
+      "issues": 23,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/sinsofthefather/DoorPuzzleStep.java",
+      "className": "DoorPuzzleStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 1,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 42,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/sinsofthefather/SinsOfTheFather.java",
+      "className": "SinsOfTheFather",
+      "entryIds": [
+        "SINS_OF_THE_FATHER"
+      ],
+      "questMatches": [
+        "Sins of the Father"
+      ],
+      "steps": 98,
+      "literalCoordinates": 83,
+      "branches": 47,
+      "issues": 10,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/sinsofthefather/ValveStep.java",
+      "className": "ValveStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 6,
+      "literalCoordinates": 5,
+      "branches": 0,
+      "issues": 12,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/sleepinggiants/SleepingGiants.java",
+      "className": "SleepingGiants",
+      "entryIds": [
+        "SLEEPING_GIANTS"
+      ],
+      "questMatches": [
+        "Sleeping Giants"
+      ],
+      "steps": 37,
+      "literalCoordinates": 17,
+      "branches": 37,
+      "issues": 18,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/songoftheelves/AmloddLightPuzzle.java",
+      "className": "AmloddLightPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 27,
+      "literalCoordinates": 26,
+      "branches": 4,
+      "issues": 4,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/songoftheelves/BaxtorianPillar.java",
+      "className": "BaxtorianPillar",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 2,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 5,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/songoftheelves/BaxtorianPuzzle.java",
+      "className": "BaxtorianPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 11,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/songoftheelves/CadarnLightPuzzle.java",
+      "className": "CadarnLightPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 10,
+      "literalCoordinates": 9,
+      "branches": 0,
+      "issues": 3,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/songoftheelves/CrwysLightPuzzle.java",
+      "className": "CrwysLightPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 20,
+      "literalCoordinates": 20,
+      "branches": 6,
+      "issues": 4,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/songoftheelves/HefinLightPuzzle.java",
+      "className": "HefinLightPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 37,
+      "literalCoordinates": 35,
+      "branches": 26,
+      "issues": 12,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/songoftheelves/IorwerthLightPuzzle.java",
+      "className": "IorwerthLightPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 54,
+      "literalCoordinates": 53,
+      "branches": 46,
+      "issues": 11,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/songoftheelves/MeilyrLightPuzzle.java",
+      "className": "MeilyrLightPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 36,
+      "literalCoordinates": 35,
+      "branches": 26,
+      "issues": 10,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/songoftheelves/SongOfTheElves.java",
+      "className": "SongOfTheElves",
+      "entryIds": [
+        "SONG_OF_THE_ELVES"
+      ],
+      "questMatches": [
+        "Song of the Elves"
+      ],
+      "steps": 167,
+      "literalCoordinates": 155,
+      "branches": 134,
+      "issues": 59,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/songoftheelves/TrahaearnLightPuzzle.java",
+      "className": "TrahaearnLightPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 41,
+      "literalCoordinates": 41,
+      "branches": 25,
+      "issues": 7,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/spiritsoftheelid/SpiritsOfTheElid.java",
+      "className": "SpiritsOfTheElid",
+      "entryIds": [
+        "SPIRITS_OF_THE_ELID"
+      ],
+      "questMatches": [
+        "Spirits of the Elid"
+      ],
+      "steps": 27,
+      "literalCoordinates": 24,
+      "branches": 20,
+      "issues": 7,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/swansong/FishMonkfish.java",
+      "className": "FishMonkfish",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 3,
+      "literalCoordinates": 3,
+      "branches": 0,
+      "issues": 3,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/swansong/FixWall.java",
+      "className": "FixWall",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 6,
+      "literalCoordinates": 6,
+      "branches": 0,
+      "issues": 3,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/swansong/SwanSong.java",
+      "className": "SwanSong",
+      "entryIds": [
+        "SWAN_SONG"
+      ],
+      "questMatches": [
+        "Swan Song"
+      ],
+      "steps": 22,
+      "literalCoordinates": 21,
+      "branches": 10,
+      "issues": 12,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/taibwowannaitrio/TaiBwoWannaiTrio.java",
+      "className": "TaiBwoWannaiTrio",
+      "entryIds": [
+        "TAI_BWO_WANNAI_TRIO"
+      ],
+      "questMatches": [
+        "Tai Bwo Wannai Trio"
+      ],
+      "steps": 42,
+      "literalCoordinates": 15,
+      "branches": 38,
+      "issues": 64,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/taleoftherighteous/TaleOfTheRighteous.java",
+      "className": "TaleOfTheRighteous",
+      "entryIds": [
+        "TALE_OF_THE_RIGHTEOUS"
+      ],
+      "questMatches": [
+        "Tale of the Righteous"
+      ],
+      "steps": 35,
+      "literalCoordinates": 30,
+      "branches": 19,
+      "issues": 8,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/tearsofguthix/TearsOfGuthix.java",
+      "className": "TearsOfGuthix",
+      "entryIds": [
+        "TEARS_OF_GUTHIX"
+      ],
+      "questMatches": [
+        "Tears of Guthix"
+      ],
+      "steps": 8,
+      "literalCoordinates": 7,
+      "branches": 7,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/templeofikov/TempleOfIkov.java",
+      "className": "TempleOfIkov",
+      "entryIds": [
+        "TEMPLE_OF_IKOV"
+      ],
+      "questMatches": [
+        "Temple of Ikov"
+      ],
+      "steps": 30,
+      "literalCoordinates": 24,
+      "branches": 52,
+      "issues": 11,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/templeoftheeye/RuneEnergyStep.java",
+      "className": "RuneEnergyStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 6,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/templeoftheeye/RunicEnergy.java",
+      "className": "RunicEnergy",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/templeoftheeye/TempleOfTheEye.java",
+      "className": "TempleOfTheEye",
+      "entryIds": [
+        "TEMPLE_OF_THE_EYE"
+      ],
+      "questMatches": [
+        "Temple of the Eye"
+      ],
+      "steps": 41,
+      "literalCoordinates": 35,
+      "branches": 32,
+      "issues": 17,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theascentofarceuus/TheAscentOfArceuus.java",
+      "className": "TheAscentOfArceuus",
+      "entryIds": [
+        "THE_ASCENT_OF_ARCEUUS"
+      ],
+      "questMatches": [
+        "The Ascent of Arceuus"
+      ],
+      "steps": 24,
+      "literalCoordinates": 24,
+      "branches": 13,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thebloodmoonrises/CastleDrakan.java",
+      "className": "CastleDrakan",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 142,
+      "literalCoordinates": 108,
+      "branches": 89,
+      "issues": 264,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thebloodmoonrises/CastleDrakanActionStep.java",
+      "className": "CastleDrakanActionStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 1,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thebloodmoonrises/CastleDrakanGoalStep.java",
+      "className": "CastleDrakanGoalStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thebloodmoonrises/CastleDrakanRoomNetwork.java",
+      "className": "CastleDrakanRoomNetwork",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 3,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 17,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thebloodmoonrises/CastleDrakanRoomStep.java",
+      "className": "CastleDrakanRoomStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 3,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thebloodmoonrises/DrakanClockSolver.java",
+      "className": "DrakanClockSolver",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 5,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 13,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thebloodmoonrises/GildedBookPuzzle.java",
+      "className": "GildedBookPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 4,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thebloodmoonrises/TheBloodMoonRises.java",
+      "className": "TheBloodMoonRises",
+      "entryIds": [
+        "THE_BLOOD_MOON_RISES"
+      ],
+      "questMatches": [
+        "The Blood Moon Rises"
+      ],
+      "steps": 206,
+      "literalCoordinates": 142,
+      "branches": 246,
+      "issues": 183,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thebloodmoonrises/treesolvers/TreeSolver.java",
+      "className": "TreeSolver",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 2,
+      "literalCoordinates": 0,
+      "branches": 1,
+      "issues": 4,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thebloodmoonrises/treesolvers/TreeSolver1.java",
+      "className": "TreeSolver1",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thebloodmoonrises/treesolvers/TreeSolver2.java",
+      "className": "TreeSolver2",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thebloodmoonrises/treesolvers/TreeSolver3.java",
+      "className": "TreeSolver3",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thebloodmoonrises/treesolvers/TreeSolver4.java",
+      "className": "TreeSolver4",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thebloodmoonrises/treesolvers/TreeSolver5.java",
+      "className": "TreeSolver5",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thebloodmoonrises/treesolvers/TreeSolver6.java",
+      "className": "TreeSolver6",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thebloodmoonrises/treesolvers/TreeType.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thecorsaircurse/TheCorsairCurse.java",
+      "className": "TheCorsairCurse",
+      "entryIds": [
+        "THE_CORSAIR_CURSE"
+      ],
+      "questMatches": [
+        "The Corsair Curse"
+      ],
+      "steps": 53,
+      "literalCoordinates": 52,
+      "branches": 42,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thecurseofarrav/MetalDoorSolver.java",
+      "className": "MetalDoorSolver",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 7,
+      "literalCoordinates": 1,
+      "branches": 11,
+      "issues": 21,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thecurseofarrav/TheCurseOfArrav.java",
+      "className": "TheCurseOfArrav",
+      "entryIds": [
+        "THE_CURSE_OF_ARRAV"
+      ],
+      "questMatches": [
+        "The Curse of Arrav"
+      ],
+      "steps": 57,
+      "literalCoordinates": 45,
+      "branches": 95,
+      "issues": 50,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thecurseofarrav/TilePuzzleSolver.java",
+      "className": "TilePuzzleSolver",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 3,
+      "literalCoordinates": 3,
+      "branches": 0,
+      "issues": 3,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thecurseofarrav/rubblesolvers/RubbleSolver.java",
+      "className": "RubbleSolver",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 2,
+      "literalCoordinates": 0,
+      "branches": 1,
+      "issues": 3,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thecurseofarrav/rubblesolvers/RubbleSolverFour.java",
+      "className": "RubbleSolverFour",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thecurseofarrav/rubblesolvers/RubbleSolverOne.java",
+      "className": "RubbleSolverOne",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thecurseofarrav/rubblesolvers/RubbleSolverThree.java",
+      "className": "RubbleSolverThree",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thecurseofarrav/rubblesolvers/RubbleSolverTwo.java",
+      "className": "RubbleSolverTwo",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thecurseofarrav/rubblesolvers/RubbleType.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thedepthsofdespair/TheDepthsOfDespair.java",
+      "className": "TheDepthsOfDespair",
+      "entryIds": [
+        "THE_DEPTHS_OF_DESPAIR"
+      ],
+      "questMatches": [
+        "The Depths of Despair"
+      ],
+      "steps": 14,
+      "literalCoordinates": 9,
+      "branches": 8,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thedigsite/TheDigSite.java",
+      "className": "TheDigSite",
+      "entryIds": [
+        "THE_DIG_SITE"
+      ],
+      "questMatches": [
+        "The Dig Site"
+      ],
+      "steps": 59,
+      "literalCoordinates": 52,
+      "branches": 60,
+      "issues": 21,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theeyesofglouphrie/PuzzleStep.java",
+      "className": "PuzzleStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 9,
+      "literalCoordinates": 2,
+      "branches": 0,
+      "issues": 50,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theeyesofglouphrie/TheEyesOfGlouphrie.java",
+      "className": "TheEyesOfGlouphrie",
+      "entryIds": [
+        "THE_EYES_OF_GLOUPHRIE"
+      ],
+      "questMatches": [
+        "The Eyes of Glouphrie"
+      ],
+      "steps": 28,
+      "literalCoordinates": 24,
+      "branches": 22,
+      "issues": 6,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thefeud/TheFeud.java",
+      "className": "TheFeud",
+      "entryIds": [
+        "THE_FEUD"
+      ],
+      "questMatches": [
+        "The Feud"
+      ],
+      "steps": 47,
+      "literalCoordinates": 33,
+      "branches": 27,
+      "issues": 8,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thefinaldawn/TheFinalDawn.java",
+      "className": "TheFinalDawn",
+      "entryIds": [
+        "THE_FINAL_DAWN"
+      ],
+      "questMatches": [
+        "The Final Dawn"
+      ],
+      "steps": 144,
+      "literalCoordinates": 121,
+      "branches": 146,
+      "issues": 203,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theforsakentower/AltarPuzzle.java",
+      "className": "AltarPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 27,
+      "literalCoordinates": 6,
+      "branches": 0,
+      "issues": 10,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theforsakentower/JugPuzzle.java",
+      "className": "JugPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 19,
+      "literalCoordinates": 11,
+      "branches": 0,
+      "issues": 9,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theforsakentower/PotionPuzzle.java",
+      "className": "PotionPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 11,
+      "literalCoordinates": 8,
+      "branches": 0,
+      "issues": 19,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theforsakentower/PowerPuzzle.java",
+      "className": "PowerPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theforsakentower/TheForsakenTower.java",
+      "className": "TheForsakenTower",
+      "entryIds": [
+        "THE_FORSAKEN_TOWER"
+      ],
+      "questMatches": [
+        "The Forsaken Tower"
+      ],
+      "steps": 15,
+      "literalCoordinates": 14,
+      "branches": 14,
+      "issues": 6,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thefremennikexiles/TheFremennikExiles.java",
+      "className": "TheFremennikExiles",
+      "entryIds": [
+        "THE_FREMENNIK_EXILES"
+      ],
+      "questMatches": [
+        "The Fremennik Exiles"
+      ],
+      "steps": 44,
+      "literalCoordinates": 36,
+      "branches": 36,
+      "issues": 35,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thefremennikisles/KillTrolls.java",
+      "className": "KillTrolls",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thefremennikisles/TheFremennikIsles.java",
+      "className": "TheFremennikIsles",
+      "entryIds": [
+        "THE_FREMENNIK_ISLES"
+      ],
+      "questMatches": [
+        "The Fremennik Isles"
+      ],
+      "steps": 58,
+      "literalCoordinates": 54,
+      "branches": 65,
+      "issues": 19,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thefremenniktrials/CombinationPuzzle.java",
+      "className": "CombinationPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thefremenniktrials/TheFremennikTrials.java",
+      "className": "TheFremennikTrials",
+      "entryIds": [
+        "THE_FREMENNIK_TRIALS"
+      ],
+      "questMatches": [
+        "The Fremennik Trials"
+      ],
+      "steps": 163,
+      "literalCoordinates": 99,
+      "branches": 116,
+      "issues": 146,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thegardenofdeath/TheGardenOfDeath.java",
+      "className": "TheGardenOfDeath",
+      "entryIds": [
+        "THE_GARDEN_OF_DEATH"
+      ],
+      "questMatches": [
+        "The Garden of Death"
+      ],
+      "steps": 40,
+      "literalCoordinates": 17,
+      "branches": 31,
+      "issues": 23,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thegiantdwarf/TheGiantDwarf.java",
+      "className": "TheGiantDwarf",
+      "entryIds": [
+        "THE_GIANT_DWARF"
+      ],
+      "questMatches": [
+        "The Giant Dwarf"
+      ],
+      "steps": 32,
+      "literalCoordinates": 31,
+      "branches": 26,
+      "issues": 11,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thegolem/TheGolem.java",
+      "className": "TheGolem",
+      "entryIds": [
+        "THE_GOLEM"
+      ],
+      "questMatches": [
+        "The Golem"
+      ],
+      "steps": 34,
+      "literalCoordinates": 29,
+      "branches": 35,
+      "issues": 21,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thegrandtree/TheGrandTree.java",
+      "className": "TheGrandTree",
+      "entryIds": [
+        "THE_GRAND_TREE"
+      ],
+      "questMatches": [
+        "The Grand Tree"
+      ],
+      "steps": 44,
+      "literalCoordinates": 20,
+      "branches": 33,
+      "issues": 17,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thegreatbrainrobbery/TheGreatBrainRobbery.java",
+      "className": "TheGreatBrainRobbery",
+      "entryIds": [
+        "THE_GREAT_BRAIN_ROBBERY"
+      ],
+      "questMatches": [
+        "The Great Brain Robbery"
+      ],
+      "steps": 64,
+      "literalCoordinates": 53,
+      "branches": 52,
+      "issues": 117,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thehandinthesand/TheHandInTheSand.java",
+      "className": "TheHandInTheSand",
+      "entryIds": [
+        "THE_HAND_IN_THE_SAND"
+      ],
+      "questMatches": [
+        "The Hand in the Sand"
+      ],
+      "steps": 25,
+      "literalCoordinates": 22,
+      "branches": 9,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theheartofdarkness/ChestCodeStep.java",
+      "className": "ChestCodeStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theheartofdarkness/LockedChestPuzzle.java",
+      "className": "LockedChestPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 5,
+      "literalCoordinates": 1,
+      "branches": 0,
+      "issues": 13,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theheartofdarkness/StatueDetails.java",
+      "className": "StatueDetails",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theheartofdarkness/TheHeartOfDarkness.java",
+      "className": "TheHeartOfDarkness",
+      "entryIds": [
+        "THE_HEART_OF_DARKNESS"
+      ],
+      "questMatches": [
+        "The Heart of Darkness"
+      ],
+      "steps": 92,
+      "literalCoordinates": 77,
+      "branches": 84,
+      "issues": 159,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theidesofmilk/TheIdesOfMilk.java",
+      "className": "TheIdesOfMilk",
+      "entryIds": [
+        "THE_IDES_OF_MILK"
+      ],
+      "questMatches": [
+        "The Ides of Milk"
+      ],
+      "steps": 17,
+      "literalCoordinates": 15,
+      "branches": 5,
+      "issues": 5,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theknightssword/TheKnightsSword.java",
+      "className": "TheKnightsSword",
+      "entryIds": [
+        "THE_KNIGHTS_SWORD"
+      ],
+      "questMatches": [
+        "The Knight's Sword"
+      ],
+      "steps": 13,
+      "literalCoordinates": 13,
+      "branches": 6,
+      "issues": 15,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thelosttribe/TheLostTribe.java",
+      "className": "TheLostTribe",
+      "entryIds": [
+        "THE_LOST_TRIBE"
+      ],
+      "questMatches": [
+        "The Lost Tribe"
+      ],
+      "steps": 26,
+      "literalCoordinates": 24,
+      "branches": 35,
+      "issues": 21,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thepathofglouphrie/DiscInsertionStep.java",
+      "className": "DiscInsertionStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thepathofglouphrie/MonolithPuzzle.java",
+      "className": "MonolithPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 13,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 16,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thepathofglouphrie/Solution.java",
+      "className": "Solution",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 65,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thepathofglouphrie/ThePathOfGlouphrie.java",
+      "className": "ThePathOfGlouphrie",
+      "entryIds": [
+        "THE_PATH_OF_GLOUPHRIE"
+      ],
+      "questMatches": [
+        "The Path of Glouphrie"
+      ],
+      "steps": 2,
+      "literalCoordinates": 2,
+      "branches": 0,
+      "issues": 19,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thepathofglouphrie/YewnocksPuzzle.java",
+      "className": "YewnocksPuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 11,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 54,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thepathofglouphrie/sections/FindLongramble.java",
+      "className": "FindLongramble",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 5,
+      "literalCoordinates": 5,
+      "branches": 1,
+      "issues": 8,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thepathofglouphrie/sections/InformKingBolren.java",
+      "className": "InformKingBolren",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 9,
+      "literalCoordinates": 8,
+      "branches": 7,
+      "issues": 7,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thepathofglouphrie/sections/StartingOff.java",
+      "className": "StartingOff",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 6,
+      "literalCoordinates": 6,
+      "branches": 5,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thepathofglouphrie/sections/TheWarpedDepths.java",
+      "className": "TheWarpedDepths",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 11,
+      "literalCoordinates": 7,
+      "branches": 8,
+      "issues": 18,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thepathofglouphrie/sections/UnveilEvil.java",
+      "className": "UnveilEvil",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 11,
+      "literalCoordinates": 4,
+      "branches": 13,
+      "issues": 13,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thequeenofthieves/TheQueenOfThieves.java",
+      "className": "TheQueenOfThieves",
+      "entryIds": [
+        "THE_QUEEN_OF_THIEVES"
+      ],
+      "questMatches": [
+        "The Queen of Thieves"
+      ],
+      "steps": 18,
+      "literalCoordinates": 6,
+      "branches": 10,
+      "issues": 12,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theredreef/TheRedReef.java",
+      "className": "TheRedReef",
+      "entryIds": [
+        "THE_RED_REEF"
+      ],
+      "questMatches": [
+        "The Red Reef"
+      ],
+      "steps": 35,
+      "literalCoordinates": 32,
+      "branches": 34,
+      "issues": 14,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/therestlessghost/TheRestlessGhost.java",
+      "className": "TheRestlessGhost",
+      "entryIds": [
+        "THE_RESTLESS_GHOST"
+      ],
+      "questMatches": [
+        "The Restless Ghost"
+      ],
+      "steps": 10,
+      "literalCoordinates": 10,
+      "branches": 7,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theribbitingtaleofalilypadlabourdispute/TheRibbitingTaleOfALilyPadLabourDispute.java",
+      "className": "TheRibbitingTaleOfALilyPadLabourDispute",
+      "entryIds": [
+        "THE_RIBBITING_TALE_OF_A_LILY_PAD_LABOUR_DISPUTE"
+      ],
+      "questMatches": [
+        "The Ribbiting Tale of a Lily Pad Labour Dispute"
+      ],
+      "steps": 20,
+      "literalCoordinates": 17,
+      "branches": 3,
+      "issues": 5,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theslugmenace/PuzzleStep.java",
+      "className": "PuzzleStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/theslugmenace/TheSlugMenace.java",
+      "className": "TheSlugMenace",
+      "entryIds": [
+        "THE_SLUG_MENACE"
+      ],
+      "questMatches": [
+        "The Slug Menace"
+      ],
+      "steps": 32,
+      "literalCoordinates": 25,
+      "branches": 18,
+      "issues": 35,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/thetouristtrap/TheTouristTrap.java",
+      "className": "TheTouristTrap",
+      "entryIds": [
+        "THE_TOURIST_TRAP"
+      ],
+      "questMatches": [
+        "The Tourist Trap"
+      ],
+      "steps": 46,
+      "literalCoordinates": 44,
+      "branches": 43,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/throneofmiscellania/ThroneOfMiscellania.java",
+      "className": "ThroneOfMiscellania",
+      "entryIds": [
+        "THRONE_OF_MISCELLANIA"
+      ],
+      "questMatches": [
+        "Throne of Miscellania"
+      ],
+      "steps": 50,
+      "literalCoordinates": 44,
+      "branches": 59,
+      "issues": 22,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/toweroflife/PuzzleSolver.java",
+      "className": "PuzzleSolver",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 68,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/toweroflife/TowerOfLife.java",
+      "className": "TowerOfLife",
+      "entryIds": [
+        "TOWER_OF_LIFE"
+      ],
+      "questMatches": [
+        "Tower of Life"
+      ],
+      "steps": 45,
+      "literalCoordinates": 35,
+      "branches": 57,
+      "issues": 32,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/treegnomevillage/TreeGnomeVillage.java",
+      "className": "TreeGnomeVillage",
+      "entryIds": [
+        "TREE_GNOME_VILLAGE"
+      ],
+      "questMatches": [
+        "Tree Gnome Village"
+      ],
+      "steps": 23,
+      "literalCoordinates": 22,
+      "branches": 14,
+      "issues": 8,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/tribaltotem/PuzzleStep.java",
+      "className": "PuzzleStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/tribaltotem/TribalTotem.java",
+      "className": "TribalTotem",
+      "entryIds": [
+        "TRIBAL_TOTEM"
+      ],
+      "questMatches": [
+        "Tribal Totem"
+      ],
+      "steps": 13,
+      "literalCoordinates": 9,
+      "branches": 7,
+      "issues": 9,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/trollromance/TrollRomance.java",
+      "className": "TrollRomance",
+      "entryIds": [
+        "TROLL_ROMANCE"
+      ],
+      "questMatches": [
+        "Troll Romance"
+      ],
+      "steps": 28,
+      "literalCoordinates": 24,
+      "branches": 18,
+      "issues": 5,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/trollstronghold/TrollStronghold.java",
+      "className": "TrollStronghold",
+      "entryIds": [
+        "TROLL_STRONGHOLD"
+      ],
+      "questMatches": [
+        "Troll Stronghold"
+      ],
+      "steps": 27,
+      "literalCoordinates": 23,
+      "branches": 23,
+      "issues": 9,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/troubledtortugans/RepairTown.java",
+      "className": "RepairTown",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 16,
+      "literalCoordinates": 9,
+      "branches": 0,
+      "issues": 42,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/troubledtortugans/TroubledTortugans.java",
+      "className": "TroubledTortugans",
+      "entryIds": [
+        "TROUBLED_TORTUGANS"
+      ],
+      "questMatches": [
+        "Troubled Tortugans"
+      ],
+      "steps": 30,
+      "literalCoordinates": 24,
+      "branches": 16,
+      "issues": 15,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/twilightspromise/TwilightsPromise.java",
+      "className": "TwilightsPromise",
+      "entryIds": [
+        "TWILIGHTS_PROMISE"
+      ],
+      "questMatches": [
+        "Twilight's Promise"
+      ],
+      "steps": 36,
+      "literalCoordinates": 34,
+      "branches": 23,
+      "issues": 5,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/undergroundpass/UndergroundPass.java",
+      "className": "UndergroundPass",
+      "entryIds": [
+        "UNDERGROUND_PASS"
+      ],
+      "questMatches": [
+        "Underground Pass"
+      ],
+      "steps": 83,
+      "literalCoordinates": 71,
+      "branches": 89,
+      "issues": 34,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/vampyreslayer/VampyreSlayer.java",
+      "className": "VampyreSlayer",
+      "entryIds": [
+        "VAMPYRE_SLAYER"
+      ],
+      "questMatches": [
+        "Vampyre Slayer"
+      ],
+      "steps": 10,
+      "literalCoordinates": 9,
+      "branches": 8,
+      "issues": 8,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/wanted/Wanted.java",
+      "className": "Wanted",
+      "entryIds": [
+        "WANTED"
+      ],
+      "questMatches": [
+        "Wanted!"
+      ],
+      "steps": 52,
+      "literalCoordinates": 35,
+      "branches": 60,
+      "issues": 22,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/watchtower/SkavidChoice.java",
+      "className": "SkavidChoice",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 4,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/watchtower/Watchtower.java",
+      "className": "Watchtower",
+      "entryIds": [
+        "WATCHTOWER"
+      ],
+      "questMatches": [
+        "Watchtower"
+      ],
+      "steps": 80,
+      "literalCoordinates": 75,
+      "branches": 72,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/waterfallquest/WaterfallQuest.java",
+      "className": "WaterfallQuest",
+      "entryIds": [
+        "WATERFALL_QUEST"
+      ],
+      "questMatches": [
+        "Waterfall Quest"
+      ],
+      "steps": 28,
+      "literalCoordinates": 24,
+      "branches": 23,
+      "issues": 13,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/whatliesbelow/WhatLiesBelow.java",
+      "className": "WhatLiesBelow",
+      "entryIds": [
+        "WHAT_LIES_BELOW"
+      ],
+      "questMatches": [
+        "What Lies Below"
+      ],
+      "steps": 15,
+      "literalCoordinates": 14,
+      "branches": 3,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/whileguthixsleeps/DolmenType.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 28,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/whileguthixsleeps/HerblorePuzzle.java",
+      "className": "HerblorePuzzle",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 2,
+      "literalCoordinates": 1,
+      "branches": 0,
+      "issues": 4,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/whileguthixsleeps/StatueLocation.java",
+      "className": null,
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 0,
+      "literalCoordinates": 0,
+      "branches": 0,
+      "issues": 0,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/whileguthixsleeps/WeightStep.java",
+      "className": "WeightStep",
+      "entryIds": [],
+      "questMatches": [],
+      "steps": 10,
+      "literalCoordinates": 8,
+      "branches": 0,
+      "issues": 4,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/whileguthixsleeps/WhileGuthixSleeps.java",
+      "className": "WhileGuthixSleeps",
+      "entryIds": [
+        "WHILE_GUTHIX_SLEEPS"
+      ],
+      "questMatches": [
+        "While Guthix Sleeps"
+      ],
+      "steps": 204,
+      "literalCoordinates": 174,
+      "branches": 221,
+      "issues": 210,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/witchshouse/WitchsHouse.java",
+      "className": "WitchsHouse",
+      "entryIds": [
+        "WITCHS_HOUSE"
+      ],
+      "questMatches": [
+        "Witch's House"
+      ],
+      "steps": 18,
+      "literalCoordinates": 17,
+      "branches": 28,
+      "issues": 10,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/witchspotion/WitchsPotion.java",
+      "className": "WitchsPotion",
+      "entryIds": [
+        "WITCHS_POTION"
+      ],
+      "questMatches": [
+        "Witch's Potion"
+      ],
+      "steps": 4,
+      "literalCoordinates": 4,
+      "branches": 1,
+      "issues": 1,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/xmarksthespot/XMarksTheSpot.java",
+      "className": "XMarksTheSpot",
+      "entryIds": [
+        "X_MARKS_THE_SPOT"
+      ],
+      "questMatches": [
+        "X Marks the Spot"
+      ],
+      "steps": 8,
+      "literalCoordinates": 3,
+      "branches": 1,
+      "issues": 11,
+      "coverage": "STATIC_PARTIAL"
+    },
+    {
+      "sourcePath": "src/main/java/com/questhelper/helpers/quests/zogreflesheaters/ZogreFleshEaters.java",
+      "className": "ZogreFleshEaters",
+      "entryIds": [
+        "ZOGRE_FLESH_EATERS"
+      ],
+      "questMatches": [
+        "Zogre Flesh Eaters"
+      ],
+      "steps": 40,
+      "literalCoordinates": 38,
+      "branches": 31,
+      "issues": 2,
+      "coverage": "STATIC_PARTIAL"
+    }
+  ],
+  "catalogueSha256": "06947c83ef24b6fa0cf50fb51f43f31a6741ccc4b790da6817cf83b2401335ad",
+  "catalogueBytes": 49093979
+}

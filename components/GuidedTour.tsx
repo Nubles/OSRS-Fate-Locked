@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ArrowRight, ArrowLeft, Compass } from 'lucide-react';
+import { X, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Compass } from './OsrsIcon';
 
 /**
  * A replayable, spotlight-style guided tour. Each step highlights a real element

@@ -36,7 +36,7 @@ export const narrate = (e: LogEntry): string => {
 export interface Milestone {
   index: number;
   label: string;
-  emoji: string;
+  image: string;
 }
 
 // Walk history once and pick out moments that feel important enough to
@@ -51,19 +51,19 @@ export const detectMilestones = (history: LogEntry[]): Milestone[] => {
     if (e.type === 'ROLL_OMNI' || e.type === 'ROLL_SUCCESS' || e.type === 'ROLL_FAIL' || e.type === 'PITY') {
       rollCount += 1;
     }
-    const push = (label: string, emoji: string) => out.push({ index: i, label, emoji });
+    const push = (label: string, image: string) => out.push({ index: i, label, image });
 
-    if (i === 0) push('First fate cast', '🌀');
-    if (e.type === 'ROLL_OMNI' && !seen.has('omni')) { seen.add('omni'); push('First Omni-Key!', '✨'); }
-    if (e.type === 'PITY' && !seen.has('pity')) { seen.add('pity'); push('First Pity Key', '🛡️'); }
-    if (e.type === 'ROLL_SUCCESS' && !seen.has('success')) { seen.add('success'); push('First Key earned', '🗝️'); }
-    if (e.type === 'UNLOCK' && !seen.has('unlock')) { seen.add('unlock'); push(`First unlock: ${e.meta?.item ?? '?'}`, '🔓'); }
-    if (e.type === 'LEVEL_UP' && !seen.has('level')) { seen.add('level'); push('First level up', '📈'); }
-    if (e.type === 'XTREME_MILESTONE') push('Xtreme milestone key', '🌟');
-    if (e.type === 'ALTAR' && !seen.has('altar')) { seen.add('altar'); push('First ritual performed', '🕯️'); }
+    if (i === 0) push('First fate cast', 'Mind_rune.png');
+    if (e.type === 'ROLL_OMNI' && !seen.has('omni')) { seen.add('omni'); push('First Omni-Key!', 'Crystal_key.png'); }
+    if (e.type === 'PITY' && !seen.has('pity')) { seen.add('pity'); push('First Pity Key', 'Shield_slot.png'); }
+    if (e.type === 'ROLL_SUCCESS' && !seen.has('success')) { seen.add('success'); push('First Key earned', 'Brass_key.png'); }
+    if (e.type === 'UNLOCK' && !seen.has('unlock')) { seen.add('unlock'); push(`First unlock: ${e.meta?.item ?? '?'}`, 'Brass_key.png'); }
+    if (e.type === 'LEVEL_UP' && !seen.has('level')) { seen.add('level'); push('First level up', 'Stats_icon.png'); }
+    if (e.type === 'XTREME_MILESTONE') push('Xtreme milestone key', 'Crystal_key.png');
+    if (e.type === 'ALTAR' && !seen.has('altar')) { seen.add('altar'); push('First ritual performed', 'Lit_candle.png'); }
     if (rollCount > 0 && rollCount % 100 === 0 && !seen.has(`r${rollCount}`)) {
       seen.add(`r${rollCount}`);
-      push(`${rollCount} rolls cast`, '🎲');
+      push(`${rollCount} rolls cast`, 'Mind_rune.png');
     }
   }
   return out;

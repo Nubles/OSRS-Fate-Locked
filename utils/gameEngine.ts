@@ -9,6 +9,7 @@ import { getActivityAccess } from './activityAccess';
 import { canonicalAreaName } from '../data/areaMapPolicy';
 import { bankLocksActive, isAreaReachable } from './reachability';
 import type { GameModeRules } from '../config/gameModes';
+import { ROLLABLE_POH_ITEMS } from '../data/items';
 
 /** The same tables and eligible entries drive rolls and their displayed odds. */
 export const randomUnlockTables = (mode?: string, custom?: GameModeRules): TableType[] => [
@@ -36,7 +37,7 @@ export const checkUnlockAvailability = (unlocks: UnlockState) => {
         chunks: ALL_CHUNK_KEYS.some(key => isFrontierChunk(key, unlocks.chunks ?? [], unlocks)),
         mobility: unlocks.mobility.length < MOBILITY_LIST.length,
         arcana: unlocks.arcana.length < ARCANA_LIST.length,
-        poh: unlocks.housing.length < POH_LIST.length,
+        poh: ROLLABLE_POH_ITEMS.some(item => !unlocks.housing.includes(item)),
         merchants: unlocks.merchants.length < MERCHANTS_LIST.length,
         minigames: unlocks.minigames.length < MINIGAMES_LIST.length,
         bosses: unlocks.bosses.length < BOSSES_LIST.length,
@@ -154,7 +155,7 @@ export const getPoolAndStateKey = (table: TableType) => {
         case TableType.REGIONS: return { pool: REGIONS_LIST, stateKey: 'region' };
         case TableType.MOBILITY: return { pool: MOBILITY_LIST, stateKey: 'mobility' };
         case TableType.ARCANA: return { pool: ARCANA_LIST, stateKey: 'arcana' };
-        case TableType.POH: return { pool: POH_LIST, stateKey: 'housing' };
+        case TableType.POH: return { pool: ROLLABLE_POH_ITEMS, stateKey: 'housing' };
         case TableType.MERCHANTS: return { pool: MERCHANTS_LIST, stateKey: 'merchants' };
         case TableType.MINIGAMES: return { pool: MINIGAMES_LIST, stateKey: 'minigame' };
         case TableType.BOSSES: return { pool: BOSSES_LIST, stateKey: 'boss' };

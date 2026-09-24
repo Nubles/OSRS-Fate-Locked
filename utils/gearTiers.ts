@@ -1,14 +1,7 @@
 /**
- * Derives an "estimated tier" (1..EQUIPMENT_TIER_MAX) for every real item, per
- * slot, so real gear can be gated by the fate-lock tier the player has unlocked.
- *
- * There's no canonical item→tier map in OSRS, so we compute a transparent power
- * score from each item's bonuses and split each slot's items into equal-sized
- * quantile buckets. This is automatic (no manual data), monotonic (a stronger
- * item never lands in a lower tier than a weaker one in the same slot), and the
- * weights live here so the mapping can be retuned without touching the UI.
- *
- * Pure + tested.
+ * Fate equipment tiers are a custom ruleset, not OSRS equip-level bands.
+ * Reviewed item families follow the Codex material ladder. Unreviewed items
+ * receive an explicitly labelled estimate from the catalogue's stat anchors.
  */
 
 import { GearBonuses } from './gearStats';
@@ -18,13 +11,13 @@ import { EQUIPMENT_TIER_MAX } from '../config/rules';
  * Canonical material → tier, mirroring the Codex's "Equipment Tiers" table so
  * the two views agree (Rune = T5, Dragon = T6, Barrows = T7, …). Matches by item
  * name. Returns null for items whose material we can't recognise (uniques,
- * cosmetics, quest items) — the caller then falls back to the power-score
- * quantile estimate. Rules are ordered most-specific / highest-tier first so
+ * cosmetics, quest items) — the caller then falls back to the stat-anchor
+ * estimate. Rules are ordered most-specific / highest-tier first so
  * ambiguous words resolve correctly (e.g. "Black d'hide" → T7 before plain
  * "Black" metal → T2; "Dragon hunter" → T9 before plain "Dragon" → T6).
  *
  * Codex reference (keep in sync with components/ReferenceModal.tsx):
- *   T1 Bronze/Iron/Leather  T2 Steel/Black/Studded  T3 Mithril/Initiate
+ *   T1 Bronze/Iron/Leather  T2 Steel/Black/White/Studded  T3 Mithril/Initiate
  *   T4 Adamant/Green d'hide  T5 Rune/Blue d'hide  T6 Dragon/Red d'hide/Magic bow
  *   T7 Barrows/Black d'hide/Obsidian  T8 God Wars/Zenyte/Trident  T9 Raids/Endgame
  */
@@ -34,6 +27,106 @@ import { EQUIPMENT_TIER_MAX } from '../config/rules';
  * ordered most-specific first (e.g. "(i)" / "elite" variants before the base).
  */
 const NAMED_TIERS: [RegExp, number][] = [
+  // Reviewed quest equipment: The Restless Ghost requires wearing it.
+  [/^ghostspeak amulet$/, 1],
+  // Quest props, unenchanted jewellery and cosmetic rewards have no combat
+  // family, even when their name contains a god, metal or high-end weapon.
+  [/^(?:armadyl pendant|dark bow tie|dragon necklace|robe of elidinis \((?:top|bottom)\)|rune satchel|steel coffin|ring of 3rd age|zenyte (?:amulet|bracelet|necklace|ring))$/, 1],
+  [/^(?:bronze|iron|steel|mithril|adamant|rune|dragon) (?:dragon mask|staff of collection)$/, 1],
+  [/^collection log \(|^crate of (?:adamantite ore|mithril ore|steel bars|xerician fabrics)$| max hood$|^(?:demonic pacts|raging echoes|shattered relics|trailblazer(?: reloaded)?|twisted) (?:bronze|iron|steel|mithril|adamant|rune|dragon) trophy$/, 1],
+
+  // Basic elemental staves have the same magic accuracy and no equip-level
+  // requirement. Melee bonuses must not split them across combat-style anchors.
+  // https://oldschool.runescape.wiki/w/Elemental_staves
+  [/^(?:staff|magic staff|staff of (?:air|water|earth|fire|bob the cat))$/, 1],
+  // Pin the progression instead of guessing from magic accuracy or melee hits.
+  [/^battlestaff$/, 3],
+  [/^(?:air|water|earth|fire|lava|mud|steam|smoke|mist|dust) battlestaff(?: \(or\))?$/, 4],
+  [/^beginner wand$/, 2],
+  [/^apprentice wand$/, 3],
+  [/^teacher wand$/, 4],
+  [/^master wand$/, 6],
+  [/^kodai wand$/, 9],
+  [/^(?:saradomin|guthix|zamorak) staff$/, 6],
+  [/^skull sceptre(?: \(i\))?$/, 1],
+  [/^warped sceptre$/, 6],
+  [/^(?:(?:blood|ice|shadow|smoke) )?ancient sceptre$/, 7],
+  [/^slayer's staff$/, 5],
+  [/^slayer's staff \(e\)$/, 7],
+  // Clue vestments share bonuses across gods. Names alone are not GWD gear.
+  [/^(?:ancient|armadyl|bandos|guthix|saradomin|zamorak) crozier$/, 4],
+  [/^(?:ancient|armadyl|bandos|guthix|saradomin|zamorak) (?:mitre|stole|cloak|robe top|robe legs)$/, 3],
+  [/^(?:ancient|armadyl|bandos|guthix|saradomin|zamorak|brassica|seren) halo$/, 1],
+  [/^damaged book \((?:ancient|armadyl|bandos|guthix|saradomin|zamorak)\)$/, 1],
+  // The custom Codex groups capes of accomplishment at T6.
+  [/^(?:agility|attack|construct\.|construction|cooking|crafting|defence|farming|firemaking|fishing|fletching|herblore|hitpoints|hunter|magic|mining|prayer|ranging|runecraft|runecrafting|sailing|slayer|smithing|strength|thieving|woodcutting|quest point|music|achievement diary|max) cape(?: \(t\))?$/, 6],
+  // Gem-tipped bolts retain the underlying metal tier, including enchantments.
+  // https://oldschool.runescape.wiki/w/Fletching#Tipped_bolts
+  [/^(?:opal|jade|pearl) bolts(?: \(e\))?$/, 1],
+  [/^topaz bolts(?: \(e\))?$/, 2],
+  [/^(?:sapphire|emerald) bolts(?: \(e\))?$/, 3],
+  [/^(?:ruby|diamond) bolts(?: \(e\))?$/, 4],
+  [/^(?:dragonstone|onyx) bolts(?: \(e\))?$/, 5],
+  [/^broad bolts$/, 4], // Same ranged strength as adamant bolts.
+  [/^amethyst broad bolts$/, 5], // Same ranged strength as rune bolts.
+  // Intermediate ammunition uses the upper neighbouring Fate material band.
+  [/^(?:seeking )?broad arrows$/, 4],
+  [/^(?:seeking )?amethyst (?:fire arrow|arrow|dart|javelin)$/, 6],
+  // Mechanic-based ranged families need explicit Fate progression; their
+  // area damage / ammunition-saving effects are absent from raw bonuses.
+  [/^chinchompa$/, 5],
+  [/^red chinchompa$/, 6],
+  [/^black chinchompa$/, 7],
+  [/^swamp lizard$/, 3],
+  [/^orange salamander$/, 4],
+  [/^red salamander$/, 6],
+  [/^black salamander$/, 7],
+  [/^tecu salamander$/, 8],
+  [/^ava's attractor$/, 3],
+  [/^(?:ava's accumulator|accumulator max cape)$/, 5],
+  [/^(?:ava's assembler|assembler max cape|masori assembler(?: max cape)?)$/, 7],
+  [/^(?:blessed )?dizana's (?:quiver|(?:max )?cape)$/, 9],
+  // Cosmetic max-cape combinations inherit the original cape's bonuses.
+  [/^infernal (?:max )?cape(?: \(l\))?$/, 9],
+  [/^(?:saradomin|guthix|zamorak) max cape(?: \(l\))?$/, 8],
+  [/^mythical max cape$/, 6],
+  [/^ardougne max cape$/, 6],
+  // Clue armour names often omit their underlying material entirely.
+  [/^(?:ancient|armadyl|bandos|guthix|saradomin|zamorak) (?:full helm|platebody|platelegs|plateskirt|kiteshield)$/, 5],
+  [/^dragonstone (?:full helm|platebody|platelegs|boots)$/, 5],
+  // Blessed dragonhide retains black-d'hide progression, with a Prayer bonus.
+  [/^(?:ancient|armadyl|bandos|guthix|saradomin|zamorak) (?:d'hide (?:body|boots|shield)|chaps|coif|bracers)$/, 7],
+  // Gilded d'hide follows green progression (same offense, higher defence).
+  [/^gilded d'hide (?:body|chaps|vambraces)$/, 4],
+  [/^gilded spade$|^dragon candle dagger$/, 1],
+  // Named reskins inherit their base items, including Prayer/charge variants.
+  [/^amulet of eternal glory$/, 4],
+  [/^strength amulet \(t\)$/, 3],
+  [/^enchanted (?:hat|top|robe)$/, 4],
+  [/^(?:hood|robe top|robe bottom|gloves|boots) of darkness$/, 4],
+  [/^rock-shell (?:helm|plate|legs)$/, 5],
+  [/^spined (?:helm|body|chaps)$/, 4],
+  // Spikes do not change the underlying dragonhide vambraces' ranged tier.
+  [/^green spiky vambraces$/, 4],
+  [/^blue spiky vambraces$/, 5],
+  [/^red spiky vambraces$/, 6],
+  [/^black spiky vambraces$/, 7],
+  // Colour and heraldic motifs do not make an item out of metal.
+  [/^(?:black cape|fremennik black cloak|black flowers)$/, 1],
+  [/^(?:blue |black )?wizard (?:hat|robe)(?: \([gt]\))?$|^black robe$/, 1],
+  [/^anti-dragon shield(?: \(nz\))?$/, 1],
+
+  // Cosmetic league variants keep the underlying equipment tier.
+  [/slayer helmet \(i\)|black mask \(i\)/, 7],
+  [/slayer helmet|black mask/, 6],
+  [/^radiant oathplate/, 8],
+  [/^cape of skulls$/, 7],
+  // Castle Wars melee sets are steel / mithril / adamant equivalents. Do not
+  // match the separate magic or ranged decorative sets.
+  [/^decorative (?:armour \(red (?:platebody|platelegs|plateskirt)\)|(?:full helm|helm|shield|boots|sword) \(red\))$/, 2],
+  [/^decorative (?:armour \(white (?:platebody|platelegs|plateskirt)\)|(?:full helm|helm|shield|boots|sword) \(white\))$/, 3],
+  [/^decorative (?:armour \(gold (?:platebody|platelegs|plateskirt)\)|(?:full helm|helm|shield|boots|sword) \(gold\))$/, 4],
+
   // weapons whose power comes from mechanics (speed/specs), not raw bonuses
   [/abyssal tentacle|abyssal bludgeon/, 8],
   [/abyssal whip|abyssal dagger/, 7],
@@ -56,7 +149,6 @@ const NAMED_TIERS: [RegExp, number][] = [
   [/calamity/, 8],
   [/sunfire fanatic/, 8],
   [/echo boots/, 8],
-  [/radiant oathplate/, 9],
   [/oathplate/, 8],
   [/(blood|blue|eclipse) moon/, 7],
   [/eclipse atlatl/, 7],
@@ -70,7 +162,7 @@ const NAMED_TIERS: [RegExp, number][] = [
   // junk Tourist Trap arrows with bogus dataset bonuses (really unusable)
   [/(barbed|blunt|bullet|field) arrow/, 1],
   // capes
-  [/infernal cape|tzhaar.?ket.?om/, 9],
+  [/infernal cape/, 9],
   [/fire (max )?cape/, 8],
   [/imbued .*cape|(saradomin|guthix|zamorak) cape|god cape/, 8],
   [/(ardougne cloak|mythical cape|cape of accomplishment)/, 6],
@@ -101,13 +193,11 @@ const NAMED_TIERS: [RegExp, number][] = [
   // head / body uniques
   [/neitiznot faceguard/, 9],
   [/serpentine helm|magma helm|tanzanite helm/, 8],
-  [/helm of neitiznot|fighter torso|justiciar faceguard/, 7],
+  [/helm of neitiznot|fighter torso/, 7],
   [/elite void/, 8],
   [/void (knight|melee|ranger|mage|seal)/, 7],
-  [/slayer helmet \(i\)|black mask \(i\)/, 7],
-  [/slayer helmet|black mask/, 6],
   [/proselyte/, 5],
-  [/gilded/, 5], // gilded armour = rune stats
+  [/^gilded (?:2h sword|axe|boots|chainbody|full helm|hasta|kiteshield|med helm|pickaxe|platebody|platelegs|plateskirt|scimitar|spear|sq shield)$/, 5], // Rune-equivalent pieces only
 ];
 
 /** God-name / decorative prefixes used by clue-scroll cosmetics. */
@@ -117,17 +207,16 @@ const COSMETIC_PREFIX = /(armadyl|bandos|saradomin|zamorak|guthix|ancient|gilded
  * Tier purely from a base material word (metal / dragonhide / bow wood / robe),
  * or null. Used both for the main ladder and to re-tier god-themed clue
  * cosmetics by what they actually are (e.g. "Armadyl d'hide" → standard d'hide,
- * not God Wars). Dragonhide without a colour (blessed / gilded sets) → T5.
+ * not God Wars). Blessed and gilded sets have explicit rules above.
  */
 const materialTier = (s: string): number | null => {
   const dh = '(d.?hide|dragonhide|dragon\\s*leather)';
   const bow = '(short|long|comp(osite)?)?\\s*bow';
-  // dragonhide by colour; uncoloured (blessed/god/gilded) → standard T5
+  // Dragonhide by colour; named blessed/gilded pieces are matched above.
   if (new RegExp(`black\\s*${dh}`).test(s)) return 7;
   if (new RegExp(`red\\s*${dh}`).test(s)) return 6;
   if (new RegExp(`blue\\s*${dh}`).test(s)) return 5;
   if (new RegExp(`green\\s*${dh}`).test(s)) return 4;
-  if (new RegExp(dh).test(s)) return 5;
   // bows by wood
   if (new RegExp(`magic\\s*${bow}`).test(s)) return 6;
   if (new RegExp(`yew\\s*${bow}`).test(s)) return 5;
@@ -140,13 +229,20 @@ const materialTier = (s: string): number | null => {
   if (/mystic/.test(s)) return 4;
   if (/xerician/.test(s)) return 3;
   if (/initiate/.test(s)) return 3;
+  // Heraldic motifs are decorations, not a second material.
+  const heraldicMetal = /^(steel|adamant|rune) (?:heraldic helm|kiteshield) \(/.exec(s)?.[1];
+  if (heraldicMetal) return { steel: 2, adamant: 4, rune: 5 }[heraldicMetal]!;
   // metals
-  if (/\bdragon\b/.test(s)) return 6;
+  if (/^dragon\b|\bdragon (?:bolts|arrow)\b/.test(s)) return 6;
   if (/\brun(e|ite)\b/.test(s)) return 5;
   if (/adamant(ite)?/.test(s)) return 4;
   if (/mithril/.test(s)) return 3;
   if (/steel/.test(s)) return 2;
-  if (/\bblack\b/.test(s)) return 2;
+  if (/^(?:elite )?black (?:2h sword|axe|battleaxe|boots|brutal|cane|chainbody|claws|dagger|dart|defender|felling axe|full helm|gloves|halberd|helm|kiteshield|knife|longsword|mace|med helm|pickaxe|platebody|platelegs|plateskirt|scimitar|shield|spear|sq shield|sword|warhammer)\b/.test(s)) return 2;
+  // White Knight equipment has black-equivalent stats plus Prayer. Match its
+  // actual pieces, not the colour alone (white aprons/berets are not metal).
+  // https://oldschool.runescape.wiki/w/White_equipment
+  if (/^white (dagger(?:\s*\(p\+{0,2}\))?|mace|claws|sword|longsword|scimitar|warhammer|battleaxe|2h sword|halberd|magic staff|med helm|full helm|sq shield|kiteshield|chainbody|platebody|plateskirt|platelegs|boots|gloves)$/.test(s)) return 2;
   if (/studded/.test(s)) return 2;
   if (/bronze|\biron\b|wooden|\bleather\b|hard leather|training/.test(s)) return 1;
   return null;
@@ -171,7 +267,7 @@ export const canonicalTierFromName = (name: string): number | null => {
   if (/(ancestral|torva|masori|twisted bow|scythe of vitur|sanguinesti|tumeken|justiciar|avernic|primordial|pegasian|eternal boot|dragon hunter|inquisitor|harmonised|volatile|eldritch|nightmare staff|venator|ultor|magus|bellator|lightbearer|elidinis|osmumten|virtus|zaryte)/.test(s)) return 9;
 
   // T8 — God Wars / Zenyte / high-end
-  if (/(bandos|armadyl|saradomin sword|saradomin's blessed|zamorakian|godsword|zenyte|amulet of anguish|necklace of anguish|amulet of torture|ring of suffering|tormented bracelet|occult|trident|staff of the dead|toxic staff|dragonfire|dragon warhammer|dragon claws|crystal (helm|body|legs|armour|bow|shield|halberd)|faerdhinen|brimstone ring)/.test(s)) return 8;
+  if (/(bandos|armadyl|saradomin sword|saradomin's blessed|zamorakian|godsword|zenyte|amulet of anguish|necklace of anguish|amulet of torture|ring of suffering|tormented bracelet|occult|trident of (?:the seas|the swamp)|staff of the dead|toxic staff|dragonfire|dragon warhammer|dragon claws|crystal (helm|body|legs|armour|bow|shield|halberd)|faerdhinen|brimstone ring)/.test(s)) return 8;
 
   // T7 — Barrows / Obsidian
   if (/(ahrim|karil|dharok|guthan|torag|verac|obsidian|tzhaar|toktz|tztok)/.test(s)) return 7;

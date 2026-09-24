@@ -19,6 +19,42 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-24-unlocks-and-guide-saves',
+    title: 'More Accurate Unlocks, Clearer Guides and Reliable Saves',
+    date: '2026-09-24',
+    sections: {
+      fixed: [
+        'Vanilla Doable, the Quest Journal and goal plans now use consistent area and requirement checks, including the Neck Tier 1 unlock for The Restless Ghost. Alternative routes and conditions needing confirmation stay visible.',
+        'Achievement Diary suggestions and completion now check required equipment, travel, spell and shop unlocks, including Draynor rooftop Agility and Thessalia\'s Clothes Shops permission. Valid alternatives and exceptions are preserved.',
+        'Sheep Shearer requires Crafting to spin wool, or confirmation that you already have 20 permitted balls of wool. Owned supplies can skip preparation without bypassing later quest requirements.',
+        'Corrected known quest, Slayer, activity, farming and housing requirements, including partial quest milestones, prerequisite quests and alternative entry routes.',
+        'All four basic elemental staves are Tier 1, and White Knight equipment shares Tier 2 with black. Reviewed material, cosmetic, ammunition and equipment-family variants now use consistent tiers; steel remains Tier 2.',
+        'Combat tools use corrected magic-damage units, preserve light, standard and heavy ranged defence, apply each melee potion boost to its own skill, and include magic prayer damage.',
+        'The Boss Planner and DPS Calculator offer attacks and stances supported by your equipped weapon. Weapons awaiting attack-option review show a checking message instead of a misleading estimate.',
+        'Resource plans check ingredient access and skill caps, use corrected recipes and potion doses, and distinguish raid-only supplies. Training advice and its guide links have been reviewed.',
+        'Banks, shops and activity access preserve their quest, diary and local entry requirements. Recognized merchant services, transport locations and resource map links have been corrected; unknown access stays marked for review.',
+        'Guide item and step checks now travel with profile backups. Restoring an earlier save restores its guide progress too, and failed saves or competing tabs use the normal recovery controls.',
+        'New Collection Log drops remain usable even when a browser retains older item mappings. Entries already identified as ambiguous keep their protection through backup, restore and transfer to another browser, while original counts are preserved.',
+        'Run-history checks account for ritual changes and valid low rolls. New seeded runs are independent of generated IDs and timestamps; existing seeded runs retain their original algorithm.',
+        'Restored legacy mode rules, included Sailing in automatic rolls, corrected Combat Achievement filters, and prevented outdated profile exports from overwriting a newly selected run.',
+        'Share cards use the same completion percentage as the dashboard. Retired Aquarium no longer blocks 100%, Quest Cape achievements exclude optional miniquests, and the journal no longer celebrates while quests or diary rewards remain.',
+        'Quest search totals match the filtered list. Share cards fit phone screens, retain keyboard focus, use a stable run ID and explain history checks as local checks with any replay warnings.',
+        'Map share cards support current and older saved layouts, restore unlock colouring, and wait for the map to draw before exporting. Failed rendering offers a retry.',
+        'Map content retains interior diary tasks, clue steps and ground spawns, with corrected entrances, Aldarin coverage, Family Crest locations and quest-start markers. Map and RuneLite permissions preserve pending confirmations, boss requirements and separate interior unlocks.',
+        'Chunked ownership and reachability use the correct area and free starting chunk; farming tree patches use their own unlock. These corrections do not change Vanilla into a connected-chunk mode.',
+      ],
+      changed: [
+        'RuneProof\'s five public guides now use one ordered walkthrough with an illustrated Still needed summary, named places and map links. Supporting details and coordinates are optional, and guide checkmarks remain separate from Journal completion and rewards.',
+        'Game content, feature icons, rivals and milestones use OSRS Wiki artwork in place of emoji and generic artwork, with matching imagery across navigation, planners and achievements.',
+        'Equipment and monster catalogues ship with each app version, so combat tools no longer depend on separate live downloads. Equipment variants and existing equipped item IDs are preserved.',
+        'RuneLite equipment permissions include reviewed tiers only. Unreviewed estimates remain labelled in the gear browser and no longer create definitive in-game equipment warnings.',
+        'Older ritual logs that lack exact costs are labelled as estimates. New ritual records retain their actual costs and rewards.',
+        'Collection Log updates detect new items without inventing saved progress IDs. New entries await a reviewed app update, while historical records remain preserved for review.',
+        'Manual online refresh requests a fresh Wise Old Man snapshot before reading the player data.',
+      ],
+    },
+  },
+  {
     id: '2026-09-21-content-and-access',
     title: 'More Complete Content and Access Checks',
     date: '2026-09-21',

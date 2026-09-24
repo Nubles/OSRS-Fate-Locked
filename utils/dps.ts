@@ -31,19 +31,23 @@ export const STANCES: Record<Style, Stance[]> = {
     { id: 'accurate', label: 'Accurate', atk: 3, str: 0, speedDelta: 0 },
     { id: 'aggressive', label: 'Aggressive', atk: 0, str: 3, speedDelta: 0 },
     { id: 'controlled', label: 'Controlled', atk: 1, str: 1, speedDelta: 0 },
+    { id: 'defensive', label: 'Defensive', atk: 0, str: 0, speedDelta: 0 },
   ],
   ranged: [
     { id: 'accurate', label: 'Accurate', atk: 3, str: 3, speedDelta: 0 },
     { id: 'rapid', label: 'Rapid', atk: 0, str: 0, speedDelta: -1 },
+    { id: 'longrange', label: 'Longrange', atk: 0, str: 0, speedDelta: 0 },
   ],
   magic: [
-    { id: 'standard', label: 'Standard', atk: 0, str: 0, speedDelta: 0 },
+    { id: 'standard', label: 'Manual / autocast', atk: 0, str: 0, speedDelta: 0 },
+    { id: 'longrange', label: 'Powered longrange', atk: 1, str: 0, speedDelta: 0 },
+    { id: 'defensive', label: 'Defensive', atk: 0, str: 0, speedDelta: 0 },
     { id: 'accurate', label: 'Accurate', atk: 3, str: 0, speedDelta: 0 },
   ],
 };
 
 // ── Prayers (multiplicative on the relevant level) ───────────────────────────
-export interface Prayer { id: string; label: string; atkMult: number; strMult: number }
+export interface Prayer { id: string; label: string; atkMult: number; strMult: number; magicDamagePct?: number }
 
 export const PRAYERS: Record<Style, Prayer[]> = {
   melee: [
@@ -59,8 +63,8 @@ export const PRAYERS: Record<Style, Prayer[]> = {
   ],
   magic: [
     { id: 'none', label: 'No prayer', atkMult: 1, strMult: 1 },
-    { id: 'mystic', label: 'Mystic Might', atkMult: 1.15, strMult: 1 },
-    { id: 'augury', label: 'Augury', atkMult: 1.25, strMult: 1 },
+    { id: 'mystic', label: 'Mystic Might', atkMult: 1.15, strMult: 1, magicDamagePct: 2 },
+    { id: 'augury', label: 'Augury', atkMult: 1.25, strMult: 1, magicDamagePct: 4 },
   ],
 };
 
@@ -165,12 +169,11 @@ export const computeDps = (input: DpsInput): DpsResult => {
   const atkBase = style === 'melee' ? levels.attack : style === 'ranged' ? levels.ranged : levels.magic;
   const strBase = style === 'melee' ? levels.strength : style === 'ranged' ? levels.ranged : levels.magic;
 
-  const boost = potionBoost(Math.max(atkBase, strBase), potion);
-  const effAtk = effectiveLevel(atkBase, prayer.atkMult, boost, stance.atk);
-  const effStr = effectiveLevel(strBase, prayer.strMult, boost, stance.str);
+  const effAtk = effectiveLevel(atkBase, prayer.atkMult, potionBoost(atkBase, potion), stance.atk);
+  const effStr = effectiveLevel(strBase, prayer.strMult, potionBoost(strBase, potion), stance.str);
 
   const maxHit = style === 'magic'
-    ? maxHitMagic(input.baseSpellMax, gear.magicDmgPct)
+    ? maxHitMagic(input.baseSpellMax, gear.magicDmgPct + (prayer.magicDamagePct ?? 0))
     : maxHitFromStr(effStr, style === 'ranged' ? gear.rangedStr : gear.meleeStr);
 
   const aRoll = attackRoll(effAtk, gear.accuracy);

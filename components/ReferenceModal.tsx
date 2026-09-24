@@ -1,6 +1,8 @@
 
 import React, { useState, useRef } from 'react';
-import { X, Shield, Package, ArrowUp, BookOpen, Dices, Sparkles, Map, Zap, Scroll, Skull, Activity, Lock, Key, Dna, Coins, HelpCircle, GraduationCap, SlidersHorizontal, Compass } from 'lucide-react';
+import { X, ArrowUp, Lock, HelpCircle, SlidersHorizontal } from 'lucide-react';
+import { Shield, Package, BookOpen, Dices, Sparkles, Map, Zap, Scroll, Skull, Activity, Key, Dna, Coins, GraduationCap, Compass } from './OsrsIcon';
+import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
@@ -654,7 +656,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="space-y-6">
                                 <div className="flex gap-4 items-start">
                                     <div className="bg-[#222] p-3 rounded-lg border border-white/10 shrink-0">
-                                        <Shield size={24} className="text-gray-400" />
+                                        <WikiIcon file="Worn_Equipment.png" alt="" size={24} />
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-gray-200 text-lg">Equipment Slots</h3>
@@ -669,7 +671,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
 
                                 <div className="flex gap-4 items-start">
                                     <div className="bg-[#222] p-3 rounded-lg border border-white/10 shrink-0">
-                                        <BookOpen size={24} className="text-blue-400" />
+                                        <WikiIcon file="Stats_icon.png" alt="" size={24} />
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-gray-200 text-lg">Skills</h3>
@@ -753,13 +755,13 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-800 text-gray-300">
-                                        <tr><td className="p-4 font-bold text-gray-500">Tier 1</td><td className="p-4">Bronze / Iron / Leather</td><td className="p-4 text-xs text-gray-500">Standard spells, Wooden shield</td></tr>
-                                        <tr><td className="p-4 font-bold text-orange-800">Tier 2</td><td className="p-4">Steel / Black / Studded</td><td className="p-4 text-xs text-gray-500">Oak shortbow, Steel scimitar</td></tr>
+                                        <tr><td className="p-4 font-bold text-gray-500">Tier 1</td><td className="p-4">Bronze / Iron / Leather / Basic staves</td><td className="p-4 text-xs text-gray-500">Elemental staves, Wooden shield</td></tr>
+                                        <tr><td className="p-4 font-bold text-orange-800">Tier 2</td><td className="p-4">Steel / Black / White / Studded</td><td className="p-4 text-xs text-gray-500">Oak shortbow, Steel scimitar</td></tr>
                                         <tr><td className="p-4 font-bold text-gray-400">Tier 3</td><td className="p-4">Mithril / Initiate</td><td className="p-4 text-xs text-gray-500">Willow bow, Xerician robes</td></tr>
                                         <tr><td className="p-4 font-bold text-green-700">Tier 4</td><td className="p-4">Adamant / Green D'hide</td><td className="p-4 text-xs text-gray-500">Maple bow, Mystic robes</td></tr>
                                         <tr><td className="p-4 font-bold text-cyan-500">Tier 5</td><td className="p-4">Rune / Blue D'hide</td><td className="p-4 text-xs text-gray-500">Yew bow, Ibans Staff</td></tr>
                                         <tr><td className="p-4 font-bold text-red-500">Tier 6</td><td className="p-4">Dragon / Red D'hide</td><td className="p-4 text-xs text-gray-500">Magic bow, Ancient staff</td></tr>
-                                        <tr><td className="p-4 font-bold text-purple-500">Tier 7</td><td className="p-4">Barrows / Black D'hide</td><td className="p-4 text-xs text-gray-500">Ahrims, Karils, Obsidian</td></tr>
+                                        <tr><td className="p-4 font-bold text-purple-500">Tier 7</td><td className="p-4">Barrows / Black &amp; Blessed D'hide</td><td className="p-4 text-xs text-gray-500">Ahrims, Karils, Obsidian</td></tr>
                                         <tr><td className="p-4 font-bold text-yellow-500">Tier 8</td><td className="p-4">God Wars / Zenyte</td><td className="p-4 text-xs text-gray-500">Bandos, Armadyl, Trident</td></tr>
                                         <tr><td className="p-4 font-bold text-blue-400">Tier 9</td><td className="p-4">Raids / Endgame</td><td className="p-4 text-xs text-gray-500">Ancestral, Torva, Masori, T-Bow</td></tr>
                                     </tbody>

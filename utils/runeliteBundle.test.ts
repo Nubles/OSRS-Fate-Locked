@@ -6,6 +6,8 @@ import fullChunkContent from '../public/chunk-content.json';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import { buildBundlePayload } from './runeliteExport';
 import { buildRuneliteBundle, RuneliteRunState } from './runeliteBundle';
+import equipmentCatalogueJson from '../public/equipment-catalogue.294c0a5ab539ea503cb22f0fafe1cb4521049724.json?raw';
+import { EQUIPMENT_CATALOGUE, EQUIPMENT_CACHE_SOURCE } from '../data/equipmentCatalogue';
 
 const state: RuneliteRunState = {
   keys: 3, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [],
@@ -173,7 +175,11 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
       vi.unstubAllGlobals();
     }
   });
-  it('fits the complete rules snapshot inside the relay limit', async () => {
+  it('fits the full pinned equipment catalogue and Vanilla rules inside the relay request limit with headroom', async () => {
+    // Previous tests may have attempted an offline export. Use fresh service
+    // instances so this check must ingest the actual full equipment fixture.
+    vi.resetModules();
+    vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => {} });
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.includes('chunk-content.json')) {
@@ -182,11 +188,16 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
           headers: { 'content-type': 'application/json' },
         });
       }
+      if (url.includes(EQUIPMENT_CATALOGUE.asset)) {
+        return new Response(equipmentCatalogueJson, { status: 200,
+          headers: { 'content-type': 'application/json' } });
+      }
       return new Response('{}', { status: 404 });
     }));
 
     try {
-      const { compressed } = await buildBundlePayload(initialState.unlocks, {
+      const { buildBundlePayload: buildFreshPayload } = await import('./runeliteExport');
+      const { json, compressed } = await buildFreshPayload(initialState.unlocks, {
         runId: 'run-size',
         runRevision: 1,
         keys: 3,
@@ -196,11 +207,28 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
         activeBuff: 'NONE',
         gameModeId: 'vanilla',
       });
+      const bundle = JSON.parse(json);
+      expect(bundle.rules.equipmentCatalogue).toMatchObject({ source: EQUIPMENT_CACHE_SOURCE,
+        status: 'pinned', localItemCount: EQUIPMENT_CATALOGUE.itemCount });
+      const reviewed = Object.keys(bundle.rules.itemRules).length;
+      expect(reviewed).toBeGreaterThan(1000);
+      expect(reviewed).toBeLessThan(EQUIPMENT_CATALOGUE.itemCount);
+      expect(Object.keys(bundle.itemTiers)).toHaveLength(reviewed);
+      expect(bundle.rules.equipmentCatalogue.reviewedItemCount).toBe(reviewed);
+      expect(bundle.rules.itemRules['552']).toEqual({ tier: 1, slot: 'Neck' });
       expect(compressed.startsWith('FLGZ:')).toBe(true);
-      expect(new TextEncoder().encode(compressed).byteLength)
-        .toBeLessThan(256 * 1024);
+      const body = JSON.stringify({ token: 'f'.repeat(32), payload: compressed });
+      expect(new TextEncoder().encode(body).byteLength).toBeLessThan(256 * 1024 - 16 * 1024);
+      const worker = (await import('../workers/fate-relay/worker.js')).default;
+      const put = vi.fn(async () => {});
+      const response = await worker.fetch(new Request('https://relay.test/r/catalogue-size', {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body,
+      }), { RELAY: { get: async () => null, put } });
+      expect(response.status).toBe(200);
+      expect(put).toHaveBeenCalledTimes(1);
     } finally {
       vi.unstubAllGlobals();
+      vi.resetModules();
     }
   });
 });

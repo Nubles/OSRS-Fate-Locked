@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Compass } from 'lucide-react';
+import { Compass } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { rankFrontierChunks } from '../utils/frontierAdvisor';
 import { chunkRegion } from '../utils/chunkAdjacency';

@@ -229,7 +229,6 @@ export const TestSuiteRunner: React.FC<TestSuiteRunnerProps> = ({ onComplete }) 
 
   return (
     <div className="w-full h-full flex flex-col bg-black font-mono text-sm p-4 rounded-lg border border-green-500/30 shadow-[inset_0_0_20px_rgba(34,197,94,0.1)] overflow-hidden relative">
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none"></div>
       <div className="absolute top-0 left-0 w-full h-1 bg-green-500/50 shadow-[0_0_10px_#22c55e]"></div>
       
       <div className="flex items-center gap-2 mb-4 text-green-500 border-b border-green-900/50 pb-2 shrink-0">

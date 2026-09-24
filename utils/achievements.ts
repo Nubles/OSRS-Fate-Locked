@@ -16,7 +16,7 @@ import {
   SKILLS_LIST, REGIONS_LIST, EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX,
 } from '../constants';
 import { completionPercent } from './completion';
-import { QUEST_DATA } from '../data/questData';
+import { QUEST_DATA, QUEST_CAPE_QUEST_IDS } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { CA_DATA } from '../data/caData';
 import { visibleAreaUnlocks } from '../data/areaMapPolicy';
@@ -49,7 +49,7 @@ export interface EvaluatedAchievement extends Achievement {
 }
 
 // ── Totals (derived once from the data sets) ───────────────────────────────
-const TOTAL_QUESTS = Object.keys(QUEST_DATA).length;
+const TOTAL_QUESTS = QUEST_CAPE_QUEST_IDS.length;
 const TOTAL_DIARIES = Object.keys(DIARY_DATA).length;
 const TOTAL_CA = Object.keys(CA_DATA).length;
 const TOTAL_SKILLS = SKILLS_LIST.length;
@@ -59,7 +59,7 @@ const TOTAL_EQUIP_SLOTS = EQUIPMENT_SLOTS.length;
 const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
 
 // ── Metric helpers ─────────────────────────────────────────────────────────
-const questsDone = (u: UnlockState) => u.quests.length;
+const questsDone = (u: UnlockState) => QUEST_CAPE_QUEST_IDS.filter(id => u.quests.includes(id)).length;
 const questPoints = (u: UnlockState) =>
   u.quests.reduce((acc, qid) => acc + (QUEST_DATA[qid]?.points ?? 0), 0);
 const skillsStarted = (u: UnlockState) =>

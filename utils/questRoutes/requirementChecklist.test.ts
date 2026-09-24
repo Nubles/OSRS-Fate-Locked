@@ -11,6 +11,7 @@ const plan: GoalPlan = {
   alreadyDone: false,
   needsConfirmation: true,
   skillSteps: [{ kind: 'skill', id: 'Construction', label: 'Construction', detail: 'Level 5', done: true }],
+  equipmentSteps: [],
   questSteps: [
     { kind: 'quest', id: "Daddy's Home", label: "Daddy's Home", done: false },
     { kind: 'quest', id: "Cook's Assistant", label: "Cook's Assistant", done: true },
@@ -30,6 +31,16 @@ const plan: GoalPlan = {
 };
 
 describe('buildQuestRequirementChecklist', () => {
+  it('keeps equipment permission automatic and separate from item possession', () => {
+    const rows = buildQuestRequirementChecklist({
+      ...plan,
+      equipmentSteps: [{ kind: 'equipment', id: 'Neck', requiredTier: 1, label: 'Neck T1: Wear the ghostspeak amulet', done: false }],
+    }, reviewedQuestRequirements('The Restless Ghost')!, new Set(['ghostspeak amulet']));
+    expect(rows.find(row => row.id === 'equipment:Neck')).toMatchObject({
+      checked: false, disabled: true, mode: 'ACCOUNT', statusText: 'Updates automatically',
+    });
+  });
+
   it('orders automatic rows before reviewed items and excludes the target quest itself', () => {
     const rows = buildQuestRequirementChecklist(
       plan,

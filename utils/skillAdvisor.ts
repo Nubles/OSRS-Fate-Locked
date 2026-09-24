@@ -18,7 +18,7 @@ import { hasCompletedQuestCapeRequirements, QUEST_DATA } from '../data/questData
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { computeUnlockImpact, prepareUnlockImpactContext } from './unlockImpact';
-import { EligibilityBlocker, evaluateDiaryTierEligibility, getDiaryStatus } from './journalStatus';
+import { EligibilityBlocker, evaluateDiaryTierEligibility } from './journalStatus';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 
 export interface RankedSkill {
@@ -132,7 +132,7 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
       return newQuestIds.has(blocker.label)
         || (blocker.label === 'All quests' && completesQuestCape);
     }
-    if (blocker.kind === 'region') return false;
+    if (blocker.kind === 'region' || blocker.kind === 'equipment' || blocker.kind === 'merchant' || blocker.kind === 'mobility' || blocker.kind === 'arcana') return false;
     return blocker.routes.some(route => route.blockers.every(routeBlocker => (
       blockerCanChange(routeBlocker, skill, newQuestIds, completesQuestCape)
     )));
@@ -169,7 +169,7 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
 
       const directDiaryIds = candidateDiaryIds(skill, new Set(), false).filter(id => {
         const diary = DIARY_DATA[id];
-        return diary && isOpen(getDiaryStatus(diary, simulated, gameModeId));
+        return diary && evaluateDiaryTierEligibility(diary, simulated, gameModeId).eligible;
       });
 
       let cascadeDiaryIds = directDiaryIds;
@@ -184,7 +184,7 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
           hasCompletedQuestCapeRequirements(impact.finalQuestIds),
         ).filter(id => {
           const diary = DIARY_DATA[id];
-          return diary && isOpen(getDiaryStatus(diary, cascadeSnap, gameModeId));
+          return diary && evaluateDiaryTierEligibility(diary, cascadeSnap, gameModeId).eligible;
         });
       }
 

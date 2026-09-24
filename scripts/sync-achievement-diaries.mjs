@@ -195,9 +195,14 @@ const renderRequirementProperties = (requirement) => {
     properties.push('skills: ' + renderSkills(requirement.skills));
   }
   if (requirement.items?.length > 0) properties.push('items: ' + renderStringArray(requirement.items));
+  if (requirement.merchants?.length > 0) properties.push('merchants: ' + renderStringArray(requirement.merchants));
+  if (requirement.arcana?.length > 0) properties.push('arcana: ' + renderStringArray(requirement.arcana));
+  if (requirement.mobility?.length > 0) properties.push('mobility: ' + renderStringArray(requirement.mobility));
+  if (requirement.equipmentRequirements?.length > 0) properties.push('equipmentRequirements: ' + JSON.stringify(requirement.equipmentRequirements));
   if (requirement.quests?.length > 0) {
     properties.push('quests: ' + renderStringArray(requirement.quests));
   }
+  if (requirement.questProgress?.length > 0) properties.push('questProgress: ' + JSON.stringify(requirement.questProgress));
   if (requirement.cas?.length > 0) properties.push('cas: ' + renderStringArray(requirement.cas));
   if (requirement.regions?.length > 0) {
     properties.push('regions: ' + renderStringArray(requirement.regions));
@@ -257,7 +262,7 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
   if (!requirement || typeof requirement !== 'object' || Array.isArray(requirement)) {
     throw new Error('Invalid Diary requirement route: ' + context);
   }
-  for (const field of ['items', 'quests', 'cas', 'regions', 'anyOfRegions', 'manualRequirements']) {
+  for (const field of ['items', 'merchants', 'mobility', 'arcana', 'quests', 'cas', 'regions', 'anyOfRegions', 'manualRequirements']) {
     if (requirement[field] !== undefined && !Array.isArray(requirement[field])) {
       throw new Error('Invalid Diary requirement ' + field + ': ' + context);
     }
@@ -268,6 +273,17 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
         'Invalid Diary requirement ' + field + ' entry (expected a non-empty string): ' + context,
       );
     }
+  }
+  if (requirement.equipmentRequirements !== undefined && (
+    !Array.isArray(requirement.equipmentRequirements) || requirement.equipmentRequirements.length === 0
+    || requirement.equipmentRequirements.some(item => !item || typeof item.slot !== 'string'
+      || !Number.isInteger(item.tier) || item.tier < 1 || item.tier > 9
+      || typeof item.reason !== 'string' || !item.reason.trim()
+      || (item.manualCheck !== undefined && (typeof item.manualCheck !== 'string' || !item.manualCheck.trim()))
+      || (item.unlessDiary !== undefined && !VALID_TIER.has(item.unlessDiary)))
+  )) throw new Error('Invalid Diary requirement equipmentRequirements: ' + context);
+  if (requirement.questProgress !== undefined && (!Array.isArray(requirement.questProgress) || requirement.questProgress.some(progress => !progress || typeof progress.quest !== 'string' || !progress.quest.trim() || typeof progress.label !== 'string' || !progress.label.trim()))) {
+    throw new Error('Invalid Diary requirement questProgress: ' + context);
   }
   for (const field of ['combatLevel', 'anySkillLevel', 'questPoints']) {
     if (requirement[field] !== undefined
@@ -300,9 +316,13 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
         || coord.cx < 0 || coord.cy < 0 || coord.cx > 255 || coord.cy > 255))
   )) throw new Error('Invalid Diary requirement locations: ' + context);
   const hasRequirement = Boolean(
-    requirement.label
+    requirement.questProgress?.length
     || requirement.locations?.length
     || requirement.items?.length
+    || requirement.merchants?.length
+    || requirement.mobility?.length
+    || requirement.arcana?.length
+    || requirement.equipmentRequirements?.length
     || Object.keys(requirement.skills ?? {}).length
     || requirement.quests?.length
     || requirement.cas?.length
@@ -391,6 +411,20 @@ export function renderDiaryTasks(snapshot) {
     || left.id.localeCompare(right.id)
   ));
   const lines = [
+    "import type { QuestProgressRequirement } from './questProgress';",
+    "import type { EquipmentSlot } from './questData';",
+    '',
+    '/** Permission to wear required gear; ownership is not inferred. */',
+    'export interface DiaryEquipmentRequirement {',
+    '  slot: EquipmentSlot;',
+    '  tier: number;',
+    '  reason: string;',
+    '  /** Unreviewed item tiers require a player check, never a guessed hard gate. */',
+    '  manualCheck?: string;',
+    '  /** A completed diary reward removes this equipment requirement. */',
+    '  unlessDiary?: string;',
+    '}',
+    '',
     'export interface DiaryLocationRequirement {',
     '  label: string;',
     '  chunkOptions: Array<{ cx: number; cy: number }>;',
@@ -400,12 +434,17 @@ export function renderDiaryTasks(snapshot) {
     '  label?: string;',
     '  skills?: Record<string, number>;',
     '  items?: string[];',
+    '  merchants?: string[];',
+    '  mobility?: string[];',
+    '  arcana?: string[];',
+    '  equipmentRequirements?: DiaryEquipmentRequirement[];',
     '  quests?: string[];',
     '  cas?: string[];',
     '  regions?: string[];',
     '  locations?: DiaryLocationRequirement[];',
     '  questPoints?: number;',
     '  manualRequirements?: string[];',
+    '  questProgress?: QuestProgressRequirement[];',
     '  combatLevel?: number;',
     '  allQuests?: true;',
     '  anySkillLevel?: number;',
@@ -419,6 +458,10 @@ export function renderDiaryTasks(snapshot) {
     '  description: string;',
     '  skills?: Record<string, number>;',
     '  items?: string[];',
+    '  merchants?: string[];',
+    '  mobility?: string[];',
+    '  arcana?: string[];',
+    '  equipmentRequirements?: DiaryEquipmentRequirement[];',
     '  quests?: string[];',
     '  cas?: string[];',
     '  regions?: string[];',
@@ -426,6 +469,7 @@ export function renderDiaryTasks(snapshot) {
     '  anyOfRegions?: string[];',
     '  questPoints?: number;',
     '  manualRequirements?: string[];',
+    '  questProgress?: QuestProgressRequirement[];',
     '  combatLevel?: number;',
     '  allQuests?: true;',
     '  anySkillLevel?: number;',
@@ -612,6 +656,10 @@ const loadReferenceCatalog = (projectRoot) => {
 
   const catalog = {
     skills,
+    merchants: new Set(stringArrayOf(initializerOf(itemsSource, 'MERCHANTS_LIST'))),
+    mobility: new Set(stringArrayOf(initializerOf(itemsSource, 'MOBILITY_LIST'))),
+    arcana: new Set(stringArrayOf(initializerOf(itemsSource, 'ARCANA_LIST'))),
+    equipment: new Set(stringArrayOf(initializerOf(itemsSource, 'EQUIPMENT_SLOTS'))),
     quests,
     regions,
     cas: new Set(['Easy', 'Medium', 'Hard', 'Elite', 'Master', 'Grandmaster']),
@@ -633,7 +681,19 @@ const findUnknownReferences = (snapshot, projectRoot) => {
       for (const skill of referencedSkills) {
         if (!catalog.skills.has(skill)) unknown.push(task.id + ' skill ' + skill);
       }
-      for (const quest of requirement.quests ?? []) {
+      for (const merchant of requirement.merchants ?? []) {
+        if (!catalog.merchants.has(merchant)) unknown.push(task.id + ' merchant ' + merchant);
+      }
+      for (const arcana of requirement.arcana ?? []) {
+        if (!catalog.arcana.has(arcana)) unknown.push(task.id + ' arcana ' + arcana);
+      }
+      for (const mobility of requirement.mobility ?? []) {
+        if (!catalog.mobility.has(mobility)) unknown.push(task.id + ' mobility ' + mobility);
+      }
+      for (const equipment of requirement.equipmentRequirements ?? []) {
+        if (!catalog.equipment.has(equipment.slot)) unknown.push(task.id + ' equipment slot ' + equipment.slot);
+      }
+      for (const quest of [...(requirement.quests ?? []), ...(requirement.questProgress ?? []).map(progress => progress.quest)]) {
         if (!catalog.quests.has(quest)) unknown.push(task.id + ' quest ' + quest);
       }
       for (const ca of requirement.cas ?? []) {

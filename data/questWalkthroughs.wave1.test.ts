@@ -3,6 +3,7 @@ import type { QuestPreparationRouteAnalysis } from '../utils/questRoutes/analyze
 import { buildRuneProofCoachModel } from '../utils/questStrategies/coach';
 import type { QuestStrategyDefinition } from '../utils/questStrategies/model';
 import { questStrategyFor } from './questWalkthroughs.preview-boundary';
+import { questWalkthroughFor as importedWalkthroughFor } from './questWalkthroughs';
 
 const strategyFor = (questId: string): QuestStrategyDefinition => {
   const strategy = questStrategyFor(questId);
@@ -39,25 +40,25 @@ describe('Wave 1 Sheep Shearer RuneProof pack', () => {
       chunk: action.mapChunks[0],
       instruction: action.displayText,
     }))).toEqual([
-      { id: 'sheep-shearer:start-with-fred', chunk: '49,51', instruction: 'Talk to Fred the Farmer north of Lumbridge and ask for a quest.' },
-      { id: 'sheep-shearer:shear-wool', chunk: '49,51', instruction: "Use Fred's shears to collect 20 wool from the sheep in his pen." },
+      { id: 'sheep-shearer:start-with-fred', chunk: '49,51', instruction: 'Ask Fred the Farmer, north of Lumbridge, for work.' },
+      { id: 'sheep-shearer:shear-wool', chunk: '49,51', instruction: "Use Fred's shears on nearby sheep until you have 20 wool." },
       { id: 'sheep-shearer:spin-wool', chunk: '50,50', instruction: 'Spin the 20 wool into 20 balls of wool upstairs in Lumbridge Castle.' },
-      { id: 'sheep-shearer:return-to-fred', chunk: '49,51', instruction: 'Return to Fred the Farmer with 20 unnoted balls of wool.' },
-      { id: 'sheep-shearer:complete', chunk: '49,51', instruction: 'Sheep Shearer complete.' },
+      { id: 'sheep-shearer:return-to-fred', chunk: '49,51', instruction: 'Take 20 unnoted balls of wool back to Fred.' },
+      { id: 'sheep-shearer:complete', chunk: '49,51', instruction: 'Sheep Shearer is complete.' },
     ]);
     expect(actionSummary('Sheep Shearer')).toEqual([
-      ['sheep-shearer:start-with-fred', '49,51', 'Talk to Fred the Farmer north of Lumbridge and ask for a quest.'],
-      ['sheep-shearer:shear-wool', '49,51', "Use Fred's shears to collect 20 wool from the sheep in his pen."],
+      ['sheep-shearer:start-with-fred', '49,51', 'Ask Fred the Farmer, north of Lumbridge, for work.'],
+      ['sheep-shearer:shear-wool', '49,51', "Use Fred's shears on nearby sheep until you have 20 wool."],
       ['sheep-shearer:spin-wool', '50,50', 'Spin the 20 wool into 20 balls of wool upstairs in Lumbridge Castle.'],
-      ['sheep-shearer:return-to-fred', '49,51', 'Return to Fred the Farmer with 20 unnoted balls of wool.'],
-      ['sheep-shearer:complete', '49,51', 'Sheep Shearer complete.'],
+      ['sheep-shearer:return-to-fred', '49,51', 'Take 20 unnoted balls of wool back to Fred.'],
+      ['sheep-shearer:complete', '49,51', 'Sheep Shearer is complete.'],
     ]);
     expect(strategy.actions.map(action => action.sourceOrder)).toEqual([1, 2, 3, 4, 5]);
     expect(strategy.actions.map(action => action.dependsOn)).toEqual([
       [],
       ['sheep-shearer:start-with-fred'],
       ['sheep-shearer:shear-wool'],
-      ['sheep-shearer:spin-wool', 'sheep-shearer:start-with-fred'],
+      ['sheep-shearer:spin-wool'],
       ['sheep-shearer:return-to-fred'],
     ]);
     expect(buildRuneProofCoachModel({
@@ -69,10 +70,12 @@ describe('Wave 1 Sheep Shearer RuneProof pack', () => {
     }).progress).toEqual({ completed: 0, total: 5 });
   });
 
-  it('preserves all source lines and the exact Sheep item, method, and completion contract', () => {
+  it('preserves imported source coverage and the public Sheep item, method, and completion contract', () => {
     const strategy = strategyFor('Sheep Shearer');
 
-    expect(Object.fromEntries(strategy.actions.map(action => [action.id, action.rawWikiLineIds]))).toEqual({
+    const imported = importedWalkthroughFor(strategy.questId)!;
+    expect(imported.sourceLines.length).toBeGreaterThan(0);
+    expect(Object.fromEntries(imported.actions.map(action => [action.id, action.rawWikiLineIds]))).toEqual({
       'sheep-shearer:start-with-fred': ['sheep-shearer-if-you-dont-have-the-balls-of-wool-3'],
       'sheep-shearer:shear-wool': [
         'sheep-shearer-if-you-dont-have-the-balls-of-wool-4',
@@ -93,8 +96,8 @@ describe('Wave 1 Sheep Shearer RuneProof pack', () => {
         'sheep-shearer-if-you-dont-have-the-balls-of-wool-11',
       ],
     });
-    expect(strategy.actions.flatMap(action => action.rawWikiLineIds).sort())
-      .toEqual(strategy.sourceLines.map(line => line.id).sort());
+    expect(imported.actions.flatMap(action => action.rawWikiLineIds).sort())
+      .toEqual(imported.sourceLines.map(line => line.id).sort());
     expect(strategy.actions.map(action => ({
       id: action.id,
       items: action.items,
@@ -153,7 +156,7 @@ describe('Wave 1 Sheep Shearer RuneProof pack', () => {
       },
       {
         id: 'sheep-shearer:return-to-fred',
-        items: [],
+        items: [{ item: { key: 'ball of wool', name: 'Ball of wool' }, quantity: 20, supplyPolicy: 'PLAYER_OBTAINED' }],
         consumes: [{
           item: { key: 'ball of wool', name: 'Ball of wool' },
           quantity: 20,
@@ -182,24 +185,26 @@ describe('Wave 1 Sheep Shearer RuneProof pack', () => {
 describe('Wave 1 The Restless Ghost RuneProof pack', () => {
   it('keeps the exact seven-action reviewed Restless Ghost journey', () => {
     expect(actionSummary('The Restless Ghost')).toEqual([
-      ['the-restless-ghost:start-with-aereck', '50,50', 'Talk to Father Aereck in Lumbridge church to start the quest.'],
-      ['the-restless-ghost:get-amulet', '49,49', 'Talk to Father Urhney in the western Lumbridge Swamp and take the ghostspeak amulet.'],
-      ['the-restless-ghost:talk-to-ghost', '50,49', 'Equip the ghostspeak amulet and talk to the ghost in Lumbridge graveyard.'],
+      ['the-restless-ghost:start-with-aereck', '50,50', 'Talk to Father Aereck in Lumbridge church to begin.'],
+      ['the-restless-ghost:get-amulet', '49,49', 'Visit Father Urhney in western Lumbridge Swamp and take the ghostspeak amulet.'],
+      ['the-restless-ghost:talk-to-ghost', '50,49', 'Wear the ghostspeak amulet and speak to the ghost in Lumbridge graveyard.'],
       ['the-restless-ghost:take-skull', '48,49', "Search the altar in the Wizards' Tower basement for the ghost's skull, then leave without fighting the skeleton."],
-      ['the-restless-ghost:return-to-ghost', '50,49', 'Return to the restless ghost with its skull.'],
-      ['the-restless-ghost:use-skull', '50,49', "Use the ghost's skull on the coffin in Lumbridge graveyard."],
-      ['the-restless-ghost:complete', '50,49', 'The Restless Ghost complete.'],
+      ['the-restless-ghost:return-to-ghost', '50,49', 'Return to the restless ghost in Lumbridge graveyard with the skull.'],
+      ['the-restless-ghost:use-skull', '50,49', "Use the skull on the graveyard coffin."],
+      ['the-restless-ghost:complete', '50,49', 'The Restless Ghost is complete.'],
     ]);
   });
 
-  it('preserves the selected source coverage, task edges, aliases, and quest-provided flow', () => {
+  it('preserves imported source coverage and the public action dependencies, chunks, and quest-provided flow', () => {
     const strategy = strategyFor('The Restless Ghost');
 
     expect(strategy.source).toMatchObject({
       wikiRevision: '15070492',
       wikiUrl: 'https://oldschool.runescape.wiki/w/The_Restless_Ghost/Quick_guide?oldid=15070492',
     });
-    expect(Object.fromEntries(strategy.actions.map(action => [action.id, action.rawWikiLineIds]))).toEqual({
+    const imported = importedWalkthroughFor(strategy.questId)!;
+    expect(imported.sourceLines.length).toBeGreaterThan(0);
+    expect(Object.fromEntries(imported.actions.map(action => [action.id, action.rawWikiLineIds]))).toEqual({
       'the-restless-ghost:start-with-aereck': [],
       'the-restless-ghost:get-amulet': ['the-restless-ghost-getting-started-1'],
       'the-restless-ghost:talk-to-ghost': [
@@ -211,8 +216,8 @@ describe('Wave 1 The Restless Ghost RuneProof pack', () => {
       'the-restless-ghost:use-skull': ['the-restless-ghost-the-skull-5'],
       'the-restless-ghost:complete': ['the-restless-ghost-the-skull-6'],
     });
-    expect(strategy.actions.flatMap(action => action.rawWikiLineIds).sort())
-      .toEqual(strategy.sourceLines.map(line => line.id).sort());
+    expect(imported.actions.flatMap(action => action.rawWikiLineIds).sort())
+      .toEqual(imported.sourceLines.map(line => line.id).sort());
     expect(strategy.actions.map(action => ({
       id: action.id,
       sourceOrder: action.sourceOrder,
@@ -225,51 +230,51 @@ describe('Wave 1 The Restless Ghost RuneProof pack', () => {
       {
         id: 'the-restless-ghost:start-with-aereck',
         sourceOrder: 1,
-        task: 't_7683',
+        task: undefined,
         dependsOn: [],
-        location: { alias: 'Lumbridge church', chunks: ['50,50'] },
+        location: { kind: 'EXPLICIT_CHUNKS', chunks: ['50,50'] },
       },
       {
         id: 'the-restless-ghost:get-amulet',
         sourceOrder: 2,
-        task: 't_7684',
+        task: undefined,
         dependsOn: ['the-restless-ghost:start-with-aereck'],
-        location: { alias: "Father Urhney's house", chunks: ['49,49'] },
+        location: { kind: 'EXPLICIT_CHUNKS', chunks: ['49,49'] },
       },
       {
         id: 'the-restless-ghost:talk-to-ghost',
         sourceOrder: 3,
-        task: 't_7685',
+        task: undefined,
         dependsOn: ['the-restless-ghost:get-amulet'],
-        location: { alias: 'Lumbridge graveyard', chunks: ['50,49'] },
+        location: { kind: 'EXPLICIT_CHUNKS', chunks: ['50,49'] },
       },
       {
         id: 'the-restless-ghost:take-skull',
         sourceOrder: 4,
-        task: 't_7686',
+        task: undefined,
         dependsOn: ['the-restless-ghost:talk-to-ghost'],
-        location: { alias: "Wizards' Tower", chunks: ['48,49'] },
+        location: { kind: 'EXPLICIT_CHUNKS', chunks: ['48,49'] },
       },
       {
         id: 'the-restless-ghost:return-to-ghost',
         sourceOrder: 5,
         task: undefined,
         dependsOn: ['the-restless-ghost:take-skull'],
-        location: { alias: 'Lumbridge graveyard', chunks: ['50,49'] },
+        location: { kind: 'EXPLICIT_CHUNKS', chunks: ['50,49'] },
       },
       {
         id: 'the-restless-ghost:use-skull',
         sourceOrder: 6,
-        task: 't_7687',
-        dependsOn: ['the-restless-ghost:return-to-ghost', 'the-restless-ghost:take-skull'],
-        location: { alias: 'Lumbridge graveyard', chunks: ['50,49'] },
+        task: undefined,
+        dependsOn: ['the-restless-ghost:return-to-ghost'],
+        location: { kind: 'EXPLICIT_CHUNKS', chunks: ['50,49'] },
       },
       {
         id: 'the-restless-ghost:complete',
         sourceOrder: 7,
-        task: 't_7688',
+        task: undefined,
         dependsOn: ['the-restless-ghost:use-skull'],
-        location: { alias: 'Lumbridge graveyard', chunks: ['50,49'] },
+        location: { kind: 'EXPLICIT_CHUNKS', chunks: ['50,49'] },
       },
     ]);
     expect(strategy.actions.map(action => ({
@@ -326,7 +331,7 @@ describe('Wave 1 The Restless Ghost RuneProof pack', () => {
       },
       {
         id: 'the-restless-ghost:use-skull',
-        items: [],
+        items: [{ item: { key: "ghost's skull", name: "Ghost's skull" }, quantity: 1, supplyPolicy: 'QUEST_PROVIDED' }],
         consumes: [{
           item: { key: "ghost's skull", name: "Ghost's skull" },
           quantity: 1,
@@ -349,30 +354,32 @@ describe('Wave 1 The Restless Ghost RuneProof pack', () => {
 describe('Wave 1 Rune Mysteries RuneProof pack', () => {
   it('keeps the exact five-action reviewed Rune Mysteries journey', () => {
     expect(actionSummary('Rune Mysteries')).toEqual([
-      ['rune-mysteries:start-with-duke', '50,50', 'Ask Duke Horacio in Lumbridge Castle for a quest and take the air talisman.'],
+      ['rune-mysteries:start-with-duke', '50,50', 'Ask Duke Horacio in Lumbridge Castle about a quest and take the air talisman.'],
       ['rune-mysteries:take-talisman-to-sedridor', '48,49', "Give the air talisman to Archmage Sedridor in the Wizards' Tower basement."],
-      ['rune-mysteries:take-package-to-aubury', '50,53', "Take Sedridor's research package to Aubury in the Varrock rune shop."],
-      ['rune-mysteries:return-notes-to-sedridor', '48,49', "Return Aubury's research notes to Sedridor in the Wizards' Tower basement."],
-      ['rune-mysteries:complete', '48,49', 'Rune Mysteries complete.'],
+      ['rune-mysteries:take-package-to-aubury', '50,53', "Deliver Sedridor's research package to Aubury in Varrock."],
+      ['rune-mysteries:return-notes-to-sedridor', '48,49', "Bring Aubury's research notes back to Sedridor."],
+      ['rune-mysteries:complete', '48,49', 'Rune Mysteries is complete.'],
     ]);
   });
 
-  it('preserves every selected line, direct task edge, reviewed alias, and quest-provided hand-off', () => {
+  it('preserves imported source coverage and the public action dependencies, chunks, and quest-provided hand-off', () => {
     const strategy = strategyFor('Rune Mysteries');
 
     expect(strategy.source).toMatchObject({
       wikiRevision: '15205463',
       wikiUrl: 'https://oldschool.runescape.wiki/w/Rune_Mysteries/Quick_guide?oldid=15205463',
     });
-    expect(Object.fromEntries(strategy.actions.map(action => [action.id, action.rawWikiLineIds]))).toEqual({
+    const imported = importedWalkthroughFor(strategy.questId)!;
+    expect(imported.sourceLines.length).toBeGreaterThan(0);
+    expect(Object.fromEntries(imported.actions.map(action => [action.id, action.rawWikiLineIds]))).toEqual({
       'rune-mysteries:start-with-duke': ['rune-mysteries-walkthrough-1'],
       'rune-mysteries:take-talisman-to-sedridor': ['rune-mysteries-walkthrough-2'],
       'rune-mysteries:take-package-to-aubury': ['rune-mysteries-walkthrough-3'],
       'rune-mysteries:return-notes-to-sedridor': ['rune-mysteries-walkthrough-4'],
       'rune-mysteries:complete': ['rune-mysteries-walkthrough-5'],
     });
-    expect(strategy.actions.flatMap(action => action.rawWikiLineIds).sort())
-      .toEqual(strategy.sourceLines.map(line => line.id).sort());
+    expect(imported.actions.flatMap(action => action.rawWikiLineIds).sort())
+      .toEqual(imported.sourceLines.map(line => line.id).sort());
     expect(strategy.actions.map(action => ({
       id: action.id,
       sourceOrder: action.sourceOrder,
@@ -385,37 +392,37 @@ describe('Wave 1 Rune Mysteries RuneProof pack', () => {
       {
         id: 'rune-mysteries:start-with-duke',
         sourceOrder: 1,
-        task: 't_7697',
+        task: undefined,
         dependsOn: [],
-        location: { alias: 'Lumbridge Castle', chunks: ['50,50'] },
+        location: { kind: 'EXPLICIT_CHUNKS', chunks: ['50,50'] },
       },
       {
         id: 'rune-mysteries:take-talisman-to-sedridor',
         sourceOrder: 2,
-        task: 't_7698',
+        task: undefined,
         dependsOn: ['rune-mysteries:start-with-duke'],
-        location: { alias: "Wizards' Tower basement", chunks: ['48,49'] },
+        location: { kind: 'EXPLICIT_CHUNKS', chunks: ['48,49'] },
       },
       {
         id: 'rune-mysteries:take-package-to-aubury',
         sourceOrder: 3,
-        task: 't_7699',
+        task: undefined,
         dependsOn: ['rune-mysteries:take-talisman-to-sedridor'],
-        location: { alias: "Aubury's rune shop", chunks: ['50,53'] },
+        location: { kind: 'EXPLICIT_CHUNKS', chunks: ['50,53'] },
       },
       {
         id: 'rune-mysteries:return-notes-to-sedridor',
         sourceOrder: 4,
-        task: 't_7700',
+        task: undefined,
         dependsOn: ['rune-mysteries:take-package-to-aubury'],
-        location: { alias: "Wizards' Tower basement", chunks: ['48,49'] },
+        location: { kind: 'EXPLICIT_CHUNKS', chunks: ['48,49'] },
       },
       {
         id: 'rune-mysteries:complete',
         sourceOrder: 5,
-        task: 't_7701',
+        task: undefined,
         dependsOn: ['rune-mysteries:return-notes-to-sedridor'],
-        location: { alias: "Wizards' Tower basement", chunks: ['48,49'] },
+        location: { kind: 'EXPLICIT_CHUNKS', chunks: ['48,49'] },
       },
     ]);
     expect(strategy.actions.map(action => ({
@@ -440,7 +447,7 @@ describe('Wave 1 Rune Mysteries RuneProof pack', () => {
       },
       {
         id: 'rune-mysteries:take-talisman-to-sedridor',
-        items: [],
+        items: [{ item: { key: 'air talisman', name: 'Air talisman' }, quantity: 1, supplyPolicy: 'QUEST_PROVIDED' }],
         consumes: [{
           item: { key: 'air talisman', name: 'Air talisman' },
           quantity: 1,
@@ -456,7 +463,7 @@ describe('Wave 1 Rune Mysteries RuneProof pack', () => {
       },
       {
         id: 'rune-mysteries:take-package-to-aubury',
-        items: [],
+        items: [{ item: { key: 'research package', name: 'Research package' }, quantity: 1, supplyPolicy: 'QUEST_PROVIDED' }],
         consumes: [{
           item: { key: 'research package', name: 'Research package' },
           quantity: 1,
@@ -472,7 +479,7 @@ describe('Wave 1 Rune Mysteries RuneProof pack', () => {
       },
       {
         id: 'rune-mysteries:return-notes-to-sedridor',
-        items: [],
+        items: [{ item: { key: 'research notes', name: 'Research notes' }, quantity: 1, supplyPolicy: 'QUEST_PROVIDED' }],
         consumes: [{
           item: { key: 'research notes', name: 'Research notes' },
           quantity: 1,
@@ -497,16 +504,16 @@ describe('Wave 1 Rune Mysteries RuneProof pack', () => {
 describe('Wave 1 Imp Catcher RuneProof pack', () => {
   it('keeps the exact six-action reviewed Imp Catcher journey', () => {
     expect(actionSummary('Imp Catcher')).toEqual([
-      ['imp-catcher:get-black-bead', '47,51', 'Kill imps south-east of Falador until you obtain a black bead.'],
-      ['imp-catcher:get-red-bead', '47,51', 'Kill imps south-east of Falador until you obtain a red bead.'],
-      ['imp-catcher:get-white-bead', '47,51', 'Kill imps south-east of Falador until you obtain a white bead.'],
-      ['imp-catcher:get-yellow-bead', '47,51', 'Kill imps south-east of Falador until you obtain a yellow bead.'],
-      ['imp-catcher:give-beads-to-mizgog', '48,49', "Take all four beads to Wizard Mizgog on the top floor of the Wizards' Tower."],
-      ['imp-catcher:complete', '48,49', 'Imp Catcher complete.'],
+      ['imp-catcher:get-black-bead', '48,50', 'Kill imps around Draynor Village until you receive a black bead.'],
+      ['imp-catcher:get-red-bead', '48,50', 'Kill imps around Draynor Village until you receive a red bead.'],
+      ['imp-catcher:get-white-bead', '48,50', 'Kill imps around Draynor Village until you receive a white bead.'],
+      ['imp-catcher:get-yellow-bead', '48,50', 'Kill imps around Draynor Village until you receive a yellow bead.'],
+      ['imp-catcher:give-beads-to-mizgog', '48,49', "Take all four beads to Wizard Mizgog at the Wizards' Tower."],
+      ['imp-catcher:complete', '48,49', 'Imp Catcher is complete.'],
     ]);
   });
 
-  it('keeps raw Mizgog provenance off the independent bead actions', () => {
+  it('keeps the independently authored Imp guide free of imported task provenance', () => {
     const strategy = strategyFor('Imp Catcher');
 
     expect(strategy.actions.map(action => [action.id, action.chunkPickerTaskId])).toEqual([
@@ -514,8 +521,8 @@ describe('Wave 1 Imp Catcher RuneProof pack', () => {
       ['imp-catcher:get-red-bead', undefined],
       ['imp-catcher:get-white-bead', undefined],
       ['imp-catcher:get-yellow-bead', undefined],
-      ['imp-catcher:give-beads-to-mizgog', 't_7651'],
-      ['imp-catcher:complete', 't_7652'],
+      ['imp-catcher:give-beads-to-mizgog', undefined],
+      ['imp-catcher:complete', undefined],
     ]);
   });
 
@@ -541,7 +548,7 @@ describe('Wave 1 Imp Catcher RuneProof pack', () => {
         consumes: [],
         fulfils: [{ item: { key: 'black bead', name: 'Black bead' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' }],
         completion: { kind: 'ITEM_CONFIRMED', itemKey: 'black bead' },
-        preferredMethod: { kind: 'DIRECT_SOURCE', itemKey: 'black bead', sourceLabel: 'Imps south-east of Falador' },
+        preferredMethod: undefined,
         fallbackPolicy: 'INTERCHANGEABLE',
       },
       {
@@ -550,7 +557,7 @@ describe('Wave 1 Imp Catcher RuneProof pack', () => {
         consumes: [],
         fulfils: [{ item: { key: 'red bead', name: 'Red bead' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' }],
         completion: { kind: 'ITEM_CONFIRMED', itemKey: 'red bead' },
-        preferredMethod: { kind: 'DIRECT_SOURCE', itemKey: 'red bead', sourceLabel: 'Imps south-east of Falador' },
+        preferredMethod: undefined,
         fallbackPolicy: 'INTERCHANGEABLE',
       },
       {
@@ -559,7 +566,7 @@ describe('Wave 1 Imp Catcher RuneProof pack', () => {
         consumes: [],
         fulfils: [{ item: { key: 'white bead', name: 'White bead' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' }],
         completion: { kind: 'ITEM_CONFIRMED', itemKey: 'white bead' },
-        preferredMethod: { kind: 'DIRECT_SOURCE', itemKey: 'white bead', sourceLabel: 'Imps south-east of Falador' },
+        preferredMethod: undefined,
         fallbackPolicy: 'INTERCHANGEABLE',
       },
       {
@@ -568,7 +575,7 @@ describe('Wave 1 Imp Catcher RuneProof pack', () => {
         consumes: [],
         fulfils: [{ item: { key: 'yellow bead', name: 'Yellow bead' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' }],
         completion: { kind: 'ITEM_CONFIRMED', itemKey: 'yellow bead' },
-        preferredMethod: { kind: 'DIRECT_SOURCE', itemKey: 'yellow bead', sourceLabel: 'Imps south-east of Falador' },
+        preferredMethod: undefined,
         fallbackPolicy: 'INTERCHANGEABLE',
       },
       {
@@ -601,4 +608,20 @@ describe('Wave 1 Imp Catcher RuneProof pack', () => {
       },
     ]);
   });
+});
+
+
+describe('Wave 1 public source boundary', () => {
+  it.each(['Sheep Shearer', 'The Restless Ghost', 'Rune Mysteries', 'Imp Catcher'])(
+    '%s retains independent authorship and pinned Wiki attribution', questId => {
+      const strategy = strategyFor(questId);
+      expect(strategy.source).toMatchObject({ kind: 'INDEPENDENT_REVIEW', author: 'Fate Locked' });
+      expect(strategy.source.wikiUrl).toContain(`oldid=${strategy.source.wikiRevision}`);
+      expect(strategy.sourceLines).toEqual([]);
+      for (const action of strategy.actions) {
+        expect(action.rawWikiLineIds).toEqual([]);
+        expect(action.chunkPickerTaskId).toBeUndefined();
+      }
+    },
+  );
 });

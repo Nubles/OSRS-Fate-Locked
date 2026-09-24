@@ -101,7 +101,7 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Guardians of the Rift': 'Misthalin',
   'Impetuous Impulses': 'Kandarin',
   'Mage Training Arena': 'Kharidian Desert',
-  'Mastering Mixology': 'Morytania',
+  'Mastering Mixology': 'Varlamore',
   'Mess': 'Kourend & Kebos',
   'Pyramid Plunder': 'Kharidian Desert',
   "Rogues' Den": 'Asgarnia',

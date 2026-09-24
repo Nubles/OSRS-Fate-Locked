@@ -1078,7 +1078,8 @@ describe('audited current quest requirements', () => {
                       "Enakhra's Lament",
                       "Temple of the Eye",
                       "The Garden of Death",
-                      "Below Ice Mountain"
+                      "Below Ice Mountain",
+                      "His Faithful Servants"
                 ],
                 "oneOf": null,
                 "manualRequirements": null,
@@ -1752,10 +1753,20 @@ describe('audited current quest requirements', () => {
                             ],
                             "chunkOptions": [
                                   {
-                                        "cx": 48,
-                                        "cy": 54
+                                        "cx": 47,
+                                        "cy": 53
+                                  },
+                                  {
+                                        "cx": 47,
+                                        "cy": 52
                                   }
                             ]
+                      },
+                      {
+                            "id": "edgeville-dungeon-chronozon",
+                            "label": "Chronozon in Edgeville Dungeon",
+                            "standardAreas": ["Edgeville"],
+                            "chunkOptions": [{ "cx": 48, "cy": 54 }]
                       },
                       {
                             "id": "north-al-kharid",
@@ -3500,9 +3511,7 @@ describe('audited current quest requirements', () => {
           "West Ardougne"
     ],
     "locations": null,
-    "skills": {
-      "Agility": 65
-    },
+    "skills": {},
     "combatLevel": null,
     "prereqs": [
       "Mourning's End Part I"
@@ -4380,6 +4389,7 @@ describe('audited current quest requirements', () => {
         "skills": {},
         "combatLevel": null,
         "prereqs": [
+          "RFD: The Cook",
           "Fishing Contest"
         ],
         "oneOf": null,
@@ -4397,6 +4407,7 @@ describe('audited current quest requirements', () => {
         "skills": {},
         "combatLevel": null,
         "prereqs": [
+          "RFD: The Cook",
           "Goblin Diplomacy"
         ],
         "oneOf": null,
@@ -4415,7 +4426,9 @@ describe('audited current quest requirements', () => {
           "Cooking": 31
         },
         "combatLevel": null,
-        "prereqs": [],
+        "prereqs": [
+          "RFD: The Cook"
+        ],
         "oneOf": null,
         "manualRequirements": null,
         "points": 1,
@@ -4433,6 +4446,7 @@ describe('audited current quest requirements', () => {
         },
         "combatLevel": null,
         "prereqs": [
+          "RFD: The Cook",
           "Big Chompy Bird Hunting",
           "Biohazard",
           "Demon Slayer",
@@ -4454,11 +4468,10 @@ describe('audited current quest requirements', () => {
               "Edgeville"
         ],
         "locations": null,
-        "skills": {
-          "Cooking": 25
-        },
+        "skills": {},
         "combatLevel": null,
         "prereqs": [
+          "RFD: The Cook",
           "Gertrude's Cat",
           "Shadow of the Storm"
         ],
@@ -4481,6 +4494,7 @@ describe('audited current quest requirements', () => {
         },
         "combatLevel": null,
         "prereqs": [
+          "RFD: The Cook",
           "Big Chompy Bird Hunting"
         ],
         "oneOf": null,
@@ -4502,7 +4516,12 @@ describe('audited current quest requirements', () => {
         },
         "combatLevel": null,
         "prereqs": [
-          "Legends' Quest"
+          "RFD: The Cook",
+          "Family Crest",
+          "Heroes' Quest",
+          "Shilo Village",
+          "Underground Pass",
+          "Waterfall Quest"
         ],
         "oneOf": null,
         "manualRequirements": null,
@@ -4522,6 +4541,7 @@ describe('audited current quest requirements', () => {
         },
         "combatLevel": null,
         "prereqs": [
+          "RFD: The Cook",
           "Monkey Madness I"
         ],
         "oneOf": null,
@@ -4549,7 +4569,9 @@ describe('audited current quest requirements', () => {
           "RFD: Evil Dave",
           "RFD: Skrach Uglogwee",
           "RFD: Sir Amik Varze",
-          "RFD: King Awowogei"
+          "RFD: King Awowogei",
+          "Desert Treasure I",
+          "Horror from the Deep"
         ],
         "oneOf": null,
         "manualRequirements": null,
@@ -4842,7 +4864,8 @@ describe('audited current quest requirements', () => {
         "prereqs": [
           "Hazeel Cult",
           "The General's Shadow",
-          "Making Friends with My Arm"
+          "Making Friends with My Arm",
+          "Devious Minds"
         ],
         "oneOf": null,
         "manualRequirements": null,

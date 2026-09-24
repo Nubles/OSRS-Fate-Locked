@@ -5,6 +5,7 @@ import { verifyChain, replayInvariants, buildVerifiedBundle, computeRunId, ensur
 import { narrate, detectMilestones, toRunDay } from '../utils/timelapseNarration';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
+import { WikiIcon } from './WikiIcon';
 import { resolveModeRules } from '../config/gameModes';
 
 interface Props {
@@ -190,7 +191,7 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
           <div className={`max-w-2xl w-full ${theme.bg} border-2 ${theme.border} ${theme.glow} rounded-xl p-6 transition-all duration-300 ${isBroken || hasViolation ? 'ring-2 ring-red-500' : ''}`}>
             {currentMilestone && (
               <div className="mb-3 flex items-center gap-2 text-amber-300 font-bold uppercase tracking-widest text-xs animate-pulse">
-                <span className="text-2xl">{currentMilestone.emoji}</span>
+                <WikiIcon file={currentMilestone.image} alt="" Fallback={ShieldCheck} size={28} className="shrink-0" />
                 {currentMilestone.label}
               </div>
             )}

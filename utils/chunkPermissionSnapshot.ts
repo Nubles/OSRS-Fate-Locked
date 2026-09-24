@@ -9,10 +9,11 @@ import type {
 import type { UnlockState } from '../types';
 import { resourceReqFor, resourceUsable } from './chunkResources';
 import { chunkUnlocked, placeOf } from './chunkLocations';
-import { getQuestStatus, meetsSkillRequirement } from './journalStatus';
+import { evaluateQuestEligibility, meetsSkillRequirement } from './journalStatus';
+import { farmingPatchFor } from './farmingPatches';
 import { isBankReachable } from './reachability';
 import { canonicalBossId, resolveQuest } from './contentIdentity';
-import { evaluateEntityAccess, evaluateBankRequirements, type EntityAccessSource } from './entityAccess';
+import { evaluateEntityAccess, evaluateBankRequirements, type EntityAccessSource, type EntityAccessResult } from './entityAccess';
 
 export type PermissionStatus = 'ALLOWED' | 'NOT_READY' | 'LOCKED' | 'UNKNOWN';
 export type ChunkCategoryId =
@@ -64,8 +65,6 @@ const CATEGORY_ORDER: ChunkCategoryId[] = [
   'ACTIVITIES',
 ];
 
-const PATCH = /\bpatch\b|grapevine|giant seaweed/i;
-
 function withEntry(
   status: PermissionStatus,
   entry: PermissionStatus,
@@ -79,13 +78,13 @@ function withEntry(
 function questStatus(
   name: string,
   context: ChunkPermissionContext,
-): PermissionStatus {
+): EntityAccessResult {
   const quest = resolveQuest(name);
-  if (!quest) return 'UNKNOWN';
-  const status = getQuestStatus(quest, context.unlocks, context.gameModeId);
-  if (status === 'COMPLETED' || status === 'AVAILABLE') return 'ALLOWED';
-  if (status === 'LOCKED_REGION') return 'LOCKED';
-  return 'NOT_READY';
+  if (!quest) return { status: 'UNKNOWN', reasons: ['Quest requirements need review'] };
+  const result = evaluateQuestEligibility(quest, context.unlocks, context.gameModeId);
+  if (result.eligible) return { status: 'ALLOWED', reasons: [] };
+  return { status: result.status === 'LOCKED_REGION' ? 'LOCKED' : result.machineEligible ? 'UNKNOWN' : 'NOT_READY',
+    reasons: [...result.blockers.map(blocker => blocker.label), ...result.manualChecks] };
 }
 
 function sortRows(rows: ChunkPermissionRow[]): ChunkPermissionRow[] {
@@ -125,7 +124,7 @@ export function buildChunkPermissionSnapshot(
   };
 
   if (BANK_BY_ID[numericId]) {
-    const access = evaluateBankRequirements(content, coord, context.unlocks, context.contentService);
+    const access = evaluateBankRequirements(content, coord, context.unlocks, context.contentService, context.gameModeId ?? 'vanilla');
     add('BANKS', {
       key: `bank:${numericId}`,
       name: BANK_BY_ID[numericId].name,
@@ -162,10 +161,12 @@ export function buildChunkPermissionSnapshot(
   }
 
   for (const name of Object.keys(content.quests)) {
+    const access = questStatus(name, context);
     add('QUESTS', {
       key: `quest:${name.toLowerCase()}`,
       name,
-      status: withEntry(questStatus(name, context), entry),
+      status: withEntry(access.status, entry),
+      ...(access.reasons.length ? { detail: access.reasons.join('; ') } : {}),
     });
   }
 
@@ -196,10 +197,9 @@ export function buildChunkPermissionSnapshot(
   }
 
   for (const [name] of content.objects) {
-    if (PATCH.test(name)) {
-      const unlocked = context.unlocks.farming.some((patch) =>
-        name.toLowerCase().includes(patch.toLowerCase())
-        || patch.toLowerCase().includes(name.toLowerCase()));
+    const patch = farmingPatchFor(name);
+    if (patch) {
+      const unlocked = context.unlocks.farming.includes(patch);
       add('FARMING', {
         key: `farm:${name.toLowerCase()}`,
         name,

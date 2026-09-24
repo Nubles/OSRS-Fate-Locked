@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { ChevronDown, ChevronRight, Award, BookOpen, Map as MapIcon } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { Award, BookOpen, Map as MapIcon } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { QUEST_DATA } from '../data/questData';

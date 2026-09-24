@@ -2,7 +2,8 @@
 import { lazyWithRetry } from '../utils/lazyRetry';
 import React, { useRef, useEffect, useState, useMemo, lazy, Suspense } from 'react';
 import { useGame } from '../context/GameContext';
-import { Scroll, Search, Filter, Dices, Lock, Unlock, Zap, TrendingUp, AlertCircle, CheckCircle2, XCircle, Sparkles, Skull, ArrowUp, ArrowDown, Film } from 'lucide-react';
+import { Search, Filter, Lock, Unlock, TrendingUp, AlertCircle, CheckCircle2, XCircle, ArrowUp, ArrowDown, Film } from 'lucide-react';
+import { Scroll, Dices, Zap, Sparkles, Skull } from './OsrsIcon';
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { LogEntry } from '../types';
@@ -284,7 +285,7 @@ export const LogViewer: React.FC = () => {
       </div>
       
       {/* Log List */}
-      <div className="flex-1 min-h-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+      <div className="flex-1 min-h-0">
         {filteredHistory.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-600 gap-2">
              <Search size={32} className="opacity-20" />

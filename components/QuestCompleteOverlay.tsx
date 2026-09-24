@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Scroll, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { Scroll } from './OsrsIcon';
 
 /**
  * Quest-complete celebration. Listens for `fate:quest-complete` {name} and

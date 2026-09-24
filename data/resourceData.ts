@@ -14,6 +14,11 @@ export type SourceType =
   | 'CLUE';      // Treasure Trail rewards
 
 export interface ResourceSource {
+  merchantCategory?: string;
+  /** Bottle size used by this route and its material quantities. */
+  outputDoses?: number;
+  /** These resources cannot be taken out of the named activity. */
+  localOnly?: string;
   requirementsUnverified?: boolean;
   manualRequirements?: string[];
   type: SourceType;
@@ -118,6 +123,10 @@ export const resourceUnlockDependency = (
   return table ? { table, id: source.unlockId } : null;
 };
 
+export const RESOURCE_ENTITY_SKILLS: Readonly<Record<string, Record<string, number>>> = {
+  'Aberrant Spectre': { Slayer: 60 },
+};
+
 export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   // --- HERBS ---
   'Ranarr Weed': [
@@ -181,28 +190,39 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
 
   // --- POTIONS ---
   'Prayer Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 38 }, inputs: {'Ranarr Weed': 1, 'Snape Grass': 1, 'Vial of Water': 1}, notes: 'Standard Recipe (3-dose)', outputYield: 1 },
-    { type: 'DROP', name: 'Maniacal Monkey', regions: ['Kandarin'], quests: ['Monkey Madness I'], skills: {'Hunter': 60} },
-    { type: 'MINIGAME', name: 'Barrows Chest', regions: ['Morytania'], unlockId: 'Barrows Brothers' },
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 38 }, inputs: {'Ranarr Weed': 1, 'Snape Grass': 1, 'Vial of Water': 1}, notes: 'Standard Recipe (3-dose)', outputYield: 1 },
+    { type: 'DROP', name: 'Maniacal Monkey', regions: ['Islands & Others'], quests: ['Monkey Madness I'], manualRequirements: ['Reach chapter II of Monkey Madness II and unlock Kruk\'s Dungeon'], notes: 'Combat monkeys in Kruk\'s Dungeon on Ape Atoll; 1-dose drop', outputDoses: 1 },
     { type: 'DROP', name: 'Wyrm', regions: ['Kourend & Kebos'], skills: {'Slayer': 62}, notes: 'Uncommon drop (3-dose)' }
   ],
   'Super Attack': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 45 }, inputs: {'Irit Leaf': 1, 'Eye of Newt': 1, 'Vial of Water': 1} }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 45 }, inputs: {'Irit Leaf': 1, 'Eye of Newt': 1, 'Vial of Water': 1} }
+  ],
+
+  'Super Attack(4)': [
+    { type: 'SKILL', name: 'Decant by hand', regions: ['Any'], inputs: { 'Super Attack': 1 }, outputYield: 0.75, outputDoses: 4, notes: 'Combine 3-dose bottles into 4-dose bottles; extra doses remain.' }
   ],
   'Super Strength': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 55 }, inputs: {'Kwuarm': 1, 'Limpwurt Root': 1, 'Vial of Water': 1} }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 55 }, inputs: {'Kwuarm': 1, 'Limpwurt Root': 1, 'Vial of Water': 1} }
+  ],
+
+  'Super Strength(4)': [
+    { type: 'SKILL', name: 'Decant by hand', regions: ['Any'], inputs: { 'Super Strength': 1 }, outputYield: 0.75, outputDoses: 4, notes: 'Combine 3-dose bottles into 4-dose bottles; extra doses remain.' }
   ],
   'Super Defence': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 66 }, inputs: {'Cadantine': 1, 'White Berries': 1, 'Vial of Water': 1} }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 66 }, inputs: {'Cadantine': 1, 'White Berries': 1, 'Vial of Water': 1} }
+  ],
+
+  'Super Defence(4)': [
+    { type: 'SKILL', name: 'Decant by hand', regions: ['Any'], inputs: { 'Super Defence': 1 }, outputYield: 0.75, outputDoses: 4, notes: 'Combine 3-dose bottles into 4-dose bottles; extra doses remain.' }
   ],
   'Super Restore': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 63 }, inputs: {'Snapdragon': 1, 'Red Spiders\' Eggs': 1, 'Vial of Water': 1} }
   ],
   'Stamina Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 77 }, inputs: {'Super Energy(4)': 1, 'Amylase Crystal': 4} }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 4, regions: ['Any'], skills: { 'Herblore': 77 }, inputs: {'Super Energy(4)': 1, 'Amylase Crystal': 4} }
   ],
   'Ranging Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 72 }, inputs: {'Dwarf Weed': 1, 'Wine of Zamorak': 1, 'Vial of Water': 1} },
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 72 }, inputs: {'Dwarf Weed': 1, 'Wine of Zamorak': 1, 'Vial of Water': 1} },
     { type: 'DROP', name: 'Tarn Razorlor', regions: ['Morytania'], quests: ['Haunted Mine'] }
   ],
   'Saradomin Brew': [
@@ -211,7 +231,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Demonic Gorilla', regions: ['Kandarin'], quests: ['Monkey Madness II'], notes: 'No Slayer level required' }
   ],
   'Super Combat Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: {'Herblore': 90}, inputs: {'Super Attack': 1, 'Super Strength': 1, 'Super Defence': 1, 'Torstol': 1}, notes: 'Combine 4-dose potions' }
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: {'Herblore': 90}, inputs: {'Super Attack(4)': 1, 'Super Strength(4)': 1, 'Super Defence(4)': 1, 'Torstol': 1}, outputDoses: 4, notes: 'Combine three 4-dose super potions and torstol to produce a 4-dose super combat potion' }
   ],
   'Anti-venom': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: {'Herblore': 87}, inputs: {'Zulrah\'s Scales': 20, 'Antidote++': 1}, notes: 'Requires Antidote++ (Coconut Milk + Toadflax + Magic Roots)' },
@@ -221,7 +241,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: {'Herblore': 26}, inputs: {'Harralander': 1, 'Chocolate Dust': 1, 'Vial of Water': 1} }
   ],
   'Super Energy(4)': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: {'Herblore': 52}, inputs: {'Avantoe': 1, 'Mort Myre Fungus': 1, 'Vial of Water': 1}, outputYield: 1 }
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: {'Herblore': 52}, inputs: {'Avantoe': 1, 'Mort Myre Fungus': 1, 'Vial of Water': 1}, outputYield: 0.75, outputDoses: 4, notes: 'Each mix creates 3 doses; decant by hand into 4-dose bottles. Extra doses remain.' }
   ],
 
   // --- SECONDARIES ---
@@ -369,7 +389,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Magpie Impling', regions: ['Any'], skills: {'Hunter': 65} }
   ],
   'Black Dragon Leather': [
-    { type: 'SKILL', name: 'Tan Leather', regions: ['Any'], inputs: {'Black Dragonhide': 1, 'Coins': 20}, notes: 'Use Tanner or Lunar Spell' }
+    { type: 'SKILL', name: 'Tanner', merchantCategory: 'Tanners', regions: ['Any'], inputs: {'Black Dragonhide': 1, 'Coins': 20}, notes: 'Use a Tanner' }
   ],
   'Black Dragonhide': [
     { type: 'DROP', name: 'Black Dragon', regions: ['Asgarnia', 'Tirannwn'], notes: 'Taverley Dungeon' },
@@ -936,7 +956,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Demonic Gorilla', regions: ['Kandarin'], quests: ['Monkey Madness II'], notes: '1/300 Drop — no Slayer level required' }
   ],
   'Uncut Zenyte': [
-    { type: 'SKILL', name: 'Fusion', regions: ['Any'], skills: {'Crafting': 89}, inputs: {'Zenyte Shard': 1, 'Uncut Onyx': 1}, notes: 'Fools gold?' }
+    { type: 'SKILL', name: 'Flames of Zamorak (Ape Atoll)', regions: ['Islands & Others'], skills: {'Crafting': 70}, inputs: {'Zenyte Shard': 1, 'Onyx': 1}, quests: ['Monkey Madness I'], manualRequirements: ['Use a zombie monkey greegree at the Flames of Zamorak beneath Ape Atoll'], notes: 'Fuse the shard with a cut onyx; cutting the resulting uncut zenyte separately requires 89 Crafting' }
   ],
   'Uncut Onyx': [
     { type: 'SHOP', name: 'TzHaar-Hur-Lek', regions: ['Karamja'], notes: 'Costs 260k Tokkul' },
@@ -1164,7 +1184,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Cerberus', regions: ['Asgarnia'], unlockId: 'Cerberus' }
   ],
   'Ferocious Gloves': [
-    { type: 'SKILL', name: 'Lithkren Machine', regions: ['Kourend & Kebos'], inputs: {'Hydra Leather': 1, 'Barrows Gloves': 1}, quests: ['Dragon Slayer II'] }
+    { type: 'SKILL', name: 'Lithkren Machine', regions: ['Islands & Others'], inputs: {'Hydra Leather': 1, 'Hammer': 0}, quests: ['Dragon Slayer II'] }
   ],
   'Hydra Leather': [
     { type: 'DROP', name: 'Alchemical Hydra', regions: ['Kourend & Kebos'], unlockId: 'Alchemical Hydra' }
@@ -1408,26 +1428,26 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Cow', regions: ['Any'], rarity: 'Always', notes: 'Lumbridge / Crafting Guild pen' }
   ],
   'Leather': [
-    { type: 'SKILL', name: 'Tan Leather', regions: ['Any'], inputs: { 'Cowhide': 1, 'Coins': 1 }, notes: 'Use a Tanner' }
+    { type: 'SKILL', name: 'Tanner', merchantCategory: 'Tanners', regions: ['Any'], inputs: { 'Cowhide': 1, 'Coins': 1 }, notes: 'Use a Tanner' }
   ],
   'Hard Leather': [
-    { type: 'SKILL', name: 'Tan Leather', regions: ['Any'], inputs: { 'Cowhide': 1, 'Coins': 3 }, notes: 'Use a Tanner' }
+    { type: 'SKILL', name: 'Tanner', merchantCategory: 'Tanners', regions: ['Any'], inputs: { 'Cowhide': 1, 'Coins': 3 }, notes: 'Use a Tanner' }
   ],
   'Green Dragon Leather': [
-    { type: 'SKILL', name: 'Tan Leather', regions: ['Any'], inputs: { 'Green Dragonhide': 1, 'Coins': 20 } }
+    { type: 'SKILL', name: 'Tanner', merchantCategory: 'Tanners', regions: ['Any'], inputs: { 'Green Dragonhide': 1, 'Coins': 20 } }
   ],
   'Blue Dragon Leather': [
-    { type: 'SKILL', name: 'Tan Leather', regions: ['Any'], inputs: { 'Blue Dragonhide': 1, 'Coins': 20 } }
+    { type: 'SKILL', name: 'Tanner', merchantCategory: 'Tanners', regions: ['Any'], inputs: { 'Blue Dragonhide': 1, 'Coins': 20 } }
   ],
   'Red Dragon Leather': [
-    { type: 'SKILL', name: 'Tan Leather', regions: ['Any'], inputs: { 'Red Dragonhide': 1, 'Coins': 20 } }
+    { type: 'SKILL', name: 'Tanner', merchantCategory: 'Tanners', regions: ['Any'], inputs: { 'Red Dragonhide': 1, 'Coins': 20 } }
   ],
   'Wool': [
     { type: 'SKILL', name: 'Shear Sheep', regions: ['Any'], notes: 'Sheep pens (e.g. Lumbridge / Farming Guild)' }
   ],
   'Ball of Wool': [
-    { type: 'SKILL', name: 'Spinning Wheel', regions: ['Any'], inputs: { 'Wool': 1 } },
-    { type: 'SHOP', name: 'Crafting Shop', regions: ['Misthalin', 'Asgarnia'], notes: "Wyson / Crafting Guild" }
+    { type: 'SKILL', name: 'Spinning Wheel', regions: ['Any'], skills: { Crafting: 1 }, inputs: { 'Wool': 1 } },
+    { type: 'SHOP', name: "Aemad's Adventuring Supplies", merchantCategory: 'General Stores', regions: ['East Ardougne'] }
   ],
   'Thread': [
     { type: 'SHOP', name: 'Crafting Shop', regions: ['Misthalin', 'Asgarnia', 'Kandarin'], notes: 'Stocked widely' }
@@ -2330,10 +2350,10 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 3 }, inputs: { 'Guam Leaf': 1, 'Vial of Water': 1, 'Eye of Newt': 1 } }
   ],
   'Bastion Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 80 }, inputs: { 'Cadantine': 1, 'Vial of Blood': 1, 'Wine of Zamorak': 1 } }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 80 }, inputs: { 'Cadantine': 1, 'Vial of Blood': 1, 'Wine of Zamorak': 1 } }
   ],
   'Battlemage Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 80 }, inputs: { 'Cadantine': 1, 'Vial of Blood': 1, 'Potato Cactus': 1 } }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 80 }, inputs: { 'Cadantine': 1, 'Vial of Blood': 1, 'Potato Cactus': 1 } }
   ],
   'Blighted Overload': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 83 }, inputs: { 'Super Combat Potion': 1, 'Ranging Potion': 1, 'Magic Potion': 1, 'Chitin': 1 } }
@@ -2348,28 +2368,28 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 30 }, inputs: { 'Ranarr Weed': 1, 'Vial of Water': 1, 'White Berries': 1 } }
   ],
   'Divine Bastion Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 86 }, inputs: { 'Bastion Potion': 1, 'Crystal Dust': 1 } }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 86 }, inputs: { 'Bastion Potion': 1, 'Crystal Dust': 3 } }
   ],
   'Divine Battlemage Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 86 }, inputs: { 'Battlemage Potion': 1, 'Crystal Dust': 1 } }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 86 }, inputs: { 'Battlemage Potion': 1, 'Crystal Dust': 3 } }
   ],
   'Divine Magic Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 78 }, inputs: { 'Magic Potion': 1, 'Crystal Dust': 1 } }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 78 }, inputs: { 'Magic Potion': 1, 'Crystal Dust': 3 } }
   ],
   'Divine Ranging Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 74 }, inputs: { 'Ranging Potion': 1, 'Crystal Dust': 1 } }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 74 }, inputs: { 'Ranging Potion': 1, 'Crystal Dust': 3 } }
   ],
   'Divine Super Attack Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 70 }, inputs: { 'Super Attack': 1, 'Crystal Dust': 1 } }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 70 }, inputs: { 'Super Attack': 1, 'Crystal Dust': 3 } }
   ],
   'Divine Super Combat Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 97 }, inputs: { 'Super Combat Potion': 1, 'Crystal Dust': 1 } }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 4, regions: ['Any'], skills: { 'Herblore': 97 }, inputs: { 'Super Combat Potion': 1, 'Crystal Dust': 4 } }
   ],
   'Divine Super Defence Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 70 }, inputs: { 'Super Defence': 1, 'Crystal Dust': 1 } }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 70 }, inputs: { 'Super Defence': 1, 'Crystal Dust': 3 } }
   ],
   'Divine Super Strength Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 70 }, inputs: { 'Super Strength': 1, 'Crystal Dust': 1 } }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 70 }, inputs: { 'Super Strength': 1, 'Crystal Dust': 3 } }
   ],
   'Egniol Potion': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 1 }, inputs: { 'Crystal Dust (The Gauntlet)': 10 } },
@@ -2419,7 +2439,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 57 }, inputs: { 'Vial of Water': 1, 'Star Flower': 1, 'Gorak Claw Powder': 1 } }
   ],
   'Magic Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 76 }, inputs: { 'Lantadyme': 1, 'Vial of Water': 1, 'Potato Cactus': 1 } }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 76 }, inputs: { 'Lantadyme': 1, 'Vial of Water': 1, 'Potato Cactus': 1 } }
   ],
   'Menaphite Remedy': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 88 }, inputs: { 'Dwarf Weed': 1, 'Vial of Water': 1, 'Lily of the Sands': 1 } }
@@ -2547,7 +2567,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Prifddinas Activities', regions: ['Tirannwn'], quests: ['Song of the Elves'], notes: 'Crystal Maths, mining, etc.' }
   ],
   'Crystal Dust': [
-    { type: 'SKILL', name: 'Crush Crystal Shard', regions: ['Tirannwn'], inputs: { 'Crystal Shard': 1 }, notes: 'Grind with a Pestle and mortar' }
+    { type: 'SKILL', name: 'Crush Crystal Shard', regions: ['Any'], inputs: { 'Crystal Shard': 1 }, outputYield: 10, notes: 'Grind with a Pestle and mortar; one shard makes 10 dust' }
   ],
   'Lava Scale': [
     { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', rarity: 'Common' }
@@ -2664,8 +2684,11 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Smithing': 20 }, inputs: { 'Silver Ore': 1 } },
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: { 'Smithing': 20 }, inputs: { 'Silver Ore': 1 }, unlockId: 'Blast Furnace' }
   ],
+  'Raw Beef': [
+    { type: 'DROP', name: 'Cow', regions: ['Misthalin', 'Asgarnia', 'Kourend & Kebos', 'Islands & Others', 'Tirannwn', 'Kandarin'], notes: 'Raw beef from ordinary cows' }
+  ],
   'Sinew': [
-    { type: 'SKILL', name: 'Cooking', regions: ['Any'], inputs: { 'Cowhide': 1 }, notes: 'Use cowhide on a range' }
+    { type: 'SKILL', name: 'Cooking', regions: ['Any'], skills: { 'Cooking': 1 }, inputs: { 'Raw Beef': 1 }, notes: 'Use raw beef on a range and choose Make sinew; cooking can fail' }
   ],
   'Oak Shield': [
     { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 27 }, inputs: { 'Oak Logs': 2 } }
@@ -2744,125 +2767,117 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Gorak Claw': 1 }, notes: 'Grind with a Pestle and mortar' }
   ],
   'Lily of the Sands': [
-    { type: 'SKILL', name: 'Civitas Garden', regions: ['Varlamore'], skills: { 'Farming': 73 }, notes: 'Civitas illa Fortis special patch' }
+    { type: 'DROP', name: 'Tombs of Amascut reward chest', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', notes: 'Raid completion reward' }
   ],
   'Olive Oil': [
-    { type: 'SKILL', name: 'Make Olive Oil', regions: ['Morytania'], skills: { 'Cooking': 32 }, inputs: { 'Olive': 1, 'Empty Vial': 1 }, quests: ["Shades of Mort'ton"] }
-  ],
-  'Olive': [
-    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Morytania'], notes: "Mort'ton" }
+    { type: 'SHOP', name: 'Razmire General Store', regions: ['Morytania'], merchantCategory: 'General Stores', manualRequirements: ['Cure Razmire using Serum 207 or Serum 208'], notes: 'Purchased olive oil; it cannot be cooked from olives' },
+    { type: 'SHOP', name: 'Rasolo', regions: ['Kandarin'], merchantCategory: 'General Stores', notes: 'Wandering merchant south of the Baxtorian Falls' }
   ],
   'Tree Roots': [
     { type: 'SKILL', name: 'Farming', regions: ['Any'], skills: { 'Farming': 15 }, notes: 'Dig up any tree stump after harvest' }
   ],
   "Rogue's Purse": [
-    { type: 'SKILL', name: 'Picking', regions: ['Morytania'], skills: { 'Farming': 4 }, quests: ['Nature Spirit'], notes: "Mort Myre Swamp mushrooms" }
+    { type: 'SKILL', name: 'Pick and clean rogue\'s purse', regions: ['Karamja'], skills: { 'Herblore': 3 }, manualRequirements: ['Start Jungle Potion and reach the rogue\'s purse herb step'], notes: 'Pick grimy rogue\'s purse from cave walls in the Jogre Dungeon, then clean it' }
   ],
 
-  // --- MASTERING MIXOLOGY HERBS / INGREDIENTS ---
-  // The MM minigame in Morytania produces its own herb line + a "water-filled
-  // gourd vial" used in every MM-only potion. Each is gated on the minigame
-  // unlock so locked players' breakdowns show MM as the prereq.
+  // --- CHAMBERS OF XERIC: RESOURCES CANNOT LEAVE THE RAID ---
   'Noxifer': [
-    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology', notes: 'Aga-paste herb' }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], unlockId: 'Chambers of Xeric', skills: { Farming: 55 }, notes: 'Farm raid seeds; only usable inside the raid' }
   ],
   'Golpar': [
-    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology', notes: 'Mox-paste herb' }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], unlockId: 'Chambers of Xeric', skills: { Farming: 27 }, notes: 'Farm raid seeds; only usable inside the raid' }
   ],
   'Buchu Leaf': [
-    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology', notes: 'Lye-paste herb' }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], unlockId: 'Chambers of Xeric', skills: { Farming: 39 }, notes: 'Farm raid seeds; only usable inside the raid' }
   ],
   'Cicely': [
-    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology' }
+    { type: 'DROP', name: 'Scavengers (Chambers of Xeric)', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], unlockId: 'Chambers of Xeric' }
   ],
   'Stinkhorn Mushroom': [
-    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology' }
+    { type: 'DROP', name: 'Scavengers (Chambers of Xeric)', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], unlockId: 'Chambers of Xeric' }
   ],
   'Endarkened Juice': [
-    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology' }
-  ],
-  'Aldarium': [
-    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology', notes: 'Crafted intermediate' }
-  ],
-  'Huasca': [
-    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology' }
+    { type: 'DROP', name: 'Scavengers (Chambers of Xeric)', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], unlockId: 'Chambers of Xeric' }
   ],
   'Water-filled Gourd Vial': [
-    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology' }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], unlockId: 'Chambers of Xeric' }
   ],
 
-  // --- MASTERING MIXOLOGY POTIONS ---
-  // Each potion has both the MM minigame source (with the unlock gate) and
-  // its real Herblore level so the existing skill check still applies.
-  // Mixing happens at the Lab in Morytania.
   'Elder Potion': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 59 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Stinkhorn Mushroom': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 59 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Stinkhorn Mushroom': 1 } }
   ],
   'Elder (+)': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 70 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Stinkhorn Mushroom': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 70 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Stinkhorn Mushroom': 1 } }
   ],
   'Elder (-)': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 47 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Stinkhorn Mushroom': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 47 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Stinkhorn Mushroom': 1 } }
   ],
   'Kodai Potion': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 59 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Endarkened Juice': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 59 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Endarkened Juice': 1 } }
   ],
   'Kodai (+)': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 70 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Endarkened Juice': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 70 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Endarkened Juice': 1 } }
   ],
   'Kodai (-)': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 47 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Endarkened Juice': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 47 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Endarkened Juice': 1 } }
   ],
   'Twisted Potion': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 59 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Cicely': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 59 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Cicely': 1 } }
   ],
   'Twisted (+)': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 70 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Cicely': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 70 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Cicely': 1 } }
   ],
   'Twisted (-)': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 47 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Cicely': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 47 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Cicely': 1 } }
   ],
   'Prayer Enhance': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 65 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Cicely': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 65 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Cicely': 1 } }
   ],
   'Prayer Enhance (+)': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 78 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Cicely': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 78 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Cicely': 1 } }
   ],
   'Prayer Enhance (-)': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 52 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Cicely': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 52 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Cicely': 1 } }
   ],
   'Revitalisation Potion': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 65 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Stinkhorn Mushroom': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 65 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Stinkhorn Mushroom': 1 } }
   ],
   'Revitalisation (+)': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 78 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Stinkhorn Mushroom': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 78 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Stinkhorn Mushroom': 1 } }
   ],
   'Revitalisation (-)': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 52 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Stinkhorn Mushroom': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 52 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Stinkhorn Mushroom': 1 } }
   ],
   "Xeric's Aid": [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 65 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Endarkened Juice': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 65 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Endarkened Juice': 1 } }
   ],
   "Xeric's Aid (+)": [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 78 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Endarkened Juice': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 78 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Endarkened Juice': 1 } }
   ],
   "Xeric's Aid (-)": [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 52 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Endarkened Juice': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 52 }, unlockId: 'Chambers of Xeric', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Endarkened Juice': 1 } }
   ],
   'Overload (+)': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 90 }, unlockId: 'Mastering Mixology', inputs: { 'Noxifer': 1, 'Elder (+)': 1, 'Twisted (+)': 1, 'Kodai (+)': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 90 }, unlockId: 'Chambers of Xeric', inputs: { 'Noxifer': 1, 'Elder (+)': 1, 'Twisted (+)': 1, 'Kodai (+)': 1 } }
   ],
   'Overload (-)': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 60 }, unlockId: 'Mastering Mixology', inputs: { 'Noxifer': 1, 'Elder (-)': 1, 'Twisted (-)': 1, 'Kodai (-)': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 60 }, unlockId: 'Chambers of Xeric', inputs: { 'Noxifer': 1, 'Elder (-)': 1, 'Twisted (-)': 1, 'Kodai (-)': 1 } }
   ],
   'Overload (Chambers of Xeric)': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 75 }, unlockId: 'Mastering Mixology', inputs: { 'Noxifer': 1, 'Elder Potion': 1, 'Twisted Potion': 1, 'Kodai Potion': 1 } }
+    { type: 'SKILL', name: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'], skills: { 'Herblore': 75 }, unlockId: 'Chambers of Xeric', inputs: { 'Noxifer': 1, 'Elder Potion': 1, 'Twisted Potion': 1, 'Kodai Potion': 1 } }
+  ],
+  // --- MASTERING MIXOLOGY REWARD AND OVERWORLD POTIONS ---
+  'Aldarium': [
+    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Varlamore'], unlockId: 'Mastering Mixology', notes: 'Buy from the reward shop with minigame points' }
+  ],
+  'Huasca': [
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: { Farming: 65, Herblore: 58 }, manualRequirements: ['Have a huasca seed and an accessible herb patch'], notes: 'Grow huasca from seeds and clean the harvested herb; not a Mastering Mixology reward' }
   ],
   'Goading Potion': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 54 }, unlockId: 'Mastering Mixology', inputs: { 'Harralander': 1, 'Vial of Water': 1, 'Aldarium': 1 } }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 54 }, inputs: { 'Harralander': 1, 'Vial of Water': 1, 'Aldarium': 1 } }
   ],
   'Prayer Regeneration Potion': [
-    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 58 }, unlockId: 'Mastering Mixology', inputs: { 'Huasca': 1, 'Vial of Water': 1, 'Aldarium': 1 } }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 58 }, inputs: { 'Huasca': 1, 'Vial of Water': 1, 'Aldarium': 1 } }
   ],
 };
 
@@ -2893,6 +2908,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
   ],
   'Potions': [
     'Prayer Potion', 'Super Attack', 'Super Strength', 'Super Defence',
+    'Super Attack(4)', 'Super Strength(4)', 'Super Defence(4)',
     'Super Restore', 'Stamina Potion', 'Ranging Potion', 'Saradomin Brew',
     'Super Combat Potion', 'Anti-venom', 'Energy Potion', 'Super Energy(4)',
     'Agility Potion',
@@ -2959,7 +2975,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Crushed Superior Dragon Bones', 'Crystal Shard', 'Crystal Dust',
     'Lava Scale', 'Lava Scale Shard', 'Ashes',
     'Kebbit Teeth', 'Kebbit Teeth Dust', 'Gorak Claw', 'Gorak Claw Powder',
-    'Lily of the Sands', 'Olive Oil', 'Olive', 'Tree Roots', "Rogue's Purse",
+    'Lily of the Sands', 'Olive Oil', 'Tree Roots', "Rogue's Purse",
   ],
   'Logs': [
     'Logs', 'Oak Logs', 'Willow Logs', 'Teak Logs', 'Maple Logs',
@@ -2989,7 +3005,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Adamantite Bar', 'Rune Bar', 'Blurite Bar', 'Elemental Bar',
     'Elemental Ore', 'Lovakite Bar', 'Silver Bar', 'Cannonball', 'Hammer',
     'Ammo Mould', 'Bar Mould', 'Goldsmith Gauntlets', 'Ice Gloves',
-    'Smithing Catalyst', 'Imcando Hammer', 'Adamantite Nails', 'Sinew',
+    'Smithing Catalyst', 'Imcando Hammer', 'Adamantite Nails', 'Sinew', 'Raw Beef',
   ],
   'Fishing & Food': [
     'Raw Shrimps', 'Raw Sardine', 'Raw Herring', 'Raw Anchovies', 'Raw Trout',
@@ -3101,9 +3117,9 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
   'Treasure Trail Rewards': [
     'Ranger Boots', 'Robin Hood Hat', 'Holy Sandals',
   ],
-  'Mastering Mixology': [
+  'Chambers of Xeric (raid only)': [
     'Noxifer', 'Golpar', 'Buchu Leaf', 'Cicely', 'Stinkhorn Mushroom',
-    'Endarkened Juice', 'Aldarium', 'Huasca', 'Water-filled Gourd Vial',
+    'Endarkened Juice', 'Water-filled Gourd Vial',
     'Elder Potion', 'Elder (+)', 'Elder (-)',
     'Kodai Potion', 'Kodai (+)', 'Kodai (-)',
     'Twisted Potion', 'Twisted (+)', 'Twisted (-)',
@@ -3111,8 +3127,8 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Revitalisation Potion', 'Revitalisation (+)', 'Revitalisation (-)',
     "Xeric's Aid", "Xeric's Aid (+)", "Xeric's Aid (-)",
     'Overload (+)', 'Overload (-)', 'Overload (Chambers of Xeric)',
-    'Goading Potion', 'Prayer Regeneration Potion',
   ],
+  'Mastering Mixology supplies': ['Aldarium', 'Huasca', 'Goading Potion', 'Prayer Regeneration Potion'],
   'Adamant Smithing': [
     'Adamant 2h Sword',
     'Adamant Arrowtips',

@@ -953,6 +953,41 @@ describe('walkthrough CLI argument parsing', () => {
     expect(() => parseWalkthroughSyncArgs(['--other'])).toThrow(/unknown command/i);
   });
 });
+describe('walkthrough current membership compatibility', () => {
+  it('accepts the Tutorial main-page title and keeps the retained legacy source records', async () => {
+    const { validateWalkthroughSource, parseWalkthroughSyncArgs } = await import('./sync-quest-walkthroughs.mjs');
+    expect(() => validateWalkthroughSource(pinnedWalkthroughSource, reviewedMembership)).not.toThrow();
+    expect(parseWalkthroughSyncArgs(['--refresh', '--quest-id=learning-the-ropes'])).toEqual({
+      mode: 'refresh', questIds: ['learning-the-ropes'],
+    });
+    expect(() => parseWalkthroughSyncArgs(['--refresh', '--quest-id=daddys-home']))
+      .toThrow(/F2P membership/i);
+  });
+
+  it('restricts the main-page exception to the exact Tutorial title', async () => {
+    const { validateWalkthroughSource } = await import('./sync-quest-walkthroughs.mjs');
+    for (const [questId, wikiTitle] of [
+      ["Cook's Assistant", "Cook's Assistant"],
+      ['Learning the Ropes', 'Learning the Ropes/Quick guide'],
+      ['Learning the Ropes', 'Tutorial Island'],
+    ]) {
+      const membership = structuredClone(reviewedMembership);
+      membership.quests.find(quest => quest.questId === questId)!.wikiTitle = wikiTitle;
+      expect(() => validateWalkthroughSource(pinnedWalkthroughSource, membership))
+        .toThrow(/Wiki title is invalid/i);
+    }
+  });
+
+  it('does not admit other members quests through the legacy exception', async () => {
+    const { validateWalkthroughSource } = await import('./sync-quest-walkthroughs.mjs');
+    const source = structuredClone(pinnedWalkthroughSource);
+    source.quests[0].questId = 'Priest in Peril';
+    source.quests[0].wikiTitle = 'Priest in Peril/Quick guide';
+    expect(() => validateWalkthroughSource(source, reviewedMembership))
+      .toThrow(/unsupported F2P membership quest ID/i);
+  });
+});
+
 describe('promotion graph validation', () => {
   it('rejects a reviewed source line when the same ID has changed wording', async () => {
     const candidate = cliSourceFixture('REVIEWED');

@@ -268,15 +268,31 @@
       "ordinal": 1,
       "description": "Enter the Unicorn pen in Ardougne zoo using Fairy rings.",
       "skills": {},
-      "quests": [
-        "Fairytale II - Cure a Queen"
-      ],
+      "quests": [],
       "regions": [
         "East Ardougne"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Fairytale II - Cure a Queen Dramen or Lunar staff to travel to Fairy ring code B I S."
+      "sourceRequirements": "Started Fairytale II - Cure a Queen Dramen or Lunar staff to travel to Fairy ring code B I S.",
+      "questProgress": [
+        {
+          "quest": "Fairytale II - Cure a Queen",
+          "label": "Reached the required progress in Fairytale II - Cure a Queen for: Enter the Unicorn pen in Ardougne zoo using Fairy rings."
+        }
+      ],
+      "mobility": [
+        "Fairy Rings"
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Dramen or lunar staff for fairy rings",
+          "unlessDiary": "Lumbridge Elite",
+          "manualCheck": "Have Dramen or lunar staff for fairy rings and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "ard_med_2",
@@ -296,7 +312,20 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "39 Agility, 38 Strength and 21 Ranged Mith grapple and any crossbow"
+      "sourceRequirements": "39 Agility, 38 Strength and 21 Ranged Mith grapple and any crossbow",
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Crossbow for the grapple shortcut",
+          "manualCheck": "Have Crossbow for the grapple shortcut and confirm that the specific item is permitted by your equipment tier"
+        },
+        {
+          "slot": "Ammo",
+          "tier": 3,
+          "reason": "Mith grapple for the shortcut"
+        }
+      ]
     },
     {
       "id": "ard_med_3",
@@ -355,6 +384,9 @@
       "sourceRequirements": "Completion of Enlightened Journey 50 Firemaking Yew log If the route has not been unlocked yet, 11 total yew logs are required to unlock it before flying again to Castle Wars to complete this task. Upon unlocking the route, you may use 1 normal log to depart to Taverley before returning to Castle Wars for the task completion.",
       "regions": [
         "Castle Wars"
+      ],
+      "mobility": [
+        "Balloon Transport"
       ]
     },
     {
@@ -374,7 +406,10 @@
       "sourceRequirements": "Completion of The Hand in the Sand (unless playing as Ultimate Ironman ) Bucket",
       "oneOf": [
         {
-          "label": "Ultimate Ironman exemption"
+          "label": "Ultimate Ironman exemption",
+          "manualRequirements": [
+            "Confirm this is an Ultimate Ironman account and complete the bucket-filling alternative"
+          ]
         },
         {
           "quests": [
@@ -391,15 +426,19 @@
       "ordinal": 7,
       "description": "Catch any fish on the Fishing Platform.",
       "skills": {},
-      "quests": [
-        "Sea Slug"
-      ],
+      "quests": [],
       "regions": [
         "Witchaven"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Sea Slug A small fishing net"
+      "sourceRequirements": "Started Sea Slug A small fishing net",
+      "questProgress": [
+        {
+          "quest": "Sea Slug",
+          "label": "Reached the required progress in Sea Slug for: Catch any fish on the Fishing Platform."
+        }
+      ]
     },
     {
       "id": "ard_med_8",
@@ -427,15 +466,19 @@
       "ordinal": 9,
       "description": "Collect some Nightshade from the Skavid Caves.",
       "skills": {},
-      "quests": [
-        "Watchtower"
-      ],
+      "quests": [],
       "regions": [
         "Yanille"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of Watchtower Any light source and the Skavid map"
+      "sourceRequirements": "Partial completion of Watchtower Any light source and the Skavid map",
+      "questProgress": [
+        {
+          "quest": "Watchtower",
+          "label": "Reached the required progress in Watchtower for: Collect some Nightshade from the Skavid Caves."
+        }
+      ]
     },
     {
       "id": "ard_med_10",
@@ -471,7 +514,29 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Underground Pass Iban's upgraded staff, or 200,000 coins and Iban's staff to have the Dark Mage in West Ardougne upgrade it"
+      "sourceRequirements": "Completion of Underground Pass Iban's upgraded staff, or 200,000 coins and Iban's staff to have the Dark Mage in West Ardougne upgrade it",
+      "oneOf": [
+        {
+          "label": "Equip upgraded Iban staff",
+          "equipmentRequirements": [
+            {
+              "slot": "Weapon",
+              "tier": 5,
+              "reason": "Iban's upgraded staff"
+            }
+          ],
+          "skills": {
+            "Attack": 50,
+            "Magic": 50
+          }
+        },
+        {
+          "label": "Upgrade an Iban staff without wielding it",
+          "manualRequirements": [
+            "Have Iban's staff and 200,000 coins to pay the Dark Mage"
+          ]
+        }
+      ]
     },
     {
       "id": "ard_med_12",
@@ -481,15 +546,31 @@
       "ordinal": 12,
       "description": "Visit the Island East of the Necromancer's tower.",
       "skills": {},
-      "quests": [
-        "Fairytale II - Cure a Queen"
-      ],
+      "quests": [],
       "regions": [
         "East Ardougne"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Fairytale II - Cure a Queen Dramen or Lunar staff to travel to Fairy ring code A I R"
+      "sourceRequirements": "Started Fairytale II - Cure a Queen Dramen or Lunar staff to travel to Fairy ring code A I R",
+      "questProgress": [
+        {
+          "quest": "Fairytale II - Cure a Queen",
+          "label": "Reached the required progress in Fairytale II - Cure a Queen for: Visit the Island East of the Necromancer's tower."
+        }
+      ],
+      "mobility": [
+        "Fairy Rings"
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Dramen or lunar staff for fairy rings",
+          "unlessDiary": "Lumbridge Elite",
+          "manualCheck": "Have Dramen or lunar staff for fairy rings and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "ard_hard_1",
@@ -554,15 +635,27 @@
       "ordinal": 4,
       "description": "Have a zookeeper put you in Ardougne Zoo's monkey cage.",
       "skills": {},
-      "quests": [
-        "Monkey Madness I"
-      ],
+      "quests": [],
       "regions": [
         "East Ardougne"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of the Monkey Madness I quest Karamjan monkey greegree"
+      "sourceRequirements": "Partial completion of the Monkey Madness I quest Karamjan monkey greegree",
+      "questProgress": [
+        {
+          "quest": "Monkey Madness I",
+          "label": "Reached the required progress in Monkey Madness I for: Have a zookeeper put you in Ardougne Zoo's monkey cage."
+        }
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Karamjan monkey greegree",
+          "manualCheck": "Have Karamjan monkey greegree and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "ard_hard_5",
@@ -686,15 +779,19 @@
       "skills": {
         "Smithing": 60
       },
-      "quests": [
-        "Plague City"
-      ],
+      "quests": [],
       "regions": [
         "West Ardougne"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of Plague City 60 Smithing Shield left half, shield right half and a hammer"
+      "sourceRequirements": "Partial completion of Plague City 60 Smithing Shield left half, shield right half and a hammer",
+      "questProgress": [
+        {
+          "quest": "Plague City",
+          "label": "Reached the required progress in Plague City for: Smith a Dragon sq shield in West Ardougne."
+        }
+      ]
     },
     {
       "id": "ard_hard_12",
@@ -809,7 +906,29 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Imbue a Salve amulet at Nightmare Zone.",
-      "sourceRequirements": "Completion of the Haunted Mine Access to the Nightmare Zone Salve amulet(i) or Salve amulet(ei), or 800,000 Nightmare Zone points points to imbue the normal one (reduced to 400,000 points with the hard tier of the Combat Achievements completed)"
+      "sourceRequirements": "Completion of the Haunted Mine Access to the Nightmare Zone Salve amulet(i) or Salve amulet(ei), or 800,000 Nightmare Zone points points to imbue the normal one (reduced to 400,000 points with the hard tier of the Combat Achievements completed)",
+      "oneOf": [
+        {
+          "label": "Equip an amulet already imbued at Nightmare Zone",
+          "equipmentRequirements": [
+            {
+              "slot": "Neck",
+              "tier": 1,
+              "reason": "Salve amulet imbued at Nightmare Zone",
+              "manualCheck": "Have Salve amulet imbued at Nightmare Zone and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "manualRequirements": [
+            "The equipped salve amulet was imbued at Nightmare Zone"
+          ]
+        },
+        {
+          "label": "Imbue an amulet without wearing it",
+          "manualRequirements": [
+            "Access Nightmare Zone and have the salve amulet and points needed to imbue it there"
+          ]
+        }
+      ]
     },
     {
       "id": "ard_elite_6",
@@ -865,6 +984,9 @@
       "sourceRequirements": "Completion of Desert Treasure I 94 Magic Means to cast Ice Barrage ( or a Blighted ancient ice sack for every cast)",
       "regions": [
         "Castle Wars"
+      ],
+      "arcana": [
+        "Ancient Magicks"
       ]
     },
     {
@@ -931,7 +1053,27 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Desert shirt, desert robe, and desert boots"
+      "sourceRequirements": "Desert shirt, desert robe, and desert boots",
+      "equipmentRequirements": [
+        {
+          "slot": "Body",
+          "tier": 1,
+          "reason": "Desert shirt",
+          "manualCheck": "Have Desert shirt and confirm that the specific item is permitted by your equipment tier"
+        },
+        {
+          "slot": "Legs",
+          "tier": 1,
+          "reason": "Desert robe",
+          "manualCheck": "Have Desert robe and confirm that the specific item is permitted by your equipment tier"
+        },
+        {
+          "slot": "Boots",
+          "tier": 1,
+          "reason": "Desert boots",
+          "manualCheck": "Have Desert boots and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "des_easy_5",
@@ -990,15 +1132,19 @@
       "ordinal": 8,
       "description": "Sell some artefacts to Simon Templeton.",
       "skills": {},
-      "quests": [
-        "Icthlarin's Little Helper"
-      ],
+      "quests": [],
       "regions": [
         "Agility Pyramid"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Players must have started Icthlarin's Little Helper for access to Sophanem. Any artefact from Pyramid Plunder."
+      "sourceRequirements": "Players must have started Icthlarin's Little Helper for access to Sophanem. Any artefact from Pyramid Plunder.",
+      "questProgress": [
+        {
+          "quest": "Icthlarin's Little Helper",
+          "label": "Reached the required progress in Icthlarin's Little Helper for: Sell some artefacts to Simon Templeton."
+        }
+      ]
     },
     {
       "id": "des_easy_9",
@@ -1010,16 +1156,20 @@
       "skills": {
         "Thieving": 21
       },
-      "quests": [
-        "Icthlarin's Little Helper"
-      ],
+      "quests": [],
       "regions": [
         "Sophanem"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Open the Sarcophagus in the first room of Pyramid Plunder.",
-      "sourceRequirements": "Started Icthlarin's Little Helper 21 Thieving"
+      "sourceRequirements": "Started Icthlarin's Little Helper 21 Thieving",
+      "questProgress": [
+        {
+          "quest": "Icthlarin's Little Helper",
+          "label": "Reached the required progress in Icthlarin's Little Helper for: Open the Sarcophagus in the first room of Pyramid Plunder"
+        }
+      ]
     },
     {
       "id": "des_easy_10",
@@ -1051,7 +1201,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "200 coins and a Shantay Pass or another 5 coins."
+      "sourceRequirements": "200 coins and a Shantay Pass or another 5 coins.",
+      "mobility": [
+        "Magic Carpets"
+      ]
     },
     {
       "id": "des_med_1",
@@ -1141,7 +1294,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of The Golem 200 coins (or 205 coins if using the Shantay Pass )"
+      "sourceRequirements": "Completion of The Golem 200 coins (or 205 coins if using the Shantay Pass )",
+      "mobility": [
+        "Magic Carpets"
+      ]
     },
     {
       "id": "des_med_6",
@@ -1159,7 +1315,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Eagles' Peak Rope"
+      "sourceRequirements": "Completion of Eagles' Peak Rope",
+      "mobility": [
+        "Eagle Transport"
+      ]
     },
     {
       "id": "des_med_7",
@@ -1228,7 +1387,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Enakhra's Lament Camulet"
+      "sourceRequirements": "Completion of Enakhra's Lament Camulet",
+      "mobility": [
+        "Camulet"
+      ]
     },
     {
       "id": "des_med_10",
@@ -1238,15 +1400,19 @@
       "ordinal": 10,
       "description": "Visit the Genie.",
       "skills": {},
-      "quests": [
-        "Spirits of the Elid"
-      ],
+      "quests": [],
       "regions": [
         "Nardah"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Spirits of the Elid Rope and light source"
+      "sourceRequirements": "Started Spirits of the Elid Rope and light source",
+      "questProgress": [
+        {
+          "quest": "Spirits of the Elid",
+          "label": "Reached the required progress in Spirits of the Elid for: Visit the Genie."
+        }
+      ]
     },
     {
       "id": "des_med_11",
@@ -1264,7 +1430,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "20 Construction Scroll of redirection and a house tablet"
+      "sourceRequirements": "20 Construction Scroll of redirection and a house tablet",
+      "mobility": [
+        "Teleport Tablets"
+      ]
     },
     {
       "id": "des_med_12",
@@ -1294,15 +1463,27 @@
       "skills": {
         "Thieving": 65
       },
-      "quests": [
-        "The Feud"
-      ],
+      "quests": [],
       "regions": [
         "Pollnivneach"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of The Feud 65 Thieving Any blackjack"
+      "sourceRequirements": "Partial completion of The Feud 65 Thieving Any blackjack",
+      "questProgress": [
+        {
+          "quest": "The Feud",
+          "label": "Reached the required progress in The Feud for: Knock out and pickpocket a Menaphite Thug."
+        }
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Blackjack to knock out a Menaphite thug",
+          "manualCheck": "Have Blackjack to knock out a Menaphite thug and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "des_hard_2",
@@ -1354,6 +1535,9 @@
         "Giants' Plateau",
         "Kalphite Lair",
         "Ruins of Unkah"
+      ],
+      "arcana": [
+        "Lunar Spellbook"
       ]
     },
     {
@@ -1403,7 +1587,6 @@
         "Slayer": 65
       },
       "quests": [
-        "Desert Treasure I",
         "Cabin Fever"
       ],
       "regions": [
@@ -1411,7 +1594,20 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Desert Treasure I 65 Slayer and 10 Defence Slayer helmet (requires 55 Crafting ) (and completion of Cabin Fever for Ironman accounts )"
+      "sourceRequirements": "Started Desert Treasure I 65 Slayer and 10 Defence Slayer helmet (requires 55 Crafting ) (and completion of Cabin Fever for Ironman accounts )",
+      "questProgress": [
+        {
+          "quest": "Desert Treasure I",
+          "label": "Reached the required progress in Desert Treasure I for: Slay a Dust Devil in the desert cave with a Slayer helmet equipped."
+        }
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Head",
+          "tier": 6,
+          "reason": "Slayer helmet"
+        }
+      ]
     },
     {
       "id": "des_hard_7",
@@ -1429,7 +1625,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Desert Treasure I"
+      "sourceRequirements": "Completion of Desert Treasure I",
+      "arcana": [
+        "Ancient Magicks"
+      ]
     },
     {
       "id": "des_hard_8",
@@ -1441,15 +1640,27 @@
       "skills": {
         "Attack": 50
       },
-      "quests": [
-        "Contact!"
-      ],
+      "quests": [],
       "regions": [
         "Sophanem"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of Contact! 50 Attack Keris or Keris partisan, and any light source"
+      "sourceRequirements": "Partial completion of Contact! 50 Attack Keris or Keris partisan, and any light source",
+      "questProgress": [
+        {
+          "quest": "Contact!",
+          "label": "Reached the required progress in Contact! for: Defeat a Locust Rider with Keris."
+        }
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Keris (or a higher-tier keris partisan)",
+          "manualCheck": "Have Keris (or a higher-tier keris partisan) and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "des_hard_9",
@@ -1538,6 +1749,9 @@
         "Giants' Plateau",
         "Kalphite Lair",
         "Ruins of Unkah"
+      ],
+      "arcana": [
+        "Ancient Magicks"
       ]
     },
     {
@@ -1585,15 +1799,19 @@
       "skills": {
         "Thieving": 91
       },
-      "quests": [
-        "Icthlarin's Little Helper"
-      ],
+      "quests": [],
       "regions": [
         "Sophanem"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Icthlarin's Little Helper 91 Thieving"
+      "sourceRequirements": "Started Icthlarin's Little Helper 91 Thieving",
+      "questProgress": [
+        {
+          "quest": "Icthlarin's Little Helper",
+          "label": "Reached the required progress in Icthlarin's Little Helper for: Steal from the Grand Gold Chest in the final room of Pyramid Plunder."
+        }
+      ]
     },
     {
       "id": "des_elite_6",
@@ -1605,15 +1823,19 @@
       "skills": {
         "Prayer": 85
       },
-      "quests": [
-        "Icthlarin's Little Helper"
-      ],
+      "quests": [],
       "regions": [
         "Sophanem"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Icthlarin's Little Helper 85 Prayer"
+      "sourceRequirements": "Started Icthlarin's Little Helper 85 Prayer",
+      "questProgress": [
+        {
+          "quest": "Icthlarin's Little Helper",
+          "label": "Reached the required progress in Icthlarin's Little Helper for: Restore at least 85 Prayer points when praying at the Altar in Sophanem."
+        }
+      ]
     },
     {
       "id": "fal_easy_1",
@@ -1666,6 +1888,9 @@
       "sourceRequirements": "None",
       "regions": [
         "Falador"
+      ],
+      "merchants": [
+        "Farming Shops"
       ]
     },
     {
@@ -1877,7 +2102,10 @@
           }
         },
         {
-          "label": "Obtain a watermelon from gryphons"
+          "label": "Obtain a watermelon from gryphons",
+          "manualRequirements": [
+            "Confirm: Obtain a watermelon from gryphons"
+          ]
         }
       ],
       "regions": [
@@ -1912,15 +2140,19 @@
       "ordinal": 6,
       "description": "Visit the Port Sarim Rat Pits.",
       "skills": {},
-      "quests": [
-        "Ratcatchers"
-      ],
+      "quests": [],
       "regions": [
         "Port Sarim"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of Ratcatchers"
+      "sourceRequirements": "Partial completion of Ratcatchers",
+      "questProgress": [
+        {
+          "quest": "Ratcatchers",
+          "label": "Reached the required progress in Ratcatchers for: Visit the Port Sarim Rat Pits."
+        }
+      ]
     },
     {
       "id": "fal_med_7",
@@ -1940,7 +2172,20 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "11 Agility, 37 Strength, and 19 Ranged Mith grapple and any crossbow"
+      "sourceRequirements": "11 Agility, 37 Strength, and 19 Ranged Mith grapple and any crossbow",
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Crossbow for the grapple shortcut",
+          "manualCheck": "Have Crossbow for the grapple shortcut and confirm that the specific item is permitted by your equipment tier"
+        },
+        {
+          "slot": "Ammo",
+          "tier": 3,
+          "reason": "Mith grapple for the shortcut"
+        }
+      ]
     },
     {
       "id": "fal_med_8",
@@ -1979,7 +2224,24 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Recruitment Drive 10 Prayer and 20 Defence Initiate armour"
+      "sourceRequirements": "Completion of Recruitment Drive 10 Prayer and 20 Defence Initiate armour",
+      "equipmentRequirements": [
+        {
+          "slot": "Head",
+          "tier": 3,
+          "reason": "Full Initiate armour"
+        },
+        {
+          "slot": "Body",
+          "tier": 3,
+          "reason": "Full Initiate armour"
+        },
+        {
+          "slot": "Legs",
+          "tier": 3,
+          "reason": "Full Initiate armour"
+        }
+      ]
     },
     {
       "id": "fal_med_10",
@@ -1998,7 +2260,33 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "40 Crafting and 40 Mining Any pickaxe and a brown apron, golden apron, or Crafting cape"
+      "sourceRequirements": "40 Crafting and 40 Mining Any pickaxe and a brown apron, golden apron, or Crafting cape",
+      "oneOf": [
+        {
+          "label": "Wear an apron",
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Brown or golden apron",
+              "manualCheck": "Have Brown or golden apron and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "Wear a Crafting cape",
+          "skills": {
+            "Crafting": 99
+          },
+          "equipmentRequirements": [
+            {
+              "slot": "Cape",
+              "tier": 6,
+              "reason": "Crafting cape"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "fal_med_11",
@@ -2098,12 +2386,119 @@
           }
         },
         {
-          "label": "3+ Raiments of the Eye pieces",
+          "label": "3+ Raiments of the Eye pieces (Head, Body, Legs)",
           "skills": {
             "Runecraft": 42
           },
           "items": [
             "3+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "3+ Raiments of the Eye pieces (Head, Body, Boots)",
+          "skills": {
+            "Runecraft": 42
+          },
+          "items": [
+            "3+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "3+ Raiments of the Eye pieces (Head, Legs, Boots)",
+          "skills": {
+            "Runecraft": 42
+          },
+          "items": [
+            "3+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "3+ Raiments of the Eye pieces (Body, Legs, Boots)",
+          "skills": {
+            "Runecraft": 42
+          },
+          "items": [
+            "3+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
           ]
         }
       ]
@@ -2195,7 +2590,15 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "60 Mining Prospector helmet or golden prospector helmet"
+      "sourceRequirements": "60 Mining Prospector helmet or golden prospector helmet",
+      "equipmentRequirements": [
+        {
+          "slot": "Head",
+          "tier": 1,
+          "reason": "Prospector helmet or golden prospector helmet",
+          "manualCheck": "Have Prospector helmet or golden prospector helmet and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "fal_hard_7",
@@ -2252,7 +2655,24 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of The Slug Menace 30 Defence 20 Prayer Full Proselyte armour"
+      "sourceRequirements": "Completion of The Slug Menace 30 Defence 20 Prayer Full Proselyte armour",
+      "equipmentRequirements": [
+        {
+          "slot": "Head",
+          "tier": 5,
+          "reason": "Full Proselyte armour"
+        },
+        {
+          "slot": "Body",
+          "tier": 5,
+          "reason": "Full Proselyte armour"
+        },
+        {
+          "slot": "Legs",
+          "tier": 5,
+          "reason": "Full Proselyte armour"
+        }
+      ]
     },
     {
       "id": "fal_hard_10",
@@ -2308,7 +2728,15 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Grim Tales 50 Defence Dwarven helmet"
+      "sourceRequirements": "Completion of Grim Tales 50 Defence Dwarven helmet",
+      "equipmentRequirements": [
+        {
+          "slot": "Head",
+          "tier": 1,
+          "reason": "Dwarven helmet",
+          "manualCheck": "Have Dwarven helmet and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "fal_elite_1",
@@ -2331,30 +2759,292 @@
           }
         },
         {
-          "label": "2 Raiments of the Eye pieces",
+          "label": "2 Raiments of the Eye pieces (Head, Body)",
           "skills": {
             "Runecraft": 77
           },
           "items": [
             "2 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
           ]
         },
         {
-          "label": "3 Raiments of the Eye pieces",
+          "label": "2 Raiments of the Eye pieces (Head, Legs)",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "2 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Head, Boots)",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "2 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Body, Legs)",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "2 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Body, Boots)",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "2 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Legs, Boots)",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "2 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Head, Body, Legs)",
           "skills": {
             "Runecraft": 66
           },
           "items": [
             "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
           ]
         },
         {
-          "label": "4 Raiments of the Eye pieces",
+          "label": "3 Raiments of the Eye pieces (Head, Body, Boots)",
+          "skills": {
+            "Runecraft": 66
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Head, Legs, Boots)",
+          "skills": {
+            "Runecraft": 66
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Body, Legs, Boots)",
+          "skills": {
+            "Runecraft": 66
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "4 Raiments of the Eye pieces (Head, Body, Legs, Boots)",
           "skills": {
             "Runecraft": 55
           },
           "items": [
             "4 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
           ]
         }
       ],
@@ -2378,7 +3068,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Wanted! 1,920 coins Rank of White Knight Master (requires a Black Knight kill score of 1300 - this rank automatically starts at White Knight Novice, with a kill score of 100)"
+      "sourceRequirements": "Completion of Wanted! 1,920 coins Rank of White Knight Master (requires a Black Knight kill score of 1300 - this rank automatically starts at White Knight Novice, with a kill score of 100)",
+      "merchants": [
+        "Platebody Shops"
+      ]
     },
     {
       "id": "fal_elite_3",
@@ -2421,6 +3114,13 @@
         {
           "label": "Skillcape",
           "anySkillLevel": 99
+        }
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Cape",
+          "tier": 6,
+          "reason": "Skillcape or quest cape for its emote"
         }
       ]
     },
@@ -2542,15 +3242,22 @@
       "ordinal": 5,
       "description": "Browse the Stonemasons shop.",
       "skills": {},
-      "quests": [
-        "The Giant Dwarf"
-      ],
+      "quests": [],
       "regions": [
         "Keldagrim"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started The Giant Dwarf Dramen or Lunar staff recommended to travel to Fairy ring code D K S for quick access to the city"
+      "sourceRequirements": "Started The Giant Dwarf Dramen or Lunar staff recommended to travel to Fairy ring code D K S for quick access to the city",
+      "questProgress": [
+        {
+          "quest": "The Giant Dwarf",
+          "label": "Reached the required progress in The Giant Dwarf for: Browse the Stonemasons shop."
+        }
+      ],
+      "merchants": [
+        "Stonemasons"
+      ]
     },
     {
       "id": "frem_easy_6",
@@ -2569,7 +3276,10 @@
       "sourceRequirements": "Waterbirth teleport tablet to directly access the island, or either 1000 coins or quest completion of The Fremennik Trials to travel via Jarvald",
       "oneOf": [
         {
-          "label": "Waterbirth teleport or coins"
+          "label": "Waterbirth teleport or coins",
+          "manualRequirements": [
+            "Confirm: Waterbirth teleport or coins"
+          ]
         },
         {
           "quests": [
@@ -2588,15 +3298,19 @@
       "skills": {
         "Thieving": 5
       },
-      "quests": [
-        "The Giant Dwarf"
-      ],
+      "quests": [],
       "regions": [
         "Keldagrim"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started The Giant Dwarf 5 Thieving"
+      "sourceRequirements": "Started The Giant Dwarf 5 Thieving",
+      "questProgress": [
+        {
+          "quest": "The Giant Dwarf",
+          "label": "Reached the required progress in The Giant Dwarf for: Steal from the Keldagrim crafting or baker's stall."
+        }
+      ]
     },
     {
       "id": "frem_easy_8",
@@ -2681,15 +3395,19 @@
       "skills": {
         "Slayer": 47
       },
-      "quests": [
-        "Olaf's Quest"
-      ],
+      "quests": [],
       "regions": [
         "Rellekka"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of Olaf's Quest 47 Slayer Weaponry, and a spade to enter the Brine Rat Cavern"
+      "sourceRequirements": "Partial completion of Olaf's Quest 47 Slayer Weaponry, and a spade to enter the Brine Rat Cavern",
+      "questProgress": [
+        {
+          "quest": "Olaf's Quest",
+          "label": "Reached the required progress in Olaf's Quest for: Slay a Brine rat."
+        }
+      ]
     },
     {
       "id": "frem_med_2",
@@ -2707,7 +3425,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Eagles' Peak Rope"
+      "sourceRequirements": "Completion of Eagles' Peak Rope",
+      "mobility": [
+        "Eagle Transport"
+      ]
     },
     {
       "id": "frem_med_3",
@@ -2758,15 +3479,32 @@
       "description": "Travel to Miscellania by Fairy ring.",
       "skills": {},
       "quests": [
-        "The Fremennik Trials",
-        "Fairytale II - Cure a Queen"
+        "The Fremennik Trials"
       ],
       "regions": [
         "Miscellania & Etceteria"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of The Fremennik Trials and having started Fairytale II - Cure a Queen Dramen or Lunar staff to travel to Fairy ring code C I P"
+      "sourceRequirements": "Completion of The Fremennik Trials and having started Fairytale II - Cure a Queen Dramen or Lunar staff to travel to Fairy ring code C I P",
+      "questProgress": [
+        {
+          "quest": "Fairytale II - Cure a Queen",
+          "label": "Reached the required progress in Fairytale II - Cure a Queen for: Travel to Miscellania by Fairy ring."
+        }
+      ],
+      "mobility": [
+        "Fairy Rings"
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Dramen or lunar staff for fairy rings",
+          "unlessDiary": "Lumbridge Elite",
+          "manualCheck": "Have Dramen or lunar staff for fairy rings and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "frem_med_6",
@@ -2798,6 +3536,14 @@
           "items": [
             "Butterfly net",
             "Butterfly jar"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Weapon",
+              "tier": 1,
+              "reason": "Butterfly net",
+              "manualCheck": "Have Butterfly net and confirm that the specific item is permitted by your equipment tier"
+            }
           ]
         }
       ]
@@ -2812,15 +3558,19 @@
       "skills": {
         "Construction": 37
       },
-      "quests": [
-        "The Fremennik Trials"
-      ],
+      "quests": [],
       "regions": [
         "Rellekka"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of The Fremennik Trials 37 Construction 30,000 coins, 4 oak planks, saw, and hammer to construct a menagerie with a pet house, if you haven't already Pet rock"
+      "sourceRequirements": "Partial completion of The Fremennik Trials 37 Construction 30,000 coins, 4 oak planks, saw, and hammer to construct a menagerie with a pet house, if you haven't already Pet rock",
+      "questProgress": [
+        {
+          "quest": "The Fremennik Trials",
+          "label": "Reached the required progress in The Fremennik Trials for: Pick up your Pet Rock from your POH Menagerie."
+        }
+      ]
     },
     {
       "id": "frem_med_8",
@@ -2842,7 +3592,10 @@
       "sourceRequirements": "Completion of Horror from the Deep Food and 43 Prayer for protection prayers recommended Way of getting past the two-man doors at the dungeon entrance (help from another player, pet rock and rune thrownaxes, or 85 Agility for the rock shortcut )",
       "oneOf": [
         {
-          "label": "Two-player door route"
+          "label": "Two-player door route",
+          "manualRequirements": [
+            "Confirm: Two-player door route"
+          ]
         },
         {
           "skills": {
@@ -2862,15 +3615,27 @@
         "Defence": 30,
         "Mining": 40
       },
-      "quests": [
-        "Between a Rock..."
-      ],
+      "quests": [],
       "regions": [
         "Keldagrim"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of Between a Rock... 40 Mining 30 Defence Any pickaxe and the gold helmet"
+      "sourceRequirements": "Partial completion of Between a Rock... 40 Mining 30 Defence Any pickaxe and the gold helmet",
+      "questProgress": [
+        {
+          "quest": "Between a Rock...",
+          "label": "Reached the required progress in Between a Rock... for: Mine some gold at the Arzinian mine."
+        }
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Head",
+          "tier": 1,
+          "reason": "Gold helmet to enter the Arzinian Mine",
+          "manualCheck": "Have Gold helmet to enter the Arzinian Mine and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "frem_hard_1",
@@ -2948,15 +3713,19 @@
       "skills": {
         "Thieving": 75
       },
-      "quests": [
-        "The Giant Dwarf"
-      ],
+      "quests": [],
       "regions": [
         "Keldagrim"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started The Giant Dwarf 75 Thieving"
+      "sourceRequirements": "Started The Giant Dwarf 75 Thieving",
+      "questProgress": [
+        {
+          "quest": "The Giant Dwarf",
+          "label": "Reached the required progress in The Giant Dwarf for: Steal from the Keldagrim Gem Stall."
+        }
+      ]
     },
     {
       "id": "frem_hard_5",
@@ -2968,15 +3737,19 @@
       "skills": {
         "Woodcutting": 56
       },
-      "quests": [
-        "The Fremennik Isles"
-      ],
+      "quests": [],
       "regions": [
         "Neitiznot"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of The Fremennik Isles 56 Woodcutting Hammer, rope, a set of bronze nails, and 2 arctic pine logs."
+      "sourceRequirements": "Partial completion of The Fremennik Isles 56 Woodcutting Hammer, rope, a set of bronze nails, and 2 arctic pine logs.",
+      "questProgress": [
+        {
+          "quest": "The Fremennik Isles",
+          "label": "Reached the required progress in The Fremennik Isles for: Craft a Neitiznot shield on Neitiznot."
+        }
+      ]
     },
     {
       "id": "frem_hard_6",
@@ -2988,15 +3761,19 @@
       "skills": {
         "Mining": 70
       },
-      "quests": [
-        "The Fremennik Isles"
-      ],
+      "quests": [],
       "regions": [
         "Jatizso"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started The Fremennik Isles 70 Mining Any pickaxe"
+      "sourceRequirements": "Started The Fremennik Isles 70 Mining Any pickaxe",
+      "questProgress": [
+        {
+          "quest": "The Fremennik Isles",
+          "label": "Reached the required progress in The Fremennik Isles for: Mine 5 Adamantite ores on Jatizso."
+        }
+      ]
     },
     {
       "id": "frem_hard_7",
@@ -3006,15 +3783,19 @@
       "ordinal": 7,
       "description": "Obtain 100% support from your kingdom subjects.",
       "skills": {},
-      "quests": [
-        "Throne of Miscellania"
-      ],
+      "quests": [],
       "regions": [
         "Miscellania & Etceteria"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of Throne of Miscellania Rake, pickaxe, axe, harpoon and/or lobster pot, depending on how you plan to gain support"
+      "sourceRequirements": "Partial completion of Throne of Miscellania Rake, pickaxe, axe, harpoon and/or lobster pot, depending on how you plan to gain support",
+      "questProgress": [
+        {
+          "quest": "Throne of Miscellania",
+          "label": "Reached the required progress in Throne of Miscellania for: Obtain 100% support from your kingdom subjects."
+        }
+      ]
     },
     {
       "id": "frem_hard_8",
@@ -3034,7 +3815,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Lunar Diplomacy 72 Magic Lunar spellbook selected Means to cast Waterbirth Teleport ( )"
+      "sourceRequirements": "Completion of Lunar Diplomacy 72 Magic Lunar spellbook selected Means to cast Waterbirth Teleport ( )",
+      "arcana": [
+        "Lunar Spellbook"
+      ]
     },
     {
       "id": "frem_hard_9",
@@ -3046,16 +3830,20 @@
       "skills": {
         "Smithing": 60
       },
-      "quests": [
-        "The Giant Dwarf"
-      ],
+      "quests": [],
       "regions": [
         "Keldagrim"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Obtain the Blast Furnace Foreman's permission to use the Blast Furnace for free.",
-      "sourceRequirements": "Started The Giant Dwarf 60 Smithing"
+      "sourceRequirements": "Started The Giant Dwarf 60 Smithing",
+      "questProgress": [
+        {
+          "quest": "The Giant Dwarf",
+          "label": "Reached the required progress in The Giant Dwarf for: Obtain the Blast Furnace Foremans permission to use the Blast Furnace for free."
+        }
+      ]
     },
     {
       "id": "frem_elite_1",
@@ -3074,7 +3862,10 @@
       "sourceRequirements": "Way of getting past the two-player doors at the dungeon entrance (help from another player, pet rock and rune thrownaxes, or 85 Agility for the rock shortcut ) See the strategy guide",
       "oneOf": [
         {
-          "label": "Two-player door route"
+          "label": "Two-player door route",
+          "manualRequirements": [
+            "Confirm: Two-player door route"
+          ]
         },
         {
           "skills": {
@@ -3114,15 +3905,19 @@
       "skills": {
         "Crafting": 80
       },
-      "quests": [
-        "The Fremennik Isles"
-      ],
+      "quests": [],
       "regions": [
         "Neitiznot"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started The Fremennik Isles 80 Crafting Dragonstone, gold bar, and an amulet mould"
+      "sourceRequirements": "Started The Fremennik Isles 80 Crafting Dragonstone, gold bar, and an amulet mould",
+      "questProgress": [
+        {
+          "quest": "The Fremennik Isles",
+          "label": "Reached the required progress in The Fremennik Isles for: Create a dragonstone amulet in the Neitiznot furnace."
+        }
+      ]
     },
     {
       "id": "frem_elite_4",
@@ -3237,7 +4032,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "3 coins"
+      "sourceRequirements": "3 coins",
+      "merchants": [
+        "Candle Shops"
+      ]
     },
     {
       "id": "kan_easy_3",
@@ -3313,15 +4111,19 @@
       "ordinal": 7,
       "description": "Defeat one of each elemental in the workshop.",
       "skills": {},
-      "quests": [
-        "Elemental Workshop I"
-      ],
+      "quests": [],
       "regions": [
         "Seers' Village"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Elemental Workshop I Battered key and weaponry"
+      "sourceRequirements": "Started Elemental Workshop I Battered key and weaponry",
+      "questProgress": [
+        {
+          "quest": "Elemental Workshop I",
+          "label": "Reached the required progress in Elemental Workshop I for: Defeat one of each elemental in the workshop."
+        }
+      ]
     },
     {
       "id": "kan_easy_8",
@@ -3353,7 +4155,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "20 coins"
+      "sourceRequirements": "20 coins",
+      "merchants": [
+        "Bars & Inns"
+      ]
     },
     {
       "id": "kan_easy_10",
@@ -3468,12 +4273,28 @@
       "sourceRequirements": "36 Agility, 22 Strength, and 39 Ranged Mith grapple and any crossbow Dusty key or 70 Agility Protection from dragonfire recommended",
       "oneOf": [
         {
-          "label": "Dusty key"
+          "label": "Dusty key",
+          "manualRequirements": [
+            "Confirm: Dusty key"
+          ]
         },
         {
           "skills": {
             "Agility": 70
           }
+        }
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Crossbow for the grapple shortcut",
+          "manualCheck": "Have Crossbow for the grapple shortcut and confirm that the specific item is permitted by your equipment tier"
+        },
+        {
+          "slot": "Ammo",
+          "tier": 3,
+          "reason": "Mith grapple for the shortcut"
         }
       ]
     },
@@ -3558,15 +4379,19 @@
       "ordinal": 9,
       "description": "Create a Mind helmet.",
       "skills": {},
-      "quests": [
-        "Elemental Workshop II"
-      ],
+      "quests": [],
       "regions": [
         "Seers' Village"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of Elemental Workshop II"
+      "sourceRequirements": "Partial completion of Elemental Workshop II",
+      "questProgress": [
+        {
+          "quest": "Elemental Workshop II",
+          "label": "Reached the required progress in Elemental Workshop II for: Create a Mind helmet."
+        }
+      ]
     },
     {
       "id": "kan_med_10",
@@ -3576,15 +4401,19 @@
       "ordinal": 10,
       "description": "Kill a Fire Giant inside Baxtorian Waterfall.",
       "skills": {},
-      "quests": [
-        "Waterfall Quest"
-      ],
+      "quests": [],
       "regions": [
         "Baxtorian Falls"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Waterfall Quest Weaponry Rope Glarial's amulet only if Waterfall Quest isn't yet completed"
+      "sourceRequirements": "Started Waterfall Quest Weaponry Rope Glarial's amulet only if Waterfall Quest isn't yet completed",
+      "questProgress": [
+        {
+          "quest": "Waterfall Quest",
+          "label": "Reached the required progress in Waterfall Quest for: Kill a Fire Giant inside Baxtorian Waterfall."
+        }
+      ]
     },
     {
       "id": "kan_med_11",
@@ -3628,15 +4457,31 @@
       "ordinal": 13,
       "description": "Travel to McGrubor's Wood by Fairy Ring.",
       "skills": {},
-      "quests": [
-        "Fairytale II - Cure a Queen"
-      ],
+      "quests": [],
       "regions": [
         "Seers' Village"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Fairytale II - Cure a Queen Dramen or Lunar staff to travel to Fairy ring code A L S"
+      "sourceRequirements": "Started Fairytale II - Cure a Queen Dramen or Lunar staff to travel to Fairy ring code A L S",
+      "questProgress": [
+        {
+          "quest": "Fairytale II - Cure a Queen",
+          "label": "Reached the required progress in Fairytale II - Cure a Queen for: Travel to McGrubor's Wood by Fairy Ring."
+        }
+      ],
+      "mobility": [
+        "Fairy Rings"
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Dramen or lunar staff for fairy rings",
+          "unlessDiary": "Lumbridge Elite",
+          "manualCheck": "Have Dramen or lunar staff for fairy rings and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "kan_med_14",
@@ -3732,7 +4577,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of King's Ransom and the Knight Waves Training Grounds 70 Prayer and 70 Defence (neither boostable )"
+      "sourceRequirements": "Completion of King's Ransom and the Knight Waves Training Grounds 70 Prayer and 70 Defence (neither boostable )",
+      "arcana": [
+        "Piety"
+      ]
     },
     {
       "id": "kan_hard_5",
@@ -3753,7 +4601,10 @@
       "sourceRequirements": "56 Magic Dusty key or 70 Agility Unpowered orb and means to cast Charge Water Orb ( ) Protection from dragonfire recommended",
       "oneOf": [
         {
-          "label": "Dusty key"
+          "label": "Dusty key",
+          "manualRequirements": [
+            "Confirm: Dusty key"
+          ]
         },
         {
           "skills": {
@@ -3790,15 +4641,27 @@
       "skills": {
         "Thieving": 53
       },
-      "quests": [
-        "Desert Treasure I"
-      ],
+      "quests": [],
       "regions": [
         "Legends' Guild"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Desert Treasure I 53 Thieving Ring of visibility (or a ring of shadows ) and weaponry"
+      "sourceRequirements": "Started Desert Treasure I 53 Thieving Ring of visibility (or a ring of shadows ) and weaponry",
+      "questProgress": [
+        {
+          "quest": "Desert Treasure I",
+          "label": "Reached the required progress in Desert Treasure I for: Kill a Shadow Hound in the Shadow dungeon."
+        }
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Ring",
+          "tier": 1,
+          "reason": "Ring of visibility or ring of shadows",
+          "manualCheck": "Have Ring of visibility or ring of shadows and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "kan_hard_8",
@@ -3833,7 +4696,15 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "50 Strength and 50 Defence See the gameplay overview and the strategy guide 95,000 coins to purchase the granite body"
+      "sourceRequirements": "50 Strength and 50 Defence See the gameplay overview and the strategy guide 95,000 coins to purchase the granite body",
+      "equipmentRequirements": [
+        {
+          "slot": "Body",
+          "tier": 1,
+          "reason": "Granite body",
+          "manualCheck": "Have Granite body and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "kan_hard_10",
@@ -3947,6 +4818,14 @@
       ],
       "items": [
         "Cooking gauntlets"
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Gloves",
+          "tier": 1,
+          "reason": "Cooking gauntlets",
+          "manualCheck": "Have Cooking gauntlets and confirm that the specific item is permitted by your equipment tier"
+        }
       ]
     },
     {
@@ -4024,7 +4903,10 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Teleport to Catherby (Lunar).",
-      "sourceRequirements": "Completion of Lunar Diplomacy 87 Magic Lunar spellbook selected Means to cast Catherby Teleport ( )"
+      "sourceRequirements": "Completion of Lunar Diplomacy 87 Magic Lunar spellbook selected Means to cast Catherby Teleport ( )",
+      "arcana": [
+        "Lunar Spellbook"
+      ]
     },
     {
       "id": "kar_easy_1",
@@ -4145,7 +5027,10 @@
       "sourceRequirements": "Harpoon (or bare-handed fishing ), lobster pot, small fishing net, or a fishing rod with bait, depending on the spot you fish at",
       "oneOf": [
         {
-          "label": "Fishing equipment"
+          "label": "Fishing equipment",
+          "manualRequirements": [
+            "Confirm: Fishing equipment"
+          ]
         },
         {
           "quests": [
@@ -4233,15 +5118,19 @@
       "ordinal": 2,
       "description": "Discover hidden wall in the dungeon below the volcano.",
       "skills": {},
-      "quests": [
-        "Dragon Slayer I"
-      ],
+      "quests": [],
       "regions": [
         "Musa Point"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Dragon Slayer I"
+      "sourceRequirements": "Started Dragon Slayer I",
+      "questProgress": [
+        {
+          "quest": "Dragon Slayer I",
+          "label": "Reached the required progress in Dragon Slayer I for: Discover hidden wall in the dungeon below the volcano."
+        }
+      ]
     },
     {
       "id": "kar_med_3",
@@ -4251,15 +5140,19 @@
       "ordinal": 3,
       "description": "Visit the Isle of Crandor via the dungeon below the volcano.",
       "skills": {},
-      "quests": [
-        "Dragon Slayer I"
-      ],
+      "quests": [],
       "regions": [
         "Crandor"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Dragon Slayer I"
+      "sourceRequirements": "Started Dragon Slayer I",
+      "questProgress": [
+        {
+          "quest": "Dragon Slayer I",
+          "label": "Reached the required progress in Dragon Slayer I for: Visit the Isle of Crandor via the dungeon below the volcano."
+        }
+      ]
     },
     {
       "id": "kar_med_4",
@@ -4333,7 +5226,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Shilo Village Ship ticket or 20-50 coins (the price is random)"
+      "sourceRequirements": "Completion of Shilo Village Ship ticket or 20-50 coins (the price is random)",
+      "mobility": [
+        "Charter Ships"
+      ]
     },
     {
       "id": "kar_med_8",
@@ -4453,15 +5349,19 @@
       "skills": {
         "Fishing": 65
       },
-      "quests": [
-        "Tai Bwo Wannai Trio"
-      ],
+      "quests": [],
       "regions": [
         "Tai Bwo Wannai"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of Tai Bwo Wannai Trio 65 Fishing Karambwan vessel, some raw karambwanji, and a small fishing net"
+      "sourceRequirements": "Partial completion of Tai Bwo Wannai Trio 65 Fishing Karambwan vessel, some raw karambwanji, and a small fishing net",
+      "questProgress": [
+        {
+          "quest": "Tai Bwo Wannai Trio",
+          "label": "Reached the required progress in Tai Bwo Wannai Trio for: Catch a karambwan."
+        }
+      ]
     },
     {
       "id": "kar_med_11",
@@ -4497,6 +5397,9 @@
       "sourceRequirements": "Completion of The Grand Tree",
       "regions": [
         "Gandius"
+      ],
+      "mobility": [
+        "Gnome Gliders"
       ]
     },
     {
@@ -4598,14 +5501,21 @@
       "ordinal": 18,
       "description": "Charter a ship from the shipyard in the far east of Karamja.",
       "skills": {},
-      "quests": [
-        "The Grand Tree"
-      ],
+      "quests": [],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Partial completion of The Grand Tree Enough coins to pay the fare for a charter ship.",
       "regions": [
         "Ship Yard"
+      ],
+      "questProgress": [
+        {
+          "quest": "The Grand Tree",
+          "label": "Reached the required progress in The Grand Tree for: Charter a ship from the shipyard in the far east of Karamja."
+        }
+      ],
+      "mobility": [
+        "Charter Ships"
       ]
     },
     {
@@ -4761,15 +5671,19 @@
         "Strength": 50,
         "Thieving": 50
       },
-      "quests": [
-        "Legends' Quest"
-      ],
+      "quests": [],
       "regions": [
         "Kharazi Jungle"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of Legends' Quest The quest can be started without all the required skills, but reaching this area requires 50 Agility, 50 Thieving, 52 Mining, and 50 Strength (all boostable). Any axe, any machete, any pickaxe, and a lockpick"
+      "sourceRequirements": "Partial completion of Legends' Quest The quest can be started without all the required skills, but reaching this area requires 50 Agility, 50 Thieving, 52 Mining, and 50 Strength (all boostable). Any axe, any machete, any pickaxe, and a lockpick",
+      "questProgress": [
+        {
+          "quest": "Legends' Quest",
+          "label": "Reached the required progress in Legends' Quest for: Kill a deathwing in the dungeon under the Kharazi Jungle."
+        }
+      ]
     },
     {
       "id": "kar_hard_7",
@@ -4789,7 +5703,20 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "53 Agility, 42 Ranged and 21 Strength Mith grapple and any crossbow"
+      "sourceRequirements": "53 Agility, 42 Ranged and 21 Strength Mith grapple and any crossbow",
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Crossbow for the grapple shortcut",
+          "manualCheck": "Have Crossbow for the grapple shortcut and confirm that the specific item is permitted by your equipment tier"
+        },
+        {
+          "slot": "Ammo",
+          "tier": 3,
+          "reason": "Mith grapple for the shortcut"
+        }
+      ]
     },
     {
       "id": "kar_hard_8",
@@ -4799,9 +5726,7 @@
       "ordinal": 8,
       "description": "Collect 5 palm leaves.",
       "skills": {},
-      "quests": [
-        "Legends' Quest"
-      ],
+      "quests": [],
       "regions": [
         "Kharazi Jungle"
       ],
@@ -4810,12 +5735,21 @@
       "sourceRequirements": "Partial completion of Legends' Quest Any axe and machete, or 79 Agility for the vine shortcut",
       "oneOf": [
         {
-          "label": "Axe and machete"
+          "label": "Axe and machete",
+          "manualRequirements": [
+            "Confirm: Axe and machete"
+          ]
         },
         {
           "skills": {
             "Agility": 79
           }
+        }
+      ],
+      "questProgress": [
+        {
+          "quest": "Legends' Quest",
+          "label": "Reached the required progress in Legends' Quest for: Collect 5 palm leaves."
         }
       ]
     },
@@ -4902,6 +5836,13 @@
       "sourceRequirements": "See the strategy guide for the TzHaar Fight Cave Fire cape or infernal cape",
       "regions": [
         "Mor Ul Rek (TzHaar City)"
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Cape",
+          "tier": 8,
+          "reason": "Fire cape (or a higher-tier infernal cape)"
+        }
       ]
     },
     {
@@ -5037,11 +5978,14 @@
       "skills": {},
       "quests": [],
       "regions": [
-        "Kourend Castle"
+        "Piscarilius"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "merchants": [
+        "General Stores"
+      ]
     },
     {
       "id": "kou_easy_6",
@@ -5172,15 +6116,31 @@
       "ordinal": 1,
       "description": "Travel to the Fairy Ring south of Mount Karuulm.",
       "skills": {},
-      "quests": [
-        "Fairytale II - Cure a Queen"
-      ],
+      "quests": [],
       "regions": [
         "Mount Karuulm"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Fairytale II - Cure a Queen Dramen or Lunar staff to travel to Fairy ring code C I R"
+      "sourceRequirements": "Started Fairytale II - Cure a Queen Dramen or Lunar staff to travel to Fairy ring code C I R",
+      "questProgress": [
+        {
+          "quest": "Fairytale II - Cure a Queen",
+          "label": "Reached the required progress in Fairytale II - Cure a Queen for: Travel to the Fairy Ring south of Mount Karuulm."
+        }
+      ],
+      "mobility": [
+        "Fairy Rings"
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Dramen or lunar staff for fairy rings",
+          "unlessDiary": "Lumbridge Elite",
+          "manualCheck": "Have Dramen or lunar staff for fairy rings and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "kou_med_2",
@@ -5222,6 +6182,9 @@
         "Lovakengj",
         "Piscarilius",
         "Shayzien"
+      ],
+      "mobility": [
+        "Kharedst's Memoirs"
       ]
     },
     {
@@ -5240,7 +6203,15 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "42 Mining Any pickaxe Face mask, gas mask, or slayer helmet"
+      "sourceRequirements": "42 Mining Any pickaxe Face mask, gas mask, or slayer helmet",
+      "equipmentRequirements": [
+        {
+          "slot": "Head",
+          "tier": 1,
+          "reason": "Face mask, gas mask or slayer helmet for volcanic sulphur",
+          "manualCheck": "Have Face mask, gas mask or slayer helmet for volcanic sulphur and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "kou_med_5",
@@ -5274,7 +6245,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "arcana": [
+        "Arceuus Spellbook"
+      ]
     },
     {
       "id": "kou_med_7",
@@ -5328,7 +6302,15 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "43 Fishing and 35 Hunter King worms (found on the island) or fish offcuts"
+      "sourceRequirements": "43 Fishing and 35 Hunter King worms (found on the island) or fish offcuts",
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Cormorant's glove for aerial fishing",
+          "manualCheck": "Have Cormorant's glove for aerial fishing and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "kou_med_10",
@@ -5377,15 +6359,19 @@
       "skills": {
         "Hunter": 53
       },
-      "quests": [
-        "Eagles' Peak"
-      ],
+      "quests": [],
       "regions": [
         "Hosidius"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of Eagles' Peak 53 Hunter Box trap"
+      "sourceRequirements": "Partial completion of Eagles' Peak 53 Hunter Box trap",
+      "questProgress": [
+        {
+          "quest": "Eagles' Peak",
+          "label": "Reached the required progress in Eagles' Peak for: Catch a Chinchompa in the Kourend Woodland."
+        }
+      ]
     },
     {
       "id": "kou_med_13",
@@ -5539,6 +6525,9 @@
             "Mounted Xeric's talisman or house-party access"
           ]
         }
+      ],
+      "mobility": [
+        "Xeric's Talisman"
       ]
     },
     {
@@ -5595,7 +6584,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Dream Mentor 66 Magic Lunar spellbook selected Means to cast Monster Examine ( )"
+      "sourceRequirements": "Completion of Dream Mentor 66 Magic Lunar spellbook selected Means to cast Monster Examine ( )",
+      "arcana": [
+        "Lunar Spellbook"
+      ]
     },
     {
       "id": "kou_elite_1",
@@ -5704,7 +6696,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "90 Magic Arceuus spellbook selected Dark essence block and the required runes ( )"
+      "sourceRequirements": "90 Magic Arceuus spellbook selected Dark essence block and the required runes ( )",
+      "arcana": [
+        "Arceuus Spellbook"
+      ]
     },
     {
       "id": "kou_elite_7",
@@ -5748,7 +6743,9 @@
       "tierId": "Lumbridge Easy",
       "ordinal": 1,
       "description": "Complete a lap of the Draynor Village agility course.",
-      "skills": {},
+      "skills": {
+        "Agility": 1
+      },
       "quests": [],
       "regions": [
         "Draynor Village"
@@ -5984,7 +6981,20 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "8 Agility, 19 and 37 Mith grapple and any crossbow"
+      "sourceRequirements": "8 Agility, 19 and 37 Mith grapple and any crossbow",
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Crossbow for the grapple shortcut",
+          "manualCheck": "Have Crossbow for the grapple shortcut and confirm that the specific item is permitted by your equipment tier"
+        },
+        {
+          "slot": "Ammo",
+          "tier": 3,
+          "reason": "Mith grapple for the shortcut"
+        }
+      ]
     },
     {
       "id": "lum_med_3",
@@ -6014,15 +7024,31 @@
       "ordinal": 4,
       "description": "Travel to the Wizards' Tower by Fairy ring.",
       "skills": {},
-      "quests": [
-        "Fairytale II - Cure a Queen"
-      ],
+      "quests": [],
       "regions": [
         "Wizards' Tower"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Fairytale II - Cure a Queen Dramen or Lunar staff to travel to Fairy ring code D I S"
+      "sourceRequirements": "Started Fairytale II - Cure a Queen Dramen or Lunar staff to travel to Fairy ring code D I S",
+      "questProgress": [
+        {
+          "quest": "Fairytale II - Cure a Queen",
+          "label": "Reached the required progress in Fairytale II - Cure a Queen for: Travel to the Wizards' Tower by Fairy ring."
+        }
+      ],
+      "mobility": [
+        "Fairy Rings"
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Dramen or lunar staff for fairy rings",
+          "unlessDiary": "Lumbridge Elite",
+          "manualCheck": "Have Dramen or lunar staff for fairy rings and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "lum_med_5",
@@ -6159,7 +7185,35 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "42 Hunter Dramen or Lunar staff to enter Zanaris Butterfly net and impling jar"
+      "sourceRequirements": "42 Hunter Dramen or Lunar staff to enter Zanaris Butterfly net and impling jar",
+      "oneOf": [
+        {
+          "label": "Catch an essence impling with a net",
+          "skills": {
+            "Hunter": 42
+          },
+          "equipmentRequirements": [
+            {
+              "slot": "Weapon",
+              "tier": 1,
+              "reason": "Butterfly net or magic butterfly net",
+              "manualCheck": "Have Butterfly net or magic butterfly net and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "items": [
+            "Impling jar"
+          ]
+        },
+        {
+          "label": "Catch an essence impling bare-handed",
+          "skills": {
+            "Hunter": 52
+          },
+          "items": [
+            "Impling jar"
+          ]
+        }
+      ]
     },
     {
       "id": "lum_med_12",
@@ -6195,7 +7249,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "60 Magic Access to Bones to Peaches via the Mage Training Arena Bones and means to cast Bones to Peaches ( )"
+      "sourceRequirements": "60 Magic Access to Bones to Peaches via the Mage Training Arena Bones and means to cast Bones to Peaches ( )",
+      "arcana": [
+        "Bones to Peaches"
+      ]
     },
     {
       "id": "lum_hard_2",
@@ -6254,7 +7311,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "57 Woodcutting Any axe"
+      "sourceRequirements": "57 Woodcutting Any axe",
+      "mobility": [
+        "Canoes"
+      ]
     },
     {
       "id": "lum_hard_5",
@@ -6308,7 +7368,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Full completion of Recipe for Disaster 130,000 coins"
+      "sourceRequirements": "Full completion of Recipe for Disaster 130,000 coins",
+      "merchants": [
+        "Cooking Shops"
+      ]
     },
     {
       "id": "lum_hard_8",
@@ -6423,7 +7486,20 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Death to the Dorgeshuun 70 Agility, 70 Ranged and 70 Strength Mith grapple, any crossbow, and a light source"
+      "sourceRequirements": "Completion of Death to the Dorgeshuun 70 Agility, 70 Ranged and 70 Strength Mith grapple, any crossbow, and a light source",
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Crossbow for the grapple shortcut",
+          "manualCheck": "Have Crossbow for the grapple shortcut and confirm that the specific item is permitted by your equipment tier"
+        },
+        {
+          "slot": "Ammo",
+          "tier": 3,
+          "reason": "Mith grapple for the shortcut"
+        }
+      ]
     },
     {
       "id": "lum_elite_3",
@@ -6485,21 +7561,154 @@
           }
         },
         {
-          "label": "3 Raiments of the Eye pieces",
+          "label": "3 Raiments of the Eye pieces (Head, Body, Legs)",
           "skills": {
             "Runecraft": 57
           },
           "items": [
             "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
           ]
         },
         {
-          "label": "4 Raiments of the Eye pieces",
+          "label": "3 Raiments of the Eye pieces (Head, Body, Boots)",
+          "skills": {
+            "Runecraft": 57
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Head, Legs, Boots)",
+          "skills": {
+            "Runecraft": 57
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Body, Legs, Boots)",
+          "skills": {
+            "Runecraft": 57
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "4 Raiments of the Eye pieces (Head, Body, Legs, Boots)",
           "skills": {
             "Runecraft": 38
           },
           "items": [
             "4 Raiments of the Eye pieces (random chance)"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
           ]
         }
       ]
@@ -6519,7 +7728,14 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of all quests Quest point cape",
-      "allQuests": true
+      "allQuests": true,
+      "equipmentRequirements": [
+        {
+          "slot": "Cape",
+          "tier": 6,
+          "reason": "Quest point cape for its emote"
+        }
+      ]
     },
     {
       "id": "mor_easy_1",
@@ -6580,7 +7796,10 @@
           ]
         },
         {
-          "label": "Ecto-tokens or charter ship"
+          "label": "Ecto-tokens or charter ship",
+          "manualRequirements": [
+            "Confirm: Ecto-tokens or charter ship"
+          ]
         }
       ]
     },
@@ -6704,7 +7923,10 @@
           }
         },
         {
-          "label": "Obtain a watermelon from gryphons"
+          "label": "Obtain a watermelon from gryphons",
+          "manualRequirements": [
+            "Confirm: Obtain a watermelon from gryphons"
+          ]
         }
       ]
     },
@@ -6738,7 +7960,15 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Wolfbane"
+      "sourceRequirements": "Wolfbane",
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Wolfbane dagger",
+          "manualCheck": "Have Wolfbane dagger and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "mor_easy_11",
@@ -6826,7 +8056,33 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Ghostspeak amulet and 25 ecto-tokens (or 10 with the activated ring of charos )"
+      "sourceRequirements": "Ghostspeak amulet and 25 ecto-tokens (or 10 with the activated ring of charos )",
+      "oneOf": [
+        {
+          "label": "Wear a ghostspeak amulet",
+          "equipmentRequirements": [
+            {
+              "slot": "Neck",
+              "tier": 1,
+              "reason": "Ghostspeak amulet"
+            }
+          ],
+          "manualRequirements": [
+            "Have a ghostspeak amulet to speak to the Ghost Captain"
+          ]
+        },
+        {
+          "label": "Wear Morytania legs 2 or better",
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Morytania legs 2 or better",
+              "manualCheck": "Have Morytania legs 2 or better and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "mor_med_5",
@@ -6916,15 +8172,19 @@
       "skills": {
         "Slayer": 42
       },
-      "quests": [
-        "Rum Deal"
-      ],
+      "quests": [],
       "regions": [
         "Braindeath Island"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Rum Deal 42 Slayer Weaponry to fight at range, or means to negate disease (such as Slayer gloves ), recommended"
+      "sourceRequirements": "Started Rum Deal 42 Slayer Weaponry to fight at range, or means to negate disease (such as Slayer gloves ), recommended",
+      "questProgress": [
+        {
+          "quest": "Rum Deal",
+          "label": "Reached the required progress in Rum Deal for: Kill a Fever Spider on Braindeath Island."
+        }
+      ]
     },
     {
       "id": "mor_med_10",
@@ -6942,7 +8202,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Ghosts Ahoy Ectophial"
+      "sourceRequirements": "Completion of Ghosts Ahoy Ectophial",
+      "mobility": [
+        "Ectophial"
+      ]
     },
     {
       "id": "mor_med_11",
@@ -6954,9 +8217,7 @@
       "skills": {
         "Herblore": 22
       },
-      "quests": [
-        "In Aid of the Myreque"
-      ],
+      "quests": [],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Partial completion of In Aid of the Myreque 22 Herblore Restore potion, garlic, and silver dust (made by using a silver bar on the Ectofuntus bone grinder )",
@@ -6980,6 +8241,12 @@
         "Braindeath Island",
         "Dragontooth Island",
         "Icyene Graveyard"
+      ],
+      "questProgress": [
+        {
+          "quest": "In Aid of the Myreque",
+          "label": "Reached the required progress in In Aid of the Myreque for: Mix a Guthix Balance potion while in Morytania."
+        }
       ]
     },
     {
@@ -7032,15 +8299,19 @@
       "skills": {
         "Farming": 47
       },
-      "quests": [
-        "The Great Brain Robbery"
-      ],
+      "quests": [],
       "regions": [
         "Harmony Island"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started The Great Brain Robbery 47 Farming 3 watermelon seeds, spade, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended"
+      "sourceRequirements": "Started The Great Brain Robbery 47 Farming 3 watermelon seeds, spade, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended",
+      "questProgress": [
+        {
+          "quest": "The Great Brain Robbery",
+          "label": "Reached the required progress in The Great Brain Robbery for: Harvest some Watermelon from the Allotment patch on Harmony Island."
+        }
+      ]
     },
     {
       "id": "mor_hard_4",
@@ -7139,7 +8410,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Nature Spirit and the Knight Waves Training Grounds (which requires completion of King's Ransom ) 70 Prayer and 70 Defence (neither boostable ) Dramen or Lunar staff recommended to travel to Fairy ring code B I P"
+      "sourceRequirements": "Completion of Nature Spirit and the Knight Waves Training Grounds (which requires completion of King's Ransom ) 70 Prayer and 70 Defence (neither boostable ) Dramen or Lunar staff recommended to travel to Fairy ring code B I P",
+      "arcana": [
+        "Piety"
+      ]
     },
     {
       "id": "mor_hard_9",
@@ -7241,7 +8515,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Lunar Diplomacy 83 Magic Lunar spellbook selected Means to cast Fertile Soil ( )"
+      "sourceRequirements": "Completion of Lunar Diplomacy 83 Magic Lunar spellbook selected Means to cast Fertile Soil ( )",
+      "arcana": [
+        "Lunar Spellbook"
+      ]
     },
     {
       "id": "mor_elite_4",
@@ -7323,6 +8600,28 @@
             "Ranged": 70
           }
         }
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Head",
+          "tier": 7,
+          "reason": "Complete Barrows set"
+        },
+        {
+          "slot": "Body",
+          "tier": 7,
+          "reason": "Complete Barrows set"
+        },
+        {
+          "slot": "Legs",
+          "tier": 7,
+          "reason": "Complete Barrows set"
+        },
+        {
+          "slot": "Weapon",
+          "tier": 7,
+          "reason": "Complete Barrows set"
+        }
       ]
     },
     {
@@ -7339,7 +8638,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "merchants": [
+        "Clothes Shops"
+      ]
     },
     {
       "id": "var_easy_2",
@@ -7605,15 +8907,28 @@
       "description": "Select a colour for your kitten.",
       "skills": {},
       "quests": [
-        "Gertrude's Cat",
-        "Garden of Tranquillity"
+        "Gertrude's Cat"
       ],
       "regions": [
         "Varrock"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Gertrude's Cat and partial completion of Garden of Tranquillity 100 coins Wear an activated ring of charos"
+      "sourceRequirements": "Completion of Gertrude's Cat and partial completion of Garden of Tranquillity 100 coins Wear an activated ring of charos",
+      "questProgress": [
+        {
+          "quest": "Garden of Tranquillity",
+          "label": "Reached the required progress in Garden of Tranquillity for: Select a colour for your kitten."
+        }
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Ring",
+          "tier": 1,
+          "reason": "Activated ring of charos",
+          "manualCheck": "Have Activated ring of charos and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "var_med_4",
@@ -7631,7 +8946,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Tree Gnome Village"
+      "sourceRequirements": "Completion of Tree Gnome Village",
+      "mobility": [
+        "Spirit Trees"
+      ]
     },
     {
       "id": "var_med_5",
@@ -7707,6 +9025,9 @@
             "Lvl-3 Enchant runes"
           ]
         }
+      ],
+      "mobility": [
+        "Digsite Pendant"
       ]
     },
     {
@@ -7809,7 +9130,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Enlightened Journey 30 Farming 40 Firemaking One set of normal logs, oak logs, yew logs, or magic logs, depending on the chosen destination If the starting point in Varrock has not been unlocked yet, an additional 10 willow logs are needed to first fly towards it from Entrana"
+      "sourceRequirements": "Completion of Enlightened Journey 30 Farming 40 Firemaking One set of normal logs, oak logs, yew logs, or magic logs, depending on the chosen destination If the starting point in Varrock has not been unlocked yet, an additional 10 willow logs are needed to first fly towards it from Entrana",
+      "mobility": [
+        "Balloon Transport"
+      ]
     },
     {
       "id": "var_med_13",
@@ -7862,6 +9186,14 @@
           "items": [
             "800 coins"
           ]
+        }
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Cape",
+          "tier": 1,
+          "reason": "Spottier cape",
+          "manualCheck": "Have Spottier cape and confirm that the specific item is permitted by your equipment tier"
         }
       ]
     },
@@ -7920,7 +9252,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Desert Treasure I 54 Magic Ancient Magicks selected Means to cast Paddewwa Teleport ( )"
+      "sourceRequirements": "Completion of Desert Treasure I 54 Magic Ancient Magicks selected Means to cast Paddewwa Teleport ( )",
+      "arcana": [
+        "Ancient Magicks"
+      ]
     },
     {
       "id": "var_hard_5",
@@ -8082,7 +9417,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Dream Mentor 86 Magic Lunar spellbook selected 21,000 coins and 20 mahogany logs Means to cast Plank Make twenty times ( )"
+      "sourceRequirements": "Completion of Dream Mentor 86 Magic Lunar spellbook selected 21,000 coins and 20 mahogany logs Means to cast Plank Make twenty times ( )",
+      "arcana": [
+        "Lunar Spellbook"
+      ]
     },
     {
       "id": "var_elite_3",
@@ -8100,7 +9438,47 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "95 Cooking Raw summer pie Chef's hat, golden chef's hat, Varrock armour 3, or Cooking cape"
+      "sourceRequirements": "95 Cooking Raw summer pie Chef's hat, golden chef's hat, Varrock armour 3, or Cooking cape",
+      "oneOf": [
+        {
+          "label": "Wear a chef's hat",
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Chef's hat or golden chef's hat",
+              "manualCheck": "Have Chef's hat or golden chef's hat and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "Wear a Cooking cape",
+          "skills": {
+            "Cooking": 99
+          },
+          "equipmentRequirements": [
+            {
+              "slot": "Cape",
+              "tier": 6,
+              "reason": "Cooking cape"
+            }
+          ]
+        },
+        {
+          "label": "Wear Varrock armour 3 or 4",
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Varrock armour 3 or 4",
+              "manualCheck": "Have Varrock armour 3 or 4 and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "manualRequirements": [
+            "Have earned Varrock armour 3 or 4"
+          ]
+        }
+      ]
     },
     {
       "id": "var_elite_4",
@@ -8147,12 +9525,141 @@
           }
         },
         {
-          "label": "2+ Raiments of the Eye pieces",
+          "label": "2+ Raiments of the Eye pieces (Head, Body)",
           "skills": {
             "Runecraft": 52
           },
           "items": [
             "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Legs)",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Boots)",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Body, Legs)",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Body, Boots)",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Legs, Boots)",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
           ]
         }
       ]
@@ -8277,7 +9784,10 @@
       "classification": "preserved-semantic",
       "previousDescription": "Teleport to the Pest Control outpost.",
       "sourceRequirements": "40 Combat level",
-      "combatLevel": 40
+      "combatLevel": 40,
+      "mobility": [
+        "Minigame Teleports"
+      ]
     },
     {
       "id": "west_easy_10",
@@ -8389,7 +9899,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Tree Gnome Village"
+      "sourceRequirements": "Completion of Tree Gnome Village",
+      "mobility": [
+        "Spirit Trees"
+      ]
     },
     {
       "id": "west_med_3",
@@ -8419,15 +9932,19 @@
       "skills": {
         "Fishing": 46
       },
-      "quests": [
-        "Monkey Madness I"
-      ],
+      "quests": [],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Fish some Bass.",
       "sourceRequirements": "Partial completion of Monkey Madness I 46 Fishing Big fishing net",
       "regions": [
         "Ape Atoll"
+      ],
+      "questProgress": [
+        {
+          "quest": "Monkey Madness I",
+          "label": "Reached the required progress in Monkey Madness I for: Fish some Bass on Ape Atoll."
+        }
       ]
     },
     {
@@ -8441,15 +9958,19 @@
         "Firemaking": 35,
         "Woodcutting": 35
       },
-      "quests": [
-        "Monkey Madness I"
-      ],
+      "quests": [],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Chop some Teak logs.",
       "sourceRequirements": "Partial completion of Monkey Madness I 35 Woodcutting and 35 Firemaking Any axe and tinderbox",
       "regions": [
         "Ape Atoll"
+      ],
+      "questProgress": [
+        {
+          "quest": "Monkey Madness I",
+          "label": "Reached the required progress in Monkey Madness I for: Chop and burn some teak logs on Ape Atoll."
+        }
       ]
     },
     {
@@ -8478,14 +9999,22 @@
       "description": "Travel to the Feldip Hills by Gnome Glider.",
       "skills": {},
       "quests": [
-        "The Grand Tree",
-        "One Small Favour"
+        "The Grand Tree"
       ],
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "Completion of The Grand Tree and partial completion of One Small Favour",
       "regions": [
         "Feldip Hills"
+      ],
+      "questProgress": [
+        {
+          "quest": "One Small Favour",
+          "label": "Reached the required progress in One Small Favour for: Travel to the Feldip Hills by Gnome Glider."
+        }
+      ],
+      "mobility": [
+        "Gnome Gliders"
       ]
     },
     {
@@ -8523,6 +10052,9 @@
       "regions": [
         "Eagles' Peak",
         "Feldip Hills"
+      ],
+      "mobility": [
+        "Eagle Transport"
       ]
     },
     {
@@ -8619,7 +10151,14 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Roving Elves 70 Ranged Crystal bow or Bow of faerdhinen"
+      "sourceRequirements": "Completion of Roving Elves 70 Ranged Crystal bow or Bow of faerdhinen",
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 8,
+          "reason": "Crystal bow or bow of faerdhinen"
+        }
+      ]
     },
     {
       "id": "west_hard_2",
@@ -8675,7 +10214,15 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "69 Hunter 500 coins"
+      "sourceRequirements": "69 Hunter 500 coins",
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Falconer's glove for falconry",
+          "manualCheck": "Have Falconer's glove for falconry and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "west_hard_5",
@@ -8687,15 +10234,27 @@
       "skills": {
         "Agility": 48
       },
-      "quests": [
-        "Monkey Madness I"
-      ],
+      "quests": [],
       "regions": [
         "Ape Atoll"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of Monkey Madness I 48 Agility Ninja monkey greegree or Kruk monkey greegree (other greegrees will cause you to fail the course)"
+      "sourceRequirements": "Partial completion of Monkey Madness I 48 Agility Ninja monkey greegree or Kruk monkey greegree (other greegrees will cause you to fail the course)",
+      "questProgress": [
+        {
+          "quest": "Monkey Madness I",
+          "label": "Reached the required progress in Monkey Madness I for: Complete a lap of the Ape Atoll agility course."
+        }
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Ninja or Kruk monkey greegree",
+          "manualCheck": "Have Ninja or Kruk monkey greegree and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "west_hard_6",
@@ -8708,15 +10267,19 @@
         "Firemaking": 50,
         "Woodcutting": 50
       },
-      "quests": [
-        "Monkey Madness I"
-      ],
+      "quests": [],
       "regions": [
         "Ape Atoll"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of Monkey Madness I 50 Woodcutting and 50 Firemaking Any axe (excluding felling axes ) and a tinderbox"
+      "sourceRequirements": "Partial completion of Monkey Madness I 50 Woodcutting and 50 Firemaking Any axe (excluding felling axes ) and a tinderbox",
+      "questProgress": [
+        {
+          "quest": "Monkey Madness I",
+          "label": "Reached the required progress in Monkey Madness I for: Chop and burn some Mahogany logs on Ape Atoll."
+        }
+      ]
     },
     {
       "id": "west_hard_7",
@@ -8728,15 +10291,19 @@
       "skills": {
         "Mining": 70
       },
-      "quests": [
-        "Regicide"
-      ],
+      "quests": [],
       "regions": [
         "Isafdar"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Regicide 70 Mining Any pickaxe"
+      "sourceRequirements": "Started Regicide 70 Mining Any pickaxe",
+      "questProgress": [
+        {
+          "quest": "Regicide",
+          "label": "Reached the required progress in Regicide for: Mine some Adamantite ore in Tirannwn."
+        }
+      ]
     },
     {
       "id": "west_hard_8",
@@ -8748,15 +10315,19 @@
       "skills": {
         "Farming": 68
       },
-      "quests": [
-        "Mourning's End Part I"
-      ],
+      "quests": [],
       "regions": [
         "Lletya"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Mourning's End Part I 68 Farming Palm sapling, rake, and spade 15 papayas recommended to pay the gardener"
+      "sourceRequirements": "Started Mourning's End Part I 68 Farming Palm sapling, rake, and spade 15 papayas recommended to pay the gardener",
+      "questProgress": [
+        {
+          "quest": "Mourning's End Part I",
+          "label": "Reached the required progress in Mourning's End Part I for: Check the health of your Palm tree in Lletya."
+        }
+      ]
     },
     {
       "id": "west_hard_9",
@@ -8801,15 +10372,19 @@
       "ordinal": 11,
       "description": "Kill Zulrah.",
       "skills": {},
-      "quests": [
-        "Regicide"
-      ],
+      "quests": [],
       "regions": [
         "Zul-Andra"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Regicide See the strategy guide"
+      "sourceRequirements": "Started Regicide See the strategy guide",
+      "questProgress": [
+        {
+          "quest": "Regicide",
+          "label": "Reached the required progress in Regicide for: Kill Zulrah."
+        }
+      ]
     },
     {
       "id": "west_hard_12",
@@ -8859,9 +10434,7 @@
       "skills": {
         "Fletching": 85
       },
-      "quests": [
-        "Regicide"
-      ],
+      "quests": [],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Started Regicide 85 Fletching Magic longbow (u) and a bow string",
@@ -8875,6 +10448,12 @@
         "Gwenith",
         "Iorwerth Camp",
         "Poison Waste"
+      ],
+      "questProgress": [
+        {
+          "quest": "Regicide",
+          "label": "Reached the required progress in Regicide for: Fletch a Magic Longbow in Tirannwn."
+        }
       ]
     },
     {
@@ -8956,7 +10535,29 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "40 Combat level, 22 Prayer, 42 Attack, 42 Strength, 42 Defence, 42 Hitpoints, 42 Ranged, and 42 Magic Any void helm ( melee, ranger, or mage helm ) Void knight top, robe, and gloves",
-      "combatLevel": 40
+      "combatLevel": 40,
+      "equipmentRequirements": [
+        {
+          "slot": "Head",
+          "tier": 7,
+          "reason": "Complete Void knight set"
+        },
+        {
+          "slot": "Body",
+          "tier": 7,
+          "reason": "Complete Void knight set"
+        },
+        {
+          "slot": "Legs",
+          "tier": 7,
+          "reason": "Complete Void knight set"
+        },
+        {
+          "slot": "Gloves",
+          "tier": 7,
+          "reason": "Complete Void knight set"
+        }
+      ]
     },
     {
       "id": "west_elite_6",
@@ -8986,15 +10587,19 @@
       "skills": {
         "Thieving": 85
       },
-      "quests": [
-        "Mourning's End Part I"
-      ],
+      "quests": [],
       "regions": [
         "Lletya"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Mourning's End Part I 85 Thieving"
+      "sourceRequirements": "Started Mourning's End Part I 85 Thieving",
+      "questProgress": [
+        {
+          "quest": "Mourning's End Part I",
+          "label": "Reached the required progress in Mourning's End Part I for: Pickpocket an Elf."
+        }
+      ]
     },
     {
       "id": "wild_easy_1",
@@ -9295,6 +10900,14 @@
         "Wilderness God Wars Dungeon",
         "Daimon's Crater",
         "Chaos Altar"
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Cape",
+          "tier": 1,
+          "reason": "Team cape",
+          "manualCheck": "Have Team cape and confirm that the specific item is permitted by your equipment tier"
+        }
       ]
     },
     {
@@ -9559,14 +11172,18 @@
       "skills": {
         "Smithing": 50
       },
-      "quests": [
-        "Between a Rock..."
-      ],
+      "quests": [],
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "Partial completion of Between a Rock... 50 Smithing 7500 coins, 3 gold bars, and a hammer",
       "regions": [
         "Resource Area"
+      ],
+      "questProgress": [
+        {
+          "quest": "Between a Rock...",
+          "label": "Reached the required progress in Between a Rock... for: Smith a Golden helmet in the Resource Area."
+        }
       ]
     },
     {
@@ -9621,7 +11238,17 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Mage Arena I 60 Magic Any god staff and means to cast its related god spell ( per cast)"
+      "sourceRequirements": "Completion of Mage Arena I 60 Magic Any god staff and means to cast its related god spell ( per cast)",
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 6,
+          "reason": "God staff for a god spell"
+        }
+      ],
+      "arcana": [
+        "God Spells"
+      ]
     },
     {
       "id": "wild_hard_2",
@@ -9960,7 +11587,10 @@
         "reviewedAt": "2026-09-12",
         "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
         "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
-      }
+      },
+      "arcana": [
+        "Ancient Magicks"
+      ]
     },
     {
       "id": "wild_elite_3",
@@ -10168,5 +11798,104 @@
       "classification": "retired",
       "reason": "No current semantic match in the verified OSRS Wiki source; preserved as a legacy completion id."
     }
-  ]
+  ],
+  "permissionAudit": {
+    "reviewedAt": "2026-09-24",
+    "reviewedRows": 492,
+    "scope": "Mandatory worn equipment and explicit travel using existing Fate Mobility unlocks. All task descriptions, sourceRequirements and alternatives reviewed; item ownership, optional combat protection and inventory-only tools are not inferred. Also closes confirmed purchase-shop and explicit Arcana-use omissions; this is not a general minigame/item-ownership audit.",
+    "source": "Pinned per-diary pages and sourceRequirements above, with current Wiki exceptions documented in docs/reviews/2026-09-24-diary-equipment-mobility-audit.md",
+    "changedTaskIds": [
+      "ard_elite_5",
+      "ard_elite_8",
+      "ard_hard_4",
+      "ard_med_1",
+      "ard_med_11",
+      "ard_med_12",
+      "ard_med_2",
+      "ard_med_5",
+      "des_easy_11",
+      "des_easy_4",
+      "des_elite_2",
+      "des_hard_1",
+      "des_hard_3",
+      "des_hard_6",
+      "des_hard_7",
+      "des_hard_8",
+      "des_med_11",
+      "des_med_5",
+      "des_med_6",
+      "des_med_9",
+      "fal_elite_1",
+      "fal_elite_2",
+      "fal_elite_4",
+      "fal_hard_1",
+      "fal_hard_11",
+      "fal_hard_6",
+      "fal_hard_9",
+      "fal_med_10",
+      "fal_med_7",
+      "fal_med_9",
+      "frem_hard_8",
+      "frem_med_2",
+      "frem_med_5",
+      "frem_med_6",
+      "frem_med_9",
+      "kan_elite_3",
+      "kan_elite_7",
+      "kan_hard_4",
+      "kan_hard_7",
+      "kan_hard_9",
+      "kan_med_13",
+      "kan_med_4",
+      "kar_elite_4",
+      "kar_hard_7",
+      "kar_med_12",
+      "kar_med_18",
+      "kar_med_7",
+      "kou_elite_6",
+      "kou_hard_10",
+      "kou_hard_7",
+      "kou_med_1",
+      "kou_med_3",
+      "kou_med_4",
+      "kou_med_6",
+      "kou_med_9",
+      "lum_elite_2",
+      "lum_elite_5",
+      "lum_elite_6",
+      "lum_hard_1",
+      "lum_hard_4",
+      "lum_hard_7",
+      "lum_med_11",
+      "lum_med_2",
+      "lum_med_4",
+      "mor_easy_10",
+      "mor_elite_3",
+      "mor_elite_6",
+      "mor_hard_8",
+      "mor_med_10",
+      "mor_med_4",
+      "var_elite_2",
+      "var_elite_3",
+      "var_elite_5",
+      "var_hard_1",
+      "var_hard_4",
+      "var_med_12",
+      "var_med_3",
+      "var_med_4",
+      "var_med_7",
+      "west_easy_9",
+      "west_elite_5",
+      "west_hard_1",
+      "west_hard_4",
+      "west_hard_5",
+      "west_med_2",
+      "western_med_7",
+      "western_med_9",
+      "wild_easy_8",
+      "wild_elite_2",
+      "wild_hard_1"
+    ],
+    "tierPolicy": "Reviewed material/named Fate tiers are hard gates. Unreviewed named items require minimum slot T1 plus manual item ownership/permission confirmation; stat estimates never become hard diary gates."
+  }
 }

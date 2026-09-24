@@ -8,6 +8,8 @@ import {
   f2pQuestMembershipFor,
   type F2PQuestMembership,
 } from '../../data/f2pQuestMembership';
+import type { ReviewedQuestRequirements } from '../../data/questItemRequirements';
+import type { QuestGuideArticle } from '../../data/questGuideArticles';
 import { reviewedQuestRequirements } from '../../data/questItemRequirements';
 import type {
   QuestActionCoachMetadata,
@@ -21,11 +23,17 @@ export type QuestStrategyAction = QuestWalkthroughActionDefinition & {
 };
 
 export interface QuestStrategyContext {
+  /** Preview displays honest gaps; public compilation remains strict. */
+  readonly allowUnmappedPreview?: boolean;
   readonly membership: F2PQuestMembership;
   readonly rootRequirements: readonly QuestItemRequirement[];
 }
 
 export interface QuestStrategyDefinition {
+  readonly requirementsReview?: ReviewedQuestRequirements;
+  readonly article?: QuestGuideArticle;
+  readonly previewNotes?: readonly string[];
+  readonly vanillaPreview?: boolean;
   readonly questId: string;
   readonly kind: F2PQuestMembership['kind'];
   readonly rolloutWave: F2PQuestMembership['wave'];
@@ -140,6 +148,7 @@ const hasValidPreferredMethod = (
 
 const hasValidCoachMetadata = (action: QuestWalkthroughActionDefinition): action is QuestStrategyAction => {
   const coach = action.coach;
+  if (action.manualChecks !== undefined && (!Array.isArray(action.manualChecks) || !action.manualChecks.every(isNonBlank))) return false;
   if (
     !isRecord(coach)
     || !Array.isArray(action.items)
@@ -275,7 +284,10 @@ export function questStrategyFromWalkthrough(
       || !hasValidCoachMetadata(action)
     ) return null;
     if (actionIds.has(action.id)) return null;
-    const mapChunks = staticMapChunksFor(action);
+    const mapChunks = staticMapChunksFor(action) ?? (
+      resolvedContext.allowUnmappedPreview === true && walkthrough.releaseStatus === 'PREVIEW_ONLY'
+        && action.location.kind === 'NONE' && action.confidence === 'UNMAPPED' ? [] : null
+    );
     if (!mapChunks) return null;
     actionIds.add(action.id);
     previousSourceOrder = action.sourceOrder;
