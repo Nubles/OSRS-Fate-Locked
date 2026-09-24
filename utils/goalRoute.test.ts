@@ -282,6 +282,30 @@ describe('buildGoalRoute — geographic area aliases', () => {
   });
 });
 
+describe('buildGoalRoute — Skills key suggestions', () => {
+  const skillsNeeded = (route: ReturnType<typeof buildGoalRoute>) =>
+    route!.tables.find(table => table.table === TableType.SKILLS)?.needed ?? [];
+
+  it('suggests a Skills key for a quest only when the tier caps the skill below the level needed', () => {
+    // The Knight's Sword needs Mining 10; tier 3 caps at 30, so only XP is missing.
+    const xpOnly = buildGoalRoute("The Knight's Sword", stateWith({ skills: { Mining: 3 }, levels: { Mining: 5 } }));
+    expect(xpOnly!.skills).toContainEqual(expect.objectContaining({ skill: 'Mining', needLevel: 10, met: false }));
+    expect(skillsNeeded(xpOnly)).not.toContain('Mining');
+    expect(skillsNeeded(buildGoalRoute("The Knight's Sword", stateWith({ levels: { Mining: 5 } })))).toContain('Mining');
+  });
+
+  it('applies the same rule to diary and strategy routes', () => {
+    // Falador Easy needs Agility 5; tier 1 caps at 10.
+    const diary = (tier: number) => buildGoalRoute('Falador Easy', stateWith({ skills: { Agility: tier }, levels: { Agility: 1 } }));
+    expect(skillsNeeded(diary(1))).not.toContain('Agility');
+    expect(skillsNeeded(diary(0))).toContain('Agility');
+    // Recipe for Disaster needs Cooking 70; tier 7 caps at 70, tier 6 at 60.
+    const strategy = (tier: number) => buildGoalRoute('Recipe for Disaster', stateWith({ skills: { Cooking: tier }, levels: { Cooking: 60 } }));
+    expect(skillsNeeded(strategy(7))).not.toContain('Cooking');
+    expect(skillsNeeded(strategy(6))).toContain('Cooking');
+  });
+});
+
 describe('suggestTables', () => {
   it('computes odds as needed/remaining and ranks descending', () => {
     const unlocks = stateWith().unlocks;

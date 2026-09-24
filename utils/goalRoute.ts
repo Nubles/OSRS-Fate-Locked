@@ -465,7 +465,9 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     }
   }
   for (const s of skills) {
-    if (!s.met && s.skill !== 'Combat level') {
+    // A Skills key helps only while the tier caps the skill below the need;
+    // otherwise only XP is missing.
+    if (!s.met && s.skill !== 'Combat level' && s.tierHave < s.tierNeeded) {
       dependencies.push({ table: TableType.SKILLS, id: s.skill });
     }
   }

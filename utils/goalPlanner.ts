@@ -137,6 +137,15 @@ function currentQuestPoints(unlocks: any): number {
   );
 }
 
+/**
+ * A skill's usable level ceiling at its current tier (0 while locked). A
+ * Skills key only helps a requirement this ceiling holds below the level
+ * needed; otherwise only XP is missing.
+ */
+function skillCap(unlocks: any, skill: string): number {
+  return Math.min(99, (unlocks.skills?.[skill] ?? 0) * 10);
+}
+
 function areaPlanStep(name: string): PlanStep {
   const canonical = canonicalAreaName(name);
   return { kind: 'region', id: canonical, label: displayAreaName(name), unlockTable: TableType.REGIONS, done: false };
@@ -189,11 +198,12 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
       skill, effectiveSkillLevel(unlocks, skill),
     ] as const);
     const have = levels.reduce((sum, [, level]) => sum + level, 0);
+    const capTotal = requirement.skills.reduce((sum, skill) => sum + skillCap(unlocks, skill), 0);
     return {
       kind: 'skill', id: 'combined:' + requirement.skills.join('+'),
       label: requirement.skills.join(' + ') + ' combined',
       relatedIds: requirement.skills,
-      unlockTable: TableType.SKILLS,
+      unlockTable: capTotal < requirement.level ? TableType.SKILLS : undefined,
       detail: 'Level ' + requirement.level + ' combined (have ' + have + ': '
         + levels.map(([skill, level]) => skill + ' ' + level).join(' + ') + ')',
       done: false,
@@ -204,7 +214,7 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
       kind: 'skill', id: 'any-of:' + requirement.skills.join('|'),
       label: requirement.skills.join(' or '),
       relatedIds: requirement.skills,
-      unlockTable: TableType.SKILLS,
+      unlockTable: requirement.skills.every(skill => skillCap(unlocks, skill) < requirement.level) ? TableType.SKILLS : undefined,
       detail: 'Lv ' + requirement.level + ' in either (have '
         + requirement.skills.map(skill => (
           skill + ' ' + effectiveSkillLevel(unlocks, skill)
@@ -227,7 +237,8 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
     ? requirement.level
     : Number(match?.[2] ?? 1);
   return {
-    kind: 'skill', id: skill, label: skill, relatedIds: [skill], unlockTable: TableType.SKILLS,
+    kind: 'skill', id: skill, label: skill, relatedIds: [skill],
+    unlockTable: skillCap(unlocks, skill) < required ? TableType.SKILLS : undefined,
     detail: 'Lv ' + required + ' (have ' + effectiveSkillLevel(unlocks, skill) + ')', done: false,
   };
 }
@@ -387,7 +398,7 @@ function buildPlanFromRequirements(
         : effectiveSkillLevel(unlocks, skill);
       const tier = unlocks.skills[skill] ?? 0;
       const unlocked = tier > 0;
-      const methodCap = Math.min(99, tier * 10);
+      const methodCap = skillCap(unlocks, skill);
       const detail = skill === 'Combat level'
         ? `Level ${lvl} (have ${have})`
         : !unlocked
@@ -401,7 +412,7 @@ function buildPlanFromRequirements(
         label: skill,
         detail,
         done,
-        unlockTable: skill === 'Combat level' ? undefined : TableType.SKILLS,
+        unlockTable: skill !== 'Combat level' && methodCap < lvl ? TableType.SKILLS : undefined,
       };
     })
     .sort((a, b) => Number(a.done) - Number(b.done) || b.id.localeCompare(a.id));

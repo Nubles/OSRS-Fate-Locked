@@ -153,6 +153,21 @@ describe('planForTarget — quests', () => {
     expect(plan.alreadyReachable).toBe(false);
   });
 
+  it('suggests a Skills key only while the tier caps the skill below the level needed', () => {
+    const mining = (quest: string, tier: number, level: number) => planForTarget('quest', quest, maxedUnlocks({
+      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? tier : 10])),
+      levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? level : 99])),
+    }))!.skillSteps.find(step => step.id === 'Mining')!;
+
+    // The Knight's Sword needs Mining 10: tier 3 caps at 30, so only XP is missing.
+    expect(mining("The Knight's Sword", 3, 5)).toMatchObject({ detail: 'Lv 10 (have 5)' });
+    expect(mining("The Knight's Sword", 3, 5).unlockTable).toBeUndefined();
+    expect(mining("The Knight's Sword", 0, 5).unlockTable).toBe(TableType.SKILLS);
+    // Elemental Workshop I needs Mining 20, above tier 1's cap of 10.
+    expect(mining('Elemental Workshop I', 1, 20).unlockTable).toBe(TableType.SKILLS);
+    expect(mining('Elemental Workshop I', 2, 15).unlockTable).toBeUndefined();
+  });
+
   it('includes a Quest Point step for a quest requirement', () => {
     const plan = planForTarget('quest', 'Black Knights\' Fortress', maxedUnlocks())!;
 
@@ -325,6 +340,22 @@ describe('planForTarget — diaries', () => {
         ],
       }),
     ]);
+  });
+
+  it('suggests a Skills key for combined and limited-any routes only when tiers cap them', () => {
+    const routes = (tier: number) => planForTarget('diary', 'Falador Hard', maxedUnlocks({
+      regions: ["Warriors' Guild"],
+      skills: { Attack: tier, Strength: tier },
+      levels: { Attack: 60, Strength: 60 },
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== 'Falador Hard' || task.id !== 'fal_hard_10')
+        .map(task => task.id),
+    }))!.alternativeSteps[0].routes.map(route => route.blockers[0].unlockTable);
+
+    // Caps of 60 + 60 fall short of 130 combined and of 99 in either.
+    expect(routes(6)).toEqual([TableType.SKILLS, TableType.SKILLS]);
+    // At tier 10 only XP is missing.
+    expect(routes(10)).toEqual([undefined, undefined]);
   });
 
   it('does not require miniquests for the Quest cape diary task', () => {
