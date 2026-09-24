@@ -9,7 +9,7 @@ import { SectionGuide } from './SectionGuide';
 import { gearService } from '../services/GearService';
 import { monsterService, MonsterStats } from '../services/MonsterService';
 import { attackBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
-import { planBoss, BossPlan, BOSS_ALIASES, defaultBossVersion, PlayerCombat, Readiness, Danger } from '../utils/bossPlanner';
+import { planBoss, BossPlan, BOSS_ALIASES, bestBoostPrayers, defaultBossVersion, PlayerCombat, Readiness, Danger } from '../utils/bossPlanner';
 import { EntityModel } from './EntityModel';
 import { modelFor, orientationFor } from '../data/entityModels';
 import { WikiLink } from './WikiLink';
@@ -42,7 +42,7 @@ const fmtTtk = (s: number): string => {
 };
 
 export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
-  const { unlocks, loadout: rawLoadout } = useGame();
+  const { unlocks, loadout: rawLoadout, gameModeId } = useGame();
   const loadout = rawLoadout || {};
   useEscapeKey(onClose, true);
 
@@ -72,14 +72,17 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
     return { bonuses: b, speedTicks: weapon?.speed || 4, count: items.length, weaponName: weapon?.name, category: weapon?.category ?? (loadout['Weapon'] == null ? 'Unarmed' : undefined), rangedDamageType: weapon?.rangedDamageType };
   }, [loadout, status]);
 
+  // Boosts assume the best attack prayer the player has unlocked, not Piety/Rigour.
+  const prayers = useMemo(() => bestBoostPrayers(unlocks, gameModeId), [unlocks, gameModeId]);
   const player: PlayerCombat = useMemo(() => {
     const L = unlocks.levels || {};
     return {
       levels: { attack: L.Attack || 1, strength: L.Strength || 1, ranged: L.Ranged || 1, magic: L.Magic || 1, hitpoints: L.Hitpoints || 10 },
       gear: { bonuses: gear.bonuses, speedTicks: gear.speedTicks, category: gear.category, rangedDamageType: rangedOverride === 'auto' ? gear.rangedDamageType ?? 'standard' : rangedOverride },
       boostsOn,
+      prayers,
     };
-  }, [unlocks.levels, gear, boostsOn, rangedOverride]);
+  }, [unlocks.levels, gear, boostsOn, prayers, rangedOverride]);
 
   // Resolve unlocked bosses → monster + plan; split matched vs. encounters.
   const { ranked, encounters } = useMemo(() => {
@@ -261,6 +264,9 @@ const Detail: React.FC<{
         <span className={`text-[12px] font-bold ${r.cls}`}>{r.label}</span>
         <span className="text-[10px] text-gray-500">· best as <span className="text-gray-300 uppercase">{plan.style === 'melee' ? plan.attackType : plan.style} / {plan.stanceId}</span>{weaponName ? ` · ${weaponName}` : ''}</span>
       </div>
+      <p className="text-[10px] text-gray-500 px-1">
+        Prayer: <span className="text-gray-300">{plan.prayer ?? 'none'}</span> · Potion: <span className="text-gray-300">{plan.potion ?? 'none'}</span>
+      </p>
 
       {/* Core stats */}
       <div className="grid grid-cols-2 gap-3">
@@ -294,7 +300,7 @@ const Detail: React.FC<{
 
       <p className="text-[9px] text-gray-600 leading-relaxed flex items-start gap-1.5">
         <Info size={11} className="shrink-0 mt-0.5" />
-        DPS compares the melee/ranged attacks your equipped weapon supports (Magic → use the DPS tab for spell-specific numbers). Kills/trip & danger are rough threat estimates assuming no protection prayers; special attacks and item passives aren't modelled.
+        DPS compares the melee/ranged attacks your equipped weapon supports (Magic → use the DPS tab for spell-specific numbers). Boosts use the best attack prayer you have unlocked. Kills/trip & danger are rough threat estimates assuming no protection prayers; special attacks and item passives aren't modelled.
       </p>
     </div>
   );

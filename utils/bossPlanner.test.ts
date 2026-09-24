@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { planBoss, PlayerCombat, MonsterLite, BOSS_ALIASES, defaultBossVersion } from './bossPlanner';
+import { planBoss, PlayerCombat, MonsterLite, BOSS_ALIASES, defaultBossVersion, bestBoostPrayers } from './bossPlanner';
 import { ZERO_BONUSES } from './gearStats';
+import type { UnlockState } from '../types';
 
 const monster = (over: Partial<MonsterLite> = {}): MonsterLite => ({
   hp: 150, maxHit: 30, defLevel: 100, magicLevel: 1,
@@ -46,7 +47,7 @@ describe('boss kill planner', () => {
     const bare = planBoss({ levels: { attack: 99, strength: 99, ranged: 99, magic: 99, hitpoints: 99 }, gear: { bonuses: { ...ZERO_BONUSES }, speedTicks: 4, category: 'Unarmed' }, boostsOn: false }, monster());
     expect(bare.gearGapPct).toBeLessThan(40);
 
-    const strong: PlayerCombat = { levels: { attack: 99, strength: 99, ranged: 99, magic: 99, hitpoints: 99 }, gear: { bonuses: { ...ZERO_BONUSES, stab: 150, slash: 150, crush: 150, ranged: 140, meleeStr: 150, rangedStr: 120 }, speedTicks: 4, category: 'Slash Sword' }, boostsOn: true };
+    const strong: PlayerCombat = { levels: { attack: 99, strength: 99, ranged: 99, magic: 99, hitpoints: 99 }, gear: { bonuses: { ...ZERO_BONUSES, stab: 150, slash: 150, crush: 150, ranged: 140, meleeStr: 150, rangedStr: 120 }, speedTicks: 4, category: 'Slash Sword' }, boostsOn: true, prayers: { melee: 'piety', ranged: 'rigour' } };
     expect(planBoss(strong, monster()).gearGapPct).toBe(100);
   });
 
@@ -115,5 +116,63 @@ describe('defaultBossVersion', () => {
     expect(pick('Abyssal Sire', ['Phase 1', 'Phase 2'])).toBe('Phase 1');
     expect(pick('Giant Mole', [''])).toBe('');
     expect(defaultBossVersion([])).toBeUndefined();
+  });
+});
+
+describe('boost prayers', () => {
+  const unlocks = (over: Partial<UnlockState> = {}): UnlockState => ({
+    equipment: {}, skills: {}, levels: {}, regions: [], chunks: [], mobility: [], arcana: [], housing: [],
+    merchants: [], minigames: [], bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [],
+    banks: [], quests: [], diaries: [], cas: [], completedTasks: [], collectionLog: {},
+    ...over,
+  });
+  const skilled = (prayer: number, defence: number, over: Partial<UnlockState> = {}) => unlocks({
+    skills: { Prayer: Math.ceil(prayer / 10), Defence: Math.ceil(defence / 10) },
+    levels: { Prayer: prayer, Defence: defence },
+    ...over,
+  });
+  // General Graardor, from the pinned catalogue.
+  const graardor = monster({ hp: 255, maxHit: 60, defLevel: 250, magicLevel: 80, def: { stab: 90, slash: 90, crush: 90, magic: 298, ranged: 90 } });
+  const whip7070 = (prayers?: PlayerCombat['prayers']): PlayerCombat => ({
+    levels: { attack: 70, strength: 70, ranged: 1, magic: 1, hitpoints: 70 },
+    gear: { bonuses: { ...ZERO_BONUSES, slash: 82, meleeStr: 82 }, speedTicks: 4, category: 'Whip' },
+    boostsOn: true,
+    prayers,
+  });
+
+  it('assumes no prayer without the Prayer levels or Arcana unlocks', () => {
+    expect(bestBoostPrayers(unlocks())).toEqual({ melee: 'none', ranged: 'none' });
+    // Raw Prayer 99 is capped at 10 by tier 1.
+    expect(bestBoostPrayers(unlocks({ skills: { Prayer: 1 }, levels: { Prayer: 99 } }))).toEqual({ melee: 'none', ranged: 'none' });
+  });
+
+  it('falls back to the standard prayers the tier-capped Prayer level reaches', () => {
+    expect(bestBoostPrayers(skilled(43, 1))).toEqual({ melee: 'clarity', ranged: 'none' });
+    expect(bestBoostPrayers(skilled(44, 1))).toEqual({ melee: 'clarity', ranged: 'eagle' });
+    // Piety's levels without its Arcana unlock are not Piety.
+    expect(bestBoostPrayers(skilled(99, 99, { quests: ["King's Ransom"] }))).toEqual({ melee: 'clarity', ranged: 'eagle' });
+  });
+
+  it('uses Piety, Chivalry and Rigour only with their unlock and every level and quest gate', () => {
+    const knight = { arcana: ['Piety', 'Chivalry'], quests: ["King's Ransom"] };
+    expect(bestBoostPrayers(skilled(70, 70, knight)).melee).toBe('piety');
+    expect(bestBoostPrayers(skilled(69, 70, knight)).melee).toBe('chivalry');
+    expect(bestBoostPrayers(skilled(70, 64, knight)).melee).toBe('clarity');
+    expect(bestBoostPrayers(skilled(70, 70, { ...knight, quests: [] })).melee).toBe('clarity');
+    // Prayer 70 capped at 60 by tier 6 reaches Chivalry, not Piety.
+    expect(bestBoostPrayers(skilled(70, 70, { ...knight, skills: { Prayer: 6, Defence: 7 } })).melee).toBe('chivalry');
+    expect(bestBoostPrayers(skilled(74, 70, { arcana: ['Rigour'] })).ranged).toBe('rigour');
+    expect(bestBoostPrayers(skilled(73, 70, { arcana: ['Rigour'] })).ranged).toBe('eagle');
+  });
+
+  it('plans with the prayer the player has and reports the boosts it assumed', () => {
+    const noPrayer = planBoss(whip7070(bestBoostPrayers(unlocks())), graardor);
+    const piety = planBoss(whip7070({ melee: 'piety', ranged: 'rigour' }), graardor);
+    expect(piety.maxHit).toBe(26);
+    expect(noPrayer.maxHit).toBe(21);
+    expect(noPrayer.dps).toBeLessThan(piety.dps);
+    expect(noPrayer).toMatchObject({ prayer: null, potion: 'Super combat' });
+    expect(piety).toMatchObject({ prayer: 'Piety', potion: 'Super combat' });
+    expect(planBoss({ ...whip7070({ melee: 'piety' }), boostsOn: false }, graardor)).toMatchObject({ maxHit: 18, prayer: null, potion: null });
   });
 });

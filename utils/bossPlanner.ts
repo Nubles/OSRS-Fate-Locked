@@ -11,9 +11,13 @@
  */
 
 import { GearBonuses, ZERO_BONUSES } from './gearStats';
-import { computeDps, Style, AttackType } from './dps';
+import { computeDps, POTIONS, PRAYERS, Style, AttackType } from './dps';
 import { rangedDefenceFor, type RangedDamageType } from './rangedDamage';
 import { weaponCombatOptions, type WeaponCombatOption } from './weaponCombat';
+import type { UnlockState } from '../types';
+import { getActivityReq } from '../data/activityRequirements';
+import { evaluateActivityReadiness } from './activityReadiness';
+import { meetsSkillRequirement } from './journalStatus';
 
 export interface MonsterLite {
   hp: number;
@@ -27,9 +31,13 @@ export interface MonsterLite {
 export interface PlayerCombat {
   levels: { attack: number; strength: number; ranged: number; magic: number; hitpoints: number };
   gear: { bonuses: GearBonuses; speedTicks: number; category?: string; rangedDamageType?: RangedDamageType };
-  /** Prayers (Piety/Rigour) + potions (super/ranging) applied. */
+  /** Potions (super combat/ranging) and the prayers below applied. */
   boostsOn: boolean;
+  /** Prayer id per style the player can use (see bestBoostPrayers); none when omitted. */
+  prayers?: Partial<Record<PlannedStyle, string>>;
 }
+
+type PlannedStyle = 'melee' | 'ranged';
 
 export type Readiness = 'excellent' | 'good' | 'workable' | 'slow' | 'undergeared' | 'unverified';
 export type Danger = 'low' | 'medium' | 'high' | 'extreme';
@@ -42,6 +50,9 @@ export interface BossPlan {
   style: Style;
   attackType: AttackType;
   stanceId: string;
+  /** Labels of the prayer and potion assumed; null when none. */
+  prayer: string | null;
+  potion: string | null;
   assessmentNote?: string;
   killsPerHour: number;
   readiness: Readiness;
@@ -96,11 +107,41 @@ const accuracyFor = (b: GearBonuses, t: AttackType): number =>
 const monDefFor = (m: MonsterLite, t: AttackType, rangedType: RangedDamageType): number =>
   t === 'stab' ? m.def.stab : t === 'slash' ? m.def.slash : t === 'crush' ? m.def.crush : t === 'ranged' ? rangedDefenceFor(m, rangedType) : m.def.magic;
 
+/**
+ * Offensive prayers the planner may assume, best first. Piety, Chivalry and
+ * Rigour are Arcana unlocks with their own level and quest gates; the others
+ * need only their Prayer level, which the skill's tier caps.
+ */
+const BOOST_PRAYERS: Record<PlannedStyle, ReadonlyArray<{ id: string; arcana?: string; prayerLevel?: number }>> = {
+  melee: [{ id: 'piety', arcana: 'Piety' }, { id: 'chivalry', arcana: 'Chivalry' }, { id: 'clarity', prayerLevel: 16 }],
+  ranged: [{ id: 'rigour', arcana: 'Rigour' }, { id: 'eagle', prayerLevel: 44 }],
+};
+
+/** The best offensive prayer per style the player can use ('none' if none). */
+export const bestBoostPrayers = (unlocks: UnlockState, gameModeId?: string): Record<PlannedStyle, string> => {
+  const skills = { skills: unlocks.skills ?? {}, levels: unlocks.levels ?? {} };
+  // An Arcana prayer's in-game unlock (Knight Waves, a prayer scroll) can't be
+  // checked, so its machine gates passing is enough to assume it.
+  const usable = ({ arcana, prayerLevel }: { arcana?: string; prayerLevel?: number }) => arcana
+    ? ['READY', 'NEEDS_CONFIRMATION'].includes(evaluateActivityReadiness((unlocks.arcana ?? []).includes(arcana), getActivityReq(arcana), unlocks, gameModeId).status)
+    : meetsSkillRequirement(skills, 'Prayer', prayerLevel ?? 1);
+  return {
+    melee: BOOST_PRAYERS.melee.find(usable)?.id ?? 'none',
+    ranged: BOOST_PRAYERS.ranged.find(usable)?.id ?? 'none',
+  };
+};
+
+const boostsFor = (p: PlayerCombat, style: Style) => ({
+  prayerId: p.boostsOn && style !== 'magic' ? p.prayers?.[style] ?? 'none' : 'none',
+  potionId: p.boostsOn ? (style === 'ranged' ? 'ranging' : 'super') : 'none',
+});
+const boostLabel = (list: ReadonlyArray<{ id: string; label: string }>, id: string): string | null =>
+  id === 'none' ? null : list.find(entry => entry.id === id)?.label ?? null;
+
 const runCombo = (p: PlayerCombat, m: MonsterLite, { style, attackType, stanceId }: WeaponCombatOption) =>
   computeDps({
     style, attackType, stanceId,
-    prayerId: p.boostsOn ? (style === 'ranged' ? 'rigour' : 'piety') : 'none',
-    potionId: p.boostsOn ? (style === 'ranged' ? 'ranging' : 'super') : 'none',
+    ...boostsFor(p, style),
     baseSpellMax: 0,
     levels: { attack: p.levels.attack, strength: p.levels.strength, ranged: p.levels.ranged, magic: p.levels.magic },
     gear: {
@@ -118,6 +159,7 @@ const STRONG: PlayerCombat = {
   levels: { attack: 99, strength: 99, ranged: 99, magic: 99, hitpoints: 99 },
   gear: { bonuses: { ...ZERO_BONUSES, stab: 150, slash: 150, crush: 150, ranged: 140, meleeStr: 150, rangedStr: 120 }, speedTicks: 4 },
   boostsOn: true,
+  prayers: { melee: 'piety', ranged: 'rigour' },
 };
 
 const KILL_OVERHEAD_S = 6; // amortised between-kills / banking
@@ -145,7 +187,7 @@ export const planBoss = (player: PlayerCombat, monster: MonsterLite): BossPlan =
   const candidates = options.filter(option => option.style !== 'magic');
   if (!candidates.length) return {
     dps: 0, ttk: Infinity, maxHit: 0, hitChance: 0, style: 'melee', attackType: 'crush', stanceId: '',
-    killsPerHour: 0, readiness: 'unverified', danger: dangerOf(monster.maxHit, player.levels.hitpoints),
+    prayer: null, potion: null, killsPerHour: 0, readiness: 'unverified', danger: dangerOf(monster.maxHit, player.levels.hitpoints),
     killsBeforeBank: 0, gearGapPct: 0,
     assessmentNote: options.length
       ? 'Choose a spell in the DPS tab to assess this magic weapon.'
@@ -164,6 +206,7 @@ export const planBoss = (player: PlayerCombat, monster: MonsterLite): BossPlan =
   const killsPerHour = isFinite(best.ttk) && best.ttk > 0 ? Math.floor(3600 / (best.ttk + KILL_OVERHEAD_S)) : 0;
   const dmgPerKill = Math.max(1, monster.maxHit * 1.5); // rough, no protection
   const killsBeforeBank = Math.max(1, Math.floor(player.levels.hitpoints / dmgPerKill));
+  const boosts = boostsFor(player, bestCombo.style);
 
   return {
     dps: best.dps,
@@ -173,6 +216,8 @@ export const planBoss = (player: PlayerCombat, monster: MonsterLite): BossPlan =
     style: bestCombo.style,
     attackType: bestCombo.attackType,
     stanceId: bestCombo.stanceId,
+    prayer: boostLabel(PRAYERS[bestCombo.style], boosts.prayerId),
+    potion: boostLabel(POTIONS[bestCombo.style], boosts.potionId),
     killsPerHour,
     readiness: readinessOf(best.ttk, best.dps),
     danger: dangerOf(monster.maxHit, player.levels.hitpoints),
