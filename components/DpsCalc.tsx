@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Search, Loader2, AlertCircle, RefreshCw, Info, Clock, Target } from 'lucide-react';
 import { Swords, Crosshair, Wand2, Zap, Crown } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
@@ -263,7 +264,8 @@ const MonsterPicker: React.FC<{ currentKey: string | null; onClose: () => void; 
   const [query, setQuery] = useState('');
   const results = useMemo(() => monsterService.search(query, 80), [query]);
 
-  return (
+  // Escape dashboard animation/overflow ancestors so the dialog fits the viewport.
+  return createPortal(
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-150" onClick={onClose} role="dialog" aria-modal="true" aria-label="Choose monster">
       <div className="bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full max-w-md h-[70vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 p-3 border-b border-white/10 bg-[#1b1b1b] shrink-0">
@@ -291,6 +293,7 @@ const MonsterPicker: React.FC<{ currentKey: string | null; onClose: () => void; 
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
