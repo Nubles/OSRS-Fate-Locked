@@ -5,6 +5,8 @@ import { RunCardModal } from './RunCard';
 import { auditHistory, ensureChain } from '../utils/integrity';
 import type { LogEntry } from '../types';
 import { resolveModeRules, type GameModeRules } from '../config/gameModes';
+import { setStartArea } from '../utils/freeAreas';
+import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 
 const mockGame = vi.hoisted(() => ({
   current: {
@@ -54,6 +56,40 @@ describe('RunCardModal region total', () => {
     expect(markup).toContain(expected);
     expect(markup).not.toContain("Otto's Grotto");
     expect(markup).not.toContain("Heroes' Guild");
+  });
+});
+
+describe('RunCardModal reachable area count', () => {
+  const reset = () => {
+    setStartArea(undefined);
+    mockGame.current.gameModeId = 'vanilla';
+    mockGame.current.unlocks.regions = [];
+    mockGame.current.unlocks.chunks = [];
+  };
+  beforeEach(reset);
+  afterEach(reset);
+  const markup = () => renderToStaticMarkup(<RunCardModal onClose={vi.fn()} embedded />);
+
+  it('counts only Lumbridge as free for a fresh legacy Xtreme run', () => {
+    setStartArea('lumbridge');
+    mockGame.current.gameModeId = 'xtreme';
+
+    expect(markup()).toContain('1/187 regions');
+  });
+
+  it('counts a Xtreme Misthalin unlock like any other area', () => {
+    setStartArea('lumbridge');
+    mockGame.current.gameModeId = 'xtreme';
+    mockGame.current.unlocks.regions = ['Varrock', 'Falador'];
+
+    expect(markup()).toContain('3/187 regions');
+  });
+
+  it('keeps counting Chunked runs by chunk', () => {
+    mockGame.current.gameModeId = 'chunked';
+    mockGame.current.unlocks.chunks = ['46,51'];
+
+    expect(markup()).toContain(`2/${ALL_CHUNK_KEYS.length} chunks`);
   });
 });
 

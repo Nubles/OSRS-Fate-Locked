@@ -4,10 +4,13 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RunCardModal, loadRunCardRegionChunks } from './RunCard';
 import { REGION_CHUNKS } from '../data/regionChunks';
+import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
+import { MISTHALIN_AREAS } from '../data/items';
+import { setStartArea } from '../utils/freeAreas';
 
 const fixtures = vi.hoisted(() => ({
   game: {
-    history: [], unlocks: { regions: [], chunks: [] },
+    history: [], unlocks: { regions: [] as string[], chunks: [] as string[] },
     keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0, gameModeId: 'vanilla',
   },
   capture: vi.fn(),
@@ -20,7 +23,8 @@ vi.mock('html2canvas', () => ({ default: fixtures.capture }));
 
 const DRAFT_KEY = 'fate-region-chunks-draft-v1';
 const BACKUP_KEY = 'fate-region-chunks-backup-v1';
-const geometry = { Misthalin: [{ cx: 50, cy: 50 }], Asgarnia: [{ cx: 49, cy: 50 }] };
+// Lumbridge (free) and Falador (locked on a fresh Vanilla run).
+const geometry = { Misthalin: [{ cx: 50, cy: 50 }], Asgarnia: [{ cx: 46, cy: 51 }] };
 const envelope = { v: 2, seed: 'saved-map-seed', dirty: true, data: geometry };
 const storageWith = (draft: string | null, backup: string | null = null) => ({
   getItem: vi.fn((key: string) => key === DRAFT_KEY ? draft : key === BACKUP_KEY ? backup : null),
@@ -174,5 +178,74 @@ describe('Vanilla run card map capture', () => {
     expect(screen.getByRole('alert').textContent).toContain('try Re-render');
     expect((screen.getByRole('button', { name: 'Re-render' }) as HTMLButtonElement).disabled).toBe(false);
     expect(fixtures.capture).not.toHaveBeenCalled();
+  });
+});
+
+describe('Run card map colours each chunk by its own area', () => {
+  const GREEN = 'rgba(16,185,129,0.55)';
+  const fills: string[] = [];
+  const context = {
+    fillStyle: '', imageSmoothingEnabled: false, imageSmoothingQuality: 'low',
+    clearRect: vi.fn(), drawImage: vi.fn(),
+    fillRect: vi.fn(() => { fills.push(context.fillStyle); }),
+    beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(), stroke: vi.fn(),
+  };
+  const shipped = new Set(Object.values(REGION_CHUNKS).flat().map(({ cx, cy }) => `${cx},${cy}`));
+  const shippedChunksOf = (areas: string[]) =>
+    areas.flatMap(area => SUB_AREA_CHUNKS[area] ?? []).filter(({ cx, cy }) => shipped.has(`${cx},${cy}`)).length;
+
+  beforeEach(() => {
+    vi.useRealTimers();
+    vi.clearAllMocks();
+    PendingMapImage.instances.length = 0;
+    vi.stubGlobal('localStorage', { getItem: () => null, setItem: vi.fn(), clear: vi.fn() });
+    vi.stubGlobal('Image', PendingMapImage);
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context as unknown as CanvasRenderingContext2D);
+    fixtures.capture.mockImplementation(async () => ({ toDataURL: () => 'data:image/png;base64,map-card' }));
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    setStartArea(undefined);
+    fixtures.game = { ...fixtures.game, unlocks: { regions: [], chunks: [] }, gameModeId: 'vanilla' };
+  });
+
+  // Draw the shipped map for one run and count its unlocked (green) chunks.
+  const greenChunks = async (unlocks: { regions?: string[]; chunks?: string[] }, gameModeId: string) => {
+    fixtures.game = { ...fixtures.game, unlocks: { regions: [], chunks: [], ...unlocks }, gameModeId };
+    fills.length = 0;
+    const captures = fixtures.capture.mock.calls.length;
+    const view = render(<RunCardModal onClose={vi.fn()} embedded />);
+    await act(async () => { PendingMapImage.instances.at(-1)!.onload?.(); });
+    await waitFor(() => expect(fixtures.capture).toHaveBeenCalledTimes(captures + 1));
+    view.unmount();
+    return fills.filter(fill => fill === GREEN).length;
+  };
+
+  it('shows Vanilla area unlocks before their whole continent is done', async () => {
+    const areas = ['Falador', 'Port Sarim', 'Rimmington', 'Taverley'];
+    const fresh = await greenChunks({}, 'vanilla');
+    const withAreas = await greenChunks({ regions: areas }, 'vanilla');
+
+    expect(withAreas - fresh).toBe(shippedChunksOf(areas));
+    expect(shippedChunksOf(areas)).toBeGreaterThan(0);
+  });
+
+  it('paints only Lumbridge for a fresh legacy Xtreme run', async () => {
+    setStartArea('lumbridge');
+    const xtreme = await greenChunks({}, 'xtreme');
+    setStartArea(undefined);
+    const vanilla = await greenChunks({}, 'vanilla');
+
+    expect(xtreme).toBe(shippedChunksOf(['Lumbridge']));
+    expect(vanilla).toBeGreaterThanOrEqual(shippedChunksOf(MISTHALIN_AREAS));
+    expect(xtreme).toBeLessThan(vanilla);
+  });
+
+  it('keeps colouring Chunked runs chunk by chunk', async () => {
+    // The free start chunk plus one rolled Falador chunk.
+    expect(await greenChunks({ chunks: ['46,51'] }, 'chunked')).toBe(2);
   });
 });
