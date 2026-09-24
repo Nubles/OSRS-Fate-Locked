@@ -19,6 +19,39 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-24-saves-keys-and-planners',
+    title: 'Safer Saves, Fairer Keys and Accurate Planners',
+    date: '2026-09-24',
+    sections: {
+      fixed: [
+        'Resetting, importing or restoring a run no longer shows the recovery screen on every later visit. Earlier checkpoints stay restorable.',
+        'Long runs can export and re-import their .fate backup again; saves above about 2 MB were refused. Saves with an unusual game-mode value load as Vanilla instead of crashing, and runs saved during an Aquarium reveal load again.',
+        'Oracle search no longer runs a developer check that could replace your run with test data when you searched for "test", and its area status shows your mode\'s real starting area.',
+        'First-run setup fits phone screens, so Next stays reachable, and the game-mode choice now appears before What\'s New. Players still owed the legacy Fate compensation see its choices at the top of What\'s New instead of being unable to close it.',
+        'One Omni-key can no longer pay for two unlocks. Buying Clarity while Greed is waiting, or the reverse, no longer overwrites the first buff, and rituals you cannot afford are refused.',
+        'Levelling a skill already at 99 no longer rolls for a reward, and Auto-Roll stops levelling skills after you leave its tab.',
+        'Cartographer offers up to three frontier chunks and keeps the same offers until your run changes. History checks no longer mistake a charted Chaos Temple chunk for a Ritual of Chaos.',
+        'The Codex now matches the game for Omni-key odds, its worked quest example, Storage, roll precision and the Chunked Sailing frontier, and no longer presents retired modes as current.',
+        'Level-1 skilling diary tasks, such as the Gnome Stronghold lap and baking bread, need the skill unlocked before they count as doable. The Wilderness Easy Chaos Runecrafting temple task needs Enter the Abyss when reached through the Abyss.',
+        'Champions\' Guild readiness can reach Ready once Varrock is unlocked, and Combat Achievement reward chips recognise the bosses you own.',
+        'The Boss Planner and DPS Calculator count ammunition strength only for weapons that fire it, keep hit chance between 0% and 100%, and round prayer and magic bonuses as the game does. The 10% Attack and Strength prayers are labelled Improved Reflexes and Superhuman Strength.',
+        'Monster max hits use the largest listed hit, so Tormented Demons, Dusk, Shellbane gryphons and other multi-attack bosses no longer read as low danger.',
+        'Goal plans no longer count a quest\'s own Quest Points, or those of quests that need it first, toward its Quest Point requirement.',
+        'The Quest Journal area filter lists every quest the chosen area gates. Choosing Varrock previously hid quests such as Demon Slayer and Rune Mysteries.',
+        'The Cook\'s Assistant guide no longer marks later steps as needing checking because of items collected in earlier steps.',
+        'Timelapse shows replay notes as warnings rather than broken integrity and uses your mode\'s pity threshold. Chunked quest doability starts from the free starting chunk, so a new Chunked run no longer shows every quest as stranded.',
+        'Discord announcements no longer repeat unlocks that arrive with an imported save or sync code, and keep working after a save made on a device with a wrong clock.',
+        'Collection Log prices recover after a failed price download, a full browser storage no longer crashes the app from the Roll Inbox, and feature reveal messages no longer repeat when storage is full.',
+        'Skill cards respond to Enter and Space, the guided tour no longer skips a step when Enter presses Next, and the Codex and Timelapse close buttons are labelled for screen readers.',
+        'Auto-Roll errors and legacy mode descriptions no longer show garbled characters. Unlock share text uses the Fate Locked Ironman name and only reports a copy when it succeeds.',
+      ],
+      changed: [
+        'Spend Keys cards show Blocked when a table\'s remaining unlocks are out of reach instead of offering a roll that cannot happen. Chunked no longer reads Done while land reached by Sailing remains, and Housing no longer counts the retired Aquarium.',
+        'While one Void Altar buff is waiting, the other buff is disabled with an explanation.',
+      ],
+    },
+  },
+  {
     id: '2026-09-24-unlocks-and-guide-saves',
     title: 'More Accurate Unlocks, Clearer Guides and Reliable Saves',
     date: '2026-09-24',
