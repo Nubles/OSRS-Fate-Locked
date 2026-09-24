@@ -647,21 +647,42 @@ describe('UNLOCK', () => {
     expect(twice.unlocks.regions.filter((r) => r === 'Karamja')).toHaveLength(1);
   });
 
-  it('caps the skill tier at 10 even if dispatched past the cap', () => {
-    let s = base();
+  it('caps the skill tier at 10 and charges nothing once dispatched past the cap', () => {
+    let s = { ...base(), keys: 20 };
     for (let i = 0; i < 15; i++) {
       s = gameReducer(s, { type: 'UNLOCK', payload: { table: TableType.SKILLS, item: 'Mining', costType: 'key', cost: 1 } });
     }
     expect(s.unlocks.skills['Mining']).toBe(10);
+    expect(s.keys).toBe(10);
   });
 
   it('caps the equipment tier at EQUIPMENT_TIER_MAX', () => {
-    let s = base();
+    let s = { ...base(), keys: 20 };
     for (let i = 0; i < 20; i++) {
       s = gameReducer(s, { type: 'UNLOCK', payload: { table: TableType.EQUIPMENT, item: 'Head', costType: 'key', cost: 1 } });
     }
     // EQUIPMENT_TIER_MAX is 9 (see config/rules.ts); the reducer must not exceed it.
     expect(s.unlocks.equipment['Head']).toBeLessThanOrEqual(9);
+  });
+
+  it('cannot spend one Omni-key on two direct unlocks', () => {
+    const unlock = (item: string) => ({
+      type: 'UNLOCK' as const,
+      payload: { table: TableType.BOSSES, item, costType: 'specialKey' as const, cost: 1 },
+    });
+    const first = gameReducer({ ...base(), specialKeys: 1 }, unlock('Zulrah'));
+    const second = gameReducer(first, unlock('Vorkath'));
+
+    expect(first.specialKeys).toBe(0);
+    expect(second).toBe(first);
+    expect(second.unlocks.bosses).toEqual(['Zulrah']);
+  });
+
+  it('does not charge an Omni-key for something already unlocked', () => {
+    const owned = { ...base(), specialKeys: 1, unlocks: { ...base().unlocks, bosses: ['Zulrah'] } };
+    const next = gameReducer(owned, { type: 'UNLOCK', payload: { table: TableType.BOSSES, item: 'Zulrah', costType: 'specialKey', cost: 1 } });
+
+    expect(next).toBe(owned);
   });
 });
 
@@ -713,6 +734,23 @@ describe('rituals', () => {
     const s = gameReducer({ ...base(), fatePoints: 40 }, { type: 'RITUAL_GREED' });
     expect(s.fatePoints).toBe(25);
     expect(s.activeBuff).toBe('GREED');
+  });
+
+  it('keeps a paid buff instead of letting the other buff replace it', () => {
+    const clarity = gameReducer({ ...base(), fatePoints: 23 }, { type: 'RITUAL_LUCK' });
+    const greed = gameReducer(clarity, { type: 'RITUAL_GREED' });
+
+    expect(greed).toBe(clarity);
+    expect(greed.activeBuff).toBe('LUCK');
+    expect(greed.fatePoints).toBe(15);
+  });
+
+  it('rejects rituals the player cannot afford', () => {
+    const poor = { ...base(), fatePoints: 7, keys: 4 };
+    expect(gameReducer(poor, { type: 'RITUAL_LUCK' })).toBe(poor);
+    expect(gameReducer(poor, { type: 'RITUAL_GREED' })).toBe(poor);
+    expect(gameReducer(poor, { type: 'RITUAL_CHAOS' })).toBe(poor);
+    expect(gameReducer(poor, { type: 'RITUAL_TRANSMUTE' })).toBe(poor);
   });
 
   it('a failed roll under GREED refunds half the ritual cost (plus the normal fate point)', () => {

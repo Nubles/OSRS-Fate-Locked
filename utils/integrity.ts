@@ -228,17 +228,21 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
           return e.timestamp < Date.parse('2026-07-04T13:34:16Z') ? before : after;
         };
         const ritual = e.meta?.ritual;
-        if (ritual === 'LUCK' || /Clarity/.test(e.message)) s.fatePoints -= legacyCost(15, 8);
-        else if (ritual === 'GREED' || /Greed/.test(e.message)) s.fatePoints -= legacyCost(30, 15);
-        else if (ritual === 'CHAOS' || /Chaos/.test(e.message)) {
+        // Message matching is only for legacy entries without a recorded
+        // ritual: a Cartographer entry naming "Chaos Temple" is not Chaos.
+        const isRitual = (id: string, legacyMessage: RegExp): boolean =>
+          typeof ritual === 'string' ? ritual === id : legacyMessage.test(e.message);
+        if (isRitual('LUCK', /Clarity/)) s.fatePoints -= legacyCost(15, 8);
+        else if (isRitual('GREED', /Greed/)) s.fatePoints -= legacyCost(30, 15);
+        else if (isRitual('CHAOS', /Chaos/)) {
           s.fatePoints -= legacyCost(25, 25); s.chaosKeys += amount('chaosKeysAwarded', 1);
-        } else if (ritual === 'TRANSMUTE' || /Transmut/.test(e.message)) {
+        } else if (isRitual('TRANSMUTE', /Transmut/)) {
           s.keys -= amount('keyCost', 5); s.specialKeys += amount('specialKeysAwarded', 1);
-        } else if (ritual === 'GAMBIT' || /Void Gambit/.test(e.message)) {
+        } else if (isRitual('GAMBIT', /Void Gambit/)) {
           s.fatePoints = 0;
           fateEstimate = false;
           s.keys += amount('keysAwarded', Number(e.message.match(/WON.*?([0-9]+) Key/)?.[1] ?? 0));
-        } else if (ritual === 'CARTOGRAPHER' || /Cartographer/.test(e.message)) {
+        } else if (isRitual('CARTOGRAPHER', /Cartographer/)) {
           s.fatePoints -= amount('fateCost', () => Number(e.details?.match(/for ([0-9]+) Fate/)?.[1] ?? legacyCost(40, 40)));
           s.unlocks += 1;
         }

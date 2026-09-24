@@ -15,7 +15,7 @@ import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { CA_DATA } from '../data/caData';
 import { ALL_CA_TASKS, CATask } from '../data/caTasks';
 import { QUEST_DATA } from '../data/questData';
-import { UNLOCK_COST, randomUnlockPool, pickRandomPoolEntry, isRandomUnlockEligible } from '../utils/gameEngine';
+import { UNLOCK_COST, randomUnlockPool, pickRandomPoolEntry, isRandomUnlockEligible, isValidUnlock } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { drawFloat, seededContext } from '../utils/seededRng';
 import { hashEntry, ensureChain } from '../utils/integrity';
@@ -1039,6 +1039,12 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       if (action.payload.revealId && (state.pendingUnlock || costType === 'specialKey'
         || (costType === 'key' ? state.keys < cost : state.chaosKeys < 1)
         || !isRandomUnlockEligible(table, item, state.unlocks, state.gameModeId, costType))) return state;
+      // Direct (Omni) unlocks must be paid for and still unlockable, or two
+      // quick confirmations could spend one Omni-key twice.
+      if (!action.payload.revealId && (
+        (costType === 'specialKey' ? state.specialKeys < 1
+          : costType === 'key' ? state.keys < cost : state.chaosKeys < 1)
+        || !isValidUnlock(table, item, state.unlocks))) return state;
 
       const newUnlocks = { ...state.unlocks };
       // Defensive helpers: pushing into an array category dedupes against the
@@ -1101,6 +1107,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     }
 
     case 'RITUAL_LUCK':
+      // One buff waits for the next roll; a second would overwrite the first.
+      if (state.activeBuff !== 'NONE'
+        || state.fatePoints < ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier)) return state;
       return {
         ...state,
         fatePoints: state.fatePoints - ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
@@ -1110,6 +1119,8 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       };
 
     case 'RITUAL_GREED':
+      if (state.activeBuff !== 'NONE'
+        || state.fatePoints < ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier)) return state;
       return {
         ...state,
         fatePoints: state.fatePoints - ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
@@ -1119,6 +1130,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       };
 
     case 'RITUAL_CHAOS':
+      if (state.fatePoints < ritualFateCost('CHAOS', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier)) return state;
       return {
         ...state,
         fatePoints: state.fatePoints - ritualFateCost('CHAOS', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
@@ -1128,6 +1140,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       };
 
     case 'RITUAL_TRANSMUTE':
+      if (state.keys < (getRitual('TRANSMUTE').keyCost ?? 5)) return state;
       return {
         ...state,
         keys: state.keys - (getRitual('TRANSMUTE').keyCost ?? 5),
@@ -2376,10 +2389,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   }, [commitAction]);
 
   const levelUpSkill = useCallback((skill: string) => {
+    const levelBefore = stateRef.current.unlocks.levels[skill] || 1;
+    // Level 99 is the cap; a level-up that changes nothing earns no roll.
+    if (levelBefore >= 99) return;
     // Pre-compute RNG outside reducer to maintain reducer purity
     const chaosRoll = nextFloat('levelup');
     const prepared = prepareLevelUpActions(stateRef.current, skill, chaosRoll, nextDice);
     const levelState = commitAction(prepared.levelAction);
+    if ((levelState.unlocks.levels[skill] || 1) === levelBefore) return;
     const levelUpMeta = levelState.lastEvent?.type === 'LEVEL_UP'
       ? levelState.lastEvent.meta
       : undefined;

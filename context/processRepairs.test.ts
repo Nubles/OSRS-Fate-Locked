@@ -58,6 +58,20 @@ describe('audited process repairs', () => {
     expect(verifyChain(history).ok).toBe(true);
   });
 
+  it('replays a Cartographer chart of Chaos Temple as Cartographer, not a Ritual of Chaos', () => {
+    const start = { ...fresh(), gameModeId: 'chunked', fatePoints: 40 };
+    const charted = gameReducer(start, {
+      type: 'RITUAL_CARTOGRAPHER',
+      payload: { chunkKey: '50,56', label: 'Chaos Temple (50, 56)' },
+    });
+    expect(charted.history.at(-1)?.message).toMatch(/Chaos/);
+
+    // Replay counts the chart as an unlock and awards no Chaos Key.
+    const audit = auditHistory(charted.history);
+    expect(audit.final).toMatchObject({ chaosKeys: 0, unlocks: 1 });
+    expect(charted.chaosKeys).toBe(0);
+  });
+
   it('recovers legacy Gambit payout and Cartographer cost from their recorded messages', () => {
     const history: LogEntry[] = [
       { id: '1', timestamp: 1, type: 'ALTAR', message: 'Void Gambit WON — 2 Keys!', details: 'Staked 30 Fate; the Void blinked.' },

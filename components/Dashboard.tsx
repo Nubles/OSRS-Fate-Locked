@@ -1,6 +1,6 @@
 import { getUtilityActivityReq } from '../utils/utilityReadiness';
 import { lazyWithRetry } from '../utils/lazyRetry';
-import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { 
   EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, MISTHALIN_AREAS, 
   MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, ROLLABLE_POH_ITEMS,
@@ -392,6 +392,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const [levelingSkill, setLevelingSkill] = useState<string | null>(null);
   const [pendingSpecial, setPendingSpecial] = useState<{table: TableType, item: string, image?: string} | null>(null);
   const [confirmOmni, setConfirmOmni] = useState<{table: TableType, item: string} | null>(null);
+  const omniInFlightRef = useRef(false);
   const [selectedSkillForDetails, setSelectedSkillForDetails] = useState<{name: string, tier: number} | null>(null);
 
   const [unlockReveal, dismissReveal] = useUnlockReveal(unlocks, gameModeId);
@@ -498,23 +499,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       if (!confirmOmni) return;
       const { table, item } = confirmOmni;
       setConfirmOmni(null);
+      // One Omni reveal at a time: a second confirmation during the artwork
+      // fetch or an open reveal must not queue another spend of the same key.
+      if (omniInFlightRef.current || pendingSpecial) return;
       if (!isOmniDirectUnlockAvailable(table, item, unlocks, gameModeId)) return;
+      omniInFlightRef.current = true;
 
       let imageUrl = undefined;
-      
-      // Prefer ID based image
-      if (UTILITY_ITEM_IDS[item]) {
-         imageUrl = `https://chisel.weirdgloop.org/static/img/osrs-sprite/${UTILITY_ITEM_IDS[item]}.png`;
-      } 
-      // Fetch image from wiki for specific tables if no ID or as fallback.
-      // Keep this list in sync with GachaSection.tsx's WIKI_FETCH_TYPES.
-      else if (['region', 'boss', 'minigame', 'storage', 'guild', 'mobility', 'arcana', 'housing', 'merchants', 'farming'].some(s => table.toLowerCase().includes(s))) {
-         const wikiUrl = await wikiService.fetchImage(item);
-         if (wikiUrl) imageUrl = wikiUrl;
-      } else {
-         if (table === TableType.SKILLS) imageUrl = `https://oldschool.runescape.wiki/images/${item}_icon.png`;
-         else if (table === TableType.EQUIPMENT) imageUrl = SLOT_CONFIG[item] ? `https://oldschool.runescape.wiki/images/${SLOT_CONFIG[item].file}` : undefined;
-         else imageUrl = SPECIAL_ICONS[item] ? `https://oldschool.runescape.wiki/images/${SPECIAL_ICONS[item]}` : undefined;
+      try {
+        // Prefer ID based image
+        if (UTILITY_ITEM_IDS[item]) {
+           imageUrl = `https://chisel.weirdgloop.org/static/img/osrs-sprite/${UTILITY_ITEM_IDS[item]}.png`;
+        } 
+        // Fetch image from wiki for specific tables if no ID or as fallback.
+        // Keep this list in sync with GachaSection.tsx's WIKI_FETCH_TYPES.
+        else if (['region', 'boss', 'minigame', 'storage', 'guild', 'mobility', 'arcana', 'housing', 'merchants', 'farming'].some(s => table.toLowerCase().includes(s))) {
+           const wikiUrl = await wikiService.fetchImage(item);
+           if (wikiUrl) imageUrl = wikiUrl;
+        } else {
+           if (table === TableType.SKILLS) imageUrl = `https://oldschool.runescape.wiki/images/${item}_icon.png`;
+           else if (table === TableType.EQUIPMENT) imageUrl = SLOT_CONFIG[item] ? `https://oldschool.runescape.wiki/images/${SLOT_CONFIG[item].file}` : undefined;
+           else imageUrl = SPECIAL_ICONS[item] ? `https://oldschool.runescape.wiki/images/${SPECIAL_ICONS[item]}` : undefined;
+        }
+      } catch {
+        // Artwork is decorative; the reveal proceeds without it.
+      } finally {
+        omniInFlightRef.current = false;
       }
       setPendingSpecial({ table, item, image: imageUrl });
   };

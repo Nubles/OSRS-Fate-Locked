@@ -1925,6 +1925,32 @@ describe('level-up feedback integration', () => {
     });
     expect(random).toHaveBeenCalledTimes(3);
   });
+
+  it('does not roll a level reward for a skill already at 99', () => {
+    const storageKey = 'level-up-capped';
+    const seeded = {
+      ...structuredClone(initialState),
+      unlocks: {
+        ...initialState.unlocks,
+        levels: { ...initialState.unlocks.levels, Attack: 99 },
+      },
+    };
+    localStorage.setItem(storageKey, serializeCurrent(seeded));
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.01);
+    let current: Game | undefined;
+
+    render(
+      <GameProvider storageKey={storageKey}>
+        <GameCapture onGame={game => { current = game; }} />
+      </GameProvider>,
+    );
+
+    act(() => current?.levelUpSkill('Attack'));
+
+    expect(current?.history).toEqual([]);
+    expect(current?.keys).toBe(seeded.keys);
+    expect(random).not.toHaveBeenCalled();
+  });
 });
 describe('quest completion integration', () => {
   type ProviderSnapshot = {
