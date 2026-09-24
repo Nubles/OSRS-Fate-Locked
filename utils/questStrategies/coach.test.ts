@@ -732,6 +732,34 @@ describe('buildRuneProofCoachModel', () => {
     });
   });
 
+  it('lists usable alternative sources before sources that need a chunk unlock', () => {
+    const strategy = impStrategy();
+    const usableImp = routeAt('monster:Imp:48,50:black bead', 'Black bead', 'Imp', 'DROP', '48,50');
+    // Level with the usable Imp on every other rank term, so its route ID used to win the tie.
+    const lockedImp = routeAt('monster:Imp:20,58:black bead', 'Black bead', 'Imp', 'DROP', '20,58');
+    lockedImp.steps[0].requiresChunkUnlock = true;
+    // A deterministic source outranks a drop, but not while its chunk is locked.
+    const lockedSpawn = routeAt('spawn:Black bead:21,57:black bead', 'Black bead', 'Black bead', 'SPAWN', '21,57');
+    lockedSpawn.steps[0].requiresChunkUnlock = true;
+    const analysis = impAnalysisFor(strategy, false, [usableImp]);
+    const model = buildImpCoach({
+      analysis: {
+        ...analysis,
+        items: [{ ...analysis.items[0], missingChunkRoutes: [lockedImp, lockedSpawn] }],
+      },
+    });
+
+    expect(model.alternativeSources[0]?.routes.map(route => ({
+      id: route.id,
+      requiresChunkUnlock: route.requiresChunkUnlock,
+      isBest: route.isBest,
+    }))).toEqual([
+      { id: usableImp.id, requiresChunkUnlock: false, isBest: true },
+      { id: lockedSpawn.id, requiresChunkUnlock: true, isBest: false },
+      { id: lockedImp.id, requiresChunkUnlock: true, isBest: false },
+    ]);
+  });
+
   it('keeps incomplete item evidence visible when an alternative replaces the location', () => {
     const strategy = impStrategy();
     const original = impAnalysisFor(strategy, false);
