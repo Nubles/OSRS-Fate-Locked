@@ -98,6 +98,12 @@ export interface RecoveryRepository {
     revisions: readonly number[],
     authorizeWrite: () => SaveWriteAuthorization,
   ): Promise<RecoveryWriteResult>;
+  /**
+   * Highest persistence revision among the profile's head and checkpoints,
+   * read without loading checkpoint bodies. Optional; callers fall back to
+   * getHead and listCheckpoints.
+   */
+  maxPersistenceRevision?(profileId: string): Promise<number>;
   getMetadata<T>(key: string): Promise<T | null>;
   putMetadata<T>(
     key: string,

@@ -1,6 +1,6 @@
 import { getUtilityActivityReq } from '../utils/utilityReadiness';
 import { lazyWithRetry } from '../utils/lazyRetry';
-import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { 
   EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, MISTHALIN_AREAS, 
   MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, ROLLABLE_POH_ITEMS,
@@ -48,7 +48,7 @@ import { PanelErrorBoundary } from './PanelErrorBoundary';
 import { MerchantShopsPanel } from './MerchantShopsPanel';
 import { SlayerReachabilityPanel } from './SlayerReachabilityPanel';
 import { ShortcutsPanel } from './ShortcutsPanel';
-import { ModalFallback } from './LoadingFallback';
+import { ModalFallback, PaneFallback } from './LoadingFallback';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useUnlockReveal } from '../hooks/useUnlockReveal';
@@ -392,10 +392,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const [levelingSkill, setLevelingSkill] = useState<string | null>(null);
   const [pendingSpecial, setPendingSpecial] = useState<{table: TableType, item: string, image?: string} | null>(null);
   const [confirmOmni, setConfirmOmni] = useState<{table: TableType, item: string} | null>(null);
+  const omniInFlightRef = useRef(false);
   const [selectedSkillForDetails, setSelectedSkillForDetails] = useState<{name: string, tier: number} | null>(null);
 
-  const [unlockReveal, dismissReveal] = useUnlockReveal(unlocks, gameModeId);
-  const [achievementReveal, dismissAchievementReveal] = useAchievementReveal(unlocks, gameModeId, customMode);
+  const [unlockReveal, dismissReveal, unlockRevealId] = useUnlockReveal(unlocks, gameModeId);
+  const [achievementReveal, dismissAchievementReveal, achievementRevealId] = useAchievementReveal(unlocks, gameModeId, customMode);
 
   useEscapeKey(() => setShowRunCard(false), showRunCard && !suspendModals);
   useEscapeKey(() => setSelectedSkillForDetails(null), selectedSkillForDetails !== null && !suspendModals);
@@ -498,23 +499,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       if (!confirmOmni) return;
       const { table, item } = confirmOmni;
       setConfirmOmni(null);
+      // One Omni reveal at a time: a second confirmation during the artwork
+      // fetch or an open reveal must not queue another spend of the same key.
+      if (omniInFlightRef.current || pendingSpecial) return;
       if (!isOmniDirectUnlockAvailable(table, item, unlocks, gameModeId)) return;
+      omniInFlightRef.current = true;
 
       let imageUrl = undefined;
-      
-      // Prefer ID based image
-      if (UTILITY_ITEM_IDS[item]) {
-         imageUrl = `https://chisel.weirdgloop.org/static/img/osrs-sprite/${UTILITY_ITEM_IDS[item]}.png`;
-      } 
-      // Fetch image from wiki for specific tables if no ID or as fallback.
-      // Keep this list in sync with GachaSection.tsx's WIKI_FETCH_TYPES.
-      else if (['region', 'boss', 'minigame', 'storage', 'guild', 'mobility', 'arcana', 'housing', 'merchants', 'farming'].some(s => table.toLowerCase().includes(s))) {
-         const wikiUrl = await wikiService.fetchImage(item);
-         if (wikiUrl) imageUrl = wikiUrl;
-      } else {
-         if (table === TableType.SKILLS) imageUrl = `https://oldschool.runescape.wiki/images/${item}_icon.png`;
-         else if (table === TableType.EQUIPMENT) imageUrl = SLOT_CONFIG[item] ? `https://oldschool.runescape.wiki/images/${SLOT_CONFIG[item].file}` : undefined;
-         else imageUrl = SPECIAL_ICONS[item] ? `https://oldschool.runescape.wiki/images/${SPECIAL_ICONS[item]}` : undefined;
+      try {
+        // Prefer ID based image
+        if (UTILITY_ITEM_IDS[item]) {
+           imageUrl = `https://chisel.weirdgloop.org/static/img/osrs-sprite/${UTILITY_ITEM_IDS[item]}.png`;
+        } 
+        // Fetch image from wiki for specific tables if no ID or as fallback.
+        // Keep this list in sync with GachaSection.tsx's WIKI_FETCH_TYPES.
+        else if (['region', 'boss', 'minigame', 'storage', 'guild', 'mobility', 'arcana', 'housing', 'merchants', 'farming'].some(s => table.toLowerCase().includes(s))) {
+           const wikiUrl = await wikiService.fetchImage(item);
+           if (wikiUrl) imageUrl = wikiUrl;
+        } else {
+           if (table === TableType.SKILLS) imageUrl = `https://oldschool.runescape.wiki/images/${item}_icon.png`;
+           else if (table === TableType.EQUIPMENT) imageUrl = SLOT_CONFIG[item] ? `https://oldschool.runescape.wiki/images/${SLOT_CONFIG[item].file}` : undefined;
+           else imageUrl = SPECIAL_ICONS[item] ? `https://oldschool.runescape.wiki/images/${SPECIAL_ICONS[item]}` : undefined;
+        }
+      } catch {
+        // Artwork is decorative; the reveal proceeds without it.
+      } finally {
+        omniInFlightRef.current = false;
       }
       setPendingSpecial({ table, item, image: imageUrl });
   };
@@ -577,6 +587,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                            key={skill}
                            data-skill-card={skill}
                            onClick={isMainActionable ? handleMainClick : undefined}
+                           onKeyDown={isMainActionable ? (event) => {
+                               // role="button" needs the native keys; nested
+                               // controls (notes, Omni upgrade) handle their own.
+                               if (event.target !== event.currentTarget) return;
+                               if (event.key === 'Enter' || event.key === ' ') {
+                                   event.preventDefault();
+                                   handleMainClick();
+                               }
+                           } : undefined}
                            className={`
                                 flex flex-col p-2 rounded bg-[#1f1f1f] border border-white/5 text-left transition-all duration-150 relative overflow-hidden group min-h-[68px]
                                 ${canLevel ? 'hover:bg-[#2a2a2a] cursor-pointer ring-1 ring-green-500/20 hover:ring-green-500/40' : ''}
@@ -733,7 +752,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
           {worldView === 'MAP' ? (
               <div className="flex-1 bg-[#050505] rounded-lg border border-white/10 overflow-hidden relative">
                   <PanelErrorBoundary name="Region map">
-                    <Suspense fallback={<ModalFallback />}>
+                    <Suspense fallback={<PaneFallback />}>
                       <RegionMap />
                     </Suspense>
                   </PanelErrorBoundary>
@@ -988,8 +1007,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
               </button>
           </div>
           {advisorsEnabled && <JournalNextBest onPick={setJournalSubTab} />}
-          <div className="flex-1 overflow-hidden p-2">
-              <Suspense fallback={<ModalFallback />}>
+          <div className="flex-1 overflow-hidden p-2 relative">
+              <Suspense fallback={<PaneFallback />}>
                   {journalSubTab === 'QUESTS' && <QuestLog searchTerm={searchQuery} suspendModals={suspendModals} />}
                   {journalSubTab === 'DIARIES' && <DiaryLog searchTerm={searchQuery} suspendModals={suspendModals} />}
                   {journalSubTab === 'CA' && <CALog searchTerm={searchQuery} />}
@@ -1200,20 +1219,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
               <GoalTracker />
           </Suspense>
           {/* Keyed by tab so the content gently slides in when you switch. */}
-          <div key={activeTab} className={`h-full ${animationsEnabled ? 'animate-fade-in-up' : ''}`}>
+          <div key={activeTab} className={`h-full relative ${animationsEnabled ? 'animate-fade-in-up' : ''}`}>
             {activeTab === 'CHARACTER' && renderCharacterTab()}
             {activeTab === 'WORLD' && renderWorldTab()}
             {activeTab === 'ACTIVITIES' && renderActivitiesTab()}
             {activeTab === 'JOURNAL' && renderJournalTab()}
             {activeTab === 'COLLECTION' && (
                 <div className="h-full p-2">
-                    <Suspense fallback={<ModalFallback />}>
+                    <Suspense fallback={<PaneFallback />}>
                         <CollectionLog searchTerm={searchQuery} />
                     </Suspense>
                 </div>
             )}
             {activeTab === 'AUTOROLL' && (
-                <Suspense fallback={<ModalFallback />}>
+                <Suspense fallback={<PaneFallback />}>
                     <AutoRollPanel />
                 </Suspense>
             )}
@@ -1260,9 +1279,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       </Suspense>
     )}
 
-    {/* Celebratory reveal when a milestone is newly earned. */}
+    {/* Celebratory reveal when a milestone is newly earned. Both reveals are
+        keyed per reveal, so a newer one restarts its own timers. */}
     {!suspendModals && !pendingUnlock && achievementReveal && (
       <AchievementReveal
+        key={`achievement-${achievementRevealId}`}
         data={achievementReveal}
         onDismiss={dismissAchievementReveal}
         onView={() => setShowAchievements(true)}
@@ -1273,6 +1294,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         unlocks and shows what new content just became available. */}
     {!suspendModals && !pendingUnlock && unlockReveal && (
       <UnlockReveal
+        key={`unlock-${unlockRevealId}`}
         data={unlockReveal}
         onDismiss={dismissReveal}
         onViewJournal={(tab) => {

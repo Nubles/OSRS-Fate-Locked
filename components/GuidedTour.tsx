@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Compass } from './OsrsIcon';
@@ -30,11 +30,14 @@ const STEPS: Step[] = [
 
 const TIP_W = 330;
 const PAD = 8;
+const CARD_CONTROLS = 'button:not([disabled]), a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 export const GuidedTour: React.FC = () => {
   const [active, setActive] = useState(false);
   const [i, setI] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const primaryRef = useRef<HTMLButtonElement>(null);
 
   const step = STEPS[i];
 
@@ -46,6 +49,23 @@ export const GuidedTour: React.FC = () => {
   }, [step]);
 
   useLayoutEffect(() => { if (active) measure(); }, [active, i, measure]);
+
+  // Remember what had focus when the tour opened, and hand it back on close.
+  useLayoutEffect(() => {
+    if (!active) return;
+    const opener = document.activeElement;
+    return () => {
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+    };
+  }, [active]);
+
+  // Bring focus into the card on open and after every step, unless it is
+  // already on one of the card's controls (Back keeps focus while it exists).
+  useLayoutEffect(() => {
+    if (active && !cardRef.current?.contains(document.activeElement)) {
+      primaryRef.current?.focus({ preventScroll: true });
+    }
+  }, [active, i]);
 
   useEffect(() => {
     if (!active) return;
@@ -67,8 +87,26 @@ export const GuidedTour: React.FC = () => {
   useEffect(() => {
     if (!active) return;
     const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        // Keep Tab and Shift+Tab cycling through the card's own controls
+        // instead of walking the app underneath the tour.
+        const controls = Array.from(cardRef.current?.querySelectorAll<HTMLElement>(CARD_CONTROLS) ?? []);
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        const focused = document.activeElement;
+        const leaving = !cardRef.current?.contains(focused) || focused === (e.shiftKey ? first : last);
+        if (first && leaving) {
+          e.preventDefault();
+          (e.shiftKey ? last : first).focus();
+        }
+        return;
+      }
+      // A focused control already activates on Enter; advancing here as well
+      // skipped a step (and closed the tour from the second-to-last one).
+      const onControl = e.target instanceof Element
+        && e.target.closest('button, a, input, select, textarea') !== null;
       if (e.key === 'Escape') setActive(false);
-      else if (e.key === 'ArrowRight' || e.key === 'Enter') next();
+      else if (e.key === 'ArrowRight' || (e.key === 'Enter' && !onControl)) next();
       else if (e.key === 'ArrowLeft') back();
     };
     window.addEventListener('keydown', onKey);
@@ -122,6 +160,7 @@ export const GuidedTour: React.FC = () => {
 
       {/* Tooltip card */}
       <div
+        ref={cardRef}
         className="fixed w-[330px] bg-[#1c1c1c] border border-amber-500/30 rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.7)] p-4 animate-in fade-in zoom-in-95 duration-200"
         style={tipStyle}
       >
@@ -145,7 +184,7 @@ export const GuidedTour: React.FC = () => {
                 <ArrowLeft size={12} /> Back
               </button>
             )}
-            <button onClick={next} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-amber-500 text-black hover:bg-amber-400 transition-colors">
+            <button ref={primaryRef} onClick={next} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-amber-500 text-black hover:bg-amber-400 transition-colors">
               {i >= STEPS.length - 1 ? 'Finish' : <>Next <ArrowRight size={12} /></>}
             </button>
           </div>

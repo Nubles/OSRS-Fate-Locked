@@ -28,6 +28,8 @@ import {
   type ItemRef,
   type RawRouteRequirement,
 } from './model';
+import { materializeQuestRouteSnapshot, materializeRuneProofAccount } from './goalPlannerRuneProof';
+import { questWalkthroughFor as publicQuestWalkthroughFor } from '../../data/questWalkthroughs.public';
 import * as resolverModule from './resolver';
 import {
   DEFAULT_RESOLVER_OPTIONS,
@@ -466,6 +468,81 @@ describe('analyzeQuest', () => {
 
     expect(questRouteStatusForItems(analyzeQuest("Cook's Assistant", fixture({ records: cookSources() })).items))
       .toBe('READY_NOW');
+  });
+
+  it('keeps same-chunk surface and interior sources as separate routes with their own access', () => {
+    const analysis = analyzeQuest("Cook's Assistant", fixture({
+      records: [
+        source('Egg', {
+          kind: 'monster',
+          hostName: 'Cyclops',
+          rawRequirements: [{ raw: 'Priest in Peril Complete the quest', origin: 'ENTITY' }],
+        }),
+        source('Egg', { kind: 'monster', hostName: 'Cyclops', sourceId: '11675' }),
+        source('Bucket of milk'),
+        source('Pot of flour'),
+      ],
+    }));
+
+    expect(analysis.items[0].currentRoutes.map(route => ({
+      id: route.id,
+      blocked: route.blockers.length > 0,
+    }))).toEqual([
+      { id: 'monster:Cyclops:1,2:egg:11675', blocked: false },
+      { id: 'monster:Cyclops:1,2:egg', blocked: true },
+    ]);
+  });
+
+  it('ranks a surfaced interior variant after an existing usable route it ties with', () => {
+    const analysis = analyzeQuest("Cook's Assistant", fixture({
+      current: ['1,2', '1,3'],
+      records: [
+        source('Egg', {
+          hostName: 'Egg',
+          sourceId: 'first-interior',
+          rawRequirements: [{ raw: 'Priest in Peril Complete the quest', origin: 'ENTITY' }],
+        }),
+        source('Egg', { hostName: 'Egg', sourceId: 'second-interior' }),
+        source('Egg', { hostName: 'Egg', cy: 3 }),
+        source('Bucket of milk'),
+        source('Pot of flour'),
+      ],
+    }));
+
+    // The variant's ID sorts first, but it must not outrank the route that existed.
+    expect(analysis.items[0].currentRoutes.map(route => route.id)).toEqual([
+      'spawn:Egg:1,3:egg',
+      'spawn:Egg:1,2:egg:second-interior',
+      'spawn:Egg:1,2:egg',
+    ]);
+  });
+
+  it("keeps Cook's Assistant's top milk route, with the Misthalin Manor bucket gated", () => {
+    // Real data: the Misthalin Manor bucket at 50,49 once recorded no entry
+    // requirement and, kept apart from the Zanaris record there, read as free.
+    // Its interim review gates the manor behind confirmation.
+    const walkthrough = publicQuestWalkthroughFor("Cook's Assistant")!;
+    const snapshot = materializeQuestRouteSnapshot(
+      "Cook's Assistant",
+      materializeRuneProofAccount(unlocks(), 'vanilla'),
+      chunkContentService,
+      generatedChunkContent.version,
+      walkthrough,
+    );
+    const milk = analyzeQuestWithWalkthrough("Cook's Assistant", snapshot, walkthrough).items
+      .find(item => item.requirement.item.key === 'bucket of milk')!;
+
+    expect(milk.currentRoutes[0]?.id)
+      .toBe('recipe:milk-cow:bucket of milk:q1:station=object:Dairy cow:50,51:deps=0=spawn:Bucket:50,51:bucket');
+    const manorRoutes = [...milk.currentRoutes, ...milk.missingChunkRoutes]
+      .filter(route => route.id.endsWith(':Misthalin Manor'));
+    expect(manorRoutes.every(route => route.blockers.some(blocker => (
+      blocker.type === 'UNRESOLVED' && /Misthalin Mystery needs confirmation/.test(blocker.label)
+    )))).toBe(true);
+    expect(snapshot.itemSourceRecords
+      .filter(record => record.itemName === 'Bucket' && record.sourceId === 'Misthalin Manor')
+      .map(record => record.rawRequirements.map(requirement => requirement.raw)))
+      .toContainEqual(['Misthalin Manor: reaching the manor through Misthalin Mystery needs confirmation']);
   });
 
   it('invalidates cached routes when an interior source identity changes', () => {

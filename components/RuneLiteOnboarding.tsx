@@ -4,6 +4,7 @@ import {
   Loader2, Puzzle, XCircle,
 } from 'lucide-react';
 import { relaySync } from '../services/relaySync';
+import { streamOverlayUrl } from '../utils/relayBase';
 import { RUNELITE_PAIRING_SUCCESS_COPY } from '../utils/runelitePairing';
 
 type DeliveryStatus = 'off' | 'sending' | 'sent' | 'upload-error';
@@ -69,9 +70,12 @@ export const RuneLiteOnboarding: React.FC = () => {
 
   const copyOverlayUrl = () => {
     if (!relaySync.code) return;
-    const url =
-      `${window.location.origin}${window.location.pathname}`
-      + `#/overlay?code=${relaySync.code}`;
+    // The overlay must poll the relay this app publishes to.
+    const url = streamOverlayUrl(
+      `${window.location.origin}${window.location.pathname}`,
+      relaySync.code,
+      relaySync.base(),
+    );
     navigator.clipboard?.writeText(url).catch(() => {});
     setOverlayCopied(true);
     window.setTimeout(() => setOverlayCopied(false), 1500);

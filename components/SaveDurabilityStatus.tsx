@@ -1,7 +1,7 @@
 import { AlertTriangle, CheckCircle2, Download, Loader2, RefreshCw, ShieldAlert } from 'lucide-react';
 import { useEffect, useRef, useState, type FC } from 'react';
 import type { SaveDurabilitySnapshot, SaveRetryResult } from '../utils/recoveryTypes';
-import type { FateSaveDownloadResult } from '../utils/fateSaveFile';
+import { FATE_EXPORT_DONE_MESSAGE, type FateSaveDownloadResult } from '../utils/fateSaveFile';
 import type { SaveStatus } from '../utils/pendingSaves';
 import { showToast } from '../utils/toast';
 
@@ -204,7 +204,7 @@ export const SaveDurabilityStatus: FC<SaveDurabilityStatusProps> = ({
       showToast(result.message);
       return;
     }
-    showToast('Backup exported — keep the .fate file somewhere safe');
+    showToast(FATE_EXPORT_DONE_MESSAGE);
   };
 
   return (

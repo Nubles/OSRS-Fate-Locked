@@ -239,7 +239,12 @@ export interface ItemSourceRecord {
 
 // Bump when public/chunk-content.json changes so the fetch URL changes and
 // browsers don't serve a stale cached copy (the filename itself never changes).
-export const CHUNK_CONTENT_DATA_VERSION = 13;
+export const CHUNK_CONTENT_DATA_VERSION = 14;
+// A stalled request must fail, so its panels offer Retry instead of loading
+// forever. The file is about 300 kB gzipped, so this only ends a request that
+// has stopped, not a slow one.
+export const CHUNK_CONTENT_TIMEOUT_MS = 30_000;
+export const CHUNK_CONTENT_TIMEOUT_MESSAGE = 'Chunk content took too long to load.';
 
 export class ChunkContentService {
   private doc: RawDoc | null = null;
@@ -268,7 +273,9 @@ export class ChunkContentService {
     if (!this.promise) {
       this.error = null;
       const base = (import.meta as any).env?.BASE_URL ?? '/';
-      this.promise = fetch(`${base}chunk-content.json?v=${CHUNK_CONTENT_DATA_VERSION}`)
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), CHUNK_CONTENT_TIMEOUT_MS);
+      this.promise = fetch(`${base}chunk-content.json?v=${CHUNK_CONTENT_DATA_VERSION}`, { signal: controller.signal })
         .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
         .then((doc: RawDoc) => {
           this.doc = doc; this.error = null;
@@ -277,11 +284,12 @@ export class ChunkContentService {
           this.emit(); return true;
         })
         .catch((err: Error) => {
-          this.error = err.message;
+          this.error = controller.signal.aborted ? CHUNK_CONTENT_TIMEOUT_MESSAGE : err.message;
           this.promise = null; // allow retry
           this.emit();
           return false;
-        });
+        })
+        .finally(() => clearTimeout(timer));
       this.emit();
     }
     return this.promise;

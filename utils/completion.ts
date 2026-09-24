@@ -13,6 +13,7 @@ import {
 } from '../constants';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY } from './chunkAdjacency';
 import { bankLocksActive } from './reachability';
+import { unlockableAreas } from './freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { UnlockState } from '../types';
 import { BANK_IDS } from '../data/banks';
@@ -32,7 +33,9 @@ export const COMPLETION_DENOMINATOR =
   BANK_IDS.length;
 
 export const completionDenominator = (mode?: string, custom?: GameModeRules): number =>
-  COMPLETION_DENOMINATOR + (mode === 'chunked' ? ALL_CHUNK_KEYS.length - 1 - REGIONS_LIST.length : 0)
+  COMPLETION_DENOMINATOR - REGIONS_LIST.length
+  // Chunked counts chunks; other modes count every area they must unlock.
+  + (mode === 'chunked' ? ALL_CHUNK_KEYS.length - 1 : unlockableAreas(mode, custom).length)
   - (bankLocksActive(mode, custom) ? 0 : BANK_IDS.length);
 
 const sum = (o: Record<string, number> | undefined) =>

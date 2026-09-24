@@ -9,6 +9,14 @@ export interface FateSaveDownloadEnvironment {
   markExported: (storageKey: string) => void;
 }
 
+/** Shown after any .fate export. The file is obfuscated, not encrypted. */
+export const FATE_EXPORT_DONE_MESSAGE =
+  "Save exported. Keep the .fate file safe: it isn't encrypted, so anyone you share it with can read it.";
+
+/** Tooltip for export controls. */
+export const FATE_EXPORT_HINT =
+  "Download a backup of this run. The file isn't encrypted: anyone you share it with can read your notes and linked account name.";
+
 export type FateSaveDownloadResult =
   | { ok: true }
   | { ok: false; message: string };

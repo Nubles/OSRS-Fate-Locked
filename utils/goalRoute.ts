@@ -12,7 +12,7 @@ import { calculateSupplyChain } from './supplyChain';
 import { getPoolAndStateKey, isValidUnlock } from './gameEngine';
 import { tierForLevel } from './skillTiers';
 import { planForTarget, type PlanStep } from './goalPlanner';
-import { evaluateDiaryTierEligibility } from './journalStatus';
+import { evaluateDiaryTierEligibility, evaluateQuestEligibility } from './journalStatus';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 import { enforcedQuestAreas } from './questGeographyDisplay';
 
@@ -290,10 +290,11 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     const qpHave = unlocks.quests.reduce(
       (total, id) => total + (QUEST_DATA[id]?.points ?? 0), 0,
     );
-    const totalSteps = Math.max(1, plan.steps.length);
-    const completedSteps = plan.alreadyDone
-      ? totalSteps
-      : plan.steps.filter(step => step.done).length;
+    // The plan lists only unmet steps, so count the quest's own requirements
+    // instead, as the diary branch and the tracker card do.
+    const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId);
+    const totalSteps = eligibility.evidence.length + eligibility.blockers.length + eligibility.manualChecks.length;
+    const completedSteps = eligibility.evidence.length;
     return {
       goalId,
       kind: 'quest',
@@ -311,7 +312,9 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       tables: suggestTables(dependencies, unlocks, gameModeId, gameState.customMode),
       totalSteps,
       completedSteps,
-      percentage: Math.round((completedSteps / totalSteps) * 100),
+      percentage: eligibility.eligible || eligibility.status === 'COMPLETED'
+        ? 100
+        : totalSteps === 0 ? 0 : Math.min(99, Math.round((completedSteps / totalSteps) * 100)),
     };
   }
 
@@ -465,7 +468,9 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     }
   }
   for (const s of skills) {
-    if (!s.met && s.skill !== 'Combat level') {
+    // A Skills key helps only while the tier caps the skill below the need;
+    // otherwise only XP is missing.
+    if (!s.met && s.skill !== 'Combat level' && s.tierHave < s.tierNeeded) {
       dependencies.push({ table: TableType.SKILLS, id: s.skill });
     }
   }
@@ -547,7 +552,7 @@ export function suggestTables(
   for (const [table, neededNames] of neededByTable) {
     let pool: string[];
     try {
-      pool = getPoolAndStateKey(table).pool;
+      pool = getPoolAndStateKey(table, gameModeId, customMode).pool;
     } catch {
       continue; // tables without a gacha pool (Quests, Diaries, CAs)
     }

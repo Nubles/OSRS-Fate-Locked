@@ -195,6 +195,27 @@ describe('ChangelogModal linked notes', () => {
 });
 
 describe('ChangelogModal compensation choices', () => {
+  it('shows the pending choice first when it belongs to an older, collapsed release', async () => {
+    const { CHANGELOG_RELEASES } = await import('../data/changelog');
+    const { LEGACY_FATE_COMPENSATION_ID } = await import('../utils/fateCompensation');
+    expect(CHANGELOG_RELEASES[0].id).not.toBe(LEGACY_FATE_COMPENSATION_ID);
+    const choices: FateCompensationChoice[] = [];
+    const { host } = await mount(
+      <ChangelogModal
+        releases={CHANGELOG_RELEASES}
+        onClose={vi.fn()}
+        compensation={{ ...pendingCompensation, releaseId: LEGACY_FATE_COMPENSATION_ID }}
+        onResolveCompensation={choice => choices.push(choice)}
+      />,
+    );
+
+    const claim = Array.from(host.querySelectorAll('button'))
+      .find(candidate => candidate.textContent === 'Claim full compensation') as HTMLButtonElement | undefined;
+    expect(claim).toBeTruthy();
+    await click(claim!);
+    expect(choices).toEqual(['full']);
+  });
+
   it('blocks every dismiss path while pending and emits each explicit choice once', async () => {
     const onClose = vi.fn();
     const choices: FateCompensationChoice[] = [];

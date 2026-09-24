@@ -2,16 +2,17 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { X, Share2, Download, Copy } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { useProfiles } from '../context/ProfileContext';
-import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
+import { REGIONS_LIST, MISTHALIN_AREAS } from '../constants';
 import {
   MAP_IMAGE, MAP_BOUNDS, CHUNK_TILES,
   tileToPixel, ChunkCoord,
 } from '../utils/mapCoords';
 import { auditHistory, computeRunId } from '../utils/integrity';
 import { useFocusTrap } from '../hooks/useFocusTrap';
-import { getGameMode } from '../config/gameModes';
-import { chunkKey, isChunkUnlocked, ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
-import { visibleAreaUnlocks } from '../data/areaMapPolicy';
+import { getGameMode, resolveModeRules } from '../config/gameModes';
+import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
+import { chunkUnlocked } from '../utils/chunkLocations';
+import { isAreaReachable } from '../utils/reachability';
 import { REGION_CHUNKS } from '../data/regionChunks';
 
 // ---- mini-map drawing -------------------------------------------------------
@@ -21,14 +22,13 @@ const CARD_MAP_H = 268;
 // Match html2canvas scale exactly so it copies our canvas 1:1 (no re-sampling).
 const MAP_OVERSAMPLE = 2;
 
-const ALWAYS_UNLOCKED = new Set(['Misthalin']);
+// Every named area the card counts: Misthalin's and those outside it.
+const NAMED_AREAS = [...MISTHALIN_AREAS, ...REGIONS_LIST];
 
 const drawMiniMap = async (
   canvas: HTMLCanvasElement,
   draftChunks: Record<string, ChunkCoord[]>,
-  unlockedRegions: string[],
-  isChunked?: boolean,
-  unlockedChunks?: string[],
+  isChunkOwned: (cx: number, cy: number) => boolean,
 ) => {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Map canvas is unavailable');
@@ -102,47 +102,13 @@ const drawMiniMap = async (
     const chunkPx = (CHUNK_TILES / TILE_W) * MAP_IMAGE.width * sx;
     const chunkPy = (CHUNK_TILES / TILE_H) * MAP_IMAGE.height * sy;
 
-    const unlockedSet = new Set(unlockedRegions);
-    const parentContinent: Record<string, string> = {};
-    for (const [cont, subs] of Object.entries(REGION_GROUPS)) {
-      for (const s of subs) parentContinent[s] = cont;
-    }
-    for (const s of MISTHALIN_AREAS) parentContinent[s] = 'Misthalin';
-
-    const isUnlocked = (region: string) => {
-      if (ALWAYS_UNLOCKED.has(region)) return true;
-      if (unlockedSet.has(region)) return true;
-      const cont = parentContinent[region];
-      if (cont) {
-        if (ALWAYS_UNLOCKED.has(cont) || unlockedSet.has(cont)) return true;
-        const siblings = cont === 'Misthalin' ? MISTHALIN_AREAS : (REGION_GROUPS[cont] ?? []);
-        if (siblings.length > 0 && siblings.every(s => unlockedSet.has(s) || ALWAYS_UNLOCKED.has(s))) return true;
-      }
-      const children = region === 'Misthalin' ? MISTHALIN_AREAS : REGION_GROUPS[region];
-      if (children?.length && children.every(s => unlockedSet.has(s) || ALWAYS_UNLOCKED.has(s))) return true;
-      return false;
-    };
-
-    if (isChunked) {
-      // Chunked mode: colour each individual chunk by its own unlock state
-      // (the free start chunk + whatever's been rolled), not by named region.
-      const chunkKeys = unlockedChunks ?? [];
-      for (const chunks of Object.values(draftChunks)) {
-        for (const { cx, cy } of chunks) {
-          ctx.fillStyle = isChunkUnlocked(chunkKey({ cx, cy }), chunkKeys)
-            ? 'rgba(16,185,129,0.55)' : 'rgba(239,68,68,0.45)';
-          const { px, py } = tileToPixel({ tx: cx * CHUNK_TILES, ty: (cy + 1) * CHUNK_TILES });
-          ctx.fillRect(px * sx, py * sy, chunkPx, chunkPy);
-        }
-      }
-    } else {
-      for (const [region, chunks] of Object.entries(draftChunks)) {
-        const unlocked = isUnlocked(region);
-        ctx.fillStyle = unlocked ? 'rgba(16,185,129,0.55)' : 'rgba(239,68,68,0.45)';
-        for (const { cx, cy } of chunks) {
-          const { px, py } = tileToPixel({ tx: cx * CHUNK_TILES, ty: (cy + 1) * CHUNK_TILES });
-          ctx.fillRect(px * sx, py * sy, chunkPx, chunkPy);
-        }
+    // Each chunk is coloured by its own owner, as on the world map: its named
+    // area (Falador, not all of Asgarnia) or, in Chunked mode, the chunk itself.
+    for (const chunks of Object.values(draftChunks)) {
+      for (const { cx, cy } of chunks) {
+        ctx.fillStyle = isChunkOwned(cx, cy) ? 'rgba(16,185,129,0.55)' : 'rgba(239,68,68,0.45)';
+        const { px, py } = tileToPixel({ tx: cx * CHUNK_TILES, ty: (cy + 1) * CHUNK_TILES });
+        ctx.fillRect(px * sx, py * sy, chunkPx, chunkPy);
       }
     }
 
@@ -214,6 +180,8 @@ interface CardInnerProps {
   regionsUnlocked: number;
   regionsTotal: number;
   fatePoints: number;
+  /** The mode's pity threshold, or null when the mode has pity off. */
+  pityThreshold: number | null;
   firstTs: number;
   runId: string | null;
   integrityOk: boolean;
@@ -224,7 +192,7 @@ interface CardInnerProps {
 
 const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
   profileName, stats, regionsUnlocked, regionsTotal,
-  fatePoints, firstTs, runId, integrityOk, integrityLabel, modeName, renderMap,
+  fatePoints, pityThreshold, firstTs, runId, integrityOk, integrityLabel, modeName, renderMap,
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [draftChunks] = useState(loadRunCardRegionChunks);
@@ -234,10 +202,10 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
-      renderMap.current = () => drawMiniMap(canvas, draftChunks, visibleAreaUnlocks(unlocks.regions), isChunked, unlocks.chunks ?? []);
+      renderMap.current = () => drawMiniMap(canvas, draftChunks, (cx, cy) => chunkUnlocked(cx, cy, unlocks, gameModeId));
     }
     return () => { renderMap.current = null; };
-  }, [draftChunks, isChunked, unlocks.regions, unlocks.chunks, renderMap]);
+  }, [draftChunks, unlocks, gameModeId, renderMap]);
 
   const days = daysSince(firstTs);
   const successRate = stats.rolls === 0 ? 0 : Math.round((stats.successes / stats.rolls) * 100);
@@ -341,7 +309,7 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
             <StatBlock label="Total Rolls" value={stats.rolls} />
             <StatBlock label="Success Rate" value={`${successRate}%`} />
             <StatBlock label="Keys Held" value={stats.keys} accent="text-amber-300" />
-            <StatBlock label="Fate Points" value={`${fatePoints}/50`} />
+            <StatBlock label="Fate Points" value={pityThreshold === null ? fatePoints : `${fatePoints}/${pityThreshold}`} />
             <StatBlock label="Omni-Keys" value={stats.omnis} accent="text-purple-300" />
             <StatBlock label="Chaos Keys" value={stats.chaosKeys} accent="text-rose-300" />
             <StatBlock label="Pity Keys" value={stats.pities} accent="text-sky-300" />
@@ -436,7 +404,7 @@ const KeyChip: React.FC<{ label: string; count: number; color: 'amber' | 'purple
 // ---- modal / trigger --------------------------------------------------------
 
 export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }> = ({ onClose, embedded }) => {
-  const { history, unlocks, keys, specialKeys, chaosKeys, fatePoints, gameModeId } = useGame();
+  const { history, unlocks, keys, specialKeys, chaosKeys, fatePoints, gameModeId, customMode } = useGame();
   const { activeProfileName } = useProfiles();
   const cardRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -446,7 +414,8 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
   const [captured, setCaptured] = useState<string | null>(null);
   const [captureError, setCaptureError] = useState<string | null>(null);
 
-  const historyAudit = React.useMemo(() => auditHistory(history), [history]);
+  const modeRules = resolveModeRules(gameModeId, customMode);
+  const historyAudit = React.useMemo(() => auditHistory(history, modeRules), [history, modeRules]);
   const runId = React.useMemo(() => computeRunId(history), [history]);
   const firstTs = history[0]?.timestamp ?? Date.now();
   const integrityOk = history.length > 0 && historyAudit.verdict === 'verified';
@@ -463,12 +432,13 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
   const isChunkedMode = gameModeId === 'chunked';
   const regionsTotal = isChunkedMode
     ? ALL_CHUNK_KEYS.length
-    : Object.values(REGION_GROUPS).reduce((a, b) => a + b.length, 0) + MISTHALIN_AREAS.length;
-  // Misthalin always unlocked in non-chunked modes; Chunked mode's baseline is
-  // the always-free start chunk, already included in unlocks.chunks' effective count via +1.
+    : NAMED_AREAS.length;
+  // Named areas count when the run can reach them, free ones included (legacy
+  // Xtreme frees only Lumbridge). Chunked mode's baseline is the always-free
+  // start chunk, already included in unlocks.chunks' effective count via +1.
   const regionsUnlocked = isChunkedMode
     ? (unlocks.chunks ?? []).length + 1
-    : visibleAreaUnlocks(unlocks.regions).length + MISTHALIN_AREAS.length;
+    : NAMED_AREAS.filter(area => isAreaReachable(area, unlocks, gameModeId)).length;
 
   const cardProps: CardInnerProps = {
     profileName: activeProfileName,
@@ -481,6 +451,7 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
     regionsUnlocked,
     regionsTotal,
     fatePoints,
+    pityThreshold: modeRules.pityEnabled ? modeRules.pityThreshold : null,
     firstTs,
     runId,
     integrityOk,

@@ -155,7 +155,8 @@ export const materializeQuestRouteSnapshot = (
     });
 
     contentService.itemSourceRecords(item.name).forEach((record) => {
-      const id = [record.itemName, record.kind, record.hostName, record.cx, record.cy].join('\0');
+      // An interior and a surface source can share a chunk and host but not access.
+      const id = [record.itemName, record.kind, record.hostName, record.cx, record.cy, record.sourceId ?? ''].join('\0');
       if (!records.has(id)) {
         records.set(id, {
           ...record,

@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { initialState } from '../context/GameContext';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
 import type { FateEventEnvelope, FateEventType } from '../services/fateEventProtocol';
+import { relaySync } from '../services/relaySync';
 import { createRollInboxStore } from '../services/rollInboxStore';
 import type { GameState } from '../types';
 import { RollInboxView, type RollInboxGame } from './RollInbox';
@@ -27,7 +28,7 @@ const gameState = (overrides: Partial<GameState> = {}): GameState => ({
 
 const event = (
   eventType: FateEventType = 'QUEST',
-  canonicalLabel: string | null = 'Dragon Slayer I',
+  canonicalLabel: string | null = "Cook's Assistant",
   overrides: Partial<FateEventEnvelope> = {},
 ): FateEventEnvelope => ({
   protocolVersion: 1,
@@ -75,7 +76,7 @@ afterEach(cleanup);
 describe('RollInbox', () => {
   it('never rolls on ingest or render', async () => {
     const { acceptDetectedEvent } = setup();
-    expect(await screen.findByText('Dragon Slayer I')).toBeTruthy();
+    expect(await screen.findByText("Cook's Assistant")).toBeTruthy();
     expect(acceptDetectedEvent).not.toHaveBeenCalled();
   });
 
@@ -87,14 +88,39 @@ describe('RollInbox', () => {
 
     expect(acceptDetectedEvent).toHaveBeenCalledTimes(1);
     expect(acceptDetectedEvent).toHaveBeenCalledWith(
-      { kind: 'QUEST', questId: 'Dragon Slayer I' },
-      expect.objectContaining({ source: 'Quest (Experienced)', threshold: 75 }),
+      { kind: 'QUEST', questId: "Cook's Assistant" },
+      expect.objectContaining({ source: 'Quest (Novice)', threshold: 25 }),
       expect.objectContaining({ fateEventId: 'evt-1' }),
       expect.objectContaining({ runId: 'run-1', account: 'Nubles', runRevision: 7 }),
     );
     expect(acknowledge).toHaveBeenCalledWith([
       expect.objectContaining({ eventId: 'evt-1', state: 'COMPLETED' }),
     ]);
+  });
+
+  it('keeps decisions local instead of acknowledging on the legacy relay route', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    relaySync.enable(); // a paired relay session exists
+    try {
+      const user = userEvent.setup();
+      const store = createRollInboxStore(new MemoryStorage(), 'run-1');
+      store.ingest([event(), event('QUEST', "Cook's Assistant", { eventId: 'evt-2' })]);
+      render(
+        <RollInboxView
+          store={store}
+          game={{ state: gameState(), acceptDetectedEvent: vi.fn().mockReturnValue(true) }}
+        />,
+      );
+      await user.click((await screen.findAllByRole('button', { name: /^Roll$/ }))[0]);
+      await user.click(screen.getByRole('button', { name: 'Not eligible' }));
+
+      expect(store.list().map((row) => row.state).sort()).toEqual(['COMPLETED', 'DISMISSED']);
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      relaySync.disable();
+      vi.unstubAllGlobals();
+    }
   });
 
   it('marks a ready row Not eligible without rolling', async () => {
@@ -144,6 +170,39 @@ describe('RollInbox', () => {
     await user.click(screen.getByRole('button', { name: 'Review' }));
     expect(await screen.findByRole('button', { name: /^Roll$/ })).toBeTruthy();
     expect(store.list()[0].reviewOutcome).toBe('CORRECTED');
+  });
+
+  it('keeps the review select mounted and focused across re-renders', async () => {
+    const names = Object.values(COLLECTION_LOG_DATA)
+      .flatMap(tab => Object.values(tab.pages))
+      .flatMap(page => page.items.map(item => item.name.trim().toLowerCase()));
+    const ambiguous = names.find((name, index) => names.indexOf(name) !== index);
+    expect(ambiguous).toBeTruthy();
+    const store = createRollInboxStore(new MemoryStorage(), 'run-1');
+    store.ingest([event('COLLECTION_LOG', ambiguous!)]);
+    const state = gameState();
+    const acceptDetectedEvent = vi.fn().mockReturnValue(true);
+    const acknowledge = vi.fn().mockResolvedValue(true);
+    const view = render(
+      <RollInboxView store={store} game={{ state, acceptDetectedEvent }} acknowledge={acknowledge} />,
+    );
+
+    const select = await screen.findByRole('combobox') as HTMLSelectElement;
+    const choice = (screen.getAllByRole('option')[1] as HTMLOptionElement).value;
+    select.focus();
+    await userEvent.setup().selectOptions(select, choice);
+
+    expect(screen.getByRole('combobox')).toBe(select);
+    expect(document.activeElement).toBe(select);
+
+    // A relay event re-renders the inbox with a new game object.
+    view.rerender(
+      <RollInboxView store={store} game={{ state: { ...state }, acceptDetectedEvent }} acknowledge={acknowledge} />,
+    );
+
+    expect(screen.getByRole('combobox')).toBe(select);
+    expect(document.activeElement).toBe(select);
+    expect(select.value).toBe(choice);
   });
 
   it('dismisses unsupported and duplicate rows without presenting Roll', async () => {

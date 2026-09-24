@@ -425,7 +425,9 @@
       "tierId": "Ardougne Medium",
       "ordinal": 7,
       "description": "Catch any fish on the Fishing Platform.",
-      "skills": {},
+      "skills": {
+        "Fishing": 1
+      },
       "quests": [],
       "regions": [
         "Witchaven"
@@ -1014,7 +1016,9 @@
       "tierId": "Desert Easy",
       "ordinal": 2,
       "description": "Mine 5 clay in the north-eastern desert.",
-      "skills": {},
+      "skills": {
+        "Mining": 1
+      },
       "quests": [],
       "regions": [
         "Al Kharid"
@@ -1948,7 +1952,9 @@
       "tierId": "Falador Easy",
       "ordinal": 7,
       "description": "Make a mind tiara.",
-      "skills": {},
+      "skills": {
+        "Runecraft": 1
+      },
       "quests": [],
       "regions": [
         "Ice Mountain"
@@ -5017,7 +5023,9 @@
       "tierId": "Karamja Easy",
       "ordinal": 7,
       "description": "Use the Fishing spots north of the banana plantation.",
-      "skills": {},
+      "skills": {
+        "Fishing": 1
+      },
       "quests": [],
       "regions": [
         "Musa Point"
@@ -6061,7 +6069,9 @@
       "tierId": "Kourend Easy",
       "ordinal": 10,
       "description": "Do a lap of either tier of the Shayzien Agility Course.",
-      "skills": {},
+      "skills": {
+        "Agility": 1
+      },
       "quests": [],
       "regions": [
         "Shayzien"
@@ -6831,7 +6841,9 @@
       "tierId": "Lumbridge Easy",
       "ordinal": 6,
       "description": "Pickpocket a man or woman in Lumbridge.",
-      "skills": {},
+      "skills": {
+        "Thieving": 1
+      },
       "quests": [],
       "regions": [
         "Lumbridge"
@@ -6900,7 +6912,9 @@
       "tierId": "Lumbridge Easy",
       "ordinal": 10,
       "description": "Bake some Bread on the Lumbridge kitchen range.",
-      "skills": {},
+      "skills": {
+        "Cooking": 1
+      },
       "quests": [
         "Cook's Assistant"
       ],
@@ -8736,7 +8750,9 @@
       "tierId": "Varrock Easy",
       "ordinal": 7,
       "description": "Chop down a dying tree in the Lumber Yard.",
-      "skills": {},
+      "skills": {
+        "Woodcutting": 1
+      },
       "quests": [],
       "regions": [
         "Varrock"
@@ -9724,7 +9740,9 @@
       "tierId": "Western Easy",
       "ordinal": 4,
       "description": "Complete a lap of the Gnome agility course.",
-      "skills": {},
+      "skills": {
+        "Agility": 1
+      },
       "quests": [],
       "aliases": [],
       "classification": "new-canonical",
@@ -10677,17 +10695,35 @@
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "Access to the Chaos Altar ( chaos talisman / tiara, catalytic talisman / tiara, or the Abyss )",
-      "locations": [
+      "oneOf": [
         {
-          "label": "Chaos ruins or Abyss entrance",
-          "chunkOptions": [
+          "label": "Chaos Temple ruins",
+          "locations": [
             {
-              "cx": 47,
-              "cy": 56
-            },
+              "label": "Chaos Temple ruins",
+              "chunkOptions": [
+                {
+                  "cx": 47,
+                  "cy": 56
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
             {
-              "cx": 48,
-              "cy": 55
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
             }
           ]
         }
@@ -10695,7 +10731,7 @@
       "geographyVerification": {
         "reviewedAt": "2026-09-12",
         "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
-        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required. The Abyss route also needs Enter the Abyss, matching wilderness_easy_11's Mage of Zamorak teleport."
       }
     },
     {

@@ -88,7 +88,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Bryophyta': { manualRequirements: ['Permanently unlocked Bryophyta’s lair using a mossy key (first access only)'] },
 
   // ===== Guilds =============================================================
-  "Champions' Guild": { questPoints: 32, requiredAreas: ["Champions' Guild"] },
+  "Champions' Guild": { questPoints: 32, requiredAreas: ['Varrock'], note: 'South of Varrock.' },
   "Cooks' Guild": { skills: { Cooking: 32 } },
   'Crafting Guild': { skills: { Crafting: 40 } },
   'Mining Guild': { skills: { Mining: 60 } },

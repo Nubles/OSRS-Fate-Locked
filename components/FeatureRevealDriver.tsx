@@ -23,6 +23,10 @@ export const FeatureRevealDriver: React.FC = () => {
   // Tracks which profile the seen-set was seeded for, so profile switches
   // re-seed silently instead of toasting the delta between two runs.
   const seededFor = useRef<string | null>(null);
+  // Session copy of each seen-set. When localStorage refuses the write, the
+  // next state change would otherwise find no record and celebrate every
+  // visible feature again.
+  const rememberedSeen = useRef(new Map<string, Set<string>>());
 
   useEffect(() => {
     let seen: Set<string>;
@@ -34,9 +38,15 @@ export const FeatureRevealDriver: React.FC = () => {
     } catch {
       seen = new Set();
     }
+    const remembered = rememberedSeen.current.get(storageKey);
+    if (remembered) {
+      hadRecord = true;
+      for (const id of remembered) seen.add(id);
+    }
     const isFreshMount = seededFor.current !== activeProfileId;
 
     const unseen = [...visible].filter((id) => !seen.has(id));
+    rememberedSeen.current.set(storageKey, seen);
     if (unseen.length === 0) {
       seededFor.current = activeProfileId;
       return;

@@ -5,6 +5,8 @@ import { DIARY_DATA } from '../data/diaryData';
 import { DropSource, UnlockState } from '../types';
 import { ARCANA_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, MOBILITY_LIST, REGION_GROUPS } from '../data/items';
 import { combatLevel } from './slayerReach';
+import { evaluateActivityReadiness } from './activityReadiness';
+import { ACTIVITY_REQUIREMENTS } from '../data/activityRequirements';
 import {
   countDoableDiaryTasks, countDoableTasks, countMetSkillRequirements,
   evaluateDiaryTaskEligibility, evaluateQuestEligibility, getDiaryStatus, getQuestStatus,
@@ -36,6 +38,21 @@ const unlocksReadyForPryingTimes = (): UnlockState => unlocked({
   quests: ['Pandemonium', "The Knight's Sword"],
   skills: { Smithing: 3, Sailing: 2 },
   levels: { Smithing: 30, Sailing: 12 },
+});
+
+describe('Wilderness Easy Chaos Altar access', () => {
+  const task = ALL_DIARY_TASKS.find(({ id }) => id === 'wilderness_easy_4')!;
+
+  it('takes the Abyss route only after Enter the Abyss, like the Mage of Zamorak task', () => {
+    expect(evaluateDiaryTaskEligibility(task, unlocked(), 'vanilla').eligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task, unlocked({ quests: ['Enter the Abyss'] }), 'vanilla').eligible)
+      .toBe(true);
+  });
+
+  it('still accepts the Chaos Temple ruins without the quest', () => {
+    expect(evaluateDiaryTaskEligibility(task, unlocked({ regions: ["Dark Warriors' Fortress"] }), 'vanilla').eligible)
+      .toBe(true);
+  });
 });
 
 describe('manual journal readiness', () => {
@@ -111,7 +128,7 @@ describe('manual journal readiness', () => {
       id: 'manual-route-preference',
       oneOf: [
         { label: 'Manual route', manualRequirements: ['Manual check'] },
-        { label: 'Automatic route', items: ['Test item'] },
+        { label: 'Automatic route', skills: { Slayer: 1 } },
       ],
     }, unlocked());
 
@@ -121,7 +138,25 @@ describe('manual journal readiness', () => {
       manualChecks: [],
       blockers: [],
     });
-    expect(result.evidence).toContain('Automatic route: Test item');
+    expect(result.evidence).toContain('Automatic route: Slayer 1');
+  });
+
+  it('asks to confirm items instead of assuming the player has them', () => {
+    const result = evaluateDiaryTaskEligibility({
+      id: 'item-route',
+      oneOf: [
+        { label: 'Owned item', items: ['Test item'] },
+        { label: 'Locked route', skills: { Agility: 99 } },
+      ],
+    }, unlocked());
+
+    expect(result).toMatchObject({
+      machineEligible: true,
+      confirmable: true,
+      eligible: false,
+      manualChecks: ['Test item'],
+      blockers: [],
+    });
   });
 
   it('keeps machine blockers ahead of manual confirmation', () => {
@@ -365,11 +400,32 @@ describe('reported quest access', () => {
   it.each([
     ['East Ardougne', { regions: ['Wilderness', 'East Ardougne'] }],
     ['Tree Gnome Stronghold', { regions: ['Wilderness', 'Tree Gnome Stronghold'] }],
-    ["Wizards' Guild", { regions: ['Wilderness'], guilds: ["Wizards' Guild"] }],
+    ["Wizards' Guild", { regions: ['Wilderness'], guilds: ["Wizards' Guild"], skills: { Magic: 7 }, levels: { Magic: 66 } }],
   ])('allows Enter the Abyss through %s', (_name, route) => {
     expect(getQuestStatus(QUEST_DATA['Enter the Abyss'], unlocked({
       quests: ['Rune Mysteries'], ...route,
     }))).toBe('AVAILABLE');
+  });
+
+  it("needs the Wizards' Guild's own Magic 66 for Enter the Abyss's guild route", () => {
+    const quest = QUEST_DATA['Enter the Abyss'];
+    const guildRoute = { quests: ['Rune Mysteries'], regions: ['Wilderness'], guilds: ["Wizards' Guild"] };
+    const cases = [
+      { unlocks: unlocked({ ...guildRoute, skills: { Magic: 10 }, levels: { Magic: 1 } }), status: 'LOCKED_REGION' },
+      // Level 70, but a tier-5 Magic unlock caps the usable level at 50.
+      { unlocks: unlocked({ ...guildRoute, skills: { Magic: 5 }, levels: { Magic: 70 } }), status: 'LOCKED_REGION' },
+      { unlocks: unlocked({ ...guildRoute, skills: { Magic: 7 }, levels: { Magic: 66 } }), status: 'AVAILABLE' },
+    ] as const;
+
+    for (const { unlocks, status } of cases) {
+      expect(getQuestStatus(quest, unlocks)).toBe(status);
+      // The guild's own readiness gives the same answer for the same account.
+      expect(evaluateActivityReadiness(true, ACTIVITY_REQUIREMENTS["Wizards' Guild"], unlocks).status)
+        .toBe(status === 'AVAILABLE' ? 'READY' : 'NOT_READY');
+    }
+    expect(evaluateQuestEligibility(quest, cases[0].unlocks).blockers).toContainEqual({
+      kind: 'region', label: "East Ardougne or Tree Gnome Stronghold or Wizards' Guild + Magic 66",
+    });
   });
 
   it('locks Enter the Abyss without a third provider', () => {
@@ -590,7 +646,7 @@ describe('diary alternative requirement routes', () => {
     })).eligible).toBe(false);
   });
 
-  it('keeps common and route item requirements visible but non-blocking', () => {
+  it('asks to confirm common and route items without blocking the task', () => {
     const task = {
       id: 'muddy-chest',
       items: ['Muddy key'],
@@ -602,8 +658,9 @@ describe('diary alternative requirement routes', () => {
 
     const result = evaluateDiaryTaskEligibility(task as any, unlocked());
 
-    expect(result.eligible).toBe(true);
-    expect(result.evidence).toContain('Muddy key');
+    expect(result.machineEligible).toBe(true);
+    expect(result.eligible).toBe(false);
+    expect(result.manualChecks).toEqual(['Muddy key', 'Knife or slashing weapon']);
     expect(result.evidence).toContain('Slashing route: Knife or slashing weapon');
   });
 });
@@ -821,22 +878,24 @@ describe('audited diary route eligibility', () => {
       levels: { Woodcutting: 50 },
     };
 
-    expect(evaluateDiaryTaskEligibility(task('kar_med_8'), unlocked({
+    const kharazi = evaluateDiaryTaskEligibility(task('kar_med_8'), unlocked({
       ...shared,
       regions: ['Kharazi Jungle'],
-    })).eligible).toBe(true);
+    }));
+    expect(kharazi.machineEligible).toBe(true);
+    expect(kharazi.manualChecks).toContain('Any axe');
     expect(evaluateDiaryTaskEligibility(task('kar_med_9'), unlocked({
       ...shared,
       regions: ['Tai Bwo Wannai'],
       quests: ['Jungle Potion'],
-    })).eligible).toBe(true);
+    })).machineEligible).toBe(true);
   });
 
   it('allows Tai Bwo Wannai Cleanup without Shilo Village access', () => {
     expect(evaluateDiaryTaskEligibility(task('kar_med_19'), unlocked({
       skills: { Mining: 4 }, levels: { Mining: 40 },
       quests: ['Jungle Potion'], regions: ['Tai Bwo Wannai'],
-    })).eligible).toBe(true);
+    })).machineEligible).toBe(true);
   });
 
   it('does not require 79 Agility on the Kharazi machete route', () => {
@@ -847,7 +906,8 @@ describe('audited diary route eligibility', () => {
       regions: ['Kharazi Jungle'],
     }));
 
-    expect(result.eligible).toBe(true);
+    expect(result.machineEligible).toBe(true);
+    expect(result.blockers).toEqual([]);
   });
 
   it('requires the higher Fishing and Strength levels on the bare-handed shark route', () => {
@@ -877,7 +937,7 @@ describe('audited diary route eligibility', () => {
     expect(eligible.evidence.join(' ')).toContain('Access to Barbarian Fishing');
   });
 
-  it('models Morytania bare-handed fishing access as evidence while retaining its gates', () => {
+  it('asks to confirm Morytania bare-handed fishing access while retaining its gates', () => {
     const common = {
       quests: ['In Aid of the Myreque'], regions: ['Burgh de Rott'],
       skills: { Fishing: 10, Strength: 10 },
@@ -885,11 +945,11 @@ describe('audited diary route eligibility', () => {
     };
     const eligible = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked(common));
 
-    expect(eligible.eligible).toBe(true);
+    expect(eligible.machineEligible).toBe(true);
     expect(eligible.blockers).not.toContainEqual({
       kind: 'quest', label: 'Barbarian Training',
     });
-    expect(eligible.evidence).toContain('Access to Barbarian Fishing');
+    expect(eligible.manualChecks).toContain('Access to Barbarian Fishing');
 
     const missingQuest = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked({
       ...common, quests: [],
@@ -920,17 +980,20 @@ describe('audited diary route eligibility', () => {
     });
   });
 
-  it('allows a pre-cooked oomlie wrap without the cooking route', () => {
-    expect(evaluateDiaryTaskEligibility(task('kar_hard_3'), unlocked()).eligible)
-      .toBe(true);
+  it('allows a pre-cooked oomlie wrap without the cooking route, once confirmed', () => {
+    expect(evaluateDiaryTaskEligibility(task('kar_hard_3'), unlocked())).toMatchObject({
+      machineEligible: true,
+      eligible: false,
+      manualChecks: ['Cooked oomlie wrap'],
+    });
   });
 
-  it('allows an existing or mounted Digsite pendant without crafting Magic', () => {
+  it('allows an existing or mounted Digsite pendant without crafting Magic, once confirmed', () => {
     expect(evaluateDiaryTaskEligibility(task('var_med_7'), unlocked({
       quests: ['The Dig Site'], regions: ['Digsite'],
       mobility: ['Digsite Pendant'],
       skills: { Magic: 1 }, levels: { Magic: 1 },
-    })).eligible).toBe(true);
+    }))).toMatchObject({ machineEligible: true, eligible: false, manualChecks: ['Digsite pendant'] });
   });
 
   it('accepts each Warriors Guild skill route', () => {

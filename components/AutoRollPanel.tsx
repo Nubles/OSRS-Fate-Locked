@@ -58,8 +58,8 @@ export async function fetchPlayer(name: string): Promise<Fetched> {
   const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
   const data = await res.json().catch(() => null);
   if (!res.ok) {
-    if (res.status === 429) throw new Error('Rate-limited by the API — wait a moment and retry.');
-    if (res.status === 404 || data?.code === 'HISCORES_USERNAME_NOT_FOUND') throw new Error(`"${name}" isn't on the OSRS hiscores — check the spelling.`);
+    if (res.status === 429) throw new Error('Rate-limited by the API â€” wait a moment and retry.');
+    if (res.status === 404 || data?.code === 'HISCORES_USERNAME_NOT_FOUND') throw new Error(`"${name}" isn't on the OSRS hiscores â€” check the spelling.`);
     throw new Error(`Could not refresh Wise Old Man hiscores (${res.status}).`);
   }
 
@@ -110,6 +110,13 @@ export function AutoRollPanel() {
   const countsRef = useRef({ keys, specialKeys, chaosKeys });
   countsRef.current = { keys, specialKeys, chaosKeys };
   const skillTimer = useRef<number | null>(null);
+  // Leaving the tab unmounts the panel. A sync must stop with it: the queue was
+  // built from the levels at its start, so a sync started after remounting
+  // would otherwise run alongside it and level skills past the real account.
+  // Re-syncing resumes from the current levels.
+  useEffect(() => () => {
+    if (skillTimer.current) window.clearInterval(skillTimer.current);
+  }, []);
 
   // Skills where the real account is ahead AND the skill is unlocked in the run.
   // Locked skills can't be levelled, so they're never rolled.

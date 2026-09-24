@@ -1,9 +1,12 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RunCardModal } from './RunCard';
 import { auditHistory, ensureChain } from '../utils/integrity';
 import type { LogEntry } from '../types';
+import { resolveModeRules, type GameModeRules } from '../config/gameModes';
+import { setStartArea } from '../utils/freeAreas';
+import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 
 const mockGame = vi.hoisted(() => ({
   current: {
@@ -17,6 +20,7 @@ const mockGame = vi.hoisted(() => ({
     chaosKeys: 0,
     fatePoints: 0,
     gameModeId: 'vanilla',
+    customMode: undefined as GameModeRules | undefined,
   },
 }));
 
@@ -55,6 +59,40 @@ describe('RunCardModal region total', () => {
   });
 });
 
+describe('RunCardModal reachable area count', () => {
+  const reset = () => {
+    setStartArea(undefined);
+    mockGame.current.gameModeId = 'vanilla';
+    mockGame.current.unlocks.regions = [];
+    mockGame.current.unlocks.chunks = [];
+  };
+  beforeEach(reset);
+  afterEach(reset);
+  const markup = () => renderToStaticMarkup(<RunCardModal onClose={vi.fn()} embedded />);
+
+  it('counts only Lumbridge as free for a fresh legacy Xtreme run', () => {
+    setStartArea('lumbridge');
+    mockGame.current.gameModeId = 'xtreme';
+
+    expect(markup()).toContain('1/187 regions');
+  });
+
+  it('counts a Xtreme Misthalin unlock like any other area', () => {
+    setStartArea('lumbridge');
+    mockGame.current.gameModeId = 'xtreme';
+    mockGame.current.unlocks.regions = ['Varrock', 'Falador'];
+
+    expect(markup()).toContain('3/187 regions');
+  });
+
+  it('keeps counting Chunked runs by chunk', () => {
+    mockGame.current.gameModeId = 'chunked';
+    mockGame.current.unlocks.chunks = ['46,51'];
+
+    expect(markup()).toContain(`2/${ALL_CHUNK_KEYS.length} chunks`);
+  });
+});
+
 describe('RunCardModal local history status', () => {
   const entry = (changes: Partial<LogEntry> = {}): LogEntry => ({
     id: 'vanilla-roll', timestamp: 1_700_000_000_000,
@@ -65,6 +103,7 @@ describe('RunCardModal local history status', () => {
   beforeEach(() => {
     mockGame.current.history = [];
     mockGame.current.unlocks.regions = [];
+    mockGame.current.gameModeId = 'vanilla';
   });
 
   it('does not approve an impossible replay just because its hashes are valid', () => {
@@ -95,6 +134,19 @@ describe('RunCardModal local history status', () => {
     expect(markup).not.toContain('REPLAY WARNING');
   });
 
+  it("checks a pity-off run's Fate against its own mode", () => {
+    // Legacy Hardcore has no pity: 30 failures at +2 legitimately reach 60 Fate.
+    mockGame.current.gameModeId = 'hardcore';
+    mockGame.current.history = ensureChain(Array.from({ length: 30 }, (_, index) => entry({
+      id: `hardcore-fail-${index}`, type: 'ROLL_FAIL', message: 'No Key.',
+      meta: { fatePointsEarned: 2 },
+    })));
+
+    const markup = renderCard();
+    expect(markup).toContain('HISTORY CHECKED');
+    expect(markup).not.toContain('REPLAY WARNING');
+  });
+
   it('keeps broken hashes distinct from a replay warning', () => {
     const [chained] = ensureChain([entry()]);
     mockGame.current.history = [{ ...chained, message: 'Changed after hashing' }];
@@ -111,5 +163,36 @@ describe('RunCardModal local history status', () => {
     expect(markup).toContain('NO HISTORY');
     expect(markup).toContain('No recorded history to check');
     expect(markup).not.toContain('HISTORY CHECKED');
+  });
+});
+
+describe('RunCardModal Fate points', () => {
+  const fateValue = () => renderToStaticMarkup(<RunCardModal onClose={vi.fn()} embedded />)
+    .match(/Fate Points<\/div><div[^>]*>([^<]*)<\/div>/)?.[1];
+
+  afterEach(() => {
+    mockGame.current.gameModeId = 'vanilla';
+    mockGame.current.customMode = undefined;
+    mockGame.current.fatePoints = 0;
+  });
+
+  it.each([
+    ['vanilla', 12, '12/50'],
+    ['casual', 12, '12/30'],
+    ['region-rush', 12, '12/45'],
+    ['hardcore', 60, '60'],
+  ])("shows a %s run's Fate against its own pity rule", (mode, fatePoints, expected) => {
+    mockGame.current.gameModeId = mode;
+    mockGame.current.fatePoints = fatePoints;
+
+    expect(fateValue()).toBe(expected);
+  });
+
+  it("uses a Custom run's own threshold", () => {
+    mockGame.current.gameModeId = 'custom';
+    mockGame.current.customMode = { ...resolveModeRules('vanilla'), pityThreshold: 100 };
+    mockGame.current.fatePoints = 52;
+
+    expect(fateValue()).toBe('52/100');
   });
 });

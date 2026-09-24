@@ -8,14 +8,14 @@ import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
-import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, GAMBIT_KEYS_PER } from '../config/economy';
+import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, GAMBIT_KEYS_PER } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { CA_DATA } from '../data/caData';
 import { ALL_CA_TASKS, CATask } from '../data/caTasks';
 import { QUEST_DATA } from '../data/questData';
-import { UNLOCK_COST, randomUnlockPool, pickRandomPoolEntry, isRandomUnlockEligible } from '../utils/gameEngine';
+import { UNLOCK_COST, randomUnlockPool, pickRandomPoolEntry, isRandomUnlockEligible, isValidUnlock } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { drawFloat, seededContext } from '../utils/seededRng';
 import { hashEntry, ensureChain } from '../utils/integrity';
@@ -63,6 +63,7 @@ import {
 } from '../utils/journalCompletion';
 import type { CompletionAttestation, CompletionResult } from '../utils/journalCompletion';
 import {
+  caTaskCompletionDecision,
   caTierCompletionDecision,
   completedCAPoints,
   newlyEarnedCATiers,
@@ -91,10 +92,11 @@ import {
   useProfileWriterLease,
   type ProfileWriterLeaseOptions,
 } from '../hooks/useProfileWriterLease';
-import type {
-  SaveOwnershipBlockReason,
-  SaveOwnershipStatus,
-  SaveWriteAuthorization,
+import {
+  isOwnershipConflictBlock,
+  type SaveOwnershipBlockReason,
+  type SaveOwnershipStatus,
+  type SaveWriteAuthorization,
 } from '../utils/profileWriterLease';
 import type { SaveBootstrapResult } from '../components/SaveBootstrap';
 
@@ -179,6 +181,12 @@ interface GameContextType extends GameState {
   saveOwnershipBlockReason: SaveOwnershipBlockReason;
   hasPendingChanges: boolean;
   saveDurability: SaveDurabilitySnapshot;
+  /**
+   * Wholesale run replacements (import, sync code, restore, reload, reset)
+   * this session. History watchers compare it to tell a replaced history
+   * from one that grew.
+   */
+  stateReplacements: number;
   retrySave: () => SaveRetryResult | Promise<SaveRetryResult>;
   stageForProfileEviction: () => void;
   takeOverSaveOwnership: () => Promise<boolean>;
@@ -508,8 +516,6 @@ export function prepareKeyRollAction(
     let omniChance = mode.omniChanceBase + omniBonus;
     if (source === DropSource.QUEST_GRANDMASTER) omniChance = Math.max(omniChance, 20);
     else if (source === DropSource.DIARY_ELITE) omniChance = Math.max(omniChance, 10);
-    else if (source === 'Diary Section Complete') omniChance = Math.max(omniChance, 10);
-    else if (source === 'CA Tier Complete') omniChance = Math.max(omniChance, 10);
     else if (source === DropSource.PET) omniChance = Math.max(omniChance, 25);
     else if (source === DropSource.RAID) omniChance = Math.max(omniChance, 15);
     else if (source === DropSource.BOSS_HIGH) omniChance = Math.max(omniChance, 10);
@@ -569,17 +575,14 @@ export const prepareDetectedEventAcceptanceAction = (
     ? { chaosKeysAwarded: guaranteedChaosKeysAwarded + randomChaosKeysAwarded, guaranteedChaosKeysAwarded, randomChaosKeysAwarded }
     : undefined;
 
-  const rollResult = prepareKeyRollAction(
-    state,
-    intent.source,
-    intent.threshold,
-    intent.failureFate,
-    nextDice,
-    undefined,
-    undefined,
-    skillChaos ? { ...meta, ...skillChaos } : meta,
-  ).payload;
-  return { type: 'ACCEPT_DETECTED_EVENT', payload: { progress, rollResult, expected, skillChaos } };
+  const rollMeta = skillChaos ? { ...meta, ...skillChaos } : meta;
+  // A Vanilla boss or clue roll carries its context, exactly as the Farm card
+  // passes it, so the boss reserve and clue rates apply to detected events too.
+  const rollAction = intent.context
+    ? prepareKeyRollAction(state, intent.source, intent.threshold, intent.failureFate, nextDice, undefined, undefined, rollMeta, intent.context)
+    : prepareKeyRollAction(state, intent.source, intent.threshold, intent.failureFate, nextDice, undefined, undefined, rollMeta);
+  if (!rollAction) throw new Error('This boss has no Standard Keys left to award.');
+  return { type: 'ACCEPT_DETECTED_EVENT', payload: { progress, rollResult: rollAction.payload, expected, skillChaos } };
 };
 
 export const prepareCATaskCompletionActions = (
@@ -592,19 +595,9 @@ export const prepareCATaskCompletionActions = (
   result: CompletionResult;
   actions: TransitionAction[];
 } => {
-  if (state.unlocks.completedTasks.includes(task.id)) {
-    return {
-      result: { ok: false, reason: 'Already completed' },
-      actions: [],
-    };
-  }
+  const decision = caTaskCompletionDecision(task, state.unlocks.completedTasks);
+  if (decision.ok === false) return { result: decision, actions: [] };
   const tier = CA_DATA[task.tierId];
-  if (!tier) {
-    return {
-      result: { ok: false, reason: 'Unknown Combat Achievement tier' },
-      actions: [],
-    };
-  }
 
   const completedIds = [...state.unlocks.completedTasks, task.id];
   const points = completedCAPoints(completedIds);
@@ -702,11 +695,62 @@ const chainAppendedHistory = (prev: GameState['history'], next: GameState['histo
   return out;
 };
 
-// Fate cost of a ritual after the run's mode multiplier. Costs live in
-// config/economy.ts (RITUALS) — the single source the Codex and Void Altar
-// also read, so the three can never disagree.
-const ritualFateCost = (id: 'LUCK' | 'GREED' | 'CHAOS' | 'CARTOGRAPHER', mult: number): number =>
-  Math.round((getRitual(id).fateCost ?? 0) * mult);
+/**
+ * Anti-softlock insurance for runs still stuck at their start: Xtreme Start
+ * (see XTREME_MILESTONE_INTERVAL in config/economy.ts) before any area is
+ * unlocked, and Chunked (CHUNKED_MILESTONE_INTERVAL, tighter because one
+ * chunk is a much smaller training footprint than Lumbridge) before any
+ * chunk is. A guaranteed Key every interval of total level; deterministic,
+ * not RNG. A manual level-up and a detected RuneLite level-up both pay it.
+ */
+const startMilestoneInsurance = (
+  state: GameState,
+  totalLevel: number,
+  now: number,
+): Pick<GameState, 'keys'> & {
+  xtremeMilestoneClaimed: number;
+  chunkedMilestoneClaimed: number;
+  entries: LogEntry[];
+} => {
+  let keys = state.keys;
+  const entries: LogEntry[] = [];
+  let xtremeMilestoneClaimed = state.xtremeMilestoneClaimed ?? 0;
+  if (state.gameModeId === 'xtreme' && visibleAreaUnlocks(state.unlocks.regions).length === 0) {
+    const eligible = Math.floor(totalLevel / XTREME_MILESTONE_INTERVAL);
+    if (eligible > xtremeMilestoneClaimed) {
+      const gained = eligible - xtremeMilestoneClaimed;
+      keys += gained;
+      xtremeMilestoneClaimed = eligible;
+      entries.push({
+        id: generateId(),
+        timestamp: now,
+        type: 'XTREME_MILESTONE',
+        message: `Xtreme milestone: Total Level ${eligible * XTREME_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
+        details: `Stuck at the start area with nothing else to roll — Fate steps in every ${XTREME_MILESTONE_INTERVAL} total levels.`,
+        meta: { totalLevel, gained }
+      });
+    }
+  }
+
+  let chunkedMilestoneClaimed = state.chunkedMilestoneClaimed ?? 0;
+  if (state.gameModeId === 'chunked' && (state.unlocks.chunks ?? []).length === 0) {
+    const eligible = Math.floor(totalLevel / CHUNKED_MILESTONE_INTERVAL);
+    if (eligible > chunkedMilestoneClaimed) {
+      const gained = eligible - chunkedMilestoneClaimed;
+      keys += gained;
+      chunkedMilestoneClaimed = eligible;
+      entries.push({
+        id: generateId(),
+        timestamp: now,
+        type: 'XTREME_MILESTONE',
+        message: `Chunked milestone: Total Level ${eligible * CHUNKED_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
+        details: `Stuck in the start chunk with nothing else to roll — Fate steps in every ${CHUNKED_MILESTONE_INTERVAL} total levels.`,
+        meta: { totalLevel, gained }
+      });
+    }
+  }
+  return { keys, xtremeMilestoneClaimed, chunkedMilestoneClaimed, entries };
+};
 
 const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
   const now = Date.now();
@@ -773,11 +817,17 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       // The mode is permanent once chosen — or if the run already has history
       // (defensive, covers saves predating the lock flag).
       if (state.gameModeLocked || state.history.length > 0) return state;
+      // Milestone insurance counts from the run's starting total level, so a
+      // new run's first level-up is not a free key. Runs that chose their mode
+      // before this rule keep the counters they already have.
+      const startTotal = Object.values(state.unlocks.levels).reduce((a, b) => a + b, 0);
       return {
         ...state,
         gameModeId: action.payload.modeId,
         customMode: action.payload.customRules,
         gameModeLocked: true,
+        xtremeMilestoneClaimed: Math.max(state.xtremeMilestoneClaimed ?? 0, Math.floor(startTotal / XTREME_MILESTONE_INTERVAL)),
+        chunkedMilestoneClaimed: Math.max(state.chunkedMilestoneClaimed ?? 0, Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL)),
       };
     }
 
@@ -792,20 +842,45 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       if (!detectedEventIdentityMatches(state, action.payload.expected)) return state;
       const progress = action.payload.progress;
       if (progress.kind === 'COLLECTION_ITEM' && collectionItemNeedsIdentityReview(state.unlocks.collectionLog, progress.itemId, state.collectionLogIdentity)) return state;
-      const guaranteedChaosAwarded = progress.kind === 'SKILL_LEVEL'
-        && progress.level > (state.unlocks.levels[progress.skill] ?? 1)
-        && isSkillChaosMilestone(progress.level);
       const progressed = rawReducer(state, {
         type: 'SYNC_DETECTED_PROGRESS',
         payload: progress,
       });
+      // As with manual completion, progress that is already recorded earns no roll.
+      if (progress.kind !== 'NONE' && progressed === state) return state;
       const rewarded = action.payload.skillChaos && progressed !== state
         ? { ...progressed, chaosKeys: progressed.chaosKeys + action.payload.skillChaos.chaosKeysAwarded }
         : progressed;
-      return rawReducer(rewarded, {
+      const rolled = rawReducer(rewarded, {
         type: 'ROLL_RESULT',
         payload: action.payload.rollResult,
       });
+      // A detected level-up pays the start-area milestone Keys a manual one does.
+      if (progress.kind === 'SKILL_LEVEL') {
+        const totalLevel = Object.values(rolled.unlocks.levels).reduce((a, b) => a + b, 0);
+        const insurance = startMilestoneInsurance(rolled, totalLevel, now);
+        return insurance.entries.length === 0 ? rolled : {
+          ...rolled,
+          keys: insurance.keys,
+          xtremeMilestoneClaimed: insurance.xtremeMilestoneClaimed,
+          chunkedMilestoneClaimed: insurance.chunkedMilestoneClaimed,
+          history: [...rolled.history, ...insurance.entries],
+        };
+      }
+      // A task that completes its tier records the tier too, as the Journal does.
+      if (progress.kind === 'CA_TASK') {
+        return newlyEarnedCATiers(completedCAPoints(rolled.unlocks.completedTasks), rolled.unlocks.cas)
+          .reduce((next, tierId) => rawReducer(next, { type: 'COMPLETE_CA', payload: tierId }), rolled);
+      }
+      if (progress.kind === 'DIARY_TASK') {
+        const tierId = ALL_DIARY_TASKS.find(task => task.id === progress.taskId)?.tierId;
+        if (tierId
+          && !rolled.unlocks.diaries.includes(tierId)
+          && canEarnDiaryTier(tierId, rolled.unlocks.completedTasks, ALL_DIARY_TASKS)) {
+          return rawReducer(rolled, { type: 'COMPLETE_DIARY', payload: tierId });
+        }
+      }
+      return rolled;
     }
     case 'SYNC_DETECTED_PROGRESS': {
       const progress = action.payload;
@@ -1039,6 +1114,12 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       if (action.payload.revealId && (state.pendingUnlock || costType === 'specialKey'
         || (costType === 'key' ? state.keys < cost : state.chaosKeys < 1)
         || !isRandomUnlockEligible(table, item, state.unlocks, state.gameModeId, costType))) return state;
+      // Direct (Omni) unlocks must be paid for and still unlockable, or two
+      // quick confirmations could spend one Omni-key twice.
+      if (!action.payload.revealId && (
+        (costType === 'specialKey' ? state.specialKeys < 1
+          : costType === 'key' ? state.keys < cost : state.chaosKeys < 1)
+        || !isValidUnlock(table, item, state.unlocks))) return state;
 
       const newUnlocks = { ...state.unlocks };
       // Defensive helpers: pushing into an array category dedupes against the
@@ -1101,6 +1182,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     }
 
     case 'RITUAL_LUCK':
+      // One buff waits for the next roll; a second would overwrite the first.
+      if (state.activeBuff !== 'NONE'
+        || state.fatePoints < ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier)) return state;
       return {
         ...state,
         fatePoints: state.fatePoints - ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
@@ -1110,6 +1194,8 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       };
 
     case 'RITUAL_GREED':
+      if (state.activeBuff !== 'NONE'
+        || state.fatePoints < ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier)) return state;
       return {
         ...state,
         fatePoints: state.fatePoints - ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
@@ -1119,6 +1205,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       };
 
     case 'RITUAL_CHAOS':
+      if (state.fatePoints < ritualFateCost('CHAOS', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier)) return state;
       return {
         ...state,
         fatePoints: state.fatePoints - ritualFateCost('CHAOS', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
@@ -1128,6 +1215,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       };
 
     case 'RITUAL_TRANSMUTE':
+      if (state.keys < (getRitual('TRANSMUTE').keyCost ?? 5)) return state;
       return {
         ...state,
         keys: state.keys - (getRitual('TRANSMUTE').keyCost ?? 5),
@@ -1218,48 +1306,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         });
       }
 
-      // Xtreme Start anti-softlock insurance — see XTREME_MILESTONE_INTERVAL in
-      // config/economy.ts. Deterministic, not RNG, and only accrues while the
-      // run is still stuck at just the start area.
-      let keys = state.keys;
-      let xtremeMilestoneClaimed = state.xtremeMilestoneClaimed ?? 0;
-      if (state.gameModeId === 'xtreme' && visibleAreaUnlocks(state.unlocks.regions).length === 0) {
-        const eligible = Math.floor(totalLevel / XTREME_MILESTONE_INTERVAL);
-        if (eligible > xtremeMilestoneClaimed) {
-          const gained = eligible - xtremeMilestoneClaimed;
-          keys += gained;
-          xtremeMilestoneClaimed = eligible;
-          logs.push({
-            id: generateId(),
-            timestamp: now,
-            type: 'XTREME_MILESTONE',
-            message: `Xtreme milestone: Total Level ${eligible * XTREME_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
-            details: `Stuck at the start area with nothing else to roll — Fate steps in every ${XTREME_MILESTONE_INTERVAL} total levels.`,
-            meta: { totalLevel, gained }
-          });
-        }
-      }
-
-      // Same insurance for Chunked mode — see CHUNKED_MILESTONE_INTERVAL.
-      // Tighter interval than Xtreme's since a single starting chunk is a
-      // much smaller training footprint than all of Lumbridge.
-      let chunkedMilestoneClaimed = state.chunkedMilestoneClaimed ?? 0;
-      if (state.gameModeId === 'chunked' && (state.unlocks.chunks ?? []).length === 0) {
-        const eligible = Math.floor(totalLevel / CHUNKED_MILESTONE_INTERVAL);
-        if (eligible > chunkedMilestoneClaimed) {
-          const gained = eligible - chunkedMilestoneClaimed;
-          keys += gained;
-          chunkedMilestoneClaimed = eligible;
-          logs.push({
-            id: generateId(),
-            timestamp: now,
-            type: 'XTREME_MILESTONE',
-            message: `Chunked milestone: Total Level ${eligible * CHUNKED_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
-            details: `Stuck in the start chunk with nothing else to roll — Fate steps in every ${CHUNKED_MILESTONE_INTERVAL} total levels.`,
-            meta: { totalLevel, gained }
-          });
-        }
-      }
+      const { keys, xtremeMilestoneClaimed, chunkedMilestoneClaimed, entries } =
+        startMilestoneInsurance(state, totalLevel, now);
+      logs.push(...entries);
 
       const eventMeta: LevelUpEventMeta = { skill, level: newLevel, totalLevel, chaosKeysAwarded, chaosKeyAwarded };
 
@@ -1376,10 +1425,12 @@ export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, 
   if (action.type === 'COMMIT_STATE') return action.payload;
   const rawNext = rawReducer(state, action);
   if (rawNext === state) return state;
+  // A replacement brings its own history. Chaining it as an append would
+  // splice in, or link to, entries of the run it replaces.
+  if (action.type === 'LOAD_SAVE' || action.type === 'RESET') return rawNext;
   const next = rawNext.history === state.history
     ? rawNext
     : { ...rawNext, history: chainAppendedHistory(state.history, rawNext.history) };
-  if (action.type === 'LOAD_SAVE' || action.type === 'RESET') return next;
   return { ...next, runRevision: state.runRevision + 1 };
 };
 
@@ -1483,6 +1534,16 @@ const createDeferredRecoveryRepository = (
       repository => repository.listCheckpoints(profileId),
       [],
     ),
+    maxPersistenceRevision: profileId => withRepository(
+      async repository => repository.maxPersistenceRevision
+        ? repository.maxPersistenceRevision(profileId)
+        : Math.max(
+          (await repository.getHead(profileId))?.persistenceRevision ?? 0,
+          ...(await repository.listCheckpoints(profileId))
+            .map(checkpoint => checkpoint.persistenceRevision),
+        ),
+      0,
+    ),
     putCheckpoint: (record, authorizeWrite) => withRepository(
       repository => repository.putCheckpoint(record, authorizeWrite),
       { stored: false, reason: 'storage_unavailable' },
@@ -1540,12 +1601,23 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const initialLoadWarningRef = useRef<string | null>(null);
   const persistedSnapshotRef = useRef<string | null>(null);
   const {
-    status: saveOwnershipStatus,
-    blockedReason: saveOwnershipBlockReason,
+    status: leaseStatus,
+    blockedReason: leaseBlockReason,
     authorizeWrite: authorizeOwnership,
     takeOver: takeOverOwnership,
     release: releaseOwnership,
   } = useProfileWriterLease(storageKey, leaseOptions);
+  // Regaining the lease is not enough to write: if another tab saved newer
+  // progress meanwhile and this tab has unsaved changes, writes stay blocked
+  // until the player keeps this tab's progress or loads the newer save.
+  const [newerSaveConflict, setNewerSaveConflict] = useState(false);
+  const newerSaveConflictRef = useRef(false);
+  const blockedSinceOwnedRef = useRef(false);
+  if (leaseStatus === 'blocked') blockedSinceOwnedRef.current = true;
+  const saveOwnershipStatus: SaveOwnershipStatus = newerSaveConflict ? 'blocked' : leaseStatus;
+  const saveOwnershipBlockReason: SaveOwnershipBlockReason = newerSaveConflict
+    ? 'newer_save'
+    : leaseBlockReason;
   const saveOwnershipStatusRef = useRef(saveOwnershipStatus);
   saveOwnershipStatusRef.current = saveOwnershipStatus;
   const saveOwnershipBlockReasonRef = useRef(saveOwnershipBlockReason);
@@ -1622,6 +1694,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     profileEvictedRef.current = false;
   }
   const [legacySaveStatus, setSaveStatus] = useState<SaveStatus>(() => getSaveStatus(storageKey));
+  const [stateReplacements, setStateReplacements] = useState(0);
   useSyncExternalStore(
     subscribeToPendingSaveChanges,
     getPendingSaveRevision,
@@ -1660,7 +1733,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     }
     if (
       !takeoverFlushAuthorizedRef.current
-      && (takeoverRequestedRef.current || saveOwnershipStatusRef.current !== 'owner')
+      && (
+        takeoverRequestedRef.current
+        || newerSaveConflictRef.current
+        || saveOwnershipStatusRef.current !== 'owner'
+      )
     ) {
       return {
         ok: false,
@@ -1698,6 +1775,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     });
   }
   const coordinator = coordinatorRef.current;
+  // Another tab may have advanced the journal while this one was blocked.
+  // Declared before the save effects so a flush in the same commit waits for it.
+  useEffect(() => {
+    if (leaseStatus === 'owner') void coordinator?.resyncRevision?.();
+  }, [coordinator, leaseStatus]);
   const coordinatorSnapshotRef = useRef<SaveDurabilitySnapshot>(
     coordinator?.getSnapshot() ?? {
       primary: 'saved',
@@ -1746,7 +1828,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       savedAt: null,
       ...(legacySaveStatus === 'failed'
         ? {
-          failureReason: saveOwnershipBlockReason === 'foreign_owner'
+          failureReason: isOwnershipConflictBlock(saveOwnershipBlockReason)
             ? 'ownership_conflict' as const
             : 'storage_unavailable' as const,
         }
@@ -1760,7 +1842,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
           ? 'degraded'
           : coordinatorDurability.recovery,
         failureReason: coordinatorDurability.failureReason
-          ?? (saveOwnershipBlockReason === 'foreign_owner'
+          ?? (isOwnershipConflictBlock(saveOwnershipBlockReason)
             ? 'ownership_conflict'
             : 'storage_unavailable'),
       }
@@ -2172,6 +2254,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     try {
       const owned = await takeOverOwnership();
       if (!owned) return false;
+      // The player chose this tab's progress, so the regained lease needs no
+      // newer-save check, and any earlier conflict is resolved.
+      blockedSinceOwnedRef.current = false;
+      newerSaveConflictRef.current = false;
+      setNewerSaveConflict(false);
+      void coordinator?.resyncRevision?.();
       takeoverFlushAuthorizedRef.current = true;
       try {
         const staged = serializeCurrent();
@@ -2362,8 +2450,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({
 
   /** Void Gambit: stake ALL fate on a coin flip (RNG here — reducer stays pure). */
   const performGambit = useCallback(() => {
-    const stake = stateRef.current.fatePoints;
-    const min = getRitual('GAMBIT').fateCost ?? 15;
+    const current = stateRef.current;
+    const stake = current.fatePoints;
+    // The minimum stake scales with the mode, exactly as the Altar shows it.
+    const min = ritualFateCost('GAMBIT', resolveModeRules(current.gameModeId, current.customMode).ritualCostMultiplier);
     if (stake < min) return;
     const won = nextFloat('gambit') < 0.5;
     const keysWon = Math.max(1, Math.floor(stake / GAMBIT_KEYS_PER));
@@ -2376,10 +2466,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   }, [commitAction]);
 
   const levelUpSkill = useCallback((skill: string) => {
+    const levelBefore = stateRef.current.unlocks.levels[skill] || 1;
+    // Level 99 is the cap; a level-up that changes nothing earns no roll.
+    if (levelBefore >= 99) return;
     // Pre-compute RNG outside reducer to maintain reducer purity
     const chaosRoll = nextFloat('levelup');
     const prepared = prepareLevelUpActions(stateRef.current, skill, chaosRoll, nextDice);
     const levelState = commitAction(prepared.levelAction);
+    if ((levelState.unlocks.levels[skill] || 1) === levelBefore) return;
     const levelUpMeta = levelState.lastEvent?.type === 'LEVEL_UP'
       ? levelState.lastEvent.meta
       : undefined;
@@ -2444,6 +2538,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const replaceState = useCallback((replacement: GameState) => {
     stateMutationRef.current += 1;
     stateRef.current = { ...replacement, lastEvent: null };
+    // Batched into the same render as the new history.
+    setStateReplacements(count => count + 1);
     dispatch({ type: 'LOAD_SAVE', payload: replacement });
   }, []);
   const reloadLatestSave = useCallback((): ImportResult => {
@@ -2471,9 +2567,53 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     persistedSnapshotRef.current = accepted;
     discardPendingSave(storageKey);
     setSaveStatus('saved');
+    newerSaveConflictRef.current = false;
+    setNewerSaveConflict(false);
     replaceState(parsed.state);
     return { ok: true, warnings: parsed.warnings };
   }, [replaceState, storageKey]);
+
+  // When a tab that was blocked regains the lease on its own (the other tab
+  // closed or its lease expired), the other tab may have saved newer
+  // progress. Load it if this tab has nothing unsaved; otherwise keep writes
+  // blocked and let the player choose, as a manual takeover would.
+  useEffect(() => {
+    if (leaseStatus !== 'owner' || !blockedSinceOwnedRef.current) return;
+    blockedSinceOwnedRef.current = false;
+    if (takeoverRequestedRef.current || profileEvictedRef.current) return;
+
+    let stored: string | null;
+    try {
+      stored = localStorage.getItem(storageKey);
+    } catch {
+      return;
+    }
+    const baseline = persistedSnapshotRef.current;
+    if (stored === null || stored === baseline) return;
+    const parsed = parseAndMigrateSave(stored, createFreshState());
+    if (parsed.ok === false) return;
+    const latest = serializeGameState(parsed.state);
+    if (latest === baseline) return;
+
+    const unsavedChanges = getPendingSave(storageKey) !== null
+      || (baseline !== null && serializeCurrent() !== baseline);
+    if (!unsavedChanges) {
+      persistedSnapshotRef.current = latest;
+      discardPendingSave(storageKey);
+      replaceState(parsed.state);
+      showToast('Loaded newer progress saved in another tab');
+      return;
+    }
+    newerSaveConflictRef.current = true;
+    saveOwnershipStatusRef.current = 'blocked';
+    saveOwnershipBlockReasonRef.current = 'newer_save';
+    if (saveTimeoutRef.current !== null) {
+      window.clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    blockPendingSave(storageKey, 'ownership_conflict');
+    setNewerSaveConflict(true);
+  }, [leaseStatus, replaceState, serializeCurrent, storageKey]);
 
   const writeReplacement = useCallback((data: string) => {
     writeReplacementNow(
@@ -2711,6 +2851,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     }
     if (!isCurrent()) return;
     pushOwnedBackup(serializeCurrent(), 'Before reset');
+    setStateReplacements(count => count + 1);
     commitAction({ type: 'RESET' });
   }, [beginReplacement, commitAction, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, serializeCurrent, setSaveStatus, writeCoordinatedReplacement]);
   const togglePin = useCallback((id: string) => commitAction({ type: 'TOGGLE_PIN', payload: id }), [commitAction]);
@@ -2821,6 +2962,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     saveOwnershipBlockReason,
     hasPendingChanges,
     saveDurability,
+    stateReplacements,
     retrySave,
     stageForProfileEviction,
     takeOverSaveOwnership,
@@ -2869,6 +3011,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     saveOwnershipBlockReason,
     hasPendingChanges,
     saveDurability,
+    stateReplacements,
     retrySave,
     stageForProfileEviction,
     takeOverSaveOwnership,

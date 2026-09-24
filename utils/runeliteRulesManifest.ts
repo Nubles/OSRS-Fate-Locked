@@ -53,6 +53,10 @@ export interface RuneliteRulesManifest {
     farming: string[];
     slayer: string[];
     quests: string[];
+    // Additive fields: the current plugin's Unlocks class has neither, so
+    // Gson drops them and it does not warn on these families yet.
+    housing?: string[];
+    storage?: string[];
   };
   itemRules: Record<string, { tier: number; slot: string }>;
   equipmentCatalogue?: EquipmentPermissionCoverage;
@@ -180,6 +184,8 @@ export async function buildRuneliteRulesManifest(
       farming: sorted(unlocks.farming),
       slayer: sorted(unlocks.slayerUnlocks),
       quests: sorted(unlocks.quests),
+      housing: sorted(unlocks.housing),
+      storage: sorted(unlocks.storage),
     },
     itemRules,
     ...(items.permissionCoverage ? { equipmentCatalogue: items.permissionCoverage() } : {}),

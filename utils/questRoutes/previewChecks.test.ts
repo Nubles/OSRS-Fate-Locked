@@ -46,6 +46,25 @@ describe('RuneProof preview confirmation storage', () => {
     expect(normalizeRuneProofPreviewChecks(inherited)).toEqual({ "Doric's Quest": ['clay'] });
   });
 
+  it("keeps item checks that a guide's own requirement review lists", () => {
+    const witchesPotion = {
+      questId: "Witch's Potion",
+      wikiRevision: '15300000',
+      reviewedAt: '2026-09-23',
+      items: [
+        { item: { key: 'eye of newt', name: 'Eye of newt' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' as const },
+      ],
+    };
+    const requirementsFor = (questId: string) => questId === "Witch's Potion" ? witchesPotion : null;
+    const stored = { "Witch's Potion": ['eye of newt', 'unknown'] };
+
+    expect(normalizeRuneProofPreviewChecks(stored)).toEqual({});
+    expect(normalizeRuneProofPreviewChecks(stored, requirementsFor)).toEqual({ "Witch's Potion": ['eye of newt'] });
+    const storage = memoryStorage();
+    writeRuneProofPreviewChecks(storage, 'run-a', stored, requirementsFor);
+    expect(readRuneProofPreviewChecks(storage, 'run-a', requirementsFor)).toEqual({ "Witch's Potion": ['eye of newt'] });
+  });
+
   it('keeps reviewed player-obtained keys only, deduplicated in catalogue order', () => {
     expect(normalizeRuneProofPreviewChecks({
       Unknown: ['anything'],

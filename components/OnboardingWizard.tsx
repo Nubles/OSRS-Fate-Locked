@@ -391,10 +391,12 @@ export const OnboardingWizard: React.FC = () => {
          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-tr ${currentStep.bg} via-transparent to-transparent rounded-full blur-[100px] transition-all duration-1000`}></div>
       </div>
 
-      <div className="relative w-full max-w-4xl h-[600px] bg-[#161616] border border-white/10 rounded-2xl shadow-2xl flex overflow-hidden">
+      {/* Phones stack the card and drop the illustration, so the step text can
+          scroll and the Next button always stays on screen. */}
+      <div className="relative w-full max-w-4xl max-h-full md:h-[600px] bg-[#161616] border border-white/10 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden">
         
         {/* Left: Interactive Visual */}
-        <div className="w-1/2 bg-[#0a0a0a] border-r border-white/5 relative flex flex-col items-center justify-center p-8 overflow-hidden">
+        <div className="hidden md:flex w-1/2 bg-[#0a0a0a] border-r border-white/5 relative flex-col items-center justify-center p-8 overflow-hidden">
             
             <div key={step} className="relative z-10 w-full flex items-center justify-center animate-in zoom-in slide-in-from-bottom-4 duration-500">
                 {currentStep.visual}
@@ -412,25 +414,25 @@ export const OnboardingWizard: React.FC = () => {
         </div>
 
         {/* Right: Content & Controls */}
-        <div className="w-1/2 p-12 flex flex-col justify-center relative z-10">
-            <div className="mb-auto">
+        <div className="w-full md:w-1/2 min-h-0 p-6 md:p-12 flex flex-col justify-center relative z-10">
+            <div className="mb-auto min-h-0 overflow-y-auto">
                 <span className={`text-xs font-bold uppercase tracking-[0.2em] ${currentStep.color} mb-2 block`}>
                     Step {step + 1} / {STEPS.length}
                 </span>
                 
-                <h1 className="text-4xl font-black text-white mb-2 tracking-tight">
+                <h1 className="text-3xl md:text-4xl font-black text-white mb-2 tracking-tight">
                     {currentStep.title}
                 </h1>
-                <h2 className="text-xl text-gray-500 font-light mb-6">
+                <h2 className="text-lg md:text-xl text-gray-500 font-light mb-4 md:mb-6">
                     {currentStep.subtitle}
                 </h2>
                 
-                <p className="text-gray-300 text-lg leading-relaxed border-l-2 border-white/10 pl-6">
+                <p className="text-gray-300 text-base md:text-lg leading-relaxed border-l-2 border-white/10 pl-4 md:pl-6">
                     {currentStep.desc}
                 </p>
             </div>
 
-            <div className="mt-12 flex justify-end">
+            <div className="mt-6 md:mt-12 shrink-0 flex justify-end">
                 <button 
                     onClick={handleNext}
                     className="group px-8 py-4 bg-white text-black font-black uppercase tracking-widest rounded-lg hover:bg-gray-200 transition-all flex items-center gap-3 shadow-lg hover:shadow-white/20"

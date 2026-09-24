@@ -4,6 +4,9 @@ import { QUEST_DATA } from '../data/questData';
 import { GameState, TableType } from '../types';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { REGION_GROUPS } from '../constants';
+import { displayAreaName } from '../data/areaMapPolicy';
+import type { ContentRequirement } from '../data/requirements';
+import { calculateGoalProgress } from './goalLogic';
 
 /** Minimal game state with the bits the route builder reads. */
 const stateWith = (over: Partial<any> = {}): GameState => ({
@@ -148,7 +151,7 @@ describe('buildGoalRoute — quest and engine-item goals', () => {
       expect.objectContaining({
         routes: expect.arrayContaining([
           expect.objectContaining({ name: 'East Ardougne' }),
-          expect.objectContaining({ name: "Wizards' Guild" }),
+          expect.objectContaining({ name: "Wizards' Guild + Magic 66" }),
         ]),
       }),
     ]);
@@ -279,6 +282,64 @@ describe('buildGoalRoute — geographic area aliases', () => {
       table: TableType.MINIGAMES,
       needed: expect.arrayContaining(['Mage Arena']),
     }));
+  });
+});
+
+describe('buildGoalRoute — quest progress', () => {
+  const card = (id: string, state: GameState) => calculateGoalProgress(
+    { id, category: TableType.QUESTS, regions: [], skills: {} } as ContentRequirement, state.unlocks, state.gameModeId,
+  );
+
+  it("reads a quest that's ready to do as done, like its tracker card", () => {
+    const state = stateWith();
+    expect(buildGoalRoute("Cook's Assistant", state)).toMatchObject({ completedSteps: 1, totalSteps: 1, percentage: 100 });
+    expect(card("Cook's Assistant", state)).toMatchObject({ completedSteps: 1, totalSteps: 1, percentage: 100 });
+  });
+
+  it('counts quest routes from eligibility evidence and blockers, as the tracker card does', () => {
+    const cases: Array<[string, GameState]> = [
+      ['Druidic Ritual', stateWith()],
+      ['Dragon Slayer I', stateWith({ quests: ["Cook's Assistant"] })],
+      ['Prying Times', stateWith({ quests: ['Pandemonium', "The Knight's Sword"], regions: ['The Open Seas'], skills: { Smithing: 3, Sailing: 2 }, levels: { Smithing: 30, Sailing: 12 } })],
+      ["Cook's Assistant", stateWith({ quests: ["Cook's Assistant"] })],
+    ];
+    for (const [id, state] of cases) {
+      const { completedSteps, totalSteps, percentage } = card(id, state);
+      expect(buildGoalRoute(id, state), id).toMatchObject({ completedSteps, totalSteps, percentage });
+    }
+  });
+});
+
+describe('buildGoalRoute — quest locations', () => {
+  it('routes a location through the area that unlocks it, not its place label', () => {
+    // Druidic Ritual needs "North Taverley" and "South Taverley", both in Taverley.
+    const route = buildGoalRoute('Druidic Ritual', stateWith())!;
+    expect(route.regions.map(region => region.name)).toEqual([displayAreaName('Taverley')]);
+    expect(route.tables).toContainEqual(expect.objectContaining({ table: TableType.REGIONS, needed: ['Taverley'] }));
+  });
+});
+
+describe('buildGoalRoute — Skills key suggestions', () => {
+  const skillsNeeded = (route: ReturnType<typeof buildGoalRoute>) =>
+    route!.tables.find(table => table.table === TableType.SKILLS)?.needed ?? [];
+
+  it('suggests a Skills key for a quest only when the tier caps the skill below the level needed', () => {
+    // The Knight's Sword needs Mining 10; tier 3 caps at 30, so only XP is missing.
+    const xpOnly = buildGoalRoute("The Knight's Sword", stateWith({ skills: { Mining: 3 }, levels: { Mining: 5 } }));
+    expect(xpOnly!.skills).toContainEqual(expect.objectContaining({ skill: 'Mining', needLevel: 10, met: false }));
+    expect(skillsNeeded(xpOnly)).not.toContain('Mining');
+    expect(skillsNeeded(buildGoalRoute("The Knight's Sword", stateWith({ levels: { Mining: 5 } })))).toContain('Mining');
+  });
+
+  it('applies the same rule to diary and strategy routes', () => {
+    // Falador Easy needs Agility 5; tier 1 caps at 10.
+    const diary = (tier: number) => buildGoalRoute('Falador Easy', stateWith({ skills: { Agility: tier }, levels: { Agility: 1 } }));
+    expect(skillsNeeded(diary(1))).not.toContain('Agility');
+    expect(skillsNeeded(diary(0))).toContain('Agility');
+    // Recipe for Disaster needs Cooking 70; tier 7 caps at 70, tier 6 at 60.
+    const strategy = (tier: number) => buildGoalRoute('Recipe for Disaster', stateWith({ skills: { Cooking: tier }, levels: { Cooking: 60 } }));
+    expect(skillsNeeded(strategy(7))).not.toContain('Cooking');
+    expect(skillsNeeded(strategy(6))).toContain('Cooking');
   });
 });
 

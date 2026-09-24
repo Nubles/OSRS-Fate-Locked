@@ -11,16 +11,14 @@ import { Dashboard } from './components/Dashboard';
 const LogViewer = lazyWithRetry(() => import('./components/LogViewer').then(m => ({ default: m.LogViewer })));
 import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { PopOnChange } from './components/PopOnChange';
-import { CommandPalette } from './components/CommandPalette';
-import { GuidedTour } from './components/GuidedTour';
-import { QuestCompleteOverlay } from './components/QuestCompleteOverlay';
 import { WikiIcon } from './components/WikiIcon';
-import { VoidAltar } from './components/VoidAltar';
-import { TransmutationEffect } from './components/TransmutationEffect';
-import { ClarityEffect, GreedEffect, ChaosEffect } from './components/RitualEffects';
 import { EffectsLayer } from './components/EffectsLayer';
 import { OnlineSyncDriver } from './components/OnlineSyncDriver';
-import { RunelitePairingDialog } from './components/RunelitePairingDialog';
+import {
+  canDismissRunelitePairing,
+  RunelitePairingDialog,
+  type RunelitePairingPhase,
+} from './components/RunelitePairingDialog';
 import { RollInboxDriver } from './components/RollInboxDriver';
 import { CoachStrip } from './components/CoachStrip';
 import { FeatureRevealDriver } from './components/FeatureRevealDriver';
@@ -32,10 +30,10 @@ import { ProfileRecoveryBanner } from './components/ProfileRecoveryBanner';
 import { SaveRecoveryGuard } from './components/SaveRecoveryGuard';
 import { SaveBootstrap } from './components/SaveBootstrap';
 import { DiscordSyncDriver } from './components/DiscordSyncDriver';
-import { downloadFateSave } from './utils/fateSaveFile';
+import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE, FATE_EXPORT_HINT } from './utils/fateSaveFile';
+import { isOwnershipConflictBlock } from './utils/profileWriterLease';
 import { useFeatureGates } from './hooks/useFeatureGates';
 import { flashElement } from './utils/flash';
-import { OnboardingWizard } from './components/OnboardingWizard';
 import { ProfileSwitcher } from './components/ProfileSwitcher';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
 import { UpdateBanner } from './components/UpdateBanner';
@@ -46,9 +44,8 @@ import { useEscapeKey } from './hooks/useEscapeKey';
 import { resolveModeRules } from './config/gameModes';
 import { showToast } from './utils/toast';
 import { importUiDecision, isCurrentImportRequest } from './utils/gamePersistence';
-import { MAX_SAVE_BYTES } from './utils/saveSchema';
 import { prefetchHeavyChunks } from './utils/prefetch';
-import { CHANGELOG_RELEASES, LATEST_CHANGELOG } from './data/changelog';
+import { LATEST_CHANGELOG_ID } from './data/changelogLatest';
 import type { FateCompensationChoice } from './types';
 import {
   changelogVisibilityReducer, markChangelogSeen,
@@ -74,17 +71,34 @@ const GameModePicker = lazyWithRetry(() => import('./components/GameModePicker')
 const SyncCodeModal = lazyWithRetry(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
 const ModelGallery = lazyWithRetry(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
 const DiscordSettingsModal = lazyWithRetry(() => import('./components/DiscordSettingsModal'));
+// The release notes load with the modal; only the latest release's id is
+// needed up front, to decide whether What's New opens.
 const ChangelogModal = lazyWithRetry(() =>
-  import('./components/ChangelogModal').then(module => ({
-    default: module.ChangelogModal,
-  })),
+  Promise.all([import('./components/ChangelogModal'), import('./data/changelog')])
+    .then(([module, changelog]) => ({
+      default: (props: Omit<React.ComponentProps<typeof module.ChangelogModal>, 'releases'>) => (
+        <module.ChangelogModal {...props} releases={changelog.CHANGELOG_RELEASES} />
+      ),
+    })),
 );
+// Shown only on demand (onboarding, rituals, the altar) or mounted as idle
+// listeners (palette, tour, quest celebration), so they stay out of the entry
+// chunk.
+const OnboardingWizard = lazyWithRetry(() => import('./components/OnboardingWizard').then(m => ({ default: m.OnboardingWizard })));
+const VoidAltar = lazyWithRetry(() => import('./components/VoidAltar').then(m => ({ default: m.VoidAltar })));
+const TransmutationEffect = lazyWithRetry(() => import('./components/TransmutationEffect').then(m => ({ default: m.TransmutationEffect })));
+const ClarityEffect = lazyWithRetry(() => import('./components/RitualEffects').then(m => ({ default: m.ClarityEffect })));
+const GreedEffect = lazyWithRetry(() => import('./components/RitualEffects').then(m => ({ default: m.GreedEffect })));
+const ChaosEffect = lazyWithRetry(() => import('./components/RitualEffects').then(m => ({ default: m.ChaosEffect })));
+const CommandPalette = lazyWithRetry(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
+const GuidedTour = lazyWithRetry(() => import('./components/GuidedTour').then(m => ({ default: m.GuidedTour })));
+const QuestCompleteOverlay = lazyWithRetry(() => import('./components/QuestCompleteOverlay').then(m => ({ default: m.QuestCompleteOverlay })));
 const RunelitePluginGuide = lazyWithRetry(() =>
   import('./components/runelite-guide/RunelitePluginGuide').then(module => ({
     default: module.RunelitePluginGuide,
   })),
 );
-import { deobfuscateFateSave } from './utils/encryption';
+import { deobfuscateFateSave, MAX_FATE_FILE_BYTES } from './utils/encryption';
 import { Download, Upload, RotateCcw, BarChart3, HelpCircle, PlayCircle, PauseCircle, Search, Database, SlidersHorizontal, Link2, Radio, Settings, MessageCircle } from 'lucide-react';
 import { Key, Sparkles, Dna, Swords, ShoppingBag, ScrollText, Compass, Lightbulb } from './components/OsrsIcon';
 import { exportRuneliteBundle } from './utils/runeliteExport';
@@ -314,7 +328,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
     activeFileReaderRef.current?.abort();
 
     const clearInput = () => { input.value = ''; };
-    if (file.size > MAX_SAVE_BYTES) {
+    if (file.size > MAX_FATE_FILE_BYTES) {
       showToast('That save file is too large.');
       clearInput();
       return;
@@ -394,7 +408,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
         showToast(result.message);
         return;
       }
-      showToast('Save exported');
+      showToast(FATE_EXPORT_DONE_MESSAGE);
   };
 
   return (
@@ -559,8 +573,8 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                         <button onClick={() => { setShowUtilMenu(false); fileInputRef.current?.click(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
                            <Upload size={13} /> Import save
                         </button>
-                        <button onClick={() => { setShowUtilMenu(false); handleExport(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
-                           <Download size={13} /> Export encrypted save
+                        <button onClick={() => { setShowUtilMenu(false); handleExport(); }} title={FATE_EXPORT_HINT} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
+                           <Download size={13} /> Export save file (.fate)
                         </button>
                         <button onClick={() => { setShowUtilMenu(false); setShowSyncCode(true); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-cyan-300">
                            <Link2 size={13} /> Sync code (move device)
@@ -681,7 +695,7 @@ const GameLayout = () => {
     [getExportData, storageKeyForActiveProfile],
   );
   const failureReason = saveDurability.failureReason
-    ?? (saveOwnershipBlockReason === 'foreign_owner'
+    ?? (isOwnershipConflictBlock(saveOwnershipBlockReason)
       ? 'ownership_conflict'
       : saveOwnershipBlockReason === 'storage_unavailable'
         ? 'storage_unavailable'
@@ -711,7 +725,7 @@ const GameLayout = () => {
     undefined,
     () => shouldAutoOpenChangelog({
       hasSeenOnboarding,
-      releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG.id),
+      releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG_ID),
       startupHash: typeof window === 'undefined' ? '' : window.location.hash,
       hasPendingGameModePrompt: recentlyCreatedId === activeProfileId,
       hasPendingGuidePrompt: directGuideRequested,
@@ -731,14 +745,13 @@ const GameLayout = () => {
       return code;
     },
   );
-  const [runelitePairPhase, setRunelitePairPhase] = useState<
-    'confirm' | 'uploading' | 'success' | 'error'
-  >('confirm');
+  const [runelitePairPhase, setRunelitePairPhase] =
+    useState<RunelitePairingPhase>('confirm');
   const [runelitePairError, setRunelitePairError] =
     useState<string | undefined>(undefined);
 
   const changelogReturnFocusTarget = useRef<HTMLElement | null>(null);
-  const changelogAutoOpenKey = `${activeProfileId}:${LATEST_CHANGELOG.id}`;
+  const changelogAutoOpenKey = `${activeProfileId}:${LATEST_CHANGELOG_ID}`;
   const changelogAutoOpenedRelease = useRef<string | null>(
     showChangelog ? changelogAutoOpenKey : null,
   );
@@ -748,13 +761,13 @@ const GameLayout = () => {
   };
   const closeChangelog = () => {
     if (fateCompensation.status === 'pending') return;
-    markChangelogSeen(LATEST_CHANGELOG.id);
+    markChangelogSeen(LATEST_CHANGELOG_ID);
     dispatchChangelog({ type: 'DISMISS' });
     changelogReturnFocusTarget.current = null;
   };
   const resolveCompensation = (choice: FateCompensationChoice) => {
     resolveFateCompensation(choice);
-    markChangelogSeen(LATEST_CHANGELOG.id);
+    markChangelogSeen(LATEST_CHANGELOG_ID);
   };
 
   const openRuneliteGuide = (returnFocusTarget: HTMLElement | null = null) => {
@@ -787,10 +800,10 @@ const GameLayout = () => {
   }), [runelitePairCode]);
 
   const closeRunelitePairing = () => {
-    if (runelitePairPhase === 'confirm'
-      || runelitePairPhase === 'success') {
-      setRunelitePairCode(null);
-    }
+    if (!canDismissRunelitePairing(runelitePairPhase)) return;
+    setRunelitePairCode(null);
+    setRunelitePairPhase('confirm');
+    setRunelitePairError(undefined);
   };
 
   // UI States
@@ -894,29 +907,28 @@ const GameLayout = () => {
   // The first profile is created implicitly, so new players reach the game via
   // the onboarding wizard rather than `createProfile`. Catch that finish-line:
   // when onboarding flips to complete on a still-empty run, prompt the mode pick.
-  const prevOnboarded = useRef(hasSeenOnboarding);
-  const onboardingJustCompleted = !prevOnboarded.current && hasSeenOnboarding && history.length === 0;
-  useEffect(() => {
-    if (onboardingJustCompleted) {
-      setShowGameMode(true);
-    }
-    prevOnboarded.current = hasSeenOnboarding;
-  }, [hasSeenOnboarding, onboardingJustCompleted]);
+  // This adjusts state during render rather than in an effect: saving the
+  // completion re-renders from the durability store before an effect's queued
+  // update applies, and in that render What's New auto-opened over the prompt.
+  const [onboardingSeenAtLastRender, setOnboardingSeenAtLastRender] = useState(hasSeenOnboarding);
+  if (onboardingSeenAtLastRender !== hasSeenOnboarding) {
+    setOnboardingSeenAtLastRender(hasSeenOnboarding);
+    if (hasSeenOnboarding && history.length === 0) setShowGameMode(true);
+  }
 
   const startupHash = typeof window === 'undefined' ? '' : window.location.hash;
   const hasPendingSyncPrompt = showSyncCode
     || (startupHash.startsWith('#sync=') && startupHash.length > '#sync='.length)
     || !!runelitePairCode;
   const hasPendingGameModePrompt = showGameMode
-    || recentlyCreatedId === activeProfileId
-    || onboardingJustCompleted;
+    || recentlyCreatedId === activeProfileId;
   useEffect(() => {
     if (
       showChangelog
       || changelogAutoOpenedRelease.current === changelogAutoOpenKey
       || !shouldAutoOpenChangelog({
         hasSeenOnboarding,
-        releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG.id),
+        releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG_ID),
         startupHash,
         hasPendingGameModePrompt,
         hasPendingSyncPrompt,
@@ -976,17 +988,19 @@ const GameLayout = () => {
       <div id="reveal-bottom" className="fixed bottom-5 right-5 z-[9997] flex flex-col-reverse gap-3 items-end pointer-events-none" />
       <ToastNotification />
 
-      {!hasSeenOnboarding && !topLevelGuideOpen && <OnboardingWizard />}
+      <Suspense fallback={null}>
+        {!hasSeenOnboarding && !topLevelGuideOpen && <OnboardingWizard />}
 
-      {activeRitualAnim === 'TRANSMUTE' && <TransmutationEffect onComplete={() => setActiveRitualAnim('NONE')} />}
-      {activeRitualAnim === 'LUCK' && <ClarityEffect onComplete={() => setActiveRitualAnim('NONE')} />}
-      {activeRitualAnim === 'GREED' && <GreedEffect onComplete={() => setActiveRitualAnim('NONE')} />}
-      {activeRitualAnim === 'CHAOS' && <ChaosEffect onComplete={() => setActiveRitualAnim('NONE')} />}
+        {activeRitualAnim === 'TRANSMUTE' && <TransmutationEffect onComplete={() => setActiveRitualAnim('NONE')} />}
+        {activeRitualAnim === 'LUCK' && <ClarityEffect onComplete={() => setActiveRitualAnim('NONE')} />}
+        {activeRitualAnim === 'GREED' && <GreedEffect onComplete={() => setActiveRitualAnim('NONE')} />}
+        {activeRitualAnim === 'CHAOS' && <ChaosEffect onComplete={() => setActiveRitualAnim('NONE')} />}
+      </Suspense>
 
-      {modalRenderPolicy.renderAppModals && showAltar && <VoidAltar onClose={() => setShowAltar(false)} />}
       <Suspense fallback={<ModalFallback />}>
         {modalRenderPolicy.renderAppModals && (
           <>
+            {showAltar && <VoidAltar onClose={() => setShowAltar(false)} />}
             {showStats && <StatsModal onClose={() => setShowStats(false)} />}
             {showFateThread && <FateThread onClose={() => setShowFateThread(false)} />}
             {showReference && <ReferenceModal onClose={() => setShowReference(false)} />}
@@ -1007,7 +1021,6 @@ const GameLayout = () => {
         )}
         {showChangelog && (
           <ChangelogModal
-            releases={CHANGELOG_RELEASES}
             onClose={closeChangelog}
             compensation={fateCompensation}
             onResolveCompensation={resolveCompensation}
@@ -1045,12 +1058,14 @@ const GameLayout = () => {
 
       <SaveFailureBanner />
 
-      {/* Global ⌘K command palette — navigates via fate:nav events. */}
-      {modalRenderPolicy.renderGlobalDialogOverlays && <CommandPalette />}
-      {/* Replayable spotlight tour — start via fate:start-tour. */}
-      {modalRenderPolicy.renderGlobalDialogOverlays && <GuidedTour />}
-      {/* Quest-complete celebration with the wiki reward scroll. */}
-      {modalRenderPolicy.renderGlobalDialogOverlays && <QuestCompleteOverlay />}
+      <Suspense fallback={null}>
+        {/* Global ⌘K command palette — navigates via fate:nav events. */}
+        {modalRenderPolicy.renderGlobalDialogOverlays && <CommandPalette />}
+        {/* Replayable spotlight tour — start via fate:start-tour. */}
+        {modalRenderPolicy.renderGlobalDialogOverlays && <GuidedTour />}
+        {/* Quest-complete celebration with the wiki reward scroll. */}
+        {modalRenderPolicy.renderGlobalDialogOverlays && <QuestCompleteOverlay />}
+      </Suspense>
       {modalRenderPolicy.renderGlobalDialogOverlays && runelitePairCode && (
         <RunelitePairingDialog
           code={runelitePairCode}
@@ -1060,7 +1075,7 @@ const GameLayout = () => {
           phase={runelitePairPhase}
           error={runelitePairError}
           onConfirm={() => {
-            if (!relaySync.adoptCode(runelitePairCode)) {
+            if (!relaySync.adoptCode(runelitePairCode, activeProfileId)) {
               setRunelitePairPhase('confirm');
               setRunelitePairError(
                 'This connection could not be saved. Try again.',
@@ -1152,6 +1167,9 @@ const GameProviderBridge: React.FC<{ children: ReactNode }> = ({ children }) => 
     metadataReadOnly,
     storageKeyForActiveProfile,
   } = useProfiles();
+  // Every tab shares the RuneLite pairing; only a tab showing the paired
+  // profile publishes it. Set before anything below reads relaySync.enabled.
+  relaySync.setActiveProfile(activeProfileId);
   return (
     <SaveBootstrap profileId={activeProfileId} storageKey={storageKeyForActiveProfile}>
       {bootstrap => (

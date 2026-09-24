@@ -28,6 +28,20 @@ const event = (eventId: string): FateEventEnvelope => ({
 });
 
 describe('Roll Inbox store', () => {
+  it('keeps working in memory when browser storage rejects the write', () => {
+    const storage = new MemoryStorage();
+    storage.setItem = () => { throw new DOMException('Quota exceeded', 'QuotaExceededError'); };
+    const store = createRollInboxStore(storage, 'run-1');
+    const notified: number[] = [];
+    store.subscribe(() => notified.push(store.list().length));
+
+    expect(() => store.ingest([event('evt-1')])).not.toThrow();
+    expect(() => store.transition('evt-1', 'READY')).not.toThrow();
+
+    expect(store.list()[0].state).toBe('READY');
+    expect(notified).toEqual([1, 1]);
+  });
+
   it('does not resurrect a completed event after reload or redelivery', () => {
     const storage = new MemoryStorage();
     const store = createRollInboxStore(storage, 'run-1');

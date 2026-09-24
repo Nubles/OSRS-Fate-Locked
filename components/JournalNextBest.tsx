@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, ListChecks, Route, ExternalLink } from 'lucide-react';
 import { Sparkles, Map as MapIcon, Scroll, Navigation, BookOpen, Gift } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
@@ -57,6 +57,28 @@ const ActionMenu: React.FC<{ a: JournalNextBestAction; onPick: (s: SubTab) => vo
   const { unlocks, gameModeId } = useGame();
   const [showUnlocks, setShowUnlocks] = useState(false);
   const place = placeFor(a, unlocks);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+
+  // Close on a press outside the menu and its chip (the menu's parent), or on
+  // Escape. A document listener, not a fixed full-screen layer: inside the
+  // animated tab pane a fixed layer covers only the pane.
+  useEffect(() => {
+    const onPointerDown = (event: Event) => {
+      const anchor = menuRef.current?.parentElement;
+      if (anchor && event.target instanceof Node && !anchor.contains(event.target)) closeRef.current();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeRef.current();
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, []);
 
   const unlocks_ = useMemo(() => {
     if (a.kind !== 'quest') return null;
@@ -81,8 +103,7 @@ const ActionMenu: React.FC<{ a: JournalNextBestAction; onPick: (s: SubTab) => vo
 
   return (
     <>
-      <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="absolute left-0 top-full mt-1 z-50 w-56 bg-[#161616] border border-white/15 rounded-lg shadow-2xl py-1 overflow-hidden">
+      <div ref={menuRef} className="absolute left-0 top-full mt-1 z-50 w-56 bg-[#161616] border border-white/15 rounded-lg shadow-2xl py-1 overflow-hidden">
         <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-gray-500 truncate border-b border-white/5 mb-1">{a.name}</div>
         <Row icon={<ListChecks size={12} />} label="Open in the list" onClick={() => {
           onPick(a.sub);

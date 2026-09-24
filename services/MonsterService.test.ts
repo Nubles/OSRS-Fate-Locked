@@ -48,6 +48,13 @@ describe('MonsterService pinned targets', () => {
     expect(service.ready).toBe(true);
     expect(service.search('', 10_000)).toHaveLength(2850); // Existing name+version deduplication.
     expect(service.byName('Menaphite Shadow')?.size).toBe(0); // Unknown-size upstream targets remain selectable.
+    // Max hits written with markup first used to parse as 0 (Danger: Low).
+    expect(service.byName('Tormented Demon')?.maxHit).toBe(45);
+    // Text with no number is unknown; a listed 0 stays 0.
+    expect(service.byName('Ice demon')?.maxHit).toBeNull(); // "Varies"
+    expect(service.byName('Menaphite Akh')?.maxHit).toBeNull(); // "? (melee)"
+    expect(service.byName('Baby impling')?.maxHit).toBeNull(); // "N/A"
+    expect(service.byName('Abyssal portal')?.maxHit).toBe(0);
     expect(service.byId(2215)).toMatchObject({ name: 'General Graardor', hp: 255, maxHit: 60, defLevel: 250,
       magicLevel: 80, def: { stab: 90, slash: 90, crush: 90, magic: 298, ranged: 90 },
       rangedDefence: { light: 90, standard: 90, heavy: 90 } });
@@ -87,6 +94,23 @@ describe('MonsterService pinned targets', () => {
       expect(service.byId(2215)?.rangedDefence?.heavy).toBe(150);
       expect(JSON.parse(storage.get(CACHE_KEY)!).source).toBe(MONSTER_CACHE_SOURCE);
     });
+
+  it('rebuilds a version 2 cache, which stored unknown max hits as 0', async () => {
+    const storage = mockStorage();
+    const varies = { ...TARGET, id: 7584, name: 'Ice demon', version: 'Normal', max_hit: 'Varies' };
+    const fetchMock = mockData([TARGET, varies]);
+    await (await freshService()).init();
+    const cached = JSON.parse(storage.get(CACHE_KEY)!);
+    expect(cached.data.find((row: { id: number }) => row.id === 7584).maxHit).toBeNull();
+    cached.source = `${MONSTER_CATALOGUE.sha256}:2`;
+    cached.data.find((row: { id: number }) => row.id === 7584).maxHit = 0;
+    storage.set(CACHE_KEY, JSON.stringify(cached));
+
+    const service = await freshService();
+    await service.init();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(service.byId(7584)?.maxHit).toBeNull();
+  });
 
   it.each([[], {}, [{ id: 1, name: 'Non-attackable', skills: { hp: 0 } }]])(
     'keeps invalid or empty data unready and permits explicit retry', async invalid => {
@@ -132,5 +156,51 @@ describe('MonsterService pinned targets', () => {
     await service.init();
     expect(service.ready).toBe(true);
     expect(service.byId(2215)?.hp).toBe(255);
+  });
+});
+
+describe('MonsterService versions', () => {
+  it('keeps every version of a monster selectable, including versions that share an NPC id', async () => {
+    mockStorage();
+    const rows = JSON.parse(readFileSync(new URL(`../public/${MONSTER_CATALOGUE.asset}`, import.meta.url), 'utf8'));
+    mockData(rows);
+    const service = await freshService();
+    await service.init();
+    const { monsterKey } = await import('./MonsterService');
+
+    const duke = service.versionsOf('duke sucellus');
+    expect(duke.map(version => version.version)).toEqual(['Awakened, Awake', 'Post-quest, Awake', 'Quest, Awake']);
+    expect(duke[0].id).toBe(duke[1].id);
+    expect(service.byKey(monsterKey(duke[0]))).toMatchObject({ version: 'Awakened, Awake', hp: 1697 });
+    expect(service.byKey(monsterKey(duke[1]))).toMatchObject({ version: 'Post-quest, Awake', hp: 485 });
+
+    const all = service.search('', 10_000);
+    expect(new Set(all.map(monsterKey)).size).toBe(all.length);
+    expect(all.every(monster => service.byKey(monsterKey(monster)) === monster)).toBe(true);
+  });
+});
+
+describe('parseMaxHit', () => {
+  it.each([
+    ['60 (melee)', 60],
+    ['<div class="plainlist " >\n*31 (auto)\n*45 (special)\n</div>', 45],
+    ['26 (melee)<br/> 15x2 (ranged)<br/> 65 (special attack)', 65],
+    ['46-61 (Melee)', 61],
+    ['50/60 (Melee)', 60],
+    ['17x2 (default)', 17],
+    ['2 (x3)', 2],
+    ['70+ (x2) (Melee)', 70],
+    ['? (Magic)\n23 (Melee)', 23],
+    ['0', 0],
+    [0, 0],
+    [12, 12],
+    // No number is an unknown max hit, not a max hit of 0.
+    ['N/A', null],
+    ['Varies', null],
+    ['? (melee)', null],
+    [undefined, null],
+  ])('reads %j as %s', async (raw, expected) => {
+    const { parseMaxHit } = await import('./MonsterService');
+    expect(parseMaxHit(raw)).toBe(expected);
   });
 });

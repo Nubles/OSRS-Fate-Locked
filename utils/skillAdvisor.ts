@@ -35,8 +35,9 @@ export interface RankedSkill {
 
 /**
  * Returns skills ranked by the impact of training to their next gating level.
- * Skills whose next threshold unlocks nothing are omitted. Sorted by cascade
- * score, then direct score, then lower target level, then name.
+ * Skills whose next threshold unlocks nothing, and locked skills, are
+ * omitted. Sorted by cascade score, then direct score, then lower target
+ * level, then name.
  */
 export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedSkill[] {
   const allDiaries = Object.values(DIARY_DATA);
@@ -48,6 +49,10 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
   const isOpen = (status: string | undefined) => (
     status === 'AVAILABLE' || status === 'COMPLETED'
   );
+
+  // A locked (tier 0) skill can't be levelled until a Skills unlock opens it,
+  // so it is never offered for training.
+  const isUnlocked = (skill: string) => (unlocks.skills[skill] ?? 0) > 0;
 
   const combatSkillNames = [
     'Attack', 'Strength', 'Defence', 'Hitpoints', 'Prayer', 'Ranged', 'Magic',
@@ -100,13 +105,12 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
   for (const requiredCombatLevel of combatRequirements) {
     if (actualCombatLevel(unlocks) >= requiredCombatLevel) continue;
     for (const skill of combatSkillNames) {
+      if (!isUnlocked(skill)) continue;
       const current = unlocks.levels[skill] ?? (skill === 'Hitpoints' ? 10 : 1);
-      const candidateTier = Math.max(unlocks.skills[skill] ?? 0, 1);
       for (let level = current + 1; level <= 99; level += 1) {
         const simulated = {
           ...unlocks,
           levels: { ...unlocks.levels, [skill]: level },
-          skills: { ...unlocks.skills, [skill]: candidateTier },
         };
         if (actualCombatLevel(simulated) >= requiredCombatLevel) {
           addThreshold(skill, level);
@@ -150,15 +154,17 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
 
   const ranked: RankedSkill[] = [];
   for (const skill of SKILLS_LIST) {
+    if (!isUnlocked(skill)) continue;
     const current = unlocks.levels[skill] ?? 1;
     const sorted = [...(thresholdsBySkill.get(skill) ?? [])].sort((a, b) => a - b);
     let chosen: RankedSkill | null = null;
 
     for (const target of sorted) {
+      // Training keeps the skill's tier: levels past its cap open nothing
+      // until a higher tier is unlocked.
       const simulated = {
         ...unlocks,
         levels: { ...unlocks.levels, [skill]: target },
-        skills: { ...unlocks.skills, [skill]: Math.max(unlocks.skills[skill] ?? 0, 1) },
       };
       // Quest cascade work is shared, while diary checks are limited below to
       // tiers this skill can affect (and broadened only when new quests cascade).

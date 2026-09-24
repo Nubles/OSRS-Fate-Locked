@@ -7,7 +7,7 @@
  * channel). The always-mounted DiscordSyncDriver watches run history and
  * posts every new UNLOCK entry past a persisted cursor — reload-safe, no
  * duplicates, and enabling the feature never floods the channel with the
- * run's back-catalogue (the cursor seeds to "now" on enable).
+ * run's back-catalogue (the cursor seeds to the newest entry on enable).
  */
 import type { LogEntry } from '../types';
 import { profileDiscordCursorKey, profileDiscordKey } from './profileStorage';
@@ -43,20 +43,48 @@ export const writeDiscordConfig = (storageKey: string, config: DiscordConfig): v
   }
 };
 
-// ── Post cursor (timestamp of the newest history entry already posted) ─────
+// ── Post cursor (the newest history entry already handled) ─────────────────
 
-export const readCursor = (storageKey: string): number => {
-  const n = Number(localStorage.getItem(profileDiscordCursorKey(storageKey)));
-  return Number.isFinite(n) ? n : 0;
+/**
+ * Where announcing resumes. History is append-only, so the cursor names the
+ * last entry already handled and everything after it is new — device clocks
+ * never decide. `start` announces the whole history (enabled on an empty
+ * run); `unset` covers a missing, unreadable or pre-anchor timestamp record.
+ */
+export type DiscordCursor =
+  | { kind: 'unset' }
+  | { kind: 'start' }
+  | { kind: 'after'; id: string };
+
+export const readCursor = (storageKey: string): DiscordCursor => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(profileDiscordCursorKey(storageKey)) ?? '');
+    if (parsed !== null && typeof parsed === 'object' && 'after' in parsed) {
+      if (parsed.after === null) return { kind: 'start' };
+      if (typeof parsed.after === 'string') return { kind: 'after', id: parsed.after };
+    }
+  } catch {
+    /* unreadable — treated as unset */
+  }
+  // Older versions stored a timestamp here; it reseeds like a missing cursor.
+  return { kind: 'unset' };
 };
 
-export const writeCursor = (storageKey: string, ts: number): void => {
+export const writeCursor = (storageKey: string, cursor: DiscordCursor): void => {
+  if (cursor.kind === 'unset') return;
   try {
-    localStorage.setItem(profileDiscordCursorKey(storageKey), String(ts));
+    localStorage.setItem(
+      profileDiscordCursorKey(storageKey),
+      JSON.stringify({ after: cursor.kind === 'after' ? cursor.id : null }),
+    );
   } catch {
     /* best-effort */
   }
 };
+
+/** The cursor that announces only what happens from now on. */
+export const cursorAtNewest = (history: LogEntry[]): DiscordCursor =>
+  history.length > 0 ? { kind: 'after', id: history[history.length - 1].id } : { kind: 'start' };
 
 // ── Pure helpers (unit-tested) ──────────────────────────────────────────────
 
@@ -64,15 +92,41 @@ export const writeCursor = (storageKey: string, ts: number): void => {
 export const isValidWebhookUrl = (url: string): boolean =>
   /^https:\/\/(?:(?:ptb|canary)\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w-]+$/.test(url.trim());
 
+export interface AnnouncementPlan {
+  /** Where the cursor moves, or null when it stays put. */
+  cursor: DiscordCursor | null;
+  /** UNLOCK entries to post, in history order. */
+  post: LogEntry[];
+}
+
 /**
- * The UNLOCK entries newer than the cursor, oldest first (Discord shows them
- * in arrival order). History is stored append-ordered; we filter rather than
- * assume sortedness.
+ * What to announce for `history`. `replaced` means the run was swapped
+ * wholesale (import, sync code, restore, reset): those unlocks happened
+ * elsewhere or earlier — often announced already by the device they came
+ * from — so the cursor reseeds silently. The same happens when the cursor's
+ * entry is missing, or no cursor exists yet.
  */
-export const pickNewUnlocks = (history: LogEntry[], cursor: number): LogEntry[] =>
-  history
-    .filter((e) => e.type === 'UNLOCK' && e.timestamp > cursor)
-    .sort((a, b) => a.timestamp - b.timestamp);
+export const planAnnouncements = (
+  history: LogEntry[],
+  cursor: DiscordCursor,
+  replaced: boolean,
+): AnnouncementPlan => {
+  const reseed: AnnouncementPlan = { cursor: cursorAtNewest(history), post: [] };
+  if (replaced || cursor.kind === 'unset') return reseed;
+
+  let from = 0;
+  if (cursor.kind === 'after') {
+    let at = history.length - 1;
+    while (at >= 0 && history[at].id !== cursor.id) at -= 1;
+    if (at < 0) return reseed;
+    from = at + 1;
+  }
+  if (from >= history.length) return { cursor: null, post: [] };
+  return {
+    cursor: cursorAtNewest(history),
+    post: history.slice(from).filter((e) => e.type === 'UNLOCK'),
+  };
+};
 
 /** One Discord embed per unlock — item, table, and what it cost. */
 export const unlockEmbed = (entry: LogEntry): Record<string, unknown> => {

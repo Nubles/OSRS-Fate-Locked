@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { DetectorPlaytestExport } from './DetectorPlaytestExport';
-import { fateEventRelay } from '../services/fateEventRelay';
 import type { EventAcknowledgement } from '../services/fateEventProtocol';
 import {
   type RollInboxRow,
@@ -80,6 +79,45 @@ const timeLabel = (timestamp: number): string =>
     minute: '2-digit',
   }).format(timestamp);
 
+const sourceLabel = (classification: EventClassification, row: RollInboxRow) =>
+  classification.state === 'READY'
+    ? classification.intent.source
+    : row.event.eventType.replaceAll('_', ' ');
+
+// Module scope keeps the row's component type stable. Declared inside the
+// view, every render remounted every row, dropping focus from the review
+// select and closing it whenever a relay event re-rendered the list.
+const RowFrame = ({
+  row,
+  classification,
+  children,
+  tone,
+}: {
+  row: RollInboxRow;
+  classification: EventClassification;
+  children: React.ReactNode;
+  tone: string;
+}) => (
+  <div className={`rounded-lg border px-3 py-2.5 ${tone}`}>
+    <div className="flex items-start gap-3">
+      <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">
+            {sourceLabel(classification, row)}
+          </span>
+          <span className="truncate text-sm font-semibold text-gray-100">
+            {row.event.canonicalLabel ?? 'Needs identification'}
+          </span>
+          <span className="ml-auto shrink-0 text-[10px] text-gray-600">
+            {timeLabel(row.event.occurredAt)}
+          </span>
+        </div>
+        {children}
+      </div>
+    </div>
+  </div>
+);
+
 function terminalAck(
   eventId: string,
   state: EventAcknowledgement['state'],
@@ -87,10 +125,17 @@ function terminalAck(
   return { eventId, state, acknowledgedAt: Date.now() };
 }
 
+/**
+ * Current RuneLite builds keep detections local and never read the legacy
+ * /acks resource (docs/online-relay.md), so by default a decision stays in
+ * this browser's inbox. A caller can still pass fateEventRelay.acknowledge.
+ */
+const keepAcknowledgementLocal = async (): Promise<boolean> => false;
+
 export function RollInboxView({
   store,
   game,
-  acknowledge = (items) => fateEventRelay.acknowledge(items),
+  acknowledge = keepAcknowledgementLocal,
   connected = relaySync.enabled,
 }: RollInboxViewProps) {
   const [, refresh] = useState(0);
@@ -164,42 +209,6 @@ export function RollInboxView({
       target === originalTarget ? 'CONFIRMED_UNCHANGED' : 'CORRECTED',
     );
   };
-
-  const sourceLabel = (classification: EventClassification, row: RollInboxRow) =>
-    classification.state === 'READY'
-      ? classification.intent.source
-      : row.event.eventType.replaceAll('_', ' ');
-
-  const RowFrame = ({
-    row,
-    classification,
-    children,
-    tone,
-  }: {
-    row: RollInboxRow;
-    classification: EventClassification;
-    children: React.ReactNode;
-    tone: string;
-  }) => (
-    <div className={`rounded-lg border px-3 py-2.5 ${tone}`}>
-      <div className="flex items-start gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">
-              {sourceLabel(classification, row)}
-            </span>
-            <span className="truncate text-sm font-semibold text-gray-100">
-              {row.event.canonicalLabel ?? 'Needs identification'}
-            </span>
-            <span className="ml-auto shrink-0 text-[10px] text-gray-600">
-              {timeLabel(row.event.occurredAt)}
-            </span>
-          </div>
-          {children}
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <section className="rounded-xl border border-white/10 bg-black/25 p-3 shadow-lg">

@@ -76,7 +76,7 @@ export const CommandPalette: React.FC = () => {
       { id: 'open-sync', title: 'Sync Code', subtitle: 'Back up / move your run', group: 'Account', icon: RefreshCw, keywords: 'sync code backup export import transfer', run: go('open:sync') },
       { id: 'open-runelite-guide', title: 'RuneLite Plugin Guide', subtitle: 'Install, connect, configure and troubleshoot RuneLite', group: 'Account', icon: BookOpen, keywords: 'runelite plugin connect guardian warnings rendering', run: go('open:runelite-guide') },
       { id: 'open-ref', title: 'Reference / Codex', subtitle: 'Rules & equipment tiers', group: 'Account', icon: BookOpen, keywords: 'reference codex rules help tiers how', run: go('open:reference') },
-      { id: 'open-mode', title: 'Game Mode', subtitle: 'Vanilla, Hardcore, Custom…', group: 'Account', icon: Settings2, keywords: 'game mode ruleset difficulty hardcore custom', run: go('open:gamemode') },
+      { id: 'open-mode', title: 'Game Mode', subtitle: 'Vanilla or Chunked, plus run seed', group: 'Account', icon: Settings2, keywords: 'game mode ruleset vanilla chunked seed', run: go('open:gamemode') },
       { id: 'open-gallery', title: '3D Model Gallery', subtitle: 'Review every boss 3D model', group: 'Account', icon: Film, keywords: '3d model gallery review bosses preview', run: go('open:gallery') },
       { id: 'open-oracle', title: 'Search all content…', subtitle: 'Find any unlockable via the Oracle', group: 'Navigate', icon: Search, keywords: 'oracle search content items find anything lookup', run: go('open:oracle') },
       // Actions

@@ -15,6 +15,7 @@ import type {
 import type { QuestGuideArticle } from '../../data/questGuideArticles';
 import type { QuestStrategyDefinition } from './model';
 import { guideTravelFor, type GuideTravelAccount, type GuideTravelLeg } from './travel';
+import { closeProvenActions } from './proofClosure';
 
 export type RuneProofCoachActionState =
   | 'COMPLETED'
@@ -118,24 +119,14 @@ const completeActions = (
   ordered: readonly StrategyAction[],
   input: RuneProofCoachInput,
 ): ReadonlySet<string> => {
-  const actionById = new Map(ordered.map(action => [action.id, action]));
-  const completed = new Set(ordered
+  const proven = new Set(ordered
     .filter(action => actionIsDirectlyProven(action, input))
     .map(action => action.id));
-
-  const closeDependencies = (actionId: string): void => {
-    const action = actionById.get(actionId);
-    if (!action) return;
-
-    action.dependsOn.forEach((dependencyId) => {
-      if (completed.has(dependencyId)) return;
-      completed.add(dependencyId);
-      closeDependencies(dependencyId);
-    });
-  };
-
-  [...completed].forEach(closeDependencies);
-  return completed;
+  return closeProvenActions(ordered, proven, action => (
+    action.coach.completion.kind === 'ITEM_CONFIRMED'
+    && !input.confirmedActionIds.has(action.id)
+    && !input.completedQuestIds.has(input.strategy.questId)
+  ));
 };
 
 const previousCompletedOrigin = (
@@ -419,7 +410,8 @@ const alternativeSourcesFor = (
   const presented = presentQuestAnalysis(analysis as Parameters<typeof presentQuestAnalysis>[0]);
   const routesByItemKey = new Map<string, {
     readonly routeIds: Set<string>;
-    readonly routes: ItemRoute[];
+    readonly usableRoutes: ItemRoute[];
+    readonly chunkLockedRoutes: ItemRoute[];
     readonly presentedRoutesById: Map<string, PresentedRoute>;
   }>();
 
@@ -434,7 +426,8 @@ const alternativeSourcesFor = (
     });
     const group = routesByItemKey.get(itemKey) ?? {
       routeIds: new Set<string>(),
-      routes: [],
+      usableRoutes: [],
+      chunkLockedRoutes: [],
       presentedRoutesById: new Map<string, PresentedRoute>(),
     };
     // Presenter route IDs are stable identities, so they safely deduplicate merged evidence.
@@ -445,7 +438,7 @@ const alternativeSourcesFor = (
         const presentedRoute = presentedRoutesById.get(route.id);
         if (!presentedRoute) return;
         group.routeIds.add(route.id);
-        group.routes.push(route);
+        (presentedRoute.requiresChunkUnlock ? group.chunkLockedRoutes : group.usableRoutes).push(route);
         group.presentedRoutesById.set(route.id, presentedRoute);
       });
     routesByItemKey.set(itemKey, group);
@@ -453,7 +446,12 @@ const alternativeSourcesFor = (
 
   return eligibleItems.flatMap(({ key, name }) => {
     const group = routesByItemKey.get(key);
-    const rankedRoutes = group && rankFallbackRoutes(group.routes, connectGraph, { origin })
+    // The fallback rank has no chunk-access term, so rank the groups apart, as
+    // the presenter does: a source behind a locked chunk never outranks a usable one.
+    const rankedRoutes = group && [
+      ...rankFallbackRoutes(group.usableRoutes, connectGraph, { origin }),
+      ...rankFallbackRoutes(group.chunkLockedRoutes, connectGraph, { origin }),
+    ]
       .map(route => group.presentedRoutesById.get(route.id))
       .filter((route): route is PresentedRoute => route !== undefined);
     const routes = rankedRoutes && coalesceAlternativeRoutes(rankedRoutes);

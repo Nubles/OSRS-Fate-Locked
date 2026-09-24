@@ -147,7 +147,7 @@ const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ on
 
   // --- Actions ---
   const generateTextSummary = () => {
-    return `**Fate-Locked Ironman** - ${rank.title}
+    return `**Fate Locked Ironman** - ${rank.title}
 Progression: ${progressPercent}% | Total Level: ${totalLevel}
 Keys: ${gameState.keys} | Omni: ${gameState.specialKeys} | Chaos: ${gameState.chaosKeys}
 ${isChunked ? 'Chunks' : 'Regions'}: ${totalRegions} Unlocked

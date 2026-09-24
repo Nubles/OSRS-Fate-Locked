@@ -1,4 +1,5 @@
 import type { QuestStrategyDefinition } from './model';
+import { closeProvenActions } from './proofClosure';
 
 export type RuneProofObjectiveReadiness = 'READY' | 'CONFIRM' | 'BLOCKED';
 
@@ -98,8 +99,7 @@ export function questStrategyProgress(
   completedQuestIds: ReadonlySet<string>,
 ): Readonly<{ completed: number; total: number }> {
   const ordered = orderedActions(strategy);
-  const actionById = new Map(ordered.map(action => [action.id, action]));
-  const completed = new Set(ordered
+  const proven = new Set(ordered
     .filter(action => isDirectlyConfirmed(
       action,
       strategy,
@@ -108,18 +108,10 @@ export function questStrategyProgress(
       completedQuestIds,
     ))
     .map(action => action.id));
-
-  const closeDependencies = (actionId: string): void => {
-    const action = actionById.get(actionId);
-    if (!action) return;
-
-    action.dependsOn.forEach((dependencyId) => {
-      if (completed.has(dependencyId)) return;
-      completed.add(dependencyId);
-      closeDependencies(dependencyId);
-    });
-  };
-
-  [...completed].forEach(closeDependencies);
+  const completed = closeProvenActions(ordered, proven, action => (
+    action.coach.completion.kind === 'ITEM_CONFIRMED'
+    && !confirmedActionIds.has(action.id)
+    && !completedQuestIds.has(strategy.questId)
+  ));
   return { completed: completed.size, total: ordered.length };
 }

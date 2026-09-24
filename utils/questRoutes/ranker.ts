@@ -103,7 +103,7 @@ export const travelCostForRoute = (
 ): RouteTravelCost => travelCostForChunksWithNeighbours(routeChunks(route), graphNeighbours(graph));
 
 export type RouteRankTuple = readonly [
-  number, number, number, number, number, number, number, number, string,
+  number, number, number, number, number, number, number, number, number, string,
 ];
 
 export const routeRankTuple = (route: ItemRoute): RouteRankTuple => [
@@ -119,6 +119,8 @@ export const routeRankTuple = (route: ItemRoute): RouteRankTuple => [
   route.skillLevelCost,
   route.travelCost,
   route.probability == null ? 1 : -route.probability,
+  // A surfaced interior variant never wins a tie against an existing route.
+  route.accessVariantCost ?? 0,
   route.id,
 ] as const;
 
@@ -167,7 +169,7 @@ export interface RouteRankContext {
 }
 
 type FallbackRouteRankTuple = readonly [
-  number, number, number, number, number, number, number, number, number, string,
+  number, number, number, number, number, number, number, number, number, number, string,
 ];
 
 const firstRouteChunkForFallback = (
@@ -191,6 +193,7 @@ const fallbackRouteRankTuple = (
   route.skillLevelCost,
   route.sourceKind === 'DROP' ? 1 : 0,
   route.probability == null ? 1 : -route.probability,
+  route.accessVariantCost ?? 0,
   route.id,
 ] as const;
 

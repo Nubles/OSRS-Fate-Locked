@@ -1,3 +1,4 @@
+import type { ProfileMetadata } from '../types';
 import {
   parseProfileMetadata,
   PROFILE_METADATA_BACKUP_KEY,
@@ -10,7 +11,16 @@ export const WRITER_LEASE_RENEW_MS = 10_000;
 export const WRITER_LEASE_ARBITRATION_MS = 50;
 
 export type SaveOwnershipStatus = 'checking' | 'owner' | 'blocked';
-export type SaveOwnershipBlockReason = 'foreign_owner' | 'storage_unavailable' | null;
+/**
+ * `newer_save` means this tab holds the lease again but another tab saved
+ * newer progress while it was blocked, and this tab has unsaved changes.
+ */
+export type SaveOwnershipBlockReason = 'foreign_owner' | 'newer_save' | 'storage_unavailable' | null;
+
+/** Block reasons that the save-conflict banner resolves, not a storage failure. */
+export const isOwnershipConflictBlock = (reason: SaveOwnershipBlockReason): boolean => (
+  reason === 'foreign_owner' || reason === 'newer_save'
+);
 export type SaveWriteAuthorizationReason = 'ownership_conflict' | 'storage_unavailable';
 export type SaveWriteAuthorization =
   | { ok: true }
@@ -109,19 +119,27 @@ const profileMetadataWriteProtection = (
   }
 
   const deletionIds = new Set<string>();
+  let newest: ProfileMetadata | null = null;
   for (const copy of copies) {
     if (copy.status !== 'current' && copy.status !== 'legacy') continue;
     const deletionId = copy.metadata.deletions.find(
       intent => intent.profileId === profileId,
     )?.deletionId;
     if (deletionId !== undefined) deletionIds.add(deletionId);
+    if (newest === null || copy.metadata.revision > newest.revision) newest = copy.metadata;
   }
   if (deletionIds.size > 1) return { ok: true, status: 'read_only' };
-  return {
-    ok: true,
-    status: 'writable',
-    deletionId: deletionIds.values().next().value ?? null,
-  };
+  const deletionId = deletionIds.values().next().value ?? null;
+  // Once a deletion finishes, its intent is gone too. A tab that missed it
+  // (for example one restored from the back-forward cache) must not write
+  // the profile back, so a profile the newest metadata no longer lists is
+  // read-only.
+  if (
+    deletionId === null
+    && newest !== null
+    && !newest.profiles.some(profile => profile.id === profileId)
+  ) return { ok: true, status: 'read_only' };
+  return { ok: true, status: 'writable', deletionId };
 };
 
 const writeWriterLease = (

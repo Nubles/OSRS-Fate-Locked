@@ -77,6 +77,46 @@ describe('AutoRollPanel backup coordination', () => {
   });
 });
 
+describe('AutoRollPanel unmount', () => {
+  it('stops a running skill sync when the panel unmounts', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'] });
+    try {
+      game.levelUpSkill.mockClear();
+      game.createBackup.mockResolvedValueOnce({ stored: true });
+      vi.stubGlobal('fetch', vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          displayName: 'Alex',
+          type: 'ironman',
+          latestSnapshot: { data: { skills: { attack: { level: 60 } } } },
+        }),
+      })));
+
+      const { unmount } = render(<AutoRollPanel />);
+      fireEvent.change(screen.getByPlaceholderText('OSRS username…'), { target: { value: 'Alex' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Fetch' }));
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /Auto-roll 1 skill/ }));
+        await Promise.resolve();
+      });
+      act(() => { vi.advanceTimersByTime(70); });
+      const levelsBeforeUnmount = game.levelUpSkill.mock.calls.length;
+      expect(levelsBeforeUnmount).toBeGreaterThan(0);
+      expect(levelsBeforeUnmount).toBeLessThan(59);
+
+      unmount();
+      vi.advanceTimersByTime(10_000);
+
+      expect(game.levelUpSkill).toHaveBeenCalledTimes(levelsBeforeUnmount);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
 
 describe('Auto-Roll current hiscores', () => {
   it('refreshes tracked users with POST and includes Sailing', async () => {

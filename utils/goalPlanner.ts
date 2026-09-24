@@ -21,8 +21,11 @@ import { TableType } from '../types';
 import {
   evaluateQuestEligibility, getDiaryStatus,
   evaluateDiaryTaskEligibility, questRequirementOptionLabel, DirectEligibilityBlocker,
+  locationUnlockTargets, type LocationUnlockTargets,
 } from './journalStatus';
-import { isAreaReachable } from './reachability';
+import { isAreaReachable, namedAreaChunks } from './reachability';
+import { placeOf } from './chunkLocations';
+import { chunkKey } from './chunkAdjacency';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 
 export type GoalKind = 'quest' | 'diary' | 'region';
@@ -137,22 +140,72 @@ function currentQuestPoints(unlocks: any): number {
   );
 }
 
-function areaPlanStep(name: string): PlanStep {
+/**
+ * A skill's usable level ceiling at its current tier (0 while locked). A
+ * Skills key only helps a requirement this ceiling holds below the level
+ * needed; otherwise only XP is missing.
+ */
+function skillCap(unlocks: any, skill: string): number {
+  return Math.min(99, (unlocks.skills?.[skill] ?? 0) * 10);
+}
+
+function areaPlanStep(name: string, gameModeId?: string): PlanStep {
   const canonical = canonicalAreaName(name);
+  // Chunked has no Areas table: any one of the area's chunks reaches it.
+  if (gameModeId === 'chunked') {
+    return {
+      kind: 'region', id: canonical, label: displayAreaName(name), unlockTable: TableType.CHUNKS,
+      relatedIds: namedAreaChunks(name).map(chunkKey), detail: 'Unlock any chunk in this area', done: false,
+    };
+  }
   return { kind: 'region', id: canonical, label: displayAreaName(name), unlockTable: TableType.REGIONS, done: false };
 }
 
-function requirementOptionPlanSteps(option: any): PlanStep[] {
+/** An exact chunk to roll on the Chunks table, as diary chunk routes plan it. */
+function chunkPlanStep({ cx, cy }: { cx: number; cy: number }): PlanStep {
+  return { kind: 'region', id: `${cx},${cy}`, label: `Chunk ${cx}, ${cy}`, unlockTable: TableType.CHUNKS, done: false };
+}
+
+/**
+ * Steps that unlock a quest location: its areas, or (Chunked) one of its
+ * chunks. Its label is a place name, not an area any table can grant.
+ */
+function locationPlanSteps(targets: LocationUnlockTargets, gameModeId?: string): PlanStep[] {
+  if (targets.chunks.length === 0) return targets.areas.map(area => areaPlanStep(area, gameModeId));
+  const keys = targets.chunks.map(({ cx, cy }) => `${cx},${cy}`);
+  return [{
+    ...chunkPlanStep(targets.chunks[0]),
+    label: `Chunk ${keys.map(key => key.replace(',', ', ')).join(' or ')}`,
+    relatedIds: keys,
+  }];
+}
+
+/** A single skill level to reach, with the Skills key it needs if its tier caps it below. */
+function skillLevelPlanStep(skill: string, required: number, unlocks: any): PlanStep {
+  return {
+    kind: 'skill', id: skill, label: skill, relatedIds: [skill],
+    unlockTable: skillCap(unlocks, skill) < required ? TableType.SKILLS : undefined,
+    detail: 'Lv ' + required + ' (have ' + effectiveSkillLevel(unlocks, skill) + ')', done: false,
+  };
+}
+
+function requirementOptionPlanSteps(option: any, unlocks: any, gameModeId?: string): PlanStep[] {
   return [
-    ...(option.regions ?? []).map(areaPlanStep),
+    ...(option.regions ?? []).map((region: string) => areaPlanStep(region, gameModeId)),
     ...(option.guilds ?? []).map((label: string): PlanStep => ({
       kind: 'region', id: label, label, unlockTable: TableType.GUILDS, done: false,
     })),
-    ...(option.locations ?? []).map((location: any) => areaPlanStep(location.label)),
+    ...(option.locations ?? []).flatMap((location: any) => (
+      locationPlanSteps(locationUnlockTargets(location, unlocks, gameModeId), gameModeId)
+    )),
+    // A route's own skill level, such as a guild's entry requirement.
+    ...Object.entries(option.skills ?? {}).map(([skill, level]) => (
+      skillLevelPlanStep(skill, level as number, unlocks)
+    )),
   ];
 }
 
-function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): PlanStep {
+function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any, gameModeId?: string): PlanStep {
   if (blocker.kind === 'arcana') {
     return { kind: 'arcana', id: blocker.label, label: blocker.label, unlockTable: TableType.ARCANA, detail: 'Unlock via Arcana', done: false };
   }
@@ -164,7 +217,7 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
   }
   if (blocker.kind === 'region') return blocker.chunk
     ? { kind: 'region', id: `${blocker.chunk.cx},${blocker.chunk.cy}`, label: blocker.label, unlockTable: TableType.CHUNKS, done: false }
-    : areaPlanStep(blocker.label);
+    : areaPlanStep(blocker.label, gameModeId);
   if (blocker.kind === 'quest') {
     return { kind: 'quest', id: blocker.label, label: blocker.label, unlockTable: TableType.QUESTS, done: false };
   }
@@ -189,11 +242,12 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
       skill, effectiveSkillLevel(unlocks, skill),
     ] as const);
     const have = levels.reduce((sum, [, level]) => sum + level, 0);
+    const capTotal = requirement.skills.reduce((sum, skill) => sum + skillCap(unlocks, skill), 0);
     return {
       kind: 'skill', id: 'combined:' + requirement.skills.join('+'),
       label: requirement.skills.join(' + ') + ' combined',
       relatedIds: requirement.skills,
-      unlockTable: TableType.SKILLS,
+      unlockTable: capTotal < requirement.level ? TableType.SKILLS : undefined,
       detail: 'Level ' + requirement.level + ' combined (have ' + have + ': '
         + levels.map(([skill, level]) => skill + ' ' + level).join(' + ') + ')',
       done: false,
@@ -204,7 +258,7 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
       kind: 'skill', id: 'any-of:' + requirement.skills.join('|'),
       label: requirement.skills.join(' or '),
       relatedIds: requirement.skills,
-      unlockTable: TableType.SKILLS,
+      unlockTable: requirement.skills.every(skill => skillCap(unlocks, skill) < requirement.level) ? TableType.SKILLS : undefined,
       detail: 'Lv ' + requirement.level + ' in either (have '
         + requirement.skills.map(skill => (
           skill + ' ' + effectiveSkillLevel(unlocks, skill)
@@ -226,10 +280,13 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
   const required = requirement?.type === 'single'
     ? requirement.level
     : Number(match?.[2] ?? 1);
-  return {
-    kind: 'skill', id: skill, label: skill, relatedIds: [skill], unlockTable: TableType.SKILLS,
-    detail: 'Lv ' + required + ' (have ' + effectiveSkillLevel(unlocks, skill) + ')', done: false,
-  };
+  return skillLevelPlanStep(skill, required, unlocks);
+}
+
+/** A Quest Point requirement and the quest it gates (null: a diary task's own gate). */
+interface QpGate {
+  required: number;
+  questId: string | null;
 }
 
 /**
@@ -241,13 +298,14 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
  */
 function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: string) {
   const order: string[] = []; // incomplete quests, dependency order
+  const prereqs = new Map<string, string[]>(); // incomplete quest → its unmet quest prereqs
+  const qpGates: QpGate[] = [];
   const visited = new Set<string>();
   const regions = new Set<string>();
   const alternatives = new Map<string, AlternativePlanStep>();
   const skills: Record<string, number> = {};
   const equipment = new Map<string, { tier: number; labels: Set<string> }>();
   const manualSteps = new Map<string, PlanStep>();
-  let qpRequired = 0;
 
   const visit = (qid: string) => {
     if (visited.has(qid)) return;
@@ -260,7 +318,7 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
 
     const questPointRequirement = q.skills['Quest Points'];
     if (questPointRequirement !== undefined) {
-      qpRequired = Math.max(qpRequired, questPointRequirement);
+      qpGates.push({ required: questPointRequirement, questId: qid });
     }
 
 
@@ -272,6 +330,9 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
     for (const blocker of eligibility.blockers) {
       if (blocker.kind === 'quest' && QUEST_DATA[blocker.label]) visit(blocker.label);
     }
+    prereqs.set(qid, eligibility.blockers.flatMap(blocker => (
+      blocker.kind === 'quest' && QUEST_DATA[blocker.label] ? [blocker.label] : []
+    )));
 
     const alternativeLabel = q.oneOf
       ?.map(questRequirementOptionLabel)
@@ -293,11 +354,23 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
             kind: 'alternative', id: 'alternative:' + qid + ':' + label, label, done: false,
             routes: (q.oneOf ?? []).map(option => ({
               label: questRequirementOptionLabel(option),
-              blockers: requirementOptionPlanSteps(option),
+              blockers: requirementOptionPlanSteps(option, unlocks, gameModeId),
+            })),
+          });
+        } else if (blocker.location?.chunks.length) {
+          // Chunked: the location is any one of its exact chunks, as diary
+          // locations are planned.
+          const label = 'One of: ' + blocker.label;
+          alternatives.set(label, {
+            kind: 'alternative', id: 'alternative:' + qid + ':' + label, label, done: false,
+            routes: blocker.location.chunks.map(chunk => ({
+              label: `${placeOf(chunk.cx, chunk.cy).label} (${chunk.cx}, ${chunk.cy})`,
+              blockers: [chunkPlanStep(chunk)],
             })),
           });
         } else {
-          regions.add(canonicalAreaName(blocker.label));
+          // A location's label is a place name; plan the areas that unlock it.
+          for (const area of blocker.location?.areas ?? [blocker.label]) regions.add(canonicalAreaName(area));
         }
         continue;
       }
@@ -311,8 +384,8 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
         for (const [skill, level] of Object.entries(q.skills)) {
           if (blocker.label !== skill + ' ' + level
             && !(blocker.requirement?.type === 'single' && blocker.requirement.skill === skill && blocker.requirement.level === level)) continue;
-          if (skill === 'Quest Points') qpRequired = Math.max(qpRequired, level);
-          else skills[skill] = Math.max(skills[skill] ?? 0, level);
+          // Quest Points are recorded as a gate above.
+          if (skill !== 'Quest Points') skills[skill] = Math.max(skills[skill] ?? 0, level);
         }
       }
     }
@@ -321,7 +394,7 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
   };
 
   visit(rootQuestId);
-  return { order, regions, alternatives, manualSteps, skills, equipment, qpRequired };
+  return { order, prereqs, regions, alternatives, manualSteps, skills, equipment, qpGates };
 }
 
 function buildPlanFromRequirements(
@@ -330,7 +403,8 @@ function buildPlanFromRequirements(
   targetLabel: string,
   reqs: {
     order: string[]; regions: Set<string>; alternatives: Map<string, AlternativePlanStep>;
-    manualSteps: Map<string, PlanStep>; skills: Record<string, number>; qpRequired: number;
+    manualSteps: Map<string, PlanStep>; skills: Record<string, number>;
+    prereqs: Map<string, string[]>; qpGates: QpGate[];
     equipment: Map<string, { tier: number; labels: Set<string> }>;
     merchants?: Set<string>;
     mobility?: Set<string>;
@@ -340,10 +414,11 @@ function buildPlanFromRequirements(
   alreadyReachable: boolean,
   alreadyDone: boolean,
   needsConfirmation: boolean,
+  gameModeId?: string,
 ): GoalPlan {
   // Region steps.
   const regionSteps = Array.from(reqs.regions)
-    .map(areaPlanStep).sort((a, b) => a.label.localeCompare(b.label));
+    .map(region => areaPlanStep(region, gameModeId)).sort((a, b) => a.label.localeCompare(b.label));
   const alternativeSteps = [...reqs.alternatives.values()]
     .sort((a, b) => a.label.localeCompare(b.label));
   const manualSteps = [...reqs.manualSteps.values()];
@@ -376,7 +451,7 @@ function buildPlanFromRequirements(
         : effectiveSkillLevel(unlocks, skill);
       const tier = unlocks.skills[skill] ?? 0;
       const unlocked = tier > 0;
-      const methodCap = Math.min(99, tier * 10);
+      const methodCap = skillCap(unlocks, skill);
       const detail = skill === 'Combat level'
         ? `Level ${lvl} (have ${have})`
         : !unlocked
@@ -390,10 +465,10 @@ function buildPlanFromRequirements(
         label: skill,
         detail,
         done,
-        unlockTable: skill === 'Combat level' ? undefined : TableType.SKILLS,
+        unlockTable: skill !== 'Combat level' && methodCap < lvl ? TableType.SKILLS : undefined,
       };
     })
-    .sort((a, b) => Number(a.done) - Number(b.done) || b.id.localeCompare(a.id));
+    .sort((a, b) => Number(a.done) - Number(b.done) || a.id.localeCompare(b.id));
 
   // Quest steps (already in dependency order from the walk).
   const questSteps: PlanStep[] = reqs.order
@@ -412,28 +487,43 @@ function buildPlanFromRequirements(
       };
     });
 
-  // Quest-point shortfall: does completing the plan's quests yield enough QP?
+  // Quest-point shortfall: can the plan's quests earn each unmet gate's
+  // points in time? A gated quest's own points, and those of quests that need
+  // it first, only arrive after the gate — they can't count toward it. The
+  // step reports the gate with the least headroom.
   let qpStep: PlanStep | undefined;
-  if (reqs.qpRequired > 0) {
-    const haveQP = currentQuestPoints(unlocks);
-    const chainQP = questSteps.reduce(
-      (acc, s) => acc + questPointsFor(s.id),
-      0,
-    );
-    const projected = haveQP + chainQP;
-    const done = haveQP >= reqs.qpRequired;
-    if (!done) {
-      qpStep = {
-        kind: 'qp',
-        id: 'Quest Points',
-        label: 'Quest Points',
-        detail:
-          projected >= reqs.qpRequired
-            ? `${reqs.qpRequired} QP — covered by this plan (${projected})`
-            : `${reqs.qpRequired} QP — plan yields ${projected}, need more quests`,
-        done: false,
-      };
-    }
+  const haveQP = currentQuestPoints(unlocks);
+  const unmetGates = reqs.qpGates.filter(gate => gate.required > haveQP);
+  if (unmetGates.length > 0) {
+    const projectedFor = (gate: QpGate): number => {
+      const tooLate = new Set<string>();
+      if (gate.questId !== null) {
+        tooLate.add(gate.questId);
+        // Dependency order puts every prerequisite before the quests needing it.
+        for (const qid of reqs.order) {
+          if ((reqs.prereqs.get(qid) ?? []).some(prereq => tooLate.has(prereq))) tooLate.add(qid);
+        }
+      }
+      return questSteps.reduce(
+        (acc, s) => acc + (tooLate.has(s.id) ? 0 : questPointsFor(s.id)),
+        haveQP,
+      );
+    };
+    const tightest = unmetGates
+      .map(gate => ({ required: gate.required, projected: projectedFor(gate) }))
+      .reduce((worst, next) => (
+        next.projected - next.required < worst.projected - worst.required ? next : worst
+      ));
+    qpStep = {
+      kind: 'qp',
+      id: 'Quest Points',
+      label: 'Quest Points',
+      detail:
+        tightest.projected >= tightest.required
+          ? `${tightest.required} QP — covered by this plan (${tightest.projected})`
+          : `${tightest.required} QP — plan yields ${tightest.projected}, need more quests`,
+      done: false,
+    };
   }
 
   const steps: Array<PlanStep | AlternativePlanStep> = [
@@ -494,6 +584,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       eligibility.status === 'COMPLETED' || eligibility.eligible,
       eligibility.status === 'COMPLETED',
       eligibility.confirmable && !eligibility.eligible && eligibility.manualChecks.length > 0,
+      gameModeId,
     );
   }
 
@@ -510,6 +601,8 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
 
     const merged = {
       order: [] as string[],
+      prereqs: new Map<string, string[]>(),
+      qpGates: [] as QpGate[],
       regions: new Set<string>(),
       alternatives: new Map<string, AlternativePlanStep>(),
       manualSteps: new Map<string, PlanStep>(),
@@ -518,7 +611,6 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       merchants: new Set<string>(),
       mobility: new Set<string>(),
       arcana: new Set<string>(),
-      qpRequired: 0,
     };
     if (status !== 'COMPLETED') {
       const seen = new Set<string>();
@@ -537,7 +629,8 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
             labels: new Set([...(previous?.labels ?? []), ...requirement.labels]),
           });
         }
-        merged.qpRequired = Math.max(merged.qpRequired, sub.qpRequired);
+        merged.qpGates.push(...sub.qpGates);
+        for (const [questId, questPrereqs] of sub.prereqs) merged.prereqs.set(questId, questPrereqs);
         for (const questId of sub.order) {
           if (!seen.has(questId)) {
             seen.add(questId);
@@ -549,7 +642,8 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       for (const [task, eligibility] of taskResults) {
         for (const qid of task.quests ?? []) mergeQuest(qid);
         if (task.questPoints !== undefined) {
-          merged.qpRequired = Math.max(merged.qpRequired, task.questPoints);
+          // The task itself is gated, so every quest in the plan can count.
+          merged.qpGates.push({ required: task.questPoints, questId: null });
         }
         if (task.allQuests) {
           for (const qid of QUEST_CAPE_QUEST_IDS) mergeQuest(qid);
@@ -578,7 +672,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
               routes: blocker.routes.map(route => ({
                 label: route.label,
                 blockers: route.blockers.map(routeBlocker => (
-                  planStepForBlocker(routeBlocker, unlocks)
+                  planStepForBlocker(routeBlocker, unlocks, gameModeId)
                 )),
               })),
             });
@@ -609,13 +703,14 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       status === 'COMPLETED' || taskResults.every(([, eligibility]) => eligibility.eligible),
       status === 'COMPLETED',
       status !== 'COMPLETED' && taskResults.every(([, eligibility]) => eligibility.machineEligible) && taskResults.some(([, eligibility]) => eligibility.manualChecks.length > 0),
+      gameModeId,
     );
   }
 
   // region
   const canonical = canonicalAreaName(id);
   const isUnlocked = isAreaReachable(canonical, unlocks, gameModeId);
-  const regionStep: PlanStep = { ...areaPlanStep(canonical), done: isUnlocked };
+  const regionStep: PlanStep = { ...areaPlanStep(canonical, gameModeId), done: isUnlocked };
   return {
     targetKind: 'region',
     targetId: canonical,

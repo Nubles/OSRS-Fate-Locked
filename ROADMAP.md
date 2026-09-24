@@ -223,9 +223,9 @@ not visual acceptance, and visual acceptance is not permission to publish.
    render cyan (`HOT_FRONTIER_FILL` in RegionMap). The plugin's world map
    also tints the Chunked frontier amber with a "rollable next" tooltip.
 2. **Frontier Advisor tuning.** Current weights: bank 3, shops ≤3, quest
-   steps ≤3, monsters ≤1, flat +3 per new-area foothold (see
-   `frontierAdvisor.ts`, all in one place). Tune with real play feedback;
-   the unit tests pin the *rules*, not the constants.
+   steps ≤3, monsters ≤1, all quartered so content stays below the flat +3
+   per new-area foothold (see `frontierAdvisor.ts`, all in one place). Tune
+   with real play feedback; the unit tests pin the *rules*, not the constants.
 3. **Diary/CA suggestion deep links.** Plugin diary suggestions carry
    "Ardougne Elite"-style labels; the Journal's diary search may not match
    that exact string. Check `suggestionNav()` query behavior against the
@@ -336,10 +336,13 @@ single authoritative command order, generated-data review, and GitHub handoff.
 The required GitHub check is `CI / quality`; enabling it in branch protection
 is a manual repository-maintainer setting after the workflow first appears.
 
-Build-size watch: if the eager `dist/assets/index-*.js` grows past about
-130 kB gzip, something that should be lazy may have been imported eagerly.
-Inspect the built file for content markers rather than relying only on the
-import graph.
+Build-size watch: `npm run build` fails when the eager entry chunk (the
+`dist/assets/index-*.js` that `index.html` loads) grows past its gzip budget
+in `scripts/check-entry-budget.mjs` (225 kB; about 217 kB after the 24 Sept
+2026 review moved on-demand screens and the release notes out of it). An
+overrun usually means something that should load through `lazyWithRetry` was
+imported eagerly. Inspect the built file for content markers rather than
+relying only on the import graph, and raise the budget only on purpose.
 
 
 ## Equipment catalogue corrections — 23 September 2026 (local Vanilla preview)

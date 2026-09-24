@@ -81,17 +81,22 @@ export function getUnlockRevealTransition(
 
 /**
  * Watches `unlocks` and fires a reveal whenever a meaningful change happens
- * (quest complete, region / boss unlock). Returns [revealData, dismiss].
+ * (quest complete, region / boss unlock). Returns [revealData, dismiss,
+ * revealId].
  *
  * Only triggers on quests / regions / bosses — diary task ticks and CA
  * task ticks do not produce a reveal.
+ *
+ * Every reveal gets a new id. Key the panel by it so a reveal that replaces
+ * one still on screen remounts with its own slide-in and auto-dismiss timer.
  */
 export function useUnlockReveal(
   unlocks: UnlockState,
   gameModeId?: string,
-): [UnlockRevealData | null, () => void] {
+): [UnlockRevealData | null, () => void, number] {
   const prevRef = useRef<UnlockState | null>(null);
-  const [reveal, setReveal] = useState<UnlockRevealData | null>(null);
+  const idRef = useRef(0);
+  const [reveal, setReveal] = useState<{ id: number; data: UnlockRevealData } | null>(null);
 
   useEffect(() => {
     const previous = prevRef.current;
@@ -101,9 +106,12 @@ export function useUnlockReveal(
     if (!previous) return;
 
     const nextReveal = getUnlockRevealTransition(previous, unlocks, gameModeId);
-    if (nextReveal) setReveal(nextReveal);
+    if (nextReveal) setReveal({ id: ++idRef.current, data: nextReveal });
   }, [unlocks, gameModeId]);
 
-  const dismiss = () => setReveal(null);
-  return [reveal, dismiss];
+  const revealId = reveal?.id ?? 0;
+  // Only dismiss the reveal this render showed, so a replaced panel's
+  // delayed slide-out can't close the reveal that replaced it.
+  const dismiss = () => setReveal(current => (current?.id === revealId ? null : current));
+  return [reveal?.data ?? null, dismiss, revealId];
 }

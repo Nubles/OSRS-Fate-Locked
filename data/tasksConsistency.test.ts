@@ -291,6 +291,11 @@ describe('Quest data integrity', () => {
             bad.push(questId + ' -> incomplete location "' + location.id + '"');
           }
         }
+        for (const [skill, level] of Object.entries(option.skills ?? {})) {
+          if (!SKILLS_LIST.includes(skill) || !Number.isInteger(level) || level < 1 || level > 99) {
+            bad.push(questId + ' -> skill "' + skill + ' ' + level + '"');
+          }
+        }
       }
     }
     expect(bad, 'quests with invalid alternative access references').toEqual([]);

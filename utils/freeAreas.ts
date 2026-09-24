@@ -14,17 +14,43 @@
  * Island remains completed onboarding outside progression in every mode.
  */
 
-import { MISTHALIN_AREAS } from '../constants';
+import { MISTHALIN_AREAS, REGIONS_LIST } from '../constants';
+import { resolveModeRules, type GameModeRules } from '../config/gameModes';
 
 const FULL_MISTHALIN = new Set<string>(['Misthalin', ...MISTHALIN_AREAS]);
 const LUMBRIDGE_ONLY = new Set<string>(['Lumbridge']);
 const NONE = new Set<string>();
 
+const freeSetFor = (startArea?: string): Set<string> =>
+  startArea === 'lumbridge' ? LUMBRIDGE_ONLY : startArea === 'none' ? NONE : FULL_MISTHALIN;
+
 let current: Set<string> = FULL_MISTHALIN;
 
 /** Set the free baseline from a mode's startArea ('lumbridge' | 'misthalin' | 'none'). */
 export const setStartArea = (startArea?: string): void => {
-  current = startArea === 'lumbridge' ? LUMBRIDGE_ONLY : startArea === 'none' ? NONE : FULL_MISTHALIN;
+  current = freeSetFor(startArea);
+};
+
+const UNLOCKABLE_AREAS_BY_START = new Map<string | undefined, string[]>();
+
+/**
+ * Every named area a run unlocks through the Areas table: the areas outside
+ * Misthalin, plus each Misthalin area its mode does not free (legacy Xtreme
+ * frees only Lumbridge). The roll pool, its availability check and the
+ * completion total all read this list. Chunked runs unlock chunks instead,
+ * so theirs stays the areas outside Misthalin.
+ */
+export const unlockableAreas = (gameModeId?: string, customMode?: GameModeRules): string[] => {
+  if (gameModeId === 'chunked') return REGIONS_LIST;
+  const startArea = resolveModeRules(gameModeId, customMode).startArea;
+  let areas = UNLOCKABLE_AREAS_BY_START.get(startArea);
+  if (!areas) {
+    const free = freeSetFor(startArea);
+    const locked = MISTHALIN_AREAS.filter(area => !free.has(area));
+    areas = locked.length > 0 ? [...locked, ...REGIONS_LIST] : REGIONS_LIST;
+    UNLOCKABLE_AREAS_BY_START.set(startArea, areas);
+  }
+  return areas;
 };
 
 /** Is this region / sub-area free from the start of the run? */

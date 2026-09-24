@@ -579,7 +579,7 @@ describe('buildRuneProofCoachModel', () => {
     });
   });
 
-  it('uses ball-of-wool confirmation only to complete Sheep Shearer spin-wool', () => {
+  it('uses ball-of-wool confirmation to complete only the steps that make the wool', () => {
     const strategy = sheepStrategy();
     const model = buildRuneProofCoachModel({
       strategy,
@@ -589,14 +589,19 @@ describe('buildRuneProofCoachModel', () => {
       completedQuestIds: new Set(),
     });
 
-    expect(model.progress).toEqual({ completed: 3, total: 5 });
+    expect(model.progress).toEqual({ completed: 2, total: 5 });
     expect(model.actions.find(action => action.id === 'sheep-shearer:spin-wool')?.state)
       .toBe('COMPLETED');
+    expect(model.actions.find(action => action.id === 'sheep-shearer:shear-wool')?.state)
+      .toBe('COMPLETED');
+    // Owning the wool does not start the quest.
+    expect(model.actions.find(action => action.id === 'sheep-shearer:start-with-fred')?.state)
+      .not.toBe('COMPLETED');
     expect(model.actions.find(action => action.id === 'sheep-shearer:return-to-fred')?.state)
       .not.toBe('COMPLETED');
     expect(model.actions.find(action => action.id === 'sheep-shearer:complete')?.state)
       .not.toBe('COMPLETED');
-    expect(model.nextAction?.id).toBe('sheep-shearer:return-to-fred');
+    expect(model.nextAction?.id).toBe('sheep-shearer:start-with-fred');
   });
 
   it('marks an Imp Catcher bead from item evidence without ordering the other beads', () => {
@@ -725,6 +730,34 @@ describe('buildRuneProofCoachModel', () => {
       chunkAccess: [{ chunk: '47,51', status: 'LOCKED' }],
       confirmationAllowed: false,
     });
+  });
+
+  it('lists usable alternative sources before sources that need a chunk unlock', () => {
+    const strategy = impStrategy();
+    const usableImp = routeAt('monster:Imp:48,50:black bead', 'Black bead', 'Imp', 'DROP', '48,50');
+    // Level with the usable Imp on every other rank term, so its route ID used to win the tie.
+    const lockedImp = routeAt('monster:Imp:20,58:black bead', 'Black bead', 'Imp', 'DROP', '20,58');
+    lockedImp.steps[0].requiresChunkUnlock = true;
+    // A deterministic source outranks a drop, but not while its chunk is locked.
+    const lockedSpawn = routeAt('spawn:Black bead:21,57:black bead', 'Black bead', 'Black bead', 'SPAWN', '21,57');
+    lockedSpawn.steps[0].requiresChunkUnlock = true;
+    const analysis = impAnalysisFor(strategy, false, [usableImp]);
+    const model = buildImpCoach({
+      analysis: {
+        ...analysis,
+        items: [{ ...analysis.items[0], missingChunkRoutes: [lockedImp, lockedSpawn] }],
+      },
+    });
+
+    expect(model.alternativeSources[0]?.routes.map(route => ({
+      id: route.id,
+      requiresChunkUnlock: route.requiresChunkUnlock,
+      isBest: route.isBest,
+    }))).toEqual([
+      { id: usableImp.id, requiresChunkUnlock: false, isBest: true },
+      { id: lockedSpawn.id, requiresChunkUnlock: true, isBest: false },
+      { id: lockedImp.id, requiresChunkUnlock: true, isBest: false },
+    ]);
   });
 
   it('keeps incomplete item evidence visible when an alternative replaces the location', () => {
@@ -1176,11 +1209,29 @@ describe('buildRuneProofCoachModel', () => {
     expect(model.nextAction?.instruction).toBe('Pick grain outside Mill Lane Mill.');
   });
 
-  it('closes transitive dependencies when a later confirmed item proves its action complete', () => {
+  it('closes only the steps that prepare a confirmed item', () => {
     const model = buildModel({ confirmedItemKeys: ['pot of flour'] });
+    const completed = model.actions.filter(action => action.state === 'COMPLETED').map(action => action.id);
 
-    expect(model.actions.slice(0, 7).every(action => action.state === 'COMPLETED')).toBe(true);
-    expect(model.nextAction?.id).toBe('cooks-assistant:return-to-cook');
+    expect(completed).toEqual(['cooks-assistant:take-pot', 'cooks-assistant:pick-grain', 'cooks-assistant:make-flour']);
+    expect(model.nextAction?.id).toBe('cooks-assistant:start-quest');
+  });
+
+  it('does not complete the milk steps when the player already has an egg', () => {
+    const model = buildModel({ confirmedItemKeys: ['egg'] });
+    const state = (id: string) => model.actions.find(action => action.id === id)?.state;
+
+    expect(state('cooks-assistant:take-egg')).toBe('COMPLETED');
+    expect(state('cooks-assistant:milk-cow')).not.toBe('COMPLETED');
+    expect(state('cooks-assistant:take-bucket')).not.toBe('COMPLETED');
+    expect(model.progress).toEqual({ completed: 1, total: 9 });
+  });
+
+  it('still closes every earlier step when the player ticks a later step', () => {
+    const model = buildModel({ confirmedActionIds: ['cooks-assistant:take-egg'] });
+
+    expect(model.actions.slice(0, 5).every(action => action.state === 'COMPLETED')).toBe(true);
+    expect(model.nextAction?.id).toBe('cooks-assistant:pick-grain');
   });
 
   it('lets RuneProof confirm the final quest-completed step without canonical quest proof', () => {

@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Search, X, CheckCircle2, Circle, ArrowRight, Route, Lock } from 'lucide-react';
+import { Search, X, CheckCircle2, Circle, ArrowRight, Route, Lock, AlertCircle, RefreshCw, RotateCcw } from 'lucide-react';
 import { Target, MapPin, BookOpen, Award, Compass, Shield } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
 import { useGame } from '../context/GameContext';
@@ -170,6 +170,8 @@ const DEFAULT_RUNEPROOF: RuneProofIntegration = {
 };
 
 const EMPTY_RUNE_PROOF_STRATEGIES: readonly QuestStrategyDefinition[] = Object.freeze([]);
+
+type RuneProofCatalogueStatus = 'LOADING' | 'LOADED' | 'FAILED' | 'RETRYING';
 
 const KIND_META: Record<GoalKind, { icon: React.ReactNode; label: string; color: string }> = {
   quest: { icon: <BookOpen size={13} />, label: 'Quest', color: 'text-blue-300' },
@@ -348,7 +350,7 @@ const AlternativeSection: React.FC<{ steps: AlternativePlanStep[] }> = ({ steps 
                   <span>
                     <span className="text-gray-200">{route.label}</span>
                     {route.blockers.length > 0 && (
-                      <span className="text-gray-600"> ? {route.blockers.map(blocker => (
+                      <span className="text-gray-600"> — {route.blockers.map(blocker => (
                         blocker.label + (blocker.detail ? ' ' + blocker.detail : '')
                       )).join(' + ')}</span>
                     )}
@@ -385,7 +387,6 @@ export const GoalPlannerModal: React.FC<Props> = ({
   const guideProgress = useMemo(() => updateRuneProof
     ? { progress: runeProofProgress, update: updateRuneProof } : undefined,
   [runeProofProgress, updateRuneProof]);
-  const previewChecks = useRuneProofPreviewChecks(runId, undefined, guideProgress);
   const runeProofIntegration = runeProof ?? DEFAULT_RUNEPROOF;
   const runeProofEnabled = runeProofIntegration.availability !== 'OFF';
   const runeProofContentService = runeProofIntegration.contentService;
@@ -395,7 +396,15 @@ export const GoalPlannerModal: React.FC<Props> = ({
   const [runeProofStrategies, setRuneProofStrategies] = useState<readonly QuestStrategyDefinition[]>(
     EMPTY_RUNE_PROOF_STRATEGIES,
   );
-  const [runeProofCatalogueLoaded, setRuneProofCatalogueLoaded] = useState(false);
+  // Preview guide packs carry their own item lists; item checks must accept them too.
+  const guideRequirementsFor = React.useCallback((questId: string) => (
+    runeProofStrategies.find(strategy => strategy.questId === questId)?.requirementsReview
+      ?? reviewedQuestRequirements(questId)
+  ), [runeProofStrategies]);
+  const previewChecks = useRuneProofPreviewChecks(runId, undefined, guideProgress, guideRequirementsFor);
+  const [runeProofCatalogueStatus, setRuneProofCatalogueStatus] = useState<RuneProofCatalogueStatus>('LOADING');
+  const [runeProofCatalogueAttempt, setRuneProofCatalogueAttempt] = useState(0);
+  const runeProofCatalogueLoaded = runeProofCatalogueStatus === 'LOADED';
   const [runeProofActionsHydratedScope, setRuneProofActionsHydratedScope] = useState<
     RuneProofActionHydrationScope | null
   >(null);
@@ -464,7 +473,8 @@ export const GoalPlannerModal: React.FC<Props> = ({
   useEffect(() => {
     let active = true;
     setRuneProofStrategies(EMPTY_RUNE_PROOF_STRATEGIES);
-    setRuneProofCatalogueLoaded(false);
+    // A Retry keeps its failure message visible until the new attempt settles.
+    setRuneProofCatalogueStatus(status => status === 'RETRYING' ? status : 'LOADING');
 
     if (!runeProofEnabled) {
       return () => { active = false; };
@@ -474,16 +484,23 @@ export const GoalPlannerModal: React.FC<Props> = ({
       .then((strategies) => {
         if (!active) return;
         setRuneProofStrategies(strategies.filter(strategy => !strategy.vanillaPreview || gameModeId !== 'chunked'));
-        setRuneProofCatalogueLoaded(true);
+        setRuneProofCatalogueStatus('LOADED');
       })
       .catch(() => {
         if (!active) return;
-        setRuneProofStrategies(EMPTY_RUNE_PROOF_STRATEGIES);
-        setRuneProofCatalogueLoaded(true);
+        // The loader has already retried the chunk. An empty picker would
+        // claim that no guides exist, so show the failure instead.
+        setRuneProofCatalogueStatus('FAILED');
       });
 
     return () => { active = false; };
-  }, [runeProofEnabled, runeProofIntegration.availability, gameModeId]);
+  }, [runeProofEnabled, runeProofIntegration.availability, gameModeId, runeProofCatalogueAttempt]);
+  const retryRuneProofCatalogue = React.useCallback(() => {
+    setRuneProofCatalogueStatus('RETRYING');
+    setRuneProofCatalogueAttempt(attempt => attempt + 1);
+  }, []);
+  const runeProofCatalogueFailed = runeProofEnabled
+    && (runeProofCatalogueStatus === 'FAILED' || runeProofCatalogueStatus === 'RETRYING');
 
   useEffect(() => {
     if (
@@ -922,7 +939,9 @@ export const GoalPlannerModal: React.FC<Props> = ({
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-1.5 space-y-0.5">
               {results.length === 0 && (
-                <p className="text-[11px] text-gray-600 italic text-center py-6">No matches.</p>
+                <p className="text-[11px] text-gray-600 italic text-center py-6">
+                  {runeProofCatalogueFailed ? 'RuneProof guides could not load.' : 'No matches.'}
+                </p>
               )}
               {results.map(({ t, state }) => {
                 const isSel = visibleSelection?.kind === t.kind && visibleSelection?.id === t.id;
@@ -961,7 +980,37 @@ export const GoalPlannerModal: React.FC<Props> = ({
                 Choose another quest
               </button>
             ) : null}
-            {!plan ? (
+            {!plan && runeProofCatalogueFailed ? (
+              <div
+                className="flex-1 flex flex-col items-center justify-center text-center px-6 gap-3"
+                role="alert"
+              >
+                <AlertCircle size={28} className="text-amber-400" aria-hidden />
+                <p className="text-sm text-amber-200 font-semibold">RuneProof guides could not load</p>
+                <p className="text-[11px] text-gray-500 max-w-[280px]">
+                  Check your connection and try again. If it keeps failing, reload the page to get the latest version.
+                </p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={retryRuneProofCatalogue}
+                    disabled={runeProofCatalogueStatus === 'RETRYING'}
+                    className="min-h-11 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#252525] border border-white/10 hover:bg-[#2d2d2d] disabled:opacity-60 text-gray-200 text-[11px] font-bold"
+                  >
+                    <RefreshCw size={12} aria-hidden />
+                    {runeProofCatalogueStatus === 'RETRYING' ? 'Retrying…' : 'Retry'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.location.reload()}
+                    className="min-h-11 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-[11px] font-bold"
+                  >
+                    <RotateCcw size={12} aria-hidden />
+                    Reload page
+                  </button>
+                </div>
+              </div>
+            ) : !plan ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center px-6 gap-3">
                 <Target size={32} className="text-gray-700" aria-hidden />
                 <p className="text-sm text-gray-500 font-semibold">

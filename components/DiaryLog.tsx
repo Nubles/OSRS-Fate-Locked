@@ -45,10 +45,12 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
 
   const focusCard = (id: string) => {
     setExpandedId(id);
-    // Clear filters so the target card is guaranteed to be visible.
+    // Clear filters, and the local search, so the target card is guaranteed
+    // to be visible.
     setFilterStatus('ALL');
     setFilterRegion('ALL');
     setFilterTier('ALL');
+    setLocalSearch('');
     setHighlightedId(id);
     // Align the card's top (header + border + first task in view) rather than
     // centring the now-expanded, tall card — and wait a frame longer so the
@@ -403,7 +405,8 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                           <WikiIcon file={`${skill}_icon.png`} alt="" size={8} /> {skill} {level as number}
                                         </span>
                                       ))}
-                                      {task.items?.map(item => (
+                                      {/* Items awaiting confirmation appear once, as Confirm chips below. */}
+                                      {task.items?.filter(item => !taskEligibility.manualChecks.includes(item)).map(item => (
                                         <span key={item} className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-white/5 text-gray-500 bg-black/30">
                                           <WikiIcon file="Inventory.png" alt="" size={8} /> {item}
                                         </span>

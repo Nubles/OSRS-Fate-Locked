@@ -22,6 +22,20 @@ interface PriceData {
   lowTime: number;
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** Disposable cache entry, or null when missing, unreadable or corrupt. */
+const readCachedObject = (key: string): Record<string, unknown> | null => {
+  try {
+    const raw = localStorage.getItem(key);
+    const parsed: unknown = raw ? JSON.parse(raw) : null;
+    return isRecord(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
 class PriceService {
   private nameToId: Record<string, number> = {};
   private prices: Record<number, PriceData> = {};
@@ -39,15 +53,19 @@ class PriceService {
   private async performInit() {
     try {
       // 1. Load Mapping (Persistent, update rarely)
-      const cachedMapping = localStorage.getItem(CACHE_KEY_MAPPING);
+      const cachedMapping = readCachedObject(CACHE_KEY_MAPPING);
       if (cachedMapping) {
-        this.nameToId = JSON.parse(cachedMapping);
+        this.nameToId = cachedMapping as Record<string, number>;
       } else {
         try {
           const res = await fetch(MAPPING_API, { headers: { 'User-Agent': 'FateLockedUIM/1.0' } });
-          const data: PriceMapping[] = await res.json();
-          data.forEach(item => {
-            this.nameToId[item.name.toLowerCase()] = item.id;
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data: unknown = await res.json();
+          if (!Array.isArray(data)) throw new Error('Unexpected mapping response');
+          (data as PriceMapping[]).forEach(item => {
+            if (typeof item?.name === 'string' && typeof item.id === 'number') {
+              this.nameToId[item.name.toLowerCase()] = item.id;
+            }
           });
           localStorage.setItem(CACHE_KEY_MAPPING, JSON.stringify(this.nameToId));
         } catch (e) {
@@ -66,21 +84,26 @@ class PriceService {
   }
 
   async refreshPrices() {
-    const cachedPrices = localStorage.getItem(CACHE_KEY_PRICES);
+    const cachedPrices = readCachedObject(CACHE_KEY_PRICES);
     const now = Date.now();
 
-    if (cachedPrices) {
-      const { timestamp, data } = JSON.parse(cachedPrices);
-      if (now - timestamp < PRICE_TTL) {
-        this.prices = data;
-        return;
-      }
+    if (
+      cachedPrices
+      && typeof cachedPrices.timestamp === 'number'
+      && isRecord(cachedPrices.data)
+      && now - cachedPrices.timestamp < PRICE_TTL
+    ) {
+      this.prices = cachedPrices.data as Record<number, PriceData>;
+      return;
     }
 
     try {
       const res = await fetch(PRICES_API, { headers: { 'User-Agent': 'FateLockedUIM/1.0' } });
-      const json = await res.json();
-      this.prices = json.data;
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json: unknown = await res.json();
+      // An error body must not be cached as "the prices" for the next hour.
+      if (!isRecord(json) || !isRecord(json.data)) throw new Error('Unexpected prices response');
+      this.prices = json.data as Record<number, PriceData>;
       localStorage.setItem(CACHE_KEY_PRICES, JSON.stringify({ timestamp: now, data: this.prices }));
     } catch (e) {
       console.warn('Failed to fetch prices', e);

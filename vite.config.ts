@@ -10,9 +10,11 @@ declare const process: {
   env: Record<string, string | undefined>;
 };
 
-const runeProofPreviewModuleIds = new Set([
-  'questWalkthroughs',
-  'questWalkthroughs.preview-boundary',
+// Each private preview module and the public-safe module a normal build uses instead.
+const runeProofPreviewModules = new Map([
+  ['questWalkthroughs', './questWalkthroughs.public'],
+  ['questWalkthroughs.preview-boundary', './questWalkthroughs.public'],
+  ['questItemRequirements.preview', './questItemRequirements.preview-omitted'],
 ]);
 
 const runeProofPreviewBoundaryPlugin = (includePreview: boolean): Plugin => ({
@@ -22,8 +24,9 @@ const runeProofPreviewBoundaryPlugin = (includePreview: boolean): Plugin => ({
     if (includePreview || !importer) return null;
     const normalizedSource = normalizePath(source).replace(/\.[cm]?[jt]sx?$/, '');
     const moduleId = normalizedSource.slice(normalizedSource.lastIndexOf('/') + 1);
-    if (!runeProofPreviewModuleIds.has(moduleId)) return null;
-    return this.resolve('./questWalkthroughs.public', importer, { skipSelf: true });
+    const publicModule = runeProofPreviewModules.get(moduleId);
+    if (!publicModule) return null;
+    return this.resolve(publicModule, importer, { skipSelf: true });
   },
 });
 

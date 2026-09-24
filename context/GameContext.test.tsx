@@ -22,6 +22,7 @@ import { profileMirrorMetadataKey } from '../utils/storageRecovery';
 import { openRecoveryDatabase } from '../utils/recoveryDatabase';
 import { checksumSave } from '../utils/saveIntegrity';
 import { parseAndMigrateSave } from '../utils/saveSchema';
+import { resolveSaveRecovery } from '../utils/saveRecovery';
 import {
   writerLeaseKey,
   WRITER_LEASE_ARBITRATION_MS,
@@ -671,6 +672,28 @@ describe('ordinary save recovery', () => {
 
     expect(game.current().userNotes.goal).toBeUndefined();
     expect(events).toContain('checkpoint:pre-replacement');
+    expect(game.current().stateReplacements).toBe(1);
+  });
+
+  it('counts imports and resets as replacements, but not ordinary changes', async () => {
+    const game = renderGame('profile');
+    await settleOwnership();
+    const before = game.current().stateReplacements;
+
+    act(() => game.current().saveNote('goal', 'ordinary change'));
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+    expect(game.current().stateReplacements).toBe(before);
+
+    const candidate = JSON.parse(game.current().getExportData()) as GameState;
+    candidate.userNotes = { goal: 'imported' };
+    let result: ImportResult | undefined;
+    await act(async () => { result = await game.current().importSave(candidate); });
+    expect(result).toMatchObject({ ok: true });
+    expect(game.current().stateReplacements).toBe(before + 1);
+
+    await act(async () => { await game.current().resetGame(); });
+    expect(game.current().userNotes.goal).toBeUndefined();
+    expect(game.current().stateReplacements).toBe(before + 2);
   });
 
   it('creates changed interval checkpoints only after five minutes of durable head saves', async () => {
@@ -1322,6 +1345,77 @@ describe('ordinary save recovery', () => {
     expect(game.current().saveOwnershipBlockReason).toBe('storage_unavailable');
   });
 
+  it('keeps a takeover save that loads after another tab advanced the recovery journal', async () => {
+    vi.useRealTimers();
+    const profileId = 'takeover-journal-revision';
+    const storageKey = `FATE_PROFILE_${profileId}`;
+    const baselineState = {
+      ...structuredClone(initialState),
+      userNotes: { goal: 'loaded by both tabs' },
+    };
+    // The other tab saved five journal revisions after this tab loaded at 1.
+    const otherTabData = serializeCurrent({
+      ...baselineState,
+      userNotes: { goal: 'other tab progress' },
+    });
+    const otherChecksum = await checksumSave(otherTabData);
+    const repository = await openRecoveryDatabase();
+    await repository.putHead({
+      profileId,
+      persistenceRevision: 5,
+      runId: baselineState.runId,
+      runRevision: baselineState.runRevision,
+      capturedAt: 500,
+      checksum: otherChecksum,
+      data: otherTabData,
+    }, () => ({ ok: true }));
+    storage.values.set(storageKey, otherTabData);
+    storage.values.set(profileMirrorMetadataKey(storageKey), JSON.stringify({
+      version: 1,
+      persistenceRevision: 5,
+      capturedAt: 500,
+      checksum: otherChecksum,
+    }));
+    seedForeignWriterLease(storageKey, 'tab-a');
+    const bootstrap: SaveBootstrapResult = {
+      initialState: baselineState,
+      initialData: serializeCurrent(baselineState),
+      persistenceRevision: 1,
+      maxDurablePersistenceRevision: 1,
+      source: 'journal',
+      needsJournalImport: false,
+    };
+    let current: Game | undefined;
+    render(
+      <GameProvider storageKey={storageKey} bootstrap={bootstrap} leaseOptions={{ ownerId: 'tab-b' }}>
+        <GameCapture onGame={game => { current = game; }} />
+      </GameProvider>,
+    );
+    await waitFor(() => expect(current!.saveOwnershipStatus).toBe('blocked'));
+
+    act(() => current!.saveNote('goal', 'kept by takeover'));
+    let tookOver = false;
+    await act(async () => { tookOver = await current!.takeOverSaveOwnership(); });
+    expect(tookOver).toBe(true);
+    expect(current!.saveStatus).toBe('saved');
+
+    // What the next page load would choose.
+    const head = await repository.getHead(profileId);
+    expect(head?.persistenceRevision).toBeGreaterThan(5);
+    const decision = await resolveSaveRecovery({
+      profileId,
+      pendingRaw: null,
+      primaryRaw: storage.values.get(storageKey) ?? null,
+      mirrorMetadataRaw: storage.values.get(profileMirrorMetadataKey(storageKey)) ?? null,
+      head,
+      checkpoints: await repository.listCheckpoints(profileId),
+      defaults: initialState,
+    });
+    repository.close();
+    expect(decision.kind).toBe('ready');
+    expect(decision.kind === 'ready' && decision.state.userNotes.goal).toBe('kept by takeover');
+  });
+
   it('rejects a valid-JSON checkpoint whose bytes no longer match its checksum', async () => {
     vi.useRealTimers();
     const profileId = 'manual-integrity-restore';
@@ -1682,6 +1776,94 @@ describe('ordinary save recovery', () => {
     expect(getPendingSave('profile')?.data).toBe(pendingBefore);
   });
 
+  const saveFromOtherTab = (storageKey: string, note: string) => {
+    const other = JSON.parse(storage.values.get(storageKey)!);
+    other.userNotes = { ...other.userNotes, goal: note };
+    storage.values.set(storageKey, JSON.stringify(other));
+  };
+
+  const closeOtherTab = async (storageKey: string) => {
+    const writerKey = writerLeaseKey(storageKey);
+    storage.values.delete(writerKey);
+    act(() => window.dispatchEvent(new StorageEvent('storage', { key: writerKey })));
+    await settleOwnership();
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+  };
+
+  it('does not write a blocked tab over newer progress when it regains saving', async () => {
+    seedCanonicalSave('profile');
+    seedForeignWriterLease('profile', 'tab-a');
+    const game = renderGame('profile', { ownerId: 'tab-b' });
+    await settleOwnership();
+    act(() => game.current().saveNote('goal', 'tab b edit'));
+    saveFromOtherTab('profile', 'tab a progress');
+
+    await closeOtherTab('profile');
+
+    expect(readStoredNote('profile', 'goal')).toBe('tab a progress');
+    expect(game.current().saveOwnershipStatus).toBe('blocked');
+    expect(game.current().saveOwnershipBlockReason).toBe('newer_save');
+    expect(getPendingSave('profile')?.data).toContain('tab b edit');
+    expect(game.current().userNotes.goal).toBe('tab b edit');
+  });
+
+  it('loads newer progress when a blocked tab with nothing unsaved regains saving', async () => {
+    seedCanonicalSave('profile');
+    seedForeignWriterLease('profile', 'tab-a');
+    const game = renderGame('profile', { ownerId: 'tab-b' });
+    await settleOwnership();
+    saveFromOtherTab('profile', 'tab a progress');
+
+    await closeOtherTab('profile');
+
+    expect(game.current().userNotes.goal).toBe('tab a progress');
+    expect(game.current().saveOwnershipStatus).toBe('owner');
+    expect(getPendingSave('profile')).toBeNull();
+    act(() => game.current().saveNote('goal', 'continued in tab b'));
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+    expect(readStoredNote('profile', 'goal')).toBe('continued in tab b');
+  });
+
+  it('saves this tab after the player keeps it over the newer progress', async () => {
+    seedCanonicalSave('profile');
+    seedForeignWriterLease('profile', 'tab-a');
+    const game = renderGame('profile', { ownerId: 'tab-b' });
+    await settleOwnership();
+    act(() => game.current().saveNote('goal', 'tab b edit'));
+    saveFromOtherTab('profile', 'tab a progress');
+    await closeOtherTab('profile');
+
+    let kept = false;
+    await act(async () => {
+      const takeover = game.current().takeOverSaveOwnership();
+      await vi.advanceTimersByTimeAsync(WRITER_LEASE_ARBITRATION_MS);
+      kept = await takeover;
+    });
+
+    expect(kept).toBe(true);
+    expect(readStoredNote('profile', 'goal')).toBe('tab b edit');
+    expect(game.current().saveOwnershipStatus).toBe('owner');
+    expect(game.current().saveOwnershipBlockReason).toBeNull();
+  });
+
+  it('resumes saving after the player loads the newer progress instead', async () => {
+    seedCanonicalSave('profile');
+    seedForeignWriterLease('profile', 'tab-a');
+    const game = renderGame('profile', { ownerId: 'tab-b' });
+    await settleOwnership();
+    act(() => game.current().saveNote('goal', 'tab b edit'));
+    saveFromOtherTab('profile', 'tab a progress');
+    await closeOtherTab('profile');
+
+    act(() => { game.current().reloadLatestSave(); });
+    expect(game.current().userNotes.goal).toBe('tab a progress');
+    expect(game.current().saveOwnershipStatus).toBe('owner');
+
+    act(() => game.current().saveNote('goal', 'after loading'));
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+    expect(readStoredNote('profile', 'goal')).toBe('after loading');
+  });
+
   it('blocks import, restore, and backup writes behind foreign ownership', async () => {
     seedForeignWriterLease('profile', 'tab-a');
     const game = renderGame('profile', { ownerId: 'tab-b' });
@@ -1924,6 +2106,32 @@ describe('level-up feedback integration', () => {
       meta: { chaosKeysAwarded: 2, chaosKeyAwarded: true },
     });
     expect(random).toHaveBeenCalledTimes(3);
+  });
+
+  it('does not roll a level reward for a skill already at 99', () => {
+    const storageKey = 'level-up-capped';
+    const seeded = {
+      ...structuredClone(initialState),
+      unlocks: {
+        ...initialState.unlocks,
+        levels: { ...initialState.unlocks.levels, Attack: 99 },
+      },
+    };
+    localStorage.setItem(storageKey, serializeCurrent(seeded));
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.01);
+    let current: Game | undefined;
+
+    render(
+      <GameProvider storageKey={storageKey}>
+        <GameCapture onGame={game => { current = game; }} />
+      </GameProvider>,
+    );
+
+    act(() => current?.levelUpSkill('Attack'));
+
+    expect(current?.history).toEqual([]);
+    expect(current?.keys).toBe(seeded.keys);
+    expect(random).not.toHaveBeenCalled();
   });
 });
 describe('quest completion integration', () => {

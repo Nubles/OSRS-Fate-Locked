@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import React from 'react';
-import { cleanup, render } from '@testing-library/react';
+import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FeatureRevealDriver } from './FeatureRevealDriver';
 
@@ -13,7 +13,8 @@ vi.mock('../hooks/useFeatureGates', () => ({
   useFeatureGates: () => new Set(['ctrl:LOG']),
 }));
 
-vi.mock('../utils/toast', () => ({ showToast: vi.fn() }));
+const toast = vi.hoisted(() => vi.fn());
+vi.mock('../utils/toast', () => ({ showToast: toast }));
 vi.mock('../utils/flash', () => ({ flashSelector: vi.fn() }));
 
 afterEach(() => {
@@ -31,6 +32,28 @@ describe('FeatureRevealDriver storage recovery', () => {
     });
 
     expect(() => render(<FeatureRevealDriver />)).not.toThrow();
+  });
+
+  it('does not re-celebrate visible features on every render when the record cannot be written', () => {
+    vi.useFakeTimers();
+    try {
+      toast.mockClear();
+      vi.stubGlobal('localStorage', {
+        getItem: () => null,
+        setItem: () => {
+          throw new DOMException('full', 'QuotaExceededError');
+        },
+      });
+
+      const { rerender } = render(<FeatureRevealDriver />);
+      rerender(<FeatureRevealDriver />);
+      rerender(<FeatureRevealDriver />);
+      act(() => { vi.runAllTimers(); });
+
+      expect(toast).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('keeps the app mounted when feature storage is completely unavailable', () => {

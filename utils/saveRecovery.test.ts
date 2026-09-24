@@ -336,6 +336,44 @@ describe('pure startup save recovery arbitration', () => {
     });
   });
 
+  it('loads the current run when only a retained checkpoint belongs to the run it replaced', async () => {
+    // Reset and import keep a pre-replacement checkpoint of the old run so the
+    // player can restore it; that history must not block every later startup.
+    const replaced = {
+      ...(await record({ runId: RUN_A, persistenceRevision: 4, runRevision: 9, note: 'old run' })),
+      reason: 'pre-replacement' as const,
+    };
+    const head = await record({ runId: RUN_B, persistenceRevision: 6, runRevision: 1, note: 'new run' });
+
+    const decision = await resolveSaveRecovery(fixture({
+      primaryRaw: head.data,
+      mirrorMetadataRaw: await metadata({ data: head.data, ...head }),
+      head,
+      checkpoints: [replaced],
+    }));
+
+    expect(decision).toMatchObject({
+      kind: 'ready',
+      reason: 'normal',
+      persistenceRevision: 6,
+      data: head.data,
+    });
+  });
+
+  it('still requires confirmation when a staged pending save belongs to another run', async () => {
+    const pending = rawSave({ runId: RUN_A, runRevision: 9, note: 'stale tab' });
+    const head = await record({ runId: RUN_B, persistenceRevision: 6, runRevision: 1 });
+
+    const decision = await resolveSaveRecovery(fixture({
+      pendingRaw: pending,
+      primaryRaw: head.data,
+      mirrorMetadataRaw: await metadata({ data: head.data, ...head }),
+      head,
+    }));
+
+    expect(decision).toMatchObject({ kind: 'recovery_required', cause: 'conflicting_runs' });
+  });
+
   it('requires confirmation when an unsequenced primary differs from a valid head', async () => {
     const primary = await record({ persistenceRevision: 4, runRevision: 4, note: 'unsequenced' });
     const head = await record({ persistenceRevision: 5, runRevision: 5, note: 'head' });

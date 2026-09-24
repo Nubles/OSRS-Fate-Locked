@@ -1,4 +1,5 @@
 import React, { Suspense, useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { lazyWithRetry } from '../utils/lazyRetry';
 import { X, ChevronsUp, AlertCircle, RotateCcw, Plus, Minus, SlidersHorizontal, Lock } from 'lucide-react';
 import { Sparkles, Crown, Swords } from './OsrsIcon';
@@ -286,7 +287,8 @@ const SlotDetail: React.FC<SlotDetailProps> = ({ slot, tier, specialKeys, onClos
   const canUpgrade = !isMaxed && specialKeys > 0;
   const curLabel = tier > 0 ? TIER_LABELS[tier - 1] : 'Locked';
 
-  return (
+  // Escape dashboard animation/overflow ancestors so the dialog fits the viewport.
+  return createPortal(
     <div
       className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-150"
       onClick={onClose}
@@ -369,6 +371,7 @@ const SlotDetail: React.FC<SlotDetailProps> = ({ slot, tier, specialKeys, onClos
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

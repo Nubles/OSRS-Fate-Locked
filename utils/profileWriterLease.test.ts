@@ -261,6 +261,35 @@ describe('profile writer leases', () => {
     expect(renewWriterLease(storage, PROFILE, 'late-cleanup-tab', 1_000).status).toBe('blocked');
   });
 
+  it('refuses a lease for a profile the newest registry no longer lists', () => {
+    // The deletion finished, so its intent is gone too; an older backup copy
+    // still lists the profile.
+    values.set(PROFILES_KEY, JSON.stringify({
+      version: 2,
+      revision: 10,
+      profiles: [{ id: 'beta', name: 'Beta', createdAt: 2 }],
+      activeProfileId: 'beta',
+      deletions: [],
+    }));
+    values.set(PROFILE_METADATA_BACKUP_KEY, JSON.stringify({
+      version: 2,
+      revision: 8,
+      profiles: [{ id: 'test', name: 'Deleted', createdAt: 1 }, { id: 'beta', name: 'Beta', createdAt: 2 }],
+      activeProfileId: 'test',
+      deletions: [],
+    }));
+    values.set(writerLeaseKey(PROFILE), JSON.stringify({
+      version: 1,
+      ownerId: 'restored-tab',
+      expiresAt: 31_000,
+    }));
+
+    expect(verifyWriterLease(storage, PROFILE, 'restored-tab', 1_000).status).toBe('blocked');
+    expect(renewWriterLease(storage, PROFILE, 'restored-tab', 1_000).status).toBe('blocked');
+    expect(claimWriterLease(storage, PROFILE, 'restored-tab', 100_000).status).toBe('blocked');
+    expect(claimWriterLease(storage, 'FATE_PROFILE_beta', 'game-tab', 1_000).status).toBe('owned');
+  });
+
   it('fails closed without writing a lease for future profile metadata', () => {
     values.set(PROFILES_KEY, JSON.stringify({
       version: 3,

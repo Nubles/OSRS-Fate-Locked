@@ -55,6 +55,16 @@ export const newlyEarnedCATiers = (
   return earnedCATiers(points, stored).filter(tier => !previous.has(tier));
 };
 
+/** Whether a Combat Achievement task can be completed and rolled for now. */
+export const caTaskCompletionDecision = (
+  task: Pick<CATask, 'id' | 'tierId'>,
+  completedTaskIds: readonly string[],
+): CompletionResult => {
+  if (completedTaskIds.includes(task.id)) return { ok: false, reason: 'Already completed' };
+  if (!CA_DATA[task.tierId]) return { ok: false, reason: 'Unknown Combat Achievement tier' };
+  return { ok: true };
+};
+
 export const caTierCompletionDecision = (
   tierId: string,
   points: number,

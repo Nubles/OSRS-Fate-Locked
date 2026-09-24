@@ -71,9 +71,17 @@ export const indexDirectItemSources = (
     }
     return snapshot.recordsForClass(item.name, searchClass);
   };
-  const mapRecord = (record: ItemSourceRecord, chunk: ChunkKey): ExactItemSource => (
-    compileSourceRequirements({
-      id: `${record.kind}:${record.hostName}:${record.cx},${record.cy}:${item.key}${record.sourceId ? `:${record.sourceId}` : ''}`,
+  // The first source for a host at a chunk keeps its plain route ID. A later
+  // distinct source there (an interior access variant) adds its sourceId and
+  // ranks after otherwise-equal routes, so surfacing it never renames an
+  // existing route or wins a tie against one.
+  const hostChunks = new Set<string>();
+  const mapRecord = (record: ItemSourceRecord, chunk: ChunkKey): ExactItemSource => {
+    const hostChunk = `${record.kind}\0${record.hostName}\0${chunk}`;
+    const accessVariant = hostChunks.has(hostChunk);
+    hostChunks.add(hostChunk);
+    return compileSourceRequirements({
+      id: `${record.kind}:${record.hostName}:${record.cx},${record.cy}:${item.key}${accessVariant && record.sourceId ? `:${record.sourceId}` : ''}`,
       output: item,
       outputQuantity: 1,
       kind: record.kind === 'spawn' ? 'SPAWN' : record.kind === 'shop' ? 'SHOP' : 'DROP',
@@ -84,8 +92,9 @@ export const indexDirectItemSources = (
       gates: [],
       deterministic: record.kind !== 'monster',
       coverage: 'COMPLETE',
-    })
-  );
+      ...(accessVariant ? { accessVariant: true } : {}),
+    });
+  };
 
   if (searchClasses.includes('current')) {
     const records = recordsForClass('current');

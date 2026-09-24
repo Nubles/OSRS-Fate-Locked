@@ -7,12 +7,15 @@ import {
   VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule,
   FAILURE_FATE_BY_SOURCE, SKILL_CHAOS_MILESTONES,
   failureFateForSkillLevel, failureFateForSource, isSkillChaosMilestone,
+  ritualFateCost,
 } from './economy';
 import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { BOSSES_LIST } from '../data/items';
 import { describeVanillaRandomAccessPolicy, formatVanillaBossSchedule } from '../components/ReferenceModal';
 import { skillLevelKeyChance } from '../utils/keyRoll';
+import { createFreshState, prepareKeyRollAction } from '../context/GameContext';
+import { resolveModeRules } from './gameModes';
 
 /**
  * This is the anti-drift guarantee: the Codex / onboarding render from
@@ -36,6 +39,26 @@ describe('economy ↔ engine consistency', () => {
     );
     for (const s of expected) {
       expect(documented.has(s), `missing earn entry for "${s}"`).toBe(true);
+    }
+  });
+
+  it('documents exactly the Omni chance the roll engine applies to each source', () => {
+    const state = { ...createFreshState(), gameModeId: 'vanilla', lastEvent: null };
+    const base = resolveModeRules('vanilla').omniChanceBase;
+    const omniOn = (tier: typeof fixedTiers[number], omniDie: number): boolean => {
+      // Die 0 is the primary key roll (always a success here); die 2 is Omni.
+      const dice = (_purpose: string, index = 0, max = 100) => index === 0 ? 1 : index === 2 ? omniDie : max;
+      const action = prepareKeyRollAction(state, tier.source!, 100, failureFateForSource(tier.source!), dice);
+      return action?.payload.omni ?? false;
+    };
+    for (const tier of fixedTiers) {
+      const documented = tier.omni ?? base;
+      expect(omniOn(tier, documented), `${tier.source} at ${documented}%`).toBe(true);
+      expect(omniOn(tier, documented + 1), `${tier.source} above ${documented}%`).toBe(false);
+    }
+    const omniText = KEY_TYPES.find(k => k.id === 'omni')!.earn.join(' ');
+    for (const percent of new Set(fixedTiers.flatMap(t => t.omni ?? []))) {
+      expect(omniText, `Omni-Key text mentions ${percent}%`).toContain(`${percent}%`);
     }
   });
 
@@ -129,6 +152,15 @@ describe('economy ↔ engine consistency', () => {
   it('defines all six Void Altar rituals with a cost', () => {
     expect(RITUALS.map(r => r.id).sort()).toEqual(['CARTOGRAPHER', 'CHAOS', 'GAMBIT', 'GREED', 'LUCK', 'TRANSMUTE']);
     for (const r of RITUALS) expect((r.fateCost ?? 0) + (r.keyCost ?? 0)).toBeGreaterThan(0);
+  });
+
+  it("scales Fate ritual prices, including the Gambit's minimum stake, by the mode", () => {
+    const gambitMinimum = (mode: string) => ritualFateCost('GAMBIT', resolveModeRules(mode).ritualCostMultiplier);
+    expect(gambitMinimum('vanilla')).toBe(15);
+    expect(gambitMinimum('casual')).toBe(9);
+    expect(gambitMinimum('hardcore')).toBe(23);
+    expect(ritualFateCost('CHAOS', 0.6)).toBe(15);
+    expect(ritualFateCost('TRANSMUTE', 1.5)).toBe(0);
   });
 
   it('keeps the finite Vanilla boss reserve and every boss schedule aligned', () => {

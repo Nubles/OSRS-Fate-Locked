@@ -8,6 +8,21 @@ import { MONSTER_CATALOGUE, MONSTER_CACHE_SOURCE } from '../data/monsterCatalogu
 
 const CACHE_KEY = 'fate_osrs_monsters_v3';
 
+/**
+ * The largest single hit in the wiki's max-hit text, which can list several
+ * attacks, ranges ("46-61") and markup ("<div …>*31 (auto)*45 (special)").
+ * Hit counts ("17x2", "2 (x3)") are not hits. Text with no number ("N/A",
+ * "Varies", "? (melee)") is unknown: null, never a max hit of 0.
+ */
+export const parseMaxHit = (raw: unknown): number | null => {
+  if (typeof raw === 'number') return Number.isFinite(raw) ? Math.max(0, Math.floor(raw)) : null;
+  const text = String(raw ?? '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/(^|[^a-z])[x×]\s?\d+/gi, '$1 ');
+  const hits = (text.match(/\d+/g) ?? []).map(Number);
+  return hits.length ? Math.max(...hits) : null;
+};
+
 export interface MonsterStats {
   id: number;
   name: string;
@@ -15,8 +30,8 @@ export interface MonsterStats {
   imageFile: string;
   level: number;
   hp: number;
-  /** Highest single hit the monster can deal (parsed; 0 if unknown). */
-  maxHit: number;
+  /** Highest single hit the monster can deal (parsed; null when the wiki gives no number). */
+  maxHit: number | null;
   defLevel: number;
   magicLevel: number;
   /** Defensive bonuses by attack type. */
@@ -25,6 +40,15 @@ export interface MonsterStats {
   size: number;
   attributes: string[];
 }
+
+/**
+ * Identity of one catalogue row. Several versions of a monster can share an
+ * NPC id (Duke Sucellus's post-quest and awakened fights, every Doom delve),
+ * and so can differently named rows (the two Nightmare totems), so neither
+ * the id nor the id and version alone select one row.
+ */
+export const monsterKey = (monster: Pick<MonsterStats, 'id' | 'name' | 'version'>): string =>
+  `${monster.id}|${monster.name}|${monster.version}`;
 
 interface RawMonster {
   id: number;
@@ -44,7 +68,8 @@ function validMonster(value: unknown): value is MonsterStats {
   const m = value as MonsterStats;
   return Number.isInteger(m.id) && typeof m.name === 'string' && !!m.name.trim()
     && typeof m.version === 'string' && typeof m.imageFile === 'string'
-    && [m.level, m.hp, m.maxHit, m.defLevel, m.magicLevel, m.size].every(Number.isFinite)
+    && [m.level, m.hp, m.defLevel, m.magicLevel, m.size].every(Number.isFinite)
+    && (m.maxHit === null || Number.isFinite(m.maxHit))
     && m.hp > 0 && m.size >= 0 // Upstream uses zero for unknown size on real targets.
     && !!m.def && ['stab', 'slash', 'crush', 'magic', 'ranged'].every(k => Number.isFinite(m.def[k as keyof MonsterStats['def']]))
     && !!m.rangedDefence && ['light', 'standard', 'heavy'].every(k => Number.isFinite(m.rangedDefence![k as 'light' | 'standard' | 'heavy']))
@@ -54,6 +79,7 @@ function validMonster(value: unknown): value is MonsterStats {
 class MonsterService {
   private list: MonsterStats[] = [];
   private byIdMap = new Map<number, MonsterStats>();
+  private byKeyMap = new Map<string, MonsterStats>();
   private initialized = false;
   private initPromise: Promise<void> | null = null;
   private lastFailAt = 0;
@@ -127,7 +153,7 @@ class MonsterService {
         imageFile: r.image ?? '',
         level: r.level ?? 0,
         hp,
-        maxHit: parseInt(String(r.max_hit ?? '0'), 10) || 0,
+        maxHit: parseMaxHit(r.max_hit),
         defLevel: r.skills?.def ?? 1,
         magicLevel: r.skills?.magic ?? 1,
         def: {
@@ -156,7 +182,11 @@ class MonsterService {
   private ingest(items: MonsterStats[]) {
     this.list = items;
     this.byIdMap.clear();
-    for (const m of items) this.byIdMap.set(m.id, m);
+    this.byKeyMap.clear();
+    for (const m of items) {
+      this.byIdMap.set(m.id, m);
+      this.byKeyMap.set(monsterKey(m), m);
+    }
   }
 
   private loadCache(): MonsterStats[] | null {
@@ -196,14 +226,23 @@ class MonsterService {
     return id == null ? undefined : this.byIdMap.get(id);
   }
 
-  /** Best monster for an exact (case-insensitive) name; prefers the highest-HP version. */
-  byName(name: string): MonsterStats | undefined {
+  /** One exact catalogue row, keyed by {@link monsterKey}. */
+  byKey(key: string | null | undefined): MonsterStats | undefined {
+    return key == null ? undefined : this.byKeyMap.get(key);
+  }
+
+  /** Every version of an exact (case-insensitive) name, in catalogue order. */
+  versionsOf(name: string): MonsterStats[] {
     const q = name.trim().toLowerCase();
-    let best: MonsterStats | undefined;
-    for (const m of this.list) {
-      if (m.name.toLowerCase() === q && (!best || m.hp > best.hp)) best = m;
-    }
-    return best;
+    return this.list.filter(m => m.name.toLowerCase() === q);
+  }
+
+  /**
+   * The first listed version of an exact name. Callers that plan a fight
+   * choose a version explicitly (see defaultBossVersion) instead.
+   */
+  byName(name: string): MonsterStats | undefined {
+    return this.versionsOf(name)[0];
   }
 }
 

@@ -12,6 +12,11 @@ import {
 } from './protocol.js';
 
 const TTL_SECONDS = 86400;
+const OWNER_TTL_SECONDS = 90 * 86400;
+const OWNER_REFRESH_MS = 86400 * 1000;
+// Versions count seconds from this instant. Never change it: clients hold
+// versions across deploys and accept only a higher one.
+const RELAY_VERSION_EPOCH_MS = Date.UTC(2026, 0, 1);
 const CODE_RE = /^\/r\/([A-Za-z0-9-]{4,40})(\/state|\/suggest|\/events|\/acks)?$/;
 
 function cors(origin) {
@@ -20,6 +25,9 @@ function cors(origin) {
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, If-None-Match',
     'Access-Control-Expose-Headers': 'ETag',
+    // Cache preflights (browsers cap this lower), so publishes and the
+    // overlay's conditional polls don't each cost an extra OPTIONS request.
+    'Access-Control-Max-Age': '86400',
     'Cache-Control': 'no-store',
   };
 }
@@ -41,7 +49,89 @@ function structuredResource(resource) {
   return null;
 }
 
-export default {
+/**
+ * Read at most `limit` bytes of the request body. Oversized uploads are
+ * refused by their declared length, or cancelled once they pass the limit,
+ * instead of being buffered in full before the size check.
+ */
+async function readBodyWithin(request, limit) {
+  const declared = Number(request.headers.get('Content-Length'));
+  if (Number.isFinite(declared) && declared > limit) return null;
+  if (!request.body) return '';
+  const reader = request.body.getReader();
+  const chunks = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > limit) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bytes);
+}
+
+/**
+ * The version (and ETag) for a write: seconds since RELAY_VERSION_EPOCH_MS,
+ * or one more than the stored version when that is higher. A plain counter
+ * restarted at 1 when a record expired, so a client holding its ETag got 304
+ * for new content, and RuneLite, which imports only a version above the one
+ * it holds, kept the old profile. The clock keeps versions rising across
+ * expiry; the stored version keeps writes within one second distinct. Seconds
+ * since 2026 fit the plugin's Java int until 2094.
+ */
+function nextVersion(storedVersion) {
+  const seconds = Math.floor((Date.now() - RELAY_VERSION_EPOCH_MS) / 1000);
+  return Math.max(seconds, (storedVersion || 0) + 1);
+}
+
+async function tokenHash(token) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+  return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Who may write `key`. A separate owner record holds a SHA-256 hash of the
+ * write token (never the token) for 90 days after the last refresh, so a code
+ * stays claimed after its 24-hour data record expires. Records written before
+ * owner records existed are adopted on their owner's next write.
+ */
+async function authorizeWrite(env, key, existing, presented) {
+  const owner = await env.RELAY.get(`own:${key}`);
+  if (owner) {
+    const [hash, refreshedAt] = owner.split(':');
+    if (typeof presented !== 'string' || await tokenHash(presented) !== hash) return null;
+    return { token: presented, refresh: !(Date.now() - Number(refreshedAt) < OWNER_REFRESH_MS) };
+  }
+  if (existing?.token && existing.token !== presented) return null;
+  return { token: existing?.token || presented || crypto.randomUUID(), refresh: true };
+}
+
+/**
+ * Refresh the owner record after the data write, at most once a day to spare
+ * KV writes. Best-effort: if it fails, the data record still holds the token
+ * and the next write adopts it.
+ */
+async function recordOwner(env, key, owner) {
+  if (!owner.refresh) return;
+  try {
+    await env.RELAY.put(`own:${key}`, `${await tokenHash(owner.token)}:${Date.now()}`,
+      { expirationTtl: OWNER_TTL_SECONDS });
+  } catch {
+    /* adopted from the data record on the next write */
+  }
+}
+
+const routes = {
   async fetch(request, env) {
     const url = new URL(request.url);
     const headers = cors(request.headers.get('Origin'));
@@ -70,8 +160,8 @@ export default {
     }
 
     if (request.method === 'POST') {
-      const rawBody = await request.text();
-      if (new TextEncoder().encode(rawBody).byteLength > MAX_REQUEST_BYTES) {
+      const rawBody = await readBodyWithin(request, MAX_REQUEST_BYTES);
+      if (rawBody === null) {
         return new Response('payload too large', { status: 413, headers });
       }
       let body;
@@ -88,11 +178,10 @@ export default {
           return new Response('bad request', { status: 400, headers });
         }
         const existing = await env.RELAY.get(key, { type: 'json' });
-        if (existing?.token && existing.token !== body.token) {
-          return new Response('forbidden', { status: 403, headers });
-        }
-        const token = existing?.token || body.token || crypto.randomUUID();
-        const version = (existing?.version || 0) + 1;
+        const owner = await authorizeWrite(env, key, existing, body.token);
+        if (!owner) return new Response('forbidden', { status: 403, headers });
+        const token = owner.token;
+        const version = nextVersion(existing?.version);
         const appended = structured.retainNewest
           ? appendUniqueNewest(existing?.records || [], incoming)
           : appendUnique(existing?.records || [], incoming);
@@ -101,18 +190,21 @@ export default {
           token,
           records: appended.records,
         }), { expirationTtl: EVENT_TTL_SECONDS });
+        await recordOwner(env, key, owner);
 
         if (resource === '/acks') {
           const eventKey = `r:${match[1]}/events`;
           const eventQueue = await env.RELAY.get(eventKey, { type: 'json' });
-          if (eventQueue) {
+          // Pruning rewrites /events, so the token must be able to write it
+          // too: anyone who knows the code can claim an unused /acks.
+          if (eventQueue && await authorizeWrite(env, eventKey, eventQueue, body.token)) {
             const acknowledged = new Set(incoming.map(entry => entry.eventId));
             const retained = (eventQueue.records || [])
               .filter(entry => !acknowledged.has(entry.eventId));
             if (retained.length !== (eventQueue.records || []).length) {
               await env.RELAY.put(eventKey, JSON.stringify({
                 ...eventQueue,
-                version: (eventQueue.version || 0) + 1,
+                version: nextVersion(eventQueue.version),
                 records: retained,
               }), { expirationTtl: EVENT_TTL_SECONDS });
             }
@@ -133,16 +225,35 @@ export default {
         return new Response('bad request', { status: 400, headers });
       }
       const existing = await env.RELAY.get(key, { type: 'json' });
-      if (existing?.token && existing.token !== body.token) {
-        return new Response('forbidden', { status: 403, headers });
-      }
-      const token = existing?.token || body.token || crypto.randomUUID();
-      const version = (existing?.version || 0) + 1;
+      const owner = await authorizeWrite(env, key, existing, body.token);
+      if (!owner) return new Response('forbidden', { status: 403, headers });
+      const token = owner.token;
+      const version = nextVersion(existing?.version);
       await env.RELAY.put(key, JSON.stringify({ version, payload: body.payload, token }),
         { expirationTtl: TTL_SECONDS });
+      await recordOwner(env, key, owner);
       return json({ version, token }, headers);
     }
 
     return new Response('method not allowed', { status: 405, headers });
+  },
+};
+
+export default {
+  /**
+   * An unexpected failure, such as a KV outage, answers 503 with the CORS
+   * headers. Without them the browser hides the status and reports only
+   * "Failed to fetch".
+   */
+  async fetch(request, env) {
+    try {
+      return await routes.fetch(request, env);
+    } catch (error) {
+      console.error('relay request failed', error);
+      return new Response('relay unavailable', {
+        status: 503,
+        headers: cors(request.headers.get('Origin')),
+      });
+    }
   },
 };

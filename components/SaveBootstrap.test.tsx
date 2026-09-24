@@ -1002,6 +1002,87 @@ describe('SaveBootstrap', () => {
     expect((await screen.findByTestId('profile-result')).textContent).toContain('pending');
     expect(screen.queryByText('stale profile failure')).toBeNull();
   });
+
+  describe('when recovery storage cannot be opened', () => {
+    const browserSave = JSON.stringify({ ...initialState, userNotes: { goal: 'browser save' } });
+    const brokenStorage = () => vi.fn(async (): Promise<RecoveryRepository> => {
+      throw new Error('Internal error opening backing store');
+    });
+
+    it('offers a retry that loads once recovery storage opens', async () => {
+      const opened = repository();
+      let attempts = 0;
+      const openRepository = vi.fn(async () => {
+        attempts += 1;
+        if (attempts === 1) throw new Error('Internal error opening backing store');
+        return opened;
+      });
+      const resolveSaveRecovery = vi.fn(async () => readyDecision('mirror'));
+      render(
+        <SaveBootstrap
+          dependencies={dependencies({ openRepository, resolveSaveRecovery, readPrimary: () => browserSave })}
+          profileId="alpha"
+          storageKey="FATE_PROFILE_alpha"
+        >
+          {result => <div data-testid="bootstrap-result">{resultLabel(result)}</div>}
+        </SaveBootstrap>,
+      );
+
+      expect(await screen.findByText('Unable to check saved progress')).toBeTruthy();
+      expect(screen.getByText(/Don't clear site data/)).toBeTruthy();
+      await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
+
+      expect((await screen.findByTestId('bootstrap-result')).textContent).toContain('mirror');
+      expect(openRepository).toHaveBeenCalledTimes(2);
+    });
+
+    it('continues with the browser save alone when recovery storage stays broken', async () => {
+      const openRepository = brokenStorage();
+      const resolveSaveRecovery = vi.fn(async () => readyDecision('mirror', { data: browserSave }));
+      render(
+        <SaveBootstrap
+          dependencies={dependencies({ openRepository, resolveSaveRecovery, readPrimary: () => browserSave })}
+          profileId="alpha"
+          storageKey="FATE_PROFILE_alpha"
+        >
+          {result => <div data-testid="bootstrap-result">{resultLabel(result)}</div>}
+        </SaveBootstrap>,
+      );
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Continue with browser save' }));
+
+      expect((await screen.findByTestId('bootstrap-result')).textContent).toContain('browser save');
+      expect(openRepository).toHaveBeenCalledTimes(1);
+      expect(resolveSaveRecovery).toHaveBeenCalledWith(expect.objectContaining({
+        primaryRaw: browserSave,
+        head: null,
+        checkpoints: [],
+      }));
+    });
+
+    it('exports the browser save before the player tries anything else', async () => {
+      const exportBrowserSave = vi.fn(() => ({ ok: true as const }));
+      render(
+        <SaveBootstrap
+          dependencies={dependencies({
+            openRepository: brokenStorage(),
+            readPrimary: () => browserSave,
+            exportBrowserSave,
+          })}
+          profileId="alpha"
+          storageKey="FATE_PROFILE_alpha"
+        >
+          {() => <div>game mounted</div>}
+        </SaveBootstrap>,
+      );
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Export browser save' }));
+
+      expect(exportBrowserSave).toHaveBeenCalledWith('FATE_PROFILE_alpha', browserSave);
+      expect(screen.getByRole('status').textContent).toBe('Browser save exported as a .fate file.');
+      expect(screen.queryByText('game mounted')).toBeNull();
+    });
+  });
 });
 
 const ProfileHarness = ({

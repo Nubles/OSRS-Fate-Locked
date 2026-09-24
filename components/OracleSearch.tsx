@@ -22,6 +22,7 @@ import { chunkContentService, EntityHit, EntityKind } from '../services/ChunkCon
 import { EntityLocations } from './EntityLocations';
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { isAreaReachable } from '../utils/reachability';
+import { isFreeArea } from '../utils/freeAreas';
 import { AREA_ALIAS_POLICIES, displayAreaName } from '../data/areaMapPolicy';
 import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
 import {
@@ -58,6 +59,11 @@ type SearchItem = {
 // Helper to generate Wiki URLs
 const getWikiUrl = wikiUrlFor;
 
+// The diagnostics runner resets the active run and only restores it after its
+// final step, so closing it, reloading or any failed step leaves the player's
+// real save replaced by test data. Development builds only.
+const DIAGNOSTICS_ENABLED = import.meta.env.DEV;
+
 export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
   const { unlocks, gameModeId } = useGame();
   const [query, setQuery] = useState('');
@@ -90,7 +96,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
 
   // Handle Enter Key for Tests
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && query.toLowerCase().trim() === 'test') {
+    if (DIAGNOSTICS_ENABLED && e.key === 'Enter' && query.toLowerCase().trim() === 'test') {
       setIsRunningTest(true);
     }
   };
@@ -122,7 +128,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
       reqText: `Canonical area: ${policy.canonical}`,
       mapPlace: alias,
     }));
-    addGroup(MISTHALIN_AREAS, 'Region', TableType.REGIONS, Map, 'Starting Area (Unlocked)');
+    addGroup(MISTHALIN_AREAS, 'Region', TableType.REGIONS, Map, 'Starting region (free unless the mode restricts it)');
     addGroup(BOSSES_LIST, 'Boss', TableType.BOSSES, Skull, 'Requires Key in Bosses Table');
     addGroup(MINIGAMES_LIST, 'Minigame', TableType.MINIGAMES, Gamepad2, 'Requires Key in Minigames Table');
     addGroup(FARMING_PATCH_LIST, 'Farming Patch', TableType.FARMING_LAYERS, Sprout, 'Requires Key in Farming Table');
@@ -221,13 +227,10 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
         detail = isUnlocked ? `Unlocked (Tier ${eqTier})` : "Unequippable";
         break;
       case TableType.REGIONS:
-        if (gameModeId !== 'chunked' && MISTHALIN_AREAS.includes(item.name)) {
-            isUnlocked = true;
-            detail = "Starting Area";
-        } else {
-            isUnlocked = isAreaReachable(item.name, unlocks, gameModeId);
-            detail = isUnlocked ? "Unlocked" : "Locked";
-        }
+        // Free starting areas depend on the run's mode (none in Chunked, only
+        // Lumbridge in legacy Xtreme), so read both through the choke points.
+        isUnlocked = isAreaReachable(item.name, unlocks, gameModeId);
+        detail = isUnlocked && isFreeArea(item.name) ? "Starting Area" : isUnlocked ? "Unlocked" : "Locked";
         break;
       case TableType.MOBILITY:
         isUnlocked = unlocks.mobility.includes(item.name);
@@ -282,7 +285,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
     return { isUnlocked, detail: isUnlocked ? detail : "Locked" }; // Fallback detail if locked
   };
 
-  if (isRunningTest) {
+  if (DIAGNOSTICS_ENABLED && isRunningTest) {
     return (
       <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
         <div className="w-full max-w-2xl h-[500px] bg-black border border-green-900 rounded-xl overflow-hidden shadow-2xl relative">
@@ -328,7 +331,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
           {results.length === 0 && worldHits.length === 0 && query && (
             <div className="text-center py-12 text-gray-600">
               <p className="text-sm font-mono">No fate found matching "{query}"...</p>
-              {query.toLowerCase() === 'test' && <p className="text-xs text-green-800 mt-2 animate-pulse">[Press Enter to run Diagnostics]</p>}
+              {DIAGNOSTICS_ENABLED && query.toLowerCase() === 'test' && <p className="text-xs text-green-800 mt-2 animate-pulse">[Press Enter to run Diagnostics]</p>}
             </div>
           )}
 

@@ -278,6 +278,8 @@ const copiedSourceRecords = (
   hostName: record.hostName,
   cx: record.cx,
   cy: record.cy,
+  // The source index keeps same-chunk interior variants apart by this identity.
+  ...(record.sourceId === undefined ? {} : { sourceId: record.sourceId }),
   rawRequirements: record.rawRequirements.map(requirement => ({ ...requirement })),
 }));
 

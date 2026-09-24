@@ -339,7 +339,7 @@ describe('audited current quest requirements', () => {
                 "oneOf": null,
                 "manualRequirements": null,
                 "points": 1,
-                "difficulty": "Quest (Intermediate)"
+                "difficulty": "Quest (Novice)"
           },
           "Below Ice Mountain": {
                 "kind": "quest",
@@ -2308,7 +2308,10 @@ describe('audited current quest requirements', () => {
           {
             "guilds": [
               "Wizards' Guild"
-            ]
+            ],
+            "skills": {
+              "Magic": 66
+            }
           }
         ],
         "manualRequirements": null,
@@ -4526,7 +4529,7 @@ describe('audited current quest requirements', () => {
         "oneOf": null,
         "manualRequirements": null,
         "points": 1,
-        "difficulty": "Quest (Experienced)"
+        "difficulty": "Quest (Master)"
       },
       "RFD: King Awowogei": {
         "kind": "quest",
@@ -4547,7 +4550,7 @@ describe('audited current quest requirements', () => {
         "oneOf": null,
         "manualRequirements": null,
         "points": 1,
-        "difficulty": "Quest (Experienced)"
+        "difficulty": "Quest (Master)"
       },
       "RFD: Finale": {
         "kind": "quest",
@@ -4576,7 +4579,7 @@ describe('audited current quest requirements', () => {
         "oneOf": null,
         "manualRequirements": null,
         "points": 1,
-        "difficulty": "Quest (Master)"
+        "difficulty": "Quest (Grandmaster)"
       },
       "Rag and Bone Man I": {
         "kind": "quest",

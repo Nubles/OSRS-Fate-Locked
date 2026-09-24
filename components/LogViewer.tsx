@@ -212,8 +212,11 @@ export const LogViewer: React.FC = () => {
     }
   }, [filteredHistory.length, searchTerm, filterType, sortOrder]);
 
-  const FilterButton = ({ type, label, icon: Icon }: { type: FilterType, label: string, icon: any }) => (
+  // A render helper, not a component defined here: a component created on
+  // every render would remount each button and drop keyboard focus.
+  const filterButton = (type: FilterType, label: string, Icon: any) => (
     <button
+      key={type}
       onClick={() => setFilterType(type)}
       className={`
         flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide border transition-all shrink-0
@@ -275,11 +278,11 @@ export const LogViewer: React.FC = () => {
           
           {/* Filters */}
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0">
-             <FilterButton type="ALL" label="All" icon={Filter} />
-             <FilterButton type="ROLLS" label="Rolls" icon={Dices} />
-             <FilterButton type="UNLOCKS" label="Unlocks" icon={Unlock} />
-             <FilterButton type="RITUALS" label="Rituals" icon={Zap} />
-             <FilterButton type="PROGRESS" label="Level" icon={TrendingUp} />
+             {filterButton('ALL', 'All', Filter)}
+             {filterButton('ROLLS', 'Rolls', Dices)}
+             {filterButton('UNLOCKS', 'Unlocks', Unlock)}
+             {filterButton('RITUALS', 'Rituals', Zap)}
+             {filterButton('PROGRESS', 'Level', TrendingUp)}
           </div>
         </div>
       </div>

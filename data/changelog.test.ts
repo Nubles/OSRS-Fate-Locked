@@ -4,6 +4,7 @@ import {
   LATEST_CHANGELOG,
   type ChangelogSection,
 } from './changelog';
+import { LATEST_CHANGELOG_ID } from './changelogLatest';
 
 const allowedSections = new Set<ChangelogSection>([
   'added',
@@ -19,7 +20,12 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-24-unlocks-and-guide-saves');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-24-saves-keys-and-planners');
+  });
+
+  it('names the newest release in changelogLatest.ts, which the app reads up front', () => {
+    // Add a release? Set LATEST_CHANGELOG_ID in data/changelogLatest.ts to its id.
+    expect(LATEST_CHANGELOG_ID).toBe(CHANGELOG_RELEASES[0].id);
   });
 
   it('retains the RuneLite relay reliability fixes', () => {

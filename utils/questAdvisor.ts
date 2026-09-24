@@ -12,7 +12,7 @@
 
 import { QUEST_DATA } from '../data/questData';
 import { evaluateQuestEligibility } from './journalStatus';
-import { computeUnlockImpact } from './unlockImpact';
+import { computeUnlockImpact, prepareUnlockImpactContext } from './unlockImpact';
 
 export interface RankedQuest {
   id: string;
@@ -45,11 +45,14 @@ export function rankAvailableQuests(unlocks: any, gameModeId?: string): RankedQu
     quest => !unlocks.quests.includes(quest.id)
       && evaluateQuestEligibility(quest, unlocks, gameModeId).eligible,
   );
+  // Every candidate is simulated from the same snapshot, so its base
+  // statuses are evaluated once and shared, as the Skill Advisor does.
+  const context = prepareUnlockImpactContext(unlocks, gameModeId);
 
   return available
     .map((candidate): RankedQuest => {
       const simulated = { ...unlocks, quests: [...unlocks.quests, candidate.id] };
-      const impact = computeUnlockImpact(unlocks, simulated, gameModeId);
+      const impact = computeUnlockImpact(unlocks, simulated, gameModeId, { context });
 
       return {
         id: candidate.id,

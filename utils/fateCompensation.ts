@@ -3,6 +3,7 @@ import {
   failureFateForSource,
   SKILL_CHAOS_MILESTONES,
 } from '../config/economy';
+import type { GameModeRules } from '../config/gameModes';
 import { SKILLS_LIST } from '../data/items';
 import { DropSource, type FailureFateAward, type GameState, type LogEntry } from '../types';
 
@@ -14,6 +15,7 @@ export interface LegacyFateCompensation {
   fatePoints: number;
 }
 
+// Used only when the run's mode is unknown.
 const LEGACY_PITY_THRESHOLD = 50;
 // Matches saveSchema's MAX_COUNTER without importing its migration dependency.
 const MAX_COMPENSATION_COUNTER = 2_147_483_647;
@@ -69,9 +71,16 @@ const reachedChaosMilestones = (levels: Readonly<Record<string, number>>): numbe
     return total + SKILL_CHAOS_MILESTONES.filter(milestone => milestone <= level).length;
   }, 0);
 
+/**
+ * `rules` is the run's mode, applied as the integrity replay applies it: a
+ * mode with pity off earns no Pity Keys, and otherwise its own threshold sets
+ * where they fall.
+ */
 export const calculateLegacyFateCompensation = (
   state: Pick<GameState, 'unlocks' | 'history' | 'fatePoints'>,
+  rules?: Pick<GameModeRules, 'pityEnabled' | 'pityThreshold'>,
 ): LegacyFateCompensation => {
+  const pityThreshold = rules?.pityThreshold ?? LEGACY_PITY_THRESHOLD;
   let fatePoints = 0;
   let pityKeys = 0;
 
@@ -86,15 +95,16 @@ export const calculateLegacyFateCompensation = (
     fatePoints += replayAward(entry);
 
     if (entry.type === 'PITY') {
-      fatePoints = fatePoints >= LEGACY_PITY_THRESHOLD
-        ? fatePoints - LEGACY_PITY_THRESHOLD
+      fatePoints = fatePoints >= pityThreshold
+        ? fatePoints - pityThreshold
         : 0;
       continue;
     }
 
-    const crossings = Math.floor(fatePoints / LEGACY_PITY_THRESHOLD);
+    if (rules?.pityEnabled === false) continue;
+    const crossings = Math.floor(fatePoints / pityThreshold);
     pityKeys += crossings;
-    fatePoints -= crossings * LEGACY_PITY_THRESHOLD;
+    fatePoints -= crossings * pityThreshold;
   }
 
   return {

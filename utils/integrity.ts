@@ -113,12 +113,16 @@ export interface ReplayState {
   pities: number;
 }
 
+/** The part of a run's ruleset that bounds its Fate. */
+export type ReplayRules = Pick<GameModeRules, 'pityEnabled' | 'pityThreshold'>;
+
 // Given the history alone, re-derive the running state and flag anything
 // physically impossible (negative keys, fate over cap, roll outside 0.01-100.0).
 // Doesn't prove the *roll values* are honest — a determined editor can
 // rewrite consistently — but catches naive tampering and any inconsistency
-// introduced by hand-editing isolated fields.
-export const replayInvariants = (history: LogEntry[], startKeys = 3): { violations: InvariantViolation[]; final: ReplayState } => {
+// introduced by hand-editing isolated fields. `rules` is the run's mode: with
+// pity off Fate has no cap, otherwise the cap is the mode's pity threshold.
+export const replayInvariants = (history: LogEntry[], startKeys = 3, rules?: ReplayRules): { violations: InvariantViolation[]; final: ReplayState } => {
   const recordedFateAward = (entry: LogEntry): number => {
     const award = entry.meta?.fatePointsEarned;
     return typeof award === 'number' && Number.isFinite(award) && award >= 0
@@ -132,12 +136,17 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
       && value <= CUSTOM_RULE_BOUNDS.pityThreshold.max
       ? value
       : null;
+  const modeThreshold = validPityThreshold(rules?.pityThreshold);
   const recordedPityThreshold = (entry: LogEntry): number =>
-    validPityThreshold(entry.meta?.pityThreshold) ?? 50;
-  const fateCap = history
-    .filter(entry => entry.type === 'PITY')
-    .map(entry => validPityThreshold(entry.meta?.pityThreshold))
-    .find((threshold): threshold is number => threshold !== null) ?? 50;
+    validPityThreshold(entry.meta?.pityThreshold) ?? modeThreshold ?? 50;
+  // Without the mode (older callers), the first Pity Key's recorded threshold
+  // or the historical 50 stands in for it.
+  const fateCap = rules?.pityEnabled === false
+    ? Number.POSITIVE_INFINITY
+    : modeThreshold ?? history
+      .filter(entry => entry.type === 'PITY')
+      .map(entry => validPityThreshold(entry.meta?.pityThreshold))
+      .find((threshold): threshold is number => threshold !== null) ?? 50;
   const detectedSkillChaosAward = (entry: LogEntry): number => {
     const award = entry.meta?.chaosKeysAwarded;
     return entry.meta?.detectorId === 'skill-level-v1'
@@ -194,6 +203,7 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
         s.rolls += 1; s.successes += 1;
         break;
       case 'PITY':
+        s.chaosKeys += detectedSkillChaosAward(e);
         s.keys += 1;
         s.fatePoints = Math.max(0, s.fatePoints + recordedFateAward(e) - recordedPityThreshold(e));
         s.rolls += 1; s.pities += 1;
@@ -228,17 +238,21 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
           return e.timestamp < Date.parse('2026-07-04T13:34:16Z') ? before : after;
         };
         const ritual = e.meta?.ritual;
-        if (ritual === 'LUCK' || /Clarity/.test(e.message)) s.fatePoints -= legacyCost(15, 8);
-        else if (ritual === 'GREED' || /Greed/.test(e.message)) s.fatePoints -= legacyCost(30, 15);
-        else if (ritual === 'CHAOS' || /Chaos/.test(e.message)) {
+        // Message matching is only for legacy entries without a recorded
+        // ritual: a Cartographer entry naming "Chaos Temple" is not Chaos.
+        const isRitual = (id: string, legacyMessage: RegExp): boolean =>
+          typeof ritual === 'string' ? ritual === id : legacyMessage.test(e.message);
+        if (isRitual('LUCK', /Clarity/)) s.fatePoints -= legacyCost(15, 8);
+        else if (isRitual('GREED', /Greed/)) s.fatePoints -= legacyCost(30, 15);
+        else if (isRitual('CHAOS', /Chaos/)) {
           s.fatePoints -= legacyCost(25, 25); s.chaosKeys += amount('chaosKeysAwarded', 1);
-        } else if (ritual === 'TRANSMUTE' || /Transmut/.test(e.message)) {
+        } else if (isRitual('TRANSMUTE', /Transmut/)) {
           s.keys -= amount('keyCost', 5); s.specialKeys += amount('specialKeysAwarded', 1);
-        } else if (ritual === 'GAMBIT' || /Void Gambit/.test(e.message)) {
+        } else if (isRitual('GAMBIT', /Void Gambit/)) {
           s.fatePoints = 0;
           fateEstimate = false;
           s.keys += amount('keysAwarded', Number(e.message.match(/WON.*?([0-9]+) Key/)?.[1] ?? 0));
-        } else if (ritual === 'CARTOGRAPHER' || /Cartographer/.test(e.message)) {
+        } else if (isRitual('CARTOGRAPHER', /Cartographer/)) {
           s.fatePoints -= amount('fateCost', () => Number(e.details?.match(/for ([0-9]+) Fate/)?.[1] ?? legacyCost(40, 40)));
           s.unlocks += 1;
         }
@@ -310,11 +324,12 @@ export interface RunAudit {
  * check with the invariant replay into a single traffic-light verdict.
  * A history with no hash links at all (very old saves) chains cleanly from
  * GENESIS and reads as intact — we only flag links that are actually broken.
+ * Pass the run's mode rules so its Fate is held to that mode's pity rule.
  */
-export const auditHistory = (history: LogEntry[]): RunAudit => {
+export const auditHistory = (history: LogEntry[], rules?: ReplayRules): RunAudit => {
   const chained = ensureChain(history);
   const chain = verifyChain(chained);
-  const { violations, final } = replayInvariants(chained);
+  const { violations, final } = replayInvariants(chained, undefined, rules);
   let verdict: RunVerdict = 'verified';
   if (!chain.ok) verdict = 'tampered';
   else if (violations.length > 0) verdict = 'warning';
@@ -358,7 +373,7 @@ export const buildVerifiedBundle = async (
 ): Promise<VerifiedBundle> => {
   const chained = ensureChain(history);
   const chainReport = verifyChain(chained);
-  const { final, violations } = replayInvariants(chained);
+  const { final, violations } = replayInvariants(chained, undefined, mode?.rules);
   const runId = computeRunId(chained) ?? 'run-empty';
   // The mode is part of what's committed to — a run isn't fully verified
   // without the ruleset it was played under.

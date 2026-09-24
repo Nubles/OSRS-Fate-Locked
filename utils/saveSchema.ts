@@ -1,6 +1,6 @@
-import { CUSTOM_RULE_BOUNDS, type GameModeRules } from '../config/gameModes';
+import { CUSTOM_RULE_BOUNDS, resolveModeRules, type GameModeRules } from '../config/gameModes';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
-import { EQUIPMENT_SLOTS } from '../data/items';
+import { EQUIPMENT_SLOTS, RETIRED_POH_ITEMS } from '../data/items';
 import { migrateAreaUnlocks } from './areaUnlockMigration';
 import { settleCanonicalAreaUnlocks } from '../data/areaMapPolicy';
 import type { CollectionLogIdentity, FateCompensationState, GameState, LogEntry, RivalState, RuneProofProgress, UnlockState } from '../types';
@@ -19,6 +19,15 @@ import { vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
 import { calculateLegacyFateCompensation, LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
 /** Version 4 freezes and strictly validates one-time Fate compensation. */
 export const CURRENT_SAVE_VERSION = 4;
+/**
+ * The save version that introduced weighted Fate and stores its one-time
+ * compensation offer. Fixed to that release: raising CURRENT_SAVE_VERSION
+ * must never offer the compensation again to saves that already hold one.
+ */
+export const WEIGHTED_FATE_SAVE_VERSION = 4;
+/** Only saves from before weighted Fate have their offer calculated on load. */
+export const calculatesLegacyFateCompensation = (sourceVersion: number): boolean =>
+  sourceVersion < WEIGHTED_FATE_SAVE_VERSION;
 const MIN_SUPPORTED_SAVE_VERSION = 1;
 export const MAX_SAVE_BYTES = 5 * 1024 * 1024;
 export const MAX_HISTORY_ENTRIES = 100_000;
@@ -780,6 +789,34 @@ const normalizeFateCompensation = (value: unknown): Outcome<FateCompensationStat
   };
 };
 
+const notEligibleFateCompensation = (): FateCompensationState => ({
+  releaseId: LEGACY_FATE_COMPENSATION_ID,
+  status: 'not_eligible',
+  chaosKeys: 0,
+  pityKeys: 0,
+  fatePoints: 0,
+});
+
+/** Freeze the one-time offer for a save from before weighted Fate, under its own mode's pity rule. */
+const legacyFateCompensationOffer = (
+  state: Pick<GameState, 'unlocks' | 'history' | 'fatePoints' | 'gameModeId' | 'customMode'>,
+): FateCompensationState => {
+  const calculated = calculateLegacyFateCompensation(
+    state,
+    resolveModeRules(state.gameModeId, state.customMode),
+  );
+  const eligible = calculated.chaosKeys > 0
+    || calculated.pityKeys > 0
+    || calculated.fatePoints !== state.fatePoints;
+  return eligible
+    ? {
+      releaseId: LEGACY_FATE_COMPENSATION_ID,
+      status: 'pending',
+      ...calculated,
+    }
+    : notEligibleFateCompensation();
+};
+
 const RFC_4122_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const normalizeRuneProofProgress = (value: unknown): Outcome<RuneProofProgress> => {
@@ -891,11 +928,11 @@ const normalizeState = (
       'unlocks', 'history', 'pinnedGoals', 'userNotes',
     ];
     // Versions 1 and 2 are permissive migration formats; v3+ require these
-    // counters at the strict save boundary, while v4 also requires its offer.
+    // counters at the strict save boundary, while v4+ also require the offer.
     if (sourceVersion >= 3) {
       required.push('bossStandardKeysAwarded', 'clueStandardKeysAwarded');
     }
-    if (sourceVersion === CURRENT_SAVE_VERSION) {
+    if (!calculatesLegacyFateCompensation(sourceVersion)) {
       required.push('fateCompensation');
     }
     for (const key of required) {
@@ -985,33 +1022,13 @@ const normalizeState = (
   if (!selectedHistory.present) return invalid('invalid_history', 'history');
   const history = normalizeHistory(selectedHistory.value);
   if (history.ok === false) return history;
-  let fateCompensation: FateCompensationState;
-  if (sourceVersion < CURRENT_SAVE_VERSION) {
-    const calculated = calculateLegacyFateCompensation({
-      unlocks: unlocks.value.value,
-      history: history.value,
-      fatePoints: fatePoints.value,
-    });
-    const eligible = calculated.chaosKeys > 0
-      || calculated.pityKeys > 0
-      || calculated.fatePoints !== fatePoints.value;
-    fateCompensation = eligible
-      ? {
-        releaseId: LEGACY_FATE_COMPENSATION_ID,
-        status: 'pending',
-        ...calculated,
-      }
-      : {
-        releaseId: LEGACY_FATE_COMPENSATION_ID,
-        status: 'not_eligible',
-        chaosKeys: 0,
-        pityKeys: 0,
-        fatePoints: 0,
-      };
-  } else {
+  // Older saves have no stored offer; theirs is calculated once the run's
+  // mode is read below, because the mode's pity rule shapes it.
+  let storedCompensation: FateCompensationState | undefined;
+  if (!calculatesLegacyFateCompensation(sourceVersion)) {
     const checked = normalizeFateCompensation(readOwn(input, 'fateCompensation'));
     if (checked.ok === false) return checked;
-    fateCompensation = checked.value;
+    storedCompensation = checked.value;
   }
 
   const selectedGoals = readPreferred(input, defaultRecord, 'pinnedGoals');
@@ -1044,7 +1061,8 @@ const normalizeState = (
     specialKeys: specialKeys.value,
     chaosKeys: chaosKeys.value,
     fatePoints: fatePoints.value,
-    fateCompensation,
+    // Replaced below for saves without a stored offer, once the mode is known.
+    fateCompensation: storedCompensation ?? notEligibleFateCompensation(),
     bossStandardKeysAwarded,
     clueStandardKeysAwarded,
     activeBuff: selectedBuff.value,
@@ -1090,6 +1108,11 @@ const normalizeState = (
     state.rngSeed = checked.value;
   }
   const selectedCustom = readPreferred(input, defaultRecord, 'customMode');
+  if (selectedCustom.present) {
+    const checked = normalizeCustomMode(selectedCustom.value);
+    if (checked.ok === false) return checked;
+    state.customMode = checked.value;
+  }
   if (own(input, 'rngVersion')) {
     const version = readOwn(input, 'rngVersion');
     if (version !== 1 && version !== 2) return invalid('invalid_field', 'rngVersion');
@@ -1102,15 +1125,16 @@ const normalizeState = (
     const p = inspected.value;
     if (typeof p.id !== 'string' || p.id.length === 0 || p.id.length > 200
       || typeof p.item !== 'string' || !Object.values(TableType).includes(p.table as TableType)
-      || (!getPoolAndStateKey(p.table as TableType).pool.includes(p.item)
-        && !(p.table === TableType.REGIONS && p.item === 'Tutorial Island'))
+      || (!getPoolAndStateKey(p.table as TableType, state.gameModeId, state.customMode).pool.includes(p.item)
+        && !(p.table === TableType.REGIONS && p.item === 'Tutorial Island')
+        // Already paid before Aquarium left the roll pool; retired items stay
+        // valid in older saves, so the reveal must still load and complete.
+        && !(p.table === TableType.POH && RETIRED_POH_ITEMS.includes(p.item)))
       || (p.costType !== 'key' && p.costType !== 'chaosKey') || p.cost !== 1) return invalid('invalid_field', 'pendingUnlock');
     state.pendingUnlock = { id: p.id, table: p.table as TableType, item: p.item, costType: p.costType, cost: 1 };
   }
-  if (selectedCustom.present) {
-    const checked = normalizeCustomMode(selectedCustom.value);
-    if (checked.ok === false) return checked;
-    state.customMode = checked.value;
+  if (storedCompensation === undefined) {
+    state.fateCompensation = legacyFateCompensationOffer(state);
   }
   const selectedLoadout = readPreferred(input, defaultRecord, 'loadout');
   if (selectedLoadout.present) {

@@ -2,17 +2,23 @@ import React from 'react';
 import { AlertTriangle, CheckCircle2, Link2, Loader2, XCircle } from 'lucide-react';
 import { RUNELITE_PAIRING_SUCCESS_COPY } from '../utils/runelitePairing';
 
+export type RunelitePairingPhase = 'confirm' | 'uploading' | 'success' | 'error';
+
 export interface RunelitePairingDialogProps {
   code: string;
   replacing: boolean;
   profileName: string;
   linkedAccount: string | null;
-  phase: 'confirm' | 'uploading' | 'success' | 'error';
+  phase: RunelitePairingPhase;
   error?: string;
   onConfirm(): void;
   onRetry(): void;
   onClose(): void;
 }
+
+/** Every phase but an in-flight send can be closed, including a failed one. */
+export const canDismissRunelitePairing = (phase: RunelitePairingPhase): boolean =>
+  phase !== 'uploading';
 
 export const RunelitePairingDialog: React.FC<
   RunelitePairingDialogProps
@@ -27,7 +33,7 @@ export const RunelitePairingDialog: React.FC<
   onRetry,
   onClose,
 }) => {
-  const canDismiss = phase === 'confirm' || phase === 'success';
+  const canDismiss = canDismissRunelitePairing(phase);
 
   return (
     <div
@@ -52,7 +58,7 @@ export const RunelitePairingDialog: React.FC<
               Connect RuneLite tracker
             </h2>
             <p className="mt-1 text-[11px] text-gray-500">
-              RuneLite requested this connection.
+              Only continue if you just pressed Connect tracker in RuneLite.
             </p>
           </div>
         </div>
@@ -60,7 +66,9 @@ export const RunelitePairingDialog: React.FC<
         <div className="space-y-4 p-4">
           <p className="text-[12px] leading-relaxed text-gray-300">
             Connect this tracker profile so RuneLite can retrieve its
-            Fate Locked rules. RuneLite does not upload gameplay data.
+            Fate Locked rules. RuneLite does not upload gameplay data. A
+            pairing link from anywhere else would let its sender read the
+            profile you publish.
           </p>
 
           <dl className="space-y-2 rounded-lg border border-white/5 bg-black/20 p-3 text-[11px]">
@@ -153,13 +161,22 @@ export const RunelitePairingDialog: React.FC<
             </button>
           )}
           {phase === 'error' && (
-            <button
-              type="button"
-              onClick={onRetry}
-              className="rounded-lg bg-cyan-600 px-4 py-2 text-[12px] font-bold text-white"
-            >
-              Retry
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-lg border border-white/10 bg-[#252525] px-4 py-2 text-[12px] font-bold text-gray-200"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={onRetry}
+                className="rounded-lg bg-cyan-600 px-4 py-2 text-[12px] font-bold text-white"
+              >
+                Retry
+              </button>
+            </>
           )}
           {phase === 'success' && (
             <button

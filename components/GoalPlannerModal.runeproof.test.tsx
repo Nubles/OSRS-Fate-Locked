@@ -487,6 +487,68 @@ describe('RuneProof Goal Planner integration', () => {
     expect(screen.queryByRole('heading', { name: 'Next action' })).toBeNull();
   });
 
+  it('offers Retry and Reload instead of an empty catalogue when the guides cannot load', async () => {
+    const attempts: RuneProofAvailability[] = [];
+    walkthroughLoaderControl.loadCatalogue = (availability) => {
+      attempts.push(availability);
+      return attempts.length === 1
+        ? Promise.reject(new TypeError(
+          'Failed to fetch dynamically imported module: /assets/questWalkthroughs.public-stale.js',
+        ))
+        : Promise.resolve(questStrategyCatalogue);
+    };
+    const reload = vi.fn();
+    vi.stubGlobal('location', { ...window.location, reload });
+
+    render(
+      <GoalPlannerModal
+        onClose={() => undefined}
+        runeProof={runeProof(loadedContent())}
+      />,
+    );
+
+    const failure = await screen.findByRole('alert');
+    expect(failure.textContent).toContain('RuneProof guides could not load');
+    expect(screen.queryByText('Choose a RuneProof quest')).toBeNull();
+    expect(screen.queryByText('Only quests with a RuneProof route appear here.')).toBeNull();
+    expect(within(guideCatalogue()).getByText('RuneProof guides could not load.')).toBeTruthy();
+    expect(within(guideCatalogue()).queryByText('No matches.')).toBeNull();
+
+    fireEvent.click(within(failure).getByRole('button', { name: 'Reload page' }));
+    expect(reload).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(within(failure).getByRole('button', { name: 'Retry' }));
+    expect(await screen.findByRole('heading', { name: 'Next action' })).toBeTruthy();
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(attempts).toEqual(['PREVIEW', 'PREVIEW']);
+  });
+
+  it('keeps the failure and its Retry until another catalogue attempt settles', async () => {
+    const retry = deferred<readonly QuestStrategyDefinition[]>();
+    let attempts = 0;
+    walkthroughLoaderControl.loadCatalogue = () => {
+      attempts += 1;
+      return attempts === 1 ? Promise.reject(new Error('offline')) : retry.promise;
+    };
+
+    render(
+      <GoalPlannerModal
+        onClose={() => undefined}
+        runeProof={runeProof(loadedContent())}
+      />,
+    );
+
+    fireEvent.click(within(await screen.findByRole('alert')).getByRole('button', { name: 'Retry' }));
+    const retrying = within(screen.getByRole('alert')).getByRole('button', { name: 'Retrying…' });
+    expect((retrying as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByText('Choose a RuneProof quest')).toBeNull();
+
+    await act(async () => { retry.resolve(questStrategyCatalogue); });
+    expect(await screen.findByRole('heading', { name: 'Next action' })).toBeTruthy();
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(attempts).toBe(2);
+  });
+
   it('keeps confirmation state for every Wave 1 strategy while objectives switch', async () => {
     const journalQuestsBefore = [...gameSnapshot.unlocks.quests];
     const objectives = [
@@ -1021,9 +1083,10 @@ describe('RuneProof Goal Planner integration', () => {
       unlocks: plannerUnlocks({ chunks: ['50,51'] }),
       gameModeId: 'chunked',
     };
+    // Ticking the egg step implies every step before it.
     window.localStorage.setItem(
-      runeProofPreviewStorageKey('run-a'),
-      JSON.stringify({ "Cook's Assistant": ['egg'] }),
+      runeProofPreviewActionStorageKey('run-a'),
+      JSON.stringify({ "Cook's Assistant": ['cooks-assistant:take-egg'] }),
     );
     const onClose = vi.fn();
     const onOpenWorldChunk = vi.fn();
@@ -1410,8 +1473,9 @@ describe('RuneProof Goal Planner integration', () => {
     renderGoalPlanner({ availability: 'PREVIEW', selectedQuest: "Cook's Assistant" });
 
     const current = await nextAction();
-    expect(current.getByText('Pick grain outside Mill Lane Mill.')).toBeTruthy();
-    expect(coachProgress("Cook's Assistant").value).toBe(5);
+    // An egg check completes only the egg step, not the earlier milk steps.
+    expect(current.getByText('Speak with the Cook in Lumbridge Castle to begin.')).toBeTruthy();
+    expect(coachProgress("Cook's Assistant").value).toBe(1);
     expect(screen.queryByRole('region', { name: 'Quest requirements' })).toBeNull();
     expect(JSON.parse(window.localStorage.getItem(runeProofPreviewStorageKey('run-a')) ?? '{}'))
       .toEqual({ "Cook's Assistant": ['egg'] });
@@ -1425,6 +1489,23 @@ describe('RuneProof Goal Planner integration', () => {
     });
     expect(await screen.findByRole('region', { name: 'Quest requirements' })).toBeTruthy();
     expect(screen.getByText('Analysis unavailable')).toBeTruthy();
+  });
+
+  it("confirms a preview guide pack's own item from the fallback checklist", async () => {
+    gameSnapshot = { ...gameSnapshot, gameModeId: 'vanilla' };
+    renderGoalPlanner({
+      availability: 'PREVIEW',
+      selectedQuest: "Witch's Potion",
+      contentService: loadedContent(async () => false),
+    });
+
+    const checklist = await screen.findByRole('region', { name: 'Quest requirements' });
+    const eyeOfNewt = within(checklist).getByRole('checkbox', { name: /Eye of newt/ }) as HTMLInputElement;
+    expect(eyeOfNewt.checked).toBe(false);
+    fireEvent.click(eyeOfNewt);
+    expect(eyeOfNewt.checked).toBe(true);
+    expect(JSON.parse(previewStorage.get(runeProofPreviewStorageKey('run-a'))!))
+      .toEqual({ "Witch's Potion": ['eye of newt'] });
   });
 
   it('keeps the normal plan and localizes chunk-content load failure', async () => {

@@ -6,6 +6,14 @@ import { MAX_SAVE_BYTES } from './saveSchema';
 const FATE_KEY = "FATE_IS_ABSOLUTE_THE_VOID_STARES_BACK";
 const FATE_PREFIX = 'FATE_LOCKED::';
 
+/**
+ * Largest .fate file that can hold a MAX_SAVE_BYTES save. The save's UTF-8
+ * bytes are base64 encoded (4/3) and then hex encoded (x2), so capping the
+ * file itself at MAX_SAVE_BYTES refused every save above about 1.97 MB, which
+ * a long run reaches. Decoding still caps the save at MAX_SAVE_BYTES.
+ */
+export const MAX_FATE_FILE_BYTES = FATE_PREFIX.length + 8 * Math.ceil(MAX_SAVE_BYTES / 3);
+
 export type SaveDecodeResult =
   | { ok: true; value: unknown }
   | {
@@ -88,7 +96,7 @@ export const boundFateSaveExport = (encoded: string): FateSaveExportResult => {
       message: 'The save file could not be generated.',
     };
   }
-  if (new TextEncoder().encode(encoded).byteLength > MAX_SAVE_BYTES) {
+  if (new TextEncoder().encode(encoded).byteLength > MAX_FATE_FILE_BYTES) {
     return {
       ok: false,
       code: 'too_large',
@@ -110,8 +118,8 @@ export const deobfuscateFateSave = (cipher: string): SaveDecodeResult => {
     return failure('decode_failed');
   }
   if (
-    cipher.length > MAX_SAVE_BYTES
-    || new TextEncoder().encode(cipher).byteLength > MAX_SAVE_BYTES
+    cipher.length > MAX_FATE_FILE_BYTES
+    || new TextEncoder().encode(cipher).byteLength > MAX_FATE_FILE_BYTES
   ) {
     return failure('too_large');
   }
@@ -119,6 +127,9 @@ export const deobfuscateFateSave = (cipher: string): SaveDecodeResult => {
   // Backward Compatibility: If it looks like JSON, parse it as JSON
   const trimmed = cipher.trim();
   if (looksLikePlainJson(trimmed)) {
+    if (new TextEncoder().encode(trimmed).byteLength > MAX_SAVE_BYTES) {
+      return failure('too_large');
+    }
     try {
       return { ok: true, value: JSON.parse(trimmed) as unknown };
     } catch {

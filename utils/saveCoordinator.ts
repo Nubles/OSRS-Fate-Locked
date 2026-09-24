@@ -170,6 +170,12 @@ type ValidationHashTask = {
 
 export interface SaveCoordinator {
   stage(data: string): void;
+  /**
+   * Raise the revision counter to the newest durable revision. Call it when
+   * this tab gains ownership: another tab may have written while this one
+   * was blocked, and the journal rejects revisions behind its head.
+   */
+  resyncRevision?(): Promise<void>;
   flush(): Promise<SaveDurabilitySnapshot>;
   retry(): Promise<SaveDurabilitySnapshot>;
   mirrorLifecycle(data: string): boolean;
@@ -201,6 +207,7 @@ export const createSaveCoordinator = (
   options: SaveCoordinatorOptions,
 ): SaveCoordinator => {
   let revision = initialRevision(options.initialPersistenceRevision);
+  let revisionSync: Promise<void> | null = null;
   let pending: StagedSnapshot | null = null;
   let lastAttemptData: string | null = null;
   let changeToken = 0;
@@ -241,6 +248,52 @@ export const createSaveCoordinator = (
     recovery: 'degraded',
     savedAt: snapshot.savedAt,
   });
+
+  const mirrorMetadataRevision = (): number => {
+    try {
+      const raw = options.storage.getItem(profileMirrorMetadataKey(options.storageKey));
+      if (raw === null) return 0;
+      const value = (JSON.parse(raw) as { persistenceRevision?: unknown }).persistenceRevision;
+      return typeof value === 'number' && Number.isSafeInteger(value) && value > 0 ? value : 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  const durableRevision = async (): Promise<number> => {
+    const stored = options.repository.maxPersistenceRevision
+      ? await options.repository.maxPersistenceRevision(options.profileId)
+      : Math.max(
+        (await options.repository.getHead(options.profileId))?.persistenceRevision ?? 0,
+        ...(await options.repository.listCheckpoints(options.profileId))
+          .map(checkpoint => checkpoint.persistenceRevision),
+      );
+    return Math.max(Number.isSafeInteger(stored) ? stored : 0, mirrorMetadataRevision());
+  };
+
+  const resyncRevision = (): Promise<void> => {
+    if (disposed) return Promise.resolve();
+    const sync: Promise<void> = (revisionSync ?? Promise.resolve())
+      .then(durableRevision)
+      .then(
+        stored => {
+          if (stored > revision) revision = stored;
+        },
+        () => {
+          // An unreadable journal keeps the local counter; a stale write is
+          // then retried once after its own resync.
+        },
+      )
+      .finally(() => {
+        if (revisionSync === sync) revisionSync = null;
+      });
+    revisionSync = sync;
+    return sync;
+  };
+
+  const isStaleRevision = (result: RecoveryWriteResult): boolean => (
+    result.stored === false && result.reason === 'stale_revision'
+  );
 
   const isCurrent = (candidate: StagedSnapshot): boolean => (
     changeToken === candidate.token
@@ -348,6 +401,7 @@ export const createSaveCoordinator = (
   };
 
   const runFlush = async (candidate: StagedSnapshot): Promise<FlushOutcome> => {
+    if (revisionSync !== null) await revisionSync;
     const validationHash = beginValidateAndHash(candidate.data);
     // An immediately settled checksum permits a synchronous stage that lands
     // before this continuation to remain part of the current journal flight;
@@ -426,9 +480,9 @@ export const createSaveCoordinator = (
       };
     }
 
-    const persistenceRevision = nextRevision(revision);
+    let persistenceRevision = nextRevision(revision);
     revision = persistenceRevision;
-    const record: RecoveryHead = {
+    let record: RecoveryHead = {
       profileId: options.profileId,
       persistenceRevision,
       runId: stateRunId(prepared.validation.state),
@@ -447,11 +501,26 @@ export const createSaveCoordinator = (
       };
     }
 
-    let journal: RecoveryWriteResult;
-    try {
-      journal = writeResult(await options.repository.putHead(record, options.authorizeWrite));
-    } catch {
-      journal = unavailableWrite();
+    const putHead = async (): Promise<RecoveryWriteResult> => {
+      try {
+        return writeResult(await options.repository.putHead(record, options.authorizeWrite));
+      } catch {
+        return unavailableWrite();
+      }
+    };
+    let journal = await putHead();
+
+    if (isStaleRevision(journal) && !disposed && unchangedSinceChecksum()) {
+      // The journal is ahead of this tab's counter because another tab
+      // wrote while this one could not. Catch up once and retry; the
+      // repository still re-checks ownership inside its transaction.
+      await resyncRevision();
+      if (!disposed && unchangedSinceChecksum()) {
+        persistenceRevision = nextRevision(revision);
+        revision = persistenceRevision;
+        record = { ...record, persistenceRevision };
+        journal = await putHead();
+      }
     }
 
     if (disposed) {
@@ -461,6 +530,14 @@ export const createSaveCoordinator = (
         mirrorMetadataVerified: false,
         stale: true,
       };
+    }
+
+    if (isStaleRevision(journal)) {
+      // Never mirror bytes the journal refused. Its newer head would win on
+      // the next load and silently undo them, so report the save as failed.
+      return unchangedSinceChecksum()
+        ? { journal, primaryVerified: false, mirrorMetadataVerified: false }
+        : { journal, primaryVerified: false, mirrorMetadataVerified: false, stale: true };
     }
 
     const mirrored = mirror(
@@ -674,6 +751,7 @@ export const createSaveCoordinator = (
   ): Promise<BackupWriteResult> => {
     if (disposed || data.length === 0) return { stored: false, reason: 'empty' };
     await whenIdle();
+    if (revisionSync !== null) await revisionSync;
     const checkpointChangeToken = changeToken;
     const checkpointStaged = pending;
 
@@ -689,23 +767,33 @@ export const createSaveCoordinator = (
     const authorization = options.authorizeWrite();
     if (isWriteFailure(authorization)) return checkpointFailure(saveAuthorizationResult(authorization));
 
-    const persistenceRevision = nextRevision(revision);
-    revision = persistenceRevision;
-    const record: RecoveryCheckpoint = {
-      profileId: options.profileId,
-      persistenceRevision,
-      runId: stateRunId(prepared.validation.state),
-      runRevision: stateRunRevision(prepared.validation.state),
-      capturedAt: options.now(),
-      checksum: prepared.checksum,
-      data,
-      reason,
+    const allocate = (): RecoveryCheckpoint => {
+      const persistenceRevision = nextRevision(revision);
+      revision = persistenceRevision;
+      return {
+        profileId: options.profileId,
+        persistenceRevision,
+        runId: stateRunId(prepared.validation.state),
+        runRevision: stateRunRevision(prepared.validation.state),
+        capturedAt: options.now(),
+        checksum: prepared.checksum,
+        data,
+        reason,
+      };
     };
-    let result: RecoveryWriteResult;
-    try {
-      result = writeResult(await options.repository.putCheckpoint(record, options.authorizeWrite));
-    } catch {
-      result = unavailableWrite();
+    const putCheckpoint = async (record: RecoveryCheckpoint): Promise<RecoveryWriteResult> => {
+      try {
+        return writeResult(await options.repository.putCheckpoint(record, options.authorizeWrite));
+      } catch {
+        return unavailableWrite();
+      }
+    };
+    let result = await putCheckpoint(allocate());
+    if (isStaleRevision(result) && !disposed) {
+      // Another tab used this revision for a different checkpoint while this
+      // one was blocked. Catch up and store it under the next free revision.
+      await resyncRevision();
+      if (!disposed) result = await putCheckpoint(allocate());
     }
     return result.stored
       ? result.pruneFailure === undefined
@@ -736,6 +824,7 @@ export const createSaveCoordinator = (
 
   return {
     stage,
+    resyncRevision,
     flush,
     retry,
     mirrorLifecycle,

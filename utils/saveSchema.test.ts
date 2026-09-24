@@ -3,6 +3,7 @@ import type { GameState, LogEntry, UnlockState } from '../types';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { serializeCurrent } from './gamePersistence';
 import {
+  calculatesLegacyFateCompensation,
   CURRENT_SAVE_VERSION,
   MAX_COLLECTION_LOG_ENTRIES,
   MAX_COUNTER,
@@ -16,6 +17,7 @@ import {
   MAX_USER_NOTES,
   parseAndMigrateSave,
   validateAndMigrateSave,
+  WEIGHTED_FATE_SAVE_VERSION,
   type SaveErrorCode,
   type SaveValidationResult,
 } from './saveSchema';
@@ -284,6 +286,57 @@ describe('save schema compatibility', () => {
     });
   });
 
+  const legacyNoviceFailures = (count: number) => Array.from({ length: count }, (_, index) => ({
+    id: `novice-${index}`,
+    timestamp: index,
+    type: 'ROLL_FAIL',
+    source: 'Quest (Novice)',
+    message: 'No Key.',
+    meta: { fatePointsEarned: 1 },
+  }));
+
+  it.each([
+    ['legacy Hardcore', { gameModeId: 'hardcore' }],
+    ['a Custom run with pity off', { customMode: { ...fullStateFixture().customMode!, pityEnabled: false } }],
+  ])('migrates %s without offering Pity Keys its mode never grants', (_label, mode) => {
+    const legacy = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    Object.assign(legacy, mode);
+    legacy.version = 3;
+    delete legacy.fateCompensation;
+    legacy.fatePoints = 60;
+    (legacy.unlocks as Record<string, unknown>).levels = { Attack: 1, Hitpoints: 10 };
+    legacy.history = legacyNoviceFailures(60);
+
+    const result = expectAccepted(validateAndMigrateSave(legacy, defaultsFixture()));
+
+    expect(result.state.fateCompensation).toEqual({
+      releaseId: LEGACY_FATE_COMPENSATION_ID,
+      status: 'not_eligible',
+      chaosKeys: 0,
+      pityKeys: 0,
+      fatePoints: 0,
+    });
+  });
+
+  it("migrates a legacy Casual run at its own 30-Fate pity threshold", () => {
+    const legacy = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    legacy.gameModeId = 'casual';
+    legacy.version = 3;
+    delete legacy.fateCompensation;
+    legacy.fatePoints = 35;
+    (legacy.unlocks as Record<string, unknown>).levels = { Attack: 1, Hitpoints: 10 };
+    legacy.history = legacyNoviceFailures(35);
+
+    const result = expectAccepted(validateAndMigrateSave(legacy, defaultsFixture()));
+
+    expect(result.state.fateCompensation).toEqual({
+      releaseId: LEGACY_FATE_COMPENSATION_ID,
+      status: 'pending',
+      chaosKeys: 0,
+      pityKeys: 1,
+      fatePoints: 5,
+    });
+  });
 
   it('freezes conservative fractional metadata through a v3-to-v4 save round trip', () => {
     const legacy = clone(fullStateFixture()) as unknown as Record<string, unknown>;
@@ -949,6 +1002,22 @@ describe('save schema numeric and enum boundaries', () => {
   });
 });
 
+describe('pending Areas reveal', () => {
+  const withPendingVarrock = (gameModeId: string) => candidate({
+    gameModeId,
+    pendingUnlock: { id: 'reveal-varrock', table: 'Regions', item: 'Varrock', costType: 'key', cost: 1 },
+  });
+
+  it("loads a legacy Xtreme reveal of a Misthalin area it rolled", () => {
+    const result = expectAccepted(validateAndMigrateSave(withPendingVarrock('xtreme'), defaultsFixture()));
+    expect(result.state.pendingUnlock).toMatchObject({ table: 'Regions', item: 'Varrock' });
+  });
+
+  it('still rejects a Misthalin reveal where Misthalin is free', () => {
+    expectRejected(withPendingVarrock('vanilla'), 'invalid_field', 'pendingUnlock');
+  });
+});
+
 describe('fate compensation validation', () => {
   const offer = (over: Record<string, unknown> = {}) => ({
     releaseId: LEGACY_FATE_COMPENSATION_ID,
@@ -1099,6 +1168,30 @@ describe('JSON parsing boundary', () => {
     expect(invalid).toMatchObject({ ok: false, code: 'invalid_json' });
     if (invalid.ok === true) throw new Error('expected invalid JSON rejection');
     expect(invalid.message).not.toContain(secret);
+  });
+
+  it('calculates the one-time offer only for saves from before weighted Fate', () => {
+    // Pinned to the weighted-Fate release, not to CURRENT_SAVE_VERSION: a later
+    // save version must not offer the compensation again to saves that hold one.
+    expect(WEIGHTED_FATE_SAVE_VERSION).toBe(4);
+    expect([0, 1, 2, 3].map(calculatesLegacyFateCompensation)).toEqual([true, true, true, true]);
+    expect([4, 5, 6, 12].map(calculatesLegacyFateCompensation)).toEqual([false, false, false, false]);
+  });
+
+  it('keeps the offer a version-4 save stores even when its history would qualify', () => {
+    const save = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    save.version = 4;
+    save.fateCompensation = {
+      releaseId: LEGACY_FATE_COMPENSATION_ID, status: 'none', chaosKeys: 8, pityKeys: 0, fatePoints: 0, choice: 'none',
+    };
+    save.fatePoints = 45;
+    save.history = Array.from({ length: 45 }, (_, index) => ({
+      id: `stored-offer-fail-${index}`, timestamp: index, type: 'ROLL_FAIL',
+      source: 'Quest (Master)', message: 'No Key.', meta: { fatePointsEarned: 1 },
+    }));
+
+    expect(expectAccepted(validateAndMigrateSave(save, defaultsFixture())).state.fateCompensation)
+      .toEqual(save.fateCompensation);
   });
 
   it('round-trips a resolved v4 choice without recalculating eligibility', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  SKILLS_LIST, EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, REGIONS_LIST,
+  SKILLS_LIST, EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, REGIONS_LIST, MISTHALIN_AREAS,
   MOBILITY_LIST, ARCANA_LIST, ROLLABLE_POH_ITEMS, MERCHANTS_LIST, MINIGAMES_LIST,
   BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST,
   SLAYER_UNLOCKS_LIST,
@@ -11,6 +11,7 @@ import {
   ACHIEVEMENTS, evaluateAchievements, earnedIds, completionPercent,
 } from './achievements';
 import { UnlockState } from '../types';
+import { setStartArea } from './freeAreas';
 
 function emptyUnlocks(over: Partial<UnlockState> = {}): UnlockState {
   return {
@@ -136,5 +137,36 @@ describe('achievements engine', () => {
     expect(completionPercent(almost, 'vanilla')).toBe(99);
     expect(evaluateAchievements(almost, 'vanilla').find(achievement => achievement.id === 'mastery-100')?.earned).toBe(false);
     expect(almost.housing).toContain('Aquarium');
+  });
+});
+
+describe('area achievements by mode', () => {
+  const regionAchievement = (unlocks: UnlockState, mode: string, id: string) =>
+    evaluateAchievements(unlocks, mode).find((a) => a.id === id);
+
+  it("counts the areas a Chunked run's chunks reach", () => {
+    // One chunk each in Falador, Port Sarim, Rimmington, Taverley and Burthorpe.
+    const unlocks = emptyUnlocks({ chunks: ['46,51', '46,49', '45,50', '45,53', '45,55'] });
+
+    expect(regionAchievement(unlocks, 'chunked', 'regions-1')?.earned).toBe(true);
+    expect(regionAchievement(unlocks, 'chunked', 'regions-5')?.earned).toBe(true);
+    expect(regionAchievement(unlocks, 'chunked', 'regions-178')?.earned).toBe(false);
+  });
+
+  it('gives a fresh Chunked run no area achievement for its free start chunk', () => {
+    expect(regionAchievement(emptyUnlocks({ chunks: [] }), 'chunked', 'regions-1')?.current).toBe(0);
+  });
+
+  it("holds legacy Xtreme's World Tour to its locked Misthalin areas as well", () => {
+    setStartArea('lumbridge');
+    try {
+      const lockedMisthalin = MISTHALIN_AREAS.filter((area) => area !== 'Lumbridge');
+      expect(regionAchievement(emptyUnlocks({ regions: [...REGIONS_LIST] }), 'xtreme', 'regions-178'))
+        .toMatchObject({ current: REGIONS_LIST.length, target: REGIONS_LIST.length + 8, earned: false });
+      expect(regionAchievement(emptyUnlocks({ regions: [...REGIONS_LIST, ...lockedMisthalin] }), 'xtreme', 'regions-178'))
+        .toMatchObject({ current: REGIONS_LIST.length + 8, earned: true });
+    } finally {
+      setStartArea(undefined);
+    }
   });
 });

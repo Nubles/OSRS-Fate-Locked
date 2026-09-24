@@ -38,11 +38,13 @@ export const STANCES: Record<Style, Stance[]> = {
     { id: 'rapid', label: 'Rapid', atk: 0, str: 0, speedDelta: -1 },
     { id: 'longrange', label: 'Longrange', atk: 0, str: 0, speedDelta: 0 },
   ],
+  // Only Accurate adds Magic accuracy, and only 2 (Wiki DPS calculator,
+  // getPlayerMaxMagicAttackRoll).
   magic: [
     { id: 'standard', label: 'Manual / autocast', atk: 0, str: 0, speedDelta: 0 },
-    { id: 'longrange', label: 'Powered longrange', atk: 1, str: 0, speedDelta: 0 },
+    { id: 'longrange', label: 'Powered longrange', atk: 0, str: 0, speedDelta: 0 },
     { id: 'defensive', label: 'Defensive', atk: 0, str: 0, speedDelta: 0 },
-    { id: 'accurate', label: 'Accurate', atk: 3, str: 0, speedDelta: 0 },
+    { id: 'accurate', label: 'Accurate', atk: 2, str: 0, speedDelta: 0 },
   ],
 };
 
@@ -52,7 +54,7 @@ export interface Prayer { id: string; label: string; atkMult: number; strMult: n
 export const PRAYERS: Record<Style, Prayer[]> = {
   melee: [
     { id: 'none', label: 'No prayer', atkMult: 1, strMult: 1 },
-    { id: 'clarity', label: 'Improved Reflexes / Burst', atkMult: 1.1, strMult: 1.1 },
+    { id: 'clarity', label: 'Improved Reflexes / Superhuman Strength', atkMult: 1.1, strMult: 1.1 },
     { id: 'chivalry', label: 'Chivalry', atkMult: 1.15, strMult: 1.18 },
     { id: 'piety', label: 'Piety', atkMult: 1.2, strMult: 1.23 },
   ],
@@ -97,17 +99,22 @@ const pick = <T extends { id: string }>(list: T[], id: string): T => list.find((
 export const potionBoost = (baseLevel: number, p: Potion): number =>
   p.flat + Math.floor(p.pct * baseLevel);
 
-/** OSRS effective level: floor((base + boost) * prayerMult) + stance + 8. */
-export const effectiveLevel = (base: number, prayerMult: number, boost: number, stance: number): number =>
-  Math.floor((base + boost) * prayerMult) + stance + 8;
+/**
+ * OSRS effective level: floor((base + boost) * prayerMult) + stance + 8, or
+ * + 9 for Magic accuracy (Wiki DPS calculator, getPlayerMaxMagicAttackRoll).
+ * The prayer multiplier is applied as a whole percentage, as the game does:
+ * 100 * 1.15 is 114.99999999999999 in floating point, which floored to 114.
+ */
+export const effectiveLevel = (base: number, prayerMult: number, boost: number, stance: number, constant = 8): number =>
+  Math.floor(((base + boost) * Math.round(prayerMult * 100)) / 100) + stance + constant;
 
 /** Melee/ranged max hit from effective strength + gear strength bonus. */
 export const maxHitFromStr = (effStr: number, strBonus: number): number =>
   Math.floor(0.5 + (effStr * (strBonus + 64)) / 640);
 
-/** Magic max hit ≈ base spell max scaled by magic-damage %. */
+/** Magic max hit: base spell max scaled by magic-damage %, in whole per-mille. */
 export const maxHitMagic = (baseSpellMax: number, magicDmgPct: number): number =>
-  Math.floor(baseSpellMax * (1 + magicDmgPct / 100));
+  Math.floor((baseSpellMax * Math.round(1000 + magicDmgPct * 10)) / 1000);
 
 export const attackRoll = (effAtk: number, gearAccuracy: number): number =>
   effAtk * (gearAccuracy + 64);
@@ -115,9 +122,13 @@ export const attackRoll = (effAtk: number, gearAccuracy: number): number =>
 export const defenceRoll = (defLevel: number, defBonus: number): number =>
   (defLevel + 9) * (defBonus + 64);
 
-/** Probability a hit lands, from the attack vs defence rolls. */
+/**
+ * Probability a hit lands, from the attack vs defence rolls. Rolls go negative
+ * with bonuses below -64 (e.g. casting in rune armour, or targets with -100
+ * magic defence), where the standard formula leaves 0..1; clamp it.
+ */
 export const hitChance = (atk: number, def: number): number =>
-  atk > def ? 1 - (def + 2) / (2 * (atk + 1)) : atk / (2 * (def + 1));
+  Math.min(1, Math.max(0, atk > def ? 1 - (def + 2) / (2 * (atk + 1)) : atk / (2 * (def + 1))));
 
 // ── Inputs / result ───────────────────────────────────────────────────────────
 export interface DpsInput {
@@ -158,6 +169,19 @@ export interface DpsResult {
   attackInterval: number; // seconds
 }
 
+/**
+ * Time to kill for display: tenths of a second under a minute, else whole
+ * minutes and seconds. Rounded before splitting, so 119.6 s reads "2m 0s",
+ * never "1m 60s".
+ */
+export const formatTimeToKill = (seconds: number): string => {
+  if (!Number.isFinite(seconds) || seconds <= 0) return '—';
+  const tenths = Math.round(seconds * 10);
+  if (tenths < 600) return `${(tenths / 10).toFixed(1)}s`;
+  const whole = Math.round(seconds);
+  return `${Math.floor(whole / 60)}m ${whole % 60}s`;
+};
+
 export const computeDps = (input: DpsInput): DpsResult => {
   const { style, levels, gear, monster } = input;
   const stance = pick(STANCES[style], input.stanceId);
@@ -169,7 +193,7 @@ export const computeDps = (input: DpsInput): DpsResult => {
   const atkBase = style === 'melee' ? levels.attack : style === 'ranged' ? levels.ranged : levels.magic;
   const strBase = style === 'melee' ? levels.strength : style === 'ranged' ? levels.ranged : levels.magic;
 
-  const effAtk = effectiveLevel(atkBase, prayer.atkMult, potionBoost(atkBase, potion), stance.atk);
+  const effAtk = effectiveLevel(atkBase, prayer.atkMult, potionBoost(atkBase, potion), stance.atk, style === 'magic' ? 9 : 8);
   const effStr = effectiveLevel(strBase, prayer.strMult, potionBoost(strBase, potion), stance.str);
 
   const maxHit = style === 'magic'

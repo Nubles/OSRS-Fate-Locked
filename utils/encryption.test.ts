@@ -5,6 +5,7 @@ import {
   boundFateSaveExport,
   deobfuscateFateSave,
   encodeFateSaveExport,
+  MAX_FATE_FILE_BYTES,
   obfuscateFateSave,
 } from './encryption';
 
@@ -47,7 +48,9 @@ describe('Fate save file export bounds', () => {
     });
   });
 
-  it('rejects a valid live save whose obfuscated artifact exceeds the file cap', () => {
+  it('exports and restores a valid live save whose file is larger than the save cap', () => {
+    // The file is ~8/3 the save's size, so a long run's backup must not be
+    // refused merely because its encoded file exceeds MAX_SAVE_BYTES.
     const live = structuredClone(initialState);
     live.userNotes = Object.fromEntries(Array.from(
       { length: 105 },
@@ -56,7 +59,16 @@ describe('Fate save file export bounds', () => {
     expect(validateAndMigrateSave(live, initialState).ok).toBe(true);
     expect(new TextEncoder().encode(JSON.stringify(live)).byteLength).toBeLessThan(MAX_SAVE_BYTES);
 
-    expect(encodeFateSaveExport(live)).toEqual({
+    const exported = encodeFateSaveExport(live);
+    expect(exported.ok).toBe(true);
+    if (!exported.ok) return;
+    expect(exported.value.length).toBeGreaterThan(MAX_SAVE_BYTES);
+    expect(exported.value.length).toBeLessThanOrEqual(MAX_FATE_FILE_BYTES);
+    expect(deobfuscateFateSave(exported.value)).toEqual({ ok: true, value: JSON.parse(JSON.stringify(live)) });
+  });
+
+  it('still refuses to export a save larger than the save cap', () => {
+    expect(encodeFateSaveExport({ note: 'x'.repeat(MAX_SAVE_BYTES) })).toEqual({
       ok: false,
       code: 'too_large',
       message: 'The generated save file is too large to export.',
@@ -98,7 +110,14 @@ describe('Fate save file decoding', () => {
   });
 
   it('rejects oversized raw input before parsing or decoding', () => {
-    expect(deobfuscateFateSave('x'.repeat(MAX_SAVE_BYTES + 1))).toMatchObject({
+    expect(deobfuscateFateSave('x'.repeat(MAX_FATE_FILE_BYTES + 1))).toMatchObject({
+      ok: false,
+      code: 'too_large',
+    });
+  });
+
+  it('rejects a plain JSON payload above the save cap', () => {
+    expect(deobfuscateFateSave(`"${'x'.repeat(MAX_SAVE_BYTES)}"`)).toMatchObject({
       ok: false,
       code: 'too_large',
     });

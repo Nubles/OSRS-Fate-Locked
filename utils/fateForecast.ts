@@ -49,6 +49,8 @@ const KEY_EVENT_TYPES = new Set(['ROLL_SUCCESS', 'ROLL_OMNI', 'PITY']);
 /**
  * Estimate keys earned per calendar day from history. Each key-granting roll
  * counts as ~1 key (greed-doubling is rare enough to ignore for a forecast).
+ * The first timed key only opens the span, so N timed keys give N − 1 keys
+ * earned across it; a lone key has no pace.
  */
 export const keyVelocity = (history: LogEntry[]): Velocity => {
   const events = history.filter((e) => KEY_EVENT_TYPES.has(e.type));
@@ -57,7 +59,7 @@ export const keyVelocity = (history: LogEntry[]): Velocity => {
   if (ts.length < 2) return { ok: false, keysPerDay: 0, spanDays: 0, keysObserved: events.length };
   const spanDays = (Math.max(...ts) - Math.min(...ts)) / MS_PER_DAY;
   if (spanDays < 1 / 24) return { ok: false, keysPerDay: 0, spanDays, keysObserved: events.length }; // < 1h
-  return { ok: true, keysPerDay: events.length / spanDays, spanDays, keysObserved: events.length };
+  return { ok: true, keysPerDay: (ts.length - 1) / spanDays, spanDays, keysObserved: events.length };
 };
 
 export interface TimeForecast {

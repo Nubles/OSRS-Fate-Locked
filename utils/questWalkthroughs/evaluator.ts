@@ -52,6 +52,22 @@ export const evaluateQuestWalkthrough = (
     itemAnalyses.map(analysis => [analysis.requirement.item.key, analysis]),
   );
   const actionById = new Map(walkthrough.actions.map(action => [action.id, action]));
+  // Items an earlier step produces (a bucket, grain, a pot) have no route
+  // analysis of their own; that step's readiness already gates this one.
+  const producedByDependencies = (action: ResolvedWalkthroughAction): ReadonlySet<string> => {
+    const produced = new Set<string>();
+    const seen = new Set<string>();
+    const visit = (id: string): void => {
+      if (seen.has(id)) return;
+      seen.add(id);
+      const dependency = actionById.get(id);
+      if (!dependency) return;
+      dependency.coach?.fulfils.forEach(item => produced.add(item.item.key));
+      dependency.dependsOn.forEach(visit);
+    };
+    action.dependsOn.forEach(visit);
+    return produced;
+  };
   const evaluations = new Map<string, ActionEvaluation>();
   const evaluating = new Set<string>();
 
@@ -122,9 +138,18 @@ export const evaluateQuestWalkthrough = (
     const itemBlockers: WalkthroughBlocker[] = [];
     const itemPreparation: EvaluatedWalkthroughAction['itemPreparation'][number][] = [];
     let incompleteItemEvidence = false;
+    const producedEarlier = producedByDependencies(action);
     action.items.forEach((requirement) => {
       if (requirement.supplyPolicy === 'QUEST_PROVIDED') return;
       const analysis = itemAnalysisByKey.get(requirement.item.key);
+      if (!analysis && producedEarlier.has(requirement.item.key)) {
+        itemPreparation.push({
+          itemKey: requirement.item.key,
+          analysisState: 'PREPARED_BY_EARLIER_STEP',
+          obtainableNow: false,
+        });
+        return;
+      }
       const analysisState = analysis?.state ?? 'MISSING_ANALYSIS';
       const obtainableNow = analysis?.state === 'OBTAINABLE_NOW';
       itemPreparation.push({

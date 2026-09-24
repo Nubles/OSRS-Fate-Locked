@@ -163,6 +163,38 @@ describe('RelaySyncService', () => {
     expect(service.lastError).toBeNull();
   });
 
+  it('times out a stalled POST as a failed publish and lets the queue continue', async () => {
+    vi.useFakeTimers();
+    try {
+      const { RelaySyncService } = await import('./relaySync');
+      const service = new RelaySyncService();
+      localStorage.setItem('fate_relay_base', 'https://relay.test');
+      const fetchMock = vi.fn()
+        .mockReturnValueOnce(new Promise(() => {}))
+        .mockResolvedValueOnce({ ok: true });
+      vi.stubGlobal('fetch', fetchMock);
+      service.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+      const seen: string[] = [];
+      service.subscribe(() => seen.push(`${service.status}:${service.lastError ?? ''}`));
+
+      const stalled = service.push('bundle-a');
+      const queued = service.push('bundle-b');
+      await vi.advanceTimersByTimeAsync(14_999);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(service.status).toBe('syncing');
+
+      await vi.advanceTimersByTimeAsync(1);
+      expect(fetchMock.mock.calls[0][1].signal.aborted).toBe(true);
+      await expect(stalled).resolves.toBe(false);
+      await expect(queued).resolves.toBe(true);
+      expect(seen).toContain('error:relay timed out');
+      expect(JSON.parse(fetchMock.mock.calls[1][1].body).payload).toBe('bundle-b');
+      expect(service.status).toBe('synced');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('keeps legacy enable and disable compatibility', async () => {
     const { RelaySyncService } = await import('./relaySync');
     const service = new RelaySyncService();
@@ -176,6 +208,90 @@ describe('RelaySyncService', () => {
     expect(service.enabled).toBe(false);
     expect(service.status).toBe('off');
     expect(removeItem).toHaveBeenCalledWith(SESSION_KEY);
+  });
+
+  describe('shared by tabs that each show their own profile', () => {
+    const CODE = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    let tabs: EventTarget;
+    let fetchMock: ReturnType<typeof vi.fn>;
+    // Every service below shares one window. A browser fires `storage` only
+    // in the other tabs, but each tab re-reads the stored session, so the
+    // writing tab ignores its own change.
+    const storageEvent = () => tabs.dispatchEvent(
+      Object.assign(new Event('storage'), { key: SESSION_KEY }),
+    );
+    const openTab = async (profileId: string) => {
+      const { RelaySyncService } = await import('./relaySync');
+      const tab = new RelaySyncService();
+      tab.setActiveProfile(profileId);
+      return tab;
+    };
+    const sent = () => fetchMock.mock.calls.map(
+      ([url, init]) => [url, JSON.parse(init.body).payload],
+    );
+
+    beforeEach(() => {
+      tabs = new EventTarget();
+      vi.stubGlobal('window', tabs);
+      localStorage.setItem('fate_relay_base', 'https://relay.test');
+      fetchMock = vi.fn().mockResolvedValue({ ok: true });
+      vi.stubGlobal('fetch', fetchMock);
+    });
+
+    it('publishes only from a tab showing the paired profile', async () => {
+      const main = await openTab('main');
+      expect(main.adoptCode(CODE, 'main')).toBe(true);
+      // A second tab, opened on another profile after the pairing.
+      const alt = await openTab('alt');
+
+      await expect(alt.push('alt-profile')).resolves.toBe(false);
+      await expect(main.push('main-profile')).resolves.toBe(true);
+      expect(sent()).toEqual([[`https://relay.test/r/${CODE}`, 'main-profile']]);
+      expect(alt.enabled).toBe(false);
+      expect(alt.code).toBeNull();
+      expect(alt.requestPush()).toBe(false);
+      expect(JSON.parse(storage[SESSION_KEY]).profileId).toBe('main');
+    });
+
+    it('picks up pairing and Disconnect from another tab', async () => {
+      const first = await openTab('main');
+      const second = await openTab('main');
+      const listener = vi.fn();
+      second.subscribe(listener);
+
+      first.adoptCode(CODE, 'main');
+      storageEvent();
+      expect(second.code).toBe(CODE);
+      expect(second.status).toBe('syncing');
+      expect(listener).toHaveBeenCalledTimes(1);
+
+      await expect(second.push('second-tab')).resolves.toBe(true);
+      first.disable();
+      storageEvent();
+      expect(second.enabled).toBe(false);
+      expect(second.status).toBe('off');
+      await expect(second.push('after-disconnect')).resolves.toBe(false);
+      expect(sent()).toEqual([[`https://relay.test/r/${CODE}`, 'second-tab']]);
+    });
+
+    it('binds a pairing saved without a profile to the first tab that publishes', async () => {
+      storage[SESSION_KEY] = JSON.stringify({ code: CODE, token: 'legacy-token' });
+      const main = await openTab('main');
+      const alt = await openTab('alt');
+      expect(main.enabled).toBe(true);
+      expect(alt.enabled).toBe(true);
+
+      await expect(main.push('main-profile')).resolves.toBe(true);
+      expect(JSON.parse(storage[SESSION_KEY])).toEqual({
+        code: CODE, token: 'legacy-token', profileId: 'main',
+      });
+      // Alt publishes before its storage event arrives: it finds the binding
+      // instead of overwriting it.
+      await expect(alt.push('alt-profile')).resolves.toBe(false);
+      expect(alt.enabled).toBe(false);
+      expect(JSON.parse(storage[SESSION_KEY]).profileId).toBe('main');
+      expect(sent()).toEqual([[`https://relay.test/r/${CODE}`, 'main-profile']]);
+    });
   });
 });
 

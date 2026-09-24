@@ -197,7 +197,7 @@ export class CollectionLogSyncService {
       try {
         const ctrl = new AbortController();
         const timer = setTimeout(() => ctrl.abort(), 12000);
-        const res = await fetch(url, { signal: ctrl.signal, headers: { 'Api-User-Agent': 'FateLockedUIM/1.0 (clog runtime sync)' } });
+        const res = await fetch(url, { signal: ctrl.signal, headers: { 'Api-User-Agent': 'FateLockedIronman/1.0 (clog runtime sync; https://github.com/Nubles/OSRS-Fate-Locked)' } });
         clearTimeout(timer);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();

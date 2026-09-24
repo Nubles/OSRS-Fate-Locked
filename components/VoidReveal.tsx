@@ -139,9 +139,13 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
     }
   }, [isChaos, animationsEnabled]);
 
-  const handleCopyFlex = () => {
-      const text = `Fate-Locked UIM Update\nJust unlocked: **${itemName}** (${displayItemType})!\n#OSRS #FateLocked`;
-      navigator.clipboard.writeText(text);
+  const handleCopyFlex = async () => {
+      const text = `Fate Locked Ironman Update\nJust unlocked: **${itemName}** (${displayItemType})!\n#OSRS #FateLocked`;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        return; /* clipboard blocked — nothing was copied, so don't claim it was */
+      }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
   };

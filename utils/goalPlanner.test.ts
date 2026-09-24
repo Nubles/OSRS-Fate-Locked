@@ -2,10 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { SKILLS_LIST } from '../constants';
 import { QUEST_CAPE_QUEST_IDS, QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
-import { REGION_GROUPS } from '../data/items';
+import { MISTHALIN_AREAS, REGION_GROUPS } from '../data/items';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { planForTarget, listGoalTargets, questPointsForEntry } from './goalPlanner';
 import { getQuestStatus } from './journalStatus';
+import { isAreaReachable } from './reachability';
 import { TableType } from '../types';
 
 // All skills unlocked & maxed, levels at 99 — so only regions, prereq quests,
@@ -153,6 +154,31 @@ describe('planForTarget — quests', () => {
     expect(plan.alreadyReachable).toBe(false);
   });
 
+  it('suggests a Skills key only while the tier caps the skill below the level needed', () => {
+    const mining = (quest: string, tier: number, level: number) => planForTarget('quest', quest, maxedUnlocks({
+      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? tier : 10])),
+      levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? level : 99])),
+    }))!.skillSteps.find(step => step.id === 'Mining')!;
+
+    // The Knight's Sword needs Mining 10: tier 3 caps at 30, so only XP is missing.
+    expect(mining("The Knight's Sword", 3, 5)).toMatchObject({ detail: 'Lv 10 (have 5)' });
+    expect(mining("The Knight's Sword", 3, 5).unlockTable).toBeUndefined();
+    expect(mining("The Knight's Sword", 0, 5).unlockTable).toBe(TableType.SKILLS);
+    // Elemental Workshop I needs Mining 20, above tier 1's cap of 10.
+    expect(mining('Elemental Workshop I', 1, 20).unlockTable).toBe(TableType.SKILLS);
+    expect(mining('Elemental Workshop I', 2, 15).unlockTable).toBeUndefined();
+  });
+
+  it('lists skill steps alphabetically', () => {
+    const plan = planForTarget('quest', "Legends' Quest", maxedUnlocks({
+      levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 1])),
+    }))!;
+    const ids = plan.skillSteps.map(step => step.id);
+
+    expect(ids.length).toBeGreaterThan(3);
+    expect(ids).toEqual([...ids].sort((a, b) => a.localeCompare(b)));
+  });
+
   it('includes a Quest Point step for a quest requirement', () => {
     const plan = planForTarget('quest', 'Black Knights\' Fortress', maxedUnlocks())!;
 
@@ -164,6 +190,22 @@ describe('planForTarget — quests', () => {
     }));
     expect(plan.questSteps.map(step => step.id)).not.toContain('Quest Points 12');
   });
+
+  it("does not count a gated quest's own points toward its Quest Point gate", () => {
+    const tenQuestPoints = ["Cook's Assistant", 'Sheep Shearer', 'Rune Mysteries', 'Romeo & Juliet', 'Imp Catcher', "Witch's Potion"];
+    const plan = planForTarget('quest', "Black Knights' Fortress", maxedUnlocks({ quests: tenQuestPoints }))!;
+
+    expect(plan.questSteps.map(step => step.id)).toEqual(["Black Knights' Fortress"]);
+    expect(plan.qpStep?.detail).toBe('12 QP — plan yields 10, need more quests');
+  });
+
+  it('does not count quests that need the gated quest first', () => {
+    const nineQuestPoints = ['Druidic Ritual', "Cook's Assistant", 'Sheep Shearer', 'Rune Mysteries', 'Imp Catcher', "Witch's Potion"];
+    const plan = planForTarget('quest', 'Recruitment Drive', maxedUnlocks({ quests: nineQuestPoints }))!;
+
+    expect(plan.questSteps.map(step => step.id)).toEqual(["Black Knights' Fortress", 'Recruitment Drive']);
+    expect(plan.qpStep?.detail).toBe('12 QP — plan yields 9, need more quests');
+  });
   it('surfaces an actionable alternative-access step for oneOf quests', () => {
     const plan = planForTarget('quest', 'Enter the Abyss', maxedUnlocks({
       quests: ['Rune Mysteries'],
@@ -174,14 +216,68 @@ describe('planForTarget — quests', () => {
     expect(plan.alternativeSteps).toEqual([
       expect.objectContaining({
         done: false,
-        label: "One of: East Ardougne or Tree Gnome Stronghold or Wizards' Guild",
+        label: "One of: East Ardougne or Tree Gnome Stronghold or Wizards' Guild + Magic 66",
         routes: expect.arrayContaining([
           expect.objectContaining({ label: 'East Ardougne' }),
-          expect.objectContaining({ label: "Wizards' Guild" }),
+          expect.objectContaining({ label: "Wizards' Guild + Magic 66" }),
         ]),
       }),
     ]);
     expect(plan.alreadyReachable).toBe(false);
+  });
+  it("plans a route's own skill level, such as the Wizards' Guild's Magic 66", () => {
+    const plan = planForTarget('quest', 'Enter the Abyss', maxedUnlocks({
+      quests: ['Rune Mysteries'],
+      regions: ['Wilderness'],
+      skills: { ...maxedUnlocks().skills, Magic: 3 },
+      levels: { ...maxedUnlocks().levels, Magic: 12 },
+    }))!;
+
+    const guildRoute = plan.alternativeSteps[0].routes!
+      .find(route => route.label === "Wizards' Guild + Magic 66")!;
+    expect(guildRoute.blockers).toEqual([
+      expect.objectContaining({ kind: 'region', id: "Wizards' Guild", unlockTable: TableType.GUILDS }),
+      expect.objectContaining({
+        kind: 'skill', id: 'Magic', label: 'Magic',
+        detail: 'Lv 66 (have 12)', unlockTable: TableType.SKILLS,
+      }),
+    ]);
+    expect(plan.alternativeSteps[0].routes!
+      .find(route => route.label === 'East Ardougne')!.blockers
+      .some(blocker => blocker.kind === 'skill')).toBe(false);
+  });
+});
+
+describe('planForTarget — Chunked area steps', () => {
+  const chunkedUnlocks = () => maxedUnlocks({ chunks: [] });
+
+  it('plans an area as any one of its chunks, not an Areas unlock', () => {
+    const plan = planForTarget('region', 'Falador', chunkedUnlocks(), 'chunked')!;
+
+    expect(plan.regionSteps).toEqual([expect.objectContaining({
+      kind: 'region', id: 'Falador', unlockTable: TableType.CHUNKS,
+      detail: 'Unlock any chunk in this area',
+    })]);
+    const chunks = plan.regionSteps[0].relatedIds!;
+    expect(chunks.length).toBeGreaterThan(0);
+    // Unlocking any one of those chunks reaches the area.
+    expect(isAreaReachable('Falador', { ...chunkedUnlocks(), chunks: [chunks[0]] } as any, 'chunked')).toBe(true);
+    expect(planForTarget('region', 'Falador', chunkedUnlocks())!.regionSteps[0])
+      .toMatchObject({ unlockTable: TableType.REGIONS });
+  });
+
+  it("plans a quest route's areas as chunks in Chunked", () => {
+    const plan = planForTarget('quest', 'Enter the Abyss', maxedUnlocks({
+      chunks: [],
+      quests: ['Rune Mysteries'],
+    }), 'chunked')!;
+
+    const routes = plan.alternativeSteps
+      .find(step => step.label.includes('East Ardougne'))!.routes;
+    expect(routes.find(route => route.label === 'East Ardougne')!.blockers).toEqual([
+      expect.objectContaining({ id: 'East Ardougne', unlockTable: TableType.CHUNKS }),
+    ]);
+    expect(plan.steps.some(step => 'unlockTable' in step && step.unlockTable === TableType.REGIONS)).toBe(false);
   });
 });
 
@@ -311,6 +407,22 @@ describe('planForTarget — diaries', () => {
     ]);
   });
 
+  it('suggests a Skills key for combined and limited-any routes only when tiers cap them', () => {
+    const routes = (tier: number) => planForTarget('diary', 'Falador Hard', maxedUnlocks({
+      regions: ["Warriors' Guild"],
+      skills: { Attack: tier, Strength: tier },
+      levels: { Attack: 60, Strength: 60 },
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== 'Falador Hard' || task.id !== 'fal_hard_10')
+        .map(task => task.id),
+    }))!.alternativeSteps[0].routes.map(route => route.blockers[0].unlockTable);
+
+    // Caps of 60 + 60 fall short of 130 combined and of 99 in either.
+    expect(routes(6)).toEqual([TableType.SKILLS, TableType.SKILLS]);
+    // At tier 10 only XP is missing.
+    expect(routes(10)).toEqual([undefined, undefined]);
+  });
+
   it('does not require miniquests for the Quest cape diary task', () => {
     const plan = planForTarget('diary', 'Lumbridge Elite', maxedUnlocks({
       equipment: { Cape: 6 },
@@ -345,6 +457,58 @@ describe('planForTarget — diaries', () => {
     const step = plan.regionSteps.find(regionStep => regionStep.id === canonical);
     expect(step?.label).toContain(canonical);
     expect(step?.label).toContain(alias);
+  });
+});
+
+describe('planForTarget — quest locations', () => {
+  const unlockableAreas = new Set([
+    ...Object.keys(REGION_GROUPS), ...Object.values(REGION_GROUPS).flat(), 'Misthalin', ...MISTHALIN_AREAS,
+  ]);
+  const fresh = () => maxedUnlocks({ skills: {}, levels: {} });
+
+  it('plans the areas that unlock a location, never its place label', () => {
+    // Druidic Ritual needs "North Taverley" and "South Taverley", both in Taverley.
+    expect(planForTarget('quest', 'Druidic Ritual', fresh(), 'vanilla')!.regionSteps.map(step => step.id)).toEqual(['Taverley']);
+  });
+
+  it('plans only areas the Areas table can grant, for every quest', () => {
+    const notAreas = Object.keys(QUEST_DATA).flatMap(id => {
+      const plan = planForTarget('quest', id, fresh(), 'vanilla')!;
+      return [...plan.regionSteps, ...plan.alternativeSteps.flatMap(step => step.routes.flatMap(route => route.blockers))]
+        .filter(step => step.unlockTable === TableType.REGIONS && !unlockableAreas.has(step.id))
+        .map(step => `${id}: ${step.id}`);
+    });
+    expect(notAreas).toEqual([]);
+  });
+
+  it('plans a location as a choice of its exact chunks in Chunked mode', () => {
+    const plan = planForTarget('quest', 'Druidic Ritual', fresh(), 'chunked')!;
+    expect(plan.regionSteps).toEqual([]);
+    expect(plan.alternativeSteps.map(step => [step.label, step.routes.map(route => route.blockers)])).toEqual([
+      ['One of: North Taverley', [[expect.objectContaining({ kind: 'region', id: '45,54', unlockTable: TableType.CHUNKS })]]],
+      ['One of: South Taverley', [[expect.objectContaining({ kind: 'region', id: '45,53', unlockTable: TableType.CHUNKS })]]],
+    ]);
+  });
+
+  it('builds one-of routes from a location’s areas, or its chunks in Chunked mode', () => {
+    const id = '__location_route__';
+    QUEST_DATA[id] = {
+      ...QUEST_DATA['Druidic Ritual'], id, name: id, accessPolicy: 'regions', regions: [], locations: [],
+      oneOf: [
+        { locations: [{ id: 'crossing', label: 'Test crossing', standardAreas: ['Falador'], chunkOptions: [{ cx: 47, cy: 51 }, { cx: 46, cy: 51 }] }] },
+        { regions: ['Catherby'] },
+      ],
+    };
+    try {
+      expect(planForTarget('quest', id, fresh(), 'vanilla')!.alternativeSteps[0].routes[0].blockers).toEqual([
+        expect.objectContaining({ kind: 'region', id: 'Falador', unlockTable: TableType.REGIONS }),
+      ]);
+      expect(planForTarget('quest', id, fresh(), 'chunked')!.alternativeSteps[0].routes[0].blockers).toEqual([
+        expect.objectContaining({ kind: 'region', id: '47,51', relatedIds: ['47,51', '46,51'], unlockTable: TableType.CHUNKS }),
+      ]);
+    } finally {
+      delete QUEST_DATA[id];
+    }
   });
 });
 

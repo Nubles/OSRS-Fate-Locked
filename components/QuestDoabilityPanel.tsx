@@ -5,7 +5,8 @@ import { useGame } from '../context/GameContext';
 import { QuestData, QUEST_DATA, EquipmentSlot } from '../data/questData';
 import { chunkContentService } from '../services/ChunkContentService';
 import { chunkReachability } from '../utils/chunkReach';
-import { chunkForPlace, chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
+import { CHUNKED_START } from '../utils/chunkAdjacency';
+import { chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
 import { questLocations } from '../utils/questLocations';
 import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate, hasCanonicalQuestLocationEvidence, QuestChunkStatus } from '../utils/questDoability';
 import {
@@ -207,7 +208,9 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
     const completed = new Set<string>(unlocks.quests as string[]);
     const known = new Set<string>(Object.keys(QUEST_DATA));
     const gate = entryBlockedGate(chunkContentService.questSections(), completed, known);
-    const reach = chunkReachability(chunkContentService.connectGraph(), unlocks, chunkForPlace('Lumbridge'), gate, gameModeId);
+    // Walk from the free start chunk the map and RuneLite export use; the
+    // Lumbridge place chunk is only corner-adjacent to it and starts locked.
+    const reach = chunkReachability(chunkContentService.connectGraph(), unlocks, CHUNKED_START, gate, gameModeId);
     const isUnlocked = (cx: number, cy: number) => chunkUnlocked(cx, cy, unlocks, gameModeId);
     return Object.values(QUEST_DATA).map((q) => {
       const hit = chunkContentService.entityLocations(q.id, ['quest']);

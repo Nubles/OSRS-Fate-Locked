@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Search, Loader2, AlertCircle, RefreshCw, Info, Clock, Target } from 'lucide-react';
 import { Swords, Crosshair, Wand2, Zap, Crown } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { EQUIPMENT_SLOTS } from '../constants';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { gearService } from '../services/GearService';
-import { monsterService, MonsterStats } from '../services/MonsterService';
-import { sumBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
+import { monsterKey, monsterService, MonsterStats } from '../services/MonsterService';
+import { attackBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
 import {
-  computeDps, STANCES, PRAYERS, POTIONS, Style, AttackType, DpsInput,
+  computeDps, formatTimeToKill, STANCES, PRAYERS, POTIONS, Style, AttackType, DpsInput,
 } from '../utils/dps';
 import { WikiLink } from './WikiLink';
 import { rangedDefenceFor, type RangedDamageType } from '../utils/rangedDamage';
@@ -57,7 +58,8 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
   const [potionId, setPotionId] = useState('none');
   const [baseSpellMax, setBaseSpellMax] = useState(24);
   const [levels, setLevels] = useState({ attack: 99, strength: 99, ranged: 99, magic: 99 });
-  const [monsterId, setMonsterId] = useState<number | null>(null);
+  // The exact catalogue row: several versions can share an NPC id.
+  const [targetKey, setTargetKey] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
 
   // Prefill levels from the run once.
@@ -78,7 +80,7 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
   // Equipped gear → summed bonuses + weapon speed.
   const gear = useMemo(() => {
     const items = EQUIPMENT_SLOTS.map((s) => gearService.byId(loadout[s])).filter((x): x is GearItem => !!x);
-    const b = items.length ? sumBonuses(items) : { ...ZERO_BONUSES };
+    const b = items.length ? attackBonuses(items) : { ...ZERO_BONUSES };
     const weapon = gearService.byId(loadout['Weapon']);
     const accuracy = attackType === 'stab' ? b.stab : attackType === 'slash' ? b.slash : attackType === 'crush' ? b.crush : attackType === 'ranged' ? b.ranged : b.magic;
     return { bonuses: b, accuracy, meleeStr: b.meleeStr, rangedStr: b.rangedStr, magicDmgPct: b.magicStr, speedTicks: weapon?.speed || 4, weaponName: weapon?.name, category: weapon?.category ?? (loadout['Weapon'] == null ? 'Unarmed' : undefined), rangedDamageType: weapon?.rangedDamageType, count: items.length };
@@ -98,7 +100,7 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
     setStanceId(next.stanceId);
   }, [combatOptions, style, attackType, stanceId]);
 
-  const monster = monsterService.byId(monsterId ?? undefined);
+  const monster = monsterService.byKey(targetKey);
   const rangedType = rangedOverride === 'auto' ? gear.rangedDamageType ?? 'standard' : rangedOverride;
 
   const result = useMemo(() => {
@@ -215,7 +217,7 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
             <Stat label="Max hit" value={result.maxHit} accent="text-red-300" Icon={Zap} />
             <Stat label="Hit chance" value={`${Math.round(result.hitChance * 100)}%`} accent="text-amber-300" Icon={Target} />
             <Stat label="DPS" value={result.dps.toFixed(2)} accent="text-emerald-300" Icon={Swords} />
-            <Stat label="Time to kill" value={fmtTtk(result.ttk)} accent="text-sky-300" Icon={Clock} />
+            <Stat label="Time to kill" value={formatTimeToKill(result.ttk)} accent="text-sky-300" Icon={Clock} />
           </div>
           <div className="grid grid-cols-3 gap-2 text-center pt-1 border-t border-white/5">
             <Mini label="Eff. atk" value={result.effAtk} />
@@ -231,9 +233,9 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
 
       {!suspendModals && pickerOpen && (
         <MonsterPicker
-          currentId={monsterId}
+          currentKey={targetKey}
           onClose={() => setPickerOpen(false)}
-          onPick={(id) => { setMonsterId(id); setPickerOpen(false); }}
+          onPick={(key) => { setTargetKey(key); setPickerOpen(false); }}
         />
       )}
     </div>
@@ -250,19 +252,14 @@ const Mini: React.FC<{ label: string; value: React.ReactNode }> = ({ label, valu
   <div><div className="text-[8px] uppercase tracking-widest text-gray-600">{label}</div><div className="text-[12px] font-bold text-gray-300 font-mono">{value}</div></div>
 );
 
-const fmtTtk = (s: number): string => {
-  if (!isFinite(s) || s <= 0) return '—';
-  if (s < 60) return `${s.toFixed(1)}s`;
-  return `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`;
-};
-
 // ── Monster picker popover ────────────────────────────────────────────────────
-const MonsterPicker: React.FC<{ currentId: number | null; onClose: () => void; onPick: (id: number) => void }> = ({ currentId, onClose, onPick }) => {
+const MonsterPicker: React.FC<{ currentKey: string | null; onClose: () => void; onPick: (key: string) => void }> = ({ currentKey, onClose, onPick }) => {
   useEscapeKey(onClose, true);
   const [query, setQuery] = useState('');
   const results = useMemo(() => monsterService.search(query, 80), [query]);
 
-  return (
+  // Escape dashboard animation/overflow ancestors so the dialog fits the viewport.
+  return createPortal(
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-150" onClick={onClose} role="dialog" aria-modal="true" aria-label="Choose monster">
       <div className="bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full max-w-md h-[70vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 p-3 border-b border-white/10 bg-[#1b1b1b] shrink-0">
@@ -279,8 +276,8 @@ const MonsterPicker: React.FC<{ currentId: number | null; onClose: () => void; o
         <div className="flex-1 overflow-y-auto custom-scrollbar p-1.5 space-y-1">
           {results.length === 0 && <div className="text-center text-[11px] text-gray-600 py-10">No monsters match.</div>}
           {results.map((m) => (
-            <button key={`${m.id}-${m.version}`} onClick={() => onPick(m.id)}
-              className={`w-full flex items-center gap-2.5 rounded-lg px-2 py-1.5 border text-left transition-colors ${m.id === currentId ? 'border-red-500/40 bg-red-950/30' : 'border-transparent hover:bg-white/5'}`}>
+            <button key={monsterKey(m)} onClick={() => onPick(monsterKey(m))}
+              className={`w-full flex items-center gap-2.5 rounded-lg px-2 py-1.5 border text-left transition-colors ${monsterKey(m) === currentKey ? 'border-red-500/40 bg-red-950/30' : 'border-transparent hover:bg-white/5'}`}>
               <img src={monsterImg(m.imageFile)} alt="" className="w-7 h-7 object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden'; }} />
               <div className="min-w-0 flex-1">
                 <div className="text-[12px] font-semibold text-gray-200 truncate">{m.name}{m.version ? <span className="text-gray-500"> · {m.version}</span> : ''}</div>
@@ -290,6 +287,7 @@ const MonsterPicker: React.FC<{ currentId: number | null; onClose: () => void; o
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

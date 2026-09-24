@@ -4,7 +4,7 @@ import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { resolveModeRules } from '../config/gameModes';
-import { RITUALS } from '../config/economy';
+import { RITUALS, ritualFateCost } from '../config/economy';
 import { getChunkFrontier, chunkKey, chunkLabel } from '../utils/chunkAdjacency';
 import { chunkContentService } from '../services/ChunkContentService';
 import { X, ArrowRight } from 'lucide-react';
@@ -21,10 +21,18 @@ interface ChunkChoice {
   hint: string | null;
 }
 
+/**
+ * The last Cartographer offer, pinned to the run's history tip. Offers are
+ * drawn when the chooser opens; on an unseeded run each draw is fresh, so
+ * without this, walking away and reopening re-rolled them for free. Any
+ * committed action moves the tip and allows a new draw.
+ */
+let pinnedCartographerOffer: { tip: string; keys: string[] } | null = null;
+
 export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
-  const { fatePoints, keys, activeBuff, performRitual, performGambit, performCartographer, unlocks, animationsEnabled, gameModeId, customMode, nextFloat } = useGame();
+  const { fatePoints, keys, activeBuff, performRitual, performGambit, performCartographer, unlocks, animationsEnabled, gameModeId, customMode, nextFloat, runId, history } = useGame();
 
   // The Gambit is irreversible and stakes everything — arm on first click,
   // fire on the second, disarm when anything else is touched.
@@ -32,9 +40,9 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   // Cartographer chooser: null = closed, [] = frontier empty, else 3 options.
   const [chunkChoices, setChunkChoices] = useState<ChunkChoice[] | null>(null);
 
-  // Ritual fate costs scale with the run's game mode (see GameContext reducer).
+  // Ritual fate costs scale with the run's game mode, priced by the same
+  // ritualFateCost the engine checks against.
   const rules = resolveModeRules(gameModeId, customMode);
-  const ritualCost = (base: number) => Math.round(base * rules.ritualCostMultiplier);
 
   // Visual identity per ritual — name, effect and cost all come from
   // config/economy.ts (RITUALS), the same source the reducer and Codex use.
@@ -50,12 +58,26 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   const openCartographer = () => {
     // Draw 3 distinct candidates from the live frontier (fewer if it's small).
     const frontier = getChunkFrontier(unlocks.chunks ?? [], unlocks);
-    // Partial Fisher–Yates through the seeded-run choke point: the 3 offered
-    // chunks are deterministic per chain tip on a seeded run.
-    const pool = [...frontier];
-    const shuffled: typeof pool = [];
-    for (let i = 0; i < Math.min(3, pool.length); i++) {
-      shuffled.push(pool.splice(Math.floor(nextFloat('cartographer', i) * pool.length), 1)[0]);
+    const tip = `${runId}:${history.length}:${history[history.length - 1]?.hash ?? ''}`;
+    const pinned = pinnedCartographerOffer?.tip === tip
+      ? pinnedCartographerOffer.keys
+          .map(key => frontier.find(chunk => chunkKey(chunk) === key))
+          .filter((chunk): chunk is (typeof frontier)[number] => chunk !== undefined)
+      : [];
+    let shuffled: typeof frontier;
+    if (pinned.length > 0) {
+      shuffled = pinned;
+    } else {
+      // Partial Fisher–Yates through the seeded-run choke point: the 3 offered
+      // chunks are deterministic per chain tip on a seeded run. The count is
+      // fixed before the loop because splice shrinks the pool.
+      const pool = [...frontier];
+      shuffled = [];
+      const count = Math.min(3, pool.length);
+      for (let i = 0; i < count; i++) {
+        shuffled.push(pool.splice(Math.floor(nextFloat('cartographer', i) * pool.length), 1)[0]);
+      }
+      pinnedCartographerOffer = { tip, keys: shuffled.map(chunkKey) };
     }
     setChunkChoices(shuffled.map((c) => {
       const key = chunkKey(c);
@@ -80,7 +102,7 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   const rituals = RITUALS
     .filter((r) => !r.chunkedOnly || gameModeId === 'chunked')
     .map((r) => {
-      const fate = r.fateCost ? ritualCost(r.fateCost) : 0;
+      const fate = ritualFateCost(r.id, rules.ritualCostMultiplier);
       const isGambit = r.id === 'GAMBIT';
       return {
         id: r.id,
@@ -91,6 +113,9 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
           : `${fate} Fate Points`,
         canAfford: r.keyCost ? keys >= r.keyCost : fatePoints >= fate,
         active: (r.id === 'LUCK' && activeBuff === 'LUCK') || (r.id === 'GREED' && activeBuff === 'GREED'),
+        // Only one buff can wait for the next roll; buying the other would
+        // silently replace it and waste its Fate.
+        buffPending: (r.id === 'LUCK' || r.id === 'GREED') && activeBuff !== 'NONE' && activeBuff !== r.id,
         ...RITUAL_UI[r.id],
       };
     });
@@ -132,6 +157,7 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
           </div>
           <button
             onClick={onClose}
+            aria-label="Close the Void Altar"
             className="p-2 hover:bg-white/5 rounded-full transition-colors text-gray-500 hover:text-white"
           >
             <X className="w-6 h-6" />
@@ -192,7 +218,7 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
                 return (
                     <button
                         key={ritual.id}
-                        disabled={!ritual.canAfford || ritual.active}
+                        disabled={!ritual.canAfford || ritual.active || ritual.buffPending}
                         onClick={() => onRitualClick(ritual.id)}
                         onBlur={() => { if (ritual.id === 'GAMBIT') setGambitArmed(false); }}
                         className={`
@@ -222,6 +248,9 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
                                 )}
                                 {armed && (
                                     <span className="px-2 py-1 bg-fuchsia-500/20 text-fuchsia-300 text-[10px] font-bold uppercase tracking-wider rounded border border-fuchsia-500/40 animate-pulse">Armed</span>
+                                )}
+                                {ritual.buffPending && (
+                                    <span className="px-2 py-1 bg-gray-500/20 text-gray-400 text-[10px] font-bold uppercase tracking-wider rounded border border-gray-500/30">Other buff active</span>
                                 )}
                             </div>
 

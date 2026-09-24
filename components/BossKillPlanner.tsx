@@ -4,11 +4,13 @@ import { Swords, Shield, Zap, Skull, Crown, Heart, Box, Boxes, FlaskConical } fr
 import { useGame } from '../context/GameContext';
 import { EQUIPMENT_SLOTS } from '../constants';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SectionGuide } from './SectionGuide';
 import { gearService } from '../services/GearService';
 import { monsterService, MonsterStats } from '../services/MonsterService';
-import { sumBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
-import { planBoss, BossPlan, BOSS_ALIASES, PlayerCombat, Readiness, Danger } from '../utils/bossPlanner';
+import { attackBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
+import { formatTimeToKill } from '../utils/dps';
+import { planBoss, BossPlan, BOSS_ALIASES, bestBoostPrayers, defaultBossVersion, PlayerCombat, Readiness, Danger } from '../utils/bossPlanner';
 import { EntityModel } from './EntityModel';
 import { modelFor, orientationFor } from '../data/entityModels';
 import { WikiLink } from './WikiLink';
@@ -31,17 +33,12 @@ const DANGER: Record<Danger, { label: string; cls: string }> = {
   medium: { label: 'Medium', cls: 'text-amber-300' },
   high: { label: 'High', cls: 'text-orange-300' },
   extreme: { label: 'Extreme', cls: 'text-red-400' },
+  unknown: { label: 'Unknown', cls: 'text-gray-500' },
 };
 const READY_ORDER: Readiness[] = ['excellent', 'good', 'workable', 'slow', 'undergeared', 'unverified'];
 
-const fmtTtk = (s: number): string => {
-  if (!isFinite(s) || s <= 0) return '—';
-  if (s < 60) return `${s.toFixed(1)}s`;
-  return `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`;
-};
-
 export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
-  const { unlocks, loadout: rawLoadout } = useGame();
+  const { unlocks, loadout: rawLoadout, gameModeId } = useGame();
   const loadout = rawLoadout || {};
   useEscapeKey(onClose, true);
 
@@ -49,6 +46,11 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
   const [boostsOn, setBoostsOn] = useState(true);
   const [rangedOverride, setRangedOverride] = useState<'auto' | 'light' | 'standard' | 'heavy'>('auto');
   const [selected, setSelected] = useState<string | null>(null);
+  // The player's chosen version per boss (by version label), on this device.
+  const [storedVersions, setStoredVersions] = useLocalStorage<Record<string, string>>('bossplanner:versions', {});
+  const versionChoice = storedVersions !== null && typeof storedVersions === 'object' ? storedVersions : {};
+  const chooseVersion = (boss: string, version: string) =>
+    setStoredVersions(previous => ({ ...(previous !== null && typeof previous === 'object' ? previous : {}), [boss]: version }));
 
   useEffect(() => {
     let alive = true;
@@ -61,34 +63,38 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
   // Equipped gear bonuses + weapon speed.
   const gear = useMemo(() => {
     const items = EQUIPMENT_SLOTS.map((s) => gearService.byId(loadout[s])).filter((x): x is GearItem => !!x);
-    const b = items.length ? sumBonuses(items) : { ...ZERO_BONUSES };
+    const b = items.length ? attackBonuses(items) : { ...ZERO_BONUSES };
     const weapon = gearService.byId(loadout['Weapon']);
     return { bonuses: b, speedTicks: weapon?.speed || 4, count: items.length, weaponName: weapon?.name, category: weapon?.category ?? (loadout['Weapon'] == null ? 'Unarmed' : undefined), rangedDamageType: weapon?.rangedDamageType };
   }, [loadout, status]);
 
+  // Boosts assume the best attack prayer the player has unlocked, not Piety/Rigour.
+  const prayers = useMemo(() => bestBoostPrayers(unlocks, gameModeId), [unlocks, gameModeId]);
   const player: PlayerCombat = useMemo(() => {
     const L = unlocks.levels || {};
     return {
       levels: { attack: L.Attack || 1, strength: L.Strength || 1, ranged: L.Ranged || 1, magic: L.Magic || 1, hitpoints: L.Hitpoints || 10 },
       gear: { bonuses: gear.bonuses, speedTicks: gear.speedTicks, category: gear.category, rangedDamageType: rangedOverride === 'auto' ? gear.rangedDamageType ?? 'standard' : rangedOverride },
       boostsOn,
+      prayers,
     };
-  }, [unlocks.levels, gear, boostsOn, rangedOverride]);
+  }, [unlocks.levels, gear, boostsOn, prayers, rangedOverride]);
 
   // Resolve unlocked bosses → monster + plan; split matched vs. encounters.
   const { ranked, encounters } = useMemo(() => {
-    const matched: { boss: string; monster: MonsterStats; plan: BossPlan }[] = [];
+    const matched: { boss: string; monster: MonsterStats; versions: MonsterStats[]; plan: BossPlan }[] = [];
     const enc: string[] = [];
     if (status === 'ready') {
       for (const boss of unlocks.bosses || []) {
-        const m = monsterService.byName(BOSS_ALIASES[boss] ?? boss);
-        if (m) matched.push({ boss, monster: m, plan: planBoss(player, m) });
+        const versions = monsterService.versionsOf(BOSS_ALIASES[boss] ?? boss);
+        const m = versions.find(version => version.version === versionChoice[boss]) ?? defaultBossVersion(versions);
+        if (m) matched.push({ boss, monster: m, versions, plan: planBoss(player, m) });
         else enc.push(boss);
       }
     }
     matched.sort((a, b) => READY_ORDER.indexOf(a.plan.readiness) - READY_ORDER.indexOf(b.plan.readiness) || b.plan.dps - a.plan.dps);
     return { ranked: matched, encounters: enc };
-  }, [unlocks.bosses, player, status]);
+  }, [unlocks.bosses, player, status, versionChoice]);
 
   const current = ranked.find((r) => r.boss === selected) ?? ranked[0];
 
@@ -166,7 +172,16 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
 
             {/* Detail */}
             <div className="flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-4">
-              {current && <Detail boss={current.boss} monster={current.monster} plan={current.plan} weaponName={gear.weaponName} />}
+              {current && (
+                <Detail
+                  boss={current.boss}
+                  monster={current.monster}
+                  versions={current.versions}
+                  onVersionChange={version => chooseVersion(current.boss, version)}
+                  plan={current.plan}
+                  weaponName={gear.weaponName}
+                />
+              )}
             </div>
           </div>
         )}
@@ -175,7 +190,14 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
   );
 };
 
-const Detail: React.FC<{ boss: string; monster: MonsterStats; plan: BossPlan; weaponName?: string }> = ({ boss, monster, plan, weaponName }) => {
+const Detail: React.FC<{
+  boss: string;
+  monster: MonsterStats;
+  versions: MonsterStats[];
+  onVersionChange: (version: string) => void;
+  plan: BossPlan;
+  weaponName?: string;
+}> = ({ boss, monster, versions, onVersionChange, plan, weaponName }) => {
   const r = READINESS[plan.readiness];
   const d = DANGER[plan.danger];
   const model = modelFor(boss);
@@ -213,7 +235,21 @@ const Detail: React.FC<{ boss: string; monster: MonsterStats; plan: BossPlan; we
         )}
         <div className="min-w-0">
           <h3 className="text-lg font-bold text-white leading-tight truncate"><WikiLink name={boss} icon /></h3>
-          <p className="text-[11px] text-gray-500">{monster.version ? `${monster.version} · ` : ''}Lvl {monster.level} · HP {monster.hp}</p>
+          {versions.length > 1 ? (
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 mt-0.5">
+              <select
+                value={monster.version}
+                onChange={e => onVersionChange(e.target.value)}
+                aria-label={`Version of ${boss}`}
+                className="max-w-full bg-[#1f1f1f] border border-white/10 rounded px-1.5 py-0.5 text-[11px] text-gray-200"
+              >
+                {versions.map(version => <option key={version.version} value={version.version}>{version.version || 'Standard'}</option>)}
+              </select>
+              <span>Lvl {monster.level} · HP {monster.hp}</span>
+            </div>
+          ) : (
+            <p className="text-[11px] text-gray-500">{monster.version ? `${monster.version} · ` : ''}Lvl {monster.level} · HP {monster.hp}</p>
+          )}
         </div>
         {model && !show3D && toggleBtn('ml-auto shrink-0')}
       </div>
@@ -224,13 +260,16 @@ const Detail: React.FC<{ boss: string; monster: MonsterStats; plan: BossPlan; we
         <span className={`text-[12px] font-bold ${r.cls}`}>{r.label}</span>
         <span className="text-[10px] text-gray-500">· best as <span className="text-gray-300 uppercase">{plan.style === 'melee' ? plan.attackType : plan.style} / {plan.stanceId}</span>{weaponName ? ` · ${weaponName}` : ''}</span>
       </div>
+      <p className="text-[10px] text-gray-500 px-1">
+        Prayer: <span className="text-gray-300">{plan.prayer ?? 'none'}</span> · Potion: <span className="text-gray-300">{plan.potion ?? 'none'}</span>
+      </p>
 
       {/* Core stats */}
       <div className="grid grid-cols-2 gap-3">
         <Stat label="Best DPS" value={plan.dps.toFixed(2)} accent="text-emerald-300" Icon={Swords} />
         <Stat label="Max hit" value={plan.maxHit} accent="text-red-300" Icon={Zap} />
         <Stat label="Hit chance" value={`${Math.round(plan.hitChance * 100)}%`} accent="text-amber-300" Icon={Crosshair} />
-        <Stat label="Time to kill" value={fmtTtk(plan.ttk)} accent="text-sky-300" Icon={Clock} />
+        <Stat label="Time to kill" value={formatTimeToKill(plan.ttk)} accent="text-sky-300" Icon={Clock} />
       </div>
 
       {/* Gear gap */}
@@ -249,15 +288,15 @@ const Detail: React.FC<{ boss: string; monster: MonsterStats; plan: BossPlan; we
       <div className="grid grid-cols-3 gap-2">
         <Mini label="Kills / hr" value={plan.killsPerHour || '—'} Icon={Crown} />
         <Mini label="Danger" value={d.label} cls={d.cls} Icon={Skull} />
-        <Mini label="Kills / trip" value={`~${plan.killsBeforeBank}`} Icon={Heart} />
+        <Mini label="Kills / trip" value={plan.killsBeforeBank === null ? '—' : `~${plan.killsBeforeBank}`} Icon={Heart} />
       </div>
       <div className="text-[10px] text-gray-500 flex items-start gap-1.5">
-        <Shield size={11} className="shrink-0 mt-0.5" /> Boss max hit <span className="text-gray-300 font-semibold">{monster.maxHit}</span>{monster.attributes.length ? ` · ${monster.attributes.join(', ')}` : ''}
+        <Shield size={11} className="shrink-0 mt-0.5" /> Boss max hit <span className="text-gray-300 font-semibold">{monster.maxHit ?? 'unknown'}</span>{monster.attributes.length ? ` · ${monster.attributes.join(', ')}` : ''}
       </div>
 
       <p className="text-[9px] text-gray-600 leading-relaxed flex items-start gap-1.5">
         <Info size={11} className="shrink-0 mt-0.5" />
-        DPS compares the melee/ranged attacks your equipped weapon supports (Magic → use the DPS tab for spell-specific numbers). Kills/trip & danger are rough threat estimates assuming no protection prayers; special attacks and item passives aren't modelled.
+        DPS compares the melee/ranged attacks your equipped weapon supports (Magic → use the DPS tab for spell-specific numbers). Boosts use the best attack prayer you have unlocked. Kills/trip & danger are rough threat estimates assuming no protection prayers; special attacks and item passives aren't modelled.
       </p>
     </div>
   );

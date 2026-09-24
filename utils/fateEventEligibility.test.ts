@@ -13,6 +13,8 @@ const state = (overrides: Partial<GameState> = {}): GameState => ({
   linkedAccount: 'Nubles',
   ...overrides,
 });
+const withUnlocks = (unlocks: Partial<GameState['unlocks']>, overrides: Partial<GameState> = {}): GameState =>
+  state({ ...overrides, unlocks: { ...initialState.unlocks, ...unlocks } });
 
 const event = (
   eventType: FateEventType,
@@ -85,17 +87,63 @@ describe('classifyFateEvent', () => {
   });
 
   it('maps exact quests to the canonical quest rate', () => {
-    expect(classifyFateEvent(event('QUEST', ' dragon slayer i '), state()))
+    expect(classifyFateEvent(event('QUEST', " cook's assistant "), state()))
       .toMatchObject({
         state: 'READY',
         intent: {
-          source: DropSource.QUEST_EXPERIENCED,
-          threshold: DROP_RATES[DropSource.QUEST_EXPERIENCED],
-          failureFate: 2,
-          target: 'Dragon Slayer I',
+          source: DropSource.QUEST_NOVICE,
+          threshold: DROP_RATES[DropSource.QUEST_NOVICE],
+          failureFate: 1,
+          target: "Cook's Assistant",
         },
-        progress: { kind: 'QUEST', questId: 'Dragon Slayer I' },
+        progress: { kind: 'QUEST', questId: "Cook's Assistant" },
       });
+  });
+
+  it('rolls a quest only where the Journal would complete it', () => {
+    expect(classifyFateEvent(event('QUEST', "Cook's Assistant"), withUnlocks({ quests: ["Cook's Assistant"] })))
+      .toEqual({ state: 'BLOCKED', reason: 'Already completed' });
+    expect(classifyFateEvent(event('QUEST', 'Dragon Slayer I'), state()))
+      .toEqual({ state: 'BLOCKED', reason: 'Requires: Rimmington, Port Sarim, Crandor, Quest Points 32' });
+
+    // Manual checks wait for the player's review, which then confirms them.
+    const sheep = event('QUEST', 'Sheep Shearer');
+    expect(classifyFateEvent(sheep, state())).toMatchObject({
+      state: 'NEEDS_CONFIRMATION',
+      reason: expect.stringMatching(/^Confirm: /),
+      candidates: [{ label: 'Sheep Shearer', target: 'Sheep Shearer' }],
+    });
+    expect(classifyFateEventCandidate(sheep, state(), 'Sheep Shearer')).toMatchObject({
+      state: 'READY', progress: { kind: 'QUEST', questId: 'Sheep Shearer' },
+    });
+  });
+
+  it('does not roll progress the run already recorded', () => {
+    const attack = withUnlocks({ skills: { Attack: 8 }, levels: { Attack: 73 } });
+    expect(classifyFateEvent(event('SKILL_LEVEL', 'Attack Level 73', {
+      evidence: { skill: 'Attack', level: 73 },
+    }), attack)).toEqual({ state: 'BLOCKED', reason: 'This level is already recorded.' });
+    expect(classifyFateEvent(event('COMBAT_ACHIEVEMENT', 'Noxious Foe'), withUnlocks({ completedTasks: ['ca_0'] })))
+      .toEqual({ state: 'BLOCKED', reason: 'Already completed' });
+
+    const logged = classifyFateEvent(event('COLLECTION_LOG', 'Bludgeon claw'), state());
+    expect(logged.state).toBe('READY');
+    const itemId = logged.state === 'READY' && logged.progress.kind === 'COLLECTION_ITEM' ? logged.progress.itemId : -1;
+    expect(classifyFateEvent(event('COLLECTION_LOG', 'Bludgeon claw'), withUnlocks({ collectionLog: { [itemId]: 1 } })))
+      .toEqual({ state: 'BLOCKED', reason: 'This item is already in the Collection Log.' });
+  });
+
+  it('rolls skill levels only for an unlocked skill, as the level-up button does', () => {
+    expect(classifyFateEvent(event('SKILL_LEVEL', 'Attack Level 2', {
+      evidence: { skill: 'Attack', level: 2 },
+    }), state())).toEqual({ state: 'BLOCKED', reason: 'Unlock this skill before its levels can roll.' });
+  });
+
+  it('rolls a reviewed diary task only where the Journal would complete it', () => {
+    const diary = event('DIARY_TASK', 'Karamja Elite', { confidence: 'UNCERTAIN', evidence: { tierId: 'Karamja Elite' } });
+    const taskId = 'kar_elite_2';
+    expect(classifyFateEventCandidate(diary, withUnlocks({ completedTasks: [taskId] }), taskId))
+      .toEqual({ state: 'BLOCKED', reason: 'Already completed' });
   });
 
   it('does not guess an unknown or unlabelled quest', () => {
@@ -164,20 +212,66 @@ describe('classifyFateEvent', () => {
     ['Vorkath', DropSource.BOSS_MID, 2],
     ['Nex', DropSource.BOSS_HIGH, 2],
     ['Chambers of Xeric', DropSource.RAID, 3],
-  ])('maps %s through the canonical boss tiers', (label, source, failureFate) => {
+  ])('maps %s through the canonical boss tiers outside Vanilla', (label, source, failureFate) => {
     const type = source === DropSource.RAID ? 'RAID_COMPLETION' : 'BOSS_KILL';
-    expect(classifyFateEvent(event(type, label), state()))
+    const classified = classifyFateEvent(event(type, label), state({ gameModeId: 'chunked' }));
+    expect(classified)
       .toMatchObject({ state: 'READY', intent: { source, threshold: DROP_RATES[source], failureFate } });
+    expect(classified.state === 'READY' && classified.intent.context).toBeUndefined();
+  });
+
+  it('rolls Vanilla bosses only while unlocked, from their own key reserve', () => {
+    expect(classifyFateEvent(event('BOSS_KILL', 'Zulrah'), state()))
+      .toEqual({ state: 'BLOCKED', reason: 'Unlock this boss before its kills can roll.' });
+
+    const vorkath = (awarded: number) => classifyFateEvent(event('BOSS_KILL', 'Vorkath'), withUnlocks(
+      { bosses: ['Vorkath'] },
+      { bossStandardKeysAwarded: awarded ? { Vorkath: awarded } : {} },
+    ));
+    const context = { kind: 'boss', bossName: 'Vorkath', bossClass: 'mid' };
+    expect(vorkath(0)).toMatchObject({ state: 'READY', intent: { source: DropSource.BOSS_MID, threshold: 30, context } });
+    expect(vorkath(1)).toMatchObject({ state: 'READY', intent: { threshold: 15, context } });
+    expect(vorkath(2)).toEqual({ state: 'BLOCKED', reason: 'This boss has no Standard Keys left to award.' });
+  });
+
+  it('rolls Brutus as the Farm card does: always open in Vanilla, low tier elsewhere', () => {
+    const brutus = (awarded: number) => classifyFateEvent(event('BOSS_KILL', 'Brutus'), state(
+      { bossStandardKeysAwarded: awarded ? { Brutus: awarded } : {} },
+    ));
+    expect(brutus(0)).toMatchObject({
+      state: 'READY',
+      intent: {
+        source: DropSource.BOSS_LOW, threshold: 10,
+        context: { kind: 'boss', bossName: 'Brutus', bossClass: 'brutus' },
+      },
+    });
+    expect(brutus(1)).toEqual({ state: 'BLOCKED', reason: 'This boss has no Standard Keys left to award.' });
+    const chunked = classifyFateEvent(event('BOSS_KILL', 'Brutus'), state({ gameModeId: 'chunked' }));
+    expect(chunked).toMatchObject({ state: 'READY', intent: { source: DropSource.BOSS_LOW } });
+    expect(chunked.state === 'READY' && chunked.intent.context).toBeUndefined();
+  });
+
+  it('rolls Vanilla clue caskets at the Clues card rates', () => {
+    expect(classifyFateEvent(event('CLUE_CASKET', 'Casket (hard)'), state())).toMatchObject({
+      state: 'READY',
+      intent: { source: DropSource.CLUE_HARD, context: { kind: 'clue', clueTier: 'Hard' } },
+    });
+    const chunked = classifyFateEvent(event('CLUE_CASKET', 'Casket (hard)'), state({ gameModeId: 'chunked' }));
+    expect(chunked.state === 'READY' && chunked.intent.context).toBeUndefined();
   });
 
   it('uses the canonical skill-level formula', () => {
+    // The level-up button's odds: level / 5, to one decimal place.
     expect(classifyFateEvent(event('SKILL_LEVEL', 'Attack Level 73', {
       evidence: { skill: 'Attack', level: 73, previousLevel: 72 },
-    }), state())).toMatchObject({
+    }), withUnlocks({ skills: { Attack: 8 } }))).toMatchObject({
       state: 'READY',
-      intent: { source: 'Attack Level 73', threshold: 15, failureFate: 2, target: 'Attack Level 73' },
+      intent: { source: 'Attack Level 73', threshold: 14.6, failureFate: 2, target: 'Attack Level 73' },
       progress: { kind: 'SKILL_LEVEL', skill: 'Attack', level: 73 },
     });
+    expect(classifyFateEvent(event('SKILL_LEVEL', 'Attack Level 2', {
+      evidence: { skill: 'Attack', level: 2 },
+    }), withUnlocks({ skills: { Attack: 1 } }))).toMatchObject({ intent: { threshold: 0.4 } });
   });
 
   it('does not trust a confirmation-only detector confidence claim', () => {

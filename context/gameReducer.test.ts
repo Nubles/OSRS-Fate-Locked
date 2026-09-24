@@ -647,21 +647,42 @@ describe('UNLOCK', () => {
     expect(twice.unlocks.regions.filter((r) => r === 'Karamja')).toHaveLength(1);
   });
 
-  it('caps the skill tier at 10 even if dispatched past the cap', () => {
-    let s = base();
+  it('caps the skill tier at 10 and charges nothing once dispatched past the cap', () => {
+    let s = { ...base(), keys: 20 };
     for (let i = 0; i < 15; i++) {
       s = gameReducer(s, { type: 'UNLOCK', payload: { table: TableType.SKILLS, item: 'Mining', costType: 'key', cost: 1 } });
     }
     expect(s.unlocks.skills['Mining']).toBe(10);
+    expect(s.keys).toBe(10);
   });
 
   it('caps the equipment tier at EQUIPMENT_TIER_MAX', () => {
-    let s = base();
+    let s = { ...base(), keys: 20 };
     for (let i = 0; i < 20; i++) {
       s = gameReducer(s, { type: 'UNLOCK', payload: { table: TableType.EQUIPMENT, item: 'Head', costType: 'key', cost: 1 } });
     }
     // EQUIPMENT_TIER_MAX is 9 (see config/rules.ts); the reducer must not exceed it.
     expect(s.unlocks.equipment['Head']).toBeLessThanOrEqual(9);
+  });
+
+  it('cannot spend one Omni-key on two direct unlocks', () => {
+    const unlock = (item: string) => ({
+      type: 'UNLOCK' as const,
+      payload: { table: TableType.BOSSES, item, costType: 'specialKey' as const, cost: 1 },
+    });
+    const first = gameReducer({ ...base(), specialKeys: 1 }, unlock('Zulrah'));
+    const second = gameReducer(first, unlock('Vorkath'));
+
+    expect(first.specialKeys).toBe(0);
+    expect(second).toBe(first);
+    expect(second.unlocks.bosses).toEqual(['Zulrah']);
+  });
+
+  it('does not charge an Omni-key for something already unlocked', () => {
+    const owned = { ...base(), specialKeys: 1, unlocks: { ...base().unlocks, bosses: ['Zulrah'] } };
+    const next = gameReducer(owned, { type: 'UNLOCK', payload: { table: TableType.BOSSES, item: 'Zulrah', costType: 'specialKey', cost: 1 } });
+
+    expect(next).toBe(owned);
   });
 });
 
@@ -713,6 +734,23 @@ describe('rituals', () => {
     const s = gameReducer({ ...base(), fatePoints: 40 }, { type: 'RITUAL_GREED' });
     expect(s.fatePoints).toBe(25);
     expect(s.activeBuff).toBe('GREED');
+  });
+
+  it('keeps a paid buff instead of letting the other buff replace it', () => {
+    const clarity = gameReducer({ ...base(), fatePoints: 23 }, { type: 'RITUAL_LUCK' });
+    const greed = gameReducer(clarity, { type: 'RITUAL_GREED' });
+
+    expect(greed).toBe(clarity);
+    expect(greed.activeBuff).toBe('LUCK');
+    expect(greed.fatePoints).toBe(15);
+  });
+
+  it('rejects rituals the player cannot afford', () => {
+    const poor = { ...base(), fatePoints: 7, keys: 4 };
+    expect(gameReducer(poor, { type: 'RITUAL_LUCK' })).toBe(poor);
+    expect(gameReducer(poor, { type: 'RITUAL_GREED' })).toBe(poor);
+    expect(gameReducer(poor, { type: 'RITUAL_CHAOS' })).toBe(poor);
+    expect(gameReducer(poor, { type: 'RITUAL_TRANSMUTE' })).toBe(poor);
   });
 
   it('a failed roll under GREED refunds half the ritual cost (plus the normal fate point)', () => {
@@ -945,6 +983,35 @@ describe('LEVEL_UP — Chunked milestone insurance', () => {
     expect(s.chunkedMilestoneClaimed).toBe(1);
   });
 
+  describe('new runs', () => {
+    const startTotal = Object.values(initialState.unlocks.levels).reduce((a, b) => a + b, 0);
+    const levelUp = (state: ReturnType<typeof base>) =>
+      gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
+    const newChunkedRun = () =>
+      gameReducer(base(), { type: 'SET_GAME_MODE', payload: { modeId: 'chunked' } });
+
+    it('count milestones from the starting total level, so the first level-up pays nothing', () => {
+      const run = newChunkedRun();
+      expect(run.chunkedMilestoneClaimed).toBe(Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL));
+      expect(levelUp(run).keys).toBe(run.keys);
+    });
+
+    it('pay their first milestone key at the next multiple of the interval', () => {
+      let run = newChunkedRun();
+      const firstPayout = CHUNKED_MILESTONE_INTERVAL * (Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL) + 1);
+      for (let total = startTotal; total < firstPayout - 1; total++) run = levelUp(run);
+      expect(run.keys).toBe(initialState.keys);
+      run = levelUp(run);
+      expect(run.keys).toBe(initialState.keys + 1);
+      expect(run.history.at(-1)?.message).toContain(`Total Level ${firstPayout}`);
+    });
+
+    it('leave runs that chose their mode before this rule on their original schedule', () => {
+      const existing = { ...chunkedIsolated(), gameModeLocked: true, chunkedMilestoneClaimed: 0 };
+      expect(levelUp(existing).keys).toBe(initialState.keys + 1);
+    });
+  });
+
   it('the two modes\' milestone counters are independent', () => {
     const state = { ...chunkedIsolated(), xtremeMilestoneClaimed: 3 };
     const s = gameReducer(state, {
@@ -978,6 +1045,43 @@ describe('LOAD_SAVE normalized replacement', () => {
     expect(replaced.keys).toBe(8);
     expect(replaced.rival).toBeUndefined();
     expect(replaced.lastEvent).toBeNull();
+  });
+
+  const entry = (id: string, chain: Partial<LogEntry> = {}): LogEntry => ({
+    id, timestamp: 1, type: 'ROLL_SUCCESS', message: id, ...chain,
+  });
+
+  it('keeps an imported history whole when the current history predates hashes', () => {
+    const current = { ...base(), history: [entry('old-1'), entry('old-2')] };
+    const imported = {
+      ...structuredClone(initialState),
+      runId: 'imported-run',
+      history: [
+        entry('new-1', { prevHash: 'GENESIS', hash: 'h1' }),
+        entry('new-2', { prevHash: 'h1', hash: 'h2' }),
+        entry('new-3', { prevHash: 'h2', hash: 'h3' }),
+      ],
+    };
+
+    const replaced = gameReducer(current, { type: 'LOAD_SAVE', payload: imported });
+
+    expect(replaced.history).toEqual(imported.history);
+  });
+
+  it('does not link an imported history to the run it replaces', () => {
+    const current = {
+      ...base(),
+      history: [entry('old-1', { prevHash: 'GENESIS', hash: 'a1' }), entry('old-2', { prevHash: 'a1', hash: 'a2' })],
+    };
+    const imported = {
+      ...structuredClone(initialState),
+      runId: 'imported-run',
+      history: [entry('legacy-1'), entry('legacy-2'), entry('legacy-3')],
+    };
+
+    const replaced = gameReducer(current, { type: 'LOAD_SAVE', payload: imported });
+
+    expect(replaced.history).toEqual(imported.history);
   });
 });
 

@@ -69,4 +69,18 @@ describe('ShortcutsPanel duplicate-name rows', () => {
       typeof message === 'string' && message.includes('same key'));
     expect(duplicateKeyWarning).toBe(false);
   });
+
+  it('names the skill each shortcut is gated on, not always Agility', () => {
+    mocks.game.unlocks.skills = { Agility: 10, Ranged: 10, Strength: 10 } as never;
+    try {
+      render(<ShortcutsPanel />);
+      fireEvent.click(screen.getByRole('button', { name: /Agility Shortcuts/ }));
+
+      expect(screen.getByText('Ranged 20')).toBeTruthy();
+      expect(screen.getByText('Strength 30')).toBeTruthy();
+      expect(screen.queryByText('Agility 20')).toBeNull();
+    } finally {
+      mocks.game.unlocks.skills = {} as never;
+    }
+  });
 });

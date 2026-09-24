@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { build } from 'vite';
 
 const EXPANDED_PREVIEW_MARKER = 'Independent F2P test guide checked against pinned full Wiki pages';
@@ -16,8 +16,23 @@ const PRIVATE_RELEASE_MARKERS = [
   '5307348d9dab40a1801d78b06660af566112223a339dfa017f4a43306149bd5f',
   '0f50a69f17989b9b244ba0f47f1461c65d720eece2b9603ad14158850ad53cdd',
 ] as const;
+// Notes from the reviewed item lists of Daddy's Home, Doric's Quest and
+// Elemental Workshop I, which only the preview build offers.
+const PRIVATE_REQUIREMENT_MARKERS = [
+  'Nail beast nails and Dragon nails are not valid construction nails.',
+  'Clay only; not Soft clay.',
+  'this is a reviewed quest alternative, not an item alias.',
+] as const;
+const PRIVATE_MARKERS = [
+  PRIVATE_MARKER,
+  EXPANDED_PREVIEW_MARKER,
+  ...PRIVATE_RELEASE_MARKERS,
+  ...PRIVATE_REQUIREMENT_MARKERS,
+];
 const PUBLIC_MARKER = 'Independently authored quest steps and F2P chunk locations.';
-const outputs: string[] = [];
+// Two real builds take tens of seconds, so the hook sets its own limit rather
+// than relying on vitest's 10 s hook default.
+const BUILDS_TIMEOUT_MS = 240_000;
 
 const emittedFiles = async (directory: string): Promise<string[]> => {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -27,60 +42,57 @@ const emittedFiles = async (directory: string): Promise<string[]> => {
   }))).flat();
 };
 
-const bundleContains = async (directory: string, marker: string): Promise<boolean> => {
+/** Reads every emitted file once and reports which markers any of them contains. */
+const markersIn = async (directory: string): Promise<ReadonlyMap<string, boolean>> => {
   const contents = await Promise.all((await emittedFiles(directory)).map(path => readFile(path)));
-  return contents.some(content => content.includes(Buffer.from(marker)));
+  return new Map([...PRIVATE_MARKERS, PUBLIC_MARKER].map(marker => [
+    marker,
+    contents.some(content => content.includes(Buffer.from(marker))),
+  ]));
+};
+
+const buildInto = async (mode: string, outDir: string): Promise<void> => {
+  await build({
+    configFile: join(process.cwd(), 'vite.config.ts'),
+    mode,
+    logLevel: 'error',
+    build: { outDir, emptyOutDir: true, reportCompressedSize: false },
+  });
 };
 
 describe('RuneProof production bundle boundary', () => {
-  afterEach(async () => {
-    vi.unstubAllEnvs();
+  const outputs: string[] = [];
+  let production: ReadonlyMap<string, boolean>;
+  let preview: ReadonlyMap<string, boolean>;
+
+  // One build per mode serves every check. The production build inherits the
+  // preview flag from its environment, the stricter case: the boundary is keyed
+  // to the build mode, so it must hold whether or not the flag is set.
+  beforeAll(async () => {
+    const normalDirectory = await mkdtemp(join(tmpdir(), 'runeproof-normal-'));
+    const previewDirectory = await mkdtemp(join(tmpdir(), 'runeproof-preview-'));
+    outputs.push(normalDirectory, previewDirectory);
+
+    vi.stubEnv('VITE_RUNEPROOF_PREVIEW', '1');
+    try {
+      await buildInto('production', normalDirectory);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+    await buildInto('runeproof-preview', previewDirectory);
+    [production, preview] = await Promise.all([markersIn(normalDirectory), markersIn(previewDirectory)]);
+  }, BUILDS_TIMEOUT_MS);
+
+  afterAll(async () => {
     await Promise.all(outputs.splice(0).map(path => rm(path, { recursive: true, force: true })));
   });
 
-  it('separates the private preview payload from the normal production bundle', async () => {
-    const normal = await mkdtemp(join(tmpdir(), 'runeproof-normal-'));
-    const preview = await mkdtemp(join(tmpdir(), 'runeproof-preview-'));
-    outputs.push(normal, preview);
+  it('keeps the private preview payload out of production, even with an inherited preview flag', () => {
+    expect(PRIVATE_MARKERS.filter(marker => production.get(marker))).toEqual([]);
+    expect(production.get(PUBLIC_MARKER)).toBe(true);
+  });
 
-    await build({
-      configFile: join(process.cwd(), 'vite.config.ts'),
-      mode: 'production',
-      build: { outDir: normal, emptyOutDir: true },
-    });
-    await build({
-      configFile: join(process.cwd(), 'vite.config.ts'),
-      mode: 'runeproof-preview',
-      build: { outDir: preview, emptyOutDir: true },
-    });
-
-    expect(normal).not.toBe(preview);
-    expect(await bundleContains(normal, PRIVATE_MARKER)).toBe(false);
-    expect(await bundleContains(normal, EXPANDED_PREVIEW_MARKER)).toBe(false);
-    await expect(Promise.all(PRIVATE_RELEASE_MARKERS.map(marker => bundleContains(normal, marker))))
-      .resolves.toEqual(PRIVATE_RELEASE_MARKERS.map(() => false));
-    expect(await bundleContains(normal, PUBLIC_MARKER)).toBe(true);
-    expect(await bundleContains(preview, PRIVATE_MARKER)).toBe(true);
-    expect(await bundleContains(preview, EXPANDED_PREVIEW_MARKER)).toBe(true);
-    await expect(Promise.all(PRIVATE_RELEASE_MARKERS.map(marker => bundleContains(preview, marker))))
-      .resolves.toEqual(PRIVATE_RELEASE_MARKERS.map(() => true));
-  }, 120_000);
-
-  it('keeps the private preview payload out of production with an inherited preview flag', async () => {
-    const normal = await mkdtemp(join(tmpdir(), 'runeproof-normal-inherited-'));
-    outputs.push(normal);
-    vi.stubEnv('VITE_RUNEPROOF_PREVIEW', '1');
-
-    await build({
-      configFile: join(process.cwd(), 'vite.config.ts'),
-      mode: 'production',
-      build: { outDir: normal, emptyOutDir: true },
-    });
-
-    expect(await bundleContains(normal, PRIVATE_MARKER)).toBe(false);
-    expect(await bundleContains(normal, EXPANDED_PREVIEW_MARKER)).toBe(false);
-    await expect(Promise.all(PRIVATE_RELEASE_MARKERS.map(marker => bundleContains(normal, marker))))
-      .resolves.toEqual(PRIVATE_RELEASE_MARKERS.map(() => false));
-    expect(await bundleContains(normal, PUBLIC_MARKER)).toBe(true);
-  }, 120_000);
+  it('ships the private preview payload in the preview build', () => {
+    expect(PRIVATE_MARKERS.filter(marker => !preview.get(marker))).toEqual([]);
+  });
 });

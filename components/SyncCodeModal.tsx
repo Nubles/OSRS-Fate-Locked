@@ -3,12 +3,13 @@ import {
   X, Link2, Copy, Check, ClipboardPaste, ShieldCheck, ShieldAlert,
   AlertTriangle, Loader2, ArrowDownToLine, Upload, QrCode, History, RotateCcw,
 } from 'lucide-react';
-import { initialState, useGame } from '../context/GameContext';
+import { createFreshState, useGame } from '../context/GameContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';
 import { encodeSyncCode, decodeAndValidateSyncCode } from '../utils/syncCode';
 import { makeQrSvg } from '../utils/qr';
 import { auditHistory, RunVerdict } from '../utils/integrity';
+import { resolveModeRules } from '../config/gameModes';
 import { BackupMeta } from '../utils/backups';
 import type { GameState } from '../types';
 import {
@@ -184,7 +185,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
   const decodedState = decoded?.value ?? null;
   const preview = useMemo(() => (decodedState ? previewOf(decodedState) : null), [decodedState]);
   const audit = useMemo(() => decodedState
-    ? auditHistory(decodedState.history)
+    ? auditHistory(decodedState.history, resolveModeRules(decodedState.gameModeId, decodedState.customMode))
     : null, [decodedState]);
 
   const invalidateSource = useCallback((next: string) => {
@@ -233,7 +234,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
     setStatus(null);
     setDecoded(null);
 
-    const result = await decodeAndValidateSyncCode(source, initialState);
+    const result = await decodeAndValidateSyncCode(source, createFreshState());
     if (!isCurrentImportRequest(verifyRequestRef.current, inputRef.current, request)) return;
 
     setDecoding(false);
@@ -389,8 +390,11 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
     }
   }, [restoreBackup, scheduleAcceptedClose]);
 
-  const TabBtn: React.FC<{ id: Tab; label: string; Icon: typeof Link2 }> = ({ id, label, Icon }) => (
+  // A render helper, not a component defined here: a component created on
+  // every render would remount each tab and drop keyboard focus.
+  const tabButton = (id: Tab, label: string, Icon: typeof Link2) => (
     <button
+      key={id}
       disabled={accepted || importBusy || restoreBusy}
       onClick={() => {
         setTab(id);
@@ -441,9 +445,9 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
 
         {/* Tabs */}
         <div className="flex border-b border-white/10 bg-[#141414] shrink-0">
-          <TabBtn id="EXPORT" label="Export" Icon={Upload} />
-          <TabBtn id="IMPORT" label="Import" Icon={ArrowDownToLine} />
-          <TabBtn id="BACKUPS" label="Backups" Icon={History} />
+          {tabButton('EXPORT', 'Export', Upload)}
+          {tabButton('IMPORT', 'Import', ArrowDownToLine)}
+          {tabButton('BACKUPS', 'Backups', History)}
         </div>
 
         {/* Body */}

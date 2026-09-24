@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { useProfiles } from '../context/ProfileContext';
 import { useGame } from '../context/GameContext';
 import {
-  readDiscordConfig, writeDiscordConfig, writeCursor, isValidWebhookUrl,
+  readDiscordConfig, writeDiscordConfig, writeCursor, cursorAtNewest, isValidWebhookUrl,
   testEmbed, postEmbeds,
 } from '../utils/discordWebhook';
 import { useEscapeKey } from '../hooks/useEscapeKey';
@@ -28,10 +28,7 @@ export const DiscordSettingsModal: React.FC<{ onClose: () => void }> = ({ onClos
     setCfg(next);
     writeDiscordConfig(storageKey, next);
     // (Re-)enabling starts announcing from *now* — never the back-catalogue.
-    if (next.enabled) {
-      const newest = history.length ? Math.max(...history.map((e) => e.timestamp)) : Date.now();
-      writeCursor(storageKey, newest);
-    }
+    if (next.enabled) writeCursor(storageKey, cursorAtNewest(history));
   }, [storageKey, history]);
 
   const handleTest = useCallback(async () => {

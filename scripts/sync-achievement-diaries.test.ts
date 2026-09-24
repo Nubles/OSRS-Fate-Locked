@@ -531,7 +531,16 @@ describe('Achievement Diary id-classification audit', () => {
       'wild_hard_9',
       'wild_med_3',
       'wild_med_7',
+      'wilderness_easy_4',
     ]);
+    // The Mage of Zamorak only teleports into the Abyss after Enter the
+    // Abyss (wilderness_easy_11 gates the same teleport).
+    expect(byId.get('wilderness_easy_4')).toMatchObject({
+      oneOf: [
+        { label: 'Chaos Temple ruins' },
+        { label: 'The Abyss', quests: ['Enter the Abyss'] },
+      ],
+    });
     expect(byId.get('wild_med_3')).toMatchObject({
       skills: { Slayer: 50 },
       oneOf: [
@@ -581,7 +590,28 @@ describe('Achievement Diary id-classification audit', () => {
       allQuestsRequirementsStructured: 2,
     });
     expect(byId.get('kar_med_1')?.skills).toEqual({});
-    expect(byId.get('lum_easy_10')?.skills).toEqual({});
+    // The recommended 34 Cooking must not become a gate, but baking still
+    // needs the Cooking unlock, like the Draynor rooftop lap needs Agility.
+    expect(byId.get('lum_easy_10')?.skills).toEqual({ Cooking: 1 });
+  });
+
+  it('gates level-1 skilling tasks on the skill unlock', () => {
+    const byId = new Map(loadSnapshot().tasks.map((task: { id: string }) => [task.id, task]));
+    expect(Object.fromEntries([
+      'lum_easy_1', 'western_easy_4', 'kou_easy_10', 'lum_easy_6', 'var_easy_7',
+      'des_easy_2', 'lum_easy_10', 'fal_easy_7', 'ard_med_7', 'kar_easy_7',
+    ].map(id => [id, (byId.get(id) as { skills: Record<string, number> }).skills]))).toEqual({
+      lum_easy_1: { Agility: 1 },
+      western_easy_4: { Agility: 1 },
+      kou_easy_10: { Agility: 1 },
+      lum_easy_6: { Thieving: 1 },
+      var_easy_7: { Woodcutting: 1 },
+      des_easy_2: { Mining: 1 },
+      lum_easy_10: { Cooking: 1 },
+      fal_easy_7: { Runecraft: 1 },
+      ard_med_7: { Fishing: 1 },
+      kar_easy_7: { Fishing: 1 },
+    });
   });
   it('preserves the historical teak-log completion id for its semantic match', () => {
     const snapshot = loadSnapshot();

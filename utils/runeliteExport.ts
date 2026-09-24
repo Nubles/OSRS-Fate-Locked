@@ -61,6 +61,15 @@ export interface RuneliteRunInput {
   detectorContractVersion?: number;
 }
 
+export interface BundlePayloadOptions {
+  /** Relay publishes: throw instead of building from failed chunk or equipment
+   *  data. That bundle has empty rules, so RuneLite would allow everything,
+   *  and it would replace the last complete profile on the relay. */
+  requireRulesData?: boolean;
+  /** An explicit Retry: skip the equipment data's failed-load cool-down. */
+  retryFailedLoads?: boolean;
+}
+
 /**
  * Build the v4 bundle for the current run and return it both as plain JSON (for
  * the readable file download) and as the compressed FLGZ form (clipboard / relay).
@@ -69,10 +78,11 @@ export interface RuneliteRunInput {
 export async function buildBundlePayload(
   unlocks: UnlockState,
   run: RuneliteRunInput,
+  options: BundlePayloadOptions = {},
 ): Promise<{ json: string; compressed: string }> {
   let itemTiers: Record<string, number> | undefined;
   try {
-    await gearService.init();           // cached after first load
+    await gearService.init(options.retryFailedLoads);   // cached after first load
     if (gearService.ready) itemTiers = gearService.tierExport();
   } catch { /* offline / load failed — ship without tiers, plugin degrades */ }
 
@@ -81,6 +91,17 @@ export async function buildBundlePayload(
     await chunkContentService.init();
     if (chunkContentService.ready) slayerChunks = chunkContentService.slayerReachIndex();
   } catch { /* no chunk data — plugin falls back to its capped monster index */ }
+
+  if (options.requireRulesData) {
+    const missing = [
+      ...(chunkContentService.ready ? [] : ['chunk']),
+      ...(gearService.ready ? [] : ['equipment']),
+    ];
+    if (missing.length > 0) {
+      throw new Error(`Couldn't load ${missing.join(' and ')} data, so the profile wasn't sent. `
+        + 'Check your connection and retry.');
+    }
+  }
 
   const state = {
     keys: run.keys,

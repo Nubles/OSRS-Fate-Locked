@@ -81,7 +81,10 @@ describe('Collection Log identity provenance across runs and browsers', () => {
     'keeps new canonical drops at %i usable despite another run historical cache', (itemId, name) => {
       let state = { ...createFreshState(), lastEvent: null, linkedAccount: 'Review account' };
       for (let count = 1; count <= 2; count++) {
-        expect(classifyFateEvent(event(state, name), state).state).toBe('READY');
+        // Only the first drop rolls; later ones are already logged, never held for identity review.
+        expect(classifyFateEvent(event(state, name), state)).toMatchObject(count === 1
+          ? { state: 'READY' }
+          : { state: 'BLOCKED', reason: 'This item is already in the Collection Log.' });
         state = gameReducer(state, { type: 'LOG_ITEM', payload: itemId }) as typeof state;
         expect(state.unlocks.collectionLog[itemId]).toBe(count);
         expect(collectionIdentityReview(state.unlocks.collectionLog, collectionLogSync.legacyMappings(), undefined, state.collectionLogIdentity).blockedIds.size).toBe(0);
@@ -91,7 +94,8 @@ describe('Collection Log identity provenance across runs and browsers', () => {
       if (reloaded.ok === false) throw new Error(reloaded.message);
       expect(reloaded.state.unlocks.collectionLog[itemId]).toBe(2);
       expect(reloaded.state.collectionLogIdentity).toEqual({ version: 1, quarantinedIds: [] });
-      expect(classifyFateEvent(event(state, name), reloaded.state).state).toBe('READY');
+      expect(classifyFateEvent(event(state, name), reloaded.state))
+        .toMatchObject({ state: 'BLOCKED', reason: 'This item is already in the Collection Log.' });
     });
 
   it('exports the quarantine and retains both blocked identities on a clean browser', () => {

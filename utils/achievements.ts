@@ -19,7 +19,8 @@ import { completionPercent } from './completion';
 import { QUEST_DATA, QUEST_CAPE_QUEST_IDS } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { CA_DATA } from '../data/caData';
-import { visibleAreaUnlocks } from '../data/areaMapPolicy';
+import { isAreaReachable } from './reachability';
+import { unlockableAreas } from './freeAreas';
 
 export type AchievementCategory =
   | 'Quests' | 'Skills' | 'Regions' | 'Equipment'
@@ -73,6 +74,10 @@ const equipMaxed = (u: UnlockState) =>
   EQUIPMENT_SLOTS.filter((s) => (u.equipment[s] || 0) >= EQUIPMENT_TIER_MAX).length;
 const collectionItems = (u: UnlockState) =>
   Object.values(u.collectionLog || {}).filter((c) => c > 0).length;
+// Areas the run has opened, by the same reachability check as the map, so
+// Chunked runs (which never fill `regions`) count the areas their chunks reach.
+const areasReached = (u: UnlockState, mode?: string, custom?: GameModeRules) =>
+  unlockableAreas(mode, custom).filter((area) => isAreaReachable(area, u, mode)).length;
 
 /** Overall completion % — the single shared metric (utils/completion), re-exported. */
 export { completionPercent };
@@ -83,7 +88,11 @@ function tiers(
   category: AchievementCategory,
   defaultIcon: AchievementIcon,
   metric: (u: UnlockState, mode?: string, custom?: GameModeRules) => number,
-  steps: Array<{ title: string; description: string; target: number; icon?: AchievementIcon }>,
+  steps: Array<{
+    title: string; description: string; target: number; icon?: AchievementIcon;
+    /** A target that depends on the run's mode; `target` still names the id. */
+    targetFor?: (mode?: string, custom?: GameModeRules) => number;
+  }>,
 ): Achievement[] {
   return steps.map((s) => ({
     id: `${baseId}-${s.target}`,
@@ -91,7 +100,10 @@ function tiers(
     description: s.description,
     category,
     icon: s.icon ?? defaultIcon,
-    progress: (u: UnlockState, mode?: string, custom?: GameModeRules) => ({ current: metric(u, mode, custom), target: s.target }),
+    progress: (u: UnlockState, mode?: string, custom?: GameModeRules) => ({
+      current: metric(u, mode, custom),
+      target: s.targetFor?.(mode, custom) ?? s.target,
+    }),
   }));
 }
 
@@ -124,10 +136,13 @@ export const ACHIEVEMENTS: Achievement[] = [
   ]),
 
   // Regions
-  ...tiers('regions', 'Regions', 'region', (u) => visibleAreaUnlocks(u.regions).length, [
+  ...tiers('regions', 'Regions', 'region', areasReached, [
     { title: 'Explorer', description: 'Unlock your first region', target: 1 },
     { title: 'Globetrotter', description: 'Unlock 5 regions', target: 5 },
-    { title: 'World Tour', description: 'Unlock every region', target: TOTAL_REGIONS, icon: 'map' },
+    {
+      title: 'World Tour', description: 'Unlock every region', target: TOTAL_REGIONS, icon: 'map',
+      targetFor: (mode, custom) => unlockableAreas(mode, custom).length,
+    },
   ]),
 
   // Equipment

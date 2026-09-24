@@ -38,6 +38,7 @@ export type RecoveryDatabaseOperation =
   | 'get-head'
   | 'put-head'
   | 'list-checkpoints'
+  | 'list-checkpoint-keys'
   | 'get-checkpoint'
   | 'put-checkpoint'
   | 'delete-checkpoint'
@@ -457,6 +458,37 @@ class IndexedDbRecoveryRepository implements RecoveryRepository {
     const pruned = await this.prune(record.profileId, authorizeWrite);
     if (pruned.stored === false) return pruned;
     return this.putHeadOnce(record, authorizeWrite);
+  }
+
+  async maxPersistenceRevision(profileId: string): Promise<number> {
+    const [head, keys] = await this.transaction(
+      [HEADS_STORE, CHECKPOINTS_STORE],
+      'readonly',
+      async (tx) => {
+        const heads = tx.objectStore(HEADS_STORE);
+        const checkpoints = tx.objectStore(CHECKPOINTS_STORE);
+        const range = IDBKeyRange.bound(
+          [profileId, Number.NEGATIVE_INFINITY],
+          [profileId, Number.POSITIVE_INFINITY],
+        );
+        return Promise.all([
+          requestDone(this.request('get-head', HEADS_STORE, () => heads.get(profileId))),
+          requestDone(this.request(
+            'list-checkpoint-keys',
+            CHECKPOINTS_STORE,
+            () => checkpoints.getAllKeys(range),
+          )),
+        ]);
+      },
+    );
+    let highest = (head as RecoveryHead | undefined)?.persistenceRevision ?? 0;
+    for (const key of keys as IDBValidKey[]) {
+      const revision = Array.isArray(key) ? key[1] : undefined;
+      if (typeof revision === 'number' && Number.isSafeInteger(revision) && revision > highest) {
+        highest = revision;
+      }
+    }
+    return highest;
   }
 
   async listCheckpoints(profileId: string): Promise<RecoveryCheckpoint[]> {

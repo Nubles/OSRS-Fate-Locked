@@ -234,7 +234,22 @@ describe('App changelog lifecycle', () => {
     await user.click(screen.getByRole('button', { name: 'Settings & save tools' }));
     await user.click(screen.getByRole('button', { name: 'Discord notifications' }));
     expect(await screen.findByRole('dialog', { name: 'Discord notifications' })).toBeTruthy();
-  });
+  }, 15_000);
+
+  it('offers the save export without claiming it is encrypted', async () => {
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    storage.setItem(profileBaseKey(PROFILE_ID), JSON.stringify(readyState));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Settings & save tools' }));
+
+    const exportButton = screen.getByRole('button', { name: 'Export save file (.fate)' });
+    expect(exportButton.getAttribute('title')).toContain("isn't encrypted");
+    expect(screen.queryByRole('button', { name: /encrypted/i })).toBeNull();
+  }, 15_000);
   it.each([
     [28, 'Level Up + Chaos Key!'],
     [29, 'Level Up + 2 Chaos Keys!'],
@@ -545,6 +560,61 @@ describe('App changelog lifecycle', () => {
       name: "What's New",
     })).toBeNull();
   });
+
+  it('pairs RuneLite with the profile the player approved', async () => {
+    const code = '0123456789abcdef0123456789abcdef';
+    window.history.replaceState(null, '', `/#runelite-pair=${code}`);
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      throw new TypeError('Failed to fetch');
+    }));
+    const { relaySync } = await import('./services/relaySync');
+    const user = userEvent.setup();
+    try {
+      render(<App />);
+      const dialog = await screen.findByRole('dialog', {
+        name: 'Connect RuneLite tracker',
+      });
+      await user.click(within(dialog).getByRole('button', {
+        name: 'Connect tracker',
+      }));
+
+      // Other tabs on other profiles see the pairing but don't publish it.
+      expect(JSON.parse(storage.getItem('fate_relay_session_v1')!))
+        .toMatchObject({ code, profileId: PROFILE_ID });
+      expect(relaySync.code).toBe(code);
+    } finally {
+      relaySync.disable();
+    }
+  });
+
+  it('lets the player close the pairing dialog after the profile fails to send', async () => {
+    const code = '0123456789abcdef0123456789abcdef';
+    window.history.replaceState(null, '', `/#runelite-pair=${code}`);
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      throw new TypeError('Failed to fetch');
+    }));
+    const { relaySync } = await import('./services/relaySync');
+    const user = userEvent.setup();
+    try {
+      render(<App />);
+      const dialog = await screen.findByRole('dialog', {
+        name: 'Connect RuneLite tracker',
+      });
+      await user.click(within(dialog).getByRole('button', {
+        name: 'Connect tracker',
+      }));
+      expect(await within(dialog).findByRole('button', { name: 'Retry' }, {
+        timeout: 15_000,
+      })).toBeTruthy();
+
+      await user.click(within(dialog).getByRole('button', { name: 'Close' }));
+      expect(screen.queryByRole('dialog', {
+        name: 'Connect RuneLite tracker',
+      })).toBeNull();
+    } finally {
+      relaySync.disable();
+    }
+  }, 30_000);
 
   it('opens the RuneLite guide from a direct query and preserves unrelated URL state', async () => {
     window.history.replaceState(
