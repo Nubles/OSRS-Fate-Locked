@@ -126,6 +126,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
           </div>
           <button 
             onClick={onClose}
+            aria-label="Close the Codex"
             className="p-2 hover:bg-white/10 rounded-full transition-colors group"
           >
             <X className="w-6 h-6 text-gray-400 group-hover:text-white" />

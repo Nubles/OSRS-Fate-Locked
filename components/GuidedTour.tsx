@@ -67,8 +67,12 @@ export const GuidedTour: React.FC = () => {
   useEffect(() => {
     if (!active) return;
     const onKey = (e: KeyboardEvent) => {
+      // A focused control already activates on Enter; advancing here as well
+      // skipped a step (and closed the tour from the second-to-last one).
+      const onControl = e.target instanceof Element
+        && e.target.closest('button, a, input, select, textarea') !== null;
       if (e.key === 'Escape') setActive(false);
-      else if (e.key === 'ArrowRight' || e.key === 'Enter') next();
+      else if (e.key === 'ArrowRight' || (e.key === 'Enter' && !onControl)) next();
       else if (e.key === 'ArrowLeft') back();
     };
     window.addEventListener('keydown', onKey);

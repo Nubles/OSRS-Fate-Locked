@@ -587,6 +587,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                            key={skill}
                            data-skill-card={skill}
                            onClick={isMainActionable ? handleMainClick : undefined}
+                           onKeyDown={isMainActionable ? (event) => {
+                               // role="button" needs the native keys; nested
+                               // controls (notes, Omni upgrade) handle their own.
+                               if (event.target !== event.currentTarget) return;
+                               if (event.key === 'Enter' || event.key === ' ') {
+                                   event.preventDefault();
+                                   handleMainClick();
+                               }
+                           } : undefined}
                            className={`
                                 flex flex-col p-2 rounded bg-[#1f1f1f] border border-white/5 text-left transition-all duration-150 relative overflow-hidden group min-h-[68px]
                                 ${canLevel ? 'hover:bg-[#2a2a2a] cursor-pointer ring-1 ring-green-500/20 hover:ring-green-500/40' : ''}
