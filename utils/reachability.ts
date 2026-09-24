@@ -18,7 +18,11 @@ import { AREA_ALIAS_POLICIES, AREA_REFERENCES, canonicalAreaName } from '../data
  * a foothold anywhere in the area counts, since that's the granularity the
  * source data actually has.
  */
-export const isNamedAreaReachableViaChunks = (name: string, unlockedChunkKeys: readonly string[]): boolean => {
+export const isNamedAreaReachableViaChunks = (name: string, unlockedChunkKeys: readonly string[]): boolean =>
+  namedAreaChunks(name).some((chunk) => isChunkUnlocked(chunkKey(chunk), unlockedChunkKeys));
+
+/** The chunks that count as a named area in Chunked mode (empty when it has none). */
+export const namedAreaChunks = (name: string): readonly { cx: number; cy: number }[] => {
   const policy = AREA_ALIAS_POLICIES[name as keyof typeof AREA_ALIAS_POLICIES];
   const canonical = canonicalAreaName(name);
   const chunks = policy?.kind === 'surface-overlap'
@@ -26,8 +30,7 @@ export const isNamedAreaReachableViaChunks = (name: string, unlockedChunkKeys: r
     : (SUB_AREA_CHUNKS[canonical]
       || AREA_REFERENCES[canonical as keyof typeof AREA_REFERENCES]?.chunks
       || REGION_CHUNKS[canonical]);
-  if (!chunks || chunks.length === 0) return false;
-  return chunks.some((chunk) => isChunkUnlocked(chunkKey(chunk), unlockedChunkKeys));
+  return chunks ?? [];
 };
 
 /**

@@ -23,8 +23,9 @@ import {
   evaluateDiaryTaskEligibility, questRequirementOptionLabel, DirectEligibilityBlocker,
   locationUnlockTargets, type LocationUnlockTargets,
 } from './journalStatus';
-import { isAreaReachable } from './reachability';
+import { isAreaReachable, namedAreaChunks } from './reachability';
 import { placeOf } from './chunkLocations';
+import { chunkKey } from './chunkAdjacency';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 
 export type GoalKind = 'quest' | 'diary' | 'region';
@@ -148,8 +149,15 @@ function skillCap(unlocks: any, skill: string): number {
   return Math.min(99, (unlocks.skills?.[skill] ?? 0) * 10);
 }
 
-function areaPlanStep(name: string): PlanStep {
+function areaPlanStep(name: string, gameModeId?: string): PlanStep {
   const canonical = canonicalAreaName(name);
+  // Chunked has no Areas table: any one of the area's chunks reaches it.
+  if (gameModeId === 'chunked') {
+    return {
+      kind: 'region', id: canonical, label: displayAreaName(name), unlockTable: TableType.CHUNKS,
+      relatedIds: namedAreaChunks(name).map(chunkKey), detail: 'Unlock any chunk in this area', done: false,
+    };
+  }
   return { kind: 'region', id: canonical, label: displayAreaName(name), unlockTable: TableType.REGIONS, done: false };
 }
 
@@ -162,8 +170,8 @@ function chunkPlanStep({ cx, cy }: { cx: number; cy: number }): PlanStep {
  * Steps that unlock a quest location: its areas, or (Chunked) one of its
  * chunks. Its label is a place name, not an area any table can grant.
  */
-function locationPlanSteps(targets: LocationUnlockTargets): PlanStep[] {
-  if (targets.chunks.length === 0) return targets.areas.map(areaPlanStep);
+function locationPlanSteps(targets: LocationUnlockTargets, gameModeId?: string): PlanStep[] {
+  if (targets.chunks.length === 0) return targets.areas.map(area => areaPlanStep(area, gameModeId));
   const keys = targets.chunks.map(({ cx, cy }) => `${cx},${cy}`);
   return [{
     ...chunkPlanStep(targets.chunks[0]),
@@ -183,12 +191,12 @@ function skillLevelPlanStep(skill: string, required: number, unlocks: any): Plan
 
 function requirementOptionPlanSteps(option: any, unlocks: any, gameModeId?: string): PlanStep[] {
   return [
-    ...(option.regions ?? []).map(areaPlanStep),
+    ...(option.regions ?? []).map((region: string) => areaPlanStep(region, gameModeId)),
     ...(option.guilds ?? []).map((label: string): PlanStep => ({
       kind: 'region', id: label, label, unlockTable: TableType.GUILDS, done: false,
     })),
     ...(option.locations ?? []).flatMap((location: any) => (
-      locationPlanSteps(locationUnlockTargets(location, unlocks, gameModeId))
+      locationPlanSteps(locationUnlockTargets(location, unlocks, gameModeId), gameModeId)
     )),
     // A route's own skill level, such as a guild's entry requirement.
     ...Object.entries(option.skills ?? {}).map(([skill, level]) => (
@@ -197,7 +205,7 @@ function requirementOptionPlanSteps(option: any, unlocks: any, gameModeId?: stri
   ];
 }
 
-function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): PlanStep {
+function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any, gameModeId?: string): PlanStep {
   if (blocker.kind === 'arcana') {
     return { kind: 'arcana', id: blocker.label, label: blocker.label, unlockTable: TableType.ARCANA, detail: 'Unlock via Arcana', done: false };
   }
@@ -209,7 +217,7 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
   }
   if (blocker.kind === 'region') return blocker.chunk
     ? { kind: 'region', id: `${blocker.chunk.cx},${blocker.chunk.cy}`, label: blocker.label, unlockTable: TableType.CHUNKS, done: false }
-    : areaPlanStep(blocker.label);
+    : areaPlanStep(blocker.label, gameModeId);
   if (blocker.kind === 'quest') {
     return { kind: 'quest', id: blocker.label, label: blocker.label, unlockTable: TableType.QUESTS, done: false };
   }
@@ -406,10 +414,11 @@ function buildPlanFromRequirements(
   alreadyReachable: boolean,
   alreadyDone: boolean,
   needsConfirmation: boolean,
+  gameModeId?: string,
 ): GoalPlan {
   // Region steps.
   const regionSteps = Array.from(reqs.regions)
-    .map(areaPlanStep).sort((a, b) => a.label.localeCompare(b.label));
+    .map(region => areaPlanStep(region, gameModeId)).sort((a, b) => a.label.localeCompare(b.label));
   const alternativeSteps = [...reqs.alternatives.values()]
     .sort((a, b) => a.label.localeCompare(b.label));
   const manualSteps = [...reqs.manualSteps.values()];
@@ -575,6 +584,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       eligibility.status === 'COMPLETED' || eligibility.eligible,
       eligibility.status === 'COMPLETED',
       eligibility.confirmable && !eligibility.eligible && eligibility.manualChecks.length > 0,
+      gameModeId,
     );
   }
 
@@ -662,7 +672,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
               routes: blocker.routes.map(route => ({
                 label: route.label,
                 blockers: route.blockers.map(routeBlocker => (
-                  planStepForBlocker(routeBlocker, unlocks)
+                  planStepForBlocker(routeBlocker, unlocks, gameModeId)
                 )),
               })),
             });
@@ -693,13 +703,14 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       status === 'COMPLETED' || taskResults.every(([, eligibility]) => eligibility.eligible),
       status === 'COMPLETED',
       status !== 'COMPLETED' && taskResults.every(([, eligibility]) => eligibility.machineEligible) && taskResults.some(([, eligibility]) => eligibility.manualChecks.length > 0),
+      gameModeId,
     );
   }
 
   // region
   const canonical = canonicalAreaName(id);
   const isUnlocked = isAreaReachable(canonical, unlocks, gameModeId);
-  const regionStep: PlanStep = { ...areaPlanStep(canonical), done: isUnlocked };
+  const regionStep: PlanStep = { ...areaPlanStep(canonical, gameModeId), done: isUnlocked };
   return {
     targetKind: 'region',
     targetId: canonical,

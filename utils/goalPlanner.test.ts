@@ -6,6 +6,7 @@ import { MISTHALIN_AREAS, REGION_GROUPS } from '../data/items';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { planForTarget, listGoalTargets, questPointsForEntry } from './goalPlanner';
 import { getQuestStatus } from './journalStatus';
+import { isAreaReachable } from './reachability';
 import { TableType } from '../types';
 
 // All skills unlocked & maxed, levels at 99 — so only regions, prereq quests,
@@ -244,6 +245,39 @@ describe('planForTarget — quests', () => {
     expect(plan.alternativeSteps[0].routes!
       .find(route => route.label === 'East Ardougne')!.blockers
       .some(blocker => blocker.kind === 'skill')).toBe(false);
+  });
+});
+
+describe('planForTarget — Chunked area steps', () => {
+  const chunkedUnlocks = () => maxedUnlocks({ chunks: [] });
+
+  it('plans an area as any one of its chunks, not an Areas unlock', () => {
+    const plan = planForTarget('region', 'Falador', chunkedUnlocks(), 'chunked')!;
+
+    expect(plan.regionSteps).toEqual([expect.objectContaining({
+      kind: 'region', id: 'Falador', unlockTable: TableType.CHUNKS,
+      detail: 'Unlock any chunk in this area',
+    })]);
+    const chunks = plan.regionSteps[0].relatedIds!;
+    expect(chunks.length).toBeGreaterThan(0);
+    // Unlocking any one of those chunks reaches the area.
+    expect(isAreaReachable('Falador', { ...chunkedUnlocks(), chunks: [chunks[0]] } as any, 'chunked')).toBe(true);
+    expect(planForTarget('region', 'Falador', chunkedUnlocks())!.regionSteps[0])
+      .toMatchObject({ unlockTable: TableType.REGIONS });
+  });
+
+  it("plans a quest route's areas as chunks in Chunked", () => {
+    const plan = planForTarget('quest', 'Enter the Abyss', maxedUnlocks({
+      chunks: [],
+      quests: ['Rune Mysteries'],
+    }), 'chunked')!;
+
+    const routes = plan.alternativeSteps
+      .find(step => step.label.includes('East Ardougne'))!.routes;
+    expect(routes.find(route => route.label === 'East Ardougne')!.blockers).toEqual([
+      expect.objectContaining({ id: 'East Ardougne', unlockTable: TableType.CHUNKS }),
+    ]);
+    expect(plan.steps.some(step => step.unlockTable === TableType.REGIONS)).toBe(false);
   });
 });
 
