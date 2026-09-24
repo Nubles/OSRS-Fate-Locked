@@ -52,7 +52,7 @@ export interface Prayer { id: string; label: string; atkMult: number; strMult: n
 export const PRAYERS: Record<Style, Prayer[]> = {
   melee: [
     { id: 'none', label: 'No prayer', atkMult: 1, strMult: 1 },
-    { id: 'clarity', label: 'Improved Reflexes / Burst', atkMult: 1.1, strMult: 1.1 },
+    { id: 'clarity', label: 'Improved Reflexes / Superhuman Strength', atkMult: 1.1, strMult: 1.1 },
     { id: 'chivalry', label: 'Chivalry', atkMult: 1.15, strMult: 1.18 },
     { id: 'piety', label: 'Piety', atkMult: 1.2, strMult: 1.23 },
   ],
@@ -97,17 +97,21 @@ const pick = <T extends { id: string }>(list: T[], id: string): T => list.find((
 export const potionBoost = (baseLevel: number, p: Potion): number =>
   p.flat + Math.floor(p.pct * baseLevel);
 
-/** OSRS effective level: floor((base + boost) * prayerMult) + stance + 8. */
+/**
+ * OSRS effective level: floor((base + boost) * prayerMult) + stance + 8.
+ * The prayer multiplier is applied as a whole percentage, as the game does:
+ * 100 * 1.15 is 114.99999999999999 in floating point, which floored to 114.
+ */
 export const effectiveLevel = (base: number, prayerMult: number, boost: number, stance: number): number =>
-  Math.floor((base + boost) * prayerMult) + stance + 8;
+  Math.floor(((base + boost) * Math.round(prayerMult * 100)) / 100) + stance + 8;
 
 /** Melee/ranged max hit from effective strength + gear strength bonus. */
 export const maxHitFromStr = (effStr: number, strBonus: number): number =>
   Math.floor(0.5 + (effStr * (strBonus + 64)) / 640);
 
-/** Magic max hit ≈ base spell max scaled by magic-damage %. */
+/** Magic max hit: base spell max scaled by magic-damage %, in whole per-mille. */
 export const maxHitMagic = (baseSpellMax: number, magicDmgPct: number): number =>
-  Math.floor(baseSpellMax * (1 + magicDmgPct / 100));
+  Math.floor((baseSpellMax * Math.round(1000 + magicDmgPct * 10)) / 1000);
 
 export const attackRoll = (effAtk: number, gearAccuracy: number): number =>
   effAtk * (gearAccuracy + 64);
@@ -115,9 +119,13 @@ export const attackRoll = (effAtk: number, gearAccuracy: number): number =>
 export const defenceRoll = (defLevel: number, defBonus: number): number =>
   (defLevel + 9) * (defBonus + 64);
 
-/** Probability a hit lands, from the attack vs defence rolls. */
+/**
+ * Probability a hit lands, from the attack vs defence rolls. Rolls go negative
+ * with bonuses below -64 (e.g. casting in rune armour, or targets with -100
+ * magic defence), where the standard formula leaves 0..1; clamp it.
+ */
 export const hitChance = (atk: number, def: number): number =>
-  atk > def ? 1 - (def + 2) / (2 * (atk + 1)) : atk / (2 * (def + 1));
+  Math.min(1, Math.max(0, atk > def ? 1 - (def + 2) / (2 * (atk + 1)) : atk / (2 * (def + 1))));
 
 // ── Inputs / result ───────────────────────────────────────────────────────────
 export interface DpsInput {

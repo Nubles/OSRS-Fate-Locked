@@ -7,7 +7,7 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';
 import { gearService } from '../services/GearService';
 import { monsterService, MonsterStats } from '../services/MonsterService';
-import { sumBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
+import { attackBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
 import { planBoss, BossPlan, BOSS_ALIASES, PlayerCombat, Readiness, Danger } from '../utils/bossPlanner';
 import { EntityModel } from './EntityModel';
 import { modelFor, orientationFor } from '../data/entityModels';
@@ -61,7 +61,7 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
   // Equipped gear bonuses + weapon speed.
   const gear = useMemo(() => {
     const items = EQUIPMENT_SLOTS.map((s) => gearService.byId(loadout[s])).filter((x): x is GearItem => !!x);
-    const b = items.length ? sumBonuses(items) : { ...ZERO_BONUSES };
+    const b = items.length ? attackBonuses(items) : { ...ZERO_BONUSES };
     const weapon = gearService.byId(loadout['Weapon']);
     return { bonuses: b, speedTicks: weapon?.speed || 4, count: items.length, weaponName: weapon?.name, category: weapon?.category ?? (loadout['Weapon'] == null ? 'Unarmed' : undefined), rangedDamageType: weapon?.rangedDamageType };
   }, [loadout, status]);

@@ -64,6 +64,46 @@ export const sumBonuses = (items: GearItem[]): GearBonuses => {
   return total;
 };
 
+// Bows that draw charges instead of arrows; their ammo slot never fires.
+const NO_AMMO_BOW = /^(crystal bow|bow of faerdhinen|craw's bow|webweaver bow|venator bow)\b/i;
+const ARROW = /\barrows?\b|\bbrutal\b/i;
+const BOLT = /\bbolts?\b|\bbolt rack\b/i;
+
+/**
+ * Does the weapon fire the ammunition in the Ammo slot? Only then does the
+ * ammo's ranged strength count toward an attack: darts, knives, blowpipes,
+ * chinchompas and crystal bows ignore it, and bows need arrows, crossbows
+ * bolts, ballistas javelins, the atlatl its darts and salamanders tar.
+ */
+export const weaponFiresAmmo = (weapon: GearItem | undefined, ammo: GearItem): boolean => {
+  if (!weapon) return false;
+  const name = ammo.name;
+  switch (weapon.category) {
+    case 'Bow':
+      if (/^eclipse atlatl\b/i.test(weapon.name)) return /atlatl dart/i.test(name);
+      return !NO_AMMO_BOW.test(weapon.name) && ARROW.test(name);
+    case 'Crossbow':
+      return /ballista/i.test(weapon.name) ? /javelin/i.test(name) : BOLT.test(name);
+    case 'Salamander':
+      return /\btar\b/i.test(name);
+    default:
+      return false;
+  }
+};
+
+/**
+ * Bonuses that apply to an attack. The in-game stats screen (and sumBonuses)
+ * still includes the ammo slot, but its ranged strength only adds damage when
+ * the weapon fires that ammunition.
+ */
+export const attackBonuses = (items: GearItem[]): GearBonuses => {
+  const total = sumBonuses(items);
+  const weapon = items.find(item => item.slot === 'Weapon');
+  const ammo = items.find(item => item.slot === 'Ammo');
+  if (ammo && !weaponFiresAmmo(weapon, ammo)) total.rangedStr -= ammo.bonuses.rangedStr || 0;
+  return total;
+};
+
 /** Display grouping for the stats panel. */
 export const BONUS_GROUPS: { label: string; rows: { key: keyof GearBonuses; label: string; pct?: boolean }[] }[] = [
   {

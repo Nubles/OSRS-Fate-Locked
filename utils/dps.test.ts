@@ -39,6 +39,21 @@ describe('dps formulas', () => {
     expect(hitChance(200, 100)).toBeCloseTo(1 - 102 / 402, 5);
   });
 
+  it('keeps hit chance a probability when a roll goes negative', () => {
+    // Level-1 melee vs a -100 defence bonus: (1+9) * (-100+64) = -360.
+    expect(hitChance(attackRoll(9, 0), defenceRoll(1, -100))).toBe(1);
+    // Casting in armour with -65 magic accuracy: 107 * (-65+64) = -107.
+    expect(hitChance(attackRoll(107, -65), defenceRoll(100, 0))).toBe(0);
+  });
+
+  it('rounds prayer and magic-damage multipliers exactly', () => {
+    expect(effectiveLevel(100, 1.15, 0, 0)).toBe(123);       // 100*1.15 = 115, not 114
+    expect(maxHitMagic(25, 16)).toBe(29);                     // 25*1.16 = 29, not 28
+    expect(maxHitMagic(50, 16)).toBe(58);
+    expect(maxHitMagic(45, 40)).toBe(63);
+    expect(maxHitMagic(25, 2.5)).toBe(25);                    // 25.625
+  });
+
   const baseInput = (): DpsInput => ({
     style: 'melee', attackType: 'slash', stanceId: 'aggressive', prayerId: 'none', potionId: 'none',
     baseSpellMax: 0,

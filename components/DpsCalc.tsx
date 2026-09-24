@@ -6,7 +6,7 @@ import { EQUIPMENT_SLOTS } from '../constants';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { gearService } from '../services/GearService';
 import { monsterService, MonsterStats } from '../services/MonsterService';
-import { sumBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
+import { attackBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
 import {
   computeDps, STANCES, PRAYERS, POTIONS, Style, AttackType, DpsInput,
 } from '../utils/dps';
@@ -78,7 +78,7 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
   // Equipped gear → summed bonuses + weapon speed.
   const gear = useMemo(() => {
     const items = EQUIPMENT_SLOTS.map((s) => gearService.byId(loadout[s])).filter((x): x is GearItem => !!x);
-    const b = items.length ? sumBonuses(items) : { ...ZERO_BONUSES };
+    const b = items.length ? attackBonuses(items) : { ...ZERO_BONUSES };
     const weapon = gearService.byId(loadout['Weapon']);
     const accuracy = attackType === 'stab' ? b.stab : attackType === 'slash' ? b.slash : attackType === 'crush' ? b.crush : attackType === 'ranged' ? b.ranged : b.magic;
     return { bonuses: b, accuracy, meleeStr: b.meleeStr, rangedStr: b.rangedStr, magicDmgPct: b.magicStr, speedTicks: weapon?.speed || 4, weaponName: weapon?.name, category: weapon?.category ?? (loadout['Weapon'] == null ? 'Unarmed' : undefined), rangedDamageType: weapon?.rangedDamageType, count: items.length };
