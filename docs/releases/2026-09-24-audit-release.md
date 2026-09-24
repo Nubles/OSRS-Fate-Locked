@@ -76,7 +76,7 @@ Historical focused counts overlap and must not be added together. This final can
 | Save/export/recovery | Passed | Full-suite persistence/bootstrap/schema/recovery tests. Browser reload retains 2/7 guide checks and Neck blocker while Journal stays incomplete. Existing user preview at port 51945 untouched. |
 | Collection Log identity | Passed | 194 focused tests across six files. Fresh canonical drops survive unrelated cache; raw IDs reviewed before migration; ambiguous counts retain keys/quarantine across import; safe aliases still work; unreadable evidence remains retryable. Independent second review cleared the corrected migration-order defect. Missing historical provenance cannot be reconstructed. |
 | Whitespace and review | Passed | `git diff --check`; independent guide-boundary and identity reviews. No remaining known blocker in reviewed scope. |
-| GitHub CI / quality | Pending draft PR | Require successful check on the prepared commit before merge. |
+| GitHub CI / quality | Tracked on [draft PR #44](https://github.com/Nubles/OSRS-Fate-Locked/pull/44/checks) | The PR records the current head-specific result; require success before merge. Local success does not substitute for CI. |
 | Public deployment | Not performed | Candidate remains unreleased. Merge, deployment and live-site verification are separate. |
 
 ## Release checklist
@@ -87,8 +87,8 @@ Historical focused counts overlap and must not be added together. This final can
 - [x] Review source/generator changes and canonical identities; inspect What's New in the built app.
 - [x] Smoke-test Vanilla desktop and phone layouts without changing the user's actual progress.
 - [x] Record remaining warnings and untested integrations; independent final review found no remaining blocker.
-- [ ] Prepare reviewed branch/commit and draft PR; preparation alone does not publish.
-- [ ] Require actual GitHub `CI / quality` success during preparation.
+- [x] Prepare reviewed branch/commit and [draft PR #44](https://github.com/Nubles/OSRS-Fate-Locked/pull/44); preparation alone does not publish.
+- [x] Trigger GitHub `CI / quality` and track its head-specific result on the PR; a failing or pending result blocks merge.
 - [ ] Merge/deploy only after publication is authorized, then verify the public site and deployed identity separately.
 - [ ] Existing manually imported RuneLite bundles need re-export/reimport; paired clients receive new permissions when republished. Verify real integration before claiming live plugin success.
 
