@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState, type ReactNode } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import type { GameState } from '../types';
+import { downloadFateSave, type FateSaveDownloadResult } from '../utils/fateSaveFile';
 import { sealRuneProofReplacement } from '../utils/runeProofProgress';
 import { createFreshState } from '../context/GameContext';
 import {
@@ -88,6 +90,8 @@ export interface SaveBootstrapDependencies {
     decision: Exclude<SaveRecoveryDecision, ReadyDecision | { kind: 'empty' }>,
     options?: RecoveryExportOptions,
   ) => RecoveryActionResult | Promise<RecoveryActionResult>;
+  /** Downloads the browser save as a .fate file when recovery storage can't be read. */
+  exportBrowserSave?: (storageKey: string, data: string) => FateSaveDownloadResult;
 }
 
 type ReadyDecision = Extract<SaveRecoveryDecision, { kind: 'ready' }>;
@@ -523,6 +527,89 @@ export const productionExportRecovery = async (
 
 const pendingData = (entry: PendingSaveEntry | null): string | null => entry?.data ?? null;
 
+const exportBrowserSaveFile = (storageKey: string, data: string): FateSaveDownloadResult => (
+  downloadFateSave(data, storageKey)
+);
+
+const unavailableButtonClass = {
+  primary: 'inline-flex items-center justify-center gap-2 rounded-md bg-amber-500 px-4 py-2.5 text-sm font-bold text-black transition-colors hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300',
+  secondary: 'inline-flex items-center justify-center gap-2 rounded-md border border-amber-200/30 px-4 py-2.5 text-sm font-semibold text-amber-50 transition-colors hover:bg-amber-900/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300',
+};
+
+/**
+ * Shown when saved progress could not be checked, usually because IndexedDB
+ * exists but won't open. The browser save may be fine, and clearing site data
+ * (the obvious fix) would delete it, so the player can retry, continue with
+ * the browser save alone, or export it first.
+ */
+const SaveCheckUnavailable: React.FC<{
+  browserSave: string | null;
+  continued: boolean;
+  onRetry: () => void;
+  onContinue: () => void;
+  onExport: (data: string) => FateSaveDownloadResult;
+}> = ({ browserSave, continued, onRetry, onContinue, onExport }) => {
+  const [message, setMessage] = useState<string | null>(null);
+  return (
+    <main
+      role="main"
+      aria-labelledby="save-check-title"
+      className="flex min-h-screen items-center justify-center bg-osrs-bg px-4 py-8 text-osrs-text"
+    >
+      <section className="w-full max-w-xl overflow-hidden rounded-xl border border-amber-500/30 bg-[#171717] shadow-2xl">
+        <header className="flex items-start gap-3 border-b border-white/10 bg-[#1e1e1e] p-5 sm:p-6">
+          <div className="rounded-lg border border-amber-500/30 bg-amber-950/40 p-2 text-amber-300" aria-hidden="true">
+            <AlertTriangle size={22} />
+          </div>
+          <div className="min-w-0">
+            <h1 id="save-check-title" className="text-xl font-bold text-gray-100">Unable to check saved progress</h1>
+            <p className="mt-1 text-sm leading-relaxed text-gray-400">
+              {continued
+                ? 'Saved progress still could not be read from this browser.'
+                : "This browser's recovery storage could not be opened, so the game paused before loading your run."}
+            </p>
+          </div>
+        </header>
+        <div className="space-y-4 p-5 sm:p-6 text-sm text-gray-300">
+          {browserSave !== null && (
+            <p>
+              Your browser save is still here. Don't clear site data to fix this: that deletes it. Export it first if you want a copy.
+            </p>
+          )}
+          {!continued && (
+            <p>
+              Continuing loads the browser save without recovery checkpoints until the recovery storage works again.
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className={unavailableButtonClass.primary} onClick={onRetry}>
+              Try again
+            </button>
+            {!continued && (
+              <button type="button" className={unavailableButtonClass.secondary} onClick={onContinue}>
+                {browserSave === null ? 'Continue without recovery storage' : 'Continue with browser save'}
+              </button>
+            )}
+            {browserSave !== null && (
+              <button
+                type="button"
+                className={unavailableButtonClass.secondary}
+                onClick={() => {
+                  const result = onExport(browserSave);
+                  setMessage(result.ok === false ? result.message : 'Browser save exported as a .fate file.');
+                }}
+              >
+                Export browser save
+              </button>
+            )}
+          </div>
+          {message !== null && <p role="status" aria-live="polite">{message}</p>}
+        </div>
+      </section>
+    </main>
+  );
+};
+
 const openProductionRepository = async (): Promise<RecoveryRepository> => {
   if (typeof indexedDB === 'undefined') return unavailableRecoveryRepository;
   try {
@@ -640,6 +727,10 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
   const identity = `${profileId}\u0000${storageKey}`;
   const requestRef = useRef(0);
   const [view, setView] = useState<BootstrapView>({ identity, phase: 'loading' });
+  const [attempt, setAttempt] = useState(0);
+  // The player chose to load from the browser save alone, for this profile.
+  const [browserSaveOnlyFor, setBrowserSaveOnlyFor] = useState<string | null>(null);
+  const browserSaveOnly = browserSaveOnlyFor === identity;
   const activeView = view.identity === identity ? view : { identity, phase: 'loading' as const };
 
   useEffect(() => {
@@ -671,7 +762,9 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
           defaults,
         };
 
-        repository = await dependencies.openRepository(profileId);
+        repository = browserSaveOnly
+          ? unavailableRecoveryRepository
+          : await dependencies.openRepository(profileId);
         if (!isCurrent()) {
           closeRepository();
           return;
@@ -714,7 +807,7 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
       requestRef.current += 1;
       closeRepository();
     };
-  }, [dependencies, identity, profileId, storageKey]);
+  }, [attempt, browserSaveOnly, dependencies, identity, profileId, storageKey]);
 
   if (activeView.phase === 'loading') {
     return <div role="status">Checking saved progress…</div>;
@@ -865,11 +958,20 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
     );
   }
   if (activeView.phase === 'error') {
+    let browserSave: string | null = null;
+    try {
+      browserSave = dependencies.readPending(storageKey) ?? dependencies.readPrimary(storageKey);
+    } catch {
+      // Unreadable browser storage leaves only retry and continue.
+    }
     return (
-      <div role="status" aria-live="polite">
-        <p>Unable to check saved progress.</p>
-        <p>The game remains closed until saved progress can be checked.</p>
-      </div>
+      <SaveCheckUnavailable
+        browserSave={browserSave}
+        continued={browserSaveOnly}
+        onRetry={() => setAttempt(value => value + 1)}
+        onContinue={() => setBrowserSaveOnlyFor(identity)}
+        onExport={data => (dependencies.exportBrowserSave ?? exportBrowserSaveFile)(storageKey, data)}
+      />
     );
   }
   return <>{children(activeView.result)}</>;
