@@ -214,6 +214,8 @@ interface CardInnerProps {
   regionsUnlocked: number;
   regionsTotal: number;
   fatePoints: number;
+  /** The mode's pity threshold, or null when the mode has pity off. */
+  pityThreshold: number | null;
   firstTs: number;
   runId: string | null;
   integrityOk: boolean;
@@ -224,7 +226,7 @@ interface CardInnerProps {
 
 const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
   profileName, stats, regionsUnlocked, regionsTotal,
-  fatePoints, firstTs, runId, integrityOk, integrityLabel, modeName, renderMap,
+  fatePoints, pityThreshold, firstTs, runId, integrityOk, integrityLabel, modeName, renderMap,
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [draftChunks] = useState(loadRunCardRegionChunks);
@@ -341,7 +343,7 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
             <StatBlock label="Total Rolls" value={stats.rolls} />
             <StatBlock label="Success Rate" value={`${successRate}%`} />
             <StatBlock label="Keys Held" value={stats.keys} accent="text-amber-300" />
-            <StatBlock label="Fate Points" value={`${fatePoints}/50`} />
+            <StatBlock label="Fate Points" value={pityThreshold === null ? fatePoints : `${fatePoints}/${pityThreshold}`} />
             <StatBlock label="Omni-Keys" value={stats.omnis} accent="text-purple-300" />
             <StatBlock label="Chaos Keys" value={stats.chaosKeys} accent="text-rose-300" />
             <StatBlock label="Pity Keys" value={stats.pities} accent="text-sky-300" />
@@ -482,6 +484,7 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
     regionsUnlocked,
     regionsTotal,
     fatePoints,
+    pityThreshold: modeRules.pityEnabled ? modeRules.pityThreshold : null,
     firstTs,
     runId,
     integrityOk,

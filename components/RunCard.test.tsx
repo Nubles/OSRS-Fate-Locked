@@ -1,9 +1,10 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RunCardModal } from './RunCard';
 import { auditHistory, ensureChain } from '../utils/integrity';
 import type { LogEntry } from '../types';
+import { resolveModeRules, type GameModeRules } from '../config/gameModes';
 
 const mockGame = vi.hoisted(() => ({
   current: {
@@ -17,6 +18,7 @@ const mockGame = vi.hoisted(() => ({
     chaosKeys: 0,
     fatePoints: 0,
     gameModeId: 'vanilla',
+    customMode: undefined as GameModeRules | undefined,
   },
 }));
 
@@ -125,5 +127,36 @@ describe('RunCardModal local history status', () => {
     expect(markup).toContain('NO HISTORY');
     expect(markup).toContain('No recorded history to check');
     expect(markup).not.toContain('HISTORY CHECKED');
+  });
+});
+
+describe('RunCardModal Fate points', () => {
+  const fateValue = () => renderToStaticMarkup(<RunCardModal onClose={vi.fn()} embedded />)
+    .match(/Fate Points<\/div><div[^>]*>([^<]*)<\/div>/)?.[1];
+
+  afterEach(() => {
+    mockGame.current.gameModeId = 'vanilla';
+    mockGame.current.customMode = undefined;
+    mockGame.current.fatePoints = 0;
+  });
+
+  it.each([
+    ['vanilla', 12, '12/50'],
+    ['casual', 12, '12/30'],
+    ['region-rush', 12, '12/45'],
+    ['hardcore', 60, '60'],
+  ])("shows a %s run's Fate against its own pity rule", (mode, fatePoints, expected) => {
+    mockGame.current.gameModeId = mode;
+    mockGame.current.fatePoints = fatePoints;
+
+    expect(fateValue()).toBe(expected);
+  });
+
+  it("uses a Custom run's own threshold", () => {
+    mockGame.current.gameModeId = 'custom';
+    mockGame.current.customMode = { ...resolveModeRules('vanilla'), pityThreshold: 100 };
+    mockGame.current.fatePoints = 52;
+
+    expect(fateValue()).toBe('52/100');
   });
 });
