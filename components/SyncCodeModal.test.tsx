@@ -184,3 +184,16 @@ describe('SyncCodeModal backup browser', () => {
     pending.resolve({ ok: true, warnings: [] });
   });
 });
+
+describe('SyncCodeModal tabs', () => {
+  it('keeps the same tab button, and its focus, after switching tab', () => {
+    render(<SyncCodeModal onClose={vi.fn()} />);
+    const importTab = screen.getByRole('button', { name: 'Import' });
+    importTab.focus();
+
+    fireEvent.click(importTab);
+
+    expect(screen.getByRole('button', { name: 'Import' })).toBe(importTab);
+    expect(document.activeElement).toBe(importTab);
+  });
+});

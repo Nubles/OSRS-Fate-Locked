@@ -389,8 +389,11 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
     }
   }, [restoreBackup, scheduleAcceptedClose]);
 
-  const TabBtn: React.FC<{ id: Tab; label: string; Icon: typeof Link2 }> = ({ id, label, Icon }) => (
+  // A render helper, not a component defined here: a component created on
+  // every render would remount each tab and drop keyboard focus.
+  const tabButton = (id: Tab, label: string, Icon: typeof Link2) => (
     <button
+      key={id}
       disabled={accepted || importBusy || restoreBusy}
       onClick={() => {
         setTab(id);
@@ -441,9 +444,9 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
 
         {/* Tabs */}
         <div className="flex border-b border-white/10 bg-[#141414] shrink-0">
-          <TabBtn id="EXPORT" label="Export" Icon={Upload} />
-          <TabBtn id="IMPORT" label="Import" Icon={ArrowDownToLine} />
-          <TabBtn id="BACKUPS" label="Backups" Icon={History} />
+          {tabButton('EXPORT', 'Export', Upload)}
+          {tabButton('IMPORT', 'Import', ArrowDownToLine)}
+          {tabButton('BACKUPS', 'Backups', History)}
         </div>
 
         {/* Body */}
