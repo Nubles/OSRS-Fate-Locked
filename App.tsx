@@ -20,7 +20,11 @@ import { TransmutationEffect } from './components/TransmutationEffect';
 import { ClarityEffect, GreedEffect, ChaosEffect } from './components/RitualEffects';
 import { EffectsLayer } from './components/EffectsLayer';
 import { OnlineSyncDriver } from './components/OnlineSyncDriver';
-import { RunelitePairingDialog } from './components/RunelitePairingDialog';
+import {
+  canDismissRunelitePairing,
+  RunelitePairingDialog,
+  type RunelitePairingPhase,
+} from './components/RunelitePairingDialog';
 import { RollInboxDriver } from './components/RollInboxDriver';
 import { CoachStrip } from './components/CoachStrip';
 import { FeatureRevealDriver } from './components/FeatureRevealDriver';
@@ -731,9 +735,8 @@ const GameLayout = () => {
       return code;
     },
   );
-  const [runelitePairPhase, setRunelitePairPhase] = useState<
-    'confirm' | 'uploading' | 'success' | 'error'
-  >('confirm');
+  const [runelitePairPhase, setRunelitePairPhase] =
+    useState<RunelitePairingPhase>('confirm');
   const [runelitePairError, setRunelitePairError] =
     useState<string | undefined>(undefined);
 
@@ -787,10 +790,10 @@ const GameLayout = () => {
   }), [runelitePairCode]);
 
   const closeRunelitePairing = () => {
-    if (runelitePairPhase === 'confirm'
-      || runelitePairPhase === 'success') {
-      setRunelitePairCode(null);
-    }
+    if (!canDismissRunelitePairing(runelitePairPhase)) return;
+    setRunelitePairCode(null);
+    setRunelitePairPhase('confirm');
+    setRunelitePairError(undefined);
   };
 
   // UI States

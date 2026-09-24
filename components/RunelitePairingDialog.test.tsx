@@ -4,7 +4,11 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RUNELITE_PAIRING_SUCCESS_COPY } from '../utils/runelitePairing';
-import { RunelitePairingDialog, RunelitePairingDialogProps } from './RunelitePairingDialog';
+import {
+  canDismissRunelitePairing,
+  RunelitePairingDialog,
+  RunelitePairingDialogProps,
+} from './RunelitePairingDialog';
 
 afterEach(cleanup);
 
@@ -95,5 +99,28 @@ describe('RunelitePairingDialog', () => {
     const inner = renderDialog();
     fireEvent.click(screen.getByText('Main profile'));
     expect(inner.props.onClose).not.toHaveBeenCalled();
+  });
+
+  it('closes after a failed send from the button or backdrop, but not while sending', async () => {
+    const user = userEvent.setup();
+    expect((['confirm', 'uploading', 'success', 'error'] as const)
+      .filter(canDismissRunelitePairing))
+      .toEqual(['confirm', 'success', 'error']);
+
+    const failed = renderDialog({
+      phase: 'error',
+      error: 'This connection is no longer active.',
+    });
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(failed.props.onClose).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('dialog'));
+    expect(failed.props.onClose).toHaveBeenCalledTimes(2);
+    expect(failed.props.onRetry).not.toHaveBeenCalled();
+    failed.unmount();
+
+    const uploading = renderDialog({ phase: 'uploading' });
+    expect(screen.queryByRole('button', { name: 'Close' })).toBeNull();
+    fireEvent.click(screen.getByRole('dialog'));
+    expect(uploading.props.onClose).not.toHaveBeenCalled();
   });
 });

@@ -561,6 +561,35 @@ describe('App changelog lifecycle', () => {
     })).toBeNull();
   });
 
+  it('lets the player close the pairing dialog after the profile fails to send', async () => {
+    const code = '0123456789abcdef0123456789abcdef';
+    window.history.replaceState(null, '', `/#runelite-pair=${code}`);
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      throw new TypeError('Failed to fetch');
+    }));
+    const { relaySync } = await import('./services/relaySync');
+    const user = userEvent.setup();
+    try {
+      render(<App />);
+      const dialog = await screen.findByRole('dialog', {
+        name: 'Connect RuneLite tracker',
+      });
+      await user.click(within(dialog).getByRole('button', {
+        name: 'Connect tracker',
+      }));
+      expect(await within(dialog).findByRole('button', { name: 'Retry' }, {
+        timeout: 15_000,
+      })).toBeTruthy();
+
+      await user.click(within(dialog).getByRole('button', { name: 'Close' }));
+      expect(screen.queryByRole('dialog', {
+        name: 'Connect RuneLite tracker',
+      })).toBeNull();
+    } finally {
+      relaySync.disable();
+    }
+  }, 30_000);
+
   it('opens the RuneLite guide from a direct query and preserves unrelated URL state', async () => {
     window.history.replaceState(
       null, '', '/?open=runelite-guide&foo=bar#player-help',
