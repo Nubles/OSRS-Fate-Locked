@@ -9,7 +9,7 @@ import {
   downloadFateSave,
   type FateSaveDownloadResult,
 } from '../utils/fateSaveFile';
-import type { SaveOwnershipBlockReason } from '../utils/profileWriterLease';
+import { isOwnershipConflictBlock, type SaveOwnershipBlockReason } from '../utils/profileWriterLease';
 import { showToast } from '../utils/toast';
 
 interface SaveFailureBannerViewProps {
@@ -41,7 +41,7 @@ export const SaveFailureBannerView: FC<SaveFailureBannerViewProps> = ({
   }, []);
 
   const failureReason = saveDurability?.failureReason
-    ?? (ownershipBlockReason === 'foreign_owner'
+    ?? (isOwnershipConflictBlock(ownershipBlockReason)
       ? 'ownership_conflict'
       : ownershipBlockReason === 'storage_unavailable'
         ? 'storage_unavailable'

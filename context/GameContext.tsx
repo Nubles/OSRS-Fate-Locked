@@ -91,10 +91,11 @@ import {
   useProfileWriterLease,
   type ProfileWriterLeaseOptions,
 } from '../hooks/useProfileWriterLease';
-import type {
-  SaveOwnershipBlockReason,
-  SaveOwnershipStatus,
-  SaveWriteAuthorization,
+import {
+  isOwnershipConflictBlock,
+  type SaveOwnershipBlockReason,
+  type SaveOwnershipStatus,
+  type SaveWriteAuthorization,
 } from '../utils/profileWriterLease';
 import type { SaveBootstrapResult } from '../components/SaveBootstrap';
 
@@ -1508,6 +1509,16 @@ const createDeferredRecoveryRepository = (
       repository => repository.listCheckpoints(profileId),
       [],
     ),
+    maxPersistenceRevision: profileId => withRepository(
+      async repository => repository.maxPersistenceRevision
+        ? repository.maxPersistenceRevision(profileId)
+        : Math.max(
+          (await repository.getHead(profileId))?.persistenceRevision ?? 0,
+          ...(await repository.listCheckpoints(profileId))
+            .map(checkpoint => checkpoint.persistenceRevision),
+        ),
+      0,
+    ),
     putCheckpoint: (record, authorizeWrite) => withRepository(
       repository => repository.putCheckpoint(record, authorizeWrite),
       { stored: false, reason: 'storage_unavailable' },
@@ -1565,12 +1576,23 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const initialLoadWarningRef = useRef<string | null>(null);
   const persistedSnapshotRef = useRef<string | null>(null);
   const {
-    status: saveOwnershipStatus,
-    blockedReason: saveOwnershipBlockReason,
+    status: leaseStatus,
+    blockedReason: leaseBlockReason,
     authorizeWrite: authorizeOwnership,
     takeOver: takeOverOwnership,
     release: releaseOwnership,
   } = useProfileWriterLease(storageKey, leaseOptions);
+  // Regaining the lease is not enough to write: if another tab saved newer
+  // progress meanwhile and this tab has unsaved changes, writes stay blocked
+  // until the player keeps this tab's progress or loads the newer save.
+  const [newerSaveConflict, setNewerSaveConflict] = useState(false);
+  const newerSaveConflictRef = useRef(false);
+  const blockedSinceOwnedRef = useRef(false);
+  if (leaseStatus === 'blocked') blockedSinceOwnedRef.current = true;
+  const saveOwnershipStatus: SaveOwnershipStatus = newerSaveConflict ? 'blocked' : leaseStatus;
+  const saveOwnershipBlockReason: SaveOwnershipBlockReason = newerSaveConflict
+    ? 'newer_save'
+    : leaseBlockReason;
   const saveOwnershipStatusRef = useRef(saveOwnershipStatus);
   saveOwnershipStatusRef.current = saveOwnershipStatus;
   const saveOwnershipBlockReasonRef = useRef(saveOwnershipBlockReason);
@@ -1686,7 +1708,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     }
     if (
       !takeoverFlushAuthorizedRef.current
-      && (takeoverRequestedRef.current || saveOwnershipStatusRef.current !== 'owner')
+      && (
+        takeoverRequestedRef.current
+        || newerSaveConflictRef.current
+        || saveOwnershipStatusRef.current !== 'owner'
+      )
     ) {
       return {
         ok: false,
@@ -1724,6 +1750,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     });
   }
   const coordinator = coordinatorRef.current;
+  // Another tab may have advanced the journal while this one was blocked.
+  // Declared before the save effects so a flush in the same commit waits for it.
+  useEffect(() => {
+    if (leaseStatus === 'owner') void coordinator?.resyncRevision?.();
+  }, [coordinator, leaseStatus]);
   const coordinatorSnapshotRef = useRef<SaveDurabilitySnapshot>(
     coordinator?.getSnapshot() ?? {
       primary: 'saved',
@@ -1772,7 +1803,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       savedAt: null,
       ...(legacySaveStatus === 'failed'
         ? {
-          failureReason: saveOwnershipBlockReason === 'foreign_owner'
+          failureReason: isOwnershipConflictBlock(saveOwnershipBlockReason)
             ? 'ownership_conflict' as const
             : 'storage_unavailable' as const,
         }
@@ -1786,7 +1817,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
           ? 'degraded'
           : coordinatorDurability.recovery,
         failureReason: coordinatorDurability.failureReason
-          ?? (saveOwnershipBlockReason === 'foreign_owner'
+          ?? (isOwnershipConflictBlock(saveOwnershipBlockReason)
             ? 'ownership_conflict'
             : 'storage_unavailable'),
       }
@@ -2198,6 +2229,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     try {
       const owned = await takeOverOwnership();
       if (!owned) return false;
+      // The player chose this tab's progress, so the regained lease needs no
+      // newer-save check, and any earlier conflict is resolved.
+      blockedSinceOwnedRef.current = false;
+      newerSaveConflictRef.current = false;
+      setNewerSaveConflict(false);
+      void coordinator?.resyncRevision?.();
       takeoverFlushAuthorizedRef.current = true;
       try {
         const staged = serializeCurrent();
@@ -2503,9 +2540,53 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     persistedSnapshotRef.current = accepted;
     discardPendingSave(storageKey);
     setSaveStatus('saved');
+    newerSaveConflictRef.current = false;
+    setNewerSaveConflict(false);
     replaceState(parsed.state);
     return { ok: true, warnings: parsed.warnings };
   }, [replaceState, storageKey]);
+
+  // When a tab that was blocked regains the lease on its own (the other tab
+  // closed or its lease expired), the other tab may have saved newer
+  // progress. Load it if this tab has nothing unsaved; otherwise keep writes
+  // blocked and let the player choose, as a manual takeover would.
+  useEffect(() => {
+    if (leaseStatus !== 'owner' || !blockedSinceOwnedRef.current) return;
+    blockedSinceOwnedRef.current = false;
+    if (takeoverRequestedRef.current || profileEvictedRef.current) return;
+
+    let stored: string | null;
+    try {
+      stored = localStorage.getItem(storageKey);
+    } catch {
+      return;
+    }
+    const baseline = persistedSnapshotRef.current;
+    if (stored === null || stored === baseline) return;
+    const parsed = parseAndMigrateSave(stored, createFreshState());
+    if (parsed.ok === false) return;
+    const latest = serializeGameState(parsed.state);
+    if (latest === baseline) return;
+
+    const unsavedChanges = getPendingSave(storageKey) !== null
+      || (baseline !== null && serializeCurrent() !== baseline);
+    if (!unsavedChanges) {
+      persistedSnapshotRef.current = latest;
+      discardPendingSave(storageKey);
+      replaceState(parsed.state);
+      showToast('Loaded newer progress saved in another tab');
+      return;
+    }
+    newerSaveConflictRef.current = true;
+    saveOwnershipStatusRef.current = 'blocked';
+    saveOwnershipBlockReasonRef.current = 'newer_save';
+    if (saveTimeoutRef.current !== null) {
+      window.clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    blockPendingSave(storageKey, 'ownership_conflict');
+    setNewerSaveConflict(true);
+  }, [leaseStatus, replaceState, serializeCurrent, storageKey]);
 
   const writeReplacement = useCallback((data: string) => {
     writeReplacementNow(

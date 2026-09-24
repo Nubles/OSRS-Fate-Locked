@@ -7,11 +7,17 @@ import {
   type FateSaveDownloadResult,
 } from '../utils/fateSaveFile';
 import type { ImportResult } from '../utils/gamePersistence';
-import type { SaveOwnershipStatus } from '../utils/profileWriterLease';
+import {
+  isOwnershipConflictBlock,
+  type SaveOwnershipBlockReason,
+  type SaveOwnershipStatus,
+} from '../utils/profileWriterLease';
 import { showToast } from '../utils/toast';
 
 interface SaveConflictBannerViewProps {
   status: SaveOwnershipStatus;
+  /** `newer_save`: this tab can save again, but another tab saved newer progress first. */
+  reason?: SaveOwnershipBlockReason;
   hasPendingChanges: boolean;
   takeOver: () => Promise<boolean>;
   reloadLatest: () => ImportResult;
@@ -26,6 +32,7 @@ const RELOAD_CONFIRMATION =
 
 export const SaveConflictBannerView: FC<SaveConflictBannerViewProps> = ({
   status,
+  reason = 'foreign_owner',
   hasPendingChanges,
   takeOver,
   reloadLatest,
@@ -90,10 +97,21 @@ export const SaveConflictBannerView: FC<SaveConflictBannerViewProps> = ({
         <div className="flex items-start gap-3">
           <AlertTriangle className="mt-0.5 hidden shrink-0 text-amber-300 sm:block" size={20} />
           <div className="min-w-0 flex-1">
-            <p className="font-bold">This profile is open in another tab</p>
-            <p className="text-sm text-amber-100/80">
-              Changes in this tab are not being saved. Choose which tab should keep the profile before continuing.
-            </p>
+            {reason === 'newer_save' ? (
+              <>
+                <p className="font-bold">Another tab saved newer progress</p>
+                <p className="text-sm text-amber-100/80">
+                  Changes in this tab are not being saved. Keep this tab's progress or load the newer save before continuing.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-bold">This profile is open in another tab</p>
+                <p className="text-sm text-amber-100/80">
+                  Changes in this tab are not being saved. Choose which tab should keep the profile before continuing.
+                </p>
+              </>
+            )}
           </div>
         </div>
         <div className="flex flex-wrap gap-2 sm:pl-8">
@@ -153,16 +171,17 @@ export const SaveConflictBanner: FC = () => {
       setTakeoverPending(false);
     }
   }, [takeOverSaveOwnership]);
-  const foreignConflictActive = saveOwnershipStatus === 'blocked'
-    && saveOwnershipBlockReason === 'foreign_owner';
+  const conflictActive = saveOwnershipStatus === 'blocked'
+    && isOwnershipConflictBlock(saveOwnershipBlockReason);
 
-  if (!foreignConflictActive && !takeoverPending) {
+  if (!conflictActive && !takeoverPending) {
     return null;
   }
 
   return (
     <SaveConflictBannerView
       status={takeoverPending ? 'blocked' : saveOwnershipStatus}
+      reason={saveOwnershipBlockReason}
       hasPendingChanges={hasPendingChanges}
       takeOver={takeOverWhileVisible}
       reloadLatest={reloadLatestSave}

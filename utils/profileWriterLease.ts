@@ -10,7 +10,16 @@ export const WRITER_LEASE_RENEW_MS = 10_000;
 export const WRITER_LEASE_ARBITRATION_MS = 50;
 
 export type SaveOwnershipStatus = 'checking' | 'owner' | 'blocked';
-export type SaveOwnershipBlockReason = 'foreign_owner' | 'storage_unavailable' | null;
+/**
+ * `newer_save` means this tab holds the lease again but another tab saved
+ * newer progress while it was blocked, and this tab has unsaved changes.
+ */
+export type SaveOwnershipBlockReason = 'foreign_owner' | 'newer_save' | 'storage_unavailable' | null;
+
+/** Block reasons that the save-conflict banner resolves, not a storage failure. */
+export const isOwnershipConflictBlock = (reason: SaveOwnershipBlockReason): boolean => (
+  reason === 'foreign_owner' || reason === 'newer_save'
+);
 export type SaveWriteAuthorizationReason = 'ownership_conflict' | 'storage_unavailable';
 export type SaveWriteAuthorization =
   | { ok: true }

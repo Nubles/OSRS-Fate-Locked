@@ -156,6 +156,19 @@ describe('transactional recovery database', () => {
     );
   });
 
+  it('reads the highest head or checkpoint revision for one profile only', async () => {
+    const repository = await openRepository();
+    await expect(repository.maxPersistenceRevision('alpha')).resolves.toBe(0);
+
+    await repository.putHead(head({ persistenceRevision: 4 }), allowWrite);
+    await repository.putCheckpoint(checkpoint(2), allowWrite);
+    await repository.putCheckpoint(checkpoint(9), allowWrite);
+    await repository.putCheckpoint({ ...checkpoint(40), profileId: 'beta' }, allowWrite);
+
+    await expect(repository.maxPersistenceRevision('alpha')).resolves.toBe(9);
+    await expect(repository.maxPersistenceRevision('beta')).resolves.toBe(40);
+  });
+
   it('cannot publish an older head over a newer revision', async () => {
     const repository = await openRepository();
 

@@ -32,6 +32,24 @@ describe('SaveConflictBannerView', () => {
     expect(screen.getByRole('alert')).toBeTruthy();
   });
 
+  it('explains when another tab saved newer progress before this tab could save', () => {
+    render(<SaveConflictBannerView
+      status="blocked"
+      reason="newer_save"
+      hasPendingChanges
+      takeOver={vi.fn()}
+      reloadLatest={() => ({ ok: true, warnings: [] })}
+      exportBackup={() => ({ ok: true })}
+    />);
+
+    const alert = screen.getByRole('alert').textContent;
+    expect(alert).toContain('Another tab saved newer progress');
+    expect(alert).toContain("Keep this tab's progress or load the newer save before continuing.");
+    expect(alert).not.toContain('open in another tab');
+    expect(screen.getByRole('button', { name: 'Take over and save this tab' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Discard this tab and reload latest' })).toBeTruthy();
+  });
+
   it('does not discard pending changes when confirmation is cancelled', async () => {
     const reloadLatest = vi.fn();
     const confirmAction = vi.fn().mockReturnValue(false);

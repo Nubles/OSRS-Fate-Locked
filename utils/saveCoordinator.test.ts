@@ -528,3 +528,125 @@ describe('coalescing journal-first save coordinator', () => {
     expect(testHarness.writtenNotes()).toEqual(['before-replacement', 'newer-edit']);
   });
 });
+
+describe('revision catch-up after another tab wrote', () => {
+  // A repository with the real journal rules: a head behind the stored one,
+  // or a different checkpoint under a used revision, is stale.
+  const journal = (
+    headRevision: number,
+    checkpointRevisions: number[] = [],
+    { racingWriter = false }: { racingWriter?: boolean } = {},
+  ) => {
+    const record = (persistenceRevision: number, note: string): RecoveryHead => ({
+      profileId: 'alpha',
+      persistenceRevision,
+      runId: 'run-alpha',
+      runRevision: 1,
+      capturedAt: 1,
+      checksum: `checksum-${note}`,
+      data: save(note),
+    });
+    let head: RecoveryHead | null = record(headRevision, 'other tab');
+    const checkpoints = new Map<number, RecoveryCheckpoint>(checkpointRevisions.map(revision => [
+      revision,
+      { ...record(revision, 'other checkpoint'), reason: 'interval' },
+    ]));
+    const headWrites: number[] = [];
+    const values = new Map<string, string>();
+    const storage: SaveStorage = {
+      getItem: key => values.get(key) ?? null,
+      setItem: (key, data) => { values.set(key, data); },
+      removeItem: key => { values.delete(key); },
+    };
+    const repository: RecoveryRepository = {
+      getHead: async () => head,
+      putHead: async next => {
+        headWrites.push(next.persistenceRevision);
+        // A writer that keeps winning the race stays one revision ahead.
+        if (racingWriter && head !== null) head = { ...head, persistenceRevision: next.persistenceRevision + 1 };
+        if (head !== null && head.persistenceRevision > next.persistenceRevision) {
+          return { stored: false, reason: 'stale_revision' };
+        }
+        head = next;
+        return { stored: true };
+      },
+      listCheckpoints: async () => [...checkpoints.values()],
+      putCheckpoint: async next => {
+        const existing = checkpoints.get(next.persistenceRevision);
+        if (existing !== undefined) {
+          return existing.data === next.data
+            ? { stored: true }
+            : { stored: false, reason: 'stale_revision' };
+        }
+        checkpoints.set(next.persistenceRevision, next);
+        return { stored: true };
+      },
+      deleteCheckpoints: async () => ({ stored: true }),
+      getMetadata: async () => null,
+      putMetadata: async () => ({ stored: true }),
+      close: () => undefined,
+    };
+    const coordinator = createSaveCoordinator({
+      profileId: 'alpha',
+      storageKey: 'FATE_PROFILE_alpha',
+      storage,
+      repository,
+      authorizeWrite: () => ({ ok: true }),
+      validate: data => ({ ok: true, state: stateFor(data), sourceVersion: 1, warnings: [] }),
+      checksum: async data => `checksum-${noteFromData(data)}`,
+      now: () => 1_700_000_000_000,
+      // This tab loaded at revision 2; the other tab has written since.
+      initialPersistenceRevision: 2,
+    });
+    return {
+      coordinator,
+      head: () => head,
+      headWrites,
+      checkpoints,
+      primary: () => values.get('FATE_PROFILE_alpha') ?? null,
+      metadata: () => JSON.parse(values.get('FATE_PROFILE_alpha__mirrorMeta') ?? 'null') as MirrorMetadata | null,
+    };
+  };
+
+  it('writes past a journal that another tab advanced instead of losing the save', async () => {
+    const tab = journal(5);
+    tab.coordinator.stage(save('this tab'));
+
+    await expect(tab.coordinator.flush()).resolves.toMatchObject({ primary: 'saved', recovery: 'protected' });
+
+    expect(tab.head()).toMatchObject({ persistenceRevision: 6, data: save('this tab') });
+    expect(tab.metadata()?.persistenceRevision).toBe(6);
+    expect(tab.primary()).toBe(save('this tab'));
+  });
+
+  it('catches up before its first write once it gains ownership', async () => {
+    const tab = journal(5, [7]);
+
+    await tab.coordinator.resyncRevision!();
+    tab.coordinator.stage(save('after takeover'));
+    await tab.coordinator.flush();
+
+    expect(tab.headWrites).toEqual([8]);
+    expect(tab.head()?.data).toBe(save('after takeover'));
+  });
+
+  it('reports a save the journal keeps refusing as failed, and leaves the primary alone', async () => {
+    const tab = journal(5, [], { racingWriter: true });
+    tab.coordinator.stage(save('refused'));
+
+    await expect(tab.coordinator.flush()).resolves.toMatchObject({ primary: 'failed' });
+
+    expect(tab.head()?.data).toBe(save('other tab'));
+    expect(tab.primary()).toBeNull();
+  });
+
+  it('stores a checkpoint under the next free revision after a collision', async () => {
+    const tab = journal(5, [3]);
+
+    await expect(tab.coordinator.createCheckpoint(save('this checkpoint'), 'interval'))
+      .resolves.toEqual({ stored: true });
+
+    expect(tab.checkpoints.get(3)?.data).toBe(save('other checkpoint'));
+    expect(tab.checkpoints.get(6)?.data).toBe(save('this checkpoint'));
+  });
+});

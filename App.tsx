@@ -33,6 +33,7 @@ import { SaveRecoveryGuard } from './components/SaveRecoveryGuard';
 import { SaveBootstrap } from './components/SaveBootstrap';
 import { DiscordSyncDriver } from './components/DiscordSyncDriver';
 import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE, FATE_EXPORT_HINT } from './utils/fateSaveFile';
+import { isOwnershipConflictBlock } from './utils/profileWriterLease';
 import { useFeatureGates } from './hooks/useFeatureGates';
 import { flashElement } from './utils/flash';
 import { OnboardingWizard } from './components/OnboardingWizard';
@@ -680,7 +681,7 @@ const GameLayout = () => {
     [getExportData, storageKeyForActiveProfile],
   );
   const failureReason = saveDurability.failureReason
-    ?? (saveOwnershipBlockReason === 'foreign_owner'
+    ?? (isOwnershipConflictBlock(saveOwnershipBlockReason)
       ? 'ownership_conflict'
       : saveOwnershipBlockReason === 'storage_unavailable'
         ? 'storage_unavailable'
