@@ -44,6 +44,23 @@ describe('RuneProof normal-build module boundary', () => {
     expect(resolve).toHaveBeenCalledWith('./questWalkthroughs.public', importer, { skipSelf: true });
   });
 
+  it('replaces the preview-only quest item lists with an empty stand-in', async () => {
+    const boundaryPlugin = await normalBoundaryPlugin();
+    const resolve = vi.fn(() => 'public-safe-module');
+    const resolveId = boundaryPlugin.resolveId as (source: string, importer: string) => unknown;
+    const importer = '/virtual/data/questItemRequirements.ts';
+
+    for (const source of ['./questItemRequirements.preview', './questItemRequirements.preview.ts']) {
+      expect(await resolveId.call({ resolve }, source, importer)).toBe('public-safe-module');
+    }
+
+    for (const source of ['./questItemRequirements', './questItemRequirements.preview-omitted']) {
+      expect(await resolveId.call({ resolve }, source, importer)).toBeNull();
+    }
+    expect(resolve).toHaveBeenCalledTimes(2);
+    expect(resolve).toHaveBeenCalledWith('./questItemRequirements.preview-omitted', importer, { skipSelf: true });
+  });
+
   it('keeps the private catalogue excluded when a preview flag is inherited', async () => {
     vi.stubEnv('VITE_RUNEPROOF_PREVIEW', '1');
     const boundaryPlugin = await normalBoundaryPlugin();
@@ -55,6 +72,13 @@ describe('RuneProof normal-build module boundary', () => {
     expect(resolve).toHaveBeenCalledWith(
       './questWalkthroughs.public',
       '/virtual/data/questWalkthroughLoader.ts',
+      { skipSelf: true },
+    );
+    expect(await resolveId.call({ resolve }, './questItemRequirements.preview', '/virtual/data/questItemRequirements.ts'))
+      .toBe('public-safe-module');
+    expect(resolve).toHaveBeenCalledWith(
+      './questItemRequirements.preview-omitted',
+      '/virtual/data/questItemRequirements.ts',
       { skipSelf: true },
     );
   });

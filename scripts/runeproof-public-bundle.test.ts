@@ -16,6 +16,13 @@ const PRIVATE_RELEASE_MARKERS = [
   '5307348d9dab40a1801d78b06660af566112223a339dfa017f4a43306149bd5f',
   '0f50a69f17989b9b244ba0f47f1461c65d720eece2b9603ad14158850ad53cdd',
 ] as const;
+// Notes from the reviewed item lists of Daddy's Home, Doric's Quest and
+// Elemental Workshop I, which only the preview build offers.
+const PRIVATE_REQUIREMENT_MARKERS = [
+  'Nail beast nails and Dragon nails are not valid construction nails.',
+  'Clay only; not Soft clay.',
+  'this is a reviewed quest alternative, not an item alias.',
+] as const;
 const PUBLIC_MARKER = 'Independently authored quest steps and F2P chunk locations.';
 const outputs: string[] = [];
 
@@ -59,11 +66,15 @@ describe('RuneProof production bundle boundary', () => {
     expect(await bundleContains(normal, EXPANDED_PREVIEW_MARKER)).toBe(false);
     await expect(Promise.all(PRIVATE_RELEASE_MARKERS.map(marker => bundleContains(normal, marker))))
       .resolves.toEqual(PRIVATE_RELEASE_MARKERS.map(() => false));
+    await expect(Promise.all(PRIVATE_REQUIREMENT_MARKERS.map(marker => bundleContains(normal, marker))))
+      .resolves.toEqual(PRIVATE_REQUIREMENT_MARKERS.map(() => false));
     expect(await bundleContains(normal, PUBLIC_MARKER)).toBe(true);
     expect(await bundleContains(preview, PRIVATE_MARKER)).toBe(true);
     expect(await bundleContains(preview, EXPANDED_PREVIEW_MARKER)).toBe(true);
     await expect(Promise.all(PRIVATE_RELEASE_MARKERS.map(marker => bundleContains(preview, marker))))
       .resolves.toEqual(PRIVATE_RELEASE_MARKERS.map(() => true));
+    await expect(Promise.all(PRIVATE_REQUIREMENT_MARKERS.map(marker => bundleContains(preview, marker))))
+      .resolves.toEqual(PRIVATE_REQUIREMENT_MARKERS.map(() => true));
   }, 120_000);
 
   it('keeps the private preview payload out of production with an inherited preview flag', async () => {
@@ -81,6 +92,8 @@ describe('RuneProof production bundle boundary', () => {
     expect(await bundleContains(normal, EXPANDED_PREVIEW_MARKER)).toBe(false);
     await expect(Promise.all(PRIVATE_RELEASE_MARKERS.map(marker => bundleContains(normal, marker))))
       .resolves.toEqual(PRIVATE_RELEASE_MARKERS.map(() => false));
+    await expect(Promise.all(PRIVATE_REQUIREMENT_MARKERS.map(marker => bundleContains(normal, marker))))
+      .resolves.toEqual(PRIVATE_REQUIREMENT_MARKERS.map(() => false));
     expect(await bundleContains(normal, PUBLIC_MARKER)).toBe(true);
   }, 120_000);
 });
