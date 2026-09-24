@@ -199,7 +199,7 @@ describe('Fate relay event resources', () => {
       state: 'COMPLETED',
       acknowledgedAt: Date.now() + index,
     }));
-    expect((await post('/r/ABCD/acks', { acknowledgements })).status).toBe(200);
+    expect((await post('/r/ABCD/acks', { token: eventToken, acknowledgements })).status).toBe(200);
     expect((await get('/r/ABCD/events').then(response => response.json())).events
       .map((item: { eventId: string }) => item.eventId))
       .toEqual(Array.from({ length: 50 }, (_, index) => `evt-${index + 50}`));
@@ -211,6 +211,45 @@ describe('Fate relay event resources', () => {
     expect((await get('/r/ABCD/events').then(response => response.json())).events
       .map((item: { eventId: string }) => item.eventId))
       .toEqual(Array.from({ length: 100 }, (_, index) => `evt-${index + 50}`));
+  });
+
+  const ack = (eventId: string) => ({ eventId, state: 'COMPLETED', acknowledgedAt: Date.now() });
+  const queued = async (code = 'ABCD') => (await get(`/r/${code}/events`)
+    .then(response => response.json())).events.map((item: { eventId: string }) => item.eventId);
+
+  it('does not let an acknowledgement from another token prune the events queue', async () => {
+    await post('/r/ABCD/events', { events: [event('evt-1'), event('evt-2')] });
+    // Anyone who knows the code can claim the unused /acks resource.
+    const claim = await post('/r/ABCD/acks', { acknowledgements: [ack('evt-1')] });
+    expect(claim.status).toBe(200);
+    const { token } = await claim.json();
+    expect((await post('/r/ABCD/acks', { token, acknowledgements: [ack('evt-2')] })).status).toBe(200);
+
+    expect(await queued()).toEqual(['evt-1', 'evt-2']);
+  });
+
+  it('prunes acknowledged events for the token that owns the events queue', async () => {
+    const { token } = await (await post('/r/ABCD/events', {
+      events: [event('evt-1'), event('evt-2')],
+    })).json();
+    expect(kv.records.get('own:r:ABCD/events')?.startsWith(`${await sha256Hex(token)}:`)).toBe(true);
+
+    expect((await post('/r/ABCD/acks', { token, acknowledgements: [ack('evt-1')] })).status).toBe(200);
+    expect(await queued()).toEqual(['evt-2']);
+  });
+
+  it('prunes a queue written before owner records only for the token it holds', async () => {
+    const legacyQueue = JSON.stringify({
+      version: 3, token: 'legacy-events', records: [event('evt-1'), event('evt-2')],
+    });
+    kv.records.set('r:ABCD/events', legacyQueue);
+    kv.records.set('r:WXYZ/events', legacyQueue);
+
+    await post('/r/ABCD/acks', { token: 'someone-else', acknowledgements: [ack('evt-1')] });
+    await post('/r/WXYZ/acks', { token: 'legacy-events', acknowledgements: [ack('evt-1')] });
+
+    expect(await queued('ABCD')).toEqual(['evt-1', 'evt-2']);
+    expect(await queued('WXYZ')).toEqual(['evt-2']);
   });
 
   it('retains the newest 100 server receipts after compaction', async () => {

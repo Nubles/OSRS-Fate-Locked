@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { DetectorPlaytestExport } from './DetectorPlaytestExport';
-import { fateEventRelay } from '../services/fateEventRelay';
 import type { EventAcknowledgement } from '../services/fateEventProtocol';
 import {
   type RollInboxRow,
@@ -87,10 +86,17 @@ function terminalAck(
   return { eventId, state, acknowledgedAt: Date.now() };
 }
 
+/**
+ * Current RuneLite builds keep detections local and never read the legacy
+ * /acks resource (docs/online-relay.md), so by default a decision stays in
+ * this browser's inbox. A caller can still pass fateEventRelay.acknowledge.
+ */
+const keepAcknowledgementLocal = async (): Promise<boolean> => false;
+
 export function RollInboxView({
   store,
   game,
-  acknowledge = (items) => fateEventRelay.acknowledge(items),
+  acknowledge = keepAcknowledgementLocal,
   connected = relaySync.enabled,
 }: RollInboxViewProps) {
   const [, refresh] = useState(0);

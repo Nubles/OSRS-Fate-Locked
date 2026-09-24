@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { initialState } from '../context/GameContext';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
 import type { FateEventEnvelope, FateEventType } from '../services/fateEventProtocol';
+import { relaySync } from '../services/relaySync';
 import { createRollInboxStore } from '../services/rollInboxStore';
 import type { GameState } from '../types';
 import { RollInboxView, type RollInboxGame } from './RollInbox';
@@ -95,6 +96,31 @@ describe('RollInbox', () => {
     expect(acknowledge).toHaveBeenCalledWith([
       expect.objectContaining({ eventId: 'evt-1', state: 'COMPLETED' }),
     ]);
+  });
+
+  it('keeps decisions local instead of acknowledging on the legacy relay route', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    relaySync.enable(); // a paired relay session exists
+    try {
+      const user = userEvent.setup();
+      const store = createRollInboxStore(new MemoryStorage(), 'run-1');
+      store.ingest([event(), event('QUEST', "Cook's Assistant", { eventId: 'evt-2' })]);
+      render(
+        <RollInboxView
+          store={store}
+          game={{ state: gameState(), acceptDetectedEvent: vi.fn().mockReturnValue(true) }}
+        />,
+      );
+      await user.click((await screen.findAllByRole('button', { name: /^Roll$/ }))[0]);
+      await user.click(screen.getByRole('button', { name: 'Not eligible' }));
+
+      expect(store.list().map((row) => row.state).sort()).toEqual(['COMPLETED', 'DISMISSED']);
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      relaySync.disable();
+      vi.unstubAllGlobals();
+    }
   });
 
   it('marks a ready row Not eligible without rolling', async () => {

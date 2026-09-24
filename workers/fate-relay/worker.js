@@ -192,7 +192,9 @@ export default {
         if (resource === '/acks') {
           const eventKey = `r:${match[1]}/events`;
           const eventQueue = await env.RELAY.get(eventKey, { type: 'json' });
-          if (eventQueue) {
+          // Pruning rewrites /events, so the token must be able to write it
+          // too: anyone who knows the code can claim an unused /acks.
+          if (eventQueue && await authorizeWrite(env, eventKey, eventQueue, body.token)) {
             const acknowledged = new Set(incoming.map(entry => entry.eventId));
             const retained = (eventQueue.records || [])
               .filter(entry => !acknowledged.has(entry.eventId));

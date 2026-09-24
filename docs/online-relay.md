@@ -108,6 +108,12 @@ They are not part of the current Hub candidate's connection. Current UI and
 documentation must not use them to claim that the plugin is connected, has
 sent gameplay, or has acknowledged an import.
 
+The current app does not post to `/acks`: Roll Inbox decisions stay in the
+browser. A post to `/acks` removes the acknowledged events from `/events`
+only when its token may also write `/events`, under the same owner-record rule
+as a direct write, because anyone who knows the code can claim an unused
+`/acks`.
+
 ## Ownership and safety boundary
 
 - **The app authors policy.** It exports the run, unlocks, account binding,
