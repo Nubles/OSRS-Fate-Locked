@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BookOpen, Clock3, ExternalLink, X } from 'lucide-react';
+import { Clock3, ExternalLink, X } from 'lucide-react';
+import { BookOpen } from '../OsrsIcon';
 import {
   RUNELITE_GUIDE_CHAPTERS,
   RUNELITE_GUIDE_CHAPTER_IDS,

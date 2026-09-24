@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useGame } from '../context/GameContext';
-import { Key, Sparkles } from 'lucide-react';
+import { Key, Sparkles } from './OsrsIcon';
 import { LootBeam } from './LootBeam';
 import { formatKeyPercent, formatKeyRollValue } from '../utils/keyRoll';
 import { eventRarity, rarityColor, rarityRank } from '../utils/rarity';

@@ -1,8 +1,29 @@
 {
   "schemaVersion": 2,
-  "reviewedAt": "2026-09-21",
+  "reviewedAt": "2026-09-22",
   "note": "Reviewed entrances take precedence over general Connect edges. Named rules also apply to their #Section records; record-specific rules add phase or entity restrictions. Mapped geography is not proof of every inventory, quest-stage or door requirement.",
   "locations": {
+    "Catacombs of Kourend": {
+      "entrances": [
+        { "chunkId": "6457", "requirements": [] },
+        { "chunkId": "6203", "requirements": ["Catacombs of Kourend: north-west vine unlocked from inside needs confirmation"] },
+        { "chunkId": "5689", "requirements": ["Catacombs of Kourend: west vine unlocked from inside needs confirmation"] },
+        { "chunkId": "6716", "requirements": ["Catacombs of Kourend: north-east vine unlocked from inside needs confirmation"] },
+        { "chunkId": "6711", "requirements": ["Catacombs of Kourend: Forthos passage vine unlocked from inside needs confirmation"] },
+        { "chunkId": "5688", "requirements": ["Catacombs of Kourend: Giants' Den passage vine unlocked from inside needs confirmation"] }
+      ],
+      "coordinates": [{ "x": 1639, "y": 3674 }, { "x": 1563, "y": 3791 }, { "x": 1470, "y": 3653 }, { "x": 1696, "y": 3865 }, { "x": 1669, "y": 3567 }, { "x": 1421, "y": 3587 }],
+      "source": "https://oldschool.runescape.wiki/w/Catacombs_of_Kourend?oldid=15331330",
+      "note": "The physical sections form one connected dungeon. All content is accessible from the statue. Each alternative entrance retains its separate prior-unlock condition; map placement alone does not prove that condition."
+    },
+    "Fisher Realm": {
+      "entrances": [
+        { "chunkId": "10802", "requirements": ["Holy Grail: restored Fisher Realm phase needs confirmation", "Fisher Realm: carrying and using the magic whistle at the Brimhaven tower needs confirmation"] },
+        { "chunkId": "12849", "requirements": ["Holy Grail Complete the quest", "Lost City Complete the quest", "Fisher Realm: access to fairy rings and BJR travel needs confirmation"] }
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Fisher_Realm?oldid=15264829",
+      "note": "Retain the restored realm independently of the during-quest record. Brimhaven whistle and the reviewed Zanaris fairy-ring origin are alternatives, not a guarantee that all fairy-ring origins are listed."
+    },
     "Prifddinas": {
       "requirements": [
         "Song of the Elves Complete the quest"
@@ -305,6 +326,37 @@
     }
   },
   "records": {
+    "12690": {
+      "name": "Kalphite Lair (potato cactus chamber)",
+      "anchors": ["12848"],
+      "requirements": ["Kalphite Lair: ropes or permanently attached ropes and the route to the potato cactus chamber need confirmation"],
+      "source": "https://oldschool.runescape.wiki/w/Potato_cactus?oldid=15298144",
+      "evidence": ["https://oldschool.runescape.wiki/w/Kalphite_Lair?oldid=15326675"],
+      "note": "The source record contains the reviewed ground-item identity. Spawn quantity is intentionally not inferred from conflicting Wiki prose/table counts."
+    },
+    "6303": {
+      "name": "Library Historical Archive",
+      "anchors": ["6459"],
+      "requirements": [],
+      "coordinates": [{ "x": 1624, "y": 3808 }],
+      "source": "https://oldschool.runescape.wiki/w/Library_Historical_Archive?oldid=15310956",
+      "note": "Freely entered by speaking to Archeio on the Arceuus Library ground floor."
+    },
+    "5278": {
+      "name": "Karuulm Slayer Dungeon",
+      "anchors": ["5179"],
+      "requirements": ["Karuulm Slayer Dungeon: boots of stone, boots of brimstone or granite boots, or the elite Kourend and Kebos Diary exemption, need confirmation"],
+      "source": "https://oldschool.runescape.wiki/w/Sulphur_Lizard?oldid=15339650",
+      "evidence": ["https://oldschool.runescape.wiki/w/Karuulm_Slayer_Dungeon?oldid=15352190"],
+      "note": "The source's two sulphur lizards complete the 13 spawns listed on both reviewed Wiki pages. This hot-floor chamber requires protective boots or the elite diary exemption; a broad entrance-chamber restriction is not asserted."
+    },
+    "11081": {
+      "name": "Fisher Realm (during Holy Grail)",
+      "anchors": ["10802"],
+      "requirements": ["Holy Grail: before restoring the Fisher Realm needs confirmation", "Fisher Realm: carrying and using the magic whistle at the Brimhaven tower needs confirmation"],
+      "source": "https://oldschool.runescape.wiki/w/Fisher_Realm?oldid=15264829",
+      "note": "Black Knight Titan and The Fisher King belong to the withered quest phase. Do not require quest completion or expose them as persistent restored-realm residents."
+    },
     "6808": {
       "requirements": [
         "The Depths of Despair: lower chamber before quest completion"

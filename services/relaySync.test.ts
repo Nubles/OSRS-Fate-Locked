@@ -138,6 +138,7 @@ describe('RelaySyncService', () => {
     const codeB = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
     service.adoptCode(codeA);
     const pushA = service.push('bundle-a');
+    await Promise.resolve();
     const firstBody = JSON.parse(fetchMock.mock.calls[0][1].body);
     expect(fetchMock.mock.calls[0][0]).toBe(
       `https://relay.test/r/${codeA}`,
@@ -154,6 +155,7 @@ describe('RelaySyncService', () => {
     expect(service.lastSyncAt).toBeNull();
 
     const pushB = service.push('bundle-b');
+    await Promise.resolve();
     service.disable();
     second.reject(new Error('offline'));
     await expect(pushB).resolves.toBe(false);

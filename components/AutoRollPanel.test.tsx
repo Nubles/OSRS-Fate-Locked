@@ -3,7 +3,7 @@
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { AutoRollPanel } from './AutoRollPanel';
+import { AutoRollPanel, fetchPlayer } from './AutoRollPanel';
 import type { BackupWriteResult } from '../utils/gamePersistence';
 
 const deferred = <T,>() => {
@@ -74,5 +74,23 @@ describe('AutoRollPanel backup coordination', () => {
       await backup.promise;
       await Promise.resolve();
     });
+  });
+});
+
+
+describe('Auto-Roll current hiscores', () => {
+  it('refreshes tracked users with POST and includes Sailing', async () => {
+    const request = vi.fn(async (_url: string, init?: RequestInit) => ({ ok: true, json: async () => ({ displayName: 'Alex', latestSnapshot: { data: { skills: { attack: { level: init?.method === 'POST' ? 99 : 50 }, sailing: { level: 80 } } } } }) }));
+    vi.stubGlobal('fetch', request);
+    for (let i = 0; i < 2; i++) {
+      const player = await fetchPlayer('Alex');
+      expect(player.skills).toContainEqual({ skill: 'Sailing', level: 80 });
+      expect(player.skills).toContainEqual({ skill: 'Attack', level: 99 });
+    }
+    expect(request.mock.calls.every(([, init]) => init?.method === 'POST')).toBe(true);
+  });
+  it('reports a failed refresh instead of silently returning a stale snapshot', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 429, json: async () => ({}) })));
+    await expect(fetchPlayer('Alex')).rejects.toThrow('Rate-limited');
   });
 });

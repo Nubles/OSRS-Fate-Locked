@@ -68,6 +68,16 @@ export function validateBankLocationRegistry(registry, { validChunkIds, validBan
     if (!Array.isArray(location.facilities) || !location.facilities.length) throw new Error(`Bank location ${location.id} has no facilities`);
     for (const facility of location.facilities) assertNonEmptyString(facility, `Bank location ${location.id} facility`);
     validateWikiEvidence(location.wiki, `Bank location ${location.id}`, sourceUrls);
+    if (location.accessOptions !== undefined) {
+      if (!Array.isArray(location.accessOptions) || !location.accessOptions.length) throw new Error(`Bank ${location.id} needs access alternatives`);
+      for (const option of location.accessOptions) {
+        if (!option || typeof option !== 'object' || Array.isArray(option)) throw new Error(`Bank ${location.id} has an invalid access alternative`);
+        for (const [kind, requirements] of Object.entries(option)) {
+          if (!['quests', 'diaries', 'manual'].includes(kind) || !Array.isArray(requirements) || !requirements.length) throw new Error(`Bank ${location.id} has invalid ${kind} requirements`);
+          for (const requirement of requirements) assertNonEmptyString(requirement, `Bank ${location.id} ${kind} requirement`);
+        }
+      }
+    }
     if (validChunkIds && !validChunkIds.has(location.id)) throw new Error(`Bank location ${location.id} is not walkable`);
     ids.add(location.id);
     names.add(location.name);

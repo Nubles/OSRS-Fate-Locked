@@ -135,13 +135,13 @@ describe('slayerReachability', () => {
     expect(r.masters[0].rows.map(row => row.status)).toEqual(['area-locked', 'area-locked']);
   });
 
-  it('blocks every Mortimer assignment until Fallen From Grace is completed', () => {
+  it('asks for Mortimer quest progress without demanding full completion', () => {
     const r = mortimerReach(mortimerUnlocks({ quests: [] }));
 
     expect(r.masters[0]).toMatchObject({
-      masterBlocker: { status: 'quest-locked', label: 'Master: Fallen From Grace' },
+      masterBlocker: { status: 'access-unknown', label: 'Confirm you reached Mortimer during Fallen From Grace (full completion is not required)' },
     });
-    expect(r.masters[0].rows.map(row => row.status)).toEqual(['quest-locked', 'quest-locked']);
+    expect(r.masters[0].rows.map(row => row.status)).toEqual(['access-unknown', 'access-unknown']);
   });
 
   it('uses the effective Slayer cap for Mortimer before low-level assignments', () => {

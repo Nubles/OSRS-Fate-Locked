@@ -34,12 +34,12 @@ export const GoalTracker: React.FC = () => {
           let req: ContentRequirement | undefined = STRATEGY_DATABASE[id];
           const diary = DIARY_DATA[id];
 
-          // Fallback construction for quests not in the manual Strategy DB.
-          if (!req) {
+          // Quest facts and readiness always come from the canonical journal.
+          if (QUEST_DATA[id]) {
              const quest = QUEST_DATA[id];
              if (quest) {
                  req = {
-                     id: quest.name,
+                     id: quest.id,
                      category: TableType.QUESTS,
                      regions: enforcedQuestAreas(quest),
                      skills: quest.skills,
@@ -57,12 +57,12 @@ export const GoalTracker: React.FC = () => {
           let description: string | undefined;
           if (diary) {
             const eligibility = evaluateDiaryTierEligibility(diary, unlocks, gameModeId);
-            const total = eligibility.evidence.length + eligibility.blockers.length;
+            const total = eligibility.evidence.length + eligibility.blockers.length + eligibility.manualChecks.length;
             progress = {
               percentage: eligibility.eligible || eligibility.status === 'COMPLETED'
                 ? 100
-                : total === 0 ? 0 : Math.round((eligibility.evidence.length / total) * 100),
-              missing: eligibility.blockers.map(blocker => blocker.label),
+                : total === 0 ? 0 : Math.min(99, Math.round((eligibility.evidence.length / total) * 100)),
+              missing: [...eligibility.blockers.map(blocker => blocker.label), ...eligibility.manualChecks.map(check => 'Confirm: ' + check)],
               totalSteps: total,
               completedSteps: eligibility.evidence.length,
             };

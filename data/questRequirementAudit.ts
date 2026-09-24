@@ -76,10 +76,14 @@ export function questRequirementFingerprint(quest: QuestData): string {
     regions: canonicalValue(quest.regions),
     locations: canonicalValue(quest.locations),
     skills: canonicalValue(quest.skills),
+    equipmentRequirements: canonicalValue(quest.equipmentRequirements),
+    preparationRequirements: canonicalValue(quest.preparationRequirements),
     combatLevel: quest.combatLevel,
     prereqs: canonicalValue(quest.prereqs),
     oneOf: canonicalValue(quest.oneOf),
     manualRequirements: canonicalValue(quest.manualRequirements),
+    questProgress: canonicalValue(quest.questProgress),
+    skillAlternatives: canonicalValue(quest.skillAlternatives),
     points: quest.points,
   });
 }

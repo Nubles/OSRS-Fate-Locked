@@ -4,7 +4,8 @@ import { DropSource } from '../types';
 import { DROP_RATES, BOSSES_LIST } from '../constants';
 import { bossTier, TIER_SOURCE, TIER_LABEL, TIER_ORDER, BossTier } from '../data/bossKeyTiers';
 import { useGame } from '../context/GameContext';
-import { BookOpen, ScrollText, Crosshair, Dices } from 'lucide-react';
+import { BookOpen, ScrollText, Dices } from './OsrsIcon';
+import { Crosshair } from 'lucide-react';
 import { wikiService } from '../services/WikiService';
 import { resolveModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
@@ -210,7 +211,6 @@ const SlayerMasterCard: React.FC<SlayerMasterProps> = ({ name, displayRate, bonu
       `}
     >
       {/* Background Texture */}
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
       
       {/* Character Portrait (Right Aligned) */}
       <img 
@@ -270,7 +270,6 @@ const ClueScrollCard: React.FC<ClueScrollCardProps> = ({ tier, displayRate, bonu
       `}
     >
       {/* Background Texture */}
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/shatter.png')] opacity-5 mix-blend-overlay"></div>
       
       {/* Text Info */}
       <div className={`flex flex-col items-start z-10 transition-opacity duration-200 ${isRolling ? 'opacity-0' : 'opacity-100'}`}>

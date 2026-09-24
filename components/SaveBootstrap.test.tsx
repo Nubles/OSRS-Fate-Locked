@@ -283,11 +283,14 @@ describe('SaveBootstrap', () => {
     expect(replaceSave).toHaveBeenCalledOnce();
   });
 
-  it('keeps a confirmed older checkpoint after immediate termination and reload', async () => {
+  it.each([true, false])('keeps a confirmed older checkpoint after immediate termination and reload (guide metadata: %s)', async (hasGuideMetadata) => {
     const recoveredState = {
       ...initialState,
       userNotes: { recovery: 'confirmed older checkpoint' },
     };
+    if (!hasGuideMetadata) delete recoveredState.runeProofProgress;
+    const expectedRecoveredData = JSON.stringify({ ...recoveredState,
+      runeProofProgress: recoveredState.runeProofProgress ?? { version: 1, items: {}, actions: {} } });
     const recoveredData = JSON.stringify(recoveredState);
     const recoveredChecksum = await checksumSave(recoveredData);
     const formerNewerState = {
@@ -360,7 +363,7 @@ describe('SaveBootstrap', () => {
       </SaveBootstrap>,
     );
     await user.click(await screen.findByRole('button', { name: 'Recover latest safe save' }));
-    expect((await screen.findByTestId('bootstrap-result')).textContent).toBe(recoveredData);
+    expect((await screen.findByTestId('bootstrap-result')).textContent).toBe(expectedRecoveredData);
 
     cleanup();
     render(
@@ -369,9 +372,9 @@ describe('SaveBootstrap', () => {
       </SaveBootstrap>,
     );
 
-    expect((await screen.findByTestId('bootstrap-result')).textContent).toBe(recoveredData);
+    expect((await screen.findByTestId('bootstrap-result')).textContent).toBe(expectedRecoveredData);
     expect(head.persistenceRevision).toBe(9);
-    expect(head.data).toBe(recoveredData);
+    expect(head.data).toBe(expectedRecoveredData);
   });
 
   it('does not let a blocked recovery completion mutate after switching profiles', async () => {

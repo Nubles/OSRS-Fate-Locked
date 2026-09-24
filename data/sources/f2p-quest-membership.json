@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-21",
+  "reviewedAt": "2026-09-23",
   "evidenceFiles": [
     "data/sources/quest-list.json",
     "data/sources/quest-requirement-audit.json"
@@ -52,20 +52,11 @@
       "evidenceQuestId": "Imp Catcher"
     },
     {
-      "questId": "Daddy's Home",
-      "slug": "daddys-home",
-      "kind": "miniquest",
-      "wave": 2,
-      "progressionPriority": 6,
-      "wikiTitle": "Daddy's Home/Quick guide",
-      "evidenceQuestId": "Daddy's Home"
-    },
-    {
       "questId": "X Marks the Spot",
       "slug": "x-marks-the-spot",
       "kind": "quest",
       "wave": 2,
-      "progressionPriority": 7,
+      "progressionPriority": 6,
       "wikiTitle": "X Marks the Spot/Quick guide",
       "evidenceQuestId": "X Marks the Spot"
     },
@@ -74,7 +65,7 @@
       "slug": "romeo-juliet",
       "kind": "quest",
       "wave": 2,
-      "progressionPriority": 8,
+      "progressionPriority": 7,
       "wikiTitle": "Romeo & Juliet/Quick guide",
       "evidenceQuestId": "Romeo & Juliet"
     },
@@ -83,7 +74,7 @@
       "slug": "demon-slayer",
       "kind": "quest",
       "wave": 2,
-      "progressionPriority": 9,
+      "progressionPriority": 8,
       "wikiTitle": "Demon Slayer/Quick guide",
       "evidenceQuestId": "Demon Slayer"
     },
@@ -92,7 +83,7 @@
       "slug": "ernest-the-chicken",
       "kind": "quest",
       "wave": 2,
-      "progressionPriority": 10,
+      "progressionPriority": 9,
       "wikiTitle": "Ernest the Chicken/Quick guide",
       "evidenceQuestId": "Ernest the Chicken"
     },
@@ -101,7 +92,7 @@
       "slug": "dorics-quest",
       "kind": "quest",
       "wave": 3,
-      "progressionPriority": 11,
+      "progressionPriority": 10,
       "wikiTitle": "Doric's Quest/Quick guide",
       "evidenceQuestId": "Doric's Quest"
     },
@@ -110,7 +101,7 @@
       "slug": "goblin-diplomacy",
       "kind": "quest",
       "wave": 3,
-      "progressionPriority": 12,
+      "progressionPriority": 11,
       "wikiTitle": "Goblin Diplomacy/Quick guide",
       "evidenceQuestId": "Goblin Diplomacy"
     },
@@ -119,7 +110,7 @@
       "slug": "witchs-potion",
       "kind": "quest",
       "wave": 3,
-      "progressionPriority": 13,
+      "progressionPriority": 12,
       "wikiTitle": "Witch's Potion/Quick guide",
       "evidenceQuestId": "Witch's Potion"
     },
@@ -128,7 +119,7 @@
       "slug": "the-knights-sword",
       "kind": "quest",
       "wave": 3,
-      "progressionPriority": 14,
+      "progressionPriority": 13,
       "wikiTitle": "The Knight's Sword/Quick guide",
       "evidenceQuestId": "The Knight's Sword"
     },
@@ -137,7 +128,7 @@
       "slug": "black-knights-fortress",
       "kind": "quest",
       "wave": 3,
-      "progressionPriority": 15,
+      "progressionPriority": 14,
       "wikiTitle": "Black Knights' Fortress/Quick guide",
       "evidenceQuestId": "Black Knights' Fortress"
     },
@@ -146,7 +137,7 @@
       "slug": "vampyre-slayer",
       "kind": "quest",
       "wave": 4,
-      "progressionPriority": 16,
+      "progressionPriority": 15,
       "wikiTitle": "Vampyre Slayer/Quick guide",
       "evidenceQuestId": "Vampyre Slayer"
     },
@@ -155,7 +146,7 @@
       "slug": "prince-ali-rescue",
       "kind": "quest",
       "wave": 4,
-      "progressionPriority": 17,
+      "progressionPriority": 16,
       "wikiTitle": "Prince Ali Rescue/Quick guide",
       "evidenceQuestId": "Prince Ali Rescue"
     },
@@ -164,7 +155,7 @@
       "slug": "pirates-treasure",
       "kind": "quest",
       "wave": 4,
-      "progressionPriority": 18,
+      "progressionPriority": 17,
       "wikiTitle": "Pirate's Treasure/Quick guide",
       "evidenceQuestId": "Pirate's Treasure"
     },
@@ -173,7 +164,7 @@
       "slug": "misthalin-mystery",
       "kind": "quest",
       "wave": 4,
-      "progressionPriority": 19,
+      "progressionPriority": 18,
       "wikiTitle": "Misthalin Mystery/Quick guide",
       "evidenceQuestId": "Misthalin Mystery"
     },
@@ -182,7 +173,7 @@
       "slug": "below-ice-mountain",
       "kind": "quest",
       "wave": 4,
-      "progressionPriority": 20,
+      "progressionPriority": 19,
       "wikiTitle": "Below Ice Mountain/Quick guide",
       "evidenceQuestId": "Below Ice Mountain"
     },
@@ -191,7 +182,7 @@
       "slug": "the-corsair-curse",
       "kind": "quest",
       "wave": 5,
-      "progressionPriority": 21,
+      "progressionPriority": 20,
       "wikiTitle": "The Corsair Curse/Quick guide",
       "evidenceQuestId": "The Corsair Curse"
     },
@@ -200,7 +191,7 @@
       "slug": "shield-of-arrav",
       "kind": "quest",
       "wave": 5,
-      "progressionPriority": 22,
+      "progressionPriority": 21,
       "wikiTitle": "Shield of Arrav/Quick guide",
       "evidenceQuestId": "Shield of Arrav"
     },
@@ -209,9 +200,27 @@
       "slug": "dragon-slayer-i",
       "kind": "quest",
       "wave": 5,
-      "progressionPriority": 23,
+      "progressionPriority": 22,
       "wikiTitle": "Dragon Slayer I/Quick guide",
       "evidenceQuestId": "Dragon Slayer I"
+    },
+    {
+      "questId": "Learning the Ropes",
+      "slug": "learning-the-ropes",
+      "kind": "quest",
+      "wave": 5,
+      "progressionPriority": 23,
+      "wikiTitle": "Learning the Ropes",
+      "evidenceQuestId": "Learning the Ropes"
+    },
+    {
+      "questId": "The Ides of Milk",
+      "slug": "the-ides-of-milk",
+      "kind": "quest",
+      "wave": 5,
+      "progressionPriority": 24,
+      "wikiTitle": "The Ides of Milk/Quick guide",
+      "evidenceQuestId": "The Ides of Milk"
     }
   ]
 }

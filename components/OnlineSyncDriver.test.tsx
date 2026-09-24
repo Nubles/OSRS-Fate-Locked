@@ -46,6 +46,8 @@ describe('OnlineSyncDriver', () => {
 
   beforeEach(() => {
     vi.useFakeTimers();
+    stableGameState.runId = 'run-current';
+    stableGameState.runRevision = 9;
     for (const key of Object.keys(storage)) delete storage[key];
     vi.stubGlobal('localStorage', {
       getItem: (key: string) => storage[key] ?? null,
@@ -156,4 +158,36 @@ describe('OnlineSyncDriver', () => {
       customMode: null,
     });
   });
+  it('does not publish an old profile build that completes after the new profile', async () => {
+    const oldBuild = deferred<{ json: string; compressed: string }>();
+    buildBundlePayloadMock.mockReturnValueOnce(oldBuild.promise).mockResolvedValueOnce({ json: '{}', compressed: 'profile-b' });
+    relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    const old = render(<OnlineSyncDriver />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    old.unmount();
+    stableGameState.runId = 'run-b';
+    render(<OnlineSyncDriver />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    await act(async () => { oldBuild.resolve({ json: '{}', compressed: 'profile-a' }); await Promise.resolve(); });
+    expect(fetchMock.mock.calls.map(([, init]) => JSON.parse(init.body).payload)).toEqual(['profile-b']);
+  });
+
+  it('serializes an already-sent old profile write before the new profile write', async () => {
+    const oldNetwork = deferred<{ ok: boolean }>();
+    fetchMock.mockReturnValueOnce(oldNetwork.promise);
+    buildBundlePayloadMock.mockResolvedValueOnce({ json: '{}', compressed: 'profile-a' }).mockResolvedValueOnce({ json: '{}', compressed: 'profile-b' });
+    relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    const old = render(<OnlineSyncDriver />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    old.unmount();
+    stableGameState.runId = 'run-b';
+    render(<OnlineSyncDriver />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await act(async () => { oldNetwork.resolve({ ok: true }); await Promise.resolve(); });
+    expect(fetchMock.mock.calls.map(([, init]) => JSON.parse(init.body).payload)).toEqual(['profile-a', 'profile-b']);
+    expect(relaySync.status).toBe('synced');
+  });
+
 });

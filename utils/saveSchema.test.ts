@@ -82,6 +82,7 @@ const defaultsFixture = (): GameState => ({
 });
 
 const fullStateFixture = (): GameState => ({
+  collectionLogIdentity: { version: 1, quarantinedIds: [] },
   version: CURRENT_SAVE_VERSION,
   areaUnlockRevision: 1,
   runId: VALID_RUN_ID,
@@ -1107,5 +1108,42 @@ describe('JSON parsing boundary', () => {
     const reparsed = expectAccepted(parseAndMigrateSave(serializeCurrent(accepted.state), defaultsFixture()));
     expect(reparsed.state).toEqual(accepted.state);
     expect(reparsed.state.fateCompensation).toEqual(current.fateCompensation);
+  });
+});
+
+
+describe('persisted Collection Log identity metadata', () => {
+  it('round-trips the run quarantine without altering saved counts', () => {
+    const state = fullStateFixture();
+    state.collectionLogIdentity = { version: 1, quarantinedIds: [101004, 101002, 101004] };
+    state.unlocks.collectionLog = { 101004: 2 };
+    const result = parseAndMigrateSave(serializeCurrent(state), defaultsFixture());
+    expect(result.ok).toBe(true);
+    if (result.ok === false) throw new Error(result.message);
+    expect(result.state.collectionLogIdentity).toEqual({ version: 1, quarantinedIds: [101002, 101004] });
+    expect(result.state.unlocks.collectionLog).toEqual({ 101004: 2 });
+  });
+
+  it.each([
+    null,
+    { version: 2, quarantinedIds: [] },
+    { version: 1 },
+    { version: 1, quarantinedIds: ['101004'] },
+    { version: 1, quarantinedIds: [-1] },
+    { version: 1, quarantinedIds: [1.5] },
+    { version: 1, quarantinedIds: [MAX_COUNTER + 1] },
+    { version: 1, quarantinedIds: [NaN] },
+    { version: 1, quarantinedIds: [], extra: true },
+    { version: 1, quarantinedIds: Array(2 * MAX_COLLECTION_LOG_ENTRIES + 1).fill(1) },
+  ])('rejects malformed collection identity metadata (%#)', collectionLogIdentity => {
+    expect(validateAndMigrateSave(candidate({ collectionLogIdentity }), defaultsFixture()).ok).toBe(false);
+  });
+
+  it('never invokes accessors in imported identity metadata', () => {
+    let accessed = false;
+    const collectionLogIdentity = { version: 1 };
+    Object.defineProperty(collectionLogIdentity, 'quarantinedIds', { enumerable: true, get: () => { accessed = true; return []; } });
+    expect(validateAndMigrateSave(candidate({ collectionLogIdentity }), defaultsFixture()).ok).toBe(false);
+    expect(accessed).toBe(false);
   });
 });

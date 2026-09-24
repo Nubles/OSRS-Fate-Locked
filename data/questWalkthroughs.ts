@@ -1,6 +1,6 @@
 import generatedCatalogue from './questWalkthroughs.generated.json';
 import { f2pQuestMembership } from './f2pQuestMembership';
-import { canonicalItemKey, chunkKey, type ChunkKey } from '../utils/questRoutes/model';
+import { canonicalItemKey, chunkKey, validateEquipmentGate, type ChunkKey, type RouteGate } from '../utils/questRoutes/model';
 import type {
   QuestWalkthroughActionDefinition,
   QuestWalkthroughDefinition,
@@ -11,7 +11,7 @@ import type {
 } from '../utils/questWalkthroughs/model';
 import { collectWalkthroughEntityRequests } from '../utils/questWalkthroughs/entityRequests';
 
-const LEGACY_QUEST_ID = 'Elemental Workshop I';
+const LEGACY_QUEST_IDS = new Set(['Elemental Workshop I', "Daddy's Home"]);
 const F2P_QUEST_IDS = new Set(f2pQuestMembership.map(entry => entry.questId));
 const ACTION_KINDS = new Set<WalkthroughActionKind>([
   'TALK_TO', 'ACQUIRE', 'USE_ITEM', 'INTERACT_OBJECT', 'KILL', 'TRAVEL', 'DIALOGUE', 'INFORMATION',
@@ -86,6 +86,9 @@ const validateGate = (value: unknown): void => {
     case 'SKILL':
       nonBlank(value.skill, 'skill gate skill');
       positiveFinite(value.level, 'skill gate level');
+      return;
+    case 'EQUIPMENT':
+      validateEquipmentGate(value as Extract<RouteGate, { type: 'EQUIPMENT' }>);
       return;
     case 'UNLOCK':
       assert(['guilds', 'merchants', 'minigames', 'mobility', 'slayerUnlocks'].includes(value.category as string), 'unlock gate category is invalid');
@@ -196,7 +199,7 @@ const definitionPayload = (definition: Record<string, unknown>): Record<string, 
 const validateDefinition = (value: unknown, phase: RawCatalogue['phase']): QuestWalkthroughDefinition => {
   assert(isRecord(value), 'walkthrough definition must be an object');
   nonBlank(value.questId, 'quest id');
-  assert(F2P_QUEST_IDS.has(value.questId) || value.questId === LEGACY_QUEST_ID, `unsupported quest ID: ${value.questId}`);
+  assert(F2P_QUEST_IDS.has(value.questId) || LEGACY_QUEST_IDS.has(value.questId), `unsupported quest ID: ${value.questId}`);
   assert(value.releaseStatus === 'PREVIEW_ONLY' || value.releaseStatus === 'APPROVED', 'invalid release status');
   assert(isRecord(value.source), 'source is required');
   nonBlank(value.source.wikiTitle, 'wiki title');

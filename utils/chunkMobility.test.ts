@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mobilityFor } from './chunkMobility';
+import { chunkTransportNodes, mobilityFor } from './chunkMobility';
 import { MOBILITY_LIST } from '../constants';
 
 describe('mobilityFor', () => {
@@ -7,17 +7,55 @@ describe('mobilityFor', () => {
     const cases: [string, string][] = [
       ['Spirit tree', 'Spirit Trees'],
       ['Fairy ring', 'Fairy Rings'],
-      ['Crashed glider', 'Gnome Gliders'],
       ['Canoe Station', 'Canoes'],
-      ['Balloon toad pile', 'Balloon Transport'],
       ['Magic Mushtree', 'Mycelium Transport'],
-      ['Carpet hotspot', 'Magic Carpets'],
       ['Obelisk', 'Wilderness Obelisks'],
       ['Mine cart', 'Mine Carts'],
     ];
     for (const [name, network] of cases) {
       expect(mobilityFor(name), name).toBe(network);
     }
+  });
+
+  it.each([
+    ['Trader Crewmember', 'Charter Ships'],
+    ['Renu', 'Quetzal Network'],
+    ['Captain Errdo', 'Gnome Gliders'],
+    ['Gnormadium Avlafrim', 'Gnome Gliders'],
+    ['Captain Shoracks', 'Gnome Gliders'],
+    ['Captain Bleemadge', 'Gnome Gliders'],
+    ['Captain Klemfoodle', 'Gnome Gliders'],
+    ['Captain Dalbur', 'Gnome Gliders'],
+    ['Auguste', 'Balloon Transport'],
+    ['Rug Merchant', 'Magic Carpets'],
+  ])('recognizes reviewed NPC service %s without conflating entity kinds', (name, network) => {
+    expect(mobilityFor(name, 'npc')).toBe(network);
+    expect(mobilityFor(name.toUpperCase(), 'npc')).toBe(network);
+    expect(mobilityFor(name, 'object')).toBeNull();
+    expect(MOBILITY_LIST).toContain(network);
+  });
+
+  it.each([
+    'Crashed glider', 'Crashed glider (Sea charting)', 'Balloon toad pile',
+    'Carpet hotspot', 'Eagle lever', 'Spirit Tree Patch', 'Quetzal shrine',
+    'Balloon assistant statue', 'constructor', 'toString',
+  ])('does not invent transport from scenery or unknown identity %s', name => {
+    expect(mobilityFor(name, 'object')).toBeNull();
+    expect(mobilityFor(name, 'npc')).toBeNull();
+  });
+
+  it('combines reviewed objects and NPC presence without inventing NPC counts', () => {
+    const content = {
+      objects: [['Fairy ring', 2], ['Balloon toad pile', 1], ['Carpet hotspot', 12]] as [string, number][],
+      npcs: ['Auguste', 'Rug Merchant', 'Shopkeeper'],
+    };
+    expect(chunkTransportNodes(content)).toEqual([
+      { name: 'Fairy ring', kind: 'object', count: 2, network: 'Fairy Rings' },
+      { name: 'Auguste', kind: 'npc', network: 'Balloon Transport' },
+      { name: 'Rug Merchant', kind: 'npc', network: 'Magic Carpets' },
+    ]);
+    expect(content.npcs).toHaveLength(3);
+    expect(content.objects).toHaveLength(3);
   });
 
   it('only ever returns networks the Mobility table actually has', () => {

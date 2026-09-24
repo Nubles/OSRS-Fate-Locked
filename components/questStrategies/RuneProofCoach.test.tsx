@@ -78,7 +78,7 @@ const lockedImpAlternativeAnalysisFor = (
 ): QuestRouteAnalysis => {
   const actions = strategy.actions.map(action => {
     const chunks = action.mapChunks;
-    const blocked = chunks.includes('47,51' as ChunkKey);
+    const blocked = chunks.includes('48,50' as ChunkKey);
     return {
       definition: action,
       location: {
@@ -93,7 +93,7 @@ const lockedImpAlternativeAnalysisFor = (
       state: blocked ? 'CHUNK_LOCKED' as const : 'READY_HERE' as const,
       blockers: blocked ? [{
         kind: 'CHUNK' as const,
-        chunk: '47,51' as ChunkKey,
+        chunk: '48,50' as ChunkKey,
         label: action.displayText,
       }] : [],
       itemPreparation: [],
@@ -198,6 +198,7 @@ const ImpCatcherLockedAlternativeHarness = ({
 // the pot belong after cooks-assistant:start-quest is complete.
 const modelWithPotNext: RuneProofCoachModel = {
   questId: "Cook's Assistant",
+  guideRevision: 'runeproof-public-cooks-assistant-v1',
   recommendationReason: 'Recommended because this local quest is ready with your current unlocks.',
   progress: { completed: 1, total: 3 },
   nextAction: {
@@ -295,6 +296,8 @@ const modelWithCurrentChunk = (chunk: string): RuneProofCoachModel => {
       ...freshModel.nextAction,
       mapChunks: [chunk as ChunkKey],
     },
+    actions: freshModel.actions.map(action => action.id === freshModel.nextAction?.id
+      ? { ...action, mapChunks: [chunk as ChunkKey] } : action),
   };
 };
 
@@ -334,7 +337,7 @@ describe('RuneProofCoach', () => {
     expect(screen.getByText('1/3 complete')).toBeTruthy();
   });
 
-  it('puts the reviewed objective and current pot action before the compact route', () => {
+  it('puts the full walkthrough first and highlights the current action once', () => {
     render(
       <RuneProofCoach
         model={modelWithPotNext}
@@ -348,25 +351,27 @@ describe('RuneProofCoach', () => {
     const nextActionSection = nextAction.closest('section');
 
     expect(objective).toBeTruthy();
-    expect(screen.getByText('Recommended because this local quest is ready with your current unlocks.'))
-      .toBeTruthy();
     expect(nextAction).toBeTruthy();
     expect(within(nextActionSection as HTMLElement).getByText(potInstruction)).toBeTruthy();
     expect(route).toBeTruthy();
     expect(screen.queryByText(/route budget/i)).toBeNull();
     expect(screen.queryByText(/Black Knight/i)).toBeNull();
-    expect(nextAction.compareDocumentPosition(route) & Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(route.contains(nextAction)).toBe(true);
+    expect(screen.getAllByText(potInstruction)).toHaveLength(1);
+    expect(screen.queryByRole('table', { name: 'OSRS quest details' })).toBeNull();
+    expect(route.compareDocumentPosition(screen.getByRole('button', { name: 'Quest details and rewards' })) & Node.DOCUMENT_POSITION_FOLLOWING)
       .toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 
     const coach = objective.closest('section');
     expect(coach?.getAttribute('style') ?? '').not.toMatch(/width:\s*\d+px/i);
     expect(coach?.className).not.toMatch(/(?:^|\s)(?:w|min-w|max-w)-\[\d+px\]/);
-    expect(screen.getAllByRole('button', { name: /on map/i })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: /on map/i })).toHaveLength(3);
 
     const routeRows = within(route).getAllByRole('listitem');
     expect(routeRows[0].querySelector('details')?.open).toBe(false);
-    expect(routeRows[1].querySelector('details')?.open).toBe(true);
-    expect(routeRows[2].querySelector('details')?.open).toBe(false);
+    expect(routeRows[1].querySelector('details')?.open).toBe(false);
+    expect(routeRows[1].querySelector('[aria-current="step"]')).toBeTruthy();
+    expect(within(routeRows[2]).getByText(modelWithPotNext.actions[2].instruction)).toBeTruthy();
   });
 
   it('keeps every compact route step tied to an explicit reviewed chunk', () => {
@@ -385,8 +390,8 @@ describe('RuneProofCoach', () => {
 
     const rows = within(screen.getByRole('list', { name: "Cook's Assistant route" }))
       .getAllByRole('listitem');
-    expect(within(rows[0]).getByText('Chunk 50,50')).toBeTruthy();
-    expect(within(rows[1]).getByText('Chunk 50,50')).toBeTruthy();
+    expect(within(rows[0]).getByText('Lumbridge Castle kitchen · Ground floor')).toBeTruthy();
+    expect(within(rows[1]).getByText('Lumbridge Castle kitchen · Ground floor')).toBeTruthy();
     expect(within(rows[2]).getByText('Chunk needs review')).toBeTruthy();
   });
 
@@ -399,6 +404,9 @@ describe('RuneProofCoach', () => {
       />,
     );
 
+    expect(screen.queryByRole('button', { name: 'Other legal sources' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Proof and sources' })).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Quest details and rewards' }));
     const alternatives = screen.getByRole('button', { name: 'Other legal sources' });
     const proofDrawer = screen.getByRole('button', { name: 'Proof and sources' });
 
@@ -437,7 +445,7 @@ describe('RuneProofCoach', () => {
     const nextActionSection = screen.getByRole('heading', { name: 'Next action' }).closest('section');
     expect(within(nextActionSection as HTMLElement).getByText('Talk to the Cook in Lumbridge Castle.'))
       .toBeTruthy();
-    expect(screen.getAllByRole('button', { name: /on map/i })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: /on map/i })).toHaveLength(3);
 
     const showMap = screen.getByRole('button', {
       name: 'Show Talk to the Cook in Lumbridge Castle. on map',
@@ -447,8 +455,8 @@ describe('RuneProofCoach', () => {
     const map = screen.getByRole('dialog', {
       name: 'Temporary map for Talk to the Cook in Lumbridge Castle.',
     });
-    expect(within(map).getByText('Chunk 50,50')).toBeTruthy();
     expect(within(map).getByText('Lumbridge Castle')).toBeTruthy();
+    expect(within(map).getByText('Lumbridge Castle kitchen')).toBeTruthy();
     expect(within(map).getByAltText('OSRS world map')).toBeTruthy();
     const wheel = new WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: 500 });
     expect(map.parentElement?.dispatchEvent(wheel)).toBe(false);
@@ -492,7 +500,7 @@ describe('RuneProofCoach', () => {
     render(<ImpCatcherYellowFirstHarness onPersistItem={onPersistItem} />);
 
     const route = screen.getByRole('list', { name: 'Imp Catcher route' });
-    const yellowInstruction = 'Kill imps south-east of Falador until you obtain a yellow bead.';
+    const yellowInstruction = 'Kill imps around Draynor Village until you receive a yellow bead.';
     const yellowRow = within(route).getByText(yellowInstruction).closest('li');
     if (!yellowRow) throw new Error('Missing yellow-bead route row.');
 
@@ -504,7 +512,7 @@ describe('RuneProofCoach', () => {
       .toBe(1);
     expect(within(yellowRow).getByText('Completed')).toBeTruthy();
 
-    const mizgogInstruction = "Take all four beads to Wizard Mizgog on the top floor of the Wizards' Tower.";
+    const mizgogInstruction = "Take all four beads to Wizard Mizgog at the Wizards' Tower.";
     const mizgogRow = within(route).getByText(mizgogInstruction).closest('li');
     if (!mizgogRow) throw new Error('Missing Mizgog route row.');
 
@@ -519,14 +527,14 @@ describe('RuneProofCoach', () => {
 
     const nextAction = screen.getByRole('heading', { name: 'Next action' }).closest('section');
     if (!nextAction) throw new Error('Missing current Imp Catcher action section.');
-    const alternatives = screen.getByRole('button', { name: 'Other legal sources' });
-
-    expect(within(nextAction).getByText('Do now')).toBeTruthy();
+    expect(within(nextAction).queryByText('Do now')).toBeNull();
     expect(within(nextAction).getByText('Kill imps in Lumbridge until you obtain a black bead.')).toBeTruthy();
-    expect(within(nextAction).getByText('Chunk 50,50')).toBeTruthy();
+    expect(within(nextAction).getByText('Lumbridge')).toBeTruthy();
+    expect(within(nextAction).queryByText('Draynor Village')).toBeNull();
     expect(within(nextAction).queryByRole('note')).toBeNull();
 
-    await user.click(alternatives);
+    await user.click(screen.getByRole('button', { name: 'Quest details and rewards' }));
+    await user.click(screen.getByRole('button', { name: 'Other legal sources' }));
     expect(screen.getByText('Other legal Imps')).toBeTruthy();
     await user.click(within(nextAction).getByRole('button', { name: 'Mark action complete' }));
 
@@ -582,7 +590,8 @@ describe('RuneProofCoach', () => {
         />,
       );
 
-      expect(screen.queryByRole('button', { name: /on map/i })).toBeNull();
+      const current = screen.getByRole('heading', { name: 'Next action' }).closest('section')!;
+      expect(within(current).queryByRole('button', { name: /on map/i })).toBeNull();
       expect(screen.getByText('Chunk needs review')).toBeTruthy();
       view.unmount();
     });
@@ -592,6 +601,7 @@ describe('RuneProofCoach', () => {
     const user = userEvent.setup();
     render(<RuneProofCoach model={emptyRouteModel} onConfirmAction={() => undefined} />);
 
+    await user.click(screen.getByRole('button', { name: 'Quest details and rewards' }));
     const alternatives = screen.getByRole('button', { name: 'Other legal sources' });
     const proofDrawer = screen.getByRole('button', { name: 'Proof and sources' });
     expect(alternatives.getAttribute('aria-expanded')).toBe('false');
@@ -607,8 +617,8 @@ describe('RuneProofCoach', () => {
   it('renders a completed route without a current action', () => {
     render(<RuneProofCoach model={completedModel} onConfirmAction={() => undefined} />);
 
-    expect(screen.getByText('All reviewed actions are complete.')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /on map/i })).toBeNull();
+    expect(screen.getByRole('status').textContent).toBe('All guide steps are checked off.');
+    expect(screen.getAllByRole('button', { name: /on map/i })).toHaveLength(3);
     expect(within(screen.getByRole('list', { name: "Cook's Assistant route" }))
       .getAllByRole('listitem')).toHaveLength(3);
   });
@@ -616,7 +626,7 @@ describe('RuneProofCoach', () => {
   it('renders an empty route without treating it as a completed journey', () => {
     render(<RuneProofCoach model={emptyRouteModel} onConfirmAction={() => undefined} />);
 
-    expect(screen.getByText('No reviewed actions are available for this objective.')).toBeTruthy();
+    expect(screen.getByRole('status').textContent).toBe('No walkthrough is available for this quest yet.');
     expect(within(screen.getByRole('list', { name: "Cook's Assistant route" }))
       .queryAllByRole('listitem')).toHaveLength(0);
   });
@@ -625,6 +635,7 @@ describe('RuneProofCoach', () => {
     const user = userEvent.setup();
     render(<RuneProofCoach model={emptyRouteModel} onConfirmAction={() => undefined} />);
 
+    await user.click(screen.getByRole('button', { name: 'Quest details and rewards' }));
     await user.click(screen.getByRole('button', { name: 'Proof and sources' }));
 
     expect(screen.getByText('No pinned source wording recorded.')).toBeTruthy();

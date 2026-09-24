@@ -1,12 +1,14 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { X, Search, Map, MapPin, BookOpen, Skull, Gamepad2, Sprout, Footprints, Zap, Home, Store, Package, Flag, Shield, Lock, Unlock, ExternalLink, ScrollText, Swords, Box, Trophy } from 'lucide-react';
+import { X, Search, Lock, Unlock, ExternalLink } from 'lucide-react';
+import { Map, MapPin, BookOpen, Skull, Gamepad2, Sprout, Footprints, Zap, Home, Store, Package, Flag, Shield, ScrollText, Swords, Box, Trophy } from './OsrsIcon';
+import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
 import { 
   SKILLS_LIST, REGIONS_LIST, BOSSES_LIST, MINIGAMES_LIST, FARMING_PATCH_LIST, 
-  MOBILITY_LIST, ARCANA_LIST, POH_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, 
+  MOBILITY_LIST, ARCANA_LIST, POH_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, SLOT_CONFIG,
   STORAGE_LIST, GUILDS_LIST, SLAYER_UNLOCKS_LIST, MISTHALIN_AREAS, wikiUrlFor
 } from '../constants';
 import { QUEST_DATA } from '../data/questData';
@@ -381,7 +383,10 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
               >
                 <div className="flex items-center gap-4 min-w-0 flex-1">
                   <div className={`p-2 rounded-lg shrink-0 ${isUnlocked ? 'bg-green-900/20 text-green-400' : 'bg-[#222] text-gray-500'}`}>
-                    <Icon size={20} />
+                    {item.category === TableType.SKILLS ? <WikiIcon file={`${item.name}_icon.png`} alt="" size={20} />
+                      : item.category === TableType.EQUIPMENT ? <WikiIcon file={SLOT_CONFIG[item.name]?.file ?? 'Worn_Equipment.png'} alt="" size={20} />
+                      : item.category === TableType.DIARIES ? <WikiIcon file="Achievement_Diaries_icon.png" alt="" size={20} />
+                      : <Icon size={20} />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">

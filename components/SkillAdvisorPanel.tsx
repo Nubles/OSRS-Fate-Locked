@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Dumbbell } from 'lucide-react';
+import { Dumbbell } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { rankSkillBottlenecks } from '../utils/skillAdvisor';
 import { AdvisorList, AdvisorItem } from './AdvisorList';

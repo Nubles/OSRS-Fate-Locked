@@ -13,6 +13,11 @@ const step = (id: string, label: string): PlanStep => ({
 });
 
 describe('goalPlannerStepHasWikiLink', () => {
+  it('does not invent a wiki article for a Fate equipment slot', () => {
+    expect(goalPlannerStepHasWikiLink({
+      kind: 'equipment', id: 'Neck', label: 'Neck T1', done: false,
+    })).toBe(false);
+  });
   it('keeps normal goal steps linked to their wiki article', () => {
     expect(goalPlannerStepHasWikiLink(step('Lumbridge', 'Lumbridge'))).toBe(true);
   });

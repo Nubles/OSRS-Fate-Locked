@@ -1,5 +1,6 @@
 import React from 'react';
-import { Map, MapPin } from 'lucide-react';
+import { Map, MapPin } from './OsrsIcon';
+import { WikiIcon } from './WikiIcon';
 import type { QuestGeographyDisplay } from '../utils/questGeographyDisplay';
 
 interface QuestGeographyChipsProps {
@@ -58,7 +59,7 @@ export const QuestGeographyChips: React.FC<QuestGeographyChipsProps> = ({
           >
             <MapPin size={8} />
             {step.subArea ?? step.region ?? step.label}
-            {step.role === 'first' && <span className="text-cyan-300/80">★</span>}
+            {step.role === 'first' && <WikiIcon file="Quest_point_icon.png" alt="Quest start" Fallback={MapPin} size={12} />}
           </button>
         ))}
         {display.knownSteps.length > 4 && (

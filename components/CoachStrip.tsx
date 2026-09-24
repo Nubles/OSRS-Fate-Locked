@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Lightbulb, ArrowRight, X } from 'lucide-react';
+import { ArrowRight, X } from 'lucide-react';
+import { Lightbulb } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { resolveModeRules } from '../config/gameModes';
 import { relaySync } from '../services/relaySync';

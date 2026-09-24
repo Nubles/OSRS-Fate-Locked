@@ -70,6 +70,8 @@ function questRequirementFingerprint(quest) {
     prereqs: canonicalValue(quest.prereqs),
     oneOf: canonicalValue(quest.oneOf),
     manualRequirements: canonicalValue(quest.manualRequirements),
+    questProgress: canonicalValue(quest.questProgress),
+    skillAlternatives: canonicalValue(quest.skillAlternatives),
     points: quest.points,
   });
 }

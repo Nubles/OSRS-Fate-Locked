@@ -1,7 +1,9 @@
 
 import React, { useRef, useEffect, useMemo, useState } from 'react';
-import { X, BookOpen, Lock, Unlock, Star, MapPin, Navigation, ChevronRight, Search } from 'lucide-react';
+import { X, Lock, Unlock, ChevronRight, Search } from 'lucide-react';
+import { Star, MapPin, Navigation } from './OsrsIcon';
 import { SKILL_UNLOCK_DATA } from '../data/skillUnlocks';
+import { WikiIcon } from './WikiIcon';
 import { tierBand } from '../utils/skillTiers';
 import { skillChunkNodesByTier, skillStations } from '../utils/skillChunkNodes';
 import { chunkContentService } from '../services/ChunkContentService';
@@ -146,7 +148,7 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
 
         {/* Tabs */}
         <div className="shrink-0 flex gap-1 px-4 pt-3 bg-[#1a1a1a] border-b border-white/5">
-          {([['gather', 'Map Gathering', MapPin], ['unlocks', 'Skill Unlocks', BookOpen]] as const).map(([id, label, Icon]) => (
+          {([['gather', 'Map Gathering', 'World_map_icon.png'], ['unlocks', 'Skill Unlocks', `${skill}_icon.png`]] as const).map(([id, label, file]) => (
             <button
               key={id}
               onClick={() => setTab(id)}
@@ -154,7 +156,7 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
               className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-t-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
                 tab === id ? 'bg-[#111] text-white border-x border-t border-white/10' : 'text-gray-500 hover:text-gray-300'}`}
             >
-              <Icon size={13} /> {label}
+              <WikiIcon file={file} alt="" size={13} /> {label}
               {id === 'gather' && hasGathering && (
                 <span className="text-[9px] font-mono text-cyan-400/70">{Object.values(nodesByTier).flat().length + stations.length}</span>
               )}
@@ -166,7 +168,7 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
 
           <div className={`border p-3 rounded-lg flex gap-3 ${tab === 'gather' ? 'bg-cyan-900/15 border-cyan-500/25' : 'bg-blue-900/20 border-blue-500/30'}`}>
-            {tab === 'gather' ? <MapPin className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" /> : <BookOpen className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />}
+            {tab === 'gather' ? <MapPin className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" /> : <WikiIcon file={`${skill}_icon.png`} alt="" size={20} className="shrink-0 mt-0.5" />}
             <p className="text-sm text-blue-200/80 leading-relaxed">
               {tab === 'gather'
                 ? 'Everything this skill can gather on the world map, grouped by the tier that unlocks it. Click a resource to pick a region and jump straight there.'
@@ -217,7 +219,7 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
           {tab === 'gather' && visibleStations.length > 0 && (
             <div className="border border-amber-500/25 bg-amber-900/10 rounded-lg overflow-hidden">
               <div className="px-4 py-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider bg-amber-900/20 text-amber-300 border-b border-amber-500/10">
-                <BookOpen size={14} /> Stations <span className="opacity-60 font-mono">· usable from level 1</span>
+                <WikiIcon file={`${skill}_icon.png`} alt="" size={14} /> Stations <span className="opacity-60 font-mono">· usable from level 1</span>
               </div>
               <div className="p-4 space-y-1.5">
                 {visibleStations.map((n) => {
@@ -228,7 +230,7 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
                         <ChevronRight size={12} className={`text-gray-500 shrink-0 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
                         <span className="text-sm flex-1 truncate text-amber-100/90">{n.name}</span>
                         <span className="text-[9px] uppercase font-bold text-amber-400/70 shrink-0">station</span>
-                        <span className="text-[10px] text-gray-600 shrink-0">{n.chunks}🗺</span>
+                        <span className="text-[10px] text-gray-600 shrink-0 inline-flex items-center gap-1" title={`${n.chunks} chunks`}>{n.chunks}<WikiIcon file="World_map_icon.png" alt="chunks" Fallback={MapPin} size={12} /></span>
                       </button>
                       {isOpen && <div className="px-2 pb-2"><RegionPicker node={n.name} onJump={jump} /></div>}
                     </div>
@@ -290,7 +292,7 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
                                 <ChevronRight size={12} className={`text-gray-500 shrink-0 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
                                 <span className={`text-sm flex-1 truncate ${isUnlocked ? 'text-cyan-100' : 'text-gray-400'}`}>{n.name}</span>
                                 <span className="text-[10px] font-mono text-gray-500 shrink-0">L{n.level}</span>
-                                <span className="text-[10px] text-gray-600 shrink-0">{n.chunks}🗺</span>
+                                <span className="text-[10px] text-gray-600 shrink-0 inline-flex items-center gap-1" title={`${n.chunks} chunks`}>{n.chunks}<WikiIcon file="World_map_icon.png" alt="chunks" Fallback={MapPin} size={12} /></span>
                               </button>
                               {isOpen && <div className="px-2 pb-2"><RegionPicker node={n.name} onJump={jump} /></div>}
                             </div>

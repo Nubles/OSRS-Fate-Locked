@@ -514,6 +514,71 @@ describe('buildRuneProofCoachModel', () => {
     expect(model.nextAction?.instruction).not.toMatch(/must kill|kill the skeleton/i);
   });
 
+  it('shows the future worn-amulet restriction at Neck T0 while leaving acquisition available', () => {
+    const strategy = restlessStrategy();
+    const analysis = restlessBlockedAnalysisFor(strategy);
+    const wearingGate = strategy.actions.find(action => action.id === 'the-restless-ghost:talk-to-ghost')?.gates[0];
+    if (!wearingGate) throw new Error('Missing reviewed worn-amulet gate.');
+    const model = buildFromAnalysis(strategy, {
+      ...analysis,
+      walkthrough: {
+        ...analysis.walkthrough,
+        actions: analysis.walkthrough.actions.map(action => (
+          action.definition.id === 'the-restless-ghost:talk-to-ghost'
+            ? {
+              ...action,
+              state: 'REQUIREMENT_MISSING',
+              blockers: [
+                { kind: 'GATE', gate: wearingGate, label: wearingGate.label },
+                { kind: 'DEPENDENCY', actionId: 'the-restless-ghost:get-amulet', label: 'Get amulet first' },
+              ],
+            }
+            : action
+        )),
+      },
+    });
+
+    expect(model.nextAction?.id).toBe('the-restless-ghost:start-with-aereck');
+    expect(model.nextAction?.state).toBe('DO_NOW');
+    expect(model.actions.find(action => action.id === 'the-restless-ghost:get-amulet')).toMatchObject({
+      state: 'AVAILABLE_NEXT', blockers: [],
+    });
+    expect(model.actions.find(action => action.id === 'the-restless-ghost:talk-to-ghost')).toMatchObject({
+      state: 'BLOCKED',
+      confirmationAllowed: false,
+      section: 'QUEST',
+      supplies: ['Ghostspeak amulet'],
+      blockers: [{ kind: 'GATE', gate: wearingGate, label: wearingGate.label }],
+      blockerText: expect.stringContaining('Neck T1: Wear the ghostspeak amulet'),
+      chunkAccess: [{ chunk: '50,49', status: 'UNLOCKED' }],
+    });
+    expect(model.recommendationReason).toBe('The next step is available with your current unlocks.');
+  });
+
+  it('retains future item restrictions even when earlier steps are available', () => {
+    const strategy = cookStrategy();
+    const analysis = analysisFor(strategy, false);
+    const model = buildFromAnalysis(strategy, {
+      ...analysis,
+      walkthrough: {
+        ...analysis.walkthrough,
+        actions: analysis.walkthrough.actions.map(action => (
+          action.definition.id === 'cooks-assistant:milk-cow'
+            ? {
+              ...action,
+              state: 'REQUIREMENT_MISSING',
+              blockers: [{ kind: 'ITEM', itemKey: 'bucket', label: 'Bucket' }],
+            }
+            : action
+        )),
+      },
+    });
+
+    expect(model.actions.find(action => action.id === 'cooks-assistant:milk-cow')).toMatchObject({
+      state: 'BLOCKED', blockerText: 'Get Bucket before this step.', confirmationAllowed: false,
+    });
+  });
+
   it('uses ball-of-wool confirmation only to complete Sheep Shearer spin-wool', () => {
     const strategy = sheepStrategy();
     const model = buildRuneProofCoachModel({
@@ -598,6 +663,8 @@ describe('buildRuneProofCoachModel', () => {
       id: 'imp-catcher:get-black-bead',
       state: 'DO_NOW',
       mapChunks: ['50,50'],
+      chunkAccess: [{ chunk: '50,50', status: 'UNLOCKED' }],
+      blockers: [],
       preferredMethodLabel: 'Other legal Imps',
     });
     expect(model.nextAction?.instruction).toContain('Kill imps');
@@ -613,6 +680,65 @@ describe('buildRuneProofCoachModel', () => {
         })],
       }),
     ]);
+  });
+
+  it('keeps action equipment and unrelated item restrictions after promoting a legal alternative', () => {
+    const strategy = impStrategy();
+    const original = impAnalysisFor(strategy, true);
+    const model = buildImpCoach({ analysis: withPrimaryAction(original, {
+      state: 'CHUNK_LOCKED',
+      blockers: [
+        { kind: 'CHUNK', chunk: '47,51', label: 'Reviewed source is locked' },
+        { kind: 'ITEM', itemKey: 'black bead', label: 'Black bead' },
+        { kind: 'ITEM', itemKey: 'bucket', label: 'Bucket' },
+        {
+          kind: 'GATE',
+          gate: { type: 'EQUIPMENT', slot: 'Neck', tier: 1, label: 'Neck T1' },
+          label: 'Neck T1',
+        },
+      ],
+    }) });
+
+    expect(model.nextAction).toMatchObject({
+      state: 'BLOCKED',
+      confirmationAllowed: false,
+      mapChunks: ['50,50'],
+      chunkAccess: [{ chunk: '50,50', status: 'UNLOCKED' }],
+      blockers: [
+        { kind: 'ITEM', itemKey: 'bucket', label: 'Bucket' },
+        { kind: 'GATE', label: 'Neck T1' },
+      ],
+    });
+    expect(model.nextAction?.blockerText).toBe('Get Bucket before this step. Neck T1 is required before this step.');
+    expect(model.nextAction?.locationExplanation).toContain('Available item source:');
+  });
+
+  it('does not promote an alleged current source whose individual step still needs a chunk unlock', () => {
+    const strategy = impStrategy();
+    const alternative = routeAt('still-locked-imps', 'Black bead', 'Other legal Imps', 'DROP', '50,50');
+    alternative.steps[0].requiresChunkUnlock = true;
+    const model = buildImpCoach({ analysis: impAnalysisFor(strategy, true, [alternative]) });
+
+    expect(model.nextAction).toMatchObject({
+      state: 'BLOCKED',
+      mapChunks: ['47,51'],
+      chunkAccess: [{ chunk: '47,51', status: 'LOCKED' }],
+      confirmationAllowed: false,
+    });
+  });
+
+  it('keeps incomplete item evidence visible when an alternative replaces the location', () => {
+    const strategy = impStrategy();
+    const original = impAnalysisFor(strategy, false);
+    const model = buildImpCoach({ analysis: withPrimaryAction(original, {
+      state: 'ITEM_EVIDENCE_INCOMPLETE',
+      blockers: [{ kind: 'LOCATION', label: 'Source location is uncertain.' }],
+    }) });
+
+    expect(model.nextAction).toMatchObject({
+      state: 'NEEDS_CONFIRMATION',
+      chunkAccess: [{ chunk: '50,50', status: 'UNLOCKED' }],
+    });
   });
 
   it('starts with the reviewed Cook instruction and keeps analysis wording out of the journey', () => {
@@ -759,7 +885,7 @@ describe('buildRuneProofCoachModel', () => {
       ?.routes.some(route => route.label === 'Black Knight')).toBe(true);
   });
 
-  it('keeps every later incomplete action available when the primary mill step is locked', () => {
+  it('shows direct chunk restrictions on future steps without allowing early confirmation', () => {
     const model = buildModel({
       confirmedActionIds: earlierThanGrain(),
       millLocked: true,
@@ -770,9 +896,14 @@ describe('buildRuneProofCoachModel', () => {
       || action.state === 'BLOCKED'
       || action.state === 'NEEDS_CONFIRMATION'
     )).map(action => action.id))
-      .toEqual(['cooks-assistant:pick-grain']);
-    expect(model.actions.find(action => action.id === 'cooks-assistant:make-flour')?.state)
-      .toBe('AVAILABLE_NEXT');
+      .toEqual(['cooks-assistant:pick-grain', 'cooks-assistant:make-flour']);
+    expect(model.actions.find(action => action.id === 'cooks-assistant:make-flour'))
+      .toMatchObject({
+        state: 'BLOCKED',
+        confirmationAllowed: false,
+        blockerText: 'Unlock chunk 49,51 to use Mill Lane Mill.',
+        chunkAccess: [{ chunk: '49,51', status: 'LOCKED' }],
+      });
   });
 
   it('merges duplicate eligible flour requirements and ranks each unique alternative group', () => {
@@ -974,6 +1105,40 @@ describe('buildRuneProofCoachModel', () => {
 
     expect(model.nextAction?.state).toBe('NEEDS_CONFIRMATION');
     expect(model.nextAction?.confirmationAllowed).toBe(true);
+    expect(model.nextAction?.chunkAccess).toEqual([{ chunk: '50,50', status: 'UNKNOWN' }]);
+    expect(model.nextAction?.locationExplanation).toContain('This step location has not been checked against your run.');
+  });
+
+  it('does not present ambiguous location candidates as unlocked destinations', () => {
+    const strategy = cookStrategy();
+    const analysis = analysisFor(strategy, false);
+    const model = buildFromAnalysis(strategy, {
+      ...analysis,
+      walkthrough: {
+        ...analysis.walkthrough,
+        actions: analysis.walkthrough.actions.map((action, index) => index === 0 ? {
+          ...action,
+          state: 'LOCATION_NEEDS_REVIEW',
+          location: {
+            ...action.location,
+            confidence: 'AMBIGUOUS',
+            chunks: [],
+            candidateChunks: ['50,50', '50,51'],
+            explanation: 'More than one location matches.',
+          },
+          blockers: [{ kind: 'LOCATION', label: 'More than one location matches.' }],
+        } : action),
+      },
+    });
+
+    expect(model.nextAction).toMatchObject({
+      state: 'NEEDS_CONFIRMATION',
+      chunkAccess: [
+        { chunk: '50,50', status: 'UNKNOWN' },
+        { chunk: '50,51', status: 'UNKNOWN' },
+      ],
+      blockers: [{ kind: 'LOCATION', label: 'More than one location matches.' }],
+    });
   });
 
   it('excludes fallback-NONE strategy outputs from alternative sources', () => {
@@ -1038,6 +1203,7 @@ describe('buildRuneProofCoachModel', () => {
     });
     expect(afterConfirmation.progress).toEqual({ completed: 9, total: 9 });
     expect(afterConfirmation.nextAction).toBeUndefined();
+    expect(afterConfirmation.recommendationReason).toBe('All guide checks are complete.');
   });
 
   it('uses quest completion as conservative proof for the whole reviewed strategy', () => {

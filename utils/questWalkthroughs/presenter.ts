@@ -66,7 +66,9 @@ const walkthroughBlockerIdentity = (blocker: WalkthroughBlocker): string => {
     case 'ITEM': return `ITEM:${blocker.itemKey}`;
     case 'DEPENDENCY': return `DEPENDENCY:${blocker.actionId}`;
     case 'LOCATION': return `LOCATION:${blocker.label}`;
-    case 'GATE': return `GATE:${JSON.stringify(blocker.gate)}`;
+    case 'GATE': return blocker.gate.type === 'EQUIPMENT'
+      ? `EQUIPMENT:${blocker.gate.slot}:${blocker.gate.tier}`
+      : `GATE:${JSON.stringify(blocker.gate)}`;
   }
 };
 

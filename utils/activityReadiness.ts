@@ -4,6 +4,7 @@ import { meetsSkillRequirement } from './journalStatus';
 import { isAreaReachable } from './reachability';
 import { actualCombatLevel } from './slayerReach';
 import { QUEST_DATA } from '../data/questData';
+import { pendingQuestProgress } from '../data/questProgress';
 
 export type ActivityBlocker =
   | { kind: 'area'; label: string }
@@ -77,7 +78,17 @@ export function evaluateActivityReadiness(
   }
   if (blockers.length > 0) return { status: 'NOT_READY', blockers };
 
-  const checks = [...new Set(requirement?.manualRequirements ?? [])];
+  const checks = [...new Set([...(requirement?.manualRequirements ?? []), ...pendingQuestProgress(requirement?.questProgress, unlocks.quests)])];
+  if (requirement?.oneOf?.length) {
+    const routes = requirement.oneOf.map(route => ({
+      machineMet: Object.entries(route.skills ?? {}).every(([skill, level]) => meetsSkillRequirement(unlocks, skill, level)) && (route.diaries ?? []).every(diary => unlocks.diaries.includes(diary)),
+      checks: route.manualRequirements ?? [],
+    }));
+    const ready = routes.find(route => route.machineMet && route.checks.length === 0);
+    const confirmable = routes.find(route => route.machineMet);
+    if (!ready && confirmable) checks.push(...confirmable.checks);
+    else if (!ready) return { status: 'NOT_READY', blockers: [{ kind: 'quest', label: requirement.oneOf.map(route => [...(route.diaries ?? []), ...Object.entries(route.skills ?? {}).map(([skill, level]) => skill + ' ' + level), ...(route.manualRequirements ?? [])].join(' + ')).join(' or ') }] };
+  }
   if (!requirement || requirement.unverified) checks.push('Access requirements have not been fully verified');
   return checks.length > 0
     ? { status: 'NEEDS_CONFIRMATION', checks }

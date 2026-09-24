@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Store, CheckCircle2, Lock, ChevronDown, ChevronRight } from 'lucide-react';
+import { CheckCircle2, Lock, ChevronDown, ChevronRight } from 'lucide-react';
+import { Store } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { MERCHANTS_LIST } from '../constants';
 import { chunkContentService } from '../services/ChunkContentService';

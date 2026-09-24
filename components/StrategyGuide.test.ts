@@ -6,6 +6,25 @@ import { TableType } from '../types';
 import { REGION_GROUPS } from '../constants';
 
 describe('StrategyGuide requirement analysis', () => {
+  it('keeps required equipment out of the playable list until its tier is unlocked', () => {
+    const req = { id: 'The Restless Ghost', category: TableType.QUESTS,
+      regions: ['Lumbridge'], skills: {}, quests: [] };
+    const unlocks = { equipment: {}, skills: {}, levels: {}, quests: [], regions: [], diaries: [] };
+    const blocked = guide.analyzeRequirement(req, unlocks);
+    expect(blocked.isFullyPlayable).toBe(false);
+    expect(blocked.completionPercent).toBeLessThan(100);
+    expect(blocked.missingChecks).toContain('Neck T1: Wear the ghostspeak amulet to speak to the ghost');
+    expect(guide.analyzeRequirement(req, { ...unlocks, equipment: { Neck: 1 } }).isFullyPlayable).toBe(true);
+  });
+
+  it('keeps unresolved diary progress out of the playable list', () => {
+    const analysis = guide.analyzeRequirement({
+      id: 'Partial diary progress', category: TableType.DIARIES,
+      regions: [], skills: {}, manualRequirements: ['Reached the fairy-ring milestone'],
+    }, { skills: {}, levels: {}, quests: [], regions: [], diaries: [] });
+    expect(analysis.isFullyPlayable).toBe(false);
+    expect(analysis.missingChecks).toContain('Reached the fairy-ring milestone');
+  });
   it('uses method-capped levels for diary blockers and prophecy scoring', () => {
     const unlocks = {
       equipment: {},

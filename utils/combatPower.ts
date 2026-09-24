@@ -1,10 +1,9 @@
 /**
  * Combat-power model for the Equipment Lab.
  *
- * Fate Locked has no real item stats — equipment is abstracted as a tier (0–9)
- * per slot and skills as a tier (0–10). There's nothing to feed a true OSRS DPS
- * calc, so instead we derive a consistent set of 0–100 "power" ratings from the
- * tiers the player has unlocked. Each axis blends the relevant gear slots with
+ * This view measures unlocked potential, independently of the Gear/DPS loadout.
+ * Equipment is abstracted as a tier (0–9) per slot and skills as a tier (0–10).
+ * We derive consistent 0–100 power ratings from those unlocked tiers. Each axis blends the relevant gear slots with
  * the relevant skills (50/50), giving a stable, explainable readout that grows
  * as a run progresses.
  *
@@ -16,9 +15,10 @@ import { EQUIPMENT_TIER_MAX } from '../config/rules';
 
 const SKILL_TIER_MAX = 10;
 
-/** OSRS-flavoured names for equipment tiers 1..9 (index 0 = T1). */
+/** Equipment tier labels match the Codex and GearService (index 0 = T1). */
 export const TIER_LABELS = [
-  'Stone', 'Bronze', 'Iron', 'Steel', 'Adamant', 'Rune', 'Dragon', 'Ancient', 'Crystal',
+  'Bronze / Iron', 'Steel / Black / White', 'Mithril', 'Adamant / Mystic',
+  'Rune', 'Dragon', 'Barrows / Obsidian', 'God Wars', 'Endgame',
 ] as const;
 
 export type PowerAxisKey = 'melee' | 'ranged' | 'magic' | 'defence' | 'prayer';

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "REVIEWED_FACTS_ONLY",
+  "reviewedAt": "2026-09-23",
+  "scope": "Restless Ghost destination chunks and worn-equipment requirement; not approval of every imported branch or travel route",
+  "questId": "The Restless Ghost",
+  "questHelperCommit": "a52646118f0e5ea63a6b3331cefa98087a7b4d6c",
+  "questHelperPath": "src/main/java/com/questhelper/helpers/quests/therestlessghost/TheRestlessGhost.java",
+  "chunkPickerCommit": "fa71ed3b207e6a501444987dee23b875ec27cacd",
+  "wiki": {
+    "title": "The Restless Ghost",
+    "revision": 15331162,
+    "revisionTimestamp": "2026-09-05T00:42:30Z",
+    "retrievedAt": "2026-09-22T15:50:35.042Z",
+    "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Restless_Ghost&oldid=15331162",
+    "wikitextSha256": "50ba9a1ae14366a5ab04ac9268038d10d9701095b394933f14fb099aa687950e",
+    "reviewedFacts": [
+      "Father Urhney is west in Lumbridge Swamp and supplies the amulet during the quest.",
+      "The ghostspeak amulet must be equipped to communicate with the ghost.",
+      "The altar skeleton can be avoided; killing it is not required.",
+      "The skull is obtained in the Wizards' Tower basement and returned to the graveyard coffin."
+    ]
+  },
+  "actionMappings": [
+    {"actionId":"the-restless-ghost:start-with-aereck","chunkPickerTask":"~|The Restless Ghost|~ 1","helperStep":"talkToAereck","accessChunk":"50,50","worldPoint":{"x":3243,"y":3206,"plane":0}},
+    {"actionId":"the-restless-ghost:get-amulet","chunkPickerTask":"~|The Restless Ghost|~ 2","helperStep":"talkToUrhney","accessChunk":"49,49","worldPoint":{"x":3147,"y":3175,"plane":0}},
+    {"actionId":"the-restless-ghost:talk-to-ghost","chunkPickerTask":"~|The Restless Ghost|~ 3","helperStep":"speakToGhost","accessChunk":"50,49","worldPoint":{"x":3250,"y":3195,"plane":0}},
+    {"actionId":"the-restless-ghost:take-skull","chunkPickerTask":"~|The Restless Ghost|~ 4","helperStep":"searchAltarAndRun","accessChunk":"48,49","physicalRegionId":12437,"worldPoint":{"x":3120,"y":9567,"plane":0}},
+    {"actionId":"the-restless-ghost:use-skull","chunkPickerTask":"~|The Restless Ghost|~ 5","helperStep":"putSkullInCoffin","accessChunk":"50,49","worldPoint":{"x":3250,"y":3193,"plane":0}},
+    {"actionId":"the-restless-ghost:complete","chunkPickerTask":"~|The Restless Ghost|~ Complete the quest","helperStep":"putSkullInCoffin","accessChunk":"50,49","worldPoint":{"x":3250,"y":3193,"plane":0}}
+  ],
+  "equipment": {
+    "helperRequirement": "ghostspeakAmulet",
+    "mustBeEquipped": true,
+    "notConsumed": true,
+    "actionId": "the-restless-ghost:talk-to-ghost",
+    "fateGate": {"type":"EQUIPMENT","slot":"Neck","tier":1},
+    "acquisitionAction": "the-restless-ghost:get-amulet",
+    "acquisitionRequiresNeck": false
+  },
+  "retainedBranches": {
+    "talkToGhost": ["ghostSpawned", "coffinOpened"],
+    "getSkullForGhost": ["inBasement"],
+    "returnSkullToGhost": ["and(inBasement, hasSkull)", "and(hasSkull, coffinOpened)", "hasSkull", "inBasement"]
+  },
+  "discrepancies": [
+    {"kind":"SOURCE_WORDING_CONFLICT","source":"Quest Helper ghostspeakAmulet.setTooltip","finding":"Recovery tooltip says south east; its own action and coordinates, plus the reviewed Wiki, place Urhney west.","decision":"Use the reviewed western location; do not promote the tooltip."},
+    {"kind":"SOURCE_DETAIL_GAP","source":"Chunk Picker quest task 3","finding":"The task names the ghost but does not encode the worn-amulet condition.","decision":"Keep the explicit equipped requirement from Quest Helper, confirmed by Wiki, and the existing Fate Neck T1 gate."},
+    {"kind":"SOURCE_DETAIL_GAP","source":"Chunk Picker quest task 4","finding":"The task does not encode the distinction between fighting and avoiding the skeleton.","decision":"Retain the existing no-fighting route, supported by Quest Helper and Wiki."},
+    {"kind":"ACTION_WORDING_DIFFERENCE","source":"Quest Helper final coffin action","finding":"Quest Helper says search the coffin; the public guide and Wiki describe using the skull on it.","decision":"Destination agreement is reviewed; retain existing Wiki-backed public instruction. Do not infer interaction equivalence from the shared coordinates."},
+    {"kind":"TRAVEL_COVERAGE_GAP","source":"All imported destination evidence","finding":"Action coordinates and task dependencies do not prove legal travel through every intermediate chunk.","decision":"Travel remains NOT_EVALUATED."}
+  ],
+  "unmappedPublicActions": [
+    {"actionId":"the-restless-ghost:return-to-ghost","reason":"Authored travel instruction shares the reviewed coffin destination; no claim that the sources encode the full travel path."}
+  ]
+}

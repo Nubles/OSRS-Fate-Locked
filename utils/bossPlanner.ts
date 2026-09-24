@@ -12,6 +12,8 @@
 
 import { GearBonuses, ZERO_BONUSES } from './gearStats';
 import { computeDps, Style, AttackType } from './dps';
+import { rangedDefenceFor, type RangedDamageType } from './rangedDamage';
+import { weaponCombatOptions, type WeaponCombatOption } from './weaponCombat';
 
 export interface MonsterLite {
   hp: number;
@@ -19,16 +21,17 @@ export interface MonsterLite {
   defLevel: number;
   magicLevel: number;
   def: { stab: number; slash: number; crush: number; magic: number; ranged: number };
+  rangedDefence?: Record<RangedDamageType, number>;
 }
 
 export interface PlayerCombat {
   levels: { attack: number; strength: number; ranged: number; magic: number; hitpoints: number };
-  gear: { bonuses: GearBonuses; speedTicks: number };
+  gear: { bonuses: GearBonuses; speedTicks: number; category?: string; rangedDamageType?: RangedDamageType };
   /** Prayers (Piety/Rigour) + potions (super/ranging) applied. */
   boostsOn: boolean;
 }
 
-export type Readiness = 'excellent' | 'good' | 'workable' | 'slow' | 'undergeared';
+export type Readiness = 'excellent' | 'good' | 'workable' | 'slow' | 'undergeared' | 'unverified';
 export type Danger = 'low' | 'medium' | 'high' | 'extreme';
 
 export interface BossPlan {
@@ -38,6 +41,8 @@ export interface BossPlan {
   hitChance: number; // 0..1
   style: Style;
   attackType: AttackType;
+  stanceId: string;
+  assessmentNote?: string;
   killsPerHour: number;
   readiness: Readiness;
   danger: Danger;
@@ -57,22 +62,14 @@ export const BOSS_ALIASES: Record<string, string> = {
   'Barrows Brothers': 'Ahrim the Blighted',
 };
 
-const COMBOS: { style: Style; attackType: AttackType }[] = [
-  { style: 'melee', attackType: 'stab' },
-  { style: 'melee', attackType: 'slash' },
-  { style: 'melee', attackType: 'crush' },
-  { style: 'ranged', attackType: 'ranged' },
-];
-
 const accuracyFor = (b: GearBonuses, t: AttackType): number =>
   t === 'stab' ? b.stab : t === 'slash' ? b.slash : t === 'crush' ? b.crush : t === 'ranged' ? b.ranged : b.magic;
-const monDefFor = (m: MonsterLite, t: AttackType): number =>
-  t === 'stab' ? m.def.stab : t === 'slash' ? m.def.slash : t === 'crush' ? m.def.crush : t === 'ranged' ? m.def.ranged : m.def.magic;
+const monDefFor = (m: MonsterLite, t: AttackType, rangedType: RangedDamageType): number =>
+  t === 'stab' ? m.def.stab : t === 'slash' ? m.def.slash : t === 'crush' ? m.def.crush : t === 'ranged' ? rangedDefenceFor(m, rangedType) : m.def.magic;
 
-const runCombo = (p: PlayerCombat, m: MonsterLite, style: Style, attackType: AttackType) =>
+const runCombo = (p: PlayerCombat, m: MonsterLite, { style, attackType, stanceId }: WeaponCombatOption) =>
   computeDps({
-    style, attackType,
-    stanceId: style === 'ranged' ? 'rapid' : 'aggressive',
+    style, attackType, stanceId,
     prayerId: p.boostsOn ? (style === 'ranged' ? 'rigour' : 'piety') : 'none',
     potionId: p.boostsOn ? (style === 'ranged' ? 'ranging' : 'super') : 'none',
     baseSpellMax: 0,
@@ -84,7 +81,7 @@ const runCombo = (p: PlayerCombat, m: MonsterLite, style: Style, attackType: Att
       magicDmgPct: p.gear.bonuses.magicStr,
       speedTicks: p.gear.speedTicks,
     },
-    monster: { defLevel: style === 'magic' ? m.magicLevel : m.defLevel, defBonus: monDefFor(m, attackType), hp: m.hp },
+    monster: { defLevel: style === 'magic' ? m.magicLevel : m.defLevel, defBonus: monDefFor(m, attackType, p.gear.rangedDamageType ?? 'standard'), hp: m.hp },
   });
 
 // A generic "strong endgame" setup for the gear-gap benchmark.
@@ -115,14 +112,24 @@ const dangerOf = (maxHit: number, hp: number): Danger => {
 
 /** Compute the best plan for a boss. */
 export const planBoss = (player: PlayerCombat, monster: MonsterLite): BossPlan => {
-  let best = runCombo(player, monster, COMBOS[0].style, COMBOS[0].attackType);
-  let bestCombo = COMBOS[0];
-  for (const c of COMBOS.slice(1)) {
-    const r = runCombo(player, monster, c.style, c.attackType);
-    if (r.dps > best.dps) { best = r; bestCombo = c; }
+  const options = weaponCombatOptions(player.gear.category);
+  const candidates = options.filter(option => option.style !== 'magic');
+  if (!candidates.length) return {
+    dps: 0, ttk: Infinity, maxHit: 0, hitChance: 0, style: 'melee', attackType: 'crush', stanceId: '',
+    killsPerHour: 0, readiness: 'unverified', danger: dangerOf(monster.maxHit, player.levels.hitpoints),
+    killsBeforeBank: 0, gearGapPct: 0,
+    assessmentNote: options.length
+      ? 'Choose a spell in the DPS tab to assess this magic weapon.'
+      : 'Attack options for this weapon need review before a combat estimate is available.',
+  };
+  let bestCombo = candidates[0];
+  let best = runCombo(player, monster, bestCombo);
+  for (const candidate of candidates.slice(1)) {
+    const result = runCombo(player, monster, candidate);
+    if (result.dps > best.dps) { best = result; bestCombo = candidate; }
   }
 
-  const ref = runCombo(STRONG, monster, bestCombo.style, bestCombo.attackType);
+  const ref = runCombo({ ...STRONG, gear: { ...STRONG.gear, rangedDamageType: player.gear.rangedDamageType } }, monster, bestCombo);
   const gearGapPct = ref.dps > 0 ? Math.min(100, Math.round((best.dps / ref.dps) * 100)) : 0;
 
   const killsPerHour = isFinite(best.ttk) && best.ttk > 0 ? Math.floor(3600 / (best.ttk + KILL_OVERHEAD_S)) : 0;
@@ -136,6 +143,7 @@ export const planBoss = (player: PlayerCombat, monster: MonsterLite): BossPlan =
     hitChance: best.hitChance,
     style: bestCombo.style,
     attackType: bestCombo.attackType,
+    stanceId: bestCombo.stanceId,
     killsPerHour,
     readiness: readinessOf(best.ttk, best.dps),
     danger: dangerOf(monster.maxHit, player.levels.hitpoints),

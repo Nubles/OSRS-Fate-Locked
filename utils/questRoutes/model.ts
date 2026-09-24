@@ -1,3 +1,5 @@
+import type { EquipmentSlot } from '../../data/questData';
+
 export type ChunkKey = `${number},${number}`;
 export type SupplyPolicy = 'PLAYER_OBTAINED' | 'QUEST_PROVIDED';
 export type Coverage = 'COMPLETE' | 'PARTIAL';
@@ -23,6 +25,7 @@ export type RouteGate =
   | { type: 'QUEST_PROGRESS'; questId: string; label: string; raw: string; completion: 'satisfies' | 'blocks' }
   | { type: 'RFD_SUBQUESTS'; count: number; label: string }
   | { type: 'SKILL'; skill: string; level: number; label: string }
+  | { type: 'EQUIPMENT'; slot: EquipmentSlot; tier: number; label: string }
   | { type: 'UNLOCK'; category: 'guilds' | 'merchants' | 'minigames' | 'mobility' | 'slayerUnlocks'; id: string; label: string }
   | { type: 'UNRESOLVED'; label: string; raw: string };
 
@@ -138,6 +141,13 @@ const validateProbability = (probability: number | undefined): void => {
   }
 };
 
+export const validateEquipmentGate = (gate: Extract<RouteGate, { type: 'EQUIPMENT' }>): void => {
+  if (!['Head', 'Cape', 'Neck', 'Ammo', 'Weapon', 'Body', 'Shield', 'Legs', 'Gloves', 'Boots', 'Ring'].includes(gate.slot)) {
+    throw new Error('equipment gate slot is invalid');
+  }
+  if (!Number.isInteger(gate.tier) || gate.tier < 1 || gate.tier > 9) throw new Error('equipment gate tier must be an integer from 1 to 9');
+};
+
 const validateRouteGate = (gate: RouteGate): RouteGate => {
   assertNonBlank(gate.label, 'gate label');
 
@@ -156,6 +166,9 @@ const validateRouteGate = (gate: RouteGate): RouteGate => {
     case 'SKILL':
       assertNonBlank(gate.skill, 'skill');
       assertPositiveFinite(gate.level, 'skill level');
+      break;
+    case 'EQUIPMENT':
+      validateEquipmentGate(gate);
       break;
     case 'UNLOCK':
       assertNonBlank(gate.id, 'unlock id');

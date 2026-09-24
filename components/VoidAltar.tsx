@@ -7,7 +7,8 @@ import { resolveModeRules } from '../config/gameModes';
 import { RITUALS } from '../config/economy';
 import { getChunkFrontier, chunkKey, chunkLabel } from '../utils/chunkAdjacency';
 import { chunkContentService } from '../services/ChunkContentService';
-import { X, Sparkles, Key, Shield, Dices, ArrowRight, Dna, Coins, Skull, Map as MapIcon } from 'lucide-react';
+import { X, ArrowRight } from 'lucide-react';
+import { Sparkles, Key, Shield, Dices, Dna, Coins, Skull, Map as MapIcon } from './OsrsIcon';
 
 interface VoidAltarProps {
   onClose: () => void;

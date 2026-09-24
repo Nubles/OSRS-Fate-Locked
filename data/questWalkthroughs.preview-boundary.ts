@@ -1,38 +1,16 @@
-import { f2pQuestMembershipFor } from './f2pQuestMembership';
-import { reviewedQuestRequirements } from './questItemRequirements';
-import { questWalkthroughReleaseFor } from './questWalkthroughRelease';
-import { questWalkthroughCatalogue } from './questWalkthroughs';
-import {
-  questStrategyFromWalkthrough,
-  type QuestStrategyDefinition,
-} from '../utils/questStrategies/model';
+import { questStrategyCatalogue as publicStrategies, questWalkthroughCatalogue as publicWalkthroughs } from './questWalkthroughs.public';
+import { batchA } from './f2pGuidePacks/batchA';
+import { batchB } from './f2pGuidePacks/batchB';
+import { batchC } from './f2pGuidePacks/batchC';
+import { compileF2PGuidePack } from './f2pGuidePacks/compile';
 
-const deepFreeze = <T>(value: T): T => {
-  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
-    Object.values(value).forEach(deepFreeze);
-    Object.freeze(value);
-  }
+const freeze = <T>(value: T): T => {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) { Object.values(value).forEach(freeze); Object.freeze(value); }
   return value;
 };
 
-const compileQuestStrategyCatalogue = (): readonly QuestStrategyDefinition[] => (
-  questWalkthroughCatalogue.flatMap((walkthrough) => {
-    const membership = f2pQuestMembershipFor(walkthrough.questId);
-    const roots = reviewedQuestRequirements(walkthrough.questId);
-    const release = questWalkthroughReleaseFor(walkthrough.questId);
-    if (!membership || !roots || !release || release.revision !== walkthrough.revision) return [];
-
-    const strategy = questStrategyFromWalkthrough(walkthrough, {
-      membership,
-      rootRequirements: roots.items,
-    });
-    return strategy ? [strategy] : [];
-  })
-);
-
-export const questStrategyCatalogue: readonly QuestStrategyDefinition[] = deepFreeze(
-  compileQuestStrategyCatalogue(),
-);
-
-export const questStrategyFor = (questId: string): QuestStrategyDefinition | undefined =>
-  questStrategyCatalogue.find(strategy => strategy.questId === questId);
+const packs = [...batchA, ...batchB, ...batchC].map(compileF2PGuidePack);
+export const questStrategyCatalogue = freeze([...publicStrategies, ...packs.map(pack => pack.strategy)]);
+export const questWalkthroughCatalogue = freeze([...publicWalkthroughs, ...packs.map(pack => pack.walkthrough)]);
+export const questStrategyFor = (questId: string) => questStrategyCatalogue.find(strategy => strategy.questId === questId);
+export const questWalkthroughFor = (questId: string) => questWalkthroughCatalogue.find(walkthrough => walkthrough.questId === questId);

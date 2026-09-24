@@ -1,32 +1,16 @@
 /**
- * Runtime self-update for the Collection Log.
- *
- * The bundled data/collectionLogData.ts is a snapshot of the wiki log at build
- * time. This service fetches the wiki's authoritative source live and merges any
- * NEWLY-tracked items into the in-memory log — so when Jagex adds a drop and the
- * wiki records it, it appears in the app with NO redeploy. It is deliberately:
- *
- *   • additive only — never renames or deletes existing slots (those stay under
- *     the reviewed build-time data + `npm run clog:sync`); it only APPENDS items
- *     the bundle doesn't have yet, onto pages that already exist.
- *   • fail-safe — any network/parse error leaves the bundled data untouched.
- *   • lazy + cached — fetched once when the log is first opened, cached in
- *     localStorage (works offline afterwards), re-checked after the TTL.
- *
- * Brand-new *pages* (e.g. a new boss) are detected and exposed via `newSources`
- * for a heads-up, but NOT auto-added: a boss also needs a model, drop-rate, key
- * cost and gacha tier, which are human-curated (see CONTENT_SYNC.md).
- *
- * Mirrors the fetch/cache pattern of services/GearService.ts.
+ * Read-only runtime freshness check. New slots wait for a reviewed build-time
+ * sync: assigning save IDs from upstream ordering corrupts progress when that
+ * ordering changes. Existing bundled identities and legacy cache data survive.
  */
-import { createCollectionIdAllocator } from '../utils/collectionLogIds.mjs';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
+import type { CollectionLogIdentity } from '../types';
 
 const API = 'https://oldschool.runescape.wiki/api.php';
 const DATA_TITLE = 'Module:Collection_log/data.json';
 const LUA_TITLE = 'Module:Collection_log'; // holds the display-override table
-// v3 discards additions minted before relocation-aware global ID allocation.
-const CACHE_KEY = 'fate_clog_sync_v3';
+// v4 caches notifications only. Never delete v1-v3: they may identify saved progress.
+const CACHE_KEY = 'fate_clog_sync_v4';
 const CACHE_TTL = 1000 * 60 * 60 * 24 * 7; // 7 days
 
 // App page-name (normalised) -> wiki page name, only where they differ.
@@ -35,7 +19,7 @@ const PAGE_ALIAS: Record<string, string> = {
 };
 
 interface WikiItem { id: number; name: string; tabs: string[]; }
-interface Addition { tab: string; page: string; id: number; name: string; }
+interface Addition { tab: string; page: string; name: string; }
 export interface NewSource { name: string; itemCount: number; }
 interface SyncResult { additions: Addition[]; newSources: NewSource[]; }
 type LogData = typeof COLLECTION_LOG_DATA;
@@ -44,7 +28,7 @@ const norm = (s: string) => s.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0
 
 /**
  * Pure diff: given the wiki's flat item list and the app's log data, return the
- * items to APPEND to existing pages (with freshly-minted, collision-free IDs)
+ * new items awaiting reviewed build-time identities
  * and any brand-new wiki pages the app doesn't have. Exported for testing.
  *
  * `overrides` maps a wiki item id -> the display name the wiki actually RENDERS
@@ -70,7 +54,6 @@ export function computeSync(wiki: WikiItem[], data: LogData, overrides: Record<n
     for (const page of Object.values(tabData.pages))
       appByNorm.set(norm(page.name), { tab, page });
 
-  const allocator = createCollectionIdAllocator([...appByNorm.values()].map(({ tab, page }) => ({ tab, items: page.items })));
   const additions: Addition[] = [];
   const newSources: NewSource[] = [];
 
@@ -82,7 +65,6 @@ export function computeSync(wiki: WikiItem[], data: LogData, overrides: Record<n
       continue;
     }
     const have = new Set(match.page.items.map(i => norm(i.name)));
-    const mint = allocator(match.tab, match.page.items);
     for (const name of items) {
       if (have.has(norm(name))) continue;
       // Relocations need a reviewed build-time move, never a second save ID.
@@ -91,23 +73,83 @@ export function computeSync(wiki: WikiItem[], data: LogData, overrides: Record<n
         && !(wikiPages.get(PAGE_ALIAS[norm(page.name)] ?? page.name) ?? []).some(item => norm(item) === norm(name)));
       if (relocated) continue;
       have.add(norm(name));
-      additions.push({ tab: match.tab, page: match.page.name, id: mint(), name });
+      additions.push({ tab: match.tab, page: match.page.name, name });
     }
   }
   return { additions, newSources };
 }
 
-class CollectionLogSyncService {
+/** Isolate ambiguous pre-v4 identities without changing the saved counts. */
+export function collectionIdentityReview(
+  progress: Record<string, number>,
+  legacy: { id: number; name: string; page: string }[],
+  data: LogData = COLLECTION_LOG_DATA,
+  identity?: CollectionLogIdentity,
+  idMigrations: Readonly<Record<number, number>> = {},
+): { blockedIds: Set<number>; savedRecords: number } {
+  const entries = Object.values(data).flatMap(tab => Object.values(tab.pages).flatMap(page =>
+    page.items.map(item => ({ ...item, page: page.name }))));
+  const blockedIds = new Set<number>(identity?.quarantinedIds);
+  for (const [savedId, count] of Object.entries(progress)) {
+    if (count <= 0) continue;
+    const id = Number(savedId);
+    const current = entries.find(item => item.id === id)
+      ?? entries.find(item => item.id === idMigrations[id]);
+    // Once reviewed, browser-wide evidence from another run cannot reinterpret
+    // new canonical drops. The saved quarantine remains authoritative on import.
+    const previous = identity ? [] : legacy.filter(item => item.id === id);
+    if (!current || previous.some(item => norm(item.name) !== norm(current.name) || norm(item.page) !== norm(current.page))) {
+      blockedIds.add(id);
+      // Also suppress a duplicate first-entry reward if the historical item is
+      // now bundled under a different identity. Reconciliation needs review.
+      for (const old of previous) for (const item of entries) {
+        if (norm(item.name) === norm(old.name) && norm(item.page) === norm(old.page)) blockedIds.add(item.id);
+      }
+    }
+  }
+  const savedRecords = Object.entries(progress).filter(([id, count]) => count > 0 && blockedIds.has(Number(id))).length;
+  return { blockedIds, savedRecords };
+}
+
+export const emptyCollectionLogIdentity = (): CollectionLogIdentity => ({ version: 1, quarantinedIds: [] });
+
+/** Snapshot known legacy ambiguity once, without changing or assigning any count. */
+export function captureCollectionLogIdentity(progress: Record<string, number>, idMigrations: Readonly<Record<number, number>> = {}): CollectionLogIdentity | undefined {
+  try {
+    return { version: 1, quarantinedIds: [...collectionIdentityReview(progress, collectionLogSync.legacyMappings(true), COLLECTION_LOG_DATA, undefined, idMigrations).blockedIds].sort((a, b) => a - b) };
+  } catch {
+    // Unreadable evidence must not permanently certify an empty quarantine.
+    return undefined;
+  }
+}
+
+export class CollectionLogSyncService {
   private initialized = false;
   private initPromise: Promise<void> | null = null;
   private listeners = new Set<() => void>();
 
   public ready = false;
   public error: string | null = null;
-  public addedCount = 0;
+  public pendingAdditions: Addition[] = [];
+  /** Previous runtime mappings are evidence only, never reassigned or applied. */
+  legacyMappings(requireReadable = false): { id: number; name: string; page: string }[] {
+    const mappings: { id: number; name: string; page: string }[] = [];
+    for (const key of ['fate_clog_sync_v1', 'fate_clog_sync_v2', 'fate_clog_sync_v3']) {
+      try {
+        const cached = JSON.parse(localStorage.getItem(key) ?? 'null');
+        for (const item of cached?.data?.additions ?? []) {
+          if (Number.isSafeInteger(item.id) && typeof item.name === 'string' && typeof item.page === 'string') mappings.push(item);
+        }
+      } catch (error) {
+        // Preserve malformed historical caches too; never reinterpret them.
+        if (requireReadable) throw error;
+      }
+    }
+    return mappings;
+  }
   public newSources: NewSource[] = [];
 
-  /** Subscribe to "data changed" (after a sync applied additions). */
+  /** Subscribe to new-content notices. */
   subscribe(fn: () => void): () => void {
     this.listeners.add(fn);
     return () => this.listeners.delete(fn);
@@ -136,7 +178,7 @@ class CollectionLogSyncService {
       if (!cached) this.saveCache(result);
       this.initialized = true;
       this.ready = true;
-      if (this.addedCount > 0 || this.newSources.length > 0) this.emit();
+      if (this.pendingAdditions.length > 0 || this.newSources.length > 0) this.emit();
     } catch (e) {
       console.warn('CollectionLogSync failed (using bundled data)', e);
       this.error = 'Could not check the wiki for new collection-log items.';
@@ -183,18 +225,9 @@ class CollectionLogSyncService {
     return out;
   }
 
-  /** Mutate COLLECTION_LOG_DATA in place (idempotent: skips items already present). */
+  /** Publish notices, never mutate the canonical collection catalogue. */
   private apply({ additions, newSources }: SyncResult) {
-    let applied = 0;
-    for (const a of additions) {
-      const tab = COLLECTION_LOG_DATA[a.tab];
-      const page = tab && Object.values(tab.pages).find(p => p.name === a.page);
-      if (!page) continue;
-      if (page.items.some(i => i.id === a.id || norm(i.name) === norm(a.name))) continue;
-      page.items.push({ id: a.id, name: a.name });
-      applied++;
-    }
-    this.addedCount = applied;
+    this.pendingAdditions = additions;
     this.newSources = newSources;
   }
 
@@ -203,7 +236,7 @@ class CollectionLogSyncService {
       const saved = localStorage.getItem(CACHE_KEY);
       if (!saved) return null;
       const { timestamp, data } = JSON.parse(saved);
-      if (Date.now() - timestamp > CACHE_TTL || !data || !Array.isArray(data.additions)) return null;
+      if (Date.now() - timestamp > CACHE_TTL || !data || !Array.isArray(data.additions) || !Array.isArray(data.newSources)) return null;
       return data as SyncResult;
     } catch { return null; }
   }
@@ -214,3 +247,8 @@ class CollectionLogSyncService {
 }
 
 export const collectionLogSync = new CollectionLogSyncService();
+
+/** Shared guard for manual writes, detected events and their final acceptance. */
+export function collectionItemNeedsIdentityReview(progress: Record<string, number>, itemId: number, identity?: CollectionLogIdentity): boolean {
+  return collectionIdentityReview(progress, identity ? [] : collectionLogSync.legacyMappings(), COLLECTION_LOG_DATA, identity).blockedIds.has(itemId);
+}

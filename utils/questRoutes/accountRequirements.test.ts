@@ -21,6 +21,18 @@ const entity = (raw: string) => ({ raw, origin: 'ENTITY' as const });
 const chunkEntry = (raw: string) => ({ raw, origin: 'CHUNK_ENTRY' as const });
 
 describe('account requirements', () => {
+  it('checks a reviewed equipment gate against slot tiers, including absent and invalid values', () => {
+    const gate = { type: 'EQUIPMENT' as const, slot: 'Neck' as const, tier: 1, label: 'Neck T1: Wear the ghostspeak amulet' };
+    for (const tier of [undefined, 0, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(evaluateRouteGates([gate], unlocks({ equipment: tier === undefined ? {} : { Neck: tier } })))
+        .toEqual({ blockers: [gate], hasDataGap: false });
+    }
+    for (const tier of [1, 2]) {
+      expect(evaluateRouteGates([gate], unlocks({ equipment: { Neck: tier } })))
+        .toEqual({ blockers: [], hasDataGap: false });
+    }
+  });
+
   it('distinguishes an unrecorded quest stage from missing completion', () => {
     const gates = compileRawRequirements([chunkEntry('Started The Giant Dwarf')]);
     expect(gates).toEqual([{

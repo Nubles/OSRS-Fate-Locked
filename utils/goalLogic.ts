@@ -3,6 +3,8 @@ import { ContentRequirement } from '../data/requirements';
 import { UnlockState, TableType } from '../types';
 import { isAreaReachable } from './reachability';
 import { effectiveSkillLevel } from './slayerReach';
+import { QUEST_DATA } from '../data/questData';
+import { currentQuestPoints, evaluateQuestEligibility } from './journalStatus';
 
 export interface GoalProgress {
   percentage: number;
@@ -12,9 +14,27 @@ export interface GoalProgress {
 }
 
 export const calculateGoalProgress = (req: ContentRequirement, unlocks: UnlockState, gameModeId?: string): GoalProgress => {
+  const quest = QUEST_DATA[req.id];
+  if (quest) {
+    const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId);
+    const missing = [...eligibility.blockers.map(blocker => blocker.label), ...eligibility.manualChecks.map(check => 'Confirm: ' + check)];
+    const completedSteps = eligibility.evidence.length;
+    const totalSteps = completedSteps + missing.length;
+    return {
+      missing, completedSteps, totalSteps,
+      percentage: eligibility.eligible ? 100 : Math.min(99, totalSteps === 0 ? 0 : Math.round(100 * completedSteps / totalSteps)),
+    };
+  }
   const missing: string[] = [];
   let total = 0;
   let completed = 0;
+
+  if (req.questPoints !== undefined) {
+    total++;
+    const points = currentQuestPoints(unlocks);
+    if (points >= req.questPoints) completed++;
+    else missing.push(`Quest Points (${points}/${req.questPoints})`);
+  }
 
   // 1. Check Regions
   req.regions.forEach(r => {
@@ -28,6 +48,12 @@ export const calculateGoalProgress = (req: ContentRequirement, unlocks: UnlockSt
   // 2. Check Skills
   Object.entries(req.skills).forEach(([skill, level]) => {
     total++;
+    if (skill === 'Quest Points') {
+      const points = currentQuestPoints(unlocks);
+      if (points >= level) completed++;
+      else missing.push(`Quest Points (${points}/${level})`);
+      return;
+    }
     const currentLevel = effectiveSkillLevel(unlocks, skill);
     const isUnlocked = (unlocks.skills[skill] || 0) > 0;
     

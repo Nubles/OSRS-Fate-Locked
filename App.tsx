@@ -85,9 +85,10 @@ const RunelitePluginGuide = lazyWithRetry(() =>
   })),
 );
 import { deobfuscateFateSave } from './utils/encryption';
-import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings, MessageCircle } from 'lucide-react';
+import { Download, Upload, RotateCcw, BarChart3, HelpCircle, PlayCircle, PauseCircle, Search, Database, SlidersHorizontal, Link2, Radio, Settings, MessageCircle } from 'lucide-react';
+import { Key, Sparkles, Dna, Swords, ShoppingBag, ScrollText, Compass, Lightbulb } from './components/OsrsIcon';
 import { exportRuneliteBundle } from './utils/runeliteExport';
-import { BookOpen } from 'lucide-react';
+import { BookOpen } from './components/OsrsIcon';
 import { DISCORD_INVITE_URL } from './constants';
 
 // --- Error Boundary ---

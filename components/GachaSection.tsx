@@ -6,7 +6,8 @@ import { bankLocksActive } from '../utils/reachability';
 import { BANK_IDS, BANK_BY_ID } from '../data/banks';
 import { checkUnlockAvailability, getPoolAndStateKey } from '../utils/gameEngine';
 import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, POH_LIST, MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, UTILITY_ITEM_IDS } from '../constants';
-import { Sparkles, Dices, HelpCircle, Dna, Lock, Sprout, TrendingUp, AlertTriangle, Check, Key } from 'lucide-react';
+import { HelpCircle, Lock, TrendingUp, AlertTriangle, Check } from 'lucide-react';
+import { Sparkles, Dices, Dna, Sprout, Key } from './OsrsIcon';
 import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { openDashboardPool } from '../utils/dashboardPoolNavigation';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, chunkLabel } from '../utils/chunkAdjacency';
@@ -229,7 +230,6 @@ export const GachaSection: React.FC = () => {
                 onClick={handleChaosUnlock}
                 className="w-full p-4 rounded-lg border border-red-500/50 bg-gradient-to-r from-red-900/20 via-purple-900/20 to-red-900/20 flex items-center justify-between group hover:border-red-400 transition-all shadow-[0_0_15px_rgba(220,38,38,0.15)] relative overflow-hidden"
             >
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
                 <div className="flex items-center gap-3 relative z-10">
                     <div className="p-2 bg-red-500/20 rounded-full border border-red-500/50 animate-pulse"><Dna className="text-red-400 w-6 h-6" /></div>
                     <div className="text-left">

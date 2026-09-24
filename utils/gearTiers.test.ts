@@ -56,6 +56,34 @@ describe('gear tiers', () => {
     expect(canonicalTierFromName('Yew longbow')).toBe(5);
   });
 
+  it('keeps White Knight equipment with black and steel at Fate tier 2', () => {
+    // White equipment has black-equivalent combat stats plus a Prayer bonus.
+    // Fate's material ladder groups Steel/Black at T2, independently of the
+    // separate skill-unlock level bands (Steel requiring level 5 is not T1).
+    const whiteEquipment = [
+      'dagger', 'dagger(p)', 'dagger(p+)', 'dagger(p++)', 'mace', 'claws',
+      'sword', 'longsword', 'scimitar', 'warhammer', 'battleaxe', '2h sword',
+      'halberd', 'magic staff', 'med helm', 'full helm', 'sq shield',
+      'kiteshield', 'chainbody', 'platebody', 'plateskirt', 'platelegs',
+      'boots', 'gloves',
+    ];
+    for (const piece of whiteEquipment) {
+      expect(canonicalTierFromName(`White ${piece}`), piece).toBe(2);
+    }
+    expect(canonicalTierFromName('Black dagger')).toBe(2);
+    expect(canonicalTierFromName('Steel dagger')).toBe(2);
+  });
+
+  it('does not treat white clothing or cosmetics as White Knight metal', () => {
+    for (const name of [
+      'White apron', 'White beret', 'White partyhat', 'White flowers',
+      'White elegant blouse', 'White elegant skirt', 'White headband',
+      'White toy horse', 'White boots (cosmetic)',
+    ]) {
+      expect(canonicalTierFromName(name), name).toBeNull();
+    }
+  });
+
   it('pins iconic non-material items to sensible tiers', () => {
     expect(canonicalTierFromName('Fire cape')).toBe(8);
     expect(canonicalTierFromName('Infernal cape')).toBe(9);
@@ -91,11 +119,11 @@ describe('gear tiers', () => {
     expect(canonicalTierFromName('Armadyl rune helmet')).toBe(5);
     expect(canonicalTierFromName('Bandos rune platebody')).toBe(5);
     expect(canonicalTierFromName('Guthix adamant kiteshield')).toBe(4);
-    // god blessed dragonhide → standard d'hide tier (uncoloured = T5), and all
-    // gods agree with each other instead of being scattered.
-    expect(canonicalTierFromName("Armadyl d'hide body")).toBe(5);
-    expect(canonicalTierFromName("Ancient d'hide body")).toBe(5);
-    expect(canonicalTierFromName("Saradomin d'hide body")).toBe(5);
+    // Blessed dragonhide follows black-d'hide progression, including gods
+    // whose names otherwise resemble God Wars armour.
+    expect(canonicalTierFromName("Armadyl d'hide body")).toBe(7);
+    expect(canonicalTierFromName("Ancient d'hide body")).toBe(7);
+    expect(canonicalTierFromName("Saradomin d'hide body")).toBe(7);
     expect(canonicalTierFromName('Gilded platebody')).toBe(5);
     // ...but the real God Wars armour (no material word) is still T8.
     expect(canonicalTierFromName('Bandos chestplate')).toBe(8);

@@ -1,393 +1,239 @@
-import {
-  CheckCircle2,
-  ChevronDown,
-  ChevronRight,
-  Circle,
-  Clock3,
-  Lock,
-  MapPin,
-  type LucideIcon,
-} from 'lucide-react';
-import { useId, useState } from 'react';
-import type {
-  RuneProofAlternativeSourceGroup,
-  RuneProofCoachAction,
-  RuneProofCoachActionState,
-  RuneProofCoachModel,
-} from '../../utils/questStrategies/coach';
+import { Fragment as ReactFragment, useId, useState, useLayoutEffect } from 'react';
+import { ChevronDown } from 'lucide-react';
+import { MapPin } from '../OsrsIcon';
+import type { RuneProofCoachAction, RuneProofCoachModel, RuneProofAlternativeSourceGroup } from '../../utils/questStrategies/coach';
 import type { ChunkKey } from '../../utils/questRoutes/model';
 import { chunkRectOnMap } from '../../utils/questRoutes/routeMapGeometry';
+import { questGuideArticleFor } from '../../data/questGuideArticles';
+import { formatQuestChunk, nameQuestChunksInText } from '../../utils/questStrategies/chunkLabels';
+import { guideReadiness, stepWarnings } from '../../utils/questStrategies/guidePresentation';
+import { guideNeeds } from '../../utils/questStrategies/guideNeeds';
 import { RuneProofProofDrawer } from './RuneProofProofDrawer';
 import { RuneProofTemporaryMap } from './RuneProofTemporaryMap';
+import { RuneProofNeedImage } from './RuneProofNeedImage';
+import './RuneProofCoach.css';
 
 export interface RuneProofCoachProps {
   readonly model: RuneProofCoachModel;
   readonly onConfirmAction: (actionId: string) => void;
+  readonly onConfirmOwnedItem?: (actionId: string) => void;
+  readonly onUndoLastCheck?: () => void;
+  readonly canUndoLastCheck?: boolean;
+  readonly focusRequest?: { readonly actionId: string; readonly serial: number };
 }
 
-interface ActionPresentation {
-  readonly label: string;
-  readonly className: string;
-  readonly Icon: LucideIcon;
+const mappable = (chunk: string): chunk is ChunkKey => {
+  if (!/^\d+,\d+$/.test(chunk)) return false;
+  const [x, y] = chunk.split(',').map(Number);
+  return Number.isSafeInteger(x) && Number.isSafeInteger(y)
+    && `${x},${y}` === chunk && Boolean(chunkRectOnMap(chunk as ChunkKey));
+};
+const actionChunks = (action: RuneProofCoachAction) => [...new Set(action.mapChunks)].filter(mappable);
+function AlternativeSources({ sources, showCoordinates }: { readonly sources: readonly RuneProofAlternativeSourceGroup[]; readonly showCoordinates: boolean }) {
+  const [open, setOpen] = useState(false);
+  const id = useId();
+  return <section className="rp-disclosure">
+    <h3><button type="button" className="rp-disclosure-toggle" aria-expanded={open} aria-controls={id} onClick={() => setOpen(!open)}>
+      Other legal sources <ChevronDown size={16} aria-hidden />
+    </button></h3>
+    {open && <div id={id} role="region" aria-label="Other legal sources" className="rp-disclosure-body">
+      {sources.length ? sources.map(source => <section key={source.itemKey}>
+        <h4>{source.itemName}</h4>
+        <ul>{source.routes.map(route => <li key={route.id}>
+          <span>{nameQuestChunksInText(route.label, showCoordinates)}</span> <span className="rp-muted">· {route.deterministic ? 'Deterministic' : route.probabilityText ?? 'Chance-based'}</span>
+          {route.variantCount > 1 && <> · <span className="rp-muted">{route.variantCount} route variants</span></>}
+          {route.requiresChunkUnlock && <p className="rp-inline-warning">Requires chunk unlock</p>}
+          {route.blockers.map((blocker, index) => <p className="rp-inline-warning" key={`${blocker.category}:${index}`}>{blocker.category}: {nameQuestChunksInText(blocker.label, showCoordinates)}</p>)}
+          {route.dataNote && <p className="rp-inline-warning">Needs checking: {nameQuestChunksInText(route.dataNote, showCoordinates)}</p>}
+          {route.travelNote && <p className="rp-muted">{nameQuestChunksInText(route.travelNote, showCoordinates)}</p>}
+          {route.steps.length > 0 && <details className="rp-step-detail"><summary>Source steps and locations</summary>
+            <ol>{route.steps.map((step, index) => <li key={index}>
+              {nameQuestChunksInText(step.label, showCoordinates)}{step.chunk ? ` · ${formatQuestChunk(step.chunk, showCoordinates)}` : ''}
+              {step.requiresChunkUnlock && <p className="rp-inline-warning">Requires chunk unlock</p>}
+              {step.blockers.map((blocker, blockerIndex) => <p className="rp-inline-warning" key={blockerIndex}>{blocker.category}: {nameQuestChunksInText(blocker.label, showCoordinates)}</p>)}
+              {step.hasDataGap && <p className="rp-inline-warning">This source step needs checking.</p>}
+            </li>)}</ol>
+          </details>}
+        </li>)}</ul>
+      </section>) : <p>No other reviewed legal sources are available.</p>}
+    </div>}
+  </section>;
 }
 
-const ACTION_PRESENTATION: Record<RuneProofCoachActionState, ActionPresentation> = {
-  COMPLETED: {
-    label: 'Completed',
-    className: 'text-emerald-300',
-    Icon: CheckCircle2,
-  },
-  DO_NOW: {
-    label: 'Do now',
-    className: 'text-cyan-200',
-    Icon: MapPin,
-  },
-  AVAILABLE_NEXT: {
-    label: 'Available next',
-    className: 'text-gray-400',
-    Icon: Clock3,
-  },
-  BLOCKED: {
-    label: 'Blocked',
-    className: 'text-amber-200',
-    Icon: Lock,
-  },
-  NEEDS_CONFIRMATION: {
-    label: 'Needs confirmation',
-    className: 'text-violet-200',
-    Icon: Circle,
-  },
-};
-
-const CHUNK_KEY_PATTERN = /^(-?\d+),(-?\d+)$/;
-
-const worldChunk = (
-  chunks: RuneProofCoachAction['mapChunks'],
-): ChunkKey | undefined => {
-  const firstChunk = chunks[0];
-  if (!firstChunk) return undefined;
-
-  const match = CHUNK_KEY_PATTERN.exec(firstChunk);
-  if (!match) return undefined;
-
-  const cx = Number(match[1]);
-  const cy = Number(match[2]);
-  if (!Number.isSafeInteger(cx) || !Number.isSafeInteger(cy)) return undefined;
-
-  const chunk = (String(cx) + ',' + String(cy)) as ChunkKey;
-  if (chunk !== firstChunk) return undefined;
-  return chunkRectOnMap(chunk) ? chunk : undefined;
-};
-
-const ChunkLabel = ({ action }: { readonly action: RuneProofCoachAction }) => {
-  const chunk = worldChunk(action.mapChunks);
-  return (
-    <span className="font-mono text-[10px] font-semibold text-cyan-200">
-      {chunk ? `Chunk ${chunk}` : 'Chunk needs review'}
-    </span>
-  );
-};
-
-const StateLabel = ({ state }: { readonly state: RuneProofCoachActionState }) => {
-  const presentation = ACTION_PRESENTATION[state];
-  const { Icon } = presentation;
-
-  return (
-    <span className={'inline-flex items-center gap-1 font-semibold ' + presentation.className}>
-      <Icon size={13} aria-hidden />
-      <span>{presentation.label}</span>
-    </span>
-  );
-};
-
-const CurrentActionCard = ({
-  action,
-  onConfirmAction,
-  onShowMap,
-}: {
-  readonly action: RuneProofCoachAction;
-  readonly onConfirmAction: RuneProofCoachProps['onConfirmAction'];
-  readonly onShowMap: (action: RuneProofCoachAction, trigger: HTMLButtonElement) => void;
-}) => {
-  const mapChunk = worldChunk(action.mapChunks);
-
-  return (
-    <article className="rounded-lg border border-cyan-400/30 bg-cyan-950/20 p-3">
-      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <StateLabel state={action.state} />
-          <p className="mt-1 break-words text-sm font-semibold leading-relaxed text-gray-100">
-            {action.instruction}
-          </p>
-          <p className="mt-1">
-            <ChunkLabel action={action} />
-          </p>
-          {action.locationLabel ? (
-            <p className="mt-1 text-[11px] text-gray-400">Location: {action.locationLabel}</p>
-          ) : null}
-          {action.preferredMethodLabel ? (
-            <p className="mt-1 text-[11px] text-gray-400">
-              Reviewed method: {action.preferredMethodLabel}
-            </p>
-          ) : null}
-          {action.blockerText ? (
-            <p
-              role="note"
-              className="mt-2 rounded border border-amber-400/25 bg-amber-950/30 px-2 py-1.5 text-[11px] text-amber-100"
-            >
-              {action.blockerText}
-            </p>
-          ) : null}
-        </div>
-
-        {mapChunk || action.confirmationAllowed ? (
-          <div className="flex shrink-0 flex-wrap gap-2">
-            {mapChunk ? (
-              <button
-                type="button"
-                aria-label={'Show ' + action.instruction + ' on map'}
-                onClick={event => onShowMap(action, event.currentTarget)}
-                className="inline-flex items-center justify-center gap-1.5 rounded border border-cyan-300/40 bg-cyan-950/50 px-2.5 py-1.5 text-[11px] font-semibold text-cyan-100 transition-colors hover:bg-cyan-900/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
-              >
-                <MapPin size={13} aria-hidden />
-                Show on map
-              </button>
-            ) : null}
-            {action.confirmationAllowed ? (
-              <button
-                type="button"
-                onClick={() => onConfirmAction(action.id)}
-                className="rounded border border-white/15 bg-white/10 px-2.5 py-1.5 text-[11px] font-semibold text-gray-100 transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
-              >
-                {action.confirmationLabel ?? 'Mark action complete'}
-              </button>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
-    </article>
-  );
-};
-
-const TimelineAction = ({
-  action,
-  index,
-  isCurrent,
-  onConfirmAction,
-}: {
-  readonly action: RuneProofCoachAction;
-  readonly index: number;
-  readonly isCurrent: boolean;
-  readonly onConfirmAction: RuneProofCoachProps['onConfirmAction'];
-}) => (
-  <li className="min-w-0 rounded-md border border-white/10 bg-[#1b1b1b]">
-    <details open={isCurrent}>
-      <summary className="flex cursor-pointer list-none items-start gap-2 px-3 py-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-300">
-        <span className="mt-0.5 text-[10px] font-mono text-gray-600" aria-hidden>
-          {index + 1}.
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block break-words text-[11px] font-semibold leading-relaxed text-gray-200">
-            {action.instruction}
-          </span>
-          <span className="mt-1 block">
-            <StateLabel state={action.state} />
-          </span>
-          <span className="mt-1 block">
-            <ChunkLabel action={action} />
-          </span>
-        </span>
-        <ChevronRight size={14} className="mt-0.5 shrink-0 text-gray-500" aria-hidden />
-      </summary>
-      <div className="space-y-1 border-t border-white/5 px-3 py-2 text-[11px] leading-relaxed text-gray-400">
-        {action.locationLabel ? <p>Location: {action.locationLabel}</p> : null}
-        {action.preferredMethodLabel ? <p>Reviewed method: {action.preferredMethodLabel}</p> : null}
-        {action.blockerText ? <p className="text-amber-100">{action.blockerText}</p> : null}
-        {!isCurrent && action.confirmationAllowed ? (
-          <button
-            type="button"
-            onClick={() => onConfirmAction(action.id)}
-            className="rounded border border-white/15 bg-white/10 px-2.5 py-1.5 text-[11px] font-semibold text-gray-100 transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
-          >
-            {action.confirmationLabel ?? 'Mark action complete'}
-          </button>
-        ) : null}
-        {isCurrent ? <p>Use the next action above to map or confirm this step.</p> : null}
-      </div>
-    </details>
-  </li>
-);
-
-const AlternativeSources = ({
-  sources,
-}: {
-  readonly sources: readonly RuneProofAlternativeSourceGroup[];
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const panelId = 'runeproof-alternatives-' + useId();
-
-  return (
-    <section className="rounded-lg border border-white/10 bg-[#171717]">
-      <h3>
-        <button
-          type="button"
-          aria-expanded={isOpen}
-          aria-controls={panelId}
-          onClick={() => setIsOpen(open => !open)}
-          className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-xs font-semibold text-gray-200 transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
-        >
-          <span>Other legal sources</span>
-          <ChevronDown
-            size={15}
-            className={'shrink-0 text-gray-400 transition-transform ' + (isOpen ? 'rotate-180' : '')}
-            aria-hidden
-          />
-        </button>
-      </h3>
-
-      {isOpen ? (
-        <div
-          id={panelId}
-          role="region"
-          aria-label="Other legal sources"
-          className="space-y-3 border-t border-white/10 px-3 py-3"
-        >
-          {sources.length > 0 ? (
-            sources.map(source => (
-              <section key={source.itemKey}>
-                <h4 className="text-[11px] font-semibold text-gray-200">{source.itemName}</h4>
-                <ul className="mt-1.5 space-y-1.5">
-                  {source.routes.map(route => (
-                    <li
-                      key={route.id}
-                      className="rounded border border-white/10 bg-black/15 px-2.5 py-2 text-[11px] text-gray-300"
-                    >
-                      <span className="font-semibold text-gray-100">{route.label}</span>
-                      <span className="ml-1.5 text-gray-500">{route.sourceKind}</span>
-                      <span className="ml-1.5 text-gray-500">
-                        {route.deterministic ? 'Deterministic' : route.probabilityText ?? 'Chance-based'}
-                      </span>
-                      {route.variantCount > 1 && (
-                        <span className="ml-1.5 text-gray-500">
-                          {route.variantCount} route variants
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ))
-          ) : (
-            <p className="text-[11px] text-gray-500">No other reviewed legal sources are available.</p>
-          )}
-        </div>
-      ) : null}
-    </section>
-  );
-};
-
-export function RuneProofCoach({
-  model,
-  onConfirmAction,
-}: RuneProofCoachProps) {
-  const coachId = useId();
-  const objectiveHeadingId = 'runeproof-objective-heading-' + coachId;
-  const nextActionHeadingId = 'runeproof-next-action-heading-' + coachId;
-  const routeHeadingId = 'runeproof-route-heading-' + coachId;
-  const currentActionId = model.nextAction?.id;
+export function RuneProofCoach({ model, onConfirmAction, onConfirmOwnedItem, onUndoLastCheck, canUndoLastCheck, focusRequest }: RuneProofCoachProps) {
+  const id = useId();
+  const reviewedArticle = model.article ?? questGuideArticleFor(model.questId);
+  const article = reviewedArticle?.guideRevision === model.guideRevision ? reviewedArticle : undefined;
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [rewardsRequest, setRewardsRequest] = useState(0);
+  const [showCoordinates, setShowCoordinates] = useState(false);
+  const chunkLabel = (chunk: ChunkKey) => formatQuestChunk(chunk, showCoordinates);
   const [temporaryMap, setTemporaryMap] = useState<{
-    readonly action: RuneProofCoachAction;
-    readonly chunk: ChunkKey;
-    readonly returnFocusTarget: HTMLButtonElement;
+    action: RuneProofCoachAction; chunk: ChunkKey; trigger: HTMLButtonElement;
   } | null>(null);
-
-  const showTemporaryMap = (action: RuneProofCoachAction, trigger: HTMLButtonElement) => {
-    const chunk = worldChunk(action.mapChunks);
-    if (!chunk) return;
-    setTemporaryMap({ action, chunk, returnFocusTarget: trigger });
+  const sectionId = (name: string) => `${id}-${name}`;
+  const stepId = (actionId: string) => sectionId(`step-${actionId}`);
+  useLayoutEffect(() => {
+    if (!focusRequest) return;
+    const target = document.getElementById(`${id}-step-${focusRequest.actionId}`);
+    target?.scrollIntoView?.({ block: 'nearest' });
+    target?.focus({ preventScroll: true });
+  }, [focusRequest?.actionId, focusRequest?.serial, id]);
+  useLayoutEffect(() => {
+    if (!rewardsRequest) return;
+    const target = document.getElementById(`${id}-rewards`);
+    target?.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
+    target?.focus({ preventScroll: true });
+  }, [rewardsRequest, id]);
+  const detailRows: readonly [string, readonly string[]][] = article ? [
+    ['Start point', [article.startPoint]],
+    ['Difficulty / length', [article.difficulty, article.length].filter((value): value is string => Boolean(value))],
+    ['Requirements', article.requirements], ['Guide notes', article.guideNotes ?? []], ['Items required', article.itemsRequired],
+    ['Obtained during the quest', article.itemsObtained], ['Recommended', article.recommended], ['Enemies', article.enemies],
+  ] : [];
+  const warnings = model.actions.map(action => stepWarnings(action, showCoordinates));
+  const needs = guideNeeds(model, showCoordinates);
+  const jumpToStep = (actionId: string) => {
+    const target = document.getElementById(stepId(actionId));
+    target?.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
+    target?.focus({ preventScroll: true });
+  };
+  const continueGuide = () => {
+    if (!model.nextAction) {
+      setDetailsOpen(true);
+      setRewardsRequest(request => request + 1);
+      return;
+    }
+    const target = document.getElementById(stepId(model.nextAction.id));
+    target?.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
+    target?.focus({ preventScroll: true });
+    target?.querySelector<HTMLButtonElement>('[data-guide-confirm]')?.focus({ preventScroll: true });
   };
 
-  return (
-    <section
-      aria-labelledby={objectiveHeadingId}
-      className="min-w-0 w-full space-y-4"
-    >
-      <header className="border-b border-white/10 pb-3">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-300">RuneProof</p>
-        <h2 id={objectiveHeadingId} className="mt-1 text-base font-bold text-gray-100">
-          {model.questId}
-        </h2>
-        <p className="mt-1 text-xs leading-relaxed text-gray-400">{model.recommendationReason}</p>
-        <div className="mt-3 flex items-center gap-2">
-          <progress
-            aria-label={model.questId + ' progress'}
-            value={model.progress.completed}
-            max={model.progress.total || 1}
-            className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full accent-cyan-400"
-          />
-          <span className="shrink-0 text-[10px] font-mono text-gray-500">
-            {model.progress.completed}/{model.progress.total} complete
-          </span>
+  return <section className="rp-guide" aria-labelledby={sectionId('title')}>
+    <div className="rp-article">
+      <header>
+        <p className="rp-eyebrow">RuneProof · Quest guide</p>
+        <h2 id={sectionId('title')}>{model.questId}</h2>
+        <p className="rp-readiness" role="status">{guideReadiness(model, showCoordinates)}</p>
+        {model.previewNotes?.map(note => <p className="rp-preview-note" key={note}>{note}</p>)}
+        {needs.length > 0 && <section className="rp-needs" aria-labelledby={sectionId('needs')}>
+          <h3 id={sectionId('needs')} className="rp-needs-title">Still needed <span aria-hidden>{needs.length}</span></h3>
+          <ul className="rp-needs-list" aria-label="Remaining requirements">
+            {needs.map(need => <li key={need.id} className={`rp-need rp-need-${need.kind.toLowerCase()}`}>
+              <RuneProofNeedImage need={need} />
+              <div className="rp-need-content">
+                <span className="rp-need-kind">{need.kind === 'UNLOCK' ? 'Required' : need.kind === 'ITEM' ? 'Item to get' : 'Needs checking'}</span>
+                <strong>{need.label}</strong>
+                <div className="rp-need-steps">{need.actionIds.map(actionId => {
+                  const step = model.actions.findIndex(action => action.id === actionId) + 1;
+                  return <a key={actionId} href={`#${stepId(actionId)}`} aria-label={`${need.label} — go to step ${step}`}
+                    onClick={event => { event.preventDefault(); jumpToStep(actionId); }}>Step {step} <span aria-hidden>↓</span></a>;
+                })}</div>
+              </div>
+            </li>)}
+          </ul>
+        </section>}
+        <div className="rp-progress">
+          <progress aria-label={`${model.questId} progress`} value={model.progress.completed} max={model.progress.total || 1} />
+          <span>{model.progress.completed}/{model.progress.total} complete</span>
+        </div>
+        <div className="rp-toolbar" aria-label="Guide controls">
+          {model.actions.length > 0 && <button type="button" className="rp-link-button" onClick={continueGuide}>{model.nextAction ? 'Continue at my next step ↓' : 'View rewards ↓'}</button>}
+          {canUndoLastCheck && onUndoLastCheck && <button type="button" className="rp-link-button" onClick={onUndoLastCheck}>Undo last check</button>}
         </div>
       </header>
 
-      <section aria-labelledby={nextActionHeadingId}>
-        <div className="mb-2 flex items-center gap-2">
-          <h3 id={nextActionHeadingId} className="text-sm font-bold text-gray-100">
-            Next action
-          </h3>
-          <div className="h-px flex-1 bg-white/10" />
-        </div>
-        {model.nextAction ? (
-          <CurrentActionCard
-            action={model.nextAction}
-            onConfirmAction={onConfirmAction}
-            onShowMap={showTemporaryMap}
-          />
-        ) : model.actions.length > 0 ? (
-          <p className="rounded-lg border border-emerald-400/25 bg-emerald-950/20 px-3 py-2.5 text-xs text-emerald-100">
-            All reviewed actions are complete.
-          </p>
-        ) : (
-          <p className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-gray-300">
-            No reviewed actions are available for this objective.
-          </p>
-        )}
-      </section>
-
-      <section aria-labelledby={routeHeadingId}>
-        <div className="mb-2 flex items-center gap-2">
-          <h3 id={routeHeadingId} className="text-sm font-bold text-gray-100">
-            Route
-          </h3>
-          <div className="h-px flex-1 bg-white/10" />
-        </div>
-        <ol aria-label={model.questId + ' route'} className="space-y-2">
-          {model.actions.map((action, index) => (
-            <TimelineAction
-              key={action.id}
-              action={action}
-              index={index}
-              isCurrent={action.id === currentActionId}
-              onConfirmAction={onConfirmAction}
-            />
-          ))}
+      <section aria-labelledby={sectionId('walkthrough')}>
+        <h3 id={sectionId('walkthrough')} tabIndex={-1}>Walkthrough</h3>
+        <ol className="rp-steps" aria-label={`${model.questId} route`}>
+          {model.actions.map((action, index) => {
+            const meta = action.usesAlternative ? undefined : article?.steps[action.id];
+            const chunks = actionChunks(action);
+            const current = action.id === model.nextAction?.id;
+            const place = meta?.location ?? action.locationLabel;
+            // Completion repeats the quest-wide equipment check; show its warning
+            // once at the earlier affected step, while keeping completion gated.
+            const visibleWarnings = warnings[index].filter(warning => action.confirmationLabel !== 'Confirm quest complete'
+              || !warnings.slice(0, index).some(previous => previous.includes(warning)));
+            const showLocationEvidence = !model.previewNotes?.length || showCoordinates;
+            const hasDetails = Boolean(meta?.details?.length || action.travel || action.locationExplanation && showLocationEvidence);
+            return <li key={action.id}>
+              <section id={stepId(action.id)} data-guide-action-id={action.id} tabIndex={-1} aria-current={current ? 'step' : undefined}
+                className={`rp-step ${current ? 'rp-step-current' : ''} ${action.state === 'COMPLETED' ? 'rp-step-completed' : ''}`}>
+                <span className="rp-step-number" aria-hidden>{index + 1}.</span>
+                {current && <h4 className="rp-next-label">Next action</h4>}
+                <p className="rp-instruction">{action.instruction}</p>
+                {action.state === 'COMPLETED' && <span className="rp-step-state">Completed</span>}
+                <div className="rp-step-location">
+                  {chunks.length ? chunks.map(chunk => <div key={chunk} className="rp-chunk-line">
+                    <span className="rp-place-name">{chunks.length === 1 && place
+                      ? `${place}${meta?.context ? ` · ${meta.context}` : ''}${showCoordinates ? ` · ${chunkLabel(chunk)}` : ''}`
+                      : chunkLabel(chunk)}</span>
+                    <button type="button" className="rp-link-button" aria-label={`Show ${action.instruction} on map${chunks.length > 1 ? `: ${chunkLabel(chunk)}` : ''}`}
+                      onClick={event => setTemporaryMap({ action: { ...action, locationLabel: place }, chunk, trigger: event.currentTarget })}>
+                      <MapPin size={14} aria-hidden /> Show on map
+                    </button>
+                  </div>) : <><p>{place}</p><p className="rp-inline-warning" role="note">Chunk needs review</p></>}
+                </div>
+                {Boolean(action.supplies?.length) && <p className="rp-small"><strong>Have with you:</strong> {action.supplies!.join(', ')}.</p>}
+                {visibleWarnings.map(warning => <p key={warning} role="note" className="rp-inline-warning">{nameQuestChunksInText(warning, showCoordinates)}</p>)}
+                <div className="rp-step-actions">
+                {hasDetails && <details className="rp-step-detail">
+                  <summary>Step details</summary>
+                  {meta?.details?.map(detail => <p key={detail}>{detail}</p>)}
+                  {action.locationExplanation && showLocationEvidence && <p>{nameQuestChunksInText(action.locationExplanation, showCoordinates)}</p>}
+                  {action.travel && <div className="rp-step-travel" aria-label={`Walking route for step ${index + 1}`}>
+                    <p className="rp-small"><strong>{action.travel.fromStep ? `Walk from step ${action.travel.fromStep}` : 'Start here'}</strong></p>
+                    {action.travel.chunks.length > 0 && <p className="rp-walking-path" aria-label="Walking chunk sequence">
+                      {action.travel.chunks.map((chunk, chunkIndex) => <ReactFragment key={`${chunk}:${chunkIndex}`}>
+                        {chunkIndex > 0 && <span aria-hidden> → </span>}
+                        <span className="rp-place-name">{chunkLabel(chunk)}{action.travel!.missingChunks.includes(chunk) ? ' (locked)' : ''}</span>
+                      </ReactFragment>)}
+                    </p>}
+                    {action.travel.entranceNote && <p className="rp-small rp-muted">{action.travel.entranceNote}</p>}
+                    <p className="rp-small rp-muted">This is the walking route between guide steps. Teleports and other transport are not included.</p>
+                  </div>}
+                </details>}
+                {action.ownedItemConfirmation && onConfirmOwnedItem && <div>
+                  <button type="button" className="rp-link-button" onClick={() => onConfirmOwnedItem(action.id)}>
+                    I already have {action.ownedItemConfirmation.label}
+                  </button>
+                  <p className="rp-small rp-muted">Confirm supplies obtained through your unlocked content to skip this preparation.</p>
+                </div>}
+                {action.confirmationAllowed && <button type="button" data-guide-confirm className="rp-confirm" onClick={() => onConfirmAction(action.id)}>
+                  {action.confirmationLabel ?? 'Mark action complete'}
+                </button>}
+                </div>
+              </section>
+            </li>;
+          })}
         </ol>
       </section>
 
-      <AlternativeSources sources={model.alternativeSources} />
-
-      <RuneProofProofDrawer proof={model.proof} />
-
-      {temporaryMap ? (
-        <RuneProofTemporaryMap
-          instruction={temporaryMap.action.instruction}
-          locationLabel={temporaryMap.action.locationLabel}
-          chunk={temporaryMap.chunk}
-          returnFocusTarget={temporaryMap.returnFocusTarget}
-          onClose={() => setTemporaryMap(null)}
-        />
-      ) : null}
-    </section>
-  );
+      <section className="rp-disclosure">
+        <h3><button type="button" className="rp-disclosure-toggle" aria-expanded={detailsOpen} aria-controls={sectionId('details')}
+          onClick={() => setDetailsOpen(!detailsOpen)}>Quest details and rewards <ChevronDown size={16} aria-hidden /></button></h3>
+        {detailsOpen && <div id={sectionId('details')} role="region" aria-label="Quest details and rewards" className="rp-disclosure-body">
+          {article ? <table className="rp-details" aria-label="OSRS quest details"><tbody>
+            {detailRows.filter(([, values]) => values.length > 0).map(([label, values]) => <tr key={label}>
+              <th scope="row">{label}</th><td>{values.map(value => <p key={value}>{value}</p>)}</td>
+            </tr>)}
+          </tbody></table> : <p>Article details are not reviewed for this guide yet. Use its source link for quest details.</p>}
+          {article?.links?.map(link => <p key={link.url}><a href={link.url} target="_blank" rel="noreferrer">{link.label}</a></p>)}
+          <h4 id={sectionId('rewards')} tabIndex={-1}>Rewards</h4>
+          {article ? <ul className="rp-rewards">{article.rewards.map(reward => <li key={reward}>{reward}</li>)}</ul>
+            : <p>See the source guide for reviewed reward details.</p>}
+          <p className="rp-small rp-muted">Awarded in OSRS when you finish the quest.</p>
+          <AlternativeSources sources={model.alternativeSources} showCoordinates={showCoordinates} />
+          <button type="button" className="rp-link-button" aria-pressed={showCoordinates} onClick={() => setShowCoordinates(!showCoordinates)}>Show chunk coordinates</button>
+          {article && <p className="rp-small rp-muted">Quest details checked against the <a href={article.sourceUrl} target="_blank" rel="noreferrer">OSRS Wiki</a>. Instructions are independently reviewed for Fate Locked.</p>}
+          <RuneProofProofDrawer proof={model.proof} />
+        </div>}
+      </section>
+      <p className="rp-small rp-muted">Checks are saved for this run. They do not complete your Journal or award rewards.</p>
+    </div>
+    {temporaryMap && <RuneProofTemporaryMap instruction={temporaryMap.action.instruction} locationLabel={temporaryMap.action.locationLabel}
+      chunk={temporaryMap.chunk} showCoordinates={showCoordinates} returnFocusTarget={temporaryMap.trigger} onClose={() => setTemporaryMap(null)} />}
+  </section>;
 }

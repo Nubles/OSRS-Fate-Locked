@@ -1,0 +1,477 @@
+{
+  "summary": {
+    "date": "2026-09-24",
+    "authoredRows": 1291,
+    "skills": 24,
+    "exactUnchangedRows": 1251,
+    "changedOrAddedRows": 40,
+    "historicalOutstanding": 1221,
+    "outstandingStillExact": 1220,
+    "outstandingChangedOrRemoved": 1,
+    "scopedPositiveChecksStillExact": 28,
+    "misplacedLevelRows": 0,
+    "note": "Exact skill+tier+text reconciliation only; unchanged does not mean independently verified. Row indices are not stable identities."
+  },
+  "changedOrAdded": [
+    {
+      "id": "Agility:4:4",
+      "skill": "Agility",
+      "tier": 4,
+      "text": "Lvl 40: Brimhaven Arena (High Obstacles)"
+    },
+    {
+      "id": "Agility:8:6",
+      "skill": "Agility",
+      "tier": 8,
+      "text": "Lvl 77: Hallowed Sepulchre (Floor 4)"
+    },
+    {
+      "id": "Agility:9:5",
+      "skill": "Agility",
+      "tier": 9,
+      "text": "Lvl 87: Hallowed Sepulchre (Floor 5)"
+    },
+    {
+      "id": "Attack:3:1",
+      "skill": "Attack",
+      "tier": 3,
+      "text": "Lvl 30: Battlestaves"
+    },
+    {
+      "id": "Attack:4:2",
+      "skill": "Attack",
+      "tier": 4,
+      "text": "Lvl 40: Mystic Staves (Magic 40)"
+    },
+    {
+      "id": "Construction:1:1",
+      "skill": "Construction",
+      "tier": 1,
+      "text": "Lvl 1: Basic Wood Decor, Garden, Parlour"
+    },
+    {
+      "id": "Construction:1:5",
+      "skill": "Construction",
+      "tier": 1,
+      "text": "Lvl 5: Kitchen"
+    },
+    {
+      "id": "Construction:3:4",
+      "skill": "Construction",
+      "tier": 3,
+      "text": "Lvl 30: Games Room"
+    },
+    {
+      "id": "Construction:4:0",
+      "skill": "Construction",
+      "tier": 4,
+      "text": "Lvl 32: Combat Room"
+    },
+    {
+      "id": "Construction:4:4",
+      "skill": "Construction",
+      "tier": 4,
+      "text": "Lvl 37: Menagerie"
+    },
+    {
+      "id": "Construction:4:7",
+      "skill": "Construction",
+      "tier": 4,
+      "text": "Lvl 40: Study"
+    },
+    {
+      "id": "Construction:5:0",
+      "skill": "Construction",
+      "tier": 5,
+      "text": "Lvl 42: Costume Room"
+    },
+    {
+      "id": "Construction:8:1",
+      "skill": "Construction",
+      "tier": 8,
+      "text": "Lvl 75: Spirit Tree (Farming 83), Gilded Altar"
+    },
+    {
+      "id": "Cooking:2:0",
+      "skill": "Cooking",
+      "tier": 2,
+      "text": "Lvl 11: Roasted Bird Meat (Firemaking 20)"
+    },
+    {
+      "id": "Cooking:2:1",
+      "skill": "Cooking",
+      "tier": 2,
+      "text": "Lvl 15: Trout"
+    },
+    {
+      "id": "Crafting:3:2",
+      "skill": "Crafting",
+      "tier": 3,
+      "text": "Lvl 28: Hardleather Body"
+    },
+    {
+      "id": "Crafting:4:2",
+      "skill": "Crafting",
+      "tier": 4,
+      "text": "Lvl 38: Coifs"
+    },
+    {
+      "id": "Crafting:9:0",
+      "skill": "Crafting",
+      "tier": 9,
+      "text": "Lvl 83: Amethyst Bolt Tips"
+    },
+    {
+      "id": "Crafting:9:2",
+      "skill": "Crafting",
+      "tier": 9,
+      "text": "Lvl 85: Amethyst Arrowtips"
+    },
+    {
+      "id": "Crafting:9:4",
+      "skill": "Crafting",
+      "tier": 9,
+      "text": "Lvl 87: Amethyst Javelin Tips"
+    },
+    {
+      "id": "Crafting:9:6",
+      "skill": "Crafting",
+      "tier": 9,
+      "text": "Lvl 89: Amethyst Dart Tips"
+    },
+    {
+      "id": "Crafting:10:0",
+      "skill": "Crafting",
+      "tier": 10,
+      "text": "Lvl 92: Zenyte Necklace (Anguish)"
+    },
+    {
+      "id": "Crafting:10:2",
+      "skill": "Crafting",
+      "tier": 10,
+      "text": "Lvl 98: Zenyte Amulet (Torture)"
+    },
+    {
+      "id": "Defence:4:0",
+      "skill": "Defence",
+      "tier": 4,
+      "text": "Lvl 40: Fighter Torso"
+    },
+    {
+      "id": "Defence:5:0",
+      "skill": "Defence",
+      "tier": 5,
+      "text": "Lvl 42: Void Knight Equipment"
+    },
+    {
+      "id": "Fletching:1:1",
+      "skill": "Fletching",
+      "tier": 1,
+      "text": "Lvl 5: Shortbows, Ogre Arrows"
+    },
+    {
+      "id": "Fletching:10:1",
+      "skill": "Fletching",
+      "tier": 10,
+      "text": "Lvl 92: Redwood Shields"
+    },
+    {
+      "id": "Herblore:7:7",
+      "skill": "Herblore",
+      "tier": 7,
+      "text": "Lvl 70: Divine Super Attack/Defence/Strength (SOTE)"
+    },
+    {
+      "id": "Herblore:10:3",
+      "skill": "Herblore",
+      "tier": 10,
+      "text": "Lvl 97: Divine Super Combat Potion (SOTE)"
+    },
+    {
+      "id": "Magic:8:8",
+      "skill": "Magic",
+      "tier": 8,
+      "text": "Lvl 79: Entangle, Dream"
+    },
+    {
+      "id": "Magic:8:9",
+      "skill": "Magic",
+      "tier": 8,
+      "text": "Lvl 80: Blood Blitz"
+    },
+    {
+      "id": "Magic:10:1",
+      "skill": "Magic",
+      "tier": 10,
+      "text": "Lvl 92: Blood Barrage"
+    },
+    {
+      "id": "Magic:10:3",
+      "skill": "Magic",
+      "tier": 10,
+      "text": "Lvl 93: Vengeance Other"
+    },
+    {
+      "id": "Ranged:5:2",
+      "skill": "Ranged",
+      "tier": 5,
+      "text": "Lvl 50: Ava's Accumulator"
+    },
+    {
+      "id": "Ranged:6:1",
+      "skill": "Ranged",
+      "tier": 6,
+      "text": "Lvl 60: Dragon Thrown"
+    },
+    {
+      "id": "Ranged:7:3",
+      "skill": "Ranged",
+      "tier": 7,
+      "text": "Lvl 65: 3rd Age Bow"
+    },
+    {
+      "id": "Sailing:7:5",
+      "skill": "Sailing",
+      "tier": 7,
+      "text": "Lvl 65: Linen Trawling Net (Construction 61)"
+    },
+    {
+      "id": "Sailing:7:9",
+      "skill": "Sailing",
+      "tier": 7,
+      "text": "Lvl 68: Advanced Chum Station"
+    },
+    {
+      "id": "Sailing:8:5",
+      "skill": "Sailing",
+      "tier": 8,
+      "text": "Lvl 76: Hemp Trawling Net (Construction 65)"
+    },
+    {
+      "id": "Sailing:8:7",
+      "skill": "Sailing",
+      "tier": 8,
+      "text": "Lvl 79: Dock Drumstick Isle, Gale Catcher"
+    }
+  ],
+  "noLongerExact": [
+    {
+      "id": "Agility:4:4",
+      "skill": "Agility",
+      "tier": 4,
+      "text": "Lvl 40: Brimhaven Arena (Medium Obstacles)",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Agility:9:1",
+      "skill": "Agility",
+      "tier": 9,
+      "text": "Lvl 82: Hallowed Sepulchre (Floor 4)",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Agility:10:0",
+      "skill": "Agility",
+      "tier": 10,
+      "text": "Lvl 92: Hallowed Sepulchre (Floor 5)",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Attack:3:1",
+      "skill": "Attack",
+      "tier": 3,
+      "text": "Lvl 30: Battlestaves & Mystic Staves",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Construction:1:1",
+      "skill": "Construction",
+      "tier": 1,
+      "text": "Lvl 1: Basic Wood Decor, Garden, Parlour, Kitchen",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Construction:3:4",
+      "skill": "Construction",
+      "tier": 3,
+      "text": "Lvl 30: Games Room, Combat Room",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Construction:4:3",
+      "skill": "Construction",
+      "tier": 4,
+      "text": "Lvl 37: Menagerie, Spirit Tree (Patch)",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Construction:4:6",
+      "skill": "Construction",
+      "tier": 4,
+      "text": "Lvl 40: Study, Costume Room",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Construction:8:1",
+      "skill": "Construction",
+      "tier": 8,
+      "text": "Lvl 75: Spirit Tree, Gilded Altar",
+      "status": "screened-not-fully-verified"
+    },
+    {
+      "id": "Cooking:2:0",
+      "skill": "Cooking",
+      "tier": 2,
+      "text": "Lvl 15: Trout, Roasted Bird",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Crafting:4:2",
+      "skill": "Crafting",
+      "tier": 4,
+      "text": "Lvl 38: Coifs, Hardleather Body",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Crafting:9:0",
+      "skill": "Crafting",
+      "tier": 9,
+      "text": "Lvl 82: Amethyst Items",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Crafting:10:0",
+      "skill": "Crafting",
+      "tier": 10,
+      "text": "Lvl 92: Zenyte Necklace (Torture)",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Crafting:10:2",
+      "skill": "Crafting",
+      "tier": 10,
+      "text": "Lvl 98: Zenyte Amulet (Anguish)",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Defence:4:0",
+      "skill": "Defence",
+      "tier": 4,
+      "text": "Lvl 40: Fighter Torso, Void Knight (42)",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Fletching:1:1",
+      "skill": "Fletching",
+      "tier": 1,
+      "text": "Lvl 5: Shortbows, Ogre Bows",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Fletching:9:6",
+      "skill": "Fletching",
+      "tier": 9,
+      "text": "Lvl 90: Redwood Shields",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Herblore:7:7",
+      "skill": "Herblore",
+      "tier": 7,
+      "text": "Lvl 70: Divine Super Combat/Def/Att/Str (SOTE)",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Magic:8:8",
+      "skill": "Magic",
+      "tier": 8,
+      "text": "Lvl 79: Entangle, Blood Blitz, Dream",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Magic:10:1",
+      "skill": "Magic",
+      "tier": 10,
+      "text": "Lvl 92: Blood Barrage, Vengeance Other",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Ranged:5:2",
+      "skill": "Ranged",
+      "tier": 5,
+      "text": "Lvl 50: Ava's Accumulator, Iban's Staff",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Ranged:6:1",
+      "skill": "Ranged",
+      "tier": 6,
+      "text": "Lvl 60: Dragon Thrown, 3rd Age Bow",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Sailing:7:8",
+      "skill": "Sailing",
+      "tier": 7,
+      "text": "Lvl 68: Linen Trawling Net, Advanced Chum Station",
+      "status": "confirmed-error-in-stated-fact"
+    },
+    {
+      "id": "Sailing:8:6",
+      "skill": "Sailing",
+      "tier": 8,
+      "text": "Lvl 79: Dock Drumstick Isle, Gale Catcher, Hemp Trawling Net",
+      "status": "confirmed-error-in-stated-fact"
+    }
+  ],
+  "outstandingChangedOrRemoved": [
+    {
+      "id": "Construction:8:1",
+      "skill": "Construction",
+      "tier": 8,
+      "index": 1,
+      "line": 271,
+      "text": "Lvl 75: Spirit Tree, Gilded Altar",
+      "claimedLevel": 75,
+      "status": "screened-not-fully-verified",
+      "matches": [
+        {
+          "skill": "Construction",
+          "level": 75,
+          "text": "* Build a Gilded altar",
+          "raw": "* Build a {{ilink|Gilded altar}}",
+          "names": [
+            "Gilded altar"
+          ],
+          "revision": 15351433,
+          "title": "Construction/Level up table",
+          "matched": [
+            "Gilded altar"
+          ],
+          "maxLength": 12
+        },
+        {
+          "skill": "Construction",
+          "level": 75,
+          "text": "* Build a Spirit tree (Construction) (with Farming 83)",
+          "raw": "* Build a {{ilink|Spirit tree (Construction)|txt=Spirit tree}} (with {{SCP|Farming|83}})",
+          "names": [
+            "Spirit tree (Construction)",
+            "Spirit tree"
+          ],
+          "revision": 15351433,
+          "title": "Construction/Level up table",
+          "matched": [
+            "Spirit tree (Construction)",
+            "Spirit tree"
+          ],
+          "maxLength": 11
+        }
+      ],
+      "flagged": [],
+      "screeningStatus": "matching-level-anchors-partial"
+    }
+  ],
+  "misplaced": [],
+  "historicalEvidence": "September 22 skill-reference/coverage.json; unchanged means the same skill, tier, and text, not a new fact check."
+}

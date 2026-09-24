@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { X, Sparkles, Key, Clock, Dices, Gauge, TrendingUp, ChevronRight } from 'lucide-react';
+import { X, Clock, Gauge, TrendingUp, ChevronRight } from 'lucide-react';
+import { Sparkles, Key, Dices } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';

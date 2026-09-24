@@ -6,7 +6,7 @@ describe('canonical area completion accounting', () => {
   it('pins physical-overlap area count in the global denominator', () => {
     expect(REGIONS_LIST).toHaveLength(178);
     expect(REGIONS_LIST).not.toContain('Elf Camp');
-    expect(COMPLETION_DENOMINATOR).toBe(977);
+    expect(COMPLETION_DENOMINATOR).toBe(976);
   });
 
   it('does not award completion for pending overlap refund markers', () => {
@@ -17,5 +17,17 @@ describe('canonical area completion accounting', () => {
     } as any);
 
     expect(points).toBe(2);
+  });
+
+  it('does not count retired housing toward Vanilla completion', () => {
+    const base = {
+      regions: [], skills: {}, equipment: {}, mobility: [], arcana: [],
+      housing: ['Aquarium'], merchants: [], minigames: [], bosses: [],
+      storage: [], guilds: [], farming: [], slayerUnlocks: [], banks: [],
+    } as any;
+
+    expect(playerUnlockPoints(base, 'vanilla')).toBe(0);
+    expect(playerUnlockPoints({ ...base, housing: ['Aquarium', 'Kitchen', 'Kitchen'] }, 'vanilla')).toBe(1);
+    expect(base.housing).toEqual(['Aquarium']);
   });
 });

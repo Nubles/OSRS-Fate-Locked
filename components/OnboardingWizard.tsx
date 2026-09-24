@@ -2,10 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
-import { 
-  ArrowRight, Check, Lock, MousePointer2, 
-  Dices, Skull, Shield, Sparkles, Key, Dna, Zap 
-} from 'lucide-react';
+import { ArrowRight, Check, Lock, MousePointer2 } from 'lucide-react';
+import { Dices, Skull, Shield, Sparkles, Key, Dna, Zap } from './OsrsIcon';
 
 // --- SHARED STYLES ---
 const CARD_BASE = "relative overflow-hidden rounded-lg border-2 transition-all duration-300 bg-[#2a2620] border-[#4a453d]";
@@ -391,14 +389,12 @@ export const OnboardingWizard: React.FC = () => {
       {/* Background Ambience */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-tr ${currentStep.bg} via-transparent to-transparent rounded-full blur-[100px] transition-all duration-1000`}></div>
-         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10"></div>
       </div>
 
       <div className="relative w-full max-w-4xl h-[600px] bg-[#161616] border border-white/10 rounded-2xl shadow-2xl flex overflow-hidden">
         
         {/* Left: Interactive Visual */}
         <div className="w-1/2 bg-[#0a0a0a] border-r border-white/5 relative flex flex-col items-center justify-center p-8 overflow-hidden">
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
             
             <div key={step} className="relative z-10 w-full flex items-center justify-center animate-in zoom-in slide-in-from-bottom-4 duration-500">
                 {currentStep.visual}

@@ -190,7 +190,8 @@ export function aggregateContent(entries: ChunkContent[]): ChunkContent {
       if (kind === 'first' || !(q in quests)) quests[q] = kind;
     }
     for (const [area, refs] of Object.entries(e.diaries)) {
-      diaries[area] = area in diaries ? `${diaries[area]}, ${refs}` : refs;
+      diaries[area] = [...new Set([diaries[area] ?? '', refs]
+        .flatMap(value => value.split(',').map(ref => ref.trim()).filter(Boolean)))].join(', ');
     }
     for (const [tier, n] of Object.entries(e.clues)) clues[tier] = (clues[tier] ?? 0) + n;
     for (const s of e.spawns) spawns.add(s);
@@ -238,7 +239,7 @@ export interface ItemSourceRecord {
 
 // Bump when public/chunk-content.json changes so the fetch URL changes and
 // browsers don't serve a stale cached copy (the filename itself never changes).
-export const CHUNK_CONTENT_DATA_VERSION = 12;
+export const CHUNK_CONTENT_DATA_VERSION = 13;
 
 export class ChunkContentService {
   private doc: RawDoc | null = null;
@@ -441,12 +442,21 @@ export class ChunkContentService {
 
   /** Keep alternative host locations separate from unrelated interior requirements. */
   entityRequirementOptions(name: string, kind: EntityKind, cx: number, cy: number, sourceId?: string): RawRouteRequirement[][] {
+    return this.entityAccessOptions(name, kind, cx, cy, sourceId).map(option => option.requirements);
+  }
+
+  /** Each physical source keeps its independent area lock and entrance evidence. */
+  entityAccessOptions(name: string, kind: EntityKind, cx: number, cy: number, sourceId?: string): { requirements: RawRouteRequirement[]; area?: string }[] {
     const hit = this.entityLocations(name, [kind]);
     const locations = hit?.locations.filter(loc => loc.cx === cx && loc.cy === cy && (!sourceId || loc.sourceId === sourceId)) ?? [];
     // A missing explicit interior is not evidence for an unrestricted surface
     // copy of that entity. Callers receive no positive access alternative.
     if (sourceId && !locations.length) return [];
-    return (locations.length ? locations : [{ cx, cy }]).map(loc => this.requirementsForLocation(name, kind, loc));
+    const alternatives: EntityLocation[] = locations.length ? locations : [{ cx, cy }];
+    return alternatives.map(loc => ({
+      requirements: this.requirementsForLocation(name, kind, loc),
+      ...(loc.sourceId ? { area: this.doc?.interiors?.[loc.sourceId]?.name } : {}),
+    }));
   }
 
   private requirementsForLocation(name: string, kind: EntityKind, loc: EntityLocation): RawRouteRequirement[] {
@@ -489,10 +499,11 @@ export class ChunkContentService {
     };
     for (const [shop, items] of Object.entries(this.doc?.shopItems ?? {})) addSources(items, shop, 'shop');
     for (const [mon, items] of Object.entries(this.doc?.drops ?? {})) addSources(items, mon, 'monster');
+    for (const hit of this.entitiesOfKind('spawn')) addSources([hit.name], hit.name, 'spawn');
     return idx;
   }
 
-  /** Chunks where an item can be obtained (shops + drops). Empty when unknown. */
+  /** Chunks where an item can be obtained (spawns, shops and drops). Empty when unknown. */
   itemSourceChunks(itemName: string): EntityLocation[] {
     if (!this.doc) return [];
     if (!this.itemSrcIdx) this.itemSrcIdx = this.buildItemSrcIdx();

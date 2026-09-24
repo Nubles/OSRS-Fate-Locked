@@ -43,6 +43,10 @@ export const POH_LIST = [
   'Mounted Coins'
 ];
 
+// Retained in the catalogue for existing saves, but never awarded again.
+export const RETIRED_POH_ITEMS = ['Aquarium'];
+export const ROLLABLE_POH_ITEMS = POH_LIST.filter(item => !RETIRED_POH_ITEMS.includes(item));
+
 export const MERCHANTS_LIST = [
   'General Stores', 'Magic Shops', 'Archery Shops', 'Sword Shops', 'Food Shops', 
   'Fishing Shops', 'Clothes Shops', 'Farming Shops', 'Crafting Shops', 'Mining Shops', 

@@ -11,29 +11,111 @@ export interface F2PQuestMembership {
 }
 
 const EXPECTED_QUEST_IDS = [
-  "Cook's Assistant", 'Sheep Shearer', 'The Restless Ghost', 'Rune Mysteries', 'Imp Catcher',
-  "Daddy's Home", 'X Marks the Spot', 'Romeo & Juliet', 'Demon Slayer', 'Ernest the Chicken',
-  "Doric's Quest", 'Goblin Diplomacy', "Witch's Potion", "The Knight's Sword", "Black Knights' Fortress",
-  'Vampyre Slayer', 'Prince Ali Rescue', "Pirate's Treasure", 'Misthalin Mystery', 'Below Ice Mountain',
-  'The Corsair Curse', 'Shield of Arrav', 'Dragon Slayer I',
+  "Cook's Assistant",
+  "Sheep Shearer",
+  "The Restless Ghost",
+  "Rune Mysteries",
+  "Imp Catcher",
+  "X Marks the Spot",
+  "Romeo & Juliet",
+  "Demon Slayer",
+  "Ernest the Chicken",
+  "Doric's Quest",
+  "Goblin Diplomacy",
+  "Witch's Potion",
+  "The Knight's Sword",
+  "Black Knights' Fortress",
+  "Vampyre Slayer",
+  "Prince Ali Rescue",
+  "Pirate's Treasure",
+  "Misthalin Mystery",
+  "Below Ice Mountain",
+  "The Corsair Curse",
+  "Shield of Arrav",
+  "Dragon Slayer I",
+  "Learning the Ropes",
+  "The Ides of Milk"
 ] as const;
 
 const EXPECTED_SLUGS = [
-  'cooks-assistant', 'sheep-shearer', 'the-restless-ghost', 'rune-mysteries', 'imp-catcher',
-  'daddys-home', 'x-marks-the-spot', 'romeo-juliet', 'demon-slayer', 'ernest-the-chicken',
-  'dorics-quest', 'goblin-diplomacy', 'witchs-potion', 'the-knights-sword', 'black-knights-fortress',
-  'vampyre-slayer', 'prince-ali-rescue', 'pirates-treasure', 'misthalin-mystery', 'below-ice-mountain',
-  'the-corsair-curse', 'shield-of-arrav', 'dragon-slayer-i',
+  "cooks-assistant",
+  "sheep-shearer",
+  "the-restless-ghost",
+  "rune-mysteries",
+  "imp-catcher",
+  "x-marks-the-spot",
+  "romeo-juliet",
+  "demon-slayer",
+  "ernest-the-chicken",
+  "dorics-quest",
+  "goblin-diplomacy",
+  "witchs-potion",
+  "the-knights-sword",
+  "black-knights-fortress",
+  "vampyre-slayer",
+  "prince-ali-rescue",
+  "pirates-treasure",
+  "misthalin-mystery",
+  "below-ice-mountain",
+  "the-corsair-curse",
+  "shield-of-arrav",
+  "dragon-slayer-i",
+  "learning-the-ropes",
+  "the-ides-of-milk"
 ] as const;
 
 const EXPECTED_KINDS = [
-  'quest', 'quest', 'quest', 'quest', 'quest', 'miniquest', 'quest', 'quest', 'quest', 'quest',
-  'quest', 'quest', 'quest', 'quest', 'quest', 'quest', 'quest', 'quest', 'quest', 'quest',
-  'quest', 'quest', 'quest',
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest",
+  "quest"
 ] as const;
 
 const EXPECTED_WAVES = [
-  1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5,
+  1,
+  1,
+  1,
+  1,
+  1,
+  2,
+  2,
+  2,
+  2,
+  3,
+  3,
+  3,
+  3,
+  3,
+  4,
+  4,
+  4,
+  4,
+  4,
+  5,
+  5,
+  5,
+  5,
+  5
 ] as const;
 
 const EVIDENCE_FILES = [
@@ -78,7 +160,7 @@ export function validateF2PQuestMembership(value: unknown): readonly F2PQuestMem
   assert(isRecord(value), 'F2P membership snapshot must be an object');
   hasOnlyKeys(value, ['schemaVersion', 'reviewedAt', 'evidenceFiles', 'quests'], 'F2P membership snapshot');
   assert(value.schemaVersion === 1, 'schemaVersion must be 1');
-  assert(value.reviewedAt === '2026-08-21', 'reviewedAt must be 2026-08-21');
+  assert(value.reviewedAt === '2026-09-23', 'reviewedAt must be 2026-09-23');
   assert(Array.isArray(value.evidenceFiles), 'evidenceFiles must be an array');
   assert(hasDenseIndexes(value.evidenceFiles), 'evidenceFiles must be a dense array');
   assert(value.evidenceFiles.length === EVIDENCE_FILES.length
@@ -86,7 +168,7 @@ export function validateF2PQuestMembership(value: unknown): readonly F2PQuestMem
   'evidenceFiles must exactly reference the reviewed quest sources');
   assert(Array.isArray(value.quests), 'quests must be an array');
   assert(hasDenseIndexes(value.quests), 'quests must be a dense array');
-  assert(value.quests.length === EXPECTED_QUEST_IDS.length, 'quests must contain exactly 23 entries');
+  assert(value.quests.length === EXPECTED_QUEST_IDS.length, 'quests must contain exactly 24 entries');
 
   const entries: F2PQuestMembership[] = [];
   const questIds = new Set<string>();
@@ -125,7 +207,7 @@ export function validateF2PQuestMembership(value: unknown): readonly F2PQuestMem
     assert(slug === EXPECTED_SLUGS[index], `${label}.slug does not match the approved quest slug`);
     assert(rawEntry.kind === EXPECTED_KINDS[index], `${label}.kind does not match the approved classification`);
     assert(wave === EXPECTED_WAVES[index], `${label}.wave does not match the approved wave`);
-    assert(rawEntry.wikiTitle === `${EXPECTED_QUEST_IDS[index]}/Quick guide`,
+    assert(rawEntry.wikiTitle === (questId === 'Learning the Ropes' ? questId : `${questId}/Quick guide`),
       `${label}.wikiTitle must be the exact quest Quick guide title`);
     assert(rawEntry.evidenceQuestId === EXPECTED_QUEST_IDS[index]
       && rawEntry.evidenceQuestId === questId,

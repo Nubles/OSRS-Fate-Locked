@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import {
-  X, Swords, Crown, Skull, Flag, Clock, Trash2, Sparkles, ClipboardPaste,
-  Loader2, AlertTriangle, ChevronRight, Zap,
-} from 'lucide-react';
+import { X, Clock, Trash2, ClipboardPaste, Loader2, AlertTriangle, ChevronRight } from 'lucide-react';
+import { Swords, Crown, Skull, Flag, Sparkles, Zap } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';
+import { WikiIcon } from './WikiIcon';
+import { getRivalImage } from '../data/wikiRivalIcons';
 import { completionPercent } from '../utils/completion';
 import { decodeSyncCode } from '../utils/syncCode';
 import { UnlockState } from '../types';
@@ -26,7 +26,7 @@ const fmtDays = (d: number): string => {
   return `${Math.round(d / 30)} months`;
 };
 
-const KIND_EMOJI: Record<string, string> = { boss: '☠️', region: '🗺️', minigame: '🎲', guild: '🏛️' };
+const KIND_IMAGES: Record<string, string> = { boss: 'Slayer_icon.png', region: 'World_map_icon.png', minigame: 'Minigames.png', guild: 'Construction_icon.png' };
 
 export const RivalModal: React.FC<Props> = ({ onClose }) => {
   const { unlocks, rival, setRival, clearRival, ackRival , gameModeId, customMode} = useGame();
@@ -57,7 +57,7 @@ export const RivalModal: React.FC<Props> = ({ onClose }) => {
   const ack = () => ackRival(st.lead);
 
   return (
-    <Shell onClose={onClose} title={`${rival.emoji} ${rival.name}`} subtitle={rival.mode === 'friend' ? "A friend's snapshot" : `Pace: ~${rival.keysPerDay} keys/day`}>
+    <Shell onClose={onClose} title={rival.name} image={getRivalImage(rival.mode, rival.personaId)} subtitle={rival.mode === 'friend' ? "A friend's snapshot" : `Pace: ~${rival.keysPerDay} keys/day`}>
       <div className="p-4 space-y-4">
         {flipped && (
           <div className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${st.lead > 0 ? 'border-emerald-500/30 bg-emerald-950/30 text-emerald-300' : 'border-red-500/30 bg-red-950/30 text-red-300'}`}>
@@ -69,8 +69,8 @@ export const RivalModal: React.FC<Props> = ({ onClose }) => {
 
         {/* The race */}
         <div className="rounded-xl bg-[#1a1a1a] border border-white/10 p-4 space-y-3">
-          <RaceBar label="You" emoji="🧑‍🚀" pct={playerPct} color="bg-cyan-500" accent="text-cyan-300" leading={st.leader === 'you'} />
-          <RaceBar label={rival.name} emoji={rival.emoji} pct={rivalPct} color="bg-fuchsia-500" accent="text-fuchsia-300" leading={st.leader === 'rival'} />
+          <RaceBar label="You" image="Worn_Equipment.png" pct={playerPct} color="bg-cyan-500" accent="text-cyan-300" leading={st.leader === 'you'} />
+          <RaceBar label={rival.name} image={getRivalImage(rival.mode, rival.personaId)} pct={rivalPct} color="bg-fuchsia-500" accent="text-fuchsia-300" leading={st.leader === 'rival'} />
           <div className="pt-1 text-center">
             {st.leader === 'tie' ? (
               <span className="text-[13px] font-bold text-gray-300">Neck and neck — {playerPct}% all square.</span>
@@ -103,7 +103,7 @@ export const RivalModal: React.FC<Props> = ({ onClose }) => {
             <div className="space-y-1.5">
               {recent.map((h) => (
                 <div key={h.name} className="flex items-center gap-2 text-[12px]">
-                  <span>{KIND_EMOJI[h.kind] ?? '✨'}</span>
+                  <WikiIcon file={KIND_IMAGES[h.kind] ?? 'Collection_log.png'} alt="" Fallback={Sparkles} size={16} className="shrink-0" />
                   <span className="text-gray-200 truncate">{h.name}</span>
                   <span className="text-[9px] text-gray-600 uppercase ml-auto">{h.kind}</span>
                 </div>
@@ -127,11 +127,11 @@ export const RivalModal: React.FC<Props> = ({ onClose }) => {
 };
 
 // ── Race bar row ─────────────────────────────────────────────────────────────
-const RaceBar: React.FC<{ label: string; emoji: string; pct: number; color: string; accent: string; leading: boolean }> = ({ label, emoji, pct, color, accent, leading }) => (
+const RaceBar: React.FC<{ label: string; image: string; pct: number; color: string; accent: string; leading: boolean }> = ({ label, image, pct, color, accent, leading }) => (
   <div>
     <div className="flex items-center justify-between mb-1">
       <span className="text-[11px] font-semibold text-gray-300 flex items-center gap-1.5 truncate">
-        <span>{emoji}</span>{label}{leading && <Crown size={11} className="text-amber-400" />}
+        <WikiIcon file={image} alt="" Fallback={Swords} size={18} className="shrink-0" />{label}{leading && <Crown size={11} className="text-amber-400" />}
       </span>
       <span className={`text-[13px] font-black ${accent}`}>{pct}%</span>
     </div>
@@ -142,11 +142,11 @@ const RaceBar: React.FC<{ label: string; emoji: string; pct: number; color: stri
 );
 
 // ── Modal shell ──────────────────────────────────────────────────────────────
-const Shell: React.FC<{ onClose: () => void; title: string; subtitle: string; children: React.ReactNode }> = ({ onClose, title, subtitle, children }) => (
+const Shell: React.FC<{ onClose: () => void; title: string; image?: string; subtitle: string; children: React.ReactNode }> = ({ onClose, title, image = 'Combat_icon.png', subtitle, children }) => (
   <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose} role="dialog" aria-modal="true" aria-label="Rival Ghost">
     <div className="bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
       <div className="flex items-center gap-3 p-4 border-b border-white/10 bg-[#1b1b1b] shrink-0">
-        <div className="p-2 bg-fuchsia-900/20 rounded-lg border border-fuchsia-500/30 text-fuchsia-300"><Swords size={18} /></div>
+        <div className="p-2 bg-fuchsia-900/20 rounded-lg border border-fuchsia-500/30 text-fuchsia-300"><WikiIcon file={image} alt="" Fallback={Swords} size={24} /></div>
         <div className="flex-1 min-w-0">
           <h2 className="text-base font-bold text-white leading-none truncate flex items-center gap-1.5">{title} <SectionGuide id="RIVAL" /></h2>
           <p className="text-[11px] text-gray-500 mt-1">{subtitle}</p>
@@ -178,14 +178,14 @@ const Setup: React.FC<{ onClose: () => void; onStart: (r: ReturnType<typeof make
   };
 
   return (
-    <Shell onClose={onClose} title="🏁 Choose a Rival" subtitle="Race a simulated nemesis — or a friend's run.">
+    <Shell onClose={onClose} title="Choose a Rival" subtitle="Race a simulated nemesis — or a friend's run.">
       <div className="p-4 space-y-4">
         <div className="space-y-2">
           {RIVAL_PERSONAS.map((p) => {
             const active = picked === p.id;
             return (
               <button key={p.id} onClick={() => setPicked(p.id)} className={`w-full flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors ${active ? 'border-fuchsia-500/50 bg-fuchsia-950/30' : 'border-white/10 bg-[#1a1a1a] hover:bg-white/5'}`}>
-                <span className="text-2xl">{p.emoji}</span>
+                <WikiIcon file={getRivalImage('sim', p.id)} alt="" Fallback={Swords} size={28} className="shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className={`text-[13px] font-bold ${active ? 'text-fuchsia-200' : 'text-gray-200'}`}>{p.name}</div>
                   <div className="text-[10px] text-gray-500">{p.blurb}</div>

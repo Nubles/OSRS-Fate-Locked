@@ -9,7 +9,7 @@
  * named area, across game-mode baselines. If either side's rules drift,
  * this fails in CI before a player sees wrong locks in-game.
  */
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { buildRuneliteBundle } from './runeliteBundle';
 import { isAreaReachable, isRegionUnlocked, isBankReachable, isNamedAreaReachableViaChunks } from './reachability';
 import { setStartArea } from './freeAreas';
@@ -18,8 +18,84 @@ import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { BANKS, bankId } from '../data/banks';
 import type { UnlockState } from '../types';
+import { ZERO_BONUSES } from './gearStats';
+import { EQUIPMENT_CACHE_SOURCE } from '../data/equipmentCatalogue';
 
 afterEach(() => setStartArea('misthalin'));
+
+describe('Vanilla equipment tier export parity', () => {
+  it('keeps reviewed daggers and basic staves aligned in the picker and both plugin maps', async () => {
+    const { gearService } = await import('../services/GearService');
+    const { buildRuneliteRulesManifest } = await import('./runeliteRulesManifest');
+    const { initialState } = await import('../context/GameContext');
+    const FreshGearService = gearService.constructor as new () => typeof gearService;
+    const gear = new FreshGearService();
+    const daggers = [
+      { id: 1205, name: 'Bronze dagger', stab: 4, meleeStr: 3, tier: 1 },
+      { id: 1203, name: 'Iron dagger', stab: 5, meleeStr: 4, tier: 1 },
+      { id: 1207, name: 'Steel dagger', stab: 8, meleeStr: 7, tier: 2 },
+      { id: 1217, name: 'Black dagger', stab: 10, meleeStr: 8, tier: 2 },
+      { id: 6591, name: 'White dagger', stab: 10, meleeStr: 8, tier: 2 },
+      { id: 1381, name: 'Staff of air', stab: 0, meleeStr: 3, magic: 10, tier: 1 },
+      { id: 1383, name: 'Staff of water', stab: 0, meleeStr: 3, magic: 10, tier: 1 },
+      { id: 1385, name: 'Staff of earth', stab: 1, meleeStr: 5, magic: 10, tier: 1 },
+      { id: 1387, name: 'Staff of fire', stab: 3, meleeStr: 6, magic: 10, tier: 1 },
+    ];
+    // Existing cached item data must pick up corrected tiers without clearing
+    // the player's profile or waiting for the gear-data cache to expire.
+    vi.stubGlobal('localStorage', {
+      getItem: () => JSON.stringify({ timestamp: Date.now(), source: EQUIPMENT_CACHE_SOURCE, data: [...daggers.map(item => ({
+        id: item.id, name: item.name, slot: 'Weapon', imageFile: `${item.name}.png`,
+        speed: 4, twoHanded: false,
+        bonuses: { ...ZERO_BONUSES, stab: item.stab, meleeStr: item.meleeStr, magic: item.magic ?? 0,
+          prayer: item.name === 'White dagger' ? 1 : 0 },
+      })), {
+        id: 1293, name: 'Iron longsword', slot: 'Weapon', imageFile: 'Iron longsword.png',
+        speed: 5, twoHanded: false,
+        bonuses: { ...ZERO_BONUSES, stab: 10, slash: 15, meleeStr: 14 },
+      }, {
+        id: 99901, name: 'Unreviewed weapon', slot: 'Weapon', imageFile: '',
+        speed: 4, twoHanded: false, bonuses: { ...ZERO_BONUSES, stab: 1000 },
+      }] }),
+    });
+    try {
+      await gear.init();
+      const unlocks = { ...structuredClone(initialState.unlocks), equipment: { Weapon: 1 } };
+      const manifest = await buildRuneliteRulesManifest({
+        unlocks, run: { runId: 'equipment-parity', runRevision: 1, gameModeId: 'vanilla' },
+        itemRuleSource: gear,
+        contentService: {
+          init: async () => false, allChunkCoords: () => [], contentFor: () => null,
+          connectGraph: () => ({}), shortcuts: () => [], questSections: () => ({}),
+        },
+      });
+      const bundle = await buildRuneliteBundle(unlocks.regions, { ...state, equipment: unlocks.equipment },
+        gear.tierExport(), undefined, undefined, undefined, undefined, undefined, manifest);
+      for (const dagger of daggers) {
+        const id = String(dagger.id);
+        expect(gear.tierOf(dagger.id), dagger.name).toBe(dagger.tier);
+        expect(bundle.itemTiers?.[id], dagger.name).toBe(dagger.tier);
+        expect(bundle.rules.itemRules[id], dagger.name).toEqual({ tier: dagger.tier, slot: 'Weapon' });
+        // FateLockedPlugin.recomputeOverTierGear and FateRuleEngine.equipment
+        // compare these exported tiers to the corresponding unlocked slot.
+        const legacyLocked = bundle.itemTiers![id] > bundle.state.equipment!.Weapon;
+        const rule = bundle.rules.itemRules[id];
+        const v4Locked = rule.tier > bundle.rules.unlocks.equipment[rule.slot];
+        expect(legacyLocked, dagger.name).toBe(dagger.tier > 1);
+        expect(v4Locked, dagger.name).toBe(legacyLocked);
+      }
+      expect(gear.byId(99901)).toBeDefined();
+      expect(gear.tierOf(99901)).toBeGreaterThan(1);
+      // The actual Java paths skip absent legacy IDs and return UNKNOWN for
+      // absent v4 rules. Adding a confidence flag alone would not protect old clients.
+      expect(bundle.itemTiers?.['99901']).toBeUndefined();
+      expect(bundle.rules.itemRules['99901']).toBeUndefined();
+      expect(bundle.rules.equipmentCatalogue?.estimatedItemCount).toBe(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
 
 type Bundle = Awaited<ReturnType<typeof buildRuneliteBundle>>;
 
@@ -194,6 +270,37 @@ const effectiveV4 = (bundle: BundleLike) => ({
 });
 
 describe('RuneLite v3/v4 parity', () => {
+  it('preserves canonical pending quest and boss confirmations in the v4 category snapshot', async () => {
+    const { buildRuneliteRulesManifest } = await import('./runeliteRulesManifest');
+    const { initialState } = await import('../context/GameContext');
+    const { QUEST_DATA } = await import('../data/questData');
+    const { REGIONS_LIST, SKILLS_LIST } = await import('../data/items');
+    const unlocks = {
+      ...structuredClone(initialState.unlocks),
+      regions: [...REGIONS_LIST], bosses: ['General Graardor'],
+      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
+      levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
+      quests: Object.keys(QUEST_DATA).filter(id => id !== 'Dragon Slayer II'),
+    };
+    const manifest = await buildRuneliteRulesManifest({
+      unlocks, run: { runId: 'confirmation-parity', runRevision: 1, gameModeId: 'vanilla' },
+      itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+      contentService: {
+        init: async () => true, allChunkCoords: () => [{ cx: 50, cy: 50 }],
+        contentFor: () => ({ name: 'Lumbridge', monsters: [{ name: 'General Graardor', count: 1, slayer: null }],
+          npcs: [], objects: [], shops: [], quests: { 'Dragon Slayer II': 'step' }, diaries: {}, clues: {}, spawns: [] }),
+        connectGraph: () => ({}), shortcuts: () => [], questSections: () => ({}),
+        taskRequirements: () => [], chunkEntryRequirements: () => [],
+      },
+    });
+    expect(manifest.chunks['50,50'].categories.QUESTS?.[0]).toMatchObject({ status: 'UNKNOWN', detail: expect.stringMatching(/pyre/i) });
+    expect(manifest.chunks['50,50'].categories.ACTIVITIES?.[0]).toMatchObject({ status: 'UNKNOWN', detail: expect.stringMatching(/kill-count/) });
+    const bundle = await buildRuneliteBundle(unlocks.regions, state, undefined, undefined, undefined, [], true, undefined, manifest);
+    expect(bundle.version).toBe(4);
+    expect(bundle.rules.chunks).toEqual(manifest.chunks);
+    expect(bundle.unlockedChunks).toBeUndefined();
+  });
+
   it('preserves region, chunk, bank, and account decisions', () => {
     const v3: BundleLike = {
       unlockedRegions: ['Misthalin'],

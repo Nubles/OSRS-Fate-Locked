@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Trophy, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { Trophy } from './OsrsIcon';
 import { Achievement } from '../utils/achievements';
 import { ACHIEVEMENT_ICON } from './AchievementsModal';
 import { usePortalHost } from '../hooks/usePortalHost';

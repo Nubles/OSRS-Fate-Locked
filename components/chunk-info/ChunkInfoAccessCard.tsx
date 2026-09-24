@@ -1,5 +1,6 @@
 import React from 'react';
-import { Check, Landmark, Lock, Route } from 'lucide-react';
+import { Check, Lock, Route } from 'lucide-react';
+import { Landmark } from '../OsrsIcon';
 import type { ChunkEntrance } from '../../services/ChunkContentService';
 import { WikiLink } from '../WikiLink';
 

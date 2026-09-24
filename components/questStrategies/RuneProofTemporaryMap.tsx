@@ -1,9 +1,11 @@
-import { MapPin, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { MapPin } from '../OsrsIcon';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { MAP_IMAGE } from '../../utils/mapCoords';
 import type { ChunkKey } from '../../utils/questRoutes/model';
+import { formatQuestChunk } from '../../utils/questStrategies/chunkLabels';
 import {
   chunkRectOnMap,
   createRouteMapGeometry,
@@ -14,6 +16,7 @@ interface RuneProofTemporaryMapProps {
   readonly instruction: string;
   readonly locationLabel?: string;
   readonly chunk: ChunkKey;
+  readonly showCoordinates?: boolean;
   readonly returnFocusTarget: HTMLElement | null;
   readonly onClose: () => void;
 }
@@ -37,6 +40,7 @@ export function RuneProofTemporaryMap({
   instruction,
   locationLabel,
   chunk,
+  showCoordinates = false,
   returnFocusTarget,
   onClose,
 }: RuneProofTemporaryMapProps) {
@@ -133,11 +137,11 @@ export function RuneProofTemporaryMap({
               {instruction}
             </h3>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
-              <span className="inline-flex items-center gap-1 font-mono font-semibold text-cyan-100">
+              <span className="inline-flex items-center gap-1 font-semibold text-cyan-100">
                 <MapPin size={12} aria-hidden />
-                Chunk {chunk}
+                {formatQuestChunk(chunk, showCoordinates)}
               </span>
-              {locationLabel ? <span className="text-gray-400">{locationLabel}</span> : null}
+              {locationLabel && locationLabel !== formatQuestChunk(chunk) ? <span className="text-gray-400">{locationLabel}</span> : null}
             </div>
           </div>
           <button

@@ -30,6 +30,7 @@ function randomToken(): string {
 
 export class RelaySyncService {
   private session: Session | null = null;
+  private pushQueue: Promise<unknown> = Promise.resolve();
   private listeners = new Set<() => void>();
 
   status: RelayStatus = 'off';
@@ -117,9 +118,21 @@ export class RelaySyncService {
   }
 
   /** Push a (compressed) bundle payload to the relay. No-op when disabled. */
-  async push(payload: string): Promise<boolean> {
+  push(payload: string, isCurrent: () => boolean = () => true): Promise<boolean> {
     const session = this.session;
-    if (!session) return false;
+    if (!session) return Promise.resolve(false);
+    // Complete network writes in order across driver unmounts/profile switches.
+    // A cancelled queued build never publishes; an already-sent write finishes
+    // before the current profile's write, so the relay cannot end on stale data.
+    const send = this.pushQueue.then(() => {
+      if (this.session !== session || !isCurrent()) return false;
+      return this.sendPayload(payload, session, isCurrent);
+    });
+    this.pushQueue = send.catch(() => false);
+    return send;
+  }
+
+  private async sendPayload(payload: string, session: Session, isCurrent: () => boolean): Promise<boolean> {
     this.status = 'syncing';
     this.lastError = null;
     this.emit();
@@ -130,14 +143,14 @@ export class RelaySyncService {
         body: JSON.stringify({ token: session.token, payload }),
       });
       if (!res.ok) throw new Error(`relay ${res.status}`);
-      if (this.session !== session) return false;
+      if (this.session !== session || !isCurrent()) return false;
       this.status = 'synced';
       this.lastSyncAt = Date.now();
       this.lastError = null;
       this.emit();
       return true;
     } catch (e: any) {
-      if (this.session !== session) return false;
+      if (this.session !== session || !isCurrent()) return false;
       this.status = 'error';
       this.lastError = e?.message ?? 'push failed';
       this.emit();

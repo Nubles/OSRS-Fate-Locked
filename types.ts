@@ -207,7 +207,23 @@ export interface PendingUnlock {
   cost: number;
 }
 
+export interface RuneProofProgress {
+  version: 1;
+  items: Record<string, string[]>;
+  actions: Record<string, { revision: string | null; ids: string[] }>;
+}
+
+export interface CollectionLogIdentity {
+  version: 1;
+  /** Historical counts and their conflicting slots stay quarantined across browsers. */
+  quarantinedIds: number[];
+}
+
 export interface GameState {
+  /** Presence records a run-scoped identity review; fresh canonical writes need no legacy cache. */
+  collectionLogIdentity?: CollectionLogIdentity;
+  /** Presence also records that legacy browser-only guide checks were migrated. */
+  runeProofProgress?: RuneProofProgress;
   /** Already charged and awarded; acceptance only dismisses its reveal. */
   pendingUnlock?: PendingUnlock;
   /** Ownership splits applied; absent on saves from before the map correction. */
@@ -249,11 +265,13 @@ export interface GameState {
   gameModeLocked?: boolean; // true once a mode has been chosen — permanent for the account
   /**
    * Seeded runs: when set, every gameplay outcome derives from
-   * hash(rngSeed, newest history hash, purpose) — see utils/seededRng.ts.
+   * hash(rngSeed, versioned history context, purpose) — see utils/seededRng.ts.
    * Chosen at run start (weekly seed, custom phrase, or random) and locked
    * once the run has history. Undefined = classic Math.random play.
    */
   rngSeed?: string;
+  /** Missing/1 preserves legacy history-hash draws; 2 ignores incidental event IDs/time. */
+  rngVersion?: 1 | 2;
   loadout?: Record<string, number>; // equipment slot -> real item id (Gear mode)
   rival?: RivalState; // Rival Ghost the player is racing (optional)
   /** OSRS account this run is bound to (Auto-Roll). Set once, then permanent. */

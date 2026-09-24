@@ -1,3 +1,4 @@
+import type { ReviewedQuestRequirements } from '../../data/questItemRequirements';
 import type { ChunkKey, ItemRef, RouteGate } from '../questRoutes/model';
 
 export type WalkthroughActionKind =
@@ -71,6 +72,8 @@ export type WalkthroughLocationDirective =
   | { readonly kind: 'NONE' };
 
 export interface QuestWalkthroughActionDefinition {
+  /** Conditions only the player can attest, never inferred from account unlocks. */
+  readonly manualChecks?: readonly string[];
   readonly id: string;
   readonly section: 'PREPARE' | 'QUEST';
   readonly sourceOrder: number;
@@ -125,6 +128,7 @@ export const isIndependentReviewWalkthroughSource = (
 ): source is IndependentReviewWalkthroughSource => source.kind === 'INDEPENDENT_REVIEW';
 
 export interface QuestWalkthroughDefinition {
+  readonly requirementsReview?: ReviewedQuestRequirements;
   readonly questId: string;
   readonly revision: string;
   readonly releaseStatus: 'PREVIEW_ONLY' | 'APPROVED';

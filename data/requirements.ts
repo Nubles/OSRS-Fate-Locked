@@ -1,4 +1,6 @@
 import { TableType } from '../types';
+import { QUEST_DATA } from './questData';
+import { enforcedQuestAreas } from '../utils/questGeographyDisplay';
 
 export interface ContentAlternativeRequirement {
   label: string;
@@ -13,10 +15,12 @@ export interface ContentRequirement {
   category: TableType;
   regions: string[];
   skills: Record<string, number>;
+  questPoints?: number;
   quests?: string[];     // Specific quest prerequisites — must match QUEST_DATA entries.
   diaries?: string[];    // Specific Achievement Diary tier IDs — must match DIARY_DATA entries.
   description?: string;
   items?: string[];      // Optional specific item requirements
+  manualRequirements?: string[];
   alternatives?: ContentAlternativeRequirement[]; // One complete route is sufficient.
   accessRoutes?: Array<{ label: string; skills?: Record<string, number>; diaries?: string[] }>;
 }
@@ -2757,3 +2761,16 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Combine Avernic Defender Hilt (ToB) with Dragon Defender.'
   }
 };
+
+// Strategy prose can be curated separately; copied quest gates cannot override
+// the canonical journal. Evaluators also use QUEST_DATA for manual/OR gates.
+for (const [id, strategy] of Object.entries(STRATEGY_DATABASE)) {
+  const quest = QUEST_DATA[id];
+  if (!quest) continue;
+  STRATEGY_DATABASE[id] = {
+    ...strategy, id: quest.id, category: TableType.QUESTS,
+    regions: enforcedQuestAreas(quest),
+    skills: Object.fromEntries(Object.entries(quest.skills).filter(([skill]) => skill !== 'Quest Points')),
+    questPoints: quest.skills['Quest Points'], quests: [...quest.prereqs],
+  };
+}

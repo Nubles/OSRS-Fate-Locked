@@ -2455,7 +2455,14 @@
               "name": "Spinning wheel"
             }
           ],
-          "gates": [],
+          "gates": [
+            {
+              "label": "Crafting level 1",
+              "level": 1,
+              "skill": "Crafting",
+              "type": "SKILL"
+            }
+          ],
           "id": "sheep-shearer:spin-wool",
           "items": [],
           "kind": "USE_ITEM",
@@ -2573,7 +2580,7 @@
       ],
       "questId": "Sheep Shearer",
       "releaseStatus": "PREVIEW_ONLY",
-      "revision": "2aa93838959a1fd0c26ab45642b9bb39e5bad0321487129cdf2fb39f2bf971e2",
+      "revision": "61adaed2635c9bfa09158c13dc25c906b3d5746e2cd20f849ed2a29cc552618d",
       "source": {
         "chunkPickerCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
         "chunkPickerLicenceStatus": "UNVERIFIED",
@@ -2766,7 +2773,14 @@
               "name": "Restless ghost"
             }
           ],
-          "gates": [],
+          "gates": [
+            {
+              "label": "Neck T1: Wear the ghostspeak amulet to speak to the ghost",
+              "slot": "Neck",
+              "tier": 1,
+              "type": "EQUIPMENT"
+            }
+          ],
           "id": "the-restless-ghost:talk-to-ghost",
           "items": [
             {
@@ -2965,7 +2979,7 @@
       ],
       "questId": "The Restless Ghost",
       "releaseStatus": "PREVIEW_ONLY",
-      "revision": "10713567065dfb8118da8fa8bcd91413bad41070d9f42d3bed46666e756b1c7a",
+      "revision": "ac29fd792fcc21964d4ad9c274a28a6f9d5f119f45524b310231060e20cd6e16",
       "source": {
         "chunkPickerCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
         "chunkPickerLicenceStatus": "UNVERIFIED",

@@ -1,12 +1,9 @@
 # Keeps the DEPLOYED app's bundled game data current with the OSRS Wiki.
 #
-# The collection log also self-updates live in the browser (additive only — see
-# services/CollectionLogSyncService.ts). This workflow is the other half: it
-# bakes wiki changes into the committed data (so first-load is correct and names
-# get the wiki's polished/override forms) and — because it runs the full test
-# suite, including the cross-data invariants — it's where a brand-new boss/quest
-# that needs human curation (model, gacha tier, economy, requirements) shows up
-# as a reviewable PR rather than silently shipping.
+# The browser reports collection-log additions without changing catalogue or
+# save identities. This workflow proposes reviewed build-time data updates and
+# runs the tests before opening a pull request. New bosses and quests still
+# need human curation of unlocks, requirements, models, and rewards.
 #
 # Flow: weekly (or manual) -> sync from wiki -> test -> open/refresh a PR.
 # A maintainer reviews + merges; the merge pushes to main and the existing

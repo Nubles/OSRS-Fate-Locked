@@ -7,11 +7,12 @@ import {
   MAP_IMAGE, MAP_BOUNDS, CHUNK_TILES,
   tileToPixel, ChunkCoord,
 } from '../utils/mapCoords';
-import { ensureChain, verifyChain, computeRunId, replayInvariants } from '../utils/integrity';
+import { auditHistory, computeRunId } from '../utils/integrity';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { getGameMode } from '../config/gameModes';
 import { chunkKey, isChunkUnlocked, ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { visibleAreaUnlocks } from '../data/areaMapPolicy';
+import { REGION_CHUNKS } from '../data/regionChunks';
 
 // ---- mini-map drawing -------------------------------------------------------
 
@@ -22,7 +23,7 @@ const MAP_OVERSAMPLE = 2;
 
 const ALWAYS_UNLOCKED = new Set(['Misthalin']);
 
-const drawMiniMap = (
+const drawMiniMap = async (
   canvas: HTMLCanvasElement,
   draftChunks: Record<string, ChunkCoord[]>,
   unlockedRegions: string[],
@@ -30,11 +31,28 @@ const drawMiniMap = (
   unlockedChunks?: string[],
 ) => {
   const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+  if (!ctx) throw new Error('Map canvas is unavailable');
 
   const img = new Image();
   img.crossOrigin = 'anonymous';
-  img.src = MAP_IMAGE.src;
+  await new Promise<void>((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      img.onload = null;
+      img.onerror = null;
+      reject(new Error('Map image timed out'));
+    }, 15000);
+    const finish = (error?: Error) => {
+      window.clearTimeout(timeout);
+      img.onload = null;
+      img.onerror = null;
+      if (error) reject(error);
+      else resolve();
+    };
+    img.onload = () => finish();
+    img.onerror = () => finish(new Error('Map image could not be loaded'));
+    img.src = MAP_IMAGE.src;
+    if (img.complete && img.naturalWidth > 0) finish();
+  });
 
   const W = CARD_MAP_W * MAP_OVERSAMPLE;
   const H = CARD_MAP_H * MAP_OVERSAMPLE;
@@ -139,20 +157,38 @@ const drawMiniMap = (
     }
   };
 
-  if (img.complete) render();
-  else img.onload = render;
+  render();
 };
 
 // ---- helpers -----------------------------------------------------------------
 
-const loadDraftChunks = (): Record<string, ChunkCoord[]> => {
-  try {
-    const raw = localStorage.getItem('fate-region-chunks-draft-v1');
-    if (raw) return JSON.parse(raw);
-    const backup = localStorage.getItem('fate-region-chunks-backup-v1');
-    if (backup) return JSON.parse(backup);
-  } catch { /* ignore */ }
-  return {};
+/** Read authoring data without changing the saved draft or its recovery backup. */
+export const loadRunCardRegionChunks = (
+  storage?: Pick<Storage, 'getItem'>,
+): Record<string, ChunkCoord[]> => {
+  for (const key of ['fate-region-chunks-draft-v1', 'fate-region-chunks-backup-v1']) {
+    try {
+      const raw = (storage ?? localStorage).getItem(key);
+      if (!raw) continue;
+      const parsed: unknown = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) continue;
+      const envelope = parsed as Record<string, unknown>;
+      const versioned = 'v' in envelope;
+      if (versioned && (envelope.v !== 2 || typeof envelope.seed !== 'string' || typeof envelope.dirty !== 'boolean')) continue;
+      const data = versioned ? envelope.data : parsed;
+      if (!data || typeof data !== 'object' || Array.isArray(data)) continue;
+      const entries = Object.entries(data);
+      const valid = entries.length > 0 && entries.every(([region, chunks]) => region.length > 0
+        && Array.isArray(chunks) && chunks.every(chunk => chunk && typeof chunk === 'object'
+          && Number.isInteger(chunk.cx) && Number.isInteger(chunk.cy)
+          && chunk.cx >= 0 && chunk.cx <= 255 && chunk.cy >= 0 && chunk.cy <= 255));
+      if (!valid || !entries.some(([, chunks]) => (chunks as ChunkCoord[]).length > 0)) continue;
+      // Untouched v2 drafts are only a cache of shipped geography; never let an old seed shadow it.
+      if (versioned && !envelope.dirty) return REGION_CHUNKS;
+      return data as Record<string, ChunkCoord[]>;
+    } catch { /* Try the recovery backup, then the shipped map. */ }
+  }
+  return REGION_CHUNKS;
 };
 
 const formatDate = (ts: number) =>
@@ -181,23 +217,27 @@ interface CardInnerProps {
   firstTs: number;
   runId: string | null;
   integrityOk: boolean;
+  integrityLabel: string;
   modeName: string;
+  renderMap: React.MutableRefObject<(() => Promise<void>) | null>;
 }
 
 const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
   profileName, stats, regionsUnlocked, regionsTotal,
-  fatePoints, firstTs, runId, integrityOk, modeName,
+  fatePoints, firstTs, runId, integrityOk, integrityLabel, modeName, renderMap,
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const draftChunks = loadDraftChunks();
+  const [draftChunks] = useState(loadRunCardRegionChunks);
   const { unlocks, gameModeId } = useGame();
   const isChunked = gameModeId === 'chunked';
 
   useEffect(() => {
-    if (canvasRef.current) {
-      drawMiniMap(canvasRef.current, draftChunks, visibleAreaUnlocks(unlocks.regions), isChunked, unlocks.chunks ?? []);
+    const canvas = canvasRef.current;
+    if (canvas) {
+      renderMap.current = () => drawMiniMap(canvas, draftChunks, visibleAreaUnlocks(unlocks.regions), isChunked, unlocks.chunks ?? []);
     }
-  }, []);
+    return () => { renderMap.current = null; };
+  }, [draftChunks, isChunked, unlocks.regions, unlocks.chunks, renderMap]);
 
   const days = daysSince(firstTs);
   const successRate = stats.rolls === 0 ? 0 : Math.round((stats.successes / stats.rolls) * 100);
@@ -208,10 +248,6 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
       style={{ width: 800, height: 450, fontFamily: 'system-ui, sans-serif' }}
       className="relative overflow-hidden bg-[#0a0c0f] flex flex-col"
     >
-      {/* Background grain texture */}
-      <div className="absolute inset-0 opacity-[0.03]"
-        style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/carbon-fibre.png")' }} />
-
       {/* Gold top border accent */}
       <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-amber-500 to-transparent" />
 
@@ -261,13 +297,13 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
                   boxShadow: integrityOk ? '0 0 6px rgba(52,211,153,0.7)' : '0 0 6px rgba(248,113,113,0.7)',
                   // The dot is an inline-block box (not baseline-pinned like the
                   // text), so it didn't need the wrapper's upward shift — push it
-                  // back down to sit level with the VERIFIED caps.
+                  // back down to sit level with the status text.
                   position: 'relative',
                   top: 7,
                 }}
               />
               <span style={{ verticalAlign: 'middle' }}>
-                {integrityOk ? 'VERIFIED' : 'UNVERIFIED'}
+                {integrityLabel}
               </span>
             </span>
           </div>
@@ -328,6 +364,9 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
       <div className="relative z-10 flex items-center justify-between px-6 py-2.5 border-t border-white/5">
         <div className="text-[9px] font-mono text-gray-600 tracking-wider">
           {runId ?? 'run-not-started'}
+        </div>
+        <div className="text-[9px] text-gray-500">
+          Local check only; not external verification
         </div>
         <div className="text-[9px] tracking-[0.2em] text-amber-500/50 uppercase font-semibold">
           fatelocked.ironman
@@ -401,15 +440,25 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
   const { activeProfileName } = useProfiles();
   const cardRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(dialogRef);
+  const renderMap = useRef<(() => Promise<void>) | null>(null);
+  useFocusTrap(dialogRef, !embedded);
   const [capturing, setCapturing] = useState(false);
   const [captured, setCaptured] = useState<string | null>(null);
+  const [captureError, setCaptureError] = useState<string | null>(null);
 
-  const chained = React.useMemo(() => ensureChain(history), [history]);
-  const chainReport = React.useMemo(() => verifyChain(chained), [chained]);
-  const replayData = React.useMemo(() => replayInvariants(chained), [chained]);
-  const runId = React.useMemo(() => computeRunId(chained), [chained]);
-  const firstTs = chained[0]?.timestamp ?? Date.now();
+  const historyAudit = React.useMemo(() => auditHistory(history), [history]);
+  const runId = React.useMemo(() => computeRunId(history), [history]);
+  const firstTs = history[0]?.timestamp ?? Date.now();
+  const integrityOk = history.length > 0 && historyAudit.verdict === 'verified';
+  const integrityLabel = history.length === 0 ? 'NO HISTORY'
+    : historyAudit.verdict === 'tampered' ? 'BROKEN HISTORY'
+    : historyAudit.verdict === 'warning' ? 'REPLAY WARNING' : 'HISTORY CHECKED';
+  const historyDetail = history.length === 0 ? 'No recorded history to check'
+    : historyAudit.verdict === 'tampered'
+      ? `${historyAudit.chain.brokenAt.length} broken link${historyAudit.chain.brokenAt.length === 1 ? '' : 's'}`
+      : historyAudit.verdict === 'warning'
+        ? `${historyAudit.violations.length} replay warning${historyAudit.violations.length === 1 ? '' : 's'}`
+        : 'Local history checks passed';
 
   const isChunkedMode = gameModeId === 'chunked';
   const regionsTotal = isChunkedMode
@@ -424,7 +473,7 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
   const cardProps: CardInnerProps = {
     profileName: activeProfileName,
     stats: {
-      ...replayData.final,
+      ...historyAudit.final,
       keys,
       specialKeys,
       chaosKeys,
@@ -434,16 +483,20 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
     fatePoints,
     firstTs,
     runId,
-    integrityOk: chainReport.ok,
+    integrityOk,
+    integrityLabel,
     modeName: getGameMode(gameModeId).name,
+    renderMap,
   };
 
   const capture = useCallback(async () => {
     if (!cardRef.current) return;
     setCapturing(true);
+    setCaptureError(null);
     try {
-      // Wait a tick for the (two-pass oversampled) canvas to finish drawing
-      await new Promise(r => setTimeout(r, 500));
+      // The image may take longer than a fixed delay; capture only after its overlays are drawn.
+      if (!renderMap.current) throw new Error('Map has not started rendering');
+      await renderMap.current();
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(cardRef.current, {
         useCORS: true,
@@ -453,6 +506,8 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
         logging: false,
       });
       setCaptured(canvas.toDataURL('image/png'));
+    } catch {
+      setCaptureError('The map card could not be rendered. Please try Re-render.');
     } finally {
       setCapturing(false);
     }
@@ -487,7 +542,7 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
           <img src={captured} alt="Run card preview" className="rounded-lg shadow-xl w-full max-w-2xl border border-white/10" />
         ) : (
           <div className="w-full max-w-2xl h-[225px] bg-[#0a0c0f] rounded-lg border border-white/10 flex items-center justify-center">
-            <div className="text-gray-500 text-sm animate-pulse">Rendering card…</div>
+            <div className="text-gray-500 text-sm">{captureError ? 'Map preview unavailable' : 'Rendering card…'}</div>
           </div>
         )}
 
@@ -517,8 +572,9 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
           </button>
         </div>
 
+        {captureError && <p role="alert" className="text-xs text-amber-300 text-center">{captureError}</p>}
         <div className="text-[10px] font-mono text-gray-600 text-center">
-          {runId ?? '—'} · {chainReport.ok ? '✓ chain verified' : `⚠ ${chainReport.brokenAt.length} broken links`}
+          {runId ?? 'run-not-started'} · {historyDetail}
         </div>
       </div>
 

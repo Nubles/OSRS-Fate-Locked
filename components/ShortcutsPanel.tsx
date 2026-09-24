@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, Footprints, MapPin } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { Footprints, MapPin } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { chunkContentService } from '../services/ChunkContentService';
 import { chunkUnlocked, chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';

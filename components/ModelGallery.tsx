@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Search, Boxes, ChevronRight } from 'lucide-react';
+import { X, Search, ChevronRight } from 'lucide-react';
+import { Boxes } from './OsrsIcon';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useGame } from '../context/GameContext';
 import { EntityModel } from './EntityModel';

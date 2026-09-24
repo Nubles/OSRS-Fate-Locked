@@ -28,6 +28,32 @@ describe('tierForLevel', () => {
   });
 });
 
+describe('mandatory equipment route', () => {
+  it('shows the necklace slot and recommends its actual Fate table', () => {
+    const route = buildGoalRoute('The Restless Ghost', stateWith())!;
+    expect(route.equipment).toContainEqual(expect.objectContaining({ name: 'Neck T1', met: false }));
+    expect(route.equipment[0].detail).toMatch(/Ghostspeak amulet/i);
+    expect(route.tables).toContainEqual(expect.objectContaining({ table: TableType.EQUIPMENT, needed: ['Neck'] }));
+    expect(route.skills.some(skill => skill.skill === 'Neck')).toBe(false);
+    expect(buildGoalRoute('The Restless Ghost', stateWith({ equipment: { Neck: 1 } }))!.equipment).toEqual([]);
+  });
+
+  it('carries equipment needs into strategy prerequisite routes', () => {
+    const route = buildGoalRoute('Recipe for Disaster', stateWith())!;
+    expect(route.equipment).toContainEqual(expect.objectContaining({ name: 'Head T1', met: false }));
+  });
+
+  it('carries prerequisite equipment into diary plans and prunes completed quests', () => {
+    const state = stateWith({
+      completedTasks: ALL_DIARY_TASKS.filter(task => task.id !== 'mor_med_10').map(task => task.id),
+    });
+    const route = buildGoalRoute('Morytania Medium', state)!;
+    expect(route.equipment).toContainEqual(expect.objectContaining({ name: 'Neck T1', met: false }));
+    state.unlocks.quests = ['Ghosts Ahoy'];
+    expect(buildGoalRoute('Morytania Medium', state)!.equipment).toEqual([]);
+  });
+});
+
 describe('expandQuestChain', () => {
   it('orders prerequisites before dependents, transitively', () => {
     const chain = expandQuestChain(["Legends' Quest"]);
@@ -136,7 +162,7 @@ describe('buildGoalRoute — quest and engine-item goals', () => {
   it('retains canonical alternatives for strategy-backed quest goals', () => {
     const route = buildGoalRoute('Desert Treasure II', stateWith())!;
 
-    expect(route.kind).toBe('strategy');
+    expect(route.kind).toBe('quest');
     expect(route.description).toContain('Unlocks 4 new bosses');
     expect(route.alternatives).toEqual(expect.arrayContaining([
       expect.objectContaining({ name: expect.stringContaining('East Ardougne') }),

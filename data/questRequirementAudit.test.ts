@@ -172,7 +172,7 @@ const expectReviewedBatch = (start: string, end?: string) => {
     if (!Number.isInteger(entry.source.revision) || entry.source.revision <= 0) {
       return [`${entry.id}:missing-source-revision`];
     }
-    const expectedChunkSourceCommit = ['A Ruff Situation', 'Crab Quest'].includes(entry.id)
+    const expectedChunkSourceCommit = ['A Ruff Situation', 'Crab Quest', 'Family Crest'].includes(entry.id)
       ? 'fa71ed3b207e6a501444987dee23b875ec27cacd' : entry.id === 'Fallen From Grace'
       ? 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746'
       : 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926';
@@ -191,6 +191,21 @@ const expectReviewedBatch = (start: string, end?: string) => {
 };
 
 describe('official quest and miniquest audit coverage', () => {
+  it('fingerprints required equipment slots, tiers and their quest-step explanation', () => {
+    const quest = QUEST_DATA['The Restless Ghost'];
+    const fingerprint = questRequirementFingerprint(quest);
+    expect(fingerprint).not.toBe(questRequirementFingerprint({ ...quest, equipmentRequirements: undefined }));
+    expect(fingerprint).not.toBe(questRequirementFingerprint({ ...quest,
+      equipmentRequirements: [{ slot: 'Neck', tier: 2, reason: 'Wear the ghostspeak amulet' }],
+    }));
+  });
+
+  it('fingerprints intermediate quest progress and alternative skill routes', () => {
+    const quest = QUEST_DATA['Desert Treasure I'];
+    expect(questRequirementFingerprint(quest)).not.toBe(questRequirementFingerprint({ ...quest, skillAlternatives: undefined }));
+    const partial = QUEST_DATA['RFD: Sir Amik Varze'];
+    expect(questRequirementFingerprint(partial)).not.toBe(questRequirementFingerprint({ ...partial, questProgress: undefined }));
+  });
   it('matches official, runtime, and audit IDs one-to-one', () => {
     expect(validateQuestRequirementAudit(QUEST_DATA, official, audit).errors)
       .toEqual([]);
@@ -229,7 +244,7 @@ describe('official quest and miniquest audit coverage', () => {
       .toEqual([...snapshot.chunkSourceCommits].sort());
     expect(snapshot.entries.filter(entry =>
       entry.chunkSourceCommit === 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
-    )).toHaveLength(209);
+    )).toHaveLength(208);
   });
 
   it('accepts approved schema-2 entry commits and rejects mismatched audit metadata', () => {

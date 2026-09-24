@@ -6,7 +6,7 @@ import {
   SKILLS_LIST,
   SLAYER_UNLOCKS_LIST,
 } from '../../data/items';
-import { meetsSkillRequirement } from '../journalStatus';
+import { currentQuestPoints, meetsSkillRequirement } from '../journalStatus';
 import { canonicalQuestId } from '../contentIdentity';
 import type { ExactItemSource, RawRouteRequirement, RouteGate } from './model';
 
@@ -16,6 +16,7 @@ export interface GateEvaluation {
 }
 
 export interface RouteGateAccountState {
+  readonly equipment?: Readonly<Record<string, number>>;
   readonly skills: Readonly<Record<string, number>>;
   readonly levels: Readonly<Record<string, number>>;
   readonly quests: readonly string[];
@@ -150,8 +151,15 @@ export const evaluateRouteGates = (
         break;
       }
       case 'SKILL':
-        if (!meetsSkillRequirement(unlocks, gate.skill, gate.level)) blockers.push(gate);
+        if (gate.skill === 'Quest Points'
+          ? currentQuestPoints(unlocks) < gate.level
+          : !meetsSkillRequirement(unlocks, gate.skill, gate.level)) blockers.push(gate);
         break;
+      case 'EQUIPMENT': {
+        const tier = unlocks.equipment?.[gate.slot] ?? 0;
+        if (!Number.isFinite(tier) || tier < gate.tier) blockers.push(gate);
+        break;
+      }
       case 'UNLOCK':
         if (!unlocks[gate.category].includes(gate.id)) blockers.push(gate);
         break;

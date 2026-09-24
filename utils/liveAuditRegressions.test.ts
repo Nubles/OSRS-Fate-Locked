@@ -54,7 +54,8 @@ describe('live audit requirement regressions', () => {
     const u = fresh().unlocks;
     u.regions = [...REGIONS_LIST];
     for (const name of ["Champions' Guild", "Warriors' Guild"]) expect(evaluateActivityReadiness(true, getActivityReq(name), u).status).toBe('NOT_READY');
-    for (const name of ['Nex', 'Nightmare Zone', 'Skotizo']) expect(evaluateActivityReadiness(true, getActivityReq(name), u).status).toBe('NEEDS_CONFIRMATION');
+    expect(evaluateActivityReadiness(true, getActivityReq('Nex'), u).status).toBe('NOT_READY');
+    for (const name of ['Nightmare Zone', 'Skotizo']) expect(evaluateActivityReadiness(true, getActivityReq(name), u).status).toBe('NEEDS_CONFIRMATION');
     expect(evaluateActivityReadiness(true, undefined, u).status).toBe('NEEDS_CONFIRMATION');
   });
   it('does not label a bank or Farming Guild ready in locked geography', () => {

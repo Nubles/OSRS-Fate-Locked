@@ -12,6 +12,7 @@ import { UnlockState } from '../types';
 import { SlayerMasters, SlayerAssignment } from '../services/ChunkContentService';
 import { SLAYER_MASTER_REQUIREMENTS, type SlayerMasterRequirementOption } from '../data/slayerMasterRequirements';
 import { isAreaReachable } from './reachability';
+import { pendingQuestProgress } from '../data/questProgress';
 
 export type SlayerStatus =
   | 'ready'         // assignable and reachable right now
@@ -118,6 +119,8 @@ const masterBlocker = (
     };
   }
 
+  const pendingProgress = pendingQuestProgress(requirements.questProgress, [...questSet]);
+  if (pendingProgress.length) return { status: 'access-unknown', label: pendingProgress.join('; ') };
   return undefined;
 };
 

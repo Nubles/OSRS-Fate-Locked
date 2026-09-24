@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, Lock, Route, MapPin, ChevronDown, ChevronRight, ExternalLink, AlertTriangle, HelpCircle } from 'lucide-react';
+import { CheckCircle2, Lock, Route, ChevronDown, ChevronRight, ExternalLink, AlertTriangle, HelpCircle } from 'lucide-react';
+import { MapPin } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
-import { QuestData, QUEST_DATA } from '../data/questData';
+import { QuestData, QUEST_DATA, EquipmentSlot } from '../data/questData';
 import { chunkContentService } from '../services/ChunkContentService';
 import { chunkReachability } from '../utils/chunkReach';
 import { chunkForPlace, chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
@@ -37,11 +38,13 @@ export interface QuestDoabilityEvaluation {
   bucket: DoabilityBucket;
   reqsMet: boolean;
   missingSkills: {
-    skill: string; lvl: number; have: number; methodCap?: number;
+    skill: string; lvl: number; have: number; methodCap?: number; label?: string;
   }[];
+  missingEquipment: { slot: EquipmentSlot; tier: number; have: number; label: string }[];
   missingPrereqs: string[];
   lockedAreas: string[];
   manualChecks: string[];
+  otherRequirements: string[];
 }
 
 interface Row extends QuestDoabilityEvaluation {
@@ -57,15 +60,20 @@ export const evaluateQuestDoability = (
 ): QuestDoabilityEvaluation => {
   const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId);
   const completed = eligibility.status === 'COMPLETED';
+  const isChunked = gameModeId === 'chunked';
+  // Known catalogue entries may intentionally have no area gate (the tutorial).
+  // An unreviewed, evidence-free entry must not acquire a ready badge by default.
+  const unreviewedAccess = !isChunked && !completed
+    && !QUEST_DATA[quest.id] && !hasCanonicalQuestLocationEvidence(quest);
   const currentQP = unlocks.quests.reduce(
     (total, qid) => total + (QUEST_DATA[qid]?.points ?? 0),
     0,
   );
-  const skillBlockers = new Set(
-    eligibility.blockers
-      .filter(blocker => blocker.kind === 'skill')
-      .map(blocker => blocker.label),
-  );
+  const skillBlockers = new Map(eligibility.blockers.flatMap(blocker =>
+    blocker.kind === 'skill' && blocker.requirement?.type === 'single'
+      ? [[blocker.requirement.skill, blocker] as const]
+      : [],
+  ));
   const questPointsRequirement = quest.skills['Quest Points'];
   const hasQuestPointsBlocker = !completed
     && questPointsRequirement !== undefined
@@ -78,7 +86,8 @@ export const evaluateQuestDoability = (
       }
       continue;
     }
-    if (!skillBlockers.has(skill + ' ' + lvl)) continue;
+    const blocker = skillBlockers.get(skill);
+    if (!blocker) continue;
     const tier = unlocks.skills[skill] ?? 0;
     const unlocked = tier > 0;
     missingSkills.push({
@@ -86,6 +95,7 @@ export const evaluateQuestDoability = (
       lvl,
       have: unlocked ? (unlocks.levels[skill] ?? 1) : 0,
       methodCap: unlocked ? Math.min(99, tier * 10) : undefined,
+      ...(blocker.label !== `${skill} ${lvl}` ? { label: blocker.label } : {}),
     });
   }
   if (quest.combatLevel !== undefined && eligibility.blockers.some(
@@ -101,8 +111,18 @@ export const evaluateQuestDoability = (
   const missingPrereqs = completed
     ? []
     : quest.prereqs.filter(prereq => !unlocks.quests.includes(prereq));
-  const reqsMet = eligibility.eligible || completed;
+  const missingEquipment = eligibility.blockers.flatMap(blocker => blocker.kind === 'equipment'
+    ? [{ slot: blocker.slot, tier: blocker.tier, have: unlocks.equipment?.[blocker.slot] ?? 0, label: blocker.label }]
+    : []);
+  const reqsMet = (eligibility.eligible && !unreviewedAccess) || completed;
   const manualChecks = completed ? [] : eligibility.manualChecks;
+  const otherRequirements = [
+    ...eligibility.blockers.filter(blocker => blocker.kind === 'quest'
+      && !quest.prereqs.includes(blocker.label)
+      && blocker.label !== `Quest Points ${questPointsRequirement}`)
+      .map(blocker => blocker.label),
+    ...(unreviewedAccess ? ['Quest access requirements need review'] : []),
+  ];
   const alternativeLabel = quest.oneOf?.length
     ? quest.oneOf.map(questRequirementOptionLabel).join(' or ')
     : '';
@@ -117,6 +137,8 @@ export const evaluateQuestDoability = (
     bucket = 'DONE';
   } else if (canonicalRegionBlockers.length > 0) {
     bucket = 'LOCKED';
+  } else if (!isChunked) {
+    bucket = reqsMet ? 'DOABLE' : 'REQS';
   } else {
     bucket = doabilityBucket(
       false, reqsMet, chunk, hasCanonicalQuestLocationEvidence(quest),
@@ -126,7 +148,7 @@ export const evaluateQuestDoability = (
   const lockedAreas = bucket !== 'LOCKED'
     ? []
     : [...new Set([
-      ...(chunk?.access === 'LOCKED' ? chunkLockedAreas : []),
+      ...(isChunked && chunk?.access === 'LOCKED' ? chunkLockedAreas : []),
       ...canonicalRegionBlockers,
     ])];
 
@@ -135,9 +157,11 @@ export const evaluateQuestDoability = (
     bucket,
     reqsMet,
     missingSkills,
+    missingEquipment,
     missingPrereqs,
     lockedAreas,
     manualChecks,
+    otherRequirements,
   };
 };
 
@@ -149,23 +173,34 @@ export const questDoabilitySkillBlockerLabel = (
     && blocker.methodCap < blocker.lvl
     ? ` (method cap ${blocker.methodCap})`
     : '';
-  return `${blocker.skill} ${blocker.lvl}${capSuffix}`;
+  return `${blocker.label ?? `${blocker.skill} ${blocker.lvl}`}${capSuffix}`;
 };
 
 export const questDoabilityRequirementLabels = (
   row: QuestDoabilityEvaluation,
 ): string[] => [
   ...row.missingSkills.map(questDoabilitySkillBlockerLabel),
-  ...row.missingPrereqs.map(prereq => `\u2726 ${prereq}`),
+  ...row.missingEquipment.map(requirement => requirement.label),
+  ...row.missingPrereqs.map(prereq => `\u2022 ${prereq}`),
   ...row.manualChecks.map(check => `Confirm: ${check}`),
+  ...row.otherRequirements,
 ];
 export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
   const { unlocks, gameModeId } = useGame();
-  const [ready, setReady] = useState(chunkContentService.ready);
-  useEffect(() => { if (!ready) chunkContentService.init().then(() => setReady(true)); }, [ready]);
+  const isChunked = gameModeId === 'chunked';
+  const [ready, setReady] = useState(() => isChunked && chunkContentService.ready);
+  useEffect(() => {
+    if (isChunked && !ready) chunkContentService.init().then(() => setReady(true));
+  }, [isChunked, ready]);
   const [open, setOpen] = useState<Record<string, boolean>>({ DOABLE: true, REQS: true, STRANDED: true, LOCKED: true });
 
   const rows = useMemo<Row[]>(() => {
+    if (!isChunked) {
+      return Object.values(QUEST_DATA).map(quest => ({
+        ...evaluateQuestDoability(quest, unlocks, null, [], gameModeId),
+        strandedChunk: null,
+      }));
+    }
     if (!ready) return [];
     // Gate reachability on per-chunk quest-entry requirements (questSections),
     // so a quest whose step sits behind an un-done quest reads correctly.
@@ -196,7 +231,7 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
 
       return { ...evaluation, strandedChunk };
     });
-  }, [ready, unlocks, gameModeId]);
+  }, [ready, unlocks, gameModeId, isChunked]);
 
   const filtered = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -210,10 +245,10 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
     return m;
   }, [filtered]);
 
-  if (!ready) return <div className="p-4 text-sm text-gray-500">Loading chunk data…</div>;
+  if (isChunked && !ready) return <div className="p-4 text-sm text-gray-500">Loading chunk data…</div>;
 
   const doableCount = byBucket.DOABLE.length;
-  const total = rows.length;
+  const total = filtered.length;
 
   return (
     <div className="h-full overflow-y-auto custom-scrollbar p-3 space-y-3">
@@ -221,7 +256,7 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
         <Route size={16} className="text-emerald-400" />
         <h3 className="text-sm font-bold text-white">Quest doability</h3>
         <span className="text-[11px] text-gray-500">
-          <span className="text-emerald-300 font-semibold">{doableCount}</span> of {total} doable now — by chunk reachability + requirements
+          <span className="text-emerald-300 font-semibold">{doableCount}</span> of {total} doable now — {isChunked ? 'by chunk reachability + requirements' : 'by area unlocks + requirements'}
         </span>
       </div>
 
@@ -238,7 +273,7 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
             >
               {isOpen ? <ChevronDown size={13} className="text-gray-500" /> : <ChevronRight size={13} className="text-gray-500" />}
               <span className={`w-2 h-2 rounded-full ${meta.dot}`} />
-              <span className={`text-xs font-semibold ${meta.cls}`}>{meta.label}</span>
+              <span className={`text-xs font-semibold ${meta.cls}`}>{!isChunked && bucket === 'REQS' ? 'Requirements remaining' : meta.label}</span>
               <span className="text-[10px] text-gray-500 font-mono">{list.length}</span>
             </button>
             {isOpen && (
@@ -281,8 +316,12 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
 
       <p className="text-[10px] text-gray-600 flex items-start gap-1">
         <AlertTriangle size={11} className="shrink-0 mt-0.5 text-gray-700" />
-        "Doable now" = every chunk a quest's steps touch is reachable from Lumbridge over your transport links, and its skill/quest
-        requirements are met. Stranded = you own the chunk but can't route to it yet. Reachability is an approximation (no per-link gating).
+        {isChunked ? <>
+          "Doable now" = every chunk a quest's steps touch is reachable from Lumbridge over your transport links, and its skill/quest
+          and equipment-slot requirements are met. Stranded = you own the chunk but can't route to it yet. Reachability is an approximation (no per-link gating).
+        </> : <>
+          Uses the same area unlocks and requirements as the Quest Journal. Quests with confirmation checks stay under Requirements remaining.
+        </>}
       </p>
     </div>
   );

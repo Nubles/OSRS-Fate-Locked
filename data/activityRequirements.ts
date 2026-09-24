@@ -9,6 +9,7 @@
 // Hard gates use structured fields; notes are descriptive only.
 
 import { ACTIVITY_ACCESS_AREAS } from './activityAccess';
+import type { QuestProgressRequirement } from './questProgress';
 
 export interface ActivityReq {
   /** Hard skill-level gates, e.g. { Slayer: 91 }. */
@@ -27,34 +28,39 @@ export interface ActivityReq {
   unverified?: boolean;
   /** External progress a player must explicitly confirm after machine gates pass. */
   manualRequirements?: string[];
+  questProgress?: QuestProgressRequirement[];
+  /** One complete route is sufficient, including manual external checks. */
+  oneOf?: Array<{ skills?: Record<string, number>; diaries?: string[]; manualRequirements?: string[] }>;
   /** Any gate that isn't a skill/quest. */
   note?: string;
 }
+
+const GOD_WARS_ENTRY = ['Unlocked God Wars Dungeon access through Troll Stronghold progress (defeated Dad), or the Easy Combat Achievement hilt teleport; entry also requires 60 Strength or Agility and a rope for first entry'];
+const GOD_WARS_CHAMBER = 'Meet this faction’s kill-count requirement for your Combat Achievement tier, or use an ecumenical key';
 
 export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   // ===== Bosses & Raids =====================================================
   'Tombs of Amascut': { quests: ['Beneath Cursed Sands'] },
   'The Gauntlet': { quests: ['Song of the Elves'] },
   'Nex': {
-    manualRequirements: [
-      'A complete Frozen key from all four God Wars Dungeon generals',
-    ],
+    skills: { Strength: 70, Agility: 70, Ranged: 70, Hitpoints: 70 },
+    manualRequirements: [...GOD_WARS_ENTRY, 'Completed The Frozen Door miniquest with a frozen key from all four generals', 'Meet the Ancient Prison kill-count requirement for your Combat Achievement tier, or use an ecumenical key'],
   },
-  'General Graardor': { manualRequirements: ['God Wars Dungeon — 40 kill-count to enter the Bandos chamber.'] },
-  'Commander Zilyana': { manualRequirements: ['God Wars Dungeon — 40 kill-count to enter the Saradomin chamber.'] },
-  "Kree'arra": { manualRequirements: ['God Wars Dungeon — 40 kill-count to enter the Armadyl chamber.'] },
-  "K'ril Tsutsaroth": { manualRequirements: ['God Wars Dungeon — 40 kill-count to enter the Zamorak chamber.'] },
+  'General Graardor': { skills: { Strength: 70 }, manualRequirements: [...GOD_WARS_ENTRY, GOD_WARS_CHAMBER] },
+  'Commander Zilyana': { skills: { Agility: 70 }, manualRequirements: [...GOD_WARS_ENTRY, GOD_WARS_CHAMBER] },
+  "Kree'arra": { skills: { Ranged: 70 }, manualRequirements: [...GOD_WARS_ENTRY, GOD_WARS_CHAMBER] },
+  "K'ril Tsutsaroth": { skills: { Hitpoints: 70 }, manualRequirements: [...GOD_WARS_ENTRY, GOD_WARS_CHAMBER] },
   'Abyssal Sire': { skills: { Slayer: 85 }, manualRequirements: ['Abyssal demon Slayer task.'] },
   'Alchemical Hydra': { skills: { Slayer: 95 }, manualRequirements: ['Hydra Slayer task; Karuulm Slayer Dungeon.'] },
   'Cerberus': { skills: { Slayer: 91 }, manualRequirements: ['Hellhound Slayer task.'] },
-  'Grotesque Guardians': { skills: { Slayer: 75 }, manualRequirements: ['Slayer Tower roof; needs a Brittle key.'] },
+  'Grotesque Guardians': { skills: { Slayer: 75 }, manualRequirements: ['Permanently unlocked the Slayer Tower roof using a brittle key', 'An active gargoyle or Grotesque Guardians boss Slayer task'] },
   'Kraken': { skills: { Slayer: 87 }, manualRequirements: ['Cave kraken Slayer task.'] },
   'Thermonuclear Smoke Devil': { skills: { Slayer: 93 }, manualRequirements: ['Smoke devil Slayer task.'] },
   'Araxxor': { skills: { Slayer: 92 }, quests: ['Priest in Peril'], manualRequirements: ['Araxyte/spider Slayer task or boss task.'] },
   'Skotizo': { manualRequirements: ['Summoned with a Dark totem in the Catacombs of Kourend.'] },
   'Vorkath': { quests: ['Dragon Slayer II'] },
   'Galvek': { quests: ['Dragon Slayer II'], note: 'Fought during Dragon Slayer II.' },
-  'Moons of Peril': { skills: { Slayer: 48 }, quests: ["Twilight's Promise"] },
+  'Moons of Peril': { skills: { Slayer: 48, Hunter: 20, Fishing: 20 }, quests: ['Perilous Moons'], note: 'Repeatable boss access after completing Perilous Moons.' },
   'Duke Sucellus': { quests: ['Desert Treasure II'] },
   'The Leviathan': { quests: ['Desert Treasure II'] },
   'The Whisperer': { quests: ['Desert Treasure II'] },
@@ -75,7 +81,11 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Gemstone Crab': { quests: ['Children of the Sun'] },
   'Shellbane Gryphon': { skills: { Slayer: 51 }, quests: ['Troubled Tortugans'], manualRequirements: ['Gryphon Slayer task.'] },
   'The Mad Angel': { quests: ['Fallen From Grace'], requiredAreas: ['Wyrmscraig'] },
-  'Mimic': { manualRequirements: ['From a Strange/Mysterious casket (Hard+ clue scrolls).'] },
+  'Mimic': { manualRequirements: ['Opted in at the strange casket in Watson’s house', 'Obtained a Mimic from an elite or master reward casket'] },
+
+  "Calvar'ion": { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ["Have an active Vet'ion boss Slayer task (a skeleton task does not qualify)"] }] },
+  'Obor': { manualRequirements: ['Permanently unlocked Obor’s lair using a giant key (first access only)'] },
+  'Bryophyta': { manualRequirements: ['Permanently unlocked Bryophyta’s lair using a mossy key (first access only)'] },
 
   // ===== Guilds =============================================================
   "Champions' Guild": { questPoints: 32, requiredAreas: ["Champions' Guild"] },
@@ -86,7 +96,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Farming Guild': { skills: { Farming: 45 }, requiredAreas: ['Farming Guild'], note: 'Tiered access: 45 / 65 / 85 Farming.' },
   'Fishing Guild': { skills: { Fishing: 68 } },
   "Heroes' Guild": { quests: ["Heroes' Quest"] },
-  'Hunter Guild': { quests: ['Children of the Sun'] },
+  'Hunter Guild': { skills: { Hunter: 46 }, quests: ['Children of the Sun'], note: 'Guild services require 46 Hunter; the exterior bank chest is unrestricted.' },
   "Legends' Guild": { quests: ["Legends' Quest"] },
   "Myths' Guild": { quests: ['Dragon Slayer II'] },
   'Ranging Guild': { skills: { Ranged: 40 } },
@@ -107,8 +117,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Piety': { skills: { Prayer: 70, Defence: 70 }, quests: ["King's Ransom"], manualRequirements: ['Knight Waves training grounds.'] },
   'Rigour': { skills: { Prayer: 74, Defence: 70 }, manualRequirements: ['Unlocked Rigour using a dexterous prayer scroll'] },
   'Augury': { skills: { Prayer: 77, Defence: 70 }, manualRequirements: ['Unlocked Augury using an arcane prayer scroll'] },
-  'Preserve': { skills: { Prayer: 55 } },
-  'Bones to Peaches': { manualRequirements: ['Mage Training Arena reward shop.'] },
+  'Preserve': { skills: { Prayer: 55 }, manualRequirements: ['Unlocked Preserve using a torn prayer scroll'] },
+  'Bones to Peaches': { skills: { Magic: 60 }, manualRequirements: ['Unlocked Bones to Peaches from the Mage Training Arena reward shop'], note: '60 Magic is required to cast the spell.' },
   'Dwarf Cannon': { quests: ['Dwarf Cannon'] },
   'Chivalry': { skills: { Prayer: 60, Defence: 65 }, quests: ["King's Ransom"], manualRequirements: ['Knight Waves training grounds.'] },
   'God Spells': { skills: { Magic: 60 }, manualRequirements: ['Mage Arena: Saradomin Strike / Claws of Guthix / Flames of Zamorak.'] },
@@ -138,7 +148,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   "Giants' Foundry": { skills: { Smithing: 15 }, quests: ['Sleeping Giants'] },
   'Mastering Mixology': { skills: { Herblore: 60 } },
   'Volcanic Mine': { skills: { Mining: 50 }, quests: ['Bone Voyage'], manualRequirements: ['150 Kudos and permission from Peter at the Museum Camp'] },
-  'Pyramid Plunder': { skills: { Thieving: 21 }, quests: ["Icthlarin's Little Helper"] },
+  'Pyramid Plunder': { skills: { Thieving: 21 }, questProgress: [{ quest: "Icthlarin's Little Helper", label: "Gained access to Sophanem by starting Icthlarin's Little Helper" }] },
   'Trouble Brewing': { skills: { Cooking: 40 }, quests: ['Cabin Fever'] },
   'Tai Bwo Wannai Cleanup': { quests: ['Jungle Potion'] },
   "Shades of Mort'ton": { quests: ["Shades of Mort'ton"] },
@@ -154,7 +164,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
     note: 'Requires several quests completed for the dream bosses.',
   },
   "Sorceress's Garden": { note: 'Gardens gated by Thieving level (1 / 27 / 45 / 65 / 85).' },
-  'Stealing Artefacts': { note: 'Piscarilius access (Kourend & Kebos).' },
+  'Stealing Artefacts': { skills: { Thieving: 49 }, manualRequirements: ['Have a lockpick or hair clip'], note: 'Piscarilius access (Kourend & Kebos).' },
   'Mess': { note: "Hosidius kitchen — a cook's duties in Great Kourend." },
 
   // ===== Player-Owned House (Construction room-build levels) ================
@@ -170,9 +180,9 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Portal Nexus': { skills: { Construction: 72 } },
   'Mounted Coins': { skills: { Construction: 80 }, note: 'Achievement gallery display.' },
   'Mounted Glory': { skills: { Construction: 47 } },
-  'Spirit Tree (POH)': { skills: { Construction: 75 }, note: 'Superior Garden.' },
+  'Spirit Tree (POH)': { skills: { Construction: 75, Farming: 83 }, quests: ['Tree Gnome Village'], note: 'Superior Garden: build at 75 Construction and 83 Farming; Tree Gnome Village unlocks travel.' },
   'Wilderness Obelisk': { skills: { Construction: 80 }, note: 'Superior Garden.' },
-  'Fairy Ring (POH)': { skills: { Construction: 85 }, note: 'Superior Garden.' },
+  'Fairy Ring (POH)': { skills: { Construction: 85 }, quests: ['Fairytale II - Cure a Queen'], note: 'Building requires the fairy enchantment sold after full Fairytale II completion.' },
 
   // ===== Mobility (quest-gated transport networks) ==========================
   'Spirit Trees': { quests: ['Tree Gnome Village'] },
@@ -181,12 +191,12 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Balloon Transport': { quests: ['Enlightened Journey'] },
   'Mine Carts': { quests: ['The Giant Dwarf'] },
   'Magic Carpets': { note: 'Basic routes require only a fare. Quest restrictions vary by destination.' },
-  'Quetzal Network': { quests: ['Children of the Sun'] },
+  'Quetzal Network': { questProgress: [{ quest: "Twilight's Promise", label: "Received Renu during Twilight's Promise to unlock the quetzal network" }] },
   'Mycelium Transport': { quests: ['Bone Voyage'] },
   'Eagle Transport': { quests: ["Eagles' Peak"] },
   'Ectophial': { quests: ['Ghosts Ahoy'] },
   'Enchanted Lyre': { quests: ['The Fremennik Trials'] },
-  'Digsite Pendant': { quests: ['Bone Voyage'], note: 'Charged at the Digsite / Fossil Island.' },
+  'Digsite Pendant': { quests: ['The Dig Site'], manualRequirements: ['Learned the digsite pendant enchantment at Varrock Museum'], note: 'Base Digsite teleport. Fossil Island additionally needs Bone Voyage and the destination machine unlock. Pendants cannot be recharged and crumble after five uses.' },
   'Camulet': { note: "Enakhra's Lament quest reward (desert teleport)." },
   'Kharedst\'s Memoirs': { note: 'Reward from the five Great Kourend mini-quests (Client of Kourend).' },
   'Ring of the Elements': { note: 'Guardians of the Rift reward (Runecraft altar teleports).' },
@@ -209,8 +219,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
 
   // ---- Minigames with a gate -------------------------------------------------
   'Fishing Trawler': {
-    skills: { Fishing: 15 },
     requiredAreas: ['Port Khazard'],
+    note: 'No Fishing level is needed to join; 15 Fishing is required for fish rewards and the minigame teleport.',
   },
   'Gnome Ball': { requiredAreas: ['Tree Gnome Stronghold'] },
   'Gnome Restaurant': { requiredAreas: ['Tree Gnome Stronghold'] },
@@ -230,9 +240,9 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Spirit Tree': { skills: { Farming: 83 }, note: 'Grow a spirit tree.' },
   'Celastrus': { skills: { Farming: 85 }, note: 'Farming Guild (high tier).' },
   'Redwood': { skills: { Farming: 90 }, note: 'Farming Guild (high tier).' },
-  'Crystal Tree': { quests: ['Song of the Elves'], note: 'Prifddinas.' },
+  'Crystal Tree': { skills: { Farming: 74 }, quests: ['Song of the Elves'], note: 'Prifddinas.' },
   'Hespori Patch': { skills: { Farming: 65 } },
-  'Anima': { skills: { Farming: 85 }, note: 'Farming Guild (high tier).' },
+  'Anima': { skills: { Farming: 76 }, note: 'Farming Guild intermediate section; planting requires 76 Farming.' },
   'Vinery': { skills: { Farming: 36 }, requiredAreas: ['Hosidius'], note: 'Grape patches.' },
 
   // ---- Mobility (gated teleport items) ---------------------------------------

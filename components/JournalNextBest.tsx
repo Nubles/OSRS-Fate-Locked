@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Sparkles, ChevronDown, ChevronRight, Map as MapIcon, Scroll, ListChecks, Navigation, BookOpen, Route, Gift, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronRight, ListChecks, Route, ExternalLink } from 'lucide-react';
+import { Sparkles, Map as MapIcon, Scroll, Navigation, BookOpen, Gift } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA, QuestData } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';

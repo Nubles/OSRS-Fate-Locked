@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { computeSync } from './CollectionLogSyncService';
+import { describe, it, expect, afterEach, vi } from 'vitest';
+import { computeSync, CollectionLogSyncService, collectionIdentityReview, captureCollectionLogIdentity } from './CollectionLogSyncService';
 import type { CollectionLogTab } from '../data/collectionLogData';
 
 // Minimal app dataset standing in for COLLECTION_LOG_DATA.
@@ -41,17 +41,17 @@ describe('collection log runtime sync diff', () => {
     expect(names).toEqual(['Brand New Drop', 'Infinity top']);
   });
 
-  it('mints a collision-free id continuing the page scheme', () => {
+  it('detects pending additions without minting any save identity', () => {
     const drop = additions.find(a => a.name === 'Brand New Drop')!;
     expect(drop.tab).toBe('Bosses');
     expect(drop.page).toBe('Test Boss');
-    expect(drop.id).toBe(101003); // next free after 101001/101002
+    expect(drop).not.toHaveProperty('id');
   });
 
   it('matches pages through the alias map', () => {
     const top = additions.find(a => a.name === 'Infinity top')!;
     expect(top.page).toBe('Mage Training Arena');
-    expect(top.id).toBe(401002);
+    expect(top).not.toHaveProperty('id');
   });
 
   it('does not re-add items already present (incl. apostrophes)', () => {
@@ -67,7 +67,7 @@ describe('collection log runtime sync diff', () => {
     const merged: Record<string, CollectionLogTab> = JSON.parse(JSON.stringify(appData));
     for (const a of additions) {
       const page = Object.values(merged[a.tab].pages).find(p => p.name === a.page)!;
-      page.items.push({ id: a.id, name: a.name });
+      page.items.push({ id: page.items.length + 900000, name: a.name });
     }
     // Only consider the pages that still exist (ignore the brand-new page).
     const again = computeSync(wiki.filter(w => w.tabs[0] !== 'Totally New Boss'), merged);
@@ -97,4 +97,54 @@ describe('collection log sync applies wiki display overrides', () => {
   it('adds nothing WITH overrides applied (the fix)', () => {
     expect(computeSync(wiki, app, overrides).additions).toEqual([]);
   });
+});
+
+
+afterEach(() => { vi.unstubAllGlobals(); });
+it('preserves old runtime identity evidence and never applies a refreshed notice cache', async () => {
+  const legacy = JSON.stringify({ timestamp: 0, data: { additions: [{ id: 101010, name: 'Earlier item A', page: 'Abyssal Sire' }], newSources: [] } });
+  const cache = JSON.stringify({ timestamp: Date.now(), data: { additions: [{ tab: 'Bosses', page: 'Abyssal Sire', name: 'New item B' }], newSources: [] } });
+  const storage: Record<string, string> = { fate_clog_sync_v3: legacy, fate_clog_sync_v4: cache };
+  vi.stubGlobal('localStorage', { getItem: (key: string) => storage[key] ?? null, setItem: (key: string, value: string) => { storage[key] = value; } });
+  const { COLLECTION_LOG_DATA } = await import('../data/collectionLogData');
+  const before = JSON.stringify(COLLECTION_LOG_DATA);
+  const service = new CollectionLogSyncService();
+  await service.init();
+  expect(service.pendingAdditions).toHaveLength(1);
+  expect(service.legacyMappings()).toEqual([{ id: 101010, name: 'Earlier item A', page: 'Abyssal Sire' }]);
+  expect(storage.fate_clog_sync_v3).toBe(legacy);
+  expect(JSON.stringify(COLLECTION_LOG_DATA)).toBe(before);
+  // Upstream insertion/reordering can only change notices, never user save IDs.
+  for (const upstream of [wiki, [...wiki].reverse()]) expect(computeSync(upstream, appData).additions.every(a => !('id' in a))).toBe(true);
+});
+
+it('quarantines a reused historical ID and its renamed slot without mutating progress', () => {
+  const data: Record<string, CollectionLogTab> = { Bosses: { name: 'Bosses', pages: { Boss: { name: 'Boss', items: [{ id: 101010, name: 'New B' }, { id: 101011, name: 'Old A' }] } } } };
+  const progress = { '101010': 1 };
+  const review = collectionIdentityReview(progress, [{ id: 101010, name: 'Old A', page: 'Boss' }], data);
+  expect([...review.blockedIds].sort()).toEqual([101010, 101011]);
+  expect(review.savedRecords).toBe(1);
+  expect(progress).toEqual({ '101010': 1 });
+  expect(collectionIdentityReview({ '101011': 1 }, [{ id: 101011, name: 'Old A', page: 'Boss' }], data).savedRecords).toBe(0);
+});
+
+
+it('uses persisted run provenance instead of unrelated browser mappings, while protecting unknown IDs', () => {
+  const data: Record<string, CollectionLogTab> = { Bosses: { name: 'Bosses', pages: { Boss: { name: 'Boss', items: [{ id: 101010, name: 'New B' }, { id: 101011, name: 'Old A' }] } } } };
+  const legacy = [{ id: 101010, name: 'Old A', page: 'Boss' }];
+  const progress = { '101010': 2, '101011': 1 };
+  expect(collectionIdentityReview(progress, legacy, data, { version: 1, quarantinedIds: [] }).savedRecords).toBe(0);
+  const savedIdentity = { version: 1 as const, quarantinedIds: [101010, 101011] };
+  expect([...collectionIdentityReview(progress, [], data, savedIdentity).blockedIds]).toEqual([101010, 101011]);
+  expect(collectionIdentityReview(progress, [], data, savedIdentity).savedRecords).toBe(2);
+  expect(collectionIdentityReview({ '999999': 1 }, legacy, data, { version: 1, quarantinedIds: [] }).blockedIds.has(999999)).toBe(true);
+});
+
+
+it('leaves legacy review retryable when historical browser evidence cannot be read', () => {
+  vi.stubGlobal('localStorage', { getItem: () => { throw new Error('storage unavailable'); } });
+  expect(captureCollectionLogIdentity({ '101004': 1 })).toBeUndefined();
+  const original = JSON.stringify({ data: { additions: [{ id: 101004, name: 'Unsired', page: 'Abyssal Sire' }] } });
+  vi.stubGlobal('localStorage', { getItem: (key: string) => key === 'fate_clog_sync_v3' ? original : null });
+  expect(captureCollectionLogIdentity({ '101004': 1 })).toEqual({ version: 1, quarantinedIds: [101002, 101004] });
 });

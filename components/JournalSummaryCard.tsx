@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { BookOpen, Map as MapIcon, Swords, ChevronRight, Sparkles, Target, PartyPopper } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
+import { BookOpen, Map as MapIcon, Swords, Sparkles, Target, PartyPopper } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA, type QuestData } from '../data/questData';
@@ -9,7 +10,7 @@ import type { UnlockState } from '../types';
 import { CA_DATA } from '../data/caData';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import {
-  countDoableDiaryTasks, evaluateQuestEligibility, getDiaryStatus,
+  countDoableDiaryTasks, evaluateQuestEligibility, evaluateDiaryTierEligibility,
 } from '../utils/journalStatus';
 import {
   CA_TIER_ORDER,
@@ -62,7 +63,7 @@ export function analyzeJournalQuestRecommendations(
   };
   const baseD = new Map(allDiaries.map(diary => [
     diary.id,
-    getDiaryStatus(diary, unlocks, gameModeId),
+    evaluateDiaryTierEligibility(diary, unlocks, gameModeId).eligible,
   ]));
 
   let best: JournalQuestRecommendationAnalysis['best'] = null;
@@ -76,8 +77,8 @@ export function analyzeJournalQuestRecommendations(
     let nd = 0;
     for (const diary of allDiaries) {
       const status = baseD.get(diary.id);
-      if (status === 'AVAILABLE' || status === 'COMPLETED') continue;
-      if (getDiaryStatus(diary, sim, gameModeId) === 'AVAILABLE') nd++;
+      if (status) continue;
+      if (evaluateDiaryTierEligibility(diary, sim, gameModeId).eligible) nd++;
     }
     const impact = nq * 2 + nd;
     if (!best || impact > best.impact) best = { name: quest.name, nq, nd, impact };
@@ -92,7 +93,7 @@ export function analyzeJournalQuestRecommendations(
  * tasks, then any available quest, then CA grind. Returns a celebratory state
  * when nothing is left.
  */
-function recommendNextAction(unlocks: any, diaryDoable: number, caLeft: number, gameModeId?: string): Recommendation {
+export function recommendNextAction(unlocks: UnlockState, diaryDoable: number, caLeft: number, gameModeId?: string): Recommendation {
   const { best } = analyzeJournalQuestRecommendations(Object.values(QUEST_DATA), Object.values(DIARY_DATA), unlocks, gameModeId);
   // Canonical automatic eligibility is analyzed once by the shared helper.
   if (best && best.impact > 0) {
@@ -110,7 +111,13 @@ function recommendNextAction(unlocks: any, diaryDoable: number, caLeft: number, 
   if (caLeft > 0) {
     return { tab: 'CA', headline: `Grind combat achievements`, detail: `${caLeft} tasks remaining` };
   }
-  return { tab: null, headline: `Everything's done!`, detail: `No actionable journal content left` };
+  if (Object.values(QUEST_DATA).some(quest => !unlocks.quests.includes(quest.id))) {
+    return { tab: 'QUESTS', headline: 'Review remaining quests', detail: 'Check missing unlocks or requirements that need confirmation' };
+  }
+  if (Object.values(DIARY_DATA).some(diary => !unlocks.diaries.includes(diary.id))) {
+    return { tab: 'DIARIES', headline: 'Review remaining diaries', detail: 'Check unfinished tasks and diary rewards' };
+  }
+  return { tab: null, headline: `Everything's done!`, detail: `All journal content completed` };
 }
 
 export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {

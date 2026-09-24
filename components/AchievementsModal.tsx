@@ -1,9 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import {
-  Trophy, X, BookOpen, Dumbbell, MapPin, Shield, Map, Swords,
-  Skull, Gamepad2, Library, Crown, Star, Sparkles, Flame, Lock, CheckCircle2,
-  type LucideIcon,
-} from 'lucide-react';
+import { X, Lock, CheckCircle2, type LucideProps } from 'lucide-react';
+import { Trophy, BookOpen, Dumbbell, MapPin, Shield, Map, Swords, Skull, Gamepad2, Library, Crown, Star, Sparkles, Flame } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import {
   evaluateAchievements, EvaluatedAchievement, AchievementIcon, AchievementCategory,
@@ -15,8 +12,8 @@ interface Props {
   onClose: () => void;
 }
 
-/** Map an achievement's icon key to a lucide glyph. Shared with the reveal. */
-export const ACHIEVEMENT_ICON: Record<AchievementIcon, LucideIcon> = {
+/** Map an achievement's icon key to a OSRS Wiki artwork. Shared with the reveal. */
+export const ACHIEVEMENT_ICON: Record<AchievementIcon, React.ComponentType<LucideProps>> = {
   quest: BookOpen,
   skill: Dumbbell,
   region: MapPin,

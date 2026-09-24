@@ -6,7 +6,7 @@ import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import type { UnlockState } from '../types';
 
 const u = (o: Partial<UnlockState>): UnlockState =>
-  ({ regions: [], quests: [], skills: {}, levels: {}, guilds: [], diaries: [],
+  ({ equipment: {}, regions: [], quests: [], skills: {}, levels: {}, guilds: [], diaries: [],
     cas: [], completedTasks: [], ...o } as UnlockState);
 
 const quest = (over: Partial<QuestData>): QuestData =>
@@ -16,6 +16,15 @@ const quest = (over: Partial<QuestData>): QuestData =>
   } as unknown as QuestData);
 
 describe('questUnmet', () => {
+  it('keeps Fate equipment separate from skills and item ownership', () => {
+    const q = quest({ equipmentRequirements: [
+      { slot: 'Neck', tier: 1, reason: 'Wear the Ghostspeak amulet' },
+    ] });
+    expect(questUnmet(q, u({ equipment: {} }))).toEqual([
+      { kind: 'equipment', label: expect.stringMatching(/Neck.*1.*Ghostspeak amulet/i) },
+    ]);
+    expect(questUnmet(q, u({ equipment: { Neck: 1 } }))).toEqual([]);
+  });
   it('returns nothing when everything is met', () => {
     expect(questUnmet(quest({ regions: ['Misthalin'] }), u({}))).toEqual([]);
   });

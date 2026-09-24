@@ -8,12 +8,12 @@ const PUBLIC_RELEASES: readonly QuestWalkthroughRelease[] = [
   },
   {
     questId: 'Sheep Shearer',
-    revision: 'runeproof-public-sheep-shearer-v1',
+    revision: 'runeproof-public-sheep-shearer-v2',
     releaseStatus: 'APPROVED',
   },
   {
     questId: 'The Restless Ghost',
-    revision: 'runeproof-public-the-restless-ghost-v1',
+    revision: 'runeproof-public-the-restless-ghost-v2',
     releaseStatus: 'APPROVED',
   },
   {

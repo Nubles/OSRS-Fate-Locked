@@ -23,6 +23,7 @@ const gateKey = (gate: RouteGate): string => {
     case 'QUEST': return `QUEST:${gate.questId}`;
     case 'QUEST_PROGRESS': return `QUEST_PROGRESS:${gate.questId}:${gate.completion}:${gate.raw}`;
     case 'SKILL': return `SKILL:${gate.skill}:${gate.level}`;
+    case 'EQUIPMENT': return `EQUIPMENT:${gate.slot}:${gate.tier}`;
     case 'UNLOCK': return `UNLOCK:${gate.category}:${gate.id}`;
     case 'UNRESOLVED': return `UNRESOLVED:${gate.raw}`;
   }

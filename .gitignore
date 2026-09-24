@@ -11,6 +11,9 @@ dist/
 dist-ssr/
 dist-runeproof-preview/
 
+# Local audit builds, screenshots and release verification output
+output/
+
 # Logs & local env
 *.log
 npm-debug.log*

@@ -10,6 +10,7 @@ import {
   type Shortcut,
 } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
+import { CHUNKED_START } from './chunkAdjacency';
 import { chunkForPlace } from './chunkLocations';
 import { chunkReachability } from './chunkReach';
 import {
@@ -20,6 +21,7 @@ import { entryBlockedGate } from './questDoability';
 import { bankLocksActive } from './reachability';
 import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
 import type { EntityAccessSource } from './entityAccess';
+import type { EquipmentPermissionCoverage } from '../data/equipmentCatalogue';
 const RULES_VERSION = '1';
 const CONTENT_VERSION = 1;
 const DETECTOR_CONTRACT_VERSION = 1;
@@ -53,6 +55,7 @@ export interface RuneliteRulesManifest {
     quests: string[];
   };
   itemRules: Record<string, { tier: number; slot: string }>;
+  equipmentCatalogue?: EquipmentPermissionCoverage;
   detectorPolicies: DetectorPolicy[];
   chunks: Record<string, ChunkPermissionSnapshot>;
 }
@@ -70,6 +73,7 @@ export interface ItemRuleSource {
   init(): Promise<void>;
   ready: boolean;
   itemRuleExport(): Record<string, { tier: number; slot: string }>;
+  permissionCoverage?(): EquipmentPermissionCoverage;
 }
 export interface RulesManifestRunInput {
   runId: string;
@@ -123,7 +127,7 @@ export async function buildRuneliteRulesManifest(
     ? chunkReachability(
       service.connectGraph(),
       input.unlocks,
-      chunkForPlace('Lumbridge'),
+      input.run.gameModeId === 'chunked' ? CHUNKED_START : chunkForPlace('Lumbridge'),
       blocked,
       input.run.gameModeId,
     )
@@ -178,6 +182,7 @@ export async function buildRuneliteRulesManifest(
       quests: sorted(unlocks.quests),
     },
     itemRules,
+    ...(items.permissionCoverage ? { equipmentCatalogue: items.permissionCoverage() } : {}),
     detectorPolicies: DETECTOR_POLICIES.map((policy) => ({
       ...policy, eventTypes: [...policy.eventTypes],
     })),

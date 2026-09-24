@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Swords, Crosshair, Wand2, X, Search, Loader2, AlertCircle, RefreshCw, Target, Info, Zap, Clock, Crown,
-} from 'lucide-react';
+import { X, Search, Loader2, AlertCircle, RefreshCw, Info, Clock, Target } from 'lucide-react';
+import { Swords, Crosshair, Wand2, Zap, Crown } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { EQUIPMENT_SLOTS } from '../constants';
 import { useEscapeKey } from '../hooks/useEscapeKey';
@@ -12,6 +11,8 @@ import {
   computeDps, STANCES, PRAYERS, POTIONS, Style, AttackType, DpsInput,
 } from '../utils/dps';
 import { WikiLink } from './WikiLink';
+import { rangedDefenceFor, type RangedDamageType } from '../utils/rangedDamage';
+import { dpsCombatOptions } from '../utils/weaponCombat';
 
 type Status = 'loading' | 'ready' | 'error';
 
@@ -20,7 +21,6 @@ const STYLE_META: { id: Style; label: string; Icon: typeof Swords }[] = [
   { id: 'ranged', label: 'Ranged', Icon: Crosshair },
   { id: 'magic', label: 'Magic', Icon: Wand2 },
 ];
-const MELEE_TYPES: AttackType[] = ['stab', 'slash', 'crush'];
 const monsterImg = (file: string) => `https://oldschool.runescape.wiki/images/${(file || '').replace(/ /g, '_')}`;
 
 const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
@@ -51,6 +51,7 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
   // ── Config state ──────────────────────────────────────────────────────────
   const [style, setStyle] = useState<Style>('melee');
   const [meleeType, setMeleeType] = useState<AttackType>('slash');
+  const [rangedOverride, setRangedOverride] = useState<RangedDamageType | 'auto'>('auto');
   const [stanceId, setStanceId] = useState('aggressive');
   const [prayerId, setPrayerId] = useState('none');
   const [potionId, setPotionId] = useState('none');
@@ -69,7 +70,6 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
 
   // Reset stance/prayer/potion to valid options when style changes.
   useEffect(() => {
-    setStanceId(STANCES[style][0].id === 'accurate' && style === 'melee' ? 'aggressive' : STANCES[style][0].id);
     setPrayerId('none'); setPotionId('none');
   }, [style]);
 
@@ -81,22 +81,37 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
     const b = items.length ? sumBonuses(items) : { ...ZERO_BONUSES };
     const weapon = gearService.byId(loadout['Weapon']);
     const accuracy = attackType === 'stab' ? b.stab : attackType === 'slash' ? b.slash : attackType === 'crush' ? b.crush : attackType === 'ranged' ? b.ranged : b.magic;
-    return { bonuses: b, accuracy, meleeStr: b.meleeStr, rangedStr: b.rangedStr, magicDmgPct: b.magicStr, speedTicks: weapon?.speed || 4, weaponName: weapon?.name, count: items.length };
+    return { bonuses: b, accuracy, meleeStr: b.meleeStr, rangedStr: b.rangedStr, magicDmgPct: b.magicStr, speedTicks: weapon?.speed || 4, weaponName: weapon?.name, category: weapon?.category ?? (loadout['Weapon'] == null ? 'Unarmed' : undefined), rangedDamageType: weapon?.rangedDamageType, count: items.length };
   }, [loadout, attackType, status]);
 
+  const combatOptions = useMemo(() => dpsCombatOptions(gear.category), [gear.category]);
+  const styleOptions = combatOptions.filter(option => option.style === style);
+  const meleeTypes = [...new Set(styleOptions.map(option => option.attackType))];
+  const stanceOptions = STANCES[style].filter(stance => styleOptions.some(option =>
+    option.attackType === attackType && option.stanceId === stance.id));
+  const selectedOption = styleOptions.find(option => option.attackType === attackType && option.stanceId === stanceId);
+  useEffect(() => {
+    if (!combatOptions.length || selectedOption) return;
+    const next = styleOptions.find(option => option.attackType === attackType) ?? styleOptions[0] ?? combatOptions[0];
+    setStyle(next.style);
+    if (next.style === 'melee') setMeleeType(next.attackType);
+    setStanceId(next.stanceId);
+  }, [combatOptions, style, attackType, stanceId]);
+
   const monster = monsterService.byId(monsterId ?? undefined);
+  const rangedType = rangedOverride === 'auto' ? gear.rangedDamageType ?? 'standard' : rangedOverride;
 
   const result = useMemo(() => {
-    if (!monster) return null;
+    if (!monster || !selectedOption) return null;
     const defLevel = style === 'magic' ? monster.magicLevel : monster.defLevel;
-    const defBonus = attackType === 'stab' ? monster.def.stab : attackType === 'slash' ? monster.def.slash : attackType === 'crush' ? monster.def.crush : attackType === 'ranged' ? monster.def.ranged : monster.def.magic;
+    const defBonus = attackType === 'stab' ? monster.def.stab : attackType === 'slash' ? monster.def.slash : attackType === 'crush' ? monster.def.crush : attackType === 'ranged' ? rangedDefenceFor(monster, rangedType) : monster.def.magic;
     const input: DpsInput = {
       style, attackType, stanceId, prayerId, potionId, baseSpellMax,
-      levels, gear: { accuracy: gear.accuracy, meleeStr: gear.meleeStr, rangedStr: gear.rangedStr, magicDmgPct: gear.magicDmgPct, speedTicks: gear.speedTicks },
+      levels, gear: { accuracy: gear.accuracy, meleeStr: gear.meleeStr, rangedStr: gear.rangedStr, magicDmgPct: gear.magicDmgPct, speedTicks: selectedOption.speedTicks ?? gear.speedTicks },
       monster: { defLevel, defBonus, hp: monster.hp },
     };
     return computeDps(input);
-  }, [monster, style, attackType, stanceId, prayerId, potionId, baseSpellMax, levels, gear]);
+  }, [monster, style, attackType, stanceId, prayerId, potionId, baseSpellMax, levels, gear, rangedType, selectedOption]);
 
   if (status !== 'ready') {
     return (
@@ -118,25 +133,35 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
       {/* Style selector */}
       <div className="flex items-center rounded-lg border border-white/10 bg-[#1f1f1f] p-0.5">
         {STYLE_META.map(({ id, label, Icon }) => (
-          <button key={id} onClick={() => setStyle(id)}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-[11px] font-bold transition-colors ${style === id ? 'bg-red-950/50 text-red-300' : 'text-gray-500 hover:text-gray-300'}`}>
+          <button key={id} onClick={() => setStyle(id)} disabled={!combatOptions.some(option => option.style === id)}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-[11px] font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${style === id ? 'bg-red-950/50 text-red-300' : 'text-gray-500 hover:text-gray-300'}`}>
             <Icon size={13} /> {label}
           </button>
         ))}
       </div>
+
+      {!combatOptions.length && <p role="status" className="text-xs text-amber-300">Attack options for this weapon need review before a combat estimate is available.</p>}
 
       {/* Config */}
       <div className="grid grid-cols-2 gap-2.5">
         {style === 'melee' && (
           <Field label="Attack type">
             <select value={meleeType} onChange={(e) => setMeleeType(e.target.value as AttackType)} className={selectCls}>
-              {MELEE_TYPES.map((t) => <option key={t} value={t}>{t[0].toUpperCase() + t.slice(1)}</option>)}
+              {meleeTypes.map((t) => <option key={t} value={t}>{t[0].toUpperCase() + t.slice(1)}</option>)}
+            </select>
+          </Field>
+        )}
+        {style === 'ranged' && (
+          <Field label="Ranged damage type">
+            <select value={rangedOverride} onChange={e => setRangedOverride(e.target.value as RangedDamageType | 'auto')} className={selectCls}>
+              <option value="auto">{gear.rangedDamageType ? `Weapon: ${gear.rangedDamageType}` : 'Standard assumed — select your type'}</option>
+              <option value="light">Light</option><option value="standard">Standard</option><option value="heavy">Heavy</option>
             </select>
           </Field>
         )}
         <Field label="Stance">
           <select value={stanceId} onChange={(e) => setStanceId(e.target.value)} className={selectCls}>
-            {STANCES[style].map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+            {stanceOptions.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
           </select>
         </Field>
         <Field label="Prayer">
@@ -164,7 +189,7 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
       {/* Gear summary */}
       <div className="text-[10px] text-gray-500 flex items-center gap-1.5">
         <Info size={11} />
-        {gear.count > 0 ? <>Using your equipped gear{gear.weaponName ? ` · ${gear.weaponName}` : ''} ({gear.speedTicks}t)</> : <>No gear equipped — equip items in the <span className="text-fuchsia-300">Gear</span> tab.</>}
+        {gear.count > 0 ? <>Using your equipped gear{gear.weaponName ? ` · ${gear.weaponName}` : ''} ({selectedOption?.speedTicks ?? gear.speedTicks}t before stance)</> : <>No gear equipped — equip items in the <span className="text-fuchsia-300">Gear</span> tab.</>}
       </div>
 
       {/* Monster target */}

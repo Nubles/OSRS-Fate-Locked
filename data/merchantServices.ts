@@ -2,6 +2,9 @@
 export const MERCHANT_SERVICES: Record<string, { category: string; requirements?: string[] }> = {
   Ellis: { category: 'Tanners' },
   Tanner: { category: 'Tanners' },
+  Sbott: { category: 'Tanners' },
+  'Sawmill Operator': { category: 'Sawmill Operators' },
+  'Estate agent': { category: 'Real Estate Agents' },
   Taxidermist: { category: 'Taxidermists' },
   'Bob Barter (herbs)': { category: 'Decanters' },
   Zahur: { category: 'Decanters' },

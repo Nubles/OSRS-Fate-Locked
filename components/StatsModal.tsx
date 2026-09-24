@@ -1,5 +1,6 @@
 import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, ArrowDown, ArrowUp, ArrowUpDown, List, Sparkles, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, List, X } from 'lucide-react';
+import { Activity, Sparkles } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { completionPercent } from '../utils/completion';
 import { buildFateAnalytics, defaultFateAnalyticsQuery, type AnalyticsAggregate } from '../utils/fateAnalytics';

@@ -67,6 +67,23 @@ describe('dps formulas', () => {
     expect(piety.dps).toBeGreaterThan(base.dps);
   });
 
+  it('boosts Attack and Strength independently at unequal base levels', () => {
+    const input = { ...baseInput(), potionId: 'super' };
+    const lowAttack = computeDps({ ...input, levels: { ...input.levels, attack: 50 } });
+    expect(lowAttack.effAtk).toBe(70); // 50 + (5 + floor(50 * .15)) + 8
+    expect(lowAttack.effStr).toBe(129);
+    const lowStrength = computeDps({ ...input, levels: { ...input.levels, strength: 50 } });
+    expect(lowStrength.effAtk).toBe(126);
+    expect(lowStrength.effStr).toBe(73);
+  });
+
+  it('adds magic prayer damage to equipment damage before rounding the max hit', () => {
+    const input: DpsInput = { ...baseInput(), style: 'magic', attackType: 'magic', stanceId: 'standard', baseSpellMax: 50 };
+    expect(computeDps({ ...input, prayerId: 'mystic' }).maxHit).toBe(51);
+    expect(computeDps({ ...input, baseSpellMax: 30, prayerId: 'augury' }).maxHit).toBe(31);
+    expect(computeDps({ ...input, prayerId: 'augury', gear: { ...input.gear, magicDmgPct: 20 } }).maxHit).toBe(62);
+  });
+
   it('rapid stance attacks faster (higher dps, shorter interval)', () => {
     const acc = computeDps({ ...baseInput(), style: 'ranged', stanceId: 'accurate', gear: { accuracy: 70, meleeStr: 0, rangedStr: 70, magicDmgPct: 0, speedTicks: 5 } });
     const rapid = computeDps({ ...baseInput(), style: 'ranged', stanceId: 'rapid', gear: { accuracy: 70, meleeStr: 0, rangedStr: 70, magicDmgPct: 0, speedTicks: 5 } });

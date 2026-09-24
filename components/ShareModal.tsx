@@ -1,6 +1,8 @@
 
 import React, { useRef, useState, useMemo, useEffect } from 'react';
-import { X, Copy, Download, Trophy, Map, Shield, Sparkles, Skull, Crown, Hash, Activity, Zap, Home, Store, Gamepad2, Package, BookOpen, Dna, Calendar, Star, Landmark } from 'lucide-react';
+import { X, Copy, Download, Calendar } from 'lucide-react';
+import { Key, Trophy, Map, Shield, Sparkles, Skull, Crown, Activity, Zap, Home, Store, Gamepad2, Package, Dna, Star, Landmark } from './OsrsIcon';
+import { WikiIcon } from './WikiIcon';
 import { useGame } from '../context/GameContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useEscapeKey } from '../hooks/useEscapeKey';
@@ -8,11 +10,13 @@ import { RunCardModal } from './RunCard';
 import { SectionGuide } from './SectionGuide';
 import { getGameMode } from '../config/gameModes';
 import { showToast } from '../utils/toast';
-import { EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, SLOT_CONFIG } from '../constants';
+import { EQUIPMENT_SLOTS, SKILLS_LIST, REGION_GROUPS, SLOT_CONFIG } from '../constants';
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { isAreaReachable } from '../utils/reachability';
 import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { BANK_IDS } from '../data/banks';
+import { completionPercent } from '../utils/completion';
+import { computeRunId } from '../utils/integrity';
 
 interface ShareModalProps {
   onClose: () => void;
@@ -38,24 +42,22 @@ const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ on
   const activeMode = getGameMode(gameState.gameModeId);
   const cardRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(dialogRef);
+  useFocusTrap(dialogRef, !embedded);
   const [isCapturing, setIsCapturing] = useState(false);
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
   const [theme, setTheme] = useState<CardTheme>('VOID');
 
   // --- Stats Calculation ---
-  const { unlocks, gameModeId } = gameState;
+  const { unlocks, gameModeId, customMode } = gameState;
   const isChunked = gameModeId === 'chunked';
   // Chunked mode has no unlocks.regions — its "territory unlocked" stat is
   // chunk count instead.
   const totalRegions = isChunked ? (unlocks.chunks ?? []).length : visibleAreaUnlocks(unlocks.regions).length;
-  const totalSkillTiers = (Object.values(unlocks.skills) as number[]).reduce((a, b) => a + b, 0);
   const totalEquipTiers = (Object.values(unlocks.equipment) as number[]).reduce((a, b) => a + b, 0);
   const totalLevel = (Object.values(unlocks.levels) as number[]).reduce((a, b) => a + b, 0);
 
-  const maxProgression = (SKILLS_LIST.length * 10) + (EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX) + REGIONS_LIST.length;
-  const currentProgression = totalSkillTiers + totalEquipTiers + totalRegions;
-  const progressPercent = Math.round((currentProgression / maxProgression) * 100);
+  const progressPercent = completionPercent(unlocks, gameModeId, customMode);
+  const runId = useMemo(() => computeRunId(gameState.history ?? []), [gameState.history]);
 
   // Region Mastery — chunk-aware: in Chunked mode an area counts once you
   // hold a chunk foothold in it (same rule as the map and World tab).
@@ -145,13 +147,13 @@ const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ on
 
   // --- Actions ---
   const generateTextSummary = () => {
-    return `📜 **Fate-Locked Ironman** - ${rank.title}
+    return `**Fate-Locked Ironman** - ${rank.title}
 Progression: ${progressPercent}% | Total Level: ${totalLevel}
-🔑 Keys: ${gameState.keys} | ✨ Omni: ${gameState.specialKeys} | 🧬 Chaos: ${gameState.chaosKeys}
-🌍 ${isChunked ? 'Chunks' : 'Regions'}: ${totalRegions} Unlocked
-⚔️ Gear Tiers: ${totalEquipTiers}
-🏆 Bosses: ${bossCount} | 🎲 Minigames: ${minigameCount}
-🏦 Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
+Keys: ${gameState.keys} | Omni: ${gameState.specialKeys} | Chaos: ${gameState.chaosKeys}
+${isChunked ? 'Chunks' : 'Regions'}: ${totalRegions} Unlocked
+Gear Tiers: ${totalEquipTiers}
+Bosses: ${bossCount} | Minigames: ${minigameCount}
+Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
 #OSRS #FateLocked`;
   };
 
@@ -169,8 +171,14 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
     if (!cardRef.current) return;
     setIsCapturing(true);
     try {
-      // Wait for font/styles to settle
-      await new Promise(r => setTimeout(r, 200));
+      // Capture the loaded Wiki artwork, with a bounded wait if a remote image is unavailable.
+      await Promise.race([
+        Promise.all([
+          document.fonts.ready,
+          ...Array.from(cardRef.current.querySelectorAll('img')).map(image => image.decode().catch(() => undefined)),
+        ]),
+        new Promise(resolve => setTimeout(resolve, 5000)),
+      ]);
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(cardRef.current, {
         useCORS: true,
@@ -208,7 +216,7 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
       // Skills
       const maxedSkills = Object.entries(unlocks.skills).filter(([_, t]) => (t as number) >= 10);
       if (maxedSkills.length > 0) feats.push({ label: `${maxedSkills.length} Maxed Skills`, icon: Crown, color: 'text-yellow-400' });
-      else if (Object.values(unlocks.skills).some(t => (t as number) >= 7)) feats.push({ label: 'High-Tier Skiller', icon: BookOpen, color: 'text-blue-400' });
+      else if (Object.values(unlocks.skills).some(t => (t as number) >= 7)) feats.push({ label: 'High-Tier Skiller', icon: Activity, color: 'text-blue-400' });
 
       // Gear
       const maxedGear = Object.entries(unlocks.equipment).filter(([_, t]) => (t as number) >= 9);
@@ -241,7 +249,7 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
                 <button
                     key={t}
                     onClick={() => setTheme(t)}
-                    className={`px-4 py-1.5 rounded-full text-[10px] font-bold transition-all uppercase tracking-wider ${theme === t ? 'bg-white text-black shadow-md scale-105' : 'text-gray-500 hover:text-white'}`}
+                    className={`px-2 sm:px-4 py-1.5 rounded-full text-[10px] font-bold transition-all uppercase tracking-wider ${theme === t ? 'bg-white text-black shadow-md scale-105' : 'text-gray-500 hover:text-white'}`}
                 >
                     {t}
                 </button>
@@ -260,21 +268,20 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
         >
             {/* Background Texture */}
             <div className={`absolute inset-0 bg-gradient-to-br ${ts.gradient} pointer-events-none`}></div>
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.07] pointer-events-none"></div>
             
             {/* Top Badge Decoration */}
             <div className={`absolute top-0 right-0 p-32 bg-gradient-to-bl from-white/5 to-transparent rounded-bl-full pointer-events-none`}></div>
 
             {/* HEADER */}
-            <div className={`relative z-10 flex justify-between items-start p-8 pb-6 border-b ${ts.deco}`}>
-                <div className="flex items-center gap-6">
-                    <div className={`w-20 h-20 rounded-2xl border-2 ${ts.border} bg-black/40 flex items-center justify-center shadow-[0_0_25px_rgba(0,0,0,0.5)] backdrop-blur-md`}>
-                        <rank.icon className={`w-12 h-12 ${rank.color} drop-shadow-lg`} />
+            <div className={`relative z-10 flex flex-wrap justify-between items-start gap-4 p-4 sm:p-8 sm:pb-6 border-b ${ts.deco}`}>
+                <div className="flex items-center gap-3 sm:gap-6 min-w-0">
+                    <div className={`w-12 h-12 sm:w-20 sm:h-20 shrink-0 rounded-2xl border-2 ${ts.border} bg-black/40 flex items-center justify-center shadow-[0_0_25px_rgba(0,0,0,0.5)] backdrop-blur-md`}>
+                        <rank.icon className={`w-8 h-8 sm:w-12 sm:h-12 ${rank.color} drop-shadow-lg`} />
                     </div>
                     <div>
                         <div className={`text-xs font-bold uppercase tracking-[0.2em] mb-1 ${ts.accent}`}>RNG Edition · {activeMode.name} Mode</div>
-                        <h2 className="text-4xl font-black text-white uppercase tracking-tight leading-none drop-shadow-md">Fate Locked</h2>
-                        <div className={`flex items-center gap-3 mt-2 ${rank.color}`}>
+                        <h2 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tight leading-none drop-shadow-md">Fate Locked</h2>
+                        <div className={`flex flex-wrap items-center gap-2 sm:gap-3 mt-2 ${rank.color}`}>
                             <span className="text-sm font-bold uppercase tracking-wide bg-black/30 px-2 py-0.5 rounded border border-white/5">{rank.title}</span>
                             <span className="text-xs text-gray-400 font-mono flex items-center gap-1.5"><Calendar size={12} /> {new Date().toLocaleDateString()}</span>
                         </div>
@@ -282,7 +289,7 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
                 </div>
                 <div className="text-right">
                     <div className="flex flex-col items-end">
-                         <span className={`text-5xl font-black text-white leading-none flex items-center gap-2 drop-shadow-lg`}>
+                         <span className={`text-3xl sm:text-5xl font-black text-white leading-none flex items-center gap-2 drop-shadow-lg`}>
                             {progressPercent}%
                          </span>
                          <span className={`text-[10px] font-mono uppercase tracking-[0.3em] ${ts.sub} mt-1`}>Completion</span>
@@ -291,7 +298,7 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
             </div>
 
             {/* STATS BAR */}
-            <div className={`relative z-10 grid grid-cols-5 border-b ${ts.deco} bg-black/30 divide-x divide-white/5 backdrop-blur-sm`}>
+            <div className={`relative z-10 grid grid-cols-3 sm:grid-cols-5 border-b ${ts.deco} bg-black/30 divide-x divide-white/5 backdrop-blur-sm`}>
                  <div className="py-3 px-2 flex flex-col items-center group">
                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5 group-hover:text-gray-300 transition-colors">Total Level</span>
                     <span className="text-lg font-bold text-white flex items-center gap-1.5"><Activity size={14} className={ts.accent} /> {totalLevel}</span>
@@ -302,7 +309,7 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
                  </div>
                  <div className="py-3 px-2 flex flex-col items-center group">
                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5 group-hover:text-gray-300 transition-colors">Keys</span>
-                    <span className="text-lg font-bold text-white flex items-center gap-1.5"><Hash size={14} className={ts.accent} /> {gameState.keys}</span>
+                    <span className="text-lg font-bold text-white flex items-center gap-1.5"><Key size={14} className={ts.accent} /> {gameState.keys}</span>
                  </div>
                  <div className="py-3 px-2 flex flex-col items-center group">
                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5 group-hover:text-gray-300 transition-colors">Omni-Keys</span>
@@ -315,17 +322,17 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
             </div>
 
             {/* MAIN CONTENT */}
-            <div className="relative z-10 p-8 grid grid-cols-12 gap-8">
+            <div className="relative z-10 p-4 sm:p-8 grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
                 
                 {/* Left Panel: Gear & Unlocks (8 cols) */}
-                <div className="col-span-7 space-y-7">
+                <div className="md:col-span-7 min-w-0 space-y-7">
                     
                     {/* Skills Section */}
                     <div>
                         <h3 className={`text-xs font-bold uppercase tracking-widest mb-3 ${ts.accent} flex items-center gap-2 border-b border-white/5 pb-2`}>
-                            <BookOpen size={14} /> Skill Mastery
+                            <WikiIcon file="Stats_icon.png" alt="" size={14} /> Skill Mastery
                         </h3>
-                        <div className="grid grid-cols-6 gap-2">
+                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                              {SKILLS_LIST.map(skill => {
                                  const tier = unlocks.skills[skill] || 0;
                                  return (
@@ -351,9 +358,9 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
                     {/* Equipment Section */}
                     <div>
                         <h3 className={`text-xs font-bold uppercase tracking-widest mb-3 ${ts.accent} flex items-center gap-2 border-b border-white/5 pb-2`}>
-                            <Shield size={14} /> Gear Access
+                            <WikiIcon file="Worn_Equipment.png" alt="" size={14} /> Gear Access
                         </h3>
-                        <div className="grid grid-cols-6 gap-2">
+                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                              {EQUIPMENT_SLOTS.map(slot => {
                                  const tier = unlocks.equipment[slot] || 0;
                                  return (
@@ -375,7 +382,7 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
                          <h3 className={`text-xs font-bold uppercase tracking-widest mb-3 ${ts.accent} flex items-center gap-2 border-b border-white/5 pb-2`}>
                             <Zap size={14} /> Unlocked Content
                         </h3>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             <div className={`${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
                                 <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Skull size={12} /> Bosses</div>
                                 <span className="font-bold text-white text-lg leading-none">{bossCount}</span>
@@ -393,7 +400,7 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
                                 <span className="font-bold text-white text-lg leading-none">{pohCount}</span>
                             </div>
                             <div className={`${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
-                                <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Sparkles size={12} /> {COMBAT_POWERS_LABEL}</div>
+                                <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><WikiIcon file="Magic_icon.png" alt="" size={12} /> {COMBAT_POWERS_LABEL}</div>
                                 <span className="font-bold text-white text-lg leading-none">{arcanaCount}</span>
                             </div>
                             <div className={`${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
@@ -410,7 +417,7 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
                 </div>
 
                 {/* Right Panel: Region Mastery (5 cols) */}
-                <div className="col-span-5 flex flex-col h-full">
+                <div className="md:col-span-5 min-w-0 flex flex-col h-full">
                      <h3 className={`text-xs font-bold uppercase tracking-widest mb-3 ${ts.accent} flex items-center gap-2 border-b border-white/5 pb-2`}>
                         <Map size={14} /> World Mastery
                     </h3>
@@ -454,17 +461,17 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
             </div>
 
             {/* FOOTER */}
-            <div className={`relative z-10 py-3 px-8 bg-black/60 backdrop-blur-md flex justify-between items-center text-[10px] ${ts.sub} font-mono uppercase border-t ${ts.deco}`}>
+            <div className={`relative z-10 py-3 px-4 sm:px-8 bg-black/60 backdrop-blur-md flex flex-wrap gap-2 justify-between items-center text-[10px] ${ts.sub} font-mono uppercase border-t ${ts.deco}`}>
                 <div className="flex items-center gap-2">
                     <Activity size={12} />
                     <span>Fate is Absolute</span>
                 </div>
-                <div>ID: {Date.now().toString(36).toUpperCase()}</div>
+                {runId && <div>Run ID: {runId}</div>}
             </div>
         </div>
 
         {/* Controls */}
-        <div className="flex gap-4 w-full max-w-[850px]">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-[850px]">
             <button 
                 onClick={handleCopyText}
                 className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#2d2d2d] hover:bg-[#3d3d3d] text-white font-bold rounded-lg transition-all border border-white/10 shadow-lg"
@@ -495,6 +502,8 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
 // ── Merged Share modal: one entry point, toggle between card styles. ──────────
 export const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [style, setStyle] = useState<'stats' | 'map'>('stats');
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
   useEscapeKey(onClose, true);
   return (
     <div
@@ -503,6 +512,8 @@ export const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       role="dialog"
       aria-modal="true"
       aria-label="Share run"
+      ref={dialogRef}
+      tabIndex={-1}
     >
       <div className="min-h-full flex flex-col items-center justify-center gap-4 py-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-1.5 p-1.5 bg-[#1a1a1a] rounded-full border border-white/10 shadow-xl">

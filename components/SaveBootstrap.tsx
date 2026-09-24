@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { GameState } from '../types';
+import { sealRuneProofReplacement } from '../utils/runeProofProgress';
 import { createFreshState } from '../context/GameContext';
 import {
   useProfileWriterLease,
@@ -762,15 +763,17 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
             }}
             onRecover={async (candidate: ValidatedRecoveryCandidate) => {
               if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+              const recoveredState = sealRuneProofReplacement(candidate.state);
+              const recoveredData = recoveredState === candidate.state ? candidate.data : JSON.stringify(recoveredState);
               const replacement: SaveBootstrapReplacement = {
                 profileId,
                 storageKey,
-                data: candidate.data,
-                state: candidate.state,
+                data: recoveredData,
+                state: recoveredState,
                 persistenceRevision: candidate.persistenceRevision,
                 maxDurablePersistenceRevision,
                 capturedAt: candidate.capturedAt,
-                checksum: candidate.checksum,
+                checksum: recoveredData === candidate.data ? candidate.checksum : null,
               };
               const beforeReplace = checkWriteAuthorization(authorizeWrite);
               if (beforeReplace !== null) return beforeReplace;
@@ -790,8 +793,8 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
                 identity,
                 phase: 'ready',
                 result: {
-                  initialState: candidate.state,
-                  initialData: candidate.data,
+                  initialState: recoveredState,
+                  initialData: recoveredData,
                   persistenceRevision,
                   maxDurablePersistenceRevision: Math.max(
                     maxDurablePersistenceRevision,

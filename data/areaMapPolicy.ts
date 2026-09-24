@@ -41,7 +41,7 @@ export const AREA_ALIAS_POLICIES = {
     kind: 'surface-overlap', canonical: 'Mage Arena', chunks: [{ cx: 46, cy: 61 }],
   },
   "Emir's Arena": {
-    kind: 'surface-overlap', canonical: 'Duel Arena / PvP Arena', chunks: [{ cx: 52, cy: 51 }],
+    kind: 'surface-overlap', canonical: 'Duel Arena / PvP Arena', chunks: [{ cx: 52, cy: 50 }],
   },
 } as const satisfies Readonly<Record<string, AreaAliasPolicy>>;
 export const AREA_ALIASES = Object.fromEntries(
@@ -62,8 +62,8 @@ export const AREA_REFERENCES = {
   },
   'Dwarven Mine': {
     kind: 'entrance',
-    chunks: [{ cx: 47, cy: 53 }, { cx: 48, cy: 54 }],
-    reason: 'Ice Mountain surface entrance to the underground mine.',
+    chunks: [{ cx: 47, cy: 53 }, { cx: 47, cy: 52 }],
+    reason: 'Ice Mountain and Falador entrances; Dwarven Mine Wiki revision 15241726.',
   },
   'Asgarnian Ice Dungeon': {
     kind: 'entrance',
@@ -87,8 +87,8 @@ export const AREA_REFERENCES = {
   },
   'Keldagrim': {
     kind: 'entrance',
-    chunks: [{ cx: 42, cy: 57 }],
-    reason: 'Surface cave entrance east of Rellekka.',
+    chunks: [{ cx: 43, cy: 58 }],
+    reason: 'Reviewed source entrance 11066, matching the tunnel connection and indexed Keldagrim interiors; not the nearby entrance mine.',
   },
   'Wilderness God Wars Dungeon': {
     kind: 'entrance',
@@ -97,8 +97,8 @@ export const AREA_REFERENCES = {
   },
   'Catacombs of Kourend': {
     kind: 'entrance',
-    chunks: [{ cx: 25, cy: 57 }],
-    reason: 'Statue of King Rada I in the Kourend Castle courtyard.',
+    chunks: [{ cx: 25, cy: 57 }, { cx: 24, cy: 59 }, { cx: 22, cy: 57 }, { cx: 26, cy: 60 }, { cx: 26, cy: 55 }, { cx: 22, cy: 56 }],
+    reason: 'Statue and five reviewed alternate entrances (Wiki revision 15331330); vine unlocks remain separate route requirements.',
   },
   'Zanaris': {
     kind: 'entrance',

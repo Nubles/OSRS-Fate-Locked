@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  X, Swords, Loader2, AlertCircle, RefreshCw, Crosshair, Shield, Zap, Clock,
-  Skull, Crown, Gauge, Heart, Info, ChevronRight, FlaskConical, Box, Boxes,
-} from 'lucide-react';
+import { X, Loader2, AlertCircle, RefreshCw, Clock, Gauge, Info, ChevronRight, Crosshair } from 'lucide-react';
+import { Swords, Shield, Zap, Skull, Crown, Heart, Box, Boxes, FlaskConical } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { EQUIPMENT_SLOTS } from '../constants';
 import { useEscapeKey } from '../hooks/useEscapeKey';
@@ -26,6 +24,7 @@ const READINESS: Record<Readiness, { label: string; cls: string; dot: string }> 
   workable: { label: 'Workable', cls: 'text-amber-300', dot: 'bg-amber-400' },
   slow: { label: 'Slow', cls: 'text-orange-300', dot: 'bg-orange-400' },
   undergeared: { label: 'Undergeared', cls: 'text-red-300', dot: 'bg-red-400' },
+  unverified: { label: 'Needs checking', cls: 'text-amber-300', dot: 'bg-amber-400' },
 };
 const DANGER: Record<Danger, { label: string; cls: string }> = {
   low: { label: 'Low', cls: 'text-gray-300' },
@@ -33,7 +32,7 @@ const DANGER: Record<Danger, { label: string; cls: string }> = {
   high: { label: 'High', cls: 'text-orange-300' },
   extreme: { label: 'Extreme', cls: 'text-red-400' },
 };
-const READY_ORDER: Readiness[] = ['excellent', 'good', 'workable', 'slow', 'undergeared'];
+const READY_ORDER: Readiness[] = ['excellent', 'good', 'workable', 'slow', 'undergeared', 'unverified'];
 
 const fmtTtk = (s: number): string => {
   if (!isFinite(s) || s <= 0) return '—';
@@ -48,6 +47,7 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
 
   const [status, setStatus] = useState<Status>(gearService.ready && monsterService.ready ? 'ready' : 'loading');
   const [boostsOn, setBoostsOn] = useState(true);
+  const [rangedOverride, setRangedOverride] = useState<'auto' | 'light' | 'standard' | 'heavy'>('auto');
   const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
@@ -63,17 +63,17 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
     const items = EQUIPMENT_SLOTS.map((s) => gearService.byId(loadout[s])).filter((x): x is GearItem => !!x);
     const b = items.length ? sumBonuses(items) : { ...ZERO_BONUSES };
     const weapon = gearService.byId(loadout['Weapon']);
-    return { bonuses: b, speedTicks: weapon?.speed || 4, count: items.length, weaponName: weapon?.name };
+    return { bonuses: b, speedTicks: weapon?.speed || 4, count: items.length, weaponName: weapon?.name, category: weapon?.category ?? (loadout['Weapon'] == null ? 'Unarmed' : undefined), rangedDamageType: weapon?.rangedDamageType };
   }, [loadout, status]);
 
   const player: PlayerCombat = useMemo(() => {
     const L = unlocks.levels || {};
     return {
       levels: { attack: L.Attack || 1, strength: L.Strength || 1, ranged: L.Ranged || 1, magic: L.Magic || 1, hitpoints: L.Hitpoints || 10 },
-      gear: { bonuses: gear.bonuses, speedTicks: gear.speedTicks },
+      gear: { bonuses: gear.bonuses, speedTicks: gear.speedTicks, category: gear.category, rangedDamageType: rangedOverride === 'auto' ? gear.rangedDamageType ?? 'standard' : rangedOverride },
       boostsOn,
     };
-  }, [unlocks.levels, gear, boostsOn]);
+  }, [unlocks.levels, gear, boostsOn, rangedOverride]);
 
   // Resolve unlocked bosses → monster + plan; split matched vs. encounters.
   const { ranked, encounters } = useMemo(() => {
@@ -111,6 +111,13 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
           <button onClick={onClose} className="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white" aria-label="Close"><X size={18} /></button>
         </div>
 
+        <label className="flex flex-wrap items-center gap-2 px-4 py-2 text-[11px] text-gray-400 border-b border-white/10">
+          Ranged damage type
+          <select value={rangedOverride} onChange={e => setRangedOverride(e.target.value as typeof rangedOverride)} className="bg-[#1f1f1f] border border-white/10 rounded px-2 py-1 text-gray-200">
+            <option value="auto">{gear.rangedDamageType ? `Weapon: ${gear.rangedDamageType}` : 'Standard assumed — select your type'}</option>
+            <option value="light">Light</option><option value="standard">Standard</option><option value="heavy">Heavy</option>
+          </select>
+        </label>
         {status !== 'ready' ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 text-gray-500">
             {status === 'loading' ? <Loader2 size={22} className="animate-spin text-red-400" /> : <AlertCircle size={22} className="text-red-400" />}
@@ -183,6 +190,13 @@ const Detail: React.FC<{ boss: string; monster: MonsterStats; plan: BossPlan; we
       <Box size={11} /> {show3D ? '3D' : '2D'}
     </button>
   );
+  if (plan.assessmentNote) return (
+    <div className="space-y-3 text-sm text-gray-300">
+      <h3 className="font-bold text-white">{boss}</h3>
+      <p role="status">{plan.assessmentNote}</p>
+      {weaponName && <p className="text-xs text-gray-500">Equipped: {weaponName}</p>}
+    </div>
+  );
   return (
     <div className="space-y-4 animate-in fade-in duration-200">
       {/* Large 3D model viewer (drag to rotate, scroll to zoom) */}
@@ -208,7 +222,7 @@ const Detail: React.FC<{ boss: string; monster: MonsterStats; plan: BossPlan; we
       <div className={`flex items-center gap-2 rounded-lg border px-3 py-2 bg-[#1a1a1a] border-white/10`}>
         <span className={`w-2 h-2 rounded-full ${r.dot}`} />
         <span className={`text-[12px] font-bold ${r.cls}`}>{r.label}</span>
-        <span className="text-[10px] text-gray-500">· best as <span className="text-gray-300 uppercase">{plan.style === 'melee' ? plan.attackType : plan.style}</span>{weaponName ? ` · ${weaponName}` : ''}</span>
+        <span className="text-[10px] text-gray-500">· best as <span className="text-gray-300 uppercase">{plan.style === 'melee' ? plan.attackType : plan.style} / {plan.stanceId}</span>{weaponName ? ` · ${weaponName}` : ''}</span>
       </div>
 
       {/* Core stats */}
@@ -243,7 +257,7 @@ const Detail: React.FC<{ boss: string; monster: MonsterStats; plan: BossPlan; we
 
       <p className="text-[9px] text-gray-600 leading-relaxed flex items-start gap-1.5">
         <Info size={11} className="shrink-0 mt-0.5" />
-        DPS auto-picks your best melee/ranged option (Magic → use the DPS tab for spell-specific numbers). Kills/trip & danger are rough threat estimates assuming no protection prayers; special attacks and item passives aren't modelled.
+        DPS compares the melee/ranged attacks your equipped weapon supports (Magic → use the DPS tab for spell-specific numbers). Kills/trip & danger are rough threat estimates assuming no protection prayers; special attacks and item passives aren't modelled.
       </p>
     </div>
   );

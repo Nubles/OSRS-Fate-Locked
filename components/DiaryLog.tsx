@@ -3,7 +3,10 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
-import { Map, CheckCircle2, Lock, Sparkles, BookOpen, ChevronDown, CheckSquare, Square, ExternalLink, ArrowUpRight, TrendingUp, MapPin } from 'lucide-react';
+import { CheckCircle2, Lock, ChevronDown, CheckSquare, Square, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { Map, Sparkles, BookOpen, MapPin } from './OsrsIcon';
+import { WikiIcon } from './WikiIcon';
+import { SLOT_CONFIG } from '../data/assets';
 import { chunkForPlace, chunkUnlocked, chunkUnlockRequirement, showChunkOnMap } from '../utils/chunkLocations';
 import { diaryUnmet, isAlmostThere } from '../utils/journalProgress';
 import { isAreaReachable } from '../utils/reachability';
@@ -96,7 +99,10 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
   };
 
   const diaries = useMemo(() => {
-    return Object.values(DIARY_DATA).map(d => ({ ...d, status: getStatus(d) })).sort((a, b) => {
+    return Object.values(DIARY_DATA).map(d => {
+      const eligibility = evaluateDiaryTierEligibility(d, unlocks, gameModeId);
+      return { ...d, status: eligibility.status, eligible: eligibility.eligible };
+    }).sort((a, b) => {
         const score = (s: string) => s === 'AVAILABLE' ? 0 : s.includes('LOCKED') ? 1 : 2;
         return score(a.status) - score(b.status) || a.id.localeCompare(b.id);
     });
@@ -108,8 +114,8 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
       if (filterTier !== 'ALL' && d.tier !== filterTier) return false;
       if (filterStatus !== 'ALL') {
         if (filterStatus === 'COMPLETED' && d.status !== 'COMPLETED') return false;
-        if (filterStatus === 'AVAILABLE' && d.status !== 'AVAILABLE') return false;
-        if (filterStatus === 'LOCKED' && !d.status.includes('LOCKED')) return false;
+        if (filterStatus === 'AVAILABLE' && (d.status !== 'AVAILABLE' || !d.eligible)) return false;
+        if (filterStatus === 'LOCKED' && (d.status === 'COMPLETED' || d.eligible)) return false;
       }
 
       if (!searchTerm) return true;
@@ -144,8 +150,8 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
 
   const statusCounts = useMemo(() => ({
     ALL: diaries.length,
-    AVAILABLE: diaries.filter((d) => d.status === 'AVAILABLE').length,
-    LOCKED: diaries.filter((d) => d.status.includes('LOCKED')).length,
+    AVAILABLE: diaries.filter((d) => d.status === 'AVAILABLE' && d.eligible).length,
+    LOCKED: diaries.filter((d) => d.status !== 'COMPLETED' && !d.eligible).length,
     COMPLETED: diaries.filter((d) => d.status === 'COMPLETED').length,
   }), [diaries]);
 
@@ -211,7 +217,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
       <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
         {sortedDiaries.map(diary => {
           const isCompleted = diary.status === 'COMPLETED';
-          const isAvailable = diary.status === 'AVAILABLE';
+          const isAvailable = diary.status === 'AVAILABLE' && evaluateDiaryTierEligibility(diary, unlocks, gameModeId).eligible;
           const isSearching = searchTerm.length > 0;
           const isExpanded = expandedId === diary.id || isSearching;
           const color = diary.tier === 'Elite' ? 'text-purple-400' : diary.tier === 'Hard' ? 'text-red-400' : diary.tier === 'Medium' ? 'text-blue-400' : 'text-green-400';
@@ -233,7 +239,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
             ? []
             : diaryUnmet(diary, unlocks, gameModeId);
           const dTotalMet = tierEligibility.evidence.length;
-          const dTotalReqs = dTotalMet + tierEligibility.blockers.length;
+          const dTotalReqs = dTotalMet + tierEligibility.blockers.length + tierEligibility.manualChecks.length;
           const dReqPct = dTotalReqs === 0 ? 100 : Math.round((dTotalMet / dTotalReqs) * 100);
           const missingDiaryQuests = dUnmet
             .filter(requirement => requirement.kind === 'quest' && requirement.label !== 'All quests')
@@ -272,6 +278,9 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-900/25 text-emerald-400 border border-emerald-500/30">
                             {doableNow} now
                         </span>
+                    )}
+                    {!isCompleted && tierEligibility.confirmable && tierEligibility.manualChecks.length > 0 && (
+                      <span className="text-[9px] text-amber-300" title={tierEligibility.manualChecks.join('\n')}>Needs confirmation</span>
                     )}
                   </div>
                   
@@ -345,11 +354,11 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                             ? task.anyOfRegions.join(' or ')
                             : undefined;
                           const hasReqs = Boolean(
-                            Object.keys(task.skills ?? {}).length || task.items?.length || task.quests?.length
+                            Object.keys(task.skills ?? {}).length || task.items?.length || task.quests?.length || task.merchants?.length
                             || task.regions?.length || task.anyOfRegions?.length || task.locations?.length
                             || task.oneOf?.length || task.combatLevel
                             || task.allQuests || task.anySkillLevel || task.questPoints !== undefined
-                            || task.manualRequirements?.length,
+                            || taskEligibility.manualChecks.length || task.equipmentRequirements?.length || task.mobility?.length || task.arcana?.length,
                           );
                           const skillRequirements = Object.entries(task.skills ?? {});
                           const unmetSkillRequirements = skillRequirements.filter(([skill, level]) =>
@@ -391,14 +400,36 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                     <div className="flex flex-wrap gap-1.5 mt-1.5">
                                       {skillRequirements.filter(([skill, level]) => meetsSkillRequirement(unlocks, skill, level as number)).map(([skill, level]) => (
                                         <span key={skill} className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-white/5 text-gray-500 bg-black/30">
-                                          <BookOpen size={8} /> {skill} {level as number}
+                                          <WikiIcon file={`${skill}_icon.png`} alt="" size={8} /> {skill} {level as number}
                                         </span>
                                       ))}
                                       {task.items?.map(item => (
                                         <span key={item} className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-white/5 text-gray-500 bg-black/30">
-                                          <BookOpen size={8} /> {item}
+                                          <WikiIcon file="Inventory.png" alt="" size={8} /> {item}
                                         </span>
                                       ))}
+                                      {task.merchants?.map(merchant => (
+                                        <span key={merchant} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${unlocks.merchants.includes(merchant) ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
+                                          <Lock size={8} /> {merchant}
+                                        </span>
+                                      ))}
+                                      {task.arcana?.map(arcana => (
+                                        <span key={arcana} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${unlocks.arcana.includes(arcana) ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
+                                          <Lock size={8} /> {arcana}
+                                        </span>
+                                      ))}
+                                      {task.mobility?.map(mobility => (
+                                        <span key={mobility} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${unlocks.mobility.includes(mobility) ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
+                                          <Lock size={8} /> {mobility}
+                                        </span>
+                                      ))}
+                                      {task.equipmentRequirements?.map(requirement => {
+                                        const waived = requirement.unlessDiary && unlocks.diaries.includes(requirement.unlessDiary);
+                                        const met = !taskEligibility.blockers.some(blocker => blocker.kind === 'equipment' && blocker.slot === requirement.slot);
+                                        return <span key={requirement.slot} title={requirement.reason} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${met ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
+                                          <WikiIcon file={waived ? "Achievement_Diaries_icon.png" : SLOT_CONFIG[requirement.slot]?.file ?? "Worn_Equipment.png"} alt="" size={8} /> {waived ? `${requirement.unlessDiary} reward` : `${requirement.slot} T${requirement.tier}: ${requirement.reason}`}
+                                        </span>;
+                                      })}
                                       {task.quests?.map(q => {
                                         const met = unlocks.quests.includes(q);
                                         return (
@@ -412,7 +443,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                         const met = !taskEligibility.blockers.some(blocker => blocker.label === label);
                                         return <span className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${met ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}><BookOpen size={8} /> {label}</span>;
                                       })()}
-                                      {task.manualRequirements?.map(requirement => (
+                                      {taskEligibility.manualChecks.map(requirement => (
                                         <span key={requirement} className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-cyan-500/30 text-cyan-300 bg-cyan-900/10">
                                           <BookOpen size={8} /> Confirm: {requirement}
                                         </span>
@@ -429,7 +460,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                       )}
                                       {[task.combatLevel ? `Combat level ${task.combatLevel}` : undefined, task.allQuests ? 'All quests' : undefined, task.anySkillLevel ? `Any skill ${task.anySkillLevel}` : undefined].filter((label): label is string => Boolean(label)).map(label => {
                                         const met = !taskEligibility.blockers.some(blocker => blocker.label === label);
-                                        return <span key={label} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${met ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}><BookOpen size={8} /> {label}</span>;
+                                        return <span key={label} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${met ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}><WikiIcon file={label.startsWith("Combat level") ? "Combat_icon.png" : label.startsWith("Any skill") ? "Stats_icon.png" : "Quest_point_icon.png"} alt="" size={8} /> {label}</span>;
                                       })}
                                     </div>
                                   )}
@@ -458,7 +489,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                         className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-red-500/30 text-red-400 bg-red-900/10 hover:bg-red-900/20 hover:border-red-400/40 transition-colors cursor-pointer"
                                         title={`Training guide: ${skill}`}
                                       >
-                                        <BookOpen size={8} /> {skill} {level as number} <TrendingUp size={7} className="opacity-60" />
+                                        <WikiIcon file={`${skill}_icon.png`} alt="" size={8} /> {skill} {level as number} <TrendingUp size={7} className="opacity-60" />
                                       </button>
                                     );
                                   })}

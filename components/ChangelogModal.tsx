@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { CheckCircle2, ChevronDown, RefreshCw, ScrollText, Sparkles, X } from 'lucide-react';
+import { CheckCircle2, ChevronDown, RefreshCw, X } from 'lucide-react';
+import { ScrollText, Sparkles } from './OsrsIcon';
 import type { ChangelogRelease, ChangelogSection } from '../data/changelog';
 import type { FateCompensationChoice, FateCompensationState } from '../types';
 import { useEscapeKey } from '../hooks/useEscapeKey';

@@ -3,7 +3,7 @@ import { QUEST_DATA, QuestData } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DIARY_DATA } from '../data/diaryData';
 import { DropSource, UnlockState } from '../types';
-import { REGION_GROUPS } from '../data/items';
+import { ARCANA_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, MOBILITY_LIST, REGION_GROUPS } from '../data/items';
 import { combatLevel } from './slayerReach';
 import {
   countDoableDiaryTasks, countDoableTasks, countMetSkillRequirements,
@@ -50,10 +50,11 @@ describe('manual journal readiness', () => {
 
     const reachable = evaluateDiaryTaskEligibility(task, unlocked({
       regions: [REGION_GROUPS.Wilderness[0]],
+      equipment: { Cape: 1 },
     }));
     expect(reachable).toMatchObject({
       machineEligible: true,
-      eligible: true,
+      eligible: false,
       blockers: [],
     });
   });
@@ -63,7 +64,7 @@ describe('manual journal readiness', () => {
 
     expect(evaluateDiaryTaskEligibility(task, unlocked({ regions: ['Port Sarim'] })).blockers)
       .toContainEqual({ kind: 'region', label: 'Falador' });
-    expect(evaluateDiaryTaskEligibility(task, unlocked({ regions: ['Falador'] })).eligible)
+    expect(evaluateDiaryTaskEligibility(task, unlocked({ regions: ['Falador'], merchants: ['Farming Shops'] }), 'vanilla').eligible)
       .toBe(true);
   });
 
@@ -746,6 +747,10 @@ describe('canonical diary tier eligibility', () => {
       ...Object.values(DIARY_DATA).flatMap(diary => diary.quests),
     ];
     return unlocked({
+      equipment: Object.fromEntries(EQUIPMENT_SLOTS.map(slot => [slot, 9])),
+      mobility: [...MOBILITY_LIST],
+      arcana: [...ARCANA_LIST],
+      merchants: [...MERCHANTS_LIST],
       skills: Object.fromEntries(taskSkills.map(skill => [skill, 10])),
       levels: Object.fromEntries(taskSkills.map(skill => [skill, 99])),
       regions: [...new Set(regions)],
@@ -852,6 +857,7 @@ describe('audited diary route eligibility', () => {
     };
     const common = {
       quests: ['Family Crest'], regions: ['Catherby'],
+      equipment: { Gloves: 1 },
       skills: { Cooking: 10, Fishing: 10, Strength: 10 },
     };
     expect(evaluateDiaryTaskEligibility(bareHandedTask, unlocked({
@@ -863,7 +869,8 @@ describe('audited diary route eligibility', () => {
     const eligible = evaluateDiaryTaskEligibility(bareHandedTask, unlocked({
       ...common, levels: { Cooking: 80, Fishing: 96, Strength: 76 },
     }));
-    expect(eligible.eligible).toBe(true);
+    expect(eligible.confirmable).toBe(true);
+    expect(eligible.manualChecks).toContainEqual(expect.stringContaining('Cooking gauntlets'));
     expect(eligible.blockers).not.toContainEqual({
       kind: 'quest', label: 'Barbarian Training',
     });
@@ -921,6 +928,7 @@ describe('audited diary route eligibility', () => {
   it('allows an existing or mounted Digsite pendant without crafting Magic', () => {
     expect(evaluateDiaryTaskEligibility(task('var_med_7'), unlocked({
       quests: ['The Dig Site'], regions: ['Digsite'],
+      mobility: ['Digsite Pendant'],
       skills: { Magic: 1 }, levels: { Magic: 1 },
     })).eligible).toBe(true);
   });
@@ -944,9 +952,10 @@ describe('audited diary route eligibility', () => {
     for (const [id, level] of cases) {
       const diaryTask = task(id);
       expect(evaluateDiaryTaskEligibility(diaryTask, unlocked({
+        equipment: { Head: 1, Body: 1, Legs: 1, Boots: 1 },
         skills: { Runecraft: 10 }, levels: { Runecraft: level },
         regions: diaryTask.regions ?? [], quests: diaryTask.quests ?? [],
-      })).eligible, id).toBe(true);
+      })).confirmable, id).toBe(true);
     }
   });
 });

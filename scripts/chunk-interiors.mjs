@@ -6,6 +6,8 @@ const baseId = value => String(value).split('-')[0];
 const fields = { Monster: 'monster', NPC: 'npc', Object: 'object', Shop: 'shop', Spawn: 'spawn', Quest: 'quest' };
 const taskCategories = { monster: 'Monsters', npc: 'NPCs', object: 'Objects', shop: 'Shops', spawn: 'Spawns' };
 const entityName = (kind, raw) => kind === 'shop' ? raw.replace(/\.$/, '') : raw.split('#')[0].trim();
+const recordsOf = blob => [blob, ...Object.values(blob.Sections ?? {})];
+const diaryRefs = value => String(value).split(',').map(ref => ref.trim()).filter(Boolean);
 
 /** Retain playable interior evidence without creating purchasable underground coordinates. */
 export function buildInteriorContent(data, registry, encode, accessPolicy = policy) {
@@ -19,7 +21,7 @@ export function buildInteriorContent(data, registry, encode, accessPolicy = poli
       group.push(id); names.set(blob.Name.toLowerCase(), group);
     }
   }
-  const nameOf = id => source[id]?.Name ?? (/^\d+$/.test(id) ? `Interior ${id}` : id);
+  const nameOf = id => accessPolicy.records?.[id]?.name ?? source[id]?.Name ?? (/^\d+$/.test(id) ? `Interior ${id}` : id);
   const rulesFor = id => {
     const name = nameOf(id);
     return [...new Set([
@@ -50,11 +52,26 @@ export function buildInteriorContent(data, registry, encode, accessPolicy = poli
     const peers = names.get(id.toLowerCase()) ?? [];
     if (!peers.length) return blob;
     const result = {};
+    const peerRecords = peers.flatMap(key => recordsOf(source[key]));
     for (const [field, kind] of Object.entries(fields)) {
-      const known = new Set(peers.flatMap(key => [source[key], ...Object.values(source[key].Sections ?? {})])
+      const known = new Set(peerRecords
         .flatMap(record => Object.keys(record[field] ?? {}).map(name => entityName(kind, name))));
       const extra = Object.fromEntries(Object.entries(blob[field] ?? {}).filter(([name]) => !known.has(entityName(kind, name))));
       if (Object.keys(extra).length) result[field] = extra;
+    }
+    // Named aggregates carry diary/clue metadata absent from their physical
+    // peers. Preserve only the residual evidence, so a numeric copy (Yu'biusk)
+    // cannot be counted again when all entrances are aggregated.
+    for (const record of recordsOf(blob)) for (const [area, refs] of Object.entries(record.Diary ?? {})) {
+      const known = new Set(peerRecords.flatMap(peer => diaryRefs(peer.Diary?.[area] ?? '')));
+      const extra = diaryRefs(refs).filter(ref => !known.has(ref));
+      if (extra.length) (result.Diary ??= {})[area] = [...new Set([...diaryRefs(result.Diary?.[area] ?? ''), ...extra])].join(', ');
+    }
+    const clues = {};
+    for (const record of recordsOf(blob)) for (const [tier, count] of Object.entries(record.Clue ?? {})) clues[tier] = (clues[tier] ?? 0) + count;
+    for (const [tier, count] of Object.entries(clues)) {
+      const retained = peerRecords.reduce((sum, record) => sum + (record.Clue?.[tier] ?? 0), 0);
+      if (count > retained) (result.Clue ??= {})[tier] = count - retained;
     }
     return result;
   };
@@ -134,6 +151,38 @@ export function buildInteriorContent(data, registry, encode, accessPolicy = poli
     interiors[id] = { name: nameOf(id), content, entrances: routes(id), requirements };
   }
   return interiors;
+}
+
+/** Every named diary reference and clue count must survive once in its peer group. */
+export function assertInteriorMetadataConservation(data, chunks, interiors) {
+  const names = new Map();
+  for (const [id, blob] of Object.entries(data.chunks ?? {})) if (/^\d+$/.test(id) && blob.Name) {
+    const ids = names.get(blob.Name.toLowerCase()) ?? [];
+    ids.push(id); names.set(blob.Name.toLowerCase(), ids);
+  }
+  const evidence = [];
+  for (const [id, blob] of Object.entries(data.chunks ?? {})) {
+    if (/^\d+$/.test(id)) continue;
+    const peers = names.get(id.toLowerCase());
+    if (!peers?.length) continue;
+    const sourceRecords = recordsOf(blob), targets = [...peers, id]
+      .map(key => chunks[key] ?? interiors[key]?.content).filter(Boolean);
+    const diaries = new Map(), clues = new Map();
+    for (const record of sourceRecords) {
+      for (const [area, refs] of Object.entries(record.Diary ?? {})) for (const ref of diaryRefs(refs)) diaries.set(`${area}/${ref}`, { area, ref });
+      for (const [tier, count] of Object.entries(record.Clue ?? {})) clues.set(tier, (clues.get(tier) ?? 0) + count);
+    }
+    for (const [key, { area, ref }] of diaries) {
+      if (!targets.some(target => diaryRefs(target.d?.[area] ?? '').includes(ref))) throw new Error(`Lost interior diary evidence: ${id}/${key}`);
+    }
+    for (const [tier, count] of clues) {
+      const numericCount = peers.flatMap(key => recordsOf(data.chunks[key])).reduce((sum, record) => sum + (record.Clue?.[tier] ?? 0), 0);
+      const retained = targets.reduce((sum, target) => sum + (target.c?.[tier] ?? 0), 0);
+      if (retained !== Math.max(count, numericCount)) throw new Error(`Interior clue conservation failed: ${id}/${tier} expected ${Math.max(count, numericCount)}, received ${retained}`);
+    }
+    if (diaries.size || clues.size) evidence.push({ id, diaryReferences: diaries.size, clueSteps: [...clues.values()].reduce((sum, count) => sum + count, 0) });
+  }
+  return evidence;
 }
 
 /** Reject invalid curated entrances before they reach any permission index. */

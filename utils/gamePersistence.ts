@@ -1,4 +1,5 @@
 import type { GameState } from '../types';
+import { sealRuneProofReplacement } from './runeProofProgress';
 import {
   validateAndMigrateSave,
   type SaveErrorCode,
@@ -170,6 +171,7 @@ export const applyValidatedReplacement = (
   options: ReplacementCallbacks,
 ): ImportResult => {
   if (prepared.ok === false) return prepared;
+  prepared = { ...prepared, state: sealRuneProofReplacement(prepared.state) };
 
   const backup = options.writeBackup(serializeCurrent(options.current));
   try {
@@ -203,6 +205,7 @@ export const applyValidatedReplacementAsync = async (
   options: AsyncReplacementCallbacks,
 ): Promise<ImportResult> => {
   if (prepared.ok === false) return prepared;
+  prepared = { ...prepared, state: sealRuneProofReplacement(prepared.state) };
 
   const isCurrent = (): boolean => {
     try {

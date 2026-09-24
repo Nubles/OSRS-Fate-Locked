@@ -214,7 +214,8 @@ const taskSourceQuestId = (sourceId, label) => {
   assert(match !== null, `${label} is not a Chunk Picker task source ID`);
   return match[1];
 };
-const LEGACY_QUEST_ID = 'Elemental Workshop I';
+// Retained source records are not additions to the current F2P roster.
+const LEGACY_QUEST_IDS = ["Daddy's Home", 'Elemental Workshop I'];
 
 const validateF2PMembership = (membership) => {
   assert(membership?.schemaVersion === 1, 'F2P membership schemaVersion must be 1');
@@ -231,7 +232,10 @@ const validateF2PMembership = (membership) => {
     assert(Number.isInteger(entry.progressionPriority) && entry.progressionPriority > 0,
       `F2P membership quest ${entry.questId} progression priority is invalid`);
     nonBlank(entry.wikiTitle, `F2P membership quest ${entry.questId} Wiki title`);
-    assert(entry.wikiTitle === `${entry.questId}/Quick guide`, `F2P membership quest ${entry.questId} Wiki title is invalid`);
+    const expectedWikiTitle = entry.questId === 'Learning the Ropes'
+      ? entry.questId
+      : `${entry.questId}/Quick guide`;
+    assert(entry.wikiTitle === expectedWikiTitle, `F2P membership quest ${entry.questId} Wiki title is invalid`);
     assert(!questIds.has(entry.questId), `F2P membership has duplicate quest ID: ${entry.questId}`);
     assert(!slugs.has(entry.slug), `F2P membership has duplicate slug: ${entry.slug}`);
     assert(!priorities.has(entry.progressionPriority), `F2P membership has duplicate progression priority: ${entry.progressionPriority}`);
@@ -251,7 +255,7 @@ const membershipBySlug = membership => new Map(validateF2PMembership(membership)
 
 const allowedQuestIds = membership => new Set([
   ...membershipByQuestId(membership).keys(),
-  LEGACY_QUEST_ID,
+  ...LEGACY_QUEST_IDS,
 ]);
 
 const DEFAULT_MEMBERSHIP = JSON.parse(readFileSync(DEFAULT_PATHS.membership, 'utf8'));
@@ -316,7 +320,7 @@ export function validateWalkthroughSource(source, membership) {
     assert(roster.has(quest.questId), `Walkthrough source has unsupported F2P membership quest ID: ${quest.questId}`);
     sourceQuestIds.add(quest.questId);
     const member = membersByQuestId.get(quest.questId);
-    const expectedWikiTitle = member?.wikiTitle ?? `${LEGACY_QUEST_ID}/Quick guide`;
+    const expectedWikiTitle = member?.wikiTitle ?? `${quest.questId}/Quick guide`;
     assert(quest.wikiTitle === expectedWikiTitle, `${quest.questId}: Wiki title is invalid`);
     validatePermanentWikiSource(quest);
     assert(Array.isArray(quest.importedLines), `${quest.questId}: imported lines are required`);

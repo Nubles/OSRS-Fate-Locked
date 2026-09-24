@@ -6,6 +6,8 @@
  * standard equipment-stats groups shown in the OSRS DPS tool. Pure + tested.
  */
 
+import type { RangedDamageType } from './rangedDamage';
+
 export interface GearBonuses {
   // Attack (offensive)
   stab: number;
@@ -35,6 +37,9 @@ export interface GearItem {
   imageFile: string;
   speed: number;
   twoHanded: boolean;
+  /** Reviewed upstream combat category; absent means attack options are unknown. */
+  category?: string;
+  rangedDamageType?: RangedDamageType;
   bonuses: GearBonuses;
 }
 

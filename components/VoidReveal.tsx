@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
-import { Sparkles, Map, Box, Copy, Shield, BookOpen, Footprints, Zap, Home, Store, Gamepad2, Skull, Package, Dna, ExternalLink, Flag, Check, Loader2 } from 'lucide-react';
+import { Copy, ExternalLink, Check, Loader2 } from 'lucide-react';
+import { Sparkles, Map, Box, Shield, BookOpen, Footprints, Zap, Home, Store, Gamepad2, Skull, Package, Dna, Flag } from './OsrsIcon';
 import { wikiUrlFor } from '../constants';
 import { EntityModel } from './EntityModel';
 import { modelFor, orientationFor } from '../data/entityModels';
@@ -139,7 +140,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
   }, [isChaos, animationsEnabled]);
 
   const handleCopyFlex = () => {
-      const text = `🔥 Fate-Locked UIM Update 🔥\nJust unlocked: **${itemName}** (${displayItemType})!\n#OSRS #FateLocked`;
+      const text = `Fate-Locked UIM Update\nJust unlocked: **${itemName}** (${displayItemType})!\n#OSRS #FateLocked`;
       navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);

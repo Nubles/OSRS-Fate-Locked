@@ -10,6 +10,7 @@
  * (specific before generic, e.g. pickaxe→Mining before axe→Axe).
  */
 const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
+  'mage arena shop': 'Magic Shops', // Resource catalogue alias for Lundail's arena-side rune shop.
   "martin thwait's lost and found": 'Claw Shops',
   "quartermaster's stores": 'Halberd Shops',
   // Armour shops whose names do not reveal their actual speciality.

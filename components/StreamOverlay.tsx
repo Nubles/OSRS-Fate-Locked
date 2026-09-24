@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { WikiIcon } from './WikiIcon';
 
 /**
  * Streamer overlay — a transparent, OBS-browser-source-friendly page showing
@@ -162,7 +163,7 @@ export const StreamOverlay: React.FC = () => {
           )}
           {newUnlock && (
             <div className="self-start px-4 py-2 rounded-lg bg-emerald-950/85 border border-emerald-400/60 text-emerald-100 text-sm font-bold backdrop-blur-sm animate-in slide-in-from-left-4 fade-in duration-500 shadow-[0_0_25px_rgba(52,211,153,0.35)]">
-              ✦ NEW UNLOCK — {newUnlock}
+              <WikiIcon file="Crystal_key.png" alt="" size={16} className="mr-1.5 align-middle" /> NEW UNLOCK — {newUnlock}
             </div>
           )}
         </div>
