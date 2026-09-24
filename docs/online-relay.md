@@ -168,7 +168,9 @@ last valid snapshot.
 
 The app defaults to `https://fate-relay.fatelocked.workers.dev`. A deployment
 can override it with `VITE_FATE_RELAY`; local development can set
-`fate_relay_base` in browser storage.
+`fate_relay_base` in browser storage. A copied stream overlay URL then names
+that relay in a `relay=` parameter, and the overlay polls it only if it is an
+https address, or http on localhost for local development.
 
 From `workers/fate-relay/`, install Wrangler, authenticate, configure the
 `RELAY` KV namespace in `wrangler.toml`, and run `wrangler deploy`.

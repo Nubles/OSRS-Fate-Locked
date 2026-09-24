@@ -15,6 +15,7 @@ const relay = vi.hoisted(() => ({
   subscribe: vi.fn(() => () => {}),
   requestPush: vi.fn(),
   disable: vi.fn(),
+  base: vi.fn(() => 'https://fate-relay.fatelocked.workers.dev'),
 }));
 
 vi.mock('../services/relaySync', () => ({ relaySync: relay }));
@@ -38,6 +39,8 @@ describe('RuneLiteOnboarding', () => {
     relay.subscribe.mockClear();
     relay.requestPush.mockReset();
     relay.disable.mockReset();
+    relay.base.mockReset();
+    relay.base.mockReturnValue('https://fate-relay.fatelocked.workers.dev');
   });
 
   afterEach(() => {
@@ -103,6 +106,27 @@ describe('RuneLiteOnboarding', () => {
     expect(screen.getByText(/clipboard or file import/i)).toBeTruthy();
     expect(screen.getByText(/local history is not transferred/i))
       .toBeTruthy();
+  });
+
+  it.each([
+    ['the public relay', 'https://fate-relay.fatelocked.workers.dev', ''],
+    ['a custom relay', 'https://relay.example.test',
+      '&relay=https%3A%2F%2Frelay.example.test'],
+  ])('copies a stream overlay URL that polls %s', async (_case, base, suffix) => {
+    const user = userEvent.setup();
+    relay.enabled = true;
+    relay.code = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    relay.status = 'synced';
+    relay.base.mockReturnValue(base);
+    render(<RuneLiteOnboarding />);
+
+    await user.click(screen.getByRole('button', {
+      name: 'Copy stream overlay URL',
+    }));
+    expect(await navigator.clipboard.readText()).toBe(
+      `${window.location.origin}${window.location.pathname}`
+      + `#/overlay?code=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa${suffix}`,
+    );
   });
 
   it('collapses a delivered profile as Profile sent, never Connected', () => {

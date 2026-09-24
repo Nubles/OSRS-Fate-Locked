@@ -169,6 +169,33 @@ describe('StreamOverlay', () => {
     await screen.findByText('keys');
     expect(badge('keys')).toBe('6');
   });
+
+  it('polls the public relay unless the URL names another', async () => {
+    relay.publish(1, json(bundle(3)));
+    render(<StreamOverlay />);
+    await screen.findByText('keys');
+    expect(relay.fetch.mock.calls[0][0])
+      .toBe(`https://fate-relay.fatelocked.workers.dev/r/${CODE}`);
+
+    cleanup();
+    window.location.hash = `#/overlay?code=${CODE}&relay=${encodeURIComponent('https://relay.example.test/')}`;
+    render(<StreamOverlay />);
+    await vi.waitFor(() => expect(relay.fetch).toHaveBeenCalledTimes(2));
+    expect(relay.fetch.mock.calls[1][0]).toBe(`https://relay.example.test/r/${CODE}`);
+  });
+
+  it.each([
+    'http://relay.example.test',
+    'javascript:alert(1)',
+    'https://user:secret@relay.example.test',
+  ])('refuses to poll the relay address %s', async (address) => {
+    window.location.hash = `#/overlay?code=${CODE}&relay=${encodeURIComponent(address)}`;
+    render(<StreamOverlay />);
+
+    expect(screen.getByText(/relay address in this overlay URL/)).toBeTruthy();
+    await nextPoll();
+    expect(relay.fetch).not.toHaveBeenCalled();
+  });
 });
 
 describe('StreamOverlay payload checks', () => {

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { DEFAULT_RELAY_BASE, parseRelayBase } from '../utils/relayBase';
 import { WikiIcon } from './WikiIcon';
 
 /**
@@ -6,7 +7,8 @@ import { WikiIcon } from './WikiIcon';
  * the live run: keys, fate points, buff, territory count, and a "NEW UNLOCK"
  * pop whenever something opens up. Reached via the hash route
  * `#/overlay?code=<pairing code>` (see index.tsx), so it works on GitHub
- * Pages with no router.
+ * Pages with no router; `&relay=<address>` names a relay other than the
+ * public one.
  *
  * Entirely self-contained: no GameContext, no app chrome — it reads the SAME
  * relay bundle the RuneLite plugin polls (the web app pushes it on every
@@ -17,7 +19,6 @@ import { WikiIcon } from './WikiIcon';
  * OBS setup: add a Browser source with this URL, width ~800, height ~120.
  */
 
-const DEFAULT_BASE = 'https://fate-relay.fatelocked.workers.dev';
 // The overlay is informational rather than latency-critical. A 30-second
 // cadence keeps it useful on stream without consuming an entire free Worker
 // allowance when it is left open for long sessions.
@@ -149,17 +150,22 @@ export const StreamOverlay: React.FC = () => {
 
   const params = new URLSearchParams(window.location.hash.split('?')[1] ?? '');
   const code = (params.get('code') ?? '').trim();
-  const base = (params.get('relay') ?? DEFAULT_BASE).replace(/\/+$/, '');
+  const relay = params.get('relay');
+  const base = relay === null ? DEFAULT_RELAY_BASE : parseRelayBase(relay);
 
   const [state, setState] = useState<OverlayState | null>(null);
-  const [error, setError] = useState<string | null>(code ? null : 'Missing ?code= — copy the overlay URL from the Sync & Roll tab.');
+  const [error, setError] = useState<string | null>(
+    !code ? 'Missing ?code= — copy the overlay URL from the Sync & Roll tab.'
+      : !base ? 'The relay address in this overlay URL is not a secure (https) address — copy the overlay URL again.'
+        : null,
+  );
   const [newUnlock, setNewUnlock] = useState<string | null>(null);
   const etag = useRef<string | null>(null);
   const prevUnlocked = useRef<Set<string> | null>(null);
   const popTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!code) return;
+    if (!code || !base) return;
     let alive = true;
 
     const poll = async () => {
