@@ -44,8 +44,11 @@ updates before they become collectible slots.
 
 `.github/workflows/sync-content.yml` runs weekly (and on demand). It re-runs the
 wiki sync, runs the **full test suite** (including the cross-data invariants),
-and opens a **pull request** with whatever the wiki changed. A maintainer
-reviews and merges; the merge triggers the existing Deploy workflow and ships.
+and opens a **pull request** with whatever the wiki changed. That pull request
+is opened with the workflow's `GITHUB_TOKEN`, which starts no other workflows,
+so the sync then dispatches the CI workflow on the pull request's branch; its
+checks appear on the pull request. A maintainer reviews and merges; the merge
+triggers the existing Deploy workflow and ships.
 
 This is what bakes wiki changes into the committed bundle (so first-load is
 correct and names get the wiki's polished forms), and it's where anything that

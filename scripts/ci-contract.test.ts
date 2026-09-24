@@ -565,3 +565,24 @@ describe('release documentation contract', () => {
     );
   });
 });
+
+describe('content sync workflow contract', () => {
+  it('dispatches CI on the sync pull request it opens with GITHUB_TOKEN', async () => {
+    const workflow = await readRepositoryFile('.github/workflows/sync-content.yml');
+    const permissionsBlock = yamlBlock(workflow, 'permissions');
+
+    // Pull requests opened with GITHUB_TOKEN start no workflows, so the sync
+    // must dispatch CI itself, on the branch its pull request uses.
+    expect(permissionsBlock).toMatch(/^\s{2}actions:\s*write\s*$/m);
+    expect(workflow).toMatch(/- name: Open or update the sync PR\n\s+id: cpr\n\s+if: success\(\)\n\s+uses: peter-evans\/create-pull-request@v6/);
+    expect(workflow).toMatch(/^\s+branch: bot\/wiki-content-sync\s*$/m);
+    expect(workflow).toMatch(
+      /- name: Run CI on the sync PR\n\s+if: success\(\) && \(steps\.cpr\.outputs\.pull-request-operation == 'created' \|\| steps\.cpr\.outputs\.pull-request-operation == 'updated'\)\n\s+env:\n\s+GH_TOKEN: \$\{\{ github\.token \}\}/,
+    );
+    expect(activeRunCommands(workflow).at(-1)).toBe(
+      'gh workflow run ci.yml --repo "${{ github.repository }}" --ref bot/wiki-content-sync',
+    );
+    expect(yamlBlock(await readRepositoryFile('.github/workflows/ci.yml'), 'on'))
+      .toMatch(/^\s{2}workflow_dispatch:\s*$/m);
+  });
+});
