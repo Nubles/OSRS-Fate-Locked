@@ -81,9 +81,16 @@ export function OnlineSyncDriver() {
       timer = window.setTimeout(() => { void publish(); }, Math.max(0, delay));
     };
     schedule.current(false);
+    // Switching to the game client hides this tab. Send a waiting publish now
+    // so RuneLite doesn't wait out the quiet period for the latest rules.
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && timer != null) void publish();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
       cancelled = true;
       schedule.current = null;
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       if (timer != null) window.clearTimeout(timer);
     };
   }, [enabled, sessionCode]);

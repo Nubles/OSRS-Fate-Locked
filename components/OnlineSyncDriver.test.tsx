@@ -202,6 +202,34 @@ describe('OnlineSyncDriver', () => {
     expect(buildBundlePayloadMock.mock.calls[1]?.[1]).toMatchObject({ runRevision: 19 });
   });
 
+  it('sends a waiting publish at once when the player leaves the tab', async () => {
+    relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    const view = render(<OnlineSyncDriver />);
+    await advance(QUIET_MS);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    stableGameState.runRevision = 10;
+    view.rerender(<OnlineSyncDriver />);
+    await advance(1_000);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await advance(0);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(buildBundlePayloadMock.mock.calls[1]?.[1]).toMatchObject({ runRevision: 10 });
+
+    // Nothing is waiting any more, so hiding again sends nothing new.
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await advance(QUIET_MS);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    visibility.mockRestore();
+  });
+
   it('still publishes once a minute while changes never pause', async () => {
     relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
     const view = render(<OnlineSyncDriver />);
