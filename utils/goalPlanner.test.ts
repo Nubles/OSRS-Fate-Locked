@@ -164,6 +164,22 @@ describe('planForTarget — quests', () => {
     }));
     expect(plan.questSteps.map(step => step.id)).not.toContain('Quest Points 12');
   });
+
+  it("does not count a gated quest's own points toward its Quest Point gate", () => {
+    const tenQuestPoints = ["Cook's Assistant", 'Sheep Shearer', 'Rune Mysteries', 'Romeo & Juliet', 'Imp Catcher', "Witch's Potion"];
+    const plan = planForTarget('quest', "Black Knights' Fortress", maxedUnlocks({ quests: tenQuestPoints }))!;
+
+    expect(plan.questSteps.map(step => step.id)).toEqual(["Black Knights' Fortress"]);
+    expect(plan.qpStep?.detail).toBe('12 QP — plan yields 10, need more quests');
+  });
+
+  it('does not count quests that need the gated quest first', () => {
+    const nineQuestPoints = ['Druidic Ritual', "Cook's Assistant", 'Sheep Shearer', 'Rune Mysteries', 'Imp Catcher', "Witch's Potion"];
+    const plan = planForTarget('quest', 'Recruitment Drive', maxedUnlocks({ quests: nineQuestPoints }))!;
+
+    expect(plan.questSteps.map(step => step.id)).toEqual(["Black Knights' Fortress", 'Recruitment Drive']);
+    expect(plan.qpStep?.detail).toBe('12 QP — plan yields 9, need more quests');
+  });
   it('surfaces an actionable alternative-access step for oneOf quests', () => {
     const plan = planForTarget('quest', 'Enter the Abyss', maxedUnlocks({
       quests: ['Rune Mysteries'],

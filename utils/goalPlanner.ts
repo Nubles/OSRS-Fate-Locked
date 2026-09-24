@@ -232,6 +232,12 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
   };
 }
 
+/** A Quest Point requirement and the quest it gates (null: a diary task's own gate). */
+interface QpGate {
+  required: number;
+  questId: string | null;
+}
+
 /**
  * Walk the prereq DAG of `rootQuestId` (post-order, so prerequisites come
  * before the quests that depend on them) and accumulate every requirement
@@ -241,13 +247,14 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
  */
 function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: string) {
   const order: string[] = []; // incomplete quests, dependency order
+  const prereqs = new Map<string, string[]>(); // incomplete quest → its unmet quest prereqs
+  const qpGates: QpGate[] = [];
   const visited = new Set<string>();
   const regions = new Set<string>();
   const alternatives = new Map<string, AlternativePlanStep>();
   const skills: Record<string, number> = {};
   const equipment = new Map<string, { tier: number; labels: Set<string> }>();
   const manualSteps = new Map<string, PlanStep>();
-  let qpRequired = 0;
 
   const visit = (qid: string) => {
     if (visited.has(qid)) return;
@@ -260,7 +267,7 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
 
     const questPointRequirement = q.skills['Quest Points'];
     if (questPointRequirement !== undefined) {
-      qpRequired = Math.max(qpRequired, questPointRequirement);
+      qpGates.push({ required: questPointRequirement, questId: qid });
     }
 
 
@@ -272,6 +279,9 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
     for (const blocker of eligibility.blockers) {
       if (blocker.kind === 'quest' && QUEST_DATA[blocker.label]) visit(blocker.label);
     }
+    prereqs.set(qid, eligibility.blockers.flatMap(blocker => (
+      blocker.kind === 'quest' && QUEST_DATA[blocker.label] ? [blocker.label] : []
+    )));
 
     const alternativeLabel = q.oneOf
       ?.map(questRequirementOptionLabel)
@@ -311,8 +321,8 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
         for (const [skill, level] of Object.entries(q.skills)) {
           if (blocker.label !== skill + ' ' + level
             && !(blocker.requirement?.type === 'single' && blocker.requirement.skill === skill && blocker.requirement.level === level)) continue;
-          if (skill === 'Quest Points') qpRequired = Math.max(qpRequired, level);
-          else skills[skill] = Math.max(skills[skill] ?? 0, level);
+          // Quest Points are recorded as a gate above.
+          if (skill !== 'Quest Points') skills[skill] = Math.max(skills[skill] ?? 0, level);
         }
       }
     }
@@ -321,7 +331,7 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
   };
 
   visit(rootQuestId);
-  return { order, regions, alternatives, manualSteps, skills, equipment, qpRequired };
+  return { order, prereqs, regions, alternatives, manualSteps, skills, equipment, qpGates };
 }
 
 function buildPlanFromRequirements(
@@ -330,7 +340,8 @@ function buildPlanFromRequirements(
   targetLabel: string,
   reqs: {
     order: string[]; regions: Set<string>; alternatives: Map<string, AlternativePlanStep>;
-    manualSteps: Map<string, PlanStep>; skills: Record<string, number>; qpRequired: number;
+    manualSteps: Map<string, PlanStep>; skills: Record<string, number>;
+    prereqs: Map<string, string[]>; qpGates: QpGate[];
     equipment: Map<string, { tier: number; labels: Set<string> }>;
     merchants?: Set<string>;
     mobility?: Set<string>;
@@ -412,28 +423,43 @@ function buildPlanFromRequirements(
       };
     });
 
-  // Quest-point shortfall: does completing the plan's quests yield enough QP?
+  // Quest-point shortfall: can the plan's quests earn each unmet gate's
+  // points in time? A gated quest's own points, and those of quests that need
+  // it first, only arrive after the gate — they can't count toward it. The
+  // step reports the gate with the least headroom.
   let qpStep: PlanStep | undefined;
-  if (reqs.qpRequired > 0) {
-    const haveQP = currentQuestPoints(unlocks);
-    const chainQP = questSteps.reduce(
-      (acc, s) => acc + questPointsFor(s.id),
-      0,
-    );
-    const projected = haveQP + chainQP;
-    const done = haveQP >= reqs.qpRequired;
-    if (!done) {
-      qpStep = {
-        kind: 'qp',
-        id: 'Quest Points',
-        label: 'Quest Points',
-        detail:
-          projected >= reqs.qpRequired
-            ? `${reqs.qpRequired} QP — covered by this plan (${projected})`
-            : `${reqs.qpRequired} QP — plan yields ${projected}, need more quests`,
-        done: false,
-      };
-    }
+  const haveQP = currentQuestPoints(unlocks);
+  const unmetGates = reqs.qpGates.filter(gate => gate.required > haveQP);
+  if (unmetGates.length > 0) {
+    const projectedFor = (gate: QpGate): number => {
+      const tooLate = new Set<string>();
+      if (gate.questId !== null) {
+        tooLate.add(gate.questId);
+        // Dependency order puts every prerequisite before the quests needing it.
+        for (const qid of reqs.order) {
+          if ((reqs.prereqs.get(qid) ?? []).some(prereq => tooLate.has(prereq))) tooLate.add(qid);
+        }
+      }
+      return questSteps.reduce(
+        (acc, s) => acc + (tooLate.has(s.id) ? 0 : questPointsFor(s.id)),
+        haveQP,
+      );
+    };
+    const tightest = unmetGates
+      .map(gate => ({ required: gate.required, projected: projectedFor(gate) }))
+      .reduce((worst, next) => (
+        next.projected - next.required < worst.projected - worst.required ? next : worst
+      ));
+    qpStep = {
+      kind: 'qp',
+      id: 'Quest Points',
+      label: 'Quest Points',
+      detail:
+        tightest.projected >= tightest.required
+          ? `${tightest.required} QP — covered by this plan (${tightest.projected})`
+          : `${tightest.required} QP — plan yields ${tightest.projected}, need more quests`,
+      done: false,
+    };
   }
 
   const steps: Array<PlanStep | AlternativePlanStep> = [
@@ -510,6 +536,8 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
 
     const merged = {
       order: [] as string[],
+      prereqs: new Map<string, string[]>(),
+      qpGates: [] as QpGate[],
       regions: new Set<string>(),
       alternatives: new Map<string, AlternativePlanStep>(),
       manualSteps: new Map<string, PlanStep>(),
@@ -518,7 +546,6 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       merchants: new Set<string>(),
       mobility: new Set<string>(),
       arcana: new Set<string>(),
-      qpRequired: 0,
     };
     if (status !== 'COMPLETED') {
       const seen = new Set<string>();
@@ -537,7 +564,8 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
             labels: new Set([...(previous?.labels ?? []), ...requirement.labels]),
           });
         }
-        merged.qpRequired = Math.max(merged.qpRequired, sub.qpRequired);
+        merged.qpGates.push(...sub.qpGates);
+        for (const [questId, questPrereqs] of sub.prereqs) merged.prereqs.set(questId, questPrereqs);
         for (const questId of sub.order) {
           if (!seen.has(questId)) {
             seen.add(questId);
@@ -549,7 +577,8 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       for (const [task, eligibility] of taskResults) {
         for (const qid of task.quests ?? []) mergeQuest(qid);
         if (task.questPoints !== undefined) {
-          merged.qpRequired = Math.max(merged.qpRequired, task.questPoints);
+          // The task itself is gated, so every quest in the plan can count.
+          merged.qpGates.push({ required: task.questPoints, questId: null });
         }
         if (task.allQuests) {
           for (const qid of QUEST_CAPE_QUEST_IDS) mergeQuest(qid);
