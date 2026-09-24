@@ -27,9 +27,9 @@ and profiles, **U** interface, **J** journal data, **H** advisors and combat,
 
 | Check | Base `6b7c301` | This branch |
 | --- | --- | --- |
-| `npx vitest run` | 311 files, 4,150 passed, **1 failed** (App lifecycle Discord invite test timed out at 5.2 s under load; fixed in `030975a`) | 343 files, **4,494 passed** |
+| `npx vitest run` | 311 files, 4,150 passed, **1 failed** (App lifecycle Discord invite test timed out at 5.2 s under load; fixed in `030975a`) | 344 files, **4,497 passed** |
 | `npx tsc --noEmit` | clean | clean |
-| `npm run content:verify` | passed | passed (441 tests) |
+| `npm run content:verify` | passed | passed |
 | `npm run diary:verify` | current | current |
 | `npm run changelog:verify` | n/a | passed (base `6b7c301`) |
 | `VITE_BASE=/OSRS-Fate-Locked/ npm run build` | 239.5 kB gzip entry chunk | 219.9 kB gzip entry chunk, under the new 225 kB budget (it was 243.2 kB before `fea2c55`) |
@@ -254,7 +254,7 @@ The fixes made these choices, which you may want to revisit:
 
 ## Guards against drift
 
-Against `6b7c301`, the branch adds 32 test files and extends 81 more. The broad guards are:
+Against `6b7c301`, the branch adds 33 test files and extends 81 more. The broad guards are:
 
 - `scripts/source-encoding.test.ts`: every app source and data file must be strict UTF-8.
 - `config/economy.consistency.test.ts`: every Omni percentage and ritual cost the Codex documents must match the engine.
