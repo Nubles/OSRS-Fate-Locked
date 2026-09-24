@@ -8,13 +8,13 @@ browser run or a script against the real data, or traced through the code,
 and is marked as such below.
 
 **Outcome:** 100 distinct findings, after merging duplicates between areas.
-52 are fixed on `claude/quirky-archimedes-aponk4`, and two more (U7, U17) are
+57 are fixed on `claude/quirky-archimedes-aponk4`, and two more (U7, U17) are
 partly fixed. Each behaviour fix is pinned by a test that fails on the old
 code, except the phone onboarding layout and the What's New ordering, which
-were verified in the browser instead. The other 46 are listed under
-[Open findings](#open-findings) with a recommended fix. Four of those wait on
-an owner decision; three earlier decisions are recorded under
-[Decisions](#decisions). Nothing has been deployed.
+were verified in the browser instead. The other 41 are listed under
+[Open findings](#open-findings) with a recommended fix. All six owner
+decisions are made and recorded under [Decisions](#decisions), so none are
+waiting. Nothing has been deployed.
 
 Finding IDs by area: **E** engine, **B** modes and reachability, **P** saves
 and profiles, **U** interface, **J** journal data, **H** advisors and combat,
@@ -24,12 +24,12 @@ and profiles, **U** interface, **J** journal data, **H** advisors and combat,
 
 | Check | Base `6b7c301` | This branch |
 | --- | --- | --- |
-| `npx vitest run` | 311 files, 4,150 passed, **1 failed** (App lifecycle Discord invite test timed out at 5.2 s under load; fixed in `030975a`) | 325 files, **4,245 passed** |
+| `npx vitest run` | 311 files, 4,150 passed, **1 failed** (App lifecycle Discord invite test timed out at 5.2 s under load; fixed in `030975a`) | 325 files, **4,255 passed** |
 | `npx tsc --noEmit` | clean | clean |
 | `npm run content:verify` | passed | passed |
 | `npm run diary:verify` | current | current (after `npm run diary:sync`) |
 | `npm run changelog:verify` | n/a | passed (base `6b7c301`) |
-| `VITE_BASE=/OSRS-Fate-Locked/ vite build` | 239.5 kB gzip entry chunk | 242.8 kB gzip entry chunk; about 2.5 kB of that is the new What's New text |
+| `VITE_BASE=/OSRS-Fate-Locked/ vite build` | 239.5 kB gzip entry chunk | 243.2 kB gzip entry chunk; the new What's New release is 2.3 kB of that (measured by building without it) |
 
 Browser checks ran in Chromium against the production build, starting from a
 fresh profile with localStorage and IndexedDB cleared:
@@ -38,6 +38,7 @@ fresh profile with localStorage and IndexedDB cleared:
 - On a 390×844 phone viewport, Next and Enter The Void are on screen and receive taps on every card. On the base build Next was clipped below the card.
 - After Reset all progress, three reloads open the dashboard. On the base build every reload showed the recovery screen.
 - Oracle search with "test" + Enter leaves the run ID and history unchanged, writes no backups and shows no diagnostics.
+- The settings menu offers **Export save file (.fate)** and no item says "encrypted". Its tooltip and the export message say the file isn't encrypted, and the download is a `.fate` file.
 - No page errors. The only console errors are blocked external wiki requests, because this sandbox has no wiki access.
 
 ## Verified correct
@@ -87,25 +88,32 @@ found them sound:
 | `0405db5`, `9feb8b5` | **J2**: quest difficulties match the official OSRS ratings (four changed; see [Decisions](#decisions)). | `data/questDifficulty.source.test.ts` (every quest Quest Helper lists) |
 | `840c323` | **H1**: the Boss Planner has a version picker with a standard default. **H2**: the DPS Calculator selects the exact version picked. | `BossKillPlanner.version.test.tsx`, `bossPlanner.test.ts`, `MonsterService.test.ts`, `DpsCalc.weaponOptions.test.tsx` |
 | `ee94c9a` | **E4**: new Chunked runs no longer get a key on their first level-up; existing runs keep their schedule. | `gameReducer.test.ts` |
+| `1af5a2a` | **P9**: "Export encrypted save" only obfuscated the file. It is now "Export save file (.fate)", and its tooltip and the export message say anyone with the file can read it. | `App.lifecycle.test.tsx`; browser |
+| `3fd92bf`, `7670992` | **F1** (security): a relay code lost its owner when its 24-hour data expired, so anyone could claim it and lock the owner out. An owner record now keeps a SHA-256 hash of the write token, never the token, for 90 days after its last refresh. **F14** (security): the pairing dialog no longer says RuneLite requested the connection, and warns that a link from anywhere else lets its sender read the published profile. | `workers/fate-relay/worker.test.ts` (five ownership cases), `utils/runeliteBundle.test.ts`, `RunelitePairingDialog.test.tsx` |
+| `d757504` | **J3**: diary tasks that need an item, such as an axe, Karamja Hard's oomlie wrap (`kar_hard_3`) or Varrock Medium's Digsite pendant (`var_med_7`), read as doable without asking. They now ask the player to confirm the item, as Sheep Shearer does. | `journalStatus.test.ts`, `diaryEquipmentMobility.test.ts` |
+| `5e3686d` | **G1**: in RuneProof guides, confirming one owned item completed other items' steps; an egg ticked off the milk steps in Cook's Assistant. A confirmed item now completes only the steps that make it. Ticking a step or completing the quest still completes every step before it. | `utils/questStrategies/coach.test.ts`, `objectives.test.ts`, `sheepCrafting.vanilla.test.ts`, `SheepCrafting.vanilla.test.tsx`, `GoalPlannerModal.runeproof.test.tsx` |
 
 Test failures during the work, all resolved: new reducer guards starved two
 tier-cap tests of keys, so their fixtures now start with enough keys. A diary
 generator test pinned `lum_easy_10` to no skills; it now pins `{ Cooking: 1 }`.
 The alternative-route audit list gained `wilderness_easy_4`. A first attempt
 at **G1** broke seven tests that pin documented owned-item behaviour, so it was
-reverted and moved to the decisions list.
+reverted until the owner chose a policy. With confirmation approved, those
+seven RuneProof tests and nine diary eligibility tests now pin the new rule,
+and three new tests cover it. The relay owner record broke
+`utils/runeliteBundle.test.ts`, which expected a single KV write; `7670992`
+updates it. Diary items awaiting confirmation were at first listed twice in
+the Diary Log, so item chips now leave them out.
 
 ## Open findings
 
 ### Fix next
 
 - **P2** (high, reproduced) — `utils/saveCoordinator.ts:203,429`, `recoveryDatabase.ts:413`. A tab that takes over saving keeps the revision counter it loaded with, so the recovery database rejects its writes as `stale_revision` while the UI says "Saved". On reload the other tab's older state returns. Re-syncing the counter on takeover alone is not enough: when tab A simply closes, stale tab B re-takes the lease automatically and would then overwrite A's newer progress everywhere. The fix needs all three parts: assign the revision inside the `putHead` transaction (max of stored and local, plus 1); never report `stale_revision` as saved; and require the manual-takeover confirmation when a blocked tab with unsaved changes regains the lease, as the spec already asks.
-- **F1** (medium, security, reproduced) — `workers/fate-relay/worker.js:135-142`. The write token is stored only inside the 24-hour record. After it expires, anyone's first POST claims the code, and the owner then gets `403` forever. Fix: see the recommendation under [Decisions](#decisions).
-- **F14** (low, security, traced) — `utils/runelitePairing.ts:9-13`, `RunelitePairingDialog.tsx:55`. Any website can present a `#runelite-pair=` link, and the dialog says "RuneLite requested this connection". Confirming it lets the link's author read every future publish. Fix: neutral wording, and ask the player to match the code shown in RuneLite.
 - **P5** (medium, reproduced) — `components/SaveBootstrap.tsx:531,705`. If IndexedDB exists but fails to open, the game stays closed with no retry or export, even though the localStorage save is valid. Clearing site data, the obvious workaround, deletes that save. Fix: offer Retry, Export and "continue with browser save", or degrade as the app already does when IndexedDB is missing.
 - **P7** (medium, reproduced) — `utils/profileWriterLease.ts:92-125`. A tab restored from the back-forward cache can re-take the lease for a deleted profile and write it back. Fix: refuse leases for profiles missing from the current list, and re-read the list on `pageshow`.
 - **F4** (medium, traced) — `services/relaySync.ts`. The relay pairing is shared by every tab, but each tab has its own active profile. A second tab on another profile publishes that profile to the paired RuneLite code. Fix: store the paired profile ID and publish only that profile, and listen for `storage` events on the session key.
-- **F2** (medium, reproduced) — `worker.js:60-69,140`, `StreamOverlay.tsx:103-105`. The ETag is a counter that restarts when the record expires, so clients can get `304` for new content, and the overlay keeps its ETag through a 404. Fix: use a hash of the payload as the ETag, and clear it on 404. The plugin side needs checking too.
+- **F2** (medium, reproduced) — `workers/fate-relay/worker.js:127-139,209` (lines on this branch), `StreamOverlay.tsx:103-105`. The ETag is a counter that restarts when the record expires, so clients can get `304` for new content, and the overlay keeps its ETag through a 404. Fix: use a hash of the payload as the ETag, and clear it on 404. The plugin side needs checking too.
 - **U10** (medium, traced) — `components/Dashboard.tsx:1203`. The tab wrapper's animation leaves a `transform`, which traps `fixed` dialogs such as the Equipment Lab slot picker and the DPS monster picker inside the pane. Fix: portal them, as `GearView.tsx:208` already does.
 - **G3** (medium, traced) — `data/questWalkthroughLoader.ts`. It uses a bare `import()`, bypassing the `lazyWithRetry`/`importWithRetry` choke point, and a failed chunk load is swallowed into an empty catalogue with no retry. Fix: `importWithRetry`, plus a failed state with retry.
 - **H5** (medium, reproduced) — `utils/bossPlanner.ts:73-74`. "Boosts on" is the default and applies Piety or Rigour without checking the Arcana unlock or Prayer level. Fix: use the best prayer the player has unlocked.
@@ -114,7 +122,7 @@ reverted and moved to the decisions list.
 
 ### Lower priority
 
-- **Saves and data:** **P9**: "Export encrypted save" is XOR obfuscation; relabel it or use AES-GCM. **R8**: the entry chunk is 242 kB gzip against the roughly 128 kB the project notes target; the largest eager modules are collection-log data, GameContext, Dashboard, App and the changelog. **R9**: `sync-content.yml` opens PRs with `GITHUB_TOKEN`, so CI does not run on them. **H8 remainder**: max-hit text with no number (3 rows: N/A, Varies, "? (melee)") still reads as 0 rather than unknown.
+- **Saves and data:** **R8**: the entry chunk is 243 kB gzip against the roughly 128 kB the project notes target; the largest eager modules are collection-log data, GameContext, Dashboard, App and the changelog. **R9**: `sync-content.yml` opens PRs with `GITHUB_TOKEN`, so CI does not run on them. **H8 remainder**: max-hit text with no number (3 rows: N/A, Varies, "? (melee)") still reads as 0 rather than unknown.
 - **Interface:** **U7** remainder: the tour card doesn't take or trap focus. **U11**: `RollInbox` defines `RowFrame` in render, so rows remount and lose focus. **U14**: unlock and achievement reveals aren't keyed, so a second reveal inherits the first's timer. **U15**: the pairing error state offers only Retry, leaving touch users stuck. **U17** remainder: `RunCard.tsx:344` still shows a fixed "/50" Fate.
 - **Relay:** **F7**: the overlay URL drops a custom relay address. **F8**: the overlay trusts the payload's shape and size. **F9**: a failed data load publishes an empty ruleset. **F10**: the bundle omits housing and storage. **F11**: legacy `/acks` can prune events without the events token. **F12**: relay POSTs have no timeout. **F13**: worker errors lack CORS headers, there is a KV write per action and no `Access-Control-Max-Age`.
 - **Engine:** **E6**: a false `FATE_OVERFLOW` warning with pity off or a threshold above 50. **E7**: the Gambit minimum stake disagrees between engine and UI in legacy modes. **E10/J11**: dormant Roll Inbox acceptance paths ignore the manual rules; they are unreachable today.
@@ -125,17 +133,14 @@ reverted and moved to the decisions list.
 
 ### Decisions
 
-Decided on 24 September and done on this branch:
+All six were decided on 24 September and are done on this branch:
 
 - **J2, match OSRS.** Quest Helper's list of official ratings (the pinned snapshot, and its current master) differs from the app for four quests: At First Light (now Novice), Recipe for Disaster's Sir Amik Varze and King Awowogei parts (now Master) and its finale (now Grandmaster). The reviewer had named six other quests; Quest Helper rates all six Intermediate, as the app already did, so they are unchanged. The wiki itself was unreachable, and web search results mixed in older RuneScape ratings. Three newer quests are not in the snapshot and keep their current rating.
 - **H1, add a version picker.** Done, with the post-quest, normal or solo fight (or a fight's opening phase) as the default. **H2** is fixed with it.
 - **E4, new runs only.** Choosing the game mode now starts the milestone counters from the run's starting total. Runs that already chose their mode keep their schedule.
-
-Still waiting on a decision, with recommendations:
-
-- **J3 / G1, owned-item confirmation (owner unsure).** Recommendation: require the same one-tap confirmation Sheep Shearer uses for every "already have it" route (Karamja Hard's oomlie wrap, Varrock Medium's Digsite pendant, the Cook's Assistant ingredients), and have it complete only that item's own steps. The app then never assumes what is in a player's bank. The cost is one extra tap for players who really have the item. Seven tests pin today's behaviour, so the change needs to update them.
-- **P9, encrypted export.** Recommendation: rename it to "Export save file (.fate)" and say in the export that anyone with the file can read its notes and linked account name. Don't add passphrase encryption. A forgotten passphrase would lock players out of their only off-device backup, and the file holds little that is sensitive.
-- **F1, relay ownership.** Recommendation: keep an owner record per code that holds only a SHA-256 hash of the write token, never the token. Give it a 90-day lifetime, refreshed on every publish, while the payload keeps its 24-hour lifetime. A code then stays claimed while in use, and can be reclaimed after 90 idle days, which is safe for 128-bit random codes. Existing codes gain their owner record on their first publish after deploy. Record the new retention in `docs/online-relay.md`, and fix F14's pairing wording in the same change. The relay deploys separately with `wrangler deploy`.
+- **J3 / G1, confirm owned items.** Every "I already have it" route now needs the one-tap confirmation Sheep Shearer uses, and a confirmation completes only that item's own steps. The app no longer assumes what is in a player's bank; players who have the item tap once more.
+- **P9, relabel rather than encrypt.** The export is now "Export save file (.fate)" and says anyone with the file can read it. Passphrase encryption was not added: a forgotten passphrase would lock players out of their only off-device backup, and the file holds little that is sensitive.
+- **F1, owner record.** Each code has an owner record, `own:r:<code>`, holding only a SHA-256 hash of the write token and when it was last refreshed. It lasts 90 days from the last refresh, and publishes refresh it at most once a day to spare KV writes; the profile itself keeps its 24-hour lifetime. A code stays claimed while in use and can be claimed again after 90 idle days, which is safe for random 128-bit codes. Codes published before the change are adopted on their owner's next publish, and `docs/online-relay.md` records the new retention. **F14**'s wording is fixed in the same change. Asking players to match a code shown in RuneLite would need a plugin change, so it is not included.
 
 ### Risks noted but not demonstrated
 
@@ -144,7 +149,7 @@ Still waiting on a decision, with recommendations:
 
 ## Guards against drift
 
-The branch adds 14 test files and extends 29 more. The broad guards are:
+The branch adds 14 test files and extends 37 more. The broad guards are:
 
 - `scripts/source-encoding.test.ts`: every app source and data file must be strict UTF-8.
 - `config/economy.consistency.test.ts`: every Omni percentage the Codex documents must match the roll engine.
@@ -163,7 +168,8 @@ The branch adds 14 test files and extends 29 more. The broad guards are:
 
 ## Deployment notes
 
-- The web app deploys on merge to `main`. The relay change (`0a022ea`) only goes live after `wrangler deploy` from `workers/fate-relay`.
+- The web app deploys on merge to `main`. The relay changes, the body size limit (`0a022ea`) and code ownership (`3fd92bf`), only go live after `wrangler deploy` from `workers/fate-relay`. Until then, codes still lose their owner when their data expires. Existing codes gain an owner record on their first publish after that deploy; nothing needs migrating.
+- Diary tasks that need an item now show a **Confirm:** chip for it, their tier reads **Needs confirmation**, and ticking the task asks the player to confirm. RuneProof guides no longer count steps that only another item's confirmation completed, so some guides in existing runs show fewer completed steps until the player ticks them or confirms their items. Completed diary tasks and quests are unaffected.
 - The monster catalogue's `normalizationVersion` is now 2, so cached catalogues are rebuilt once from the shipped file. No network request is needed.
 - Discord cursors saved by the old version reseed silently to the newest history entry on first run. No announcements are replayed.
 - Every player sees the new What's New release once.
