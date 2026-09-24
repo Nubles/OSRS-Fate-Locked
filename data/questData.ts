@@ -1064,21 +1064,21 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Kharazi Jungle', 'Draynor Village', 'Zanaris'],
     questProgress: [{ quest: "Legends' Quest", label: "Started Legends' Quest and gained access to the Kharazi Jungle" }],
     skills: { 'Quest Points': 107 }, prereqs: ['RFD: The Cook', "Family Crest", "Heroes' Quest", 'Shilo Village', 'Underground Pass', 'Waterfall Quest'], points: 1, series: 'Recipe for Disaster',
-    difficulty: DropSource.QUEST_EXPERIENCED
+    difficulty: DropSource.QUEST_MASTER
   },
   'RFD: King Awowogei': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'RFD: King Awowogei', name: 'RFD: King Awowogei',
     regions: ['Ape Atoll'],
     skills: { 'Cooking': 70, 'Agility': 48 }, prereqs: ['RFD: The Cook', 'Monkey Madness I'], points: 1, series: 'Recipe for Disaster',
-    difficulty: DropSource.QUEST_EXPERIENCED
+    difficulty: DropSource.QUEST_MASTER
   },
   'RFD: Finale': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'RFD: Finale', name: 'RFD: Finale',
     regions: ['Lumbridge'],
     skills: { 'Quest Points': 175 }, prereqs: ['RFD: The Cook', 'RFD: Dwarf', 'RFD: Goblins', 'RFD: Pirate Pete', 'RFD: Lumbridge Guide', 'RFD: Evil Dave', 'RFD: Skrach Uglogwee', 'RFD: Sir Amik Varze', 'RFD: King Awowogei', 'Desert Treasure I', 'Horror from the Deep'], points: 1, series: 'Recipe for Disaster',
-    difficulty: DropSource.QUEST_MASTER
+    difficulty: DropSource.QUEST_GRANDMASTER
   },
   'In Aid of the Myreque': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1564,7 +1564,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'At First Light', name: 'At First Light',
     regions: ['Hunter\'s Guild'],
     skills: { 'Hunter': 46, 'Herblore': 30, 'Construction': 27 }, prereqs: ["Children of the Sun","Eagles' Peak"], points: 1,
-    difficulty: DropSource.QUEST_INTERMEDIATE
+    difficulty: DropSource.QUEST_NOVICE
   },
   'Perilous Moons': {
     kind: 'quest', accessPolicy: 'locations',

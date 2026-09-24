@@ -46,6 +46,9 @@ export const CHANGELOG_RELEASES = [
         'Skill cards respond to Enter and Space, the guided tour no longer skips a step when Enter presses Next, and the Codex and Timelapse close buttons are labelled for screen readers.',
         'Auto-Roll errors and legacy mode descriptions no longer show garbled characters. Share text uses the Fate Locked Ironman name, and unlock sharing only reports a copy when it succeeds.',
       ],
+      balance: [
+        'Quest difficulties now match the official OSRS ratings. At First Light is Novice, Recipe for Disaster\'s Sir Amik Varze and King Awowogei parts are Master, and its finale is Grandmaster, so their key odds change to match.',
+      ],
       changed: [
         'Spend Keys cards show Blocked when a table\'s remaining unlocks are out of reach instead of offering a roll that cannot happen. Chunked no longer reads Done while land reached by Sailing remains, and Housing no longer counts the retired Aquarium.',
         'While one Void Altar buff is waiting, the other buff is disabled with an explanation.',
