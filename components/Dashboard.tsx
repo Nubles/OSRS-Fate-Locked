@@ -395,8 +395,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const omniInFlightRef = useRef(false);
   const [selectedSkillForDetails, setSelectedSkillForDetails] = useState<{name: string, tier: number} | null>(null);
 
-  const [unlockReveal, dismissReveal] = useUnlockReveal(unlocks, gameModeId);
-  const [achievementReveal, dismissAchievementReveal] = useAchievementReveal(unlocks, gameModeId, customMode);
+  const [unlockReveal, dismissReveal, unlockRevealId] = useUnlockReveal(unlocks, gameModeId);
+  const [achievementReveal, dismissAchievementReveal, achievementRevealId] = useAchievementReveal(unlocks, gameModeId, customMode);
 
   useEscapeKey(() => setShowRunCard(false), showRunCard && !suspendModals);
   useEscapeKey(() => setSelectedSkillForDetails(null), selectedSkillForDetails !== null && !suspendModals);
@@ -1279,9 +1279,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       </Suspense>
     )}
 
-    {/* Celebratory reveal when a milestone is newly earned. */}
+    {/* Celebratory reveal when a milestone is newly earned. Both reveals are
+        keyed per reveal, so a newer one restarts its own timers. */}
     {!suspendModals && !pendingUnlock && achievementReveal && (
       <AchievementReveal
+        key={`achievement-${achievementRevealId}`}
         data={achievementReveal}
         onDismiss={dismissAchievementReveal}
         onView={() => setShowAchievements(true)}
@@ -1292,6 +1294,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         unlocks and shows what new content just became available. */}
     {!suspendModals && !pendingUnlock && unlockReveal && (
       <UnlockReveal
+        key={`unlock-${unlockRevealId}`}
         data={unlockReveal}
         onDismiss={dismissReveal}
         onViewJournal={(tab) => {
