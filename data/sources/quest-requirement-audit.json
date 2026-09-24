@@ -2434,7 +2434,7 @@
       "id": "Enter the Abyss",
       "kind": "miniquest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28",
+      "reviewedAt": "2026-09-24",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Enter_the_Abyss&oldid=15166608",
         "revision": 15166608,
@@ -2442,7 +2442,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\",\"Wilderness\"],\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":55}],\"id\":\"edgeville-ditch\",\"label\":\"Edgeville ditch\",\"standardAreas\":[\"Edgeville\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":52}],\"id\":\"varrock-south-gate\",\"label\":\"Varrock south gate\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[\"Rune Mysteries\"],\"oneOf\":[{\"regions\":[\"East Ardougne\"]},{\"regions\":[\"Tree Gnome Stronghold\"]},{\"guilds\":[\"Wizards' Guild\"]}],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\",\"Wilderness\"],\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":55}],\"id\":\"edgeville-ditch\",\"label\":\"Edgeville ditch\",\"standardAreas\":[\"Edgeville\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":52}],\"id\":\"varrock-south-gate\",\"label\":\"Varrock south gate\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[\"Rune Mysteries\"],\"oneOf\":[{\"regions\":[\"East Ardougne\"]},{\"regions\":[\"Tree Gnome Stronghold\"]},{\"guilds\":[\"Wizards' Guild\"],\"skills\":{\"Magic\":66}}],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "48,55",
@@ -2460,7 +2460,8 @@
           "The scrying orb is supplied during the miniquest; no item-possession gate is added."
         ],
         "travel": [
-          "The Mage of Zamorak north of the Edgeville ditch and Varrock chaos temple are unavoidable. Both sit in the default Misthalin area in Standard mode; three of five rune-essence mine transports are required, with the existing one-of route supplying the third."
+          "The Mage of Zamorak north of the Edgeville ditch and Varrock chaos temple are unavoidable. Both sit in the default Misthalin area in Standard mode; three of five rune-essence mine transports are required, with the existing one-of route supplying the third.",
+          "Fate route review 2026-09-24: the Wizards' Guild route also needs Magic 66, the guild's own entry requirement, before its rune-essence teleport can be used. The East Ardougne and Tree Gnome Stronghold routes are unchanged."
         ],
         "instances": [
           "The rune essence mine is visited three times from distinct transport NPCs."

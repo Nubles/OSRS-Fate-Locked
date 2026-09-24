@@ -215,10 +215,10 @@ describe('planForTarget — quests', () => {
     expect(plan.alternativeSteps).toEqual([
       expect.objectContaining({
         done: false,
-        label: "One of: East Ardougne or Tree Gnome Stronghold or Wizards' Guild",
+        label: "One of: East Ardougne or Tree Gnome Stronghold or Wizards' Guild + Magic 66",
         routes: expect.arrayContaining([
           expect.objectContaining({ label: 'East Ardougne' }),
-          expect.objectContaining({ label: "Wizards' Guild" }),
+          expect.objectContaining({ label: "Wizards' Guild + Magic 66" }),
         ]),
       }),
     ]);

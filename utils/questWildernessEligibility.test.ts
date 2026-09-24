@@ -50,7 +50,10 @@ describe('quest Wilderness access', () => {
   it('requires both pinned Enter the Abyss chunks in Chunked mode', () => {
     const base = {
       quests: ['Rune Mysteries'],
+      // The Wizards' Guild route, with the guild's Magic 66.
       guilds: ["Wizards' Guild"],
+      skills: { Magic: 7 },
+      levels: { Magic: 66 },
     };
 
     expect(evaluateQuestEligibility(QUEST_DATA['Enter the Abyss'], unlocked({

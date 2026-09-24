@@ -140,7 +140,9 @@ export const questRequirementOptionMet = (
   (option.guilds ?? []).every(guild =>
     unlocks.guilds.includes(guild)) &&
   (option.locations ?? []).every(location =>
-    locationRequirementMet(location, unlocks, gameModeId));
+    locationRequirementMet(location, unlocks, gameModeId)) &&
+  Object.entries(option.skills ?? {}).every(([skill, level]) =>
+    meetsSkillRequirement(unlocks, skill, level));
 
 export const questAlternativesMet = (
   quest: QuestData,
@@ -157,6 +159,7 @@ export const questRequirementOptionLabel = (
   ...(option.regions ?? []),
   ...(option.guilds ?? []),
   ...(option.locations ?? []).map(location => location.label),
+  ...Object.entries(option.skills ?? {}).map(([skill, level]) => skill + ' ' + level),
 ].join(' + ');
 
 export const currentQuestPoints = (unlocks: { readonly quests: readonly string[] }): number =>

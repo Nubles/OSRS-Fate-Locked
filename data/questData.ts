@@ -13,6 +13,8 @@ export interface QuestRequirementOption {
   regions?: string[];
   guilds?: string[];
   locations?: QuestLocationRequirement[];
+  /** Skill levels the route needs, such as a guild's entry requirement. */
+  skills?: Record<string, number>;
 }
 
 export type QuestKind = 'quest' | 'miniquest';
@@ -1819,7 +1821,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     oneOf: [
       { regions: ['East Ardougne'] },
       { regions: ['Tree Gnome Stronghold'] },
-      { guilds: ["Wizards' Guild"] },
+      // Entering the Wizards' Guild needs 66 Magic.
+      { guilds: ["Wizards' Guild"], skills: { Magic: 66 } },
     ],
     skills: {}, prereqs: ['Rune Mysteries'], points: 0, series: 'Order of Wizards',
     difficulty: DropSource.QUEST_INTERMEDIATE

@@ -151,7 +151,7 @@ describe('buildGoalRoute — quest and engine-item goals', () => {
       expect.objectContaining({
         routes: expect.arrayContaining([
           expect.objectContaining({ name: 'East Ardougne' }),
-          expect.objectContaining({ name: "Wizards' Guild" }),
+          expect.objectContaining({ name: "Wizards' Guild + Magic 66" }),
         ]),
       }),
     ]);

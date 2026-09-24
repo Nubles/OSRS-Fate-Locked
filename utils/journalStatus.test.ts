@@ -5,6 +5,8 @@ import { DIARY_DATA } from '../data/diaryData';
 import { DropSource, UnlockState } from '../types';
 import { ARCANA_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, MOBILITY_LIST, REGION_GROUPS } from '../data/items';
 import { combatLevel } from './slayerReach';
+import { evaluateActivityReadiness } from './activityReadiness';
+import { ACTIVITY_REQUIREMENTS } from '../data/activityRequirements';
 import {
   countDoableDiaryTasks, countDoableTasks, countMetSkillRequirements,
   evaluateDiaryTaskEligibility, evaluateQuestEligibility, getDiaryStatus, getQuestStatus,
@@ -398,11 +400,32 @@ describe('reported quest access', () => {
   it.each([
     ['East Ardougne', { regions: ['Wilderness', 'East Ardougne'] }],
     ['Tree Gnome Stronghold', { regions: ['Wilderness', 'Tree Gnome Stronghold'] }],
-    ["Wizards' Guild", { regions: ['Wilderness'], guilds: ["Wizards' Guild"] }],
+    ["Wizards' Guild", { regions: ['Wilderness'], guilds: ["Wizards' Guild"], skills: { Magic: 7 }, levels: { Magic: 66 } }],
   ])('allows Enter the Abyss through %s', (_name, route) => {
     expect(getQuestStatus(QUEST_DATA['Enter the Abyss'], unlocked({
       quests: ['Rune Mysteries'], ...route,
     }))).toBe('AVAILABLE');
+  });
+
+  it("needs the Wizards' Guild's own Magic 66 for Enter the Abyss's guild route", () => {
+    const quest = QUEST_DATA['Enter the Abyss'];
+    const guildRoute = { quests: ['Rune Mysteries'], regions: ['Wilderness'], guilds: ["Wizards' Guild"] };
+    const cases = [
+      { unlocks: unlocked({ ...guildRoute, skills: { Magic: 10 }, levels: { Magic: 1 } }), status: 'LOCKED_REGION' },
+      // Level 70, but a tier-5 Magic unlock caps the usable level at 50.
+      { unlocks: unlocked({ ...guildRoute, skills: { Magic: 5 }, levels: { Magic: 70 } }), status: 'LOCKED_REGION' },
+      { unlocks: unlocked({ ...guildRoute, skills: { Magic: 7 }, levels: { Magic: 66 } }), status: 'AVAILABLE' },
+    ] as const;
+
+    for (const { unlocks, status } of cases) {
+      expect(getQuestStatus(quest, unlocks)).toBe(status);
+      // The guild's own readiness gives the same answer for the same account.
+      expect(evaluateActivityReadiness(true, ACTIVITY_REQUIREMENTS["Wizards' Guild"], unlocks).status)
+        .toBe(status === 'AVAILABLE' ? 'READY' : 'NOT_READY');
+    }
+    expect(evaluateQuestEligibility(quest, cases[0].unlocks).blockers).toContainEqual({
+      kind: 'region', label: "East Ardougne or Tree Gnome Stronghold or Wizards' Guild + Magic 66",
+    });
   });
 
   it('locks Enter the Abyss without a third provider', () => {

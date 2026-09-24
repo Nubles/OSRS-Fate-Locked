@@ -2308,7 +2308,10 @@ describe('audited current quest requirements', () => {
           {
             "guilds": [
               "Wizards' Guild"
-            ]
+            ],
+            "skills": {
+              "Magic": 66
+            }
           }
         ],
         "manualRequirements": null,

@@ -107,7 +107,7 @@ describe('evaluateQuestDoability', () => {
     expect(row.bucket).toBe('LOCKED');
     expect(row.reqsMet).toBe(false);
     expect(row.lockedAreas).toEqual([
-      "One of: East Ardougne or Tree Gnome Stronghold or Wizards' Guild",
+      "One of: East Ardougne or Tree Gnome Stronghold or Wizards' Guild + Magic 66",
     ]);
   });
 
