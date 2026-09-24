@@ -3,6 +3,7 @@ import type { GameState, LogEntry, UnlockState } from '../types';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { serializeCurrent } from './gamePersistence';
 import {
+  calculatesLegacyFateCompensation,
   CURRENT_SAVE_VERSION,
   MAX_COLLECTION_LOG_ENTRIES,
   MAX_COUNTER,
@@ -16,6 +17,7 @@ import {
   MAX_USER_NOTES,
   parseAndMigrateSave,
   validateAndMigrateSave,
+  WEIGHTED_FATE_SAVE_VERSION,
   type SaveErrorCode,
   type SaveValidationResult,
 } from './saveSchema';
@@ -1150,6 +1152,30 @@ describe('JSON parsing boundary', () => {
     expect(invalid).toMatchObject({ ok: false, code: 'invalid_json' });
     if (invalid.ok === true) throw new Error('expected invalid JSON rejection');
     expect(invalid.message).not.toContain(secret);
+  });
+
+  it('calculates the one-time offer only for saves from before weighted Fate', () => {
+    // Pinned to the weighted-Fate release, not to CURRENT_SAVE_VERSION: a later
+    // save version must not offer the compensation again to saves that hold one.
+    expect(WEIGHTED_FATE_SAVE_VERSION).toBe(4);
+    expect([0, 1, 2, 3].map(calculatesLegacyFateCompensation)).toEqual([true, true, true, true]);
+    expect([4, 5, 6, 12].map(calculatesLegacyFateCompensation)).toEqual([false, false, false, false]);
+  });
+
+  it('keeps the offer a version-4 save stores even when its history would qualify', () => {
+    const save = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    save.version = 4;
+    save.fateCompensation = {
+      releaseId: LEGACY_FATE_COMPENSATION_ID, status: 'none', chaosKeys: 8, pityKeys: 0, fatePoints: 0, choice: 'none',
+    };
+    save.fatePoints = 45;
+    save.history = Array.from({ length: 45 }, (_, index) => ({
+      id: `stored-offer-fail-${index}`, timestamp: index, type: 'ROLL_FAIL',
+      source: 'Quest (Master)', message: 'No Key.', meta: { fatePointsEarned: 1 },
+    }));
+
+    expect(expectAccepted(validateAndMigrateSave(save, defaultsFixture())).state.fateCompensation)
+      .toEqual(save.fateCompensation);
   });
 
   it('round-trips a resolved v4 choice without recalculating eligibility', () => {

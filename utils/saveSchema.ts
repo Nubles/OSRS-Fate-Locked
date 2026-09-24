@@ -19,6 +19,15 @@ import { vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
 import { calculateLegacyFateCompensation, LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
 /** Version 4 freezes and strictly validates one-time Fate compensation. */
 export const CURRENT_SAVE_VERSION = 4;
+/**
+ * The save version that introduced weighted Fate and stores its one-time
+ * compensation offer. Fixed to that release: raising CURRENT_SAVE_VERSION
+ * must never offer the compensation again to saves that already hold one.
+ */
+export const WEIGHTED_FATE_SAVE_VERSION = 4;
+/** Only saves from before weighted Fate have their offer calculated on load. */
+export const calculatesLegacyFateCompensation = (sourceVersion: number): boolean =>
+  sourceVersion < WEIGHTED_FATE_SAVE_VERSION;
 const MIN_SUPPORTED_SAVE_VERSION = 1;
 export const MAX_SAVE_BYTES = 5 * 1024 * 1024;
 export const MAX_HISTORY_ENTRIES = 100_000;
@@ -919,11 +928,11 @@ const normalizeState = (
       'unlocks', 'history', 'pinnedGoals', 'userNotes',
     ];
     // Versions 1 and 2 are permissive migration formats; v3+ require these
-    // counters at the strict save boundary, while v4 also requires its offer.
+    // counters at the strict save boundary, while v4+ also require the offer.
     if (sourceVersion >= 3) {
       required.push('bossStandardKeysAwarded', 'clueStandardKeysAwarded');
     }
-    if (sourceVersion === CURRENT_SAVE_VERSION) {
+    if (!calculatesLegacyFateCompensation(sourceVersion)) {
       required.push('fateCompensation');
     }
     for (const key of required) {
@@ -1016,7 +1025,7 @@ const normalizeState = (
   // Older saves have no stored offer; theirs is calculated once the run's
   // mode is read below, because the mode's pity rule shapes it.
   let storedCompensation: FateCompensationState | undefined;
-  if (sourceVersion >= CURRENT_SAVE_VERSION) {
+  if (!calculatesLegacyFateCompensation(sourceVersion)) {
     const checked = normalizeFateCompensation(readOwn(input, 'fateCompensation'));
     if (checked.ok === false) return checked;
     storedCompensation = checked.value;
