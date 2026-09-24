@@ -52,7 +52,7 @@ export const RunelitePairingDialog: React.FC<
               Connect RuneLite tracker
             </h2>
             <p className="mt-1 text-[11px] text-gray-500">
-              RuneLite requested this connection.
+              Only continue if you just pressed Connect tracker in RuneLite.
             </p>
           </div>
         </div>
@@ -60,7 +60,9 @@ export const RunelitePairingDialog: React.FC<
         <div className="space-y-4 p-4">
           <p className="text-[12px] leading-relaxed text-gray-300">
             Connect this tracker profile so RuneLite can retrieve its
-            Fate Locked rules. RuneLite does not upload gameplay data.
+            Fate Locked rules. RuneLite does not upload gameplay data. A
+            pairing link from anywhere else would let its sender read the
+            profile you publish.
           </p>
 
           <dl className="space-y-2 rounded-lg border border-white/5 bg-black/20 p-3 text-[11px]">

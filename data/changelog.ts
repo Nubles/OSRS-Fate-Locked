@@ -57,6 +57,7 @@ export const CHANGELOG_RELEASES = [
       changed: [
         'Spend Keys cards show Blocked when a table\'s remaining unlocks are out of reach instead of offering a roll that cannot happen. Chunked no longer reads Done while land reached by Sailing remains, and Housing no longer counts the retired Aquarium.',
         'While one Void Altar buff is waiting, the other buff is disabled with an explanation.',
+        'The RuneLite pairing dialog no longer says RuneLite requested the connection, since any website can open a pairing link. It asks you to continue only if you just pressed Connect tracker in RuneLite.',
         '"Export encrypted save" is now "Export save file (.fate)". The file was never encrypted, so the menu and the export message now say that anyone you share it with can read it.',
       ],
     },

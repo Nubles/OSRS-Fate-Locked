@@ -12,6 +12,8 @@ import {
 } from './protocol.js';
 
 const TTL_SECONDS = 86400;
+const OWNER_TTL_SECONDS = 90 * 86400;
+const OWNER_REFRESH_MS = 86400 * 1000;
 const CODE_RE = /^\/r\/([A-Za-z0-9-]{4,40})(\/state|\/suggest|\/events|\/acks)?$/;
 
 function cors(origin) {
@@ -72,6 +74,43 @@ async function readBodyWithin(request, limit) {
   return new TextDecoder().decode(bytes);
 }
 
+async function tokenHash(token) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+  return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Who may write `key`. A separate owner record holds a SHA-256 hash of the
+ * write token (never the token) for 90 days after the last refresh, so a code
+ * stays claimed after its 24-hour data record expires. Records written before
+ * owner records existed are adopted on their owner's next write.
+ */
+async function authorizeWrite(env, key, existing, presented) {
+  const owner = await env.RELAY.get(`own:${key}`);
+  if (owner) {
+    const [hash, refreshedAt] = owner.split(':');
+    if (typeof presented !== 'string' || await tokenHash(presented) !== hash) return null;
+    return { token: presented, refresh: !(Date.now() - Number(refreshedAt) < OWNER_REFRESH_MS) };
+  }
+  if (existing?.token && existing.token !== presented) return null;
+  return { token: existing?.token || presented || crypto.randomUUID(), refresh: true };
+}
+
+/**
+ * Refresh the owner record after the data write, at most once a day to spare
+ * KV writes. Best-effort: if it fails, the data record still holds the token
+ * and the next write adopts it.
+ */
+async function recordOwner(env, key, owner) {
+  if (!owner.refresh) return;
+  try {
+    await env.RELAY.put(`own:${key}`, `${await tokenHash(owner.token)}:${Date.now()}`,
+      { expirationTtl: OWNER_TTL_SECONDS });
+  } catch {
+    /* adopted from the data record on the next write */
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -119,10 +158,9 @@ export default {
           return new Response('bad request', { status: 400, headers });
         }
         const existing = await env.RELAY.get(key, { type: 'json' });
-        if (existing?.token && existing.token !== body.token) {
-          return new Response('forbidden', { status: 403, headers });
-        }
-        const token = existing?.token || body.token || crypto.randomUUID();
+        const owner = await authorizeWrite(env, key, existing, body.token);
+        if (!owner) return new Response('forbidden', { status: 403, headers });
+        const token = owner.token;
         const version = (existing?.version || 0) + 1;
         const appended = structured.retainNewest
           ? appendUniqueNewest(existing?.records || [], incoming)
@@ -132,6 +170,7 @@ export default {
           token,
           records: appended.records,
         }), { expirationTtl: EVENT_TTL_SECONDS });
+        await recordOwner(env, key, owner);
 
         if (resource === '/acks') {
           const eventKey = `r:${match[1]}/events`;
@@ -164,13 +203,13 @@ export default {
         return new Response('bad request', { status: 400, headers });
       }
       const existing = await env.RELAY.get(key, { type: 'json' });
-      if (existing?.token && existing.token !== body.token) {
-        return new Response('forbidden', { status: 403, headers });
-      }
-      const token = existing?.token || body.token || crypto.randomUUID();
+      const owner = await authorizeWrite(env, key, existing, body.token);
+      if (!owner) return new Response('forbidden', { status: 403, headers });
+      const token = owner.token;
       const version = (existing?.version || 0) + 1;
       await env.RELAY.put(key, JSON.stringify({ version, payload: body.payload, token }),
         { expirationTtl: TTL_SECONDS });
+      await recordOwner(env, key, owner);
       return json({ version, token }, headers);
     }
 

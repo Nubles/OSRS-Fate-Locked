@@ -50,12 +50,24 @@ that condition.
 
 | Method | Path | Body / response | Ownership |
 |---|---|---|---|
-| `POST` | `/r/<code>` | `{ token?, payload }` | Browser publishes the v4 profile; 24-hour TTL. |
+| `POST` | `/r/<code>` | `{ token?, payload }` | Browser publishes the v4 profile; 24-hour TTL. Refused without the code's write token. |
 | `GET` | `/r/<code>` | `{ version, payload }` | RuneLite reads; supports `If-None-Match`. |
 
 The first browser write claims the record with a private token. The app
 persists that token in the pairing session so later profile revisions can
 replace the same record.
+
+The Worker also keeps a separate owner record, `own:r:<code>`, that holds
+only a SHA-256 hash of the token and the time it was last refreshed. It lasts
+90 days from the last refresh, and publishes refresh it at most once a day to
+spare KV writes. A code therefore stays claimed after its 24-hour profile
+record expires; after 90 days without a publish it can be claimed again,
+which is safe for random 128-bit codes. Codes published before owner records
+existed are adopted on their owner's next publish. The legacy resources below
+use the same rule.
+
+The pairing dialog asks the player to continue only if they just pressed
+**Connect tracker** in RuneLite, because any website can open a pairing link.
 
 ## Legacy compatibility only
 
@@ -99,7 +111,9 @@ cookie, chat history, inventory dump, or arbitrary telemetry.
 
 The current relay record expires after 24 hours. Anyone with the random
 pairing code can read that record during its lifetime; the private token is
-required to replace it. Use clipboard or local-file import if relay data
+required to replace it. The owner record holds no profile data and no token,
+only the token's hash and a timestamp, and expires 90 days after its last
+refresh. Use clipboard or local-file import if relay data
 should not leave the machine.
 
 ## RuneLite bundle v4

@@ -4,6 +4,8 @@ import { FATE_EVENT_TYPES } from '../../services/fateEventProtocol';
 
 class MemoryKv {
   records = new Map<string, string>();
+  ttls = new Map<string, number | undefined>();
+  puts: string[] = [];
   failNextPut = false;
 
   async get(key: string, options?: { type?: string }) {
@@ -12,14 +14,20 @@ class MemoryKv {
     return options?.type === 'json' ? JSON.parse(value) : value;
   }
 
-  async put(key: string, value: string) {
+  async put(key: string, value: string, options?: { expirationTtl?: number }) {
     if (this.failNextPut) {
       this.failNextPut = false;
       throw new Error('simulated put failure');
     }
     this.records.set(key, value);
+    this.ttls.set(key, options?.expirationTtl);
+    this.puts.push(key);
   }
 }
+
+const sha256Hex = async (value: string) => [...new Uint8Array(
+  await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)),
+)].map(byte => byte.toString(16).padStart(2, '0')).join('');
 
 const event = (eventId: string, overrides: Record<string, unknown> = {}) => ({
   protocolVersion: 1,
@@ -234,5 +242,76 @@ describe('Fate relay event resources', () => {
         ...Array.from({ length: 95 }, (_, index) => `evt-${index + 10}`),
         ...Array.from({ length: 5 }, (_, index) => `evt-${index}`),
       ]);
+  });
+});
+
+describe('Fate relay code ownership', () => {
+  let kv: MemoryKv;
+  let env: { RELAY: MemoryKv };
+  const CODE = '0123456789abcdef0123456789abcdef';
+
+  beforeEach(() => {
+    kv = new MemoryKv();
+    env = { RELAY: kv };
+  });
+
+  const publish = (body: unknown) => worker.fetch(new Request(`https://relay.test/r/${CODE}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }), env);
+  const read = () => worker.fetch(new Request(`https://relay.test/r/${CODE}`), env);
+
+  it('keeps a code claimed after its 24-hour data record expires', async () => {
+    const { token } = await (await publish({ payload: 'owner v1' })).json();
+    kv.records.delete(`r:${CODE}`); // the data record's TTL ran out
+
+    expect((await publish({ payload: 'forged' })).status).toBe(403);
+    expect((await publish({ token: 'guess', payload: 'forged' })).status).toBe(403);
+    expect((await publish({ token, payload: 'owner v2' })).status).toBe(200);
+    expect((await (await read()).json()).payload).toBe('owner v2');
+  });
+
+  it('stores only a hash of the write token, kept for 90 days', async () => {
+    const { token } = await (await publish({ payload: 'v1' })).json();
+    const owner = kv.records.get(`own:r:${CODE}`)!;
+
+    expect(owner).not.toContain(token);
+    expect(owner.startsWith(`${await sha256Hex(token)}:`)).toBe(true);
+    expect(kv.ttls.get(`own:r:${CODE}`)).toBe(90 * 86_400);
+    expect(kv.ttls.get(`r:${CODE}`)).toBe(86_400);
+  });
+
+  it('adopts a code published before owner records existed', async () => {
+    kv.records.set(`r:${CODE}`, JSON.stringify({ version: 3, payload: 'old', token: 'legacy-token' }));
+
+    expect((await publish({ token: 'someone-else', payload: 'forged' })).status).toBe(403);
+    expect((await publish({ token: 'legacy-token', payload: 'new' })).status).toBe(200);
+    expect(kv.records.get(`own:r:${CODE}`)?.startsWith(`${await sha256Hex('legacy-token')}:`)).toBe(true);
+  });
+
+  it('refreshes the owner record at most once a day', async () => {
+    const { token } = await (await publish({ payload: 'v1' })).json();
+    await publish({ token, payload: 'v2' });
+    await publish({ token, payload: 'v3' });
+    expect(kv.puts.filter(key => key === `own:r:${CODE}`)).toHaveLength(1);
+
+    const [hash] = kv.records.get(`own:r:${CODE}`)!.split(':');
+    kv.records.set(`own:r:${CODE}`, `${hash}:${Date.now() - 2 * 86_400_000}`);
+    await publish({ token, payload: 'v4' });
+    expect(kv.puts.filter(key => key === `own:r:${CODE}`)).toHaveLength(2);
+  });
+
+  it('still returns the new token when recording the owner fails', async () => {
+    const put = kv.put.bind(kv);
+    kv.put = async (key, value, options) => {
+      if (key.startsWith('own:')) throw new Error('owner write failed');
+      return put(key, value, options);
+    };
+    const response = await publish({ payload: 'v1' });
+
+    expect(response.status).toBe(200);
+    const { token } = await response.json();
+    expect((await publish({ token, payload: 'v2' })).status).toBe(200);
   });
 });

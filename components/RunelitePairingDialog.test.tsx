@@ -44,6 +44,13 @@ describe('RunelitePairingDialog', () => {
     expect(props.onClose).not.toHaveBeenCalled();
   });
 
+  it('does not claim that RuneLite sent the link, since any site can open one', () => {
+    renderDialog();
+    expect(screen.queryByText(/RuneLite requested this connection/i)).toBeNull();
+    expect(screen.getByText(/Only continue if you just pressed Connect tracker in RuneLite/i)).toBeTruthy();
+    expect(screen.getByText(/link from anywhere else/i)).toBeTruthy();
+  });
+
   it('shows the unbound-account fallback', () => {
     renderDialog({ linkedAccount: null });
     expect(screen.getByText('No bound account')).toBeTruthy();
