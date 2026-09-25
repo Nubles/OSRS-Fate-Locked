@@ -129,6 +129,19 @@ describe('DiaryLog access evidence', () => {
     expect(completion).toContain('border-red-500/30');
   });
 
+  it('shows Druidic Ritual beside a Herblore task that does not list it', () => {
+    const markup = renderToStaticMarkup(
+      <DiaryLog searchTerm="combat potion in the desert" suspendModals />,
+    );
+    const row = elementMarkup(markup, '<div data-diary-task-row="des_med_8"');
+    const completion = elementMarkup(
+      row,
+      '<button aria-label="Complete diary task: Create a combat potion in the desert."',
+    );
+
+    expect(completion).toContain('Druidic Ritual');
+  });
+
   it('shows the Varrock Kudos confirmation before completion is attempted', () => {
     const markup = renderToStaticMarkup(
       <DiaryLog searchTerm="153 Kudos" suspendModals />,

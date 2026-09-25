@@ -227,6 +227,24 @@ describe('evaluateQuestDoability', () => {
     expect(row.missingPrereqs).toEqual([]);
   });
 
+  it('lists Druidic Ritual as a missing prerequisite of The Dig Site at Herblore 10', () => {
+    const row = evaluateQuestDoability(
+      QUEST_DATA['The Dig Site'],
+      unlocks({
+        skills: { Herblore: 1, Agility: 1, Thieving: 3 },
+        levels: { Herblore: 10, Agility: 10, Thieving: 25 },
+      }),
+      reachableChunk,
+      [],
+      'vanilla',
+    );
+
+    expect(row).toMatchObject({
+      bucket: 'REQS', reqsMet: false, missingSkills: [],
+      missingPrereqs: ['Druidic Ritual'], otherRequirements: [],
+    });
+  });
+
   it('keeps Prying Times in REQS until its manual Sailing check is confirmed', () => {
     const row = evaluateQuestDoability(
       QUEST_DATA['Prying Times'],

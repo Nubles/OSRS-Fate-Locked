@@ -512,6 +512,37 @@ describe('planForTarget — quest locations', () => {
   });
 });
 
+describe('planForTarget — skills gated by an unlocking quest', () => {
+  // Reported Vanilla run with no quests: Taverley is locked, and Herblore,
+  // Agility and Thieving are at tiers 1/1/3 with Agility 10 and Thieving 25.
+  const reported = (quests: string[] = []) => maxedUnlocks({
+    quests,
+    skills: { ...Object.fromEntries(SKILLS_LIST.map(skill => [skill, 0])), Herblore: 1, Agility: 1, Thieving: 3 },
+    levels: {
+      ...Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Hitpoints' ? 10 : 1])),
+      Agility: 10, Thieving: 25,
+    },
+  });
+
+  it('plans Druidic Ritual and its Taverley access before The Dig Site', () => {
+    const plan = planForTarget('quest', 'The Dig Site', reported(), 'vanilla')!;
+
+    expect(plan.questSteps.map(step => step.id)).toEqual(['Druidic Ritual', 'The Dig Site']);
+    expect(plan.regionSteps.map(step => step.id)).toEqual(['Taverley']);
+    expect(plan.skillSteps).toEqual([expect.objectContaining({ id: 'Herblore', detail: 'Lv 10 (have 1)' })]);
+    expect(plan.alreadyReachable).toBe(false);
+  });
+
+  it("plans Druidic Ritual and its Taverley access for Desert Medium's combat potion", () => {
+    const plan = planForTarget('diary', 'Desert Medium', reported(), 'vanilla')!;
+
+    expect(plan.questSteps.map(step => step.id)).toContain('Druidic Ritual');
+    expect(plan.regionSteps.map(step => step.id)).toContain('Taverley');
+    expect(planForTarget('diary', 'Desert Medium', reported(['Druidic Ritual']), 'vanilla')!
+      .questSteps.map(step => step.id)).not.toContain('Druidic Ritual');
+  });
+});
+
 describe('planForTarget — regions', () => {
   it('a locked region is a single-step plan', () => {
     const region = Object.keys(REGION_GROUPS)[0];

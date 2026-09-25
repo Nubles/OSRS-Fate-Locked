@@ -10,7 +10,7 @@ import { chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations'
 import { questLocations } from '../utils/questLocations';
 import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate, hasCanonicalQuestLocationEvidence, QuestChunkStatus } from '../utils/questDoability';
 import {
-  evaluateQuestEligibility, questRequirementOptionLabel,
+  evaluateQuestEligibility, questRequirementOptionLabel, withSkillGateQuests,
 } from '../utils/journalStatus';
 import { actualCombatLevel } from '../utils/slayerReach';
 import { WIKI_OVERRIDES } from '../constants';
@@ -109,9 +109,11 @@ export const evaluateQuestDoability = (
     });
   }
 
+  // Includes the quest a gated skill needs, such as Druidic Ritual for Herblore.
+  const prereqs = withSkillGateQuests(quest.prereqs, quest.skills, quest.id);
   const missingPrereqs = completed
     ? []
-    : quest.prereqs.filter(prereq => !unlocks.quests.includes(prereq));
+    : prereqs.filter(prereq => !unlocks.quests.includes(prereq));
   const missingEquipment = eligibility.blockers.flatMap(blocker => blocker.kind === 'equipment'
     ? [{ slot: blocker.slot, tier: blocker.tier, have: unlocks.equipment?.[blocker.slot] ?? 0, label: blocker.label }]
     : []);
@@ -119,7 +121,7 @@ export const evaluateQuestDoability = (
   const manualChecks = completed ? [] : eligibility.manualChecks;
   const otherRequirements = [
     ...eligibility.blockers.filter(blocker => blocker.kind === 'quest'
-      && !quest.prereqs.includes(blocker.label)
+      && !prereqs.includes(blocker.label)
       && blocker.label !== `Quest Points ${questPointsRequirement}`)
       .map(blocker => blocker.label),
     ...(unreviewedAccess ? ['Quest access requirements need review'] : []),

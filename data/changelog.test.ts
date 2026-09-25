@@ -20,7 +20,16 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-25-runelite-safety-update');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-25-herblore-sailing-quests');
+  });
+
+  it('announces the Herblore and Sailing quest requirements and what happens to older saves', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-25-herblore-sailing-quests');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Herblore needs Druidic Ritual and Sailing needs Pandemonium/),
+      expect.stringMatching(/Skill Advisor no longer suggests training Herblore before Druidic Ritual/),
+      expect.stringMatching(/Herblore levels but no Druidic Ritual.*already completed stays completed/),
+    ]);
   });
 
   it('announces the RuneLite safety update without promising a Roll Inbox feed', () => {
