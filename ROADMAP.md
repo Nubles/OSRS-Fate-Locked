@@ -10,19 +10,16 @@ contributor. Last updated: September 2026.
 
 The Plugin Hub entry
 [`plugins/fate-locked-ironman`](https://github.com/runelite/plugin-hub/blob/master/plugins/fate-locked-ironman)
-builds commit `52f45f5b709e60be80d69e33ad3f98e83b6442a3` of
+builds commit `874b9d106cad72c1a0d03addcd25237d2e1220e3` of
 [Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
-("restore explicit consent", 16 September 2026), not that repository's
-`main`; check the entry for the current pin. Its `repository=` line still
-names the pre-rename `RS3-Fate-Locked-Runelite` URL, which works only through
-GitHub's redirect.
+(the Stage 0 safety release, 25 September 2026,
+[runelite/plugin-hub#17110](https://github.com/runelite/plugin-hub/pull/17110)),
+not that repository's `main`; check the entry for the current pin.
 
 Plugin changes reach players only through a Plugin Hub pull request that
-bumps `commit=` (and fixes `repository=`). The plugin repository's
-CONTRIBUTING.md has the steps and the in-game checklist to run first. The
-next release is the Stage 0 safety release
-([plugin PR #18](https://github.com/Nubles/OSRS-Fate-Locked-Runelite/pull/18)).
-Merge this repo's matching RuneLite guide text once the Hub serves it.
+bumps `commit=`. The plugin repository's CONTRIBUTING.md has the steps and
+the in-game checklist to run first. Stage 1 is in progress
+([plugin PR #19](https://github.com/Nubles/OSRS-Fate-Locked-Runelite/pull/19)).
 Plugin releases are built and published only from
 `OSRS-Fate-Locked-Runelite`.
 
