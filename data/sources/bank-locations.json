@@ -60,7 +60,9 @@
   ],
   "labelOverrides": [
     { "id": "10275", "name": "Wyrmscraig bank chest", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
-    { "id": "11830", "name": "Ruins of Camdozaal (via Ice Mountain)", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] }
+    { "id": "11830", "name": "Ruins of Camdozaal (via Ice Mountain)", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "10292", "name": "Ardougne north bank", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "10547", "name": "Ardougne south bank", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] }
   ],
   "exclusions": [
     { "name": "Tutorial Island bank", "reason": "Onboarding-only and absent from the walkable chunk registry." },

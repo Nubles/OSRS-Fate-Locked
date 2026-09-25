@@ -25,9 +25,11 @@ const EXCLUSIONS = [
   { name: 'Removed banks', reason: 'No longer accessible in normal play.' },
 ];
 
+// validBankIds holds every label override's target, so each rejection test
+// below fails on the check it names rather than on an unknown override id.
 const TEST_VALIDATION_OPTIONS = {
   validChunkIds: new Set(ADDITION_IDS),
-  validBankIds: new Set(['10275', '11830']),
+  validBankIds: new Set(['10275', '11830', '10292', '10547']),
 };
 
 describe('reviewed bank-location registry', () => {
@@ -80,6 +82,8 @@ describe('reviewed bank-location registry', () => {
     expect(new Set(registry.locations.map(({ name }: { name: string }) => name))).toHaveLength(26);
     expect(labels.get('10275')).toBe('Wyrmscraig bank chest');
     expect(labels.get('11830')).toBe('Ruins of Camdozaal (via Ice Mountain)');
+    expect(labels.get('10292')).toBe('Ardougne north bank');
+    expect(labels.get('10547')).toBe('Ardougne south bank');
     expect(registry.exclusions).toEqual(EXCLUSIONS);
 
     const locationNames = registry.locations.map(({ name }: { name: string }) => name);

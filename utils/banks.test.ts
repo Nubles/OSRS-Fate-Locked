@@ -33,6 +33,16 @@ describe('bank data', () => {
     expect(BANK_IDS.filter(id => /^\d+$/.test(id))).toHaveLength(127);
   });
 
+  it('names the Ardougne banks under their existing chunk ids', () => {
+    // Saves hold these ids, so the rename must not move them.
+    expect(bankId(40, 52)).toBe('10292');
+    expect(bankId(41, 51)).toBe('10547');
+    expect(BANK_BY_ID['10292'].name).toBe('Ardougne north bank');
+    expect(BANK_BY_ID['10547'].name).toBe('Ardougne south bank');
+    expect(BANKS.map(b => b.name)).not.toContain('Chaos Druid Tower');
+    expect(BANKS.map(b => b.name)).not.toContain('Ardougne Market');
+  });
+
   it('bankId encodes cx*256+cy and round-trips against a known entry', () => {
     expect(bankId(19, 48)).toBe(String(19 * 256 + 48));
     // Every id resolves to a def.

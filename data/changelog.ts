@@ -20,11 +20,12 @@ export interface ChangelogRelease {
 export const CHANGELOG_RELEASES = [
   {
     id: '2026-09-25-clearer-names',
-    title: 'Clearer Shop Names',
+    title: 'Clearer Shop and Bank Names',
     date: '2026-09-25',
     sections: {
       fixed: [
         'Amulet Shops and Jewellery Shops now say which shops they unlock: Conara\'s Jewels in Cam Torum and Grum\'s Gold Exchange in Port Sarim for jewellery, Davon\'s Amulet Store in Brimhaven for amulets. Grum\'s and Davon\'s have no stock of their own, so ironmen can only sell there. Both wiki links now open the right page.',
+        'The Ardougne banks are now called Ardougne north bank and Ardougne south bank. The north bank was listed as Chaos Druid Tower, which has no bank, and the south bank as Ardougne Market. Banks you already own stay unlocked, and older history entries keep their original wording.',
       ],
     },
   },

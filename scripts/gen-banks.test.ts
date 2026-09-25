@@ -22,6 +22,23 @@ describe('bank source generator', () => {
     expect(byId['14132']).toBe('Sangvesti and Castle Drakan banking');
   });
 
+  it('names the Ardougne banks as the Wiki does and keeps their chunk ids', () => {
+    // Chunk (40,52) is nicknamed Chaos Druid Tower, but its bank is the Wiki's
+    // Ardougne north bank at 2617,3333; the tower has none. Chunk (41,51),
+    // Ardougne Market, holds Ardougne south bank at 2653,3284.
+    const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
+    const defs = buildBankDefinitions(doc, readBankLocationRegistry());
+    const byId = Object.fromEntries(defs.map(def => [def.id, def.name]));
+    const names = defs.map(def => def.name);
+
+    expect(doc.chunks['10292'].n).toBe('Chaos Druid Tower');
+    expect(doc.chunks['10547'].n).toBe('Ardougne Market');
+    expect(byId['10292']).toBe('Ardougne north bank');
+    expect(byId['10547']).toBe('Ardougne south bank');
+    expect(names).not.toContain('Chaos Druid Tower');
+    expect(names).not.toContain('Ardougne Market');
+  });
+
   it('does not add the virtual bank to the public physical chunk list', () => {
     const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
 
