@@ -243,6 +243,68 @@ const accountCases = () => ({
   })),
 });
 
+/** Inflated size of the gzip bomb: past the 8 MiB both readers accept. */
+const BOMB_INFLATED_BYTES = 9 * 1024 * 1024;
+const flgz = (text: string) => `FLGZ:${gzipSync(Buffer.from(text, 'utf8'), { level: 9 }).toString('base64')}`;
+
+interface BundleCase {
+  name: string;
+  /** The input text, when the case does not start from a scenario's bundle. */
+  input?: string;
+  scenario?: string;
+  /** Dotted paths from the root, set to these values. */
+  set?: Record<string, unknown>;
+  /** Dotted paths from the root, removed. */
+  remove?: string[];
+  /** Keep this fraction of the JSON text. */
+  truncate?: number;
+  /** Send the bundle as "FLGZ:" text. */
+  compress?: boolean;
+}
+
+/**
+ * Inputs an import must refuse, and changes it must shrug off with the same
+ * answers as the scenario it starts from. Changes are recipes against that
+ * scenario's bundle, so the file stays small; the reader applies them.
+ */
+const bundleCases = (): { schema: number; reject: BundleCase[]; sameAnswers: BundleCase[] } => ({
+  schema: SCHEMA,
+  reject: [
+    { name: 'empty', input: '' },
+    { name: 'an empty object', input: '{}' },
+    { name: 'null', input: 'null' },
+    { name: 'a version 3 stub', input: '{"version":3}' },
+    { name: 'a future version 5', scenario: 'vanilla-mid', set: { version: 5 } },
+    { name: 'version 4 without chunks', scenario: 'vanilla-mid', remove: ['chunks'] },
+    { name: 'version 4 without rules', scenario: 'vanilla-mid', remove: ['rules'] },
+    { name: 'version 4 rules without a run', scenario: 'vanilla-mid', remove: ['rules.runId'] },
+    { name: 'truncated JSON', scenario: 'vanilla-mid', truncate: 0.5 },
+    { name: 'FLGZ that is not base64', input: 'FLGZ:not base64 at all' },
+    { name: 'a gzip bomb over 8 MiB', input: flgz(' '.repeat(BOMB_INFLATED_BYTES)) },
+  ],
+  sameAnswers: [
+    { name: 'an unknown root field', scenario: 'vanilla-mid', set: { futureRootField: { added: 'later' } } },
+    { name: 'an unknown rules field', scenario: 'vanilla-mid', set: { 'rules.futureRulesField': [1, 2, 3] } },
+    {
+      name: 'without the optional content fields',
+      scenario: 'vanilla-mid',
+      remove: ['chunkContent', 'itemTiers', 'slayerChunks'],
+    },
+    { name: 'without the run state', scenario: 'custom-none-banks-on', remove: ['state'] },
+    { name: 'compressed', scenario: 'chunked-walk', compress: true },
+  ],
+});
+
+const pathParts = (path: string) => path.split('.');
+function hasPath(root: Record<string, unknown>, path: string): boolean {
+  let node: unknown = root;
+  for (const part of pathParts(path)) {
+    if (typeof node !== 'object' || node === null || !(part in node)) return false;
+    node = (node as Record<string, unknown>)[part];
+  }
+  return true;
+}
+
 const results = new Map<string, Generated>();
 
 beforeAll(async () => {
@@ -284,6 +346,7 @@ describe('golden bundles', () => {
       files[`${scenario.id}.expect.json`] = answers;
     }
     files['accounts.json'] = accountCases();
+    files['cases.json'] = bundleCases();
 
     for (const [name, content] of Object.entries(files)) {
       const file = join(OUT, name);
@@ -321,6 +384,27 @@ describe('golden bundles', () => {
 
     const total = readdirSync(OUT).reduce((sum, name) => sum + readFileSync(join(OUT, name)).length, 0);
     expect(total, 'golden files exceed their size budget').toBeLessThanOrEqual(SIZE_BUDGET_BYTES);
+  });
+
+  it('name bundle cases that apply to the bundles they start from', () => {
+    // A recipe that points at nothing would pass in the plugin for the wrong reason.
+    const { reject, sameAnswers } = bundleCases();
+    for (const bundleCase of [...reject, ...sameAnswers]) {
+      expect(bundleCase.input !== undefined || bundleCase.scenario !== undefined, bundleCase.name).toBe(true);
+      if (bundleCase.scenario === undefined) continue;
+      const generated = results.get(bundleCase.scenario);
+      expect(generated, `${bundleCase.name}: no scenario ${bundleCase.scenario}`).toBeDefined();
+      for (const path of bundleCase.remove ?? []) {
+        expect(hasPath(generated!.bundle, path), `${bundleCase.name}: nothing at ${path}`).toBe(true);
+      }
+      for (const path of Object.keys(bundleCase.set ?? {})) {
+        const parent = pathParts(path).slice(0, -1).join('.');
+        expect(parent === '' || hasPath(generated!.bundle, parent), `${bundleCase.name}: no ${parent}`).toBe(true);
+      }
+    }
+    const bomb = reject.find((bundleCase) => bundleCase.name.includes('gzip bomb'))!;
+    const inflated = gunzipSync(Buffer.from(bomb.input!.slice('FLGZ:'.length), 'base64'));
+    expect(inflated.length).toBeGreaterThan(8 * 1024 * 1024);
   });
 
   it('cover the land rules the plugin depends on', () => {
