@@ -58,11 +58,16 @@ interface Scenario {
 const customRules = (startArea: 'misthalin' | 'lumbridge' | 'none', bankLocks: boolean): GameModeRules =>
   ({ ...getGameMode('vanilla').rules, startArea, bankLocks });
 
-const bankIdsNamed = (...names: string[]) =>
-  names.map((name) => {
-    const bank = BANKS.find((b) => b.name === name);
-    if (!bank) throw new Error(`no bank named ${name}`);
-    return bank.id;
+/**
+ * Banks by id, which stays fixed when a label is corrected; the names only
+ * say which bank each id is.
+ */
+const AL_KHARID_BANK = '13105';
+const ARDOUGNE_SOUTH_BANK = '10547';
+const bankIds = (...ids: string[]) =>
+  ids.map((id) => {
+    if (!BANKS.some((bank) => bank.id === id)) throw new Error(`no bank with id ${id}`);
+    return id;
   });
 
 const SCENARIOS: Scenario[] = [
@@ -73,7 +78,7 @@ const SCENARIOS: Scenario[] = [
     mode: 'vanilla',
     account: ACCOUNT,
     regions: ['Falador', 'Port Sarim', 'Catherby', 'Baxtorian Falls', 'Keldagrim', 'Zanaris'],
-    banks: bankIdsNamed('Al Kharid Palace', 'Ardougne Market'),
+    banks: bankIds(AL_KHARID_BANK, ARDOUGNE_SOUTH_BANK),
     equipment: { Weapon: 2, Body: 1 },
   },
   {
@@ -109,7 +114,7 @@ const SCENARIOS: Scenario[] = [
     custom: customRules('none', true),
     account: ACCOUNT,
     regions: ['Falador'],
-    banks: bankIdsNamed('Al Kharid Palace'),
+    banks: bankIds(AL_KHARID_BANK),
   },
 ];
 
