@@ -2,18 +2,26 @@
 
 Everything in flight, everything planned, and every gotcha learned the hard
 way — written so the project can keep moving without any particular
-contributor. Last updated: August 2026.
+contributor. Last updated: September 2026.
 
 ---
 
 ## 1. RuneLite Plugin Hub release (shipped)
 
-The Plugin Hub entry for
+The Plugin Hub entry
+[`plugins/fate-locked-ironman`](https://github.com/runelite/plugin-hub/blob/master/plugins/fate-locked-ironman)
+builds commit `874b9d106cad72c1a0d03addcd25237d2e1220e3` of
 [Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
-already resolves to the canonical release commit
-`5cc1ffc4e4f684a99211f12342a69ceb6d16de30`. No additional Plugin Hub pin PR
-is required for this release. Future plugin releases are built and published
-only from `OSRS-Fate-Locked-Runelite`.
+(the Stage 0 safety release, 25 September 2026,
+[runelite/plugin-hub#17110](https://github.com/runelite/plugin-hub/pull/17110)),
+not that repository's `main`; check the entry for the current pin.
+
+Plugin changes reach players only through a Plugin Hub pull request that
+bumps `commit=`. The plugin repository's CONTRIBUTING.md has the steps and
+the in-game checklist to run first. Stage 1 is in progress
+([plugin PR #19](https://github.com/Nubles/OSRS-Fate-Locked-Runelite/pull/19)).
+Plugin releases are built and published only from
+`OSRS-Fate-Locked-Runelite`.
 
 ## 1b. Shipped — July 2026 sprint (onboarding, safety, community)
 

@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   HelpCircle,
   Inbox,
-  Radio,
   ShieldAlert,
   X,
 } from 'lucide-react';
@@ -16,7 +15,6 @@ import {
   type RollInboxStore,
 } from '../services/rollInboxStore';
 import { getRollInboxStore } from '../services/rollInboxRuntime';
-import { relaySync } from '../services/relaySync';
 import type {
   DetectedEventIdentity,
   DetectedProgress,
@@ -43,7 +41,6 @@ interface RollInboxViewProps {
   store: RollInboxStore;
   game: RollInboxGame;
   acknowledge?: (items: EventAcknowledgement[]) => Promise<boolean>;
-  connected?: boolean;
 }
 
 const TERMINAL = new Set(['COMPLETED', 'DISMISSED', 'DUPLICATE']);
@@ -136,7 +133,6 @@ export function RollInboxView({
   store,
   game,
   acknowledge = keepAcknowledgementLocal,
-  connected = relaySync.enabled,
 }: RollInboxViewProps) {
   const [, refresh] = useState(0);
   const [selection, setSelection] = useState<Record<string, string>>({});
@@ -220,16 +216,13 @@ export function RollInboxView({
             {active.length}
           </span>
         )}
-        <span className={`ml-auto flex items-center gap-1 text-[10px] ${connected ? 'text-emerald-400' : 'text-gray-500'}`}>
-          <Radio size={10} />
-          {connected ? 'Listening' : 'Offline · inbox kept locally'}
-        </span>
+        <span className="ml-auto text-[10px] text-gray-500">Kept in this browser</span>
         <DetectorPlaytestExport inbox={allRows} history={game.state.history} />
       </div>
 
       {active.length === 0 ? (
         <p className="rounded-lg border border-dashed border-white/10 px-3 py-4 text-center text-[11px] text-gray-500">
-          No detected rolls waiting. RuneLite events will queue here for you to decide.
+          No detected rolls waiting. RuneLite can't send its detections here yet, so log each level-up, quest and diary yourself.
         </p>
       ) : (
         <div className="space-y-3">
@@ -378,14 +371,11 @@ export function RollInbox() {
     () => getRollInboxStore(game.runId),
     [game.runId],
   );
-  const [, relayRevision] = useState(0);
-  useEffect(() => relaySync.subscribe(() => relayRevision((value) => value + 1)), []);
 
   return (
     <RollInboxView
       store={store}
       game={{ state: game, acceptDetectedEvent: game.acceptDetectedEvent }}
-      connected={relaySync.enabled}
     />
   );
 }
