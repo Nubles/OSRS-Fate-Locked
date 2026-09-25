@@ -69,6 +69,7 @@ export default defineConfig(({ mode }) => {
               './data/caTasks.ts',
               './data/diaryTasks.ts',
               './data/diaryData.ts',
+              './data/areaAccess.ts',
               './data/items.ts',
               './data/activityRequirements.ts',
               './data/assets.ts',

@@ -215,6 +215,15 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any, gam
   if (blocker.kind === 'merchant') {
     return { kind: 'merchant', id: blocker.label, label: blocker.label, unlockTable: TableType.MERCHANTS, detail: 'Unlock via Merchants', done: false };
   }
+  if (blocker.kind === 'region' && blocker.anyOf?.length) {
+    // A travel route's departure: unlocking any one of these areas is enough.
+    const areas = blocker.anyOf.map(canonicalAreaName);
+    return {
+      kind: 'region', id: 'any-of:' + areas.join('|'),
+      label: 'Any of: ' + areas.join(', '),
+      unlockTable: TableType.REGIONS, relatedIds: areas, detail: 'Unlock any one', done: false,
+    };
+  }
   if (blocker.kind === 'region') return blocker.chunk
     ? { kind: 'region', id: `${blocker.chunk.cx},${blocker.chunk.cy}`, label: blocker.label, unlockTable: TableType.CHUNKS, done: false }
     : areaPlanStep(blocker.label, gameModeId);

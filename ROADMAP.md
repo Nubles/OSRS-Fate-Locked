@@ -287,6 +287,12 @@ Follow-ups:
   through it — that's how Chunked mode works app-wide. If a new surface
   reads `unlocks.regions.includes(...)` directly, it's a bug (this exact
   bug was found twice: World tab grid, ShareModal mastery).
+- **Ownership is not travel:** `isAreaReachable` answers "is this area
+  owned" (roll pool, map tint, completion, plugin parity). Diary tasks also
+  need a way onto owned islands and enclaves: `data/areaAccess.ts` lists
+  reviewed entry routes, read by `journalStatus.ts::areaAccess` in the
+  area modes only. Areas not listed keep plain ownership; quests do not
+  check travel yet. `utils/areaAccess.test.ts` pins the data and surfaces.
 - **Gameplay RNG choke point:** `GameContext.nextFloat(purpose)` — every
   gameplay outcome (rolls, table picks, gambles) draws through it so seeded
   runs stay deterministic and verifiable. A new surface calling
