@@ -67,7 +67,8 @@ that condition.
 | Method | Path | Body / response | Ownership |
 |---|---|---|---|
 | `POST` | `/r/<code>` | `{ token?, payload }` | Browser publishes the v4 profile; 24-hour TTL. Refused without the code's write token. |
-| `GET` | `/r/<code>` | `{ version, payload }` | RuneLite reads; supports `If-None-Match`. |
+| `POST` | `/r/<code>` | `{ token, gone: true }` → `{ version, gone: true }` | The owner marks the code gone: a tombstone replaces the profile for 90 days. Refused without the code's write token. |
+| `GET` | `/r/<code>` | `{ version, payload }` | RuneLite reads; supports `If-None-Match`. A gone code answers `404` with `{"gone":true}`. |
 
 The first browser write claims the record with a private token. The app
 persists that token in the pairing session so later profile revisions can
@@ -84,6 +85,25 @@ use the same rule.
 
 The pairing dialog asks the player to continue only if they just pressed
 **Connect tracker** in RuneLite, because any website can open a pairing link.
+
+## Marking a code gone
+
+The owner can withdraw a published profile before its record expires.
+`POST /r/<code>` with `{ token, gone: true }` and no payload is authorised
+like a publish: it needs the code's write token and refreshes the owner
+record the same way. The Worker replaces the profile with a tombstone,
+`{ gone: true, version, token }`, which holds no profile data, keeps it for
+90 days like an owner record, and answers `{ version, gone: true }`. The
+version rises as for any write.
+
+A `GET` of a gone code answers `404` with the body `{"gone":true}`, whatever
+its `If-None-Match`. It is a 404, as for a code with no profile, and never a
+410: the plugin builds players already have read a 404 as a missing profile,
+but would treat a 410 as an outage and back off, and the stream overlay would
+keep showing its last frame. A later publish with the owner's token replaces
+the tombstone with a profile as usual. Only the profile resource, `/r/<code>`,
+can be marked gone; the legacy resources below still refuse a body without
+their data.
 
 ## Versions and ETags
 
@@ -165,10 +185,11 @@ cookie, chat history, inventory dump, or arbitrary telemetry.
 
 The current relay record expires after 24 hours. Anyone with the random
 pairing code can read that record during its lifetime; the private token is
-required to replace it. The owner record holds no profile data and no token,
-only the token's hash and a timestamp, and expires 90 days after its last
-refresh. Use clipboard or local-file import if relay data
-should not leave the machine.
+required to replace it, or to mark the code gone, which ends that lifetime
+early and leaves a tombstone with no profile data. The owner record holds no
+profile data and no token, only the token's hash and a timestamp, and expires
+90 days after its last refresh. Use clipboard or local-file import if relay
+data should not leave the machine.
 
 ## RuneLite bundle v4
 

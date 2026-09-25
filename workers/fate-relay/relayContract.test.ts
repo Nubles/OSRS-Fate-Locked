@@ -8,11 +8,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import worker from './worker.js';
 import relayGet from '../../contracts/relay/relay-get.json';
 
+/** A published profile, or the tombstone the owner's Disconnect leaves. */
+type StoredRecord = { version: number; payload: string } | { gone: true; version: number };
+
 interface RelayCase {
   name: string;
   from: 'worker' | 'network' | 'transport';
   held: string | null;
-  stored?: { version: number; payload: string } | 'fails' | null;
+  stored?: StoredRecord | 'fails' | null;
   request?: { ifNoneMatch: string | null };
   response?: { status: number; headers: Record<string, string>; body: string | null };
   transport?: string;
@@ -28,7 +31,11 @@ interface RelayFixture {
 
 const fixture = relayGet as unknown as RelayFixture;
 
-/** Holds one stored record, or fails every read like a KV outage. A GET never writes. */
+/**
+ * Holds one stored record, a profile or a tombstone, each with the owner's
+ * write token as the worker keeps it; or fails every read like a KV outage.
+ * A GET never writes.
+ */
 class FixtureKv {
   constructor(
     private readonly key: string,
@@ -38,7 +45,8 @@ class FixtureKv {
   async get(key: string, options?: { type?: string }) {
     if (this.stored === 'fails') throw new Error('simulated KV outage');
     if (key !== this.key || !this.stored) return null;
-    const value = JSON.stringify({ ...this.stored, token: 'owner-token' });
+    const record: StoredRecord & { token: string } = { ...this.stored, token: 'owner-token' };
+    const value = JSON.stringify(record);
     return options?.type === 'json' ? JSON.parse(value) : value;
   }
 

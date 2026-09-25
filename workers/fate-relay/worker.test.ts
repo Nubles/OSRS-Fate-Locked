@@ -538,3 +538,109 @@ describe('Fate relay conditional GET', () => {
     expect(await response.json()).toEqual({ version: 41, payload: 'FLGZ:rules-41' });
   });
 });
+
+describe('Fate relay codes the owner marked gone', () => {
+  let kv: MemoryKv;
+  let env: { RELAY: MemoryKv };
+  const CODE = '0123456789abcdef0123456789abcdef';
+  const PROFILE = `/r/${CODE}`;
+  const PAYLOAD = 'FLGZ:rules linked to Nubles';
+
+  beforeEach(() => {
+    kv = new MemoryKv();
+    env = { RELAY: kv };
+  });
+
+  const post = (path: string, body: unknown) => worker.fetch(new Request(`https://relay.test${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }), env);
+  const get = (path: string, etag?: string) => worker.fetch(new Request(
+    `https://relay.test${path}`,
+    etag ? { headers: { 'If-None-Match': etag } } : undefined,
+  ), env);
+  const publishProfile = async (): Promise<{ token: string; version: number }> =>
+    (await post(PROFILE, { payload: PAYLOAD })).json();
+
+  it('replaces the profile with a 90-day tombstone for the owner, without a payload', async () => {
+    const { token, version: published } = await publishProfile();
+    const response = await post(PROFILE, { token, gone: true });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body).toEqual({ version: expect.any(Number), gone: true });
+    expect(body.version).toBeGreaterThan(published);
+    expect(JSON.parse(kv.records.get(`r:${CODE}`)!)).toEqual({ gone: true, version: body.version, token });
+    expect(kv.ttls.get(`r:${CODE}`)).toBe(90 * 86_400);
+  });
+
+  it('refreshes an old owner record, as a publish does', async () => {
+    const { token } = await publishProfile();
+    const [hash] = kv.records.get(`own:r:${CODE}`)!.split(':');
+    kv.records.set(`own:r:${CODE}`, `${hash}:${Date.now() - 2 * 86_400_000}`);
+    kv.puts.length = 0;
+
+    expect((await post(PROFILE, { token, gone: true })).status).toBe(200);
+    expect(kv.puts).toEqual([`r:${CODE}`, `own:r:${CODE}`]);
+    expect(kv.records.get(`own:r:${CODE}`)!.startsWith(`${hash}:`)).toBe(true);
+    expect(kv.ttls.get(`own:r:${CODE}`)).toBe(90 * 86_400);
+  });
+
+  it('refuses a wrong or missing token and keeps serving the profile', async () => {
+    await publishProfile();
+
+    expect((await post(PROFILE, { token: 'guess', gone: true })).status).toBe(403);
+    expect((await post(PROFILE, { gone: true })).status).toBe(403);
+    const response = await get(PROFILE);
+    expect(response.status).toBe(200);
+    expect((await response.json()).payload).toBe(PAYLOAD);
+  });
+
+  it('answers 404 {"gone":true} after, whatever the validator, never the profile', async () => {
+    const { token, version: published } = await publishProfile();
+    const { version: gone } = await (await post(PROFILE, { token, gone: true })).json();
+
+    for (const etag of [undefined, String(published), String(gone)]) {
+      const response = await get(PROFILE, etag);
+      expect(response.status, `If-None-Match: ${etag}`).toBe(404);
+      expect(response.headers.get('Content-Type')).toBe('application/json');
+      expect(response.headers.get('ETag')).toBeNull();
+      const text = await response.text();
+      expect(text).toBe('{"gone":true}');
+      expect(text).not.toContain('Nubles');
+      expect(text).not.toContain(token);
+    }
+  });
+
+  it('serves the profile again once the owner publishes after marking it gone', async () => {
+    const { token } = await publishProfile();
+    const { version: gone } = await (await post(PROFILE, { token, gone: true })).json();
+
+    expect((await post(PROFILE, { payload: 'forged' })).status).toBe(403);
+    const republished = await post(PROFILE, { token, payload: 'FLGZ:rules again' });
+    expect(republished.status).toBe(200);
+    const { version } = await republished.json();
+    expect(version).toBeGreaterThan(gone);
+    expect(kv.ttls.get(`r:${CODE}`)).toBe(86_400);
+    const response = await get(PROFILE);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('ETag')).toBe(String(version));
+    expect(await response.json()).toEqual({ version, payload: 'FLGZ:rules again' });
+  });
+
+  it.each([
+    ['/events', { events: [event('evt-1')] }],
+    ['/acks', { acknowledgements: [{ eventId: 'evt-1', state: 'COMPLETED', acknowledgedAt: 1 }] }],
+    ['/state', { payload: 'legacy state' }],
+    ['/suggest', { payload: 'legacy suggestion' }],
+  ])('leaves %s as before: only the profile resource can be marked gone', async (resource, first) => {
+    const path = `${PROFILE}${resource}`;
+    const { token } = await (await post(path, first)).json();
+    const stored = kv.records.get(`r:${CODE}${resource}`);
+
+    expect((await post(path, { token, gone: true })).status).toBe(400);
+    expect(kv.records.get(`r:${CODE}${resource}`)).toBe(stored);
+    expect((await get(path)).status).toBe(200);
+  });
+});
