@@ -153,6 +153,17 @@
    "outcome": "unreadable"
   },
   {
+   "name": "the rules the plugin holds, sent in full",
+   "from": "network",
+   "held": "41",
+   "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json", "ETag": "41" },
+    "body": "{\"version\":41,\"payload\":\"FLGZ:rules-41\"}"
+   },
+   "outcome": "unchanged"
+  },
+  {
    "name": "a 304 for a version the plugin does not hold",
    "from": "network",
    "held": "41",

@@ -250,12 +250,13 @@ const accountCases = () => ({
 
 /** Inflated size of the gzip bomb: past the 8 MiB both readers accept. */
 const BOMB_INFLATED_BYTES = 9 * 1024 * 1024;
-const flgz = (text: string) => `FLGZ:${gzipSync(Buffer.from(text, 'utf8'), { level: 9 }).toString('base64')}`;
 
 interface BundleCase {
   name: string;
   /** The input text, when the case does not start from a scenario's bundle. */
   input?: string;
+  /** Repeat the input text this many times. */
+  repeat?: number;
   scenario?: string;
   /** Dotted paths from the root, set to these values. */
   set?: Record<string, unknown>;
@@ -263,14 +264,16 @@ interface BundleCase {
   remove?: string[];
   /** Keep this fraction of the JSON text. */
   truncate?: number;
-  /** Send the bundle as "FLGZ:" text. */
+  /** Send the text as "FLGZ:" text. */
   compress?: boolean;
 }
 
 /**
  * Inputs an import must refuse, and changes it must shrug off with the same
  * answers as the scenario it starts from. Changes are recipes against that
- * scenario's bundle, so the file stays small; the reader applies them.
+ * scenario's bundle, so the file stays small; the reader applies them. The
+ * reader compresses too: gzip output differs between zlib builds, so stored
+ * compressed bytes would not match what another machine produces.
  */
 const bundleCases = (): { schema: number; reject: BundleCase[]; sameAnswers: BundleCase[] } => ({
   schema: SCHEMA,
@@ -285,7 +288,7 @@ const bundleCases = (): { schema: number; reject: BundleCase[]; sameAnswers: Bun
     { name: 'version 4 rules without a run', scenario: 'vanilla-mid', remove: ['rules.runId'] },
     { name: 'truncated JSON', scenario: 'vanilla-mid', truncate: 0.5 },
     { name: 'FLGZ that is not base64', input: 'FLGZ:not base64 at all' },
-    { name: 'a gzip bomb over 8 MiB', input: flgz(' '.repeat(BOMB_INFLATED_BYTES)) },
+    { name: 'a gzip bomb over 8 MiB', input: ' ', repeat: BOMB_INFLATED_BYTES, compress: true },
   ],
   sameAnswers: [
     { name: 'an unknown root field', scenario: 'vanilla-mid', set: { futureRootField: { added: 'later' } } },
@@ -408,8 +411,8 @@ describe('golden bundles', () => {
       }
     }
     const bomb = reject.find((bundleCase) => bundleCase.name.includes('gzip bomb'))!;
-    const inflated = gunzipSync(Buffer.from(bomb.input!.slice('FLGZ:'.length), 'base64'));
-    expect(inflated.length).toBeGreaterThan(8 * 1024 * 1024);
+    expect(bomb.compress).toBe(true);
+    expect(bomb.input!.length * (bomb.repeat ?? 1)).toBeGreaterThan(8 * 1024 * 1024);
   });
 
   it('cover the land rules the plugin depends on', () => {
