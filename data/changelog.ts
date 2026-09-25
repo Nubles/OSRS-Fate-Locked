@@ -19,6 +19,16 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-25-clearer-names',
+    title: 'Clearer Shop Names',
+    date: '2026-09-25',
+    sections: {
+      fixed: [
+        'Amulet Shops and Jewellery Shops now say which shops they unlock: Conara\'s Jewels in Cam Torum and Grum\'s Gold Exchange in Port Sarim for jewellery, Davon\'s Amulet Store in Brimhaven for amulets. Grum\'s and Davon\'s have no stock of their own, so ironmen can only sell there. Both wiki links now open the right page.',
+      ],
+    },
+  },
+  {
     id: '2026-09-25-runelite-safety-update',
     title: 'RuneLite Safety Update',
     date: '2026-09-25',

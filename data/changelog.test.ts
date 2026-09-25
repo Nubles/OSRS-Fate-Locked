@@ -20,7 +20,14 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-25-runelite-safety-update');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-25-clearer-names');
+  });
+
+  it('says which shops Amulet Shops and Jewellery Shops unlock', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-25-clearer-names');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Conara's Jewels.*Grum's Gold Exchange.*Davon's Amulet Store.*ironmen can only sell there/),
+    ]);
   });
 
   it('announces the RuneLite safety update without promising a Roll Inbox feed', () => {

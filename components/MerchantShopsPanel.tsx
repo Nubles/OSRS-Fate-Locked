@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { CheckCircle2, Lock, ChevronDown, ChevronRight } from 'lucide-react';
 import { Store } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
-import { MERCHANTS_LIST } from '../constants';
+import { MERCHANTS_LIST, MERCHANT_UNLOCK_DETAILS } from '../constants';
 import { chunkContentService } from '../services/ChunkContentService';
 import { shopsByCategory, type CategoryShop } from '../utils/merchantShops';
 import { summarisePlaces, showChunkOnMap } from '../utils/chunkLocations';
@@ -53,6 +53,7 @@ export const MerchantShopsPanel: React.FC = () => {
       {categories.map(cat => {
         const catUnlocked = unlocks.merchants.includes(cat);
         const shops = grouped.get(cat) ?? [];
+        const detail = MERCHANT_UNLOCK_DETAILS[cat];
         const isOpen = openCats.has(cat);
         // usable = category unlocked AND at least one location reachable
         const usableCount = catUnlocked
@@ -76,6 +77,7 @@ export const MerchantShopsPanel: React.FC = () => {
 
             {isOpen && (
               <div className="pb-2 pl-7 space-y-1">
+                {detail && <p className="text-[11px] text-gray-400 leading-snug">{detail}</p>}
                 {!shops.length && <p className="text-[11px] text-amber-300">Provider locations for this category still need review.</p>}
                 {shops.map(shop => {
                   const places = summarisePlaces(shop.locations, unlocks, gameModeId);
