@@ -19,6 +19,20 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-25-runelite-safety-update',
+    title: 'RuneLite Safety Update',
+    date: '2026-09-25',
+    sections: {
+      changed: [
+        'The RuneLite guide describes the plugin\'s safety update. Strict Mode stops only travel to places your rules prove locked, never walking, NPC, object, bank or equipment clicks, and says whether it is Active, Paused, Off or Inactive, and why.',
+        'The guide also covers the plugin\'s quieter warnings: no chunk chat in places the tracker hasn\'t mapped, such as dungeons, and one warning sound as you enter locked ground. Connecting says Confirm in browser while it waits for you.',
+      ],
+      fixed: [
+        'The Roll Inbox no longer says it is listening for RuneLite, which can\'t send it detections yet. Log level-ups, quests and diaries yourself for now.',
+      ],
+    },
+  },
+  {
     id: '2026-09-24-saves-keys-and-planners',
     title: 'Safer Saves, Fairer Keys and Accurate Planners',
     date: '2026-09-24',

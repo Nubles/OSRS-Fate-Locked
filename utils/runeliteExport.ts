@@ -137,12 +137,13 @@ export async function buildBundlePayload(
 }
 
 export async function exportRuneliteBundle(unlocks: UnlockState, run: RuneliteRunInput): Promise<void> {
-  // Clipboard gets the compressed (gzip+base64 "FLGZ:") form so we don't dump
-  // ~115 KB onto the clipboard; the file download stays plain readable JSON.
+  // Clipboard gets the compressed (gzip+base64 "FLGZ:") form, about 205 KB
+  // instead of about 1.3 MB of JSON; the file download stays plain JSON.
   const { json, compressed: clip } = await buildBundlePayload(unlocks, run);
   navigator.clipboard?.writeText(clip).catch(() => { /* non-secure origin / no focus */ });
-  // …and a file download kept as PLAIN, readable JSON (openable/inspectable, and
-  // what the plugin's Downloads auto-detect / file-watch path reads).
+  // …and a file download kept as PLAIN, readable JSON (openable/inspectable).
+  // The plugin reads it only once moved into .runelite/fate-locked; it never
+  // looks in Downloads.
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

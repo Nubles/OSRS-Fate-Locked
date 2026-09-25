@@ -20,7 +20,18 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-24-saves-keys-and-planners');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-25-runelite-safety-update');
+  });
+
+  it('announces the RuneLite safety update without promising a Roll Inbox feed', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-25-runelite-safety-update');
+    expect(release?.sections.changed).toEqual(expect.arrayContaining([
+      expect.stringMatching(/stops only travel.*never walking/i),
+      expect.stringMatching(/Active, Paused, Off or Inactive/),
+    ]));
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/no longer says it is listening for RuneLite/i),
+    ]);
   });
 
   it('names the newest release in changelogLatest.ts, which the app reads up front', () => {

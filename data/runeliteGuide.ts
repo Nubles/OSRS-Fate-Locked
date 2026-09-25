@@ -312,7 +312,7 @@ export const RUNELITE_GUIDE_SCREENSHOTS: readonly GuideScreenshot[] = [
         0.36,
         0.48,
         'Strict Mode',
-        'Strict Mode is optional and off by default. Enable it only when you want proven locked actions prevented.',
+        'Strict Mode is optional and off by default. Enable it only when you want travel to proven locked places stopped.',
       ),
       callout(
         'guardian-state',
@@ -320,7 +320,7 @@ export const RUNELITE_GUIDE_SCREENSHOTS: readonly GuideScreenshot[] = [
         0.66,
         0.65,
         'Guardian status',
-        'On means Strict Mode is active and not currently paused.',
+        'Active means Strict Mode can stop locked travel right now. Inactive names what is missing, such as a linked account, the right character, or rules less than 15 minutes old.',
       ),
       callout(
         'pause',
@@ -328,7 +328,7 @@ export const RUNELITE_GUIDE_SCREENSHOTS: readonly GuideScreenshot[] = [
         0.52,
         0.84,
         'Pause for 60 seconds',
-        'The shared pause affects every Strict Mode category and resumes automatically.',
+        'The pause lets every click through for 60 seconds, then Strict Mode resumes automatically.',
       ),
     ],
   },
@@ -590,8 +590,8 @@ export const RUNELITE_GUIDE_SETTINGS: readonly GuideSetting[] = [
     section: 'Guardian',
     label: 'Strict Mode',
     defaultValue: 'Off',
-    purpose: 'Prevent only fresh, exact, account-bound actions that the current rules prove Locked.',
-    visibleResult: 'A proven locked click is consumed and explained; uncertain cases are allowed.',
+    purpose: 'Stop only travel (a teleport or named transport) to a destination that fresh rules bound to your character prove Locked.',
+    visibleResult: 'A proven locked teleport or transport click is stopped and explained. Walking, NPC, object, bank and equipment clicks are never stopped, and uncertain cases are allowed.',
     changeWhen: 'Enable it when you want an extra travel safety net. Leave it off for advisory warnings only.',
   },
   {
@@ -599,8 +599,8 @@ export const RUNELITE_GUIDE_SETTINGS: readonly GuideSetting[] = [
     section: 'Warnings',
     label: 'Chat on chunk entry',
     defaultValue: 'On',
-    purpose: 'Post a chat line each time you enter a new chunk.',
-    visibleResult: 'The chatbox names the new chunk or area after a boundary crossing.',
+    purpose: 'Post a chat line each time you enter a chunk on the tracker map.',
+    visibleResult: 'The chatbox names the new chunk or area after a boundary crossing. Chunks the tracker has not mapped, such as dungeons, stay quiet.',
     changeWhen: 'Turn it off if routine boundary messages make the chatbox too busy.',
   },
   {
@@ -609,7 +609,7 @@ export const RUNELITE_GUIDE_SETTINGS: readonly GuideSetting[] = [
     label: 'Warn entering locked chunk',
     defaultValue: 'On',
     purpose: 'Warn when you step into territory the imported rules mark Locked.',
-    visibleResult: 'A strong red warning appears on locked entry.',
+    visibleResult: 'A warning sound plays once as you enter locked territory, even with chunk chat off, plus a notification if RuneLite notifications are on.',
     changeWhen: 'Keep it on for normal play; turn it off only if another warning channel is enough.',
   },
   {
@@ -878,7 +878,7 @@ export const RUNELITE_GUIDE_PRESETS: readonly GuidePreset[] = [
     adjustments: [
       'Start from Balanced defaults and enable Strict Mode.',
       'Remember that uncertain, stale, missing, future, wrong-account, or unresolved decisions fail open.',
-      'Use Pause Strict Mode for 60 seconds when you need a temporary global pause.',
+      'Use Pause Strict Mode for 60 seconds when you need to travel somewhere it would stop.',
     ],
   },
 ];
@@ -886,8 +886,8 @@ export const RUNELITE_GUIDE_PRESETS: readonly GuidePreset[] = [
 export const RUNELITE_GUIDE_TROUBLESHOOTING: readonly GuideTroubleshootingItem[] = [
   {
     id: 'waiting-after-confirm',
-    symptom: 'The browser page opens, but RuneLite stays Waiting for tracker.',
-    likelyCause: 'The wrong request was confirmed, the request expired, or RuneLite has not completed its first valid import.',
+    symptom: 'The browser page opens, but RuneLite keeps showing Confirm in browser.',
+    likelyCause: 'The profile was confirmed in an older browser page, or RuneLite has not completed its first valid import. If nothing arrives within 10 minutes, RuneLite shows No profile received.',
     fix: [
       'Return to the currently open RuneLite client and select Connect tracker again.',
       'Confirm the intended profile in the newest browser page.',
@@ -906,11 +906,11 @@ export const RUNELITE_GUIDE_TROUBLESHOOTING: readonly GuideTroubleshootingItem[]
   },
   {
     id: 'expired-rejected-stale',
-    symptom: 'The panel reports expired, not found, rejected, stale, or unsupported bundle feedback.',
-    likelyCause: 'The one-time request is no longer valid, or the received bundle cannot safely replace the current rules.',
+    symptom: 'The panel reports No profile received, No recent update, rejected, stale, or unsupported bundle feedback.',
+    likelyCause: 'No profile was confirmed within 10 minutes, the tracker has not published the profile for over a day, or the received bundle cannot safely replace the current rules.',
     fix: [
-      'Create a fresh request with Connect tracker.',
-      'Confirm the same profile in the newest page.',
+      'For No profile received, create a fresh request with Connect tracker and confirm the same profile in the newest page.',
+      'For No recent update, open the tracker with that profile; it publishes again and RuneLite picks it up.',
       'If the bundle is unsupported, update the Plugin Hub plugin and companion before retrying.',
     ],
   },
@@ -977,8 +977,9 @@ export const RUNELITE_GUIDE_TROUBLESHOOTING: readonly GuideTroubleshootingItem[]
   {
     id: 'strict-mode-allows-action',
     symptom: 'Strict Mode does not block an action you expected it to stop.',
-    likelyCause: 'The decision is unknown, ambiguous, stale, missing, future-dated, wrong-account, or otherwise not proven Locked.',
+    likelyCause: 'It stops only travel. Walking, NPCs, objects, banks and equipment are never stopped, and travel is let through when the decision is unknown, ambiguous, stale, missing, future-dated, wrong-account, or otherwise not proven Locked.',
     fix: [
+      'Read the Guardian status: Inactive names what is missing.',
       'Check Connected, Last sync, Account, and Current chunk.',
       'Treat the warning as advisory when the evidence is uncertain.',
       'This is deliberate: Strict Mode fails open and never guesses.',
@@ -1025,7 +1026,7 @@ export const RUNELITE_GUIDE_GLOSSARY: readonly GuideGlossaryItem[] = [
   },
   {
     term: 'Strict Mode',
-    definition: 'An optional, default-off guard that prevents only actions fresh account-bound rules prove Locked.',
+    definition: 'An optional, default-off guard that stops only travel to places fresh account-bound rules prove Locked.',
   },
   {
     term: 'Keys',
@@ -1101,8 +1102,9 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
     ],
     bullets: [
       'Not connected: no profile is paired.',
-      'Waiting: confirm the newest browser request.',
+      'Confirm in browser: confirm the profile in the newest browser page. After 10 minutes without one, RuneLite shows No profile received.',
       'Connected: a valid rules bundle was accepted.',
+      'No recent update: the tracker has not published this profile for over a day; open it there to publish again.',
       'Offline: the relay cannot currently be reached; the last valid bundle remains safer than an unknown replacement.',
       'Rejected, stale, or unsupported: RuneLite kept the previous valid rules.',
     ],
@@ -1141,15 +1143,15 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
     id: 'guardian',
     number: 7,
     title: 'Guardian and Strict Mode',
-    summary: 'Strict Mode is an optional, conservative guard for actions that are certainly Locked.',
+    summary: 'Strict Mode is an optional, conservative guard for travel to places that are certainly Locked.',
     paragraphs: [
-      'Strict Mode is off by default. When enabled, it can consume only a player-selected click when fresh, exact, account-bound rules prove the destination Locked.',
-      'Unknown, ambiguous, stale, missing, future, wrong-account, and unresolved cases are allowed: Strict Mode fails open rather than guessing.',
-      'Pause Strict Mode for 60 seconds affects every prevention category and resumes automatically. Recent Prevented Actions is a local explanation log, not an action queue.',
+      'Strict Mode is off by default. When enabled, it can stop only a travel click (a teleport or a named transport destination) when fresh, exact, account-bound rules prove the destination Locked.',
+      'Walking, NPC, object, bank and equipment clicks are never stopped; locked-content tags and warnings cover them. Unknown, ambiguous, stale, missing, future, wrong-account, and unresolved cases are allowed: Strict Mode fails open rather than guessing.',
+      'The Guardian status says Active, Paused, Off, or Inactive with the reason, such as another character or rules more than 15 minutes old. Pause Strict Mode for 60 seconds lets every click through and resumes automatically. Recent Prevented Actions is a local explanation log, not an action queue.',
     ],
     bullets: [
       'Warnings remain useful with Strict Mode off.',
-      'Walking and uncertain actions are never blocked by a guess.',
+      'Walking is never blocked, and uncertain travel is never blocked by a guess.',
       'Turn Strict Mode off immediately or use the shared temporary pause.',
     ],
     screenshotIds: ['guardian'],
