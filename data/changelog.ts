@@ -24,7 +24,7 @@ export const CHANGELOG_RELEASES = [
     date: '2026-09-25',
     sections: {
       fixed: [
-        'Herblore needs Druidic Ritual and Sailing needs Pandemonium, as in the game. Quests, diary tasks and activities that need a Herblore or Sailing level now need the quest too, so The Dig Site, Mastering Mixology and the Desert Medium combat potion no longer read as doable without Druidic Ritual.',
+        'Herblore needs Druidic Ritual and Sailing needs Pandemonium, as in the game. Quests, diary tasks, activities, chunk details and Resource Engine recipes that need a Herblore or Sailing level now need the quest too, so The Dig Site, Mastering Mixology and the Desert Medium combat potion no longer read as doable without Druidic Ritual.',
         'The Skill Advisor no longer suggests training Herblore before Druidic Ritual, or Sailing before Pandemonium. Goal plans add the missing quest and the area it needs, such as Taverley for Druidic Ritual.',
         'If your save has Herblore levels but no Druidic Ritual, those quests and tasks stay blocked until you mark Druidic Ritual complete. Anything you have already completed stays completed.',
       ],

@@ -6,7 +6,7 @@ import {
   SKILLS_LIST,
   SLAYER_UNLOCKS_LIST,
 } from '../../data/items';
-import { currentQuestPoints, meetsSkillRequirement } from '../journalStatus';
+import { currentQuestPoints, meetsSkillRequirement, skillGateQuests } from '../journalStatus';
 import { canonicalQuestId } from '../contentIdentity';
 import type { ExactItemSource, RawRouteRequirement, RouteGate } from './model';
 
@@ -169,6 +169,14 @@ export const evaluateRouteGates = (
         break;
       }
     }
+  }
+
+  // A gated skill also needs its unlocking quest, such as Druidic Ritual for a
+  // Herblore level, unless the gates already name that quest.
+  const skills = gates.flatMap(gate => gate.type === 'SKILL' ? [gate.skill] : []);
+  const quests = gates.flatMap(gate => gate.type === 'QUEST' ? [gate.questId] : []);
+  for (const questId of skillGateQuests(skills, quests)) {
+    if (!unlocks.quests.includes(questId)) blockers.push(questGate(questId));
   }
 
   return { blockers, hasDataGap };
