@@ -11,6 +11,7 @@ The relay is optional. Clipboard and local-file imports remain available.
 
 ```text
 Browser  POST /r/<code>   publishes the app-authored v4 profile
+Browser  POST /r/<code>   marks the code gone when the player presses Disconnect
 RuneLite GET  /r/<code>   retrieves and validates that profile
 ```
 
@@ -32,6 +33,14 @@ profile shows RuneLite as not connected. Pairing again or pressing
 **Disconnect** in one tab applies to every open tab. A pairing saved before
 its profile was recorded is bound to the profile of the first tab that
 publishes it.
+
+After forgetting the pairing, **Disconnect** asks the relay to
+[mark the code gone](#marking-a-code-gone) with the pairing's write token, so
+the relay stops serving the last profile, and the linked account in it, to
+anyone who has the code. The request waits for a publish that tab already has
+on its way, which would otherwise land after it and put the profile back. It
+is sent once and is best effort: if it fails, for example offline, the
+profile expires with its record within 24 hours.
 
 The rules are built from the app's chunk and equipment data. If either fails
 to load, the browser publishes nothing: the relay keeps the last complete
@@ -85,10 +94,14 @@ use the same rule.
 
 The pairing dialog asks the player to continue only if they just pressed
 **Connect tracker** in RuneLite, because any website can open a pairing link.
+It shows only the code's last four characters, such as `…a1b2`, so a stream
+or screenshot of the dialog does not reveal the code. The app still stores
+and sends the whole code.
 
 ## Marking a code gone
 
-The owner can withdraw a published profile before its record expires.
+The owner can withdraw a published profile before its record expires; the app
+does so when the player presses **Disconnect**.
 `POST /r/<code>` with `{ token, gone: true }` and no payload is authorised
 like a publish: it needs the code's write token and refreshes the owner
 record the same way. The Worker replaces the profile with a tombstone,
@@ -183,13 +196,14 @@ The published v4 profile contains the tracker state needed to render and
 enforce the player's current restrictions. It contains no password, session
 cookie, chat history, inventory dump, or arbitrary telemetry.
 
-The current relay record expires after 24 hours. Anyone with the random
-pairing code can read that record during its lifetime; the private token is
-required to replace it, or to mark the code gone, which ends that lifetime
-early and leaves a tombstone with no profile data. The owner record holds no
-profile data and no token, only the token's hash and a timestamp, and expires
-90 days after its last refresh. Use clipboard or local-file import if relay
-data should not leave the machine.
+The current relay record expires after 24 hours, or sooner when the player
+presses **Disconnect**, which marks the code gone and leaves a tombstone with
+no profile data. Anyone with the random pairing code can read the record
+during its lifetime; the private token is required to replace it or mark it
+gone. The app shows only the code's last four characters. The owner record
+holds no profile data and no token, only the token's hash and a timestamp,
+and expires 90 days after its last refresh. Use clipboard or local-file import
+if relay data should not leave the machine.
 
 ## RuneLite bundle v4
 

@@ -5,6 +5,7 @@ import {
   RUNELITE_PAIRING_SUCCESS_COPY,
   isRunelitePairCode,
   parseRunelitePairFragment,
+  runelitePairCodeHint,
 } from './runelitePairing';
 
 describe('RuneLite pairing fragments', () => {
@@ -33,5 +34,9 @@ describe('RuneLite pairing fragments', () => {
     )).toBeNull();
     expect(parseRunelitePairFragment('#sync=ABCD1234')).toBeNull();
     expect(parseRunelitePairFragment('#/overlay')).toBeNull();
+  });
+
+  it('shows a code as its last four characters only', () => {
+    expect(runelitePairCodeHint('0123456789abcdef0123456789abcd12')).toBe('…cd12');
   });
 });

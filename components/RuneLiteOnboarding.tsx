@@ -216,7 +216,7 @@ export const RuneLiteOnboarding: React.FC = () => {
             {overlayCopied ? 'Copied!' : 'Copy stream overlay URL'}
           </button>
           <button
-            onClick={() => relaySync.disable()}
+            onClick={() => { void relaySync.disconnect(); }}
             className="rounded bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-gray-300 hover:bg-white/15"
           >
             Disconnect

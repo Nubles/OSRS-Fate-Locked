@@ -60,6 +60,20 @@ describe('RunelitePairingDialog', () => {
     expect(screen.getByText('No bound account')).toBeTruthy();
   });
 
+  it('shows only the last four characters of the pairing code, in every phase', () => {
+    const code = '8c3e1b7a9d2f4e6a0b5c7d9e1f3a5b7c';
+    for (const phase of ['confirm', 'uploading', 'success', 'error'] as const) {
+      const { unmount } = renderDialog({ code, phase, error: 'relay offline' });
+      expect(screen.getByText('…5b7c')).toBeTruthy();
+      // No five characters in a row of the code, in the text or any attribute.
+      const html = document.body.innerHTML;
+      for (let start = 0; start + 5 <= code.length; start += 1) {
+        expect(html, phase).not.toContain(code.slice(start, start + 5));
+      }
+      unmount();
+    }
+  });
+
   it('renders uploading, success, and retryable error phases', async () => {
     const user = userEvent.setup();
     const uploading = renderDialog({ phase: 'uploading' });

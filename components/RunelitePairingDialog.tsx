@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertTriangle, CheckCircle2, Link2, Loader2, XCircle } from 'lucide-react';
-import { RUNELITE_PAIRING_SUCCESS_COPY } from '../utils/runelitePairing';
+import { RUNELITE_PAIRING_SUCCESS_COPY, runelitePairCodeHint } from '../utils/runelitePairing';
 
 export type RunelitePairingPhase = 'confirm' | 'uploading' | 'success' | 'error';
 
@@ -85,7 +85,7 @@ export const RunelitePairingDialog: React.FC<
             <div className="flex justify-between gap-4">
               <dt className="text-gray-500">Request</dt>
               <dd className="font-mono text-[10px] text-cyan-200">
-                {code}
+                {runelitePairCodeHint(code)}
               </dd>
             </div>
           </dl>
