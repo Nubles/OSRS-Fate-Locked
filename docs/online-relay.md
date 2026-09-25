@@ -110,6 +110,13 @@ the code's owner can write, and a browser tab sends its publishes one at a
 time, so this needs two of the owner's tabs or devices publishing within the
 same second.
 
+The `ETag` is the bare version, such as `41`, and RuneLite sends it back as it
+is in `If-None-Match`. A `GET` whose `If-None-Match` names the stored version
+is answered `304 Not Modified` with the same bare `ETag`, whether the
+validator is bare, quoted (`"41"`) or weak (`W/"41"`), as a proxy or another
+client may send it. Any other value, including a list of validators or `*`,
+gets the full reply.
+
 ## Legacy compatibility only
 
 The Worker temporarily retains these older routes so already-installed legacy

@@ -72,30 +72,22 @@
    "outcome": "stale"
   },
   {
-   "name": "a quoted validator, answered in full",
+   "name": "a quoted validator",
    "from": "worker",
    "held": "41",
    "stored": { "version": 41, "payload": "FLGZ:rules-41" },
    "request": { "ifNoneMatch": "\"41\"" },
-   "response": {
-    "status": 200,
-    "headers": { "Content-Type": "application/json", "ETag": "41" },
-    "body": "{\"version\":41,\"payload\":\"FLGZ:rules-41\"}"
-   },
-   "outcome": "stale"
+   "response": { "status": 304, "headers": { "ETag": "41" }, "body": null },
+   "outcome": "unchanged"
   },
   {
-   "name": "a weak validator, answered in full",
+   "name": "a weak validator",
    "from": "worker",
    "held": "41",
    "stored": { "version": 41, "payload": "FLGZ:rules-41" },
    "request": { "ifNoneMatch": "W/\"41\"" },
-   "response": {
-    "status": 200,
-    "headers": { "Content-Type": "application/json", "ETag": "41" },
-    "body": "{\"version\":41,\"payload\":\"FLGZ:rules-41\"}"
-   },
-   "outcome": "stale"
+   "response": { "status": 304, "headers": { "ETag": "41" }, "body": null },
+   "outcome": "unchanged"
   },
   {
    "name": "the relay's storage fails",

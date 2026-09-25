@@ -496,3 +496,45 @@ describe('Fate relay versions', () => {
     expect(body.events).toEqual([]);
   });
 });
+
+describe('Fate relay conditional GET', () => {
+  let env: { RELAY: MemoryKv };
+  const CODE = '0123456789abcdef0123456789abcdef';
+
+  beforeEach(() => {
+    const kv = new MemoryKv();
+    kv.records.set(`r:${CODE}`, JSON.stringify({ version: 41, payload: 'FLGZ:rules-41', token: 'owner-token' }));
+    env = { RELAY: kv };
+  });
+
+  const get = (ifNoneMatch: string) => worker.fetch(new Request(`https://relay.test/r/${CODE}`, {
+    headers: { 'If-None-Match': ifNoneMatch },
+  }), env);
+
+  it.each([
+    ['bare', '41'],
+    ['quoted', '"41"'],
+    ['weak', 'W/"41"'],
+  ])('answers a %s validator for the stored version with 304 and the bare ETag', async (_kind, validator) => {
+    const response = await get(validator);
+
+    expect(response.status).toBe(304);
+    expect(response.headers.get('ETag')).toBe('41');
+    expect(await response.text()).toBe('');
+  });
+
+  it.each([
+    ['a quoted validator for another version', '"40"'],
+    ['a weak validator for another version', 'W/"40"'],
+    ['a list of validators', '"40", "41"'],
+    ['a wildcard', '*'],
+    ['an unclosed quote', '"41'],
+    ['a stray quote', '41"'],
+  ])('answers %s in full', async (_kind, validator) => {
+    const response = await get(validator);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('ETag')).toBe('41');
+    expect(await response.json()).toEqual({ version: 41, payload: 'FLGZ:rules-41' });
+  });
+});

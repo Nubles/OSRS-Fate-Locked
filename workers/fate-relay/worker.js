@@ -94,6 +94,20 @@ function nextVersion(storedVersion) {
   return Math.max(seconds, (storedVersion || 0) + 1);
 }
 
+/**
+ * The version an If-None-Match header names. The ETag is the bare version,
+ * which RuneLite sends back as it is; a quoted or weak validator ("41" or
+ * W/"41") names the same version. Nothing else is parsed: a list of
+ * validators or * stays as it is and never equals a version.
+ */
+function validatorVersion(header) {
+  if (header === null) return null;
+  const value = header.startsWith('W/') ? header.slice(2) : header;
+  return value.length >= 2 && value.startsWith('"') && value.endsWith('"')
+    ? value.slice(1, -1)
+    : value;
+}
+
 async function tokenHash(token) {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
   return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
@@ -147,7 +161,7 @@ const routes = {
     if (request.method === 'GET') {
       const stored = await env.RELAY.get(key, { type: 'json' });
       if (!stored) return json({}, headers, 404);
-      if (request.headers.get('If-None-Match') === String(stored.version)) {
+      if (validatorVersion(request.headers.get('If-None-Match')) === String(stored.version)) {
         return new Response(null, {
           status: 304,
           headers: { ...headers, ETag: String(stored.version) },
