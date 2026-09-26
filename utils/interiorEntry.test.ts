@@ -5,6 +5,7 @@ import { interiorArea } from '../data/interiorAreas';
 import { ChunkContentService } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
 import { chunkForPlace } from './chunkLocations';
+import { evaluateEntityAccess } from './entityAccess';
 import { interiorEntry, type InteriorContext, type InteriorRecord } from './interiorEntry';
 
 const service = new ChunkContentService();
@@ -105,6 +106,21 @@ describe('interiorEntry', () => {
     const keldagrim: InteriorRecord = { key: '1,1', name: 'Keldagrim', entrances: [] };
     expect(interiorEntry(keldagrim, context(run({})))).toBe('LOCKED');
     expect(interiorEntry(keldagrim, context(run({ regions: ['Keldagrim'] })))).toBe('UNKNOWN');
+  });
+});
+
+describe("the app's own content checks", () => {
+  it('agree with the entry for the interior the content is in', () => {
+    // TzHaar-Ket live in Mor Ul Rek's outer area, 39,80, entered from Musa Point's 44,49.
+    const monster = (unlocks: UnlockState) =>
+      evaluateEntityAccess('TzHaar-Ket', 'monster', { cx: 44, cy: 49, sourceId: '10064' }, unlocks, 'vanilla', service);
+    const outer = records.get('39,80')!;
+    const karamja = run({ regions: ['Musa Point'] });
+    expect(monster(karamja)).toEqual({ status: 'LOCKED', reasons: ['Unlock Mor Ul Rek (TzHaar City)'] });
+    expect(interiorEntry(outer, context(karamja))).toBe('LOCKED');
+    const city = run({ regions: ['Musa Point', 'Mor Ul Rek (TzHaar City)'] });
+    expect(monster(city).status).toBe('ALLOWED');
+    expect(interiorEntry(outer, context(city))).toBe('ALLOWED');
   });
 });
 

@@ -8,8 +8,7 @@ import { compileRawRequirements, evaluateRouteGates } from './questRoutes/accoun
 import type { RawRouteRequirement } from './questRoutes/model';
 import bankRegistry from '../data/sources/bank-locations.json';
 import { getActivityReq } from '../data/activityRequirements';
-import { REGIONS_LIST } from '../data/items';
-import { canonicalAreaName } from '../data/areaMapPolicy';
+import { interiorArea } from '../data/interiorAreas';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { isAreaReachable } from './reachability';
 
@@ -22,9 +21,6 @@ export interface EntityAccessSource {
   entityAccessOptions?(name: string, kind: EntityKind, cx: number, cy: number, sourceId?: string): Array<{ requirements: RawRouteRequirement[]; area?: string }>;
 }
 
-// The source exports the Blast Furnace separately, but it is inside the
-// independently rolled Keldagrim area (see the reviewed bank registry).
-const INTERIOR_AREA_OWNERS: Record<string, string> = { 'Blast Furnace': 'Keldagrim' };
 
 /** All simultaneous gates must pass; a known blocker outranks uncertainty. */
 function combineAccess(...results: EntityAccessResult[]): EntityAccessResult {
@@ -145,11 +141,10 @@ function evaluateSourceRequirements(
     ...source.chunkEntryRequirements(coord.cx, coord.cy).map(raw => ({ raw, origin: 'CHUNK_ENTRY' as const })),
   ]]).map(requirements => ({ requirements, area: undefined }));
   return bestAccess(options.map(({ requirements, area }): EntityAccessResult => {
-    const canonicalArea = area ? canonicalAreaName(INTERIOR_AREA_OWNERS[area] ?? area) : undefined;
+    const canonicalArea = area ? interiorArea(area) : undefined;
     // Interior source names are evidence for independently rolled Fate areas,
     // not a reason to invent an unlock for every named cave or quest instance.
-    if (enforceArea && canonicalArea && REGIONS_LIST.includes(canonicalArea)
-      && !isAreaReachable(canonicalArea, unlocks, mode)) {
+    if (enforceArea && canonicalArea && !isAreaReachable(canonicalArea, unlocks, mode)) {
       return { status: 'LOCKED', reasons: [`Unlock ${canonicalArea}`] };
     }
     const result = evaluateRouteGates(compileRawRequirements([...requirements, ...(service?.requirements ?? []).map(raw => ({ raw, origin: 'ENTITY' as const }))]), unlocks);
