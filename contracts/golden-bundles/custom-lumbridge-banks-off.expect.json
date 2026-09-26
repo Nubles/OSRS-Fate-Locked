@@ -1,5 +1,5 @@
 {
- "schema": 1,
+ "schema": 2,
  "id": "custom-lumbridge-banks-off",
  "covers": "Custom Lumbridge-only start with bank locks off",
  "gameModeId": "custom",

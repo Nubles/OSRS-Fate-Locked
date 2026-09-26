@@ -1,5 +1,5 @@
 {
- "schema": 1,
+ "schema": 2,
  "exportedAt": "2026-09-25T12:00:00.000Z",
  "chunkContentDataVersion": 14,
  "equipmentCatalogue": "equipment-catalogue.294c0a5ab539ea503cb22f0fafe1cb4521049724.json",
@@ -43,31 +43,49 @@
   {
    "id": "custom-none-banks-on",
    "covers": "Custom with no free areas and bank locks on"
+  },
+  {
+   "id": "chunked-sailing",
+   "covers": "Chunked with Sailing, so the frontier reaches land across the sea"
+  },
+  {
+   "id": "vanilla-sailing",
+   "covers": "Sailing with Pandemonium done, so every ocean chunk opens"
+  },
+  {
+   "id": "vanilla-interiors",
+   "covers": "interiors behind open and locked entrances and areas, with Slayer levels so masters differ"
   }
  ],
  "files": {
-  "accounts.json": "53ba90ce5abc93dca6a903c63bdb579051bcf4630c51863ee8cdf8630c1b16ca",
+  "accounts.json": "499612eef58aecc215c9aeff1272bbc774c6b0111239962d7e67f7d53131e921",
   "bundle-contract.json": "96b44683015979336c615c20fdd678a01b05ac7a006a87a2009d3b4258417ebf",
-  "cases.json": "5b370476f4b0e0f46d60d941be9f858ceab2979b5fba35f0b1b4d5f887f1ccad",
+  "cases.json": "d355c8401a789cd1d8764466a1d2190f484f9667f46c11d74bb6af894761d7bf",
   "chunked-fresh.bundle.json.gz": "be72a3d5a1e765f15041fab0ec8e12cdd82a6b0bb1f8b55a9defdd0a2f0a5d9f",
-  "chunked-fresh.expect.json": "0adcb0f167d27ba8f081790c376c6daba988e7cf057f9f50934b338113375719",
+  "chunked-fresh.expect.json": "68b7ca13e5679a96e4f1453fc678f4e093964d6eacd1222e2c5d65081f6813bd",
+  "chunked-sailing.bundle.json.gz": "c8c0343238240b4257566aefcc50eb69faea497b00bb035b76912d3f19ca0245",
+  "chunked-sailing.expect.json": "e8ab12b43406aa6c1ba97ac816c905420a826fd66cc72dd811b11a19bdf3ef97",
   "chunked-walk.bundle.json.gz": "b4271d44d0173667c8eca8051f0c5cad10c21216125966bc93388757160d4760",
-  "chunked-walk.expect.json": "ea1ada80383263d27bbf6addba5231267b071a4572d5c5b819383bdc700a625b",
+  "chunked-walk.expect.json": "23fa39617f55cad338915aed665617f29cb71baa86e8e5477465266d9fa03e1c",
   "custom-lumbridge-banks-off.bundle.json.gz": "8c5108b611e9cf0ba252297e2d46be9fc9055617b9487379f74f0c4ce56eb9ce",
-  "custom-lumbridge-banks-off.expect.json": "df2ffa1a0055f83bdc9b428d73f3cd56f7d0b4885144c0fbb9ef332bec70e863",
+  "custom-lumbridge-banks-off.expect.json": "68e17082e27931af77900af588e86d181b1412fd18cc8b66f15e22d7869a0172",
   "custom-none-banks-on.bundle.json.gz": "5ccd0f07b5a816806ce36032e353f70957ddc7dfbea7565d12d52aaa6f6792cd",
-  "custom-none-banks-on.expect.json": "d7e202a27ec9aab90deffbd4e74067ed5b2e5804e6ede56f3640f98230204144",
+  "custom-none-banks-on.expect.json": "65e22ec1103c57ae1b4b18d281ced6e6d721b6fc25ae40a3a3097afaea70fbf6",
   "vanilla-asgarnia-complete.bundle.json.gz": "a035579c086e0d4399dda8b0549118527450447ce45fd347fe82f147c5cc1503",
-  "vanilla-asgarnia-complete.expect.json": "84da1141fe0d717f4e5d9d2a28adaa0d9139dc46dafdb95e21877e1864e1c58c",
+  "vanilla-asgarnia-complete.expect.json": "f5d0eb4e3eb8eca0850950b41d2573ea9725ece8bac493320cfd932c45652427",
   "vanilla-continent.bundle.json.gz": "d8ce4b0443dae4f811bc205c14c3196887d2640dd12c4a772d843a4b22a8af69",
-  "vanilla-continent.expect.json": "b7d70111b0c44949f1083c4bb220113e930179852eef2ce0ee5a615cfb957c67",
+  "vanilla-continent.expect.json": "01212d8903fed79b4d3a8113542f37bb1a90211ffcdfb1d3f4a44f07f3cb9fac",
   "vanilla-fresh.bundle.json.gz": "83ba84f876febd6fb7b832e273b776cfbc07edfa4ada2498906a81517cc165bd",
-  "vanilla-fresh.expect.json": "4a132539cdf90e81a4b01ad055b0ad53e9d6c18d8a2c2a86a040ab23d4dce95f",
+  "vanilla-fresh.expect.json": "7815e923dbd19d09bbc8782e958871057c93e85af4267a567e0858ff8a4f7edf",
+  "vanilla-interiors.bundle.json.gz": "9facb1dc9f3e0955da547de316ef95a216746dae8171fa46c5b0494e267527f1",
+  "vanilla-interiors.expect.json": "ef1f248ca4f1b195057726087a1e3266d46e6befc2c01fdfec347671e004ac7c",
   "vanilla-mid.bundle.json.gz": "53e2f877a60e80b12192ef7b14feb44d73a9a7294ce82c105a376720c454bce0",
-  "vanilla-mid.expect.json": "b3361cbda7dcb05aaff7e869b747691e234a8ced905bcea0428a5e6d0abcd7c9",
+  "vanilla-mid.expect.json": "78f4be814e08430a42f226fab35edb7513c8b378ce42097ec83c226e04d000a6",
+  "vanilla-sailing.bundle.json.gz": "81106d20ac04b2f631b6848cde360ea3f6ed745ab047bf14ddf6cc3c3e5b66d7",
+  "vanilla-sailing.expect.json": "631535d80498998c896c8dc36bf72f33107c0aa8a383fea599796e133a8e8861",
   "vanilla-unbound.bundle.json.gz": "a0e8f295d2f5bd19a152b87b203e3e0b3b1828d73f706fc9bdd464fcf8683183",
-  "vanilla-unbound.expect.json": "a45539ba789db10f68f445cfc88cde9b3a1a8099c59f41a264b35b994d2c2592",
+  "vanilla-unbound.expect.json": "ef646a3a0a08d59f9fb274ddd5d082690e868b5efebbbc5600c14dd0d45355cd",
   "xtreme-varrock.bundle.json.gz": "124f988fbc46adbb24e4b123cc9be79583b040a611b2d97d729a3ee41c109026",
-  "xtreme-varrock.expect.json": "8af60e01dd340eab4fddc846926002edf1e4eef1acea82ea71240a4ef3986426"
+  "xtreme-varrock.expect.json": "5f0944ba10bd3d5227d008dc0e691fbf6c4021de7f63541b44bbdcfdea1a47c1"
  }
 }

@@ -38,7 +38,7 @@ import type { UnlockState } from '../types';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'contracts', 'golden-bundles');
 const WRITE = process.env.FATE_GOLDENS === 'write';
-const SCHEMA = 1;
+const SCHEMA = 2;
 const EXPORTED_AT = new Date('2026-09-25T12:00:00.000Z');
 const SIZE_BUDGET_BYTES = 3.5 * 1024 * 1024;
 /** Headroom under the largest request the relay accepts, for every run. */
@@ -58,6 +58,12 @@ interface Scenario {
   chunks?: string[];
   banks?: string[];
   equipment?: Record<string, number>;
+  quests?: string[];
+  /** Skill tiers and levels on top of a fresh run's. */
+  skills?: Record<string, number>;
+  levels?: Record<string, number>;
+  /** Sailing unlocked with Pandemonium done, which opens the ocean. */
+  sailing?: boolean;
 }
 
 const customRules = (startArea: 'misthalin' | 'lumbridge' | 'none', bankLocks: boolean): GameModeRules =>
@@ -121,6 +127,33 @@ const SCENARIOS: Scenario[] = [
     regions: ['Falador'],
     banks: bankIds(AL_KHARID_BANK),
   },
+  {
+    id: 'chunked-sailing',
+    covers: 'Chunked with Sailing, so the frontier reaches land across the sea',
+    mode: 'chunked',
+    account: ACCOUNT,
+    chunks: ['49,50', '49,49'],
+    sailing: true,
+  },
+  {
+    id: 'vanilla-sailing',
+    covers: 'Sailing with Pandemonium done, so every ocean chunk opens',
+    mode: 'vanilla',
+    account: ACCOUNT,
+    regions: ['Falador', 'Port Sarim', 'Keldagrim'],
+    sailing: true,
+  },
+  {
+    id: 'vanilla-interiors',
+    covers: 'interiors behind open and locked entrances and areas, with Slayer levels so masters differ',
+    mode: 'vanilla',
+    account: ACCOUNT,
+    // Keldagrim with its entrance and quest; Musa Point without the TzHaar city.
+    regions: ['Keldagrim', 'Mountain Camp', 'Port Sarim', 'Musa Point', 'Taverley', 'Burthorpe', 'Zanaris'],
+    quests: ['The Giant Dwarf', 'Lost City', 'Priest in Peril'],
+    skills: { Slayer: 6, Attack: 6, Strength: 6, Defence: 6, Hitpoints: 6, Ranged: 6, Magic: 6, Prayer: 5 },
+    levels: { Slayer: 55, Attack: 60, Strength: 60, Defence: 60, Hitpoints: 60, Ranged: 60, Magic: 60, Prayer: 43 },
+  },
 ];
 
 /** Bound account, logged-in name, and whether the app treats them as one. */
@@ -165,12 +198,18 @@ const coordsOf = (key: string) => {
 };
 
 function unlocksFor(fresh: UnlockState, scenario: Scenario): UnlockState {
+  const sailing = scenario.sailing
+    ? { skills: { Sailing: 1 }, levels: { Sailing: 1 }, quests: ['Pandemonium'] }
+    : { skills: {}, levels: {}, quests: [] };
   return {
     ...structuredClone(fresh),
     regions: scenario.regions ?? [],
     chunks: scenario.chunks ?? [],
     banks: scenario.banks ?? [],
     equipment: { ...fresh.equipment, ...scenario.equipment },
+    quests: [...fresh.quests, ...(scenario.quests ?? []), ...sailing.quests],
+    skills: { ...fresh.skills, ...scenario.skills, ...sailing.skills },
+    levels: { ...fresh.levels, ...scenario.levels, ...sailing.levels },
   };
 }
 
@@ -230,7 +269,7 @@ async function generate(scenario: Scenario, fresh: UnlockState): Promise<Generat
     return [bank.id, isBankReachable(Math.floor(id / 256), id % 256, unlocks, scenario.mode, scenario.custom)];
   }));
   const frontier = scenario.mode === 'chunked'
-    ? getChunkFrontier(scenario.chunks ?? []).map(chunkKey).sort(byCodeUnit)
+    ? getChunkFrontier(scenario.chunks ?? [], unlocks).map(chunkKey).sort(byCodeUnit)
     : undefined;
 
   return {
@@ -576,6 +615,26 @@ describe('golden bundles', () => {
     expect(kinds.includes(contract.bankRows.targetKind), 'no bank rows to check').toBe(true);
   });
 
+  it("carry the same answers in the bundle as they pin", () => {
+    // A bundle field must not drift from the answer the golden pins for it.
+    for (const scenario of SCENARIOS) {
+      const { bundle, expect: answers } = results.get(scenario.id)!;
+      const pinned = answers as { chunks: Record<string, boolean>; banks: Record<string, boolean> };
+      const rules = bundle.rules as { chunks: Record<string, { entry: string; categories: Record<string, { name: string; status: string }[]> }> };
+      const entries = Object.entries(rules.chunks)
+        .filter(([key, snapshot]) => key in pinned.chunks && (snapshot.entry !== 'LOCKED') !== pinned.chunks[key])
+        .map(([key, snapshot]) => `${key} entry ${snapshot.entry}, pinned ${pinned.chunks[key] ? 'unlocked' : 'locked'}`);
+      expect(entries.slice(0, 10), `${scenario.id}: chunk entries`).toEqual([]);
+      // A bank the run hasn't unlocked can't be used, whatever else holds.
+      const banks = Object.entries(pinned.banks).filter(([id, unlocked]) => {
+        const at = `${Math.floor(Number(id) / 256)},${Number(id) % 256}`;
+        const row = rules.chunks[at]?.categories.BANKS?.find((one) => one.name === BANKS.find((bank) => bank.id === id)?.name);
+        return !unlocked && row !== undefined && row.status !== 'LOCKED';
+      }).map(([id]) => id);
+      expect(banks, `${scenario.id}: banks`).toEqual([]);
+    }
+  });
+
   it('cover the land rules the plugin depends on', () => {
     // Guards against a generator bug that would quietly pin nothing.
     const fresh = results.get('vanilla-fresh')!.expect as { chunks: Record<string, boolean>; areas: Record<string, boolean> };
@@ -586,5 +645,19 @@ describe('golden bundles', () => {
     expect(walk.chunks['46,52']).toBe(true);
     expect(walk.chunks['45,52']).toBe(false);
     expect(walk.frontier.length).toBeGreaterThan(0);
+  });
+
+  it('cover what their new runs say they do', () => {
+    type Answers = { chunks: Record<string, boolean>; areas: Record<string, boolean>; frontier?: string[] };
+    const answers = (id: string) => results.get(id)!.expect as Answers;
+    // Sailing opens every ocean chunk.
+    expect([...OCEAN_CHUNK_KEYS].filter((key) => !answers('vanilla-sailing').chunks[key])).toEqual([]);
+    expect([...OCEAN_CHUNK_KEYS].some((key) => answers('vanilla-mid').chunks[key])).toBe(false);
+    // Land across the sea from the coast joins the Chunked frontier.
+    expect(answers('chunked-sailing').frontier).toEqual(expect.arrayContaining(['49,47', '50,48']));
+    // Keldagrim with its entrance; Mor Ul Rek's entrance open but the city not rolled.
+    const interiors = answers('vanilla-interiors');
+    expect([interiors.areas.Keldagrim, interiors.areas['Mountain Camp'], interiors.areas['Musa Point']]).toEqual([true, true, true]);
+    expect(interiors.areas['Mor Ul Rek (TzHaar City)']).toBe(false);
   });
 });
