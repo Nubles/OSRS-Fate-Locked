@@ -20,7 +20,21 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-26-diary-travel');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-26-fate-analytics');
+  });
+
+  it('announces the Fate Analytics redesign and its chart fixes', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-26-fate-analytics');
+    expect(release?.title).toBe('Fate Analytics Redesigned');
+    expect(release?.sections.changed).toEqual([
+      expect.stringMatching(/luck in plain words.*luck meter/),
+      expect.stringMatching(/plain title and a one-line takeaway/),
+      expect.stringMatching(/Activity Breakdown fits on screen.*Copy summary/),
+    ]);
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Patterned bars and donut slices/),
+      expect.stringMatching(/no longer draws a thick gold band/),
+    ]);
   });
 
   it('announces that diary tasks on an owned island need a way there, and minigame tasks their minigame', () => {
