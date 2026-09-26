@@ -10,9 +10,12 @@ import {
 } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
 import { runReach } from './chunkEntry';
+import { chunkEntries, rulesPlaces, type RulesPlace } from './chunkEntries';
+import type { InteriorRecord } from './interiorEntry';
 import {
   buildChunkPermissionSnapshot,
   type ChunkPermissionSnapshot,
+  type PermissionStatus,
 } from './chunkPermissionSnapshot';
 import { bankLocksActive } from './reachability';
 import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
@@ -58,6 +61,10 @@ export interface RuneliteRulesManifest {
   equipmentCatalogue?: EquipmentPermissionCoverage;
   detectorPolicies: DetectorPolicy[];
   chunks: Record<string, ChunkPermissionSnapshot>;
+  /** Stage 2: every land, ocean and interior chunk's entry. Absent when the chunk data didn't load. */
+  chunkEntries?: Record<string, PermissionStatus>;
+  /** Stage 2: what the chunks that aren't land are. Sent with chunkEntries. */
+  places?: Record<string, RulesPlace>;
 }
 
 export interface RulesContentSource extends Partial<EntityAccessSource> {
@@ -67,6 +74,7 @@ export interface RulesContentSource extends Partial<EntityAccessSource> {
   connectGraph(): ConnectGraph;
   shortcuts(): Shortcut[];
   questSections(): Record<string, string[]>;
+  interiorRecords?(): InteriorRecord[];
 }
 
 export interface ItemRuleSource {
@@ -135,6 +143,16 @@ export async function buildRuneliteRulesManifest(
       chunks[snapshot.chunkKey] = snapshot;
     }
   }
+  const interiors = { interiorRecords: () => service.interiorRecords?.() ?? [] };
+  const stage2 = loaded
+    ? {
+      chunkEntries: chunkEntries({
+        ...interiors,
+        chunkEntryRequirements: (cx: number, cy: number) => service.chunkEntryRequirements?.(cx, cy) ?? [],
+      }, input.unlocks, input.run.gameModeId, reachable),
+      places: rulesPlaces(interiors),
+    }
+    : {};
 
   const unlocks = input.unlocks;
   return {
@@ -175,5 +193,6 @@ export async function buildRuneliteRulesManifest(
       ...policy, eventTypes: [...policy.eventTypes],
     })),
     chunks,
+    ...stage2,
   };
 }

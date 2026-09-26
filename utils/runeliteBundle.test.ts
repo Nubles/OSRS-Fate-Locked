@@ -272,6 +272,9 @@ describe('buildBundlePayload - failed rules data', () => {
       const degraded = JSON.parse((await buildFreshPayload(initialState.unlocks, run)).json);
       expect(degraded.rules.chunks).toEqual({});
       expect(degraded.rules.itemRules).toEqual({});
+      // No entries or places decided without the chunk data.
+      expect(degraded.rules).not.toHaveProperty('chunkEntries');
+      expect(degraded.rules).not.toHaveProperty('places');
 
       // Back online, but equipment data is inside its failure cool-down.
       online = true;
@@ -282,6 +285,8 @@ describe('buildBundlePayload - failed rules data', () => {
         requireRulesData: true, retryFailedLoads: true,
       })).json);
       expect(Object.keys(full.rules.chunks).length).toBeGreaterThan(100);
+      expect(Object.keys(full.rules.chunkEntries).length).toBeGreaterThan(Object.keys(full.rules.chunks).length);
+      expect(Object.keys(full.rules.places).length).toBeGreaterThan(500);
       expect(full.rules.itemRules['1205']).toEqual({ tier: 1, slot: 'Weapon' });
     } finally {
       vi.unstubAllGlobals();

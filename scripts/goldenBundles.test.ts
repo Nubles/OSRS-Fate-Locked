@@ -21,11 +21,13 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { buildBundlePayload } from '../utils/runeliteExport';
 import { chunkUnlocked } from '../utils/chunkLocations';
 import { isAreaReachable, isBankReachable } from '../utils/reachability';
-import { chunkKey, getChunkFrontier } from '../utils/chunkAdjacency';
+import { ALL_CHUNK_KEYS, chunkKey, getChunkFrontier } from '../utils/chunkAdjacency';
 import { setStartArea } from '../utils/freeAreas';
 import { getGameMode, resolveModeRules, type GameModeRules } from '../config/gameModes';
 import { normalizeAccountName } from '../services/fateEventProtocol';
-import { CHUNK_CONTENT_DATA_VERSION } from '../services/ChunkContentService';
+import { chunkContentService, CHUNK_CONTENT_DATA_VERSION } from '../services/ChunkContentService';
+import { runReach } from '../utils/chunkEntry';
+import { chunkEntries, rulesPlaces } from '../utils/chunkEntries';
 import { EQUIPMENT_CATALOGUE } from '../data/equipmentCatalogue';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
@@ -271,6 +273,9 @@ async function generate(scenario: Scenario, fresh: UnlockState): Promise<Generat
   const frontier = scenario.mode === 'chunked'
     ? getChunkFrontier(scenario.chunks ?? [], unlocks).map(chunkKey).sort(byCodeUnit)
     : undefined;
+  // Land, ocean and interiors, with the run's reach, as the app decides them.
+  const entries = chunkEntries(chunkContentService, unlocks, scenario.mode,
+    runReach(chunkContentService, unlocks, scenario.mode));
 
   return {
     bundle,
@@ -286,6 +291,7 @@ async function generate(scenario: Scenario, fresh: UnlockState): Promise<Generat
       areas,
       banks,
       ...(frontier ? { frontier } : {}),
+      entries,
     },
   };
 }
@@ -463,6 +469,8 @@ function contractBreaches(bundle: Record<string, unknown>, contract: BundleContr
 }
 
 const results = new Map<string, Generated>();
+/** What the chunks that aren't land are: the same for every run, so pinned once. */
+let placesAnswer: { schema: number; places: Record<string, unknown> };
 
 beforeAll(async () => {
   const chunkContent = JSON.parse(readFileSync(join(ROOT, 'public', 'chunk-content.json'), 'utf8'));
@@ -479,6 +487,7 @@ beforeAll(async () => {
   const { createFreshState } = await import('../context/GameContext');
   const fresh = createFreshState().unlocks;
   for (const scenario of SCENARIOS) results.set(scenario.id, await generate(scenario, fresh));
+  placesAnswer = { schema: SCHEMA, places: rulesPlaces(chunkContentService) };
 }, 300_000);
 
 afterAll(() => {
@@ -504,6 +513,7 @@ describe('golden bundles', () => {
     }
     files['accounts.json'] = accountCases();
     files['cases.json'] = bundleCases();
+    files['places.json'] = placesAnswer;
 
     for (const [name, content] of Object.entries(files)) {
       const file = join(OUT, name);
@@ -632,6 +642,15 @@ describe('golden bundles', () => {
         return !unlocked && row !== undefined && row.status !== 'LOCKED';
       }).map(([id]) => id);
       expect(banks, `${scenario.id}: banks`).toEqual([]);
+
+      const stage2 = bundle.rules as { chunkEntries: Record<string, string>; places: Record<string, unknown> };
+      expect(sameContent(stage2.chunkEntries, (answers as { entries: unknown }).entries), `${scenario.id}: chunkEntries`)
+        .toBe(true);
+      const snapshots = Object.entries(stage2.chunkEntries)
+        .filter(([key, entry]) => key in rules.chunks && rules.chunks[key].entry !== entry)
+        .map(([key, entry]) => `${key} ${entry}, snapshot ${rules.chunks[key].entry}`);
+      expect(snapshots.slice(0, 10), `${scenario.id}: chunkEntries against rules.chunks`).toEqual([]);
+      expect(sameContent(stage2.places, placesAnswer.places), `${scenario.id}: places`).toBe(true);
     }
   });
 
@@ -659,5 +678,22 @@ describe('golden bundles', () => {
     const interiors = answers('vanilla-interiors');
     expect([interiors.areas.Keldagrim, interiors.areas['Mountain Camp'], interiors.areas['Musa Point']]).toEqual([true, true, true]);
     expect(interiors.areas['Mor Ul Rek (TzHaar City)']).toBe(false);
+  });
+
+  it('give an entry to every land, ocean and interior chunk, and a place to every one not on land', () => {
+    const entries = (id: string) => (results.get(id)!.expect as { entries: Record<string, string> }).entries;
+    const interiors = chunkContentService.interiorRecords().map((record) => record.key);
+    const kinds = [ALL_CHUNK_KEYS, [...OCEAN_CHUNK_KEYS], interiors];
+    expect(new Set(kinds.flat()).size, 'land, ocean and interiors share no chunk').toBe(kinds.flat().length);
+    for (const scenario of SCENARIOS) {
+      expect(Object.keys(entries(scenario.id)).sort(), scenario.id).toEqual(kinds.flat().sort());
+    }
+    expect(Object.keys(placesAnswer.places).sort()).toEqual([...OCEAN_CHUNK_KEYS, ...interiors].sort());
+    // Keldagrim: behind its locked entrance, then open; Mor Ul Rek: its area not rolled.
+    expect(entries('vanilla-mid')['44,159']).toBe('LOCKED');
+    expect(entries('vanilla-interiors')['44,159']).toBe('ALLOWED');
+    expect(entries('vanilla-interiors')['39,80']).toBe('LOCKED');
+    expect(new Set(interiors.map((key) => entries('vanilla-interiors')[key])))
+      .toEqual(new Set(['ALLOWED', 'NOT_READY', 'UNKNOWN', 'LOCKED']));
   });
 });
