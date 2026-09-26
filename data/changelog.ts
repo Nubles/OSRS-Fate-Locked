@@ -19,6 +19,22 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-26-fate-analytics',
+    title: 'Fate Analytics Redesigned',
+    date: '2026-09-26',
+    sections: {
+      changed: [
+        'Fate Analytics now opens with your luck in plain words: a verdict, how many wins you are ahead of or behind the odds, a luck meter, and how your luck compares with other runs on the same odds.',
+        'Every chart has a plain title and a one-line takeaway, the dice fairness charts sit in their own section, and the activity calendar is a week-by-week heatmap.',
+        'The Activity Breakdown fits on screen, with a win-rate bar against the expected rate and its technical columns one toggle away. The Fate Report has a Copy summary button for sharing.',
+      ],
+      fixed: [
+        'Patterned bars and donut slices in Fate Analytics now show. The Keys earned chart and the outcome donut used to draw nothing for them.',
+        'The Luck over time chart no longer draws a thick gold band when no roll ended in pity.',
+      ],
+    },
+  },
+  {
     id: '2026-09-26-diary-travel',
     title: 'Diary Tasks Need a Way There',
     date: '2026-09-26',

@@ -124,19 +124,22 @@ describe('StatsModal shared analytics shell', () => {
     const { host } = await mount(<StatsModal onClose={() => undefined} />);
     const dashboard = host.querySelector('#fate-panel-dashboard')!;
 
-    expect(dashboard.textContent).toContain(`Roll attempts${expected.summary.attempts}`);
-    expect(dashboard.textContent).toContain(`Genuine RNG wins${expected.summary.genuineWins}`);
-    expect(dashboard.textContent).toContain(`Expected wins — scoreable cohort${expected.summary.expectedWins.toFixed(2)}`);
-    expect(dashboard.textContent).toContain(`${expected.summary.scoreableWins}/${expected.summary.scoreableAttempts} scoreable wins`);
-    expect(dashboard.textContent).toContain(`Delta ${expected.summary.delta >= 0 ? '+' : ''}${expected.summary.delta.toFixed(2)} scoreable wins`);
-    expect(dashboard.textContent).toContain(`Dry streak${expected.summary.currentDrought}Current · ${expected.summary.longestDrought} longest`);
+    const { summary } = expected;
+    const verdictSentence = `You won ${summary.scoreableWins} of ${summary.scoreableAttempts} rolls with known odds. Fate expected about ${summary.expectedWins.toFixed(1)}`;
+    const misses = (count: number) => `${count} ${count === 1 ? 'miss' : 'misses'}`;
+
+    expect(dashboard.textContent).toContain(`Rolls${summary.attempts}`);
+    expect(dashboard.textContent).toContain(`Wins${summary.genuineWins}`);
+    expect(dashboard.textContent).toContain(verdictSentence);
+    expect(dashboard.textContent).toContain('1 roll with unknown odds is counted but not judged.');
+    expect(dashboard.textContent).toContain(`Dry streak${summary.currentDrought}misses in a row · longest ${summary.longestDrought}`);
 
     await click(host.querySelector('[role="tab"][aria-controls="fate-panel-fate"]')!);
     const report = host.querySelector('#fate-panel-fate')!;
-    expect(report.textContent).toContain(`Overall: ${expected.summary.attempts} attempts · ${expected.summary.genuineWins} genuine RNG wins`);
-    expect(report.textContent).toContain(`Scoreable cohort: ${expected.summary.scoreableWins}/${expected.summary.scoreableAttempts} wins · ${expected.summary.expectedWins.toFixed(2)} expected · ${expected.summary.delta >= 0 ? '+' : ''}${expected.summary.delta.toFixed(2)} delta`);
-    expect(report.textContent).toContain(`Current drought${expected.summary.currentDrought}`);
-    expect(report.textContent).toContain(`Longest drought${expected.summary.longestDrought}`);
+    expect(report.textContent).toContain(verdictSentence);
+    expect(report.textContent).toContain('1 roll with unknown odds is counted but not judged.');
+    expect(report.textContent).toContain(`Current drought${misses(summary.currentDrought)}`);
+    expect(report.textContent).toContain(`Longest drought${misses(summary.longestDrought)}`);
     expect(expected.summary.genuineWins).toBe(expected.summary.scoreableWins + 1);
     expect(expected.summary.delta).toBeCloseTo(expected.summary.scoreableWins - expected.summary.expectedWins);
   });
@@ -161,12 +164,13 @@ describe('StatsModal shared analytics shell', () => {
       source: 'Imported reward', threshold: 20, rollValue: 2, message: 'Unverified reward.',
     }];
     const populated = await mount(<StatsModal onClose={() => undefined} />);
-    expect(populated.host.textContent).toContain('Legacy estimates included');
-    expect(populated.host.textContent).toContain('Invalid timestamps: 1');
-    expect(populated.host.textContent).toContain('Unscoreable: 1');
-    expect(populated.host.textContent).toContain('Roll attempts3');
-    expect(populated.host.textContent).toContain('Confirmed Standard Keys0');
-    expect(populated.host.textContent).toContain('0/2 reward events exact');
+    expect(populated.host.textContent).toContain('Includes estimated odds from older saves');
+    expect(populated.host.textContent).toContain('Invalid dates1');
+    expect(populated.host.textContent).toContain('Unknown odds1');
+    expect(populated.host.textContent).toContain('1 roll has unknown odds and is not judged.');
+    expect(populated.host.textContent).toContain('Rolls3');
+    expect(populated.host.textContent).toContain('Standard Keys0');
+    expect(populated.host.textContent).toContain('0/2 rewards verified');
     expect(populated.host.textContent).not.toContain('3 Standard Keys');
 
     mocks.game.history = [{
@@ -175,9 +179,10 @@ describe('StatsModal shared analytics shell', () => {
       meta: { successProbability: 1, standardKeysAwarded: 1, rewardKind: 'normal', drawResolution: 1000, luckApplied: false },
     }];
     const zeroVariance = await mount(<StatsModal onClose={() => undefined} />);
-    expect(zeroVariance.host.textContent).toContain('Luck — scoreable cohort—');
-    expect(zeroVariance.host.textContent).not.toMatch(/Blessed|Forsaken/);
-    expect(zeroVariance.host.querySelector<HTMLInputElement>('input[aria-label="Exact only"]')?.disabled).toBe(false);
+    expect(zeroVariance.host.textContent).toContain('No verdict yet');
+    expect(zeroVariance.host.textContent).toContain('—luck score');
+    expect(zeroVariance.host.textContent).not.toMatch(/Blessed by Fate|Forsaken by Fate/);
+    expect(zeroVariance.host.querySelector<HTMLInputElement>('input[aria-label="Exact odds only"]')?.disabled).toBe(false);
   });
 
   it('opens on Dashboard and separates RNG wins from pity', async () => {
@@ -185,8 +190,8 @@ describe('StatsModal shared analytics shell', () => {
     const { host } = await mount(<StatsModal onClose={() => undefined} />);
 
     expect(host.querySelector('[aria-selected="true"]')?.textContent).toContain('Dashboard');
-    expect(host.textContent).toContain('Genuine RNG wins');
-    expect(host.textContent).toContain('Pity interventions');
+    expect(host.textContent).toContain('Wins1');
+    expect(host.textContent).toContain('Pity keys1');
     expect(host.querySelector('[data-testid="dashboard-result"]')?.textContent).toBe('3/1/1');
   });
 
@@ -277,7 +282,7 @@ describe('StatsModal shared analytics shell', () => {
   it('maps Exact only inversely and leaves a checked control enabled', async () => {
     mocks.game.history = baseHistory();
     const { host } = await mount(<StatsModal onClose={() => undefined} />);
-    const exactOnly = host.querySelector<HTMLInputElement>('input[aria-label="Exact only"]')!;
+    const exactOnly = host.querySelector<HTMLInputElement>('input[aria-label="Exact odds only"]')!;
 
     expect(host.querySelector('[data-testid="dashboard-scoreable"]')?.textContent).toBe('3');
     await change(exactOnly);
@@ -293,7 +298,7 @@ describe('StatsModal shared analytics shell', () => {
     const { host } = await mount(<StatsModal onClose={() => undefined} />);
     await click(host.querySelector('[role="tab"][aria-controls="fate-panel-breakdown"]')!);
     const expectedHeader = [...host.querySelectorAll('th')]
-      .find(header => header.textContent?.includes('Expected wins'))!;
+      .find(header => header.textContent?.trim() === 'Luck')!;
     const button = expectedHeader.querySelector('button')!;
 
     expect(expectedHeader.getAttribute('aria-sort')).toBe('none');
@@ -336,20 +341,22 @@ describe('StatsModal shared analytics shell', () => {
     expect(tabs[0].getAttribute('aria-selected')).toBe('true');
   });
 
-  it('labels scoreable-only source and Fate category statistics explicitly', async () => {
+  it('says expectation uses rolls with known odds and keeps the technical columns one click away', async () => {
     mocks.game.history = baseHistory();
     const { host } = await mount(<StatsModal onClose={() => undefined} />);
 
     await click(host.querySelector('[role="tab"][aria-controls="fate-panel-breakdown"]')!);
     const breakdown = host.querySelector('#fate-panel-breakdown')!;
-    expect(breakdown.textContent).toContain('Z-score (scoreable)');
-    expect(breakdown.textContent).toContain('Actual rate (scoreable)');
-    expect(breakdown.textContent).toContain('Expected rate (scoreable)');
+    expect(breakdown.textContent).toContain('counting rolls with known odds');
+    expect(breakdown.textContent).not.toContain('Z-score');
+    await click([...breakdown.querySelectorAll('label')].find(label => label.textContent?.includes('Show technical columns'))!.querySelector('input')!);
+    for (const heading of ['Expected wins', 'Z-score', 'Expected rate', 'Standard Keys', 'Known odds']) {
+      expect(breakdown.querySelector('thead')?.textContent).toContain(heading);
+    }
 
     await click(host.querySelector('[role="tab"][aria-controls="fate-panel-fate"]')!);
     const fate = host.querySelector('#fate-panel-fate')!;
-    expect(fate.textContent).toContain('Expected (scoreable)');
-    expect(fate.textContent).toContain('Delta (scoreable)');
+    expect(fate.textContent).toContain('Expected and luck use rolls with known odds');
   });
 
   it('focuses inside, traps focus, closes on Escape, and restores the opener', async () => {
