@@ -651,6 +651,9 @@ describe('golden bundles', () => {
         .map(([key, entry]) => `${key} ${entry}, snapshot ${rules.chunks[key].entry}`);
       expect(snapshots.slice(0, 10), `${scenario.id}: chunkEntries against rules.chunks`).toEqual([]);
       expect(sameContent(stage2.places, placesAnswer.places), `${scenario.id}: places`).toBe(true);
+      // Chunked runs only.
+      expect(sameContent((bundle.rules as { frontier?: string[] }).frontier, (answers as { frontier?: string[] }).frontier),
+        `${scenario.id}: frontier`).toBe(true);
     }
   });
 

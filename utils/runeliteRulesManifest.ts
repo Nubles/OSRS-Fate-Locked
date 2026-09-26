@@ -10,6 +10,7 @@ import {
 } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
 import { runReach } from './chunkEntry';
+import { chunkKey, getChunkFrontier } from './chunkAdjacency';
 import { chunkEntries, rulesPlaces, type RulesPlace } from './chunkEntries';
 import type { InteriorRecord } from './interiorEntry';
 import {
@@ -65,6 +66,8 @@ export interface RuneliteRulesManifest {
   chunkEntries?: Record<string, PermissionStatus>;
   /** Stage 2: what the chunks that aren't land are. Sent with chunkEntries. */
   places?: Record<string, RulesPlace>;
+  /** Stage 2, Chunked runs: the chunks the run may roll next. */
+  frontier?: string[];
 }
 
 export interface RulesContentSource extends Partial<EntityAccessSource> {
@@ -153,6 +156,14 @@ export async function buildRuneliteRulesManifest(
       places: rulesPlaces(interiors),
     }
     : {};
+  // Needs no chunk data: the land next to the run's chunks, and with Sailing
+  // the land across the sea from its coast, as the map shows it.
+  const chunked = input.run.gameModeId === 'chunked'
+    ? {
+      frontier: getChunkFrontier(input.unlocks.chunks, input.unlocks)
+        .sort((left, right) => left.cx - right.cx || left.cy - right.cy).map(chunkKey),
+    }
+    : {};
 
   const unlocks = input.unlocks;
   return {
@@ -194,5 +205,6 @@ export async function buildRuneliteRulesManifest(
     })),
     chunks,
     ...stage2,
+    ...chunked,
   };
 }

@@ -155,6 +155,31 @@ describe('buildRuneliteRulesManifest', () => {
   });
 });
 
+describe('buildRuneliteRulesManifest - frontier', () => {
+  const build = (gameModeId: string, changes: Partial<typeof initialState.unlocks>) => buildRuneliteRulesManifest({
+    unlocks: { ...structuredClone(initialState.unlocks), ...changes },
+    run: { runId: 'frontier', runRevision: 1, gameModeId },
+    contentService: contentSource,
+    itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+  });
+  const sailor = { skills: { ...initialState.unlocks.skills, Sailing: 1 }, levels: { ...initialState.unlocks.levels, Sailing: 1 }, quests: ['Pandemonium'] };
+
+  it("sends a Chunked run's next chunks, in chunk order", async () => {
+    const manifest = await build('chunked', { regions: [], chunks: ['49,50', '49,49'] });
+    expect(manifest.frontier).toEqual(['48,49', '48,50', '49,51', '50,49', '50,51', '51,50']);
+  });
+
+  it('adds the land its Sailing reaches across the sea', async () => {
+    const manifest = await build('chunked', { regions: [], chunks: ['49,50', '49,49'], ...sailor });
+    expect(manifest.frontier).toEqual(expect.arrayContaining(['49,47', '50,48']));
+    expect(manifest.frontier).toHaveLength(8);
+  });
+
+  it('sends no frontier for other runs', async () => {
+    expect(await build('vanilla', {})).not.toHaveProperty('frontier');
+  });
+});
+
 describe('buildRuneliteRulesManifest - web-only unlock families', () => {
   it('adds housing and storage without changing the unlock fields the plugin reads', async () => {
     // RuneliteRulesManifest.java's Unlocks class. Gson drops every other key,
