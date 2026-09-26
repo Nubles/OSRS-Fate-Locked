@@ -27,6 +27,23 @@ const tierTasksExcept = (tierId: string, id: string) => ALL_DIARY_TASKS
   .filter(row => row.tierId === tierId && row.id !== id)
   .map(row => row.id);
 
+describe('island access for one account state', () => {
+  it('is reused only while nothing a route reads has changed', () => {
+    const seaweed = task('kar_easy_8');
+    const stranded = account({ regions: ['Ship Yard', 'Al Kharid'], quests: ['The Grand Tree'] });
+    expect(evaluateDiaryTaskEligibility(seaweed, stranded, 'vanilla').eligible).toBe(false);
+
+    // A copy sharing the regions list, as each diary tier's copy does.
+    const withGlider = { ...stranded, mobility: ['Gnome Gliders'] };
+    expect(evaluateDiaryTaskEligibility(seaweed, withGlider, 'vanilla').eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(seaweed, stranded, 'vanilla').eligible).toBe(false);
+
+    // A list that grows in place is noticed too.
+    stranded.mobility.push('Gnome Gliders');
+    expect(evaluateDiaryTaskEligibility(seaweed, stranded, 'vanilla').eligible).toBe(true);
+  });
+});
+
 describe('reaching an owned island or enclave for a diary task (Vanilla)', () => {
   it('does not count seaweed as doable when the Ship Yard is the only Karamja area owned', () => {
     const seaweed = task('kar_easy_8');

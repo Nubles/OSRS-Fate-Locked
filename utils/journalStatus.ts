@@ -16,6 +16,7 @@ import { DiaryTier } from '../data/diaryData';
 import { UnlockState } from '../types';
 import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
 import { isAreaReachable } from './reachability';
+import { getFreeAreas } from './freeAreas';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 import { pendingQuestProgress, type QuestProgressRequirement } from '../data/questProgress';
 import { AREA_ENTRY_ROUTES } from '../data/areaAccess';
@@ -424,6 +425,32 @@ const OPEN_ACCESS: AreaAccess = { state: 'open' };
 const NO_AREAS: ReadonlySet<string> = new Set();
 
 /**
+ * Island access worked out once per account state. Tier counts and the
+ * unlock-impact engine check every diary task against the same account, and
+ * resolving an island's routes for each task made them a third slower. Each
+ * tier works on its own copy of the unlocks object, so entries hang off the
+ * regions list, which the copies share. An entry keeps everything else a
+ * route reads, with each list's length in case one grew in place; when any of
+ * it changes, or the start's free areas do, the entry starts afresh.
+ */
+const areaAccessCache = new WeakMap<readonly string[], {
+  inputs: readonly unknown[];
+  byArea: Map<string, AreaAccess>;
+}>();
+
+const areaAccessInputs = (unlocks: UnlockState, gameModeId: string | undefined): readonly unknown[] => {
+  const lists = [
+    unlocks.regions, unlocks.chunks, unlocks.banks, unlocks.mobility, unlocks.arcana, unlocks.merchants,
+    unlocks.minigames, unlocks.quests, unlocks.diaries,
+  ];
+  return [
+    gameModeId, getFreeAreas().join('\n'), (unlocks.cas ?? []).join('\n'),
+    unlocks.skills, unlocks.levels, unlocks.equipment,
+    ...lists, ...lists.map(list => list?.length),
+  ];
+};
+
+/**
  * Can the player get onto an area they own? Islands and enclaves listed in
  * data/areaAccess.ts need one of their routes; any other owned area is
  * reachable, as is everything in Chunked mode, whose chunk reach models
@@ -432,6 +459,31 @@ const NO_AREAS: ReadonlySet<string> = new Set();
  * already being resolved, so a route that loops back never counts.
  */
 const areaAccess = (
+  area: string,
+  unlocks: UnlockState,
+  gameModeId: string | undefined,
+  visited: ReadonlySet<string>,
+): AreaAccess => {
+  if (gameModeId === 'chunked') return OPEN_ACCESS;
+  const canonical = canonicalAreaName(area);
+  if (!AREA_ENTRY_ROUTES[canonical]?.length) return OPEN_ACCESS;
+  // Only a top-level answer is the same for every task that asks.
+  if (visited.size > 0 || !unlocks.regions) return resolveAreaAccess(canonical, unlocks, gameModeId, visited);
+  const inputs = areaAccessInputs(unlocks, gameModeId);
+  let entry = areaAccessCache.get(unlocks.regions);
+  if (!entry || entry.inputs.some((input, index) => input !== inputs[index])) {
+    entry = { inputs, byArea: new Map() };
+    areaAccessCache.set(unlocks.regions, entry);
+  }
+  let access = entry.byArea.get(canonical);
+  if (!access) {
+    access = resolveAreaAccess(canonical, unlocks, gameModeId, visited);
+    entry.byArea.set(canonical, access);
+  }
+  return access;
+};
+
+const resolveAreaAccess = (
   area: string,
   unlocks: UnlockState,
   gameModeId: string | undefined,
