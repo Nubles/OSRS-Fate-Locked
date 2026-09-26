@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import chunkContentJson from '../public/chunk-content.json?raw';
 import { initialState } from '../context/GameContext';
 import { MOBILITY_LIST } from '../data/items';
@@ -372,6 +372,50 @@ describe('buildRuneliteBundle - canonical area names', () => {
       { cx: 33, cy: 50 },
       { cx: 34, cy: 50 },
     ]);
+  });
+});
+
+describe('buildBundlePayload - the run and the free baseline', () => {
+  const run = (gameModeId: string) => ({
+    runId: 'run-mode', runRevision: 1, keys: 0, specialKeys: 0, chaosKeys: 0,
+    fatePoints: 0, activeBuff: 'NONE', gameModeId,
+  });
+
+  // Fresh services, so a build has to load its data.
+  const fresh = async () => {
+    vi.resetModules();
+    vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => {} });
+    const { buildBundlePayload: build, RunChangedError: Refused } = await import('./runeliteExport');
+    const { setStartArea: setGlobal } = await import('./freeAreas');
+    return { build, Refused, setGlobal };
+  };
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
+
+  it("refuses an Xtreme run while the global holds Misthalin's baseline, before loading anything", async () => {
+    const { build, Refused, setGlobal } = await fresh();
+    const fetch = vi.fn(async () => new Response('unavailable', { status: 503 }));
+    vi.stubGlobal('fetch', fetch);
+    setGlobal('misthalin');
+    await expect(build(initialState.unlocks, run('xtreme'))).rejects.toBeInstanceOf(Refused);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('refuses a run whose baseline changes while its data loads', async () => {
+    const { build, Refused, setGlobal } = await fresh();
+    setGlobal('misthalin');
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      setGlobal('lumbridge'); // a profile switch lands mid-build
+      return new Response('unavailable', { status: 503 });
+    }));
+    try {
+      await expect(build(initialState.unlocks, run('vanilla'))).rejects.toBeInstanceOf(Refused);
+    } finally {
+      setGlobal('misthalin');
+    }
   });
 });
 

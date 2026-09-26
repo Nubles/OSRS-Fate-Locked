@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { relaySync } from '../services/relaySync';
 import type { UnlockState } from '../types';
-import { buildBundlePayload, type RuneliteRunInput } from '../utils/runeliteExport';
+import { buildBundlePayload, RunChangedError, type RuneliteRunInput } from '../utils/runeliteExport';
 
 /** A publish waits until run changes have paused this long… */
 const PUBLISH_QUIET_MS = 5_000;
@@ -77,6 +77,8 @@ export function OnlineSyncDriver() {
         if (isCurrent()) await relaySync.push(compressed, isCurrent);
       } catch (error) {
         if (isCurrent()) relaySync.reportPushFailure(error);
+        // A profile switch overlapped the build: send the new run once it settles.
+        if (error instanceof RunChangedError) schedule.current?.(false);
       } finally {
         inFlight = false;
         if (again && !cancelled) {
