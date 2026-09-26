@@ -14,6 +14,7 @@ import { locateSlayerTask } from '../utils/slayerTaskLocations';
  */
 
 import type { Coverage, RawRouteRequirement } from '../utils/questRoutes/model';
+import type { InteriorRecord } from '../utils/interiorEntry';
 import { classifyShop } from '../utils/shopClassification';
 
 export interface ChunkMonster { name: string; count: number; slayer: number | null }
@@ -326,6 +327,17 @@ export class ChunkContentService {
       }
     }
     return this.interiorIndex;
+  }
+
+  /** Interiors with a chunk of their own (a numeric region id), each with its ways in. */
+  interiorRecords(): InteriorRecord[] {
+    return Object.entries(this.doc?.interiors ?? {})
+      .filter(([id]) => /^\d+$/.test(id))
+      .map(([id, entry]) => ({
+        key: `${Math.floor(Number(id) / 256)},${Number(id) % 256}`,
+        name: entry.name,
+        entrances: entry.entrances.map(({ chunkId, requirements }) => ({ chunkId, requirements: [...requirements] })),
+      }));
   }
 
   entrancesFor(cx: number, cy: number): ChunkEntrance[] {
