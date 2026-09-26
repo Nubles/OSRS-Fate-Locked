@@ -15,6 +15,7 @@ const relay = vi.hoisted(() => ({
   subscribe: vi.fn(() => () => {}),
   requestPush: vi.fn(),
   disable: vi.fn(),
+  disconnect: vi.fn(() => Promise.resolve()),
   base: vi.fn(() => 'https://fate-relay.fatelocked.workers.dev'),
 }));
 
@@ -39,6 +40,7 @@ describe('RuneLiteOnboarding', () => {
     relay.subscribe.mockClear();
     relay.requestPush.mockReset();
     relay.disable.mockReset();
+    relay.disconnect.mockClear();
     relay.base.mockReset();
     relay.base.mockReturnValue('https://fate-relay.fatelocked.workers.dev');
   });
@@ -106,6 +108,18 @@ describe('RuneLiteOnboarding', () => {
     expect(screen.getByText(/clipboard or file import/i)).toBeTruthy();
     expect(screen.getByText(/local history is not transferred/i))
       .toBeTruthy();
+  });
+
+  it('disconnects through the relay, so it stops serving the profile', async () => {
+    const user = userEvent.setup();
+    relay.enabled = true;
+    relay.code = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    relay.status = 'synced';
+    render(<RuneLiteOnboarding />);
+
+    await user.click(screen.getByRole('button', { name: 'Disconnect' }));
+    expect(relay.disconnect).toHaveBeenCalledTimes(1);
+    expect(relay.disable).not.toHaveBeenCalled();
   });
 
   it.each([

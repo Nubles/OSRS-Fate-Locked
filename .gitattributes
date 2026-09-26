@@ -1,0 +1,3 @@
+# Contract files are checked by SHA-256, so their bytes must never change on
+# checkout (for example LF to CRLF on Windows).
+contracts/** -text

@@ -68,7 +68,7 @@ const PARENT_CONTINENT: Record<string, string> = (() => {
  *  4. its parent continent is "complete" (every sibling unlocked/free), or
  *  5. — if the region IS a continent — every one of its children is unlocked/free.
  * The RuneLite plugin mirrors these exact rules (FateLockedBundle.isUnlocked);
- * utils/runelitePluginParity.test.ts pins the two together.
+ * the golden bundles (scripts/goldenBundles.test.ts) pin the two together.
  */
 export const isRegionUnlocked = (region: string, unlocks: string[]): boolean => {
   if (isFreeArea(region)) return true;

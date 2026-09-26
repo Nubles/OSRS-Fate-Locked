@@ -121,8 +121,8 @@ export { REGION_CHUNKS } from '../data/regionChunks';
 
 
 // Region-unlock resolution lives in utils/reachability.ts (isRegionUnlocked)
-// so the RuneLite plugin parity test can pin the exact same rules the map
-// renders with.
+// so the golden bundles can pin the RuneLite plugin to the exact rules the
+// map renders with.
 
 // Every unlockable/assignable region name, deduped + alphabetised. Pulled
 // from the existing unlock data so the authoring dropdown can't introduce

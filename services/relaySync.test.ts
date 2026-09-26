@@ -210,6 +210,87 @@ describe('RelaySyncService', () => {
     expect(removeItem).toHaveBeenCalledWith(SESSION_KEY);
   });
 
+  describe('Disconnect', () => {
+    const CODE = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    const TOKEN = '070707070707070707070707070707070707';
+    const nextTask = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    it('marks the code gone with its token once the publish on its way settles', async () => {
+      const { RelaySyncService } = await import('./relaySync');
+      const service = new RelaySyncService();
+      localStorage.setItem('fate_relay_base', 'https://relay.test');
+      const publish = deferred<{ ok: boolean }>();
+      const fetchMock = vi.fn()
+        .mockReturnValueOnce(publish.promise)
+        .mockResolvedValueOnce({ ok: true });
+      vi.stubGlobal('fetch', fetchMock);
+      service.adoptCode(CODE);
+      const pushed = service.push('bundle');
+      await Promise.resolve();
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+
+      const disconnected = service.disconnect();
+      // The pairing is gone here and for every tab at once...
+      expect(service.enabled).toBe(false);
+      expect(service.status).toBe('off');
+      expect(storage[SESSION_KEY]).toBeUndefined();
+      // ...but the relay is told only after the publish lands, which would
+      // otherwise put the profile back.
+      await nextTask();
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+
+      publish.resolve({ ok: true });
+      await expect(pushed).resolves.toBe(false);
+      await expect(disconnected).resolves.toBeUndefined();
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      const [url, init] = fetchMock.mock.calls[1];
+      expect(url).toBe(`https://relay.test/r/${CODE}`);
+      expect(init.method).toBe('POST');
+      expect(JSON.parse(init.body)).toEqual({ token: TOKEN, gone: true });
+      expect(service.status).toBe('off');
+    });
+
+    it('sends nothing without a pairing or its write token', async () => {
+      const { RelaySyncService } = await import('./relaySync');
+      const fetchMock = vi.fn();
+      vi.stubGlobal('fetch', fetchMock);
+
+      await expect(new RelaySyncService().disconnect()).resolves.toBeUndefined();
+
+      storage[SESSION_KEY] = JSON.stringify({ code: CODE, token: '' });
+      const tokenless = new RelaySyncService();
+      expect(tokenless.enabled).toBe(true);
+      await expect(tokenless.disconnect()).resolves.toBeUndefined();
+      expect(tokenless.enabled).toBe(false);
+      expect(storage[SESSION_KEY]).toBeUndefined();
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['cannot be reached', () => Promise.reject(new TypeError('Failed to fetch'))],
+      ['refuses the request', () => Promise.resolve({ ok: false, status: 400 })],
+    ])('still disconnects when the relay %s', async (_case, reply) => {
+      const { RelaySyncService } = await import('./relaySync');
+      const service = new RelaySyncService();
+      localStorage.setItem('fate_relay_base', 'https://relay.test');
+      const fetchMock = vi.fn().mockImplementation(reply);
+      vi.stubGlobal('fetch', fetchMock);
+      service.adoptCode(CODE);
+      const listener = vi.fn();
+      service.subscribe(listener);
+
+      await expect(service.disconnect()).resolves.toBeUndefined();
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ token: TOKEN, gone: true });
+      expect(service.enabled).toBe(false);
+      expect(service.code).toBeNull();
+      expect(service.status).toBe('off');
+      expect(service.lastError).toBeNull();
+      expect(storage[SESSION_KEY]).toBeUndefined();
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('shared by tabs that each show their own profile', () => {
     const CODE = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
     let tabs: EventTarget;

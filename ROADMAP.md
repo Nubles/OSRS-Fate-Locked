@@ -303,8 +303,9 @@ Follow-ups:
 - **Current RuneLite relay:** the browser publishes the current app-authored
   v4 profile with `POST /r/:code`; RuneLite retrieves and validates it with
   `GET /r/:code` and optional ETag caching. The plugin does not write to the
-  relay, and the browser receives no import receipt. Full contract in
-  `docs/online-relay.md`. Deployed at
+  relay, and the browser receives no import receipt. Disconnect marks the
+  code gone, which the plugin's `GET` then reports (`404 {"gone":true}`).
+  Full contract in `docs/online-relay.md`. Deployed at
   `fate-relay.fatelocked.workers.dev`; redeploy with `wrangler deploy` from
   `workers/fate-relay/` (KV id is committed in wrangler.toml).
 - **Legacy relay compatibility only:** the Worker temporarily retains
@@ -315,6 +316,38 @@ Follow-ups:
 - **Plugin boundary:** [Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
   owns the plugin source, builds, releases, and local detection history. The
   app exports rules bundles but contains no Java plugin or download pipeline.
+
+## 3b. Contracts with the RuneLite plugin
+
+Java and Gradle stay out of this repository
+(`scripts/runeliteRepositoryBoundary.test.ts`), so the app and the plugin
+share test files instead of code:
+
+- **Golden bundles** (`contracts/golden-bundles/`): for a fixed set of runs
+  across the game modes, the bundle exactly as the relay path makes it and
+  the app's own answers for it: every land and ocean chunk
+  (`chunkUnlocked`), every named area (`isAreaReachable`), every bank
+  (`isBankReachable`) and the Chunked frontier. With them come account-name
+  pairs (`normalizeAccountName`) and the bundles an import must refuse or
+  read the same (`cases.json`). `scripts/goldenBundles.test.ts` fails when
+  the files no longer match the app.
+- **Relay replies** (`contracts/relay/relay-get.json`): each reply the
+  worker gives the plugin's `GET /r/<code>`, and what the plugin must make
+  of it. `workers/fate-relay/relayContract.test.ts` checks that the worker
+  gives them.
+
+The plugin copies both at a pinned commit of this repository (its
+`scripts/pin-web-contracts.sh`, which records the commit in
+`src/test/resources/contracts/PINNED`). Its CI checks the copy against that
+commit and runs the real Java codec and rules against them. They replaced
+a TypeScript copy of the plugin's rules, which had drifted from the Java.
+
+To change land rules, banks, account matching, the bundle or the relay's
+replies on purpose: run `npm run goldens:write` (the relay file is edited
+by hand), review the diff, where the `.expect.json` files show exactly which
+decisions changed, and merge. Then re-pin the plugin to the merged commit
+and make it agree before its next Plugin Hub release; until then, players
+on the Hub build get the old answers.
 
 ## 4. Gotchas that cost real debugging time
 
@@ -332,11 +365,15 @@ Follow-ups:
   Corsair Curse!" with NO trailing "quest" — regexes must handle both forms
   (see `QUEST_COMPLETE_SUFFIXED` / `_BARE`).
 - **Diary varbits & login baselines:** a tier varbit that's 0 at login never
-  fires VarbitChanged, so pure event-filtering misses its completion. The
-  plugin baselines all 48 once on the first event after LOGGED_IN, then
-  filters by `ev.getVarbitId()`.
+  fires VarbitChanged, so pure event-filtering misses its completion, and a
+  login's first events can arrive before every tier has synced. From Stage 1
+  the plugin reads all 48 at the session's first game tick and remembers
+  each account's finished tiers, so a tier counts once: when it flips in
+  play, or at the next login if it was finished with RuneLite closed. It
+  then filters by `ev.getVarbitId()`. (The Stage 0 Hub build baselines on
+  the first event after LOGGED_IN.)
 - **Plugin verification belongs in the standalone repository.** In the
-  standalone checkout, run `gradle clean test jar --no-daemon`; plugin CI,
+  standalone checkout, run `gradle clean check --no-daemon`; plugin CI,
   releases, and Plugin Hub work also occur there, never in the companion app.
 - **Dataset fetch cool-downs:** GearService/MonsterService fast-fail for 60s
   after a failed load (`init(force)` bypasses for Retry buttons). Without

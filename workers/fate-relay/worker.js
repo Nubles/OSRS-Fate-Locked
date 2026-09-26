@@ -94,6 +94,20 @@ function nextVersion(storedVersion) {
   return Math.max(seconds, (storedVersion || 0) + 1);
 }
 
+/**
+ * The version an If-None-Match header names. The ETag is the bare version,
+ * which RuneLite sends back as it is; a quoted or weak validator ("41" or
+ * W/"41") names the same version. Nothing else is parsed: a list of
+ * validators or * stays as it is and never equals a version.
+ */
+function validatorVersion(header) {
+  if (header === null) return null;
+  const value = header.startsWith('W/') ? header.slice(2) : header;
+  return value.length >= 2 && value.startsWith('"') && value.endsWith('"')
+    ? value.slice(1, -1)
+    : value;
+}
+
 async function tokenHash(token) {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
   return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
@@ -147,7 +161,12 @@ const routes = {
     if (request.method === 'GET') {
       const stored = await env.RELAY.get(key, { type: 'json' });
       if (!stored) return json({}, headers, 404);
-      if (request.headers.get('If-None-Match') === String(stored.version)) {
+      // The owner disconnected the code. A 404, as for a code with no
+      // profile, never a 410: the installed plugin builds read a 404 as a
+      // missing profile but back off from a 410 as an outage. No validator
+      // is consulted, since a tombstone has no content to be unchanged.
+      if (stored.gone === true) return json({ gone: true }, headers, 404);
+      if (validatorVersion(request.headers.get('If-None-Match')) === String(stored.version)) {
         return new Response(null, {
           status: 304,
           headers: { ...headers, ETag: String(stored.version) },
@@ -219,6 +238,22 @@ const routes = {
           duplicates: appended.duplicates,
           ...(atCapacity ? { capacity: appended.capacity } : {}),
         }, headers, atCapacity ? 429 : 200, atCapacity ? { 'Retry-After': '5' } : {});
+      }
+
+      if (resource === '' && body?.gone === true) {
+        // The owner's Disconnect: the profile gives way to a tombstone that
+        // holds no profile data, only the version and the token. It lasts
+        // 90 days, like an owner record, so RuneLite keeps being told the
+        // code is gone instead of seeing it expire into "no profile". A later
+        // publish with the owner's token replaces it as usual.
+        const existing = await env.RELAY.get(key, { type: 'json' });
+        const owner = await authorizeWrite(env, key, existing, body.token);
+        if (!owner) return new Response('forbidden', { status: 403, headers });
+        const version = nextVersion(existing?.version);
+        await env.RELAY.put(key, JSON.stringify({ gone: true, version, token: owner.token }),
+          { expirationTtl: OWNER_TTL_SECONDS });
+        await recordOwner(env, key, owner);
+        return json({ version, gone: true }, headers);
       }
 
       if (!body || typeof body.payload !== 'string') {

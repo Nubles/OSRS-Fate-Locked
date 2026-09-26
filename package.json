@@ -29,6 +29,7 @@
     "changelog:verify": "node scripts/verify-player-facing-changelog.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
+    "goldens:write": "node scripts/golden-bundles.mjs",
     "typecheck": "tsc --noEmit",
     "release:verify": "npm run changelog:verify && npm test && npm run typecheck && npm run content:verify && npm run build",
     "quests:source-refresh": "node scripts/sync-quest-sources.mjs --refresh",

@@ -154,3 +154,34 @@ describe('buildRuneliteRulesManifest', () => {
     expect(manifest.unlocks.regions).not.toContain("Heroes' Guild");
   });
 });
+
+describe('buildRuneliteRulesManifest - web-only unlock families', () => {
+  it('adds housing and storage without changing the unlock fields the plugin reads', async () => {
+    // RuneliteRulesManifest.java's Unlocks class. Gson drops every other key,
+    // so the web-only families below must never gain a plugin decision here.
+    const pluginUnlockFields = [
+      'regions', 'chunks', 'skills', 'levels', 'equipment', 'banks',
+      'merchants', 'bosses', 'minigames', 'mobility', 'arcana', 'guilds',
+      'farming', 'slayer', 'quests',
+    ];
+    const webOnlyUnlockFields = ['housing', 'storage'];
+    const manifest = await buildRuneliteRulesManifest({
+      unlocks: {
+        ...structuredClone(initialState.unlocks),
+        housing: ['Portal Nexus'],
+        storage: ['Rune Pouch'],
+      },
+      run: { runId: 'web-only-families', runRevision: 1, gameModeId: 'vanilla' },
+      itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+      contentService: {
+        init: async () => false, allChunkCoords: () => [], contentFor: () => null,
+        connectGraph: () => ({}), shortcuts: () => [], questSections: () => ({}),
+      },
+    });
+
+    expect(Object.keys(manifest.unlocks).sort())
+      .toEqual([...pluginUnlockFields, ...webOnlyUnlockFields].sort());
+    expect(manifest.unlocks.housing).toEqual(['Portal Nexus']);
+    expect(manifest.unlocks.storage).toEqual(['Rune Pouch']);
+  });
+});
