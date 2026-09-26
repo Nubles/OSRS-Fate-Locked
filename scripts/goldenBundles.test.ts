@@ -537,9 +537,13 @@ describe('golden bundles', () => {
       'fields both always present and present only sometimes').toEqual([]);
 
     // A path that meets nothing in any run would pass for the wrong reason.
-    // An empty list or map still shows its own path is right.
+    // An empty list or map still shows its own path is right, and the export
+    // leaves out the unread fields.
     const bundles = [...results.values()].map(({ bundle }) => bundle);
+    const underUnread = (path: string) => contract.unread.paths.some((field) =>
+      path === field || path.startsWith(`${field}.`) || path.startsWith(`${field}[]`));
     const unmet = Object.keys(contract.fields).filter((path) => {
+      if (underUnread(path)) return false;
       const all = steps(path);
       const last = all[all.length - 1];
       const probe = last === '*' || last === '[]' ? all.slice(0, -1) : all;

@@ -5,7 +5,8 @@ import { MOBILITY_LIST } from '../data/items';
 import fullChunkContent from '../public/chunk-content.json';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import { buildBundlePayload } from './runeliteExport';
-import { buildRuneliteBundle, RuneliteRunState } from './runeliteBundle';
+import { buildRuneliteBundle, RuneliteRunState, wireChunks } from './runeliteBundle';
+import type { ChunkPermissionSnapshot } from './chunkPermissionSnapshot';
 import equipmentCatalogueJson from '../public/equipment-catalogue.294c0a5ab539ea503cb22f0fafe1cb4521049724.json?raw';
 import { EQUIPMENT_CATALOGUE, EQUIPMENT_CACHE_SOURCE } from '../data/equipmentCatalogue';
 import { setStartArea } from './freeAreas';
@@ -334,6 +335,7 @@ describe('buildRuneliteBundle - canonical area names', () => {
         ...fallback.rules.unlocks,
         regions: ['Elf Camp', 'Iorwerth Camp'],
       },
+      chunks: {},
     };
     const bundle = await buildRuneliteBundle(
       ['Prifddinas', 'Elf Camp', 'Iorwerth Camp', 'Lletya'],
@@ -485,7 +487,41 @@ describe('buildRuneliteBundle - v4 category snapshot', () => {
     expect(manifest.chunks['50,50'].categories.ACTIVITIES?.[0]).toMatchObject({ status: 'UNKNOWN', detail: expect.stringMatching(/kill-count/) });
     const bundle = await buildRuneliteBundle(unlocks.regions, state, undefined, undefined, undefined, [], true, undefined, manifest);
     expect(bundle.version).toBe(4);
-    expect(bundle.rules.chunks).toEqual(manifest.chunks);
+    expect(bundle.rules.chunks).toEqual(wireChunks(manifest.chunks));
     expect(bundle.unlockedChunks).toBeUndefined();
+  });
+});
+
+describe('wireChunks', () => {
+  const snapshot = (): ChunkPermissionSnapshot => ({
+    chunkKey: '50,50',
+    name: 'Lumbridge',
+    region: 'Misthalin',
+    entry: 'ALLOWED',
+    categories: {
+      BANKS: [{ key: 'bank:12850', name: 'Lumbridge Castle bank', status: 'ALLOWED', targetKind: 'BANK' }],
+      QUESTS: [{ key: "quest:cook's assistant", name: "Cook's Assistant", status: 'NOT_READY', detail: 'Cooking 1/1' }],
+    },
+    counts: { allowed: 1, notReady: 1, locked: 0, unknown: 0 },
+  });
+
+  it('leaves out only the fields no installed reader uses', () => {
+    expect(wireChunks({ '50,50': snapshot() })).toStrictEqual({
+      '50,50': {
+        name: 'Lumbridge',
+        region: 'Misthalin',
+        entry: 'ALLOWED',
+        categories: {
+          BANKS: [{ name: 'Lumbridge Castle bank', status: 'ALLOWED', targetKind: 'BANK' }],
+          QUESTS: [{ name: "Cook's Assistant", status: 'NOT_READY', detail: 'Cooking 1/1' }],
+        },
+      },
+    });
+  });
+
+  it("keeps the app's own snapshot whole", () => {
+    const app = snapshot();
+    wireChunks({ '50,50': app });
+    expect(app).toStrictEqual(snapshot());
   });
 });
