@@ -1,6 +1,5 @@
 import type { GameModeRules } from '../config/gameModes';
 import { MOBILITY_LIST } from '../data/items';
-import { QUEST_DATA } from '../data/questData';
 import { DETECTOR_POLICIES, type DetectorPolicy } from '../config/detectorPolicies';
 import { gearService } from '../services/GearService';
 import {
@@ -10,14 +9,11 @@ import {
   type Shortcut,
 } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
-import { CHUNKED_START } from './chunkAdjacency';
-import { chunkForPlace } from './chunkLocations';
-import { chunkReachability } from './chunkReach';
+import { runReach } from './chunkEntry';
 import {
   buildChunkPermissionSnapshot,
   type ChunkPermissionSnapshot,
 } from './chunkPermissionSnapshot';
-import { entryBlockedGate } from './questDoability';
 import { bankLocksActive } from './reachability';
 import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
 import type { EntityAccessSource } from './entityAccess';
@@ -121,21 +117,7 @@ export async function buildRuneliteRulesManifest(
     }
   } catch { /* unavailable item rules remain Unknown */ }
   const loaded = await service.init();
-  const completed = new Set(input.unlocks.quests);
-  const known = new Set([
-    ...Object.keys(QUEST_DATA),
-    ...Object.values(QUEST_DATA).map((quest) => quest.name),
-  ]);
-  const blocked = entryBlockedGate(service.questSections(), completed, known);
-  const reach = loaded
-    ? chunkReachability(
-      service.connectGraph(),
-      input.unlocks,
-      input.run.gameModeId === 'chunked' ? CHUNKED_START : chunkForPlace('Lumbridge'),
-      blocked,
-      input.run.gameModeId,
-    )
-    : { reachable: new Set<string>() };
+  const reachable = loaded ? runReach(service, input.unlocks, input.run.gameModeId) : new Set<string>();
   const chunks: Record<string, ChunkPermissionSnapshot> = {};
 
   if (loaded) {
@@ -147,7 +129,7 @@ export async function buildRuneliteRulesManifest(
         unlocks: input.unlocks,
         gameModeId: input.run.gameModeId,
         customMode: input.run.customMode,
-        reachableChunks: reach.reachable,
+        reachableChunks: reachable,
         shortcuts: service.shortcuts(),
       });
       chunks[snapshot.chunkKey] = snapshot;

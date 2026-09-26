@@ -8,7 +8,8 @@ import type {
 } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
 import { resourceReqFor, resourceUsable } from './chunkResources';
-import { chunkUnlocked, placeOf } from './chunkLocations';
+import { placeOf } from './chunkLocations';
+import { chunkEntry } from './chunkEntry';
 import { evaluateQuestEligibility, meetsSkillRequirement } from './journalStatus';
 import { farmingPatchFor } from './farmingPatches';
 import { isBankReachable } from './reachability';
@@ -99,17 +100,7 @@ export function buildChunkPermissionSnapshot(
 ): ChunkPermissionSnapshot {
   const chunkKey = `${coord.cx},${coord.cy}`;
   const numericId = String(coord.cx * 256 + coord.cy);
-  const owned = chunkUnlocked(
-    coord.cx,
-    coord.cy,
-    context.unlocks,
-    context.gameModeId,
-  );
-  const entry: PermissionStatus = !owned
-    ? 'LOCKED'
-    : context.reachableChunks && !context.reachableChunks.has(numericId)
-      ? 'NOT_READY'
-      : 'ALLOWED';
+  const entry = chunkEntry(coord, context.unlocks, context.gameModeId, context.reachableChunks);
   const place = placeOf(coord.cx, coord.cy);
   const categories: Partial<Record<ChunkCategoryId, ChunkPermissionRow[]>> = {};
   const add = (category: ChunkCategoryId, row: ChunkPermissionRow) => {
