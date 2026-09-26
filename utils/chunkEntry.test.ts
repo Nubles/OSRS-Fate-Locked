@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { initialState } from '../context/GameContext';
 import type { UnlockState } from '../types';
-import { chunkEntry, runReach, type ReachSource } from './chunkEntry';
+import { chunkEntry, chunkEntryReason, runReach, type ReachSource } from './chunkEntry';
 import { CHUNKED_START } from './chunkAdjacency';
 import { chunkForPlace } from './chunkLocations';
 import { OCEAN_CHUNK_KEYS } from './oceanAccess';
@@ -60,5 +60,28 @@ describe('runReach', () => {
 
   it('leaves out chunks the run does not own', () => {
     expect(runReach(source, fresh(), 'vanilla').has(idOf(falador))).toBe(false);
+  });
+});
+
+describe('chunkEntryReason', () => {
+  const sailor = () => ({ ...fresh(), skills: { ...fresh().skills, Sailing: 1 }, quests: ['Pandemonium'] });
+
+  it('gives none for an ALLOWED chunk', () => {
+    expect(chunkEntryReason(lumbridge, 'ALLOWED', fresh(), 'vanilla', [])).toBeUndefined();
+  });
+
+  it('says what would unlock a LOCKED chunk', () => {
+    expect(chunkEntryReason(falador, 'LOCKED', fresh(), 'vanilla', [])).toBe('Unlock Falador');
+    expect(chunkEntryReason(falador, 'LOCKED', fresh(), 'chunked', [])).toBe('Chunk not unlocked');
+    expect(chunkEntryReason(ocean, 'LOCKED', fresh(), 'vanilla', [])).toBe('Needs Sailing and Pandemonium');
+    expect(chunkEntryReason(ocean, 'LOCKED', sailor(), 'chunked', [])).toBe('Not reached from your coast');
+  });
+
+  it("names the quest a NOT_READY chunk's entry needs, or the missing route", () => {
+    expect(chunkEntryReason(north, 'NOT_READY', fresh(), 'vanilla', ["Cook's Assistant"])).toBe("Needs Cook's Assistant");
+    expect(chunkEntryReason(north, 'NOT_READY', fresh(), 'vanilla', ['Not A Real Quest'])).toBe('No route from Lumbridge');
+    const done = { ...fresh(), quests: ["Cook's Assistant"] };
+    expect(chunkEntryReason(north, 'NOT_READY', done, 'vanilla', ["Cook's Assistant"])).toBe('No route from Lumbridge');
+    expect(chunkEntryReason(north, 'NOT_READY', fresh(), 'chunked', [])).toBe('No route from your start chunk');
   });
 });

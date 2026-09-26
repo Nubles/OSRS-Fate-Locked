@@ -675,6 +675,13 @@ describe('golden bundles', () => {
       expect(sameContent((bundle.rules as { frontier?: string[] }).frontier, (answers as { frontier?: string[] }).frontier),
         `${scenario.id}: frontier`).toBe(true);
 
+      // Each snapshot says what it is, and why its entry isn't ALLOWED exactly when it isn't.
+      const described = rules.chunks as Record<string, { entry: string; kind?: string; entryReason?: string }>;
+      const misdescribed = Object.entries(described).filter(([key, snapshot]) =>
+        snapshot.kind !== (OCEAN_CHUNK_KEYS.has(key) ? 'ocean' : 'land')
+        || (snapshot.entry === 'ALLOWED') !== (snapshot.entryReason === undefined)).map(([key]) => key);
+      expect(misdescribed.slice(0, 10), `${scenario.id}: snapshot kinds and reasons`).toEqual([]);
+
       // Each bank: the pinned status, its chunk's BANKS row, and the pinned chunks it is in.
       const decided = (bundle.rules as { banks: Record<string, { name: string; status: string; at: string; physical: string[] }> }).banks;
       const pinnedStatus = (answers as { bankStatus: Record<string, string> }).bankStatus;

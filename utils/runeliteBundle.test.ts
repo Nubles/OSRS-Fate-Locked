@@ -565,6 +565,8 @@ describe('wireChunks', () => {
     name: 'Lumbridge',
     region: 'Misthalin',
     entry: 'ALLOWED',
+    kind: 'land',
+    area: 'Lumbridge',
     categories: {
       BANKS: [{ key: 'bank:12850', name: 'Lumbridge Castle bank', status: 'ALLOWED', targetKind: 'BANK' }],
       QUESTS: [{ key: "quest:cook's assistant", name: "Cook's Assistant", status: 'NOT_READY', detail: 'Cooking 1/1' }],
@@ -578,6 +580,8 @@ describe('wireChunks', () => {
         name: 'Lumbridge',
         region: 'Misthalin',
         entry: 'ALLOWED',
+        kind: 'land',
+        area: 'Lumbridge',
         categories: {
           BANKS: [{ name: 'Lumbridge Castle bank', status: 'ALLOWED', targetKind: 'BANK' }],
           QUESTS: [{ name: "Cook's Assistant", status: 'NOT_READY', detail: 'Cooking 1/1' }],

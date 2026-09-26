@@ -9,7 +9,8 @@ import type {
 import type { UnlockState } from '../types';
 import { resourceReqFor, resourceUsable } from './chunkResources';
 import { placeOf } from './chunkLocations';
-import { chunkEntry } from './chunkEntry';
+import { chunkEntry, chunkEntryReason } from './chunkEntry';
+import { OCEAN_CHUNK_KEYS } from './oceanAccess';
 import { evaluateQuestEligibility, meetsSkillRequirement } from './journalStatus';
 import { farmingPatchFor } from './farmingPatches';
 import { isBankReachable } from './reachability';
@@ -40,6 +41,11 @@ export interface ChunkPermissionSnapshot {
   name: string | null;
   region: string | null;
   entry: PermissionStatus;
+  /** Why the entry isn't ALLOWED; absent when it is. */
+  entryReason?: string;
+  kind: 'land' | 'ocean';
+  /** The rolled area the chunk belongs to, when it belongs to one. */
+  area?: string;
   categories: Partial<Record<ChunkCategoryId, ChunkPermissionRow[]>>;
   counts: { allowed: number; notReady: number; locked: number; unknown: number };
 }
@@ -255,11 +261,17 @@ export function buildChunkPermissionSnapshot(
     else delete categories[category];
   }
   const rows = Object.values(categories).flatMap((value) => value ?? []);
+  const entryReason = chunkEntryReason(coord, entry, context.unlocks, context.gameModeId,
+    context.contentService?.chunkEntryRequirements(coord.cx, coord.cy) ?? []);
+  const area = place.subArea ?? place.region;
   return {
     chunkKey,
     name: content.name ?? place.subArea,
     region: place.region,
     entry,
+    ...(entryReason ? { entryReason } : {}),
+    kind: OCEAN_CHUNK_KEYS.has(chunkKey) ? 'ocean' : 'land',
+    ...(area ? { area } : {}),
     categories,
     counts: {
       allowed: rows.filter((row) => row.status === 'ALLOWED').length,
