@@ -47,6 +47,7 @@
  ],
  "files": {
   "accounts.json": "53ba90ce5abc93dca6a903c63bdb579051bcf4630c51863ee8cdf8630c1b16ca",
+  "bundle-contract.json": "96b44683015979336c615c20fdd678a01b05ac7a006a87a2009d3b4258417ebf",
   "cases.json": "5b370476f4b0e0f46d60d941be9f858ceab2979b5fba35f0b1b4d5f887f1ccad",
   "chunked-fresh.bundle.json.gz": "d51b2782a02cddc9e2f2bc5e3c3cc2d7301151da593e3dfded35efaa477d465d",
   "chunked-fresh.expect.json": "0adcb0f167d27ba8f081790c376c6daba988e7cf057f9f50934b338113375719",

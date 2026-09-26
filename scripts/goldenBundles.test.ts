@@ -313,6 +313,104 @@ function hasPath(root: Record<string, unknown>, path: string): boolean {
   return true;
 }
 
+/**
+ * Written by hand, unlike the files above: what a version 4 bundle promises
+ * the readers already installed. Every run is checked against it, and the
+ * manifest lists it so the plugin copies it with the rest.
+ */
+const CONTRACT_FILE = 'bundle-contract.json';
+
+interface Condition {
+  path: string;
+  equals?: unknown;
+  notEquals?: unknown;
+}
+
+interface BundleContract {
+  version: number;
+  statuses: string[];
+  categories: { names: string[] };
+  bankRows: { category: string; targetKind: string };
+  /** Contract path to JSON type, such as "string|null" or "status". */
+  fields: Record<string, string>;
+  required: { paths: string[] };
+  always: { paths: string[] };
+  presentWhen: { fields: Record<string, Condition> };
+  overlay: { paths: string[] };
+  unread: { paths: string[] };
+}
+
+const readContract = (): BundleContract => JSON.parse(readFileSync(join(OUT, CONTRACT_FILE), 'utf8'));
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** A contract path as steps: "chunks.*[].cx" is chunks, *, [], cx. */
+const steps = (path: string) =>
+  path.split('.').flatMap((part) => (part.endsWith('[]') ? [part.slice(0, -2), '[]'] : [part]));
+
+/** Every value along the steps: "*" is each value of an object, "[]" each item of an array. */
+const valuesAt = (root: unknown, path: string[]): unknown[] =>
+  path.reduce<unknown[]>((nodes, step) => nodes.flatMap((node) => {
+    if (step === '[]') return Array.isArray(node) ? node : [];
+    if (!isRecord(node)) return [];
+    if (step === '*') return Object.values(node);
+    return step in node ? [node[step]] : [];
+  }), [root]);
+
+const jsonType = (value: unknown) => (value === null ? 'null'
+  : Array.isArray(value) ? 'array'
+  : typeof value === 'number' && Number.isInteger(value) ? 'integer'
+  : typeof value);
+
+const hasType = (value: unknown, type: string, contract: BundleContract) =>
+  type.split('|').some((one) => (one === 'status'
+    ? typeof value === 'string' && contract.statuses.includes(value)
+    : jsonType(value) === one));
+
+/** How a bundle breaks the contract, one line per kind of break; empty when it keeps it. */
+function contractBreaches(bundle: Record<string, unknown>, contract: BundleContract): string[] {
+  const breaches = new Set<string>();
+  if (bundle.version !== contract.version) breaches.add(`version is ${JSON.stringify(bundle.version)}`);
+  for (const [path, type] of Object.entries(contract.fields)) {
+    const wrong = valuesAt(bundle, steps(path)).find((value) => !hasType(value, type, contract));
+    if (wrong !== undefined) breaches.add(`${path} holds ${JSON.stringify(wrong)}, not ${type}`);
+  }
+  for (const path of contract.required.paths) {
+    const [value] = valuesAt(bundle, steps(path));
+    const empty = value === undefined || value === null
+      || (typeof value === 'string' && value.trim() === '')
+      || (typeof value === 'object' && Object.keys(value).length === 0);
+    if (empty) breaches.add(`${path} is required`);
+  }
+  for (const path of contract.always.paths) {
+    const all = steps(path);
+    const key = all[all.length - 1];
+    if (valuesAt(bundle, all.slice(0, -1)).some((parent) => !isRecord(parent) || !(key in parent))) {
+      breaches.add(`${path} is missing`);
+    }
+  }
+  for (const [path, { path: on, ...when }] of Object.entries(contract.presentWhen.fields)) {
+    const [value] = valuesAt(bundle, steps(on));
+    const expected = 'equals' in when ? sameContent(value, when.equals) : !sameContent(value, when.notEquals);
+    if (hasPath(bundle, path) !== expected) {
+      breaches.add(`${path} is ${expected ? 'missing' : 'present'} with ${on} ${JSON.stringify(value)}`);
+    }
+  }
+  for (const categories of valuesAt(bundle, steps('rules.chunks.*.categories')).filter(isRecord)) {
+    for (const [category, rows] of Object.entries(categories)) {
+      if (!contract.categories.names.includes(category)) breaches.add(`category ${category} is new`);
+      for (const row of Array.isArray(rows) ? rows.filter(isRecord) : []) {
+        const bankKind = row.targetKind === contract.bankRows.targetKind;
+        if (bankKind !== (category === contract.bankRows.category)) {
+          breaches.add(`a ${category} row has target kind ${JSON.stringify(row.targetKind)}`);
+        }
+      }
+    }
+  }
+  return [...breaches];
+}
+
 const results = new Map<string, Generated>();
 
 beforeAll(async () => {
@@ -378,7 +476,7 @@ describe('golden bundles', () => {
       chunkContentDataVersion: CHUNK_CONTENT_DATA_VERSION,
       equipmentCatalogue: EQUIPMENT_CATALOGUE.asset,
       scenarios: SCENARIOS.map(({ id, covers }) => ({ id, covers })),
-      files: Object.fromEntries(Object.keys(files).sort(byCodeUnit)
+      files: Object.fromEntries([...Object.keys(files), CONTRACT_FILE].sort(byCodeUnit)
         .map((name) => [name, existsSync(join(OUT, name)) ? sha256(readFileSync(join(OUT, name))) : null])),
     };
     const manifestFile = join(OUT, 'manifest.json');
@@ -413,6 +511,43 @@ describe('golden bundles', () => {
     const bomb = reject.find((bundleCase) => bundleCase.name.includes('gzip bomb'))!;
     expect(bomb.compress).toBe(true);
     expect(bomb.input!.length * (bomb.repeat ?? 1)).toBeGreaterThan(8 * 1024 * 1024);
+  });
+
+  it('keep the promises of the bundle contract', () => {
+    const contract = readContract();
+    for (const scenario of SCENARIOS) {
+      expect(contractBreaches(results.get(scenario.id)!.bundle, contract).slice(0, 10),
+        `${scenario.id} breaks ${CONTRACT_FILE}`).toEqual([]);
+    }
+  });
+
+  it('keep a bundle contract whose paths name real fields', () => {
+    const contract = readContract();
+    const when = Object.entries(contract.presentWhen.fields);
+    const named = [
+      ...contract.required.paths, ...contract.always.paths, ...contract.overlay.paths, ...contract.unread.paths,
+      ...when.flatMap(([path, condition]) => [path, condition.path]),
+    ];
+    expect(named.filter((path) => !(path in contract.fields)), 'paths without a type').toEqual([]);
+    expect(contract.required.paths.filter((path) => !contract.always.paths.includes(path)),
+      'required fields the export may leave out').toEqual([]);
+    const read = new Set([...contract.always.paths, ...contract.overlay.paths, ...when.map(([path]) => path)]);
+    expect(contract.unread.paths.filter((path) => read.has(path)), 'unread fields that are read').toEqual([]);
+    expect(when.filter(([path]) => contract.always.paths.includes(path)).map(([path]) => path),
+      'fields both always present and present only sometimes').toEqual([]);
+
+    // A path that meets nothing in any run would pass for the wrong reason.
+    // An empty list or map still shows its own path is right.
+    const bundles = [...results.values()].map(({ bundle }) => bundle);
+    const unmet = Object.keys(contract.fields).filter((path) => {
+      const all = steps(path);
+      const last = all[all.length - 1];
+      const probe = last === '*' || last === '[]' ? all.slice(0, -1) : all;
+      return !bundles.some((bundle) => valuesAt(bundle, probe).length > 0);
+    });
+    expect(unmet, 'contract fields no golden run has').toEqual([]);
+    const kinds = bundles.flatMap((bundle) => valuesAt(bundle, steps('rules.chunks.*.categories.*[].targetKind')));
+    expect(kinds.includes(contract.bankRows.targetKind), 'no bank rows to check').toBe(true);
   });
 
   it('cover the land rules the plugin depends on', () => {
