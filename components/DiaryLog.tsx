@@ -367,7 +367,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                             || task.regions?.length || task.anyOfRegions?.length || task.locations?.length
                             || task.oneOf?.length || task.combatLevel
                             || task.allQuests || task.anySkillLevel || task.questPoints !== undefined
-                            || taskEligibility.manualChecks.length || task.equipmentRequirements?.length || task.mobility?.length || task.arcana?.length,
+                            || taskEligibility.manualChecks.length || task.equipmentRequirements?.length || task.mobility?.length || task.arcana?.length || task.minigames?.length,
                           );
                           const skillRequirements = Object.entries(task.skills ?? {});
                           const unmetSkillRequirements = skillRequirements.filter(([skill, level]) =>
@@ -431,6 +431,11 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                       {task.mobility?.map(mobility => (
                                         <span key={mobility} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${unlocks.mobility.includes(mobility) ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
                                           <Lock size={8} /> {mobility}
+                                        </span>
+                                      ))}
+                                      {task.minigames?.map(minigame => (
+                                        <span key={minigame} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${unlocks.minigames.includes(minigame) ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
+                                          <Lock size={8} /> {minigame}
                                         </span>
                                       ))}
                                       {task.equipmentRequirements?.map(requirement => {

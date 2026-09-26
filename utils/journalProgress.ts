@@ -17,7 +17,7 @@ import {
 } from './journalStatus';
 
 export interface Unmet {
-  kind: 'region' | 'skill' | 'equipment' | 'merchant' | 'mobility' | 'arcana' | 'quest' | 'qp' | 'alternative' | 'manual';
+  kind: 'region' | 'skill' | 'equipment' | 'merchant' | 'mobility' | 'arcana' | 'minigame' | 'quest' | 'qp' | 'alternative' | 'manual';
   label: string;
 }
 

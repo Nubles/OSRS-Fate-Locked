@@ -83,6 +83,7 @@ export interface GoalRoute {
   merchants?: RouteItem[];
   mobility?: RouteItem[];
   arcana?: RouteItem[];
+  minigames?: RouteItem[];
   alternatives: RouteAlternative[];
   manualChecks?: RouteItem[];
   diaries: RouteItem[];
@@ -208,6 +209,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       ...(plan.merchantSteps ?? []),
       ...(plan.mobilitySteps ?? []),
       ...(plan.arcanaSteps ?? []),
+      ...(plan.minigameSteps ?? []),
       ...plan.alternativeSteps.flatMap(step => step.routes.flatMap(route => route.blockers)),
     ]);
     const totalSteps = eligibility.evidence.length + eligibility.blockers.length + eligibility.manualChecks.length;
@@ -223,6 +225,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       merchants: (plan.merchantSteps ?? []).map(step => ({ name: step.label, met: step.done, detail: step.detail })),
       arcana: (plan.arcanaSteps ?? []).map(step => ({ name: step.label, met: step.done, detail: step.detail })),
       mobility: (plan.mobilitySteps ?? []).map(step => ({ name: step.label, met: step.done, detail: step.detail })),
+      minigames: (plan.minigameSteps ?? []).map(step => ({ name: step.label, met: step.done, detail: step.detail })),
       alternatives,
       manualChecks: plan.manualSteps.map(step => ({ name: step.label, met: step.done, detail: step.detail })),
       diaries: [],

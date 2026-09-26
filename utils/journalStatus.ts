@@ -22,7 +22,7 @@ import { AREA_ENTRY_ROUTES } from '../data/areaAccess';
 import { canonicalAreaName } from '../data/areaMapPolicy';
 
 export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_QUEST';
-export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_MOBILITY' | 'LOCKED_ARCANA' | 'LOCKED_MERCHANT' | 'LOCKED_QUEST';
+export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_MOBILITY' | 'LOCKED_ARCANA' | 'LOCKED_MERCHANT' | 'LOCKED_MINIGAME' | 'LOCKED_QUEST';
 
 export type DiaryStatusUnlocks =
   Omit<UnlockState, 'cas' | 'completedTasks'>
@@ -58,6 +58,7 @@ export type DirectEligibilityBlocker =
   | { kind: 'merchant'; label: string }
   | { kind: 'mobility'; label: string }
   | { kind: 'arcana'; label: string }
+  | { kind: 'minigame'; label: string }
   | { kind: 'quest'; label: string };
 
 export interface AlternativeEligibilityRoute {
@@ -302,6 +303,7 @@ export interface DoableTask {
   merchants?: string[];
   mobility?: string[];
   arcana?: string[];
+  minigames?: string[];
   equipmentRequirements?: DiaryEquipmentRequirement[];
   quests?: string[];
   regions?: string[];
@@ -334,6 +336,7 @@ const requirementOptionParts = (option: DiaryTaskRequirementOption): string[] =>
   ...(option.merchants ?? []),
   ...(option.mobility ?? []),
   ...(option.arcana ?? []),
+  ...(option.minigames ?? []),
   ...(option.equipmentRequirements ?? []).map(item => `${item.slot} T${item.tier}: ${item.reason}${item.unlessDiary ? ` (unless ${item.unlessDiary} is complete)` : ''}`),
   ...(option.combinedSkillLevel ? [
     option.combinedSkillLevel.skills.join(' + ') + ' combined ' + option.combinedSkillLevel.level,
@@ -481,6 +484,11 @@ function evaluateDiaryRequirement(
   for (const mobility of requirement.mobility ?? []) {
     if (unlocks.mobility?.includes(mobility)) evidence.push(mobility);
     else blockers.push({ kind: 'mobility', label: mobility });
+  }
+  // A task played inside a minigame needs that minigame unlocked.
+  for (const minigame of requirement.minigames ?? []) {
+    if (unlocks.minigames?.includes(minigame)) evidence.push(minigame);
+    else blockers.push({ kind: 'minigame', label: minigame });
   }
   for (const item of requirement.equipmentRequirements ?? []) {
     if (item.unlessDiary && unlocks.diaries.includes(item.unlessDiary)) {
@@ -752,6 +760,8 @@ export function evaluateDiaryTierEligibility(
         ? 'LOCKED_ARCANA'
       : blockers.some(blocker => blocker.kind === 'merchant')
         ? 'LOCKED_MERCHANT'
+      : blockers.some(blocker => blocker.kind === 'minigame')
+        ? 'LOCKED_MINIGAME'
       : blockers.some(blocker => blocker.kind === 'quest' || blocker.kind === 'alternative')
         ? 'LOCKED_QUEST'
         : 'AVAILABLE';

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { CheckCircle2, Circle, Route } from 'lucide-react';
-import { Dices, Map as MapIcon, BookOpen, Swords, Package, Shield, Store } from './OsrsIcon';
+import { Dices, Map as MapIcon, BookOpen, Swords, Package, Shield, Store, Gamepad2 } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { buildGoalRoute } from '../utils/goalRoute';
 import { WikiLink } from './WikiLink';
@@ -134,6 +134,18 @@ export const GoalRouteView: React.FC<{ goalId: string }> = ({ goalId }) => {
           <div>
             <Head icon={<Route size={11} />} label="Transport" done={met(route.mobility)} total={route.mobility.length} />
             {route.mobility.map(requirement => (
+              <div key={requirement.name} className="flex items-start gap-1.5 py-px">
+                <Tick met={requirement.met} />
+                <span className="text-gray-300">{requirement.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!!route.minigames?.length && (
+          <div>
+            <Head icon={<Gamepad2 size={11} />} label="Minigames" done={met(route.minigames)} total={route.minigames.length} />
+            {route.minigames.map(requirement => (
               <div key={requirement.name} className="flex items-start gap-1.5 py-px">
                 <Tick met={requirement.met} />
                 <span className="text-gray-300">{requirement.name}</span>

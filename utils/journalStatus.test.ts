@@ -3,7 +3,7 @@ import { QUEST_DATA, QuestData } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DIARY_DATA } from '../data/diaryData';
 import { DropSource, UnlockState } from '../types';
-import { ARCANA_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, MOBILITY_LIST, REGION_GROUPS } from '../data/items';
+import { ARCANA_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, MINIGAMES_LIST, MOBILITY_LIST, REGION_GROUPS } from '../data/items';
 import { combatLevel } from './slayerReach';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { ACTIVITY_REQUIREMENTS } from '../data/activityRequirements';
@@ -808,6 +808,7 @@ describe('canonical diary tier eligibility', () => {
       mobility: [...MOBILITY_LIST],
       arcana: [...ARCANA_LIST],
       merchants: [...MERCHANTS_LIST],
+      minigames: [...MINIGAMES_LIST],
       skills: Object.fromEntries(taskSkills.map(skill => [skill, 10])),
       levels: Object.fromEntries(taskSkills.map(skill => [skill, 99])),
       regions: [...new Set(regions)],
