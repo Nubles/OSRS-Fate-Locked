@@ -23,9 +23,11 @@ describe('authored changelog releases', () => {
     expect(LATEST_CHANGELOG.id).toBe('2026-09-26-diary-bosses-and-routes');
   });
 
-  it('announces that diary tasks fighting a boss need that boss', () => {
+  it('announces that diary tasks need a route to their area, and a boss fight its boss', () => {
     const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-26-diary-bosses-and-routes');
+    expect(release?.title).toBe('Diary Tasks Check Bosses and Routes');
     expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/own but can.t get to are no longer Can do.*Ruins of Uzer.*Port Khazard.*No route to/),
       expect.stringMatching(/fighting a boss need that boss unlocked, 15 in all.*Giant Mole.*completed stay completed/),
     ]);
   });

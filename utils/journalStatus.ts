@@ -21,6 +21,7 @@ import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 import { pendingQuestProgress, type QuestProgressRequirement } from '../data/questProgress';
 import { AREA_ENTRY_ROUTES } from '../data/areaAccess';
 import { canonicalAreaName } from '../data/areaMapPolicy';
+import type { AreaRoutes } from './areaRoutes';
 
 export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_QUEST';
 export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_MOBILITY' | 'LOCKED_ARCANA' | 'LOCKED_MERCHANT' | 'LOCKED_MINIGAME' | 'LOCKED_BOSS' | 'LOCKED_QUEST';
@@ -558,11 +559,17 @@ const resolveAreaAccess = (
   };
 };
 
+/** An owned area or place that no route reaches yet: a trip problem, like an island. */
+const noRouteBlocker = (place: string): AlternativeBlocker => ({
+  kind: 'alternative', label: `No route to ${place}`, travel: place, blockerKinds: [], routes: [],
+});
+
 function evaluateDiaryRequirement(
   requirement: Omit<DoableTask, 'id' | 'oneOf'>,
   unlocks: UnlockState,
   gameModeId?: string,
   visited: ReadonlySet<string> = NO_AREAS,
+  areaRoutes?: AreaRoutes | null,
 ): DiaryTaskEligibility {
   const blockers: EligibilityBlocker[] = [];
   // Items are never assumed to be in the player's bank: like Sheep Shearer's
@@ -639,11 +646,18 @@ function evaluateDiaryRequirement(
       blockers.push(access.blocker);
       continue;
     }
+    // Owned, but the map finds no way there from the rest of the run.
+    if (areaRoutes?.strandedAreas.has(canonicalAreaName(region))) {
+      blockers.push(noRouteBlocker(canonicalAreaName(region)));
+      continue;
+    }
     evidence.push(region);
     if (access.state === 'confirm') travelChecks.push(...access.manualChecks);
   }
   for (const location of requirement.locations ?? []) {
-    if (location.chunkOptions.some(({ cx, cy }) => chunkUnlocked(cx, cy, unlocks, gameModeId))) evidence.push(location.label);
+    const owned = location.chunkOptions.filter(({ cx, cy }) => chunkUnlocked(cx, cy, unlocks, gameModeId));
+    if (owned.some(({ cx, cy }) => !areaRoutes?.strandedChunks.has(`${cx},${cy}`))) evidence.push(location.label);
+    else if (owned.length) blockers.push(noRouteBlocker(location.label));
     else blockers.push({
       kind: 'alternative', label: location.label, blockerKinds: ['region'],
       routes: location.chunkOptions.map(({ cx, cy }) => {
@@ -663,7 +677,12 @@ function evaluateDiaryRequirement(
     // Any one area that is both owned and reachable will do.
     const owned = requirement.anyOfRegions
       .filter(region => isAreaReachable(region, unlocks, gameModeId))
-      .map(region => ({ region, access: areaAccess(region, unlocks, gameModeId, visited) }));
+      .map(region => ({
+        region,
+        access: areaRoutes?.strandedAreas.has(canonicalAreaName(region))
+          ? { state: 'blocked' as const, blocker: noRouteBlocker(canonicalAreaName(region)) }
+          : areaAccess(region, unlocks, gameModeId, visited),
+      }));
     const reachable = owned.find(({ access }) => access.state === 'open')
       ?? owned.find(({ access }) => access.state === 'confirm');
     if (reachable) {
@@ -738,16 +757,22 @@ function evaluateDiaryRequirement(
   return { ...manual, blockers, evidence };
 }
 
+/**
+ * Whether a diary task can be done now. Pass `areaRoutes` (from useAreaRoutes)
+ * to treat owned areas that no route reaches as out of reach; without it,
+ * owning an area is enough, as before.
+ */
 export function evaluateDiaryTaskEligibility(
   task: DoableTask,
   unlocks: UnlockState,
   gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
 ): DiaryTaskEligibility {
-  const shared = evaluateDiaryRequirement(task, unlocks, gameModeId);
+  const shared = evaluateDiaryRequirement(task, unlocks, gameModeId, NO_AREAS, areaRoutes);
   if (!task.oneOf?.length) return shared;
 
   const routeResults = task.oneOf.map(option => (
-    evaluateDiaryRequirement(option, unlocks, gameModeId)
+    evaluateDiaryRequirement(option, unlocks, gameModeId, NO_AREAS, areaRoutes)
   ));
   const eligibleRouteIndex = routeResults.findIndex(result => result.eligible);
   const confirmableRouteIndex = routeResults.findIndex(result => result.confirmable);
@@ -818,6 +843,7 @@ export function evaluateDiaryTierEligibility(
   diary: Pick<DiaryTier, 'id'>,
   unlocks: DiaryStatusUnlocks,
   gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
 ): DiaryTierEligibility {
   if (unlocks.diaries.includes(diary.id)) {
     return { ...readinessFields([], []), status: 'COMPLETED', blockers: [], evidence: ['Completed'] };
@@ -830,7 +856,7 @@ export function evaluateDiaryTierEligibility(
   };
   const taskResults = ALL_DIARY_TASKS
     .filter(task => task.tierId === diary.id && !normalizedUnlocks.completedTasks.includes(task.id))
-    .map(task => evaluateDiaryTaskEligibility(task, normalizedUnlocks, gameModeId));
+    .map(task => evaluateDiaryTaskEligibility(task, normalizedUnlocks, gameModeId, areaRoutes));
   const blockers = uniqueBlockers(taskResults.flatMap(result => result.blockers));
   const evidence = [...new Set(taskResults.flatMap(result => result.evidence))];
   const alternatives = blockers.filter(
@@ -879,14 +905,20 @@ export function getDiaryStatus(
   diary: DiaryTier,
   unlocks: DiaryStatusUnlocks,
   gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
 ): DiaryStatus {
-  return evaluateDiaryTierEligibility(diary, unlocks, gameModeId).status;
+  return evaluateDiaryTierEligibility(diary, unlocks, gameModeId, areaRoutes).status;
 }
 
-export function countDoableTasks(tasks: DoableTask[], unlocks: UnlockState, gameModeId?: string): number {
+export function countDoableTasks(
+  tasks: DoableTask[],
+  unlocks: UnlockState,
+  gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
+): number {
   return tasks.filter(task => {
     if (unlocks.completedTasks.includes(task.id)) return false;
-    return evaluateDiaryTaskEligibility(task, unlocks, gameModeId).eligible;
+    return evaluateDiaryTaskEligibility(task, unlocks, gameModeId, areaRoutes).eligible;
   }).length;
 }
 
@@ -894,7 +926,8 @@ export function countDoableDiaryTasks(
   tasks: DoableDiaryTask[],
   unlocks: UnlockState,
   gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
 ): number {
   const incompleteTiers = tasks.filter(task => !unlocks.diaries.includes(task.tierId));
-  return countDoableTasks(incompleteTiers, unlocks, gameModeId);
+  return countDoableTasks(incompleteTiers, unlocks, gameModeId, areaRoutes);
 }
