@@ -19,8 +19,15 @@ import { DiaryHeatmap } from './DiaryHeatmap';
 import {
   countDoableTasks, diaryRequirementOptionLabel, evaluateDiaryTaskEligibility,
   evaluateDiaryTierEligibility, getDiaryStatus, meetsSkillRequirement, withSkillGateQuests,
+  type EligibilityBlocker,
 } from '../utils/journalStatus';
 import { requestManualAttestation } from '../utils/manualAttestation';
+
+const isTravelBlocker = (
+  blocker: EligibilityBlocker,
+): blocker is Extract<EligibilityBlocker, { kind: 'alternative' }> => (
+  blocker.kind === 'alternative' && blocker.travel !== undefined
+);
 
 // Doable-now counting lives in utils/journalStatus (shared with the
 // insights band) — see countDoableTasks there.
@@ -360,7 +367,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                             || task.regions?.length || task.anyOfRegions?.length || task.locations?.length
                             || task.oneOf?.length || task.combatLevel
                             || task.allQuests || task.anySkillLevel || task.questPoints !== undefined
-                            || taskEligibility.manualChecks.length || task.equipmentRequirements?.length || task.mobility?.length || task.arcana?.length,
+                            || taskEligibility.manualChecks.length || task.equipmentRequirements?.length || task.mobility?.length || task.arcana?.length || task.minigames?.length,
                           );
                           const skillRequirements = Object.entries(task.skills ?? {});
                           const unmetSkillRequirements = skillRequirements.filter(([skill, level]) =>
@@ -426,6 +433,11 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                           <Lock size={8} /> {mobility}
                                         </span>
                                       ))}
+                                      {task.minigames?.map(minigame => (
+                                        <span key={minigame} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${unlocks.minigames.includes(minigame) ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
+                                          <Lock size={8} /> {minigame}
+                                        </span>
+                                      ))}
                                       {task.equipmentRequirements?.map(requirement => {
                                         const waived = requirement.unlessDiary && unlocks.diaries.includes(requirement.unlessDiary);
                                         const met = !taskEligibility.blockers.some(blocker => blocker.kind === 'equipment' && blocker.slot === requirement.slot);
@@ -461,6 +473,18 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                           <MapPin size={8} /> Any area: {anyRegionAlternativeLabel}
                                         </span>
                                       )}
+                                      {/* An owned island or enclave that no route reaches yet. */}
+                                      {taskEligibility.blockers.filter(isTravelBlocker).map(blocker => (
+                                        <span
+                                          key={blocker.label}
+                                          title={['One of:', ...blocker.routes.map(route => route.blockers.length
+                                            ? `${route.label} (needs ${route.blockers.map(routeBlocker => routeBlocker.label).join(' + ')})`
+                                            : route.label)].join('\n')}
+                                          className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-red-500/30 text-red-400 bg-red-900/10"
+                                        >
+                                          <MapPin size={8} /> {blocker.label}
+                                        </span>
+                                      ))}
                                       {[task.combatLevel ? `Combat level ${task.combatLevel}` : undefined, task.allQuests ? 'All quests' : undefined, task.anySkillLevel ? `Any skill ${task.anySkillLevel}` : undefined].filter((label): label is string => Boolean(label)).map(label => {
                                         const met = !taskEligibility.blockers.some(blocker => blocker.label === label);
                                         return <span key={label} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${met ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}><WikiIcon file={label.startsWith("Combat level") ? "Combat_icon.png" : label.startsWith("Any skill") ? "Stats_icon.png" : "Quest_point_icon.png"} alt="" size={8} /> {label}</span>;

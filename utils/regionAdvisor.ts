@@ -16,6 +16,7 @@ import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { canonicalAreaName } from '../data/areaMapPolicy';
+import { areaEntryDependencies } from '../data/areaAccess';
 import { TableType } from '../types';
 import { isAreaReachable } from './reachability';
 import { chunkUnlocked } from './chunkLocations';
@@ -58,11 +59,21 @@ const questProbes = new Map<string, Probe[]>(Object.values(QUEST_DATA).map(quest
   ]).map(area => `area:${area}`)),
 ]]));
 const diaryProbes = new Map<string, Probe[]>();
+// An island's departure areas count too: unlocking Port Sarim can open a task
+// on the Void Knights' Outpost (data/areaAccess.ts).
+const areaProbes = (area: string): Probe[] => {
+  const travel = areaEntryDependencies(area);
+  return [
+    `area:${area}`,
+    ...travel.areas.map(departure => `area:${departure}`),
+    ...travel.chunks.map(({ cx, cy }) => `chunk:${cx},${cy}`),
+  ];
+};
 for (const task of ALL_DIARY_TASKS) {
   const probes = [
-    ...(task.anyOfRegions ?? []).map(area => `area:${area}`),
+    ...(task.anyOfRegions ?? []).flatMap(areaProbes),
     ...[task, ...(task.oneOf ?? [])].flatMap(option => [
-      ...(option.regions ?? []).map(area => `area:${area}`),
+      ...(option.regions ?? []).flatMap(areaProbes),
       ...(option.locations ?? []).flatMap(location => location.chunkOptions.map(({ cx, cy }) => `chunk:${cx},${cy}`)),
     ]),
   ];

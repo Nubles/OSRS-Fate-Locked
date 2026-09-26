@@ -19,6 +19,19 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-26-diary-travel',
+    title: 'Diary Tasks Need a Way There',
+    date: '2026-09-26',
+    sections: {
+      fixed: [
+        'Diary tasks on an island or enclave you own count as doable only once you can get there. Owning just the Ship Yard no longer makes the Karamja seaweed task doable, and an Ankou in the Forgotten Cemetery needs Cemetery Teleport or a neighbouring Wilderness area.',
+        'Pest Control diary tasks need Port Sarim\'s boat, the Minigame Teleport or 50 Sailing, or a one-tap confirmation that you have a Pest control teleport scroll.',
+        'Diary tasks you do inside a minigame need that minigame unlocked, 26 in all: Pest Control\'s games and the Void set, Barbarian Assault, Pyramid Plunder, the Fishing Trawler, Tithe Farm and the rest. Tasks that only visit the place, such as entering the Warriors\' Guild, don\'t, and tasks you have completed stay completed.',
+        'The Diary Journal, Next Best and goal plans name the trip, such as Travel to Forgotten Cemetery, and suggest the transport or area that gets you there. Fourteen islands and enclaves are covered so far, including Waterbirth Island, Lunar Isle, Mos Le\'Harmless and Ape Atoll. Owned areas still show on the map and count toward completion as before.',
+      ],
+    },
+  },
+  {
     id: '2026-09-26-runelite-pairing-privacy',
     title: 'RuneLite Pairing Privacy',
     date: '2026-09-26',

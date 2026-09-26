@@ -176,7 +176,10 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Go out fishing on the Fishing Trawler.",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "minigames": [
+        "Fishing Trawler"
+      ]
     },
     {
       "id": "ard_easy_6",
@@ -832,7 +835,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "81 Fishing and 91 Cooking Raw manta ray, multiple recommended in case of burning one"
+      "sourceRequirements": "81 Fishing and 91 Cooking Raw manta ray, multiple recommended in case of burning one",
+      "minigames": [
+        "Fishing Trawler"
+      ]
     },
     {
       "id": "ard_elite_2",
@@ -930,6 +936,9 @@
             "Access Nightmare Zone and have the salve amulet and points needed to imbue it there"
           ]
         }
+      ],
+      "minigames": [
+        "Nightmare Zone"
       ]
     },
     {
@@ -989,6 +998,9 @@
       ],
       "arcana": [
         "Ancient Magicks"
+      ],
+      "minigames": [
+        "Castle Wars"
       ]
     },
     {
@@ -1148,6 +1160,9 @@
           "quest": "Icthlarin's Little Helper",
           "label": "Reached the required progress in Icthlarin's Little Helper for: Sell some artefacts to Simon Templeton."
         }
+      ],
+      "minigames": [
+        "Pyramid Plunder"
       ]
     },
     {
@@ -1173,6 +1188,9 @@
           "quest": "Icthlarin's Little Helper",
           "label": "Reached the required progress in Icthlarin's Little Helper for: Open the Sarcophagus in the first room of Pyramid Plunder"
         }
+      ],
+      "minigames": [
+        "Pyramid Plunder"
       ]
     },
     {
@@ -1815,6 +1833,9 @@
           "quest": "Icthlarin's Little Helper",
           "label": "Reached the required progress in Icthlarin's Little Helper for: Steal from the Grand Gold Chest in the final room of Pyramid Plunder."
         }
+      ],
+      "minigames": [
+        "Pyramid Plunder"
       ]
     },
     {
@@ -3849,6 +3870,9 @@
           "quest": "The Giant Dwarf",
           "label": "Reached the required progress in The Giant Dwarf for: Obtain the Blast Furnace Foremans permission to use the Blast Furnace for free."
         }
+      ],
+      "minigames": [
+        "Blast Furnace"
       ]
     },
     {
@@ -4435,7 +4459,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of the Barbarian Assault tutorial to be able to play the minigame"
+      "sourceRequirements": "Completion of the Barbarian Assault tutorial to be able to play the minigame",
+      "minigames": [
+        "Barbarian Assault"
+      ]
     },
     {
       "id": "kan_med_12",
@@ -4710,6 +4737,9 @@
           "reason": "Granite body",
           "manualCheck": "Have Granite body and confirm that the specific item is permitted by your equipment tier"
         }
+      ],
+      "minigames": [
+        "Barbarian Assault"
       ]
     },
     {
@@ -4762,7 +4792,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "See the gameplay overview and the strategy guide"
+      "sourceRequirements": "See the gameplay overview and the strategy guide",
+      "minigames": [
+        "Barbarian Assault"
+      ]
     },
     {
       "id": "kan_elite_2",
@@ -5116,7 +5149,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "200 coins 40 Agility recommended"
+      "sourceRequirements": "200 coins 40 Agility recommended",
+      "minigames": [
+        "Brimhaven Agility Arena"
+      ]
     },
     {
       "id": "kar_med_2",
@@ -5198,7 +5234,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Jungle Potion 10 Woodcutting See the recommendations"
+      "sourceRequirements": "Completion of Jungle Potion 10 Woodcutting See the recommendations",
+      "minigames": [
+        "Tai Bwo Wannai Cleanup"
+      ]
     },
     {
       "id": "kar_med_6",
@@ -5578,7 +5617,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "At least one other player Weaponry, optionally"
+      "sourceRequirements": "At least one other player Weaponry, optionally",
+      "minigames": [
+        "TzHaar Fight Pit"
+      ]
     },
     {
       "id": "kar_hard_2",
@@ -6489,7 +6531,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "74 Farming Seed dibber"
+      "sourceRequirements": "74 Farming Seed dibber",
+      "minigames": [
+        "Tithe Farm"
+      ]
     },
     {
       "id": "kou_hard_6",
@@ -6556,7 +6601,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "49 Thieving Lockpick"
+      "sourceRequirements": "49 Thieving Lockpick",
+      "minigames": [
+        "Stealing Artefacts"
+      ]
     },
     {
       "id": "kou_hard_9",
@@ -7227,6 +7275,9 @@
             "Impling jar"
           ]
         }
+      ],
+      "minigames": [
+        "Impetuous Impulses"
       ]
     },
     {
@@ -7346,7 +7397,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Tears of Guthix Games necklace recommended for quick access"
+      "sourceRequirements": "Completion of Tears of Guthix Games necklace recommended for quick access",
+      "minigames": [
+        "Tears of Guthix"
+      ]
     },
     {
       "id": "lum_hard_6",
@@ -8136,7 +8190,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Cabin Fever 40 Cooking Empty inventory and head slot At least one opposing player to start the game"
+      "sourceRequirements": "Completion of Cabin Fever 40 Cooking Empty inventory and head slot At least one opposing player to start the game",
+      "minigames": [
+        "Trouble Brewing"
+      ]
     },
     {
       "id": "mor_med_7",
@@ -8364,7 +8421,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of In Aid of the Myreque See the recommendations"
+      "sourceRequirements": "Completion of In Aid of the Myreque See the recommendations",
+      "minigames": [
+        "Temple Trekking"
+      ]
     },
     {
       "id": "mor_hard_6",
@@ -9713,7 +9773,10 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "40 Combat level",
-      "combatLevel": 40
+      "combatLevel": 40,
+      "minigames": [
+        "Pest Control"
+      ]
     },
     {
       "id": "west_easy_3",
@@ -9765,6 +9828,9 @@
       "sourceRequirements": "None",
       "regions": [
         "Tree Gnome Stronghold"
+      ],
+      "minigames": [
+        "Gnome Ball"
       ]
     },
     {
@@ -10006,6 +10072,9 @@
       "combatLevel": 70,
       "regions": [
         "Void Knights' Outpost"
+      ],
+      "minigames": [
+        "Pest Control"
       ]
     },
     {
@@ -10111,7 +10180,10 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Complete a Gnome Delivery.",
-      "sourceRequirements": "Completion of the Gnome Restaurant tutorial 29-42 Cooking (varies per food)"
+      "sourceRequirements": "Completion of the Gnome Restaurant tutorial 29-42 Cooking (varies per food)",
+      "minigames": [
+        "Gnome Restaurant"
+      ]
     },
     {
       "id": "western_med_12",
@@ -10214,7 +10286,10 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "100 Combat level",
-      "combatLevel": 100
+      "combatLevel": 100,
+      "minigames": [
+        "Pest Control"
+      ]
     },
     {
       "id": "west_hard_4",
@@ -10575,6 +10650,9 @@
           "tier": 7,
           "reason": "Complete Void knight set"
         }
+      ],
+      "minigames": [
+        "Pest Control"
       ]
     },
     {
@@ -11933,5 +12011,58 @@
       "wild_hard_1"
     ],
     "tierPolicy": "Reviewed material/named Fate tiers are hard gates. Unreviewed named items require minimum slot T1 plus manual item ownership/permission confirmation; stat estimates never become hard diary gates."
+  },
+  "minigameAudit": {
+    "reviewedAt": "2026-09-26",
+    "decision": "Owner decision, 26 September 2026: a diary task that means playing a minigame needs that minigame unlocked, as Pest Control's games do. Tasks that only visit or use a place are left alone.",
+    "rule": "Tagged when the task is done inside the minigame, or needs something only the minigame gives (its points, tickets, favour, rewards or loot). Not tagged: visiting or using the place, a task with a route outside the minigame, a quest of a similar name, or an unlock the tracker already models another way.",
+    "source": "docs/reviews/2026-09-26-diary-minigame-audit.md",
+    "changedTaskIds": [
+      "ard_easy_5",
+      "ard_elite_1",
+      "ard_elite_5",
+      "ard_elite_8",
+      "des_easy_8",
+      "des_easy_9",
+      "des_elite_5",
+      "frem_hard_9",
+      "kan_elite_1",
+      "kan_hard_9",
+      "kan_med_11",
+      "kar_hard_1",
+      "kar_med_1",
+      "kar_med_5",
+      "kou_hard_5",
+      "kou_hard_8",
+      "lum_hard_5",
+      "lum_med_11",
+      "mor_hard_5",
+      "mor_med_6",
+      "west_easy_2",
+      "west_elite_5",
+      "west_hard_3",
+      "west_med_7",
+      "western_easy_5",
+      "western_med_6"
+    ],
+    "notTagged": {
+      "ard_med_5": "Travels to Castle Wars by balloon; no game is played.",
+      "fal_hard_10": "Enters the Warriors' Guild, a guild entry.",
+      "fal_hard_8": "The wall safes are in the Rogues' Den itself, not in its maze minigame.",
+      "fal_med_6": "Only visits the Port Sarim Rat Pits.",
+      "kar_easy_9": "The Fight Cave, a boss, also completes it; the requirements have no boss field.",
+      "kar_hard_5": "Needs Tai Bwo Wannai Trio, a quest, not the Cleanup.",
+      "kar_med_10": "Needs Tai Bwo Wannai Trio, a quest, not the Cleanup.",
+      "kar_med_19": "Shilo Village also opens the gem rocks.",
+      "kar_med_8": "Teak trees grow outside the Tai Bwo Wannai Hardwood Grove as well.",
+      "kar_med_9": "Mahogany trees grow outside the Tai Bwo Wannai Hardwood Grove as well.",
+      "lum_elite_3": "The magic trees stand outside the Mage Training Arena's games.",
+      "lum_hard_1": "Bones to Peaches is already an Arcana unlock.",
+      "lum_hard_10": "Uses the altar at Emir's Arena; no duel is fought.",
+      "mor_elite_2": "Firemaking with shade remains, not the Shades of Mort'ton temple game.",
+      "west_easy_9": "The Minigame Teleport itself, already a Mobility unlock; no game is played.",
+      "western_med_7": "A Gnome Glider trip.",
+      "wild_hard_1": "The god spells come from Mage Arena I, already a quest requirement."
+    }
   }
 }

@@ -20,7 +20,17 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-26-runelite-pairing-privacy');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-26-diary-travel');
+  });
+
+  it('announces that diary tasks on an owned island need a way there, and minigame tasks their minigame', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-26-diary-travel');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/only once you can get there.*Ship Yard.*Forgotten Cemetery/),
+      expect.stringMatching(/Pest control teleport scroll/),
+      expect.stringMatching(/inside a minigame need that minigame unlocked, 26 in all.*completed stay completed/),
+      expect.stringMatching(/Travel to Forgotten Cemetery.*still show on the map/),
+    ]);
   });
 
   it('announces that Disconnect clears the relay and the pairing dialog hides the code', () => {

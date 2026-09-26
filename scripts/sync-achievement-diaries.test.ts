@@ -465,6 +465,16 @@ describe('Achievement Diary id-classification audit', () => {
     expect(() => renderDiaryTasks(snapshot)).toThrow(/merchants.*non-empty string/i);
   });
 
+  it('retains minigame gates and rejects unknown minigames', () => {
+    const snapshot = loadSnapshot();
+    snapshot.tasks[0].minigames = ['Pest Control'];
+    expect(renderDiaryTasks(snapshot)).toContain("minigames: ['Pest Control']");
+    snapshot.tasks[0].minigames = ['NotAMinigame'];
+    expect(() => validateAudit(snapshot)).toThrow(/unknown.*NotAMinigame/i);
+    snapshot.tasks[0].minigames = [42];
+    expect(() => renderDiaryTasks(snapshot)).toThrow(/minigames.*non-empty string/i);
+  });
+
   it('rejects unknown references nested inside an alternative route', () => {
     const snapshot = loadSnapshot();
     snapshot.tasks[0].oneOf = [
@@ -762,7 +772,7 @@ describe('Achievement Diary id-classification audit', () => {
       snapshot.tasks[0].equipmentRequirements = [{ slot: 'Cape', tier, reason: 'Test cape' }];
       expect(() => validateSnapshot(snapshot)).toThrow(/equipmentRequirements/);
     }
-    for (const field of ['mobility', 'arcana']) {
+    for (const field of ['mobility', 'arcana', 'minigames']) {
       const snapshot = loadSnapshot();
       snapshot.tasks[0][field] = ['Invented unlock'];
       expect(() => validateAudit(snapshot)).toThrow(/unknown/i);

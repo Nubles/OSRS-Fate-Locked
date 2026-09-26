@@ -198,6 +198,7 @@ const renderRequirementProperties = (requirement) => {
   if (requirement.merchants?.length > 0) properties.push('merchants: ' + renderStringArray(requirement.merchants));
   if (requirement.arcana?.length > 0) properties.push('arcana: ' + renderStringArray(requirement.arcana));
   if (requirement.mobility?.length > 0) properties.push('mobility: ' + renderStringArray(requirement.mobility));
+  if (requirement.minigames?.length > 0) properties.push('minigames: ' + renderStringArray(requirement.minigames));
   if (requirement.equipmentRequirements?.length > 0) properties.push('equipmentRequirements: ' + JSON.stringify(requirement.equipmentRequirements));
   if (requirement.quests?.length > 0) {
     properties.push('quests: ' + renderStringArray(requirement.quests));
@@ -262,7 +263,7 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
   if (!requirement || typeof requirement !== 'object' || Array.isArray(requirement)) {
     throw new Error('Invalid Diary requirement route: ' + context);
   }
-  for (const field of ['items', 'merchants', 'mobility', 'arcana', 'quests', 'cas', 'regions', 'anyOfRegions', 'manualRequirements']) {
+  for (const field of ['items', 'merchants', 'mobility', 'arcana', 'minigames', 'quests', 'cas', 'regions', 'anyOfRegions', 'manualRequirements']) {
     if (requirement[field] !== undefined && !Array.isArray(requirement[field])) {
       throw new Error('Invalid Diary requirement ' + field + ': ' + context);
     }
@@ -322,6 +323,7 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
     || requirement.merchants?.length
     || requirement.mobility?.length
     || requirement.arcana?.length
+    || requirement.minigames?.length
     || requirement.equipmentRequirements?.length
     || Object.keys(requirement.skills ?? {}).length
     || requirement.quests?.length
@@ -437,6 +439,7 @@ export function renderDiaryTasks(snapshot) {
     '  merchants?: string[];',
     '  mobility?: string[];',
     '  arcana?: string[];',
+    '  minigames?: string[];',
     '  equipmentRequirements?: DiaryEquipmentRequirement[];',
     '  quests?: string[];',
     '  cas?: string[];',
@@ -461,6 +464,7 @@ export function renderDiaryTasks(snapshot) {
     '  merchants?: string[];',
     '  mobility?: string[];',
     '  arcana?: string[];',
+    '  minigames?: string[];',
     '  equipmentRequirements?: DiaryEquipmentRequirement[];',
     '  quests?: string[];',
     '  cas?: string[];',
@@ -659,6 +663,7 @@ const loadReferenceCatalog = (projectRoot) => {
     merchants: new Set(stringArrayOf(initializerOf(itemsSource, 'MERCHANTS_LIST'))),
     mobility: new Set(stringArrayOf(initializerOf(itemsSource, 'MOBILITY_LIST'))),
     arcana: new Set(stringArrayOf(initializerOf(itemsSource, 'ARCANA_LIST'))),
+    minigames: new Set(stringArrayOf(initializerOf(itemsSource, 'MINIGAMES_LIST'))),
     equipment: new Set(stringArrayOf(initializerOf(itemsSource, 'EQUIPMENT_SLOTS'))),
     quests,
     regions,
@@ -689,6 +694,9 @@ const findUnknownReferences = (snapshot, projectRoot) => {
       }
       for (const mobility of requirement.mobility ?? []) {
         if (!catalog.mobility.has(mobility)) unknown.push(task.id + ' mobility ' + mobility);
+      }
+      for (const minigame of requirement.minigames ?? []) {
+        if (!catalog.minigames.has(minigame)) unknown.push(task.id + ' minigame ' + minigame);
       }
       for (const equipment of requirement.equipmentRequirements ?? []) {
         if (!catalog.equipment.has(equipment.slot)) unknown.push(task.id + ' equipment slot ' + equipment.slot);
