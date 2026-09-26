@@ -33,6 +33,17 @@ describe('authored changelog releases', () => {
     ]);
   });
 
+  it('announces that Disconnect clears the relay and the pairing dialog hides the code', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-26-runelite-pairing-privacy');
+    expect(release).toMatchObject({ title: 'RuneLite Pairing Privacy', date: '2026-09-26' });
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Disconnect.*removes your published profile from the relay/i),
+    ]);
+    expect(release?.sections.changed).toEqual([
+      expect.stringMatching(/only the last four characters of the pairing request/i),
+    ]);
+  });
+
   it('says which shops Amulet Shops and Jewellery Shops unlock and renames the Ardougne banks', () => {
     const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-25-clearer-names');
     expect(release?.title).toBe('Clearer Shop and Bank Names');

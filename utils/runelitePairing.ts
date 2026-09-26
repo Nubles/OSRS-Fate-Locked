@@ -11,3 +11,10 @@ export const parseRunelitePairFragment = (hash: string): string | null => {
   const code = hash.slice(RUNELITE_PAIR_HASH_PREFIX.length);
   return isRunelitePairCode(code) ? code : null;
 };
+
+/**
+ * A pairing code as the app shows it: only its last four characters, such
+ * as "…a1b2". Anyone with the whole code can read the published profile, so
+ * it never appears on screen, where a stream or screenshot could show it.
+ */
+export const runelitePairCodeHint = (code: string): string => `…${code.slice(-4)}`;

@@ -139,6 +139,11 @@ export class RelaySyncService {
     return this.session.code;
   }
 
+  /**
+   * Forget the pairing, here and in every other tab. Local only: the relay
+   * keeps serving the last profile until its record expires. The Disconnect
+   * button calls disconnect(), which also tells the relay.
+   */
   disable() {
     this.session = null;
     try { localStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
@@ -146,6 +151,31 @@ export class RelaySyncService {
     this.lastError = null;
     this.lastSyncAt = null;
     this.emit();
+  }
+
+  /**
+   * Disconnect: forget the pairing at once, here and in every other tab,
+   * then ask the relay to mark the code gone, so it stops serving the last
+   * profile, and the linked account in it, to anyone who has the code. The
+   * request waits for a publish already on its way, which would otherwise
+   * land after it and restore the profile. It is best effort and never
+   * rejects: if it fails, the profile expires with its record within a day.
+   */
+  disconnect(): Promise<void> {
+    const session = this.session;
+    this.disable();
+    // Only the code's write token can mark it gone.
+    if (!session?.token) return Promise.resolve();
+    return this.pushQueue.then(() => this.markGone(session));
+  }
+
+  /** Ask the relay to mark a pairing's code gone. Never throws. */
+  private async markGone(session: Session): Promise<void> {
+    try {
+      await this.post(`/r/${session.code}`, { token: session.token, gone: true });
+    } catch {
+      // Offline or timed out: the profile expires with its record.
+    }
   }
 
   /** Ask the mounted driver to rebuild and send the current profile. */

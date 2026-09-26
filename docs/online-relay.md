@@ -11,6 +11,7 @@ The relay is optional. Clipboard and local-file imports remain available.
 
 ```text
 Browser  POST /r/<code>   publishes the app-authored v4 profile
+Browser  POST /r/<code>   marks the code gone when the player presses Disconnect
 RuneLite GET  /r/<code>   retrieves and validates that profile
 ```
 
@@ -32,6 +33,14 @@ profile shows RuneLite as not connected. Pairing again or pressing
 **Disconnect** in one tab applies to every open tab. A pairing saved before
 its profile was recorded is bound to the profile of the first tab that
 publishes it.
+
+After forgetting the pairing, **Disconnect** asks the relay to
+[mark the code gone](#marking-a-code-gone) with the pairing's write token, so
+the relay stops serving the last profile, and the linked account in it, to
+anyone who has the code. The request waits for a publish that tab already has
+on its way, which would otherwise land after it and put the profile back. It
+is sent once and is best effort: if it fails, for example offline, the
+profile expires with its record within 24 hours.
 
 The rules are built from the app's chunk and equipment data. If either fails
 to load, the browser publishes nothing: the relay keeps the last complete
@@ -67,7 +76,8 @@ that condition.
 | Method | Path | Body / response | Ownership |
 |---|---|---|---|
 | `POST` | `/r/<code>` | `{ token?, payload }` | Browser publishes the v4 profile; 24-hour TTL. Refused without the code's write token. |
-| `GET` | `/r/<code>` | `{ version, payload }` | RuneLite reads; supports `If-None-Match`. |
+| `POST` | `/r/<code>` | `{ token, gone: true }` → `{ version, gone: true }` | The owner marks the code gone: a tombstone replaces the profile for 90 days. Refused without the code's write token. |
+| `GET` | `/r/<code>` | `{ version, payload }` | RuneLite reads; supports `If-None-Match`. A gone code answers `404` with `{"gone":true}`. |
 
 The first browser write claims the record with a private token. The app
 persists that token in the pairing session so later profile revisions can
@@ -84,6 +94,29 @@ use the same rule.
 
 The pairing dialog asks the player to continue only if they just pressed
 **Connect tracker** in RuneLite, because any website can open a pairing link.
+It shows only the code's last four characters, such as `…a1b2`, so a stream
+or screenshot of the dialog does not reveal the code. The app still stores
+and sends the whole code.
+
+## Marking a code gone
+
+The owner can withdraw a published profile before its record expires; the app
+does so when the player presses **Disconnect**.
+`POST /r/<code>` with `{ token, gone: true }` and no payload is authorised
+like a publish: it needs the code's write token and refreshes the owner
+record the same way. The Worker replaces the profile with a tombstone,
+`{ gone: true, version, token }`, which holds no profile data, keeps it for
+90 days like an owner record, and answers `{ version, gone: true }`. The
+version rises as for any write.
+
+A `GET` of a gone code answers `404` with the body `{"gone":true}`, whatever
+its `If-None-Match`. It is a 404, as for a code with no profile, and never a
+410: the plugin builds players already have read a 404 as a missing profile,
+but would treat a 410 as an outage and back off, and the stream overlay would
+keep showing its last frame. A later publish with the owner's token replaces
+the tombstone with a profile as usual. Only the profile resource, `/r/<code>`,
+can be marked gone; the legacy resources below still refuse a body without
+their data.
 
 ## Versions and ETags
 
@@ -109,6 +142,13 @@ that fetched the earlier one can be told `304` until the next publish. Only
 the code's owner can write, and a browser tab sends its publishes one at a
 time, so this needs two of the owner's tabs or devices publishing within the
 same second.
+
+The `ETag` is the bare version, such as `41`, and RuneLite sends it back as it
+is in `If-None-Match`. A `GET` whose `If-None-Match` names the stored version
+is answered `304 Not Modified` with the same bare `ETag`, whether the
+validator is bare, quoted (`"41"`) or weak (`W/"41"`), as a proxy or another
+client may send it. Any other value, including a list of validators or `*`,
+gets the full reply.
 
 ## Legacy compatibility only
 
@@ -156,12 +196,14 @@ The published v4 profile contains the tracker state needed to render and
 enforce the player's current restrictions. It contains no password, session
 cookie, chat history, inventory dump, or arbitrary telemetry.
 
-The current relay record expires after 24 hours. Anyone with the random
-pairing code can read that record during its lifetime; the private token is
-required to replace it. The owner record holds no profile data and no token,
-only the token's hash and a timestamp, and expires 90 days after its last
-refresh. Use clipboard or local-file import if relay data
-should not leave the machine.
+The current relay record expires after 24 hours, or sooner when the player
+presses **Disconnect**, which marks the code gone and leaves a tombstone with
+no profile data. Anyone with the random pairing code can read the record
+during its lifetime; the private token is required to replace it or mark it
+gone. The app shows only the code's last four characters. The owner record
+holds no profile data and no token, only the token's hash and a timestamp,
+and expires 90 days after its last refresh. Use clipboard or local-file import
+if relay data should not leave the machine.
 
 ## RuneLite bundle v4
 

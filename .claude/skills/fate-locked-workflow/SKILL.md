@@ -50,10 +50,13 @@ web app exports rules bundles and processes plugin events through the relay.
   confirm with network/console evidence, not intuition.
 - **For cross-boundary work (web ↔ plugin):** the bundle
   (`utils/runeliteBundle.ts` ↔ `FateLockedBundle.java`) is the contract.
-  Any semantic that exists on both sides must be pinned by
-  `utils/runelitePluginParity.test.ts` — a TS simulation of the Java
-  resolution run against real built bundles. If you change either side,
-  update the simulation in the same commit or the test is lying.
+  The golden bundles (`contracts/golden-bundles/`, written by
+  `scripts/goldenBundles.test.ts`) pin it: the app's own answers for a
+  fixed set of runs, which the plugin's CI checks its real Java against
+  at a pinned commit of this repository. After an intended change, run
+  `npm run goldens:write` and review the `.expect.json` diff; the plugin
+  then re-pins and must agree before its next release. Don't add a
+  TypeScript copy of the Java rules: the last one drifted from the plugin.
 
 ## What to verify before answering "done"
 

@@ -32,6 +32,19 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-09-26-runelite-pairing-privacy',
+    title: 'RuneLite Pairing Privacy',
+    date: '2026-09-26',
+    sections: {
+      fixed: [
+        'Disconnect in the Connect RuneLite card now removes your published profile from the relay. Anyone with the pairing code could previously still read it, including your linked account name, for up to a day.',
+      ],
+      changed: [
+        'The RuneLite pairing dialog shows only the last four characters of the pairing request, so a stream or screenshot no longer shows the whole code.',
+      ],
+    },
+  },
+  {
     id: '2026-09-25-clearer-names',
     title: 'Clearer Shop and Bank Names',
     date: '2026-09-25',
