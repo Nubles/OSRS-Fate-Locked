@@ -1,20 +1,30 @@
+// @ts-expect-error Node types are intentionally excluded from the browser app.
+import { readFileSync } from 'node:fs';
+// @ts-expect-error Node types are intentionally excluded from the browser app.
+import { gunzipSync } from 'node:zlib';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import content from '../public/chunk-content.json';
 import { ChunkContentService } from '../services/ChunkContentService';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { OCEAN_CHUNK_KEYS } from '../utils/oceanAccess';
 import { ARCANA_LIST, MOBILITY_LIST, POH_LIST } from './items';
+import { DIARY_DATA } from './diaryData';
 import { NON_TRAVEL_OPTIONS, TRAVEL_METHODS } from './travelMethods';
 
 /** Every chunk a player can stand in: land, ocean and interiors. */
 let places: Set<string>;
+/** Interior chunks by the interior's name. */
+let interiorKeys: Map<string, string[]>;
 
 beforeAll(async () => {
   const service = new ChunkContentService();
   vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => content })));
   await service.init();
   vi.unstubAllGlobals();
-  places = new Set([...ALL_CHUNK_KEYS, ...OCEAN_CHUNK_KEYS, ...service.interiorRecords().map((record) => record.key)]);
+  const interiors = service.interiorRecords();
+  places = new Set([...ALL_CHUNK_KEYS, ...OCEAN_CHUNK_KEYS, ...interiors.map((record) => record.key)]);
+  interiorKeys = new Map();
+  for (const record of interiors) interiorKeys.set(record.name, [...(interiorKeys.get(record.name) ?? []), record.key]);
 });
 
 const destinations = (method: (typeof TRAVEL_METHODS)[number]) =>
@@ -69,5 +79,107 @@ describe('TRAVEL_METHODS', () => {
 
   it('cite a source', () => {
     for (const method of TRAVEL_METHODS) expect(method.source.trim(), method.id).not.toBe('');
+  });
+});
+
+/** The Chunk Picker's teleport spells: spell name, lowercased, to the chunks and places it names. */
+const CHUNK_PICKER_SPELLS: ReadonlyMap<string, string[]> = (() => {
+  const doc = JSON.parse(gunzipSync(readFileSync(new URL('./sources/chunkpicker-chunkinfo-export.json.gz', import.meta.url)))
+    .toString('utf8')) as { challenges: { Magic: Record<string, { Chunks?: string[] }> } };
+  const spells = new Map<string, string[]>();
+  for (const [task, record] of Object.entries(doc.challenges.Magic)) {
+    const name = /^Cast ~\|(.+?)\|~$/.exec(task)?.[1];
+    if (name && /tele/.test(name)) spells.set(name, record.Chunks ?? []);
+  }
+  return spells;
+})();
+/** The chunk where Tyss teaches the Arceuus spellbook, which the Chunk Picker lists first for its spells. */
+const ARCEUUS_TEACHER = '26,60';
+/** Named places the Chunk Picker gives that no chunk stands for. */
+const NOT_A_PLACE = new Set(['Player-owned house', 'WildernessChunks[+]']);
+const keyOf = (chunk: string) => {
+  const id = Number(chunk.split('-')[0]);
+  return `${Math.floor(id / 256)},${id % 256}`;
+};
+
+const spells = () => TRAVEL_METHODS.filter((method) => 'spell' in method.match);
+const spellOf = (method: (typeof TRAVEL_METHODS)[number]) => (method.match as { spell: { book: string; name: string } }).spell;
+const castTo = (method: (typeof TRAVEL_METHODS)[number]) =>
+  [...method.options.Cast.to, ...(method.options.Cast.afterDiary?.to ?? [])];
+/** Spell names the Chunk Picker spells its own way. */
+const CHUNK_PICKER_SPELLINGS: Readonly<Record<string, string>> = {
+  "fenkenstrain's castle teleport": "fenkenstain's castle teleport",
+};
+/** The spell's Chunk Picker record name: with the spellbook where two books share a name. */
+const recordName = (method: (typeof TRAVEL_METHODS)[number]) => {
+  const { book, name } = spellOf(method);
+  const plain = CHUNK_PICKER_SPELLINGS[name.toLowerCase()] ?? name.toLowerCase();
+  return CHUNK_PICKER_SPELLS.has(`${plain} (${book})`) ? `${plain} (${book})` : plain;
+};
+const recordFor = (method: (typeof TRAVEL_METHODS)[number]) => CHUNK_PICKER_SPELLS.get(recordName(method));
+
+/** Where the wiki's landing square and the Chunk Picker disagree, reviewed. */
+const REVIEWED_AGAINST_CHUNK_PICKER: Readonly<Record<string, string>> = {
+  'spell:ancient:senntisten-teleport': 'The Chunk Picker names the Exam Centre (52,52); the wiki lands at 3320,3337, in 51,52.',
+  'spell:arceuus:ape-atoll-teleport': 'The Chunk Picker names the Ape Atoll Dungeon; the wiki lands on the surface at 2769,2703, in 43,42.',
+};
+
+describe('teleport spells', () => {
+  it('each have a Chunk Picker record, and go where it says, or differ as reviewed', () => {
+    for (const method of spells()) {
+      const record = recordFor(method);
+      expect(record, method.id).toBeDefined();
+      const to = new Set(castTo(method));
+      const agrees = record!.every((chunk) => {
+        if (method.unlocks.includes('Arceuus Spellbook') && keyOf(chunk) === ARCEUUS_TEACHER) return true;
+        if (NOT_A_PLACE.has(chunk)) return true;
+        const inside = interiorKeys.get(chunk);
+        if (inside) return inside.some((key) => to.has(key));
+        return /^\d+(-\d+)?$/.test(chunk) && to.has(keyOf(chunk));
+      });
+      expect(agrees, `${method.id}: ${REVIEWED_AGAINST_CHUNK_PICKER[method.id] ?? 'disagrees with the Chunk Picker'}`)
+        .toBe(!(method.id in REVIEWED_AGAINST_CHUNK_PICKER));
+    }
+  });
+
+  it('cover every Chunk Picker teleport spell that goes somewhere fixed', () => {
+    const covered = new Set(spells().map(recordName));
+    const somewhere = [...CHUNK_PICKER_SPELLS.entries()].filter(([, chunks]) => chunks.some((chunk) =>
+      !NOT_A_PLACE.has(chunk) && keyOf(chunk) !== ARCEUUS_TEACHER)).map(([name]) => name);
+    expect(somewhere.filter((name) => !covered.has(name))).toEqual([]);
+  });
+
+  it('put the spells the old table got wrong in the right places (G7)', () => {
+    const byId = new Map(TRAVEL_METHODS.map((method) => [method.id, method]));
+    expect(byId.get('spell:ancient:senntisten-teleport')?.options.Cast.to).toEqual(['51,52']);
+    expect(byId.get('spell:ancient:carrallanger-teleport')?.options.Cast.to).toEqual(['49,57']);
+    expect(spellOf(byId.get('spell:ancient:carrallanger-teleport')!).name).toBe('Carrallanger Teleport');
+    // Two spells named Ape Atoll Teleport, told apart by the spellbook.
+    expect(byId.get('spell:standard:ape-atoll-teleport')?.options.Cast.to).toEqual(['43,43']);
+    expect(byId.get('spell:arceuus:ape-atoll-teleport')?.options.Cast.to).toEqual(['43,42']);
+    expect(byId.get('spell:paddewwa-teleport')).toBeUndefined();
+    expect(byId.get('spell:ancient:paddewwa-teleport')?.options.Cast.to).toEqual(['48,154']);
+  });
+
+  it("switch destination after the diary that lets them, and name only real diaries", () => {
+    const switches = Object.fromEntries(spells().filter((method) => method.options.Cast.afterDiary)
+      .map((method) => [method.id, method.options.Cast.afterDiary]));
+    expect(switches).toEqual({
+      'spell:standard:varrock-teleport': { diary: 'Varrock Medium', to: ['49,54'] },
+      'spell:standard:camelot-teleport': { diary: 'Kandarin Hard', to: ['42,54'] },
+      'spell:standard:watchtower-teleport': { diary: 'Ardougne Hard', to: ['40,48'] },
+    });
+    for (const method of TRAVEL_METHODS) {
+      for (const option of Object.values(method.options)) {
+        if (option.afterDiary) expect(DIARY_DATA[option.afterDiary.diary], method.id).toBeDefined();
+      }
+    }
+  });
+
+  it('need the spellbook they are cast from, and nothing for the standard one', () => {
+    const books: Record<string, string[]> = {
+      standard: [], ancient: ['Ancient Magicks'], lunar: ['Lunar Spellbook'], arceuus: ['Arceuus Spellbook'],
+    };
+    for (const method of spells()) expect(method.unlocks, method.id).toEqual(books[spellOf(method).book]);
   });
 });

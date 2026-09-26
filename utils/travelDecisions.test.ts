@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { TravelMethod } from '../data/travelMethods';
 import { hasTravelUnlock, travelDecisions, type TravelContext } from './travelDecisions';
 
-const nothing = { mobility: [], arcana: [], housing: [] };
+const nothing = { mobility: [], arcana: [], housing: [], diaries: [] };
 const context = (changes: Partial<TravelContext> = {}): TravelContext => ({
   unlocks: nothing,
   entries: { '50,50': 'ALLOWED', '46,52': 'LOCKED', '52,52': 'NOT_READY' },
@@ -14,7 +14,7 @@ const method = (changes: Partial<TravelMethod>): TravelMethod => ({
 
 describe('hasTravelUnlock', () => {
   it('looks an unlock up in the list it belongs to', () => {
-    const unlocks = { mobility: ['Teleport Tablets'], arcana: ['Ancient Magicks'], housing: ['Mounted Glory'] };
+    const unlocks = { mobility: ['Teleport Tablets'], arcana: ['Ancient Magicks'], housing: ['Mounted Glory'], diaries: [] };
     expect(['Teleport Tablets', 'Ancient Magicks', 'Mounted Glory'].map((id) => hasTravelUnlock(unlocks, id)))
       .toEqual([true, true, true]);
     expect(hasTravelUnlock(nothing, 'Teleport Tablets')).toBe(false);
@@ -53,6 +53,13 @@ describe('travelDecisions', () => {
     expect(decided.Rub).toEqual({ to: ['50,50', '46,52'], status: 'UNKNOWN', reason: 'Goes to one of several places' });
     expect(decided.Same).toEqual({ to: ['50,50'], status: 'ALLOWED' });
     expect(decided.Anywhere).toEqual({ to: [], status: 'UNKNOWN', reason: 'Where it goes is unknown' });
+  });
+
+  it('adds the destination a diary lets the player switch to, once it is done', () => {
+    const varrock = method({ options: { Cast: { to: ['50,50'], afterDiary: { diary: 'Varrock Medium', to: ['46,52'] } } } });
+    expect(travelDecisions([varrock], context()).test.options.Cast).toEqual({ to: ['50,50'], status: 'ALLOWED' });
+    expect(travelDecisions([varrock], context({ unlocks: { ...nothing, diaries: ['Varrock Medium'] } })).test.options.Cast)
+      .toEqual({ to: ['50,50', '46,52'], status: 'UNKNOWN', reason: 'Goes to one of several places' });
   });
 
   it('keeps what identifies a method, and decides fairy ring codes like options', () => {

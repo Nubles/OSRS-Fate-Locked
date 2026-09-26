@@ -25,7 +25,7 @@ export interface TravelMethodDecision {
 }
 
 export interface TravelContext {
-  unlocks: Pick<UnlockState, 'mobility' | 'arcana' | 'housing'>;
+  unlocks: Pick<UnlockState, 'mobility' | 'arcana' | 'housing' | 'diaries'>;
   /** Each chunk's entry for the run, as rules.chunkEntries has it. */
   entries: Readonly<Record<string, PermissionStatus>>;
   /** Why a chunk's entry isn't ALLOWED, where the snapshots say. */
@@ -33,7 +33,7 @@ export interface TravelContext {
 }
 
 /** Whether the run has a travel unlock, looked up in the list it belongs to. */
-export function hasTravelUnlock(unlocks: TravelContext['unlocks'], id: string): boolean {
+export function hasTravelUnlock(unlocks: Pick<UnlockState, 'mobility' | 'arcana' | 'housing'>, id: string): boolean {
   if (MOBILITY_LIST.includes(id)) return unlocks.mobility.includes(id);
   if (ARCANA_LIST.includes(id)) return unlocks.arcana.includes(id);
   if (POH_LIST.includes(id)) return unlocks.housing.includes(id);
@@ -47,7 +47,10 @@ const DESTINATION_REASONS: Record<Exclude<PermissionStatus, 'ALLOWED'>, string> 
 };
 
 function decideOption(method: TravelMethod, option: TravelOption, context: TravelContext): TravelOptionDecision {
-  const to = [...new Set(option.to)];
+  // A diary that lets the player switch the destination adds the other one.
+  const switchable = option.afterDiary && context.unlocks.diaries.includes(option.afterDiary.diary)
+    ? option.afterDiary.to : [];
+  const to = [...new Set([...option.to, ...switchable])];
   const missing = method.unlocks.filter((id) => !hasTravelUnlock(context.unlocks, id));
   if (missing.length) return { to, status: 'LOCKED', reason: `Needs ${missing.join(' and ')}` };
   if (to.length !== 1) {
