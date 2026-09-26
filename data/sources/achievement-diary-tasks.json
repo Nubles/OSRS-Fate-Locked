@@ -11727,23 +11727,19 @@
       "manualRequirements": [
         "Meet the entry requirements for each chosen boss variant (diary completion or qualifying boss Slayer task)."
       ],
-      "oneOf": [
-        {
-          "label": "The greater bosses",
-          "bosses": [
-            "Callisto",
-            "Venenatis",
-            "Vet'ion"
-          ]
-        },
-        {
-          "label": "The lesser bosses",
-          "bosses": [
-            "Artio",
-            "Spindel",
-            "Calvar'ion"
-          ]
-        }
+      "anyOfBosses": [
+        [
+          "Callisto",
+          "Artio"
+        ],
+        [
+          "Venenatis",
+          "Spindel"
+        ],
+        [
+          "Vet'ion",
+          "Calvar'ion"
+        ]
       ]
     },
     {
@@ -12144,7 +12140,7 @@
   "bossAudit": {
     "reviewedAt": "2026-09-26",
     "decision": "A player reported on 26 September 2026 that \"Kill the Giant Mole beneath Falador Park\" showed as doable without the Giant Mole unlocked. Following the owner's minigame rule of the same day, a diary task that means fighting a boss needs that boss unlocked.",
-    "rule": "Tagged when the task is a kill, a raid or a fight against something the tracker unlocks under Bosses, including a wave inside the Fight Caves. Where either of two ways completes the task, each way becomes a route. Not tagged: entering a lair, visiting the area, or a monster or reward that only shares a boss's name.",
+    "rule": "Tagged when the task is a kill, a raid or a fight against something the tracker unlocks under Bosses, including a wave inside the Fight Caves. Where a boss has a lesser version that also counts, either one will do; where either of two activities completes the task, each becomes a route. Not tagged: entering a lair, visiting the area, or a monster or reward that only shares a boss's name.",
     "source": "docs/reviews/2026-09-26-diary-boss-audit.md",
     "changedTaskIds": [
       "des_hard_4",

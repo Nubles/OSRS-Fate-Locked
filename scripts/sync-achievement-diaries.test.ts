@@ -476,6 +476,16 @@ describe('Achievement Diary id-classification audit', () => {
     expect(() => renderDiaryTasks(snapshot)).toThrow(/bosses.*non-empty string/i);
   });
 
+  it('retains a choice of bosses per group and rejects a bad group', () => {
+    const snapshot = loadSnapshot();
+    snapshot.tasks[0].anyOfBosses = [['Callisto', 'Artio'], ['Venenatis', 'Spindel']];
+    expect(renderDiaryTasks(snapshot)).toContain("anyOfBosses: [['Callisto', 'Artio'], ['Venenatis', 'Spindel']]");
+    snapshot.tasks[0].anyOfBosses = [['Callisto', 'NotABoss']];
+    expect(() => validateAudit(snapshot)).toThrow(/unknown.*NotABoss/i);
+    snapshot.tasks[0].anyOfBosses = [['Callisto']];
+    expect(() => renderDiaryTasks(snapshot)).toThrow(/anyOfBosses/);
+  });
+
   it('retains minigame gates and rejects unknown minigames', () => {
     const snapshot = loadSnapshot();
     snapshot.tasks[0].minigames = ['Pest Control'];
@@ -548,7 +558,6 @@ describe('Achievement Diary id-classification audit', () => {
       'var_med_7',
       'var_med_9',
       'wild_easy_2',
-      'wild_elite_1',
       'wild_elite_6',
       'wild_hard_8',
       'wild_hard_9',

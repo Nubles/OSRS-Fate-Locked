@@ -16,8 +16,9 @@ the exception. The review is recorded beside the data as `bossAudit` in
 
 A task is tagged when it is a kill, a raid or a fight against something the
 tracker unlocks under Bosses (`BOSSES_LIST` in `data/items.ts`), including a
-wave inside the Fight Caves. Where either of two ways completes a task, each
-way becomes a route and any one will do.
+wave inside the Fight Caves. Where a boss has a lesser version that also
+counts, either one will do (`anyOfBosses`). Where either of two activities
+completes a task, each becomes a route.
 
 A task is not tagged when it only enters a lair or visits the area, or when
 a monster or reward merely shares a boss's name.
@@ -43,11 +44,7 @@ a monster or reward merely shares a boss's name.
 | `west_elite_2` | Western Elite | Thermonuclear Smoke Devil | A kill |
 | `wild_hard_6` | Wilderness Hard | Chaos Elemental | A kill |
 | `wild_hard_7` | Wilderness Hard | Crazy Archaeologist, Chaos Fanatic, Scorpia | Kill each |
-| `wild_elite_1` | Wilderness Elite | Callisto, Venenatis, Vet'ion, or Artio, Spindel, Calvar'ion | Two routes: the greater bosses or the lesser ones |
-
-`wild_elite_1` accepts each boss's lesser version in game, one by one. The
-routes cover all greater or all lesser; a mix, such as Callisto with Spindel
-and Vet'ion, reads as locked. It is rare enough to leave for now.
+| `wild_elite_1` | Wilderness Elite | Callisto or Artio, Venenatis or Spindel, Vet'ion or Calvar'ion | Either version of each boss, in any mix, as its map locations already allow |
 
 ## Left alone (5)
 

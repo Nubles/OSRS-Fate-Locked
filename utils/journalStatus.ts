@@ -352,6 +352,8 @@ export interface DoableTask {
   arcana?: string[];
   minigames?: string[];
   bosses?: string[];
+  /** Any one boss of each group, such as Callisto or its lesser Artio. */
+  anyOfBosses?: string[][];
   equipmentRequirements?: DiaryEquipmentRequirement[];
   quests?: string[];
   regions?: string[];
@@ -386,6 +388,7 @@ const requirementOptionParts = (option: DiaryTaskRequirementOption): string[] =>
   ...(option.arcana ?? []),
   ...(option.minigames ?? []),
   ...(option.bosses ?? []),
+  ...(option.anyOfBosses ?? []).map(group => group.join(' or ')),
   ...(option.equipmentRequirements ?? []).map(item => `${item.slot} T${item.tier}: ${item.reason}${item.unlessDiary ? ` (unless ${item.unlessDiary} is complete)` : ''}`),
   ...(option.combinedSkillLevel ? [
     option.combinedSkillLevel.skills.join(' + ') + ' combined ' + option.combinedSkillLevel.level,
@@ -600,6 +603,11 @@ function evaluateDiaryRequirement(
   for (const boss of requirement.bosses ?? []) {
     if (unlocks.bosses?.includes(boss)) evidence.push(boss);
     else blockers.push({ kind: 'boss', label: boss });
+  }
+  for (const group of requirement.anyOfBosses ?? []) {
+    const unlocked = group.find(boss => unlocks.bosses?.includes(boss));
+    if (unlocked) evidence.push(unlocked);
+    else blockers.push({ kind: 'boss', label: group.join(' or ') });
   }
   for (const item of requirement.equipmentRequirements ?? []) {
     if (item.unlessDiary && unlocks.diaries.includes(item.unlessDiary)) {

@@ -31,7 +31,7 @@ const REVIEWED: Record<string, string> = {
   mor_elite_6: 'Barrows Brothers',
   west_elite_2: 'Thermonuclear Smoke Devil',
   west_hard_11: 'Zulrah',
-  wild_elite_1: "Callisto, Venenatis, Vet'ion, Artio, Spindel, Calvar'ion",
+  wild_elite_1: "Callisto, Artio, Venenatis, Spindel, Vet'ion, Calvar'ion",
   wild_hard_6: 'Chaos Elemental',
   wild_hard_7: 'Crazy Archaeologist, Chaos Fanatic, Scorpia',
 };
@@ -61,8 +61,12 @@ const bossBlockers = (id: string, unlocks: UnlockState) => evaluateDiaryTaskElig
 describe('diary tasks that mean fighting a boss', () => {
   it('tag exactly the reviewed tasks, each with a boss the tracker unlocks', () => {
     const tagged = Object.fromEntries(ALL_DIARY_TASKS
-      .filter(row => row.bosses?.length || row.oneOf?.some(option => option.bosses?.length))
-      .map(row => [row.id, [...(row.bosses ?? []), ...(row.oneOf ?? []).flatMap(option => option.bosses ?? [])].join(', ')]));
+      .filter(row => row.bosses?.length || row.anyOfBosses?.length || row.oneOf?.some(option => option.bosses?.length))
+      .map(row => [row.id, [
+        ...(row.bosses ?? []),
+        ...(row.oneOf ?? []).flatMap(option => option.bosses ?? []),
+        ...(row.anyOfBosses ?? []).flat(),
+      ].join(', ')]));
 
     expect(tagged).toEqual(REVIEWED);
     for (const bosses of Object.values(REVIEWED)) {
@@ -120,16 +124,20 @@ describe('diary tasks that mean fighting a boss', () => {
     expect(evaluateDiaryTaskEligibility(row, { ...neither, bosses: ['TzHaar Fight Cave'] }, 'vanilla').eligible).toBe(true);
   });
 
-  it('accept the greater or the lesser Wilderness bosses', () => {
+  it('accept either version of each Wilderness boss, in any mix', () => {
     // The task also asks the player to confirm each boss's entry requirement.
     const row = task('wild_elite_1');
     const none = everything({ bosses: [] });
     const blockers = (bosses: string[]) => evaluateDiaryTaskEligibility(row, { ...none, bosses }, 'vanilla').blockers;
 
-    expect(blockers([])).not.toEqual([]);
+    expect(blockers([])).toEqual([
+      { kind: 'boss', label: 'Callisto or Artio' },
+      { kind: 'boss', label: 'Venenatis or Spindel' },
+      { kind: 'boss', label: "Vet'ion or Calvar'ion" },
+    ]);
     expect(blockers(['Callisto', 'Venenatis', "Vet'ion"])).toEqual([]);
-    expect(blockers(['Artio', 'Spindel', "Calvar'ion"])).toEqual([]);
-    expect(blockers(['Callisto', 'Venenatis'])).not.toEqual([]);
+    expect(blockers(['Artio', 'Venenatis', "Calvar'ion"])).toEqual([]);
+    expect(blockers(['Callisto', 'Spindel'])).toEqual([{ kind: 'boss', label: "Vet'ion or Calvar'ion" }]);
     expect(evaluateDiaryTaskEligibility(row, { ...none, bosses: ['Artio', 'Spindel', "Calvar'ion"] }, 'vanilla').confirmable).toBe(true);
   });
 

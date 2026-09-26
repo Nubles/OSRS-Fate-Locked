@@ -26,6 +26,7 @@ export interface DiaryTaskRequirementOption {
   arcana?: string[];
   minigames?: string[];
   bosses?: string[];
+  anyOfBosses?: string[][];
   equipmentRequirements?: DiaryEquipmentRequirement[];
   quests?: string[];
   cas?: string[];
@@ -52,6 +53,7 @@ export interface DiaryTask {
   arcana?: string[];
   minigames?: string[];
   bosses?: string[];
+  anyOfBosses?: string[][];
   equipmentRequirements?: DiaryEquipmentRequirement[];
   quests?: string[];
   cas?: string[];
@@ -557,7 +559,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'wild_hard_8', tierId: 'Wilderness Hard', description: 'Take the agility shortcut from Trollheim into the Wilderness.', skills: { 'Agility': 64 }, regions: ['Wilderness God Wars Dungeon'], oneOf: [{ quests: ['Troll Stronghold'] }, { cas: ['Easy'] }] },
   { id: 'wild_hard_9', tierId: 'Wilderness Hard', description: 'Kill a Spiritual warrior in the Wilderness Godwars Dungeon.', skills: { 'Slayer': 68 }, regions: ['Wilderness God Wars Dungeon'], oneOf: [{ skills: { 'Agility': 60 } }, { skills: { 'Strength': 60 } }] },
   { id: 'wild_hard_10', tierId: 'Wilderness Hard', description: 'Fish some Raw Lava Eel in the Wilderness.', skills: { 'Fishing': 53, 'Herblore': 25 }, regions: ['Lava Maze'] },
-  { id: 'wild_elite_1', tierId: 'Wilderness Elite', description: 'Kill Callisto, Venenatis & Vet\'ion.', locations: [{"label":"Callisto or Artio entrance","chunkOptions":[{"cx":51,"cy":60},{"cx":48,"cy":57}]},{"label":"Venenatis or Spindel entrance","chunkOptions":[{"cx":51,"cy":59},{"cx":49,"cy":58}]},{"label":"Vet'ion or Calvar'ion entrance","chunkOptions":[{"cx":50,"cy":59},{"cx":49,"cy":57}]}], manualRequirements: ['Meet the entry requirements for each chosen boss variant (diary completion or qualifying boss Slayer task).'], oneOf: [{ label: 'The greater bosses', bosses: ['Callisto', 'Venenatis', 'Vet\'ion'] }, { label: 'The lesser bosses', bosses: ['Artio', 'Spindel', 'Calvar\'ion'] }] },
+  { id: 'wild_elite_1', tierId: 'Wilderness Elite', description: 'Kill Callisto, Venenatis & Vet\'ion.', anyOfBosses: [['Callisto', 'Artio'], ['Venenatis', 'Spindel'], ['Vet\'ion', 'Calvar\'ion']], locations: [{"label":"Callisto or Artio entrance","chunkOptions":[{"cx":51,"cy":60},{"cx":48,"cy":57}]},{"label":"Venenatis or Spindel entrance","chunkOptions":[{"cx":51,"cy":59},{"cx":49,"cy":58}]},{"label":"Vet'ion or Calvar'ion entrance","chunkOptions":[{"cx":50,"cy":59},{"cx":49,"cy":57}]}], manualRequirements: ['Meet the entry requirements for each chosen boss variant (diary completion or qualifying boss Slayer task).'] },
   { id: 'wild_elite_2', tierId: 'Wilderness Elite', description: 'Teleport to Ghorrock.', skills: { 'Magic': 96 }, arcana: ['Ancient Magicks'], quests: ['Desert Treasure I'], locations: [{"label":"Ghorrock teleport destination","chunkOptions":[{"cx":46,"cy":61}]}] },
   { id: 'wild_elite_3', tierId: 'Wilderness Elite', description: 'Fish and Cook a Dark Crab in the Resource Area.', skills: { 'Cooking': 90, 'Fishing': 85 }, regions: ['Resource Area'] },
   { id: 'wild_elite_4', tierId: 'Wilderness Elite', description: 'Smith a rune scimitar from scratch in the Resource Area.', skills: { 'Mining': 85, 'Smithing': 90 }, regions: ['Resource Area'] },

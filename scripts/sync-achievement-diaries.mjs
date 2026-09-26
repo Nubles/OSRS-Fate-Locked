@@ -200,6 +200,9 @@ const renderRequirementProperties = (requirement) => {
   if (requirement.mobility?.length > 0) properties.push('mobility: ' + renderStringArray(requirement.mobility));
   if (requirement.minigames?.length > 0) properties.push('minigames: ' + renderStringArray(requirement.minigames));
   if (requirement.bosses?.length > 0) properties.push('bosses: ' + renderStringArray(requirement.bosses));
+  if (requirement.anyOfBosses?.length > 0) {
+    properties.push('anyOfBosses: [' + requirement.anyOfBosses.map(renderStringArray).join(', ') + ']');
+  }
   if (requirement.equipmentRequirements?.length > 0) properties.push('equipmentRequirements: ' + JSON.stringify(requirement.equipmentRequirements));
   if (requirement.quests?.length > 0) {
     properties.push('quests: ' + renderStringArray(requirement.quests));
@@ -276,6 +279,13 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
       );
     }
   }
+  if (requirement.anyOfBosses !== undefined && (
+    !Array.isArray(requirement.anyOfBosses)
+    || requirement.anyOfBosses.some(group => !Array.isArray(group) || group.length < 2
+      || group.some(value => typeof value !== 'string' || value.trim() === ''))
+  )) {
+    throw new Error('Invalid Diary requirement anyOfBosses (expected groups of two or more names): ' + context);
+  }
   if (requirement.equipmentRequirements !== undefined && (
     !Array.isArray(requirement.equipmentRequirements) || requirement.equipmentRequirements.length === 0
     || requirement.equipmentRequirements.some(item => !item || typeof item.slot !== 'string'
@@ -326,6 +336,7 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
     || requirement.arcana?.length
     || requirement.minigames?.length
     || requirement.bosses?.length
+    || requirement.anyOfBosses?.length
     || requirement.equipmentRequirements?.length
     || Object.keys(requirement.skills ?? {}).length
     || requirement.quests?.length
@@ -443,6 +454,7 @@ export function renderDiaryTasks(snapshot) {
     '  arcana?: string[];',
     '  minigames?: string[];',
     '  bosses?: string[];',
+    '  anyOfBosses?: string[][];',
     '  equipmentRequirements?: DiaryEquipmentRequirement[];',
     '  quests?: string[];',
     '  cas?: string[];',
@@ -469,6 +481,7 @@ export function renderDiaryTasks(snapshot) {
     '  arcana?: string[];',
     '  minigames?: string[];',
     '  bosses?: string[];',
+    '  anyOfBosses?: string[][];',
     '  equipmentRequirements?: DiaryEquipmentRequirement[];',
     '  quests?: string[];',
     '  cas?: string[];',
@@ -703,7 +716,7 @@ const findUnknownReferences = (snapshot, projectRoot) => {
       for (const minigame of requirement.minigames ?? []) {
         if (!catalog.minigames.has(minigame)) unknown.push(task.id + ' minigame ' + minigame);
       }
-      for (const boss of requirement.bosses ?? []) {
+      for (const boss of [...(requirement.bosses ?? []), ...(requirement.anyOfBosses ?? []).flat()]) {
         if (!catalog.bosses.has(boss)) unknown.push(task.id + ' boss ' + boss);
       }
       for (const equipment of requirement.equipmentRequirements ?? []) {
