@@ -1,5 +1,3 @@
-import { evaluateEntityAccess } from '../utils/entityAccess';
-import type { SlayerAssignment } from '../services/ChunkContentService';
 import React, { useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Skull, MapPin, Sword } from './OsrsIcon';
@@ -8,6 +6,7 @@ import { WikiIcon } from './WikiIcon';
 import { chunkContentService } from '../services/ChunkContentService';
 import { showChunkOnMap } from '../utils/chunkLocations';
 import { slayerReachability, SlayerStatus, SlayerTaskRow } from '../utils/slayerReach';
+import { slayerLocate } from '../utils/slayerDecisions';
 import { useChunkContent } from '../hooks/useChunkContent';
 
 const STATUS_META: Record<SlayerStatus, { label: string; cls: string }> = {
@@ -58,16 +57,8 @@ export const SlayerReachabilityPanel: React.FC = () => {
 
   const reach = useMemo(() => {
     if (!ready) return null;
-    const masters = chunkContentService.slayerMasters();
-    const locate = (task: string, assignment?: SlayerAssignment, master?: string) => {
-      const locations = chunkContentService.slayerLocations(task, assignment, master);
-      const checked = locations.map(hit => ({ ...hit, access: evaluateEntityAccess(hit.name, 'monster', hit.location, unlocks, gameModeId) }));
-      const hit = checked.find(hit => hit.access.status === 'ALLOWED')
-        ?? checked.find(hit => hit.access.status === 'UNKNOWN')
-        ?? checked.find(hit => hit.access.status === 'NOT_READY') ?? checked[0];
-      return hit ? { cx: hit.location.cx, cy: hit.location.cy, unlocked: hit.access.status === 'ALLOWED', accessStatus: hit.access.status } : null;
-    };
-    return slayerReachability(masters, unlocks, locate, gameModeId);
+    const locate = slayerLocate(chunkContentService, unlocks, gameModeId);
+    return slayerReachability(chunkContentService.slayerMasters(), unlocks, locate, gameModeId);
   }, [ready, unlocks, gameModeId]);
 
   if (error) return <div role="alert" className="mb-4 text-xs text-amber-300">Could not load Slayer locations. <button onClick={retry} className="underline">Retry Slayer locations</button></div>;
