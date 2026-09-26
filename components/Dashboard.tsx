@@ -62,6 +62,7 @@ import { BANKS, BANK_IDS, BANK_BY_ID } from '../data/banks';
 import { getActivityReq, ActivityReq } from '../data/activityRequirements';
 import { bossTier, TIER_LABEL } from '../data/bossKeyTiers';
 import { evaluateActivityReadiness, type ActivityReadiness } from '../utils/activityReadiness';
+import { withSkillGateQuests } from '../utils/journalStatus';
 import { ActivityReadinessBadge } from './ActivityReadinessBadge';
 import { RegionAdvisorPanel } from './RegionAdvisorPanel';
 import { FrontierAdvisorPanel } from './FrontierAdvisorPanel';
@@ -282,7 +283,7 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
                     {req.skills && Object.entries(req.skills).map(([sk, lvl]) => (
                         <span key={sk} className="text-[9px] px-1 py-0.5 rounded bg-amber-900/20 border border-amber-500/20 text-amber-300/90 leading-none font-mono" title={`Requires ${lvl} ${sk}`}>{sk} {lvl}</span>
                     ))}
-                    {req.quests && req.quests.map(q => (
+                    {withSkillGateQuests(req.quests, req.skills).map(q => (
                         <span key={q} className="text-[9px] px-1 py-0.5 rounded bg-violet-900/20 border border-violet-500/20 text-violet-300/90 leading-none flex items-center gap-0.5" title={`Quest: ${q}`}>
                             <ScrollText size={8} className="shrink-0" />{q}
                         </span>

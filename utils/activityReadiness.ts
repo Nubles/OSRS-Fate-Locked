@@ -1,6 +1,6 @@
 import type { ActivityReq } from '../data/activityRequirements';
 import type { UnlockState } from '../types';
-import { meetsSkillRequirement } from './journalStatus';
+import { meetsSkillRequirement, withSkillGateQuests } from './journalStatus';
 import { isAreaReachable } from './reachability';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 import { QUEST_DATA } from '../data/questData';
@@ -46,7 +46,8 @@ export function evaluateActivityReadiness(
   ) {
     blockers.push({ kind: 'area', label: requiredAreas.join(' or ') });
   }
-  for (const quest of requirement?.quests ?? []) {
+  // Includes the unlocking quest of a gated skill, such as Druidic Ritual.
+  for (const quest of withSkillGateQuests(requirement?.quests, requirement?.skills)) {
     if (!unlocks.quests.includes(quest)) {
       blockers.push({ kind: 'quest', label: quest });
     }
