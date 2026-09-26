@@ -121,7 +121,6 @@ const recordFor = (method: (typeof TRAVEL_METHODS)[number]) => CHUNK_PICKER_SPEL
 /** Where the wiki's landing square and the Chunk Picker disagree, reviewed. */
 const REVIEWED_AGAINST_CHUNK_PICKER: Readonly<Record<string, string>> = {
   'spell:ancient:senntisten-teleport': 'The Chunk Picker names the Exam Centre (52,52); the wiki lands at 3320,3337, in 51,52.',
-  'spell:arceuus:ape-atoll-teleport': 'The Chunk Picker names the Ape Atoll Dungeon; the wiki lands on the surface at 2769,2703, in 43,42.',
 };
 
 describe('teleport spells', () => {
@@ -156,7 +155,7 @@ describe('teleport spells', () => {
     expect(spellOf(byId.get('spell:ancient:carrallanger-teleport')!).name).toBe('Carrallanger Teleport');
     // Two spells named Ape Atoll Teleport, told apart by the spellbook.
     expect(byId.get('spell:standard:ape-atoll-teleport')?.options.Cast.to).toEqual(['43,43']);
-    expect(byId.get('spell:arceuus:ape-atoll-teleport')?.options.Cast.to).toEqual(['43,42']);
+    expect(byId.get('spell:arceuus:ape-atoll-teleport')?.options.Cast.to).toEqual(['43,142']);
     expect(byId.get('spell:paddewwa-teleport')).toBeUndefined();
     expect(byId.get('spell:ancient:paddewwa-teleport')?.options.Cast.to).toEqual(['48,154']);
   });

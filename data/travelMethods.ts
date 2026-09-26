@@ -122,8 +122,10 @@ const SPELLS: readonly TravelMethod[] = [
   spell('arceuus', 'Harmony Island Teleport', ['59,44'], 14863783),
   spell('arceuus', 'Cemetery Teleport', ['46,58'], 15266150),
   spell('arceuus', 'Barrows Teleport', ['55,51'], 15151762),
-  // The same name as the standard spell; the spellbook tells them apart.
-  spell('arceuus', 'Ape Atoll Teleport', ['43,42'], 14863786, { page: 'Ape Atoll Teleport (Arceuus)' }),
+  // The same name as the standard spell; the spellbook tells them apart. It
+  // lands inside the Ape Atoll Dungeon (2771,9102, from the tablet's page): the
+  // spell page draws that tile on the surface map, 6400 tiles north.
+  spell('arceuus', 'Ape Atoll Teleport', ['43,142'], 14863786, { page: 'Ape Atoll Teleport (Arceuus)' }),
 ];
 
 export const TRAVEL_METHODS: readonly TravelMethod[] = [...SPELLS];
