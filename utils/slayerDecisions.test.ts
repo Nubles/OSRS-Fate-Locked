@@ -4,10 +4,13 @@ import { initialState } from '../context/GameContext';
 import { ChunkContentService } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
 import { chunkForPlace } from './chunkLocations';
-import { SLAYER_DECISION, slayerDecisions, slayerLocate, slayerTaskKey } from './slayerDecisions';
-import { slayerReachability, type SlayerReach, type SlayerStatus } from './slayerReach';
+import { SLAYER_DECISION, slayerDecisions, slayerLocate, slayerReason, slayerTaskKey } from './slayerDecisions';
+import { slayerReachability, type SlayerReach, type SlayerStatus, type SlayerTaskRow } from './slayerReach';
 
 const fresh = (): UnlockState => structuredClone(initialState.unlocks);
+
+const statuses = (decisions: ReturnType<typeof slayerDecisions>) =>
+  Object.fromEntries(Object.entries(decisions).map(([key, decision]) => [key, decision.status]));
 
 /** Masters and their tasks' statuses, as slayerReachability would give them. */
 const reach = (masters: Record<string, [string, SlayerStatus][]>): SlayerReach => ({
@@ -40,17 +43,18 @@ describe('SLAYER_DECISION', () => {
 describe('slayerDecisions', () => {
   it('keys each task as slayerChunks does, for its master and on its own', () => {
     expect(slayerTaskKey(' Bears ')).toBe('bear');
+    const locked = { status: 'LOCKED', reason: 'Area locked' };
     expect(slayerDecisions(reach({ Krystilia: [['Bears', 'area-locked']] })))
-      .toEqual({ 'krystilia:bear': 'LOCKED', bear: 'LOCKED' });
+      .toEqual({ 'krystilia:bear': locked, bear: locked });
   });
 
   it("gives a task whatever its master the most usable of the masters' answers", () => {
-    const decisions = slayerDecisions(reach({
+    const decisions = statuses(slayerDecisions(reach({
       Turael: [['Bears', 'ready'], ['Cows', 'area-locked'], ['Dogs', 'no-location'], ['Rats', 'area-locked'],
         ['Goblins', 'area-locked']],
       Krystilia: [['Bears', 'area-locked'], ['Cows', 'area-locked'], ['Dogs', 'slayer-locked'], ['Rats', 'access-unknown'],
         ['Goblins', 'combat-locked']],
-    }));
+    })));
     expect(decisions).toMatchObject({
       'turael:bear': 'ALLOWED', 'krystilia:bear': 'LOCKED', bear: 'ALLOWED',
       cow: 'LOCKED',
@@ -64,7 +68,31 @@ describe('slayerDecisions', () => {
     const one = reach({ A: [['Rats', 'area-locked']], B: [['Rats', 'ready']] });
     const other = reach({ B: [['Rats', 'ready']], A: [['Rats', 'area-locked']] });
     expect(slayerDecisions(one)).toEqual(slayerDecisions(other));
-    expect(slayerDecisions(one).rat).toBe('ALLOWED');
+    expect(slayerDecisions(one).rat).toEqual({ status: 'ALLOWED' });
+  });
+
+  it("gives a task whatever its master the chosen master's reason", () => {
+    const decisions = slayerDecisions(reach({ A: [['Rats', 'area-locked']], B: [['Rats', 'access-unknown']] }));
+    expect(decisions.rat).toEqual({ status: 'UNKNOWN', reason: 'Access needs review' });
+  });
+});
+
+describe('slayerReason', () => {
+  const row = (status: SlayerStatus, extra: Partial<SlayerTaskRow> = {}): SlayerTaskRow =>
+    ({ monster: 'Bears', weight: 1, status, loc: null, ...extra });
+
+  it("says why a task isn't ready, the master's blocker and levels first, as the panel's badge does", () => {
+    expect(slayerReason(row('ready'))).toBeUndefined();
+    expect(slayerReason(row('area-locked', { masterBlocker: { status: 'area-locked', label: 'Master: Wyrmscraig' } })))
+      .toBe('Master: Wyrmscraig');
+    expect(slayerReason(row('slayer-locked', { slayer: 55 }))).toBe('Slayer 55');
+    expect(slayerReason(row('slayer-locked'))).toBe('Slayer locked');
+    expect(slayerReason(row('combat-locked', { combat: 70 }))).toBe('Combat 70');
+    expect(slayerReason(row('quest-locked'))).toBe('Quest requirements');
+    expect(slayerReason(row('area-locked'))).toBe('Area locked');
+    expect(slayerReason(row('access-blocked'))).toBe('Entry requirements');
+    expect(slayerReason(row('access-unknown'))).toBe('Access needs review');
+    expect(slayerReason(row('no-location'))).toBe('No known location');
   });
 });
 

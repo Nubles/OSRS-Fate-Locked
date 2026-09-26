@@ -30,6 +30,8 @@ import { runReach } from '../utils/chunkEntry';
 import { chunkEntries, rulesPlaces } from '../utils/chunkEntries';
 import { bankDecisions } from '../utils/bankDecisions';
 import { runProgress } from '../utils/runProgress';
+import { slayerDecisions, slayerLocate } from '../utils/slayerDecisions';
+import { slayerReachability } from '../utils/slayerReach';
 import { EQUIPMENT_CATALOGUE } from '../data/equipmentCatalogue';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
@@ -300,6 +302,8 @@ async function generate(scenario: Scenario, fresh: UnlockState): Promise<Generat
       bankStatus,
       freeAreas: freeAreasFor(scenario.mode, scenario.custom),
       progress: runProgress(unlocks, scenario.mode),
+      slayer: Object.fromEntries(Object.entries(slayerDecisions(slayerReachability(chunkContentService.slayerMasters(), unlocks,
+        slayerLocate(chunkContentService, unlocks, scenario.mode), scenario.mode))).map(([key, task]) => [key, task.status])),
     },
   };
 }
@@ -689,6 +693,12 @@ describe('golden bundles', () => {
         .toEqual([free, free]);
       expect((bundle.rules as { progress: unknown }).progress, `${scenario.id}: progress`)
         .toEqual((answers as { progress: unknown }).progress);
+
+      // Every task slayerChunks knows, with the pinned status.
+      const tasks = (bundle.rules as { slayerTasks: Record<string, { status: string }> }).slayerTasks;
+      expect(Object.keys(tasks).sort(), `${scenario.id}: Slayer keys`).toEqual(Object.keys(bundle.slayerChunks as object).sort());
+      expect(sameContent(Object.fromEntries(Object.entries(tasks).map(([key, task]) => [key, task.status])),
+        (answers as { slayer: unknown }).slayer), `${scenario.id}: Slayer statuses`).toBe(true);
     }
   });
 

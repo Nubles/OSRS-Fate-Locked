@@ -8,7 +8,7 @@ import type { UnlockState } from '../types';
 import type { PermissionStatus } from './chunkPermissionSnapshot';
 import { evaluateEntityAccess } from './entityAccess';
 import { mostUsable } from './permissionStatus';
-import type { LocateFn, SlayerReach, SlayerStatus } from './slayerReach';
+import type { LocateFn, SlayerReach, SlayerStatus, SlayerTaskRow } from './slayerReach';
 
 export interface SlayerLocationSource {
   slayerLocations(task: string, assignment?: SlayerAssignment, master?: string):
@@ -51,27 +51,54 @@ export const SLAYER_DECISION: Record<SlayerStatus, PermissionStatus> = {
   'no-location': 'UNKNOWN',
 };
 
+/**
+ * Why a task isn't ready, as the export says it: the master's blocker or
+ * the Slayer or Combat level first, as the Slayer panel's badge does.
+ */
+export function slayerReason(row: SlayerTaskRow): string | undefined {
+  if (row.masterBlocker) return row.masterBlocker.label;
+  switch (row.status) {
+    case 'ready': return undefined;
+    case 'slayer-locked': return row.slayer ? `Slayer ${row.slayer}` : 'Slayer locked';
+    case 'combat-locked': return row.combat ? `Combat ${row.combat}` : 'Combat level';
+    case 'quest-locked': return 'Quest requirements';
+    case 'area-locked': return 'Area locked';
+    case 'access-blocked': return 'Entry requirements';
+    case 'access-unknown': return 'Access needs review';
+    case 'no-location': return 'No known location';
+  }
+}
+
+export interface SlayerDecision {
+  status: PermissionStatus;
+  reason?: string;
+}
+
 /** A task as slayerChunks keys it: lowercased and trimmed, one trailing "s" dropped. */
 export const slayerTaskKey = (task: string): string => task.toLowerCase().trim().replace(/s$/, '');
 
 /**
  * A decision for each master's task ("krystilia:bear"), and one for each
  * task whatever the master ("bear"): the most usable of the masters'
- * answers, so it is LOCKED only when every master's is. A master that
- * wouldn't give the task yet (NOT_READY) probably didn't, so another
- * master's UNKNOWN comes first.
+ * answers, with the first such master's reason, so it is LOCKED only when
+ * every master's is. A master that wouldn't give the task yet (NOT_READY)
+ * probably didn't, so another master's UNKNOWN comes first.
  */
-export function slayerDecisions(reach: SlayerReach): Record<string, PermissionStatus> {
-  const decisions: Record<string, PermissionStatus> = {};
-  const byTask = new Map<string, PermissionStatus[]>();
+export function slayerDecisions(reach: SlayerReach): Record<string, SlayerDecision> {
+  const decisions: Record<string, SlayerDecision> = {};
+  const byTask = new Map<string, SlayerDecision[]>();
   for (const { master, rows } of reach.masters) {
     for (const row of rows) {
-      const status = SLAYER_DECISION[row.status];
+      const reason = slayerReason(row);
+      const decision: SlayerDecision = { status: SLAYER_DECISION[row.status], ...(reason ? { reason } : {}) };
       const task = slayerTaskKey(row.monster);
-      decisions[`${master.toLowerCase()}:${task}`] = status;
-      byTask.set(task, [...(byTask.get(task) ?? []), status]);
+      decisions[`${master.toLowerCase()}:${task}`] = decision;
+      byTask.set(task, [...(byTask.get(task) ?? []), decision]);
     }
   }
-  for (const [task, statuses] of byTask) decisions[task] = mostUsable(statuses)!;
+  for (const [task, answers] of byTask) {
+    const status = mostUsable(answers.map((answer) => answer.status))!;
+    decisions[task] = answers.find((answer) => answer.status === status)!;
+  }
   return decisions;
 }

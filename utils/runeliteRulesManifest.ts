@@ -7,6 +7,7 @@ import {
   type ChunkContent,
   type ConnectGraph,
   type Shortcut,
+  type SlayerMasters,
 } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
 import { runReach } from './chunkEntry';
@@ -16,6 +17,8 @@ import type { InteriorRecord } from './interiorEntry';
 import { bankDecisions, type BankDecision } from './bankDecisions';
 import { freeAreasFor } from './freeAreas';
 import { runProgress, type RunProgress } from './runProgress';
+import { slayerDecisions, slayerLocate, type SlayerDecision, type SlayerLocationSource } from './slayerDecisions';
+import { slayerReachability } from './slayerReach';
 import {
   buildChunkPermissionSnapshot,
   type ChunkPermissionSnapshot,
@@ -77,6 +80,8 @@ export interface RuneliteRulesManifest {
   freeAreas?: string[];
   /** Stage 2: how far the run has come, as its run card counts it. */
   progress?: RunProgress;
+  /** Stage 2: each Slayer task, per master and whatever the master, keyed like slayerChunks. */
+  slayerTasks?: Record<string, SlayerDecision>;
 }
 
 export interface RulesContentSource extends Partial<EntityAccessSource> {
@@ -89,6 +94,8 @@ export interface RulesContentSource extends Partial<EntityAccessSource> {
   interiorRecords?(): InteriorRecord[];
   surfaceContentFor?(cx: number, cy: number): ChunkContent | null;
   interiorsEnteredFrom?(cx: number, cy: number): { sourceId: string; content: ChunkContent }[];
+  slayerMasters?(): SlayerMasters;
+  slayerLocations?: SlayerLocationSource['slayerLocations'];
 }
 
 export interface ItemRuleSource {
@@ -171,6 +178,12 @@ export async function buildRuneliteRulesManifest(
         surfaceContentFor: (cx: number, cy: number) => service.surfaceContentFor?.(cx, cy) ?? service.contentFor(cx, cy),
         interiorsEnteredFrom: (cx: number, cy: number) => service.interiorsEnteredFrom?.(cx, cy) ?? [],
       }, permissions),
+      ...(service.slayerMasters && service.slayerLocations
+        ? {
+          slayerTasks: slayerDecisions(slayerReachability(service.slayerMasters(), input.unlocks,
+            slayerLocate(service as SlayerLocationSource, input.unlocks, input.run.gameModeId), input.run.gameModeId)),
+        }
+        : {}),
     }
     : {};
   // Needs no chunk data: the land next to the run's chunks, and with Sailing
