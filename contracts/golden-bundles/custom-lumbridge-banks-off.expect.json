@@ -3515,5 +3515,14 @@
  "freeAreas": [
   "Tutorial Island",
   "Lumbridge"
- ]
+ ],
+ "progress": {
+  "unit": "areas",
+  "unlocked": 2,
+  "total": 187,
+  "chunks": {
+   "unlocked": 9,
+   "total": 624
+  }
+ }
 }

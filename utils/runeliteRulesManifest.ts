@@ -15,6 +15,7 @@ import { chunkEntries, rulesPlaces, type RulesPlace } from './chunkEntries';
 import type { InteriorRecord } from './interiorEntry';
 import { bankDecisions, type BankDecision } from './bankDecisions';
 import { freeAreasFor } from './freeAreas';
+import { runProgress, type RunProgress } from './runProgress';
 import {
   buildChunkPermissionSnapshot,
   type ChunkPermissionSnapshot,
@@ -74,6 +75,8 @@ export interface RuneliteRulesManifest {
   banks?: Record<string, BankDecision>;
   /** Stage 2: the areas the run's mode frees at the start, from the mode itself. */
   freeAreas?: string[];
+  /** Stage 2: how far the run has come, as its run card counts it. */
+  progress?: RunProgress;
 }
 
 export interface RulesContentSource extends Partial<EntityAccessSource> {
@@ -221,5 +224,6 @@ export async function buildRuneliteRulesManifest(
     ...stage2,
     ...chunked,
     freeAreas: freeAreasFor(input.run.gameModeId, input.run.customMode),
+    progress: runProgress(input.unlocks, input.run.gameModeId),
   };
 }

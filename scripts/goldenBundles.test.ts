@@ -29,6 +29,7 @@ import { chunkContentService, CHUNK_CONTENT_DATA_VERSION } from '../services/Chu
 import { runReach } from '../utils/chunkEntry';
 import { chunkEntries, rulesPlaces } from '../utils/chunkEntries';
 import { bankDecisions } from '../utils/bankDecisions';
+import { runProgress } from '../utils/runProgress';
 import { EQUIPMENT_CATALOGUE } from '../data/equipmentCatalogue';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
@@ -298,6 +299,7 @@ async function generate(scenario: Scenario, fresh: UnlockState): Promise<Generat
       entries,
       bankStatus,
       freeAreas: freeAreasFor(scenario.mode, scenario.custom),
+      progress: runProgress(unlocks, scenario.mode),
     },
   };
 }
@@ -685,6 +687,8 @@ describe('golden bundles', () => {
       const free = (answers as { freeAreas: string[] }).freeAreas;
       expect([(bundle.rules as { freeAreas: string[] }).freeAreas, bundle.freeAreas], `${scenario.id}: free areas`)
         .toEqual([free, free]);
+      expect((bundle.rules as { progress: unknown }).progress, `${scenario.id}: progress`)
+        .toEqual((answers as { progress: unknown }).progress);
     }
   });
 

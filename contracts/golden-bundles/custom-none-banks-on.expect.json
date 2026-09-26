@@ -3514,5 +3514,14 @@
  },
  "freeAreas": [
   "Tutorial Island"
- ]
+ ],
+ "progress": {
+  "unit": "areas",
+  "unlocked": 1,
+  "total": 187,
+  "chunks": {
+   "unlocked": 7,
+   "total": 624
+  }
+ }
 }

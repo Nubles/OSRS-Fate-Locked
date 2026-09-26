@@ -3524,5 +3524,14 @@
   "Digsite",
   "Silvarea",
   "Paterdomus"
- ]
+ ],
+ "progress": {
+  "unit": "areas",
+  "unlocked": 16,
+  "total": 187,
+  "chunks": {
+   "unlocked": 51,
+   "total": 624
+  }
+ }
 }

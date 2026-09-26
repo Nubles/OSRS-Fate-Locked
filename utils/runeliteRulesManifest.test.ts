@@ -196,6 +196,19 @@ describe('buildRuneliteRulesManifest - free areas', () => {
   });
 });
 
+describe('buildRuneliteRulesManifest - progress', () => {
+  it("sends the run card's progress, with the land chunks it owns", async () => {
+    const manifest = await buildRuneliteRulesManifest({
+      unlocks: { ...structuredClone(initialState.unlocks), regions: ['Falador'] },
+      run: { runId: 'progress', runRevision: 1, gameModeId: 'vanilla' },
+      contentService: contentSource,
+      itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+    });
+    expect(manifest.progress).toMatchObject({ unit: 'areas', unlocked: 10, total: 187, chunks: { total: 624 } });
+    expect(manifest.progress?.chunks.unlocked).toBeGreaterThan(0);
+  });
+});
+
 describe('buildRuneliteRulesManifest - banks', () => {
   it("decides a bank with the run's reach, as its chunk's row does", async () => {
     // Lumbridge Castle's bank, rolled, in a chunk behind an unfinished quest.
