@@ -436,6 +436,20 @@ describe('buildRuneliteBundle - free areas', () => {
       setStartArea('misthalin');
     }
   });
+
+  it("takes the root free areas from the rules' own, whatever the global holds", async () => {
+    const { buildRuneliteRulesManifest } = await import('./runeliteRulesManifest');
+    const rules = await buildRuneliteRulesManifest({
+      unlocks: initialState.unlocks, run: { runId: 'free-areas', runRevision: 1, gameModeId: 'xtreme' },
+      contentService: { init: async () => false, allChunkCoords: () => [], contentFor: () => null,
+        connectGraph: () => ({}), shortcuts: () => [], questSections: () => ({}) },
+      itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+    });
+    setStartArea('misthalin');
+    const bundle = await buildRuneliteBundle([], state, undefined, undefined, undefined, undefined, true, undefined, rules);
+    expect(bundle.rules.freeAreas).toEqual(['Tutorial Island', 'Lumbridge']);
+    expect(bundle.freeAreas).toEqual(['Tutorial Island', 'Lumbridge']);
+  });
 });
 
 describe('buildRuneliteBundle - equipment tiers', () => {

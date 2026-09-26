@@ -22,7 +22,7 @@ import { buildBundlePayload } from '../utils/runeliteExport';
 import { chunkUnlocked } from '../utils/chunkLocations';
 import { isAreaReachable, isBankReachable } from '../utils/reachability';
 import { ALL_CHUNK_KEYS, chunkKey, getChunkFrontier } from '../utils/chunkAdjacency';
-import { setStartArea } from '../utils/freeAreas';
+import { freeAreasFor, setStartArea } from '../utils/freeAreas';
 import { getGameMode, resolveModeRules, type GameModeRules } from '../config/gameModes';
 import { normalizeAccountName } from '../services/fateEventProtocol';
 import { chunkContentService, CHUNK_CONTENT_DATA_VERSION } from '../services/ChunkContentService';
@@ -297,6 +297,7 @@ async function generate(scenario: Scenario, fresh: UnlockState): Promise<Generat
       ...(frontier ? { frontier } : {}),
       entries,
       bankStatus,
+      freeAreas: freeAreasFor(scenario.mode, scenario.custom),
     },
   };
 }
@@ -679,6 +680,11 @@ describe('golden bundles', () => {
       expect(unlike, `${scenario.id}: banks against their rows`).toEqual([]);
       const at = Object.fromEntries(Object.entries(decided).flatMap(([id, bank]) => bank.physical.map((key) => [key, id])));
       expect(sameContent(at, banksAnswer.bankAt), `${scenario.id}: bankAt`).toBe(true);
+
+      // The rules' free areas and the root's for older builds are both the mode's.
+      const free = (answers as { freeAreas: string[] }).freeAreas;
+      expect([(bundle.rules as { freeAreas: string[] }).freeAreas, bundle.freeAreas], `${scenario.id}: free areas`)
+        .toEqual([free, free]);
     }
   });
 

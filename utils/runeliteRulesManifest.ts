@@ -14,6 +14,7 @@ import { chunkKey, getChunkFrontier } from './chunkAdjacency';
 import { chunkEntries, rulesPlaces, type RulesPlace } from './chunkEntries';
 import type { InteriorRecord } from './interiorEntry';
 import { bankDecisions, type BankDecision } from './bankDecisions';
+import { freeAreasFor } from './freeAreas';
 import {
   buildChunkPermissionSnapshot,
   type ChunkPermissionSnapshot,
@@ -71,6 +72,8 @@ export interface RuneliteRulesManifest {
   frontier?: string[];
   /** Stage 2: every bank with a chunk, by id. Sent with chunkEntries. */
   banks?: Record<string, BankDecision>;
+  /** Stage 2: the areas the run's mode frees at the start, from the mode itself. */
+  freeAreas?: string[];
 }
 
 export interface RulesContentSource extends Partial<EntityAccessSource> {
@@ -217,5 +220,6 @@ export async function buildRuneliteRulesManifest(
     chunks,
     ...stage2,
     ...chunked,
+    freeAreas: freeAreasFor(input.run.gameModeId, input.run.customMode),
   };
 }

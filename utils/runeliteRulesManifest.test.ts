@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { initialState } from '../context/GameContext';
 import { MOBILITY_LIST } from '../data/items';
+import { getGameMode } from '../config/gameModes';
 import type { ChunkContent } from '../services/ChunkContentService';
 import {
   buildRuneliteRulesManifest,
@@ -177,6 +178,21 @@ describe('buildRuneliteRulesManifest - frontier', () => {
 
   it('sends no frontier for other runs', async () => {
     expect(await build('vanilla', {})).not.toHaveProperty('frontier');
+  });
+});
+
+describe('buildRuneliteRulesManifest - free areas', () => {
+  it("sends the areas the run's mode frees, whatever the global holds", async () => {
+    const build = async (gameModeId: string, customMode?: ReturnType<typeof getGameMode>['rules']) =>
+      (await buildRuneliteRulesManifest({
+        unlocks: initialState.unlocks, run: { runId: 'free', runRevision: 1, gameModeId, customMode },
+        contentService: contentSource,
+        itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+      })).freeAreas;
+    expect(await build('vanilla')).toContain('Varrock');
+    expect(await build('xtreme')).toEqual(['Tutorial Island', 'Lumbridge']);
+    expect(await build('chunked')).toEqual(['Tutorial Island']);
+    expect(await build('custom', { ...getGameMode('vanilla').rules, startArea: 'none' })).toEqual(['Tutorial Island']);
   });
 });
 

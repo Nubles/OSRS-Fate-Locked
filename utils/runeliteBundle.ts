@@ -141,8 +141,9 @@ export async function buildRuneliteBundle(
     subAreaChunks: SUB_AREA_CHUNKS,
     regionGroups: { Misthalin: MISTHALIN_AREAS, ...REGION_GROUPS },
     unlockedRegions: canonicalRegions,
-    // Preserve the current mode's explicit free-area baseline for legacy plugin paths.
-    freeAreas: getFreeAreas(),
+    // Preserve the current mode's explicit free-area baseline for legacy plugin
+    // paths: the rules' own, from the run's mode, or else the global's.
+    freeAreas: rules?.freeAreas ?? getFreeAreas(),
     // Chunked mode's unlock state — individual map-region chunks the player
     // has rolled, keyed "cx,cy" (matches unlocks.chunks). Included (even as
     // an empty array, at the very start of a Chunked run) whenever the

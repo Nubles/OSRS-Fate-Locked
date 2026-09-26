@@ -3521,5 +3521,8 @@
   "14908": "LOCKED",
   "15151": "LOCKED",
   "15163": "LOCKED"
- }
+ },
+ "freeAreas": [
+  "Tutorial Island"
+ ]
 }
