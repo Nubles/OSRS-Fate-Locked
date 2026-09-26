@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { X, Share2, Download, Copy } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { useProfiles } from '../context/ProfileContext';
-import { REGIONS_LIST, MISTHALIN_AREAS } from '../constants';
 import {
   MAP_IMAGE, MAP_BOUNDS, CHUNK_TILES,
   tileToPixel, ChunkCoord,
@@ -10,9 +9,8 @@ import {
 import { auditHistory, computeRunId } from '../utils/integrity';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { getGameMode, resolveModeRules } from '../config/gameModes';
-import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { chunkUnlocked } from '../utils/chunkLocations';
-import { isAreaReachable } from '../utils/reachability';
+import { runProgress } from '../utils/runProgress';
 import { REGION_CHUNKS } from '../data/regionChunks';
 
 // ---- mini-map drawing -------------------------------------------------------
@@ -21,9 +19,6 @@ const CARD_MAP_W = 380;
 const CARD_MAP_H = 268;
 // Match html2canvas scale exactly so it copies our canvas 1:1 (no re-sampling).
 const MAP_OVERSAMPLE = 2;
-
-// Every named area the card counts: Misthalin's and those outside it.
-const NAMED_AREAS = [...MISTHALIN_AREAS, ...REGIONS_LIST];
 
 const drawMiniMap = async (
   canvas: HTMLCanvasElement,
@@ -429,16 +424,7 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
         ? `${historyAudit.violations.length} replay warning${historyAudit.violations.length === 1 ? '' : 's'}`
         : 'Local history checks passed';
 
-  const isChunkedMode = gameModeId === 'chunked';
-  const regionsTotal = isChunkedMode
-    ? ALL_CHUNK_KEYS.length
-    : NAMED_AREAS.length;
-  // Named areas count when the run can reach them, free ones included (legacy
-  // Xtreme frees only Lumbridge). Chunked mode's baseline is the always-free
-  // start chunk, already included in unlocks.chunks' effective count via +1.
-  const regionsUnlocked = isChunkedMode
-    ? (unlocks.chunks ?? []).length + 1
-    : NAMED_AREAS.filter(area => isAreaReachable(area, unlocks, gameModeId)).length;
+  const { unlocked: regionsUnlocked, total: regionsTotal } = runProgress(unlocks, gameModeId);
 
   const cardProps: CardInnerProps = {
     profileName: activeProfileName,
