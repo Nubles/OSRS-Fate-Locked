@@ -111,6 +111,55 @@ describe('rankSkillBottlenecks', () => {
     expect(unlocked.find(candidate => candidate.id === 'Mining')!.newQuestNames).toContain("The Knight's Sword");
   });
 
+  it('offers Herblore only after Druidic Ritual, the quest that unlocks it', () => {
+    // Reported Vanilla run with no quests: Herblore, Agility and Thieving at
+    // tiers 1/1/3, Agility 10 and Thieving 25. The Dig Site needs Herblore 10,
+    // but Herblore can't be trained before Druidic Ritual (behind Taverley).
+    const run = lowSkills({
+      skills: { ...Object.fromEntries(SKILLS_LIST.map(skill => [skill, 0])), Herblore: 1, Agility: 1, Thieving: 3 },
+      levels: {
+        ...Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Hitpoints' ? 10 : 1])),
+        Agility: 10, Thieving: 25,
+      },
+    });
+    const before = rankSkillBottlenecks(run, 'vanilla');
+    expect(before.find(candidate => candidate.id === 'Herblore')).toBeUndefined();
+    expect(before.flatMap(candidate => [...candidate.newQuestNames, ...candidate.cascadeQuestNames]))
+      .not.toContain('The Dig Site');
+
+    // Druidic Ritual grants Herblore 3; training to 10 then opens The Dig Site.
+    const after = rankSkillBottlenecks({
+      ...run, quests: ['Druidic Ritual'], levels: { ...run.levels, Herblore: 3 },
+    }, 'vanilla');
+    expect(after.find(candidate => candidate.id === 'Herblore')).toMatchObject({
+      currentLevel: 3, targetLevel: 10, newQuestNames: ['The Dig Site'],
+    });
+  });
+
+  it('does not train Herblore or Sailing toward an any-skill gate before their quests', () => {
+    // Falador Elite's last task accepts a skillcape emote, so any skill at 99
+    // completes it. Every skill is one level short; Herblore and Sailing can
+    // only close the gap once Druidic Ritual and Pandemonium are complete.
+    const offered = (quests: string[]) => new Map(rankSkillBottlenecks(lowSkills({
+      equipment: { Cape: 6 },
+      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
+      levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 98])),
+      regions: ['Falador'],
+      quests,
+      diaries: Object.keys(DIARY_DATA).filter(diary => diary !== 'Falador Elite'),
+      completedTasks: ALL_DIARY_TASKS.filter(task => task.id !== 'fal_elite_4').map(task => task.id),
+    }), 'vanilla').map(candidate => [candidate.id, candidate]));
+    const skillcape = { targetLevel: 99, newDiaryIds: ['Falador Elite'] };
+
+    const before = offered([]);
+    expect(before.get('Mining')).toMatchObject(skillcape);
+    expect(before.has('Herblore')).toBe(false);
+    expect(before.has('Sailing')).toBe(false);
+    const after = offered(['Druidic Ritual', 'Pandemonium']);
+    expect(after.get('Herblore')).toMatchObject(skillcape);
+    expect(after.get('Sailing')).toMatchObject(skillcape);
+  });
+
   it('does not reach a combat gate through a locked combat skill', () => {
     // Attack 13 → 14 lifts combat level to Morytania Easy's gate, but a
     // locked Attack can't be levelled.

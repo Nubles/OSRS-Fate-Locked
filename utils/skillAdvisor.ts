@@ -18,7 +18,7 @@ import { hasCompletedQuestCapeRequirements, QUEST_DATA } from '../data/questData
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { computeUnlockImpact, prepareUnlockImpactContext } from './unlockImpact';
-import { EligibilityBlocker, evaluateDiaryTierEligibility } from './journalStatus';
+import { EligibilityBlocker, evaluateDiaryTierEligibility, skillGateQuests } from './journalStatus';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 
 export interface RankedSkill {
@@ -35,9 +35,9 @@ export interface RankedSkill {
 
 /**
  * Returns skills ranked by the impact of training to their next gating level.
- * Skills whose next threshold unlocks nothing, and locked skills, are
- * omitted. Sorted by cascade score, then direct score, then lower target
- * level, then name.
+ * Skills whose next threshold unlocks nothing, and locked skills (including
+ * Herblore and Sailing before their unlocking quests), are omitted. Sorted by
+ * cascade score, then direct score, then lower target level, then name.
  */
 export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedSkill[] {
   const allDiaries = Object.values(DIARY_DATA);
@@ -51,8 +51,10 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
   );
 
   // A locked (tier 0) skill can't be levelled until a Skills unlock opens it,
-  // so it is never offered for training.
-  const isUnlocked = (skill: string) => (unlocks.skills[skill] ?? 0) > 0;
+  // nor Herblore or Sailing before its unlocking quest (SKILL_QUEST_GATES),
+  // so neither is ever offered for training.
+  const isUnlocked = (skill: string) => (unlocks.skills[skill] ?? 0) > 0
+    && skillGateQuests([skill], unlocks.quests).length === 0;
 
   const combatSkillNames = [
     'Attack', 'Strength', 'Defence', 'Hitpoints', 'Prayer', 'Ranged', 'Magic',

@@ -244,4 +244,23 @@ describe('evaluateActivityReadiness', () => {
       checks: ['Confirm a key'],
     });
   });
+
+  it('needs Druidic Ritual for Mastering Mixology and Pandemonium for the Barracuda Trials', () => {
+    // Their data lists only Herblore 60 and Sailing 30; the skills need the quests.
+    const mixology = unlocked({ regions: ['Aldarin'], skills: { Herblore: 6 }, levels: { Herblore: 60 } });
+    expect(evaluateActivityReadiness(true, getActivityReq('Mastering Mixology'), mixology, 'vanilla')).toEqual({
+      status: 'NOT_READY', blockers: [{ kind: 'quest', label: 'Druidic Ritual' }],
+    });
+    expect(evaluateActivityReadiness(true, getActivityReq('Mastering Mixology'), {
+      ...mixology, quests: ['Druidic Ritual'],
+    }, 'vanilla')).toEqual({ status: 'READY' });
+
+    const trials = unlocked({ skills: { Sailing: 3 }, levels: { Sailing: 30 } });
+    expect(evaluateActivityReadiness(true, getActivityReq('Barracuda Trials'), trials, 'vanilla')).toEqual({
+      status: 'NOT_READY', blockers: [{ kind: 'quest', label: 'Pandemonium' }],
+    });
+    expect(evaluateActivityReadiness(true, getActivityReq('Barracuda Trials'), {
+      ...trials, quests: ['Pandemonium'],
+    }, 'vanilla')).toEqual({ status: 'READY' });
+  });
 });

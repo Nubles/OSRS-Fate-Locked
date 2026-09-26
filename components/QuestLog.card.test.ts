@@ -136,3 +136,28 @@ describe('QuestCard mandatory equipment', () => {
     expect(renderGhost({}, true)).not.toContain('reqs');
   });
 });
+
+describe('QuestCard skill-gated prerequisites', () => {
+  const renderDigSite = (quests: string[]) => {
+    const state = {
+      ...unlocks, quests,
+      skills: { Herblore: 1, Agility: 1, Thieving: 3 },
+      levels: { Herblore: 10, Agility: 10, Thieving: 25 },
+    };
+    const eligibility = evaluateQuestEligibility(QUEST_DATA['The Dig Site'], state, 'vanilla');
+    return renderToStaticMarkup(React.createElement(QuestCard, {
+      quest: { ...QUEST_DATA['The Dig Site'], status: eligibility.status, eligibility },
+      unlocks: state, gameModeId: 'vanilla', currentQP: 0, onToggle: vi.fn(),
+    }));
+  };
+
+  it('shows Druidic Ritual as the one missing requirement of The Dig Site at Herblore 10', () => {
+    const html = renderDigSite([]);
+    expect(html).toContain('Jump to prerequisite: Druidic Ritual');
+    const [, met, total] = html.match(/(\d+)\/(\d+) reqs/)!;
+    expect(Number(total) - Number(met)).toBe(1);
+    expect(html).not.toContain('Ready to complete!');
+
+    expect(renderDigSite(['Druidic Ritual'])).toContain('Ready to complete!');
+  });
+});

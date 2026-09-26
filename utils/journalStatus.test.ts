@@ -3,14 +3,14 @@ import { QUEST_DATA, QuestData } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DIARY_DATA } from '../data/diaryData';
 import { DropSource, UnlockState } from '../types';
-import { ARCANA_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, MINIGAMES_LIST, MOBILITY_LIST, REGION_GROUPS } from '../data/items';
+import { ARCANA_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, MINIGAMES_LIST, MOBILITY_LIST, REGION_GROUPS, SKILLS_LIST } from '../data/items';
 import { combatLevel } from './slayerReach';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { ACTIVITY_REQUIREMENTS } from '../data/activityRequirements';
 import {
   countDoableDiaryTasks, countDoableTasks, countMetSkillRequirements,
   evaluateDiaryTaskEligibility, evaluateQuestEligibility, getDiaryStatus, getQuestStatus,
-  meetsSkillRequirement,
+  meetsSkillRequirement, SKILL_QUEST_GATES, skillGateQuests, withSkillGateQuests,
 } from './journalStatus';
 
 const unlocked = (over: Partial<UnlockState> = {}): UnlockState => ({
@@ -1021,5 +1021,83 @@ describe('audited diary route eligibility', () => {
         regions: diaryTask.regions ?? [], quests: diaryTask.quests ?? [],
       })).confirmable, id).toBe(true);
     }
+  });
+});
+
+describe('skills gated by an unlocking quest', () => {
+  // Herblore can't be trained before Druidic Ritual, nor Sailing before
+  // Pandemonium. Requirement lists name only the level, so the checks add the
+  // quest. Reported: Herblore 1 -> 10 offered for The Dig Site without it.
+  const digSiteRun = (over: Partial<UnlockState> = {}) => unlocked({
+    skills: { Herblore: 1, Agility: 1, Thieving: 3 },
+    levels: { Herblore: 10, Agility: 10, Thieving: 25 },
+    ...over,
+  });
+  const task = (id: string) => ALL_DIARY_TASKS.find(candidate => candidate.id === id)!;
+
+  it('names real skills and quests, and leaves Runecraft ungated', () => {
+    expect(SKILL_QUEST_GATES).toEqual({ Herblore: 'Druidic Ritual', Sailing: 'Pandemonium' });
+    for (const [skill, quest] of Object.entries(SKILL_QUEST_GATES)) {
+      expect(SKILLS_LIST).toContain(skill);
+      expect(QUEST_DATA[quest]?.kind, quest).toBe('quest');
+    }
+  });
+
+  it('keeps The Dig Site blocked at Herblore 10 until Druidic Ritual is complete', () => {
+    const blocked = evaluateQuestEligibility(QUEST_DATA['The Dig Site'], digSiteRun(), 'vanilla');
+    expect(blocked).toMatchObject({
+      status: 'LOCKED_QUEST', eligible: false,
+      blockers: [{ kind: 'quest', label: 'Druidic Ritual' }],
+    });
+    expect(blocked.evidence).toContain('Herblore 10');
+
+    const ready = evaluateQuestEligibility(QUEST_DATA['The Dig Site'], digSiteRun({ quests: ['Druidic Ritual'] }), 'vanilla');
+    expect(ready).toMatchObject({ status: 'AVAILABLE', eligible: true, blockers: [] });
+    expect(ready.evidence).toContain('Druidic Ritual');
+  });
+
+  it('adds the quest at any level, once, even when it is already listed', () => {
+    // Jungle Potion lists Druidic Ritual for its Herblore 3 itself.
+    expect(evaluateQuestEligibility(QUEST_DATA['Jungle Potion'], unlocked(), 'vanilla').blockers
+      .filter(blocker => blocker.label === 'Druidic Ritual'))
+      .toEqual([{ kind: 'quest', label: 'Druidic Ritual' }]);
+    expect(withSkillGateQuests(['Druidic Ritual'], { Herblore: 3 })).toEqual(['Druidic Ritual']);
+    expect(withSkillGateQuests(undefined, { Herblore: 1, Sailing: 99, Mining: 50 })).toEqual(['Druidic Ritual', 'Pandemonium']);
+    expect(withSkillGateQuests([], { Runecraft: 44, 'Quest Points': 10 })).toEqual([]);
+    expect(withSkillGateQuests([], { Herblore: 1 }, 'Druidic Ritual')).toEqual([]);
+    expect(skillGateQuests(['Herblore', 'Herblore'])).toEqual(['Druidic Ritual']);
+  });
+
+  it('blocks a Herblore diary task until Druidic Ritual is complete', () => {
+    const desert = unlocked({ regions: ['Al Kharid'], skills: { Herblore: 4 }, levels: { Herblore: 36 } });
+    expect(evaluateDiaryTaskEligibility(task('des_med_8'), desert, 'vanilla')).toMatchObject({
+      eligible: false, blockers: [{ kind: 'quest', label: 'Druidic Ritual' }],
+    });
+    expect(evaluateDiaryTaskEligibility(task('des_med_8'), { ...desert, quests: ['Druidic Ritual'] }, 'vanilla').eligible)
+      .toBe(true);
+    // Kourend Easy's Strength potion task lists the quest itself.
+    expect(evaluateDiaryTaskEligibility(task('kou_easy_11'), unlocked(), 'vanilla').blockers
+      .filter(blocker => blocker.label === 'Druidic Ritual')).toHaveLength(1);
+  });
+
+  it('finds gated skills only in requirement fields that add their quest', () => {
+    // Quest, diary task (and route) and activity skill levels add the quest.
+    // A gated skill in any other field would need that field to add it too.
+    const gated = (skill: string) => Object.hasOwn(SKILL_QUEST_GATES, skill);
+    const elsewhere = [
+      ...Object.values(QUEST_DATA).flatMap(quest => [
+        ...(quest.oneOf ?? []).flatMap(option => Object.keys(option.skills ?? {})),
+        ...(quest.skillAlternatives ?? []).map(option => option.skill),
+        ...(quest.preparationRequirements ?? []).map(preparation => preparation.skill),
+      ].filter(gated).map(skill => `${quest.id}: ${skill}`)),
+      ...ALL_DIARY_TASKS.flatMap(diaryTask => [diaryTask, ...(diaryTask.oneOf ?? [])].flatMap(requirement => [
+        ...(requirement.anyOfSkillsLevel?.skills ?? []),
+        ...(requirement.combinedSkillLevel?.skills ?? []),
+      ]).filter(gated).map(skill => `${diaryTask.id}: ${skill}`)),
+      ...Object.entries(ACTIVITY_REQUIREMENTS).flatMap(([name, requirement]) => (requirement.oneOf ?? [])
+        .flatMap(route => Object.keys(route.skills ?? {}))
+        .filter(gated).map(skill => `${name}: ${skill}`)),
+    ];
+    expect(elsewhere).toEqual([]);
   });
 });

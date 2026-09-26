@@ -18,7 +18,7 @@ import { DiaryInsights } from './JournalInsights';
 import { DiaryHeatmap } from './DiaryHeatmap';
 import {
   countDoableTasks, diaryRequirementOptionLabel, evaluateDiaryTaskEligibility,
-  evaluateDiaryTierEligibility, getDiaryStatus, meetsSkillRequirement,
+  evaluateDiaryTierEligibility, getDiaryStatus, meetsSkillRequirement, withSkillGateQuests,
   type EligibilityBlocker,
 } from '../utils/journalStatus';
 import { requestManualAttestation } from '../utils/manualAttestation';
@@ -445,7 +445,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                           <WikiIcon file={waived ? "Achievement_Diaries_icon.png" : SLOT_CONFIG[requirement.slot]?.file ?? "Worn_Equipment.png"} alt="" size={8} /> {waived ? `${requirement.unlessDiary} reward` : `${requirement.slot} T${requirement.tier}: ${requirement.reason}`}
                                         </span>;
                                       })}
-                                      {task.quests?.map(q => {
+                                      {withSkillGateQuests(task.quests, task.skills).map(q => {
                                         const met = unlocks.quests.includes(q);
                                         return (
                                           <span key={q} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${met ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>

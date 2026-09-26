@@ -32,6 +32,29 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-09-25-clearer-names',
+    title: 'Clearer Shop and Bank Names',
+    date: '2026-09-25',
+    sections: {
+      fixed: [
+        'Amulet Shops and Jewellery Shops now say which shops they unlock: Conara\'s Jewels in Cam Torum and Grum\'s Gold Exchange in Port Sarim for jewellery, Davon\'s Amulet Store in Brimhaven for amulets. Grum\'s and Davon\'s have no stock of their own, so ironmen can only sell there. Both wiki links now open the right page.',
+        'The Ardougne banks are now called Ardougne north bank and Ardougne south bank. The north bank was listed as Chaos Druid Tower, which has no bank, and the south bank as Ardougne Market. Banks you already own stay unlocked, and older history entries keep their original wording.',
+      ],
+    },
+  },
+  {
+    id: '2026-09-25-herblore-sailing-quests',
+    title: 'Herblore and Sailing Need Their Quests',
+    date: '2026-09-25',
+    sections: {
+      fixed: [
+        'Herblore needs Druidic Ritual and Sailing needs Pandemonium, as in the game. Quests, diary tasks, activities, chunk details and Resource Engine recipes that need a Herblore or Sailing level now need the quest too, so The Dig Site, Mastering Mixology and the Desert Medium combat potion no longer read as doable without Druidic Ritual.',
+        'The Skill Advisor no longer suggests training Herblore before Druidic Ritual, or Sailing before Pandemonium. Goal plans add the missing quest and the area it needs, such as Taverley for Druidic Ritual.',
+        'If your save has Herblore levels but no Druidic Ritual, those quests and tasks stay blocked until you mark Druidic Ritual complete. Anything you have already completed stays completed.',
+      ],
+    },
+  },
+  {
     id: '2026-09-25-runelite-safety-update',
     title: 'RuneLite Safety Update',
     date: '2026-09-25',
