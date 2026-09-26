@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DIARY_DATA } from '../data/diaryData';
 import { QUEST_DATA } from '../data/questData';
-import { ARCANA_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, MINIGAMES_LIST, MOBILITY_LIST, REGION_GROUPS, SKILLS_LIST } from '../data/items';
+import { ARCANA_LIST, BOSSES_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, MINIGAMES_LIST, MOBILITY_LIST, REGION_GROUPS, SKILLS_LIST } from '../data/items';
 import { TableType, type GameState, type UnlockState } from '../types';
 import { countDoableTasks, evaluateDiaryTaskEligibility, getDiaryStatus } from './journalStatus';
 import { diaryTaskCompletionDecision } from './journalCompletion';
@@ -25,7 +25,7 @@ const skilledAccount = (overrides: Partial<UnlockState> = {}) => account({
   levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
   regions: [...Object.keys(REGION_GROUPS), ...Object.values(REGION_GROUPS).flat()],
   arcana: [...ARCANA_LIST], quests: Object.keys(QUEST_DATA), mobility: [...MOBILITY_LIST], merchants: [...MERCHANTS_LIST],
-  minigames: [...MINIGAMES_LIST],
+  minigames: [...MINIGAMES_LIST], bosses: [...BOSSES_LIST],
   ...overrides,
 });
 

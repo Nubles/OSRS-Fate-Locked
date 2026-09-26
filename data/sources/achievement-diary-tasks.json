@@ -1576,7 +1576,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "See the strategy guide"
+      "sourceRequirements": "See the strategy guide",
+      "bosses": [
+        "Kalphite Queen"
+      ]
     },
     {
       "id": "des_hard_5",
@@ -2563,7 +2566,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Spade and light source See the strategy guide"
+      "sourceRequirements": "Spade and light source See the strategy guide",
+      "bosses": [
+        "Giant Mole"
+      ]
     },
     {
       "id": "fal_hard_4",
@@ -3902,6 +3908,9 @@
             "Agility": 85
           }
         }
+      ],
+      "bosses": [
+        "Dagannoth Kings"
       ]
     },
     {
@@ -3998,6 +4007,12 @@
             "Easy"
           ]
         }
+      ],
+      "bosses": [
+        "Kree'arra",
+        "General Graardor",
+        "Commander Zilyana",
+        "K'ril Tsutsaroth"
       ]
     },
     {
@@ -5117,7 +5132,21 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "oneOf": [
+        {
+          "label": "Fight Pits",
+          "minigames": [
+            "TzHaar Fight Pit"
+          ]
+        },
+        {
+          "label": "Fight Cave",
+          "bosses": [
+            "TzHaar Fight Cave"
+          ]
+        }
+      ]
     },
     {
       "id": "kar_easy_10",
@@ -5636,7 +5665,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "See the strategy guide"
+      "sourceRequirements": "See the strategy guide",
+      "bosses": [
+        "TzHaar Fight Cave"
+      ]
     },
     {
       "id": "kar_hard_3",
@@ -6399,7 +6431,10 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Subdue the Wintertodt.",
-      "sourceRequirements": "50 Firemaking Any axe, tinderbox, and warm clothing Knife and a hammer or Imcando hammer recommended to score more points Rejuvenation potions recommended for learners (these are made in the minigame's lobby)"
+      "sourceRequirements": "50 Firemaking Any axe, tinderbox, and warm clothing Knife and a hammer or Imcando hammer recommended to score more points Rejuvenation potions recommended for learners (these are made in the minigame's lobby)",
+      "bosses": [
+        "Wintertodt"
+      ]
     },
     {
       "id": "kou_med_12",
@@ -6699,7 +6734,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Dark totem See the strategy guide"
+      "sourceRequirements": "Dark totem See the strategy guide",
+      "bosses": [
+        "Skotizo"
+      ]
     },
     {
       "id": "kou_elite_4",
@@ -6773,7 +6811,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "See the strategy guide"
+      "sourceRequirements": "See the strategy guide",
+      "bosses": [
+        "Chambers of Xeric"
+      ]
     },
     {
       "id": "kou_elite_8",
@@ -8696,6 +8737,9 @@
           "tier": 7,
           "reason": "Complete Barrows set"
         }
+      ],
+      "bosses": [
+        "Barrows Brothers"
       ]
     },
     {
@@ -10477,6 +10521,9 @@
           "quest": "Regicide",
           "label": "Reached the required progress in Regicide for: Kill Zulrah."
         }
+      ],
+      "bosses": [
+        "Zulrah"
       ]
     },
     {
@@ -10565,6 +10612,9 @@
       "sourceRequirements": "93 Slayer See the strategy guide",
       "regions": [
         "Castle Wars"
+      ],
+      "bosses": [
+        "Thermonuclear Smoke Devil"
       ]
     },
     {
@@ -11478,7 +11528,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "See the strategy guide"
+      "sourceRequirements": "See the strategy guide",
+      "bosses": [
+        "Chaos Elemental"
+      ]
     },
     {
       "id": "wild_hard_7",
@@ -11526,7 +11579,12 @@
         "reviewedAt": "2026-09-12",
         "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
         "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
-      }
+      },
+      "bosses": [
+        "Crazy Archaeologist",
+        "Chaos Fanatic",
+        "Scorpia"
+      ]
     },
     {
       "id": "wild_hard_8",
@@ -11668,6 +11726,24 @@
       },
       "manualRequirements": [
         "Meet the entry requirements for each chosen boss variant (diary completion or qualifying boss Slayer task)."
+      ],
+      "oneOf": [
+        {
+          "label": "The greater bosses",
+          "bosses": [
+            "Callisto",
+            "Venenatis",
+            "Vet'ion"
+          ]
+        },
+        {
+          "label": "The lesser bosses",
+          "bosses": [
+            "Artio",
+            "Spindel",
+            "Calvar'ion"
+          ]
+        }
       ]
     },
     {
@@ -12029,6 +12105,7 @@
       "kan_elite_1",
       "kan_hard_9",
       "kan_med_11",
+      "kar_easy_9",
       "kar_hard_1",
       "kar_med_1",
       "kar_med_5",
@@ -12050,7 +12127,6 @@
       "fal_hard_10": "Enters the Warriors' Guild, a guild entry.",
       "fal_hard_8": "The wall safes are in the Rogues' Den itself, not in its maze minigame.",
       "fal_med_6": "Only visits the Port Sarim Rat Pits.",
-      "kar_easy_9": "The Fight Cave, a boss, also completes it; the requirements have no boss field.",
       "kar_hard_5": "Needs Tai Bwo Wannai Trio, a quest, not the Cleanup.",
       "kar_med_10": "Needs Tai Bwo Wannai Trio, a quest, not the Cleanup.",
       "kar_med_19": "Shilo Village also opens the gem rocks.",
@@ -12063,6 +12139,36 @@
       "west_easy_9": "The Minigame Teleport itself, already a Mobility unlock; no game is played.",
       "western_med_7": "A Gnome Glider trip.",
       "wild_hard_1": "The god spells come from Mage Arena I, already a quest requirement."
+    }
+  },
+  "bossAudit": {
+    "reviewedAt": "2026-09-26",
+    "decision": "A player reported on 26 September 2026 that \"Kill the Giant Mole beneath Falador Park\" showed as doable without the Giant Mole unlocked. Following the owner's minigame rule of the same day, a diary task that means fighting a boss needs that boss unlocked.",
+    "rule": "Tagged when the task is a kill, a raid or a fight against something the tracker unlocks under Bosses, including a wave inside the Fight Caves. Where either of two ways completes the task, each way becomes a route. Not tagged: entering a lair, visiting the area, or a monster or reward that only shares a boss's name.",
+    "source": "docs/reviews/2026-09-26-diary-boss-audit.md",
+    "changedTaskIds": [
+      "des_hard_4",
+      "fal_hard_3",
+      "frem_elite_1",
+      "frem_elite_5",
+      "kar_easy_9",
+      "kar_hard_2",
+      "kou_elite_3",
+      "kou_elite_7",
+      "kou_med_11",
+      "mor_elite_6",
+      "west_elite_2",
+      "west_hard_11",
+      "wild_elite_1",
+      "wild_hard_6",
+      "wild_hard_7"
+    ],
+    "notTagged": {
+      "ard_elite_5": "Nightmare Zone is a minigame, already tagged; The Nightmare is not fought.",
+      "kan_elite_3": "Cooking gauntlets, not The Gauntlet.",
+      "kou_elite_5": "A Hydra in the Karuulm Slayer Dungeon is a Slayer monster, not the Alchemical Hydra.",
+      "lum_hard_7": "Barrows gloves come from Recipe for Disaster, not from the Barrows.",
+      "wilderness_easy_8": "Only enters the King Black Dragon's lair; the boss is not fought."
     }
   }
 }

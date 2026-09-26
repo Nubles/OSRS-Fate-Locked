@@ -19,6 +19,16 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-26-diary-bosses-and-routes',
+    title: 'Diary Tasks Check Bosses',
+    date: '2026-09-26',
+    sections: {
+      fixed: [
+        'Diary tasks that mean fighting a boss need that boss unlocked, 15 in all: the Giant Mole, the Kalphite Queen, Zulrah, the Barrows, the God Wars generals, a Chambers of Xeric raid, the Wintertodt and the rest. The TzHaar attempt accepts the Fight Pits or the Fight Cave, and the Wilderness elite task the greater or the lesser bosses. Tasks that only enter a lair don\'t, and tasks you have completed stay completed.',
+      ],
+    },
+  },
+  {
     id: '2026-09-26-diary-travel',
     title: 'Diary Tasks Need a Way There',
     date: '2026-09-26',

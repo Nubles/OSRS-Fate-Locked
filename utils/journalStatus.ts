@@ -23,7 +23,7 @@ import { AREA_ENTRY_ROUTES } from '../data/areaAccess';
 import { canonicalAreaName } from '../data/areaMapPolicy';
 
 export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_QUEST';
-export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_MOBILITY' | 'LOCKED_ARCANA' | 'LOCKED_MERCHANT' | 'LOCKED_MINIGAME' | 'LOCKED_QUEST';
+export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_MOBILITY' | 'LOCKED_ARCANA' | 'LOCKED_MERCHANT' | 'LOCKED_MINIGAME' | 'LOCKED_BOSS' | 'LOCKED_QUEST';
 
 export type DiaryStatusUnlocks =
   Omit<UnlockState, 'cas' | 'completedTasks'>
@@ -60,6 +60,7 @@ export type DirectEligibilityBlocker =
   | { kind: 'mobility'; label: string }
   | { kind: 'arcana'; label: string }
   | { kind: 'minigame'; label: string }
+  | { kind: 'boss'; label: string }
   | { kind: 'quest'; label: string };
 
 export interface AlternativeEligibilityRoute {
@@ -349,6 +350,7 @@ export interface DoableTask {
   mobility?: string[];
   arcana?: string[];
   minigames?: string[];
+  bosses?: string[];
   equipmentRequirements?: DiaryEquipmentRequirement[];
   quests?: string[];
   regions?: string[];
@@ -382,6 +384,7 @@ const requirementOptionParts = (option: DiaryTaskRequirementOption): string[] =>
   ...(option.mobility ?? []),
   ...(option.arcana ?? []),
   ...(option.minigames ?? []),
+  ...(option.bosses ?? []),
   ...(option.equipmentRequirements ?? []).map(item => `${item.slot} T${item.tier}: ${item.reason}${item.unlessDiary ? ` (unless ${item.unlessDiary} is complete)` : ''}`),
   ...(option.combinedSkillLevel ? [
     option.combinedSkillLevel.skills.join(' + ') + ' combined ' + option.combinedSkillLevel.level,
@@ -585,6 +588,11 @@ function evaluateDiaryRequirement(
   for (const minigame of requirement.minigames ?? []) {
     if (unlocks.minigames?.includes(minigame)) evidence.push(minigame);
     else blockers.push({ kind: 'minigame', label: minigame });
+  }
+  // A task that means fighting a boss needs that boss unlocked.
+  for (const boss of requirement.bosses ?? []) {
+    if (unlocks.bosses?.includes(boss)) evidence.push(boss);
+    else blockers.push({ kind: 'boss', label: boss });
   }
   for (const item of requirement.equipmentRequirements ?? []) {
     if (item.unlessDiary && unlocks.diaries.includes(item.unlessDiary)) {
@@ -858,6 +866,8 @@ export function evaluateDiaryTierEligibility(
         ? 'LOCKED_MERCHANT'
       : blockers.some(blocker => blocker.kind === 'minigame')
         ? 'LOCKED_MINIGAME'
+      : blockers.some(blocker => blocker.kind === 'boss')
+        ? 'LOCKED_BOSS'
       : blockers.some(blocker => blocker.kind === 'quest' || blocker.kind === 'alternative')
         ? 'LOCKED_QUEST'
         : 'AVAILABLE';

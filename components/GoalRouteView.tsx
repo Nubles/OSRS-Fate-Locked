@@ -142,6 +142,18 @@ export const GoalRouteView: React.FC<{ goalId: string }> = ({ goalId }) => {
           </div>
         )}
 
+        {!!route.bosses?.length && (
+          <div>
+            <Head icon={<Swords size={11} />} label="Bosses" done={met(route.bosses)} total={route.bosses.length} />
+            {route.bosses.map(requirement => (
+              <div key={requirement.name} className="flex items-start gap-1.5 py-px">
+                <Tick met={requirement.met} />
+                <span className="text-gray-300">{requirement.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {!!route.minigames?.length && (
           <div>
             <Head icon={<Gamepad2 size={11} />} label="Minigames" done={met(route.minigames)} total={route.minigames.length} />
