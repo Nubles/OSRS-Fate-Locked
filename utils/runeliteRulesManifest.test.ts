@@ -209,6 +209,27 @@ describe('buildRuneliteRulesManifest - progress', () => {
   });
 });
 
+describe('buildRuneliteRulesManifest - capabilities', () => {
+  const build = (gameModeId: string, loaded: boolean) => buildRuneliteRulesManifest({
+    unlocks: { ...structuredClone(initialState.unlocks), regions: [], chunks: [] },
+    run: { runId: 'capabilities', runRevision: 1, gameModeId },
+    contentService: { ...contentSource, init: async () => loaded },
+    itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+  });
+
+  it('names exactly the Stage 2 sections the rules have', async () => {
+    expect((await build('vanilla', true)).capabilities)
+      .toEqual(['banks', 'chunkDetails', 'chunkEntries', 'freeAreas', 'places', 'progress']);
+    expect((await build('chunked', true)).capabilities)
+      .toEqual(['banks', 'chunkDetails', 'chunkEntries', 'freeAreas', 'frontier', 'places', 'progress']);
+  });
+
+  it('leaves out the sections that need chunk data when it did not load', async () => {
+    expect((await build('vanilla', false)).capabilities).toEqual(['freeAreas', 'progress']);
+    expect((await build('chunked', false)).capabilities).toEqual(['freeAreas', 'frontier', 'progress']);
+  });
+});
+
 describe('buildRuneliteRulesManifest - banks', () => {
   it("decides a bank with the run's reach, as its chunk's row does", async () => {
     // Lumbridge Castle's bank, rolled, in a chunk behind an unfinished quest.

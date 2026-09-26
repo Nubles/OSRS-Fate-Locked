@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { buildBundlePayload } from '../utils/runeliteExport';
+import { RULES_CAPABILITIES } from '../utils/runeliteRulesManifest';
 import { chunkUnlocked } from '../utils/chunkLocations';
 import { isAreaReachable, isBankReachable } from '../utils/reachability';
 import { ALL_CHUNK_KEYS, chunkKey, getChunkFrontier } from '../utils/chunkAdjacency';
@@ -344,7 +345,15 @@ interface BundleCase {
  * reader compresses too: gzip output differs between zlib builds, so stored
  * compressed bytes would not match what another machine produces.
  */
-const bundleCases = (): { schema: number; reject: BundleCase[]; sameAnswers: BundleCase[] } => ({
+/** The Stage 2 fields in a Vanilla run's rules, which installed builds never read. */
+const STAGE_2_FIELDS = ['capabilities', 'chunkEntries', 'places', 'banks', 'freeAreas', 'progress', 'slayerTasks']
+  .map((field) => `rules.${field}`);
+const capabilitiesOf = (scenario: string) =>
+  (results.get(scenario)!.bundle.rules as { capabilities: string[] }).capabilities;
+
+const bundleCases = (): {
+  schema: number; reject: BundleCase[]; sameAnswers: BundleCase[]; stage2SameAnswers: BundleCase[];
+} => ({
   schema: SCHEMA,
   reject: [
     { name: 'empty', input: '' },
@@ -369,6 +378,20 @@ const bundleCases = (): { schema: number; reject: BundleCase[]; sameAnswers: Bun
     },
     { name: 'without the run state', scenario: 'custom-none-banks-on', remove: ['state'] },
     { name: 'compressed', scenario: 'chunked-walk', compress: true },
+    { name: 'without the Stage 2 sections', scenario: 'vanilla-mid', remove: STAGE_2_FIELDS },
+    { name: 'Stage 2 sections without their capabilities', scenario: 'vanilla-mid', remove: ['rules.capabilities'] },
+    {
+      name: 'an unknown capability',
+      scenario: 'vanilla-mid',
+      set: { 'rules.capabilities': [...capabilitiesOf('vanilla-mid'), 'futureSection'] },
+    },
+  ],
+  // Only a reader of the Stage 2 sections shrugs these off. To installed
+  // builds a root unlockedChunks means a Chunked run (R10), and without root
+  // freeAreas they free all of Misthalin (R6).
+  stage2SameAnswers: [
+    { name: 'a stray root unlockedChunks', scenario: 'vanilla-mid', set: { unlockedChunks: [] } },
+    { name: 'no root freeAreas', scenario: 'xtreme-varrock', remove: ['freeAreas'] },
   ],
 });
 
@@ -575,8 +598,8 @@ describe('golden bundles', () => {
 
   it('name bundle cases that apply to the bundles they start from', () => {
     // A recipe that points at nothing would pass in the plugin for the wrong reason.
-    const { reject, sameAnswers } = bundleCases();
-    for (const bundleCase of [...reject, ...sameAnswers]) {
+    const { reject, sameAnswers, stage2SameAnswers } = bundleCases();
+    for (const bundleCase of [...reject, ...sameAnswers, ...stage2SameAnswers]) {
       expect(bundleCase.input !== undefined || bundleCase.scenario !== undefined, bundleCase.name).toBe(true);
       if (bundleCase.scenario === undefined) continue;
       const generated = results.get(bundleCase.scenario);
@@ -674,6 +697,13 @@ describe('golden bundles', () => {
       // Chunked runs only.
       expect(sameContent((bundle.rules as { frontier?: string[] }).frontier, (answers as { frontier?: string[] }).frontier),
         `${scenario.id}: frontier`).toBe(true);
+
+      // Capabilities name exactly the Stage 2 sections the bundle has.
+      const sections = bundle.rules as Record<string, unknown>;
+      const has = RULES_CAPABILITIES.filter((capability) => (capability === 'chunkDetails'
+        ? Object.values(rules.chunks).some((snapshot) => 'kind' in snapshot)
+        : sections[capability] !== undefined));
+      expect(sections.capabilities, `${scenario.id}: capabilities`).toEqual(has);
 
       // Each snapshot says what it is, and why its entry isn't ALLOWED exactly when it isn't.
       const described = rules.chunks as Record<string, { entry: string; kind?: string; entryReason?: string }>;

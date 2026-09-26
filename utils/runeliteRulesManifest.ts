@@ -32,6 +32,18 @@ const RULES_VERSION = '1';
 const CONTENT_VERSION = 1;
 const DETECTOR_CONTRACT_VERSION = 1;
 
+/**
+ * The Stage 2 sections, each named by the capability that says a bundle
+ * has it: its field, or chunkDetails for the snapshots' kind, area and
+ * entryReason. A section's meaning never changes: a new meaning gets a
+ * new field and a new capability, and a reader uses only the sections
+ * whose capability it knows.
+ */
+export const RULES_CAPABILITIES = [
+  'banks', 'chunkDetails', 'chunkEntries', 'freeAreas', 'frontier', 'places', 'progress', 'slayerTasks',
+] as const;
+export type RulesCapability = typeof RULES_CAPABILITIES[number];
+
 export interface RuneliteRulesManifest {
   rulesVersion: string;
   contentVersion: number;
@@ -82,6 +94,8 @@ export interface RuneliteRulesManifest {
   progress?: RunProgress;
   /** Stage 2: each Slayer task, per master and whatever the master, keyed like slayerChunks. */
   slayerTasks?: Record<string, SlayerDecision>;
+  /** The Stage 2 sections this bundle has, by capability. */
+  capabilities?: RulesCapability[];
 }
 
 export interface RulesContentSource extends Partial<EntityAccessSource> {
@@ -196,6 +210,15 @@ export async function buildRuneliteRulesManifest(
     : {};
 
   const unlocks = input.unlocks;
+  const sections = {
+    ...stage2,
+    ...chunked,
+    freeAreas: freeAreasFor(input.run.gameModeId, input.run.customMode),
+    progress: runProgress(input.unlocks, input.run.gameModeId),
+  };
+  const capabilities = RULES_CAPABILITIES.filter((capability) => (capability === 'chunkDetails'
+    ? Object.keys(chunks).length > 0
+    : (sections as Partial<Record<RulesCapability, unknown>>)[capability] !== undefined));
   return {
     rulesVersion: input.run.rulesVersion ?? RULES_VERSION,
     contentVersion: input.run.contentVersion ?? CONTENT_VERSION,
@@ -234,9 +257,7 @@ export async function buildRuneliteRulesManifest(
       ...policy, eventTypes: [...policy.eventTypes],
     })),
     chunks,
-    ...stage2,
-    ...chunked,
-    freeAreas: freeAreasFor(input.run.gameModeId, input.run.customMode),
-    progress: runProgress(input.unlocks, input.run.gameModeId),
+    ...sections,
+    capabilities,
   };
 }
