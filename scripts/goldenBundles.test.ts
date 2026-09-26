@@ -32,6 +32,7 @@ import { REGION_CHUNKS } from '../data/regionChunks';
 import { REGION_GROUPS } from '../data/items';
 import { BANKS } from '../data/banks';
 import { OCEAN_CHUNK_KEYS } from '../utils/oceanAccess';
+import { MAX_REQUEST_BYTES } from '../workers/fate-relay/protocol.js';
 import type { UnlockState } from '../types';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -40,6 +41,10 @@ const WRITE = process.env.FATE_GOLDENS === 'write';
 const SCHEMA = 1;
 const EXPORTED_AT = new Date('2026-09-25T12:00:00.000Z');
 const SIZE_BUDGET_BYTES = 3.5 * 1024 * 1024;
+/** Headroom under the largest request the relay accepts, for every run. */
+const RELAY_BODY_BUDGET_BYTES = MAX_REQUEST_BYTES - 16 * 1024;
+/** The relay write token: randomToken's 18 bytes as hex. */
+const RELAY_TOKEN = 'f'.repeat(36);
 const ACCOUNT = 'Iron Example';
 
 interface Scenario {
@@ -189,12 +194,18 @@ const AREA_NAMES = [...new Set([
 interface Generated {
   bundle: Record<string, unknown>;
   expect: Record<string, unknown>;
+  /** The compressed bundle as the app publishes it: "FLGZ:" and base64 gzip. */
+  compressed: string;
 }
+
+/** The request the app sends the relay to publish a bundle (relaySync's sendPayload). */
+const relayBodyBytes = (compressed: string) =>
+  Buffer.byteLength(JSON.stringify({ token: RELAY_TOKEN, payload: compressed }), 'utf8');
 
 async function generate(scenario: Scenario, fresh: UnlockState): Promise<Generated> {
   setStartArea(resolveModeRules(scenario.mode, scenario.custom).startArea);
   const unlocks = unlocksFor(fresh, scenario);
-  const { json } = await buildBundlePayload(unlocks, {
+  const { json, compressed } = await buildBundlePayload(unlocks, {
     runId: `golden-${scenario.id}`,
     runRevision: 7,
     keys: 3,
@@ -224,6 +235,7 @@ async function generate(scenario: Scenario, fresh: UnlockState): Promise<Generat
 
   return {
     bundle,
+    compressed,
     expect: {
       schema: SCHEMA,
       id: scenario.id,
@@ -511,6 +523,16 @@ describe('golden bundles', () => {
     const bomb = reject.find((bundleCase) => bundleCase.name.includes('gzip bomb'))!;
     expect(bomb.compress).toBe(true);
     expect(bomb.input!.length * (bomb.repeat ?? 1)).toBeGreaterThan(8 * 1024 * 1024);
+  });
+
+  it('each fit in one relay request with headroom', () => {
+    // Stage 2 adds fields to every run, and Chunked, Custom and bank-locked
+    // runs differ, so one run's size says little about the others.
+    for (const scenario of SCENARIOS) {
+      const { compressed } = results.get(scenario.id)!;
+      expect(compressed.startsWith('FLGZ:'), `${scenario.id} is compressed`).toBe(true);
+      expect(relayBodyBytes(compressed), `${scenario.id}'s relay body in bytes`).toBeLessThan(RELAY_BODY_BUDGET_BYTES);
+    }
   });
 
   it('keep the promises of the bundle contract', () => {
