@@ -209,8 +209,15 @@ if relay data should not leave the machine.
 
 The app exports `version: 4` with a canonical `rules` manifest. It includes
 the run, account, game mode, rules/content/detector versions, every unlock
-family, bank-lock state, and category-first chunk permission snapshots. Root
-fields from v3 remain for one compatibility release.
+family, bank-lock state, and category-first chunk permission snapshots.
+
+The fields that builds already on the Plugin Hub read, and that the stream
+overlay reads, are frozen: `contracts/golden-bundles/bundle-contract.json`
+lists each with its JSON type, the ones a bundle is refused without, and
+the ones parsed but never read. The export never drops a frozen field that
+is read, never changes a field's type or meaning, and only adds fields. The
+snapshots go out without the three unread ones (their `chunkKey`, `counts`
+and each row's `key`); the app's own snapshots keep them.
 
 `rules.unlocks.housing` and `rules.unlocks.storage` are exported too, but the
 current plugin has no fields for them: it ignores them and does not warn on
@@ -228,10 +235,40 @@ retain that authority only when mobility state was explicitly supplied;
 otherwise the known set is empty so Travel Guardian fails open instead of
 inventing authority.
 
-The `FLGZ:` relay payload is tested against the existing 256 KiB compressed
-limit. RuneLite continues to load v1-v3 bundles using legacy map behavior; a
-malformed v4 or unsupported future version is rejected without replacing the
-last valid snapshot.
+### Stage 2 sections
+
+The app decides and RuneLite looks the answers up. These `rules` fields
+carry the decisions RuneLite would otherwise work out itself:
+
+| Field | What it holds |
+|---|---|
+| `chunkEntries` | One status for every land, ocean and interior chunk |
+| `places` | What each chunk that isn't land is: ocean, or an interior with its name, area and entrances |
+| `frontier` | Chunked runs only: the chunks the run may roll next, Sailing included |
+| `banks` | Each bank's status and reason, its chunk, and the chunks its facilities are in |
+| `freeAreas` | The areas the run's mode frees; the root `freeAreas` takes the same value |
+| `progress` | The run card's progress, with the land chunks the run owns |
+| `slayerTasks` | Each Slayer task per master and whatever the master, keyed like `slayerChunks` |
+
+Each snapshot also carries its `kind` (land or ocean), its `area`, and an
+`entryReason` whenever its entry isn't `ALLOWED`.
+
+`rules.capabilities` names the sections a bundle has (`chunkDetails` for
+the snapshot fields). A reader uses only the sections whose capability it
+knows. A section's meaning never changes: a new meaning gets a new field
+and a new capability, and statuses stay the four above. An export whose
+chunk data didn't load sends only `freeAreas`, `progress` and, for a
+Chunked run, `frontier`.
+
+An export built while the app's free-area baseline belongs to another run
+(a profile switch mid-build) is refused, and the switch's own publish
+sends the new run.
+
+The `FLGZ:` relay request for every golden run is tested against 240 KiB,
+16 KiB under the relay's 256 KiB limit; the golden runs' requests are
+187-191 KiB. RuneLite continues to load v1-v3 bundles using legacy map
+behavior; a malformed v4 or unsupported future version is rejected without
+replacing the last valid snapshot.
 
 ## Worker deployment
 
