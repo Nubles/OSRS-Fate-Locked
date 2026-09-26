@@ -180,6 +180,23 @@ describe('buildRuneliteRulesManifest - frontier', () => {
   });
 });
 
+describe('buildRuneliteRulesManifest - banks', () => {
+  it("decides a bank with the run's reach, as its chunk's row does", async () => {
+    // Lumbridge Castle's bank, rolled, in a chunk behind an unfinished quest.
+    const bankHall: ChunkContent = { ...lumbridge, objects: [['Bank booth', 2]] };
+    const build = (quests: string[]) => buildRuneliteRulesManifest({
+      unlocks: { ...structuredClone(initialState.unlocks), banks: ['12850'], quests },
+      run: { runId: 'banks', runRevision: 1, gameModeId: 'vanilla' },
+      contentService: { ...contentSource, contentFor: () => bankHall, questSections: () => ({ '12850': ["Cook's Assistant"] }) },
+      itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+    });
+    const gated = await build([]);
+    expect(gated.banks?.['12850']).toMatchObject({ at: '50,50', physical: ['50,50'], status: 'NOT_READY' });
+    expect(gated.chunks['50,50'].categories.BANKS?.[0].status).toBe('NOT_READY');
+    expect((await build(["Cook's Assistant"])).banks?.['12850'].status).toBe('ALLOWED');
+  });
+});
+
 describe('buildRuneliteRulesManifest - web-only unlock families', () => {
   it('adds housing and storage without changing the unlock fields the plugin reads', async () => {
     // RuneliteRulesManifest.java's Unlocks class. Gson drops every other key,

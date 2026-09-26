@@ -28,6 +28,7 @@ import { normalizeAccountName } from '../services/fateEventProtocol';
 import { chunkContentService, CHUNK_CONTENT_DATA_VERSION } from '../services/ChunkContentService';
 import { runReach } from '../utils/chunkEntry';
 import { chunkEntries, rulesPlaces } from '../utils/chunkEntries';
+import { bankDecisions } from '../utils/bankDecisions';
 import { EQUIPMENT_CATALOGUE } from '../data/equipmentCatalogue';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
@@ -274,8 +275,11 @@ async function generate(scenario: Scenario, fresh: UnlockState): Promise<Generat
     ? getChunkFrontier(scenario.chunks ?? [], unlocks).map(chunkKey).sort(byCodeUnit)
     : undefined;
   // Land, ocean and interiors, with the run's reach, as the app decides them.
-  const entries = chunkEntries(chunkContentService, unlocks, scenario.mode,
-    runReach(chunkContentService, unlocks, scenario.mode));
+  const reachable = runReach(chunkContentService, unlocks, scenario.mode);
+  const entries = chunkEntries(chunkContentService, unlocks, scenario.mode, reachable);
+  const bankStatus = Object.fromEntries(Object.entries(bankDecisions(chunkContentService, {
+    unlocks, gameModeId: scenario.mode, customMode: scenario.custom, contentService: chunkContentService, reachableChunks: reachable,
+  })).map(([id, decision]) => [id, decision.status]));
 
   return {
     bundle,
@@ -292,6 +296,7 @@ async function generate(scenario: Scenario, fresh: UnlockState): Promise<Generat
       banks,
       ...(frontier ? { frontier } : {}),
       entries,
+      bankStatus,
     },
   };
 }
@@ -471,6 +476,8 @@ function contractBreaches(bundle: Record<string, unknown>, contract: BundleContr
 const results = new Map<string, Generated>();
 /** What the chunks that aren't land are: the same for every run, so pinned once. */
 let placesAnswer: { schema: number; places: Record<string, unknown> };
+/** Which bank each chunk a bank's facilities are in belongs to: also the same for every run. */
+let banksAnswer: { schema: number; bankAt: Record<string, string> };
 
 beforeAll(async () => {
   const chunkContent = JSON.parse(readFileSync(join(ROOT, 'public', 'chunk-content.json'), 'utf8'));
@@ -488,6 +495,11 @@ beforeAll(async () => {
   const fresh = createFreshState().unlocks;
   for (const scenario of SCENARIOS) results.set(scenario.id, await generate(scenario, fresh));
   placesAnswer = { schema: SCHEMA, places: rulesPlaces(chunkContentService) };
+  const physical = bankDecisions(chunkContentService, { unlocks: fresh, gameModeId: 'vanilla', contentService: chunkContentService });
+  banksAnswer = {
+    schema: SCHEMA,
+    bankAt: Object.fromEntries(Object.entries(physical).flatMap(([id, decision]) => decision.physical.map((key) => [key, id]))),
+  };
 }, 300_000);
 
 afterAll(() => {
@@ -514,6 +526,7 @@ describe('golden bundles', () => {
     files['accounts.json'] = accountCases();
     files['cases.json'] = bundleCases();
     files['places.json'] = placesAnswer;
+    files['banks.json'] = banksAnswer;
 
     for (const [name, content] of Object.entries(files)) {
       const file = join(OUT, name);
@@ -654,6 +667,18 @@ describe('golden bundles', () => {
       // Chunked runs only.
       expect(sameContent((bundle.rules as { frontier?: string[] }).frontier, (answers as { frontier?: string[] }).frontier),
         `${scenario.id}: frontier`).toBe(true);
+
+      // Each bank: the pinned status, its chunk's BANKS row, and the pinned chunks it is in.
+      const decided = (bundle.rules as { banks: Record<string, { name: string; status: string; at: string; physical: string[] }> }).banks;
+      const pinnedStatus = (answers as { bankStatus: Record<string, string> }).bankStatus;
+      expect(sameContent(Object.fromEntries(Object.entries(decided).map(([id, bank]) => [id, bank.status])), pinnedStatus),
+        `${scenario.id}: bank statuses`).toBe(true);
+      const unlike = Object.entries(decided).filter(([, bank]) =>
+        rules.chunks[bank.at]?.categories.BANKS?.find((row) => row.name === bank.name)?.status !== bank.status)
+        .map(([id]) => id);
+      expect(unlike, `${scenario.id}: banks against their rows`).toEqual([]);
+      const at = Object.fromEntries(Object.entries(decided).flatMap(([id, bank]) => bank.physical.map((key) => [key, id])));
+      expect(sameContent(at, banksAnswer.bankAt), `${scenario.id}: bankAt`).toBe(true);
     }
   });
 

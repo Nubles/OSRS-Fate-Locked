@@ -13,6 +13,7 @@ import { runReach } from './chunkEntry';
 import { chunkKey, getChunkFrontier } from './chunkAdjacency';
 import { chunkEntries, rulesPlaces, type RulesPlace } from './chunkEntries';
 import type { InteriorRecord } from './interiorEntry';
+import { bankDecisions, type BankDecision } from './bankDecisions';
 import {
   buildChunkPermissionSnapshot,
   type ChunkPermissionSnapshot,
@@ -68,6 +69,8 @@ export interface RuneliteRulesManifest {
   places?: Record<string, RulesPlace>;
   /** Stage 2, Chunked runs: the chunks the run may roll next. */
   frontier?: string[];
+  /** Stage 2: every bank with a chunk, by id. Sent with chunkEntries. */
+  banks?: Record<string, BankDecision>;
 }
 
 export interface RulesContentSource extends Partial<EntityAccessSource> {
@@ -78,6 +81,8 @@ export interface RulesContentSource extends Partial<EntityAccessSource> {
   shortcuts(): Shortcut[];
   questSections(): Record<string, string[]>;
   interiorRecords?(): InteriorRecord[];
+  surfaceContentFor?(cx: number, cy: number): ChunkContent | null;
+  interiorsEnteredFrom?(cx: number, cy: number): { sourceId: string; content: ChunkContent }[];
 }
 
 export interface ItemRuleSource {
@@ -131,18 +136,19 @@ export async function buildRuneliteRulesManifest(
   const reachable = loaded ? runReach(service, input.unlocks, input.run.gameModeId) : new Set<string>();
   const chunks: Record<string, ChunkPermissionSnapshot> = {};
 
+  const permissions = {
+    contentService: service.taskRequirements && service.chunkEntryRequirements ? service as RulesContentSource & EntityAccessSource : undefined,
+    unlocks: input.unlocks,
+    gameModeId: input.run.gameModeId,
+    customMode: input.run.customMode,
+    reachableChunks: reachable,
+  };
+
   if (loaded) {
     for (const coord of service.allChunkCoords()) {
       const content = service.contentFor(coord.cx, coord.cy);
       if (!content) continue;
-      const snapshot = buildChunkPermissionSnapshot(content, coord, {
-        contentService: service.taskRequirements && service.chunkEntryRequirements ? service as RulesContentSource & EntityAccessSource : undefined,
-        unlocks: input.unlocks,
-        gameModeId: input.run.gameModeId,
-        customMode: input.run.customMode,
-        reachableChunks: reachable,
-        shortcuts: service.shortcuts(),
-      });
+      const snapshot = buildChunkPermissionSnapshot(content, coord, { ...permissions, shortcuts: service.shortcuts() });
       chunks[snapshot.chunkKey] = snapshot;
     }
   }
@@ -154,6 +160,11 @@ export async function buildRuneliteRulesManifest(
         chunkEntryRequirements: (cx: number, cy: number) => service.chunkEntryRequirements?.(cx, cy) ?? [],
       }, input.unlocks, input.run.gameModeId, reachable),
       places: rulesPlaces(interiors),
+      banks: bankDecisions({
+        contentFor: (cx: number, cy: number) => service.contentFor(cx, cy),
+        surfaceContentFor: (cx: number, cy: number) => service.surfaceContentFor?.(cx, cy) ?? service.contentFor(cx, cy),
+        interiorsEnteredFrom: (cx: number, cy: number) => service.interiorsEnteredFrom?.(cx, cy) ?? [],
+      }, permissions),
     }
     : {};
   // Needs no chunk data: the land next to the run's chunks, and with Sailing

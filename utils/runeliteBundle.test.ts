@@ -275,6 +275,7 @@ describe('buildBundlePayload - failed rules data', () => {
       // No entries or places decided without the chunk data.
       expect(degraded.rules).not.toHaveProperty('chunkEntries');
       expect(degraded.rules).not.toHaveProperty('places');
+      expect(degraded.rules).not.toHaveProperty('banks');
 
       // Back online, but equipment data is inside its failure cool-down.
       online = true;
@@ -287,6 +288,7 @@ describe('buildBundlePayload - failed rules data', () => {
       expect(Object.keys(full.rules.chunks).length).toBeGreaterThan(100);
       expect(Object.keys(full.rules.chunkEntries).length).toBeGreaterThan(Object.keys(full.rules.chunks).length);
       expect(Object.keys(full.rules.places).length).toBeGreaterThan(500);
+      expect(Object.keys(full.rules.banks)).toHaveLength(127);
       expect(full.rules.itemRules['1205']).toEqual({ tier: 1, slot: 'Weapon' });
     } finally {
       vi.unstubAllGlobals();
