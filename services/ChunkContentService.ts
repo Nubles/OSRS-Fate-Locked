@@ -329,6 +329,18 @@ export class ChunkContentService {
     return this.interiorIndex;
   }
 
+  /** A chunk's own surface content, without the interiors entered from it. */
+  surfaceContentFor(cx: number, cy: number): ChunkContent | null {
+    const entry = this.doc?.chunks[String(cx * 256 + cy)];
+    return entry ? decode(entry) : null;
+  }
+
+  /** The interiors entered from a chunk, each with its own content. */
+  interiorsEnteredFrom(cx: number, cy: number): { sourceId: string; name: string; content: ChunkContent }[] {
+    return (this.interiorLocations().get(String(cx * 256 + cy)) ?? [])
+      .map(({ sourceId, entry }) => ({ sourceId, name: entry.name, content: decode(entry.content) }));
+  }
+
   /** Interiors with a chunk of their own (a numeric region id), each with its ways in. */
   interiorRecords(): InteriorRecord[] {
     return Object.entries(this.doc?.interiors ?? {})

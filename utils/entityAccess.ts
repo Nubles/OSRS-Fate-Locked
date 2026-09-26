@@ -64,6 +64,27 @@ function registryBankRequirements(coord: { cx: number; cy: number }, unlocks: Un
     reasons: [...new Set([...entry.reasons, ...access.reasons])] };
 }
 
+interface BankFacility { name: string; kind: EntityKind; requirements?: string[] }
+
+/**
+ * The bank facilities in some content, for the bank with this id: booths,
+ * chests, deposit boxes and pools, bankers, and the reviewed ones (such as
+ * the bank buffalo) where the registry puts them.
+ */
+export function bankFacilities(content: ChunkContent, bankId: string): BankFacility[] {
+  const facilities: BankFacility[] = content.objects
+    .filter(([name]) => /^(bank booth|bank chest|bank deposit box|bank deposit chest|deposit pool)$/i.test(name))
+    .map(([name]) => ({ name, kind: 'object' }));
+  if (content.npcs.includes('Banker')) facilities.push({ name: 'Banker', kind: 'npc' });
+  for (const facility of bankRegistry.reviewedFacilities) {
+    if (facility.id !== bankId) continue;
+    const present = facility.kind === 'object'
+      ? content.objects.some(([name]) => name === facility.name) : content.npcs.includes(facility.name);
+    if (present) facilities.push({ ...facility, kind: facility.kind as EntityKind });
+  }
+  return facilities;
+}
+
 /** A surface bank or any independently accessible interior facility suffices.
  * Pass mode to enforce interior Fate ownership; omission checks OSRS requirements only.
  * Bank-table ownership and surface ownership remain the caller's responsibility.
@@ -72,16 +93,7 @@ export function evaluateBankRequirements(
   content: ChunkContent, coord: { cx: number; cy: number }, unlocks: UnlockState,
   source: EntityAccessSource = chunkContentService, mode?: string,
 ): EntityAccessResult {
-  const facilities: Array<{ name: string; kind: EntityKind; requirements?: string[] }> = content.objects
-    .filter(([name]) => /^(bank booth|bank chest|bank deposit box|bank deposit chest|deposit pool)$/i.test(name))
-    .map(([name]) => ({ name, kind: 'object' }));
-  if (content.npcs.includes('Banker')) facilities.push({ name: 'Banker', kind: 'npc' });
-  for (const facility of bankRegistry.reviewedFacilities) {
-    if (facility.id !== String(coord.cx * 256 + coord.cy)) continue;
-    const present = facility.kind === 'object'
-      ? content.objects.some(([name]) => name === facility.name) : content.npcs.includes(facility.name);
-    if (present) facilities.push({ ...facility, kind: facility.kind as EntityKind });
-  }
+  const facilities = bankFacilities(content, String(coord.cx * 256 + coord.cy));
   const results = facilities.map(({ name, kind, requirements }) => {
     const access = evaluateEntityRequirements(name, kind, coord, unlocks, source, mode);
     const extra = evaluateRouteGates(compileRawRequirements((requirements ?? []).map(raw => ({ raw, origin: 'ENTITY' as const }))), unlocks);

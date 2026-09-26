@@ -88,6 +88,22 @@ function questStatus(
     reasons: [...result.blockers.map(blocker => blocker.label), ...result.manualChecks] };
 }
 
+/**
+ * Whether the run may use the bank whose chunk this is, and why not: the
+ * bank's own unlock, its facilities' requirements and the chunk's entry.
+ * The chunk's BANKS row and the export's bank table both come from here.
+ */
+export function bankAccess(
+  content: ChunkContent,
+  coord: { cx: number; cy: number },
+  context: ChunkPermissionContext,
+  entry: PermissionStatus,
+): { status: PermissionStatus; reasons: string[] } {
+  const access = evaluateBankRequirements(content, coord, context.unlocks, context.contentService, context.gameModeId ?? 'vanilla');
+  const unlocked = isBankReachable(coord.cx, coord.cy, context.unlocks, context.gameModeId, context.customMode);
+  return { status: withEntry(unlocked ? 'ALLOWED' : 'LOCKED', withEntry(access.status, entry)), reasons: access.reasons };
+}
+
 function sortRows(rows: ChunkPermissionRow[]): ChunkPermissionRow[] {
   return rows.sort((left, right) =>
     left.name.localeCompare(right.name) || left.key.localeCompare(right.key));
@@ -115,20 +131,11 @@ export function buildChunkPermissionSnapshot(
   };
 
   if (BANK_BY_ID[numericId]) {
-    const access = evaluateBankRequirements(content, coord, context.unlocks, context.contentService, context.gameModeId ?? 'vanilla');
+    const access = bankAccess(content, coord, context, entry);
     add('BANKS', {
       key: `bank:${numericId}`,
       name: BANK_BY_ID[numericId].name,
-      status: withEntry(
-        isBankReachable(
-          coord.cx,
-          coord.cy,
-          context.unlocks,
-          context.gameModeId,
-          context.customMode,
-        ) ? 'ALLOWED' : 'LOCKED',
-        withEntry(access.status, entry),
-      ),
+      status: access.status,
       ...(access.reasons.length ? { detail: access.reasons.join('; ') } : {}),
       targetKind: 'BANK',
     });
