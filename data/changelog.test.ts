@@ -20,7 +20,16 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-25-herblore-sailing-quests');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-25-clearer-names');
+  });
+
+  it('says which shops Amulet Shops and Jewellery Shops unlock and renames the Ardougne banks', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-25-clearer-names');
+    expect(release?.title).toBe('Clearer Shop and Bank Names');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Conara's Jewels.*Grum's Gold Exchange.*Davon's Amulet Store.*ironmen can only sell there/),
+      expect.stringMatching(/Ardougne north bank and Ardougne south bank.*Chaos Druid Tower.*Ardougne Market/),
+    ]);
   });
 
   it('announces the Herblore and Sailing quest requirements and what happens to older saves', () => {

@@ -4,4 +4,4 @@
  * data/changelog.test.ts pins it to CHANGELOG_RELEASES[0]; update it whenever
  * a release is added.
  */
-export const LATEST_CHANGELOG_ID = '2026-09-25-herblore-sailing-quests';
+export const LATEST_CHANGELOG_ID = '2026-09-25-clearer-names';
