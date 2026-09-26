@@ -519,7 +519,12 @@ export const WIKI_OVERRIDES: Record<string, string> = {
   'Miscellania & Etceteria': 'Miscellania',
   "Scorpia's Cave": 'Scorpia',
   'Archery Competition': 'Archery_competition',
-  'Anima': 'Anima_patch'
+  'Anima': 'Anima_patch',
+  // Merchant categories with a wiki page of their own: "Jewellery shop" lists
+  // Conara's Jewels and Grum's Gold Exchange, and "Amulet shop" redirects to
+  // Davon's Amulet Store.
+  'Jewellery Shops': 'Jewellery_shop',
+  'Amulet Shops': 'Amulet_shop'
 };
 
 // App-design category names (transport groupings, POH facilities, shop types)
@@ -541,7 +546,7 @@ export const NO_WIKI_PAGE = new Set<string>([
   'Farming Shops', 'Crafting Shops', 'Mining Shops', 'Gem Shops', 'Herblore Shops', 'Dye Shops',
   'Axe Shops', 'Platebody Shops', 'Bars & Inns', 'Cooking Shops', 'Shield Shops', 'Scimitar Shops',
   'Helmet Shops', 'Platelegs Shops', 'Plateskirt Shops', 'Chainbody Shops', 'Mace Shops',
-  'Staff Shops', 'Crossbow Shops', 'Hunter Shops', 'Candle Shops', 'Fur Traders', 'Jewellery Shops',
+  'Staff Shops', 'Crossbow Shops', 'Hunter Shops', 'Candle Shops', 'Fur Traders',
   'Kebab Sellers', 'Silk Shops',
 ]);
 

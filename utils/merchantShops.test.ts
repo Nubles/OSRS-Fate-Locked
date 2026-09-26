@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { classifyShop } from './merchantShops';
-import { MERCHANTS_LIST } from '../constants';
+import { MERCHANTS_LIST, MERCHANT_UNLOCK_DETAILS, wikiUrlFor } from '../constants';
 import chunkContent from '../public/chunk-content.json';
 import { STRATEGY_DATABASE } from '../data/requirements';
 import { TableType } from '../types';
@@ -202,5 +202,47 @@ describe('classifyShop', () => {
       const got = classifyShop(p);
       if (got !== null) expect(valid.has(got), `${p} -> ${got}`).toBe(true);
     }
+  });
+});
+
+describe('Jewellery Shops and Amulet Shops', () => {
+  // Every shop name in the data: placed in a chunk, inside an interior, or
+  // known only from its stock list. Names drop a trailing "." and "#variant".
+  const shopsIn = (category: string) => {
+    const interiors = chunkContent.interiors as unknown as Record<string, { content?: { s?: string[] } }>;
+    const names = new Set<string>([
+      ...Object.values(chunkContent.chunks).flatMap(entry => 's' in entry ? entry.s : []),
+      ...Object.values(interiors).flatMap(entry => entry.content?.s ?? []),
+      ...Object.keys(chunkContent.shopItems),
+    ]);
+    return [...new Set([...names]
+      .filter(name => classifyShop(name) === category)
+      .map(name => name.trim().replace(/#.*$/, '').replace(/\.$/, '')))]
+      .sort();
+  };
+
+  it('sorts each shop into its own category', () => {
+    expect(classifyShop("Conara's Jewels")).toBe('Jewellery Shops');
+    expect(classifyShop("Grum's Gold Exchange.")).toBe('Jewellery Shops');
+    expect(classifyShop("Davon's Amulet Store.")).toBe('Amulet Shops');
+    expect(shopsIn('Jewellery Shops')).toEqual(["Conara's Jewels", "Grum's Gold Exchange"]);
+    expect(shopsIn('Amulet Shops')).toEqual(["Davon's Amulet Store"]);
+  });
+
+  it('describes each category by naming every shop it unlocks', () => {
+    for (const category of ['Jewellery Shops', 'Amulet Shops']) {
+      const detail = MERCHANT_UNLOCK_DETAILS[category];
+      expect(detail, category).toBeTruthy();
+      for (const shop of shopsIn(category)) expect(detail, `${category} names ${shop}`).toContain(shop);
+    }
+    expect(MERCHANT_UNLOCK_DETAILS['Amulet Shops']).toMatch(/ironmen can only sell there/);
+    expect(Object.keys(MERCHANT_UNLOCK_DETAILS).filter(category => !MERCHANTS_LIST.includes(category))).toEqual([]);
+  });
+
+  it('links each tile to the wiki page for its shops', () => {
+    // "Jewellery shop" lists Conara's Jewels and Grum's Gold Exchange;
+    // "Amulet shop" redirects to Davon's Amulet Store. "Amulet_Shops" is a 404.
+    expect(wikiUrlFor('Jewellery Shops')).toBe('https://oldschool.runescape.wiki/w/Jewellery_shop');
+    expect(wikiUrlFor('Amulet Shops')).toBe('https://oldschool.runescape.wiki/w/Amulet_shop');
   });
 });

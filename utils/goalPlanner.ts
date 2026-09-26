@@ -614,7 +614,10 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
     };
     if (status !== 'COMPLETED') {
       const seen = new Set<string>();
+      const mergedQuests = new Set<string>();
       const mergeQuest = (qid: string) => {
+        if (mergedQuests.has(qid)) return;
+        mergedQuests.add(qid);
         const sub = collectQuestChain(qid, unlocks, gameModeId);
         for (const region of sub.regions) merged.regions.add(region);
         for (const [key, alternative] of sub.alternatives) merged.alternatives.set(key, alternative);
@@ -654,6 +657,9 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
         }
         const blockers = eligibility.blockers;
         for (const blocker of blockers) {
+          // Quests the task needs beyond its own list, such as Druidic Ritual
+          // for a Herblore level, join the plan with their own requirements.
+          if (blocker.kind === 'quest' && QUEST_DATA[blocker.label]) mergeQuest(blocker.label);
           if (blocker.kind === 'merchant') merged.merchants.add(blocker.label);
           if (blocker.kind === 'arcana') merged.arcana.add(blocker.label);
           if (blocker.kind === 'mobility') merged.mobility.add(blocker.label);

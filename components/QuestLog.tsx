@@ -17,6 +17,7 @@ import {
   type QuestEligibility,
   type QuestStatus,
   questRequirementOptionLabel,
+  withSkillGateQuests,
 } from '../utils/journalStatus';
 import { requestManualAttestation } from '../utils/manualAttestation';
 import { effectiveSkillLevel } from '../utils/slayerReach';
@@ -147,7 +148,8 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
       blocker => blocker.kind === 'equipment' && blocker.slot === requirement.slot && blocker.tier === requirement.tier,
     );
     const metEquipment = equipmentReqs.filter(equipmentMet);
-    const prereqReqs: string[] = quest.prereqs || [];
+    // Includes the quest a gated skill needs, such as Druidic Ritual for Herblore.
+    const prereqReqs: string[] = withSkillGateQuests(quest.prereqs, quest.skills, quest.id);
     const metPrereqs = prereqReqs.filter((qid: string) =>
       eligibility.evidence.includes(qid));
     const hasAlternative = Boolean(quest.oneOf?.length);

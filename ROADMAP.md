@@ -250,11 +250,16 @@ not visual acceptance, and visual acceptance is not permission to publish.
 
 ## 2b. Bank unlocks (shipped — web side) & follow-ups
 
-The bank pool contains 126 physical canonical bank/deposit chunks plus 1 virtual Forestry unlock.
-All 127 are individual `TableType.BANKS` entries in `unlocks.banks[]`: the 126 physical entries are keyed by
+The bank pool contains 127 physical canonical bank/deposit chunks plus 1 virtual Forestry unlock.
+All 128 are individual `TableType.BANKS` entries in `unlocks.banks[]`: the 127 physical entries are keyed by
 canonical chunk id cx*256+cy, while the virtual Forestry unlock is tracked separately,
 mirroring the STORAGE table pattern. Data: `data/banks.ts` (regen with
 `node scripts/gen-banks.mjs` from public/chunk-content.json's `banks`).
+Labels come from `data/sources/bank-locations.json` when it has one (`locations`
+or `labelOverrides`, each with Wiki evidence) and otherwise from the chunk's
+Chunk Picker nickname, which can name a landmark instead of the bank (10292 was
+"Chaos Druid Tower"). Correct a label with a `labelOverrides` entry; never change
+the id, which saves store.
 
 Gated by a per-mode `bankLocks` rule (config/gameModes.ts), **on in every
 built-in mode**; Custom mode can toggle it off.
@@ -278,7 +283,7 @@ Follow-ups:
   follow-up because the current warning path is chunk-based.
 - ~~Completion/stats~~ — done: banks counted in completion % (denominator +
   points), Share card tile, and the copy summary.
-- **Browsable owned-banks list** in the Dashboard (Spend card only shows X/127).
+- **Browsable owned-banks list** in the Dashboard (Spend card only shows X/128).
 
 ## 3. Architecture cheat-sheet
 

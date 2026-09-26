@@ -34,6 +34,24 @@ describe('authored changelog releases', () => {
     ]);
   });
 
+  it('says which shops Amulet Shops and Jewellery Shops unlock and renames the Ardougne banks', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-25-clearer-names');
+    expect(release?.title).toBe('Clearer Shop and Bank Names');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Conara's Jewels.*Grum's Gold Exchange.*Davon's Amulet Store.*ironmen can only sell there/),
+      expect.stringMatching(/Ardougne north bank and Ardougne south bank.*Chaos Druid Tower.*Ardougne Market/),
+    ]);
+  });
+
+  it('announces the Herblore and Sailing quest requirements and what happens to older saves', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-25-herblore-sailing-quests');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Herblore needs Druidic Ritual and Sailing needs Pandemonium/),
+      expect.stringMatching(/Skill Advisor no longer suggests training Herblore before Druidic Ritual/),
+      expect.stringMatching(/Herblore levels but no Druidic Ritual.*already completed stays completed/),
+    ]);
+  });
+
   it('announces the RuneLite safety update without promising a Roll Inbox feed', () => {
     const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-25-runelite-safety-update');
     expect(release?.sections.changed).toEqual(expect.arrayContaining([

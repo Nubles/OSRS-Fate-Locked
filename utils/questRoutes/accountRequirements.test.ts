@@ -102,6 +102,18 @@ describe('account requirements', () => {
     }))).toEqual({ blockers: [], hasDataGap: false });
   });
 
+  it("needs Druidic Ritual for a Herblore level, such as the Alchemical Society interior's", () => {
+    const gates = compileRawRequirements([entity('Herblore level 60')]);
+    const herblore = { skills: { Herblore: 6 }, levels: { Herblore: 60 } };
+    const ritual = { type: 'QUEST' as const, questId: 'Druidic Ritual', label: 'Druidic Ritual' };
+
+    expect(evaluateRouteGates(gates, unlocks(herblore))).toEqual({ blockers: [ritual], hasDataGap: false });
+    expect(evaluateRouteGates(gates, unlocks({ ...herblore, quests: ['Druidic Ritual'] })))
+      .toEqual({ blockers: [], hasDataGap: false });
+    // A source that names the quest itself reports it once.
+    expect(evaluateRouteGates([...gates, ritual], unlocks(herblore)).blockers).toEqual([ritual]);
+  });
+
   it('compiles reviewed account-unlock aliases into their typed unlock categories', () => {
     expect(compileRawRequirements([
       entity('Access the Fishing Guild'), entity('Use the Sawmill Operator'), entity('Play Barbarian Assault'),

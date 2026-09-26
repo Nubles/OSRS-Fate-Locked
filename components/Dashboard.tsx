@@ -5,7 +5,7 @@ import {
   EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, MISTHALIN_AREAS, 
   MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, ROLLABLE_POH_ITEMS,
   MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, SLAYER_UNLOCKS_LIST,
-  FARMING_PATCH_LIST, FARMING_UNLOCK_DETAILS, EQUIPMENT_TIER_MAX,
+  FARMING_PATCH_LIST, FARMING_UNLOCK_DETAILS, MERCHANT_UNLOCK_DETAILS, EQUIPMENT_TIER_MAX,
   REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, wikiUrlFor, UTILITY_ITEM_IDS,
   SKILL_UNLOCK_DATA
 } from '../constants';
@@ -62,6 +62,7 @@ import { BANKS, BANK_IDS, BANK_BY_ID } from '../data/banks';
 import { getActivityReq, ActivityReq } from '../data/activityRequirements';
 import { bossTier, TIER_LABEL } from '../data/bossKeyTiers';
 import { evaluateActivityReadiness, type ActivityReadiness } from '../utils/activityReadiness';
+import { withSkillGateQuests } from '../utils/journalStatus';
 import { ActivityReadinessBadge } from './ActivityReadinessBadge';
 import { RegionAdvisorPanel } from './RegionAdvisorPanel';
 import { FrontierAdvisorPanel } from './FrontierAdvisorPanel';
@@ -282,7 +283,7 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
                     {req.skills && Object.entries(req.skills).map(([sk, lvl]) => (
                         <span key={sk} className="text-[9px] px-1 py-0.5 rounded bg-amber-900/20 border border-amber-500/20 text-amber-300/90 leading-none font-mono" title={`Requires ${lvl} ${sk}`}>{sk} {lvl}</span>
                     ))}
-                    {req.quests && req.quests.map(q => (
+                    {withSkillGateQuests(req.quests, req.skills).map(q => (
                         <span key={q} className="text-[9px] px-1 py-0.5 rounded bg-violet-900/20 border border-violet-500/20 text-violet-300/90 leading-none flex items-center gap-0.5" title={`Quest: ${q}`}>
                             <ScrollText size={8} className="shrink-0" />{q}
                         </span>
@@ -900,7 +901,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         { id: 'ARCANA',    label: COMBAT_POWERS_LABEL,  color: 'text-violet-400', bar: 'bg-violet-500', list: ARCANA_LIST,        unlocked: unlocks.arcana,    type: TableType.ARCANA },
         { id: 'POH',       label: 'Player Owned House', color: 'text-orange-400', bar: 'bg-orange-500', list: ROLLABLE_POH_ITEMS,  unlocked: ROLLABLE_POH_ITEMS.filter(item => unlocks.housing.includes(item)),   type: TableType.POH },
         { id: 'STORAGE',   label: 'Storage',            color: 'text-amber-600',  bar: 'bg-amber-600',  list: STORAGE_LIST,       unlocked: unlocks.storage,   type: TableType.STORAGE },
-        { id: 'MERCHANTS', label: 'Merchants',          color: 'text-yellow-400', bar: 'bg-yellow-500', list: MERCHANTS_LIST,     unlocked: unlocks.merchants, type: TableType.MERCHANTS },
+        { id: 'MERCHANTS', label: 'Merchants',          color: 'text-yellow-400', bar: 'bg-yellow-500', list: MERCHANTS_LIST,     unlocked: unlocks.merchants, type: TableType.MERCHANTS, details: MERCHANT_UNLOCK_DETAILS },
         { id: 'SLAYER',    label: 'Slayer Unlocks',     color: 'text-rose-400',   bar: 'bg-rose-500',   list: SLAYER_UNLOCKS_LIST, unlocked: unlocks.slayerUnlocks,   type: TableType.SLAYER_UNLOCKS },
         // Banks are keyed by chunk id but shown by place name; only present when
         // the run locks banks (see bankLocksActive).

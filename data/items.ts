@@ -62,6 +62,14 @@ export const MERCHANTS_LIST = [
   'Weapon Shops', 'Reward Shops'
 ];
 
+// One line under a merchant tile and in the shop directory, for categories
+// whose names are easy to confuse. Name every shop the category holds
+// (utils/merchantShops.test.ts checks this against the shop data).
+export const MERCHANT_UNLOCK_DETAILS: Record<string, string> = {
+  'Jewellery Shops': "Conara's Jewels (Cam Torum) sells a small stock of gold jewellery and cut gems; Grum's Gold Exchange (Port Sarim) has no stock of its own, so ironmen can only sell there.",
+  'Amulet Shops': "Davon's Amulet Store (Brimhaven) trades enchanted amulets and holy symbols but has no stock of its own, so ironmen can only sell there.",
+};
+
 export const STORAGE_LIST = [
   'Looting Bag', 'Rune Pouch', 'Seed Box', 'Herb Sack', 'Gem Bag', 'Coal Bag', 'Fish Barrel', 
   'Tackle Box', 'Bolt Pouch', 'Plank Sack', 'Huntsman\'s Kit', 'Log Basket', 'Beginner STASH', 
