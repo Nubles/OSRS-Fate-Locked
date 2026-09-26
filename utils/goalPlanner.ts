@@ -32,7 +32,7 @@ export type GoalKind = 'quest' | 'diary' | 'region';
 
 export interface PlanStep {
   /** What kind of thing this step is. */
-  kind: 'quest' | 'region' | 'skill' | 'equipment' | 'merchant' | 'mobility' | 'arcana' | 'minigame' | 'qp' | 'manual';
+  kind: 'quest' | 'region' | 'skill' | 'equipment' | 'merchant' | 'mobility' | 'arcana' | 'minigame' | 'boss' | 'qp' | 'manual';
   /** Stable id: quest id, region name, skill name, or 'Quest Points'. */
   id: string;
   /** Display label. */
@@ -87,6 +87,7 @@ export interface GoalPlan {
   mobilitySteps?: PlanStep[];
   arcanaSteps?: PlanStep[];
   minigameSteps?: PlanStep[];
+  bossSteps?: PlanStep[];
   /** Requirements where any one complete route is sufficient. */
   alternativeSteps: AlternativePlanStep[];
   /** Optional quest-point shortfall note. */
@@ -215,6 +216,9 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any, gam
   }
   if (blocker.kind === 'minigame') {
     return { kind: 'minigame', id: blocker.label, label: blocker.label, unlockTable: TableType.MINIGAMES, detail: 'Unlock via Minigames', done: false };
+  }
+  if (blocker.kind === 'boss') {
+    return { kind: 'boss', id: blocker.label, label: blocker.label, unlockTable: TableType.BOSSES, detail: 'Unlock via Bosses', done: false };
   }
   if (blocker.kind === 'merchant') {
     return { kind: 'merchant', id: blocker.label, label: blocker.label, unlockTable: TableType.MERCHANTS, detail: 'Unlock via Merchants', done: false };
@@ -423,6 +427,7 @@ function buildPlanFromRequirements(
     mobility?: Set<string>;
     arcana?: Set<string>;
     minigames?: Set<string>;
+    bosses?: Set<string>;
   },
   unlocks: any,
   alreadyReachable: boolean,
@@ -447,6 +452,9 @@ function buildPlanFromRequirements(
   ));
   const minigameSteps: PlanStep[] = [...(reqs.minigames ?? [])].sort().map(label => (
     planStepForBlocker({ kind: 'minigame', label }, unlocks)
+  ));
+  const bossSteps: PlanStep[] = [...(reqs.bosses ?? [])].sort().map(label => (
+    planStepForBlocker({ kind: 'boss', label }, unlocks)
   ));
   const equipmentSteps: PlanStep[] = [...reqs.equipment.entries()]
     .sort(([left], [right]) => left.localeCompare(right))
@@ -550,6 +558,7 @@ function buildPlanFromRequirements(
     ...mobilitySteps,
     ...arcanaSteps,
     ...minigameSteps,
+    ...bossSteps,
     ...skillSteps,
     ...alternativeSteps,
     ...(qpStep ? [qpStep] : []),
@@ -574,6 +583,7 @@ function buildPlanFromRequirements(
     mobilitySteps,
     arcanaSteps,
     minigameSteps,
+    bossSteps,
     alternativeSteps,
     qpStep,
     steps,
@@ -631,6 +641,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       mobility: new Set<string>(),
       arcana: new Set<string>(),
       minigames: new Set<string>(),
+      bosses: new Set<string>(),
     };
     if (status !== 'COMPLETED') {
       const seen = new Set<string>();
@@ -684,6 +695,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
           if (blocker.kind === 'arcana') merged.arcana.add(blocker.label);
           if (blocker.kind === 'mobility') merged.mobility.add(blocker.label);
           if (blocker.kind === 'minigame') merged.minigames.add(blocker.label);
+          if (blocker.kind === 'boss') merged.bosses.add(blocker.label);
           if (blocker.kind === 'equipment') {
             const previous = merged.equipment.get(blocker.slot);
             merged.equipment.set(blocker.slot, {

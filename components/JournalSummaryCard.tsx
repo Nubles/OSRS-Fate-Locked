@@ -3,6 +3,7 @@ import { ChevronRight } from 'lucide-react';
 import { BookOpen, Map as MapIcon, Swords, Sparkles, Target, PartyPopper } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
 import { useGame } from '../context/GameContext';
+import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import { QUEST_DATA, type QuestData } from '../data/questData';
 import { DIARY_DATA, type DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
@@ -122,6 +123,7 @@ export function recommendNextAction(unlocks: UnlockState, diaryDoable: number, c
 
 export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
   const { unlocks, advisorsEnabled, gameModeId } = useGame();
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
 
   const stats = useMemo(() => {
     // ── Quests available ─────────────────────────────────────────────────────
@@ -134,7 +136,7 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
 
     // ── Diary tasks doable ───────────────────────────────────────────────────
     const diaryTasksDoable = countDoableDiaryTasks(
-      ALL_DIARY_TASKS, unlocks, gameModeId);
+      ALL_DIARY_TASKS, unlocks, gameModeId, areaRoutes);
     const diaryTasksTotal  = ALL_DIARY_TASKS.length;
     const diaryTasksDone   = unlocks.completedTasks.filter((id: string) =>
       ALL_DIARY_TASKS.some((t) => t.id === id),
@@ -166,7 +168,7 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
         nextTier: nextCATier,
       },
     };
-  }, [unlocks, gameModeId]);
+  }, [unlocks, gameModeId, areaRoutes]);
 
   // The single best next action — computed once per unlocks change.
   const recommendation = useMemo(

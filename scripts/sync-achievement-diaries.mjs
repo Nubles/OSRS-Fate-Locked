@@ -199,6 +199,10 @@ const renderRequirementProperties = (requirement) => {
   if (requirement.arcana?.length > 0) properties.push('arcana: ' + renderStringArray(requirement.arcana));
   if (requirement.mobility?.length > 0) properties.push('mobility: ' + renderStringArray(requirement.mobility));
   if (requirement.minigames?.length > 0) properties.push('minigames: ' + renderStringArray(requirement.minigames));
+  if (requirement.bosses?.length > 0) properties.push('bosses: ' + renderStringArray(requirement.bosses));
+  if (requirement.anyOfBosses?.length > 0) {
+    properties.push('anyOfBosses: [' + requirement.anyOfBosses.map(renderStringArray).join(', ') + ']');
+  }
   if (requirement.equipmentRequirements?.length > 0) properties.push('equipmentRequirements: ' + JSON.stringify(requirement.equipmentRequirements));
   if (requirement.quests?.length > 0) {
     properties.push('quests: ' + renderStringArray(requirement.quests));
@@ -263,7 +267,7 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
   if (!requirement || typeof requirement !== 'object' || Array.isArray(requirement)) {
     throw new Error('Invalid Diary requirement route: ' + context);
   }
-  for (const field of ['items', 'merchants', 'mobility', 'arcana', 'minigames', 'quests', 'cas', 'regions', 'anyOfRegions', 'manualRequirements']) {
+  for (const field of ['items', 'merchants', 'mobility', 'arcana', 'minigames', 'bosses', 'quests', 'cas', 'regions', 'anyOfRegions', 'manualRequirements']) {
     if (requirement[field] !== undefined && !Array.isArray(requirement[field])) {
       throw new Error('Invalid Diary requirement ' + field + ': ' + context);
     }
@@ -274,6 +278,13 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
         'Invalid Diary requirement ' + field + ' entry (expected a non-empty string): ' + context,
       );
     }
+  }
+  if (requirement.anyOfBosses !== undefined && (
+    !Array.isArray(requirement.anyOfBosses)
+    || requirement.anyOfBosses.some(group => !Array.isArray(group) || group.length < 2
+      || group.some(value => typeof value !== 'string' || value.trim() === ''))
+  )) {
+    throw new Error('Invalid Diary requirement anyOfBosses (expected groups of two or more names): ' + context);
   }
   if (requirement.equipmentRequirements !== undefined && (
     !Array.isArray(requirement.equipmentRequirements) || requirement.equipmentRequirements.length === 0
@@ -324,6 +335,8 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
     || requirement.mobility?.length
     || requirement.arcana?.length
     || requirement.minigames?.length
+    || requirement.bosses?.length
+    || requirement.anyOfBosses?.length
     || requirement.equipmentRequirements?.length
     || Object.keys(requirement.skills ?? {}).length
     || requirement.quests?.length
@@ -440,6 +453,8 @@ export function renderDiaryTasks(snapshot) {
     '  mobility?: string[];',
     '  arcana?: string[];',
     '  minigames?: string[];',
+    '  bosses?: string[];',
+    '  anyOfBosses?: string[][];',
     '  equipmentRequirements?: DiaryEquipmentRequirement[];',
     '  quests?: string[];',
     '  cas?: string[];',
@@ -465,6 +480,8 @@ export function renderDiaryTasks(snapshot) {
     '  mobility?: string[];',
     '  arcana?: string[];',
     '  minigames?: string[];',
+    '  bosses?: string[];',
+    '  anyOfBosses?: string[][];',
     '  equipmentRequirements?: DiaryEquipmentRequirement[];',
     '  quests?: string[];',
     '  cas?: string[];',
@@ -664,6 +681,7 @@ const loadReferenceCatalog = (projectRoot) => {
     mobility: new Set(stringArrayOf(initializerOf(itemsSource, 'MOBILITY_LIST'))),
     arcana: new Set(stringArrayOf(initializerOf(itemsSource, 'ARCANA_LIST'))),
     minigames: new Set(stringArrayOf(initializerOf(itemsSource, 'MINIGAMES_LIST'))),
+    bosses: new Set(stringArrayOf(initializerOf(itemsSource, 'BOSSES_LIST'))),
     equipment: new Set(stringArrayOf(initializerOf(itemsSource, 'EQUIPMENT_SLOTS'))),
     quests,
     regions,
@@ -697,6 +715,9 @@ const findUnknownReferences = (snapshot, projectRoot) => {
       }
       for (const minigame of requirement.minigames ?? []) {
         if (!catalog.minigames.has(minigame)) unknown.push(task.id + ' minigame ' + minigame);
+      }
+      for (const boss of [...(requirement.bosses ?? []), ...(requirement.anyOfBosses ?? []).flat()]) {
+        if (!catalog.bosses.has(boss)) unknown.push(task.id + ' boss ' + boss);
       }
       for (const equipment of requirement.equipmentRequirements ?? []) {
         if (!catalog.equipment.has(equipment.slot)) unknown.push(task.id + ' equipment slot ' + equipment.slot);

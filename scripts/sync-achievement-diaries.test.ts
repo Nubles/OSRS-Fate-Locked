@@ -465,6 +465,27 @@ describe('Achievement Diary id-classification audit', () => {
     expect(() => renderDiaryTasks(snapshot)).toThrow(/merchants.*non-empty string/i);
   });
 
+  it('retains boss gates and rejects unknown bosses', () => {
+    const snapshot = loadSnapshot();
+    snapshot.tasks[0].bosses = ["Vet'ion"];
+    expect(renderDiaryTasks(snapshot)).toContain("bosses: ['Vet\\'ion']");
+    expect(() => validateAudit(snapshot)).not.toThrow();
+    snapshot.tasks[0].bosses = ['NotABoss'];
+    expect(() => validateAudit(snapshot)).toThrow(/unknown.*NotABoss/i);
+    snapshot.tasks[0].bosses = [42];
+    expect(() => renderDiaryTasks(snapshot)).toThrow(/bosses.*non-empty string/i);
+  });
+
+  it('retains a choice of bosses per group and rejects a bad group', () => {
+    const snapshot = loadSnapshot();
+    snapshot.tasks[0].anyOfBosses = [['Callisto', 'Artio'], ['Venenatis', 'Spindel']];
+    expect(renderDiaryTasks(snapshot)).toContain("anyOfBosses: [['Callisto', 'Artio'], ['Venenatis', 'Spindel']]");
+    snapshot.tasks[0].anyOfBosses = [['Callisto', 'NotABoss']];
+    expect(() => validateAudit(snapshot)).toThrow(/unknown.*NotABoss/i);
+    snapshot.tasks[0].anyOfBosses = [['Callisto']];
+    expect(() => renderDiaryTasks(snapshot)).toThrow(/anyOfBosses/);
+  });
+
   it('retains minigame gates and rejects unknown minigames', () => {
     const snapshot = loadSnapshot();
     snapshot.tasks[0].minigames = ['Pest Control'];
@@ -514,6 +535,7 @@ describe('Achievement Diary id-classification audit', () => {
       'kan_hard_5',
       'kan_med_4',
       'kar_easy_7',
+      'kar_easy_9',
       'kar_hard_3',
       'kar_hard_8',
       'kar_hard_9',
@@ -772,7 +794,7 @@ describe('Achievement Diary id-classification audit', () => {
       snapshot.tasks[0].equipmentRequirements = [{ slot: 'Cape', tier, reason: 'Test cape' }];
       expect(() => validateSnapshot(snapshot)).toThrow(/equipmentRequirements/);
     }
-    for (const field of ['mobility', 'arcana', 'minigames']) {
+    for (const field of ['mobility', 'arcana', 'minigames', 'bosses']) {
       const snapshot = loadSnapshot();
       snapshot.tasks[0][field] = ['Invented unlock'];
       expect(() => validateAudit(snapshot)).toThrow(/unknown/i);

@@ -31,6 +31,7 @@ const REVIEWED: Record<string, string> = {
   kan_elite_1: 'Barbarian Assault',
   kar_med_1: 'Brimhaven Agility Arena',
   kar_med_5: 'Tai Bwo Wannai Cleanup',
+  kar_easy_9: 'TzHaar Fight Pit',
   kar_hard_1: 'TzHaar Fight Pit',
   kou_hard_5: 'Tithe Farm',
   kou_hard_8: 'Stealing Artefacts',
@@ -69,7 +70,7 @@ describe('diary tasks played in a minigame', () => {
   it('tag exactly the reviewed tasks, each with a minigame the tracker unlocks', () => {
     const tagged = Object.fromEntries(ALL_DIARY_TASKS
       .filter(row => row.minigames?.length || row.oneOf?.some(option => option.minigames?.length))
-      .map(row => [row.id, row.minigames?.join(', ')]));
+      .map(row => [row.id, [...(row.minigames ?? []), ...(row.oneOf ?? []).flatMap(option => option.minigames ?? [])].join(', ')]));
 
     expect(tagged).toEqual(REVIEWED);
     for (const minigame of Object.values(REVIEWED)) expect(MINIGAMES_LIST).toContain(minigame);
@@ -87,6 +88,8 @@ describe('diary tasks played in a minigame', () => {
 
   it('wait for their minigame, and only for it', () => {
     for (const [id, minigame] of Object.entries(REVIEWED)) {
+      // The Fight Pits task can also be done in the Fight Cave: diaryBosses.test.ts covers it.
+      if (!task(id).minigames?.includes(minigame)) continue;
       const without = everything({ minigames: MINIGAMES_LIST.filter(name => name !== minigame) });
       expect(evaluateDiaryTaskEligibility(task(id), without, 'vanilla').blockers, id)
         .toContainEqual({ kind: 'minigame', label: minigame });
