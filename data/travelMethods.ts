@@ -128,4 +128,111 @@ const SPELLS: readonly TravelMethod[] = [
   spell('arceuus', 'Ape Atoll Teleport', ['43,142'], 14863786, { page: 'Ape Atoll Teleport (Arceuus)' }),
 ];
 
-export const TRAVEL_METHODS: readonly TravelMethod[] = [...SPELLS];
+const item = (id: string, label: string, ids: readonly number[], unlocks: readonly string[],
+  options: Readonly<Record<string, TravelOption>>, page: string, oldid: number): TravelMethod =>
+  ({ id, label, unlocks, match: { items: ids }, options, source: wiki(page, oldid) });
+
+/**
+ * A teleport tablet, broken from the inventory. A standard tablet needs
+ * Teleport Tablets; another spellbook's tablet needs that spellbook, as the
+ * app's route data has it for the Arceuus ones.
+ */
+const tablet = (book: SpellBook, name: string, ids: readonly number[], to: readonly string[], oldid: number,
+  extra: { page?: string; options?: Readonly<Record<string, TravelOption>>; afterDiary?: TravelOption['afterDiary'] } = {}) =>
+  item(`tablet:${slug(name)}`, `${name} tablet`, ids, book === 'standard' ? ['Teleport Tablets'] : BOOK_UNLOCKS[book],
+    { Break: { to, ...(extra.afterDiary ? { afterDiary: extra.afterDiary } : {}) }, ...extra.options },
+    extra.page ?? `${name} (tablet)`, oldid);
+
+/** A house tablet redirected to a house location: it lands outside that house's portal. */
+const houseTablet = (name: string, id: number, to: readonly string[], oldid: number) =>
+  item(`tablet:${slug(name)}`, `${name} tablet`, [id], ['Teleport Tablets'], { Break: { to } }, name, oldid);
+
+/** A one-use teleport scroll. The app's route data asks no unlock for them. */
+const scroll = (name: string, id: number, to: readonly string[], oldid: number, page = name) =>
+  item(`scroll:${slug(name)}`, `${name} scroll`, [id], [], { Teleport: { to } }, page, oldid);
+
+const TABLETS: readonly TravelMethod[] = [
+  tablet('standard', 'Varrock teleport', [8007], ['50,53'], 15184222, {
+    afterDiary: { diary: 'Varrock Medium', to: ['49,54'] },
+    options: { Varrock: { to: ['50,53'] }, 'Grand Exchange': { to: ['49,54'] } },
+  }),
+  tablet('standard', 'Lumbridge teleport', [8008], ['50,50'], 15185081),
+  tablet('standard', 'Falador teleport', [8009], ['46,52'], 15185079),
+  tablet('standard', 'Camelot teleport', [8010], ['43,54'], 15185080, {
+    afterDiary: { diary: 'Kandarin Hard', to: ['42,54'] },
+    options: { Camelot: { to: ['43,54'] }, "Seers' Village": { to: ['42,54'] } },
+  }),
+  tablet('standard', 'Ardougne teleport', [8011], ['41,51'], 15183982),
+  tablet('standard', 'Watchtower teleport', [8012], ['39,48'], 15185084, {
+    afterDiary: { diary: 'Ardougne Hard', to: ['40,48'] },
+    options: { Watchtower: { to: ['39,48'] }, Yanille: { to: ['40,48'] } },
+  }),
+  tablet('standard', 'Kourend castle teleport', [28790], ['25,57'], 15287395),
+  tablet('standard', 'Civitas illa fortis teleport', [28824], ['26,48'], 15192363),
+
+  houseTablet('Rimmington teleport', 11741, ['46,50'], 15309324),
+  houseTablet('Taverley teleport', 11742, ['45,54'], 15309326),
+  houseTablet('Pollnivneach teleport', 11743, ['52,46'], 15309321),
+  houseTablet('Rellekka teleport', 11744, ['41,56'], 15309323),
+  houseTablet('Brimhaven teleport', 11745, ['43,49'], 15309318),
+  houseTablet('Yanille teleport', 11746, ['39,48'], 15342795),
+  houseTablet('Trollheim teleport', 11747, ['45,57'], 15309327),
+  houseTablet('Hosidius teleport', 19651, ['27,54'], 15309320),
+  houseTablet('Prifddinas teleport', 23771, ['50,94'], 15309322),
+
+  tablet('ancient', 'Paddewwa teleport', [12781], ['48,154'], 15186395),
+  tablet('ancient', 'Senntisten teleport', [12782], ['51,52'], 15186394),
+  tablet('ancient', 'Kharyrll teleport', [12779], ['54,54'], 15186392),
+  tablet('ancient', 'Lassar teleport', [12780], ['46,54'], 15186393),
+  tablet('ancient', 'Dareeyak teleport', [12777], ['46,57'], 15186390),
+  tablet('ancient', 'Carrallanger teleport', [12776], ['49,57'], 15186389),
+  tablet('ancient', 'Annakarl teleport', [12775], ['51,60'], 15186388),
+  tablet('ancient', 'Ghorrock teleport', [12778], ['46,60'], 15186391),
+
+  tablet('lunar', 'Moonclan teleport', [24949], ['32,61', '33,61'], 15189870),
+  tablet('lunar', 'Ourania teleport', [24951], ['38,50'], 15189871),
+  tablet('lunar', 'Waterbirth teleport', [24953], ['39,58'], 15189872),
+  tablet('lunar', 'Barbarian teleport', [24955], ['39,55'], 15189873),
+  tablet('lunar', 'Khazard teleport', [24957], ['41,49'], 15189874),
+  tablet('lunar', 'Fishing guild teleport', [24959], ['40,52', '40,53'], 15189875),
+  tablet('lunar', 'Catherby teleport', [24961], ['43,53'], 15189876),
+  tablet('lunar', 'Ice plateau teleport', [24963], ['46,61'], 15189877),
+
+  tablet('arceuus', 'Arceuus library teleport', [19613], ['25,59', '25,60'], 15231347),
+  tablet('arceuus', 'Draynor manor teleport', [19615], ['48,52'], 15187517),
+  tablet('arceuus', 'Mind altar teleport', [19617], ['46,54'], 15187518),
+  tablet('arceuus', 'Salve graveyard teleport', [19619], ['53,54'], 15187519),
+  tablet('arceuus', "Fenkenstrain's castle teleport", [19621], ['55,55'], 15187520),
+  tablet('arceuus', 'West ardougne teleport', [19623], ['39,51'], 15187521),
+  tablet('arceuus', 'Harmony island teleport', [19625], ['59,44'], 15187522),
+  tablet('arceuus', 'Cemetery teleport', [19627], ['46,58'], 15187523),
+  tablet('arceuus', 'Barrows teleport', [19629], ['55,51'], 15187524),
+  tablet('arceuus', 'Ape atoll teleport', [19631], ['43,142'], 15187525),
+  tablet('arceuus', 'Battlefront teleport', [22949], ['21,58'], 15189104),
+];
+
+// The Guthixian temple scroll lands at 4062,4556, in a region no area or
+// interior covers, so it is left out; so is the Revenant cave scroll, which
+// offers three entrances.
+const SCROLLS: readonly TravelMethod[] = [
+  scroll('Nardah teleport', 12402, ['53,45'], 15186014),
+  scroll('Digsite teleport', 12403, ['51,53'], 15186009),
+  scroll('Feldip hills teleport', 12404, ['39,45'], 15186010),
+  scroll('Lunar isle teleport', 12405, ['32,61'], 15186011),
+  scroll("Mort'ton teleport", 12406, ['54,51'], 15186012),
+  scroll('Pest control teleport', 12407, ['41,41'], 15186015),
+  scroll('Piscatoris teleport', 12408, ['36,57'], 15186016),
+  scroll('Tai bwo wannai teleport', 12409, ['43,47'], 15186007),
+  scroll('Iorwerth camp teleport', 12410, ['34,50'], 15186008),
+  scroll("Mos le'harmless teleport", 12411, ['57,46'], 15186013),
+  scroll('Lumberyard teleport', 12642, ['51,54'], 15186290),
+  scroll('Zul-andra teleport', 12938, ['34,47'], 15186555),
+  scroll('Key master teleport', 13249, ['20,19'], 15259810),
+  scroll('Watson teleport', 23387, ['25,55'], 15257420),
+  scroll('Spider cave teleport', 29782, ['57,53'], 15192620),
+  scroll('Colossal wyrm teleport', 30040, ['25,45'], 15192735, 'Colossal wyrm teleport scroll'),
+  scroll('Chasm teleport', 30775, ['22,157'], 15350393, 'Chasm teleport scroll'),
+  scroll('Ardeaglais teleport', 34033, ['39,34'], 15291623),
+];
+
+export const TRAVEL_METHODS: readonly TravelMethod[] = [...SPELLS, ...TABLETS, ...SCROLLS];

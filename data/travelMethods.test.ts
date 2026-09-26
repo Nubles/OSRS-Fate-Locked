@@ -182,3 +182,63 @@ describe('teleport spells', () => {
     for (const method of spells()) expect(method.unlocks, method.id).toEqual(books[spellOf(method).book]);
   });
 });
+
+const byKind = (kind: string) => TRAVEL_METHODS.filter((method) => method.id.startsWith(`${kind}:`));
+
+/** Where a tablet's page marks a different landing square from its spell's page, reviewed. */
+const TABLET_SQUARES: Readonly<Record<string, string>> = {
+  'tablet:civitas-illa-fortis-teleport': "The tablet's square lies in 26,48; the spell's crosses into 26,49.",
+  'tablet:arceuus-library-teleport': "The tablet's square crosses into 25,60; the spell's lies in 25,59.",
+};
+
+describe('teleport tablets and scrolls', () => {
+  it('land where their spell does, or differ as reviewed', () => {
+    const spellTo = new Map(spells().map((method) => [spellOf(method).name.toLowerCase(), castTo(method)]));
+    let compared = 0;
+    for (const method of byKind('tablet')) {
+      const to = spellTo.get(method.label.replace(/ tablet$/, '').toLowerCase());
+      if (!to) continue;
+      compared++;
+      const same = JSON.stringify([...new Set(to)].sort())
+        === JSON.stringify([...method.options.Break.to, ...(method.options.Break.afterDiary?.to ?? [])].sort());
+      expect(same, `${method.id}: ${TABLET_SQUARES[method.id] ?? 'lands elsewhere than its spell'}`)
+        .toBe(!(method.id in TABLET_SQUARES));
+    }
+    expect(compared).toBeGreaterThan(30);
+  });
+
+  it("need Teleport Tablets, or the spellbook that makes them; scrolls need nothing", () => {
+    const books: Record<string, string> = { ancient: 'Ancient Magicks', lunar: 'Lunar Spellbook', arceuus: 'Arceuus Spellbook' };
+    const spellBooks = new Map(spells().map((method) => [spellOf(method).name.toLowerCase(), spellOf(method).book]));
+    for (const method of byKind('tablet')) {
+      const book = spellBooks.get(method.label.replace(/ tablet$/, '').toLowerCase()) ?? 'standard';
+      expect(method.unlocks, method.id).toEqual([books[book] ?? 'Teleport Tablets']);
+    }
+    for (const method of byKind('scroll')) expect(method.unlocks, method.id).toEqual([]);
+  });
+
+  it('break tablets and read scrolls', () => {
+    for (const method of byKind('tablet')) expect(Object.keys(method.options), method.id).toContain('Break');
+    for (const method of byKind('scroll')) expect(Object.keys(method.options), method.id).toEqual(['Teleport']);
+  });
+
+  it("offer the switchable tablets' destinations as options of their own", () => {
+    const byId = new Map(TRAVEL_METHODS.map((method) => [method.id, method]));
+    expect(byId.get('tablet:varrock-teleport')?.options).toMatchObject({
+      Break: { to: ['50,53'], afterDiary: { diary: 'Varrock Medium', to: ['49,54'] } },
+      Varrock: { to: ['50,53'] }, 'Grand Exchange': { to: ['49,54'] },
+    });
+    expect(byId.get('tablet:camelot-teleport')?.options["Seers' Village"]).toEqual({ to: ['42,54'] });
+    expect(byId.get('tablet:watchtower-teleport')?.options.Yanille).toEqual({ to: ['40,48'] });
+  });
+
+  it('match every item id to one method only', () => {
+    const owners = new Map<number, string[]>();
+    for (const method of TRAVEL_METHODS) {
+      const ids = (method.match as { items?: readonly number[] }).items ?? [];
+      for (const id of ids) owners.set(id, [...(owners.get(id) ?? []), method.id]);
+    }
+    expect([...owners.entries()].filter(([, ids]) => ids.length > 1)).toEqual([]);
+    expect(owners.size).toBeGreaterThan(60);
+  });
+});
