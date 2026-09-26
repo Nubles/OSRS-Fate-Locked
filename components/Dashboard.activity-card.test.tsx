@@ -87,4 +87,15 @@ describe('Dashboard activity cards', () => {
 
     expect(within(card).getByText('Ready')).toBeTruthy();
   });
+
+  it("lists Druidic Ritual beside Mastering Mixology's Herblore level", async () => {
+    const user = userEvent.setup();
+    render(<Dashboard suspendModals />);
+    await user.click(screen.getByRole('button', { name: /Activities & Utility/ }));
+    await user.click(screen.getByText('Minigames').closest('button')!);
+    const card = screen.getByText('Mastering Mixology').closest('div.relative') as HTMLElement;
+
+    expect(within(card).getByText('Herblore 60')).toBeTruthy();
+    expect(within(card).getByText('Druidic Ritual')).toBeTruthy();
+  });
 });

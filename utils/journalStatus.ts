@@ -110,6 +110,49 @@ export const countMetSkillRequirements = (
   ([skill, required]) => meetsSkillRequirement(unlocks, skill, required),
 ).length;
 
+/**
+ * Skills the game lets a player train only after a quest. Wiki requirement
+ * lists name the skill level and leave this quest implicit, so every skill
+ * requirement also needs it, at any level (see withSkillGateQuests).
+ *
+ * - Herblore: training it, or even boosting it, needs Druidic Ritual.
+ *   https://oldschool.runescape.wiki/w/Herblore (Requirements)
+ * - Sailing: training starts with the Pandemonium quest.
+ *   https://oldschool.runescape.wiki/w/Sailing (Getting started)
+ *
+ * Runecraft is deliberately absent: Rune Mysteries gates mining rune essence,
+ * not the skill. https://oldschool.runescape.wiki/w/Runecraft
+ */
+export const SKILL_QUEST_GATES: Readonly<Record<string, string>> = Object.freeze({
+  Herblore: 'Druidic Ritual',
+  Sailing: 'Pandemonium',
+});
+
+/**
+ * The unlocking quests (SKILL_QUEST_GATES) that the named skills add, leaving
+ * out any quest already in `listedQuests`.
+ */
+export const skillGateQuests = (
+  skills: Iterable<string>,
+  listedQuests: readonly string[] = [],
+): string[] => uniqueStrings([...skills].flatMap(skill => (
+  Object.hasOwn(SKILL_QUEST_GATES, skill) ? [SKILL_QUEST_GATES[skill]] : []
+))).filter(quest => !listedQuests.includes(quest));
+
+/**
+ * The quests a requirement needs: the ones it lists, then the unlocking quest
+ * of each gated skill it names that it doesn't list already. `self` is the
+ * quest being evaluated, which never needs itself.
+ */
+export const withSkillGateQuests = (
+  quests: readonly string[] | undefined,
+  skills: Readonly<Record<string, number>> | undefined,
+  self?: string,
+): string[] => [
+  ...(quests ?? []),
+  ...skillGateQuests(Object.keys(skills ?? {}), [...(quests ?? []), ...(self === undefined ? [] : [self])]),
+];
+
 export const locationRequirementMet = (
   location: QuestLocationRequirement,
   unlocks: UnlockState,
@@ -251,7 +294,8 @@ export function evaluateQuestEligibility(
     if (Number.isFinite(tier) && tier >= requirement.tier) evidence.push(label);
     else blockers.push({ kind: 'equipment', slot: requirement.slot, tier: requirement.tier, label });
   }
-  for (const prereq of quest.prereqs) {
+  // Includes Druidic Ritual for a Herblore level, and Pandemonium for Sailing.
+  for (const prereq of withSkillGateQuests(quest.prereqs, quest.skills, quest.id)) {
     if (unlocks.quests.includes(prereq)) evidence.push(prereq);
     else blockers.push({ kind: 'quest', label: prereq });
   }
@@ -389,7 +433,7 @@ const evaluateDiaryRequirement = (
       requirement: { type: 'single', skill, level: required },
     });
   }
-  for (const quest of requirement.quests ?? []) {
+  for (const quest of withSkillGateQuests(requirement.quests, requirement.skills)) {
     if (unlocks.quests.includes(quest)) evidence.push(quest);
     else blockers.push({ kind: 'quest', label: quest });
   }

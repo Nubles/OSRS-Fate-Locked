@@ -101,7 +101,7 @@ describe('fact-checked resource and quantity repairs', () => {
       expect(sources.length).toBeGreaterThan(0);
       for (const source of sources) expect(source).toMatchObject({ unlockId: 'Chambers of Xeric', localOnly: 'Chambers of Xeric', regions: ['Kourend & Kebos'] });
     }
-    const state = fresh(); state.unlocks.minigames.push('Mastering Mixology'); state.unlocks.regions.push('Varlamore', 'Morytania'); state.unlocks.skills.Herblore = 10; state.unlocks.levels.Herblore = 99;
+    const state = fresh(); state.unlocks.minigames.push('Mastering Mixology'); state.unlocks.regions.push('Varlamore', 'Morytania'); state.unlocks.skills.Herblore = 10; state.unlocks.levels.Herblore = 99; state.unlocks.quests.push('Druidic Ritual');
     expect(calculateSupplyChain('Elder Potion', state)!.sources[0].status.missing).toContain('Unlock: Chambers of Xeric');
     state.unlocks.bosses.push('Chambers of Xeric'); state.unlocks.regions.push('Kourend & Kebos');
     state.unlocks.skills.Farming = 10; state.unlocks.levels.Farming = 99;
@@ -111,8 +111,16 @@ describe('fact-checked resource and quantity repairs', () => {
   it('retains real Mixology geography while allowing regular potion mixing anywhere with owned supplies', () => {
     expect(RESOURCE_MAP.Aldarium[0].regions).toEqual(['Varlamore']);
     expect(RESOURCE_MAP.Huasca[0].skills).toEqual({ Farming: 65, Herblore: 58 });
-    const state = fresh(); state.unlocks.skills.Herblore = 6; state.unlocks.levels.Herblore = 58;
+    const state = fresh(); state.unlocks.skills.Herblore = 6; state.unlocks.levels.Herblore = 58; state.unlocks.quests.push('Druidic Ritual');
     expect(route('Prayer Regeneration Potion', 'Herblore', state, { Huasca: 1, Aldarium: 1, 'Vial of Water': 1 }).status.isAvailable).toBe(true);
+  });
+
+  it('needs Druidic Ritual for every Herblore recipe, as training Herblore does', () => {
+    const state = fresh(); state.unlocks.skills.Herblore = 6; state.unlocks.levels.Herblore = 58;
+    const supplies = { Huasca: 1, Aldarium: 1, 'Vial of Water': 1 };
+    expect(route('Prayer Regeneration Potion', 'Herblore', state, supplies).status.missing).toEqual(['Quest: Druidic Ritual']);
+    state.unlocks.quests.push('Druidic Ritual');
+    expect(route('Prayer Regeneration Potion', 'Herblore', state, supplies).status.isAvailable).toBe(true);
   });
 
   it('removes the imaginary Barrows reward and requires MMII dungeon progress for combat monkeys', () => {

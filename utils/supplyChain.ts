@@ -15,6 +15,7 @@ import { canonicalAreaName } from '../data/areaMapPolicy';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { getActivityReq } from '../data/activityRequirements';
 import { evaluateActivityReadiness } from './activityReadiness';
+import { withSkillGateQuests } from './journalStatus';
 import { isAreaReachable } from './reachability';
 import { effectiveSkillLevel } from './slayerReach';
 import { classifyShop } from './shopClassification';
@@ -188,11 +189,10 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
     }
   }
 
-  // 3. Quests
-  if (source.quests) {
-    for (const q of source.quests) {
-      if (!ctx.quests.has(q) && !fail(`Quest: ${q}`)) return result(false);
-    }
+  // 3. Quests, plus the unlocking quest of a gated skill: every Herblore
+  // recipe needs Druidic Ritual.
+  for (const q of withSkillGateQuests(source.quests, requiredSkills)) {
+    if (!ctx.quests.has(q) && !fail(`Quest: ${q}`)) return result(false);
   }
 
   // 4. Specific unlock
@@ -440,7 +440,7 @@ export const calculateEngineItemProgress = (itemName: string, gameState: GameSta
   const total =
     s.regions.length +
     Object.keys(s.skills || {}).length +
-    (s.quests?.length || 0) +
+    withSkillGateQuests(s.quests, s.skills).length +
     Object.keys(s.inputs ?? {}).filter(item => item !== 'Coins').length +
     (s.unlockId ? 1 : 0);
   const completed = Math.max(0, total - path.missing.length);
