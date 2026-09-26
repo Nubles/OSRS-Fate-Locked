@@ -7,6 +7,7 @@ import type { SlayerAssignment } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
 import type { PermissionStatus } from './chunkPermissionSnapshot';
 import { evaluateEntityAccess } from './entityAccess';
+import { mostUsable } from './permissionStatus';
 import type { LocateFn, SlayerReach, SlayerStatus } from './slayerReach';
 
 export interface SlayerLocationSource {
@@ -53,26 +54,24 @@ export const SLAYER_DECISION: Record<SlayerStatus, PermissionStatus> = {
 /** A task as slayerChunks keys it: lowercased and trimmed, one trailing "s" dropped. */
 export const slayerTaskKey = (task: string): string => task.toLowerCase().trim().replace(/s$/, '');
 
-/** Most permissive first. */
-const PERMISSIVENESS: PermissionStatus[] = ['ALLOWED', 'NOT_READY', 'UNKNOWN', 'LOCKED'];
-
 /**
  * A decision for each master's task ("krystilia:bear"), and one for each
- * task whatever the master ("bear"): the most permissive of the masters'
- * answers, so it is LOCKED only when every master's is.
+ * task whatever the master ("bear"): the most usable of the masters'
+ * answers, so it is LOCKED only when every master's is. A master that
+ * wouldn't give the task yet (NOT_READY) probably didn't, so another
+ * master's UNKNOWN comes first.
  */
 export function slayerDecisions(reach: SlayerReach): Record<string, PermissionStatus> {
   const decisions: Record<string, PermissionStatus> = {};
+  const byTask = new Map<string, PermissionStatus[]>();
   for (const { master, rows } of reach.masters) {
     for (const row of rows) {
       const status = SLAYER_DECISION[row.status];
       const task = slayerTaskKey(row.monster);
       decisions[`${master.toLowerCase()}:${task}`] = status;
-      const merged = decisions[task];
-      if (merged === undefined || PERMISSIVENESS.indexOf(status) < PERMISSIVENESS.indexOf(merged)) {
-        decisions[task] = status;
-      }
+      byTask.set(task, [...(byTask.get(task) ?? []), status]);
     }
   }
+  for (const [task, statuses] of byTask) decisions[task] = mostUsable(statuses)!;
   return decisions;
 }

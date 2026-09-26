@@ -44,16 +44,19 @@ describe('slayerDecisions', () => {
       .toEqual({ 'krystilia:bear': 'LOCKED', bear: 'LOCKED' });
   });
 
-  it("gives a task whatever its master the most permissive of the masters' answers", () => {
+  it("gives a task whatever its master the most usable of the masters' answers", () => {
     const decisions = slayerDecisions(reach({
-      Turael: [['Bears', 'ready'], ['Cows', 'area-locked'], ['Dogs', 'no-location'], ['Rats', 'area-locked']],
-      Krystilia: [['Bears', 'area-locked'], ['Cows', 'area-locked'], ['Dogs', 'slayer-locked'], ['Rats', 'access-unknown']],
+      Turael: [['Bears', 'ready'], ['Cows', 'area-locked'], ['Dogs', 'no-location'], ['Rats', 'area-locked'],
+        ['Goblins', 'area-locked']],
+      Krystilia: [['Bears', 'area-locked'], ['Cows', 'area-locked'], ['Dogs', 'slayer-locked'], ['Rats', 'access-unknown'],
+        ['Goblins', 'combat-locked']],
     }));
     expect(decisions).toMatchObject({
       'turael:bear': 'ALLOWED', 'krystilia:bear': 'LOCKED', bear: 'ALLOWED',
       cow: 'LOCKED',
-      dog: 'NOT_READY',
+      dog: 'UNKNOWN',
       rat: 'UNKNOWN',
+      goblin: 'NOT_READY',
     });
   });
 
