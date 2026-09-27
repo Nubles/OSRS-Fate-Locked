@@ -621,6 +621,54 @@ const WHISTLES: readonly TravelMethod[] = [
     anyStop(QUETZAL_STOPS, 'Signal', 'Last-destination'), 'Basic quetzal whistle', 15356472),
 ];
 
+/** A boat: tag-only like the networks (owner decision 2), and needing no unlock from the app's lists. */
+const boat = (id: string, label: string, npcs: readonly number[], options: Readonly<Record<string, TravelOption>>,
+  page: string, oldid: number): TravelMethod =>
+  ({ id: `boat:${id}`, label, unlocks: [], match: { npcs }, options, advisory: true, source: wiki(page, oldid) });
+
+/**
+ * Boats whose crew offers a one-click trip. Each lands where the app's chunk
+ * content has the crew for the way back; where the same crew works both
+ * ends, the trip goes to one of the two. Left out: crews that only talk.
+ */
+const BOATS: readonly TravelMethod[] = [
+  // Captain Tobias, Seaman Lorris (oldid 15315318) and Seaman Thresnor (oldid 15315315). Travel asks where.
+  boat('port-sarim-ship', 'Ship from Port Sarim', range(14978, 14983), {
+    Travel: { to: ['46,49', '47,46'] }, 'Musa Point': { to: ['46,49'] }, 'The Pandemonium': { to: ['47,46'] },
+  }, 'Captain Tobias', 15315296),
+  boat('musa-point-ship', 'Ship from Musa Point', [14984, 14985], {
+    Travel: { to: ['47,50', '47,46'] }, 'Port Sarim': { to: ['47,50'] }, 'The Pandemonium': { to: ['47,46'] },
+  }, 'Customs officer', 15315301),
+  boat('pandemonium-ship', 'Ship from the Pandemonium', [8631], {
+    'Port Sarim': { to: ['47,50'] }, 'Musa Point': { to: ['46,49'] },
+  }, 'Seaman Morris', 15315347),
+  // Veos stands at both ends.
+  boat('lands-end-ship', "Ship from Land's End", [7471], {
+    'Port Sarim': { to: ['47,50'] }, 'Port Piscarilius': { to: ['28,57'] },
+  }, 'Captain Magoro', 15353365),
+  // From Piscatoris to the dock west of the Tree Gnome Stronghold; the other Kathy only talks.
+  boat('piscatoris-boat', "Kathy Corkat's boat", [4299], { Travel: { to: ['37,54'] } }, 'Kathy Corkat', 15315454),
+  boat('harmony-boat', "Brother Tranquility's boat", [550, 551, 552], { Transport: { to: ['59,44', '57,46'] } },
+    'Brother Tranquility', 15196274),
+  boat('dragontooth-boat', "Ghost captain's boat", [3005], { Travel: { to: ['59,55', '57,54'] } }, 'Ghost captain', 15315341),
+  // The guard at the Digsite once Bone Voyage is done; the barge lands at the Museum Camp, as the app's boat landings have it.
+  boat('canal-barge', 'Canal barge', [8012], { Embark: { to: ['58,59'] }, 'Quick-Travel': { to: ['58,59'] } },
+    'Barge guard', 15040225),
+  boat('lady-zay', 'Lady Zay', [6650], { Travel: { to: ['33,60', '34,59'] } }, 'Captain Bentley', 15229124),
+  boat('lokar-searunner', "Lokar Searunner's boat", [3855, 6648, 9306], {
+    "Pirate's Cove": { to: ['34,59'] }, Rellekka: { to: ['40,57'] },
+  }, 'Lokar Searunner', 15351199),
+  boat('neitiznot-ferry', "Maria Gunnars' ferry", [1883, 1882], { Neitiznot: { to: ['36,59'] }, Rellekka: { to: ['41,57'] } },
+    'Maria Gunnars', 15351202),
+  boat('jatizso-ferry', "Mord Gunnars' ferry", [1900, 1940], { Jatizso: { to: ['37,59'] }, Rellekka: { to: ['41,57'] } },
+    'Mord Gunnars', 15351203),
+  boat('waterbirth-boat', "Jarvald's boat", [5937, 7205, 10407], {
+    'Waterbirth Island': { to: ['39,58'] }, Rellekka: { to: ['40,57'] },
+  }, 'Jarvald', 15351198),
+  // Between the dock north of Port Phasmatys and Slepe.
+  boat('slepe-boat', "Andras's boat", [8267, 8268], { Travel: { to: ['57,51', '57,55'] } }, 'Andras', 15233277),
+];
+
 export const TRAVEL_METHODS: readonly TravelMethod[] = [
-  ...SPELLS, ...TABLETS, ...SCROLLS, ...JEWELLERY, ...EQUIPMENT, ...OTHER_ITEMS, ...WHISTLES, ...NETWORKS,
+  ...SPELLS, ...TABLETS, ...SCROLLS, ...JEWELLERY, ...EQUIPMENT, ...OTHER_ITEMS, ...WHISTLES, ...NETWORKS, ...BOATS,
 ];

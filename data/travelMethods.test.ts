@@ -460,6 +460,21 @@ const NETWORK_NODES: Readonly<Record<string, RegExp>> = {
   'item:quetzal-whistle': /^(renu|(unbuilt )?landing site)$/i,
   'network:wilderness-obelisk': /^obelisk$/i,
   'network:lovakengj-minecart': /^(loinur|ferain|elnes|traxi|hordal|buneir|miriam|stuliette|lassin|raeli|mogrim|hatna)$/i,
+  // A boat's stop holds the crew for the way back.
+  'boat:port-sarim-ship': /^(customs officer|seaman morris)$/i,
+  'boat:musa-point-ship': /^(captain tobias|seaman (lorris|thresnor|morris))$/i,
+  'boat:pandemonium-ship': /^(captain tobias|seaman (lorris|thresnor)|customs officer)$/i,
+  "boat:lands-end-ship": /^veos$/i,
+  'boat:piscatoris-boat': /^kathy corkat$/i,
+  'boat:harmony-boat': /^brother tranquility$/i,
+  'boat:dragontooth-boat': /^ghost captain$/i,
+  'boat:canal-barge': /^barge guard$/i,
+  'boat:lady-zay': /^captain bentley$/i,
+  'boat:lokar-searunner': /^lokar searunner$/i,
+  'boat:neitiznot-ferry': /^maria gunnars$/i,
+  'boat:jatizso-ferry': /^mord gunnars$/i,
+  'boat:waterbirth-boat': /^jarvald$/i,
+  'boat:slepe-boat': /^andras$/i,
 };
 /** Stops whose chunk holds no node, reviewed. */
 const REVIEWED_STOPS: Readonly<Record<string, string>> = {
@@ -469,6 +484,7 @@ const REVIEWED_STOPS: Readonly<Record<string, string>> = {
   'network:charter-ship 49,36': "The Summer Shore's pin; its crew stands across the border, in 49,37.",
   'network:quetzal 20,47': "Kastori's pin, on the chunk's east edge; its landing site is in 21,47.",
   'item:quetzal-whistle 20,47': "Kastori's pin, on the chunk's east edge; its landing site is in 21,47.",
+  'boat:canal-barge 58,59': 'The Museum Camp, where the barge lands: no barge crew waits there.',
 };
 const holdsNode = (key: string, node: RegExp) => {
   const [cx, cy] = key.split(',').map(Number);
@@ -478,11 +494,12 @@ const holdsNode = (key: string, node: RegExp) => {
 };
 
 describe('travel networks', () => {
-  it('are tag-only, and nothing else is', () => {
-    const networks = byKind('network');
-    expect(networks.length).toBeGreaterThan(8);
-    expect(TRAVEL_METHODS.filter((method) => !!method.advisory !== method.id.startsWith('network:')).map((method) => method.id))
-      .toEqual([]);
+  it('are tag-only, like the boats, and nothing else is', () => {
+    expect(byKind('network').length).toBeGreaterThan(8);
+    expect(byKind('boat').length).toBeGreaterThan(10);
+    const tagOnly = (id: string) => id.startsWith('network:') || id.startsWith('boat:');
+    expect(TRAVEL_METHODS.filter((method) => !!method.advisory !== tagOnly(method.id)).map((method) => method.id)).toEqual([]);
+    expect(byKind('boat').filter((method) => method.unlocks.length).map((method) => method.id)).toEqual([]);
   });
 
   it("stop where the network's objects or NPCs are, or as reviewed", () => {
@@ -501,7 +518,8 @@ describe('travel networks', () => {
       const [id, key] = entry.split(' ');
       return !destinations(itemRow(id)).includes(key) || holdsNode(key, NETWORK_NODES[id]);
     })).toEqual([]);
-    expect(byKind('network').filter((method) => !(method.id in NETWORK_NODES)).map((method) => method.id)).toEqual([]);
+    expect([...byKind('network'), ...byKind('boat')].filter((method) => !(method.id in NETWORK_NODES)).map((method) => method.id))
+      .toEqual([]);
   });
 
   it('dial every fairy ring code to where the wiki marks it', () => {
