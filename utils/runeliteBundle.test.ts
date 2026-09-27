@@ -1,11 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import chunkContentJson from '../public/chunk-content.json?raw';
 import { initialState } from '../context/GameContext';
 import { MOBILITY_LIST } from '../data/items';
 import fullChunkContent from '../public/chunk-content.json';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import { buildBundlePayload } from './runeliteExport';
-import { buildRuneliteBundle, RuneliteRunState } from './runeliteBundle';
+import { buildRuneliteBundle, RuneliteRunState, wireChunks } from './runeliteBundle';
+import type { ChunkPermissionSnapshot } from './chunkPermissionSnapshot';
 import equipmentCatalogueJson from '../public/equipment-catalogue.294c0a5ab539ea503cb22f0fafe1cb4521049724.json?raw';
 import { EQUIPMENT_CATALOGUE, EQUIPMENT_CACHE_SOURCE } from '../data/equipmentCatalogue';
 import { setStartArea } from './freeAreas';
@@ -271,6 +272,11 @@ describe('buildBundlePayload - failed rules data', () => {
       const degraded = JSON.parse((await buildFreshPayload(initialState.unlocks, run)).json);
       expect(degraded.rules.chunks).toEqual({});
       expect(degraded.rules.itemRules).toEqual({});
+      // No entries or places decided without the chunk data.
+      expect(degraded.rules).not.toHaveProperty('chunkEntries');
+      expect(degraded.rules).not.toHaveProperty('places');
+      expect(degraded.rules).not.toHaveProperty('banks');
+      expect(degraded.rules).not.toHaveProperty('slayerTasks');
 
       // Back online, but equipment data is inside its failure cool-down.
       online = true;
@@ -281,6 +287,10 @@ describe('buildBundlePayload - failed rules data', () => {
         requireRulesData: true, retryFailedLoads: true,
       })).json);
       expect(Object.keys(full.rules.chunks).length).toBeGreaterThan(100);
+      expect(Object.keys(full.rules.chunkEntries).length).toBeGreaterThan(Object.keys(full.rules.chunks).length);
+      expect(Object.keys(full.rules.places).length).toBeGreaterThan(500);
+      expect(Object.keys(full.rules.banks)).toHaveLength(127);
+      expect(Object.keys(full.rules.slayerTasks).sort()).toEqual(Object.keys(full.slayerChunks).sort());
       expect(full.rules.itemRules['1205']).toEqual({ tier: 1, slot: 'Weapon' });
     } finally {
       vi.unstubAllGlobals();
@@ -334,6 +344,7 @@ describe('buildRuneliteBundle - canonical area names', () => {
         ...fallback.rules.unlocks,
         regions: ['Elf Camp', 'Iorwerth Camp'],
       },
+      chunks: {},
     };
     const bundle = await buildRuneliteBundle(
       ['Prifddinas', 'Elf Camp', 'Iorwerth Camp', 'Lletya'],
@@ -373,6 +384,50 @@ describe('buildRuneliteBundle - canonical area names', () => {
   });
 });
 
+describe('buildBundlePayload - the run and the free baseline', () => {
+  const run = (gameModeId: string) => ({
+    runId: 'run-mode', runRevision: 1, keys: 0, specialKeys: 0, chaosKeys: 0,
+    fatePoints: 0, activeBuff: 'NONE', gameModeId,
+  });
+
+  // Fresh services, so a build has to load its data.
+  const fresh = async () => {
+    vi.resetModules();
+    vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => {} });
+    const { buildBundlePayload: build, RunChangedError: Refused } = await import('./runeliteExport');
+    const { setStartArea: setGlobal } = await import('./freeAreas');
+    return { build, Refused, setGlobal };
+  };
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
+
+  it("refuses an Xtreme run while the global holds Misthalin's baseline, before loading anything", async () => {
+    const { build, Refused, setGlobal } = await fresh();
+    const fetch = vi.fn(async () => new Response('unavailable', { status: 503 }));
+    vi.stubGlobal('fetch', fetch);
+    setGlobal('misthalin');
+    await expect(build(initialState.unlocks, run('xtreme'))).rejects.toBeInstanceOf(Refused);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('refuses a run whose baseline changes while its data loads', async () => {
+    const { build, Refused, setGlobal } = await fresh();
+    setGlobal('misthalin');
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      setGlobal('lumbridge'); // a profile switch lands mid-build
+      return new Response('unavailable', { status: 503 });
+    }));
+    try {
+      await expect(build(initialState.unlocks, run('vanilla'))).rejects.toBeInstanceOf(Refused);
+    } finally {
+      setGlobal('misthalin');
+    }
+  });
+});
+
 describe('buildRuneliteBundle - free areas', () => {
   it("carries a Lumbridge start's free areas", async () => {
     setStartArea('lumbridge');
@@ -382,6 +437,20 @@ describe('buildRuneliteBundle - free areas', () => {
     } finally {
       setStartArea('misthalin');
     }
+  });
+
+  it("takes the root free areas from the rules' own, whatever the global holds", async () => {
+    const { buildRuneliteRulesManifest } = await import('./runeliteRulesManifest');
+    const rules = await buildRuneliteRulesManifest({
+      unlocks: initialState.unlocks, run: { runId: 'free-areas', runRevision: 1, gameModeId: 'xtreme' },
+      contentService: { init: async () => false, allChunkCoords: () => [], contentFor: () => null,
+        connectGraph: () => ({}), shortcuts: () => [], questSections: () => ({}) },
+      itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+    });
+    setStartArea('misthalin');
+    const bundle = await buildRuneliteBundle([], state, undefined, undefined, undefined, undefined, true, undefined, rules);
+    expect(bundle.rules.freeAreas).toEqual(['Tutorial Island', 'Lumbridge']);
+    expect(bundle.freeAreas).toEqual(['Tutorial Island', 'Lumbridge']);
   });
 });
 
@@ -485,7 +554,45 @@ describe('buildRuneliteBundle - v4 category snapshot', () => {
     expect(manifest.chunks['50,50'].categories.ACTIVITIES?.[0]).toMatchObject({ status: 'UNKNOWN', detail: expect.stringMatching(/kill-count/) });
     const bundle = await buildRuneliteBundle(unlocks.regions, state, undefined, undefined, undefined, [], true, undefined, manifest);
     expect(bundle.version).toBe(4);
-    expect(bundle.rules.chunks).toEqual(manifest.chunks);
+    expect(bundle.rules.chunks).toEqual(wireChunks(manifest.chunks));
     expect(bundle.unlockedChunks).toBeUndefined();
+  });
+});
+
+describe('wireChunks', () => {
+  const snapshot = (): ChunkPermissionSnapshot => ({
+    chunkKey: '50,50',
+    name: 'Lumbridge',
+    region: 'Misthalin',
+    entry: 'ALLOWED',
+    kind: 'land',
+    area: 'Lumbridge',
+    categories: {
+      BANKS: [{ key: 'bank:12850', name: 'Lumbridge Castle bank', status: 'ALLOWED', targetKind: 'BANK' }],
+      QUESTS: [{ key: "quest:cook's assistant", name: "Cook's Assistant", status: 'NOT_READY', detail: 'Cooking 1/1' }],
+    },
+    counts: { allowed: 1, notReady: 1, locked: 0, unknown: 0 },
+  });
+
+  it('leaves out only the fields no installed reader uses', () => {
+    expect(wireChunks({ '50,50': snapshot() })).toStrictEqual({
+      '50,50': {
+        name: 'Lumbridge',
+        region: 'Misthalin',
+        entry: 'ALLOWED',
+        kind: 'land',
+        area: 'Lumbridge',
+        categories: {
+          BANKS: [{ name: 'Lumbridge Castle bank', status: 'ALLOWED', targetKind: 'BANK' }],
+          QUESTS: [{ name: "Cook's Assistant", status: 'NOT_READY', detail: 'Cooking 1/1' }],
+        },
+      },
+    });
+  });
+
+  it("keeps the app's own snapshot whole", () => {
+    const app = snapshot();
+    wireChunks({ '50,50': app });
+    expect(app).toStrictEqual(snapshot());
   });
 });

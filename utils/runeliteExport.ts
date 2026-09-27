@@ -17,6 +17,23 @@ import { UnlockState } from '../types';
 import { bankLocksActive } from './reachability';
 import type { GameModeRules } from '../config/gameModes';
 import { buildRuneliteRulesManifest } from './runeliteRulesManifest';
+import { isStartAreaFor } from './freeAreas';
+
+/**
+ * The run's mode no longer matches the free baseline every region check
+ * reads: a profile switch overlapped the build. Nothing was sent; the
+ * switch's own publish sends the new run.
+ */
+export class RunChangedError extends Error {
+  constructor() {
+    super("The run changed while its RuneLite profile was being built, so it wasn't sent.");
+    this.name = 'RunChangedError';
+  }
+}
+
+const refuseChangedRun = (run: RuneliteRunInput) => {
+  if (!isStartAreaFor(run.gameModeId, run.customMode)) throw new RunChangedError();
+};
 
 /**
  * gzip+base64 a string for the clipboard, prefixed "FLGZ:" so the plugin knows
@@ -80,6 +97,7 @@ export async function buildBundlePayload(
   run: RuneliteRunInput,
   options: BundlePayloadOptions = {},
 ): Promise<{ json: string; compressed: string }> {
+  refuseChangedRun(run);
   let itemTiers: Record<string, number> | undefined;
   try {
     await gearService.init(options.retryFailedLoads);   // cached after first load
@@ -131,6 +149,8 @@ export async function buildBundlePayload(
     rules,
     unlocks.mobility,
   );
+  // The build awaited data, so check again: the answers above read the global.
+  refuseChangedRun(run);
   const json = JSON.stringify(payload);
   const compressed = await compressForClipboard(json);
   return { json, compressed };

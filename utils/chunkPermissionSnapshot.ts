@@ -8,7 +8,9 @@ import type {
 } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
 import { resourceReqFor, resourceUsable } from './chunkResources';
-import { chunkUnlocked, placeOf } from './chunkLocations';
+import { placeOf } from './chunkLocations';
+import { chunkEntry, chunkEntryReason } from './chunkEntry';
+import { OCEAN_CHUNK_KEYS } from './oceanAccess';
 import { evaluateQuestEligibility, meetsSkillRequirement } from './journalStatus';
 import { farmingPatchFor } from './farmingPatches';
 import { isBankReachable } from './reachability';
@@ -39,6 +41,11 @@ export interface ChunkPermissionSnapshot {
   name: string | null;
   region: string | null;
   entry: PermissionStatus;
+  /** Why the entry isn't ALLOWED; absent when it is. */
+  entryReason?: string;
+  kind: 'land' | 'ocean';
+  /** The rolled area the chunk belongs to, when it belongs to one. */
+  area?: string;
   categories: Partial<Record<ChunkCategoryId, ChunkPermissionRow[]>>;
   counts: { allowed: number; notReady: number; locked: number; unknown: number };
 }
@@ -87,6 +94,22 @@ function questStatus(
     reasons: [...result.blockers.map(blocker => blocker.label), ...result.manualChecks] };
 }
 
+/**
+ * Whether the run may use the bank whose chunk this is, and why not: the
+ * bank's own unlock, its facilities' requirements and the chunk's entry.
+ * The chunk's BANKS row and the export's bank table both come from here.
+ */
+export function bankAccess(
+  content: ChunkContent,
+  coord: { cx: number; cy: number },
+  context: ChunkPermissionContext,
+  entry: PermissionStatus,
+): { status: PermissionStatus; reasons: string[] } {
+  const access = evaluateBankRequirements(content, coord, context.unlocks, context.contentService, context.gameModeId ?? 'vanilla');
+  const unlocked = isBankReachable(coord.cx, coord.cy, context.unlocks, context.gameModeId, context.customMode);
+  return { status: withEntry(unlocked ? 'ALLOWED' : 'LOCKED', withEntry(access.status, entry)), reasons: access.reasons };
+}
+
 function sortRows(rows: ChunkPermissionRow[]): ChunkPermissionRow[] {
   return rows.sort((left, right) =>
     left.name.localeCompare(right.name) || left.key.localeCompare(right.key));
@@ -99,17 +122,7 @@ export function buildChunkPermissionSnapshot(
 ): ChunkPermissionSnapshot {
   const chunkKey = `${coord.cx},${coord.cy}`;
   const numericId = String(coord.cx * 256 + coord.cy);
-  const owned = chunkUnlocked(
-    coord.cx,
-    coord.cy,
-    context.unlocks,
-    context.gameModeId,
-  );
-  const entry: PermissionStatus = !owned
-    ? 'LOCKED'
-    : context.reachableChunks && !context.reachableChunks.has(numericId)
-      ? 'NOT_READY'
-      : 'ALLOWED';
+  const entry = chunkEntry(coord, context.unlocks, context.gameModeId, context.reachableChunks);
   const place = placeOf(coord.cx, coord.cy);
   const categories: Partial<Record<ChunkCategoryId, ChunkPermissionRow[]>> = {};
   const add = (category: ChunkCategoryId, row: ChunkPermissionRow) => {
@@ -124,20 +137,11 @@ export function buildChunkPermissionSnapshot(
   };
 
   if (BANK_BY_ID[numericId]) {
-    const access = evaluateBankRequirements(content, coord, context.unlocks, context.contentService, context.gameModeId ?? 'vanilla');
+    const access = bankAccess(content, coord, context, entry);
     add('BANKS', {
       key: `bank:${numericId}`,
       name: BANK_BY_ID[numericId].name,
-      status: withEntry(
-        isBankReachable(
-          coord.cx,
-          coord.cy,
-          context.unlocks,
-          context.gameModeId,
-          context.customMode,
-        ) ? 'ALLOWED' : 'LOCKED',
-        withEntry(access.status, entry),
-      ),
+      status: access.status,
       ...(access.reasons.length ? { detail: access.reasons.join('; ') } : {}),
       targetKind: 'BANK',
     });
@@ -257,11 +261,17 @@ export function buildChunkPermissionSnapshot(
     else delete categories[category];
   }
   const rows = Object.values(categories).flatMap((value) => value ?? []);
+  const entryReason = chunkEntryReason(coord, entry, context.unlocks, context.gameModeId,
+    context.contentService?.chunkEntryRequirements(coord.cx, coord.cy) ?? []);
+  const area = place.subArea ?? place.region;
   return {
     chunkKey,
     name: content.name ?? place.subArea,
     region: place.region,
     entry,
+    ...(entryReason ? { entryReason } : {}),
+    kind: OCEAN_CHUNK_KEYS.has(chunkKey) ? 'ocean' : 'land',
+    ...(area ? { area } : {}),
     categories,
     counts: {
       allowed: rows.filter((row) => row.status === 'ALLOWED').length,

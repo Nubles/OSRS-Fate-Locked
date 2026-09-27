@@ -20,11 +20,11 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-26-fate-analytics');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-27-fate-analytics');
   });
 
   it('announces the Fate Analytics redesign and its chart fixes', () => {
-    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-26-fate-analytics');
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-27-fate-analytics');
     expect(release?.title).toBe('Fate Analytics Redesigned');
     expect(release?.sections.changed).toEqual([
       expect.stringMatching(/luck in plain words.*luck meter/),
@@ -35,6 +35,15 @@ describe('authored changelog releases', () => {
       expect.stringMatching(/Patterned bars and donut slices/),
       expect.stringMatching(/no longer draws a thick gold band/),
     ]);
+  });
+
+  it('announces the interiors that now need their area, and the groundwork for the next RuneLite update', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-27-runelite-groundwork');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/eight more areas.*Mor Ul Rek.*Woodcutting Guild/),
+      expect.stringMatching(/profile switch/),
+    ]);
+    expect(release?.sections.added).toEqual([expect.stringMatching(/next plugin update.*travel table.*ignores them/)]);
   });
 
   it('announces that diary tasks on an owned island need a way there, and minigame tasks their minigame', () => {
