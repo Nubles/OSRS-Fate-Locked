@@ -235,4 +235,127 @@ const SCROLLS: readonly TravelMethod[] = [
   scroll('Ardeaglais teleport', 34033, ['39,34'], 15291623),
 ];
 
-export const TRAVEL_METHODS: readonly TravelMethod[] = [...SPELLS, ...TABLETS, ...SCROLLS];
+/**
+ * Options for an item whose worn menu names each place, while its other
+ * options (such as Rub) open a choice of all of them. A place the app has no
+ * chunk for goes nowhere known, so its option stays UNKNOWN.
+ */
+const choice = (places: Readonly<Record<string, readonly string[]>>, ...choose: string[]) => {
+  const all = [...new Set(Object.values(places).flat())];
+  return {
+    ...Object.fromEntries(choose.map((option) => [option, { to: all }])),
+    ...Object.fromEntries(Object.entries(places).map(([option, to]) => [option, { to }])),
+  };
+};
+
+/**
+ * Teleport jewellery and the other teleport items with their own unlock.
+ * Only charged ids: an uncharged item can't teleport. Where a variant (such
+ * as the eternal or imbued one) shares the menu, it shares the row, and its
+ * page is cited beside it. Wearable ids are in the pinned equipment catalogue.
+ */
+const SLAYER_RING = ['37,53', '38,53', '53,55', '43,156', '49,71', '31,72'];
+
+const JEWELLERY: readonly TravelMethod[] = [
+  // Amulet of glory (t), oldid 15352301; Amulet of eternal glory, oldid 15345507.
+  item('item:amulet-of-glory', 'Amulet of glory',
+    [1706, 1708, 1710, 1712, 11976, 11978, 10360, 10358, 10356, 10354, 11966, 11964, 19707], ['Jewelry Teleports'],
+    choice({ Edgeville: ['48,54'], Karamja: ['45,49'], 'Draynor Village': ['48,50'], 'Al Kharid': ['51,49'] }, 'Rub'),
+    'Amulet of glory', 15356028),
+  item('item:ring-of-dueling', 'Ring of dueling', [2566, 2564, 2562, 2560, 2558, 2556, 2554, 2552], ['Jewelry Teleports'],
+    choice({
+      "Emir's Arena": ['51,50'], 'Castle Wars': ['38,48'], 'Ferox Enclave': ['49,56'],
+      // The landing square crosses into 28,48.
+      'Fortis Colosseum': ['27,48', '28,48'],
+    }, 'Rub'),
+    'Ring of dueling', 15322346),
+  item('item:games-necklace', 'Games necklace', [3867, 3865, 3863, 3861, 3859, 3857, 3855, 3853], ['Jewelry Teleports'],
+    choice({
+      Burthorpe: ['45,55'], 'Barbarian Outpost': ['39,55'], 'Corporeal Beast': ['46,66'],
+      'Tears of Guthix': ['50,148'], 'Wintertodt Camp': ['25,61'],
+    }, 'Rub'),
+    'Games necklace', 15351957),
+  item('item:combat-bracelet', 'Combat bracelet', [11124, 11122, 11120, 11118, 11974, 11972], ['Jewelry Teleports'],
+    choice({ "Warriors' Guild": ['45,55'], "Champions' Guild": ['49,52'], Monastery: ['47,54'], 'Ranging Guild': ['41,53'] }, 'Rub'),
+    'Combat bracelet', 15320281),
+  item('item:skills-necklace', 'Skills necklace', [11111, 11109, 11107, 11105, 11970, 11968], ['Jewelry Teleports'],
+    choice({
+      'Fishing Guild': ['40,52'], 'Mining Guild': ['47,152'], 'Crafting Guild': ['45,51'],
+      'Cooking Guild': ['49,53'], 'Woodcutting Guild': ['25,54'], 'Farming Guild': ['19,58'],
+    }, 'Rub'),
+    'Skills necklace', 15340883),
+  // Ring of wealth (i), oldid 15341258.
+  item('item:ring-of-wealth', 'Ring of wealth',
+    [11988, 11986, 11984, 11982, 11980, 20790, 20789, 20788, 20787, 20786], ['Jewelry Teleports'],
+    choice({ Miscellania: ['39,60'], 'Grand Exchange': ['49,54'], Falador: ['46,52'], Dondakan: ['44,158'] }, 'Rub'),
+    'Ring of wealth', 15341259),
+  // The Eyrie is a jewellery teleport, not Eagle Transport.
+  item('item:necklace-of-passage', 'Necklace of passage', [21155, 21153, 21151, 21149, 21146], ['Jewelry Teleports'],
+    choice({ "Wizards' Tower": ['48,49'], 'The Outpost': ['37,52'], "Eagles' Eyrie": ['53,49'], Wyrmscraig: ['40,34'] }, 'Rub'),
+    'Necklace of passage', 15309251),
+  item('item:burning-amulet', 'Burning amulet', [21175, 21173, 21171, 21169, 21166], ['Jewelry Teleports'],
+    choice({ 'Chaos Temple': ['50,56'], 'Bandit Camp': ['47,57'], 'Lava Maze': ['47,60'] }, 'Rub'),
+    'Burning amulet', 15188167),
+
+  item('item:digsite-pendant', 'Digsite pendant', [11190, 11191, 11192, 11193, 11194], ['Digsite Pendant'],
+    choice({ Digsite: ['52,53'], 'Fossil Island': ['58,60'], 'Lithkren Dungeon': ['55,163'] }, 'Rub'),
+    'Digsite pendant', 15302156),
+  // Slayer ring (eternal), oldid 15322601. Rubbed, or teleporting worn or not,
+  // it opens a choice: the Stronghold Slayer Cave (its landing square crosses
+  // into 38,53), the Slayer Tower, the Fremennik Slayer Dungeon, Tarn's Lair,
+  // the Dark Beasts and the Wyrmscraig Cavern (40,134, which the app has no
+  // chunk for yet).
+  item('item:slayer-ring', 'Slayer ring', [11873, 11872, 11871, 11870, 11869, 11868, 11867, 11866, 21268], ['Slayer Ring'],
+    { Rub: { to: SLAYER_RING }, Teleport: { to: SLAYER_RING } },
+    'Slayer ring', 15286008),
+  item('item:xerics-talisman', "Xeric's talisman", [13393], ["Xeric's Talisman"],
+    choice({
+      "Xeric's Lookout": ['24,55'], "Xeric's Glade": ['27,55'], "Xeric's Inferno": ['23,59'],
+      "Xeric's Heart": ['25,57'], "Xeric's Honour": ['19,55'],
+    }, 'Rub'),
+    "Xeric's talisman", 15343014),
+  // Slepe (59,151) and Castle Drakan (49,120) have no chunk in the app yet.
+  item('item:drakans-medallion', "Drakan's medallion", [22400], ["Drakan's Medallion"],
+    choice({ 'Ver Sinhaza': ['57,50'], Darkmeyer: ['56,52'], Slepe: [], 'Castle Drakan': [] }, 'Teleport'),
+    "Drakan's medallion", 15304192),
+  // Rubbed or worn, it goes inside the temple; after the hard Desert Diary the
+  // player can switch it to the entrance, and the worn menu splits in two.
+  item('item:camulet', 'Camulet', [6707], ['Camulet'], {
+    Rub: { to: ['48,145'], afterDiary: { diary: 'Desert Hard', to: ['49,45'] } },
+    Teleport: { to: ['48,145'], afterDiary: { diary: 'Desert Hard', to: ['49,45'] } },
+    Temple: { to: ['48,145'] },
+    Surface: { to: ['49,45'] },
+  }, 'Camulet', 15355566),
+  item('item:ring-of-the-elements', 'Ring of the elements', [26818], ['Ring of the Elements'],
+    choice({ 'Air Altar': ['46,51'], 'Water Altar': ['49,49'], 'Earth Altar': ['51,54'], 'Fire Altar': ['51,51'] },
+      'Rub', 'Last Destination'),
+    'Ring of the elements', 15321585),
+  // Enchanted lyre(i), oldid 15322185. Played, it goes to Rellekka until the
+  // hard Fremennik Diary adds Waterbirth Island (and the elite, the isles).
+  // The worn menu spells Jatizso "Jatiszo".
+  item('item:enchanted-lyre', 'Enchanted lyre', [3691, 6125, 6126, 6127, 13079, 23458], ['Enchanted Lyre'], {
+    Play: { to: ['41,56'], afterDiary: { diary: 'Fremennik Hard', to: ['39,58', '37,59', '36,59'] } },
+    Rellekka: { to: ['41,56'] }, 'Waterbirth Island': { to: ['39,58'] }, Neitiznot: { to: ['36,59'] }, Jatiszo: { to: ['37,59'] },
+  }, 'Enchanted lyre', 15351821),
+  item('item:pharaohs-sceptre', "Pharaoh's sceptre", [26948], ["Pharaoh's Sceptre"],
+    choice({ Jalsavrah: ['30,69'], Jaleustrophos: ['52,44'], Jaldraocht: ['50,45'], Jaltevas: ['51,42'] },
+      'Teleport', 'Last-Teleport'),
+    "Pharaoh's sceptre", 15322386),
+  item('item:ectophial', 'Ectophial', [4251], ['Ectophial'], { Teleport: { to: ['57,55'] } }, 'Ectophial', 15195604),
+  // It lands at the Grand Tree (2466,3492 on the Grand Tree's page, oldid 15114413).
+  item('item:royal-seed-pod', 'Royal seed pod', [19564], ['Royal Seed Pod'], { Commune: { to: ['38,54'] } },
+    'Royal seed pod', 15323014),
+  // Eternal teleport crystal, oldid 15261005.
+  item('item:teleport-crystal', 'Teleport crystal', [6102, 6101, 6100, 6099, 13102, 23946], ['Crystal Teleport Seed'],
+    { Lletya: { to: ['36,49'] }, Prifddinas: { to: ['51,94'] } },
+    'Teleport crystal', 15261004),
+  // The Book of the Dead, oldid 15317141, shares the stories and names each one's pin.
+  item('item:kharedsts-memoirs', "Kharedst's memoirs", [21760, 25818], ["Kharedst's Memoirs"],
+    choice({
+      'Lunch by the Lancalliums': ['26,56'], "The Fisher's Flute": ['28,58'], 'History and Hearsay': ['23,55'],
+      'Jewellery of Jubilation': ['24,58'], 'A Dark Disposition': ['26,58'],
+    }, 'Reminisce'),
+    "Kharedst's memoirs", 15316631),
+];
+
+export const TRAVEL_METHODS: readonly TravelMethod[] = [...SPELLS, ...TABLETS, ...SCROLLS, ...JEWELLERY];

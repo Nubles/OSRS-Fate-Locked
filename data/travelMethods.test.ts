@@ -7,8 +7,10 @@ import content from '../public/chunk-content.json';
 import { ChunkContentService } from '../services/ChunkContentService';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { OCEAN_CHUNK_KEYS } from '../utils/oceanAccess';
+import { travelDecisions } from '../utils/travelDecisions';
 import { ARCANA_LIST, MOBILITY_LIST, POH_LIST } from './items';
 import { DIARY_DATA } from './diaryData';
+import { EQUIPMENT_CATALOGUE } from './equipmentCatalogue';
 import { NON_TRAVEL_OPTIONS, TRAVEL_METHODS } from './travelMethods';
 
 /** Every chunk a player can stand in: land, ocean and interiors. */
@@ -240,5 +242,94 @@ describe('teleport tablets and scrolls', () => {
     }
     expect([...owners.entries()].filter(([, ids]) => ids.length > 1)).toEqual([]);
     expect(owners.size).toBeGreaterThan(60);
+  });
+});
+
+/** The pinned equipment catalogue: each worn item's name and version, such as "(4)" or "Uncharged". */
+const CATALOGUE: ReadonlyMap<number, { name: string; version: string }> = new Map(
+  (JSON.parse(readFileSync(new URL(`../public/${EQUIPMENT_CATALOGUE.asset}`, import.meta.url), 'utf8')) as
+    { id: number; name: string; version: string }[]).map((row) => [row.id, { name: row.name, version: row.version }]));
+/** Teleport items no one wears, so the catalogue has none of their ids; they are cited from their pages. */
+const NOT_WORN = new Set(['item:ectophial', 'item:royal-seed-pod', 'item:teleport-crystal']);
+/** A variant the catalogue names otherwise than its row. */
+const ALSO_NAMED: Readonly<Record<string, string>> = {
+  'item:amulet-of-glory': 'Amulet of eternal glory',
+  'item:kharedsts-memoirs': 'Book of the Dead',
+};
+/** Catalogue versions that can't teleport. */
+const SPENT = new Set(['Uncharged', 'Inert']);
+/** Options that open a choice of every place the item goes. */
+const CHOOSING = ['Rub', 'Teleport', 'Last Destination', 'Last-Teleport', 'Reminisce'];
+
+type Method = (typeof TRAVEL_METHODS)[number];
+const itemsOf = (method: Method) => [...(method.match as { items: readonly number[] }).items].sort((a, b) => a - b);
+const ofFamily = (method: Method, name: string) => [method.label, ALSO_NAMED[method.id]]
+  .some((label) => label !== undefined && name.toLowerCase().startsWith(label.toLowerCase()));
+const itemRow = (id: string) => {
+  const method = TRAVEL_METHODS.find((row) => row.id === id);
+  if (!method) throw new Error(`no ${id}`);
+  return method;
+};
+const nothing = { mobility: [], arcana: [], housing: [], diaries: [] };
+
+describe('teleport jewellery and items', () => {
+  it('match every charged id the equipment catalogue gives a worn item, and only those', () => {
+    let worn = 0;
+    for (const method of byKind('item')) {
+      if (NOT_WORN.has(method.id)) {
+        expect(itemsOf(method).filter((id) => CATALOGUE.has(id)), method.id).toEqual([]);
+        continue;
+      }
+      worn++;
+      const charged = [...CATALOGUE].filter(([, row]) => ofFamily(method, row.name) && !SPENT.has(row.version))
+        .map(([id]) => id).sort((a, b) => a - b);
+      expect(itemsOf(method), method.id).toEqual(charged);
+    }
+    expect(worn).toBeGreaterThan(15);
+  });
+
+  it("give the Digsite pendant, Slayer ring, Xeric's talisman and Drakan's medallion their own unlocks (G6)", () => {
+    expect(itemRow('item:digsite-pendant').unlocks).toEqual(['Digsite Pendant']);
+    expect(itemRow('item:slayer-ring').unlocks).toEqual(['Slayer Ring']);
+    expect(itemRow('item:xerics-talisman').unlocks).toEqual(["Xeric's Talisman"]);
+    expect(itemRow('item:drakans-medallion').unlocks).toEqual(["Drakan's Medallion"]);
+  });
+
+  it('take the necklace of passage to the Eyrie with Jewelry Teleports, not Eagle Transport (G6)', () => {
+    const decided = travelDecisions([itemRow('item:necklace-of-passage')], {
+      unlocks: { ...nothing, mobility: ['Jewelry Teleports'] },
+      entries: { '53,49': 'ALLOWED' },
+    })['item:necklace-of-passage'].options["Eagles' Eyrie"];
+    expect(decided).toEqual({ to: ['53,49'], status: 'ALLOWED' });
+  });
+
+  it("leave a rub's choice open: it goes to every place the worn menu names (G7)", () => {
+    expect(itemRow('item:digsite-pendant').options).toEqual({
+      Rub: { to: ['52,53', '58,60', '55,163'] },
+      Digsite: { to: ['52,53'] }, 'Fossil Island': { to: ['58,60'] }, 'Lithkren Dungeon': { to: ['55,163'] },
+    });
+    for (const method of byKind('item')) {
+      const places = new Set(Object.values(method.options).flatMap((option) => option.to));
+      for (const text of CHOOSING) {
+        const option = method.options[text];
+        if (!option || option.afterDiary) continue;
+        expect([...places].filter((key) => !option.to.includes(key)), `${method.id} ${text}`).toEqual([]);
+      }
+    }
+  });
+
+  it("name only the Slayer ring's own options: its worn menu says Teleport, not the places", () => {
+    expect(Object.keys(itemRow('item:slayer-ring').options)).toEqual(['Rub', 'Teleport']);
+  });
+
+  it('add the places a diary unlocks to the Camulet and the lyre, a harder tier too', () => {
+    const decide = (id: string, text: string, diaries: string[]) => travelDecisions([itemRow(id)], {
+      unlocks: { ...nothing, mobility: [itemRow(id).unlocks[0]], diaries },
+      entries: { '48,145': 'ALLOWED', '41,56': 'LOCKED' },
+    })[id].options[text];
+    expect(decide('item:camulet', 'Rub', [])).toEqual({ to: ['48,145'], status: 'ALLOWED' });
+    expect(decide('item:camulet', 'Rub', ['Desert Elite']).status).toBe('UNKNOWN');
+    expect(decide('item:enchanted-lyre', 'Play', [])).toMatchObject({ to: ['41,56'], status: 'LOCKED' });
+    expect(decide('item:enchanted-lyre', 'Play', ['Fremennik Hard']).to).toEqual(['41,56', '39,58', '37,59', '36,59']);
   });
 });
