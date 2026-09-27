@@ -238,10 +238,12 @@ const SCROLLS: readonly TravelMethod[] = [
 /**
  * Options for an item whose worn menu names each place, while its other
  * options (such as Rub) open a choice of all of them. A place the app has no
- * chunk for goes nowhere known, so its option stays UNKNOWN.
+ * chunk for goes nowhere known, so its option stays UNKNOWN, and so does a
+ * choice that would be left with a single known chunk.
  */
-const choice = (places: Readonly<Record<string, readonly string[]>>, ...choose: string[]) => {
-  const all = [...new Set(Object.values(places).flat())];
+export const choice = (places: Readonly<Record<string, readonly string[]>>, ...choose: string[]) => {
+  const known = [...new Set(Object.values(places).flat())];
+  const all = known.length === 1 && Object.values(places).some((to) => to.length === 0) ? [] : known;
   return {
     ...Object.fromEntries(choose.map((option) => [option, { to: all }])),
     ...Object.fromEntries(Object.entries(places).map(([option, to]) => [option, { to }])),
@@ -358,4 +360,124 @@ const JEWELLERY: readonly TravelMethod[] = [
     "Kharedst's memoirs", 15316631),
 ];
 
-export const TRAVEL_METHODS: readonly TravelMethod[] = [...SPELLS, ...TABLETS, ...SCROLLS, ...JEWELLERY];
+/** Where the house portals are: Rimmington, Taverley, Pollnivneach, Hosidius, Aldarin, Rellekka, Brimhaven, Yanille, Prifddinas. */
+const HOUSE_PORTALS = ['46,50', '45,54', '52,46', '27,54', '22,46', '41,56', '43,49', '39,48', '50,94'];
+
+/**
+ * Worn teleport equipment: diary rewards, capes and the rest. None needs an
+ * unlock from the app's lists (the game asks for the diary, level or quest
+ * itself), so the destination alone decides. A lower tier without a teleport
+ * isn't matched; a tier with fewer options simply never shows the others.
+ * Left out: the Sailing cape (its teleport can take the boat, which has no
+ * fixed place), the Ring of returning (the respawn point) and Ghommal's hilts
+ * and defenders (their pages mark no landing square).
+ */
+const EQUIPMENT: readonly TravelMethod[] = [
+  // Cloaks 1 to 3: oldids 15322173, 15271698, 15347094; Ardougne max cape, oldid 15262598.
+  item('item:ardougne-cloak', 'Ardougne cloak', [13121, 13122, 13123, 13124, 20760], [], {
+    'Monastery Teleport': { to: ['40,50'] }, 'Kandarin Monastery': { to: ['40,50'] },
+    'Farm Teleport': { to: ['41,52'] }, 'Ardougne Farm': { to: ['41,52'] },
+  }, 'Ardougne cloak 4', 15352885),
+  // Amulets 2 and 3 (oldids 15186683, 15186684) teleport to Nardah only.
+  item('item:desert-amulet', 'Desert amulet', [13134, 13135, 13136], [], {
+    Teleport: { to: ['53,45'] }, Nardah: { to: ['53,45'] }, 'Kalphite cave': { to: ['51,48'] },
+  }, 'Desert amulet 4', 15242227),
+  // Rings 2 and 3: oldids 15186666, 15284006. To the cabbage patch south of Falador.
+  item("item:explorers-ring", "Explorer's ring", [13126, 13127, 13128], [], { Teleport: { to: ['47,51'] } },
+    "Explorer's ring 4", 15242240),
+  // Boots 1 to 3: oldids 15186689, 15347400, 15347402. To Rellekka, not the golden apple tree (G7).
+  item('item:fremennik-sea-boots', 'Fremennik sea boots', [13129, 13130, 13131, 13132], [], { Teleport: { to: ['41,57'] } },
+    'Fremennik sea boots 4', 15242230),
+  // Headgear 3: oldid 15186705. To Sherlock.
+  item('item:kandarin-headgear', 'Kandarin headgear', [13139, 13140], [], { Teleport: { to: ['42,53'] } },
+    'Kandarin headgear 4', 15242233),
+  // Gloves 3 (oldid 15266075) go to the gem mine only. The Slayer Master is Duradel, in Shilo Village.
+  item('item:karamja-gloves', 'Karamja gloves', [11140, 13103], [], {
+    'Gem Mine': { to: ['44,146'] }, 'Slayer Master': { to: ['44,46'] },
+  }, 'Karamja gloves 4', 15266078),
+  // Legs 1 to 3: oldids 15186665, 15186668, 15186695. Legs 1 and 2 go to the Ectofuntus's slime pit only.
+  item('item:morytania-legs', 'Morytania legs', [13112, 13113, 13114, 13115], [], {
+    'Ecto Teleport': { to: ['57,154'] }, 'Ectofuntus Pit': { to: ['57,154'] },
+    'Burgh Teleport': { to: ['54,50'] }, 'Burgh de Rott': { to: ['54,50'] },
+  }, 'Morytania legs 4', 15348856),
+  // Blessings 1 to 3: oldids 15240314, 15240313, 15240310; 1 and 2 go to the woodland only, whose
+  // landing area crosses into 24,54.
+  item("item:radas-blessing", "Rada's blessing", [22941, 22943, 22945, 22947], [], {
+    'Kourend Woodland': { to: ['24,53', '24,54'] }, 'Mount Karuulm': { to: ['20,59'] },
+  }, "Rada's blessing 4", 15242366),
+  // Banner 3: oldid 15265264. To the Piscatoris Fishing Colony.
+  item('item:western-banner', 'Western banner', [13143, 13144], [], { Teleport: { to: ['36,57'] } },
+    'Western banner 4', 15265266),
+  // Sword 3: oldid 15186672. To the Fountain of Rune, which its own page (oldid 15339934) maps in 52,60.
+  item('item:wilderness-sword', 'Wilderness sword', [13110, 13111], [], { Teleport: { to: ['52,60'] } },
+    'Wilderness sword 4', 15242364),
+
+  // Teleport opens a choice of the house and the portals; Tele to POH goes to the house, wherever it is.
+  item('item:construct-cape', 'Construct. cape', [9789, 9790], [], {
+    Teleport: { to: HOUSE_PORTALS }, 'Tele to POH': { to: [] },
+  }, 'Construct. cape', 15327003),
+  item('item:crafting-cape', 'Crafting cape', [9780, 9781], [], { Teleport: { to: ['45,51'] } }, 'Crafting cape', 15232507),
+  item('item:farming-cape', 'Farming cape', [9810, 9811], [], { Teleport: { to: ['19,58'] } }, 'Farming cape', 15327005),
+  item('item:fishing-cape', 'Fishing cape', [9798, 9799], [], {
+    'Fishing Guild': { to: ['40,53'] }, "Otto's Grotto": { to: ['39,54'] },
+  }, 'Fishing cape', 15327000),
+  // A choice of the Feldip and Wilderness hunter areas, and the Hunter Guild once unlocked.
+  item('item:hunter-cape', 'Hunter cape', [9948, 9949], [], { Teleport: { to: ['39,45', '49,58', '24,47'] } },
+    'Hunter cape', 15316570),
+  item('item:strength-cape', 'Strength cape', [9750, 9751], [], {
+    Teleport: { to: ['44,55'] }, "Warriors' Guild": { to: ['44,55'] },
+  }, 'Strength cape', 15342993),
+  // To the Legends' Guild gates; the guild's page (oldid 15352122) maps it within 42,52.
+  item('item:quest-point-cape', 'Quest point cape', [9813, 13068], [], { Teleport: { to: ['42,52'] } },
+    'Quest point cape', 15320190),
+  // A choice of the sixteen diary masters.
+  item('item:achievement-diary-cape', 'Achievement diary cape', [19476, 13069], [], {
+    Teleport: {
+      to: ['40,51', '51,48', '46,52', '41,56', '42,53', '43,49', '44,46', '43,46',
+        '38,80', '25,57', '50,50', '54,54', '50,53', '48,54', '38,54', '48,50'],
+    },
+  }, 'Achievement diary cape', 15342685),
+  // To Falo the Bard, whose square on his page (oldid 15351077) crosses into 42,55.
+  item('item:music-cape', 'Music cape', [13221, 13222], [], { Teleport: { to: ['41,55', '42,55'] } }, 'Music cape', 15344582),
+  // Mythical max cape, oldid 15262599. To the Myths' Guild.
+  item('item:mythical-cape', 'Mythical cape', [22114, 24855], [], { Teleport: { to: ['38,44'] } }, 'Mythical cape', 15242067),
+  // 13280 is the cape in the inventory and 13342 the cape worn. Teleports opens every skill cape's
+  // teleport and the house portals; Home goes to the house, wherever it is. The worn menu's Guild
+  // Teleports and Skilling Areas open lists the page doesn't give, so they aren't matched. The other
+  // max capes keep none of these teleports.
+  item('item:max-cape', 'Max cape', [13280, 13342], [], {
+    Teleports: { to: ['44,55', '40,53', '45,51', '19,58', '39,54', '39,45', '49,58', '24,47', '47,46', ...HOUSE_PORTALS] },
+    'POH Portals': { to: HOUSE_PORTALS }, Home: { to: [] }, 'Crafting Guild': { to: ['45,51'] },
+  }, 'Max cape', 15352882),
+
+  // The Champions' Guild; the landing square crosses into 50,52.
+  item('item:chronicle', 'Chronicle', [13660], [], { Teleport: { to: ['49,52', '50,52'] } }, 'Chronicle', 15324584),
+  // Skull sceptre (i), oldid 15322318. To the Stronghold of Security's entrance.
+  item('item:skull-sceptre', 'Skull sceptre', [9013, 21276], [], { Invoke: { to: ['48,53'] } }, 'Skull sceptre', 15332191),
+  // The Ghorrock Dungeon's landing (45,161) has no chunk in the app yet.
+  item('item:ring-of-shadows', 'Ring of shadows', [28327], [],
+    choice({
+      'Ancient Vault': ['51,100'], 'Ghorrock Dungeon': [], 'The Scar': ['31,100'],
+      'Lassar Undercity': ['40,100'], 'The Stranglewood': ['18,53'],
+    }, 'Teleport'),
+    'Ring of shadows', 15278103),
+  item('item:pendant-of-ates', 'Pendant of Ates', [29893], [],
+    choice({
+      Darkfrost: ['23,51'], 'Twilight Temple': ['26,50'], "Ralos' Rise": ['22,49'],
+      'North Aldarin': ['22,46'], Kastori: ['21,48'], 'Nemus Retreat': ['21,51'],
+    }, 'Rub'),
+    'Pendant of Ates', 15319355),
+  item('item:giantsoul-amulet', 'Giantsoul amulet', [30638], [],
+    choice({ Bryophyta: ['49,154'], Obor: ['48,153'], 'Branda and Eldric': ['46,149'] }, 'Rub'),
+    'Giantsoul amulet', 15356803),
+  // The Temple of the Eye (56,147) has no chunk in the app yet.
+  item('item:amulet-of-the-eye', 'Amulet of the Eye', [26914, 26990, 26992, 26994], [], { Teleport: { to: [] } },
+    'Amulet of the Eye', 15309207),
+  // A choice of the Pandemonium, Port Roberts, Red Rock and Deepfin Point.
+  item("item:sailors-amulet", "Sailors' amulet", [32399], [], { Teleport: { to: ['47,46', '29,51', '43,39', '30,43'] } },
+    "Sailors' amulet", 15319506),
+  // To the Lumbridge cow field.
+  item('item:cowbell-amulet', 'Cowbell amulet', [33104], [], { Teleport: { to: ['50,51'] } }, 'Cowbell amulet', 15338665),
+];
+
+export const TRAVEL_METHODS: readonly TravelMethod[] = [...SPELLS, ...TABLETS, ...SCROLLS, ...JEWELLERY, ...EQUIPMENT];

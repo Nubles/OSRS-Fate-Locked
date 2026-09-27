@@ -11,7 +11,7 @@ import { travelDecisions } from '../utils/travelDecisions';
 import { ARCANA_LIST, MOBILITY_LIST, POH_LIST } from './items';
 import { DIARY_DATA } from './diaryData';
 import { EQUIPMENT_CATALOGUE } from './equipmentCatalogue';
-import { NON_TRAVEL_OPTIONS, TRAVEL_METHODS } from './travelMethods';
+import { choice, NON_TRAVEL_OPTIONS, TRAVEL_METHODS } from './travelMethods';
 
 /** Every chunk a player can stand in: land, ocean and interiors. */
 let places: Set<string>;
@@ -255,9 +255,21 @@ const NOT_WORN = new Set(['item:ectophial', 'item:royal-seed-pod', 'item:telepor
 const ALSO_NAMED: Readonly<Record<string, string>> = {
   'item:amulet-of-glory': 'Amulet of eternal glory',
   'item:kharedsts-memoirs': 'Book of the Dead',
+  'item:ardougne-cloak': 'Ardougne max cape',
+  'item:mythical-cape': 'Mythical max cape',
 };
 /** Catalogue versions that can't teleport. */
-const SPENT = new Set(['Uncharged', 'Inert']);
+const SPENT = new Set(['Uncharged', 'Inert', 'Empty']);
+/** Lower diary tiers that don't teleport yet, as their pages have it. */
+const NO_TELEPORT = new Set([
+  'Desert amulet 1', "Explorer's ring 1", 'Kandarin headgear 1', 'Kandarin headgear 2', 'Karamja gloves 1',
+  'Karamja gloves 2', 'Western banner 1', 'Western banner 2', 'Wilderness sword 1', 'Wilderness sword 2',
+]);
+/** Ids the catalogue lacks, from the item's page: the max cape in the inventory, and a newer charged amulet. */
+const NOT_IN_CATALOGUE: Readonly<Record<string, readonly number[]>> = {
+  'item:max-cape': [13280],
+  "item:sailors-amulet": [32399],
+};
 /** Options that open a choice of every place the item goes. */
 const CHOOSING = ['Rub', 'Teleport', 'Last Destination', 'Last-Teleport', 'Reminisce'];
 
@@ -281,11 +293,14 @@ describe('teleport jewellery and items', () => {
         continue;
       }
       worn++;
-      const charged = [...CATALOGUE].filter(([, row]) => ofFamily(method, row.name) && !SPENT.has(row.version))
+      const extra = NOT_IN_CATALOGUE[method.id] ?? [];
+      expect(extra.filter((id) => CATALOGUE.has(id) || !itemsOf(method).includes(id)), method.id).toEqual([]);
+      const charged = [...CATALOGUE]
+        .filter(([, row]) => ofFamily(method, row.name) && !SPENT.has(row.version) && !NO_TELEPORT.has(row.name))
         .map(([id]) => id).sort((a, b) => a - b);
-      expect(itemsOf(method), method.id).toEqual(charged);
+      expect(itemsOf(method).filter((id) => !extra.includes(id)), method.id).toEqual(charged);
     }
-    expect(worn).toBeGreaterThan(15);
+    expect(worn).toBeGreaterThan(40);
   });
 
   it("give the Digsite pendant, Slayer ring, Xeric's talisman and Drakan's medallion their own unlocks (G6)", () => {
@@ -312,7 +327,8 @@ describe('teleport jewellery and items', () => {
       const places = new Set(Object.values(method.options).flatMap((option) => option.to));
       for (const text of CHOOSING) {
         const option = method.options[text];
-        if (!option || option.afterDiary) continue;
+        // One place is no choice: the Desert amulet 2's Teleport goes to Nardah only.
+        if (!option || option.afterDiary || option.to.length < 2) continue;
         expect([...places].filter((key) => !option.to.includes(key)), `${method.id} ${text}`).toEqual([]);
       }
     }
@@ -331,5 +347,31 @@ describe('teleport jewellery and items', () => {
     expect(decide('item:camulet', 'Rub', ['Desert Elite']).status).toBe('UNKNOWN');
     expect(decide('item:enchanted-lyre', 'Play', [])).toMatchObject({ to: ['41,56'], status: 'LOCKED' });
     expect(decide('item:enchanted-lyre', 'Play', ['Fremennik Hard']).to).toEqual(['41,56', '39,58', '37,59', '36,59']);
+  });
+});
+
+describe('worn teleport equipment', () => {
+  it('leaves Jewelry Teleports to the eight charged jewellery families', () => {
+    expect(TRAVEL_METHODS.filter((method) => method.unlocks.includes('Jewelry Teleports')).map((method) => method.id))
+      .toEqual([
+        'item:amulet-of-glory', 'item:ring-of-dueling', 'item:games-necklace', 'item:combat-bracelet',
+        'item:skills-necklace', 'item:ring-of-wealth', 'item:necklace-of-passage', 'item:burning-amulet',
+      ]);
+  });
+
+  it("never lets a choice look certain because a place in it has no chunk", () => {
+    expect(choice({ Here: ['50,50'], Unmapped: [] }, 'Rub').Rub).toEqual({ to: [] });
+    expect(choice({ Here: ['50,50'], There: ['46,52'], Unmapped: [] }, 'Rub').Rub).toEqual({ to: ['50,50', '46,52'] });
+    expect(choice({ Here: ['50,50'], Also: ['50,50'] }, 'Rub').Rub).toEqual({ to: ['50,50'] });
+    expect(choice({ Here: ['50,50'], Unmapped: [] }, 'Rub').Unmapped).toEqual({ to: [] });
+  });
+
+  it("send the sea boots to Rellekka, not where the old table's text match put them (G7)", () => {
+    expect(itemRow('item:fremennik-sea-boots').options.Teleport.to).toEqual(['41,57']);
+  });
+
+  it("match only the max cape's options whose places its page gives", () => {
+    expect(Object.keys(itemRow('item:max-cape').options).sort())
+      .toEqual(['Crafting Guild', 'Home', 'POH Portals', 'Teleports']);
   });
 });
