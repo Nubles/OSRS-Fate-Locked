@@ -20,7 +20,16 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-26-diary-travel');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-27-runelite-groundwork');
+  });
+
+  it('announces the interiors that now need their area, and the groundwork for the next RuneLite update', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-27-runelite-groundwork');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/eight more areas.*Mor Ul Rek.*Woodcutting Guild/),
+      expect.stringMatching(/profile switch/),
+    ]);
+    expect(release?.sections.added).toEqual([expect.stringMatching(/next plugin update.*travel table.*ignores them/)]);
   });
 
   it('announces that diary tasks on an owned island need a way there, and minigame tasks their minigame', () => {
