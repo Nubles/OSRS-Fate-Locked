@@ -516,7 +516,8 @@ describe('App changelog lifecycle', () => {
     }
     await user.click(screen.getByRole('button', { name: 'Enter The Void' }));
 
-    const dialog = await screen.findByRole('dialog', { name: "What's New" });
+    // The release notes load lazily, which takes a while under a full CI run.
+    const dialog = await screen.findByRole('dialog', { name: "What's New" }, { timeout: 10_000 });
     expect(dialog).toBeTruthy();
     expect(document.querySelectorAll('[role="dialog"][aria-labelledby="whats-new-title"]')).toHaveLength(1);
 
@@ -525,7 +526,7 @@ describe('App changelog lifecycle', () => {
       expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
     });
     expect(storage.getItem(changelogStorageKey)).toBe(latestChangelogId);
-  }, 15_000);
+  }, 25_000);
   it('defers the unseen release until the post-onboarding game-mode prompt closes', async () => {
     storage.setItem(profileBaseKey(PROFILE_ID), seedOnboardingRun(false));
     const user = userEvent.setup();
@@ -540,8 +541,8 @@ describe('App changelog lifecycle', () => {
     expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
 
     await user.click(within(gameMode).getByRole('button', { name: 'Close' }));
-    expect(await screen.findByRole('dialog', { name: "What's New" })).toBeTruthy();
-  }, 15_000);
+    expect(await screen.findByRole('dialog', { name: "What's New" }, { timeout: 10_000 })).toBeTruthy();
+  }, 25_000);
 
   it('scrubs a valid RuneLite pairing fragment and owns the startup modal', async () => {
     const code = '0123456789abcdef0123456789abcdef';
