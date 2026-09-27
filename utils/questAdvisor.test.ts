@@ -59,5 +59,6 @@ describe('rankAvailableQuests', () => {
         score: alone.directScore, cascadeScore: alone.cascadeScore,
       });
     }
-  });
+    // Every candidate is simulated twice; a full CI run takes it close to the default five seconds.
+  }, 20_000);
 });
