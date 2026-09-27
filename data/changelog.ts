@@ -19,13 +19,27 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-09-26-diary-bosses-and-routes',
+    id: '2026-09-27-diary-bosses-and-routes',
     title: 'Diary Tasks Check Bosses and Routes',
-    date: '2026-09-26',
+    date: '2026-09-27',
     sections: {
       fixed: [
         'Diary tasks in an area you own but can\'t get to are no longer Can do. Owning the Ruins of Uzer without the desert around it, or Port Khazard on its own, now shows "No route to" the area, as the map\'s Reachability lens already did, until an owned area or transport joins it to the rest of your run.',
         'Diary tasks that mean fighting a boss need that boss unlocked, 15 in all: the Giant Mole, the Kalphite Queen, Zulrah, the Barrows, the God Wars generals, a Chambers of Xeric raid, the Wintertodt and the rest. The TzHaar attempt accepts the Fight Pits or the Fight Cave, and the Wilderness elite task either version of each boss. Tasks that only enter a lair don\'t, and tasks you have completed stay completed.',
+      ],
+    },
+  },
+  {
+    id: '2026-09-27-runelite-groundwork',
+    title: 'Groundwork for the Next RuneLite Update',
+    date: '2026-09-27',
+    sections: {
+      fixed: [
+        'Monsters, NPCs and objects inside eight more areas\' buildings and dungeons now need that area, not just the chunk you enter from: Mor Ul Rek (TzHaar City), the Legends\' Guild, the Lighthouse, the Mage Arena, the Slayer Tower, the Heroes\' Guild basement in Taverley, the Warriors\' Guild and the Woodcutting Guild.',
+        'A RuneLite sync that overlaps a profile switch is dropped and sent again once the switch settles, so it can no longer mix the two runs\' free areas.',
+      ],
+      added: [
+        'The RuneLite sync now also sends the app\'s own answers for the next plugin update: whether you may enter each chunk (land, sea and interiors), each bank, each Slayer task per master, your progress, and a travel table of teleports, teleport jewellery, networks and boats with a decision for each option. The current plugin ignores them.',
       ],
     },
   },

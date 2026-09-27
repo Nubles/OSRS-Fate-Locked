@@ -60,3 +60,15 @@ export const isFreeArea = (name: string): boolean => name === 'Tutorial Island' 
  *  the plugin doesn't have to guess the mode's start area (it used to hardcode
  *  full Misthalin, which over-unlocked Lumbridge-only starts in-game). */
 export const getFreeAreas = (): string[] => ['Tutorial Island', ...current];
+
+/** A mode's free baseline as a list, from the mode itself rather than the global. */
+export const freeAreasFor = (gameModeId?: string, customMode?: GameModeRules): string[] =>
+  ['Tutorial Island', ...freeSetFor(resolveModeRules(gameModeId, customMode).startArea)];
+
+/**
+ * Is the global baseline, which every region check reads, this mode's?
+ * GameContext sets it while rendering, so an export that overlaps a profile
+ * switch could read another run's baseline.
+ */
+export const isStartAreaFor = (gameModeId?: string, customMode?: GameModeRules): boolean =>
+  current === freeSetFor(resolveModeRules(gameModeId, customMode).startArea);

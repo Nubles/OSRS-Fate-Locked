@@ -22,6 +22,7 @@ const stableGameState = vi.hoisted(() => ({
 }));
 
 const buildBundlePayloadMock = vi.hoisted(() => vi.fn());
+const RunChangedError = vi.hoisted(() => class RunChangedError extends Error {});
 
 vi.mock('../context/GameContext', () => ({
   useGame: () => stableGameState,
@@ -29,6 +30,7 @@ vi.mock('../context/GameContext', () => ({
 
 vi.mock('../utils/runeliteExport', () => ({
   buildBundlePayload: buildBundlePayloadMock,
+  RunChangedError,
 }));
 
 // The publish contract: wait for 5 s without changes, but never more than
@@ -112,6 +114,23 @@ describe('OnlineSyncDriver', () => {
     expect(fetchMock.mock.calls[1]?.[0]).toBe(
       `https://relay.test/r/${codeB}`,
     );
+  });
+
+  it('sends the run again when a profile switch overlapped its build', async () => {
+    buildBundlePayloadMock.mockRejectedValueOnce(new RunChangedError('run changed'));
+    const report = vi.spyOn(relaySync, 'reportPushFailure');
+    relaySync.adoptCode('cccccccccccccccccccccccccccccccc');
+    render(<OnlineSyncDriver />);
+
+    await advance(QUIET_MS);
+    expect(buildBundlePayloadMock).toHaveBeenCalledTimes(1);
+    expect(report).toHaveBeenCalledTimes(1);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    // No further change arrives: the refusal itself schedules the retry.
+    await advance(QUIET_MS);
+    expect(buildBundlePayloadMock).toHaveBeenCalledTimes(2);
+    expect(sentPayloads()).toEqual(['bundle']);
   });
 
   it('reports current build failures but ignores stale-code failures', async () => {
