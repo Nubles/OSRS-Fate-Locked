@@ -113,7 +113,8 @@
     "rules.banks",
     "rules.freeAreas",
     "rules.progress",
-    "rules.slayerTasks"
+    "rules.slayerTasks",
+    "rules.travel"
    ]
   },
   {
@@ -135,6 +136,7 @@
      "places",
      "progress",
      "slayerTasks",
+     "travel",
      "futureSection"
     ]
    }

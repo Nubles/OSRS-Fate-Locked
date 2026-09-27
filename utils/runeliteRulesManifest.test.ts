@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { initialState } from '../context/GameContext';
 import { MOBILITY_LIST } from '../data/items';
 import { getGameMode } from '../config/gameModes';
+import { TRAVEL_METHODS } from '../data/travelMethods';
 import type { ChunkContent } from '../services/ChunkContentService';
 import {
   buildRuneliteRulesManifest,
@@ -219,14 +220,45 @@ describe('buildRuneliteRulesManifest - capabilities', () => {
 
   it('names exactly the Stage 2 sections the rules have', async () => {
     expect((await build('vanilla', true)).capabilities)
-      .toEqual(['banks', 'chunkDetails', 'chunkEntries', 'freeAreas', 'places', 'progress']);
+      .toEqual(['banks', 'chunkDetails', 'chunkEntries', 'freeAreas', 'places', 'progress', 'travel']);
     expect((await build('chunked', true)).capabilities)
-      .toEqual(['banks', 'chunkDetails', 'chunkEntries', 'freeAreas', 'frontier', 'places', 'progress']);
+      .toEqual(['banks', 'chunkDetails', 'chunkEntries', 'freeAreas', 'frontier', 'places', 'progress', 'travel']);
   });
 
   it('leaves out the sections that need chunk data when it did not load', async () => {
     expect((await build('vanilla', false)).capabilities).toEqual(['freeAreas', 'progress']);
     expect((await build('chunked', false)).capabilities).toEqual(['freeAreas', 'frontier', 'progress']);
+  });
+});
+
+describe('buildRuneliteRulesManifest - travel', () => {
+  const build = (mobility: string[], loaded = true) => buildRuneliteRulesManifest({
+    unlocks: { ...structuredClone(initialState.unlocks), regions: [], mobility },
+    run: { runId: 'travel', runRevision: 1, gameModeId: 'vanilla' },
+    contentService: { ...contentSource, init: async () => loaded, allChunkCoords: () => [{ cx: 50, cy: 50 }, { cx: 46, cy: 52 }] },
+    itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+  });
+
+  it("decides each option from the run's chunk entries, with the snapshot's reason", async () => {
+    const manifest = await build([]);
+    // Misthalin is free and Falador isn't.
+    expect(manifest.travel?.['spell:standard:lumbridge-teleport'].options.Cast).toEqual({ to: ['50,50'], status: 'ALLOWED' });
+    expect(manifest.travel?.['spell:standard:falador-teleport'].options.Cast)
+      .toEqual({ to: ['46,52'], status: 'LOCKED', reason: manifest.chunks['46,52'].entryReason });
+    expect([manifest.chunkEntries?.['46,52'], manifest.chunks['46,52'].entryReason]).toEqual(['LOCKED', expect.any(String)]);
+  });
+
+  it('locks an option while the unlock its method needs is locked', async () => {
+    expect((await build([])).travel?.['item:amulet-of-glory'].options.Edgeville)
+      .toEqual({ to: ['48,54'], status: 'LOCKED', reason: 'Needs Jewelry Teleports' });
+    const unlocked = await build(['Jewelry Teleports']);
+    expect(unlocked.travel?.['item:amulet-of-glory'].options.Edgeville).toEqual({ to: ['48,54'], status: 'ALLOWED' });
+    expect(unlocked.travel?.['item:amulet-of-glory'].options.Rub.status).toBe('UNKNOWN');
+  });
+
+  it('sends every method, and nothing when the chunk data did not load', async () => {
+    expect(Object.keys((await build([])).travel ?? {})).toHaveLength(TRAVEL_METHODS.length);
+    expect((await build([], false)).travel).toBeUndefined();
   });
 });
 

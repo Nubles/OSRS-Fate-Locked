@@ -335,7 +335,8 @@ share test files instead of code:
   ocean chunk (`chunkUnlocked`), every named area (`isAreaReachable`), every
   bank (`isBankReachable`), the Chunked frontier with the account, and for
   Stage 2 each chunk's entry (land, ocean and interior), each bank's status,
-  the free areas, the progress and each Slayer task's status.
+  the free areas, the progress, each Slayer task's status and a sample of
+  travel decisions (the bundle sends every one).
   `places.json` and `banks.json` pin what is the same for every run. With
   them come account-name pairs (`normalizeAccountName`) and the bundles an
   import must refuse or read the same (`cases.json`, whose

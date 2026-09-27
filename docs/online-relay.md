@@ -249,6 +249,19 @@ carry the decisions RuneLite would otherwise work out itself:
 | `freeAreas` | The areas the run's mode frees; the root `freeAreas` takes the same value |
 | `progress` | The run card's progress, with the land chunks the run owns |
 | `slayerTasks` | Each Slayer task per master and whatever the master, keyed like `slayerChunks` |
+| `travel` | Each travel method by id, with each menu option's destinations and decision |
+
+`travel` holds the table in `data/travelMethods.ts`, decided for the run
+(`utils/travelDecisions.ts`). A method is matched by exactly one of a
+spellbook and spell name, item ids, object ids or NPC ids; its `options`
+are keyed by the menu option's exact text, and a fairy ring's `codes` by
+its code. Each option lists the chunks it can go to (`to`) with a
+`status` and, unless `ALLOWED`, a `reason`: `LOCKED` while an unlock the
+method needs is locked, otherwise the destination's entry when there is
+exactly one destination, and `UNKNOWN` when the player picks the place
+after the click. Networks and boats are `advisory`: tagged, never
+blocked. RuneLite blocks only an id match with one destination and a
+`LOCKED` decision.
 
 Each snapshot also carries its `kind` (land or ocean), its `area`, and an
 `entryReason` whenever its entry isn't `ALLOWED`.
@@ -266,7 +279,8 @@ sends the new run.
 
 The `FLGZ:` relay request for every golden run is tested against 240 KiB,
 16 KiB under the relay's 256 KiB limit; the golden runs' requests are
-187-191 KiB. RuneLite continues to load v1-v3 bundles using legacy map
+193-197 KiB, of which the travel section is about 9 KiB (tested against
+16 KiB). RuneLite continues to load v1-v3 bundles using legacy map
 behavior; a malformed v4 or unsupported future version is rejected without
 replacing the last valid snapshot.
 

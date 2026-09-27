@@ -19,6 +19,7 @@ import { freeAreasFor } from './freeAreas';
 import { runProgress, type RunProgress } from './runProgress';
 import { slayerDecisions, slayerLocate, type SlayerDecision, type SlayerLocationSource } from './slayerDecisions';
 import { slayerReachability } from './slayerReach';
+import { travelDecisions, type TravelMethodDecision } from './travelDecisions';
 import {
   buildChunkPermissionSnapshot,
   type ChunkPermissionSnapshot,
@@ -40,7 +41,7 @@ const DETECTOR_CONTRACT_VERSION = 1;
  * whose capability it knows.
  */
 export const RULES_CAPABILITIES = [
-  'banks', 'chunkDetails', 'chunkEntries', 'freeAreas', 'frontier', 'places', 'progress', 'slayerTasks',
+  'banks', 'chunkDetails', 'chunkEntries', 'freeAreas', 'frontier', 'places', 'progress', 'slayerTasks', 'travel',
 ] as const;
 export type RulesCapability = typeof RULES_CAPABILITIES[number];
 
@@ -94,6 +95,8 @@ export interface RuneliteRulesManifest {
   progress?: RunProgress;
   /** Stage 2: each Slayer task, per master and whatever the master, keyed like slayerChunks. */
   slayerTasks?: Record<string, SlayerDecision>;
+  /** Stage 2: each travel method by id, with each option's decision for the run. Sent with chunkEntries. */
+  travel?: Record<string, TravelMethodDecision>;
   /** The Stage 2 sections this bundle has, by capability. */
   capabilities?: RulesCapability[];
 }
@@ -180,12 +183,18 @@ export async function buildRuneliteRulesManifest(
     }
   }
   const interiors = { interiorRecords: () => service.interiorRecords?.() ?? [] };
+  // Dynamic import keeps the travel table out of the eager startup bundle:
+  // it is only needed here, at export time.
+  const travelMethods = loaded ? (await import('../data/travelMethods')).TRAVEL_METHODS : [];
+  const entries = loaded
+    ? chunkEntries({
+      ...interiors,
+      chunkEntryRequirements: (cx: number, cy: number) => service.chunkEntryRequirements?.(cx, cy) ?? [],
+    }, input.unlocks, input.run.gameModeId, reachable)
+    : {};
   const stage2 = loaded
     ? {
-      chunkEntries: chunkEntries({
-        ...interiors,
-        chunkEntryRequirements: (cx: number, cy: number) => service.chunkEntryRequirements?.(cx, cy) ?? [],
-      }, input.unlocks, input.run.gameModeId, reachable),
+      chunkEntries: entries,
       places: rulesPlaces(interiors),
       banks: bankDecisions({
         contentFor: (cx: number, cy: number) => service.contentFor(cx, cy),
@@ -198,6 +207,13 @@ export async function buildRuneliteRulesManifest(
             slayerLocate(service as SlayerLocationSource, input.unlocks, input.run.gameModeId), input.run.gameModeId)),
         }
         : {}),
+      // Each option decided from the entries above, with the snapshots' reasons.
+      travel: travelDecisions(travelMethods, {
+        unlocks: input.unlocks,
+        entries,
+        reasons: Object.fromEntries(Object.entries(chunks).flatMap(([key, snapshot]) =>
+          (snapshot.entryReason ? [[key, snapshot.entryReason]] : []))),
+      }),
     }
     : {};
   // Needs no chunk data: the land next to the run's chunks, and with Sailing

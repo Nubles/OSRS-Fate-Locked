@@ -33,6 +33,8 @@ import { bankDecisions } from '../utils/bankDecisions';
 import { runProgress } from '../utils/runProgress';
 import { slayerDecisions, slayerLocate } from '../utils/slayerDecisions';
 import { slayerReachability } from '../utils/slayerReach';
+import { travelDecisions, type TravelMethodDecision } from '../utils/travelDecisions';
+import { TRAVEL_METHODS } from '../data/travelMethods';
 import { EQUIPMENT_CATALOGUE } from '../data/equipmentCatalogue';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
@@ -48,6 +50,8 @@ const WRITE = process.env.FATE_GOLDENS === 'write';
 const SCHEMA = 2;
 const EXPORTED_AT = new Date('2026-09-25T12:00:00.000Z');
 const SIZE_BUDGET_BYTES = 3.5 * 1024 * 1024;
+/** The travel section's share of a bundle, compressed. */
+const TRAVEL_BUDGET_BYTES = 16 * 1024;
 /** Headroom under the largest request the relay accepts, for every run. */
 const RELAY_BODY_BUDGET_BYTES = MAX_REQUEST_BYTES - 16 * 1024;
 /** The relay write token: randomToken's 18 bytes as hex. */
@@ -71,6 +75,10 @@ interface Scenario {
   levels?: Record<string, number>;
   /** Sailing unlocked with Pandemonium done, which opens the ocean. */
   sailing?: boolean;
+  /** Travel unlocks and diaries, for the travel decisions. */
+  mobility?: string[];
+  arcana?: string[];
+  diaries?: string[];
 }
 
 const customRules = (startArea: 'misthalin' | 'lumbridge' | 'none', bankLocks: boolean): GameModeRules =>
@@ -152,7 +160,7 @@ const SCENARIOS: Scenario[] = [
   },
   {
     id: 'vanilla-interiors',
-    covers: 'interiors behind open and locked entrances and areas, with Slayer levels so masters differ',
+    covers: 'interiors behind open and locked entrances and areas, with Slayer levels so masters differ, and travel unlocks',
     mode: 'vanilla',
     account: ACCOUNT,
     // Keldagrim with its entrance and quest; Musa Point without the TzHaar city.
@@ -160,6 +168,9 @@ const SCENARIOS: Scenario[] = [
     quests: ['The Giant Dwarf', 'Lost City', 'Priest in Peril'],
     skills: { Slayer: 6, Attack: 6, Strength: 6, Defence: 6, Hitpoints: 6, Ranged: 6, Magic: 6, Prayer: 5 },
     levels: { Slayer: 55, Attack: 60, Strength: 60, Defence: 60, Hitpoints: 60, Ranged: 60, Magic: 60, Prayer: 43 },
+    mobility: ['Jewelry Teleports', 'Teleport Tablets'],
+    arcana: ['Ancient Magicks'],
+    diaries: ['Varrock Medium'],
   },
 ];
 
@@ -217,6 +228,9 @@ function unlocksFor(fresh: UnlockState, scenario: Scenario): UnlockState {
     quests: [...fresh.quests, ...(scenario.quests ?? []), ...sailing.quests],
     skills: { ...fresh.skills, ...scenario.skills, ...sailing.skills },
     levels: { ...fresh.levels, ...scenario.levels, ...sailing.levels },
+    mobility: [...fresh.mobility, ...(scenario.mobility ?? [])],
+    arcana: [...fresh.arcana, ...(scenario.arcana ?? [])],
+    diaries: [...fresh.diaries, ...(scenario.diaries ?? [])],
   };
 }
 
@@ -236,6 +250,38 @@ const AREA_NAMES = [...new Set([
   ...Object.keys(REGION_GROUPS),
   ...Object.values(REGION_GROUPS).flat(),
 ])].sort(byCodeUnit);
+
+/**
+ * The travel options each golden pins, as "<method>|<option>", or
+ * "<method>|code:<code>" for a fairy ring code: the spells and jewellery the
+ * old table got wrong (G6, G7) and a sample of every kind. The bundle sends
+ * every option; these few keep the files small.
+ */
+const TRAVEL_ANSWERS = [
+  'spell:standard:lumbridge-teleport|Cast', 'spell:standard:falador-teleport|Cast', 'spell:standard:varrock-teleport|Cast',
+  'spell:ancient:senntisten-teleport|Cast', 'spell:ancient:carrallanger-teleport|Cast',
+  'spell:standard:ape-atoll-teleport|Cast', 'spell:arceuus:ape-atoll-teleport|Cast', 'spell:lunar:moonclan-teleport|Cast',
+  'tablet:varrock-teleport|Break', 'tablet:varrock-teleport|Grand Exchange', 'tablet:rimmington-teleport|Break',
+  'scroll:nardah-teleport|Teleport',
+  'item:amulet-of-glory|Rub', 'item:amulet-of-glory|Edgeville', 'item:ring-of-dueling|Castle Wars',
+  'item:digsite-pendant|Rub', 'item:digsite-pendant|Fossil Island', 'item:slayer-ring|Teleport',
+  "item:xerics-talisman|Xeric's Lookout", "item:drakans-medallion|Ver Sinhaza", "item:necklace-of-passage|Eagles' Eyrie",
+  'item:enchanted-lyre|Play', 'item:ardougne-cloak|Kandarin Monastery', 'item:cowbell-amulet|Teleport',
+  'item:amulet-of-the-eye|Teleport',
+  'network:fairy-ring|Zanaris', 'network:fairy-ring|code:CKS', 'network:fairy-ring|code:BLQ',
+  'network:spirit-tree|Travel', 'network:charter-ship|Charter-to Port Sarim',
+  'boat:musa-point-ship|Port Sarim', 'boat:neitiznot-ferry|Neitiznot',
+];
+
+/** One pinned option's decision, looked up the way the key names it. */
+function travelAnswer(decisions: Record<string, TravelMethodDecision>, key: string) {
+  const [method, option] = key.split('|');
+  const decision = option.startsWith('code:')
+    ? decisions[method]?.codes?.[option.slice('code:'.length)]
+    : decisions[method]?.options[option];
+  if (!decision) throw new Error(`no travel decision for ${key}`);
+  return decision;
+}
 
 interface Generated {
   bundle: Record<string, unknown>;
@@ -305,6 +351,8 @@ async function generate(scenario: Scenario, fresh: UnlockState): Promise<Generat
       progress: runProgress(unlocks, scenario.mode),
       slayer: Object.fromEntries(Object.entries(slayerDecisions(slayerReachability(chunkContentService.slayerMasters(), unlocks,
         slayerLocate(chunkContentService, unlocks, scenario.mode), scenario.mode))).map(([key, task]) => [key, task.status])),
+      travel: Object.fromEntries(TRAVEL_ANSWERS.map((key) =>
+        [key, travelAnswer(travelDecisions(TRAVEL_METHODS, { unlocks, entries }), key).status])),
     },
   };
 }
@@ -346,7 +394,7 @@ interface BundleCase {
  * compressed bytes would not match what another machine produces.
  */
 /** The Stage 2 fields in a Vanilla run's rules, which installed builds never read. */
-const STAGE_2_FIELDS = ['capabilities', 'chunkEntries', 'places', 'banks', 'freeAreas', 'progress', 'slayerTasks']
+const STAGE_2_FIELDS = ['capabilities', 'chunkEntries', 'places', 'banks', 'freeAreas', 'progress', 'slayerTasks', 'travel']
   .map((field) => `rules.${field}`);
 const capabilitiesOf = (scenario: string) =>
   (results.get(scenario)!.bundle.rules as { capabilities: string[] }).capabilities;
@@ -736,7 +784,39 @@ describe('golden bundles', () => {
       expect(Object.keys(tasks).sort(), `${scenario.id}: Slayer keys`).toEqual(Object.keys(bundle.slayerChunks as object).sort());
       expect(sameContent(Object.fromEntries(Object.entries(tasks).map(([key, task]) => [key, task.status])),
         (answers as { slayer: unknown }).slayer), `${scenario.id}: Slayer statuses`).toBe(true);
+
+      // Every travel method, with the pinned options' statuses.
+      const travel = (bundle.rules as { travel: Record<string, TravelMethodDecision> }).travel;
+      expect(Object.keys(travel).sort(byCodeUnit), `${scenario.id}: travel methods`)
+        .toEqual(TRAVEL_METHODS.map((method) => method.id).sort(byCodeUnit));
+      expect(Object.fromEntries(TRAVEL_ANSWERS.map((key) => [key, travelAnswer(travel, key).status])),
+        `${scenario.id}: travel statuses`).toEqual((answers as { travel: unknown }).travel);
     }
+  });
+
+  it('keep the travel section small in every run', () => {
+    for (const scenario of SCENARIOS) {
+      const travel = (results.get(scenario.id)!.bundle.rules as { travel: unknown }).travel;
+      expect(gzipSync(JSON.stringify(travel)).length, `${scenario.id}'s travel section, compressed`)
+        .toBeLessThan(TRAVEL_BUDGET_BYTES);
+    }
+  });
+
+  it('cover the travel decisions the plugin depends on', () => {
+    const decided = (id: string) => (results.get(id)!.bundle.rules as { travel: Record<string, TravelMethodDecision> }).travel;
+    const fresh = decided('vanilla-fresh');
+    // Misthalin is free and Falador isn't; an unlock the run lacks locks the option wherever it goes.
+    expect(travelAnswer(fresh, 'spell:standard:lumbridge-teleport|Cast').status).toBe('ALLOWED');
+    expect(travelAnswer(fresh, 'spell:standard:falador-teleport|Cast').status).toBe('LOCKED');
+    expect(travelAnswer(fresh, 'item:amulet-of-glory|Edgeville')).toMatchObject({ status: 'LOCKED', reason: 'Needs Jewelry Teleports' });
+    expect(travelAnswer(fresh, "item:necklace-of-passage|Eagles' Eyrie").reason).toBe('Needs Jewelry Teleports');
+    // With the unlock, its destination decides; a rub or a diary's switch leaves the choice open.
+    const travelling = decided('vanilla-interiors');
+    expect(travelAnswer(travelling, 'item:amulet-of-glory|Edgeville').status).toBe('ALLOWED');
+    expect(travelAnswer(travelling, 'item:amulet-of-glory|Rub').status).toBe('UNKNOWN');
+    expect(travelAnswer(travelling, 'tablet:varrock-teleport|Break')).toMatchObject({ to: ['50,53', '49,54'], status: 'UNKNOWN' });
+    // The networks and boats are tag-only.
+    expect(Object.entries(fresh).filter(([id, method]) => !!method.advisory !== /^(network|boat):/.test(id))).toEqual([]);
   });
 
   it('cover the land rules the plugin depends on', () => {
