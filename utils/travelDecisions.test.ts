@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { TravelMethod } from '../data/travelMethods';
-import { hasTravelUnlock, travelDecisions, type TravelContext } from './travelDecisions';
+import { hasDiaryTier, hasTravelUnlock, travelDecisions, type TravelContext } from './travelDecisions';
 
 const nothing = { mobility: [], arcana: [], housing: [], diaries: [] };
 const context = (changes: Partial<TravelContext> = {}): TravelContext => ({
@@ -21,6 +21,27 @@ describe('hasTravelUnlock', () => {
     // An arcana id held under mobility doesn't count, and nor does an unknown id.
     expect(hasTravelUnlock({ ...nothing, mobility: ['Ancient Magicks'] }, 'Ancient Magicks')).toBe(false);
     expect(hasTravelUnlock({ ...nothing, mobility: ['Not An Unlock'] }, 'Not An Unlock')).toBe(false);
+  });
+});
+
+describe('hasDiaryTier', () => {
+  it('counts the tier, or a harder tier of the same diary', () => {
+    expect(hasDiaryTier(['Varrock Medium'], 'Varrock Medium')).toBe(true);
+    expect(hasDiaryTier(['Varrock Hard'], 'Varrock Medium')).toBe(true);
+    expect(hasDiaryTier(['Varrock Elite'], 'Varrock Medium')).toBe(true);
+    expect(hasDiaryTier(['Varrock Easy'], 'Varrock Medium')).toBe(false);
+    expect(hasDiaryTier([], 'Varrock Medium')).toBe(false);
+  });
+
+  it("doesn't count another diary, even one in the same region", () => {
+    // The Ardougne and Kandarin diaries are both in Kandarin.
+    expect(hasDiaryTier(['Kandarin Elite'], 'Ardougne Hard')).toBe(false);
+    expect(hasDiaryTier(['Falador Elite'], 'Varrock Medium')).toBe(false);
+  });
+
+  it('matches a diary it has no data for by its id only', () => {
+    expect(hasDiaryTier(['Made Up Hard'], 'Made Up Hard')).toBe(true);
+    expect(hasDiaryTier(['Made Up Elite'], 'Made Up Hard')).toBe(false);
   });
 });
 
@@ -60,6 +81,8 @@ describe('travelDecisions', () => {
     expect(travelDecisions([varrock], context()).test.options.Cast).toEqual({ to: ['50,50'], status: 'ALLOWED' });
     expect(travelDecisions([varrock], context({ unlocks: { ...nothing, diaries: ['Varrock Medium'] } })).test.options.Cast)
       .toEqual({ to: ['50,50', '46,52'], status: 'UNKNOWN', reason: 'Goes to one of several places' });
+    expect(travelDecisions([varrock], context({ unlocks: { ...nothing, diaries: ['Varrock Elite'] } })).test.options.Cast.to)
+      .toEqual(['50,50', '46,52']);
   });
 
   it('keeps what identifies a method, and decides fairy ring codes like options', () => {

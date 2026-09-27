@@ -20,7 +20,7 @@ export type TravelMatch =
 export interface TravelOption {
   /** Where the option can take the player; one chunk means the destination is certain. */
   to: readonly string[];
-  /** Once this diary is done, the player can switch the option to go here instead. */
+  /** Once this diary (or a harder tier of it) is done, the player can switch the option to go here instead. */
   afterDiary?: { diary: string; to: readonly string[] };
 }
 
