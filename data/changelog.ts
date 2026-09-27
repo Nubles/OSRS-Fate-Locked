@@ -19,6 +19,20 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-27-runelite-update',
+    title: 'RuneLite Plugin Update',
+    date: '2026-09-27',
+    sections: {
+      added: [
+        'The RuneLite plugin now takes its answers from the app: the sea and dungeons have lock states, an instance reads as the chunk it copies, and the HUD and chunk chat say why a chunk is locked.',
+        'Strict Mode now knows each teleport by its id. It stops a spell, tablet, scroll or teleport item option that goes to one place the app locks, never one that picks its place after the click, such as a Rub. Fairy rings, spirit trees, charters and boats are tagged but never stopped.',
+      ],
+      changed: [
+        'The RuneLite guide matches the current plugin: Load newest backup file replaces the old auto-reload, and Strict Mode has an optional pause hotkey.',
+      ],
+    },
+  },
+  {
     id: '2026-09-27-fate-analytics',
     title: 'Fate Analytics Redesigned',
     date: '2026-09-27',

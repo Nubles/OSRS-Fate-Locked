@@ -320,7 +320,7 @@ export const RUNELITE_GUIDE_SCREENSHOTS: readonly GuideScreenshot[] = [
         0.66,
         0.65,
         'Guardian status',
-        'Active means Strict Mode can stop locked travel right now. Inactive names what is missing, such as a linked account, the right character, or rules less than 15 minutes old.',
+        'Active means Strict Mode can stop locked travel right now. Inactive names what is missing, such as a linked account, the right character, rules less than 15 minutes old, or a travel table from the tracker.',
       ),
       callout(
         'pause',
@@ -400,15 +400,15 @@ export const RUNELITE_GUIDE_SCREENSHOTS: readonly GuideScreenshot[] = [
     id: 'bundle-recovery',
     src: '/guides/runelite/10-bundle-recovery.png',
     title: 'Bundle recovery controls',
-    alt: 'Bundle section with auto-reload, re-import hotkey, and Import from clipboard controls.',
+    alt: 'Bundle section with an older auto-reload toggle, which is now a Load newest backup file button, and the re-import hotkey and Import from clipboard controls.',
     callouts: [
       callout(
         'auto-reload',
         1,
         0.46,
         0.58,
-        'Auto-reload on change',
-        'RuneLite watches for the newest matching bundle in its Fate Locked recovery folder.',
+        'Load newest backup file',
+        'The auto-reload toggle shown here is now a button: it reads the newest matching bundle in the Fate Locked recovery folder when you press it. RuneLite no longer watches the folder.',
       ),
       callout(
         'hotkey',
@@ -568,15 +568,6 @@ export const RUNELITE_GUIDE_SCREENSHOTS: readonly GuideScreenshot[] = [
 
 export const RUNELITE_GUIDE_SETTINGS: readonly GuideSetting[] = [
   {
-    key: 'autoReload',
-    section: 'Bundle',
-    label: 'Auto-reload on change',
-    defaultValue: 'On',
-    purpose: 'Reload the newest matching Fate Locked bundle file when it changes.',
-    visibleResult: 'Valid exported rule changes appear in the panel without another manual import.',
-    changeWhen: 'Turn it off if you keep unrelated or old matching exports in the recovery folder.',
-  },
-  {
     key: 'reimportHotkey',
     section: 'Bundle',
     label: 'Re-import hotkey',
@@ -590,9 +581,18 @@ export const RUNELITE_GUIDE_SETTINGS: readonly GuideSetting[] = [
     section: 'Guardian',
     label: 'Strict Mode',
     defaultValue: 'Off',
-    purpose: 'Stop only travel (a teleport or named transport) to a destination that fresh rules bound to your character prove Locked.',
-    visibleResult: 'A proven locked teleport or transport click is stopped and explained. Walking, NPC, object, bank and equipment clicks are never stopped, and uncertain cases are allowed.',
+    purpose: 'Stop only a trip the tracker locks: a spell, tablet, scroll or teleport item option, matched by id, that goes to one place, with fresh rules bound to your character.',
+    visibleResult: 'A locked trip is stopped and explained with the tracker\'s reason. Options that pick the place after the click, fairy rings, spirit trees, charters and boats, and walking, NPC, object, bank and equipment clicks are never stopped; uncertain cases are allowed.',
     changeWhen: 'Enable it when you want an extra travel safety net. Leave it off for advisory warnings only.',
+  },
+  {
+    key: 'pauseStrictModeHotkey',
+    section: 'Guardian',
+    label: 'Pause Strict Mode hotkey',
+    defaultValue: 'Not set',
+    purpose: 'Pause Strict Mode for 60 seconds from the keyboard.',
+    visibleResult: 'Pressing it pauses Strict Mode for 60 seconds, as the banner and sidebar pause do, and the HUD counts down.',
+    changeWhen: 'Set it if you pause Strict Mode often; avoid a shortcut used by RuneLite or the game.',
   },
   {
     key: 'chatOnEnter',
@@ -600,7 +600,7 @@ export const RUNELITE_GUIDE_SETTINGS: readonly GuideSetting[] = [
     label: 'Chat on chunk entry',
     defaultValue: 'On',
     purpose: 'Post a chat line each time you enter a chunk on the tracker map.',
-    visibleResult: 'The chatbox names the new chunk or area after a boundary crossing. Chunks the tracker has not mapped, such as dungeons, stay quiet.',
+    visibleResult: 'The chatbox names the new chunk, area or dungeon after a boundary crossing, and says why a locked one is locked. An instance reads as the chunk it copies; places the tracker does not name stay quiet.',
     changeWhen: 'Turn it off if routine boundary messages make the chatbox too busy.',
   },
   {
@@ -653,8 +653,8 @@ export const RUNELITE_GUIDE_SETTINGS: readonly GuideSetting[] = [
     section: 'Warnings',
     label: 'Tag teleports to locked chunks',
     defaultValue: 'On',
-    purpose: 'Mark teleport options whose known destination is locked.',
-    visibleResult: 'Spells, jewellery, and tablet menu options can gain a red (LOCKED) tag.',
+    purpose: 'Mark travel options that go to one place the tracker locks for your run.',
+    visibleResult: 'Spell, tablet, jewellery, fairy ring, spirit tree and boat options can gain a red (LOCKED) tag.',
     changeWhen: 'Keep it on for travel safety; turn it off if destination tags crowd your menus.',
   },
   {
@@ -960,26 +960,26 @@ export const RUNELITE_GUIDE_TROUBLESHOOTING: readonly GuideTroubleshootingItem[]
     likelyCause: 'The clipboard does not contain one complete Fate Locked bundle.',
     fix: [
       'Copy the bundle again from the companion.',
-      'Use Import from clipboard or Paste JSON once.',
+      'Use Import from clipboard, or the re-import hotkey, once.',
       'An invalid import keeps the previous valid rules; never edit the JSON by hand unless you know the format.',
     ],
   },
   {
-    id: 'file-auto-reload',
-    symptom: 'Auto-reload watches the wrong file or does not notice an export.',
+    id: 'backup-file',
+    symptom: 'Load newest backup file does not find your export.',
     likelyCause: 'The file is outside the recovery folder or does not match the expected fate-locked-bundle-*.json pattern.',
     fix: [
       'Use %USERPROFILE%\\.runelite\\fate-locked\\ on Windows.',
-      'Keep only the intended newest matching export in that folder.',
-      'Use Reload from file for a one-off bundle outside the watched folder.',
+      'Name the export fate-locked-bundle-*.json; the newest matching file is the one read.',
+      'RuneLite reads the folder only when you press the button; it does not watch it.',
     ],
   },
   {
     id: 'strict-mode-allows-action',
     symptom: 'Strict Mode does not block an action you expected it to stop.',
-    likelyCause: 'It stops only travel. Walking, NPCs, objects, banks and equipment are never stopped, and travel is let through when the decision is unknown, ambiguous, stale, missing, future-dated, wrong-account, or otherwise not proven Locked.',
+    likelyCause: 'It stops only a trip the tracker locks, matched by id and going to one place. Options that pick the place after the click, such as a jewellery Rub, and fairy rings, spirit trees, charters and boats are never stopped, nor are walking, NPCs, objects, banks and equipment. Travel is let through when the decision is unknown, stale, missing, future-dated, wrong-account, or otherwise not proven Locked.',
     fix: [
-      'Read the Guardian status: Inactive names what is missing.',
+      'Read the Guardian status: Inactive names what is missing, such as a travel table in rules saved before the current plugin; sync them from the tracker again.',
       'Check Connected, Last sync, Account, and Current chunk.',
       'Treat the warning as advisory when the evidence is uncertain.',
       'This is deliberate: Strict Mode fails open and never guesses.',
@@ -1026,7 +1026,7 @@ export const RUNELITE_GUIDE_GLOSSARY: readonly GuideGlossaryItem[] = [
   },
   {
     term: 'Strict Mode',
-    definition: 'An optional, default-off guard that stops only travel to places fresh account-bound rules prove Locked.',
+    definition: 'An optional, default-off guard that stops only a trip the tracker locks, matched by id and going to one place, with fresh rules bound to your character.',
   },
   {
     term: 'Keys',
@@ -1145,9 +1145,9 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
     title: 'Guardian and Strict Mode',
     summary: 'Strict Mode is an optional, conservative guard for travel to places that are certainly Locked.',
     paragraphs: [
-      'Strict Mode is off by default. When enabled, it can stop only a travel click (a teleport or a named transport destination) when fresh, exact, account-bound rules prove the destination Locked.',
-      'Walking, NPC, object, bank and equipment clicks are never stopped; locked-content tags and warnings cover them. Unknown, ambiguous, stale, missing, future, wrong-account, and unresolved cases are allowed: Strict Mode fails open rather than guessing.',
-      'The Guardian status says Active, Paused, Off, or Inactive with the reason, such as another character or rules more than 15 minutes old. Pause Strict Mode for 60 seconds lets every click through and resumes automatically. Recent Prevented Actions is a local explanation log, not an action queue.',
+      'Strict Mode is off by default. When enabled, it can stop only a trip the tracker\'s travel table matches by id: a spell, tablet, scroll or teleport item option that goes to one place the tracker locks, because the place or the unlock the trip needs is locked. The rules must be fresh and bound to your character.',
+      'An option that picks its place after the click, such as a jewellery Rub, is never stopped, and fairy rings, spirit trees, charters and boats are tagged but never stopped. Walking, NPC, object, bank and equipment clicks are never stopped either; locked-content tags and warnings cover them. Unknown, stale, missing, future, wrong-account, and unresolved cases are allowed: Strict Mode fails open rather than guessing.',
+      'The Guardian status says Active, Paused, Off, or Inactive with the reason, such as another character, rules more than 15 minutes old, or rules without a travel table. Pause Strict Mode for 60 seconds from the banner, the sidebar or its optional hotkey; it lets every click through, the HUD counts down, and it resumes automatically. Recent Prevented Actions is a local explanation log, not an action queue.',
     ],
     bullets: [
       'Warnings remain useful with Strict Mode off.',
@@ -1195,14 +1195,13 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
     title: 'Bundle recovery',
     summary: 'The connected relay is normal; clipboard and file import are safe recovery paths.',
     paragraphs: [
-      'Prefer the connected relay for routine refreshes. Use Import from clipboard, Paste JSON, or Reload from file when connection recovery is necessary.',
-      'On Windows, Auto-reload watches %USERPROFILE%\\.runelite\\fate-locked\\ for the newest matching fate-locked-bundle-*.json export.',
+      'Prefer the connected relay for routine refreshes. Use Import from clipboard, its re-import hotkey, or Load newest backup file when connection recovery is necessary.',
+      'Load newest backup file reads the newest fate-locked-bundle-*.json export in %USERPROFILE%\\.runelite\\fate-locked\\ on Windows when you press it; RuneLite does not watch the folder. RuneLite also keeps the last rules it accepted and brings them back when it starts, even offline.',
       'Invalid, malformed, stale, or unsupported imports keep the previous valid rules.',
     ],
     bullets: [
-      'Clipboard: copy one complete bundle, then select Import from clipboard.',
-      'Paste JSON: paste one complete bundle into the provided field and import it.',
-      'File: choose a trusted export, or place a matching export in the watched recovery folder.',
+      'Clipboard: copy one complete bundle, then select Import from clipboard or press the re-import hotkey.',
+      'Backup file: place a trusted export named fate-locked-bundle-*.json in the recovery folder, then select Load newest backup file.',
     ],
     screenshotIds: ['bundle-recovery'],
     settingsSection: 'Bundle',
