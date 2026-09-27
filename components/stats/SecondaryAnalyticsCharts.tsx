@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, KeyRound } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   Bar,
   BarChart,
@@ -15,6 +15,7 @@ import { buildCalendarGrid } from './chartData';
 import { BlockSwatch, Legend, type LegendItem } from './Legend';
 import { formatShortDay, parseLocalDay, plural } from './luck';
 import { useReducedMotion } from './useReducedMotion';
+import { AnalyticsIcon } from './analyticsArt';
 
 interface SecondaryAnalyticsChartsProps {
   analytics: FateAnalyticsResult;
@@ -196,7 +197,7 @@ export const SecondaryAnalyticsCharts: React.FC<SecondaryAnalyticsChartsProps> =
           summary={analytics.keyAcquisition.length === 0
             ? 'No verified rewards yet.'
             : `${plural(standardKeys, 'Standard Key')}${totals.omniKeys > 0 ? ` and ${plural(totals.omniKeys, 'Omni-Key')}` : ''} earned on ${plural(analytics.keyAcquisition.length, 'day')}${bestKeyDay && bestKeyDay.keys > 1 ? `; your best day was ${formatShortDay(bestKeyDay.date)} with ${bestKeyDay.keys}` : ''}.`}
-          icon={<KeyRound size={15} />}
+          icon={<AnalyticsIcon art="standardKeys" size={22} />}
           legend={rewardLegend.length > 0 ? <Legend label="Key acquisition series legend" items={rewardLegend} /> : undefined}
           empty={analytics.keyAcquisition.length === 0 ? 'No reward events with valid local dates match these filters.' : undefined}
         >
@@ -227,7 +228,7 @@ export const SecondaryAnalyticsCharts: React.FC<SecondaryAnalyticsChartsProps> =
         title="Activity calendar"
         subtitle="Rolls per day, win or lose"
         summary={`${plural(includedAttempts, 'roll')} on ${plural(activeDaysShown, 'day')} between ${formatShortDay(calendarStart)} and ${formatShortDay(calendarEnd)}${includedAttempts < selectedDatedAttempts ? ` (${integer.format(selectedDatedAttempts)} in the whole selection)` : ''}.`}
-        icon={<CalendarDays size={15} />}
+        icon={<AnalyticsIcon art="calendar" size={22} />}
         action={analytics.activityDays.length > 0 ? (
           <div className="flex shrink-0 items-center gap-1">
             <button type="button" aria-label="Previous activity window" disabled={!hasPreviousWindow} onClick={() => setCalendarEnd(shiftLocalDate(calendarStart, -1))} className={navButton}><ChevronLeft size={14} /></button>

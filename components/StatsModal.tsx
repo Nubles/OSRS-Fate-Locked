@@ -1,5 +1,5 @@
 import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ArrowUpDown, Clover, Flame, Hourglass, LifeBuoy, List, Skull, TimerReset, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, X } from 'lucide-react';
 import { Activity, Sparkles } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { completionPercent } from '../utils/completion';
@@ -13,6 +13,7 @@ import { LuckSummary } from './stats/LuckSummary';
 import { plural, selectionDateRange, signedFixed } from './stats/luck';
 import { KeyEconomyEvidenceExport } from './KeyEconomyEvidenceExport';
 import { SectionGuide } from './SectionGuide';
+import { AnalyticsIcon } from './stats/analyticsArt';
 
 const StatsChartsView = lazyWithRetry(() => import('./StatsChartsView'));
 
@@ -121,7 +122,7 @@ const percentage = (value: number | null): string => value === null ? '—' : `$
 const decimal = (value: number | null): string => value === null ? '—' : value.toFixed(2);
 const tabs: Array<{ id: Tab; label: string; icon: React.ReactNode }> = [
   { id: 'dashboard', label: 'Dashboard', icon: <Activity size={16} /> },
-  { id: 'breakdown', label: 'Activity Breakdown', icon: <List size={16} /> },
+  { id: 'breakdown', label: 'Activity Breakdown', icon: <AnalyticsIcon art="activities" size={16} /> },
   { id: 'fate', label: 'Fate Report', icon: <Sparkles size={16} /> },
 ];
 
@@ -294,19 +295,19 @@ export const StatsModal: React.FC<StatsModalProps> = ({ onClose }) => {
               {!fateReport ? <div className="p-10 text-center italic text-gray-600">{fullHistoryHasAttempts ? 'No roll attempts in this selection' : "No rolls recorded yet — Fate hasn't had a chance to judge you."}</div> : <>
                 <LuckSummary analytics={analytics} variant="report" />
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  <Highlight icon={<Clover size={18} />} tint="bg-emerald-400/10 text-emerald-300" label="Luckiest roll"
+                  <Highlight icon={<AnalyticsIcon art="luckiest" size={30} />} tint="bg-emerald-400/10 text-emerald-300" label="Luckiest roll"
                     value={fateReport.luckiest ? fateReport.luckiest.source : <span className="text-sm italic text-gray-500">none with known odds</span>}
                     detail={fateReport.luckiest ? `won at ${fateReport.luckiest.threshold.toFixed(2)}% odds` : undefined} />
-                  <Highlight icon={<Skull size={18} />} tint="bg-rose-400/10 text-rose-300" label="Cruellest miss"
+                  <Highlight icon={<AnalyticsIcon art="forsaken" size={30} />} tint="bg-rose-400/10 text-rose-300" label="Cruellest miss"
                     value={fateReport.cruelest ? fateReport.cruelest.source : <span className="text-sm italic text-gray-500">none with known odds</span>}
                     detail={fateReport.cruelest ? `missed at ${fateReport.cruelest.threshold.toFixed(2)}% odds` : undefined} />
-                  <Highlight icon={<Flame size={18} />} tint="bg-amber-400/10 text-amber-300" label="Longest hot streak"
+                  <Highlight icon={<AnalyticsIcon art="hot" size={30} />} tint="bg-amber-400/10 text-amber-300" label="Longest hot streak"
                     value={plural(fateReport.longestHotStreak, 'win')} detail="in a row" />
-                  <Highlight icon={<Hourglass size={18} />} tint="bg-sky-400/10 text-sky-300" label="Longest drought"
+                  <Highlight icon={<AnalyticsIcon art="drought" size={30} />} tint="bg-sky-400/10 text-sky-300" label="Longest drought"
                     value={plural(fateReport.longestDrought, 'miss', 'misses')} detail="in a row" />
-                  <Highlight icon={<TimerReset size={18} />} tint="bg-white/[0.06] text-gray-200" label="Current drought"
+                  <Highlight icon={<AnalyticsIcon art="drought" size={30} />} tint="bg-white/[0.06] text-gray-200" label="Current drought"
                     value={plural(analytics.summary.currentDrought, 'miss', 'misses')} detail={analytics.summary.currentDrought === 0 ? 'your last roll won' : 'and counting'} />
-                  <Highlight icon={<LifeBuoy size={18} />} tint="bg-amber-400/10 text-amber-200" label="Pity keys"
+                  <Highlight icon={<AnalyticsIcon art="pityKeys" size={30} />} tint="bg-amber-400/10 text-amber-200" label="Pity keys"
                     value={analytics.summary.pityInterventions} detail={analytics.summary.pityInterventions === 1 ? 'time Fate stepped in' : 'times Fate stepped in'} />
                 </div>
                 <div className="overflow-x-auto rounded-xl border border-white/[0.06] bg-[#1a1a1a]">

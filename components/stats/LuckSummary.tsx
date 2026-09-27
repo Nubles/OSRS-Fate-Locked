@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Check, Copy, Crown, Flame, HelpCircle, Hourglass, Scale, Skull, Snowflake, type LucideIcon } from 'lucide-react';
+import { Check, Copy } from 'lucide-react';
 import type { FateAnalyticsResult } from '../../utils/fateAnalytics';
 import { formatSigma, luckSentence, percentileSentence, plural, shareableSummary, verdictTone, type Verdict } from './luck';
+import { AnalyticsIcon, type AnalyticsArt } from './analyticsArt';
 
 const ZONES = [
   { from: -3, to: -2, label: 'Forsaken', fill: 'bg-rose-500/55' },
@@ -13,13 +14,13 @@ const ZONES = [
 const SPAN = 6;
 const zoneWidth = (zone: typeof ZONES[number]) => `${((zone.to - zone.from) / SPAN) * 100}%`;
 
-const VERDICT_ICONS: Record<Exclude<Verdict, null>, LucideIcon> = {
-  'Blessed by Fate': Crown,
-  'Running hot': Flame,
-  'Fate is fair': Scale,
-  'Running cold': Snowflake,
-  'Forsaken by Fate': Skull,
-  'Building sample': Hourglass,
+export const VERDICT_ART: Record<Exclude<Verdict, null>, AnalyticsArt> = {
+  'Blessed by Fate': 'blessed',
+  'Running hot': 'hot',
+  'Fate is fair': 'fair',
+  'Running cold': 'cold',
+  'Forsaken by Fate': 'forsaken',
+  'Building sample': 'sampling',
 };
 
 /** A five-zone gauge from −3σ to +3σ; a reading past either end pins to that end. */
@@ -79,7 +80,7 @@ interface LuckSummaryProps {
 export const LuckSummary: React.FC<LuckSummaryProps> = ({ analytics, variant }) => {
   const { summary } = analytics;
   const tone = verdictTone(summary.verdict);
-  const Icon = summary.verdict ? VERDICT_ICONS[summary.verdict] : HelpCircle;
+  const art: AnalyticsArt = summary.verdict ? VERDICT_ART[summary.verdict] : 'noVerdict';
   const judged = summary.zScore !== null && summary.verdict !== 'Building sample';
   const report = variant === 'report';
   const footnote = judged ? percentileSentence(summary.zScore!) : tone.blurb;
@@ -92,7 +93,7 @@ export const LuckSummary: React.FC<LuckSummaryProps> = ({ analytics, variant }) 
         <div className={`flex w-full gap-4 ${report ? 'flex-col items-center' : 'items-start justify-between'}`}>
           <div className={`flex items-center gap-3 ${report ? 'flex-col' : ''}`}>
             <span className={`grid shrink-0 place-items-center rounded-xl bg-black/30 ring-1 ring-white/10 ${tone.text} ${report ? 'h-16 w-16' : 'h-11 w-11'}`}>
-              <Icon size={report ? 32 : 22} aria-hidden="true" />
+              <AnalyticsIcon art={art} size={report ? 48 : 32} className={report ? '[image-rendering:pixelated]' : undefined} />
             </span>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">{report ? 'Fate’s verdict' : 'Your luck'}</p>
