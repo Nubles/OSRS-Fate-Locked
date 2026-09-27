@@ -20,7 +20,19 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-27-fate-analytics');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-27-runelite-update');
+  });
+
+  it('announces the RuneLite plugin update and the guide that matches it', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-27-runelite-update');
+    expect(release?.title).toBe('RuneLite Plugin Update');
+    expect(release?.sections.added).toEqual([
+      expect.stringMatching(/answers from the app.*sea and dungeons.*instance.*why a chunk is locked/),
+      expect.stringMatching(/Strict Mode now knows each teleport by its id.*one place.*Rub.*never stopped/),
+    ]);
+    expect(release?.sections.changed).toEqual([
+      expect.stringMatching(/RuneLite guide.*Load newest backup file.*pause hotkey/),
+    ]);
   });
 
   it('announces the Fate Analytics redesign and its chart fixes', () => {
