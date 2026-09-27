@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { initialState } from '../context/GameContext';
 import { MOBILITY_LIST } from '../data/items';
+import { getGameMode } from '../config/gameModes';
+import { TRAVEL_METHODS } from '../data/travelMethods';
 import type { ChunkContent } from '../services/ChunkContentService';
 import {
   buildRuneliteRulesManifest,
@@ -152,6 +154,128 @@ describe('buildRuneliteRulesManifest', () => {
     expect(manifest.unlocks.regions).toEqual(['Baxtorian Falls', 'Taverley']);
     expect(manifest.unlocks.regions).not.toContain("Otto's Grotto");
     expect(manifest.unlocks.regions).not.toContain("Heroes' Guild");
+  });
+});
+
+describe('buildRuneliteRulesManifest - frontier', () => {
+  const build = (gameModeId: string, changes: Partial<typeof initialState.unlocks>) => buildRuneliteRulesManifest({
+    unlocks: { ...structuredClone(initialState.unlocks), ...changes },
+    run: { runId: 'frontier', runRevision: 1, gameModeId },
+    contentService: contentSource,
+    itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+  });
+  const sailor = { skills: { ...initialState.unlocks.skills, Sailing: 1 }, levels: { ...initialState.unlocks.levels, Sailing: 1 }, quests: ['Pandemonium'] };
+
+  it("sends a Chunked run's next chunks, in chunk order", async () => {
+    const manifest = await build('chunked', { regions: [], chunks: ['49,50', '49,49'] });
+    expect(manifest.frontier).toEqual(['48,49', '48,50', '49,51', '50,49', '50,51', '51,50']);
+  });
+
+  it('adds the land its Sailing reaches across the sea', async () => {
+    const manifest = await build('chunked', { regions: [], chunks: ['49,50', '49,49'], ...sailor });
+    expect(manifest.frontier).toEqual(expect.arrayContaining(['49,47', '50,48']));
+    expect(manifest.frontier).toHaveLength(8);
+  });
+
+  it('sends no frontier for other runs', async () => {
+    expect(await build('vanilla', {})).not.toHaveProperty('frontier');
+  });
+});
+
+describe('buildRuneliteRulesManifest - free areas', () => {
+  it("sends the areas the run's mode frees, whatever the global holds", async () => {
+    const build = async (gameModeId: string, customMode?: ReturnType<typeof getGameMode>['rules']) =>
+      (await buildRuneliteRulesManifest({
+        unlocks: initialState.unlocks, run: { runId: 'free', runRevision: 1, gameModeId, customMode },
+        contentService: contentSource,
+        itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+      })).freeAreas;
+    expect(await build('vanilla')).toContain('Varrock');
+    expect(await build('xtreme')).toEqual(['Tutorial Island', 'Lumbridge']);
+    expect(await build('chunked')).toEqual(['Tutorial Island']);
+    expect(await build('custom', { ...getGameMode('vanilla').rules, startArea: 'none' })).toEqual(['Tutorial Island']);
+  });
+});
+
+describe('buildRuneliteRulesManifest - progress', () => {
+  it("sends the run card's progress, with the land chunks it owns", async () => {
+    const manifest = await buildRuneliteRulesManifest({
+      unlocks: { ...structuredClone(initialState.unlocks), regions: ['Falador'] },
+      run: { runId: 'progress', runRevision: 1, gameModeId: 'vanilla' },
+      contentService: contentSource,
+      itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+    });
+    expect(manifest.progress).toMatchObject({ unit: 'areas', unlocked: 10, total: 187, chunks: { total: 624 } });
+    expect(manifest.progress?.chunks.unlocked).toBeGreaterThan(0);
+  });
+});
+
+describe('buildRuneliteRulesManifest - capabilities', () => {
+  const build = (gameModeId: string, loaded: boolean) => buildRuneliteRulesManifest({
+    unlocks: { ...structuredClone(initialState.unlocks), regions: [], chunks: [] },
+    run: { runId: 'capabilities', runRevision: 1, gameModeId },
+    contentService: { ...contentSource, init: async () => loaded },
+    itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+  });
+
+  it('names exactly the Stage 2 sections the rules have', async () => {
+    expect((await build('vanilla', true)).capabilities)
+      .toEqual(['banks', 'chunkDetails', 'chunkEntries', 'freeAreas', 'places', 'progress', 'travel']);
+    expect((await build('chunked', true)).capabilities)
+      .toEqual(['banks', 'chunkDetails', 'chunkEntries', 'freeAreas', 'frontier', 'places', 'progress', 'travel']);
+  });
+
+  it('leaves out the sections that need chunk data when it did not load', async () => {
+    expect((await build('vanilla', false)).capabilities).toEqual(['freeAreas', 'progress']);
+    expect((await build('chunked', false)).capabilities).toEqual(['freeAreas', 'frontier', 'progress']);
+  });
+});
+
+describe('buildRuneliteRulesManifest - travel', () => {
+  const build = (mobility: string[], loaded = true) => buildRuneliteRulesManifest({
+    unlocks: { ...structuredClone(initialState.unlocks), regions: [], mobility },
+    run: { runId: 'travel', runRevision: 1, gameModeId: 'vanilla' },
+    contentService: { ...contentSource, init: async () => loaded, allChunkCoords: () => [{ cx: 50, cy: 50 }, { cx: 46, cy: 52 }] },
+    itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+  });
+
+  it("decides each option from the run's chunk entries, with the snapshot's reason", async () => {
+    const manifest = await build([]);
+    // Misthalin is free and Falador isn't.
+    expect(manifest.travel?.['spell:standard:lumbridge-teleport'].options.Cast).toEqual({ to: ['50,50'], status: 'ALLOWED' });
+    expect(manifest.travel?.['spell:standard:falador-teleport'].options.Cast)
+      .toEqual({ to: ['46,52'], status: 'LOCKED', reason: manifest.chunks['46,52'].entryReason });
+    expect([manifest.chunkEntries?.['46,52'], manifest.chunks['46,52'].entryReason]).toEqual(['LOCKED', expect.any(String)]);
+  });
+
+  it('locks an option while the unlock its method needs is locked', async () => {
+    expect((await build([])).travel?.['item:amulet-of-glory'].options.Edgeville)
+      .toEqual({ to: ['48,54'], status: 'LOCKED', reason: 'Needs Jewelry Teleports' });
+    const unlocked = await build(['Jewelry Teleports']);
+    expect(unlocked.travel?.['item:amulet-of-glory'].options.Edgeville).toEqual({ to: ['48,54'], status: 'ALLOWED' });
+    expect(unlocked.travel?.['item:amulet-of-glory'].options.Rub.status).toBe('UNKNOWN');
+  });
+
+  it('sends every method, and nothing when the chunk data did not load', async () => {
+    expect(Object.keys((await build([])).travel ?? {})).toHaveLength(TRAVEL_METHODS.length);
+    expect((await build([], false)).travel).toBeUndefined();
+  });
+});
+
+describe('buildRuneliteRulesManifest - banks', () => {
+  it("decides a bank with the run's reach, as its chunk's row does", async () => {
+    // Lumbridge Castle's bank, rolled, in a chunk behind an unfinished quest.
+    const bankHall: ChunkContent = { ...lumbridge, objects: [['Bank booth', 2]] };
+    const build = (quests: string[]) => buildRuneliteRulesManifest({
+      unlocks: { ...structuredClone(initialState.unlocks), banks: ['12850'], quests },
+      run: { runId: 'banks', runRevision: 1, gameModeId: 'vanilla' },
+      contentService: { ...contentSource, contentFor: () => bankHall, questSections: () => ({ '12850': ["Cook's Assistant"] }) },
+      itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+    });
+    const gated = await build([]);
+    expect(gated.banks?.['12850']).toMatchObject({ at: '50,50', physical: ['50,50'], status: 'NOT_READY' });
+    expect(gated.chunks['50,50'].categories.BANKS?.[0].status).toBe('NOT_READY');
+    expect((await build(["Cook's Assistant"])).banks?.['12850'].status).toBe('ALLOWED');
   });
 });
 

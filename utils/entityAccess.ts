@@ -8,8 +8,7 @@ import { compileRawRequirements, evaluateRouteGates } from './questRoutes/accoun
 import type { RawRouteRequirement } from './questRoutes/model';
 import bankRegistry from '../data/sources/bank-locations.json';
 import { getActivityReq } from '../data/activityRequirements';
-import { REGIONS_LIST } from '../data/items';
-import { canonicalAreaName } from '../data/areaMapPolicy';
+import { interiorArea } from '../data/interiorAreas';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { isAreaReachable } from './reachability';
 
@@ -22,9 +21,6 @@ export interface EntityAccessSource {
   entityAccessOptions?(name: string, kind: EntityKind, cx: number, cy: number, sourceId?: string): Array<{ requirements: RawRouteRequirement[]; area?: string }>;
 }
 
-// The source exports the Blast Furnace separately, but it is inside the
-// independently rolled Keldagrim area (see the reviewed bank registry).
-const INTERIOR_AREA_OWNERS: Record<string, string> = { 'Blast Furnace': 'Keldagrim' };
 
 /** All simultaneous gates must pass; a known blocker outranks uncertainty. */
 function combineAccess(...results: EntityAccessResult[]): EntityAccessResult {
@@ -68,6 +64,27 @@ function registryBankRequirements(coord: { cx: number; cy: number }, unlocks: Un
     reasons: [...new Set([...entry.reasons, ...access.reasons])] };
 }
 
+interface BankFacility { name: string; kind: EntityKind; requirements?: string[] }
+
+/**
+ * The bank facilities in some content, for the bank with this id: booths,
+ * chests, deposit boxes and pools, bankers, and the reviewed ones (such as
+ * the bank buffalo) where the registry puts them.
+ */
+export function bankFacilities(content: ChunkContent, bankId: string): BankFacility[] {
+  const facilities: BankFacility[] = content.objects
+    .filter(([name]) => /^(bank booth|bank chest|bank deposit box|bank deposit chest|deposit pool)$/i.test(name))
+    .map(([name]) => ({ name, kind: 'object' }));
+  if (content.npcs.includes('Banker')) facilities.push({ name: 'Banker', kind: 'npc' });
+  for (const facility of bankRegistry.reviewedFacilities) {
+    if (facility.id !== bankId) continue;
+    const present = facility.kind === 'object'
+      ? content.objects.some(([name]) => name === facility.name) : content.npcs.includes(facility.name);
+    if (present) facilities.push({ ...facility, kind: facility.kind as EntityKind });
+  }
+  return facilities;
+}
+
 /** A surface bank or any independently accessible interior facility suffices.
  * Pass mode to enforce interior Fate ownership; omission checks OSRS requirements only.
  * Bank-table ownership and surface ownership remain the caller's responsibility.
@@ -76,16 +93,7 @@ export function evaluateBankRequirements(
   content: ChunkContent, coord: { cx: number; cy: number }, unlocks: UnlockState,
   source: EntityAccessSource = chunkContentService, mode?: string,
 ): EntityAccessResult {
-  const facilities: Array<{ name: string; kind: EntityKind; requirements?: string[] }> = content.objects
-    .filter(([name]) => /^(bank booth|bank chest|bank deposit box|bank deposit chest|deposit pool)$/i.test(name))
-    .map(([name]) => ({ name, kind: 'object' }));
-  if (content.npcs.includes('Banker')) facilities.push({ name: 'Banker', kind: 'npc' });
-  for (const facility of bankRegistry.reviewedFacilities) {
-    if (facility.id !== String(coord.cx * 256 + coord.cy)) continue;
-    const present = facility.kind === 'object'
-      ? content.objects.some(([name]) => name === facility.name) : content.npcs.includes(facility.name);
-    if (present) facilities.push({ ...facility, kind: facility.kind as EntityKind });
-  }
+  const facilities = bankFacilities(content, String(coord.cx * 256 + coord.cy));
   const results = facilities.map(({ name, kind, requirements }) => {
     const access = evaluateEntityRequirements(name, kind, coord, unlocks, source, mode);
     const extra = evaluateRouteGates(compileRawRequirements((requirements ?? []).map(raw => ({ raw, origin: 'ENTITY' as const }))), unlocks);
@@ -145,11 +153,10 @@ function evaluateSourceRequirements(
     ...source.chunkEntryRequirements(coord.cx, coord.cy).map(raw => ({ raw, origin: 'CHUNK_ENTRY' as const })),
   ]]).map(requirements => ({ requirements, area: undefined }));
   return bestAccess(options.map(({ requirements, area }): EntityAccessResult => {
-    const canonicalArea = area ? canonicalAreaName(INTERIOR_AREA_OWNERS[area] ?? area) : undefined;
+    const canonicalArea = area ? interiorArea(area) : undefined;
     // Interior source names are evidence for independently rolled Fate areas,
     // not a reason to invent an unlock for every named cave or quest instance.
-    if (enforceArea && canonicalArea && REGIONS_LIST.includes(canonicalArea)
-      && !isAreaReachable(canonicalArea, unlocks, mode)) {
+    if (enforceArea && canonicalArea && !isAreaReachable(canonicalArea, unlocks, mode)) {
       return { status: 'LOCKED', reasons: [`Unlock ${canonicalArea}`] };
     }
     const result = evaluateRouteGates(compileRawRequirements([...requirements, ...(service?.requirements ?? []).map(raw => ({ raw, origin: 'ENTITY' as const }))]), unlocks);

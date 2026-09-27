@@ -329,14 +329,24 @@ Java and Gradle stay out of this repository
 (`scripts/runeliteRepositoryBoundary.test.ts`), so the app and the plugin
 share test files instead of code:
 
-- **Golden bundles** (`contracts/golden-bundles/`): for a fixed set of runs
-  across the game modes, the bundle exactly as the relay path makes it and
-  the app's own answers for it: every land and ocean chunk
-  (`chunkUnlocked`), every named area (`isAreaReachable`), every bank
-  (`isBankReachable`) and the Chunked frontier. With them come account-name
-  pairs (`normalizeAccountName`) and the bundles an import must refuse or
-  read the same (`cases.json`). `scripts/goldenBundles.test.ts` fails when
-  the files no longer match the app.
+- **Golden bundles** (`contracts/golden-bundles/`, schema 2): for 13 runs
+  across the game modes, Sailing and interiors, the bundle exactly as the
+  relay path makes it and the app's own answers for it: every land and
+  ocean chunk (`chunkUnlocked`), every named area (`isAreaReachable`), every
+  bank (`isBankReachable`), the Chunked frontier with the account, and for
+  Stage 2 each chunk's entry (land, ocean and interior), each bank's status,
+  the free areas, the progress, each Slayer task's status and a sample of
+  travel decisions (the bundle sends every one).
+  `places.json` and `banks.json` pin what is the same for every run. With
+  them come account-name pairs (`normalizeAccountName`) and the bundles an
+  import must refuse or read the same (`cases.json`, whose
+  `stage2SameAnswers` only a reader of the Stage 2 sections shrugs off).
+  `scripts/goldenBundles.test.ts` fails when the files no longer match the
+  app, when a bundle's own fields disagree with the answers it pins, or
+  when a run's relay request passes 240 KiB.
+- **Bundle contract** (`contracts/golden-bundles/bundle-contract.json`):
+  the fields Plugin Hub builds and the stream overlay read, with their
+  types, which are frozen. Every golden run is checked against it.
 - **Relay replies** (`contracts/relay/relay-get.json`): each reply the
   worker gives the plugin's `GET /r/<code>`, and what the plugin must make
   of it. `workers/fate-relay/relayContract.test.ts` checks that the worker
@@ -354,6 +364,13 @@ by hand), review the diff, where the `.expect.json` files show exactly which
 decisions changed, and merge. Then re-pin the plugin to the merged commit
 and make it agree before its next Plugin Hub release; until then, players
 on the Hub build get the old answers.
+
+New bundle fields are only ever added, each under a capability in
+`rules.capabilities` (see `docs/online-relay.md`); a new meaning gets a new
+field. Before merging a bundle change, copy the new goldens into a plugin
+checkout at the Hub build's commit and run its tests: it must still pass,
+apart from answers it is known to get wrong (today, the Sailing frontier
+of `chunked-sailing`).
 
 ## 4. Gotchas that cost real debugging time
 

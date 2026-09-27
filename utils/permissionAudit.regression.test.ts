@@ -7,7 +7,7 @@ import { BOSSES_LIST, FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST, REGIONS_L
 import { evaluateBankRequirements, evaluateEntityAccess } from './entityAccess';
 import { buildChunkPermissionSnapshot } from './chunkPermissionSnapshot';
 import { buildRuneliteRulesManifest } from './runeliteRulesManifest';
-import { buildRuneliteBundle } from './runeliteBundle';
+import { buildRuneliteBundle, wireChunks } from './runeliteBundle';
 import { chunkReachability } from './chunkReach';
 import { CHUNKED_START } from './chunkAdjacency';
 import { farmingPatchFor } from './farmingPatches';
@@ -129,11 +129,12 @@ describe('second audit permission regressions', () => {
     });
     expect(manifest.chunks['50,50'].entry).toBe('ALLOWED');
     expect(manifest.chunks['50,50'].categories.QUESTS!.find(row => row.name === "Cook's Assistant")?.status).toBe('ALLOWED');
-    // The app-authored v4 snapshot must survive bundling unchanged; legacy chunk
-    // ownership remains a distinct, explicitly present field even when empty.
+    // The app-authored v4 snapshot must survive bundling, less the fields no
+    // installed reader uses; legacy chunk ownership remains a distinct,
+    // explicitly present field even when empty.
     const bundle = await buildRuneliteBundle([], { keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [] },
       undefined, undefined, [], [], true, undefined, manifest);
-    expect(bundle.rules.chunks).toEqual(manifest.chunks);
+    expect(bundle.rules.chunks).toEqual(wireChunks(manifest.chunks));
     expect(bundle.unlockedChunks).toEqual([]);
   });
 

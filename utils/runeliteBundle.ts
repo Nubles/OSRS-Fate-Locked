@@ -9,11 +9,38 @@ import { MOBILITY_LIST } from '../data/items';
 import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import type { RuneliteRulesManifest } from './runeliteRulesManifest';
+import type { ChunkCategoryId, ChunkPermissionRow, ChunkPermissionSnapshot } from './chunkPermissionSnapshot';
 import { getFreeAreas } from './freeAreas';
 
 export const RULES_VERSION = '1';
 export const CONTENT_VERSION = 1;
 export const DETECTOR_CONTRACT_VERSION = 1;
+
+/** A chunk's snapshot as the bundle carries it: see wireChunks. */
+export type WireChunkSnapshot = Omit<ChunkPermissionSnapshot, 'chunkKey' | 'counts' | 'categories'> & {
+  categories: Partial<Record<ChunkCategoryId, Omit<ChunkPermissionRow, 'key'>[]>>;
+};
+
+/** The rules as the bundle carries them. */
+export type WireRulesManifest = Omit<RuneliteRulesManifest, 'chunks'> & {
+  chunks: Record<string, WireChunkSnapshot>;
+};
+
+/**
+ * The snapshots without the fields no installed reader uses (the contract's
+ * unread list): chunkKey, which the map key already gives, the counts and
+ * each row's key. The app's own snapshots keep them. Leaving them out takes
+ * about 44 KiB, a fifth, off the relay body: room the Stage 2 fields need
+ * under the relay's size limit.
+ */
+export function wireChunks(chunks: Record<string, ChunkPermissionSnapshot>): Record<string, WireChunkSnapshot> {
+  return Object.fromEntries(Object.entries(chunks).map(([key, snapshot]) => {
+    const { chunkKey: _chunkKey, counts: _counts, categories, ...kept } = snapshot;
+    const rows = Object.entries(categories).map(([category, list]) =>
+      [category, (list ?? []).map(({ key: _key, ...row }) => row)]);
+    return [key, { ...kept, categories: Object.fromEntries(rows) }];
+  }));
+}
 
 export interface RuneliteBundleIdentity {
   runId: string;
@@ -60,7 +87,7 @@ export async function buildRuneliteBundle(
   // caller is already async.
   const { CHUNK_CONTENT_LITE } = await import('../data/chunkContentLite');
   const exportedAt = rules?.exportedAt ?? new Date().toISOString();
-  const fallbackRules: RuneliteRulesManifest = {
+  const fallbackRules: WireRulesManifest = {
     rulesVersion: identity?.rulesVersion ?? RULES_VERSION,
     contentVersion: identity?.contentVersion ?? CONTENT_VERSION,
     detectorContractVersion: identity?.detectorContractVersion ?? DETECTOR_CONTRACT_VERSION,
@@ -94,13 +121,14 @@ export async function buildRuneliteBundle(
     detectorPolicies: [],
     chunks: {},
   };
-  const canonicalRules: RuneliteRulesManifest = rules
+  const canonicalRules: WireRulesManifest = rules
     ? {
       ...rules,
       unlocks: {
         ...rules.unlocks,
         regions: [...canonicalizeAreaUnlocks(rules.unlocks.regions).regions].sort(),
       },
+      chunks: wireChunks(rules.chunks),
     }
     : fallbackRules;
   return {
@@ -113,8 +141,9 @@ export async function buildRuneliteBundle(
     subAreaChunks: SUB_AREA_CHUNKS,
     regionGroups: { Misthalin: MISTHALIN_AREAS, ...REGION_GROUPS },
     unlockedRegions: canonicalRegions,
-    // Preserve the current mode's explicit free-area baseline for legacy plugin paths.
-    freeAreas: getFreeAreas(),
+    // Preserve the current mode's explicit free-area baseline for legacy plugin
+    // paths: the rules' own, from the run's mode, or else the global's.
+    freeAreas: rules?.freeAreas ?? getFreeAreas(),
     // Chunked mode's unlock state — individual map-region chunks the player
     // has rolled, keyed "cx,cy" (matches unlocks.chunks). Included (even as
     // an empty array, at the very start of a Chunked run) whenever the
