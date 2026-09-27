@@ -144,8 +144,8 @@ const tablet = (book: SpellBook, name: string, ids: readonly number[], to: reado
     extra.page ?? `${name} (tablet)`, oldid);
 
 /** A house tablet redirected to a house location: it lands outside that house's portal. */
-const houseTablet = (name: string, id: number, to: readonly string[], oldid: number) =>
-  item(`tablet:${slug(name)}`, `${name} tablet`, [id], ['Teleport Tablets'], { Break: { to } }, name, oldid);
+const houseTablet = (name: string, id: number, to: readonly string[], oldid: number, page = name) =>
+  item(`tablet:${slug(name)}`, `${name} tablet`, [id], ['Teleport Tablets'], { Break: { to } }, page, oldid);
 
 /** A one-use teleport scroll. The app's route data asks no unlock for them. */
 const scroll = (name: string, id: number, to: readonly string[], oldid: number, page = name) =>
@@ -176,9 +176,14 @@ const TABLETS: readonly TravelMethod[] = [
   houseTablet('Rellekka teleport', 11744, ['41,56'], 15309323),
   houseTablet('Brimhaven teleport', 11745, ['43,49'], 15309318),
   houseTablet('Yanille teleport', 11746, ['39,48'], 15342795),
-  houseTablet('Trollheim teleport', 11747, ['45,57'], 15309327),
+  houseTablet('Trollheim teleport', 11747, ['45,57'], 15309327, 'Trollheim teleport (tablet)'),
   houseTablet('Hosidius teleport', 19651, ['27,54'], 15309320),
   houseTablet('Prifddinas teleport', 23771, ['50,94'], 15309322),
+  // Its page has no map: the Aldarin portal (1422,2965) is on the Construct. cape's page, oldid 15327003.
+  houseTablet('Aldarin teleport', 30149, ['22,46'], 15309317),
+  // Reward tablets, broken like the others.
+  tablet('standard', 'Volcanic mine teleport', [21541], ['59,59'], 15188411, { page: 'Volcanic mine teleport' }),
+  tablet('standard', 'Wilderness crabs teleport', [24251], ['52,59'], 15271148, { page: 'Wilderness crabs teleport' }),
 
   tablet('ancient', 'Paddewwa teleport', [12781], ['48,154'], 15186395),
   tablet('ancient', 'Senntisten teleport', [12782], ['51,52'], 15186394),
@@ -480,4 +485,26 @@ const EQUIPMENT: readonly TravelMethod[] = [
   item('item:cowbell-amulet', 'Cowbell amulet', [33104], [], { Teleport: { to: ['50,51'] } }, 'Cowbell amulet', 15338665),
 ];
 
-export const TRAVEL_METHODS: readonly TravelMethod[] = [...SPELLS, ...TABLETS, ...SCROLLS, ...JEWELLERY, ...EQUIPMENT];
+/**
+ * Other single-use teleport items, none needing an unlock from the app's
+ * lists. Left out: the spheres (each goes to a random spot in a town or
+ * cave), the Revenant cave teleport (its page and the caves' page disagree
+ * on where it goes), and items whose pages mark no landing square.
+ */
+const OTHER_ITEMS: readonly TravelMethod[] = [
+  // Launched or squashed, it goes to the Grand Tree, like the royal seed pod.
+  item('item:grand-seed-pod', 'Grand seed pod', [9469], [], { Launch: { to: ['38,54'] }, Squash: { to: ['38,54'] } },
+    'Grand seed pod', 15195675),
+  item('item:icy-basalt', 'Icy basalt', [22599], [], { Weiss: { to: ['44,61'] } }, 'Icy basalt', 15265415),
+  // The entrance and the roof, whichever the player toggles to, are both in 44,57.
+  item('item:stony-basalt', 'Stony basalt', [22601], [], {
+    'Troll Stronghold': { to: ['44,57'] }, 'Troll Stronghold entrance': { to: ['44,57'] }, 'Troll Stronghold roof': { to: ['44,57'] },
+  }, 'Stony basalt', 15265417),
+  item('item:calcified-moth', 'Calcified moth', [29090], [], { Crush: { to: ['22,149'] } }, 'Calcified moth', 15340633),
+  item('item:mokhaiotl-waystone', 'Mokhaiotl waystone', [31099], [], { Channel: { to: ['20,148'] } },
+    'Mokhaiotl waystone', 15194020),
+];
+
+export const TRAVEL_METHODS: readonly TravelMethod[] = [
+  ...SPELLS, ...TABLETS, ...SCROLLS, ...JEWELLERY, ...EQUIPMENT, ...OTHER_ITEMS,
+];

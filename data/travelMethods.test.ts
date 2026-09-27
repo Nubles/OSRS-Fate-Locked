@@ -250,7 +250,10 @@ const CATALOGUE: ReadonlyMap<number, { name: string; version: string }> = new Ma
   (JSON.parse(readFileSync(new URL(`../public/${EQUIPMENT_CATALOGUE.asset}`, import.meta.url), 'utf8')) as
     { id: number; name: string; version: string }[]).map((row) => [row.id, { name: row.name, version: row.version }]));
 /** Teleport items no one wears, so the catalogue has none of their ids; they are cited from their pages. */
-const NOT_WORN = new Set(['item:ectophial', 'item:royal-seed-pod', 'item:teleport-crystal']);
+const NOT_WORN = new Set([
+  'item:ectophial', 'item:royal-seed-pod', 'item:teleport-crystal',
+  'item:grand-seed-pod', 'item:icy-basalt', 'item:stony-basalt', 'item:calcified-moth', 'item:mokhaiotl-waystone',
+]);
 /** A variant the catalogue names otherwise than its row. */
 const ALSO_NAMED: Readonly<Record<string, string>> = {
   'item:amulet-of-glory': 'Amulet of eternal glory',
@@ -373,5 +376,70 @@ describe('worn teleport equipment', () => {
   it("match only the max cape's options whose places its page gives", () => {
     expect(Object.keys(itemRow('item:max-cape').options).sort())
       .toEqual(['Crafting Guild', 'Home', 'POH Portals', 'Teleports']);
+  });
+});
+
+describe('the other teleport items', () => {
+  it("need no unlock: the app's lists have none for them", () => {
+    for (const id of ['item:grand-seed-pod', 'item:icy-basalt', 'item:stony-basalt', 'item:calcified-moth', 'item:mokhaiotl-waystone']) {
+      expect(itemRow(id).unlocks, id).toEqual([]);
+    }
+  });
+
+  it("send the seed pods to the Grand Tree, both ways the grand one opens", () => {
+    expect(itemRow('item:grand-seed-pod').options).toEqual({ Launch: { to: ['38,54'] }, Squash: { to: ['38,54'] } });
+    expect(itemRow('item:royal-seed-pod').options.Commune.to).toEqual(['38,54']);
+  });
+});
+
+/** Every page the wiki's list of teleportation items links, pinned in data/sources. */
+const WIKI_TELEPORT_ITEMS = (JSON.parse(readFileSync(new URL('./sources/wiki-teleportation-items.json', import.meta.url), 'utf8')) as
+  { pages: string[] }).pages;
+const NO_LANDING_SQUARE = 'Its page marks no landing square.';
+/** Teleport items the table leaves out, and why. */
+const LEFT_OUT: Readonly<Record<string, string>> = {
+  'Ring of returning': 'It goes to the respawn point the player chose.',
+  'Ring of life': 'It teleports by itself, when the wearer is about to die.',
+  'Defence cape': 'It works as a ring of life.',
+  '10th squad sigil': 'Its page names no teleport option.',
+  'Sailing cape': 'Its teleport can take the boat, which has no fixed place.',
+  "Ghommal's avernic defender 5": NO_LANDING_SQUARE,
+  "Ghommal's avernic defender 6": NO_LANDING_SQUARE,
+  "Ghommal's hilt 1": NO_LANDING_SQUARE,
+  "Ghommal's hilt 2": NO_LANDING_SQUARE,
+  "Ghommal's hilt 3": NO_LANDING_SQUARE,
+  "Ghommal's hilt 4": NO_LANDING_SQUARE,
+  "Ghommal's hilt 5": NO_LANDING_SQUARE,
+  "Ghommal's hilt 6": NO_LANDING_SQUARE,
+  'Teleport to boat (tablet)': 'It goes to the boat, wherever it is.',
+  'Teleport to house (tablet)': 'It goes to the house, wherever it is.',
+  'Deadman teleport tablet': 'A Jagex moderator item from a 2016 event.',
+  'Scaperune teleport': 'A 2019 Christmas event item, no longer in the game.',
+  'Target teleport': "It goes to the player's assigned target, wherever they are.",
+  "Wise old man's teleport tablet": NO_LANDING_SQUARE,
+  'Guthixian temple teleport': 'The app has no chunk for the temple (63,71).',
+  'Revenant cave teleport': "Its page and the caves' page disagree on where it goes.",
+  'Basic quetzal whistle': 'It belongs with the quetzal network.',
+  Directions: 'It works only in Ardougne, during the Ratcatchers quest.',
+  'Disk of Returning': 'It works only in the Dwarven Mine, into the Blackhole and back.',
+  'Dorgesh-kaan sphere': 'It goes to a random spot in the city.',
+  'Goblin village sphere': 'It goes to a random spot in the village.',
+  'Plain of Mud sphere': 'It goes to a random spot in the cave.',
+  'Escape crystal': NO_LANDING_SQUARE,
+  'Hallowed crystal shard': NO_LANDING_SQUARE,
+  'Magic whistle': 'It works at one spot only, into the Fisher Realm.',
+  'Rum (blue)': NO_LANDING_SQUARE,
+  'Rum (red)': NO_LANDING_SQUARE,
+};
+const pageOf = (source: string) => decodeURIComponent(/\/w\/([^?]+)/.exec(source)?.[1] ?? '').replace(/_/g, ' ');
+
+describe('the whole table', () => {
+  it('covers every teleport item the wiki lists, or leaves it out as reviewed', () => {
+    const cited = new Set(TRAVEL_METHODS.map((method) => pageOf(method.source)));
+    const covered = (page: string) => cited.has(page) || byKind('item').some((method) => ofFamily(method, page));
+    expect(WIKI_TELEPORT_ITEMS.length).toBeGreaterThan(150);
+    expect(WIKI_TELEPORT_ITEMS.filter((page) => !covered(page) && !(page in LEFT_OUT))).toEqual([]);
+    // A page left out must still be on the list, and not covered after all.
+    expect(Object.keys(LEFT_OUT).filter((page) => covered(page) || !WIKI_TELEPORT_ITEMS.includes(page))).toEqual([]);
   });
 });
