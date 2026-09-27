@@ -5,6 +5,7 @@ vi.mock('./journalStatus', async () => {
   return { ...actual, evaluateDiaryTierEligibility: vi.fn(actual.evaluateDiaryTierEligibility) };
 });
 import { MISTHALIN_AREAS, REGIONS_LIST, SKILLS_LIST } from '../constants';
+import { BOSSES_LIST } from '../data/items';
 import { QUEST_DATA } from '../data/questData';
 import { rankSkillBottlenecks } from './skillAdvisor';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
@@ -30,11 +31,12 @@ function lowSkills(over: Record<string, any> = {}) {
   };
 }
 
-// All regions + all quests done, but skills at level 1 — isolates skill gates.
+// All regions, quests and bosses done, but skills at level 1 — isolates skill gates.
 function regionsAndQuestsDone(over: Record<string, any> = {}) {
   return lowSkills({
     regions: [...MISTHALIN_AREAS, ...REGIONS_LIST],
     quests: Object.keys(QUEST_DATA),
+    bosses: [...BOSSES_LIST],
     ...over,
   });
 }
@@ -212,6 +214,7 @@ describe('rankSkillBottlenecks', () => {
   it('does not credit a diary while another skill is blocked by its method cap', () => {
     const base = lowSkills({
       merchants: ['Farming Shops'],
+      bosses: [...BOSSES_LIST],
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Smithing' ? 1 : 10])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Agility' ? 1 : 99])),
       regions: [...new Set(ALL_DIARY_TASKS.flatMap(task => [

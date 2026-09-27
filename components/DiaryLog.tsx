@@ -1,6 +1,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
+import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
 import { CheckCircle2, Lock, ChevronDown, CheckSquare, Square, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
@@ -39,6 +40,8 @@ interface DiaryLogProps {
 
 export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch = '', suspendModals = false }) => {
   const { unlocks, completeDiaryTask, completeDiaryTier, advisorsEnabled, gameModeId } = useGame();
+  // Owned areas with no route are not doable; null until the map data loads.
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
   // Filter state persisted across sessions.
   const [filterRegion, setFilterRegion] = useLocalStorage<string>('jrnl:diary:region', 'ALL');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -84,7 +87,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
   }, []);
 
   const getStatus = (diary: DiaryTier) => (
-    getDiaryStatus(diary, unlocks, gameModeId)
+    getDiaryStatus(diary, unlocks, gameModeId, areaRoutes)
   );
 
   const getDiaryWikiLink = (tierId: string) => {
@@ -109,13 +112,13 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
 
   const diaries = useMemo(() => {
     return Object.values(DIARY_DATA).map(d => {
-      const eligibility = evaluateDiaryTierEligibility(d, unlocks, gameModeId);
+      const eligibility = evaluateDiaryTierEligibility(d, unlocks, gameModeId, areaRoutes);
       return { ...d, status: eligibility.status, eligible: eligibility.eligible };
     }).sort((a, b) => {
         const score = (s: string) => s === 'AVAILABLE' ? 0 : s.includes('LOCKED') ? 1 : 2;
         return score(a.status) - score(b.status) || a.id.localeCompare(b.id);
     });
-  }, [unlocks, gameModeId]);
+  }, [unlocks, gameModeId, areaRoutes]);
 
   const filteredDiaries = diaries.filter(d => {
       const matchesRegion = filterRegion === 'ALL' || d.region === filterRegion;
@@ -148,14 +151,14 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
       const tasks = ALL_DIARY_TASKS.filter(t => t.tierId === d.id);
       const remaining = tasks.filter(t => !unlocks.completedTasks.includes(t.id)).length;
       if (!tasks.length || remaining === 0) return [2, Infinity, 0];
-      const doable = countDoableTasks(tasks, unlocks, gameModeId);
+      const doable = countDoableTasks(tasks, unlocks, gameModeId, areaRoutes);
       return [doable > 0 ? 0 : 1, remaining, -doable];
     };
     return [...filteredDiaries].sort((a, b) => {
       const ka = key(a), kb = key(b);
       return ka[0] - kb[0] || ka[1] - kb[1] || ka[2] - kb[2];
     });
-  }, [filteredDiaries, sortMode, unlocks, gameModeId]);
+  }, [filteredDiaries, sortMode, unlocks, gameModeId, areaRoutes]);
 
   const statusCounts = useMemo(() => ({
     ALL: diaries.length,
@@ -170,7 +173,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
   };
 
   const handleTaskToggle = (task: DiaryTask, e: React.MouseEvent) => {
-      const eligibility = evaluateDiaryTaskEligibility(task, unlocks, gameModeId);
+      const eligibility = evaluateDiaryTaskEligibility(task, unlocks, gameModeId, areaRoutes);
       const attestation = requestManualAttestation(
         task.description,
         eligibility,
@@ -239,11 +242,11 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
           const isActionable = isCompleted || allTasksDone;
 
           // Tasks the player can tick off right now — drives the green badge.
-          const doableNow = isCompleted ? 0 : countDoableTasks(tasks, unlocks, gameModeId);
+          const doableNow = isCompleted ? 0 : countDoableTasks(tasks, unlocks, gameModeId, areaRoutes);
 
           // Req progress for LOCKED diary cards: count diary-level gates met
           // (required regions + prerequisite quests + skill requirements).
-          const tierEligibility = evaluateDiaryTierEligibility(diary, unlocks, gameModeId);
+          const tierEligibility = evaluateDiaryTierEligibility(diary, unlocks, gameModeId, areaRoutes);
           const dUnmet = (isCompleted || isAvailable)
             ? []
             : diaryUnmet(diary, unlocks, gameModeId);
@@ -355,7 +358,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                   <div className="border-t border-white/5 bg-black/20 p-2 space-y-1">
                       {tasks.map(task => {
                           const isTaskDone = unlocks.completedTasks.includes(task.id);
-                          const taskEligibility = evaluateDiaryTaskEligibility(task, unlocks, gameModeId);
+                          const taskEligibility = evaluateDiaryTaskEligibility(task, unlocks, gameModeId, areaRoutes);
                           const alternativeLabel = task.oneOf?.length
                             ? task.oneOf.map(diaryRequirementOptionLabel).join(' or ')
                             : undefined;
@@ -367,7 +370,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                             || task.regions?.length || task.anyOfRegions?.length || task.locations?.length
                             || task.oneOf?.length || task.combatLevel
                             || task.allQuests || task.anySkillLevel || task.questPoints !== undefined
-                            || taskEligibility.manualChecks.length || task.equipmentRequirements?.length || task.mobility?.length || task.arcana?.length || task.minigames?.length,
+                            || taskEligibility.manualChecks.length || task.equipmentRequirements?.length || task.mobility?.length || task.arcana?.length || task.minigames?.length || task.bosses?.length || task.anyOfBosses?.length,
                           );
                           const skillRequirements = Object.entries(task.skills ?? {});
                           const unmetSkillRequirements = skillRequirements.filter(([skill, level]) =>
@@ -433,6 +436,16 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                           <Lock size={8} /> {mobility}
                                         </span>
                                       ))}
+                                      {task.bosses?.map(boss => (
+                                        <span key={boss} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${unlocks.bosses.includes(boss) ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
+                                          <Lock size={8} /> {boss}
+                                        </span>
+                                      ))}
+                                      {task.anyOfBosses?.map(group => (
+                                        <span key={group.join('|')} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${group.some(boss => unlocks.bosses.includes(boss)) ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
+                                          <Lock size={8} /> {group.join(' or ')}
+                                        </span>
+                                      ))}
                                       {task.minigames?.map(minigame => (
                                         <span key={minigame} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${unlocks.minigames.includes(minigame) ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
                                           <Lock size={8} /> {minigame}
@@ -473,13 +486,15 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                           <MapPin size={8} /> Any area: {anyRegionAlternativeLabel}
                                         </span>
                                       )}
-                                      {/* An owned island or enclave that no route reaches yet. */}
+                                      {/* An owned area, island or enclave that no route reaches yet. */}
                                       {taskEligibility.blockers.filter(isTravelBlocker).map(blocker => (
                                         <span
                                           key={blocker.label}
-                                          title={['One of:', ...blocker.routes.map(route => route.blockers.length
-                                            ? `${route.label} (needs ${route.blockers.map(routeBlocker => routeBlocker.label).join(' + ')})`
-                                            : route.label)].join('\n')}
+                                          title={blocker.routes.length
+                                            ? ['One of:', ...blocker.routes.map(route => route.blockers.length
+                                              ? `${route.label} (needs ${route.blockers.map(routeBlocker => routeBlocker.label).join(' + ')})`
+                                              : route.label)].join('\n')
+                                            : 'You own it, but every way there crosses locked land. The map\'s Reachability lens shows which areas would connect it.'}
                                           className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-red-500/30 text-red-400 bg-red-900/10"
                                         >
                                           <MapPin size={8} /> {blocker.label}

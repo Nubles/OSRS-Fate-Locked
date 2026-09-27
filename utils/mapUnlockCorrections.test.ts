@@ -114,9 +114,12 @@ describe('map unlock corrections', () => {
   it('requires all three boss locations, allowing mixed greater/lesser routes', () => {
     const task = ALL_DIARY_TASKS.find(task => task.id === 'wild_elite_1')!;
     const unlocks = createFreshState().unlocks;
+    // Artio's, Venenatis's and Calvar'ion's entrances; each boss needs its unlock too.
+    unlocks.bosses = ['Artio', 'Venenatis', "Calvar'ion"];
     unlocks.chunks = ['48,57', '51,59'];
     expect(evaluateDiaryTaskEligibility(task, unlocks, 'chunked').machineEligible).toBe(false);
     unlocks.chunks.push('49,57');
+    expect(evaluateDiaryTaskEligibility(task, { ...unlocks, bosses: [] }, 'chunked').machineEligible).toBe(false);
     const ready = evaluateDiaryTaskEligibility(task, unlocks, 'chunked');
     expect(ready.machineEligible).toBe(true);
     expect(ready.manualChecks.length).toBeGreaterThan(0);
