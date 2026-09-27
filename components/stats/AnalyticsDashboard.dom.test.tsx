@@ -8,6 +8,21 @@ import { buildFateAnalytics, defaultFateAnalyticsQuery } from '../../utils/fateA
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 vi.mock('recharts', () => {
+  const Series = ({ children, data, dataKey, isAnimationActive, name, stackId }: React.PropsWithChildren<Record<string, unknown>>) => (
+    <span
+      aria-label={typeof name === 'string' ? name : undefined}
+      data-animation-active={typeof isAnimationActive === 'boolean' ? String(isAnimationActive) : undefined}
+      data-series-key={typeof dataKey === 'string' ? dataKey : undefined}
+      data-stack-id={typeof stackId === 'string' ? stackId : undefined}
+      data-render-point-count={Array.isArray(data) ? String(data.length) : undefined}
+    >
+      {children}
+    </span>
+  );
+  const Container = ({ children }: React.PropsWithChildren) => <div>{children}</div>;
+  const Primitive = ({ children }: React.PropsWithChildren) => <>{children}</>;
+  // Recharts renders raw SVG elements and its own components, and silently drops anything else.
+  const known = new Set<unknown>([Series, Primitive]);
   const Chart = ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => {
     const data = Array.isArray(props.data) ? props.data as Array<{
       denominator?: number;
@@ -25,6 +40,8 @@ vi.mock('recharts', () => {
       ? undefined
       : `${numerator}/${denominator}`;
     const modelValue = (value?: number | null) => value === undefined ? undefined : value === null ? 'not modelled' : String(value);
+    const rendered = React.Children.toArray(children)
+      .filter(child => React.isValidElement(child) && (typeof child.type === 'string' || known.has(child.type)));
     return (
       <div
         role="img"
@@ -38,23 +55,10 @@ vi.mock('recharts', () => {
         data-predicted-rates={data.map(row => row.meanPredictedRate).filter(value => value !== undefined).join(',') || undefined}
         data-actual-rates={data.map(row => row.actualRate).filter(value => value !== undefined).join(',') || undefined}
       >
-        {children}
+        {rendered}
       </div>
     );
   };
-  const Series = ({ children, data, dataKey, isAnimationActive, name, stackId }: React.PropsWithChildren<Record<string, unknown>>) => (
-    <span
-      aria-label={typeof name === 'string' ? name : undefined}
-      data-animation-active={typeof isAnimationActive === 'boolean' ? String(isAnimationActive) : undefined}
-      data-series-key={typeof dataKey === 'string' ? dataKey : undefined}
-      data-stack-id={typeof stackId === 'string' ? stackId : undefined}
-      data-render-point-count={Array.isArray(data) ? String(data.length) : undefined}
-    >
-      {children}
-    </span>
-  );
-  const Container = ({ children }: React.PropsWithChildren) => <div>{children}</div>;
-  const Primitive = ({ children }: React.PropsWithChildren) => <>{children}</>;
   return {
     ResponsiveContainer: Container,
     ComposedChart: Chart,
@@ -77,6 +81,7 @@ vi.mock('recharts', () => {
 import { AnalyticsTooltip, PrimaryAnalyticsCharts } from './PrimaryAnalyticsCharts';
 import StatsChartsView from '../StatsChartsView';
 import { CalibrationTooltip, KeyAcquisitionTooltip, SecondaryAnalyticsCharts } from './SecondaryAnalyticsCharts';
+import { FairnessCharts } from './FairnessCharts';
 
 const NOW = Date.UTC(2026, 7, 20, 12);
 const analyticsFor = (history: LogEntry[]) => buildFateAnalytics(history, defaultFateAnalyticsQuery(NOW));
@@ -117,25 +122,24 @@ afterEach(async () => {
 });
 
 describe('PrimaryAnalyticsCharts', () => {
-  it('renders the five named chart cards with summaries and non-colour labels', async () => {
+  it('renders the four named chart cards with summaries and non-colour labels', async () => {
     const host = await mount(<PrimaryAnalyticsCharts analytics={analyticsFor(history)} />);
 
     for (const heading of [
-      'Observed vs expected',
-      'Outcome composition',
-      'Roll distribution',
-      'Source performance',
-      'Streak timeline',
+      'Luck over time',
+      'How your rolls ended',
+      'Luck by activity',
+      'Streaks',
     ]) {
       expect(host.textContent).toContain(heading);
       expect(host.querySelector(`article[aria-label="${heading}"]`)).not.toBeNull();
     }
-    expect(host.querySelectorAll('[data-chart-summary]')).toHaveLength(5);
-    expect(host.textContent).toContain('scoreable cohort');
-    expect(host.textContent).toContain('Expected occupancy coverage: 4/4 attempts');
+    expect(host.querySelectorAll('[data-chart-summary]')).toHaveLength(4);
+    expect(host.textContent).toContain('After 4 rolls, you are');
     expect(host.textContent).toContain('Quest');
     expect(host.textContent).toContain('Boss');
     expect(host.textContent).toContain('Limited sample');
+    expect(host.textContent).toContain('small sample');
     expect(host.textContent).toContain('Win');
     expect(host.textContent).toContain('Miss');
     expect(host.textContent).toContain('Pity');
@@ -147,10 +151,10 @@ describe('PrimaryAnalyticsCharts', () => {
     for (const message of [
       'No scoreable attempts match these filters.',
       'No attempt outcomes match these filters.',
-      'No recorded roll values match these filters.',
       'No category attempts match these filters.',
       'No streak data matches these filters.',
     ]) expect(host.textContent).toContain(message);
+    expect(host.textContent).not.toContain('0.0% of your rolls');
     expect(host.querySelectorAll('[role="img"]')).toHaveLength(0);
   });
 
@@ -189,10 +193,11 @@ describe('PrimaryAnalyticsCharts', () => {
   });
 
   it('uses all filtered attempts as the histogram tooltip denominator', async () => {
-    const host = await mount(<PrimaryAnalyticsCharts analytics={analyticsFor(history)} />);
+    const host = await mount(<FairnessCharts analytics={analyticsFor(history)} />);
     const histogram = host.querySelector('[aria-label="Observed and expected roll distribution chart"]');
 
     expect(histogram?.getAttribute('data-tooltip-denominators')?.split(',')).toEqual(Array(20).fill('4'));
+    expect(host.textContent).toContain('Expected occupancy coverage: 4/4 attempts');
   });
 
   it('keeps timeline prefix coverage separate from selection coverage in data and tooltip copy', async () => {
@@ -205,9 +210,10 @@ describe('PrimaryAnalyticsCharts', () => {
 
     expect(timeline?.getAttribute('data-prefix-coverages')).toBe('1/1,2/2,3/3,4/4');
     expect(timeline?.getAttribute('data-selection-coverages')).toBe('4/5,4/5,4/5,4/5');
+    expect(host.querySelector('article[aria-label="Luck over time"]')?.textContent).toContain('(rolls with known odds)');
 
     const tooltipPayload = [{ payload: {
-      markLabel: 'Scoreable attempt 1', numerator: 1, denominator: 1, expectedValue: 0.2,
+      markLabel: 'Roll 1 with known odds', numerator: 1, denominator: 1, expectedValue: 0.2,
       coverageNumerator: 1, coverageDenominator: 1,
       selectionCoverageNumerator: 4, selectionCoverageDenominator: 5,
     } }] as unknown as React.ComponentProps<typeof AnalyticsTooltip>['payload'];
@@ -216,7 +222,7 @@ describe('PrimaryAnalyticsCharts', () => {
     expect(tooltipHost.textContent).toContain('Selection coverage: 4/5 attempts');
   });
 
-  it('keeps the pity marker series inside the timeline render cap', async () => {
+  it('draws pity markers from the capped timeline data rather than a data set of their own', async () => {
     const base = analyticsFor(history);
     const timeline = Array.from({ length: 1000 }, (_, index) => ({
       index,
@@ -234,8 +240,20 @@ describe('PrimaryAnalyticsCharts', () => {
       summary: { ...base.summary, attempts: 1000, scoreableAttempts: 1000 },
     };
     const host = await mount(<PrimaryAnalyticsCharts analytics={analytics} />);
+    const chart = host.querySelector('[aria-label="Cumulative observed and expected wins chart"]');
+    const marker = host.querySelector('[aria-label="Pity marker — diamond"]');
 
-    expect(host.querySelector('[aria-label="Pity marker — diamond"]')?.getAttribute('data-render-point-count')).toBe('400');
+    expect(chart?.getAttribute('data-prefix-coverages')?.split(',')).toHaveLength(400);
+    expect(marker?.getAttribute('data-series-key')).toBe('pityMarker');
+    expect(marker?.getAttribute('data-render-point-count')).toBeNull();
+  });
+
+  it('leaves the pity marker out when no roll ended in pity', async () => {
+    const withoutPity = history.filter(entry => entry.type !== 'PITY');
+    const host = await mount(<PrimaryAnalyticsCharts analytics={analyticsFor(withoutPity)} />);
+
+    expect(host.querySelector('[aria-label="Pity marker — diamond"]')).toBeNull();
+    expect(host.querySelector('[aria-label="Luck over time legend"]')?.textContent).not.toContain('Pity key');
   });
 
   it('labels category expectation and delta as not modelled without scoreable attempts', async () => {
@@ -244,13 +262,11 @@ describe('PrimaryAnalyticsCharts', () => {
       threshold: Number.NaN, rollValue: 80, message: 'Unknown odds.',
     };
     const host = await mount(<PrimaryAnalyticsCharts analytics={analyticsFor([unscoreable])} />);
-    const sourceCard = host.querySelector('article[aria-label="Source performance"]');
-    const sourceChart = host.querySelector('[aria-label="Category performance diverging bar chart"]');
+    const sourceCard = host.querySelector('article[aria-label="Luck by activity"]');
 
     expect(sourceCard?.textContent).toContain('expected not modelled, delta not modelled');
+    expect(sourceCard?.textContent).toContain('n/a');
     expect(sourceCard?.textContent).not.toContain('expected 0.00');
-    expect(sourceChart?.getAttribute('data-tooltip-expectations')).toBe('not modelled');
-    expect(sourceChart?.getAttribute('data-tooltip-deltas')).toBe('not modelled');
 
     const tooltipPayload = [{ payload: {
       markLabel: 'Quest', numerator: 0, denominator: 0, expectedValue: null, deltaValue: null,
@@ -259,6 +275,20 @@ describe('PrimaryAnalyticsCharts', () => {
     const tooltipHost = await mount(<AnalyticsTooltip active payload={tooltipPayload} />);
     expect(tooltipHost.textContent).toContain('Expected: not modelled');
     expect(tooltipHost.textContent).toContain('Delta: not modelled');
+  });
+
+  it('orders activity luck from furthest ahead to furthest behind', async () => {
+    const host = await mount(<PrimaryAnalyticsCharts analytics={analyticsFor([...history, {
+      id: 'clue-miss', timestamp: NOW, type: 'ROLL_FAIL', result: 'FAIL',
+      source: 'Clue Scroll (Easy)', threshold: 60, rollValue: 90, message: 'Miss.',
+      meta: { successProbability: 0.6, standardKeysAwarded: 0, rewardKind: 'none', drawResolution: 1000, luckApplied: false },
+    }])} />);
+    const rows = [...host.querySelectorAll('[aria-label="Source performance data"] > li')]
+      .map(row => row.querySelector('p')?.textContent);
+
+    expect(rows.at(-1)).toBe('Clue Scroll');
+    expect(host.querySelector('article[aria-label="Luck by activity"] [data-chart-summary]')?.textContent)
+      .toContain('unluckiest at Clue Scroll (−0.6)');
   });
 
   it('keeps the newest streak segment visible in a keyboard-scrollable region', async () => {
@@ -296,11 +326,14 @@ describe('PrimaryAnalyticsCharts', () => {
     expect(region?.scrollLeft).toBe(640);
     expect(region?.querySelector('[aria-current="true"]')?.getAttribute('aria-label'))
       .toContain('current segment');
+    const recent = [...host.querySelectorAll('[aria-label="Most recent rolls, oldest first"] > [role="listitem"]')];
+    expect(recent).toHaveLength(40);
+    expect(recent.every(roll => roll.getAttribute('aria-label') === 'Miss')).toBe(true);
   });
 });
 
 describe('complete analytics dashboard', () => {
-  it('keeps legacy-only probability charts useful while labelling the scoreable cohort', async () => {
+  it('keeps legacy-only probability charts useful', async () => {
     const legacy: LogEntry[] = [{
       id: 'legacy-win', timestamp: NOW - 1_000, type: 'ROLL_SUCCESS', result: 'SUCCESS',
       source: 'Legacy quest', threshold: 25, rollValue: 4, message: 'Legacy win.',
@@ -312,7 +345,7 @@ describe('complete analytics dashboard', () => {
 
     expect(host.querySelector('[aria-label="Cumulative observed and expected wins chart"]')).not.toBeNull();
     expect(host.querySelector('[aria-label="Predicted and actual probability calibration chart"]')).not.toBeNull();
-    expect(host.querySelector('article[aria-label="Observed vs expected"]')?.textContent).toContain('Probability coverage: 2/2 attempts');
+    expect(host.querySelector('article[aria-label="Luck over time"]')?.textContent).toContain('After 2 rolls');
     expect(host.textContent).not.toContain('No scoreable attempts match these filters.');
   });
 
@@ -320,29 +353,30 @@ describe('complete analytics dashboard', () => {
     const host = await mount(<StatsChartsView analytics={analyticsFor(history)} />);
 
     for (const heading of [
-      'Observed vs expected',
-      'Outcome composition',
-      'Roll distribution',
-      'Source performance',
-      'Streak timeline',
-      'Probability calibration',
-      'Key acquisition',
+      'Luck over time',
+      'How your rolls ended',
+      'Luck by activity',
+      'Streaks',
+      'Keys earned',
       'Activity calendar',
       'Notable moments',
+      'Roll spread',
+      'Odds check',
     ]) expect(host.querySelector(`article[aria-label="${heading}"]`)).not.toBeNull();
 
     expect(host.querySelectorAll('[data-chart-summary]')).toHaveLength(9);
+    expect(host.querySelector('section[aria-label="Fairness checks"]')?.textContent).toContain("don't change your luck score");
   });
 
   it('labels calibration samples and keeps predicted and actual values on a percentage scale', async () => {
-    const host = await mount(<SecondaryAnalyticsCharts analytics={analyticsFor(history)} />);
+    const host = await mount(<FairnessCharts analytics={analyticsFor(history)} />);
     const chart = host.querySelector('[aria-label="Predicted and actual probability calibration chart"]');
 
     expect(chart?.getAttribute('data-sample-attempts')).toBe('1,2,1');
     expect(chart?.getAttribute('data-predicted-rates')).toBe('10,20,30');
     expect(chart?.getAttribute('data-actual-rates')).toBe('100,50,0');
-    expect(host.textContent).toContain('Mean predicted rate (%) — dashed');
-    expect(host.textContent).toContain('Actual genuine-win rate (%) — solid');
+    expect(host.textContent).toContain('How often you won');
+    expect(host.textContent).toContain('What the odds said');
     expect(host.textContent).toContain('1 attempt');
   });
 
@@ -365,6 +399,13 @@ describe('complete analytics dashboard', () => {
     expect(host.textContent).not.toContain('2 unverified Keys');
   });
 
+  it('keeps chart patterns as raw SVG defs, the only custom children Recharts renders', async () => {
+    const primary = await mount(<PrimaryAnalyticsCharts analytics={analyticsFor(history)} />);
+    expect(primary.querySelector('[aria-label="Outcome composition donut chart"] pattern#outcome-normal')).not.toBeNull();
+    const secondary = await mount(<SecondaryAnalyticsCharts analytics={analyticsFor(history)} />);
+    expect(secondary.querySelector('[aria-label="Verified Standard Key and separate Omni-Key acquisition chart"] pattern#reward-normal')).not.toBeNull();
+  });
+
   it('provides unit-explicit calibration and reward tooltip copy', async () => {
     const calibration = await mount(<CalibrationTooltip active payload={[{ payload: {
       range: '20–30%', attempts: 4, meanPredictedRate: 25, actualRate: 50,
@@ -383,7 +424,7 @@ describe('complete analytics dashboard', () => {
     expect(rewards.textContent).toContain('Unverified legacy reward events: 3 (not Key counts)');
   });
 
-  it('renders a seven-row focusable activity grid with visible zeroes and numeric legend labels', async () => {
+  it('renders focusable week columns that start on Monday, with a numeric busiest-day legend', async () => {
     const base = analyticsFor(history);
     const analytics = {
       ...base,
@@ -397,15 +438,19 @@ describe('complete analytics dashboard', () => {
     const grid = host.querySelector('[aria-label="Roll attempts by local calendar day"]');
     const zero = host.querySelector('[aria-label="19 August 2026: 0 roll attempts"]');
     const active = host.querySelector('[aria-label="20 August 2026: 3 roll attempts"]');
+    const monday = host.querySelector('[aria-label="17 August 2026: 0 roll attempts"]');
 
-    expect(grid?.className).toContain('grid-rows-7');
+    // Each week column is a month label plus seven day cells, Monday first; the newest week may be partial.
+    const columns = [...grid!.children];
+    expect(columns.slice(0, -1).every(column => column.children.length === 8)).toBe(true);
+    expect(columns.at(-1)!.children.length).toBeLessThanOrEqual(8);
+    expect(monday?.parentElement?.children[1]).toBe(monday);
     expect(zero?.getAttribute('tabindex')).toBe('0');
     expect(zero?.getAttribute('role')).toBe('img');
-    expect(zero?.textContent).toBe('0');
     expect(zero?.getAttribute('aria-label')).not.toMatch(/success|failure/i);
     expect(active?.getAttribute('tabindex')).toBe('0');
-    expect(host.querySelector('[aria-label="Activity intensity legend"]')?.textContent).toContain('0 attempts');
-    expect(host.querySelector('[aria-label="Activity intensity legend"]')?.textContent).toContain('3 attempts');
+    expect(active?.getAttribute('title')).toBe('20 August 2026: 3 rolls');
+    expect(host.querySelector('[aria-label="Activity intensity legend"]')?.textContent).toContain('busiest day: 3 rolls');
   });
 
   it('anchors an old selection to its latest activity and navigates the full dated extent', async () => {
@@ -436,16 +481,16 @@ describe('complete analytics dashboard', () => {
     expect(next.disabled).toBe(false);
   });
 
-  it('renders all six deterministic notable facts with precise unavailable copy', async () => {
+  it('renders all six notable facts with precise unavailable copy', async () => {
     const populated = await mount(<StatsChartsView analytics={analyticsFor(history)} />);
     const notableCard = populated.querySelector('article[aria-label="Notable moments"]');
     for (const label of [
-      'Luckiest genuine success', 'Cruellest underlying miss', 'Longest drought',
-      'Hottest streak', 'Most productive source', 'Most active day',
+      'Luckiest roll', 'Cruellest miss', 'Longest drought',
+      'Hottest streak', 'Best activity', 'Busiest day',
     ]) expect(notableCard?.textContent).toContain(label);
-    expect(notableCard?.textContent).toContain('Boss (Low) · 10.0% predicted chance');
+    expect(notableCard?.textContent).toContain('Boss (Low)Won at 10.0% chance · 20 August 2026');
     expect(notableCard?.textContent).toContain('Quest (Novice)');
-    expect(notableCard?.textContent).toContain('20 August 2026 · 4 roll attempts');
+    expect(notableCard?.textContent).toContain('20 August 20264 roll attempts');
 
     const empty = await mount(<StatsChartsView analytics={analyticsFor([])} />);
     expect(empty.textContent).toContain('No scoreable genuine success in this selection');
@@ -467,30 +512,30 @@ describe('complete analytics dashboard', () => {
     const host = await mount(<StatsChartsView analytics={analytics} />);
 
     expect(host.querySelector('article[aria-label="Notable moments"]')?.textContent)
-      .toContain('Imported roll · 5.0% predicted chance · date unavailable');
+      .toContain('Imported rollWon at 5.0% chance · date unavailable');
   });
 
   it('renders specific empty copy for every secondary visualization', async () => {
-    const host = await mount(<SecondaryAnalyticsCharts analytics={analyticsFor([])} />);
+    const host = await mount(<StatsChartsView analytics={analyticsFor([])} />);
 
+    expect(host.textContent).toContain('No recorded roll values match these filters.');
     expect(host.textContent).toContain('No scoreable probability bins match these filters.');
     expect(host.textContent).toContain('No reward events with valid local dates match these filters.');
     expect(host.textContent).toContain('No dated roll attempts match these filters.');
   });
 
-  it('uses one, two, and three-column responsive grids with the primary timeline spanning only at large sizes', async () => {
+  it('stays one column on small screens and only spans columns from the large breakpoint', async () => {
     const host = await mount(<StatsChartsView analytics={analyticsFor(history)} />);
     for (const grid of host.querySelectorAll('section[data-analytics-grid]')) {
       expect(grid.className).toContain('grid-cols-1');
       expect(grid.className).toContain('lg:grid-cols-2');
       expect(grid.className).toContain('xl:grid-cols-3');
     }
-    const timeline = host.querySelector('[data-primary-timeline]');
-    expect(timeline?.className).toContain('lg:col-span-2');
-    expect(timeline?.className).not.toContain('col-span-2 lg:');
-    const largeSpans = host.querySelectorAll('[class~="lg:col-span-2"]');
-    expect(largeSpans).toHaveLength(1);
-    expect(largeSpans[0]?.querySelector('article[aria-label="Observed vs expected"]')).not.toBeNull();
+    const spanClasses = [...host.querySelectorAll('[class*="col-span"]')]
+      .flatMap(element => element.className.split(/\s+/).filter(token => token.includes('col-span')));
+    expect(spanClasses.length).toBeGreaterThan(0);
+    expect(spanClasses.every(token => /^(lg|xl):col-span-/.test(token))).toBe(true);
+    expect(host.querySelector('[data-primary-timeline]')?.className).toContain('lg:col-span-2');
   });
 
   it('disables every secondary chart animation when reduced motion is requested', async () => {
@@ -502,7 +547,10 @@ describe('complete analytics dashboard', () => {
         removeListener: vi.fn(), dispatchEvent: vi.fn(),
       })),
     });
-    const host = await mount(<SecondaryAnalyticsCharts analytics={analyticsFor(history)} />);
+    const host = await mount(<>
+      <SecondaryAnalyticsCharts analytics={analyticsFor(history)} />
+      <FairnessCharts analytics={analyticsFor(history)} />
+    </>);
     const animatedMarks = [...host.querySelectorAll('[data-animation-active]')];
 
     expect(animatedMarks.length).toBeGreaterThan(0);

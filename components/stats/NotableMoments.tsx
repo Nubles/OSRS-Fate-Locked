@@ -1,4 +1,5 @@
 import React from 'react';
+import { CalendarDays, Clover, Flame, Hourglass, Skull, Star, Trophy } from 'lucide-react';
 import type { AnalyticsNotableRoll, FateAnalyticsResult } from '../../utils/fateAnalytics';
 import { AnalyticsChartCard } from './AnalyticsChartCard';
 
@@ -6,14 +7,22 @@ interface NotableMomentsProps {
   analytics: FateAnalyticsResult;
 }
 
+interface Fact {
+  label: string;
+  icon: React.ReactNode;
+  tint: string;
+  value: string | null;
+  detail: string;
+  unavailable: string;
+}
+
 const integer = new Intl.NumberFormat('en-GB');
 const longDate = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
-const notableRoll = (roll: AnalyticsNotableRoll | null, unavailable: string): string => {
-  if (!roll) return unavailable;
+const rollDetail = (roll: AnalyticsNotableRoll): string => {
   const date = new Date(roll.timestamp);
   const dateLabel = Number.isNaN(date.getTime()) ? 'date unavailable' : longDate.format(date);
-  return `${roll.source} · ${(roll.probability * 100).toFixed(1)}% predicted chance · ${dateLabel}`;
+  return `${(roll.probability * 100).toFixed(1)}% chance · ${dateLabel}`;
 };
 
 const localDay = (value: string): string => {
@@ -23,51 +32,76 @@ const localDay = (value: string): string => {
 
 export const NotableMoments: React.FC<NotableMomentsProps> = ({ analytics }) => {
   const { notables, summary } = analytics;
-  const facts = [{
-    label: 'Luckiest genuine success',
-    value: notableRoll(notables.luckiestSuccess, 'No scoreable genuine success in this selection'),
+  const facts: Fact[] = [{
+    label: 'Luckiest roll',
+    icon: <Clover size={16} />,
+    tint: 'bg-emerald-400/10 text-emerald-300',
+    value: notables.luckiestSuccess?.source ?? null,
+    detail: notables.luckiestSuccess ? `Won at ${rollDetail(notables.luckiestSuccess)}` : '',
+    unavailable: 'No scoreable genuine success in this selection',
   }, {
-    label: 'Cruellest underlying miss',
-    value: notableRoll(notables.cruelestMiss, 'No scoreable underlying miss in this selection'),
-  }, {
-    label: 'Longest drought',
-    value: summary.longestDrought > 0
-      ? `${integer.format(summary.longestDrought)} consecutive underlying ${summary.longestDrought === 1 ? 'miss' : 'misses'}`
-      : 'No underlying miss streak in this selection',
+    label: 'Cruellest miss',
+    icon: <Skull size={16} />,
+    tint: 'bg-rose-400/10 text-rose-300',
+    value: notables.cruelestMiss?.source ?? null,
+    detail: notables.cruelestMiss ? `Missed at ${rollDetail(notables.cruelestMiss)}` : '',
+    unavailable: 'No scoreable underlying miss in this selection',
   }, {
     label: 'Hottest streak',
-    value: summary.longestHotStreak > 0
-      ? `${integer.format(summary.longestHotStreak)} consecutive genuine RNG ${summary.longestHotStreak === 1 ? 'success' : 'successes'}`
-      : 'No genuine-success streak in this selection',
+    icon: <Flame size={16} />,
+    tint: 'bg-amber-400/10 text-amber-300',
+    value: summary.longestHotStreak > 0 ? `${integer.format(summary.longestHotStreak)} ${summary.longestHotStreak === 1 ? 'win' : 'wins'} in a row` : null,
+    detail: 'Genuine wins, pity not included',
+    unavailable: 'No genuine-success streak in this selection',
   }, {
-    label: 'Most productive source',
-    value: notables.mostProductiveSource ?? 'No productive source in this selection',
+    label: 'Longest drought',
+    icon: <Hourglass size={16} />,
+    tint: 'bg-sky-400/10 text-sky-300',
+    value: summary.longestDrought > 0 ? `${integer.format(summary.longestDrought)} ${summary.longestDrought === 1 ? 'miss' : 'misses'} in a row` : null,
+    detail: 'Rolls without a genuine win',
+    unavailable: 'No underlying miss streak in this selection',
   }, {
-    label: 'Most active day',
-    value: notables.mostActiveDay
-      ? `${localDay(notables.mostActiveDay.date)} · ${integer.format(notables.mostActiveDay.attempts)} roll ${notables.mostActiveDay.attempts === 1 ? 'attempt' : 'attempts'}`
-      : 'No active day in this selection',
+    label: 'Best activity',
+    icon: <Trophy size={16} />,
+    tint: 'bg-violet-400/10 text-violet-300',
+    value: notables.mostProductiveSource,
+    detail: 'Won you the most keys',
+    unavailable: 'No productive source in this selection',
+  }, {
+    label: 'Busiest day',
+    icon: <CalendarDays size={16} />,
+    tint: 'bg-white/[0.06] text-gray-200',
+    value: notables.mostActiveDay ? localDay(notables.mostActiveDay.date) : null,
+    detail: notables.mostActiveDay ? `${integer.format(notables.mostActiveDay.attempts)} roll ${notables.mostActiveDay.attempts === 1 ? 'attempt' : 'attempts'}` : '',
+    unavailable: 'No active day in this selection',
   }];
-  const availableFacts = facts.filter(fact => !fact.value.startsWith('No ')).length;
+  const availableFacts = facts.filter(fact => fact.value !== null).length;
 
   return (
-    <section data-analytics-grid aria-label="Notable analytics" className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
-      <div className="xl:col-span-3">
-        <AnalyticsChartCard
-          title="Notable moments"
-          subtitle="Deterministic highlights · ties retain chronological history order"
-          summary={`${availableFacts}/6 notable facts are available for this selection. Probability highlights use the same scoreable cohort as the luck analysis.`}
-        >
-          <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {facts.map(fact => (
-              <div key={fact.label} className="rounded border border-white/10 bg-black/15 p-3">
-                <dt className="text-[10px] font-bold uppercase tracking-wider text-amber-300">{fact.label}</dt>
-                <dd className="mt-2 text-sm leading-5 text-gray-200">{fact.value}</dd>
+    <section aria-label="Notable analytics">
+      <AnalyticsChartCard
+        title="Notable moments"
+        subtitle="The rolls worth remembering"
+        summary={availableFacts === 0 ? 'Nothing notable in this selection yet.' : `${availableFacts} of 6 highlights are ready for this selection.`}
+        icon={<Star size={15} />}
+      >
+        <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {facts.map(fact => (
+            <div key={fact.label} className="flex gap-3 rounded-lg border border-white/[0.06] bg-black/20 p-3">
+              <span aria-hidden="true" className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${fact.tint}`}>{fact.icon}</span>
+              <div className="min-w-0">
+                <dt className="text-[10px] font-bold uppercase tracking-wider text-gray-500">{fact.label}</dt>
+                {fact.value === null
+                  ? <dd className="mt-1 text-sm italic text-gray-500">{fact.unavailable}</dd>
+                  : <dd className="mt-0.5">
+                      <span className="block truncate text-sm font-semibold text-gray-100">{fact.value}</span>
+                      <span className="block text-[11px] text-gray-500">{fact.detail}</span>
+                    </dd>}
               </div>
-            ))}
-          </dl>
-        </AnalyticsChartCard>
-      </div>
+            </div>
+          ))}
+        </dl>
+      </AnalyticsChartCard>
     </section>
   );
 };
