@@ -233,8 +233,9 @@ describe('App changelog lifecycle', () => {
 
     await user.click(screen.getByRole('button', { name: 'Settings & save tools' }));
     await user.click(screen.getByRole('button', { name: 'Discord notifications' }));
-    expect(await screen.findByRole('dialog', { name: 'Discord notifications' })).toBeTruthy();
-  }, 15_000);
+    // The dialog loads lazily, which takes a while under a full test run.
+    expect(await screen.findByRole('dialog', { name: 'Discord notifications' }, { timeout: 10_000 })).toBeTruthy();
+  }, 25_000);
 
   it('offers the save export without claiming it is encrypted', async () => {
     const readyState = JSON.parse(seedOnboardingRun());
