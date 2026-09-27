@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Search, X, CheckCircle2, Circle, ArrowRight, Route, Lock, AlertCircle, RefreshCw, RotateCcw } from 'lucide-react';
-import { Target, MapPin, BookOpen, Award, Compass, Shield, Gamepad2 } from './OsrsIcon';
+import { Target, MapPin, BookOpen, Award, Compass, Shield, Gamepad2, Swords } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
 import { useGame } from '../context/GameContext';
 import { wikiUrlFor } from '../constants';
@@ -243,6 +243,7 @@ const STEP_ICON: Record<PlanStep['kind'], React.ReactNode> = {
   mobility: <Compass size={12} />,
   arcana: <WikiIcon file="Magic_icon.png" alt="" size={12} />,
   minigame: <Gamepad2 size={12} />,
+  boss: <Swords size={12} />,
   qp: <WikiIcon file="Quest_point_icon.png" alt="" size={12} />,
   quest: <BookOpen size={12} />,
   manual: <Compass size={12} />,
@@ -1108,6 +1109,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
                     <PlanSection title="Arcana to unlock" icon={<WikiIcon file="Magic_icon.png" alt="" size={12} />} steps={plan.arcanaSteps ?? []} />
                     <PlanSection title="Transport to unlock" icon={<Compass size={12} />} steps={plan.mobilitySteps ?? []} />
                     <PlanSection title="Minigames to unlock" icon={<Gamepad2 size={12} />} steps={plan.minigameSteps ?? []} />
+                    <PlanSection title="Bosses to unlock" icon={<Swords size={12} />} steps={plan.bossSteps ?? []} />
                     <PlanSection title="Skills to train" icon={<WikiIcon file="Stats_icon.png" alt="" size={12} />} steps={plan.skillSteps} />
                     <AlternativeSection steps={plan.alternativeSteps} />
                     {plan.qpStep && (

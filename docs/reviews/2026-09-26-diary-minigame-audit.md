@@ -30,7 +30,7 @@ Names are the tracker's Minigames unlocks (`MINIGAMES_LIST` in
 `data/items.ts`). `npm run diary:sync` rejects any other name, and
 `utils/diaryMinigames.test.ts` pins the list below.
 
-## Tagged (26)
+## Tagged (27)
 
 | Task | Tier | Minigame | Why |
 |---|---|---|---|
@@ -46,6 +46,7 @@ Names are the tracker's Minigames unlocks (`MINIGAMES_LIST` in
 | `kan_hard_9` | Kandarin Hard | Barbarian Assault | The granite body is from its reward shop |
 | `kan_elite_1` | Kandarin Elite | Barbarian Assault | Level 5 in every role |
 | `kar_med_1` | Karamja Medium | Brimhaven Agility Arena | An arena ticket |
+| `kar_easy_9` | Karamja Easy | TzHaar Fight Pit | One of two routes: the Fight Pits, or the Fight Cave (a boss; see the [boss audit](2026-09-26-diary-boss-audit.md)) |
 | `kar_med_5` | Karamja Medium | Tai Bwo Wannai Cleanup | The village's favour comes from the Cleanup |
 | `kar_hard_1` | Karamja Hard | TzHaar Fight Pit | Champion of the Fight Pits |
 | `kou_hard_5` | Kourend Hard | Tithe Farm | Seeds planted in the Tithe Farm |
@@ -61,7 +62,7 @@ Names are the tracker's Minigames unlocks (`MINIGAMES_LIST` in
 | `western_easy_5` | Western Easy | Gnome Ball | A goal in a match |
 | `west_med_7` | Western Medium | Gnome Restaurant | A delivery |
 
-## Left alone (17)
+## Left alone (16)
 
 Also recorded, with the same reasons, as `minigameAudit.notTagged` in
 `data/sources/achievement-diary-tasks.json`.
@@ -72,7 +73,6 @@ Also recorded, with the same reasons, as `minigameAudit.notTagged` in
 | `fal_med_6` | Only visits the Port Sarim Rat Pits. |
 | `fal_hard_8` | The wall safes are in the Rogues' Den itself, not in its maze minigame. |
 | `fal_hard_10` | Enters the Warriors' Guild, a guild entry. |
-| `kar_easy_9` | The Fight Cave, a boss, also completes it; diary requirements have no boss field. |
 | `kar_med_8`, `kar_med_9` | Teak and mahogany trees grow outside the Tai Bwo Wannai Hardwood Grove as well. |
 | `kar_med_10`, `kar_hard_5` | Need Tai Bwo Wannai Trio, a quest, not the Cleanup. |
 | `kar_med_19` | Shilo Village also opens the gem rocks. |
