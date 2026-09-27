@@ -1,5 +1,4 @@
 import React from 'react';
-import { BarChart3, Target } from 'lucide-react';
 import {
   Bar,
   CartesianGrid,
@@ -17,6 +16,7 @@ import { CalibrationTooltip } from './SecondaryAnalyticsCharts';
 import { BlockSwatch, Legend, LineSwatch } from './Legend';
 import { plural } from './luck';
 import { useReducedMotion } from './useReducedMotion';
+import { AnalyticsIcon } from './analyticsArt';
 
 const integer = new Intl.NumberFormat('en-GB');
 const AXIS_TICK = { fontSize: 10, fill: '#8b8b8b' };
@@ -56,7 +56,7 @@ export const FairnessCharts: React.FC<{ analytics: FateAnalyticsResult }> = ({ a
           summary={observedRolls === 0
             ? 'No roll values recorded.'
             : `With fair dice, each range gets about ${fairShare.toFixed(1)} of your ${plural(observedRolls, 'roll')}.`}
-          icon={<BarChart3 size={15} />}
+          icon={<AnalyticsIcon art="rolls" size={22} />}
           legend={<Legend label="Roll spread legend" items={[
             { label: 'Your rolls', swatch: <BlockSwatch style={{ backgroundColor: '#d6a84b' }} /> },
             ...(histogramCoverage > 0 ? [{ label: 'Fair share', swatch: <LineSwatch color="#93c5fd" dashed /> }] : []),
@@ -84,7 +84,7 @@ export const FairnessCharts: React.FC<{ analytics: FateAnalyticsResult }> = ({ a
           summary={analytics.calibration.length === 0
             ? 'No rolls with known odds yet.'
             : 'If the odds are honest, the gold line follows the dashed one. Ranges with few rolls wobble more.'}
-          icon={<Target size={15} />}
+          icon={<AnalyticsIcon art="fair" size={22} />}
           legend={<Legend label="Odds check legend" items={[
             { label: 'How often you won', swatch: <LineSwatch color="#fbbf24" /> },
             { label: 'What the odds said', swatch: <LineSwatch color="#93c5fd" dashed /> },

@@ -1,7 +1,7 @@
 import React from 'react';
-import { CalendarDays, Clover, Flame, Hourglass, Skull, Star, Trophy } from 'lucide-react';
 import type { AnalyticsNotableRoll, FateAnalyticsResult } from '../../utils/fateAnalytics';
 import { AnalyticsChartCard } from './AnalyticsChartCard';
+import { AnalyticsIcon } from './analyticsArt';
 
 interface NotableMomentsProps {
   analytics: FateAnalyticsResult;
@@ -34,42 +34,42 @@ export const NotableMoments: React.FC<NotableMomentsProps> = ({ analytics }) => 
   const { notables, summary } = analytics;
   const facts: Fact[] = [{
     label: 'Luckiest roll',
-    icon: <Clover size={16} />,
+    icon: <AnalyticsIcon art="luckiest" size={28} />,
     tint: 'bg-emerald-400/10 text-emerald-300',
     value: notables.luckiestSuccess?.source ?? null,
     detail: notables.luckiestSuccess ? `Won at ${rollDetail(notables.luckiestSuccess)}` : '',
     unavailable: 'No scoreable genuine success in this selection',
   }, {
     label: 'Cruellest miss',
-    icon: <Skull size={16} />,
+    icon: <AnalyticsIcon art="forsaken" size={28} />,
     tint: 'bg-rose-400/10 text-rose-300',
     value: notables.cruelestMiss?.source ?? null,
     detail: notables.cruelestMiss ? `Missed at ${rollDetail(notables.cruelestMiss)}` : '',
     unavailable: 'No scoreable underlying miss in this selection',
   }, {
     label: 'Hottest streak',
-    icon: <Flame size={16} />,
+    icon: <AnalyticsIcon art="hot" size={28} />,
     tint: 'bg-amber-400/10 text-amber-300',
     value: summary.longestHotStreak > 0 ? `${integer.format(summary.longestHotStreak)} ${summary.longestHotStreak === 1 ? 'win' : 'wins'} in a row` : null,
     detail: 'Genuine wins, pity not included',
     unavailable: 'No genuine-success streak in this selection',
   }, {
     label: 'Longest drought',
-    icon: <Hourglass size={16} />,
+    icon: <AnalyticsIcon art="drought" size={28} />,
     tint: 'bg-sky-400/10 text-sky-300',
     value: summary.longestDrought > 0 ? `${integer.format(summary.longestDrought)} ${summary.longestDrought === 1 ? 'miss' : 'misses'} in a row` : null,
     detail: 'Rolls without a genuine win',
     unavailable: 'No underlying miss streak in this selection',
   }, {
     label: 'Best activity',
-    icon: <Trophy size={16} />,
+    icon: <AnalyticsIcon art="bestActivity" size={28} />,
     tint: 'bg-violet-400/10 text-violet-300',
     value: notables.mostProductiveSource,
     detail: 'Won you the most keys',
     unavailable: 'No productive source in this selection',
   }, {
     label: 'Busiest day',
-    icon: <CalendarDays size={16} />,
+    icon: <AnalyticsIcon art="calendar" size={28} />,
     tint: 'bg-white/[0.06] text-gray-200',
     value: notables.mostActiveDay ? localDay(notables.mostActiveDay.date) : null,
     detail: notables.mostActiveDay ? `${integer.format(notables.mostActiveDay.attempts)} roll ${notables.mostActiveDay.attempts === 1 ? 'attempt' : 'attempts'}` : '',
@@ -83,7 +83,7 @@ export const NotableMoments: React.FC<NotableMomentsProps> = ({ analytics }) => 
         title="Notable moments"
         subtitle="The rolls worth remembering"
         summary={availableFacts === 0 ? 'Nothing notable in this selection yet.' : `${availableFacts} of 6 highlights are ready for this selection.`}
-        icon={<Star size={15} />}
+        icon={<AnalyticsIcon art="moments" size={22} />}
       >
         <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {facts.map(fact => (

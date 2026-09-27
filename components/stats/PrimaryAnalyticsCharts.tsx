@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Activity, Flame, PieChart as PieIcon, TrendingUp } from 'lucide-react';
 import {
   Area,
   Cell,
@@ -19,6 +18,7 @@ import { downsampleTimeline } from './chartData';
 import { BlockSwatch, DiamondSwatch, Legend, LineSwatch, OUTCOME_STYLE } from './Legend';
 import { plural, signedFixed } from './luck';
 import { useReducedMotion } from './useReducedMotion';
+import { AnalyticsIcon } from './analyticsArt';
 
 interface PrimaryAnalyticsChartsProps {
   analytics: FateAnalyticsResult;
@@ -192,7 +192,7 @@ export const PrimaryAnalyticsCharts: React.FC<PrimaryAnalyticsChartsProps> = ({ 
           title="Luck over time"
           subtitle={`Your wins against what the odds expected, roll by roll${partlyScoreable ? ' (rolls with known odds)' : ''}`}
           summary={timelineSummary}
-          icon={<TrendingUp size={15} />}
+          icon={<AnalyticsIcon art="luckOverTime" size={22} />}
           legend={<Legend label="Luck over time legend" items={[
             { label: 'Your wins', swatch: <LineSwatch color="#fbbf24" /> },
             { label: 'Expected', swatch: <LineSwatch color="#93c5fd" dashed /> },
@@ -224,7 +224,7 @@ export const PrimaryAnalyticsCharts: React.FC<PrimaryAnalyticsChartsProps> = ({ 
         summary={summary.attempts === 0
           ? 'No rolls yet.'
           : `${percent(wins, summary.attempts)} of your rolls won a key${summary.pityInterventions > 0 ? `, and Fate stepped in ${plural(summary.pityInterventions, 'time')}` : ''}.`}
-        icon={<PieIcon size={15} />}
+        icon={<AnalyticsIcon art="outcomes" size={22} />}
         empty={summary.attempts === 0 ? 'No attempt outcomes match these filters.' : undefined}
       >
         <div className="flex flex-1 flex-col items-center gap-5 sm:flex-row lg:flex-col 2xl:flex-row">
@@ -258,7 +258,7 @@ export const PrimaryAnalyticsCharts: React.FC<PrimaryAnalyticsChartsProps> = ({ 
         title="Luck by activity"
         subtitle="Wins above or below the odds, per kind of activity"
         summary={activitySummary}
-        icon={<Activity size={15} />}
+        icon={<AnalyticsIcon art="activities" size={22} />}
         empty={analytics.categories.length === 0 ? 'No category attempts match these filters.' : undefined}
       >
         <ul aria-label="Source performance data" className="space-y-2.5">
@@ -311,7 +311,7 @@ export const PrimaryAnalyticsCharts: React.FC<PrimaryAnalyticsChartsProps> = ({ 
           summary={analytics.streaks.length === 0
             ? 'No streaks yet.'
             : `Your hottest streak was ${plural(summary.longestHotStreak, 'win')} in a row; your longest drought was ${plural(summary.longestDrought, 'miss', 'misses')}.`}
-          icon={<Flame size={15} />}
+          icon={<AnalyticsIcon art="hot" size={22} />}
           legend={<Legend label="Streak pattern legend" items={[
             { label: 'Win', swatch: <BlockSwatch style={OUTCOME_STYLE.win} /> },
             { label: 'Miss', swatch: <BlockSwatch style={OUTCOME_STYLE.miss} /> },

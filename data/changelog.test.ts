@@ -30,6 +30,7 @@ describe('authored changelog releases', () => {
       expect.stringMatching(/luck in plain words.*luck meter/),
       expect.stringMatching(/plain title and a one-line takeaway/),
       expect.stringMatching(/Activity Breakdown fits on screen.*Copy summary/),
+      expect.stringMatching(/OSRS artwork.*Casket.*Fire rune.*Law rune/),
     ]);
     expect(release?.sections.fixed).toEqual([
       expect.stringMatching(/Patterned bars and donut slices/),

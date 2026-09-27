@@ -82,6 +82,9 @@ import { AnalyticsTooltip, PrimaryAnalyticsCharts } from './PrimaryAnalyticsChar
 import StatsChartsView from '../StatsChartsView';
 import { CalibrationTooltip, KeyAcquisitionTooltip, SecondaryAnalyticsCharts } from './SecondaryAnalyticsCharts';
 import { FairnessCharts } from './FairnessCharts';
+import { AnalyticsKpis } from './AnalyticsKpis';
+import { ANALYTICS_ART } from './analyticsArt';
+import { VERDICT_ART } from './LuckSummary';
 
 const NOW = Date.UTC(2026, 7, 20, 12);
 const analyticsFor = (history: LogEntry[]) => buildFateAnalytics(history, defaultFateAnalyticsQuery(NOW));
@@ -555,5 +558,63 @@ describe('complete analytics dashboard', () => {
 
     expect(animatedMarks.length).toBeGreaterThan(0);
     expect(animatedMarks.every(mark => mark.getAttribute('data-animation-active') === 'false')).toBe(true);
+  });
+});
+
+describe('OSRS artwork', () => {
+  const wikiFile = (img: Element | null): string | null => img
+    ? decodeURIComponent((img as HTMLImageElement).src.split('/images/')[1] ?? '')
+    : null;
+
+  it('gives every chart card and notable moment an OSRS Wiki icon, not a generic glyph', async () => {
+    const host = await mount(<StatsChartsView analytics={analyticsFor(history)} />);
+
+    const cards = Object.fromEntries([...host.querySelectorAll('article[aria-label]')].map(card => [
+      card.getAttribute('aria-label'),
+      wikiFile(card.querySelector('header span[aria-hidden="true"] img')),
+    ]));
+    expect(cards).toEqual({
+      'Luck over time': 'Stats_icon.png',
+      'How your rolls ended': 'Apple_pie.png',
+      'Luck by activity': 'Collection_log.png',
+      Streaks: 'Fire_rune.png',
+      'Keys earned': 'Crystal_key.png',
+      'Activity calendar': 'Watch.png',
+      'Notable moments': 'Stardust_175.png',
+      'Roll spread': 'Mystery_box.png',
+      'Odds check': 'Law_rune.png',
+    });
+    const facts = [...host.querySelectorAll('section[aria-label="Notable analytics"] dl > div')]
+      .map(fact => wikiFile(fact.querySelector('img')));
+    expect(facts).toEqual([
+      'Lucky_impling_jar.png', 'Slayer_icon.png', 'Fire_rune.png', 'Waterskin(0).png',
+      'Trailblazer_dragon_trophy.png', 'Watch.png',
+    ]);
+    for (const img of host.querySelectorAll('img')) {
+      expect(img.getAttribute('alt')).toBe('');
+      expect(img.getAttribute('aria-hidden')).toBe('true');
+    }
+  });
+
+  it('shows the luck verdict and the six tiles as OSRS items, with the same keys as the header', async () => {
+    const analytics = analyticsFor(history);
+    expect(analytics.summary.verdict).toBe('Building sample');
+    const host = await mount(<AnalyticsKpis analytics={analytics} />);
+
+    expect([...host.querySelectorAll('img')].map(wikiFile)).toEqual([
+      'Watch.png',
+      'Mystery_box.png', 'Casket.png', 'Enhanced_crystal_key.png', 'Shield_slot.png', 'Crystal_key.png', 'Waterskin(0).png',
+    ]);
+  });
+
+  it('gives each luck verdict its own icon', () => {
+    expect(Object.fromEntries(Object.entries(VERDICT_ART).map(([verdict, art]) => [verdict, ANALYTICS_ART[art]]))).toEqual({
+      'Blessed by Fate': 'Yellow_partyhat.png',
+      'Running hot': 'Fire_rune.png',
+      'Fate is fair': 'Law_rune.png',
+      'Running cold': 'Ice_Barrage.png',
+      'Forsaken by Fate': 'Slayer_icon.png',
+      'Building sample': 'Watch.png',
+    });
   });
 });
