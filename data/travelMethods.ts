@@ -505,6 +505,122 @@ const OTHER_ITEMS: readonly TravelMethod[] = [
     'Mokhaiotl waystone', 15194020),
 ];
 
+/** Every id from one to another, inclusive. */
+const range = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, index) => from + index);
+
+/**
+ * A travel network's service. Tag-only in Stage 2 (owner decision 2): the
+ * player picks the stop after the click, so most options go to one of
+ * several places anyway.
+ */
+const network = (id: string, label: string, unlock: string, match: TravelMatch,
+  options: Readonly<Record<string, TravelOption>>, page: string, oldid: number,
+  codes?: Readonly<Record<string, TravelOption>>): TravelMethod => ({
+  id: `network:${id}`, label, unlocks: [unlock], match, options, advisory: true,
+  ...(codes ? { codes } : {}), source: wiki(page, oldid),
+});
+
+/** Every option goes to one of the stops, picked after the click. */
+const anyStop = (stops: readonly string[], ...options: string[]) =>
+  Object.fromEntries(options.map((option) => [option, { to: stops }]));
+
+/**
+ * Each fairy ring code and where it lands, from the wiki's combinations
+ * tables. Yu'biusk (BLQ) has no chunk in the app yet.
+ */
+const FAIRY_RING_CODES: Readonly<Record<string, readonly string[]>> = {
+  AIQ: ['46,48'], AIR: ['42,50'], AIS: ['22,51'], AJP: ['25,47'], AJQ: ['42,81'], AJR: ['43,56'], AJS: ['39,60'],
+  AKP: ['51,42'], AKQ: ['36,56'], AKR: ['28,55'], AKS: ['40,46'], ALP: ['39,56'], ALQ: ['56,54'], ALR: ['47,76'],
+  ALS: ['41,54'],
+  BIP: ['53,51'], BIQ: ['50,48'], BIS: ['41,51'], BJP: ['35,46'], BJR: ['41,73'], BJS: ['33,47'], BKP: ['37,47'],
+  BKQ: ['47,70'], BKR: ['54,53'], BKS: ['37,69'], BLP: ['38,80'], BLQ: [], BLR: ['42,52'], BLS: ['20,54'],
+  CIP: ['39,60'], CIQ: ['39,48'], CIR: ['20,58'], CIS: ['25,60'], CJQ: ['49,38'], CJR: ['42,55'], CKP: ['32,75'],
+  CKQ: ['21,45'], CKR: ['43,46'], CKS: ['53,54'], CLP: ['48,50'], CLR: ['42,42'], CLS: ['41,48'],
+  DIP: ['47,74'], DIR: ['47,83'], DIS: ['48,49'], DJP: ['41,50'], DJR: ['22,57'], DKP: ['45,48'], DKR: ['48,54'],
+  DKS: ['42,58'], DLQ: ['53,47'], DLR: ['34,48'], DLS: ['53,153'],
+};
+
+/** The charter ports, from the charter ship page's map. Tempestus and Barracuda HQ have no pin there. */
+const CHARTER_PORTS: Readonly<Record<string, readonly string[]>> = {
+  Aldarin: ['22,46'], Brimhaven: ['43,50'], Catherby: ['43,53'], 'Civitas illa Fortis': ['27,49'],
+  'Corsair Cove': ['40,44'],
+  // The pin is on the dock's south edge; the crew stands across the border in 30,43.
+  'Deepfin Point': ['30,42', '30,43'],
+  "Land's End": ['23,53'], "Mos Le'Harmless": ['57,45'], 'Musa Point': ['46,49'], 'Port Khazard': ['41,49'],
+  'Port Phasmatys': ['57,54'], 'Port Piscarilius': ['28,57'], 'Port Roberts': ['29,51'], 'Port Sarim': ['47,49'],
+  'Port Tyras': ['33,48'], Prifddinas: ['33,52'], Shipyard: ['46,47'], 'Sunset Coast': ['23,46'],
+  'The Pandemonium': ['47,46'],
+  // As at Deepfin Point, the crew stands across the border, in 49,37.
+  'The Summer Shore': ['49,36', '49,37'],
+  'Red Rock': ['43,39'], Tempestus: [], 'Barracuda HQ': [],
+};
+
+/** The quetzal landing sites. Kastori's pin is on its chunk's east edge, beside the site in 21,47. */
+const QUETZAL_STOPS = [
+  '21,45', '22,52', '26,49', '24,47', '23,50', '24,46', '19,48', '22,49', '22,48', '26,45', '27,48',
+  '20,47', '21,47', '26,47', '25,51',
+];
+
+/**
+ * Travel networks. Left out: canoes (a station's options change as the canoe
+ * is built), magic mushtrees (their only option, Use, is never travel here),
+ * the eagles and the Keldagrim mine carts (their pages mark no stops), and
+ * the house's services (the house has no fixed place).
+ */
+const NETWORKS: readonly TravelMethod[] = [
+  // Configure and Favourites only open the dial or the list, where the player picks a code; the codes
+  // say where each goes. Last-destination names its code, as in "Last-destination (CKS)".
+  network('fairy-ring', 'Fairy ring', 'Fairy Rings', { objects: [29495, 29560] }, { Zanaris: { to: ['37,69'] } },
+    'Fairy ring', 15345150, Object.fromEntries(Object.entries(FAIRY_RING_CODES).map(([code, to]) => [code, { to }]))),
+  // The ancient, young and Prifddinas trees; the trees players grow have ids of their own.
+  network('spirit-tree', 'Spirit tree', 'Spirit Trees', { objects: [26259, 26260, 26261, 26262, 26263, 35949, 35950] },
+    anyStop([
+      '39,49', '38,53', '39,50', '49,54', '38,44', '36,48', '51,95', '18,43',
+      '40,60', '47,50', '43,50', '26,55', '19,58',
+    ], 'Travel', 'Last-destination'),
+    'Spirit tree', 15356739),
+  // The pilots: Gnormadium Avlafrim, Captains Bleemadge, Errdo, Dalbur, Klemfoodle and Shoracks.
+  network('gnome-glider', 'Gnome glider', 'Gnome Gliders', {
+    npcs: [7516, 7517, 10459, ...range(10461, 10466), ...range(10467, 10473), 6091, ...range(10452, 10458),
+      ...range(10479, 10485), 7178],
+  }, {
+    ...anyStop(['38,54', '44,54', '51,53', '51,50', '39,46', '42,43', '46,46'], 'Glider'),
+    'Glider-to Gandius': { to: ['46,46'] },
+  }, 'Gnome glider', 15320406),
+  // A crewmember's id changes with the player's last charter, which adds a Charter-to option for it.
+  network('charter-ship', 'Charter ship', 'Charter Ships', {
+    npcs: [...range(9312, 9383), ...range(12632, 12643), ...range(12783, 12806), ...range(15506, 15511),
+      ...range(15513, 15518), ...range(15520, 15525), ...range(15527, 15532), ...range(15534, 15539), ...range(15541, 15546)],
+  }, Object.fromEntries(Object.entries(choice(CHARTER_PORTS, 'Charter'))
+    .map(([text, option]) => [text === 'Charter' ? text : `Charter-to ${text}`, option])),
+  'Trader Crewmember', 15284983),
+  // Auguste on Entrana and the assistants at Varrock, the Crafting Guild, Castle Wars, the Grand Tree and Taverley.
+  network('balloon', 'Balloon', 'Balloon Transport', { npcs: range(4715, 4723) },
+    anyStop(['45,51', '45,53', '43,52', '51,54', '38,48', '38,54'], 'Fly'),
+    'Balloon transport system', 15356815),
+  network('magic-carpet', 'Magic carpet', 'Magic Carpets', { npcs: [17, 18, 19, 20, 22] },
+    anyStop(['51,48', '52,46', '53,45', '49,47', '54,48', '51,43', '50,43'], 'Travel'),
+    'Magic carpet', 15315446),
+  network('quetzal', 'Quetzal', 'Quetzal Network', { npcs: range(13350, 13354) },
+    anyStop(QUETZAL_STOPS, 'Travel', 'Last-destination'), 'Quetzal Transport System', 15308283),
+  // Activated, an obelisk sends the player to a random one; with a destination set, to that one.
+  network('wilderness-obelisk', 'Wilderness obelisk', 'Wilderness Obelisks', { objects: range(14826, 14831) },
+    anyStop(['49,56', '50,57', '47,58', '48,59', '46,60', '51,61'], 'Activate', 'Teleport to Destination'),
+    'Wilderness Obelisk', 15229888),
+  // The conductors at the twelve stations of the Lovakengj network.
+  network('lovakengj-minecart', 'Lovakengj minecart', 'Mine Carts', { npcs: [...range(7227, 7231), 7619, ...range(12702, 12707)] },
+    anyStop([
+      '26,59', '19,58', '28,54', '25,55', '26,57', '24,54', '23,58', '19,55', '25,61', '27,57', '24,56', '22,55',
+    ], 'Travel'),
+    'Lovakengj Minecart Network', 15322190),
+];
+
+/** The quetzal whistles call a quetzal to any landing site; the basic, enhanced, perfected and imbued ones. */
+const WHISTLES: readonly TravelMethod[] = [
+  item('item:quetzal-whistle', 'Quetzal whistle', [29271, 29273, 29275, 33120], ['Quetzal Network'],
+    anyStop(QUETZAL_STOPS, 'Signal', 'Last-destination'), 'Basic quetzal whistle', 15356472),
+];
+
 export const TRAVEL_METHODS: readonly TravelMethod[] = [
-  ...SPELLS, ...TABLETS, ...SCROLLS, ...JEWELLERY, ...EQUIPMENT, ...OTHER_ITEMS,
+  ...SPELLS, ...TABLETS, ...SCROLLS, ...JEWELLERY, ...EQUIPMENT, ...OTHER_ITEMS, ...WHISTLES, ...NETWORKS,
 ];

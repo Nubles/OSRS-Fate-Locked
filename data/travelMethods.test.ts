@@ -253,6 +253,7 @@ const CATALOGUE: ReadonlyMap<number, { name: string; version: string }> = new Ma
 const NOT_WORN = new Set([
   'item:ectophial', 'item:royal-seed-pod', 'item:teleport-crystal',
   'item:grand-seed-pod', 'item:icy-basalt', 'item:stony-basalt', 'item:calcified-moth', 'item:mokhaiotl-waystone',
+  'item:quetzal-whistle',
 ]);
 /** A variant the catalogue names otherwise than its row. */
 const ALSO_NAMED: Readonly<Record<string, string>> = {
@@ -419,7 +420,6 @@ const LEFT_OUT: Readonly<Record<string, string>> = {
   "Wise old man's teleport tablet": NO_LANDING_SQUARE,
   'Guthixian temple teleport': 'The app has no chunk for the temple (63,71).',
   'Revenant cave teleport': "Its page and the caves' page disagree on where it goes.",
-  'Basic quetzal whistle': 'It belongs with the quetzal network.',
   Directions: 'It works only in Ardougne, during the Ratcatchers quest.',
   'Disk of Returning': 'It works only in the Dwarven Mine, into the Blackhole and back.',
   'Dorgesh-kaan sphere': 'It goes to a random spot in the city.',
@@ -441,5 +441,96 @@ describe('the whole table', () => {
     expect(WIKI_TELEPORT_ITEMS.filter((page) => !covered(page) && !(page in LEFT_OUT))).toEqual([]);
     // A page left out must still be on the list, and not covered after all.
     expect(Object.keys(LEFT_OUT).filter((page) => covered(page) || !WIKI_TELEPORT_ITEMS.includes(page))).toEqual([]);
+  });
+});
+
+/** The raw chunk content: each chunk's (and each interior's) objects and NPCs by name. */
+type RawEntry = { o?: [string, number][]; p?: string[] };
+const RAW = content as unknown as { chunks: Record<string, RawEntry>; interiors?: Record<string, { content: RawEntry }> };
+/** The objects or NPCs that stand for each network's stop in chunk content. */
+const NETWORK_NODES: Readonly<Record<string, RegExp>> = {
+  'network:fairy-ring': /^fairy ring$/i,
+  // A grown tree's stop is its spirit tree patch.
+  'network:spirit-tree': /^spirit tree( patch)?$/i,
+  'network:gnome-glider': /^(captain (errdo|shoracks|bleemadge|klemfoodle|dalbur)|gnormadium avlafrim)$/i,
+  'network:charter-ship': /^trader crewmember$/i,
+  'network:balloon': /^(auguste|assistant (serf|brock|marrow|le smith|stan))$/i,
+  'network:magic-carpet': /^rug merchant$/i,
+  'network:quetzal': /^(renu|(unbuilt )?landing site)$/i,
+  'item:quetzal-whistle': /^(renu|(unbuilt )?landing site)$/i,
+  'network:wilderness-obelisk': /^obelisk$/i,
+  'network:lovakengj-minecart': /^(loinur|ferain|elnes|traxi|hordal|buneir|miriam|stuliette|lassin|raeli|mogrim|hatna)$/i,
+};
+/** Stops whose chunk holds no node, reviewed. */
+const REVIEWED_STOPS: Readonly<Record<string, string>> = {
+  'network:fairy-ring 25,60': "The Arceuus Library ring (CIS): the app's chunk content has no fairy ring near it.",
+  'network:spirit-tree 51,95': "The Prifddinas tree: the app's chunk content has no spirit tree in Prifddinas.",
+  'network:charter-ship 30,42': "Deepfin Point's pin; its crew stands across the border, in 30,43.",
+  'network:charter-ship 49,36': "The Summer Shore's pin; its crew stands across the border, in 49,37.",
+  'network:quetzal 20,47': "Kastori's pin, on the chunk's east edge; its landing site is in 21,47.",
+  'item:quetzal-whistle 20,47': "Kastori's pin, on the chunk's east edge; its landing site is in 21,47.",
+};
+const holdsNode = (key: string, node: RegExp) => {
+  const [cx, cy] = key.split(',').map(Number);
+  const id = String(cx * 256 + cy);
+  return [RAW.chunks[id], RAW.interiors?.[id]?.content].some((entry) =>
+    (entry?.o ?? []).some(([name]) => node.test(name)) || (entry?.p ?? []).some((name) => node.test(name)));
+};
+
+describe('travel networks', () => {
+  it('are tag-only, and nothing else is', () => {
+    const networks = byKind('network');
+    expect(networks.length).toBeGreaterThan(8);
+    expect(TRAVEL_METHODS.filter((method) => !!method.advisory !== method.id.startsWith('network:')).map((method) => method.id))
+      .toEqual([]);
+  });
+
+  it("stop where the network's objects or NPCs are, or as reviewed", () => {
+    const missing: string[] = [];
+    for (const [id, node] of Object.entries(NETWORK_NODES)) {
+      const method = itemRow(id);
+      const stops = new Set(destinations(method));
+      expect(stops.size, id).toBeGreaterThan(0);
+      for (const key of stops) {
+        if (!holdsNode(key, node) && !(`${id} ${key}` in REVIEWED_STOPS)) missing.push(`${id} ${key}`);
+      }
+    }
+    expect(missing).toEqual([]);
+    // A reviewed stop still exists, and still has no node.
+    expect(Object.keys(REVIEWED_STOPS).filter((entry) => {
+      const [id, key] = entry.split(' ');
+      return !destinations(itemRow(id)).includes(key) || holdsNode(key, NETWORK_NODES[id]);
+    })).toEqual([]);
+    expect(byKind('network').filter((method) => !(method.id in NETWORK_NODES)).map((method) => method.id)).toEqual([]);
+  });
+
+  it('dial every fairy ring code to where the wiki marks it', () => {
+    const ring = itemRow('network:fairy-ring');
+    const codes = Object.keys(ring.codes ?? {});
+    expect(codes).toHaveLength(53);
+    expect(codes.filter((code) => !/^[A-D][I-L][P-S]$/.test(code))).toEqual([]);
+    expect(ring.codes?.CKS).toEqual({ to: ['53,54'] });
+    expect(ring.codes?.BLQ).toEqual({ to: [] });
+    // Configure only opens the dial; the codes decide.
+    expect(ring.options).toEqual({ Zanaris: { to: ['37,69'] } });
+  });
+
+  it('charter a ship to one port, or leave the choice for after the click', () => {
+    const charter = itemRow('network:charter-ship');
+    expect((charter.match as { npcs: number[] }).npcs).toHaveLength(144);
+    expect(charter.options['Charter-to Port Sarim']).toEqual({ to: ['47,49'] });
+    expect(charter.options['Charter-to Deepfin Point']).toEqual({ to: ['30,42', '30,43'] });
+    expect(charter.options['Charter-to Tempestus']).toEqual({ to: [] });
+    const ports = Object.keys(charter.options).filter((text) => text.startsWith('Charter-to '));
+    expect(ports).toHaveLength(23);
+    const all = [...new Set(ports.flatMap((text) => charter.options[text].to))].sort();
+    expect([...charter.options.Charter.to].sort()).toEqual(all);
+  });
+
+  it('whistle for a quetzal to any landing site the quetzals fly to', () => {
+    const stops = [...itemRow('network:quetzal').options.Travel.to].sort();
+    const whistle = itemRow('item:quetzal-whistle');
+    expect(Object.keys(whistle.options)).toEqual(['Signal', 'Last-destination']);
+    for (const option of Object.values(whistle.options)) expect([...option.to].sort()).toEqual(stops);
   });
 });
