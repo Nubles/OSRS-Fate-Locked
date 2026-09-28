@@ -289,10 +289,31 @@ describe('classifyFateEvent', () => {
       .toEqual({ state: 'NEEDS_CONFIRMATION', reason: 'Choose the clue casket tier.' });
   });
 
-  it('offers every page an item name is on, up to 16', () => {
+  it('offers every page an item name is on, up to 24', () => {
     const pages = classifyFateEvent(event('COLLECTION_LOG', 'Ancient page'), state());
     expect(pages.state).toBe('NEEDS_CONFIRMATION');
     expect(pages.state === 'NEEDS_CONFIRMATION' && pages.candidates).toHaveLength(13);
+  });
+
+  it('offers every item the game gives one plain name, as the log tells them apart', () => {
+    // The game says "Chompy bird hat"; the log has 18, as "Chompy bird hat (ogre bowman)" and so on.
+    const hats = classifyFateEvent(event('COLLECTION_LOG', 'Chompy bird hat'), state());
+    expect(hats).toMatchObject({ state: 'NEEDS_CONFIRMATION', reason: 'The game names these items alike: choose which one.' });
+    const choices = hats.state === 'NEEDS_CONFIRMATION' ? hats.candidates ?? [] : [];
+    expect(choices).toHaveLength(18);
+    expect(choices.map((choice) => choice.label.split(' · ')[0]))
+      .toEqual(expect.arrayContaining(['Chompy bird hat (ogre bowman)', 'Chompy bird hat (expert dragon archer)']));
+    // The player's choice then rolls that item.
+    expect(classifyFateEventCandidate(event('COLLECTION_LOG', 'Chompy bird hat'), state(), choices[0].target))
+      .toMatchObject({ state: 'READY', progress: { kind: 'COLLECTION_ITEM', itemId: Number(choices[0].target) } });
+    // A name with items of its own never widens to its variants.
+    const pages = classifyFateEvent(event('COLLECTION_LOG', 'Ancient page'), state());
+    expect(pages.state === 'NEEDS_CONFIRMATION' ? pages.candidates : []).toHaveLength(13);
+    // A plain name with one variant is still the player's to confirm, never a guess.
+    expect(classifyFateEvent(event('COLLECTION_LOG', 'Torva full helm'), state())).toMatchObject({
+      state: 'NEEDS_CONFIRMATION',
+      candidates: [{ label: expect.stringMatching(/^Torva full helm \(damaged\) · /) }],
+    });
   });
 
   it('uses the canonical skill-level formula', () => {

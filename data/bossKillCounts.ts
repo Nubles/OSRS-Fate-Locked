@@ -19,7 +19,8 @@ import { BRUTUS_BOSS_NAME } from '../config/vanillaKeyEconomy';
 export const BOSS_KILL_COUNTS: Readonly<Record<string, readonly string[]>> = {
   // ── Raids ──
   'Chambers of Xeric': ['Chambers of Xeric', 'Chambers of Xeric Challenge Mode'], // SEEN both
-  'Theatre of Blood': ['Theatre of Blood', 'Theatre of Blood: Entry Mode', 'Theatre of Blood: Hard Mode'], // SEEN the first two
+  // Story Mode is Entry Mode's old name, still in RuneLite's tests.
+  'Theatre of Blood': ['Theatre of Blood', 'Theatre of Blood: Entry Mode', 'Theatre of Blood: Story Mode', 'Theatre of Blood: Hard Mode'], // SEEN all four
   'Tombs of Amascut': ['Tombs of Amascut', 'Tombs of Amascut: Entry Mode', 'Tombs of Amascut: Expert Mode'], // SEEN all three
 
   // ── High ──

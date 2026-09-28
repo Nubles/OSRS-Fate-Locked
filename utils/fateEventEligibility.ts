@@ -66,13 +66,17 @@ interface CollectionMatch {
 }
 
 const COLLECTION_INDEX = new Map<string, CollectionMatch[]>();
+// The game gives some items one name where the log tells them apart the
+// wiki's way, as "Chompy bird hat (ogre bowman)": a plain name with no item
+// of its own offers every item it can be.
+const COLLECTION_VARIANT_INDEX = new Map<string, CollectionMatch[]>();
+const VARIANT_SUFFIX = / \([^()]+\)$/;
 for (const tab of Object.values(COLLECTION_LOG_DATA)) {
   for (const page of Object.values(tab.pages)) {
     for (const item of page.items) {
-      addToIndex(COLLECTION_INDEX, item.name, {
-        item,
-        location: `${tab.name} · ${page.name}`,
-      });
+      const match = { item, location: `${tab.name} · ${page.name}` };
+      addToIndex(COLLECTION_INDEX, item.name, match);
+      if (VARIANT_SUFFIX.test(item.name)) addToIndex(COLLECTION_VARIANT_INDEX, item.name.replace(VARIANT_SUFFIX, ''), match);
     }
   }
 }
@@ -294,17 +298,20 @@ function collectionItemBlock(state: GameState, itemId: number): EventClassificat
 
 function classifyCollectionLog(event: FateEventEnvelope, state: GameState): EventClassification {
   if (!event.canonicalLabel) return needsConfirmation('Choose the Collection Log item.');
-  const matches = COLLECTION_INDEX.get(normalize(event.canonicalLabel)) ?? [];
-  if (matches.length !== 1) {
+  const exact = COLLECTION_INDEX.get(normalize(event.canonicalLabel));
+  const matches = exact ?? COLLECTION_VARIANT_INDEX.get(normalize(event.canonicalLabel)) ?? [];
+  if (matches.length !== 1 || !exact) {
     return needsConfirmation(
-      matches.length
-        ? 'More than one Collection Log item has this name.'
-        : 'Collection Log item is not in the current rules.',
+      !matches.length
+        ? 'Collection Log item is not in the current rules.'
+        : exact
+          ? 'More than one Collection Log item has this name.'
+          : 'The game names these items alike: choose which one.',
       candidates(
         matches,
         (match) => `${match.item.name} · ${match.location}`,
         (match) => String(match.item.id),
-        16,
+        24,
       ),
     );
   }

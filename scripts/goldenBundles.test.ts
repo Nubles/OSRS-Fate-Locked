@@ -467,6 +467,12 @@ const CONTRACT_FILE = 'bundle-contract.json';
  */
 const WORDING_FILE = 'runelite-wording.json';
 
+/**
+ * What RuneLite's detectors must make of real game signals, and what the app must make of those
+ * events (Stage 4). Written by hand; utils/detectedEventsContract.test.ts checks the app's side.
+ */
+const DETECTED_EVENTS_FILE = 'detected-events.json';
+
 interface Condition {
   path: string;
   equals?: unknown;
@@ -645,7 +651,7 @@ describe('golden bundles', () => {
       chunkContentDataVersion: CHUNK_CONTENT_DATA_VERSION,
       equipmentCatalogue: EQUIPMENT_CATALOGUE.asset,
       scenarios: SCENARIOS.map(({ id, covers }) => ({ id, covers })),
-      files: Object.fromEntries([...Object.keys(files), CONTRACT_FILE, WORDING_FILE].sort(byCodeUnit)
+      files: Object.fromEntries([...Object.keys(files), CONTRACT_FILE, WORDING_FILE, DETECTED_EVENTS_FILE].sort(byCodeUnit)
         .map((name) => [name, existsSync(join(OUT, name)) ? sha256(readFileSync(join(OUT, name))) : null])),
     };
     const manifestFile = join(OUT, 'manifest.json');
