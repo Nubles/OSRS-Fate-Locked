@@ -6,48 +6,100 @@ import {
 } from './runeliteWording';
 
 export const RUNELITE_GUIDE_CHAPTER_IDS = [
-  'what-it-does',
-  'install-plugin-hub',
-  'connect-tracker',
-  'connection-privacy',
+  'start',
   'sidebar',
+  'status',
   'here',
   'strict-mode',
+  'run',
   'roll-inbox',
-  'run-and-keys',
   'connection-and-backup',
+  'in-game',
   'settings',
-  'alerts',
-  'in-game-display',
-  'recommended-configurations',
   'troubleshooting',
   'glossary',
 ] as const;
 
 export type GuideChapterId = typeof RUNELITE_GUIDE_CHAPTER_IDS[number];
 
+/**
+ * Where a picture comes from: drawn by the plugin's own code, in RuneLite's own theme, or
+ * captured from the companion.
+ */
+export type GuideFigureSource = 'rendered' | 'web-capture';
+
+/** The outline of what a callout names, as fractions of its picture: x, y, width, height. */
+export type GuideBox = readonly [number, number, number, number];
+
 export interface GuideCallout {
   readonly id: string;
   readonly marker: number;
-  readonly x: number;
-  readonly y: number;
+  readonly box: GuideBox;
   readonly label: string;
   readonly body: string;
 }
 
-/**
- * Where an image comes from: rendered from the plugin's code at a release commit, in RuneLite's
- * own theme; captured from a real RuneLite client; or captured from the companion.
- */
-export type GuideScreenshotSource = 'rendered' | 'client-capture' | 'web-capture';
-
-export interface GuideScreenshot {
+export interface GuideFigure {
   readonly id: string;
   readonly src: string;
-  readonly source: GuideScreenshotSource;
+  readonly source: GuideFigureSource;
   readonly title: string;
   readonly alt: string;
+  /** The file's size, in pixels. */
+  readonly width: number;
+  readonly height: number;
+  /** The file's pixels to each pixel of what it shows: 2 for a picture drawn at twice the detail. */
+  readonly scale: number;
   readonly callouts: readonly GuideCallout[];
+}
+
+/** One picture of a set shown side by side, such as the status card's states. */
+export interface GuideGalleryItem {
+  readonly figureId: string;
+  readonly title: string;
+  readonly body: string;
+}
+
+export interface GuideStep {
+  readonly title: string;
+  readonly body: string;
+}
+
+export interface GuideTerm {
+  readonly term: string;
+  readonly text: string;
+}
+
+/** One piece of a chapter, in reading order. */
+export type GuideBlock =
+  | { readonly kind: 'text'; readonly text: string }
+  | { readonly kind: 'heading'; readonly text: string }
+  | { readonly kind: 'steps'; readonly steps: readonly GuideStep[] }
+  | { readonly kind: 'list'; readonly items: readonly string[] }
+  | { readonly kind: 'terms'; readonly items: readonly GuideTerm[] }
+  | { readonly kind: 'note'; readonly title: string; readonly text: string }
+  | { readonly kind: 'figure'; readonly figureId: string }
+  | { readonly kind: 'gallery'; readonly items: readonly GuideGalleryItem[] }
+  | { readonly kind: 'settings' }
+  | { readonly kind: 'presets' }
+  | { readonly kind: 'troubleshooting' }
+  | { readonly kind: 'resources' }
+  | { readonly kind: 'glossary' };
+
+export interface GuideChapter {
+  readonly id: GuideChapterId;
+  readonly number: number;
+  readonly title: string;
+  /** One sentence under the title: what the chapter is for. */
+  readonly lede: string;
+  /** The OSRS Wiki picture beside the title. */
+  readonly icon: string;
+  readonly blocks: readonly GuideBlock[];
+}
+
+export interface GuideNavGroup {
+  readonly label: string;
+  readonly chapterIds: readonly GuideChapterId[];
 }
 
 /**
@@ -63,18 +115,6 @@ export interface GuideSetting {
   readonly purpose: string;
   readonly visibleResult: string;
   readonly changeWhen: string;
-}
-
-export interface GuideChapter {
-  readonly id: GuideChapterId;
-  readonly number: number;
-  readonly title: string;
-  readonly summary: string;
-  readonly paragraphs: readonly string[];
-  readonly bullets: readonly string[];
-  readonly screenshotIds: readonly string[];
-  /** The config panel's sections whose settings this chapter lists. */
-  readonly settingsSections?: readonly RuneliteSettingSection[];
 }
 
 export interface GuidePreset {
@@ -97,7 +137,7 @@ export interface GuideGlossaryItem {
 }
 
 export interface GuideExternalResource {
-  readonly id: 'plugin-hub' | 'plugin-hub-review' | 'support';
+  readonly id: 'plugin-hub' | 'source' | 'support';
   readonly label: string;
   readonly description: string;
   readonly href: string;
@@ -106,23 +146,36 @@ export interface GuideExternalResource {
 /** The sidebar's cards below the status card, top to bottom, as the plugin names them. */
 export const RUNELITE_SIDEBAR_CARD_TITLES = RUNELITE_SIDEBAR_CARDS;
 
+/** The OSRS Wiki picture beside the guide's title: the plugin's own crystal key. */
+export const RUNELITE_GUIDE_ICON = 'Crystal_key.png';
+
+export const RUNELITE_GUIDE_NAV_GROUPS: readonly GuideNavGroup[] = [
+  { label: 'Start here', chapterIds: ['start', 'sidebar'] },
+  {
+    label: 'The cards',
+    chapterIds: ['status', 'here', 'strict-mode', 'run', 'roll-inbox', 'connection-and-backup'],
+  },
+  { label: 'In game', chapterIds: ['in-game', 'settings'] },
+  { label: 'Help', chapterIds: ['troubleshooting', 'glossary'] },
+];
+
 export const RUNELITE_GUIDE_RESOURCES: readonly GuideExternalResource[] = [
   {
     id: 'plugin-hub',
-    label: 'Official Plugin Hub manifest',
-    description: 'Open RuneLite’s merged manifest entry for Fate Locked Ironman.',
-    href: 'https://github.com/runelite/plugin-hub/blob/master/plugins/fate-locked-ironman',
+    label: 'Fate Locked Ironman on the Plugin Hub',
+    description: 'RuneLite’s own page for the plugin.',
+    href: 'https://runelite.net/plugin-hub/show/fate-locked-ironman',
   },
   {
-    id: 'plugin-hub-review',
-    label: 'Merged Plugin Hub review PR #14395',
-    description: 'Read the RuneLite review that approved and merged this unified Plugin Hub update.',
-    href: 'https://github.com/runelite/plugin-hub/pull/14395',
+    id: 'source',
+    label: 'The plugin’s source code',
+    description: 'Every line RuneLite reviewed, in the open.',
+    href: 'https://github.com/Nubles/OSRS-Fate-Locked-Runelite',
   },
   {
     id: 'support',
-    label: 'Report a companion issue',
-    description: 'Open a private-data-safe issue form in the Fate Locked companion repository.',
+    label: 'Report a problem',
+    description: 'Tell us what went wrong, without sharing your pairing page.',
     href: 'https://github.com/Nubles/OSRS-Fate-Locked/issues/new/choose',
   },
 ];
@@ -130,193 +183,156 @@ export const RUNELITE_GUIDE_RESOURCES: readonly GuideExternalResource[] = [
 const callout = (
   id: string,
   marker: number,
-  x: number,
-  y: number,
+  box: GuideBox,
   label: string,
   body: string,
-): GuideCallout => ({ id, marker, x, y, label, body });
+): GuideCallout => ({ id, marker, box, label, body });
 
-export const RUNELITE_GUIDE_SCREENSHOTS: readonly GuideScreenshot[] = [
+/** A state of the status card, drawn alone; the chapter says what each one means. */
+const statusCard = (id: string, height: number, title: string): GuideFigure => ({
+  id,
+  src: `/guides/runelite/${id}.png`,
+  source: 'rendered',
+  title,
+  alt: `The status card saying ${title}.`,
+  width: 442,
+  height,
+  scale: 2,
+  callouts: [],
+});
+
+export const RUNELITE_GUIDE_FIGURES: readonly GuideFigure[] = [
   {
-    id: 'plugin-hub-install',
-    src: '/guides/runelite/01-plugin-hub-install.png',
-    source: 'client-capture',
-    title: 'Install from the live Plugin Hub',
-    alt: 'RuneLite Plugin Hub showing the installed Fate Locked Ironman plugin result.',
-    callouts: [
-      callout(
-        'plugin-result',
-        1,
-        0.86,
-        0.36,
-        'Fate Locked Ironman',
-        'Use this exact Plugin Hub result. The handbook captures the live reviewed build, not a separate development plugin.',
-      ),
-      callout(
-        'installed-control',
-        2,
-        0.91,
-        0.73,
-        'Installed state',
-        'RuneLite shows Remove after installation. Leave the Plugin Hub version installed for normal play.',
-      ),
-    ],
-  },
-  {
-    id: 'companion-confirmation',
-    src: '/guides/runelite/03-companion-confirmation.png',
-    source: 'web-capture',
-    title: 'Confirm the profile in the companion',
-    alt: 'Fate Locked companion confirmation for a fictional unbound Vanilla profile, with the private request hidden.',
-    callouts: [
-      callout(
-        'profile',
-        1,
-        0.72,
-        0.44,
-        'Check the profile',
-        'Make sure this is the run whose rules you want RuneLite to use before confirming.',
-      ),
-      callout(
-        'privacy-copy',
-        2,
-        0.39,
-        0.31,
-        'Inbound-only connection',
-        'The confirmation states the boundary plainly: RuneLite retrieves rules and does not upload gameplay data.',
-      ),
-      callout(
-        'confirm',
-        3,
-        0.76,
-        0.83,
-        'Connect tracker',
-        'Confirm once, return to RuneLite, and wait for the status card to say Rules up to date.',
-      ),
-    ],
-  },  {
-    id: 'sidebar-not-connected',
-    src: '/guides/runelite/sidebar-not-connected.png',
-    source: 'rendered',
-    title: 'Connect the tracker',
-    alt: 'The Fate Locked sidebar before connecting: the status card says Not connected, with Connect tracker and Use a backup instead.',
-    callouts: [
-      callout('status', 1, 0.51, 0.16, 'Not connected', 'The status card says whether RuneLite has your rules, and what to do next.'),
-      callout('connect', 2, 0.35, 0.34, 'Connect tracker', 'Opens the companion in your browser to confirm a profile. The first time, RuneLite asks to turn on online sync.'),
-      callout('backup', 3, 0.34, 0.4, 'Use a backup instead', 'Opens Connection & backup, to import your rules from the clipboard or a file without the relay.'),
-    ],
-  },
-  {
-    id: 'sidebar-waiting',
-    src: '/guides/runelite/sidebar-waiting.png',
-    source: 'rendered',
-    title: 'Wait for confirmation',
-    alt: 'The status card says Waiting for confirmation, with Open page again and Cancel.',
-    callouts: [
-      callout('status', 1, 0.51, 0.16, 'Waiting for confirmation', 'RuneLite checks every few seconds until you confirm the profile in the browser.'),
-      callout('open-again', 2, 0.36, 0.38, 'Open page again', 'Reopens the confirmation page if you closed it.'),
-      callout('cancel', 3, 0.76, 0.37, 'Cancel', 'Stops waiting. Nothing changes until a profile is confirmed.'),
-    ],
-  },
-  {
-    id: 'sidebar-out-of-date',
-    src: '/guides/runelite/sidebar-out-of-date.png',
-    source: 'rendered',
-    title: 'Rules may be out of date',
-    alt: 'The status card says Rules may be out of date, with Check now, and the Strict Mode card says Inactive until the rules refresh.',
-    callouts: [
-      callout('status', 1, 0.51, 0.14, 'Rules may be out of date', 'RuneLite couldn’t check for more than 15 minutes. Your rules stay in use.'),
-      callout('check', 2, 0.27, 0.36, 'Check now', 'Tries the tracker again at once.'),
-      callout('inactive', 3, 0.29, 0.58, 'Inactive', 'Strict Mode waits until the rules are fresh again, and says why.'),
-    ],
-  },
-  {
-    id: 'sidebar-different-character',
-    src: '/guides/runelite/sidebar-different-character.png',
-    source: 'rendered',
-    title: 'Different character',
-    alt: 'The status card says Different character, and the Here card checks nothing for another character’s rules.',
-    callouts: [
-      callout('status', 1, 0.51, 0.14, 'Different character', 'The rules belong to another character, so warnings and Strict Mode are off.'),
-      callout('here', 2, 0.5, 0.46, 'Nothing checked', 'Here still names the place, but checks nothing for another character’s rules.'),
-    ],
-  },
-  {
-    id: 'sidebar-overview',
-    src: '/guides/runelite/sidebar-overview.png',
+    id: 'sidebar',
+    src: '/guides/runelite/sidebar.png',
     source: 'rendered',
     title: 'The sidebar at a glance',
-    alt: 'The Fate Locked sidebar with the status card saying Rules up to date and every card closed.',
+    alt: 'The Fate Locked sidebar: the crystal key and Open tracker, the status card saying Rules up to date, and the five cards, closed.',
+    width: 450,
+    height: 616,
+    scale: 2,
     callouts: [
-      callout('status', 1, 0.51, 0.19, 'Status card', 'Always at the top: whether your rules are current and for this character.'),
-      callout('cards', 2, 0.5, 0.43, 'Cards', 'Here, Strict Mode, Run, Roll inbox and Connection & backup, each opening on its own.'),
-      callout('more-settings', 3, 0.5, 0.94, 'More settings', 'Everything else is in RuneLite’s configuration, under Fate Locked Ironman.'),
+      callout('open-tracker', 1, [0.649, 0.026, 0.324, 0.091], 'Open tracker', 'Opens the companion in your browser.'),
+      callout('status', 2, [0.027, 0.143, 0.947, 0.221], 'Status card', 'Whether your rules are current and for this character, and the one thing to do about it.'),
+      callout('cards', 3, [0.027, 0.383, 0.947, 0.5], 'Five cards', 'Here, Strict Mode, Run, Roll inbox and Connection & backup. Each opens and closes on its own.'),
+      callout('more-settings', 4, [0.027, 0.903, 0.947, 0.078], 'More settings', 'Everything else is in RuneLite’s configuration, under Fate Locked Ironman.'),
+    ],
+  },
+  statusCard('status-up-to-date', 152, 'Rules up to date'),
+  statusCard('status-not-connected', 256, 'Not connected'),
+  statusCard('status-waiting', 248, 'Waiting for confirmation'),
+  statusCard('status-out-of-date', 280, 'Rules may be out of date'),
+  statusCard('status-expired', 248, 'Tracker copy expired'),
+  statusCard('status-backup', 280, 'Using a backup'),
+  statusCard('status-different-character', 184, 'Different character'),
+  {
+    id: 'companion-confirmation',
+    src: '/guides/runelite/companion-confirmation.png',
+    source: 'web-capture',
+    title: 'Confirm the profile in the companion',
+    alt: 'The companion’s Connect RuneLite tracker dialog for the fictional Iron Example profile, with Cancel and Connect tracker.',
+    width: 896,
+    height: 692,
+    scale: 2,
+    callouts: [
+      callout('privacy', 1, [0.038, 0.273, 0.924, 0.169], 'Only your rules', 'RuneLite fetches the profile’s rules and uploads nothing.'),
+      callout('profile', 2, [0.067, 0.525, 0.866, 0.048], 'Check the profile', 'Make sure this is the run you want RuneLite to follow.'),
+      callout('confirm', 3, [0.692, 0.847, 0.27, 0.104], 'Connect tracker', 'Confirm once, then go back to RuneLite.'),
     ],
   },
   {
-    id: 'sidebar-here',
-    src: '/guides/runelite/sidebar-here.png',
+    id: 'here',
+    src: '/guides/runelite/here.png',
     source: 'rendered',
     title: 'Here, in a locked place',
-    alt: 'The Here card for Sorcerer’s Tower: Locked, Unlock Seers’ Village, the counts, the arrow pointing at the nearest Magic tree, Skilling open at Woodcutting, and Quests and Combat closed, each saying what it holds.',
+    alt: 'The Here card for Sorcerer’s Tower: Locked, Unlock Seers’ Village, the counts, the arrow pointing at the nearest Magic tree, and Skilling open at Woodcutting.',
+    width: 442,
+    height: 796,
+    scale: 2,
     callouts: [
-      callout('status', 1, 0.84, 0.23, 'Status', 'The place’s status in a word: here, Locked.'),
-      callout('reason', 2, 0.5, 0.28, 'Why', 'The tracker’s reason, in its own words.'),
-      callout('counts', 3, 0.5, 0.33, 'Counts', 'What you can do here, what isn’t ready, and what’s locked.'),
-      callout('arrow', 4, 0.42, 0.38, 'Arrow', 'Click a row and the game’s arrow points at the nearest one.'),
-      callout('categories', 5, 0.55, 0.42, 'Categories', 'Each opens and closes, and says what it holds while closed.'),
-      callout('skills', 6, 0.43, 0.46, 'Skills', 'Skilling opens skill by skill, with your level and cap.'),
+      callout('place', 1, [0.054, 0.075, 0.891, 0.04], 'Place and status', 'The place’s name, and its status in a word.'),
+      callout('reason', 2, [0.054, 0.166, 0.891, 0.04], 'Why', 'The tracker’s reason, in its own words.'),
+      callout('counts', 3, [0.054, 0.216, 0.891, 0.095], 'Counts', 'What you can do here, what isn’t ready yet, and what’s locked.'),
+      callout('arrow', 4, [0.054, 0.322, 0.891, 0.06], 'Arrow', 'After you click a row: the game’s arrow points at the nearest one. Clear takes it down.'),
+      callout('categories', 5, [0.054, 0.41, 0.891, 0.04], 'Categories', 'Each opens and closes, and says what it holds while closed.'),
+      callout('skills', 6, [0.1, 0.465, 0.846, 0.04], 'Skills', 'Skilling opens skill by skill, with your level and cap.'),
     ],
   },
   {
-    id: 'sidebar-strict-mode',
-    src: '/guides/runelite/sidebar-strict-mode.png',
+    id: 'here-way',
+    src: '/guides/runelite/here-way.png',
+    source: 'rendered',
+    title: 'The way to one you’ve seen',
+    alt: 'The Here card saying Shortest Path shows the way to the nearest Magic tree you’ve seen in Sorcerer’s Tower, with Clear.',
+    width: 442,
+    height: 610,
+    scale: 2,
+    callouts: [
+      callout('way', 1, [0.054, 0.42, 0.891, 0.118], 'The way', 'With none near you, the way to the nearest one you’ve seen. Clear takes the arrow, the pin and the route down.'),
+    ],
+  },
+  {
+    id: 'strict-mode',
+    src: '/guides/runelite/strict-mode.png',
     source: 'rendered',
     title: 'Strict Mode, paused',
-    alt: 'The Strict Mode card paused with 42 seconds left, a Resume button, and two recently stopped teleports.',
+    alt: 'The Strict Mode card: switched on, Paused with 42 seconds left, a Resume button, and two recently stopped teleports.',
+    width: 442,
+    height: 286,
+    scale: 2,
     callouts: [
-      callout('switch', 1, 0.88, 0.39, 'On or off', 'Turns Strict Mode on or off, like the setting.'),
-      callout('paused', 2, 0.35, 0.45, 'Paused', 'A pause lets every click through, then Strict Mode resumes by itself.'),
-      callout('resume', 3, 0.8, 0.45, 'Resume', 'Ends the pause now. When Strict Mode isn’t paused, this is Pause 60s.'),
-      callout('stopped', 4, 0.5, 0.52, 'Recently stopped', 'The teleports Strict Mode stopped, and when.'),
+      callout('switch', 1, [0.819, 0.028, 0.127, 0.182], 'On or off', 'The same switch as the setting.'),
+      callout('pause', 2, [0.054, 0.21, 0.891, 0.168], 'Status and pause', 'Active, Paused, Off, or Inactive with why. While paused, Resume brings Strict Mode back at once.'),
+      callout('stopped', 3, [0.054, 0.441, 0.891, 0.476], 'Recently stopped', 'The teleports it stopped, and when.'),
     ],
   },
   {
-    id: 'sidebar-roll-inbox',
-    src: '/guides/runelite/sidebar-roll-inbox.png',
+    id: 'run',
+    src: '/guides/runelite/run.png',
+    source: 'rendered',
+    title: 'Run',
+    alt: 'The Run card: Iron Example (you), 15 of 187 areas unlocked, 3 Keys, 1 Omni-Key, 0 Chaos Keys, 12 Fate Points and the Ritual of Clarity.',
+    width: 442,
+    height: 454,
+    scale: 2,
+    callouts: [
+      callout('character', 1, [0.054, 0.132, 0.891, 0.07], 'Character', 'Whose run this is, with (you) when you’re logged in on it.'),
+      callout('progress', 2, [0.054, 0.308, 0.891, 0.07], 'Progress', 'How much of the run you’ve unlocked.'),
+      callout('keys', 3, [0.054, 0.454, 0.891, 0.3], 'Keys', 'Keys, Omni-Keys and Chaos Keys, as the companion counts them.'),
+      callout('fate-points', 4, [0.054, 0.771, 0.891, 0.088], 'Fate Points', 'What your failed rolls have built up.'),
+      callout('ritual', 5, [0.054, 0.877, 0.891, 0.07], 'Ritual', 'The ritual waiting on your next roll, if any.'),
+    ],
+  },
+  {
+    id: 'roll-inbox',
+    src: '/guides/runelite/roll-inbox.png',
     source: 'rendered',
     title: 'Roll inbox',
     alt: 'The Roll inbox card: 12 local events, 2 that need checking, 1 active warning, and Open web Roll Inbox.',
+    width: 442,
+    height: 308,
+    scale: 2,
     callouts: [
-      callout('events', 1, 0.22, 0.58, 'Local events', 'Events RuneLite noticed on this computer that may be worth a roll.'),
-      callout('needs-checking', 2, 0.26, 0.63, 'Needs checking', 'Events RuneLite can’t be sure of.'),
-      callout('open', 3, 0.5, 0.79, 'Open web Roll Inbox', 'Opens the companion’s own Roll Inbox; the local history isn’t sent to it.'),
+      callout('events', 1, [0.054, 0.195, 0.891, 0.104], 'Local events', 'What RuneLite noticed on this computer that may be worth a roll.'),
+      callout('needs-checking', 2, [0.054, 0.325, 0.891, 0.104], 'Needs checking', 'Events RuneLite can’t be sure of.'),
+      callout('warnings', 3, [0.054, 0.455, 0.891, 0.104], 'Warnings', 'Rule warnings that apply right now.'),
+      callout('open', 4, [0.054, 0.766, 0.891, 0.156], 'Open web Roll Inbox', 'Opens the companion’s Roll Inbox, where you roll.'),
     ],
   },
   {
-    id: 'sidebar-run',
-    src: '/guides/runelite/sidebar-run.png',
-    source: 'rendered',
-    title: 'Run and the three Keys',
-    alt: 'The Run card: Iron Example (you), 15 of 187 areas unlocked, 3 Keys, 1 Omni-Key, 0 Chaos Keys, 12 Fate Points and the Ritual of Clarity.',
-    callouts: [
-      callout('character', 1, 0.64, 0.43, 'Character', 'Whose run this is, with (you) when you’re logged in on it.'),
-      callout('progress', 2, 0.5, 0.51, 'Progress', 'How much of the run you’ve unlocked.'),
-      callout('keys', 3, 0.5, 0.63, 'Keys', 'Keys, Omni-Keys and Chaos Keys, as the companion names them.'),
-      callout('ritual', 4, 0.58, 0.77, 'Ritual', 'The ritual active on your next roll.'),
-    ],
-  },
-  {
-    id: 'sidebar-connection',
-    src: '/guides/runelite/sidebar-connection.png',
+    id: 'connection',
+    src: '/guides/runelite/connection.png',
     source: 'rendered',
     title: 'Connection & backup',
-    alt: 'The Connection & backup card: Online sync on, the pairing, Re-pair tracker, Disconnect, Check now, and the two backup buttons.',
+    alt: 'The Connection & backup card: Online sync on, the pairing, Re-pair tracker, Disconnect, Check now, Import from clipboard and Load newest backup file.',
+    width: 442,
+    height: 560,
+    scale: 2,
     callouts: [
-      callout('sync', 1, 0.88, 0.51, 'Online sync', 'Turns the relay on or off; your pairing is kept either way.'),
-      callout('repair', 2, 0.27, 0.58, 'Re-pair tracker…', 'Pairs another profile, keeping this one until the new one sends its rules.'),
-      callout('check', 3, 0.5, 0.64, 'Check now', 'Asks the tracker for your rules at once.'),
-      callout('clipboard', 4, 0.5, 0.72, 'Backup', 'Import from clipboard, or load the newest backup file, without the relay.'),
+      callout('sync', 1, [0.054, 0.107, 0.891, 0.057], 'Online sync', 'Turns the relay on or off. Your pairing is kept either way.'),
+      callout('pairing', 2, [0.054, 0.25, 0.887, 0.086], 'Re-pair or disconnect', 'Re-pair tracker… pairs another profile; Disconnect forgets the pairing and keeps your rules as a backup.'),
+      callout('check', 3, [0.054, 0.35, 0.891, 0.086], 'Check now', 'Asks for your rules at once.'),
+      callout('backups', 4, [0.054, 0.525, 0.891, 0.186], 'Backups', 'Load your rules from the clipboard or a file, without the relay.'),
     ],
   },
 ];
@@ -324,72 +340,72 @@ export const RUNELITE_GUIDE_SCREENSHOTS: readonly GuideScreenshot[] = [
 /** What the guide says about each setting, beside what the contract fixes. */
 const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'visibleResult' | 'changeWhen'>>> = {
   trackerNetworkAccess: {
-    purpose: 'Lets RuneLite get your run’s rules from the Fate Locked relay. Connect tracker asks before it turns this on, and RuneLite shows its own warning that the relay sees your IP address.',
-    visibleResult: 'With the tracker connected, the status card says Rules up to date and when it last synced. With it off, RuneLite never contacts the relay; clipboard imports and backup files still work.',
-    changeWhen: 'Leave it on to keep your rules current. Turn it off if you’d rather contact no server; RuneLite keeps your pairing for when you turn it back on.',
+    purpose: 'Lets RuneLite fetch your run’s rules from the Fate Locked relay. Connect tracker asks before turning it on.',
+    visibleResult: 'The status card says Rules up to date and when they last synced. With it off, RuneLite never contacts the relay; backups still work.',
+    changeWhen: 'Leave it on to keep your rules current. Turn it off to contact no server; your pairing is kept for later.',
   },
   strictMode: {
     purpose: 'Stops a teleport only when the tracker’s travel table matches it exactly and fresh rules for your character lock where it goes.',
-    visibleResult: 'A stopped teleport shows a banner over the game with the tracker’s reason and a Pause 60s button. The sidebar’s Strict Mode card says Active, Paused, Inactive with why, or Off.',
-    changeWhen: 'Turn it on for a safety net against teleporting somewhere locked by mistake. The Strict Mode card has the same switch.',
+    visibleResult: 'A stopped teleport shows a banner with the tracker’s reason and Pause 60s. The Strict Mode card says Active, Paused, Off, or Inactive with why.',
+    changeWhen: 'Turn it on for a safety net against teleporting somewhere locked by mistake.',
   },
   pauseStrictModeHotkey: {
     purpose: 'Pauses Strict Mode for 60 seconds from the keyboard, like the Pause 60s button.',
-    visibleResult: 'The Strict Mode card and the HUD count the pause down, then Strict Mode resumes by itself.',
-    changeWhen: 'Set it if you pause often, on a key RuneLite and the game don’t use.',
+    visibleResult: 'The Strict Mode card and the HUD count the pause down, then Strict Mode comes back by itself.',
+    changeWhen: 'Set it if you pause often, on a key neither RuneLite nor the game uses.',
   },
   lockedAreaAlert: {
-    purpose: 'What happens when you walk into a locked area: a chat line, and if you choose, a sound and a short fade around the game view.',
-    visibleResult: 'The chat line names the area and says why it is locked, in the tracker’s words. The sound and fade come only when you arrive from unlocked land, and the same area alerts again only after a minute.',
+    purpose: 'What happens when you walk into a locked area: a chat line, and if you like, a sound and one short fade.',
+    visibleResult: 'The chat line names the area and why it’s locked. The sound and fade come only when you arrive from unlocked land.',
     changeWhen: 'Pick Chat for a quieter run, or Off if the map and borders are enough.',
   },
   announceAreaChanges: {
     purpose: 'A chat line whenever you walk into another area the tracker maps, locked or not.',
     visibleResult: 'The chatbox names each new area and its status, once per area rather than once per chunk.',
-    changeWhen: 'Turn it off if these lines crowd the chatbox; locked areas still alert.',
+    changeWhen: 'Turn it off if these lines crowd your chat; locked areas still alert.',
   },
   ruleWarnings: {
     purpose: 'Warns about a bank you haven’t unlocked, a Slayer task in locked areas, and gear above your unlocked tier.',
-    visibleResult: 'A chat line when it happens; the Slayer and gear warnings also stay on the HUD while they apply. Each needs your rules to cover it, and stays quiet when they don’t.',
+    visibleResult: 'A chat line when it happens; the Slayer and gear warnings also stay on the HUD while they apply.',
     changeWhen: 'Leave it on unless your run doesn’t lock banks, Slayer tasks or gear tiers.',
   },
   tagLockedOptions: {
     purpose: 'Adds (Locked) to right-click options on NPCs, objects, items on the ground and teleports your rules lock.',
-    visibleResult: 'The tag follows the option’s name in the locked colour. It asks before you click; it never blocks.',
+    visibleResult: 'The tag follows the option in the locked colour. It only tells you; it never blocks a click.',
     changeWhen: 'Turn it off if you’d rather see menus as the game shows them.',
   },
   rollNudges: {
-    purpose: 'A chat reminder when a level-up, quest, diary, boss kill or collection log entry may be worth a roll in the tracker.',
+    purpose: 'A chat reminder when a level-up, quest, diary, boss kill or collection log entry may be worth a roll.',
     visibleResult: 'The reminder says what happened. It never rolls and never changes your run.',
-    changeWhen: 'Turn it off if you roll in the tracker on your own schedule.',
+    changeWhen: 'Turn it off if you roll in the companion on your own schedule.',
   },
   useNotifier: {
     purpose: 'Also sends locked-area alerts and rule warnings as RuneLite notifications.',
-    visibleResult: 'They arrive however your RuneLite notification settings deliver them, such as a tray message while the client is in the background.',
+    visibleResult: 'They arrive however RuneLite delivers notifications, such as a tray message while the client is in the background.',
     changeWhen: 'Turn it on if you often play with RuneLite behind other windows.',
   },
   hudMode: {
-    purpose: 'A box over the game. Compact shows where you are, its status and why, Strict Mode, and the nearest bank and shop. Detailed adds your progress, Keys and Fate Points, and what the place holds.',
-    visibleResult: 'Statuses are words in the palette’s colours. Detailed lists up to five things of each kind, then +N more; on another character the HUD says only that the run isn’t theirs.',
+    purpose: 'A box over the game. Compact shows where you are, its status and why, Strict Mode, and the nearest bank and shop.',
+    visibleResult: 'Detailed adds your progress, Keys, Fate Points and what the place holds. On another character it says only that the run isn’t theirs.',
     changeWhen: 'Pick Detailed while planning a route, Compact for play, or Off for a clear screen.',
   },
   worldMapMode: {
-    purpose: 'Shades locked land on the world map like fog, lightly fills the frontier in Chunked mode, and outlines your unlocked land.',
-    visibleResult: 'Hovering a chunk shows its area and status, and with contents what it holds. Nothing is drawn over the overview or the surface selector.',
+    purpose: 'Shades locked land on the world map like fog, outlines your unlocked land, and in Chunked mode lightly fills the frontier.',
+    visibleResult: 'Hovering a chunk shows its area and status, and with contents what it holds.',
     changeWhen: 'Drop the contents or the tooltip if the map feels busy; Off leaves the map as the game draws it.',
   },
   worldMapMarkers: {
     purpose: 'A pin on each area you haven’t unlocked.',
     visibleResult: 'Clicking a pin moves the world map there.',
-    changeWhen: 'Turn it on to see what’s left to unlock at a glance; leave it off to keep the map clean.',
+    changeWhen: 'Turn it on to see what’s left to unlock at a glance.',
   },
   chunkBorders: {
     purpose: 'Lines on the ground where chunks meet.',
-    visibleResult: 'Locked edges are dashed over a dark underlay, so they read on any ground. All edges adds a thin line between unlocked chunks.',
+    visibleResult: 'Locked edges are dashed over a dark underlay, fixed to the tiles, and hidden behind whatever stands in front. All edges adds a thin line between unlocked chunks.',
     changeWhen: 'Pick All edges while learning the chunk grid, or Off to leave the ground alone.',
   },
   shadeNearbyLocked: {
-    purpose: 'Darkens a band of locked land along a locked edge, in the game view and on the minimap.',
+    purpose: 'Darkens a band of locked land along each locked edge, in the game view and on the minimap.',
     visibleResult: 'The band lies on the locked side, two tiles deep, so you can tell the sides apart at a glance.',
     changeWhen: 'Turn it off if you’d rather see the ground unshaded.',
   },
@@ -400,13 +416,13 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
   },
   showInfoBoxes: {
     purpose: 'RuneLite infoboxes for your Keys, Fate Points and unlock progress.',
-    visibleResult: 'Each box has its own OSRS icon and moves on its own. A box with nothing to count, or on another character, isn’t shown.',
+    visibleResult: 'Each box has its own OSRS icon and moves on its own. One with nothing to count isn’t shown.',
     changeWhen: 'Turn it on to keep your Keys in sight without the Detailed HUD.',
   },
   colourPreset: {
     purpose: 'The plugin’s colours: the default set, a set safe for colour-blind players, or your own.',
     visibleResult: 'Changes every colour the plugin draws, in the sidebar, the HUD, the borders, the minimap and the world map.',
-    changeWhen: 'Pick Colour-blind safe if red and green are hard to tell apart, or Custom to choose the three colours below.',
+    changeWhen: 'Pick Colour-blind safe if red and green are hard to tell apart, or Custom to choose your own.',
   },
   unlockedColor: {
     purpose: 'The colour of unlocked land and statuses, with Colours set to Custom.',
@@ -425,8 +441,8 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
   },
   reimportHotkey: {
     purpose: 'Imports your rules from the clipboard, as the sidebar’s Import from clipboard does.',
-    visibleResult: 'The status card says Using a backup, where the rules came from and when the tracker exported them.',
-    changeWhen: 'Set it if you copy rules from the tracker often, for example with online sync off.',
+    visibleResult: 'The status card says Using a backup, where the rules came from and when they were exported.',
+    changeWhen: 'Set it if you copy rules from the companion often, for example with online sync off.',
   },
 };
 
@@ -445,41 +461,36 @@ export const RUNELITE_GUIDE_PRESETS: readonly GuidePreset[] = [
   {
     id: 'balanced-defaults',
     title: 'Balanced defaults',
-    summary: 'The settings a new profile starts with: alerts in chat with a sound and fade, a Compact HUD, and Strict Mode off.',
+    summary: 'What a new profile starts with: alerts in chat with a sound and fade, a Compact HUD, and Strict Mode off.',
     adjustments: [
       'Keep every default as it comes.',
-      `Leave ${label('showInfoBoxes')}, ${label('worldMapMarkers')} and ${label('useNotifier')} off.`,
-      `Keep ${label('strictMode')} off until you choose to turn it on.`,
+      `${label('showInfoBoxes')}, ${label('worldMapMarkers')} and ${label('useNotifier')} stay off.`,
     ],
   },
   {
     id: 'high-visibility',
-    title: 'High visibility',
-    summary: 'Every channel on, for players who want the run in view all the time.',
+    title: 'Everything on',
+    summary: 'For players who want the run in view all the time.',
     adjustments: [
-      'Start from Balanced defaults.',
-      `Set ${label('hudMode')} to Detailed.`,
+      `Set ${label('hudMode')} to Detailed and ${label('chunkBorders')} to All edges.`,
       `Turn on ${label('showInfoBoxes')}, ${label('worldMapMarkers')} and ${label('useNotifier')}.`,
-      `Set ${label('chunkBorders')} to All edges.`,
     ],
   },
   {
     id: 'minimal-screen',
-    title: 'Minimal screen',
+    title: 'Clear screen',
     summary: 'The world map and the sidebar tell you everything; the game view stays clear.',
     adjustments: [
-      `Keep ${label('worldMapMode')} on, with the tooltip.`,
-      `Set ${label('hudMode')} to Off, and ${label('lockedAreaAlert')} to Chat.`,
+      `Set ${label('hudMode')} to Off and ${label('lockedAreaAlert')} to Chat.`,
       `Turn off ${label('shadeNearbyLocked')} and ${label('announceAreaChanges')}.`,
     ],
   },
   {
     id: 'strict-travel',
     title: 'Strict travel',
-    summary: 'Balanced defaults with Strict Mode on, which fails open whenever it can’t be sure.',
+    summary: 'The defaults with Strict Mode on. It still fails open whenever it can’t be sure.',
     adjustments: [
-      `Start from Balanced defaults and turn on ${label('strictMode')}.`,
-      'Remember it lets a teleport through whenever the rules are stale, for another character, or don’t decide it.',
+      `Turn on ${label('strictMode')}.`,
       `Set a ${label('pauseStrictModeHotkey')} if you often need to go somewhere it would stop.`,
     ],
   },
@@ -489,60 +500,68 @@ export const RUNELITE_GUIDE_TROUBLESHOOTING: readonly GuideTroubleshootingItem[]
   {
     id: 'waiting-for-confirmation',
     symptom: 'The status card keeps saying Waiting for confirmation.',
-    likelyCause: 'The profile hasn’t been confirmed in the browser page RuneLite opened, or it was confirmed in an older page. After 10 minutes without one, the card says No profile arrived.',
+    likelyCause: 'The profile hasn’t been confirmed in the page RuneLite opened, or was confirmed in an older page. After 10 minutes without one, the card says No profile arrived.',
     fix: [
-      'Select Open page again to reopen the newest page, and confirm the profile there.',
+      'Select Open page again, and confirm the profile in that page.',
       'Keep RuneLite open until the card says Rules up to date.',
-      'Select Cancel to stop waiting; select Connect tracker to start again.',
+      'To start over, select Cancel, then Connect tracker.',
     ],
   },
   {
     id: 'not-connected-or-sync-off',
     symptom: 'The status card says Not connected, or Online sync is off.',
-    likelyCause: 'No tracker profile is paired, or online sync is turned off, so RuneLite doesn’t contact the relay.',
+    likelyCause: 'No profile is paired, or online sync is off, so RuneLite doesn’t contact the relay.',
     fix: [
       'For Not connected, select Connect tracker and confirm the profile.',
       'For Online sync is off, select Turn on online sync; your pairing is kept.',
-      'To play without the relay, use a backup: Import from clipboard or Load newest backup file.',
+      'To play without the relay, use a backup instead.',
     ],
   },
   {
     id: 'out-of-date-or-expired',
     symptom: 'The status card says Rules may be out of date, Tracker copy expired, or Tracker has older rules.',
-    likelyCause: 'RuneLite couldn’t reach the tracker for more than 15 minutes, the tracker hasn’t sent your rules in 24 hours, or the relay has an older copy than yours. Your current rules stay in use.',
+    likelyCause: 'RuneLite couldn’t reach the relay for more than 15 minutes, the companion hasn’t sent your rules in 24 hours, or the relay has an older copy than yours. Your current rules stay in use.',
     fix: [
       'For Rules may be out of date, check your internet connection, then select Check now.',
-      'For Tracker copy expired or Tracker has older rules, select Open web tracker; opening your profile there sends the rules again.',
-      'Strict Mode waits until the rules are fresh again; warnings and the sidebar keep working.',
+      'For the others, select Open web tracker: opening your profile there sends the rules again.',
+      'Strict Mode waits until the rules are fresh; everything else keeps working.',
     ],
   },
   {
     id: 'not-usable-or-update',
     symptom: 'The status card says Tracker rules not usable, Couldn’t apply the tracker’s rules, or Plugin update needed.',
-    likelyCause: 'The tracker sent rules RuneLite couldn’t read, or in a newer format than your plugin knows. Your current rules stay in use.',
+    likelyCause: 'The companion sent rules this plugin couldn’t read, or in a newer format than it knows. Your current rules stay in use.',
     fix: [
-      'For Plugin update needed, restart RuneLite; it updates Fate Locked from the Plugin Hub.',
-      'For the others, select Open web tracker to send the rules again, or wait for the next check.',
-      'Never edit the rules by hand; a backup from the tracker is always safe to import.',
+      'For Plugin update needed, restart RuneLite to get the latest Fate Locked from the Plugin Hub.',
+      'For the others, select Open web tracker to send the rules again.',
+      'Never edit the rules by hand; a backup from the companion is always safe to import.',
     ],
   },
   {
     id: 'different-character',
     symptom: 'The status card says Different character.',
-    likelyCause: 'The run’s rules belong to another character than the one logged in, so warnings and Strict Mode are off and the Here card checks nothing.',
+    likelyCause: 'The rules belong to another character than the one logged in, so warnings and Strict Mode are off and Here checks nothing.',
     fix: [
       'Log in on the character the card names.',
-      'Or connect the tracker profile for this character: Re-pair tracker… in Connection & backup.',
+      'Or pair this character’s profile: Re-pair tracker… in Connection & backup.',
     ],
   },
   {
     id: 'here-empty',
-    symptom: 'The Here card says Log in to see the place you’re standing in, or The tracker doesn’t map this place.',
-    likelyCause: 'You aren’t logged in, or you are somewhere the tracker leaves Uncharted, such as some dungeons and instances.',
+    symptom: 'Here says Log in to see the place you’re standing in, or The tracker doesn’t map this place.',
+    likelyCause: 'You aren’t logged in, or you’re somewhere the tracker leaves Uncharted, such as some dungeons and instances.',
     fix: [
       'Log in and step into the game world.',
-      'In an instance, the card names the place it copies when the tracker maps it.',
-      'Check the tracker’s map if a place you expect stays Uncharted.',
+      'In an instance, Here names the place it copies when the tracker maps it.',
+    ],
+  },
+  {
+    id: 'no-way-shown',
+    symptom: 'Clicking a row in Here says it can’t find one near you.',
+    likelyCause: 'None is loaded near you, and you haven’t been near one in that place since the plugin started remembering.',
+    fix: [
+      'Walk near one once; after that, clicking the row shows the way back.',
+      'Inside an instance or on a boat, the way can’t be shown; step back onto the main map.',
     ],
   },
   {
@@ -552,7 +571,6 @@ export const RUNELITE_GUIDE_TROUBLESHOOTING: readonly GuideTroubleshootingItem[]
     fix: [
       'Open RuneLite’s configuration, select Fate Locked Ironman, and check the Display section.',
       'Check the status card: nothing is drawn for another character’s run.',
-      'The world map draws only inside the map, never over the overview or the surface selector.',
     ],
   },
   {
@@ -561,15 +579,14 @@ export const RUNELITE_GUIDE_TROUBLESHOOTING: readonly GuideTroubleshootingItem[]
     likelyCause: `${label('worldMapMode')} is set to Shading and tooltip, or the tracker lists nothing in that chunk.`,
     fix: [
       `Set ${label('worldMapMode')} to Shading, tooltip and contents.`,
-      'Try a chunk you know holds something, to tell an empty chunk from the setting.',
     ],
   },
   {
     id: 'clipboard-import',
     symptom: 'Import from clipboard doesn’t load your rules.',
-    likelyCause: 'The clipboard doesn’t hold one complete copy of your rules from the tracker.',
+    likelyCause: 'The clipboard doesn’t hold one complete copy of your rules from the companion.',
     fix: [
-      'Copy the rules again from the tracker.',
+      'Copy the rules again in the companion.',
       `Select Import from clipboard, or press your ${label('reimportHotkey')}, once.`,
       'A failed import keeps the rules you had.',
     ],
@@ -581,38 +598,27 @@ export const RUNELITE_GUIDE_TROUBLESHOOTING: readonly GuideTroubleshootingItem[]
     fix: [
       'Put it in %USERPROFILE%\\.runelite\\fate-locked\\ on Windows.',
       'Name it fate-locked-bundle-*.json; the newest such file is the one read.',
-      'RuneLite reads the folder only when you select the button; it doesn’t watch it.',
     ],
   },
   {
     id: 'strict-mode-allows-action',
     symptom: 'Strict Mode doesn’t stop a teleport you expected it to.',
-    likelyCause: 'It stops only a trip the tracker’s travel table matches by id, going to one place your rules lock. Options that pick the place after the click, such as a jewellery Rub, and fairy rings, spirit trees, charters and boats are never stopped, nor are walking, NPCs, objects, banks and equipment. When the rules are stale, for another character, or don’t decide the trip, it lets it through.',
+    likelyCause: 'It stops only a trip the travel table matches exactly, to one place your rules lock, with fresh rules for your character. It fails open whenever it can’t be sure.',
     fix: [
       'Read the Strict Mode card: Inactive says what’s missing, such as fresh rules.',
       'The (Locked) tag and the locked-area alert still cover what Strict Mode leaves alone.',
-      'This is deliberate: Strict Mode fails open and never guesses.',
     ],
   },
 ];
 
 export const RUNELITE_GUIDE_GLOSSARY: readonly GuideGlossaryItem[] = [
-  {
-    term: RUNELITE_TERMS.UNLOCKED,
-    definition: 'Your run can go there or do it.',
-  },
-  {
-    term: RUNELITE_TERMS.CAN_DO,
-    definition: 'Something in a place that your run can do now.',
-  },
+  { term: RUNELITE_TERMS.UNLOCKED, definition: 'Your run can go there or do it.' },
+  { term: RUNELITE_TERMS.CAN_DO, definition: 'Something in a place that your run can do now.' },
   {
     term: RUNELITE_TERMS.NOT_READY,
     definition: 'Unlocked, but waiting on something first: a quest, a level, or a way to get there.',
   },
-  {
-    term: RUNELITE_TERMS.LOCKED,
-    definition: 'Your run hasn’t unlocked it yet.',
-  },
+  { term: RUNELITE_TERMS.LOCKED, definition: 'Your run hasn’t unlocked it yet.' },
   {
     term: RUNELITE_TERMS.NEEDS_CHECKING,
     definition: 'An event RuneLite noticed but can’t be sure of, counted in the Roll inbox.',
@@ -627,303 +633,364 @@ export const RUNELITE_GUIDE_GLOSSARY: readonly GuideGlossaryItem[] = [
   },
   {
     term: RUNELITE_TERMS.DIFFERENT_CHARACTER,
-    definition: 'The run’s rules belong to another character than the one logged in; nothing is checked until you switch.',
+    definition: 'The rules belong to another character than the one logged in; nothing is checked until you switch.',
   },
   {
     term: RUNELITE_TERMS.STRICT_MODE,
-    definition: 'An optional guard, off by default, that stops a teleport only when the tracker’s travel table matches it exactly and fresh rules for your character lock where it goes. It never guesses.',
+    definition: 'An optional guard, off by default, that stops a teleport only when the travel table matches it exactly and fresh rules lock where it goes.',
   },
-  {
-    term: RUNELITE_TERMS.KEYS,
-    definition: 'Spend one on a table you choose for a random unlock from it.',
-  },
-  {
-    term: RUNELITE_TERMS.OMNI_KEYS,
-    definition: 'Spend one to choose the exact unlock you want.',
-  },
+  { term: RUNELITE_TERMS.KEYS, definition: 'Spend one on a table you choose for a random unlock from it.' },
+  { term: RUNELITE_TERMS.OMNI_KEYS, definition: 'Spend one to choose the exact unlock you want.' },
   {
     term: RUNELITE_TERMS.CHAOS_KEYS,
     definition: 'Spend one for a random unlock from any table; you don’t choose the table.',
   },
   {
     term: RUNELITE_TERMS.FATE_POINTS,
-    definition: 'What a failed roll gives instead of a Key. Enough of them bring a Pity Key, and you can spend them on rituals.',
+    definition: 'What a failed roll gives instead of a Key. Enough of them bring a Pity Key, and rituals spend them.',
   },
-  {
-    term: 'Ritual of Clarity',
-    definition: 'Your next roll is made twice, and the better result is kept.',
-  },
+  { term: 'Ritual of Clarity', definition: 'Your next roll is made twice, and the better result is kept.' },
   {
     term: 'Ritual of Greed',
     definition: 'If your next roll succeeds you get 2 Keys; if it fails, half the Fate Points come back.',
   },
-  {
-    term: 'Chunk',
-    definition: 'A 64 by 64 tile square of the game map, the unit the tracker locks and unlocks.',
-  },
+  { term: 'Chunk', definition: 'A 64 by 64 tile square of the game map, the unit the tracker locks and unlocks.' },
   {
     term: 'Relay',
-    definition: 'The fixed Fate Locked service that hands RuneLite your paired profile’s rules. It sees your IP address, as any internet service does.',
+    definition: 'The one fixed Fate Locked service that hands RuneLite your paired profile’s rules. It sees your IP address, as any internet service does.',
   },
-  {
-    term: 'Backup',
-    definition: 'Your rules copied from the tracker to the clipboard or a file, for playing without the relay.',
-  },
+  { term: 'Backup', definition: 'Your rules copied from the companion to the clipboard or a file, for playing without the relay.' },
 ];
 
 export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
   {
-    id: 'what-it-does',
+    id: 'start',
     number: 1,
-    title: 'What the plugin does',
-    summary: 'Fate Locked Ironman shows your run’s rules in RuneLite: where you stand, what’s locked, and what your run holds.',
-    paragraphs: [
-      'The companion is where you create the run, roll and spend Keys, and unlock things. RuneLite gets that run’s current rules and shows them as you play.',
-      'RuneLite’s warnings and what it notices are helpers. They never roll and never change your run.',
+    title: 'Get started',
+    lede: 'Install the plugin, open its sidebar and connect it to your tracker. It takes about five minutes.',
+    icon: 'Crystal_key.png',
+    blocks: [
+      {
+        kind: 'steps',
+        steps: [
+          {
+            title: 'Install it',
+            body: 'In RuneLite, open the configuration (the wrench), choose Plugin Hub, search for Fate Locked Ironman and select Install. Updates arrive the same way, once RuneLite has reviewed them.',
+          },
+          {
+            title: 'Open the sidebar',
+            body: 'Select the crystal key in RuneLite’s sidebar. The status card at the top says Not connected.',
+          },
+          {
+            title: 'Connect your tracker',
+            body: 'Select Connect tracker. The first time, RuneLite asks to turn on online sync and warns that the relay sees your IP address. Your browser then opens the companion.',
+          },
+          {
+            title: 'Confirm the profile',
+            body: 'Check that the page names your run, then select Connect tracker. Keep RuneLite open while you do.',
+          },
+          {
+            title: 'Play',
+            body: 'Back in RuneLite, the status card says Rules up to date. Everything the plugin shows now comes from your run.',
+          },
+        ],
+      },
+      { kind: 'figure', figureId: 'companion-confirmation' },
+      {
+        kind: 'gallery',
+        items: [
+          { figureId: 'status-not-connected', title: 'Before', body: 'Connect tracker starts, or use a backup instead.' },
+          { figureId: 'status-waiting', title: 'While you confirm', body: 'RuneLite checks every few seconds.' },
+          { figureId: 'status-up-to-date', title: 'Done', body: 'Your rules are loaded and current.' },
+        ],
+      },
+      {
+        kind: 'note',
+        title: 'It only reads your run',
+        text: 'RuneLite downloads your run’s rules and does not upload gameplay data. It never rolls, spends Keys or unlocks anything: the companion is still where your run changes.',
+      },
+      {
+        kind: 'text',
+        text: 'Rather not use the relay, or playing offline? Load your rules from a backup instead; Connection & backup shows how.',
+      },
     ],
-    bullets: [
-      'Install the one Fate Locked Ironman plugin from the Plugin Hub.',
-      'Read your run in the Fate Locked sidebar; change settings in RuneLite’s configuration.',
-      'Return to the companion whenever the run itself needs to change.',
-    ],
-    screenshotIds: [],
-  },
-  {
-    id: 'install-plugin-hub',
-    number: 2,
-    title: 'Install from Plugin Hub',
-    summary: 'Install Fate Locked Ironman from RuneLite’s normal Plugin Hub.',
-    paragraphs: [
-      'Open RuneLite’s configuration, select Plugin Hub, and search for Fate Locked Ironman. Install the result shown in the screenshot.',
-      'After installation, select the Fate Locked icon in RuneLite’s sidebar: a crystal key.',
-    ],
-    bullets: [
-      'Use the Plugin Hub result named Fate Locked Ironman.',
-      'Updates arrive through the same Plugin Hub entry after RuneLite review.',
-    ],
-    screenshotIds: ['plugin-hub-install'],
-  },
-  {
-    id: 'connect-tracker',
-    number: 3,
-    title: 'Connect the tracker',
-    summary: 'A one-time browser confirmation links your companion profile to this RuneLite client.',
-    paragraphs: [
-      'Select Connect tracker on the status card. The first time, RuneLite asks to turn on online sync, which lets it contact the Fate Locked relay; RuneLite shows its own warning that the relay sees your IP address.',
-      'Your browser opens a confirmation page in the companion. Check the profile, confirm it, and return to RuneLite. The status card says Waiting for confirmation, then Rules up to date with when it synced.',
-    ],
-    bullets: [
-      'Keep RuneLite open while you confirm.',
-      'Open page again reopens the newest page if you closed it.',
-      'Never share the private pairing page in screenshots or support messages.',
-    ],
-    screenshotIds: ['sidebar-not-connected', 'companion-confirmation', 'sidebar-waiting'],
-    settingsSections: ['Tracker'],
-  },
-  {
-    id: 'connection-privacy',
-    number: 4,
-    title: 'Connection and privacy',
-    summary: 'RuneLite gets your run’s rules through a fixed, inbound-only connection, and the status card says how current they are.',
-    paragraphs: [
-      'RuneLite fetches your rules from the fixed Fate Locked relay. The relay sees your IP address, as any internet service does. RuneLite does not upload gameplay data.',
-      'The status card at the top of the sidebar says whether your rules are current and for this character, and offers the one thing to do about it.',
-    ],
-    bullets: [
-      'Rules up to date: synced recently for your character.',
-      'Rules may be out of date: RuneLite couldn’t check for more than 15 minutes; Strict Mode waits until they refresh.',
-      'Tracker copy expired: the tracker hasn’t sent your rules in 24 hours; open it to send them again.',
-      'Using a backup or Using saved rules: rules from the clipboard, a backup file, or the last start.',
-      'Different character: the rules belong to another character, so nothing is checked.',
-      'Waiting for confirmation, No profile arrived, Not connected: the pairing steps.',
-    ],
-    screenshotIds: ['sidebar-out-of-date', 'sidebar-different-character'],
   },
   {
     id: 'sidebar',
-    number: 5,
-    title: 'The sidebar',
-    summary: 'The Fate Locked sidebar leads with the status card, then a card for each part of your run.',
-    paragraphs: [
-      'The status card is always at the top. Below it, each card opens and closes on its own; Here starts open.',
-      'Opening or closing a card never changes the others, your settings, or the run. More settings are in RuneLite’s configuration, under Fate Locked Ironman.',
+    number: 2,
+    title: 'The sidebar at a glance',
+    lede: 'A status card at the top, then five cards that open and close.',
+    icon: 'Stats_icon.png',
+    blocks: [
+      { kind: 'figure', figureId: 'sidebar' },
+      {
+        kind: 'terms',
+        items: [
+          { term: 'Here', text: 'Your rules for the place you’re standing in. It starts open.' },
+          { term: 'Strict Mode', text: 'The optional guard against teleporting somewhere locked.' },
+          { term: 'Run', text: 'Your progress, Keys and Fate Points.' },
+          { term: 'Roll inbox', text: 'Things you did in game that may be worth a roll.' },
+          { term: 'Connection & backup', text: 'Online sync, your pairing and backups.' },
+        ],
+      },
+      {
+        kind: 'text',
+        text: 'Opening or closing a card never changes your settings or your run, and what you leave open stays open.',
+      },
     ],
-    bullets: RUNELITE_SIDEBAR_CARD_TITLES,
-    screenshotIds: ['sidebar-overview'],
+  },
+  {
+    id: 'status',
+    number: 3,
+    title: 'The status card',
+    lede: 'Read it first when something looks wrong: it says what state your rules are in, and the one thing to do.',
+    icon: 'Achievement_Diaries_icon.png',
+    blocks: [
+      {
+        kind: 'gallery',
+        items: [
+          { figureId: 'status-up-to-date', title: 'Rules up to date', body: 'Synced recently, for this character. Nothing to do.' },
+          { figureId: 'status-out-of-date', title: 'Rules may be out of date', body: 'RuneLite couldn’t check for more than 15 minutes. Your rules stay in use; Strict Mode waits.' },
+          { figureId: 'status-expired', title: 'Tracker copy expired', body: 'The companion hasn’t sent your rules in 24 hours. Open it to send them again.' },
+          { figureId: 'status-backup', title: 'Using a backup', body: 'Rules from the clipboard or a file. Connect tracker goes back to the relay.' },
+          { figureId: 'status-different-character', title: 'Different character', body: 'The rules are another character’s, so warnings and Strict Mode are off.' },
+          { figureId: 'status-not-connected', title: 'Not connected', body: 'Connect your tracker, or use a backup instead.' },
+        ],
+      },
+      {
+        kind: 'text',
+        text: 'You may also see Waiting for confirmation, No profile arrived, Online sync is off, Tracker has older rules, Tracker rules not usable, Couldn’t apply the tracker’s rules or Plugin update needed. In every case your current rules stay in use, and the card’s button is the fix. Troubleshooting has more on each.',
+      },
+    ],
   },
   {
     id: 'here',
-    number: 6,
+    number: 4,
     title: 'Here',
-    summary: 'Here explains your rules for the place you’re standing in.',
-    paragraphs: [
-      'When you’re logged in, the card names the place, its region and chunk, and its status in a word, with the tracker’s reason when it is locked or not ready.',
-      'Below, it counts what you can do, what isn’t ready and what’s locked. Then come the place’s skilling, banks, shops, quests, combat, travel, farming and activities, each on a line that opens and closes and, while closed, says what it holds. Skilling opens skill by skill, each with your level and cap. What you leave open stays open as you walk, and an open list shows five rows with +N more.',
-      'When the tracker can’t see a requirement, such as a quest started, quest points, a free-to-play world or a light source you carry, RuneLite checks it in game. Every row says Can do, Not ready or Locked, and a row that isn’t ready names only what’s left.',
-      'Click a skilling spot, monster, bank or shop and the game’s own arrow points at the nearest one around you, with a line under the counts saying so. It comes down when you get there, when you click the row again or press Clear, or when you leave the chunk.',
-      'If none is near enough to be loaded, the card shows the way to the nearest one you’ve seen in that chunk: the arrow goes on that spot, your minimap points toward it and the world map has a pin. If you run the Shortest Path plugin from the Plugin Hub, it draws the walking route too. The way stays up as you cross other chunks, and the arrow moves onto the thing itself once it comes into view. Where you’ve seen things is kept on your computer and never sent anywhere.',
+    lede: 'Your rules for the place you’re standing in, and a way to find what’s there.',
+    icon: 'World_map_icon.png',
+    blocks: [
+      { kind: 'figure', figureId: 'here' },
+      {
+        kind: 'terms',
+        items: [
+          { term: RUNELITE_TERMS.CAN_DO, text: 'Your run can do it now.' },
+          { term: RUNELITE_TERMS.NOT_READY, text: 'Unlocked, but waiting on something first, such as a quest or a level.' },
+          { term: RUNELITE_TERMS.LOCKED, text: 'Your run hasn’t unlocked it.' },
+          { term: RUNELITE_TERMS.UNCHARTED, text: 'The tracker doesn’t map this place, so nothing is checked.' },
+        ],
+      },
+      {
+        kind: 'text',
+        text: 'Where the tracker can’t see a requirement, such as a quest you’ve started, quest points, a free-to-play world or a light source you carry, RuneLite checks it in game. A row that isn’t ready names only what’s left.',
+      },
+      { kind: 'heading', text: 'Find it' },
+      {
+        kind: 'text',
+        text: 'Click a skilling spot, monster, bank or shop and the game’s own arrow points at the nearest one around you. It comes down when you get there, when you click the row again or select Clear, or when you leave the chunk.',
+      },
+      { kind: 'figure', figureId: 'here-way' },
+      {
+        kind: 'text',
+        text: 'With none near enough to be loaded, the card shows the way to the nearest one you’ve seen in that place. The arrow goes on that spot, your minimap points toward it and the world map has a pin. If you run the Shortest Path plugin from the Plugin Hub, it draws the walking route too. The way stays up as you cross other chunks, and the arrow moves onto the thing itself once it comes into view.',
+      },
+      {
+        kind: 'note',
+        title: 'Remembered on your computer',
+        text: 'The plugin notes where you’ve seen things as you play, and keeps it on your computer; nothing is sent anywhere. Somewhere you’ve never been near, it can’t show the way yet.',
+      },
     ],
-    bullets: [
-      `${RUNELITE_TERMS.CAN_DO}: your run can do it now.`,
-      `${RUNELITE_TERMS.NOT_READY}: unlocked, but waiting on something first.`,
-      `${RUNELITE_TERMS.LOCKED}: not unlocked by this run.`,
-      `${RUNELITE_TERMS.UNCHARTED}: the tracker doesn’t map the place.`,
-    ],
-    screenshotIds: ['sidebar-here'],
   },
   {
     id: 'strict-mode',
-    number: 7,
+    number: 5,
     title: 'Strict Mode',
-    summary: 'Strict Mode is an optional, careful guard against teleporting somewhere your rules lock.',
-    paragraphs: [
-      'Strict Mode is off by default. When on, it stops only a trip the tracker’s travel table matches by id: a spell, tablet, scroll or teleport item option that goes to one place your rules lock. The rules must be fresh and bound to your character.',
-      'An option that picks its place after the click, such as a jewellery Rub, is never stopped, and fairy rings, spirit trees, charters and boats are tagged but never stopped. Walking, NPC, object, bank and equipment clicks are never stopped either. When the rules are stale, for another character, or don’t decide the trip, Strict Mode fails open rather than guessing.',
-      'The Strict Mode card says Active, Paused, Off, or Inactive with why. Pause 60s, on the card, on the banner over a stopped teleport, or on its optional hotkey, lets every click through for 60 seconds, and the HUD counts it down. Recently stopped lists what it stopped.',
+    lede: 'An optional safety net against teleporting somewhere your rules lock.',
+    icon: 'Magic_icon.png',
+    blocks: [
+      {
+        kind: 'text',
+        text: 'Strict Mode is off by default. Turn it on with the switch on its card, or in the settings.',
+      },
+      { kind: 'figure', figureId: 'strict-mode' },
+      { kind: 'heading', text: 'What it stops' },
+      {
+        kind: 'list',
+        items: [
+          'A spell, tablet, scroll or teleport item option that the tracker’s travel table matches exactly, going to one place your rules lock.',
+          'Only with fresh rules for the character you’re on.',
+        ],
+      },
+      { kind: 'heading', text: 'What it never stops' },
+      {
+        kind: 'list',
+        items: [
+          'Walking, and clicks on NPCs, objects, banks and equipment.',
+          'An option that picks its place after the click, such as a jewellery Rub.',
+          'Fairy rings, spirit trees, charters and boats. These get the (Locked) tag instead.',
+          'Anything when the rules are stale, for another character, or don’t decide the trip. Strict Mode fails open rather than guessing.',
+        ],
+      },
+      {
+        kind: 'text',
+        text: 'When it stops a teleport, a banner over the game gives the tracker’s reason with a Pause 60s button. A pause lets every click through for 60 seconds, from the banner, the card or an optional hotkey, and the HUD counts it down.',
+      },
     ],
-    bullets: [
-      'Warnings and tags keep working with Strict Mode off.',
-      'Walking is never blocked, and uncertain travel is never blocked by a guess.',
-      'Turn it off from the card at any time, or pause it for 60 seconds.',
+  },
+  {
+    id: 'run',
+    number: 6,
+    title: 'Run',
+    lede: 'Whose run this is, how far it has come, and what it holds.',
+    icon: 'Brass_key.png',
+    blocks: [
+      { kind: 'figure', figureId: 'run' },
+      {
+        kind: 'terms',
+        items: [
+          { term: RUNELITE_TERMS.KEYS, text: 'Choose a table; Fate picks the unlock from it.' },
+          { term: RUNELITE_TERMS.OMNI_KEYS, text: 'Choose the exact unlock.' },
+          { term: RUNELITE_TERMS.CHAOS_KEYS, text: 'A random unlock from any table.' },
+          { term: RUNELITE_TERMS.FATE_POINTS, text: 'What a failed roll gives. Enough of them bring a Pity Key, and rituals spend them.' },
+        ],
+      },
+      {
+        kind: 'text',
+        text: 'The card only reads your run. Rolling, spending Keys and unlocking all happen in the companion.',
+      },
     ],
-    screenshotIds: ['sidebar-strict-mode'],
-    settingsSections: ['Strict Mode'],
   },
   {
     id: 'roll-inbox',
-    number: 8,
+    number: 7,
     title: 'Roll inbox',
-    summary: 'Roll inbox is a local history of in-game events that may be worth a roll.',
-    paragraphs: [
-      `The card counts Local events, ${RUNELITE_TERMS.NEEDS_CHECKING} and Warnings. RuneLite keeps the newest 250 events on this computer.`,
-      'Events RuneLite can’t be sure of count as Needs checking. Noticing an event never rolls and never changes your run.',
+    lede: 'Things you did in game that may be worth a roll in the companion.',
+    icon: 'Mystery_box.png',
+    blocks: [
+      { kind: 'figure', figureId: 'roll-inbox' },
+      {
+        kind: 'text',
+        text: 'RuneLite notices level-ups, quests, diaries, boss kills and collection log entries, and keeps the newest 250 on this computer. Ones it can’t be sure of count as Needs checking.',
+      },
+      {
+        kind: 'text',
+        text: 'Noticing an event never rolls and never changes your run, and the local history isn’t sent to the companion. Open web Roll Inbox to roll there.',
+      },
     ],
-    bullets: [
-      'Open web Roll Inbox opens the companion’s own Roll Inbox.',
-      'RuneLite’s local history isn’t uploaded or sent to it.',
-      'Roll in the companion, not from a local event alone.',
-    ],
-    screenshotIds: ['sidebar-roll-inbox'],
-  },
-  {
-    id: 'run-and-keys',
-    number: 9,
-    title: 'Run and the three Keys',
-    summary: 'Run shows whose run it is, your progress, and what the run holds, in the companion’s words.',
-    paragraphs: [
-      'Character names the run’s character, with (you) when you’re logged in on it, or the character you’re on when it differs. Run shows the end of the run’s id, so you can tell runs apart without sharing it.',
-      `The card shows how much you’ve unlocked, your ${RUNELITE_TERMS.KEYS}, ${RUNELITE_TERMS.OMNI_KEYS} and ${RUNELITE_TERMS.CHAOS_KEYS}, your ${RUNELITE_TERMS.FATE_POINTS}, an active ritual and your next goal.`,
-    ],
-    bullets: [
-      `${RUNELITE_TERMS.KEYS}: choose the table; Fate chooses the unlock.`,
-      `${RUNELITE_TERMS.OMNI_KEYS}: choose the exact unlock.`,
-      `${RUNELITE_TERMS.CHAOS_KEYS}: neither the table nor the unlock is yours to choose.`,
-    ],
-    screenshotIds: ['sidebar-run'],
   },
   {
     id: 'connection-and-backup',
-    number: 10,
+    number: 8,
     title: 'Connection & backup',
-    summary: 'Connection & backup holds online sync, the pairing, and the ways to load rules without the relay.',
-    paragraphs: [
-      'Online sync turns the relay on or off. Re-pair tracker… pairs another profile, and keeps the current one until the new one sends its rules. Disconnect forgets the pairing and keeps the rules you have as a backup. Check now asks the tracker at once.',
-      'Import from clipboard reads rules you copied from the tracker. Load newest backup file reads the newest fate-locked-bundle-*.json in %USERPROFILE%\\.runelite\\fate-locked\\ on Windows, only when you select it. RuneLite also keeps the last rules it accepted and brings them back when it starts, even offline.',
-      'A backup that can’t be read, or is older or for another run, keeps the rules you had.',
+    lede: 'Online sync, your pairing, and ways to load your rules without the relay.',
+    icon: 'Friends_List.png',
+    blocks: [
+      { kind: 'figure', figureId: 'connection' },
+      {
+        kind: 'text',
+        text: 'Disconnect forgets the pairing and keeps the rules you have as a backup. RuneLite also keeps the last rules it accepted, and uses them when it starts, even offline.',
+      },
+      { kind: 'heading', text: 'Without the relay' },
+      {
+        kind: 'steps',
+        steps: [
+          {
+            title: 'From the clipboard',
+            body: 'Copy your rules in the companion, then select Import from clipboard, or press the import hotkey if you’ve set one.',
+          },
+          {
+            title: 'From a file',
+            body: 'Save your rules from the companion as fate-locked-bundle-*.json in %USERPROFILE%\\.runelite\\fate-locked\\ on Windows, then select Load newest backup file.',
+          },
+        ],
+      },
+      {
+        kind: 'text',
+        text: 'A backup that can’t be read, is older than yours, or is for another run keeps the rules you had.',
+      },
+      {
+        kind: 'note',
+        title: 'Your privacy',
+        text: 'RuneLite contacts one fixed Fate Locked relay, and only to fetch your rules. The relay sees your IP address, as any internet service does. RuneLite does not upload gameplay data. Your pairing page is private: leave it out of screenshots and support messages.',
+      },
     ],
-    bullets: [
-      'Clipboard: copy your rules in the tracker, then select Import from clipboard.',
-      'Backup file: put a file from the tracker named fate-locked-bundle-*.json in the folder, then select Load newest backup file.',
+  },
+  {
+    id: 'in-game',
+    number: 9,
+    title: 'In game',
+    lede: 'Your rules drawn where you play. Each part has its own setting, and every one can be turned off.',
+    icon: 'Compass.png',
+    blocks: [
+      {
+        kind: 'terms',
+        items: [
+          {
+            term: 'Chunk borders',
+            text: 'Dashed lines on the ground where locked land starts, over a dark underlay so they read on any ground. The dashes are fixed to the tiles, and whatever stands in front of a line, such as a tree, a wall or you, hides it. All edges adds a thin line between unlocked chunks too.',
+          },
+          { term: 'Shade', text: 'A band of shade two tiles deep on the locked side of each locked edge.' },
+          { term: 'Minimap', text: 'The same edges on the minimap, and locked land shaded.' },
+          {
+            term: 'World map',
+            text: 'Locked land shaded like fog and your unlocked land outlined; in Chunked mode, a light fill on the frontier. Hover a chunk for its area and status, and what it holds if you like. Pins on locked areas are optional.',
+          },
+          {
+            term: 'HUD',
+            text: 'A box over the game. Compact shows where you are, its status and why, Strict Mode, and the nearest bank and shop. Detailed adds your progress, Keys, Fate Points and what the place holds.',
+          },
+          {
+            term: 'Alerts',
+            text: 'Walking into a locked area posts a chat line naming it and why, and if you like a sound and one short fade. The same area alerts again only after a minute.',
+          },
+          { term: 'Menu tags', text: '(Locked) after right-click options your rules lock. It never blocks a click.' },
+          {
+            term: 'Warnings',
+            text: 'A chat line for a bank you haven’t unlocked, a Slayer task in locked areas, and gear above your unlocked tier.',
+          },
+          { term: 'Infoboxes', text: 'Boxes for Keys, Fate Points and progress, each with its OSRS icon.' },
+        ],
+      },
+      {
+        kind: 'text',
+        text: 'All of it uses one set of colours: Default, Colour-blind safe, or your own. Nothing is drawn or checked for another character’s run.',
+      },
     ],
-    screenshotIds: ['sidebar-connection'],
-    settingsSections: ['Backup'],
   },
   {
     id: 'settings',
-    number: 11,
+    number: 10,
     title: 'Settings',
-    summary: 'Every setting is in RuneLite’s configuration, under Fate Locked Ironman, in sections that follow the sidebar.',
-    paragraphs: [
-      'Open RuneLite’s configuration, the wrench, and select Fate Locked Ironman. Tracker, Strict Mode, Alerts and Display are open; Custom colours and Backup start closed.',
-      'Settings change only what RuneLite shows and how it warns you. They never unlock anything, roll, or change your run.',
+    lede: `All ${RUNELITE_SETTINGS.length} settings, in RuneLite’s configuration under Fate Locked Ironman.`,
+    icon: 'Hammer.png',
+    blocks: [
+      {
+        kind: 'text',
+        text: 'Open RuneLite’s configuration (the wrench) and select Fate Locked Ironman; its sections follow the sidebar. Settings change only what RuneLite shows and how it warns you. They never unlock anything, roll or change your run.',
+      },
+      { kind: 'settings' },
+      { kind: 'heading', text: 'Suggested setups' },
+      { kind: 'presets' },
     ],
-    bullets: [
-      'Tracker: online sync.',
-      'Strict Mode: the guard and its pause hotkey.',
-      'Alerts: locked areas, area changes, rule warnings, tags, reminders, notifications.',
-      'Display: the HUD, the world map, borders, the minimap, infoboxes and colours.',
-      'Custom colours and Backup: your own colours, and the clipboard hotkey.',
-    ],
-    screenshotIds: [],
-  },
-  {
-    id: 'alerts',
-    number: 12,
-    title: 'Alerts',
-    summary: 'Choose how RuneLite tells you about locked areas, your rules, and events worth a roll.',
-    paragraphs: [
-      'Walking into a locked area posts a chat line that names the area and says why, and by default a sound and a short fade around the game view. Each area alerts once; the same area again only after a minute.',
-      'Rule warnings, the (Locked) tag on right-click options and roll reminders each have their own setting. None of them unlocks anything or changes the run.',
-    ],
-    bullets: [
-      'Keep the defaults for a balanced setup.',
-      'Also send RuneLite notifications helps when the client is in the background.',
-      'Turn off any channel that makes too much noise.',
-    ],
-    screenshotIds: [],
-    settingsSections: ['Alerts'],
-  },
-  {
-    id: 'in-game-display',
-    number: 13,
-    title: 'In-game display',
-    summary: 'The HUD, chunk borders, the minimap, the world map and infoboxes show your rules where you play.',
-    paragraphs: [
-      'The HUD sits over the game in Compact or Detailed. Chunk borders are dashed where locked land starts, over a dark underlay, with a band of shade on the locked side. The minimap draws the same edges.',
-      'The world map shades locked land like fog of war and leaves unlocked land clear, with its edge outlined; in Chunked mode the frontier has a light fill. Hovering a chunk shows its area, status and, if you choose, what it holds.',
-      'Colours come from one palette: Default, Colour-blind safe, or your own. Nothing is drawn for another character’s run.',
-    ],
-    bullets: [
-      'Pins on locked areas are off by default, to keep the map clear.',
-      'Infoboxes for Keys, Fate Points and progress are off by default.',
-      'Each layer has its own setting; turning one off leaves the others.',
-    ],
-    screenshotIds: [],
-    settingsSections: ['Display', 'Custom colours'],
-  },
-  {
-    id: 'recommended-configurations',
-    number: 14,
-    title: 'Recommended configurations',
-    summary: 'Start with one of four simple setups, then change only what helps you.',
-    paragraphs: [
-      'Balanced defaults suit most players. High visibility turns every channel on. Minimal screen keeps the game view clear and leaves the map and sidebar to tell you.',
-      'Strict travel adds Strict Mode to the defaults. It still fails open when it can’t be sure, and its pause lasts 60 seconds.',
-    ],
-    bullets: RUNELITE_GUIDE_PRESETS.map(preset => preset.title),
-    screenshotIds: [],
   },
   {
     id: 'troubleshooting',
-    number: 15,
+    number: 11,
     title: 'Troubleshooting',
-    summary: 'Connection, rules, display and Strict Mode problems can be read from the sidebar.',
-    paragraphs: [
-      'Start with the status card: its title and its one action explain most problems without changing a setting or losing your rules.',
-      'Use the links below for the official Plugin Hub listing, RuneLite’s review, and companion support. Leave pairing pages, run ids, file paths and unrelated chat out of reports.',
+    lede: 'Start with the status card: its title and its button explain most problems.',
+    icon: 'Herblore_icon.png',
+    blocks: [
+      { kind: 'troubleshooting' },
+      { kind: 'heading', text: 'Links' },
+      { kind: 'resources' },
     ],
-    bullets: RUNELITE_GUIDE_TROUBLESHOOTING.map(item => item.symptom),
-    screenshotIds: [],
   },
   {
     id: 'glossary',
-    number: 16,
+    number: 12,
     title: 'Glossary',
-    summary: 'Plain definitions for the words the companion and the RuneLite plugin share.',
-    paragraphs: [
-      'The sidebar, the HUD and the companion use these words the same way.',
-    ],
-    bullets: RUNELITE_GUIDE_GLOSSARY.map(item => `${item.term}: ${item.definition}`),
-    screenshotIds: [],
+    lede: 'The words the plugin and the companion share, and what they mean.',
+    icon: 'Quest_point_icon.png',
+    blocks: [{ kind: 'glossary' }],
   },
 ];

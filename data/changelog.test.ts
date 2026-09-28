@@ -20,7 +20,17 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-28-runelite-sidebar-and-display');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-28-runelite-guide-redesign');
+  });
+
+  it('announces the redesigned RuneLite guide', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-28-runelite-guide-redesign');
+    expect(release?.title).toBe('RuneLite Guide Redesigned');
+    expect(Object.keys(release?.sections ?? {})).toEqual(['changed']);
+    expect(release?.sections.changed).toEqual([
+      expect.stringMatching(/RuneLite Plugin Guide.*twelve short chapters.*each card of the sidebar.*every setting.*glossary.*contents follow you.*Jump to menu/),
+      expect.stringMatching(/plugin’s own code at twice the detail.*outlined and numbered beside the picture.*no marker covers what it names/),
+    ]);
   });
 
   it('announces the RuneLite plugin’s new sidebar and display, and the guide that matches them', () => {

@@ -1,13 +1,14 @@
 // @ts-expect-error Node types are intentionally excluded from the browser app.
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 // @ts-expect-error Node types are intentionally excluded from the browser app.
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   RUNELITE_GUIDE_CHAPTERS,
+  RUNELITE_GUIDE_FIGURES,
   RUNELITE_GUIDE_GLOSSARY,
   RUNELITE_GUIDE_PRESETS,
-  RUNELITE_GUIDE_SCREENSHOTS,
+  RUNELITE_GUIDE_RESOURCES,
   RUNELITE_GUIDE_SETTINGS,
   RUNELITE_GUIDE_TROUBLESHOOTING,
   RUNELITE_SIDEBAR_CARD_TITLES,
@@ -82,17 +83,26 @@ describe('the RuneLite wording contract', () => {
   });
 });
 
+/** The guide's components: every one of them, not its tests, so a new one can't slip past. */
+function guideComponents(): string[] {
+  const folder = 'components/runelite-guide';
+  return (readdirSync(folder) as string[])
+    .filter(name => name.endsWith('.tsx') && !name.includes('.test.'))
+    .sort();
+}
+
 /** Everything the guide says: its data, and the text written into its components. */
 function guideText(): string {
-  const components = ['RunelitePluginGuide.tsx', 'GuideScreenshot.tsx', 'GuideSettingsTable.tsx']
+  const components = guideComponents()
     .map(name => readFileSync(resolve('components/runelite-guide', name), 'utf8'));
   return JSON.stringify([
     RUNELITE_GUIDE_CHAPTERS,
     RUNELITE_GUIDE_SETTINGS,
-    RUNELITE_GUIDE_SCREENSHOTS,
+    RUNELITE_GUIDE_FIGURES,
     RUNELITE_GUIDE_TROUBLESHOOTING,
     RUNELITE_GUIDE_GLOSSARY,
     RUNELITE_GUIDE_PRESETS,
+    RUNELITE_GUIDE_RESOURCES,
   ]) + components.join(' ');
 }
 
@@ -121,6 +131,15 @@ describe('the RuneLite guide, held to the contract', () => {
     for (const [name, term] of Object.entries(RUNELITE_TERMS)) {
       if (name !== 'LOCKED_TAG') expect(defined.has(term), term).toBe(true);
     }
+  });
+
+  it('reads every one of its components', () => {
+    expect(guideComponents()).toEqual([
+      'GuideFigure.tsx',
+      'GuideReference.tsx',
+      'GuideSettings.tsx',
+      'RunelitePluginGuide.tsx',
+    ]);
   });
 
   it('never says an avoided word', () => {
