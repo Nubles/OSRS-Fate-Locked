@@ -19,6 +19,19 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-29-roll-inbox-groundwork',
+    title: 'Groundwork for RuneLite’s Roll Inbox',
+    date: '2026-09-29',
+    sections: {
+      added: [
+        'The RuneLite sync now also sends what the next plugin update needs to name what it notices: each boss by the names the game prints in its kill count, every quest, and every achievement diary tier. The current plugin ignores them.',
+      ],
+      changed: [
+        'The Roll Inbox is ready for the next RuneLite update, which will fill it: every event from one batch can be rolled, not only the first; a run not yet linked to a character takes events too; and clues, Slayer tasks and collection log items the game names alike, such as the 18 chompy bird hats, lead to a roll or a choice instead of a dead end. Logging by hand, rolling and spending Keys are unchanged.',
+      ],
+    },
+  },
+  {
     id: '2026-09-28-runelite-guide-redesign',
     title: 'RuneLite Guide Redesigned',
     date: '2026-09-28',
