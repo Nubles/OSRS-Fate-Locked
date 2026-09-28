@@ -7,7 +7,7 @@ import {
   RUNELITE_GUIDE_RESOURCES,
   RUNELITE_GUIDE_SCREENSHOTS,
   RUNELITE_GUIDE_SETTINGS,
-  RUNELITE_PANEL_SECTIONS,
+  RUNELITE_SIDEBAR_CARD_TITLES,
 } from '../../data/runeliteGuide';
 import { RunelitePluginGuide } from './RunelitePluginGuide';
 
@@ -41,8 +41,8 @@ describe('RunelitePluginGuide', () => {
     expect(html.match(/data-guide-chapter-header=/g)).toHaveLength(
       RUNELITE_GUIDE_CHAPTERS.length,
     );
-    expect(html.match(/data-guide-panel-section=/g)).toHaveLength(
-      RUNELITE_PANEL_SECTIONS.length,
+    expect(html.match(/data-guide-sidebar-card=/g)).toHaveLength(
+      RUNELITE_SIDEBAR_CARD_TITLES.length,
     );
     expect(html.match(/data-guide-preset=/g)).toHaveLength(
       RUNELITE_GUIDE_PRESETS.length,
@@ -65,9 +65,14 @@ describe('RunelitePluginGuide', () => {
     expect(officialSupportHeading?.[1]).not.toContain('font-serif');
 
 
-    for (const section of RUNELITE_PANEL_SECTIONS) {
-      expect(decodedHtml).toContain(section);
+    for (const card of RUNELITE_SIDEBAR_CARD_TITLES) {
+      expect(decodedHtml).toContain(card);
     }
+    expect(decodedHtml.replaceAll('<!-- -->', '')).toContain(
+      `each of the sidebar’s ${RUNELITE_SIDEBAR_CARD_TITLES.length} cards, and what all ${RUNELITE_GUIDE_SETTINGS.length} settings change`,
+    );
+    expect(html.match(/data-guide-settings-section=/g)).toHaveLength(6);
+    expect(html.match(/data-guide-setting-card=/g)).toHaveLength(RUNELITE_GUIDE_SETTINGS.length);
 
     for (const setting of RUNELITE_GUIDE_SETTINGS) {
       expect(decodedHtml).toContain(setting.label);

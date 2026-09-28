@@ -1,4 +1,17 @@
+// @ts-expect-error Node types are intentionally excluded from the browser app.
+import { readFileSync } from 'node:fs';
+// @ts-expect-error Node types are intentionally excluded from the browser app.
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import {
+  RUNELITE_GUIDE_CHAPTERS,
+  RUNELITE_GUIDE_GLOSSARY,
+  RUNELITE_GUIDE_PRESETS,
+  RUNELITE_GUIDE_SCREENSHOTS,
+  RUNELITE_GUIDE_SETTINGS,
+  RUNELITE_GUIDE_TROUBLESHOOTING,
+  RUNELITE_SIDEBAR_CARD_TITLES,
+} from './runeliteGuide';
 import {
   RUNELITE_AVOIDED_WORDS,
   RUNELITE_SETTING_SECTIONS,
@@ -66,5 +79,55 @@ describe('the RuneLite wording contract', () => {
     expect(Object.keys(RUNELITE_WORDING)).toEqual(['version', 'terms', 'avoidedWords', 'settingSections', 'settings',
       'sidebarCards']);
     expect(RUNELITE_WORDING.settings).toHaveLength(21);
+  });
+});
+
+/** Everything the guide says: its data, and the text written into its components. */
+function guideText(): string {
+  const components = ['RunelitePluginGuide.tsx', 'GuideScreenshot.tsx', 'GuideSettingsTable.tsx']
+    .map(name => readFileSync(resolve('components/runelite-guide', name), 'utf8'));
+  return JSON.stringify([
+    RUNELITE_GUIDE_CHAPTERS,
+    RUNELITE_GUIDE_SETTINGS,
+    RUNELITE_GUIDE_SCREENSHOTS,
+    RUNELITE_GUIDE_TROUBLESHOOTING,
+    RUNELITE_GUIDE_GLOSSARY,
+    RUNELITE_GUIDE_PRESETS,
+  ]) + components.join(' ');
+}
+
+describe('the RuneLite guide, held to the contract', () => {
+  it('describes every setting the plugin has, in the contract’s words', () => {
+    expect(RUNELITE_GUIDE_SETTINGS.map(({ key, section, label, defaultValue, options }) => ({
+      key,
+      section,
+      name: label,
+      defaultValue,
+      ...(options ? { options } : {}),
+    }))).toEqual(RUNELITE_SETTINGS);
+    for (const setting of RUNELITE_GUIDE_SETTINGS) {
+      for (const text of [setting.purpose, setting.visibleResult, setting.changeWhen]) {
+        expect(text?.trim().length ?? 0, setting.key).toBeGreaterThan(20);
+      }
+    }
+  });
+
+  it('names the sidebar’s cards as the plugin does', () => {
+    expect(RUNELITE_SIDEBAR_CARD_TITLES).toEqual(RUNELITE_SIDEBAR_CARDS);
+  });
+
+  it('defines every term the plugin uses in its glossary', () => {
+    const defined = new Set(RUNELITE_GUIDE_GLOSSARY.map(item => item.term));
+    for (const [name, term] of Object.entries(RUNELITE_TERMS)) {
+      if (name !== 'LOCKED_TAG') expect(defined.has(term), term).toBe(true);
+    }
+  });
+
+  it('never says an avoided word', () => {
+    const text = guideText();
+    for (const { word, use } of RUNELITE_AVOIDED_WORDS) {
+      expect(says(text, word), `the guide says "${word}"; say "${use}"`).toBe(false);
+    }
+    expect(says(text, RUNELITE_TERMS.STRICT_MODE)).toBe(true);
   });
 });

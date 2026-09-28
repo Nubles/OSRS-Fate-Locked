@@ -105,22 +105,22 @@ describe('RunelitePluginGuide navigation and focus', () => {
     const opener = await openGuide(host);
 
 
-    const guardianLink = host.querySelector<HTMLAnchorElement>(
-      'a[href="#runelite-guide-guardian"]',
+    const strictModeLink = host.querySelector<HTMLAnchorElement>(
+      'a[href="#runelite-guide-strict-mode"]',
     );
-    if (!guardianLink) throw new Error('Missing guide navigation');
+    if (!strictModeLink) throw new Error('Missing guide navigation');
 
     await act(async () => {
-      guardianLink.click();
+      strictModeLink.click();
     });
 
     expect(scrollIntoView).toHaveBeenCalledWith({
       behavior: 'auto',
       block: 'start',
     });
-    expect(guardianLink.getAttribute('aria-current')).toBe('location');
-    expect(guardianLink.className).toContain('border-amber-400/40');
-    expect(guardianLink.className).toContain('bg-amber-400/10');
+    expect(strictModeLink.getAttribute('aria-current')).toBe('location');
+    expect(strictModeLink.className).toContain('border-amber-400/40');
+    expect(strictModeLink.className).toContain('bg-amber-400/10');
 
     const inactiveLink = host.querySelector<HTMLAnchorElement>(
       'a[href="#runelite-guide-what-it-does"]',
@@ -171,8 +171,8 @@ describe('RunelitePluginGuide navigation and focus', () => {
     expect(desktopNav).toBeTruthy();
     expect(groupLabels).toEqual(new Set([
       'Getting started',
-      'Panel sections',
-      'Configuration',
+      'The sidebar',
+      'Settings',
       'Help',
     ]));
     expect(host.querySelector('[data-guide-overview]')).toBeTruthy();
@@ -210,15 +210,15 @@ describe('RunelitePluginGuide navigation and focus', () => {
     const mobileContents = host.querySelector<HTMLDetailsElement>(
       '[data-runelite-guide-mobile-contents]',
     );
-    const mobileGuardian = host.querySelector<HTMLAnchorElement>(
-      '[data-runelite-guide-nav="mobile"] a[href="#runelite-guide-guardian"]',
+    const mobileStrictMode = host.querySelector<HTMLAnchorElement>(
+      '[data-runelite-guide-nav="mobile"] a[href="#runelite-guide-strict-mode"]',
     );
-    if (!mobileContents || !mobileGuardian) {
+    if (!mobileContents || !mobileStrictMode) {
       throw new Error('Missing mobile guide contents');
     }
     await act(async () => {
       mobileContents.open = true;
-      mobileGuardian.click();
+      mobileStrictMode.click();
     });
     expect(mobileContents.open).toBe(false);
     expect(scrollIntoView).toHaveBeenCalled();

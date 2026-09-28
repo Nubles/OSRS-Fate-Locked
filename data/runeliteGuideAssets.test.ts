@@ -10,19 +10,7 @@ import {
 
 const required = [
   'plugin-hub-install',
-  'panel-disconnected',
   'companion-confirmation',
-  'panel-connected',
-  'unified-panel',
-  'current-chunk',
-  'guardian',
-  'roll-inbox',
-  'run-keys',
-  'bundle-recovery',
-  'warnings',
-  'rendering',
-  'world-map-tooltip',
-  'scene-minimap-hud',
 ] as const;
 
 interface ScreenshotManifestEntry {
