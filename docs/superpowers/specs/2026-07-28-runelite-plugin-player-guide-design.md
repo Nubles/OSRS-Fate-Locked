@@ -6,11 +6,12 @@ Build a complete player-facing handbook for the live **Fate Locked Ironman**
 RuneLite Plugin Hub plugin inside the Fate Locked companion app. The handbook
 must explain installation, connection, everyday use, every unified-panel
 section, all retained settings, visible overlays, recovery paths, privacy, and
-troubleshooting. It must use annotated screenshots captured from the actual
-Plugin Hub build rather than recreated interfaces.
+troubleshooting. It must use authentic, annotated pictures of the plugin, drawn
+by its own code or captured, rather than recreated interfaces (see Screenshot
+policy).
 
-The live Plugin Hub manifest currently points to plugin source commit
-`1e118ec73f5a0fad17fc7b0704461a602d169041`.
+When this spec was first written, the live Plugin Hub manifest pointed to
+plugin source commit `1e118ec73f5a0fad17fc7b0704461a602d169041`.
 
 ## Audience and scope
 
@@ -45,132 +46,61 @@ Opening and closing the handbook does not change the run. Closing a manually
 opened guide returns focus to the control that opened it. Direct-query opening
 uses the existing safe fallback focus behaviour.
 
-Desktop uses a sticky left table of contents and a scrollable article. Mobile
-uses a collapsible table of contents above the article. Every chapter has a
-stable anchor, and the active chapter is visible in the table of contents.
-The first screen presents a five-minute quick start rather than making a new
-player read the complete reference.
+*The September 2026 rebuild replaced this paragraph's first version.* Desktop
+shows the contents in a left column, in four groups, beside a scrolling
+article, and marks the chapter being read as the article scrolls. A phone
+shows a **Jump to** menu under the header instead, and nothing is fixed to the
+bottom of the screen. Every chapter has a stable anchor. The first screen is a
+short introduction with links to Get started, Here, Strict Mode, Settings and
+Troubleshooting, so a new player starts with the five-minute setup rather than
+the complete reference.
 
 ## Chapter architecture
 
-The handbook opens with an unnumbered **Five-minute setup** card that links to
-the Install and Connect chapters. It then contains these chapters in order:
+*The September 2026 rebuild replaced this section's first version, which
+followed the unified panel that Stage 3 retired.* After the introduction come
+twelve chapters, in four groups:
 
-1. **What the plugin does**
-   - One Plugin Hub plugin and one RuneLite sidebar.
-   - The companion authors the run; RuneLite reads and displays its rules.
-   - RuneLite warnings and local observations do not replace tracker rolls.
+**Start here**
 
-2. **Install from Plugin Hub**
-   - Find and install **Fate Locked Ironman** from Plugin Hub.
-   - Open its sidebar.
+1. **Get started**: install from the Plugin Hub, open the sidebar, connect the
+   tracker, confirm the profile in the companion, and play. The status card's
+   states while connecting sit side by side. RuneLite downloads the run's rules
+   and does not upload gameplay data; the companion is still where the run
+   changes.
+2. **The sidebar at a glance**: the status card, then five cards that open and
+   close.
 
-3. **Connect the tracker**
-   - Select **Connect tracker**.
-   - Confirm the fictional/demo or real tracker profile in the opened page.
-   - Return to RuneLite and verify **Connected**.
+**The cards**
 
-4. **Connection and privacy**
-   - Explain Not connected, Waiting, Connected, Offline, and rejected/import
-     feedback in player terms.
-   - RuneLite retrieves a complete rules bundle from the fixed Fate Locked
-     relay.
-   - The relay sees the request IP address.
-   - RuneLite does not upload gameplay data.
-   - Pairing codes and Run IDs must not be shared in screenshots or support
-     posts.
+3. **The status card**: each state, what it means, and its one action.
+4. **Here**: the rules for the place the player stands in, the arrow to the
+   nearest spot, and the way to one seen before, drawn by Shortest Path when it
+   runs. Spots seen are remembered on the player's computer.
+5. **Strict Mode**: optional and off by default. It stops only a click it can
+   prove leads somewhere the rules lock, fails open otherwise, and pauses for
+   60 seconds.
+6. **Run**: the character, progress, Keys, Omni-Keys, Chaos Keys, Fate Points
+   and the ritual. The card only reads the run.
+7. **Roll inbox**: events worth a roll, what needs checking, and warnings.
+   Noticing an event never rolls, and the local history stays on the computer.
+8. **Connection & backup**: online sync, pairing, and backups from the
+   clipboard or a file. Privacy: RuneLite contacts one fixed relay, which sees
+   the request's IP address.
 
-5. **Unified panel overview**
-   - Explain that headings expand and collapse independently.
-   - List the seven actual sections: Current chunk, Guardian, Roll inbox, Run,
-     Bundle, Warnings, and Rendering.
-   - Current chunk and Guardian start expanded; the others start collapsed.
+**In game**
 
-6. **Current Chunk**
-   - Area/chunk identity and entry source.
-   - Can do, Not ready, and Locked counts.
-   - Category rows and their permission/detail text.
-   - The signed-out prompt: **Enter the game to see this chunk**.
+9. **In game**: chunk borders, shade, the minimap, the world map, the HUD,
+   alerts, menu tags, warnings and infoboxes, each with its own off switch.
+10. **Settings**: every setting, by RuneLite's sections, then four suggested
+    setups.
 
-7. **Guardian and Strict Mode**
-   - Strict Mode is optional and off by default.
-   - It can consume only a player-selected click when fresh, exact,
-     account-bound rules prove the destination Locked.
-   - Unknown, ambiguous, stale, missing, future, wrong-account, and unresolved
-     cases fail open.
-   - The shared pause lasts 60 seconds and resumes automatically.
-   - Recent Prevented Actions is a local explanation/audit view, not an action
-     queue.
+**Help**
 
-8. **Roll Inbox**
-   - Local events, Needs review, and Warnings counters.
-   - The local history keeps the newest 250 unique observations.
-   - Ambiguous observations go to Needs review.
-   - Detection never rolls and never changes tracker progression.
-   - **Open web Roll Inbox** opens a separate web view and does not transfer
-     RuneLite's local history.
-
-9. **Run and the three Keys**
-   - Explain Profile, Account, Run ID, Fate, Buff, and Goal.
-   - **Keys:** spend one on a chosen table for a random eligible unlock.
-   - **Omni Keys:** choose the exact eligible unlock you want.
-   - **Chaos Keys:** receive a random eligible unlock from any table; the
-     player does not choose the table.
-   - Use the exact sidebar labels **Keys**, **Omni Keys**, and **Chaos Keys**.
-
-10. **Bundle recovery**
-   - Normal connected relay import remains the preferred path.
-   - **Auto-reload on change** watches for the newest matching bundle file.
-   - **Re-import hotkey** imports the clipboard bundle without opening the
-     sidebar.
-   - Explain **Import from clipboard**, **Paste JSON**, and **Reload from
-     file** step by step.
-   - Windows recovery folder:
-     `%USERPROFILE%\.runelite\fate-locked\`.
-   - Invalid or unsupported imports keep the previous valid rules.
-
-11. **Warnings**
-    - Explain every retained warning control, its default, what the player
-      sees, and why they might change it.
-    - Distinguish chat, HUD, screen flash, native RuneLite notification,
-      menu tag, info box, and reminder behaviour.
-
-12. **Rendering**
-    - Explain every retained rendering control and color.
-    - Distinguish the world map, game scene, minimap, borders, nearby shading,
-      markers, hover tooltip, and tooltip content.
-    - Define Unlocked, Frontier, Locked, and Unauthored colors.
-
-13. **In-game overlays**
-    - Show the run HUD, current-chunk content box, native info boxes, world-map
-      tint/markers/tooltip, scene tint, minimap tint, locked border, nearby
-      locked shading, and real warning presentation when safely reproducible.
-
-14. **Recommended configurations**
-    - **Balanced defaults:** the shipped defaults.
-    - **High visibility:** default warnings plus native notifications, content
-      box, and info boxes.
-    - **Minimal screen:** map rendering retained while optional HUD/content
-      elements are disabled.
-    - **Strict travel:** balanced defaults plus Strict Mode, with the fail-open
-      and 60-second pause explanation beside it.
-
-15. **Troubleshooting**
-    - Connect button opens a page but RuneLite stays Waiting.
-    - Not connected, Offline, expired/not found, stale, wrong-account, and
-      unsupported bundle feedback.
-    - Tracker account does not match the logged-in character.
-    - No chunk appears because the player is signed out or data is absent.
-    - A map/scene/minimap layer is missing because its setting is off.
-    - A tooltip lacks content because its content toggle is off.
-    - Clipboard import is empty or malformed.
-    - File auto-reload uses the wrong folder or filename pattern.
-    - Strict Mode does not block an uncertain action by design.
-    - Where to link the Plugin Hub listing, current review, and support issue.
-
-16. **Glossary**
-    - Authored, bundle, chunk, frontier, locked, unauthored, relay, local
-      observation, Needs review, Strict Mode, and the three Key types.
+11. **Troubleshooting**: each problem as the player sees it, its likely cause
+    and the fix, step by step; then the Plugin Hub page, the source, and where
+    to report a problem.
+12. **Glossary**: the words the plugin and the companion share.
 
 ## Exact setting inventory
 
@@ -191,15 +121,17 @@ captures from the live Plugin Hub build.* Every image says where it comes
 from, in its caption and in the manifest:
 
 - **Rendered**: the plugin's sidebar, drawn from the plugin's own code at a
-  release commit, in RuneLite's own theme, by the plugin's `gradle
+  commit on its main branch, in RuneLite's own theme, by the plugin's `gradle
   guideScreenshots` task. The run is the golden bundles' fictional
-  "Iron Example". Captioned "Rendered from the plugin's code, in RuneLite's own
-  theme." The sidebar crops this replaced were probably not taken in RuneLite's
-  theme, so renders are the more faithful picture.
-- **Client capture**: a real RuneLite client, for what only the client draws,
-  such as the Plugin Hub. Captioned "Captured from the live Plugin Hub build."
-- **Web capture**: the companion itself. Captioned "Captured from the
-  companion."
+  "Iron Example". Since the September 2026 rebuild each render is drawn at
+  twice the detail and cut to the one card its chapter is about, with a margin
+  of the sidebar round it; the sidebar at a glance stays whole. Captioned
+  "Drawn by the plugin's own code, in RuneLite's theme."
+- **Web capture**: the companion itself, captured at twice the detail and shown
+  at its size on screen. Captioned "Captured from the companion."
+
+A capture of a real RuneLite client, such as the Plugin Hub, is allowed but none
+is shown: the install step is described in words.
 
 Mockups, reconstructed controls, AI-generated RuneLite windows and fabricated
 warning states are still not permitted. A render is the plugin's real code
@@ -210,11 +142,15 @@ account or chat information are excluded at capture time or redacted before
 publication. Redaction must not hide a control being taught. Renders use a
 fictional run and need none.
 
-The source PNG remains untouched. The guide renders responsive amber numbered
-markers as HTML overlays, each with an accessible explanation below the image.
-For a render, the tool works out each marker's position from where the
-components were laid out and writes it beside the images, so markers can't
-drift from what they name.
+The source PNG remains untouched. *The September 2026 rebuild replaced the
+markers drawn over the picture, which covered the words they named.* Each part
+a note names is outlined in gold; its numbered marker sits in a gutter beside
+the picture, joined to the outline by a thin line, and the numbered notes sit
+next to the picture, or under it on a narrow screen. Pointing at or focusing a
+note lights its outline and dims the others. For a render, the tool works out
+each outline from where the components were laid out, usually the whole row
+they sit on so no line crosses the card, and writes it beside the images, so
+outlines can't drift from what they name.
 
 In-game overlays (the HUD, borders, the minimap and the world map) are
 described in words until a logged-in client capture is taken; the guide never
@@ -222,22 +158,24 @@ presents a simulated scene as a capture.
 
 ## Screenshot inventory
 
-- Plugin Hub search and install result (client capture).
 - Companion pairing confirmation (web capture).
-- Rendered sidebar states: not connected, waiting for confirmation, rules that
-  may be out of date, another character, the sidebar at a glance, Here in a
-  locked place, Strict Mode paused, Roll inbox, Run, and Connection & backup.
+- Rendered: the sidebar at a glance; the status card in each of its seven
+  states (up to date, not connected, waiting, may be out of date, expired,
+  using a backup, another character); Here in a locked place, and Here
+  showing the way to one seen; Strict Mode paused; Run; Roll inbox; and
+  Connection & backup.
 
-`public/guides/runelite/manifest.json` (version 2) records for each image:
+`public/guides/runelite/manifest.json` (version 3) records for each image:
 
-- stable ID and filename, and the chapter that shows it;
-- its source: rendered, client capture or web capture;
-- the plugin commit shown, for a render or a client capture, and the
-  RuneLite version when known;
+- stable ID and filename;
+- its source: rendered or web capture;
+- the plugin commit that drew it, for a render, and the RuneLite version;
 - the date it was made, and its purpose;
-- its size and its SHA-256;
+- its size, its scale (2: two file pixels to each pixel it shows) and its
+  SHA-256;
 - redactions, if any; and
-- annotation IDs with normalized coordinates.
+- annotation IDs with their outlines: x, y, width and height as fractions of
+  the picture.
 
 `data/runeliteGuideAssets.test.ts` checks each against the file itself, and that
 the folder holds no image the manifest doesn't list.
@@ -247,11 +185,14 @@ the folder holds no image the manifest doesn't list.
 - `components/runelite-guide/RunelitePluginGuide.tsx` owns dialog/page shell,
   table of contents, chapter scrolling, close/focus behaviour, and responsive
   layout.
-- `components/runelite-guide/GuideScreenshot.tsx` renders an authentic image,
-  responsive annotation overlay, accessible callout list, and missing-image
-  fallback.
-- `components/runelite-guide/GuideSettingsTable.tsx` renders setting purpose,
-  default, result, and change guidance consistently.
+- `components/runelite-guide/GuideFigure.tsx` renders an authentic image, its
+  outlines and markers, the numbered notes beside it, a Full size link, and the
+  missing-image fallback; also a picture of a set, at its size in RuneLite.
+- `components/runelite-guide/GuideSettings.tsx` lists the settings by
+  RuneLite's sections; each opens to its choices, what the player sees, and
+  when to change it, and a colour default gets a swatch.
+- `components/runelite-guide/GuideReference.tsx` renders the suggested setups,
+  troubleshooting, external links and glossary.
 - `data/runeliteGuide.ts` is the typed source of chapter metadata, copy,
   setting inventory, screenshot references, recommended configurations,
   troubleshooting, and glossary entries.
@@ -270,8 +211,8 @@ typed data preserve the app's current safety and styling patterns.
 - Active chapter state is exposed without relying on color alone.
 - Screenshot alt text describes the underlying UI; numbered callouts are also
   available as text and do not rely on the image.
-- Mobile screenshots can be expanded to a zoomable lightbox or opened at
-  original resolution without losing the callout explanations.
+- Every picture has a Full size link to the file itself; its notes stay
+  beside or under it.
 - Reduced-motion preference disables smooth scrolling and nonessential
   transitions.
 
@@ -293,11 +234,16 @@ Automated coverage proves:
 - both menu and command palette expose the guide;
 - `?open=runelite-guide` opens it directly;
 - manual close restores focus correctly;
-- all 16 chapter IDs and all seven panel section names are present;
-- all 30 setting labels and defaults are present exactly once;
+- all twelve chapters are present in order, each once in the contents;
+- every setting in the wording contract is present with its default, choices
+  and prose;
 - the three Key definitions and privacy/Strict Mode contracts remain present;
-- every screenshot reference resolves to a manifest entry and file;
-- every annotation ID has normalized coordinates and accessible copy;
+- every picture reference resolves to a manifest entry and file, at its size,
+  scale and hash;
+- every outline lies inside its picture and has accessible copy, and a
+  render's outlines reach the card's right side;
+- markers never overlap or leave the picture, and pointing at a note lights
+  its outline;
 - external links use safe new-tab attributes; and
 - the guide lazy-loads rather than entering the initial application bundle.
 
