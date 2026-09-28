@@ -4,7 +4,7 @@ import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { resolveModeRules } from '../config/gameModes';
-import { RITUALS, ritualFateCost } from '../config/economy';
+import { RITUALS, ritualEffect, ritualFateCost } from '../config/economy';
 import { getChunkFrontier, chunkKey, chunkLabel } from '../utils/chunkAdjacency';
 import { chunkContentService } from '../services/ChunkContentService';
 import { X, ArrowRight } from 'lucide-react';
@@ -107,7 +107,7 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
       return {
         id: r.id,
         name: r.name,
-        desc: r.effect,
+        desc: ritualEffect(r.id, rules.ritualCostMultiplier),
         cost: r.keyCost ? `${r.keyCost} Keys`
           : isGambit ? `ALL Fate (min ${fate})`
           : `${fate} Fate Points`,
