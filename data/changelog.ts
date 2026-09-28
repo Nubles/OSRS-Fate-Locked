@@ -19,6 +19,21 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-28-runelite-sidebar-and-display',
+    title: 'RuneLite Plugin: New Sidebar and Display',
+    date: '2026-09-28',
+    sections: {
+      added: [
+        'The RuneLite plugin has a new sidebar. A status card says whether your rules are current and for this character, with the one thing to do about it, above cards for Here, Strict Mode, Run, Roll inbox, and Connection & backup.',
+        'In game, chunk borders are drawn where locked land starts, the world map and minimap show locked land as fog, a locked area alerts once rather than every chunk, and the HUD is Compact or Detailed.',
+      ],
+      changed: [
+        'Every RuneLite setting now lives in RuneLite’s configuration, under Fate Locked Ironman, with a colour-blind safe set of colours. Your old choices carry over.',
+        'The RuneLite guide is rewritten to match, in the plugin’s own words, and its sidebar pictures are drawn from the plugin’s own code.',
+      ],
+    },
+  },
+  {
     id: '2026-09-28-void-gambit-payout',
     title: 'Void Gambit Pays per Minimum Stake',
     date: '2026-09-28',

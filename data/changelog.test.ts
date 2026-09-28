@@ -20,7 +20,20 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-28-void-gambit-payout');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-28-runelite-sidebar-and-display');
+  });
+
+  it('announces the RuneLite plugin’s new sidebar and display, and the guide that matches them', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-28-runelite-sidebar-and-display');
+    expect(release?.title).toBe('RuneLite Plugin: New Sidebar and Display');
+    expect(release?.sections.added).toEqual([
+      expect.stringMatching(/new sidebar.*status card.*Here, Strict Mode, Run, Roll inbox, and Connection & backup/),
+      expect.stringMatching(/chunk borders.*fog.*alerts once.*Compact or Detailed/),
+    ]);
+    expect(release?.sections.changed).toEqual([
+      expect.stringMatching(/RuneLite’s configuration.*colour-blind safe.*old choices carry over/),
+      expect.stringMatching(/RuneLite guide.*plugin’s own words.*drawn from the plugin’s own code/),
+    ]);
   });
 
   it('announces the Void Gambit payout fix', () => {
