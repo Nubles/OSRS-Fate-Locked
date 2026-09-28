@@ -29,7 +29,7 @@ describe('authored changelog releases', () => {
     expect(release?.sections.added).toEqual([
       expect.stringMatching(/new sidebar.*status card.*Here, Strict Mode, Run, Roll inbox, and Connection & backup/),
       expect.stringMatching(/chunk borders.*fog.*all the way round.*alerts once.*Compact or Detailed/),
-      expect.stringMatching(/Here.*opens and closes.*Skilling skill by skill.*arrow points at the nearest one.*checks it in game.*Can do, Not ready or Locked/),
+      expect.stringMatching(/Here.*opens and closes.*Skilling skill by skill.*arrow points at the nearest one.*shows the way to the nearest you’ve seen.*Shortest Path.*checks it in game.*Can do, Not ready or Locked/),
     ]);
     expect(release?.sections.changed).toEqual([
       expect.stringMatching(/RuneLite’s configuration.*colour-blind safe.*old choices carry over/),
