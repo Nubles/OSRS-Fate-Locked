@@ -20,7 +20,7 @@ import { runProgress, type RunProgress } from './runProgress';
 import { slayerDecisions, slayerLocate, type SlayerDecision, type SlayerLocationSource } from './slayerDecisions';
 import { slayerReachability } from './slayerReach';
 import { travelDecisions, type TravelMethodDecision } from './travelDecisions';
-import { rulesDetection, type RulesDetection } from './runeliteDetection';
+import type { RulesDetection } from './runeliteDetection';
 import {
   buildChunkPermissionSnapshot,
   type ChunkPermissionSnapshot,
@@ -230,6 +230,8 @@ export async function buildRuneliteRulesManifest(
     : {};
 
   const unlocks = input.unlocks;
+  // Like the travel table, the detection names load only here, at export time.
+  const { rulesDetection } = await import('./runeliteDetection');
   const sections = {
     ...stage2,
     ...chunked,
