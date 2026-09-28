@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AutoRollPanel, fetchPlayer } from './AutoRollPanel';
 import type { BackupWriteResult } from '../utils/gamePersistence';
 
@@ -132,5 +132,68 @@ describe('Auto-Roll current hiscores', () => {
   it('reports a failed refresh instead of silently returning a stale snapshot', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 429, json: async () => ({}) })));
     await expect(fetchPlayer('Alex')).rejects.toThrow('Rate-limited');
+  });
+});
+
+describe('Auto-Roll account titles', () => {
+  const hiscores = (type: string) => vi.fn(async () => ({
+    ok: true,
+    json: async () => ({
+      displayName: 'Group Example',
+      type,
+      latestSnapshot: { data: { skills: { overall: { level: 664 }, attack: { level: 1 } } } },
+    }),
+  }));
+
+  const fetchAs = async (type: string) => {
+    vi.stubGlobal('fetch', hiscores(type));
+    render(<AutoRollPanel />);
+    fireEvent.change(screen.getByPlaceholderText('OSRS username…'), { target: { value: 'Group Example' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Fetch' }));
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+  };
+
+  const titleShown = () => document.querySelector('[data-account-title]')?.getAttribute('data-account-title');
+
+  // An in-memory store: Node's own localStorage isn't usable in every environment the tests run in.
+  beforeEach(() => {
+    const values = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => { values.set(key, value); },
+      removeItem: (key: string) => { values.delete(key); },
+    });
+  });
+
+  it("lets a group iron pick the title Wise Old Man can't see, and keeps it", async () => {
+    await fetchAs('regular');
+    expect(titleShown()).toBe('Regular');
+    expect(screen.getByText(/Wise Old Man lists group irons as regular accounts/)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hardcore Group Ironman' }));
+    expect(titleShown()).toBe('Hardcore Group Ironman');
+    expect(document.querySelector('[data-account-title] img')?.getAttribute('src'))
+      .toContain('Hardcore_group_ironman_chat_badge.png');
+    expect(screen.queryByText(/Wise Old Man lists group irons as regular accounts/)).toBeNull();
+
+    // The next look at the same character keeps the title.
+    cleanup();
+    await fetchAs('regular');
+    expect(titleShown()).toBe('Hardcore Group Ironman');
+
+    // And the player can take it back.
+    fireEvent.click(screen.getByRole('button', { name: 'Change' }));
+    expect(titleShown()).toBe('Regular');
+    expect(screen.getByRole('button', { name: 'Group Ironman' })).toBeTruthy();
+  });
+
+  it('shows a solo iron its title and badge from the hiscores, with no group choice', async () => {
+    await fetchAs('ironman');
+    expect(titleShown()).toBe('Ironman');
+    expect(document.querySelector('[data-account-title] img')?.getAttribute('src')).toContain('Ironman_chat_badge.png');
+    expect(screen.queryByRole('group', { name: 'Group ironman title' })).toBeNull();
   });
 });
