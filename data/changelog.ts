@@ -19,6 +19,17 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-28-runelite-guide-redesign',
+    title: 'RuneLite Guide Redesigned',
+    date: '2026-09-28',
+    sections: {
+      changed: [
+        'The RuneLite Plugin Guide is rebuilt in twelve short chapters: getting started, each card of the sidebar, what you see in game, every setting, fixes for common problems, and a glossary. The contents follow you as you read, and on a phone a Jump to menu takes their place.',
+        'Its pictures are drawn by the plugin’s own code at twice the detail, one card at a time. Each part is outlined and numbered beside the picture, so no marker covers what it names, and pointing at a note lights its part up.',
+      ],
+    },
+  },
+  {
     id: '2026-09-28-runelite-sidebar-and-display',
     title: 'RuneLite Plugin: New Sidebar and Display',
     date: '2026-09-28',
