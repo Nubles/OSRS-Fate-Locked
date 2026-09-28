@@ -7,7 +7,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
 import { REGION_MODIFIERS } from '../config/regionModifiers';
-import { CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, type Ritual } from '../config/economy';
+import { CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { TableType } from '../types';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
@@ -82,6 +82,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
   const activeMode = getGameMode(gameModeId);
   const rules = resolveModeRules(gameModeId, customMode);
   const ritualCost = (id: Ritual['id']) => ritualFateCost(id, rules.ritualCostMultiplier);
+  const ritualText = (id: Ritual['id']) => ritualEffect(id, rules.ritualCostMultiplier);
   const vanillaPolicyLabel = gameModeId === 'vanilla'
     ? 'Vanilla-only rules'
     : 'Vanilla-only (not active for this run)';
@@ -566,7 +567,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                             <div className="text-xs font-mono bg-black/40 p-3 rounded border border-white/5 text-gray-400">
                                                 Cost: <span className="text-white font-bold">{r.fateCost ? `${ritualCost(r.id)} Fate Points` : `${r.keyCost} Keys`}</span>
                                                 <br/>
-                                                Effect: {r.effect}
+                                                Effect: {ritualText(r.id)}
                                             </div>
                                         </div>
                                     );

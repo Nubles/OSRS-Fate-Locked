@@ -19,6 +19,16 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-28-void-gambit-payout',
+    title: 'Void Gambit Pays per Minimum Stake',
+    date: '2026-09-28',
+    sections: {
+      fixed: [
+        'A won Void Gambit now pays 1 Key per minimum stake as your mode prices it, whatever you stake: 1 per 9 Fate in Casual and 1 per 23 in Hardcore. It paid 1 per 15 in every mode, so in a cheap mode staking the minimum paid far more per Fate than waiting, and in an expensive mode less. The Void Altar and the Codex now name the price. Vanilla and Chunked runs are unchanged.',
+      ],
+    },
+  },
+  {
     id: '2026-09-27-runelite-update',
     title: 'RuneLite Plugin Update',
     date: '2026-09-27',

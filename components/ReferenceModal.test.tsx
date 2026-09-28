@@ -6,7 +6,7 @@ import { ReferenceModal } from './ReferenceModal';
 import { unlockableAreas } from '../utils/freeAreas';
 import { MISTHALIN_AREAS } from '../constants';
 
-type CodexTab = 'core' | 'economy' | 'drops' | 'unlocks';
+type CodexTab = 'core' | 'economy' | 'drops' | 'unlocks' | 'altar';
 
 const renderCodex = (tab: CodexTab, gameModeId = 'vanilla') => {
   const save = JSON.stringify({ gameModeId });
@@ -26,6 +26,14 @@ const renderCodex = (tab: CodexTab, gameModeId = 'vanilla') => {
 
 beforeEach(() => vi.unstubAllGlobals());
 afterEach(() => vi.unstubAllGlobals());
+
+describe('ReferenceModal Void Altar', () => {
+  it("names the Gambit's price per Key as the run's mode sets it", () => {
+    expect(renderCodex('altar')).toContain('Win: 1 Key per 15 staked');
+    expect(renderCodex('altar', 'casual')).toContain('Win: 1 Key per 9 staked');
+    expect(renderCodex('altar', 'hardcore')).toContain('Win: 1 Key per 23 staked');
+  });
+});
 
 describe('ReferenceModal Vanilla policy', () => {
   it('explains weighted failure Fate, Chaos milestones, and pity overflow', () => {

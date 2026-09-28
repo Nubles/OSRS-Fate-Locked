@@ -110,3 +110,16 @@ it.each([
   expect(current.fatePoints).toBe(accepted ? 0 : fate);
   expect(current.history.filter(e => e.meta?.ritual === 'GAMBIT')).toHaveLength(accepted ? 1 : 0);
 });
+
+it.each([
+  ['vanilla', 29, 1],
+  ['casual', 29, 3],
+  ['hardcore', 30, 1],
+] as const)('pays a won %s Gambit of %i Fate 1 Key per minimum stake: %i', async (mode, fate, keys) => {
+  localStorage.setItem('roll-audit', JSON.stringify({ ...createFreshState(), keys: 0, fatePoints: fate, gameModeId: mode, gameModeLocked: true }));
+  mount(); await settle();
+  vi.spyOn(Math, 'random').mockReturnValue(0);
+  act(() => current.performGambit());
+  expect(current.keys).toBe(keys);
+  expect(current.history.find(e => e.meta?.ritual === 'GAMBIT')?.meta?.keysAwarded).toBe(keys);
+});

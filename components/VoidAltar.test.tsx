@@ -76,6 +76,7 @@ describe('VoidAltar Gambit minimum stake', () => {
 
     const gambit = screen.getByRole('button', { name: /Void Gambit/ }) as HTMLButtonElement;
     expect(within(gambit).getByText(`ALL Fate (min ${minimum})`)).toBeTruthy();
+    expect(within(gambit).getByText(new RegExp(`Win: 1 Key per ${minimum} staked`))).toBeTruthy();
     expect(gambit.disabled).toBe(disabled);
   });
 });

@@ -392,8 +392,13 @@ export interface Ritual {
   chunkedOnly?: boolean;
 }
 
-/** Gambit payout: keys won per this many staked fate points (on a 50/50 win). */
-export const GAMBIT_KEYS_PER = 15;
+/**
+ * The Void Gambit's minimum stake before the mode's multiplier. A won Gambit pays 1 Key per
+ * minimum staked, scaled the same way, so a Key costs the same whatever is staked.
+ */
+const GAMBIT_STAKE = 15;
+const gambitText = (perKey: number): string =>
+  `Stake ALL your Fate on a coin flip. Win: 1 Key per ${perKey} staked. Lose: the Void keeps everything.`;
 /** Greed's consolation: this fraction of the (scaled) cost refunds on a failed roll. */
 export const GREED_REFUND_FRACTION = 0.5;
 
@@ -401,8 +406,8 @@ export const RITUALS: Ritual[] = [
   { id: 'LUCK',         name: 'Ritual of Clarity',       tagline: 'Roll with advantage.',   fateCost: 8,  effect: 'Your next roll is made twice — the better result is kept.' },
   { id: 'GREED',        name: 'Ritual of Greed',         tagline: 'Double or… something.',  fateCost: 15, effect: 'If your next roll succeeds you get 2 Keys. If it fails, half the Fate is refunded.' },
   { id: 'CHAOS',        name: 'Ritual of Chaos',         tagline: 'Embrace entropy.',       fateCost: 25, effect: 'Immediately forge 1 Chaos Key (a random unlock from ANY table).' },
-  { id: 'GAMBIT',       name: 'Void Gambit',             tagline: 'Before Fate reclaims it.', fateCost: 15, stakesAllFate: true,
-    effect: `Stake ALL your Fate on a coin flip. Win: 1 Key per ${GAMBIT_KEYS_PER} staked. Lose: the Void keeps everything.` },
+  { id: 'GAMBIT',       name: 'Void Gambit',             tagline: 'Before Fate reclaims it.', fateCost: GAMBIT_STAKE, stakesAllFate: true,
+    effect: gambitText(GAMBIT_STAKE) },
   { id: 'CARTOGRAPHER', name: 'Ritual of the Cartographer', tagline: 'Chart your own course.', fateCost: 40, chunkedOnly: true,
     effect: 'Reveal 3 random frontier chunks — and CHOOSE which one unlocks. The only say you get in where Fate takes you.' },
   { id: 'TRANSMUTE',    name: 'Ritual of Transmutation', tagline: 'Equivalent exchange.',   keyCost: 5,   effect: 'Fuse 5 standard Keys into 1 Omni-Key.' },
@@ -417,6 +422,19 @@ export const getRitual = (id: Ritual['id']): Ritual => RITUALS.find(r => r.id ==
  */
 export const ritualFateCost = (id: Ritual['id'], multiplier: number): number =>
   Math.round((getRitual(id).fateCost ?? 0) * multiplier);
+
+/**
+ * The Keys a won Void Gambit pays: 1 per minimum stake as the run's multiplier scales it (the
+ * minimum the Altar shows). No stake is below the minimum, so a win pays at least 1. Paying
+ * per a fixed 15 made a stake at a cheap mode's minimum pay far more per Fate than a larger
+ * one, and an expensive mode the reverse.
+ */
+export const gambitKeys = (stake: number, multiplier: number): number =>
+  Math.floor(stake / ritualFateCost('GAMBIT', multiplier));
+
+/** A ritual's effect as the run's multiplier prices it: the Gambit names its price per Key. */
+export const ritualEffect = (id: Ritual['id'], multiplier: number): string =>
+  id === 'GAMBIT' ? gambitText(ritualFateCost('GAMBIT', multiplier)) : getRitual(id).effect;
 
 export {
   BRUTUS_BOSS_NAME,

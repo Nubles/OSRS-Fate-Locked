@@ -8,7 +8,7 @@ import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
-import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, GAMBIT_KEYS_PER } from '../config/economy';
+import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, gambitKeys } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
@@ -2452,11 +2452,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const performGambit = useCallback(() => {
     const current = stateRef.current;
     const stake = current.fatePoints;
-    // The minimum stake scales with the mode, exactly as the Altar shows it.
-    const min = ritualFateCost('GAMBIT', resolveModeRules(current.gameModeId, current.customMode).ritualCostMultiplier);
-    if (stake < min) return;
+    // The minimum stake scales with the mode, exactly as the Altar shows it, and so does the
+    // price of each Key a win pays.
+    const multiplier = resolveModeRules(current.gameModeId, current.customMode).ritualCostMultiplier;
+    if (stake < ritualFateCost('GAMBIT', multiplier)) return;
     const won = nextFloat('gambit') < 0.5;
-    const keysWon = Math.max(1, Math.floor(stake / GAMBIT_KEYS_PER));
+    const keysWon = gambitKeys(stake, multiplier);
     commitAction({ type: 'RITUAL_GAMBIT', payload: { won, stake, keysWon } });
   }, [commitAction, nextFloat]);
 

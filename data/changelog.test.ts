@@ -20,7 +20,15 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-27-runelite-update');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-28-void-gambit-payout');
+  });
+
+  it('announces the Void Gambit payout fix', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-28-void-gambit-payout');
+    expect(release?.title).toBe('Void Gambit Pays per Minimum Stake');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/1 Key per minimum stake.*1 per 9 Fate in Casual.*1 per 23 in Hardcore.*Vanilla and Chunked runs are unchanged/),
+    ]);
   });
 
   it('announces the RuneLite plugin update and the guide that matches it', () => {

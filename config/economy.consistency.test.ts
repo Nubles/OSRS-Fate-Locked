@@ -7,7 +7,7 @@ import {
   VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule,
   FAILURE_FATE_BY_SOURCE, SKILL_CHAOS_MILESTONES,
   failureFateForSkillLevel, failureFateForSource, isSkillChaosMilestone,
-  ritualFateCost,
+  gambitKeys, getRitual, ritualEffect, ritualFateCost,
 } from './economy';
 import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
@@ -161,6 +161,29 @@ describe('economy ↔ engine consistency', () => {
     expect(gambitMinimum('hardcore')).toBe(23);
     expect(ritualFateCost('CHAOS', 0.6)).toBe(15);
     expect(ritualFateCost('TRANSMUTE', 1.5)).toBe(0);
+  });
+
+  it('pays a won Gambit 1 Key per minimum stake, whatever the mode or the stake', () => {
+    const keys = (mode: string, stake: number) => gambitKeys(stake, resolveModeRules(mode).ritualCostMultiplier);
+    expect([15, 29, 30, 45].map(stake => keys('vanilla', stake))).toEqual([1, 1, 2, 3]);
+    // Casual paid 1 Key for 29 staked, but 1 for its minimum of 9.
+    expect([9, 17, 18, 29].map(stake => keys('casual', stake))).toEqual([1, 1, 2, 3]);
+    // Hardcore paid 2 Keys for 30 staked, but 1 for its minimum of 23.
+    expect([23, 30, 45, 46].map(stake => keys('hardcore', stake))).toEqual([1, 1, 1, 2]);
+    for (const multiplier of [0.25, 0.6, 1, 1.5, 2.5]) {
+      const minimum = ritualFateCost('GAMBIT', multiplier);
+      for (let stake = minimum; stake <= minimum * 10; stake++) {
+        expect(gambitKeys(stake, multiplier)).toBe(Math.floor(stake / minimum));
+      }
+    }
+  });
+
+  it("names the Gambit's price per Key as the mode sets it", () => {
+    expect(ritualEffect('GAMBIT', 0.6)).toContain('1 Key per 9 staked');
+    expect(ritualEffect('GAMBIT', 1.5)).toContain('1 Key per 23 staked');
+    expect(ritualEffect('GAMBIT', 1)).toBe(getRitual('GAMBIT').effect);
+    expect(getRitual('GAMBIT').effect).toContain('1 Key per 15 staked');
+    expect(ritualEffect('LUCK', 0.6)).toBe(getRitual('LUCK').effect);
   });
 
   it('keeps the finite Vanilla boss reserve and every boss schedule aligned', () => {
