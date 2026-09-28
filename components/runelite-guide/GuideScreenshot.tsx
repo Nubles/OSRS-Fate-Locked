@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
 import { ExternalLink, ImageOff } from 'lucide-react';
-import type { GuideScreenshot as GuideScreenshotData } from '../../data/runeliteGuide';
+import type {
+  GuideScreenshot as GuideScreenshotData,
+  GuideScreenshotSource,
+} from '../../data/runeliteGuide';
 
 interface GuideScreenshotProps {
   readonly screenshot: GuideScreenshotData;
 }
+
+/** What each image's caption says about where it comes from. */
+export const GUIDE_SCREENSHOT_CAPTIONS: Readonly<Record<GuideScreenshotSource, string>> = {
+  rendered: 'Rendered from the plugin’s code, in RuneLite’s own theme.',
+  'client-capture': 'Captured from the live Plugin Hub build.',
+  'web-capture': 'Captured from the companion.',
+};
 
 export const resolveGuideScreenshotSrc = (
   src: string,
@@ -33,7 +43,9 @@ export const GuideScreenshot: React.FC<GuideScreenshotProps> = ({ screenshot }) 
           <h3 id={titleId} className="font-sans text-sm font-bold text-gray-100">
             {screenshot.title}
           </h3>
-          <p className="mt-1 text-xs text-gray-400">Captured from the live Plugin Hub build.</p>
+          <p className="mt-1 text-xs text-gray-400" data-guide-screenshot-source={screenshot.source}>
+            {GUIDE_SCREENSHOT_CAPTIONS[screenshot.source]}
+          </p>
         </div>
         <a
           className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-amber-300 transition-colors hover:border-amber-400/40 hover:bg-amber-400/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"

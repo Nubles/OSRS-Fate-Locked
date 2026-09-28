@@ -1,16 +1,18 @@
 {
-  "version": 1,
-  "pluginCommit": "1e118ec73f5a0fad17fc7b0704461a602d169041",
-  "capturedAt": "2026-07-28",
-  "runeliteVersion": "Not visible in source captures",
+  "version": 2,
   "entries": [
     {
       "id": "plugin-hub-install",
       "filename": "01-plugin-hub-install.png",
       "chapter": "install-plugin-hub",
+      "source": "client-capture",
+      "pluginCommit": "1e118ec73f5a0fad17fc7b0704461a602d169041",
+      "runeliteVersion": "Not visible in source captures",
+      "capturedAt": "2026-07-28",
       "purpose": "Find the live Fate Locked Ironman result in RuneLite's Plugin Hub and verify the installed Plugin Hub commit.",
       "width": 1048,
       "height": 535,
+      "sha256": "8fdca4fda02e1a856631eb1f1db012b9238a7b1a4f611b9c56e619f8225143e5",
       "redactions": [],
       "annotations": [
         { "id": "plugin-result", "marker": 1, "x": 0.86, "y": 0.36 },
@@ -21,16 +23,209 @@
       "id": "companion-confirmation",
       "filename": "03-companion-confirmation.png",
       "chapter": "connect-tracker",
+      "source": "web-capture",
+      "capturedAt": "2026-07-28",
       "purpose": "Confirm the fictional Vanilla tracker profile in the companion app without exposing the one-time pairing request.",
       "width": 545,
       "height": 475,
-      "redactions": [
-        "One-time RuneLite pairing request"
-      ],
+      "sha256": "488504e65e26a7d6e2140e374062b556c03230e98d6abff83cc68050afd28418",
+      "redactions": ["One-time RuneLite pairing request"],
       "annotations": [
         { "id": "profile", "marker": 1, "x": 0.72, "y": 0.44 },
         { "id": "privacy-copy", "marker": 2, "x": 0.39, "y": 0.31 },
         { "id": "confirm", "marker": 3, "x": 0.76, "y": 0.83 }
+      ]
+    },
+    {
+      "id": "sidebar-not-connected",
+      "filename": "sidebar-not-connected.png",
+      "chapter": "connect-tracker",
+      "source": "rendered",
+      "pluginCommit": "10a34bd67b731a0795d8593fc403cd620d6f14c2",
+      "runeliteVersion": "1.12.39",
+      "capturedAt": "2026-09-28",
+      "purpose": "Find Connect tracker and the backup route on the status card before a profile is paired.",
+      "width": 225,
+      "height": 368,
+      "sha256": "53523401a7f0dd5ac41d136eb127443d04e54134e562a8bd07f6ef8fcbc8d739",
+      "redactions": [],
+      "annotations": [
+        { "id": "status", "marker": 1, "x": 0.51, "y": 0.16 },
+        { "id": "connect", "marker": 2, "x": 0.35, "y": 0.34 },
+        { "id": "backup", "marker": 3, "x": 0.34, "y": 0.40 }
+      ]
+    },
+    {
+      "id": "sidebar-waiting",
+      "filename": "sidebar-waiting.png",
+      "chapter": "connect-tracker",
+      "source": "rendered",
+      "pluginCommit": "10a34bd67b731a0795d8593fc403cd620d6f14c2",
+      "runeliteVersion": "1.12.39",
+      "capturedAt": "2026-09-28",
+      "purpose": "Recognise the waiting state while the profile is confirmed in the browser.",
+      "width": 225,
+      "height": 364,
+      "sha256": "6ab21de5d154a82c8608bdbe081474bc8fad89fb1b4cd82d69712fd8d10c1e9e",
+      "redactions": [],
+      "annotations": [
+        { "id": "status", "marker": 1, "x": 0.51, "y": 0.16 },
+        { "id": "open-again", "marker": 2, "x": 0.36, "y": 0.38 },
+        { "id": "cancel", "marker": 3, "x": 0.76, "y": 0.37 }
+      ]
+    },
+    {
+      "id": "sidebar-out-of-date",
+      "filename": "sidebar-out-of-date.png",
+      "chapter": "connection-privacy",
+      "source": "rendered",
+      "pluginCommit": "10a34bd67b731a0795d8593fc403cd620d6f14c2",
+      "runeliteVersion": "1.12.39",
+      "capturedAt": "2026-09-28",
+      "purpose": "Recognise rules that may be out of date, and Strict Mode waiting for fresh ones.",
+      "width": 225,
+      "height": 428,
+      "sha256": "b8da5472264b1bb453329f724646a1213cbe6dda3dc4b83fd1341c385a791e70",
+      "redactions": [],
+      "annotations": [
+        { "id": "status", "marker": 1, "x": 0.51, "y": 0.14 },
+        { "id": "check", "marker": 2, "x": 0.27, "y": 0.36 },
+        { "id": "inactive", "marker": 3, "x": 0.29, "y": 0.58 }
+      ]
+    },
+    {
+      "id": "sidebar-different-character",
+      "filename": "sidebar-different-character.png",
+      "chapter": "connection-privacy",
+      "source": "rendered",
+      "pluginCommit": "10a34bd67b731a0795d8593fc403cd620d6f14c2",
+      "runeliteVersion": "1.12.39",
+      "capturedAt": "2026-09-28",
+      "purpose": "Recognise another character’s rules, for which nothing is checked.",
+      "width": 225,
+      "height": 416,
+      "sha256": "d1fb81ce87e74cecfdbc16cfde08d4f3a500d4960680f153e5743078be91fdca",
+      "redactions": [],
+      "annotations": [
+        { "id": "status", "marker": 1, "x": 0.51, "y": 0.14 },
+        { "id": "here", "marker": 2, "x": 0.50, "y": 0.46 }
+      ]
+    },
+    {
+      "id": "sidebar-overview",
+      "filename": "sidebar-overview.png",
+      "chapter": "sidebar",
+      "source": "rendered",
+      "pluginCommit": "10a34bd67b731a0795d8593fc403cd620d6f14c2",
+      "runeliteVersion": "1.12.39",
+      "capturedAt": "2026-09-28",
+      "purpose": "See the status card and the five cards, and where the rest of the settings live.",
+      "width": 225,
+      "height": 308,
+      "sha256": "fb01da5d5d3787a2cf1b28429eef6cc6dc666e9edb9c5607adc61a46e013b933",
+      "redactions": [],
+      "annotations": [
+        { "id": "status", "marker": 1, "x": 0.51, "y": 0.19 },
+        { "id": "cards", "marker": 2, "x": 0.50, "y": 0.43 },
+        { "id": "more-settings", "marker": 3, "x": 0.50, "y": 0.94 }
+      ]
+    },
+    {
+      "id": "sidebar-here",
+      "filename": "sidebar-here.png",
+      "chapter": "here",
+      "source": "rendered",
+      "pluginCommit": "10a34bd67b731a0795d8593fc403cd620d6f14c2",
+      "runeliteVersion": "1.12.39",
+      "capturedAt": "2026-09-28",
+      "purpose": "Read a locked place: its status, the tracker’s reason, the counts and its rows.",
+      "width": 225,
+      "height": 656,
+      "sha256": "1a809c6fbc74c8ffdee13c09dbd8cea6f1503fe1c4804f4cfd3c492b711d56c7",
+      "redactions": [],
+      "annotations": [
+        { "id": "status", "marker": 1, "x": 0.84, "y": 0.23 },
+        { "id": "reason", "marker": 2, "x": 0.50, "y": 0.29 },
+        { "id": "counts", "marker": 3, "x": 0.50, "y": 0.33 }
+      ]
+    },
+    {
+      "id": "sidebar-strict-mode",
+      "filename": "sidebar-strict-mode.png",
+      "chapter": "strict-mode",
+      "source": "rendered",
+      "pluginCommit": "10a34bd67b731a0795d8593fc403cd620d6f14c2",
+      "runeliteVersion": "1.12.39",
+      "capturedAt": "2026-09-28",
+      "purpose": "Read Strict Mode’s status, pause and resume it, and see what it stopped.",
+      "width": 225,
+      "height": 417,
+      "sha256": "c68082deb1233fff69e4af1c7f866544ca5d78d27aa4874f66cc497e467b6c90",
+      "redactions": [],
+      "annotations": [
+        { "id": "switch", "marker": 1, "x": 0.88, "y": 0.39 },
+        { "id": "paused", "marker": 2, "x": 0.35, "y": 0.45 },
+        { "id": "resume", "marker": 3, "x": 0.80, "y": 0.45 },
+        { "id": "stopped", "marker": 4, "x": 0.50, "y": 0.52 }
+      ]
+    },
+    {
+      "id": "sidebar-roll-inbox",
+      "filename": "sidebar-roll-inbox.png",
+      "chapter": "roll-inbox",
+      "source": "rendered",
+      "pluginCommit": "10a34bd67b731a0795d8593fc403cd620d6f14c2",
+      "runeliteVersion": "1.12.39",
+      "capturedAt": "2026-09-28",
+      "purpose": "Read the local event counts and open the companion’s Roll Inbox.",
+      "width": 225,
+      "height": 428,
+      "sha256": "22eeb4126b9b1b63aa30030b4334cf387c682e6c821b6b84e9fe2ab1dd3e4134",
+      "redactions": [],
+      "annotations": [
+        { "id": "events", "marker": 1, "x": 0.22, "y": 0.58 },
+        { "id": "needs-checking", "marker": 2, "x": 0.26, "y": 0.63 },
+        { "id": "open", "marker": 3, "x": 0.50, "y": 0.79 }
+      ]
+    },
+    {
+      "id": "sidebar-run",
+      "filename": "sidebar-run.png",
+      "chapter": "run-and-keys",
+      "source": "rendered",
+      "pluginCommit": "10a34bd67b731a0795d8593fc403cd620d6f14c2",
+      "runeliteVersion": "1.12.39",
+      "capturedAt": "2026-09-28",
+      "purpose": "Confirm whose run it is, its progress, the three Keys, Fate Points and the ritual.",
+      "width": 225,
+      "height": 501,
+      "sha256": "2a73746ce03019b6b2491983a1acf78e376dc0e00f8556a5a0cdefc730073d3a",
+      "redactions": [],
+      "annotations": [
+        { "id": "character", "marker": 1, "x": 0.64, "y": 0.43 },
+        { "id": "progress", "marker": 2, "x": 0.50, "y": 0.51 },
+        { "id": "keys", "marker": 3, "x": 0.50, "y": 0.63 },
+        { "id": "ritual", "marker": 4, "x": 0.58, "y": 0.77 }
+      ]
+    },
+    {
+      "id": "sidebar-connection",
+      "filename": "sidebar-connection.png",
+      "chapter": "connection-and-backup",
+      "source": "rendered",
+      "pluginCommit": "10a34bd67b731a0795d8593fc403cd620d6f14c2",
+      "runeliteVersion": "1.12.39",
+      "capturedAt": "2026-09-28",
+      "purpose": "Find online sync, the pairing controls and the backup buttons.",
+      "width": 225,
+      "height": 554,
+      "sha256": "97a44010a29cf536f435442023f3310afe64782332e80545e014750a885ac058",
+      "redactions": [],
+      "annotations": [
+        { "id": "sync", "marker": 1, "x": 0.88, "y": 0.51 },
+        { "id": "repair", "marker": 2, "x": 0.27, "y": 0.58 },
+        { "id": "check", "marker": 3, "x": 0.50, "y": 0.64 },
+        { "id": "clipboard", "marker": 4, "x": 0.50, "y": 0.72 }
       ]
     }
   ]

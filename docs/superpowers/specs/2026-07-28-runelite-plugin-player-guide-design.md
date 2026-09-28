@@ -174,113 +174,73 @@ the Install and Connect chapters. It then contains these chapters in order:
 
 ## Exact setting inventory
 
-The handbook must name and explain all 30 current settings. A guide content
-contract test asserts this exact inventory.
+*Stage 3 (September 2026) replaced this section's first version.* The settings
+are no longer listed here. `data/runeliteWording.ts` holds them, with their
+config panel sections, names, defaults and choices; `npm run goldens:write`
+writes it to `contracts/golden-bundles/runelite-wording.json`, and the plugin's
+`WordingContractTest` fails its build when its own settings differ. The guide
+builds its settings table from the same list and adds only the prose, and
+`data/runeliteWording.test.ts` checks every setting has it. Stage 3 has 21
+settings in six sections: Tracker, Strict Mode, Alerts, Display, Custom colours
+and Backup.
 
-### Bundle (2)
+## Screenshot policy
 
-| Setting | Default |
-|---|---:|
-| Auto-reload on change | On |
-| Re-import hotkey | Not set |
+*Stage 3 (September 2026) replaced the first version, which allowed only
+captures from the live Plugin Hub build.* Every image says where it comes
+from, in its caption and in the manifest:
 
-### Guardian (1)
+- **Rendered**: the plugin's sidebar, drawn from the plugin's own code at a
+  release commit, in RuneLite's own theme, by the plugin's `gradle
+  guideScreenshots` task. The run is the golden bundles' fictional
+  "Iron Example". Captioned "Rendered from the plugin's code, in RuneLite's own
+  theme." The sidebar crops this replaced were probably not taken in RuneLite's
+  theme, so renders are the more faithful picture.
+- **Client capture**: a real RuneLite client, for what only the client draws,
+  such as the Plugin Hub. Captioned "Captured from the live Plugin Hub build."
+- **Web capture**: the companion itself. Captioned "Captured from the
+  companion."
 
-| Setting | Default |
-|---|---:|
-| Strict Mode | Off |
+Mockups, reconstructed controls, AI-generated RuneLite windows and fabricated
+warning states are still not permitted. A render is the plugin's real code
+drawing a real sidebar state from real rules, not a reconstruction.
 
-### Warnings (15)
-
-| Setting | Default |
-|---|---:|
-| Chat on chunk entry | On |
-| Warn entering locked chunk | On |
-| Warn opening a locked bank | On |
-| Screen flash on locked entry | On |
-| Warn on wrong account | On |
-| Tag locked right-click targets | On |
-| Tag teleports to locked chunks | On |
-| Show in-game HUD | On |
-| HUD: nearest bank & shop | On |
-| Show "in this chunk" box | Off |
-| Send RuneLite notifications | Off |
-| Warn on locked slayer task | On |
-| Warn on over-tier gear | On |
-| Show key/fate/progress infoboxes | Off |
-| Roll reminders | On |
-
-### Rendering (12)
-
-| Setting | Default |
-|---|---:|
-| Draw on world map | On |
-| Draw around player | On |
-| Draw on minimap | On |
-| Highlight locked borders | On |
-| Shade nearby locked chunks | On |
-| Pin locked areas on world map | Off |
-| World map hover tooltip | On |
-| Tooltip: what's in the chunk | On |
-| Unlocked color | Green, translucent |
-| Frontier color (Chunked) | Amber, translucent |
-| Locked color | Red, translucent |
-| Unauthored color | Gray, translucent |
-
-## Real screenshot policy
-
-Every instructional screenshot is captured from the live Plugin Hub build
-inside RuneLite or from the real companion page opened by that build. Panel
-mockups, reconstructed controls, AI-generated RuneLite windows, and fabricated
-warning states are not permitted.
-
-A dedicated demo run uses fictional account and run details. Pairing codes,
-Run IDs, local paths containing a username, and any unrelated account or chat
-information are excluded at capture time or redacted before publication.
-Redaction must not hide a control being taught.
+Pairing codes, Run IDs, local paths containing a username, and any unrelated
+account or chat information are excluded at capture time or redacted before
+publication. Redaction must not hide a control being taught. Renders use a
+fictional run and need none.
 
 The source PNG remains untouched. The guide renders responsive amber numbered
-markers and leader lines as SVG/HTML overlays. Each marker has an accessible
-matching explanation below the image. The annotation layer may crop the source
-for focus but must not replace or redraw UI pixels.
+markers as HTML overlays, each with an accessible explanation below the image.
+For a render, the tool works out each marker's position from where the
+components were laid out and writes it beside the images, so markers can't
+drift from what they name.
 
-If a gameplay warning cannot be safely reproduced, the guide uses a genuine
-idle-plugin screenshot and explains the verified behaviour beside it. It must
-not present a simulated warning as a real capture.
-
-When the demo account is signed out, overlay chapters use authentic settings-
-panel captures and label them as controls. They must not imply that a control
-crop is a logged-in gameplay scene.
+In-game overlays (the HUD, borders, the minimap and the world map) are
+described in words until a logged-in client capture is taken; the guide never
+presents a simulated scene as a capture.
 
 ## Screenshot inventory
 
-The initial release targets these captures:
+- Plugin Hub search and install result (client capture).
+- Companion pairing confirmation (web capture).
+- Rendered sidebar states: not connected, waiting for confirmation, rules that
+  may be out of date, another character, the sidebar at a glance, Here in a
+  locked place, Strict Mode paused, Roll inbox, Run, and Connection & backup.
 
-1. Plugin Hub search and install result.
-2. Disconnected plugin panel.
-3. Companion pairing confirmation.
-4. Connected panel status.
-5. Unified panel showing the first five headings, with Warnings and Rendering continuing below the crop.
-6. Current Chunk expanded.
-7. Guardian expanded, including pause and recent actions.
-8. Roll Inbox expanded.
-9. Run expanded with Keys, Omni Keys, and Chaos Keys.
-10. Bundle recovery controls.
-11. Warnings controls, using multiple overlapping crops if needed.
-12. Rendering controls, using multiple overlapping crops if needed.
-13. World-map hover-tooltip and color controls.
-14. Scene/minimap/HUD and locked-border controls.
+`public/guides/runelite/manifest.json` (version 2) records for each image:
 
-`public/guides/runelite/manifest.json` records for each capture:
-
-- stable ID and filename;
-- capture date;
-- live plugin source commit;
-- RuneLite version when visible;
-- chapter and purpose;
-- crop dimensions;
+- stable ID and filename, and the chapter that shows it;
+- its source: rendered, client capture or web capture;
+- the plugin commit shown, for a render or a client capture, and the
+  RuneLite version when known;
+- the date it was made, and its purpose;
+- its size and its SHA-256;
 - redactions, if any; and
 - annotation IDs with normalized coordinates.
+
+`data/runeliteGuideAssets.test.ts` checks each against the file itself, and that
+the folder holds no image the manifest doesn't list.
 
 ## Component and data boundaries
 

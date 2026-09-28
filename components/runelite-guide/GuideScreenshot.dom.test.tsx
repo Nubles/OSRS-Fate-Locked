@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { GuideScreenshot as GuideScreenshotData } from '../../data/runeliteGuide';
 import {
+  GUIDE_SCREENSHOT_CAPTIONS,
   GuideScreenshot,
   resolveGuideScreenshotSrc,
 } from './GuideScreenshot';
@@ -13,6 +14,7 @@ import {
 const screenshot: GuideScreenshotData = {
   id: 'demo',
   src: '/guides/runelite/demo.png',
+  source: 'rendered',
   title: 'Demo connection',
   alt: 'Demo RuneLite panel.',
   callouts: [
@@ -78,6 +80,9 @@ describe('GuideScreenshot', () => {
     const sourceNote = panelHeader?.querySelector<HTMLElement>('p');
     expect(sourceNote?.className).toContain('text-gray-400');
     expect(sourceNote?.className).not.toContain('text-gray-500');
+    expect(sourceNote?.textContent).toBe('Rendered from the plugin’s code, in RuneLite’s own theme.');
+    expect(sourceNote?.getAttribute('data-guide-screenshot-source')).toBe('rendered');
+    expect(Object.values(GUIDE_SCREENSHOT_CAPTIONS)).toHaveLength(3);
     expect(calloutRows).toHaveLength(screenshot.callouts.length);
     expect(imageStage).toBeTruthy();
     expect(imageStage?.contains(host.querySelector('img'))).toBe(true);
