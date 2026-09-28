@@ -258,13 +258,14 @@ export const RUNELITE_GUIDE_SCREENSHOTS: readonly GuideScreenshot[] = [
     src: '/guides/runelite/sidebar-here.png',
     source: 'rendered',
     title: 'Here, in a locked place',
-    alt: 'The Here card for Sorcerer’s Tower: Locked, Unlock Seers’ Village, the counts, Skilling open at Woodcutting, and Quests and Combat closed, each saying what it holds.',
+    alt: 'The Here card for Sorcerer’s Tower: Locked, Unlock Seers’ Village, the counts, the arrow pointing at the nearest Magic tree, Skilling open at Woodcutting, and Quests and Combat closed, each saying what it holds.',
     callouts: [
-      callout('status', 1, 0.84, 0.24, 'Status', 'The place’s status in a word: here, Locked.'),
-      callout('reason', 2, 0.5, 0.29, 'Why', 'The tracker’s reason, in its own words.'),
-      callout('counts', 3, 0.5, 0.34, 'Counts', 'What you can do here, what isn’t ready, and what’s locked.'),
-      callout('categories', 4, 0.55, 0.4, 'Categories', 'Each opens and closes, and says what it holds while closed.'),
-      callout('skills', 5, 0.43, 0.43, 'Skills', 'Skilling opens skill by skill, with your level and cap.'),
+      callout('status', 1, 0.84, 0.23, 'Status', 'The place’s status in a word: here, Locked.'),
+      callout('reason', 2, 0.5, 0.28, 'Why', 'The tracker’s reason, in its own words.'),
+      callout('counts', 3, 0.5, 0.33, 'Counts', 'What you can do here, what isn’t ready, and what’s locked.'),
+      callout('arrow', 4, 0.42, 0.38, 'Arrow', 'Click a row and the game’s arrow points at the nearest one.'),
+      callout('categories', 5, 0.55, 0.42, 'Categories', 'Each opens and closes, and says what it holds while closed.'),
+      callout('skills', 6, 0.43, 0.46, 'Skills', 'Skilling opens skill by skill, with your level and cap.'),
     ],
   },
   {
@@ -759,6 +760,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
       'When you’re logged in, the card names the place, its region and chunk, and its status in a word, with the tracker’s reason when it is locked or not ready.',
       'Below, it counts what you can do, what isn’t ready and what’s locked. Then come the place’s skilling, banks, shops, quests, combat, travel, farming and activities, each on a line that opens and closes and, while closed, says what it holds. Skilling opens skill by skill, each with your level and cap. What you leave open stays open as you walk, and an open list shows five rows with +N more.',
       'When the tracker can’t see a requirement, such as a quest started, quest points, a free-to-play world or a light source you carry, RuneLite checks it in game. Every row says Can do, Not ready or Locked, and a row that isn’t ready names only what’s left.',
+      'Click a skilling spot, monster, bank or shop and the game’s own arrow points at the nearest one around you, with a line under the counts saying so. It comes down when you get there, when you click the row again or press Clear, or when you leave the chunk. Something inside or underground can’t be pointed at from outside.',
     ],
     bullets: [
       `${RUNELITE_TERMS.CAN_DO}: your run can do it now.`,

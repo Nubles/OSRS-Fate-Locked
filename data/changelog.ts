@@ -26,7 +26,7 @@ export const CHANGELOG_RELEASES = [
       added: [
         'The RuneLite plugin has a new sidebar. A status card says whether your rules are current and for this character, with the one thing to do about it, above cards for Here, Strict Mode, Run, Roll inbox, and Connection & backup.',
         'In game, chunk borders are drawn where locked land starts, the world map and minimap show locked land as fog with a line all the way round your unlocked land, a locked area alerts once rather than every chunk, and the HUD is Compact or Detailed.',
-        'Here, the card for the place you’re standing in, opens and closes category by category, and Skilling skill by skill with the game’s own skill icons. Where the tracker can’t see a requirement, such as a quest started or a light source you carry, RuneLite checks it in game, so every row says Can do, Not ready or Locked.',
+        'Here, the card for the place you’re standing in, opens and closes category by category, and Skilling skill by skill with the game’s own skill icons. Click a skilling spot, monster, bank or shop and the game’s arrow points at the nearest one. Where the tracker can’t see a requirement, such as a quest started or a light source you carry, RuneLite checks it in game, so every row says Can do, Not ready or Locked.',
       ],
       changed: [
         'Every RuneLite setting now lives in RuneLite’s configuration, under Fate Locked Ironman, with a colour-blind safe set of colours. Your old choices carry over.',
