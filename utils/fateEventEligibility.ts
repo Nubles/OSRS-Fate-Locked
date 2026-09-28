@@ -318,18 +318,18 @@ export function classifyFateEvent(
   if (event.runId !== state.runId) {
     return { state: 'BLOCKED', reason: 'Event belongs to a different run.' };
   }
+  // A run linked to a character takes only that character's events. An
+  // unlinked run takes any: the row shows whose it is, and the player decides.
   if (
-    !state.linkedAccount
-    || normalizeAccountName(event.account) !== normalizeAccountName(state.linkedAccount)
+    state.linkedAccount
+    && normalizeAccountName(event.account) !== normalizeAccountName(state.linkedAccount)
   ) {
-    return { state: 'BLOCKED', reason: 'Account does not match this run.' };
+    return { state: 'BLOCKED', reason: 'This event is from another character.' };
   }
-  if (event.runRevision !== state.runRevision) {
-    return needsConfirmation(
-      event.runRevision < state.runRevision
-        ? 'The run changed after this event was detected.'
-        : 'The event was detected against a newer run state.',
-    );
+  // Every roll raises the run's revision, so an event from an earlier revision
+  // is checked against the run as it is now, as a manual log would be.
+  if (event.runRevision > state.runRevision) {
+    return needsConfirmation('The event was detected against a newer run state.');
   }
   if (event.rulesVersion !== RULES_VERSION || event.contentVersion !== CONTENT_VERSION) {
     return needsConfirmation('The plugin and app rules do not match.');

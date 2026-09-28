@@ -53,16 +53,31 @@ const event = (
 });
 
 describe('classifyFateEvent', () => {
-  it('blocks events for another account or run', () => {
+  it('blocks events for another character or run', () => {
     expect(classifyFateEvent(event('QUEST', 'Dragon Slayer I', { account: 'Other' }), state()))
-      .toMatchObject({ state: 'BLOCKED', reason: 'Account does not match this run.' });
+      .toMatchObject({ state: 'BLOCKED', reason: 'This event is from another character.' });
     expect(classifyFateEvent(event('QUEST', 'Dragon Slayer I', { runId: 'run-2' }), state()))
       .toMatchObject({ state: 'BLOCKED', reason: 'Event belongs to a different run.' });
   });
 
-  it('requires confirmation for stale run context', () => {
-    expect(classifyFateEvent(event('QUEST', 'Dragon Slayer I', { runRevision: 6 }), state()).state)
-      .toBe('NEEDS_CONFIRMATION');
+  it('takes any character\'s events while the run is not linked to one', () => {
+    for (const linkedAccount of [undefined, '']) {
+      expect(classifyFateEvent(event('QUEST', "Cook's Assistant", { account: 'Zezima' }), state({ linkedAccount })))
+        .toMatchObject({ state: 'READY', progress: { kind: 'QUEST', questId: "Cook's Assistant" } });
+    }
+  });
+
+  it('checks an event from an earlier revision against the run as it is now', () => {
+    // Every roll raises the revision, so the rows of one paste were all detected earlier.
+    expect(classifyFateEvent(event('QUEST', "Cook's Assistant", { runRevision: 2 }), state()))
+      .toMatchObject({ state: 'READY', progress: { kind: 'QUEST', questId: "Cook's Assistant" } });
+    expect(classifyFateEvent(event('QUEST', "Cook's Assistant", { runRevision: 2 }), withUnlocks({ quests: ["Cook's Assistant"] })))
+      .toEqual({ state: 'BLOCKED', reason: 'Already completed' });
+  });
+
+  it('asks about an event from a newer revision than the run has', () => {
+    expect(classifyFateEvent(event('QUEST', "Cook's Assistant", { runRevision: 8 }), state()))
+      .toEqual({ state: 'NEEDS_CONFIRMATION', reason: 'The event was detected against a newer run state.' });
   });
 
   it('requires confirmation for an unsupported detector or version', () => {
