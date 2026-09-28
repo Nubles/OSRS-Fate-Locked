@@ -14,7 +14,8 @@ import { getFreeAreas } from './freeAreas';
 
 export const RULES_VERSION = '1';
 export const CONTENT_VERSION = 1;
-export const DETECTOR_CONTRACT_VERSION = 1;
+// 2 since Stage 4: rules.detection names bosses, quests and diary tiers.
+export const DETECTOR_CONTRACT_VERSION = 2;
 
 /** A chunk's snapshot as the bundle carries it: see wireChunks. */
 export type WireChunkSnapshot = Omit<ChunkPermissionSnapshot, 'chunkKey' | 'counts' | 'categories'> & {
