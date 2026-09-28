@@ -135,18 +135,20 @@
       "filename": "sidebar-here.png",
       "chapter": "here",
       "source": "rendered",
-      "pluginCommit": "10a34bd67b731a0795d8593fc403cd620d6f14c2",
+      "pluginCommit": "7b46f7a48e72c6b14d1970800867d0a50b0de1a8",
       "runeliteVersion": "1.12.39",
       "capturedAt": "2026-09-28",
-      "purpose": "Read a locked place: its status, the tracker’s reason, the counts and its rows.",
+      "purpose": "Read a locked place: its status, the tracker’s reason, the counts, and its categories and skills, which open and close.",
       "width": 225,
-      "height": 656,
-      "sha256": "1a809c6fbc74c8ffdee13c09dbd8cea6f1503fe1c4804f4cfd3c492b711d56c7",
+      "height": 644,
+      "sha256": "7fffa6301c87570a611677df1f9c24d40407aa16814110d5ecd5fd8f866cc876",
       "redactions": [],
       "annotations": [
-        { "id": "status", "marker": 1, "x": 0.84, "y": 0.23 },
+        { "id": "status", "marker": 1, "x": 0.84, "y": 0.24 },
         { "id": "reason", "marker": 2, "x": 0.50, "y": 0.29 },
-        { "id": "counts", "marker": 3, "x": 0.50, "y": 0.33 }
+        { "id": "counts", "marker": 3, "x": 0.50, "y": 0.34 },
+        { "id": "categories", "marker": 4, "x": 0.55, "y": 0.40 },
+        { "id": "skills", "marker": 5, "x": 0.43, "y": 0.43 }
       ]
     },
     {

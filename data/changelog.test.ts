@@ -28,7 +28,8 @@ describe('authored changelog releases', () => {
     expect(release?.title).toBe('RuneLite Plugin: New Sidebar and Display');
     expect(release?.sections.added).toEqual([
       expect.stringMatching(/new sidebar.*status card.*Here, Strict Mode, Run, Roll inbox, and Connection & backup/),
-      expect.stringMatching(/chunk borders.*fog.*alerts once.*Compact or Detailed/),
+      expect.stringMatching(/chunk borders.*fog.*all the way round.*alerts once.*Compact or Detailed/),
+      expect.stringMatching(/Here.*opens and closes.*Skilling skill by skill.*checks it in game.*Can do, Not ready or Locked/),
     ]);
     expect(release?.sections.changed).toEqual([
       expect.stringMatching(/RuneLite’s configuration.*colour-blind safe.*old choices carry over/),
