@@ -275,6 +275,26 @@ describe('classifyFateEvent', () => {
     expect(chunked.state === 'READY' && chunked.intent.context).toBeUndefined();
   });
 
+  it('rolls a completed clue by its tier, however it is labelled', () => {
+    // RuneLite's clue detector reads "You have completed 12 hard Treasure Trails."
+    expect(classifyFateEvent(event('CLUE_CASKET', 'Clue scroll (hard)', { evidence: { tier: 'hard', count: 12 } }), state()))
+      .toMatchObject({ state: 'READY', intent: { source: DropSource.CLUE_HARD, target: 'Clue scroll (hard)' } });
+    expect(classifyFateEvent(event('CLUE_CASKET', null, { evidence: { tier: 'Elite' } }), state()))
+      .toMatchObject({ state: 'READY', intent: { source: DropSource.CLUE_ELITE, target: 'Clue scroll (elite)' } });
+    expect(classifyFateEvent(event('CLUE_CASKET', 'Clue scroll (medium)'), state()))
+      .toMatchObject({ state: 'READY', intent: { source: DropSource.CLUE_MEDIUM } });
+    expect(classifyFateEvent(event('CLUE_CASKET', 'Clue scroll (legendary)'), state()))
+      .toEqual({ state: 'NEEDS_CONFIRMATION', reason: 'Clue casket tier could not be verified.' });
+    expect(classifyFateEvent(event('CLUE_CASKET', null), state()))
+      .toEqual({ state: 'NEEDS_CONFIRMATION', reason: 'Choose the clue casket tier.' });
+  });
+
+  it('offers every page an item name is on, up to 16', () => {
+    const pages = classifyFateEvent(event('COLLECTION_LOG', 'Ancient page'), state());
+    expect(pages.state).toBe('NEEDS_CONFIRMATION');
+    expect(pages.state === 'NEEDS_CONFIRMATION' && pages.candidates).toHaveLength(13);
+  });
+
   it('uses the canonical skill-level formula', () => {
     // The level-up button's odds: level / 5, to one decimal place.
     expect(classifyFateEvent(event('SKILL_LEVEL', 'Attack Level 73', {
@@ -313,6 +333,22 @@ describe('classifyFateEvent', () => {
       state: 'NEEDS_CONFIRMATION',
       candidates: [{ label: 'Pet kraken', target: 'Pet kraken' }],
     });
+  });
+
+  it('puts the Slayer master RuneLite read first, so the review starts on it', () => {
+    const first = (evidence: Record<string, string | boolean>) => {
+      const slayer = classifyFateEvent(event('SLAYER_TASK', 'Abyssal demons', {
+        detectorId: 'slayer-task-varp-v1', confidence: 'UNCERTAIN', evidence,
+      }), state());
+      return slayer.state === 'NEEDS_CONFIRMATION' ? slayer.candidates?.map((candidate) => candidate.target) : undefined;
+    };
+    expect(first({ master: 'Duradel' })?.[0]).toBe('Slayer (Duradel/Kuradal)');
+    expect(first({ master: ' konar quo maten ' })?.[0]).toBe('Slayer (Konar)');
+    expect(first({ master: 'Steve', bossTask: true })?.[0]).toBe('Slayer (Boss Task)');
+    // Mortimer has no tier here, so every master stays in the usual order.
+    expect(first({ master: 'Mortimer' })?.[0]).toBe('Slayer (Turael/Spria)');
+    expect(new Set(first({ master: 'Nieve' }))).toEqual(new Set(first({})));
+    expect(first({ master: 'Nieve' })).toHaveLength(9);
   });
 
   it('turns an explicit confirmation into a ready intent', () => {

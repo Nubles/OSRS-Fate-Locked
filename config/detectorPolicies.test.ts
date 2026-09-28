@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { policyFor } from './detectorPolicies';
+import { DETECTOR_POLICIES, policyFor } from './detectorPolicies';
 
 describe('detector policies', () => {
   it.each([
@@ -19,6 +19,20 @@ describe('detector policies', () => {
     'pet-drop-v1',
   ])('%s stays confirmation-only', (detectorId) => {
     expect(policyFor(detectorId)?.handling).toBe('CONFIRMATION');
+  });
+
+  it('approves the versions RuneLite ships', () => {
+    expect(Object.fromEntries(DETECTOR_POLICIES.map((policy) => [policy.detectorId, policy.maxApprovedVersion]))).toEqual({
+      'skill-level-v1': 2,
+      'quest-state-v1': 1,
+      'combat-achievement-chat-v1': 2,
+      'collection-log-chat-v1': 2,
+      'clue-completion-v1': 1,
+      'boss-kill-count-v1': 1,
+      'slayer-task-varp-v1': 1,
+      'diary-task-v1': 2,
+      'pet-drop-v1': 1,
+    });
   });
 
   it('names bosses and raids from the one kill-count detector', () => {
