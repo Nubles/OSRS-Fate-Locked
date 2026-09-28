@@ -35,13 +35,13 @@ const event = (
   contentVersion: 1,
   detectorId: {
     SKILL_LEVEL: 'skill-level-v1',
-    QUEST: 'quest-widget-v1',
+    QUEST: 'quest-state-v1',
     COMBAT_ACHIEVEMENT: 'combat-achievement-chat-v1',
     COLLECTION_LOG: 'collection-log-chat-v1',
-    CLUE_CASKET: 'clue-casket-loot-v1',
-    BOSS_KILL: 'boss-loot-v1',
-    RAID_COMPLETION: 'raid-loot-v1',
-    SLAYER_TASK: 'slayer-task-v1',
+    CLUE_CASKET: 'clue-completion-v1',
+    BOSS_KILL: 'boss-kill-count-v1',
+    RAID_COMPLETION: 'boss-kill-count-v1',
+    SLAYER_TASK: 'slayer-task-varp-v1',
     DIARY_TASK: 'diary-task-v1',
     PET_DROP: 'pet-drop-v1',
     MINIGAME_COMPLETION: 'minigame-completion-v1',
@@ -297,7 +297,7 @@ describe('classifyFateEvent', () => {
 
   it('offers player-review choices for confirmation-only detector events', () => {
     const slayer = classifyFateEvent(event('SLAYER_TASK', 'Abyssal demons', {
-      detectorId: 'slayer-task-v1', confidence: 'UNCERTAIN',
+      detectorId: 'slayer-task-varp-v1', confidence: 'UNCERTAIN',
     }), state());
     expect(slayer).toMatchObject({
       state: 'NEEDS_CONFIRMATION',
@@ -317,7 +317,7 @@ describe('classifyFateEvent', () => {
 
   it('turns an explicit confirmation into a ready intent', () => {
     const slayerEvent = event('SLAYER_TASK', 'Abyssal demons', {
-      detectorId: 'slayer-task-v1', confidence: 'UNCERTAIN',
+      detectorId: 'slayer-task-varp-v1', confidence: 'UNCERTAIN',
     });
     expect(classifyFateEventCandidate(
       slayerEvent,

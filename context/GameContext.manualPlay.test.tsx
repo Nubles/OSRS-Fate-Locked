@@ -68,7 +68,7 @@ async function playByHand(storageKey: string, withDetections: boolean) {
     inbox.ingest([
       detected(current.runId, 'waiting-level', {}),
       detected(current.runId, 'waiting-quest', {
-        eventType: 'QUEST', canonicalLabel: "Cook's Assistant", detectorId: 'quest-widget-v1', evidence: {},
+        eventType: 'QUEST', canonicalLabel: "Cook's Assistant", detectorId: 'quest-state-v1', evidence: {},
       }),
     ]);
   }

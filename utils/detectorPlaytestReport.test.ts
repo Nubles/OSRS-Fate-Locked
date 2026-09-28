@@ -21,7 +21,7 @@ const row = (
     bundleVersion: 4,
     rulesVersion: '1',
     contentVersion: 1,
-    detectorId: 'slayer-task-v1',
+    detectorId: 'slayer-task-varp-v1',
     detectorVersion: 1,
     confidence: 'UNCERTAIN',
     evidence: { chatSignature: 'private message', relayToken: 'secret' },
@@ -55,7 +55,7 @@ describe('buildDetectorPlaytestReport', () => {
 
     const report = buildDetectorPlaytestReport(inbox, history);
 
-    expect(report.detectors['slayer-task-v1@1']).toMatchObject({
+    expect(report.detectors['slayer-task-varp-v1@1']).toMatchObject({
       received: 22,
       confirmedUnchanged: 18,
       corrected: 1,
