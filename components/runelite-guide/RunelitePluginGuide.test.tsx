@@ -3,112 +3,91 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import {
   RUNELITE_GUIDE_CHAPTERS,
+  RUNELITE_GUIDE_FIGURES,
+  RUNELITE_GUIDE_GLOSSARY,
+  RUNELITE_GUIDE_NAV_GROUPS,
   RUNELITE_GUIDE_PRESETS,
   RUNELITE_GUIDE_RESOURCES,
-  RUNELITE_GUIDE_SCREENSHOTS,
   RUNELITE_GUIDE_SETTINGS,
-  RUNELITE_SIDEBAR_CARD_TITLES,
+  RUNELITE_GUIDE_TROUBLESHOOTING,
 } from '../../data/runeliteGuide';
+import { RUNELITE_SETTING_SECTIONS } from '../../data/runeliteWording';
+import { resolveGuideImageSrc } from './GuideFigure';
 import { RunelitePluginGuide } from './RunelitePluginGuide';
 
-describe('RunelitePluginGuide', () => {
-  it('renders the complete, authentic player handbook', () => {
-    const html = renderToStaticMarkup(
-      <RunelitePluginGuide onClose={() => undefined} />,
-    );
-    const decodedHtml = html
-      .replaceAll('&amp;', '&')
-      .replaceAll('&quot;', '"')
-      .replaceAll('&#x27;', "'");
+const render = () => renderToStaticMarkup(<RunelitePluginGuide onClose={() => undefined} />);
+const count = (html: string, attribute: string) => html.split(attribute).length - 1;
+const decode = (html: string) => html
+  .replaceAll('&lt;', '<')
+  .replaceAll('&gt;', '>')
+  .replaceAll('&quot;', '"')
+  .replaceAll('&#x27;', "'")
+  .replaceAll('&amp;', '&');
 
+const blocks = RUNELITE_GUIDE_CHAPTERS.flatMap(chapter => [...chapter.blocks]);
+
+describe('RunelitePluginGuide', () => {
+  it('is one labelled dialog', () => {
+    const html = render();
     expect(html).toContain('role="dialog"');
     expect(html).toContain('aria-modal="true"');
     expect(html).toContain('aria-labelledby="runelite-guide-title"');
-    expect(html).toContain('Five-minute setup');
-    expect(html).toContain('Jump to Install');
-    expect(html).toContain('Jump to Connect');
-    expect(html).toContain('Vanilla');
-    expect(html).toContain('Chunked mode is not finished');
+    expect(html).toContain('aria-describedby="runelite-guide-summary"');
+    expect(html).toContain('id="runelite-guide-title"');
+    expect(html).toContain('RuneLite Plugin Guide');
+    expect(count(html, 'aria-label="Close RuneLite Plugin Guide"')).toBe(1);
+    expect(html).toContain('Back to the companion');
+  });
 
+  it('has every chapter, in order, in its contents and on the page', () => {
+    const html = decode(render());
+    expect(count(html, 'data-guide-chapter="')).toBe(RUNELITE_GUIDE_CHAPTERS.length);
+    expect(count(html, 'data-guide-nav-group="')).toBe(RUNELITE_GUIDE_NAV_GROUPS.length);
+    let from = 0;
     for (const chapter of RUNELITE_GUIDE_CHAPTERS) {
-      expect(html).toContain(`id="runelite-guide-${chapter.id}"`);
-      expect(decodedHtml).toContain(chapter.title);
+      const at = html.indexOf(`id="runelite-guide-${chapter.id}"`, from);
+      expect(at, chapter.id).toBeGreaterThan(-1);
+      from = at;
+      expect(html).toContain(`href="#runelite-guide-${chapter.id}"`);
+      expect(html).toMatch(new RegExp(`<option value="${chapter.id}"( selected="")?>${chapter.number}\\. `));
+      expect(html).toContain(`${chapter.number}. ${chapter.title}</option>`);
+      expect(html).toContain(chapter.lede);
     }
+  });
 
-    expect(html.match(/data-guide-chapter-panel=/g)).toHaveLength(
-      RUNELITE_GUIDE_CHAPTERS.length,
-    );
-    expect(html.match(/data-guide-chapter-header=/g)).toHaveLength(
-      RUNELITE_GUIDE_CHAPTERS.length,
-    );
-    expect(html.match(/data-guide-sidebar-card=/g)).toHaveLength(
-      RUNELITE_SIDEBAR_CARD_TITLES.length,
-    );
-    expect(html.match(/data-guide-preset=/g)).toHaveLength(
-      RUNELITE_GUIDE_PRESETS.length,
-    );
-    expect(html.match(/data-guide-resource=/g)).toHaveLength(
-      RUNELITE_GUIDE_RESOURCES.length,
-    );
-    expect(html).toContain('data-guide-troubleshooting=');
-    expect(html).toContain('data-guide-glossary-row=');
-    const officialSupportPanel = html.match(
-      /<section(?=[^>]*aria-labelledby="runelite-guide-support-links")(?=[^>]*class="([^"]*)")[^>]*>/,
-    );
-    expect(officialSupportPanel?.[1]).toContain('rounded-lg');
-    expect(officialSupportPanel?.[1]).not.toContain('rounded-xl');
-
-    const officialSupportHeading = html.match(
-      /<h3(?=[^>]*id="runelite-guide-support-links")(?=[^>]*class="([^"]*)")[^>]*>/,
-    );
-    expect(officialSupportHeading?.[1]).toContain('text-lg');
-    expect(officialSupportHeading?.[1]).not.toContain('font-serif');
-
-
-    for (const card of RUNELITE_SIDEBAR_CARD_TITLES) {
-      expect(decodedHtml).toContain(card);
+  it('shows every picture, each with its notes', () => {
+    const html = decode(render());
+    const figureBlocks = blocks.flatMap(block => (block.kind === 'figure' ? [block] : []));
+    const galleryItems = blocks.flatMap(block => (block.kind === 'gallery' ? block.items : []));
+    expect(count(html, 'data-guide-figure="')).toBe(figureBlocks.length);
+    expect(count(html, 'data-guide-gallery-item="')).toBe(galleryItems.length);
+    const notes = figureBlocks.reduce((total, block) => total
+      + (RUNELITE_GUIDE_FIGURES.find(figure => figure.id === block.figureId)?.callouts.length ?? 0), 0);
+    expect(count(html, 'data-guide-callout="')).toBe(notes);
+    for (const figure of RUNELITE_GUIDE_FIGURES) {
+      expect(html, figure.id).toContain(`src="${resolveGuideImageSrc(figure.src)}"`);
+      expect(html, figure.id).toContain(`alt="${figure.alt}"`);
     }
-    expect(decodedHtml.replaceAll('<!-- -->', '')).toContain(
-      `each of the sidebar’s ${RUNELITE_SIDEBAR_CARD_TITLES.length} cards, and what all ${RUNELITE_GUIDE_SETTINGS.length} settings change`,
-    );
-    expect(html.match(/data-guide-settings-section=/g)).toHaveLength(6);
-    expect(html.match(/data-guide-setting-card=/g)).toHaveLength(RUNELITE_GUIDE_SETTINGS.length);
+  });
 
-    for (const setting of RUNELITE_GUIDE_SETTINGS) {
-      expect(decodedHtml).toContain(setting.label);
-    }
-
-    for (const screenshot of RUNELITE_GUIDE_SCREENSHOTS) {
-      expect(html).toContain(screenshot.src);
-    }
-
-    for (const preset of RUNELITE_GUIDE_PRESETS) {
-      expect(decodedHtml).toContain(preset.title);
-    }
-
+  it('lists every setting, setup, problem, link and word', () => {
+    const html = decode(render());
+    expect(count(html, 'data-guide-settings-section="')).toBe(RUNELITE_SETTING_SECTIONS.length);
+    expect(count(html, 'data-guide-setting="')).toBe(RUNELITE_GUIDE_SETTINGS.length);
+    expect(count(html, 'data-guide-preset="')).toBe(RUNELITE_GUIDE_PRESETS.length);
+    expect(count(html, 'data-guide-troubleshooting="')).toBe(RUNELITE_GUIDE_TROUBLESHOOTING.length);
+    expect(count(html, 'data-guide-glossary-row="')).toBe(RUNELITE_GUIDE_GLOSSARY.length);
+    expect(count(html, 'data-guide-resource="')).toBe(RUNELITE_GUIDE_RESOURCES.length);
     for (const resource of RUNELITE_GUIDE_RESOURCES) {
-      expect(html).toContain(`href="${resource.href}"`);
+      expect(html).toContain(`href="${resource.href}" target="_blank" rel="noopener noreferrer"`);
     }
-    expect(html.match(/rel="noopener noreferrer"/g)?.length).toBeGreaterThanOrEqual(
-      RUNELITE_GUIDE_RESOURCES.length,
-    );
+    for (const setting of RUNELITE_GUIDE_SETTINGS) expect(html).toContain(setting.label);
+  });
 
-    expect(html).toContain('Troubleshooting');
-    expect(html).toContain('Glossary');
-    expect(
-      html.match(/aria-label="Close RuneLite Plugin Guide"/g),
-    ).toHaveLength(2);
-    expect(html).not.toContain('font-serif');
-    expect(html).not.toContain('rounded-2xl');
-    expect(html).not.toContain('bg-gradient-to-br');
-    const guideShell = html.match(
-      /<div(?=[^>]*data-runelite-guide-shell=)(?=[^>]*class="([^"]*)")[^>]*>/,
-    );
-    expect(guideShell?.[1]).toContain('rounded-xl');
-    expect(html.match(/\brounded-xl\b/g)).toHaveLength(1);
-    expect(html).toContain('data-runelite-guide-backdrop=');
-    expect(html).toContain('data-runelite-guide-shell=');
-    expect(html).toContain('data-guide-overview=');
-    expect(html).toContain('data-guide-quick-start=');
+  it('keeps nothing fixed to the bottom of the screen, and draws its icons from OSRS art', () => {
+    const html = render();
+    expect(html).not.toContain('data-runelite-guide-footer');
+    const wikiImages = html.match(/src="https:\/\/oldschool\.runescape\.wiki\/images\/[^"]+"/g) ?? [];
+    expect(wikiImages.length).toBeGreaterThan(RUNELITE_GUIDE_CHAPTERS.length * 2);
   });
 });

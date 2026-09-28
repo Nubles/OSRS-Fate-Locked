@@ -5,95 +5,75 @@ import { readdirSync, readFileSync } from 'node:fs';
 // @ts-expect-error Node types are intentionally excluded from the browser app.
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import {
-  RUNELITE_GUIDE_CHAPTERS,
-  RUNELITE_GUIDE_SCREENSHOTS,
-  type GuideScreenshotSource,
-} from './runeliteGuide';
+import { RUNELITE_GUIDE_FIGURES, type GuideBox, type GuideFigureSource } from './runeliteGuide';
 
-interface ScreenshotManifestEntry {
+interface PictureManifestEntry {
   readonly id: string;
   readonly filename: string;
-  readonly chapter: string;
-  readonly source: GuideScreenshotSource;
-  /** The plugin build shown, for a render or a client capture. */
+  readonly source: GuideFigureSource;
+  /** The plugin commit that drew it, for a rendered picture. */
   readonly pluginCommit?: string;
   readonly runeliteVersion?: string;
   readonly capturedAt: string;
   readonly purpose: string;
   readonly width: number;
   readonly height: number;
+  readonly scale: number;
   readonly sha256: string;
   readonly redactions: readonly string[];
   readonly annotations: readonly {
     readonly id: string;
     readonly marker: number;
-    readonly x: number;
-    readonly y: number;
+    readonly box: GuideBox;
   }[];
 }
 
-interface ScreenshotManifest {
+interface PictureManifest {
   readonly version: number;
-  readonly entries: readonly ScreenshotManifestEntry[];
+  readonly entries: readonly PictureManifestEntry[];
 }
 
 const root = resolve('public/guides/runelite');
-const readManifest = (): ScreenshotManifest =>
+const readManifest = (): PictureManifest =>
   JSON.parse(readFileSync(resolve(root, 'manifest.json'), 'utf8'));
 
-describe('RuneLite guide screenshot assets', () => {
-  it('records where every image comes from', () => {
+describe('RuneLite guide pictures on disk', () => {
+  it('records where every picture comes from', () => {
     const manifest = readManifest();
 
-    expect(manifest.version).toBe(2);
+    expect(manifest.version).toBe(3);
     for (const entry of manifest.entries) {
-      expect(['rendered', 'client-capture', 'web-capture'], entry.id).toContain(entry.source);
+      expect(['rendered', 'web-capture'], entry.id).toContain(entry.source);
       expect(entry.capturedAt, entry.id).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-      if (entry.source === 'web-capture') {
-        expect(entry.pluginCommit, entry.id).toBeUndefined();
-      } else {
-        expect(entry.pluginCommit, entry.id).toMatch(/^[0-9a-f]{40}$/);
-      }
+      expect(entry.purpose.trim().length, entry.id).toBeGreaterThan(20);
+      expect(entry.redactions.every(redaction => redaction.trim().length > 0), entry.id).toBe(true);
       if (entry.source === 'rendered') {
+        expect(entry.pluginCommit, entry.id).toMatch(/^[0-9a-f]{40}$/);
         expect(entry.runeliteVersion, entry.id).toMatch(/^\d+\.\d+\.\d+$/);
-        // Rendered from the golden bundles' fictional run: nothing to hide.
+        // Drawn from the golden bundles' fictional run: nothing to hide.
         expect(entry.redactions, entry.id).toEqual([]);
+      } else {
+        expect(entry.pluginCommit, entry.id).toBeUndefined();
       }
     }
-    const sources = Object.fromEntries(manifest.entries.map(entry => [entry.id, entry.source]));
-    expect(sources['plugin-hub-install']).toBe('client-capture');
-    expect(sources['companion-confirmation']).toBe('web-capture');
-    expect(manifest.entries.filter(entry => entry.source === 'rendered')).toHaveLength(10);
   });
 
-  it('matches every typed screenshot, its source, chapter and annotations', () => {
+  it('matches every picture the guide shows: size, detail and notes', () => {
     const manifest = readManifest();
 
-    expect(manifest.entries).toHaveLength(RUNELITE_GUIDE_SCREENSHOTS.length);
-    for (const screenshot of RUNELITE_GUIDE_SCREENSHOTS) {
-      const entry = manifest.entries.find(candidate => candidate.id === screenshot.id);
-
-      expect(entry, screenshot.id).toBeTruthy();
-      expect(entry!.filename).toBe(screenshot.src.split('/').at(-1));
-      expect(entry!.source, screenshot.id).toBe(screenshot.source);
-      const chapter = RUNELITE_GUIDE_CHAPTERS.find(candidate => candidate.id === entry!.chapter);
-      expect(chapter?.screenshotIds, screenshot.id).toContain(screenshot.id);
-      expect(entry!.purpose.trim().length).toBeGreaterThan(20);
-      expect(entry!.redactions.every(redaction => redaction.trim().length > 0)).toBe(true);
-      expect(entry!.annotations).toEqual(
-        screenshot.callouts.map(({ id, marker, x, y }) => ({ id, marker, x, y })),
+    expect(manifest.entries.map(entry => entry.id)).toEqual(RUNELITE_GUIDE_FIGURES.map(figure => figure.id));
+    for (const figure of RUNELITE_GUIDE_FIGURES) {
+      const entry = manifest.entries.find(candidate => candidate.id === figure.id)!;
+      expect(entry.filename, figure.id).toBe(figure.src.split('/').at(-1));
+      expect(entry.source, figure.id).toBe(figure.source);
+      expect([entry.width, entry.height, entry.scale], figure.id).toEqual([figure.width, figure.height, figure.scale]);
+      expect(entry.annotations, figure.id).toEqual(
+        figure.callouts.map(({ id, marker, box }) => ({ id, marker, box })),
       );
-      for (const annotation of entry!.annotations) {
-        expect(annotation.x).toBeGreaterThanOrEqual(0);
-        expect(annotation.x).toBeLessThanOrEqual(1);
-        expect(annotation.y).toBeGreaterThanOrEqual(0);
-        expect(annotation.y).toBeLessThanOrEqual(1);
-      }
     }
   });
 
-  it('lists every image in the folder, and each file is the image it records', () => {
+  it('holds every picture it lists, and nothing else, each the file it records', () => {
     const manifest = readManifest();
     const pngs = readdirSync(root).filter((name: string) => name.endsWith('.png')).sort();
 
@@ -103,8 +83,6 @@ describe('RuneLite guide screenshot assets', () => {
       expect([...png.subarray(1, 4)], entry.id).toEqual([80, 78, 71]);
       expect(png.readUInt32BE(16), entry.id).toBe(entry.width);
       expect(png.readUInt32BE(20), entry.id).toBe(entry.height);
-      expect(entry.width, entry.id).toBeGreaterThan(200);
-      expect(entry.height, entry.id).toBeGreaterThan(150);
       expect(createHash('sha256').update(png).digest('hex'), entry.id).toBe(entry.sha256);
     }
   });

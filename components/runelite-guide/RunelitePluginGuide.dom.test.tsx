@@ -14,20 +14,10 @@ const GuideHarness = () => {
 
   return (
     <>
-      <button
-        ref={openerRef}
-        type="button"
-        data-testid="guide-opener"
-        onClick={() => setOpen(true)}
-      >
+      <button ref={openerRef} type="button" data-testid="guide-opener" onClick={() => setOpen(true)}>
         RuneLite guide
       </button>
-      {open && (
-        <RunelitePluginGuide
-          onClose={() => setOpen(false)}
-          returnFocusTarget={openerRef.current}
-        />
-      )}
+      {open && <RunelitePluginGuide onClose={() => setOpen(false)} returnFocusTarget={openerRef.current} />}
     </>
   );
 };
@@ -63,9 +53,7 @@ const unmount = async (host: HTMLDivElement) => {
   host.remove();
 };
 
-const runOpenGuideLifecycle = async (
-  callback: (host: HTMLDivElement) => Promise<void>,
-) => {
+const runOpenGuideLifecycle = async (callback: (host: HTMLDivElement) => Promise<void>) => {
   const host = await mount();
   await openGuide(host);
   try {
@@ -75,8 +63,22 @@ const runOpenGuideLifecycle = async (
   }
 };
 
+const reducedMotion = (matches: boolean) => {
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: vi.fn().mockReturnValue({ matches, addEventListener: vi.fn(), removeEventListener: vi.fn() }),
+  });
+};
+
+const spyOnScroll = () => {
+  const scrollIntoView = vi.fn();
+  Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: scrollIntoView });
+  return scrollIntoView;
+};
+
 afterEach(async () => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   for (const { host, root } of mountedRoots.splice(0).reverse()) {
     await act(async () => {
       root.unmount();
@@ -86,142 +88,105 @@ afterEach(async () => {
 });
 
 describe('RunelitePluginGuide navigation and focus', () => {
-  it('navigates with reduced motion, closes on Escape, and restores focus', async () => {
-    Object.defineProperty(window, 'matchMedia', {
-      configurable: true,
-      value: vi.fn().mockReturnValue({
-        matches: true,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      }),
-    });
-    const scrollIntoView = vi.fn();
-    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
-      configurable: true,
-      value: scrollIntoView,
-    });
-
+  it('jumps to a chapter from its contents, without motion when asked, and marks where you are', async () => {
+    reducedMotion(true);
+    const scrollIntoView = spyOnScroll();
     const host = await mount();
     const opener = await openGuide(host);
 
-
-    const strictModeLink = host.querySelector<HTMLAnchorElement>(
-      'a[href="#runelite-guide-strict-mode"]',
-    );
-    if (!strictModeLink) throw new Error('Missing guide navigation');
-
+    const strictMode = host.querySelector<HTMLAnchorElement>('a[href="#runelite-guide-strict-mode"]');
+    if (!strictMode) throw new Error('Missing guide contents');
     await act(async () => {
-      strictModeLink.click();
+      strictMode.click();
     });
 
-    expect(scrollIntoView).toHaveBeenCalledWith({
-      behavior: 'auto',
-      block: 'start',
-    });
-    expect(strictModeLink.getAttribute('aria-current')).toBe('location');
-    expect(strictModeLink.className).toContain('border-amber-400/40');
-    expect(strictModeLink.className).toContain('bg-amber-400/10');
-
-    const inactiveLink = host.querySelector<HTMLAnchorElement>(
-      'a[href="#runelite-guide-what-it-does"]',
-    );
-    expect(inactiveLink?.className).toContain('border-transparent');
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
+    expect(strictMode.getAttribute('aria-current')).toBe('location');
+    expect(strictMode.className).toContain('border-amber-400');
+    expect(host.querySelector('a[href="#runelite-guide-start"]')?.getAttribute('aria-current')).toBeNull();
+    expect(host.querySelector<HTMLSelectElement>('[data-runelite-guide-nav="mobile"]')?.value).toBe('strict-mode');
 
     await act(async () => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     });
-
     expect(host.querySelector('[role="dialog"]')).toBeNull();
     expect(document.activeElement).toBe(opener);
   });
 
-  it('renders the bounded Fate Locked shell with grouped contents and fixed regions', async () => {
-    const scrollIntoView = vi.fn();
-    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
-      configurable: true,
-      value: scrollIntoView,
-    });
+  it('jumps from the phone’s chapter menu and the introduction’s links, smoothly', async () => {
+    reducedMotion(false);
+    const scrollIntoView = spyOnScroll();
     const host = await mount();
     await openGuide(host);
 
-    const backdrop = host.querySelector<HTMLElement>('[data-runelite-guide-backdrop]');
-    const shell = host.querySelector<HTMLElement>('[data-runelite-guide-shell]');
-    const header = host.querySelector<HTMLElement>('[data-runelite-guide-header]');
-    const body = host.querySelector<HTMLElement>('[data-runelite-guide-body]');
-    const scrollRegion = host.querySelector<HTMLElement>('[data-runelite-guide-scroll-region]');
-    const footer = host.querySelector<HTMLElement>('[data-runelite-guide-footer]');
-    const desktopNav = host.querySelector<HTMLElement>(
-      '[data-runelite-guide-nav="desktop"]',
-    );
-    const groupLabels = new Set(
-      Array.from(host.querySelectorAll<HTMLElement>('[data-guide-nav-group]'))
-        .map(node => node.dataset.guideNavGroup),
-    );
-
-    expect(shell).toBeTruthy();
-    expect(backdrop?.className).toContain('bg-black/85');
-    expect(shell?.className).toContain('max-w-[96rem]');
-    expect(shell?.className).toContain('max-h-[92vh]');
-    expect(shell?.className).toContain('bg-[#171717]');
-    expect(shell?.className).toContain('border-amber-400/30');
-    expect(header?.parentElement).toBe(shell);
-    expect(body?.parentElement).toBe(shell);
-    expect(footer?.parentElement).toBe(shell);
-    expect(scrollRegion?.className).toContain('overflow-y-auto');
-    expect(desktopNav).toBeTruthy();
-    expect(groupLabels).toEqual(new Set([
-      'Getting started',
-      'The sidebar',
-      'Settings',
-      'Help',
-    ]));
-    expect(host.querySelector('[data-guide-overview]')).toBeTruthy();
-    expect(host.querySelector('[data-guide-quick-start]')).toBeTruthy();
-    const quickStart = host.querySelector<HTMLElement>('[data-guide-quick-start]');
-    const informativeLabels = [
-      ...Array.from(
-        host.querySelectorAll<HTMLElement>(
-          '[data-runelite-guide-nav] > p, [data-guide-nav-group] > h2, [data-runelite-guide-nav] a > span:first-child',
-        ),
-      ),
-      host.querySelector<HTMLElement>('[data-runelite-guide-footer] p:last-child'),
-    ].filter((node): node is HTMLElement => Boolean(node));
-    expect(informativeLabels.length).toBeGreaterThan(0);
-    for (const label of informativeLabels) {
-      expect(label.className).toContain('text-gray-400');
-      expect(label.className).not.toMatch(/\btext-gray-(500|600)\b/);
-    }
-    const quickStartHeading = host.querySelector<HTMLElement>('#runelite-guide-quick-start');
-    const quickStartIcon = quickStart?.querySelector<HTMLElement>('div > span');
-    const quickStartActions = Array.from(quickStart?.querySelectorAll<HTMLButtonElement>('button') ?? []);
-    if (!quickStartHeading || !quickStartIcon || quickStartActions.length !== 5) {
-      throw new Error('Missing quick-start presentation elements');
-    }
-    expect(quickStartHeading.className).toContain('font-sans');
-    expect(quickStartHeading.className).not.toContain('font-serif');
-    expect(quickStartIcon.className).toContain('rounded-lg');
-    expect(quickStartIcon.className).not.toContain('rounded-xl');
-    for (const action of quickStartActions) {
-      expect(action.className).toContain('rounded-lg');
-      expect(action.className).toContain('bg-[#252525]');
-      expect(action.className).not.toContain('bg-black/20');
-    }
-
-    const mobileContents = host.querySelector<HTMLDetailsElement>(
-      '[data-runelite-guide-mobile-contents]',
-    );
-    const mobileStrictMode = host.querySelector<HTMLAnchorElement>(
-      '[data-runelite-guide-nav="mobile"] a[href="#runelite-guide-strict-mode"]',
-    );
-    if (!mobileContents || !mobileStrictMode) {
-      throw new Error('Missing mobile guide contents');
-    }
+    const menu = host.querySelector<HTMLSelectElement>('[data-runelite-guide-nav="mobile"]');
+    if (!menu) throw new Error('Missing the chapter menu');
     await act(async () => {
-      mobileContents.open = true;
-      mobileStrictMode.click();
+      menu.value = 'here';
+      menu.dispatchEvent(new Event('change', { bubbles: true }));
     });
-    expect(mobileContents.open).toBe(false);
-    expect(scrollIntoView).toHaveBeenCalled();
+    expect(scrollIntoView).toHaveBeenLastCalledWith({ behavior: 'smooth', block: 'start' });
+    expect(host.querySelector('a[href="#runelite-guide-here"]')?.getAttribute('aria-current')).toBe('location');
+
+    const settings = host.querySelector<HTMLButtonElement>('[data-guide-quick-link="settings"]');
+    if (!settings) throw new Error('Missing the introduction’s links');
+    await act(async () => {
+      settings.click();
+    });
+    expect(host.querySelector('a[href="#runelite-guide-settings"]')?.getAttribute('aria-current')).toBe('location');
+    expect(menu.value).toBe('settings');
+    expect(scrollIntoView).toHaveBeenCalledTimes(2);
+  });
+
+  it('marks the chapter being read as the page scrolls', async () => {
+    let report: IntersectionObserverCallback = () => undefined;
+    const observed: Element[] = [];
+    vi.stubGlobal('IntersectionObserver', class {
+      constructor(callback: IntersectionObserverCallback) {
+        report = callback;
+      }
+      observe(node: Element) {
+        observed.push(node);
+      }
+      disconnect() {}
+    });
+    const host = await mount();
+    await openGuide(host);
+    const cross = (entries: ReadonlyArray<readonly [string, boolean]>) => act(async () => {
+      report(entries.map(([id, isIntersecting]) => ({
+        target: host.querySelector(`#runelite-guide-${id}`),
+        isIntersecting,
+      })) as unknown as IntersectionObserverEntry[], {} as IntersectionObserver);
+    });
+    const reading = () => host.querySelector('a[aria-current="location"]')?.getAttribute('href');
+
+    expect(observed.map(node => node.id)).toEqual(
+      Array.from(host.querySelectorAll('[data-guide-chapter]')).map(node => node.id),
+    );
+    await cross([['status', true], ['sidebar', true]]);
+    expect(reading()).toBe('#runelite-guide-sidebar');
+    await cross([['here', true]]);
+    expect(reading()).toBe('#runelite-guide-sidebar');
+    await cross([['sidebar', false]]);
+    expect(reading()).toBe('#runelite-guide-status');
+    await cross([['status', false], ['here', false]]);
+    expect(reading()).toBe('#runelite-guide-status');
+  });
+
+  it('closes from the end of the guide, back to where it was opened', async () => {
+    spyOnScroll();
+    const host = await mount();
+    const opener = await openGuide(host);
+    const back = Array.from(host.querySelectorAll<HTMLButtonElement>('button'))
+      .find(button => button.textContent === 'Back to the companion');
+    if (!back) throw new Error('Missing the closing button');
+
+    await act(async () => {
+      back.click();
+    });
+
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(document.activeElement).toBe(opener);
   });
 
   it('restores document overflow when an open guide lifecycle exits early', async () => {

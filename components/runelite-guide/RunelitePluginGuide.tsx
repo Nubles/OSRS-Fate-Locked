@@ -1,297 +1,143 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Clock3, ExternalLink, X } from 'lucide-react';
-import { BookOpen } from '../OsrsIcon';
+import { X } from 'lucide-react';
+import { WikiIcon } from '../WikiIcon';
 import {
   RUNELITE_GUIDE_CHAPTERS,
   RUNELITE_GUIDE_CHAPTER_IDS,
-  RUNELITE_GUIDE_GLOSSARY,
-  RUNELITE_GUIDE_PRESETS,
-  RUNELITE_GUIDE_RESOURCES,
-  RUNELITE_GUIDE_SCREENSHOTS,
-  RUNELITE_GUIDE_SETTINGS,
-  RUNELITE_GUIDE_TROUBLESHOOTING,
-  RUNELITE_SIDEBAR_CARD_TITLES,
+  RUNELITE_GUIDE_FIGURES,
+  RUNELITE_GUIDE_ICON,
+  RUNELITE_GUIDE_NAV_GROUPS,
+  type GuideBlock,
   type GuideChapter,
   type GuideChapterId,
 } from '../../data/runeliteGuide';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { GuideScreenshot } from './GuideScreenshot';
-import { GuideSettingsTable } from './GuideSettingsTable';
+import { GuideFigure, GuideGalleryPicture } from './GuideFigure';
+import { GuideSettings } from './GuideSettings';
+import { GuideGlossary, GuidePresets, GuideResources, GuideTroubleshooting } from './GuideReference';
 
 export interface RunelitePluginGuideProps {
   readonly onClose: () => void;
   readonly returnFocusTarget?: HTMLElement | null;
 }
 
-const screenshotsById = new Map(
-  RUNELITE_GUIDE_SCREENSHOTS.map(screenshot => [screenshot.id, screenshot]),
-);
+const figuresById = new Map(RUNELITE_GUIDE_FIGURES.map(figure => [figure.id, figure]));
+const chaptersById = new Map(RUNELITE_GUIDE_CHAPTERS.map(chapter => [chapter.id, chapter]));
 
-interface GuideNavGroup {
-  readonly label: string;
-  readonly chapterIds: readonly GuideChapterId[];
-}
+/** The chapters the introduction points newcomers and returning players to. */
+const QUICK_LINKS: readonly GuideChapterId[] = ['start', 'here', 'strict-mode', 'settings', 'troubleshooting'];
 
-const GUIDE_NAV_GROUPS: readonly GuideNavGroup[] = [
-  {
-    label: 'Getting started',
-    chapterIds: [
-      'what-it-does',
-      'install-plugin-hub',
-      'connect-tracker',
-      'connection-privacy',
-    ],
-  },
-  {
-    label: 'The sidebar',
-    chapterIds: [
-      'sidebar',
-      'here',
-      'strict-mode',
-      'roll-inbox',
-      'run-and-keys',
-      'connection-and-backup',
-    ],
-  },
-  {
-    label: 'Settings',
-    chapterIds: ['settings', 'alerts', 'in-game-display', 'recommended-configurations'],
-  },
-  {
-    label: 'Help',
-    chapterIds: ['troubleshooting', 'glossary'],
-  },
-];
-
-const FiveMinuteSetup: React.FC<{
-  readonly onNavigate: (chapterId: GuideChapterId) => void;
-}> = ({ onNavigate }) => (
-  <section
-    data-guide-quick-start
-    className="overflow-hidden rounded-lg border border-osrs-border bg-osrs-panel"
-    aria-labelledby="runelite-guide-quick-start"
-  >
-    <div className="flex items-center gap-3 bg-[#1b1b1b] px-4 py-3">
-      <span className="rounded-lg bg-amber-400/15 p-2 text-amber-300">
-        <Clock3 className="h-5 w-5" aria-hidden="true" />
-      </span>
-      <div>
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-300">
-          Start here
-        </p>
-        <h2 id="runelite-guide-quick-start" className="font-sans text-2xl font-black text-white">
-          Five-minute setup
-        </h2>
-      </div>
-    </div>
-    <ol className="grid gap-2 p-3 sm:grid-cols-2 xl:grid-cols-5">
-      {([
-        ['1', 'Install', 'Find Fate Locked Ironman in RuneLite’s Plugin Hub and install it.', 'install-plugin-hub'],
-        ['2', 'Open', 'Select the Fate Locked icon, a crystal key, in RuneLite’s sidebar.', 'sidebar'],
-        ['3', 'Connect', 'Choose Connect tracker and allow online sync to open the private confirmation page.', 'connect-tracker'],
-        ['4', 'Confirm', 'Confirm the intended companion profile and wait for Rules up to date.', 'connection-privacy'],
-        ['5', 'Play Vanilla', 'Open the cards you need and keep the run in Vanilla.', 'recommended-configurations'],
-      ] as const).map(([number, title, body, chapterId]) => (
-        <li key={number}>
-          <button
-            type="button"
-            aria-label={`Jump to ${title}`}
-            onClick={() => onNavigate(chapterId)}
-            className="group h-full w-full rounded-lg border border-white/10 bg-[#252525] p-3 text-left transition-colors hover:border-amber-400/35 hover:bg-amber-400/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-          >
-            <span className="text-xs font-black text-amber-300">STEP {number}</span>
-            <strong className="mt-1 block text-sm text-white group-hover:text-amber-100">
-              {title}
-            </strong>
-            <span className="mt-1 block text-xs leading-relaxed text-gray-400">{body}</span>
-          </button>
-        </li>
-      ))}
-    </ol>
-  </section>
-);
-
-const ContentsLink: React.FC<{
-  readonly chapter: GuideChapter;
-  readonly activeChapter: GuideChapterId;
-  readonly onNavigate: (chapterId: GuideChapterId) => void;
-}> = ({ chapter, activeChapter, onNavigate }) => (
-  <a
-    href={`#runelite-guide-${chapter.id}`}
-    aria-current={activeChapter === chapter.id ? 'location' : undefined}
-    onClick={event => {
-      event.preventDefault();
-      onNavigate(chapter.id);
-    }}
-    className={`group flex items-start gap-3 rounded-lg border px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
-      activeChapter === chapter.id
-        ? 'border-amber-400/40 bg-amber-400/10 font-bold text-amber-200'
-        : 'border-transparent text-gray-400 hover:bg-white/5 hover:text-white'
-    }`}
-  >
-    <span className="w-5 shrink-0 text-right text-xs font-black text-gray-400 group-aria-[current=location]:text-amber-400">
-      {chapter.number}
-    </span>
-    <span>{chapter.title}</span>
-  </a>
-);
-
-interface GuideContentsProps {
-  readonly mode: 'desktop' | 'mobile';
-  readonly activeChapter: GuideChapterId;
-  readonly onNavigate: (chapterId: GuideChapterId) => void;
-}
-
-const GuideContents: React.FC<GuideContentsProps> = ({
-  mode,
-  activeChapter,
-  onNavigate,
-}) => (
-  <nav
-    data-runelite-guide-nav={mode}
-    aria-label={mode === 'desktop'
-      ? 'RuneLite guide contents'
-      : 'Mobile RuneLite guide contents'}
-    className={mode === 'desktop'
-      ? 'h-full overflow-y-auto p-3 custom-scrollbar'
-      : 'border-t border-osrs-border p-2'}
-  >
-    <p className="px-2 pb-2 text-[10px] font-black uppercase tracking-[0.16em] text-gray-400">
-      Contents
-    </p>
-    <div className="space-y-4">
-      {GUIDE_NAV_GROUPS.map(group => (
-        <section key={group.label} data-guide-nav-group={group.label}>
-          <h2 className="px-2 pb-1 text-[10px] font-black uppercase tracking-[0.14em] text-gray-400">
-            {group.label}
-          </h2>
-          <div className="space-y-0.5">
-            {group.chapterIds.map(chapterId => {
-              const chapter = RUNELITE_GUIDE_CHAPTERS.find(
-                candidate => candidate.id === chapterId,
-              );
-              if (!chapter) return null;
-              return (
-                <ContentsLink
-                  key={chapter.id}
-                  chapter={chapter}
-                  activeChapter={activeChapter}
-                  onNavigate={onNavigate}
-                />
-              );
-            })}
-          </div>
-        </section>
-      ))}
-    </div>
-  </nav>
-);
-const Presets: React.FC = () => (
-  <div className="grid gap-4 lg:grid-cols-2">
-    {RUNELITE_GUIDE_PRESETS.map(preset => (
-      <article
-        key={preset.id}
-        data-guide-preset={preset.id}
-        className="rounded-lg border border-osrs-border bg-[#252525] p-4"
-      >
-        <h3 className="font-sans text-base font-bold text-white">{preset.title}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-gray-300">{preset.summary}</p>
-        <ul className="mt-4 space-y-2 text-sm text-gray-400">
-          {preset.adjustments.map(adjustment => (
-            <li key={adjustment} className="flex gap-2">
-              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" aria-hidden="true" />
-              <span>{adjustment}</span>
+const Block: React.FC<{ readonly block: GuideBlock }> = ({ block }) => {
+  switch (block.kind) {
+    case 'text':
+      return <p className="max-w-3xl text-[15px] leading-7 text-gray-300">{block.text}</p>;
+    case 'heading':
+      return <h3 className="pt-2 text-lg font-bold text-white">{block.text}</h3>;
+    case 'steps':
+      return (
+        <ol data-guide-steps className="max-w-3xl space-y-5">
+          {block.steps.map((step, index) => (
+            <li key={step.title} className="flex gap-4">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-400 text-sm font-black text-[#111]">
+                {index + 1}
+              </span>
+              <div className="min-w-0 pt-1">
+                <p className="font-bold text-white">{step.title}</p>
+                <p className="mt-1 text-[15px] leading-7 text-gray-300">{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      );
+    case 'list':
+      return (
+        <ul className="max-w-3xl space-y-2.5">
+          {block.items.map(item => (
+            <li key={item} className="flex gap-3 text-[15px] leading-7 text-gray-300">
+              <span className="mt-[0.7rem] h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" aria-hidden="true" />
+              <span>{item}</span>
             </li>
           ))}
         </ul>
-      </article>
-    ))}
-  </div>
-);
-
-const Troubleshooting: React.FC = () => (
-  <div className="space-y-3">
-    {RUNELITE_GUIDE_TROUBLESHOOTING.map(item => (
-      <details
-        key={item.id}
-        data-guide-troubleshooting={item.id}
-        className="group rounded-lg border border-osrs-border bg-[#252525]"
-      >
-        <summary className="cursor-pointer px-4 py-3 font-bold text-white marker:text-amber-400">
-          {item.symptom}
-        </summary>
-        <div className="border-t border-white/10 px-4 py-4">
-          <p className="text-sm leading-relaxed text-gray-300">
-            <strong className="text-gray-200">Likely cause:</strong> {item.likelyCause}
-          </p>
-          <ol className="mt-3 space-y-2 text-sm text-gray-400">
-            {item.fix.map((step, index) => (
-              <li key={step} className="flex gap-3">
-                <span className="font-black text-amber-300">{index + 1}.</span>
-                <span>{step}</span>
-              </li>
-            ))}
-          </ol>
+      );
+    case 'terms':
+      return (
+        <dl data-guide-terms className="max-w-4xl divide-y divide-white/10 rounded-lg border border-white/10 bg-[#1b1b1b]">
+          {block.items.map(item => (
+            <div key={item.term} className="grid gap-1 px-4 py-3 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-4">
+              <dt className="font-bold text-gray-100">{item.term}</dt>
+              <dd className="text-[15px] leading-7 text-gray-400">{item.text}</dd>
+            </div>
+          ))}
+        </dl>
+      );
+    case 'note':
+      return (
+        <aside data-guide-note className="max-w-3xl rounded-lg border border-amber-400/25 bg-amber-400/[0.06] px-4 py-3">
+          <p className="font-bold text-amber-200">{block.title}</p>
+          <p className="mt-1 text-[15px] leading-7 text-gray-300">{block.text}</p>
+        </aside>
+      );
+    case 'figure': {
+      const figure = figuresById.get(block.figureId);
+      return figure ? <GuideFigure figure={figure} /> : null;
+    }
+    case 'gallery':
+      return (
+        <div data-guide-gallery className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {block.items.map(item => {
+            const figure = figuresById.get(item.figureId);
+            return figure
+              ? <GuideGalleryPicture key={item.figureId} figure={figure} title={item.title} body={item.body} />
+              : null;
+          })}
         </div>
-      </details>
-    ))}
-    <section
-      className="rounded-lg border border-amber-400/20 bg-amber-400/[0.055] p-4"
-      aria-labelledby="runelite-guide-support-links"
-    >
-      <h3 id="runelite-guide-support-links" className="text-lg font-bold text-white">
-        Official links
-      </h3>
-      <div className="mt-3 grid gap-3 lg:grid-cols-3">
-        {RUNELITE_GUIDE_RESOURCES.map(resource => (
-          <a
-            key={resource.id}
-            href={resource.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-guide-resource={resource.id}
-            className="group rounded-lg border border-osrs-border bg-[#1b1b1b] p-3 transition-colors hover:border-amber-400/35 hover:bg-amber-400/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-          >
-            <span className="flex items-center gap-2 text-sm font-bold text-amber-200">
-              {resource.label}
-              <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-            </span>
-            <span className="mt-1 block text-xs leading-relaxed text-gray-400">
-              {resource.description}
-            </span>
-          </a>
-        ))}
+      );
+    case 'settings':
+      return <GuideSettings />;
+    case 'presets':
+      return <GuidePresets />;
+    case 'troubleshooting':
+      return <GuideTroubleshooting />;
+    case 'resources':
+      return <GuideResources />;
+    case 'glossary':
+      return <GuideGlossary />;
+    default:
+      return null;
+  }
+};
+
+const Chapter: React.FC<{ readonly chapter: GuideChapter }> = ({ chapter }) => (
+  <section
+    id={`runelite-guide-${chapter.id}`}
+    data-guide-chapter={chapter.id}
+    aria-labelledby={`runelite-guide-${chapter.id}-title`}
+    className="scroll-mt-6 border-t border-white/10 pt-10"
+  >
+    <header data-guide-chapter-header={chapter.id} className="flex items-start gap-4">
+      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-white/10 bg-[#1e1e1e]">
+        <WikiIcon file={chapter.icon} alt="" size={28} />
+      </span>
+      <div className="min-w-0">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-amber-400">Chapter {chapter.number}</p>
+        <h2 id={`runelite-guide-${chapter.id}-title`} className="mt-0.5 text-2xl font-black text-white">
+          {chapter.title}
+        </h2>
+        <p className="mt-1.5 max-w-3xl text-base leading-relaxed text-gray-400">{chapter.lede}</p>
       </div>
-    </section>
-  </div>
+    </header>
+    <div className="mt-6 space-y-6">
+      {chapter.blocks.map((block, index) => <Block key={`${block.kind}-${index}`} block={block} />)}
+    </div>
+  </section>
 );
 
-const Glossary: React.FC = () => (
-  <dl className="grid gap-3 sm:grid-cols-2">
-    {RUNELITE_GUIDE_GLOSSARY.map(item => (
-      <div
-        key={item.term}
-        data-guide-glossary-row={item.term}
-        className="rounded-lg border border-osrs-border bg-[#252525] p-3"
-      >
-        <dt className="font-bold text-amber-200">{item.term}</dt>
-        <dd className="mt-1 text-sm leading-relaxed text-gray-400">{item.definition}</dd>
-      </div>
-    ))}
-  </dl>
-);
-
-export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
-  onClose,
-  returnFocusTarget,
-}) => {
+export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({ onClose, returnFocusTarget }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLElement>(null);
-  const mobileContentsRef = useRef<HTMLDetailsElement>(null);
-  const [activeChapter, setActiveChapter] = useState<GuideChapterId>(
-    RUNELITE_GUIDE_CHAPTER_IDS[0],
-  );
+  const [activeChapter, setActiveChapter] = useState<GuideChapterId>(RUNELITE_GUIDE_CHAPTER_IDS[0]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -310,19 +156,21 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
 
   useEffect(() => {
     if (typeof IntersectionObserver === 'undefined') return;
+    // Which chapters cross a band near the top of the page; the first of them is the one being read.
+    const crossing = new Set<GuideChapterId>();
     const observer = new IntersectionObserver(
       entries => {
-        const visible = entries
-          .filter(entry => entry.isIntersecting)
-          .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
-        const chapterId = visible?.target.getAttribute('data-guide-chapter') as
-          | GuideChapterId
-          | null;
-        if (chapterId) setActiveChapter(chapterId);
+        for (const entry of entries) {
+          const chapterId = entry.target.getAttribute('data-guide-chapter') as GuideChapterId | null;
+          if (!chapterId) continue;
+          if (entry.isIntersecting) crossing.add(chapterId);
+          else crossing.delete(chapterId);
+        }
+        const reading = RUNELITE_GUIDE_CHAPTER_IDS.find(id => crossing.has(id));
+        if (reading) setActiveChapter(reading);
       },
-      { root: contentRef.current, rootMargin: '-12% 0px -70% 0px', threshold: [0.05, 0.4, 0.8] },
+      { root: contentRef.current, rootMargin: '-15% 0px -80% 0px', threshold: 0 },
     );
-
     for (const chapterId of RUNELITE_GUIDE_CHAPTER_IDS) {
       const node = document.getElementById(`runelite-guide-${chapterId}`);
       if (node) observer.observe(node);
@@ -333,21 +181,16 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
   const navigateTo = (chapterId: GuideChapterId) => {
     const node = document.getElementById(`runelite-guide-${chapterId}`);
     if (!node) return;
-    const reducedMotion =
-      typeof window.matchMedia === 'function'
+    const reducedMotion = typeof window.matchMedia === 'function'
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    node.scrollIntoView({
-      behavior: reducedMotion ? 'auto' : 'smooth',
-      block: 'start',
-    });
+    node.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
     setActiveChapter(chapterId);
-    if (mobileContentsRef.current) mobileContentsRef.current.open = false;
   };
 
   return (
     <div
       data-runelite-guide-backdrop
-      className="fixed inset-0 z-[220] flex items-center justify-center bg-black/85 p-2 backdrop-blur-sm sm:p-4"
+      className="fixed inset-0 z-[220] flex items-center justify-center bg-black/80 backdrop-blur-sm sm:p-4"
     >
       <div
         ref={dialogRef}
@@ -357,23 +200,18 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
         aria-describedby="runelite-guide-summary"
         tabIndex={-1}
         data-runelite-guide-shell
-        className="flex h-[calc(100dvh-1rem)] max-h-[92vh] w-full max-w-[96rem] flex-col overflow-hidden rounded-xl border border-amber-400/30 bg-[#171717] text-gray-200 shadow-2xl sm:h-[calc(100dvh-2rem)]"
+        className="flex h-[100dvh] w-full max-w-[88rem] flex-col overflow-hidden border-white/10 bg-[#141414] text-gray-200 shadow-2xl sm:h-[calc(100dvh-2rem)] sm:rounded-xl sm:border"
       >
-        <header
-          data-runelite-guide-header
-          className="shrink-0 border-b border-osrs-border bg-[#1b1b1b]"
-        >
+        <header data-runelite-guide-header className="shrink-0 border-b border-white/10 bg-[#181818]">
           <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
-            <span className="rounded-lg border border-amber-400/25 bg-amber-400/10 p-2 text-amber-300">
-              <BookOpen className="h-5 w-5" aria-hidden="true" />
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-amber-400/25 bg-amber-400/10">
+              <WikiIcon file={RUNELITE_GUIDE_ICON} alt="" size={24} />
             </span>
             <div className="min-w-0 flex-1">
               <h1 id="runelite-guide-title" className="truncate text-lg font-black text-white sm:text-xl">
                 RuneLite Plugin Guide
               </h1>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">
-                Player handbook
-              </p>
+              <p className="truncate text-xs text-gray-400">Fate Locked Ironman, from RuneLite’s Plugin Hub</p>
             </div>
             <button
               type="button"
@@ -384,210 +222,127 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
               <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
+          <div className="border-t border-white/10 px-4 py-2 lg:hidden">
+            <label className="flex items-center gap-3 text-sm text-gray-400">
+              <span className="shrink-0 font-semibold">Jump to</span>
+              <select
+                data-runelite-guide-nav="mobile"
+                value={activeChapter}
+                onChange={event => navigateTo(event.target.value as GuideChapterId)}
+                className="min-w-0 flex-1 rounded-md border border-white/10 bg-[#202020] px-2 py-1.5 font-semibold text-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+              >
+                {RUNELITE_GUIDE_NAV_GROUPS.map(group => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.chapterIds.map(id => (
+                      <option key={id} value={id}>
+                        {chaptersById.get(id)?.number}. {chaptersById.get(id)?.title}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </label>
+          </div>
         </header>
 
-        <div
-          data-runelite-guide-body
-          className="flex min-h-0 flex-1 overflow-hidden"
-        >
-          <aside className="hidden w-72 shrink-0 border-r border-osrs-border bg-[#1b1b1b] lg:block">
-            <GuideContents
-              mode="desktop"
-              activeChapter={activeChapter}
-              onNavigate={navigateTo}
-            />
-          </aside>
+        <div data-runelite-guide-body className="flex min-h-0 flex-1">
+          <nav
+            data-runelite-guide-nav="desktop"
+            aria-label="RuneLite guide contents"
+            className="hidden w-64 shrink-0 overflow-y-auto border-r border-white/10 bg-[#181818] px-3 py-4 lg:block"
+          >
+            <div className="space-y-5">
+              {RUNELITE_GUIDE_NAV_GROUPS.map(group => (
+                <div key={group.label} data-guide-nav-group={group.label}>
+                  <p className="px-2 pb-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-gray-500">
+                    {group.label}
+                  </p>
+                  <div className="space-y-0.5">
+                    {group.chapterIds.map(id => {
+                      const chapter = chaptersById.get(id);
+                      if (!chapter) return null;
+                      const current = activeChapter === id;
+                      return (
+                        <a
+                          key={id}
+                          href={`#runelite-guide-${id}`}
+                          aria-current={current ? 'location' : undefined}
+                          onClick={event => {
+                            event.preventDefault();
+                            navigateTo(id);
+                          }}
+                          className={`flex items-center gap-2.5 rounded-md border-l-2 px-2 py-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+                            current
+                              ? 'border-amber-400 bg-amber-400/10 font-semibold text-amber-100'
+                              : 'border-transparent text-gray-400 hover:bg-white/5 hover:text-gray-100'
+                          }`}
+                        >
+                          <WikiIcon file={chapter.icon} alt="" size={18} />
+                          <span className="min-w-0 truncate">{chapter.title}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </nav>
 
           <main
             ref={contentRef}
             data-runelite-guide-scroll-region
-            className="min-w-0 flex-1 overflow-y-auto bg-osrs-bg custom-scrollbar"
+            className="min-w-0 flex-1 overflow-y-auto bg-[#141414]"
           >
-            <div className="mx-auto max-w-5xl p-4 sm:p-5">
-              <div className="mb-4 lg:hidden">
-                <details
-                  ref={mobileContentsRef}
-                  data-runelite-guide-mobile-contents
-                  className="rounded-lg border border-osrs-border bg-osrs-panel"
-                >
-                  <summary className="cursor-pointer px-4 py-3 font-bold text-white marker:text-amber-400">
-                    Guide contents
-                  </summary>
-                  <GuideContents
-                    mode="mobile"
-                    activeChapter={activeChapter}
-                    onNavigate={navigateTo}
-                  />
-                </details>
-              </div>
-
-              <section
-                data-guide-overview
-                className="rounded-lg border border-osrs-border bg-osrs-panel"
-                aria-labelledby="runelite-guide-summary"
-              >
-                <div className="p-5 sm:p-6">
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-300">
-                    PLAYER HANDBOOK
-                  </p>
-                  <p
-                    id="runelite-guide-summary"
-                    className="mt-3 max-w-4xl text-base leading-relaxed text-gray-300 sm:text-lg"
-                  >
-                    Learn how the Plugin Hub build connects to the Fate Locked companion, how to read
-                    each of the sidebar’s {RUNELITE_SIDEBAR_CARD_TITLES.length} cards, and what all{' '}
-                    {RUNELITE_GUIDE_SETTINGS.length} settings change.
-                  </p>
-                  <div className="mt-5 rounded-lg border border-amber-400/25 bg-amber-400/[0.07] px-4 py-3 text-sm text-amber-100">
-                    <strong>Vanilla</strong>
-                  </div>
-                  <div className="mt-3 rounded-lg border border-sky-400/20 bg-sky-400/[0.07] px-4 py-3 text-sm leading-relaxed text-sky-100">
-                    This handbook uses a fictional <strong>Vanilla</strong> run. Chunked mode is not
-                    finished, so it is described only where a setting or term depends on it.
-                  </div>
+            <div className="mx-auto max-w-5xl px-4 pb-16 pt-6 sm:px-8 sm:pt-8">
+              <section data-guide-intro aria-labelledby="runelite-guide-intro-title" className="pb-10">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-400">Player guide</p>
+                <h2 id="runelite-guide-intro-title" className="mt-1 text-3xl font-black text-white sm:text-4xl">
+                  Your run, in RuneLite
+                </h2>
+                <p id="runelite-guide-summary" className="mt-3 max-w-3xl text-base leading-relaxed text-gray-300 sm:text-lg">
+                  Fate Locked Ironman shows your run’s rules while you play: what’s locked around you, what you
+                  can do where you stand, and how the run is going. The companion is still where you roll and
+                  unlock.
+                </p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {QUICK_LINKS.map(id => {
+                    const chapter = chaptersById.get(id);
+                    if (!chapter) return null;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        data-guide-quick-link={id}
+                        onClick={() => navigateTo(id)}
+                        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#1e1e1e] px-3 py-1.5 text-sm font-semibold text-gray-200 transition-colors hover:border-amber-400/40 hover:bg-amber-400/10 hover:text-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                      >
+                        <WikiIcon file={chapter.icon} alt="" size={16} />
+                        {chapter.title}
+                      </button>
+                    );
+                  })}
                 </div>
               </section>
 
-              <div className="mt-5">
-                <FiveMinuteSetup onNavigate={navigateTo} />
+              <div className="space-y-12">
+                {RUNELITE_GUIDE_CHAPTERS.map(chapter => <Chapter key={chapter.id} chapter={chapter} />)}
               </div>
 
-              <div className="mt-8 space-y-8">
-              {RUNELITE_GUIDE_CHAPTERS.map(chapter => {
-                const chapterScreenshots = chapter.screenshotIds
-                  .map(id => screenshotsById.get(id))
-                  .filter((screenshot): screenshot is NonNullable<typeof screenshot> => Boolean(screenshot));
-                const chapterSettings = (chapter.settingsSections ?? []).map(section => ({
-                  section,
-                  settings: RUNELITE_GUIDE_SETTINGS.filter(setting => setting.section === section),
-                }));
-
-                return (
-                  <section
-                    key={chapter.id}
-                    id={`runelite-guide-${chapter.id}`}
-                    data-guide-chapter={chapter.id}
-                    data-guide-chapter-panel={chapter.id}
-                    className="scroll-mt-4 overflow-hidden rounded-lg border border-osrs-border bg-osrs-panel"
-                    aria-labelledby={`runelite-guide-${chapter.id}-title`}
-                  >
-                    <header
-                      data-guide-chapter-header={chapter.id}
-                      className="flex items-start gap-3 border-b border-osrs-border bg-[#1b1b1b] px-4 py-3"
-                    >
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-amber-400/35 bg-amber-400/10 text-xs font-black text-osrs-gold">
-                        {chapter.number}
-                      </span>
-                      <div className="min-w-0">
-                        <h2
-                          id={`runelite-guide-${chapter.id}-title`}
-                          className="text-lg font-black text-gray-100 sm:text-xl"
-                        >
-                          {chapter.title}
-                        </h2>
-                        <p className="mt-1 text-sm leading-relaxed text-gray-400">
-                          {chapter.summary}
-                        </p>
-                      </div>
-                    </header>
-
-                    <div className="space-y-5 p-4 sm:p-5">
-                      <div className="space-y-3 text-sm leading-7 text-gray-400 sm:text-base">
-                      {chapter.paragraphs.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
-                    </div>
-
-                    {chapter.bullets.length > 0 && (
-                      <ul className="grid gap-3 md:grid-cols-2">
-                        {chapter.bullets.map(bullet => (
-                          <li key={bullet} className="flex gap-3 rounded-lg border border-white/10 bg-[#252525] px-3 py-2.5 text-sm leading-relaxed text-gray-300">
-                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" aria-hidden="true" />
-                            <span>{bullet}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    {chapter.id === 'sidebar' && (
-                      <div>
-                        <h3 className="text-sm font-black uppercase tracking-[0.16em] text-gray-500">
-                          Its cards, top to bottom
-                        </h3>
-                        <ul className="mt-3 flex flex-wrap gap-2">
-                          {RUNELITE_SIDEBAR_CARD_TITLES.map(section => (
-                            <li
-                              key={section}
-                              data-guide-sidebar-card={section}
-                              className="rounded border border-amber-400/25 bg-amber-400/[0.07] px-2.5 py-1 text-xs font-bold text-amber-100"
-                            >
-                              {section}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {chapter.id === 'recommended-configurations' && (
-                      <div>
-                        <Presets />
-                      </div>
-                    )}
-
-                    {chapter.id === 'troubleshooting' && (
-                      <div>
-                        <Troubleshooting />
-                      </div>
-                    )}
-
-                    {chapter.id === 'glossary' && (
-                      <div>
-                        <Glossary />
-                      </div>
-                    )}
-
-                    {chapterSettings.map(({ section, settings }) => (
-                      <div key={section} data-guide-settings-section={section}>
-                        <h3 className="mb-4 text-base font-black text-gray-100">
-                          Every {section} setting
-                        </h3>
-                        <GuideSettingsTable settings={settings} />
-                      </div>
-                    ))}
-
-                    {chapterScreenshots.length > 0 && (
-                      <div className="grid gap-6">
-                        {chapterScreenshots.map(screenshot => (
-                          <GuideScreenshot key={screenshot.id} screenshot={screenshot} />
-                        ))}
-                      </div>
-                    )}
-                    </div>
-                  </section>
-                );
-              })}
-            </div>
+              <div className="mt-14 flex flex-col items-start gap-3 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-gray-400">
+                  You can open this guide again from Help or the command palette.
+                </p>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-black text-[#111] transition-colors hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414]"
+                >
+                  Back to the companion
+                </button>
+              </div>
             </div>
           </main>
         </div>
-
-        <footer
-          data-runelite-guide-footer
-          className="flex shrink-0 flex-col items-center justify-between gap-3 border-t border-osrs-border bg-[#1b1b1b] px-4 py-3 text-center sm:flex-row sm:px-5 sm:text-left"
-        >
-          <div>
-            <p className="font-bold text-white">Ready to return to the companion?</p>
-            <p className="mt-1 text-sm text-gray-400">
-              You can reopen this handbook from Help or the command palette.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close RuneLite Plugin Guide"
-            className="rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-black text-black transition-colors hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111]"
-          >
-            Close guide
-          </button>
-        </footer>
       </div>
     </div>
   );
