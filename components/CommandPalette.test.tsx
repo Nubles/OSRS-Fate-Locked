@@ -41,7 +41,7 @@ describe('CommandPalette RuneLite guide command', () => {
       window.dispatchEvent(new Event('fate:open-palette'));
     });
     const input = screen.getByRole('textbox');
-    await user.type(input, 'guardian warnings rendering');
+    await user.type(input, 'strict mode alerts display');
 
     const command = await screen.findByRole('button', {
       name: /RuneLite Plugin Guide.*Install, connect, configure and troubleshoot RuneLite/i,

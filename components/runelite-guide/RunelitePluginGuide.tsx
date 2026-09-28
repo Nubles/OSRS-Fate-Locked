@@ -10,7 +10,7 @@ import {
   RUNELITE_GUIDE_SCREENSHOTS,
   RUNELITE_GUIDE_SETTINGS,
   RUNELITE_GUIDE_TROUBLESHOOTING,
-  RUNELITE_PANEL_SECTIONS,
+  RUNELITE_SIDEBAR_CARD_TITLES,
   type GuideChapter,
   type GuideChapterId,
 } from '../../data/runeliteGuide';
@@ -41,25 +41,22 @@ const GUIDE_NAV_GROUPS: readonly GuideNavGroup[] = [
       'install-plugin-hub',
       'connect-tracker',
       'connection-privacy',
-      'unified-panel',
     ],
   },
   {
-    label: 'Panel sections',
+    label: 'The sidebar',
     chapterIds: [
-      'current-chunk',
-      'guardian',
+      'sidebar',
+      'here',
+      'strict-mode',
       'roll-inbox',
       'run-and-keys',
-      'bundle-recovery',
-      'warnings',
-      'rendering',
-      'in-game-overlays',
+      'connection-and-backup',
     ],
   },
   {
-    label: 'Configuration',
-    chapterIds: ['recommended-configurations'],
+    label: 'Settings',
+    chapterIds: ['settings', 'alerts', 'in-game-display', 'recommended-configurations'],
   },
   {
     label: 'Help',
@@ -91,10 +88,10 @@ const FiveMinuteSetup: React.FC<{
     <ol className="grid gap-2 p-3 sm:grid-cols-2 xl:grid-cols-5">
       {([
         ['1', 'Install', 'Find Fate Locked Ironman in RuneLite’s Plugin Hub and install it.', 'install-plugin-hub'],
-        ['2', 'Open', 'Select the Fate Locked side-panel icon in RuneLite.', 'unified-panel'],
-        ['3', 'Connect', 'Choose Connect tracker to open the private confirmation page.', 'connect-tracker'],
-        ['4', 'Confirm', 'Select the intended companion profile and wait for Connected.', 'connection-privacy'],
-        ['5', 'Play Vanilla', 'Expand the panel sections you need and keep the run in Vanilla.', 'recommended-configurations'],
+        ['2', 'Open', 'Select the Fate Locked icon, a crystal key, in RuneLite’s sidebar.', 'sidebar'],
+        ['3', 'Connect', 'Choose Connect tracker and allow online sync to open the private confirmation page.', 'connect-tracker'],
+        ['4', 'Confirm', 'Confirm the intended companion profile and wait for Rules up to date.', 'connection-privacy'],
+        ['5', 'Play Vanilla', 'Open the cards you need and keep the run in Vanilla.', 'recommended-configurations'],
       ] as const).map(([number, title, body, chapterId]) => (
         <li key={number}>
           <button
@@ -438,7 +435,8 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
                     className="mt-3 max-w-4xl text-base leading-relaxed text-gray-300 sm:text-lg"
                   >
                     Learn how the Plugin Hub build connects to the Fate Locked companion, how to read
-                    every collapsible panel section, and what all 30 player-facing settings change.
+                    each of the sidebar’s {RUNELITE_SIDEBAR_CARD_TITLES.length} cards, and what all{' '}
+                    {RUNELITE_GUIDE_SETTINGS.length} settings change.
                   </p>
                   <div className="mt-5 rounded-lg border border-amber-400/25 bg-amber-400/[0.07] px-4 py-3 text-sm text-amber-100">
                     <strong>Vanilla</strong>
@@ -459,11 +457,10 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
                 const chapterScreenshots = chapter.screenshotIds
                   .map(id => screenshotsById.get(id))
                   .filter((screenshot): screenshot is NonNullable<typeof screenshot> => Boolean(screenshot));
-                const chapterSettings = chapter.settingsSection
-                  ? RUNELITE_GUIDE_SETTINGS.filter(
-                    setting => setting.section === chapter.settingsSection,
-                  )
-                  : [];
+                const chapterSettings = (chapter.settingsSections ?? []).map(section => ({
+                  section,
+                  settings: RUNELITE_GUIDE_SETTINGS.filter(setting => setting.section === section),
+                }));
 
                 return (
                   <section
@@ -510,16 +507,16 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
                       </ul>
                     )}
 
-                    {chapter.id === 'unified-panel' && (
+                    {chapter.id === 'sidebar' && (
                       <div>
                         <h3 className="text-sm font-black uppercase tracking-[0.16em] text-gray-500">
-                          The seven collapsible sections
+                          Its cards, top to bottom
                         </h3>
                         <ul className="mt-3 flex flex-wrap gap-2">
-                          {RUNELITE_PANEL_SECTIONS.map(section => (
+                          {RUNELITE_SIDEBAR_CARD_TITLES.map(section => (
                             <li
                               key={section}
-                              data-guide-panel-section={section}
+                              data-guide-sidebar-card={section}
                               className="rounded border border-amber-400/25 bg-amber-400/[0.07] px-2.5 py-1 text-xs font-bold text-amber-100"
                             >
                               {section}
@@ -547,14 +544,14 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
                       </div>
                     )}
 
-                    {chapterSettings.length > 0 && (
-                      <div>
+                    {chapterSettings.map(({ section, settings }) => (
+                      <div key={section} data-guide-settings-section={section}>
                         <h3 className="mb-4 text-base font-black text-gray-100">
-                          Every {chapter.settingsSection} setting
+                          Every {section} setting
                         </h3>
-                        <GuideSettingsTable settings={chapterSettings} />
+                        <GuideSettingsTable settings={settings} />
                       </div>
-                    )}
+                    ))}
 
                     {chapterScreenshots.length > 0 && (
                       <div className="grid gap-6">

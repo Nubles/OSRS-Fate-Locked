@@ -668,7 +668,7 @@ describe('App changelog lifecycle', () => {
     await user.click(paletteTrigger);
     await user.type(
       screen.getByPlaceholderText(/Jump to a tab, tool or action/i),
-      'guardian warnings rendering',
+      'strict mode alerts display',
     );
     await user.click(await screen.findByRole('button', {
       name: /RuneLite Plugin Guide.*Install, connect, configure and troubleshoot RuneLite/i,

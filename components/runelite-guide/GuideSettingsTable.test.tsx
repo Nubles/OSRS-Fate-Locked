@@ -7,7 +7,7 @@ import { GuideSettingsTable } from './GuideSettingsTable';
 const settings: readonly GuideSetting[] = [
   {
     key: 'enabled',
-    section: 'Warnings',
+    section: 'Alerts',
     label: 'Enabled warning',
     defaultValue: 'On',
     purpose: 'Explains a locked action.',
@@ -16,7 +16,7 @@ const settings: readonly GuideSetting[] = [
   },
   {
     key: 'optional',
-    section: 'Warnings',
+    section: 'Alerts',
     label: 'Optional warning',
     defaultValue: 'Off',
     purpose: 'Adds an extra notification.',
@@ -25,7 +25,40 @@ const settings: readonly GuideSetting[] = [
   },
 ];
 
+const shownDifferently: readonly GuideSetting[] = [
+  {
+    key: 'choice',
+    section: 'Display',
+    label: 'A choice',
+    defaultValue: 'Compact',
+    options: ['Off', 'Compact', 'Detailed'],
+    purpose: 'Picks how much to show.',
+    visibleResult: 'More or less of it.',
+    changeWhen: 'When you want more.',
+  },
+  {
+    key: 'colour',
+    section: 'Custom colours',
+    label: 'A colour',
+    defaultValue: '#6e10b981',
+    purpose: 'Colours unlocked land.',
+    visibleResult: 'Unlocked land in that colour.',
+    changeWhen: 'When it is hard to see.',
+  },
+];
+
 describe('GuideSettingsTable', () => {
+  it('lists the options of a choice, and shows a colour as its swatch and opacity', () => {
+    const markup = renderToStaticMarkup(<GuideSettingsTable settings={shownDifferently} />);
+
+    expect(markup).toContain('data-guide-setting-options="true">Off · Compact · Detailed</p>');
+    expect(markup).toContain('data-default-value="Compact"');
+    expect(markup).toContain('data-default-value="#6e10b981"');
+    expect(markup).toContain('background-color:rgba(16, 185, 129, 0.43)');
+    expect(markup.replace(/<!-- -->/g, '')).toContain('#10b981 · 43%');
+    expect(markup.match(/data-guide-setting-options/g)).toHaveLength(1);
+  });
+
   it('renders every setting as a compact native row with labeled fields', () => {
     const markup = renderToStaticMarkup(<GuideSettingsTable settings={settings} />);
 

@@ -41,6 +41,7 @@ import { REGION_CHUNKS } from '../data/regionChunks';
 import { REGION_GROUPS } from '../data/items';
 import { BANKS } from '../data/banks';
 import { OCEAN_CHUNK_KEYS } from '../utils/oceanAccess';
+import { RUNELITE_WORDING } from '../data/runeliteWording';
 import { MAX_REQUEST_BYTES } from '../workers/fate-relay/protocol.js';
 import type { UnlockState } from '../types';
 
@@ -460,6 +461,12 @@ function hasPath(root: Record<string, unknown>, path: string): boolean {
  */
 const CONTRACT_FILE = 'bundle-contract.json';
 
+/**
+ * The words the plugin and the RuneLite guide share (data/runeliteWording.ts). Its lists are in
+ * the order the plugin shows them, so it is compared as written, not canonically.
+ */
+const WORDING_FILE = 'runelite-wording.json';
+
 interface Condition {
   path: string;
   equals?: unknown;
@@ -622,13 +629,23 @@ describe('golden bundles', () => {
       }
     }
 
+    const wordingFile = join(OUT, WORDING_FILE);
+    const wording = textBytes(RUNELITE_WORDING);
+    if (WRITE) {
+      if (!existsSync(wordingFile) || !readFileSync(wordingFile).equals(wording)) writeFileSync(wordingFile, wording);
+    } else {
+      expect(existsSync(wordingFile), `${WORDING_FILE} is missing; run npm run goldens:write`).toBe(true);
+      expect(readFileSync(wordingFile).equals(wording),
+        `${WORDING_FILE} no longer matches data/runeliteWording.ts; run npm run goldens:write`).toBe(true);
+    }
+
     const manifest = {
       schema: SCHEMA,
       exportedAt: EXPORTED_AT.toISOString(),
       chunkContentDataVersion: CHUNK_CONTENT_DATA_VERSION,
       equipmentCatalogue: EQUIPMENT_CATALOGUE.asset,
       scenarios: SCENARIOS.map(({ id, covers }) => ({ id, covers })),
-      files: Object.fromEntries([...Object.keys(files), CONTRACT_FILE].sort(byCodeUnit)
+      files: Object.fromEntries([...Object.keys(files), CONTRACT_FILE, WORDING_FILE].sort(byCodeUnit)
         .map((name) => [name, existsSync(join(OUT, name)) ? sha256(readFileSync(join(OUT, name))) : null])),
     };
     const manifestFile = join(OUT, 'manifest.json');
