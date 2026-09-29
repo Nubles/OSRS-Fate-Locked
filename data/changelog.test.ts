@@ -29,6 +29,7 @@ describe('authored changelog releases', () => {
     expect(release?.sections.added).toEqual([
       expect.stringMatching(/Paste from RuneLite button.*Copy for tracker in the Roll inbox card.*nothing rolls until you choose Roll/),
       expect.stringMatching(/not linked to a character.*each row says whose it is/),
+      expect.stringMatching(/World map borders setting turns off the dashed lines on the world map and keeps the shading/),
     ]);
     expect(release?.sections.changed).toEqual([
       expect.stringMatching(/Logging by hand, rolling and spending Keys are unchanged/),

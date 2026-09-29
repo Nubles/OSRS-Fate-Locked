@@ -26,6 +26,7 @@ export const CHANGELOG_RELEASES = [
       added: [
         'The Roll Inbox has a Paste from RuneLite button. In RuneLite, choose Copy for tracker in the Roll inbox card, then paste here: the inbox says what it added, and nothing rolls until you choose Roll.',
         'A run not linked to a character takes a paste from whoever copied it, and each row says whose it is.',
+        'In RuneLite, the new World map borders setting turns off the dashed lines on the world map and keeps the shading.',
       ],
       changed: [
         'Logging by hand, rolling and spending Keys are unchanged. Skip any row you’ve already logged by hand.',

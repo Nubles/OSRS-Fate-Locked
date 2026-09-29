@@ -88,6 +88,7 @@ export const RUNELITE_SETTINGS: readonly RuneliteSetting[] = [
     defaultValue: 'Shading, tooltip and contents',
     options: ['Off', 'Shading', 'Shading and tooltip', 'Shading, tooltip and contents'],
   },
+  { key: 'worldMapOutline', section: 'Display', name: 'World map borders', defaultValue: 'On' },
   { key: 'worldMapMarkers', section: 'Display', name: 'Pin locked areas on the world map', defaultValue: 'Off' },
   {
     key: 'chunkBorders',
