@@ -553,7 +553,7 @@
       "skills": {},
       "quests": [],
       "regions": [
-        "East Ardougne"
+        "Brimhaven"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -1033,7 +1033,7 @@
       },
       "quests": [],
       "regions": [
-        "Al Kharid"
+        "Ruins of Uzer"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -1064,8 +1064,9 @@
       "description": "Enter the Desert with a set of Desert robes equipped.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Al Kharid"
+      "anyOfRegions": [
+        "Shantay Pass",
+        "Ruins of Unkah"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -1100,8 +1101,9 @@
       "description": "Kill a Vulture",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Al Kharid"
+      "anyOfRegions": [
+        "Menaphos",
+        "Agility Pyramid"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -1202,8 +1204,15 @@
       "description": "Cut a desert cactus open to fill a waterskin.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Al Kharid"
+      "anyOfRegions": [
+        "Shantay Pass",
+        "Pollnivneach",
+        "Bedabin Camp",
+        "Kalphite Lair",
+        "Agility Pyramid",
+        "Menaphos",
+        "Ruins of Unkah",
+        "Sophanem"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -1275,8 +1284,9 @@
         "Hunter": 47
       },
       "quests": [],
-      "regions": [
-        "Ruins of Uzer"
+      "anyOfRegions": [
+        "Ruins of Uzer",
+        "Sophanem"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -1294,7 +1304,7 @@
       },
       "quests": [],
       "regions": [
-        "Nardah"
+        "Ruins of Uzer"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -5058,7 +5068,7 @@
       },
       "quests": [],
       "regions": [
-        "Tai Bwo Wannai"
+        "Shilo Village"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -5298,7 +5308,8 @@
         "Shilo Village"
       ],
       "regions": [
-        "Tai Bwo Wannai"
+        "Shilo Village",
+        "Port Khazard"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -8109,7 +8120,7 @@
       },
       "quests": [],
       "regions": [
-        "Canifis"
+        "Mort Myre Swamp"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -8144,8 +8155,10 @@
         "Woodcutting": 45
       },
       "quests": [],
-      "regions": [
-        "Canifis"
+      "anyOfRegions": [
+        "Haunted Woods",
+        "Darkmeyer",
+        "Slepe"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -11764,7 +11777,7 @@
           "chunkOptions": [
             {
               "cx": 46,
-              "cy": 61
+              "cy": 60
             }
           ]
         }
