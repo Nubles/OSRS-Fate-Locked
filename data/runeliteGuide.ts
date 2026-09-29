@@ -308,15 +308,17 @@ export const RUNELITE_GUIDE_FIGURES: readonly GuideFigure[] = [
     src: '/guides/runelite/roll-inbox.png',
     source: 'rendered',
     title: 'Roll inbox',
-    alt: 'The Roll inbox card: 12 local events, 2 that need checking, 1 active warning, and Open web Roll Inbox.',
+    alt: 'The Roll inbox card: 3 new events, Attack Level 71 and Vorkath, a Gargoyles Slayer task that needs checking, and Cook’s Assistant, already copied. Below them, Copy for tracker, 1 active warning, and Open web Roll Inbox.',
     width: 442,
-    height: 308,
+    height: 452,
     scale: 2,
     callouts: [
-      callout('events', 1, [0.054, 0.195, 0.891, 0.104], 'Local events', 'What RuneLite noticed on this computer that may be worth a roll.'),
-      callout('needs-checking', 2, [0.054, 0.325, 0.891, 0.104], 'Needs checking', 'Events RuneLite can’t be sure of.'),
-      callout('warnings', 3, [0.054, 0.455, 0.891, 0.104], 'Warnings', 'Rule warnings that apply right now.'),
-      callout('open', 4, [0.054, 0.766, 0.891, 0.156], 'Open web Roll Inbox', 'Opens the companion’s Roll Inbox, where you roll.'),
+      callout('events', 1, [0.054, 0.133, 0.891, 0.075], 'New events', 'What RuneLite noticed this run, newest first, each with its own icon.'),
+      callout('needs-checking', 2, [0.054, 0.319, 0.891, 0.075], 'Needs checking', 'The tracker asks you to confirm these before they roll.'),
+      callout('copied', 3, [0.054, 0.412, 0.891, 0.075], 'Copied', 'Already copied. Pasting an event twice brings it in once.'),
+      callout('copy', 4, [0.054, 0.504, 0.891, 0.106], 'Copy for tracker', 'Puts this run’s events on your clipboard, only when you click.'),
+      callout('warnings', 5, [0.054, 0.628, 0.891, 0.071], 'Warnings', 'Rule warnings that apply right now.'),
+      callout('open', 6, [0.054, 0.841, 0.891, 0.106], 'Open web Roll Inbox', 'Opens the tracker’s Roll Inbox, where you paste and roll.'),
     ],
   },
   {
@@ -621,7 +623,7 @@ export const RUNELITE_GUIDE_GLOSSARY: readonly GuideGlossaryItem[] = [
   { term: RUNELITE_TERMS.LOCKED, definition: 'Your run hasn’t unlocked it yet.' },
   {
     term: RUNELITE_TERMS.NEEDS_CHECKING,
-    definition: 'An event RuneLite noticed but can’t be sure of, counted in the Roll inbox.',
+    definition: 'An event RuneLite noticed but can’t be sure of. The tracker asks you to confirm it before it rolls.',
   },
   {
     term: RUNELITE_TERMS.UNCHARTED,
@@ -877,17 +879,36 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
     id: 'roll-inbox',
     number: 7,
     title: 'Roll inbox',
-    lede: 'Things you did in game that may be worth a roll in the companion.',
+    lede: 'What you did in game that may be worth a roll, ready to copy to the tracker.',
     icon: 'Mystery_box.png',
     blocks: [
       { kind: 'figure', figureId: 'roll-inbox' },
       {
         kind: 'text',
-        text: 'RuneLite notices level-ups, quests, diaries, boss kills and collection log entries, and keeps the newest 250 on this computer. Ones it can’t be sure of count as Needs checking.',
+        text: 'RuneLite notices level-ups, quests, achievement diaries, combat tasks, boss and raid kills, clue scrolls, collection log entries and Slayer tasks. It keeps the last 30 days on this computer, up to 250 events. The card lists the newest and counts the rest.',
+      },
+      { kind: 'heading', text: 'Rolling what RuneLite noticed' },
+      {
+        kind: 'steps',
+        steps: [
+          {
+            title: `Select ${RUNELITE_TERMS.COPY_FOR_TRACKER}`,
+            body: 'RuneLite puts this run’s events on your clipboard, and they show as Copied.',
+          },
+          {
+            title: `Choose ${RUNELITE_TERMS.PASTE_FROM_RUNELITE}`,
+            body: 'In the tracker’s Roll Inbox, each event becomes a row to roll or skip. Skip any you’ve already logged by hand.',
+          },
+        ],
       },
       {
         kind: 'text',
-        text: 'Noticing an event never rolls and never changes your run, and the local history isn’t sent to the companion. Open web Roll Inbox to roll there.',
+        text: 'Needs checking marks an event the tracker asks you to confirm first, such as which master gave a Slayer task. Dismiss (×) takes an event off the card. If your run isn’t linked to a character, the card and the tracker both say which character the events came from.',
+      },
+      {
+        kind: 'note',
+        title: 'Only when you click',
+        text: 'Copy for tracker uses your clipboard, never the relay, and RuneLite doesn’t upload anything. Noticing an event never rolls or changes your run, and logging by hand in the tracker works as it always has.',
       },
     ],
   },

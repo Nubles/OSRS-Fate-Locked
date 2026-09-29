@@ -424,14 +424,14 @@
       "id": "roll-inbox",
       "filename": "roll-inbox.png",
       "source": "rendered",
-      "pluginCommit": "9b6b5d3d677f93af1c199cef2950d5967e1288c1",
+      "pluginCommit": "98346e8eb7eb205c0a054aa6fcd8de8bd26dd983",
       "runeliteVersion": "1.12.39",
-      "capturedAt": "2026-09-28",
-      "purpose": "Shows the Roll inbox card counting local events.",
+      "capturedAt": "2026-09-29",
+      "purpose": "Shows the Roll inbox card listing what RuneLite noticed, ready to copy for the tracker.",
       "width": 442,
-      "height": 308,
+      "height": 452,
       "scale": 2,
-      "sha256": "f3f7a2527ee248998ccfd1b2acb490a7acf71885ceaad87a378e01615ea4e0f3",
+      "sha256": "712cf8940eeeb8c3d4dd1706a6ceb28df5ca60f1380940a901237a0ecd8b2dec",
       "redactions": [],
       "annotations": [
         {
@@ -439,9 +439,9 @@
           "marker": 1,
           "box": [
             0.054,
-            0.195,
+            0.133,
             0.891,
-            0.104
+            0.075
           ]
         },
         {
@@ -449,29 +449,49 @@
           "marker": 2,
           "box": [
             0.054,
-            0.325,
+            0.319,
             0.891,
-            0.104
+            0.075
+          ]
+        },
+        {
+          "id": "copied",
+          "marker": 3,
+          "box": [
+            0.054,
+            0.412,
+            0.891,
+            0.075
+          ]
+        },
+        {
+          "id": "copy",
+          "marker": 4,
+          "box": [
+            0.054,
+            0.504,
+            0.891,
+            0.106
           ]
         },
         {
           "id": "warnings",
-          "marker": 3,
+          "marker": 5,
           "box": [
             0.054,
-            0.455,
+            0.628,
             0.891,
-            0.104
+            0.071
           ]
         },
         {
           "id": "open",
-          "marker": 4,
+          "marker": 6,
           "box": [
             0.054,
-            0.766,
+            0.841,
             0.891,
-            0.156
+            0.106
           ]
         }
       ]
