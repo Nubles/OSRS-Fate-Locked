@@ -106,7 +106,7 @@ describe('RuneLiteOnboarding', () => {
       name: 'Disconnect',
     })).toBeTruthy();
     expect(screen.getByText(/clipboard or file import/i)).toBeTruthy();
-    expect(screen.getByText(/local history is not transferred/i))
+    expect(screen.getByText(/only when you choose Copy for tracker/i))
       .toBeTruthy();
   });
 
