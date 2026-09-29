@@ -204,6 +204,33 @@ export const questRequirementOptionMet = (
   Object.entries(option.skills ?? {}).every(([skill, level]) =>
     meetsSkillRequirement(unlocks, skill, level));
 
+/** An owned area that no route reaches yet (utils/areaRoutes.ts). */
+const strandedArea = (area: string, areaRoutes?: AreaRoutes | null): boolean =>
+  !!areaRoutes?.strandedAreas.has(canonicalAreaName(area));
+
+/** A location owned only where no route reaches: in its areas, or every owned chunk option. */
+const strandedLocation = (
+  location: QuestLocationRequirement,
+  unlocks: UnlockState,
+  gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
+): boolean => {
+  if (!areaRoutes) return false;
+  if (gameModeId !== 'chunked') return location.standardAreas.some(area => strandedArea(area, areaRoutes));
+  const owned = location.chunkOptions.filter(coord => isChunkUnlocked(chunkKey(coord), unlocks.chunks ?? []));
+  return owned.length > 0 && owned.every(({ cx, cy }) => areaRoutes.strandedChunks.has(`${cx},${cy}`));
+};
+
+/** A met requirement option whose places no route reaches. */
+const strandedOption = (
+  option: QuestRequirementOption,
+  unlocks: UnlockState,
+  gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
+): boolean =>
+  (option.regions ?? []).some(region => strandedArea(region, areaRoutes)) ||
+  (option.locations ?? []).some(location => strandedLocation(location, unlocks, gameModeId, areaRoutes));
+
 export const questAlternativesMet = (
   quest: QuestData,
   unlocks: UnlockState,
@@ -228,10 +255,15 @@ export const currentQuestPoints = (unlocks: { readonly quests: readonly string[]
       QUEST_DATA[id]?.kind === 'quest' ? QUEST_DATA[id].points : 0
     ), 0);
 
+/**
+ * Whether a quest can be done now. Pass `areaRoutes` (from useAreaRoutes) so
+ * an owned area no route reaches reads "No route to", as in the Diary Journal.
+ */
 export function evaluateQuestEligibility(
   quest: QuestData,
   unlocks: UnlockState,
   gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
 ): QuestEligibility {
   if (unlocks.quests.includes(quest.id)) {
     return {
@@ -263,15 +295,26 @@ export function evaluateQuestEligibility(
     quest.accessPolicy === 'locations' ||
     quest.accessPolicy === 'regions-and-locations';
   for (const region of enforceRegions ? quest.regions : []) {
-    if (isAreaReachable(region, unlocks, gameModeId)) evidence.push(region);
-    else blockers.push({ kind: 'region', label: region });
+    if (!isAreaReachable(region, unlocks, gameModeId)) blockers.push({ kind: 'region', label: region });
+    else if (strandedArea(region, areaRoutes)) blockers.push(noRouteBlocker(canonicalAreaName(region)));
+    else evidence.push(region);
   }
   for (const location of enforceLocations ? (quest.locations ?? []) : []) {
-    if (locationRequirementMet(location, unlocks, gameModeId)) evidence.push(location.label);
-    else blockers.push({ kind: 'region', label: location.label, location: locationUnlockTargets(location, unlocks, gameModeId) });
+    if (!locationRequirementMet(location, unlocks, gameModeId)) {
+      blockers.push({ kind: 'region', label: location.label, location: locationUnlockTargets(location, unlocks, gameModeId) });
+    } else if (strandedLocation(location, unlocks, gameModeId, areaRoutes)) {
+      blockers.push(noRouteBlocker(location.label));
+    } else {
+      evidence.push(location.label);
+    }
   }
   if (!questAlternativesMet(quest, unlocks, gameModeId)) {
     blockers.push({ kind: 'region', label: quest.oneOf!.map(questRequirementOptionLabel).join(' or ') });
+  } else if (quest.oneOf?.length && !quest.oneOf.some(option =>
+    questRequirementOptionMet(option, unlocks, gameModeId) && !strandedOption(option, unlocks, gameModeId, areaRoutes))) {
+    blockers.push(noRouteBlocker(quest.oneOf
+      .filter(option => questRequirementOptionMet(option, unlocks, gameModeId))
+      .map(questRequirementOptionLabel).join(' or ')));
   }
   const manualChecks = [...(quest.manualRequirements ?? []), ...pendingQuestProgress(quest.questProgress, unlocks.quests)];
   for (const preparation of quest.preparationRequirements ?? []) {
@@ -316,7 +359,8 @@ export function evaluateQuestEligibility(
     if (unlocks.quests.includes(prereq)) evidence.push(prereq);
     else blockers.push({ kind: 'quest', label: prereq });
   }
-  const status: QuestStatus = blockers.some(x => x.kind === 'region') ? 'LOCKED_REGION'
+  // "No route to" is a trip problem, as an island is in the Diary Journal.
+  const status: QuestStatus = blockers.some(x => x.kind === 'region' || x.kind === 'alternative') ? 'LOCKED_REGION'
     : blockers.some(x => x.kind === 'skill' || x.kind === 'combat') ? 'LOCKED_SKILL'
     : blockers.some(x => x.kind === 'equipment') ? 'LOCKED_EQUIPMENT'
     : blockers.some(x => x.kind === 'quest') ? 'LOCKED_QUEST'
