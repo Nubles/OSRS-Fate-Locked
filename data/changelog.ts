@@ -19,6 +19,18 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-29-stranded-areas',
+    title: 'Places You Can’t Reach Yet',
+    date: '2026-09-29',
+    sections: {
+      fixed: [
+        'The Diary Journal no longer calls a task doable in an owned area you can’t get to. Fairy rings, house portals, eagles, balloons and the Keldagrim mine carts count as a way there once you’ve unlocked them; dying, crop circles and the essence mine never do. The boats to Great Kourend, Entrana and Brimhaven count, and the barge to Fossil Island once Bone Voyage is done. The map’s Reachability lens agrees.',
+        'The Quest Log says “No route to” an owned place a quest needs that nothing reaches, as the Diary Journal does, instead of “Ready to complete”. You can still complete it by hand.',
+        '12 Diary tasks now name the area the game has them in: mining clay and the Desert Phoenix are at the Ruins of Uzer, vultures near Menaphos and the Agility Pyramid, cacti across the desert, swamp lizards in Mort Myre Swamp, and hollow trees in the Haunted Woods, Darkmeyer and Slepe, among others.',
+      ],
+    },
+  },
+  {
     id: '2026-09-29-roll-inbox-groundwork',
     title: 'Groundwork for RuneLite’s Roll Inbox',
     date: '2026-09-29',
