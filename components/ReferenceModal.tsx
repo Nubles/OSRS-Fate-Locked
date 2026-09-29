@@ -180,7 +180,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-2">Core Rules</h1>
-                                <p className="text-gray-400 text-lg">The ultimate test of adaptability and fortune.</p>
+                                <p className="text-gray-400 text-lg">How rolls, Keys and unlocks work.</p>
                             </div>
 
                             {/* The Concept */}
