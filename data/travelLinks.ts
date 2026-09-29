@@ -10,6 +10,9 @@
  *   Zanaris and Kourend Castle through Death's Office (a player's report,
  *   29 Sept 2026). A stop with a quest of its own, such as Ape Atoll's ring,
  *   is left off the network until that quest is done.
+ * - A way that only leads out, such as the Entrana Dungeon's magic door to
+ *   the Wilderness, is closed like a network that never opens: the graph
+ *   has no direction, so it would otherwise lead in as well.
  * - A quest the player need only have started, as the Keldagrim mine carts
  *   want of The Giant Dwarf, is never assumed missing: the app records only
  *   finished quests, and the Journal asks for a start like that by hand.
@@ -97,6 +100,13 @@ export const TRAVEL_NETWORKS: readonly TravelNetwork[] = [
     nodes: ['Puro-Puro', '40,67'],
     opensWith: [],
     source: wiki('Crop circle', 15333817),
+  },
+  {
+    // Its only way out is a one-way magic door to level 32 Wilderness; no route into Entrana goes through it.
+    label: 'Entrana Dungeon',
+    nodes: ['Entrana Dungeon', '44,152'],
+    opensWith: [],
+    source: wiki('Entrana Dungeon', 15353043),
   },
   {
     // Its portals leave the player back with the wizard who sent them.

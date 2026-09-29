@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import content from '../public/chunk-content.json';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
-import { MOBILITY_LIST, POH_LIST } from '../data/items';
+import { MOBILITY_LIST, POH_LIST, REGION_GROUPS } from '../data/items';
 import { DIARY_DATA } from '../data/diaryData';
 import { QUEST_DATA } from '../data/questData';
 import { BOAT_CROSSINGS, TRAVEL_NETWORKS } from '../data/travelLinks';
@@ -89,8 +89,10 @@ describe('the reviewed travel links', () => {
     const everything = run({
       mobility: [...MOBILITY_LIST], housing: [...POH_LIST], quests: Object.keys(QUEST_DATA), equipment: { Weapon: 1 },
     });
-    expect([...closedTravelNodes(everything)].sort()).toEqual(
-      [graphNode("Death's Office"), graphNode('49,89'), graphNode('Puro-Puro'), graphNode('40,67'), graphNode('45,75')].sort());
+    expect([...closedTravelNodes(everything)].sort()).toEqual([
+      graphNode("Death's Office"), graphNode('49,89'), graphNode('Puro-Puro'), graphNode('40,67'), graphNode('45,75'),
+      graphNode('Entrana Dungeon'), graphNode('44,152'),
+    ].sort());
   });
 
   it('leave a ring off the network until its own quest is done', () => {
@@ -140,6 +142,11 @@ describe('what is stranded', () => {
     expect(stranded(run({ regions: ['Port Sarim', 'Rimmington', 'Brimhaven'] })).has('Brimhaven')).toBe(false);
     expect(stranded(run({ regions: ['Port Sarim', 'Entrana'] })).has('Entrana')).toBe(false);
     expect(stranded(run({ regions: ['Entrana'] })).has('Entrana')).toBe(true);
+    // The Entrana Dungeon's magic door only leads out, to the Wilderness.
+    const wilderness = run({ regions: [...REGION_GROUPS.Wilderness, 'Entrana'] });
+    expect(chunkReachability(connect, wilderness, LUMBRIDGE, undefined, 'vanilla').reachable.has(graphNode('44,52')))
+      .toBe(true);
+    expect(stranded(wilderness).has('Entrana')).toBe(true);
     expect(stranded(run({ regions: ['Port Sarim', 'Piscarilius'] })).has('Piscarilius')).toBe(false);
     expect(stranded(run({ regions: ['Piscarilius'] })).has('Piscarilius')).toBe(true);
   });
