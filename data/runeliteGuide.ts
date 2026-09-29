@@ -636,6 +636,19 @@ export const RUNELITE_GUIDE_GLOSSARY: readonly GuideGlossaryItem[] = [
     definition: 'The rules belong to another character than the one logged in; nothing is checked until you switch.',
   },
   {
+    term: RUNELITE_TERMS.COPY_FOR_TRACKER,
+    definition: 'The Roll inbox card’s button. It copies what RuneLite noticed, only when you click, and uploads nothing.',
+  },
+  {
+    term: RUNELITE_TERMS.PASTE_FROM_RUNELITE,
+    definition: 'The tracker’s Roll Inbox button that brings in what you copied, a row for each event to roll or skip.',
+  },
+  { term: RUNELITE_TERMS.NEW, definition: 'In the Roll inbox card, an event RuneLite noticed that you haven’t copied yet.' },
+  {
+    term: RUNELITE_TERMS.COPIED,
+    definition: 'In the Roll inbox card, an event you’ve copied for the tracker. Pasting it twice brings it in once.',
+  },
+  {
     term: RUNELITE_TERMS.STRICT_MODE,
     definition: 'An optional guard, off by default, that stops a teleport only when the travel table matches it exactly and fresh rules lock where it goes.',
   },

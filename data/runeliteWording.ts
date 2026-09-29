@@ -22,6 +22,14 @@ export const RUNELITE_TERMS = {
   CHAOS_KEYS: 'Chaos Keys',
   FATE_POINTS: 'Fate Points',
   DIFFERENT_CHARACTER: 'Different character',
+  /** The Roll inbox card's button that copies what RuneLite noticed (Stage 4). */
+  COPY_FOR_TRACKER: 'Copy for tracker',
+  /** The Roll Inbox's button that brings in what was copied in RuneLite. */
+  PASTE_FROM_RUNELITE: 'Paste from RuneLite',
+  /** An event in the Roll inbox card that hasn't been copied yet. */
+  NEW: 'New',
+  /** An event in the Roll inbox card that has been copied for the tracker. */
+  COPIED: 'Copied',
   /** What the plugin adds to a right-click option the rules lock. */
   LOCKED_TAG: ' (Locked)',
 } as const;
