@@ -396,10 +396,10 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     visibleResult: 'Hovering a chunk shows its area and status, and with contents what it holds.',
     changeWhen: 'Drop the contents or the tooltip if the map feels busy; Off leaves the map as the game draws it.',
   },
-  worldMapOutline: {
-    purpose: 'A dashed line on the world map where your unlocked land meets locked land.',
-    visibleResult: 'Off keeps the shading and the tooltip, without the line.',
-    changeWhen: 'Turn it off if the lines make the map feel busy.',
+  worldMapBorders: {
+    purpose: 'Lines on the world map. Locked edges is a dashed line where your unlocked land meets locked land; All edges adds a faint line along every chunk edge.',
+    visibleResult: 'Off keeps the shading and the tooltip, without lines.',
+    changeWhen: 'Pick All edges to see the chunk grid, or Off if the lines make the map feel busy.',
   },
   worldMapMarkers: {
     purpose: 'A pin on each area you haven’t unlocked.',
@@ -972,7 +972,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
           { term: 'Minimap', text: 'The same edges on the minimap, and locked land shaded.' },
           {
             term: 'World map',
-            text: 'Locked land shaded like fog and your unlocked land outlined; in Chunked mode, a light fill on the frontier. Hover a chunk for its area and status, and what it holds if you like. The outline has its own switch, and pins on locked areas are optional.',
+            text: 'Locked land shaded like fog and your unlocked land outlined; in Chunked mode, a light fill on the frontier. Hover a chunk for its area and status, and what it holds if you like. Its lines have a setting of their own: the outline, every chunk edge, or none. Pins on locked areas are optional.',
           },
           {
             term: 'HUD',
