@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import source from './sources/achievement-diary-tasks.json';
-import { canonicalAreaName } from './areaMapPolicy';
+import { AREA_ALIAS_POLICIES, AREA_REFERENCES, canonicalAreaName } from './areaMapPolicy';
 import { REGION_CHUNKS } from './regionChunks';
 import { SUB_AREA_CHUNKS } from './subAreaChunks';
 
@@ -17,30 +17,36 @@ import { SUB_AREA_CHUNKS } from './subAreaChunks';
  * chunk, or where the monster, NPC or object it names is.
  *
  * Where the export has the task in named areas, the task must name one of
- * them. Where it has it only in chunks with no area of its own (the desert's
- * open sand, say), one must border an area the task names, as the map files
- * such chunks' tasks under the named place beside them.
+ * them: an area's own chunks, or the entrance or surface chunks the map
+ * policy gives it (data/areaMapPolicy.ts). Where it has it only in chunks with
+ * no area of their own (the desert's open sand, say), one must border an area
+ * the task names, as the map files such chunks' tasks under the named place
+ * beside them.
+ *
+ * Most of the export's chunks keep their content at the top, not in sections,
+ * and its diaries are named in full ("Kourend and Kebos Diary"); both are read.
  */
 
 type Chunk = { cx: number; cy: number };
 type Place = { chunkOptions: Chunk[] };
 interface SourceTask {
   id: string; area: string; tier: string; ordinal: number; description: string;
-  regions?: string[]; anyOfRegions?: string[]; oneOf?: { regions?: string[] }[]; locations?: Place[];
+  regions?: string[]; anyOfRegions?: string[]; oneOf?: { regions?: string[]; locations?: Place[] }[];
+  locations?: Place[];
 }
 
 /** Where the export and the app's map disagree, reviewed; the tag stands. */
 const REVIEWED: Readonly<Record<string, string>> = {
-  ard_hard_3: "The export's record puts Ardougne Castle's chest in 42,51, which holds no chest; the castle is 40,51.",
   ard_hard_11: 'The anvil is in 39,52, which the map gives to East Ardougne.',
   des_hard_2: 'The granite quarry, 49,45, is the Agility Pyramid\'s on the map.',
   frem_med_8: 'The export marks Waterbirth Island, where the trip starts; the task is visiting the Lighthouse.',
   kan_med_8: 'The Catherby patches are in 43,54, which the map gives to Camelot.',
   kan_elite_2: 'The Catherby patches are in 43,54, which the map gives to Camelot.',
   kar_easy_4: 'The Musa Point dock is in 46,49, which the map gives to Port Sarim.',
+  lum_hard_10: "Emir's Arena's altar is in 52,51, which the map gives to the Mage Training Arena.",
   mor_hard_7: 'The Canifis mushroom patch is in 53,54, which the map gives to Paterdomus.',
   wilderness_easy_2: 'The task is pulling a lever; the export marks where the levers land.',
-  wild_hard_3: 'The export names the young trees the traps use, which grow everywhere.',
+  wild_hard_6: "The Chaos Elemental roams 50,61, west of Rogues' Castle, which the map calls Scorpia's Cave.",
   wild_hard_8: "The shortcut lands at 46,57, beside the Wilderness God Wars Dungeon's entrance at 47,58.",
 };
 
@@ -49,6 +55,8 @@ const EXPORT_DIARY: Readonly<Record<string, string>> = {
   Karamja: 'Karamja', Kourend: 'Kourend & Kebos', Lumbridge: 'Lumbridge & Draynor', Morytania: 'Morytania',
   Varrock: 'Varrock', Western: 'Western Provinces', Wilderness: 'Wilderness',
 };
+/** The export's full names for the diaries whose chunk codes shorten "and" to "&". */
+const RECORD_DIARY: Readonly<Record<string, string>> = { Kourend: 'Kourend and Kebos', Lumbridge: 'Lumbridge and Draynor' };
 const TIER_CODE: Readonly<Record<string, string>> = { Easy: 'EA', Medium: 'MD', Hard: 'HD', Elite: 'EL' };
 
 interface ExportSection {
@@ -56,20 +64,30 @@ interface ExportSection {
   Diary?: Record<string, string>;
 }
 interface ExportDoc {
-  chunks: Record<string, { Sections?: Record<string, ExportSection> }>;
+  chunks: Record<string, ExportSection & { Sections?: Record<string, ExportSection> }>;
   challenges: { Diary: Record<string, { Chunks?: string[]; Monsters?: string[]; NPCs?: string[]; Objects?: string[] }> };
 }
 
 const doc: ExportDoc = JSON.parse(gunzipSync(readFileSync(new URL('./sources/chunkpicker-chunkinfo-export.json.gz', import.meta.url)))
   .toString());
 
+const idOf = ({ cx, cy }: Chunk) => String(cx * 256 + cy);
 const areaOf = new Map<string, string>();
 for (const [name, chunks] of Object.entries(SUB_AREA_CHUNKS as Record<string, Chunk[]>)) {
-  for (const { cx, cy } of chunks) areaOf.set(String(cx * 256 + cy), name);
+  for (const chunk of chunks) areaOf.set(idOf(chunk), name);
 }
+type Referenced = Record<string, { chunks?: readonly Chunk[] }>;
+/** An area's chunks: its own, and any entrance or surface chunks the map policy gives it. */
+const chunksOf = (area: string): string[] => [...new Set([area, canonicalAreaName(area)].flatMap(name => [
+  ...((SUB_AREA_CHUNKS as Record<string, Chunk[]>)[name] ?? []),
+  ...((AREA_REFERENCES as Referenced)[name]?.chunks ?? []),
+  ...((AREA_ALIAS_POLICIES as Referenced)[name]?.chunks ?? []),
+].map(idOf)))];
+const named = new Set([...areaOf.keys(), ...[...Object.values(AREA_REFERENCES as Referenced),
+  ...Object.values(AREA_ALIAS_POLICIES as Referenced)].flatMap(reference => (reference.chunks ?? []).map(idOf))]);
 // The surface the map covers; dungeons and instances are elsewhere.
-const onMap = new Set([...areaOf.keys(), ...Object.values(REGION_CHUNKS as Record<string, Chunk[]>)
-  .flatMap(chunks => chunks.map(({ cx, cy }) => String(cx * 256 + cy)))]);
+const onMap = new Set([...named, ...Object.values(REGION_CHUNKS as Record<string, Chunk[]>)
+  .flatMap(chunks => chunks.map(idOf))]);
 const base = (name: string) => name.split('#')[0].toLowerCase();
 const standing = { Monsters: new Map<string, Set<string>>(), NPCs: new Map<string, Set<string>>(), Objects: new Map<string, Set<string>>() };
 const coded = new Map<string, Set<string>>();
@@ -78,7 +96,7 @@ const add = (map: Map<string, Set<string>>, key: string, id: string) => {
   map.get(key)!.add(id);
 };
 for (const [id, chunk] of Object.entries(doc.chunks)) {
-  for (const section of Object.values(chunk.Sections ?? {})) {
+  for (const section of chunk.Sections ? Object.values(chunk.Sections) : [chunk]) {
     for (const name of Object.keys(section.Monster ?? {})) add(standing.Monsters, base(name), id);
     for (const name of Object.keys(section.NPC ?? {})) add(standing.NPCs, base(name), id);
     for (const name of Object.keys(section.Object ?? {})) add(standing.Objects, base(name), id);
@@ -91,7 +109,7 @@ for (const [id, chunk] of Object.entries(doc.chunks)) {
 /** The chunks of the map the export places a task in. */
 const placesOf = (task: SourceTask): string[] => {
   const diary = EXPORT_DIARY[task.area];
-  const record = doc.challenges.Diary[`~|${diary} Diary#${task.tier}|~ Task ${task.ordinal}`];
+  const record = doc.challenges.Diary[`~|${RECORD_DIARY[task.area] ?? diary} Diary#${task.tier}|~ Task ${task.ordinal}`];
   const chunks = new Set<string>((record?.Chunks ?? []).map(chunk => chunk.split('-')[0]));
   for (const id of coded.get(`${diary}|${TIER_CODE[task.tier]}${task.ordinal}`) ?? []) chunks.add(id);
   if (!chunks.size) {
@@ -104,12 +122,12 @@ const placesOf = (task: SourceTask): string[] => {
 
 /** Whether the task's areas and locations take in where the export places it. */
 const agrees = (task: SourceTask, places: readonly string[]): boolean => {
-  const tags = new Set([
+  const tagChunks = new Set([
     ...(task.regions ?? []), ...(task.anyOfRegions ?? []), ...(task.oneOf ?? []).flatMap(option => option.regions ?? []),
-  ].map(canonicalAreaName));
-  const located = (id: string) => (task.locations ?? [])
-    .some(place => place.chunkOptions.some(({ cx, cy }) => String(cx * 256 + cy) === id));
-  const tagged = (id: string) => areaOf.has(id) && tags.has(canonicalAreaName(areaOf.get(id)!));
+  ].flatMap(chunksOf));
+  const locations = [...(task.locations ?? []), ...(task.oneOf ?? []).flatMap(option => option.locations ?? [])];
+  const located = (id: string) => locations.some(place => place.chunkOptions.some(chunk => idOf(chunk) === id));
+  const tagged = (id: string) => tagChunks.has(id);
   const borders = (id: string) => {
     const cx = Math.floor(Number(id) / 256);
     const cy = Number(id) % 256;
@@ -119,8 +137,8 @@ const agrees = (task: SourceTask, places: readonly string[]): boolean => {
     return false;
   };
   if (places.some(located)) return true;
-  const named = places.filter(id => areaOf.has(id));
-  return named.length ? named.some(tagged) : places.some(borders);
+  const inAreas = places.filter(id => named.has(id));
+  return inAreas.length ? inAreas.some(tagged) : places.some(borders);
 };
 
 const tasks = (source as { tasks: SourceTask[] }).tasks;
