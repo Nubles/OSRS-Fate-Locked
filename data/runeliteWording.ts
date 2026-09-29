@@ -7,32 +7,9 @@
  * fails when the guide does, so the guide can't drift from the release it describes.
  */
 
-/** The plugin's words for statuses, features and currencies, by the name of its constant. */
-export const RUNELITE_TERMS = {
-  UNLOCKED: 'Unlocked',
-  CAN_DO: 'Can do',
-  NOT_READY: 'Not ready',
-  LOCKED: 'Locked',
-  NEEDS_CHECKING: 'Needs checking',
-  UNCHARTED: 'Uncharted',
-  FRONTIER: 'Frontier',
-  STRICT_MODE: 'Strict Mode',
-  KEYS: 'Keys',
-  OMNI_KEYS: 'Omni-Keys',
-  CHAOS_KEYS: 'Chaos Keys',
-  FATE_POINTS: 'Fate Points',
-  DIFFERENT_CHARACTER: 'Different character',
-  /** The Roll inbox card's button that copies what RuneLite noticed (Stage 4). */
-  COPY_FOR_TRACKER: 'Copy for tracker',
-  /** The Roll Inbox's button that brings in what was copied in RuneLite. */
-  PASTE_FROM_RUNELITE: 'Paste from RuneLite',
-  /** An event in the Roll inbox card that hasn't been copied yet. */
-  NEW: 'New',
-  /** An event in the Roll inbox card that has been copied for the tracker. */
-  COPIED: 'Copied',
-  /** What the plugin adds to a right-click option the rules lock. */
-  LOCKED_TAG: ' (Locked)',
-} as const;
+import { RUNELITE_TERMS } from './runeliteTerms';
+
+export { RUNELITE_TERMS };
 
 export interface AvoidedWord {
   /** Matched as a whole word or phrase, case and all. */

@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { initialState } from '../context/GameContext';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
 import type { FateEventEnvelope, FateEventType } from '../services/fateEventProtocol';
+import { RUNELITE_COPY_FORMAT } from '../utils/runelitePaste';
 import { relaySync } from '../services/relaySync';
 import { createRollInboxStore } from '../services/rollInboxStore';
 import type { GameState } from '../types';
@@ -307,5 +308,92 @@ describe('RollInbox', () => {
     expect(applied).not.toHaveBeenCalled();
     expect(store.list()[0].state).toBe('RECEIVED');
     expect(acknowledge).not.toHaveBeenCalled();
+  });
+});
+
+describe('Paste from RuneLite', () => {
+  const copyOf = (...events: FateEventEnvelope[]) => JSON.stringify({ format: RUNELITE_COPY_FORMAT, events });
+
+  function view(state = gameState()) {
+    const store = createRollInboxStore(new MemoryStorage(), state.runId);
+    const game: RollInboxGame = { state, acceptDetectedEvent: vi.fn().mockReturnValue(true) };
+    render(<RollInboxView store={store} game={game} acknowledge={vi.fn().mockResolvedValue(true)} />);
+    return store;
+  }
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('asks for RuneLite’s copy while the inbox is empty', () => {
+    view();
+
+    expect(screen.getByText('In RuneLite, open the Roll inbox card and choose Copy for tracker, then paste here.'))
+      .toBeTruthy();
+  });
+
+  it('adds what RuneLite copied, says what it added, and rolls nothing', async () => {
+    const user = userEvent.setup();
+    const store = view();
+    store.ingest([event('QUEST', "Cook's Assistant", { eventId: 'evt-1' })]);
+    await navigator.clipboard.writeText(copyOf(
+      event('QUEST', "Cook's Assistant", { eventId: 'evt-1' }),
+      event('QUEST', 'Rune Mysteries', { eventId: 'evt-2' }),
+    ));
+
+    await user.click(screen.getByRole('button', { name: 'Paste from RuneLite' }));
+
+    expect((await screen.findByRole('status')).textContent).toBe('Added 1. 1 was already here.');
+    expect(screen.getByText('Rune Mysteries')).toBeTruthy();
+    expect(store.list().map((row) => row.state)).toEqual(['RECEIVED', 'RECEIVED']);
+    expect(screen.getByText('Skip any you’ve already logged by hand.')).toBeTruthy();
+    // A linked run's rows are all its character's own.
+    expect(screen.queryByText('Nubles')).toBeNull();
+  });
+
+  it('offers a box to paste into when the browser won’t read the clipboard', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(navigator.clipboard, 'readText').mockRejectedValue(new Error('Not allowed'));
+    view();
+
+    await user.click(screen.getByRole('button', { name: 'Paste from RuneLite' }));
+    const box = await screen.findByLabelText('Paste RuneLite’s copy here');
+    expect(screen.getByRole('button', { name: 'Add' })).toHaveProperty('disabled', true);
+    fireEvent.change(box, { target: { value: copyOf(event()) } });
+    await user.click(screen.getByRole('button', { name: 'Add' }));
+
+    expect(screen.getByRole('status').textContent).toBe('Added 1.');
+    expect(screen.getByText("Cook's Assistant")).toBeTruthy();
+    expect(screen.queryByLabelText('Paste RuneLite’s copy here')).toBeNull();
+  });
+
+  it('says so when the text is no copy from RuneLite, and the box stays for another try', async () => {
+    const user = userEvent.setup();
+    view();
+    await navigator.clipboard.writeText('Dragon Slayer');
+
+    await user.click(screen.getByRole('button', { name: 'Paste from RuneLite' }));
+
+    expect((await screen.findByRole('status')).textContent)
+      .toBe('That isn’t a copy from RuneLite. In its Roll inbox card, choose Copy for tracker first.');
+    const box = screen.getByLabelText('Paste RuneLite’s copy here');
+    fireEvent.change(box, { target: { value: 'still not it' } });
+    await user.click(screen.getByRole('button', { name: 'Add' }));
+    expect(screen.getByLabelText('Paste RuneLite’s copy here')).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByLabelText('Paste RuneLite’s copy here')).toBeNull();
+  });
+
+  it('names whose events a run linked to no one took, on the line and each row', async () => {
+    const user = userEvent.setup();
+    view(gameState({ linkedAccount: undefined }));
+    await navigator.clipboard.writeText(copyOf(
+      event('QUEST', "Cook's Assistant", { eventId: 'evt-1', account: 'Zezima' }),
+      event('QUEST', 'Rune Mysteries', { eventId: 'evt-2', account: 'Zezima' }),
+    ));
+
+    await user.click(screen.getByRole('button', { name: 'Paste from RuneLite' }));
+
+    expect((await screen.findByRole('status')).textContent).toBe('Added 2 from Zezima.');
+    expect(screen.getAllByText('Zezima')).toHaveLength(2);
   });
 });
