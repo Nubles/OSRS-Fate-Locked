@@ -7,6 +7,7 @@ import { DIARY_DATA } from '../data/diaryData';
 import { QUEST_DATA } from '../data/questData';
 import { BOAT_CROSSINGS, TRAVEL_NETWORKS } from '../data/travelLinks';
 import { AREA_ENTRY_ROUTES } from '../data/areaAccess';
+import { TRAVEL_METHODS } from '../data/travelMethods';
 import type { UnlockState } from '../types';
 import { computeAreaRoutes } from './areaRoutes';
 import { chunkReachability } from './chunkReach';
@@ -57,9 +58,28 @@ describe('the reviewed travel links', () => {
     for (const crossing of BOAT_CROSSINGS) {
       expect(crossing.source, crossing.label).toMatch(/^https:\/\/oldschool\.runescape\.wiki\/w\/.+\?oldid=\d+$/);
       expect(crossing.docks.length, crossing.label).toBeGreaterThan(1);
+      expect(new Set(crossing.docks).size, crossing.label).toBe(crossing.docks.length);
       for (const dock of crossing.docks) expect(ownable.has(graphNode(dock)), `${crossing.label}: ${dock}`).toBe(true);
+      if (crossing.mobility !== undefined) expect(MOBILITY_LIST).toContain(crossing.mobility);
       for (const quest of crossing.quests ?? []) expect(QUEST_DATA[quest], quest).toBeDefined();
+      for (const stop of crossing.stops ?? []) {
+        expect(crossing.docks, `${crossing.label}: ${stop.node}`).toContain(stop.node);
+        for (const quest of stop.quests) expect(QUEST_DATA[quest], quest).toBeDefined();
+      }
     }
+  });
+
+  it('sail the charter ships to the ports the RuneLite travel list knows', () => {
+    // Deepfin Point and Port Roberts serve only players who have sailed there; Tempestus and Barracuda HQ
+    // have no place on the charter map.
+    const charter = BOAT_CROSSINGS.find(crossing => crossing.mobility === 'Charter Ships')!;
+    const method = TRAVEL_METHODS.find(travel => travel.id === 'network:charter-ship')!;
+    const ports = Object.entries(method.options)
+      .filter(([text]) => text.startsWith('Charter-to ')
+        && !['Deepfin Point', 'Port Roberts', 'Tempestus', 'Barracuda HQ'].includes(text.slice('Charter-to '.length)))
+      .map(([text, option]) => ({ text, to: option.to ?? [] }));
+    expect(ports.length).toBe(charter.docks.length);
+    for (const { text, to } of ports) expect(to.filter(dock => charter.docks.includes(dock)), text).toHaveLength(1);
   });
 
   it('close a network until the run has everything one way to open it needs', () => {
@@ -101,6 +121,17 @@ describe('the reviewed travel links', () => {
     expect(routeGraph(connect, run())[graphNode('37,69')]).not.toContain(ring);
     expect(routeGraph(connect, run())[ring] ?? []).not.toContain(graphNode('37,69'));
     expect(routeGraph(connect, run({ quests: ['Regicide'] }))[graphNode('37,69')]).toContain(ring);
+  });
+
+  it('join a charter ship’s ports once the run has Charter Ships, each port once its own quest is done', () => {
+    const [sarim, brimhaven, tyras] = ['47,49', '43,50', '33,48'].map(graphNode);
+    expect(routeGraph(connect, run())[sarim] ?? []).not.toContain(brimhaven);
+    const charter = routeGraph(connect, run({ mobility: ['Charter Ships'] }));
+    expect(charter[sarim]).toContain(brimhaven);
+    expect(charter[sarim]).not.toContain(tyras);
+    expect(charter[tyras] ?? []).not.toContain(sarim);
+    expect(routeGraph(connect, run({ mobility: ['Charter Ships'], quests: ['Regicide'] }))[sarim]).toContain(tyras);
+    expect(routeGraph(connect, run({ quests: ['Regicide'] }))[sarim] ?? []).not.toContain(tyras);
   });
 
   it('join a boat’s docks both ways, once the run has its quests', () => {
@@ -149,6 +180,38 @@ describe('what is stranded', () => {
     expect(stranded(wilderness).has('Entrana')).toBe(true);
     expect(stranded(run({ regions: ['Port Sarim', 'Piscarilius'] })).has('Piscarilius')).toBe(false);
     expect(stranded(run({ regions: ['Piscarilius'] })).has('Piscarilius')).toBe(true);
+
+    // A charter ship from Port Sarim, and to Port Tyras only after Regicide.
+    expect(stranded(run({ regions: ['Port Sarim', 'Brimhaven'], mobility: ['Charter Ships'] })).has('Brimhaven')).toBe(false);
+    const tyras = run({ regions: ['Port Sarim', 'Tyras Camp'], mobility: ['Charter Ships'] });
+    expect(stranded(tyras).has('Tyras Camp')).toBe(true);
+    expect(stranded({ ...tyras, quests: ['Regicide'] }).has('Tyras Camp')).toBe(false);
+  });
+
+  it('reaches the islands by their boats, once the run has each boat’s quests', () => {
+    const everything = run({ regions: Object.keys(AREAS) });
+    const reaches = (unlocks: UnlockState, dock: string) =>
+      travelReachability(connect, unlocks, LUMBRIDGE, undefined, 'vanilla').reachable.has(graphNode(dock));
+    // The squire's boat from Port Sarim needs nothing; the plain graph never reached the outpost.
+    expect(reaches(run({ regions: ['Port Sarim', "Void Knights' Outpost"] }), '41,41')).toBe(true);
+    expect(chunkReachability(connect, everything, LUMBRIDGE, undefined, 'vanilla').reachable.has(graphNode('41,41')))
+      .toBe(false);
+    // Lokar Searunner sails from Rellekka to Pirates' Cove after The Fremennik Trials.
+    expect(stranded(everything).has("Pirates' Cove")).toBe(true);
+    const trials = { ...everything, quests: ['The Fremennik Trials'] };
+    expect(stranded(trials).has("Pirates' Cove")).toBe(false);
+    for (const dock of ['39,58', '40,60', '36,59', '37,59']) expect(reaches(trials, dock), dock).toBe(true);
+    // Captain Bentley sails on to Lunar Isle once Lunar Diplomacy can be started.
+    expect(reaches(trials, '33,60')).toBe(false);
+    expect(reaches({ ...everything, quests: ['The Fremennik Trials', 'Lost City', 'Rune Mysteries', 'Shilo Village'] }, '33,60'))
+      .toBe(true);
+    // Bill Teach after Cabin Fever, and Brother Tranquility once The Great Brain Robbery can be started.
+    expect(reaches(everything, '57,46')).toBe(false);
+    const fever = { ...everything, quests: ['Cabin Fever'] };
+    expect(reaches(fever, '57,46')).toBe(true);
+    expect(reaches(fever, '59,44')).toBe(false);
+    expect(reaches({ ...everything, quests: ['Cabin Fever', 'Creature of Fenkenstrain', 'RFD: Pirate Pete'] }, '59,44'))
+      .toBe(true);
   });
 
   it('strands nothing the plain graph reached for a run that owns every area, networks or not', () => {

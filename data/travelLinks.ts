@@ -15,10 +15,15 @@
  *   has no direction, so it would otherwise lead in as well.
  * - A quest the player need only have started, as the Keldagrim mine carts
  *   want of The Giant Dwarf, is never assumed missing: the app records only
- *   finished quests, and the Journal asks for a start like that by hand.
- * - Boats the graph leaves out join their docks, once the run has any quest
- *   each needs. Coins, and the items a crew turns away, are never assumed
- *   either way, as with the Diary tasks' own item checks.
+ *   finished quests, and the Journal asks for a start like that by hand. The
+ *   quests it takes to start one are asked for instead: Maria Gunnars ferries
+ *   the player during The Fremennik Isles, which needs The Fremennik Trials.
+ * - Boats the graph leaves out join their docks, once the run has what each
+ *   needs: its unlock (the charter ships need Charter Ships) and its quests. A
+ *   dock with a quest of its own, such as the charter ships' Port Tyras, is
+ *   left out until that quest is done. Coins, and the items a crew turns
+ *   away, are never assumed either way, as with the Diary tasks' own item
+ *   checks.
  *
  * Nodes are the graph's own names ("Zanaris") or chunk keys ("37,69"); docks
  * are chunk keys. utils/travelReach.test.ts checks every one against the
@@ -56,8 +61,12 @@ export interface BoatCrossing {
   label: string;
   /** Every dock the boat serves; it sails between any two. */
   docks: readonly string[];
+  /** The Mobility unlock the crossing needs. */
+  mobility?: string;
   /** Quests the crossing needs, every one of them. */
   quests?: readonly string[];
+  /** Docks served only once these quests are done too. */
+  stops?: readonly NetworkStop[];
   source: string;
 }
 
@@ -174,5 +183,96 @@ export const BOAT_CROSSINGS: readonly BoatCrossing[] = [
     docks: ['52,53', '58,59'],
     quests: ['Bone Voyage'],
     source: wiki('Barge guard', 15040225),
+  },
+  {
+    label: "The squire's boat, from Port Sarim to the Void Knights' Outpost",
+    docks: ['47,50', '41,41'],
+    source: wiki('Squire (Void Knights)', 15239656),
+  },
+  {
+    // Free after The Fremennik Trials; 1,000 coins a trip before.
+    label: "Jarvald's boat, from Rellekka to Waterbirth Island",
+    docks: ['40,57', '39,58'],
+    source: wiki('Jarvald', 15351198),
+  },
+  {
+    label: 'The sailor, from Rellekka to Miscellania',
+    docks: ['41,57', '40,60'],
+    quests: ['The Fremennik Trials'],
+    source: wiki('Sailor', 15351110),
+  },
+  {
+    // During and after The Fremennik Isles, which needs The Fremennik Trials to start.
+    label: "Maria Gunnars' ferry, from Rellekka to Neitiznot",
+    docks: ['41,57', '36,59'],
+    quests: ['The Fremennik Trials'],
+    source: wiki('Maria Gunnars', 15351202),
+  },
+  {
+    // During and after The Fremennik Isles, which needs The Fremennik Trials to start.
+    label: "Mord Gunnars' ferry, from Rellekka to Jatizso",
+    docks: ['41,57', '37,59'],
+    quests: ['The Fremennik Trials'],
+    source: wiki('Mord Gunnars', 15351203),
+  },
+  {
+    label: "Lokar Searunner, from Rellekka to Pirates' Cove",
+    docks: ['40,57', '34,59'],
+    quests: ['The Fremennik Trials'],
+    source: wiki('Lokar Searunner', 15351199),
+  },
+  {
+    // From partway through Lunar Diplomacy, which needs these quests to start.
+    label: "Captain Bentley, from Pirates' Cove to Lunar Isle",
+    docks: ['34,59', '33,60'],
+    quests: ['The Fremennik Trials', 'Lost City', 'Rune Mysteries', 'Shilo Village'],
+    source: wiki('Captain Bentley', 15229124),
+  },
+  {
+    label: "Bill Teach, from Port Phasmatys to Mos Le'Harmless",
+    docks: ['57,54', '57,46'],
+    quests: ['Cabin Fever'],
+    source: wiki('Bill Teach', 15297848),
+  },
+  {
+    // From the start of The Great Brain Robbery, which needs these quests.
+    label: "Brother Tranquility, from Mos Le'Harmless to Harmony Island",
+    docks: ['57,46', '59,44'],
+    quests: ['Creature of Fenkenstrain', 'Cabin Fever', 'RFD: Pirate Pete'],
+    source: wiki('Harmony Island', 15350276),
+  },
+  {
+    // He speaks only to a player with a ghostspeak amulet or Morytania legs 2, which the island's
+    // entry routes ask for (data/areaAccess.ts).
+    label: 'The ghost captain, from Port Phasmatys to Dragontooth Island',
+    docks: ['57,54', '59,55'],
+    source: wiki('Ghost captain', 15315341),
+  },
+  {
+    // Every port but Deepfin Point and Port Roberts: the ships call there only for a player who has sailed
+    // there already, and the open sea reaches them for such a player (utils/oceanAccess.ts).
+    label: 'Charter ships',
+    docks: [
+      '47,49', '46,49', '43,50', '43,53', '41,49', '40,44', '57,54', '57,45', '46,47', '33,48', '33,52',
+      '28,57', '23,53', '27,49', '22,46', '23,46', '47,46', '49,37', '43,39',
+    ],
+    mobility: 'Charter Ships',
+    // Port Phasmatys; Mos Le'Harmless; the Shipyard, from partway through Monkey Madness I, which needs
+    // The Grand Tree and Tree Gnome Village to start; Port Tyras; Prifddinas; Civitas illa Fortis,
+    // Aldarin and the Sunset Coast; the Summer Shore, from partway through Troubled Tortugans, which
+    // needs Pandemonium; Red Rock, from partway through The Red Reef, which needs Troubled Tortugans.
+    stops: [
+      { node: '57,54', quests: ['Priest in Peril'] },
+      { node: '57,45', quests: ['Cabin Fever'] },
+      { node: '46,47', quests: ['The Grand Tree', 'Tree Gnome Village'] },
+      { node: '33,48', quests: ['Regicide'] },
+      { node: '33,52', quests: ['Song of the Elves'] },
+      { node: '27,49', quests: ['Children of the Sun'] },
+      { node: '22,46', quests: ['Children of the Sun'] },
+      { node: '23,46', quests: ['Children of the Sun'] },
+      { node: '49,37', quests: ['Pandemonium'] },
+      { node: '43,39', quests: ['Troubled Tortugans'] },
+    ],
+    source: wiki('Charter ship', 15321518),
   },
 ];

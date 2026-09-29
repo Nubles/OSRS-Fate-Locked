@@ -11,7 +11,7 @@
  * because of a route this app doesn't know.
  */
 
-import { BOAT_CROSSINGS, TRAVEL_NETWORKS, type NetworkOpener } from '../data/travelLinks';
+import { BOAT_CROSSINGS, TRAVEL_NETWORKS, type BoatCrossing, type NetworkOpener } from '../data/travelLinks';
 import type { UnlockState } from '../types';
 import { chunkReachability, type ReachResult } from './chunkReach';
 
@@ -43,16 +43,25 @@ export function closedTravelNodes(unlocks: UnlockState): ReadonlySet<string> {
   return closed;
 }
 
-// The graph as a run sees it, one per graph and set of boats and closed stops.
+/** The docks this run can sail between on a crossing: none until it has what the crossing needs. */
+const servedDocks = (crossing: BoatCrossing, unlocks: UnlockState): string[] => (
+  opens({ mobility: crossing.mobility, quests: crossing.quests }, unlocks)
+    ? crossing.docks
+      .filter(dock => done(crossing.stops?.find(stop => stop.node === dock)?.quests, unlocks))
+      .map(graphNode)
+    : []
+);
+
+// The graph as a run sees it, one per graph and set of docks and closed stops.
 const forRuns = new WeakMap<Graph, Map<string, Graph>>();
 
 /** The route graph with the boats this run can take, and without the network stops it can't use yet. */
 export function routeGraph(connect: Graph, unlocks: UnlockState): Graph {
-  const open = BOAT_CROSSINGS.filter(crossing => done(crossing.quests, unlocks));
+  const open = BOAT_CROSSINGS.map(crossing => servedDocks(crossing, unlocks)).filter(docks => docks.length > 1);
   const shut = TRAVEL_NETWORKS.flatMap(network => (network.stops ?? [])
     .filter(stop => !done(stop.quests, unlocks))
     .map(stop => ({ nodes: network.nodes.map(graphNode), stop: graphNode(stop.node) })));
-  const key = [...open.map(crossing => crossing.label), ...shut.map(({ stop }) => stop)].join('\n');
+  const key = [...open.map(docks => docks.join(' ')), ...shut.map(({ stop }) => stop)].join('\n');
   let cache = forRuns.get(connect);
   if (!cache) forRuns.set(connect, cache = new Map());
   const cached = cache.get(key);
@@ -62,8 +71,7 @@ export function routeGraph(connect: Graph, unlocks: UnlockState): Graph {
     for (const node of nodes) graph[node] = (graph[node] ?? []).filter(next => next !== stop);
     graph[stop] = (graph[stop] ?? []).filter(next => !nodes.includes(next));
   }
-  for (const crossing of open) {
-    const docks = crossing.docks.map(graphNode);
+  for (const docks of open) {
     for (const dock of docks) {
       graph[dock] = [...new Set([...(graph[dock] ?? []), ...docks.filter(other => other !== dock)])];
     }
