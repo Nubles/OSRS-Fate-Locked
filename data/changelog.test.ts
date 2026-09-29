@@ -30,6 +30,7 @@ describe('authored changelog releases', () => {
       expect.stringMatching(/Diary Journal no longer calls a task doable.*Fairy rings.*once you’ve unlocked them and done the quests they need.*Fairytale I and a staff.*boats to Great Kourend, Entrana and Brimhaven/),
       expect.stringMatching(/Quest Log says “No route to”.*complete it by hand/),
       expect.stringMatching(/^12 Diary tasks now name the area the game has them in/),
+      expect.stringMatching(/chunk no area covers.*nothing there to unlock/),
     ]);
   });
 
