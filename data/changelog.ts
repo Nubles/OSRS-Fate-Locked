@@ -28,6 +28,7 @@ export const CHANGELOG_RELEASES = [
         'The Quest Log says “No route to” an owned place a quest needs that nothing reaches, as the Diary Journal does, instead of “Ready to complete”. You can still complete it by hand.',
         '12 Diary tasks now name the area the game has them in: mining clay and the Desert Phoenix are at the Ruins of Uzer, vultures near Menaphos and the Agility Pyramid, cacti across the desert, swamp lizards in Mort Myre Swamp, and hollow trees in the Haunted Woods, Darkmeyer and Slepe, among others.',
         'A map chunk no area covers, such as the mountains between Weiss and the Wilderness, now says there is nothing there to unlock, instead of asking you to unlock it.',
+        'Pirate Pete’s trip to Braindeath Island asks you to confirm you’ve started Rum Deal, as he takes nobody there before it.',
       ],
       changed: [
         'The Rules page describes the challenge in plainer words.',

@@ -31,6 +31,7 @@ describe('authored changelog releases', () => {
       expect.stringMatching(/Quest Log says “No route to”.*complete it by hand/),
       expect.stringMatching(/^12 Diary tasks now name the area the game has them in/),
       expect.stringMatching(/chunk no area covers.*nothing there to unlock/),
+      expect.stringMatching(/Braindeath Island.*started Rum Deal/),
     ]);
     expect(release?.sections.changed).toEqual([expect.stringMatching(/Rules page describes the challenge in plainer words/)]);
   });
