@@ -18,7 +18,7 @@ const legacyRow: RollInboxRow = {
     bundleVersion: 4,
     rulesVersion: '1',
     contentVersion: 1,
-    detectorId: 'quest-widget-v1',
+    detectorId: 'quest-state-v1',
     detectorVersion: 1,
     confidence: 'EXACT',
     evidence: {},

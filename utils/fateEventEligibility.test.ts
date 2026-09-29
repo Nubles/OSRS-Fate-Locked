@@ -35,13 +35,13 @@ const event = (
   contentVersion: 1,
   detectorId: {
     SKILL_LEVEL: 'skill-level-v1',
-    QUEST: 'quest-widget-v1',
+    QUEST: 'quest-state-v1',
     COMBAT_ACHIEVEMENT: 'combat-achievement-chat-v1',
     COLLECTION_LOG: 'collection-log-chat-v1',
-    CLUE_CASKET: 'clue-casket-loot-v1',
-    BOSS_KILL: 'boss-loot-v1',
-    RAID_COMPLETION: 'raid-loot-v1',
-    SLAYER_TASK: 'slayer-task-v1',
+    CLUE_CASKET: 'clue-completion-v1',
+    BOSS_KILL: 'boss-kill-count-v1',
+    RAID_COMPLETION: 'boss-kill-count-v1',
+    SLAYER_TASK: 'slayer-task-varp-v1',
     DIARY_TASK: 'diary-task-v1',
     PET_DROP: 'pet-drop-v1',
     MINIGAME_COMPLETION: 'minigame-completion-v1',
@@ -53,16 +53,31 @@ const event = (
 });
 
 describe('classifyFateEvent', () => {
-  it('blocks events for another account or run', () => {
+  it('blocks events for another character or run', () => {
     expect(classifyFateEvent(event('QUEST', 'Dragon Slayer I', { account: 'Other' }), state()))
-      .toMatchObject({ state: 'BLOCKED', reason: 'Account does not match this run.' });
+      .toMatchObject({ state: 'BLOCKED', reason: 'This event is from another character.' });
     expect(classifyFateEvent(event('QUEST', 'Dragon Slayer I', { runId: 'run-2' }), state()))
       .toMatchObject({ state: 'BLOCKED', reason: 'Event belongs to a different run.' });
   });
 
-  it('requires confirmation for stale run context', () => {
-    expect(classifyFateEvent(event('QUEST', 'Dragon Slayer I', { runRevision: 6 }), state()).state)
-      .toBe('NEEDS_CONFIRMATION');
+  it('takes any character\'s events while the run is not linked to one', () => {
+    for (const linkedAccount of [undefined, '']) {
+      expect(classifyFateEvent(event('QUEST', "Cook's Assistant", { account: 'Zezima' }), state({ linkedAccount })))
+        .toMatchObject({ state: 'READY', progress: { kind: 'QUEST', questId: "Cook's Assistant" } });
+    }
+  });
+
+  it('checks an event from an earlier revision against the run as it is now', () => {
+    // Every roll raises the revision, so the rows of one paste were all detected earlier.
+    expect(classifyFateEvent(event('QUEST', "Cook's Assistant", { runRevision: 2 }), state()))
+      .toMatchObject({ state: 'READY', progress: { kind: 'QUEST', questId: "Cook's Assistant" } });
+    expect(classifyFateEvent(event('QUEST', "Cook's Assistant", { runRevision: 2 }), withUnlocks({ quests: ["Cook's Assistant"] })))
+      .toEqual({ state: 'BLOCKED', reason: 'Already completed' });
+  });
+
+  it('asks about an event from a newer revision than the run has', () => {
+    expect(classifyFateEvent(event('QUEST', "Cook's Assistant", { runRevision: 8 }), state()))
+      .toEqual({ state: 'NEEDS_CONFIRMATION', reason: 'The event was detected against a newer run state.' });
   });
 
   it('requires confirmation for an unsupported detector or version', () => {
@@ -260,6 +275,47 @@ describe('classifyFateEvent', () => {
     expect(chunked.state === 'READY' && chunked.intent.context).toBeUndefined();
   });
 
+  it('rolls a completed clue by its tier, however it is labelled', () => {
+    // RuneLite's clue detector reads "You have completed 12 hard Treasure Trails."
+    expect(classifyFateEvent(event('CLUE_CASKET', 'Clue scroll (hard)', { evidence: { tier: 'hard', count: 12 } }), state()))
+      .toMatchObject({ state: 'READY', intent: { source: DropSource.CLUE_HARD, target: 'Clue scroll (hard)' } });
+    expect(classifyFateEvent(event('CLUE_CASKET', null, { evidence: { tier: 'Elite' } }), state()))
+      .toMatchObject({ state: 'READY', intent: { source: DropSource.CLUE_ELITE, target: 'Clue scroll (elite)' } });
+    expect(classifyFateEvent(event('CLUE_CASKET', 'Clue scroll (medium)'), state()))
+      .toMatchObject({ state: 'READY', intent: { source: DropSource.CLUE_MEDIUM } });
+    expect(classifyFateEvent(event('CLUE_CASKET', 'Clue scroll (legendary)'), state()))
+      .toEqual({ state: 'NEEDS_CONFIRMATION', reason: 'Clue casket tier could not be verified.' });
+    expect(classifyFateEvent(event('CLUE_CASKET', null), state()))
+      .toEqual({ state: 'NEEDS_CONFIRMATION', reason: 'Choose the clue casket tier.' });
+  });
+
+  it('offers every page an item name is on, up to 24', () => {
+    const pages = classifyFateEvent(event('COLLECTION_LOG', 'Ancient page'), state());
+    expect(pages.state).toBe('NEEDS_CONFIRMATION');
+    expect(pages.state === 'NEEDS_CONFIRMATION' && pages.candidates).toHaveLength(13);
+  });
+
+  it('offers every item the game gives one plain name, as the log tells them apart', () => {
+    // The game says "Chompy bird hat"; the log has 18, as "Chompy bird hat (ogre bowman)" and so on.
+    const hats = classifyFateEvent(event('COLLECTION_LOG', 'Chompy bird hat'), state());
+    expect(hats).toMatchObject({ state: 'NEEDS_CONFIRMATION', reason: 'The game names these items alike: choose which one.' });
+    const choices = hats.state === 'NEEDS_CONFIRMATION' ? hats.candidates ?? [] : [];
+    expect(choices).toHaveLength(18);
+    expect(choices.map((choice) => choice.label.split(' · ')[0]))
+      .toEqual(expect.arrayContaining(['Chompy bird hat (ogre bowman)', 'Chompy bird hat (expert dragon archer)']));
+    // The player's choice then rolls that item.
+    expect(classifyFateEventCandidate(event('COLLECTION_LOG', 'Chompy bird hat'), state(), choices[0].target))
+      .toMatchObject({ state: 'READY', progress: { kind: 'COLLECTION_ITEM', itemId: Number(choices[0].target) } });
+    // A name with items of its own never widens to its variants.
+    const pages = classifyFateEvent(event('COLLECTION_LOG', 'Ancient page'), state());
+    expect(pages.state === 'NEEDS_CONFIRMATION' ? pages.candidates : []).toHaveLength(13);
+    // A plain name with one variant is still the player's to confirm, never a guess.
+    expect(classifyFateEvent(event('COLLECTION_LOG', 'Torva full helm'), state())).toMatchObject({
+      state: 'NEEDS_CONFIRMATION',
+      candidates: [{ label: expect.stringMatching(/^Torva full helm \(damaged\) · /) }],
+    });
+  });
+
   it('uses the canonical skill-level formula', () => {
     // The level-up button's odds: level / 5, to one decimal place.
     expect(classifyFateEvent(event('SKILL_LEVEL', 'Attack Level 73', {
@@ -282,7 +338,7 @@ describe('classifyFateEvent', () => {
 
   it('offers player-review choices for confirmation-only detector events', () => {
     const slayer = classifyFateEvent(event('SLAYER_TASK', 'Abyssal demons', {
-      detectorId: 'slayer-task-v1', confidence: 'UNCERTAIN',
+      detectorId: 'slayer-task-varp-v1', confidence: 'UNCERTAIN',
     }), state());
     expect(slayer).toMatchObject({
       state: 'NEEDS_CONFIRMATION',
@@ -300,9 +356,25 @@ describe('classifyFateEvent', () => {
     });
   });
 
+  it('puts the Slayer master RuneLite read first, so the review starts on it', () => {
+    const first = (evidence: Record<string, string | boolean>) => {
+      const slayer = classifyFateEvent(event('SLAYER_TASK', 'Abyssal demons', {
+        detectorId: 'slayer-task-varp-v1', confidence: 'UNCERTAIN', evidence,
+      }), state());
+      return slayer.state === 'NEEDS_CONFIRMATION' ? slayer.candidates?.map((candidate) => candidate.target) : undefined;
+    };
+    expect(first({ master: 'Duradel' })?.[0]).toBe('Slayer (Duradel/Kuradal)');
+    expect(first({ master: ' konar quo maten ' })?.[0]).toBe('Slayer (Konar)');
+    expect(first({ master: 'Steve', bossTask: true })?.[0]).toBe('Slayer (Boss Task)');
+    // Mortimer has no tier here, so every master stays in the usual order.
+    expect(first({ master: 'Mortimer' })?.[0]).toBe('Slayer (Turael/Spria)');
+    expect(new Set(first({ master: 'Nieve' }))).toEqual(new Set(first({})));
+    expect(first({ master: 'Nieve' })).toHaveLength(9);
+  });
+
   it('turns an explicit confirmation into a ready intent', () => {
     const slayerEvent = event('SLAYER_TASK', 'Abyssal demons', {
-      detectorId: 'slayer-task-v1', confidence: 'UNCERTAIN',
+      detectorId: 'slayer-task-varp-v1', confidence: 'UNCERTAIN',
     });
     expect(classifyFateEventCandidate(
       slayerEvent,

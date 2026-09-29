@@ -20,7 +20,18 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-29-group-ironman-titles');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-29-roll-inbox-groundwork');
+  });
+
+  it('announces the groundwork for RuneLite’s Roll Inbox, and that manual play is unchanged', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-29-roll-inbox-groundwork');
+    expect(release?.title).toBe('Groundwork for RuneLite’s Roll Inbox');
+    expect(release?.sections.added).toEqual([
+      expect.stringMatching(/each boss by the names the game prints in its kill count, every quest, and every achievement diary tier.*current plugin ignores them/),
+    ]);
+    expect(release?.sections.changed).toEqual([
+      expect.stringMatching(/every event from one batch can be rolled.*not yet linked to a character.*chompy bird hats.*Logging by hand, rolling and spending Keys are unchanged/),
+    ]);
   });
 
   it('announces group ironman titles', () => {

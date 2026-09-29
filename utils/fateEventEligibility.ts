@@ -66,13 +66,17 @@ interface CollectionMatch {
 }
 
 const COLLECTION_INDEX = new Map<string, CollectionMatch[]>();
+// The game gives some items one name where the log tells them apart the
+// wiki's way, as "Chompy bird hat (ogre bowman)": a plain name with no item
+// of its own offers every item it can be.
+const COLLECTION_VARIANT_INDEX = new Map<string, CollectionMatch[]>();
+const VARIANT_SUFFIX = / \([^()]+\)$/;
 for (const tab of Object.values(COLLECTION_LOG_DATA)) {
   for (const page of Object.values(tab.pages)) {
     for (const item of page.items) {
-      addToIndex(COLLECTION_INDEX, item.name, {
-        item,
-        location: `${tab.name} · ${page.name}`,
-      });
+      const match = { item, location: `${tab.name} · ${page.name}` };
+      addToIndex(COLLECTION_INDEX, item.name, match);
+      if (VARIANT_SUFFIX.test(item.name)) addToIndex(COLLECTION_VARIANT_INDEX, item.name.replace(VARIANT_SUFFIX, ''), match);
     }
   }
 }
@@ -95,6 +99,30 @@ const SLAYER_SOURCES = [
   DropSource.SLAYER_BOSS,
 ];
 
+// The master RuneLite read from the game, by name, and the roll source that
+// master's tier uses. Mortimer has no tier here, so the player chooses.
+const SLAYER_MASTER_SOURCES: Record<string, DropSource> = {
+  turael: DropSource.SLAYER_BEGINNER,
+  spria: DropSource.SLAYER_BEGINNER,
+  mazchna: DropSource.SLAYER_MAZCHNA,
+  achtryn: DropSource.SLAYER_MAZCHNA,
+  vannaka: DropSource.SLAYER_VANNAKA,
+  chaeldar: DropSource.SLAYER_CHAELDAR,
+  konar: DropSource.SLAYER_KONAR,
+  'konar quo maten': DropSource.SLAYER_KONAR,
+  nieve: DropSource.SLAYER_NIEVE,
+  steve: DropSource.SLAYER_NIEVE,
+  krystilia: DropSource.SLAYER_KRYSTILIA,
+  duradel: DropSource.SLAYER_DURADEL,
+  kuradal: DropSource.SLAYER_DURADEL,
+};
+
+function detectedSlayerSource(event: FateEventEnvelope): DropSource | undefined {
+  if (event.evidence.bossTask === true) return DropSource.SLAYER_BOSS;
+  const master = typeof event.evidence.master === 'string' ? normalize(event.evidence.master) : '';
+  return SLAYER_MASTER_SOURCES[master];
+}
+
 const CA_SOURCES: Record<string, DropSource> = {
   Easy: DropSource.CA_EASY,
   Medium: DropSource.CA_MEDIUM,
@@ -104,27 +132,40 @@ const CA_SOURCES: Record<string, DropSource> = {
   Grandmaster: DropSource.CA_GRANDMASTER,
 };
 
-// Each casket's roll source and the tier name the Clues card rolls under.
+// Each clue tier's roll source and the tier name the Clues card rolls under.
 const CLUE_SOURCES: Record<string, { source: DropSource; tier: string }> = {
-  'casket (beginner)': { source: DropSource.CLUE_BEGINNER, tier: 'Beginner' },
-  'casket (easy)': { source: DropSource.CLUE_EASY, tier: 'Easy' },
-  'casket (medium)': { source: DropSource.CLUE_MEDIUM, tier: 'Medium' },
-  'casket (hard)': { source: DropSource.CLUE_HARD, tier: 'Hard' },
-  'casket (elite)': { source: DropSource.CLUE_ELITE, tier: 'Elite' },
-  'casket (master)': { source: DropSource.CLUE_MASTER, tier: 'Master' },
+  beginner: { source: DropSource.CLUE_BEGINNER, tier: 'Beginner' },
+  easy: { source: DropSource.CLUE_EASY, tier: 'Easy' },
+  medium: { source: DropSource.CLUE_MEDIUM, tier: 'Medium' },
+  hard: { source: DropSource.CLUE_HARD, tier: 'Hard' },
+  elite: { source: DropSource.CLUE_ELITE, tier: 'Elite' },
+  master: { source: DropSource.CLUE_MASTER, tier: 'Master' },
 };
+
+// RuneLite names a completed clue "Clue scroll (hard)"; older labels said "Casket (hard)".
+const CLUE_LABEL = /^(?:casket|clue scroll) \((beginner|easy|medium|hard|elite|master)\)$/;
+
+function detectedClue(event: FateEventEnvelope): { source: DropSource; tier: string } | undefined {
+  const tier = typeof event.evidence.tier === 'string' ? normalize(event.evidence.tier) : '';
+  if (CLUE_SOURCES[tier]) return CLUE_SOURCES[tier];
+  const label = event.canonicalLabel ? CLUE_LABEL.exec(normalize(event.canonicalLabel)) : null;
+  return label ? CLUE_SOURCES[label[1]] : undefined;
+}
 
 function candidates<T>(
   values: T[],
   label: (value: T) => string,
   target: (value: T) => string,
+  limit = 8,
 ): EventCandidate[] {
-  return values.slice(0, 8).map((value) => ({ label: label(value), target: target(value) }));
+  return values.slice(0, limit).map((value) => ({ label: label(value), target: target(value) }));
 }
 
 function confirmationCandidates(event: FateEventEnvelope): EventCandidate[] | undefined {
   if (event.eventType === 'SLAYER_TASK') {
-    return SLAYER_SOURCES.map((source) => ({ label: source, target: source }));
+    const detected = detectedSlayerSource(event);
+    const sources = detected ? [detected, ...SLAYER_SOURCES.filter((source) => source !== detected)] : SLAYER_SOURCES;
+    return sources.map((source) => ({ label: source, target: source }));
   }
   if (event.eventType === 'DIARY_TASK') {
     const tierId = typeof event.evidence.tierId === 'string'
@@ -257,16 +298,20 @@ function collectionItemBlock(state: GameState, itemId: number): EventClassificat
 
 function classifyCollectionLog(event: FateEventEnvelope, state: GameState): EventClassification {
   if (!event.canonicalLabel) return needsConfirmation('Choose the Collection Log item.');
-  const matches = COLLECTION_INDEX.get(normalize(event.canonicalLabel)) ?? [];
-  if (matches.length !== 1) {
+  const exact = COLLECTION_INDEX.get(normalize(event.canonicalLabel));
+  const matches = exact ?? COLLECTION_VARIANT_INDEX.get(normalize(event.canonicalLabel)) ?? [];
+  if (matches.length !== 1 || !exact) {
     return needsConfirmation(
-      matches.length
-        ? 'More than one Collection Log item has this name.'
-        : 'Collection Log item is not in the current rules.',
+      !matches.length
+        ? 'Collection Log item is not in the current rules.'
+        : exact
+          ? 'More than one Collection Log item has this name.'
+          : 'The game names these items alike: choose which one.',
       candidates(
         matches,
         (match) => `${match.item.name} · ${match.location}`,
         (match) => String(match.item.id),
+        24,
       ),
     );
   }
@@ -278,11 +323,13 @@ function classifyCollectionLog(event: FateEventEnvelope, state: GameState): Even
 }
 
 function classifyClue(event: FateEventEnvelope, state: GameState): EventClassification {
-  if (!event.canonicalLabel) return needsConfirmation('Choose the clue casket tier.');
-  const clue = CLUE_SOURCES[normalize(event.canonicalLabel)];
-  if (!clue) return needsConfirmation('Clue casket tier could not be verified.');
+  const clue = detectedClue(event);
+  if (!clue) {
+    return needsConfirmation(event.canonicalLabel ? 'Clue casket tier could not be verified.' : 'Choose the clue casket tier.');
+  }
+  const target = event.canonicalLabel?.trim() || `Clue scroll (${clue.tier.toLowerCase()})`;
   // Vanilla clue keys use the Clues card's onboarding rates.
-  return ready(clue.source, event.canonicalLabel.trim(), { kind: 'NONE' }, state.gameModeId === 'vanilla'
+  return ready(clue.source, target, { kind: 'NONE' }, state.gameModeId === 'vanilla'
     ? { context: { kind: 'clue', clueTier: clue.tier } }
     : {});
 }
@@ -318,18 +365,18 @@ export function classifyFateEvent(
   if (event.runId !== state.runId) {
     return { state: 'BLOCKED', reason: 'Event belongs to a different run.' };
   }
+  // A run linked to a character takes only that character's events. An
+  // unlinked run takes any: the row shows whose it is, and the player decides.
   if (
-    !state.linkedAccount
-    || normalizeAccountName(event.account) !== normalizeAccountName(state.linkedAccount)
+    state.linkedAccount
+    && normalizeAccountName(event.account) !== normalizeAccountName(state.linkedAccount)
   ) {
-    return { state: 'BLOCKED', reason: 'Account does not match this run.' };
+    return { state: 'BLOCKED', reason: 'This event is from another character.' };
   }
-  if (event.runRevision !== state.runRevision) {
-    return needsConfirmation(
-      event.runRevision < state.runRevision
-        ? 'The run changed after this event was detected.'
-        : 'The event was detected against a newer run state.',
-    );
+  // Every roll raises the run's revision, so an event from an earlier revision
+  // is checked against the run as it is now, as a manual log would be.
+  if (event.runRevision > state.runRevision) {
+    return needsConfirmation('The event was detected against a newer run state.');
   }
   if (event.rulesVersion !== RULES_VERSION || event.contentVersion !== CONTENT_VERSION) {
     return needsConfirmation('The plugin and app rules do not match.');

@@ -220,14 +220,15 @@ describe('buildRuneliteRulesManifest - capabilities', () => {
 
   it('names exactly the Stage 2 sections the rules have', async () => {
     expect((await build('vanilla', true)).capabilities)
-      .toEqual(['banks', 'chunkDetails', 'chunkEntries', 'freeAreas', 'places', 'progress', 'travel']);
+      .toEqual(['banks', 'chunkDetails', 'chunkEntries', 'detection', 'freeAreas', 'places', 'progress', 'travel']);
     expect((await build('chunked', true)).capabilities)
-      .toEqual(['banks', 'chunkDetails', 'chunkEntries', 'freeAreas', 'frontier', 'places', 'progress', 'travel']);
+      .toEqual(['banks', 'chunkDetails', 'chunkEntries', 'detection', 'freeAreas', 'frontier', 'places', 'progress', 'travel']);
   });
 
   it('leaves out the sections that need chunk data when it did not load', async () => {
-    expect((await build('vanilla', false)).capabilities).toEqual(['freeAreas', 'progress']);
-    expect((await build('chunked', false)).capabilities).toEqual(['freeAreas', 'frontier', 'progress']);
+    // The detection tables need no chunk data either.
+    expect((await build('vanilla', false)).capabilities).toEqual(['detection', 'freeAreas', 'progress']);
+    expect((await build('chunked', false)).capabilities).toEqual(['detection', 'freeAreas', 'frontier', 'progress']);
   });
 });
 

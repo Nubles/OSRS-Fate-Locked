@@ -364,6 +364,8 @@ export type Action =
       progress: DetectedProgress;
       rollResult: PreparedRollResult;
       expected: DetectedEventIdentity;
+      /** The run's revision when the roll was prepared: it lands only on that state. */
+      preparedRevision: number;
       skillChaos?: {
         chaosKeysAwarded: number;
         guaranteedChaosKeysAwarded: number;
@@ -544,13 +546,17 @@ export function prepareKeyRollAction(
   };
 }
 
+// Whether a detected event still belongs to this run. Every roll raises the
+// run's revision, so an event from an earlier revision stays this run's: the
+// classifier checked it against the run as it is now. A run linked to a
+// character takes only that character's events; an unlinked run takes any.
 export const detectedEventIdentityMatches = (
   state: Pick<GameState, 'runId' | 'runRevision' | 'linkedAccount'>,
   expected: DetectedEventIdentity,
-): boolean => Boolean(state.linkedAccount)
-  && state.runId === expected.runId
-  && state.runRevision === expected.runRevision
-  && normalizeAccountName(state.linkedAccount!) === normalizeAccountName(expected.account);
+): boolean => state.runId === expected.runId
+  && expected.runRevision <= state.runRevision
+  && (!state.linkedAccount
+    || normalizeAccountName(state.linkedAccount) === normalizeAccountName(expected.account));
 
 export const prepareDetectedEventAcceptanceAction = (
   state: GameState,
@@ -582,7 +588,10 @@ export const prepareDetectedEventAcceptanceAction = (
     ? prepareKeyRollAction(state, intent.source, intent.threshold, intent.failureFate, nextDice, undefined, undefined, rollMeta, intent.context)
     : prepareKeyRollAction(state, intent.source, intent.threshold, intent.failureFate, nextDice, undefined, undefined, rollMeta);
   if (!rollAction) throw new Error('This boss has no Standard Keys left to award.');
-  return { type: 'ACCEPT_DETECTED_EVENT', payload: { progress, rollResult: rollAction.payload, expected, skillChaos } };
+  return {
+    type: 'ACCEPT_DETECTED_EVENT',
+    payload: { progress, rollResult: rollAction.payload, expected, preparedRevision: state.runRevision, skillChaos },
+  };
 };
 
 export const prepareCATaskCompletionActions = (
@@ -839,6 +848,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     }
 
     case 'ACCEPT_DETECTED_EVENT': {
+      // The roll was prepared from one state of the run; anything since
+      // (another roll, a manual log) makes it stale.
+      if (state.runRevision !== action.payload.preparedRevision) return state;
       if (!detectedEventIdentityMatches(state, action.payload.expected)) return state;
       const progress = action.payload.progress;
       if (progress.kind === 'COLLECTION_ITEM' && collectionItemNeedsIdentityReview(state.unlocks.collectionLog, progress.itemId, state.collectionLogIdentity)) return state;

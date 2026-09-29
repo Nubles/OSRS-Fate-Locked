@@ -45,12 +45,12 @@ const event = (
   contentVersion: 1,
   detectorId: {
     SKILL_LEVEL: 'skill-level-v1',
-    QUEST: 'quest-widget-v1',
+    QUEST: 'quest-state-v1',
     COMBAT_ACHIEVEMENT: 'combat-achievement-chat-v1',
     COLLECTION_LOG: 'collection-log-chat-v1',
-    CLUE_CASKET: 'clue-casket-loot-v1',
-    BOSS_KILL: 'boss-loot-v1',
-    RAID_COMPLETION: 'raid-loot-v1',
+    CLUE_CASKET: 'clue-completion-v1',
+    BOSS_KILL: 'boss-kill-count-v1',
+    RAID_COMPLETION: 'boss-kill-count-v1',
   }[eventType],
   detectorVersion: 1,
   confidence: 'EXACT',
@@ -138,14 +138,14 @@ describe('RollInbox', () => {
     ]);
   });
 
-  it('never exposes Roll for wrong-account or stale-run rows', async () => {
+  it("never exposes Roll for another character's row or a newer run's", async () => {
     setup(event('QUEST', 'Dragon Slayer I', { account: 'Other' }));
-    expect(await screen.findByText('Account does not match this run.')).toBeTruthy();
+    expect(await screen.findByText('This event is from another character.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /^Roll$/ })).toBeNull();
 
     cleanup();
-    setup(event('QUEST', 'Dragon Slayer I', { runRevision: 6 }));
-    expect(await screen.findByText('The run changed after this event was detected.')).toBeTruthy();
+    setup(event('QUEST', 'Dragon Slayer I', { runRevision: 8 }));
+    expect(await screen.findByText('The event was detected against a newer run state.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /^Roll$/ })).toBeNull();
   });
 
@@ -238,38 +238,34 @@ describe('RollInbox', () => {
     expect(refreshed.list()[0].state).toBe('COMPLETED');
   });
 
-  it('returns a persisted READY row to review after an unrelated revision change', async () => {
-    const storage = new MemoryStorage();
-    const store = createRollInboxStore(storage, 'run-1');
-    store.ingest([event()]);
-    store.transition('evt-1', 'READY');
+  it("keeps every row of a paste ready after a roll raises the run's revision", async () => {
+    const store = createRollInboxStore(new MemoryStorage(), 'run-1');
+    store.ingest([event(), event('QUEST', "Cook's Assistant", { eventId: 'evt-2' })]);
     const acceptDetectedEvent = vi.fn().mockReturnValue(true);
-    const acknowledge = vi.fn().mockResolvedValue(true);
     const first = gameState({ runRevision: 7 });
-    expect(classifyRollInboxDriverRow(store.list()[0], { ...first, runRevision: 8 })).toMatchObject({
-      state: 'NEEDS_CONFIRMATION',
-      reason: 'The run changed after this event was detected.',
-    });
-    const view = render(
-      <RollInboxView store={store} game={{ state: first, acceptDetectedEvent }} acknowledge={acknowledge} />,
-    );
-    expect(await screen.findByRole('button', { name: /^Roll$/ })).toBeTruthy();
+    const view = render(<RollInboxView store={store} game={{ state: first, acceptDetectedEvent }} />);
+    const user = userEvent.setup();
+    await user.click((await screen.findAllByRole('button', { name: /^Roll$/ }))[0]);
 
-    view.rerender(
-      <RollInboxView
-        store={store}
-        game={{ state: { ...first, runRevision: 8 }, acceptDetectedEvent }}
-        acknowledge={acknowledge}
-      />,
-    );
+    // The roll raised the revision; the other row was detected before it.
+    const rolled = { ...first, runRevision: 8 };
+    view.rerender(<RollInboxView store={store} game={{ state: rolled, acceptDetectedEvent }} />);
+    const other = store.list().find((row) => row.event.eventId === 'evt-2')!;
+    expect(classifyRollInboxDriverRow(other, rolled).state).toBe('READY');
+    const remaining = await screen.findAllByRole('button', { name: /^Roll$/ });
+    expect(remaining).toHaveLength(1);
+    await user.click(remaining[0]);
 
-    expect(await screen.findByText('The run changed after this event was detected.')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /^Roll$/ })).toBeNull();
-    expect(store.list()[0].event.runRevision).toBe(7);
-    expect(acceptDetectedEvent).not.toHaveBeenCalled();
+    expect(acceptDetectedEvent).toHaveBeenCalledTimes(2);
+    expect(acceptDetectedEvent).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ fateEventId: 'evt-2' }),
+      expect.objectContaining({ runId: 'run-1', account: 'Nubles', runRevision: 7 }),
+    );
   });
 
-  it('does not roll, reconcile, complete, or acknowledge when live identity changes before click', async () => {
+  it('does not complete or acknowledge a row the run refuses at the click', async () => {
     const store = createRollInboxStore(new MemoryStorage(), 'run-1');
     store.ingest([event()]);
     let live = gameState();

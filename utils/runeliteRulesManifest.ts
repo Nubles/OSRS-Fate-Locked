@@ -20,6 +20,7 @@ import { runProgress, type RunProgress } from './runProgress';
 import { slayerDecisions, slayerLocate, type SlayerDecision, type SlayerLocationSource } from './slayerDecisions';
 import { slayerReachability } from './slayerReach';
 import { travelDecisions, type TravelMethodDecision } from './travelDecisions';
+import type { RulesDetection } from './runeliteDetection';
 import {
   buildChunkPermissionSnapshot,
   type ChunkPermissionSnapshot,
@@ -31,7 +32,8 @@ import type { EntityAccessSource } from './entityAccess';
 import type { EquipmentPermissionCoverage } from '../data/equipmentCatalogue';
 const RULES_VERSION = '1';
 const CONTENT_VERSION = 1;
-const DETECTOR_CONTRACT_VERSION = 1;
+// 2 since Stage 4: rules.detection names bosses, quests and diary tiers.
+const DETECTOR_CONTRACT_VERSION = 2;
 
 /**
  * The Stage 2 sections, each named by the capability that says a bundle
@@ -41,7 +43,7 @@ const DETECTOR_CONTRACT_VERSION = 1;
  * whose capability it knows.
  */
 export const RULES_CAPABILITIES = [
-  'banks', 'chunkDetails', 'chunkEntries', 'freeAreas', 'frontier', 'places', 'progress', 'slayerTasks', 'travel',
+  'banks', 'chunkDetails', 'chunkEntries', 'detection', 'freeAreas', 'frontier', 'places', 'progress', 'slayerTasks', 'travel',
 ] as const;
 export type RulesCapability = typeof RULES_CAPABILITIES[number];
 
@@ -97,6 +99,8 @@ export interface RuneliteRulesManifest {
   slayerTasks?: Record<string, SlayerDecision>;
   /** Stage 2: each travel method by id, with each option's decision for the run. Sent with chunkEntries. */
   travel?: Record<string, TravelMethodDecision>;
+  /** Stage 4: the app's ids for what RuneLite notices: bosses by kill-count name, quests and diary tiers. */
+  detection?: RulesDetection;
   /** The Stage 2 sections this bundle has, by capability. */
   capabilities?: RulesCapability[];
 }
@@ -226,11 +230,14 @@ export async function buildRuneliteRulesManifest(
     : {};
 
   const unlocks = input.unlocks;
+  // Like the travel table, the detection names load only here, at export time.
+  const { rulesDetection } = await import('./runeliteDetection');
   const sections = {
     ...stage2,
     ...chunked,
     freeAreas: freeAreasFor(input.run.gameModeId, input.run.customMode),
     progress: runProgress(input.unlocks, input.run.gameModeId),
+    detection: rulesDetection(),
   };
   const capabilities = RULES_CAPABILITIES.filter((capability) => (capability === 'chunkDetails'
     ? Object.keys(chunks).length > 0

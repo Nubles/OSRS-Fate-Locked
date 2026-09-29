@@ -2556,6 +2556,27 @@ describe('detected progress reconciliation', () => {
     expect(next.history).toHaveLength(0);
   });
 
+  it('accepts an event detected at an earlier revision, and one for a run with no linked character', () => {
+    const prepared = (state: ReturnType<typeof start>, runRevision: number) =>
+      prepareDetectedEventAcceptanceAction(
+        state,
+        { kind: 'QUEST', questId: 'Dragon Slayer I' },
+        { source: 'Quest (Experienced)', threshold: 75, failureFate: 2, target: 'Dragon Slayer I' },
+        () => 999,
+        { fateEventId: `evt-${runRevision}` },
+        { runId: 'run-1', account: 'Nubles', runRevision },
+      );
+    // Another roll since the paste raised the revision; the event is still this run's.
+    const linked = { ...start(), runId: 'run-1', runRevision: 12, linkedAccount: 'Nubles' };
+    expect(gameReducerForTest(linked, prepared(linked, 9)).unlocks.quests).toContain('Dragon Slayer I');
+
+    const unlinked = { ...start(), runId: 'run-1', runRevision: 3, linkedAccount: undefined };
+    expect(gameReducerForTest(unlinked, prepared(unlinked, 3)).unlocks.quests).toContain('Dragon Slayer I');
+
+    // An event can't come from a revision the run hasn't reached.
+    expect(gameReducerForTest(linked, prepared(linked, 13))).toBe(linked);
+  });
+
   it('reconciles diary task IDs as completed tasks, not completed tiers', () => {
     const next = gameReducerForTest(start(), {
       type: 'SYNC_DETECTED_PROGRESS',
