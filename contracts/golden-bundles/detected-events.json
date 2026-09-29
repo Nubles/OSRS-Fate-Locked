@@ -7,9 +7,9 @@
     "levels": "Real skill levels read at login or when the plugin starts: the baseline.",
     "level": "A skill's real level after a StatChanged.",
     "quests": "Every quest the game says is finished, by RuneLite's quest name. The first reading is the baseline.",
-    "varbits": "A full reading of the diary varbits, by id: the baseline.",
+    "varbits": "A full reading of the varbits the detectors read, by id: the diary tiers (the baseline) and the collection log's notification setting (11959).",
     "varbit": "One varbit's new value.",
-    "slayer": "The Slayer task as the game's variables give it: the task's name from the game's task table, the amount left and the amount assigned, the master's value and the task streak."
+    "slayer": "The Slayer task as the game's variables give it: the task's name from the game's task table, the amount left and the amount assigned, the master's value, the task streak for that master, and whether it's a boss task (bossTask, false when absent)."
   },
   "events": "Each event names its type, label, confidence, detector and version, and evidence exactly. The app's verdict is READY or NEEDS_CONFIRMATION; firstCandidate is the choice a review starts on.",
   "run": "The app classifies against a Vanilla run for Iron Example with every skill unlocked at level 1 and every boss unlocked, plus the case's given unlocks.",
@@ -169,6 +169,30 @@
       ]
     },
     {
+      "id": "collection-log-popup-shown",
+      "about": "With the game's collection log notification set to anything but chat only (varbit 11959 other than 1, as RuneLite's Screenshot plugin reads it), the popup stands for the item: RuneLite ScreenshotPluginTest's real line and popup record it once.",
+      "signals": [
+        { "kind": "varbits", "values": { "11959": 3 } },
+        { "kind": "chat", "type": "GAMEMESSAGE", "message": "New item added to your collection log: <col=ef1020>Chompy bird hat</col>" },
+        { "kind": "popup", "title": "Collection log", "text": "New item:<br><br><col=ffffff>Chompy bird hat</col>" }
+      ],
+      "events": [
+        { "eventType": "COLLECTION_LOG", "canonicalLabel": "Chompy bird hat", "confidence": "EXACT", "detectorId": "collection-log-chat-v1", "detectorVersion": 2, "evidence": { "from": "popup" }, "web": { "verdict": "NEEDS_CONFIRMATION" } }
+      ]
+    },
+    {
+      "id": "collection-log-same-name-twice",
+      "about": "Two chompy bird hats are two items the game names alike: each is an event, and the app asks which.",
+      "signals": [
+        { "kind": "chat", "type": "GAMEMESSAGE", "message": "New item added to your collection log: <col=ef1020>Chompy bird hat</col>" },
+        { "kind": "chat", "type": "GAMEMESSAGE", "message": "New item added to your collection log: <col=ef1020>Chompy bird hat</col>" }
+      ],
+      "events": [
+        { "eventType": "COLLECTION_LOG", "canonicalLabel": "Chompy bird hat", "confidence": "EXACT", "detectorId": "collection-log-chat-v1", "detectorVersion": 2, "evidence": { "from": "chat" }, "web": { "verdict": "NEEDS_CONFIRMATION" } },
+        { "eventType": "COLLECTION_LOG", "canonicalLabel": "Chompy bird hat", "confidence": "EXACT", "detectorId": "collection-log-chat-v1", "detectorVersion": 2, "evidence": { "from": "chat" }, "web": { "verdict": "NEEDS_CONFIRMATION" } }
+      ]
+    },
+    {
       "id": "clue-first",
       "about": "RuneLite LootTrackerPluginTest's real line for a first clue.",
       "signals": [
@@ -247,6 +271,16 @@
       ]
     },
     {
+      "id": "boss-completion-count-for",
+      "about": "RuneLite ChatCommandsPluginTest's real line: \"completion count for\" comes before the name, and no \"count\" after it.",
+      "signals": [
+        { "kind": "chat", "type": "GAMEMESSAGE", "message": "Your completion count for TzHaar-Ket-Rak's First Challenge is: <col=ff0000>3</col>." }
+      ],
+      "events": [
+        { "eventType": "BOSS_KILL", "canonicalLabel": "TzHaar-Ket-Rak's Challenges", "confidence": "EXACT", "detectorId": "boss-kill-count-v1", "detectorVersion": 1, "evidence": { "killCountName": "TzHaar-Ket-Rak's First Challenge", "count": 3 }, "web": { "verdict": "READY" } }
+      ]
+    },
+    {
       "id": "raid-completions",
       "about": "RuneLite ChatCommandsPluginTest's and ScreenshotPluginTest's real raid lines, every mode.",
       "signals": [
@@ -316,6 +350,38 @@
       "events": []
     },
     {
+      "id": "slayer-streak-after-amount",
+      "about": "The amount and the streak can change in separate readings: the task completes once both have.",
+      "signals": [
+        { "kind": "slayer", "task": "Abyssal demons", "amount": 1, "assigned": 120, "master": 7, "streak": 43 },
+        { "kind": "slayer", "task": "Abyssal demons", "amount": 0, "assigned": 120, "master": 7, "streak": 43 },
+        { "kind": "slayer", "task": "Abyssal demons", "amount": 0, "assigned": 120, "master": 7, "streak": 44 }
+      ],
+      "events": [
+        { "eventType": "SLAYER_TASK", "canonicalLabel": "Abyssal demons", "confidence": "UNCERTAIN", "detectorId": "slayer-task-varp-v1", "detectorVersion": 1, "evidence": { "master": "Krystilia", "assigned": 120, "streak": 44 }, "web": { "verdict": "NEEDS_CONFIRMATION", "firstCandidate": "Slayer (Krystilia)" } }
+      ]
+    },
+    {
+      "id": "slayer-master-changes",
+      "about": "A streak read for another master is another task's: the next task's master arriving first is no completion.",
+      "signals": [
+        { "kind": "slayer", "task": "Abyssal demons", "amount": 5, "assigned": 120, "master": 7, "streak": 43 },
+        { "kind": "slayer", "task": "Abyssal demons", "amount": 0, "assigned": 120, "master": 9, "streak": 500 }
+      ],
+      "events": []
+    },
+    {
+      "id": "slayer-boss-task",
+      "about": "A boss task (the game's task 98) says so, and the app starts on the boss task roll.",
+      "signals": [
+        { "kind": "slayer", "task": "Vorkath", "amount": 3, "assigned": 5, "master": 9, "streak": 10, "bossTask": true },
+        { "kind": "slayer", "task": "Vorkath", "amount": 0, "assigned": 5, "master": 9, "streak": 11, "bossTask": true }
+      ],
+      "events": [
+        { "eventType": "SLAYER_TASK", "canonicalLabel": "Vorkath", "confidence": "UNCERTAIN", "detectorId": "slayer-task-varp-v1", "detectorVersion": 1, "evidence": { "assigned": 5, "streak": 11, "bossTask": true }, "web": { "verdict": "NEEDS_CONFIRMATION", "firstCandidate": "Slayer (Boss Task)" } }
+      ]
+    },
+    {
       "id": "diary-tier-finished",
       "about": "Varbit 4479 (VARROCK_DIARY_EASY_COMPLETE) turns 1 after a baseline of 0.",
       "signals": [
@@ -343,6 +409,27 @@
       "signals": [
         { "kind": "varbits", "values": { "4479": 1 } },
         { "kind": "varbit", "id": 4479, "value": 1 }
+      ],
+      "events": []
+    },
+    {
+      "id": "diary-karamja-done-at-two",
+      "about": "Karamja's easy, medium and hard varbits (3578, 3599 and 3611) are 1 once started and 2 once done, as the OSRS Wiki gives them; every other tier's is 1 once done.",
+      "signals": [
+        { "kind": "varbits", "values": { "3578": 0 } },
+        { "kind": "varbit", "id": 3578, "value": 1 },
+        { "kind": "varbit", "id": 3578, "value": 2 }
+      ],
+      "events": [
+        { "eventType": "DIARY_TASK", "canonicalLabel": "Karamja Easy", "confidence": "UNCERTAIN", "detectorId": "diary-task-v1", "detectorVersion": 2, "evidence": { "tierId": "Karamja Easy", "previous": 1, "completed": 2 }, "web": { "verdict": "NEEDS_CONFIRMATION" } }
+      ]
+    },
+    {
+      "id": "diary-change-before-reading",
+      "about": "A change before the full reading is the login's own tiers arriving from the server, not a tier done now.",
+      "signals": [
+        { "kind": "varbit", "id": 4479, "value": 1 },
+        { "kind": "varbits", "values": { "4479": 1 } }
       ],
       "events": []
     }
