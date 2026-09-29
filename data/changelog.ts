@@ -19,6 +19,20 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-29-paste-from-runelite',
+    title: 'Paste from RuneLite',
+    date: '2026-09-29',
+    sections: {
+      added: [
+        'The Roll Inbox has a Paste from RuneLite button. In RuneLite, choose Copy for tracker in the Roll inbox card, then paste here: the inbox says what it added, and nothing rolls until you choose Roll.',
+        'A run not linked to a character takes a paste from whoever copied it, and each row says whose it is.',
+      ],
+      changed: [
+        'Logging by hand, rolling and spending Keys are unchanged. Skip any row you’ve already logged by hand.',
+      ],
+    },
+  },
+  {
     id: '2026-09-29-roll-inbox-groundwork',
     title: 'Groundwork for RuneLite’s Roll Inbox',
     date: '2026-09-29',

@@ -20,7 +20,19 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-29-roll-inbox-groundwork');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-29-paste-from-runelite');
+  });
+
+  it('announces Paste from RuneLite, and that manual play is unchanged', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-29-paste-from-runelite');
+    expect(release?.title).toBe('Paste from RuneLite');
+    expect(release?.sections.added).toEqual([
+      expect.stringMatching(/Paste from RuneLite button.*Copy for tracker in the Roll inbox card.*nothing rolls until you choose Roll/),
+      expect.stringMatching(/not linked to a character.*each row says whose it is/),
+    ]);
+    expect(release?.sections.changed).toEqual([
+      expect.stringMatching(/Logging by hand, rolling and spending Keys are unchanged/),
+    ]);
   });
 
   it('announces the groundwork for RuneLite’s Roll Inbox, and that manual play is unchanged', () => {
