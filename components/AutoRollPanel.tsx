@@ -4,7 +4,17 @@ import { Sparkles, Dice5 } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { RollInbox } from './RollInbox';
 import { RuneLiteOnboarding } from './RuneLiteOnboarding';
+import { WikiIcon } from './WikiIcon';
 import { SKILLS_LIST } from '../data/items';
+import {
+  GROUP_IRON_TITLES,
+  GROUP_TITLES,
+  accountTitle,
+  readGroupIronTitle,
+  saveGroupIronTitle,
+  type AccountTitle,
+  type GroupIronTitle,
+} from '../utils/accountTitle';
 
 /**
  * Auto-Roll (PROTOTYPE)
@@ -32,14 +42,15 @@ const womMetric = (skill: string) =>
   skill === 'Runecraft' ? 'runecrafting' : skill.toLowerCase();
 
 interface FetchedSkill { skill: string; level: number }
-/** WiseOldMan account `type` → a friendly label. GIM isn't distinguishable from
- *  the player type (WOM reports it as ironman/hardcore), so it's not listed. */
-const ACCOUNT_TYPE_LABEL: Record<string, string> = {
-  ultimate: 'Ultimate Ironman',
-  hardcore: 'Hardcore Ironman',
-  ironman: 'Ironman',
-  regular: 'Regular',
-  unknown: 'Unknown',
+
+// Each title's pill, in the colours of its in-game badge.
+const TITLE_TONE: Record<AccountTitle['tone'], string> = {
+  ultimate: 'bg-sky-500/15 border-sky-500/40 text-sky-300',
+  hardcore: 'bg-red-500/15 border-red-500/40 text-red-300',
+  ironman: 'bg-gray-400/15 border-gray-400/40 text-gray-300',
+  group: 'bg-blue-500/15 border-blue-400/40 text-blue-300',
+  unranked: 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300',
+  regular: 'bg-amber-500/15 border-amber-500/40 text-amber-300',
 };
 
 interface Fetched {
@@ -88,6 +99,15 @@ export function AutoRollPanel() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'loaded'>('idle');
   const [error, setError] = useState('');
   const [fetched, setFetched] = useState<Fetched | null>(null);
+  // Wise Old Man calls a group iron a regular account, so a group iron picks their title.
+  const [groupTitle, setGroupTitle] = useState<GroupIronTitle | null>(null);
+  useEffect(() => { setGroupTitle(fetched ? readGroupIronTitle(fetched.displayName) : null); }, [fetched]);
+  const chooseGroupTitle = useCallback((title: GroupIronTitle | null) => {
+    if (!fetched) return;
+    saveGroupIronTitle(fetched.displayName, title);
+    setGroupTitle(title);
+  }, [fetched]);
+  const title = fetched ? accountTitle(fetched.accountType, groupTitle) : null;
   const [rolledTo, setRolledTo] = useState(0); // how many skills the roll animation has revealed
   const [applied, setApplied] = useState(false);
   const [skillRolling, setSkillRolling] = useState(false);
@@ -265,20 +285,48 @@ export function AutoRollPanel() {
             <div>
               <div className="text-base font-bold text-white flex items-center gap-2">
                 {fetched.displayName}
-                <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${
-                  fetched.accountType === 'ultimate' ? 'bg-sky-500/15 border-sky-500/40 text-sky-300'
-                  : fetched.accountType === 'hardcore' ? 'bg-red-500/15 border-red-500/40 text-red-300'
-                  : fetched.accountType === 'ironman' ? 'bg-gray-400/15 border-gray-400/40 text-gray-300'
-                  : 'bg-amber-500/15 border-amber-500/40 text-amber-300'}`}>
-                  {ACCOUNT_TYPE_LABEL[fetched.accountType] ?? 'Unknown'}
-                </span>
+                {title && (
+                  <span
+                    data-account-title={title.label}
+                    className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${TITLE_TONE[title.tone]}`}
+                  >
+                    {title.badge && <WikiIcon file={title.badge} alt="" size={11} />}
+                    {title.label}
+                  </span>
+                )}
               </div>
               <div className="text-[11px] text-gray-500">
                 Total level <span className="text-gray-300 font-mono">{fetched.totalLevel}</span>
                 {fetched.combatLevel != null && <> · Combat <span className="text-gray-300 font-mono">{fetched.combatLevel}</span></>}
               </div>
-              {fetched.accountType === 'regular' && (
-                <div className="text-[10px] text-amber-400/90 mt-0.5">⚠ Not an ironman account on the hiscores.</div>
+              {fetched.accountType === 'regular' && !groupTitle && (
+                <div className="mt-1 space-y-1">
+                  <div className="text-[10px] text-amber-400/90 flex items-center gap-1">
+                    <AlertTriangle size={10} className="shrink-0" />
+                    Not on the ironman hiscores. Wise Old Man lists group irons as regular accounts, so pick yours if you're one:
+                  </div>
+                  <div className="flex flex-wrap gap-1" role="group" aria-label="Group ironman title">
+                    {GROUP_IRON_TITLES.map((choice) => (
+                      <button
+                        key={choice}
+                        type="button"
+                        onClick={() => chooseGroupTitle(choice)}
+                        className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded border border-white/15 bg-white/5 text-gray-200 hover:bg-white/10"
+                      >
+                        <WikiIcon file={GROUP_TITLES[choice].badge!} alt="" size={11} />
+                        {GROUP_TITLES[choice].label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {fetched.accountType === 'regular' && groupTitle && (
+                <div className="text-[10px] text-gray-500 mt-0.5">
+                  Your group title: Wise Old Man can't tell group irons apart.{' '}
+                  <button type="button" onClick={() => chooseGroupTitle(null)} className="text-gray-400 underline hover:text-gray-200">
+                    Change
+                  </button>
+                </div>
               )}
             </div>
             <div className="flex-1" />
