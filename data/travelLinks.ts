@@ -3,11 +3,16 @@
  * public/chunk-content.json, from the Chunk Picker), which joins places
  * through teleport networks as if they were tunnels and has no boats.
  * utils/travelReach.ts reads the graph with both:
- * - A travel network's nodes are closed until the run has what opens it. The
- *   fairy rings need Fairy Rings, for example, and a respawn or a crop circle
+ * - A travel network's nodes are closed until the run has what opens it: its
+ *   unlock and the quests it needs. The fairy rings need Fairy Rings,
+ *   Fairytale I and a staff, for example, and a respawn or a crop circle
  *   never makes a route: without this, Lumbridge "reached" Brimhaven through
  *   Zanaris and Kourend Castle through Death's Office (a player's report,
- *   29 Sept 2026).
+ *   29 Sept 2026). A stop with a quest of its own, such as Ape Atoll's ring,
+ *   is left off the network until that quest is done.
+ * - A quest the player need only have started, as the Keldagrim mine carts
+ *   want of The Giant Dwarf, is never assumed missing: the app records only
+ *   finished quests, and the Journal asks for a start like that by hand.
  * - Boats the graph leaves out join their docks, once the run has any quest
  *   each needs. Coins, and the items a crew turns away, are never assumed
  *   either way, as with the Diary tasks' own item checks.
@@ -18,10 +23,21 @@
  * against.
  */
 
-export type NetworkOpener =
-  | { mobility: string }
-  | { housing: string }
-  | { quest: string };
+/** One way to open a network: all of it together. */
+export interface NetworkOpener {
+  mobility?: string;
+  housing?: string;
+  /** Finished quests. */
+  quests?: readonly string[];
+  /** A weapon this tier or better, unless this diary is done (the fairy rings' staff). */
+  weapon?: { tier: number; unlessDiary?: string };
+}
+
+/** A stop the network reaches only once these quests are done. */
+export interface NetworkStop {
+  node: string;
+  quests: readonly string[];
+}
 
 export interface TravelNetwork {
   label: string;
@@ -29,6 +45,7 @@ export interface TravelNetwork {
   nodes: readonly string[];
   /** Any one of these opens it; none means it never makes a route. */
   opensWith: readonly NetworkOpener[];
+  stops?: readonly NetworkStop[];
   source: string;
 }
 
@@ -46,10 +63,25 @@ const wiki = (page: string, oldid: number) =>
 
 export const TRAVEL_NETWORKS: readonly TravelNetwork[] = [
   {
-    // The Zanaris hub and its interior chunk link every ring the graph knows.
+    // The Zanaris hub and its interior chunk link every ring the graph knows. The rings open partway
+    // through Fairytale II, which the app can't see, and Fairytale I must be done; a dramen or lunar
+    // staff is needed, as the Diary's own fairy ring route has it (data/areaAccess.ts).
     label: 'Fairy rings',
     nodes: ['Zanaris', '37,69'],
-    opensWith: [{ mobility: 'Fairy Rings' }],
+    opensWith: [{
+      mobility: 'Fairy Rings',
+      quests: ['Fairytale I - Growing Pains'],
+      weapon: { tier: 1, unlessDiary: 'Lumbridge Elite' },
+    }],
+    // AIS, AJP and CKQ; BJS; CIP; CLR.
+    stops: [
+      { node: '22,51', quests: ['Children of the Sun'] },
+      { node: '25,47', quests: ['Children of the Sun'] },
+      { node: '21,45', quests: ['Children of the Sun'] },
+      { node: '33,47', quests: ['Regicide'] },
+      { node: '39,60', quests: ['The Fremennik Trials'] },
+      { node: '42,42', quests: ['Monkey Madness I'] },
+    ],
     source: wiki('Fairy ring', 15345150),
   },
   {
@@ -83,27 +115,28 @@ export const TRAVEL_NETWORKS: readonly TravelNetwork[] = [
   {
     label: 'The Abyss',
     nodes: ['Abyss', '47,74', '47,75'],
-    opensWith: [{ quest: 'Enter the Abyss' }],
+    opensWith: [{ quests: ['Enter the Abyss'] }],
     source: wiki('Abyss', 15228428),
   },
   {
     // The eyrie in Eagles' Peak (31,77) links the desert, jungle and polar lairs.
     label: 'Eagle transport',
     nodes: ['31,77', 'Desert eagle lair', 'Jungle eagle lair', 'Polar eagle lair'],
-    opensWith: [{ mobility: 'Eagle Transport' }],
+    opensWith: [{ mobility: 'Eagle Transport', quests: ["Eagles' Peak"] }],
     source: wiki('Eagle transport system', 15212928),
   },
   {
+    // The carts want The Giant Dwarf started, which the app can't see.
     label: 'Keldagrim mine carts',
     nodes: ['Keldagrim'],
     opensWith: [{ mobility: 'Mine Carts' }],
-    source: wiki('Mine cart', 14761664),
+    source: wiki('Keldagrim minecart system', 15323246),
   },
   {
     // Auguste's flight (28,76) links Entrana with the other launch sites.
     label: 'Balloons',
     nodes: ['28,76'],
-    opensWith: [{ mobility: 'Balloon Transport' }],
+    opensWith: [{ mobility: 'Balloon Transport', quests: ['Enlightened Journey'] }],
     source: wiki('Balloon transport system', 15356815),
   },
 ];

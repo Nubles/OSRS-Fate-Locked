@@ -23,10 +23,15 @@ export const graphNode = (node: string): string => {
   return match ? String(Number(match[1]) * 256 + Number(match[2])) : node;
 };
 
+const done = (quests: readonly string[] | undefined, unlocks: UnlockState): boolean =>
+  (quests ?? []).every(quest => (unlocks.quests ?? []).includes(quest));
+
 const opens = (opener: NetworkOpener, unlocks: UnlockState): boolean =>
-  'mobility' in opener ? (unlocks.mobility ?? []).includes(opener.mobility)
-    : 'housing' in opener ? (unlocks.housing ?? []).includes(opener.housing)
-      : (unlocks.quests ?? []).includes(opener.quest);
+  (opener.mobility === undefined || (unlocks.mobility ?? []).includes(opener.mobility)) &&
+  (opener.housing === undefined || (unlocks.housing ?? []).includes(opener.housing)) &&
+  done(opener.quests, unlocks) &&
+  (opener.weapon === undefined || (unlocks.equipment?.Weapon ?? 0) >= opener.weapon.tier ||
+    (opener.weapon.unlessDiary !== undefined && (unlocks.diaries ?? []).includes(opener.weapon.unlessDiary)));
 
 /** The nodes of every travel network this run can't use yet. */
 export function closedTravelNodes(unlocks: UnlockState): ReadonlySet<string> {
@@ -38,18 +43,25 @@ export function closedTravelNodes(unlocks: UnlockState): ReadonlySet<string> {
   return closed;
 }
 
-// The graph with the crossings open to a run, one per graph and set of crossings.
-const withCrossings = new WeakMap<Graph, Map<string, Graph>>();
+// The graph as a run sees it, one per graph and set of boats and closed stops.
+const forRuns = new WeakMap<Graph, Map<string, Graph>>();
 
-/** The route graph with the boats this run can take. */
+/** The route graph with the boats this run can take, and without the network stops it can't use yet. */
 export function routeGraph(connect: Graph, unlocks: UnlockState): Graph {
-  const open = BOAT_CROSSINGS.filter(crossing => (crossing.quests ?? []).every(quest => (unlocks.quests ?? []).includes(quest)));
-  const key = open.map(crossing => crossing.label).join('\n');
-  let cache = withCrossings.get(connect);
-  if (!cache) withCrossings.set(connect, cache = new Map());
+  const open = BOAT_CROSSINGS.filter(crossing => done(crossing.quests, unlocks));
+  const shut = TRAVEL_NETWORKS.flatMap(network => (network.stops ?? [])
+    .filter(stop => !done(stop.quests, unlocks))
+    .map(stop => ({ nodes: network.nodes.map(graphNode), stop: graphNode(stop.node) })));
+  const key = [...open.map(crossing => crossing.label), ...shut.map(({ stop }) => stop)].join('\n');
+  let cache = forRuns.get(connect);
+  if (!cache) forRuns.set(connect, cache = new Map());
   const cached = cache.get(key);
   if (cached) return cached;
   const graph: Graph = { ...connect };
+  for (const { nodes, stop } of shut) {
+    for (const node of nodes) graph[node] = (graph[node] ?? []).filter(next => next !== stop);
+    graph[stop] = (graph[stop] ?? []).filter(next => !nodes.includes(next));
+  }
   for (const crossing of open) {
     const docks = crossing.docks.map(graphNode);
     for (const dock of docks) {

@@ -27,7 +27,7 @@ describe('authored changelog releases', () => {
     const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-29-stranded-areas');
     expect(release?.title).toBe('Places You Can’t Reach Yet');
     expect(release?.sections.fixed).toEqual([
-      expect.stringMatching(/Diary Journal no longer calls a task doable.*Fairy rings.*once you’ve unlocked them.*boats to Great Kourend, Entrana and Brimhaven/),
+      expect.stringMatching(/Diary Journal no longer calls a task doable.*Fairy rings.*once you’ve unlocked them and done the quests they need.*Fairytale I and a staff.*boats to Great Kourend, Entrana and Brimhaven/),
       expect.stringMatching(/Quest Log says “No route to”.*complete it by hand/),
       expect.stringMatching(/^12 Diary tasks now name the area the game has them in/),
     ]);

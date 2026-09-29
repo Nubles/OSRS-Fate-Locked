@@ -3,6 +3,7 @@ import content from '../public/chunk-content.json';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { MOBILITY_LIST, POH_LIST } from '../data/items';
+import { DIARY_DATA } from '../data/diaryData';
 import { QUEST_DATA } from '../data/questData';
 import { BOAT_CROSSINGS, TRAVEL_NETWORKS } from '../data/travelLinks';
 import { AREA_ENTRY_ROUTES } from '../data/areaAccess';
@@ -41,9 +42,16 @@ describe('the reviewed travel links', () => {
         expect(ownable.has(graphNode(node)), `${network.label}: ${node} is land a run owns`).toBe(false);
       }
       for (const opener of network.opensWith) {
-        if ('mobility' in opener) expect(MOBILITY_LIST).toContain(opener.mobility);
-        else if ('housing' in opener) expect(POH_LIST).toContain(opener.housing);
-        else expect(QUEST_DATA[opener.quest], opener.quest).toBeDefined();
+        if (opener.mobility !== undefined) expect(MOBILITY_LIST).toContain(opener.mobility);
+        if (opener.housing !== undefined) expect(POH_LIST).toContain(opener.housing);
+        for (const quest of opener.quests ?? []) expect(QUEST_DATA[quest], quest).toBeDefined();
+        if (opener.weapon?.unlessDiary !== undefined) {
+          expect(Object.keys(DIARY_DATA), opener.weapon.unlessDiary).toContain(opener.weapon.unlessDiary);
+        }
+      }
+      for (const stop of network.stops ?? []) {
+        expect(ownable.has(graphNode(stop.node)), `${network.label}: ${stop.node}`).toBe(true);
+        for (const quest of stop.quests) expect(QUEST_DATA[quest], quest).toBeDefined();
       }
     }
     for (const crossing of BOAT_CROSSINGS) {
@@ -54,10 +62,23 @@ describe('the reviewed travel links', () => {
     }
   });
 
-  it('close a network until the run has any one thing that opens it', () => {
+  it('close a network until the run has everything one way to open it needs', () => {
     const zanaris = [graphNode('Zanaris'), graphNode('37,69')];
-    expect([...closedTravelNodes(run())]).toEqual(expect.arrayContaining(zanaris));
-    expect([...closedTravelNodes(run({ mobility: ['Fairy Rings'] }))]).not.toEqual(expect.arrayContaining(zanaris));
+    const isShut = (unlocks: UnlockState) => zanaris.every(node => closedTravelNodes(unlocks).has(node));
+    expect(isShut(run())).toBe(true);
+    // Fairy rings need the unlock, Fairytale I, and a staff or the Lumbridge Elite diary.
+    const rings = { mobility: ['Fairy Rings'], quests: ['Fairytale I - Growing Pains'] };
+    expect(isShut(run({ mobility: ['Fairy Rings'] }))).toBe(true);
+    expect(isShut(run({ ...rings }))).toBe(true);
+    expect(isShut(run({ ...rings, equipment: { Weapon: 1 } }))).toBe(false);
+    expect(isShut(run({ ...rings, diaries: ['Lumbridge Elite'] }))).toBe(false);
+    expect(isShut(run({ quests: ['Fairytale I - Growing Pains'], equipment: { Weapon: 1 } }))).toBe(true);
+
+    expect(closedTravelNodes(run({ mobility: ['Eagle Transport'] })).has(graphNode('31,77'))).toBe(true);
+    expect(closedTravelNodes(run({ mobility: ['Eagle Transport'], quests: ["Eagles' Peak"] })).has(graphNode('31,77'))).toBe(false);
+    expect(closedTravelNodes(run({ mobility: ['Balloon Transport'] })).has(graphNode('28,76'))).toBe(true);
+    expect(closedTravelNodes(run({ mobility: ['Balloon Transport'], quests: ['Enlightened Journey'] })).has(graphNode('28,76')))
+      .toBe(false);
 
     const house = [graphNode('Player-owned house'), graphNode('28,89')];
     expect([...closedTravelNodes(run({ housing: ['Portal Chamber'] }))]).not.toEqual(expect.arrayContaining(house));
@@ -65,9 +86,19 @@ describe('the reviewed travel links', () => {
     expect([...closedTravelNodes(run({ housing: ['Jewellery Box'] }))]).toEqual(expect.arrayContaining(house));
     expect(closedTravelNodes(run({ quests: ['Enter the Abyss'] })).has(graphNode('Abyss'))).toBe(false);
 
-    const everything = run({ mobility: [...MOBILITY_LIST], housing: [...POH_LIST], quests: Object.keys(QUEST_DATA) });
+    const everything = run({
+      mobility: [...MOBILITY_LIST], housing: [...POH_LIST], quests: Object.keys(QUEST_DATA), equipment: { Weapon: 1 },
+    });
     expect([...closedTravelNodes(everything)].sort()).toEqual(
       [graphNode("Death's Office"), graphNode('49,89'), graphNode('Puro-Puro'), graphNode('40,67'), graphNode('45,75')].sort());
+  });
+
+  it('leave a ring off the network until its own quest is done', () => {
+    const ring = graphNode('33,47');
+    expect(connect[graphNode('37,69')]).toContain(ring);
+    expect(routeGraph(connect, run())[graphNode('37,69')]).not.toContain(ring);
+    expect(routeGraph(connect, run())[ring] ?? []).not.toContain(graphNode('37,69'));
+    expect(routeGraph(connect, run({ quests: ['Regicide'] }))[graphNode('37,69')]).toContain(ring);
   });
 
   it('join a boat’s docks both ways, once the run has its quests', () => {
@@ -94,9 +125,16 @@ describe('what is stranded', () => {
   });
 
   it('reaches them by a network the run has unlocked, or by a boat', () => {
-    const rings = stranded({ ...reported, mobility: ['Fairy Rings'] });
+    const fairyRings = { mobility: ['Fairy Rings'], quests: ['Fairytale I - Growing Pains'], equipment: { Weapon: 1 } };
+    const rings = stranded({ ...reported, ...fairyRings });
     expect(rings.has('Brimhaven')).toBe(false);
     expect(rings.has('Kourend Castle')).toBe(true);
+    // The unlock alone isn't enough: the rings need Fairytale I and a staff.
+    expect(stranded({ ...reported, mobility: ['Fairy Rings'] }).has('Brimhaven')).toBe(true);
+    // Zul-Andra's ring (BJS) needs Regicide as well.
+    expect(stranded(run({ regions: ['Zul-Andra'], ...fairyRings })).has('Zul-Andra')).toBe(true);
+    expect(stranded(run({ regions: ['Zul-Andra'], ...fairyRings, quests: [...fairyRings.quests, 'Regicide'] })).has('Zul-Andra'))
+      .toBe(false);
 
     // Captain Barnaby from Rimmington; the monks and Veos from Port Sarim.
     expect(stranded(run({ regions: ['Port Sarim', 'Rimmington', 'Brimhaven'] })).has('Brimhaven')).toBe(false);
