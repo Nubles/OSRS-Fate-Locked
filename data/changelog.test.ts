@@ -32,6 +32,7 @@ describe('authored changelog releases', () => {
       expect.stringMatching(/^12 Diary tasks now name the area the game has them in/),
       expect.stringMatching(/chunk no area covers.*nothing there to unlock/),
     ]);
+    expect(release?.sections.changed).toEqual([expect.stringMatching(/Rules page describes the challenge in plainer words/)]);
   });
 
   it('announces the groundwork for RuneLite’s Roll Inbox, and that manual play is unchanged', () => {
