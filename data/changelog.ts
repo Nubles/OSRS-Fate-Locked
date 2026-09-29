@@ -46,6 +46,19 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-09-29-group-ironman-titles',
+    title: 'Group Ironman Titles',
+    date: '2026-09-29',
+    sections: {
+      fixed: [
+        'Sync & Roll no longer calls a group ironman a regular account. Wise Old Man can’t tell group irons apart, so when it says Regular, a group iron can pick their title: Group, Hardcore Group or Unranked Group Ironman. The title is remembered for that character.',
+      ],
+      changed: [
+        'Every ironman title on Sync & Roll shows its in-game chat badge.',
+      ],
+    },
+  },
+  {
     id: '2026-09-28-runelite-guide-redesign',
     title: 'RuneLite Guide Redesigned',
     date: '2026-09-28',

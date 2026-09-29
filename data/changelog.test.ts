@@ -46,6 +46,15 @@ describe('authored changelog releases', () => {
     ]);
   });
 
+  it('announces group ironman titles', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-29-group-ironman-titles');
+    expect(release?.title).toBe('Group Ironman Titles');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/group ironman a regular account.*Wise Old Man can’t tell group irons apart.*says Regular.*Group, Hardcore Group or Unranked Group Ironman.*remembered for that character/),
+    ]);
+    expect(release?.sections.changed).toEqual([expect.stringMatching(/in-game chat badge/)]);
+  });
+
   it('announces the redesigned RuneLite guide', () => {
     const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-28-runelite-guide-redesign');
     expect(release?.title).toBe('RuneLite Guide Redesigned');
