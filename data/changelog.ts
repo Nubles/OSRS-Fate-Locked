@@ -19,6 +19,23 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-02-online-backup',
+    title: 'Online Backup Keeps Your Run Safe',
+    date: '2026-10-02',
+    sections: {
+      added: [
+        'Online backup, under Sync Code → Online, keeps an encrypted copy of your run on the Fate Locked relay, so clearing your browser’s data no longer loses it. It backs up as you play, and when you leave the page.',
+        'A backup code you keep is the only way to open the copy. Copy it or save it as a file when you turn backup on: nobody, the relay included, can read the copy or reset the code.',
+        'To get a run back, in this browser or any other, enter its backup code under Sync Code → Online → Restore a run.',
+        'If two browsers back up the same run, the copy one replaces is kept, and a restore offers both.',
+        'Once a run has some progress, the tracker asks once whether to turn online backup on. Not now means it won’t ask again.',
+      ],
+      changed: [
+        'The reminder to export a .fate file waits while online backup has a copy from the last week.',
+      ],
+    },
+  },
+  {
     id: '2026-10-02-plain-rules',
     title: 'Rules and Help Say What the Game Does',
     date: '2026-10-02',

@@ -79,6 +79,9 @@ that condition.
 | `POST` | `/r/<code>` | `{ token, gone: true }` → `{ version, gone: true }` | The owner marks the code gone: a tombstone replaces the profile for 90 days. Refused without the code's write token. |
 | `GET` | `/r/<code>` | `{ version, payload }` | RuneLite reads; supports `If-None-Match`. A gone code answers `404` with `{"gone":true}`. |
 
+The relay also keeps players' encrypted online backups under `/b/<id>`; see
+[online-backup.md](online-backup.md).
+
 The first browser write claims the record with a private token. The app
 persists that token in the pairing session so later profile revisions can
 replace the same record.
