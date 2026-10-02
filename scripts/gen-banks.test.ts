@@ -68,4 +68,16 @@ describe('bank source generator', () => {
       generateBankSource(doc, registry),
     )).toBe(true);
   });
+
+  it("gives the app the registry's access rules without its evidence, each location labelled by its name", () => {
+    const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
+    const registry = readBankLocationRegistry();
+    const labels = Object.fromEntries(buildBankDefinitions(doc, registry).map(def => [def.id, def.name]));
+    // utils/entityAccess.ts names a reviewed location by its label, so the two must agree.
+    for (const location of registry.locations) expect(labels[location.id], location.id).toBe(location.name);
+    const source = generateBankSource(doc, registry);
+    expect(source).toContain('{"id":"10293","accessOptions":[{"guilds":["Fishing Guild"]}]}');
+    expect(source).toContain('{"id":"10553","accessOptions":[{"diaries":["Fremennik Easy"]}');
+    expect(source).not.toContain('oldschool.runescape.wiki');
+  });
 });

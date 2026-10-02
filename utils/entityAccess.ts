@@ -6,7 +6,7 @@ import { chunkUnlocked } from './chunkLocations';
 import { classifyShop } from './shopClassification';
 import { compileRawRequirements, evaluateRouteGates } from './questRoutes/accountRequirements';
 import type { RawRouteRequirement } from './questRoutes/model';
-import bankRegistry from '../data/sources/bank-locations.json';
+import { BANK_ACCESS_GATES, BANK_BY_ID, BANK_REVIEWED_FACILITIES, BANK_REVIEWED_LOCATIONS, type BankAccessOption } from '../data/banks';
 import { getActivityReq } from '../data/activityRequirements';
 import { interiorArea } from '../data/interiorAreas';
 import { evaluateActivityReadiness } from './activityReadiness';
@@ -37,19 +37,13 @@ function bestAccess(results: EntityAccessResult[]): EntityAccessResult {
   return { status, reasons: [...new Set(results.flatMap(result => result.reasons))] };
 }
 
-interface BankAccessOption { quests?: string[]; diaries?: string[]; guilds?: string[]; manual?: string[]; }
-const registryBanks = bankRegistry.locations as Array<{
-  id: string; name: string; accessOptions?: BankAccessOption[];
-}>;
-const bankGates = bankRegistry.accessGates as Array<{ id: string; accessOptions: BankAccessOption[] }>;
-
 /**
  * The ways into a whole bank, any one of them enough, that the registry puts
  * on it: its guild's entry, or the quest its town's bank waits on (accuracy
  * audit B1, B2). Every facility the bank has needs one.
  */
 function bankGateOptions(bankId: string): BankAccessOption[] | undefined {
-  return bankGates.find(gate => gate.id === bankId)?.accessOptions;
+  return BANK_ACCESS_GATES.find(gate => gate.id === bankId)?.accessOptions;
 }
 
 /**
@@ -80,12 +74,14 @@ function bankOptionsAccess(options: BankAccessOption[], unlocks: UnlockState, mo
 
 function registryBankRequirements(coord: { cx: number; cy: number }, unlocks: UnlockState, source: EntityAccessSource, mode?: string): EntityAccessResult {
   const bankId = String(coord.cx * 256 + coord.cy);
-  const bank = registryBanks.find(entry => entry.id === bankId);
-  const entry = evaluateEntityRequirements(bank?.name ?? 'Unreviewed bank', 'object', coord, unlocks, source);
+  const bank = BANK_REVIEWED_LOCATIONS.find(entry => entry.id === bankId);
+  // A reviewed location's label is its registry name (scripts/gen-banks.test.ts).
+  const name = bank ? BANK_BY_ID[bankId]?.name : undefined;
+  const entry = evaluateEntityRequirements(name ?? 'Unreviewed bank', 'object', coord, unlocks, source);
   // A reviewed service's own ways in, such as Peer the Seer's, else the bank's gate.
   const options = bank?.accessOptions ?? bankGateOptions(bankId) ?? [];
   const access: EntityAccessResult = options.length ? bankOptionsAccess(options, unlocks, mode)
-    : { status: 'UNKNOWN', reasons: [`${bank?.name ?? 'Bank facility'} access requirements need review`] };
+    : { status: 'UNKNOWN', reasons: [`${name ?? 'Bank facility'} access requirements need review`] };
   return { status: entry.status === 'NOT_READY' || access.status === 'NOT_READY' ? 'NOT_READY'
     : entry.status === 'UNKNOWN' || access.status === 'UNKNOWN' ? 'UNKNOWN' : 'ALLOWED',
     reasons: [...new Set([...entry.reasons, ...access.reasons])] };
@@ -103,7 +99,7 @@ export function bankFacilities(content: ChunkContent, bankId: string): BankFacil
     .filter(([name]) => /^(bank booth|bank chest|bank deposit box|bank deposit chest|deposit pool)$/i.test(name))
     .map(([name]) => ({ name, kind: 'object' }));
   if (content.npcs.includes('Banker')) facilities.push({ name: 'Banker', kind: 'npc' });
-  for (const facility of bankRegistry.reviewedFacilities) {
+  for (const facility of BANK_REVIEWED_FACILITIES) {
     if (facility.id !== bankId) continue;
     const present = facility.kind === 'object'
       ? content.objects.some(([name]) => name === facility.name) : content.npcs.includes(facility.name);
