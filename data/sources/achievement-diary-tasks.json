@@ -246,7 +246,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "merchants": [
+        "Hunter Shops"
+      ]
     },
     {
       "id": "ard_easy_10",
@@ -1125,7 +1128,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Any grimy herb and 200 coins"
+      "sourceRequirements": "Any grimy herb and 200 coins",
+      "merchants": [
+        "Decanters"
+      ]
     },
     {
       "id": "des_easy_7",
@@ -1465,8 +1471,8 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "20 Construction Scroll of redirection and a house tablet",
-      "mobility": [
-        "Teleport Tablets"
+      "merchants": [
+        "Real Estate Agents"
       ]
     },
     {
@@ -1817,9 +1823,15 @@
       "quests": [
         "Priest in Peril"
       ],
+      "regions": [
+        "Canifis"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Priest in Peril 78 Construction 2 mahogany planks, 2 gold leaves, saw, and hammer Kq head or Kq head (tattered), and 50,000 coins to have the taxidermist stuff it Additional 15,000 coins to construct a Skill Hall if you haven't already"
+      "sourceRequirements": "Completion of Priest in Peril 78 Construction 2 mahogany planks, 2 gold leaves, saw, and hammer Kq head or Kq head (tattered), and 50,000 coins to have the taxidermist stuff it Additional 15,000 coins to construct a Skill Hall if you haven't already",
+      "merchants": [
+        "Taxidermists"
+      ]
     },
     {
       "id": "des_elite_5",
@@ -4802,7 +4814,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "50 Construction 25,000 coins Additional 5,000 coins if already using Fancy Stone, to change to something else and back"
+      "sourceRequirements": "50 Construction 25,000 coins Additional 5,000 coins if already using Fancy Stone, to change to something else and back",
+      "merchants": [
+        "Real Estate Agents"
+      ]
     },
     {
       "id": "kan_hard_11",
@@ -8058,7 +8073,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Any tannable hide and 2-45 coins depending on the type of hide"
+      "sourceRequirements": "Any tannable hide and 2-45 coins depending on the type of hide",
+      "merchants": [
+        "Tanners"
+      ]
     },
     {
       "id": "mor_easy_6",
@@ -8933,7 +8951,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "100 coins Logs, obtainable from a dying tree here with any axe for another easy task"
+      "sourceRequirements": "100 coins Logs, obtainable from a dying tree here with any axe for another easy task",
+      "merchants": [
+        "Sawmill Operators"
+      ]
     },
     {
       "id": "var_easy_5",
@@ -9170,6 +9191,9 @@
           "reason": "Activated ring of charos",
           "manualCheck": "Have Activated ring of charos and confirm that the specific item is permitted by your equipment tier"
         }
+      ],
+      "merchants": [
+        "Pet Shops"
       ]
     },
     {
@@ -9331,7 +9355,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "20 mahogany logs and 30,000 coins"
+      "sourceRequirements": "20 mahogany logs and 30,000 coins",
+      "merchants": [
+        "Sawmill Operators"
+      ]
     },
     {
       "id": "var_med_11",
@@ -9564,7 +9591,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "50 Construction 25,000 coins Additional 5,000 coins if already using Fancy Stone, to change to something else and back"
+      "sourceRequirements": "50 Construction 25,000 coins Additional 5,000 coins if already using Fancy Stone, to change to something else and back",
+      "merchants": [
+        "Real Estate Agents"
+      ]
     },
     {
       "id": "var_hard_8",

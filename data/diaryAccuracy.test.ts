@@ -5,6 +5,7 @@ import { namedAreaChunks } from '../utils/reachability';
 import { ALL_DIARY_TASKS, type DiaryTask, type DiaryTaskRequirementOption } from './diaryTasks';
 import { ACTIVITY_ACCESS_AREAS } from './activityAccess';
 import { QUEST_DATA } from './questData';
+import { MERCHANT_SERVICES } from './merchantServices';
 
 /**
  * Players reported wrong Achievement Diary data, so every task was checked
@@ -295,5 +296,49 @@ describe('Diary tasks that use a barbarian skill', () => {
         expect((requirement.items ?? []).filter(item => /Barbarian/.test(item)), row.id).toEqual([]);
       }
     }
+  });
+});
+
+/** How task descriptions name the service NPCs in data/merchantServices.ts, when not by name. */
+const SERVICE_NAMES: Readonly<Record<string, string>> = { Sawmill: 'Sawmill Operator', 'Nardah Herbalist': 'Zahur' };
+const merchantsOf = (row: DiaryTask): string[] => [row, ...(row.oneOf ?? [])].flatMap(requirement => requirement.merchants ?? []);
+
+describe('Diary tasks that use a shop or a service', () => {
+  it.each([
+    ['mor_easy_5', 'Tanners', 'Sbott tans a hide'],
+    ['var_easy_4', 'Sawmill Operators', 'the Sawmill makes a plank'],
+    ['var_med_10', 'Sawmill Operators', 'the Sawmill makes 20 mahogany planks'],
+    ['kan_hard_10', 'Real Estate Agents', 'the Seers’ estate agent redecorates'],
+    ['var_hard_7', 'Real Estate Agents', 'the Varrock estate agent redecorates'],
+    ['des_med_11', 'Real Estate Agents', 'the house moves to Pollnivneach'],
+    ['var_med_3', 'Pet Shops', 'Gertrude colours the kitten'],
+    ['ard_easy_9', 'Hunter Shops', 'it views Aleck’s Hunter Emporium'],
+    ['des_easy_6', 'Decanters', 'Zahur, the Nardah Herbalist, cleans the herb'],
+    ['des_elite_4', 'Taxidermists', 'the Canifis taxidermist stuffs the KQ head'],
+  ])('asks %s for %s, because %s', (id, merchant) => {
+    expect(task(id).merchants).toEqual([merchant]);
+  });
+
+  it('lets an ironman reach Pollnivneach through the house portal, without teleport tablets', () => {
+    // "Ironmen must instead enter their house via the Pollnivneach house portal" (wiki rev 15280543).
+    expect(task('des_med_11')).toMatchObject({ skills: { Construction: 20 }, regions: ['Pollnivneach'] });
+    expect(task('des_med_11').mobility).toBeUndefined();
+  });
+
+  it('needs Canifis, where the taxidermist stuffs the KQ head', () => {
+    expect(task('des_elite_4')).toMatchObject({ regions: ['Canifis'], quests: ['Priest in Peril'] });
+  });
+
+  it('need the category of any service NPC they name', () => {
+    const named: string[] = [];
+    for (const row of ALL_DIARY_TASKS) {
+      for (const [name, service] of [...Object.keys(MERCHANT_SERVICES).map(key => [key, key]), ...Object.entries(SERVICE_NAMES)]) {
+        const npc = name.replace(/\s*\(.*\)$/, '');
+        if (!new RegExp(`\\b${npc}\\b`, 'i').test(row.description)) continue;
+        named.push(row.id);
+        expect(merchantsOf(row), `${row.id} names ${npc}`).toContain(MERCHANT_SERVICES[service].category);
+      }
+    }
+    expect([...new Set(named)].sort()).toEqual(['des_easy_6', 'kan_hard_10', 'mor_easy_5', 'var_easy_4', 'var_hard_7']);
   });
 });
