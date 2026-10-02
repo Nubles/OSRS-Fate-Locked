@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { keysToTarget, keyVelocity, forecastTarget } from './fateForecast';
+import { chanceWithin, keysToTarget, keyVelocity, forecastTarget, rangeShare } from './fateForecast';
 import { LogEntry } from '../types';
 
 const ev = (type: string, dayOffset: number): LogEntry => ({
@@ -17,6 +17,20 @@ describe('fate forecast', () => {
     expect(f.p50).toBe(5);
     expect(f.p10).toBe(1);
     expect(f.p90).toBe(9);
+  });
+
+  it('gives the real chance of the median and of the p10–p90 range shown', () => {
+    // R = 10: p10 = 1, p50 = 5, p90 = 9. No value is most likely; each is 1 in 10.
+    const ten = keysToTarget(10);
+    expect(chanceWithin(ten, ten.p50)).toBe(0.5);
+    expect(rangeShare(ten)).toBe(0.9);
+    // Five or fewer left: the range covers every outcome.
+    expect(rangeShare(keysToTarget(5))).toBe(1);
+    // 68 left: 7 to 62 Keys is 56 of the 68 outcomes, about 82%, not 80%.
+    expect(rangeShare(keysToTarget(68))).toBeCloseTo(56 / 68, 10);
+    // An odd count: the median covers a little more than half.
+    expect(chanceWithin(keysToTarget(5), keysToTarget(5).p50)).toBe(0.6);
+    expect(chanceWithin(ten, 25)).toBe(1);
   });
 
   it('collapses to 1 when only the target is left', () => {

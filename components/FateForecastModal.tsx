@@ -6,7 +6,7 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';
 import { TableType } from '../types';
 import { randomUnlockPool, randomUnlockTables } from '../utils/gameEngine';
-import { keyVelocity, forecastTarget, keysToTarget } from '../utils/fateForecast';
+import { chanceWithin, keyVelocity, forecastTarget, keysToTarget, rangeShare } from '../utils/fateForecast';
 import { tableDisplayName } from '../utils/tableDisplay';
 
 interface Props {
@@ -28,6 +28,8 @@ const FORECAST_TABLES: { table: TableType; singular: string }[] = [
   { table: TableType.GUILDS, singular: 'guild' },
   { table: TableType.ARCANA, singular: 'combat power' },
 ];
+
+const percent = (share: number): string => `${Math.round(share * 100)}%`;
 
 const fmtDays = (d: number): string => {
   if (d <= 0) return 'now';
@@ -88,12 +90,12 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-base font-bold text-white leading-none flex items-center gap-1.5">Fate Forecast <SectionGuide id="FORECAST" /></h2>
-            <p className="text-[11px] text-gray-500 mt-1">How long until Fate hands you something from each category.</p>
+            <p className="text-[11px] text-gray-500 mt-1">How many Keys, and how long, until you draw something specific from each category.</p>
           </div>
           <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#1a1a1a] border border-white/10" title="Keys earned per day, from your history">
             <Gauge size={13} className="text-emerald-400" />
             <span className="text-[11px] text-gray-300">
-              {velocity.ok ? <>~{velocity.keysPerDay.toFixed(1)} <span className="text-gray-500">keys/day</span></> : <span className="text-gray-500">pace: n/a</span>}
+              {velocity.ok ? <>~{velocity.keysPerDay.toFixed(1)} <span className="text-gray-500">Keys/day</span></> : <span className="text-gray-500">pace: n/a</span>}
             </span>
           </div>
           <button onClick={onClose} className="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors" aria-label="Close"><X size={18} /></button>
@@ -109,7 +111,7 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
             {/* Category board */}
             <div className="flex flex-col min-h-0 border-r border-white/10">
               <div className="px-3 py-2 text-[9px] uppercase tracking-widest text-gray-500 border-b border-white/5 shrink-0">
-                Category · keys for one
+                Category · Keys for one, half the time
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
                 {categories.map((c) => {
@@ -128,7 +130,7 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
                       </div>
                       <div className="text-right shrink-0">
                         <div className="text-[13px] font-bold text-amber-300 leading-none">{c.table === TableType.CHUNKS ? `1/${c.remaining}` : `~${c.headline}`}</div>
-                        <div className="text-[9px] text-gray-600">{c.table === TableType.CHUNKS ? 'next roll odds' : 'keys'}</div>
+                        <div className="text-[9px] text-gray-600">{c.table === TableType.CHUNKS ? 'next unlock odds' : 'Keys'}</div>
                       </div>
                       <ChevronRight size={13} className={isActive ? 'text-fuchsia-300' : 'text-gray-600'} />
                     </button>
@@ -139,7 +141,7 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
 
             {/* Detail */}
             <div className="flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-4">
-              {active?.table === TableType.CHUNKS && <p className="text-sm text-gray-300">There are {active.remaining} adjacent chunks eligible now. Your next roll has a 1 in {active.remaining} chance for each. The frontier changes after every roll, so a fixed waiting-time estimate would be misleading.</p>}
+              {active?.table === TableType.CHUNKS && <p className="text-sm text-gray-300">There are {active.remaining} adjacent chunks eligible now. Your next Chunk unlock has a 1 in {active.remaining} chance for each. The frontier changes after every roll, so a fixed waiting-time estimate would be misleading.</p>}
               {active && forecast && (
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div>
@@ -157,10 +159,10 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
                     </div>
                     <div className="flex items-baseline gap-2">
                       <span className="text-3xl font-black text-amber-300 leading-none">{forecast.keys.p50}</span>
-                      <span className="text-[11px] text-gray-500">most likely</span>
+                      <span className="text-[11px] text-gray-500">Keys or fewer: a {percent(chanceWithin(forecast.keys, forecast.keys.p50))} chance</span>
                     </div>
                     <div className="text-[11px] text-gray-500 mt-1">
-                      80% chance within <span className="text-gray-300 font-semibold">{forecast.keys.p10}–{forecast.keys.p90}</span> keys
+                      A {percent(rangeShare(forecast.keys))} chance within <span className="text-gray-300 font-semibold">{forecast.keys.p10}–{forecast.keys.p90}</span> Keys
                       {forecast.days && <> · ≈ <span className="text-emerald-300 font-semibold">{fmtDays(forecast.days.p50)}</span> at your pace</>}
                     </div>
                     <div className="relative h-2 mt-3 rounded-full bg-black/50 border border-white/5 overflow-hidden">
@@ -180,7 +182,7 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
                         <Sparkles size={12} className="text-fuchsia-400" /> Clear {completeAll.totalKeys} eligible entries
                       </div>
                       <div className="flex items-baseline gap-2 flex-wrap">
-                        <span className="text-xl font-black text-fuchsia-300 leading-none">{completeAll.totalKeys} keys</span>
+                        <span className="text-xl font-black text-fuchsia-300 leading-none">{completeAll.totalKeys} Keys</span>
                         {completeAll.days != null && <span className="text-[11px] text-gray-500">· ≈ {fmtDays(completeAll.days)} at your pace</span>}
                       </div>
                       <p className="text-[10px] text-gray-600 mt-1">Clearing this eligible pool takes {completeAll.totalKeys} spends, assuming no new locations become accessible.</p>
@@ -189,15 +191,15 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
 
                   {/* Keys in hand / pace footnote */}
                   <div className="flex items-center justify-between text-[10px] text-gray-600 px-1">
-                    <span className="flex items-center gap-1.5"><Key size={11} className="text-amber-400/70" /> You hold <span className="text-amber-300 font-semibold">{keys}</span> key{keys === 1 ? '' : 's'}</span>
+                    <span className="flex items-center gap-1.5"><Key size={11} className="text-amber-400/70" /> You hold <span className="text-amber-300 font-semibold">{keys}</span> Key{keys === 1 ? '' : 's'}</span>
                     {velocity.ok
-                      ? <span className="flex items-center gap-1.5"><Clock size={11} className="text-emerald-400/70" /> ~{velocity.keysPerDay.toFixed(1)} keys/day</span>
+                      ? <span className="flex items-center gap-1.5"><Clock size={11} className="text-emerald-400/70" /> ~{velocity.keysPerDay.toFixed(1)} Keys/day</span>
                       : <span className="text-gray-700">play more for time estimates</span>}
                   </div>
 
                   <p className="text-[9px] text-gray-600 leading-relaxed flex items-start gap-1.5">
                     <TrendingUp size={11} className="shrink-0 mt-0.5" />
-                    Assumes you spend keys on {active.label.toLowerCase()} and that Fate draws uniformly at random; the pool shrinks as you unlock.
+                    Assumes you spend every Key on {active.label.toLowerCase()}, and that each draw picks evenly from what is left; the pool shrinks as you unlock.
                   </p>
                 </div>
               )}
