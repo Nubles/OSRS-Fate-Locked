@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BACKUP_CODE_LENGTH,
+  BACKUP_RETRY_MS,
+  backupRun,
   decryptBackup,
   deleteBackup,
   deriveBackupKeys,
@@ -149,5 +151,85 @@ describe("this browser's record", () => {
     expect(readOnlineBackupRecord('P')).toEqual({ code: CODE });
     localStorage.setItem(profileOnlineBackupKey('P'), 'not json');
     expect(readOnlineBackupRecord('P')).toEqual({});
+  });
+});
+
+describe('backing up a run', () => {
+  const base = 'https://relay.test';
+  const exportJson = JSON.stringify({ runId: 'run-1', keys: 3, history: [] });
+  let uploads: { url: string; body: string; auth: string }[];
+  let status: number;
+  let headers: Record<string, string>;
+  const fetchImpl = vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
+    uploads.push({ url: String(url), body: String(init?.body), auth: String((init?.headers as Record<string, string>)?.Authorization) });
+    return new Response(status === 200 ? JSON.stringify({ updatedAt: 1000 + uploads.length }) : null, { status, headers });
+  }) as unknown as typeof fetch;
+
+  beforeEach(() => {
+    const store = new Map<string, string>();
+    (globalThis as any).localStorage = {
+      getItem: (key: string) => (store.has(key) ? store.get(key)! : null),
+      setItem: (key: string, value: string) => { store.set(key, value); },
+      removeItem: (key: string) => { store.delete(key); },
+      clear: () => store.clear(),
+    };
+    uploads = [];
+    status = 200;
+    headers = {};
+  });
+
+  it('does nothing while online backup is off', async () => {
+    expect(await backupRun('P', exportJson, base, { fetchImpl })).toEqual({ kind: 'off' });
+    expect(uploads).toHaveLength(0);
+  });
+
+  it('uploads the run encrypted with its code, then only when it changes', async () => {
+    writeOnlineBackupRecord('P', { code: CODE, enabledAt: 1 });
+    expect(await backupRun('P', exportJson, base, { fetchImpl })).toEqual({ kind: 'uploaded', updatedAt: 1001 });
+    const keys = await deriveBackupKeys(CODE);
+    expect(uploads[0].url).toBe(`${base}/b/${keys.id}`);
+    expect(uploads[0].auth).toBe(`Bearer ${keys.writeToken}`);
+    expect(uploads[0].body).not.toContain('run-1');
+    expect(await decryptBackup(uploads[0].body, keys.key)).toMatch(/^FLSYNC\./);
+    expect(readOnlineBackupRecord('P')).toMatchObject({ lastUploadAt: 1001, lastChecksum: expect.any(String) });
+
+    expect(await backupRun('P', exportJson, base, { fetchImpl })).toEqual({ kind: 'unchanged' });
+    expect(await backupRun('P', exportJson, base, { fetchImpl, force: true })).toEqual({ kind: 'uploaded', updatedAt: 1002 });
+    expect(await backupRun('P', exportJson.replace('3', '4'), base, { fetchImpl })).toEqual({ kind: 'uploaded', updatedAt: 1003 });
+  });
+
+  it('retries when the relay is out of reach, and says so until an upload works', async () => {
+    writeOnlineBackupRecord('P', { code: CODE });
+    status = 503;
+    expect(await backupRun('P', exportJson, base, { fetchImpl })).toEqual({ kind: 'retry', afterMs: BACKUP_RETRY_MS });
+    expect(readOnlineBackupRecord('P').lastError).toBe('unavailable');
+    status = 200;
+    expect((await backupRun('P', exportJson, base, { fetchImpl })).kind).toBe('uploaded');
+    expect(readOnlineBackupRecord('P').lastError).toBeUndefined();
+  });
+
+  it('waits as long as the relay asks, without calling it an error', async () => {
+    writeOnlineBackupRecord('P', { code: CODE });
+    status = 429;
+    headers = { 'Retry-After': '42' };
+    expect(await backupRun('P', exportJson, base, { fetchImpl })).toEqual({ kind: 'retry', afterMs: 42_000 });
+    expect(readOnlineBackupRecord('P').lastError).toBeUndefined();
+  });
+
+  it('stops on a refusal, and keeps the reason', async () => {
+    writeOnlineBackupRecord('P', { code: CODE });
+    status = 403;
+    expect(await backupRun('P', exportJson, base, { fetchImpl })).toEqual({ kind: 'failed', reason: 'forbidden' });
+    expect(readOnlineBackupRecord('P').lastError).toBe('forbidden');
+  });
+
+  it('leaves backup off when the player turned it off during the upload', async () => {
+    writeOnlineBackupRecord('P', { code: CODE });
+    const slow = vi.fn(async () => {
+      writeOnlineBackupRecord('P', { promptAnsweredAt: 5 });
+      return new Response(JSON.stringify({ updatedAt: 7 }), { status: 200 });
+    }) as unknown as typeof fetch;
+    expect(await backupRun('P', exportJson, base, { fetchImpl: slow })).toEqual({ kind: 'off' });
+    expect(readOnlineBackupRecord('P')).toEqual({ promptAnsweredAt: 5 });
   });
 });

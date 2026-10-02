@@ -7,13 +7,26 @@
  * and ciphertext, so nobody without the code, the relay included, can read or
  * replace the backup. The code is the only way back in: it can't be reset.
  */
-import { profileOnlineBackupKey } from './profileStorage';
+import {
+  BACKUP_CODE_ALPHABET,
+  BACKUP_CODE_LENGTH,
+  formatBackupCode,
+  readOnlineBackupRecord,
+  writeOnlineBackupRecord,
+  type OnlineBackupError,
+} from './onlineBackupRecord';
+import { encodeSyncCode } from './syncCode';
+import { simpleHash } from './integrity';
 
-/** Crockford base32: no I, L, O or U, so a code read aloud or retyped stays unambiguous. */
-const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
-/** 20 symbols of 5 bits: 100 random bits. */
-export const BACKUP_CODE_LENGTH = 20;
-const GROUP_LENGTH = 5;
+export {
+  BACKUP_CODE_LENGTH,
+  formatBackupCode,
+  normalizeBackupCode,
+  readOnlineBackupRecord,
+  writeOnlineBackupRecord,
+  type OnlineBackupRecord,
+} from './onlineBackupRecord';
+
 const HKDF_SALT = 'fate-locked-online-backup-v1';
 const ENVELOPE_TAG = 'FLBK1';
 
@@ -36,28 +49,13 @@ const fromBase64Url = (value: string): Uint8Array<ArrayBuffer> | null => {
   return bytes;
 };
 
-/** "ABCDE-FGHJK-MNPQR-STVWX": the canonical symbols in groups of five. */
-export const formatBackupCode = (canonical: string): string =>
-  canonical.match(new RegExp(`.{1,${GROUP_LENGTH}}`, 'g'))?.join('-') ?? '';
-
 /** A new random backup code, formatted for the player to keep. */
 export const generateBackupCode = (
   random: (bytes: Uint8Array) => Uint8Array = bytes => crypto.getRandomValues(bytes),
 ): string => {
   // 256 is a multiple of 32, so each byte's low five bits pick a symbol uniformly.
   const bytes = random(new Uint8Array(BACKUP_CODE_LENGTH));
-  return formatBackupCode([...bytes].map(byte => ALPHABET[byte & 31]).join(''));
-};
-
-/**
- * A typed code as its 20 symbols, or null. It forgives case, spaces and dashes,
- * and reads O as 0 and I or L as 1, as Crockford base32 does.
- */
-export const normalizeBackupCode = (input: string): string | null => {
-  const cleaned = input.toUpperCase().replace(/[\s-]/g, '').replace(/O/g, '0').replace(/[IL]/g, '1');
-  return cleaned.length === BACKUP_CODE_LENGTH && [...cleaned].every(symbol => ALPHABET.includes(symbol))
-    ? cleaned
-    : null;
+  return formatBackupCode([...bytes].map(byte => BACKUP_CODE_ALPHABET[byte & 31]).join(''));
 };
 
 export interface BackupKeys {
@@ -168,41 +166,59 @@ export const deleteBackup = async (base: string, keys: BackupKeys, fetchImpl: Fe
   }
 };
 
-// ── This browser's record, per profile ──────────────────────────────────────
+// ── Backing up a run ────────────────────────────────────────────────────────
 
-export interface OnlineBackupRecord {
-  /** The canonical backup code, when online backup is on for this run. */
-  code?: string;
-  enabledAt?: number;
-  /** The last successful upload, as the relay timed it. */
-  lastUploadAt?: number;
-  /** The save's checksum at that upload, so an unchanged run isn't sent again. */
-  lastChecksum?: string;
-  /** When the player answered the one-time prompt, either way. */
-  promptAnsweredAt?: number;
-}
+/** How long to wait before trying a failed upload again. */
+export const BACKUP_RETRY_MS = 5 * 60 * 1000;
 
-export const readOnlineBackupRecord = (storageKey: string): OnlineBackupRecord => {
+export type BackupRunOutcome =
+  | { kind: 'off' }
+  | { kind: 'unchanged' }
+  | { kind: 'uploaded'; updatedAt: number }
+  | { kind: 'retry'; afterMs: number }
+  | { kind: 'failed'; reason: OnlineBackupError };
+
+/**
+ * Uploads a run's export, encrypted, when online backup is on for it and the run
+ * changed since the last upload (or always, when `force`). The outcome goes in
+ * the run's record, so the screens can say when it was last backed up or why
+ * it wasn't; the driver uses the returned outcome to schedule a retry.
+ */
+export const backupRun = async (
+  storageKey: string,
+  exportJson: string,
+  relayBase: string,
+  options: { force?: boolean; fetchImpl?: Fetch } = {},
+): Promise<BackupRunOutcome> => {
+  const record = readOnlineBackupRecord(storageKey);
+  if (!record.code) return { kind: 'off' };
+  const checksum = simpleHash(exportJson);
+  if (!options.force && checksum === record.lastChecksum && !record.lastError) return { kind: 'unchanged' };
+
+  const fail = (reason: OnlineBackupError): BackupRunOutcome => {
+    const latest = readOnlineBackupRecord(storageKey);
+    if (latest.code === record.code) writeOnlineBackupRecord(storageKey, { ...latest, lastError: reason });
+    return reason === 'network' || reason === 'unavailable'
+      ? { kind: 'retry', afterMs: BACKUP_RETRY_MS }
+      : { kind: 'failed', reason };
+  };
+
+  let syncCode: string;
   try {
-    const parsed = JSON.parse(localStorage.getItem(profileOnlineBackupKey(storageKey)) || '{}');
-    if (!parsed || typeof parsed !== 'object') return {};
-    const record: OnlineBackupRecord = {};
-    if (typeof parsed.code === 'string' && normalizeBackupCode(parsed.code)) record.code = normalizeBackupCode(parsed.code)!;
-    for (const field of ['enabledAt', 'lastUploadAt', 'promptAnsweredAt'] as const) {
-      if (typeof parsed[field] === 'number' && Number.isFinite(parsed[field])) record[field] = parsed[field];
-    }
-    if (typeof parsed.lastChecksum === 'string') record.lastChecksum = parsed.lastChecksum;
-    return record;
+    syncCode = await encodeSyncCode(JSON.parse(exportJson) as Record<string, unknown>);
   } catch {
-    return {};
+    return fail('too-large-to-share');
   }
-};
+  const keys = await deriveBackupKeys(record.code);
+  const result = await uploadBackup(relayBase, keys, await encryptBackup(syncCode, keys.key), options.fetchImpl);
+  if (result.ok === false) {
+    if (result.reason === 'throttled') return { kind: 'retry', afterMs: result.retryAfterMs ?? 60_000 };
+    return fail(result.reason);
+  }
 
-export const writeOnlineBackupRecord = (storageKey: string, record: OnlineBackupRecord): boolean => {
-  try {
-    localStorage.setItem(profileOnlineBackupKey(storageKey), JSON.stringify(record));
-    return true;
-  } catch {
-    return false;
-  }
+  // Backup may have been turned off, or its code changed, while this upload ran.
+  const latest = readOnlineBackupRecord(storageKey);
+  if (latest.code !== record.code) return { kind: 'off' };
+  writeOnlineBackupRecord(storageKey, { ...latest, lastUploadAt: result.updatedAt, lastChecksum: checksum, lastError: undefined });
+  return { kind: 'uploaded', updatedAt: result.updatedAt };
 };
