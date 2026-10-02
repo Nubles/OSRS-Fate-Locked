@@ -5,13 +5,13 @@ import { buildBankDefinitions, generateBankSource } from './gen-banks.mjs';
 import { generatedTextMatches } from './generated-text.mjs';
 
 describe('bank source generator', () => {
-  it('uses reviewed labels before chunk nicknames and appends the virtual bank after all 127 physical banks', () => {
+  it('uses reviewed labels before chunk nicknames and appends the virtual bank after all 125 physical banks', () => {
     const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
     const registry = readBankLocationRegistry();
     const defs = buildBankDefinitions(doc, registry);
     const byId = Object.fromEntries(defs.map(def => [def.id, def.name]));
 
-    expect(defs).toHaveLength(128);
+    expect(defs).toHaveLength(126);
     expect(defs.at(-1)).toEqual({
       id: 'woodcutting-leprechaun',
       name: 'Woodcutting Leprechaun (Forestry)',
@@ -39,6 +39,21 @@ describe('bank source generator', () => {
     expect(names).not.toContain('Ardougne Market');
   });
 
+  it('merges the two bank unlocks that open no bank into the bank each leads to', () => {
+    // Rellekka Peninsula is the way into Keldagrim, and Asgarnian Road the way into the
+    // Dwarven Mine and its Motherlode Mine chest (owner decision M5, 2 October 2026).
+    const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
+    const registry = readBankLocationRegistry();
+    const ids = buildBankDefinitions(doc, registry).map(def => def.id);
+    const source = generateBankSource(doc, registry);
+
+    expect(doc.banks).toEqual(expect.arrayContaining(['10810', '12085']));
+    expect(ids).not.toContain('10810');
+    expect(ids).not.toContain('12085');
+    expect(ids).toEqual(expect.arrayContaining(['11066', '12084']));
+    expect(source).toContain("  '10810': '11066',\n  '12085': '12084',");
+  });
+
   it('does not add the virtual bank to the public physical chunk list', () => {
     const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
 
@@ -52,5 +67,17 @@ describe('bank source generator', () => {
       readFileSync('data/banks.ts', 'utf8'),
       generateBankSource(doc, registry),
     )).toBe(true);
+  });
+
+  it("gives the app the registry's access rules without its evidence, each location labelled by its name", () => {
+    const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
+    const registry = readBankLocationRegistry();
+    const labels = Object.fromEntries(buildBankDefinitions(doc, registry).map(def => [def.id, def.name]));
+    // utils/entityAccess.ts names a reviewed location by its label, so the two must agree.
+    for (const location of registry.locations) expect(labels[location.id], location.id).toBe(location.name);
+    const source = generateBankSource(doc, registry);
+    expect(source).toContain('{"id":"10293","accessOptions":[{"guilds":["Fishing Guild"]}]}');
+    expect(source).toContain('{"id":"10553","accessOptions":[{"diaries":["Fremennik Easy"]}');
+    expect(source).not.toContain('oldschool.runescape.wiki');
   });
 });

@@ -21,6 +21,23 @@ const assertVirtualBankId = (value, label) => {
   if (!VIRTUAL_BANK_ID.test(value)) throw new Error(`${label} must be a stable virtual bank id`);
 };
 
+/**
+ * A bank's ways in, any one of them enough: quests, diaries, guilds (the
+ * guild's unlock and its entry requirement) and checks a player confirms.
+ */
+const ACCESS_KINDS = ['quests', 'diaries', 'guilds', 'manual'];
+
+const validateAccessOptions = (options, id) => {
+  if (!Array.isArray(options) || !options.length) throw new Error(`Bank ${id} needs access alternatives`);
+  for (const option of options) {
+    if (!option || typeof option !== 'object' || Array.isArray(option)) throw new Error(`Bank ${id} has an invalid access alternative`);
+    for (const [kind, requirements] of Object.entries(option)) {
+      if (!ACCESS_KINDS.includes(kind) || !Array.isArray(requirements) || !requirements.length) throw new Error(`Bank ${id} has invalid ${kind} requirements`);
+      for (const requirement of requirements) assertNonEmptyString(requirement, `Bank ${id} ${kind} requirement`);
+    }
+  }
+};
+
 const validateWikiEvidence = (wiki, label, sourceUrls) => {
   if (!Array.isArray(wiki) || !wiki.length) throw new Error(`${label} has no Wiki evidence`);
   for (const url of wiki) {
@@ -68,16 +85,7 @@ export function validateBankLocationRegistry(registry, { validChunkIds, validBan
     if (!Array.isArray(location.facilities) || !location.facilities.length) throw new Error(`Bank location ${location.id} has no facilities`);
     for (const facility of location.facilities) assertNonEmptyString(facility, `Bank location ${location.id} facility`);
     validateWikiEvidence(location.wiki, `Bank location ${location.id}`, sourceUrls);
-    if (location.accessOptions !== undefined) {
-      if (!Array.isArray(location.accessOptions) || !location.accessOptions.length) throw new Error(`Bank ${location.id} needs access alternatives`);
-      for (const option of location.accessOptions) {
-        if (!option || typeof option !== 'object' || Array.isArray(option)) throw new Error(`Bank ${location.id} has an invalid access alternative`);
-        for (const [kind, requirements] of Object.entries(option)) {
-          if (!['quests', 'diaries', 'manual'].includes(kind) || !Array.isArray(requirements) || !requirements.length) throw new Error(`Bank ${location.id} has invalid ${kind} requirements`);
-          for (const requirement of requirements) assertNonEmptyString(requirement, `Bank ${location.id} ${kind} requirement`);
-        }
-      }
-    }
+    if (location.accessOptions !== undefined) validateAccessOptions(location.accessOptions, location.id);
     if (validChunkIds && !validChunkIds.has(location.id)) throw new Error(`Bank location ${location.id} is not walkable`);
     ids.add(location.id);
     names.add(location.name);
@@ -128,7 +136,47 @@ export function validateBankLocationRegistry(registry, { validChunkIds, validBan
     assertNonEmptyString(exclusion.name, 'Bank exclusion name');
     assertNonEmptyString(exclusion.reason, `Bank exclusion ${exclusion.name} reason`);
   }
+
+  // A merged unlock opens no bank of its own; a save that owns it owns the bank it leads to.
+  const merges = registry.merges ?? [];
+  if (!Array.isArray(merges)) throw new Error('Bank merges must be an array');
+  const merged = new Set(merges.map(merge => merge?.id));
+  for (const merge of merges) {
+    assertCanonicalChunkId(merge.id, 'Merged bank id');
+    assertNonEmptyString(merge.into, `Merged bank ${merge.id} target`);
+    if (merges.filter(other => other.id === merge.id).length > 1) throw new Error(`Duplicate bank merge: ${merge.id}`);
+    if (merge.into === merge.id || merged.has(merge.into)) throw new Error(`Bank merge ${merge.id} must lead to a bank that stays`);
+    if (validBankIds instanceof Set && !validBankIds.has(merge.id)) throw new Error(`Merged bank ${merge.id} is not a bank`);
+    if (validBankIds instanceof Set && !validBankIds.has(merge.into) && !ids.has(merge.into) && !virtualIds.has(merge.into)) {
+      throw new Error(`Bank merge ${merge.id} leads to an unknown bank: ${merge.into}`);
+    }
+    assertNonEmptyString(merge.reason, `Bank merge ${merge.id} reason`);
+    validateWikiEvidence(merge.wiki, `Bank merge ${merge.id}`, sourceUrls);
+  }
+
+  // A listed bank's own ways in, such as its guild's entry or its town's quest: every facility
+  // the bank has needs one of them (accuracy audit B1, B2).
+  const gates = registry.accessGates ?? [];
+  if (!Array.isArray(gates)) throw new Error('Bank access gates must be an array');
+  const gated = new Set();
+  for (const gate of gates) {
+    assertCanonicalChunkId(gate.id, 'Gated bank id');
+    if (gated.has(gate.id)) throw new Error(`Duplicate bank access gate: ${gate.id}`);
+    if (merged.has(gate.id)) throw new Error(`Bank access gate ${gate.id} is on a merged bank`);
+    if (validBankIds instanceof Set && !validBankIds.has(gate.id) && !ids.has(gate.id)) throw new Error(`Bank access gate ${gate.id} is not on a bank`);
+    if (registry.locations.some(location => location.id === gate.id && location.accessOptions)) {
+      throw new Error(`Bank ${gate.id} has access alternatives in two places`);
+    }
+    validateAccessOptions(gate.accessOptions, gate.id);
+    validateWikiEvidence(gate.wiki, `Bank access gate ${gate.id}`, sourceUrls);
+    gated.add(gate.id);
+  }
   return registry;
+}
+
+/** Each merged bank unlock and the bank it leads to, as id pairs. */
+export function bankMerges(registry) {
+  return (registry.merges ?? []).map(({ id, into }) => ({ id: String(id), into: String(into) }));
 }
 
 export function bankLocationLabels(registry) {

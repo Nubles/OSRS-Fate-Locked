@@ -27,3 +27,8 @@ export const farmingPatchFor = (objectName: string): string | null => {
   for (const [re, patch] of PATCH_RULES) if (re.test(objectName)) return patch;
   return null;
 };
+
+/** How a farming unlock reads in a requirement: "Herb patch", or its own name when it already says patch. */
+export const farmingPatchLabel = (patch: string): string => (
+  /patch|nursery/i.test(patch) ? patch : `${patch} patch`
+);

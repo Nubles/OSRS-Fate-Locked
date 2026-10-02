@@ -55,11 +55,6 @@ export interface AreaReference {
 }
 
 export const AREA_REFERENCES = {
-  "Giants' Plateau": {
-    kind: 'surface',
-    chunks: [{ cx: 52, cy: 49 }],
-    reason: 'Representative surface chunk east of Al Kharid.',
-  },
   'Dwarven Mine': {
     kind: 'entrance',
     chunks: [{ cx: 47, cy: 53 }, { cx: 47, cy: 52 }],

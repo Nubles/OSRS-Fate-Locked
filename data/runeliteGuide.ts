@@ -677,7 +677,7 @@ export const RUNELITE_GUIDE_GLOSSARY: readonly GuideGlossaryItem[] = [
   { term: 'Ritual of Clarity', definition: 'Your next roll is made twice, and the better result is kept.' },
   {
     term: 'Ritual of Greed',
-    definition: 'If your next roll succeeds you get 2 Keys; if it fails, half the Fate Points come back.',
+    definition: 'If your next Key roll succeeds you get 2 Keys, even when it also brings an Omni-Key. If it fails, half the Fate Points come back, unless the fail brings a Pity Key.',
   },
   {
     term: 'Chunk',

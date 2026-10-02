@@ -10,12 +10,13 @@ import {
 import { drawDice } from '../utils/seededRng';
 import { TableType, LogEntry, type FailureFateAward } from '../types';
 import { isRollEntry } from '../utils/logEntry';
-import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL } from '../config/economy';
+import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, LEVEL_CHAOS_CHANCE } from '../config/economy';
 import { isValidUnlock } from '../utils/gameEngine';
 import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import { MAX_COUNTER, validateAndMigrateSave } from '../utils/saveSchema';
+import { replayInvariants } from '../utils/integrity';
 
 /**
  * Tests for the core game reducer — every roll, unlock, ritual, level-up and
@@ -148,6 +149,7 @@ describe('ROLL_RESULT', () => {
     ['pity', { ...base(), fatePoints: 49 }, roll({ pity: true }), { rewardKind: 'pity', standardKeysAwarded: 1 }],
     ['omni', base(), roll({ success: true, omni: true }), { rewardKind: 'omni', standardKeysAwarded: 1 }],
     ['greed', { ...base(), activeBuff: 'GREED' as const }, roll({ success: true }), { rewardKind: 'greed', standardKeysAwarded: 2 }],
+    ['greed omni', { ...base(), activeBuff: 'GREED' as const }, roll({ success: true, omni: true }), { rewardKind: 'omni', standardKeysAwarded: 2 }],
   ])('records universal %s analytics metadata', (_label, state, action, expected) => {
     const result = gameReducer(state, action);
 
@@ -215,7 +217,7 @@ describe('ROLL_RESULT', () => {
         state: gameReducer(base(), roll({
           success: true, omni: true, roll: 1, baseThreshold: 2.2, threshold: 2.2,
         })),
-        expected: 'Critical Success! Rolled 1.0 vs 2.2%.',
+        expected: 'Rolled 1.0 (≤ 2.2%), and an Omni-Key came with the Key.',
       },
       {
         state: gameReducer(base(), roll({
@@ -248,7 +250,7 @@ describe('ROLL_RESULT', () => {
         state: gameReducer(base(), roll({
           success: true, omni: true, roll: 1, baseThreshold: 2.2, threshold: 3.2,
         })),
-        expected: 'Critical Success! Rolled 1.0 vs 3.2% effective; 2.2% base.',
+        expected: 'Rolled 1.0 (≤ 3.2% effective; 2.2% base), and an Omni-Key came with the Key.',
       },
       {
         state: gameReducer(base(), roll({
@@ -545,6 +547,17 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
     expect(next.bossStandardKeysAwarded?.Zulrah).toBe(1);
   });
 
+  it('clamps a Greed Omni-Key roll to the one remaining boss allowance', () => {
+    const start = { ...vanillaState(), activeBuff: 'GREED' as const, bossStandardKeysAwarded: { Zulrah: 1 } };
+    const next = gameReducer(start, roll({ success: true, omni: true, context: bossContext }));
+
+    expect(next.keys).toBe(initialState.keys + 1);
+    expect(next.specialKeys).toBe(initialState.specialKeys + 1);
+    expect(next.bossStandardKeysAwarded?.Zulrah).toBe(2);
+    expect(next.history.at(-1)?.message).toBe('Key and Omni-Key Found! (Greed awarded 1 Standard Key)');
+    expect(replayInvariants(next.history, start.keys).final.keys).toBe(next.keys);
+  });
+
   it('tracks the actual Standard Key award for a Greed clue result', () => {
     const next = gameReducer(
       { ...vanillaState(), activeBuff: 'GREED' },
@@ -771,6 +784,41 @@ describe('rituals', () => {
     expect(s.activeBuff).toBe('NONE');
   });
 
+  it('an Omni-Key roll under GREED pays double too, as well as the Omni-Key', () => {
+    const armed = gameReducer({ ...base(), fatePoints: 15 }, { type: 'RITUAL_GREED' });
+    const s = gameReducer(armed, roll({ success: true, omni: true }));
+    expect(s.keys).toBe(initialState.keys + 2);
+    expect(s.specialKeys).toBe(initialState.specialKeys + 1);
+    expect(s.activeBuff).toBe('NONE');
+    expect(s.history.at(-1)).toMatchObject({
+      type: 'ROLL_OMNI',
+      message: '2 Keys and an Omni-Key Found! (Doubled)',
+      meta: { rewardKind: 'omni', standardKeysAwarded: 2 },
+    });
+  });
+
+  it('a fail under GREED that brings the Pity Key pays that Key and refunds nothing', () => {
+    const plain = gameReducer({ ...base(), fatePoints: 49 }, roll({ pity: true }));
+    const greedy = gameReducer({ ...base(), fatePoints: 49, activeBuff: 'GREED' as const }, roll({ pity: true }));
+    expect(greedy.keys).toBe(plain.keys);
+    expect(greedy.fatePoints).toBe(plain.fatePoints);
+    expect(greedy.history.at(-1)?.message).toBe(plain.history.at(-1)?.message);
+    expect(greedy.activeBuff).toBe('NONE');
+  });
+
+  it.each([
+    ['a Greed success', roll({ success: true })],
+    ['a Greed Omni-Key roll', roll({ success: true, omni: true })],
+    ['a Greed fail', roll({ success: false })],
+  ])('the integrity replay counts the Keys from %s', (_label, action) => {
+    const armed = { ...base(), activeBuff: 'GREED' as const };
+    const s = gameReducer(armed, action);
+    const { final, violations } = replayInvariants(s.history, armed.keys);
+    expect(violations).toEqual([]);
+    expect(final.keys).toBe(s.keys);
+    expect(final.specialKeys).toBe(s.specialKeys - armed.specialKeys);
+  });
+
   it('Void Gambit: a win pays the pre-rolled keys and zeroes fate', () => {
     const s = gameReducer({ ...base(), fatePoints: 45 },
       { type: 'RITUAL_GAMBIT', payload: { won: true, stake: 45, keysWon: 3 } });
@@ -848,6 +896,14 @@ describe('LEVEL_UP', () => {
   it('awards a chaos key when the roll lands under 2%', () => {
     const s = gameReducer(base(), { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.01 } });
     expect(s.chaosKeys).toBe(initialState.chaosKeys + 1);
+  });
+
+  it('rolls the level-up Chaos chance the Rules page names, and says so plainly in History', () => {
+    const hit = gameReducer(base(), { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: LEVEL_CHAOS_CHANCE / 100 - 0.0001 } });
+    const miss = gameReducer(base(), { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: LEVEL_CHAOS_CHANCE / 100 } });
+    expect(hit.chaosKeys).toBe(initialState.chaosKeys + 1);
+    expect(miss.chaosKeys).toBe(initialState.chaosKeys);
+    expect(hit.history.at(-1)?.details).toMatch(new RegExp(`^The ${LEVEL_CHAOS_CHANCE}% level-up chance came up, at Total Level \\d+\\.$`));
   });
 
   it('guarantees one Chaos Key at a skill milestone', () => {
@@ -1004,6 +1060,10 @@ describe('LEVEL_UP — Chunked milestone insurance', () => {
       run = levelUp(run);
       expect(run.keys).toBe(initialState.keys + 1);
       expect(run.history.at(-1)?.message).toContain(`Total Level ${firstPayout}`);
+      // The Key comes on total level alone; a start-chunk player can still roll other things.
+      expect(run.history.at(-1)?.details).toBe(
+        `Start-chunk milestone: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels until you unlock another chunk.`,
+      );
     });
 
     it('leave runs that chose their mode before this rule on their original schedule', () => {

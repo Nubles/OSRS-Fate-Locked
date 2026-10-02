@@ -24,6 +24,7 @@ const Row: React.FC<{ r: SlayerTaskRow }> = ({ r }) => {
   const meta = STATUS_META[r.status];
   const badge =
     r.masterBlocker?.label ??
+    r.blocker ??
     (r.status === 'slayer-locked' && r.slayer ? `Slayer ${r.slayer}` :
     r.status === 'combat-locked' && r.combat ? `Combat ${r.combat}` : meta.label);
   return (

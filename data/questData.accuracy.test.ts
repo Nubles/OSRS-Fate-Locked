@@ -37,9 +37,20 @@ describe('audited current quest requirements', () => {
     const q = QUEST_DATA['A Porcine of Interest'];
     expect(q.regions).not.toContain('Port Sarim');
     expect(q.locations?.map(x => x.id)).toEqual([
-      'draynor-village', 'south-falador-farm',
+      'draynor-village', 'south-falador-farm', 'sourhog-cave', 'spria',
     ]);
     expect(q.locations?.[1].chunkOptions).toEqual([{ cx: 47, cy: 51 }]);
+  });
+
+  it("lists The Fremennik Exiles' Mining 60, as the wiki does", () => {
+    expect(QUEST_DATA['The Fremennik Exiles'].skills).toMatchObject({ Mining: 60 });
+  });
+
+  it('words the Biohazard priest gown and the Brain Robbery workshop as the wiki has them', () => {
+    expect(QUEST_DATA['Biohazard'].equipmentRequirements).toContainEqual(
+      { slot: 'Legs', tier: 1, reason: 'Wear the priest gown to see Guidor in Varrock' });
+    expect(QUEST_DATA['The Great Brain Robbery'].manualRequirements)
+      .toEqual(['Access to a player-owned house workshop and crafting table']);
   });
 
   it('models Dream Mentor as calculated combat', () => {
@@ -54,7 +65,7 @@ describe('audited current quest requirements', () => {
       prereqs: ['Children of the Sun', 'Shield of Arrav'],
     });
     expect(QUEST_DATA['Ethically Acquired Antiquities'].locations?.map(x => x.id)).toEqual([
-      'grand-museum', 'fortis-cothon', 'port-sarim-jail', 'port-sarim-betty', 'varrock-museum',
+      'grand-museum', 'fortis-cothon', 'port-sarim-jail', 'port-sarim-betty', 'varrock-museum', 'diadem-crate',
     ]);
     expect(QUEST_DATA['The Curse of Arrav']).toMatchObject({
       skills: { Agility: 61, Ranged: 62, Strength: 58, Thieving: 62, Mining: 64, Slayer: 37 },
@@ -212,6 +223,32 @@ describe('audited current quest requirements', () => {
                                         "cy": 51
                                   }
                             ]
+                      },
+                      {
+                            "id": "sourhog-cave",
+                            "label": "Sourhog Cave by the River Lum",
+                            "standardAreas": [
+                                  "Varrock"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 49,
+                                        "cy": 52
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "spria",
+                            "label": "Spria in north Draynor",
+                            "standardAreas": [
+                                  "Draynor Village"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 48,
+                                        "cy": 51
+                                  }
+                            ]
                       }
                 ],
                 "skills": {},
@@ -276,7 +313,9 @@ describe('audited current quest requirements', () => {
                 "regions": [
                       "Draynor Village",
                       "Burthorpe",
-                      "Fenkenstrain's Castle"
+                      "Fenkenstrain's Castle",
+                      "Port Phasmatys",
+                      "Rimmington"
                 ],
                 "locations": null,
                 "skills": {
@@ -323,7 +362,9 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Hunter's Guild"
+                      "Hunter's Guild",
+                      "Avium Savannah",
+                      "Civitas illa Fortis"
                 ],
                 "locations": null,
                 "skills": {
@@ -398,6 +439,19 @@ describe('audited current quest requirements', () => {
                                   {
                                         "cx": 48,
                                         "cy": 54
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "barbarian-village",
+                            "label": "Checkal in Barbarian Village",
+                            "standardAreas": [
+                                  "Barbarian Village"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 48,
+                                        "cy": 53
                                   }
                             ]
                       },
@@ -533,7 +587,9 @@ describe('audited current quest requirements', () => {
                       "Varrock",
                       "Fossil Island",
                       "Port Sarim",
-                      "Woodcutting Guild"
+                      "Woodcutting Guild",
+                      "Digsite",
+                      "Silvarea"
                 ],
                 "locations": null,
                 "skills": {},
@@ -637,13 +693,40 @@ describe('audited current quest requirements', () => {
           },
           "Cold War": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "regions-and-locations",
                 "regions": [
                       "Rellekka",
                       "East Ardougne",
                       "Lumbridge"
                 ],
-                "locations": null,
+                "locations": [
+                      {
+                            "id": "south-iceberg",
+                            "label": "South iceberg",
+                            "standardAreas": [
+                                  "Rellekka"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 41,
+                                        "cy": 62
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "north-iceberg",
+                            "label": "North iceberg",
+                            "standardAreas": [
+                                  "Rellekka"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 41,
+                                        "cy": 63
+                                  }
+                            ]
+                      }
+                ],
                 "skills": {
                       "Hunter": 10,
                       "Agility": 30,
@@ -927,7 +1010,8 @@ describe('audited current quest requirements', () => {
                 "accessPolicy": "regions",
                 "regions": [
                       "Varrock",
-                      "Goblin Village"
+                      "Goblin Village",
+                      "Silvarea"
                 ],
                 "locations": null,
                 "skills": {
@@ -1020,7 +1104,7 @@ describe('audited current quest requirements', () => {
           },
           "Desert Treasure I": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "regions-and-locations",
                 "regions": [
                       "Bandit Camp",
                       "Bedabin Camp",
@@ -1029,9 +1113,26 @@ describe('audited current quest requirements', () => {
                       "Burthorpe",
                       "Baxtorian Falls",
                       "Canifis",
-                      "Mort Myre Swamp"
+                      "Mort Myre Swamp",
+                      "Mountain Camp",
+                      "Digsite",
+                      "Draynor Village"
                 ],
-                "locations": null,
+                "locations": [
+                      {
+                            "id": "jaldraocht-pyramid",
+                            "label": "Jaldraocht Pyramid",
+                            "standardAreas": [
+                                  "Bandit Camp"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 50,
+                                        "cy": 45
+                                  }
+                            ]
+                      }
+                ],
                 "skills": {
                       "Thieving": 53,
                       "Firemaking": 50,
@@ -1060,7 +1161,10 @@ describe('audited current quest requirements', () => {
                       "Goblin Village",
                       "Weiss",
                       "The Stranglewood",
-                      "Digsite"
+                      "Digsite",
+                      "Lovakengj",
+                      "Hosidius",
+                      "Wizards' Tower"
                 ],
                 "locations": null,
                 "skills": {
@@ -1164,7 +1268,8 @@ describe('audited current quest requirements', () => {
                       "Lumbridge",
                       "Rimmington",
                       "Port Sarim",
-                      "Crandor"
+                      "Crandor",
+                      "Dwarven Mine"
                 ],
                 "locations": null,
                 "skills": {
@@ -1179,7 +1284,7 @@ describe('audited current quest requirements', () => {
           },
           "Dragon Slayer II": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "regions-and-locations",
                 "regions": [
                       "Draynor Village",
                       "Varrock",
@@ -1195,9 +1300,25 @@ describe('audited current quest requirements', () => {
                       "Sophanem",
                       "Port Phasmatys",
                       "Fossil Island",
-                      "Lithkren"
+                      "Lithkren",
+                      "Mort Myre Swamp",
+                      "East Ardougne"
                 ],
-                "locations": null,
+                "locations": [
+                      {
+                            "id": "ungael",
+                            "label": "Ungael",
+                            "standardAreas": [
+                                  "Rellekka"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 35,
+                                        "cy": 63
+                                  }
+                            ]
+                      }
+                ],
                 "skills": {
                       "Magic": 75,
                       "Smithing": 70,
@@ -1314,6 +1435,19 @@ describe('audited current quest requirements', () => {
                                         "cy": 53
                                   }
                             ]
+                      },
+                      {
+                            "id": "fishing-guild-watchtower",
+                            "label": "Watchtower and Goblin Cave by the Fishing Guild",
+                            "standardAreas": [
+                                  "Fishing Guild"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 40,
+                                        "cy": 53
+                                  }
+                            ]
                       }
                 ],
                 "skills": {},
@@ -1329,7 +1463,8 @@ describe('audited current quest requirements', () => {
                 "accessPolicy": "regions",
                 "regions": [
                       "Eagles' Peak",
-                      "Varrock"
+                      "Varrock",
+                      "East Ardougne"
                 ],
                 "locations": null,
                 "skills": {
@@ -1380,7 +1515,7 @@ describe('audited current quest requirements', () => {
                 "accessPolicy": "regions",
                 "regions": [
                       "Seers' Village",
-                      "Varrock"
+                      "Digsite"
                 ],
                 "locations": null,
                 "skills": {
@@ -1407,7 +1542,7 @@ describe('audited current quest requirements', () => {
                             "id": "desert-quarry-and-temple",
                             "label": "Desert Quarry and Enakhra's Temple",
                             "standardAreas": [
-                                  "Kharidian Desert"
+                                  "Agility Pyramid"
                             ],
                             "chunkOptions": [
                                   {
@@ -1581,6 +1716,23 @@ describe('audited current quest requirements', () => {
                                   {
                                         "cx": 50,
                                         "cy": 53
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "diadem-crate",
+                            "label": "Diadem crate in east Varrock",
+                            "standardAreas": [
+                                  "Varrock"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 51,
+                                        "cy": 53
+                                  },
+                                  {
+                                        "cx": 51,
+                                        "cy": 54
                                   }
                             ]
                       }
@@ -1825,7 +1977,9 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Hemenster"
+                      "Hemenster",
+                      "Taverley",
+                      "Seers' Village"
                 ],
                 "locations": null,
                 "skills": {
@@ -2414,24 +2568,62 @@ describe('audited current quest requirements', () => {
       },
       "The General's Shadow": {
         "kind": "miniquest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Rellekka",
-              "Observatory",
-              "Seers' Village",
-              "Tree Gnome Stronghold",
-              "Tai Bwo Wannai",
-              "Falador",
-              "Shantay Pass"
+          "Rellekka",
+          "Seers' Village",
+          "Tree Gnome Stronghold",
+          "Shilo Village",
+          "Falador",
+          "Draynor Village",
+          "Shantay Pass"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "general-khazard",
+            "label": "General Khazard south-east of Rellekka",
+            "standardAreas": [
+              "Rellekka"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 42,
+                "cy": 56
+              }
+            ]
+          },
+          {
+            "id": "gnomish-scout",
+            "label": "Gnomish scout outside the Gnome Stronghold",
+            "standardAreas": [
+              "Tree Gnome Stronghold"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 38,
+                "cy": 52
+              }
+            ]
+          }
+        ],
         "skills": {},
         "combatLevel": null,
         "prereqs": [
           "Fight Arena",
           "Curse of the Empty Lord"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "regions": [
+              "Fishing Guild"
+            ]
+          },
+          {
+            "regions": [
+              "Hemenster"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 0,
         "difficulty": "Quest (Experienced)"
@@ -2695,14 +2887,15 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-          "Varrock",
-          "Draynor Village",
-          "Edgeville",
-          "Falador",
-          "Burthorpe",
-          "East Ardougne",
-          "Catherby",
-          "Port Phasmatys"
+      "Varrock",
+      "Draynor Village",
+      "Edgeville",
+      "Falador",
+      "Burthorpe",
+      "East Ardougne",
+      "Catherby",
+      "Port Phasmatys",
+      "Taverley"
     ],
     "locations": null,
     "skills": {
@@ -2795,8 +2988,9 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-          "Port Phasmatys",
-          "Fenkenstrain's Castle"
+      "Port Phasmatys",
+      "Fenkenstrain's Castle",
+      "Dragontooth Island"
     ],
     "locations": null,
     "skills": {
@@ -3051,7 +3245,8 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-          "Burgh de Rott"
+      "Burgh de Rott",
+      "Paterdomus"
     ],
     "locations": null,
     "skills": {
@@ -3094,7 +3289,8 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-          "Tai Bwo Wannai"
+      "Tai Bwo Wannai",
+      "Shilo Village"
     ],
     "locations": null,
     "skills": {
@@ -3139,10 +3335,10 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-          "Hemenster",
-          "Lumbridge",
-          "Crafting Guild",
-          "Goblin Village"
+      "Hemenster",
+      "Lumbridge",
+      "Crafting Guild",
+      "Draynor Village"
     ],
     "locations": null,
     "skills": {
@@ -3220,9 +3416,9 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-          "Lunar Isle",
-          "Pirates' Cove",
-          "Rellekka"
+      "Lunar Isle",
+      "Pirates' Cove",
+      "Rellekka"
     ],
     "locations": null,
     "skills": {
@@ -3241,7 +3437,84 @@ describe('audited current quest requirements', () => {
       "Rune Mysteries",
       "Shilo Village"
     ],
-    "oneOf": null,
+    "oneOf": [
+      {
+        "locations": [
+          {
+            "id": "air-altar",
+            "label": "Air altar",
+            "standardAreas": [
+              "Falador"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 46,
+                "cy": 51
+              }
+            ]
+          },
+          {
+            "id": "fire-altar",
+            "label": "Fire altar",
+            "standardAreas": [
+              "Al Kharid"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 51,
+                "cy": 50
+              }
+            ]
+          },
+          {
+            "id": "water-altar",
+            "label": "Water altar",
+            "standardAreas": [
+              "Lumbridge"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 49,
+                "cy": 49
+              }
+            ]
+          },
+          {
+            "id": "earth-altar",
+            "label": "Earth altar",
+            "standardAreas": [
+              "Varrock"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 51,
+                "cy": 54
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "id": "edgeville-ditch",
+            "label": "Edgeville ditch",
+            "standardAreas": [
+              "Edgeville"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 48,
+                "cy": 55
+              }
+            ]
+          }
+        ],
+        "quests": [
+          "Enter the Abyss"
+        ]
+      }
+    ],
     "manualRequirements": null,
     "points": 2,
     "difficulty": "Quest (Experienced)"
@@ -3277,14 +3550,28 @@ describe('audited current quest requirements', () => {
   },
   "Making History": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "regions-and-locations",
     "regions": [
-          "Observatory",
-          "East Ardougne",
-          "Rellekka",
-          "Port Phasmatys"
+      "Observatory",
+      "East Ardougne",
+      "Rellekka",
+      "Port Phasmatys"
     ],
-    "locations": null,
+    "locations": [
+      {
+        "id": "jorrals-outpost",
+        "label": "Jorral's Outpost",
+        "standardAreas": [
+          "East Ardougne"
+        ],
+        "chunkOptions": [
+          {
+            "cx": 38,
+            "cy": 52
+          }
+        ]
+      }
+    ],
     "skills": {},
     "combatLevel": null,
     "prereqs": [
@@ -3300,7 +3587,8 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-          "Civitas illa Fortis"
+      "Civitas illa Fortis",
+      "Cam Torum"
     ],
     "locations": null,
     "skills": {},
@@ -3395,9 +3683,10 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-          "Tree Gnome Stronghold",
-          "Ship Yard",
-          "Ape Atoll"
+      "Tree Gnome Stronghold",
+      "Ship Yard",
+      "Ape Atoll",
+      "East Ardougne"
     ],
     "locations": null,
     "skills": {},
@@ -3415,10 +3704,11 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-          "Ape Atoll",
-          "Tree Gnome Stronghold",
-          "Entrana",
-          "Burthorpe"
+      "Ape Atoll",
+      "Tree Gnome Stronghold",
+      "Entrana",
+      "Burthorpe",
+      "Feldip Hills"
     ],
     "locations": null,
     "skills": {
@@ -3449,7 +3739,8 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-          "Mountain Camp"
+      "Mountain Camp",
+      "Rellekka"
     ],
     "locations": null,
     "skills": {
@@ -3458,23 +3749,16 @@ describe('audited current quest requirements', () => {
     "combatLevel": null,
     "prereqs": [],
     "oneOf": [
-
-          {
-
-                "regions": [
-                      "Taverley"
-                ]
-
-          },
-
-          {
-
-                "regions": [
-                      "Catherby"
-                ]
-
-          }
-
+      {
+        "regions": [
+          "Taverley"
+        ]
+      },
+      {
+        "regions": [
+          "Catherby"
+        ]
+      }
     ],
     "manualRequirements": null,
     "points": 2,
@@ -3482,15 +3766,33 @@ describe('audited current quest requirements', () => {
   },
   "Mourning's End Part I": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "regions-and-locations",
     "regions": [
-          "Lletya",
-          "Tyras Camp",
-          "Isafdar",
-          "Arandar",
-          "West Ardougne"
+      "Lletya",
+      "Tyras Camp",
+      "Isafdar",
+      "Arandar",
+      "West Ardougne",
+      "Taverley",
+      "Rimmington",
+      "East Ardougne",
+      "Feldip Hills"
     ],
-    "locations": null,
+    "locations": [
+      {
+        "id": "jorrals-orchard",
+        "label": "Apple orchard by Jorral's Outpost",
+        "standardAreas": [
+          "East Ardougne"
+        ],
+        "chunkOptions": [
+          {
+            "cx": 38,
+            "cy": 52
+          }
+        ]
+      }
+    ],
     "skills": {
       "Ranged": 60,
       "Thieving": 50
@@ -3796,16 +4098,30 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Port Sarim",
-              "Falador",
-              "Varrock",
-              "Musa Point"
+          "Port Sarim",
+          "Falador",
+          "Varrock",
+          "Musa Point"
         ],
         "locations": null,
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "merchants": [
+              "Wine Traders"
+            ]
+          },
+          {
+            "regions": [
+              "Brimhaven"
+            ],
+            "merchants": [
+              "Bars & Inns"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 2,
         "difficulty": "Quest (Novice)"
@@ -3917,7 +4233,7 @@ describe('audited current quest requirements', () => {
             ],
             "chunkOptions": [
               {
-                "cx": 39,
+                "cx": 40,
                 "cy": 52
               }
             ]
@@ -4130,12 +4446,14 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Tyras Camp",
-              "Iorwerth Camp",
-              "Isafdar",
-              "Arandar",
-              "East Ardougne",
-              "West Ardougne"
+          "Tyras Camp",
+          "Iorwerth Camp",
+          "Isafdar",
+          "Arandar",
+          "East Ardougne",
+          "West Ardougne",
+          "Rimmington",
+          "Poison Waste"
         ],
         "locations": null,
         "skills": {
@@ -4210,19 +4528,21 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Feldip Hills",
-              "Port Khazard",
-              "East Ardougne",
-              "Seers' Village",
-              "Catherby",
-              "Kharazi Jungle",
-              "Shilo Village",
-              "Taverley",
-              "Port Sarim",
-              "Falador",
-              "Draynor Village",
-              "Lumbridge",
-              "Varrock"
+          "Feldip Hills",
+          "Port Khazard",
+          "East Ardougne",
+          "Seers' Village",
+          "Catherby",
+          "Kharazi Jungle",
+          "Shilo Village",
+          "Taverley",
+          "Port Sarim",
+          "Falador",
+          "Draynor Village",
+          "Lumbridge",
+          "Varrock",
+          "Dwarven Mine",
+          "Barbarian Village"
         ],
         "locations": null,
         "skills": {
@@ -4236,7 +4556,18 @@ describe('audited current quest requirements', () => {
           "Rune Mysteries",
           "Shilo Village"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "regions": [
+              "Fishing Guild"
+            ]
+          },
+          {
+            "regions": [
+              "Hemenster"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 2,
         "difficulty": "Quest (Experienced)"
@@ -4344,11 +4675,38 @@ describe('audited current quest requirements', () => {
       },
       "Spirits of the Elid": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Nardah"
+          "Nardah"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "water-ravine",
+            "label": "Water Ravine at the source of the River Elid",
+            "standardAreas": [
+              "Nardah"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 52,
+                "cy": 48
+              }
+            ]
+          },
+          {
+            "id": "genie-cave",
+            "label": "Genie's cave",
+            "standardAreas": [
+              "Nardah"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 52,
+                "cy": 45
+              }
+            ]
+          }
+        ],
         "skills": {
           "Magic": 33,
           "Ranged": 37,
@@ -4366,7 +4724,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Lumbridge"
+          "Lumbridge"
         ],
         "locations": null,
         "skills": {
@@ -4585,13 +4943,45 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Draynor Village"
+          "Draynor Village",
+          "Silvarea"
         ],
         "locations": null,
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "regions": [
+              "Musa Point"
+            ]
+          },
+          {
+            "regions": [
+              "Shilo Village"
+            ],
+            "anyOfRegions": [
+              "Catherby",
+              "Seers' Village",
+              "Yanille",
+              "Hosidius"
+            ]
+          },
+          {
+            "regions": [
+              "East Ardougne"
+            ],
+            "anyOfRegions": [
+              "Catherby",
+              "Seers' Village",
+              "Yanille",
+              "Hosidius"
+            ],
+            "skills": {
+              "Magic": 33
+            }
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Novice)"
@@ -4600,9 +4990,11 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Piscatoris Fishing Colony",
-              "Yanille",
-              "Draynor Village"
+          "Piscatoris Fishing Colony",
+          "Yanille",
+          "Draynor Village",
+          "Falador",
+          "Crafting Guild"
         ],
         "locations": null,
         "skills": {
@@ -4793,11 +5185,13 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Paterdomus",
-              "Burgh de Rott",
-              "Meiyerditch",
-              "Darkmeyer",
-              "Slepe"
+          "Paterdomus",
+          "Burgh de Rott",
+          "Meiyerditch",
+          "Darkmeyer",
+          "Slepe",
+          "Icyene Graveyard",
+          "Haunted Woods"
         ],
         "locations": null,
         "skills": {
@@ -4854,8 +5248,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "East Ardougne",
-              "Weiss"
+          "East Ardougne",
+          "Weiss",
+          "Fight Arena"
         ],
         "locations": null,
         "skills": {
@@ -4956,7 +5351,7 @@ describe('audited current quest requirements', () => {
           },
           {
             "id": "tal-teok",
-            "label": "Tal Teok and Tal Teklan",
+            "label": "Tal Teok",
             "standardAreas": [
               "Tlati Rainforest"
             ],
@@ -4964,6 +5359,19 @@ describe('audited current quest requirements', () => {
               {
                 "cx": 19,
                 "cy": 49
+              }
+            ]
+          },
+          {
+            "id": "tal-teklan",
+            "label": "Tal Teklan",
+            "standardAreas": [
+              "Tlati Rainforest"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 19,
+                "cy": 48
               }
             ]
           },
@@ -4977,6 +5385,19 @@ describe('audited current quest requirements', () => {
               {
                 "cx": 20,
                 "cy": 48
+              }
+            ]
+          },
+          {
+            "id": "dragon-nest",
+            "label": "Dragon nest by the river crossing",
+            "standardAreas": [
+              "Tlati Rainforest"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 20,
+                "cy": 49
               }
             ]
           }
@@ -5176,10 +5597,10 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Tai Bwo Wannai",
-              "Shilo Village",
-              "Brimhaven",
-              "Musa Point"
+          "Tai Bwo Wannai",
+          "Shilo Village",
+          "Brimhaven",
+          "Musa Point"
         ],
         "locations": null,
         "skills": {
@@ -5191,7 +5612,18 @@ describe('audited current quest requirements', () => {
         "prereqs": [
           "Jungle Potion"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "merchants": [
+              "Wine Traders"
+            ]
+          },
+          {
+            "merchants": [
+              "Bars & Inns"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 2,
         "difficulty": "Quest (Intermediate)"
@@ -5260,7 +5692,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Hemenster"
+          "Hemenster",
+          "East Ardougne",
+          "Edgeville"
         ],
         "locations": null,
         "skills": {
@@ -5298,7 +5732,10 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Arceuus"
+          "Arceuus",
+          "Kourend Castle",
+          "Mount Karuulm",
+          "Lovakengj"
         ],
         "locations": null,
         "skills": {
@@ -5332,13 +5769,41 @@ describe('audited current quest requirements', () => {
       },
       "The Curse of Arrav": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Varrock",
-              "Ruins of Uzer",
-              "Mountain Camp"
+          "Varrock",
+          "Ruins of Uzer",
+          "Mountain Camp",
+          "Silvarea"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "trollweiss-mountain",
+            "label": "Cave on Trollweiss Mountain",
+            "standardAreas": [
+              "Mountain Camp"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 43,
+                "cy": 60
+              }
+            ]
+          },
+          {
+            "id": "zemouregals-fortress",
+            "label": "Zemouregal's Fortress",
+            "standardAreas": [
+              "Mountain Camp"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 44,
+                "cy": 60
+              }
+            ]
+          }
+        ],
         "skills": {
           "Agility": 61,
           "Ranged": 62,
@@ -5399,13 +5864,26 @@ describe('audited current quest requirements', () => {
       },
       "The Eyes of Glouphrie": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Tree Gnome Stronghold",
-              "Observatory",
-              "Feldip Hills"
+          "Tree Gnome Stronghold",
+          "Yanille"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "giant-tortoises",
+            "label": "Giant tortoises in the Gnome Stronghold",
+            "standardAreas": [
+              "Tree Gnome Stronghold"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 37,
+                "cy": 55
+              }
+            ]
+          }
+        ],
         "skills": {
           "Construction": 5,
           "Magic": 46
@@ -5439,13 +5917,27 @@ describe('audited current quest requirements', () => {
       },
       "The Final Dawn": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Tlati Rainforest",
-              "Civitas illa Fortis",
-              "Ralos' Rise"
+          "Tlati Rainforest",
+          "Civitas illa Fortis",
+          "Ralos' Rise"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "crypt-of-tonali",
+            "label": "Crypt of Tonali",
+            "standardAreas": [
+              "Tlati Rainforest"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 20,
+                "cy": 47
+              }
+            ]
+          }
+        ],
         "skills": {
           "Thieving": 66,
           "Fletching": 52,
@@ -5465,7 +5957,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Lovakengj"
+          "Lovakengj",
+          "Wintertodt Camp"
         ],
         "locations": null,
         "skills": {},
@@ -5480,18 +5973,59 @@ describe('audited current quest requirements', () => {
       },
       "The Fremennik Exiles": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Rellekka",
-              "Lunar Isle"
+          "Rellekka",
+          "Lunar Isle"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "brundt-outside-rellekka",
+            "label": "Brundt outside Rellekka",
+            "standardAreas": [
+              "Rellekka"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 42,
+                "cy": 56
+              }
+            ]
+          },
+          {
+            "id": "fossegrimen",
+            "label": "Fossegrimen's lake",
+            "standardAreas": [
+              "Rellekka"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 41,
+                "cy": 56
+              }
+            ]
+          },
+          {
+            "id": "island-of-stone",
+            "label": "Island of Stone",
+            "standardAreas": [
+              "Rellekka"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 38,
+                "cy": 62
+              }
+            ]
+          }
+        ],
         "skills": {
           "Crafting": 65,
           "Slayer": 60,
           "Smithing": 60,
           "Fishing": 60,
-          "Runecraft": 55,
+          "Mining": 60,
+          "Runecraft": 55
         },
         "combatLevel": null,
         "prereqs": [
@@ -5507,13 +6041,27 @@ describe('audited current quest requirements', () => {
       },
       "The Fremennik Isles": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Rellekka",
-              "Neitiznot",
-              "Jatizso"
+          "Rellekka",
+          "Neitiznot",
+          "Jatizso"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "ice-troll-lands",
+            "label": "Ice troll lands north of Neitiznot",
+            "standardAreas": [
+              "Neitiznot"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 36,
+                "cy": 60
+              }
+            ]
+          }
+        ],
         "skills": {
           "Construction": 20
         },
@@ -5543,11 +6091,26 @@ describe('audited current quest requirements', () => {
       },
       "The Garden of Death": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Molch"
+          "Molch",
+          "Mount Quidamortem"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "ruins-of-morra",
+            "label": "Ruins of Morra",
+            "standardAreas": [
+              "Mount Quidamortem"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 22,
+                "cy": 54
+              }
+            ]
+          }
+        ],
         "skills": {
           "Farming": 20
         },
@@ -5582,12 +6145,27 @@ describe('audited current quest requirements', () => {
       },
       "The Golem": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Ruins of Uzer",
-              "Varrock"
+          "Ruins of Uzer",
+          "Varrock",
+          "Digsite"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "desert-phoenix",
+            "label": "Desert phoenix north of Uzer",
+            "standardAreas": [
+              "Ruins of Uzer"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 53,
+                "cy": 49
+              }
+            ]
+          }
+        ],
         "skills": {
           "Crafting": 20,
           "Thieving": 25
@@ -5603,9 +6181,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Tree Gnome Stronghold",
-              "Feldip Hills",
-              "Ship Yard"
+          "Tree Gnome Stronghold",
+          "Yanille",
+          "Ship Yard"
         ],
         "locations": null,
         "skills": {
@@ -5622,10 +6200,10 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Canifis",
-              "Mos Le'Harmless",
-              "Harmony Island",
-              "Edgeville"
+          "Canifis",
+          "Mos Le'Harmless",
+          "Harmony Island",
+          "Edgeville"
         ],
         "locations": null,
         "skills": {
@@ -5641,7 +6219,7 @@ describe('audited current quest requirements', () => {
         ],
         "oneOf": null,
         "manualRequirements": [
-          "Access to a player-owned house workshop and crafting table, or the Grand Exchange"
+          "Access to a player-owned house workshop and crafting table"
         ],
         "points": 2,
         "difficulty": "Quest (Experienced)"
@@ -5669,12 +6247,39 @@ describe('audited current quest requirements', () => {
       },
       "The Heart of Darkness": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Ralos' Rise",
-              "Civitas illa Fortis"
+          "Ralos' Rise",
+          "Civitas illa Fortis"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "quetzacalli-gorge",
+            "label": "Quetzacalli Gorge",
+            "standardAreas": [
+              "Ralos' Rise"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 23,
+                "cy": 50
+              }
+            ]
+          },
+          {
+            "id": "twilight-trialist-tower",
+            "label": "Twilight Trialist Tower",
+            "standardAreas": [
+              "Ralos' Rise"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 25,
+                "cy": 50
+              }
+            ]
+          }
+        ],
         "skills": {
           "Mining": 55,
           "Thieving": 48,
@@ -5753,8 +6358,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Gnome Village",
-              "Feldip Hills"
+          "Gnome Village",
+          "Castle Wars",
+          "Yanille"
         ],
         "locations": null,
         "skills": {
@@ -5799,7 +6405,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Last Light"
+          "Last Light",
+          "Red Rock"
         ],
         "locations": null,
         "skills": {
@@ -5819,7 +6426,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Lumbridge"
+          "Lumbridge",
+          "Wizards' Tower"
         ],
         "locations": null,
         "skills": {},
@@ -5851,13 +6459,26 @@ describe('audited current quest requirements', () => {
       },
       "The Slug Menace": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Observatory",
-              "Witchaven",
-              "Falador"
+          "Witchaven",
+          "Falador"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "jorrals-outpost",
+            "label": "Jorral's Outpost",
+            "standardAreas": [
+              "East Ardougne"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 38,
+                "cy": 52
+              }
+            ]
+          }
+        ],
         "skills": {
           "Crafting": 30,
           "Runecraft": 30,
@@ -5878,19 +6499,47 @@ describe('audited current quest requirements', () => {
       },
       "The Tourist Trap": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Bedabin Camp",
-              "Shantay Pass"
+          "Bedabin Camp",
+          "Shantay Pass"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "desert-mining-camp",
+            "label": "Desert Mining Camp",
+            "standardAreas": [
+              "Shantay Pass"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 51,
+                "cy": 47
+              }
+            ]
+          }
+        ],
         "skills": {
           "Fletching": 10,
           "Smithing": 20
         },
         "combatLevel": null,
         "prereqs": [],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "merchants": [
+              "General Stores"
+            ]
+          },
+          {
+            "regions": [
+              "Sophanem"
+            ],
+            "merchants": [
+              "Clothes Shops"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 2,
         "difficulty": "Quest (Intermediate)"
@@ -5934,7 +6583,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Gnome Village"
+          "Gnome Village",
+          "Khazard Battlefield",
+          "West Ardougne"
         ],
         "locations": null,
         "skills": {},
@@ -5967,8 +6618,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Burthorpe",
-              "Warriors' Guild"
+          "Burthorpe",
+          "Warriors' Guild",
+          "Mountain Camp"
         ],
         "locations": null,
         "skills": {
@@ -6112,7 +6764,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Yanille"
+          "Yanille",
+          "Feldip Hills"
         ],
         "locations": null,
         "skills": {
@@ -6149,8 +6802,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Edgeville",
-              "Varrock"
+          "Edgeville",
+          "Varrock"
         ],
         "locations": null,
         "skills": {
@@ -6160,23 +6813,85 @@ describe('audited current quest requirements', () => {
         "prereqs": [
           "Rune Mysteries"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Mining": 42
+            }
+          },
+          {
+            "locations": [
+              {
+                "id": "chaos-temple-ruins",
+                "label": "Chaos Temple ruins",
+                "standardAreas": [
+                  "Dark Warriors' Fortress"
+                ],
+                "chunkOptions": [
+                  {
+                    "cx": 47,
+                    "cy": 56
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "locations": [
+              {
+                "id": "edgeville-ditch",
+                "label": "Edgeville ditch",
+                "standardAreas": [
+                  "Edgeville"
+                ],
+                "chunkOptions": [
+                  {
+                    "cx": 48,
+                    "cy": 55
+                  }
+                ]
+              }
+            ],
+            "quests": [
+              "Enter the Abyss"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Intermediate)"
       },
       "While Guthix Sleeps": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Edgeville",
-              "Draynor Village",
-              "Warriors' Guild",
-              "Taverley",
-              "Falador",
-              "Port Sarim"
+          "Edgeville",
+          "Draynor Village",
+          "Warriors' Guild",
+          "Taverley",
+          "Falador",
+          "Port Sarim",
+          "Fight Arena",
+          "Feldip Hills",
+          "Khazard Battlefield",
+          "Seers' Village",
+          "Chaos Altar"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "luciens-camp",
+            "label": "Lucien's camp",
+            "standardAreas": [
+              "Chaos Altar"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 45,
+                "cy": 59
+              }
+            ]
+          }
+        ],
         "skills": {
           "Quest Points": 180,
           "Thieving": 72,
@@ -6184,7 +6899,7 @@ describe('audited current quest requirements', () => {
           "Agility": 66,
           "Farming": 65,
           "Herblore": 65,
-          "Hunter": 62,
+          "Hunter": 62
         },
         "combatLevel": null,
         "prereqs": [

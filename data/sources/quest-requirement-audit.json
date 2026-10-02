@@ -11,7 +11,7 @@
       "id": "A Kingdom Divided",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Kingdom_Divided&oldid=15259353",
         "revision": 15259353,
@@ -19,7 +19,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Shayzien\",\"Lovakengj\",\"Hosidius\",\"Arceuus\",\"Piscarilius\"],\"skills\":{\"Agility\":54,\"Crafting\":38,\"Herblore\":50,\"Magic\":35,\"Mining\":42,\"Thieving\":52,\"Woodcutting\":52},\"prereqs\":[\"The Depths of Despair\",\"The Queen of Thieves\",\"Tale of the Righteous\",\"The Forsaken Tower\",\"The Ascent of Arceuus\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Shayzien\",\"Lovakengj\",\"Hosidius\",\"Arceuus\",\"Piscarilius\",\"Kourend Castle\",\"Molch\",\"Kebos Lowlands\",\"Mount Karuulm\",\"Wintertodt Camp\"],\"skills\":{\"Agility\":54,\"Crafting\":38,\"Herblore\":50,\"Magic\":35,\"Mining\":42,\"Thieving\":52,\"Woodcutting\":52},\"prereqs\":[\"The Depths of Despair\",\"The Queen of Thieves\",\"Tale of the Righteous\",\"The Forsaken Tower\",\"The Ascent of Arceuus\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "23,56",
@@ -88,7 +88,8 @@
         ],
         "travel": [
           "The Kourend council and faction route remains covered by Kourend & Kebos.",
-          "The catalogue-wide parent-region audit replaced Kourend & Kebos with the exact tracked access set: Shayzien, Lovakengj, Hosidius, Arceuus, Piscarilius."
+          "The catalogue-wide parent-region audit replaced Kourend & Kebos with the exact tracked access set: Shayzien, Lovakengj, Hosidius, Arceuus, Piscarilius.",
+          "Accuracy review 2026-10-02: Commander Fullore is at Kourend Castle, Kaht B'alam in Molch, the egg in the Kebos Lowlands, the Tasakaal and Keith's house at Mount Karuulm, and the Doors of Dinh at the Wintertodt Camp; those five areas are now required (Wiki revision 15356780)."
         ],
         "instances": [],
         "partialCompletion": []
@@ -98,7 +99,7 @@
       "id": "A Night at the Theatre",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Night_at_the_Theatre&oldid=15241913",
         "revision": 15241913,
@@ -106,7 +107,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Mort Myre Swamp\",\"Ver Sinhaza\"],\"skills\":{},\"prereqs\":[\"A Taste of Hope\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Mort Myre Swamp\",\"Ver Sinhaza\",\"Slepe\"],\"skills\":{},\"prereqs\":[\"A Taste of Hope\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "54,52",
@@ -130,7 +131,8 @@
         ],
         "travel": [
           "The pinned route enters and completes the Theatre of Blood in Morytania.",
-          "The catalogue-wide parent-region audit replaced Morytania with the exact tracked access set: Mort Myre Swamp, Ver Sinhaza."
+          "The catalogue-wide parent-region audit replaced Morytania with the exact tracked access set: Mort Myre Swamp, Ver Sinhaza.",
+          "Accuracy review 2026-10-02: Daer Krand is in the Sisterhood Sanctuary beneath Slepe; Slepe is now required (Wiki revision 15325956)."
         ],
         "instances": [
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
@@ -142,7 +144,7 @@
       "id": "A Porcine of Interest",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Porcine_of_Interest&oldid=15272507",
         "revision": 15272507,
@@ -150,7 +152,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\",\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":50}],\"id\":\"draynor-village\",\"label\":\"Draynor Village\",\"standardAreas\":[\"Draynor Village\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":51}],\"id\":\"south-falador-farm\",\"label\":\"South Falador Farm\",\"standardAreas\":[\"Falador\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\",\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":50}],\"id\":\"draynor-village\",\"label\":\"Draynor Village\",\"standardAreas\":[\"Draynor Village\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":51}],\"id\":\"south-falador-farm\",\"label\":\"South Falador Farm\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":52}],\"id\":\"sourhog-cave\",\"label\":\"Sourhog Cave by the River Lum\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":51}],\"id\":\"spria\",\"label\":\"Spria in north Draynor\",\"standardAreas\":[\"Draynor Village\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "47,51",
@@ -173,7 +175,8 @@
           "The pinned Wiki item requirements for A Porcine of Interest were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "The unavoidable start and farm stops are represented by Draynor Village and South Falador Farm; the Champions' Guild picker row at chunk 49,52 was reviewed as an intermediate activity marker and is not forced as a third completion gate."
+          "The unavoidable start and farm stops are represented by Draynor Village and South Falador Farm; the Champions' Guild picker row at chunk 49,52 was reviewed as an intermediate activity marker and is not forced as a third completion gate.",
+          "Accuracy review 2026-10-02: The Sourhog's hole by the River Lum (49,52) and Spria in north Draynor (48,51) are now locations, for Chunked mode (Wiki revision 15329297)."
         ],
         "instances": [],
         "partialCompletion": []
@@ -345,7 +348,7 @@
       "id": "Alfred Grimhand's Barcrawl",
       "kind": "miniquest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Alfred_Grimhand's_Barcrawl&oldid=15237159",
         "revision": 15237159,
@@ -353,7 +356,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\",\"Misthalin\",\"Karamja\",\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":39,\"cy\":55}],\"id\":\"barbarian-outpost\",\"label\":\"Barbarian Outpost\",\"standardAreas\":[\"Barbarian Outpost\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"blue-moon-inn\",\"label\":\"Blue Moon Inn\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":38,\"cy\":54}],\"id\":\"grand-tree-bar\",\"label\":\"Blurberry Bar in the Grand Tree\",\"standardAreas\":[\"Tree Gnome Stronghold\"]},{\"chunkOptions\":[{\"cx\":43,\"cy\":49}],\"id\":\"brimhaven-bar\",\"label\":\"Dead Man's Chest in Brimhaven\",\"standardAreas\":[\"Brimhaven\"]},{\"chunkOptions\":[{\"cx\":39,\"cy\":48}],\"id\":\"yanille-bar\",\"label\":\"Dragon Inn in Yanille\",\"standardAreas\":[\"Yanille\"]},{\"chunkOptions\":[{\"cx\":40,\"cy\":51}],\"id\":\"east-ardougne-bar\",\"label\":\"Flying Horse Inn in East Ardougne\",\"standardAreas\":[\"East Ardougne\"]},{\"chunkOptions\":[{\"cx\":42,\"cy\":54}],\"id\":\"seers-village-bar\",\"label\":\"Forester's Arms in Seers' Village\",\"standardAreas\":[\"Seers' Village\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"jolly-boar-inn\",\"label\":\"Jolly Boar Inn\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":45,\"cy\":49}],\"id\":\"musa-point-bar\",\"label\":\"Karamja Spirits Bar at Musa Point\",\"standardAreas\":[\"Musa Point\"]},{\"chunkOptions\":[{\"cx\":46,\"cy\":52}],\"id\":\"falador-bar\",\"label\":\"Rising Sun Inn in Falador\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":50}],\"id\":\"port-sarim-bar\",\"label\":\"Rusty Anchor in Port Sarim\",\"standardAreas\":[\"Port Sarim\"]}],\"skills\":{},\"prereqs\":[],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\",\"Misthalin\",\"Karamja\",\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":39,\"cy\":55}],\"id\":\"barbarian-outpost\",\"label\":\"Barbarian Outpost\",\"standardAreas\":[\"Barbarian Outpost\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"blue-moon-inn\",\"label\":\"Blue Moon Inn\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":38,\"cy\":54}],\"id\":\"grand-tree-bar\",\"label\":\"Blurberry Bar in the Grand Tree\",\"standardAreas\":[\"Tree Gnome Stronghold\"]},{\"chunkOptions\":[{\"cx\":43,\"cy\":49}],\"id\":\"brimhaven-bar\",\"label\":\"Dead Man's Chest in Brimhaven\",\"standardAreas\":[\"Brimhaven\"]},{\"chunkOptions\":[{\"cx\":39,\"cy\":48}],\"id\":\"yanille-bar\",\"label\":\"Dragon Inn in Yanille\",\"standardAreas\":[\"Yanille\"]},{\"chunkOptions\":[{\"cx\":40,\"cy\":51}],\"id\":\"east-ardougne-bar\",\"label\":\"Flying Horse Inn in East Ardougne\",\"standardAreas\":[\"East Ardougne\"]},{\"chunkOptions\":[{\"cx\":42,\"cy\":54}],\"id\":\"seers-village-bar\",\"label\":\"Forester's Arms in Seers' Village\",\"standardAreas\":[\"Seers' Village\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"jolly-boar-inn\",\"label\":\"Jolly Boar Inn\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":45,\"cy\":49}],\"id\":\"musa-point-bar\",\"label\":\"Karamja Spirits Bar at Musa Point\",\"standardAreas\":[\"Musa Point\"]},{\"chunkOptions\":[{\"cx\":46,\"cy\":52}],\"id\":\"falador-bar\",\"label\":\"Rising Sun Inn in Falador\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":50}],\"id\":\"port-sarim-bar\",\"label\":\"Rusty Anchor in Port Sarim\",\"standardAreas\":[\"Port Sarim\"]}],\"skills\":{},\"prereqs\":[],\"merchants\":[\"Bars & Inns\"],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "39,48",
@@ -403,7 +406,8 @@
       ],
       "notes": {
         "items": [
-          "The ten required drinks cost 208 coins; item possession is not machine-enforced."
+          "The ten required drinks cost 208 coins; item possession is not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: barkeeper purchases need Bars & Inns, and every drink on the barcrawl card is bought from one (Wiki revision 15292247)."
         ],
         "travel": [
           "The Wiki requires the Barbarian Outpost and ten pubs. The exact location policy uses Wiki map coordinates for the Grand Tree bar (38,54) and East Ardougne bar (40,51), which have no pinned Chunk Picker first/step row; the other unavoidable stops match the nine pinned rows."
@@ -416,7 +420,7 @@
       "id": "Animal Magnetism",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-22",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Animal_Magnetism&oldid=15327014",
         "revision": 15327014,
@@ -424,7 +428,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Draynor Village\",\"Burthorpe\",\"Fenkenstrain's Castle\"],\"skills\":{\"Crafting\":19,\"Ranged\":30,\"Slayer\":18,\"Woodcutting\":35},\"equipmentRequirements\":[{\"reason\":\"Wear the ghostspeak amulet when speaking to the old crone\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"The Restless Ghost\",\"Ernest the Chicken\",\"Priest in Peril\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Draynor Village\",\"Burthorpe\",\"Fenkenstrain's Castle\",\"Port Phasmatys\",\"Rimmington\"],\"skills\":{\"Crafting\":19,\"Ranged\":30,\"Slayer\":18,\"Woodcutting\":35},\"equipmentRequirements\":[{\"reason\":\"Wear the ghostspeak amulet when speaking to the old crone\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"The Restless Ghost\",\"Ernest the Chicken\",\"Priest in Peril\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "45,55",
@@ -449,7 +453,8 @@
         ],
         "travel": [
           "The route visits Draynor Manor, Taverley, and Port Phasmatys, represented by Misthalin, Asgarnia, and Morytania.",
-          "The catalogue-wide parent-region audit replaced Misthalin, Asgarnia, Morytania with the exact tracked access set: Draynor Village, Burthorpe, Fenkenstrain's Castle."
+          "The catalogue-wide parent-region audit replaced Misthalin, Asgarnia, Morytania with the exact tracked access set: Draynor Village, Burthorpe, Fenkenstrain's Castle.",
+          "Accuracy review 2026-10-02: Alice's farm is in Port Phasmatys's chunk 56,55 and the bar magnet is made in the Rimmington mine; both areas are now required (Wiki revision 15327014)."
         ],
         "instances": [],
         "partialCompletion": []
@@ -501,7 +506,7 @@
       "id": "At First Light",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=At_First_Light&oldid=15271675",
         "revision": 15271675,
@@ -509,7 +514,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hunter's Guild\"],\"skills\":{\"Construction\":27,\"Herblore\":30,\"Hunter\":46},\"prereqs\":[\"Children of the Sun\",\"Eagles' Peak\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hunter's Guild\",\"Avium Savannah\",\"Civitas illa Fortis\"],\"skills\":{\"Construction\":27,\"Herblore\":30,\"Hunter\":46},\"prereqs\":[\"Children of the Sun\",\"Eagles' Peak\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "24,47",
@@ -523,7 +528,8 @@
         ],
         "travel": [
           "The Varlamore route and the Eagles' Peak prerequisite were both verified.",
-          "The catalogue-wide parent-region audit replaced Varlamore with the exact tracked access set: Hunter's Guild."
+          "The catalogue-wide parent-region audit replaced Varlamore with the exact tracked access set: Hunter's Guild.",
+          "Accuracy review 2026-10-02: Fox is at the Avium Savannah mining site and Atza at Outer Fortis (26,47, Civitas illa Fortis); both areas are now required (Wiki revision 15271675)."
         ],
         "instances": [],
         "partialCompletion": [
@@ -617,7 +623,7 @@
       "id": "Below Ice Mountain",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Below_Ice_Mountain&oldid=15240942",
         "revision": 15240942,
@@ -625,7 +631,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\",\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":46,\"cy\":52}],\"id\":\"west-falador\",\"label\":\"West Falador\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":46,\"cy\":53}],\"id\":\"falador-north-gate\",\"label\":\"Falador north gate\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":46,\"cy\":54}],\"id\":\"goblin-village\",\"label\":\"Goblin Village\",\"standardAreas\":[\"Goblin Village\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":54}],\"id\":\"edgeville\",\"label\":\"Edgeville\",\"standardAreas\":[\"Edgeville\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":52}],\"id\":\"varrock-south-gate\",\"label\":\"Varrock south gate\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"varrock-square\",\"label\":\"Varrock square\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{\"Quest Points\":16},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\",\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":46,\"cy\":52}],\"id\":\"west-falador\",\"label\":\"West Falador\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":46,\"cy\":53}],\"id\":\"falador-north-gate\",\"label\":\"Falador north gate\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":46,\"cy\":54}],\"id\":\"goblin-village\",\"label\":\"Goblin Village\",\"standardAreas\":[\"Goblin Village\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":54}],\"id\":\"edgeville\",\"label\":\"Edgeville\",\"standardAreas\":[\"Edgeville\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":53}],\"id\":\"barbarian-village\",\"label\":\"Checkal in Barbarian Village\",\"standardAreas\":[\"Barbarian Village\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":52}],\"id\":\"varrock-south-gate\",\"label\":\"Varrock south gate\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"varrock-square\",\"label\":\"Varrock square\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{\"Quest Points\":16},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "46,52",
@@ -663,7 +669,8 @@
           "The pinned Wiki item requirements for Below Ice Mountain were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "All six pinned picker rows from west Falador through Varrock are represented as exact locations."
+          "All six pinned picker rows from west Falador through Varrock are represented as exact locations.",
+          "Accuracy review 2026-10-02: Checkal is recruited in Barbarian Village (Quest Helper recruitCheckal, 3087,3415); it is now a location, for Chunked mode and Xtreme runs."
         ],
         "instances": [
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
@@ -675,15 +682,15 @@
       "id": "Beneath Cursed Sands",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Beneath_Cursed_Sands&oldid=15265928",
         "revision": 15265928,
         "revisionTimestamp": "2026-07-17T08:19:06Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Sophanem\"],\"skills\":{\"Agility\":62,\"Crafting\":55,\"Firemaking\":55},\"prereqs\":[\"Contact!\"],\"points\":2}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Sophanem\",\"Nardah\"],\"locations\":[{\"chunkOptions\":[{\"cx\":53,\"cy\":43}],\"id\":\"ullek-swamp\",\"label\":\"Ullek swamp, where the chest is buried\",\"standardAreas\":[\"Sophanem\"]},{\"chunkOptions\":[{\"cx\":53,\"cy\":44}],\"id\":\"ruins-of-ullek\",\"label\":\"Ruins of Ullek\",\"standardAreas\":[\"Sophanem\"]},{\"chunkOptions\":[{\"cx\":52,\"cy\":45}],\"id\":\"lily-of-the-elid\",\"label\":\"Lily of the Elid island\",\"standardAreas\":[\"Nardah\"]}],\"skills\":{\"Agility\":62,\"Crafting\":55,\"Firemaking\":55},\"prereqs\":[\"Contact!\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "51,42",
@@ -717,7 +724,9 @@
         ],
         "travel": [
           "The desert and tomb route remains represented by the Kharidian Desert region.",
-          "The catalogue-wide parent-region audit replaced Kharidian Desert with the exact tracked access set: Sophanem."
+          "The catalogue-wide parent-region audit replaced Kharidian Desert with the exact tracked access set: Sophanem.",
+          "Accuracy review 2026-10-02: Maisa and Zahur are in Nardah (53,45); Nardah is now required (Wiki revision 15333475).",
+          "Accuracy review 2026-10-02: Stand-ins for steps in chunks no area owns (owner decision of 2 Oct): the Ruins of Ullek (53,43 and 53,44, reached round the cliffs from Maisa's camp by Sophanem) ask for Sophanem, and the Lily of the Elid's island (52,45, west of Nardah) asks for Nardah."
         ],
         "instances": [
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
@@ -804,7 +813,7 @@
       "id": "Biohazard",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-22",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Biohazard&oldid=15327977",
         "revision": 15327977,
@@ -812,7 +821,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"East Ardougne\",\"West Ardougne\",\"Rimmington\",\"Varrock\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the gas mask for the plague-sample route\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the medical gown to enter the Mourner headquarters\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear the priest gown to enter the Mourner headquarters\",\"slot\":\"Legs\",\"tier\":1}],\"prereqs\":[\"Plague City\"],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"East Ardougne\",\"West Ardougne\",\"Rimmington\",\"Varrock\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the gas mask for the plague-sample route\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the medical gown to enter the Mourner headquarters\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear the priest gown to see Guidor in Varrock\",\"slot\":\"Legs\",\"tier\":1}],\"prereqs\":[\"Plague City\"],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "39,51",
@@ -838,7 +847,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Biohazard were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Fate equipment review 2026-09-22: Head T1: Wear the gas mask for the plague-sample route; Body T1: Wear the medical gown to enter the Mourner headquarters; Legs T1: Wear the priest gown to enter the Mourner headquarters. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
+          "Fate equipment review 2026-09-22: Head T1: Wear the gas mask for the plague-sample route; Body T1: Wear the medical gown to enter the Mourner headquarters; Legs T1: Wear the priest gown to enter the Mourner headquarters. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged.",
+          "Accuracy review 2026-10-02: Wording: the priest gown is worn to see Guidor in Varrock, not to enter the Mourner headquarters, which takes the medical gown (Wiki revision 15327977)."
         ],
         "travel": [
           "The route crosses Ardougne/Kandarin, Asgarnia, and Varrock/Misthalin.",
@@ -892,7 +902,7 @@
       "id": "Bone Voyage",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Bone_Voyage&oldid=15262285",
         "revision": 15262285,
@@ -900,7 +910,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"Fossil Island\",\"Port Sarim\",\"Woodcutting Guild\"],\"skills\":{},\"prereqs\":[\"The Dig Site\"],\"manualRequirements\":[\"100 Kudos\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"Fossil Island\",\"Port Sarim\",\"Woodcutting Guild\",\"Digsite\",\"Silvarea\"],\"skills\":{},\"prereqs\":[\"The Dig Site\"],\"manualRequirements\":[\"100 Kudos\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "25,54",
@@ -939,7 +949,8 @@
         ],
         "travel": [
           "The route crosses Varrock/Misthalin, Asgarnia, Kourend, and Fossil Island.",
-          "The catalogue-wide parent-region audit replaced Misthalin, Islands & Others, Asgarnia, Kourend & Kebos with the exact tracked access set: Varrock, Fossil Island, Port Sarim, Woodcutting Guild."
+          "The catalogue-wide parent-region audit replaced Misthalin, Islands & Others, Asgarnia, Kourend & Kebos with the exact tracked access set: Varrock, Fossil Island, Port Sarim, Woodcutting Guild.",
+          "Accuracy review 2026-10-02: The barge foreman is at the Digsite and the Odd Old Man in Silvarea (Chunk Picker tasks 2, 9a and 10); both areas are now required, which matters in Chunked mode and Xtreme runs."
         ],
         "instances": [],
         "partialCompletion": [
@@ -1117,15 +1128,15 @@
       "id": "Cold War",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Cold_War&oldid=15271161",
         "revision": 15271161,
         "revisionTimestamp": "2026-07-21T05:30:10Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Rellekka\",\"East Ardougne\",\"Lumbridge\"],\"skills\":{\"Agility\":30,\"Construction\":34,\"Crafting\":30,\"Hunter\":10,\"Thieving\":15},\"prereqs\":[],\"manualRequirements\":[\"Access to a crafting table 3\"],\"points\":1}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Rellekka\",\"East Ardougne\",\"Lumbridge\"],\"locations\":[{\"chunkOptions\":[{\"cx\":41,\"cy\":62}],\"id\":\"south-iceberg\",\"label\":\"South iceberg\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":41,\"cy\":63}],\"id\":\"north-iceberg\",\"label\":\"North iceberg\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Agility\":30,\"Construction\":34,\"Crafting\":30,\"Hunter\":10,\"Thieving\":15},\"prereqs\":[],\"manualRequirements\":[\"Access to a crafting table 3\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "41,62",
@@ -1154,7 +1165,8 @@
         ],
         "travel": [
           "The route crosses Rellekka/Fremennik, Ardougne/Kandarin, and Lumbridge/Misthalin.",
-          "The catalogue-wide parent-region audit replaced Fremennik, Kandarin, Misthalin with the exact tracked access set: Rellekka, East Ardougne, Lumbridge."
+          "The catalogue-wide parent-region audit replaced Fremennik, Kandarin, Misthalin with the exact tracked access set: Rellekka, East Ardougne, Lumbridge.",
+          "Accuracy review 2026-10-02: Stand-ins for steps in chunks no area owns (owner decision of 2 Oct): the two icebergs (41,62 and 41,63) ask for Rellekka, where Larry's boat leaves from."
         ],
         "instances": [],
         "partialCompletion": [
@@ -1388,7 +1400,7 @@
       "id": "Daddy's Home",
       "kind": "miniquest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Daddy's_Home&oldid=15233724",
         "revision": 15233724,
@@ -1396,7 +1408,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":54}],\"id\":\"varrock-palace\",\"label\":\"Marlo at Varrock's Estate Agent\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"varrock-center\",\"label\":\"Old Man Yarlo's house in Varrock\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"lumber-yard\",\"label\":\"Lumber Yard\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":54}],\"id\":\"varrock-palace\",\"label\":\"Marlo at Varrock's Estate Agent\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"varrock-center\",\"label\":\"Old Man Yarlo's house in Varrock\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"lumber-yard\",\"label\":\"Lumber Yard\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[],\"merchants\":[\"Sawmill Operators\"],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "50,53",
@@ -1416,7 +1428,8 @@
       ],
       "notes": {
         "items": [
-          "Planks, bolts of cloth, nails, a hammer, and a saw are required; item possession is not machine-enforced."
+          "Planks, bolts of cloth, nails, a hammer, and a saw are required; item possession is not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the bolts of cloth (and the planks) come from the Varrock sawmill (Wiki revision 15337234); the quest now needs Sawmill Operators."
         ],
         "travel": [
           "Marlo at Varrock's Estate Agent, Old Man Yarlo's house, and the Lumber Yard are all unavoidable and match the pinned first/step chunks."
@@ -1622,7 +1635,7 @@
       "id": "Defender of Varrock",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Defender_of_Varrock&oldid=15266905",
         "revision": 15266905,
@@ -1630,7 +1643,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"Goblin Village\"],\"skills\":{\"Hunter\":52,\"Smithing\":55},\"prereqs\":[\"Shield of Arrav\",\"Romeo & Juliet\",\"Demon Slayer\",\"Temple of Ikov\",\"Below Ice Mountain\",\"Family Crest\",\"Garden of Tranquillity\",\"What Lies Below\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"Goblin Village\",\"Silvarea\"],\"skills\":{\"Hunter\":52,\"Smithing\":55},\"prereqs\":[\"Shield of Arrav\",\"Romeo & Juliet\",\"Demon Slayer\",\"Temple of Ikov\",\"Below Ice Mountain\",\"Family Crest\",\"Garden of Tranquillity\",\"What Lies Below\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "50,53",
@@ -1654,7 +1667,8 @@
         ],
         "travel": [
           "The route crosses Varrock/Misthalin and Camdozaal/Asgarnia.",
-          "The catalogue-wide parent-region audit replaced Misthalin, Asgarnia with the exact tracked access set: Varrock, Goblin Village."
+          "The catalogue-wide parent-region audit replaced Misthalin, Asgarnia with the exact tracked access set: Varrock, Goblin Village.",
+          "Accuracy review 2026-10-02: The tracks end in Silvarea (Chunk Picker task 3); Silvarea is now required, which matters in Chunked mode and Xtreme runs."
         ],
         "instances": [],
         "partialCompletion": []
@@ -1713,15 +1727,15 @@
       "id": "Desert Treasure I",
       "kind": "quest",
       "status": "unresolved",
-      "reviewedAt": "2026-09-22",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Desert_Treasure_I&oldid=15350966",
         "revision": 15350966,
         "revisionTimestamp": "2026-09-19T15:50:32Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Bandit Camp\",\"Bedabin Camp\",\"Pollnivneach\",\"Entrana\",\"Burthorpe\",\"Baxtorian Falls\",\"Canifis\",\"Mort Myre Swamp\"],\"skills\":{\"Firemaking\":50,\"Magic\":50,\"Slayer\":10,\"Thieving\":53},\"prereqs\":[\"The Dig Site\",\"Temple of Ikov\",\"The Tourist Trap\",\"Troll Stronghold\",\"Priest in Peril\",\"Waterfall Quest\"],\"skillAlternatives\":[{\"manualRequirements\":[\"Have a gas mask from Plague City for the smoke dungeon (alternative to Slayer 10)\"],\"quests\":[\"Plague City\"],\"skill\":\"Slayer\"}],\"points\":3}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Bandit Camp\",\"Bedabin Camp\",\"Pollnivneach\",\"Entrana\",\"Burthorpe\",\"Baxtorian Falls\",\"Canifis\",\"Mort Myre Swamp\",\"Mountain Camp\",\"Digsite\",\"Draynor Village\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":45}],\"id\":\"jaldraocht-pyramid\",\"label\":\"Jaldraocht Pyramid\",\"standardAreas\":[\"Bandit Camp\"]}],\"skills\":{\"Firemaking\":50,\"Magic\":50,\"Slayer\":10,\"Thieving\":53},\"prereqs\":[\"The Dig Site\",\"Temple of Ikov\",\"The Tourist Trap\",\"Troll Stronghold\",\"Priest in Peril\",\"Waterfall Quest\"],\"skillAlternatives\":[{\"manualRequirements\":[\"Have a gas mask from Plague City for the smoke dungeon (alternative to Slayer 10)\"],\"quests\":[\"Plague City\"],\"skill\":\"Slayer\"}],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "39,53",
@@ -1785,7 +1799,10 @@
         ],
         "travel": [
           "The route crosses the desert, Asgarnia, Kandarin, Morytania, and Misthalin; Wilderness was not unavoidable in the pinned route.",
-          "The catalogue-wide parent-region audit replaced Kharidian Desert, Asgarnia, Kandarin, Morytania, Misthalin with the exact tracked access set: Bandit Camp, Bedabin Camp, Pollnivneach, Entrana, Burthorpe, Baxtorian Falls, Canifis, Mort Myre Swamp."
+          "The catalogue-wide parent-region audit replaced Kharidian Desert, Asgarnia, Kandarin, Morytania, Misthalin with the exact tracked access set: Bandit Camp, Bedabin Camp, Pollnivneach, Entrana, Burthorpe, Baxtorian Falls, Canifis, Mort Myre Swamp.",
+          "Accuracy review 2026-10-02: Kamil and the troll child are at the Ice Gate and Ice Path, Mountain Camp's chunks 44,58 and 44,59; Mountain Camp is now required (Wiki revision 15355192).",
+          "Accuracy review 2026-10-02: Terry is at the Digsite and Ruantun under Draynor (Chunk Picker tasks 2 and 7a2); both areas are now required, which matters in Chunked mode and Xtreme runs.",
+          "Accuracy review 2026-10-02: Stand-in for steps in a chunk no area owns (owner decision of 2 Oct): the Jaldraocht Pyramid (50,45) asks for the Bandit Camp, where it is reached from on foot."
         ],
         "instances": [
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
@@ -1794,14 +1811,14 @@
           "Slayer 10 is one route; completed Plague City with a manually confirmed gas mask is an alternative, not an additional universal quest requirement."
         ]
       },
-      "discrepancy": "Desert Treasure I retains the regions policy with Kharidian Desert, Asgarnia, Kandarin, Morytania, and Misthalin plus prerequisite The Dig Site and Slayer 10. The pinned Wiki permits Slayer 10 or a gas mask, but item possession is not tracked; the pinned Chunk Picker includes Bedabin Camp (chunk 49,47), so the alternative cannot be encoded without weakening eligibility.",
-      "conservativeReason": "Keeping Desert Treasure I's regions policy, including Bedabin Camp and Slayer 10, prevents premature completion/key-roll eligibility when the gas-mask alternative cannot be observed by runtime state."
+      "discrepancy": "Desert Treasure I retains the regions-and-locations policy with regions across the Kharidian Desert, Asgarnia, Kandarin, Morytania and Misthalin, the Jaldraocht Pyramid stand-in location, prerequisite The Dig Site and Slayer 10. The pinned Wiki permits Slayer 10 or a gas mask, but item possession is not tracked; the pinned Chunk Picker includes Bedabin Camp (chunk 49,47), so the alternative cannot be encoded without weakening eligibility.",
+      "conservativeReason": "Keeping Desert Treasure I's regions-and-locations policy, including Bedabin Camp, the Jaldraocht Pyramid and Slayer 10, prevents premature completion/key-roll eligibility when the gas-mask alternative cannot be observed by runtime state."
     },
     {
       "id": "Desert Treasure II",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-22",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Desert_Treasure_II_-_The_Fallen_Empire&oldid=15352463",
         "revision": 15352463,
@@ -1809,7 +1826,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Nardah\",\"Goblin Village\",\"Weiss\",\"The Stranglewood\",\"Digsite\"],\"skills\":{\"Construction\":60,\"Firemaking\":75,\"Herblore\":62,\"Magic\":75,\"Runecraft\":60,\"Thieving\":70},\"prereqs\":[\"Desert Treasure I\",\"Secrets of the North\",\"Enakhra's Lament\",\"Temple of the Eye\",\"The Garden of Death\",\"Below Ice Mountain\",\"His Faithful Servants\"],\"points\":5}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Nardah\",\"Goblin Village\",\"Weiss\",\"The Stranglewood\",\"Digsite\",\"Lovakengj\",\"Hosidius\",\"Wizards' Tower\"],\"skills\":{\"Construction\":60,\"Firemaking\":75,\"Herblore\":62,\"Magic\":75,\"Runecraft\":60,\"Thieving\":70},\"prereqs\":[\"Desert Treasure I\",\"Secrets of the North\",\"Enakhra's Lament\",\"Temple of the Eye\",\"The Garden of Death\",\"Below Ice Mountain\",\"His Faithful Servants\"],\"points\":5}",
       "chunkEvidence": [],
       "notes": {
         "items": [
@@ -1817,7 +1834,9 @@
         ],
         "travel": [
           "The pinned route crosses the desert, Asgarnia, Fremennik, Kourend, and Misthalin; no unavoidable Morytania step was present.",
-          "The catalogue-wide parent-region audit replaced Kharidian Desert, Asgarnia, Fremennik, Kourend & Kebos, Misthalin with the exact tracked access set: Nardah, Goblin Village, Weiss, The Stranglewood, Digsite."
+          "The catalogue-wide parent-region audit replaced Kharidian Desert, Asgarnia, Fremennik, Kourend & Kebos, Misthalin with the exact tracked access set: Nardah, Goblin Village, Weiss, The Stranglewood, Digsite.",
+          "Accuracy review 2026-10-02: The Vardorvis trail goes to Barus at the Burning Man in Lovakengj and the botanist's desk in north-east Hosidius; both areas are now required (Wiki revision 15356264).",
+          "Accuracy review 2026-10-02: The Leviathan's trail starts in the Temple of the Eye, under the Wizards' Tower (Chunk Picker task 5b1); the Wizards' Tower is now required, which matters in Chunked mode and Xtreme runs."
         ],
         "instances": [
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
@@ -1914,7 +1933,7 @@
       "id": "Dragon Slayer I",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Dragon_Slayer_I&oldid=15266013",
         "revision": 15266013,
@@ -1922,7 +1941,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"Edgeville\",\"Draynor Village\",\"Lumbridge\",\"Rimmington\",\"Port Sarim\",\"Crandor\"],\"skills\":{\"Quest Points\":32},\"prereqs\":[],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"Edgeville\",\"Draynor Village\",\"Lumbridge\",\"Rimmington\",\"Port Sarim\",\"Crandor\",\"Dwarven Mine\"],\"skills\":{\"Quest Points\":32},\"prereqs\":[],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "44,50",
@@ -1971,7 +1990,8 @@
         ],
         "travel": [
           "The route crosses Misthalin, Asgarnia, and Karamja; Crafting 8 is not a pinned skill requirement.",
-          "The catalogue-wide parent-region audit replaced Misthalin, Asgarnia, Karamja with the exact tracked access set: Varrock, Edgeville, Draynor Village, Lumbridge, Rimmington, Port Sarim, Crandor."
+          "The catalogue-wide parent-region audit replaced Misthalin, Asgarnia, Karamja with the exact tracked access set: Varrock, Edgeville, Draynor Village, Lumbridge, Rimmington, Port Sarim, Crandor.",
+          "Accuracy review 2026-10-02: Thalzar's map piece is behind the magic door in the Dwarven Mine; the Dwarven Mine is now required (Wiki revision 15337984)."
         ],
         "instances": [
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
@@ -1983,15 +2003,15 @@
       "id": "Dragon Slayer II",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Dragon_Slayer_II&oldid=15270141",
         "revision": 15270141,
         "revisionTimestamp": "2026-07-20T12:42:51Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Draynor Village\",\"Varrock\",\"Falador\",\"Baxtorian Falls\",\"Corsair Cove\",\"Lunar Isle\",\"Rellekka\",\"Shayzien\",\"Crandor\",\"Kharazi Jungle\",\"Musa Point\",\"Sophanem\",\"Port Phasmatys\",\"Fossil Island\",\"Lithkren\"],\"skills\":{\"Agility\":60,\"Construction\":50,\"Crafting\":62,\"Hitpoints\":50,\"Magic\":75,\"Mining\":68,\"Quest Points\":200,\"Smithing\":70,\"Thieving\":60},\"prereqs\":[\"Legends' Quest\",\"Dream Mentor\",\"A Tail of Two Cats\",\"Animal Magnetism\",\"Ghosts Ahoy\",\"Bone Voyage\",\"Client of Kourend\"],\"manualRequirements\":[\"Started the pyre ship portion of Barbarian Training\"],\"points\":5}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Draynor Village\",\"Varrock\",\"Falador\",\"Baxtorian Falls\",\"Corsair Cove\",\"Lunar Isle\",\"Rellekka\",\"Shayzien\",\"Crandor\",\"Kharazi Jungle\",\"Musa Point\",\"Sophanem\",\"Port Phasmatys\",\"Fossil Island\",\"Lithkren\",\"Mort Myre Swamp\",\"East Ardougne\"],\"locations\":[{\"chunkOptions\":[{\"cx\":35,\"cy\":63}],\"id\":\"ungael\",\"label\":\"Ungael\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Agility\":60,\"Construction\":50,\"Crafting\":62,\"Hitpoints\":50,\"Magic\":75,\"Mining\":68,\"Quest Points\":200,\"Smithing\":70,\"Thieving\":60},\"prereqs\":[\"Legends' Quest\",\"Dream Mentor\",\"A Tail of Two Cats\",\"Animal Magnetism\",\"Ghosts Ahoy\",\"Bone Voyage\",\"Client of Kourend\"],\"manualRequirements\":[\"Started the pyre ship portion of Barbarian Training\"],\"points\":5}",
       "chunkEvidence": [
         {
           "chunkId": "24,55",
@@ -2085,7 +2105,9 @@
         ],
         "travel": [
           "The long route crosses the nine retained regions, including Karamja, the desert, Morytania, and island destinations.",
-          "The catalogue-wide parent-region audit replaced Misthalin, Asgarnia, Kandarin, Fremennik, Kourend & Kebos, Karamja, Kharidian Desert, Morytania, Islands & Others with the exact tracked access set: Draynor Village, Varrock, Falador, Baxtorian Falls, Corsair Cove, Lunar Isle, Rellekka, Shayzien, Crandor, Kharazi Jungle, Musa Point, Sophanem, Port Phasmatys, Fossil Island, Lithkren."
+          "The catalogue-wide parent-region audit replaced Misthalin, Asgarnia, Kandarin, Fremennik, Kourend & Kebos, Karamja, Kharidian Desert, Morytania, Islands & Others with the exact tracked access set: Draynor Village, Varrock, Falador, Baxtorian Falls, Corsair Cove, Lunar Isle, Rellekka, Shayzien, Crandor, Kharazi Jungle, Musa Point, Sophanem, Port Phasmatys, Fossil Island, Lithkren.",
+          "Accuracy review 2026-10-02: A key piece is hidden in Mort Myre Swamp, and King Lathas (or King Thoros) in East Ardougne joins the alliance; both areas are now required (Wiki revision 15345913).",
+          "Accuracy review 2026-10-02: Stand-in for steps in a chunk no area owns (owner decision of 2 Oct): Ungael (35,63) asks for Rellekka, where Torfinn's boat leaves from."
         ],
         "instances": [
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
@@ -2179,7 +2201,7 @@
       "id": "Dwarf Cannon",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Dwarf_Cannon&oldid=15166602",
         "revision": 15166602,
@@ -2187,7 +2209,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\",\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":40,\"cy\":54}],\"id\":\"coal-truck-mine\",\"label\":\"Coal Truck Mine\",\"standardAreas\":[\"Seers' Village\"]},{\"chunkOptions\":[{\"cx\":39,\"cy\":54}],\"id\":\"baxtorian-falls\",\"label\":\"Baxtorian Falls\",\"standardAreas\":[\"Baxtorian Falls\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":53}],\"id\":\"asgarnian-road\",\"label\":\"Asgarnian road by the Dwarven Mine\",\"standardAreas\":[\"Dwarven Mine\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\",\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":40,\"cy\":54}],\"id\":\"coal-truck-mine\",\"label\":\"Coal Truck Mine\",\"standardAreas\":[\"Seers' Village\"]},{\"chunkOptions\":[{\"cx\":39,\"cy\":54}],\"id\":\"baxtorian-falls\",\"label\":\"Baxtorian Falls\",\"standardAreas\":[\"Baxtorian Falls\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":53}],\"id\":\"asgarnian-road\",\"label\":\"Asgarnian road by the Dwarven Mine\",\"standardAreas\":[\"Dwarven Mine\"]},{\"chunkOptions\":[{\"cx\":40,\"cy\":53}],\"id\":\"fishing-guild-watchtower\",\"label\":\"Watchtower and Goblin Cave by the Fishing Guild\",\"standardAreas\":[\"Fishing Guild\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "39,54",
@@ -2211,7 +2233,8 @@
         ],
         "travel": [
           "The fixed Coal Truck Mine, Baxtorian Falls, and Asgarnian road rows are represented as exact locations.",
-          "Standard mode has no Coal Truck Mine alias, so the truthful mine label uses the existing Seers' Village unlock; Chunked mode uses exact chunk 40,54."
+          "Standard mode has no Coal Truck Mine alias, so the truthful mine label uses the existing Seers' Village unlock; Chunked mode uses exact chunk 40,54.",
+          "Accuracy review 2026-10-02: Gilob's remains on the watchtower and the Goblin Cave's mouth are in 40,53, the Fishing Guild's chunk; a Fishing Guild location now covers both (Wiki revision 15313000)."
         ],
         "instances": [],
         "partialCompletion": []
@@ -2221,7 +2244,7 @@
       "id": "Eadgar's Ruse",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Eadgar's_Ruse&oldid=15256448",
         "revision": 15256448,
@@ -2229,7 +2252,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Burthorpe\",\"Taverley\"],\"skills\":{\"Herblore\":31},\"prereqs\":[\"Druidic Ritual\",\"Troll Stronghold\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Burthorpe\",\"Taverley\",\"East Ardougne\"],\"skills\":{\"Herblore\":31},\"prereqs\":[\"Druidic Ritual\",\"Troll Stronghold\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "44,57",
@@ -2248,7 +2271,8 @@
         ],
         "travel": [
           "The Troll Stronghold and Taverley route remains represented by Fremennik and Asgarnia.",
-          "The catalogue-wide parent-region audit replaced Asgarnia, Kandarin with the exact tracked access set: Burthorpe, Taverley."
+          "The catalogue-wide parent-region audit replaced Asgarnia, Kandarin with the exact tracked access set: Burthorpe, Taverley.",
+          "Accuracy review 2026-10-02: The parrot comes from Parroty Pete at the Ardougne Zoo; East Ardougne is now required (Wiki revision 15326715)."
         ],
         "instances": [],
         "partialCompletion": []
@@ -2258,7 +2282,7 @@
       "id": "Eagles' Peak",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Eagles'_Peak&oldid=15241038",
         "revision": 15241038,
@@ -2266,7 +2290,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Eagles' Peak\",\"Varrock\"],\"skills\":{\"Hunter\":27},\"prereqs\":[],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Eagles' Peak\",\"Varrock\",\"East Ardougne\"],\"skills\":{\"Hunter\":27},\"prereqs\":[],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "36,54",
@@ -2285,7 +2309,8 @@
         ],
         "travel": [
           "The route crosses Kandarin and the Varrock museum area in Misthalin.",
-          "The catalogue-wide parent-region audit replaced Kandarin, Misthalin with the exact tracked access set: Eagles' Peak, Varrock."
+          "The catalogue-wide parent-region audit replaced Kandarin, Misthalin with the exact tracked access set: Eagles' Peak, Varrock.",
+          "Accuracy review 2026-10-02: Charlie starts and ends the quest at the Ardougne Zoo; East Ardougne is now required (Wiki revision 15314504)."
         ],
         "instances": [],
         "partialCompletion": []
@@ -2328,7 +2353,7 @@
       "id": "Elemental Workshop II",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Elemental_Workshop_II&oldid=15271178",
         "revision": 15271178,
@@ -2336,7 +2361,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Seers' Village\",\"Varrock\"],\"skills\":{\"Magic\":20,\"Smithing\":30},\"prereqs\":[\"Elemental Workshop I\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Seers' Village\",\"Digsite\"],\"skills\":{\"Magic\":20,\"Smithing\":30},\"prereqs\":[\"Elemental Workshop I\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "42,54",
@@ -2350,7 +2375,8 @@
         ],
         "travel": [
           "The route crosses the Seers' workshop and the Varrock exam centre in Misthalin.",
-          "The catalogue-wide parent-region audit replaced Kandarin, Misthalin with the exact tracked access set: Seers' Village, Varrock."
+          "The catalogue-wide parent-region audit replaced Kandarin, Misthalin with the exact tracked access set: Seers' Village, Varrock.",
+          "Accuracy review 2026-10-02: The quest starts at the bookcase in the Digsite Exam Centre (Chunk Picker task 1, Quest Helper searchBookcase), and nothing happens in Varrock; the Digsite replaces Varrock."
         ],
         "instances": [
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
@@ -2362,7 +2388,7 @@
       "id": "Enakhra's Lament",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Enakhra's_Lament&oldid=15276619",
         "revision": 15276619,
@@ -2370,7 +2396,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":45}],\"id\":\"desert-quarry-and-temple\",\"label\":\"Desert Quarry and Enakhra's Temple\",\"standardAreas\":[\"Kharidian Desert\"]}],\"skills\":{\"Crafting\":50,\"Firemaking\":45,\"Magic\":39,\"Prayer\":43},\"prereqs\":[],\"manualRequirements\":[\"Must be on the standard spellbook\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":45}],\"id\":\"desert-quarry-and-temple\",\"label\":\"Desert Quarry and Enakhra's Temple\",\"standardAreas\":[\"Agility Pyramid\"]}],\"skills\":{\"Crafting\":50,\"Firemaking\":45,\"Magic\":39,\"Prayer\":43},\"prereqs\":[],\"manualRequirements\":[\"Must be on the standard spellbook\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "49,45",
@@ -2384,7 +2410,8 @@
         ],
         "travel": [
           "The unavoidable Desert Quarry and temple entrance are represented by the pinned chunk.",
-          "Standard mode has no Desert Quarry alias, so the truthful quarry label uses the existing Kharidian Desert unlock; Chunked mode uses exact chunk 49,45."
+          "Standard mode has no Desert Quarry alias, so the truthful quarry label uses the existing Kharidian Desert unlock; Chunked mode uses exact chunk 49,45.",
+          "Accuracy review 2026-10-02: The Desert Quarry location asked for the whole Kharidian Desert, which in the area modes opens only when every desert area is owned; its chunk 49,45 is the Agility Pyramid's, which is now asked for instead (Wiki revision 15350737)."
         ],
         "instances": [
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
@@ -2504,7 +2531,7 @@
       "id": "Ethically Acquired Antiquities",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Ethically_Acquired_Antiquities&oldid=15252769",
         "revision": 15252769,
@@ -2512,7 +2539,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Varlamore\",\"Asgarnia\",\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":26,\"cy\":49}],\"id\":\"grand-museum\",\"label\":\"Grand Museum in Civitas illa Fortis\",\"standardAreas\":[\"Civitas illa Fortis\"]},{\"chunkOptions\":[{\"cx\":27,\"cy\":48}],\"id\":\"fortis-cothon\",\"label\":\"Fortis Cothon\",\"standardAreas\":[\"Civitas illa Fortis\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":49}],\"id\":\"port-sarim-jail\",\"label\":\"Port Sarim jail\",\"standardAreas\":[\"Port Sarim\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":50}],\"id\":\"port-sarim-betty\",\"label\":\"Betty's shop in Port Sarim\",\"standardAreas\":[\"Port Sarim\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"varrock-museum\",\"label\":\"Varrock Museum\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{\"Thieving\":25},\"prereqs\":[\"Children of the Sun\",\"Shield of Arrav\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Varlamore\",\"Asgarnia\",\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":26,\"cy\":49}],\"id\":\"grand-museum\",\"label\":\"Grand Museum in Civitas illa Fortis\",\"standardAreas\":[\"Civitas illa Fortis\"]},{\"chunkOptions\":[{\"cx\":27,\"cy\":48}],\"id\":\"fortis-cothon\",\"label\":\"Fortis Cothon\",\"standardAreas\":[\"Civitas illa Fortis\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":49}],\"id\":\"port-sarim-jail\",\"label\":\"Port Sarim jail\",\"standardAreas\":[\"Port Sarim\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":50}],\"id\":\"port-sarim-betty\",\"label\":\"Betty's shop in Port Sarim\",\"standardAreas\":[\"Port Sarim\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"varrock-museum\",\"label\":\"Varrock Museum\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":53},{\"cx\":51,\"cy\":54}],\"id\":\"diadem-crate\",\"label\":\"Diadem crate in east Varrock\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{\"Thieving\":25},\"prereqs\":[\"Children of the Sun\",\"Shield of Arrav\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "26,49",
@@ -2550,7 +2577,8 @@
           "The pinned Wiki item requirements for Ethically Acquired Antiquities were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "The fixed route uses the Grand Museum, Fortis Cothon, Port Sarim jail and Betty, and Varrock Museum."
+          "The fixed route uses the Grand Museum, Fortis Cothon, Port Sarim jail and Betty, and Varrock Museum.",
+          "Accuracy review 2026-10-02: The diadem crate in east Varrock (51,53 or 51,54) is now a location, for Chunked mode."
         ],
         "instances": [],
         "partialCompletion": [
@@ -2611,7 +2639,7 @@
       "id": "Fairytale II - Cure a Queen",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Fairytale_II_-_Cure_a_Queen&oldid=15266901",
         "revision": 15266901,
@@ -2619,7 +2647,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Islands & Others\",\"Misthalin\",\"Kandarin\",\"Tirannwn\"],\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":50}],\"id\":\"draynor-village\",\"label\":\"Draynor Village\",\"standardAreas\":[\"Draynor Village\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":49}],\"id\":\"zanaris\",\"label\":\"Zanaris\",\"standardAreas\":[\"Zanaris\"]},{\"chunkOptions\":[{\"cx\":34,\"cy\":48}],\"id\":\"poison-waste\",\"label\":\"Poison Waste\",\"standardAreas\":[\"Poison Waste\"]},{\"chunkOptions\":[{\"cx\":42,\"cy\":50}],\"id\":\"horseshoe-mine\",\"label\":\"Horseshoe Mine\",\"standardAreas\":[\"Brimhaven\"]}],\"skills\":{\"Farming\":49,\"Herblore\":57,\"Thieving\":40},\"prereqs\":[\"Fairytale I - Growing Pains\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Islands & Others\",\"Misthalin\",\"Kandarin\",\"Tirannwn\"],\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":50}],\"id\":\"draynor-village\",\"label\":\"Draynor Village\",\"standardAreas\":[\"Draynor Village\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":49}],\"id\":\"zanaris\",\"label\":\"Zanaris\",\"standardAreas\":[\"Zanaris\"]},{\"chunkOptions\":[{\"cx\":34,\"cy\":48}],\"id\":\"poison-waste\",\"label\":\"Poison Waste\",\"standardAreas\":[\"Poison Waste\"]},{\"chunkOptions\":[{\"cx\":42,\"cy\":50}],\"id\":\"horseshoe-mine\",\"label\":\"Horseshoe Mine\",\"standardAreas\":[\"Brimhaven\"]}],\"skills\":{\"Farming\":49,\"Herblore\":57,\"Thieving\":40},\"prereqs\":[\"Fairytale I - Growing Pains\"],\"mobility\":[\"Fairy Rings\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "34,48",
@@ -2643,7 +2671,8 @@
         ],
         "travel": [
           "The fixed route uses Draynor, Zanaris, Poison Waste, and Horseshoe Mine.",
-          "Standard mode has no Horseshoe Mine alias, so the truthful mine label uses the existing Kandarin unlock; Chunked mode uses exact chunk 42,50."
+          "Standard mode has no Horseshoe Mine alias, so the truthful mine label uses the existing Kandarin unlock; Chunked mode uses exact chunk 42,50.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the Fairy Queen's hideout is reached only through the fairy rings AIR, DLR, DJQ and AJS, and the cosmic and gorak planes only by CKP and DIR (Wiki revision 15292318), so the quest now needs the Fairy Rings mobility unlock, as Diary tasks that use a fairy ring do."
         ],
         "instances": [
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
@@ -2848,7 +2877,7 @@
       "id": "Fishing Contest",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Fishing_Contest&oldid=15240950",
         "revision": 15240950,
@@ -2856,7 +2885,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hemenster\"],\"skills\":{\"Fishing\":10},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hemenster\",\"Taverley\",\"Seers' Village\"],\"skills\":{\"Fishing\":10},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "44,54",
@@ -2870,7 +2899,8 @@
         ],
         "travel": [
           "The route can start west of White Wolf Mountain and remains within Kandarin; Asgarnia is not unavoidable.",
-          "The catalogue-wide parent-region audit replaced Kandarin with the exact tracked access set: Hemenster."
+          "The catalogue-wide parent-region audit replaced Kandarin with the exact tracked access set: Hemenster.",
+          "Accuracy review 2026-10-02: Austri and Vestri stand in 44,54, which the map gives to Taverley, and the red vine worms grow only in McGrubor's Wood (41,54, Seers' Village); both areas are now required (Wiki revision 15302643)."
         ],
         "instances": [],
         "partialCompletion": []
@@ -2906,7 +2936,7 @@
       "id": "Garden of Tranquillity",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Garden_of_Tranquillity&oldid=15264105",
         "revision": 15264105,
@@ -2914,7 +2944,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"Draynor Village\",\"Edgeville\",\"Falador\",\"Burthorpe\",\"East Ardougne\",\"Catherby\",\"Port Phasmatys\"],\"skills\":{\"Farming\":25},\"prereqs\":[\"Creature of Fenkenstrain\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"Draynor Village\",\"Edgeville\",\"Falador\",\"Burthorpe\",\"East Ardougne\",\"Catherby\",\"Port Phasmatys\",\"Taverley\"],\"skills\":{\"Farming\":25},\"prereqs\":[\"Creature of Fenkenstrain\"],\"merchants\":[\"Farming Shops\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "41,52",
@@ -2974,11 +3004,13 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Garden of Tranquillity were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Garden of Tranquillity were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the plant cure, filled plant pot, gardening trowel, secateurs and watering can come only from farming shops in the export (Wiki revision 15344256); the quest now needs Farming Shops."
         ],
         "travel": [
           "The unavoidable garden route crosses Varrock, Draynor, Falador, Taverley, Burthorpe, Catherby, Ardougne, and Port Phasmatys; the four retained regions cover all fixed patches.",
-          "The catalogue-wide parent-region audit replaced Misthalin, Asgarnia, Kandarin, Morytania with the exact tracked access set: Varrock, Draynor Village, Edgeville, Falador, Burthorpe, East Ardougne, Catherby, Port Phasmatys."
+          "The catalogue-wide parent-region audit replaced Misthalin, Asgarnia, Kandarin, Morytania with the exact tracked access set: Varrock, Draynor Village, Edgeville, Falador, Burthorpe, East Ardougne, Catherby, Port Phasmatys.",
+          "Accuracy review 2026-10-02: Alain at the Taverley tree patch is a required step; Taverley is now required (Wiki revision 15344256)."
         ],
         "instances": [],
         "partialCompletion": []
@@ -3066,7 +3098,7 @@
       "id": "Ghosts Ahoy",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-22",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Ghosts_Ahoy&oldid=15315208",
         "revision": 15315208,
@@ -3074,7 +3106,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Phasmatys\",\"Fenkenstrain's Castle\"],\"skills\":{\"Agility\":25,\"Cooking\":20},\"equipmentRequirements\":[{\"reason\":\"Wear the enchanted ghostspeak amulet to command Necrovarus\",\"slot\":\"Neck\",\"tier\":1},{\"reason\":\"Wear the bedsheet disguise to gather signatures\",\"slot\":\"Head\",\"tier\":1}],\"prereqs\":[\"Priest in Peril\",\"The Restless Ghost\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Phasmatys\",\"Fenkenstrain's Castle\",\"Dragontooth Island\"],\"skills\":{\"Agility\":25,\"Cooking\":20},\"equipmentRequirements\":[{\"reason\":\"Wear the enchanted ghostspeak amulet to command Necrovarus\",\"slot\":\"Neck\",\"tier\":1},{\"reason\":\"Wear the bedsheet disguise to gather signatures\",\"slot\":\"Head\",\"tier\":1}],\"prereqs\":[\"Priest in Peril\",\"The Restless Ghost\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "54,55",
@@ -3099,7 +3131,8 @@
         ],
         "travel": [
           "Port Phasmatys, the Ectofuntus, and the mausoleum remain within Morytania.",
-          "The catalogue-wide parent-region audit replaced Morytania with the exact tracked access set: Port Phasmatys, Fenkenstrain's Castle."
+          "The catalogue-wide parent-region audit replaced Morytania with the exact tracked access set: Port Phasmatys, Fenkenstrain's Castle.",
+          "Accuracy review 2026-10-02: The Book of Haricanto is dug up on Dragontooth Island; it is now required (Wiki revision 15315208)."
         ],
         "instances": [],
         "partialCompletion": []
@@ -3419,7 +3452,7 @@
       "id": "Hopespear's Will",
       "kind": "miniquest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Hopespear's_Will&oldid=15262386",
         "revision": 15262386,
@@ -3427,7 +3460,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hemenster\"],\"skills\":{\"Prayer\":50},\"prereqs\":[\"Desert Treasure I\",\"Fairytale II - Cure a Queen\",\"Land of the Goblins\"],\"manualRequirements\":[\"Started The Restless Ghost\"],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hemenster\"],\"skills\":{\"Prayer\":50},\"prereqs\":[\"Desert Treasure I\",\"Fairytale II - Cure a Queen\",\"Land of the Goblins\"],\"manualRequirements\":[\"Started The Restless Ghost\"],\"mobility\":[\"Fairy Rings\"],\"points\":0}",
       "chunkEvidence": [],
       "notes": {
         "items": [
@@ -3435,7 +3468,8 @@
         ],
         "travel": [
           "The direct route uses Goblin Cave/Goblin Temple in Kandarin and Yu'biusk by fairy ring. There is no pinned Chunk Picker first/step row.",
-          "The catalogue-wide parent-region audit replaced Kandarin with the exact tracked access set: Hemenster."
+          "The catalogue-wide parent-region audit replaced Kandarin with the exact tracked access set: Hemenster.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: Yu'biusk is reached only by fairy ring BLQ (Wiki revision 15335611), so the miniquest now needs the Fairy Rings mobility unlock, as Diary tasks that use a fairy ring do."
         ],
         "instances": [
           "The Goblin Temple crypt and Yu'biusk are special route spaces reached from Kandarin/fairy-ring access."
@@ -3493,7 +3527,7 @@
       "id": "Icthlarin's Little Helper",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Icthlarin's_Little_Helper&oldid=15264128",
         "revision": 15264128,
@@ -3501,7 +3535,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Sophanem\"],\"skills\":{},\"prereqs\":[\"Gertrude's Cat\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Sophanem\"],\"skills\":{},\"prereqs\":[\"Gertrude's Cat\"],\"merchants\":[\"Clothes Shops\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "51,43",
@@ -3516,7 +3550,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Icthlarin's Little Helper were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Icthlarin's Little Helper were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the linen is sold only by Raetul's cloth store in Sophanem (Wiki revision 15292330); the quest now needs Clothes Shops."
         ],
         "travel": [
           "The desert wanderer, Sophanem, pyramid, and tomb route remains within the Kharidian Desert.",
@@ -3561,7 +3596,7 @@
       "id": "In Aid of the Myreque",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=In_Aid_of_the_Myreque&oldid=15265343",
         "revision": 15265343,
@@ -3569,7 +3604,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Burgh de Rott\"],\"skills\":{\"Agility\":25,\"Crafting\":25,\"Magic\":7,\"Mining\":15},\"prereqs\":[\"In Search of the Myreque\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Burgh de Rott\",\"Paterdomus\"],\"skills\":{\"Agility\":25,\"Crafting\":25,\"Magic\":7,\"Mining\":15},\"prereqs\":[\"In Search of the Myreque\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "53,54",
@@ -3593,7 +3628,8 @@
         ],
         "travel": [
           "The Burgh de Rott, Paterdomus, and Myreque route remains within Morytania; Agility 25 is a listed requirement.",
-          "The catalogue-wide parent-region audit replaced Morytania with the exact tracked access set: Burgh de Rott."
+          "The catalogue-wide parent-region audit replaced Morytania with the exact tracked access set: Burgh de Rott.",
+          "Accuracy review 2026-10-02: Drezel and the well are at Paterdomus (Chunk Picker tasks 10 and 14); Paterdomus is now required, which matters in Chunked mode and Xtreme runs."
         ],
         "instances": [],
         "partialCompletion": []
@@ -3717,7 +3753,7 @@
       "id": "Jungle Potion",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Jungle_Potion&oldid=15240963",
         "revision": 15240963,
@@ -3725,7 +3761,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tai Bwo Wannai\"],\"skills\":{\"Herblore\":3},\"prereqs\":[\"Druidic Ritual\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tai Bwo Wannai\",\"Shilo Village\"],\"skills\":{\"Herblore\":3},\"prereqs\":[\"Druidic Ritual\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "43,47",
@@ -3749,7 +3785,8 @@
         ],
         "travel": [
           "The Tai Bwo Wannai herb route remains within Karamja; Druidic Ritual is a listed prerequisite.",
-          "The catalogue-wide parent-region audit replaced Karamja with the exact tracked access set: Tai Bwo Wannai."
+          "The catalogue-wide parent-region audit replaced Karamja with the exact tracked access set: Tai Bwo Wannai.",
+          "Accuracy review 2026-10-02: The Volencia moss rock is in the Karamja jungle mine, 44,47, which the map gives to Shilo Village; Shilo Village is now required (Wiki revision 15281195)."
         ],
         "instances": [],
         "partialCompletion": []
@@ -3845,7 +3882,7 @@
       "id": "Land of the Goblins",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Land_of_the_Goblins&oldid=15241061",
         "revision": 15241061,
@@ -3853,7 +3890,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hemenster\",\"Lumbridge\",\"Crafting Guild\",\"Goblin Village\"],\"skills\":{\"Agility\":38,\"Fishing\":40,\"Herblore\":48,\"Thieving\":45},\"prereqs\":[\"Another Slice of H.A.M.\",\"Fishing Contest\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hemenster\",\"Lumbridge\",\"Crafting Guild\",\"Draynor Village\"],\"skills\":{\"Agility\":38,\"Fishing\":40,\"Herblore\":48,\"Thieving\":45},\"prereqs\":[\"Another Slice of H.A.M.\",\"Fishing Contest\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "45,51",
@@ -3872,7 +3909,8 @@
         ],
         "travel": [
           "The fixed route crosses Kandarin, Dorgesh-Kaan/Misthalin, and Goblin Village/Asgarnia.",
-          "The catalogue-wide parent-region audit replaced Kandarin, Misthalin, Asgarnia with the exact tracked access set: Hemenster, Lumbridge, Crafting Guild, Goblin Village."
+          "The catalogue-wide parent-region audit replaced Kandarin, Misthalin, Asgarnia with the exact tracked access set: Hemenster, Lumbridge, Crafting Guild, Goblin Village.",
+          "Accuracy review 2026-10-02: Nothing in the quest happens in Goblin Village, and Aggie, who makes the dyes and bleaches the goblin mail, is in Draynor Village; Draynor Village replaces Goblin Village (Wiki revision 15314873)."
         ],
         "instances": [],
         "partialCompletion": []
@@ -4011,7 +4049,7 @@
       "id": "Lunar Diplomacy",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Lunar_Diplomacy&oldid=15266897",
         "revision": 15266897,
@@ -4019,7 +4057,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lunar Isle\",\"Pirates' Cove\",\"Rellekka\"],\"skills\":{\"Crafting\":61,\"Defence\":40,\"Firemaking\":49,\"Herblore\":5,\"Magic\":65,\"Mining\":60,\"Woodcutting\":55},\"prereqs\":[\"The Fremennik Trials\",\"Lost City\",\"Rune Mysteries\",\"Shilo Village\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lunar Isle\",\"Pirates' Cove\",\"Rellekka\"],\"skills\":{\"Crafting\":61,\"Defence\":40,\"Firemaking\":49,\"Herblore\":5,\"Magic\":65,\"Mining\":60,\"Woodcutting\":55},\"prereqs\":[\"The Fremennik Trials\",\"Lost City\",\"Rune Mysteries\",\"Shilo Village\"],\"oneOf\":[{\"locations\":[{\"chunkOptions\":[{\"cx\":46,\"cy\":51}],\"id\":\"air-altar\",\"label\":\"Air altar\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":50}],\"id\":\"fire-altar\",\"label\":\"Fire altar\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":49}],\"id\":\"water-altar\",\"label\":\"Water altar\",\"standardAreas\":[\"Lumbridge\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"earth-altar\",\"label\":\"Earth altar\",\"standardAreas\":[\"Varrock\"]}]},{\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":55}],\"id\":\"edgeville-ditch\",\"label\":\"Edgeville ditch\",\"standardAreas\":[\"Edgeville\"]}],\"quests\":[\"Enter the Abyss\"]}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "32,60",
@@ -4063,7 +4101,8 @@
         ],
         "travel": [
           "Rellekka, Pirates’ Cove, Lunar Isle, and the dream instance remain covered by Fremennik; Herblore 5 is a listed requirement.",
-          "The catalogue-wide parent-region audit replaced Fremennik with the exact tracked access set: Lunar Isle, Pirates' Cove, Rellekka."
+          "The catalogue-wide parent-region audit replaced Fremennik with the exact tracked access set: Lunar Isle, Pirates' Cove, Rellekka.",
+          "Accuracy review 2026-10-02: The dramen staff is used on the Air, Fire, Water and Earth altars; a one-of now asks for those four altars' ruins or the Abyss (the Edgeville ditch after Enter the Abyss). Guardians of the Rift needs Temple of the Eye and so Enter the Abyss (Wiki revision 15345875)."
         ],
         "instances": [
           "Lunar Diplomacy's underground or instanced sequence was reviewed through its permanent Wiki route and pinned entrance/activity evidence."
@@ -4132,7 +4171,7 @@
       "id": "Making Friends with My Arm",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Making_Friends_with_My_Arm&oldid=15265992",
         "revision": 15265992,
@@ -4140,7 +4179,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Burthorpe\",\"Rellekka\",\"Weiss\",\"Draynor Village\",\"Varrock\"],\"skills\":{\"Agility\":68,\"Construction\":35,\"Firemaking\":66,\"Mining\":72},\"prereqs\":[\"My Arm's Big Adventure\",\"Swan Song\",\"Cold War\",\"Romeo & Juliet\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Burthorpe\",\"Rellekka\",\"Weiss\",\"Draynor Village\",\"Varrock\"],\"skills\":{\"Agility\":68,\"Construction\":35,\"Firemaking\":66,\"Mining\":72},\"prereqs\":[\"My Arm's Big Adventure\",\"Swan Song\",\"Cold War\",\"Romeo & Juliet\"],\"merchants\":[\"Sawmill Operators\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "42,58",
@@ -4175,7 +4214,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Making Friends with My Arm were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Making Friends with My Arm were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the bolt of cloth comes from the Varrock sawmill (Wiki revision 15345660); the quest now needs Sawmill Operators."
         ],
         "travel": [
           "The route crosses Troll Country and Weiss plus mandatory Draynor and Varrock stops in Misthalin.",
@@ -4189,15 +4229,15 @@
       "id": "Making History",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Making_History&oldid=15265964",
         "revision": 15265964,
         "revisionTimestamp": "2026-07-17T11:01:40Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Observatory\",\"East Ardougne\",\"Rellekka\",\"Port Phasmatys\"],\"skills\":{},\"prereqs\":[\"Priest in Peril\",\"The Restless Ghost\"],\"points\":3}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Observatory\",\"East Ardougne\",\"Rellekka\",\"Port Phasmatys\"],\"locations\":[{\"chunkOptions\":[{\"cx\":38,\"cy\":52}],\"id\":\"jorrals-outpost\",\"label\":\"Jorral's Outpost\",\"standardAreas\":[\"East Ardougne\"]}],\"skills\":{},\"prereqs\":[\"Priest in Peril\",\"The Restless Ghost\"],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "38,49",
@@ -4231,7 +4271,8 @@
         ],
         "travel": [
           "The fixed outpost route visits Kandarin, Rellekka/Fremennik, and Port Phasmatys/Morytania.",
-          "The catalogue-wide parent-region audit replaced Kandarin, Fremennik, Morytania with the exact tracked access set: Observatory, East Ardougne, Rellekka, Port Phasmatys."
+          "The catalogue-wide parent-region audit replaced Kandarin, Fremennik, Morytania with the exact tracked access set: Observatory, East Ardougne, Rellekka, Port Phasmatys.",
+          "Accuracy review 2026-10-02: Stand-in for steps in a chunk no area owns (owner decision of 2 Oct): Jorral's Outpost (38,52) asks for East Ardougne, whose Combat Training Camp chunk (39,52) the reviewed walking graph links it to."
         ],
         "instances": [],
         "partialCompletion": []
@@ -4241,7 +4282,7 @@
       "id": "Meat and Greet",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Meat_and_Greet&oldid=15215144",
         "revision": 15215144,
@@ -4249,7 +4290,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Civitas illa Fortis\"],\"skills\":{},\"prereqs\":[\"Children of the Sun\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Civitas illa Fortis\",\"Cam Torum\"],\"skills\":{},\"prereqs\":[\"Children of the Sun\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "26,48",
@@ -4278,7 +4319,8 @@
         ],
         "travel": [
           "The Fortis bazaar, docks, east district, and Colosseum route remains within Varlamore.",
-          "The catalogue-wide parent-region audit replaced Varlamore with the exact tracked access set: Civitas illa Fortis."
+          "The catalogue-wide parent-region audit replaced Varlamore with the exact tracked access set: Civitas illa Fortis.",
+          "Accuracy review 2026-10-02: The Wolf Den is in 23,48, which the map gives to Cam Torum; Cam Torum is now required (Wiki revision 15355341)."
         ],
         "instances": [],
         "partialCompletion": []
@@ -4408,7 +4450,7 @@
       "id": "Monkey Madness I",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Monkey_Madness_I&oldid=15271778",
         "revision": 15271778,
@@ -4416,7 +4458,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tree Gnome Stronghold\",\"Ship Yard\",\"Ape Atoll\"],\"skills\":{},\"prereqs\":[\"The Grand Tree\",\"Tree Gnome Village\"],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tree Gnome Stronghold\",\"Ship Yard\",\"Ape Atoll\",\"East Ardougne\"],\"skills\":{},\"prereqs\":[\"The Grand Tree\",\"Tree Gnome Village\"],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "42,43",
@@ -4450,7 +4492,8 @@
         ],
         "travel": [
           "The route crosses Kandarin, the Karamja Ship Yard, and the Crash Island/Ape Atoll island chain.",
-          "The catalogue-wide parent-region audit replaced Kandarin, Karamja, Islands & Others with the exact tracked access set: Tree Gnome Stronghold, Ship Yard, Ape Atoll."
+          "The catalogue-wide parent-region audit replaced Kandarin, Karamja, Islands & Others with the exact tracked access set: Tree Gnome Stronghold, Ship Yard, Ape Atoll.",
+          "Accuracy review 2026-10-02: A monkey is rescued from the Ardougne Zoo; East Ardougne is now required (Wiki revision 15358076)."
         ],
         "instances": [],
         "partialCompletion": []
@@ -4460,7 +4503,7 @@
       "id": "Monkey Madness II",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Monkey_Madness_II&oldid=15272900",
         "revision": 15272900,
@@ -4468,7 +4511,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Ape Atoll\",\"Tree Gnome Stronghold\",\"Entrana\",\"Burthorpe\"],\"skills\":{\"Agility\":55,\"Crafting\":70,\"Firemaking\":60,\"Hunter\":60,\"Slayer\":69,\"Thieving\":55},\"prereqs\":[\"Monkey Madness I\",\"Enlightened Journey\",\"The Eyes of Glouphrie\",\"Troll Stronghold\",\"Watchtower\",\"RFD: King Awowogei\"],\"manualRequirements\":[\"Unlocked the Gnome Stronghold balloon route\"],\"points\":4}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Ape Atoll\",\"Tree Gnome Stronghold\",\"Entrana\",\"Burthorpe\",\"Feldip Hills\"],\"skills\":{\"Agility\":55,\"Crafting\":70,\"Firemaking\":60,\"Hunter\":60,\"Slayer\":69,\"Thieving\":55},\"prereqs\":[\"Monkey Madness I\",\"Enlightened Journey\",\"The Eyes of Glouphrie\",\"Troll Stronghold\",\"Watchtower\",\"RFD: King Awowogei\"],\"manualRequirements\":[\"Unlocked the Gnome Stronghold balloon route\"],\"points\":4}",
       "chunkEvidence": [
         {
           "chunkId": "37,54",
@@ -4517,7 +4560,8 @@
         ],
         "travel": [
           "The route crosses the Gnome Stronghold/Kandarin, Troll Stronghold/Asgarnia, and the Ape Atoll island chain; the Gnome Stronghold balloon route must already be unlocked.",
-          "The catalogue-wide parent-region audit replaced Islands & Others, Kandarin, Asgarnia with the exact tracked access set: Ape Atoll, Tree Gnome Stronghold, Entrana, Burthorpe."
+          "The catalogue-wide parent-region audit replaced Islands & Others, Kandarin, Asgarnia with the exact tracked access set: Ape Atoll, Tree Gnome Stronghold, Entrana, Burthorpe.",
+          "Accuracy review 2026-10-02: Keef is fought in Gu'Tanoth, in the Feldip Hills; they are now required (Wiki revision 15357471)."
         ],
         "instances": [],
         "partialCompletion": [
@@ -4529,7 +4573,7 @@
       "id": "Mountain Daughter",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Mountain_Daughter&oldid=15272443",
         "revision": 15272443,
@@ -4537,7 +4581,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Mountain Camp\"],\"skills\":{\"Agility\":20},\"prereqs\":[],\"oneOf\":[{\"regions\":[\"Taverley\"]},{\"regions\":[\"Catherby\"]}],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Mountain Camp\",\"Rellekka\"],\"skills\":{\"Agility\":20},\"prereqs\":[],\"oneOf\":[{\"regions\":[\"Taverley\"]},{\"regions\":[\"Catherby\"]}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "41,57",
@@ -4561,7 +4605,8 @@
         ],
         "travel": [
           "The Mountain Camp is Fremennik; White Wolf Mountain can be approached from either Asgarnia or Kandarin, represented as an exact alternative.",
-          "The catalogue-wide parent-region audit replaced Fremennik with the exact tracked access set: Mountain Camp."
+          "The catalogue-wide parent-region audit replaced Fremennik with the exact tracked access set: Mountain Camp.",
+          "Accuracy review 2026-10-02: Svidi and Brundt are in Rellekka; it is now required (Wiki revision 15292291)."
         ],
         "instances": [],
         "partialCompletion": []
@@ -4571,15 +4616,15 @@
       "id": "Mourning's End Part I",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Mourning's_End_Part_I&oldid=15173030",
         "revision": 15173030,
         "revisionTimestamp": "2026-04-11T22:10:36Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lletya\",\"Tyras Camp\",\"Isafdar\",\"Arandar\",\"West Ardougne\"],\"skills\":{\"Ranged\":60,\"Thieving\":50},\"prereqs\":[\"Roving Elves\",\"Big Chompy Bird Hunting\",\"Sheep Herder\"],\"points\":2}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Lletya\",\"Tyras Camp\",\"Isafdar\",\"Arandar\",\"West Ardougne\",\"Taverley\",\"Rimmington\",\"East Ardougne\",\"Feldip Hills\"],\"locations\":[{\"chunkOptions\":[{\"cx\":38,\"cy\":52}],\"id\":\"jorrals-orchard\",\"label\":\"Apple orchard by Jorral's Outpost\",\"standardAreas\":[\"East Ardougne\"]}],\"skills\":{\"Ranged\":60,\"Thieving\":50},\"prereqs\":[\"Roving Elves\",\"Big Chompy Bird Hunting\",\"Sheep Herder\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "34,49",
@@ -4618,7 +4663,9 @@
         ],
         "travel": [
           "The fixed route crosses Tirannwn and West Ardougne/Kandarin; the South Taverley picker row is an item-source marker rather than unavoidable travel.",
-          "The catalogue-wide parent-region audit replaced Tirannwn, Kandarin with the exact tracked access set: Lletya, Tyras Camp, Isafdar, Arandar, West Ardougne."
+          "The catalogue-wide parent-region audit replaced Tirannwn, Kandarin with the exact tracked access set: Lletya, Tyras Camp, Isafdar, Arandar, West Ardougne.",
+          "Accuracy review 2026-10-02: Tegid's soap (Taverley), the Chemist's naphtha (Rimmington), Elena and the sheep (East Ardougne) and the toads (Feldip Hills) are now required (Wiki revision 15292327).",
+          "Accuracy review 2026-10-02: Stand-in for a step in a chunk no area owns (owner decision of 2 Oct): the apple orchard by Jorral's Outpost (38,52) asks for East Ardougne."
         ],
         "instances": [],
         "partialCompletion": []
@@ -4860,7 +4907,7 @@
       "id": "One Small Favour",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=One_Small_Favour&oldid=15240988",
         "revision": 15240988,
@@ -4868,7 +4915,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Feldip Hills\",\"Port Khazard\",\"East Ardougne\",\"Seers' Village\",\"Catherby\",\"Kharazi Jungle\",\"Shilo Village\",\"Taverley\",\"Port Sarim\",\"Falador\",\"Draynor Village\",\"Lumbridge\",\"Varrock\"],\"skills\":{\"Agility\":36,\"Crafting\":25,\"Herblore\":18,\"Smithing\":30},\"prereqs\":[\"Rune Mysteries\",\"Shilo Village\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Feldip Hills\",\"Port Khazard\",\"East Ardougne\",\"Seers' Village\",\"Catherby\",\"Kharazi Jungle\",\"Shilo Village\",\"Taverley\",\"Port Sarim\",\"Falador\",\"Draynor Village\",\"Lumbridge\",\"Varrock\",\"Dwarven Mine\",\"Barbarian Village\"],\"skills\":{\"Agility\":36,\"Crafting\":25,\"Herblore\":18,\"Smithing\":30},\"prereqs\":[\"Rune Mysteries\",\"Shilo Village\"],\"oneOf\":[{\"regions\":[\"Fishing Guild\"]},{\"regions\":[\"Hemenster\"]}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "41,46",
@@ -4962,7 +5009,10 @@
         ],
         "travel": [
           "The fixed favour chain crosses Karamja, Asgarnia, Misthalin, and Kandarin; all seventeen picker rows were reviewed and item-source markers were not promoted to extra gates.",
-          "The catalogue-wide parent-region audit replaced Kandarin, Karamja, Asgarnia, Misthalin with the exact tracked access set: Feldip Hills, Port Khazard, East Ardougne, Seers' Village, Catherby, Kharazi Jungle, Shilo Village, Taverley, Port Sarim, Falador, Draynor Village, Lumbridge, Varrock."
+          "The catalogue-wide parent-region audit replaced Kandarin, Karamja, Asgarnia, Misthalin with the exact tracked access set: Feldip Hills, Port Khazard, East Ardougne, Seers' Village, Catherby, Kharazi Jungle, Shilo Village, Taverley, Port Sarim, Falador, Draynor Village, Lumbridge, Varrock.",
+          "Accuracy review 2026-10-02: Hammerspike Stoutbeard is in the Dwarven Mine; it is now required (Wiki revision 15332553).",
+          "Accuracy review 2026-10-02: Tassie Slipcast is in Barbarian Village (Chunk Picker tasks 11 and 32); Barbarian Village is now required, which matters in Chunked mode and Xtreme runs.",
+          "Accuracy review 2026-10-02: Petra and the Slagilith are in the Goblin Cave east of the Fishing Guild, whose mouth (2622,3392) is between the Fishing Guild's chunk 40,53 and Hemenster's 41,53; a one-of now asks for either (Wiki revision 15332553). The export lists the cave's entrance in 40,52, which is why the area was missed."
         ],
         "instances": [
           "The H.A.M. hideout, Dwarven Mine fight, and Slagilith cave were reviewed as route instances."
@@ -5057,7 +5107,7 @@
       "id": "Pirate's Treasure",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-22",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Pirate's_Treasure&oldid=15315445",
         "revision": 15315445,
@@ -5065,7 +5115,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Sarim\",\"Falador\",\"Varrock\",\"Musa Point\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear a white apron to enter the grocery storeroom\",\"slot\":\"Body\",\"tier\":1}],\"prereqs\":[],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Sarim\",\"Falador\",\"Varrock\",\"Musa Point\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear a white apron to enter the grocery storeroom\",\"slot\":\"Body\",\"tier\":1}],\"prereqs\":[],\"oneOf\":[{\"merchants\":[\"Wine Traders\"]},{\"merchants\":[\"Bars & Inns\"],\"regions\":[\"Brimhaven\"]}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "45,49",
@@ -5091,7 +5141,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Pirate's Treasure were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Fate equipment review 2026-09-22: Body T1: Wear a white apron to enter the grocery storeroom. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
+          "Fate equipment review 2026-09-22: Body T1: Wear a white apron to enter the grocery storeroom. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the Karamjan rum is bought from Zembo at Musa Point (Wine Traders by the app's shop classification) or the Dead Man's Chest in Brimhaven (Bars & Inns); a one-of now asks for either (Wiki revision 15315445)."
         ],
         "travel": [
           "The compulsory rum-smuggling route crosses Port Sarim/Asgarnia, Musa Point/Karamja, Varrock/Misthalin, and Falador/Asgarnia.",
@@ -5105,7 +5156,7 @@
       "id": "Plague City",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-22",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Plague_City&oldid=15343824",
         "revision": 15343824,
@@ -5113,7 +5164,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":39,\"cy\":52}],\"id\":\"east-ardougne-edmond\",\"label\":\"Edmond's house in East Ardougne\",\"standardAreas\":[\"East Ardougne\"]},{\"chunkOptions\":[{\"cx\":39,\"cy\":51}],\"id\":\"west-ardougne\",\"label\":\"West Ardougne\",\"standardAreas\":[\"West Ardougne\"]}],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the gas mask when entering West Ardougne from the sewer\",\"slot\":\"Head\",\"tier\":1}],\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":40,\"cy\":52}],\"id\":\"east-ardougne-edmond\",\"label\":\"Edmond's house in East Ardougne\",\"standardAreas\":[\"East Ardougne\"]},{\"chunkOptions\":[{\"cx\":39,\"cy\":51}],\"id\":\"west-ardougne\",\"label\":\"West Ardougne\",\"standardAreas\":[\"West Ardougne\"]}],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the gas mask when entering West Ardougne from the sewer\",\"slot\":\"Head\",\"tier\":1}],\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "39,51",
@@ -5132,7 +5183,8 @@
           "Fate equipment review 2026-09-22: Head T1: Wear the gas mask when entering West Ardougne from the sewer. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
         ],
         "travel": [
-          "Edmond's East Ardougne garden and West Ardougne are the fixed quest locations represented by the two pinned chunks."
+          "Edmond's East Ardougne garden and West Ardougne are the fixed quest locations represented by the two pinned chunks.",
+          "Accuracy review 2026-10-02: Edmond's house is at 2568,3334, in 40,52; the Chunked location now names 40,52 instead of 39,52 (Wiki revision 15343824)."
         ],
         "instances": [
           "The wall tunnel and Elena's cellar are attached to the two exact Ardougne locations."
@@ -5182,7 +5234,7 @@
       "id": "Prince Ali Rescue",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Prince_Ali_Rescue&oldid=15260348",
         "revision": 15260348,
@@ -5190,7 +5242,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\",\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":51,\"cy\":49}],\"id\":\"al-kharid-palace\",\"label\":\"Al Kharid Palace\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":50}],\"id\":\"draynor-village-and-jail\",\"label\":\"Draynor Village and the jail\",\"standardAreas\":[\"Draynor Village\"]}],\"skills\":{},\"prereqs\":[],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\",\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":51,\"cy\":49}],\"id\":\"al-kharid-palace\",\"label\":\"Al Kharid Palace\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":50}],\"id\":\"draynor-village-and-jail\",\"label\":\"Draynor Village and the jail\",\"standardAreas\":[\"Draynor Village\"]}],\"skills\":{},\"prereqs\":[],\"merchants\":[\"Clothes Shops\",\"Bars & Inns\"],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "48,50",
@@ -5205,7 +5257,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Prince Ali Rescue were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Prince Ali Rescue were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decisions of 2 Oct: the pink skirt is sold only by clothes shops (Thessalia; Wiki revision 15260348) and Joe's three beers are bought from a barkeeper, so the quest now needs Clothes Shops and Bars & Inns."
         ],
         "travel": [
           "Al Kharid Palace and the Draynor jail/rescue route are unavoidable; ingredient and furnace choices are not location gates."
@@ -5266,7 +5319,7 @@
       "id": "Rag and Bone Man I",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_I&oldid=15241026",
         "revision": 15241026,
@@ -5274,7 +5327,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Draynor Village\"],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Draynor Village\",\"Silvarea\"],\"skills\":{},\"prereqs\":[],\"oneOf\":[{\"regions\":[\"Musa Point\"]},{\"anyOfRegions\":[\"Catherby\",\"Seers' Village\",\"Yanille\",\"Hosidius\"],\"regions\":[\"Shilo Village\"]},{\"anyOfRegions\":[\"Catherby\",\"Seers' Village\",\"Yanille\",\"Hosidius\"],\"regions\":[\"East Ardougne\"],\"skills\":{\"Magic\":33}}],\"merchants\":[\"Wine Traders\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "48,50",
@@ -5284,11 +5337,14 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Rag and Bone Man I were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Rag and Bone Man I were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the eight jugs of vinegar are bought from Fortunato's wine shop in Draynor (Wiki revision 15292348); the quest now needs Wine Traders."
         ],
         "travel": [
           "The Odd Old Man and Draynor vinegar route remain covered by Misthalin; monster-bone sources have multiple item-source alternatives.",
-          "The catalogue-wide parent-region audit replaced Misthalin with the exact tracked access set: Draynor Village."
+          "The catalogue-wide parent-region audit replaced Misthalin with the exact tracked access set: Draynor Village.",
+          "Accuracy review 2026-10-02: The monkey paw comes from Musa Point, south Karamja by fairy ring CKR (Shilo Village's chunk) or the Ardougne Zoo with Telekinetic Grab (Magic 33); the giant bat wing from Musa Point, Keep Le Faye (Catherby), the coal trucks (Seers' Village), the Yanille dungeon or the mine west of the Tithe Farm (Hosidius). A one-of now asks for a way to both; the Heroes' Guild basement is left out as only guild members get in (Wiki revision 15292348).",
+          "Accuracy review 2026-10-02: The Odd Old Man is in Silvarea (Chunk Picker task 1); Silvarea is now required, which matters in Chunked mode and Xtreme runs."
         ],
         "instances": [],
         "partialCompletion": [
@@ -5300,7 +5356,7 @@
       "id": "Rag and Bone Man II",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_II&oldid=15273866",
         "revision": 15273866,
@@ -5308,7 +5364,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Silvarea\",\"Draynor Village\",\"Taverley\",\"Tree Gnome Stronghold\",\"Feldip Hills\",\"Nardah\",\"Rellekka\",\"Canifis\",\"Haunted Woods\",\"Fenkenstrain's Castle\",\"Slayer Tower\"],\"skills\":{\"Slayer\":40},\"prereqs\":[\"Rag and Bone Man I\",\"Skippy and the Mogres\"],\"manualRequirements\":[\"Completed Horror from the Deep or started The Fremennik Trials for dagannoth access\",\"Reached an experiment after starting Creature of Fenkenstrain or completing Grim Tales\",\"Reached a listed fire giant source after partially completing Waterfall Quest or by an alternative route\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Silvarea\",\"Draynor Village\",\"Taverley\",\"Tree Gnome Stronghold\",\"Feldip Hills\",\"Nardah\",\"Rellekka\",\"Canifis\",\"Haunted Woods\",\"Fenkenstrain's Castle\",\"Slayer Tower\"],\"skills\":{\"Slayer\":40},\"prereqs\":[\"Rag and Bone Man I\",\"Skippy and the Mogres\"],\"manualRequirements\":[\"Completed Horror from the Deep or started The Fremennik Trials for dagannoth access\",\"Reached an experiment after starting Creature of Fenkenstrain or completing Grim Tales\",\"Reached a listed fire giant source after partially completing Waterfall Quest or by an alternative route\"],\"merchants\":[\"Wine Traders\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "48,50",
@@ -5318,7 +5374,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Rag and Bone Man II were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Rag and Bone Man II were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the jugs of vinegar are bought from Fortunato's wine shop in Draynor, the only source in the export; the quest now needs Wine Traders."
         ],
         "travel": [
           "The pinned route explicitly requires monster access across Misthalin, Asgarnia, Kandarin, the desert, Fremennik, and Morytania.",
@@ -5434,7 +5491,7 @@
       "id": "Regicide",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Regicide&oldid=15271309",
         "revision": 15271309,
@@ -5442,7 +5499,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tyras Camp\",\"Iorwerth Camp\",\"Isafdar\",\"Arandar\",\"East Ardougne\",\"West Ardougne\"],\"skills\":{\"Agility\":56,\"Crafting\":10},\"prereqs\":[\"Underground Pass\"],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tyras Camp\",\"Iorwerth Camp\",\"Isafdar\",\"Arandar\",\"East Ardougne\",\"West Ardougne\",\"Rimmington\",\"Poison Waste\"],\"skills\":{\"Agility\":56,\"Crafting\":10},\"prereqs\":[\"Underground Pass\"],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "34,49",
@@ -5481,7 +5538,8 @@
         ],
         "travel": [
           "The quest starts and ends in Ardougne/Kandarin and traverses the Underground Pass into the fixed Tirannwn route.",
-          "The catalogue-wide parent-region audit replaced Tirannwn, Kandarin with the exact tracked access set: Tyras Camp, Iorwerth Camp, Isafdar, Arandar, East Ardougne, West Ardougne."
+          "The catalogue-wide parent-region audit replaced Tirannwn, Kandarin with the exact tracked access set: Tyras Camp, Iorwerth Camp, Isafdar, Arandar, East Ardougne, West Ardougne.",
+          "Accuracy review 2026-10-02: The Chemist who makes the naphtha is in Rimmington and the sulphur is by the Poison Waste swamp (35,48); both areas are now required (Wiki revision 15347677)."
         ],
         "instances": [
           "The Underground Pass and Tirannwn cave/forest route were reviewed through the permanent walkthrough."
@@ -5640,7 +5698,7 @@
       "id": "RFD: King Awowogei",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-22",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_King_Awowogei&oldid=15331685",
         "revision": 15331685,
@@ -5648,7 +5706,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Ape Atoll\"],\"skills\":{\"Agility\":48,\"Cooking\":70},\"prereqs\":[\"RFD: The Cook\",\"Monkey Madness I\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Ape Atoll\"],\"skills\":{\"Agility\":48,\"Cooking\":70},\"prereqs\":[\"RFD: The Cook\",\"Monkey Madness I\"],\"merchants\":[\"Food Shops\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "42,43",
@@ -5673,7 +5731,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for RFD: King Awowogei were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for RFD: King Awowogei were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the monkey nuts are sold only by Solihib's food stall on Ape Atoll in the export; the quest now needs Food Shops."
         ],
         "travel": [
           "Compatibility-preserved King Awowogei chapter evidence covers Lumbridge, Ape Atoll, Crash Island, and its dungeon for the Recipe for Disaster parent route.",
@@ -6134,7 +6193,7 @@
       "id": "Scrambled!",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Scrambled!&oldid=15275586",
         "revision": 15275586,
@@ -6142,7 +6201,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Varlamore\"],\"locations\":[{\"chunkOptions\":[{\"cx\":18,\"cy\":48}],\"id\":\"tal-teklan-dock\",\"label\":\"Tal Teklan dock\",\"standardAreas\":[\"Tlati Rainforest\"]},{\"chunkOptions\":[{\"cx\":19,\"cy\":49}],\"id\":\"tal-teok\",\"label\":\"Tal Teok and Tal Teklan\",\"standardAreas\":[\"Tlati Rainforest\"]},{\"chunkOptions\":[{\"cx\":20,\"cy\":48}],\"id\":\"tlati-rainforest\",\"label\":\"Central Tlati Rainforest\",\"standardAreas\":[\"Tlati Rainforest\"]}],\"skills\":{\"Construction\":38,\"Cooking\":36,\"Smithing\":35},\"prereqs\":[\"Children of the Sun\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Varlamore\"],\"locations\":[{\"chunkOptions\":[{\"cx\":18,\"cy\":48}],\"id\":\"tal-teklan-dock\",\"label\":\"Tal Teklan dock\",\"standardAreas\":[\"Tlati Rainforest\"]},{\"chunkOptions\":[{\"cx\":19,\"cy\":49}],\"id\":\"tal-teok\",\"label\":\"Tal Teok\",\"standardAreas\":[\"Tlati Rainforest\"]},{\"chunkOptions\":[{\"cx\":19,\"cy\":48}],\"id\":\"tal-teklan\",\"label\":\"Tal Teklan\",\"standardAreas\":[\"Tlati Rainforest\"]},{\"chunkOptions\":[{\"cx\":20,\"cy\":48}],\"id\":\"tlati-rainforest\",\"label\":\"Central Tlati Rainforest\",\"standardAreas\":[\"Tlati Rainforest\"]},{\"chunkOptions\":[{\"cx\":20,\"cy\":49}],\"id\":\"dragon-nest\",\"label\":\"Dragon nest by the river crossing\",\"standardAreas\":[\"Tlati Rainforest\"]}],\"skills\":{\"Construction\":38,\"Cooking\":36,\"Smithing\":35},\"prereqs\":[\"Children of the Sun\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "18,48",
@@ -6166,7 +6225,8 @@
         ],
         "travel": [
           "Tal Teklan dock, Tal Teok, and the central Tlati Rainforest are the fixed route represented by all three picker rows.",
-          "Standard mode has no separate Tal Teklan or Tal Teok aliases, so all truthful labels use Tlati Rainforest; Chunked mode uses exact chunks 18,48, 19,49, and 20,48."
+          "Standard mode has no separate Tal Teklan or Tal Teok aliases, so all truthful labels use Tlati Rainforest; Chunked mode uses exact chunks 18,48, 19,49, and 20,48.",
+          "Accuracy review 2026-10-02: The King and her three men are in Tal Teklan (19,48) and the dragon egg is in the nest at 20,49; Chunked mode now asks for both chunks (Wiki revision 15323000)."
         ],
         "instances": [],
         "partialCompletion": []
@@ -6215,7 +6275,7 @@
       "id": "Secrets of the North",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-22",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Secrets_of_the_North&oldid=15325015",
         "revision": 15325015,
@@ -6223,7 +6283,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"East Ardougne\",\"Weiss\"],\"skills\":{\"Agility\":69,\"Hunter\":56,\"Thieving\":64},\"prereqs\":[\"Hazeel Cult\",\"The General's Shadow\",\"Making Friends with My Arm\",\"Devious Minds\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"East Ardougne\",\"Weiss\",\"Fight Arena\"],\"skills\":{\"Agility\":69,\"Hunter\":56,\"Thieving\":64},\"prereqs\":[\"Hazeel Cult\",\"The General's Shadow\",\"Making Friends with My Arm\",\"Devious Minds\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "40,50",
@@ -6252,7 +6312,8 @@
         ],
         "travel": [
           "The actual route is Ardougne/Hazeel territory in Kandarin and Weiss/Ghorrock in Fremennik; desert state comes from the prerequisite chain, not route geography.",
-          "The catalogue-wide parent-region audit replaced Kandarin, Fremennik with the exact tracked access set: East Ardougne, Weiss."
+          "The catalogue-wide parent-region audit replaced Kandarin, Fremennik with the exact tracked access set: East Ardougne, Weiss.",
+          "Accuracy review 2026-10-02: The Khazard Barman and the trail are at the Fight Arena; it is now required (Wiki revision 15325015)."
         ],
         "instances": [
           "The Ghorrock Dungeon, assassin, and Strange Creature fights are attached to Weiss."
@@ -6266,7 +6327,7 @@
       "id": "Shades of Mort'ton",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Shades_of_Mort'ton&oldid=15240980",
         "revision": 15240980,
@@ -6274,7 +6335,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Morytania\"],\"locations\":[{\"chunkOptions\":[{\"cx\":54,\"cy\":51}],\"id\":\"mortton\",\"label\":\"Mort'ton and the Flamtaer Temple\",\"standardAreas\":[\"Mort'ton\"]}],\"skills\":{\"Crafting\":20,\"Firemaking\":5,\"Herblore\":15},\"prereqs\":[\"Priest in Peril\"],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Morytania\"],\"locations\":[{\"chunkOptions\":[{\"cx\":54,\"cy\":51}],\"id\":\"mortton\",\"label\":\"Mort'ton and the Flamtaer Temple\",\"standardAreas\":[\"Mort'ton\"]}],\"skills\":{\"Crafting\":20,\"Firemaking\":5,\"Herblore\":15},\"prereqs\":[\"Priest in Peril\"],\"merchants\":[\"General Stores\",\"Real Estate Agents\"],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "54,51",
@@ -6284,7 +6345,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Shades of Mort'ton were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Shades of Mort'ton were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: Razmire sells the olive oil (his general store) and the timber beams (his builders' merchant, a Real Estate Agent by the app's shop classification); the quest now needs both."
         ],
         "travel": [
           "The quest is confined to Mort'ton and its Flamtaer Temple, represented by the pinned chunk.",
@@ -6524,7 +6586,7 @@
       "id": "Sins of the Father",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Sins_of_the_Father&oldid=15271402",
         "revision": 15271402,
@@ -6532,7 +6594,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Paterdomus\",\"Burgh de Rott\",\"Meiyerditch\",\"Darkmeyer\",\"Slepe\"],\"skills\":{\"Agility\":52,\"Attack\":50,\"Crafting\":56,\"Fletching\":60,\"Magic\":49,\"Slayer\":50,\"Woodcutting\":62},\"prereqs\":[\"A Taste of Hope\",\"Vampyre Slayer\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Paterdomus\",\"Burgh de Rott\",\"Meiyerditch\",\"Darkmeyer\",\"Slepe\",\"Icyene Graveyard\",\"Haunted Woods\"],\"skills\":{\"Agility\":52,\"Attack\":50,\"Crafting\":56,\"Fletching\":60,\"Magic\":49,\"Slayer\":50,\"Woodcutting\":62},\"prereqs\":[\"A Taste of Hope\",\"Vampyre Slayer\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "53,54",
@@ -6561,7 +6623,8 @@
         ],
         "travel": [
           "The Slepe, Paterdomus, Meiyerditch, Darkmeyer, and instanced boss route remains within Morytania.",
-          "The catalogue-wide parent-region audit replaced Morytania with the exact tracked access set: Paterdomus, Burgh de Rott, Meiyerditch, Darkmeyer, Slepe."
+          "The catalogue-wide parent-region audit replaced Morytania with the exact tracked access set: Paterdomus, Burgh de Rott, Meiyerditch, Darkmeyer, Slepe.",
+          "Accuracy review 2026-10-02: The team meets Vanescula at the Icyene Graveyard and the werewolf meeting is in the Haunted Woods (55,54); both areas are now required (Wiki revision 15355652)."
         ],
         "instances": [
           "The laboratory, escort encounters, Darkmeyer, and Vanstrom fight were reviewed as Morytania instances."
@@ -6727,15 +6790,15 @@
       "id": "Spirits of the Elid",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Spirits_of_the_Elid&oldid=15241013",
         "revision": 15241013,
         "revisionTimestamp": "2026-06-27T14:52:29Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Nardah\"],\"skills\":{\"Magic\":33,\"Mining\":37,\"Ranged\":37,\"Thieving\":37},\"prereqs\":[],\"points\":2}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Nardah\"],\"locations\":[{\"chunkOptions\":[{\"cx\":52,\"cy\":48}],\"id\":\"water-ravine\",\"label\":\"Water Ravine at the source of the River Elid\",\"standardAreas\":[\"Nardah\"]},{\"chunkOptions\":[{\"cx\":52,\"cy\":45}],\"id\":\"genie-cave\",\"label\":\"Genie's cave\",\"standardAreas\":[\"Nardah\"]}],\"skills\":{\"Magic\":33,\"Mining\":37,\"Ranged\":37,\"Thieving\":37},\"prereqs\":[],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "52,45",
@@ -6749,7 +6812,8 @@
         ],
         "travel": [
           "Nardah, the River Elid waterfall dungeon, and the western crevice remain within the Kharidian Desert.",
-          "The catalogue-wide parent-region audit replaced Kharidian Desert with the exact tracked access set: Nardah."
+          "The catalogue-wide parent-region audit replaced Kharidian Desert with the exact tracked access set: Nardah.",
+          "Accuracy review 2026-10-02: Stand-ins for steps in chunks no area owns (owner decision of 2 Oct): the Water Ravine (52,48) and the genie's cave (52,45) ask for Nardah, the quest's own area beside them."
         ],
         "instances": [],
         "partialCompletion": []
@@ -6759,7 +6823,7 @@
       "id": "Swan Song",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Swan_Song&oldid=15266910",
         "revision": 15266910,
@@ -6767,7 +6831,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Piscatoris Fishing Colony\",\"Yanille\",\"Draynor Village\"],\"skills\":{\"Cooking\":62,\"Crafting\":40,\"Firemaking\":42,\"Fishing\":62,\"Magic\":66,\"Quest Points\":100,\"Smithing\":45},\"prereqs\":[\"One Small Favour\",\"Garden of Tranquillity\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Piscatoris Fishing Colony\",\"Yanille\",\"Draynor Village\",\"Falador\",\"Crafting Guild\"],\"skills\":{\"Cooking\":62,\"Crafting\":40,\"Firemaking\":42,\"Fishing\":62,\"Magic\":66,\"Quest Points\":100,\"Smithing\":45},\"prereqs\":[\"One Small Favour\",\"Garden of Tranquillity\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "36,57",
@@ -6796,7 +6860,8 @@
         ],
         "travel": [
           "The route crosses Piscatoris and Yanille/Kandarin, Draynor/Misthalin, and the Crafting Guild plus Malignius/Asgarnia.",
-          "The catalogue-wide parent-region audit replaced Kandarin, Misthalin, Asgarnia with the exact tracked access set: Piscatoris Fishing Colony, Yanille, Draynor Village."
+          "The catalogue-wide parent-region audit replaced Kandarin, Misthalin, Asgarnia with the exact tracked access set: Piscatoris Fishing Colony, Yanille, Draynor Village.",
+          "Accuracy review 2026-10-02: Malignius Mortifer is in 46,51 (Falador) and the master crafter who explains the airtight pot is in the Crafting Guild (Chunk Picker task 8, Quest Helper talkToCrafter); both areas are now required (Wiki revision 15313334)."
         ],
         "instances": [
           "The colony defence and Sea Troll Queen encounters occur in the Piscatoris quest area."
@@ -6808,7 +6873,7 @@
       "id": "Tai Bwo Wannai Trio",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Tai_Bwo_Wannai_Trio&oldid=15265886",
         "revision": 15265886,
@@ -6816,7 +6881,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tai Bwo Wannai\",\"Shilo Village\",\"Brimhaven\",\"Musa Point\"],\"skills\":{\"Agility\":15,\"Cooking\":30,\"Fishing\":5},\"prereqs\":[\"Jungle Potion\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tai Bwo Wannai\",\"Shilo Village\",\"Brimhaven\",\"Musa Point\"],\"skills\":{\"Agility\":15,\"Cooking\":30,\"Fishing\":5},\"prereqs\":[\"Jungle Potion\"],\"oneOf\":[{\"merchants\":[\"Wine Traders\"]},{\"merchants\":[\"Bars & Inns\"]}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "43,46",
@@ -6851,7 +6916,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Tai Bwo Wannai Trio were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Tai Bwo Wannai Trio were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the Karamjan rum is bought from Zembo at Musa Point (Wine Traders) or the Dead Man's Chest in Brimhaven (Bars & Inns); a one-of now asks for either (Wiki revision 15265886)."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Cairn Isle (43,46, step); South Tai Bwo Wannai (43,47, step); North Tai Bwo Wannai (43,48, first); Brimhaven (43,49, step); Karambwan Shore (45,48, step); Musa Point (45,49, step), and unavoidable travel remains represented by region gate Karamja.",
@@ -6952,7 +7018,7 @@
       "id": "Temple of Ikov",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Temple_of_Ikov&oldid=15240953",
         "revision": 15240953,
@@ -6960,7 +7026,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hemenster\"],\"skills\":{\"Thieving\":42},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hemenster\",\"East Ardougne\",\"Edgeville\"],\"skills\":{\"Thieving\":42},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "48,54",
@@ -6974,7 +7040,9 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Edgeville (48,54, step), and unavoidable travel remains represented by region gate Kandarin.",
-          "The catalogue-wide parent-region audit replaced Kandarin with the exact tracked access set: Hemenster."
+          "The catalogue-wide parent-region audit replaced Kandarin with the exact tracked access set: Hemenster.",
+          "Accuracy review 2026-10-02: Lucien starts the quest in the Flying Horse Inn, East Ardougne (40,51); East Ardougne is now required (Wiki revision 15326722).",
+          "Accuracy review 2026-10-02: The quest ends with Lucien west of the Grand Exchange (48,54, Edgeville; Chunk Picker task 5); Edgeville is now required, which matters in Chunked mode and Xtreme runs."
         ],
         "instances": [
           "The Temple of Ikov dungeon, including the Chamber of Fear, ice chamber, unsteady bridge, and guardian-side chambers."
@@ -7039,7 +7107,7 @@
       "id": "The Ascent of Arceuus",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Ascent_of_Arceuus&oldid=15241054",
         "revision": 15241054,
@@ -7047,7 +7115,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Arceuus\"],\"skills\":{\"Hunter\":12},\"prereqs\":[\"Client of Kourend\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Arceuus\",\"Kourend Castle\",\"Mount Karuulm\",\"Lovakengj\"],\"skills\":{\"Hunter\":12},\"prereqs\":[\"Client of Kourend\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "24,59",
@@ -7066,7 +7134,8 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Tower of Magic (24,59, step); Dark Altar (26,60, step), and unavoidable travel remains represented by region gate Kourend & Kebos.",
-          "The catalogue-wide parent-region audit replaced Kourend & Kebos with the exact tracked access set: Arceuus."
+          "The catalogue-wide parent-region audit replaced Kourend & Kebos with the exact tracked access set: Arceuus.",
+          "Accuracy review 2026-10-02: Councillor Andrews is at Kourend Castle, the Tasakaal at Mount Karuulm and the Ancient Grave in Lovakengj (21,58); those three areas are now required (Wiki revision 15314575)."
         ],
         "instances": [
           "Tower of Magic interiors and the Karuulm Slayer Dungeon Tasakaal chamber."
@@ -7187,15 +7256,15 @@
       "id": "The Curse of Arrav",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Curse_of_Arrav&oldid=15271605",
         "revision": 15271605,
         "revisionTimestamp": "2026-07-22T00:26:12Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"Ruins of Uzer\",\"Mountain Camp\"],\"skills\":{\"Agility\":61,\"Mining\":64,\"Ranged\":62,\"Slayer\":37,\"Strength\":58,\"Thieving\":62},\"prereqs\":[\"Defender of Varrock\",\"Troll Romance\"],\"points\":2}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Varrock\",\"Ruins of Uzer\",\"Mountain Camp\",\"Silvarea\"],\"locations\":[{\"chunkOptions\":[{\"cx\":43,\"cy\":60}],\"id\":\"trollweiss-mountain\",\"label\":\"Cave on Trollweiss Mountain\",\"standardAreas\":[\"Mountain Camp\"]},{\"chunkOptions\":[{\"cx\":44,\"cy\":60}],\"id\":\"zemouregals-fortress\",\"label\":\"Zemouregal's Fortress\",\"standardAreas\":[\"Mountain Camp\"]}],\"skills\":{\"Agility\":61,\"Mining\":64,\"Ranged\":62,\"Slayer\":37,\"Strength\":58,\"Thieving\":62},\"prereqs\":[\"Defender of Varrock\",\"Troll Romance\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "43,60",
@@ -7209,7 +7278,9 @@
         ],
         "travel": [
           "The route through Varrock, the desert and Trollweiss Mountain is represented by Misthalin, Kharidian Desert and Fremennik.",
-          "The catalogue-wide parent-region audit replaced Misthalin, Kharidian Desert, Fremennik with the exact tracked access set: Varrock, Ruins of Uzer, Mountain Camp."
+          "The catalogue-wide parent-region audit replaced Misthalin, Kharidian Desert, Fremennik with the exact tracked access set: Varrock, Ruins of Uzer, Mountain Camp.",
+          "Accuracy review 2026-10-02: Zemouregal's base is in Silvarea (Chunk Picker tasks 10 to 13); Silvarea is now required, which matters in Chunked mode and Xtreme runs.",
+          "Accuracy review 2026-10-02: Stand-ins for steps in chunks no area owns (owner decision of 2 Oct): the Trollweiss Mountain cave (43,60) and Zemouregal's Fortress (44,60) ask for Mountain Camp, where the mountain path starts."
         ],
         "instances": [
           "Uzer Mastaba, Trollweiss Dungeon and rubble tunnels, Zemouregal's fort basement, base and dungeon, and the kitchen sewer."
@@ -7379,15 +7450,15 @@
       "id": "The Eyes of Glouphrie",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Eyes_of_Glouphrie&oldid=15266891",
         "revision": 15266891,
         "revisionTimestamp": "2026-07-18T10:55:58Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tree Gnome Stronghold\",\"Observatory\",\"Feldip Hills\"],\"skills\":{\"Construction\":5,\"Magic\":46},\"prereqs\":[\"The Grand Tree\"],\"points\":2}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Tree Gnome Stronghold\",\"Yanille\"],\"locations\":[{\"chunkOptions\":[{\"cx\":37,\"cy\":55}],\"id\":\"giant-tortoises\",\"label\":\"Giant tortoises in the Gnome Stronghold\",\"standardAreas\":[\"Tree Gnome Stronghold\"]}],\"skills\":{\"Construction\":5,\"Magic\":46},\"prereqs\":[\"The Grand Tree\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "37,53",
@@ -7421,7 +7492,9 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Brimstail's Cave Entrance (37,53, first); Gnome Ball Field (37,54, step); Jorral's Outpost (38,52, step); Tree Gnome Stronghold (38,53, step); Hazelmere's Island (41,48, step), and unavoidable travel remains represented by region gate Kandarin.",
-          "The catalogue-wide parent-region audit replaced Kandarin with the exact tracked access set: Tree Gnome Stronghold, Observatory, Feldip Hills."
+          "The catalogue-wide parent-region audit replaced Kandarin with the exact tracked access set: Tree Gnome Stronghold, Observatory, Feldip Hills.",
+          "Accuracy review 2026-10-02: Hazelmere's Island (41,48) is Yanille's on the map; Yanille replaces the Feldip Hills stand-in, and the Observatory stand-in is dropped, as nothing in the quest happens at either.",
+          "Accuracy review 2026-10-02: Stand-in for a step in a chunk no area owns (owner decision of 2 Oct): the giant tortoises' pen (37,55), inside the Gnome Stronghold's walls, asks for the Tree Gnome Stronghold."
         ],
         "instances": [
           "Brimstail's Cave and singing-bowl chamber."
@@ -7435,7 +7508,7 @@
       "id": "The Feud",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Feud&oldid=15265909",
         "revision": 15265909,
@@ -7443,7 +7516,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Al Kharid\",\"Pollnivneach\"],\"skills\":{\"Thieving\":30},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Al Kharid\",\"Pollnivneach\"],\"skills\":{\"Thieving\":30},\"prereqs\":[],\"merchants\":[\"General Stores\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "51,50",
@@ -7458,7 +7531,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for The Feud were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for The Feud were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the Kharidian headpiece and fake beard are sold by Ali Morrisane (Ali's Discount Wares) or the Pollnivneach general store (Wiki revision 15315438); the quest now needs General Stores."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are North Al Kharid (51,50, first); Pollnivneach (52,46, step), and unavoidable travel remains represented by region gate Kharidian Desert.",
@@ -7474,15 +7548,15 @@
       "id": "The Final Dawn",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Final_Dawn&oldid=15270090",
         "revision": 15270090,
         "revisionTimestamp": "2026-07-20T09:07:20Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tlati Rainforest\",\"Civitas illa Fortis\",\"Ralos' Rise\"],\"skills\":{\"Fletching\":52,\"Runecraft\":52,\"Thieving\":66},\"prereqs\":[\"The Heart of Darkness\",\"Perilous Moons\"],\"points\":3}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Tlati Rainforest\",\"Civitas illa Fortis\",\"Ralos' Rise\"],\"locations\":[{\"chunkOptions\":[{\"cx\":20,\"cy\":47}],\"id\":\"crypt-of-tonali\",\"label\":\"Crypt of Tonali\",\"standardAreas\":[\"Tlati Rainforest\"]}],\"skills\":{\"Fletching\":52,\"Runecraft\":52,\"Thieving\":66},\"prereqs\":[\"The Heart of Darkness\",\"Perilous Moons\"],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "20,47",
@@ -7506,7 +7580,8 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Tonali Crypt Entrance (20,47, step); Sunrise Palace (26,49, first); Twilight Temple (26,50, step), and unavoidable travel remains represented by region gate Varlamore.",
-          "The catalogue-wide parent-region audit replaced Varlamore with the exact tracked access set: Tlati Rainforest, Civitas illa Fortis, Ralos' Rise."
+          "The catalogue-wide parent-region audit replaced Varlamore with the exact tracked access set: Tlati Rainforest, Civitas illa Fortis, Ralos' Rise.",
+          "Accuracy review 2026-10-02: Stand-in for steps in a chunk no area owns (owner decision of 2 Oct): the Crypt of Tonali (20,47) asks for the Tlati Rainforest beside it."
         ],
         "instances": [
           "Twilight Temple basement, the safe-house basement, Crypt of Tonali, and the Neypotzli cavern, sun chamber, moon chamber, and encounter instances."
@@ -7520,7 +7595,7 @@
       "id": "The Forsaken Tower",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Forsaken_Tower&oldid=15270136",
         "revision": 15270136,
@@ -7528,7 +7603,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lovakengj\"],\"skills\":{},\"prereqs\":[\"Client of Kourend\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lovakengj\",\"Wintertodt Camp\"],\"skills\":{},\"prereqs\":[\"Client of Kourend\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "21,59",
@@ -7547,7 +7622,8 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are The Forsaken Tower (21,59, step); Lovakengj Assembly (23,58, first), and unavoidable travel remains represented by region gate Kourend & Kebos.",
-          "The catalogue-wide parent-region audit replaced Kourend & Kebos with the exact tracked access set: Lovakengj."
+          "The catalogue-wide parent-region audit replaced Kourend & Kebos with the exact tracked access set: Lovakengj.",
+          "Accuracy review 2026-10-02: Undor at the Wintertodt Camp gives the task and takes Dinh's hammer back; the Wintertodt Camp is now required (Wiki revision 15316647)."
         ],
         "instances": [
           "Forsaken Tower interiors, basement, refinery, and pylon rooms."
@@ -7561,15 +7637,15 @@
       "id": "The Fremennik Exiles",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Fremennik_Exiles&oldid=15265991",
         "revision": 15265991,
         "revisionTimestamp": "2026-07-17T11:42:42Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Rellekka\",\"Lunar Isle\"],\"skills\":{\"Crafting\":65,\"Fishing\":60,\"Runecraft\":55,\"Slayer\":60,\"Smithing\":60},\"prereqs\":[\"The Fremennik Isles\",\"Lunar Diplomacy\",\"Mountain Daughter\",\"Heroes' Quest\"],\"points\":2}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Rellekka\",\"Lunar Isle\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":56}],\"id\":\"brundt-outside-rellekka\",\"label\":\"Brundt outside Rellekka\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":41,\"cy\":56}],\"id\":\"fossegrimen\",\"label\":\"Fossegrimen's lake\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":38,\"cy\":62}],\"id\":\"island-of-stone\",\"label\":\"Island of Stone\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Crafting\":65,\"Fishing\":60,\"Mining\":60,\"Runecraft\":55,\"Slayer\":60,\"Smithing\":60},\"prereqs\":[\"The Fremennik Isles\",\"Lunar Diplomacy\",\"Mountain Daughter\",\"Heroes' Quest\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "32,61",
@@ -7613,13 +7689,15 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are North Moonclan (32,61, step); Astral Altar (33,60, step); Lunar Mine Entrance (33,61, step); Island of Stone (38,62, step); Fremennik Province (41,56, step); Rellekka (41,57, first); Fremennik Forest (42,56, step), and unavoidable travel remains represented by region gate Fremennik.",
-          "The catalogue-wide parent-region audit replaced Fremennik with the exact tracked access set: Rellekka, Lunar Isle."
+          "The catalogue-wide parent-region audit replaced Fremennik with the exact tracked access set: Rellekka, Lunar Isle.",
+          "Accuracy review 2026-10-02: Stand-ins for steps in chunks no area owns (owner decision of 2 Oct): Brundt outside the city (42,56), Fossegrimen's lake (41,56) and the Island of Stone (38,62, by boat) ask for Rellekka."
         ],
         "instances": [
           "The basilisk market fight instance and the Island of Stone cave and Jormungand fight instance; Waterbirth Island Dungeon and the Lunar Isle mine are optional routes."
         ],
         "partialCompletion": [
-          "Level 60 Mining belongs to the optional Lunar Isle ore route and is already recursive through Lunar Diplomacy, so it is not a direct skill gate."
+          "Level 60 Mining belongs to the optional Lunar Isle ore route and is already recursive through Lunar Diplomacy, so it is not a direct skill gate.",
+          "Accuracy review 2026-10-02: Mining 60 is now listed, as the wiki, the Chunk Picker and Quest Helper list it (for the lunar ores, unless the player already has lunar bars; Wiki revision 15356243). Lunar Diplomacy, a prerequisite, already needs it."
         ]
       }
     },
@@ -7627,15 +7705,15 @@
       "id": "The Fremennik Isles",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Fremennik_Isles&oldid=15271156",
         "revision": 15271156,
         "revisionTimestamp": "2026-07-21T05:08:53Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Rellekka\",\"Neitiznot\",\"Jatizso\"],\"skills\":{\"Construction\":20},\"prereqs\":[\"The Fremennik Trials\"],\"points\":1}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Rellekka\",\"Neitiznot\",\"Jatizso\"],\"locations\":[{\"chunkOptions\":[{\"cx\":36,\"cy\":60}],\"id\":\"ice-troll-lands\",\"label\":\"Ice troll lands north of Neitiznot\",\"standardAreas\":[\"Neitiznot\"]}],\"skills\":{\"Construction\":20},\"prereqs\":[\"The Fremennik Trials\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "36,59",
@@ -7669,7 +7747,8 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Neitiznot (36,59, step); West Ice Trolls (36,60, step); Jatizso (37,59, step); East Ice Trolls (37,60, step); Rellekka (41,57, first), and unavoidable travel remains represented by region gate Fremennik.",
-          "The catalogue-wide parent-region audit replaced Fremennik with the exact tracked access set: Rellekka, Neitiznot, Jatizso."
+          "The catalogue-wide parent-region audit replaced Fremennik with the exact tracked access set: Rellekka, Neitiznot, Jatizso.",
+          "Accuracy review 2026-10-02: Stand-in for steps in a chunk no area owns (owner decision of 2 Oct): the ice trolls' land (36,60) asks for Neitiznot, whose bridges cross to it."
         ],
         "instances": [
           "Ice Troll Caves and the instanced Troll King fight; the Jatizso mine is optional."
@@ -7762,15 +7841,15 @@
       "id": "The Garden of Death",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Garden_of_Death&oldid=15274502",
         "revision": 15274502,
         "revisionTimestamp": "2026-07-25T12:53:36Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Molch\"],\"skills\":{\"Farming\":20},\"prereqs\":[],\"points\":1}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Molch\",\"Mount Quidamortem\"],\"locations\":[{\"chunkOptions\":[{\"cx\":22,\"cy\":54}],\"id\":\"ruins-of-morra\",\"label\":\"Ruins of Morra\",\"standardAreas\":[\"Mount Quidamortem\"]}],\"skills\":{\"Farming\":20},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "20,54",
@@ -7799,7 +7878,9 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Settlement Path (20,54, first); Xeric's Shrine (20,56, step); Molch Island (21,56, step); Ruins of Morra (22,54, step), and unavoidable travel remains represented by region gate Kourend & Kebos.",
-          "The catalogue-wide parent-region audit replaced Kourend & Kebos with the exact tracked access set: Molch."
+          "The catalogue-wide parent-region audit replaced Kourend & Kebos with the exact tracked access set: Molch.",
+          "Accuracy review 2026-10-02: The tent south of the Lizardman Settlement is in 20,54, which the map gives to Mount Quidamortem; it is now required (Chunk Picker task 1).",
+          "Accuracy review 2026-10-02: Stand-in for steps in a chunk no area owns (owner decision of 2 Oct): the Ruins of Morra (22,54) ask for Mount Quidamortem beside them."
         ],
         "instances": [
           "The four underground dungeons beneath the swamp settlement, Molch Island, Xeric Shrine, and the Ruins of Morra."
@@ -7813,15 +7894,15 @@
       "id": "The General's Shadow",
       "kind": "miniquest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_General's_Shadow&oldid=15264172",
         "revision": 15264172,
         "revisionTimestamp": "2026-07-15T13:27:04Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Rellekka\",\"Observatory\",\"Seers' Village\",\"Tree Gnome Stronghold\",\"Tai Bwo Wannai\",\"Falador\",\"Shantay Pass\"],\"skills\":{},\"prereqs\":[\"Fight Arena\",\"Curse of the Empty Lord\"],\"points\":0}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Rellekka\",\"Seers' Village\",\"Tree Gnome Stronghold\",\"Shilo Village\",\"Falador\",\"Draynor Village\",\"Shantay Pass\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":56}],\"id\":\"general-khazard\",\"label\":\"General Khazard south-east of Rellekka\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":38,\"cy\":52}],\"id\":\"gnomish-scout\",\"label\":\"Gnomish scout outside the Gnome Stronghold\",\"standardAreas\":[\"Tree Gnome Stronghold\"]}],\"skills\":{},\"prereqs\":[\"Fight Arena\",\"Curse of the Empty Lord\"],\"oneOf\":[{\"regions\":[\"Fishing Guild\"]},{\"regions\":[\"Hemenster\"]}],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "38,52",
@@ -7855,7 +7936,8 @@
         ],
         "travel": [
           "The Wiki requires south-east Rellekka, Seers' Village, Tai Bwo Wannai, the Tree Gnome Stronghold entrance, the Falador/Draynor fence, Shantay Pass, and Goblin Cave. The picker omits Tai Bwo Wannai and Goblin Cave, so the source-supported five-region policy is retained.",
-          "The catalogue-wide parent-region audit replaced Fremennik, Kandarin, Karamja, Asgarnia, Kharidian Desert with the exact tracked access set: Rellekka, Observatory, Seers' Village, Tree Gnome Stronghold, Tai Bwo Wannai, Falador, Shantay Pass."
+          "The catalogue-wide parent-region audit replaced Fremennik, Kandarin, Karamja, Asgarnia, Kharidian Desert with the exact tracked access set: Rellekka, Observatory, Seers' Village, Tree Gnome Stronghold, Tai Bwo Wannai, Falador, Shantay Pass.",
+          "Accuracy review 2026-10-02: The scouts and the Goblin Cave as the map has them: the Karamjan scout is in 44,47 (Shilo Village, replacing Tai Bwo Wannai), the Falador scout in 48,52 (Draynor Village), and Bouncer's ghost in the Goblin Cave between the Fishing Guild and Hemenster (a one-of). General Khazard (42,56) and the Gnomish scout (38,52) are stand-ins for chunks no area owns (owner decision of 2 Oct), asking for Rellekka and the Tree Gnome Stronghold. The Observatory stand-in is dropped (Wiki revision 15336893)."
         ],
         "instances": [
           "The final Ghost of Bouncer fight occurs beyond a crack in Goblin Cave."
@@ -7913,15 +7995,15 @@
       "id": "The Golem",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Golem&oldid=15255943",
         "revision": 15255943,
         "revisionTimestamp": "2026-07-07T11:30:32Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Ruins of Uzer\",\"Varrock\"],\"skills\":{\"Crafting\":20,\"Thieving\":25},\"prereqs\":[],\"points\":1}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Ruins of Uzer\",\"Varrock\",\"Digsite\"],\"locations\":[{\"chunkOptions\":[{\"cx\":53,\"cy\":49}],\"id\":\"desert-phoenix\",\"label\":\"Desert phoenix north of Uzer\",\"standardAreas\":[\"Ruins of Uzer\"]}],\"skills\":{\"Crafting\":20,\"Thieving\":25},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "50,53",
@@ -7940,7 +8022,9 @@
         ],
         "travel": [
           "The Uzer route and the unavoidable Varrock consultation are represented by Kharidian Desert and Misthalin.",
-          "The catalogue-wide parent-region audit replaced Kharidian Desert, Misthalin with the exact tracked access set: Ruins of Uzer, Varrock."
+          "The catalogue-wide parent-region audit replaced Kharidian Desert, Misthalin with the exact tracked access set: Ruins of Uzer, Varrock.",
+          "Accuracy review 2026-10-02: Elissa and Varmen's notes are at the Digsite (Chunk Picker tasks 3 and 4); the Digsite is now required, which matters in Chunked mode and Xtreme runs.",
+          "Accuracy review 2026-10-02: Stand-in for a step in a chunk no area owns (owner decision of 2 Oct): the desert phoenix's clay mine (53,49) asks for the Ruins of Uzer, just south-east of it."
         ],
         "instances": [
           "The Uzer temple dungeon and demon portal chamber."
@@ -7954,7 +8038,7 @@
       "id": "The Grand Tree",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Grand_Tree&oldid=15225321",
         "revision": 15225321,
@@ -7962,7 +8046,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tree Gnome Stronghold\",\"Feldip Hills\",\"Ship Yard\"],\"skills\":{\"Agility\":25},\"prereqs\":[],\"points\":5}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tree Gnome Stronghold\",\"Yanille\",\"Ship Yard\"],\"skills\":{\"Agility\":25},\"prereqs\":[],\"points\":5}",
       "chunkEvidence": [
         {
           "chunkId": "37,54",
@@ -7986,7 +8070,8 @@
         ],
         "travel": [
           "The Tree Gnome Stronghold, Hazelmere and Karamja Ship Yard route is represented by Kandarin and Karamja.",
-          "The catalogue-wide parent-region audit replaced Kandarin, Karamja with the exact tracked access set: Tree Gnome Stronghold, Feldip Hills, Ship Yard."
+          "The catalogue-wide parent-region audit replaced Kandarin, Karamja with the exact tracked access set: Tree Gnome Stronghold, Feldip Hills, Ship Yard.",
+          "Accuracy review 2026-10-02: Hazelmere's Island (41,48) is Yanille's on the map; Yanille replaces the Feldip Hills stand-in, where nothing in the quest happens (Wiki revision 15343831)."
         ],
         "instances": [
           "The Grand Tree root tunnels and Glough's trapdoor cave and black-demon tunnel."
@@ -8000,7 +8085,7 @@
       "id": "The Great Brain Robbery",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Great_Brain_Robbery&oldid=15275553",
         "revision": 15275553,
@@ -8008,7 +8093,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Canifis\",\"Mos Le'Harmless\",\"Harmony Island\",\"Edgeville\"],\"skills\":{\"Construction\":30,\"Crafting\":16,\"Prayer\":50},\"prereqs\":[\"Creature of Fenkenstrain\",\"Cabin Fever\",\"RFD: Pirate Pete\"],\"manualRequirements\":[\"Access to a player-owned house workshop and crafting table, or the Grand Exchange\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Canifis\",\"Mos Le'Harmless\",\"Harmony Island\",\"Edgeville\"],\"skills\":{\"Construction\":30,\"Crafting\":16,\"Prayer\":50},\"prereqs\":[\"Creature of Fenkenstrain\",\"Cabin Fever\",\"RFD: Pirate Pete\"],\"manualRequirements\":[\"Access to a player-owned house workshop and crafting table\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "47,54",
@@ -8028,7 +8113,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for The Great Brain Robbery were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for The Great Brain Robbery were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Wording: the manual check no longer offers the Grand Exchange, which an ironman cannot use; the wooden cats are made at a player-owned house workshop crafting table (Wiki revision 15357906)."
         ],
         "travel": [
           "The Morytania and Asgarnia route covers Canifis, Fenkenstrain-related travel, Harmony Island access and the monastery step; Mos Le'Harmless sailing is prerequisite-mediated.",
@@ -8100,15 +8186,15 @@
       "id": "The Heart of Darkness",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Heart_of_Darkness&oldid=15270091",
         "revision": 15270091,
         "revisionTimestamp": "2026-07-20T09:15:15Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Ralos' Rise\",\"Civitas illa Fortis\"],\"skills\":{\"Agility\":46,\"Mining\":55,\"Slayer\":48,\"Thieving\":48},\"prereqs\":[\"Twilight's Promise\"],\"points\":2}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Ralos' Rise\",\"Civitas illa Fortis\"],\"locations\":[{\"chunkOptions\":[{\"cx\":23,\"cy\":50}],\"id\":\"quetzacalli-gorge\",\"label\":\"Quetzacalli Gorge\",\"standardAreas\":[\"Ralos' Rise\"]},{\"chunkOptions\":[{\"cx\":25,\"cy\":50}],\"id\":\"twilight-trialist-tower\",\"label\":\"Twilight Trialist Tower\",\"standardAreas\":[\"Ralos' Rise\"]}],\"skills\":{\"Agility\":46,\"Mining\":55,\"Slayer\":48,\"Thieving\":48},\"prereqs\":[\"Twilight's Promise\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "22,49",
@@ -8142,7 +8228,8 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Ralos' Rise (22,49, first); Quetzacalli Gorge (23,50, step); Twilight Trialist Tower (25,50, step); Sunrise Palace (26,49, step); Twilight Temple (26,50, step), and unavoidable travel remains represented by region gate Varlamore.",
-          "The catalogue-wide parent-region audit replaced Varlamore with the exact tracked access set: Ralos' Rise, Civitas illa Fortis."
+          "The catalogue-wide parent-region audit replaced Varlamore with the exact tracked access set: Ralos' Rise, Civitas illa Fortis.",
+          "Accuracy review 2026-10-02: Stand-ins for steps in chunks no area owns (owner decision of 2 Oct): the Quetzacalli Gorge (23,50) and the Twilight Trialist Tower (25,50) ask for Ralos' Rise beside them."
         ],
         "instances": [
           "The blocked Twilight Temple passage, Ruins of Tapoyauik dungeon, and instanced Amoxliatl fight."
@@ -8294,7 +8381,7 @@
       "id": "The Path of Glouphrie",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Path_of_Glouphrie&oldid=15265989",
         "revision": 15265989,
@@ -8302,7 +8389,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Gnome Village\",\"Feldip Hills\"],\"skills\":{\"Agility\":45,\"Ranged\":47,\"Slayer\":56,\"Strength\":60,\"Thieving\":56},\"prereqs\":[\"The Eyes of Glouphrie\",\"Waterfall Quest\",\"Tree Gnome Village\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Gnome Village\",\"Castle Wars\",\"Yanille\"],\"skills\":{\"Agility\":45,\"Ranged\":47,\"Slayer\":56,\"Strength\":60,\"Thieving\":56},\"prereqs\":[\"The Eyes of Glouphrie\",\"Waterfall Quest\",\"Tree Gnome Village\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "39,49",
@@ -8321,7 +8408,9 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Tree Gnome Village (39,49, first); Hazelmere's Island (41,48, step), and unavoidable travel remains represented by region gate Kandarin.",
-          "The catalogue-wide parent-region audit replaced Kandarin with the exact tracked access set: Gnome Village, Feldip Hills."
+          "The catalogue-wide parent-region audit replaced Kandarin with the exact tracked access set: Gnome Village, Feldip Hills.",
+          "Accuracy review 2026-10-02: Longramble and the Poison Waste Dungeon are across the river in 36,48, which the map gives to Castle Wars; Castle Wars is now required (Chunk Picker tasks 5 and 6).",
+          "Accuracy review 2026-10-02: Hazelmere's Island (41,48) is Yanille's on the map; Yanille replaces the Feldip Hills stand-in, where nothing in the quest happens."
         ],
         "instances": [
           "Tree Gnome Village Dungeon storeroom and the Poison Waste Dungeon."
@@ -8381,7 +8470,7 @@
       "id": "The Red Reef",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Red_Reef&oldid=15272807",
         "revision": 15272807,
@@ -8389,7 +8478,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Last Light\"],\"skills\":{\"Sailing\":52,\"Smithing\":48},\"prereqs\":[\"Troubled Tortugans\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Last Light\",\"Red Rock\"],\"skills\":{\"Sailing\":52,\"Smithing\":48},\"prereqs\":[\"Troubled Tortugans\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "43,39",
@@ -8418,7 +8507,8 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Red Rock (43,39, step); Last Light (44,36, step); The Summer Shore (49,37, first); Sacred Grove West (49,38, step), and unavoidable travel remains represented by region gate The Open Seas.",
-          "The catalogue-wide parent-region audit replaced The Open Seas with the exact tracked access set: Last Light."
+          "The catalogue-wide parent-region audit replaced The Open Seas with the exact tracked access set: Last Light.",
+          "Accuracy review 2026-10-02: The company headquarters and Theodore Paxton are on Red Rock; it is now required (Wiki revision 15353290)."
         ],
         "instances": [
           "The required instanced confrontation at Last Light; the preceding ship-combat route can be skipped."
@@ -8432,7 +8522,7 @@
       "id": "The Restless Ghost",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-22",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Restless_Ghost&oldid=15331162",
         "revision": 15331162,
@@ -8440,7 +8530,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lumbridge\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the ghostspeak amulet to speak to the ghost\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lumbridge\",\"Wizards' Tower\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the ghostspeak amulet to speak to the ghost\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "49,49",
@@ -8465,7 +8555,8 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are West Lumbridge Swamp (49,49, step); East Lumbridge Swamp (50,49, step); Lumbridge Castle (50,50, first), and unavoidable travel remains represented by region gate Misthalin.",
-          "The catalogue-wide parent-region audit replaced Misthalin with the exact tracked access set: Lumbridge."
+          "The catalogue-wide parent-region audit replaced Misthalin with the exact tracked access set: Lumbridge.",
+          "Accuracy review 2026-10-02: The skull is in the Wizards' Tower basement (Chunk Picker task 4); the Wizards' Tower is now required, which matters in Chunked mode and Xtreme runs."
         ],
         "instances": [
           "Wizards' Tower basement and the skull-skeleton chamber."
@@ -8507,15 +8598,15 @@
       "id": "The Slug Menace",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Slug_Menace&oldid=15266884",
         "revision": 15266884,
         "revisionTimestamp": "2026-07-18T10:38:27Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Observatory\",\"Witchaven\",\"Falador\"],\"skills\":{\"Crafting\":30,\"Runecraft\":30,\"Slayer\":30,\"Thieving\":30},\"prereqs\":[\"Sea Slug\",\"Wanted!\"],\"manualRequirements\":[\"Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss through Edgeville with Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed\"],\"points\":1}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Witchaven\",\"Falador\"],\"locations\":[{\"chunkOptions\":[{\"cx\":38,\"cy\":52}],\"id\":\"jorrals-outpost\",\"label\":\"Jorral's Outpost\",\"standardAreas\":[\"East Ardougne\"]}],\"skills\":{\"Crafting\":30,\"Runecraft\":30,\"Slayer\":30,\"Thieving\":30},\"prereqs\":[\"Sea Slug\",\"Wanted!\"],\"manualRequirements\":[\"Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss through Edgeville with Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "38,52",
@@ -8544,7 +8635,8 @@
         ],
         "travel": [
           "The fixed Falador, Witchaven, Fishing Platform and dungeon route is represented by Kandarin and Asgarnia; access to every required elemental altar remains an explicit manual route attestation.",
-          "The catalogue-wide parent-region audit replaced Kandarin, Asgarnia with the exact tracked access set: Observatory, Witchaven, Falador."
+          "The catalogue-wide parent-region audit replaced Kandarin, Asgarnia with the exact tracked access set: Observatory, Witchaven, Falador.",
+          "Accuracy review 2026-10-02: Jorral is at his outpost (38,52), not the Observatory, where nothing in the quest happens: the Jorral's Outpost stand-in (East Ardougne, owner decision of 2 Oct) replaces the Observatory."
         ],
         "instances": [
           "Witchaven Dungeon, the Pillars of Zanash, and the Slug Prince chamber."
@@ -8558,15 +8650,15 @@
       "id": "The Tourist Trap",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-22",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Tourist_Trap&oldid=15350316",
         "revision": 15350316,
         "revisionTimestamp": "2026-09-18T12:46:11Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Bedabin Camp\",\"Shantay Pass\"],\"skills\":{\"Fletching\":10,\"Smithing\":20},\"equipmentRequirements\":[{\"reason\":\"Wear the slave shirt inside the mining camp\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear the slave robe inside the mining camp\",\"slot\":\"Legs\",\"tier\":1},{\"reason\":\"Wear the slave boots inside the mining camp\",\"slot\":\"Boots\",\"tier\":1}],\"prereqs\":[],\"points\":2}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Bedabin Camp\",\"Shantay Pass\"],\"locations\":[{\"chunkOptions\":[{\"cx\":51,\"cy\":47}],\"id\":\"desert-mining-camp\",\"label\":\"Desert Mining Camp\",\"standardAreas\":[\"Shantay Pass\"]}],\"skills\":{\"Fletching\":10,\"Smithing\":20},\"equipmentRequirements\":[{\"reason\":\"Wear the slave shirt inside the mining camp\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear the slave robe inside the mining camp\",\"slot\":\"Legs\",\"tier\":1},{\"reason\":\"Wear the slave boots inside the mining camp\",\"slot\":\"Boots\",\"tier\":1}],\"prereqs\":[],\"oneOf\":[{\"merchants\":[\"General Stores\"]},{\"merchants\":[\"Clothes Shops\"],\"regions\":[\"Sophanem\"]}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "49,47",
@@ -8587,11 +8679,13 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for The Tourist Trap were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Fate equipment review 2026-09-22: Body T1: Wear the slave shirt inside the mining camp; Legs T1: Wear the slave robe inside the mining camp; Boots T1: Wear the slave boots inside the mining camp. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
+          "Fate equipment review 2026-09-22: Body T1: Wear the slave shirt inside the mining camp; Legs T1: Wear the slave robe inside the mining camp; Boots T1: Wear the slave boots inside the mining camp. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the desert shirt, robe and boots are sold by the Shantay Pass, Bandit Camp and Pollnivneach general stores, or Raetul's cloth store in Sophanem; a one-of now asks for General Stores, or Sophanem with Clothes Shops (Wiki revision 15350316)."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Bedabin Camp (49,47, step); Rocky Desert (50,47, step); Shantay Pass (51,48, first), and unavoidable travel remains represented by region gate Kharidian Desert.",
-          "The catalogue-wide parent-region audit replaced Kharidian Desert with the exact tracked access set: Bedabin Camp, Shantay Pass."
+          "The catalogue-wide parent-region audit replaced Kharidian Desert with the exact tracked access set: Bedabin Camp, Shantay Pass.",
+          "Accuracy review 2026-10-02: Stand-in for steps in a chunk no area owns (owner decision of 2 Oct): the Desert Mining Camp (51,47) asks for the Shantay Pass just north of it."
         ],
         "instances": [
           "The underground Desert Mining Camp and mine-cart tunnels."
@@ -8681,7 +8775,7 @@
       "id": "Tree Gnome Village",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Tree_Gnome_Village&oldid=15259418",
         "revision": 15259418,
@@ -8689,7 +8783,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Gnome Village\"],\"skills\":{},\"prereqs\":[],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Gnome Village\",\"Khazard Battlefield\",\"West Ardougne\"],\"skills\":{},\"prereqs\":[],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "38,51",
@@ -8708,7 +8802,8 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Underground Pass Entrance (38,51, step); Tree Gnome Village (39,49, first), and unavoidable travel remains represented by region gate Kandarin.",
-          "The catalogue-wide parent-region audit replaced Kandarin with the exact tracked access set: Gnome Village."
+          "The catalogue-wide parent-region audit replaced Kandarin with the exact tracked access set: Gnome Village.",
+          "Accuracy review 2026-10-02: Commander Montai and the trackers are on the Khazard Battlefield (39,50), and the Khazard warlord is in 38,51, which the map gives to West Ardougne; both areas are now required (Wiki revision 15351851)."
         ],
         "instances": [],
         "partialCompletion": [
@@ -8759,7 +8854,7 @@
       "id": "Troll Romance",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Troll_Romance&oldid=15240985",
         "revision": 15240985,
@@ -8767,7 +8862,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Burthorpe\",\"Warriors' Guild\"],\"skills\":{\"Agility\":28},\"prereqs\":[\"Troll Stronghold\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Burthorpe\",\"Warriors' Guild\",\"Mountain Camp\"],\"skills\":{\"Agility\":28},\"prereqs\":[\"Troll Stronghold\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "44,55",
@@ -8791,7 +8886,8 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Warriors' Guild (44,55, step); Troll Stronghold (44,57, first); Burthorpe (45,55, step), and unavoidable travel remains represented by region gate Asgarnia.",
-          "The catalogue-wide parent-region audit replaced Asgarnia with the exact tracked access set: Burthorpe, Warriors' Guild."
+          "The catalogue-wide parent-region audit replaced Asgarnia with the exact tracked access set: Burthorpe, Warriors' Guild.",
+          "Accuracy review 2026-10-02: The troll cave and the Trollweiss flower are in Mountain Camp's chunks (44,58 and 43,59); Mountain Camp is now required (Wiki revision 15326713)."
         ],
         "instances": [
           "Trollweiss Dungeon, cave and sled tunnel, and the troll-arena fight."
@@ -9132,7 +9228,7 @@
       "id": "Watchtower",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Watchtower&oldid=15266880",
         "revision": 15266880,
@@ -9140,7 +9236,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Yanille\"],\"skills\":{\"Agility\":25,\"Herblore\":14,\"Magic\":14,\"Mining\":40,\"Thieving\":15},\"prereqs\":[],\"points\":4}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Yanille\",\"Feldip Hills\"],\"skills\":{\"Agility\":25,\"Herblore\":14,\"Magic\":14,\"Mining\":40,\"Thieving\":15},\"prereqs\":[],\"points\":4}",
       "chunkEvidence": [
         {
           "chunkId": "39,48",
@@ -9159,7 +9255,8 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are West Yanille (39,48, first); Gu'Tanoth Island (40,47, step), and unavoidable travel remains represented by region gate Kandarin.",
-          "The catalogue-wide parent-region audit replaced Kandarin with the exact tracked access set: Yanille."
+          "The catalogue-wide parent-region audit replaced Kandarin with the exact tracked access set: Yanille.",
+          "Accuracy review 2026-10-02: Gu'Tanoth, the skavid caves and the ogre enclave are in the Feldip Hills (39,46, 39,47 and 40,47); the Feldip Hills are now required (Wiki revision 15351654)."
         ],
         "instances": [
           "The Skavid caves and Ogre Enclave cave."
@@ -9219,7 +9316,7 @@
       "id": "What Lies Below",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=What_Lies_Below&oldid=15271078",
         "revision": 15271078,
@@ -9227,7 +9324,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Edgeville\",\"Varrock\"],\"skills\":{\"Runecraft\":35},\"prereqs\":[\"Rune Mysteries\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Edgeville\",\"Varrock\"],\"skills\":{\"Runecraft\":35},\"prereqs\":[\"Rune Mysteries\"],\"oneOf\":[{\"skills\":{\"Mining\":42}},{\"locations\":[{\"chunkOptions\":[{\"cx\":47,\"cy\":56}],\"id\":\"chaos-temple-ruins\",\"label\":\"Chaos Temple ruins\",\"standardAreas\":[\"Dark Warriors' Fortress\"]}]},{\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":55}],\"id\":\"edgeville-ditch\",\"label\":\"Edgeville ditch\",\"standardAreas\":[\"Edgeville\"]}],\"quests\":[\"Enter the Abyss\"]}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "48,54",
@@ -9256,7 +9353,8 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Edgeville (48,54, step); Varrock Palace (50,54, step); East Varrock Mine (51,52, first); Lumber Yard (51,54, step), and unavoidable travel remains represented by region gate Misthalin.",
-          "The catalogue-wide parent-region audit replaced Misthalin with the exact tracked access set: Edgeville, Varrock."
+          "The catalogue-wide parent-region audit replaced Misthalin with the exact tracked access set: Edgeville, Varrock.",
+          "Accuracy review 2026-10-02: The wiki lists Mining 42 as a recommendation, for one of the ways to the Chaos Altar (Wiki revision 15292388). A one-of now asks for one way: the Tunnel of Chaos statue east of Varrock (Mining 42), the Chaos Temple ruins in the Wilderness (47,56, Dark Warriors' Fortress), or the Abyss after Enter the Abyss; Guardians of the Rift needs Temple of the Eye and so Enter the Abyss."
         ],
         "instances": [
           "The Tunnel of Chaos, Dagon-hai chambers and second level, portal chamber, and the instanced Surok and King Roald confrontation."
@@ -9270,15 +9368,15 @@
       "id": "While Guthix Sleeps",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=While_Guthix_Sleeps&oldid=15270787",
         "revision": 15270787,
         "revisionTimestamp": "2026-07-20T23:23:02Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Edgeville\",\"Draynor Village\",\"Warriors' Guild\",\"Taverley\",\"Falador\",\"Port Sarim\"],\"skills\":{\"Agility\":66,\"Farming\":65,\"Herblore\":65,\"Hunter\":62,\"Magic\":67,\"Quest Points\":180,\"Thieving\":72},\"prereqs\":[\"Defender of Varrock\",\"The Path of Glouphrie\",\"Fight Arena\",\"Dream Mentor\",\"The Hand in the Sand\",\"Wanted!\",\"Temple of the Eye\",\"Tears of Guthix\",\"Nature Spirit\",\"A Tail of Two Cats\"],\"manualRequirements\":[\"Warriors' Guild access with Attack + Strength at least 130, or 99 Attack, or 99 Strength\"],\"points\":5}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Edgeville\",\"Draynor Village\",\"Warriors' Guild\",\"Taverley\",\"Falador\",\"Port Sarim\",\"Fight Arena\",\"Feldip Hills\",\"Khazard Battlefield\",\"Seers' Village\",\"Chaos Altar\"],\"locations\":[{\"chunkOptions\":[{\"cx\":45,\"cy\":59}],\"id\":\"luciens-camp\",\"label\":\"Lucien's camp\",\"standardAreas\":[\"Chaos Altar\"]}],\"skills\":{\"Agility\":66,\"Farming\":65,\"Herblore\":65,\"Hunter\":62,\"Magic\":67,\"Quest Points\":180,\"Thieving\":72},\"prereqs\":[\"Defender of Varrock\",\"The Path of Glouphrie\",\"Fight Arena\",\"Dream Mentor\",\"The Hand in the Sand\",\"Wanted!\",\"Temple of the Eye\",\"Tears of Guthix\",\"Nature Spirit\",\"A Tail of Two Cats\"],\"manualRequirements\":[\"Warriors' Guild access with Attack + Strength at least 130, or 99 Attack, or 99 Strength\"],\"points\":5}",
       "chunkEvidence": [
         {
           "chunkId": "44,55",
@@ -9317,7 +9415,9 @@
         ],
         "travel": [
           "The stable route through Taverley, the Warriors' Guild, Falador, Port Sarim, Edgeville Monastery and Draynor is represented by Misthalin, Asgarnia and Kandarin.",
-          "The catalogue-wide parent-region audit replaced Misthalin, Asgarnia, Kandarin with the exact tracked access set: Edgeville, Draynor Village, Warriors' Guild, Taverley, Falador, Port Sarim."
+          "The catalogue-wide parent-region audit replaced Misthalin, Asgarnia, Kandarin with the exact tracked access set: Edgeville, Draynor Village, Warriors' Guild, Taverley, Falador, Port Sarim.",
+          "Accuracy review 2026-10-02: The Khazard Launderer (Fight Arena), the broav (Feldip Hills), Movario's base (Khazard Battlefield), Idria in McGrubor's Wood (Seers' Village) and the Chaos Temple ledge Lucien is watched from (46,59, Chaos Altar) are now required (Wiki revision 15357813).",
+          "Accuracy review 2026-10-02: Stand-in for a step in a chunk no area owns (owner decision of 2 Oct): Lucien's camp (45,59), reached by teleorb, asks for the Chaos Altar area, whose Chaos Temple ledge you leave by."
         ],
         "instances": [
           "Black Knight Catacombs, Movario's base, Lucien's camp, the Ancient Guthixian Temple, and the Balance Elemental and tormented-demon fight sequence."

@@ -19,9 +19,9 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-09-29-paste-from-runelite',
+    id: '2026-10-02-paste-from-runelite',
     title: 'Paste from RuneLite',
-    date: '2026-09-29',
+    date: '2026-10-02',
     sections: {
       added: [
         'The Roll Inbox has a Paste from RuneLite button. In RuneLite, choose Copy for tracker in the Roll inbox card, then paste here: the inbox says what it added, and nothing rolls until you choose Roll.',
@@ -39,6 +39,177 @@ export const CHANGELOG_RELEASES = [
         'RuneLite’s progress percentage counts what the number beside it counts: 15 of 187 areas is 8%, where it showed 7%, a share of the map’s chunks.',
         'The RuneLite guide says what a backup does: any backup RuneLite can read replaces your rules, even an older one or another run’s, so pick the right file.',
         'After you connect RuneLite, the tracker says what to look for: the status card saying Rules up to date. RuneLite never showed Connected.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-02-plain-rules',
+    title: 'Rules and Help Say What the Game Does',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'The Rules page, onboarding and the tour now say a new run starts with 3 Keys and all of Misthalin (one chunk of Lumbridge in Chunked), not with nothing.',
+        'The Rules page no longer calls bosses repeatable: in Vanilla each boss pays 1 to 3 Keys at falling odds, then stops.',
+        'Chaos Keys are explained properly: every skill gives one at levels 30, 40, 50, 60, 70, 80, 90 and 99, as well as a 2% chance on any level-up. A Chaos Key draws from all the tables at once, so big tables such as Banks come up most.',
+        'An Omni-Key was called an “upgrade” of a successful roll. It comes on top of the Key, and the Rules page now says so, and that Omni-Keys can’t pick land in Chunked.',
+        'The Rules page lists every way to get a Key: any successful roll wherever you log it, Pity Keys, a won Void Gambit, the 3 Keys you start with, and Chunked’s start-chunk Keys (one every 25 total levels while you hold only your start chunk).',
+        'Smart Play no longer tells you to save up Fate. Any successful roll resets it to 0, so spend it first.',
+        'Importing a sync code and resetting your progress now say a backup of your save is kept under Sync Code → Backups, instead of “This cannot be undone”.',
+        'The share card and History are no longer called verifiable. Their check only lets the tracker spot a hand-edited save in your browser.',
+        'The Fate Forecast shows the real chance behind its numbers, instead of “most likely” and a flat 80%.',
+        'A won Void Gambit pays 1 Key for every whole 15 Fate staked; the Rules page now says the rest is lost.',
+        'Banks are unlocked by place: one unlock opens every bank and deposit box there.',
+        'The Inferno is no longer listed as a minigame, and unlocking a skill says which training methods its new tier opens.',
+      ],
+      changed: [
+        'The Rival is out of the game for now. A rival you already set up stays in your save.',
+        'The Rules page’s Game Modes tab says what differs between Vanilla and Chunked, and the Region Bonuses tab, for a retired mode, is gone.',
+        'Plainer words across the tracker: the Rules page is called Rules everywhere, Spend Keys cards say Unlock, the share card has no ranks, and onboarding, the tour, the help buttons and History say what things do.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-02-diary-unlock-gates',
+    title: 'Diary Tasks Ask for Guilds, Patches and House Rooms',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'Diary tasks done inside a guild now need that guild unlocked before the Journal calls them doable: entering the Magic Guild needs the Wizards’ Guild, a Rogues’ Den wall safe the Rogues’ Den, and the redwoods the Woodcutting Guild, or the Farming Guild if you grow your own redwood there, among 14 tasks. Like the patches, rooms and Slayer reward below, this only changes the Journal: you can still log the task by hand.',
+        'Diary tasks that use a farming patch need that patch unlocked, as RuneLite already locks it: the Catherby limpwurt needs the Flower patch, the palm trees the Fruit Tree patch, and the scarecrows a Flower patch, plus an Allotment patch if you grow the watermelon, among 21 tasks.',
+        'Tasks in your house need the room or mount they use: the Menagerie for the pet rock, a Portal Chamber or Portal Nexus for the Kharyrll portal, and the mounted Xeric’s talisman or Digsite pendant if you use your own. Entering your house from Yanille or Hosidius needs Real Estate Agents to move it there.',
+        'Killing a dust devil in a Slayer helmet needs the Malevolent Masquerade Slayer reward, which the helmet takes to make.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-02-diary-accuracy',
+    title: 'Diary Tasks Checked Against the Game',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'Morytania Diary tasks now need Priest in Peril wherever the map keeps their area locked until it, so “Kill a Ghoul” and the Salve bridge shortcut no longer show as doable at the start of a run.',
+        'Some Diary tasks named the wrong area. The Ancient Magicks altar is beside the Bandit Camp and Pollnivneach, the Shadow Dungeon is entered at Baxtorian Falls, the Thermonuclear Smoke Devil and its roll are in the Feldip Hills, crafting nature runes needs Shilo Village or Tai Bwo Wannai, oomlie wraps need the Kharazi Jungle, and the Isafdar painting needs Falador.',
+        'Where a task’s spot is in a chunk the map gives to the next area, the task now asks for that area: the Catherby farming patches (Camelot), the granite quarry (Agility Pyramid), the boat from Musa Point (Port Sarim), the anvil by West Ardougne (East Ardougne) and the altar at Emir’s Arena (Mage Training Arena).',
+        'Trips now need both ends: the magic carpets to Uzer and Pollnivneach, the boats to Entrana, Ardougne and Land’s End, the Dorgesh-Kaan train, the Ardougne and Edgeville levers (they land in the Mage Arena’s chunk) and the Trollheim shortcut (Trollheim is in Burthorpe’s chunk). Visiting the Lighthouse from Waterbirth Island needs Waterbirth Island, and the Water Obelisk tasks need Taverley, whose dungeon is the only way there.',
+        'Making a combat potion, casting Humidify and casting Ice Barrage “in the desert” no longer count Al Kharid, the Duel Arena or the Mage Training Arena, which are outside it.',
+        'Barbarian skill tasks, such as the leaping sturgeon, the pyre ship and the bare-handed sharks, ask you to confirm the part of Barbarian Training they use, and the confirmation clears once the miniquest is done. Only the spear and hasta tasks need Tai Bwo Wannai Trio.',
+        'Tasks that use a shop or service need its merchant unlock, as RuneLite already did: Sbott’s tanning (Tanners), the Sawmill (Sawmill Operators), the estate agents (Real Estate Agents), Gertrude’s kitten (Pet Shops), Aleck’s Hunter Emporium (Hunter Shops), the Nardah Herbalist (Decanters), the Canifis taxidermist (Taxidermists) and the Ardougne silk trader (Silk Shops).',
+        'Tasks that use a minigame’s or a boss’s loot need it unlocked: intelligence for Captain Ginea (Intelligence Gathering), the fire cape (TzHaar Fight Cave), the KQ head (Kalphite Queen), and the trading sticks and gem rocks of Tai Bwo Wannai Cleanup, on the routes that use them.',
+        'Zanaris tasks need a dramen or lunar staff in your Weapon slot. The jutting wall and the 56 cosmic runes can use the Abyss instead.',
+        'Tasks that need only part of a quest no longer ask for all of it: the Troll Stronghold, God Wars Dungeon and Trollheim shortcut tasks need Death Plateau and Troll Stronghold under way, smelting in the Forsaken Tower needs that quest under way, and the Swampy boat needs Nature Spirit started.',
+        'Killing a wyrm in the Karuulm Slayer Dungeon needs boots of stone, brimstone or granite until you have the Kourend Elite reward. The redirected house tablet task follows the ironman rule: it needs Real Estate Agents to move your house to Pollnivneach, not Teleport Tablets, as ironmen go in through the Pollnivneach portal.',
+        'The spottier cape needs 69 Hunter, since an ironman catches the dashing kebbits. The scarecrow tasks’ gryphon route for a watermelon now checks 51 Slayer, 45 Sailing, Troubled Tortugans and the Great Conch, instead of a tick-box.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-02-quest-areas',
+    title: 'Quests Ask for Every Place They Need',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'Quests now ask for every area their required steps happen in, so the Quest Log no longer calls a quest ready before you can reach all of it. Temple of Ikov needs East Ardougne, where Lucien starts it. Fishing Contest needs Taverley and Seers’ Village, Watchtower the Feldip Hills, Tree Gnome Village the Khazard Battlefield and West Ardougne, Dragon Slayer I the Dwarven Mine for the magic door, and A Kingdom Divided the Kourend areas it visits, such as Kourend Castle and the Wintertodt Camp. You can still complete any quest by hand.',
+        'Enakhra’s Lament no longer asks for the whole Kharidian Desert, only the Agility Pyramid, whose chunk holds the quarry. The Grand Tree, The Eyes of Glouphrie and The Path of Glouphrie ask for Yanille, where Hazelmere’s island is, instead of the Feldip Hills. Elemental Workshop II asks for the Digsite instead of Varrock, and Land of the Goblins for Draynor Village, where Aggie makes its dyes, instead of Goblin Village.',
+        'In Chunked runs, quests ask for the chunks their steps are in: Plague City for Edmond’s house rather than the chunk beside it, Scrambled! for Tal Teklan and the dragon nest, A Porcine of Interest for the Sourhog Cave and Spria, and The Restless Ghost for the Wizards’ Tower.',
+        'Steps in a chunk no area covers, such as Cold War’s icebergs, the Jaldraocht Pyramid in Desert Treasure I and Jorral’s Outpost in Making History, now ask for that chunk in Chunked runs. In Vanilla runs they ask for the area you reach them from: Rellekka, the Bandit Camp and East Ardougne.',
+        'Quests whose items only a shop sells need that shop unlock. Prince Ali Rescue needs Clothes Shops for the pink skirt and Bars & Inns for Joe’s beers, Rag and Bone Man I and II need Wine Traders for the vinegar, and Garden of Tranquillity needs Farming Shops. For Pirate’s Treasure’s Karamjan rum, either Wine Traders or Bars & Inns with Brimhaven will do. Alfred Grimhand’s Barcrawl needs Bars & Inns. The Feud, Shades of Mort’ton, Icthlarin’s Little Helper, Daddy’s Home, Making Friends with My Arm, RFD: King Awowogei, Tai Bwo Wannai Trio and The Tourist Trap need their shops too.',
+        'Hopespear’s Will and Fairytale II - Cure a Queen need Fairy Rings, as only a fairy ring reaches the places they go.',
+        'Some quests now accept one of several routes. What Lies Below needs one way to the Chaos Altar: Mining 42 for the Tunnel of Chaos east of Varrock, the Chaos Temple ruins in the Wilderness with Dark Warriors’ Fortress, or the Abyss once you’ve done Enter the Abyss. Lunar Diplomacy needs the Air, Fire, Water and Earth altars or the Abyss, and One Small Favour the Fishing Guild or Hemenster for the Goblin Cave.',
+        'The Fremennik Exiles lists Mining 60, for the lunar ores. Biohazard says the priest gown is worn to see Guidor in Varrock, and The Great Brain Robbery no longer suggests the Grand Exchange, which an ironman can’t use.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-02-shops-and-guilds',
+    title: 'Shops, Guilds and Banks Ask What the Game Asks',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'Members shops and places no longer wait on the map data’s “free-to-play only” tag, so a run that has them can use them.',
+        'Farming Guild patches open at their own tier: 65 Farming for the herb, tree and anima patches, and 85 for the fruit tree, spirit tree, celastrus and redwood patches. The Troll Stronghold and Weiss herb patches need My Arm’s Big Adventure and Making Friends with My Arm.',
+        'A bank inside a guild needs that guild. The banks in Shilo Village, Sophanem, Lletya, Corsair Cove, Etceteria, Neitiznot, Jatizso, Burgh de Rott and Darkmeyer need the quest that opens them.',
+        'The planner smelts steel, mithril, adamantite and rune bars at any furnace, not only the Blast Furnace.',
+        'Trees, rocks, fishing spots, stalls and implings open at the levels the game asks, such as 92 Woodcutting for rosewood and 82 Thieving for the ore stall.',
+        'Shops sit under what they sell. The Runic Emporium and Regath’s Wares are Magic Shops, the TzHaar equipment stores and the vampyre weapon sellers are Weapon Shops, Sian’s is an Archery Shop, the Ore seller is an Ore Merchant, and the Lost Pickaxe and King’s Axe Inn are pubs. Intelligence Gathering is in Shayzien.',
+        'A reward shop needs Reward Shops and the activity whose points it takes: Temple Supplies needs Guardians of the Rift, for example. Grace’s graceful clothing, bought with marks of grace, now needs Reward Shops instead of Clothes Shops.',
+        'Armour shops with mixed stock are filed by most of what they sell, and the shop directory marks an item only one shop sells, such as Scavvo’s rune sword.',
+        'Mine Carts no longer needs The Giant Dwarf, since the Lovakengj carts need no quest. Keldagrim still asks for it.',
+        'Hardwood patches ask for what each place needs: Bone Voyage on Fossil Island, The Ribbiting Tale at the Locus Oasis and 51 Sailing on Anglers’ Retreat.',
+        'In RuneLite, the teleport crystal asks for Mourning’s End Part I at Lletya and Song of the Elves at Prifddinas, and the south Pollnivneach magic carpet counts as a stop.',
+      ],
+      added: [
+        'Ten shops the map was missing, among them Kjut’s Kebabs, Dusuri’s Star Shop, the Barbarian Assault reward shop, Flakes ’n’ Flotsam and The Burrow.',
+        'Karim’s kebabs, Aggie’s dyes, the silk trader, Tenzing’s climbing boots and Nulodion’s cannon now count as merchants, under their shop categories.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-02-slayer-rewards',
+    title: 'Slayer Rewards Add Their Tasks',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'Slayer rewards that add a task now add it to the Slayer panel and RuneLite. Seeing Red, Watch the Birdie, Hot Stuff, Reptile Got Ripped, Actual Vampyre Slayer, Warped Reality, Basilocked, Lured In and Wings Spread give the masters who use them 30 more tasks, each waiting until you buy its reward.',
+        'Slayer tasks no longer say “access needs review” for a gate that being on the task already meets, such as “Gargoyle task”, or for a level the map writes as “93 Slayer”. The Mining Guild’s entrance now asks for its 60 Mining.',
+      ],
+      added: [
+        'Boss tasks: once you buy Like a Boss, Konar, Nieve, Duradel and Krystilia list a boss task. It’s ready when you’ve unlocked a boss you have the Slayer level for. Krystilia gives only Wilderness bosses, and only Konar gives the Alchemical Hydra.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-02-ritual-of-greed',
+    title: 'Greed Pays on an Omni-Key Too',
+    date: '2026-10-02',
+    sections: {
+      balance: [
+        'The Ritual of Greed now gives 2 Keys on an Omni-Key roll too, as on any other success. Before, an Omni-Key roll used Greed up for nothing.',
+      ],
+      fixed: [
+        'Greed’s description now says that a fail which brings a Pity Key refunds no Fate, and that a Vanilla boss with 1 Key left gives 1.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-02-slayer-tasks',
+    title: 'Slayer Tasks Ask What the Masters Ask',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'Slayer tasks ask for the other levels the masters do: Defence 20 for basilisks and cockatrice, Magic 50 for cave krakens, Firemaking 33 for harpie bug swarms, 45 Sailing for gryphons, 87 Sailing for frost dragons, and Thieving 23 and 39 for the magic axe hut and the Pirates’ Hideout.',
+        'Krystilia’s abyssal demon, dust devil, jelly and nechryael tasks need the I Wildy More Slayer reward, as in the game.',
+        'Corrected levels: basilisks need 40 Slayer from Vannaka and Mortimer, Nieve gives suqah and metal dragons from combat 85 and greater demons from 75, and Vannaka gives ice warriors from 45. Fossil Island wyverns no longer ask for Elemental Workshop I, and waterfiends outside the Ancient Cavern no longer ask for the cavern.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-02-boss-fights',
+    title: 'Boss Fights Need Their Boss',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'The monsters a boss fight is made of now count as that boss: the Dagannoth Kings, Jad, Zuk, the Royal Titans, the Barrows brothers, the Moons, Sol Heredit, the Great Olm, the Tombs of Amascut’s Wardens and the Hueycoatl. Before, the map and RuneLite let you fight them without the boss unlock. Tormented demons need the Tormented Demons unlock too, and Jad’s cave needs Mor Ul Rek, as the Inferno does.',
+        'Artio and Spindel ask for the hard Wilderness Diary or their boss’s Slayer task, as Calvar’ion does. The Maggot King asks for The Blood Moon Rises, TzHaar-Ket-Rak’s Challenges a fire cape, and the Abyssal Sire a visit to the Abyss or fairy ring DIP.',
+        'Galvek has left the Bosses table: he is fought only once, during Dragon Slayer II. If you had unlocked him, you get the Key back.',
+        'The God Wars Dungeon bosses and the Whisperer are tagged Asgarnia, and the Leviathan Misthalin, where the map puts their entrances.',
+        'Combat Achievements show where to fight for 179 more tasks, such as the Leviathan’s, the Royal Titans’ and every raid mode’s, and say “Boss not unlocked” when you haven’t unlocked the boss. You can still tick any task by hand.',
+        'The Brutus card notes that repeat kills need The Ides of Milk. Logging a kill is unchanged.',
+        'The collection log counts the Nightmare page for Phosani’s Nightmare too, and the Tormented Demons page needs the Tormented Demons unlock.',
+        'The goal planner counts a boss’s drops only once you have unlocked the boss, and the Wilderness Slayer Cave no longer asks you to confirm you have entered the Wilderness.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-02-map-areas',
+    title: 'Places Join the Area They’re In',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'Places the map left outside every area now belong to the area they’re in: the Giants’ Foundry to Giants’ Plateau, Kraken Cove to Piscatoris Fishing Colony, Tal Teklan and Kastori to the Tlati Rainforest, Ortus Farm and Kualti Headquarters to Civitas illa Fortis, Nemus Retreat to Auburnvale, the Morytania Spider Cave to Darkmeyer, the Seers’ Village hops patch, Mosol Rei and others. Before, most opened only once you owned every area of their region.',
+        'The Fremennik Slayer Dungeon belongs to Mountain Camp, beside its entrance. It used to open only with every Kandarin area.',
+        'Boss and minigame rolls ask for the area the map puts their entrance in: the Corporeal Beast needs Chaos Temple, the Thermonuclear Smoke Devil Feldip Hills, Yama Mount Karuulm, and the Giants’ Foundry Giants’ Plateau. Bosses any Vanilla run could roll now need their area too: the God Wars Dungeon bosses Burthorpe, the Tombs of Amascut Sophanem, Duke Sucellus and the Phantom Muspah Weiss, the Leviathan the Wizards’ Tower, the Whisperer Goblin Village, Amoxliatl Ralos’ Rise, the Maggot King and Araxxor Darkmeyer, and the Chaos Elemental Scorpia’s Cave.',
+        'Emir’s Arena also counts with the Mage Training Arena, whose chunk holds the arena’s bank, altar and entrance.',
+        'Two bank unlocks that opened no bank have left the Banks table. Rellekka Peninsula now counts as Keldagrim’s bank, and Asgarnian Road as East Falador’s, with the Motherlode Mine chest. If you had already unlocked the bank it leads to, you get the Key back.',
       ],
     },
   },

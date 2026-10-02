@@ -3,10 +3,11 @@
  * statuses the plugin knows for each master's task, keyed like the bundle's
  * slayerChunks, from the same rows the Slayer panel shows.
  */
-import type { SlayerAssignment } from '../services/ChunkContentService';
+import { chunkContentService, type SlayerAssignment } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
 import type { PermissionStatus } from './chunkPermissionSnapshot';
-import { evaluateEntityAccess } from './entityAccess';
+import { evaluateEntityAccess, type EntityAccessSource } from './entityAccess';
+import type { RawRouteRequirement } from './questRoutes/model';
 import { mostUsable } from './permissionStatus';
 import type { LocateFn, SlayerReach, SlayerStatus, SlayerTaskRow } from './slayerReach';
 
@@ -14,6 +15,35 @@ export interface SlayerLocationSource {
   slayerLocations(task: string, assignment?: SlayerAssignment, master?: string):
     { name: string; location: { cx: number; cy: number; sourceId?: string } }[];
 }
+
+/**
+ * A monster's gate that a player on its Slayer task meets: "Gargoyle task",
+ * "Smoke devil Slayer task", "Current Slayer assignment: Iron dragon". Only
+ * Krystilia's tasks meet a "wilderness task" gate (accuracy audit S-9).
+ */
+export const isOnTaskRequirement = (raw: string, master?: string): boolean => {
+  const value = raw.trim();
+  if (/\bwilderness task\.?$/i.test(value)) return master === 'Krystilia';
+  return /^Slayer task for /i.test(value) || /^Current Slayer assignment: /i.test(value) || /\btask\.?$/i.test(value);
+};
+
+/** The map's requirements without the ones a player on this master's task meets. */
+const onSlayerTask = (source: EntityAccessSource, master?: string): EntityAccessSource => {
+  const keep = (requirement: RawRouteRequirement) => !isOnTaskRequirement(requirement.raw, master);
+  const wrapped: EntityAccessSource = {
+    taskRequirements: (name, kind, cx, cy) => source.taskRequirements(name, kind, cx, cy).filter(raw => !isOnTaskRequirement(raw, master)),
+    chunkEntryRequirements: (cx, cy) => source.chunkEntryRequirements(cx, cy),
+  };
+  if (source.entityRequirementOptions) {
+    wrapped.entityRequirementOptions = (name, kind, cx, cy, sourceId) =>
+      source.entityRequirementOptions!(name, kind, cx, cy, sourceId)?.map(option => option.filter(keep));
+  }
+  if (source.entityAccessOptions) {
+    wrapped.entityAccessOptions = (name, kind, cx, cy, sourceId) =>
+      source.entityAccessOptions!(name, kind, cx, cy, sourceId)?.map(option => ({ ...option, requirements: option.requirements.filter(keep) }));
+  }
+  return wrapped;
+};
 
 /**
  * Where a task can be done: the first location the run can use, else one
@@ -24,8 +54,9 @@ export const slayerLocate = (
   unlocks: UnlockState,
   gameModeId: string | undefined,
 ): LocateFn => (task, assignment, master) => {
+  const access = onSlayerTask(chunkContentService, master);
   const checked = source.slayerLocations(task, assignment, master).map((hit) =>
-    ({ ...hit, access: evaluateEntityAccess(hit.name, 'monster', hit.location, unlocks, gameModeId) }));
+    ({ ...hit, access: evaluateEntityAccess(hit.name, 'monster', hit.location, unlocks, gameModeId, access) }));
   const hit = checked.find((one) => one.access.status === 'ALLOWED')
     ?? checked.find((one) => one.access.status === 'UNKNOWN')
     ?? checked.find((one) => one.access.status === 'NOT_READY')
@@ -59,10 +90,10 @@ export function slayerReason(row: SlayerTaskRow): string | undefined {
   if (row.masterBlocker) return row.masterBlocker.label;
   switch (row.status) {
     case 'ready': return undefined;
-    case 'slayer-locked': return row.slayer ? `Slayer ${row.slayer}` : 'Slayer locked';
+    case 'slayer-locked': return row.blocker ?? (row.slayer ? `Slayer ${row.slayer}` : 'Slayer locked');
     case 'combat-locked': return row.combat ? `Combat ${row.combat}` : 'Combat level';
     case 'quest-locked': return 'Quest requirements';
-    case 'area-locked': return 'Area locked';
+    case 'area-locked': return row.blocker ?? 'Area locked';
     case 'access-blocked': return 'Entry requirements';
     case 'access-unknown': return 'Access needs review';
     case 'no-location': return 'No known location';

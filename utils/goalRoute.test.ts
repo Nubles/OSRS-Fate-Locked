@@ -238,7 +238,7 @@ describe('buildGoalRoute — diary alternatives', () => {
 });
 
 describe('buildGoalRoute — geographic area aliases', () => {
-  it('routes Kandarin Medium Ranging Guild through canonical Areas, never Guilds', () => {
+  it('routes the Ranging Guild area through canonical Areas, and only the guild itself through Guilds', () => {
     const route = buildGoalRoute('Kandarin Medium', stateWith({
       skills: { Ranged: 10 },
       levels: { Ranged: 99 },
@@ -256,8 +256,14 @@ describe('buildGoalRoute — geographic area aliases', () => {
       needed: ['Hemenster'],
     }));
     expect(route.tables).not.toContainEqual(expect.objectContaining({
-      table: TableType.GUILDS,
+      table: TableType.REGIONS,
       needed: expect.arrayContaining(['Ranging Guild']),
+    }));
+    // Entering it names the guild, a Guilds unlock, apart from the area.
+    expect(route.guilds).toEqual([expect.objectContaining({ name: 'Ranging Guild', met: false })]);
+    expect(route.tables).toContainEqual(expect.objectContaining({
+      table: TableType.GUILDS,
+      needed: ['Ranging Guild'],
     }));
   });
 

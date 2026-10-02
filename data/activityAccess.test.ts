@@ -6,6 +6,7 @@ import {
   validateVanillaRandomAccessPolicy,
 } from './activityAccess';
 import { BOSSES_LIST, MINIGAMES_LIST, REGIONS_LIST } from './items';
+import { SUB_AREA_CHUNKS } from './subAreaChunks';
 import { MISTHALIN_AREAS } from '../constants';
 import { TableType } from '../types';
 
@@ -54,9 +55,34 @@ describe('vanilla activity access declarations', () => {
     expect(NO_HARD_LOCATION_GATE.has('Crazy Archaeologist')).toBe(false);
     expect(ACTIVITY_ACCESS_AREAS['The Mad Angel']).toEqual(['Wyrmscraig']);
 
-    for (const activity of ['Mimic', 'Maggot King', 'Shooting Stars', 'Mahogany Homes', 'Forestry', 'Rat Pits']) {
+    for (const activity of ['Mimic', 'Shooting Stars', 'Mahogany Homes', 'Forestry', 'Rat Pits']) {
       expect(NO_HARD_LOCATION_GATE.has(activity), `${activity} should remain a location-neutral activity`).toBe(true);
     }
+  });
+
+  it('gates each boss and minigame by the area the map gives its entrance chunk', () => {
+    // Reviewed entrance chunks (accuracy audit, 29 September 2026). A gate that names
+    // another area lets a run roll something it can't enter, while the map, the chunk
+    // panel and RuneLite lock it (owner decisions B1 and B2, 2 October 2026).
+    const ENTRANCES: Readonly<Record<string, string>> = {
+      'Corporeal Beast': '50,57', 'Thermonuclear Smoke Devil': '37,47', Yama: '22,57', Kraken: '35,56',
+      "Giants' Foundry": '52,49', 'Tombs of Amascut': '52,42', Nex: '45,58', 'General Graardor': '45,58',
+      'Commander Zilyana': '45,58', "Kree'arra": '45,58', "K'ril Tsutsaroth": '45,58', 'Duke Sucellus': '44,61',
+      'Phantom Muspah': '44,61', 'The Leviathan': '48,49', 'The Whisperer': '46,54', Amoxliatl: '26,50',
+      'Maggot King': '56,52', 'Chaos Elemental': '50,61', Araxxor: '57,53', "Emir's Arena": '52,51',
+      // Captain Ginea's tent at (1504,3632), in the Shayzien encampment (accuracy audit G1).
+      'Intelligence Gathering': '23,56',
+    };
+    const ownerOf = new Map<string, string>(Object.entries(SUB_AREA_CHUNKS as Record<string, { cx: number; cy: number }[]>)
+      .flatMap(([area, chunks]) => chunks.map(({ cx, cy }) => [`${cx},${cy}`, area] as const)));
+    for (const [activity, chunk] of Object.entries(ENTRANCES)) {
+      const owner = ownerOf.get(chunk);
+      expect(owner, `${activity}: ${chunk} has an area`).toBeDefined();
+      expect(ACTIVITY_ACCESS_AREAS[activity], activity).toContain(owner);
+      expect(NO_HARD_LOCATION_GATE.has(activity), activity).toBe(false);
+    }
+    // The arena floor still counts for Emir's Arena; its lobby is in the Mage Training Arena's chunk.
+    expect(ACTIVITY_ACCESS_AREAS["Emir's Arena"]).toEqual(['Duel Arena / PvP Arena', 'Mage Training Arena']);
   });
 
   it('exports the downstream vanilla random access policy', () => {

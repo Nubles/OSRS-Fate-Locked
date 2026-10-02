@@ -472,10 +472,15 @@ describe('planForTarget — quest locations', () => {
   });
 
   it('plans only areas the Areas table can grant, for every quest', () => {
+    // A choice of places (Rag and Bone Man I's giant bats) is one step whose
+    // every place must be an area.
+    const grantable = (step: { id: string; relatedIds?: string[] }) => step.id.startsWith('any-of:')
+      ? (step.relatedIds ?? []).length > 0 && step.relatedIds!.every(area => unlockableAreas.has(area))
+      : unlockableAreas.has(step.id);
     const notAreas = Object.keys(QUEST_DATA).flatMap(id => {
       const plan = planForTarget('quest', id, fresh(), 'vanilla')!;
       return [...plan.regionSteps, ...plan.alternativeSteps.flatMap(step => step.routes.flatMap(route => route.blockers))]
-        .filter(step => step.unlockTable === TableType.REGIONS && !unlockableAreas.has(step.id))
+        .filter(step => step.unlockTable === TableType.REGIONS && !grantable(step))
         .map(step => `${id}: ${step.id}`);
     });
     expect(notAreas).toEqual([]);

@@ -7,14 +7,16 @@ import {
   VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule,
   FAILURE_FATE_BY_SOURCE, SKILL_CHAOS_MILESTONES,
   failureFateForSkillLevel, failureFateForSource, isSkillChaosMilestone,
-  gambitKeys, getRitual, ritualEffect, ritualFateCost,
+  gambitKeys, getRitual, ritualEffect, ritualFateCost, STARTING_KEYS, CHUNKED_MILESTONE_INTERVAL,
 } from './economy';
 import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
-import { BOSSES_LIST } from '../data/items';
+import { BOSSES_LIST, MINIGAMES_LIST } from '../data/items';
+import { BANKS } from '../data/banks';
 import { describeVanillaRandomAccessPolicy, formatVanillaBossSchedule } from '../components/ReferenceModal';
 import { skillLevelKeyChance } from '../utils/keyRoll';
-import { createFreshState, prepareKeyRollAction } from '../context/GameContext';
+import { randomUnlockPool } from '../utils/gameEngine';
+import { createFreshState, initialState, prepareKeyRollAction } from '../context/GameContext';
 import { resolveModeRules } from './gameModes';
 
 /**
@@ -25,6 +27,11 @@ import { resolveModeRules } from './gameModes';
  */
 describe('economy ↔ engine consistency', () => {
   const fixedTiers = EARN_METHODS.flatMap(m => m.tiers.filter(t => t.source));
+
+  it('starts a new run with the Keys the Rules, onboarding and tour name', () => {
+    expect(initialState.keys).toBe(STARTING_KEYS);
+    expect(createFreshState().keys).toBe(STARTING_KEYS);
+  });
 
   it('every fixed earn rate equals DROP_RATES exactly', () => {
     for (const t of fixedTiers) {
@@ -60,6 +67,15 @@ describe('economy ↔ engine consistency', () => {
     for (const percent of new Set(fixedTiers.flatMap(t => t.omni ?? []))) {
       expect(omniText, `Omni-Key text mentions ${percent}%`).toContain(`${percent}%`);
     }
+  });
+
+  it('lists every way to get a Standard Key, not only Farm Keys rolls', () => {
+    const earn = KEY_TYPES.find(k => k.id === 'standard')!.earn.join(' ');
+    expect(earn).toContain('Any successful roll, wherever you log it');
+    expect(earn).not.toContain('Farm Key');
+    expect(earn).toContain('A won Void Gambit.');
+    expect(earn).toContain(`Chunked: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels while you hold only your start chunk.`);
+    expect(earn).toContain(`The ${STARTING_KEYS} every run starts with.`);
   });
 
   it('never documents the same DropSource twice', () => {
@@ -112,6 +128,22 @@ describe('economy ↔ engine consistency', () => {
     }
   });
 
+  it('says most Chaos Keys are guaranteed, and that big tables come up most', () => {
+    const chaos = KEY_TYPES.find(k => k.id === 'chaos')!;
+    expect(chaos.earn[0]).toBe(`Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99: ${SKILL_CHAOS_MILESTONES.length} per skill.`);
+    expect([...chaos.earn, chaos.spend].join(' ')).not.toMatch(/rare|ANY table/i);
+    // A Chaos Key draws once from every eligible entry of every table, so a
+    // table's share is its size: on a fresh run Banks is among the biggest.
+    const tableSizes = (mode: string) => {
+      const sizes = new Map<TableType, number>();
+      for (const { table } of randomUnlockPool(createFreshState().unlocks, mode, 'chaosKey')) sizes.set(table, (sizes.get(table) ?? 0) + 1);
+      return [...sizes].sort((a, b) => b[1] - a[1]).map(([table]) => table);
+    };
+    expect(tableSizes('vanilla').slice(0, 2)).toEqual([TableType.REGIONS, TableType.BANKS]);
+    expect(tableSizes('chunked')[0]).toBe(TableType.BANKS);
+    expect(chaos.spend).toContain('Every eligible entry is equally likely, so big tables such as Banks come up most.');
+  });
+
   it('defines Chaos milestones exactly and recognizes only milestone levels', () => {
     expect(SKILL_CHAOS_MILESTONES).toEqual([30, 40, 50, 60, 70, 80, 90, 99]);
     expect(isSkillChaosMilestone(70)).toBe(true);
@@ -132,6 +164,32 @@ describe('economy ↔ engine consistency', () => {
   it('lists every spend table with a non-empty pool', () => {
     expect(SPEND_TABLES.length).toBeGreaterThanOrEqual(12);
     for (const t of SPEND_TABLES) expect(t.count, t.label).toBeGreaterThan(0);
+  });
+
+  it('calls an Areas unlock an area, as Spend Keys does', () => {
+    const areas = SPEND_TABLES.find(t => t.type === TableType.REGIONS)!;
+    expect(areas.label).toBe('Areas');
+    expect(areas.blurb).toContain('area');
+    expect(areas.blurb).not.toMatch(/region/i);
+  });
+
+  it('names only Minigames entries in the Minigames blurb', () => {
+    const minigames = SPEND_TABLES.find(t => t.type === TableType.MINIGAMES)!;
+    for (const name of ['Pest Control', 'Guardians of the Rift']) {
+      expect(minigames.blurb).toContain(name);
+      expect(MINIGAMES_LIST).toContain(name);
+    }
+    // The Inferno is on the Bosses table.
+    expect(minigames.blurb).not.toContain('Inferno');
+    expect(BOSSES_LIST).toContain('Inferno');
+    expect(MINIGAMES_LIST).not.toContain('Inferno');
+  });
+
+  it('says banks are unlocked by place, one unlock for every bank there', () => {
+    const banks = SPEND_TABLES.find(t => t.type === TableType.BANKS)!;
+    expect(banks.blurb).toBe('Banking is locked by place: each place with a bank, bank chest or deposit box is one unlock.');
+    // One unlock covers a whole place, such as "Arceuus bank and deposit box".
+    expect(BANKS.some(bank => / and deposit (box|pool)/.test(bank.name))).toBe(true);
   });
 
   it('presents Arcana as Combat Powers without changing its type', () => {
@@ -178,6 +236,22 @@ describe('economy ↔ engine consistency', () => {
     }
   });
 
+  it('says a won Gambit pays for each whole minimum staked, and the rest is lost', () => {
+    expect(getRitual('GAMBIT').effect).toContain('Win: 1 Key per 15 staked, rounded down, and the rest is lost.');
+    // Staking 29 wins 1 Key; the other 14 Fate is gone, as Fate goes to 0 either way.
+    expect(gambitKeys(29, 1)).toBe(1);
+  });
+
+  it('describes the Keys and rituals plainly', () => {
+    const text = [
+      ...KEY_TYPES.flatMap(k => [k.tagline, k.spend, ...k.earn]),
+      ...RITUALS.flatMap(r => [r.tagline, r.effect]),
+    ].join(' ');
+    expect(text).not.toMatch(/bread-and-butter|Bend Fate|entropy|Double or|reclaims|Chart your own|Equivalent exchange|advantage|forge|Void keeps/i);
+    // No shouting either.
+    expect(text).not.toMatch(/RANDOM|ANY table|EXACTLY|ALL your/);
+  });
+
   it("names the Gambit's price per Key as the mode sets it", () => {
     expect(ritualEffect('GAMBIT', 0.6)).toContain('1 Key per 9 staked');
     expect(ritualEffect('GAMBIT', 1.5)).toContain('1 Key per 23 staked');
@@ -186,62 +260,77 @@ describe('economy ↔ engine consistency', () => {
     expect(ritualEffect('LUCK', 0.6)).toBe(getRitual('LUCK').effect);
   });
 
+  it('says Vanilla bosses pay a few Keys and stop, never that bosses are repeatable', () => {
+    const bosses = EARN_METHODS.find(m => m.category === 'Bosses')!;
+    const text = [bosses.blurb, ...bosses.tiers.map(t => t.bonus ?? '')].join(' ');
+    expect(text).not.toMatch(/repeatable/i);
+    expect(bosses.blurb).toMatch(/^In Vanilla, each boss pays a few Keys at falling odds, then stops/);
+    // The schedule behind "a few Keys": every boss's runs out after 1 to 3.
+    for (const boss of BOSSES_LIST) expect(vanillaBossKeySchedule(boss).length).toBeLessThanOrEqual(3);
+  });
+
   it('keeps the finite Vanilla boss reserve and every boss schedule aligned', () => {
-    expect(VANILLA_BOSS_STANDARD_KEY_TOTAL).toBe(118);
+    expect(VANILLA_BOSS_STANDARD_KEY_TOTAL).toBe(116);
     expect(BOSSES_LIST).not.toContain(BRUTUS_BOSS_NAME);
     for (const boss of BOSSES_LIST) expect(vanillaBossKeySchedule(boss).length).toBeGreaterThan(0);
     expect(vanillaBossKeySchedule('The Mad Angel')).toEqual([30, 15]);
   });
 
   it('formats Codex policy directly from the shared Vanilla configuration', () => {
-    expect(formatVanillaBossSchedule('Raid', VANILLA_BOSS_KEY_RATES.raid)).toBe('Raid: 65% → 32.5% → 16.25% (3 keys)');
-    expect(describeVanillaRandomAccessPolicy(VANILLA_RANDOM_ACCESS_POLICY)).toContain('Standard and Chaos random unlocks respect hard location access');
+    expect(formatVanillaBossSchedule('Raid', VANILLA_BOSS_KEY_RATES.raid)).toBe('Raid: 65% → 32.5% → 16.25% (3 Keys)');
+    expect(describeVanillaRandomAccessPolicy(VANILLA_RANDOM_ACCESS_POLICY)).toBe(
+      'In Vanilla, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas you own. '
+      + "If none can be reached, nothing is unlocked. You keep the Key. A seeded run's next roll stays the same. "
+      + "An Omni-Key can still pick one you can't reach yet, with a warning.",
+    );
   });
 
   it('derives each Codex safety-valve sentence from policy decisions', () => {
     const policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY;
     const formatted = describeVanillaRandomAccessPolicy(policy);
-    expect(formatted).toContain('Standard and Chaos random unlocks respect hard location access');
-    expect(formatted).toContain('empty eligible pool means no unlock occurs');
-    expect(formatted).toContain('no key is spent');
-    expect(formatted).toContain('no RNG progression');
-    expect(formatted).toContain('bypass that filter with a warning');
+    expect(formatted).toContain('Keys and Chaos Keys only unlock bosses and minigames you can reach');
+    expect(formatted).toContain('If none can be reached, nothing is unlocked.');
+    expect(formatted).toContain('You keep the Key.');
+    expect(formatted).toContain("A seeded run's next roll stays the same.");
+    expect(formatted).toContain("An Omni-Key can still pick one you can't reach yet, with a warning.");
+    expect(formatted).not.toMatch(/hard location access|eligible pool|RNG progression|bypass/);
 
     const standardOnly: VanillaRandomAccessPolicy = { ...policy, randomCosts: ['key'] };
-    expect(describeVanillaRandomAccessPolicy(standardOnly)).toContain('Standard random unlocks respect hard location access');
-    expect(describeVanillaRandomAccessPolicy(standardOnly)).not.toContain('Standard and Chaos');
+    expect(describeVanillaRandomAccessPolicy(standardOnly)).toContain('In Vanilla, Keys only unlock bosses and minigames you can reach');
+    expect(describeVanillaRandomAccessPolicy(standardOnly)).not.toContain('Chaos Keys');
 
     const noGeography: VanillaRandomAccessPolicy = { ...policy, requiresTrackedHardGeography: false };
-    expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('hard location access');
-    expect(describeVanillaRandomAccessPolicy(noGeography)).toContain('Omni-Key direct unlocks can be selected even without location access.');
+    expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('you can reach with the areas you own');
+    expect(describeVanillaRandomAccessPolicy(noGeography)).toContain("An Omni-Key can pick one even if you can't reach it.");
+    expect(describeVanillaRandomAccessPolicy(noGeography)).toContain('If there is nothing to unlock, nothing happens.');
     expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('with a warning');
-    expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('that filter');
+    expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('can still pick one');
 
     const noFilteredTables: VanillaRandomAccessPolicy = { ...policy, filteredTables: [] };
-    expect(describeVanillaRandomAccessPolicy(noFilteredTables)).not.toContain('random unlocks respect hard location access');
-    expect(describeVanillaRandomAccessPolicy(noFilteredTables)).toContain('Omni-Key direct unlocks can be selected even without location access');
+    expect(describeVanillaRandomAccessPolicy(noFilteredTables)).not.toContain('only unlock');
+    expect(describeVanillaRandomAccessPolicy(noFilteredTables)).toContain("An Omni-Key can pick one even if you can't reach it");
 
     const minigamesOnly: VanillaRandomAccessPolicy = { ...policy, filteredTables: [TableType.MINIGAMES] };
-    expect(describeVanillaRandomAccessPolicy(minigamesOnly)).toContain('hard location access for Minigames');
-    expect(describeVanillaRandomAccessPolicy(minigamesOnly)).not.toContain('Bosses and Minigames');
+    expect(describeVanillaRandomAccessPolicy(minigamesOnly)).toContain('only unlock minigames you can reach');
+    expect(describeVanillaRandomAccessPolicy(minigamesOnly)).not.toContain('bosses and minigames');
 
     const noEmptyPoolGuard: VanillaRandomAccessPolicy = {
       ...policy,
       emptyEligiblePool: { noUnlock: false, retainsKey: true, preservesRngProgression: true },
     };
-    expect(describeVanillaRandomAccessPolicy(noEmptyPoolGuard)).not.toContain('empty eligible pool');
+    expect(describeVanillaRandomAccessPolicy(noEmptyPoolGuard)).not.toMatch(/nothing is unlocked|nothing happens|You keep the Key/);
 
     const consumingEmptyPool: VanillaRandomAccessPolicy = {
       ...policy,
       emptyEligiblePool: { noUnlock: true, retainsKey: false, preservesRngProgression: true },
     };
-    expect(describeVanillaRandomAccessPolicy(consumingEmptyPool)).not.toContain('no key is spent');
+    expect(describeVanillaRandomAccessPolicy(consumingEmptyPool)).not.toContain('You keep the Key');
 
     const advancingEmptyPool: VanillaRandomAccessPolicy = {
       ...policy,
       emptyEligiblePool: { noUnlock: true, retainsKey: true, preservesRngProgression: false },
     };
-    expect(describeVanillaRandomAccessPolicy(advancingEmptyPool)).not.toContain('no RNG progression');
+    expect(describeVanillaRandomAccessPolicy(advancingEmptyPool)).not.toContain('seeded run');
 
     const silentOmni: VanillaRandomAccessPolicy = {
       ...policy,
@@ -253,7 +342,8 @@ describe('economy ↔ engine consistency', () => {
       ...policy,
       omniDirect: { allowsLocationIneligible: false, warnsPlayer: true },
     };
-    expect(describeVanillaRandomAccessPolicy(restrictedOmni)).not.toContain('bypass that filter');
+    expect(describeVanillaRandomAccessPolicy(restrictedOmni)).toContain('An Omni-Key follows the same rule.');
+    expect(describeVanillaRandomAccessPolicy(restrictedOmni)).not.toContain('can still pick one');
     expect(describeVanillaRandomAccessPolicy(restrictedOmni)).not.toContain('with a warning');
   });
 });

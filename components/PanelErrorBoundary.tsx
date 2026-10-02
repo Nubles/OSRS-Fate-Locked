@@ -43,7 +43,7 @@ export class PanelErrorBoundary extends Component<Props, State> {
           <div className="bg-[#1e1e1e] border border-amber-500/30 rounded-lg p-5 max-w-sm text-center">
             <RotateCcw className="w-8 h-8 text-amber-400 mx-auto mb-3 animate-spin" />
             <h3 className="text-sm font-bold text-amber-300 mb-1">Updating…</h3>
-            <p className="text-xs text-gray-500 mb-3">This part of the app couldn't load — usually a new version or a network blip.</p>
+            <p className="text-xs text-gray-500 mb-3">This part of the tracker couldn't load. This is usually a new version or a network blip.</p>
             {/* The auto-reload is once-per-15s guarded; without this button a
                 suppressed reload would leave the spinner stuck forever. */}
             <button
@@ -66,7 +66,7 @@ export class PanelErrorBoundary extends Component<Props, State> {
             {this.props.name} hit an error
           </h3>
           <p className="text-xs text-gray-500 mb-3">
-            The rest of the app is still running. Your save data is safe.
+            The rest of the tracker is still running. Your save data is safe.
           </p>
           {this.state.error?.message && (
             <pre className="text-[10px] text-red-300/60 bg-black/40 rounded p-2 mb-3 text-left overflow-auto max-h-24">

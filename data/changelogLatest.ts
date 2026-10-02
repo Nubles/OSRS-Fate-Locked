@@ -4,4 +4,4 @@
  * data/changelog.test.ts pins it to CHANGELOG_RELEASES[0]; update it whenever
  * a release is added.
  */
-export const LATEST_CHANGELOG_ID = '2026-09-29-paste-from-runelite';
+export const LATEST_CHANGELOG_ID = '2026-10-02-paste-from-runelite';

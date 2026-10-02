@@ -100,6 +100,8 @@ const SLAYER_SOURCES = [
 // master's tier uses. Mortimer has no tier here, so the player chooses.
 const SLAYER_MASTER_SOURCES: Record<string, DropSource> = {
   turael: DropSource.SLAYER_BEGINNER,
+  // Aya takes Turael's place after While Guthix Sleeps.
+  aya: DropSource.SLAYER_BEGINNER,
   spria: DropSource.SLAYER_BEGINNER,
   mazchna: DropSource.SLAYER_MAZCHNA,
   achtryn: DropSource.SLAYER_MAZCHNA,

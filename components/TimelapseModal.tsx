@@ -171,11 +171,11 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
         <Stat label="Day" value={day} />
         <Stat label="Rolls" value={statsAtIdx.rolls} />
         <Stat label="Success" value={statsAtIdx.rolls === 0 ? '—' : `${Math.round((statsAtIdx.successes / statsAtIdx.rolls) * 100)}%`} />
-        <Stat label="Omnis" value={statsAtIdx.omnis} accent="text-amber-300" />
-        <Stat label="Pities" value={statsAtIdx.pities} accent="text-sky-300" />
+        <Stat label="Omni-Keys found" value={statsAtIdx.omnis} accent="text-amber-300" />
+        <Stat label="Pity Keys" value={statsAtIdx.pities} accent="text-sky-300" />
         <Stat label="Unlocks" value={statsAtIdx.unlocks} accent="text-purple-300" />
         <Stat label="Keys" value={statsAtIdx.keys} />
-        <Stat label="Omni-Keys" value={statsAtIdx.specialKeys} accent="text-amber-300" />
+        <Stat label="Omni-Keys held" value={statsAtIdx.specialKeys} accent="text-amber-300" />
         <Stat label="Chaos" value={statsAtIdx.chaosKeys} accent="text-rose-300" />
         <Stat label="Fate" value={pityRules.pityEnabled ? `${statsAtIdx.fatePoints}/${pityRules.pityThreshold}` : statsAtIdx.fatePoints} />
         <div className="ml-auto text-gray-400 font-mono text-[10px]">{idx + 1} / {chained.length}</div>

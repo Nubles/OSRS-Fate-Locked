@@ -124,6 +124,9 @@ export const evaluateQuestDoability = (
       && !prereqs.includes(blocker.label)
       && blocker.label !== `Quest Points ${questPointsRequirement}`)
       .map(blocker => blocker.label),
+    // A shop type or travel network the quest needs, such as Fairy Rings.
+    ...eligibility.blockers.filter(blocker => blocker.kind === 'merchant' || blocker.kind === 'mobility')
+      .map(blocker => blocker.label),
     ...(unreviewedAccess ? ['Quest access requirements need review'] : []),
   ];
   const alternativeLabel = quest.oneOf?.length

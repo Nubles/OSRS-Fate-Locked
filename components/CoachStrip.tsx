@@ -62,7 +62,7 @@ export const CoachStrip: React.FC = () => {
     if (!hasRolled && !tourDone) {
       return {
         id: 'tour',
-        text: 'New here? Everything has a place — take the 30-second tour.',
+        text: 'New here? Take the short tour to see where everything is.',
         cta: 'Show me around',
         act: () => {
           try { localStorage.setItem(TOUR_DONE_KEY, '1'); } catch { /* ignore */ }
@@ -74,7 +74,7 @@ export const CoachStrip: React.FC = () => {
     if (keys > 0) {
       return {
         id: 'spend',
-        text: `You have ${keys} key${keys > 1 ? 's' : ''} — let Fate decide what ${keys > 1 ? 'they unlock' : 'it unlocks'}.`,
+        text: `You have ${keys} Key${keys > 1 ? 's' : ''}. Spend ${keys > 1 ? 'them' : 'it'} to unlock something at random.`,
         cta: 'Spend Keys',
         act: () => nav('ctrl:SPEND'),
       };
@@ -90,7 +90,7 @@ export const CoachStrip: React.FC = () => {
     if (rules.pityEnabled && fatePoints >= rules.pityThreshold * 0.8) {
       return {
         id: 'pity',
-        text: `${rules.pityThreshold - fatePoints} fate point${rules.pityThreshold - fatePoints === 1 ? '' : 's'} from a guaranteed pity key — even failed rolls count.`,
+        text: `${rules.pityThreshold - fatePoints} Fate Point${rules.pityThreshold - fatePoints === 1 ? '' : 's'} from a guaranteed Pity Key. Failed rolls count toward it.`,
         cta: 'Farm Keys: harder rolls pay more Fate',
         act: () => nav('ctrl:FARM'),
       };
@@ -98,7 +98,7 @@ export const CoachStrip: React.FC = () => {
     if (!hasRolled) {
       return {
         id: 'farm',
-        text: 'Complete a task in-game (a slayer task, a quest, a clue), then click its card to roll for a key.',
+        text: 'Finish something in game (a Slayer task, a quest, a clue), then click its card to roll for a Key.',
         cta: 'Farm Keys',
         act: () => nav('ctrl:FARM'),
       };

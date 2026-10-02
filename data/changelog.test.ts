@@ -20,11 +20,11 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-29-paste-from-runelite');
+    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-paste-from-runelite');
   });
 
   it('announces Paste from RuneLite, and that manual play is unchanged', () => {
-    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-29-paste-from-runelite');
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-paste-from-runelite');
     expect(release?.title).toBe('Paste from RuneLite');
     expect(release?.sections.added).toEqual([
       expect.stringMatching(/Paste from RuneLite button.*Copy for tracker in the Roll inbox card.*nothing rolls until you choose Roll/),
@@ -42,6 +42,155 @@ describe('authored changelog releases', () => {
       expect.stringMatching(/progress percentage counts what the number beside it counts: 15 of 187 areas is 8%/),
       expect.stringMatching(/any backup RuneLite can read replaces your rules, even an older one or another run’s/),
       expect.stringMatching(/status card saying Rules up to date/),
+    ]);
+  });
+
+  it('announces the plain, corrected Rules and help text, and that the Rival is out for now', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-plain-rules');
+    expect(release?.title).toBe('Rules and Help Say What the Game Does');
+    expect(release?.date).toBe('2026-10-02');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/new run starts with 3 Keys and all of Misthalin \(one chunk of Lumbridge in Chunked\)/),
+      expect.stringMatching(/no longer calls bosses repeatable.*each boss pays 1 to 3 Keys at falling odds, then stops/),
+      expect.stringMatching(/Chaos Keys.*30, 40, 50, 60, 70, 80, 90 and 99.*2% chance on any level-up.*all the tables at once/),
+      expect.stringMatching(/Omni-Key.*comes on top of the Key.*can’t pick land in Chunked/),
+      expect.stringMatching(/every way to get a Key.*any successful roll.*Pity Keys.*Void Gambit.*3 Keys you start with.*every 25 total levels/),
+      expect.stringMatching(/Smart Play no longer tells you to save up Fate.*resets it to 0/),
+      expect.stringMatching(/backup of your save is kept under Sync Code → Backups/),
+      expect.stringMatching(/no longer called verifiable/),
+      expect.stringMatching(/Fate Forecast shows the real chance/),
+      expect.stringMatching(/Void Gambit pays 1 Key for every whole 15 Fate staked.*rest is lost/),
+      expect.stringMatching(/Banks are unlocked by place/),
+      expect.stringMatching(/Inferno is no longer listed as a minigame.*training methods its new tier opens/),
+    ]);
+    expect(release?.sections.changed).toEqual([
+      expect.stringMatching(/Rival is out of the game for now.*stays in your save/),
+      expect.stringMatching(/what differs between Vanilla and Chunked.*Region Bonuses tab.*is gone/),
+      expect.stringMatching(/Rules page is called Rules everywhere.*Spend Keys cards say Unlock.*no ranks/),
+    ]);
+  });
+
+  it('announces the guild, farming patch, house and Slayer reward gates, and that logging stays free', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-diary-unlock-gates');
+    expect(release?.title).toBe('Diary Tasks Ask for Guilds, Patches and House Rooms');
+    expect(release?.date).toBe('2026-10-02');
+    expect(Object.keys(release?.sections ?? {})).toEqual(['fixed']);
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/done inside a guild now need that guild unlocked.*Magic Guild needs the Wizards’ Guild.*Rogues’ Den.*Woodcutting Guild, or the Farming Guild if you grow your own redwood.*14 tasks.*only changes the Journal: you can still log the task by hand/),
+      expect.stringMatching(/farming patch need that patch unlocked.*Flower patch.*Fruit Tree patch.*Allotment patch if you grow the watermelon.*21 tasks/),
+      expect.stringMatching(/house need the room or mount.*Menagerie.*Portal Chamber or Portal Nexus.*Xeric’s talisman or Digsite pendant.*Yanille or Hosidius needs Real Estate Agents/),
+      expect.stringMatching(/Slayer helmet needs the Malevolent Masquerade Slayer reward/),
+    ]);
+  });
+
+  it('announces the Diary tasks checked against the game, with examples of each fix', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-diary-accuracy');
+    expect(release?.title).toBe('Diary Tasks Checked Against the Game');
+    expect(release?.date).toBe('2026-10-02');
+    expect(Object.keys(release?.sections ?? {})).toEqual(['fixed']);
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Morytania Diary tasks now need Priest in Peril.*“Kill a Ghoul” and the Salve bridge shortcut/),
+      expect.stringMatching(/named the wrong area.*Ancient Magicks altar.*Baxtorian Falls.*Feldip Hills.*Shilo Village or Tai Bwo Wannai.*Kharazi Jungle.*Falador/),
+      expect.stringMatching(/chunk the map gives to the next area.*Catherby farming patches \(Camelot\).*granite quarry \(Agility Pyramid\).*Musa Point \(Port Sarim\).*West Ardougne \(East Ardougne\).*Emir’s Arena \(Mage Training Arena\)/),
+      expect.stringMatching(/Trips now need both ends.*Uzer and Pollnivneach.*Entrana, Ardougne and Land’s End.*Dorgesh-Kaan train.*Mage Arena’s chunk.*Burthorpe’s chunk.*Waterbirth Island.*Taverley/),
+      expect.stringMatching(/“in the desert” no longer count Al Kharid, the Duel Arena or the Mage Training Arena/),
+      expect.stringMatching(/part of Barbarian Training they use.*clears once the miniquest is done.*Only the spear and hasta tasks need Tai Bwo Wannai Trio/),
+      expect.stringMatching(/shop or service need its merchant unlock.*Sbott’s tanning \(Tanners\).*Sawmill \(Sawmill Operators\).*estate agents \(Real Estate Agents\).*Pet Shops.*Hunter Shops.*Nardah Herbalist \(Decanters\).*Taxidermists.*silk trader \(Silk Shops\)/),
+      expect.stringMatching(/minigame’s or a boss’s loot.*Intelligence Gathering.*fire cape \(TzHaar Fight Cave\).*KQ head \(Kalphite Queen\).*Tai Bwo Wannai Cleanup/),
+      expect.stringMatching(/Zanaris tasks need a dramen or lunar staff.*Abyss instead/),
+      expect.stringMatching(/only part of a quest no longer ask for all of it.*Death Plateau and Troll Stronghold under way.*Forsaken Tower.*Nature Spirit started/),
+      expect.stringMatching(/wyrm.*boots of stone, brimstone or granite.*Kourend Elite reward.*Real Estate Agents.*not Teleport Tablets/),
+      expect.stringMatching(/spottier cape needs 69 Hunter.*gryphon route.*51 Slayer, 45 Sailing, Troubled Tortugans and the Great Conch/),
+    ]);
+  });
+
+  it('announces that quests ask for every place their steps happen in, and the shops and rings they need', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-quest-areas');
+    expect(release?.title).toBe('Quests Ask for Every Place They Need');
+    expect(release?.date).toBe('2026-10-02');
+    expect(Object.keys(release?.sections ?? {})).toEqual(['fixed']);
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Temple of Ikov needs East Ardougne, where Lucien starts it.*Fishing Contest needs Taverley and Seers’ Village.*complete any quest by hand/),
+      expect.stringMatching(/Enakhra’s Lament no longer asks for the whole Kharidian Desert, only the Agility Pyramid.*Yanille.*instead of the Feldip Hills.*Draynor Village/),
+      expect.stringMatching(/In Chunked runs.*Plague City for Edmond’s house.*Scrambled! for Tal Teklan.*Wizards’ Tower/),
+      expect.stringMatching(/chunk no area covers.*Cold War’s icebergs.*Jaldraocht Pyramid.*Jorral’s Outpost.*In Vanilla runs.*area you reach them from/),
+      expect.stringMatching(/Prince Ali Rescue needs Clothes Shops for the pink skirt and Bars & Inns.*Wine Traders for the vinegar.*Pirate’s Treasure.*Alfred Grimhand’s Barcrawl needs Bars & Inns/),
+      expect.stringMatching(/Hopespear’s Will and Fairytale II - Cure a Queen need Fairy Rings/),
+      expect.stringMatching(/What Lies Below needs one way to the Chaos Altar: Mining 42.*Chaos Temple ruins.*Enter the Abyss.*Lunar Diplomacy.*One Small Favour/),
+      expect.stringMatching(/Fremennik Exiles lists Mining 60.*priest gown.*Guidor in Varrock.*Grand Exchange/),
+    ]);
+  });
+
+  it('announces the shop, guild and bank fixes in plain words', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-shops-and-guilds');
+    expect(release?.title).toBe('Shops, Guilds and Banks Ask What the Game Asks');
+    expect(release?.sections.fixed).toEqual(expect.arrayContaining([
+      expect.stringMatching(/Farming Guild patches open at their own tier: 65 Farming.*85/),
+      expect.stringMatching(/bank inside a guild needs that guild.*Burgh de Rott and Darkmeyer/),
+      expect.stringMatching(/smelts steel, mithril, adamantite and rune bars at any furnace/),
+      expect.stringMatching(/reward shop needs Reward Shops and the activity.*Grace’s graceful clothing.*Reward Shops instead of Clothes Shops/),
+      expect.stringMatching(/Mine Carts no longer needs The Giant Dwarf/),
+      expect.stringMatching(/Bone Voyage on Fossil Island.*51 Sailing on Anglers’ Retreat/),
+    ]));
+    expect(release?.sections.added).toEqual([
+      expect.stringMatching(/^Ten shops the map was missing.*Kjut’s Kebabs/),
+      expect.stringMatching(/Karim’s kebabs, Aggie’s dyes, the silk trader, Tenzing’s climbing boots and Nulodion’s cannon/),
+    ]);
+    // Player words only: no audit labels or file names.
+    expect(JSON.stringify(release)).not.toMatch(/\b[SBGUMD]\d+\b|\.ts\b|\.json\b|Chunk Picker/);
+  });
+
+  it('announces the tasks Slayer rewards add, and boss tasks', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-slayer-rewards');
+    expect(release?.title).toBe('Slayer Rewards Add Their Tasks');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Seeing Red.*Wings Spread.*30 more tasks/),
+      expect.stringMatching(/Gargoyle task.*93 Slayer.*60 Mining/),
+    ]);
+    expect(release?.sections.added).toEqual([expect.stringMatching(/Like a Boss.*Krystilia gives only Wilderness bosses.*Alchemical Hydra/)]);
+  });
+
+  it('announces that Greed pays on an Omni-Key roll', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-ritual-of-greed');
+    expect(release?.title).toBe('Greed Pays on an Omni-Key Too');
+    expect(release?.sections.balance).toEqual([expect.stringMatching(/2 Keys on an Omni-Key roll/)]);
+    expect(release?.sections.fixed).toEqual([expect.stringMatching(/Pity Key refunds no Fate.*Vanilla boss/)]);
+  });
+
+  it('announces the Slayer task fixes', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-slayer-tasks');
+    expect(release?.title).toBe('Slayer Tasks Ask What the Masters Ask');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Defence 20 for basilisks.*Magic 50 for cave krakens.*Thieving 23 and 39/),
+      expect.stringMatching(/Krystilia’s .* I Wildy More Slayer/),
+      expect.stringMatching(/basilisks need 40 Slayer.*Elemental Workshop I.*waterfiends/),
+    ]);
+  });
+
+  it('announces that boss fights need their boss, and Galvek’s refund', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-boss-fights');
+    expect(release?.title).toBe('Boss Fights Need Their Boss');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Dagannoth Kings, Jad, Zuk.*without the boss unlock.*Tormented Demons unlock/),
+      expect.stringMatching(/Artio and Spindel.*Maggot King asks for The Blood Moon Rises.*Abyssal Sire/),
+      expect.stringMatching(/Galvek has left the Bosses table.*Key back/),
+      expect.stringMatching(/God Wars Dungeon bosses and the Whisperer are tagged Asgarnia/),
+      expect.stringMatching(/Combat Achievements show where to fight.*Boss not unlocked.*by hand/),
+      expect.stringMatching(/Brutus card notes that repeat kills need The Ides of Milk/),
+      expect.stringMatching(/Nightmare page for Phosani’s Nightmare.*Tormented Demons page/),
+      expect.stringMatching(/goal planner counts a boss’s drops only once.*Wilderness Slayer Cave/),
+    ]);
+  });
+
+  it('announces the places that join their areas, and rolls that ask for the entrance’s area', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-map-areas');
+    expect(release?.title).toBe('Places Join the Area They’re In');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Giants’ Foundry to Giants’ Plateau, Kraken Cove to Piscatoris Fishing Colony.*every area of their region/),
+      expect.stringMatching(/Fremennik Slayer Dungeon belongs to Mountain Camp.*every Kandarin area/),
+      expect.stringMatching(/Corporeal Beast needs Chaos Temple.*God Wars Dungeon bosses Burthorpe.*Chaos Elemental Scorpia’s Cave/),
+      expect.stringMatching(/Emir’s Arena also counts with the Mage Training Arena/),
+      expect.stringMatching(/Rellekka Peninsula now counts as Keldagrim’s bank.*Asgarnian Road as East Falador’s.*Key back/),
     ]);
   });
 

@@ -34,6 +34,14 @@ export const keysToTarget = (remaining: number): KeysForecast => {
   return { remaining: R, expected: (R + 1) / 2, p10: q(0.1), p50: q(0.5), p90: q(0.9) };
 };
 
+/** The chance the target turns up within `spends` draws: P(N ≤ n) = n / R. */
+export const chanceWithin = (forecast: KeysForecast, spends: number): number =>
+  Math.min(1, Math.max(0, Math.floor(spends)) / forecast.remaining);
+
+/** The share of outcomes inside the p10–p90 range, ends included: (p90 − p10 + 1) / R. */
+export const rangeShare = (forecast: KeysForecast): number =>
+  (forecast.p90 - forecast.p10 + 1) / forecast.remaining;
+
 export interface Velocity {
   /** True when there's enough history to estimate a pace. */
   ok: boolean;

@@ -309,6 +309,65 @@ describe('transformChunkContent', () => {
     });
   });
 
+  it("drops the Chunk Picker's F2P Only tag, which the tracker has no mode for (accuracy audit S11)", () => {
+    const result = transformChunkContent({
+      walkableChunks: [256],
+      chunks: { 256: { Nickname: 'Town', Shop: { 'Garden Centre': true, 'Pie Shop': true } } },
+      slayerMonsters: {},
+      taskUnlocks: {
+        Shops: {
+          'Garden Centre': { 256: [{ 'F2P Only': 'Nonskill' }] },
+          'Pie Shop': { 256: [{ 'F2P Only': 'Nonskill', "~|Access the Cooks' Guild|~": 'Nonskill' }] },
+        },
+      },
+    }, manifest);
+    // A shop that was only tagged has no requirement left; the others keep theirs.
+    expect(result.full.taskUnlocks).toEqual({ Shops: { 'Pie Shop': { 256: ["Access the Cooks' Guild"] } } });
+    expect(JSON.stringify(result.full)).not.toContain('F2P Only');
+    expect(result.audit.events.filter((event) => event.reason === 'reviewed-requirement-rewritten'))
+      .toEqual([
+        expect.objectContaining({ sourceKey: 'Shops/Garden Centre/256', terminal: false, targetKeys: [], detail: 'F2P Only' }),
+        expect.objectContaining({ sourceKey: 'Shops/Pie Shop/256', terminal: false, targetKeys: [], detail: 'F2P Only' }),
+      ]);
+  });
+
+  it("gives a reviewed shop its activity's unlock wherever it stands, in place of the source's wording (owner call U1)", () => {
+    const result = transformChunkContent({
+      walkableChunks: [13631],
+      chunks: { 13631: { Nickname: "Daimon's Crater", Shop: { 'Bounty Hunter Store': true } } },
+      slayerMonsters: {},
+      shopItems: { 'Bounty Hunter Store': { 'Bounty hunter hat (tier 1)': true } },
+      taskUnlocks: { Shops: { 'Bounty Hunter Store': { 13631: [{ 'Access Bounty Hunter Store': 'Nonskill', 'Example Quest Complete the quest': 'Nonskill' }] } } },
+    }, manifest);
+    // data/sources/shop-overrides.json: "Play Bounty Hunter" replaces "Access Bounty Hunter Store".
+    expect(result.full.taskUnlocks.Shops).toEqual({
+      'Bounty Hunter Store': { 13631: ['Example Quest Complete the quest', 'Play Bounty Hunter'] },
+    });
+  });
+
+  it("rewrites the Farming Guild's tier wording and sets each reviewed patch's own tier (accuracy audit G4)", () => {
+    const beginner = [{ '~|Access the Farming Guild#Beginner tier|~': 'Nonskill' }];
+    const result = transformChunkContent({
+      walkableChunks: [4922, 11321],
+      chunks: {
+        4922: { Nickname: 'Farming Guild', Object: { 'Allotment patch': 2, 'Herb patch': 1 } },
+        11321: { Nickname: 'Troll Stronghold', Object: { 'Soil patch': 1 } },
+      },
+      slayerMonsters: {},
+      taskUnlocks: { Objects: { 'Allotment patch': { 4922: beginner }, 'Herb patch': { 4922: beginner } } },
+    }, manifest);
+    expect(result.full.taskUnlocks.Objects).toEqual({
+      // The source's beginner tier, in words a gate checks.
+      'Allotment patch': { 4922: ['Access the Farming Guild', 'Farming level 45'] },
+      // The herb patch is in the intermediate tier; the reviewed override says so. The Troll
+      // Stronghold has no herb patch in this fixture, so it gains no requirement.
+      'Herb patch': { 4922: ['Access the Farming Guild', 'Farming level 65'] },
+    });
+    expect(result.audit.events).toContainEqual(expect.objectContaining({
+      category: 'overrides', sourceKey: 'requirements/Objects/Herb patch/4922', reason: 'reviewed-content-override',
+    }));
+  });
+
   it('accounts independently for duplicate banks and nested consumed records', () => {
     const result = transformChunkContent({
       walkableChunks: [], chunks: {}, slayerMonsters: {},

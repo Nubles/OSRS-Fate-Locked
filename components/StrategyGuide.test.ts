@@ -5,6 +5,30 @@ import * as guide from './StrategyGuide';
 import { TableType } from '../types';
 import { REGION_GROUPS } from '../constants';
 
+describe('StrategyGuide Closest goals', () => {
+  const req = { id: 'Example', category: TableType.BOSSES, regions: [], skills: {}, quests: [] };
+  const score = (missing: Record<string, unknown>) => guide.calculateProphecyScore(req, {
+    missingRegions: [], missingSkills: [], missingQuests: [], missingChecks: [], missingAlternatives: [],
+    isCategoryUnlocked: true, ...missing,
+  });
+
+  it('explains the score with the weights the scoring uses', () => {
+    const text = guide.CLOSEST_GOALS_EXPLAINED;
+    expect(score({ missingRegions: ['Falador'] })).toBe(100);
+    expect(text).toContain('100 for each locked area');
+    expect(score({ missingSkills: [{ skill: 'Attack', reqLevel: 10, currentLevel: 1, isUnlocked: false }] })).toBe(50 + 9);
+    expect(score({ missingSkills: [{ skill: 'Attack', reqLevel: 10, currentLevel: 1, isUnlocked: true }] })).toBe(9);
+    expect(text).toContain('50 for each locked skill plus 1 for each level short');
+    expect(score({ missingQuests: ['Dragon Slayer I'] })).toBe(20);
+    expect(score({ missingChecks: ['Wear a ghostspeak amulet'] })).toBe(20);
+    expect(score({ missingAlternatives: [{ label: 'One of', routes: [] }] })).toBe(20);
+    expect(text).toContain('20 for each missing quest or other requirement');
+    expect(score({ isCategoryUnlocked: false })).toBe(30);
+    expect(text).toContain('30 if the goal itself is still locked');
+    expect(text).not.toMatch(/efficient|Oracle|Prophecy/);
+  });
+});
+
 describe('StrategyGuide requirement analysis', () => {
   it('keeps required equipment out of the playable list until its tier is unlocked', () => {
     const req = { id: 'The Restless Ghost', category: TableType.QUESTS,

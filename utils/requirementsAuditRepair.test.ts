@@ -23,8 +23,8 @@ const questProfile = (id: string, excluded: string[] = []) => profile({ quests: 
 
 describe('audited diary requirement semantics', () => {
   const partial = ALL_DIARY_TASKS.filter(task => task.questProgress?.length);
-  it('preserves all 56 audited partial-progress tasks in generated source', () => {
-    expect(partial).toHaveLength(56);
+  it('preserves all 67 audited partial-progress tasks in generated source', () => {
+    expect(partial).toHaveLength(67);
   });
   it.each(partial.map(task => [task.id, task] as const))('%s asks for progress, not complete quest', (_, task) => {
     const quests = task.questProgress!.map(requirement => requirement.quest);

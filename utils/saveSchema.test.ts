@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GameState, LogEntry, UnlockState } from '../types';
+import { TableType } from '../types';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { serializeCurrent } from './gamePersistence';
 import {
@@ -523,6 +524,42 @@ describe('save schema compatibility', () => {
       'Iorwerth Camp',
       'Lletya',
     ]);
+  });
+
+  it('gives a merged bank unlock the bank it leads to, without a refund', () => {
+    const input = candidate({}, { banks: ['10292', '10810', '12085'] });
+    const result = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
+
+    expect(result.state.keys).toBe(17);
+    expect(result.state.unlocks.banks).toEqual(['10292', '11066', '12084']);
+  });
+
+  it('refunds one regular key for each merged bank unlock whose bank the run already owned, once', () => {
+    const input = candidate({}, { banks: ['11066', '10810', '12084', '12085'] });
+    const first = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
+    const second = expectAccepted(validateAndMigrateSave(first.state, defaultsFixture()));
+
+    expect(first.state.keys).toBe(19);
+    expect(first.state.unlocks.banks).toEqual(['11066', '12084']);
+    expect(second.state).toEqual(first.state);
+  });
+
+  it('keeps a merged bank unlock as credit while the key counter is full', () => {
+    const input = candidate({ keys: MAX_COUNTER }, { banks: ['11066', '10810'] });
+    const result = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
+
+    expect(result.state.keys).toBe(MAX_COUNTER);
+    expect(result.state.unlocks.banks).toEqual(['11066', '10810']);
+  });
+
+  it('reveals the bank a merged bank unlock leads to', () => {
+    const input = candidate({
+      pendingUnlock: { id: 'reveal-12085', table: TableType.BANKS, item: '12085', costType: 'key', cost: 1 },
+    }, { banks: ['12085'] });
+    const result = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
+
+    expect(result.state.pendingUnlock?.item).toBe('12084');
+    expect(result.state.unlocks.banks).toEqual(['12084']);
   });
 
   it('does not modify a canonical Iorwerth Camp save', () => {

@@ -256,11 +256,18 @@ describe('Quest data integrity', () => {
     expect(badChunks, 'quest locations with unknown chunk coordinates').toEqual([]);
   });
   it('assigns every quest location coordinate to one of its Standard-owned areas', () => {
+    // A chunk no named area owns is a stand-in (owner decision of 2 Oct 2026):
+    // it names one nearby area, and data/questGeography.test.ts holds it to that.
+    const named = new Set([
+      ...Object.values(SUB_AREA_CHUNKS).flat(),
+      ...Object.values(AREA_REFERENCES).flatMap(reference => [...reference.chunks]),
+    ].map(chunkKey));
     const mismatch: string[] = [];
     for (const [questId, quest] of Object.entries(QUEST_DATA)) {
       for (const location of allLocations(quest)) {
         for (const coordinate of location.chunkOptions) {
           const key = chunkKey(coordinate);
+          if (!named.has(key)) continue;
           const ownsCoordinate = location.standardAreas.some(area => (
             [
               ...(SUB_AREA_CHUNKS[area] ?? []),

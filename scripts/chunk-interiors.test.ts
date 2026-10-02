@@ -53,6 +53,18 @@ describe('reviewed interior entrances', () => {
       .toEqual([['Common quest', 'Northern door'], ['Common quest', 'Southern fee']]);
   });
 
+  it("drops the Chunk Picker's F2P Only tag from an interior's entity requirements (accuracy audit S11)", () => {
+    const result = buildInteriorContent({
+      walkableChunks: ['256'],
+      chunks: { 256: {}, 900: { Name: 'Cave', Object: { 'Herb patch': 1, 'Tree patch': 1 } } },
+      taskUnlocks: { Objects: {
+        'Herb patch': { 900: [{ 'F2P Only': 'Nonskill', 'Example Quest Complete the quest': 'Nonskill' }] },
+        'Tree patch': { 900: [{ 'F2P Only': 'Nonskill' }] },
+      } },
+    }, null, encode, { locations: { Cave: { anchors: ['256'] } } });
+    expect(result['900'].requirements).toEqual({ object: { 'Herb patch': ['Example Quest Complete the quest'] } });
+  });
+
   it('rejects unowned coordinates and mis-pinned evidence', () => {
     const data = { walkableChunks: ['256'], chunks: { 256: {}, Cave: {} } };
     expect(() => validateInteriorAccessPolicy(data, { locations: { Cave: { anchors: ['999'] } } }))

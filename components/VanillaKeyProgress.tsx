@@ -12,15 +12,15 @@ type BossKeyProgressProps = {
 export const BossKeyProgress: React.FC<BossKeyProgressProps> = ({ stage }) => (
   <div className="mt-1.5 text-[9px] font-mono leading-snug text-gray-400">
     <div className="flex items-center justify-between gap-2">
-      <span>{stage.awarded} / {stage.cap} keys</span>
+      <span>{stage.awarded} of {stage.cap} Keys paid</span>
       {stage.capped ? (
-        <span className="text-amber-300">Key reserve exhausted</span>
+        <span className="text-amber-300">All Keys paid</span>
       ) : (
-        <span className="text-emerald-300">{stage.currentRate}% current</span>
+        <span className="text-emerald-300">{stage.currentRate}% now</span>
       )}
     </div>
     {stage.capped ? (
-      <p className="mt-0.5 text-gray-500">Only this key/Fate roll is exhausted; ordinary loot, CAs, Collection Log, and pets still apply.</p>
+      <p className="mt-0.5 text-gray-500">This boss no longer rolls for Keys or Fate. Its Combat Achievements, Collection Log items and pet still roll.</p>
     ) : stage.nextRate !== null ? (
       <p className="mt-0.5 text-gray-500">{stage.nextRate}% next</p>
     ) : null}
@@ -39,15 +39,15 @@ export const ClueKeyProgress: React.FC<ClueKeyProgressProps> = ({ awarded, baseR
   return (
     <div className="mt-1 text-[9px] font-mono leading-snug text-gray-400">
       <div className="flex items-center justify-between gap-2">
-        <span>Shared keys: {Math.min(awarded, CLUE_ONBOARDING_MINIMUMS.length)} / {CLUE_ONBOARDING_MINIMUMS.length}</span>
+        <span>First clue Keys: {Math.min(awarded, CLUE_ONBOARDING_MINIMUMS.length)} of {CLUE_ONBOARDING_MINIMUMS.length}</span>
         <span className={onboardingActive ? 'text-emerald-300' : 'text-gray-300'}>
-          {effectiveRate}% {onboardingActive ? 'onboarding rate' : 'tier rate'}
+          {effectiveRate}% {onboardingActive ? 'for your first Keys' : 'tier rate'}
         </span>
       </div>
       <p className="mt-0.5 text-gray-500">
         {awarded >= CLUE_ONBOARDING_MINIMUMS.length
           ? 'Normal tier rates apply'
-          : 'Shared across all clue tiers'}
+          : 'Counts Keys from every clue tier'}
       </p>
     </div>
   );

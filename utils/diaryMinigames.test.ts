@@ -31,8 +31,13 @@ const REVIEWED: Record<string, string> = {
   kan_elite_1: 'Barbarian Assault',
   kar_med_1: 'Brimhaven Agility Arena',
   kar_med_5: 'Tai Bwo Wannai Cleanup',
+  // 2 October 2026: loot counts too. Only the Hardwood Grove and gem rock routes use the Cleanup.
+  kar_med_8: 'Tai Bwo Wannai Cleanup',
+  kar_med_9: 'Tai Bwo Wannai Cleanup',
+  kar_med_19: 'Tai Bwo Wannai Cleanup',
   kar_easy_9: 'TzHaar Fight Pit',
   kar_hard_1: 'TzHaar Fight Pit',
+  kou_med_8: 'Intelligence Gathering',
   kou_hard_5: 'Tithe Farm',
   kou_hard_8: 'Stealing Artefacts',
   lum_med_11: 'Impetuous Impulses',

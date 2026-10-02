@@ -11,10 +11,16 @@ export interface QuestLocationRequirement {
 
 export interface QuestRequirementOption {
   regions?: string[];
+  /** Any one of these areas will do, as on a Diary task: one of several places to get an item. */
+  anyOfRegions?: string[];
   guilds?: string[];
   locations?: QuestLocationRequirement[];
   /** Skill levels the route needs, such as a guild's entry requirement. */
   skills?: Record<string, number>;
+  /** Quests the route needs done first, such as Enter the Abyss for the Abyss. */
+  quests?: string[];
+  /** Merchant categories the route buys from, as a Diary task's `merchants`. */
+  merchants?: string[];
 }
 
 export type QuestKind = 'quest' | 'miniquest';
@@ -46,6 +52,14 @@ export interface QuestData {
   questProgress?: QuestProgressRequirement[];
   /** A manually confirmed route that can replace the named skill gate. */
   skillAlternatives?: Array<{ skill: string; quests: string[]; manualRequirements: string[] }>;
+  /**
+   * Merchant categories the run must own, as on Diary tasks: the quest needs an
+   * item that, where the quest goes, only a shop of that kind sells (Prince Ali
+   * Rescue's pink skirt). Common tools such as a hammer are never listed.
+   */
+  merchants?: string[];
+  /** Mobility unlocks the quest must use, as on Diary tasks (Fairy Rings for code BLQ). */
+  mobility?: string[];
   prereqs: string[];
   points: number;
   series?: string;
@@ -105,6 +119,13 @@ const LOCATIONS = {
   necropolisMainTemple: { id: 'necropolis-main-temple', label: 'Necropolis main temple', standardAreas: ['Sophanem'], chunkOptions: [{ cx: 52, cy: 42 }] },
   abandonedMine: { id: 'abandoned-mine', label: "Haunted Mine and Tarn's Lair", standardAreas: ['Haunted Mine'], chunkOptions: [{ cx: 53, cy: 50 }] },
   skippysCamp: { id: 'skippys-camp', label: "Skippy's camp south-east of Rimmington", standardAreas: ['Port Sarim'], chunkOptions: [{ cx: 46, cy: 49 }] },
+  // Stand-in: Jorral's Outpost (38,52) belongs to no area; it is on the road out of East Ardougne (39,52).
+  jorralsOutpost: { id: 'jorrals-outpost', label: "Jorral's Outpost", standardAreas: ['East Ardougne'], chunkOptions: [{ cx: 38, cy: 52 }] },
+  // The elemental altars' ruins.
+  airAltar: { id: 'air-altar', label: 'Air altar', standardAreas: ['Falador'], chunkOptions: [{ cx: 46, cy: 51 }] },
+  fireAltar: { id: 'fire-altar', label: 'Fire altar', standardAreas: ['Al Kharid'], chunkOptions: [{ cx: 51, cy: 50 }] },
+  waterAltar: { id: 'water-altar', label: 'Water altar', standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 49, cy: 49 }] },
+  earthAltar: { id: 'earth-altar', label: 'Earth altar', standardAreas: ['Varrock'], chunkOptions: [{ cx: 51, cy: 54 }] },
 } satisfies Record<string, QuestLocationRequirement>;
 
 export const QUEST_DATA: Record<string, QuestData> = {
@@ -143,7 +164,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Restless Ghost': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Restless Ghost', name: 'The Restless Ghost',
-    regions: ['Lumbridge'],
+    regions: ['Lumbridge', 'Wizards\' Tower'],
     skills: {}, prereqs: [], points: 1,
     equipmentRequirements: [{ slot: 'Neck', tier: 1, reason: 'Wear the ghostspeak amulet to speak to the ghost' }],
     difficulty: DropSource.QUEST_NOVICE
@@ -215,6 +236,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'draynor-village-and-jail', label: 'Draynor Village and the jail', standardAreas: ['Draynor Village'], chunkOptions: [{ cx: 48, cy: 50 }] },
     ],
     skills: {}, prereqs: [], points: 3, series: 'Kharidian',
+    // Only clothes shops sell the pink skirt (Thessalia), and Joe's three beers are bought at a bar.
+    merchants: ['Clothes Shops', 'Bars & Inns'],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Doric\'s Quest': {
@@ -277,12 +300,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     equipmentRequirements: [{ slot: 'Body', tier: 1, reason: 'Wear a white apron to enter the grocery storeroom' }],
     regions: ['Port Sarim', 'Falador', 'Varrock', 'Musa Point'],
     skills: {}, prereqs: [], points: 2,
+    // The Karamjan rum: Zembo's wine shop at Musa Point, or the Dead Man's Chest bar in Brimhaven.
+    oneOf: [{ merchants: ['Wine Traders'] }, { regions: ['Brimhaven'], merchants: ['Bars & Inns'] }],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Dragon Slayer I': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Dragon Slayer I', name: 'Dragon Slayer I',
-    regions: ['Varrock', 'Edgeville', 'Draynor Village', 'Lumbridge', 'Rimmington', 'Port Sarim', 'Crandor'],
+    regions: ['Varrock', 'Edgeville', 'Draynor Village', 'Lumbridge', 'Rimmington', 'Port Sarim', 'Crandor', 'Dwarven Mine'],
     skills: {"Quest Points":32}, prereqs: [], points: 2, series: 'Dragonkin',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -318,6 +343,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "falador-north-gate", label: "Falador north gate", standardAreas: ["Falador"], chunkOptions: [{ cx: 46, cy: 53 }] },
       { id: "goblin-village", label: "Goblin Village", standardAreas: ["Goblin Village"], chunkOptions: [{ cx: 46, cy: 54 }] },
       { id: "edgeville", label: "Edgeville", standardAreas: ["Edgeville"], chunkOptions: [{ cx: 48, cy: 54 }] },
+      { id: "barbarian-village", label: "Checkal in Barbarian Village", standardAreas: ["Barbarian Village"], chunkOptions: [{ cx: 48, cy: 53 }] },
       { id: "varrock-south-gate", label: "Varrock south gate", standardAreas: ["Varrock"], chunkOptions: [{ cx: 50, cy: 52 }] },
       { id: "varrock-square", label: "Varrock square", standardAreas: ["Varrock"], chunkOptions: [{ cx: 50, cy: 53 }] },
     ],
@@ -415,7 +441,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Fishing Contest': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Fishing Contest', name: 'Fishing Contest',
-    regions: ['Hemenster'],
+    regions: ['Hemenster', 'Taverley', 'Seers\' Village'],
     skills: { 'Fishing': 10 }, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -432,7 +458,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Temple of Ikov': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Temple of Ikov', name: 'Temple of Ikov',
-    regions: ['Hemenster'],
+    regions: ['Hemenster', 'East Ardougne', 'Edgeville'],
     skills: { 'Thieving': 42 }, prereqs: [], points: 1, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -453,7 +479,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Tree Gnome Village': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Tree Gnome Village', name: 'Tree Gnome Village',
-    regions: ['Gnome Village'],
+    regions: ['Gnome Village', 'Khazard Battlefield', 'West Ardougne'],
     skills: {}, prereqs: [], points: 2, series: 'Gnome',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -484,7 +510,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     equipmentRequirements: [{ slot: 'Head', tier: 1, reason: 'Wear the gas mask when entering West Ardougne from the sewer' }],
     regions: ['Kandarin'],
     locations: [
-      { id: 'east-ardougne-edmond', label: "Edmond's house in East Ardougne", standardAreas: ['East Ardougne'], chunkOptions: [{ cx: 39, cy: 52 }] },
+      { id: 'east-ardougne-edmond', label: "Edmond's house in East Ardougne", standardAreas: ['East Ardougne'], chunkOptions: [{ cx: 40, cy: 52 }] },
       { id: 'west-ardougne', label: 'West Ardougne', standardAreas: ['West Ardougne'], chunkOptions: [{ cx: 39, cy: 51 }] },
     ],
     skills: {}, prereqs: [], points: 1, series: 'Elf',
@@ -514,7 +540,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     equipmentRequirements: [
       { slot: 'Head', tier: 1, reason: 'Wear the gas mask for the plague-sample route' },
       { slot: 'Body', tier: 1, reason: 'Wear the medical gown to enter the Mourner headquarters' },
-      { slot: 'Legs', tier: 1, reason: 'Wear the priest gown to enter the Mourner headquarters' },
+      { slot: 'Legs', tier: 1, reason: 'Wear the priest gown to see Guidor in Varrock' },
     ],
     regions: ['East Ardougne', 'West Ardougne', 'Rimmington', 'Varrock'],
     skills: {}, prereqs: ['Plague City'], points: 3, series: 'Elf',
@@ -523,14 +549,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Jungle Potion': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Jungle Potion', name: 'Jungle Potion',
-    regions: ['Tai Bwo Wannai'],
+    regions: ['Tai Bwo Wannai', 'Shilo Village'],
     skills: { 'Herblore': 3 }, prereqs: ['Druidic Ritual'], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
   'The Grand Tree': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Grand Tree', name: 'The Grand Tree',
-    regions: ['Tree Gnome Stronghold', 'Feldip Hills', 'Ship Yard'],
+    regions: ['Tree Gnome Stronghold', 'Yanille', 'Ship Yard'],
     skills: { 'Agility': 25 }, prereqs: [], points: 5, series: 'Gnome',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -559,7 +585,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Tourist Trap': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'The Tourist Trap', name: 'The Tourist Trap',
     equipmentRequirements: [
       { slot: 'Body', tier: 1, reason: 'Wear the slave shirt inside the mining camp' },
@@ -567,13 +593,19 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { slot: 'Boots', tier: 1, reason: 'Wear the slave boots inside the mining camp' },
     ],
     regions: ['Bedabin Camp', 'Shantay Pass'],
+    locations: [
+      // Stand-in: the Desert Mining Camp (51,47) belongs to no area; it is just south of the Shantay Pass (51,48).
+      { id: 'desert-mining-camp', label: 'Desert Mining Camp', standardAreas: ['Shantay Pass'], chunkOptions: [{ cx: 51, cy: 47 }] },
+    ],
     skills: { 'Fletching': 10, 'Smithing': 20 }, prereqs: [], points: 2,
+    // The desert clothes: the Shantay Pass and Bandit Camp general stores, or Raetul's cloth store in Sophanem.
+    oneOf: [{ merchants: ['General Stores'] }, { regions: ['Sophanem'], merchants: ['Clothes Shops'] }],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Watchtower': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Watchtower', name: 'Watchtower',
-    regions: ['Yanille'],
+    regions: ['Yanille', 'Feldip Hills'],
     skills: { 'Magic': 14, 'Thieving': 15, 'Agility': 25, 'Herblore': 14, 'Mining': 40 }, prereqs: [], points: 4,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -585,6 +617,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "coal-truck-mine", label: "Coal Truck Mine", standardAreas: ["Seers' Village"], chunkOptions: [{ cx: 40, cy: 54 }] },
       { id: "baxtorian-falls", label: "Baxtorian Falls", standardAreas: ["Baxtorian Falls"], chunkOptions: [{ cx: 39, cy: 54 }] },
       { id: "asgarnian-road", label: "Asgarnian road by the Dwarven Mine", standardAreas: ["Dwarven Mine"], chunkOptions: [{ cx: 47, cy: 53 }] },
+      // Gilob's remains on the watchtower and the Goblin Cave's mouth, both in 40,53.
+      { id: "fishing-guild-watchtower", label: "Watchtower and Goblin Cave by the Fishing Guild", standardAreas: ["Fishing Guild"], chunkOptions: [{ cx: 40, cy: 53 }] },
     ],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
@@ -695,19 +729,21 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Tai Bwo Wannai Trio', name: 'Tai Bwo Wannai Trio',
     regions: ['Tai Bwo Wannai', 'Shilo Village', 'Brimhaven', 'Musa Point'],
     skills: { 'Agility': 15, 'Cooking': 30, 'Fishing': 5 }, prereqs: ['Jungle Potion'], points: 2,
+    // The Karamjan rum: Zembo's wine shop at Musa Point, or the Dead Man's Chest bar in Brimhaven.
+    oneOf: [{ merchants: ['Wine Traders'] }, { merchants: ['Bars & Inns'] }],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Regicide': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Regicide', name: 'Regicide',
-    regions: ['Tyras Camp', 'Iorwerth Camp', 'Isafdar', 'Arandar', 'East Ardougne', 'West Ardougne'],
+    regions: ['Tyras Camp', 'Iorwerth Camp', 'Isafdar', 'Arandar', 'East Ardougne', 'West Ardougne', 'Rimmington', 'Poison Waste'],
     skills: { 'Agility': 56, 'Crafting': 10 }, prereqs: ['Underground Pass'], points: 3, series: 'Elf',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Eadgar\'s Ruse': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Eadgar\'s Ruse', name: 'Eadgar\'s Ruse',
-    regions: ['Burthorpe', 'Taverley'],
+    regions: ['Burthorpe', 'Taverley', 'East Ardougne'],
     skills: { 'Herblore': 31 }, prereqs: ['Druidic Ritual', 'Troll Stronghold'], points: 1, series: 'Troll',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -719,6 +755,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'mortton', label: "Mort'ton and the Flamtaer Temple", standardAreas: ["Mort'ton"], chunkOptions: [{ cx: 54, cy: 51 }] },
     ],
     skills: { 'Crafting': 20, 'Firemaking': 5, 'Herblore': 15 }, prereqs: ['Priest in Peril'], points: 3,
+    // Razmire sells the olive oil (his general store) and the timber beams (his builders' merchant).
+    merchants: ['General Stores', 'Real Estate Agents'],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Fremennik Trials': {
@@ -745,7 +783,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Monkey Madness I': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Monkey Madness I', name: 'Monkey Madness I',
-    regions: ['Tree Gnome Stronghold', 'Ship Yard', 'Ape Atoll'],
+    regions: ['Tree Gnome Stronghold', 'Ship Yard', 'Ape Atoll', 'East Ardougne'],
     skills: {}, prereqs: ['The Grand Tree', 'Tree Gnome Village'], points: 3, series: 'Gnome',
     difficulty: DropSource.QUEST_MASTER
   },
@@ -762,7 +800,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Troll Romance': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Troll Romance', name: 'Troll Romance',
-    regions: ['Burthorpe', 'Warriors\' Guild'],
+    regions: ['Burthorpe', 'Warriors\' Guild', 'Mountain Camp'],
     skills: { 'Agility': 28 }, prereqs: ['Troll Stronghold'], points: 2,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -795,21 +833,23 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { slot: 'Neck', tier: 1, reason: 'Wear the enchanted ghostspeak amulet to command Necrovarus' },
       { slot: 'Head', tier: 1, reason: 'Wear the bedsheet disguise to gather signatures' },
     ],
-    regions: ['Port Phasmatys', 'Fenkenstrain\'s Castle'],
+    regions: ['Port Phasmatys', 'Fenkenstrain\'s Castle', 'Dragontooth Island'],
     skills: { 'Agility': 25, 'Cooking': 20 }, prereqs: ['Priest in Peril', 'The Restless Ghost'], points: 2,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'One Small Favour': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'One Small Favour', name: 'One Small Favour',
-    regions: ['Feldip Hills', 'Port Khazard', 'East Ardougne', 'Seers\' Village', 'Catherby', 'Kharazi Jungle', 'Shilo Village', 'Taverley', 'Port Sarim', 'Falador', 'Draynor Village', 'Lumbridge', 'Varrock'],
+    regions: ['Feldip Hills', 'Port Khazard', 'East Ardougne', 'Seers\' Village', 'Catherby', 'Kharazi Jungle', 'Shilo Village', 'Taverley', 'Port Sarim', 'Falador', 'Draynor Village', 'Lumbridge', 'Varrock', 'Dwarven Mine', 'Barbarian Village'],
+    // Petra and the Slagilith are in the Goblin Cave, whose mouth is between the Fishing Guild (40,53) and Hemenster (41,53).
+    oneOf: [{ regions: ['Fishing Guild'] }, { regions: ['Hemenster'] }],
     skills: { 'Agility': 36, 'Crafting': 25, 'Herblore': 18, 'Smithing': 30 }, prereqs: ['Rune Mysteries', 'Shilo Village'], points: 2,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Mountain Daughter': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Mountain Daughter', name: 'Mountain Daughter',
-    regions: ['Mountain Camp'],
+    regions: ['Mountain Camp', 'Rellekka'],
     oneOf: [{ regions: ['Taverley'] }, { regions: ['Catherby'] }],
     skills: { 'Agility': 20 }, prereqs: [], points: 2,
     difficulty: DropSource.QUEST_INTERMEDIATE
@@ -827,20 +867,30 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'The Feud', name: 'The Feud',
     regions: ['Al Kharid', 'Pollnivneach'],
     skills: { 'Thieving': 30 }, prereqs: [], points: 1,
+    // The Kharidian headpiece and fake beard are sold by Ali Morrisane or the Pollnivneach general store.
+    merchants: ['General Stores'],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Golem': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'The Golem', name: 'The Golem',
-    regions: ['Ruins of Uzer', 'Varrock'],
+    regions: ['Ruins of Uzer', 'Varrock', 'Digsite'],
+    locations: [
+      // Stand-in: the desert phoenix's clay mine (53,49) belongs to no area; it is just north-west of the Ruins of Uzer.
+      { id: 'desert-phoenix', label: 'Desert phoenix north of Uzer', standardAreas: ['Ruins of Uzer'], chunkOptions: [{ cx: 53, cy: 49 }] },
+    ],
     skills: { 'Crafting': 20, 'Thieving': 25 }, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Desert Treasure I': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'Desert Treasure I', name: 'Desert Treasure I',
     skillAlternatives: [{ skill: 'Slayer', quests: ['Plague City'], manualRequirements: ['Have a gas mask from Plague City for the smoke dungeon (alternative to Slayer 10)'] }],
-    regions: ['Bandit Camp', 'Bedabin Camp', 'Pollnivneach', 'Entrana', 'Burthorpe', 'Baxtorian Falls', 'Canifis', 'Mort Myre Swamp'],
+    regions: ['Bandit Camp', 'Bedabin Camp', 'Pollnivneach', 'Entrana', 'Burthorpe', 'Baxtorian Falls', 'Canifis', 'Mort Myre Swamp', 'Mountain Camp', 'Digsite', 'Draynor Village'],
+    locations: [
+      // Stand-in: the Jaldraocht Pyramid (50,45) belongs to no area; it is reached on foot from the Bandit Camp (49,46).
+      { id: 'jaldraocht-pyramid', label: 'Jaldraocht Pyramid', standardAreas: ['Bandit Camp'], chunkOptions: [{ cx: 50, cy: 45 }] },
+    ],
     skills: { 'Thieving': 53, 'Firemaking': 50, 'Slayer': 10, 'Magic': 50 }, prereqs: ['The Dig Site', 'Temple of Ikov', 'The Tourist Trap', 'Troll Stronghold', 'Priest in Peril', 'Waterfall Quest'], points: 3, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_MASTER
   },
@@ -849,6 +899,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Icthlarin\'s Little Helper', name: 'Icthlarin\'s Little Helper',
     regions: ['Sophanem'],
     skills: {}, prereqs: ['Gertrude\'s Cat'], points: 2, series: 'Kharidian',
+    // The linen is sold only by Raetul's cloth store in Sophanem.
+    merchants: ['Clothes Shops'],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Tears of Guthix': {
@@ -894,9 +946,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_NOVICE
   },
   'Mourning\'s End Part I': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'Mourning\'s End Part I', name: 'Mourning\'s End Part I',
-    regions: ['Lletya', 'Tyras Camp', 'Isafdar', 'Arandar', 'West Ardougne'],
+    regions: ['Lletya', 'Tyras Camp', 'Isafdar', 'Arandar', 'West Ardougne', 'Taverley', 'Rimmington', 'East Ardougne', 'Feldip Hills'],
+    locations: [
+      // Stand-in: the orchard by Jorral's Outpost (38,52) belongs to no area; it is on the road out of East Ardougne (39,52).
+      { id: 'jorrals-orchard', label: "Apple orchard by Jorral's Outpost", standardAreas: ['East Ardougne'], chunkOptions: [{ cx: 38, cy: 52 }] },
+    ],
     skills: { 'Ranged': 60, 'Thieving': 50 }, prereqs: ['Roving Elves', 'Big Chompy Bird Hunting', 'Sheep Herder'], points: 2, series: 'Elf',
     difficulty: DropSource.QUEST_MASTER
   },
@@ -910,8 +966,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Garden of Tranquillity': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Garden of Tranquillity', name: 'Garden of Tranquillity',
-    regions: ['Varrock', 'Draynor Village', 'Edgeville', 'Falador', 'Burthorpe', 'East Ardougne', 'Catherby', 'Port Phasmatys'],
+    regions: ['Varrock', 'Draynor Village', 'Edgeville', 'Falador', 'Burthorpe', 'East Ardougne', 'Catherby', 'Port Phasmatys', 'Taverley'],
     skills: { 'Farming': 25 }, prereqs: ['Creature of Fenkenstrain'], points: 2,
+    // The plant cure, plant pot, trowel, secateurs and watering can come from farming shops.
+    merchants: ['Farming Shops'],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'A Tail of Two Cats': {
@@ -950,9 +1008,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Making History': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'Making History', name: 'Making History',
     regions: ['Observatory', 'East Ardougne', 'Rellekka', 'Port Phasmatys'],
+    locations: [LOCATIONS.jorralsOutpost],
     skills: {}, prereqs: ['Priest in Peril', 'The Restless Ghost'], points: 3,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -965,9 +1024,15 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Spirits of the Elid': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'Spirits of the Elid', name: 'Spirits of the Elid',
     regions: ['Nardah'],
+    locations: [
+      // Stand-in: the Water Ravine (52,48) belongs to no area; you walk to it up the River Elid from Nardah.
+      { id: 'water-ravine', label: 'Water Ravine at the source of the River Elid', standardAreas: ['Nardah'], chunkOptions: [{ cx: 52, cy: 48 }] },
+      // Stand-in: the genie's cave (52,45) belongs to no area; it is across the River Elid from Nardah.
+      { id: 'genie-cave', label: "Genie's cave", standardAreas: ['Nardah'], chunkOptions: [{ cx: 52, cy: 45 }] },
+    ],
     skills: { 'Magic': 33, 'Ranged': 37, 'Mining': 37, 'Thieving': 37 }, prereqs: [], points: 2,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -991,7 +1056,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Enakhra\'s Lament', name: 'Enakhra\'s Lament',
     regions: ["Kharidian Desert"],
     locations: [
-      { id: "desert-quarry-and-temple", label: "Desert Quarry and Enakhra's Temple", standardAreas: ["Kharidian Desert"], chunkOptions: [{ cx: 49, cy: 45 }] },
+      { id: "desert-quarry-and-temple", label: "Desert Quarry and Enakhra's Temple", standardAreas: ["Agility Pyramid"], chunkOptions: [{ cx: 49, cy: 45 }] },
     ],
     skills: { 'Crafting': 50, 'Firemaking': 45, 'Magic': 39, 'Prayer': 43 }, prereqs: [],
     manualRequirements: ["Must be on the standard spellbook"], points: 2, series: 'Mahjarrat',
@@ -1073,6 +1138,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'RFD: King Awowogei', name: 'RFD: King Awowogei',
     regions: ['Ape Atoll'],
     skills: { 'Cooking': 70, 'Agility': 48 }, prereqs: ['RFD: The Cook', 'Monkey Madness I'], points: 1, series: 'Recipe for Disaster',
+    // The monkey nuts are sold only by Solihib's food stall on Ape Atoll.
+    merchants: ['Food Shops'],
     difficulty: DropSource.QUEST_MASTER
   },
   'RFD: Finale': {
@@ -1085,7 +1152,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'In Aid of the Myreque': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'In Aid of the Myreque', name: 'In Aid of the Myreque',
-    regions: ['Burgh de Rott'],
+    regions: ['Burgh de Rott', 'Paterdomus'],
     skills: { 'Agility': 25, 'Crafting': 25, 'Magic': 7, 'Mining': 15 },
     prereqs: ['In Search of the Myreque'],
     points: 2,
@@ -1105,14 +1172,26 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Rag and Bone Man I': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Rag and Bone Man I', name: 'Rag and Bone Man I',
-    regions: ['Draynor Village'],
+    regions: ['Draynor Village', 'Silvarea'],
+    // A monkey paw: Musa Point, by fairy ring CKR in south Karamja (Shilo
+    // Village's chunk), or the Ardougne Zoo with Telekinetic Grab. A giant bat
+    // wing: the Karamja Volcano, Keep Le Faye, the coal trucks, the Yanille
+    // dungeon or the mine west of the Tithe Farm. The Heroes' Guild basement's
+    // bats are left out, as only guild members get in.
+    oneOf: [
+      { regions: ['Musa Point'] },
+      { regions: ['Shilo Village'], anyOfRegions: ['Catherby', 'Seers\' Village', 'Yanille', 'Hosidius'] },
+      { regions: ['East Ardougne'], anyOfRegions: ['Catherby', 'Seers\' Village', 'Yanille', 'Hosidius'], skills: { Magic: 33 } },
+    ],
     skills: {}, prereqs: [], points: 1, series: 'Rag and Bone Man',
+    // The jugs of vinegar are bought from Fortunato's wine shop in Draynor.
+    merchants: ['Wine Traders'],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Swan Song': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Swan Song', name: 'Swan Song',
-    regions: ['Piscatoris Fishing Colony', 'Yanille', 'Draynor Village'],
+    regions: ['Piscatoris Fishing Colony', 'Yanille', 'Draynor Village', 'Falador', 'Crafting Guild'],
     skills: { 'Quest Points': 100, 'Magic': 66, 'Cooking': 62, 'Fishing': 62, 'Smithing': 45, 'Firemaking': 42, 'Crafting': 40 },
     prereqs: ['One Small Favour', 'Garden of Tranquillity'], points: 2,
     difficulty: DropSource.QUEST_MASTER
@@ -1155,19 +1234,32 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "horseshoe-mine", label: "Horseshoe Mine", standardAreas: ["Brimhaven"], chunkOptions: [{ cx: 42, cy: 50 }] },
     ],
     skills: { 'Thieving': 40, 'Farming': 49, 'Herblore': 57 }, prereqs: ['Fairytale I - Growing Pains'], points: 2, series: 'Fairy Tale',
+    // The Fairy Queen's hideout (AIR, DLR, DJQ, AJS), the cosmic plane (CKP) and the gorak plane (DIR) are reached only by fairy ring.
+    mobility: ['Fairy Rings'],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Lunar Diplomacy': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Lunar Diplomacy', name: 'Lunar Diplomacy',
     regions: ['Lunar Isle', 'Pirates\' Cove', 'Rellekka'],
+    // The dramen staff is used on the Air, Fire, Water and Earth altars, at
+    // their ruins or through the Abyss. Guardians of the Rift needs Temple of
+    // the Eye, and so Enter the Abyss: the Abyss route covers it.
+    oneOf: [
+      { locations: [LOCATIONS.airAltar, LOCATIONS.fireAltar, LOCATIONS.waterAltar, LOCATIONS.earthAltar] },
+      { locations: [LOCATIONS.edgevilleDitch], quests: ['Enter the Abyss'] },
+    ],
     skills: { 'Herblore': 5, 'Crafting': 61, 'Defence': 40, 'Firemaking': 49, 'Magic': 65, 'Mining': 60, 'Woodcutting': 55 }, prereqs: ['The Fremennik Trials', 'Lost City', 'Rune Mysteries', 'Shilo Village'], points: 2, series: 'Fremennik',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'The Eyes of Glouphrie': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'The Eyes of Glouphrie', name: 'The Eyes of Glouphrie',
-    regions: ['Tree Gnome Stronghold', 'Observatory', 'Feldip Hills'],
+    regions: ['Tree Gnome Stronghold', 'Yanille'],
+    locations: [
+      // Stand-in: the giant tortoises' pen (37,55) belongs to no area; it is inside the Gnome Stronghold's walls.
+      { id: 'giant-tortoises', label: 'Giant tortoises in the Gnome Stronghold', standardAreas: ['Tree Gnome Stronghold'], chunkOptions: [{ cx: 37, cy: 55 }] },
+    ],
     skills: { 'Construction': 5, 'Magic': 46 }, prereqs: ['The Grand Tree'], points: 2, series: 'Gnome',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1179,9 +1271,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'The Slug Menace': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'The Slug Menace', name: 'The Slug Menace',
-    regions: ['Observatory', 'Witchaven', 'Falador'],
+    regions: ['Witchaven', 'Falador'],
+    locations: [LOCATIONS.jorralsOutpost],
     manualRequirements: ['Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss through Edgeville with Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed'],
     skills: { 'Crafting': 30, 'Runecraft': 30, 'Slayer': 30, 'Thieving': 30 }, prereqs: ['Sea Slug', 'Wanted!'], points: 1, series: 'Temple Knight',
     difficulty: DropSource.QUEST_INTERMEDIATE
@@ -1189,7 +1282,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Elemental Workshop II': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Elemental Workshop II', name: 'Elemental Workshop II',
-    regions: ['Seers\' Village', 'Varrock'],
+    regions: ['Seers\' Village', 'Digsite'],
     skills: { 'Magic': 20, 'Smithing': 30 }, prereqs: ['Elemental Workshop I'], points: 1, series: 'Elemental Workshop',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1215,7 +1308,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Eagles\' Peak': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Eagles\' Peak', name: 'Eagles\' Peak',
-    regions: ['Eagles\' Peak', 'Varrock'],
+    regions: ['Eagles\' Peak', 'Varrock', 'East Ardougne'],
     skills: { 'Hunter': 27 }, prereqs: [], points: 2,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -1223,7 +1316,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Animal Magnetism', name: 'Animal Magnetism',
     equipmentRequirements: [{ slot: 'Neck', tier: 1, reason: 'Wear the ghostspeak amulet when speaking to the old crone' }],
-    regions: ['Draynor Village', 'Burthorpe', 'Fenkenstrain\'s Castle'],
+    regions: ['Draynor Village', 'Burthorpe', 'Fenkenstrain\'s Castle', 'Port Phasmatys', 'Rimmington'],
     skills: { 'Slayer': 18, 'Crafting': 19, 'Ranged': 30, 'Woodcutting': 35 }, prereqs: ['The Restless Ghost', 'Ernest the Chicken', 'Priest in Peril'], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1239,17 +1332,27 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Cold War': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'Cold War', name: 'Cold War',
     regions: ['Rellekka', 'East Ardougne', 'Lumbridge'],
+    locations: [
+      // Stand-in: the icebergs (41,62) belong to no area; Larry's boat to them leaves from Rellekka's dock.
+      { id: 'south-iceberg', label: 'South iceberg', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 41, cy: 62 }] },
+      // Stand-in: the icebergs (41,63) belong to no area; Larry's boat to them leaves from Rellekka's dock.
+      { id: 'north-iceberg', label: 'North iceberg', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 41, cy: 63 }] },
+    ],
     skills: { 'Hunter': 10, 'Agility': 30, 'Crafting': 30, 'Construction': 34, 'Thieving': 15 }, prereqs: [],
     manualRequirements: ["Access to a crafting table 3"], points: 1, series: 'Penguin',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Fremennik Isles': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'The Fremennik Isles', name: 'The Fremennik Isles',
     regions: ['Rellekka', 'Neitiznot', 'Jatizso'],
+    locations: [
+      // Stand-in: the ice trolls' land (36,60) belongs to no area; its bridges cross from Neitiznot.
+      { id: 'ice-troll-lands', label: 'Ice troll lands north of Neitiznot', standardAreas: ['Neitiznot'], chunkOptions: [{ cx: 36, cy: 60 }] },
+    ],
     skills: { 'Construction': 20 }, prereqs: ['The Fremennik Trials'], points: 1, series: 'Fremennik',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1270,7 +1373,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Great Brain Robbery', name: 'The Great Brain Robbery',
     regions: ['Canifis', 'Mos Le\'Harmless', 'Harmony Island', 'Edgeville'],
-    manualRequirements: ['Access to a player-owned house workshop and crafting table, or the Grand Exchange'],
+    manualRequirements: ['Access to a player-owned house workshop and crafting table'],
     skills: { 'Crafting': 16, 'Construction': 30, 'Prayer': 50 }, prereqs: ['Creature of Fenkenstrain', 'Cabin Fever', 'RFD: Pirate Pete'], points: 2, series: 'Pirate',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1278,6 +1381,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'What Lies Below', name: 'What Lies Below',
     regions: ['Edgeville', 'Varrock'],
+    // The way to the Chaos Altar: the Tunnel of Chaos statue east of Varrock (Mining 42), the
+    // Wilderness ruins, or the Abyss. Guardians of the Rift needs Temple of the Eye, and so Enter
+    // the Abyss: the Abyss route covers it.
+    oneOf: [
+      { skills: { Mining: 42 } },
+      { locations: [{ id: 'chaos-temple-ruins', label: 'Chaos Temple ruins', standardAreas: ["Dark Warriors' Fortress"], chunkOptions: [{ cx: 47, cy: 56 }] }] },
+      { locations: [LOCATIONS.edgevilleDitch], quests: ['Enter the Abyss'] },
+    ],
     skills: { 'Runecraft': 35 }, prereqs: ['Rune Mysteries'], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1323,7 +1434,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Monkey Madness II': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Monkey Madness II', name: 'Monkey Madness II',
-    regions: ['Ape Atoll', 'Tree Gnome Stronghold', 'Entrana', 'Burthorpe'],
+    regions: ['Ape Atoll', 'Tree Gnome Stronghold', 'Entrana', 'Burthorpe', 'Feldip Hills'],
     manualRequirements: ['Unlocked the Gnome Stronghold balloon route'],
     skills: { 'Slayer': 69, 'Crafting': 70, 'Hunter': 60, 'Agility': 55, 'Thieving': 55, 'Firemaking': 60 }, prereqs: ['Monkey Madness I', 'Enlightened Journey', 'The Eyes of Glouphrie', 'Troll Stronghold', 'Watchtower', 'RFD: King Awowogei'], points: 4, series: 'Gnome',
     difficulty: DropSource.QUEST_GRANDMASTER
@@ -1345,12 +1456,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
       'Reached a listed fire giant source after partially completing Waterfall Quest or by an alternative route',
     ],
     skills: { 'Slayer': 40 }, prereqs: ['Rag and Bone Man I', 'Skippy and the Mogres'], points: 1, series: 'Rag and Bone Man',
+    // The jugs of vinegar are bought from Fortunato's wine shop in Draynor.
+    merchants: ['Wine Traders'],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Bone Voyage': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Bone Voyage', name: 'Bone Voyage',
-    regions: ['Varrock', 'Fossil Island', 'Port Sarim', 'Woodcutting Guild'],
+    regions: ['Varrock', 'Fossil Island', 'Port Sarim', 'Woodcutting Guild', 'Digsite', 'Silvarea'],
     skills: {}, prereqs: ['The Dig Site'],
     manualRequirements: ["100 Kudos"], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
@@ -1370,9 +1483,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Dragon Slayer II': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'Dragon Slayer II', name: 'Dragon Slayer II',
-    regions: ['Draynor Village', 'Varrock', 'Falador', 'Baxtorian Falls', 'Corsair Cove', 'Lunar Isle', 'Rellekka', 'Shayzien', 'Crandor', 'Kharazi Jungle', 'Musa Point', 'Sophanem', 'Port Phasmatys', 'Fossil Island', 'Lithkren'],
+    regions: ['Draynor Village', 'Varrock', 'Falador', 'Baxtorian Falls', 'Corsair Cove', 'Lunar Isle', 'Rellekka', 'Shayzien', 'Crandor', 'Kharazi Jungle', 'Musa Point', 'Sophanem', 'Port Phasmatys', 'Fossil Island', 'Lithkren', 'Mort Myre Swamp', 'East Ardougne'],
+    locations: [
+      // Stand-in: Ungael (35,63) belongs to no area; Torfinn's boat to it leaves from Rellekka.
+      { id: 'ungael', label: 'Ungael', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 35, cy: 63 }] },
+    ],
     skills: { 'Magic': 75, 'Smithing': 70, 'Mining': 68, 'Crafting': 62, 'Agility': 60, 'Thieving': 60, 'Construction': 50, 'Hitpoints': 50, 'Quest Points': 200 }, prereqs: ['Legends\' Quest', 'Dream Mentor', 'A Tail of Two Cats', 'Animal Magnetism', 'Ghosts Ahoy', 'Bone Voyage', 'Client of Kourend'],
     manualRequirements: ["Started the pyre ship portion of Barbarian Training"], points: 5, series: 'Dragonkin',
     difficulty: DropSource.QUEST_GRANDMASTER
@@ -1396,19 +1513,21 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Making Friends with My Arm', name: 'Making Friends with My Arm',
     regions: ['Burthorpe', 'Rellekka', 'Weiss', 'Draynor Village', 'Varrock'],
     skills: { 'Firemaking': 66, 'Mining': 72, 'Construction': 35, 'Agility': 68 }, prereqs: ['My Arm\'s Big Adventure', 'Swan Song', 'Cold War', 'Romeo & Juliet'], points: 2, series: 'Troll',
+    // The bolt of cloth comes from the Varrock sawmill.
+    merchants: ['Sawmill Operators'],
     difficulty: DropSource.QUEST_MASTER
   },
   'The Forsaken Tower': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Forsaken Tower', name: 'The Forsaken Tower',
-    regions: ['Lovakengj'],
+    regions: ['Lovakengj', 'Wintertodt Camp'],
     skills: {}, prereqs: ['Client of Kourend'], points: 1, series: 'Great Kourend',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Ascent of Arceuus': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Ascent of Arceuus', name: 'The Ascent of Arceuus',
-    regions: ['Arceuus'],
+    regions: ['Arceuus', 'Kourend Castle', 'Mount Karuulm', 'Lovakengj'],
     skills: { 'Hunter': 12 }, prereqs: ['Client of Kourend'], points: 1, series: 'Great Kourend',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1421,16 +1540,24 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_GRANDMASTER
   },
   'The Fremennik Exiles': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'The Fremennik Exiles', name: 'The Fremennik Exiles',
     regions: ['Rellekka', 'Lunar Isle'],
-    skills: { 'Crafting': 65, 'Slayer': 60, 'Smithing': 60, 'Fishing': 60, 'Runecraft': 55 }, prereqs: ['The Fremennik Isles', 'Lunar Diplomacy', 'Mountain Daughter', 'Heroes\' Quest'], points: 2, series: 'Fremennik',
+    locations: [
+      // Stand-in: the Fremennik Forest (42,56) belongs to no area; Brundt waits just south of Rellekka.
+      { id: 'brundt-outside-rellekka', label: 'Brundt outside Rellekka', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 42, cy: 56 }] },
+      // Stand-in: Fossegrimen's lake (41,56) belongs to no area; it is just south of Rellekka.
+      { id: 'fossegrimen', label: "Fossegrimen's lake", standardAreas: ['Rellekka'], chunkOptions: [{ cx: 41, cy: 56 }] },
+      // Stand-in: the Island of Stone (38,62) belongs to no area; the boat to it leaves from Rellekka.
+      { id: 'island-of-stone', label: 'Island of Stone', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 38, cy: 62 }] },
+    ],
+    skills: { 'Crafting': 65, 'Slayer': 60, 'Smithing': 60, 'Fishing': 60, 'Mining': 60, 'Runecraft': 55 }, prereqs: ['The Fremennik Isles', 'Lunar Diplomacy', 'Mountain Daughter', 'Heroes\' Quest'], points: 2, series: 'Fremennik',
     difficulty: DropSource.QUEST_MASTER
   },
   'Sins of the Father': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Sins of the Father', name: 'Sins of the Father',
-    regions: ['Paterdomus', 'Burgh de Rott', 'Meiyerditch', 'Darkmeyer', 'Slepe'],
+    regions: ['Paterdomus', 'Burgh de Rott', 'Meiyerditch', 'Darkmeyer', 'Slepe', 'Icyene Graveyard', 'Haunted Woods'],
     skills: { 'Agility': 52, 'Attack': 50, 'Crafting': 56, 'Fletching': 60, 'Magic': 49, 'Slayer': 50, 'Woodcutting': 62 },
     prereqs: ['A Taste of Hope', 'Vampyre Slayer'], points: 2, series: 'Myreque',
     difficulty: DropSource.QUEST_MASTER
@@ -1442,6 +1569,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     locations: [
       { id: "draynor-village", label: "Draynor Village", standardAreas: ["Draynor Village"], chunkOptions: [{ cx: 48, cy: 50 }] },
       { id: "south-falador-farm", label: "South Falador Farm", standardAreas: ["Falador"], chunkOptions: [{ cx: 47, cy: 51 }] },
+      { id: "sourhog-cave", label: "Sourhog Cave by the River Lum", standardAreas: ["Varrock"], chunkOptions: [{ cx: 49, cy: 52 }] },
+      { id: "spria", label: "Spria in north Draynor", standardAreas: ["Draynor Village"], chunkOptions: [{ cx: 48, cy: 51 }] },
     ],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
@@ -1456,7 +1585,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'A Night at the Theatre': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'A Night at the Theatre', name: 'A Night at the Theatre',
-    regions: ['Mort Myre Swamp', 'Ver Sinhaza'],
+    regions: ['Mort Myre Swamp', 'Ver Sinhaza', 'Slepe'],
     skills: {}, prereqs: ['A Taste of Hope'], points: 2,
     difficulty: DropSource.QUEST_MASTER
   },
@@ -1472,14 +1601,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'A Kingdom Divided': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'A Kingdom Divided', name: 'A Kingdom Divided',
-    regions: ['Shayzien', 'Lovakengj', 'Hosidius', 'Arceuus', 'Piscarilius'],
+    regions: ['Shayzien', 'Lovakengj', 'Hosidius', 'Arceuus', 'Piscarilius', 'Kourend Castle', 'Molch', 'Kebos Lowlands', 'Mount Karuulm', 'Wintertodt Camp'],
     skills: { 'Agility': 54, 'Thieving': 52, 'Woodcutting': 52, 'Herblore': 50, 'Mining': 42, 'Crafting': 38, 'Magic': 35 }, prereqs: ['The Depths of Despair', 'The Queen of Thieves', 'Tale of the Righteous', 'The Forsaken Tower', 'The Ascent of Arceuus'], points: 2, series: 'Great Kourend',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Land of the Goblins': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Land of the Goblins', name: 'Land of the Goblins',
-    regions: ['Hemenster', 'Lumbridge', 'Crafting Guild', 'Goblin Village'],
+    regions: ['Hemenster', 'Lumbridge', 'Crafting Guild', 'Draynor Village'],
     skills: { 'Agility': 38, 'Thieving': 45, 'Fishing': 40, 'Herblore': 48 }, prereqs: ['Another Slice of H.A.M.', 'Fishing Contest'], points: 2, series: 'Dorgeshuun',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1491,9 +1620,17 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Beneath Cursed Sands': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'Beneath Cursed Sands', name: 'Beneath Cursed Sands',
-    regions: ['Sophanem'],
+    regions: ['Sophanem', 'Nardah'],
+    locations: [
+      // Stand-in: the Ruins of Ullek (53,43) belong to no area; the path to them runs round the cliffs from Maisa's camp by Sophanem.
+      { id: 'ullek-swamp', label: 'Ullek swamp, where the chest is buried', standardAreas: ['Sophanem'], chunkOptions: [{ cx: 53, cy: 43 }] },
+      // Stand-in: the Ruins of Ullek (53,44) belong to no area; the path to them runs round the cliffs from Maisa's camp by Sophanem.
+      { id: 'ruins-of-ullek', label: 'Ruins of Ullek', standardAreas: ['Sophanem'], chunkOptions: [{ cx: 53, cy: 44 }] },
+      // Stand-in: the lily island in the River Elid (52,45) belongs to no area; Zahur sends you west to it from Nardah.
+      { id: 'lily-of-the-elid', label: 'Lily of the Elid island', standardAreas: ['Nardah'], chunkOptions: [{ cx: 52, cy: 45 }] },
+    ],
     skills: { 'Agility': 62, 'Crafting': 55, 'Firemaking': 55 }, prereqs: ['Contact!'], points: 2, series: 'Kharidian',
     difficulty: DropSource.QUEST_MASTER
   },
@@ -1508,16 +1645,20 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Garden of Death': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'The Garden of Death', name: 'The Garden of Death',
-    regions: ['Molch'],
+    regions: ['Molch', 'Mount Quidamortem'],
+    locations: [
+      // Stand-in: the Ruins of Morra (22,54) belong to no area; they are beside Mount Quidamortem (21,54).
+      { id: 'ruins-of-morra', label: 'Ruins of Morra', standardAreas: ['Mount Quidamortem'], chunkOptions: [{ cx: 22, cy: 54 }] },
+    ],
     skills: { 'Farming': 20 }, prereqs: [], points: 1, series: 'Twisted Tales',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Secrets of the North': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Secrets of the North', name: 'Secrets of the North',
-    regions: ['East Ardougne', 'Weiss'],
+    regions: ['East Ardougne', 'Weiss', 'Fight Arena'],
     skills: { 'Agility': 69, 'Thieving': 64, 'Hunter': 56 },
     prereqs: ['Hazeel Cult', 'The General\'s Shadow', 'Making Friends with My Arm', 'Devious Minds'], points: 2, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_MASTER
@@ -1525,14 +1666,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Desert Treasure II': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Desert Treasure II', name: 'Desert Treasure II - The Fallen Empire',
-    regions: ['Nardah', 'Goblin Village', 'Weiss', 'The Stranglewood', 'Digsite'],
+    regions: ['Nardah', 'Goblin Village', 'Weiss', 'The Stranglewood', 'Digsite', 'Lovakengj', 'Hosidius', 'Wizards\' Tower'],
     skills: { 'Magic': 75, 'Firemaking': 75, 'Thieving': 70, 'Herblore': 62, 'Runecraft': 60, 'Construction': 60 }, prereqs: ['Desert Treasure I', 'Secrets of the North', 'Enakhra\'s Lament', 'Temple of the Eye', 'The Garden of Death', 'Below Ice Mountain', 'His Faithful Servants'], points: 5, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_GRANDMASTER
   },
   'The Path of Glouphrie': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Path of Glouphrie', name: 'The Path of Glouphrie',
-    regions: ['Gnome Village', 'Feldip Hills'],
+    regions: ['Gnome Village', 'Castle Wars', 'Yanille'],
     skills: { 'Strength': 60, 'Slayer': 56, 'Thieving': 56, 'Ranged': 47, 'Agility': 45 }, prereqs: ['The Eyes of Glouphrie', 'Waterfall Quest', 'Tree Gnome Village'], points: 2, series: 'Gnome',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1550,7 +1691,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Defender of Varrock': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Defender of Varrock', name: 'Defender of Varrock',
-    regions: ['Varrock', 'Goblin Village'],
+    regions: ['Varrock', 'Goblin Village', 'Silvarea'],
     skills: { 'Smithing': 55, 'Hunter': 52 }, prereqs: ['Shield of Arrav', 'Romeo & Juliet', 'Demon Slayer', 'Temple of Ikov', 'Below Ice Mountain', 'Family Crest', 'Garden of Tranquillity', 'What Lies Below'], points: 2, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1564,7 +1705,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'At First Light': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'At First Light', name: 'At First Light',
-    regions: ['Hunter\'s Guild'],
+    regions: ['Hunter\'s Guild', 'Avium Savannah', 'Civitas illa Fortis'],
     skills: { 'Hunter': 46, 'Herblore': 30, 'Construction': 27 }, prereqs: ["Children of the Sun","Eagles' Peak"], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -1587,9 +1728,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_NOVICE
   },
   'While Guthix Sleeps': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'While Guthix Sleeps', name: 'While Guthix Sleeps',
-    regions: ['Edgeville', 'Draynor Village', 'Warriors\' Guild', 'Taverley', 'Falador', 'Port Sarim'],
+    regions: ['Edgeville', 'Draynor Village', 'Warriors\' Guild', 'Taverley', 'Falador', 'Port Sarim', 'Fight Arena', 'Feldip Hills', 'Khazard Battlefield', 'Seers\' Village', 'Chaos Altar'],
+    locations: [
+      // Stand-in: Lucien's camp (45,59) belongs to no area; you reach it by teleorb and leave by the Chaos Temple ledge (46,59).
+      { id: 'luciens-camp', label: "Lucien's camp", standardAreas: ['Chaos Altar'], chunkOptions: [{ cx: 45, cy: 59 }] },
+    ],
     skills: { 'Quest Points': 180, 'Thieving': 72, 'Magic': 67, 'Agility': 66, 'Farming': 65, 'Herblore': 65, 'Hunter': 62 },
     manualRequirements: ["Warriors' Guild access with Attack + Strength at least 130, or 99 Attack, or 99 Strength"],
     prereqs: [
@@ -1601,9 +1746,15 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_GRANDMASTER
   },
   'The Heart of Darkness': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'The Heart of Darkness', name: 'The Heart of Darkness',
     regions: ['Ralos\' Rise', 'Civitas illa Fortis'],
+    locations: [
+      // Stand-in: the Quetzacalli Gorge (23,50) belongs to no area; it is beside Ralos' Rise (22,49).
+      { id: 'quetzacalli-gorge', label: 'Quetzacalli Gorge', standardAreas: ["Ralos' Rise"], chunkOptions: [{ cx: 23, cy: 50 }] },
+      // Stand-in: the Twilight Trialist Tower (25,50) belongs to no area; it is beside Ralos' Rise and the Twilight Temple (26,50).
+      { id: 'twilight-trialist-tower', label: 'Twilight Trialist Tower', standardAreas: ["Ralos' Rise"], chunkOptions: [{ cx: 25, cy: 50 }] },
+    ],
     skills: { 'Mining': 55, 'Thieving': 48, 'Slayer': 48, 'Agility': 46 }, prereqs: ['Twilight\'s Promise'], points: 2, series: 'Twilight Emissaries',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1622,7 +1773,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Meat and Greet': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Meat and Greet', name: 'Meat and Greet',
-    regions: ['Civitas illa Fortis'],
+    regions: ['Civitas illa Fortis', 'Cam Torum'],
     skills: {}, prereqs: ['Children of the Sun'], points: 1,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1636,21 +1787,32 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "port-sarim-jail", label: "Port Sarim jail", standardAreas: ["Port Sarim"], chunkOptions: [{ cx: 47, cy: 49 }] },
       { id: "port-sarim-betty", label: "Betty's shop in Port Sarim", standardAreas: ["Port Sarim"], chunkOptions: [{ cx: 47, cy: 50 }] },
       { id: "varrock-museum", label: "Varrock Museum", standardAreas: ["Varrock"], chunkOptions: [{ cx: 50, cy: 53 }] },
+      { id: "diadem-crate", label: "Diadem crate in east Varrock", standardAreas: ["Varrock"], chunkOptions: [{ cx: 51, cy: 53 }, { cx: 51, cy: 54 }] },
     ],
     skills: { 'Thieving': 25 }, prereqs: ['Children of the Sun', 'Shield of Arrav'], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
   'The Curse of Arrav': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'The Curse of Arrav', name: 'The Curse of Arrav',
-    regions: ['Varrock', 'Ruins of Uzer', 'Mountain Camp'],
+    regions: ['Varrock', 'Ruins of Uzer', 'Mountain Camp', 'Silvarea'],
+    locations: [
+      // Stand-in: Trollweiss Mountain (43,60) belongs to no area; its path climbs from Mountain Camp (43,59).
+      { id: 'trollweiss-mountain', label: 'Cave on Trollweiss Mountain', standardAreas: ['Mountain Camp'], chunkOptions: [{ cx: 43, cy: 60 }] },
+      // Stand-in: Zemouregal's Fortress (44,60) belongs to no area; the Trollweiss cave from Mountain Camp leads to it.
+      { id: 'zemouregals-fortress', label: "Zemouregal's Fortress", standardAreas: ['Mountain Camp'], chunkOptions: [{ cx: 44, cy: 60 }] },
+    ],
     skills: { 'Agility': 61, 'Ranged': 62, 'Strength': 58, 'Thieving': 62, 'Mining': 64, 'Slayer': 37 }, prereqs: ['Defender of Varrock', 'Troll Romance'], points: 2, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_MASTER
   },
   'The Final Dawn': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'The Final Dawn', name: 'The Final Dawn',
     regions: ['Tlati Rainforest', 'Civitas illa Fortis', 'Ralos\' Rise'],
+    locations: [
+      // Stand-in: the Crypt of Tonali (20,47) belongs to no area; its entrance is just south of the Tlati Rainforest (20,48).
+      { id: 'crypt-of-tonali', label: 'Crypt of Tonali', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 20, cy: 47 }] },
+    ],
     skills: { 'Thieving': 66, 'Fletching': 52, 'Runecraft': 52 }, prereqs: ['The Heart of Darkness', 'Perilous Moons'], points: 3, series: 'Twilight Emissaries',
     difficulty: DropSource.QUEST_MASTER
   },
@@ -1667,8 +1829,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Varlamore'],
     locations: [
       { id: 'tal-teklan-dock', label: 'Tal Teklan dock', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 18, cy: 48 }] },
-      { id: 'tal-teok', label: 'Tal Teok and Tal Teklan', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 19, cy: 49 }] },
+      { id: 'tal-teok', label: 'Tal Teok', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 19, cy: 49 }] },
+      { id: 'tal-teklan', label: 'Tal Teklan', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 19, cy: 48 }] },
       { id: 'tlati-rainforest', label: 'Central Tlati Rainforest', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 20, cy: 48 }] },
+      { id: 'dragon-nest', label: 'Dragon nest by the river crossing', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 20, cy: 49 }] },
     ],
     skills: { 'Construction': 38, 'Cooking': 36, 'Smithing': 35 }, prereqs: ['Children of the Sun'], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
@@ -1731,7 +1895,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Red Reef': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Red Reef', name: 'The Red Reef',
-    regions: ['Last Light'],
+    regions: ['Last Light', 'Red Rock'],
     skills: { Sailing: 52, Smithing: 48 }, prereqs: ['Troubled Tortugans'], points: 2, series: 'Tortugan',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1767,6 +1931,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
       LOCATIONS.faladorBar, LOCATIONS.portSarimBar,
     ],
     skills: {}, prereqs: [], points: 0,
+    // Every drink on the card is bought from a barkeeper.
+    merchants: ['Bars & Inns'],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Barbarian Training': {
@@ -1804,6 +1970,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Misthalin'],
     locations: [LOCATIONS.varrockPalace, LOCATIONS.varrockCenter, LOCATIONS.lumberYard],
     skills: {}, prereqs: [], points: 0,
+    // The bolts of cloth and planks come from the Varrock sawmill.
+    merchants: ['Sawmill Operators'],
     difficulty: DropSource.QUEST_NOVICE
   },
   'The Enchanted Key': {
@@ -1847,9 +2015,17 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_MASTER
   },
   'The General\'s Shadow': {
-    kind: 'miniquest', accessPolicy: 'regions',
+    kind: 'miniquest', accessPolicy: 'regions-and-locations',
     id: 'The General\'s Shadow', name: 'The General\'s Shadow',
-    regions: ['Rellekka', 'Observatory', 'Seers\' Village', 'Tree Gnome Stronghold', 'Tai Bwo Wannai', 'Falador', 'Shantay Pass'],
+    regions: ['Rellekka', 'Seers\' Village', 'Tree Gnome Stronghold', 'Shilo Village', 'Falador', 'Draynor Village', 'Shantay Pass'],
+    // Bouncer's ghost is in the Goblin Cave, whose mouth is between the Fishing Guild (40,53) and Hemenster (41,53).
+    oneOf: [{ regions: ['Fishing Guild'] }, { regions: ['Hemenster'] }],
+    locations: [
+      // Stand-in: General Khazard's spot (42,56) belongs to no area; it is just south-east of Rellekka.
+      { id: 'general-khazard', label: 'General Khazard south-east of Rellekka', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 42, cy: 56 }] },
+      // Stand-in: the Gnomish scout stands at the Gnome Stronghold's gate, in 38,52, which belongs to no area.
+      { id: 'gnomish-scout', label: 'Gnomish scout outside the Gnome Stronghold', standardAreas: ['Tree Gnome Stronghold'], chunkOptions: [{ cx: 38, cy: 52 }] },
+    ],
     skills: {}, prereqs: ['Fight Arena', 'Curse of the Empty Lord'], points: 0, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1867,6 +2043,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: { 'Prayer': 50 },
     prereqs: ['Desert Treasure I', 'Fairytale II - Cure a Queen', 'Land of the Goblins'],
     manualRequirements: ['Started The Restless Ghost'], points: 0,
+    // Yu'biusk is reached only by fairy ring BLQ.
+    mobility: ['Fairy Rings'],
     difficulty: DropSource.QUEST_MASTER
   },
   'In Search of Knowledge': {

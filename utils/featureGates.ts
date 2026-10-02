@@ -58,7 +58,7 @@ export const FEATURE_GATES: GateDef[] = [
     id: 'ctrl:LOG',
     when: (s) => s.history.length >= 1,
     fallbackHistory: 1,
-    revealMessage: 'History unlocked — every roll is recorded (and tamper-evident)',
+    revealMessage: 'History unlocked: every roll, unlock and ritual is recorded',
   },
   {
     id: 'dash:JOURNAL',
@@ -99,7 +99,7 @@ export const FEATURE_GATES: GateDef[] = [
     id: 'tool:stats',
     when: (s) => s.history.length >= 5,
     fallbackHistory: 5,
-    revealMessage: 'Stats unlocked — charts of your luck and progress',
+    revealMessage: 'Fate Analytics unlocked: charts of your luck and progress',
     flashSelector: '[data-reveal="tools"]',
   },
   {

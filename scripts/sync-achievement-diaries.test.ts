@@ -496,6 +496,29 @@ describe('Achievement Diary id-classification audit', () => {
     expect(() => renderDiaryTasks(snapshot)).toThrow(/minigames.*non-empty string/i);
   });
 
+  it.each([
+    ['guilds', "Wizards' Guild", "guilds: ['Wizards\\' Guild']", 'NotAGuild'],
+    ['farming', 'Herb', "farming: ['Herb']", 'Herb patch'],
+    ['housing', 'Menagerie', "housing: ['Menagerie']", 'Aquarium'],
+    ['slayerUnlocks', 'Malevolent Masquerade', "slayerUnlocks: ['Malevolent Masquerade']", 'NotASlayerReward'],
+  ])('retains %s gates and rejects a name its unlock table does not roll', (field, name, rendered, unknown) => {
+    const snapshot = loadSnapshot();
+    snapshot.tasks[0][field] = [name];
+    expect(renderDiaryTasks(snapshot)).toContain(rendered);
+    expect(() => validateAudit(snapshot)).not.toThrow();
+    // The farming ids are the patch kinds ("Herb"); the retired Aquarium can never be rolled.
+    snapshot.tasks[0][field] = [unknown];
+    expect(() => validateAudit(snapshot)).toThrow(new RegExp('unknown.*' + unknown, 'i'));
+    snapshot.tasks[0][field] = [''];
+    expect(() => renderDiaryTasks(snapshot)).toThrow(new RegExp(field + '.*non-empty string', 'i'));
+  });
+
+  it('accepts a route made only of an unlock table gate', () => {
+    const snapshot = loadSnapshot();
+    snapshot.tasks[0].oneOf = [{ housing: ['Portal Chamber'] }, { housing: ['Portal Nexus'] }];
+    expect(renderDiaryTasks(snapshot)).toContain("oneOf: [{ housing: ['Portal Chamber'] }, { housing: ['Portal Nexus'] }]");
+  });
+
   it('rejects unknown references nested inside an alternative route', () => {
     const snapshot = loadSnapshot();
     snapshot.tasks[0].oneOf = [
@@ -542,18 +565,21 @@ describe('Achievement Diary id-classification audit', () => {
       'kar_med_19',
       'kar_med_8',
       'kar_med_9',
+      'kou_elite_2',
       'kou_hard_7',
       'lum_elite_5',
+      'lum_hard_2',
+      'lum_hard_3',
       'lum_med_10',
       'lum_med_11',
       'mor_easy_2',
       'mor_easy_3',
       'mor_easy_8',
       'mor_elite_6',
+      'mor_hard_1',
       'mor_med_4',
       'var_elite_3',
       'var_elite_5',
-      'var_hard_1',
       'var_hard_5',
       'var_med_7',
       'var_med_9',
@@ -583,7 +609,11 @@ describe('Achievement Diary id-classification audit', () => {
     expect(byId.get('frem_easy_9')).toMatchObject({
       quests: [],
       oneOf: [
-        { quests: ['Troll Stronghold'] },
+        {
+          label: 'Troll Stronghold progress',
+          quests: ['Death Plateau'],
+          questProgress: [expect.objectContaining({ quest: 'Troll Stronghold' })],
+        },
         { cas: ['Easy'] },
       ],
     });
@@ -709,7 +739,7 @@ describe('Achievement Diary id-classification audit', () => {
         expect.objectContaining({
           label: 'Bare-handed fishing',
           skills: { Fishing: 96, Strength: 76 },
-          items: ['Access to Barbarian Fishing'],
+          questProgress: [{ quest: 'Barbarian Training', label: 'Learned barehanded fishing in Barbarian Training' }],
         }),
       ],
     });
@@ -727,7 +757,7 @@ describe('Achievement Diary id-classification audit', () => {
       ],
     });
     expect(byId.get('kar_hard_3')).toMatchObject({
-      skills: {}, regions: [],
+      skills: {}, regions: ['Kharazi Jungle'],
       oneOf: [
         { label: 'Pre-cooked', items: ['Cooked oomlie wrap'] },
         expect.objectContaining({ label: 'Cook it yourself', skills: { Cooking: 50 } }),
@@ -743,8 +773,9 @@ describe('Achievement Diary id-classification audit', () => {
     expect(byId.get('mor_elite_1')).toMatchObject({
       skills: { Fishing: 96, Strength: 76 },
       quests: ['In Aid of the Myreque'],
-      items: ['Access to Barbarian Fishing'],
+      questProgress: [{ quest: 'Barbarian Training', label: 'Learned barehanded fishing in Barbarian Training' }],
     });
+    expect(byId.get('mor_elite_1').items).toBeUndefined();
     expect(byId.get('mor_elite_1').quests).not.toContain('Barbarian Training');
     expect(byId.get('var_med_7')).toMatchObject({
       skills: {},
@@ -761,7 +792,9 @@ describe('Achievement Diary id-classification audit', () => {
         expect.objectContaining({ label: 'Butterfly net', skills: { Hunter: 35 } }),
       ],
     });
-    expect(byId.get('var_hard_1')).toMatchObject({ skills: { Hunter: 66 } });
+    // Ironmen catch the dashing kebbits themselves, at 69 Hunter.
+    expect(byId.get('var_hard_1')).toMatchObject({ skills: { Hunter: 69 }, items: ['800 coins'] });
+    expect(byId.get('var_hard_1').oneOf).toBeUndefined();
 
     const raimentRoutes = {
       fal_hard_1: [56, 42],

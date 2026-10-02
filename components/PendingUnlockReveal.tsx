@@ -6,8 +6,10 @@ import { chunkLabel } from '../utils/chunkAdjacency';
 import { VoidReveal } from './VoidReveal';
 
 /** Mounted for the whole run, so a saved reveal also resumes outside Spend Keys. */
-export function PendingUnlockReveal({ pending, animationsEnabled, onAccept }: {
+export function PendingUnlockReveal({ pending, animationsEnabled, onAccept, tier }: {
   pending: PendingUnlock; animationsEnabled: boolean; onAccept: (id: string) => void;
+  /** The skill's tier now that the unlock is applied. */
+  tier?: number;
 }) {
   const label = pending.table === TableType.BANKS ? BANK_BY_ID[pending.item]?.name ?? pending.item
     : pending.table === TableType.CHUNKS ? chunkLabel(pending.item) : pending.item;
@@ -18,5 +20,5 @@ export function PendingUnlockReveal({ pending, animationsEnabled, onAccept }: {
     ? `https://chisel.weirdgloop.org/static/img/osrs-sprite/${UTILITY_ITEM_IDS[pending.item]}.png`
     : file ? `https://oldschool.runescape.wiki/images/${file}` : undefined;
   return <VoidReveal key={pending.id} itemName={label} itemType={pending.table} itemImage={image}
-    isChaos={pending.costType === 'chaosKey'} animationsEnabled={animationsEnabled} onComplete={() => onAccept(pending.id)} />;
+    isChaos={pending.costType === 'chaosKey'} animationsEnabled={animationsEnabled} tier={tier} onComplete={() => onAccept(pending.id)} />;
 }

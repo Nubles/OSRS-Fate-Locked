@@ -20,6 +20,8 @@ import { isAreaReachable } from './reachability';
 import { effectiveSkillLevel } from './slayerReach';
 import { classifyShop } from './shopClassification';
 import { MERCHANT_SERVICES } from '../data/merchantServices';
+import shopOverrides from '../data/sources/shop-overrides.json';
+import { compileRawRequirements } from './questRoutes/accountRequirements';
 
 export interface RouteStatus {
   isAvailable: boolean;
@@ -55,6 +57,27 @@ const PLURAL_MAPPINGS: Record<string, string> = {
 const MERCHANT_BY_NORM_NAME: Map<string, string> = new Map(
   MERCHANTS_LIST.map((m) => [normalize(m), m]),
 );
+
+/**
+ * The unlocks a reviewed shop asks for besides its merchant category, such as
+ * the activity whose currency a reward shop takes (owner call U1). The chunk
+ * data carries the same requirements (data/sources/shop-overrides.json).
+ */
+const SHOP_UNLOCK_GATES: ReadonlyMap<string, { category: string; id: string }[]> = new Map(
+  (shopOverrides.records as Array<{ name: string; requirements?: string[] }>).flatMap((record) => {
+    const gates = compileRawRequirements((record.requirements ?? []).map((raw) => ({ raw, origin: 'ENTITY' as const })))
+      .flatMap((gate) => (gate.type === 'UNLOCK' ? [{ category: gate.category, id: gate.id }] : []));
+    return gates.length ? [[record.name.toLowerCase(), gates] as const] : [];
+  }),
+);
+
+const hasShopUnlock = (ctx: AvailabilityContext, gate: { category: string; id: string }): boolean =>
+  gate.category === 'minigames' ? ctx.minigames.has(gate.id)
+    : gate.category === 'guilds' ? ctx.guilds.has(gate.id)
+      : gate.category === 'bosses' ? ctx.bosses.has(gate.id)
+        : gate.category === 'mobility' ? ctx.mobility.has(gate.id)
+          : gate.category === 'merchants' ? ctx.merchants.has(gate.id)
+            : false;
 
 /**
  * Precomputed view of the game state for fast availability checks.
@@ -225,6 +248,9 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
       if (!ctx.merchants.has(cat) && !fail(`Merchant: ${cat}`)) return result(false);
     } else if (!fail('Shop category needs review')) {
       return result(false);
+    }
+    for (const gate of SHOP_UNLOCK_GATES.get(lower) ?? []) {
+      if (!hasShopUnlock(ctx, gate) && !fail(`Unlock: ${gate.id}`)) return result(false);
     }
   }
 

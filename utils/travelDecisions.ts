@@ -2,7 +2,9 @@
  * Each travel option's decision for a run, as the export sends it: LOCKED
  * while an unlock the method needs is locked, whatever the destination;
  * otherwise, with one destination, that chunk's entry; with several or none,
- * UNKNOWN, since the choice comes after the click.
+ * UNKNOWN, since the choice comes after the click. An option's own quests
+ * come on top: one not done makes it NOT_READY (a locked destination stays
+ * LOCKED), and one it needs only started leaves an allowed option UNKNOWN.
  */
 import { DIARY_DATA, type DiaryTier } from '../data/diaryData';
 import { ARCANA_LIST, MOBILITY_LIST, POH_LIST } from '../data/items';
@@ -26,7 +28,8 @@ export interface TravelMethodDecision {
 }
 
 export interface TravelContext {
-  unlocks: Pick<UnlockState, 'mobility' | 'arcana' | 'housing' | 'diaries'>;
+  /** Quests are the run's finished ones; without them, an option that needs a quest isn't allowed. */
+  unlocks: Pick<UnlockState, 'mobility' | 'arcana' | 'housing' | 'diaries'> & { quests?: readonly string[] };
   /** Each chunk's entry for the run, as rules.chunkEntries has it. */
   entries: Readonly<Record<string, PermissionStatus>>;
   /** Why a chunk's entry isn't ALLOWED, where the snapshots say. */
@@ -72,6 +75,20 @@ function decideOption(method: TravelMethod, option: TravelOption, context: Trave
   const to = [...new Set([...option.to, ...switchable])];
   const missing = method.unlocks.filter((id) => !hasTravelUnlock(context.unlocks, id));
   if (missing.length) return { to, status: 'LOCKED', reason: `Needs ${missing.join(' and ')}` };
+  const destination = decideDestination(to, context);
+  const done = context.unlocks.quests ?? [];
+  const unfinished = (option.quests ?? []).filter((quest) => !done.includes(quest));
+  if (unfinished.length && destination.status !== 'LOCKED') {
+    return { to, status: 'NOT_READY', reason: `Needs ${unfinished.join(' and ')}` };
+  }
+  const unstarted = (option.startedQuests ?? []).filter((quest) => !done.includes(quest));
+  if (unstarted.length && destination.status === 'ALLOWED') {
+    return { to, status: 'UNKNOWN', reason: `Needs ${unstarted.join(' and ')} started` };
+  }
+  return destination;
+}
+
+function decideDestination(to: string[], context: TravelContext): TravelOptionDecision {
   if (to.length !== 1) {
     return { to, status: 'UNKNOWN', reason: to.length ? 'Goes to one of several places' : 'Where it goes is unknown' };
   }

@@ -41,6 +41,30 @@ describe('resourceReqFor', () => {
     }
   });
 
+  it('gates the nodes whose level crossed a tier at their own level (accuracy audit S16)', () => {
+    const cases: [string, string, number][] = [
+      // A "\b" after the bracket left karambwan spots at level 1.
+      ['Fishing spot (karambwan)', 'Fishing', 65],
+      ['Fishing spot (karambwanji)', 'Fishing', 5],
+      ['Daeyalt Essence rock', 'Mining', 60], ['Daeyalt Essence', 'Mining', 60], ['Daeyalt rocks', 'Mining', 60],
+      ['Silver rocks', 'Mining', 20],
+      ['Blisterwood Tree', 'Woodcutting', 62], ['Camphor tree', 'Woodcutting', 66], ['Ironwood tree', 'Woodcutting', 80],
+      ['Rosewood tree', 'Woodcutting', 92], ['Jatoba tree', 'Woodcutting', 40],
+      ['Mature juniper tree', 'Woodcutting', 42], ['Arctic pine tree', 'Woodcutting', 54],
+      ['Fishing spot (aerial fishing)', 'Fishing', 43],
+      ['Fishing spot (infernal eel)', 'Fishing', 80], ['Fishing spot (frogspawn)', 'Fishing', 33],
+      ['Fishing spot (Tempoross Cove)', 'Fishing', 35],
+      // Monkfish need 62, but the same spots give tuna (35) to a harpoon; a spot opens at its lowest catch.
+      ['Fishing spot (Piscatoris Fishing Colony)', 'Fishing', 35],
+      ['Fruit Stall', 'Thieving', 25], ['Veg stall', 'Thieving', 2], ['Seed Stall', 'Thieving', 27],
+      ['Crossbow stall', 'Thieving', 49], ['Crafting stall', 'Thieving', 5], ['Fish stall', 'Thieving', 42],
+      ['Ore stall', 'Thieving', 82], ['Market stall (wine)', 'Thieving', 22], ['General Stall', 'Thieving', 5],
+    ];
+    for (const [name, skill, level] of cases) {
+      expect(resourceReqFor(name), name).toEqual({ skill, level });
+    }
+  });
+
   it('excludes Prayer altars and travel portals from Runecrafting', () => {
     for (const name of ['Chaos altar (Prayer)', 'Altar of Guthix', 'Altar of Zamorak', 'Exposed altar', 'Saradomin Portal', 'Portal of Cadarn']) {
       expect(resourceReqFor(name), name).toBeNull();

@@ -137,6 +137,10 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3, rules?: Rep
       ? value
       : null;
   const modeThreshold = validPityThreshold(rules?.pityThreshold);
+  // A Greed success says "(Doubled)" when it paid 2 Standard Keys: a plain success
+  // always could, an Omni-Key roll only since 2 October 2026.
+  const successStandardKeys = (entry: LogEntry): number =>
+    entry.details && /\(Doubled\)/.test(entry.message) ? 2 : 1;
   const recordedPityThreshold = (entry: LogEntry): number =>
     validPityThreshold(entry.meta?.pityThreshold) ?? modeThreshold ?? 50;
   // Without the mode (older callers), the first Pity Key's recorded threshold
@@ -190,14 +194,14 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3, rules?: Rep
       case 'ROLL_OMNI':
         s.chaosKeys += detectedSkillChaosAward(e);
         s.specialKeys += 1;
-        s.keys += 1;
+        s.keys += successStandardKeys(e);
         s.fatePoints = 0;
         fateEstimate = false;
         s.rolls += 1; s.successes += 1; s.omnis += 1;
         break;
       case 'ROLL_SUCCESS':
         s.chaosKeys += detectedSkillChaosAward(e);
-        s.keys += (e.details && /\(Doubled\)/.test(e.message) ? 2 : 1);
+        s.keys += successStandardKeys(e);
         s.fatePoints = 0;
         fateEstimate = false;
         s.rolls += 1; s.successes += 1;

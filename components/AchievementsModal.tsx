@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { X, Lock, CheckCircle2, type LucideProps } from 'lucide-react';
-import { Trophy, BookOpen, Dumbbell, MapPin, Shield, Map, Swords, Skull, Gamepad2, Library, Crown, Star, Sparkles, Flame } from './OsrsIcon';
+import { X, Lock, CheckCircle2 } from 'lucide-react';
+import { Trophy } from './OsrsIcon';
+import { ACHIEVEMENT_ICON } from './achievementIcons';
 import { useGame } from '../context/GameContext';
 import {
-  evaluateAchievements, EvaluatedAchievement, AchievementIcon, AchievementCategory,
+  evaluateAchievements, EvaluatedAchievement, AchievementCategory,
 } from '../utils/achievements';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';
@@ -12,27 +13,8 @@ interface Props {
   onClose: () => void;
 }
 
-/** Map an achievement's icon key to a OSRS Wiki artwork. Shared with the reveal. */
-export const ACHIEVEMENT_ICON: Record<AchievementIcon, React.ComponentType<LucideProps>> = {
-  quest: BookOpen,
-  skill: Dumbbell,
-  region: MapPin,
-  equipment: Shield,
-  diary: Map,
-  combat: Swords,
-  boss: Skull,
-  minigame: Gamepad2,
-  collection: Library,
-  trophy: Trophy,
-  crown: Crown,
-  star: Star,
-  map: Map,
-  sparkles: Sparkles,
-  flame: Flame,
-};
-
 const CATEGORY_ORDER: AchievementCategory[] = [
-  'Quests', 'Skills', 'Regions', 'Equipment', 'Diaries', 'Combat', 'Activities', 'Collection', 'Mastery',
+  'Quests', 'Skills', 'Areas', 'Equipment', 'Diaries', 'Combat', 'Activities', 'Collection', 'Mastery',
 ];
 
 export const AchievementsModal: React.FC<Props> = ({ onClose }) => {

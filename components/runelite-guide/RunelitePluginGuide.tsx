@@ -301,7 +301,7 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({ onClos
                 </h2>
                 <p id="runelite-guide-summary" className="mt-3 max-w-3xl text-base leading-relaxed text-gray-300 sm:text-lg">
                   Fate Locked Ironman shows your run’s rules while you play: what’s locked around you, what you
-                  can do where you stand, and how the run is going. The companion is still where you roll and
+                  can do where you stand, and how the run is going. The tracker is still where you roll and
                   unlock.
                 </p>
                 <div className="mt-5 flex flex-wrap gap-2">
@@ -337,7 +337,7 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({ onClos
                   onClick={onClose}
                   className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-black text-[#111] transition-colors hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414]"
                 >
-                  Back to the companion
+                  Back to the tracker
                 </button>
               </div>
             </div>

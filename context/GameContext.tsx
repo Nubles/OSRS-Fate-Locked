@@ -8,8 +8,9 @@ import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
-import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, gambitKeys } from '../config/economy';
+import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, gambitKeys, STARTING_KEYS } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
+import { tableDisplayName } from '../utils/tableDisplay';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { CA_DATA } from '../data/caData';
@@ -292,7 +293,7 @@ export const initialState: GameState = {
   areaUnlockRevision: 1,
   runId: newRunId(),
   runRevision: 0,
-  keys: 3,
+  keys: STARTING_KEYS,
   specialKeys: 0,
   chaosKeys: 0,
   fatePoints: 0,
@@ -734,8 +735,8 @@ const startMilestoneInsurance = (
         id: generateId(),
         timestamp: now,
         type: 'XTREME_MILESTONE',
-        message: `Xtreme milestone: Total Level ${eligible * XTREME_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
-        details: `Stuck at the start area with nothing else to roll — Fate steps in every ${XTREME_MILESTONE_INTERVAL} total levels.`,
+        message: `Xtreme milestone: Total Level ${eligible * XTREME_MILESTONE_INTERVAL} gives ${gained === 1 ? 'a guaranteed Key' : `${gained} guaranteed Keys`}.`,
+        details: `Start-area milestone: a guaranteed Key every ${XTREME_MILESTONE_INTERVAL} total levels until you unlock an area.`,
         meta: { totalLevel, gained }
       });
     }
@@ -752,8 +753,8 @@ const startMilestoneInsurance = (
         id: generateId(),
         timestamp: now,
         type: 'XTREME_MILESTONE',
-        message: `Chunked milestone: Total Level ${eligible * CHUNKED_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
-        details: `Stuck in the start chunk with nothing else to roll — Fate steps in every ${CHUNKED_MILESTONE_INTERVAL} total levels.`,
+        message: `Chunked milestone: Total Level ${eligible * CHUNKED_MILESTONE_INTERVAL} gives ${gained === 1 ? 'a guaranteed Key' : `${gained} guaranteed Keys`}.`,
+        details: `Start-chunk milestone: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels until you unlock another chunk.`,
         meta: { totalLevel, gained }
       });
     }
@@ -956,8 +957,10 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         : `${thresholdText} effective (${formatKeyPercent(baseThreshold)} base)`;
       const luckApplied = state.activeBuff === 'LUCK';
       const isGreed = state.activeBuff === 'GREED';
+      // Greed doubles any success's Standard Key, an Omni-Key roll's included.
+      // A fail that brings the Pity Key pays that Key and refunds nothing.
       const requestedStandardKeys = success || pity
-        ? success && !omni && isGreed ? 2 : 1
+        ? success && isGreed ? 2 : 1
         : 0;
       const standardKeysAwarded = bossStage
         ? Math.min(requestedStandardKeys, bossStage.remaining)
@@ -1031,6 +1034,12 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       }
 
       if (success) {
+        // "(Doubled)" is what the integrity replay counts as 2 Standard Keys.
+        const greedMessage = isGreed
+          ? standardKeysAwarded === 2
+            ? ' (Doubled)'
+            : ` (Greed awarded ${standardKeysAwarded} Standard Key${standardKeysAwarded === 1 ? '' : 's'})`
+          : '';
         if (omni) {
           newState.specialKeys += 1;
           newState.keys += standardKeysAwarded;
@@ -1039,8 +1048,10 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
              id: generateId(),
              timestamp: now,
              type: 'ROLL_OMNI',
-             message: 'LEGENDARY DROP! You found an Omni-Key!',
-             details: `Critical Success! Rolled ${rollText} vs ${comparisonChanceText}.`,
+             message: isGreed && standardKeysAwarded === 2
+               ? '2 Keys and an Omni-Key Found! (Doubled)'
+               : `Key and Omni-Key Found!${greedMessage}`,
+             details: `Rolled ${rollText} (≤ ${comparisonChanceText}), and an Omni-Key came with the ${standardKeysAwarded === 2 ? '2 Keys' : 'Key'}.`,
              meta: entryMeta(0),
              result: 'SUCCESS',
              source,
@@ -1051,11 +1062,6 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           newState.lastEvent = { id: generateId(), type: 'ROLL_OMNI', x, y, meta: eventMeta };
         } else {
           newState.keys += standardKeysAwarded;
-          const greedMessage = isGreed
-            ? standardKeysAwarded === 2
-              ? ' (Doubled)'
-              : ` (Greed awarded ${standardKeysAwarded} Standard Key${standardKeysAwarded === 1 ? '' : 's'})`
-            : '';
 
           newHistory.push({
              id: generateId(),
@@ -1174,7 +1180,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           timestamp: now,
           type: 'UNLOCK',
           message: `Unlocked ${itemLabel}`,
-          details: `Category: ${table}`,
+          details: `Category: ${tableDisplayName(table)}`,
           meta: { item, category: table, cost, costType }
       };
 
@@ -1201,7 +1207,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         ...state,
         fatePoints: state.fatePoints - ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
         activeBuff: 'LUCK',
-        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Clarity', details: 'Next roll has Advantage.', meta: { ritual: 'LUCK', fateCost: ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier) } }],
+        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Clarity', details: 'Your next Key roll is made twice and the better result is kept.', meta: { ritual: 'LUCK', fateCost: ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier) } }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'LUCK' } }
       };
 
@@ -1247,8 +1253,8 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         keys: state.keys + (won ? keysWon : 0),
         history: [...state.history, {
           id: generateId(), timestamp: now, type: 'ALTAR',
-          message: won ? `Void Gambit WON — ${keysWon} Key${keysWon > 1 ? 's' : ''}!` : 'Void Gambit lost.',
-          details: won ? `Staked ${stake} Fate; the Void blinked.` : `Staked ${stake} Fate; the Void keeps it.`,
+          message: won ? `Void Gambit WON: ${keysWon} Key${keysWon > 1 ? 's' : ''}!` : 'Void Gambit lost.',
+          details: won ? `Staked ${stake} Fate and won.` : `Staked ${stake} Fate and lost it.`,
           meta: { ritual: 'GAMBIT', fateCost: stake, keysAwarded: won ? keysWon : 0 },
         }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'GAMBIT', won } }
@@ -1270,7 +1276,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           id: generateId(), timestamp: now, type: 'ALTAR',
           message: `Cartographer charted ${label}`,
           meta: { ritual: 'CARTOGRAPHER', fateCost: cost, chunk: chosen },
-          details: `Chose a frontier chunk for ${cost} Fate — the one decision Fate allows.`,
+          details: `Chose a frontier chunk for ${cost} Fate.`,
         }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'CARTOGRAPHER', chunk: chosen } }
       };
@@ -1308,7 +1314,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           message: `${reward} awarded!`,
           details: guaranteedChaosAwarded
             ? `Skill level ${newLevel} milestone${randomChaosAwarded ? ' plus a lucky roll' : ''}.`
-            : `Fate smiled upon you at Total Level ${totalLevel}.`,
+            : `The ${Math.round(RNG_CHAOS_CHANCE * 100)}% level-up chance came up, at Total Level ${totalLevel}.`,
           meta: {
             totalLevel,
             reward,
@@ -3076,7 +3082,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
           <p>{saveStatus === 'failed' ? 'Your roll is waiting to be saved. Retry to reveal the same result.' : 'Saving your roll…'}</p>
           <button type="button" className="px-4 py-2 rounded border border-amber-400 text-amber-300" onClick={() => void retrySave()}>Retry save</button>
         </div>
-      ) : state.pendingUnlock ? <PendingUnlockReveal pending={state.pendingUnlock} animationsEnabled={state.animationsEnabled} onAccept={acknowledgeUnlock} /> : null}
+      ) : state.pendingUnlock ? <PendingUnlockReveal pending={state.pendingUnlock} animationsEnabled={state.animationsEnabled} onAccept={acknowledgeUnlock}
+        tier={state.pendingUnlock.table === TableType.SKILLS ? state.unlocks.skills[state.pendingUnlock.item] : undefined} /> : null}
     </GameContext.Provider>
   );
 };

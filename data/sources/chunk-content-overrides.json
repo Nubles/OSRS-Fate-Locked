@@ -18,5 +18,22 @@
   ],
   "npcs": [
     { "name": "Chase", "chunkId": "12086", "x": 3037, "y": 3457, "requirements": ["A Ruff Situation Complete the quest"], "source": "https://oldschool.runescape.wiki/w/Chase?oldid=15350971" }
+  ],
+  "requirementRewrites": [
+    { "from": "Access the Farming Guild#Beginner tier", "to": ["Access the Farming Guild", "Farming level 45"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002" },
+    { "from": "Access the Farming Guild#Intermediate tier", "to": ["Access the Farming Guild", "Farming level 65"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002" },
+    { "from": "Access the Farming Guild#Advanced tier", "to": ["Access the Farming Guild", "Farming level 85"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002" }
+  ],
+  "entityRequirements": [
+    { "category": "Objects", "name": "Herb patch", "chunkId": "4922", "requirements": ["Access the Farming Guild", "Farming level 65"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002", "note": "The intermediate tier, the west wing." },
+    { "category": "Objects", "name": "Tree patch", "chunkId": "4922", "requirements": ["Access the Farming Guild", "Farming level 65"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002", "note": "The intermediate tier, the west wing." },
+    { "category": "Objects", "name": "Anima patch", "chunkId": "4922", "requirements": ["Access the Farming Guild", "Farming level 65"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002", "note": "The intermediate tier, the west wing." },
+    { "category": "Objects", "name": "Fruit Tree Patch", "chunkId": "4922", "requirements": ["Access the Farming Guild", "Farming level 85"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002", "note": "The advanced tier, the north wing." },
+    { "category": "Objects", "name": "Spirit Tree Patch", "chunkId": "4922", "requirements": ["Access the Farming Guild", "Farming level 85"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002", "note": "The advanced tier, the north wing." },
+    { "category": "Objects", "name": "Celastrus patch", "chunkId": "4922", "requirements": ["Access the Farming Guild", "Farming level 85"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002", "note": "The advanced tier, the north wing." },
+    { "category": "Objects", "name": "Redwood tree patch", "chunkId": "4922", "requirements": ["Access the Farming Guild", "Farming level 85"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002", "note": "The advanced tier, the north wing." },
+    { "category": "Objects", "name": "Herb patch", "chunkId": "11321", "requirements": ["My Arm's Big Adventure Complete the quest"], "source": "https://oldschool.runescape.wiki/w/Herb_patch?oldid=15359652", "note": "The patch on the Troll Stronghold's roof." },
+    { "category": "Objects", "name": "Herb patch", "chunkId": "11325", "requirements": ["Making Friends with My Arm Complete the quest"], "source": "https://oldschool.runescape.wiki/w/Herb_patch?oldid=15359652", "note": "The patch in Weiss." },
+    { "category": "Objects", "name": "Hardwood tree patch", "chunkId": "9770", "requirements": ["Sailing level 51"], "source": "https://oldschool.runescape.wiki/w/Special_patches/Patches?oldid=15319393", "note": "The patch on Anglers' Retreat, where mooring needs 51 Sailing." }
   ]
 }

@@ -50,7 +50,14 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Commander Zilyana': { skills: { Agility: 70 }, manualRequirements: [...GOD_WARS_ENTRY, GOD_WARS_CHAMBER] },
   "Kree'arra": { skills: { Ranged: 70 }, manualRequirements: [...GOD_WARS_ENTRY, GOD_WARS_CHAMBER] },
   "K'ril Tsutsaroth": { skills: { Hitpoints: 70 }, manualRequirements: [...GOD_WARS_ENTRY, GOD_WARS_CHAMBER] },
-  'Abyssal Sire': { skills: { Slayer: 85 }, manualRequirements: ['Abyssal demon Slayer task.'] },
+  'Abyssal Sire': {
+    skills: { Slayer: 85 },
+    manualRequirements: ['Abyssal demon Slayer task.'],
+    oneOf: [
+      { manualRequirements: ['Reached the Abyssal Nexus through fairy ring DIP'] },
+      { manualRequirements: ['Reached the Abyss through the Mage of Zamorak in the Wilderness'] },
+    ],
+  },
   'Alchemical Hydra': { skills: { Slayer: 95 }, manualRequirements: ['Hydra Slayer task; Karuulm Slayer Dungeon.'] },
   'Cerberus': { skills: { Slayer: 91 }, manualRequirements: ['Hellhound Slayer task.'] },
   'Grotesque Guardians': { skills: { Slayer: 75 }, manualRequirements: ['Permanently unlocked the Slayer Tower roof using a brittle key', 'An active gargoyle or Grotesque Guardians boss Slayer task'] },
@@ -59,7 +66,6 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Araxxor': { skills: { Slayer: 92 }, quests: ['Priest in Peril'], manualRequirements: ['Araxyte/spider Slayer task or boss task.'] },
   'Skotizo': { manualRequirements: ['Summoned with a Dark totem in the Catacombs of Kourend.'] },
   'Vorkath': { quests: ['Dragon Slayer II'] },
-  'Galvek': { quests: ['Dragon Slayer II'], note: 'Fought during Dragon Slayer II.' },
   'Moons of Peril': { skills: { Slayer: 48, Hunter: 20, Fishing: 20 }, quests: ['Perilous Moons'], note: 'Repeatable boss access after completing Perilous Moons.' },
   'Duke Sucellus': { quests: ['Desert Treasure II'] },
   'The Leviathan': { quests: ['Desert Treasure II'] },
@@ -84,6 +90,10 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Mimic': { manualRequirements: ['Opted in at the strange casket in Watson’s house', 'Obtained a Mimic from an elite or master reward casket'] },
 
   "Calvar'ion": { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ["Have an active Vet'ion boss Slayer task (a skeleton task does not qualify)"] }] },
+  'Artio': { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ['Have an active Callisto boss Slayer task (a bear task does not qualify)'] }] },
+  'Spindel': { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ['Have an active Venenatis boss Slayer task (a spider task does not qualify)'] }] },
+  // B-4: the Maggot King can only be killed after The Blood Moon Rises.
+  'Maggot King': { quests: ['The Blood Moon Rises'] },
   'Obor': { manualRequirements: ['Permanently unlocked Obor’s lair using a giant key (first access only)'] },
   'Bryophyta': { manualRequirements: ['Permanently unlocked Bryophyta’s lair using a mossy key (first access only)'] },
 
@@ -189,7 +199,10 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Fairy Rings': { manualRequirements: ['Reached fairy ring access during Fairytale II - Cure a Queen (full completion is not required)'] },
   'Gnome Gliders': { quests: ['The Grand Tree'] },
   'Balloon Transport': { quests: ['Enlightened Journey'] },
-  'Mine Carts': { quests: ['The Giant Dwarf'] },
+  // One unlock for both networks (owner call U4). Lovakengj Minecart Network (oldid 15322190):
+  // no quest. Keldagrim minecart system (oldid 15323246): The Giant Dwarf started, which
+  // Keldagrim's own entry asks for; the White Wolf Mountain line needs it and Fishing Contest done.
+  'Mine Carts': { note: "Lovakengj's carts need no quest. Keldagrim's carts need The Giant Dwarf started, and their White Wolf Mountain line needs it and Fishing Contest done." },
   'Magic Carpets': { note: 'Basic routes require only a fare. Quest restrictions vary by destination.' },
   'Quetzal Network': { questProgress: [{ quest: "Twilight's Promise", label: "Received Renu during Twilight's Promise to unlock the quetzal network" }] },
   'Mycelium Transport': { quests: ['Bone Voyage'] },
@@ -207,10 +220,12 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   "Drakan's Medallion": { quests: ['A Taste of Hope'] },
   'Royal Seed Pod': { quests: ['Monkey Madness II'] },
   "Pharaoh's Sceptre": { note: 'Pyramid Plunder reward (Sophanem).' },
-  'Crystal Teleport Seed': { note: 'Crystal teleport seed (Prifddinas / elf content).' },
+  // Teleport crystal, oldid 15261004 (accuracy audit M4); the travel options ask for each quest.
+  'Crystal Teleport Seed': { note: "Eluned enchants a teleport crystal once Mourning's End Part I is started; its Prifddinas teleport needs Song of the Elves." },
 
   // ---- Bosses with an access gate (most others have no hard requirement) -----
   'Inferno': { manualRequirements: ['Complete the Fight Cave (TzTok-Jad) to enter.'] },
+  "TzHaar-Ket-Rak's Challenges": { manualRequirements: ['Show a fire cape to enter inner Mor Ul Rek'], note: 'Challenges 3 to 6 also need the Inferno completed.' },
   "Phosani's Nightmare": { manualRequirements: ['Defeated The Nightmare at least once'] },
   'Fortis Colosseum': { note: 'Varlamore — high-level combat (Sol Heredit).' },
   'The Hueycoatl': { note: 'Varlamore.' },
@@ -235,7 +250,9 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Brimhaven Agility Arena': { note: 'Agility (Brimhaven).' },
 
   // ---- Farming patches (access/level-gated; basic patches need nothing) ------
-  'Hardwood Tree': { quests: ['Bone Voyage'], note: 'Fossil Island.' },
+  // Each place asks for its own way in, and each patch carries it (owner call U6;
+  // Special patches/Patches, oldid 15319393): no quest is asked of the unlock itself.
+  'Hardwood Tree': { note: "Fossil Island's three patches need Bone Voyage, the Locus Oasis patch The Ribbiting Tale of a Lily Pad Labour Dispute, and the Anglers' Retreat patch 51 Sailing." },
   'Seaweed': { quests: ['Bone Voyage'], note: 'Underwater, Fossil Island.' },
   'Spirit Tree': { skills: { Farming: 83 }, note: 'Grow a spirit tree.' },
   'Celastrus': { skills: { Farming: 85 }, note: 'Farming Guild (high tier).' },

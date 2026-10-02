@@ -67,6 +67,9 @@ describe('reviewed content repairs', () => {
     const coord = { cx: 49, cy: 49, sourceId: '12692' };
     expect(evaluateEntityAccess('Tormented Demon', 'monster', coord, state, 'chunked', service).status).not.toBe('ALLOWED');
     state.quests.push('While Guthix Sleeps');
+    // Tormented Demons is a boss unlock, so its demons need it as well as the quest.
+    expect(evaluateEntityAccess('Tormented Demon', 'monster', coord, state, 'chunked', service).status).toBe('LOCKED');
+    state.bosses.push('Tormented Demons');
     expect(evaluateEntityAccess('Tormented Demon', 'monster', coord, state, 'chunked', service).status).toBe('ALLOWED');
     expect(service.entityLocations('Juna', ['npc'])!.locations).toContainEqual(expect.objectContaining({ cx: 49, cy: 49 }));
   });

@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GameProvider } from '../context/GameContext';
 import { CommandPalette } from './CommandPalette';
+import { RIVAL_ENABLED } from '../config/rules';
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -55,5 +56,25 @@ describe('CommandPalette RuneLite guide command', () => {
     });
 
     window.removeEventListener('fate:nav', onNavigate);
+  });
+});
+
+describe('CommandPalette Rival command', () => {
+  it('lists the Rival only while it is switched on', async () => {
+    const user = userEvent.setup();
+    render(
+      <GameProvider storageKey="command-palette-rival">
+        <CommandPalette />
+      </GameProvider>,
+    );
+
+    await act(async () => {
+      window.dispatchEvent(new Event('fate:open-palette'));
+    });
+    await user.type(screen.getByRole('textbox'), 'rival');
+
+    const rival = screen.queryByRole('button', { name: /Race a rival ghost/i });
+    if (RIVAL_ENABLED) expect(rival).not.toBeNull();
+    else expect(rival).toBeNull();
   });
 });

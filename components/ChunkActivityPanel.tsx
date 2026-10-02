@@ -185,6 +185,8 @@ const QUEST_BADGE: Record<QuestStatus, { cls: string; label: string }> = {
   LOCKED_REGION: { cls: 'text-gray-500', label: 'locked: region not unlocked' },
   LOCKED_SKILL: { cls: 'text-gray-500', label: 'locked: skill requirements not met' },
   LOCKED_EQUIPMENT: { cls: 'text-gray-500', label: 'locked: required equipment tier not unlocked' },
+  LOCKED_MOBILITY: { cls: 'text-gray-500', label: 'locked: travel network not unlocked' },
+  LOCKED_MERCHANT: { cls: 'text-gray-500', label: 'locked: shop type not unlocked' },
   LOCKED_QUEST: { cls: 'text-gray-500', label: 'locked: prerequisite quest missing' },
 };
 

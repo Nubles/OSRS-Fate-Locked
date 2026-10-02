@@ -30,7 +30,7 @@ Names are the tracker's Minigames unlocks (`MINIGAMES_LIST` in
 `data/items.ts`). `npm run diary:sync` rejects any other name, and
 `utils/diaryMinigames.test.ts` pins the list below.
 
-## Tagged (27)
+## Tagged (31)
 
 | Task | Tier | Minigame | Why |
 |---|---|---|---|
@@ -48,7 +48,11 @@ Names are the tracker's Minigames unlocks (`MINIGAMES_LIST` in
 | `kar_med_1` | Karamja Medium | Brimhaven Agility Arena | An arena ticket |
 | `kar_easy_9` | Karamja Easy | TzHaar Fight Pit | One of two routes: the Fight Pits, or the Fight Cave (a boss; see the [boss audit](2026-09-26-diary-boss-audit.md)) |
 | `kar_med_5` | Karamja Medium | Tai Bwo Wannai Cleanup | The village's favour comes from the Cleanup |
+| `kar_med_8` | Karamja Medium | Tai Bwo Wannai Cleanup | Hardwood Grove route only: its trading sticks come from the Cleanup (2 October) |
+| `kar_med_9` | Karamja Medium | Tai Bwo Wannai Cleanup | Hardwood Grove route only: its trading sticks come from the Cleanup (2 October) |
+| `kar_med_19` | Karamja Medium | Tai Bwo Wannai Cleanup | Cleanup route only: the gem rocks that appear in the Cleanup (2 October) |
 | `kar_hard_1` | Karamja Hard | TzHaar Fight Pit | Champion of the Fight Pits |
+| `kou_med_8` | Kourend Medium | Intelligence Gathering | Intelligence comes only from the minigame's gang members (2 October) |
 | `kou_hard_5` | Kourend Hard | Tithe Farm | Seeds planted in the Tithe Farm |
 | `kou_hard_8` | Kourend Hard | Stealing Artefacts | An artefact delivered to Captain Khaled |
 | `lum_med_11` | Lumbridge Medium | Impetuous Impulses | Implings in Puro-Puro |
@@ -62,7 +66,7 @@ Names are the tracker's Minigames unlocks (`MINIGAMES_LIST` in
 | `western_easy_5` | Western Easy | Gnome Ball | A goal in a match |
 | `west_med_7` | Western Medium | Gnome Restaurant | A delivery |
 
-## Left alone (16)
+## Left alone (13)
 
 Also recorded, with the same reasons, as `minigameAudit.notTagged` in
 `data/sources/achievement-diary-tasks.json`.
@@ -73,9 +77,7 @@ Also recorded, with the same reasons, as `minigameAudit.notTagged` in
 | `fal_med_6` | Only visits the Port Sarim Rat Pits. |
 | `fal_hard_8` | The wall safes are in the Rogues' Den itself, not in its maze minigame. |
 | `fal_hard_10` | Enters the Warriors' Guild, a guild entry. |
-| `kar_med_8`, `kar_med_9` | Teak and mahogany trees grow outside the Tai Bwo Wannai Hardwood Grove as well. |
 | `kar_med_10`, `kar_hard_5` | Need Tai Bwo Wannai Trio, a quest, not the Cleanup. |
-| `kar_med_19` | Shilo Village also opens the gem rocks. |
 | `lum_hard_1` | Bones to Peaches is already an Arcana unlock. |
 | `lum_hard_10` | Uses the altar at Emir's Arena; no duel is fought. |
 | `lum_elite_3` | The magic trees stand outside the Mage Training Arena's games. |
@@ -83,6 +85,13 @@ Also recorded, with the same reasons, as `minigameAudit.notTagged` in
 | `western_med_7` | A Gnome Glider trip. |
 | `west_easy_9` | The Minigame Teleport itself, already a Mobility unlock; no game is played. |
 | `wild_hard_1` | The god spells come from Mage Arena I, already a quest requirement. |
+
+## Update, 2 October 2026
+
+The owner extended the rule to loot: a task that needs a minigame's loot needs
+the minigame, on the route that uses it (`minigameAudit.followUp`). That tags
+the four rows marked 2 October above. The Kharazi Jungle and Shilo Village
+routes of the three Karamja tasks still need no minigame.
 
 ## What it changes
 

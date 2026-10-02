@@ -36,7 +36,7 @@ describe('RunelitePluginGuide', () => {
     expect(html).toContain('id="runelite-guide-title"');
     expect(html).toContain('RuneLite Plugin Guide');
     expect(count(html, 'aria-label="Close RuneLite Plugin Guide"')).toBe(1);
-    expect(html).toContain('Back to the companion');
+    expect(html).toContain('Back to the tracker');
   });
 
   it('has every chapter, in order, in its contents and on the page', () => {

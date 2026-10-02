@@ -1,5 +1,6 @@
 import type { ItemSourceRecord } from '../../services/ChunkContentService';
 import { compileSourceRequirements } from './accountRequirements';
+import { canonicalBossId } from '../contentIdentity';
 import {
   chunkKey,
   type ChunkKey,
@@ -80,6 +81,8 @@ export const indexDirectItemSources = (
     const hostChunk = `${record.kind}\0${record.hostName}\0${chunk}`;
     const accessVariant = hostChunks.has(hostChunk);
     hostChunks.add(hostChunk);
+    // A boss's drops are a source only once the boss is unlocked.
+    const boss = record.kind === 'monster' ? canonicalBossId(record.hostName) : undefined;
     return compileSourceRequirements({
       id: `${record.kind}:${record.hostName}:${record.cx},${record.cy}:${item.key}${accessVariant && record.sourceId ? `:${record.sourceId}` : ''}`,
       output: item,
@@ -89,7 +92,7 @@ export const indexDirectItemSources = (
       hostName: record.hostName,
       chunk,
       rawRequirements: [...record.rawRequirements],
-      gates: [],
+      gates: boss ? [{ type: 'UNLOCK', category: 'bosses', id: boss, label: `${boss} unlocked` }] : [],
       deterministic: record.kind !== 'monster',
       coverage: 'COMPLETE',
       ...(accessVariant ? { accessVariant: true } : {}),

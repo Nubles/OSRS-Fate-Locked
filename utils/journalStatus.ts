@@ -22,9 +22,10 @@ import { pendingQuestProgress, type QuestProgressRequirement } from '../data/que
 import { AREA_ENTRY_ROUTES } from '../data/areaAccess';
 import { canonicalAreaName } from '../data/areaMapPolicy';
 import type { AreaRoutes } from './areaRoutes';
+import { farmingPatchLabel } from './farmingPatches';
 
-export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_QUEST';
-export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_MOBILITY' | 'LOCKED_ARCANA' | 'LOCKED_MERCHANT' | 'LOCKED_MINIGAME' | 'LOCKED_BOSS' | 'LOCKED_QUEST';
+export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_MOBILITY' | 'LOCKED_MERCHANT' | 'LOCKED_QUEST';
+export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_MOBILITY' | 'LOCKED_ARCANA' | 'LOCKED_MERCHANT' | 'LOCKED_MINIGAME' | 'LOCKED_BOSS' | 'LOCKED_GUILD' | 'LOCKED_FARMING' | 'LOCKED_HOUSING' | 'LOCKED_SLAYER' | 'LOCKED_QUEST';
 
 export type DiaryStatusUnlocks =
   Omit<UnlockState, 'cas' | 'completedTasks'>
@@ -62,6 +63,13 @@ export type DirectEligibilityBlocker =
   | { kind: 'arcana'; label: string }
   | { kind: 'minigame'; label: string }
   | { kind: 'boss'; label: string }
+  // Guilds, farming patches, house rooms and Slayer rewards set a Diary task's
+  // status only: logging it by hand never waits for them (utils/journalCompletion.ts).
+  | { kind: 'guild'; label: string }
+  /** `label` is how the patch reads ("Herb patch"); `patch` is its farming unlock id ("Herb"). */
+  | { kind: 'farming'; label: string; patch: string }
+  | { kind: 'housing'; label: string }
+  | { kind: 'slayer'; label: string }
   | { kind: 'quest'; label: string };
 
 export interface AlternativeEligibilityRoute {
@@ -197,12 +205,16 @@ export const questRequirementOptionMet = (
 ): boolean =>
   (option.regions ?? []).every(region =>
     isAreaReachable(region, unlocks, gameModeId)) &&
+  (!option.anyOfRegions?.length || option.anyOfRegions.some(region =>
+    isAreaReachable(region, unlocks, gameModeId))) &&
   (option.guilds ?? []).every(guild =>
     unlocks.guilds.includes(guild)) &&
   (option.locations ?? []).every(location =>
     locationRequirementMet(location, unlocks, gameModeId)) &&
   Object.entries(option.skills ?? {}).every(([skill, level]) =>
-    meetsSkillRequirement(unlocks, skill, level));
+    meetsSkillRequirement(unlocks, skill, level)) &&
+  (option.quests ?? []).every(quest => unlocks.quests.includes(quest)) &&
+  (option.merchants ?? []).every(merchant => unlocks.merchants?.includes(merchant));
 
 /** An owned area that no route reaches yet (utils/areaRoutes.ts). */
 const strandedArea = (area: string, areaRoutes?: AreaRoutes | null): boolean =>
@@ -229,6 +241,9 @@ const strandedOption = (
   areaRoutes?: AreaRoutes | null,
 ): boolean =>
   (option.regions ?? []).some(region => strandedArea(region, areaRoutes)) ||
+  (!!option.anyOfRegions?.length && option.anyOfRegions
+    .filter(region => isAreaReachable(region, unlocks, gameModeId))
+    .every(region => strandedArea(region, areaRoutes))) ||
   (option.locations ?? []).some(location => strandedLocation(location, unlocks, gameModeId, areaRoutes));
 
 export const questAlternativesMet = (
@@ -244,9 +259,12 @@ export const questRequirementOptionLabel = (
   option: QuestRequirementOption,
 ): string => [
   ...(option.regions ?? []),
+  ...(option.anyOfRegions?.length ? ['any of ' + option.anyOfRegions.join(', ')] : []),
   ...(option.guilds ?? []),
   ...(option.locations ?? []).map(location => location.label),
   ...Object.entries(option.skills ?? {}).map(([skill, level]) => skill + ' ' + level),
+  ...(option.quests ?? []),
+  ...(option.merchants ?? []),
 ].join(' + ');
 
 export const currentQuestPoints = (unlocks: { readonly quests: readonly string[] }): number =>
@@ -354,6 +372,15 @@ export function evaluateQuestEligibility(
     if (Number.isFinite(tier) && tier >= requirement.tier) evidence.push(label);
     else blockers.push({ kind: 'equipment', slot: requirement.slot, tier: requirement.tier, label });
   }
+  // A shop-only item or a travel network, read with the Diary evaluator.
+  if (quest.merchants?.length || quest.mobility?.length) {
+    const unlocked = evaluateDiaryRequirement(
+      { merchants: quest.merchants, mobility: quest.mobility }, unlocks, gameModeId, NO_AREAS, areaRoutes,
+    );
+    blockers.push(...unlocked.blockers);
+    evidence.push(...unlocked.evidence);
+    manualChecks.push(...unlocked.manualChecks);
+  }
   // Includes Druidic Ritual for a Herblore level, and Pandemonium for Sailing.
   for (const prereq of withSkillGateQuests(quest.prereqs, quest.skills, quest.id)) {
     if (unlocks.quests.includes(prereq)) evidence.push(prereq);
@@ -363,6 +390,8 @@ export function evaluateQuestEligibility(
   const status: QuestStatus = blockers.some(x => x.kind === 'region' || x.kind === 'alternative') ? 'LOCKED_REGION'
     : blockers.some(x => x.kind === 'skill' || x.kind === 'combat') ? 'LOCKED_SKILL'
     : blockers.some(x => x.kind === 'equipment') ? 'LOCKED_EQUIPMENT'
+    : blockers.some(x => x.kind === 'mobility') ? 'LOCKED_MOBILITY'
+    : blockers.some(x => x.kind === 'merchant') ? 'LOCKED_MERCHANT'
     : blockers.some(x => x.kind === 'quest') ? 'LOCKED_QUEST'
     : 'AVAILABLE';
   const manual = readinessFields(blockers, manualChecks);
@@ -398,6 +427,11 @@ export interface DoableTask {
   bosses?: string[];
   /** Any one boss of each group, such as Callisto or its lesser Artio. */
   anyOfBosses?: string[][];
+  guilds?: string[];
+  /** Farming unlock ids, as FARMING_PATCH_LIST names them ("Herb"). */
+  farming?: string[];
+  housing?: string[];
+  slayerUnlocks?: string[];
   equipmentRequirements?: DiaryEquipmentRequirement[];
   quests?: string[];
   regions?: string[];
@@ -433,6 +467,10 @@ const requirementOptionParts = (option: DiaryTaskRequirementOption): string[] =>
   ...(option.minigames ?? []),
   ...(option.bosses ?? []),
   ...(option.anyOfBosses ?? []).map(group => group.join(' or ')),
+  ...(option.guilds ?? []),
+  ...(option.farming ?? []).map(farmingPatchLabel),
+  ...(option.housing ?? []),
+  ...(option.slayerUnlocks ?? []),
   ...(option.equipmentRequirements ?? []).map(item => `${item.slot} T${item.tier}: ${item.reason}${item.unlessDiary ? ` (unless ${item.unlessDiary} is complete)` : ''}`),
   ...(option.combinedSkillLevel ? [
     option.combinedSkillLevel.skills.join(' + ') + ' combined ' + option.combinedSkillLevel.level,
@@ -652,6 +690,25 @@ function evaluateDiaryRequirement(
     const unlocked = group.find(boss => unlocks.bosses?.includes(boss));
     if (unlocked) evidence.push(unlocked);
     else blockers.push({ kind: 'boss', label: group.join(' or ') });
+  }
+  // A guild, farming patch, house room or Slayer reward the task uses must be
+  // unlocked before the Journal reads it as ready; logging by hand ignores them.
+  for (const guild of requirement.guilds ?? []) {
+    if (unlocks.guilds?.includes(guild)) evidence.push(guild);
+    else blockers.push({ kind: 'guild', label: guild });
+  }
+  for (const patch of requirement.farming ?? []) {
+    const label = farmingPatchLabel(patch);
+    if (unlocks.farming?.includes(patch)) evidence.push(label);
+    else blockers.push({ kind: 'farming', label, patch });
+  }
+  for (const room of requirement.housing ?? []) {
+    if (unlocks.housing?.includes(room)) evidence.push(room);
+    else blockers.push({ kind: 'housing', label: room });
+  }
+  for (const reward of requirement.slayerUnlocks ?? []) {
+    if (unlocks.slayerUnlocks?.includes(reward)) evidence.push(reward);
+    else blockers.push({ kind: 'slayer', label: reward });
   }
   for (const item of requirement.equipmentRequirements ?? []) {
     if (item.unlessDiary && unlocks.diaries.includes(item.unlessDiary)) {
@@ -946,6 +1003,14 @@ export function evaluateDiaryTierEligibility(
         ? 'LOCKED_MINIGAME'
       : blockers.some(blocker => blocker.kind === 'boss')
         ? 'LOCKED_BOSS'
+      : blockers.some(blocker => blocker.kind === 'guild')
+        ? 'LOCKED_GUILD'
+      : blockers.some(blocker => blocker.kind === 'farming')
+        ? 'LOCKED_FARMING'
+      : blockers.some(blocker => blocker.kind === 'housing')
+        ? 'LOCKED_HOUSING'
+      : blockers.some(blocker => blocker.kind === 'slayer')
+        ? 'LOCKED_SLAYER'
       : blockers.some(blocker => blocker.kind === 'quest' || blocker.kind === 'alternative')
         ? 'LOCKED_QUEST'
         : 'AVAILABLE';

@@ -51,9 +51,15 @@ describe('classifyShop', () => {
 
   it('uses reviewed categories for misleading and non-descriptive shop names', () => {
     const cases: [string, string][] = [
-      // Armour and equipment specialities.
-      ['Armour Shop (Jatizso)', 'Chainbody Shops'],
-      ['Armoury', 'Archery Shops'],
+      // Armour and equipment specialities. Mixed-stock shops go by most of their stock, or else
+      // the game's own icon for them (owner call U2): Jatizso's full mithril set has a Platebody
+      // shop icon, and the Armoury's 2h swords, axes and bows a Sword shop icon.
+      ['Armour Shop (Jatizso)', 'Platebody Shops'],
+      ['Armoury', 'Sword Shops'],
+      ["Blair's Armour", 'Chainbody Shops'],
+      ['Quality Armour Shop', 'Chainbody Shops'],
+      ["Reldak's Leather Armour", 'Archery Shops'],
+      ["Myths' Guild Armoury", 'Platebody Shops'],
       ["Ava's Odds and Ends", 'Archery Shops'],
       ["Brian's Battleaxe Bazaar", 'Axe Shops'],
       ["Filamina's Wares", 'Staff Shops'],
@@ -68,7 +74,10 @@ describe('classifyShop', () => {
       // Ore sellers and mining suppliers are separate unlocks.
       ['Deepfin Point Ore Exchange', 'Ore Merchants'],
       ['Ore store', 'Ore Merchants'],
-      ["Petrified Pete's Ore Shop", 'Ore Merchants'],
+      // Petrified Pete takes Volcanic Mine points, so it is a Reward Shop (owner call U1).
+      ["Petrified Pete's Ore Shop", 'Reward Shops'],
+      // Grace takes marks of grace, so graceful needs Reward Shops, not Clothes Shops.
+      ["Grace's Graceful Clothing", 'Reward Shops'],
       ['Port Roberts Ore Stall', 'Ore Merchants'],
       ["Thirus Urkar's Fine Dynamite Store", 'Mining Shops'],
       // Names which previously overrode their actual stock or service.
@@ -96,11 +105,24 @@ describe('classifyShop', () => {
       ["Fairy Fixit's Fairy Enchantment", 'Magic Shops'],
       ['Irksol (shop)', 'Gem Shops'],
       ["Iwan's Maces", 'Mace Shops'],
-      ["Mairin's Market", 'Fishing Shops'],
+      // Mairin takes mermaid's tears, so hers is a Reward Shop (owner call U1).
+      ["Mairin's Market", 'Reward Shops'],
       ["Miltog's Lamps", 'Candle Shops'],
       ['Mysterious Hallowed Goods', 'Reward Shops'],
       ["The Esoterican Arms", 'Bars & Inns'],
       ["Yarnio's Baked Goods", 'Food Shops'],
+      // Stock over name (accuracy audit S1 to S10): rune shops, pubs, weapon sellers and an ore seller.
+      ['The Runic Emporium', 'Magic Shops'],
+      ["Regath's Wares", 'Magic Shops'],
+      ['The Lost Pickaxe', 'Bars & Inns'],
+      ["King's Axe Inn", 'Bars & Inns'],
+      ["Efaritay's Supplies", 'Weapon Shops'],
+      ["Ivan's Supplies", 'Weapon Shops'],
+      ["TzHaar-Hur-Tel's Equipment Store", 'Weapon Shops'],
+      ["TzHaar-Hur-Zal's Equipment Store", 'Weapon Shops'],
+      ['Temple Supplies', 'Reward Shops'],
+      ["Sian's Ranged Weaponry", 'Archery Shops'],
+      ['Ore seller', 'Ore Merchants'],
     ];
     for (const [name, want] of cases) {
       expect(classifyShop(name), name).toBe(want);

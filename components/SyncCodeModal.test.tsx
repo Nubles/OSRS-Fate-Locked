@@ -186,6 +186,23 @@ describe('SyncCodeModal backup browser', () => {
     expect(game.importSave).toHaveBeenCalledTimes(1);
     pending.resolve({ ok: true, warnings: [] });
   });
+
+  it('says an import keeps a backup of the save it replaces', async () => {
+    const user = userEvent.setup();
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    render(<SyncCodeModal onClose={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Import' }));
+    fireEvent.change(screen.getByPlaceholderText('FLSYNC.g1.…'), {
+      target: { value: 'backup-note-code' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Verify code' }));
+    await user.click(await screen.findByRole('button', { name: 'Import & overwrite this profile' }));
+
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('A backup of the current save is kept on the Backups tab.'));
+    expect(confirm).not.toHaveBeenCalledWith(expect.stringMatching(/cannot be undone/i));
+    expect(game.importSave).not.toHaveBeenCalled();
+  });
 });
 
 describe('SyncCodeModal tabs', () => {

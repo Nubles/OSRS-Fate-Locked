@@ -60,16 +60,12 @@ describe('area map policy', () => {
     });
   });
 
-  it('pins the exact surface and entrance reference classifications', () => {
-    const surface = Object.entries(AREA_REFERENCES)
-      .filter(([, policy]) => policy.kind === 'surface')
-      .map(([name]) => name);
-    const entrance = Object.entries(AREA_REFERENCES)
-      .filter(([, policy]) => policy.kind === 'entrance')
-      .map(([name]) => name);
-
-    expect(sorted(surface)).toEqual(["Giants' Plateau"]);
-    expect(sorted(entrance)).toEqual(EXPECTED_ENTRANCE_REFERENCE_NAMES);
+  it('pins the exact entrance references, now that Giants\' Plateau owns its chunk', () => {
+    const references: Readonly<Record<string, AreaReference>> = AREA_REFERENCES;
+    expect(Object.values(references).every(policy => policy.kind === 'entrance')).toBe(true);
+    expect(sorted(Object.keys(references))).toEqual(EXPECTED_ENTRANCE_REFERENCE_NAMES);
+    // Its surface reference stood in for a chunk no area owned (owner decision M1, 2 October 2026).
+    expect(SUB_AREA_CHUNKS["Giants' Plateau"]).toEqual([{ cx: 52, cy: 49 }]);
   });
   it('maps every surface overlap within the canonical area parent region', () => {
     for (const [alias, policy] of Object.entries(AREA_ALIAS_POLICIES)) {

@@ -133,11 +133,11 @@ export const FateThread: React.FC<Props> = ({ onClose }) => {
           <Sparkles className="text-amber-300" size={18} />
           <div>
             <h2 className="text-amber-200 font-black uppercase tracking-[0.2em] text-sm leading-none">Fate Thread</h2>
-            <p className="text-[10px] text-gray-500 mt-1">{total} unlock{total !== 1 ? 's' : ''} woven across {hubs.length} {hubs.length === 1 ? 'strand' : 'strands'} of fate</p>
+            <p className="text-[10px] text-gray-500 mt-1">{total} unlock{total !== 1 ? 's' : ''} across {hubs.length} {hubs.length === 1 ? 'table' : 'tables'}</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          <button onClick={weave} disabled={!total} className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-400/30 text-amber-200 hover:bg-amber-500/25 disabled:opacity-40 transition-colors"><Play size={12} /> Weave</button>
+          <button onClick={weave} disabled={!total} className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-400/30 text-amber-200 hover:bg-amber-500/25 disabled:opacity-40 transition-colors"><Play size={12} /> Replay</button>
           <button onClick={() => setView(v => ({ ...v, scale: Math.min(v.scale * 1.2, 3) }))} className="p-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10" aria-label="Zoom in"><ZoomIn size={14} /></button>
           <button onClick={() => setView(v => ({ ...v, scale: Math.max(v.scale * 0.83, 0.2) }))} className="p-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10" aria-label="Zoom out"><ZoomOut size={14} /></button>
           <button onClick={fit} className="p-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10" aria-label="Fit"><Maximize2 size={14} /></button>
@@ -155,8 +155,8 @@ export const FateThread: React.FC<Props> = ({ onClose }) => {
         {total === 0 ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
             <Sparkles className="text-gray-700 mb-3" size={40} />
-            <p className="text-gray-400 font-bold">Your fate is unwritten.</p>
-            <p className="text-gray-600 text-xs mt-1 max-w-xs">Roll keys and unlock content — each one becomes a star, threaded into your tapestry.</p>
+            <p className="text-gray-400 font-bold">No unlocks yet.</p>
+            <p className="text-gray-600 text-xs mt-1 max-w-xs">Each unlock appears here as a star, grouped by table. Replay shows them in the order you unlocked them.</p>
           </div>
         ) : (
           <svg className="w-full h-full" key={weaveKey}>

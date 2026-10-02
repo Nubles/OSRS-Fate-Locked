@@ -185,7 +185,7 @@ describe('reaching an owned island or enclave for a diary task (Vanilla)', () =>
     const watermelon = task('mor_hard_3');
     const islands = account({
       regions: ['Harmony Island', "Mos Le'Harmless"], quests: ['The Great Brain Robbery'],
-      skills: { Farming: 5 }, levels: { Farming: 47 },
+      skills: { Farming: 5 }, levels: { Farming: 47 }, farming: ['Allotment'],
     });
     const blocked = evaluateDiaryTaskEligibility(watermelon, islands, 'vanilla').blockers;
     expect(blocked).toEqual([expect.objectContaining({ label: 'Travel to Harmony Island' })]);
