@@ -948,7 +948,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const message = startupTerminalFailure === 'busy'
       ? 'Profiles are still being updated in another tab. Refresh this page to try again.'
       : startupTerminalFailure === 'unsupported_metadata'
-        ? 'Profile data was updated by a newer version of the app. Refresh after opening this version in the original tab.'
+        ? 'Profile data was updated by a newer version of the tracker. Refresh after opening this version in the original tab.'
         : 'Profile data changed to an invalid format while loading. Refresh this page to continue safely.';
     return <div role="alert">{message}</div>;
   }
