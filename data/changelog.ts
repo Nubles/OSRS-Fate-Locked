@@ -35,6 +35,7 @@ export const CHANGELOG_RELEASES = [
         'Strict Mode’s setting, its card in RuneLite and the RuneLite guide now say all it stops: a teleport to a place your rules lock, and a teleport of a kind your run hasn’t unlocked, such as Jewelry Teleports, even to an unlocked place. A worn item’s teleport, such as a glory’s Edgeville, counts. What it stops is unchanged.',
         'With Also send RuneLite notifications on, walking into a locked area sends a notification with its chat line, not only when the alert plays a sound.',
         'RuneLite and its guide say what it notices: a finished diary tier, not each task, and a collection log item only with the game’s collection log notification on. When it can’t notice anything, such as on a character your run isn’t linked to, its Roll inbox card says why.',
+        'RuneLite’s progress percentage counts what the number beside it counts: 15 of 187 areas is 8%, where it showed 7%, a share of the map’s chunks.',
       ],
     },
   },

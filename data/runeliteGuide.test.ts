@@ -159,6 +159,26 @@ describe('RuneLite guide, as the plugin does it', () => {
     expect(setting('rollNudges').purpose).toContain('a finished diary tier (not each task)');
   });
 
+  it('says what the borders, shade and minimap draw (P-15, P-16, P-17)', () => {
+    const inGame = chapter('in-game');
+    expect(setting('chunkBorders').visibleResult).toContain('All edges adds a thin line along every other chunk edge');
+    expect(inGame).toContain('All edges adds a thin line along every other chunk edge too');
+    expect(inGame).not.toContain('between unlocked chunks');
+    expect(setting('shadeNearbyLocked').purpose).toContain('on the minimap, all locked land nearby, while Minimap chunk borders is on');
+    expect(inGame).toContain('On the minimap, all locked land nearby');
+    expect(setting('drawMinimap').purpose).toContain('every chunk line when Chunk borders in the game view is All edges');
+    expect(setting('drawMinimap').visibleResult).toContain('With Shade locked land nearby on');
+    // P-32: another character's HUD and sidebar still say whose run it is.
+    expect(inGame).toContain('the HUD and the sidebar say only that the run isn’t theirs');
+  });
+
+  it('says the Unlocked colour is for words only, the frontier is unlocked, and the percentage is of the count (P-5, P-49, T7)', () => {
+    expect(setting('unlockedColor').visibleResult).toContain('unlocked land is never filled');
+    expect(setting('unlockedColor').visibleResult).toContain('transparency isn’t used');
+    expect(setting('frontierColor').visibleResult).toContain('that you can unlock next');
+    expect(callout('run', 'progress')).toContain('The percentage counts the same.');
+  });
+
   it('names the banner’s button and says what Recently stopped lists (P-6, P-19)', () => {
     expect(chapter('strict-mode')).toContain('a Pause Strict Mode for 60s button');
     expect(setting('strictMode').visibleResult).toContain('Pause Strict Mode for 60s');

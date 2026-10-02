@@ -297,7 +297,7 @@ export const RUNELITE_GUIDE_FIGURES: readonly GuideFigure[] = [
     scale: 2,
     callouts: [
       callout('character', 1, [0.054, 0.132, 0.891, 0.07], 'Character', 'Whose run this is, with (you) when you’re logged in on it.'),
-      callout('progress', 2, [0.054, 0.308, 0.891, 0.07], 'Progress', 'How much of the run you’ve unlocked.'),
+      callout('progress', 2, [0.054, 0.308, 0.891, 0.07], 'Progress', 'How much of the run you’ve unlocked, in areas, or chunks in Chunked mode. The percentage counts the same.'),
       callout('keys', 3, [0.054, 0.454, 0.891, 0.3], 'Keys', 'Keys, Omni-Keys and Chaos Keys, as the companion counts them.'),
       callout('fate-points', 4, [0.054, 0.771, 0.891, 0.088], 'Fate Points', 'What your failed rolls have built up.'),
       callout('ritual', 5, [0.054, 0.877, 0.891, 0.07], 'Ritual', 'The ritual waiting on your next roll, if any.'),
@@ -408,17 +408,17 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
   },
   chunkBorders: {
     purpose: 'Lines on the ground where chunks meet.',
-    visibleResult: 'Locked edges are dashed over a dark underlay, fixed to the tiles, and hidden behind whatever stands in front. All edges adds a thin line between unlocked chunks.',
+    visibleResult: 'Locked edges are dashed over a dark underlay, fixed to the tiles, and hidden behind whatever stands in front. All edges adds a thin line along every other chunk edge.',
     changeWhen: 'Pick All edges while learning the chunk grid, or Off to leave the ground alone.',
   },
   shadeNearbyLocked: {
-    purpose: 'Darkens a band of locked land along each locked edge, in the game view and on the minimap.',
+    purpose: 'Darkens locked land near you: in the game view, a band along each locked edge; on the minimap, all locked land nearby, while Minimap chunk borders is on.',
     visibleResult: 'The band lies on the locked side, two tiles deep, so you can tell the sides apart at a glance.',
     changeWhen: 'Turn it off if you’d rather see the ground unshaded.',
   },
   drawMinimap: {
-    purpose: 'Chunk borders and locked land on the minimap.',
-    visibleResult: 'The same edges as the game view, drawn on the minimap.',
+    purpose: 'Locked edges on the minimap, and every chunk line when Chunk borders in the game view is All edges.',
+    visibleResult: 'Locked edges show even with Chunk borders in the game view set to Off. With Shade locked land nearby on, locked land nearby is darkened too.',
     changeWhen: 'Turn it off to keep the minimap as the game draws it.',
   },
   showInfoBoxes: {
@@ -432,13 +432,13 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     changeWhen: 'Pick Colour-blind safe if red and green are hard to tell apart, or Custom to choose your own.',
   },
   unlockedColor: {
-    purpose: 'The colour of unlocked land and statuses, with Colours set to Custom.',
-    visibleResult: 'Used wherever the plugin says Unlocked or Can do.',
+    purpose: 'The colour of Unlocked, Can do and other good states, such as Active and Rules up to date, with Colours set to Custom.',
+    visibleResult: 'It colours words and labels only: unlocked land is never filled, on the ground or on the maps, and the colour’s transparency isn’t used.',
     changeWhen: 'Change it to suit your eyes or your screen; it takes effect only with Custom.',
   },
   frontierColor: {
     purpose: 'The colour of the frontier in Chunked mode, with Colours set to Custom.',
-    visibleResult: 'The light fill on chunks next to yours that you can roll next.',
+    visibleResult: 'The light fill on chunks next to yours that you can unlock next.',
     changeWhen: 'Change it only if you play Chunked mode with Custom colours.',
   },
   lockedColor: {
@@ -973,10 +973,16 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
         items: [
           {
             term: 'Chunk borders',
-            text: 'Dashed lines on the ground where locked land starts, over a dark underlay so they read on any ground. The dashes are fixed to the tiles, and whatever stands in front of a line, such as a tree, a wall or you, hides it. All edges adds a thin line between unlocked chunks too.',
+            text: 'Dashed lines on the ground where locked land starts, over a dark underlay so they read on any ground. The dashes are fixed to the tiles, and whatever stands in front of a line, such as a tree, a wall or you, hides it. All edges adds a thin line along every other chunk edge too.',
           },
-          { term: 'Shade', text: 'A band of shade two tiles deep on the locked side of each locked edge.' },
-          { term: 'Minimap', text: 'The same edges on the minimap, and locked land shaded.' },
+          {
+            term: 'Shade',
+            text: 'In the game view, a band of shade two tiles deep on the locked side of each locked edge. On the minimap, all locked land nearby.',
+          },
+          {
+            term: 'Minimap',
+            text: 'Locked edges on the minimap, every chunk line too with All edges, and locked land shaded while Shade locked land nearby is on.',
+          },
           {
             term: 'World map',
             text: 'Locked land shaded like fog and your unlocked land outlined; in Chunked mode, a light fill on the frontier. Hover a chunk for its area and status, and what it holds if you like. Its lines have a setting of their own: the outline, every chunk edge, or none. Pins on locked areas are optional.',
@@ -999,7 +1005,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
       },
       {
         kind: 'text',
-        text: 'All of it uses one set of colours: Default, Colour-blind safe, or your own. Nothing is drawn or checked for another character’s run.',
+        text: 'All of it uses one set of colours: Default, Colour-blind safe, or your own. On another character, the HUD and the sidebar say only that the run isn’t theirs; nothing else is drawn or checked.',
       },
     ],
   },
