@@ -1,4 +1,5 @@
 import {
+  RUNELITE_SETTING_SECTIONS,
   RUNELITE_SETTINGS,
   RUNELITE_SIDEBAR_CARDS,
   RUNELITE_TERMS,
@@ -169,7 +170,7 @@ export const RUNELITE_GUIDE_RESOURCES: readonly GuideExternalResource[] = [
   {
     id: 'source',
     label: 'The plugin’s source code',
-    description: 'Every line RuneLite reviewed, in the open.',
+    description: 'The plugin’s code on GitHub, open for anyone to read.',
     href: 'https://github.com/Nubles/OSRS-Fate-Locked-Runelite',
   },
   {
@@ -255,7 +256,7 @@ export const RUNELITE_GUIDE_FIGURES: readonly GuideFigure[] = [
       callout('counts', 3, [0.054, 0.216, 0.891, 0.095], 'Counts', 'What you can do here, what isn’t ready yet, and what’s locked.'),
       callout('arrow', 4, [0.054, 0.322, 0.891, 0.06], 'Arrow', 'After you click a row: the game’s arrow points at the nearest one. Clear takes it down.'),
       callout('categories', 5, [0.054, 0.41, 0.891, 0.04], 'Categories', 'Each opens and closes, and says what it holds while closed.'),
-      callout('skills', 6, [0.1, 0.465, 0.846, 0.04], 'Skills', 'Skilling opens skill by skill, with your level and cap.'),
+      callout('skills', 6, [0.1, 0.465, 0.846, 0.04], 'Skills', 'Skilling opens skill by skill, with the level the tracker has for you and your cap.'),
     ],
   },
   {
@@ -331,8 +332,8 @@ export const RUNELITE_GUIDE_FIGURES: readonly GuideFigure[] = [
     height: 560,
     scale: 2,
     callouts: [
-      callout('sync', 1, [0.054, 0.107, 0.891, 0.057], 'Online sync', 'Turns the relay on or off. Your pairing is kept either way.'),
-      callout('pairing', 2, [0.054, 0.25, 0.887, 0.086], 'Re-pair or disconnect', 'Re-pair tracker… pairs another profile; Disconnect forgets the pairing and keeps your rules as a backup.'),
+      callout('sync', 1, [0.054, 0.107, 0.891, 0.057], 'Online sync', 'Lets RuneLite use the relay, or not. Your pairing is kept either way.'),
+      callout('pairing', 2, [0.054, 0.25, 0.887, 0.086], 'Re-pair or disconnect', 'Re-pair tracker… pairs another profile; Disconnect forgets the pairing and keeps the rules you have.'),
       callout('check', 3, [0.054, 0.35, 0.891, 0.086], 'Check now', 'Asks for your rules at once.'),
       callout('backups', 4, [0.054, 0.525, 0.891, 0.186], 'Backups', 'Load your rules from the clipboard or a file, without the relay.'),
     ],
@@ -464,6 +465,10 @@ export const RUNELITE_GUIDE_SETTINGS: readonly GuideSetting[] = RUNELITE_SETTING
 
 const label = (key: string) => RUNELITE_SETTINGS.find(setting => setting.key === key)?.name ?? key;
 
+/** "A, B and C", as a sentence lists things. */
+const listed = (items: readonly string[]): string =>
+  items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+
 export const RUNELITE_GUIDE_PRESETS: readonly GuidePreset[] = [
   {
     id: 'balanced-defaults',
@@ -547,7 +552,7 @@ export const RUNELITE_GUIDE_TROUBLESHOOTING: readonly GuideTroubleshootingItem[]
   {
     id: 'different-character',
     symptom: 'The status card says Different character.',
-    likelyCause: 'The rules belong to another character than the one logged in, so warnings and Strict Mode are off and Here checks nothing.',
+    likelyCause: 'The run is linked to another character than the one logged in, so warnings and Strict Mode are off and Here checks nothing.',
     fix: [
       'Log in on the character the card names.',
       'Or pair this character’s profile: Re-pair tracker… in Connection & backup.',
@@ -636,11 +641,11 @@ export const RUNELITE_GUIDE_GLOSSARY: readonly GuideGlossaryItem[] = [
   },
   {
     term: RUNELITE_TERMS.FRONTIER,
-    definition: 'In Chunked mode, a locked chunk next to one you hold, which you can roll next.',
+    definition: 'In Chunked mode, a locked chunk next to one you hold, which you can unlock next.',
   },
   {
     term: RUNELITE_TERMS.DIFFERENT_CHARACTER,
-    definition: 'The rules belong to another character than the one logged in; nothing is checked until you switch.',
+    definition: 'The run is linked to another character than the one logged in; nothing is checked until you switch.',
   },
   {
     term: RUNELITE_TERMS.COPY_FOR_TRACKER,
@@ -674,7 +679,10 @@ export const RUNELITE_GUIDE_GLOSSARY: readonly GuideGlossaryItem[] = [
     term: 'Ritual of Greed',
     definition: 'If your next roll succeeds you get 2 Keys; if it fails, half the Fate Points come back.',
   },
-  { term: 'Chunk', definition: 'A 64 by 64 tile square of the game map, the unit the tracker locks and unlocks.' },
+  {
+    term: 'Chunk',
+    definition: 'A 64 by 64 tile square of the game map. The tracker maps every place by chunk; in Chunked mode you unlock one chunk at a time.',
+  },
   {
     term: 'Relay',
     definition: 'The one fixed Fate Locked service that hands RuneLite your paired profile’s rules. It sees your IP address, as any internet service does.',
@@ -755,7 +763,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
       },
       {
         kind: 'text',
-        text: 'Opening or closing a card never changes your settings or your run, and what you leave open stays open.',
+        text: 'Opening or closing a card never changes your settings or your run. Here remembers which of its categories you left open.',
       },
     ],
   },
@@ -773,13 +781,13 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
           { figureId: 'status-out-of-date', title: 'Rules may be out of date', body: 'RuneLite couldn’t check for more than 15 minutes. Your rules stay in use; Strict Mode waits.' },
           { figureId: 'status-expired', title: 'Tracker copy expired', body: 'The companion hasn’t sent your rules in 24 hours. Open it to send them again.' },
           { figureId: 'status-backup', title: 'Using a backup', body: 'Rules from the clipboard or a file. Connect tracker goes back to the relay.' },
-          { figureId: 'status-different-character', title: 'Different character', body: 'The rules are another character’s, so warnings and Strict Mode are off.' },
+          { figureId: 'status-different-character', title: 'Different character', body: 'The run is linked to another character, so warnings and Strict Mode are off.' },
           { figureId: 'status-not-connected', title: 'Not connected', body: 'Connect your tracker, or use a backup instead.' },
         ],
       },
       {
         kind: 'text',
-        text: 'You may also see Waiting for confirmation, No profile arrived, Online sync is off, Tracker has older rules, Tracker rules not usable, Couldn’t apply the tracker’s rules or Plugin update needed. In every case your current rules stay in use, and the card’s button is the fix. Troubleshooting has more on each.',
+        text: 'You may also see Waiting for confirmation, No profile arrived, Checking with the tracker, Online sync is off, Using saved rules, Disconnected in the tracker, Kept your pairing, Tracker has older rules, Tracker rules not usable, Couldn’t apply the tracker’s rules or Plugin update needed. None of them throws away rules you already have. Most have a button that fixes it; for Plugin update needed, restart RuneLite. Troubleshooting has more on each.',
       },
     ],
   },
@@ -934,7 +942,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
       { kind: 'figure', figureId: 'connection' },
       {
         kind: 'text',
-        text: 'Disconnect forgets the pairing and keeps the rules you have as a backup. RuneLite also keeps the last rules it accepted, and uses them when it starts, even offline.',
+        text: 'Disconnect forgets the pairing and keeps the rules you have. RuneLite also keeps the last rules it accepted, and uses them when it starts, even offline.',
       },
       { kind: 'heading', text: 'Without the relay' },
       {
@@ -952,7 +960,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
       },
       {
         kind: 'text',
-        text: 'A backup that can’t be read, is older than yours, or is for another run keeps the rules you had.',
+        text: 'A backup that can’t be read keeps the rules you had. Any backup that can be read replaces them, even an older one or another run’s, so pick the right one. While you’re paired with online sync on, the tracker’s copy replaces it at its next check.',
       },
       {
         kind: 'note',
@@ -1018,7 +1026,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
     blocks: [
       {
         kind: 'text',
-        text: 'Open RuneLite’s configuration (the wrench) and select Fate Locked Ironman; its sections follow the sidebar. Settings change only what RuneLite shows and how it warns you. They never unlock anything, roll or change your run.',
+        text: `Open RuneLite’s configuration (the wrench) and select Fate Locked Ironman. Its sections are ${listed(RUNELITE_SETTING_SECTIONS)}. Apart from Online sync and Strict Mode, settings change only what RuneLite shows and how it warns you. None of them unlocks anything, rolls or changes your run.`,
       },
       { kind: 'settings' },
       { kind: 'heading', text: 'Suggested setups' },

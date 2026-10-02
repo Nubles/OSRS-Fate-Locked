@@ -179,6 +179,35 @@ describe('RuneLite guide, as the plugin does it', () => {
     expect(callout('run', 'progress')).toContain('The percentage counts the same.');
   });
 
+  it('says what a backup, Disconnect and the status cards do (P-7, P-18, P-33)', () => {
+    const backup = chapter('connection-and-backup');
+    expect(backup).toContain('Any backup that can be read replaces them, even an older one or another run’s');
+    expect(backup).not.toContain('is older than yours');
+    expect(backup).not.toContain('as a backup');
+    expect(callout('connection', 'pairing')).toContain('keeps the rules you have.');
+    const status = chapter('status');
+    for (const title of ['Checking with the tracker', 'Using saved rules', 'Disconnected in the tracker', 'Kept your pairing']) {
+      expect(status, title).toContain(title);
+    }
+    expect(status).toContain('for Plugin update needed, restart RuneLite');
+    expect(status).not.toContain('In every case');
+  });
+
+  it('defines a chunk and the frontier, and names the run’s character as linked (P-20, P-49, owner’s call T1)', () => {
+    expect(glossary('Chunk')).toContain('in Chunked mode you unlock one chunk at a time');
+    expect(glossary('Frontier')).toContain('which you can unlock next');
+    expect(glossary('Different character')).toContain('The run is linked to another character');
+    expect(RUNELITE_GUIDE_TROUBLESHOOTING.find(item => item.id === 'different-character')?.likelyCause)
+      .toContain('The run is linked to another character');
+  });
+
+  it('says what the sidebar and the settings keep and change (P-29, P-30, P-31)', () => {
+    expect(chapter('settings')).toContain('Its sections are Tracker, Strict Mode, Alerts, Display, Custom colours and Backup.');
+    expect(chapter('settings')).toContain('Apart from Online sync and Strict Mode');
+    expect(chapter('sidebar')).toContain('Here remembers which of its categories you left open.');
+    expect(callout('here', 'skills')).toContain('the level the tracker has for you');
+  });
+
   it('names the banner’s button and says what Recently stopped lists (P-6, P-19)', () => {
     expect(chapter('strict-mode')).toContain('a Pause Strict Mode for 60s button');
     expect(setting('strictMode').visibleResult).toContain('Pause Strict Mode for 60s');
