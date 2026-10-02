@@ -105,3 +105,29 @@ describe('Diary trips need the place you leave from and the place you arrive in'
     });
   });
 });
+
+/** North of the Shantay Pass: no desert heat, and the Desert Diary's areas leave them out. */
+const NOT_DESERT = ['Al Kharid', 'Duel Arena / PvP Arena', 'Mage Training Arena'];
+const placesOf = (row: DiaryTask): string[] => [
+  ...(row.regions ?? []), ...(row.anyOfRegions ?? []), ...(row.oneOf ?? []).flatMap(option => option.regions ?? []),
+];
+
+describe('Desert Diary tasks done in the desert', () => {
+  it('accept any desert area for a combat potion, Humidify and Ice Barrage', () => {
+    for (const id of ['des_med_8', 'des_hard_3', 'des_elite_2']) {
+      expect(task(id).anyOfRegions, id).toEqual([
+        'Shantay Pass', 'Pollnivneach', 'Nardah', 'Sophanem', 'Menaphos', 'Bandit Camp', 'Bedabin Camp',
+        'Ruins of Uzer', 'Agility Pyramid', "Giants' Plateau", 'Kalphite Lair', 'Ruins of Unkah',
+      ]);
+    }
+  });
+
+  it('never accept Al Kharid, the Duel Arena or the Mage Training Arena', () => {
+    // The Desert Diary's areas are "Kharidian Desert (not including Al Kharid)" (wiki rev 15280543).
+    const inTheDesert = ALL_DIARY_TASKS.filter(row => row.tierId.startsWith('Desert') && /\bdesert\b/i.test(row.description));
+    expect(inTheDesert.map(row => row.id)).toEqual(expect.arrayContaining(['des_med_8', 'des_hard_3', 'des_elite_2']));
+    for (const row of inTheDesert) {
+      expect(placesOf(row).filter(area => NOT_DESERT.includes(area)), row.id).toEqual([]);
+    }
+  });
+});

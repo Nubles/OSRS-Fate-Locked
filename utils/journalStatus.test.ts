@@ -1076,7 +1076,8 @@ describe('skills gated by an unlocking quest', () => {
   });
 
   it('blocks a Herblore diary task until Druidic Ritual is complete', () => {
-    const desert = unlocked({ regions: ['Al Kharid'], skills: { Herblore: 4 }, levels: { Herblore: 36 } });
+    // Al Kharid is north of the Shantay Pass and not desert; the Pass itself is.
+    const desert = unlocked({ regions: ['Shantay Pass'], skills: { Herblore: 4 }, levels: { Herblore: 36 } });
     expect(evaluateDiaryTaskEligibility(task('des_med_8'), desert, 'vanilla')).toMatchObject({
       eligible: false, blockers: [{ kind: 'quest', label: 'Druidic Ritual' }],
     });
