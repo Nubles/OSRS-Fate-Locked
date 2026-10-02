@@ -14,6 +14,7 @@ const expectedKeys = (profileId: string): string[] => {
     `${base}__exportNag`,
     `${base}__discord`,
     `${base}__discordCursor`,
+    `${base}__onlineBackup`,
     `fate_features_seen_v1_${profileId}`,
     `${base}__writer`,
     `${base}__mirrorMeta`,
@@ -22,7 +23,7 @@ const expectedKeys = (profileId: string): string[] => {
 };
 
 describe('profile-owned storage registry', () => {
-  it('lists the exact nine owned keys in stable order', () => {
+  it('lists the exact ten owned keys in stable order', () => {
     expect(profileOwnedKeys('target')).toEqual(expectedKeys('target'));
   });
 
