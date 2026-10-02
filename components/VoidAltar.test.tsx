@@ -51,6 +51,15 @@ describe('VoidAltar Cartographer', () => {
   });
 });
 
+describe('VoidAltar header', () => {
+  it('says a successful roll resets Fate, which a Pity Key does not', async () => {
+    const { VoidAltar } = await import('./VoidAltar');
+    render(<VoidAltar onClose={vi.fn()} />);
+    expect(screen.getByText('A successful roll resets your Fate to 0, so spend it first.')).toBeTruthy();
+    expect(screen.queryByText(/when you find a key/)).toBeNull();
+  });
+});
+
 describe('VoidAltar buffs', () => {
   it('will not sell a second buff while one is waiting for the next roll', async () => {
     game.current = { ...game.current, gameModeId: 'vanilla', activeBuff: 'LUCK' };

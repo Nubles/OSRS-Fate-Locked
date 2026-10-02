@@ -152,7 +152,7 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
             </div>
             <div>
                 <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-blue-300 uppercase tracking-widest flex items-center gap-2">The Void Altar <SectionGuide id="VOID_ALTAR" /></h2>
-                <p className="text-xs text-purple-400/60 font-mono mt-1">Fate resets when you find a key — spend it while it burns.</p>
+                <p className="text-xs text-purple-400/60 font-mono mt-1">A successful roll resets your Fate to 0, so spend it first.</p>
             </div>
           </div>
           <button
@@ -183,11 +183,11 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
             /* ── Cartographer chooser ─────────────────────────────────────── */
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="text-center mb-6">
-                <h3 className="text-lg font-black text-emerald-300 uppercase tracking-widest">The map unfolds…</h3>
-                <p className="text-xs text-gray-400 mt-1">Three paths reveal themselves. Choose where Fate takes you — this is the only say you get.</p>
+                <h3 className="text-lg font-black text-emerald-300 uppercase tracking-widest">Choose a chunk</h3>
+                <p className="text-xs text-gray-400 mt-1">Pick the frontier chunk to unlock. This is the only way to choose land in Chunked.</p>
               </div>
               {chunkChoices.length === 0 ? (
-                <p className="text-center text-gray-500 text-sm py-8">The frontier is empty — nothing borders your territory yet.</p>
+                <p className="text-center text-gray-500 text-sm py-8">The frontier is empty: no chunk next to your land is left to unlock.</p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {chunkChoices.map((c) => (

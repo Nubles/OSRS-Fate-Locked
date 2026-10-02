@@ -229,6 +229,22 @@ describe('economy ↔ engine consistency', () => {
     }
   });
 
+  it('says a won Gambit pays for each whole minimum staked, and the rest is lost', () => {
+    expect(getRitual('GAMBIT').effect).toContain('Win: 1 Key per 15 staked, rounded down, and the rest is lost.');
+    // Staking 29 wins 1 Key; the other 14 Fate is gone, as Fate goes to 0 either way.
+    expect(gambitKeys(29, 1)).toBe(1);
+  });
+
+  it('describes the Keys and rituals plainly', () => {
+    const text = [
+      ...KEY_TYPES.flatMap(k => [k.tagline, k.spend, ...k.earn]),
+      ...RITUALS.flatMap(r => [r.tagline, r.effect]),
+    ].join(' ');
+    expect(text).not.toMatch(/bread-and-butter|Bend Fate|entropy|Double or|reclaims|Chart your own|Equivalent exchange|advantage|forge|Void keeps/i);
+    // No shouting either.
+    expect(text).not.toMatch(/RANDOM|ANY table|EXACTLY|ALL your/);
+  });
+
   it("names the Gambit's price per Key as the mode sets it", () => {
     expect(ritualEffect('GAMBIT', 0.6)).toContain('1 Key per 9 staked');
     expect(ritualEffect('GAMBIT', 1.5)).toContain('1 Key per 23 staked');

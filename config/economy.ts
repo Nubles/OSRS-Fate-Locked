@@ -319,7 +319,7 @@ export const KEY_TYPES: KeyTypeInfo[] = [
     name: 'Standard Key',
     icon: `${WIKI}Crystal_key.png`,
     accent: 'text-osrs-gold',
-    tagline: 'Your bread-and-butter currency.',
+    tagline: 'The everyday Key.',
     earn: [
       'Any successful roll, wherever you log it (+1, or +2 with the Ritual of Greed).',
       'A Pity Key when Fate Points hit your mode’s threshold.',
@@ -327,14 +327,14 @@ export const KEY_TYPES: KeyTypeInfo[] = [
       `Chunked: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels while you hold only your start chunk.`,
       `The ${STARTING_KEYS} every run starts with.`,
     ],
-    spend: 'Cash in on a table you choose to unlock one RANDOM entry from it.',
+    spend: 'Spend it on a table you choose to unlock a random entry from it.',
   },
   {
     id: 'omni',
     name: 'Omni-Key',
     icon: `${WIKI}Enhanced_crystal_key.png`,
     accent: 'text-purple-400',
-    tagline: 'Bend Fate to your will.',
+    tagline: 'Pick what you unlock.',
     earn: [
       'A bonus on a successful roll, on top of the Key: your mode’s base chance, raised to 25% on pet drops, 20% on Grandmaster quests, 15% on raids and 10% on Elite diaries and high-tier bosses.',
       'The Ritual of Transmutation: 5 Keys make 1 Omni-Key.',
@@ -346,7 +346,7 @@ export const KEY_TYPES: KeyTypeInfo[] = [
     name: 'Chaos Key',
     icon: `${WIKI}Eternal_crystal.png`,
     accent: 'text-red-400',
-    tagline: 'Surrender to entropy.',
+    tagline: 'A random unlock from every table.',
     earn: [
       `Guaranteed at skill levels ${andList(SKILL_CHAOS_MILESTONES)}: ${SKILL_CHAOS_MILESTONES.length} per skill.`,
       `A separate ${LEVEL_CHAOS_CHANCE}% chance on every level-up, milestones included.`,
@@ -417,19 +417,19 @@ export interface Ritual {
  */
 const GAMBIT_STAKE = 15;
 const gambitText = (perKey: number): string =>
-  `Stake ALL your Fate on a coin flip. Win: 1 Key per ${perKey} staked. Lose: the Void keeps everything.`;
+  `Stake all your Fate on a coin flip. Win: 1 Key per ${perKey} staked, rounded down, and the rest is lost. Lose: all of it is lost.`;
 /** Greed's consolation: this fraction of the (scaled) cost refunds on a failed roll. */
 export const GREED_REFUND_FRACTION = 0.5;
 
 export const RITUALS: Ritual[] = [
-  { id: 'LUCK',         name: 'Ritual of Clarity',       tagline: 'Roll with advantage.',   fateCost: 8,  effect: 'Your next roll is made twice — the better result is kept.' },
-  { id: 'GREED',        name: 'Ritual of Greed',         tagline: 'Double or… something.',  fateCost: 15, effect: 'If your next roll succeeds you get 2 Keys. If it fails, half the Fate is refunded.' },
-  { id: 'CHAOS',        name: 'Ritual of Chaos',         tagline: 'Embrace entropy.',       fateCost: 25, effect: 'Immediately forge 1 Chaos Key (a random unlock from ANY table).' },
-  { id: 'GAMBIT',       name: 'Void Gambit',             tagline: 'Before Fate reclaims it.', fateCost: GAMBIT_STAKE, stakesAllFate: true,
+  { id: 'LUCK',         name: 'Ritual of Clarity',       tagline: 'Roll twice, keep the better.', fateCost: 8,  effect: 'Your next Key roll is made twice and the better result is kept.' },
+  { id: 'GREED',        name: 'Ritual of Greed',         tagline: 'Try to double your next Key.', fateCost: 15, effect: 'If your next roll succeeds you get 2 Keys. If it fails, half the Fate is refunded.' },
+  { id: 'CHAOS',        name: 'Ritual of Chaos',         tagline: 'Buy a Chaos Key.',       fateCost: 25, effect: 'Get 1 Chaos Key now: a random unlock from every table at once.' },
+  { id: 'GAMBIT',       name: 'Void Gambit',             tagline: 'A coin flip for Keys.', fateCost: GAMBIT_STAKE, stakesAllFate: true,
     effect: gambitText(GAMBIT_STAKE) },
-  { id: 'CARTOGRAPHER', name: 'Ritual of the Cartographer', tagline: 'Chart your own course.', fateCost: 40, chunkedOnly: true,
-    effect: 'Reveal 3 random frontier chunks — and CHOOSE which one unlocks. The only say you get in where Fate takes you.' },
-  { id: 'TRANSMUTE',    name: 'Ritual of Transmutation', tagline: 'Equivalent exchange.',   keyCost: 5,   effect: 'Fuse 5 standard Keys into 1 Omni-Key.' },
+  { id: 'CARTOGRAPHER', name: 'Ritual of the Cartographer', tagline: 'Choose your next chunk.', fateCost: 40, chunkedOnly: true,
+    effect: 'See up to 3 random frontier chunks and choose which one unlocks. The only way to choose land in Chunked.' },
+  { id: 'TRANSMUTE',    name: 'Ritual of Transmutation', tagline: 'Trade Keys for an Omni-Key.', keyCost: 5, effect: 'Trade 5 Keys for 1 Omni-Key.' },
 ];
 
 export const getRitual = (id: Ritual['id']): Ritual => RITUALS.find(r => r.id === id)!;
