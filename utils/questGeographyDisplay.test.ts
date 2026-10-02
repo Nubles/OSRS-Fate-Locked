@@ -34,6 +34,8 @@ describe('selectQuestGeography', () => {
     expect(result.locations.map(location => location.label)).toEqual([
       'Draynor Village',
       'South Falador Farm',
+      'Sourhog Cave by the River Lum',
+      'Spria in north Draynor',
     ]);
     expect(result.knownSteps).toEqual([]);
   });
@@ -83,7 +85,7 @@ describe('selectQuestGeography', () => {
     ]);
 
     expect(result.regions).toEqual(['Misthalin', 'Asgarnia']);
-    expect(result.locations).toHaveLength(2);
+    expect(result.locations).toHaveLength(4);
     expect(result.knownSteps).toEqual([]);
   });
 });

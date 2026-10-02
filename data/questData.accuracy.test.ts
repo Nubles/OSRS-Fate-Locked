@@ -37,7 +37,7 @@ describe('audited current quest requirements', () => {
     const q = QUEST_DATA['A Porcine of Interest'];
     expect(q.regions).not.toContain('Port Sarim');
     expect(q.locations?.map(x => x.id)).toEqual([
-      'draynor-village', 'south-falador-farm',
+      'draynor-village', 'south-falador-farm', 'sourhog-cave', 'spria',
     ]);
     expect(q.locations?.[1].chunkOptions).toEqual([{ cx: 47, cy: 51 }]);
   });
@@ -54,7 +54,7 @@ describe('audited current quest requirements', () => {
       prereqs: ['Children of the Sun', 'Shield of Arrav'],
     });
     expect(QUEST_DATA['Ethically Acquired Antiquities'].locations?.map(x => x.id)).toEqual([
-      'grand-museum', 'fortis-cothon', 'port-sarim-jail', 'port-sarim-betty', 'varrock-museum',
+      'grand-museum', 'fortis-cothon', 'port-sarim-jail', 'port-sarim-betty', 'varrock-museum', 'diadem-crate',
     ]);
     expect(QUEST_DATA['The Curse of Arrav']).toMatchObject({
       skills: { Agility: 61, Ranged: 62, Strength: 58, Thieving: 62, Mining: 64, Slayer: 37 },
@@ -209,6 +209,32 @@ describe('audited current quest requirements', () => {
                             "chunkOptions": [
                                   {
                                         "cx": 47,
+                                        "cy": 51
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "sourhog-cave",
+                            "label": "Sourhog Cave by the River Lum",
+                            "standardAreas": [
+                                  "Varrock"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 49,
+                                        "cy": 52
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "spria",
+                            "label": "Spria in north Draynor",
+                            "standardAreas": [
+                                  "Draynor Village"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 48,
                                         "cy": 51
                                   }
                             ]
@@ -406,6 +432,19 @@ describe('audited current quest requirements', () => {
                             ]
                       },
                       {
+                            "id": "barbarian-village",
+                            "label": "Checkal in Barbarian Village",
+                            "standardAreas": [
+                                  "Barbarian Village"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 48,
+                                        "cy": 53
+                                  }
+                            ]
+                      },
+                      {
                             "id": "varrock-south-gate",
                             "label": "Varrock south gate",
                             "standardAreas": [
@@ -537,7 +576,9 @@ describe('audited current quest requirements', () => {
                       "Varrock",
                       "Fossil Island",
                       "Port Sarim",
-                      "Woodcutting Guild"
+                      "Woodcutting Guild",
+                      "Digsite",
+                      "Silvarea"
                 ],
                 "locations": null,
                 "skills": {},
@@ -931,7 +972,8 @@ describe('audited current quest requirements', () => {
                 "accessPolicy": "regions",
                 "regions": [
                       "Varrock",
-                      "Goblin Village"
+                      "Goblin Village",
+                      "Silvarea"
                 ],
                 "locations": null,
                 "skills": {
@@ -1034,7 +1076,9 @@ describe('audited current quest requirements', () => {
                       "Baxtorian Falls",
                       "Canifis",
                       "Mort Myre Swamp",
-                      "Mountain Camp"
+                      "Mountain Camp",
+                      "Digsite",
+                      "Draynor Village"
                 ],
                 "locations": null,
                 "skills": {
@@ -1067,7 +1111,8 @@ describe('audited current quest requirements', () => {
                       "The Stranglewood",
                       "Digsite",
                       "Lovakengj",
-                      "Hosidius"
+                      "Hosidius",
+                      "Wizards' Tower"
                 ],
                 "locations": null,
                 "skills": {
@@ -1404,7 +1449,7 @@ describe('audited current quest requirements', () => {
                 "accessPolicy": "regions",
                 "regions": [
                       "Seers' Village",
-                      "Varrock"
+                      "Digsite"
                 ],
                 "locations": null,
                 "skills": {
@@ -1431,7 +1476,7 @@ describe('audited current quest requirements', () => {
                             "id": "desert-quarry-and-temple",
                             "label": "Desert Quarry and Enakhra's Temple",
                             "standardAreas": [
-                                  "Kharidian Desert"
+                                  "Agility Pyramid"
                             ],
                             "chunkOptions": [
                                   {
@@ -1605,6 +1650,23 @@ describe('audited current quest requirements', () => {
                                   {
                                         "cx": 50,
                                         "cy": 53
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "diadem-crate",
+                            "label": "Diadem crate in east Varrock",
+                            "standardAreas": [
+                                  "Varrock"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 51,
+                                        "cy": 53
+                                  },
+                                  {
+                                        "cx": 51,
+                                        "cy": 54
                                   }
                             ]
                       }
@@ -3079,7 +3141,8 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-          "Burgh de Rott"
+      "Burgh de Rott",
+      "Paterdomus"
     ],
     "locations": null,
     "skills": {
@@ -3168,10 +3231,10 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-          "Hemenster",
-          "Lumbridge",
-          "Crafting Guild",
-          "Goblin Village"
+      "Hemenster",
+      "Lumbridge",
+      "Crafting Guild",
+      "Draynor Village"
     ],
     "locations": null,
     "skills": {
@@ -4024,7 +4087,7 @@ describe('audited current quest requirements', () => {
             ],
             "chunkOptions": [
               {
-                "cx": 39,
+                "cx": 40,
                 "cy": 52
               }
             ]
@@ -4332,7 +4395,8 @@ describe('audited current quest requirements', () => {
           "Draynor Village",
           "Lumbridge",
           "Varrock",
-          "Dwarven Mine"
+          "Dwarven Mine",
+          "Barbarian Village"
         ],
         "locations": null,
         "skills": {
@@ -4695,7 +4759,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Draynor Village"
+          "Draynor Village",
+          "Silvarea"
         ],
         "locations": null,
         "skills": {},
@@ -5102,7 +5167,7 @@ describe('audited current quest requirements', () => {
           },
           {
             "id": "tal-teok",
-            "label": "Tal Teok and Tal Teklan",
+            "label": "Tal Teok",
             "standardAreas": [
               "Tlati Rainforest"
             ],
@@ -5110,6 +5175,19 @@ describe('audited current quest requirements', () => {
               {
                 "cx": 19,
                 "cy": 49
+              }
+            ]
+          },
+          {
+            "id": "tal-teklan",
+            "label": "Tal Teklan",
+            "standardAreas": [
+              "Tlati Rainforest"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 19,
+                "cy": 48
               }
             ]
           },
@@ -5123,6 +5201,19 @@ describe('audited current quest requirements', () => {
               {
                 "cx": 20,
                 "cy": 48
+              }
+            ]
+          },
+          {
+            "id": "dragon-nest",
+            "label": "Dragon nest by the river crossing",
+            "standardAreas": [
+              "Tlati Rainforest"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 20,
+                "cy": 49
               }
             ]
           }
@@ -5407,7 +5498,8 @@ describe('audited current quest requirements', () => {
         "accessPolicy": "regions",
         "regions": [
           "Hemenster",
-          "East Ardougne"
+          "East Ardougne",
+          "Edgeville"
         ],
         "locations": null,
         "skills": {
@@ -5484,9 +5576,10 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Varrock",
-              "Ruins of Uzer",
-              "Mountain Camp"
+          "Varrock",
+          "Ruins of Uzer",
+          "Mountain Camp",
+          "Silvarea"
         ],
         "locations": null,
         "skills": {
@@ -5551,9 +5644,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Tree Gnome Stronghold",
-              "Observatory",
-              "Feldip Hills"
+          "Tree Gnome Stronghold",
+          "Yanille"
         ],
         "locations": null,
         "skills": {
@@ -5736,8 +5828,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Ruins of Uzer",
-              "Varrock"
+          "Ruins of Uzer",
+          "Varrock",
+          "Digsite"
         ],
         "locations": null,
         "skills": {
@@ -5755,9 +5848,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Tree Gnome Stronghold",
-              "Feldip Hills",
-              "Ship Yard"
+          "Tree Gnome Stronghold",
+          "Yanille",
+          "Ship Yard"
         ],
         "locations": null,
         "skills": {
@@ -5906,8 +5999,8 @@ describe('audited current quest requirements', () => {
         "accessPolicy": "regions",
         "regions": [
           "Gnome Village",
-          "Feldip Hills",
-          "Castle Wars"
+          "Castle Wars",
+          "Yanille"
         ],
         "locations": null,
         "skills": {
@@ -5973,7 +6066,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Lumbridge"
+          "Lumbridge",
+          "Wizards' Tower"
         ],
         "locations": null,
         "skills": {},

@@ -19,7 +19,7 @@ afterEach(() => {
 });
 
 describe('QuestCard geography integration', () => {
-  it('renders Porcine exact chunks once and counts only its two geography gates', () => {
+  it('renders Porcine exact chunks once and counts only its four geography gates', () => {
     const eligibility: QuestEligibility = {
       eligible: false,
       machineEligible: false,
@@ -50,7 +50,7 @@ describe('QuestCard geography integration', () => {
     expect(html.match(/South Falador Farm/g)).toHaveLength(1);
     expect(html).not.toContain('Misthalin');
     expect(html).not.toContain('Asgarnia');
-    expect(html).toContain('0/2 reqs');
+    expect(html).toContain('0/4 reqs');
   });
 
   it('renders distinct same-label Known-step coordinates once each', () => {

@@ -162,7 +162,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Restless Ghost': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Restless Ghost', name: 'The Restless Ghost',
-    regions: ['Lumbridge'],
+    regions: ['Lumbridge', 'Wizards\' Tower'],
     skills: {}, prereqs: [], points: 1,
     equipmentRequirements: [{ slot: 'Neck', tier: 1, reason: 'Wear the ghostspeak amulet to speak to the ghost' }],
     difficulty: DropSource.QUEST_NOVICE
@@ -337,6 +337,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "falador-north-gate", label: "Falador north gate", standardAreas: ["Falador"], chunkOptions: [{ cx: 46, cy: 53 }] },
       { id: "goblin-village", label: "Goblin Village", standardAreas: ["Goblin Village"], chunkOptions: [{ cx: 46, cy: 54 }] },
       { id: "edgeville", label: "Edgeville", standardAreas: ["Edgeville"], chunkOptions: [{ cx: 48, cy: 54 }] },
+      { id: "barbarian-village", label: "Checkal in Barbarian Village", standardAreas: ["Barbarian Village"], chunkOptions: [{ cx: 48, cy: 53 }] },
       { id: "varrock-south-gate", label: "Varrock south gate", standardAreas: ["Varrock"], chunkOptions: [{ cx: 50, cy: 52 }] },
       { id: "varrock-square", label: "Varrock square", standardAreas: ["Varrock"], chunkOptions: [{ cx: 50, cy: 53 }] },
     ],
@@ -451,7 +452,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Temple of Ikov': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Temple of Ikov', name: 'Temple of Ikov',
-    regions: ['Hemenster', 'East Ardougne'],
+    regions: ['Hemenster', 'East Ardougne', 'Edgeville'],
     skills: { 'Thieving': 42 }, prereqs: [], points: 1, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -503,7 +504,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     equipmentRequirements: [{ slot: 'Head', tier: 1, reason: 'Wear the gas mask when entering West Ardougne from the sewer' }],
     regions: ['Kandarin'],
     locations: [
-      { id: 'east-ardougne-edmond', label: "Edmond's house in East Ardougne", standardAreas: ['East Ardougne'], chunkOptions: [{ cx: 39, cy: 52 }] },
+      { id: 'east-ardougne-edmond', label: "Edmond's house in East Ardougne", standardAreas: ['East Ardougne'], chunkOptions: [{ cx: 40, cy: 52 }] },
       { id: 'west-ardougne', label: 'West Ardougne', standardAreas: ['West Ardougne'], chunkOptions: [{ cx: 39, cy: 51 }] },
     ],
     skills: {}, prereqs: [], points: 1, series: 'Elf',
@@ -549,7 +550,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Grand Tree': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Grand Tree', name: 'The Grand Tree',
-    regions: ['Tree Gnome Stronghold', 'Feldip Hills', 'Ship Yard'],
+    regions: ['Tree Gnome Stronghold', 'Yanille', 'Ship Yard'],
     skills: { 'Agility': 25 }, prereqs: [], points: 5, series: 'Gnome',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -823,7 +824,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'One Small Favour': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'One Small Favour', name: 'One Small Favour',
-    regions: ['Feldip Hills', 'Port Khazard', 'East Ardougne', 'Seers\' Village', 'Catherby', 'Kharazi Jungle', 'Shilo Village', 'Taverley', 'Port Sarim', 'Falador', 'Draynor Village', 'Lumbridge', 'Varrock', 'Dwarven Mine'],
+    regions: ['Feldip Hills', 'Port Khazard', 'East Ardougne', 'Seers\' Village', 'Catherby', 'Kharazi Jungle', 'Shilo Village', 'Taverley', 'Port Sarim', 'Falador', 'Draynor Village', 'Lumbridge', 'Varrock', 'Dwarven Mine', 'Barbarian Village'],
     skills: { 'Agility': 36, 'Crafting': 25, 'Herblore': 18, 'Smithing': 30 }, prereqs: ['Rune Mysteries', 'Shilo Village'], points: 2,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -853,7 +854,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Golem': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Golem', name: 'The Golem',
-    regions: ['Ruins of Uzer', 'Varrock'],
+    regions: ['Ruins of Uzer', 'Varrock', 'Digsite'],
     skills: { 'Crafting': 20, 'Thieving': 25 }, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -861,7 +862,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Desert Treasure I', name: 'Desert Treasure I',
     skillAlternatives: [{ skill: 'Slayer', quests: ['Plague City'], manualRequirements: ['Have a gas mask from Plague City for the smoke dungeon (alternative to Slayer 10)'] }],
-    regions: ['Bandit Camp', 'Bedabin Camp', 'Pollnivneach', 'Entrana', 'Burthorpe', 'Baxtorian Falls', 'Canifis', 'Mort Myre Swamp', 'Mountain Camp'],
+    regions: ['Bandit Camp', 'Bedabin Camp', 'Pollnivneach', 'Entrana', 'Burthorpe', 'Baxtorian Falls', 'Canifis', 'Mort Myre Swamp', 'Mountain Camp', 'Digsite', 'Draynor Village'],
     skills: { 'Thieving': 53, 'Firemaking': 50, 'Slayer': 10, 'Magic': 50 }, prereqs: ['The Dig Site', 'Temple of Ikov', 'The Tourist Trap', 'Troll Stronghold', 'Priest in Peril', 'Waterfall Quest'], points: 3, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_MASTER
   },
@@ -1012,7 +1013,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Enakhra\'s Lament', name: 'Enakhra\'s Lament',
     regions: ["Kharidian Desert"],
     locations: [
-      { id: "desert-quarry-and-temple", label: "Desert Quarry and Enakhra's Temple", standardAreas: ["Kharidian Desert"], chunkOptions: [{ cx: 49, cy: 45 }] },
+      { id: "desert-quarry-and-temple", label: "Desert Quarry and Enakhra's Temple", standardAreas: ["Agility Pyramid"], chunkOptions: [{ cx: 49, cy: 45 }] },
     ],
     skills: { 'Crafting': 50, 'Firemaking': 45, 'Magic': 39, 'Prayer': 43 }, prereqs: [],
     manualRequirements: ["Must be on the standard spellbook"], points: 2, series: 'Mahjarrat',
@@ -1106,7 +1107,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'In Aid of the Myreque': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'In Aid of the Myreque', name: 'In Aid of the Myreque',
-    regions: ['Burgh de Rott'],
+    regions: ['Burgh de Rott', 'Paterdomus'],
     skills: { 'Agility': 25, 'Crafting': 25, 'Magic': 7, 'Mining': 15 },
     prereqs: ['In Search of the Myreque'],
     points: 2,
@@ -1126,7 +1127,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Rag and Bone Man I': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Rag and Bone Man I', name: 'Rag and Bone Man I',
-    regions: ['Draynor Village'],
+    regions: ['Draynor Village', 'Silvarea'],
     // A monkey paw: Musa Point, by fairy ring CKR in south Karamja (Shilo
     // Village's chunk), or the Ardougne Zoo with Telekinetic Grab. A giant bat
     // wing: the Karamja Volcano, Keep Le Faye, the coal trucks, the Yanille
@@ -1205,7 +1206,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Eyes of Glouphrie': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Eyes of Glouphrie', name: 'The Eyes of Glouphrie',
-    regions: ['Tree Gnome Stronghold', 'Observatory', 'Feldip Hills'],
+    regions: ['Tree Gnome Stronghold', 'Yanille'],
     skills: { 'Construction': 5, 'Magic': 46 }, prereqs: ['The Grand Tree'], points: 2, series: 'Gnome',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1227,7 +1228,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Elemental Workshop II': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Elemental Workshop II', name: 'Elemental Workshop II',
-    regions: ['Seers\' Village', 'Varrock'],
+    regions: ['Seers\' Village', 'Digsite'],
     skills: { 'Magic': 20, 'Smithing': 30 }, prereqs: ['Elemental Workshop I'], points: 1, series: 'Elemental Workshop',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1388,7 +1389,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Bone Voyage': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Bone Voyage', name: 'Bone Voyage',
-    regions: ['Varrock', 'Fossil Island', 'Port Sarim', 'Woodcutting Guild'],
+    regions: ['Varrock', 'Fossil Island', 'Port Sarim', 'Woodcutting Guild', 'Digsite', 'Silvarea'],
     skills: {}, prereqs: ['The Dig Site'],
     manualRequirements: ["100 Kudos"], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
@@ -1480,6 +1481,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     locations: [
       { id: "draynor-village", label: "Draynor Village", standardAreas: ["Draynor Village"], chunkOptions: [{ cx: 48, cy: 50 }] },
       { id: "south-falador-farm", label: "South Falador Farm", standardAreas: ["Falador"], chunkOptions: [{ cx: 47, cy: 51 }] },
+      { id: "sourhog-cave", label: "Sourhog Cave by the River Lum", standardAreas: ["Varrock"], chunkOptions: [{ cx: 49, cy: 52 }] },
+      { id: "spria", label: "Spria in north Draynor", standardAreas: ["Draynor Village"], chunkOptions: [{ cx: 48, cy: 51 }] },
     ],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
@@ -1517,7 +1520,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Land of the Goblins': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Land of the Goblins', name: 'Land of the Goblins',
-    regions: ['Hemenster', 'Lumbridge', 'Crafting Guild', 'Goblin Village'],
+    regions: ['Hemenster', 'Lumbridge', 'Crafting Guild', 'Draynor Village'],
     skills: { 'Agility': 38, 'Thieving': 45, 'Fishing': 40, 'Herblore': 48 }, prereqs: ['Another Slice of H.A.M.', 'Fishing Contest'], points: 2, series: 'Dorgeshuun',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1563,14 +1566,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Desert Treasure II': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Desert Treasure II', name: 'Desert Treasure II - The Fallen Empire',
-    regions: ['Nardah', 'Goblin Village', 'Weiss', 'The Stranglewood', 'Digsite', 'Lovakengj', 'Hosidius'],
+    regions: ['Nardah', 'Goblin Village', 'Weiss', 'The Stranglewood', 'Digsite', 'Lovakengj', 'Hosidius', 'Wizards\' Tower'],
     skills: { 'Magic': 75, 'Firemaking': 75, 'Thieving': 70, 'Herblore': 62, 'Runecraft': 60, 'Construction': 60 }, prereqs: ['Desert Treasure I', 'Secrets of the North', 'Enakhra\'s Lament', 'Temple of the Eye', 'The Garden of Death', 'Below Ice Mountain', 'His Faithful Servants'], points: 5, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_GRANDMASTER
   },
   'The Path of Glouphrie': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Path of Glouphrie', name: 'The Path of Glouphrie',
-    regions: ['Gnome Village', 'Feldip Hills', 'Castle Wars'],
+    regions: ['Gnome Village', 'Castle Wars', 'Yanille'],
     skills: { 'Strength': 60, 'Slayer': 56, 'Thieving': 56, 'Ranged': 47, 'Agility': 45 }, prereqs: ['The Eyes of Glouphrie', 'Waterfall Quest', 'Tree Gnome Village'], points: 2, series: 'Gnome',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1588,7 +1591,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Defender of Varrock': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Defender of Varrock', name: 'Defender of Varrock',
-    regions: ['Varrock', 'Goblin Village'],
+    regions: ['Varrock', 'Goblin Village', 'Silvarea'],
     skills: { 'Smithing': 55, 'Hunter': 52 }, prereqs: ['Shield of Arrav', 'Romeo & Juliet', 'Demon Slayer', 'Temple of Ikov', 'Below Ice Mountain', 'Family Crest', 'Garden of Tranquillity', 'What Lies Below'], points: 2, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1674,6 +1677,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "port-sarim-jail", label: "Port Sarim jail", standardAreas: ["Port Sarim"], chunkOptions: [{ cx: 47, cy: 49 }] },
       { id: "port-sarim-betty", label: "Betty's shop in Port Sarim", standardAreas: ["Port Sarim"], chunkOptions: [{ cx: 47, cy: 50 }] },
       { id: "varrock-museum", label: "Varrock Museum", standardAreas: ["Varrock"], chunkOptions: [{ cx: 50, cy: 53 }] },
+      { id: "diadem-crate", label: "Diadem crate in east Varrock", standardAreas: ["Varrock"], chunkOptions: [{ cx: 51, cy: 53 }, { cx: 51, cy: 54 }] },
     ],
     skills: { 'Thieving': 25 }, prereqs: ['Children of the Sun', 'Shield of Arrav'], points: 1,
     difficulty: DropSource.QUEST_NOVICE
@@ -1681,7 +1685,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Curse of Arrav': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Curse of Arrav', name: 'The Curse of Arrav',
-    regions: ['Varrock', 'Ruins of Uzer', 'Mountain Camp'],
+    regions: ['Varrock', 'Ruins of Uzer', 'Mountain Camp', 'Silvarea'],
     skills: { 'Agility': 61, 'Ranged': 62, 'Strength': 58, 'Thieving': 62, 'Mining': 64, 'Slayer': 37 }, prereqs: ['Defender of Varrock', 'Troll Romance'], points: 2, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_MASTER
   },
@@ -1705,8 +1709,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Varlamore'],
     locations: [
       { id: 'tal-teklan-dock', label: 'Tal Teklan dock', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 18, cy: 48 }] },
-      { id: 'tal-teok', label: 'Tal Teok and Tal Teklan', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 19, cy: 49 }] },
+      { id: 'tal-teok', label: 'Tal Teok', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 19, cy: 49 }] },
+      { id: 'tal-teklan', label: 'Tal Teklan', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 19, cy: 48 }] },
       { id: 'tlati-rainforest', label: 'Central Tlati Rainforest', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 20, cy: 48 }] },
+      { id: 'dragon-nest', label: 'Dragon nest by the river crossing', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 20, cy: 49 }] },
     ],
     skills: { 'Construction': 38, 'Cooking': 36, 'Smithing': 35 }, prereqs: ['Children of the Sun'], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE

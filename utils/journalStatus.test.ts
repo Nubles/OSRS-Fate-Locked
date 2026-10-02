@@ -369,8 +369,8 @@ describe('reported quest access', () => {
 
   it('requires the exact South Falador Farm chunk in Chunked mode', () => {
     const q = QUEST_DATA['A Porcine of Interest'];
-    const near = unlocked({ chunks: ['46,51', '48,50'] });
-    const exact = unlocked({ chunks: ['47,51', '48,50'] });
+    const near = unlocked({ chunks: ['46,51', '48,50', '49,52', '48,51'] });
+    const exact = unlocked({ chunks: ['47,51', '48,50', '49,52', '48,51'] });
     expect(evaluateQuestEligibility(q, near, 'chunked').status).toBe('LOCKED_REGION');
     expect(evaluateQuestEligibility(q, exact, 'chunked').status).toBe('AVAILABLE');
   });

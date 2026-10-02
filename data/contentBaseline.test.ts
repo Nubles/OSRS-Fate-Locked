@@ -160,16 +160,16 @@ describe('cross-surface quest eligibility contract', () => {
       label: 'A Porcine of Interest before South Falador Farm',
       id: 'A Porcine of Interest',
       gameModeId: 'chunked',
-      unlocks: porcineOnlyUnlocks(['48,50']),
+      unlocks: porcineOnlyUnlocks(['48,50', '49,52', '48,51']),
       expectedStatus: 'LOCKED_REGION',
       expectedReadiness: 'BLOCKED',
       firstBlocker: 'South Falador Farm',
     },
     {
-      label: 'A Porcine of Interest after both audited locations',
+      label: 'A Porcine of Interest after its audited locations',
       id: 'A Porcine of Interest',
       gameModeId: 'chunked',
-      unlocks: porcineOnlyUnlocks(['48,50', '47,51']),
+      unlocks: porcineOnlyUnlocks(['48,50', '47,51', '49,52', '48,51']),
       expectedStatus: 'AVAILABLE',
       expectedReadiness: 'READY',
       firstBlocker: undefined,
@@ -246,8 +246,8 @@ describe('cross-surface quest eligibility contract', () => {
   });
 
   it.each([
-    porcineOnlyUnlocks(['48,50']),
-    porcineOnlyUnlocks(['48,50', '47,51']),
+    porcineOnlyUnlocks(['48,50', '49,52', '48,51']),
+    porcineOnlyUnlocks(['48,50', '47,51', '49,52', '48,51']),
   ])('keeps the actual Next Best selector focused on the only incomplete quest', unlocks => {
     const quest = QUEST_DATA['A Porcine of Interest'];
     const selected = selectJournalNextBestActions(unlocks, 'chunked');
@@ -414,7 +414,7 @@ describe('deterministic current content baseline', () => {
   it('pins audited quest requirement fields with exact equality', () => {
     expect(questRequirementFields('A Porcine of Interest')).toEqual({
       regions: ['Misthalin', 'Asgarnia'],
-      locations: ['draynor-village', 'south-falador-farm'],
+      locations: ['draynor-village', 'south-falador-farm', 'sourhog-cave', 'spria'],
       skills: {},
       combatLevel: undefined,
       prereqs: [],
@@ -428,13 +428,13 @@ describe('deterministic current content baseline', () => {
     });
     expect(questRequirementFields('Ethically Acquired Antiquities')).toEqual({
       regions: ['Varlamore', 'Asgarnia', 'Misthalin'],
-      locations: ['grand-museum', 'fortis-cothon', 'port-sarim-jail', 'port-sarim-betty', 'varrock-museum'],
+      locations: ['grand-museum', 'fortis-cothon', 'port-sarim-jail', 'port-sarim-betty', 'varrock-museum', 'diadem-crate'],
       skills: { Thieving: 25 }, combatLevel: undefined,
       prereqs: ['Children of the Sun', 'Shield of Arrav'], oneOf: undefined,
       manualRequirements: undefined,
     });
     expect(questRequirementFields('The Curse of Arrav')).toEqual({
-      regions: ['Varrock', 'Ruins of Uzer', 'Mountain Camp'], locations: undefined,
+      regions: ['Varrock', 'Ruins of Uzer', 'Mountain Camp', 'Silvarea'], locations: undefined,
       skills: {
         Agility: 61, Ranged: 62, Strength: 58, Thieving: 62, Mining: 64,
         Slayer: 37,
@@ -455,7 +455,7 @@ describe('deterministic current content baseline', () => {
       oneOf: undefined, manualRequirements: undefined,
     });
     expect(questRequirementFields('Scrambled!')).toEqual({
-      regions: ['Varlamore'], locations: ['tal-teklan-dock', 'tal-teok', 'tlati-rainforest'],
+      regions: ['Varlamore'], locations: ['tal-teklan-dock', 'tal-teok', 'tal-teklan', 'tlati-rainforest', 'dragon-nest'],
       skills: { Construction: 38, Cooking: 36, Smithing: 35 },
       combatLevel: undefined, prereqs: ['Children of the Sun'],
       oneOf: undefined, manualRequirements: undefined,
