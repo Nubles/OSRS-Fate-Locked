@@ -166,6 +166,13 @@ describe('economy ↔ engine consistency', () => {
     for (const t of SPEND_TABLES) expect(t.count, t.label).toBeGreaterThan(0);
   });
 
+  it('calls an Areas unlock an area, as Spend Keys does', () => {
+    const areas = SPEND_TABLES.find(t => t.type === TableType.REGIONS)!;
+    expect(areas.label).toBe('Areas');
+    expect(areas.blurb).toContain('area');
+    expect(areas.blurb).not.toMatch(/region/i);
+  });
+
   it('names only Minigames entries in the Minigames blurb', () => {
     const minigames = SPEND_TABLES.find(t => t.type === TableType.MINIGAMES)!;
     for (const name of ['Pest Control', 'Guardians of the Rift']) {

@@ -370,7 +370,7 @@ export interface SpendTable {
 export const SPEND_TABLES: SpendTable[] = [
   { type: TableType.EQUIPMENT,       label: 'Equipment',  count: EQUIPMENT_SLOTS.length, tiers: EQUIPMENT_TIER_MAX, blurb: 'Open a gear slot, then upgrade its tier toward endgame.' },
   { type: TableType.SKILLS,          label: 'Skills',     count: SKILLS_LIST.length,     tiers: SKILLS_TIER_CAP,    blurb: 'Raise a skill’s tier cap by +10 levels of usable methods.' },
-  { type: TableType.REGIONS,         label: 'Areas',      count: REGIONS_LIST.length,    blurb: 'Open new map regions you’re allowed to enter.' },
+  { type: TableType.REGIONS,         label: 'Areas',      count: REGIONS_LIST.length,    blurb: 'Unlock a new area you can go to.' },
   { type: TableType.MOBILITY,        label: 'Mobility',   count: MOBILITY_LIST.length,   blurb: 'Teleports, spirit trees, fairy rings and transport networks.' },
   { type: TableType.ARCANA,          label: COMBAT_POWERS_LABEL, count: ARCANA_LIST.length, blurb: COMBAT_POWERS_DESCRIPTION },
   { type: TableType.STORAGE,         label: 'Storage',    count: STORAGE_LIST.length,    blurb: 'Looting bag, rune pouch, seed box and other storage. Banks are their own table.' },
