@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import chunkContent from '../public/chunk-content.json';
+import diarySource from './sources/achievement-diary-tasks.json';
 import { namedAreaChunks } from '../utils/reachability';
 import { ALL_DIARY_TASKS, type DiaryTask, type DiaryTaskRequirementOption } from './diaryTasks';
 import { ACTIVITY_ACCESS_AREAS } from './activityAccess';
@@ -239,5 +240,60 @@ describe('Diary tasks behind a quest gate on the map', () => {
       .toEqual([]);
     expect(missingGates({ id: 'probe', tierId: 'Morytania Hard', description: 'Visit Mos Le’Harmless.', anyOfRegions: ["Mos Le'Harmless", 'Harmony Island'] }))
       .toEqual(expect.arrayContaining(['Cabin Fever', 'Priest in Peril']));
+  });
+});
+
+/** The source rows, for what the wiki says each task needs (`sourceRequirements`). */
+const SOURCE_REQUIREMENTS = new Map((diarySource as { tasks: { id: string; sourceRequirements?: string }[] }).tasks
+  .map(row => [row.id, row.sourceRequirements ?? '']));
+const barbarianProgress = (row: DiaryTask): string[] => [row, ...(row.oneOf ?? [])]
+  .flatMap(requirement => requirement.questProgress ?? [])
+  .filter(progress => progress.quest === 'Barbarian Training')
+  .map(progress => progress.label);
+
+describe('Diary tasks that use a barbarian skill', () => {
+  // Barbarian Training (wiki rev 15359145): Tai Bwo Wannai Trio is "not required to start"; only Otto's
+  // spear and hasta smithing needs it. Each task needs its own part of the miniquest, not all of it.
+  it.each([
+    ['kan_hard_1', 'Learned heavy rod fishing in Barbarian Training'],
+    ['kan_hard_6', 'Learned to light fires with a bow in Barbarian Training'],
+    ['kan_hard_8', 'Finished bow firemaking in Barbarian Training, which opens the Ancient Cavern'],
+    ['kan_hard_11', 'Learned to smith spears in Barbarian Training'],
+    ['kan_elite_3', 'Learned barehanded fishing in Barbarian Training'],
+    ['kan_elite_4', 'Finished the Herblore part of Barbarian Training'],
+    ['kan_elite_5', 'Learned to smith hastae in Barbarian Training'],
+    ['kan_elite_6', 'Learned to build pyre ships in Barbarian Training'],
+    ['mor_elite_1', 'Learned barehanded fishing in Barbarian Training'],
+  ])('asks %s for its part of Barbarian Training: %s', (id, label) => {
+    expect(barbarianProgress(task(id))).toEqual([label]);
+  });
+
+  it('asks for Tai Bwo Wannai Trio only where Otto teaches smithing', () => {
+    expect(task('kan_hard_11').quests).toEqual(['Tai Bwo Wannai Trio']);
+    expect(task('kan_elite_5').quests).toEqual(['Tai Bwo Wannai Trio']);
+    for (const id of ['kan_hard_1', 'kan_hard_6', 'kan_hard_8', 'kan_elite_3', 'kan_elite_4', 'kan_elite_6', 'mor_elite_1']) {
+      expect(task(id).quests ?? [], id).not.toContain('Tai Bwo Wannai Trio');
+    }
+  });
+
+  it('use the bare-handed route on the Catherby sharks, and no item stands for the training', () => {
+    const bareHanded = task('kan_elite_3').oneOf?.find(option => option.label === 'Bare-handed fishing');
+    expect(bareHanded).toMatchObject({ skills: { Fishing: 96, Strength: 76 } });
+    expect(bareHanded?.items).toBeUndefined();
+    expect(task('mor_elite_1').items).toBeUndefined();
+  });
+
+  it('ask every task the wiki gives a barbarian skill for Barbarian Training progress, never the whole miniquest', () => {
+    const barbarian = ALL_DIARY_TASKS.filter(row => /Access to Barbarian|or Barbarian Fishing/.test(SOURCE_REQUIREMENTS.get(row.id) ?? ''));
+    expect(barbarian.map(row => row.id).sort()).toEqual([
+      'kan_elite_3', 'kan_elite_4', 'kan_elite_5', 'kan_elite_6', 'kan_hard_1', 'kan_hard_11', 'kan_hard_6', 'kan_hard_8', 'mor_elite_1',
+    ]);
+    for (const row of barbarian) {
+      expect(barbarianProgress(row), row.id).toHaveLength(1);
+      for (const requirement of [row, ...(row.oneOf ?? [])]) {
+        expect(requirement.quests ?? [], row.id).not.toContain('Barbarian Training');
+        expect((requirement.items ?? []).filter(item => /Barbarian/.test(item)), row.id).toEqual([]);
+      }
+    }
   });
 });

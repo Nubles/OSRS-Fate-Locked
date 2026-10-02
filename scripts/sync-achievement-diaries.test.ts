@@ -709,7 +709,7 @@ describe('Achievement Diary id-classification audit', () => {
         expect.objectContaining({
           label: 'Bare-handed fishing',
           skills: { Fishing: 96, Strength: 76 },
-          items: ['Access to Barbarian Fishing'],
+          questProgress: [{ quest: 'Barbarian Training', label: 'Learned barehanded fishing in Barbarian Training' }],
         }),
       ],
     });
@@ -743,8 +743,9 @@ describe('Achievement Diary id-classification audit', () => {
     expect(byId.get('mor_elite_1')).toMatchObject({
       skills: { Fishing: 96, Strength: 76 },
       quests: ['In Aid of the Myreque'],
-      items: ['Access to Barbarian Fishing'],
+      questProgress: [{ quest: 'Barbarian Training', label: 'Learned barehanded fishing in Barbarian Training' }],
     });
+    expect(byId.get('mor_elite_1').items).toBeUndefined();
     expect(byId.get('mor_elite_1').quests).not.toContain('Barbarian Training');
     expect(byId.get('var_med_7')).toMatchObject({
       skills: {},

@@ -4577,6 +4577,12 @@
       "sourceRequirements": "Access to Barbarian Fishing 70 Fishing, 45 Agility, and 45 Strength Barbarian rod and suitable bait ( fishing bait, feathers, fish offcuts, roe, or caviar )",
       "regions": [
         "Otto's Grotto"
+      ],
+      "questProgress": [
+        {
+          "quest": "Barbarian Training",
+          "label": "Learned heavy rod fishing in Barbarian Training"
+        }
       ]
     },
     {
@@ -4688,7 +4694,13 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Access to Barbarian Firemaking 65 Firemaking Maple logs, and any bow (except the twisted, cursed, dark, crystal, ogre, rain, starter or signed oak bow )"
+      "sourceRequirements": "Access to Barbarian Firemaking 65 Firemaking Maple logs, and any bow (except the twisted, cursed, dark, crystal, ogre, rain, starter or signed oak bow )",
+      "questProgress": [
+        {
+          "quest": "Barbarian Training",
+          "label": "Learned to light fires with a bow in Barbarian Training"
+        }
+      ]
     },
     {
       "id": "kan_hard_7",
@@ -4736,6 +4748,12 @@
       "sourceRequirements": "Access to Barbarian Firemaking Weaponry and protection from dragonfire",
       "regions": [
         "Ancient Cavern"
+      ],
+      "questProgress": [
+        {
+          "quest": "Barbarian Training",
+          "label": "Finished bow firemaking in Barbarian Training, which opens the Ancient Cavern"
+        }
       ]
     },
     {
@@ -4796,13 +4814,21 @@
       "skills": {
         "Smithing": 75
       },
-      "quests": [],
+      "quests": [
+        "Tai Bwo Wannai Trio"
+      ],
       "regions": [
         "Otto's Grotto"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Access to Barbarian Smithing 75 Smithing Yew logs, adamantite bar, and a hammer"
+      "sourceRequirements": "Access to Barbarian Smithing 75 Smithing Yew logs, adamantite bar, and a hammer",
+      "questProgress": [
+        {
+          "quest": "Barbarian Training",
+          "label": "Learned to smith spears in Barbarian Training"
+        }
+      ]
     },
     {
       "id": "kan_elite_1",
@@ -4876,8 +4902,11 @@
             "Fishing": 96,
             "Strength": 76
           },
-          "items": [
-            "Access to Barbarian Fishing"
+          "questProgress": [
+            {
+              "quest": "Barbarian Training",
+              "label": "Learned barehanded fishing in Barbarian Training"
+            }
           ]
         }
       ],
@@ -4910,7 +4939,13 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Access to Barbarian Herblore 86 Herblore and 60 Agility Stamina potion (2) and caviar"
+      "sourceRequirements": "Access to Barbarian Herblore 86 Herblore and 60 Agility Stamina potion (2) and caviar",
+      "questProgress": [
+        {
+          "quest": "Barbarian Training",
+          "label": "Finished the Herblore part of Barbarian Training"
+        }
+      ]
     },
     {
       "id": "kan_elite_5",
@@ -4922,13 +4957,21 @@
       "skills": {
         "Smithing": 90
       },
-      "quests": [],
+      "quests": [
+        "Tai Bwo Wannai Trio"
+      ],
       "regions": [
         "Otto's Grotto"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Access to Barbarian Smithing 90 Smithing Runite bar, magic logs, and a hammer"
+      "sourceRequirements": "Access to Barbarian Smithing 90 Smithing Runite bar, magic logs, and a hammer",
+      "questProgress": [
+        {
+          "quest": "Barbarian Training",
+          "label": "Learned to smith hastae in Barbarian Training"
+        }
+      ]
     },
     {
       "id": "kan_elite_6",
@@ -4947,7 +4990,13 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Access to Barbarian Firemaking 85 Firemaking and 85 Crafting Magic logs, chewed bones, tinderbox, and any woodcutting axe"
+      "sourceRequirements": "Access to Barbarian Firemaking 85 Firemaking and 85 Crafting Magic logs, chewed bones, tinderbox, and any woodcutting axe",
+      "questProgress": [
+        {
+          "quest": "Barbarian Training",
+          "label": "Learned to build pyre ships in Barbarian Training"
+        }
+      ]
     },
     {
       "id": "kan_elite_7",
@@ -8651,8 +8700,11 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of In Aid of the Myreque Access to Barbarian Fishing 96 Fishing and 76 Strength (both are boostable ) Shark lure recommended If you are boosting with the Dragon harpoon special attack, you need to bank the harpoon before catching the shark. Having it in the inventory will use it by default and it will not count as bare handed.",
-      "items": [
-        "Access to Barbarian Fishing"
+      "questProgress": [
+        {
+          "quest": "Barbarian Training",
+          "label": "Learned barehanded fishing in Barbarian Training"
+        }
       ]
     },
     {

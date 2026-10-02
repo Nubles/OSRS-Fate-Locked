@@ -936,7 +936,12 @@ describe('audited diary route eligibility', () => {
     expect(eligible.blockers).not.toContainEqual({
       kind: 'quest', label: 'Barbarian Training',
     });
-    expect(eligible.evidence.join(' ')).toContain('Access to Barbarian Fishing');
+    // Only the barehanded part of Barbarian Training is needed, so it is a confirmation.
+    expect(eligible.manualChecks).toContain('Learned barehanded fishing in Barbarian Training');
+    expect(eligible.evidence.join(' ')).toContain('Bare-handed fishing');
+    expect(evaluateDiaryTaskEligibility(bareHandedTask, unlocked({
+      ...common, quests: [...common.quests, 'Barbarian Training'], levels: { Cooking: 80, Fishing: 96, Strength: 76 },
+    })).manualChecks).not.toContain('Learned barehanded fishing in Barbarian Training');
   });
 
   it('asks to confirm Morytania bare-handed fishing access while retaining its gates', () => {
@@ -951,7 +956,7 @@ describe('audited diary route eligibility', () => {
     expect(eligible.blockers).not.toContainEqual({
       kind: 'quest', label: 'Barbarian Training',
     });
-    expect(eligible.manualChecks).toContain('Access to Barbarian Fishing');
+    expect(eligible.manualChecks).toContain('Learned barehanded fishing in Barbarian Training');
 
     const missingQuest = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked({
       ...common, quests: [],

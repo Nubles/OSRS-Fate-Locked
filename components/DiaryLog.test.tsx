@@ -81,8 +81,9 @@ describe('DiaryLog access evidence', () => {
       <DiaryLog searchTerm="shark" suspendModals />,
     );
 
-    expect(markup).not.toContain('Barbarian Training');
-    expect(markup.match(/Access to Barbarian Fishing/g)).toHaveLength(2);
+    // Only the barehanded part of Barbarian Training is needed: a confirmation, never the quest itself.
+    expect(markup.match(/Barbarian Training/g)).toHaveLength(1);
+    expect(markup).toContain('Confirm: Learned barehanded fishing in Barbarian Training');
     expect(markup).toContain('Fishing 96');
     expect(markup).toContain('Strength 76');
     expect(markup).toContain('In Aid of the Myreque');
