@@ -569,8 +569,10 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Iron Bar': [
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 15}, inputs: {'Iron Ore': 1} }
   ],
+  // Any furnace smelts every bar; the Blast Furnace only halves the coal (accuracy audit S14).
   'Steel Bar': [
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 30}, inputs: {'Iron Ore': 1, 'Coal': 1}, notes: 'Requires 1 Coal at BF, 2 elsewhere' },
+    { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 30}, inputs: {'Iron Ore': 1, 'Coal': 2} },
     { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} },
     { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 15 }
   ],
@@ -583,16 +585,19 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Mithril Bar': [
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 50}, inputs: {'Mithril Ore': 1, 'Coal': 2}, notes: 'Requires 2 Coal at BF' },
+    { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 50}, inputs: {'Mithril Ore': 1, 'Coal': 4} },
     { type: 'DROP', name: 'Mithril Dragon', regions: ['Kandarin'], notes: 'Ancient Cavern' },
     { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} }
   ],
   'Adamantite Bar': [
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 70}, inputs: {'Adamantite Ore': 1, 'Coal': 3}, notes: 'Requires 3 Coal at BF' },
+    { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 70}, inputs: {'Adamantite Ore': 1, 'Coal': 6} },
     { type: 'DROP', name: 'Aviansie', regions: ['Fremennik'], skills: {'Agility': 70} },
     { type: 'DROP', name: 'Rune Dragon', regions: ['Kandarin'], quests: ['Dragon Slayer II'] }
   ],
   'Rune Bar': [
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 85}, inputs: {'Runite Ore': 1, 'Coal': 4}, notes: 'Requires 4 Coal at BF' },
+    { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 85}, inputs: {'Runite Ore': 1, 'Coal': 8} },
     { type: 'DROP', name: 'Magpie Impling', regions: ['Any'], skills: {'Hunter': 65} },
     { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath' },
     { type: 'DROP', name: 'Rune Dragon', regions: ['Kandarin'], quests: ['Dragon Slayer II'] },

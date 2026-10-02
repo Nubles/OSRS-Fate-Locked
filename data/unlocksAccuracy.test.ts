@@ -10,6 +10,8 @@ import { createFreshState } from '../context/GameContext';
 import { evaluateBankRequirements, evaluateEntityAccess } from '../utils/entityAccess';
 import { BANKS } from './banks';
 import { getActivityReq } from './activityRequirements';
+import { RESOURCE_MAP } from './resourceData';
+import { calculateSupplyChain } from '../utils/supplyChain';
 import {
   FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST, MINIGAMES_LIST, MISTHALIN_AREAS, MOBILITY_LIST,
   REGIONS_LIST, SKILLS_LIST, BOSSES_LIST,
@@ -147,6 +149,30 @@ describe('B2: a town bank built in a quest needs the quest', () => {
     const without = bankAccess(id, everything(99, { quests: questsWithout(quest) }));
     expect(without.status).toBe('NOT_READY');
     expect(without.reasons).toContain(`Complete ${quest}`);
+  });
+});
+
+describe('S14: any furnace smelts steel, mithril, adamantite and rune bars', () => {
+  it.each([
+    ['Steel Bar', 30, 'Iron Ore', 2], ['Mithril Bar', 50, 'Mithril Ore', 4],
+    ['Adamantite Bar', 70, 'Adamantite Ore', 6], ['Rune Bar', 85, 'Runite Ore', 8],
+  ] as const)('%s: %i Smithing at any furnace, with twice the Blast Furnace coal', (bar, level, ore, coal) => {
+    expect(RESOURCE_MAP[bar].filter(source => source.type === 'SKILL' && source.name === 'Furnace')).toEqual([
+      { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { Smithing: level }, inputs: { [ore]: 1, Coal: coal } },
+    ]);
+  });
+
+  it('plans a steel bar for a run that has no part of the Fremennik Province', () => {
+    const state = createFreshState();
+    state.gameModeId = 'vanilla';
+    for (const skill of ['Smithing', 'Mining']) {
+      state.unlocks.skills[skill] = 3;
+      state.unlocks.levels[skill] = 30;
+    }
+    const routes = calculateSupplyChain('Steel Bar', state)!.sources;
+    expect(state.unlocks.regions.some(region => /fremennik|rellekka|keldagrim/i.test(region))).toBe(false);
+    expect(routes.find(route => route.source.name === 'Blast Furnace')!.status.isAvailable).toBe(false);
+    expect(routes.find(route => route.source.name === 'Furnace')!.status).toMatchObject({ isAvailable: true, missing: [] });
   });
 });
 
