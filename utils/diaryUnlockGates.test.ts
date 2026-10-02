@@ -42,11 +42,12 @@ const task = (id: string) => ALL_DIARY_TASKS.find(row => row.id === id)!;
 const exceptTask = (id: string) => ALL_DIARY_TASKS
   .filter(row => row.tierId === task(id).tierId && row.id !== id).map(row => row.id);
 
+/** Each vocabulary: its field, how the Journal shows the unlock, the unlock's id, and its blocker kind. */
 const VOCABULARIES = [
-  { field: 'guilds', name: "Wizards' Guild", kind: 'guild', shown: "Wizards' Guild" },
-  { field: 'farming', name: 'Herb', kind: 'farming', shown: 'Herb patch' },
-  { field: 'housing', name: 'Menagerie', kind: 'housing', shown: 'Menagerie' },
-  { field: 'slayerUnlocks', name: 'Malevolent Masquerade', kind: 'slayer', shown: 'Malevolent Masquerade' },
+  ['guilds', "Wizards' Guild", "Wizards' Guild", 'guild'],
+  ['farming', 'Herb patch', 'Herb', 'farming'],
+  ['housing', 'Menagerie', 'Menagerie', 'housing'],
+  ['slayerUnlocks', 'Malevolent Masquerade', 'Malevolent Masquerade', 'slayer'],
 ] as const;
 
 const probe = (field: string, name: string, extra: Partial<DiaryTask> = {}): DiaryTask => ({
@@ -54,7 +55,7 @@ const probe = (field: string, name: string, extra: Partial<DiaryTask> = {}): Dia
 } as DiaryTask);
 
 describe('Diary tasks that use a guild, farming patch, house room or Slayer reward', () => {
-  it.each(VOCABULARIES)('read as locked without the $field unlock, naming $shown, and ready with it', ({ field, name, kind, shown }) => {
+  it.each(VOCABULARIES)('read as locked without their %s unlock, naming %s, and as ready with it', (field, shown, name, kind) => {
     const row = probe(field, name);
     const locked = evaluateDiaryTaskEligibility(row, account());
     expect(locked).toMatchObject({ eligible: false, machineEligible: false });
@@ -70,7 +71,7 @@ describe('Diary tasks that use a guild, farming patch, house room or Slayer rewa
       .toEqual([{ kind: 'farming', label: 'Fruit Tree patch', patch: 'Fruit Tree' }]);
   });
 
-  it.each(VOCABULARIES)('never hold up logging a task by hand for a missing $field unlock', ({ field, name }) => {
+  it.each(VOCABULARIES)('never hold up logging a task by hand for a missing %s unlock', (field, _shown, name) => {
     const row = probe(field, name);
     expect(diaryTaskLoggingEligibility(row, account())).toMatchObject({ eligible: true, blockers: [] });
     expect(diaryTaskCompletionDecision(row, account())).toEqual({ ok: true });
@@ -91,7 +92,7 @@ describe('Diary tasks that use a guild, farming patch, house room or Slayer rewa
     expect(diaryTaskCompletionDecision(row, account())).toEqual({ ok: true });
   });
 
-  it('still asks for confirmations when a task is logged by hand', () => {
+  it('still ask for their confirmations when logged by hand', () => {
     const row = probe('guilds', 'Mining Guild', { items: ['Prospector helmet'] });
     expect(diaryTaskCompletionDecision(row, account())).toEqual({ ok: false, reason: 'Confirm: Prospector helmet' });
     expect(diaryTaskCompletionDecision(row, account(), undefined, { manualConfirmed: true })).toEqual({ ok: true });
