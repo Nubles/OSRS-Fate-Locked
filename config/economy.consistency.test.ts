@@ -255,53 +255,59 @@ describe('economy ↔ engine consistency', () => {
 
   it('formats Codex policy directly from the shared Vanilla configuration', () => {
     expect(formatVanillaBossSchedule('Raid', VANILLA_BOSS_KEY_RATES.raid)).toBe('Raid: 65% → 32.5% → 16.25% (3 keys)');
-    expect(describeVanillaRandomAccessPolicy(VANILLA_RANDOM_ACCESS_POLICY)).toContain('Standard and Chaos random unlocks respect hard location access');
+    expect(describeVanillaRandomAccessPolicy(VANILLA_RANDOM_ACCESS_POLICY)).toBe(
+      'In Vanilla, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas you own. '
+      + "If none can be reached, nothing is unlocked. You keep the Key. A seeded run's next roll stays the same. "
+      + "An Omni-Key can still pick one you can't reach yet, with a warning.",
+    );
   });
 
   it('derives each Codex safety-valve sentence from policy decisions', () => {
     const policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY;
     const formatted = describeVanillaRandomAccessPolicy(policy);
-    expect(formatted).toContain('Standard and Chaos random unlocks respect hard location access');
-    expect(formatted).toContain('empty eligible pool means no unlock occurs');
-    expect(formatted).toContain('no key is spent');
-    expect(formatted).toContain('no RNG progression');
-    expect(formatted).toContain('bypass that filter with a warning');
+    expect(formatted).toContain('Keys and Chaos Keys only unlock bosses and minigames you can reach');
+    expect(formatted).toContain('If none can be reached, nothing is unlocked.');
+    expect(formatted).toContain('You keep the Key.');
+    expect(formatted).toContain("A seeded run's next roll stays the same.");
+    expect(formatted).toContain("An Omni-Key can still pick one you can't reach yet, with a warning.");
+    expect(formatted).not.toMatch(/hard location access|eligible pool|RNG progression|bypass/);
 
     const standardOnly: VanillaRandomAccessPolicy = { ...policy, randomCosts: ['key'] };
-    expect(describeVanillaRandomAccessPolicy(standardOnly)).toContain('Standard random unlocks respect hard location access');
-    expect(describeVanillaRandomAccessPolicy(standardOnly)).not.toContain('Standard and Chaos');
+    expect(describeVanillaRandomAccessPolicy(standardOnly)).toContain('In Vanilla, Keys only unlock bosses and minigames you can reach');
+    expect(describeVanillaRandomAccessPolicy(standardOnly)).not.toContain('Chaos Keys');
 
     const noGeography: VanillaRandomAccessPolicy = { ...policy, requiresTrackedHardGeography: false };
-    expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('hard location access');
-    expect(describeVanillaRandomAccessPolicy(noGeography)).toContain('Omni-Key direct unlocks can be selected even without location access.');
+    expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('you can reach with the areas you own');
+    expect(describeVanillaRandomAccessPolicy(noGeography)).toContain("An Omni-Key can pick one even if you can't reach it.");
+    expect(describeVanillaRandomAccessPolicy(noGeography)).toContain('If there is nothing to unlock, nothing happens.');
     expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('with a warning');
-    expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('that filter');
+    expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('can still pick one');
 
     const noFilteredTables: VanillaRandomAccessPolicy = { ...policy, filteredTables: [] };
-    expect(describeVanillaRandomAccessPolicy(noFilteredTables)).not.toContain('random unlocks respect hard location access');
-    expect(describeVanillaRandomAccessPolicy(noFilteredTables)).toContain('Omni-Key direct unlocks can be selected even without location access');
+    expect(describeVanillaRandomAccessPolicy(noFilteredTables)).not.toContain('only unlock');
+    expect(describeVanillaRandomAccessPolicy(noFilteredTables)).toContain("An Omni-Key can pick one even if you can't reach it");
 
     const minigamesOnly: VanillaRandomAccessPolicy = { ...policy, filteredTables: [TableType.MINIGAMES] };
-    expect(describeVanillaRandomAccessPolicy(minigamesOnly)).toContain('hard location access for Minigames');
-    expect(describeVanillaRandomAccessPolicy(minigamesOnly)).not.toContain('Bosses and Minigames');
+    expect(describeVanillaRandomAccessPolicy(minigamesOnly)).toContain('only unlock minigames you can reach');
+    expect(describeVanillaRandomAccessPolicy(minigamesOnly)).not.toContain('bosses and minigames');
 
     const noEmptyPoolGuard: VanillaRandomAccessPolicy = {
       ...policy,
       emptyEligiblePool: { noUnlock: false, retainsKey: true, preservesRngProgression: true },
     };
-    expect(describeVanillaRandomAccessPolicy(noEmptyPoolGuard)).not.toContain('empty eligible pool');
+    expect(describeVanillaRandomAccessPolicy(noEmptyPoolGuard)).not.toMatch(/nothing is unlocked|nothing happens|You keep the Key/);
 
     const consumingEmptyPool: VanillaRandomAccessPolicy = {
       ...policy,
       emptyEligiblePool: { noUnlock: true, retainsKey: false, preservesRngProgression: true },
     };
-    expect(describeVanillaRandomAccessPolicy(consumingEmptyPool)).not.toContain('no key is spent');
+    expect(describeVanillaRandomAccessPolicy(consumingEmptyPool)).not.toContain('You keep the Key');
 
     const advancingEmptyPool: VanillaRandomAccessPolicy = {
       ...policy,
       emptyEligiblePool: { noUnlock: true, retainsKey: true, preservesRngProgression: false },
     };
-    expect(describeVanillaRandomAccessPolicy(advancingEmptyPool)).not.toContain('no RNG progression');
+    expect(describeVanillaRandomAccessPolicy(advancingEmptyPool)).not.toContain('seeded run');
 
     const silentOmni: VanillaRandomAccessPolicy = {
       ...policy,
@@ -313,7 +319,8 @@ describe('economy ↔ engine consistency', () => {
       ...policy,
       omniDirect: { allowsLocationIneligible: false, warnsPlayer: true },
     };
-    expect(describeVanillaRandomAccessPolicy(restrictedOmni)).not.toContain('bypass that filter');
+    expect(describeVanillaRandomAccessPolicy(restrictedOmni)).toContain('An Omni-Key follows the same rule.');
+    expect(describeVanillaRandomAccessPolicy(restrictedOmni)).not.toContain('can still pick one');
     expect(describeVanillaRandomAccessPolicy(restrictedOmni)).not.toContain('with a warning');
   });
 });

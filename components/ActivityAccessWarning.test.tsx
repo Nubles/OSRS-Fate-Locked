@@ -42,7 +42,7 @@ describe('ActivityAccessWarning', () => {
       <ActivityAccessWarning activity="Giant Mole" table={TableType.BOSSES} unlocks={baseUnlocks} modeId="vanilla" />,
     );
 
-    expect(markup).toContain('Omni Keys can unlock this now, but you still need access to: Falador.');
+    expect(markup).toContain('An Omni-Key can unlock this now, but you still need access to: Falador.');
   });
 
   it('uses the shared Omni warning and availability decisions', () => {

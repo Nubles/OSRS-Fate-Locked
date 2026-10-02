@@ -50,26 +50,26 @@ export const formatVanillaBossSchedule = (bossClass: string, rates: readonly num
 export const describeVanillaRandomAccessPolicy = (
   policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
 ): string => {
-  const costs = policy.randomCosts.includes('chaosKey') ? 'Standard and Chaos' : 'Standard';
-  const tableScope = policy.filteredTables.join(' and ');
-  const hasLocationFilter = policy.requiresTrackedHardGeography && tableScope.length > 0;
+  const keys = policy.randomCosts.includes('chaosKey') ? 'Keys and Chaos Keys' : 'Keys';
+  const tables = policy.filteredTables.map(table => table.toLowerCase()).join(' and ');
+  const hasLocationFilter = policy.requiresTrackedHardGeography && tables.length > 0;
   const randomAccess = hasLocationFilter
-    ? `${costs} random unlocks respect hard location access for ${tableScope}.`
+    ? `In Vanilla, ${keys} only unlock ${tables} you can reach with the areas you own.`
     : '';
   const emptyPool = policy.emptyEligiblePool.noUnlock
     ? [
-        'An empty eligible pool means no unlock occurs',
-        policy.emptyEligiblePool.retainsKey ? 'no key is spent' : '',
-        policy.emptyEligiblePool.preservesRngProgression ? 'no RNG progression is consumed' : '',
-      ].filter(Boolean).join('; ') + '.'
+        hasLocationFilter ? 'If none can be reached, nothing is unlocked.' : 'If there is nothing to unlock, nothing happens.',
+        policy.emptyEligiblePool.retainsKey ? 'You keep the Key.' : '',
+        policy.emptyEligiblePool.preservesRngProgression ? "A seeded run's next roll stays the same." : '',
+      ].filter(Boolean).join(' ')
     : '';
   const omni = policy.omniDirect.allowsLocationIneligible
     ? hasLocationFilter
-      ? `Omni-Key direct unlocks bypass that filter${policy.omniDirect.warnsPlayer ? ' with a warning' : ''}.`
-      : 'Omni-Key direct unlocks can be selected even without location access.'
+      ? `An Omni-Key can still pick one you can't reach yet${policy.omniDirect.warnsPlayer ? ', with a warning' : ''}.`
+      : "An Omni-Key can pick one even if you can't reach it."
     : hasLocationFilter
-      ? 'Omni-Key direct unlocks respect that filter.'
-      : 'Omni-Key direct unlocks remain subject to their ordinary availability rules.';
+      ? 'An Omni-Key follows the same rule.'
+      : 'An Omni-Key follows the usual rules for each table.';
 
   return [randomAccess, emptyPool, omni].filter(Boolean).join(' ');
 };

@@ -176,9 +176,9 @@ describe('ReferenceModal Vanilla policy', () => {
     expect(drops).toContain('High: 50% → 25% (2 keys)');
     expect(drops).toContain('Raid: 65% → 32.5% → 16.25% (3 keys)');
     expect(drops).toContain('25% → 15% → 10%');
-    expect(unlocks).toContain('Standard and Chaos random unlocks respect hard location access');
-    expect(unlocks).toContain('empty eligible pool means no unlock occurs');
-    expect(unlocks).toContain('Omni-Key direct unlocks bypass that filter with a warning');
+    expect(unlocks).toContain('In Vanilla, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas you own.');
+    expect(unlocks).toContain('If none can be reached, nothing is unlocked. You keep the Key.');
+    expect(unlocks).toContain('An Omni-Key can still pick one you can');
     expect(unlocks).toContain('In Vanilla the areas you roll don&#x27;t have to touch each other.');
     expect(unlocks).toContain('Only Chunked makes you grow out from land you hold.');
     expect(unlocks).toContain('Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99, a 2% chance on every level-up, or the Ritual of Chaos.');
