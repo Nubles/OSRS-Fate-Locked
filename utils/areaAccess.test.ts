@@ -171,6 +171,16 @@ describe('reaching an owned island or enclave for a diary task (Vanilla)', () =>
     expect(evaluateDiaryTaskEligibility(pestControl, lowSailing, 'vanilla').eligible).toBe(false);
   });
 
+  it('asks for Rum Deal to be started before Pirate Pete reaches Braindeath Island', () => {
+    const island = { id: 'access:Braindeath Island', regions: ['Braindeath Island'] };
+    const dock = account({ regions: ['Braindeath Island', 'Port Phasmatys'] });
+    expect(evaluateDiaryTaskEligibility(island, dock, 'vanilla')).toMatchObject({
+      eligible: false, machineEligible: true,
+      manualChecks: ['Started Rum Deal, so Pirate Pete takes you to Braindeath Island'],
+    });
+    expect(evaluateDiaryTaskEligibility(island, { ...dock, quests: ['Rum Deal'] }, 'vanilla').eligible).toBe(true);
+  });
+
   it('reaches Harmony Island through a reachable Mos Le\'Harmless', () => {
     const watermelon = task('mor_hard_3');
     const islands = account({

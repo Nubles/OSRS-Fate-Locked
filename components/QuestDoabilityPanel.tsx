@@ -4,7 +4,7 @@ import { MapPin } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { QuestData, QUEST_DATA, EquipmentSlot } from '../data/questData';
 import { chunkContentService } from '../services/ChunkContentService';
-import { chunkReachability } from '../utils/chunkReach';
+import { travelReachability } from '../utils/travelReach';
 import { CHUNKED_START } from '../utils/chunkAdjacency';
 import { chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
 import { questLocations } from '../utils/questLocations';
@@ -212,7 +212,7 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
     const gate = entryBlockedGate(chunkContentService.questSections(), completed, known);
     // Walk from the free start chunk the map and RuneLite export use; the
     // Lumbridge place chunk is only corner-adjacent to it and starts locked.
-    const reach = chunkReachability(chunkContentService.connectGraph(), unlocks, CHUNKED_START, gate, gameModeId);
+    const reach = travelReachability(chunkContentService.connectGraph(), unlocks, CHUNKED_START, gate, gameModeId);
     const isUnlocked = (cx: number, cy: number) => chunkUnlocked(cx, cy, unlocks, gameModeId);
     return Object.values(QUEST_DATA).map((q) => {
       const hit = chunkContentService.entityLocations(q.id, ['quest']);
@@ -323,7 +323,7 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
         <AlertTriangle size={11} className="shrink-0 mt-0.5 text-gray-700" />
         {isChunked ? <>
           "Doable now" = every chunk a quest's steps touch is reachable from Lumbridge over your transport links, and its skill/quest
-          and equipment-slot requirements are met. Stranded = you own the chunk but can't route to it yet. Reachability is an approximation (no per-link gating).
+          and equipment-slot requirements are met. Stranded = you own the chunk but can't route to it yet. Teleport networks such as fairy rings count once you've unlocked them; the rest of the route map is approximate.
         </> : <>
           Uses the same area unlocks and requirements as the Quest Journal. Quests with confirmation checks stay under Requirements remaining.
         </>}

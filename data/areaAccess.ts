@@ -328,6 +328,7 @@ export const AREA_ENTRY_ROUTES: Readonly<Record<string, readonly AreaEntryRoute[
     {
       label: "Pirate Pete's dock north of the Ectofuntus",
       regions: ['Port Phasmatys'],
+      questProgress: [{ quest: 'Rum Deal', label: 'Started Rum Deal, so Pirate Pete takes you to Braindeath Island' }],
       source: 'https://oldschool.runescape.wiki/w/Braindeath_Island?oldid=15231735',
     },
   ],

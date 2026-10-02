@@ -46,7 +46,8 @@ describe('diary equipment and mobility permissions in Vanilla', () => {
 
   it('requires every desert outfit slot, without requiring the shop that supplied it', () => {
     const row = task('des_easy_4');
-    const locked = account({ regions: ['Al Kharid'], equipment: { Body: 1, Legs: 1 } });
+    // Entered at Shantay Pass or off the boat to the Ruins of Unkah.
+    const locked = account({ regions: ['Shantay Pass'], equipment: { Body: 1, Legs: 1 } });
     expect(evaluateDiaryTaskEligibility(row, locked, 'vanilla').blockers)
       .toContainEqual(expect.objectContaining({ kind: 'equipment', slot: 'Boots', tier: 1 }));
     expect(evaluateDiaryTaskEligibility(row, { ...locked, equipment: { ...locked.equipment, Boots: 1 } }, 'vanilla').confirmable).toBe(true);

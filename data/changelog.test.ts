@@ -20,7 +20,20 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-29-roll-inbox-groundwork');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-29-stranded-areas');
+  });
+
+  it('announces the fixes for places a run owns but can’t reach, and the retagged Diary tasks', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-09-29-stranded-areas');
+    expect(release?.title).toBe('Places You Can’t Reach Yet');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Diary Journal no longer calls a task doable.*Fairy rings.*once you’ve unlocked them and done the quests they need.*Fairytale I and a staff.*boats to Great Kourend, Entrana, Brimhaven and the Void Knights’ Outpost.*charter ships once you’ve unlocked them/),
+      expect.stringMatching(/Quest Log says “No route to”.*complete it by hand/),
+      expect.stringMatching(/^12 Diary tasks now name the area the game has them in/),
+      expect.stringMatching(/chunk no area covers.*nothing there to unlock/),
+      expect.stringMatching(/Braindeath Island.*started Rum Deal/),
+    ]);
+    expect(release?.sections.changed).toEqual([expect.stringMatching(/Rules page describes the challenge in plainer words/)]);
   });
 
   it('announces the groundwork for RuneLite’s Roll Inbox, and that manual play is unchanged', () => {

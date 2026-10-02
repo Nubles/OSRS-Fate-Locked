@@ -145,9 +145,14 @@ export const summarisePlaces = (
     Number(b.unlocked) - Number(a.unlocked) || a.label.localeCompare(b.label));
 };
 
-/** Explain the actual owner separately from the content dataset's place name. */
+/**
+ * Explain the actual owner separately from the content dataset's place name.
+ * `unmapped` marks a chunk no area covers: every chunk with ground to walk on
+ * belongs to an area or the sea (data/regionChunks.test.ts), so there is
+ * nothing in it to unlock.
+ */
 export function chunkUnlockRequirement(cx: number, cy: number, unlocks: UnlockState, gameModeId?: string): {
-  text: string; remaining: string[];
+  text: string; remaining: string[]; unmapped?: true;
 } {
   if (OCEAN_CHUNK_KEYS.has(key(cx, cy))) return { text: 'Open sea: complete Pandemonium and unlock Sailing. In Chunked mode, sail from an owned coastal chunk. Islands retain their own locks.', remaining: [] };
   if (gameModeId === 'chunked') return {
@@ -155,7 +160,13 @@ export function chunkUnlockRequirement(cx: number, cy: number, unlocks: UnlockSt
   };
   const place = placeOf(cx, cy);
   if (place.subArea) return { text: `Area unlock: ${place.subArea}.`, remaining: [] };
-  if (!place.region) return { text: 'This location has no mapped area unlock.', remaining: [] };
+  if (!place.region) {
+    return {
+      text: 'Nothing to unlock: this chunk has no ground to walk on in the game, so no area covers it.',
+      remaining: [],
+      unmapped: true,
+    };
+  }
   const children = place.region === 'Misthalin' ? MISTHALIN_AREAS : REGION_GROUPS[place.region] ?? [];
   const remaining = children.filter(area => !isAreaReachable(area, unlocks, gameModeId));
   const owned = isAreaReachable(place.region, unlocks, gameModeId);
