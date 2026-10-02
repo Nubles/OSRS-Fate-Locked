@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Search, CornerDownLeft, ArrowUp, ArrowDown, Route, BarChart3, Share2, RefreshCw, Settings2, Gauge, Film, type LucideProps } from 'lucide-react';
 import { User, Globe, Swords, BookOpen, Library, Coins, ShoppingBag, ScrollText, Trophy, Sparkles, Skull, Map, Wand2, Zap, Compass } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
+import { RIVAL_ENABLED } from '../config/rules';
 
 /**
  * Global ⌘K / Ctrl-K command palette. A single launcher to jump to any tab,
@@ -69,7 +70,7 @@ export const CommandPalette: React.FC = () => {
       { id: 'open-ach', title: 'Achievements', subtitle: 'Milestones & completion', group: 'Track', icon: Trophy, keywords: 'achievements milestones trophies', run: go('open:achievements') },
       { id: 'open-stats', title: 'Fate Analytics', subtitle: 'Luck, pace & distribution', group: 'Track', icon: BarChart3, keywords: 'analytics stats luck numbers graphs', run: go('open:stats') },
       { id: 'open-fatethread', title: 'Fate Thread', subtitle: 'Every unlock, grouped by table', group: 'Track', icon: Sparkles, keywords: 'fate thread tapestry constellation web graph map visual unlocks destiny', run: go('open:fatethread') },
-      { id: 'open-rival', title: 'Rival', subtitle: 'Race a rival ghost', group: 'Track', icon: Swords, keywords: 'rival ghost race compare pace', run: go('open:rival') },
+      ...(RIVAL_ENABLED ? [{ id: 'open-rival', title: 'Rival', subtitle: 'Race a rival ghost', group: 'Track' as const, icon: Swords, keywords: 'rival ghost race compare pace', run: go('open:rival') }] : []),
       // Account
       { id: 'open-altar', title: 'Void Altar', subtitle: 'Spend Fate Points on rituals', group: 'Account', icon: Wand2, keywords: 'void altar ritual Fate Points sacrifice', run: go('open:altar') },
       { id: 'open-share', title: 'Share Run', subtitle: 'Generate a shareable card', group: 'Account', icon: Share2, keywords: 'share run card image export', run: go('open:share') },

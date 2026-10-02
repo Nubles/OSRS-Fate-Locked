@@ -34,6 +34,7 @@ import { getRivalImage } from '../data/wikiRivalIcons';
 import { SectionGuide } from './SectionGuide';
 import { completionPercent as runCompletion } from '../utils/completion';
 import { rivalCompletion, standing as rivalStanding } from '../utils/rival';
+import { RIVAL_ENABLED } from '../config/rules';
 // Heavy tab/modal contents — code-split so their large data dependencies
 // (questData, diaryTasks, caTasks, collectionLogData, requirements, etc.)
 // stay out of the initial dashboard bundle.
@@ -451,7 +452,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         'open:goal': setShowGoalPlanner,
         'open:achievements': setShowAchievements,
         'open:forecast': setShowForecast,
-        'open:rival': setShowRival,
+        ...(RIVAL_ENABLED ? { 'open:rival': setShowRival } : {}),
         'open:killplanner': setShowBossPlanner,
         'open:share': setShowRunCard,
       };
@@ -1130,7 +1131,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                  <Route size={12} />
                  Fate Thread
                </button>
-               <RivalHeaderButton onClick={() => setShowRival(true)} />
+               {RIVAL_ENABLED && <RivalHeaderButton onClick={() => setShowRival(true)} />}
                <button
                  onClick={() => setShowBossPlanner(true)}
                  className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-red-500/30 bg-red-950/30 hover:bg-red-900/40 text-red-300 text-[11px] font-medium whitespace-nowrap transition-colors"
@@ -1269,7 +1270,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       </Suspense>
     )}
 
-    {!suspendModals && showRival && (
+    {RIVAL_ENABLED && !suspendModals && showRival && (
       <Suspense fallback={<ModalFallback label="Summoning your rival…" />}>
         <RivalModal onClose={() => setShowRival(false)} />
       </Suspense>

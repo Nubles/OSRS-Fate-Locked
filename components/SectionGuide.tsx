@@ -141,11 +141,11 @@ export const GUIDES: Record<string, Guide> = {
   },
   RIVAL: {
     title: 'Rival',
-    blurb: 'A simulated rival account racing you through the same fate.',
+    blurb: 'A simulated rival that earns Keys at a steady pace, to race against.',
     bullets: [
-      'See the rival’s progress alongside yours and who’s ahead.',
-      'The rival rolls on the same tables, so it’s a fair pace benchmark.',
-      'Use the gap to push your completion higher.',
+      'See its completion next to yours, and who’s ahead.',
+      'It earns about 4, 10 or 26 Keys a day, by the pace you pick, and turns each into an unlock. It doesn’t roll.',
+      'Or race a friend’s run from their sync code.',
     ],
   },
   SYNC: {
