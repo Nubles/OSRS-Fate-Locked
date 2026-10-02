@@ -42,6 +42,17 @@ describe('audited current quest requirements', () => {
     expect(q.locations?.[1].chunkOptions).toEqual([{ cx: 47, cy: 51 }]);
   });
 
+  it("lists The Fremennik Exiles' Mining 60, as the wiki does", () => {
+    expect(QUEST_DATA['The Fremennik Exiles'].skills).toMatchObject({ Mining: 60 });
+  });
+
+  it('words the Biohazard priest gown and the Brain Robbery workshop as the wiki has them', () => {
+    expect(QUEST_DATA['Biohazard'].equipmentRequirements).toContainEqual(
+      { slot: 'Legs', tier: 1, reason: 'Wear the priest gown to see Guidor in Varrock' });
+    expect(QUEST_DATA['The Great Brain Robbery'].manualRequirements)
+      .toEqual(['Access to a player-owned house workshop and crafting table']);
+  });
+
   it('models Dream Mentor as calculated combat', () => {
     const q = QUEST_DATA['Dream Mentor'];
     expect(q.combatLevel).toBe(85);
@@ -6013,6 +6024,7 @@ describe('audited current quest requirements', () => {
           "Slayer": 60,
           "Smithing": 60,
           "Fishing": 60,
+          "Mining": 60,
           "Runecraft": 55
         },
         "combatLevel": null,
@@ -6188,10 +6200,10 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Canifis",
-              "Mos Le'Harmless",
-              "Harmony Island",
-              "Edgeville"
+          "Canifis",
+          "Mos Le'Harmless",
+          "Harmony Island",
+          "Edgeville"
         ],
         "locations": null,
         "skills": {
@@ -6207,7 +6219,7 @@ describe('audited current quest requirements', () => {
         ],
         "oneOf": null,
         "manualRequirements": [
-          "Access to a player-owned house workshop and crafting table, or the Grand Exchange"
+          "Access to a player-owned house workshop and crafting table"
         ],
         "points": 2,
         "difficulty": "Quest (Experienced)"
@@ -6790,8 +6802,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Edgeville",
-              "Varrock"
+          "Edgeville",
+          "Varrock"
         ],
         "locations": null,
         "skills": {
@@ -6801,7 +6813,50 @@ describe('audited current quest requirements', () => {
         "prereqs": [
           "Rune Mysteries"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Mining": 42
+            }
+          },
+          {
+            "locations": [
+              {
+                "id": "chaos-temple-ruins",
+                "label": "Chaos Temple ruins",
+                "standardAreas": [
+                  "Dark Warriors' Fortress"
+                ],
+                "chunkOptions": [
+                  {
+                    "cx": 47,
+                    "cy": 56
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "locations": [
+              {
+                "id": "edgeville-ditch",
+                "label": "Edgeville ditch",
+                "standardAreas": [
+                  "Edgeville"
+                ],
+                "chunkOptions": [
+                  {
+                    "cx": 48,
+                    "cy": 55
+                  }
+                ]
+              }
+            ],
+            "quests": [
+              "Enter the Abyss"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Intermediate)"

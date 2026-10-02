@@ -540,7 +540,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     equipmentRequirements: [
       { slot: 'Head', tier: 1, reason: 'Wear the gas mask for the plague-sample route' },
       { slot: 'Body', tier: 1, reason: 'Wear the medical gown to enter the Mourner headquarters' },
-      { slot: 'Legs', tier: 1, reason: 'Wear the priest gown to enter the Mourner headquarters' },
+      { slot: 'Legs', tier: 1, reason: 'Wear the priest gown to see Guidor in Varrock' },
     ],
     regions: ['East Ardougne', 'West Ardougne', 'Rimmington', 'Varrock'],
     skills: {}, prereqs: ['Plague City'], points: 3, series: 'Elf',
@@ -1373,7 +1373,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Great Brain Robbery', name: 'The Great Brain Robbery',
     regions: ['Canifis', 'Mos Le\'Harmless', 'Harmony Island', 'Edgeville'],
-    manualRequirements: ['Access to a player-owned house workshop and crafting table, or the Grand Exchange'],
+    manualRequirements: ['Access to a player-owned house workshop and crafting table'],
     skills: { 'Crafting': 16, 'Construction': 30, 'Prayer': 50 }, prereqs: ['Creature of Fenkenstrain', 'Cabin Fever', 'RFD: Pirate Pete'], points: 2, series: 'Pirate',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1381,6 +1381,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'What Lies Below', name: 'What Lies Below',
     regions: ['Edgeville', 'Varrock'],
+    // The way to the Chaos Altar: the Tunnel of Chaos statue east of Varrock (Mining 42), the
+    // Wilderness ruins, or the Abyss. Guardians of the Rift needs Temple of the Eye, and so Enter
+    // the Abyss: the Abyss route covers it.
+    oneOf: [
+      { skills: { Mining: 42 } },
+      { locations: [{ id: 'chaos-temple-ruins', label: 'Chaos Temple ruins', standardAreas: ["Dark Warriors' Fortress"], chunkOptions: [{ cx: 47, cy: 56 }] }] },
+      { locations: [LOCATIONS.edgevilleDitch], quests: ['Enter the Abyss'] },
+    ],
     skills: { 'Runecraft': 35 }, prereqs: ['Rune Mysteries'], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1543,7 +1551,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
       // Stand-in: the Island of Stone (38,62) belongs to no area; the boat to it leaves from Rellekka.
       { id: 'island-of-stone', label: 'Island of Stone', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 38, cy: 62 }] },
     ],
-    skills: { 'Crafting': 65, 'Slayer': 60, 'Smithing': 60, 'Fishing': 60, 'Runecraft': 55 }, prereqs: ['The Fremennik Isles', 'Lunar Diplomacy', 'Mountain Daughter', 'Heroes\' Quest'], points: 2, series: 'Fremennik',
+    skills: { 'Crafting': 65, 'Slayer': 60, 'Smithing': 60, 'Fishing': 60, 'Mining': 60, 'Runecraft': 55 }, prereqs: ['The Fremennik Isles', 'Lunar Diplomacy', 'Mountain Daughter', 'Heroes\' Quest'], points: 2, series: 'Fremennik',
     difficulty: DropSource.QUEST_MASTER
   },
   'Sins of the Father': {

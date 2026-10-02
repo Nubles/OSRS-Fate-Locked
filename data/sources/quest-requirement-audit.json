@@ -813,7 +813,7 @@
       "id": "Biohazard",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-22",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Biohazard&oldid=15327977",
         "revision": 15327977,
@@ -821,7 +821,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"East Ardougne\",\"West Ardougne\",\"Rimmington\",\"Varrock\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the gas mask for the plague-sample route\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the medical gown to enter the Mourner headquarters\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear the priest gown to enter the Mourner headquarters\",\"slot\":\"Legs\",\"tier\":1}],\"prereqs\":[\"Plague City\"],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"East Ardougne\",\"West Ardougne\",\"Rimmington\",\"Varrock\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the gas mask for the plague-sample route\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the medical gown to enter the Mourner headquarters\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear the priest gown to see Guidor in Varrock\",\"slot\":\"Legs\",\"tier\":1}],\"prereqs\":[\"Plague City\"],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "39,51",
@@ -847,7 +847,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Biohazard were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Fate equipment review 2026-09-22: Head T1: Wear the gas mask for the plague-sample route; Body T1: Wear the medical gown to enter the Mourner headquarters; Legs T1: Wear the priest gown to enter the Mourner headquarters. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
+          "Fate equipment review 2026-09-22: Head T1: Wear the gas mask for the plague-sample route; Body T1: Wear the medical gown to enter the Mourner headquarters; Legs T1: Wear the priest gown to enter the Mourner headquarters. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged.",
+          "Accuracy review 2026-10-02: Wording: the priest gown is worn to see Guidor in Varrock, not to enter the Mourner headquarters, which takes the medical gown (Wiki revision 15327977)."
         ],
         "travel": [
           "The route crosses Ardougne/Kandarin, Asgarnia, and Varrock/Misthalin.",
@@ -7644,7 +7645,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Rellekka\",\"Lunar Isle\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":56}],\"id\":\"brundt-outside-rellekka\",\"label\":\"Brundt outside Rellekka\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":41,\"cy\":56}],\"id\":\"fossegrimen\",\"label\":\"Fossegrimen's lake\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":38,\"cy\":62}],\"id\":\"island-of-stone\",\"label\":\"Island of Stone\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Crafting\":65,\"Fishing\":60,\"Runecraft\":55,\"Slayer\":60,\"Smithing\":60},\"prereqs\":[\"The Fremennik Isles\",\"Lunar Diplomacy\",\"Mountain Daughter\",\"Heroes' Quest\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Rellekka\",\"Lunar Isle\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":56}],\"id\":\"brundt-outside-rellekka\",\"label\":\"Brundt outside Rellekka\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":41,\"cy\":56}],\"id\":\"fossegrimen\",\"label\":\"Fossegrimen's lake\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":38,\"cy\":62}],\"id\":\"island-of-stone\",\"label\":\"Island of Stone\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Crafting\":65,\"Fishing\":60,\"Mining\":60,\"Runecraft\":55,\"Slayer\":60,\"Smithing\":60},\"prereqs\":[\"The Fremennik Isles\",\"Lunar Diplomacy\",\"Mountain Daughter\",\"Heroes' Quest\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "32,61",
@@ -7695,7 +7696,8 @@
           "The basilisk market fight instance and the Island of Stone cave and Jormungand fight instance; Waterbirth Island Dungeon and the Lunar Isle mine are optional routes."
         ],
         "partialCompletion": [
-          "Level 60 Mining belongs to the optional Lunar Isle ore route and is already recursive through Lunar Diplomacy, so it is not a direct skill gate."
+          "Level 60 Mining belongs to the optional Lunar Isle ore route and is already recursive through Lunar Diplomacy, so it is not a direct skill gate.",
+          "Accuracy review 2026-10-02: Mining 60 is now listed, as the wiki, the Chunk Picker and Quest Helper list it (for the lunar ores, unless the player already has lunar bars; Wiki revision 15356243). Lunar Diplomacy, a prerequisite, already needs it."
         ]
       }
     },
@@ -8083,7 +8085,7 @@
       "id": "The Great Brain Robbery",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Great_Brain_Robbery&oldid=15275553",
         "revision": 15275553,
@@ -8091,7 +8093,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Canifis\",\"Mos Le'Harmless\",\"Harmony Island\",\"Edgeville\"],\"skills\":{\"Construction\":30,\"Crafting\":16,\"Prayer\":50},\"prereqs\":[\"Creature of Fenkenstrain\",\"Cabin Fever\",\"RFD: Pirate Pete\"],\"manualRequirements\":[\"Access to a player-owned house workshop and crafting table, or the Grand Exchange\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Canifis\",\"Mos Le'Harmless\",\"Harmony Island\",\"Edgeville\"],\"skills\":{\"Construction\":30,\"Crafting\":16,\"Prayer\":50},\"prereqs\":[\"Creature of Fenkenstrain\",\"Cabin Fever\",\"RFD: Pirate Pete\"],\"manualRequirements\":[\"Access to a player-owned house workshop and crafting table\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "47,54",
@@ -8111,7 +8113,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for The Great Brain Robbery were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for The Great Brain Robbery were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Wording: the manual check no longer offers the Grand Exchange, which an ironman cannot use; the wooden cats are made at a player-owned house workshop crafting table (Wiki revision 15357906)."
         ],
         "travel": [
           "The Morytania and Asgarnia route covers Canifis, Fenkenstrain-related travel, Harmony Island access and the monastery step; Mos Le'Harmless sailing is prerequisite-mediated.",
@@ -9313,7 +9316,7 @@
       "id": "What Lies Below",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=What_Lies_Below&oldid=15271078",
         "revision": 15271078,
@@ -9321,7 +9324,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Edgeville\",\"Varrock\"],\"skills\":{\"Runecraft\":35},\"prereqs\":[\"Rune Mysteries\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Edgeville\",\"Varrock\"],\"skills\":{\"Runecraft\":35},\"prereqs\":[\"Rune Mysteries\"],\"oneOf\":[{\"skills\":{\"Mining\":42}},{\"locations\":[{\"chunkOptions\":[{\"cx\":47,\"cy\":56}],\"id\":\"chaos-temple-ruins\",\"label\":\"Chaos Temple ruins\",\"standardAreas\":[\"Dark Warriors' Fortress\"]}]},{\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":55}],\"id\":\"edgeville-ditch\",\"label\":\"Edgeville ditch\",\"standardAreas\":[\"Edgeville\"]}],\"quests\":[\"Enter the Abyss\"]}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "48,54",
@@ -9350,7 +9353,8 @@
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Edgeville (48,54, step); Varrock Palace (50,54, step); East Varrock Mine (51,52, first); Lumber Yard (51,54, step), and unavoidable travel remains represented by region gate Misthalin.",
-          "The catalogue-wide parent-region audit replaced Misthalin with the exact tracked access set: Edgeville, Varrock."
+          "The catalogue-wide parent-region audit replaced Misthalin with the exact tracked access set: Edgeville, Varrock.",
+          "Accuracy review 2026-10-02: The wiki lists Mining 42 as a recommendation, for one of the ways to the Chaos Altar (Wiki revision 15292388). A one-of now asks for one way: the Tunnel of Chaos statue east of Varrock (Mining 42), the Chaos Temple ruins in the Wilderness (47,56, Dark Warriors' Fortress), or the Abyss after Enter the Abyss; Guardians of the Rift needs Temple of the Eye and so Enter the Abyss."
         ],
         "instances": [
           "The Tunnel of Chaos, Dagon-hai chambers and second level, portal chamber, and the instanced Surok and King Roald confrontation."

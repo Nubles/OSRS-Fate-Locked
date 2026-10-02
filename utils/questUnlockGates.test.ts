@@ -187,3 +187,27 @@ describe("the quests' shop-only items, bar drinks and fairy rings", () => {
     expect(chain.mobilitySteps.map(step => step.id)).toEqual(['Fairy Rings']);
   });
 });
+
+describe("What Lies Below's ways to the Chaos Altar", () => {
+  const quest = QUEST_DATA['What Lies Below'];
+  const run = (over: Partial<UnlockState> = {}) => unlocked({
+    quests: ['Rune Mysteries'], skills: { Runecraft: 4 }, levels: { Runecraft: 35 }, ...over,
+  });
+
+  it('needs one of the ways the wiki lists, not Mining 42 alone', () => {
+    expect(evaluateQuestEligibility(quest, run(), 'vanilla').blockers).toEqual([{
+      kind: 'region', label: 'Mining 42 or Chaos Temple ruins or Edgeville ditch + Enter the Abyss',
+    }]);
+    expect(evaluateQuestEligibility(quest, run({ skills: { Runecraft: 4, Mining: 5 }, levels: { Runecraft: 35, Mining: 42 } }), 'vanilla').eligible)
+      .toBe(true);
+    expect(evaluateQuestEligibility(quest, run({ regions: ["Dark Warriors' Fortress"] }), 'vanilla').eligible).toBe(true);
+    expect(evaluateQuestEligibility(quest, run({ quests: ['Rune Mysteries', 'Enter the Abyss'] }), 'vanilla').eligible).toBe(true);
+  });
+
+  it('plans each way, the Abyss with its quest', () => {
+    const plan = planForTarget('quest', 'What Lies Below', run(), 'vanilla')!;
+    expect(plan.alternativeSteps.map(step => step.routes.map(route => route.blockers.map(blocker => blocker.id)))).toEqual([
+      [['Mining'], ["Dark Warriors' Fortress"], ['Enter the Abyss']],
+    ]);
+  });
+});
