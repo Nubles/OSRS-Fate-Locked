@@ -19,6 +19,32 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-02-plain-rules',
+    title: 'Rules and Help Say What the Game Does',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'The Rules page, onboarding and the tour now say a new run starts with 3 Keys and all of Misthalin (one chunk of Lumbridge in Chunked), not with nothing.',
+        'The Rules page no longer calls bosses repeatable: in Vanilla each boss pays 1 to 3 Keys at falling odds, then stops.',
+        'Chaos Keys are explained properly: every skill gives one at levels 30, 40, 50, 60, 70, 80, 90 and 99, as well as a 2% chance on any level-up. A Chaos Key draws from all the tables at once, so big tables such as Banks come up most.',
+        'An Omni-Key was called an “upgrade” of a successful roll. It comes on top of the Key, and the Rules page now says so, and that Omni-Keys can’t pick land in Chunked.',
+        'The Rules page lists every way to get a Key: any successful roll wherever you log it, Pity Keys, a won Void Gambit, the 3 Keys you start with, and Chunked’s start-chunk Keys (one every 25 total levels while you hold only your start chunk).',
+        'Smart Play no longer tells you to save up Fate. Any successful roll resets it to 0, so spend it first.',
+        'Importing a sync code and resetting your progress now say a backup of your save is kept under Sync Code → Backups, instead of “This cannot be undone”.',
+        'The share card and History are no longer called verifiable. Their check only lets the tracker spot a hand-edited save in your browser.',
+        'The Fate Forecast shows the real chance behind its numbers, instead of “most likely” and a flat 80%.',
+        'A won Void Gambit pays 1 Key for every whole 15 Fate staked; the Rules page now says the rest is lost.',
+        'Banks are unlocked by place: one unlock opens every bank and deposit box there.',
+        'The Inferno is no longer listed as a minigame, and unlocking a skill says which training methods its new tier opens.',
+      ],
+      changed: [
+        'The Rival is out of the game for now. A rival you already set up stays in your save.',
+        'The Rules page’s Game Modes tab says what differs between Vanilla and Chunked, and the Region Bonuses tab, for a retired mode, is gone.',
+        'Plainer words across the tracker: the Rules page is called Rules everywhere, Spend Keys cards say Unlock, the share card has no ranks, and onboarding, the tour, the help buttons and History say what things do.',
+      ],
+    },
+  },
+  {
     id: '2026-09-29-stranded-areas',
     title: 'Places You Can’t Reach Yet',
     date: '2026-09-29',
