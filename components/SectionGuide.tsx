@@ -152,7 +152,7 @@ export const GUIDES: Record<string, Guide> = {
     bullets: [
       'Export your full run to a compact, integrity-checked code.',
       'Import a code on another device to restore that run.',
-      'A pre-overwrite snapshot is kept so an import can be undone.',
+      'Before an import replaces your save, a backup of it is kept on the Backups tab.',
     ],
   },
   GOAL_PLANNER: {

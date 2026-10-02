@@ -31,6 +31,7 @@ import { SaveRecoveryGuard } from './components/SaveRecoveryGuard';
 import { SaveBootstrap } from './components/SaveBootstrap';
 import { DiscordSyncDriver } from './components/DiscordSyncDriver';
 import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE, FATE_EXPORT_HINT } from './utils/fateSaveFile';
+import { RESET_CONFIRM_MESSAGE } from './utils/backups';
 import { isOwnershipConflictBlock } from './utils/profileWriterLease';
 import { useFeatureGates } from './hooks/useFeatureGates';
 import { flashElement } from './utils/flash';
@@ -583,7 +584,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                            <Radio size={13} /> Discord notifications
                         </button>
                         <div className="my-1 border-t border-white/10" />
-                        <button onClick={() => { setShowUtilMenu(false); if(window.confirm("Are you sure you want to reset ALL progress? This cannot be undone.")) void resetGame(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-red-300/90 hover:bg-red-900/20 hover:text-red-200">
+                        <button onClick={() => { setShowUtilMenu(false); if(window.confirm(RESET_CONFIRM_MESSAGE)) void resetGame(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-red-300/90 hover:bg-red-900/20 hover:text-red-200">
                            <RotateCcw size={13} /> Reset all progress
                         </button>
                      </div>

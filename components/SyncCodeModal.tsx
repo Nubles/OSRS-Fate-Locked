@@ -265,7 +265,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
     const warn = audit && audit.verdict === 'tampered'
       ? 'This run failed verification (the hash chain is broken). '
       : '';
-    if (!window.confirm(`${warn}Import this run? It will OVERWRITE the current profile's save. This cannot be undone.`)) {
+    if (!window.confirm(`${warn}Import this run? It replaces this profile's save. A backup of the current save is kept on the Backups tab.`)) {
       return;
     }
     if (!candidateMatchesSource(decoded, inputRef.current)) {
@@ -353,7 +353,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
 
   const handleRestore = useCallback(async (b: BackupMeta) => {
     if (acceptedRef.current || restoreBusyRef.current) return;
-    if (!window.confirm(`Restore this backup (${b.summary})? It will OVERWRITE the current profile's save.`)) {
+    if (!window.confirm(`Restore this backup (${b.summary})? It replaces this profile's save. A backup of the current save is kept here too.`)) {
       return;
     }
 
