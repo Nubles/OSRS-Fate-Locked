@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import React from 'react';
+import { cleanup, render as renderPlain, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -43,6 +44,9 @@ vi.mock('../services/relaySync', () => ({ relaySync: { base: () => 'https://rela
 vi.mock('../utils/onlineBackup', () => backup);
 vi.mock('../utils/syncCode', () => ({ decodeAndValidateSyncCode: decode }));
 vi.mock('../utils/toast', () => ({ showToast: toast }));
+
+// As the app renders it: StrictMode mounts each component twice in development.
+const render = (ui: React.ReactElement) => renderPlain(<React.StrictMode>{ui}</React.StrictMode>);
 
 const nowRequests = () => {
   const seen: OnlineBackupEventDetail[] = [];

@@ -139,8 +139,12 @@ export const OnlineBackupPanel: React.FC = () => {
   const [showCode, setShowCode] = useState(false);
   const [turningOff, setTurningOff] = useState(false);
   const [, tick] = useState(0);
+  // Set on every mount: StrictMode unmounts and remounts once in development.
   const mounted = useRef(true);
-  useEffect(() => () => { mounted.current = false; }, []);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
 
   useEffect(() => {
     setRecord(readOnlineBackupRecord(storageKey));
