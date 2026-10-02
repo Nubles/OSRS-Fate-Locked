@@ -101,6 +101,18 @@ describe('classifyShop', () => {
       ['Mysterious Hallowed Goods', 'Reward Shops'],
       ["The Esoterican Arms", 'Bars & Inns'],
       ["Yarnio's Baked Goods", 'Food Shops'],
+      // Stock over name (accuracy audit S1 to S10): rune shops, pubs, weapon sellers and an ore seller.
+      ['The Runic Emporium', 'Magic Shops'],
+      ["Regath's Wares", 'Magic Shops'],
+      ['The Lost Pickaxe', 'Bars & Inns'],
+      ["King's Axe Inn", 'Bars & Inns'],
+      ["Efaritay's Supplies", 'Weapon Shops'],
+      ["Ivan's Supplies", 'Weapon Shops'],
+      ["TzHaar-Hur-Tel's Equipment Store", 'Weapon Shops'],
+      ["TzHaar-Hur-Zal's Equipment Store", 'Weapon Shops'],
+      ['Temple Supplies', 'Reward Shops'],
+      ["Sian's Ranged Weaponry", 'Archery Shops'],
+      ['Ore seller', 'Ore Merchants'],
     ];
     for (const [name, want] of cases) {
       expect(classifyShop(name), name).toBe(want);

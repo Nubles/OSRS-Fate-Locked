@@ -70,6 +70,8 @@ describe('vanilla activity access declarations', () => {
       'Commander Zilyana': '45,58', "Kree'arra": '45,58', "K'ril Tsutsaroth": '45,58', 'Duke Sucellus': '44,61',
       'Phantom Muspah': '44,61', 'The Leviathan': '48,49', 'The Whisperer': '46,54', Amoxliatl: '26,50',
       'Maggot King': '56,52', 'Chaos Elemental': '50,61', Araxxor: '57,53', "Emir's Arena": '52,51',
+      // Captain Ginea's tent at (1504,3632), in the Shayzien encampment (accuracy audit G1).
+      'Intelligence Gathering': '23,56',
     };
     const ownerOf = new Map<string, string>(Object.entries(SUB_AREA_CHUNKS as Record<string, { cx: number; cy: number }[]>)
       .flatMap(([area, chunks]) => chunks.map(({ cx, cy }) => [`${cx},${cy}`, area] as const)));

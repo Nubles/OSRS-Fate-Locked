@@ -75,7 +75,8 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   'Castle Wars': ['Castle Wars'],
   'Clan Wars': ['Ferox Enclave'],
   "Emir's Arena": ['Duel Arena / PvP Arena', 'Mage Training Arena'],
-  'Intelligence Gathering': ['Piscarilius'],
+  // Captain Ginea runs it from the Shayzien encampment, 23,56 (accuracy audit G1).
+  'Intelligence Gathering': ['Shayzien'],
   'Last Man Standing': ['Ferox Enclave'],
   'Mage Arena': ['Mage Arena'],
   'Nightmare Zone': ['Yanille'],

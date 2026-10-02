@@ -429,6 +429,19 @@ function hasEntity(entry, category, name) {
   return (entry?.[field] ?? []).some((value) => (Array.isArray(value) ? value[0] : value) === name);
 }
 
+/**
+ * A reviewed shop's requirements where it stands (data/sources/shop-overrides.json): the
+ * source's, less those the record replaces, with the record's own, such as the activity whose
+ * currency a reward shop takes. A shop left with none loses its entry.
+ */
+function reviewShopRequirements(override, requirementsByKey, key) {
+  if (!override.requirements?.length && !override.replaces?.length) return;
+  const kept = (requirementsByKey[key] ?? []).filter(requirement => !(override.replaces ?? []).includes(requirement));
+  const requirements = [...new Set([...kept, ...(override.requirements ?? [])])].sort();
+  if (requirements.length) requirementsByKey[key] = requirements;
+  else delete requirementsByKey[key];
+}
+
 function cleanReqs(values, audit, sourceKey, category) {
   const result = new Set(); let duplicated = false;
   for (const value of values) for (const raw of Object.keys(value ?? {})) {
@@ -585,7 +598,8 @@ export function transformChunkContent(data, sourceManifest, namedLocationRegistr
   const shopInfo = {};
   for (const override of shopOverrides.records) {
     const located = Object.values(chunks).some(e => e.s?.includes(override.name) || override.npcNames?.some(n => e.p?.includes(n)))
-      || Object.entries(interiors).some(([id, e]) => e.content.s?.includes(override.name) || override.placementSourceIds?.includes(id));
+      || Object.entries(interiors).some(([id, e]) => e.content.s?.includes(override.name) || override.placementSourceIds?.includes(id)
+        || override.npcNames?.some(n => e.content.p?.includes(n)));
     if (!(override.name in shopItems) && !located) continue;
     shopInfo[override.name] = { status: override.status, source: override.source };
     if (override.status === 'removed') { delete shopItems[override.name]; continue; }
@@ -594,13 +608,19 @@ export function transformChunkContent(data, sourceManifest, namedLocationRegistr
       shopItems[override.aliasOf] = [...new Set([...(shopItems[override.aliasOf] ?? []), ...(shopItems[override.name] ?? [])])];
       delete shopItems[override.name];
     }
-    for (const [id, entry] of Object.entries(chunks)) if (override.npcNames?.some(n => entry.p?.includes(n))) {
-      entry.s = [...new Set([...(entry.s ?? []), override.name])].sort();
-      if (override.requirements?.length) ((taskUnlocks.Shops ??= {})[override.name] ??= {})[id] = override.requirements;
+    const reviewsRequirements = Boolean(override.requirements?.length || override.replaces?.length);
+    for (const [id, entry] of Object.entries(chunks)) {
+      if (override.npcNames?.some(n => entry.p?.includes(n))) entry.s = [...new Set([...(entry.s ?? []), override.name])].sort();
+      if (reviewsRequirements && entry.s?.includes(override.name)) reviewShopRequirements(override, (taskUnlocks.Shops ??= {})[override.name] ??= {}, id);
     }
-    for (const [id, entry] of Object.entries(interiors)) if (override.placementSourceIds?.includes(id) || override.npcNames?.some(n => entry.content.p?.includes(n))) {
-      entry.content.s = [...new Set([...(entry.content.s ?? []), override.name])].sort();
-      if (override.requirements?.length) (entry.requirements.shop ??= {})[override.name] = override.requirements;
+    if (taskUnlocks.Shops?.[override.name] && !Object.keys(taskUnlocks.Shops[override.name]).length) delete taskUnlocks.Shops[override.name];
+    for (const [id, entry] of Object.entries(interiors)) {
+      if (override.placementSourceIds?.includes(id) || override.npcNames?.some(n => entry.content.p?.includes(n))) {
+        entry.content.s = [...new Set([...(entry.content.s ?? []), override.name])].sort();
+      }
+      if (!reviewsRequirements || !entry.content.s?.includes(override.name)) continue;
+      reviewShopRequirements(override, entry.requirements.shop ??= {}, override.name);
+      if (!Object.keys(entry.requirements.shop).length) delete entry.requirements.shop;
     }
   }
   applyReviewedContent(data, chunks, interiors, taskUnlocks, audit);

@@ -269,6 +269,16 @@
         "url": "https://oldschool.runescape.wiki/w/Hendor's_Awesome_Ores?oldid=15318612",
         "revision": 15318612
       }
+    },
+    {
+      "name": "Efaritay's Supplies",
+      "status": "stocked",
+      "requirements": ["The Blood Moon Rises Complete the quest"],
+      "note": "Efaritay Hallow opens the shop in Castle Drakan after The Blood Moon Rises; the castle itself asks only for Priest in Peril.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Efaritay's_Supplies?oldid=15318555",
+        "revision": 15318555
+      }
     }
   ]
 }

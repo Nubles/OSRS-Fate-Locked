@@ -16,6 +16,8 @@ import { SKILL_UNLOCK_DATA } from './skillUnlocks';
 import { resourceReqFor } from '../utils/chunkResources';
 import { skillChunkNodes } from '../utils/skillChunkNodes';
 import { chunkContentService } from '../services/ChunkContentService';
+import { classifyShop } from '../utils/shopClassification';
+import shopOverrides from './sources/shop-overrides.json';
 import {
   FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST, MINIGAMES_LIST, MISTHALIN_AREAS, MOBILITY_LIST,
   REGIONS_LIST, SKILLS_LIST, BOSSES_LIST,
@@ -235,6 +237,76 @@ describe('S16: the level gates agree with the skill table', () => {
       }
     }
     expect(checked).toEqual(expect.arrayContaining(['Veg stall', 'Fruit Stall', 'Ore stall', 'Tea stall', 'Gem stall']));
+  });
+});
+
+type RawPlace = { s?: string[] };
+const rawContent = content as unknown as {
+  chunks: Record<string, RawPlace>;
+  interiors: Record<string, { content: RawPlace; requirements: { shop?: Record<string, string[]> } }>;
+  shopItems: Record<string, string[]>;
+  taskUnlocks: { Shops?: Record<string, Record<string, string[]>> };
+};
+/** Every shop name in the data, placed or known only from its stock. */
+const allShops = [...new Set([
+  ...Object.values(rawContent.chunks).flatMap(entry => entry.s ?? []),
+  ...Object.values(rawContent.interiors).flatMap(entry => entry.content.s ?? []),
+  ...Object.keys(rawContent.shopItems),
+])];
+
+describe('S1 to S10: each shop sits in the category its stock calls for', () => {
+  it('puts every shop the audit names where its stock belongs', () => {
+    expect(Object.fromEntries([
+      'The Runic Emporium', "Regath's Wares", 'The Lost Pickaxe', "King's Axe Inn", "Efaritay's Supplies",
+      "Ivan's Supplies", "TzHaar-Hur-Tel's Equipment Store", "TzHaar-Hur-Zal's Equipment Store", 'Temple Supplies',
+      "Sian's Ranged Weaponry", 'Ore seller',
+    ].map(shop => [shop, classifyShop(shop)]))).toEqual({
+      'The Runic Emporium': 'Magic Shops', "Regath's Wares": 'Magic Shops',
+      'The Lost Pickaxe': 'Bars & Inns', "King's Axe Inn": 'Bars & Inns',
+      "Efaritay's Supplies": 'Weapon Shops', "Ivan's Supplies": 'Weapon Shops',
+      "TzHaar-Hur-Tel's Equipment Store": 'Weapon Shops', "TzHaar-Hur-Zal's Equipment Store": 'Weapon Shops',
+      'Temple Supplies': 'Reward Shops', "Sian's Ranged Weaponry": 'Archery Shops', 'Ore seller': 'Ore Merchants',
+    });
+  });
+
+  it('sells runes only in magic shops, but for one general store left for review', () => {
+    // Durrik's Goods, a general store, also sells cosmic and death runes; the audit noted it,
+    // and it has no ruling yet.
+    const sellers = allShops.filter(shop => (rawContent.shopItems[shop.replace(/\.$/, '')] ?? []).some(item => / rune$/.test(item)));
+    expect(sellers.filter(shop => classifyShop(shop) !== 'Magic Shops')).toEqual(["Durrik's Goods"]);
+  });
+
+  it('sells obsidian gear and the vampyre flails only in weapon shops', () => {
+    const sellers = allShops.filter(shop => (rawContent.shopItems[shop.replace(/\.$/, '')] ?? [])
+      .some(item => /^(toktz-|tzhaar-ket-|obsidian )|flail$|^sunspear$/i.test(item)));
+    expect(sellers.length).toBeGreaterThanOrEqual(4);
+    expect(sellers.filter(shop => classifyShop(shop) !== 'Weapon Shops')).toEqual([]);
+  });
+
+  it("opens Efaritay's Supplies only after The Blood Moon Rises (S5)", () => {
+    const shop = (unlocks: UnlockState) => evaluateEntityAccess("Efaritay's Supplies", 'shop', { cx: 56, cy: 52, sourceId: '10105' }, unlocks, 'vanilla', service);
+    expect(shop(everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(shop(everything(99, { quests: questsWithout('The Blood Moon Rises') }))).toEqual({ status: 'NOT_READY', reasons: ['The Blood Moon Rises'] });
+  });
+});
+
+describe('reviewed shop records', () => {
+  it('cite a wiki revision, and give every place the shop stands its requirements', () => {
+    for (const record of shopOverrides.records as Array<{ name: string; source: { url: string; revision: number }; requirements?: string[]; replaces?: string[] }>) {
+      expect(record.source.url, record.name).toMatch(new RegExp(`\\?oldid=${record.source.revision}$`));
+      if (!record.requirements?.length && !record.replaces?.length) continue;
+      const places = [
+        ...Object.entries(rawContent.chunks).filter(([, entry]) => entry.s?.includes(record.name))
+          .map(([id]) => rawContent.taskUnlocks.Shops?.[record.name]?.[id] ?? []),
+        ...Object.values(rawContent.interiors).filter(entry => entry.content.s?.includes(record.name))
+          .map(entry => entry.requirements.shop?.[record.name] ?? []),
+      ];
+      expect(places.length, record.name).toBeGreaterThan(0);
+      for (const requirements of places) {
+        expect(requirements, record.name).toEqual(expect.arrayContaining(record.requirements ?? []));
+        for (const replaced of record.replaces ?? []) expect(requirements, record.name).not.toContain(replaced);
+      }
+    }
   });
 });
 

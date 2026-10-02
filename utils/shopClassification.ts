@@ -45,9 +45,23 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   'warrior guild armoury': 'Weapon Shops',
   "~ uglug's stuffsies ~": 'Archery Shops',
 
+  // Shops whose names said one thing and whose stock another (accuracy audit,
+  // S1 to S10): the rune shops sold Law, Nature, Blood and Soul runes under
+  // Food Shops and General Stores, and the obsidian and vampyre weapons were
+  // General Stores stock.
+  'the runic emporium': 'Magic Shops',
+  "regath's wares": 'Magic Shops',
+  "efaritay's supplies": 'Weapon Shops',
+  "ivan's supplies": 'Weapon Shops',
+  "tzhaar-hur-tel's equipment store": 'Weapon Shops',
+  "tzhaar-hur-zal's equipment store": 'Weapon Shops',
+  // The only shop with yew bows sells nothing but bows and arrows.
+  "sian's ranged weaponry": 'Archery Shops',
+
   // Ore-only sellers use the dedicated Ore Merchants unlock; tool and
   // dynamite sellers remain Mining Shops.
   'deepfin point ore exchange': 'Ore Merchants',
+  'ore seller': 'Ore Merchants',
   'ore store': 'Ore Merchants',
   "petrified pete's ore shop": 'Ore Merchants',
   'port roberts ore stall': 'Ore Merchants',
@@ -65,11 +79,13 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   'the shrimp and parrot': 'Food Shops',
   "yarnio's baked goods": 'Food Shops',
 
-  // These are pubs despite words such as Ore, Arrow, Sanctum, or Arms.
+  // These are pubs despite words such as Ore, Arrow, Sanctum, Arms, Pickaxe or Axe.
   'beach cocktails': 'Bars & Inns',
   'falador party room': 'Bars & Inns',
   'garlic cocktail supply': 'Bars & Inns',
+  "king's axe inn": 'Bars & Inns',
   "myreque's rest": 'Bars & Inns',
+  'the lost pickaxe': 'Bars & Inns',
   'stick your ore inn': 'Bars & Inns',
   "sunlight's sanctum": 'Bars & Inns',
   'the crypt': 'Bars & Inns',
@@ -85,6 +101,8 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   "honest jimmy's house of stuff": 'Reward Shops',
   'mysterious hallowed goods': 'Reward Shops',
   "prospector percy's nugget shop": 'Reward Shops',
+  // The Guardians of the Rift reward shop, and the only shop with the ring of the elements.
+  'temple supplies': 'Reward Shops',
   "worm tounge's wares": 'Reward Shops',
   'beach kit': 'Clothes Shops',
   "darren's wilderness cape shop": 'Clothes Shops',
