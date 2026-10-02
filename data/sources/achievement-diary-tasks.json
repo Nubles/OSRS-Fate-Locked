@@ -1831,6 +1831,9 @@
       "sourceRequirements": "Completion of Priest in Peril 78 Construction 2 mahogany planks, 2 gold leaves, saw, and hammer Kq head or Kq head (tattered), and 50,000 coins to have the taxidermist stuff it Additional 15,000 coins to construct a Skill Hall if you haven't already",
       "merchants": [
         "Taxidermists"
+      ],
+      "bosses": [
+        "Kalphite Queen"
       ]
     },
     {
@@ -5409,6 +5412,9 @@
           ],
           "items": [
             "100 trading sticks and Tai Bwo Wannai Cleanup access"
+          ],
+          "minigames": [
+            "Tai Bwo Wannai Cleanup"
           ]
         },
         {
@@ -5463,6 +5469,9 @@
           ],
           "items": [
             "100 trading sticks and Tai Bwo Wannai Cleanup access"
+          ],
+          "minigames": [
+            "Tai Bwo Wannai Cleanup"
           ]
         },
         {
@@ -5705,6 +5714,9 @@
           ],
           "regions": [
             "Tai Bwo Wannai"
+          ],
+          "minigames": [
+            "Tai Bwo Wannai Cleanup"
           ]
         }
       ]
@@ -6012,6 +6024,9 @@
           "tier": 8,
           "reason": "Fire cape (or a higher-tier infernal cape)"
         }
+      ],
+      "bosses": [
+        "TzHaar Fight Cave"
       ]
     },
     {
@@ -6458,7 +6473,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Combat gear"
+      "sourceRequirements": "Combat gear",
+      "minigames": [
+        "Intelligence Gathering"
+      ]
     },
     {
       "id": "kou_med_9",
@@ -12263,9 +12281,13 @@
       "kar_easy_9",
       "kar_hard_1",
       "kar_med_1",
+      "kar_med_19",
       "kar_med_5",
+      "kar_med_8",
+      "kar_med_9",
       "kou_hard_5",
       "kou_hard_8",
+      "kou_med_8",
       "lum_hard_5",
       "lum_med_11",
       "mor_hard_5",
@@ -12284,9 +12306,6 @@
       "fal_med_6": "Only visits the Port Sarim Rat Pits.",
       "kar_hard_5": "Needs Tai Bwo Wannai Trio, a quest, not the Cleanup.",
       "kar_med_10": "Needs Tai Bwo Wannai Trio, a quest, not the Cleanup.",
-      "kar_med_19": "Shilo Village also opens the gem rocks.",
-      "kar_med_8": "Teak trees grow outside the Tai Bwo Wannai Hardwood Grove as well.",
-      "kar_med_9": "Mahogany trees grow outside the Tai Bwo Wannai Hardwood Grove as well.",
       "lum_elite_3": "The magic trees stand outside the Mage Training Arena's games.",
       "lum_hard_1": "Bones to Peaches is already an Arcana unlock.",
       "lum_hard_10": "Uses the altar at Emir's Arena; no duel is fought.",
@@ -12294,7 +12313,8 @@
       "west_easy_9": "The Minigame Teleport itself, already a Mobility unlock; no game is played.",
       "western_med_7": "A Gnome Glider trip.",
       "wild_hard_1": "The god spells come from Mage Arena I, already a quest requirement."
-    }
+    },
+    "followUp": "Owner decision, 2 October 2026: a task needs the minigame whose loot it uses, on the route that uses it. The Hardwood Grove routes of kar_med_8 and kar_med_9 need trading sticks, and kar_med_19's Cleanup route its gem rocks, so those routes need Tai Bwo Wannai Cleanup; kou_med_8 delivers intelligence, which only Intelligence Gathering gives."
   },
   "bossAudit": {
     "reviewedAt": "2026-09-26",
@@ -12302,11 +12322,13 @@
     "rule": "Tagged when the task is a kill, a raid or a fight against something the tracker unlocks under Bosses, including a wave inside the Fight Caves. Where a boss has a lesser version that also counts, either one will do; where either of two activities completes the task, each becomes a route. Not tagged: entering a lair, visiting the area, or a monster or reward that only shares a boss's name.",
     "source": "docs/reviews/2026-09-26-diary-boss-audit.md",
     "changedTaskIds": [
+      "des_elite_4",
       "des_hard_4",
       "fal_hard_3",
       "frem_elite_1",
       "frem_elite_5",
       "kar_easy_9",
+      "kar_elite_4",
       "kar_hard_2",
       "kou_elite_3",
       "kou_elite_7",
@@ -12324,6 +12346,7 @@
       "kou_elite_5": "A Hydra in the Karuulm Slayer Dungeon is a Slayer monster, not the Alchemical Hydra.",
       "lum_hard_7": "Barrows gloves come from Recipe for Disaster, not from the Barrows.",
       "wilderness_easy_8": "Only enters the King Black Dragon's lair; the boss is not fought."
-    }
+    },
+    "followUp": "Owner decision, 2 October 2026: a task that needs a boss's loot needs that boss. The KQ head (des_elite_4) drops only from the Kalphite Queen, and the fire cape (kar_elite_4) comes only from the TzHaar Fight Cave; the infernal cape needs a fire cape to enter the Inferno."
   }
 }

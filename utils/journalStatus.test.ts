@@ -886,18 +886,27 @@ describe('audited diary route eligibility', () => {
     }));
     expect(kharazi.machineEligible).toBe(true);
     expect(kharazi.manualChecks).toContain('Any axe');
-    expect(evaluateDiaryTaskEligibility(task('kar_med_9'), unlocked({
+    // The Hardwood Grove's trading sticks come only from Tai Bwo Wannai Cleanup.
+    const grove = unlocked({
       ...shared,
       regions: ['Tai Bwo Wannai'],
       quests: ['Jungle Potion'],
-    })).machineEligible).toBe(true);
+    });
+    expect(evaluateDiaryTaskEligibility(task('kar_med_9'), grove).machineEligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task('kar_med_9'), {
+      ...grove, minigames: ['Tai Bwo Wannai Cleanup'],
+    }).machineEligible).toBe(true);
   });
 
   it('allows Tai Bwo Wannai Cleanup without Shilo Village access', () => {
-    expect(evaluateDiaryTaskEligibility(task('kar_med_19'), unlocked({
+    const cleanup = unlocked({
       skills: { Mining: 4 }, levels: { Mining: 40 },
       quests: ['Jungle Potion'], regions: ['Tai Bwo Wannai'],
-    })).machineEligible).toBe(true);
+    });
+    expect(evaluateDiaryTaskEligibility(task('kar_med_19'), cleanup).machineEligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task('kar_med_19'), {
+      ...cleanup, minigames: ['Tai Bwo Wannai Cleanup'],
+    }).machineEligible).toBe(true);
   });
 
   it('does not require 79 Agility on the Kharazi machete route', () => {

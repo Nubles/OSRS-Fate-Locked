@@ -342,3 +342,25 @@ describe('Diary tasks that use a shop or a service', () => {
     expect([...new Set(named)].sort()).toEqual(['des_easy_6', 'kan_hard_10', 'mor_easy_5', 'var_easy_4', 'var_hard_7']);
   });
 });
+
+describe('Diary tasks that need a minigame’s or a boss’s loot', () => {
+  // The owner's rule of 2 October 2026: loot counts like playing, on the route that uses it.
+  it('needs Intelligence Gathering to deliver intelligence to Captain Ginea', () => {
+    expect(task('kou_med_8')).toMatchObject({ regions: ['Shayzien'], minigames: ['Intelligence Gathering'] });
+  });
+
+  it('needs the TzHaar Fight Cave for a fire cape, and the Kalphite Queen for her head', () => {
+    expect(task('kar_elite_4').bosses).toEqual(['TzHaar Fight Cave']);
+    expect(task('des_elite_4').bosses).toEqual(['Kalphite Queen']);
+  });
+
+  it('needs Tai Bwo Wannai Cleanup only on the routes that use its trading sticks or gem rocks', () => {
+    for (const [id, cleanupRoute] of [['kar_med_8', 'Hardwood Grove'], ['kar_med_9', 'Hardwood Grove'], ['kar_med_19', 'Tai Bwo Wannai Cleanup']]) {
+      const row = task(id);
+      expect(row.minigames, id).toBeUndefined();
+      for (const option of row.oneOf ?? []) {
+        expect(option.minigames, `${id} ${option.label}`).toEqual(option.label === cleanupRoute ? ['Tai Bwo Wannai Cleanup'] : undefined);
+      }
+    }
+  });
+});
