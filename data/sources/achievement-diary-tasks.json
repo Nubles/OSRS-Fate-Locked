@@ -6949,14 +6949,35 @@
         "Woodcutting": 90
       },
       "quests": [],
-      "regions": [
-        "Woodcutting Guild"
-      ],
+      "regions": [],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "90 Woodcutting Any axe",
-      "guilds": [
-        "Woodcutting Guild"
+      "oneOf": [
+        {
+          "label": "Woodcutting Guild redwoods",
+          "regions": [
+            "Woodcutting Guild"
+          ],
+          "guilds": [
+            "Woodcutting Guild"
+          ]
+        },
+        {
+          "label": "Grow a redwood in the Farming Guild",
+          "skills": {
+            "Farming": 90
+          },
+          "regions": [
+            "Farming Guild"
+          ],
+          "guilds": [
+            "Farming Guild"
+          ],
+          "farming": [
+            "Redwood"
+          ]
+        }
       ]
     },
     {

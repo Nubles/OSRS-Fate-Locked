@@ -538,11 +538,20 @@ describe('Diary tasks done inside a guild', () => {
     ['kou_med_5', 'Farming Guild'],
     ['kou_elite_8', 'Farming Guild'],
     ['kou_hard_1', 'Woodcutting Guild'],
-    ['kou_elite_2', 'Woodcutting Guild'],
     ['var_med_2', "Champions' Guild"],
     ['var_elite_3', "Cooks' Guild"],
   ])('tags %s with %s', (id, guild) => {
     expect(task(id).guilds).toEqual([guild]);
+  });
+
+  it('let the redwoods be chopped in the Woodcutting Guild or grown in the Farming Guild', () => {
+    // The owner's call (2 October 2026), as the game allows: a redwood sapling goes in the
+    // Farming Guild's redwood patch at 90 Farming (wiki "Farming Guild" rev 15274002).
+    expect(task('kou_elite_2').guilds).toBeUndefined();
+    expect(task('kou_elite_2').oneOf).toEqual([
+      { label: 'Woodcutting Guild redwoods', regions: ['Woodcutting Guild'], guilds: ['Woodcutting Guild'] },
+      { label: 'Grow a redwood in the Farming Guild', skills: { Farming: 90 }, regions: ['Farming Guild'], guilds: ['Farming Guild'], farming: ['Redwood'] },
+    ]);
   });
 
   it('tag the guild for every route of a task done inside it', () => {

@@ -50,7 +50,7 @@ export const CHANGELOG_RELEASES = [
     date: '2026-10-02',
     sections: {
       fixed: [
-        'Diary tasks done inside a guild now need that guild unlocked before the Journal calls them doable: entering the Magic Guild needs the Wizards’ Guild, a Rogues’ Den wall safe the Rogues’ Den, and the redwoods the Woodcutting Guild, among 14 tasks. Like the patches, rooms and Slayer reward below, this only changes the Journal: you can still log the task by hand.',
+        'Diary tasks done inside a guild now need that guild unlocked before the Journal calls them doable: entering the Magic Guild needs the Wizards’ Guild, a Rogues’ Den wall safe the Rogues’ Den, and the redwoods the Woodcutting Guild, or the Farming Guild if you grow your own redwood there, among 14 tasks. Like the patches, rooms and Slayer reward below, this only changes the Journal: you can still log the task by hand.',
         'Diary tasks that use a farming patch need that patch unlocked, as RuneLite already locks it: the Catherby limpwurt needs the Flower patch, the palm trees the Fruit Tree patch, and the scarecrows a Flower patch, plus an Allotment patch if you grow the watermelon, among 21 tasks.',
         'Tasks in your house need the room or mount they use: the Menagerie for the pet rock, a Portal Chamber or Portal Nexus for the Kharyrll portal, and the mounted Xeric’s talisman or Digsite pendant if you use your own. Entering your house from Yanille or Hosidius needs Real Estate Agents to move it there.',
         'Killing a dust devil in a Slayer helmet needs the Malevolent Masquerade Slayer reward, which the helmet takes to make.',

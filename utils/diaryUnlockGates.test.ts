@@ -92,6 +92,16 @@ describe('Diary tasks that use a guild, farming patch, house room or Slayer rewa
     expect(diaryTaskCompletionDecision(row, account())).toEqual({ ok: true });
   });
 
+  it('read the redwoods as doable from either guild, the Farming Guild with its patch and 90 Farming', () => {
+    const redwoods = ALL_DIARY_TASKS.find(row => row.id === 'kou_elite_2')!;
+    const levels = everything().levels;
+    expect(evaluateDiaryTaskEligibility(redwoods, everything({ guilds: [] })).eligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(redwoods, everything({ guilds: ['Woodcutting Guild'] })).eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(redwoods, everything({ guilds: ['Farming Guild'] })).eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(redwoods, everything({ guilds: ['Farming Guild'], farming: [] })).eligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(redwoods, everything({ guilds: ['Farming Guild'], levels: { ...levels, Farming: 89 } })).eligible).toBe(false);
+  });
+
   it('still ask for their confirmations when logged by hand', () => {
     const row = probe('guilds', 'Mining Guild', { items: ['Prospector helmet'] });
     expect(diaryTaskCompletionDecision(row, account())).toEqual({ ok: false, reason: 'Confirm: Prospector helmet' });

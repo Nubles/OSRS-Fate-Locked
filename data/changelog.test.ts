@@ -54,7 +54,7 @@ describe('authored changelog releases', () => {
     expect(release?.date).toBe('2026-10-02');
     expect(Object.keys(release?.sections ?? {})).toEqual(['fixed']);
     expect(release?.sections.fixed).toEqual([
-      expect.stringMatching(/done inside a guild now need that guild unlocked.*Magic Guild needs the Wizards’ Guild.*Rogues’ Den.*Woodcutting Guild.*14 tasks.*only changes the Journal: you can still log the task by hand/),
+      expect.stringMatching(/done inside a guild now need that guild unlocked.*Magic Guild needs the Wizards’ Guild.*Rogues’ Den.*Woodcutting Guild, or the Farming Guild if you grow your own redwood.*14 tasks.*only changes the Journal: you can still log the task by hand/),
       expect.stringMatching(/farming patch need that patch unlocked.*Flower patch.*Fruit Tree patch.*Allotment patch if you grow the watermelon.*21 tasks/),
       expect.stringMatching(/house need the room or mount.*Menagerie.*Portal Chamber or Portal Nexus.*Xeric’s talisman or Digsite pendant.*Yanille or Hosidius needs Real Estate Agents/),
       expect.stringMatching(/Slayer helmet needs the Malevolent Masquerade Slayer reward/),
