@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import {
   X, Link2, Copy, Check, ClipboardPaste, ShieldCheck, ShieldAlert,
   AlertTriangle, Loader2, ArrowDownToLine, Upload, QrCode, History, RotateCcw,
+  type LucideProps,
 } from 'lucide-react';
 import { createFreshState, useGame } from '../context/GameContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
@@ -20,14 +21,18 @@ import {
 } from '../utils/gamePersistence';
 import { showToast } from '../utils/toast';
 import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
+import { Landmark } from './OsrsIcon';
+import { OnlineBackupPanel } from './OnlineBackupPanel';
 
 interface Props {
   onClose: () => void;
   /** When set (e.g. opened from a #sync= link) start on Import, pre-filled. */
   initialImportCode?: string;
+  /** Start on the Online backup tab, as its one-time prompt asks. */
+  initialTab?: 'ONLINE';
 }
 
-type Tab = 'EXPORT' | 'IMPORT' | 'BACKUPS';
+type Tab = 'EXPORT' | 'IMPORT' | 'BACKUPS' | 'ONLINE';
 
 const SYNC_HASH_PREFIX = '#sync=';
 const shareUrlFor = (code: string): string =>
@@ -91,7 +96,7 @@ const VERDICT_UI: Record<RunVerdict, { label: string; sub: string; cls: string; 
   },
 };
 
-export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) => {
+export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode, initialTab }) => {
   const { getExportData, importSave, listBackups, restoreBackup } = useGame();
   const closeTimerRef = useRef<number | null>(null);
   const closedRef = useRef(false);
@@ -120,7 +125,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
   }, []);
   useEscapeKey(closeModal, true);
 
-  const [tab, setTab] = useState<Tab>(initialImportCode ? 'IMPORT' : 'EXPORT');
+  const [tab, setTab] = useState<Tab>(initialImportCode ? 'IMPORT' : initialTab ?? 'EXPORT');
 
   // ── Export ──────────────────────────────────────────────────────────────
   const [code, setCode] = useState<string>('');
@@ -392,7 +397,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
 
   // A render helper, not a component defined here: a component created on
   // every render would remount each tab and drop keyboard focus.
-  const tabButton = (id: Tab, label: string, Icon: typeof Link2) => (
+  const tabButton = (id: Tab, label: string, Icon: React.ComponentType<LucideProps>) => (
     <button
       key={id}
       disabled={accepted || importBusy || restoreBusy}
@@ -448,6 +453,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
           {tabButton('EXPORT', 'Export', Upload)}
           {tabButton('IMPORT', 'Import', ArrowDownToLine)}
           {tabButton('BACKUPS', 'Backups', History)}
+          {tabButton('ONLINE', 'Online', Landmark)}
         </div>
 
         {/* Body */}
@@ -608,6 +614,8 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
               })()}
             </div>
           )}
+
+          {tab === 'ONLINE' && <OnlineBackupPanel />}
 
           {tab === 'BACKUPS' && (
             <div className="space-y-3">

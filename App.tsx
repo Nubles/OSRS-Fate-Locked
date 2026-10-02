@@ -67,6 +67,7 @@ const StrategyGuide = lazyWithRetry(() => import('./components/StrategyGuide').t
 const SupplyChainCalculator = lazyWithRetry(() => import('./components/SupplyChainCalculator').then(m => ({ default: m.SupplyChainCalculator })));
 const GameModePicker = lazyWithRetry(() => import('./components/GameModePicker').then(m => ({ default: m.GameModePicker })));
 const SyncCodeModal = lazyWithRetry(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
+const OnlineBackupDriver = lazyWithRetry(() => import('./components/OnlineBackupDriver').then(m => ({ default: m.OnlineBackupDriver })));
 const ModelGallery = lazyWithRetry(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
 const DiscordSettingsModal = lazyWithRetry(() => import('./components/DiscordSettingsModal'));
 // The release notes load with the modal; only the latest release's id is
@@ -836,6 +837,11 @@ const GameLayout = () => {
         returnFocusTarget?: HTMLElement | null;
       }>).detail;
       const target = detail?.target ?? '';
+      if (target === 'open:online-backup') {
+        setSyncInitialTab('ONLINE');
+        setShowSyncCode(true);
+        return;
+      }
       if (target === 'open:runelite-guide') {
         openRuneliteGuide(
           detail?.returnFocusTarget
@@ -865,6 +871,7 @@ const GameLayout = () => {
   const [showDiscord, setShowDiscord] = useState(false);
   const [showSyncCode, setShowSyncCode] = useState(false);
   const [syncImportCode, setSyncImportCode] = useState<string | undefined>(undefined);
+  const [syncInitialTab, setSyncInitialTab] = useState<'ONLINE' | undefined>(undefined);
   const [activeRitualAnim, setActiveRitualAnim] = useState<'NONE' | 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE'>('NONE');
 
   // Deep link: a `#sync=<code>` fragment (from a shared link or scanned QR)
@@ -974,6 +981,7 @@ const GameLayout = () => {
     <div className="min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative">
       <EffectsLayer />
       <OnlineSyncDriver />
+      <Suspense fallback={null}><OnlineBackupDriver /></Suspense>
       <RollInboxDriver />
       {/* Progressive-disclosure watcher — always mounted (same rule as
           RollInboxDriver): detected events must queue from every screen. */}
@@ -1006,7 +1014,7 @@ const GameLayout = () => {
             {showStrategy && <StrategyGuide onClose={() => setShowStrategy(false)} />}
             {showSupplyChain && <SupplyChainCalculator initialQuery={supplyChainPreset} onClose={() => { setShowSupplyChain(false); setSupplyChainPreset(undefined); }} />}
             {showGameMode && <GameModePicker onClose={() => setShowGameMode(false)} />}
-            {showSyncCode && <SyncCodeModal onClose={() => { setShowSyncCode(false); setSyncImportCode(undefined); }} initialImportCode={syncImportCode} />}
+            {showSyncCode && <SyncCodeModal onClose={() => { setShowSyncCode(false); setSyncImportCode(undefined); setSyncInitialTab(undefined); }} initialImportCode={syncImportCode} initialTab={syncInitialTab} />}
             {showGallery && <ModelGallery onClose={() => setShowGallery(false)} />}
             {showDiscord && <DiscordSettingsModal onClose={() => setShowDiscord(false)} />}
           </>
