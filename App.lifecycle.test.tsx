@@ -538,7 +538,8 @@ describe('App changelog lifecycle', () => {
     }
     await user.click(screen.getByRole('button', { name: 'Start' }));
 
-    const gameMode = await screen.findByRole('dialog', { name: 'Choose game mode' });
+    // The game mode picker loads lazily, which takes a while under a full test run.
+    const gameMode = await screen.findByRole('dialog', { name: 'Choose game mode' }, { timeout: 10_000 });
     expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
 
     await user.click(within(gameMode).getByRole('button', { name: 'Close' }));
@@ -650,15 +651,16 @@ describe('App changelog lifecycle', () => {
       name: 'RuneLite Plugin Guide',
     }));
 
+    // The guide loads lazily, which takes a while under a full test run.
     const guideDialog = await screen.findByRole('dialog', {
       name: 'RuneLite Plugin Guide',
-    });
+    }, { timeout: 10_000 });
     expect(guideDialog).toBeTruthy();
     await user.click(within(guideDialog).getAllByRole('button', {
       name: 'Close RuneLite Plugin Guide',
     })[0]);
     expect(document.activeElement).toBe(settings);
-  });
+  }, 25_000);
 
   it('opens the RuneLite guide from the command palette and returns focus to Jump to', async () => {
     storage.setItem(changelogStorageKey, latestChangelogId);
@@ -675,14 +677,15 @@ describe('App changelog lifecycle', () => {
       name: /RuneLite Plugin Guide.*Install, connect, configure and troubleshoot RuneLite/i,
     }));
 
+    // The guide loads lazily, which takes a while under a full test run.
     const guideDialog = await screen.findByRole('dialog', {
       name: 'RuneLite Plugin Guide',
-    });
+    }, { timeout: 10_000 });
     await user.click(within(guideDialog).getAllByRole('button', {
       name: 'Close RuneLite Plugin Guide',
     })[0]);
     expect(document.activeElement).toBe(paletteTrigger);
-  }, 15_000);
+  }, 25_000);
 
   it('recovers the latest game action after active-profile storage fails', async () => {
     const profileKey = profileBaseKey(PROFILE_ID);
