@@ -220,7 +220,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   "Drakan's Medallion": { quests: ['A Taste of Hope'] },
   'Royal Seed Pod': { quests: ['Monkey Madness II'] },
   "Pharaoh's Sceptre": { note: 'Pyramid Plunder reward (Sophanem).' },
-  'Crystal Teleport Seed': { note: 'Crystal teleport seed (Prifddinas / elf content).' },
+  // Teleport crystal, oldid 15261004 (accuracy audit M4); the travel options ask for each quest.
+  'Crystal Teleport Seed': { note: "Eluned enchants a teleport crystal once Mourning's End Part I is started; its Prifddinas teleport needs Song of the Elves." },
 
   // ---- Bosses with an access gate (most others have no hard requirement) -----
   'Inferno': { manualRequirements: ['Complete the Fight Cave (TzTok-Jad) to enter.'] },

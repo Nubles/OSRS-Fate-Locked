@@ -24,6 +24,7 @@ import { compileRawRequirements } from '../utils/questRoutes/accountRequirements
 import { evaluateActivityReadiness } from '../utils/activityReadiness';
 import { TRAVEL_NETWORKS } from './travelLinks';
 import { TRAVEL_METHODS } from './travelMethods';
+import { travelDecisions } from '../utils/travelDecisions';
 import interiorAccess from './sources/interior-access.json';
 import { getActivityRegion } from './activityRegions';
 import {
@@ -573,6 +574,42 @@ describe('the shops the data was missing are added, each where the wiki puts it'
     const kebabs = [...new Set(Object.entries(rawContent.shopItems)
       .filter(([shop]) => classifyShop(shop) === 'Kebab Sellers').flatMap(([, items]) => items))].sort();
     expect(kebabs).toEqual(expect.arrayContaining(['Kebab', 'Varlamorian kebab']));
+  });
+});
+
+describe('M3 and M4: the south Pollnivneach carpet, and the teleport crystal\'s quests', () => {
+  const method = (id: string) => TRAVEL_METHODS.find(row => row.id === id)!;
+
+  it('stops the magic carpets at every rug merchant, south Pollnivneach\'s in 52,45 too', () => {
+    const raw = content as unknown as { chunks: Record<string, { p?: string[] }> };
+    const merchants = Object.entries(raw.chunks).filter(([, entry]) => entry.p?.includes('Rug Merchant'))
+      .map(([id]) => `${Math.floor(Number(id) / 256)},${Number(id) % 256}`).sort();
+    expect(merchants).toContain('52,45');
+    expect([...method('network:magic-carpet').options.Travel.to].sort()).toEqual(merchants);
+  });
+
+  it('asks for Mourning\'s End Part I started at Lletya, and Song of the Elves at Prifddinas', () => {
+    // Teleport crystal, oldid 15261004.
+    const crystal = method('item:teleport-crystal');
+    const decide = (quests: string[]) => travelDecisions([crystal], {
+      unlocks: { mobility: ['Crystal Teleport Seed'], arcana: [], housing: [], diaries: [], quests },
+      entries: { '36,49': 'ALLOWED', '51,94': 'ALLOWED' },
+    })['item:teleport-crystal'].options;
+    expect(decide([])).toEqual({
+      Lletya: { to: ['36,49'], status: 'UNKNOWN', reason: "Needs Mourning's End Part I started" },
+      Prifddinas: { to: ['51,94'], status: 'NOT_READY', reason: 'Needs Song of the Elves' },
+    });
+    expect(decide(["Mourning's End Part I", 'Song of the Elves'])).toEqual({
+      Lletya: { to: ['36,49'], status: 'ALLOWED' }, Prifddinas: { to: ['51,94'], status: 'ALLOWED' },
+    });
+    expect(getActivityReq('Crystal Teleport Seed')?.note).toMatch(/Mourning's End Part I is started.*Song of the Elves/);
+  });
+
+  it('names only real quests on a travel option', () => {
+    const named = TRAVEL_METHODS.flatMap(row => Object.values({ ...row.options, ...row.codes }))
+      .flatMap(option => [...(option.quests ?? []), ...(option.startedQuests ?? [])]);
+    expect(named.length).toBeGreaterThan(0);
+    expect(named.filter(quest => !(quest in QUEST_DATA))).toEqual([]);
   });
 });
 

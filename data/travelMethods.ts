@@ -22,6 +22,10 @@ export interface TravelOption {
   to: readonly string[];
   /** Once this diary (or a harder tier of it) is done, the player can switch the option to go here instead. */
   afterDiary?: { diary: string; to: readonly string[] };
+  /** Quests this option needs done, beyond the method's unlocks. */
+  quests?: readonly string[];
+  /** Quests it needs only started. The app records finished quests, so until one is done the option is UNKNOWN. */
+  startedQuests?: readonly string[];
 }
 
 export interface TravelMethod {
@@ -352,9 +356,10 @@ const JEWELLERY: readonly TravelMethod[] = [
   // It lands at the Grand Tree (2466,3492 on the Grand Tree's page, oldid 15114413).
   item('item:royal-seed-pod', 'Royal seed pod', [19564], ['Royal Seed Pod'], { Commune: { to: ['38,54'] } },
     'Royal seed pod', 15323014),
-  // Eternal teleport crystal, oldid 15261005.
+  // Eternal teleport crystal, oldid 15261005. Eluned enchants a crystal once Mourning's End
+  // Part I is started, and Prifddinas opens with Song of the Elves (accuracy audit M4).
   item('item:teleport-crystal', 'Teleport crystal', [6102, 6101, 6100, 6099, 13102, 23946], ['Crystal Teleport Seed'],
-    { Lletya: { to: ['36,49'] }, Prifddinas: { to: ['51,94'] } },
+    { Lletya: { to: ['36,49'], startedQuests: ["Mourning's End Part I"] }, Prifddinas: { to: ['51,94'], quests: ['Song of the Elves'] } },
     'Teleport crystal', 15261004),
   // The Book of the Dead, oldid 15317141, shares the stories and names each one's pin.
   item('item:kharedsts-memoirs', "Kharedst's memoirs", [21760, 25818], ["Kharedst's Memoirs"],
@@ -598,8 +603,10 @@ const NETWORKS: readonly TravelMethod[] = [
   network('balloon', 'Balloon', 'Balloon Transport', { npcs: range(4715, 4723) },
     anyStop(['45,51', '45,53', '43,52', '51,54', '38,48', '38,54'], 'Fly'),
     'Balloon transport system', 15356815),
+  // South Pollnivneach's pin (3346,2944) is on 52,46's south edge; its rug merchant stands
+  // in 52,45 (accuracy audit M3).
   network('magic-carpet', 'Magic carpet', 'Magic Carpets', { npcs: [17, 18, 19, 20, 22] },
-    anyStop(['51,48', '52,46', '53,45', '49,47', '54,48', '51,43', '50,43'], 'Travel'),
+    anyStop(['51,48', '52,46', '52,45', '53,45', '49,47', '54,48', '51,43', '50,43'], 'Travel'),
     'Magic carpet', 15315446),
   network('quetzal', 'Quetzal', 'Quetzal Network', { npcs: range(13350, 13354) },
     anyStop(QUETZAL_STOPS, 'Travel', 'Last-destination'), 'Quetzal Transport System', 15308283),

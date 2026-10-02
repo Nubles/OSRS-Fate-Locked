@@ -85,6 +85,40 @@ describe('travelDecisions', () => {
       .toEqual(['50,50', '46,52']);
   });
 
+  it("asks for an option's own quests on top of its destination", () => {
+    const crystal = method({
+      unlocks: ['Crystal Teleport Seed'],
+      options: { Done: { to: ['50,50'], quests: ['Song of the Elves'] }, Locked: { to: ['46,52'], quests: ['Song of the Elves'] } },
+    });
+    const decide = (quests?: string[], mobility = ['Crystal Teleport Seed']) =>
+      travelDecisions([crystal], context({ unlocks: { ...nothing, mobility, ...(quests ? { quests } : {}) } })).test.options;
+    expect(decide([])).toEqual({
+      Done: { to: ['50,50'], status: 'NOT_READY', reason: 'Needs Song of the Elves' },
+      // A locked destination stays locked, quest or not.
+      Locked: { to: ['46,52'], status: 'LOCKED', reason: 'The destination is locked' },
+    });
+    // A run whose quests the context doesn't give hasn't done them.
+    expect(decide().Done.status).toBe('NOT_READY');
+    expect(decide(['Song of the Elves']).Done).toEqual({ to: ['50,50'], status: 'ALLOWED' });
+    // The method's unlock comes first.
+    expect(decide(['Song of the Elves'], []).Done).toEqual({ to: ['50,50'], status: 'LOCKED', reason: 'Needs Crystal Teleport Seed' });
+  });
+
+  it('leaves an allowed option UNKNOWN while a quest it needs only started is not done', () => {
+    const crystal = method({
+      options: {
+        Here: { to: ['50,50'], startedQuests: ["Mourning's End Part I"] },
+        Later: { to: ['52,52'], startedQuests: ["Mourning's End Part I"] },
+      },
+    });
+    const decide = (quests: string[]) => travelDecisions([crystal], context({ unlocks: { ...nothing, quests } })).test.options;
+    expect(decide([])).toEqual({
+      Here: { to: ['50,50'], status: 'UNKNOWN', reason: "Needs Mourning's End Part I started" },
+      Later: { to: ['52,52'], status: 'NOT_READY', reason: "The destination isn't ready" },
+    });
+    expect(decide(["Mourning's End Part I"]).Here).toEqual({ to: ['50,50'], status: 'ALLOWED' });
+  });
+
   it('keeps what identifies a method, and decides fairy ring codes like options', () => {
     const ring = method({
       id: 'network:fairy-ring', label: 'Fairy ring', unlocks: ['Fairy Rings'], match: { objects: [29495] },
