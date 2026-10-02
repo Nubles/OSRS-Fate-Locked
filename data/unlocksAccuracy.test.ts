@@ -21,6 +21,10 @@ import { shopsByCategory } from '../utils/merchantShops';
 import { MERCHANT_SERVICES } from './merchantServices';
 import shopOverrides from './sources/shop-overrides.json';
 import { compileRawRequirements } from '../utils/questRoutes/accountRequirements';
+import { evaluateActivityReadiness } from '../utils/activityReadiness';
+import { TRAVEL_NETWORKS } from './travelLinks';
+import { TRAVEL_METHODS } from './travelMethods';
+import interiorAccess from './sources/interior-access.json';
 import {
   FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST, MINIGAMES_LIST, MISTHALIN_AREAS, MOBILITY_LIST,
   REGIONS_LIST, SKILLS_LIST, BOSSES_LIST,
@@ -473,6 +477,21 @@ describe('U3: the sellers who sell through dialogue are merchant services', () =
     expect(missing('Climbing Boots', 'Tenzing', ['Clothes Shops'])).toEqual([]);
     expect(missing('Ammo Mould', 'Nulodion', [])).toEqual(['Merchant: Weapon Shops']);
     expect(missing('Ammo Mould', 'Nulodion', ['Weapon Shops'])).toEqual([]);
+  });
+});
+
+describe("U4: Mine Carts asks for The Giant Dwarf only on Keldagrim's carts", () => {
+  it('is ready without The Giant Dwarf, since the Lovakengj network needs no quest', () => {
+    const readiness = (quests: string[]) => evaluateActivityReadiness(true, getActivityReq('Mine Carts'), everything(99, { quests }), 'vanilla');
+    expect(readiness(questsWithout('The Giant Dwarf')).status).toBe('READY');
+    expect(readiness([]).status).toBe('READY');
+    expect(getActivityReq('Mine Carts')?.note).toMatch(/Lovakengj's carts need no quest\. Keldagrim's carts need The Giant Dwarf started/);
+    expect(TRAVEL_METHODS.find(method => method.id === 'network:lovakengj-minecart')?.unlocks).toEqual(['Mine Carts']);
+  });
+
+  it("still asks for the quest on the way into Keldagrim, where its carts run", () => {
+    expect(TRAVEL_NETWORKS.find(network => network.label === 'Keldagrim mine carts')?.opensWith).toEqual([{ mobility: 'Mine Carts' }]);
+    expect(interiorAccess.locations.Keldagrim.requirements).toEqual(['Started The Giant Dwarf']);
   });
 });
 

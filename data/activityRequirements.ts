@@ -199,7 +199,10 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Fairy Rings': { manualRequirements: ['Reached fairy ring access during Fairytale II - Cure a Queen (full completion is not required)'] },
   'Gnome Gliders': { quests: ['The Grand Tree'] },
   'Balloon Transport': { quests: ['Enlightened Journey'] },
-  'Mine Carts': { quests: ['The Giant Dwarf'] },
+  // One unlock for both networks (owner call U4). Lovakengj Minecart Network (oldid 15322190):
+  // no quest. Keldagrim minecart system (oldid 15323246): The Giant Dwarf started, which
+  // Keldagrim's own entry asks for; the White Wolf Mountain line needs it and Fishing Contest done.
+  'Mine Carts': { note: "Lovakengj's carts need no quest. Keldagrim's carts need The Giant Dwarf started, and their White Wolf Mountain line needs it and Fishing Contest done." },
   'Magic Carpets': { note: 'Basic routes require only a fare. Quest restrictions vary by destination.' },
   'Quetzal Network': { questProgress: [{ quest: "Twilight's Promise", label: "Received Renu during Twilight's Promise to unlock the quetzal network" }] },
   'Mycelium Transport': { quests: ['Bone Voyage'] },
