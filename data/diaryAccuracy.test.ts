@@ -75,3 +75,33 @@ describe('Diary tasks name the area that owns their chunk on the map', () => {
     expect(task('ard_hard_11').questProgress).toEqual([expect.objectContaining({ quest: 'Plague City' })]);
   });
 });
+
+describe('Diary trips need the place you leave from and the place you arrive in', () => {
+  // The owner's rule: a travel task needs both ends of the trip.
+  it.each([
+    ['des_med_5', 'the magic carpet to Uzer', ['Shantay Pass', 'Ruins of Uzer']],
+    ['des_easy_11', 'the magic carpet to Pollnivneach', ['Shantay Pass', 'Pollnivneach']],
+    ['fal_easy_8', 'the boat to Entrana', ['Port Sarim', 'Entrana']],
+    ['kar_easy_5', 'the boat from Brimhaven to Ardougne', ['Brimhaven', 'East Ardougne']],
+    ['lum_hard_6', 'the train from Dorgesh-Kaan to Keldagrim', ['Lumbridge', 'Keldagrim']],
+    ['ard_easy_8', 'the Ardougne lever to the Deserted Keep (49,61)', ['East Ardougne', 'Mage Arena']],
+    ['wild_hard_8', 'the shortcut from Trollheim (45,57)', ['Burthorpe', 'Wilderness God Wars Dungeon']],
+    ['frem_med_8', 'the walk from Waterbirth Island to the Lighthouse', ['Lighthouse', 'Waterbirth Island']],
+    ['kan_med_4', 'the Water Obelisk grapple, reached through Taverley Dungeon', ['Catherby', 'Taverley']],
+    ['kan_hard_5', 'the Water Obelisk, reached through Taverley Dungeon', ['Catherby', 'Taverley']],
+  ] as const)('tags %s with each area %s passes through', (id, _trip, areas) => {
+    expect(task(id).regions).toEqual(areas);
+  });
+
+  it('takes the boat to Land’s End from Port Sarim or Port Piscarilius', () => {
+    expect(task('kou_easy_6')).toMatchObject({
+      regions: ["Land's End"], anyOfRegions: ['Port Sarim', 'Piscarilius'],
+    });
+  });
+
+  it('lands either Wilderness lever at the Deserted Keep', () => {
+    expect(task('wilderness_easy_2')).toMatchObject({
+      regions: ['Mage Arena'], anyOfRegions: ['East Ardougne', 'Edgeville'],
+    });
+  });
+});

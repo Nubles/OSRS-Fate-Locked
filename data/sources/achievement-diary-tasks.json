@@ -225,7 +225,8 @@
       "skills": {},
       "quests": [],
       "regions": [
-        "East Ardougne"
+        "East Ardougne",
+        "Mage Arena"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -1230,7 +1231,8 @@
       "skills": {},
       "quests": [],
       "regions": [
-        "Shantay Pass"
+        "Shantay Pass",
+        "Pollnivneach"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -1324,7 +1326,8 @@
         "The Golem"
       ],
       "regions": [
-        "Shantay Pass"
+        "Shantay Pass",
+        "Ruins of Uzer"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -2010,7 +2013,8 @@
       "skills": {},
       "quests": [],
       "regions": [
-        "Port Sarim"
+        "Port Sarim",
+        "Entrana"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -3630,7 +3634,8 @@
         "Horror from the Deep"
       ],
       "regions": [
-        "Lighthouse"
+        "Lighthouse",
+        "Waterbirth Island"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -4324,7 +4329,8 @@
       },
       "quests": [],
       "regions": [
-        "Catherby"
+        "Catherby",
+        "Taverley"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -4655,7 +4661,8 @@
       },
       "quests": [],
       "regions": [
-        "Catherby"
+        "Catherby",
+        "Taverley"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -5053,7 +5060,8 @@
       "skills": {},
       "quests": [],
       "regions": [
-        "Brimhaven"
+        "Brimhaven",
+        "East Ardougne"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -6104,6 +6112,10 @@
       "quests": [],
       "regions": [
         "Land's End"
+      ],
+      "anyOfRegions": [
+        "Port Sarim",
+        "Piscarilius"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -7479,7 +7491,8 @@
         "Another Slice of H.A.M."
       ],
       "regions": [
-        "Lumbridge"
+        "Lumbridge",
+        "Keldagrim"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -10806,6 +10819,9 @@
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "None",
+      "regions": [
+        "Mage Arena"
+      ],
       "anyOfRegions": [
         "East Ardougne",
         "Edgeville"
@@ -11642,6 +11658,7 @@
         }
       ],
       "regions": [
+        "Burthorpe",
         "Wilderness God Wars Dungeon"
       ]
     },

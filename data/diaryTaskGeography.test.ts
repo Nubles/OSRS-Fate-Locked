@@ -37,11 +37,8 @@ interface SourceTask {
 
 /** Where the export and the app's map disagree, reviewed; the tag stands. */
 const REVIEWED: Readonly<Record<string, string>> = {
-  frem_med_8: 'The export marks Waterbirth Island, where the trip starts; the task is visiting the Lighthouse.',
   mor_hard_7: 'The Canifis mushroom patch is in 53,54, which the map gives to Paterdomus.',
-  wilderness_easy_2: 'The task is pulling a lever; the export marks where the levers land.',
   wild_hard_6: "The Chaos Elemental roams 50,61, west of Rogues' Castle, which the map calls Scorpia's Cave.",
-  wild_hard_8: "The shortcut lands at 46,57, beside the Wilderness God Wars Dungeon's entrance at 47,58.",
 };
 
 const EXPORT_DIARY: Readonly<Record<string, string>> = {
