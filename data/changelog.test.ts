@@ -20,7 +20,18 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-29-stranded-areas');
+    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-map-areas');
+  });
+
+  it('announces the places that join their areas, and rolls that ask for the entrance’s area', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-map-areas');
+    expect(release?.title).toBe('Places Join the Area They’re In');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Giants’ Foundry to Giants’ Plateau, Kraken Cove to Piscatoris Fishing Colony.*every area of their region/),
+      expect.stringMatching(/Fremennik Slayer Dungeon belongs to Mountain Camp.*every Kandarin area/),
+      expect.stringMatching(/Corporeal Beast needs Chaos Temple.*God Wars Dungeon bosses Burthorpe.*Chaos Elemental Scorpia’s Cave/),
+      expect.stringMatching(/Emir’s Arena also counts with the Mage Training Arena/),
+    ]);
   });
 
   it('announces the fixes for places a run owns but can’t reach, and the retagged Diary tasks', () => {

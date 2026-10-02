@@ -19,6 +19,19 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-02-map-areas',
+    title: 'Places Join the Area They’re In',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'Places the map left outside every area now belong to the area they’re in: the Giants’ Foundry to Giants’ Plateau, Kraken Cove to Piscatoris Fishing Colony, Tal Teklan and Kastori to the Tlati Rainforest, Ortus Farm and Kualti Headquarters to Civitas illa Fortis, Nemus Retreat to Auburnvale, the Morytania Spider Cave to Darkmeyer, the Seers’ Village hops patch, Mosol Rei and others. Before, most opened only once you owned every area of their region.',
+        'The Fremennik Slayer Dungeon belongs to Mountain Camp, beside its entrance. It used to open only with every Kandarin area.',
+        'Boss and minigame rolls ask for the area the map puts their entrance in: the Corporeal Beast needs Chaos Temple, the Thermonuclear Smoke Devil Feldip Hills, Yama Mount Karuulm, and the Giants’ Foundry Giants’ Plateau. Bosses any Vanilla run could roll now need their area too: the God Wars Dungeon bosses Burthorpe, the Tombs of Amascut Sophanem, Duke Sucellus and the Phantom Muspah Weiss, the Leviathan the Wizards’ Tower, the Whisperer Goblin Village, Amoxliatl Ralos’ Rise, the Maggot King and Araxxor Darkmeyer, and the Chaos Elemental Scorpia’s Cave.',
+        'Emir’s Arena also counts with the Mage Training Arena, whose chunk holds the arena’s bank, altar and entrance.',
+      ],
+    },
+  },
+  {
     id: '2026-09-29-stranded-areas',
     title: 'Places You Can’t Reach Yet',
     date: '2026-09-29',
