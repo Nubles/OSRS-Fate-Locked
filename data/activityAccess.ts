@@ -14,13 +14,13 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   'The Gauntlet': ['Prifddinas'],
   'The Nightmare': ['Slepe'],
   "Phosani's Nightmare": ['Slepe'],
-  'Corporeal Beast': ['Graveyard of Shadows'],
+  'Corporeal Beast': ['Chaos Temple'],
   'Alchemical Hydra': ['Mount Karuulm'],
   Cerberus: ['Taverley'],
   'Grotesque Guardians': ['Slayer Tower'],
   Kraken: ['Piscatoris Fishing Colony'],
   Skotizo: ['Catacombs of Kourend'],
-  'Thermonuclear Smoke Devil': ['Castle Wars'],
+  'Thermonuclear Smoke Devil': ['Feldip Hills'],
   "Calvar'ion": ['Graveyard of Shadows'],
   'Crazy Archaeologist': ['Forgotten Cemetery'],
   Scorpia: ["Scorpia's Cave"],
@@ -48,18 +48,33 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   "TzHaar-Ket-Rak's Challenges": ['Mor Ul Rek (TzHaar City)'],
   'Tormented Demons': ['Lumbridge'],
   'The Royal Titans': ['Asgarnian Ice Dungeon'],
-  Yama: ['Kebos Lowlands'],
+  Yama: ['Mount Karuulm'],
   'Doom of Mokhaiotl': ['Tlati Rainforest'],
   'Gemstone Crab': ['Tlati Rainforest'],
   'Shellbane Gryphon': ['The Great Conch'],
   'The Mad Angel': ['Wyrmscraig'],
+  // Each entrance's chunk, as the map owns it.
+  'Tombs of Amascut': ['Sophanem'],
+  Nex: ['Burthorpe'],
+  'General Graardor': ['Burthorpe'],
+  'Commander Zilyana': ['Burthorpe'],
+  "Kree'arra": ['Burthorpe'],
+  "K'ril Tsutsaroth": ['Burthorpe'],
+  Araxxor: ['Darkmeyer'],
+  'Chaos Elemental': ["Scorpia's Cave"],
+  'Duke Sucellus': ['Weiss'],
+  'Phantom Muspah': ['Weiss'],
+  'The Leviathan': ["Wizards' Tower"],
+  'The Whisperer': ['Goblin Village'],
+  Amoxliatl: ["Ralos' Rise"],
+  'Maggot King': ['Darkmeyer'],
 
   // Minigames
   'Barbarian Assault': ['Barbarian Outpost'],
   'Bounty Hunter': ['Ferox Enclave'],
   'Castle Wars': ['Castle Wars'],
   'Clan Wars': ['Ferox Enclave'],
-  "Emir's Arena": ['Duel Arena / PvP Arena'],
+  "Emir's Arena": ['Duel Arena / PvP Arena', 'Mage Training Arena'],
   'Intelligence Gathering': ['Piscarilius'],
   'Last Man Standing': ['Ferox Enclave'],
   'Mage Arena': ['Mage Arena'],
@@ -71,7 +86,7 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   'Archery Competition': ['Hemenster'],
   'Blast Furnace': ['Keldagrim'],
   'Fishing Trawler': ['Port Khazard'],
-  "Giants' Foundry": ['Al Kharid'],
+  "Giants' Foundry": ["Giants' Plateau"],
   'Gnome Ball': ['Tree Gnome Stronghold'],
   'Gnome Restaurant': ['Tree Gnome Stronghold'],
   'Guardians of the Rift': ["Wizards' Tower"],
@@ -98,30 +113,16 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
 /** Activities with no hard location gate expressible by the tracked named areas. */
 export const NO_HARD_LOCATION_GATE = new Set<string>([
   // Boss venues or entrances not represented by a single tracked named area.
-  'Tombs of Amascut', // no tracked named-area gate (Necropolis)
-  'Nex', // no tracked named-area gate (God Wars Dungeon)
-  'General Graardor', // no tracked named-area gate (God Wars Dungeon)
-  'Commander Zilyana', // no tracked named-area gate (God Wars Dungeon)
-  "Kree'arra", // no tracked named-area gate (God Wars Dungeon)
-  "K'ril Tsutsaroth", // no tracked named-area gate (God Wars Dungeon)
   'Abyssal Sire', // no tracked named-area gate (fairy-ring interior)
-  'Araxxor', // no tracked named-area gate (Morytania Spider Cave)
   'Artio', // no tracked named-area gate (Wilderness bear cave)
   'Callisto', // no tracked named-area gate (Wilderness bear cave)
-  'Chaos Elemental', // no tracked named-area gate (roaming Wilderness boss)
   'Chaos Fanatic', // no tracked named-area gate (Wilderness altar site)
   'Spindel', // no tracked named-area gate (Wilderness spider cave)
   'Venenatis', // no tracked named-area gate (Wilderness spider cave)
   "Vet'ion", // no tracked named-area gate (Wilderness skeleton cave)
   'Vorkath', // no tracked named-area gate (Ungael)
   'Galvek', // no tracked named-area gate (quest instance)
-  'Duke Sucellus', // no tracked named-area gate (Ghorrock Prison)
-  'The Leviathan', // no tracked named-area gate (The Scar)
-  'The Whisperer', // no tracked named-area gate (The Scar)
   'Mimic', // no tracked named-area gate (casket-triggered encounter)
-  'Phantom Muspah', // no tracked named-area gate (Ghorrock Dungeon)
-  'Amoxliatl', // no tracked named-area gate (Ruins of Tapoyauik)
-  'Maggot King', // Vampyrium (The Blood Moon Rises) is not a tracked named area
 
   // Distributed, event, or untracked-content activities.
   'Shooting Stars', // no tracked named-area gate (world event)
