@@ -266,3 +266,12 @@ describe('SyncCodeModal online backup tab', () => {
     expect(screen.getByText('Online backup panel')).toBeTruthy();
   });
 });
+
+describe('SyncCodeModal closing', () => {
+  it('closes from its Close button under StrictMode, as the app renders it in development', async () => {
+    const onClose = vi.fn();
+    render(<React.StrictMode><SyncCodeModal onClose={onClose} /></React.StrictMode>);
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+});

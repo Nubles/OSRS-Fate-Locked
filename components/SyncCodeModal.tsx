@@ -118,10 +118,14 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode, ini
     operationGenerationRef.current += 1;
     onClose();
   }, [onClose]);
-  useEffect(() => () => {
-    if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
-    closedRef.current = true;
-    operationGenerationRef.current += 1;
+  useEffect(() => {
+    // Open again on every mount: StrictMode unmounts and remounts once in development.
+    closedRef.current = false;
+    return () => {
+      if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+      closedRef.current = true;
+      operationGenerationRef.current += 1;
+    };
   }, []);
   useEscapeKey(closeModal, true);
 
