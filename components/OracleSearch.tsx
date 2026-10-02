@@ -370,7 +370,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
                <div className="inline-flex items-center justify-center p-4 bg-[#222] rounded-full mb-3">
                   <Search className="w-6 h-6 opacity-50" />
                </div>
-               <p className="text-xs font-mono uppercase tracking-widest">Type to reveal destiny</p>
+               <p className="text-xs font-mono uppercase tracking-widest">Type to search</p>
              </div>
           )}
 

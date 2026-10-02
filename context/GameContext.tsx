@@ -1040,8 +1040,8 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
              id: generateId(),
              timestamp: now,
              type: 'ROLL_OMNI',
-             message: 'LEGENDARY DROP! You found an Omni-Key!',
-             details: `Critical Success! Rolled ${rollText} vs ${comparisonChanceText}.`,
+             message: 'Key and Omni-Key Found!',
+             details: `Rolled ${rollText} (≤ ${comparisonChanceText}), and an Omni-Key came with the Key.`,
              meta: entryMeta(0),
              result: 'SUCCESS',
              source,
@@ -1248,8 +1248,8 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         keys: state.keys + (won ? keysWon : 0),
         history: [...state.history, {
           id: generateId(), timestamp: now, type: 'ALTAR',
-          message: won ? `Void Gambit WON — ${keysWon} Key${keysWon > 1 ? 's' : ''}!` : 'Void Gambit lost.',
-          details: won ? `Staked ${stake} Fate; the Void blinked.` : `Staked ${stake} Fate; the Void keeps it.`,
+          message: won ? `Void Gambit WON: ${keysWon} Key${keysWon > 1 ? 's' : ''}!` : 'Void Gambit lost.',
+          details: won ? `Staked ${stake} Fate and won.` : `Staked ${stake} Fate and lost it.`,
           meta: { ritual: 'GAMBIT', fateCost: stake, keysAwarded: won ? keysWon : 0 },
         }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'GAMBIT', won } }
@@ -1271,7 +1271,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           id: generateId(), timestamp: now, type: 'ALTAR',
           message: `Cartographer charted ${label}`,
           meta: { ritual: 'CARTOGRAPHER', fateCost: cost, chunk: chosen },
-          details: `Chose a frontier chunk for ${cost} Fate — the one decision Fate allows.`,
+          details: `Chose a frontier chunk for ${cost} Fate.`,
         }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'CARTOGRAPHER', chunk: chosen } }
       };
@@ -1309,7 +1309,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           message: `${reward} awarded!`,
           details: guaranteedChaosAwarded
             ? `Skill level ${newLevel} milestone${randomChaosAwarded ? ' plus a lucky roll' : ''}.`
-            : `Fate smiled upon you at Total Level ${totalLevel}.`,
+            : `The ${Math.round(RNG_CHAOS_CHANCE * 100)}% level-up chance came up, at Total Level ${totalLevel}.`,
           meta: {
             totalLevel,
             reward,

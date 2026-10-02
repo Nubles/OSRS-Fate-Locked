@@ -1125,7 +1125,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                <button
                  onClick={() => window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: 'open:fatethread' } }))}
                  className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-violet-500/30 bg-violet-950/30 hover:bg-violet-900/40 text-violet-300 text-[11px] font-medium whitespace-nowrap transition-colors"
-                 title="View your run as a living tapestry of fate"
+                 title="See every unlock, grouped by table, and replay them in order"
                >
                  <Route size={12} />
                  Fate Thread
