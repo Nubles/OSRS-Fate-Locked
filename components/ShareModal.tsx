@@ -72,15 +72,6 @@ const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ on
   const arcanaCount = unlocks.arcana.length;
   const pohCount = unlocks.housing.length;
 
-  // --- Rank System ---
-  const rank = useMemo(() => {
-    if (progressPercent < 10) return { title: 'Lost Soul', color: 'text-gray-500', icon: Skull };
-    if (progressPercent < 25) return { title: 'Fate Wanderer', color: 'text-blue-400', icon: Map };
-    if (progressPercent < 50) return { title: 'Iron Determinator', color: 'text-gray-300', icon: Shield };
-    if (progressPercent < 75) return { title: 'Void Champion', color: 'text-purple-400', icon: Trophy };
-    return { title: 'Master of Fate', color: 'text-amber-400', icon: Crown };
-  }, [progressPercent]);
-
   // --- Theme Styles ---
   const getThemeStyles = () => {
     switch (theme) {
@@ -147,7 +138,7 @@ const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ on
 
   // --- Actions ---
   const generateTextSummary = () => {
-    return `**Fate Locked Ironman** - ${rank.title}
+    return `**Fate Locked Ironman** (${activeMode.name} mode)
 Progression: ${progressPercent}% | Total Level: ${totalLevel}
 Keys: ${gameState.keys} | Omni: ${gameState.specialKeys} | Chaos: ${gameState.chaosKeys}
 ${isChunked ? 'Chunks' : 'Areas'}: ${totalRegions} Unlocked
@@ -276,13 +267,12 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
             <div className={`relative z-10 flex flex-wrap justify-between items-start gap-4 p-4 sm:p-8 sm:pb-6 border-b ${ts.deco}`}>
                 <div className="flex items-center gap-3 sm:gap-6 min-w-0">
                     <div className={`w-12 h-12 sm:w-20 sm:h-20 shrink-0 rounded-2xl border-2 ${ts.border} bg-black/40 flex items-center justify-center shadow-[0_0_25px_rgba(0,0,0,0.5)] backdrop-blur-md`}>
-                        <rank.icon className={`w-8 h-8 sm:w-12 sm:h-12 ${rank.color} drop-shadow-lg`} />
+                        <Shield className={`w-8 h-8 sm:w-12 sm:h-12 ${ts.accent} drop-shadow-lg`} />
                     </div>
                     <div>
-                        <div className={`text-xs font-bold uppercase tracking-[0.2em] mb-1 ${ts.accent}`}>RNG Edition · {activeMode.name} Mode</div>
+                        <div className={`text-xs font-bold uppercase tracking-[0.2em] mb-1 ${ts.accent}`}>{activeMode.name} Mode</div>
                         <h2 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tight leading-none drop-shadow-md">Fate Locked</h2>
-                        <div className={`flex flex-wrap items-center gap-2 sm:gap-3 mt-2 ${rank.color}`}>
-                            <span className="text-sm font-bold uppercase tracking-wide bg-black/30 px-2 py-0.5 rounded border border-white/5">{rank.title}</span>
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
                             <span className="text-xs text-gray-400 font-mono flex items-center gap-1.5"><Calendar size={12} /> {new Date().toLocaleDateString()}</span>
                         </div>
                     </div>
@@ -452,7 +442,7 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
                                         <span className="text-xs font-bold text-gray-300">{feat.label}</span>
                                     </div>
                                 )) : (
-                                    <div className="text-[10px] text-gray-600 italic text-center py-2">The journey has just begun...</div>
+                                    <div className="text-[10px] text-gray-600 italic text-center py-2">No notable unlocks yet.</div>
                                 )}
                             </div>
                         </div>
@@ -464,7 +454,7 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
             <div className={`relative z-10 py-3 px-4 sm:px-8 bg-black/60 backdrop-blur-md flex flex-wrap gap-2 justify-between items-center text-[10px] ${ts.sub} font-mono uppercase border-t ${ts.deco}`}>
                 <div className="flex items-center gap-2">
                     <Activity size={12} />
-                    <span>Fate is Absolute</span>
+                    <span>Fate Locked Ironman</span>
                 </div>
                 {runId && <div>Run ID: {runId}</div>}
             </div>

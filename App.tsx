@@ -423,7 +423,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
             </div>
             <div>
               <h1 className="text-lg font-black text-gray-100 tracking-tight uppercase leading-none">Fate Locked Ironman</h1>
-              <p className="text-[10px] text-gray-500 font-mono mt-0.5 tracking-wide">RNG EDITION COMMAND CENTER</p>
+              <p className="text-[10px] text-gray-500 font-mono mt-0.5 tracking-wide">Ironman challenge tracker</p>
             </div>
             <ProfileSwitcher />
           </div>
