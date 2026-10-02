@@ -36,6 +36,8 @@ describe('authored changelog releases', () => {
     ]);
     expect(release?.sections.fixed).toEqual([
       expect.stringMatching(/Strict Mode.*a teleport of a kind your run hasn’t unlocked.*even to an unlocked place.*worn item’s teleport.*glory’s Edgeville.*What it stops is unchanged/),
+      expect.stringMatching(/notifications on.*locked area sends a notification with its chat line, not only when the alert plays a sound/),
+      expect.stringMatching(/finished diary tier, not each task.*collection log item only with the game’s collection log notification on.*Roll inbox card says why/),
     ]);
   });
 

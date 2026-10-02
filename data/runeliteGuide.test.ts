@@ -142,6 +142,23 @@ describe('RuneLite guide, as the plugin does it', () => {
       .toContain('that place or that kind of teleport');
   });
 
+  it('says what the alerts, reminders and notifications do (P-3, owner’s call T8, P-4, P-11, P-12)', () => {
+    expect(setting('useNotifier').purpose).toContain('with each locked-area alert’s chat line');
+    expect(setting('lockedAreaAlert').visibleResult).toContain('the same area stays quiet for a minute');
+    expect(setting('announceAreaChanges').purpose).toContain('Locked areas follow the Locked-area alert instead');
+    expect(setting('rollNudges').purpose).toContain('a combat task, a clue scroll, a boss or raid kill');
+    expect(setting('rollNudges').purpose).toContain('Only on the character your run is linked to');
+    expect(callout('roll-inbox', 'warnings')).toContain('a locked area, a locked Slayer task, gear above your tier');
+  });
+
+  it('says RuneLite notices whole diary tiers, and collection log items only with the game’s notification (T9, P-10)', () => {
+    const inbox = chapter('roll-inbox');
+    expect(inbox).toContain('finished achievement diary tiers (not single tasks)');
+    expect(inbox).toContain('only with the game’s own collection log notification turned on');
+    expect(inbox).toContain('the card says why');
+    expect(setting('rollNudges').purpose).toContain('a finished diary tier (not each task)');
+  });
+
   it('names the banner’s button and says what Recently stopped lists (P-6, P-19)', () => {
     expect(chapter('strict-mode')).toContain('a Pause Strict Mode for 60s button');
     expect(setting('strictMode').visibleResult).toContain('Pause Strict Mode for 60s');

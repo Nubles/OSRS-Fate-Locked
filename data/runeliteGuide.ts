@@ -317,7 +317,7 @@ export const RUNELITE_GUIDE_FIGURES: readonly GuideFigure[] = [
       callout('needs-checking', 2, [0.054, 0.319, 0.891, 0.075], 'Needs checking', 'The tracker asks you to confirm these before they roll.'),
       callout('copied', 3, [0.054, 0.412, 0.891, 0.075], 'Copied', 'Already copied. Pasting an event twice brings it in once.'),
       callout('copy', 4, [0.054, 0.504, 0.891, 0.106], 'Copy for tracker', 'Puts this run’s events on your clipboard, only when you click.'),
-      callout('warnings', 5, [0.054, 0.628, 0.891, 0.071], 'Warnings', 'Rule warnings that apply right now.'),
+      callout('warnings', 5, [0.054, 0.628, 0.891, 0.071], 'Warnings', 'How many warnings apply where you are now: a locked area, a locked Slayer task, gear above your tier.'),
       callout('open', 6, [0.054, 0.841, 0.891, 0.106], 'Open web Roll Inbox', 'Opens the tracker’s Roll Inbox, where you paste and roll.'),
     ],
   },
@@ -358,11 +358,11 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
   },
   lockedAreaAlert: {
     purpose: 'What happens when you walk into a locked area: a chat line, and if you like, a sound and one short fade.',
-    visibleResult: 'The chat line names the area and why it’s locked. The sound and fade come only when you arrive from unlocked land.',
+    visibleResult: 'The chat line names the area and why it’s locked. The sound and fade come only when you arrive from unlocked land, and the same area stays quiet for a minute after it alerts.',
     changeWhen: 'Pick Chat for a quieter run, or Off if the map and borders are enough.',
   },
   announceAreaChanges: {
-    purpose: 'A chat line whenever you walk into another area the tracker maps, locked or not.',
+    purpose: 'A chat line when you walk into another area the tracker maps. Locked areas follow the Locked-area alert instead.',
     visibleResult: 'The chatbox names each new area and its status, once per area rather than once per chunk.',
     changeWhen: 'Turn it off if these lines crowd your chat; locked areas still alert.',
   },
@@ -377,12 +377,12 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     changeWhen: 'Turn it off if you’d rather see menus as the game shows them.',
   },
   rollNudges: {
-    purpose: 'A chat reminder when a level-up, quest, diary, boss kill or collection log entry may be worth a roll.',
-    visibleResult: 'The reminder says what happened. It never rolls and never changes your run.',
+    purpose: 'A chat line when RuneLite adds something to your Roll inbox: a level, a quest, a finished diary tier (not each task), a combat task, a clue scroll, a boss or raid kill, a collection log item or a Slayer task. Only on the character your run is linked to.',
+    visibleResult: 'The line says what happened, such as Attack level 71: added to your Roll inbox. It never rolls and never changes your run.',
     changeWhen: 'Turn it off if you roll in the companion on your own schedule.',
   },
   useNotifier: {
-    purpose: 'Also sends locked-area alerts and rule warnings as RuneLite notifications.',
+    purpose: 'Also sends a RuneLite notification with each locked-area alert’s chat line, each rule warning, and the warning that you’re on a character your run isn’t linked to.',
     visibleResult: 'They arrive however RuneLite delivers notifications, such as a tray message while the client is in the background.',
     changeWhen: 'Turn it on if you often play with RuneLite behind other windows.',
   },
@@ -892,7 +892,12 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
       { kind: 'figure', figureId: 'roll-inbox' },
       {
         kind: 'text',
-        text: 'RuneLite notices level-ups, quests, achievement diaries, combat tasks, boss and raid kills, clue scrolls, collection log entries and Slayer tasks. It keeps the last 30 days on this computer, up to 250 events. The card lists the newest and counts the rest.',
+        text: 'RuneLite notices level-ups, quests, finished achievement diary tiers (not single tasks), combat tasks, boss and raid kills, clue scrolls, collection log items and Slayer tasks. It keeps the last 30 days on this computer, up to 250 events. The card lists the newest and counts the rest.',
+      },
+      {
+        kind: 'note',
+        title: 'What it can’t notice',
+        text: 'A collection log item is noticed only with the game’s own collection log notification turned on, in chat or as a popup. When RuneLite can’t notice anything, such as on a character your run isn’t linked to or on a Leagues world, the card says why.',
       },
       { kind: 'heading', text: 'Rolling what RuneLite noticed' },
       {
