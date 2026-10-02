@@ -6,6 +6,8 @@ import { ALL_DIARY_TASKS, type DiaryTask, type DiaryTaskRequirementOption } from
 import { ACTIVITY_ACCESS_AREAS } from './activityAccess';
 import { QUEST_DATA } from './questData';
 import { MERCHANT_SERVICES } from './merchantServices';
+import type { UnlockState } from '../types';
+import { evaluateDiaryTaskEligibility } from '../utils/journalStatus';
 
 /**
  * Players reported wrong Achievement Diary data, so every task was checked
@@ -19,6 +21,14 @@ const task = (id: string): DiaryTask => {
   if (!found) throw new Error(`No Diary task ${id}`);
   return found;
 };
+
+/** An account with nothing unlocked but what a check names. */
+const account = (overrides: Partial<UnlockState> = {}): UnlockState => ({
+  equipment: {}, skills: {}, levels: {}, regions: [], mobility: [], arcana: [],
+  housing: [], merchants: [], minigames: [], bosses: [], storage: [], guilds: [],
+  farming: [], slayerUnlocks: [], quests: [], diaries: [], cas: [],
+  completedTasks: [], collectionLog: {}, ...overrides,
+});
 
 describe('Diary tasks are in the areas the game has them in', () => {
   it('puts the Jaldraocht Pyramid altar beside the pyramid, not in Sophanem', () => {
@@ -447,5 +457,23 @@ describe('Diary tasks that need only part of a quest', () => {
       }
     }
     expect(partial).toEqual(expect.arrayContaining(['frem_easy_9', 'frem_elite_5', 'frem_elite_6', 'wild_hard_8', 'mor_med_7']));
+  });
+});
+
+describe('Diary tasks in the Karuulm Slayer Dungeon', () => {
+  const BOOTS = {
+    slot: 'Boots', tier: 1, reason: 'Boots of stone, brimstone or granite', unlessDiary: 'Kourend Elite',
+    manualCheck: 'Have Boots of stone, brimstone or granite and confirm that the specific item is permitted by your equipment tier',
+  };
+
+  it('needs boots of stone, brimstone or granite to kill a wyrm, unless the Kourend Elite reward is claimed', () => {
+    expect(task('kou_hard_9')).toMatchObject({ regions: ['Mount Karuulm'], equipmentRequirements: [BOOTS] });
+    const wyrmHunter = account({ regions: ['Mount Karuulm'], skills: { Slayer: 10 }, levels: { Slayer: 62 } });
+    expect(evaluateDiaryTaskEligibility(task('kou_hard_9'), wyrmHunter).blockers)
+      .toEqual([expect.objectContaining({ kind: 'equipment', slot: 'Boots', tier: 1 })]);
+    expect(evaluateDiaryTaskEligibility(task('kou_hard_9'), { ...wyrmHunter, equipment: { Boots: 1 } }))
+      .toMatchObject({ machineEligible: true, manualChecks: [BOOTS.manualCheck] });
+    expect(evaluateDiaryTaskEligibility(task('kou_hard_9'), { ...wyrmHunter, diaries: ['Kourend Elite'] }))
+      .toMatchObject({ eligible: true, blockers: [] });
   });
 });

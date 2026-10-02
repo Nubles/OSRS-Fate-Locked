@@ -6793,7 +6793,16 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "62 Slayer Combat gear Boots of stone, brimstone, or granite"
+      "sourceRequirements": "62 Slayer Combat gear Boots of stone, brimstone, or granite",
+      "equipmentRequirements": [
+        {
+          "slot": "Boots",
+          "tier": 1,
+          "reason": "Boots of stone, brimstone or granite",
+          "unlessDiary": "Kourend Elite",
+          "manualCheck": "Have Boots of stone, brimstone or granite and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "kou_hard_10",
