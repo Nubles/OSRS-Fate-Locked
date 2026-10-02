@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import content from '../public/chunk-content.json';
+import { ChunkContentService } from '../services/ChunkContentService';
+import { locateSlayerTask } from './slayerTaskLocations';
 import corrections from '../data/sources/slayer-corrections.json';
 import type { SlayerMasters } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
@@ -41,6 +43,28 @@ describe('Slayer rows keep what the source asks for', () => {
       expect(row('Krystilia', task, account()), task).toMatchObject({ status: 'slayer-locked', blocker: 'Needs I Wildy More Slayer' });
       expect(row('Krystilia', task, account({ slayerUnlocks: ['I Wildy More Slayer'] })).status, task).toBe('ready');
     }
+  });
+});
+
+describe('where a master’s task is fought', () => {
+  const service = new ChunkContentService();
+  beforeAll(async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => content })));
+    await service.init();
+    vi.unstubAllGlobals();
+  });
+  const places = (master: string, task: string, monster: string) =>
+    locateSlayerTask(task, [service.entityLocations(monster, ['monster'])!], MASTERS[master][task], master);
+
+  it('finds Krystilia’s earth warriors in the Edgeville Dungeon’s Wilderness part (S-7)', () => {
+    const hits = places('Krystilia', 'Earth warriors', 'Earth warrior');
+    expect(hits.length).toBeGreaterThan(0);
+    expect(hits.every(hit => /#wilderness$/i.test(hit.location.locationName ?? ''))).toBe(true);
+  });
+
+  it('finds Konar’s abyssal demons in the Abyss and dark beasts in the Mourner Tunnels (S-8)', () => {
+    expect(places('Konar quo Maten', 'Abyssal demons - Abyss', 'Abyssal demon').length).toBeGreaterThan(0);
+    expect(places('Konar quo Maten', 'Dark beasts - Mourner Tunnels', 'Dark beast').length).toBeGreaterThan(0);
   });
 });
 
