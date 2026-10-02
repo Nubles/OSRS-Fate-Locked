@@ -12,8 +12,10 @@ import { evaluateDiaryTaskEligibility } from '../utils/journalStatus';
 /**
  * Players reported wrong Achievement Diary data, so every task was checked
  * against the game: the OSRS Wiki's diary pages and the app's own map. The
- * owner approved the fixes on 2 October 2026. Each block below pins a fix;
- * the checks at the end catch the same kind of mistake in any task.
+ * owner approved the fixes on 2 October 2026. Each block below pins its
+ * fixes, and most also check every task for the same kind of mistake: map
+ * quest gates, desert areas, Barbarian Training, service NPCs and quests
+ * that are only partly needed.
  */
 
 const task = (id: string): DiaryTask => {
