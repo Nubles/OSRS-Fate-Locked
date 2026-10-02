@@ -45,6 +45,21 @@ describe('authored changelog releases', () => {
     ]);
   });
 
+  it('announces online backup in plain words', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-online-backup');
+    expect(release?.title).toBe('Online Backup Keeps Your Run Safe');
+    expect(release?.sections.added).toEqual([
+      expect.stringMatching(/^Online backup, under Sync Code → Online, keeps an encrypted copy of your run/),
+      expect.stringMatching(/backup code you keep is the only way to open the copy/),
+      expect.stringMatching(/Restore a run/),
+      expect.stringMatching(/two browsers back up the same run, the copy one replaces is kept/),
+      expect.stringMatching(/asks once whether to turn online backup on/),
+    ]);
+    expect(release?.sections.changed).toEqual([expect.stringMatching(/export a \.fate file waits while online backup/)]);
+    // Player words only: no file names or crypto jargon.
+    expect(JSON.stringify(release)).not.toMatch(/\.ts\b|\.json\b|AES|HKDF|\bKV\b|worker/i);
+  });
+
   it('announces the plain, corrected Rules and help text, and that the Rival is out for now', () => {
     const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-plain-rules');
     expect(release?.title).toBe('Rules and Help Say What the Game Does');

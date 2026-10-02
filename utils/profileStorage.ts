@@ -19,6 +19,10 @@ export const profileExportNagKey = (storageKey: string): string =>
 export const profileDiscordKey = (storageKey: string): string =>
   `${storageKey}__discord`;
 
+/** This browser's online backup record for a run: its backup code and last upload. */
+export const profileOnlineBackupKey = (storageKey: string): string =>
+  `${storageKey}__onlineBackup`;
+
 export const profileDiscordCursorKey = (storageKey: string): string =>
   `${storageKey}__discordCursor`;
 
@@ -147,6 +151,7 @@ export const profileOwnedKeys = (profileId: string): readonly string[] => {
     profileExportNagKey(storageKey),
     profileDiscordKey(storageKey),
     profileDiscordCursorKey(storageKey),
+    profileOnlineBackupKey(storageKey),
     profileFeatureSeenKey(profileId),
     writerLeaseKey(storageKey),
     profileMirrorMetadataKey(storageKey),

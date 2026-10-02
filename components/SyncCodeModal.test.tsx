@@ -36,6 +36,7 @@ vi.mock('../context/GameContext', () => ({
 }));
 vi.mock('../hooks/useEscapeKey', () => ({ useEscapeKey: () => undefined }));
 vi.mock('./SectionGuide', () => ({ SectionGuide: () => null }));
+vi.mock('./OnlineBackupPanel', () => ({ OnlineBackupPanel: () => <p>Online backup panel</p> }));
 vi.mock('../utils/syncCode', () => ({
   encodeSyncCode: vi.fn(async () => 'encoded-code'),
   decodeAndValidateSyncCode: vi.fn(async (_code: string, state: unknown) => ({
@@ -250,5 +251,27 @@ describe('SyncCodeModal import verdict', () => {
 
     expect(await screen.findByText('Verified run')).toBeTruthy();
     expect(screen.queryByText('Loadable, with warnings')).toBeNull();
+  });
+});
+
+describe('SyncCodeModal online backup tab', () => {
+  it('opens on the Online tab when the backup prompt asks, and is a tab like the others', async () => {
+    const { unmount } = render(<SyncCodeModal onClose={vi.fn()} initialTab="ONLINE" />);
+    expect(screen.getByText('Online backup panel')).toBeTruthy();
+    unmount();
+
+    render(<SyncCodeModal onClose={vi.fn()} />);
+    expect(screen.queryByText('Online backup panel')).toBeNull();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Online' }));
+    expect(screen.getByText('Online backup panel')).toBeTruthy();
+  });
+});
+
+describe('SyncCodeModal closing', () => {
+  it('closes from its Close button under StrictMode, as the app renders it in development', async () => {
+    const onClose = vi.fn();
+    render(<React.StrictMode><SyncCodeModal onClose={onClose} /></React.StrictMode>);
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalledOnce();
   });
 });
