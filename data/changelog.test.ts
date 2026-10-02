@@ -40,6 +40,7 @@ describe('authored changelog releases', () => {
       expect.stringMatching(/finished diary tier, not each task.*collection log item only with the game’s collection log notification on.*Roll inbox card says why/),
       expect.stringMatching(/progress percentage counts what the number beside it counts: 15 of 187 areas is 8%/),
       expect.stringMatching(/any backup RuneLite can read replaces your rules, even an older one or another run’s/),
+      expect.stringMatching(/status card saying Rules up to date/),
     ]);
   });
 
