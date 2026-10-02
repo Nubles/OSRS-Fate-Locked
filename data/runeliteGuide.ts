@@ -283,7 +283,7 @@ export const RUNELITE_GUIDE_FIGURES: readonly GuideFigure[] = [
     callouts: [
       callout('switch', 1, [0.819, 0.028, 0.127, 0.182], 'On or off', 'The same switch as the setting.'),
       callout('pause', 2, [0.054, 0.21, 0.891, 0.168], 'Status and pause', 'Active, Paused, Off, or Inactive with why. While paused, Resume brings Strict Mode back at once.'),
-      callout('stopped', 3, [0.054, 0.441, 0.891, 0.476], 'Recently stopped', 'The teleports it stopped, and when.'),
+      callout('stopped', 3, [0.054, 0.441, 0.891, 0.476], 'Recently stopped', 'The teleports it stopped lately, and why.'),
     ],
   },
   {
@@ -347,12 +347,12 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     changeWhen: 'Leave it on to keep your rules current. Turn it off to contact no server; your pairing is kept for later.',
   },
   strictMode: {
-    purpose: 'Stops a teleport only when the tracker’s travel table matches it exactly and fresh rules for your character lock where it goes.',
-    visibleResult: 'A stopped teleport shows a banner with the tracker’s reason and Pause 60s. The Strict Mode card says Active, Paused, Off, or Inactive with why.',
-    changeWhen: 'Turn it on for a safety net against teleporting somewhere locked by mistake.',
+    purpose: 'Stops a teleport the tracker’s travel table matches exactly, with one place it can go, when fresh rules for your character lock that place. It also stops one to an unlocked place when your run hasn’t unlocked that kind of teleport, such as Teleport Tablets, Jewelry Teleports or a spellbook.',
+    visibleResult: 'A stopped teleport shows a banner with the tracker’s reason, a teleport to try instead when there is one, and Pause Strict Mode for 60s. The Strict Mode card says Active, Paused, Off, or Inactive with why.',
+    changeWhen: 'Turn it on for a safety net against taking a teleport your rules don’t allow by mistake.',
   },
   pauseStrictModeHotkey: {
-    purpose: 'Pauses Strict Mode for 60 seconds from the keyboard, like the Pause 60s button.',
+    purpose: 'Pauses Strict Mode for 60 seconds from the keyboard, like the Pause 60s button on its card.',
     visibleResult: 'The Strict Mode card and the HUD count the pause down, then Strict Mode comes back by itself.',
     changeWhen: 'Set it if you pause often, on a key neither RuneLite nor the game uses.',
   },
@@ -610,7 +610,7 @@ export const RUNELITE_GUIDE_TROUBLESHOOTING: readonly GuideTroubleshootingItem[]
   {
     id: 'strict-mode-allows-action',
     symptom: 'Strict Mode doesn’t stop a teleport you expected it to.',
-    likelyCause: 'It stops only a trip the travel table matches exactly, to one place your rules lock, with fresh rules for your character. It fails open whenever it can’t be sure.',
+    likelyCause: 'It stops only a trip the travel table matches exactly, with one place it can go, when your rules lock that place or that kind of teleport, and only with fresh rules for your character. It fails open whenever it can’t be sure.',
     fix: [
       'Read the Strict Mode card: Inactive says what’s missing, such as fresh rules.',
       'The (Locked) tag and the locked-area alert still cover what Strict Mode leaves alone.',
@@ -657,7 +657,7 @@ export const RUNELITE_GUIDE_GLOSSARY: readonly GuideGlossaryItem[] = [
   },
   {
     term: RUNELITE_TERMS.STRICT_MODE,
-    definition: 'An optional guard, off by default, that stops a teleport only when the travel table matches it exactly and fresh rules lock where it goes.',
+    definition: 'An optional guard, off by default, that stops a teleport the travel table matches exactly when fresh rules lock where it goes, or when your run hasn’t unlocked that kind of teleport.',
   },
   { term: RUNELITE_TERMS.KEYS, definition: 'Spend one on a table you choose for a random unlock from it.' },
   { term: RUNELITE_TERMS.OMNI_KEYS, definition: 'Spend one to choose the exact unlock you want.' },
@@ -747,7 +747,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
         kind: 'terms',
         items: [
           { term: 'Here', text: 'Your rules for the place you’re standing in. It starts open.' },
-          { term: 'Strict Mode', text: 'The optional guard against teleporting somewhere locked.' },
+          { term: 'Strict Mode', text: 'The optional guard against teleports your rules don’t allow.' },
           { term: 'Run', text: 'Your progress, Keys and Fate Points.' },
           { term: 'Roll inbox', text: 'Things you did in game that may be worth a roll.' },
           { term: 'Connection & backup', text: 'Online sync, your pairing and backups.' },
@@ -825,7 +825,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
     id: 'strict-mode',
     number: 5,
     title: 'Strict Mode',
-    lede: 'An optional safety net against teleporting somewhere your rules lock.',
+    lede: 'An optional safety net against teleports your rules don’t allow.',
     icon: 'Magic_icon.png',
     blocks: [
       {
@@ -838,6 +838,8 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
         kind: 'list',
         items: [
           'A spell, tablet, scroll or teleport item option that the tracker’s travel table matches exactly, going to one place your rules lock.',
+          'A teleport like that to an unlocked place, when your run hasn’t unlocked that kind of teleport: Teleport Tablets, Jewelry Teleports or a spellbook. The banner says what it needs, such as Needs Jewelry Teleports.',
+          'A teleport option on an item you’re wearing, such as a glory’s Edgeville.',
           'Only with fresh rules for the character you’re on.',
         ],
       },
@@ -845,7 +847,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
       {
         kind: 'list',
         items: [
-          'Walking, and clicks on NPCs, objects, banks and equipment.',
+          'Walking, clicks on NPCs, objects and banks, and putting on or taking off gear.',
           'An option that picks its place after the click, such as a jewellery Rub.',
           'Fairy rings, spirit trees, charters and boats. These get the (Locked) tag instead.',
           'Anything when the rules are stale, for another character, or don’t decide the trip. Strict Mode fails open rather than guessing.',
@@ -853,7 +855,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
       },
       {
         kind: 'text',
-        text: 'When it stops a teleport, a banner over the game gives the tracker’s reason with a Pause 60s button. A pause lets every click through for 60 seconds, from the banner, the card or an optional hotkey, and the HUD counts it down.',
+        text: 'When it stops a teleport, a banner over the game gives the tracker’s reason, a teleport to try instead when there is one, and a Pause Strict Mode for 60s button. A pause lets every click through for 60 seconds, from the banner, the card’s Pause 60s or an optional hotkey, and the HUD counts it down.',
       },
     ],
   },

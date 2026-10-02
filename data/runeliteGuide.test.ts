@@ -3,8 +3,11 @@ import {
   RUNELITE_GUIDE_CHAPTERS,
   RUNELITE_GUIDE_CHAPTER_IDS,
   RUNELITE_GUIDE_FIGURES,
+  RUNELITE_GUIDE_GLOSSARY,
   RUNELITE_GUIDE_ICON,
   RUNELITE_GUIDE_NAV_GROUPS,
+  RUNELITE_GUIDE_SETTINGS,
+  RUNELITE_GUIDE_TROUBLESHOOTING,
   type GuideBlock,
 } from './runeliteGuide';
 import { WIKI_UI_ICONS } from './wikiUiIcons';
@@ -110,5 +113,38 @@ describe('RuneLite guide pictures', () => {
       expect(figure.alt.trim().length, figure.id).toBeGreaterThan(20);
       expect(figure.title.trim().length, figure.id).toBeGreaterThan(2);
     }
+  });
+});
+
+/**
+ * The accuracy review checked what the guide says against what the plugin does. These pin the
+ * corrections, each in the plugin's own words where the plugin says the same thing.
+ */
+describe('RuneLite guide, as the plugin does it', () => {
+  const chapter = (id: string): string => JSON.stringify(RUNELITE_GUIDE_CHAPTERS.find(item => item.id === id));
+  const setting = (key: string) => {
+    const found = RUNELITE_GUIDE_SETTINGS.find(item => item.key === key);
+    if (!found) throw new Error(`no setting ${key}`);
+    return found;
+  };
+  const callout = (figureId: string, id: string): string =>
+    RUNELITE_GUIDE_FIGURES.find(figure => figure.id === figureId)?.callouts.find(item => item.id === id)?.body ?? '';
+  const glossary = (term: string): string => RUNELITE_GUIDE_GLOSSARY.find(item => item.term === term)?.definition ?? '';
+
+  it('says Strict Mode also stops a teleport of a kind not unlocked, and a worn item’s (owner’s call T6)', () => {
+    const strict = chapter('strict-mode');
+    expect(strict).toContain('when your run hasn’t unlocked that kind of teleport');
+    expect(strict).toContain('an item you’re wearing, such as a glory’s Edgeville');
+    expect(strict).not.toContain('equipment');
+    expect(setting('strictMode').purpose).toContain('when your run hasn’t unlocked that kind of teleport');
+    expect(glossary('Strict Mode')).toContain('hasn’t unlocked that kind of teleport');
+    expect(RUNELITE_GUIDE_TROUBLESHOOTING.find(item => item.id === 'strict-mode-allows-action')?.likelyCause)
+      .toContain('that place or that kind of teleport');
+  });
+
+  it('names the banner’s button and says what Recently stopped lists (P-6, P-19)', () => {
+    expect(chapter('strict-mode')).toContain('a Pause Strict Mode for 60s button');
+    expect(setting('strictMode').visibleResult).toContain('Pause Strict Mode for 60s');
+    expect(callout('strict-mode', 'stopped')).toBe('The teleports it stopped lately, and why.');
   });
 });

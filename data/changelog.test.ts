@@ -34,6 +34,9 @@ describe('authored changelog releases', () => {
     expect(release?.sections.changed).toEqual([
       expect.stringMatching(/Logging by hand, rolling and spending Keys are unchanged/),
     ]);
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Strict Mode.*a teleport of a kind your run hasn’t unlocked.*even to an unlocked place.*worn item’s teleport.*glory’s Edgeville.*What it stops is unchanged/),
+    ]);
   });
 
   it('announces the groundwork for RuneLite’s Roll Inbox, and that manual play is unchanged', () => {
