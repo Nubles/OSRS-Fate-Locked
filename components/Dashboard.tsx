@@ -1023,7 +1023,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
     <>
     <div className="bg-osrs-panel border border-osrs-border rounded-lg shadow-lg flex flex-col h-full overflow-hidden relative">
       {!suspendModals && pendingSpecial && (
-          <VoidReveal itemName={pendingSpecial.item} itemType={pendingSpecial.table} itemImage={pendingSpecial.image} onComplete={finalizeSpecial} animationsEnabled={animationsEnabled} />
+          <VoidReveal itemName={pendingSpecial.item} itemType={pendingSpecial.table} itemImage={pendingSpecial.image} onComplete={finalizeSpecial} animationsEnabled={animationsEnabled}
+            tier={pendingSpecial.table === TableType.SKILLS ? (unlocks.skills[pendingSpecial.item] || 0) + 1 : undefined} />
       )}
 
       {!suspendModals && selectedSkillForDetails && (
