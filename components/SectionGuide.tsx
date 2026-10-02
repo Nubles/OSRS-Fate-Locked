@@ -94,10 +94,10 @@ export const GUIDES: Record<string, Guide> = {
   },
   LOG: {
     title: 'History',
-    blurb: 'A verifiable log of every roll, unlock and ritual.',
+    blurb: 'Every roll, unlock and ritual in your run.',
     bullets: [
-      'Review your full run history, newest first.',
-      'Each entry is hash-chained so the run can be verified (see Share Run).',
+      'Your full run history, newest first.',
+      'Each entry is chained to the one before it, so the tracker can spot a hand-edited save. It is a check in your browser, not proof for anyone else.',
     ],
   },
 
@@ -212,11 +212,11 @@ export const GUIDES: Record<string, Guide> = {
 
   SHARE: {
     title: 'Share Run',
-    blurb: 'Turn your run into a shareable, verifiable card.',
+    blurb: 'Turn your run into a card to share.',
     bullets: [
       'Switch between a Stats card and a Map card.',
       'Download the image to share your progress.',
-      'The card embeds a verification hash so others can confirm it’s genuine.',
+      'The card shows whether your history passes the tracker’s own check in this browser. It isn’t proof for anyone else.',
     ],
   },
 

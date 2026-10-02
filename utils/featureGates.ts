@@ -58,7 +58,7 @@ export const FEATURE_GATES: GateDef[] = [
     id: 'ctrl:LOG',
     when: (s) => s.history.length >= 1,
     fallbackHistory: 1,
-    revealMessage: 'History unlocked — every roll is recorded (and tamper-evident)',
+    revealMessage: 'History unlocked: every roll, unlock and ritual is recorded',
   },
   {
     id: 'dash:JOURNAL',
