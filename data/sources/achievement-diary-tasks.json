@@ -3401,8 +3401,15 @@
       "sourceRequirements": "Partial completion of the Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1",
       "oneOf": [
         {
+          "label": "Troll Stronghold progress",
           "quests": [
-            "Troll Stronghold"
+            "Death Plateau"
+          ],
+          "questProgress": [
+            {
+              "quest": "Troll Stronghold",
+              "label": "Reached the required progress in Troll Stronghold for: Enter the Troll Stronghold."
+            }
           ]
         },
         {
@@ -4022,8 +4029,15 @@
       "sourceRequirements": "Partial completion of the Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1 70 Agility, 70 Strength, 70 Hitpoints, and 70 Ranged (only Hitpoints is boostable ) See the boss overview (or see the individual strategy guides for Kree'arra, General Graardor, Commander Zilyana, and K'ril Tsutsaroth )",
       "oneOf": [
         {
+          "label": "Troll Stronghold progress",
           "quests": [
-            "Troll Stronghold"
+            "Death Plateau"
+          ],
+          "questProgress": [
+            {
+              "quest": "Troll Stronghold",
+              "label": "Reached the required progress in Troll Stronghold for: Kill the generals of Armadyl, Bandos, Saradomin and Zamorak in the God Wars Dungeon."
+            }
           ]
         },
         {
@@ -4058,8 +4072,15 @@
       "sourceRequirements": "Partial completion of the Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1 83 Slayer Weaponry",
       "oneOf": [
         {
+          "label": "Troll Stronghold progress",
           "quests": [
-            "Troll Stronghold"
+            "Death Plateau"
+          ],
+          "questProgress": [
+            {
+              "quest": "Troll Stronghold",
+              "label": "Reached the required progress in Troll Stronghold for: Slay a Spiritual mage within the Godwars Dungeon."
+            }
           ]
         },
         {
@@ -6616,14 +6637,20 @@
         "Smithing": 70
       },
       "quests": [
-        "The Forsaken Tower"
+        "Client of Kourend"
       ],
       "regions": [
         "Lovakengj"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of The Forsaken Tower 70 Smithing Adamantite ore and 6 coal"
+      "sourceRequirements": "Completion of The Forsaken Tower 70 Smithing Adamantite ore and 6 coal",
+      "questProgress": [
+        {
+          "quest": "The Forsaken Tower",
+          "label": "Reached the required progress in The Forsaken Tower for: Smelt an Adamantite bar in The Forsaken Tower."
+        }
+      ]
     },
     {
       "id": "kou_hard_3",
@@ -8441,14 +8468,21 @@
       "description": "Board the Swampy boat at the Hollows.",
       "skills": {},
       "quests": [
-        "Nature Spirit"
+        "Priest in Peril",
+        "The Restless Ghost"
       ],
       "regions": [
         "Mort Myre Swamp"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Quest start of Nature Spirit Dramen or Lunar staff recommended to travel to Fairy ring code B K R"
+      "sourceRequirements": "Quest start of Nature Spirit Dramen or Lunar staff recommended to travel to Fairy ring code B K R",
+      "questProgress": [
+        {
+          "quest": "Nature Spirit",
+          "label": "Started Nature Spirit"
+        }
+      ]
     },
     {
       "id": "mor_med_8",
@@ -11833,8 +11867,15 @@
       "sourceRequirements": "64 Agility Partial completion of Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1",
       "oneOf": [
         {
+          "label": "Troll Stronghold progress",
           "quests": [
-            "Troll Stronghold"
+            "Death Plateau"
+          ],
+          "questProgress": [
+            {
+              "quest": "Troll Stronghold",
+              "label": "Reached the required progress in Troll Stronghold for: Take the agility shortcut from Trollheim into the Wilderness."
+            }
           ]
         },
         {

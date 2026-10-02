@@ -585,7 +585,11 @@ describe('Achievement Diary id-classification audit', () => {
     expect(byId.get('frem_easy_9')).toMatchObject({
       quests: [],
       oneOf: [
-        { quests: ['Troll Stronghold'] },
+        {
+          label: 'Troll Stronghold progress',
+          quests: ['Death Plateau'],
+          questProgress: [expect.objectContaining({ quest: 'Troll Stronghold' })],
+        },
         { cas: ['Easy'] },
       ],
     });

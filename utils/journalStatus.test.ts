@@ -845,9 +845,10 @@ describe('canonical diary tier eligibility', () => {
     const { cas, ...partialUnlocks } = canonicalUnlocks();
     void cas;
 
+    // Entering the Troll Stronghold takes Troll Stronghold under way (so Death Plateau done) or the Easy CAs.
     expect(getDiaryStatus(DIARY_DATA['Fremennik Easy'], {
       ...partialUnlocks,
-      quests: partialUnlocks.quests.filter(quest => quest !== 'Troll Stronghold'),
+      quests: partialUnlocks.quests.filter(quest => quest !== 'Troll Stronghold' && quest !== 'Death Plateau'),
     })).toBe('LOCKED_QUEST');
   });
 

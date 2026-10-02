@@ -398,3 +398,54 @@ describe('Diary tasks in Zanaris', () => {
     });
   });
 });
+
+const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+describe('Diary tasks that need only part of a quest', () => {
+  it.each(['frem_easy_9', 'frem_elite_5', 'frem_elite_6', 'wild_hard_8'])(
+    'accepts %s with Troll Stronghold under way, or the Easy Combat Achievements', id => {
+      // "Partial completion of the Troll Stronghold": it needs Death Plateau done, not Troll Stronghold.
+      expect(task(id).oneOf).toEqual([
+        {
+          label: 'Troll Stronghold progress',
+          quests: ['Death Plateau'],
+          questProgress: [{ quest: 'Troll Stronghold', label: expect.stringContaining('Troll Stronghold') }],
+        },
+        { cas: ['Easy'] },
+      ]);
+      expect(task(id).quests ?? []).not.toContain('Troll Stronghold');
+    },
+  );
+
+  it('smelts in The Forsaken Tower partway through the quest, after Client of Kourend', () => {
+    // The pinned wiki text said completion; the current page says "Partial completion" (rev 15357910).
+    expect(task('kou_hard_2')).toMatchObject({
+      quests: ['Client of Kourend'],
+      questProgress: [expect.objectContaining({ quest: 'The Forsaken Tower' })],
+    });
+  });
+
+  it('boards the Swampy boat once Nature Spirit is started', () => {
+    expect(task('mor_med_7')).toMatchObject({
+      quests: ['Priest in Peril', 'The Restless Ghost'],
+      questProgress: [{ quest: 'Nature Spirit', label: 'Started Nature Spirit' }],
+    });
+  });
+
+  it('never ask for the whole quest where the wiki asks for part of it', () => {
+    const quests = Object.keys(QUEST_DATA);
+    const partial: string[] = [];
+    for (const row of ALL_DIARY_TASKS) {
+      const text = SOURCE_REQUIREMENTS.get(row.id) ?? '';
+      for (const quest of quests) {
+        const named = new RegExp(`(partial completion of|quest start of|started) (the )?${escapeRegExp(quest)}(?!\\w)`, 'i');
+        if (!named.test(text)) continue;
+        partial.push(row.id);
+        for (const requirement of [row, ...(row.oneOf ?? [])]) {
+          expect(requirement.quests ?? [], `${row.id} needs only part of ${quest}`).not.toContain(quest);
+        }
+      }
+    }
+    expect(partial).toEqual(expect.arrayContaining(['frem_easy_9', 'frem_elite_5', 'frem_elite_6', 'wild_hard_8', 'mor_med_7']));
+  });
+});
