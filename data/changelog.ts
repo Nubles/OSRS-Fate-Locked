@@ -19,6 +19,23 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-02-quest-areas',
+    title: 'Quests Ask for Every Place They Need',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'Quests now ask for every area their required steps happen in, so the Quest Log no longer calls a quest ready before you can reach all of it. Temple of Ikov needs East Ardougne, where Lucien starts it. Fishing Contest needs Taverley and Seers’ Village, Watchtower the Feldip Hills, Tree Gnome Village the Khazard Battlefield and West Ardougne, Dragon Slayer I the Dwarven Mine for the magic door, and A Kingdom Divided the Kourend areas it visits, such as Kourend Castle and the Wintertodt Camp. You can still complete any quest by hand.',
+        'Enakhra’s Lament no longer asks for the whole Kharidian Desert, only the Agility Pyramid, whose chunk holds the quarry. The Grand Tree, The Eyes of Glouphrie and The Path of Glouphrie ask for Yanille, where Hazelmere’s island is, instead of the Feldip Hills. Elemental Workshop II asks for the Digsite instead of Varrock, and Land of the Goblins for Draynor Village, where Aggie makes its dyes, instead of Goblin Village.',
+        'In Chunked runs, quests ask for the chunks their steps are in: Plague City for Edmond’s house rather than the chunk beside it, Scrambled! for Tal Teklan and the dragon nest, A Porcine of Interest for the Sourhog Cave and Spria, and The Restless Ghost for the Wizards’ Tower.',
+        'Steps in a chunk no area covers, such as Cold War’s icebergs, the Jaldraocht Pyramid in Desert Treasure I and Jorral’s Outpost in Making History, now ask for that chunk in Chunked runs. In Vanilla runs they ask for the area you reach them from: Rellekka, the Bandit Camp and East Ardougne.',
+        'Quests whose items only a shop sells need that shop unlock. Prince Ali Rescue needs Clothes Shops for the pink skirt and Bars & Inns for Joe’s beers, Rag and Bone Man I and II need Wine Traders for the vinegar, and Garden of Tranquillity needs Farming Shops. For Pirate’s Treasure’s Karamjan rum, either Wine Traders or Bars & Inns with Brimhaven will do. Alfred Grimhand’s Barcrawl needs Bars & Inns. The Feud, Shades of Mort’ton, Icthlarin’s Little Helper, Daddy’s Home, Making Friends with My Arm, RFD: King Awowogei, Tai Bwo Wannai Trio and The Tourist Trap need their shops too.',
+        'Hopespear’s Will and Fairytale II - Cure a Queen need Fairy Rings, as only a fairy ring reaches the places they go.',
+        'Some quests now accept one of several routes. What Lies Below needs one way to the Chaos Altar: Mining 42 for the Tunnel of Chaos east of Varrock, the Chaos Temple ruins in the Wilderness with Dark Warriors’ Fortress, or the Abyss once you’ve done Enter the Abyss. Lunar Diplomacy needs the Air, Fire, Water and Earth altars or the Abyss, and One Small Favour the Fishing Guild or Hemenster for the Goblin Cave.',
+        'The Fremennik Exiles lists Mining 60, for the lunar ores. Biohazard says the priest gown is worn to see Guidor in Varrock, and The Great Brain Robbery no longer suggests the Grand Exchange, which an ironman can’t use.',
+      ],
+    },
+  },
+  {
     id: '2026-10-02-boss-fights',
     title: 'Boss Fights Need Their Boss',
     date: '2026-10-02',
