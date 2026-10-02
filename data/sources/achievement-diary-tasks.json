@@ -143,7 +143,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Silk"
+      "sourceRequirements": "Silk",
+      "merchants": [
+        "Silk Shops"
+      ]
     },
     {
       "id": "ard_easy_4",

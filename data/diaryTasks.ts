@@ -86,7 +86,7 @@ export interface DiaryTask {
 export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'ard_easy_1', tierId: 'Ardougne Easy', description: 'Have Wizard Cromperty teleport you to the Rune Essence mine.', quests: ['Rune Mysteries'], regions: ['East Ardougne'] },
   { id: 'ard_easy_2', tierId: 'Ardougne Easy', description: 'Steal a cake from the Ardougne market stalls.', skills: { 'Thieving': 5 }, regions: ['East Ardougne'] },
-  { id: 'ard_easy_3', tierId: 'Ardougne Easy', description: 'Sell Silk to Silk trader in Ardougne for 60 coins each.', regions: ['East Ardougne'] },
+  { id: 'ard_easy_3', tierId: 'Ardougne Easy', description: 'Sell Silk to Silk trader in Ardougne for 60 coins each.', merchants: ['Silk Shops'], regions: ['East Ardougne'] },
   { id: 'ard_easy_4', tierId: 'Ardougne Easy', description: 'Use the altar in East Ardougne\'s church.', regions: ['East Ardougne'] },
   { id: 'ard_easy_5', tierId: 'Ardougne Easy', description: 'Go out fishing on the Fishing Trawler', minigames: ['Fishing Trawler'], regions: ['Port Khazard'] },
   { id: 'ard_easy_6', tierId: 'Ardougne Easy', description: 'Enter the Combat Training Camp north of W. Ardougne.', quests: ['Biohazard'], regions: ['Combat Training Camp'] },

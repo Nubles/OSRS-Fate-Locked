@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
+import { reviewRequirement } from './chunk-requirements.mjs';
 
-const policy = JSON.parse(readFileSync(new URL('../data/sources/interior-access.json', import.meta.url), 'utf8'));
+const policy =JSON.parse(readFileSync(new URL('../data/sources/interior-access.json', import.meta.url), 'utf8'));
 const clean = value => String(value).replace(/~\||\|~/g, '').replace(/\s+/g, ' ').trim();
 const baseId = value => String(value).split('-')[0];
 const fields = { Monster: 'monster', NPC: 'npc', Object: 'object', Shop: 'shop', Spawn: 'spawn', Quest: 'quest' };
@@ -123,7 +124,7 @@ export function buildInteriorContent(data, registry, encode, accessPolicy = poli
         const selected = Array.isArray(entries) ? entries : Object.entries(entries)
           .filter(([location]) => location === '*' || sourceNames.has(baseId(location)) || sourceNames.has(location))
           .flatMap(([, requirements]) => requirements);
-        const requirements = [...new Set(selected.flatMap(value => Object.keys(value ?? {}).map(clean)))];
+        const requirements = [...new Set(selected.flatMap(value => Object.keys(value ?? {}).map(clean).flatMap(reviewRequirement)))];
         if (requirements.length) (out[kind] ??= {})[entityName(kind, raw)] = requirements;
       }
     }

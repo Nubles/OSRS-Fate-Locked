@@ -32,6 +32,10 @@ vi.mock('../utils/merchantShops', () => ({
     ['Gem Shops', [
       { name: 'Gem Trader', kind: 'shop', category: 'Gem Shops', locations: [{ cx: 51, cy: 50 }] },
     ]],
+    ['Chainbody Shops', [
+      { name: "Scavvo's Rune Store.", kind: 'shop', category: 'Chainbody Shops', onlySource: ['Rune sword'], locations: [{ cx: 49, cy: 52 }] },
+      { name: "Wayne's Chains! - Chainmail specialist", kind: 'shop', category: 'Chainbody Shops', locations: [{ cx: 46, cy: 52 }] },
+    ]],
   ]),
 }));
 vi.mock('../utils/chunkLocations', () => ({ summarisePlaces: () => [], showChunkOnMap: vi.fn() }));
@@ -53,6 +57,14 @@ describe('MerchantShopsPanel category descriptions', () => {
     openCategory(category);
 
     expect(screen.getByText(MERCHANT_UNLOCK_DETAILS[category])).toBeTruthy();
+  });
+
+  it('marks the items a shop is the only one to sell (owner call U2)', () => {
+    render(<MerchantShopsPanel />);
+    openCategory('Chainbody Shops');
+
+    expect(screen.getByText('Only shop selling Rune sword')).toBeTruthy();
+    expect(screen.getAllByText(/^Only shop selling/)).toHaveLength(1);
   });
 
   it('adds no description to categories without one', () => {

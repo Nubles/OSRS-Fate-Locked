@@ -73,7 +73,7 @@ describe('authored changelog releases', () => {
       expect.stringMatching(/Trips now need both ends.*Uzer and Pollnivneach.*Entrana, Ardougne and Land’s End.*Dorgesh-Kaan train.*Mage Arena’s chunk.*Burthorpe’s chunk.*Waterbirth Island.*Taverley/),
       expect.stringMatching(/“in the desert” no longer count Al Kharid, the Duel Arena or the Mage Training Arena/),
       expect.stringMatching(/part of Barbarian Training they use.*clears once the miniquest is done.*Only the spear and hasta tasks need Tai Bwo Wannai Trio/),
-      expect.stringMatching(/shop or service need its merchant unlock.*Sbott’s tanning \(Tanners\).*Sawmill \(Sawmill Operators\).*estate agents \(Real Estate Agents\).*Pet Shops.*Hunter Shops.*Nardah Herbalist \(Decanters\).*Taxidermists/),
+      expect.stringMatching(/shop or service need its merchant unlock.*Sbott’s tanning \(Tanners\).*Sawmill \(Sawmill Operators\).*estate agents \(Real Estate Agents\).*Pet Shops.*Hunter Shops.*Nardah Herbalist \(Decanters\).*Taxidermists.*silk trader \(Silk Shops\)/),
       expect.stringMatching(/minigame’s or a boss’s loot.*Intelligence Gathering.*fire cape \(TzHaar Fight Cave\).*KQ head \(Kalphite Queen\).*Tai Bwo Wannai Cleanup/),
       expect.stringMatching(/Zanaris tasks need a dramen or lunar staff.*Abyss instead/),
       expect.stringMatching(/only part of a quest no longer ask for all of it.*Death Plateau and Troll Stronghold under way.*Forsaken Tower.*Nature Spirit started/),
@@ -97,6 +97,25 @@ describe('authored changelog releases', () => {
       expect.stringMatching(/What Lies Below needs one way to the Chaos Altar: Mining 42.*Chaos Temple ruins.*Enter the Abyss.*Lunar Diplomacy.*One Small Favour/),
       expect.stringMatching(/Fremennik Exiles lists Mining 60.*priest gown.*Guidor in Varrock.*Grand Exchange/),
     ]);
+  });
+
+  it('announces the shop, guild and bank fixes in plain words', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-shops-and-guilds');
+    expect(release?.title).toBe('Shops, Guilds and Banks Ask What the Game Asks');
+    expect(release?.sections.fixed).toEqual(expect.arrayContaining([
+      expect.stringMatching(/Farming Guild patches open at their own tier: 65 Farming.*85/),
+      expect.stringMatching(/bank inside a guild needs that guild.*Burgh de Rott and Darkmeyer/),
+      expect.stringMatching(/smelts steel, mithril, adamantite and rune bars at any furnace/),
+      expect.stringMatching(/reward shop needs Reward Shops and the activity/),
+      expect.stringMatching(/Mine Carts no longer needs The Giant Dwarf/),
+      expect.stringMatching(/Bone Voyage on Fossil Island.*51 Sailing on Anglers’ Retreat/),
+    ]));
+    expect(release?.sections.added).toEqual([
+      expect.stringMatching(/^Ten shops the map was missing.*Kjut’s Kebabs/),
+      expect.stringMatching(/Karim’s kebabs, Aggie’s dyes, the silk trader, Tenzing’s climbing boots and Nulodion’s cannon/),
+    ]);
+    // Player words only: no audit labels or file names.
+    expect(JSON.stringify(release)).not.toMatch(/\b[SBGUMD]\d+\b|\.ts\b|\.json\b|Chunk Picker/);
   });
 
   it('announces the tasks Slayer rewards add, and boss tasks', () => {

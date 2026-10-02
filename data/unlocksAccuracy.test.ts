@@ -1,0 +1,650 @@
+/**
+ * Accuracy audit, batch 4 (shops, guilds, banks and levels): each fix checked
+ * against the shipped chunk data, so a resync or an edit that undoes one fails
+ * here. Findings are named as the audit names them (S11, B1, G4…).
+ */
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+import content from '../public/chunk-content.json';
+import { ChunkContentService } from '../services/ChunkContentService';
+import { createFreshState } from '../context/GameContext';
+import { evaluateBankRequirements, evaluateEntityAccess } from '../utils/entityAccess';
+import { BANKS } from './banks';
+import { getActivityReq } from './activityRequirements';
+import { RESOURCE_MAP } from './resourceData';
+import { calculateSupplyChain } from '../utils/supplyChain';
+import { SKILL_UNLOCK_DATA } from './skillUnlocks';
+import { resourceReqFor } from '../utils/chunkResources';
+import { skillChunkNodes } from '../utils/skillChunkNodes';
+import { chunkContentService } from '../services/ChunkContentService';
+import { classifyShop, ONLY_SHOP_SOURCE } from '../utils/shopClassification';
+import { shopsByCategory } from '../utils/merchantShops';
+import { MERCHANT_SERVICES } from './merchantServices';
+import shopOverrides from './sources/shop-overrides.json';
+import { compileRawRequirements } from '../utils/questRoutes/accountRequirements';
+import { evaluateActivityReadiness } from '../utils/activityReadiness';
+import { TRAVEL_NETWORKS } from './travelLinks';
+import { TRAVEL_METHODS } from './travelMethods';
+import { travelDecisions } from '../utils/travelDecisions';
+import interiorAccess from './sources/interior-access.json';
+import { getActivityRegion } from './activityRegions';
+import {
+  FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST, MINIGAMES_LIST, MISTHALIN_AREAS, MOBILITY_LIST,
+  REGIONS_LIST, SKILLS_LIST, BOSSES_LIST,
+} from './items';
+import { QUEST_DATA } from './questData';
+import contentOverrides from './sources/chunk-content-overrides.json';
+import type { UnlockState } from '../types';
+
+const service = new ChunkContentService();
+beforeAll(async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => content })));
+  await service.init();
+  await chunkContentService.init();
+  vi.unstubAllGlobals();
+});
+
+const levels = (level: number) => Object.fromEntries(SKILLS_LIST.map(skill => [skill, level]));
+
+/** A run that owns every area and unlock, has done every quest and has these levels. */
+const everything = (level = 99, changes: Partial<UnlockState> = {}): UnlockState => ({
+  ...createFreshState().unlocks,
+  skills: levels(10),
+  levels: levels(level),
+  regions: [...REGIONS_LIST, ...MISTHALIN_AREAS],
+  merchants: [...MERCHANTS_LIST],
+  guilds: [...GUILDS_LIST],
+  minigames: [...MINIGAMES_LIST],
+  mobility: [...MOBILITY_LIST],
+  farming: [...FARMING_PATCH_LIST],
+  bosses: [...BOSSES_LIST],
+  quests: Object.keys(QUEST_DATA),
+  ...changes,
+});
+
+describe('S11: members content does not wait on a free-to-play tag', () => {
+  it('leaves the Chunk Picker\'s "F2P Only" tag out of every requirement', () => {
+    expect(JSON.stringify(content)).not.toContain('F2P Only');
+  });
+
+  it('lets a run that owns everything use the members shops the tag held at "needs confirmation"', () => {
+    const shops: [string, number, number][] = [
+      ['Garden Centre', 47, 52], ['Construction supplies', 51, 54], ["Harry's Fishing Shop", 44, 53],
+      ['Fancy Clothes Store', 51, 53], ['Draynor Seed Market', 48, 50], ["Trader Stan's Trading Post", 28, 57],
+      ['Slayer Equipment (shop)', 45, 55], ['Pie Shop', 49, 53], ['Farming Supplies', 43, 54],
+      ["Hickton's Archery Emporium", 44, 53], ["Jatix's Herblore Shop", 45, 53], ['Ye olde Tea Shoppe', 51, 53],
+    ];
+    for (const [name, cx, cy] of shops) {
+      expect(evaluateEntityAccess(name, 'shop', { cx, cy }, everything(), 'vanilla', service), name)
+        .toEqual({ status: 'ALLOWED', reasons: [] });
+    }
+  });
+});
+
+/** Every quest but these. */
+const questsWithout = (...missing: string[]) => Object.keys(QUEST_DATA).filter(quest => !missing.includes(quest));
+
+describe('G4: each Farming Guild patch opens at its own tier', () => {
+  const FARMING_GUILD = { cx: 19, cy: 58 };
+  // The wiki's tiers (Farming Guild, oldid 15274002): beginner 45, intermediate 65, advanced 85.
+  const TIERS: [string, number][] = [
+    ['Allotment patch', 45], ['Flower Patch', 45], ['Bush Patch', 45], ['Cactus patch', 45],
+    ['Herb patch', 65], ['Tree patch', 65], ['Anima patch', 65],
+    ['Fruit Tree Patch', 85], ['Spirit Tree Patch', 85], ['Celastrus patch', 85], ['Redwood tree patch', 85],
+  ];
+
+  it.each(TIERS)('%s needs %i Farming and the guild', (patch, level) => {
+    const access = (unlocks: UnlockState) => evaluateEntityAccess(patch, 'object', FARMING_GUILD, unlocks, 'vanilla', service);
+    expect(access(everything(level))).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(access(everything(level - 1))).toEqual({ status: 'NOT_READY', reasons: [`Farming level ${level}`] });
+    expect(access(everything(99, { guilds: GUILDS_LIST.filter(guild => guild !== 'Farming Guild') })))
+      .toEqual({ status: 'NOT_READY', reasons: ['Farming Guild'] });
+  });
+
+  it("leaves none of the source's tier wording, which no gate could check", () => {
+    expect(JSON.stringify(content)).not.toContain('Access the Farming Guild#');
+  });
+});
+
+describe('G5: the disease-free herb patches need the quests that open them', () => {
+  // Herb patch, oldid 15359652: "unlocked with My Arm's Big Adventure and Making Friends with My Arm".
+  it.each([
+    ['Troll Stronghold', 44, 57, "My Arm's Big Adventure"],
+    ['Weiss', 44, 61, 'Making Friends with My Arm'],
+  ] as const)('the herb patch at %s needs %s', (_place, cx, cy, quest) => {
+    const access = (unlocks: UnlockState) => evaluateEntityAccess('Herb patch', 'object', { cx, cy }, unlocks, 'vanilla', service);
+    expect(access(everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(access(everything(99, { quests: questsWithout(quest) }))).toEqual({ status: 'NOT_READY', reasons: [quest] });
+  });
+});
+
+/** The bank at this canonical chunk id, as the chunk panel and the RuneLite export judge it. */
+const bankAccess = (id: string, unlocks: UnlockState) => {
+  const coord = { cx: Math.floor(Number(id) / 256), cy: Number(id) % 256 };
+  return evaluateBankRequirements(service.contentFor(coord.cx, coord.cy)!, coord, unlocks, service, 'vanilla');
+};
+
+describe('B1: a bank inside a guild needs the guild', () => {
+  // The Hunter Guild's bank chest stands outside the guild (data/activityRequirements.ts).
+  const OUTSIDE = new Set(['Hunter Guild']);
+  const guildBanks = BANKS.flatMap(bank => {
+    const guild = GUILDS_LIST.find(name => bank.name.includes(name));
+    return guild && !OUTSIDE.has(guild) ? [{ id: bank.id, bank: bank.name, guild }] : [];
+  });
+
+  it('finds every guild bank', () => {
+    expect(guildBanks.map(({ bank }) => bank).sort()).toEqual([
+      'Crafting Guild', 'East Woodcutting Guild deposit box', 'Farming Guild', 'Fishing Guild',
+      "Legends' Guild", "Myths' Guild", "Warriors' Guild", 'West Woodcutting Guild',
+    ]);
+  });
+
+  it('opens each to a run that owns the guild and meets its entry requirement, and to no other', () => {
+    for (const { id, bank, guild } of guildBanks) {
+      expect(bankAccess(id, everything()), bank).toEqual({ status: 'ALLOWED', reasons: [] });
+      const unowned = bankAccess(id, everything(99, { guilds: GUILDS_LIST.filter(name => name !== guild) }));
+      expect(unowned.status, bank).toBe('NOT_READY');
+      expect(unowned.reasons, bank).toContain(guild);
+      const entry = getActivityReq(guild)!;
+      // Below the guild's level, or without its quest.
+      const short = entry.quests?.length ? everything(99, { quests: questsWithout(...entry.quests) }) : everything(1);
+      expect(bankAccess(id, short).status, `${bank} without its entry requirement`).toBe('NOT_READY');
+    }
+  });
+});
+
+describe('B2: a town bank built in a quest needs the quest', () => {
+  // List of banks, oldid 15315317.
+  it.each([
+    ['11310', 'Shilo Village', 'Shilo Village'], ['13099', 'Sophanem', 'Contact!'],
+    ['9265', 'Lletya', "Mourning's End Part I"], ['10284', 'Corsair Cove', 'The Corsair Curse'],
+    ['10300', 'Etceteria', 'Throne of Miscellania'], ['9275', 'Neitiznot', 'The Fremennik Isles'],
+    ['9531', 'Jatizso', 'The Fremennik Isles'], ['13874', 'Burgh de Rott', 'In Aid of the Myreque'],
+    ['14388', 'Darkmeyer', 'Sins of the Father'],
+  ])('bank %s (%s) needs %s', (id, _bank, quest) => {
+    expect(bankAccess(id, everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    const without = bankAccess(id, everything(99, { quests: questsWithout(quest) }));
+    expect(without.status).toBe('NOT_READY');
+    expect(without.reasons).toContain(`Complete ${quest}`);
+  });
+});
+
+describe('S14: any furnace smelts steel, mithril, adamantite and rune bars', () => {
+  it.each([
+    ['Steel Bar', 30, 'Iron Ore', 2], ['Mithril Bar', 50, 'Mithril Ore', 4],
+    ['Adamantite Bar', 70, 'Adamantite Ore', 6], ['Rune Bar', 85, 'Runite Ore', 8],
+  ] as const)('%s: %i Smithing at any furnace, with twice the Blast Furnace coal', (bar, level, ore, coal) => {
+    expect(RESOURCE_MAP[bar].filter(source => source.type === 'SKILL' && source.name === 'Furnace')).toEqual([
+      { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { Smithing: level }, inputs: { [ore]: 1, Coal: coal } },
+    ]);
+  });
+
+  it('plans a steel bar for a run that has no part of the Fremennik Province', () => {
+    const state = createFreshState();
+    state.gameModeId = 'vanilla';
+    for (const skill of ['Smithing', 'Mining']) {
+      state.unlocks.skills[skill] = 3;
+      state.unlocks.levels[skill] = 30;
+    }
+    const routes = calculateSupplyChain('Steel Bar', state)!.sources;
+    expect(state.unlocks.regions.some(region => /fremennik|rellekka|keldagrim/i.test(region))).toBe(false);
+    expect(routes.find(route => route.source.name === 'Blast Furnace')!.status.isAvailable).toBe(false);
+    expect(routes.find(route => route.source.name === 'Furnace')!.status).toMatchObject({ isAvailable: true, missing: [] });
+  });
+});
+
+describe('S16: the level gates agree with the skill table', () => {
+  type Raw = { o?: [string, number][]; p?: string[]; m?: [string, number][] };
+  const raw = content as unknown as { chunks: Record<string, Raw>; interiors: Record<string, { content: Raw }> };
+  const entries = [...Object.values(raw.chunks), ...Object.values(raw.interiors).map(interior => interior.content)];
+  const objects = [...new Set(entries.flatMap(entry => (entry.o ?? []).map(([name]) => name)))];
+  /** "Lvl N: a, b" lines of one skill's table, as [N, item] pairs. */
+  const unlocksOf = (skill: string) => Object.values(SKILL_UNLOCK_DATA[skill]).flat().flatMap(line => {
+    const match = line.match(/^Lvl (\d+): (.+)$/);
+    return match ? match[2].split(', ').map(item => [Number(match[1]), item] as const) : [];
+  });
+
+  it('opens each tree at the level its logs need', () => {
+    const checked: string[] = [];
+    for (const [level, item] of unlocksOf('Woodcutting')) {
+      const logs = item.match(/^(.+) Logs$/)?.[1];
+      if (!logs) continue;
+      for (const name of objects.filter(object => object.toLowerCase().includes(`${logs.toLowerCase()} tree`) && !/patch/i.test(object))) {
+        expect(resourceReqFor(name), name).toEqual({ skill: 'Woodcutting', level });
+        checked.push(name);
+      }
+    }
+    expect(checked).toEqual(expect.arrayContaining([
+      'Jatoba tree', 'Mature juniper tree', 'Blisterwood Tree', 'Camphor tree', 'Ironwood tree', 'Rosewood tree',
+    ]));
+  });
+
+  it('opens each impling at the level that catches it', () => {
+    const hunter = new Map(skillChunkNodes('Hunter').map(node => [node.name.toLowerCase(), node.level]));
+    const checked: string[] = [];
+    for (const [level, item] of unlocksOf('Hunter')) {
+      const kind = item.match(/^(.+) Implings$/)?.[1];
+      if (!kind) continue;
+      const name = `${kind.toLowerCase()} impling`;
+      if (!hunter.has(name)) continue;
+      expect(hunter.get(name), name).toBe(level);
+      checked.push(name);
+    }
+    expect(checked.length).toBeGreaterThanOrEqual(11);
+  });
+
+  it('opens each stall the table names at its level', () => {
+    const checked: string[] = [];
+    for (const [level, item] of unlocksOf('Thieving')) {
+      const kinds = item.match(/^(.+) Stalls$/)?.[1];
+      if (!kinds) continue;
+      for (const kind of kinds.split(' & ')) {
+        const stall = kind === 'Vegetable' ? 'veg stall' : `${kind.toLowerCase()} stall`;
+        for (const name of objects.filter(object => object.toLowerCase().startsWith(stall))) {
+          expect(resourceReqFor(name), name).toEqual({ skill: 'Thieving', level });
+          checked.push(name);
+        }
+      }
+    }
+    expect(checked).toEqual(expect.arrayContaining(['Veg stall', 'Fruit Stall', 'Ore stall', 'Tea stall', 'Gem stall']));
+  });
+});
+
+type RawPlace = { s?: string[] };
+const rawContent = content as unknown as {
+  chunks: Record<string, RawPlace>;
+  interiors: Record<string, { content: RawPlace; requirements: { shop?: Record<string, string[]> } }>;
+  shopItems: Record<string, string[]>;
+  taskUnlocks: { Shops?: Record<string, Record<string, string[]>> };
+};
+/** Every shop name in the data, placed or known only from its stock. */
+const allShops = [...new Set([
+  ...Object.values(rawContent.chunks).flatMap(entry => entry.s ?? []),
+  ...Object.values(rawContent.interiors).flatMap(entry => entry.content.s ?? []),
+  ...Object.keys(rawContent.shopItems),
+])];
+
+describe('S1 to S10: each shop sits in the category its stock calls for', () => {
+  it('puts every shop the audit names where its stock belongs', () => {
+    expect(Object.fromEntries([
+      'The Runic Emporium', "Regath's Wares", 'The Lost Pickaxe', "King's Axe Inn", "Efaritay's Supplies",
+      "Ivan's Supplies", "TzHaar-Hur-Tel's Equipment Store", "TzHaar-Hur-Zal's Equipment Store", 'Temple Supplies',
+      "Sian's Ranged Weaponry", 'Ore seller',
+    ].map(shop => [shop, classifyShop(shop)]))).toEqual({
+      'The Runic Emporium': 'Magic Shops', "Regath's Wares": 'Magic Shops',
+      'The Lost Pickaxe': 'Bars & Inns', "King's Axe Inn": 'Bars & Inns',
+      "Efaritay's Supplies": 'Weapon Shops', "Ivan's Supplies": 'Weapon Shops',
+      "TzHaar-Hur-Tel's Equipment Store": 'Weapon Shops', "TzHaar-Hur-Zal's Equipment Store": 'Weapon Shops',
+      'Temple Supplies': 'Reward Shops', "Sian's Ranged Weaponry": 'Archery Shops', 'Ore seller': 'Ore Merchants',
+    });
+  });
+
+  it('sells runes only in magic shops, but for one general store left for review', () => {
+    // Durrik's Goods, a general store, also sells cosmic and death runes; the audit noted it,
+    // and it has no ruling yet.
+    const sellers = allShops.filter(shop => (rawContent.shopItems[shop.replace(/\.$/, '')] ?? []).some(item => / rune$/.test(item)));
+    expect(sellers.filter(shop => classifyShop(shop) !== 'Magic Shops')).toEqual(["Durrik's Goods"]);
+  });
+
+  it('sells obsidian gear and the vampyre flails only in weapon shops', () => {
+    const sellers = allShops.filter(shop => (rawContent.shopItems[shop.replace(/\.$/, '')] ?? [])
+      .some(item => /^(toktz-|tzhaar-ket-|obsidian )|flail$|^sunspear$/i.test(item)));
+    expect(sellers.length).toBeGreaterThanOrEqual(4);
+    expect(sellers.filter(shop => classifyShop(shop) !== 'Weapon Shops')).toEqual([]);
+  });
+
+  it("opens Efaritay's Supplies only after The Blood Moon Rises (S5)", () => {
+    const shop = (unlocks: UnlockState) => evaluateEntityAccess("Efaritay's Supplies", 'shop', { cx: 56, cy: 52, sourceId: '10105' }, unlocks, 'vanilla', service);
+    expect(shop(everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(shop(everything(99, { quests: questsWithout('The Blood Moon Rises') }))).toEqual({ status: 'NOT_READY', reasons: ['The Blood Moon Rises'] });
+  });
+});
+
+/** The shop's requirements at each place it stands: a surface chunk, or an interior. */
+const shopPlaces = (shop: string): string[][] => [
+  ...Object.entries(rawContent.chunks).filter(([, entry]) => entry.s?.includes(shop))
+    .map(([id]) => rawContent.taskUnlocks.Shops?.[shop]?.[id] ?? []),
+  ...Object.values(rawContent.interiors).filter(entry => entry.content.s?.includes(shop))
+    .map(entry => entry.requirements.shop?.[shop] ?? []),
+];
+
+describe("U1: a reward shop needs Reward Shops and its activity's unlock", () => {
+  // Reward shops whose activity has no unlock of its own in the app: Reward Shops alone opens them.
+  const NO_ACTIVITY_UNLOCK: Readonly<Record<string, string>> = {
+    'Leagues Reward Shop': 'Leagues',
+    "Prospector Percy's Nugget Shop": 'the Motherlode Mine',
+    "Worm Tounge's Wares": 'the Colossal Wyrm Agility Course',
+    "Mairin's Market": 'Underwater Agility and Thieving',
+    "Alry the Angler's Angling Accessories": 'aerial fishing',
+    "Ramarno's Shard Exchange": 'the Ruins of Camdozaal',
+  };
+
+  it('puts the shops that take an activity currency in Reward Shops', () => {
+    for (const shop of [
+      'Temple Supplies', "Mairin's Market", 'Mining Guild Mineral Exchange', "Petrified Pete's Ore Shop",
+      "Gabooty's Tai Bwo Wannai Cooperative", "Gabooty's Tai Bwo Wannai Drinky Store", "Alry the Angler's Angling Accessories",
+    ]) expect(classifyShop(shop), shop).toBe('Reward Shops');
+  });
+
+  it("asks for the activity's unlock wherever a reward shop stands", () => {
+    const rewardShops = allShops.filter(shop => classifyShop(shop) === 'Reward Shops');
+    expect(rewardShops.length).toBeGreaterThanOrEqual(25);
+    const missing = rewardShops.filter(shop => !(shop in NO_ACTIVITY_UNLOCK)).flatMap(shop => shopPlaces(shop)
+      .filter(requirements => !compileRawRequirements(requirements.map(raw => ({ raw, origin: 'ENTITY' as const })))
+        .some(gate => gate.type === 'UNLOCK' && ['minigames', 'guilds', 'bosses'].includes(gate.category)))
+      .map(() => shop));
+    expect(missing).toEqual([]);
+  });
+
+  it('opens Temple Supplies, and the ring of the elements it sells, only with both unlocks', () => {
+    const temple = (unlocks: UnlockState) => evaluateEntityAccess('Temple Supplies', 'shop', { cx: 48, cy: 49, sourceId: 'Temple of the Eye' }, unlocks, 'vanilla', service);
+    expect(temple(everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(temple(everything(99, { merchants: MERCHANTS_LIST.filter(merchant => merchant !== 'Reward Shops') })))
+      .toEqual({ status: 'LOCKED', reasons: ['Unlock Reward Shops'] });
+    expect(temple(everything(99, { minigames: MINIGAMES_LIST.filter(minigame => minigame !== 'Guardians of the Rift') })))
+      .toEqual({ status: 'NOT_READY', reasons: ['Guardians of the Rift'] });
+    const ring = service.itemSourceRecords('Ring of the elements').filter(record => record.hostName === 'Temple Supplies');
+    expect(ring.length).toBeGreaterThan(0);
+    for (const record of ring) {
+      expect(record.rawRequirements.map(requirement => requirement.raw))
+        .toEqual(expect.arrayContaining(['Use the Reward Shops', 'Play Guardians of the Rift']));
+    }
+  });
+
+  it("makes the resource planner ask for the activity too", () => {
+    const missingAt = (minigames: string[]) => {
+      const state = createFreshState();
+      state.gameModeId = 'vanilla';
+      state.unlocks.merchants = ['Reward Shops'];
+      state.unlocks.minigames = minigames;
+      return calculateSupplyChain('Bucket of Sand', state)!.sources
+        .find(route => route.source.name === "Dom Onion's Reward Shop")!.status.missing;
+    };
+    expect(missingAt([])).toContain('Unlock: Nightmare Zone');
+    expect(missingAt(['Nightmare Zone'])).not.toContain('Unlock: Nightmare Zone');
+    expect(missingAt(['Nightmare Zone'])).not.toContain('Merchant: Reward Shops');
+  });
+
+  it("opens the Mineral Exchange only in the Mining Guild, at the guild's 60 Mining", () => {
+    const exchange = (unlocks: UnlockState) => evaluateEntityAccess('Mining Guild Mineral Exchange', 'shop', { cx: 47, cy: 52, sourceId: '12183' }, unlocks, 'vanilla', service);
+    expect(exchange(everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(exchange(everything(59)).reasons).toContain('Mining level 60');
+    expect(exchange(everything(99, { guilds: GUILDS_LIST.filter(guild => guild !== 'Mining Guild') })))
+      .toEqual({ status: 'NOT_READY', reasons: ['Mining Guild'] });
+  });
+});
+
+describe('U2: a mixed-stock armour shop goes by its stock, and its only-source items are marked', () => {
+  // More than half the stock decides; else the game's own type for the shop (minimap icon, or
+  // the wiki's speciality where it has no icon). Ranged armour counts for Archery Shops.
+  const SHOPS: Readonly<Record<string, string>> = {
+    'Armour Shop (Jatizso)': 'Platebody Shops', "Blair's Armour": 'Chainbody Shops',
+    "Myths' Guild Armoury": 'Platebody Shops', 'Quality Armour Shop': 'Chainbody Shops',
+    "Reldak's Leather Armour": 'Archery Shops', "Scavvo's Rune Store": 'Chainbody Shops',
+    "Seddu's Adventurer's Store": 'Platelegs Shops', Armoury: 'Sword Shops',
+  };
+  /** The category whose speciality an item is. */
+  const kindOf = (item: string) => ([
+    [/platebody|dragon metal (shard|lump)/i, 'Platebody Shops'], [/chainbody/i, 'Chainbody Shops'],
+    [/platelegs/i, 'Platelegs Shops'], [/plateskirt/i, 'Plateskirt Shops'], [/helm\b/i, 'Helmet Shops'],
+    [/shield|kiteshield/i, 'Shield Shops'], [/\bmace\b/i, 'Mace Shops'], [/battleaxe|\baxe\b/i, 'Axe Shops'],
+    [/sword|dagger/i, 'Sword Shops'], [/crossbow/i, 'Crossbow Shops'],
+    [/arrow|bolts|bow\b|coif|d'hide|leather/i, 'Archery Shops'],
+  ] as const).find(([pattern]) => pattern.test(item))?.[1] ?? 'other';
+  const sellers = (item: string) => Object.entries(rawContent.shopItems).filter(([, items]) => items.includes(item)).map(([shop]) => shop);
+
+  it('puts each shop where most of its stock, or its own icon, puts it', () => {
+    expect(Object.fromEntries(Object.keys(SHOPS).map(shop => [shop, classifyShop(shop)]))).toEqual(SHOPS);
+    // Where one category holds more than half the stock, it is that one.
+    for (const [shop, category] of Object.entries(SHOPS)) {
+      const stock = rawContent.shopItems[shop] ?? [];
+      const counts = new Map<string, number>();
+      for (const item of stock) counts.set(kindOf(item), (counts.get(kindOf(item)) ?? 0) + 1);
+      const majority = [...counts].find(([, count]) => count * 2 > stock.length)?.[0];
+      if (majority) expect(category, shop).toBe(majority);
+    }
+  });
+
+  it('marks every item such a shop alone sells that is not of its category', () => {
+    const marked = Object.fromEntries(Object.keys(SHOPS).flatMap(shop => {
+      const only = (rawContent.shopItems[shop] ?? []).filter(item => sellers(item).length === 1 && kindOf(item) !== SHOPS[shop]);
+      return only.length ? [[shop.toLowerCase(), only]] : [];
+    }));
+    expect(marked).toEqual(ONLY_SHOP_SOURCE);
+  });
+
+  it('keeps each marked item reachable through its shop, and shows it in the shop directory', () => {
+    for (const [shop, items] of Object.entries(ONLY_SHOP_SOURCE)) {
+      for (const item of items) {
+        // Monsters drop them too; no other shop sells them.
+        const records = service.itemSourceRecords(item).filter(record => record.kind === 'shop');
+        expect(records.length, item).toBeGreaterThan(0);
+        expect(records.map(record => record.hostName.toLowerCase()), item).toEqual(records.map(() => shop));
+        for (const record of records) expect(record.rawRequirements.map(requirement => requirement.raw), item).toContain(`Use the ${classifyShop(shop)}`);
+      }
+    }
+    const directory = [...shopsByCategory()!.values()].flat();
+    expect(directory.find(entry => entry.name === "Scavvo's Rune Store")?.onlySource).toEqual(['Rune sword']);
+    expect(directory.find(entry => entry.name === "Seddu's Adventurer's Store")?.onlySource).toEqual(['Black med helm']);
+  });
+});
+
+describe('U3: the sellers who sell through dialogue are merchant services', () => {
+  // Name, category, and the wiki's map pin (x, y).
+  // Karim oldid 15358428, Aggie 15083478, Silk trader 15318776, Tenzing 15318801, Nulodion 15328958.
+  const SELLERS: [string, string, number, number][] = [
+    ['Karim', 'Kebab Sellers', 3274, 3181],
+    ['Aggie', 'Dye Shops', 3086, 3259],
+    ['Silk trader', 'Silk Shops', 3298, 3202],
+    ['Tenzing', 'Clothes Shops', 2821, 3556],
+    ['Nulodion', 'Weapon Shops', 3012, 3452],
+  ];
+
+  it.each(SELLERS)('%s sells as a %s service where the wiki puts them', (name, category, x, y) => {
+    expect(MERCHANT_SERVICES[name]?.category).toBe(category);
+    const locations = service.entityLocations(name, ['npc'])!.locations;
+    expect(locations.map(({ cx, cy }) => [cx, cy])).toEqual([[Math.floor(x / 64), Math.floor(y / 64)]]);
+    const at = (unlocks: UnlockState) => evaluateEntityAccess(name, 'npc', locations[0], unlocks, 'vanilla', service);
+    expect(at(everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(at(everything(99, { merchants: MERCHANTS_LIST.filter(merchant => merchant !== category) })))
+      .toEqual({ status: 'LOCKED', reasons: [`Unlock ${category}`] });
+    expect(shopsByCategory()!.get(category)!.find(entry => entry.name === name))
+      .toMatchObject({ kind: 'npc', stockStatus: 'service' });
+  });
+
+  it('asks for the quests that open Tenzing and Nulodion', () => {
+    const at = (name: string, quest: string) => evaluateEntityAccess(name, 'npc', service.entityLocations(name, ['npc'])!.locations[0],
+      everything(99, { quests: questsWithout(quest) }), 'vanilla', service);
+    // Death Plateau has you buy his boots, so a run that has only started it can still buy them.
+    expect(at('Tenzing', 'Death Plateau')).toEqual({ status: 'UNKNOWN', reasons: ['Started Death Plateau'] });
+    expect(at('Nulodion', 'Dwarf Cannon')).toEqual({ status: 'NOT_READY', reasons: ['Dwarf Cannon'] });
+  });
+
+  it('gives every merchant service a real category and a place in the chunk data', () => {
+    for (const [name, { category }] of Object.entries(MERCHANT_SERVICES)) {
+      expect(MERCHANTS_LIST, name).toContain(category);
+      expect(service.entityLocations(name, ['npc'])?.locations.length, name).toBeGreaterThan(0);
+    }
+  });
+
+  it('lets the resource planner buy climbing boots from Tenzing and an ammo mould from Nulodion', () => {
+    const missing = (item: string, seller: string, merchants: string[]) => {
+      const state = createFreshState();
+      state.gameModeId = 'vanilla';
+      state.unlocks.merchants = merchants;
+      state.unlocks.regions = [...REGIONS_LIST, ...MISTHALIN_AREAS];
+      state.unlocks.quests = Object.keys(QUEST_DATA);
+      return calculateSupplyChain(item, state)!.sources.find(route => route.source.name === seller)!.status.missing;
+    };
+    // Neither name is a shop, so both routes used to stop at "Shop category needs review".
+    expect(missing('Climbing Boots', 'Tenzing', [])).toEqual(['Merchant: Clothes Shops']);
+    expect(missing('Climbing Boots', 'Tenzing', ['Clothes Shops'])).toEqual([]);
+    expect(missing('Ammo Mould', 'Nulodion', [])).toEqual(['Merchant: Weapon Shops']);
+    expect(missing('Ammo Mould', 'Nulodion', ['Weapon Shops'])).toEqual([]);
+  });
+});
+
+describe("U4: Mine Carts asks for The Giant Dwarf only on Keldagrim's carts", () => {
+  it('is ready without The Giant Dwarf, since the Lovakengj network needs no quest', () => {
+    const readiness = (quests: string[]) => evaluateActivityReadiness(true, getActivityReq('Mine Carts'), everything(99, { quests }), 'vanilla');
+    expect(readiness(questsWithout('The Giant Dwarf')).status).toBe('READY');
+    expect(readiness([]).status).toBe('READY');
+    expect(getActivityReq('Mine Carts')?.note).toMatch(/Lovakengj's carts need no quest\. Keldagrim's carts need The Giant Dwarf started/);
+    expect(TRAVEL_METHODS.find(method => method.id === 'network:lovakengj-minecart')?.unlocks).toEqual(['Mine Carts']);
+  });
+
+  it("still asks for the quest on the way into Keldagrim, where its carts run", () => {
+    expect(TRAVEL_NETWORKS.find(network => network.label === 'Keldagrim mine carts')?.opensWith).toEqual([{ mobility: 'Mine Carts' }]);
+    expect(interiorAccess.locations.Keldagrim.requirements).toEqual(['Started The Giant Dwarf']);
+  });
+});
+
+describe('U6: each hardwood patch asks for its own way in', () => {
+  // Special patches/Patches, oldid 15319393: three patches on Fossil Island, one at the Locus Oasis
+  // (The Ribbiting Tale of a Lily Pad Labour Dispute) and one on Anglers' Retreat (51 Sailing).
+  const PATCHES: [string, number, number, Partial<UnlockState>, string][] = [
+    ['Fossil Island, west', 57, 59, { quests: questsWithout('Bone Voyage') }, 'Bone Voyage'],
+    ['Fossil Island, east', 58, 59, { quests: questsWithout('Bone Voyage') }, 'Bone Voyage'],
+    ['the Locus Oasis', 26, 46, { quests: questsWithout('The Ribbiting Tale') }, 'The Ribbiting Tale'],
+    ["Anglers' Retreat", 38, 42, { levels: { ...levels(99), Sailing: 50 } }, 'Sailing level 51'],
+  ];
+
+  it.each(PATCHES)('the patch at %s needs %s', (_place, cx, cy, without, reason) => {
+    const access = (unlocks: UnlockState) => evaluateEntityAccess('Hardwood tree patch', 'object', { cx, cy }, unlocks, 'vanilla', service);
+    expect(access(everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(access(everything(99, without))).toEqual({ status: 'NOT_READY', reasons: [reason] });
+  });
+
+  it('has the five patches the wiki lists, and nowhere else', () => {
+    const raw = content as unknown as { chunks: Record<string, { o?: [string, number][] }> };
+    const patches = Object.entries(raw.chunks).flatMap(([id, entry]) => (entry.o ?? [])
+      .filter(([name]) => name === 'Hardwood tree patch')
+      .map(([, count]) => [`${Math.floor(Number(id) / 256)},${Number(id) % 256}`, count]));
+    expect(Object.fromEntries(patches)).toEqual({ '57,59': 2, '58,59': 1, '26,46': 1, '38,42': 1 });
+  });
+
+  it('asks no quest of the unlock itself, and tags it where most patches are', () => {
+    const readiness = evaluateActivityReadiness(true, getActivityReq('Hardwood Tree'), everything(99, { quests: [] }), 'vanilla');
+    expect(readiness.status).toBe('READY');
+    expect(getActivityReq('Hardwood Tree')?.note).toMatch(/Bone Voyage.*The Ribbiting Tale of a Lily Pad Labour Dispute.*51 Sailing/);
+    expect(getActivityRegion('Hardwood Tree')).toBe('Islands & Others');
+  });
+});
+
+describe('the shops the data was missing are added, each where the wiki puts it', () => {
+  // Shop, category, place (chunk, and interior where it is inside one), what to take away, and the
+  // access without it. Each record cites its page's revision in data/sources/shop-overrides.json.
+  const ADDED: [string, string, number, number, string | undefined, Partial<UnlockState>, string, string[]][] = [
+    ["Kjut's Kebabs", 'Kebab Sellers', 43, 58, '11679', { quests: questsWithout('The Giant Dwarf') }, 'UNKNOWN', ['Started The Giant Dwarf']],
+    ['The Green Ghost', 'Bars & Inns', 57, 54, '14747', { quests: questsWithout('Priest in Peril') }, 'NOT_READY', ['Priest in Peril']],
+    ["Apothecary's Potions", 'Herblore Shops', 49, 53, undefined, {}, 'ALLOWED', []],
+    ["Dusuri's Star Shop", 'Reward Shops', 47, 52, undefined,
+      { minigames: MINIGAMES_LIST.filter(game => game !== 'Shooting Stars') }, 'NOT_READY', ['Shooting Stars']],
+    ['Barbarian Assault Reward Shop', 'Reward Shops', 39, 55, undefined,
+      { minigames: MINIGAMES_LIST.filter(game => game !== 'Barbarian Assault') }, 'NOT_READY', ['Barbarian Assault']],
+    ['The Burrow', 'Bars & Inns', 24, 47, '6291', { levels: { ...levels(99), Hunter: 45 } }, 'NOT_READY', ['Hunter level 46']],
+    ["Ramarno's Shard Exchange", 'Reward Shops', 46, 54, 'Ruins of Camdozaal',
+      { quests: questsWithout('Below Ice Mountain') }, 'NOT_READY', ['Below Ice Mountain']],
+    ["Flakes 'n' Flotsam", 'Reward Shops', 49, 44, undefined,
+      { bosses: BOSSES_LIST.filter(boss => boss !== 'Tempoross') }, 'NOT_READY', ['Tempoross']],
+    ['Mysterious Stranger (shop)', 'General Stores', 57, 50, undefined, { quests: questsWithout('Priest in Peril') }, 'NOT_READY', ['Priest in Peril']],
+    ["Old Man Ral's Supplies", 'Weapon Shops', 56, 50, undefined,
+      { quests: questsWithout('The Blood Moon Rises') }, 'UNKNOWN', ['Started The Blood Moon Rises']],
+  ];
+
+  it.each(ADDED)('%s: a %s shop at %i,%i', (shop, category, cx, cy, sourceId, without, status, reasons) => {
+    expect(classifyShop(shop)).toBe(category);
+    const locations = service.entityLocations(shop, ['shop'])!.locations;
+    expect(locations.map(location => [location.cx, location.cy, location.sourceId])).toEqual([[cx, cy, sourceId]]);
+    const at = (unlocks: UnlockState) => evaluateEntityAccess(shop, 'shop', locations[0], unlocks, 'vanilla', service);
+    expect(at(everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(at(everything(99, { merchants: MERCHANTS_LIST.filter(merchant => merchant !== category) })))
+      .toEqual({ status: 'LOCKED', reasons: [`Unlock ${category}`] });
+    expect(at(everything(99, without))).toEqual({ status, reasons });
+    expect(rawContent.shopItems[shop]?.length, shop).toBeGreaterThan(0);
+    expect(shopsByCategory()!.get(category)!.some(entry => entry.name === shop)).toBe(true);
+  });
+
+  it('asks for the Hunter Guild at The Burrow, inside it', () => {
+    const burrow = service.entityLocations('The Burrow', ['shop'])!.locations[0];
+    expect(evaluateEntityAccess('The Burrow', 'shop', burrow, everything(99, { guilds: GUILDS_LIST.filter(guild => guild !== 'Hunter Guild') }), 'vanilla', service))
+      .toEqual({ status: 'NOT_READY', reasons: ['Hunter Guild'] });
+  });
+
+  it('sells Kjut\'s kebabs as Kebab Sellers stock, beside the Varlamorian kebab', () => {
+    const kebabs = [...new Set(Object.entries(rawContent.shopItems)
+      .filter(([shop]) => classifyShop(shop) === 'Kebab Sellers').flatMap(([, items]) => items))].sort();
+    expect(kebabs).toEqual(expect.arrayContaining(['Kebab', 'Varlamorian kebab']));
+  });
+});
+
+describe('M3 and M4: the south Pollnivneach carpet, and the teleport crystal\'s quests', () => {
+  const method = (id: string) => TRAVEL_METHODS.find(row => row.id === id)!;
+
+  it('stops the magic carpets at every rug merchant, south Pollnivneach\'s in 52,45 too', () => {
+    const raw = content as unknown as { chunks: Record<string, { p?: string[] }> };
+    const merchants = Object.entries(raw.chunks).filter(([, entry]) => entry.p?.includes('Rug Merchant'))
+      .map(([id]) => `${Math.floor(Number(id) / 256)},${Number(id) % 256}`).sort();
+    expect(merchants).toContain('52,45');
+    expect([...method('network:magic-carpet').options.Travel.to].sort()).toEqual(merchants);
+  });
+
+  it('asks for Mourning\'s End Part I started at Lletya, and Song of the Elves at Prifddinas', () => {
+    // Teleport crystal, oldid 15261004.
+    const crystal = method('item:teleport-crystal');
+    const decide = (quests: string[]) => travelDecisions([crystal], {
+      unlocks: { mobility: ['Crystal Teleport Seed'], arcana: [], housing: [], diaries: [], quests },
+      entries: { '36,49': 'ALLOWED', '51,94': 'ALLOWED' },
+    })['item:teleport-crystal'].options;
+    expect(decide([])).toEqual({
+      Lletya: { to: ['36,49'], status: 'UNKNOWN', reason: "Needs Mourning's End Part I started" },
+      Prifddinas: { to: ['51,94'], status: 'NOT_READY', reason: 'Needs Song of the Elves' },
+    });
+    expect(decide(["Mourning's End Part I", 'Song of the Elves'])).toEqual({
+      Lletya: { to: ['36,49'], status: 'ALLOWED' }, Prifddinas: { to: ['51,94'], status: 'ALLOWED' },
+    });
+    expect(getActivityReq('Crystal Teleport Seed')?.note).toMatch(/Mourning's End Part I is started.*Song of the Elves/);
+  });
+
+  it('names only real quests on a travel option', () => {
+    const named = TRAVEL_METHODS.flatMap(row => Object.values({ ...row.options, ...row.codes }))
+      .flatMap(option => [...(option.quests ?? []), ...(option.startedQuests ?? [])]);
+    expect(named.length).toBeGreaterThan(0);
+    expect(named.filter(quest => !(quest in QUEST_DATA))).toEqual([]);
+  });
+});
+
+describe('reviewed shop records', () => {
+  it('cite a wiki revision, and give every place the shop stands its requirements', () => {
+    for (const record of shopOverrides.records as Array<{ name: string; source: { url: string; revision: number }; requirements?: string[]; replaces?: string[] }>) {
+      expect(record.source.url, record.name).toMatch(new RegExp(`\\?oldid=${record.source.revision}$`));
+      if (!record.requirements?.length && !record.replaces?.length) continue;
+      const places = [
+        ...Object.entries(rawContent.chunks).filter(([, entry]) => entry.s?.includes(record.name))
+          .map(([id]) => rawContent.taskUnlocks.Shops?.[record.name]?.[id] ?? []),
+        ...Object.values(rawContent.interiors).filter(entry => entry.content.s?.includes(record.name))
+          .map(entry => entry.requirements.shop?.[record.name] ?? []),
+      ];
+      expect(places.length, record.name).toBeGreaterThan(0);
+      for (const requirements of places) {
+        expect(requirements, record.name).toEqual(expect.arrayContaining(record.requirements ?? []));
+        for (const replaced of record.replaces ?? []) expect(requirements, record.name).not.toContain(replaced);
+      }
+    }
+  });
+});
+
+describe('reviewed chunk-content corrections', () => {
+  it('cite a wiki revision for every rewrite and requirement, and reach the generated data', () => {
+    for (const rewrite of contentOverrides.requirementRewrites) {
+      expect(rewrite.source, rewrite.from).toMatch(/^https:\/\/oldschool\.runescape\.wiki\/w\/.+\?oldid=\d+$/);
+      expect(rewrite.to.length, rewrite.from).toBeGreaterThan(0);
+    }
+    const taskUnlocks = content.taskUnlocks as Record<string, Record<string, Record<string, string[]>>>;
+    for (const override of contentOverrides.entityRequirements) {
+      const key = `${override.category}/${override.name}/${override.chunkId}`;
+      expect(override.source, key).toMatch(/^https:\/\/oldschool\.runescape\.wiki\/w\/.+\?oldid=\d+$/);
+      expect(taskUnlocks[override.category]?.[override.name]?.[override.chunkId], key)
+        .toEqual([...override.requirements].sort());
+    }
+  });
+});

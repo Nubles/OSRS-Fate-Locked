@@ -13,15 +13,24 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   'mage arena shop': 'Magic Shops', // Resource catalogue alias for Lundail's arena-side rune shop.
   "martin thwait's lost and found": 'Claw Shops',
   "quartermaster's stores": 'Halberd Shops',
-  // Armour shops whose names do not reveal their actual speciality.
-  'armour shop (jatizso)': 'Chainbody Shops',
-  "scavvo's rune store": 'Chainbody Shops',
+  // Armour shops whose names do not reveal their actual speciality. A shop
+  // with mixed stock goes to the category more than half of its stock
+  // belongs to; where no category has that, to the game's own type for the
+  // shop, its minimap icon or else the wiki's speciality for it (owner call
+  // U2). The few items such a shop alone sells are marked in ONLY_SHOP_SOURCE.
+  'armour shop (jatizso)': 'Platebody Shops', // a full mithril set; Platebody shop icon
+  "blair's armour": 'Chainbody Shops', // three each of chainbodies, platelegs, plateskirts and med helms; Chainbody shop icon
+  "myths' guild armoury": 'Platebody Shops', // a dragon metal shard and a shield half; Platebody shop icon
+  'quality armour shop': 'Chainbody Shops', // four chainbodies and three med helms
+  "reldak's leather armour": 'Archery Shops', // frog-leather, ranged armour as at Aaron's
+  "scavvo's rune store": 'Chainbody Shops', // no icon; the wiki calls it a chainmail shop
+  "seddu's adventurer's store": 'Platelegs Shops', // Platelegs shop icon
   "sir tiffy cashien (recruitment drive)": 'Platebody Shops',
   "sir tiffy cashien (the slug menace)": 'Platebody Shops',
   "valaine's shop of champions": 'Platebody Shops',
 
   // Specific equipment shops hidden behind generic or misleading names.
-  'armoury': 'Archery Shops',
+  'armoury': 'Sword Shops', // 2h swords, axes and archery gear, none of them half; Sword shop icon
   "ava's odds and ends": 'Archery Shops',
   "brian's battleaxe bazaar": 'Axe Shops',
   "fairy fixit's fairy enchantment": 'Magic Shops',
@@ -45,11 +54,25 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   'warrior guild armoury': 'Weapon Shops',
   "~ uglug's stuffsies ~": 'Archery Shops',
 
+  // Shops whose names said one thing and whose stock another (accuracy audit,
+  // S1 to S10): the rune shops sold Law, Nature, Blood and Soul runes under
+  // Food Shops and General Stores, and the obsidian and vampyre weapons were
+  // General Stores stock.
+  'the runic emporium': 'Magic Shops',
+  "regath's wares": 'Magic Shops',
+  "efaritay's supplies": 'Weapon Shops',
+  "ivan's supplies": 'Weapon Shops',
+  "old man ral's supplies": 'Weapon Shops', // Ivan's stock, once Ivan leaves (The Blood Moon Rises)
+  "tzhaar-hur-tel's equipment store": 'Weapon Shops',
+  "tzhaar-hur-zal's equipment store": 'Weapon Shops',
+  // The only shop with yew bows sells nothing but bows and arrows.
+  "sian's ranged weaponry": 'Archery Shops',
+
   // Ore-only sellers use the dedicated Ore Merchants unlock; tool and
   // dynamite sellers remain Mining Shops.
   'deepfin point ore exchange': 'Ore Merchants',
+  'ore seller': 'Ore Merchants',
   'ore store': 'Ore Merchants',
-  "petrified pete's ore shop": 'Ore Merchants',
   'port roberts ore stall': 'Ore Merchants',
 
   // Food, fishing, and service shops with non-descriptive proper names.
@@ -59,17 +82,17 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   "keldagrim's best bread": 'Food Shops',
   "kenelme's wares": 'Food Shops',
   "lovecraft's tackle": 'Fishing Shops',
-  "mairin's market": 'Fishing Shops',
-  "seddu's adventurer's store": 'Platelegs Shops',
   'shop of distaste': 'Vegetable Shops',
   'the shrimp and parrot': 'Food Shops',
   "yarnio's baked goods": 'Food Shops',
 
-  // These are pubs despite words such as Ore, Arrow, Sanctum, or Arms.
+  // These are pubs despite words such as Ore, Arrow, Sanctum, Arms, Pickaxe or Axe.
   'beach cocktails': 'Bars & Inns',
   'falador party room': 'Bars & Inns',
   'garlic cocktail supply': 'Bars & Inns',
+  "king's axe inn": 'Bars & Inns',
   "myreque's rest": 'Bars & Inns',
+  'the lost pickaxe': 'Bars & Inns',
   'stick your ore inn': 'Bars & Inns',
   "sunlight's sanctum": 'Bars & Inns',
   'the crypt': 'Bars & Inns',
@@ -77,6 +100,9 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   "the esoterican arms": 'Bars & Inns',
   'the flaming arrow': 'Bars & Inns',
   "the haymaker's arms": 'Bars & Inns',
+  // Pubs whose names have no pub word: the Hunter Guild's cavern and Port Phasmatys' inn.
+  'the burrow': 'Bars & Inns',
+  'the green ghost': 'Bars & Inns',
 
   // Currency/reward exchanges and ordinary clothing shops must not be
   // inferred from words such as Hunter, Stuff, Wares, or Cape.
@@ -85,7 +111,23 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   "honest jimmy's house of stuff": 'Reward Shops',
   'mysterious hallowed goods': 'Reward Shops',
   "prospector percy's nugget shop": 'Reward Shops',
+  // The Guardians of the Rift reward shop, and the only shop with the ring of the elements.
+  'temple supplies': 'Reward Shops',
   "worm tounge's wares": 'Reward Shops',
+  // Shops that take an activity's own currency are Reward Shops whatever they sell, and
+  // also need the activity's unlock where the app has one (owner call U1;
+  // data/sources/shop-overrides.json): mermaid's tears, unidentified minerals, Volcanic
+  // Mine points, trading sticks and molch pearls.
+  "mairin's market": 'Reward Shops',
+  'mining guild mineral exchange': 'Reward Shops',
+  "petrified pete's ore shop": 'Reward Shops',
+  "gabooty's tai bwo wannai cooperative": 'Reward Shops',
+  "gabooty's tai bwo wannai drinky store": 'Reward Shops',
+  "alry the angler's angling accessories": 'Reward Shops',
+  // Stardust, barronite shards and spirit flakes.
+  "dusuri's star shop": 'Reward Shops',
+  "ramarno's shard exchange": 'Reward Shops',
+  "flakes 'n' flotsam": 'Reward Shops',
   'beach kit': 'Clothes Shops',
   "darren's wilderness cape shop": 'Clothes Shops',
   "edmond's wilderness cape shop": 'Clothes Shops',
@@ -101,6 +143,9 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   "where wyrmscraig's wear wares were": 'Clothes Shops',
   "william's wilderness cape shop": 'Clothes Shops',
   "yrsa's accoutrements": 'Clothes Shops',
+
+  // Escape crystals for coins at the Theatre of Blood's entrance: no specialist sells them.
+  'mysterious stranger (shop)': 'General Stores',
 
   // The Culinaromancer's Chest has stock snapshots for each RFD stage.
   "culinaromancer's chest": 'Cooking Shops',
@@ -183,3 +228,17 @@ export const classifyShop = (shopName: string): string | null => {
   }
   return null;
 };
+
+/**
+ * Items a mixed-stock armour shop is the only shop to sell, though they are
+ * not of its category's kind: they are bought with the shop's category, and
+ * the shop directory says so (owner call U2). Keyed by lowercase shop name.
+ */
+export const ONLY_SHOP_SOURCE: Readonly<Record<string, readonly string[]>> = {
+  "scavvo's rune store": ['Rune sword'],
+  "seddu's adventurer's store": ['Black med helm'],
+};
+
+/** The items only this shop sells, as ONLY_SHOP_SOURCE marks them. */
+export const onlyShopSource = (shopName: string): readonly string[] =>
+  ONLY_SHOP_SOURCE[shopName.trim().toLowerCase().replace(/#.*$/, '').replace(/\.$/, '')] ?? [];

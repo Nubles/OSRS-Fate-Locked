@@ -81,6 +81,15 @@ describe('account requirements', () => {
     ]);
   });
 
+  it('reads "60 Mining", the reviewed entrance wording, as a skill gate (the Mining Guild door)', () => {
+    expect(compileRawRequirements([chunkEntry('60 Mining'), chunkEntry('91 Slayer')])).toEqual([
+      { type: 'SKILL', skill: 'Mining', level: 60, label: 'Mining level 60' },
+      { type: 'SKILL', skill: 'Slayer', level: 91, label: 'Slayer level 91' },
+    ]);
+    // A number before anything but a skill stays evidence for a person to check.
+    expect(compileRawRequirements([entity('100 Kudos')])).toEqual([{ type: 'UNRESOLVED', label: '100 Kudos', raw: '100 Kudos' }]);
+  });
+
   it('does not compile a bare canonical quest from entity evidence', () => {
     expect(compileRawRequirements([entity('Dragon Slayer I')])).toEqual([{
       type: 'UNRESOLVED', label: 'Dragon Slayer I', raw: 'Dragon Slayer I',
@@ -134,6 +143,15 @@ describe('account requirements', () => {
       { type: 'UNLOCK', category: 'mobility', id: 'Fairy Rings', label: 'Fairy Rings' },
       { type: 'UNLOCK', category: 'slayerUnlocks', id: 'Broader Fletching', label: 'Broader Fletching' },
     ]);
+  });
+
+  it('reads "Play" a boss as that boss\'s unlock, for a shop taking its currency (Flakes \'n\' Flotsam)', () => {
+    const gates = compileRawRequirements([entity('Play Tempoross')]);
+    expect(gates).toEqual([{ type: 'UNLOCK', category: 'bosses', id: 'Tempoross', label: 'Tempoross' }]);
+    expect(evaluateRouteGates(gates, unlocks()).blockers).toEqual(gates);
+    expect(evaluateRouteGates(gates, unlocks({ bosses: ['Tempoross'] }))).toEqual({ blockers: [], hasDataGap: false });
+    // Only "Play" reads as a boss's unlock: other wording naming a boss stays unresolved.
+    expect(compileRawRequirements([entity('Access Tempoross')])[0]).toMatchObject({ type: 'UNRESOLVED' });
   });
 
   it('does not silently satisfy unknown requirement wording', () => {

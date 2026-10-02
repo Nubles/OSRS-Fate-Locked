@@ -326,6 +326,7 @@ describe('Diary tasks that use a shop or a service', () => {
     ['des_med_11', 'Real Estate Agents', 'the house moves to Pollnivneach'],
     ['var_med_3', 'Pet Shops', 'Gertrude colours the kitten'],
     ['ard_easy_9', 'Hunter Shops', 'it views Aleck’s Hunter Emporium'],
+    ['ard_easy_3', 'Silk Shops', 'the silk trader buys the silk'],
     ['des_easy_6', 'Decanters', 'Zahur, the Nardah Herbalist, cleans the herb'],
     ['des_elite_4', 'Taxidermists', 'the Canifis taxidermist stuffs the KQ head'],
   ])('asks %s for %s, because %s', (id, merchant) => {
@@ -352,7 +353,7 @@ describe('Diary tasks that use a shop or a service', () => {
         expect(merchantsOf(row), `${row.id} names ${npc}`).toContain(MERCHANT_SERVICES[service].category);
       }
     }
-    expect([...new Set(named)].sort()).toEqual(['des_easy_6', 'kan_hard_10', 'mor_easy_5', 'var_easy_4', 'var_hard_7']);
+    expect([...new Set(named)].sort()).toEqual(['ard_easy_3', 'des_easy_6', 'kan_hard_10', 'mor_easy_5', 'var_easy_4', 'var_hard_7']);
   });
 });
 

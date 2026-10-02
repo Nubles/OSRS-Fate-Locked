@@ -1,4 +1,5 @@
 import {
+  BOSSES_LIST,
   GUILDS_LIST,
   MERCHANTS_LIST,
   MINIGAMES_LIST,
@@ -39,6 +40,8 @@ const unlockAliases: readonly [UnlockCategory, readonly string[], readonly strin
   ['minigames', MINIGAMES_LIST, ['play ', 'access the ', 'access ', 'enter the ', 'enter ']],
   ['mobility', MOBILITY_LIST, ['use ', 'access ', 'travel by ']],
   ['slayerUnlocks', SLAYER_UNLOCKS_LIST, ['', 'requires ', 'required: ']],
+  // A reward shop that takes a boss's currency, such as Tempoross's spirit flakes (owner call U1).
+  ['bosses', BOSSES_LIST, ['play ']],
 ];
 
 /** Source labels that intentionally differ from the corresponding UnlockState ID. */
@@ -93,7 +96,8 @@ const REVIEWED_SKILL_WORDING: ReadonlyMap<string, readonly [string, number]> = n
 const parseSkill = (raw: string): RouteGate | null => {
   const reviewed = REVIEWED_SKILL_WORDING.get(normalise(raw));
   if (reviewed) return { type: 'SKILL', skill: reviewed[0], level: reviewed[1], label: `${reviewed[0]} level ${reviewed[1]}` };
-  // "Agility level 52", or the source's shorter "93 Slayer".
+  // "Mining level 60", or "60 Mining" as the source and the reviewed entrance registry word it
+  // (the Mining Guild's door and the Slayer lairs, data/sources/named-task-unlock-locations.json).
   const named = raw.match(/^(.+?)\s+level\s+(\d+)$/i);
   const short = named ? null : raw.match(/^(\d+)\s+(.+)$/);
   const skill = skills.get(normalise((named?.[1] ?? short?.[2]) ?? ''));

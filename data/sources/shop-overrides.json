@@ -54,6 +54,9 @@
         "Zamorak halo",
         "Guthix halo"
       ],
+      "requirements": [
+        "Play Castle Wars"
+      ],
       "source": {
         "url": "https://oldschool.runescape.wiki/w/Castle_Wars_Ticket_Exchange?oldid=15318525",
         "revision": 15318525
@@ -72,6 +75,9 @@
       "name": "Gabooty's Tai Bwo Wannai Drinky Store",
       "status": "zero-stock",
       "items": [],
+      "requirements": [
+        "Play Tai Bwo Wannai Cleanup"
+      ],
       "source": {
         "url": "https://oldschool.runescape.wiki/w/Gabooty's_Tai_Bwo_Wannai_Drinky_Store.?oldid=15318588",
         "revision": 15318588
@@ -120,6 +126,9 @@
         "Rum (red)",
         "Rum (blue)"
       ],
+      "requirements": [
+        "Play Trouble Brewing"
+      ],
       "source": {
         "url": "https://oldschool.runescape.wiki/w/Honest_Jimmy's_House_of_Stuff?oldid=15318616",
         "revision": 15318616
@@ -165,6 +174,9 @@
         "Blighted karambwan",
         "Blighted super restore(4)"
       ],
+      "requirements": [
+        "Play Soul Wars"
+      ],
       "source": {
         "url": "https://oldschool.runescape.wiki/w/Soul_Wars_Reward_Shop?oldid=15337354",
         "revision": 15337354
@@ -195,6 +207,9 @@
         "Forestry top",
         "Golden pheasant egg",
         "Fox whistle"
+      ],
+      "requirements": [
+        "Play Forestry"
       ],
       "source": {
         "url": "https://oldschool.runescape.wiki/w/Forestry_Shop?oldid=15214626",
@@ -268,6 +283,403 @@
       "source": {
         "url": "https://oldschool.runescape.wiki/w/Hendor's_Awesome_Ores?oldid=15318612",
         "revision": 15318612
+      }
+    },
+    {
+      "name": "Efaritay's Supplies",
+      "status": "stocked",
+      "requirements": [
+        "The Blood Moon Rises Complete the quest"
+      ],
+      "note": "Efaritay Hallow opens the shop in Castle Drakan after The Blood Moon Rises; the castle itself asks only for Priest in Peril.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Efaritay's_Supplies?oldid=15318555",
+        "revision": 15318555
+      }
+    },
+    {
+      "name": "Temple Supplies",
+      "status": "stocked",
+      "requirements": [
+        "Play Guardians of the Rift"
+      ],
+      "replaces": [
+        "Participate in Guardians of the Rift"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Temple_Supplies?oldid=15318800",
+        "revision": 15318800
+      }
+    },
+    {
+      "name": "Mining Guild Mineral Exchange",
+      "status": "stocked",
+      "requirements": [
+        "Access the Mining Guild"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Mining_Guild_Mineral_Exchange?oldid=15318692",
+        "revision": 15318692
+      }
+    },
+    {
+      "name": "Gabooty's Tai Bwo Wannai Cooperative",
+      "status": "stocked",
+      "requirements": [
+        "Play Tai Bwo Wannai Cleanup"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Gabooty's_Tai_Bwo_Wannai_Cooperative.?oldid=15318587",
+        "revision": 15318587
+      }
+    },
+    {
+      "name": "Agility Arena Store",
+      "status": "stocked",
+      "requirements": [
+        "Play Brimhaven Agility Arena"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Agility_Arena_Store?oldid=15318453",
+        "revision": 15318453
+      }
+    },
+    {
+      "name": "Bounty Hunter Store",
+      "status": "stocked",
+      "requirements": [
+        "Play Bounty Hunter"
+      ],
+      "replaces": [
+        "Access Bounty Hunter Store"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Bounty_Hunter_Store?oldid=15327851",
+        "revision": 15327851
+      }
+    },
+    {
+      "name": "Dom Onion's Reward Shop",
+      "status": "stocked",
+      "requirements": [
+        "Play Nightmare Zone"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Dom_Onion's_Reward_Shop?oldid=15318542",
+        "revision": 15318542
+      }
+    },
+    {
+      "name": "Farmer Gricoller's Rewards",
+      "status": "stocked",
+      "requirements": [
+        "Play Tithe Farm"
+      ],
+      "replaces": [
+        "Grow a golovanova fruit"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Farmer_Gricoller's_Rewards?oldid=15337362",
+        "revision": 15337362
+      }
+    },
+    {
+      "name": "Giants' Foundry Reward Shop",
+      "status": "stocked",
+      "requirements": [
+        "Play Giants' Foundry"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Giants'_Foundry_Reward_Shop?oldid=15337300",
+        "revision": 15337300
+      }
+    },
+    {
+      "name": "Justine's stuff for the Last Shopper Standing",
+      "status": "stocked",
+      "requirements": [
+        "Play Last Man Standing"
+      ],
+      "replaces": [
+        "Access Justine's shop"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Justine's_stuff_for_the_Last_Shopper_Standing?oldid=15344227",
+        "revision": 15344227
+      }
+    },
+    {
+      "name": "Mahogany Homes Reward Shop",
+      "status": "stocked",
+      "requirements": [
+        "Play Mahogany Homes"
+      ],
+      "replaces": [
+        "Access the Mahogany Homes Reward Shop"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Mahogany_Homes_Reward_Shop?oldid=15318678",
+        "revision": 15318678
+      }
+    },
+    {
+      "name": "Mixology Rewards",
+      "status": "stocked",
+      "requirements": [
+        "Play Mastering Mixology"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Mixology_Rewards?oldid=15318693",
+        "revision": 15318693
+      }
+    },
+    {
+      "name": "Mysterious Hallowed Goods",
+      "status": "stocked",
+      "requirements": [
+        "Play Hallowed Sepulchre"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Mysterious_Hallowed_Goods?oldid=15318696",
+        "revision": 15318696
+      }
+    },
+    {
+      "name": "PvP Arena Rewards",
+      "status": "stocked",
+      "requirements": [
+        "Play Emir's Arena"
+      ],
+      "replaces": [
+        "Participate in the PvP Arena"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/PvP_Arena_Rewards?oldid=15345627",
+        "revision": 15345627
+      }
+    },
+    {
+      "name": "Ranging Guild Ticket Exchange",
+      "status": "stocked",
+      "requirements": [
+        "Play Archery Competition"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Ranging_Guild_Ticket_Exchange?oldid=15318747",
+        "revision": 15318747
+      }
+    },
+    {
+      "name": "Vale Research Exchange",
+      "status": "stocked",
+      "requirements": [
+        "Play Vale Totems"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Vale_Research_Exchange?oldid=15209762",
+        "revision": 15209762
+      }
+    },
+    {
+      "name": "Petrified Pete's Ore Shop",
+      "status": "stocked",
+      "requirements": [
+        "Access the Volcanic Mine"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Petrified_Pete's_Ore_Shop?oldid=15318722",
+        "revision": 15318722
+      }
+    },
+    {
+      "name": "Kjut's Kebabs",
+      "status": "stocked",
+      "items": [
+        "Kebab"
+      ],
+      "npcNames": [
+        "Kjut"
+      ],
+      "note": "Kjut sells kebabs through his dialogue.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Kjut's_Kebabs?oldid=15318644",
+        "revision": 15318644
+      }
+    },
+    {
+      "name": "The Green Ghost",
+      "status": "stocked",
+      "items": [
+        "Ale yeast"
+      ],
+      "npcNames": [
+        "Metarialus"
+      ],
+      "note": "Metarialus sells ale yeast for ecto-tokens in the inn's basement brewery.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/The_Green_Ghost?oldid=15273760",
+        "revision": 15273760
+      }
+    },
+    {
+      "name": "Apothecary's Potions",
+      "status": "stocked",
+      "items": [
+        "Strength potion(4)",
+        "Energy potion(4)",
+        "Antipoison(4)"
+      ],
+      "npcNames": [
+        "Apothecary"
+      ],
+      "note": "The Apothecary makes each potion from ingredients the player brings.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Apothecary's_Potions?oldid=15336348",
+        "revision": 15336348
+      }
+    },
+    {
+      "name": "Dusuri's Star Shop",
+      "status": "stocked",
+      "items": [
+        "Celestial ring (uncharged)",
+        "Star fragment",
+        "Bag full of gems",
+        "Soft clay pack"
+      ],
+      "npcNames": [
+        "Dusuri"
+      ],
+      "requirements": [
+        "Play Shooting Stars"
+      ],
+      "note": "Takes stardust from Shooting Stars.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Dusuri's_Star_Shop?oldid=15318549",
+        "revision": 15318549
+      }
+    },
+    {
+      "name": "Barbarian Assault Reward Shop",
+      "status": "stocked",
+      "items": [
+        "Fighter hat",
+        "Ranger hat",
+        "Healer hat",
+        "Runner hat",
+        "Fighter torso",
+        "Penance skirt",
+        "Runner boots",
+        "Penance gloves",
+        "Granite body"
+      ],
+      "npcNames": [
+        "Commander Connad"
+      ],
+      "requirements": [
+        "Play Barbarian Assault"
+      ],
+      "note": "Takes Honour points; the role upgrades and gambles are left out.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Barbarian_Assault_Reward_Shop?oldid=15298666",
+        "revision": 15298666
+      }
+    },
+    {
+      "name": "The Burrow",
+      "status": "stocked",
+      "items": [
+        "Trapper's tipple",
+        "Stew"
+      ],
+      "npcNames": [
+        "Huntmaster Gilman (Novice)"
+      ],
+      "requirements": [
+        "Access the Hunter Guild",
+        "Hunter level 46"
+      ],
+      "note": "The Hunter Guild's cavern, which needs 46 Hunter to enter.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/The_Burrow?oldid=15318802",
+        "revision": 15318802
+      }
+    },
+    {
+      "name": "Ramarno's Shard Exchange",
+      "status": "stocked",
+      "items": [
+        "Fishing buff",
+        "Preparation buff",
+        "Defence buff",
+        "Mining buff",
+        "Luck buff",
+        "Boost buff"
+      ],
+      "npcNames": [
+        "Ramarno"
+      ],
+      "note": "Sells buffs for barronite shards, for use inside the Ruins of Camdozaal.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Ramarno's_Shard_Exchange?oldid=14783923",
+        "revision": 14783923
+      }
+    },
+    {
+      "name": "Flakes 'n' Flotsam",
+      "status": "stocked",
+      "items": [
+        "Fish barrel",
+        "Tackle box"
+      ],
+      "npcNames": [
+        "Spirit Angler"
+      ],
+      "requirements": [
+        "Play Tempoross"
+      ],
+      "note": "Takes spirit flakes from Tempoross.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Flakes_'n'_Flotsam?oldid=15318570",
+        "revision": 15318570
+      }
+    },
+    {
+      "name": "Mysterious Stranger (shop)",
+      "status": "stocked",
+      "items": [
+        "Escape crystal"
+      ],
+      "npcNames": [
+        "Mysterious Stranger"
+      ],
+      "note": "Sells escape crystals at the Theatre of Blood's entrance.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Mysterious_Stranger_(shop)?oldid=15318697",
+        "revision": 15318697
+      }
+    },
+    {
+      "name": "Old Man Ral's Supplies",
+      "status": "stocked",
+      "items": [
+        "Silver sickle",
+        "Silver sickle (b)",
+        "Rod of Ivandis (10)",
+        "Ivandis flail",
+        "Blisterwood flail",
+        "Blisterwood sickle"
+      ],
+      "npcNames": [
+        "Old Man Ral"
+      ],
+      "requirements": [
+        "Started The Blood Moon Rises"
+      ],
+      "note": "Opens when Ivan leaves the Myreque hideout during The Blood Moon Rises, with Ivan's stock.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Old_Man_Ral's_Supplies?oldid=15318712",
+        "revision": 15318712
       }
     }
   ]

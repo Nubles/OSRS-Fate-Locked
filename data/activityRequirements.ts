@@ -199,7 +199,10 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Fairy Rings': { manualRequirements: ['Reached fairy ring access during Fairytale II - Cure a Queen (full completion is not required)'] },
   'Gnome Gliders': { quests: ['The Grand Tree'] },
   'Balloon Transport': { quests: ['Enlightened Journey'] },
-  'Mine Carts': { quests: ['The Giant Dwarf'] },
+  // One unlock for both networks (owner call U4). Lovakengj Minecart Network (oldid 15322190):
+  // no quest. Keldagrim minecart system (oldid 15323246): The Giant Dwarf started, which
+  // Keldagrim's own entry asks for; the White Wolf Mountain line needs it and Fishing Contest done.
+  'Mine Carts': { note: "Lovakengj's carts need no quest. Keldagrim's carts need The Giant Dwarf started, and their White Wolf Mountain line needs it and Fishing Contest done." },
   'Magic Carpets': { note: 'Basic routes require only a fare. Quest restrictions vary by destination.' },
   'Quetzal Network': { questProgress: [{ quest: "Twilight's Promise", label: "Received Renu during Twilight's Promise to unlock the quetzal network" }] },
   'Mycelium Transport': { quests: ['Bone Voyage'] },
@@ -217,7 +220,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   "Drakan's Medallion": { quests: ['A Taste of Hope'] },
   'Royal Seed Pod': { quests: ['Monkey Madness II'] },
   "Pharaoh's Sceptre": { note: 'Pyramid Plunder reward (Sophanem).' },
-  'Crystal Teleport Seed': { note: 'Crystal teleport seed (Prifddinas / elf content).' },
+  // Teleport crystal, oldid 15261004 (accuracy audit M4); the travel options ask for each quest.
+  'Crystal Teleport Seed': { note: "Eluned enchants a teleport crystal once Mourning's End Part I is started; its Prifddinas teleport needs Song of the Elves." },
 
   // ---- Bosses with an access gate (most others have no hard requirement) -----
   'Inferno': { manualRequirements: ['Complete the Fight Cave (TzTok-Jad) to enter.'] },
@@ -246,7 +250,9 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Brimhaven Agility Arena': { note: 'Agility (Brimhaven).' },
 
   // ---- Farming patches (access/level-gated; basic patches need nothing) ------
-  'Hardwood Tree': { quests: ['Bone Voyage'], note: 'Fossil Island.' },
+  // Each place asks for its own way in, and each patch carries it (owner call U6;
+  // Special patches/Patches, oldid 15319393): no quest is asked of the unlock itself.
+  'Hardwood Tree': { note: "Fossil Island's three patches need Bone Voyage, the Locus Oasis patch The Ribbiting Tale of a Lily Pad Labour Dispute, and the Anglers' Retreat patch 51 Sailing." },
   'Seaweed': { quests: ['Bone Voyage'], note: 'Underwater, Fossil Island.' },
   'Spirit Tree': { skills: { Farming: 83 }, note: 'Grow a spirit tree.' },
   'Celastrus': { skills: { Farming: 85 }, note: 'Farming Guild (high tier).' },

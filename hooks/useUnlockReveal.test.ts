@@ -65,7 +65,8 @@ describe('getUnlockRevealTransition', () => {
       .toContainEqual({ id: "Witch's Potion", name: "Witch's Potion" });
 
     const completedTasks = completedTierTasksExcept('Ardougne Easy', 'ard_easy_3');
-    const diaryPrevious = unlocks({ completedTasks });
+    // The last task sells silk to the silk trader, a Silk Shops merchant.
+    const diaryPrevious = unlocks({ completedTasks, merchants: ['Silk Shops'] });
     const diaryCurrent = { ...diaryPrevious, regions: ['East Ardougne'] };
     expect(getUnlockRevealTransition(diaryPrevious, diaryCurrent)?.newDiaryTiersAvailable)
       .toContain('Ardougne Easy');

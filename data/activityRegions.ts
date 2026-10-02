@@ -156,7 +156,7 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Royal Seed Pod': 'Kandarin',
 
   // ---- Farming Patches (only region-specific patch types) ------------------
-  'Hardwood Tree': 'Karamja',
+  'Hardwood Tree': 'Islands & Others', // three of the five patches are on Fossil Island; none is on Karamja
   'Cactus': 'Kharidian Desert',
   'Mushroom': 'Morytania',
   'Belladonna': 'Misthalin',

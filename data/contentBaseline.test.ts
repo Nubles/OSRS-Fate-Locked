@@ -313,12 +313,15 @@ describe('deterministic current content baseline', () => {
       connections: 1110,
       slayerMasters: 10,
       shortcuts: 219,
-      shops: 439,
+      // Up from 439: the ten shops added from the wiki (accuracy audit, missing shops).
+      shops: 449,
       dropTables: 800,
       questSections: 134,
       banks: 127,
       tags: 29,
-      auditEvents: 27654,
+      // Up from 27,654: the transform records each "F2P Only" tag it drops and each requirement it
+      // rewrites or overrides (accuracy audit S11, G4, G5, U6).
+      auditEvents: 28083,
       unresolvedTaskUnlocks: 0,
     });
     expect(taskUnlockTotals.source).toBe(1959);

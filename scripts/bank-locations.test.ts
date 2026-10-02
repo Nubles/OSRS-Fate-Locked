@@ -241,3 +241,65 @@ describe('reviewed bank-location registry', () => {
       .toThrow(/Wiki evidence is not covered by source revisions/i);
   });
 });
+
+describe('bank access gates (accuracy audit B1, B2)', () => {
+  // Every bank id the app has, and the merged ones, so each rejection below fails on its own check.
+  const options = () => {
+    const registry = readBankLocationRegistry();
+    return {
+      validChunkIds: new Set<string>(registry.locations.map(({ id }: { id: string }) => id)),
+      validBankIds: new Set<string>([...BANKS.map(({ id }) => id), ...registry.merges.map(({ id }: { id: string }) => id)]),
+    };
+  };
+  const gatesOf = (registry: { accessGates: Array<{ id: string; accessOptions: unknown[] }> }) =>
+    Object.fromEntries(registry.accessGates.map(({ id, accessOptions }) => [id, accessOptions]));
+
+  it('gate the guild banks by their guild and the town banks by their quest', () => {
+    const registry = readBankLocationRegistry();
+    expect(() => validateBankLocationRegistry(registry, options())).not.toThrow();
+    expect(gatesOf(registry)).toEqual({
+      10293: [{ guilds: ['Fishing Guild'] }], 4922: [{ guilds: ['Farming Guild'] }],
+      11571: [{ guilds: ['Crafting Guild'] }], 11319: [{ guilds: ["Warriors' Guild"] }],
+      10804: [{ guilds: ["Legends' Guild"] }], 9772: [{ guilds: ["Myths' Guild"] }],
+      6198: [{ guilds: ['Woodcutting Guild'] }], 6454: [{ guilds: ['Woodcutting Guild'] }],
+      11310: [{ quests: ['Shilo Village'] }], 13099: [{ quests: ['Contact!'] }],
+      9265: [{ quests: ["Mourning's End Part I"] }], 10284: [{ quests: ['The Corsair Curse'] }],
+      10300: [{ quests: ['Throne of Miscellania'] }], 9275: [{ quests: ['The Fremennik Isles'] }],
+      9531: [{ quests: ['The Fremennik Isles'] }], 13874: [{ quests: ['In Aid of the Myreque'] }],
+      14388: [{ quests: ['Sins of the Father'] }],
+    });
+  });
+
+  it('reject a gate with an unknown kind of requirement', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.accessGates[0].accessOptions = [{ skills: ['Fishing 68'] }];
+    expect(() => validateBankLocationRegistry(registry, options())).toThrow(/invalid skills requirements/i);
+  });
+
+  it('reject two gates on one bank', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.accessGates.push(structuredClone(registry.accessGates[0]));
+    expect(() => validateBankLocationRegistry(registry, options())).toThrow(/duplicate bank access gate/i);
+  });
+
+  it('reject a gate on a chunk that holds no bank, or on a merged bank', () => {
+    const unknown = structuredClone(readBankLocationRegistry());
+    unknown.accessGates[0].id = '12345';
+    expect(() => validateBankLocationRegistry(unknown, options())).toThrow(/is not on a bank/i);
+    const merged = structuredClone(readBankLocationRegistry());
+    merged.accessGates[0].id = merged.merges[0].id;
+    expect(() => validateBankLocationRegistry(merged, options())).toThrow(/on a merged bank/i);
+  });
+
+  it('reject a gate on a reviewed location that has its own access alternatives', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.accessGates[0].id = '10553';
+    expect(() => validateBankLocationRegistry(registry, options())).toThrow(/access alternatives in two places/i);
+  });
+
+  it('reject gate Wiki evidence absent from the reviewed source revisions', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.accessGates[0].wiki = ['https://oldschool.runescape.wiki/w/Unreviewed_gate'];
+    expect(() => validateBankLocationRegistry(registry, options())).toThrow(/Wiki evidence is not covered by source revisions/i);
+  });
+});
