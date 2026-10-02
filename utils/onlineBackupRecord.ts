@@ -35,6 +35,12 @@ export type OnlineBackupError = 'network' | 'unavailable' | 'forbidden' | 'too-l
 export interface OnlineBackupRecord {
   /** The canonical backup code, when online backup is on for this run. */
   code?: string;
+  /**
+   * This browser's name for the copy it writes (16 random bytes, base64url). When
+   * another browser backs the run up, the relay keeps this browser's copy as the
+   * previous copy instead of losing it.
+   */
+  writer?: string;
   enabledAt?: number;
   /** The last successful upload, as the relay timed it. */
   lastUploadAt?: number;
@@ -47,6 +53,7 @@ export interface OnlineBackupRecord {
 }
 
 const ERRORS: ReadonlySet<string> = new Set(['network', 'unavailable', 'forbidden', 'too-large', 'too-large-to-share']);
+const WRITER_RE = /^[A-Za-z0-9_-]{22}$/;
 
 export const readOnlineBackupRecord = (storageKey: string): OnlineBackupRecord => {
   try {
@@ -55,6 +62,7 @@ export const readOnlineBackupRecord = (storageKey: string): OnlineBackupRecord =
     const record: OnlineBackupRecord = {};
     const code = typeof parsed.code === 'string' ? normalizeBackupCode(parsed.code) : null;
     if (code) record.code = code;
+    if (typeof parsed.writer === 'string' && WRITER_RE.test(parsed.writer)) record.writer = parsed.writer;
     for (const field of ['enabledAt', 'lastUploadAt', 'promptAnsweredAt'] as const) {
       if (typeof parsed[field] === 'number' && Number.isFinite(parsed[field])) record[field] = parsed[field];
     }

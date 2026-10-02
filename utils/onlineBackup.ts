@@ -6,6 +6,10 @@
  * (workers/fate-relay, route /b/<id>). The relay sees only the id, a write token
  * and ciphertext, so nobody without the code, the relay included, can read or
  * replace the backup. The code is the only way back in: it can't be reset.
+ *
+ * When a second browser backs up the same run, the relay keeps the copy it
+ * replaced as the previous copy (/b/<id>/previous), so a browser holding an
+ * older run can't erase newer progress: a restore offers both.
  */
 import {
   BACKUP_CODE_ALPHABET,
@@ -57,6 +61,11 @@ export const generateBackupCode = (
   const bytes = random(new Uint8Array(BACKUP_CODE_LENGTH));
   return formatBackupCode([...bytes].map(byte => BACKUP_CODE_ALPHABET[byte & 31]).join(''));
 };
+
+/** A new random name for this browser's copy of a backup. */
+export const generateBackupWriter = (
+  random: (bytes: Uint8Array) => Uint8Array = bytes => crypto.getRandomValues(bytes),
+): string => toBase64Url(random(new Uint8Array(16)));
 
 export interface BackupKeys {
   /** Where the relay keeps the backup. */
@@ -112,16 +121,19 @@ export type BackupFetchResult =
   | { ok: true; envelope: string; updatedAt: number }
   | { ok: false; reason: 'network' | 'unavailable' | 'not-found' };
 
+/** The newest copy, or the one it replaced when another browser backed the run up. */
+export type BackupCopy = 'latest' | 'previous';
+
 type Fetch = typeof fetch;
 
 export const uploadBackup = async (
-  base: string, keys: BackupKeys, envelope: string, fetchImpl: Fetch = fetch,
+  base: string, keys: BackupKeys, envelope: string, writer: string, fetchImpl: Fetch = fetch,
 ): Promise<BackupUploadResult> => {
   let response: Response;
   try {
     response = await fetchImpl(`${base}/b/${keys.id}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain', Authorization: `Bearer ${keys.writeToken}` },
+      headers: { 'Content-Type': 'text/plain', Authorization: `Bearer ${keys.writeToken}`, 'X-Backup-Writer': writer },
       body: envelope,
     });
   } catch {
@@ -140,10 +152,12 @@ export const uploadBackup = async (
   return { ok: false, reason: 'unavailable' };
 };
 
-export const fetchBackup = async (base: string, keys: BackupKeys, fetchImpl: Fetch = fetch): Promise<BackupFetchResult> => {
+export const fetchBackup = async (
+  base: string, keys: BackupKeys, copy: BackupCopy = 'latest', fetchImpl: Fetch = fetch,
+): Promise<BackupFetchResult> => {
   let response: Response;
   try {
-    response = await fetchImpl(`${base}/b/${keys.id}`);
+    response = await fetchImpl(`${base}/b/${keys.id}${copy === 'previous' ? '/previous' : ''}`);
   } catch {
     return { ok: false, reason: 'network' };
   }
@@ -153,7 +167,7 @@ export const fetchBackup = async (base: string, keys: BackupKeys, fetchImpl: Fet
   return { ok: true, envelope: await response.text(), updatedAt: Number.isFinite(updatedAt) ? updatedAt : 0 };
 };
 
-/** Removes the relay's copy. True when it's gone, or was never there. */
+/** Removes the relay's copies. True when they're gone, or were never there. */
 export const deleteBackup = async (base: string, keys: BackupKeys, fetchImpl: Fetch = fetch): Promise<boolean> => {
   try {
     const response = await fetchImpl(`${base}/b/${keys.id}`, {
@@ -209,8 +223,10 @@ export const backupRun = async (
   } catch {
     return fail('too-large-to-share');
   }
+  const writer = record.writer ?? generateBackupWriter();
+  if (!record.writer) writeOnlineBackupRecord(storageKey, { ...record, writer });
   const keys = await deriveBackupKeys(record.code);
-  const result = await uploadBackup(relayBase, keys, await encryptBackup(syncCode, keys.key), options.fetchImpl);
+  const result = await uploadBackup(relayBase, keys, await encryptBackup(syncCode, keys.key), writer, options.fetchImpl);
   if (result.ok === false) {
     if (result.reason === 'throttled') return { kind: 'retry', afterMs: result.retryAfterMs ?? 60_000 };
     return fail(result.reason);

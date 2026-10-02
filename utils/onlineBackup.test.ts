@@ -10,6 +10,7 @@ import {
   fetchBackup,
   formatBackupCode,
   generateBackupCode,
+  generateBackupWriter,
   normalizeBackupCode,
   readOnlineBackupRecord,
   uploadBackup,
@@ -93,34 +94,49 @@ describe('the relay', () => {
   const reply = (status: number, body: BodyInit | null = null, headers: Record<string, string> = {}) =>
     vi.fn(async () => new Response(body, { status, headers }));
 
-  it('uploads the envelope under the id, with the write token', async () => {
+  const WRITER = 'Wr'.repeat(11);
+
+  it('uploads the envelope under the id, with the write token and the browser that wrote it', async () => {
     const keys = await deriveBackupKeys(CODE);
     const fetchImpl = reply(200, JSON.stringify({ updatedAt: 1234 }));
-    expect(await uploadBackup(base, keys, 'FLBK1.x.y', fetchImpl)).toEqual({ ok: true, updatedAt: 1234 });
+    expect(await uploadBackup(base, keys, 'FLBK1.x.y', WRITER, fetchImpl)).toEqual({ ok: true, updatedAt: 1234 });
     expect(fetchImpl).toHaveBeenCalledWith(`${base}/b/${keys.id}`, expect.objectContaining({
       method: 'POST',
       body: 'FLBK1.x.y',
-      headers: expect.objectContaining({ Authorization: `Bearer ${keys.writeToken}` }),
+      headers: expect.objectContaining({ Authorization: `Bearer ${keys.writeToken}`, 'X-Backup-Writer': WRITER }),
     }));
   });
 
   it('says why an upload failed', async () => {
     const keys = await deriveBackupKeys(CODE);
-    expect(await uploadBackup(base, keys, 'e', reply(403))).toEqual({ ok: false, reason: 'forbidden' });
-    expect(await uploadBackup(base, keys, 'e', reply(413))).toEqual({ ok: false, reason: 'too-large' });
-    expect(await uploadBackup(base, keys, 'e', reply(429, null, { 'Retry-After': '30' })))
+    expect(await uploadBackup(base, keys, 'e', WRITER, reply(403))).toEqual({ ok: false, reason: 'forbidden' });
+    expect(await uploadBackup(base, keys, 'e', WRITER, reply(413))).toEqual({ ok: false, reason: 'too-large' });
+    expect(await uploadBackup(base, keys, 'e', WRITER, reply(429, null, { 'Retry-After': '30' })))
       .toEqual({ ok: false, reason: 'throttled', retryAfterMs: 30_000 });
-    expect(await uploadBackup(base, keys, 'e', reply(503))).toEqual({ ok: false, reason: 'unavailable' });
-    expect(await uploadBackup(base, keys, 'e', vi.fn(async () => { throw new TypeError('offline'); })))
+    expect(await uploadBackup(base, keys, 'e', WRITER, reply(503))).toEqual({ ok: false, reason: 'unavailable' });
+    expect(await uploadBackup(base, keys, 'e', WRITER, vi.fn(async () => { throw new TypeError('offline'); })))
       .toEqual({ ok: false, reason: 'network' });
   });
 
   it('fetches the envelope and its upload time, or says there is none', async () => {
     const keys = await deriveBackupKeys(CODE);
-    expect(await fetchBackup(base, keys, reply(200, 'FLBK1.x.y', { 'X-Backup-Updated-At': '99' })))
+    expect(await fetchBackup(base, keys, 'latest', reply(200, 'FLBK1.x.y', { 'X-Backup-Updated-At': '99' })))
       .toEqual({ ok: true, envelope: 'FLBK1.x.y', updatedAt: 99 });
-    expect(await fetchBackup(base, keys, reply(404, '{}'))).toEqual({ ok: false, reason: 'not-found' });
-    expect(await fetchBackup(base, keys, reply(503))).toEqual({ ok: false, reason: 'unavailable' });
+    expect(await fetchBackup(base, keys, 'latest', reply(404, '{}'))).toEqual({ ok: false, reason: 'not-found' });
+    expect(await fetchBackup(base, keys, 'latest', reply(503))).toEqual({ ok: false, reason: 'unavailable' });
+  });
+
+  it('fetches the previous copy from its own address', async () => {
+    const keys = await deriveBackupKeys(CODE);
+    const fetchImpl = reply(200, 'FLBK1.p.q', { 'X-Backup-Updated-At': '42' });
+    expect(await fetchBackup(base, keys, 'previous', fetchImpl)).toEqual({ ok: true, envelope: 'FLBK1.p.q', updatedAt: 42 });
+    expect(fetchImpl).toHaveBeenCalledWith(`${base}/b/${keys.id}/previous`);
+  });
+
+  it('names each browser’s copy with 16 random bytes', () => {
+    expect(generateBackupWriter(bytes => bytes.fill(255))).toBe('_'.repeat(21) + 'w');
+    expect(generateBackupWriter()).toMatch(/^[A-Za-z0-9_-]{22}$/);
+    expect(generateBackupWriter()).not.toBe(generateBackupWriter());
   });
 
   it('deletes with the write token', async () => {
@@ -145,9 +161,12 @@ describe("this browser's record", () => {
   });
 
   it('keeps the code canonical and drops anything it does not know', () => {
-    writeOnlineBackupRecord('P', { code: CODE, enabledAt: 1, lastUploadAt: 2, lastChecksum: 'abc' });
-    expect(readOnlineBackupRecord('P')).toEqual({ code: CODE, enabledAt: 1, lastUploadAt: 2, lastChecksum: 'abc' });
-    localStorage.setItem(profileOnlineBackupKey('P'), JSON.stringify({ code: '01234-56789-abcde-fghjk', extra: true, lastUploadAt: 'x' }));
+    const writer = 'Wr'.repeat(11);
+    writeOnlineBackupRecord('P', { code: CODE, writer, enabledAt: 1, lastUploadAt: 2, lastChecksum: 'abc' });
+    expect(readOnlineBackupRecord('P')).toEqual({ code: CODE, writer, enabledAt: 1, lastUploadAt: 2, lastChecksum: 'abc' });
+    localStorage.setItem(profileOnlineBackupKey('P'), JSON.stringify({
+      code: '01234-56789-abcde-fghjk', extra: true, lastUploadAt: 'x', writer: 'not/a/name',
+    }));
     expect(readOnlineBackupRecord('P')).toEqual({ code: CODE });
     localStorage.setItem(profileOnlineBackupKey('P'), 'not json');
     expect(readOnlineBackupRecord('P')).toEqual({});
@@ -157,11 +176,12 @@ describe("this browser's record", () => {
 describe('backing up a run', () => {
   const base = 'https://relay.test';
   const exportJson = JSON.stringify({ runId: 'run-1', keys: 3, history: [] });
-  let uploads: { url: string; body: string; auth: string }[];
+  let uploads: { url: string; body: string; auth: string; writer: string }[];
   let status: number;
   let headers: Record<string, string>;
   const fetchImpl = vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
-    uploads.push({ url: String(url), body: String(init?.body), auth: String((init?.headers as Record<string, string>)?.Authorization) });
+    const sent = init?.headers as Record<string, string>;
+    uploads.push({ url: String(url), body: String(init?.body), auth: String(sent?.Authorization), writer: String(sent?.['X-Backup-Writer']) });
     return new Response(status === 200 ? JSON.stringify({ updatedAt: 1000 + uploads.length }) : null, { status, headers });
   }) as unknown as typeof fetch;
 
@@ -196,6 +216,15 @@ describe('backing up a run', () => {
     expect(await backupRun('P', exportJson, base, { fetchImpl })).toEqual({ kind: 'unchanged' });
     expect(await backupRun('P', exportJson, base, { fetchImpl, force: true })).toEqual({ kind: 'uploaded', updatedAt: 1002 });
     expect(await backupRun('P', exportJson.replace('3', '4'), base, { fetchImpl })).toEqual({ kind: 'uploaded', updatedAt: 1003 });
+  });
+
+  it('names this browser’s copy once, and sends the same name with every upload', async () => {
+    writeOnlineBackupRecord('P', { code: CODE });
+    await backupRun('P', exportJson, base, { fetchImpl });
+    const { writer } = readOnlineBackupRecord('P');
+    expect(writer).toMatch(/^[A-Za-z0-9_-]{22}$/);
+    await backupRun('P', exportJson, base, { fetchImpl, force: true });
+    expect(uploads.map(upload => upload.writer)).toEqual([writer, writer]);
   });
 
   it('retries when the relay is out of reach, and says so until an upload works', async () => {
