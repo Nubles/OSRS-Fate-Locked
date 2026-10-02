@@ -50,7 +50,14 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Commander Zilyana': { skills: { Agility: 70 }, manualRequirements: [...GOD_WARS_ENTRY, GOD_WARS_CHAMBER] },
   "Kree'arra": { skills: { Ranged: 70 }, manualRequirements: [...GOD_WARS_ENTRY, GOD_WARS_CHAMBER] },
   "K'ril Tsutsaroth": { skills: { Hitpoints: 70 }, manualRequirements: [...GOD_WARS_ENTRY, GOD_WARS_CHAMBER] },
-  'Abyssal Sire': { skills: { Slayer: 85 }, manualRequirements: ['Abyssal demon Slayer task.'] },
+  'Abyssal Sire': {
+    skills: { Slayer: 85 },
+    manualRequirements: ['Abyssal demon Slayer task.'],
+    oneOf: [
+      { manualRequirements: ['Reached the Abyssal Nexus through fairy ring DIP'] },
+      { manualRequirements: ['Reached the Abyss through the Mage of Zamorak in the Wilderness'] },
+    ],
+  },
   'Alchemical Hydra': { skills: { Slayer: 95 }, manualRequirements: ['Hydra Slayer task; Karuulm Slayer Dungeon.'] },
   'Cerberus': { skills: { Slayer: 91 }, manualRequirements: ['Hellhound Slayer task.'] },
   'Grotesque Guardians': { skills: { Slayer: 75 }, manualRequirements: ['Permanently unlocked the Slayer Tower roof using a brittle key', 'An active gargoyle or Grotesque Guardians boss Slayer task'] },
@@ -59,7 +66,6 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Araxxor': { skills: { Slayer: 92 }, quests: ['Priest in Peril'], manualRequirements: ['Araxyte/spider Slayer task or boss task.'] },
   'Skotizo': { manualRequirements: ['Summoned with a Dark totem in the Catacombs of Kourend.'] },
   'Vorkath': { quests: ['Dragon Slayer II'] },
-  'Galvek': { quests: ['Dragon Slayer II'], note: 'Fought during Dragon Slayer II.' },
   'Moons of Peril': { skills: { Slayer: 48, Hunter: 20, Fishing: 20 }, quests: ['Perilous Moons'], note: 'Repeatable boss access after completing Perilous Moons.' },
   'Duke Sucellus': { quests: ['Desert Treasure II'] },
   'The Leviathan': { quests: ['Desert Treasure II'] },
@@ -84,6 +90,10 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Mimic': { manualRequirements: ['Opted in at the strange casket in Watson’s house', 'Obtained a Mimic from an elite or master reward casket'] },
 
   "Calvar'ion": { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ["Have an active Vet'ion boss Slayer task (a skeleton task does not qualify)"] }] },
+  'Artio': { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ['Have an active Callisto boss Slayer task (a bear task does not qualify)'] }] },
+  'Spindel': { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ['Have an active Venenatis boss Slayer task (a spider task does not qualify)'] }] },
+  // B-4: the Maggot King can only be killed after The Blood Moon Rises.
+  'Maggot King': { quests: ['The Blood Moon Rises'] },
   'Obor': { manualRequirements: ['Permanently unlocked Obor’s lair using a giant key (first access only)'] },
   'Bryophyta': { manualRequirements: ['Permanently unlocked Bryophyta’s lair using a mossy key (first access only)'] },
 
@@ -211,6 +221,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
 
   // ---- Bosses with an access gate (most others have no hard requirement) -----
   'Inferno': { manualRequirements: ['Complete the Fight Cave (TzTok-Jad) to enter.'] },
+  "TzHaar-Ket-Rak's Challenges": { manualRequirements: ['Show a fire cape to enter inner Mor Ul Rek'], note: 'Challenges 3 to 6 also need the Inferno completed.' },
   "Phosani's Nightmare": { manualRequirements: ['Defeated The Nightmare at least once'] },
   'Fortis Colosseum': { note: 'Varlamore — high-level combat (Sol Heredit).' },
   'The Hueycoatl': { note: 'Varlamore.' },

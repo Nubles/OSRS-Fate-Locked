@@ -121,7 +121,6 @@ export const NO_HARD_LOCATION_GATE = new Set<string>([
   'Venenatis', // no tracked named-area gate (Wilderness spider cave)
   "Vet'ion", // no tracked named-area gate (Wilderness skeleton cave)
   'Vorkath', // no tracked named-area gate (Ungael)
-  'Galvek', // no tracked named-area gate (quest instance)
   'Mimic', // no tracked named-area gate (casket-triggered encounter)
 
   // Distributed, event, or untracked-content activities.

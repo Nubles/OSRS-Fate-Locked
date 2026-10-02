@@ -1,6 +1,6 @@
 import { CUSTOM_RULE_BOUNDS, resolveModeRules, type GameModeRules } from '../config/gameModes';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
-import { EQUIPMENT_SLOTS, RETIRED_POH_ITEMS } from '../data/items';
+import { EQUIPMENT_SLOTS, RETIRED_BOSSES, RETIRED_POH_ITEMS } from '../data/items';
 import { migrateAreaUnlocks } from './areaUnlockMigration';
 import { mergedBankId, settleMergedBanks } from './bankUnlockMerges';
 import { settleCanonicalAreaUnlocks } from '../data/areaMapPolicy';
@@ -966,6 +966,7 @@ const normalizeState = (
 
   let bossStandardKeysAwarded: Record<string, number>;
   let clueStandardKeysAwarded: number;
+  let retiredBossCounters = false;
   if (sourceVersion >= 3) {
     const strictBossProgress = inspectRecord(
       selectedBossProgress.value,
@@ -978,6 +979,11 @@ const normalizeState = (
     bossStandardKeysAwarded = {};
     for (const bossName of Object.getOwnPropertyNames(strictBossProgress.value)) {
       const path = pathOf('bossStandardKeysAwarded', bossName);
+      // A retired boss has no reserve left to count; the Keys it paid stay in the history.
+      if (RETIRED_BOSSES.includes(bossName)) {
+        retiredBossCounters = true;
+        continue;
+      }
       if (!isKnownVanillaBoss(bossName)) return invalid('invalid_field', path);
       const awarded = boundedInteger(
         readOwn(strictBossProgress.value, bossName),
@@ -1136,7 +1142,9 @@ const normalizeState = (
         && !(p.table === TableType.REGIONS && item === 'Tutorial Island')
         // Already paid before Aquarium left the roll pool; retired items stay
         // valid in older saves, so the reveal must still load and complete.
-        && !(p.table === TableType.POH && RETIRED_POH_ITEMS.includes(item)))
+        && !(p.table === TableType.POH && RETIRED_POH_ITEMS.includes(item))
+        // A retired boss's reveal loads so its refund can settle it.
+        && !(p.table === TableType.BOSSES && RETIRED_BOSSES.includes(item)))
       || (p.costType !== 'key' && p.costType !== 'chaosKey') || p.cost !== 1) return invalid('invalid_field', 'pendingUnlock');
     state.pendingUnlock = { id: p.id, table: p.table as TableType, item, costType: p.costType, cost: 1 };
     pendingMerged = item !== p.item;
@@ -1174,7 +1182,7 @@ const normalizeState = (
     ok: true,
     value: {
       state,
-      migrated: areaMigrated || pendingMerged || sourceVersion < CURRENT_SAVE_VERSION
+      migrated: areaMigrated || pendingMerged || retiredBossCounters || sourceVersion < CURRENT_SAVE_VERSION
         || unlocks.value.migrated
         || !own(input, 'runId')
         || !own(input, 'runRevision')

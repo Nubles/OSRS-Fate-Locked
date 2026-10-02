@@ -20,7 +20,18 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-map-areas');
+    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-boss-fights');
+  });
+
+  it('announces that boss fights need their boss, and Galvek’s refund', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-boss-fights');
+    expect(release?.title).toBe('Boss Fights Need Their Boss');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Dagannoth Kings, Jad, Zuk.*without the boss unlock.*Tormented Demons unlock/),
+      expect.stringMatching(/Artio and Spindel.*Maggot King asks for The Blood Moon Rises.*Abyssal Sire/),
+      expect.stringMatching(/Galvek has left the Bosses table.*Key back/),
+      expect.stringMatching(/God Wars Dungeon bosses and the Whisperer are tagged Asgarnia/),
+    ]);
   });
 
   it('announces the places that join their areas, and rolls that ask for the entrance’s area', () => {

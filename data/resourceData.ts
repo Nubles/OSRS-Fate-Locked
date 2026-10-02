@@ -145,7 +145,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Torstol': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Misthalin', 'Kandarin', 'Morytania', 'Kourend & Kebos', 'Tirannwn', 'Fremennik', 'Varlamore'], skills: { 'Farming': 85 }, notes: 'Requires Seeds', outputYield: 8 },
     { type: 'MINIGAME', name: 'Sinister Chest', regions: ['Kandarin'], skills: {'Agility': 40}, notes: 'Guaranteed Drop' },
-    { type: 'DROP', name: 'Commander Zilyana', regions: ['Fremennik'], unlockId: 'Commander Zilyana' },
+    { type: 'DROP', name: 'Commander Zilyana', regions: ['Asgarnia'], unlockId: 'Commander Zilyana' },
     { type: 'DROP', name: 'Thermonuclear Smoke Devil', regions: ['Kandarin'], skills: {'Slayer': 93}, unlockId: 'Thermonuclear Smoke Devil' }
   ],
   'Irit Leaf': [
@@ -1000,25 +1000,25 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Assembly', regions: ['Any'], inputs: {'Godsword Blade': 1, 'Armadyl Hilt': 1} }
   ],
   'Armadyl Hilt': [
-    { type: 'DROP', name: 'Kree\'arra', regions: ['Fremennik'], unlockId: 'Kree\'arra' }
+    { type: 'DROP', name: 'Kree\'arra', regions: ['Asgarnia'], unlockId: 'Kree\'arra' }
   ],
   'Bandos Godsword': [
     { type: 'SKILL', name: 'Assembly', regions: ['Any'], inputs: {'Godsword Blade': 1, 'Bandos Hilt': 1} }
   ],
   'Bandos Hilt': [
-    { type: 'DROP', name: 'General Graardor', regions: ['Fremennik'], unlockId: 'General Graardor' }
+    { type: 'DROP', name: 'General Graardor', regions: ['Asgarnia'], unlockId: 'General Graardor' }
   ],
   'Saradomin Godsword': [
     { type: 'SKILL', name: 'Assembly', regions: ['Any'], inputs: {'Godsword Blade': 1, 'Saradomin Hilt': 1} }
   ],
   'Saradomin Hilt': [
-    { type: 'DROP', name: 'Commander Zilyana', regions: ['Fremennik'], unlockId: 'Commander Zilyana' }
+    { type: 'DROP', name: 'Commander Zilyana', regions: ['Asgarnia'], unlockId: 'Commander Zilyana' }
   ],
   'Zamorak Godsword': [
     { type: 'SKILL', name: 'Assembly', regions: ['Any'], inputs: {'Godsword Blade': 1, 'Zamorak Hilt': 1} }
   ],
   'Zamorak Hilt': [
-    { type: 'DROP', name: 'K\'ril Tsutsaroth', regions: ['Fremennik'], unlockId: 'K\'ril Tsutsaroth' }
+    { type: 'DROP', name: 'K\'ril Tsutsaroth', regions: ['Asgarnia'], unlockId: 'K\'ril Tsutsaroth' }
   ],
 
   // --- RAIDS & ENDGAME ---
@@ -1086,16 +1086,16 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Tombs of Amascut', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut' }
   ],
   'Zaryte Crossbow': [
-    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' }
+    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' }
   ],
   'Torva Full Helm': [
-    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' }
+    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' }
   ],
   'Torva Platebody': [
-    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' }
+    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' }
   ],
   'Torva Platelegs': [
-    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' }
+    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' }
   ],
   'Inquisitor\'s Mace': [
     { type: 'DROP', name: 'The Nightmare', regions: ['Morytania'], unlockId: 'The Nightmare' }
@@ -1117,20 +1117,20 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Virtus Mask': [
     { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus' },
-    { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan' },
-    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer' },
+    { type: 'DROP', name: 'The Leviathan', regions: ['Misthalin'], unlockId: 'The Leviathan' },
+    { type: 'DROP', name: 'The Whisperer', regions: ['Asgarnia'], unlockId: 'The Whisperer' },
     { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore', 'Kourend & Kebos'], unlockId: 'Vardorvis' }
   ],
   'Virtus Robe Top': [
     { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus' },
-    { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan' },
-    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer' },
+    { type: 'DROP', name: 'The Leviathan', regions: ['Misthalin'], unlockId: 'The Leviathan' },
+    { type: 'DROP', name: 'The Whisperer', regions: ['Asgarnia'], unlockId: 'The Whisperer' },
     { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore', 'Kourend & Kebos'], unlockId: 'Vardorvis' }
   ],
   'Virtus Robe Bottom': [
     { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus' },
-    { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan' },
-    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer' },
+    { type: 'DROP', name: 'The Leviathan', regions: ['Misthalin'], unlockId: 'The Leviathan' },
+    { type: 'DROP', name: 'The Whisperer', regions: ['Asgarnia'], unlockId: 'The Whisperer' },
     { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore', 'Kourend & Kebos'], unlockId: 'Vardorvis' }
   ],
   'Voidwaker': [
@@ -2595,25 +2595,25 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Abyssal Sire', regions: ['Wilderness'], unlockId: 'Abyssal Sire', rarity: '1/258' }
   ],
   'Godsword Shard 1': [
-    { type: 'DROP', name: 'General Graardor', regions: ['Fremennik'], unlockId: 'General Graardor' },
-    { type: 'DROP', name: 'Commander Zilyana', regions: ['Fremennik'], unlockId: 'Commander Zilyana' },
-    { type: 'DROP', name: "Kree'arra", regions: ['Fremennik'], unlockId: "Kree'arra" },
-    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Fremennik'], unlockId: "K'ril Tsutsaroth" },
-    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' }
+    { type: 'DROP', name: 'General Graardor', regions: ['Asgarnia'], unlockId: 'General Graardor' },
+    { type: 'DROP', name: 'Commander Zilyana', regions: ['Asgarnia'], unlockId: 'Commander Zilyana' },
+    { type: 'DROP', name: "Kree'arra", regions: ['Asgarnia'], unlockId: "Kree'arra" },
+    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Asgarnia'], unlockId: "K'ril Tsutsaroth" },
+    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' }
   ],
   'Godsword Shard 2': [
-    { type: 'DROP', name: 'General Graardor', regions: ['Fremennik'], unlockId: 'General Graardor' },
-    { type: 'DROP', name: 'Commander Zilyana', regions: ['Fremennik'], unlockId: 'Commander Zilyana' },
-    { type: 'DROP', name: "Kree'arra", regions: ['Fremennik'], unlockId: "Kree'arra" },
-    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Fremennik'], unlockId: "K'ril Tsutsaroth" },
-    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' }
+    { type: 'DROP', name: 'General Graardor', regions: ['Asgarnia'], unlockId: 'General Graardor' },
+    { type: 'DROP', name: 'Commander Zilyana', regions: ['Asgarnia'], unlockId: 'Commander Zilyana' },
+    { type: 'DROP', name: "Kree'arra", regions: ['Asgarnia'], unlockId: "Kree'arra" },
+    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Asgarnia'], unlockId: "K'ril Tsutsaroth" },
+    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' }
   ],
   'Godsword Shard 3': [
-    { type: 'DROP', name: 'General Graardor', regions: ['Fremennik'], unlockId: 'General Graardor' },
-    { type: 'DROP', name: 'Commander Zilyana', regions: ['Fremennik'], unlockId: 'Commander Zilyana' },
-    { type: 'DROP', name: "Kree'arra", regions: ['Fremennik'], unlockId: "Kree'arra" },
-    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Fremennik'], unlockId: "K'ril Tsutsaroth" },
-    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' }
+    { type: 'DROP', name: 'General Graardor', regions: ['Asgarnia'], unlockId: 'General Graardor' },
+    { type: 'DROP', name: 'Commander Zilyana', regions: ['Asgarnia'], unlockId: 'Commander Zilyana' },
+    { type: 'DROP', name: "Kree'arra", regions: ['Asgarnia'], unlockId: "Kree'arra" },
+    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Asgarnia'], unlockId: "K'ril Tsutsaroth" },
+    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' }
   ],
   "Executioner's Axe Head": [
     { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore', 'Kourend & Kebos'], unlockId: 'Vardorvis', rarity: '1/96' }
@@ -2622,18 +2622,18 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus', rarity: '1/96' }
   ],
   'Leviathan Lure': [
-    { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan', rarity: '1/96' }
+    { type: 'DROP', name: 'The Leviathan', regions: ['Misthalin'], unlockId: 'The Leviathan', rarity: '1/96' }
   ],
   "Siren's Staff": [
-    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer', rarity: '1/96' }
+    { type: 'DROP', name: 'The Whisperer', regions: ['Asgarnia'], unlockId: 'The Whisperer', rarity: '1/96' }
   ],
   'Araxyte Venom Sack': [
     { type: 'DROP', name: 'Araxxor', regions: ['Morytania'], unlockId: 'Araxxor' }
   ],
   'Ancient Essence': [
     { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus', notes: 'DT2 awakened bosses (any)' },
-    { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan' },
-    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer' },
+    { type: 'DROP', name: 'The Leviathan', regions: ['Misthalin'], unlockId: 'The Leviathan' },
+    { type: 'DROP', name: 'The Whisperer', regions: ['Asgarnia'], unlockId: 'The Whisperer' },
     { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore', 'Kourend & Kebos'], unlockId: 'Vardorvis' }
   ],
   'Ancient Shard': [
@@ -2649,7 +2649,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Nihil Shard': 1 }, notes: 'Grind with a Pestle and mortar' }
   ],
   'Nihil Shard': [
-    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' },
+    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' },
     { type: 'DROP', name: 'Tombs of Amascut', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut' }
   ],
   'Helm of Neitiznot': [
@@ -2673,7 +2673,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Otto Godblessed', regions: ['Kandarin'], inputs: { 'Zamorakian Spear': 1, 'Coins': 300000 }, notes: "Otto's Grotto conversion" }
   ],
   'Zamorakian Spear': [
-    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Fremennik'], unlockId: "K'ril Tsutsaroth", rarity: '1/127' }
+    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Asgarnia'], unlockId: "K'ril Tsutsaroth", rarity: '1/127' }
   ],
 
   // --- SMITHING / FLETCHING INTERMEDIATES ---

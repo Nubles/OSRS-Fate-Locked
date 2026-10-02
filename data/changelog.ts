@@ -19,6 +19,19 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-02-boss-fights',
+    title: 'Boss Fights Need Their Boss',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'The monsters a boss fight is made of now count as that boss: the Dagannoth Kings, Jad, Zuk, the Royal Titans, the Barrows brothers, the Moons, Sol Heredit, the Great Olm, the Tombs of Amascut’s Wardens and the Hueycoatl. Before, the map and RuneLite let you fight them without the boss unlock. Tormented demons need the Tormented Demons unlock too, and Jad’s cave needs Mor Ul Rek, as the Inferno does.',
+        'Artio and Spindel ask for the hard Wilderness Diary or their boss’s Slayer task, as Calvar’ion does. The Maggot King asks for The Blood Moon Rises, TzHaar-Ket-Rak’s Challenges a fire cape, and the Abyssal Sire a visit to the Abyss or fairy ring DIP.',
+        'Galvek has left the Bosses table: he is fought only once, during Dragon Slayer II. If you had unlocked him, you get the Key back.',
+        'The God Wars Dungeon bosses and the Whisperer are tagged Asgarnia, and the Leviathan Misthalin, where the map puts their entrances.',
+      ],
+    },
+  },
+  {
     id: '2026-10-02-map-areas',
     title: 'Places Join the Area They’re In',
     date: '2026-10-02',

@@ -19,6 +19,7 @@ export const INTERIOR_AREA_OWNERS: Readonly<Record<string, string>> = {
   // The TzHaar city's sections, and the Inferno within it.
   'Mor Ul Rek': 'Mor Ul Rek (TzHaar City)',
   'Inferno': 'Mor Ul Rek (TzHaar City)',
+  'Fight Caves': 'Mor Ul Rek (TzHaar City)',
   'Prifddinas Library': 'Prifddinas',
   'Cosmic altar': 'Zanaris',
 };
