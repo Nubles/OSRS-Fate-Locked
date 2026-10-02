@@ -7,7 +7,9 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import content from '../public/chunk-content.json';
 import { ChunkContentService } from '../services/ChunkContentService';
 import { createFreshState } from '../context/GameContext';
-import { evaluateEntityAccess } from '../utils/entityAccess';
+import { evaluateBankRequirements, evaluateEntityAccess } from '../utils/entityAccess';
+import { BANKS } from './banks';
+import { getActivityReq } from './activityRequirements';
 import {
   FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST, MINIGAMES_LIST, MISTHALIN_AREAS, MOBILITY_LIST,
   REGIONS_LIST, SKILLS_LIST, BOSSES_LIST,
@@ -94,6 +96,57 @@ describe('G5: the disease-free herb patches need the quests that open them', () 
     const access = (unlocks: UnlockState) => evaluateEntityAccess('Herb patch', 'object', { cx, cy }, unlocks, 'vanilla', service);
     expect(access(everything())).toEqual({ status: 'ALLOWED', reasons: [] });
     expect(access(everything(99, { quests: questsWithout(quest) }))).toEqual({ status: 'NOT_READY', reasons: [quest] });
+  });
+});
+
+/** The bank at this canonical chunk id, as the chunk panel and the RuneLite export judge it. */
+const bankAccess = (id: string, unlocks: UnlockState) => {
+  const coord = { cx: Math.floor(Number(id) / 256), cy: Number(id) % 256 };
+  return evaluateBankRequirements(service.contentFor(coord.cx, coord.cy)!, coord, unlocks, service, 'vanilla');
+};
+
+describe('B1: a bank inside a guild needs the guild', () => {
+  // The Hunter Guild's bank chest stands outside the guild (data/activityRequirements.ts).
+  const OUTSIDE = new Set(['Hunter Guild']);
+  const guildBanks = BANKS.flatMap(bank => {
+    const guild = GUILDS_LIST.find(name => bank.name.includes(name));
+    return guild && !OUTSIDE.has(guild) ? [{ id: bank.id, bank: bank.name, guild }] : [];
+  });
+
+  it('finds every guild bank', () => {
+    expect(guildBanks.map(({ bank }) => bank).sort()).toEqual([
+      'Crafting Guild', 'East Woodcutting Guild deposit box', 'Farming Guild', 'Fishing Guild',
+      "Legends' Guild", "Myths' Guild", "Warriors' Guild", 'West Woodcutting Guild',
+    ]);
+  });
+
+  it('opens each to a run that owns the guild and meets its entry requirement, and to no other', () => {
+    for (const { id, bank, guild } of guildBanks) {
+      expect(bankAccess(id, everything()), bank).toEqual({ status: 'ALLOWED', reasons: [] });
+      const unowned = bankAccess(id, everything(99, { guilds: GUILDS_LIST.filter(name => name !== guild) }));
+      expect(unowned.status, bank).toBe('NOT_READY');
+      expect(unowned.reasons, bank).toContain(guild);
+      const entry = getActivityReq(guild)!;
+      // Below the guild's level, or without its quest.
+      const short = entry.quests?.length ? everything(99, { quests: questsWithout(...entry.quests) }) : everything(1);
+      expect(bankAccess(id, short).status, `${bank} without its entry requirement`).toBe('NOT_READY');
+    }
+  });
+});
+
+describe('B2: a town bank built in a quest needs the quest', () => {
+  // List of banks, oldid 15315317.
+  it.each([
+    ['11310', 'Shilo Village', 'Shilo Village'], ['13099', 'Sophanem', 'Contact!'],
+    ['9265', 'Lletya', "Mourning's End Part I"], ['10284', 'Corsair Cove', 'The Corsair Curse'],
+    ['10300', 'Etceteria', 'Throne of Miscellania'], ['9275', 'Neitiznot', 'The Fremennik Isles'],
+    ['9531', 'Jatizso', 'The Fremennik Isles'], ['13874', 'Burgh de Rott', 'In Aid of the Myreque'],
+    ['14388', 'Darkmeyer', 'Sins of the Father'],
+  ])('bank %s (%s) needs %s', (id, _bank, quest) => {
+    expect(bankAccess(id, everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    const without = bankAccess(id, everything(99, { quests: questsWithout(quest) }));
+    expect(without.status).toBe('NOT_READY');
+    expect(without.reasons).toContain(`Complete ${quest}`);
   });
 });
 

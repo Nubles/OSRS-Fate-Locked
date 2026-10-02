@@ -37,28 +37,55 @@ function bestAccess(results: EntityAccessResult[]): EntityAccessResult {
   return { status, reasons: [...new Set(results.flatMap(result => result.reasons))] };
 }
 
-interface BankAccessOption { quests?: string[]; diaries?: string[]; manual?: string[]; }
+interface BankAccessOption { quests?: string[]; diaries?: string[]; guilds?: string[]; manual?: string[]; }
 const registryBanks = bankRegistry.locations as Array<{
   id: string; name: string; accessOptions?: BankAccessOption[];
 }>;
+const bankGates = bankRegistry.accessGates as Array<{ id: string; accessOptions: BankAccessOption[] }>;
 
-function registryBankRequirements(coord: { cx: number; cy: number }, unlocks: UnlockState, source: EntityAccessSource): EntityAccessResult {
-  const bank = registryBanks.find(entry => entry.id === String(coord.cx * 256 + coord.cy));
-  const entry = evaluateEntityRequirements(bank?.name ?? 'Unreviewed bank', 'object', coord, unlocks, source);
-  const options: EntityAccessResult[] = (bank?.accessOptions ?? []).map(option => {
+/**
+ * The ways into a whole bank, any one of them enough, that the registry puts
+ * on it: its guild's entry, or the quest its town's bank waits on (accuracy
+ * audit B1, B2). Every facility the bank has needs one.
+ */
+function bankGateOptions(bankId: string): BankAccessOption[] | undefined {
+  return bankGates.find(gate => gate.id === bankId)?.accessOptions;
+}
+
+/**
+ * Entering a guild: the run's unlock of it, then the guild's own entry
+ * requirement (data/activityRequirements.ts), such as 68 Fishing.
+ */
+function guildEntry(guild: string, unlocks: UnlockState, mode?: string): EntityAccessResult {
+  if (!unlocks.guilds.includes(guild)) return { status: 'NOT_READY', reasons: [guild] };
+  const readiness = evaluateActivityReadiness(true, getActivityReq(guild), unlocks, mode);
+  return readiness.status === 'READY' ? { status: 'ALLOWED', reasons: [] }
+    : readiness.status === 'NEEDS_CONFIRMATION' ? { status: 'UNKNOWN', reasons: readiness.checks }
+      : { status: 'NOT_READY', reasons: readiness.status === 'NOT_READY' ? readiness.blockers.map(blocker => blocker.label) : [guild] };
+}
+
+/** One complete alternative is enough. */
+function bankOptionsAccess(options: BankAccessOption[], unlocks: UnlockState, mode?: string): EntityAccessResult {
+  return bestAccess(options.map(option => {
     const missing = [
       ...(option.quests ?? []).filter(quest => !unlocks.quests.includes(quest)).map(quest => `Complete ${quest}`),
       ...(option.diaries ?? []).filter(diary => !unlocks.diaries.includes(diary)).map(diary => `Complete ${diary} Diary`),
     ];
-    return missing.length ? { status: 'NOT_READY', reasons: missing }
+    const own: EntityAccessResult = missing.length ? { status: 'NOT_READY', reasons: missing }
       : option.manual?.length ? { status: 'UNKNOWN', reasons: option.manual }
         : { status: 'ALLOWED', reasons: [] };
-  });
-  const access: EntityAccessResult = options.some(option => option.status === 'ALLOWED')
-    ? { status: 'ALLOWED', reasons: [] }
-    : { status: !options.length || options.some(option => option.status === 'UNKNOWN') ? 'UNKNOWN' : 'NOT_READY',
-      reasons: options.length ? [...new Set(options.flatMap(option => option.reasons))]
-        : [`${bank?.name ?? 'Bank facility'} access requirements need review`] };
+    return combineAccess(own, ...(option.guilds ?? []).map(guild => guildEntry(guild, unlocks, mode)));
+  }));
+}
+
+function registryBankRequirements(coord: { cx: number; cy: number }, unlocks: UnlockState, source: EntityAccessSource, mode?: string): EntityAccessResult {
+  const bankId = String(coord.cx * 256 + coord.cy);
+  const bank = registryBanks.find(entry => entry.id === bankId);
+  const entry = evaluateEntityRequirements(bank?.name ?? 'Unreviewed bank', 'object', coord, unlocks, source);
+  // A reviewed service's own ways in, such as Peer the Seer's, else the bank's gate.
+  const options = bank?.accessOptions ?? bankGateOptions(bankId) ?? [];
+  const access: EntityAccessResult = options.length ? bankOptionsAccess(options, unlocks, mode)
+    : { status: 'UNKNOWN', reasons: [`${bank?.name ?? 'Bank facility'} access requirements need review`] };
   return { status: entry.status === 'NOT_READY' || access.status === 'NOT_READY' ? 'NOT_READY'
     : entry.status === 'UNKNOWN' || access.status === 'UNKNOWN' ? 'UNKNOWN' : 'ALLOWED',
     reasons: [...new Set([...entry.reasons, ...access.reasons])] };
@@ -93,15 +120,20 @@ export function evaluateBankRequirements(
   content: ChunkContent, coord: { cx: number; cy: number }, unlocks: UnlockState,
   source: EntityAccessSource = chunkContentService, mode?: string,
 ): EntityAccessResult {
-  const facilities = bankFacilities(content, String(coord.cx * 256 + coord.cy));
+  const bankId = String(coord.cx * 256 + coord.cy);
+  const facilities = bankFacilities(content, bankId);
+  // The bank's gate holds every facility: a booth in a guild needs the guild's entry.
+  const options = bankGateOptions(bankId);
+  const gate = options?.length ? bankOptionsAccess(options, unlocks, mode) : undefined;
   const results = facilities.map(({ name, kind, requirements }) => {
     const access = evaluateEntityRequirements(name, kind, coord, unlocks, source, mode);
     const extra = evaluateRouteGates(compileRawRequirements((requirements ?? []).map(raw => ({ raw, origin: 'ENTITY' as const }))), unlocks);
-    return combineAccess(access, { status: !extra.blockers.length ? 'ALLOWED' : extra.hasDataGap ? 'UNKNOWN' : 'NOT_READY',
-      reasons: extra.blockers.map(gate => gate.label) });
+    const facility = combineAccess(access, { status: !extra.blockers.length ? 'ALLOWED' : extra.hasDataGap ? 'UNKNOWN' : 'NOT_READY',
+      reasons: extra.blockers.map(blocker => blocker.label) });
+    return gate ? combineAccess(facility, gate) : facility;
   });
   // Reviewed NPC services may not have a generic bank object in the source.
-  if (!results.length) return registryBankRequirements(coord, unlocks, source);
+  if (!results.length) return registryBankRequirements(coord, unlocks, source, mode);
   return bestAccess(results);
 }
 

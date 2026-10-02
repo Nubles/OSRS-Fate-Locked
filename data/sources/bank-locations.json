@@ -17,7 +17,8 @@
     { "title": "Sangvesti bank", "revision": 15262093, "url": "https://oldschool.runescape.wiki/w/Sangvesti_bank" },
     { "title": "Castle Drakan", "revision": 15283343, "url": "https://oldschool.runescape.wiki/w/Castle_Drakan" },
     { "title": "Forestry event", "revision": 14430593, "url": "https://oldschool.runescape.wiki/w/Forestry_event" },
-    { "title": "Motherlode Mine", "revision": 15359659, "url": "https://oldschool.runescape.wiki/w/Motherlode_Mine" }
+    { "title": "Motherlode Mine", "revision": 15359659, "url": "https://oldschool.runescape.wiki/w/Motherlode_Mine" },
+    { "title": "Farming Guild", "revision": 15274002, "url": "https://oldschool.runescape.wiki/w/Farming_Guild" }
   ],
   "locations": [
     { "id": "11066", "cx": 43, "cy": 58, "name": "Keldagrim bank and Blast Furnace chest", "referenceKind": "entrance", "accessVia": "Keldagrim entrance north-east of Rellekka; start The Giant Dwarf", "facilities": ["Keldagrim bank", "Blast Furnace bank chest"], "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim", "https://oldschool.runescape.wiki/w/Blast_Furnace"] },
@@ -73,6 +74,25 @@
     { "name": "Player-owned house servants", "reason": "Variable-location fetching service, not a fixed bank or deposit facility." },
     { "name": "Ferox Enclave mercenary", "reason": "Unnoting and token exchange service, not a deposit facility." },
     { "name": "Removed banks", "reason": "No longer accessible in normal play." }
+  ],
+  "accessGates": [
+    { "id": "10293", "accessOptions": [{ "guilds": ["Fishing Guild"] }], "note": "The bank and deposit box are inside the Fishing Guild (68 Fishing).", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "4922", "accessOptions": [{ "guilds": ["Farming Guild"] }], "note": "The bank chest and deposit box are in the guild's central area (45 Farming); the second bank is in its advanced tier.", "wiki": ["https://oldschool.runescape.wiki/w/Farming_Guild"] },
+    { "id": "11571", "accessOptions": [{ "guilds": ["Crafting Guild"] }], "note": "The deposit box is inside the Crafting Guild (40 Crafting); its bank chest also needs 99 Crafting or the hard Falador Diary.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "11319", "accessOptions": [{ "guilds": ["Warriors' Guild"] }], "note": "The bank is inside the Warriors' Guild.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "10804", "accessOptions": [{ "guilds": ["Legends' Guild"] }], "note": "The bank is inside the Legends' Guild (Legends' Quest).", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "9772", "accessOptions": [{ "guilds": ["Myths' Guild"] }], "note": "The bank chest is inside the Myths' Guild (Dragon Slayer II).", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "6198", "accessOptions": [{ "guilds": ["Woodcutting Guild"] }], "note": "The bank chest is inside the Woodcutting Guild (60 Woodcutting).", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "6454", "accessOptions": [{ "guilds": ["Woodcutting Guild"] }], "note": "The deposit box and the Ent dungeon chest are inside the Woodcutting Guild (60 Woodcutting).", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "11310", "accessOptions": [{ "quests": ["Shilo Village"] }], "note": "Shilo Village bank.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "13099", "accessOptions": [{ "quests": ["Contact!"] }], "note": "Sophanem bank.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "9265", "accessOptions": [{ "quests": ["Mourning's End Part I"] }], "note": "Lletya bank.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "10284", "accessOptions": [{ "quests": ["The Corsair Curse"] }], "note": "Corsair Cove bank.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "10300", "accessOptions": [{ "quests": ["Throne of Miscellania"] }], "note": "Etceteria bank.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "9275", "accessOptions": [{ "quests": ["The Fremennik Isles"] }], "note": "Neitiznot bank.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "9531", "accessOptions": [{ "quests": ["The Fremennik Isles"] }], "note": "Jatizso bank.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "13874", "accessOptions": [{ "quests": ["In Aid of the Myreque"] }], "note": "Burgh de Rott bank; reaching the town needs only Priest in Peril.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "14388", "accessOptions": [{ "quests": ["Sins of the Father"] }], "note": "Darkmeyer bank; the chunk asks only for Priest in Peril.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] }
   ],
   "merges": [
     { "id": "10810", "into": "11066", "reason": "Rellekka Peninsula holds no bank: its chunk is the way into Keldagrim, whose bank and Blast Furnace chest are 11066.", "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim"] },
