@@ -26,7 +26,7 @@ export type RouteGate =
   | { type: 'RFD_SUBQUESTS'; count: number; label: string }
   | { type: 'SKILL'; skill: string; level: number; label: string }
   | { type: 'EQUIPMENT'; slot: EquipmentSlot; tier: number; label: string }
-  | { type: 'UNLOCK'; category: 'guilds' | 'merchants' | 'minigames' | 'mobility' | 'slayerUnlocks'; id: string; label: string }
+  | { type: 'UNLOCK'; category: 'guilds' | 'merchants' | 'minigames' | 'mobility' | 'slayerUnlocks' | 'bosses'; id: string; label: string }
   | { type: 'UNRESOLVED'; label: string; raw: string };
 
 export interface QuestItemRequirement {

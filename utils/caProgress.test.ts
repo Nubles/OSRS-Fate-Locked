@@ -3,6 +3,7 @@ import { CA_DATA } from '../data/caData';
 import {
   CA_TASK_POINTS,
   CA_TIER_ORDER,
+  caTaskLockedBoss,
   caTierCompletionDecision,
   completedCAPoints,
   earnedCATiers,
@@ -56,5 +57,21 @@ describe('Combat Achievement point progress', () => {
       ok: false,
       reason: 'Already completed',
     });
+  });
+});
+
+describe('Combat Achievement boss hint', () => {
+  it('names the boss a task is fought at until the run unlocks it, for every boss name the list uses', () => {
+    // Owner decision B6 (2 October 2026): a hint only; tasks stay free to log.
+    for (const [monster, boss] of [
+      ['Leviathan', 'The Leviathan'], ['Whisperer', 'The Whisperer'], ['Royal Titans', 'The Royal Titans'],
+      ['Barrows', 'Barrows Brothers'], ['Theatre of Blood: Hard Mode', 'Theatre of Blood'],
+      ['Tombs of Amascut: Expert Mode', 'Tombs of Amascut'], ['Chambers of Xeric: Challenge Mode', 'Chambers of Xeric'],
+      ['Crystalline Hunllef', 'The Gauntlet'], ['Zulrah', 'Zulrah'],
+    ]) {
+      expect(caTaskLockedBoss({ monster }, []), monster).toBe(boss);
+      expect(caTaskLockedBoss({ monster }, [boss]), monster).toBeUndefined();
+    }
+    expect(caTaskLockedBoss({ monster: 'Kurask' }, [])).toBeUndefined();
   });
 });

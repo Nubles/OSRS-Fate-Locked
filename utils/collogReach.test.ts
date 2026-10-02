@@ -45,10 +45,24 @@ describe('collogReachability', () => {
     }
   });
 
-  it('gated tabs are Bosses/Raids/Minigames; Clues/Other are baseline', () => {
+  it('gated tabs are Bosses/Raids/Minigames; Clues/Other are baseline, bar a boss page of their own', () => {
     const r = collogReachability(base());
     const gated = r.tabs.filter(t => t.gated).map(t => t.tab).sort();
     expect(gated).toEqual(['Bosses', 'Minigames', 'Raids']);
-    for (const t of r.tabs.filter(t => !t.gated)) expect(t.obtainable).toBe(t.total);
+    expect(r.tabs.find(t => t.tab === 'Clues')!.obtainable).toBe(r.tabs.find(t => t.tab === 'Clues')!.total);
+    // Tormented Demons is a rollable boss, so its Other-tab page needs it (accuracy audit CL-3).
+    const other = r.tabs.find(t => t.tab === 'Other')!;
+    expect(other.total - other.obtainable).toBe(3);
+    expect(r.suggestions).toContainEqual(expect.objectContaining({ page: 'Tormented Demons', unlock: 'Tormented Demons', kind: 'boss' }));
+    const demons = collogReachability(base({ bosses: ['Tormented Demons'] })).tabs.find(t => t.tab === 'Other')!;
+    expect(demons.obtainable).toBe(demons.total);
+  });
+
+  it('counts the Nightmare page for either Nightmare fight', () => {
+    // Both fights share one page (accuracy audit CL-1).
+    for (const boss of ['The Nightmare', "Phosani's Nightmare"]) {
+      expect(collogReachability(base({ bosses: [boss] })).suggestions.map(s => s.page), boss).not.toContain('The Nightmare');
+    }
+    expect(collogReachability(base()).suggestions.map(s => s.page)).toContain('The Nightmare');
   });
 });

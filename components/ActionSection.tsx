@@ -12,7 +12,7 @@ import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { EARN_METHODS, failureFateForSource, LEVEL_ROLL_MAX } from '../config/economy';
 import { BRUTUS_BOSS_NAME, effectiveVanillaClueRate, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
 import { BossKeyProgress, ClueKeyProgress } from './VanillaKeyProgress';
-import { VANILLA_BOSS_SEARCH_PLACEHOLDER, vanillaBossSearchEmptyMessage } from './vanillaBossSearchCopy';
+import { VANILLA_BOSS_SEARCH_PLACEHOLDER, vanillaBossNote, vanillaBossSearchEmptyMessage } from './vanillaBossSearchCopy';
 
 // OSRS Wiki Icon URLs
 const WIKI_IMG = 'https://oldschool.runescape.wiki/images/';
@@ -333,8 +333,9 @@ const VanillaBossRollCard: React.FC<{
   displayRate: number;
   style: TierStyle;
   stage: ReturnType<typeof vanillaBossKeyStage>;
+  note?: string;
   onClick: (e: React.MouseEvent) => void;
-}> = ({ name, displayRate, style, stage, onClick }) => {
+}> = ({ name, displayRate, style, stage, note, onClick }) => {
   const { isRolling, triggerRoll } = useRollSuspense(onClick);
   const capped = stage.capped;
 
@@ -346,6 +347,7 @@ const VanillaBossRollCard: React.FC<{
     >
       <div className="min-w-0 flex-1">
         <span className={`block text-xs font-semibold truncate ${style.text}`}>{name}</span>
+        {note && <span className="block text-[10px] text-amber-300/90">{note}</span>}
         <BossKeyProgress stage={stage} />
       </div>
       <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border shrink-0 ${style.pill}`}>
@@ -588,6 +590,7 @@ export const ActionSection: React.FC = () => {
                       displayRate={stage.currentRate ?? 0}
                       style={bossClass === 'brutus' ? TIER_STYLE.low : TIER_STYLE[bossClass]}
                       stage={stage}
+                      note={vanillaBossNote(name, unlocks.quests)}
                       onClick={(e) => handleRoll(source, stage.currentRate ?? 0, e, {
                         kind: 'boss',
                         bossName: name,

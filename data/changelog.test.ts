@@ -31,6 +31,10 @@ describe('authored changelog releases', () => {
       expect.stringMatching(/Artio and Spindel.*Maggot King asks for The Blood Moon Rises.*Abyssal Sire/),
       expect.stringMatching(/Galvek has left the Bosses table.*Key back/),
       expect.stringMatching(/God Wars Dungeon bosses and the Whisperer are tagged Asgarnia/),
+      expect.stringMatching(/Combat Achievements show where to fight.*Boss not unlocked.*by hand/),
+      expect.stringMatching(/Brutus card notes that repeat kills need The Ides of Milk/),
+      expect.stringMatching(/Nightmare page for Phosani’s Nightmare.*Tormented Demons page/),
+      expect.stringMatching(/goal planner counts a boss’s drops only once.*Wilderness Slayer Cave/),
     ]);
   });
 

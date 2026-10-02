@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import generated from '../public/chunk-content.json';
 import { ChunkContentService } from '../services/ChunkContentService';
 import { RESOURCE_MAP } from '../data/resourceData';
+import { ALL_CA_TASKS } from '../data/caTasks';
 import { SOURCE_TYPE_KINDS } from './chunkLocations';
 import { findEntityLocations } from './entityLocationLookup';
 
@@ -11,6 +12,27 @@ beforeAll(async () => {
   await source.init();
 });
 afterAll(() => vi.unstubAllGlobals());
+
+describe('Combat Achievement places', () => {
+  it('finds a place for every task whose fight the map can show', () => {
+    // 203 of 655 tasks showed no place before (accuracy audit, 29 September 2026).
+    // These names have no place in the map's data: the fight is instanced, unnamed,
+    // or not one place.
+    const NO_PLACE: Readonly<Record<string, string>> = {
+      Wintertodt: 'The source names only its braziers, which stand in many places',
+      Giants: 'One task across several giant areas',
+      'N/A': 'A task with no monster',
+      Galvek: 'Fought only inside Dragon Slayer II',
+      'The Mimic': 'Summoned from a casket, with no fixed place',
+      'Fragment of Seren': 'Fought only inside Song of the Elves',
+      "TzHaar-Ket-Rak's Challenges": 'Inner Mor Ul Rek, which the source leaves unnamed',
+    };
+    const missing = [...new Set(ALL_CA_TASKS
+      .filter(task => !findEntityLocations(source, task.monster, ['monster'])?.locations.length)
+      .map(task => task.monster))].sort();
+    expect(missing).toEqual(Object.keys(NO_PLACE).sort());
+  });
+});
 
 describe('reviewed resource-host location links', () => {
   it.each([

@@ -183,3 +183,10 @@ describe('account requirements', () => {
     );
   });
 });
+
+describe('requirements a place meets by itself', () => {
+  it('drops "Enter the Wilderness" from the Wilderness Slayer Cave entrances, which are in the Wilderness', () => {
+    expect(compileRawRequirements([{ raw: 'Enter the Wilderness', origin: 'ENTITY' }])).toEqual([]);
+    expect(compileRawRequirements([{ raw: ' enter the  wilderness ', origin: 'CHUNK_ENTRY' }])).toEqual([]);
+  });
+});

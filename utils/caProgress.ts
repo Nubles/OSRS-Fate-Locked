@@ -1,4 +1,5 @@
 import { CA_DATA } from '../data/caData';
+import { canonicalBossId } from './contentIdentity';
 import { ALL_CA_TASKS, CATask } from '../data/caTasks';
 import type { CompletionResult } from './journalCompletion';
 
@@ -80,4 +81,13 @@ export const caTierCompletionDecision = (
     };
   }
   return { ok: true };
+};
+
+/**
+ * The boss a task is fought at, when the run hasn't unlocked it. Only a hint:
+ * a task stays free to complete by hand, as manual play does.
+ */
+export const caTaskLockedBoss = (task: { monster: string }, bosses: readonly string[]): string | undefined => {
+  const boss = canonicalBossId(task.monster);
+  return boss && !bosses.includes(boss) ? boss : undefined;
 };

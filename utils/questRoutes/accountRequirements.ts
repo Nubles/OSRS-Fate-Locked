@@ -25,6 +25,7 @@ export interface RouteGateAccountState {
   readonly minigames: readonly string[];
   readonly mobility: readonly string[];
   readonly slayerUnlocks: readonly string[];
+  readonly bosses?: readonly string[];
 }
 
 type UnlockCategory = Extract<RouteGate, { type: 'UNLOCK' }>['category'];
@@ -108,13 +109,21 @@ const parseUnlock = (raw: string): RouteGate | null => {
   return null;
 };
 
+/**
+ * Source wording the place itself meets. The Wilderness Slayer Cave's entrances are
+ * Wilderness chunks, so a run that reaches one has entered the Wilderness; asking
+ * again kept every Wilderness Slayer location at "needs review" (accuracy audit).
+ */
+const MET_BY_PLACE = new Set(['enter the wilderness']);
+
 /** Converts only reviewed source wording into account gates; all other wording remains evidence. */
-export const compileRawRequirements = (rawRequirements: readonly RawRouteRequirement[]): RouteGate[] => rawRequirements.map((evidence) => {
+export const compileRawRequirements = (rawRequirements: readonly RawRouteRequirement[]): RouteGate[] => rawRequirements.flatMap((evidence): RouteGate[] => {
   const requirement = evidence.raw.trim();
+  if (MET_BY_PLACE.has(normalise(requirement))) return [];
   const normalisedEvidence = { ...evidence, raw: requirement };
   const rfd = requirement.match(/^RFD Chest ([1-8]) Subquests?$/i);
-  if (rfd) return { type: 'RFD_SUBQUESTS', count: Number(rfd[1]), label: `Complete ${rfd[1]} Recipe for Disaster rescues` };
-  return parseQuest(normalisedEvidence) ?? parseQuestProgress(requirement) ?? parseSkill(requirement) ?? parseUnlock(requirement) ?? unresolved(evidence.raw);
+  if (rfd) return [{ type: 'RFD_SUBQUESTS', count: Number(rfd[1]), label: `Complete ${rfd[1]} Recipe for Disaster rescues` }];
+  return [parseQuest(normalisedEvidence) ?? parseQuestProgress(requirement) ?? parseSkill(requirement) ?? parseUnlock(requirement) ?? unresolved(evidence.raw)];
 });
 
 /** Appends compiled gates while preserving the original structured source evidence. */
@@ -161,7 +170,7 @@ export const evaluateRouteGates = (
         break;
       }
       case 'UNLOCK':
-        if (!unlocks[gate.category].includes(gate.id)) blockers.push(gate);
+        if (!(unlocks[gate.category] ?? []).includes(gate.id)) blockers.push(gate);
         break;
       case 'UNRESOLVED': {
         hasDataGap = true;
