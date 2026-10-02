@@ -8,6 +8,7 @@ import { MISTHALIN_AREAS } from '../constants';
 import { CHUNKED_MILESTONE_INTERVAL, STARTING_KEYS } from '../config/economy';
 import { GAME_MODES } from '../config/gameModes';
 import { DropSource } from '../types';
+import { DROP_RATES } from '../config/rules';
 
 const CHUNKED_LAND = 'In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.';
 
@@ -82,6 +83,25 @@ describe('ReferenceModal Omni-Keys', () => {
       expect(drops, label).toContain(`${label} <b>${engineOmniChance(source)}%</b>`);
     }
     expect(renderCodex('economy')).toContain(`or ${engineOmniChance(DropSource.QUEST_GRANDMASTER)}% for a Grandmaster quest`);
+  });
+});
+
+describe('ReferenceModal Smart Play', () => {
+  it('says a success wipes Fate, and shows the rates and Omni-Key chances the code uses', () => {
+    const economy = renderCodex('economy');
+    expect(economy).toContain('Failed rolls give Fate, but any successful roll resets it to 0, so spend it first: 8 on Clarity before a big roll, or 25 on a Chaos Key.');
+    expect(economy).toContain('Any successful roll resets them to 0, so spend them at the Void Altar before that.');
+    expect(economy).not.toMatch(/banks Fate|save toward a Chaos Key|fuel for the Void Altar/);
+    expect(economy).toContain(`Konar ${DROP_RATES[DropSource.SLAYER_KONAR]}%, Duradel ${DROP_RATES[DropSource.SLAYER_DURADEL]}%, boss tasks ${DROP_RATES[DropSource.SLAYER_BOSS]}%`);
+    expect(economy).toContain(`a guaranteed Key and a ${engineOmniChance(DropSource.QUEST_GRANDMASTER)}% Omni-Key chance`);
+    expect(economy).toContain(`Only pet drops (${engineOmniChance(DropSource.PET)}%) have a better Omni-Key chance.`);
+    expect(economy).toContain(`Raids give ${engineOmniChance(DropSource.RAID)}%, Elite diaries ${engineOmniChance(DropSource.DIARY_ELITE)}% and high-tier bosses ${engineOmniChance(DropSource.BOSS_HIGH)}%.`);
+  });
+
+  it('prices the Gambit as a minimum stake and marks the Cartographer as Chunked only', () => {
+    const economy = renderCodex('economy');
+    expect(economy).toContain('All Fate (min 15)');
+    expect(economy).toContain('Ritual of the Cartographer (Chunked only)');
   });
 });
 

@@ -9,6 +9,7 @@ import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
 import { andList, CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { DropSource, TableType } from '../types';
+import { DROP_RATES } from '../config/rules';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { unlockableAreas } from '../utils/freeAreas';
 
@@ -340,7 +341,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         {rules.pityEnabled
                                             ? <> At <b className="text-white">{rules.pityThreshold}</b> they grant a guaranteed <b>Pity Key</b>. Pity conversions keep any Fate overflow.</>
                                             : <> Pity is <b className="text-red-400">off</b> in {activeMode.name} mode.</>}
-                                        {' '}Either way, they're the fuel for the Void Altar.
+                                        {' '}Any successful roll resets them to 0, so spend them at the Void Altar before that.
                                     </p>
                                 </div>
                                 <div className="bg-[#222] p-5 rounded-xl border border-white/5">
@@ -348,8 +349,8 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     <ul className="space-y-1.5 text-xs text-gray-400">
                                         {RITUALS.map(r => (
                                             <li key={r.id} className="flex justify-between gap-2">
-                                                <span>{r.name}</span>
-                                                <span className="font-mono text-gray-300 shrink-0">{r.fateCost ? `${ritualCost(r.id)} Fate` : `${r.keyCost} Keys`}</span>
+                                                <span>{r.name}{r.chunkedOnly ? ' (Chunked only)' : ''}</span>
+                                                <span className="font-mono text-gray-300 shrink-0">{r.keyCost ? `${r.keyCost} Keys` : r.stakesAllFate ? `All Fate (min ${ritualCost(r.id)})` : `${ritualCost(r.id)} Fate`}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -365,10 +366,10 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="bg-gradient-to-br from-emerald-950/40 to-[#222] p-6 rounded-xl border border-emerald-500/20">
                                 <h3 className="text-emerald-300 font-bold uppercase tracking-widest mb-3 flex items-center gap-2"><Compass size={18}/> Smart Play</h3>
                                 <ul className="space-y-2 text-sm text-gray-300">
-                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Slayer is your engine.</b> It's the most repeatable roll — climb to higher masters (Konar 35%, Duradel 70%, Boss tasks 80%) as soon as you can survive them.</span></li>
-                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Save Omni-Keys for the big wishes.</b> Pick a must-have — a key region, a raid boss, a gear slot — rather than spending them where the table is tiny.</span></li>
-                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Bad luck still pays.</b> Every failed roll banks Fate. Spend it on Clarity before a high-stakes roll, or save toward a Chaos Key.</span></li>
-                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Grandmaster quests are the best journal roll.</b> A guaranteed Key with 20% Omni odds — only pet drops (25%) beat them. Raids (15%), Elite diaries and high-tier bosses (10%) also keep elevated Omni odds.</span></li>
+                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Slayer never runs out.</b> Every task you finish rolls, and higher masters roll better (Konar {DROP_RATES[DropSource.SLAYER_KONAR]}%, Duradel {DROP_RATES[DropSource.SLAYER_DURADEL]}%, boss tasks {DROP_RATES[DropSource.SLAYER_BOSS]}%). Move up as soon as you can survive their tasks.</span></li>
+                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Save Omni-Keys for what you need most.</b> Pick a must-have, such as a boss, a gear slot or a skill, rather than something from a small table that a Key will soon give you anyway.</span></li>
+                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Spend Fate before your next success.</b> Failed rolls give Fate, but any successful roll resets it to 0, so spend it first: {ritualCost('LUCK')} on Clarity before a big roll, or {ritualCost('CHAOS')} on a Chaos Key.</span></li>
+                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Grandmaster quests are the best Journal roll:</b> a guaranteed Key and a {omniFloor(DropSource.QUEST_GRANDMASTER)}% Omni-Key chance. Only pet drops ({omniFloor(DropSource.PET)}%) have a better Omni-Key chance. Raids give {omniFloor(DropSource.RAID)}%, Elite diaries {omniFloor(DropSource.DIARY_ELITE)}% and high-tier bosses {omniFloor(DropSource.BOSS_HIGH)}%.</span></li>
                                 </ul>
                             </div>
                         </div>
