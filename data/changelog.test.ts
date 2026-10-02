@@ -20,7 +20,26 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-slayer-rewards');
+    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-shops-and-guilds');
+  });
+
+  it('announces the shop, guild and bank fixes in plain words', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-shops-and-guilds');
+    expect(release?.title).toBe('Shops, Guilds and Banks Ask What the Game Asks');
+    expect(release?.sections.fixed).toEqual(expect.arrayContaining([
+      expect.stringMatching(/Farming Guild patches open at their own tier: 65 Farming.*85/),
+      expect.stringMatching(/bank inside a guild needs that guild.*Burgh de Rott and Darkmeyer/),
+      expect.stringMatching(/smelts steel, mithril, adamantite and rune bars at any furnace/),
+      expect.stringMatching(/reward shop needs Reward Shops and the activity/),
+      expect.stringMatching(/Mine Carts no longer needs The Giant Dwarf/),
+      expect.stringMatching(/Bone Voyage on Fossil Island.*51 Sailing on Anglers’ Retreat/),
+    ]));
+    expect(release?.sections.added).toEqual([
+      expect.stringMatching(/^Ten shops the map was missing.*Kjut’s Kebabs/),
+      expect.stringMatching(/Karim’s kebabs, Aggie’s dyes, the silk trader, Tenzing’s climbing boots and Nulodion’s cannon/),
+    ]);
+    // Player words only: no audit labels or file names.
+    expect(JSON.stringify(release)).not.toMatch(/\b[SBGUMD]\d+\b|\.ts\b|\.json\b|Chunk Picker/);
   });
 
   it('announces the tasks Slayer rewards add, and boss tasks', () => {

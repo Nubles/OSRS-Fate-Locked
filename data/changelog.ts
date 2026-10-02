@@ -19,6 +19,30 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-02-shops-and-guilds',
+    title: 'Shops, Guilds and Banks Ask What the Game Asks',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'Members shops and places no longer wait on the map data’s “free-to-play only” tag, so a run that has them can use them.',
+        'Farming Guild patches open at their own tier: 65 Farming for the herb, tree and anima patches, and 85 for the fruit tree, spirit tree, celastrus and redwood patches. The Troll Stronghold and Weiss herb patches need My Arm’s Big Adventure and Making Friends with My Arm.',
+        'A bank inside a guild needs that guild. The banks in Shilo Village, Sophanem, Lletya, Corsair Cove, Etceteria, Neitiznot, Jatizso, Burgh de Rott and Darkmeyer need the quest that opens them.',
+        'The planner smelts steel, mithril, adamantite and rune bars at any furnace, not only the Blast Furnace.',
+        'Trees, rocks, fishing spots, stalls and implings open at the levels the game asks, such as 92 Woodcutting for rosewood and 82 Thieving for the ore stall.',
+        'Shops sit under what they sell. The Runic Emporium and Regath’s Wares are Magic Shops, the TzHaar equipment stores and the vampyre weapon sellers are Weapon Shops, Sian’s is an Archery Shop, the Ore seller is an Ore Merchant, and the Lost Pickaxe and King’s Axe Inn are pubs. Intelligence Gathering is in Shayzien.',
+        'A reward shop needs Reward Shops and the activity whose points it takes: Temple Supplies needs Guardians of the Rift, for example.',
+        'Armour shops with mixed stock are filed by most of what they sell, and the shop directory marks an item only one shop sells, such as Scavvo’s rune sword.',
+        'Mine Carts no longer needs The Giant Dwarf, since the Lovakengj carts need no quest. Keldagrim still asks for it.',
+        'Hardwood patches ask for what each place needs: Bone Voyage on Fossil Island, The Ribbiting Tale at the Locus Oasis and 51 Sailing on Anglers’ Retreat.',
+        'In RuneLite, the teleport crystal asks for Mourning’s End Part I at Lletya and Song of the Elves at Prifddinas, and the south Pollnivneach magic carpet counts as a stop.',
+      ],
+      added: [
+        'Ten shops the map was missing, among them Kjut’s Kebabs, Dusuri’s Star Shop, the Barbarian Assault reward shop, Flakes ’n’ Flotsam and The Burrow.',
+        'Karim’s kebabs, Aggie’s dyes, the silk trader, Tenzing’s climbing boots and Nulodion’s cannon now count as merchants, under their shop categories.',
+      ],
+    },
+  },
+  {
     id: '2026-10-02-slayer-rewards',
     title: 'Slayer Rewards Add Their Tasks',
     date: '2026-10-02',
