@@ -54,7 +54,7 @@ import { migrateLegacyBackupRing } from '../utils/legacyBackupMigration';
 import { profileBackupKey } from '../utils/profileStorage';
 import { showToast } from '../utils/toast';
 import { LEGACY_FATE_COMPENSATION_ID } from '../utils/fateCompensation';
-import { normalizeAccountName } from '../services/fateEventProtocol';
+import { normalizeAccountName } from '../utils/accountName';
 import { collectionItemNeedsIdentityReview, emptyCollectionLogIdentity } from '../services/CollectionLogSyncService';
 import {
   canEarnDiaryTier,

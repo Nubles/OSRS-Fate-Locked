@@ -7,24 +7,9 @@
  * fails when the guide does, so the guide can't drift from the release it describes.
  */
 
-/** The plugin's words for statuses, features and currencies, by the name of its constant. */
-export const RUNELITE_TERMS = {
-  UNLOCKED: 'Unlocked',
-  CAN_DO: 'Can do',
-  NOT_READY: 'Not ready',
-  LOCKED: 'Locked',
-  NEEDS_CHECKING: 'Needs checking',
-  UNCHARTED: 'Uncharted',
-  FRONTIER: 'Frontier',
-  STRICT_MODE: 'Strict Mode',
-  KEYS: 'Keys',
-  OMNI_KEYS: 'Omni-Keys',
-  CHAOS_KEYS: 'Chaos Keys',
-  FATE_POINTS: 'Fate Points',
-  DIFFERENT_CHARACTER: 'Different character',
-  /** What the plugin adds to a right-click option the rules lock. */
-  LOCKED_TAG: ' (Locked)',
-} as const;
+import { RUNELITE_TERMS } from './runeliteTerms';
+
+export { RUNELITE_TERMS };
 
 export interface AvoidedWord {
   /** Matched as a whole word or phrase, case and all. */
@@ -103,13 +88,20 @@ export const RUNELITE_SETTINGS: readonly RuneliteSetting[] = [
     defaultValue: 'Shading, tooltip and contents',
     options: ['Off', 'Shading', 'Shading and tooltip', 'Shading, tooltip and contents'],
   },
+  {
+    key: 'worldMapBorders',
+    section: 'Display',
+    name: 'World map borders',
+    defaultValue: 'Locked edges',
+    options: ['Off', 'Locked edges', 'Chunk grid', 'All edges'],
+  },
   { key: 'worldMapMarkers', section: 'Display', name: 'Pin locked areas on the world map', defaultValue: 'Off' },
   {
     key: 'chunkBorders',
     section: 'Display',
     name: 'Chunk borders in the game view',
     defaultValue: 'Locked edges',
-    options: ['Off', 'Locked edges', 'All edges'],
+    options: ['Off', 'Locked edges', 'Chunk grid', 'All edges'],
   },
   { key: 'shadeNearbyLocked', section: 'Display', name: 'Shade locked land nearby', defaultValue: 'On' },
   { key: 'drawMinimap', section: 'Display', name: 'Minimap chunk borders', defaultValue: 'On' },

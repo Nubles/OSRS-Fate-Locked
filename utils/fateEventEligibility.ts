@@ -8,11 +8,8 @@ import { COLLECTION_LOG_DATA, type CollectionLogItem } from '../data/collectionL
 import { collectionItemNeedsIdentityReview } from '../services/CollectionLogSyncService';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { QUEST_DATA, type QuestData } from '../data/questData';
-import {
-  normalizeAccountName,
-  type FateEventEnvelope,
-  type FateEventType,
-} from '../services/fateEventProtocol';
+import type { FateEventEnvelope, FateEventType } from '../services/fateEventProtocol';
+import { normalizeAccountName } from './accountName';
 import {
   DropSource,
   type DetectedProgress,

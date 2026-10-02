@@ -82,7 +82,7 @@ export const CoachStrip: React.FC = () => {
     if (pendingCount > 0) {
       return {
         id: 'roll-inbox',
-        text: `${pendingCount} RuneLite detection${pendingCount > 1 ? 's are' : ' is'} waiting for your decision.`,
+        text: `${pendingCount} event${pendingCount > 1 ? 's' : ''} from RuneLite ${pendingCount > 1 ? 'are' : 'is'} waiting in your Roll Inbox.`,
         cta: 'Open Roll Inbox',
         act: () => nav('tab:AUTOROLL'),
       };

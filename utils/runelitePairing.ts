@@ -1,7 +1,8 @@
 export const RUNELITE_PAIR_CODE_PATTERN = /^[0-9a-f]{32}$/;
 export const RUNELITE_PAIR_HASH_PREFIX = '#runelite-pair=';
+/** What RuneLite shows once the profile arrives: its status card's own title (accuracy review, P-8). */
 export const RUNELITE_PAIRING_SUCCESS_COPY =
-  'Profile sent. Return to RuneLite; its Fate Locked panel will show Connected after the first valid import.';
+  'Profile sent. Back in RuneLite, the Fate Locked status card will say Rules up to date.';
 
 export const isRunelitePairCode = (value: string): boolean =>
   RUNELITE_PAIR_CODE_PATTERN.test(value);

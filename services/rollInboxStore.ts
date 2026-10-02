@@ -20,7 +20,8 @@ export interface RollInboxRow {
 }
 
 export interface RollInboxStore {
-  ingest(events: FateEventEnvelope[]): void;
+  /** Adds the events it hasn't seen, and says how many it added. */
+  ingest(events: FateEventEnvelope[]): number;
   list(): RollInboxRow[];
   transition(
     eventId: string,
@@ -78,7 +79,7 @@ export function createRollInboxStore(
   return {
     ingest(events) {
       const byId = new Map(rows.map(row => [row.event.eventId, row]));
-      let changed = false;
+      let added = 0;
       for (const event of events) {
         if (byId.has(event.eventId)) continue;
         const row: RollInboxRow = {
@@ -87,14 +88,15 @@ export function createRollInboxStore(
           updatedAt: Date.now(),
         };
         byId.set(event.eventId, row);
-        changed = true;
+        added += 1;
       }
-      if (!changed) return;
+      if (added === 0) return 0;
       const all = sorted([...byId.values()]);
       const terminal = all.filter(row => TERMINAL.has(row.state));
       const active = all.filter(row => !TERMINAL.has(row.state)).slice(-MAX_ACTIVE);
       rows = sorted([...terminal, ...active]);
       save();
+      return added;
     },
 
     list() {

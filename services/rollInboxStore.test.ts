@@ -54,6 +54,18 @@ describe('Roll Inbox store', () => {
     expect(restarted.list()[0].state).toBe('COMPLETED');
   });
 
+  it('says how many events were new', () => {
+    const store = createRollInboxStore(new MemoryStorage(), 'run-1');
+    let notifications = 0;
+    store.subscribe(() => { notifications += 1; });
+
+    expect(store.ingest([event('evt-1'), event('evt-2'), event('evt-1')])).toBe(2);
+    expect(store.ingest([event('evt-2'), event('evt-3')])).toBe(1);
+    expect(store.ingest([event('evt-3')])).toBe(0);
+    expect(store.list()).toHaveLength(3);
+    expect(notifications).toBe(2);
+  });
+
   it('sorts occurrences deterministically and notifies subscribers', () => {
     const storage = new MemoryStorage();
     const store = createRollInboxStore(storage, 'run-1');

@@ -19,6 +19,31 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-02-paste-from-runelite',
+    title: 'Paste from RuneLite',
+    date: '2026-10-02',
+    sections: {
+      added: [
+        'The Roll Inbox has a Paste from RuneLite button. In RuneLite, choose Copy for tracker in the Roll inbox card, then paste here: the inbox says what it added, and nothing rolls until you choose Roll.',
+        'A run not linked to a character takes a paste from whoever copied it, and each row says whose it is.',
+        'In RuneLite, the new World map borders setting picks the world map’s lines: the outline of your unlocked land, the chunk grid, both, or none, keeping the shading.',
+      ],
+      changed: [
+        'Logging by hand, rolling and spending Keys are unchanged. Skip any row you’ve already logged by hand.',
+        'The RuneLite guide calls the website the tracker throughout, as RuneLite’s own buttons do.',
+        'In RuneLite, Chunk borders in the game view can show the chunk grid without the dashed locked edges, and the minimap follows it.',
+      ],
+      fixed: [
+        'Strict Mode’s setting, its card in RuneLite and the RuneLite guide now say all it stops: a teleport to a place your rules lock, and a teleport of a kind your run hasn’t unlocked, such as Jewelry Teleports, even to an unlocked place. A worn item’s teleport, such as a glory’s Edgeville, counts. What it stops is unchanged.',
+        'With Also send RuneLite notifications on, walking into a locked area sends a notification with its chat line, not only when the alert plays a sound.',
+        'RuneLite and its guide say what it notices: a finished diary tier, not each task, and a collection log item only with the game’s collection log notification on. When it can’t notice anything, such as on a character your run isn’t linked to, its Roll inbox card says why.',
+        'RuneLite’s progress percentage counts what the number beside it counts: 15 of 187 areas is 8%, where it showed 7%, a share of the map’s chunks.',
+        'The RuneLite guide says what a backup does: any backup RuneLite can read replaces your rules, even an older one or another run’s, so pick the right file.',
+        'After you connect RuneLite, the tracker says what to look for: the status card saying Rules up to date. RuneLite never showed Connected.',
+      ],
+    },
+  },
+  {
     id: '2026-10-02-online-backup',
     title: 'Online Backup Keeps Your Run Safe',
     date: '2026-10-02',

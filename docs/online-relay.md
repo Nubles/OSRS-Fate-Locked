@@ -59,7 +59,10 @@ legacy event resources.
 
 The plugin does **not** upload gameplay, account names, detected events,
 acknowledgements, suggestions, heartbeats, telemetry, or any other state.
-Supported gameplay detections stay in RuneLite's local event history.
+Supported gameplay detections stay in RuneLite's local event history until the
+player selects **Copy for tracker**, which puts them on the clipboard. The Roll
+Inbox's **Paste from RuneLite** reads them from there. Neither step uses the
+relay.
 
 ## What “Profile sent” means
 

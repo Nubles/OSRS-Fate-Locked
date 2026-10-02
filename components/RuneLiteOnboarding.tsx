@@ -195,8 +195,9 @@ export const RuneLiteOnboarding: React.FC = () => {
         <span className="font-semibold text-gray-300">
           Advanced recovery:
         </span>{' '}
-        use clipboard or file import if the relay is unavailable. RuneLite
-        local history is not transferred to the web Roll Inbox.
+        use clipboard or file import if the relay is unavailable. What RuneLite
+        notices reaches the Roll Inbox only when you choose Copy for tracker in
+        RuneLite, then Paste from RuneLite here.
       </div>
 
       {relaySync.enabled && (

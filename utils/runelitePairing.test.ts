@@ -14,8 +14,9 @@ describe('RuneLite pairing fragments', () => {
   it('exposes the strict protocol constants and success copy', () => {
     expect(RUNELITE_PAIR_HASH_PREFIX).toBe('#runelite-pair=');
     expect(RUNELITE_PAIR_CODE_PATTERN.test(code)).toBe(true);
+    // The plugin's status card never says Connected: its title is Rules up to date.
     expect(RUNELITE_PAIRING_SUCCESS_COPY).toBe(
-      'Profile sent. Return to RuneLite; its Fate Locked panel will show Connected after the first valid import.',
+      'Profile sent. Back in RuneLite, the Fate Locked status card will say Rules up to date.',
     );
   });
 

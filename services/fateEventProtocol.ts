@@ -52,9 +52,7 @@ export interface EventAcknowledgement {
   acknowledgedAt: number;
 }
 
-export function normalizeAccountName(account: string): string {
-  return account.trim().replace(/\s+/g, ' ').toLowerCase();
-}
+export { normalizeAccountName } from '../utils/accountName';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);

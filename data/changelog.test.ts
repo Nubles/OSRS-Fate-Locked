@@ -20,7 +20,30 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-online-backup');
+    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-paste-from-runelite');
+  });
+
+  it('announces Paste from RuneLite, and that manual play is unchanged', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-paste-from-runelite');
+    expect(release?.title).toBe('Paste from RuneLite');
+    expect(release?.sections.added).toEqual([
+      expect.stringMatching(/Paste from RuneLite button.*Copy for tracker in the Roll inbox card.*nothing rolls until you choose Roll/),
+      expect.stringMatching(/not linked to a character.*each row says whose it is/),
+      expect.stringMatching(/World map borders setting picks the world map’s lines.*the chunk grid, both, or none, keeping the shading/),
+    ]);
+    expect(release?.sections.changed).toEqual([
+      expect.stringMatching(/Logging by hand, rolling and spending Keys are unchanged/),
+      expect.stringMatching(/RuneLite guide calls the website the tracker throughout/),
+      expect.stringMatching(/Chunk borders in the game view can show the chunk grid without the dashed locked edges, and the minimap follows it/),
+    ]);
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Strict Mode.*a teleport of a kind your run hasn’t unlocked.*even to an unlocked place.*worn item’s teleport.*glory’s Edgeville.*What it stops is unchanged/),
+      expect.stringMatching(/notifications on.*locked area sends a notification with its chat line, not only when the alert plays a sound/),
+      expect.stringMatching(/finished diary tier, not each task.*collection log item only with the game’s collection log notification on.*Roll inbox card says why/),
+      expect.stringMatching(/progress percentage counts what the number beside it counts: 15 of 187 areas is 8%/),
+      expect.stringMatching(/any backup RuneLite can read replaces your rules, even an older one or another run’s/),
+      expect.stringMatching(/status card saying Rules up to date/),
+    ]);
   });
 
   it('announces online backup in plain words', () => {

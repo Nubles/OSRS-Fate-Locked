@@ -8,6 +8,7 @@ import {
   X,
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
+import { RUNELITE_TERMS } from '../data/runeliteTerms';
 import { DetectorPlaytestExport } from './DetectorPlaytestExport';
 import type { EventAcknowledgement } from '../services/fateEventProtocol';
 import {
@@ -26,6 +27,7 @@ import {
   classifyFateEvent,
   classifyFateEventCandidate,
 } from '../utils/fateEventEligibility';
+import { parsePastedEvents, pasteSummary } from '../utils/runelitePaste';
 
 export interface RollInboxGame {
   state: GameState;
@@ -89,11 +91,14 @@ const RowFrame = ({
   classification,
   children,
   tone,
+  account,
 }: {
   row: RollInboxRow;
   classification: EventClassification;
   children: React.ReactNode;
   tone: string;
+  /** Whose event it is, shown when the run is linked to no one. */
+  account?: string;
 }) => (
   <div className={`rounded-lg border px-3 py-2.5 ${tone}`}>
     <div className="flex items-start gap-3">
@@ -105,6 +110,7 @@ const RowFrame = ({
           <span className="truncate text-sm font-semibold text-gray-100">
             {row.event.canonicalLabel ?? 'Needs identification'}
           </span>
+          {account && <span className="shrink-0 text-[10px] text-gray-400">{account}</span>}
           <span className="ml-auto shrink-0 text-[10px] text-gray-600">
             {timeLabel(row.event.occurredAt)}
           </span>
@@ -136,6 +142,9 @@ export function RollInboxView({
 }: RollInboxViewProps) {
   const [, refresh] = useState(0);
   const [selection, setSelection] = useState<Record<string, string>>({});
+  const [pasting, setPasting] = useState(false);
+  const [pasteText, setPasteText] = useState('');
+  const [pasteNote, setPasteNote] = useState<string | null>(null);
   const rolling = useRef(new Set<string>());
 
   useEffect(() => store.subscribe(() => refresh((value) => value + 1)), [store]);
@@ -192,6 +201,36 @@ export function RollInboxView({
     void acknowledge([terminalAck(row.event.eventId, 'COMPLETED')]);
   };
 
+  // A run linked to no one takes any character's events (plan decision 9), so each row says whose.
+  const whose = (row: RollInboxRow) => (game.state.linkedAccount ? undefined : row.event.account);
+
+  /** RuneLite's copy, added to the inbox: nothing rolls until the player says so. */
+  const takePaste = (text: string): boolean => {
+    const pasted = parsePastedEvents(text);
+    if (!pasted) {
+      setPasteNote(`That isn’t a copy from RuneLite. In its Roll inbox card, choose ${RUNELITE_TERMS.COPY_FOR_TRACKER} first.`);
+      return false;
+    }
+    const added = store.ingest(pasted.events);
+    const characters = game.state.linkedAccount
+      ? []
+      : [...new Set(pasted.events.map((event) => event.account))];
+    setPasteNote(pasteSummary(pasted, added, characters));
+    setPasting(false);
+    setPasteText('');
+    return true;
+  };
+
+  const pasteFromRuneLite = async () => {
+    try {
+      if (takePaste(await navigator.clipboard.readText())) return;
+    } catch {
+      // The browser won't read the clipboard here: a box to paste into instead.
+      setPasteNote(null);
+    }
+    setPasting(true);
+  };
+
   const review = (row: RollInboxRow, classification: EventClassification) => {
     if (classification.state !== 'NEEDS_CONFIRMATION') return;
     const target = selection[row.event.eventId]
@@ -217,15 +256,64 @@ export function RollInboxView({
           </span>
         )}
         <span className="ml-auto text-[10px] text-gray-500">Kept in this browser</span>
+        <button
+          type="button"
+          onClick={() => void pasteFromRuneLite()}
+          className="rounded-md bg-fuchsia-600 px-2 py-1 text-[11px] font-bold text-white hover:bg-fuchsia-500"
+        >
+          {RUNELITE_TERMS.PASTE_FROM_RUNELITE}
+        </button>
         <DetectorPlaytestExport inbox={allRows} history={game.state.history} />
       </div>
 
+      {pasteNote && <p role="status" className="mb-2 text-[11px] text-fuchsia-100/80">{pasteNote}</p>}
+      {pasting && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            takePaste(pasteText);
+          }}
+          className="mb-3 space-y-1.5"
+        >
+          <label htmlFor="runelite-paste" className="block text-[11px] text-gray-400">
+            Paste RuneLite’s copy here
+          </label>
+          <textarea
+            id="runelite-paste"
+            value={pasteText}
+            onChange={(e) => setPasteText(e.target.value)}
+            rows={3}
+            className="w-full rounded-md border border-white/10 bg-black/70 px-2 py-1.5 font-mono text-[11px] text-gray-200"
+          />
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={!pasteText.trim()}
+              className="rounded-md bg-fuchsia-600 px-2.5 py-1.5 text-[11px] font-bold text-white enabled:hover:bg-fuchsia-500 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Add
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPasting(false);
+                setPasteText('');
+              }}
+              className="rounded-md px-2 py-1.5 text-[11px] text-gray-400 hover:bg-white/5 hover:text-white"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
       {active.length === 0 ? (
         <p className="rounded-lg border border-dashed border-white/10 px-3 py-4 text-center text-[11px] text-gray-500">
-          No detected rolls waiting. RuneLite can't send its detections here yet, so log each level-up, quest and diary yourself.
+          In RuneLite, open the Roll inbox card and choose {RUNELITE_TERMS.COPY_FOR_TRACKER}, then paste here.
         </p>
       ) : (
         <div className="space-y-3">
+          <p className="text-[10px] text-gray-500">Skip any you’ve already logged by hand.</p>
           {groups.READY.length > 0 && (
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400">
@@ -236,6 +324,7 @@ export function RollInboxView({
                   key={row.event.eventId}
                   row={row}
                   classification={classification}
+                  account={whose(row)}
                   tone="border-emerald-500/25 bg-emerald-500/[0.06]"
                 >
                   <div className="mt-2 flex items-center gap-2">
@@ -272,6 +361,7 @@ export function RollInboxView({
                   key={row.event.eventId}
                   row={row}
                   classification={classification}
+                  account={whose(row)}
                   tone="border-amber-500/25 bg-amber-500/[0.05]"
                 >
                   <p className="mt-1 text-[11px] text-amber-200/80">{classification.reason}</p>
@@ -326,6 +416,7 @@ export function RollInboxView({
                   key={row.event.eventId}
                   row={row}
                   classification={classification}
+                  account={whose(row)}
                   tone="border-red-500/20 bg-red-500/[0.04]"
                 >
                   <div className="mt-1 flex items-center gap-2">
