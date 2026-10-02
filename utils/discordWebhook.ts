@@ -10,6 +10,7 @@
  * run's back-catalogue (the cursor seeds to the newest entry on enable).
  */
 import type { LogEntry } from '../types';
+import { tableDisplayName } from './tableDisplay';
 import { profileDiscordCursorKey, profileDiscordKey } from './profileStorage';
 
 export interface DiscordConfig {
@@ -132,13 +133,13 @@ export const planAnnouncements = (
 export const unlockEmbed = (entry: LogEntry): Record<string, unknown> => {
   const meta = (entry.meta ?? {}) as { category?: string; cost?: number; costType?: string };
   const costLabel =
-    meta.costType === 'specialKey' ? 'an Omni-key'
-    : meta.costType === 'chaosKey' ? 'a Chaos key'
+    meta.costType === 'specialKey' ? 'an Omni-Key'
+    : meta.costType === 'chaosKey' ? 'a Chaos Key'
     : meta.cost ? `${meta.cost} ${meta.cost === 1 ? 'Key' : 'Keys'}`
     : undefined;
   return {
     title: `🔓 ${entry.message}`,
-    description: [meta.category, costLabel && `spent ${costLabel}`].filter(Boolean).join(' — '),
+    description: [meta.category && tableDisplayName(meta.category), costLabel && `spent ${costLabel}`].filter(Boolean).join(' — '),
     color: EMBED_COLOR,
     timestamp: new Date(entry.timestamp).toISOString(),
     footer: { text: 'Fate Locked Ironman' },

@@ -84,6 +84,8 @@ export function questRequirementFingerprint(quest: QuestData): string {
     manualRequirements: canonicalValue(quest.manualRequirements),
     questProgress: canonicalValue(quest.questProgress),
     skillAlternatives: canonicalValue(quest.skillAlternatives),
+    merchants: canonicalValue(quest.merchants),
+    mobility: canonicalValue(quest.mobility),
     points: quest.points,
   });
 }

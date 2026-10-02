@@ -6,10 +6,10 @@ import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
-import { REGION_MODIFIERS } from '../config/regionModifiers';
-import { CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, ritualEffect, type Ritual } from '../config/economy';
+import { andList, CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
-import { TableType } from '../types';
+import { DropSource, TableType } from '../types';
+import { DROP_RATES } from '../config/rules';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { unlockableAreas } from '../utils/freeAreas';
 
@@ -18,7 +18,10 @@ interface ReferenceModalProps {
   initialTab?: TabId;
 }
 
-type TabId = 'core' | 'economy' | 'modes' | 'drops' | 'altar' | 'region' | 'unlocks' | 'equipment' | 'storage';
+type TabId = 'core' | 'economy' | 'modes' | 'drops' | 'altar' | 'unlocks' | 'equipment' | 'storage';
+
+// The values every mode a player can pick shares (gameModes.test.ts checks they do).
+const SHARED_MODE_RULES = GAME_MODES[0].rules;
 
 // Colour a roll rate along the OSRS difficulty gradient (rare → guaranteed).
 const rateColor = (rate: number): string =>
@@ -41,32 +44,32 @@ const ALTAR_UI: Record<string, { icon: any; color: string; border: string }> = {
 
 export const formatVanillaBossSchedule = (bossClass: string, rates: readonly number[]): string => {
   const label = `${bossClass.slice(0, 1).toUpperCase()}${bossClass.slice(1)}`;
-  return `${label}: ${rates.map(rate => `${rate}%`).join(' → ')} (${rates.length} ${rates.length === 1 ? 'key' : 'keys'})`;
+  return `${label}: ${rates.map(rate => `${rate}%`).join(' → ')} (${rates.length} ${rates.length === 1 ? 'Key' : 'Keys'})`;
 };
 
 export const describeVanillaRandomAccessPolicy = (
   policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
 ): string => {
-  const costs = policy.randomCosts.includes('chaosKey') ? 'Standard and Chaos' : 'Standard';
-  const tableScope = policy.filteredTables.join(' and ');
-  const hasLocationFilter = policy.requiresTrackedHardGeography && tableScope.length > 0;
+  const keys = policy.randomCosts.includes('chaosKey') ? 'Keys and Chaos Keys' : 'Keys';
+  const tables = policy.filteredTables.map(table => table.toLowerCase()).join(' and ');
+  const hasLocationFilter = policy.requiresTrackedHardGeography && tables.length > 0;
   const randomAccess = hasLocationFilter
-    ? `${costs} random unlocks respect hard location access for ${tableScope}.`
+    ? `In Vanilla, ${keys} only unlock ${tables} you can reach with the areas you own.`
     : '';
   const emptyPool = policy.emptyEligiblePool.noUnlock
     ? [
-        'An empty eligible pool means no unlock occurs',
-        policy.emptyEligiblePool.retainsKey ? 'no key is spent' : '',
-        policy.emptyEligiblePool.preservesRngProgression ? 'no RNG progression is consumed' : '',
-      ].filter(Boolean).join('; ') + '.'
+        hasLocationFilter ? 'If none can be reached, nothing is unlocked.' : 'If there is nothing to unlock, nothing happens.',
+        policy.emptyEligiblePool.retainsKey ? 'You keep the Key.' : '',
+        policy.emptyEligiblePool.preservesRngProgression ? "A seeded run's next roll stays the same." : '',
+      ].filter(Boolean).join(' ')
     : '';
   const omni = policy.omniDirect.allowsLocationIneligible
     ? hasLocationFilter
-      ? `Omni-Key direct unlocks bypass that filter${policy.omniDirect.warnsPlayer ? ' with a warning' : ''}.`
-      : 'Omni-Key direct unlocks can be selected even without location access.'
+      ? `An Omni-Key can still pick one you can't reach yet${policy.omniDirect.warnsPlayer ? ', with a warning' : ''}.`
+      : "An Omni-Key can pick one even if you can't reach it."
     : hasLocationFilter
-      ? 'Omni-Key direct unlocks respect that filter.'
-      : 'Omni-Key direct unlocks remain subject to their ordinary availability rules.';
+      ? 'An Omni-Key follows the same rule.'
+      : 'An Omni-Key follows the usual rules for each table.';
 
   return [randomAccess, emptyPool, omni].filter(Boolean).join(' ');
 };
@@ -106,14 +109,13 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
     { id: 'modes', label: 'Game Modes', icon: SlidersHorizontal },
     { id: 'drops', label: 'RNG & Drop Rates', icon: Dices },
     { id: 'altar', label: 'The Void Altar', icon: Zap },
-    { id: 'region', label: 'Region Bonuses', icon: Compass },
     { id: 'unlocks', label: 'Unlock Systems', icon: Lock },
     { id: 'equipment', label: 'Equipment Tiers', icon: Shield },
     { id: 'storage', label: 'Storage', icon: Package },
   ];
 
   return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Game reference" tabIndex={-1} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Rules" tabIndex={-1} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
       <div className="bg-[#121212] border border-osrs-border w-full max-w-5xl rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col h-[85vh]">
         
         {/* Header */}
@@ -122,7 +124,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
              <div className="bg-osrs-gold/10 p-2 rounded-lg border border-osrs-gold/20">
                 <HelpCircle className="w-5 h-5 text-osrs-gold" />
              </div>
-            <h2 className="text-xl font-bold text-gray-100 tracking-wide">Fate Locked Ironman: Codex</h2>
+            <h2 className="text-xl font-bold text-gray-100 tracking-wide">Rules</h2>
             <span
               className="text-[10px] font-bold uppercase tracking-wider text-amber-200 bg-amber-900/40 px-2 py-1 rounded border border-amber-500/30"
               title={activeMode.description}
@@ -132,7 +134,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
           </div>
           <button 
             onClick={onClose}
-            aria-label="Close the Codex"
+            aria-label="Close the Rules"
             className="p-2 hover:bg-white/10 rounded-full transition-colors group"
           >
             <X className="w-6 h-6 text-gray-400 group-hover:text-white" />
@@ -168,7 +170,6 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                 {/* Flavor Text at bottom of sidebar */}
                 <div className="mt-auto p-6 text-center opacity-30">
                     <img src="https://oldschool.runescape.wiki/images/Ironman_chat_badge.png" alt="Ironman" className="w-8 h-8 mx-auto mb-2 grayscale" />
-                    <p className="text-[10px] font-mono text-gray-500">Fate is absolute.</p>
                 </div>
             </div>
 
@@ -189,9 +190,10 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     <Skull size={18} /> The Concept
                                 </h3>
                                 <p className="text-gray-300 leading-relaxed text-sm">
-                                    A challenge for Old School RuneScape ironman accounts. You start with everything locked: you
-                                    can't equip armour, train skills past level 1, enter most of the map, or use transport. What
-                                    you unlock, and when, is down to the rolls.
+                                    A challenge for Old School RuneScape ironman accounts. You start with {STARTING_KEYS} Keys and
+                                    almost everything else locked: you can't equip armour, train any skill but Hitpoints, leave
+                                    your start area, or use transport, banks or shops. What you unlock, and when, is down to the
+                                    rolls.
                                 </p>
                             </div>
 
@@ -206,7 +208,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <div>
                                             <h4 className="font-bold text-gray-200">The Grind</h4>
                                             <p className="text-sm text-gray-400 mt-1">
-                                                Complete an in-game task (e.g., finish a Quest, complete a Diary step, or gain a Level).
+                                                Complete something in game: finish a quest, a diary task or a clue, or gain a level.
                                             </p>
                                         </div>
                                     </div>
@@ -215,7 +217,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <div>
                                             <h4 className="font-bold text-gray-200">The Roll</h4>
                                             <p className="text-sm text-gray-400 mt-1">
-                                                The app draws to 0.1% precision, from 0.1 to 100.0 (Vanilla boss and clue rolls use 0.01%).
+                                                The tracker draws to 0.1% precision, from 0.1 to 100.0 (Vanilla boss and clue rolls use 0.01%).
                                                 <br/>
                                                 <span className="text-green-400">Success:</span> Roll at or under the threshold to get a Key.
                                                 <br/>
@@ -228,7 +230,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <div>
                                             <h4 className="font-bold text-gray-200">The Unlock</h4>
                                             <p className="text-sm text-gray-400 mt-1">
-                                                 Spend Keys to randomly unlock content (Skills, Gear Slots, Regions).
+                                                 Spend Keys to unlock content at random (skills, gear slots, areas and more).
                                             </p>
                                         </div>
                                     </div>
@@ -245,16 +247,17 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         {rules.pityEnabled ? (
                                           <span className="text-white font-bold">{rules.pityThreshold} Points = 1 Guaranteed (Pity) Key.</span>
                                         ) : (
-                                          <span className="text-red-400 font-bold">Pity is DISABLED in {activeMode.name} mode — Fate Points only fuel the Void Altar.</span>
+                                          <span className="text-red-400 font-bold">Pity is off in {activeMode.name} mode: Fate Points only pay for Void Altar rituals.</span>
                                         )}
                                     </p>
                                 </div>
                                  <div className="bg-[#222] p-4 rounded-xl border border-white/5">
                                     <h4 className="font-bold text-gray-200 mb-2 flex items-center gap-2"><Sparkles size={16} className="text-purple-400"/> Omni-Keys</h4>
                                     <p className="text-xs text-gray-400">
-                                        Rare upgrade on a successful roll (<span className="text-white font-bold">{rules.omniChanceBase}% base chance</span> in your mode).
+                                        A successful roll has a <span className="text-white font-bold">{rules.omniChanceBase}% chance</span> in your mode to give a bonus Omni-Key as well as the Key.
                                         <br/><br/>
-                                        These let you <span className="text-white font-bold">pick exactly what you want</span> to unlock, bypassing the RNG gacha.
+                                        Spend one to <span className="text-white font-bold">pick exactly what you unlock</span>, instead of a random entry.
+                                        {gameModeId === 'chunked' && ' In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.'}
                                     </p>
                                 </div>
                             </div>
@@ -271,7 +274,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             </div>
 
                             <div className="bg-amber-950/20 p-4 rounded-xl border border-amber-500/30 text-sm text-gray-300">
-                                <b className="text-amber-300">{VANILLA_BOSS_STANDARD_KEY_TOTAL} finite boss safety-reserve Standard Keys.</b> Vanilla boss encounters pay from this capped reserve, so repeated farming cannot create unlimited Standard Keys.
+                                <b className="text-amber-300">Vanilla bosses pay {VANILLA_BOSS_STANDARD_KEY_TOTAL} Keys in all, then stop.</b> Each boss pays 1 to 3 Keys at falling odds (see RNG &amp; Drop Rates); after that, its kills no longer roll.
                             </div>
 
                             {/* The loop */}
@@ -320,11 +323,11 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="bg-gradient-to-br from-[#1d2230] to-[#222] p-6 rounded-xl border border-blue-500/20">
                                 <h3 className="text-blue-300 font-bold uppercase tracking-widest mb-4 flex items-center gap-2"><Dices size={18}/> A single roll, start to finish</h3>
                                 <ol className="space-y-3 text-sm text-gray-300">
-                                    <li><b className="text-white">1.</b> You finish <b>Desert Treasure I</b> — a <b className="text-purple-400">Master</b> quest — and tick it off in the Journal.</li>
-                                    <li><b className="text-white">2.</b> The app draws to <span className="font-mono">0.1%</span> precision against its <b className="text-purple-400">95.0%</b> threshold. You roll <span className="font-mono text-green-400">42.0</span> → a Key!</li>
-                                    <li><b className="text-white">3.</b> Every success then rolls for an upgrade. In {activeMode.name} mode that's a <b className="text-purple-400">{rules.omniChanceBase}%</b> Omni chance (Grandmaster quests raise it to 20%). Miss it and you bank a Standard Key; hit it and you <i>also</i> pocket an <b className="text-purple-400">Omni-Key</b>.</li>
-                                    <li><b className="text-white">4.</b> Take the Key to <b className="text-osrs-gold">Spend Keys</b>, choose the <b>Skills</b> table, and unlock a random skill tier — say Slayer. Those new Slayer levels open fresh tasks to roll on.</li>
-                                    <li className="text-gray-500 text-xs pt-1">Roll <span className="font-mono">95.1–100.0</span> instead and you'd get no Key — but you would gain +3 Fate{rules.pityEnabled ? <>, inching toward a guaranteed Key at <b>{rules.pityThreshold}</b></> : ''}.</li>
+                                    <li><b className="text-white">1.</b> You finish <b>Desert Treasure I</b>, a <b className="text-purple-400">Master</b> quest, and tick it off in the Journal.</li>
+                                    <li><b className="text-white">2.</b> The tracker draws to <span className="font-mono">0.1%</span> precision against its <b className="text-purple-400">95.0%</b> threshold. You roll <span className="font-mono text-green-400">42.0</span> → a Key!</li>
+                                    <li><b className="text-white">3.</b> Every success also has a chance at a bonus <b className="text-purple-400">Omni-Key</b>: <b className="text-purple-400">{rules.omniChanceBase}%</b> in {activeMode.name} mode, or {omniFloor(DropSource.QUEST_GRANDMASTER)}% for a Grandmaster quest. Either way, you keep the Key.</li>
+                                    <li><b className="text-white">4.</b> Take the Key to <b className="text-osrs-gold">Spend Keys</b>, choose the <b>Skills</b> table, and unlock a random skill tier, say Slayer. Those new Slayer levels open new tasks to roll on.</li>
+                                    <li className="text-gray-500 text-xs pt-1">Roll <span className="font-mono">95.1–100.0</span> instead and you get no Key, but you would gain +3 Fate{rules.pityEnabled ? <>, toward a guaranteed Key at <b>{rules.pityThreshold}</b></> : ''}.</li>
                                 </ol>
                             </div>
 
@@ -337,7 +340,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         {rules.pityEnabled
                                             ? <> At <b className="text-white">{rules.pityThreshold}</b> they grant a guaranteed <b>Pity Key</b>. Pity conversions keep any Fate overflow.</>
                                             : <> Pity is <b className="text-red-400">off</b> in {activeMode.name} mode.</>}
-                                        {' '}Either way, they're the fuel for the Void Altar.
+                                        {' '}Any successful roll resets them to 0, so spend them at the Void Altar before that.
                                     </p>
                                 </div>
                                 <div className="bg-[#222] p-5 rounded-xl border border-white/5">
@@ -345,8 +348,8 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     <ul className="space-y-1.5 text-xs text-gray-400">
                                         {RITUALS.map(r => (
                                             <li key={r.id} className="flex justify-between gap-2">
-                                                <span>{r.name}</span>
-                                                <span className="font-mono text-gray-300 shrink-0">{r.fateCost ? `${ritualCost(r.id)} Fate` : `${r.keyCost} Keys`}</span>
+                                                <span>{r.name}{r.chunkedOnly ? ' (Chunked only)' : ''}</span>
+                                                <span className="font-mono text-gray-300 shrink-0">{r.keyCost ? `${r.keyCost} Keys` : r.stakesAllFate ? `All Fate (min ${ritualCost(r.id)})` : `${ritualCost(r.id)} Fate`}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -355,17 +358,17 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             </div>
 
                             <p className="text-xs text-gray-500">
-                                Standard Keys cash in across <b className="text-gray-300">{spendTables.length} tables</b> — {spendTables.map(t => t.label).join(', ')} — at a flat <b className="text-osrs-gold">{UNLOCK_KEY_COST} Key</b> each. The Unlock Systems tab breaks down what every table does.
+                                A Key unlocks a random entry from one of <b className="text-gray-300">{spendTables.length} tables</b>: {spendTables.map(t => t.label).join(', ')}. Each unlock costs <b className="text-osrs-gold">{UNLOCK_KEY_COST} Key</b>. The Unlock Systems tab says what every table does.
                             </p>
 
                             {/* Smart play */}
                             <div className="bg-gradient-to-br from-emerald-950/40 to-[#222] p-6 rounded-xl border border-emerald-500/20">
                                 <h3 className="text-emerald-300 font-bold uppercase tracking-widest mb-3 flex items-center gap-2"><Compass size={18}/> Smart Play</h3>
                                 <ul className="space-y-2 text-sm text-gray-300">
-                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Slayer is your engine.</b> It's the most repeatable roll — climb to higher masters (Konar 35%, Duradel 70%, Boss tasks 80%) as soon as you can survive them.</span></li>
-                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Save Omni-Keys for the big wishes.</b> Pick a must-have — a key region, a raid boss, a gear slot — rather than spending them where the table is tiny.</span></li>
-                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Bad luck still pays.</b> Every failed roll banks Fate. Spend it on Clarity before a high-stakes roll, or save toward a Chaos Key.</span></li>
-                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Grandmaster quests are the best journal roll.</b> A guaranteed Key with 20% Omni odds — only pet drops (25%) beat them. Raids (15%), Elite diaries and high-tier bosses (10%) also keep elevated Omni odds.</span></li>
+                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Slayer never runs out.</b> Every task you finish rolls, and higher masters roll better (Konar {DROP_RATES[DropSource.SLAYER_KONAR]}%, Duradel {DROP_RATES[DropSource.SLAYER_DURADEL]}%, boss tasks {DROP_RATES[DropSource.SLAYER_BOSS]}%). Move up as soon as you can survive their tasks.</span></li>
+                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Save Omni-Keys for what you need most.</b> Pick a must-have, such as a boss, a gear slot or a skill, rather than something from a small table that a Key will soon give you anyway.</span></li>
+                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Spend Fate before your next success.</b> Failed rolls give Fate, but any successful roll resets it to 0, so spend it first: {ritualCost('LUCK')} on Clarity before a big roll, or {ritualCost('CHAOS')} on a Chaos Key.</span></li>
+                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Grandmaster quests are the best Journal roll:</b> a guaranteed Key and a {omniFloor(DropSource.QUEST_GRANDMASTER)}% Omni-Key chance. Only pet drops ({omniFloor(DropSource.PET)}%) have a better Omni-Key chance. Raids give {omniFloor(DropSource.RAID)}%, Elite diaries {omniFloor(DropSource.DIARY_ELITE)}% and high-tier bosses {omniFloor(DropSource.BOSS_HIGH)}%.</span></li>
                                 </ul>
                             </div>
                         </div>
@@ -376,35 +379,32 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-2">Game Modes</h1>
-                                <p className="text-gray-400">Every run is played under one fixed ruleset.</p>
+                                <p className="text-gray-400">Every run is played under one fixed mode.</p>
                             </div>
 
                             <div className="bg-[#222] p-6 rounded-xl border border-amber-500/20">
                                 <h3 className="text-amber-400 font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
-                                    <Lock size={16} /> The Mode Locks On Start
+                                    <Lock size={16} /> Your Mode Is Fixed
                                 </h3>
                                 <p className="text-sm text-gray-300 leading-relaxed">
-                                    You pick a mode when a profile is created. The moment the run logs
-                                    its first action, the mode is <b>permanently locked</b> — this keeps a
-                                    run's ruleset fixed and its verified history meaningful. To play a
+                                    Your mode is fixed as soon as you apply it. If you never choose one, the run is
+                                    Vanilla, and that is fixed once anything appears in your History. To play a
                                     different mode, start a new profile.
                                 </p>
                             </div>
 
                             <div className="bg-[#222] p-6 rounded-xl border border-white/5">
-                                <h3 className="text-gray-200 font-bold uppercase tracking-widest mb-4">The Rule Knobs</h3>
+                                <h3 className="text-gray-200 font-bold uppercase tracking-widest mb-4">What Differs Between the Modes</h3>
                                 <ul className="space-y-3 text-sm text-gray-400">
-                                    <li><b className="text-sky-400">Pity System</b> — whether failed rolls eventually guarantee a Key, and after how many Fate Points.</li>
-                                    <li><b className="text-purple-400">Base Omni Chance</b> — the % chance a successful roll upgrades to an Omni-Key.</li>
-                                    <li><b className="text-amber-400">Ritual Cost</b> — a multiplier applied to every Void Altar ritual's Fate cost.</li>
-                                    <li><b className="text-emerald-400">Region Modifiers</b> — whether explored continents grant passive bonuses (see the Region Bonuses tab).</li>
+                                    <li><b className="text-amber-300">Vanilla:</b> you unlock named areas, and all of Misthalin is free from the start. Each boss pays a few Keys and then stops, your first three clue Keys roll at no less than {andList(CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`))}, and Keys only unlock bosses and minigames you can reach.</li>
+                                    <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, next to land you hold. Every boss kill rolls, with no limit. While you hold only your start chunk, every {CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key.</li>
+                                    <li><b className="text-gray-200">Both:</b> a Pity Key at {SHARED_MODE_RULES.pityThreshold} Fate Points, a {SHARED_MODE_RULES.omniChanceBase}% base Omni-Key chance, the same ritual prices, and every bank locked until you unlock it.</li>
                                 </ul>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {GAME_MODES.map(mode => {
                                     const isActive = mode.id === activeMode.id;
-                                    const r = (mode.id === 'custom' && isActive) ? rules : mode.rules;
                                     return (
                                         <div key={mode.id} className={`bg-[#222] p-5 rounded-xl border ${isActive ? 'border-amber-500/60' : 'border-white/5'}`}>
                                             <div className="flex items-center justify-between mb-1">
@@ -412,20 +412,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                                 {isActive && <span className="text-[9px] uppercase tracking-wider bg-emerald-900/60 text-emerald-300 px-1.5 py-0.5 rounded">Your run</span>}
                                             </div>
                                             <p className="text-xs text-amber-300/70 mb-2">{mode.tagline}</p>
-                                            <p className="text-xs text-gray-400 mb-3 leading-relaxed">{mode.description}</p>
-                                            <div className="grid grid-cols-2 gap-y-1.5 text-[11px] font-mono bg-black/30 p-3 rounded border border-white/5">
-                                                <span className="text-gray-500">Pity</span>
-                                                <span className="text-gray-200">{r.pityEnabled ? `${r.pityThreshold} Fate` : 'Disabled'}</span>
-                                                <span className="text-gray-500">Omni base</span>
-                                                <span className="text-gray-200">{r.omniChanceBase}%</span>
-                                                <span className="text-gray-500">Ritual cost</span>
-                                                <span className="text-gray-200">{r.ritualCostMultiplier.toFixed(2)}×</span>
-                                                <span className="text-gray-500">Regions</span>
-                                                <span className="text-gray-200">{r.regionModifiers ? 'On' : 'Off'}</span>
-                                            </div>
-                                            {mode.id === 'custom' && !isActive && (
-                                                <p className="text-[10px] text-gray-600 mt-2 italic">Defaults shown — every value is tunable in the mode picker.</p>
-                                            )}
+                                            <p className="text-xs text-gray-400 leading-relaxed">{mode.description}</p>
                                         </div>
                                     );
                                 })}
@@ -438,16 +425,16 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                              <div>
                                 <h1 className="text-3xl font-black text-white mb-2">RNG & Drop Rates</h1>
-                                <p className="text-gray-400">How to obtain the Keys of Fate.</p>
+                                <p className="text-gray-400">Every way to earn Keys.</p>
                                 <p className="text-xs text-amber-300 mt-2 font-bold">{vanillaPolicyLabel}</p>
                              </div>
 
                             <div className="bg-amber-950/20 p-4 rounded-xl border border-amber-500/30">
-                                <h3 className="font-bold text-amber-300 mb-2">Vanilla boss reserve schedules</h3>
+                                <h3 className="font-bold text-amber-300 mb-2">Vanilla: Keys per boss</h3>
                                 <ul className="text-sm text-gray-300 space-y-1">
                                     {Object.entries(VANILLA_BOSS_KEY_RATES).map(([bossClass, rates]) => <li key={bossClass}>{formatVanillaBossSchedule(bossClass, rates)}</li>)}
                                 </ul>
-                                <p className="text-xs text-gray-400 mt-3">All clue tiers share onboarding minimums of <b>{CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`).join(' → ')}</b> for the first three Standard Keys, then use their normal tier rate.</p>
+                                <p className="text-xs text-gray-400 mt-3">Each boss pays its Keys in order, at these odds, then its kills stop rolling. Your first three clue Keys, from any tier, roll at no less than <b>{CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`).join(' → ')}</b>; after that each tier uses its normal rate.</p>
                             </div>
 
                             <div className="bg-[#222] rounded-xl border border-white/5 overflow-hidden">
@@ -514,10 +501,10 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <h4 className="font-bold text-purple-400">Omni-Key Chance</h4>
                                     </div>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Any successful key roll has a <b>{rules.omniChanceBase}% chance</b> to upgrade to an Omni-Key in <b>{activeMode.name}</b> mode.
+                                        Any successful roll has a <b>{rules.omniChanceBase}% chance</b> in <b>{activeMode.name}</b> mode to give a bonus Omni-Key as well as the Key.
                                         <br/><br/>
-                                        High-effort sources keep elevated odds: pet drops <b>25%</b>, Grandmaster quests <b>20%</b>, raids <b>15%</b>, Elite diaries and high-tier bosses <b>10%</b>.
-                                        {rules.regionModifiers && <><br/><br/><span className="text-emerald-400">Region bonuses add to this — see the Region Bonuses tab.</span></>}
+                                        Some sources have a higher chance: pet drops <b>{omniFloor(DropSource.PET)}%</b>, Grandmaster quests <b>{omniFloor(DropSource.QUEST_GRANDMASTER)}%</b>, raids <b>{omniFloor(DropSource.RAID)}%</b>, Elite diaries <b>{omniFloor(DropSource.DIARY_ELITE)}%</b> and high-tier bosses <b>{omniFloor(DropSource.BOSS_HIGH)}%</b>.
+                                        {rules.regionModifiers && <><br/><br/><span className="text-emerald-400">Your run's region bonuses add to this.</span></>}
                                     </p>
                                 </div>
                                 <div className="bg-black/20 p-4 rounded-lg border border-red-500/30">
@@ -526,9 +513,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <h4 className="font-bold text-red-400">Chaos Keys</h4>
                                     </div>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Every level has a separate {LEVEL_CHAOS_CHANCE}% Chaos chance on every level. Guaranteed Chaos Keys also arrive at levels {SKILL_CHAOS_MILESTONES.join(', ')}.
+                                        Every skill gives a guaranteed Chaos Key at levels {andList(SKILL_CHAOS_MILESTONES)}. Each level-up also has a separate {LEVEL_CHAOS_CHANCE}% chance of one, milestones included.
                                         <br/><br/>
-                                        Also obtainable via the Ritual of Chaos ({ritualCost('CHAOS')} Fate Points).
+                                        The Ritual of Chaos also makes one for {ritualCost('CHAOS')} Fate Points.
                                     </p>
                                 </div>
                                 <div className="bg-black/20 p-4 rounded-lg border border-amber-500/30">
@@ -540,7 +527,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         {rules.pityEnabled ? (
                                           <>{rules.pityThreshold} Fate grants 1 Guaranteed Key; overflow carries forward.<br/><br/>Any successful roll resets your Fate. Combat Achievements: Easy / Medium: +1 Fate; Hard / Elite: +2 Fate; Master / GM: +3 Fate.</>
                                         ) : (
-                                          <span className="text-red-400">Disabled in {activeMode.name} mode — there is no safety net. Failed rolls only build Fate for the Altar.</span>
+                                          <span className="text-red-400">Off in {activeMode.name} mode: there is no Pity Key. Failed rolls only build Fate for the Altar.</span>
                                         )}
                                     </p>
                                 </div>
@@ -553,7 +540,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-2">The Void Altar</h1>
-                                <p className="text-gray-400">Spend your Fate Points to influence destiny.</p>
+                                <p className="text-gray-400">Spend Fate Points on rituals.</p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -577,58 +564,12 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                         </div>
                     )}
 
-                    {/* --- REGION BONUSES --- */}
-                    {activeTab === 'region' && (
-                        <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
-                            <div>
-                                <h1 className="text-3xl font-black text-white mb-2">Region Bonuses</h1>
-                                <p className="text-gray-400">Passive modifiers granted by the continents you've explored.</p>
-                            </div>
-
-                            <div className={`p-4 rounded-xl border ${rules.regionModifiers ? 'bg-emerald-950/30 border-emerald-500/30' : 'bg-[#222] border-white/5'}`}>
-                                <p className="text-sm text-gray-300 leading-relaxed">
-                                    {rules.regionModifiers ? (
-                                        <><b className="text-emerald-400">Active in {activeMode.name} mode.</b> A continent's passive switches on once you unlock any region inside it, and every active bonus stacks.</>
-                                    ) : (
-                                        <><b className="text-gray-500">Inactive in {activeMode.name} mode.</b> Region passives only apply to runs started under a mode with Region Modifiers — the retired Region Rush, or a legacy Custom run with the toggle on.</>
-                                    )}
-                                </p>
-                            </div>
-
-                            <div className="bg-[#222] rounded-xl border border-white/5 overflow-hidden">
-                                <table className="w-full text-left text-sm">
-                                    <thead className="bg-[#111] text-gray-400 uppercase text-xs">
-                                        <tr>
-                                            <th className="p-4">Continent</th>
-                                            <th className="p-4">Passive</th>
-                                            <th className="p-4">Effect</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-800 text-gray-300">
-                                        {REGION_MODIFIERS.map(mod => (
-                                            <tr key={mod.continent}>
-                                                <td className="p-4 font-bold text-white">{mod.continent}</td>
-                                                <td className="p-4 text-emerald-300">{mod.name}</td>
-                                                <td className="p-4 text-gray-400 text-xs">{mod.description}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <p className="text-xs text-gray-500 italic">
-                                Misthalin's passive is always active — it's your homeland. Bonuses shift the
-                                effective success threshold and Omni chance of every roll.
-                            </p>
-                        </div>
-                    )}
-
                     {/* --- UNLOCK SYSTEMS --- */}
                     {activeTab === 'unlocks' && (
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-2">Unlock Systems</h1>
-                                <p className="text-gray-400">What do Keys actually do?</p>
+                                <p className="text-gray-400">What each unlock does.</p>
                                 <p className="text-xs text-amber-300 mt-2 font-bold">{vanillaPolicyLabel}</p>
                             </div>
 
@@ -648,15 +589,18 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <div className="bg-[#222] p-4 rounded-xl border border-purple-500/30">
                                     <h4 className="font-bold text-purple-400 mb-1 flex items-center gap-2"><Sparkles size={16}/> Omni-Key</h4>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Spend on a table to <b>pick exactly</b> the entry you want — no RNG.
-                                        Earned by upgrading a successful roll, or forged at the Altar.
+                                        Click a locked entry on the Dashboard to <b>pick exactly</b> what you unlock. You get them as a
+                                        bonus on successful rolls, or for {getRitual('TRANSMUTE').keyCost} Keys at the Void Altar.
+                                        {gameModeId === 'chunked' && ' In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.'}
                                     </p>
                                 </div>
                                 <div className="bg-[#222] p-4 rounded-xl border border-red-500/30">
                                     <h4 className="font-bold text-red-400 mb-1 flex items-center gap-2"><Dna size={16}/> Chaos Key</h4>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Unlocks a <b>random entry from ANY table</b> — you don't choose the
-                                        table. Rare Level-Up drop, or the Ritual of Chaos.
+                                        Unlocks a <b>random entry from all the tables at once</b>. Every eligible entry is
+                                        equally likely, so big tables such as {gameModeId === 'chunked' ? 'Banks' : 'Areas and Banks'} come up most.
+                                        Guaranteed at skill levels {andList(SKILL_CHAOS_MILESTONES)}, a {LEVEL_CHAOS_CHANCE}% chance on
+                                        every level-up, or the Ritual of Chaos.
                                     </p>
                                 </div>
                             </div>
@@ -698,27 +642,28 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <Map size={24} className="text-emerald-400" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-gray-200 text-lg">{gameModeId === 'chunked' ? 'Chunks' : 'Regions'}</h3>
+                                        <h3 className="font-bold text-gray-200 text-lg">{gameModeId === 'chunked' ? 'Chunks' : 'Areas'}</h3>
                                         {gameModeId === 'chunked' ? (
                                             <p className="text-sm text-gray-400 mt-1 leading-relaxed">
-                                                Chunked mode uses a different model entirely: no named regions.
-                                                You start in a single free chunk — the Lumbridge castle courtyard.
+                                                Chunked mode has no named areas: you unlock map chunks, each a square of
+                                                64 by 64 tiles. You start in one free chunk: central Lumbridge, with the
+                                                castle, church and shops.
                                                 <br/>
-                                                1 Key = Unlock a <b>random frontier chunk</b> next to one you already
-                                                hold (map-region granularity, not a named area). After Pandemonium and
-                                                Sailing, coast reached across open sea joins the frontier.
+                                                1 Key = a <b>random frontier chunk</b>, one next to a chunk you already hold.
+                                                After Pandemonium, with Sailing unlocked, coast across open sea from your
+                                                land joins the frontier too.
                                                 <br/>
-                                                You can only enter chunks you've unlocked, one step out from your
-                                                territory at a time — Fate hands you a random tile of the frontier,
-                                                not the one you wanted.
+                                                You can only enter chunks you've unlocked. Fate picks a random chunk from
+                                                the frontier, not the one you want; only the Ritual of the Cartographer
+                                                lets you choose.
                                             </p>
                                         ) : (
                                             <p className="text-sm text-gray-400 mt-1 leading-relaxed">
-                                                You start in <b>Misthalin</b> (Lumbridge/Varrock/Draynor).
+                                                All of <b>Misthalin</b> (Lumbridge, Varrock, Draynor Village and more) is free from the start.
                                                 <br/>
-                                                1 Key = Unlock a random named area (e.g. "Catherby", "Rellekka"). Vanilla named-area rolls can be scattered.
+                                                1 Key = a random named area, such as Catherby or Rellekka. In Vanilla the areas you roll don't have to touch each other.
                                                 <br/>
-                                                Only Chunked mode enforces adjacent expansion. You can only enter unlocked regions.
+                                                Only Chunked makes you grow out from land you hold. You can only enter areas you've unlocked.
                                             </p>
                                         )}
                                     </div>
@@ -728,7 +673,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             {/* Every spend table */}
                             <div>
                                 <h3 className="text-osrs-gold font-bold uppercase tracking-widest mb-3 flex items-center gap-2"><Coins size={16}/> Every Spend Table</h3>
-                                <p className="text-xs text-gray-500 mb-4">A Standard Key cashes in on whichever table you choose, for a random entry from it. Equipment and Skills are tiered — repeat unlocks deepen them (slots × tiers); the rest are one-and-done.</p>
+                                <p className="text-xs text-gray-500 mb-4">A Key unlocks a random entry from the table you choose. Equipment and Skills have tiers, so each later unlock raises a slot or skill by one (slots × tiers); every other entry is unlocked once.</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {spendTables.map(t => (
                                         <div key={t.label} className="bg-[#222] rounded-lg border border-white/5 p-3 flex items-start gap-3">
@@ -751,7 +696,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-2">Equipment Tiers</h1>
-                                <p className="text-gray-400">Progression of gear power.</p>
+                                <p className="text-gray-400">What each tier lets you wear.</p>
                             </div>
 
                             <div className="bg-[#222] rounded-xl border border-white/5 overflow-hidden">
@@ -784,15 +729,14 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-2">Storage Restrictions</h1>
-                                <p className="text-gray-400">Inventory management is key.</p>
+                                <p className="text-gray-400">Bank and storage rules.</p>
                             </div>
 
                             <div className="bg-[#222] p-6 rounded-xl border border-white/5">
                                 <h3 className="font-bold text-gray-200 text-lg mb-4 flex items-center gap-2"><Package size={20}/> The Rules</h3>
                                 <ul className="space-y-4 text-sm text-gray-300 list-disc list-inside">
-                                    <li><b>Banks are locked</b> by default: each bank and deposit box is its own unlock on the <b>Banks</b> table.</li>
-                                    <li>You can also unlock specific <b>Storage Containers</b> from the Storage table.</li>
-                                    <li>Unlockable items include: Looting Bag, Rune Pouch, Seed Box, etc.</li>
+                                    <li><b>Banking is locked by place.</b> Each place with a bank, bank chest or deposit box is one unlock on the <b>Banks</b> table, and it opens all of them there. A Key unlocks a random one; an Omni-Key picks one.</li>
+                                    <li>Storage items, such as the looting bag, rune pouch and seed box, are unlocked from the <b>Storage</b> table.</li>
                                 </ul>
                             </div>
                         </div>

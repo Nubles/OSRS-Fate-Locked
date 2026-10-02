@@ -37,17 +37,8 @@ interface SourceTask {
 
 /** Where the export and the app's map disagree, reviewed; the tag stands. */
 const REVIEWED: Readonly<Record<string, string>> = {
-  ard_hard_11: 'The anvil is in 39,52, which the map gives to East Ardougne.',
-  des_hard_2: 'The granite quarry, 49,45, is the Agility Pyramid\'s on the map.',
-  frem_med_8: 'The export marks Waterbirth Island, where the trip starts; the task is visiting the Lighthouse.',
-  kan_med_8: 'The Catherby patches are in 43,54, which the map gives to Camelot.',
-  kan_elite_2: 'The Catherby patches are in 43,54, which the map gives to Camelot.',
-  kar_easy_4: 'The Musa Point dock is in 46,49, which the map gives to Port Sarim.',
-  lum_hard_10: "Emir's Arena's altar is in 52,51, which the map gives to the Mage Training Arena.",
   mor_hard_7: 'The Canifis mushroom patch is in 53,54, which the map gives to Paterdomus.',
-  wilderness_easy_2: 'The task is pulling a lever; the export marks where the levers land.',
   wild_hard_6: "The Chaos Elemental roams 50,61, west of Rogues' Castle, which the map calls Scorpia's Cave.",
-  wild_hard_8: "The shortcut lands at 46,57, beside the Wilderness God Wars Dungeon's entrance at 47,58.",
 };
 
 const EXPORT_DIARY: Readonly<Record<string, string>> = {

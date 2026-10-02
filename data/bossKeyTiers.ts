@@ -57,7 +57,6 @@ export const BOSS_TIERS: Record<string, BossTier> = {
   'Venenatis': 'mid',
   "Vet'ion": 'mid',
   'Vorkath': 'mid',
-  'Galvek': 'mid',
   'The Hueycoatl': 'mid',
   'Kalphite Queen': 'mid',
   'Phantom Muspah': 'mid',

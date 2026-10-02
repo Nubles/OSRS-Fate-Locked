@@ -13,6 +13,24 @@ const RESOURCE_HOSTS: Record<string, { name: string; from: EntityKind[]; kinds: 
   'duke horacio': { name: 'Duke Horacio', from: ['spawn'], kinds: ['npc'] },
   'chambers of xeric': { name: 'Chambers of Xeric', from: ['monster'], kinds: ['object'] },
   'theatre of blood': { name: 'Theatre of Blood', from: ['monster'], kinds: ['object'] },
+  // Combat Achievement "monsters" the map knows by the fight's own monsters or entrance
+  // (accuracy audit, 29 September 2026: 203 of 655 tasks showed no place).
+  'chambers of xeric: challenge mode': { name: 'Chambers of Xeric', from: ['monster'], kinds: ['object'] },
+  'theatre of blood: entry mode': { name: 'Theatre of Blood', from: ['monster'], kinds: ['object'] },
+  'theatre of blood: hard mode': { name: 'Theatre of Blood', from: ['monster'], kinds: ['object'] },
+  'tombs of amascut': { name: "Tumeken's Warden", from: ['monster'], kinds: ['monster'] },
+  'tombs of amascut: entry mode': { name: "Tumeken's Warden", from: ['monster'], kinds: ['monster'] },
+  'tombs of amascut: expert mode': { name: "Tumeken's Warden", from: ['monster'], kinds: ['monster'] },
+  leviathan: { name: 'The Leviathan', from: ['monster'], kinds: ['monster'] },
+  whisperer: { name: 'The Whisperer', from: ['monster'], kinds: ['monster'] },
+  'royal titans': { name: 'Branda the Fire Queen', from: ['monster'], kinds: ['monster'] },
+  'fortis colosseum': { name: 'Sol Heredit', from: ['monster'], kinds: ['monster'] },
+  'moons of peril': { name: 'Blood Moon', from: ['monster'], kinds: ['monster'] },
+  barrows: { name: 'Ahrim the Blighted', from: ['monster'], kinds: ['monster'] },
+  tempoross: { name: 'Tempoross', from: ['monster'], kinds: ['npc'] },
+  glough: { name: 'Glough', from: ['monster'], kinds: ['npc'] },
+  'crystalline hunllef': { name: 'Gauntlet Portal', from: ['monster'], kinds: ['object', 'npc'] },
+  'corrupted hunllef': { name: 'Gauntlet Portal', from: ['monster'], kinds: ['object', 'npc'] },
 };
 
 /** Exact lookup first; only explicitly reviewed resource hosts cross entity kinds. */

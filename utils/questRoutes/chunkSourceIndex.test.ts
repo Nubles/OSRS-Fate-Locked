@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import type { ItemSourceRecord } from '../../services/ChunkContentService';
 import { indexDirectItemSources } from './chunkSourceIndex';
+import { evaluateRouteGates } from './accountRequirements';
 import { chunkKey, type ItemRef } from './model';
 
 const plank: ItemRef = { key: 'plank', name: 'Plank' };
@@ -20,6 +21,23 @@ const records: readonly ItemSourceRecord[] = [
     rawRequirements: [],
   },
 ];
+
+describe('boss drops as sources', () => {
+  it('count a boss’s drops only once the boss is unlocked (combat audit D12)', () => {
+    const ring: ItemRef = { key: 'berserker ring', name: 'Berserker ring' };
+    const rex: ItemSourceRecord = { itemName: 'Berserker ring', kind: 'monster', hostName: 'Dagannoth Rex', cx: 39, cy: 158, rawRequirements: [] };
+    const result = indexDirectItemSources(ring, {
+      unlockedChunks: new Set([chunkKey(39, 158)]),
+      recordsForClass: (_, searchClass) => (searchClass === 'current' ? [rex] : []),
+      hasKnownOutsideSources: () => false,
+    });
+    const [source] = result.currentSources;
+    expect(source.gates).toEqual([{ type: 'UNLOCK', category: 'bosses', id: 'Dagannoth Kings', label: 'Dagannoth Kings unlocked' }]);
+    const account = { skills: {}, levels: {}, quests: [], guilds: [], merchants: [], minigames: [], mobility: [], slayerUnlocks: [] };
+    expect(evaluateRouteGates(source.gates, { ...account, bosses: [] }).blockers).toHaveLength(1);
+    expect(evaluateRouteGates(source.gates, { ...account, bosses: ['Dagannoth Kings'] }).blockers).toEqual([]);
+  });
+});
 
 describe('indexDirectItemSources', () => {
   it('does not infer complete direct-family coverage from an empty callback', () => {

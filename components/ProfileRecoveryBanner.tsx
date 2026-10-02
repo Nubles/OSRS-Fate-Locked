@@ -20,8 +20,8 @@ const explanationFor = (kind: ProfileRecoveryNotice['kind']): string => ({
   repaired: 'Your profile list was repaired safely.',
   partial: 'Valid profiles are available, but some saved runs were left untouched.',
   read_only: 'Recovered profiles are available, but profile-list changes cannot be saved right now.',
-  unsupported: 'Profile management is read-only until this app supports the stored version.',
-  remote_removal: 'The app switched to another available profile to keep this tab safe.',
+  unsupported: 'Profile management is read-only until this version of the tracker can read the stored version.',
+  remote_removal: 'The tracker switched to another available profile to keep this tab safe.',
 }[kind]);
 
 const plural = (count: number, singular: string, pluralForm = `${singular}s`): string =>

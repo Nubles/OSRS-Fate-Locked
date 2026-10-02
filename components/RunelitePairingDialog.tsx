@@ -1,8 +1,9 @@
 import React from 'react';
 import { AlertTriangle, CheckCircle2, Link2, Loader2, XCircle } from 'lucide-react';
 import { RUNELITE_PAIRING_SUCCESS_COPY, runelitePairCodeHint } from '../utils/runelitePairing';
+import { canDismissRunelitePairing, type RunelitePairingPhase } from './runelitePairingPhase';
 
-export type RunelitePairingPhase = 'confirm' | 'uploading' | 'success' | 'error';
+export { canDismissRunelitePairing, type RunelitePairingPhase };
 
 export interface RunelitePairingDialogProps {
   code: string;
@@ -15,10 +16,6 @@ export interface RunelitePairingDialogProps {
   onRetry(): void;
   onClose(): void;
 }
-
-/** Every phase but an in-flight send can be closed, including a failed one. */
-export const canDismissRunelitePairing = (phase: RunelitePairingPhase): boolean =>
-  phase !== 'uploading';
 
 export const RunelitePairingDialog: React.FC<
   RunelitePairingDialogProps

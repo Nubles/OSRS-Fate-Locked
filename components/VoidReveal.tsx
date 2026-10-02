@@ -15,13 +15,15 @@ interface VoidRevealProps {
   onComplete: () => void;
   isChaos?: boolean;
   animationsEnabled: boolean;
+  /** A skill's tier after this unlock, so the reveal can say which methods it opens. */
+  tier?: number;
 }
 
 type Phase = 'idle' | 'imploding' | 'singularity' | 'roulette' | 'flash' | 'reveal';
 
 const getWikiUrl = wikiUrlFor;
 
-const getItemDescription = (type: string, name: string): string => {
+export const getItemDescription = (type: string, name: string, tier?: number): string => {
     const t = type.toLowerCase();
     
     // New specific checks
@@ -29,13 +31,16 @@ const getItemDescription = (type: string, name: string): string => {
     if (name === 'Servant\'s Moneybag') return "You may now pay your servant directly from the coffer.";
     if (name === 'Achievement Cape Hanger') return "You may now mount Achievement Capes to utilize their perks.";
 
-    if (t.includes('skill')) return `Training methods unlocked for ${name}. You may train to 99 using unlocked methods.`;
+    // A Skills unlock raises one tier: methods up to tier × 10, and tier 10 is all of them, to 99.
+    if (t.includes('skill')) return tier
+        ? `${name} is now tier ${tier}: you can use its training methods up to level ${tier >= 10 ? 99 : tier * 10}.`
+        : `${name} goes up one tier: you can use its training methods 10 levels higher.`;
     if (t.includes('equipment')) return "You can now equip items in this slot (up to your unlocked tier).";
     if (t.includes('region') || t.includes('area')) return "Travel restrictions lifted. You may now enter and explore this area.";
     if (t.includes('boss')) return "You are now permitted to challenge this encounter.";
     if (t.includes('minigame')) return "Activity access granted. You may now participate.";
     if (t.includes('mobility')) return "Transportation method unlocked. You may now use this network.";
-    if (t.includes('arcana')) return "You have unlocked access to these spells or prayers.";
+    if (t.includes('arcana')) return "You can now use this combat power.";
     if (t.includes('housing')) return "You may now build and utilize this room or feature in your POH.";
     if (t.includes('merchant')) return "You may now trade with these shopkeepers.";
     if (t.includes('storage')) return "You may now utilize this item to store goods.";
@@ -44,7 +49,7 @@ const getItemDescription = (type: string, name: string): string => {
     return "Content successfully unlocked.";
 };
 
-export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, itemImage, onComplete, isChaos = false, animationsEnabled }) => {
+export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, itemImage, onComplete, isChaos = false, animationsEnabled, tier }) => {
   const [phase, setPhase] = useState<Phase>(() => {
       if (!animationsEnabled) return 'reveal';
       return isChaos ? 'roulette' : 'imploding';
@@ -292,12 +297,12 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
   const theme = getTheme(itemType);
   const isRegion = itemType.toLowerCase().includes('regions') || itemType.toLowerCase().includes('area');
   const RouletteIcon = rouletteIcons[rouletteIndex].icon;
-  const description = getItemDescription(itemType, itemName);
+  const description = getItemDescription(itemType, itemName, tier);
   const entityModel = modelFor(itemName);
 
   // Loot beam rising behind the revealed item — same rarity colour language as
   // the transient roll beams, but it lives inside the reveal so the pillar of
-  // light is part of the moment (rather than a stray beam after Accept Destiny).
+  // light is part of the moment (rather than a stray beam after Continue).
   const beamColor = isChaos ? '#ef4444' : categoryColor(itemType);
   const beamIntense = isChaos || rarityRank(categoryRarity(itemType)) >= rarityRank('epic');
   const lootBeam = animationsEnabled ? (
@@ -491,7 +496,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
                  onClick={onComplete}
                  className={`w-full px-8 py-3 ${theme.button} text-black font-black text-sm uppercase tracking-wider rounded shadow-lg transition-transform hover:scale-105 active:scale-95`}
                >
-                 Accept Destiny
+                 Continue
                </button>
                
                <div className="flex gap-2 justify-center w-full">

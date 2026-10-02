@@ -23,7 +23,7 @@ import { isAreaReachable } from './reachability';
 import { unlockableAreas } from './freeAreas';
 
 export type AchievementCategory =
-  | 'Quests' | 'Skills' | 'Regions' | 'Equipment'
+  | 'Quests' | 'Skills' | 'Areas' | 'Equipment'
   | 'Diaries' | 'Combat' | 'Activities' | 'Collection' | 'Mastery';
 
 export type AchievementIcon =
@@ -135,12 +135,12 @@ export const ACHIEVEMENTS: Achievement[] = [
     { title: 'Maxed', description: 'Reach level 99 in every skill', target: TOTAL_SKILLS, icon: 'trophy' },
   ]),
 
-  // Regions
-  ...tiers('regions', 'Regions', 'region', areasReached, [
-    { title: 'Explorer', description: 'Unlock your first region', target: 1 },
-    { title: 'Globetrotter', description: 'Unlock 5 regions', target: 5 },
+  // Areas (the ids keep their old 'regions' prefix, so earned achievements stay earned)
+  ...tiers('regions', 'Areas', 'region', areasReached, [
+    { title: 'Explorer', description: 'Unlock your first area', target: 1 },
+    { title: 'Globetrotter', description: 'Unlock 5 areas', target: 5 },
     {
-      title: 'World Tour', description: 'Unlock every region', target: TOTAL_REGIONS, icon: 'map',
+      title: 'World Tour', description: 'Unlock every area', target: TOTAL_REGIONS, icon: 'map',
       targetFor: (mode, custom) => unlockableAreas(mode, custom).length,
     },
   ]),

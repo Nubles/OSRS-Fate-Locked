@@ -65,7 +65,7 @@ export const NotableMoments: React.FC<NotableMomentsProps> = ({ analytics }) => 
     icon: <AnalyticsIcon art="bestActivity" size={28} />,
     tint: 'bg-violet-400/10 text-violet-300',
     value: notables.mostProductiveSource,
-    detail: 'Won you the most keys',
+    detail: 'Won you the most Keys',
     unavailable: 'No productive source in this selection',
   }, {
     label: 'Busiest day',

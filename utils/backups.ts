@@ -18,6 +18,10 @@ import { checksumSave } from './saveIntegrity';
 import type { RecoveryCheckpoint, RecoveryRepository } from './recoveryTypes';
 const MAX_BACKUPS = 8;
 
+/** Asked before Reset all progress, which keeps a "Before reset" backup here first. */
+export const RESET_CONFIRM_MESSAGE =
+  'Reset all progress? A backup of the current save is kept under Sync Code → Backups.';
+
 export interface BackupMeta {
   /** Stable identifier used by the restore action across renders. */
   id: string;

@@ -25,7 +25,7 @@ export const REGION_CHUNKS: Record<string, ChunkCoord[]> = {
     { cx: 45, cy: 56 }, { cx: 44, cy: 57 }, { cx: 45, cy: 57 }, { cx: 45, cy: 58 },
   ],
   'Fremennik': [
-    { cx: 39, cy: 56 }, { cx: 40, cy: 56 }, { cx: 40, cy: 57 }, { cx: 41, cy: 57 }, { cx: 42, cy: 57 }, { cx: 43, cy: 57 }, { cx: 36, cy: 58 }, { cx: 39, cy: 58 }, { cx: 41, cy: 58 },
+    { cx: 39, cy: 56 }, { cx: 40, cy: 56 }, { cx: 43, cy: 56 }, { cx: 40, cy: 57 }, { cx: 41, cy: 57 }, { cx: 42, cy: 57 }, { cx: 43, cy: 57 }, { cx: 36, cy: 58 }, { cx: 39, cy: 58 }, { cx: 41, cy: 58 },
     { cx: 42, cy: 58 }, { cx: 43, cy: 58 }, { cx: 44, cy: 58 }, { cx: 34, cy: 59 }, { cx: 36, cy: 59 }, { cx: 37, cy: 59 }, { cx: 39, cy: 59 }, { cx: 42, cy: 59 },
     { cx: 43, cy: 59 }, { cx: 44, cy: 59 }, { cx: 45, cy: 59 }, { cx: 32, cy: 60 }, { cx: 33, cy: 60 }, { cx: 36, cy: 60 }, { cx: 37, cy: 60 }, { cx: 39, cy: 60 },
     { cx: 40, cy: 60 }, { cx: 41, cy: 60 }, { cx: 43, cy: 60 }, { cx: 44, cy: 60 }, { cx: 32, cy: 61 }, { cx: 33, cy: 61 }, { cx: 44, cy: 61 }, { cx: 45, cy: 61 },
@@ -42,7 +42,7 @@ export const REGION_CHUNKS: Record<string, ChunkCoord[]> = {
     { cx: 41, cy: 53 }, { cx: 42, cy: 53 }, { cx: 43, cy: 53 }, { cx: 44, cy: 53 }, { cx: 35, cy: 54 }, { cx: 36, cy: 54 }, { cx: 37, cy: 54 }, { cx: 38, cy: 54 }, { cx: 39, cy: 54 },
     { cx: 40, cy: 54 }, { cx: 41, cy: 54 }, { cx: 42, cy: 54 }, { cx: 43, cy: 54 }, { cx: 35, cy: 55 }, { cx: 36, cy: 55 }, { cx: 37, cy: 55 }, { cx: 38, cy: 55 }, { cx: 39, cy: 55 },
     { cx: 41, cy: 55 }, { cx: 42, cy: 55 }, { cx: 43, cy: 55 }, { cx: 35, cy: 56 }, { cx: 36, cy: 56 }, { cx: 37, cy: 56 }, { cx: 41, cy: 56 }, { cx: 42, cy: 56 },
-    { cx: 43, cy: 56 }, { cx: 36, cy: 57 },
+    { cx: 36, cy: 57 },
   ],
   'Karamja': [
     { cx: 43, cy: 45 }, { cx: 44, cy: 45 }, { cx: 45, cy: 45 }, { cx: 46, cy: 45 }, { cx: 42, cy: 46 }, { cx: 43, cy: 46 }, { cx: 44, cy: 46 }, { cx: 45, cy: 46 },

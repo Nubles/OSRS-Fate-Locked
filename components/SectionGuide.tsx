@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { HelpCircle, X } from 'lucide-react';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SKILLS_LIST } from '../data/items';
+import { DROP_RATES } from '../config/rules';
+import { DropSource } from '../types';
 
 /**
  * A small "?" button that opens a short popover explaining a section: what it
@@ -16,48 +18,48 @@ export const GUIDES: Record<string, Guide> = {
   // ── Dashboard tabs ──────────────────────────────────────────────────────
   CHARACTER: {
     title: 'Character',
-    blurb: 'Your gear and skills — and the tools to plan and theorycraft them.',
+    blurb: 'Your gear and skills, and tools to plan them.',
     bullets: [
-      'Spend Omni-keys to upgrade equipment slots and skill tiers (the paper-doll & skill grid).',
-      'Equipment Lab → Tiers: see gear progress and plan a target loadout + its Omni-key cost.',
-      'Equipment Lab → Gear: equip real OSRS items (gated by your unlocked tier) and see their stats.',
-      'Equipment Lab → DPS: pick a monster and get max hit, accuracy, DPS and time-to-kill.',
+      'Spend an Omni-Key on a gear slot or skill here to unlock it or raise its tier by one.',
+      'Equipment Lab → Tiers: your gear tiers, and Plan for a target loadout and its Omni-Key cost.',
+      'Equipment Lab → Gear: equip real OSRS items (up to your unlocked tier) and see their stats.',
+      'Equipment Lab → DPS: pick a monster and get max hit, accuracy, DPS and time to kill.',
     ],
   },
   WORLD: {
     title: 'World',
-    blurb: 'Everywhere fate has let you travel — on the real OSRS map.',
+    blurb: 'Where you can go, on the OSRS world map.',
     bullets: [
-      'See which regions and sub-areas you’ve unlocked, lit up on the world map.',
-      'Pan and zoom the map; hover for tile/chunk coordinates.',
-      'Track region mastery per continent and what’s left to unlock.',
+      'See the areas you’ve unlocked, lit up on the world map.',
+      'Pan and zoom the map; hover for tile and chunk coordinates.',
+      'The list view counts the areas you hold in each region.',
     ],
   },
   ACTIVITIES: {
     title: 'Activities & Utility',
-    blurb: 'The content fate can grant beyond skills and regions.',
+    blurb: 'Everything else Keys unlock: bosses, minigames, guilds, transport and more.',
     bullets: [
-      'Browse your unlocked bosses, minigames, guilds, storage, mobility and more.',
-      'Each is unlocked by spending keys on its table in Spend Keys.',
-      'Use the Kill Planner (header) to score your DPS against unlocked bosses.',
+      'Browse your unlocked bosses, minigames, guilds, storage, transport and more.',
+      'Unlock each with a Key on its table in Spend Keys, or pick one here with an Omni-Key.',
+      'Use the Kill Planner to score your DPS against the bosses you’ve unlocked.',
     ],
   },
   JOURNAL: {
     title: 'Journal',
-    blurb: 'Quests, Achievement Diaries and Combat Achievements — your key-earning to-do list.',
+    blurb: 'Quests, Achievement Diaries and Combat Achievements: tick them off to roll for Keys.',
     bullets: [
-      'Tick off quests, diary tiers and CA tasks as you complete them in-game.',
-      'Completing content rolls for keys (the core way to earn them).',
+      'Tick off quests, diary tasks and Combat Achievement tasks as you complete them in game.',
+      'Each one you tick rolls once for a Key.',
       'The “Do this next” banner suggests the highest-impact thing to tackle.',
     ],
   },
   COLLECTION: {
     title: 'Collection Log',
-    blurb: 'Your unique drops — each new one is a chance at a key.',
+    blurb: 'Your unique drops. Each new one rolls for a Key.',
     bullets: [
-      'Log new unique items as you obtain them.',
-      'Every newly-logged item rolls for a key (8% chance).',
-      'Track collection progress across bosses and activities.',
+      'Log new unique items as you get them.',
+      `Every newly logged item rolls for a Key (${DROP_RATES[DropSource.COLLECTION_LOG]}% chance).`,
+      'Track your progress across bosses and activities.',
     ],
   },
 
@@ -66,57 +68,57 @@ export const GUIDES: Record<string, Guide> = {
     title: 'Equipment Lab',
     blurb: 'Three tools in one for your gear.',
     bullets: [
-      'Tiers — your fate-locked gear tiers; click a slot for its ladder, or Plan a target loadout.',
-      'Gear — equip real OSRS items (limited to your unlocked tier) and read their combined stats.',
-      'DPS — choose a style, prayers and potion, pick a monster, and get max hit / DPS / TTK.',
+      'Tiers: your gear tiers. Click a slot for its ladder, or Plan a target loadout.',
+      'Gear: equip real OSRS items (up to your unlocked tier) and read their combined stats.',
+      'DPS: choose a style, prayers and a potion, pick a monster, and get max hit, DPS and time to kill.',
     ],
   },
 
   // ── Left control panel ──────────────────────────────────────────────────
   FARM: {
     title: 'Farm Keys',
-    blurb: 'Where you earn keys — the currency fate runs on.',
+    blurb: 'Roll for Keys when you finish a Slayer task, a clue, a boss kill or a minigame.',
     bullets: [
-      'Roll slayer tasks, clue scrolls and other sources for a chance at a key.',
-      'Higher-effort content has better key odds.',
-      'Harder failed rolls award more Fate.',
-      'Fate Points build on failed rolls; max them for a guaranteed pity key.',
+      'Four tabs: Slayer, Clues, Bossing and Activities (minigames and pets).',
+      'Harder content rolls better, and a harder failed roll gives more Fate.',
+      'Failed rolls build Fate Points; at the pity threshold you get a guaranteed Pity Key.',
+      'Quests, diaries and Combat Achievements roll from the Journal, and levels from the Character tab.',
     ],
   },
   SPEND: {
     title: 'Spend Keys',
-    blurb: 'The gacha — spend keys to let fate unlock content at random.',
+    blurb: 'Spend a Key on a table to unlock a random entry from it.',
     bullets: [
-      'Pick a category and spend a key; fate reveals a random locked item from it.',
-      'Omni-keys upgrade gear/skill tiers; Chaos keys unlock from any category.',
-      'Visit the Void Altar to perform rituals with your Fate Points.',
+      'Pick a table and spend a Key: it unlocks a random locked entry from that table.',
+      'Omni-Keys (spent on the Dashboard) pick the exact unlock; Chaos Keys unlock at random from every table at once.',
+      'Spend Fate Points on rituals at the Void Altar.',
     ],
   },
   LOG: {
     title: 'History',
-    blurb: 'A verifiable log of every roll, unlock and ritual.',
+    blurb: 'Every roll, unlock and ritual in your run.',
     bullets: [
-      'Review your full run history, newest first.',
-      'Each entry is hash-chained so the run can be verified (see Share Run).',
+      'Your full run history, newest first.',
+      'Each entry is chained to the one before it, so the tracker can spot a hand-edited save. It is a check in your browser, not proof for anyone else.',
     ],
   },
 
   SKILLS: {
     title: 'Skills',
-    blurb: `Your ${SKILLS_LIST.length} skills — each unlocked and levelled through fate.`,
+    blurb: `Your ${SKILLS_LIST.length} skills, each unlocked and raised a tier at a time.`,
     bullets: [
-      'Spend an Omni-key on a locked skill to unlock it, then upgrade its tier to open higher-level methods and content.',
-      'Level unlocked skills toward 99 as you train them in-game.',
-      'The Skill Advisor ranks which skill to train next by how much quest + diary content it unlocks.',
+      'Unlock a skill or raise its tier with a Key on the Skills table (a random skill) or an Omni-Key (your choice). Each tier opens 10 more levels of training methods.',
+      'Click an unlocked skill to log a level as you gain it in game; each level rolls for a Key.',
+      'The Skill Advisor ranks which skill to train next by how much quest and diary content it unlocks.',
     ],
   },
   VOID_ALTAR: {
     title: 'The Void Altar',
-    blurb: 'Spend Fate Points on high-risk, high-reward rituals.',
+    blurb: 'Spend Fate Points on rituals.',
     bullets: [
-      'Fate builds on failed rolls and RESETS on your next success — spend it while it lasts.',
-      'Cheap spice (Clarity), softened gambles (Greed refunds half on a miss), converters (Chaos, Transmute).',
-      'The Void Gambit stakes ALL your fate on a coin flip; in Chunked mode the Cartographer lets you choose a frontier chunk.',
+      'Failed rolls build Fate; your next successful roll resets it to 0, so spend it first.',
+      'Clarity rolls your next Key roll twice and keeps the better. Greed tries to double your next Key. Chaos buys a Chaos Key. Transmutation trades 5 Keys for an Omni-Key.',
+      'The Void Gambit stakes all your Fate on a coin flip. In Chunked, the Cartographer lets you choose your next chunk.',
     ],
   },
   ACHIEVEMENTS: {
@@ -124,26 +126,26 @@ export const GUIDES: Record<string, Guide> = {
     blurb: 'Milestones that reward you for how your run unfolds.',
     bullets: [
       'Browse locked and unlocked achievements across categories.',
-      'They unlock automatically as you hit gear, skill, region and luck milestones.',
+      'They unlock by themselves as you reach gear, skill, area and luck milestones.',
       'Track your overall completion at a glance.',
     ],
   },
   FORECAST: {
     title: 'Fate Forecast',
-    blurb: 'See the odds before you spend — what each key could unlock.',
+    blurb: 'How many Keys it takes to draw something specific from each table.',
     bullets: [
-      'For every category, preview what’s still locked and your draw chances.',
-      'Compare which spend gives the best shot at the content you want.',
-      'Plan your next key around real probabilities, not guesswork.',
+      'For each table: how many entries a Key could draw now, and the odds for any one of them.',
+      'Compare tables to see which gives the best shot at what you want.',
+      'Once you’ve earned a few Keys, it also estimates how long that takes at your pace.',
     ],
   },
   RIVAL: {
     title: 'Rival',
-    blurb: 'A simulated rival account racing you through the same fate.',
+    blurb: 'A simulated rival that earns Keys at a steady pace, to race against.',
     bullets: [
-      'See the rival’s progress alongside yours and who’s ahead.',
-      'The rival rolls on the same tables, so it’s a fair pace benchmark.',
-      'Use the gap to push your completion higher.',
+      'See its completion next to yours, and who’s ahead.',
+      'It earns about 4, 10 or 26 Keys a day, by the pace you pick, and turns each into an unlock. It doesn’t roll.',
+      'Or race a friend’s run from their sync code.',
     ],
   },
   SYNC: {
@@ -152,34 +154,34 @@ export const GUIDES: Record<string, Guide> = {
     bullets: [
       'Export your full run to a compact, integrity-checked code.',
       'Import a code on another device to restore that run.',
-      'A pre-overwrite snapshot is kept so an import can be undone.',
+      'Before an import replaces your save, a backup of it is kept on the Backups tab.',
     ],
   },
   GOAL_PLANNER: {
     title: 'Goal Planner',
-    blurb: 'Set a target unlock and get the path to reach it.',
+    blurb: 'Pick a target unlock and see the path to it.',
     bullets: [
-      'Pick a goal (a boss, region, gear tier…) and see what it requires.',
-      'Track the keys and prerequisites still needed.',
-      'Pin goals to your dashboard to stay focused.',
+      'Pick a goal (a boss, an area, a gear tier and more) and see what it needs.',
+      'Track the Keys and requirements still needed.',
+      'Pin goals to your dashboard to keep them in view.',
     ],
   },
   STATS: {
     title: 'Fate Analytics',
-    blurb: 'The numbers behind your run — luck, pace and distribution.',
+    blurb: 'The numbers behind your run: luck, pace and how your rolls spread.',
     bullets: [
-      'See your luck deviation vs expected key rates.',
-      'Dig into per-category roll stats and a statistical deep dive.',
-      'Spot whether fate has been kind or cruel.',
+      'See how your luck compares with the expected Key rates.',
+      'Dig into roll stats by category and by source.',
+      'See whether your luck so far has been good or bad.',
     ],
   },
   STRATEGY: {
     title: 'Fate Strategy Guide',
-    blurb: 'Curated advice on how to approach each unlock and table.',
+    blurb: 'What you can do now, what each locked goal still needs, and the goals you’re closest to.',
     bullets: [
-      'Read strategy notes for content you’ve unlocked or are chasing.',
-      'Learn the most efficient order to spend keys and train.',
-      'Reference recommended setups per activity.',
+      'Available: quests, diaries and other content your unlocks allow now.',
+      'Locked: what each goal still needs, such as areas, levels and quests.',
+      'Closest: the ten goals nearest to reach. Pin one to keep it on your dashboard.',
     ],
   },
   SUPPLY: {
@@ -195,8 +197,8 @@ export const GUIDES: Record<string, Guide> = {
     title: 'The Oracle',
     blurb: 'Search every unlockable to find anything fast.',
     bullets: [
-      'Type to search across all content — gear, regions, bosses, skills and more.',
-      'See at a glance what’s unlocked vs still locked.',
+      'Type to search all content: gear, areas, bosses, skills and more.',
+      'See at a glance what’s unlocked and what’s still locked.',
       'Jump straight to the item you’re looking for.',
     ],
   },
@@ -212,21 +214,21 @@ export const GUIDES: Record<string, Guide> = {
 
   SHARE: {
     title: 'Share Run',
-    blurb: 'Turn your run into a shareable, verifiable card.',
+    blurb: 'Turn your run into a card to share.',
     bullets: [
       'Switch between a Stats card and a Map card.',
       'Download the image to share your progress.',
-      'The card embeds a verification hash so others can confirm it’s genuine.',
+      'The card shows whether your history passes the tracker’s own check in this browser. It isn’t proof for anyone else.',
     ],
   },
 
   JOURNAL_SUMMARY: {
     title: 'Journal Summary',
-    blurb: 'A glance at your key-earning progress and what to do next.',
+    blurb: 'A glance at your Key-earning progress and what to do next.',
     bullets: [
-      'See quests/diaries/CAs ready to complete at a glance.',
-      'The “Do this next” banner picks the highest-impact available action.',
-      'Click a row to jump to that journal tab.',
+      'See the quests, diary tasks and Combat Achievements ready to complete.',
+      'The “Do this next” banner picks the highest-impact action you can take.',
+      'Click a row to jump to that Journal tab.',
     ],
   },
 };

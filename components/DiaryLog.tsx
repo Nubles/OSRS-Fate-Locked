@@ -5,7 +5,7 @@ import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
 import { CheckCircle2, Lock, ChevronDown, CheckSquare, Square, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
-import { Map, Sparkles, BookOpen, MapPin } from './OsrsIcon';
+import { Map, Sparkles, BookOpen, MapPin, Flag, Sprout, Home, Skull } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
 import { SLOT_CONFIG } from '../data/assets';
 import { chunkForPlace, chunkUnlocked, chunkUnlockRequirement, showChunkOnMap } from '../utils/chunkLocations';
@@ -23,6 +23,8 @@ import {
   type EligibilityBlocker,
 } from '../utils/journalStatus';
 import { requestManualAttestation } from '../utils/manualAttestation';
+import { diaryTaskLoggingEligibility } from '../utils/journalCompletion';
+import { farmingPatchLabel } from '../utils/farmingPatches';
 
 const isTravelBlocker = (
   blocker: EligibilityBlocker,
@@ -173,7 +175,9 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
   };
 
   const handleTaskToggle = (task: DiaryTask, e: React.MouseEvent) => {
-      const eligibility = evaluateDiaryTaskEligibility(task, unlocks, gameModeId, areaRoutes);
+      // Logging by hand: guild, farming patch, house and Slayer reward unlocks
+      // only set the task's status, so they never hold this up.
+      const eligibility = diaryTaskLoggingEligibility(task, unlocks, gameModeId, areaRoutes);
       const attestation = requestManualAttestation(
         task.description,
         eligibility,
@@ -370,7 +374,8 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                             || task.regions?.length || task.anyOfRegions?.length || task.locations?.length
                             || task.oneOf?.length || task.combatLevel
                             || task.allQuests || task.anySkillLevel || task.questPoints !== undefined
-                            || taskEligibility.manualChecks.length || task.equipmentRequirements?.length || task.mobility?.length || task.arcana?.length || task.minigames?.length || task.bosses?.length || task.anyOfBosses?.length,
+                            || taskEligibility.manualChecks.length || task.equipmentRequirements?.length || task.mobility?.length || task.arcana?.length || task.minigames?.length || task.bosses?.length || task.anyOfBosses?.length
+                            || task.guilds?.length || task.farming?.length || task.housing?.length || task.slayerUnlocks?.length,
                           );
                           const skillRequirements = Object.entries(task.skills ?? {});
                           const unmetSkillRequirements = skillRequirements.filter(([skill, level]) =>
@@ -449,6 +454,26 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                       {task.minigames?.map(minigame => (
                                         <span key={minigame} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${unlocks.minigames.includes(minigame) ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
                                           <Lock size={8} /> {minigame}
+                                        </span>
+                                      ))}
+                                      {task.guilds?.map(guild => (
+                                        <span key={guild} data-diary-unlock="guild" className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${(unlocks.guilds ?? []).includes(guild) ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
+                                          <Flag size={8} /> {guild}
+                                        </span>
+                                      ))}
+                                      {task.farming?.map(patch => (
+                                        <span key={patch} data-diary-unlock="farming" className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${(unlocks.farming ?? []).includes(patch) ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
+                                          <Sprout size={8} /> {farmingPatchLabel(patch)}
+                                        </span>
+                                      ))}
+                                      {task.housing?.map(room => (
+                                        <span key={room} data-diary-unlock="housing" className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${(unlocks.housing ?? []).includes(room) ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
+                                          <Home size={8} /> {room}
+                                        </span>
+                                      ))}
+                                      {task.slayerUnlocks?.map(reward => (
+                                        <span key={reward} data-diary-unlock="slayer" className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${(unlocks.slayerUnlocks ?? []).includes(reward) ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
+                                          <Skull size={8} /> {reward}
                                         </span>
                                       ))}
                                       {task.equipmentRequirements?.map(requirement => {

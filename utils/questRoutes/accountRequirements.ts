@@ -1,4 +1,5 @@
 import {
+  BOSSES_LIST,
   GUILDS_LIST,
   MERCHANTS_LIST,
   MINIGAMES_LIST,
@@ -25,6 +26,7 @@ export interface RouteGateAccountState {
   readonly minigames: readonly string[];
   readonly mobility: readonly string[];
   readonly slayerUnlocks: readonly string[];
+  readonly bosses?: readonly string[];
 }
 
 type UnlockCategory = Extract<RouteGate, { type: 'UNLOCK' }>['category'];
@@ -38,6 +40,8 @@ const unlockAliases: readonly [UnlockCategory, readonly string[], readonly strin
   ['minigames', MINIGAMES_LIST, ['play ', 'access the ', 'access ', 'enter the ', 'enter ']],
   ['mobility', MOBILITY_LIST, ['use ', 'access ', 'travel by ']],
   ['slayerUnlocks', SLAYER_UNLOCKS_LIST, ['', 'requires ', 'required: ']],
+  // A reward shop that takes a boss's currency, such as Tempoross's spirit flakes (owner call U1).
+  ['bosses', BOSSES_LIST, ['play ']],
 ];
 
 /** Source labels that intentionally differ from the corresponding UnlockState ID. */
@@ -80,11 +84,24 @@ const parseQuest = (requirement: RawRouteRequirement): RouteGate | null => {
   return questId ? questGate(questId) : null;
 };
 
+/**
+ * Source wording that means a skill level: the magic axe hut's and the Pirates'
+ * Hideout's doors are picked (accuracy audit S-9; wiki "Slayer task" rev 15343835).
+ */
+const REVIEWED_SKILL_WORDING: ReadonlyMap<string, readonly [string, number]> = new Map([
+  ['unlock the door (magic axe hut)', ['Thieving', 23]],
+  ["unlock the door (pirates' hideout)", ['Thieving', 39]],
+]);
+
 const parseSkill = (raw: string): RouteGate | null => {
-  const match = raw.match(/^(.+?)\s+level\s+(\d+)$/i);
-  if (!match) return null;
-  const skill = skills.get(normalise(match[1]));
-  const level = Number(match[2]);
+  const reviewed = REVIEWED_SKILL_WORDING.get(normalise(raw));
+  if (reviewed) return { type: 'SKILL', skill: reviewed[0], level: reviewed[1], label: `${reviewed[0]} level ${reviewed[1]}` };
+  // "Mining level 60", or "60 Mining" as the source and the reviewed entrance registry word it
+  // (the Mining Guild's door and the Slayer lairs, data/sources/named-task-unlock-locations.json).
+  const named = raw.match(/^(.+?)\s+level\s+(\d+)$/i);
+  const short = named ? null : raw.match(/^(\d+)\s+(.+)$/);
+  const skill = skills.get(normalise((named?.[1] ?? short?.[2]) ?? ''));
+  const level = Number(named?.[2] ?? short?.[1]);
   return skill && level > 0 ? { type: 'SKILL', skill, level, label: `${skill} level ${level}` } : null;
 };
 
@@ -108,13 +125,21 @@ const parseUnlock = (raw: string): RouteGate | null => {
   return null;
 };
 
+/**
+ * Source wording the place itself meets. The Wilderness Slayer Cave's entrances are
+ * Wilderness chunks, so a run that reaches one has entered the Wilderness; asking
+ * again kept every Wilderness Slayer location at "needs review" (accuracy audit).
+ */
+const MET_BY_PLACE = new Set(['enter the wilderness']);
+
 /** Converts only reviewed source wording into account gates; all other wording remains evidence. */
-export const compileRawRequirements = (rawRequirements: readonly RawRouteRequirement[]): RouteGate[] => rawRequirements.map((evidence) => {
+export const compileRawRequirements = (rawRequirements: readonly RawRouteRequirement[]): RouteGate[] => rawRequirements.flatMap((evidence): RouteGate[] => {
   const requirement = evidence.raw.trim();
+  if (MET_BY_PLACE.has(normalise(requirement))) return [];
   const normalisedEvidence = { ...evidence, raw: requirement };
   const rfd = requirement.match(/^RFD Chest ([1-8]) Subquests?$/i);
-  if (rfd) return { type: 'RFD_SUBQUESTS', count: Number(rfd[1]), label: `Complete ${rfd[1]} Recipe for Disaster rescues` };
-  return parseQuest(normalisedEvidence) ?? parseQuestProgress(requirement) ?? parseSkill(requirement) ?? parseUnlock(requirement) ?? unresolved(evidence.raw);
+  if (rfd) return [{ type: 'RFD_SUBQUESTS', count: Number(rfd[1]), label: `Complete ${rfd[1]} Recipe for Disaster rescues` }];
+  return [parseQuest(normalisedEvidence) ?? parseQuestProgress(requirement) ?? parseSkill(requirement) ?? parseUnlock(requirement) ?? unresolved(evidence.raw)];
 });
 
 /** Appends compiled gates while preserving the original structured source evidence. */
@@ -161,7 +186,7 @@ export const evaluateRouteGates = (
         break;
       }
       case 'UNLOCK':
-        if (!unlocks[gate.category].includes(gate.id)) blockers.push(gate);
+        if (!(unlocks[gate.category] ?? []).includes(gate.id)) blockers.push(gate);
         break;
       case 'UNRESOLVED': {
         hasDataGap = true;

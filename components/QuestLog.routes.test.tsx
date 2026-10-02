@@ -32,7 +32,8 @@ const strandedAt = (...areas: string[]): AreaRoutes => ({ strandedAreas: new Set
 const noRoute = (place: string) => ({ kind: 'alternative', label: `No route to ${place}`, travel: place, blockerKinds: [], routes: [] });
 
 const barcrawl = QUEST_DATA["Alfred Grimhand's Barcrawl"];
-const bars = account([...new Set(barcrawl.locations!.flatMap(location => location.standardAreas))]);
+// Every drink on the card is bought from a barkeeper (Bars & Inns).
+const bars = { ...account([...new Set(barcrawl.locations!.flatMap(location => location.standardAreas))]), merchants: ['Bars & Inns'] };
 const inAreas = (overrides: Partial<QuestData>): QuestData => ({
   id: 'Test quest', name: 'Test quest', kind: 'quest', accessPolicy: 'regions', regions: [], skills: {},
   prereqs: [], points: 1, difficulty: barcrawl.difficulty, ...overrides,

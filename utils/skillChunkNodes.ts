@@ -110,7 +110,19 @@ const NPC_RULES: [RegExp, Req][] = [
   [/rainbow crab \(hunter\)/i, { skill: 'Hunter', level: 77 }],
   [/herbiboar/i, { skill: 'Hunter', level: 80 }],
   [/\bferret\b/i, { skill: 'Hunter', level: 27 }],
-  [/\bimpling\b/i, { skill: 'Hunter', level: 17 }],
+  // ── Hunter: implings, each at its own level (accuracy audit S16) ──
+  [/lucky impling/i, { skill: 'Hunter', level: 89 }],
+  [/dragon impling/i, { skill: 'Hunter', level: 83 }],
+  [/crystal impling/i, { skill: 'Hunter', level: 80 }],
+  [/ninja impling/i, { skill: 'Hunter', level: 74 }],
+  [/magpie impling/i, { skill: 'Hunter', level: 65 }],
+  [/nature impling/i, { skill: 'Hunter', level: 58 }],
+  [/eclectic impling/i, { skill: 'Hunter', level: 50 }],
+  [/essence impling/i, { skill: 'Hunter', level: 42 }],
+  [/earth impling/i, { skill: 'Hunter', level: 36 }],
+  [/gourmet impling/i, { skill: 'Hunter', level: 28 }],
+  [/young impling/i, { skill: 'Hunter', level: 22 }],
+  [/\bimpling\b/i, { skill: 'Hunter', level: 17 }], // baby implings, and any other
 
   // ── Thieving: pickpocket targets (wiki levels) ──
   [/master farmer|chief farmer|martin the master/i, { skill: 'Thieving', level: 38 }],

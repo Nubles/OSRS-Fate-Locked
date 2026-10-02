@@ -53,10 +53,13 @@ const CONTINENT_OF: Record<string, string> = Object.fromEntries(
  */
 type Probe = string;
 const questProbes = new Map<string, Probe[]>(Object.values(QUEST_DATA).map(quest => [quest.id, [
-  ...new Set([quest, ...(quest.oneOf ?? [])].flatMap(option => [
-    ...(option.regions ?? []),
-    ...(option.locations ?? []).flatMap(location => location.standardAreas),
-  ]).map(area => `area:${area}`)),
+  ...new Set([
+    ...[quest, ...(quest.oneOf ?? [])].flatMap(option => [
+      ...(option.regions ?? []),
+      ...(option.locations ?? []).flatMap(location => location.standardAreas),
+    ]),
+    ...(quest.oneOf ?? []).flatMap(option => option.anyOfRegions ?? []),
+  ].map(area => `area:${area}`)),
 ]]));
 const diaryProbes = new Map<string, Probe[]>();
 // An island's departure areas count too: unlocking Port Sarim can open a task

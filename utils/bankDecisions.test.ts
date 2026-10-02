@@ -36,8 +36,11 @@ describe('bankDecisions', () => {
     // Lumbridge Castle's id also covers the bank in Dorgesh-Kaan, entered
     // from the castle's cellar, as its BANKS row already does.
     expect(decisions['12850'].physical).toEqual(['42,83', '50,50']);
-    // Rellekka Peninsula is one of the banks the facility data doesn't show.
-    expect(decisions['10810'].physical).toEqual(['42,58']);
+    // The Abandoned Mine's (Tarn's Lair) bank is one the facility data doesn't show.
+    expect(decisions['13618'].physical).toEqual(['53,50']);
+    // Merged into the banks they lead to, so they are no longer decided at all.
+    expect(decisions['10810']).toBeUndefined();
+    expect(decisions['12085']).toBeUndefined();
   });
 
   it('opens a bank only once it is rolled, in a bank-locked run', () => {
@@ -56,7 +59,7 @@ describe('bankDecisions', () => {
     });
     const decisions = bankDecisions(service, context(unlocks));
     expect(Object.keys(decisions)).toHaveLength(numericBanks.length);
-    expect(numericBanks).toHaveLength(127);
+    expect(numericBanks).toHaveLength(125);
     for (const bank of numericBanks) {
       const decision = decisions[bank.id];
       const row = manifest.chunks[decision.at]?.categories.BANKS?.find((one) => one.key === `bank:${bank.id}`);

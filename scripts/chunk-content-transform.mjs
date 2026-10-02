@@ -1,9 +1,11 @@
 import { buildEntranceIndex, indexNamedTaskUnlockRegistry } from './named-task-unlock-locations.mjs';
 import { readFileSync } from 'node:fs';
 import { buildInteriorContent, assertInteriorMetadataConservation } from './chunk-interiors.mjs';
+import { reviewRequirement } from './chunk-requirements.mjs';
 const shopOverrides = JSON.parse(readFileSync(new URL('../data/sources/shop-overrides.json', import.meta.url), 'utf8'));
 const contentAliases = JSON.parse(readFileSync(new URL('../data/contentAliases.json', import.meta.url), 'utf8'));
 const contentOverrides = JSON.parse(readFileSync(new URL('../data/sources/chunk-content-overrides.json', import.meta.url), 'utf8'));
+const slayerCorrections = JSON.parse(readFileSync(new URL('../data/sources/slayer-corrections.json', import.meta.url), 'utf8'));
 const REASONS = new Set([
   'interior-preserved', 'interior-unmapped', 'reviewed-content-override', 'interior-metadata-conserved',
   'base-record', 'section-merged', 'variant-name-cleaned', 'quest-subpath-collapsed',
@@ -11,6 +13,7 @@ const REASONS = new Set([
   'empty-walkable-chunk', 'broad-quest-gate-suppressed', 'lite-cap',
   'duplicate-deduped', 'role-promoted-to-first', 'variant-collision-merged',
   'named-location-mapped', 'named-location-instance-only', 'named-location-non-purchasable',
+  'reviewed-requirement-rewritten',
 ]);
 
 const cleanName = (value) => String(value).split('#')[0].trim();
@@ -133,12 +136,55 @@ function buildSlayerMasters(data, audit) {
       if (info.Chunks?.length) entry.locations = info.Chunks;
       if (info.Level != null) entry.slayer = info.Level;
       const req = Object.keys(info.Tasks ?? {}).map(stripWiki); if (req.length) entry.req = req;
+      // Other skills the master asks for (Defence 20 for basilisks, Magic 50 for cave krakens).
+      if (info.Skills && Object.keys(info.Skills).length) entry.skills = { ...info.Skills };
+      // Krystilia assigns these only once "I Wildy More Slayer" is bought.
+      if (info.KrystiliaSlayerCreatures) entry.unlock = 'I Wildy More Slayer';
       result[name] = entry;
       audit.add('slayerMasterTasks', `${master}/${monster}`, monster.includes('#') ? 'normalized' : 'imported', monster.includes('#') ? 'variant-name-cleaned' : 'base-record', [`${master}/${name}`]);
     }
     out[master] = result;
   }
+  applySlayerCorrections(out);
   return out;
+}
+
+/**
+ * Reviewed corrections to the source's Slayer rows, each with its wiki revision
+ * (data/sources/slayer-corrections.json): fixes to its rows, the rows a Slayer
+ * reward adds (the source has only the tasks a master gives without one), and
+ * each master's boss task. utils/slayerAccuracy.test.ts checks every one reached
+ * the generated rows; small test sources simply lack the masters.
+ */
+function applySlayerCorrections(masters) {
+  for (const correction of slayerCorrections.corrections) {
+    const row = masters[correction.master]?.[correction.task];
+    if (!row) continue;
+    if (row.req) {
+      row.req = row.req.filter(req => !(correction.removeReq ?? []).includes(req));
+      if (!row.req.length) delete row.req;
+    }
+    Object.assign(row, structuredClone(correction.set ?? {}));
+  }
+  for (const addition of slayerCorrections.additions) {
+    const tasks = masters[addition.master];
+    // A row the source has since gained keeps the source's values; the test flags any difference.
+    if (!tasks || tasks[addition.task]) continue;
+    tasks[addition.task] = structuredClone(addition.row);
+  }
+  const { bossTasks } = slayerCorrections;
+  for (const [master, rule] of Object.entries(bossTasks.masters)) {
+    const tasks = masters[master];
+    if (!tasks) continue;
+    const bosses = bossTasks.bosses
+      .filter(({ boss }) => (!rule.only || rule.only.includes(boss)) && !(rule.except ?? []).includes(boss))
+      .map(({ boss, slayer, monsters, substitutes }) => ({
+        name: boss,
+        monsters: [...(monsters ?? [boss]), ...((rule.noSubstitutes ?? []).includes(boss) ? [] : substitutes ?? [])],
+        ...(slayer ? { slayer } : {}),
+      }));
+    tasks.Bosses = { weight: rule.weight, unlock: bossTasks.unlock, bosses };
+  }
 }
 
 function buildShortcuts(data, audit) {
@@ -366,11 +412,46 @@ function applyReviewedContent(data, chunks, interiors, taskUnlocks, audit) {
     ((taskUnlocks.NPCs ??= {})[override.name] ??= {})[override.chunkId] = override.requirements;
     audit.add('overrides', `npc/${override.name}`, 'normalized', 'reviewed-content-override', [override.chunkId], false, override.source);
   }
+  // Reviewed requirements for one entity in one chunk, in place of the source's, such as the
+  // tier each Farming Guild patch is in. A chunk without the entity gains nothing.
+  for (const override of contentOverrides.entityRequirements ?? []) {
+    if (!hasEntity(chunks[override.chunkId], override.category, override.name)) continue;
+    ((taskUnlocks[override.category] ??= {})[override.name] ??= {})[override.chunkId] = [...override.requirements].sort();
+    audit.add('overrides', `requirements/${override.category}/${override.name}/${override.chunkId}`, 'normalized', 'reviewed-content-override', [override.chunkId], false, override.source);
+  }
+}
+
+const ENTITY_FIELDS = { Monsters: 'm', NPCs: 'p', Objects: 'o', Shops: 's', Spawns: 'i' };
+
+function hasEntity(entry, category, name) {
+  const field = ENTITY_FIELDS[category];
+  if (!field) throw new Error(`Unknown reviewed requirement category: ${category}`);
+  return (entry?.[field] ?? []).some((value) => (Array.isArray(value) ? value[0] : value) === name);
+}
+
+/**
+ * A reviewed shop's requirements where it stands (data/sources/shop-overrides.json): the
+ * source's, less those the record replaces, with the record's own, such as the activity whose
+ * currency a reward shop takes. A shop left with none loses its entry.
+ */
+function reviewShopRequirements(override, requirementsByKey, key) {
+  if (!override.requirements?.length && !override.replaces?.length) return;
+  const kept = (requirementsByKey[key] ?? []).filter(requirement => !(override.replaces ?? []).includes(requirement));
+  const requirements = [...new Set([...kept, ...(override.requirements ?? [])])].sort();
+  if (requirements.length) requirementsByKey[key] = requirements;
+  else delete requirementsByKey[key];
 }
 
 function cleanReqs(values, audit, sourceKey, category) {
   const result = new Set(); let duplicated = false;
-  for (const value of values) for (const raw of Object.keys(value ?? {})) { const clean = stripWiki(raw).replace(/\s+/g, ' ').trim(); if (clean) { if (result.has(clean)) duplicated = true; result.add(clean); } }
+  for (const value of values) for (const raw of Object.keys(value ?? {})) {
+    const clean = stripWiki(raw).replace(/\s+/g, ' ').trim();
+    if (!clean) continue;
+    // Reviewed wording (scripts/chunk-requirements.mjs): a dropped tag, or a requirement rewritten.
+    const reviewed = reviewRequirement(clean);
+    if (reviewed.length !== 1 || reviewed[0] !== clean) audit.add(category, sourceKey, 'normalized', 'reviewed-requirement-rewritten', reviewed, false, clean);
+    for (const requirement of reviewed) { if (result.has(requirement)) duplicated = true; result.add(requirement); }
+  }
   if (duplicated) audit.add(category, sourceKey, 'normalized', 'duplicate-deduped', [...result], false);
   return [...result].sort();
 }
@@ -517,7 +598,8 @@ export function transformChunkContent(data, sourceManifest, namedLocationRegistr
   const shopInfo = {};
   for (const override of shopOverrides.records) {
     const located = Object.values(chunks).some(e => e.s?.includes(override.name) || override.npcNames?.some(n => e.p?.includes(n)))
-      || Object.entries(interiors).some(([id, e]) => e.content.s?.includes(override.name) || override.placementSourceIds?.includes(id));
+      || Object.entries(interiors).some(([id, e]) => e.content.s?.includes(override.name) || override.placementSourceIds?.includes(id)
+        || override.npcNames?.some(n => e.content.p?.includes(n)));
     if (!(override.name in shopItems) && !located) continue;
     shopInfo[override.name] = { status: override.status, source: override.source };
     if (override.status === 'removed') { delete shopItems[override.name]; continue; }
@@ -526,13 +608,19 @@ export function transformChunkContent(data, sourceManifest, namedLocationRegistr
       shopItems[override.aliasOf] = [...new Set([...(shopItems[override.aliasOf] ?? []), ...(shopItems[override.name] ?? [])])];
       delete shopItems[override.name];
     }
-    for (const [id, entry] of Object.entries(chunks)) if (override.npcNames?.some(n => entry.p?.includes(n))) {
-      entry.s = [...new Set([...(entry.s ?? []), override.name])].sort();
-      if (override.requirements?.length) ((taskUnlocks.Shops ??= {})[override.name] ??= {})[id] = override.requirements;
+    const reviewsRequirements = Boolean(override.requirements?.length || override.replaces?.length);
+    for (const [id, entry] of Object.entries(chunks)) {
+      if (override.npcNames?.some(n => entry.p?.includes(n))) entry.s = [...new Set([...(entry.s ?? []), override.name])].sort();
+      if (reviewsRequirements && entry.s?.includes(override.name)) reviewShopRequirements(override, (taskUnlocks.Shops ??= {})[override.name] ??= {}, id);
     }
-    for (const [id, entry] of Object.entries(interiors)) if (override.placementSourceIds?.includes(id) || override.npcNames?.some(n => entry.content.p?.includes(n))) {
-      entry.content.s = [...new Set([...(entry.content.s ?? []), override.name])].sort();
-      if (override.requirements?.length) (entry.requirements.shop ??= {})[override.name] = override.requirements;
+    if (taskUnlocks.Shops?.[override.name] && !Object.keys(taskUnlocks.Shops[override.name]).length) delete taskUnlocks.Shops[override.name];
+    for (const [id, entry] of Object.entries(interiors)) {
+      if (override.placementSourceIds?.includes(id) || override.npcNames?.some(n => entry.content.p?.includes(n))) {
+        entry.content.s = [...new Set([...(entry.content.s ?? []), override.name])].sort();
+      }
+      if (!reviewsRequirements || !entry.content.s?.includes(override.name)) continue;
+      reviewShopRequirements(override, entry.requirements.shop ??= {}, override.name);
+      if (!Object.keys(entry.requirements.shop).length) delete entry.requirements.shop;
     }
   }
   applyReviewedContent(data, chunks, interiors, taskUnlocks, audit);

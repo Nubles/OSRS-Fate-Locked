@@ -21,6 +21,15 @@ const entity = (raw: string) => ({ raw, origin: 'ENTITY' as const });
 const chunkEntry = (raw: string) => ({ raw, origin: 'CHUNK_ENTRY' as const });
 
 describe('account requirements', () => {
+  it('reads the source’s short skill levels and the picked doors as skill gates (accuracy audit S-9)', () => {
+    expect(compileRawRequirements([entity('93 Slayer')])).toEqual([{ type: 'SKILL', skill: 'Slayer', level: 93, label: 'Slayer level 93' }]);
+    expect(compileRawRequirements([entity('Unlock the door (Magic axe hut)')]))
+      .toEqual([{ type: 'SKILL', skill: 'Thieving', level: 23, label: 'Thieving level 23' }]);
+    expect(compileRawRequirements([entity("Unlock the door (Pirates' Hideout)")]))
+      .toEqual([{ type: 'SKILL', skill: 'Thieving', level: 39, label: 'Thieving level 39' }]);
+    expect(compileRawRequirements([entity('100 Coins')])).toEqual([{ type: 'UNRESOLVED', label: '100 Coins', raw: '100 Coins' }]);
+  });
+
   it('checks a reviewed equipment gate against slot tiers, including absent and invalid values', () => {
     const gate = { type: 'EQUIPMENT' as const, slot: 'Neck' as const, tier: 1, label: 'Neck T1: Wear the ghostspeak amulet' };
     for (const tier of [undefined, 0, Number.NaN, Number.POSITIVE_INFINITY]) {
@@ -70,6 +79,15 @@ describe('account requirements', () => {
     expect(compileRawRequirements([chunkEntry('Dragon Slayer I')])).toEqual([
       { type: 'QUEST', questId: 'Dragon Slayer I', label: 'Dragon Slayer I' },
     ]);
+  });
+
+  it('reads "60 Mining", the reviewed entrance wording, as a skill gate (the Mining Guild door)', () => {
+    expect(compileRawRequirements([chunkEntry('60 Mining'), chunkEntry('91 Slayer')])).toEqual([
+      { type: 'SKILL', skill: 'Mining', level: 60, label: 'Mining level 60' },
+      { type: 'SKILL', skill: 'Slayer', level: 91, label: 'Slayer level 91' },
+    ]);
+    // A number before anything but a skill stays evidence for a person to check.
+    expect(compileRawRequirements([entity('100 Kudos')])).toEqual([{ type: 'UNRESOLVED', label: '100 Kudos', raw: '100 Kudos' }]);
   });
 
   it('does not compile a bare canonical quest from entity evidence', () => {
@@ -127,6 +145,15 @@ describe('account requirements', () => {
     ]);
   });
 
+  it('reads "Play" a boss as that boss\'s unlock, for a shop taking its currency (Flakes \'n\' Flotsam)', () => {
+    const gates = compileRawRequirements([entity('Play Tempoross')]);
+    expect(gates).toEqual([{ type: 'UNLOCK', category: 'bosses', id: 'Tempoross', label: 'Tempoross' }]);
+    expect(evaluateRouteGates(gates, unlocks()).blockers).toEqual(gates);
+    expect(evaluateRouteGates(gates, unlocks({ bosses: ['Tempoross'] }))).toEqual({ blockers: [], hasDataGap: false });
+    // Only "Play" reads as a boss's unlock: other wording naming a boss stays unresolved.
+    expect(compileRawRequirements([entity('Access Tempoross')])[0]).toMatchObject({ type: 'UNRESOLVED' });
+  });
+
   it('does not silently satisfy unknown requirement wording', () => {
     const gates = compileRawRequirements([entity('Access the sealed workshop')]);
     expect(gates).toEqual([{ type: 'UNRESOLVED', label: 'Access the sealed workshop', raw: 'Access the sealed workshop' }]);
@@ -181,5 +208,12 @@ describe('account requirements', () => {
     expect(evaluateRouteGates(gates, snapshotUnlocks)).toEqual(
       evaluateRouteGates(gates, account),
     );
+  });
+});
+
+describe('requirements a place meets by itself', () => {
+  it('drops "Enter the Wilderness" from the Wilderness Slayer Cave entrances, which are in the Wilderness', () => {
+    expect(compileRawRequirements([{ raw: 'Enter the Wilderness', origin: 'ENTITY' }])).toEqual([]);
+    expect(compileRawRequirements([{ raw: ' enter the  wilderness ', origin: 'CHUNK_ENTRY' }])).toEqual([]);
   });
 });

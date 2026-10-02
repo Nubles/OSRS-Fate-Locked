@@ -27,6 +27,8 @@ const BOSS_PAGE_ALIASES: Record<string, string[]> = {
   'Royal Titans': ['The Royal Titans'],
   'Venenatis & Spindel': ['Venenatis', 'Spindel'],
   "Vet'ion & Calvar'ion": ["Vet'ion", "Calvar'ion"],
+  // Both fights share one page.
+  'The Nightmare': ['The Nightmare', "Phosani's Nightmare"],
 };
 // Joke/novelty pages with no real unlock gate — treated as baseline-available.
 const BASELINE_BOSS_PAGES = new Set<string>(['Brutus']);
@@ -69,7 +71,7 @@ export interface CollogReach {
 const bossPageObtainable = (page: string, bossSet: Set<string>, unlocked: Set<string>):
   { obtainable: boolean; gated: boolean; missing?: string } => {
   if (BASELINE_BOSS_PAGES.has(page)) return { obtainable: true, gated: false };
-  const targets = bossSet.has(page) ? [page] : BOSS_PAGE_ALIASES[page];
+  const targets = BOSS_PAGE_ALIASES[page] ?? (bossSet.has(page) ? [page] : undefined);
   if (!targets) return { obtainable: true, gated: false }; // unknown source → don't penalise
   const obtainable = targets.some(t => unlocked.has(t));
   return { obtainable, gated: true, missing: obtainable ? undefined : targets[0] };
@@ -93,9 +95,11 @@ export function collogReachability(unlocks: UnlockState): CollogReach {
       const n = page.items.length;
       tabTotal += n;
 
-      if (!gated) { tabObtainable += n; continue; } // Clues / Other → baseline
+      // Clues / Other are baseline, bar a page that is a boss of its own (Tormented Demons).
+      const otherBossPage = !gated && bossSet.has(page.name);
+      if (!gated && !otherBossPage) { tabObtainable += n; continue; }
 
-      if (tabName === 'Minigames') {
+      if (tabName === 'Minigames' && !otherBossPage) {
         const ok = miniSet.has(page.name) && unlockedMinis.has(page.name);
         if (ok) tabObtainable += n;
         else suggestions.push({ page: page.name, tab: tabName, items: n, unlock: page.name, kind: 'minigame' });

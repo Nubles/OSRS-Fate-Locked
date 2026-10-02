@@ -134,7 +134,7 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
                 onChange={v => setCustom('pityThreshold', v)}
               />
               <Slider
-                label="Base Omni-key chance"
+                label="Base Omni-Key chance"
                 value={customDraft.omniChanceBase}
                 bounds={CUSTOM_RULE_BOUNDS.omniChanceBase}
                 format={v => `${v}%`}
@@ -232,7 +232,7 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
             <span>Pity: {activeRules.pityEnabled ? `${activeRules.pityThreshold} Fate` : 'off'}</span>
             <span>Omni: {activeRules.omniChanceBase}%</span>
             <span>Rituals: {activeRules.ritualCostMultiplier.toFixed(2)}×</span>
-            <span>Regions: {activeRules.regionModifiers ? 'on' : 'off'}</span>
+            <span>Region bonuses: {activeRules.regionModifiers ? 'on' : 'off'}</span>
             {activeRules.bankLocks && <span className="text-amber-400">Banks locked</span>}
           </div>
           <button

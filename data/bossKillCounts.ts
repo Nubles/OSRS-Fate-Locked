@@ -61,7 +61,6 @@ export const BOSS_KILL_COUNTS: Readonly<Record<string, readonly string[]>> = {
   'Venenatis': ['Venenatis'],
   "Vet'ion": ["Vet'ion"],
   'Vorkath': ['Vorkath'],
-  'Galvek': ['Galvek'],
   'The Hueycoatl': ['Hueycoatl', 'The Hueycoatl'],
   'Kalphite Queen': ['Kalphite Queen'],
   'Phantom Muspah': ['Phantom Muspah'],

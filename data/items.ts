@@ -45,6 +45,8 @@ export const POH_LIST = [
 
 // Retained in the catalogue for existing saves, but never awarded again.
 export const RETIRED_POH_ITEMS = ['Aquarium'];
+/** Bosses taken off the boss table; a run that owned one gets its Key back (utils/areaUnlockMigration.ts). */
+export const RETIRED_BOSSES = ['Galvek'];
 export const ROLLABLE_POH_ITEMS = POH_LIST.filter(item => !RETIRED_POH_ITEMS.includes(item));
 
 export const MERCHANTS_LIST = [
@@ -135,7 +137,7 @@ export const BOSSES_LIST = [
   'Kree\'arra', 'K\'ril Tsutsaroth', 'Abyssal Sire', 'Alchemical Hydra', 'Cerberus', 
   'Grotesque Guardians', 'Kraken', 'Skotizo', 'Thermonuclear Smoke Devil', 'Araxxor', 
   'Artio', 'Callisto', 'Calvar\'ion', 'Chaos Elemental', 'Chaos Fanatic', 'Crazy Archaeologist', 
-  'Scorpia', 'Spindel', 'Venenatis', 'Vet\'ion', 'Vorkath', 'Galvek', 'The Hueycoatl', 
+  'Scorpia', 'Spindel', 'Venenatis', 'Vet\'ion', 'Vorkath', 'The Hueycoatl', 
   'Moons of Peril', 'Fortis Colosseum', 'Duke Sucellus', 'The Leviathan', 'The Whisperer', 
   'Vardorvis', 'Barrows Brothers', 'Bryophyta', 'Dagannoth Kings', 'Deranged Archaeologist', 
   'Giant Mole', 'Hespori', 'Kalphite Queen', 'King Black Dragon', 'Mimic', 'Obor', 

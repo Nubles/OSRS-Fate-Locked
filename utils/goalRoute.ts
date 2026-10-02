@@ -85,6 +85,10 @@ export interface GoalRoute {
   arcana?: RouteItem[];
   minigames?: RouteItem[];
   bosses?: RouteItem[];
+  guilds?: RouteItem[];
+  farming?: RouteItem[];
+  housing?: RouteItem[];
+  slayerUnlocks?: RouteItem[];
   alternatives: RouteAlternative[];
   manualChecks?: RouteItem[];
   diaries: RouteItem[];
@@ -212,6 +216,10 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       ...(plan.arcanaSteps ?? []),
       ...(plan.minigameSteps ?? []),
       ...(plan.bossSteps ?? []),
+      ...(plan.guildSteps ?? []),
+      ...(plan.farmingSteps ?? []),
+      ...(plan.housingSteps ?? []),
+      ...(plan.slayerSteps ?? []),
       ...plan.alternativeSteps.flatMap(step => step.routes.flatMap(route => route.blockers)),
     ]);
     const totalSteps = eligibility.evidence.length + eligibility.blockers.length + eligibility.manualChecks.length;
@@ -229,6 +237,10 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       mobility: (plan.mobilitySteps ?? []).map(step => ({ name: step.label, met: step.done, detail: step.detail })),
       minigames: (plan.minigameSteps ?? []).map(step => ({ name: step.label, met: step.done, detail: step.detail })),
       bosses: (plan.bossSteps ?? []).map(step => ({ name: step.label, met: step.done, detail: step.detail })),
+      guilds: (plan.guildSteps ?? []).map(step => ({ name: step.label, met: step.done, detail: step.detail })),
+      farming: (plan.farmingSteps ?? []).map(step => ({ name: step.label, met: step.done, detail: step.detail })),
+      housing: (plan.housingSteps ?? []).map(step => ({ name: step.label, met: step.done, detail: step.detail })),
+      slayerUnlocks: (plan.slayerSteps ?? []).map(step => ({ name: step.label, met: step.done, detail: step.detail })),
       alternatives,
       manualChecks: plan.manualSteps.map(step => ({ name: step.label, met: step.done, detail: step.detail })),
       diaries: [],

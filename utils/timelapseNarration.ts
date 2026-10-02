@@ -59,7 +59,8 @@ export const detectMilestones = (history: LogEntry[]): Milestone[] => {
     if (e.type === 'ROLL_SUCCESS' && !seen.has('success')) { seen.add('success'); push('First Key earned', 'Brass_key.png'); }
     if (e.type === 'UNLOCK' && !seen.has('unlock')) { seen.add('unlock'); push(`First unlock: ${e.meta?.item ?? '?'}`, 'Brass_key.png'); }
     if (e.type === 'LEVEL_UP' && !seen.has('level')) { seen.add('level'); push('First level up', 'Stats_icon.png'); }
-    if (e.type === 'XTREME_MILESTONE') push('Xtreme milestone key', 'Crystal_key.png');
+    // Chunked's start-chunk Keys log as XTREME_MILESTONE too, so the label names neither mode.
+    if (e.type === 'XTREME_MILESTONE') push('Start-area milestone Key', 'Crystal_key.png');
     if (e.type === 'ALTAR' && !seen.has('altar')) { seen.add('altar'); push('First ritual performed', 'Lit_candle.png'); }
     if (rollCount > 0 && rollCount % 100 === 0 && !seen.has(`r${rollCount}`)) {
       seen.add(`r${rollCount}`);

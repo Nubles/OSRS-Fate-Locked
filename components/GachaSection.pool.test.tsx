@@ -25,10 +25,10 @@ const renderWith = async (unlocks: ReturnType<typeof createFreshState>['unlocks'
   render(<GachaSection />);
 };
 
-const card = (label: string) => screen.getByRole('button', { name: `Roll ${label}` }) as HTMLButtonElement;
+const card = (label: string) => screen.getByRole('button', { name: `Unlock from ${label}` }) as HTMLButtonElement;
 
 describe('Spend Keys cards', () => {
-  it('block a table whose remaining entries are all ineligible instead of offering Roll', async () => {
+  it('block a table whose remaining entries are all ineligible instead of offering Unlock', async () => {
     const fresh = createFreshState().unlocks;
     const eligible = randomUnlockPool(fresh, 'vanilla', 'key', TableType.BOSSES).map(entry => entry.item);
     expect(eligible.length).toBeGreaterThan(0);

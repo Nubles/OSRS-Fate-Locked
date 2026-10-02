@@ -1,7 +1,8 @@
 import { CUSTOM_RULE_BOUNDS, resolveModeRules, type GameModeRules } from '../config/gameModes';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
-import { EQUIPMENT_SLOTS, RETIRED_POH_ITEMS } from '../data/items';
+import { EQUIPMENT_SLOTS, RETIRED_BOSSES, RETIRED_POH_ITEMS } from '../data/items';
 import { migrateAreaUnlocks } from './areaUnlockMigration';
+import { mergedBankId, settleMergedBanks } from './bankUnlockMerges';
 import { settleCanonicalAreaUnlocks } from '../data/areaMapPolicy';
 import type { CollectionLogIdentity, FateCompensationState, GameState, LogEntry, RivalState, RuneProofProgress, UnlockState } from '../types';
 import { captureCollectionLogIdentity } from '../services/CollectionLogSyncService';
@@ -388,6 +389,9 @@ const normalizeUnlocks = (
   const settledRegions = settleCanonicalAreaUnlocks(arrays.regions, regularKeyRefundCapacity);
   arrays.regions = settledRegions.regions;
   migrated ||= settledRegions.migrated;
+  const settledBanks = settleMergedBanks(arrays.banks, regularKeyRefundCapacity - settledRegions.duplicateAliasRefunds);
+  arrays.banks = settledBanks.banks;
+  migrated ||= settledBanks.migrated;
 
   if (sourceVersion === 0 && own(inspected.value, 'power')) {
     const power = identifierArray(readOwn(inspected.value, 'power'), 'unlocks.power', 'invalid_unlocks');
@@ -448,7 +452,7 @@ const normalizeUnlocks = (
     value: {
       value: unlocks,
       migrated,
-      regularKeyRefunds: settledRegions.duplicateAliasRefunds,
+      regularKeyRefunds: settledRegions.duplicateAliasRefunds + settledBanks.refunds,
       collectionLogIdentity: collection.value.identity,
     },
   };
@@ -962,6 +966,7 @@ const normalizeState = (
 
   let bossStandardKeysAwarded: Record<string, number>;
   let clueStandardKeysAwarded: number;
+  let retiredBossCounters = false;
   if (sourceVersion >= 3) {
     const strictBossProgress = inspectRecord(
       selectedBossProgress.value,
@@ -974,6 +979,11 @@ const normalizeState = (
     bossStandardKeysAwarded = {};
     for (const bossName of Object.getOwnPropertyNames(strictBossProgress.value)) {
       const path = pathOf('bossStandardKeysAwarded', bossName);
+      // A retired boss has no reserve left to count; the Keys it paid stay in the history.
+      if (RETIRED_BOSSES.includes(bossName)) {
+        retiredBossCounters = true;
+        continue;
+      }
       if (!isKnownVanillaBoss(bossName)) return invalid('invalid_field', path);
       const awarded = boundedInteger(
         readOwn(strictBossProgress.value, bossName),
@@ -1119,19 +1129,25 @@ const normalizeState = (
     state.rngVersion = version;
   }
   // A reveal is an acknowledgement of an existing award, never a new award.
+  let pendingMerged = false;
   if (own(input, 'pendingUnlock')) {
     const inspected = inspectRecord(readOwn(input, 'pendingUnlock'), new Set(['id', 'table', 'item', 'costType', 'cost']), 'invalid_field', 'pendingUnlock');
     if (inspected.ok === false) return inspected;
     const p = inspected.value;
+    // A bank unlock merged into another reveals the bank it leads to.
+    const item = p.table === TableType.BANKS && typeof p.item === 'string' ? mergedBankId(p.item) : p.item;
     if (typeof p.id !== 'string' || p.id.length === 0 || p.id.length > 200
-      || typeof p.item !== 'string' || !Object.values(TableType).includes(p.table as TableType)
-      || (!getPoolAndStateKey(p.table as TableType, state.gameModeId, state.customMode).pool.includes(p.item)
-        && !(p.table === TableType.REGIONS && p.item === 'Tutorial Island')
+      || typeof item !== 'string' || !Object.values(TableType).includes(p.table as TableType)
+      || (!getPoolAndStateKey(p.table as TableType, state.gameModeId, state.customMode).pool.includes(item)
+        && !(p.table === TableType.REGIONS && item === 'Tutorial Island')
         // Already paid before Aquarium left the roll pool; retired items stay
         // valid in older saves, so the reveal must still load and complete.
-        && !(p.table === TableType.POH && RETIRED_POH_ITEMS.includes(p.item)))
+        && !(p.table === TableType.POH && RETIRED_POH_ITEMS.includes(item))
+        // A retired boss's reveal loads so its refund can settle it.
+        && !(p.table === TableType.BOSSES && RETIRED_BOSSES.includes(item)))
       || (p.costType !== 'key' && p.costType !== 'chaosKey') || p.cost !== 1) return invalid('invalid_field', 'pendingUnlock');
-    state.pendingUnlock = { id: p.id, table: p.table as TableType, item: p.item, costType: p.costType, cost: 1 };
+    state.pendingUnlock = { id: p.id, table: p.table as TableType, item, costType: p.costType, cost: 1 };
+    pendingMerged = item !== p.item;
   }
   if (storedCompensation === undefined) {
     state.fateCompensation = legacyFateCompensationOffer(state);
@@ -1166,7 +1182,7 @@ const normalizeState = (
     ok: true,
     value: {
       state,
-      migrated: areaMigrated || sourceVersion < CURRENT_SAVE_VERSION
+      migrated: areaMigrated || pendingMerged || retiredBossCounters || sourceVersion < CURRENT_SAVE_VERSION
         || unlocks.value.migrated
         || !own(input, 'runId')
         || !own(input, 'runRevision')

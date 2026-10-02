@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LogEntry } from '../types';
-import { narrate } from './timelapseNarration';
+import { detectMilestones, narrate } from './timelapseNarration';
 
 const rollSuccess = (
   over: Partial<LogEntry> = {},
@@ -11,6 +11,18 @@ const rollSuccess = (
   source: 'Attack Level 41',
   message: 'Key Found!',
   ...over,
+});
+
+describe('timelapse milestones', () => {
+  it('labels start-area milestone Keys without naming a retired mode', () => {
+    // Chunked's start-chunk Keys use the XTREME_MILESTONE entry type too.
+    const milestones = detectMilestones([
+      { id: 'start', timestamp: 1, type: 'LEVEL_UP', message: 'Attack level 2' },
+      { id: 'chunk-key', timestamp: 2, type: 'XTREME_MILESTONE', message: 'Chunked milestone: Total Level 50 gives a guaranteed Key.' },
+    ]);
+    expect(milestones.find(m => m.index === 1)?.label).toBe('Start-area milestone Key');
+    expect(milestones.map(m => m.label).join(' ')).not.toContain('Xtreme');
+  });
 });
 
 describe('timelapse roll narration', () => {

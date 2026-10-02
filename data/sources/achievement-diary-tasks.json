@@ -143,7 +143,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Silk"
+      "sourceRequirements": "Silk",
+      "merchants": [
+        "Silk Shops"
+      ]
     },
     {
       "id": "ard_easy_4",
@@ -225,7 +228,8 @@
       "skills": {},
       "quests": [],
       "regions": [
-        "East Ardougne"
+        "East Ardougne",
+        "Mage Arena"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -245,7 +249,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "merchants": [
+        "Hunter Shops"
+      ]
     },
     {
       "id": "ard_easy_10",
@@ -346,7 +353,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "31 Farming 3 strawberry seeds, spade, seed dibber (or Barbarian Farming ), and a rake Basket of apples recommended to pay the nearby farmer to protect the crop"
+      "sourceRequirements": "31 Farming 3 strawberry seeds, spade, seed dibber (or Barbarian Farming ), and a rake Basket of apples recommended to pay the nearby farmer to protect the crop",
+      "farming": [
+        "Allotment"
+      ]
     },
     {
       "id": "ard_med_4",
@@ -594,7 +604,10 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Recharge some Jewellery at Totem in the Legends Guild.",
-      "sourceRequirements": "Completion of Legends' Quest Less than fully charged skills necklace or combat bracelet"
+      "sourceRequirements": "Completion of Legends' Quest Less than fully charged skills necklace or combat bracelet",
+      "guilds": [
+        "Legends' Guild"
+      ]
     },
     {
       "id": "ard_hard_2",
@@ -612,7 +625,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "66 Magic"
+      "sourceRequirements": "66 Magic",
+      "guilds": [
+        "Wizards' Guild"
+      ]
     },
     {
       "id": "ard_hard_3",
@@ -716,6 +732,9 @@
       "sourceRequirements": "68 Farming Palm sapling, spade and a rake 15 Papaya fruit recommended to pay the gardener",
       "regions": [
         "Observatory"
+      ],
+      "farming": [
+        "Fruit Tree"
       ]
     },
     {
@@ -734,7 +753,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "70 Farming Poison ivy seed, seed dibber (or Barbarian Farming ), and a rake Note: Poison ivy cannot get diseased while growing."
+      "sourceRequirements": "70 Farming Poison ivy seed, seed dibber (or Barbarian Farming ), and a rake Note: Poison ivy cannot get diseased while growing.",
+      "farming": [
+        "Bush"
+      ]
     },
     {
       "id": "ard_hard_9",
@@ -772,7 +794,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "50 Construction 25,000 coins for an estate agent to move your house to Yanille Note: In Deadman Mode, the task is instead \"Ask the Estate Agent to move your house to Yanille.\" This does not cost anything as your house will not be moved."
+      "sourceRequirements": "50 Construction 25,000 coins for an estate agent to move your house to Yanille Note: In Deadman Mode, the task is instead \"Ask the Estate Agent to move your house to Yanille.\" This does not cost anything as your house will not be moved.",
+      "merchants": [
+        "Real Estate Agents"
+      ]
     },
     {
       "id": "ard_hard_11",
@@ -786,7 +811,7 @@
       },
       "quests": [],
       "regions": [
-        "West Ardougne"
+        "East Ardougne"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -957,7 +982,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "85 Farming Torstol seed, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended"
+      "sourceRequirements": "85 Farming Torstol seed, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended",
+      "farming": [
+        "Herb"
+      ]
     },
     {
       "id": "ard_elite_7",
@@ -1124,7 +1152,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Any grimy herb and 200 coins"
+      "sourceRequirements": "Any grimy herb and 200 coins",
+      "merchants": [
+        "Decanters"
+      ]
     },
     {
       "id": "des_easy_7",
@@ -1230,7 +1261,8 @@
       "skills": {},
       "quests": [],
       "regions": [
-        "Shantay Pass"
+        "Shantay Pass",
+        "Pollnivneach"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -1324,7 +1356,8 @@
         "The Golem"
       ],
       "regions": [
-        "Shantay Pass"
+        "Shantay Pass",
+        "Ruins of Uzer"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -1388,8 +1421,6 @@
       "classification": "preserved-semantic",
       "sourceRequirements": "36 Herblore Harralander potion (unf) and goat horn dust",
       "anyOfRegions": [
-        "Al Kharid",
-        "Duel Arena / PvP Arena",
         "Shantay Pass",
         "Pollnivneach",
         "Nardah",
@@ -1398,7 +1429,6 @@
         "Bandit Camp",
         "Bedabin Camp",
         "Ruins of Uzer",
-        "Mage Training Arena",
         "Agility Pyramid",
         "Giants' Plateau",
         "Kalphite Lair",
@@ -1465,8 +1495,8 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "20 Construction Scroll of redirection and a house tablet",
-      "mobility": [
-        "Teleport Tablets"
+      "merchants": [
+        "Real Estate Agents"
       ]
     },
     {
@@ -1531,7 +1561,7 @@
       },
       "quests": [],
       "regions": [
-        "Bandit Camp"
+        "Agility Pyramid"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -1554,8 +1584,6 @@
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Dream Mentor 68 Magic Lunar spellbook selected Waterskin that isn't full and means to cast Humidify ( )",
       "anyOfRegions": [
-        "Al Kharid",
-        "Duel Arena / PvP Arena",
         "Shantay Pass",
         "Pollnivneach",
         "Nardah",
@@ -1564,7 +1592,6 @@
         "Bandit Camp",
         "Bedabin Camp",
         "Ruins of Uzer",
-        "Mage Training Arena",
         "Agility Pyramid",
         "Giants' Plateau",
         "Kalphite Lair",
@@ -1644,6 +1671,9 @@
           "tier": 6,
           "reason": "Slayer helmet"
         }
+      ],
+      "slayerUnlocks": [
+        "Malevolent Masquerade"
       ]
     },
     {
@@ -1657,8 +1687,9 @@
       "quests": [
         "Desert Treasure I"
       ],
-      "regions": [
-        "Sophanem"
+      "anyOfRegions": [
+        "Bandit Camp",
+        "Pollnivneach"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -1771,8 +1802,6 @@
       "previousDescription": "Cast Ice Barrage against a foe in the Desert.",
       "sourceRequirements": "Completion of Desert Treasure I 94 Magic Means to cast Ice Barrage ( )",
       "anyOfRegions": [
-        "Al Kharid",
-        "Duel Arena / PvP Arena",
         "Shantay Pass",
         "Pollnivneach",
         "Nardah",
@@ -1781,7 +1810,6 @@
         "Bandit Camp",
         "Bedabin Camp",
         "Ruins of Uzer",
-        "Mage Training Arena",
         "Agility Pyramid",
         "Giants' Plateau",
         "Kalphite Lair",
@@ -1822,9 +1850,18 @@
       "quests": [
         "Priest in Peril"
       ],
+      "regions": [
+        "Canifis"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Priest in Peril 78 Construction 2 mahogany planks, 2 gold leaves, saw, and hammer Kq head or Kq head (tattered), and 50,000 coins to have the taxidermist stuff it Additional 15,000 coins to construct a Skill Hall if you haven't already"
+      "sourceRequirements": "Completion of Priest in Peril 78 Construction 2 mahogany planks, 2 gold leaves, saw, and hammer Kq head or Kq head (tattered), and 50,000 coins to have the taxidermist stuff it Additional 15,000 coins to construct a Skill Hall if you haven't already",
+      "merchants": [
+        "Taxidermists"
+      ],
+      "bosses": [
+        "Kalphite Queen"
+      ]
     },
     {
       "id": "des_elite_5",
@@ -2009,7 +2046,8 @@
       "skills": {},
       "quests": [],
       "regions": [
-        "Port Sarim"
+        "Port Sarim",
+        "Entrana"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -2141,17 +2179,30 @@
           "label": "Grow watermelons",
           "skills": {
             "Farming": 47
-          }
+          },
+          "farming": [
+            "Allotment"
+          ]
         },
         {
           "label": "Obtain a watermelon from gryphons",
-          "manualRequirements": [
-            "Confirm: Obtain a watermelon from gryphons"
+          "skills": {
+            "Sailing": 45,
+            "Slayer": 51
+          },
+          "quests": [
+            "Troubled Tortugans"
+          ],
+          "regions": [
+            "The Great Conch"
           ]
         }
       ],
       "regions": [
         "Falador"
+      ],
+      "farming": [
+        "Flower"
       ]
     },
     {
@@ -2328,6 +2379,9 @@
             }
           ]
         }
+      ],
+      "guilds": [
+        "Crafting Guild"
       ]
     },
     {
@@ -2643,6 +2697,9 @@
           "reason": "Prospector helmet or golden prospector helmet",
           "manualCheck": "Have Prospector helmet or golden prospector helmet and confirm that the specific item is permitted by your equipment tier"
         }
+      ],
+      "guilds": [
+        "Mining Guild"
       ]
     },
     {
@@ -2661,7 +2718,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of the Heroes' Quest Protection from dragonfire and weaponry to slay it"
+      "sourceRequirements": "Completion of the Heroes' Quest Protection from dragonfire and weaponry to slay it",
+      "guilds": [
+        "Heroes' Guild"
+      ]
     },
     {
       "id": "fal_hard_8",
@@ -2679,7 +2739,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "50 Thieving"
+      "sourceRequirements": "50 Thieving",
+      "guilds": [
+        "Rogues' Den"
+      ]
     },
     {
       "id": "fal_hard_9",
@@ -2753,6 +2816,9 @@
             "level": 99
           }
         }
+      ],
+      "guilds": [
+        "Warriors' Guild"
       ]
     },
     {
@@ -3135,7 +3201,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "91 Farming and 75 Woodcutting Magic sapling, spade and any axe"
+      "sourceRequirements": "91 Farming and 75 Woodcutting Magic sapling, spade and any axe",
+      "farming": [
+        "Wood Tree"
+      ]
     },
     {
       "id": "fal_elite_4",
@@ -3390,8 +3459,15 @@
       "sourceRequirements": "Partial completion of the Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1",
       "oneOf": [
         {
+          "label": "Troll Stronghold progress",
           "quests": [
-            "Troll Stronghold"
+            "Death Plateau"
+          ],
+          "questProgress": [
+            {
+              "quest": "Troll Stronghold",
+              "label": "Reached the required progress in Troll Stronghold for: Enter the Troll Stronghold."
+            }
           ]
         },
         {
@@ -3615,6 +3691,9 @@
           "quest": "The Fremennik Trials",
           "label": "Reached the required progress in The Fremennik Trials for: Pick up your Pet Rock from your POH Menagerie."
         }
+      ],
+      "housing": [
+        "Menagerie"
       ]
     },
     {
@@ -3629,7 +3708,8 @@
         "Horror from the Deep"
       ],
       "regions": [
-        "Lighthouse"
+        "Lighthouse",
+        "Waterbirth Island"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -4010,8 +4090,15 @@
       "sourceRequirements": "Partial completion of the Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1 70 Agility, 70 Strength, 70 Hitpoints, and 70 Ranged (only Hitpoints is boostable ) See the boss overview (or see the individual strategy guides for Kree'arra, General Graardor, Commander Zilyana, and K'ril Tsutsaroth )",
       "oneOf": [
         {
+          "label": "Troll Stronghold progress",
           "quests": [
-            "Troll Stronghold"
+            "Death Plateau"
+          ],
+          "questProgress": [
+            {
+              "quest": "Troll Stronghold",
+              "label": "Reached the required progress in Troll Stronghold for: Kill the generals of Armadyl, Bandos, Saradomin and Zamorak in the God Wars Dungeon."
+            }
           ]
         },
         {
@@ -4046,8 +4133,15 @@
       "sourceRequirements": "Partial completion of the Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1 83 Slayer Weaponry",
       "oneOf": [
         {
+          "label": "Troll Stronghold progress",
           "quests": [
-            "Troll Stronghold"
+            "Death Plateau"
+          ],
+          "questProgress": [
+            {
+              "quest": "Troll Stronghold",
+              "label": "Reached the required progress in Troll Stronghold for: Slay a Spiritual mage within the Godwars Dungeon."
+            }
           ]
         },
         {
@@ -4142,7 +4236,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "13 Farming 3 jute seeds, rake, and a seed dibber"
+      "sourceRequirements": "13 Farming 3 jute seeds, rake, and a seed dibber",
+      "farming": [
+        "Hops"
+      ]
     },
     {
       "id": "kan_easy_6",
@@ -4307,7 +4404,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "40 Ranged"
+      "sourceRequirements": "40 Ranged",
+      "guilds": [
+        "Ranging Guild"
+      ]
     },
     {
       "id": "kan_med_4",
@@ -4323,7 +4423,8 @@
       },
       "quests": [],
       "regions": [
-        "Catherby"
+        "Catherby",
+        "Taverley"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -4422,11 +4523,14 @@
       },
       "quests": [],
       "regions": [
-        "Catherby"
+        "Camelot"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "26 Farming Limpwurt seed, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended"
+      "sourceRequirements": "26 Farming Limpwurt seed, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended",
+      "farming": [
+        "Flower"
+      ]
     },
     {
       "id": "kan_med_9",
@@ -4579,6 +4683,12 @@
       "sourceRequirements": "Access to Barbarian Fishing 70 Fishing, 45 Agility, and 45 Strength Barbarian rod and suitable bait ( fishing bait, feathers, fish offcuts, roe, or caviar )",
       "regions": [
         "Otto's Grotto"
+      ],
+      "questProgress": [
+        {
+          "quest": "Barbarian Training",
+          "label": "Learned heavy rod fishing in Barbarian Training"
+        }
       ]
     },
     {
@@ -4654,7 +4764,8 @@
       },
       "quests": [],
       "regions": [
-        "Catherby"
+        "Catherby",
+        "Taverley"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -4689,7 +4800,13 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Access to Barbarian Firemaking 65 Firemaking Maple logs, and any bow (except the twisted, cursed, dark, crystal, ogre, rain, starter or signed oak bow )"
+      "sourceRequirements": "Access to Barbarian Firemaking 65 Firemaking Maple logs, and any bow (except the twisted, cursed, dark, crystal, ogre, rain, starter or signed oak bow )",
+      "questProgress": [
+        {
+          "quest": "Barbarian Training",
+          "label": "Learned to light fires with a bow in Barbarian Training"
+        }
+      ]
     },
     {
       "id": "kan_hard_7",
@@ -4703,7 +4820,7 @@
       },
       "quests": [],
       "regions": [
-        "Legends' Guild"
+        "Baxtorian Falls"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -4737,6 +4854,12 @@
       "sourceRequirements": "Access to Barbarian Firemaking Weaponry and protection from dragonfire",
       "regions": [
         "Ancient Cavern"
+      ],
+      "questProgress": [
+        {
+          "quest": "Barbarian Training",
+          "label": "Finished bow firemaking in Barbarian Training, which opens the Ancient Cavern"
+        }
       ]
     },
     {
@@ -4785,7 +4908,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "50 Construction 25,000 coins Additional 5,000 coins if already using Fancy Stone, to change to something else and back"
+      "sourceRequirements": "50 Construction 25,000 coins Additional 5,000 coins if already using Fancy Stone, to change to something else and back",
+      "merchants": [
+        "Real Estate Agents"
+      ]
     },
     {
       "id": "kan_hard_11",
@@ -4797,13 +4923,21 @@
       "skills": {
         "Smithing": 75
       },
-      "quests": [],
+      "quests": [
+        "Tai Bwo Wannai Trio"
+      ],
       "regions": [
         "Otto's Grotto"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Access to Barbarian Smithing 75 Smithing Yew logs, adamantite bar, and a hammer"
+      "sourceRequirements": "Access to Barbarian Smithing 75 Smithing Yew logs, adamantite bar, and a hammer",
+      "questProgress": [
+        {
+          "quest": "Barbarian Training",
+          "label": "Learned to smith spears in Barbarian Training"
+        }
+      ]
     },
     {
       "id": "kan_elite_1",
@@ -4836,11 +4970,14 @@
       },
       "quests": [],
       "regions": [
-        "Catherby"
+        "Camelot"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "79 Farming Dwarf weed seed, spade, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended"
+      "sourceRequirements": "79 Farming Dwarf weed seed, spade, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended",
+      "farming": [
+        "Herb"
+      ]
     },
     {
       "id": "kan_elite_3",
@@ -4877,8 +5014,11 @@
             "Fishing": 96,
             "Strength": 76
           },
-          "items": [
-            "Access to Barbarian Fishing"
+          "questProgress": [
+            {
+              "quest": "Barbarian Training",
+              "label": "Learned barehanded fishing in Barbarian Training"
+            }
           ]
         }
       ],
@@ -4911,7 +5051,13 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Access to Barbarian Herblore 86 Herblore and 60 Agility Stamina potion (2) and caviar"
+      "sourceRequirements": "Access to Barbarian Herblore 86 Herblore and 60 Agility Stamina potion (2) and caviar",
+      "questProgress": [
+        {
+          "quest": "Barbarian Training",
+          "label": "Finished the Herblore part of Barbarian Training"
+        }
+      ]
     },
     {
       "id": "kan_elite_5",
@@ -4923,13 +5069,21 @@
       "skills": {
         "Smithing": 90
       },
-      "quests": [],
+      "quests": [
+        "Tai Bwo Wannai Trio"
+      ],
       "regions": [
         "Otto's Grotto"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Access to Barbarian Smithing 90 Smithing Runite bar, magic logs, and a hammer"
+      "sourceRequirements": "Access to Barbarian Smithing 90 Smithing Runite bar, magic logs, and a hammer",
+      "questProgress": [
+        {
+          "quest": "Barbarian Training",
+          "label": "Learned to smith hastae in Barbarian Training"
+        }
+      ]
     },
     {
       "id": "kan_elite_6",
@@ -4948,7 +5102,13 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Access to Barbarian Firemaking 85 Firemaking and 85 Crafting Magic logs, chewed bones, tinderbox, and any woodcutting axe"
+      "sourceRequirements": "Access to Barbarian Firemaking 85 Firemaking and 85 Crafting Magic logs, chewed bones, tinderbox, and any woodcutting axe",
+      "questProgress": [
+        {
+          "quest": "Barbarian Training",
+          "label": "Learned to build pyre ships in Barbarian Training"
+        }
+      ]
     },
     {
       "id": "kan_elite_7",
@@ -5036,7 +5196,7 @@
       "skills": {},
       "quests": [],
       "regions": [
-        "Musa Point"
+        "Port Sarim"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -5052,7 +5212,8 @@
       "skills": {},
       "quests": [],
       "regions": [
-        "Brimhaven"
+        "Brimhaven",
+        "East Ardougne"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -5345,6 +5506,9 @@
           ],
           "items": [
             "100 trading sticks and Tai Bwo Wannai Cleanup access"
+          ],
+          "minigames": [
+            "Tai Bwo Wannai Cleanup"
           ]
         },
         {
@@ -5399,6 +5563,9 @@
           ],
           "items": [
             "100 trading sticks and Tai Bwo Wannai Cleanup access"
+          ],
+          "minigames": [
+            "Tai Bwo Wannai Cleanup"
           ]
         },
         {
@@ -5507,7 +5674,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "27 Farming Any fruit tree sapling, a spade, and a rake"
+      "sourceRequirements": "27 Farming Any fruit tree sapling, a spade, and a rake",
+      "farming": [
+        "Fruit Tree"
+      ]
     },
     {
       "id": "kar_med_14",
@@ -5641,6 +5811,9 @@
           ],
           "regions": [
             "Tai Bwo Wannai"
+          ],
+          "minigames": [
+            "Tai Bwo Wannai Cleanup"
           ]
         }
       ]
@@ -5692,7 +5865,9 @@
       "description": "Eat an oomlie wrap.",
       "skills": {},
       "quests": [],
-      "regions": [],
+      "regions": [
+        "Kharazi Jungle"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Cooked oomlie wrap, or the requirements to make it ( 50 Cooking, a palm leaf, and a raw oomlie )",
@@ -5713,6 +5888,12 @@
             "Raw oomlie"
           ]
         }
+      ],
+      "questProgress": [
+        {
+          "quest": "Legends' Quest",
+          "label": "Reached the required progress in Legends' Quest for: Eat an oomlie wrap."
+        }
       ]
     },
     {
@@ -5726,7 +5907,8 @@
         "Runecraft": 44
       },
       "quests": [],
-      "regions": [
+      "anyOfRegions": [
+        "Shilo Village",
         "Tai Bwo Wannai"
       ],
       "aliases": [],
@@ -5908,7 +6090,8 @@
         "Runecraft": 91
       },
       "quests": [],
-      "regions": [
+      "anyOfRegions": [
+        "Shilo Village",
         "Tai Bwo Wannai"
       ],
       "aliases": [],
@@ -5938,6 +6121,9 @@
           "tier": 8,
           "reason": "Fire cape (or a higher-tier infernal cape)"
         }
+      ],
+      "bosses": [
+        "TzHaar Fight Cave"
       ]
     },
     {
@@ -5956,7 +6142,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "68 Farming Palm sapling, spade and rake 15 papaya fruit recommended to pay the gardener"
+      "sourceRequirements": "68 Farming Palm sapling, spade and rake 15 papaya fruit recommended to pay the gardener",
+      "farming": [
+        "Fruit Tree"
+      ]
     },
     {
       "id": "karamja_elite_4",
@@ -5992,6 +6181,9 @@
       "sourceRequirements": "72 Farming Calquat sapling, spade and rake 8 poison ivy berries recommended to pay the gardener",
       "regions": [
         "Tai Bwo Wannai"
+      ],
+      "farming": [
+        "Calquat"
       ]
     },
     {
@@ -6094,6 +6286,10 @@
       "regions": [
         "Land's End"
       ],
+      "anyOfRegions": [
+        "Port Sarim",
+        "Piscarilius"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "None"
@@ -6147,7 +6343,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "25 Construction 8,750 coins for an estate agent to move your house to Hosidius (can only be done after you've visited Great Kourend )"
+      "sourceRequirements": "25 Construction 8,750 coins for an estate agent to move your house to Hosidius (can only be done after you've visited Great Kourend )",
+      "merchants": [
+        "Real Estate Agents"
+      ]
     },
     {
       "id": "kou_easy_10",
@@ -6326,7 +6525,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "45 Farming"
+      "sourceRequirements": "45 Farming",
+      "guilds": [
+        "Farming Guild"
+      ]
     },
     {
       "id": "kou_med_6",
@@ -6380,7 +6582,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Combat gear"
+      "sourceRequirements": "Combat gear",
+      "minigames": [
+        "Intelligence Gathering"
+      ]
     },
     {
       "id": "kou_med_9",
@@ -6507,7 +6712,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "60 Woodcutting"
+      "sourceRequirements": "60 Woodcutting",
+      "guilds": [
+        "Woodcutting Guild"
+      ]
     },
     {
       "id": "kou_hard_2",
@@ -6520,14 +6728,20 @@
         "Smithing": 70
       },
       "quests": [
-        "The Forsaken Tower"
+        "Client of Kourend"
       ],
       "regions": [
         "Lovakengj"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of The Forsaken Tower 70 Smithing Adamantite ore and 6 coal"
+      "sourceRequirements": "Completion of The Forsaken Tower 70 Smithing Adamantite ore and 6 coal",
+      "questProgress": [
+        {
+          "quest": "The Forsaken Tower",
+          "label": "Reached the required progress in The Forsaken Tower for: Smelt an Adamantite bar in The Forsaken Tower."
+        }
+      ]
     },
     {
       "id": "kou_hard_3",
@@ -6625,7 +6839,10 @@
         {
           "label": "Mounted Xeric talisman",
           "items": [
-            "Mounted Xeric's talisman or house-party access"
+            "Mounted Xeric's talisman in your house"
+          ],
+          "housing": [
+            "Mounted Xeric's Talisman"
           ]
         }
       ],
@@ -6670,7 +6887,16 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "62 Slayer Combat gear Boots of stone, brimstone, or granite"
+      "sourceRequirements": "62 Slayer Combat gear Boots of stone, brimstone, or granite",
+      "equipmentRequirements": [
+        {
+          "slot": "Boots",
+          "tier": 1,
+          "reason": "Boots of stone, brimstone or granite",
+          "unlessDiary": "Kourend Elite",
+          "manualCheck": "Have Boots of stone, brimstone or granite and confirm that the specific item is permitted by your equipment tier"
+        }
+      ]
     },
     {
       "id": "kou_hard_10",
@@ -6726,12 +6952,36 @@
         "Woodcutting": 90
       },
       "quests": [],
-      "regions": [
-        "Woodcutting Guild"
-      ],
+      "regions": [],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "90 Woodcutting Any axe"
+      "sourceRequirements": "90 Woodcutting Any axe",
+      "oneOf": [
+        {
+          "label": "Woodcutting Guild redwoods",
+          "regions": [
+            "Woodcutting Guild"
+          ],
+          "guilds": [
+            "Woodcutting Guild"
+          ]
+        },
+        {
+          "label": "Grow a redwood in the Farming Guild",
+          "skills": {
+            "Farming": 90
+          },
+          "regions": [
+            "Farming Guild"
+          ],
+          "guilds": [
+            "Farming Guild"
+          ],
+          "farming": [
+            "Redwood"
+          ]
+        }
+      ]
     },
     {
       "id": "kou_elite_3",
@@ -6846,7 +7096,13 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "85 Farming and 40 Fletching Celastrus sapling, knife, spade, rake, and any axe 8 potato cacti recommended to protect your sapling"
+      "sourceRequirements": "85 Farming and 40 Fletching Celastrus sapling, knife, spade, rake, and any axe 8 potato cacti recommended to protect your sapling",
+      "guilds": [
+        "Farming Guild"
+      ],
+      "farming": [
+        "Celastrus"
+      ]
     },
     {
       "id": "lum_easy_1",
@@ -7283,6 +7539,14 @@
             "Slayer": 99
           }
         }
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Dramen or lunar staff to enter Zanaris",
+          "manualCheck": "Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier"
+        }
       ]
     },
     {
@@ -7391,7 +7655,29 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Lost City 46 Agility Dramen or Lunar staff to enter Zanaris, or access to the Abyss"
+      "sourceRequirements": "Completion of Lost City 46 Agility Dramen or Lunar staff to enter Zanaris, or access to the Abyss",
+      "oneOf": [
+        {
+          "label": "Zanaris",
+          "equipmentRequirements": [
+            {
+              "slot": "Weapon",
+              "tier": 1,
+              "reason": "Dramen or lunar staff to enter Zanaris",
+              "manualCheck": "Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "regions": [
+            "Edgeville"
+          ]
+        }
+      ]
     },
     {
       "id": "lum_hard_3",
@@ -7412,7 +7698,32 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 56 Cosmic runes simultaneously.",
-      "sourceRequirements": "Completion of Lost City 59 Runecraft 28 pure or daeyalt essence (less may suffice with Raiments of the Eye pieces) Access to the Cosmic Altar ( cosmic talisman / tiara, catalytic talisman / tiara, or the Abyss )"
+      "sourceRequirements": "Completion of Lost City 59 Runecraft 28 pure or daeyalt essence (less may suffice with Raiments of the Eye pieces) Access to the Cosmic Altar ( cosmic talisman / tiara, catalytic talisman / tiara, or the Abyss )",
+      "oneOf": [
+        {
+          "label": "Zanaris",
+          "items": [
+            "Cosmic or catalytic talisman or tiara"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Weapon",
+              "tier": 1,
+              "reason": "Dramen or lunar staff to enter Zanaris",
+              "manualCheck": "Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "regions": [
+            "Edgeville"
+          ]
+        }
+      ]
     },
     {
       "id": "lum_hard_4",
@@ -7468,7 +7779,8 @@
         "Another Slice of H.A.M."
       ],
       "regions": [
-        "Lumbridge"
+        "Lumbridge",
+        "Keldagrim"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -7511,7 +7823,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "63 Farming Belladonna seed, seed dibber, spade, rake and any gloves"
+      "sourceRequirements": "63 Farming Belladonna seed, seed dibber, spade, rake and any gloves",
+      "farming": [
+        "Belladonna"
+      ]
     },
     {
       "id": "lum_hard_9",
@@ -7546,7 +7861,7 @@
       "classification": "preserved-semantic",
       "sourceRequirements": "52 Prayer",
       "regions": [
-        "Emir's Arena"
+        "Mage Training Arena"
       ]
     },
     {
@@ -7869,7 +8184,9 @@
       "skills": {
         "Crafting": 15
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "15 Crafting Chisel Any blamish shell",
@@ -7904,7 +8221,9 @@
       "skills": {
         "Cooking": 12
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Port Phasmatys"
       ],
@@ -7964,7 +8283,9 @@
       "skills": {
         "Slayer": 15
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Slayer Tower"
       ],
@@ -7980,13 +8301,18 @@
       "ordinal": 5,
       "description": "Have Sbott in Canifis tan something for you.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Canifis"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Any tannable hide and 2-45 coins depending on the type of hide"
+      "sourceRequirements": "Any tannable hide and 2-45 coins depending on the type of hide",
+      "merchants": [
+        "Tanners"
+      ]
     },
     {
       "id": "mor_easy_6",
@@ -7996,7 +8322,9 @@
       "ordinal": 6,
       "description": "Enter Mort Myre Swamp.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Mort Myre Swamp"
       ],
@@ -8012,7 +8340,9 @@
       "ordinal": 7,
       "description": "Kill a Ghoul.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Weaponry",
@@ -8030,7 +8360,9 @@
       "skills": {
         "Farming": 23
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Port Phasmatys"
       ],
@@ -8042,14 +8374,27 @@
           "label": "Grow watermelons",
           "skills": {
             "Farming": 47
-          }
+          },
+          "farming": [
+            "Allotment"
+          ]
         },
         {
           "label": "Obtain a watermelon from gryphons",
-          "manualRequirements": [
-            "Confirm: Obtain a watermelon from gryphons"
+          "skills": {
+            "Sailing": 45,
+            "Slayer": 51
+          },
+          "quests": [
+            "Troubled Tortugans"
+          ],
+          "regions": [
+            "The Great Conch"
           ]
         }
+      ],
+      "farming": [
+        "Flower"
       ]
     },
     {
@@ -8060,7 +8405,9 @@
       "ordinal": 9,
       "description": "Offer some bonemeal at the Ectofuntus.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Port Phasmatys"
       ],
@@ -8076,7 +8423,9 @@
       "ordinal": 10,
       "description": "Kill a werewolf in its human form using the Wolfbane Dagger.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Canifis"
       ],
@@ -8120,7 +8469,9 @@
       "skills": {
         "Hunter": 29
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Mort Myre Swamp"
       ],
@@ -8138,7 +8489,9 @@
       "skills": {
         "Agility": 40
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Canifis"
       ],
@@ -8156,7 +8509,9 @@
       "skills": {
         "Woodcutting": 45
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "anyOfRegions": [
         "Haunted Woods",
         "Darkmeyer",
@@ -8174,7 +8529,9 @@
       "ordinal": 4,
       "description": "Travel to Dragontooth Isle.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Dragontooth Island"
       ],
@@ -8260,14 +8617,21 @@
       "description": "Board the Swampy boat at the Hollows.",
       "skills": {},
       "quests": [
-        "Nature Spirit"
+        "Priest in Peril",
+        "The Restless Ghost"
       ],
       "regions": [
         "Mort Myre Swamp"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Quest start of Nature Spirit Dramen or Lunar staff recommended to travel to Fairy ring code B K R"
+      "sourceRequirements": "Quest start of Nature Spirit Dramen or Lunar staff recommended to travel to Fairy ring code B K R",
+      "questProgress": [
+        {
+          "quest": "Nature Spirit",
+          "label": "Started Nature Spirit"
+        }
+      ]
     },
     {
       "id": "mor_med_8",
@@ -8280,7 +8644,8 @@
         "Smithing": 35
       },
       "quests": [
-        "Dwarf Cannon"
+        "Dwarf Cannon",
+        "Priest in Peril"
       ],
       "regions": [
         "Port Phasmatys"
@@ -8395,7 +8760,19 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Desert Treasure I 66 Magic and 50 Construction 100,000 coins, 2 limestone bricks, 3 teak planks, hammer, and saw to construct a portal chamber with an activatable teak portal and teleport focus, if you haven't already 200 law runes and 100 blood runes to direct a portal to Kharyrll, or 2000 law runes and 1000 blood runes if adding the portal to a portal nexus instead"
+      "sourceRequirements": "Completion of Desert Treasure I 66 Magic and 50 Construction 100,000 coins, 2 limestone bricks, 3 teak planks, hammer, and saw to construct a portal chamber with an activatable teak portal and teleport focus, if you haven't already 200 law runes and 100 blood runes to direct a portal to Kharyrll, or 2000 law runes and 1000 blood runes if adding the portal to a portal nexus instead",
+      "oneOf": [
+        {
+          "housing": [
+            "Portal Chamber"
+          ]
+        },
+        {
+          "housing": [
+            "Portal Nexus"
+          ]
+        }
+      ]
     },
     {
       "id": "mor_hard_2",
@@ -8407,7 +8784,9 @@
       "skills": {
         "Agility": 71
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Slayer Tower"
       ],
@@ -8438,6 +8817,9 @@
           "quest": "The Great Brain Robbery",
           "label": "Reached the required progress in The Great Brain Robbery for: Harvest some Watermelon from the Allotment patch on Harmony Island."
         }
+      ],
+      "farming": [
+        "Allotment"
       ]
     },
     {
@@ -8512,13 +8894,18 @@
       "skills": {
         "Farming": 53
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Canifis"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "53 Farming Mushroom spore, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended"
+      "sourceRequirements": "53 Farming Mushroom spore, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended",
+      "farming": [
+        "Mushroom"
+      ]
     },
     {
       "id": "mor_hard_8",
@@ -8555,7 +8942,9 @@
       "skills": {
         "Agility": 65
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "65 Agility",
@@ -8603,8 +8992,11 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of In Aid of the Myreque Access to Barbarian Fishing 96 Fishing and 76 Strength (both are boostable ) Shark lure recommended If you are boosting with the Dragon harpoon special attack, you need to bank the harpoon before catching the shark. Having it in the inventory will use it by default and it will not count as bare handed.",
-      "items": [
-        "Access to Barbarian Fishing"
+      "questProgress": [
+        {
+          "quest": "Barbarian Training",
+          "label": "Learned barehanded fishing in Barbarian Training"
+        }
       ]
     },
     {
@@ -8638,7 +9030,8 @@
         "Magic": 83
       },
       "quests": [
-        "Lunar Diplomacy"
+        "Lunar Diplomacy",
+        "Priest in Peril"
       ],
       "regions": [
         "Port Phasmatys"
@@ -8648,6 +9041,9 @@
       "sourceRequirements": "Completion of Lunar Diplomacy 83 Magic Lunar spellbook selected Means to cast Fertile Soil ( )",
       "arcana": [
         "Lunar Spellbook"
+      ],
+      "farming": [
+        "Herb"
       ]
     },
     {
@@ -8660,7 +9056,9 @@
       "skills": {
         "Crafting": 84
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Canifis"
       ],
@@ -8678,7 +9076,9 @@
       "skills": {
         "Slayer": 85
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Slayer Tower"
       ],
@@ -8696,7 +9096,9 @@
       "skills": {
         "Defence": 70
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Barrows"
       ],
@@ -8826,7 +9228,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "100 coins Logs, obtainable from a dying tree here with any axe for another easy task"
+      "sourceRequirements": "100 coins Logs, obtainable from a dying tree here with any axe for another easy task",
+      "merchants": [
+        "Sawmill Operators"
+      ]
     },
     {
       "id": "var_easy_5",
@@ -9031,7 +9436,10 @@
       "questPoints": 32,
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "32 Quest points"
+      "sourceRequirements": "32 Quest points",
+      "guilds": [
+        "Champions' Guild"
+      ]
     },
     {
       "id": "var_med_3",
@@ -9063,6 +9471,9 @@
           "reason": "Activated ring of charos",
           "manualCheck": "Have Activated ring of charos and confirm that the specific item is permitted by your equipment tier"
         }
+      ],
+      "merchants": [
+        "Pet Shops"
       ]
     },
     {
@@ -9147,7 +9558,10 @@
         {
           "label": "Mounted Digsite pendant",
           "items": [
-            "Mounted Digsite pendant or house-party access"
+            "Mounted Digsite pendant in your house"
+          ],
+          "housing": [
+            "Mounted Digsite Pendant"
           ]
         },
         {
@@ -9224,7 +9638,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "20 mahogany logs and 30,000 coins"
+      "sourceRequirements": "20 mahogany logs and 30,000 coins",
+      "merchants": [
+        "Sawmill Operators"
+      ]
     },
     {
       "id": "var_med_11",
@@ -9296,7 +9713,7 @@
       "ordinal": 1,
       "description": "Trade furs with the Fancy Dress Seller for a spottier cape and equip it.",
       "skills": {
-        "Hunter": 66
+        "Hunter": 69
       },
       "quests": [],
       "regions": [
@@ -9305,23 +9722,8 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "66 Hunter 800 coins 2 dashing kebbit fur (requires 69 Hunter if playing as Ironman )",
-      "oneOf": [
-        {
-          "label": "Existing furs",
-          "items": [
-            "2 dashing kebbit fur",
-            "800 coins"
-          ]
-        },
-        {
-          "label": "Catch the furs yourself",
-          "skills": {
-            "Hunter": 69
-          },
-          "items": [
-            "800 coins"
-          ]
-        }
+      "items": [
+        "800 coins"
       ],
       "equipmentRequirements": [
         {
@@ -9457,7 +9859,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "50 Construction 25,000 coins Additional 5,000 coins if already using Fancy Stone, to change to something else and back"
+      "sourceRequirements": "50 Construction 25,000 coins Additional 5,000 coins if already using Fancy Stone, to change to something else and back",
+      "merchants": [
+        "Real Estate Agents"
+      ]
     },
     {
       "id": "var_hard_8",
@@ -9476,7 +9881,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "68 Farming and 60 Woodcutting Yew sapling, any axe, and a spade 10 cactus spines recommended to pay the gardener"
+      "sourceRequirements": "68 Farming and 60 Woodcutting Yew sapling, any axe, and a spade 10 cactus spines recommended to pay the gardener",
+      "farming": [
+        "Wood Tree"
+      ]
     },
     {
       "id": "var_hard_9",
@@ -9613,6 +10021,9 @@
             "Have earned Varrock armour 3 or 4"
           ]
         }
+      ],
+      "guilds": [
+        "Cooks' Guild"
       ]
     },
     {
@@ -10479,6 +10890,9 @@
           "quest": "Mourning's End Part I",
           "label": "Reached the required progress in Mourning's End Part I for: Check the health of your Palm tree in Lletya."
         }
+      ],
+      "farming": [
+        "Fruit Tree"
       ]
     },
     {
@@ -10511,6 +10925,9 @@
       },
       "quests": [
         "Roving Elves"
+      ],
+      "regions": [
+        "Falador"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -10626,7 +11043,7 @@
       "classification": "preserved-semantic",
       "sourceRequirements": "93 Slayer See the strategy guide",
       "regions": [
-        "Castle Wars"
+        "Feldip Hills"
       ],
       "bosses": [
         "Thermonuclear Smoke Devil"
@@ -10648,7 +11065,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "75 Farming Magic sapling, 25 coconuts, rake, and a spade"
+      "sourceRequirements": "75 Farming Magic sapling, 25 coconuts, rake, and a spade",
+      "farming": [
+        "Wood Tree"
+      ]
     },
     {
       "id": "west_elite_4",
@@ -10792,6 +11212,9 @@
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "None",
+      "regions": [
+        "Mage Arena"
+      ],
       "anyOfRegions": [
         "East Ardougne",
         "Edgeville"
@@ -11617,8 +12040,15 @@
       "sourceRequirements": "64 Agility Partial completion of Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1",
       "oneOf": [
         {
+          "label": "Troll Stronghold progress",
           "quests": [
-            "Troll Stronghold"
+            "Death Plateau"
+          ],
+          "questProgress": [
+            {
+              "quest": "Troll Stronghold",
+              "label": "Reached the required progress in Troll Stronghold for: Take the agility shortcut from Trollheim into the Wilderness."
+            }
           ]
         },
         {
@@ -11628,6 +12058,7 @@
         }
       ],
       "regions": [
+        "Burthorpe",
         "Wilderness God Wars Dungeon"
       ]
     },
@@ -12119,9 +12550,13 @@
       "kar_easy_9",
       "kar_hard_1",
       "kar_med_1",
+      "kar_med_19",
       "kar_med_5",
+      "kar_med_8",
+      "kar_med_9",
       "kou_hard_5",
       "kou_hard_8",
+      "kou_med_8",
       "lum_hard_5",
       "lum_med_11",
       "mor_hard_5",
@@ -12140,9 +12575,6 @@
       "fal_med_6": "Only visits the Port Sarim Rat Pits.",
       "kar_hard_5": "Needs Tai Bwo Wannai Trio, a quest, not the Cleanup.",
       "kar_med_10": "Needs Tai Bwo Wannai Trio, a quest, not the Cleanup.",
-      "kar_med_19": "Shilo Village also opens the gem rocks.",
-      "kar_med_8": "Teak trees grow outside the Tai Bwo Wannai Hardwood Grove as well.",
-      "kar_med_9": "Mahogany trees grow outside the Tai Bwo Wannai Hardwood Grove as well.",
       "lum_elite_3": "The magic trees stand outside the Mage Training Arena's games.",
       "lum_hard_1": "Bones to Peaches is already an Arcana unlock.",
       "lum_hard_10": "Uses the altar at Emir's Arena; no duel is fought.",
@@ -12150,7 +12582,8 @@
       "west_easy_9": "The Minigame Teleport itself, already a Mobility unlock; no game is played.",
       "western_med_7": "A Gnome Glider trip.",
       "wild_hard_1": "The god spells come from Mage Arena I, already a quest requirement."
-    }
+    },
+    "followUp": "Owner decision, 2 October 2026: a task needs the minigame whose loot it uses, on the route that uses it. The Hardwood Grove routes of kar_med_8 and kar_med_9 need trading sticks, and kar_med_19's Cleanup route its gem rocks, so those routes need Tai Bwo Wannai Cleanup; kou_med_8 delivers intelligence, which only Intelligence Gathering gives."
   },
   "bossAudit": {
     "reviewedAt": "2026-09-26",
@@ -12158,11 +12591,13 @@
     "rule": "Tagged when the task is a kill, a raid or a fight against something the tracker unlocks under Bosses, including a wave inside the Fight Caves. Where a boss has a lesser version that also counts, either one will do; where either of two activities completes the task, each becomes a route. Not tagged: entering a lair, visiting the area, or a monster or reward that only shares a boss's name.",
     "source": "docs/reviews/2026-09-26-diary-boss-audit.md",
     "changedTaskIds": [
+      "des_elite_4",
       "des_hard_4",
       "fal_hard_3",
       "frem_elite_1",
       "frem_elite_5",
       "kar_easy_9",
+      "kar_elite_4",
       "kar_hard_2",
       "kou_elite_3",
       "kou_elite_7",
@@ -12180,6 +12615,7 @@
       "kou_elite_5": "A Hydra in the Karuulm Slayer Dungeon is a Slayer monster, not the Alchemical Hydra.",
       "lum_hard_7": "Barrows gloves come from Recipe for Disaster, not from the Barrows.",
       "wilderness_easy_8": "Only enters the King Black Dragon's lair; the boss is not fought."
-    }
+    },
+    "followUp": "Owner decision, 2 October 2026: a task that needs a boss's loot needs that boss. The KQ head (des_elite_4) drops only from the Kalphite Queen, and the fire cape (kar_elite_4) comes only from the TzHaar Fight Cave; the infernal cape needs a fire cape to enter the Inferno."
   }
 }

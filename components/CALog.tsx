@@ -12,6 +12,7 @@ import { EntityLocations } from './EntityLocations';
 import { WikiLink } from './WikiLink';
 import {
   CA_TIER_ORDER,
+  caTaskLockedBoss,
   completedCAPoints,
   earnedCATiers,
 } from '../utils/caProgress';
@@ -247,6 +248,14 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-0.5">
                                                 <span className="text-[10px] uppercase font-bold text-gray-500 bg-white/5 px-1.5 rounded">{task.monster}</span>
+                                                {!isTaskDone && caTaskLockedBoss(task, unlocks.bosses) && (
+                                                  <span
+                                                    className="text-[10px] font-semibold text-amber-300 bg-amber-500/10 px-1.5 rounded"
+                                                    title={`Unlock ${caTaskLockedBoss(task, unlocks.bosses)} to fight here. You can still log the task by hand.`}
+                                                  >
+                                                    Boss not unlocked
+                                                  </span>
+                                                )}
                                                 {task.name && <WikiLink name={task.name} className="text-[11px] font-semibold text-gray-300 hover:underline decoration-dotted underline-offset-2 hover:text-amber-200" />}
                                                 <a
                                                     href={getWikiUrl(task.monster)}

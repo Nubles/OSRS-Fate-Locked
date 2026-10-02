@@ -26,16 +26,18 @@ a monster or reward merely shares a boss's name.
 `npm run diary:sync` rejects any name that is not a Bosses unlock, and
 `utils/diaryBosses.test.ts` pins the list.
 
-## Tagged (15)
+## Tagged (17)
 
 | Task | Tier | Boss | Why |
 |---|---|---|---|
 | `des_hard_4` | Desert Hard | Kalphite Queen | A kill |
+| `des_elite_4` | Desert Elite | Kalphite Queen | The KQ head drops only from her (2 October) |
 | `fal_hard_3` | Falador Hard | Giant Mole | A kill (the reported task) |
 | `frem_elite_1` | Fremennik Elite | Dagannoth Kings | Kill each king |
 | `frem_elite_5` | Fremennik Elite | Kree'arra, General Graardor, Commander Zilyana, K'ril Tsutsaroth | Kill each god general |
 | `kar_easy_9` | Karamja Easy | TzHaar Fight Cave | One of two routes: the Fight Cave, or the Fight Pits (a minigame) |
 | `kar_hard_2` | Karamja Hard | TzHaar Fight Cave | Ket-Zek appear only in the Fight Cave's waves |
+| `kar_elite_4` | Karamja Elite | TzHaar Fight Cave | The fire cape comes only from the Fight Cave, and the Inferno takes one to enter (2 October) |
 | `kou_med_11` | Kourend Medium | Wintertodt | Subduing the Wintertodt is the boss fight |
 | `kou_elite_3` | Kourend Elite | Skotizo | A kill |
 | `kou_elite_7` | Kourend Elite | Chambers of Xeric | A raid |
@@ -57,6 +59,12 @@ Also recorded, with the same reasons, as `bossAudit.notTagged`.
 | `kou_elite_5` | A Hydra in the Karuulm Slayer Dungeon is a Slayer monster, not the Alchemical Hydra. |
 | `lum_hard_7` | Barrows gloves come from Recipe for Disaster, not from the Barrows. |
 | `wilderness_easy_8` | Only enters the King Black Dragon's lair; the boss is not fought. |
+
+## Update, 2 October 2026
+
+The owner extended the rule to loot: a task that needs a boss's loot needs
+that boss (`bossAudit.followUp`). That tags the two rows marked 2 October
+above.
 
 ## What it changes
 

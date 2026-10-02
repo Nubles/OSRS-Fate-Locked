@@ -78,9 +78,9 @@ describe('unlockEmbed', () => {
   });
   it('labels omni/chaos spends', () => {
     expect(unlockEmbed(entry({ meta: { category: 'Skills', costType: 'specialKey' } })).description)
-      .toBe('Skills — spent an Omni-key');
+      .toBe('Skills — spent an Omni-Key');
     expect(unlockEmbed(entry({ meta: { category: 'Regions', costType: 'chaosKey' } })).description)
-      .toBe('Regions — spent a Chaos key');
+      .toBe('Areas — spent a Chaos Key');
   });
   it('survives missing meta', () => {
     expect(unlockEmbed(entry({ meta: undefined })).description).toBe('');

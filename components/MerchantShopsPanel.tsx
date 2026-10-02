@@ -92,6 +92,7 @@ export const MerchantShopsPanel: React.FC = () => {
                       <WikiLink name={shop.name} className={`hover:underline decoration-dotted underline-offset-2 ${usable ? 'text-gray-200' : 'text-gray-500'}`} />
                       {shop.stockStatus === 'service' && <span className="text-[9px] text-gray-500">Service</span>}
                       {shop.stockStatus === 'zero-stock' && <span className="text-[9px] text-gray-500">No default stock</span>}
+                      {shop.onlySource?.length ? <span className="text-[9px] text-sky-300" title="No other shop sells these">Only shop selling {shop.onlySource.join(', ')}</span> : null}
                       {catUnlocked && !usable && reasons.length > 0 && <span className="text-[9px] text-amber-300" title={reasons.join('; ')}>{access.some(result => result.status === 'UNKNOWN') ? 'Access needs confirmation' : reasons[0]}</span>}
                       {places.slice(0, 3).map(p => (
                         <button

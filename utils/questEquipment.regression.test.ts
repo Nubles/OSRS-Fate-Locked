@@ -15,7 +15,8 @@ const ghost = QUEST_DATA['The Restless Ghost'];
 
 describe('mandatory quest equipment readiness', () => {
   it.each([undefined, 'chunked'])('blocks the ghost with a locked necklace slot in %s mode', mode => {
-    const result = evaluateQuestEligibility(ghost, fresh(), mode);
+    // In Chunked mode the run owns the Wizards' Tower, where the skull is.
+    const result = evaluateQuestEligibility(ghost, mode === 'chunked' ? { ...fresh(), chunks: ['48,49'] } : fresh(), mode);
     expect(result).toMatchObject({
       eligible: false, machineEligible: false, confirmable: false, status: 'LOCKED_EQUIPMENT',
     });

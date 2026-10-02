@@ -119,7 +119,7 @@ describe('classifyFateEvent', () => {
     expect(classifyFateEvent(event('QUEST', "Cook's Assistant"), withUnlocks({ quests: ["Cook's Assistant"] })))
       .toEqual({ state: 'BLOCKED', reason: 'Already completed' });
     expect(classifyFateEvent(event('QUEST', 'Dragon Slayer I'), state()))
-      .toEqual({ state: 'BLOCKED', reason: 'Requires: Rimmington, Port Sarim, Crandor, Quest Points 32' });
+      .toEqual({ state: 'BLOCKED', reason: 'Requires: Rimmington, Port Sarim, Crandor, Dwarven Mine, Quest Points 32' });
 
     // Manual checks wait for the player's review, which then confirms them.
     const sheep = event('QUEST', 'Sheep Shearer');

@@ -97,7 +97,7 @@ describe('profileMutationMessage', () => {
     ['max_profiles', 'Maximum of 10 profiles reached.'],
     ['not_found', 'That profile no longer exists. The list has been refreshed.'],
     ['last_profile', 'You cannot delete the last profile.'],
-    ['unsupported_metadata', 'Profiles are read-only until this app supports the stored profile version.'],
+    ['unsupported_metadata', 'Profiles are read-only until this version of the tracker can read the stored profile version.'],
     ['storage_unavailable', 'Browser storage is unavailable. Your profile list is unchanged.'],
     ['invalid_metadata', 'Profile data could not be validated. Your profile list is unchanged.'],
     ['backup_failed', 'The safety backup could not be verified. Your profile list is unchanged.'],
