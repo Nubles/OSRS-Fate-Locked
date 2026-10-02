@@ -157,6 +157,7 @@ describe('RuneLite guide, as the plugin does it', () => {
     expect(inbox).toContain('only with the game’s own collection log notification turned on');
     expect(inbox).toContain('the card says why');
     expect(setting('rollNudges').purpose).toContain('a finished diary tier (not each task)');
+    expect(setting('rollNudges').purpose).toContain('Collection log items need the game’s own collection log notification');
   });
 
   it('says what the borders, shade and minimap draw (P-15, P-16, P-17)', () => {

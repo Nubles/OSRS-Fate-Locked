@@ -378,7 +378,7 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     changeWhen: 'Turn it off if you’d rather see menus as the game shows them.',
   },
   rollNudges: {
-    purpose: 'A chat line when RuneLite adds something to your Roll inbox: a level, a quest, a finished diary tier (not each task), a combat task, a clue scroll, a boss or raid kill, a collection log item or a Slayer task. Only on the character your run is linked to.',
+    purpose: 'A chat line when RuneLite adds something to your Roll inbox: a level, a quest, a finished diary tier (not each task), a combat task, a clue scroll, a boss or raid kill, a collection log item or a Slayer task. Collection log items need the game’s own collection log notification, in chat or as a popup. Only on the character your run is linked to.',
     visibleResult: 'The line says what happened, such as Attack level 71: added to your Roll inbox. It never rolls and never changes your run.',
     changeWhen: 'Turn it off if you roll in the tracker on your own schedule.',
   },
