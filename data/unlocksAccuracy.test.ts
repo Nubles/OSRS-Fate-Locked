@@ -12,6 +12,10 @@ import { BANKS } from './banks';
 import { getActivityReq } from './activityRequirements';
 import { RESOURCE_MAP } from './resourceData';
 import { calculateSupplyChain } from '../utils/supplyChain';
+import { SKILL_UNLOCK_DATA } from './skillUnlocks';
+import { resourceReqFor } from '../utils/chunkResources';
+import { skillChunkNodes } from '../utils/skillChunkNodes';
+import { chunkContentService } from '../services/ChunkContentService';
 import {
   FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST, MINIGAMES_LIST, MISTHALIN_AREAS, MOBILITY_LIST,
   REGIONS_LIST, SKILLS_LIST, BOSSES_LIST,
@@ -24,6 +28,7 @@ const service = new ChunkContentService();
 beforeAll(async () => {
   vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => content })));
   await service.init();
+  await chunkContentService.init();
   vi.unstubAllGlobals();
 });
 
@@ -173,6 +178,63 @@ describe('S14: any furnace smelts steel, mithril, adamantite and rune bars', () 
     expect(state.unlocks.regions.some(region => /fremennik|rellekka|keldagrim/i.test(region))).toBe(false);
     expect(routes.find(route => route.source.name === 'Blast Furnace')!.status.isAvailable).toBe(false);
     expect(routes.find(route => route.source.name === 'Furnace')!.status).toMatchObject({ isAvailable: true, missing: [] });
+  });
+});
+
+describe('S16: the level gates agree with the skill table', () => {
+  type Raw = { o?: [string, number][]; p?: string[]; m?: [string, number][] };
+  const raw = content as unknown as { chunks: Record<string, Raw>; interiors: Record<string, { content: Raw }> };
+  const entries = [...Object.values(raw.chunks), ...Object.values(raw.interiors).map(interior => interior.content)];
+  const objects = [...new Set(entries.flatMap(entry => (entry.o ?? []).map(([name]) => name)))];
+  /** "Lvl N: a, b" lines of one skill's table, as [N, item] pairs. */
+  const unlocksOf = (skill: string) => Object.values(SKILL_UNLOCK_DATA[skill]).flat().flatMap(line => {
+    const match = line.match(/^Lvl (\d+): (.+)$/);
+    return match ? match[2].split(', ').map(item => [Number(match[1]), item] as const) : [];
+  });
+
+  it('opens each tree at the level its logs need', () => {
+    const checked: string[] = [];
+    for (const [level, item] of unlocksOf('Woodcutting')) {
+      const logs = item.match(/^(.+) Logs$/)?.[1];
+      if (!logs) continue;
+      for (const name of objects.filter(object => object.toLowerCase().includes(`${logs.toLowerCase()} tree`) && !/patch/i.test(object))) {
+        expect(resourceReqFor(name), name).toEqual({ skill: 'Woodcutting', level });
+        checked.push(name);
+      }
+    }
+    expect(checked).toEqual(expect.arrayContaining([
+      'Jatoba tree', 'Mature juniper tree', 'Blisterwood Tree', 'Camphor tree', 'Ironwood tree', 'Rosewood tree',
+    ]));
+  });
+
+  it('opens each impling at the level that catches it', () => {
+    const hunter = new Map(skillChunkNodes('Hunter').map(node => [node.name.toLowerCase(), node.level]));
+    const checked: string[] = [];
+    for (const [level, item] of unlocksOf('Hunter')) {
+      const kind = item.match(/^(.+) Implings$/)?.[1];
+      if (!kind) continue;
+      const name = `${kind.toLowerCase()} impling`;
+      if (!hunter.has(name)) continue;
+      expect(hunter.get(name), name).toBe(level);
+      checked.push(name);
+    }
+    expect(checked.length).toBeGreaterThanOrEqual(11);
+  });
+
+  it('opens each stall the table names at its level', () => {
+    const checked: string[] = [];
+    for (const [level, item] of unlocksOf('Thieving')) {
+      const kinds = item.match(/^(.+) Stalls$/)?.[1];
+      if (!kinds) continue;
+      for (const kind of kinds.split(' & ')) {
+        const stall = kind === 'Vegetable' ? 'veg stall' : `${kind.toLowerCase()} stall`;
+        for (const name of objects.filter(object => object.toLowerCase().startsWith(stall))) {
+          expect(resourceReqFor(name), name).toEqual({ skill: 'Thieving', level });
+          checked.push(name);
+        }
+      }
+    }
+    expect(checked).toEqual(expect.arrayContaining(['Veg stall', 'Fruit Stall', 'Ore stall', 'Tea stall', 'Gem stall']));
   });
 });
 
