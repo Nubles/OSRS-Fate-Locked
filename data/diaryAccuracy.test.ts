@@ -6,6 +6,7 @@ import { ALL_DIARY_TASKS, type DiaryTask, type DiaryTaskRequirementOption } from
 import { ACTIVITY_ACCESS_AREAS } from './activityAccess';
 import { QUEST_DATA } from './questData';
 import { MERCHANT_SERVICES } from './merchantServices';
+import { FARMING_PATCH_LIST, GUILDS_LIST, ROLLABLE_POH_ITEMS, SLAYER_UNLOCKS_LIST } from './items';
 import type { UnlockState } from '../types';
 import { evaluateDiaryTaskEligibility } from '../utils/journalStatus';
 
@@ -516,5 +517,54 @@ describe('Diary tasks an ironman does the ironman way', () => {
       { label: 'Ultimate Ironman exemption', manualRequirements: [expect.stringContaining('Ultimate Ironman')] },
       { quests: ['The Hand in the Sand'] },
     ]);
+  });
+});
+
+describe('Diary tasks done inside a guild', () => {
+  // The owner's call D2: a guild is a rolled unlock, so a task inside one names it.
+  it.each([
+    ['ard_hard_1', "Legends' Guild"],
+    ['ard_hard_2', "Wizards' Guild"],
+    ['fal_med_10', 'Crafting Guild'],
+    ['fal_hard_6', 'Mining Guild'],
+    ['fal_hard_7', "Heroes' Guild"],
+    ['fal_hard_8', "Rogues' Den"],
+    ['fal_hard_10', "Warriors' Guild"],
+    ['kan_med_3', 'Ranging Guild'],
+    ['kou_med_5', 'Farming Guild'],
+    ['kou_elite_8', 'Farming Guild'],
+    ['kou_hard_1', 'Woodcutting Guild'],
+    ['kou_elite_2', 'Woodcutting Guild'],
+    ['var_med_2', "Champions' Guild"],
+    ['var_elite_3', "Cooks' Guild"],
+  ])('tags %s with %s', (id, guild) => {
+    expect(task(id).guilds).toEqual([guild]);
+  });
+
+  it('tag the guild for every route of a task done inside it', () => {
+    for (const id of ['fal_med_10', 'fal_hard_10', 'var_elite_3']) {
+      expect(task(id).guilds, id).toHaveLength(1);
+      expect((task(id).oneOf ?? []).flatMap(option => option.guilds ?? []), id).toEqual([]);
+    }
+  });
+});
+
+describe('Diary unlock names', () => {
+  it('use only names their unlock tables can roll', () => {
+    const tables: Record<string, readonly string[]> = {
+      guilds: GUILDS_LIST, farming: FARMING_PATCH_LIST, housing: ROLLABLE_POH_ITEMS, slayerUnlocks: SLAYER_UNLOCKS_LIST,
+    };
+    const used: string[] = [];
+    for (const row of ALL_DIARY_TASKS) {
+      for (const requirement of [row, ...(row.oneOf ?? [])] as Record<string, unknown>[]) {
+        for (const [field, table] of Object.entries(tables)) {
+          for (const name of (requirement[field] as string[] | undefined) ?? []) {
+            used.push(field);
+            expect(table, `${row.id} ${field}`).toContain(name);
+          }
+        }
+      }
+    }
+    expect(used).toContain('guilds');
   });
 });

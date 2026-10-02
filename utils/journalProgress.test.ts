@@ -120,8 +120,13 @@ describe('diaryUnmet', () => {
 
     expect(diaryUnmet(DIARY_DATA['Varrock Medium'], u({
       regions: ['Varrock'],
+      guilds: ["Champions' Guild"],
       completedTasks,
     }))).toEqual([{ kind: 'qp', label: '32 QP' }]);
+    expect(diaryUnmet(DIARY_DATA['Varrock Medium'], u({
+      regions: ['Varrock'],
+      completedTasks,
+    }))).toEqual([{ kind: 'guild', label: "Champions' Guild" }, { kind: 'qp', label: '32 QP' }]);
   });
   it('reports the remaining Varrock Kudos confirmation after machine gates pass', () => {
     const completedTasks = ALL_DIARY_TASKS

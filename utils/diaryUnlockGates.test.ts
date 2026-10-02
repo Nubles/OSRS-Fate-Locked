@@ -1,8 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import type { DiaryTask } from '../data/diaryTasks';
-import { FARMING_PATCH_LIST, GUILDS_LIST, POH_LIST, SLAYER_UNLOCKS_LIST } from '../data/items';
-import type { UnlockState } from '../types';
-import { diaryRequirementOptionLabel, evaluateDiaryTaskEligibility } from './journalStatus';
+import { ALL_DIARY_TASKS, type DiaryTask } from '../data/diaryTasks';
+import { DIARY_DATA } from '../data/diaryData';
+import { QUEST_DATA } from '../data/questData';
+import {
+  ARCANA_LIST, BOSSES_LIST, EQUIPMENT_SLOTS, FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST, MINIGAMES_LIST,
+  MOBILITY_LIST, POH_LIST, REGION_GROUPS, SKILLS_LIST, SLAYER_UNLOCKS_LIST,
+} from '../data/items';
+import { TableType, type GameState, type UnlockState } from '../types';
+import { diaryRequirementOptionLabel, evaluateDiaryTaskEligibility, getDiaryStatus } from './journalStatus';
+import { planForTarget } from './goalPlanner';
+import { buildGoalRoute } from './goalRoute';
 import { diaryTaskCompletionDecision, diaryTaskLoggingEligibility, withStatusOnlyUnlocks } from './journalCompletion';
 
 /**
@@ -18,6 +25,22 @@ const account = (overrides: Partial<UnlockState> = {}): UnlockState => ({
   farming: [], slayerUnlocks: [], quests: [], diaries: [], cas: [],
   completedTasks: [], collectionLog: {}, ...overrides,
 });
+
+/** Everything unlocked, every quest and Combat Achievement done: only what a check takes away is missing. */
+const everything = (overrides: Partial<UnlockState> = {}) => account({
+  equipment: Object.fromEntries(EQUIPMENT_SLOTS.map(slot => [slot, 9])),
+  skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
+  levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
+  regions: [...Object.keys(REGION_GROUPS), ...Object.values(REGION_GROUPS).flat()],
+  arcana: [...ARCANA_LIST], quests: Object.keys(QUEST_DATA), mobility: [...MOBILITY_LIST],
+  merchants: [...MERCHANTS_LIST], minigames: [...MINIGAMES_LIST], bosses: [...BOSSES_LIST],
+  guilds: [...GUILDS_LIST], farming: [...FARMING_PATCH_LIST], housing: [...POH_LIST],
+  slayerUnlocks: [...SLAYER_UNLOCKS_LIST], cas: ['Easy', 'Medium', 'Hard', 'Elite', 'Master', 'Grandmaster'],
+  ...overrides,
+});
+const task = (id: string) => ALL_DIARY_TASKS.find(row => row.id === id)!;
+const exceptTask = (id: string) => ALL_DIARY_TASKS
+  .filter(row => row.tierId === task(id).tierId && row.id !== id).map(row => row.id);
 
 const VOCABULARIES = [
   { field: 'guilds', name: "Wizards' Guild", kind: 'guild', shown: "Wizards' Guild" },
@@ -87,5 +110,26 @@ describe('Diary tasks that use a guild, farming patch, house room or Slayer rewa
       guilds: GUILDS_LIST, farming: FARMING_PATCH_LIST, housing: POH_LIST, slayerUnlocks: SLAYER_UNLOCKS_LIST,
       regions: ['Falador'], merchants: [], minigames: [], bosses: [],
     });
+  });
+});
+
+describe('A Diary task done inside a guild', () => {
+  it('locks the Ranging Guild entry, its tier, plan and route until the guild is unlocked, but never its logging', () => {
+    const row = task('kan_med_3');
+    const locked = everything({ guilds: [], completedTasks: exceptTask(row.id) });
+
+    expect(evaluateDiaryTaskEligibility(row, locked, 'vanilla').blockers).toEqual([{ kind: 'guild', label: 'Ranging Guild' }]);
+    expect(getDiaryStatus(DIARY_DATA[row.tierId], locked, 'vanilla')).toBe('LOCKED_GUILD');
+    expect(planForTarget('diary', row.tierId, locked, 'vanilla')?.guildSteps).toEqual([
+      expect.objectContaining({ kind: 'guild', id: 'Ranging Guild', unlockTable: TableType.GUILDS }),
+    ]);
+    const route = buildGoalRoute(row.tierId, { unlocks: locked, gameModeId: 'vanilla' } as GameState)!;
+    expect(route.guilds).toEqual([expect.objectContaining({ name: 'Ranging Guild', met: false })]);
+    expect(route.tables).toContainEqual(expect.objectContaining({ table: TableType.GUILDS, needed: ['Ranging Guild'] }));
+    expect(diaryTaskCompletionDecision(row, locked, 'vanilla')).toEqual({ ok: true });
+
+    const unlocked = { ...locked, guilds: ['Ranging Guild'] };
+    expect(evaluateDiaryTaskEligibility(row, unlocked, 'vanilla').eligible).toBe(true);
+    expect(getDiaryStatus(DIARY_DATA[row.tierId], unlocked, 'vanilla')).toBe('AVAILABLE');
   });
 });

@@ -3,7 +3,10 @@ import { QUEST_DATA, QuestData } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DIARY_DATA } from '../data/diaryData';
 import { DropSource, UnlockState } from '../types';
-import { ARCANA_LIST, BOSSES_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, MINIGAMES_LIST, MOBILITY_LIST, REGION_GROUPS, SKILLS_LIST } from '../data/items';
+import {
+  ARCANA_LIST, BOSSES_LIST, EQUIPMENT_SLOTS, FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST, MINIGAMES_LIST, MOBILITY_LIST,
+  POH_LIST, REGION_GROUPS, SKILLS_LIST, SLAYER_UNLOCKS_LIST,
+} from '../data/items';
 import { combatLevel } from './slayerReach';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { ACTIVITY_REQUIREMENTS } from '../data/activityRequirements';
@@ -90,6 +93,7 @@ describe('manual journal readiness', () => {
     const low = evaluateDiaryTaskEligibility(task, unlocked({
       quests: ['Cook\'s Assistant'],
       regions: ['Varrock'],
+      guilds: ["Champions' Guild"],
     }));
     expect(low.machineEligible).toBe(false);
     expect(low.blockers).toContainEqual({
@@ -100,6 +104,7 @@ describe('manual journal readiness', () => {
     const enough = evaluateDiaryTaskEligibility(task, unlocked({
       quests: questIdsWorthAtLeast(32),
       regions: ['Varrock'],
+      guilds: ["Champions' Guild"],
     }));
     expect(enough).toMatchObject({
       machineEligible: true,
@@ -825,6 +830,10 @@ describe('canonical diary tier eligibility', () => {
       merchants: [...MERCHANTS_LIST],
       minigames: [...MINIGAMES_LIST],
       bosses: [...BOSSES_LIST],
+      guilds: [...GUILDS_LIST],
+      farming: [...FARMING_PATCH_LIST],
+      housing: [...POH_LIST],
+      slayerUnlocks: [...SLAYER_UNLOCKS_LIST],
       skills: Object.fromEntries(taskSkills.map(skill => [skill, 10])),
       levels: Object.fromEntries(taskSkills.map(skill => [skill, 99])),
       regions: [...new Set(regions)],
@@ -1036,11 +1045,11 @@ describe('audited diary route eligibility', () => {
 
   it('accepts each Warriors Guild skill route', () => {
     expect(evaluateDiaryTaskEligibility(task('fal_hard_10'), unlocked({
-      regions: ["Warriors' Guild"],
+      regions: ["Warriors' Guild"], guilds: ["Warriors' Guild"],
       skills: { Attack: 7, Strength: 7 }, levels: { Attack: 65, Strength: 65 },
     })).eligible).toBe(true);
     expect(evaluateDiaryTaskEligibility(task('fal_hard_10'), unlocked({
-      regions: ["Warriors' Guild"],
+      regions: ["Warriors' Guild"], guilds: ["Warriors' Guild"],
       skills: { Attack: 10, Strength: 1 }, levels: { Attack: 99, Strength: 1 },
     })).eligible).toBe(true);
   });

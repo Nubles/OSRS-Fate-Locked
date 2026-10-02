@@ -598,7 +598,10 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Recharge some Jewellery at Totem in the Legends Guild.",
-      "sourceRequirements": "Completion of Legends' Quest Less than fully charged skills necklace or combat bracelet"
+      "sourceRequirements": "Completion of Legends' Quest Less than fully charged skills necklace or combat bracelet",
+      "guilds": [
+        "Legends' Guild"
+      ]
     },
     {
       "id": "ard_hard_2",
@@ -616,7 +619,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "66 Magic"
+      "sourceRequirements": "66 Magic",
+      "guilds": [
+        "Wizards' Guild"
+      ]
     },
     {
       "id": "ard_hard_3",
@@ -2346,6 +2352,9 @@
             }
           ]
         }
+      ],
+      "guilds": [
+        "Crafting Guild"
       ]
     },
     {
@@ -2661,6 +2670,9 @@
           "reason": "Prospector helmet or golden prospector helmet",
           "manualCheck": "Have Prospector helmet or golden prospector helmet and confirm that the specific item is permitted by your equipment tier"
         }
+      ],
+      "guilds": [
+        "Mining Guild"
       ]
     },
     {
@@ -2679,7 +2691,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of the Heroes' Quest Protection from dragonfire and weaponry to slay it"
+      "sourceRequirements": "Completion of the Heroes' Quest Protection from dragonfire and weaponry to slay it",
+      "guilds": [
+        "Heroes' Guild"
+      ]
     },
     {
       "id": "fal_hard_8",
@@ -2697,7 +2712,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "50 Thieving"
+      "sourceRequirements": "50 Thieving",
+      "guilds": [
+        "Rogues' Den"
+      ]
     },
     {
       "id": "fal_hard_9",
@@ -2771,6 +2789,9 @@
             "level": 99
           }
         }
+      ],
+      "guilds": [
+        "Warriors' Guild"
       ]
     },
     {
@@ -4347,7 +4368,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "40 Ranged"
+      "sourceRequirements": "40 Ranged",
+      "guilds": [
+        "Ranging Guild"
+      ]
     },
     {
       "id": "kan_med_4",
@@ -6447,7 +6471,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "45 Farming"
+      "sourceRequirements": "45 Farming",
+      "guilds": [
+        "Farming Guild"
+      ]
     },
     {
       "id": "kou_med_6",
@@ -6631,7 +6658,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "60 Woodcutting"
+      "sourceRequirements": "60 Woodcutting",
+      "guilds": [
+        "Woodcutting Guild"
+      ]
     },
     {
       "id": "kou_hard_2",
@@ -6870,7 +6900,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "90 Woodcutting Any axe"
+      "sourceRequirements": "90 Woodcutting Any axe",
+      "guilds": [
+        "Woodcutting Guild"
+      ]
     },
     {
       "id": "kou_elite_3",
@@ -6985,7 +7018,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "85 Farming and 40 Fletching Celastrus sapling, knife, spade, rake, and any axe 8 potato cacti recommended to protect your sapling"
+      "sourceRequirements": "85 Farming and 40 Fletching Celastrus sapling, knife, spade, rake, and any axe 8 potato cacti recommended to protect your sapling",
+      "guilds": [
+        "Farming Guild"
+      ]
     },
     {
       "id": "lum_easy_1",
@@ -9289,7 +9325,10 @@
       "questPoints": 32,
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "32 Quest points"
+      "sourceRequirements": "32 Quest points",
+      "guilds": [
+        "Champions' Guild"
+      ]
     },
     {
       "id": "var_med_3",
@@ -9865,6 +9904,9 @@
             "Have earned Varrock armour 3 or 4"
           ]
         }
+      ],
+      "guilds": [
+        "Cooks' Guild"
       ]
     },
     {

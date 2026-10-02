@@ -76,6 +76,17 @@ const innerMarkup = (element: string, tagName: string) => {
 };
 
 describe('DiaryLog access evidence', () => {
+  it.each([
+    ['Enter the Ranging guild', 'kan_med_3', 'guild', 'Ranging Guild'],
+  ])('names the unlock "%s" uses, locked until it is unlocked', (searchTerm, id, kind, name) => {
+    const markup = renderToStaticMarkup(<DiaryLog searchTerm={searchTerm} suspendModals />);
+    const row = elementMarkup(markup, `<div data-diary-task-row="${id}"`);
+    const chip = elementMarkup(row, `<span data-diary-unlock="${kind}"`);
+
+    expect(chip).toContain(name);
+    expect(chip).toContain('border-red-500/30');
+  });
+
   it('shows partial Barbarian Fishing access without a completion blocker', () => {
     const markup = renderToStaticMarkup(
       <DiaryLog searchTerm="shark" suspendModals />,
