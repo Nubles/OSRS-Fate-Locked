@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatKeyPercent, skillLevelKeyChance } from '../utils/keyRoll';
+import { isSkillChaosMilestone, LEVEL_CHAOS_CHANCE } from '../config/economy';
 
 interface Props {
   currentLevel: number;
@@ -23,7 +24,9 @@ export const SkillRollOdds: React.FC<Props> = ({ currentLevel, isUnlocked, descr
         role="tooltip"
         className="pointer-events-none absolute inset-x-2 bottom-2 z-40 whitespace-normal rounded border border-blue-400/30 bg-slate-950/95 px-2 py-1 text-[9px] leading-tight text-blue-100 shadow-lg invisible opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
       >
-        Every level also has a separate 2% Chaos Key chance.
+        {isSkillChaosMilestone(nextLevel)
+          ? `Level ${nextLevel} also gives a guaranteed Chaos Key, and a separate ${LEVEL_CHAOS_CHANCE}% chance of another.`
+          : `Each level-up also has a separate ${LEVEL_CHAOS_CHANCE}% chance of a Chaos Key.`}
       </span>
     </div>
   );

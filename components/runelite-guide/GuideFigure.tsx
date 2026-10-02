@@ -5,7 +5,7 @@ import type { GuideCallout, GuideFigure as GuideFigureData, GuideFigureSource } 
 /** What each picture's caption says about where it comes from. */
 export const GUIDE_FIGURE_SOURCES: Readonly<Record<GuideFigureSource, string>> = {
   rendered: 'Drawn by the plugin’s own code, in RuneLite’s theme.',
-  'web-capture': 'Captured from the companion.',
+  'web-capture': 'Captured from the tracker.',
 };
 
 /** Room beside a picture for its numbered markers, in the picture's own pixels. */

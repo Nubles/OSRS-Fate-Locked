@@ -23,6 +23,13 @@ import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDi
 import { skillLevelKeyChance } from '../utils/keyRoll';
 const WIKI = 'https://oldschool.runescape.wiki/images/';
 
+/** Keys every new run starts with. GameContext's fresh state and the Rules text both read it. */
+export const STARTING_KEYS = 3;
+
+/** "a, b and c": for lists the Rules text reads out. */
+export const andList = (items: readonly (string | number)[]): string =>
+  items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+
 // ── Skill levelling is the one dynamic rate (computed per attempt) ───────────
 export const SKILLS_TIER_CAP = 10;     // tiers per skill (1 Key each)
 export const LEVEL_ROLL_MAX = skillLevelKeyChance(99);
@@ -148,47 +155,47 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
   {
     category: 'Quests',
     icon: `${WIKI}Quest_point_icon.png`,
-    where: 'Journal → Quests — tick a quest as you complete it.',
-    blurb: 'The backbone of early progress: every quest rolls once, scaling hard with difficulty.',
+    where: 'Journal → Quests: tick a quest when you finish it.',
+    blurb: 'Every quest rolls once, and harder quests roll better.',
     tiers: [
       { tier: 'Novice',       source: DropSource.QUEST_NOVICE,       rate: DROP_RATES[DropSource.QUEST_NOVICE] },
       { tier: 'Intermediate', source: DropSource.QUEST_INTERMEDIATE, rate: DROP_RATES[DropSource.QUEST_INTERMEDIATE] },
       { tier: 'Experienced',  source: DropSource.QUEST_EXPERIENCED,  rate: DROP_RATES[DropSource.QUEST_EXPERIENCED] },
       { tier: 'Master',       source: DropSource.QUEST_MASTER,       rate: DROP_RATES[DropSource.QUEST_MASTER] },
-      { tier: 'Grandmaster',  source: DropSource.QUEST_GRANDMASTER,  rate: DROP_RATES[DropSource.QUEST_GRANDMASTER], omni: 20, bonus: 'Guaranteed Key + the best Omni odds of any quest.' },
+      { tier: 'Grandmaster',  source: DropSource.QUEST_GRANDMASTER,  rate: DROP_RATES[DropSource.QUEST_GRANDMASTER], omni: 20, bonus: 'A guaranteed Key, and the best Omni-Key chance of any quest.' },
     ],
   },
   {
     category: 'Achievement Diaries',
     icon: `${WIKI}Achievement_Diaries_icon.png`,
-    where: 'Journal → Diaries — tick each diary task.',
-    blurb: 'Rolls per individual task, with the rate climbing steeply toward Elite.',
+    where: 'Journal → Diaries: tick each diary task.',
+    blurb: 'Each diary task rolls once, and harder tiers roll better.',
     tiers: [
       { tier: 'Easy',   source: DropSource.DIARY_EASY,   rate: DROP_RATES[DropSource.DIARY_EASY] },
       { tier: 'Medium', source: DropSource.DIARY_MEDIUM, rate: DROP_RATES[DropSource.DIARY_MEDIUM] },
       { tier: 'Hard',   source: DropSource.DIARY_HARD,   rate: DROP_RATES[DropSource.DIARY_HARD] },
-      { tier: 'Elite',  source: DropSource.DIARY_ELITE,  rate: DROP_RATES[DropSource.DIARY_ELITE], omni: 10, bonus: 'The best diary rate, with an elevated Omni chance.' },
+      { tier: 'Elite',  source: DropSource.DIARY_ELITE,  rate: DROP_RATES[DropSource.DIARY_ELITE], omni: 10, bonus: 'The best diary rate, and a raised Omni-Key chance.' },
     ],
   },
   {
     category: 'Combat Achievements',
     icon: `${WIKI}Combat_Achievements_icon.png`,
-    where: 'Journal → Combat Achievements — tick each task.',
-    blurb: 'Your reward for PvM mastery; rolls per task from Easy through Grandmaster.',
+    where: 'Journal → Combat Achievements: tick each task.',
+    blurb: 'Each Combat Achievement task rolls once, from Easy to Grandmaster.',
     tiers: [
       { tier: 'Easy',        source: DropSource.CA_EASY,        rate: DROP_RATES[DropSource.CA_EASY] },
       { tier: 'Medium',      source: DropSource.CA_MEDIUM,      rate: DROP_RATES[DropSource.CA_MEDIUM] },
       { tier: 'Hard',        source: DropSource.CA_HARD,        rate: DROP_RATES[DropSource.CA_HARD] },
       { tier: 'Elite',       source: DropSource.CA_ELITE,       rate: DROP_RATES[DropSource.CA_ELITE] },
       { tier: 'Master',      source: DropSource.CA_MASTER,      rate: DROP_RATES[DropSource.CA_MASTER] },
-      { tier: 'Grandmaster', source: DropSource.CA_GRANDMASTER, rate: DROP_RATES[DropSource.CA_GRANDMASTER], bonus: 'The biggest CA payout.' },
+      { tier: 'Grandmaster', source: DropSource.CA_GRANDMASTER, rate: DROP_RATES[DropSource.CA_GRANDMASTER], bonus: 'The best Combat Achievement rate.' },
     ],
   },
   {
     category: 'Clue Scrolls',
     icon: `${WIKI}Clue_scroll_%28master%29.png`,
-    where: 'Farm Keys → Clue Scrolls — roll a casket card on completion.',
-    blurb: 'Cash in completed caskets; rarer tiers pay out far more often.',
+    where: 'Farm Keys → Clues: roll that tier’s card for each clue you finish.',
+    blurb: 'Each finished clue rolls once, and harder tiers roll better.',
     tiers: [
       { tier: 'Beginner', source: DropSource.CLUE_BEGINNER, rate: DROP_RATES[DropSource.CLUE_BEGINNER] },
       { tier: 'Easy',     source: DropSource.CLUE_EASY,     rate: DROP_RATES[DropSource.CLUE_EASY] },
@@ -201,8 +208,8 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
   {
     category: 'Slayer Tasks',
     icon: `${WIKI}Slayer_icon.png`,
-    where: 'Farm Keys → Slayer Tasks — roll a master card per finished task.',
-    blurb: 'Your most repeatable income. Higher masters demand more but pay far better.',
+    where: 'Farm Keys → Slayer: roll your master’s card for each task you finish.',
+    blurb: 'Every finished task rolls, with no limit, and higher masters roll better.',
     tiers: [
       { tier: 'Turael / Spria',     source: DropSource.SLAYER_BEGINNER,  rate: DROP_RATES[DropSource.SLAYER_BEGINNER] },
       { tier: 'Mazchna',            source: DropSource.SLAYER_MAZCHNA,    rate: DROP_RATES[DropSource.SLAYER_MAZCHNA] },
@@ -212,26 +219,26 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
       { tier: 'Nieve / Steve',      source: DropSource.SLAYER_NIEVE,      rate: DROP_RATES[DropSource.SLAYER_NIEVE] },
       { tier: 'Krystilia',          source: DropSource.SLAYER_KRYSTILIA,  rate: DROP_RATES[DropSource.SLAYER_KRYSTILIA] },
       { tier: 'Duradel / Kuradal',  source: DropSource.SLAYER_DURADEL,    rate: DROP_RATES[DropSource.SLAYER_DURADEL] },
-      { tier: 'Boss Task',          source: DropSource.SLAYER_BOSS,       rate: DROP_RATES[DropSource.SLAYER_BOSS], bonus: 'The single best repeatable roll in the game.' },
+      { tier: 'Boss Task',          source: DropSource.SLAYER_BOSS,       rate: DROP_RATES[DropSource.SLAYER_BOSS], bonus: 'The best Slayer rate.' },
     ],
   },
   {
     category: 'Bosses',
     icon: `${WIKI}Boss.png`,
-    where: 'Farm Keys → Bossing — pick the boss you killed and roll.',
-    blurb: 'Repeatable PvM income: every kill rolls at that specific boss’s rate, from entry bosses up to raids.',
+    where: 'Farm Keys → Bossing: pick the boss you killed and roll.',
+    blurb: 'In Vanilla, each boss pays a few Keys at falling odds, then stops: the list above shows how many. In Chunked, every kill rolls at its tier’s rate.',
     tiers: [
       { tier: 'Low boss',  source: DropSource.BOSS_LOW,  rate: DROP_RATES[DropSource.BOSS_LOW] },
       { tier: 'Mid boss',  source: DropSource.BOSS_MID,  rate: DROP_RATES[DropSource.BOSS_MID] },
-      { tier: 'High boss', source: DropSource.BOSS_HIGH, rate: DROP_RATES[DropSource.BOSS_HIGH], omni: 10, bonus: 'Top bosses keep elevated Omni odds.' },
-      { tier: 'Raid',      source: DropSource.RAID,      rate: DROP_RATES[DropSource.RAID], omni: 15, bonus: 'CoX / ToB / ToA — the best repeatable Omni odds.' },
+      { tier: 'High boss', source: DropSource.BOSS_HIGH, rate: DROP_RATES[DropSource.BOSS_HIGH], omni: 10 },
+      { tier: 'Raid',      source: DropSource.RAID,      rate: DROP_RATES[DropSource.RAID], omni: 15, bonus: 'Raids (CoX, ToB and ToA) have the best Omni-Key chance of any boss.' },
     ],
   },
   {
     category: 'Activities',
     icon: `${WIKI}Minigames.png`,
-    where: 'Farm Keys → Activities — roll on each completion.',
-    blurb: 'Minigames keep paying out long after the journal is done.',
+    where: 'Farm Keys → Activities: roll each time you finish one.',
+    blurb: 'Every finished minigame rolls, with no limit.',
     tiers: [
       { tier: 'Minigame', source: DropSource.ACTIVITY_MINIGAME, rate: DROP_RATES[DropSource.ACTIVITY_MINIGAME] },
     ],
@@ -239,16 +246,16 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
   {
     category: 'Pets',
     icon: `${WIKI}Pet_kraken.png`,
-    where: 'Farm Keys → Activities — roll the moment a pet drops.',
-    blurb: 'The jackpot: any pet is a guaranteed key, with the best Omni odds going.',
+    where: 'Farm Keys → Activities: roll when a pet drops.',
+    blurb: 'Any pet drop is a guaranteed Key, with the best Omni-Key chance.',
     tiers: [
-      { tier: 'Any pet drop', source: DropSource.PET, rate: DROP_RATES[DropSource.PET], omni: 25, bonus: 'Guaranteed Key + top-tier Omni odds.' },
+      { tier: 'Any pet drop', source: DropSource.PET, rate: DROP_RATES[DropSource.PET], omni: 25, bonus: 'A guaranteed Key, and the best Omni-Key chance of any source.' },
     ],
   },
   {
     category: 'Collection Log',
     icon: `${WIKI}Collection_log.png`,
-    where: 'Collection Log tab — log a new unique item.',
+    where: 'Collection Log tab: log a new unique item.',
     blurb: 'Every unique slot you fill for the first time rolls once.',
     tiers: [
       { tier: 'Any new unique', source: DropSource.COLLECTION_LOG, rate: DROP_RATES[DropSource.COLLECTION_LOG] },
@@ -257,15 +264,15 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
   {
     category: 'Level Ups',
     icon: `${WIKI}Stats_icon.png`,
-    where: 'Dashboard → click an unlocked skill to bank a level.',
-    blurb: 'The slow drip that rewards raw XP — and the only routine Chaos Key source.',
+    where: 'Character tab: click an unlocked skill to log a level.',
+    blurb: 'Every level you gain rolls once, and higher levels roll better. Level-ups also give Chaos Keys.',
     dynamic: true,
     tiers: [
       {
         tier: 'Per level gained',
         rate: LEVEL_ROLL_MAX,
         rateLabel: `Level ÷ 5 (up to ${LEVEL_ROLL_MAX.toFixed(1)}% at level 99)`,
-        bonus: `Failure Fate: +1 at levels 2-19, +2 at 20-79, +3 at 80-99. ${LEVEL_CHAOS_CHANCE}% chance of a Chaos Key on every level, plus guaranteed Chaos Keys at levels ${SKILL_CHAOS_MILESTONES.join(', ')}.`,
+        bonus: `Failure Fate: +1 at levels 2-19, +2 at 20-79, +3 at 80-99. Guaranteed Chaos Keys at levels ${andList(SKILL_CHAOS_MILESTONES)}, plus a separate ${LEVEL_CHAOS_CHANCE}% chance of one on every level-up.`,
       },
     ],
   },
@@ -277,6 +284,16 @@ export const EARN_METHODS: EarnMethod[] = EARN_METHOD_DEFINITIONS.map(method => 
     ? { ...tier, fateOnFailure: failureFateForSource(tier.source) }
     : tier),
 }));
+
+/**
+ * The raised Omni-Key chance a source rolls at, if it has one. These are the tiers' `omni`
+ * values, which economy.consistency.test.ts pins to the roll engine.
+ */
+export const omniFloor = (source: DropSource): number => {
+  const omni = EARN_METHODS.flatMap(m => m.tiers).find(t => t.source === source)?.omni;
+  if (omni === undefined) throw new Error(`No raised Omni-Key chance for ${source}`);
+  return omni;
+};
 
 /** Min/max fixed success rate across all tiers of a method (for summary chips). */
 export const earnRange = (m: EarnMethod): [number, number] => {
@@ -302,38 +319,40 @@ export const KEY_TYPES: KeyTypeInfo[] = [
     name: 'Standard Key',
     icon: `${WIKI}Crystal_key.png`,
     accent: 'text-osrs-gold',
-    tagline: 'Your bread-and-butter currency.',
+    tagline: 'The everyday Key.',
     earn: [
-      'Any successful Farm Key roll (+1, or +2 under Ritual of Greed).',
+      'Any successful roll, wherever you log it (+1, or +2 with the Ritual of Greed).',
       'A Pity Key when Fate Points hit your mode’s threshold.',
-      'The bonus Key that rides along with every Omni-Key roll.',
+      'A won Void Gambit.',
+      `Chunked: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels while you hold only your start chunk.`,
+      `The ${STARTING_KEYS} every run starts with.`,
     ],
-    spend: 'Cash in on a table you choose to unlock one RANDOM entry from it.',
+    spend: 'Spend it on a table you choose to unlock a random entry from it.',
   },
   {
     id: 'omni',
     name: 'Omni-Key',
     icon: `${WIKI}Enhanced_crystal_key.png`,
     accent: 'text-purple-400',
-    tagline: 'Bend Fate to your will.',
+    tagline: 'Pick what you unlock.',
     earn: [
-      'A lucky upgrade on a successful roll (mode base %, raised to 25% on pet drops, 20% on Grandmaster quests, 15% on raids and 10% on Elite diaries and high-tier bosses).',
-      'Ritual of Transmutation — fuse 5 standard Keys into 1.',
+      'A bonus on a successful roll, on top of the Key: your mode’s base chance, raised to 25% on pet drops, 20% on Grandmaster quests, 15% on raids and 10% on Elite diaries and high-tier bosses.',
+      'The Ritual of Transmutation: 5 Keys make 1 Omni-Key.',
     ],
-    spend: 'Hold one and the Dashboard lights up — click any locked skill, gear slot, region or boss to unlock EXACTLY it. No RNG, no table roll.',
+    spend: 'Click a locked skill, gear slot, area, boss or other entry on the Dashboard to unlock exactly that. In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.',
   },
   {
     id: 'chaos',
     name: 'Chaos Key',
     icon: `${WIKI}Eternal_crystal.png`,
     accent: 'text-red-400',
-    tagline: 'Surrender to entropy.',
+    tagline: 'A random unlock from every table.',
     earn: [
-      `A separate ${LEVEL_CHAOS_CHANCE}% chance on every Level Up.`,
-      `Guaranteed at skill levels ${SKILL_CHAOS_MILESTONES.join(', ')}.`,
-      'Ritual of Chaos — convert Fate Points into one.',
+      `Guaranteed at skill levels ${andList(SKILL_CHAOS_MILESTONES)}: ${SKILL_CHAOS_MILESTONES.length} per skill.`,
+      `A separate ${LEVEL_CHAOS_CHANCE}% chance on every level-up, milestones included.`,
+      'The Ritual of Chaos turns Fate Points into one.',
     ],
-    spend: 'Unlocks one RANDOM entry from ANY table — you don’t even pick the table.',
+    spend: 'Unlocks one random entry from all the tables at once. Every eligible entry is equally likely, so big tables such as Banks come up most.',
   },
 ];
 
@@ -351,19 +370,19 @@ export interface SpendTable {
 export const SPEND_TABLES: SpendTable[] = [
   { type: TableType.EQUIPMENT,       label: 'Equipment',  count: EQUIPMENT_SLOTS.length, tiers: EQUIPMENT_TIER_MAX, blurb: 'Open a gear slot, then upgrade its tier toward endgame.' },
   { type: TableType.SKILLS,          label: 'Skills',     count: SKILLS_LIST.length,     tiers: SKILLS_TIER_CAP,    blurb: 'Raise a skill’s tier cap by +10 levels of usable methods.' },
-  { type: TableType.REGIONS,         label: 'Areas',      count: REGIONS_LIST.length,    blurb: 'Open new map regions you’re allowed to enter.' },
+  { type: TableType.REGIONS,         label: 'Areas',      count: REGIONS_LIST.length,    blurb: 'Unlock a new area you can go to.' },
   { type: TableType.MOBILITY,        label: 'Mobility',   count: MOBILITY_LIST.length,   blurb: 'Teleports, spirit trees, fairy rings and transport networks.' },
   { type: TableType.ARCANA,          label: COMBAT_POWERS_LABEL, count: ARCANA_LIST.length, blurb: COMBAT_POWERS_DESCRIPTION },
   { type: TableType.STORAGE,         label: 'Storage',    count: STORAGE_LIST.length,    blurb: 'Looting bag, rune pouch, seed box and other storage. Banks are their own table.' },
   { type: TableType.POH,             label: 'Housing',    count: ROLLABLE_POH_ITEMS.length, blurb: 'Player-owned house rooms and facilities.' },
   { type: TableType.MERCHANTS,       label: 'Merchants',  count: MERCHANTS_LIST.length,  blurb: 'Shops and traders you’re permitted to use.' },
-  { type: TableType.MINIGAMES,       label: 'Minigames',  count: MINIGAMES_LIST.length,  blurb: 'Activities, from Pest Control to the Inferno.' },
+  { type: TableType.MINIGAMES,       label: 'Minigames',  count: MINIGAMES_LIST.length,  blurb: 'Activities, from Pest Control to Guardians of the Rift.' },
   { type: TableType.BOSSES,          label: 'Bosses',     count: BOSSES_LIST.length,     blurb: 'Permission to fight each major boss encounter.' },
   { type: TableType.GUILDS,          label: 'Guilds',     count: GUILDS_LIST.length,     blurb: 'Skill guilds and their perks.' },
   { type: TableType.FARMING_LAYERS,  label: 'Farming',    count: FARMING_PATCH_LIST.length, blurb: 'Farming patches across the world.' },
   { type: TableType.SLAYER_UNLOCKS,  label: 'Slayer',     count: SLAYER_UNLOCKS_LIST.length, blurb: 'Slayer reward unlocks: new tasks, superiors, helmet & more.' },
   // Bank-locked modes only (rules.bankLocks) — filtered in on demand.
-  { type: TableType.BANKS,           label: 'Banks',      count: BANK_IDS.length,        blurb: 'Every bank and deposit box is locked until you roll it — banking is a privilege, not a given.' },
+  { type: TableType.BANKS,           label: 'Banks',      count: BANK_IDS.length,        blurb: 'Banking is locked by place: each place with a bank, bank chest or deposit box is one unlock.' },
 ];
 
 /** Flat cost, in keys, of a single unlock from any table. */
@@ -398,19 +417,19 @@ export interface Ritual {
  */
 const GAMBIT_STAKE = 15;
 const gambitText = (perKey: number): string =>
-  `Stake ALL your Fate on a coin flip. Win: 1 Key per ${perKey} staked. Lose: the Void keeps everything.`;
+  `Stake all your Fate on a coin flip. Win: 1 Key per ${perKey} staked, rounded down, and the rest is lost. Lose: all of it is lost.`;
 /** Greed's consolation: this fraction of the (scaled) cost refunds on a failed roll. */
 export const GREED_REFUND_FRACTION = 0.5;
 
 export const RITUALS: Ritual[] = [
-  { id: 'LUCK',         name: 'Ritual of Clarity',       tagline: 'Roll with advantage.',   fateCost: 8,  effect: 'Your next roll is made twice — the better result is kept.' },
-  { id: 'GREED',        name: 'Ritual of Greed',         tagline: 'Double or… something.',  fateCost: 15, effect: 'If your next Key roll succeeds you get 2 Keys, even when it also brings an Omni-Key (a Vanilla boss with 1 Key left gives 1). If it fails, half the Fate comes back, unless the fail brings a Pity Key.' },
-  { id: 'CHAOS',        name: 'Ritual of Chaos',         tagline: 'Embrace entropy.',       fateCost: 25, effect: 'Immediately forge 1 Chaos Key (a random unlock from ANY table).' },
-  { id: 'GAMBIT',       name: 'Void Gambit',             tagline: 'Before Fate reclaims it.', fateCost: GAMBIT_STAKE, stakesAllFate: true,
+  { id: 'LUCK',         name: 'Ritual of Clarity',       tagline: 'Roll twice, keep the better.', fateCost: 8,  effect: 'Your next Key roll is made twice and the better result is kept.' },
+  { id: 'GREED',        name: 'Ritual of Greed',         tagline: 'Try to double your next Key.', fateCost: 15, effect: 'If your next Key roll succeeds you get 2 Keys, even when it also brings an Omni-Key (a Vanilla boss with 1 Key left gives 1). If it fails, half the Fate comes back, unless the fail brings a Pity Key.' },
+  { id: 'CHAOS',        name: 'Ritual of Chaos',         tagline: 'Buy a Chaos Key.',       fateCost: 25, effect: 'Get 1 Chaos Key now: a random unlock from every table at once.' },
+  { id: 'GAMBIT',       name: 'Void Gambit',             tagline: 'A coin flip for Keys.', fateCost: GAMBIT_STAKE, stakesAllFate: true,
     effect: gambitText(GAMBIT_STAKE) },
-  { id: 'CARTOGRAPHER', name: 'Ritual of the Cartographer', tagline: 'Chart your own course.', fateCost: 40, chunkedOnly: true,
-    effect: 'Reveal 3 random frontier chunks — and CHOOSE which one unlocks. The only say you get in where Fate takes you.' },
-  { id: 'TRANSMUTE',    name: 'Ritual of Transmutation', tagline: 'Equivalent exchange.',   keyCost: 5,   effect: 'Fuse 5 standard Keys into 1 Omni-Key.' },
+  { id: 'CARTOGRAPHER', name: 'Ritual of the Cartographer', tagline: 'Choose your next chunk.', fateCost: 40, chunkedOnly: true,
+    effect: 'See up to 3 random frontier chunks and choose which one unlocks. The only way to choose land in Chunked.' },
+  { id: 'TRANSMUTE',    name: 'Ritual of Transmutation', tagline: 'Trade Keys for an Omni-Key.', keyCost: 5, effect: 'Trade 5 Keys for 1 Omni-Key.' },
 ];
 
 export const getRitual = (id: Ritual['id']): Ritual => RITUALS.find(r => r.id === id)!;

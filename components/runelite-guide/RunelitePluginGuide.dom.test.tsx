@@ -178,7 +178,7 @@ describe('RunelitePluginGuide navigation and focus', () => {
     const host = await mount();
     const opener = await openGuide(host);
     const back = Array.from(host.querySelectorAll<HTMLButtonElement>('button'))
-      .find(button => button.textContent === 'Back to the companion');
+      .find(button => button.textContent === 'Back to the tracker');
     if (!back) throw new Error('Missing the closing button');
 
     await act(async () => {

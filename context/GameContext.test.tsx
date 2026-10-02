@@ -18,6 +18,7 @@ import {
   stagePendingSave,
 } from '../utils/pendingSaves';
 import { profileBackupKey } from '../utils/profileStorage';
+import { RESET_CONFIRM_MESSAGE } from '../utils/backups';
 import { profileMirrorMetadataKey } from '../utils/storageRecovery';
 import { openRecoveryDatabase } from '../utils/recoveryDatabase';
 import { checksumSave } from '../utils/saveIntegrity';
@@ -694,6 +695,22 @@ describe('ordinary save recovery', () => {
     await act(async () => { await game.current().resetGame(); });
     expect(game.current().userNotes.goal).toBeUndefined();
     expect(game.current().stateReplacements).toBe(before + 2);
+  });
+
+  it('keeps the backups that the import and reset confirmations promise', async () => {
+    const game = renderGame('profile');
+    await settleOwnership();
+
+    const candidate = JSON.parse(game.current().getExportData()) as GameState;
+    candidate.userNotes = { goal: 'imported' };
+    await act(async () => { await game.current().importSave(candidate); });
+    await act(async () => { await game.current().resetGame(); });
+
+    let reasons: string[] = [];
+    await act(async () => { reasons = (await game.current().listBackups()).map(backup => backup.reason); });
+    expect(reasons).toEqual(expect.arrayContaining(['Before import', 'Before reset']));
+    expect(RESET_CONFIRM_MESSAGE).toContain('A backup of the current save is kept under Sync Code → Backups.');
+    expect(RESET_CONFIRM_MESSAGE).not.toMatch(/cannot be undone/i);
   });
 
   it('creates changed interval checkpoints only after five minutes of durable head saves', async () => {

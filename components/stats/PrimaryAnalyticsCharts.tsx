@@ -68,10 +68,10 @@ export const AnalyticsTooltip: React.FC<AnalyticsTooltipProps> = ({ active, payl
 };
 
 const outcomeLabels: Record<AnalyticsOutcome, string> = {
-  'normal-win': 'Won a key',
+  'normal-win': 'Won a Key',
   'omni-win': 'Won an Omni-Key',
-  miss: 'No key',
-  pity: 'Pity key',
+  miss: 'No Key',
+  pity: 'Pity Key',
 };
 
 const outcomeSwatch: Record<AnalyticsOutcome, React.CSSProperties> = {
@@ -197,7 +197,7 @@ export const PrimaryAnalyticsCharts: React.FC<PrimaryAnalyticsChartsProps> = ({ 
             { label: 'Your wins', swatch: <LineSwatch color="#fbbf24" /> },
             { label: 'Expected', swatch: <LineSwatch color="#93c5fd" dashed /> },
             { label: 'Normal range', swatch: <BlockSwatch style={{ backgroundColor: 'rgba(96,165,250,0.25)' }} /> },
-            ...(pityDrawn ? [{ label: 'Pity key', swatch: <DiamondSwatch color="#fbbf24" /> }] : []),
+            ...(pityDrawn ? [{ label: 'Pity Key', swatch: <DiamondSwatch color="#fbbf24" /> }] : []),
           ]} />}
           empty={analytics.timeline.length === 0 ? 'No scoreable attempts match these filters.' : undefined}
         >
@@ -240,7 +240,7 @@ export const PrimaryAnalyticsCharts: React.FC<PrimaryAnalyticsChartsProps> = ({ 
             </ResponsiveContainer>
             <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-2xl font-black tabular-nums text-gray-50">{percent(wins, summary.attempts)}</span>
-              <span className="text-[10px] uppercase tracking-wider text-gray-500">won a key</span>
+              <span className="text-[10px] uppercase tracking-wider text-gray-500">won a Key</span>
             </div>
           </div>
           <ul aria-label="Outcome pattern legend" className="w-full flex-1 space-y-2.5">

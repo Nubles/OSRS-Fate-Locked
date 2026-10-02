@@ -31,6 +31,7 @@ import { SaveRecoveryGuard } from './components/SaveRecoveryGuard';
 import { SaveBootstrap } from './components/SaveBootstrap';
 import { DiscordSyncDriver } from './components/DiscordSyncDriver';
 import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE, FATE_EXPORT_HINT } from './utils/fateSaveFile';
+import { RESET_CONFIRM_MESSAGE } from './utils/backups';
 import { isOwnershipConflictBlock } from './utils/profileWriterLease';
 import { useFeatureGates } from './hooks/useFeatureGates';
 import { flashElement } from './utils/flash';
@@ -132,7 +133,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
           <div className="min-h-screen bg-[#161616] flex items-center justify-center p-8">
             <div className="bg-[#1e1e1e] border border-amber-500/30 rounded-xl p-8 max-w-lg text-center">
               <h1 className="text-2xl font-bold text-amber-400 mb-2">Updating…</h1>
-              <p className="text-gray-400 mb-4">The app couldn't load its code — usually a new version or a network blip.</p>
+              <p className="text-gray-400 mb-4">The tracker couldn't load its code. This is usually a new version or a network blip.</p>
               <button
                 onClick={() => window.location.reload()}
                 className="px-6 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold transition-colors"
@@ -422,7 +423,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
             </div>
             <div>
               <h1 className="text-lg font-black text-gray-100 tracking-tight uppercase leading-none">Fate Locked Ironman</h1>
-              <p className="text-[10px] text-gray-500 font-mono mt-0.5 tracking-wide">RNG EDITION COMMAND CENTER</p>
+              <p className="text-[10px] text-gray-500 font-mono mt-0.5 tracking-wide">Ironman challenge tracker</p>
             </div>
             <ProfileSwitcher />
           </div>
@@ -430,8 +431,8 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
           {/* Resources Bar */}
           <div className="flex flex-col md:flex-row items-center gap-3 md:gap-6 bg-black/20 p-1.5 pr-4 rounded-xl border border-white/5 w-full xl:w-auto shadow-inner">
             <div className="w-full md:w-48 lg:w-64 px-2" title={pityRules.pityEnabled
-                ? `Fate Points — failed rolls build these; at ${pityRules.pityThreshold} you get a guaranteed pity key. Also spend them on rituals at the Altar.`
-                : 'Fate Points — failed rolls build these; spend them on rituals at the Altar.'}>
+                ? `Fate Points: failed rolls build these, and at ${pityRules.pityThreshold} you get a guaranteed Pity Key. You can also spend them on rituals at the Altar.`
+                : 'Fate Points: failed rolls build these. Spend them on rituals at the Altar.'}>
                <div className="flex justify-between text-[10px] mb-1.5 font-bold uppercase tracking-wider">
                   <span className={nearPity ? "text-red-400 animate-pulse" : "text-gray-500"}>Fate Points</span>
                   <span className="text-gray-400">{pityRules.pityEnabled ? `${fatePoints}/${pityRules.pityThreshold}` : `${fatePoints} Fate`}</span>
@@ -442,17 +443,17 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
             </div>
             <div className="hidden md:block w-px h-8 bg-white/5"></div>
             <div data-tour="keys" className="flex items-center gap-3 justify-center">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg min-w-[60px] justify-center" title="Keys — spend on a table in Spend Keys for a random unlock">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg min-w-[60px] justify-center" title="Keys: spend one on a table in Spend Keys for a random unlock">
                    <WikiIcon file="Crystal_key.png" alt="Keys" Fallback={Key} size={17} className="drop-shadow" />
                    <span className="font-bold text-amber-100 text-lg leading-none"><PopOnChange value={keys} /></span>
                 </div>
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors min-w-[60px] justify-center ${specialKeys > 0 ? 'bg-purple-500/20 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'bg-white/5 border-white/10 opacity-50'}`} title="Omni-keys — click any locked item in the Dashboard to unlock exactly it">
-                   <WikiIcon file="Enhanced_crystal_key.png" alt="Omni-keys" Fallback={Sparkles} size={18} className={specialKeys > 0 ? 'animate-pulse' : 'opacity-50 grayscale'} />
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors min-w-[60px] justify-center ${specialKeys > 0 ? 'bg-purple-500/20 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'bg-white/5 border-white/10 opacity-50'}`} title={`Omni-Keys: click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ' In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.' : ''}`}>
+                   <WikiIcon file="Enhanced_crystal_key.png" alt="Omni-Keys" Fallback={Sparkles} size={18} className={specialKeys > 0 ? 'animate-pulse' : 'opacity-50 grayscale'} />
                    <span className={`font-bold text-lg leading-none ${specialKeys > 0 ? 'text-purple-200' : 'text-gray-500'}`}><PopOnChange value={specialKeys} /></span>
                 </div>
                 {chaosKeys > 0 && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 border border-red-500/40 rounded-lg animate-in fade-in slide-in-from-right-4 min-w-[60px] justify-center" title="Chaos keys (unlock from any category)">
-                     <WikiIcon file="Sinister_key.png" alt="Chaos keys" Fallback={Dna} size={17} className="animate-pulse drop-shadow" />
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 border border-red-500/40 rounded-lg animate-in fade-in slide-in-from-right-4 min-w-[60px] justify-center" title="Chaos Keys: each one unlocks a random entry from all the tables at once">
+                     <WikiIcon file="Sinister_key.png" alt="Chaos Keys" Fallback={Dna} size={17} className="animate-pulse drop-shadow" />
                      <span className="font-bold text-red-100 text-lg leading-none"><PopOnChange value={chaosKeys} /></span>
                   </div>
                 )}
@@ -520,7 +521,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                  </>}
                  {gates.has('tool:stats') && <>
                  <div className="w-px h-4 bg-white/10"></div>
-                 <button onClick={() => setShowStats(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-blue-400 hover:bg-white/5 rounded transition-colors" title="Stats" aria-label="Stats"><BarChart3 size={14} /></button>
+                 <button onClick={() => setShowStats(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-blue-400 hover:bg-white/5 rounded transition-colors" title="Fate Analytics" aria-label="Fate Analytics"><BarChart3 size={14} /></button>
                  </>}
                  <div className="w-px h-4 bg-white/10"></div>
                  <button onClick={() => setShowReference(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-yellow-400 hover:bg-white/5 rounded transition-colors" title="Rules" aria-label="Rules"><HelpCircle size={14} /></button>
@@ -583,7 +584,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                            <Radio size={13} /> Discord notifications
                         </button>
                         <div className="my-1 border-t border-white/10" />
-                        <button onClick={() => { setShowUtilMenu(false); if(window.confirm("Are you sure you want to reset ALL progress? This cannot be undone.")) void resetGame(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-red-300/90 hover:bg-red-900/20 hover:text-red-200">
+                        <button onClick={() => { setShowUtilMenu(false); if(window.confirm(RESET_CONFIRM_MESSAGE)) void resetGame(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-red-300/90 hover:bg-red-900/20 hover:text-red-200">
                            <RotateCcw size={13} /> Reset all progress
                         </button>
                      </div>

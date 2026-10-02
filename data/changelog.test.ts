@@ -20,7 +20,32 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-slayer-rewards');
+    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-plain-rules');
+  });
+
+  it('announces the plain, corrected Rules and help text, and that the Rival is out for now', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-plain-rules');
+    expect(release?.title).toBe('Rules and Help Say What the Game Does');
+    expect(release?.date).toBe('2026-10-02');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/new run starts with 3 Keys and all of Misthalin \(one chunk of Lumbridge in Chunked\)/),
+      expect.stringMatching(/no longer calls bosses repeatable.*each boss pays 1 to 3 Keys at falling odds, then stops/),
+      expect.stringMatching(/Chaos Keys.*30, 40, 50, 60, 70, 80, 90 and 99.*2% chance on any level-up.*all the tables at once/),
+      expect.stringMatching(/Omni-Key.*comes on top of the Key.*can’t pick land in Chunked/),
+      expect.stringMatching(/every way to get a Key.*any successful roll.*Pity Keys.*Void Gambit.*3 Keys you start with.*every 25 total levels/),
+      expect.stringMatching(/Smart Play no longer tells you to save up Fate.*resets it to 0/),
+      expect.stringMatching(/backup of your save is kept under Sync Code → Backups/),
+      expect.stringMatching(/no longer called verifiable/),
+      expect.stringMatching(/Fate Forecast shows the real chance/),
+      expect.stringMatching(/Void Gambit pays 1 Key for every whole 15 Fate staked.*rest is lost/),
+      expect.stringMatching(/Banks are unlocked by place/),
+      expect.stringMatching(/Inferno is no longer listed as a minigame.*training methods its new tier opens/),
+    ]);
+    expect(release?.sections.changed).toEqual([
+      expect.stringMatching(/Rival is out of the game for now.*stays in your save/),
+      expect.stringMatching(/what differs between Vanilla and Chunked.*Region Bonuses tab.*is gone/),
+      expect.stringMatching(/Rules page is called Rules everywhere.*Spend Keys cards say Unlock.*no ranks/),
+    ]);
   });
 
   it('announces the tasks Slayer rewards add, and boss tasks', () => {

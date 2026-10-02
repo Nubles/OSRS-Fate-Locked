@@ -23,6 +23,6 @@ describe('SpendCard', () => {
 
     expect(html).toContain('View pool');
     expect(html).toContain('Need Keys');
-    expect(html).toContain('aria-label="Roll Bosses"');
+    expect(html).toContain('aria-label="Unlock from Bosses"');
   });
 });

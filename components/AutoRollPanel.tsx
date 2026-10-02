@@ -230,11 +230,11 @@ export function AutoRollPanel() {
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <Dice5 size={20} className="text-fuchsia-400" /> Auto-Roll
+            <Dice5 size={20} className="text-fuchsia-400" /> Sync &amp; Roll
             <span className="text-[10px] uppercase tracking-wide bg-fuchsia-500/20 text-fuchsia-300 px-1.5 py-0.5 rounded">Prototype</span>
           </h2>
           <p className="text-xs text-gray-500 mt-1 max-w-xl">
-            Pull your real account from the OSRS hiscores and auto-roll your run to match what you've already earned.
+            Pull your real account from the OSRS hiscores and roll every level you've already gained, as if you logged each one.
             Powered by the <span className="text-gray-400">Wise Old Man</span> API. Currently syncs skill levels.
           </p>
         </div>
@@ -348,9 +348,9 @@ export function AutoRollPanel() {
                 <CheckCircle2 size={18} /> Synced
                 {skillKeysGained && (skillKeysGained.keys + skillKeysGained.special + skillKeysGained.chaos) > 0 && (
                   <span className="font-normal text-gray-300">
-                    · earned <span className="text-amber-300 font-semibold">{skillKeysGained.keys} key{skillKeysGained.keys === 1 ? '' : 's'}</span>
-                    {skillKeysGained.special > 0 && <>, <span className="text-purple-300 font-semibold">{skillKeysGained.special} omni</span></>}
-                    {skillKeysGained.chaos > 0 && <>, <span className="text-red-400 font-semibold">{skillKeysGained.chaos} chaos</span></>}
+                    · earned <span className="text-amber-300 font-semibold">{skillKeysGained.keys} Key{skillKeysGained.keys === 1 ? '' : 's'}</span>
+                    {skillKeysGained.special > 0 && <>, <span className="text-purple-300 font-semibold">{skillKeysGained.special} Omni-Key{skillKeysGained.special === 1 ? '' : 's'}</span></>}
+                    {skillKeysGained.chaos > 0 && <>, <span className="text-red-400 font-semibold">{skillKeysGained.chaos} Chaos Key{skillKeysGained.chaos === 1 ? '' : 's'}</span></>}
                   </span>
                 )}
               </div>

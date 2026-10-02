@@ -100,7 +100,7 @@ describe('ShareModal region summary', () => {
 
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     const summary = writeText.mock.calls[0][0];
-    expect(summary).toContain(`Regions: ${expected} Unlocked`);
+    expect(summary).toContain(`Areas: ${expected} Unlocked`);
     expect(summary).not.toContain("Otto's Grotto");
     expect(summary).not.toContain("Heroes' Guild");
   });
@@ -117,7 +117,7 @@ describe('ShareModal region summary', () => {
     expect(BANK_IDS).toHaveLength(126);
   });
 
-  it('uses all unlock families for the shared completion percentage and rank', async () => {
+  it('uses all unlock families for the shared completion percentage, with no rank', async () => {
     Object.assign(mockGame.current.unlocks, {
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
       equipment: Object.fromEntries(EQUIPMENT_SLOTS.map(slot => [slot, EQUIPMENT_TIER_MAX])),
@@ -128,9 +128,12 @@ describe('ShareModal region summary', () => {
 
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     expect(writeText.mock.calls[0][0]).toContain('Progression: 53%');
-    expect(writeText.mock.calls[0][0]).toContain('Void Champion');
+    expect(writeText.mock.calls[0][0]).toMatch(/^\*\*Fate Locked Ironman\*\* \(Vanilla mode\)\n/);
     expect(view.getByText('53%')).toBeTruthy();
-    expect(view.queryByText('Master of Fate')).toBeNull();
+    const ranks = /Lost Soul|Fate Wanderer|Iron Determinator|Void Champion|Master of Fate/;
+    expect(writeText.mock.calls[0][0]).not.toMatch(ranks);
+    expect(document.body.textContent).not.toMatch(ranks);
+    expect(document.body.textContent).not.toMatch(/RNG Edition|Fate is Absolute/i);
   });
 
   it('reaches 100% when every active Vanilla unlock is owned without retired housing', async () => {
@@ -148,7 +151,7 @@ describe('ShareModal region summary', () => {
 
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     expect(writeText.mock.calls[0][0]).toContain('Progression: 100%');
-    expect(writeText.mock.calls[0][0]).toContain('Master of Fate');
+    expect(writeText.mock.calls[0][0]).not.toContain('Master of Fate');
     expect(mockGame.current.unlocks.housing).not.toContain('Aquarium');
   });
 

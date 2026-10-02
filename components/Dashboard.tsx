@@ -34,6 +34,7 @@ import { getRivalImage } from '../data/wikiRivalIcons';
 import { SectionGuide } from './SectionGuide';
 import { completionPercent as runCompletion } from '../utils/completion';
 import { rivalCompletion, standing as rivalStanding } from '../utils/rival';
+import { RIVAL_ENABLED } from '../config/rules';
 // Heavy tab/modal contents — code-split so their large data dependencies
 // (questData, diaryTasks, caTasks, collectionLogData, requirements, etc.)
 // stay out of the initial dashboard bundle.
@@ -451,7 +452,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         'open:goal': setShowGoalPlanner,
         'open:achievements': setShowAchievements,
         'open:forecast': setShowForecast,
-        'open:rival': setShowRival,
+        ...(RIVAL_ENABLED ? { 'open:rival': setShowRival } : {}),
         'open:killplanner': setShowBossPlanner,
         'open:share': setShowRunCard,
       };
@@ -730,7 +731,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const renderWorldTab = () => (
       <div className="flex flex-col h-full overflow-hidden">
           <div className="flex justify-between items-center mb-4 px-2 pt-2 shrink-0">
-               <h3 className="text-emerald-400 font-bold text-sm uppercase tracking-wide">Regions</h3>
+               <h3 className="text-emerald-400 font-bold text-sm uppercase tracking-wide">Areas</h3>
                <div className="flex bg-[#1a1a1a] p-1 rounded-lg border border-white/10">
                    <button 
                      onClick={() => setWorldView('MAP')}
@@ -1023,7 +1024,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
     <>
     <div className="bg-osrs-panel border border-osrs-border rounded-lg shadow-lg flex flex-col h-full overflow-hidden relative">
       {!suspendModals && pendingSpecial && (
-          <VoidReveal itemName={pendingSpecial.item} itemType={pendingSpecial.table} itemImage={pendingSpecial.image} onComplete={finalizeSpecial} animationsEnabled={animationsEnabled} />
+          <VoidReveal itemName={pendingSpecial.item} itemType={pendingSpecial.table} itemImage={pendingSpecial.image} onComplete={finalizeSpecial} animationsEnabled={animationsEnabled}
+            tier={pendingSpecial.table === TableType.SKILLS ? (unlocks.skills[pendingSpecial.item] || 0) + 1 : undefined} />
       )}
 
       {!suspendModals && selectedSkillForDetails && (
@@ -1124,12 +1126,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                <button
                  onClick={() => window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: 'open:fatethread' } }))}
                  className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-violet-500/30 bg-violet-950/30 hover:bg-violet-900/40 text-violet-300 text-[11px] font-medium whitespace-nowrap transition-colors"
-                 title="View your run as a living tapestry of fate"
+                 title="See every unlock, grouped by table, and replay them in order"
                >
                  <Route size={12} />
                  Fate Thread
                </button>
-               <RivalHeaderButton onClick={() => setShowRival(true)} />
+               {RIVAL_ENABLED && <RivalHeaderButton onClick={() => setShowRival(true)} />}
                <button
                  onClick={() => setShowBossPlanner(true)}
                  className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-red-500/30 bg-red-950/30 hover:bg-red-900/40 text-red-300 text-[11px] font-medium whitespace-nowrap transition-colors"
@@ -1268,7 +1270,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       </Suspense>
     )}
 
-    {!suspendModals && showRival && (
+    {RIVAL_ENABLED && !suspendModals && showRival && (
       <Suspense fallback={<ModalFallback label="Summoning your rival…" />}>
         <RivalModal onClose={() => setShowRival(false)} />
       </Suspense>

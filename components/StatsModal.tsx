@@ -75,7 +75,7 @@ interface Column { key: AnalyticsSortKey; label: string; numeric?: boolean; hint
 const mainColumns: Column[] = [
   { key: 'source', label: 'Activity' },
   { key: 'attempts', label: 'Rolls', numeric: true },
-  { key: 'genuineWins', label: 'Wins', numeric: true, hint: 'Genuine wins; pity keys are counted separately' },
+  { key: 'genuineWins', label: 'Wins', numeric: true, hint: 'Genuine wins; Pity Keys are counted separately' },
   { key: 'actualRate', label: 'Win rate vs expected', hint: 'Bar: how often you won. Tick: what the odds expected' },
   { key: 'delta', label: 'Luck', numeric: true, hint: 'Wins minus the wins the odds expected' },
   { key: 'pityInterventions', label: 'Pity', numeric: true },
@@ -307,7 +307,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ onClose }) => {
                     value={plural(fateReport.longestDrought, 'miss', 'misses')} detail="in a row" />
                   <Highlight icon={<AnalyticsIcon art="drought" size={30} />} tint="bg-white/[0.06] text-gray-200" label="Current drought"
                     value={plural(analytics.summary.currentDrought, 'miss', 'misses')} detail={analytics.summary.currentDrought === 0 ? 'your last roll won' : 'and counting'} />
-                  <Highlight icon={<AnalyticsIcon art="pityKeys" size={30} />} tint="bg-amber-400/10 text-amber-200" label="Pity keys"
+                  <Highlight icon={<AnalyticsIcon art="pityKeys" size={30} />} tint="bg-amber-400/10 text-amber-200" label="Pity Keys"
                     value={analytics.summary.pityInterventions} detail={analytics.summary.pityInterventions === 1 ? 'time Fate stepped in' : 'times Fate stepped in'} />
                 </div>
                 <div className="overflow-x-auto rounded-xl border border-white/[0.06] bg-[#1a1a1a]">

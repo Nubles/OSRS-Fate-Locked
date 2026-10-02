@@ -10,6 +10,7 @@ import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST,
 import { HelpCircle, Lock, TrendingUp, AlertTriangle, Check } from 'lucide-react';
 import { Sparkles, Dices, Dna, Sprout, Key } from './OsrsIcon';
 import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
+import { andList, LEVEL_CHAOS_CHANCE, SKILL_CHAOS_MILESTONES } from '../config/economy';
 import { openDashboardPool } from '../utils/dashboardPoolNavigation';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, chunkLabel } from '../utils/chunkAdjacency';
 
@@ -100,7 +101,7 @@ export const SpendCard: React.FC<SpendCardProps> = ({
         type="button"
         onClick={onClick}
         disabled={!isClickable}
-        aria-label={`Roll ${label}`}
+        aria-label={`Unlock from ${label}`}
         title={blocked && !complete ? 'No entry here is eligible yet — open more locations or quests first.' : undefined}
         className={`relative overflow-hidden rounded-lg border-2 w-full text-left group flex flex-col p-2.5 min-h-[104px] transition-all duration-200 active:scale-[0.98]
         ${isClickable
@@ -147,7 +148,7 @@ export const SpendCard: React.FC<SpendCardProps> = ({
         <span className="text-[9px] font-mono text-gray-400 font-bold shrink-0 leading-none">{unlocked}<span className="text-gray-600">/{total}</span></span>
         {isClickable && (
           <span className={`flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider shrink-0 ${a.ctaText} ${a.titleHover} transition-colors`}>
-            Roll <Dices size={11} className="group-hover:rotate-[24deg] transition-transform duration-300" />
+            Unlock <Dices size={11} className="group-hover:rotate-[24deg] transition-transform duration-300" />
           </span>
         )}
       </div>
@@ -212,9 +213,9 @@ export const GachaSection: React.FC = () => {
     { type: TableType.STORAGE, label: 'Storage', subLabel: 'Inventory Space', iconSrc: OSRS_GACHA_ICONS.STORAGE, unlocked: (unlocks.storage ?? []).length, total: STORAGE_LIST.length, can: canUnlock.storage },
     { type: TableType.POH, label: 'Housing', subLabel: 'POH Facilities', iconSrc: OSRS_GACHA_ICONS.POH, unlocked: ROLLABLE_POH_ITEMS.filter(item => (unlocks.housing ?? []).includes(item)).length, total: ROLLABLE_POH_ITEMS.length, can: canUnlock.poh },
     { type: TableType.MERCHANTS, label: 'Merchants', subLabel: 'Shops & Wares', iconSrc: OSRS_GACHA_ICONS.MERCHANTS, unlocked: (unlocks.merchants ?? []).length, total: MERCHANTS_LIST.length, can: canUnlock.merchants },
-    { type: TableType.MINIGAMES, label: 'Minigames', subLabel: 'Activities & Fun', iconSrc: OSRS_GACHA_ICONS.MINIGAMES, unlocked: (unlocks.minigames ?? []).length, total: MINIGAMES_LIST.length, can: canUnlock.minigames },
-    { type: TableType.BOSSES, label: 'Bosses', subLabel: 'Major Encounters', iconSrc: OSRS_GACHA_ICONS.BOSSES, unlocked: (unlocks.bosses ?? []).length, total: BOSSES_LIST.length, can: canUnlock.bosses },
-    { type: TableType.GUILDS, label: 'Guilds', subLabel: 'Professional Societies', iconSrc: OSRS_GACHA_ICONS.GUILDS, unlocked: (unlocks.guilds ?? []).length, total: GUILDS_LIST.length, can: canUnlock.guilds },
+    { type: TableType.MINIGAMES, label: 'Minigames', subLabel: 'Activities', iconSrc: OSRS_GACHA_ICONS.MINIGAMES, unlocked: (unlocks.minigames ?? []).length, total: MINIGAMES_LIST.length, can: canUnlock.minigames },
+    { type: TableType.BOSSES, label: 'Bosses', subLabel: 'Boss fights', iconSrc: OSRS_GACHA_ICONS.BOSSES, unlocked: (unlocks.bosses ?? []).length, total: BOSSES_LIST.length, can: canUnlock.bosses },
+    { type: TableType.GUILDS, label: 'Guilds', subLabel: 'Guild access', iconSrc: OSRS_GACHA_ICONS.GUILDS, unlocked: (unlocks.guilds ?? []).length, total: GUILDS_LIST.length, can: canUnlock.guilds },
     { type: TableType.FARMING_LAYERS, label: 'Farming', subLabel: 'Patches', iconSrc: OSRS_GACHA_ICONS.FARMING, unlocked: (unlocks.farming ?? []).length, total: FARMING_PATCH_LIST.length, can: canUnlock.farming },
     { type: TableType.SLAYER_UNLOCKS, label: 'Slayer', subLabel: 'Reward Unlocks', iconSrc: OSRS_GACHA_ICONS.SLAYER_UNLOCKS, unlocked: (unlocks.slayerUnlocks ?? []).length, total: SLAYER_UNLOCKS_LIST.length, can: canUnlock.slayerUnlocks },
     ...(bankLocks ? [{ type: TableType.BANKS, label: 'Banks', subLabel: 'Bank Access', iconSrc: OSRS_GACHA_ICONS.BANKS, unlocked: (unlocks.banks ?? []).length, total: BANK_IDS.length, can: (canUnlock as any).banks as boolean }] : []),
@@ -234,7 +235,7 @@ export const GachaSection: React.FC = () => {
               {specialKeys} Omni-Key{specialKeys > 1 ? 's' : ''} Ready
             </h3>
             <p className="text-[11px] text-purple-300/70 font-mono leading-snug">
-              Omni-Keys aren't rolled here — click any locked skill, gear slot, {isChunked ? '' : 'region '}or boss in the <span className="text-purple-200">Progression Dashboard</span> to pick exactly what to unlock.
+              Omni-Keys aren't spent here. Click a locked skill, gear slot, {isChunked ? '' : 'area, '}boss or other entry on the <span className="text-purple-200">Dashboard</span> to pick exactly what to unlock.
             </p>
           </div>
         </div>
@@ -254,7 +255,7 @@ export const GachaSection: React.FC = () => {
                             Chaos Key Available
                             <span className="text-[10px] bg-red-500/20 px-1.5 py-0.5 rounded border border-red-500/30 text-red-300 animate-pulse">WILDCARD</span>
                         </h3>
-                        <p className="text-xs text-red-300/60 font-mono">Unlocks a random item from ANY category.</p>
+                        <p className="text-xs text-red-300/60 font-mono">Unlocks a random entry from all the tables at once.</p>
                     </div>
                 </div>
                 <div className="text-2xl font-bold text-red-500 group-hover:scale-110 transition-transform relative z-10 text-shadow-osrs">{chaosKeys}</div>
@@ -265,9 +266,9 @@ export const GachaSection: React.FC = () => {
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-black/40 rounded-full border border-white/10 grayscale opacity-50"><Dna className="text-gray-500 w-5 h-5" /></div>
                     <div>
-                        <h3 className="text-gray-400 font-bold uppercase tracking-widest text-xs">Chaos Entropy</h3>
+                        <h3 className="text-gray-400 font-bold uppercase tracking-widest text-xs">Chaos Keys</h3>
                         <p className="text-[10px] text-gray-600 font-mono flex items-center gap-1">
-                           <AlertTriangle size={10} /> 2% Chance on Level Up
+                           <AlertTriangle size={10} className="shrink-0" /> Guaranteed at skill levels {andList(SKILL_CHAOS_MILESTONES)}, plus a {LEVEL_CHAOS_CHANCE}% chance on any level-up
                         </p>
                     </div>
                 </div>

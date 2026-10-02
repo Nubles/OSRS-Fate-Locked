@@ -10,7 +10,7 @@ describe('BossKeyProgress', () => {
       <BossKeyProgress stage={vanillaBossKeyStage('Zulrah', 0)} />,
     );
 
-    expect(markup).toContain('30% current');
+    expect(markup).toContain('30% now');
     expect(markup).toContain('15% next');
   });
 
@@ -19,7 +19,7 @@ describe('BossKeyProgress', () => {
       <BossKeyProgress stage={vanillaBossKeyStage('Zulrah', 1)} />,
     );
 
-    expect(markup).toContain('1 / 2 keys');
+    expect(markup).toContain('1 of 2 Keys paid');
   });
 
   it('marks an exhausted boss reserve without implying ordinary loot is disabled', () => {
@@ -27,8 +27,8 @@ describe('BossKeyProgress', () => {
       <BossKeyProgress stage={vanillaBossKeyStage('Zulrah', 2)} />,
     );
 
-    expect(markup).toContain('Key reserve exhausted');
-    expect(markup).toContain('Only this key/Fate roll is exhausted');
+    expect(markup).toContain('All Keys paid');
+    expect(markup).toContain('This boss no longer rolls for Keys or Fate.');
   });
 });
 
@@ -36,7 +36,7 @@ describe('ClueKeyProgress', () => {
   it('shows the shared onboarding floor when it exceeds the tier rate', () => {
     const markup = renderToStaticMarkup(<ClueKeyProgress awarded={1} baseRate={5} />);
 
-    expect(markup).toContain('15% onboarding rate');
+    expect(markup).toContain('15% for your first Keys');
   });
 
   it('announces normal tier rates after the shared onboarding reserve', () => {

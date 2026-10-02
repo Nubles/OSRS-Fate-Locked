@@ -515,7 +515,7 @@ describe('App changelog lifecycle', () => {
     for (let step = 0; step < 4; step += 1) {
       await user.click(await screen.findByRole('button', { name: 'Next' }));
     }
-    await user.click(screen.getByRole('button', { name: 'Enter The Void' }));
+    await user.click(screen.getByRole('button', { name: 'Start' }));
 
     // The release notes load lazily, which takes a while under a full CI run.
     const dialog = await screen.findByRole('dialog', { name: "What's New" }, { timeout: 10_000 });
@@ -536,7 +536,7 @@ describe('App changelog lifecycle', () => {
     for (let step = 0; step < 4; step += 1) {
       await user.click(await screen.findByRole('button', { name: 'Next' }));
     }
-    await user.click(screen.getByRole('button', { name: 'Enter The Void' }));
+    await user.click(screen.getByRole('button', { name: 'Start' }));
 
     const gameMode = await screen.findByRole('dialog', { name: 'Choose game mode' });
     expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();

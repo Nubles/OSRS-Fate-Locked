@@ -9,7 +9,7 @@ const PROFILE_MUTATION_MESSAGES: Record<ProfileMutationFailure, string> = {
   max_profiles: 'Maximum of 10 profiles reached.',
   not_found: 'That profile no longer exists. The list has been refreshed.',
   last_profile: 'You cannot delete the last profile.',
-  unsupported_metadata: 'Profiles are read-only until this app supports the stored profile version.',
+  unsupported_metadata: 'Profiles are read-only until this version of the tracker can read the stored profile version.',
   storage_unavailable: 'Browser storage is unavailable. Your profile list is unchanged.',
   invalid_metadata: 'Profile data could not be validated. Your profile list is unchanged.',
   backup_failed: 'The safety backup could not be verified. Your profile list is unchanged.',
@@ -28,7 +28,7 @@ const CLEANUP_FAILURE_MESSAGES: Record<CleanupFailureReason, string> = {
   busy: 'Another tab is cleaning up profile storage. Try again in a moment.',
   profile_in_use: "Another tab is using this profile's storage. Switch away from it there, then retry cleanup.",
   storage_unavailable: 'Browser storage is unavailable. Cleanup is still pending.',
-  unsupported_metadata: 'Profile cleanup is read-only until this app supports the stored profile version.',
+  unsupported_metadata: 'Profile cleanup is read-only until this version of the tracker can read the stored profile version.',
   invalid_metadata: 'Profile cleanup metadata could not be validated. Cleanup is still pending.',
 };
 

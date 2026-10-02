@@ -121,6 +121,11 @@ export const AlternativeRequirementChip: React.FC<{
     </div>
 );
 
+/** How the Closest tab scores a goal: calculateProphecyScore's weights, in words. */
+export const CLOSEST_GOALS_EXPLAINED = 'The ten goals you are closest to. Each is scored by what it still needs: '
+    + '100 for each locked area, 50 for each locked skill plus 1 for each level short, '
+    + '20 for each missing quest or other requirement, and 30 if the goal itself is still locked.';
+
 export const calculateProphecyScore = (req: ContentRequirement, analysis: any) => {
     let score = 0;
     score += analysis.missingRegions.length * 100;
@@ -262,7 +267,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">Fate Strategy Guide <SectionGuide id="STRATEGY" /></h2>
-                            <p className="text-xs text-gray-500">Analyze timeline capabilities & bottlenecks.</p>
+                            <p className="text-xs text-gray-500">What you can do now, and what is blocking the rest.</p>
                         </div>
                     </div>
                     
@@ -283,7 +288,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                             onClick={() => setActiveTab('PROPHECY')}
                             className={`px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'PROPHECY' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-300'}`}
                         >
-                            <Sparkles size={12} /> Prophecy
+                            <Sparkles size={12} /> Closest
                         </button>
                     </div>
 
@@ -444,10 +449,10 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                     <BrainCircuit size={32} className="text-purple-300" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-white mb-2">The Oracle's Prophecy</h3>
+                                    <h3 className="text-xl font-bold text-white mb-2">Closest Goals</h3>
                                     <p className="text-sm text-gray-300 leading-relaxed">
-                                        These are your most efficient next steps. The Oracle calculates the "Distance" to every goal based on your current unlocks, levels, and prerequisites.
-                                        <br/><span className="text-purple-300 text-xs mt-2 block">Low score = Easier to achieve.</span>
+                                        {CLOSEST_GOALS_EXPLAINED}
+                                        <br/><span className="text-purple-300 text-xs mt-2 block">Lower is closer.</span>
                                     </p>
                                 </div>
                             </div>
@@ -469,7 +474,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                                     <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-gray-500 uppercase tracking-wide border border-white/5">{content.category}</span>
                                                 </div>
                                                 <div className="flex items-center gap-4 text-xs text-gray-500 font-mono">
-                                                    <span>Difficulty Score: <span className="text-purple-400 font-bold">{content.difficultyScore}</span></span>
+                                                    <span>Score: <span className="text-purple-400 font-bold">{content.difficultyScore}</span></span>
                                                     <span>Progress: <span className={completionPercent > 80 ? 'text-green-400' : 'text-yellow-500'}>{completionPercent}%</span></span>
                                                 </div>
                                             </div>
@@ -489,7 +494,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                     );
                                 })}
                                 {prophecyList.length === 0 && (
-                                    <div className="text-center py-10 text-gray-500 italic">No prophecies available. You may have unlocked everything possible!</div>
+                                    <div className="text-center py-10 text-gray-500 italic">No locked goals left: you can do everything listed here.</div>
                                 )}
                             </div>
                         </div>

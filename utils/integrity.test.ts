@@ -162,7 +162,7 @@ describe('replayInvariants', () => {
   it('awards two keys for a doubled (Greed) Omni roll', () => {
     const { final } = replayInvariants([mk({
       type: 'ROLL_OMNI',
-      message: 'LEGENDARY DROP! You found an Omni-Key and 2 Keys! (Doubled)',
+      message: '2 Keys and an Omni-Key Found! (Doubled)',
       details: 'Critical Success! Rolled 1.0 vs 50.0%.',
     })], 0);
     expect(final.keys).toBe(2);

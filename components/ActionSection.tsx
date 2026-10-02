@@ -115,7 +115,7 @@ const TIER_STYLE: Record<BossTier, typeof TIER_STYLES.GREEN> = {
 };
 const ACTIVITY_ROLLS = [
   { name: 'Minigame', subText: 'Pest Control, BA, Castle Wars, Soul Wars…', source: DropSource.ACTIVITY_MINIGAME, image: `${WIKI_IMG}Void_knight_mace.png`, style: TIER_STYLES.STONE },
-  { name: 'Any Pet',  subText: 'Guaranteed key on a pet drop!',            source: DropSource.PET,               image: `${WIKI_IMG}Vorki.png`,           style: TIER_STYLES.GOLD },
+  { name: 'Any Pet',  subText: 'A guaranteed Key on a pet drop.',            source: DropSource.PET,               image: `${WIKI_IMG}Vorki.png`,           style: TIER_STYLES.GOLD },
 ];
 
 type TierStyle = typeof TIER_STYLES.GREEN;

@@ -10,7 +10,7 @@ import {
 import { drawDice } from '../utils/seededRng';
 import { TableType, LogEntry, type FailureFateAward } from '../types';
 import { isRollEntry } from '../utils/logEntry';
-import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL } from '../config/economy';
+import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, LEVEL_CHAOS_CHANCE } from '../config/economy';
 import { isValidUnlock } from '../utils/gameEngine';
 import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
 import { ALL_CA_TASKS } from '../data/caTasks';
@@ -217,7 +217,7 @@ describe('ROLL_RESULT', () => {
         state: gameReducer(base(), roll({
           success: true, omni: true, roll: 1, baseThreshold: 2.2, threshold: 2.2,
         })),
-        expected: 'Critical Success! Rolled 1.0 vs 2.2%.',
+        expected: 'Rolled 1.0 (≤ 2.2%), and an Omni-Key came with the Key.',
       },
       {
         state: gameReducer(base(), roll({
@@ -250,7 +250,7 @@ describe('ROLL_RESULT', () => {
         state: gameReducer(base(), roll({
           success: true, omni: true, roll: 1, baseThreshold: 2.2, threshold: 3.2,
         })),
-        expected: 'Critical Success! Rolled 1.0 vs 3.2% effective; 2.2% base.',
+        expected: 'Rolled 1.0 (≤ 3.2% effective; 2.2% base), and an Omni-Key came with the Key.',
       },
       {
         state: gameReducer(base(), roll({
@@ -554,7 +554,7 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
     expect(next.keys).toBe(initialState.keys + 1);
     expect(next.specialKeys).toBe(initialState.specialKeys + 1);
     expect(next.bossStandardKeysAwarded?.Zulrah).toBe(2);
-    expect(next.history.at(-1)?.message).toBe('LEGENDARY DROP! You found an Omni-Key! (Greed awarded 1 Standard Key)');
+    expect(next.history.at(-1)?.message).toBe('Key and Omni-Key Found! (Greed awarded 1 Standard Key)');
     expect(replayInvariants(next.history, start.keys).final.keys).toBe(next.keys);
   });
 
@@ -792,7 +792,7 @@ describe('rituals', () => {
     expect(s.activeBuff).toBe('NONE');
     expect(s.history.at(-1)).toMatchObject({
       type: 'ROLL_OMNI',
-      message: 'LEGENDARY DROP! You found an Omni-Key and 2 Keys! (Doubled)',
+      message: '2 Keys and an Omni-Key Found! (Doubled)',
       meta: { rewardKind: 'omni', standardKeysAwarded: 2 },
     });
   });
@@ -896,6 +896,14 @@ describe('LEVEL_UP', () => {
   it('awards a chaos key when the roll lands under 2%', () => {
     const s = gameReducer(base(), { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.01 } });
     expect(s.chaosKeys).toBe(initialState.chaosKeys + 1);
+  });
+
+  it('rolls the level-up Chaos chance the Rules page names, and says so plainly in History', () => {
+    const hit = gameReducer(base(), { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: LEVEL_CHAOS_CHANCE / 100 - 0.0001 } });
+    const miss = gameReducer(base(), { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: LEVEL_CHAOS_CHANCE / 100 } });
+    expect(hit.chaosKeys).toBe(initialState.chaosKeys + 1);
+    expect(miss.chaosKeys).toBe(initialState.chaosKeys);
+    expect(hit.history.at(-1)?.details).toMatch(new RegExp(`^The ${LEVEL_CHAOS_CHANCE}% level-up chance came up, at Total Level \\d+\\.$`));
   });
 
   it('guarantees one Chaos Key at a skill milestone', () => {
@@ -1052,6 +1060,10 @@ describe('LEVEL_UP — Chunked milestone insurance', () => {
       run = levelUp(run);
       expect(run.keys).toBe(initialState.keys + 1);
       expect(run.history.at(-1)?.message).toContain(`Total Level ${firstPayout}`);
+      // The Key comes on total level alone; a start-chunk player can still roll other things.
+      expect(run.history.at(-1)?.details).toBe(
+        `Start-chunk milestone: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels until you unlock another chunk.`,
+      );
     });
 
     it('leave runs that chose their mode before this rule on their original schedule', () => {

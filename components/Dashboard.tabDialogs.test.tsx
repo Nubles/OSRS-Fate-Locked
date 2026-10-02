@@ -50,6 +50,7 @@ vi.mock('../services/MonsterService', () => {
 });
 
 import { Dashboard } from './Dashboard';
+import { RIVAL_ENABLED } from '../config/rules';
 
 afterEach(cleanup);
 
@@ -89,5 +90,18 @@ describe('Dashboard tab dialogs', () => {
     expectOutsideTabPane(dialog);
     fireEvent.click(dialog);
     expect(screen.queryByRole('dialog', { name: 'Choose monster' })).toBeNull();
+  }, 15_000);
+});
+
+describe('Dashboard Rival', () => {
+  it.runIf(!RIVAL_ENABLED)('has no Rival button, and does not open the Rival from the command palette, while it is switched off', async () => {
+    render(<Dashboard />);
+    expect(screen.queryByTitle('Race a Rival Ghost')).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Rival$/ })).toBeNull();
+
+    window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: 'open:rival' } }));
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(screen.queryByRole('dialog', { name: 'Rival Ghost' })).toBeNull();
+    expect(screen.queryByText('Choose a Rival')).toBeNull();
   }, 15_000);
 });

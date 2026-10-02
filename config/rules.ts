@@ -3,6 +3,13 @@ import { DropSource } from '../types';
 
 export const EQUIPMENT_TIER_MAX = 9;
 
+/**
+ * The Rival is out of the game for now (owner's call, 2 October 2026). Its code,
+ * and any rival a save already holds, stay as they are; set this to true to bring
+ * back its Dashboard button, its dialog and its command palette entry.
+ */
+export const RIVAL_ENABLED = false;
+
 export const DROP_RATES: Record<string, number> = {
   [DropSource.QUEST_NOVICE]: 25,
   [DropSource.QUEST_INTERMEDIATE]: 50,
