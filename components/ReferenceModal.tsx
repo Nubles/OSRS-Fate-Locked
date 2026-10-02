@@ -180,7 +180,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-2">Core Rules</h1>
-                                <p className="text-gray-400 text-lg">The ultimate test of adaptability and fortune.</p>
+                                <p className="text-gray-400 text-lg">How rolls, Keys and unlocks work.</p>
                             </div>
 
                             {/* The Concept */}
@@ -189,8 +189,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     <Skull size={18} /> The Concept
                                 </h3>
                                 <p className="text-gray-300 leading-relaxed text-sm">
-                                    This is a <b>"Snowball" style restriction mode</b> for Old School RuneScape. 
-                                    You start as a fresh account (Ironman) with everything locked: you cannot equip armor, train skills past level 1, enter specific map regions, or use transport methods.
+                                    A challenge for Old School RuneScape ironman accounts. You start with everything locked: you
+                                    can't equip armour, train skills past level 1, enter most of the map, or use transport. What
+                                    you unlock, and when, is down to the rolls.
                                 </p>
                             </div>
 
@@ -286,7 +287,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     <ArrowUp className="rotate-90 text-gray-600 shrink-0" size={14} />
                                     <span className="px-3 py-2 rounded-lg bg-emerald-900/30 text-emerald-300 border border-emerald-500/20">New tasks open</span>
                                 </div>
-                                <p className="text-center text-xs text-gray-500 mt-4">Every unlock widens the funnel — more skills, regions and bosses mean more tasks to roll on. That snowball <i>is</i> the game.</p>
+                                <p className="text-center text-xs text-gray-500 mt-4">Each unlock opens more tasks to roll on: more skills, places and bosses mean more ways to earn the next Key.</p>
                             </div>
 
                             {/* The three keys */}
