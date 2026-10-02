@@ -1,10 +1,13 @@
 import { DiaryTask } from '../data/diaryTasks';
+import { FARMING_PATCH_LIST, GUILDS_LIST, POH_LIST, SLAYER_UNLOCKS_LIST } from '../data/items';
 import { QuestData } from '../data/questData';
 import { UnlockState } from '../types';
+import type { AreaRoutes } from './areaRoutes';
 import {
   evaluateDiaryTaskEligibility,
   evaluateQuestEligibility,
   ManualEligibility,
+  type DiaryTaskEligibility,
 } from './journalStatus';
 
 export type JournalCompletionField = 'quests' | 'diaries' | 'completedTasks';
@@ -26,6 +29,27 @@ export type CompletionResult =
 export interface CompletionAttestation {
   manualConfirmed?: boolean;
 }
+
+/**
+ * Guilds, farming patches, house rooms and Slayer rewards only decide whether
+ * the Journal reads a Diary task as ready (owner, 2 October 2026). Logging a
+ * task by hand never waits for them, so its checks count them all as unlocked.
+ */
+export const withStatusOnlyUnlocks = (unlocks: UnlockState): UnlockState => ({
+  ...unlocks,
+  guilds: [...GUILDS_LIST],
+  farming: [...FARMING_PATCH_LIST],
+  housing: [...POH_LIST],
+  slayerUnlocks: [...SLAYER_UNLOCKS_LIST],
+});
+
+/** What logging a Diary task by hand checks: its requirements, less the status-only unlocks. */
+export const diaryTaskLoggingEligibility = (
+  task: DiaryTask,
+  unlocks: UnlockState,
+  gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
+): DiaryTaskEligibility => evaluateDiaryTaskEligibility(task, withStatusOnlyUnlocks(unlocks), gameModeId, areaRoutes);
 
 const manualDecision = (
   result: Pick<ManualEligibility, 'machineEligible' | 'manualChecks' | 'confirmable'>,
@@ -66,7 +90,7 @@ export const diaryTaskCompletionDecision = (
   if (unlocks.completedTasks.includes(task.id)) {
     return { ok: false, reason: 'Already completed' };
   }
-  const result = evaluateDiaryTaskEligibility(task, unlocks, gameModeId);
+  const result = diaryTaskLoggingEligibility(task, unlocks, gameModeId);
   if (!result.machineEligible) {
     return {
       ok: false,

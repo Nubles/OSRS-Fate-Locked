@@ -27,12 +27,14 @@ import { isAreaReachable, namedAreaChunks } from './reachability';
 import { placeOf } from './chunkLocations';
 import { chunkKey } from './chunkAdjacency';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
+import { farmingPatchLabel } from './farmingPatches';
 
 export type GoalKind = 'quest' | 'diary' | 'region';
 
 export interface PlanStep {
   /** What kind of thing this step is. */
-  kind: 'quest' | 'region' | 'skill' | 'equipment' | 'merchant' | 'mobility' | 'arcana' | 'minigame' | 'boss' | 'qp' | 'manual';
+  kind: 'quest' | 'region' | 'skill' | 'equipment' | 'merchant' | 'mobility' | 'arcana' | 'minigame' | 'boss'
+    | 'guild' | 'farming' | 'housing' | 'slayer' | 'qp' | 'manual';
   /** Stable id: quest id, region name, skill name, or 'Quest Points'. */
   id: string;
   /** Display label. */
@@ -88,6 +90,11 @@ export interface GoalPlan {
   arcanaSteps?: PlanStep[];
   minigameSteps?: PlanStep[];
   bossSteps?: PlanStep[];
+  /** Guilds, farming patches, house rooms and Slayer rewards incomplete diary tasks use. */
+  guildSteps?: PlanStep[];
+  farmingSteps?: PlanStep[];
+  housingSteps?: PlanStep[];
+  slayerSteps?: PlanStep[];
   /** Requirements where any one complete route is sufficient. */
   alternativeSteps: AlternativePlanStep[];
   /** Optional quest-point shortfall note. */
@@ -219,6 +226,18 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any, gam
   }
   if (blocker.kind === 'boss') {
     return { kind: 'boss', id: blocker.label, label: blocker.label, unlockTable: TableType.BOSSES, detail: 'Unlock via Bosses', done: false };
+  }
+  if (blocker.kind === 'guild') {
+    return { kind: 'guild', id: blocker.label, label: blocker.label, unlockTable: TableType.GUILDS, detail: 'Unlock via Guilds', done: false };
+  }
+  if (blocker.kind === 'farming') {
+    return { kind: 'farming', id: blocker.patch, label: blocker.label, unlockTable: TableType.FARMING_LAYERS, detail: 'Unlock via Farming Patches', done: false };
+  }
+  if (blocker.kind === 'housing') {
+    return { kind: 'housing', id: blocker.label, label: blocker.label, unlockTable: TableType.POH, detail: 'Unlock via Housing', done: false };
+  }
+  if (blocker.kind === 'slayer') {
+    return { kind: 'slayer', id: blocker.label, label: blocker.label, unlockTable: TableType.SLAYER_UNLOCKS, detail: 'Unlock via Slayer Unlocks', done: false };
   }
   if (blocker.kind === 'merchant') {
     return { kind: 'merchant', id: blocker.label, label: blocker.label, unlockTable: TableType.MERCHANTS, detail: 'Unlock via Merchants', done: false };
@@ -428,6 +447,11 @@ function buildPlanFromRequirements(
     arcana?: Set<string>;
     minigames?: Set<string>;
     bosses?: Set<string>;
+    guilds?: Set<string>;
+    /** Farming unlock ids ("Herb"). */
+    farming?: Set<string>;
+    housing?: Set<string>;
+    slayerUnlocks?: Set<string>;
   },
   unlocks: any,
   alreadyReachable: boolean,
@@ -455,6 +479,18 @@ function buildPlanFromRequirements(
   ));
   const bossSteps: PlanStep[] = [...(reqs.bosses ?? [])].sort().map(label => (
     planStepForBlocker({ kind: 'boss', label }, unlocks)
+  ));
+  const guildSteps: PlanStep[] = [...(reqs.guilds ?? [])].sort().map(label => (
+    planStepForBlocker({ kind: 'guild', label }, unlocks)
+  ));
+  const farmingSteps: PlanStep[] = [...(reqs.farming ?? [])].sort().map(patch => (
+    planStepForBlocker({ kind: 'farming', label: farmingPatchLabel(patch), patch }, unlocks)
+  ));
+  const housingSteps: PlanStep[] = [...(reqs.housing ?? [])].sort().map(label => (
+    planStepForBlocker({ kind: 'housing', label }, unlocks)
+  ));
+  const slayerSteps: PlanStep[] = [...(reqs.slayerUnlocks ?? [])].sort().map(label => (
+    planStepForBlocker({ kind: 'slayer', label }, unlocks)
   ));
   const equipmentSteps: PlanStep[] = [...reqs.equipment.entries()]
     .sort(([left], [right]) => left.localeCompare(right))
@@ -559,6 +595,10 @@ function buildPlanFromRequirements(
     ...arcanaSteps,
     ...minigameSteps,
     ...bossSteps,
+    ...guildSteps,
+    ...farmingSteps,
+    ...housingSteps,
+    ...slayerSteps,
     ...skillSteps,
     ...alternativeSteps,
     ...(qpStep ? [qpStep] : []),
@@ -584,6 +624,10 @@ function buildPlanFromRequirements(
     arcanaSteps,
     minigameSteps,
     bossSteps,
+    guildSteps,
+    farmingSteps,
+    housingSteps,
+    slayerSteps,
     alternativeSteps,
     qpStep,
     steps,
@@ -642,6 +686,10 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       arcana: new Set<string>(),
       minigames: new Set<string>(),
       bosses: new Set<string>(),
+      guilds: new Set<string>(),
+      farming: new Set<string>(),
+      housing: new Set<string>(),
+      slayerUnlocks: new Set<string>(),
     };
     if (status !== 'COMPLETED') {
       const seen = new Set<string>();
@@ -696,6 +744,10 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
           if (blocker.kind === 'mobility') merged.mobility.add(blocker.label);
           if (blocker.kind === 'minigame') merged.minigames.add(blocker.label);
           if (blocker.kind === 'boss') merged.bosses.add(blocker.label);
+          if (blocker.kind === 'guild') merged.guilds.add(blocker.label);
+          if (blocker.kind === 'farming') merged.farming.add(blocker.patch);
+          if (blocker.kind === 'housing') merged.housing.add(blocker.label);
+          if (blocker.kind === 'slayer') merged.slayerUnlocks.add(blocker.label);
           if (blocker.kind === 'equipment') {
             const previous = merged.equipment.get(blocker.slot);
             merged.equipment.set(blocker.slot, {

@@ -27,6 +27,11 @@ export interface DiaryTaskRequirementOption {
   minigames?: string[];
   bosses?: string[];
   anyOfBosses?: string[][];
+  /** Guild, farming patch, house and Slayer reward unlocks: they set the Journal status only. */
+  guilds?: string[];
+  farming?: string[];
+  housing?: string[];
+  slayerUnlocks?: string[];
   equipmentRequirements?: DiaryEquipmentRequirement[];
   quests?: string[];
   cas?: string[];
@@ -54,6 +59,11 @@ export interface DiaryTask {
   minigames?: string[];
   bosses?: string[];
   anyOfBosses?: string[][];
+  /** Guild, farming patch, house and Slayer reward unlocks: they set the Journal status only. */
+  guilds?: string[];
+  farming?: string[];
+  housing?: string[];
+  slayerUnlocks?: string[];
   equipmentRequirements?: DiaryEquipmentRequirement[];
   quests?: string[];
   cas?: string[];

@@ -496,6 +496,29 @@ describe('Achievement Diary id-classification audit', () => {
     expect(() => renderDiaryTasks(snapshot)).toThrow(/minigames.*non-empty string/i);
   });
 
+  it.each([
+    ['guilds', "Wizards' Guild", "guilds: ['Wizards\\' Guild']", 'NotAGuild'],
+    ['farming', 'Herb', "farming: ['Herb']", 'Herb patch'],
+    ['housing', 'Menagerie', "housing: ['Menagerie']", 'Aquarium'],
+    ['slayerUnlocks', 'Malevolent Masquerade', "slayerUnlocks: ['Malevolent Masquerade']", 'NotASlayerReward'],
+  ])('retains %s gates and rejects a name its unlock table does not roll', (field, name, rendered, unknown) => {
+    const snapshot = loadSnapshot();
+    snapshot.tasks[0][field] = [name];
+    expect(renderDiaryTasks(snapshot)).toContain(rendered);
+    expect(() => validateAudit(snapshot)).not.toThrow();
+    // The farming ids are the patch kinds ("Herb"); the retired Aquarium can never be rolled.
+    snapshot.tasks[0][field] = [unknown];
+    expect(() => validateAudit(snapshot)).toThrow(new RegExp('unknown.*' + unknown, 'i'));
+    snapshot.tasks[0][field] = [''];
+    expect(() => renderDiaryTasks(snapshot)).toThrow(new RegExp(field + '.*non-empty string', 'i'));
+  });
+
+  it('accepts a route made only of an unlock table gate', () => {
+    const snapshot = loadSnapshot();
+    snapshot.tasks[0].oneOf = [{ housing: ['Portal Chamber'] }, { housing: ['Portal Nexus'] }];
+    expect(renderDiaryTasks(snapshot)).toContain("oneOf: [{ housing: ['Portal Chamber'] }, { housing: ['Portal Nexus'] }]");
+  });
+
   it('rejects unknown references nested inside an alternative route', () => {
     const snapshot = loadSnapshot();
     snapshot.tasks[0].oneOf = [

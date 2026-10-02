@@ -203,6 +203,10 @@ const renderRequirementProperties = (requirement) => {
   if (requirement.anyOfBosses?.length > 0) {
     properties.push('anyOfBosses: [' + requirement.anyOfBosses.map(renderStringArray).join(', ') + ']');
   }
+  if (requirement.guilds?.length > 0) properties.push('guilds: ' + renderStringArray(requirement.guilds));
+  if (requirement.farming?.length > 0) properties.push('farming: ' + renderStringArray(requirement.farming));
+  if (requirement.housing?.length > 0) properties.push('housing: ' + renderStringArray(requirement.housing));
+  if (requirement.slayerUnlocks?.length > 0) properties.push('slayerUnlocks: ' + renderStringArray(requirement.slayerUnlocks));
   if (requirement.equipmentRequirements?.length > 0) properties.push('equipmentRequirements: ' + JSON.stringify(requirement.equipmentRequirements));
   if (requirement.quests?.length > 0) {
     properties.push('quests: ' + renderStringArray(requirement.quests));
@@ -267,7 +271,7 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
   if (!requirement || typeof requirement !== 'object' || Array.isArray(requirement)) {
     throw new Error('Invalid Diary requirement route: ' + context);
   }
-  for (const field of ['items', 'merchants', 'mobility', 'arcana', 'minigames', 'bosses', 'quests', 'cas', 'regions', 'anyOfRegions', 'manualRequirements']) {
+  for (const field of ['items', 'merchants', 'mobility', 'arcana', 'minigames', 'bosses', 'guilds', 'farming', 'housing', 'slayerUnlocks', 'quests', 'cas', 'regions', 'anyOfRegions', 'manualRequirements']) {
     if (requirement[field] !== undefined && !Array.isArray(requirement[field])) {
       throw new Error('Invalid Diary requirement ' + field + ': ' + context);
     }
@@ -337,6 +341,10 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
     || requirement.minigames?.length
     || requirement.bosses?.length
     || requirement.anyOfBosses?.length
+    || requirement.guilds?.length
+    || requirement.farming?.length
+    || requirement.housing?.length
+    || requirement.slayerUnlocks?.length
     || requirement.equipmentRequirements?.length
     || Object.keys(requirement.skills ?? {}).length
     || requirement.quests?.length
@@ -455,6 +463,11 @@ export function renderDiaryTasks(snapshot) {
     '  minigames?: string[];',
     '  bosses?: string[];',
     '  anyOfBosses?: string[][];',
+    '  /** Guild, farming patch, house and Slayer reward unlocks: they set the Journal status only. */',
+    '  guilds?: string[];',
+    '  farming?: string[];',
+    '  housing?: string[];',
+    '  slayerUnlocks?: string[];',
     '  equipmentRequirements?: DiaryEquipmentRequirement[];',
     '  quests?: string[];',
     '  cas?: string[];',
@@ -482,6 +495,11 @@ export function renderDiaryTasks(snapshot) {
     '  minigames?: string[];',
     '  bosses?: string[];',
     '  anyOfBosses?: string[][];',
+    '  /** Guild, farming patch, house and Slayer reward unlocks: they set the Journal status only. */',
+    '  guilds?: string[];',
+    '  farming?: string[];',
+    '  housing?: string[];',
+    '  slayerUnlocks?: string[];',
     '  equipmentRequirements?: DiaryEquipmentRequirement[];',
     '  quests?: string[];',
     '  cas?: string[];',
@@ -675,6 +693,7 @@ const loadReferenceCatalog = (projectRoot) => {
     if (nameProperty) quests.add(stringLiteralOf(nameProperty.initializer));
   }
 
+  const retiredPohItems = new Set(stringArrayOf(initializerOf(itemsSource, 'RETIRED_POH_ITEMS')));
   const catalog = {
     skills,
     merchants: new Set(stringArrayOf(initializerOf(itemsSource, 'MERCHANTS_LIST'))),
@@ -682,6 +701,11 @@ const loadReferenceCatalog = (projectRoot) => {
     arcana: new Set(stringArrayOf(initializerOf(itemsSource, 'ARCANA_LIST'))),
     minigames: new Set(stringArrayOf(initializerOf(itemsSource, 'MINIGAMES_LIST'))),
     bosses: new Set(stringArrayOf(initializerOf(itemsSource, 'BOSSES_LIST'))),
+    guilds: new Set(stringArrayOf(initializerOf(itemsSource, 'GUILDS_LIST'))),
+    farming: new Set(stringArrayOf(initializerOf(itemsSource, 'FARMING_PATCH_LIST'))),
+    // Only what the Housing table can still roll: a retired item can never be unlocked.
+    housing: new Set(stringArrayOf(initializerOf(itemsSource, 'POH_LIST')).filter(item => !retiredPohItems.has(item))),
+    slayerUnlocks: new Set(stringArrayOf(initializerOf(itemsSource, 'SLAYER_UNLOCKS_LIST'))),
     equipment: new Set(stringArrayOf(initializerOf(itemsSource, 'EQUIPMENT_SLOTS'))),
     quests,
     regions,
@@ -718,6 +742,18 @@ const findUnknownReferences = (snapshot, projectRoot) => {
       }
       for (const boss of [...(requirement.bosses ?? []), ...(requirement.anyOfBosses ?? []).flat()]) {
         if (!catalog.bosses.has(boss)) unknown.push(task.id + ' boss ' + boss);
+      }
+      for (const guild of requirement.guilds ?? []) {
+        if (!catalog.guilds.has(guild)) unknown.push(task.id + ' guild ' + guild);
+      }
+      for (const patch of requirement.farming ?? []) {
+        if (!catalog.farming.has(patch)) unknown.push(task.id + ' farming patch ' + patch);
+      }
+      for (const room of requirement.housing ?? []) {
+        if (!catalog.housing.has(room)) unknown.push(task.id + ' housing ' + room);
+      }
+      for (const reward of requirement.slayerUnlocks ?? []) {
+        if (!catalog.slayerUnlocks.has(reward)) unknown.push(task.id + ' Slayer unlock ' + reward);
       }
       for (const equipment of requirement.equipmentRequirements ?? []) {
         if (!catalog.equipment.has(equipment.slot)) unknown.push(task.id + ' equipment slot ' + equipment.slot);

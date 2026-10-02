@@ -22,9 +22,10 @@ import { pendingQuestProgress, type QuestProgressRequirement } from '../data/que
 import { AREA_ENTRY_ROUTES } from '../data/areaAccess';
 import { canonicalAreaName } from '../data/areaMapPolicy';
 import type { AreaRoutes } from './areaRoutes';
+import { farmingPatchLabel } from './farmingPatches';
 
 export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_QUEST';
-export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_MOBILITY' | 'LOCKED_ARCANA' | 'LOCKED_MERCHANT' | 'LOCKED_MINIGAME' | 'LOCKED_BOSS' | 'LOCKED_QUEST';
+export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_MOBILITY' | 'LOCKED_ARCANA' | 'LOCKED_MERCHANT' | 'LOCKED_MINIGAME' | 'LOCKED_BOSS' | 'LOCKED_GUILD' | 'LOCKED_FARMING' | 'LOCKED_HOUSING' | 'LOCKED_SLAYER' | 'LOCKED_QUEST';
 
 export type DiaryStatusUnlocks =
   Omit<UnlockState, 'cas' | 'completedTasks'>
@@ -62,6 +63,13 @@ export type DirectEligibilityBlocker =
   | { kind: 'arcana'; label: string }
   | { kind: 'minigame'; label: string }
   | { kind: 'boss'; label: string }
+  // Guilds, farming patches, house rooms and Slayer rewards set a Diary task's
+  // status only: logging it by hand never waits for them (utils/journalCompletion.ts).
+  | { kind: 'guild'; label: string }
+  /** `label` is how the patch reads ("Herb patch"); `patch` is its farming unlock id ("Herb"). */
+  | { kind: 'farming'; label: string; patch: string }
+  | { kind: 'housing'; label: string }
+  | { kind: 'slayer'; label: string }
   | { kind: 'quest'; label: string };
 
 export interface AlternativeEligibilityRoute {
@@ -398,6 +406,11 @@ export interface DoableTask {
   bosses?: string[];
   /** Any one boss of each group, such as Callisto or its lesser Artio. */
   anyOfBosses?: string[][];
+  guilds?: string[];
+  /** Farming unlock ids, as FARMING_PATCH_LIST names them ("Herb"). */
+  farming?: string[];
+  housing?: string[];
+  slayerUnlocks?: string[];
   equipmentRequirements?: DiaryEquipmentRequirement[];
   quests?: string[];
   regions?: string[];
@@ -433,6 +446,10 @@ const requirementOptionParts = (option: DiaryTaskRequirementOption): string[] =>
   ...(option.minigames ?? []),
   ...(option.bosses ?? []),
   ...(option.anyOfBosses ?? []).map(group => group.join(' or ')),
+  ...(option.guilds ?? []),
+  ...(option.farming ?? []).map(farmingPatchLabel),
+  ...(option.housing ?? []),
+  ...(option.slayerUnlocks ?? []),
   ...(option.equipmentRequirements ?? []).map(item => `${item.slot} T${item.tier}: ${item.reason}${item.unlessDiary ? ` (unless ${item.unlessDiary} is complete)` : ''}`),
   ...(option.combinedSkillLevel ? [
     option.combinedSkillLevel.skills.join(' + ') + ' combined ' + option.combinedSkillLevel.level,
@@ -652,6 +669,25 @@ function evaluateDiaryRequirement(
     const unlocked = group.find(boss => unlocks.bosses?.includes(boss));
     if (unlocked) evidence.push(unlocked);
     else blockers.push({ kind: 'boss', label: group.join(' or ') });
+  }
+  // A guild, farming patch, house room or Slayer reward the task uses must be
+  // unlocked before the Journal reads it as ready; logging by hand ignores them.
+  for (const guild of requirement.guilds ?? []) {
+    if (unlocks.guilds?.includes(guild)) evidence.push(guild);
+    else blockers.push({ kind: 'guild', label: guild });
+  }
+  for (const patch of requirement.farming ?? []) {
+    const label = farmingPatchLabel(patch);
+    if (unlocks.farming?.includes(patch)) evidence.push(label);
+    else blockers.push({ kind: 'farming', label, patch });
+  }
+  for (const room of requirement.housing ?? []) {
+    if (unlocks.housing?.includes(room)) evidence.push(room);
+    else blockers.push({ kind: 'housing', label: room });
+  }
+  for (const reward of requirement.slayerUnlocks ?? []) {
+    if (unlocks.slayerUnlocks?.includes(reward)) evidence.push(reward);
+    else blockers.push({ kind: 'slayer', label: reward });
   }
   for (const item of requirement.equipmentRequirements ?? []) {
     if (item.unlessDiary && unlocks.diaries.includes(item.unlessDiary)) {
@@ -946,6 +982,14 @@ export function evaluateDiaryTierEligibility(
         ? 'LOCKED_MINIGAME'
       : blockers.some(blocker => blocker.kind === 'boss')
         ? 'LOCKED_BOSS'
+      : blockers.some(blocker => blocker.kind === 'guild')
+        ? 'LOCKED_GUILD'
+      : blockers.some(blocker => blocker.kind === 'farming')
+        ? 'LOCKED_FARMING'
+      : blockers.some(blocker => blocker.kind === 'housing')
+        ? 'LOCKED_HOUSING'
+      : blockers.some(blocker => blocker.kind === 'slayer')
+        ? 'LOCKED_SLAYER'
       : blockers.some(blocker => blocker.kind === 'quest' || blocker.kind === 'alternative')
         ? 'LOCKED_QUEST'
         : 'AVAILABLE';
