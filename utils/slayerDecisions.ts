@@ -59,7 +59,7 @@ export function slayerReason(row: SlayerTaskRow): string | undefined {
   if (row.masterBlocker) return row.masterBlocker.label;
   switch (row.status) {
     case 'ready': return undefined;
-    case 'slayer-locked': return row.slayer ? `Slayer ${row.slayer}` : 'Slayer locked';
+    case 'slayer-locked': return row.blocker ?? (row.slayer ? `Slayer ${row.slayer}` : 'Slayer locked');
     case 'combat-locked': return row.combat ? `Combat ${row.combat}` : 'Combat level';
     case 'quest-locked': return 'Quest requirements';
     case 'area-locked': return 'Area locked';

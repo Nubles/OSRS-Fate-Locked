@@ -20,7 +20,17 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-boss-fights');
+    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-slayer-tasks');
+  });
+
+  it('announces the Slayer task fixes', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-slayer-tasks');
+    expect(release?.title).toBe('Slayer Tasks Ask What the Masters Ask');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Defence 20 for basilisks.*Magic 50 for cave krakens.*Thieving 23 and 39/),
+      expect.stringMatching(/Krystilia’s .* I Wildy More Slayer/),
+      expect.stringMatching(/basilisks need 40 Slayer.*Elemental Workshop I.*waterfiends/),
+    ]);
   });
 
   it('announces that boss fights need their boss, and Galvek’s refund', () => {

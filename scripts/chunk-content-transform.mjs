@@ -4,6 +4,7 @@ import { buildInteriorContent, assertInteriorMetadataConservation } from './chun
 const shopOverrides = JSON.parse(readFileSync(new URL('../data/sources/shop-overrides.json', import.meta.url), 'utf8'));
 const contentAliases = JSON.parse(readFileSync(new URL('../data/contentAliases.json', import.meta.url), 'utf8'));
 const contentOverrides = JSON.parse(readFileSync(new URL('../data/sources/chunk-content-overrides.json', import.meta.url), 'utf8'));
+const slayerCorrections = JSON.parse(readFileSync(new URL('../data/sources/slayer-corrections.json', import.meta.url), 'utf8'));
 const REASONS = new Set([
   'interior-preserved', 'interior-unmapped', 'reviewed-content-override', 'interior-metadata-conserved',
   'base-record', 'section-merged', 'variant-name-cleaned', 'quest-subpath-collapsed',
@@ -133,12 +134,34 @@ function buildSlayerMasters(data, audit) {
       if (info.Chunks?.length) entry.locations = info.Chunks;
       if (info.Level != null) entry.slayer = info.Level;
       const req = Object.keys(info.Tasks ?? {}).map(stripWiki); if (req.length) entry.req = req;
+      // Other skills the master asks for (Defence 20 for basilisks, Magic 50 for cave krakens).
+      if (info.Skills && Object.keys(info.Skills).length) entry.skills = { ...info.Skills };
+      // Krystilia assigns these only once "I Wildy More Slayer" is bought.
+      if (info.KrystiliaSlayerCreatures) entry.unlock = 'I Wildy More Slayer';
       result[name] = entry;
       audit.add('slayerMasterTasks', `${master}/${monster}`, monster.includes('#') ? 'normalized' : 'imported', monster.includes('#') ? 'variant-name-cleaned' : 'base-record', [`${master}/${name}`]);
     }
     out[master] = result;
   }
+  applySlayerCorrections(out);
   return out;
+}
+
+/**
+ * Reviewed corrections to the source's Slayer rows, each with its wiki revision
+ * (data/sources/slayer-corrections.json). utils/slayerAccuracy.test.ts checks every
+ * one reached the generated rows; small test sources simply lack the rows.
+ */
+function applySlayerCorrections(masters) {
+  for (const correction of slayerCorrections.corrections) {
+    const row = masters[correction.master]?.[correction.task];
+    if (!row) continue;
+    if (row.req) {
+      row.req = row.req.filter(req => !(correction.removeReq ?? []).includes(req));
+      if (!row.req.length) delete row.req;
+    }
+    Object.assign(row, structuredClone(correction.set ?? {}));
+  }
 }
 
 function buildShortcuts(data, audit) {

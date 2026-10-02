@@ -19,6 +19,18 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-02-slayer-tasks',
+    title: 'Slayer Tasks Ask What the Masters Ask',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'Slayer tasks ask for the other levels the masters do: Defence 20 for basilisks and cockatrice, Magic 50 for cave krakens, Firemaking 33 for harpie bug swarms, 45 Sailing for gryphons, 87 Sailing for frost dragons, and Thieving 23 and 39 for the magic axe hut and the Pirates’ Hideout.',
+        'Krystilia’s abyssal demon, dust devil, jelly and nechryael tasks need the I Wildy More Slayer reward, as in the game.',
+        'Corrected levels: basilisks need 40 Slayer from Vannaka and Mortimer, Nieve gives suqah and metal dragons from combat 85 and greater demons from 75, and Vannaka gives ice warriors from 45. Fossil Island wyverns no longer ask for Elemental Workshop I, and waterfiends outside the Ancient Cavern no longer ask for the cavern.',
+      ],
+    },
+  },
+  {
     id: '2026-10-02-boss-fights',
     title: 'Boss Fights Need Their Boss',
     date: '2026-10-02',

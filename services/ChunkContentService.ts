@@ -58,6 +58,10 @@ export interface SlayerAssignment {
   slayer?: number;
   /** Unlock requirements (e.g. "Priest in Peril Complete the quest"). */
   req?: string[];
+  /** Other skill levels the master asks for, e.g. { Defence: 20 } for basilisks. */
+  skills?: Record<string, number>;
+  /** The Slayer reward the master needs bought first, e.g. "I Wildy More Slayer". */
+  unlock?: string;
 }
 export type SlayerMasters = Record<string, Record<string, SlayerAssignment>>;
 

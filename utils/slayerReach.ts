@@ -38,6 +38,8 @@ export interface SlayerTaskRow {
   status: SlayerStatus;
   loc: { cx: number; cy: number; unlocked: boolean } | null;
   masterBlocker?: SlayerMasterBlocker;
+  /** What else the master asks for that the run lacks: a skill level, or a Slayer reward. */
+  blocker?: string;
 }
 
 export interface SlayerMasterReach {
@@ -143,9 +145,15 @@ export function slayerReachability(
     for (const [monster, info] of Object.entries(tasks)) {
       const loc = locate(monster, info, master);
       const gates = evaluateRouteGates(compileRawRequirements((info.req ?? []).map(raw => ({ raw, origin: 'ENTITY' as const }))), unlocks);
+      const missingSkill = Object.entries(info.skills ?? {}).find(([skill, level]) => effectiveSkillLevel(unlocks, skill) < level);
+      const missingReward = info.unlock && !(unlocks.slayerUnlocks ?? []).includes(info.unlock) ? info.unlock : undefined;
+      // Something else the master asks for: a Slayer reward bought, or another skill's level.
+      const blocker = missingReward ? `Needs ${missingReward}` : missingSkill ? `${missingSkill[0]} ${missingSkill[1]}` : undefined;
       let status: SlayerStatus;
+      let rowBlocker: string | undefined;
       if (masterGate) status = masterGate.status;
       else if (!slayerUnlocked || (info.slayer != null && slayerLevel < info.slayer)) status = 'slayer-locked';
+      else if (blocker) { status = 'slayer-locked'; rowBlocker = blocker; }
       else if (gates.hasDataGap) status = 'access-unknown';
       else if (gates.blockers.length) status = 'quest-locked';
       else if (info.combat != null && combat < info.combat) status = 'combat-locked';
@@ -158,6 +166,7 @@ export function slayerReachability(
       rows.push({
         monster, slayer: info.slayer, combat: info.combat, req: info.req, weight: info.weight, status, loc,
         ...(masterGate ? { masterBlocker: masterGate } : {}),
+        ...(rowBlocker ? { blocker: rowBlocker } : {}),
       });
     }
     rows.sort((a, b) =>

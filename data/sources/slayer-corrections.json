@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-10-02",
+  "sourceRevisions": [
+    { "title": "Vannaka", "revision": 15350577, "url": "https://oldschool.runescape.wiki/w/Vannaka?oldid=15350577" },
+    { "title": "Slayer task", "revision": 15343835, "url": "https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835" },
+    { "title": "Nieve/Slayer assignments", "revision": 15347565, "url": "https://oldschool.runescape.wiki/w/Nieve/Slayer_assignments?oldid=15347565" }
+  ],
+  "corrections": [
+    { "master": "Vannaka", "task": "Basilisks", "set": { "slayer": 40 }, "reason": "Basilisks need 40 Slayer, as Chaeldar's row already has.", "wiki": ["https://oldschool.runescape.wiki/w/Vannaka?oldid=15350577"] },
+    { "master": "Mortimer", "task": "Basilisks", "set": { "slayer": 40 }, "reason": "Basilisks need 40 Slayer.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
+    { "master": "Vannaka", "task": "Ice warriors", "set": { "combat": 45 }, "reason": "Vannaka assigns ice warriors from combat level 45, as Mazchna's row already has.", "wiki": ["https://oldschool.runescape.wiki/w/Vannaka?oldid=15350577"] },
+    { "master": "Nieve", "task": "Suqah", "set": { "combat": 85 }, "reason": "Nieve assigns suqah from combat level 85.", "wiki": ["https://oldschool.runescape.wiki/w/Nieve/Slayer_assignments?oldid=15347565"] },
+    { "master": "Nieve", "task": "Metal dragons", "set": { "combat": 85 }, "reason": "Nieve assigns metal dragons from combat level 85.", "wiki": ["https://oldschool.runescape.wiki/w/Nieve/Slayer_assignments?oldid=15347565"] },
+    { "master": "Nieve", "task": "Greater demons", "set": { "combat": 75 }, "reason": "Nieve assigns greater demons from combat level 75.", "wiki": ["https://oldschool.runescape.wiki/w/Nieve/Slayer_assignments?oldid=15347565"] },
+    { "master": "Chaeldar", "task": "Fossil Island Wyverns", "removeReq": ["Elemental Workshop I Complete the quest"], "reason": "Fossil Island wyverns need only Bone Voyage; Elemental Workshop I is a skeletal wyvern requirement.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
+    { "master": "Konar quo Maten", "task": "Fossil Island Wyverns - Wyvern Cave", "removeReq": ["Elemental Workshop I Complete the quest"], "reason": "Fossil Island wyverns need only Bone Voyage.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
+    { "master": "Nieve", "task": "Fossil Island Wyverns", "removeReq": ["Elemental Workshop I Complete the quest"], "reason": "Fossil Island wyverns need only Bone Voyage.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
+    { "master": "Duradel", "task": "Fossil Island Wyverns", "removeReq": ["Elemental Workshop I Complete the quest"], "reason": "Fossil Island wyverns need only Bone Voyage.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
+    { "master": "Duradel", "task": "Waterfiends", "removeReq": ["Ancient Cavern access"], "reason": "Waterfiends also live in Kraken Cove and the Iorwerth Dungeon; only the Ancient Cavern needs its access.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
+    { "master": "Konar quo Maten", "task": "Waterfiends - Kraken Cove", "removeReq": ["Ancient Cavern access"], "reason": "Kraken Cove's waterfiends don't need the Ancient Cavern.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
+    { "master": "Konar quo Maten", "task": "Waterfiends - Iorwerth Dungeon", "removeReq": ["Ancient Cavern access"], "reason": "The Iorwerth Dungeon's waterfiends need Song of the Elves, not the Ancient Cavern.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
+    { "master": "Nieve", "task": "Frost dragons", "set": { "skills": { "Sailing": 87 } }, "reason": "Frost dragon tasks need 87 Sailing.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
+    { "master": "Duradel", "task": "Frost dragons", "set": { "skills": { "Sailing": 87 } }, "reason": "Frost dragon tasks need 87 Sailing.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
+    { "master": "Krystilia", "task": "Magic axes", "set": { "skills": { "Thieving": 23 } }, "removeReq": ["Unlock the door (Magic axe hut)"], "reason": "The magic axe hut's door needs 23 Thieving to pick.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
+    { "master": "Krystilia", "task": "Pirates", "set": { "skills": { "Thieving": 39 } }, "removeReq": ["WildernessPirateAccess[+]"], "reason": "The Pirates' Hideout's door needs 39 Thieving to pick.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] }
+  ]
+}
