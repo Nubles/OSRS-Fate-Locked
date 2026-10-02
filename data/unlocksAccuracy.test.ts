@@ -18,6 +18,7 @@ import { skillChunkNodes } from '../utils/skillChunkNodes';
 import { chunkContentService } from '../services/ChunkContentService';
 import { classifyShop, ONLY_SHOP_SOURCE } from '../utils/shopClassification';
 import { shopsByCategory } from '../utils/merchantShops';
+import { MERCHANT_SERVICES } from './merchantServices';
 import shopOverrides from './sources/shop-overrides.json';
 import { compileRawRequirements } from '../utils/questRoutes/accountRequirements';
 import {
@@ -417,6 +418,61 @@ describe('U2: a mixed-stock armour shop goes by its stock, and its only-source i
     const directory = [...shopsByCategory()!.values()].flat();
     expect(directory.find(entry => entry.name === "Scavvo's Rune Store")?.onlySource).toEqual(['Rune sword']);
     expect(directory.find(entry => entry.name === "Seddu's Adventurer's Store")?.onlySource).toEqual(['Black med helm']);
+  });
+});
+
+describe('U3: the sellers who sell through dialogue are merchant services', () => {
+  // Name, category, and the wiki's map pin (x, y).
+  // Karim oldid 15358428, Aggie 15083478, Silk trader 15318776, Tenzing 15318801, Nulodion 15328958.
+  const SELLERS: [string, string, number, number][] = [
+    ['Karim', 'Kebab Sellers', 3274, 3181],
+    ['Aggie', 'Dye Shops', 3086, 3259],
+    ['Silk trader', 'Silk Shops', 3298, 3202],
+    ['Tenzing', 'Clothes Shops', 2821, 3556],
+    ['Nulodion', 'Weapon Shops', 3012, 3452],
+  ];
+
+  it.each(SELLERS)('%s sells as a %s service where the wiki puts them', (name, category, x, y) => {
+    expect(MERCHANT_SERVICES[name]?.category).toBe(category);
+    const locations = service.entityLocations(name, ['npc'])!.locations;
+    expect(locations.map(({ cx, cy }) => [cx, cy])).toEqual([[Math.floor(x / 64), Math.floor(y / 64)]]);
+    const at = (unlocks: UnlockState) => evaluateEntityAccess(name, 'npc', locations[0], unlocks, 'vanilla', service);
+    expect(at(everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(at(everything(99, { merchants: MERCHANTS_LIST.filter(merchant => merchant !== category) })))
+      .toEqual({ status: 'LOCKED', reasons: [`Unlock ${category}`] });
+    expect(shopsByCategory()!.get(category)!.find(entry => entry.name === name))
+      .toMatchObject({ kind: 'npc', stockStatus: 'service' });
+  });
+
+  it('asks for the quests that open Tenzing and Nulodion', () => {
+    const at = (name: string, quest: string) => evaluateEntityAccess(name, 'npc', service.entityLocations(name, ['npc'])!.locations[0],
+      everything(99, { quests: questsWithout(quest) }), 'vanilla', service);
+    // Death Plateau has you buy his boots, so a run that has only started it can still buy them.
+    expect(at('Tenzing', 'Death Plateau')).toEqual({ status: 'UNKNOWN', reasons: ['Started Death Plateau'] });
+    expect(at('Nulodion', 'Dwarf Cannon')).toEqual({ status: 'NOT_READY', reasons: ['Dwarf Cannon'] });
+  });
+
+  it('gives every merchant service a real category and a place in the chunk data', () => {
+    for (const [name, { category }] of Object.entries(MERCHANT_SERVICES)) {
+      expect(MERCHANTS_LIST, name).toContain(category);
+      expect(service.entityLocations(name, ['npc'])?.locations.length, name).toBeGreaterThan(0);
+    }
+  });
+
+  it('lets the resource planner buy climbing boots from Tenzing and an ammo mould from Nulodion', () => {
+    const missing = (item: string, seller: string, merchants: string[]) => {
+      const state = createFreshState();
+      state.gameModeId = 'vanilla';
+      state.unlocks.merchants = merchants;
+      state.unlocks.regions = [...REGIONS_LIST, ...MISTHALIN_AREAS];
+      state.unlocks.quests = Object.keys(QUEST_DATA);
+      return calculateSupplyChain(item, state)!.sources.find(route => route.source.name === seller)!.status.missing;
+    };
+    // Neither name is a shop, so both routes used to stop at "Shop category needs review".
+    expect(missing('Climbing Boots', 'Tenzing', [])).toEqual(['Merchant: Clothes Shops']);
+    expect(missing('Climbing Boots', 'Tenzing', ['Clothes Shops'])).toEqual([]);
+    expect(missing('Ammo Mould', 'Nulodion', [])).toEqual(['Merchant: Weapon Shops']);
+    expect(missing('Ammo Mould', 'Nulodion', ['Weapon Shops'])).toEqual([]);
   });
 });
 
