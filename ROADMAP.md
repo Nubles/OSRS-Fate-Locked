@@ -2,26 +2,49 @@
 
 Everything in flight, everything planned, and every gotcha learned the hard
 way — written so the project can keep moving without any particular
-contributor. Last updated: September 2026.
+contributor. Last updated: 3 October 2026.
 
 ---
+
+## 0. Next up (October 2026)
+
+1. **Pets in the Roll Inbox**, once the community poll decides whether a pet
+   earns an Omni-Key or a normal Key. Until then RuneLite doesn't copy pets.
+2. **A ritual and Key balance pass**: Clarity against Void Gambit, the pity
+   line and Greed's price, from player feedback and a simulation of the
+   current rules. It changes the rules, so it waits for a decision.
+3. **An opt-in Fate Locked key next to players' names in game.** It needs an
+   opt-in public list on the web and the relay first, then the plugin.
+4. **The Corporeal Beast by games necklace** (accuracy review call B7). It
+   needs the map to handle teleports into interiors.
+5. **RuneProof quest guides** (P0 and P1 below).
 
 ## 1. RuneLite Plugin Hub release (shipped)
 
 The Plugin Hub entry
 [`plugins/fate-locked-ironman`](https://github.com/runelite/plugin-hub/blob/master/plugins/fate-locked-ironman)
-builds commit `874b9d106cad72c1a0d03addcd25237d2e1220e3` of
+builds commit `4c53198dada2126af1823f00396fef939cc9c251` of
 [Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
-(the Stage 0 safety release, 25 September 2026,
-[runelite/plugin-hub#17110](https://github.com/runelite/plugin-hub/pull/17110)),
+(the Stage 4 release, 2 October 2026,
+[runelite/plugin-hub#17653](https://github.com/runelite/plugin-hub/pull/17653)),
 not that repository's `main`; check the entry for the current pin.
 
 Plugin changes reach players only through a Plugin Hub pull request that
 bumps `commit=`. The plugin repository's CONTRIBUTING.md has the steps and
-the in-game checklist to run first. Stage 1 is in progress
-([plugin PR #19](https://github.com/Nubles/OSRS-Fate-Locked-Runelite/pull/19)).
-Plugin releases are built and published only from
-`OSRS-Fate-Locked-Runelite`.
+the in-game checklist to run first. Plugin releases are built and published
+only from `OSRS-Fate-Locked-Runelite`.
+
+## 1a. Shipped — the RuneLite overhaul and the accuracy review (September to October 2026)
+
+| Date | Release | What players got |
+|---|---|---|
+| 2 Oct | RuneLite Stage 4 (Hub `4c53198`; web #60 and #61) | The Roll inbox card lists what RuneLite noticed, with **Copy for tracker**; the tracker's Roll Inbox reads it with **Paste from RuneLite**. A Chunk grid choice for the world map and game view borders. |
+| 2 Oct | Online backup (web #64; relay deployed) | An encrypted copy of each run on the relay, opened only by a backup code the player keeps; restore in any browser. See `docs/online-backup.md`. |
+| 2 Oct | Accuracy review (web #62, #63 and #61; plugin #26) | Places, bosses, Slayer, Diary tasks, quests, shops, guilds, banks and levels checked against the game, and the tracker's and RuneLite's text made to say what the code does. |
+| 28 Sept | RuneLite Stage 3 (Hub `0240704`; web #57 and #58) | A new sidebar, the in-game display redrawn, settings in RuneLite's configuration, and the RuneLite guide rebuilt. |
+| 27 Sept | RuneLite Stage 2 (Hub `4c2bf97`; web #53 to #55) | One source of truth: every answer RuneLite shows is the tracker's, for land, the sea and interiors. |
+| 26 Sept | RuneLite Stage 1 (runelite/plugin-hub#17144) | Reliable rules and connection between the tracker and RuneLite. |
+| 25 Sept | RuneLite Stage 0 (Hub `874b9d1`) | The safety release: online sync only with the player's consent. |
 
 ## 1b. Shipped — July 2026 sprint (onboarding, safety, community)
 
@@ -168,6 +191,14 @@ See `docs/reviews/2026-09-23-community-report-fixes.md` for decisions and eviden
    remote source is unavailable.
 
 ### P2 — RuneLite capture and enforcement foundation
+
+**Status, 2 October 2026:** RuneLite Stages 1 to 4 delivered most of this:
+the versioned event envelope and its contract
+(`contracts/golden-bundles/detected-events.json`), advisory rule warnings,
+the Roll Inbox (RuneLite's events are copied and pasted, reviewed and rolled
+or skipped; nothing rewrites a run on its own), replayable fixtures in the
+plugin, and Strict Mode, which stops only travel the tracker's travel table
+matches. Pets wait for the reward poll (section 0).
 
 1. Define a versioned evidence envelope for detected quest, diary, CA, item,
    skill, region, bank, and boss progress. Preserve raw evidence and confidence.
@@ -351,6 +382,17 @@ share test files instead of code:
   worker gives the plugin's `GET /r/<code>`, and what the plugin must make
   of it. `workers/fate-relay/relayContract.test.ts` checks that the worker
   gives them.
+- **Detected events** (`contracts/golden-bundles/detected-events.json`,
+  written by hand): the game signals RuneLite's detectors read, the events
+  they must make of them, and what the app does with each (`web.verdict`,
+  `web.firstCandidate`). `utils/detectedEventsContract.test.ts` checks the
+  app's side; the plugin's `DetectedEventsContractTest` runs the same
+  signals through its detectors.
+- **Wording** (`contracts/golden-bundles/runelite-wording.json`, from
+  `data/runeliteWording.ts`): the plugin's terms, the words neither side
+  uses, its settings with their defaults and options, and its sidebar
+  cards. The RuneLite guide is held to the same file, and the plugin's
+  `WordingContractTest` compares its configuration with it.
 
 The plugin copies both at a pinned commit of this repository (its
 `scripts/pin-web-contracts.sh`, which records the commit in
@@ -401,6 +443,12 @@ of `chunked-sailing`).
 - **Dataset fetch cool-downs:** GearService/MonsterService fast-fail for 60s
   after a failed load (`init(force)` bypasses for Retry buttons). Without
   this, the relay driver re-fetched on every state change while offline.
+- **Lazily loaded dialogs in the App tests:** `App.lifecycle.test.tsx`
+  renders the whole app, and a dialog loaded through `lazyWithRetry` can
+  take longer than Testing Library's default one second to appear under a
+  full run on CI. Look such a dialog up with `{ timeout: 10_000 }` and give
+  the test 25 seconds. A missed one failed a main deploy on 2 October 2026
+  (#65).
 
 ## 5. Web release handoff
 
@@ -412,7 +460,8 @@ is a manual repository-maintainer setting after the workflow first appears.
 Build-size watch: `npm run build` fails when the eager entry chunk (the
 `dist/assets/index-*.js` that `index.html` loads) grows past its gzip budget
 in `scripts/check-entry-budget.mjs` (225 kB; about 217 kB after the 24 Sept
-2026 review moved on-demand screens and the release notes out of it). An
+2026 review moved on-demand screens and the release notes out of it, and
+about 224 kB in October 2026, after online backup and Paste from RuneLite). An
 overrun usually means something that should load through `lazyWithRetry` was
 imported eagerly. Inspect the built file for content markers rather than
 relying only on the import graph, and raise the budget only on purpose.
