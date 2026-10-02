@@ -682,13 +682,40 @@ describe('audited current quest requirements', () => {
           },
           "Cold War": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "regions-and-locations",
                 "regions": [
                       "Rellekka",
                       "East Ardougne",
                       "Lumbridge"
                 ],
-                "locations": null,
+                "locations": [
+                      {
+                            "id": "south-iceberg",
+                            "label": "South iceberg",
+                            "standardAreas": [
+                                  "Rellekka"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 41,
+                                        "cy": 62
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "north-iceberg",
+                            "label": "North iceberg",
+                            "standardAreas": [
+                                  "Rellekka"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 41,
+                                        "cy": 63
+                                  }
+                            ]
+                      }
+                ],
                 "skills": {
                       "Hunter": 10,
                       "Agility": 30,
@@ -1066,7 +1093,7 @@ describe('audited current quest requirements', () => {
           },
           "Desert Treasure I": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "regions-and-locations",
                 "regions": [
                       "Bandit Camp",
                       "Bedabin Camp",
@@ -1080,7 +1107,21 @@ describe('audited current quest requirements', () => {
                       "Digsite",
                       "Draynor Village"
                 ],
-                "locations": null,
+                "locations": [
+                      {
+                            "id": "jaldraocht-pyramid",
+                            "label": "Jaldraocht Pyramid",
+                            "standardAreas": [
+                                  "Bandit Camp"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 50,
+                                        "cy": 45
+                                  }
+                            ]
+                      }
+                ],
                 "skills": {
                       "Thieving": 53,
                       "Firemaking": 50,
@@ -1232,7 +1273,7 @@ describe('audited current quest requirements', () => {
           },
           "Dragon Slayer II": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "regions-and-locations",
                 "regions": [
                       "Draynor Village",
                       "Varrock",
@@ -1252,7 +1293,21 @@ describe('audited current quest requirements', () => {
                       "Mort Myre Swamp",
                       "East Ardougne"
                 ],
-                "locations": null,
+                "locations": [
+                      {
+                            "id": "ungael",
+                            "label": "Ungael",
+                            "standardAreas": [
+                                  "Rellekka"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 35,
+                                        "cy": 63
+                                  }
+                            ]
+                      }
+                ],
                 "skills": {
                       "Magic": 75,
                       "Smithing": 70,
@@ -2502,24 +2557,62 @@ describe('audited current quest requirements', () => {
       },
       "The General's Shadow": {
         "kind": "miniquest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Rellekka",
-              "Observatory",
-              "Seers' Village",
-              "Tree Gnome Stronghold",
-              "Tai Bwo Wannai",
-              "Falador",
-              "Shantay Pass"
+          "Rellekka",
+          "Seers' Village",
+          "Tree Gnome Stronghold",
+          "Shilo Village",
+          "Falador",
+          "Draynor Village",
+          "Shantay Pass"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "general-khazard",
+            "label": "General Khazard south-east of Rellekka",
+            "standardAreas": [
+              "Rellekka"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 42,
+                "cy": 56
+              }
+            ]
+          },
+          {
+            "id": "gnomish-scout",
+            "label": "Gnomish scout outside the Gnome Stronghold",
+            "standardAreas": [
+              "Tree Gnome Stronghold"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 38,
+                "cy": 52
+              }
+            ]
+          }
+        ],
         "skills": {},
         "combatLevel": null,
         "prereqs": [
           "Fight Arena",
           "Curse of the Empty Lord"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "regions": [
+              "Fishing Guild"
+            ]
+          },
+          {
+            "regions": [
+              "Hemenster"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 0,
         "difficulty": "Quest (Experienced)"
@@ -3446,14 +3539,28 @@ describe('audited current quest requirements', () => {
   },
   "Making History": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "regions-and-locations",
     "regions": [
-          "Observatory",
-          "East Ardougne",
-          "Rellekka",
-          "Port Phasmatys"
+      "Observatory",
+      "East Ardougne",
+      "Rellekka",
+      "Port Phasmatys"
     ],
-    "locations": null,
+    "locations": [
+      {
+        "id": "jorrals-outpost",
+        "label": "Jorral's Outpost",
+        "standardAreas": [
+          "East Ardougne"
+        ],
+        "chunkOptions": [
+          {
+            "cx": 38,
+            "cy": 52
+          }
+        ]
+      }
+    ],
     "skills": {},
     "combatLevel": null,
     "prereqs": [
@@ -3648,7 +3755,7 @@ describe('audited current quest requirements', () => {
   },
   "Mourning's End Part I": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "regions-and-locations",
     "regions": [
       "Lletya",
       "Tyras Camp",
@@ -3660,7 +3767,21 @@ describe('audited current quest requirements', () => {
       "East Ardougne",
       "Feldip Hills"
     ],
-    "locations": null,
+    "locations": [
+      {
+        "id": "jorrals-orchard",
+        "label": "Apple orchard by Jorral's Outpost",
+        "standardAreas": [
+          "East Ardougne"
+        ],
+        "chunkOptions": [
+          {
+            "cx": 38,
+            "cy": 52
+          }
+        ]
+      }
+    ],
     "skills": {
       "Ranged": 60,
       "Thieving": 50
@@ -4410,7 +4531,18 @@ describe('audited current quest requirements', () => {
           "Rune Mysteries",
           "Shilo Village"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "regions": [
+              "Fishing Guild"
+            ]
+          },
+          {
+            "regions": [
+              "Hemenster"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 2,
         "difficulty": "Quest (Experienced)"
@@ -4518,11 +4650,38 @@ describe('audited current quest requirements', () => {
       },
       "Spirits of the Elid": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Nardah"
+          "Nardah"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "water-ravine",
+            "label": "Water Ravine at the source of the River Elid",
+            "standardAreas": [
+              "Nardah"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 52,
+                "cy": 48
+              }
+            ]
+          },
+          {
+            "id": "genie-cave",
+            "label": "Genie's cave",
+            "standardAreas": [
+              "Nardah"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 52,
+                "cy": 45
+              }
+            ]
+          }
+        ],
         "skills": {
           "Magic": 33,
           "Ranged": 37,
@@ -5574,14 +5733,41 @@ describe('audited current quest requirements', () => {
       },
       "The Curse of Arrav": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
           "Varrock",
           "Ruins of Uzer",
           "Mountain Camp",
           "Silvarea"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "trollweiss-mountain",
+            "label": "Cave on Trollweiss Mountain",
+            "standardAreas": [
+              "Mountain Camp"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 43,
+                "cy": 60
+              }
+            ]
+          },
+          {
+            "id": "zemouregals-fortress",
+            "label": "Zemouregal's Fortress",
+            "standardAreas": [
+              "Mountain Camp"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 44,
+                "cy": 60
+              }
+            ]
+          }
+        ],
         "skills": {
           "Agility": 61,
           "Ranged": 62,
@@ -5642,12 +5828,26 @@ describe('audited current quest requirements', () => {
       },
       "The Eyes of Glouphrie": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
           "Tree Gnome Stronghold",
           "Yanille"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "giant-tortoises",
+            "label": "Giant tortoises in the Gnome Stronghold",
+            "standardAreas": [
+              "Tree Gnome Stronghold"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 37,
+                "cy": 55
+              }
+            ]
+          }
+        ],
         "skills": {
           "Construction": 5,
           "Magic": 46
@@ -5681,13 +5881,27 @@ describe('audited current quest requirements', () => {
       },
       "The Final Dawn": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Tlati Rainforest",
-              "Civitas illa Fortis",
-              "Ralos' Rise"
+          "Tlati Rainforest",
+          "Civitas illa Fortis",
+          "Ralos' Rise"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "crypt-of-tonali",
+            "label": "Crypt of Tonali",
+            "standardAreas": [
+              "Tlati Rainforest"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 20,
+                "cy": 47
+              }
+            ]
+          }
+        ],
         "skills": {
           "Thieving": 66,
           "Fletching": 52,
@@ -5723,18 +5937,58 @@ describe('audited current quest requirements', () => {
       },
       "The Fremennik Exiles": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Rellekka",
-              "Lunar Isle"
+          "Rellekka",
+          "Lunar Isle"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "brundt-outside-rellekka",
+            "label": "Brundt outside Rellekka",
+            "standardAreas": [
+              "Rellekka"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 42,
+                "cy": 56
+              }
+            ]
+          },
+          {
+            "id": "fossegrimen",
+            "label": "Fossegrimen's lake",
+            "standardAreas": [
+              "Rellekka"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 41,
+                "cy": 56
+              }
+            ]
+          },
+          {
+            "id": "island-of-stone",
+            "label": "Island of Stone",
+            "standardAreas": [
+              "Rellekka"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 38,
+                "cy": 62
+              }
+            ]
+          }
+        ],
         "skills": {
           "Crafting": 65,
           "Slayer": 60,
           "Smithing": 60,
           "Fishing": 60,
-          "Runecraft": 55,
+          "Runecraft": 55
         },
         "combatLevel": null,
         "prereqs": [
@@ -5750,13 +6004,27 @@ describe('audited current quest requirements', () => {
       },
       "The Fremennik Isles": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Rellekka",
-              "Neitiznot",
-              "Jatizso"
+          "Rellekka",
+          "Neitiznot",
+          "Jatizso"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "ice-troll-lands",
+            "label": "Ice troll lands north of Neitiznot",
+            "standardAreas": [
+              "Neitiznot"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 36,
+                "cy": 60
+              }
+            ]
+          }
+        ],
         "skills": {
           "Construction": 20
         },
@@ -5786,12 +6054,26 @@ describe('audited current quest requirements', () => {
       },
       "The Garden of Death": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
           "Molch",
           "Mount Quidamortem"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "ruins-of-morra",
+            "label": "Ruins of Morra",
+            "standardAreas": [
+              "Mount Quidamortem"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 22,
+                "cy": 54
+              }
+            ]
+          }
+        ],
         "skills": {
           "Farming": 20
         },
@@ -5826,13 +6108,27 @@ describe('audited current quest requirements', () => {
       },
       "The Golem": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
           "Ruins of Uzer",
           "Varrock",
           "Digsite"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "desert-phoenix",
+            "label": "Desert phoenix north of Uzer",
+            "standardAreas": [
+              "Ruins of Uzer"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 53,
+                "cy": 49
+              }
+            ]
+          }
+        ],
         "skills": {
           "Crafting": 20,
           "Thieving": 25
@@ -5914,12 +6210,39 @@ describe('audited current quest requirements', () => {
       },
       "The Heart of Darkness": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Ralos' Rise",
-              "Civitas illa Fortis"
+          "Ralos' Rise",
+          "Civitas illa Fortis"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "quetzacalli-gorge",
+            "label": "Quetzacalli Gorge",
+            "standardAreas": [
+              "Ralos' Rise"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 23,
+                "cy": 50
+              }
+            ]
+          },
+          {
+            "id": "twilight-trialist-tower",
+            "label": "Twilight Trialist Tower",
+            "standardAreas": [
+              "Ralos' Rise"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 25,
+                "cy": 50
+              }
+            ]
+          }
+        ],
         "skills": {
           "Mining": 55,
           "Thieving": 48,
@@ -6099,13 +6422,26 @@ describe('audited current quest requirements', () => {
       },
       "The Slug Menace": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Observatory",
-              "Witchaven",
-              "Falador"
+          "Witchaven",
+          "Falador"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "jorrals-outpost",
+            "label": "Jorral's Outpost",
+            "standardAreas": [
+              "East Ardougne"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 38,
+                "cy": 52
+              }
+            ]
+          }
+        ],
         "skills": {
           "Crafting": 30,
           "Runecraft": 30,
@@ -6126,12 +6462,26 @@ describe('audited current quest requirements', () => {
       },
       "The Tourist Trap": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
-              "Bedabin Camp",
-              "Shantay Pass"
+          "Bedabin Camp",
+          "Shantay Pass"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "desert-mining-camp",
+            "label": "Desert Mining Camp",
+            "standardAreas": [
+              "Shantay Pass"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 51,
+                "cy": 47
+              }
+            ]
+          }
+        ],
         "skills": {
           "Fletching": 10,
           "Smithing": 20
@@ -6419,7 +6769,7 @@ describe('audited current quest requirements', () => {
       },
       "While Guthix Sleeps": {
         "kind": "quest",
-        "accessPolicy": "regions",
+        "accessPolicy": "regions-and-locations",
         "regions": [
           "Edgeville",
           "Draynor Village",
@@ -6433,7 +6783,21 @@ describe('audited current quest requirements', () => {
           "Seers' Village",
           "Chaos Altar"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "id": "luciens-camp",
+            "label": "Lucien's camp",
+            "standardAreas": [
+              "Chaos Altar"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 45,
+                "cy": 59
+              }
+            ]
+          }
+        ],
         "skills": {
           "Quest Points": 180,
           "Thieving": 72,

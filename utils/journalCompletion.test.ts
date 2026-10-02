@@ -304,7 +304,7 @@ describe('journal completion decisions', () => {
     };
     const machineBlocked = unlocked({
       ...shared,
-      regions: ['Observatory', 'Witchaven'],
+      regions: ['East Ardougne', 'Witchaven'],
     });
 
     expect(questCompletionDecision(
@@ -316,7 +316,7 @@ describe('journal completion decisions', () => {
 
     const machineReady = unlocked({
       ...shared,
-      regions: ['Observatory', 'Witchaven', 'Falador'],
+      regions: ['East Ardougne', 'Witchaven', 'Falador'],
     });
     expect(questCompletionDecision(quest, machineReady, 'vanilla')).toEqual({
       ok: false,

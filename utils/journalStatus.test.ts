@@ -186,7 +186,7 @@ describe('manual journal readiness', () => {
     const result = evaluateQuestEligibility(
       QUEST_DATA['The Slug Menace'],
       unlocked({
-        regions: ['Observatory', 'Witchaven', 'Falador'],
+        regions: ['East Ardougne', 'Witchaven', 'Falador'],
         quests: ['Sea Slug', 'Wanted!'],
         skills: { Crafting: 30, Runecraft: 30, Slayer: 30, Thieving: 30 },
         levels: { Crafting: 30, Runecraft: 30, Slayer: 30, Thieving: 30 },

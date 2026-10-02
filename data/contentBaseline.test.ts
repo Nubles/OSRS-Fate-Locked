@@ -236,7 +236,7 @@ describe('cross-surface quest eligibility contract', () => {
 
   it('keeps a machine-ready manual quest pending on every completion surface', () => {
     const unlocks = maxedQuestUnlocks('The Slug Menace', {
-      regions: ['Observatory', 'Witchaven', 'Falador'],
+      regions: ['East Ardougne', 'Witchaven', 'Falador'],
     });
     const actual = crossSurfaceReadiness('The Slug Menace', unlocks);
 
@@ -434,7 +434,7 @@ describe('deterministic current content baseline', () => {
       manualRequirements: undefined,
     });
     expect(questRequirementFields('The Curse of Arrav')).toEqual({
-      regions: ['Varrock', 'Ruins of Uzer', 'Mountain Camp', 'Silvarea'], locations: undefined,
+      regions: ['Varrock', 'Ruins of Uzer', 'Mountain Camp', 'Silvarea'], locations: ['trollweiss-mountain', 'zemouregals-fortress'],
       skills: {
         Agility: 61, Ranged: 62, Strength: 58, Thieving: 62, Mining: 64,
         Slayer: 37,
@@ -443,7 +443,7 @@ describe('deterministic current content baseline', () => {
       oneOf: undefined, manualRequirements: undefined,
     });
     expect(questRequirementFields('The Final Dawn')).toEqual({
-      regions: ['Tlati Rainforest', 'Civitas illa Fortis', 'Ralos\' Rise'], locations: undefined,
+      regions: ['Tlati Rainforest', 'Civitas illa Fortis', 'Ralos\' Rise'], locations: ['crypt-of-tonali'],
       skills: { Thieving: 66, Fletching: 52, Runecraft: 52 },
       combatLevel: undefined, prereqs: ['The Heart of Darkness', 'Perilous Moons'],
       oneOf: undefined, manualRequirements: undefined,

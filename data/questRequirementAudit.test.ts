@@ -390,7 +390,7 @@ describe('official quest and miniquest audit coverage', () => {
     const cases = [
       {
         id: 'Desert Treasure I',
-        discrepancy: ['regions policy', 'Kharidian Desert', 'Bedabin Camp', '49,47', 'The Dig Site'],
+        discrepancy: ['regions-and-locations policy', 'Kharidian Desert', 'Jaldraocht Pyramid', 'Bedabin Camp', '49,47', 'The Dig Site'],
       },
       {
         id: 'Bear Your Soul',
