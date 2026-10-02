@@ -17,7 +17,7 @@ interface Props {
 // player-completed quests/diaries/CAs — those aren't decided by a key roll).
 // `singular` is used for "a specific <thing>" copy.
 const FORECAST_TABLES: { table: TableType; singular: string }[] = [
-  { table: TableType.REGIONS, singular: 'region' },
+  { table: TableType.REGIONS, singular: 'area' },
   { table: TableType.BOSSES, singular: 'boss' },
   { table: TableType.MINIGAMES, singular: 'minigame' },
   { table: TableType.MERCHANTS, singular: 'merchant' },

@@ -150,7 +150,7 @@ const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ on
     return `**Fate Locked Ironman** - ${rank.title}
 Progression: ${progressPercent}% | Total Level: ${totalLevel}
 Keys: ${gameState.keys} | Omni: ${gameState.specialKeys} | Chaos: ${gameState.chaosKeys}
-${isChunked ? 'Chunks' : 'Regions'}: ${totalRegions} Unlocked
+${isChunked ? 'Chunks' : 'Areas'}: ${totalRegions} Unlocked
 Gear Tiers: ${totalEquipTiers}
 Bosses: ${bossCount} | Minigames: ${minigameCount}
 Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}

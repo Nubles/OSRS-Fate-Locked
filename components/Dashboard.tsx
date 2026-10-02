@@ -730,7 +730,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const renderWorldTab = () => (
       <div className="flex flex-col h-full overflow-hidden">
           <div className="flex justify-between items-center mb-4 px-2 pt-2 shrink-0">
-               <h3 className="text-emerald-400 font-bold text-sm uppercase tracking-wide">Regions</h3>
+               <h3 className="text-emerald-400 font-bold text-sm uppercase tracking-wide">Areas</h3>
                <div className="flex bg-[#1a1a1a] p-1 rounded-lg border border-white/10">
                    <button 
                      onClick={() => setWorldView('MAP')}

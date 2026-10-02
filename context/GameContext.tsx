@@ -10,6 +10,7 @@ import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, gambitKeys, STARTING_KEYS } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
+import { tableDisplayName } from '../utils/tableDisplay';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { CA_DATA } from '../data/caData';
@@ -1174,7 +1175,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           timestamp: now,
           type: 'UNLOCK',
           message: `Unlocked ${itemLabel}`,
-          details: `Category: ${table}`,
+          details: `Category: ${tableDisplayName(table)}`,
           meta: { item, category: table, cost, costType }
       };
 

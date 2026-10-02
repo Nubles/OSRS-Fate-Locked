@@ -32,7 +32,7 @@ export const ACHIEVEMENT_ICON: Record<AchievementIcon, React.ComponentType<Lucid
 };
 
 const CATEGORY_ORDER: AchievementCategory[] = [
-  'Quests', 'Skills', 'Regions', 'Equipment', 'Diaries', 'Combat', 'Activities', 'Collection', 'Mastery',
+  'Quests', 'Skills', 'Areas', 'Equipment', 'Diaries', 'Combat', 'Activities', 'Collection', 'Mastery',
 ];
 
 export const AchievementsModal: React.FC<Props> = ({ onClose }) => {

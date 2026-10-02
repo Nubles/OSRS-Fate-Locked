@@ -100,7 +100,7 @@ describe('ShareModal region summary', () => {
 
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     const summary = writeText.mock.calls[0][0];
-    expect(summary).toContain(`Regions: ${expected} Unlocked`);
+    expect(summary).toContain(`Areas: ${expected} Unlocked`);
     expect(summary).not.toContain("Otto's Grotto");
     expect(summary).not.toContain("Heroes' Guild");
   });
