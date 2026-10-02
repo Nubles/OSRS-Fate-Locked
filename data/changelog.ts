@@ -26,11 +26,12 @@ export const CHANGELOG_RELEASES = [
       added: [
         'The Roll Inbox has a Paste from RuneLite button. In RuneLite, choose Copy for tracker in the Roll inbox card, then paste here: the inbox says what it added, and nothing rolls until you choose Roll.',
         'A run not linked to a character takes a paste from whoever copied it, and each row says whose it is.',
-        'In RuneLite, the new World map borders setting picks the world map’s lines: the outline of your unlocked land, a line on every chunk edge as well, or none, keeping the shading.',
+        'In RuneLite, the new World map borders setting picks the world map’s lines: the outline of your unlocked land, the chunk grid, both, or none, keeping the shading.',
       ],
       changed: [
         'Logging by hand, rolling and spending Keys are unchanged. Skip any row you’ve already logged by hand.',
         'The RuneLite guide calls the website the tracker throughout, as RuneLite’s own buttons do.',
+        'In RuneLite, Chunk borders in the game view can show the chunk grid without the dashed locked edges, and the minimap follows it.',
       ],
       fixed: [
         'Strict Mode’s setting, its card in RuneLite and the RuneLite guide now say all it stops: a teleport to a place your rules lock, and a teleport of a kind your run hasn’t unlocked, such as Jewelry Teleports, even to an unlocked place. A worn item’s teleport, such as a glory’s Edgeville, counts. What it stops is unchanged.',

@@ -29,11 +29,12 @@ describe('authored changelog releases', () => {
     expect(release?.sections.added).toEqual([
       expect.stringMatching(/Paste from RuneLite button.*Copy for tracker in the Roll inbox card.*nothing rolls until you choose Roll/),
       expect.stringMatching(/not linked to a character.*each row says whose it is/),
-      expect.stringMatching(/World map borders setting picks the world map’s lines.*every chunk edge.*or none, keeping the shading/),
+      expect.stringMatching(/World map borders setting picks the world map’s lines.*the chunk grid, both, or none, keeping the shading/),
     ]);
     expect(release?.sections.changed).toEqual([
       expect.stringMatching(/Logging by hand, rolling and spending Keys are unchanged/),
       expect.stringMatching(/RuneLite guide calls the website the tracker throughout/),
+      expect.stringMatching(/Chunk borders in the game view can show the chunk grid without the dashed locked edges, and the minimap follows it/),
     ]);
     expect(release?.sections.fixed).toEqual([
       expect.stringMatching(/Strict Mode.*a teleport of a kind your run hasn’t unlocked.*even to an unlocked place.*worn item’s teleport.*glory’s Edgeville.*What it stops is unchanged/),

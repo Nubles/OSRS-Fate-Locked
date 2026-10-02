@@ -398,9 +398,9 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     changeWhen: 'Drop the contents or the tooltip if the map feels busy; Off leaves the map as the game draws it.',
   },
   worldMapBorders: {
-    purpose: 'Lines on the world map. Locked edges is a dashed line where your unlocked land meets locked land; All edges adds a faint line along every chunk edge.',
+    purpose: 'Lines on the world map. Locked edges is a dashed line where your unlocked land meets locked land; Chunk grid is a faint line along every chunk edge, without the dashed one; All edges draws both.',
     visibleResult: 'Off keeps the shading and the tooltip, without lines.',
-    changeWhen: 'Pick All edges to see the chunk grid, or Off if the lines make the map feel busy.',
+    changeWhen: 'Pick Chunk grid to see the chunk grid without the dashed line, All edges for both, or Off if the lines make the map feel busy.',
   },
   worldMapMarkers: {
     purpose: 'A pin on each area you haven’t unlocked.',
@@ -409,8 +409,8 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
   },
   chunkBorders: {
     purpose: 'Lines on the ground where chunks meet.',
-    visibleResult: 'Locked edges are dashed over a dark underlay, fixed to the tiles, and hidden behind whatever stands in front. All edges adds a thin line along every other chunk edge.',
-    changeWhen: 'Pick All edges while learning the chunk grid, or Off to leave the ground alone.',
+    visibleResult: 'Locked edges are dashed over a dark underlay, fixed to the tiles, and hidden behind whatever stands in front. Chunk grid is a thin line along every chunk edge, without the dashed ones; All edges draws both.',
+    changeWhen: 'Pick Chunk grid or All edges while learning the chunk grid, or Off to leave the ground alone.',
   },
   shadeNearbyLocked: {
     purpose: 'Darkens locked land near you: in the game view, a band along each locked edge; on the minimap, all locked land nearby, while Minimap chunk borders is on.',
@@ -418,7 +418,7 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     changeWhen: 'Turn it off if you’d rather see the ground unshaded.',
   },
   drawMinimap: {
-    purpose: 'Locked edges on the minimap, and every chunk line when Chunk borders in the game view is All edges.',
+    purpose: 'The game view’s chunk lines on the minimap, as Chunk borders in the game view is set: locked edges, the chunk grid, or both.',
     visibleResult: 'Locked edges show even with Chunk borders in the game view set to Off. With Shade locked land nearby on, locked land nearby is darkened too.',
     changeWhen: 'Turn it off to keep the minimap as the game draws it.',
   },
@@ -981,7 +981,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
         items: [
           {
             term: 'Chunk borders',
-            text: 'Dashed lines on the ground where locked land starts, over a dark underlay so they read on any ground. The dashes are fixed to the tiles, and whatever stands in front of a line, such as a tree, a wall or you, hides it. All edges adds a thin line along every other chunk edge too.',
+            text: 'Dashed lines on the ground where locked land starts, over a dark underlay so they read on any ground. The dashes are fixed to the tiles, and whatever stands in front of a line, such as a tree, a wall or you, hides it. Chunk grid draws a thin line along every chunk edge instead, and All edges draws both.',
           },
           {
             term: 'Shade',
@@ -989,11 +989,11 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
           },
           {
             term: 'Minimap',
-            text: 'Locked edges on the minimap, every chunk line too with All edges, and locked land shaded while Shade locked land nearby is on.',
+            text: 'The game view’s chunk lines on the minimap (locked edges while those are Off), and locked land shaded while Shade locked land nearby is on.',
           },
           {
             term: 'World map',
-            text: 'Locked land shaded like fog and your unlocked land outlined; in Chunked mode, a light fill on the frontier. Hover a chunk for its area and status, and what it holds if you like. Its lines have a setting of their own: the outline, every chunk edge, or none. Pins on locked areas are optional.',
+            text: 'Locked land shaded like fog and your unlocked land outlined; in Chunked mode, a light fill on the frontier. Hover a chunk for its area and status, and what it holds if you like. Its lines have a setting of their own: the outline, the chunk grid, both, or none. Pins on locked areas are optional.',
           },
           {
             term: 'HUD',

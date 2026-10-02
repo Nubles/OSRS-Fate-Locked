@@ -93,7 +93,7 @@ export const RUNELITE_SETTINGS: readonly RuneliteSetting[] = [
     section: 'Display',
     name: 'World map borders',
     defaultValue: 'Locked edges',
-    options: ['Off', 'Locked edges', 'All edges'],
+    options: ['Off', 'Locked edges', 'Chunk grid', 'All edges'],
   },
   { key: 'worldMapMarkers', section: 'Display', name: 'Pin locked areas on the world map', defaultValue: 'Off' },
   {
@@ -101,7 +101,7 @@ export const RUNELITE_SETTINGS: readonly RuneliteSetting[] = [
     section: 'Display',
     name: 'Chunk borders in the game view',
     defaultValue: 'Locked edges',
-    options: ['Off', 'Locked edges', 'All edges'],
+    options: ['Off', 'Locked edges', 'Chunk grid', 'All edges'],
   },
   { key: 'shadeNearbyLocked', section: 'Display', name: 'Shade locked land nearby', defaultValue: 'On' },
   { key: 'drawMinimap', section: 'Display', name: 'Minimap chunk borders', defaultValue: 'On' },

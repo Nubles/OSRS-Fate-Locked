@@ -160,14 +160,21 @@ describe('RuneLite guide, as the plugin does it', () => {
     expect(setting('rollNudges').purpose).toContain('Collection log items need the game’s own collection log notification');
   });
 
+  it('offers the chunk grid without the dashed locked edges, on the world map and the ground', () => {
+    expect(setting('worldMapBorders').purpose).toContain('Chunk grid is a faint line along every chunk edge, without the dashed one');
+    expect(setting('worldMapBorders').changeWhen).toContain('Pick Chunk grid to see the chunk grid without the dashed line');
+    expect(setting('chunkBorders').changeWhen).toContain('Pick Chunk grid or All edges');
+    expect(chapter('in-game')).toContain('Its lines have a setting of their own: the outline, the chunk grid, both, or none');
+  });
+
   it('says what the borders, shade and minimap draw (P-15, P-16, P-17)', () => {
     const inGame = chapter('in-game');
-    expect(setting('chunkBorders').visibleResult).toContain('All edges adds a thin line along every other chunk edge');
-    expect(inGame).toContain('All edges adds a thin line along every other chunk edge too');
+    expect(setting('chunkBorders').visibleResult).toContain('Chunk grid is a thin line along every chunk edge, without the dashed ones; All edges draws both');
+    expect(inGame).toContain('Chunk grid draws a thin line along every chunk edge instead, and All edges draws both');
     expect(inGame).not.toContain('between unlocked chunks');
     expect(setting('shadeNearbyLocked').purpose).toContain('on the minimap, all locked land nearby, while Minimap chunk borders is on');
     expect(inGame).toContain('On the minimap, all locked land nearby');
-    expect(setting('drawMinimap').purpose).toContain('every chunk line when Chunk borders in the game view is All edges');
+    expect(setting('drawMinimap').purpose).toContain('as Chunk borders in the game view is set: locked edges, the chunk grid, or both');
     expect(setting('drawMinimap').visibleResult).toContain('With Shade locked land nearby on');
     // P-32: another character's HUD and sidebar still say whose run it is.
     expect(inGame).toContain('the HUD and the sidebar say only that the run isn’t theirs');
