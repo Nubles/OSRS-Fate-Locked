@@ -18,7 +18,6 @@ import { canDismissRunelitePairing, type RunelitePairingPhase } from './componen
 import { RollInboxDriver } from './components/RollInboxDriver';
 import { CoachStrip } from './components/CoachStrip';
 import { FeatureRevealDriver } from './components/FeatureRevealDriver';
-import { BackupNagBanner } from './components/BackupNagBanner';
 import { SaveConflictBanner } from './components/SaveConflictBanner';
 import { SaveFailureBanner } from './components/SaveFailureBanner';
 import { effectiveSaveDurability, SaveDurabilityStatus } from './components/SaveDurabilityStatus';
@@ -68,6 +67,8 @@ const SupplyChainCalculator = lazyWithRetry(() => import('./components/SupplyCha
 const GameModePicker = lazyWithRetry(() => import('./components/GameModePicker').then(m => ({ default: m.GameModePicker })));
 const SyncCodeModal = lazyWithRetry(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
 const OnlineBackupDriver = lazyWithRetry(() => import('./components/OnlineBackupDriver').then(m => ({ default: m.OnlineBackupDriver })));
+const OnlineBackupPrompt = lazyWithRetry(() => import('./components/OnlineBackupPrompt').then(m => ({ default: m.OnlineBackupPrompt })));
+const BackupNagBanner = lazyWithRetry(() => import('./components/BackupNagBanner').then(m => ({ default: m.BackupNagBanner })));
 const ModelGallery = lazyWithRetry(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
 const DiscordSettingsModal = lazyWithRetry(() => import('./components/DiscordSettingsModal'));
 // The release notes load with the modal; only the latest release's id is
@@ -1111,8 +1112,10 @@ const GameLayout = () => {
       {/* One contextual "next step" hint under the header — teaches the loop. */}
       <CoachStrip />
 
+      {/* Asks once per run whether to turn on online backup. */}
+      <Suspense fallback={null}><OnlineBackupPrompt /></Suspense>
       {/* Dismissible "export a .fate backup" reminder for unbacked-up runs. */}
-      <BackupNagBanner />
+      <Suspense fallback={null}><BackupNagBanner /></Suspense>
       {/* Posts new unlocks to the profile's Discord webhook (if configured). */}
       <DiscordSyncDriver />
 

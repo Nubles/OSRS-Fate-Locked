@@ -22,6 +22,7 @@ const persistent = vi.hoisted(() => ({
   status: 'unknown' as PersistentStorageStatus,
   requestPersistence: vi.fn().mockResolvedValue('granted'),
 }));
+const onlineBackup = vi.hoisted(() => ({ record: { promptAnsweredAt: 1 } as Record<string, unknown> }));
 
 vi.mock('../utils/backupNag', () => backupNag);
 vi.mock('../context/GameContext', () => ({ useGame: () => game }));
@@ -33,6 +34,10 @@ vi.mock('../utils/fateSaveFile', () => ({
   downloadFateSave: vi.fn(() => ({ ok: true })),
 }));
 vi.mock('../utils/toast', () => ({ showToast: vi.fn() }));
+vi.mock('../utils/onlineBackupRecord', async importOriginal => ({
+  ...await importOriginal<typeof import('../utils/onlineBackupRecord')>(),
+  readOnlineBackupRecord: () => onlineBackup.record,
+}));
 
 afterEach(() => {
   cleanup();
@@ -40,6 +45,7 @@ afterEach(() => {
   game.history.length = 1;
   backupNag.shouldNag.mockReturnValue(true);
   persistent.status = 'unknown';
+  onlineBackup.record = { promptAnsweredAt: 1 };
 });
 
 describe('BackupNagBanner', () => {
@@ -53,6 +59,23 @@ describe('BackupNagBanner', () => {
 
     await user.click(screen.getByRole('button', { name: 'Enable persistent storage' }));
     expect(persistent.requestPersistence).toHaveBeenCalledOnce();
+    expect(screen.getByRole('button', { name: 'Export backup' })).toBeTruthy();
+  });
+
+  it('waits while the online backup prompt is unanswered, so one banner shows at a time', () => {
+    onlineBackup.record = {};
+    render(<BackupNagBanner />);
+    expect(screen.queryByRole('button', { name: 'Export backup' })).toBeNull();
+  });
+
+  it('waits while online backup has a copy from the last week, and comes back after', () => {
+    onlineBackup.record = { code: '0123456789ABCDEFGHJK', lastUploadAt: Date.now() - 6 * 86_400_000 };
+    const { unmount } = render(<BackupNagBanner />);
+    expect(screen.queryByRole('button', { name: 'Export backup' })).toBeNull();
+    unmount();
+
+    onlineBackup.record = { code: '0123456789ABCDEFGHJK', lastUploadAt: Date.now() - 8 * 86_400_000 };
+    render(<BackupNagBanner />);
     expect(screen.getByRole('button', { name: 'Export backup' })).toBeTruthy();
   });
 

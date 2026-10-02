@@ -52,6 +52,18 @@ export interface OnlineBackupRecord {
   promptAnsweredAt?: number;
 }
 
+/** How long a successful online backup keeps the .fate export reminder away. */
+export const ONLINE_BACKUP_CURRENT_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Whether the .fate export reminder (BackupNagBanner) waits for online backup:
+ * while its one-time prompt is unanswered, so one banner shows at a time, and
+ * while online backup has a copy from the last week.
+ */
+export const onlineBackupHoldsReminder = (record: OnlineBackupRecord, now = Date.now()): boolean =>
+  (!record.code && !record.promptAnsweredAt)
+  || (!!record.code && record.lastUploadAt !== undefined && now - record.lastUploadAt < ONLINE_BACKUP_CURRENT_MS);
+
 const ERRORS: ReadonlySet<string> = new Set(['network', 'unavailable', 'forbidden', 'too-large', 'too-large-to-share']);
 const WRITER_RE = /^[A-Za-z0-9_-]{22}$/;
 

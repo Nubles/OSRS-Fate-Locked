@@ -3,6 +3,7 @@ import { useGame } from '../context/GameContext';
 import { useProfiles } from '../context/ProfileContext';
 import { usePersistentStorage, type PersistentStorageStatus } from '../hooks/usePersistentStorage';
 import { shouldNag, snoozeNag, lastExportLabel } from '../utils/backupNag';
+import { onlineBackupHoldsReminder, readOnlineBackupRecord } from '../utils/onlineBackupRecord';
 import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE } from '../utils/fateSaveFile';
 import { showToast } from '../utils/toast';
 import { HardDriveDownload, X } from 'lucide-react';
@@ -24,7 +25,9 @@ export const BackupNagBanner: React.FC = () => {
   const [requestingPersistence, setRequestingPersistence] = useState(false);
 
   useEffect(() => {
-    setVisible(shouldNag(storageKey, history.length));
+    // Online backup asks first (OnlineBackupPrompt), and while it keeps a recent
+    // copy the run isn't only in this browser.
+    setVisible(shouldNag(storageKey, history.length) && !onlineBackupHoldsReminder(readOnlineBackupRecord(storageKey)));
   }, [storageKey, history.length]);
 
   const handleExport = useCallback(() => {
