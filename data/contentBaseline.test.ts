@@ -178,7 +178,7 @@ describe('cross-surface quest eligibility contract', () => {
       label: 'Mountain Daughter before either alternative route',
       id: 'Mountain Daughter',
       gameModeId: undefined,
-      unlocks: maxedQuestUnlocks('Mountain Daughter', { regions: ['Mountain Camp'] }),
+      unlocks: maxedQuestUnlocks('Mountain Daughter', { regions: ['Mountain Camp', 'Rellekka'] }),
       expectedStatus: 'LOCKED_REGION',
       expectedReadiness: 'BLOCKED',
       firstBlocker: 'Taverley or Catherby',
@@ -188,7 +188,7 @@ describe('cross-surface quest eligibility contract', () => {
       id: 'Mountain Daughter',
       gameModeId: undefined,
       unlocks: maxedQuestUnlocks('Mountain Daughter', {
-        regions: ['Mountain Camp', 'Taverley'],
+        regions: ['Mountain Camp', 'Rellekka', 'Taverley'],
       }),
       expectedStatus: 'AVAILABLE',
       expectedReadiness: 'READY',
