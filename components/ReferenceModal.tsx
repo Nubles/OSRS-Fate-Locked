@@ -730,15 +730,14 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-2">Storage Restrictions</h1>
-                                <p className="text-gray-400">Inventory management is key.</p>
+                                <p className="text-gray-400">Bank and storage rules.</p>
                             </div>
 
                             <div className="bg-[#222] p-6 rounded-xl border border-white/5">
                                 <h3 className="font-bold text-gray-200 text-lg mb-4 flex items-center gap-2"><Package size={20}/> The Rules</h3>
                                 <ul className="space-y-4 text-sm text-gray-300 list-disc list-inside">
-                                    <li><b>Banks are locked</b> by default: each bank and deposit box is its own unlock on the <b>Banks</b> table.</li>
-                                    <li>You can also unlock specific <b>Storage Containers</b> from the Storage table.</li>
-                                    <li>Unlockable items include: Looting Bag, Rune Pouch, Seed Box, etc.</li>
+                                    <li><b>Banking is locked by place.</b> Each place with a bank, bank chest or deposit box is one unlock on the <b>Banks</b> table, and it opens all of them there. A Key unlocks a random one; an Omni-Key picks one.</li>
+                                    <li>Storage items, such as the looting bag, rune pouch and seed box, are unlocked from the <b>Storage</b> table.</li>
                                 </ul>
                             </div>
                         </div>

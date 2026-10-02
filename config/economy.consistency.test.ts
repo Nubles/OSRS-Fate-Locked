@@ -12,6 +12,7 @@ import {
 import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { BOSSES_LIST, MINIGAMES_LIST } from '../data/items';
+import { BANKS } from '../data/banks';
 import { describeVanillaRandomAccessPolicy, formatVanillaBossSchedule } from '../components/ReferenceModal';
 import { skillLevelKeyChance } from '../utils/keyRoll';
 import { randomUnlockPool } from '../utils/gameEngine';
@@ -175,6 +176,13 @@ describe('economy ↔ engine consistency', () => {
     expect(minigames.blurb).not.toContain('Inferno');
     expect(BOSSES_LIST).toContain('Inferno');
     expect(MINIGAMES_LIST).not.toContain('Inferno');
+  });
+
+  it('says banks are unlocked by place, one unlock for every bank there', () => {
+    const banks = SPEND_TABLES.find(t => t.type === TableType.BANKS)!;
+    expect(banks.blurb).toBe('Banking is locked by place: each place with a bank, bank chest or deposit box is one unlock.');
+    // One unlock covers a whole place, such as "Arceuus bank and deposit box".
+    expect(BANKS.some(bank => / and deposit (box|pool)/.test(bank.name))).toBe(true);
   });
 
   it('presents Arcana as Combat Powers without changing its type', () => {
