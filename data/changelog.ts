@@ -25,6 +25,7 @@ export const CHANGELOG_RELEASES = [
     sections: {
       fixed: [
         'Slayer rewards that add a task now add it to the Slayer panel and RuneLite. Seeing Red, Watch the Birdie, Hot Stuff, Reptile Got Ripped, Actual Vampyre Slayer, Warped Reality, Basilocked, Lured In and Wings Spread give the masters who use them 30 more tasks, each waiting until you buy its reward.',
+        'Slayer tasks no longer say “access needs review” for a gate that being on the task already meets, such as “Gargoyle task”, or for a level the map writes as “93 Slayer”. The Mining Guild’s entrance now asks for its 60 Mining.',
       ],
       added: [
         'Boss tasks: once you buy Like a Boss, Konar, Nieve, Duradel and Krystilia list a boss task. It’s ready when you’ve unlocked a boss you have the Slayer level for. Krystilia gives only Wilderness bosses, and only Konar gives the Alchemical Hydra.',

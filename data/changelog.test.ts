@@ -26,7 +26,10 @@ describe('authored changelog releases', () => {
   it('announces the tasks Slayer rewards add, and boss tasks', () => {
     const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-slayer-rewards');
     expect(release?.title).toBe('Slayer Rewards Add Their Tasks');
-    expect(release?.sections.fixed).toEqual([expect.stringMatching(/Seeing Red.*Wings Spread.*30 more tasks/)]);
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Seeing Red.*Wings Spread.*30 more tasks/),
+      expect.stringMatching(/Gargoyle task.*93 Slayer.*60 Mining/),
+    ]);
     expect(release?.sections.added).toEqual([expect.stringMatching(/Like a Boss.*Krystilia gives only Wilderness bosses.*Alchemical Hydra/)]);
   });
 

@@ -81,11 +81,23 @@ const parseQuest = (requirement: RawRouteRequirement): RouteGate | null => {
   return questId ? questGate(questId) : null;
 };
 
+/**
+ * Source wording that means a skill level: the magic axe hut's and the Pirates'
+ * Hideout's doors are picked (accuracy audit S-9; wiki "Slayer task" rev 15343835).
+ */
+const REVIEWED_SKILL_WORDING: ReadonlyMap<string, readonly [string, number]> = new Map([
+  ['unlock the door (magic axe hut)', ['Thieving', 23]],
+  ["unlock the door (pirates' hideout)", ['Thieving', 39]],
+]);
+
 const parseSkill = (raw: string): RouteGate | null => {
-  const match = raw.match(/^(.+?)\s+level\s+(\d+)$/i);
-  if (!match) return null;
-  const skill = skills.get(normalise(match[1]));
-  const level = Number(match[2]);
+  const reviewed = REVIEWED_SKILL_WORDING.get(normalise(raw));
+  if (reviewed) return { type: 'SKILL', skill: reviewed[0], level: reviewed[1], label: `${reviewed[0]} level ${reviewed[1]}` };
+  // "Agility level 52", or the source's shorter "93 Slayer".
+  const named = raw.match(/^(.+?)\s+level\s+(\d+)$/i);
+  const short = named ? null : raw.match(/^(\d+)\s+(.+)$/);
+  const skill = skills.get(normalise((named?.[1] ?? short?.[2]) ?? ''));
+  const level = Number(named?.[2] ?? short?.[1]);
   return skill && level > 0 ? { type: 'SKILL', skill, level, label: `${skill} level ${level}` } : null;
 };
 

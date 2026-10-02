@@ -21,6 +21,15 @@ const entity = (raw: string) => ({ raw, origin: 'ENTITY' as const });
 const chunkEntry = (raw: string) => ({ raw, origin: 'CHUNK_ENTRY' as const });
 
 describe('account requirements', () => {
+  it('reads the source’s short skill levels and the picked doors as skill gates (accuracy audit S-9)', () => {
+    expect(compileRawRequirements([entity('93 Slayer')])).toEqual([{ type: 'SKILL', skill: 'Slayer', level: 93, label: 'Slayer level 93' }]);
+    expect(compileRawRequirements([entity('Unlock the door (Magic axe hut)')]))
+      .toEqual([{ type: 'SKILL', skill: 'Thieving', level: 23, label: 'Thieving level 23' }]);
+    expect(compileRawRequirements([entity("Unlock the door (Pirates' Hideout)")]))
+      .toEqual([{ type: 'SKILL', skill: 'Thieving', level: 39, label: 'Thieving level 39' }]);
+    expect(compileRawRequirements([entity('100 Coins')])).toEqual([{ type: 'UNRESOLVED', label: '100 Coins', raw: '100 Coins' }]);
+  });
+
   it('checks a reviewed equipment gate against slot tiers, including absent and invalid values', () => {
     const gate = { type: 'EQUIPMENT' as const, slot: 'Neck' as const, tier: 1, label: 'Neck T1: Wear the ghostspeak amulet' };
     for (const tier of [undefined, 0, Number.NaN, Number.POSITIVE_INFINITY]) {

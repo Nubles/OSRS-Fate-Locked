@@ -6,8 +6,11 @@ import corrections from '../data/sources/slayer-corrections.json';
 import type { SlayerMasters } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
 import { slayerReachability, type LocateFn } from './slayerReach';
-import { slayerLocate, slayerReason } from './slayerDecisions';
-import { SLAYER_UNLOCKS_LIST } from '../data/items';
+import { isOnTaskRequirement, slayerLocate, slayerReason } from './slayerDecisions';
+import { BOSSES_LIST, MISTHALIN_AREAS, MOBILITY_LIST, REGIONS_LIST, SKILLS_LIST, SLAYER_UNLOCKS_LIST } from '../data/items';
+import { QUEST_DATA } from '../data/questData';
+import { DIARY_DATA } from '../data/diaryData';
+import { chunkContentService } from '../services/ChunkContentService';
 
 /**
  * Slayer fixes from the accuracy audit (29 September 2026): the data import
@@ -124,6 +127,45 @@ describe('tasks a Slayer reward adds (accuracy audit S-6)', () => {
     expect(row('Chaeldar', 'Lizardmen', masters())).toMatchObject({ blocker: 'Needs Reptile Got Ripped' });
     expect(row('Chaeldar', 'Lizardmen', masters({ slayerUnlocks: ['Reptile Got Ripped'] })).status).toBe('ready');
     expect(row('Krystilia', 'Aviansies', account())).toMatchObject({ blocker: 'Needs Watch the Birdie' });
+  });
+});
+
+describe('gates a player on the task meets (accuracy audit S-9)', () => {
+  beforeAll(async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => content })));
+    await chunkContentService.init();
+    vi.unstubAllGlobals();
+  });
+
+  it('count a monster’s own on-task gate as met, and a Wilderness one only for Krystilia', () => {
+    for (const raw of ['Gargoyle task', 'Smoke devil Slayer task.', 'Cave kraken or Kraken Slayer task', 'Slayer task for basement monsters', 'Current Slayer assignment: Iron dragon']) {
+      expect(isOnTaskRequirement(raw, 'Nieve'), raw).toBe(true);
+    }
+    expect(isOnTaskRequirement('Abyssal demon wilderness task', 'Krystilia')).toBe(true);
+    expect(isOnTaskRequirement('Abyssal demon wilderness task', 'Vannaka')).toBe(false);
+    for (const raw of ['Take port tasks from Catherby', 'Receive a Slayer assignment from Krystilia in Edgeville', 'Slayer Tower Task[+]', 'Priest in Peril Complete the quest']) {
+      expect(isOnTaskRequirement(raw, 'Nieve'), raw).toBe(false);
+    }
+  });
+
+  it('let an account with everything take the tasks only those gates held back', () => {
+    const maxed = account({
+      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
+      levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
+      regions: [...REGIONS_LIST, ...MISTHALIN_AREAS],
+      mobility: [...MOBILITY_LIST],
+      bosses: [...BOSSES_LIST],
+      slayerUnlocks: [...SLAYER_UNLOCKS_LIST],
+      quests: Object.keys(QUEST_DATA),
+      diaries: Object.keys(DIARY_DATA),
+    });
+    const reach = slayerReachability(chunkContentService.slayerMasters(), maxed, slayerLocate(chunkContentService, maxed, 'vanilla'), 'vanilla');
+    const status = (master: string, task: string) =>
+      reach.masters.find(entry => entry.master === master)!.rows.find(row => row.monster === task)!.status;
+    for (const [master, task] of [
+      ['Nieve', 'Smoke devils'], ['Nieve', 'Gargoyles'], ['Nieve', 'Cave krakens'], ['Nieve', 'Kalphites'], ['Nieve', 'Frost dragons'],
+      ['Duradel', 'Hellhounds'], ['Krystilia', 'Abyssal demons'], ['Krystilia', 'Magic axes'], ['Krystilia', 'Pirates'],
+    ]) expect(status(master, task), `${master}/${task}`).toBe('ready');
   });
 });
 
