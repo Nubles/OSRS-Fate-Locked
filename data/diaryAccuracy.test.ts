@@ -477,3 +477,42 @@ describe('Diary tasks in the Karuulm Slayer Dungeon', () => {
       .toMatchObject({ eligible: true, blockers: [] });
   });
 });
+
+describe('Diary tasks an ironman does the ironman way', () => {
+  it('needs 69 Hunter for the spottier cape, as an ironman catches the dashing kebbits', () => {
+    // "Catching dashing kebbits at the Piscatoris falconry area requires 69 Hunter" (Spottier cape rev 15183240).
+    expect(task('var_hard_1')).toMatchObject({
+      skills: { Hunter: 69 }, items: ['800 coins'], regions: ['Varrock'],
+      equipmentRequirements: [expect.objectContaining({ slot: 'Cape', tier: 1, reason: 'Spottier cape' })],
+    });
+    expect(task('var_hard_1').oneOf).toBeUndefined();
+  });
+
+  it.each(['fal_med_4', 'mor_easy_8'])('checks the gryphon route for the %s scarecrow’s watermelon', id => {
+    // Gryphons need 51 Slayer, live on the Great Conch, and need Troubled Tortugans and 45 Sailing to
+    // reach (Gryphon rev 15352305); they drop watermelons.
+    expect(task(id).oneOf).toEqual([
+      { label: 'Grow watermelons', skills: { Farming: 47 } },
+      {
+        label: 'Obtain a watermelon from gryphons',
+        skills: { Sailing: 45, Slayer: 51 }, quests: ['Troubled Tortugans'], regions: ['The Great Conch'],
+      },
+    ]);
+    const farmer = account({ skills: { Farming: 10 }, levels: { Farming: 23 }, regions: [...(task(id).regions ?? [])], quests: [...(task(id).quests ?? [])] });
+    expect(evaluateDiaryTaskEligibility(task(id), farmer).machineEligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task(id), {
+      ...farmer,
+      skills: { Farming: 10, Sailing: 10, Slayer: 10 },
+      levels: { Farming: 23, Sailing: 45, Slayer: 51 },
+      quests: [...farmer.quests, 'Pandemonium', 'Troubled Tortugans'],
+      regions: [...farmer.regions, 'The Great Conch'],
+    }).eligible).toBe(true);
+  });
+
+  it('keeps the Ultimate Ironman route for Bert’s sand as a confirmation', () => {
+    expect(task('ard_med_6').oneOf).toEqual([
+      { label: 'Ultimate Ironman exemption', manualRequirements: [expect.stringContaining('Ultimate Ironman')] },
+      { quests: ['The Hand in the Sand'] },
+    ]);
+  });
+});

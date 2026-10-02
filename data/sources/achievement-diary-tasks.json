@@ -2156,8 +2156,15 @@
         },
         {
           "label": "Obtain a watermelon from gryphons",
-          "manualRequirements": [
-            "Confirm: Obtain a watermelon from gryphons"
+          "skills": {
+            "Sailing": 45,
+            "Slayer": 51
+          },
+          "quests": [
+            "Troubled Tortugans"
+          ],
+          "regions": [
+            "The Great Conch"
           ]
         }
       ],
@@ -8251,8 +8258,15 @@
         },
         {
           "label": "Obtain a watermelon from gryphons",
-          "manualRequirements": [
-            "Confirm: Obtain a watermelon from gryphons"
+          "skills": {
+            "Sailing": 45,
+            "Slayer": 51
+          },
+          "quests": [
+            "Troubled Tortugans"
+          ],
+          "regions": [
+            "The Great Conch"
           ]
         }
       ]
@@ -9546,7 +9560,7 @@
       "ordinal": 1,
       "description": "Trade furs with the Fancy Dress Seller for a spottier cape and equip it.",
       "skills": {
-        "Hunter": 66
+        "Hunter": 69
       },
       "quests": [],
       "regions": [
@@ -9555,23 +9569,8 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "66 Hunter 800 coins 2 dashing kebbit fur (requires 69 Hunter if playing as Ironman )",
-      "oneOf": [
-        {
-          "label": "Existing furs",
-          "items": [
-            "2 dashing kebbit fur",
-            "800 coins"
-          ]
-        },
-        {
-          "label": "Catch the furs yourself",
-          "skills": {
-            "Hunter": 69
-          },
-          "items": [
-            "800 coins"
-          ]
-        }
+      "items": [
+        "800 coins"
       ],
       "equipmentRequirements": [
         {

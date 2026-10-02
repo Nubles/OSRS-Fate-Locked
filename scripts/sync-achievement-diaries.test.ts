@@ -555,7 +555,6 @@ describe('Achievement Diary id-classification audit', () => {
       'mor_med_4',
       'var_elite_3',
       'var_elite_5',
-      'var_hard_1',
       'var_hard_5',
       'var_med_7',
       'var_med_9',
@@ -768,7 +767,9 @@ describe('Achievement Diary id-classification audit', () => {
         expect.objectContaining({ label: 'Butterfly net', skills: { Hunter: 35 } }),
       ],
     });
-    expect(byId.get('var_hard_1')).toMatchObject({ skills: { Hunter: 66 } });
+    // Ironmen catch the dashing kebbits themselves, at 69 Hunter.
+    expect(byId.get('var_hard_1')).toMatchObject({ skills: { Hunter: 69 }, items: ['800 coins'] });
+    expect(byId.get('var_hard_1').oneOf).toBeUndefined();
 
     const raimentRoutes = {
       fal_hard_1: [56, 42],
