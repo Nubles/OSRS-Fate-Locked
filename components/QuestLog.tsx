@@ -159,6 +159,15 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
       blocker => blocker.kind === 'equipment' && blocker.slot === requirement.slot && blocker.tier === requirement.tier,
     );
     const metEquipment = equipmentReqs.filter(equipmentMet);
+    // Shop types and travel networks the quest needs, as Diary tasks show them.
+    const unlockReqs = [
+      ...(quest.mobility ?? []).map(label => ({ kind: 'mobility' as const, label })),
+      ...(quest.merchants ?? []).map(label => ({ kind: 'merchant' as const, label })),
+    ];
+    const unlockMet = (requirement: typeof unlockReqs[number]) => isCompleted || !eligibility.blockers.some(
+      blocker => blocker.kind === requirement.kind && blocker.label === requirement.label,
+    );
+    const metUnlocks = unlockReqs.filter(unlockMet);
     // Includes the quest a gated skill needs, such as Druidic Ritual for Herblore.
     const prereqReqs: string[] = withSkillGateQuests(quest.prereqs, quest.skills, quest.id);
     const metPrereqs = prereqReqs.filter((qid: string) =>
@@ -172,9 +181,9 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
         blocker.kind === 'region' && blocker.label === alternativeLabel,
     );
     const totalReqs = regionReqs.length + locationReqs.length + skillReqs.length +
-      combatReqs.length + equipmentReqs.length + prereqReqs.length + (hasAlternative ? 1 : 0) + eligibility.manualChecks.length;
+      combatReqs.length + equipmentReqs.length + unlockReqs.length + prereqReqs.length + (hasAlternative ? 1 : 0) + eligibility.manualChecks.length;
     const totalMet = metRegions.length + metLocations.length + metSkills.length +
-      metCombat.length + metEquipment.length + metPrereqs.length + (hasAlternative && alternativeMet ? 1 : 0);
+      metCombat.length + metEquipment.length + metUnlocks.length + metPrereqs.length + (hasAlternative && alternativeMet ? 1 : 0);
     const reqPct = totalReqs === 0 ? 100 : Math.round((totalMet / totalReqs) * 100);
 
     return (
@@ -250,6 +259,18 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                                 : 'bg-red-900/10 text-red-400 border-red-500/20')}
                             title={`Fate equipment unlock: ${requirement.slot} T${requirement.tier}. ${requirement.reason}`}>
                               <WikiIcon file={SLOT_CONFIG[requirement.slot]?.file ?? "Worn_Equipment.png"} alt="" size={8} /> {requirement.slot} T{requirement.tier} — {requirement.reason}
+                          </span>
+                      ))}
+                      {unlockReqs.map(requirement => (
+                          <span key={requirement.kind + ':' + requirement.label}
+                            className={'text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border ' +
+                              (unlockMet(requirement)
+                                ? 'bg-black/30 text-gray-500 border-white/5'
+                                : 'bg-red-900/10 text-red-400 border-red-500/20')}
+                            title={requirement.kind === 'merchant'
+                              ? `Merchant unlock: ${requirement.label}. The quest needs an item that, where it goes, only this kind of shop sells.`
+                              : `Mobility unlock: ${requirement.label}. The quest has to travel this way.`}>
+                              <WikiIcon file={requirement.kind === 'merchant' ? 'General_store_icon.png' : 'Graceful_boots.png'} alt="" size={8} /> {requirement.label}
                           </span>
                       ))}
                       {/* An owned area that no route reaches yet, as in the Diary Journal. */}

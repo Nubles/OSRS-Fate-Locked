@@ -11,10 +11,16 @@ export interface QuestLocationRequirement {
 
 export interface QuestRequirementOption {
   regions?: string[];
+  /** Any one of these areas will do, as on a Diary task: one of several places to get an item. */
+  anyOfRegions?: string[];
   guilds?: string[];
   locations?: QuestLocationRequirement[];
   /** Skill levels the route needs, such as a guild's entry requirement. */
   skills?: Record<string, number>;
+  /** Quests the route needs done first, such as Enter the Abyss for the Abyss. */
+  quests?: string[];
+  /** Merchant categories the route buys from, as a Diary task's `merchants`. */
+  merchants?: string[];
 }
 
 export type QuestKind = 'quest' | 'miniquest';
@@ -46,6 +52,14 @@ export interface QuestData {
   questProgress?: QuestProgressRequirement[];
   /** A manually confirmed route that can replace the named skill gate. */
   skillAlternatives?: Array<{ skill: string; quests: string[]; manualRequirements: string[] }>;
+  /**
+   * Merchant categories the run must own, as on Diary tasks: the quest needs an
+   * item that, where the quest goes, only a shop of that kind sells (Prince Ali
+   * Rescue's pink skirt). Common tools such as a hammer are never listed.
+   */
+  merchants?: string[];
+  /** Mobility unlocks the quest must use, as on Diary tasks (Fairy Rings for code BLQ). */
+  mobility?: string[];
   prereqs: string[];
   points: number;
   series?: string;

@@ -194,6 +194,10 @@ function skillLevelPlanStep(skill: string, required: number, unlocks: any): Plan
 function requirementOptionPlanSteps(option: any, unlocks: any, gameModeId?: string): PlanStep[] {
   return [
     ...(option.regions ?? []).map((region: string) => areaPlanStep(region, gameModeId)),
+    // Any one of several places, such as the giant bats in Rag and Bone Man I.
+    ...(option.anyOfRegions?.length ? [planStepForBlocker({
+      kind: 'region', label: 'Any of: ' + option.anyOfRegions.join(', '), anyOf: option.anyOfRegions,
+    }, unlocks, gameModeId)] : []),
     ...(option.guilds ?? []).map((label: string): PlanStep => ({
       kind: 'region', id: label, label, unlockTable: TableType.GUILDS, done: false,
     })),
@@ -204,6 +208,9 @@ function requirementOptionPlanSteps(option: any, unlocks: any, gameModeId?: stri
     ...Object.entries(option.skills ?? {}).map(([skill, level]) => (
       skillLevelPlanStep(skill, level as number, unlocks)
     )),
+    // A route's own quest, such as Enter the Abyss, or a shop it buys from.
+    ...(option.quests ?? []).map((label: string) => planStepForBlocker({ kind: 'quest', label }, unlocks, gameModeId)),
+    ...(option.merchants ?? []).map((label: string) => planStepForBlocker({ kind: 'merchant', label }, unlocks, gameModeId)),
   ];
 }
 
@@ -323,6 +330,9 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
   const skills: Record<string, number> = {};
   const equipment = new Map<string, { tier: number; labels: Set<string> }>();
   const manualSteps = new Map<string, PlanStep>();
+  // A quest's shop-only items and travel networks, as Diary tasks plan them.
+  const merchants = new Set<string>();
+  const mobility = new Set<string>();
 
   const visit = (qid: string) => {
     if (visited.has(qid)) return;
@@ -356,6 +366,14 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
       .join(' or ');
 
     for (const blocker of eligibility.blockers) {
+      if (blocker.kind === 'merchant') {
+        merchants.add(blocker.label);
+        continue;
+      }
+      if (blocker.kind === 'mobility') {
+        mobility.add(blocker.label);
+        continue;
+      }
       if (blocker.kind === 'equipment') {
         const previous = equipment.get(blocker.slot);
         equipment.set(blocker.slot, {
@@ -411,7 +429,7 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
   };
 
   visit(rootQuestId);
-  return { order, prereqs, regions, alternatives, manualSteps, skills, equipment, qpGates };
+  return { order, prereqs, regions, alternatives, manualSteps, skills, equipment, qpGates, merchants, mobility };
 }
 
 function buildPlanFromRequirements(
@@ -656,6 +674,8 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
         for (const [skill, level] of Object.entries(sub.skills)) {
           merged.skills[skill] = Math.max(merged.skills[skill] ?? 0, level);
         }
+        for (const merchant of sub.merchants) merged.merchants.add(merchant);
+        for (const network of sub.mobility) merged.mobility.add(network);
         for (const [slot, requirement] of sub.equipment) {
           const previous = merged.equipment.get(slot);
           merged.equipment.set(slot, {
