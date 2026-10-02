@@ -191,6 +191,15 @@ describe('economy ↔ engine consistency', () => {
     expect(ritualEffect('LUCK', 0.6)).toBe(getRitual('LUCK').effect);
   });
 
+  it('says Vanilla bosses pay a few Keys and stop, never that bosses are repeatable', () => {
+    const bosses = EARN_METHODS.find(m => m.category === 'Bosses')!;
+    const text = [bosses.blurb, ...bosses.tiers.map(t => t.bonus ?? '')].join(' ');
+    expect(text).not.toMatch(/repeatable/i);
+    expect(bosses.blurb).toMatch(/^In Vanilla, each boss pays a few Keys at falling odds, then stops/);
+    // The schedule behind "a few Keys": every boss's runs out after 1 to 3.
+    for (const boss of BOSSES_LIST) expect(vanillaBossKeySchedule(boss).length).toBeLessThanOrEqual(3);
+  });
+
   it('keeps the finite Vanilla boss reserve and every boss schedule aligned', () => {
     expect(VANILLA_BOSS_STANDARD_KEY_TOTAL).toBe(118);
     expect(BOSSES_LIST).not.toContain(BRUTUS_BOSS_NAME);
