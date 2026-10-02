@@ -134,7 +134,7 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
                 onChange={v => setCustom('pityThreshold', v)}
               />
               <Slider
-                label="Base Omni-key chance"
+                label="Base Omni-Key chance"
                 value={customDraft.omniChanceBase}
                 bounds={CUSTOM_RULE_BOUNDS.omniChanceBase}
                 format={v => `${v}%`}

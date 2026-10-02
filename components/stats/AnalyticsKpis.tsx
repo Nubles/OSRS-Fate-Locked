@@ -38,7 +38,7 @@ export const AnalyticsKpis: React.FC<AnalyticsKpisProps> = ({ analytics }) => {
           detail={`${rate(summary.actualRate)} win rate · ${rate(summary.expectedRate)} expected`} />
         <Tile icon={<AnalyticsIcon art="omniKeys" size={22} />} tint="bg-violet-400/10 text-violet-300" label="Omni-Keys" value={summary.omniKeysAwarded}
           detail="the rarest reward" />
-        <Tile icon={<AnalyticsIcon art="pityKeys" size={22} />} tint="bg-amber-400/10 text-amber-300" label="Pity keys" value={summary.pityInterventions}
+        <Tile icon={<AnalyticsIcon art="pityKeys" size={22} />} tint="bg-amber-400/10 text-amber-300" label="Pity Keys" value={summary.pityInterventions}
           detail={summary.pityInterventions === 0 ? 'Fate never had to step in' : `Fate stepped in ${plural(summary.pityInterventions, 'time')}`} />
         <Tile icon={<AnalyticsIcon art="standardKeys" size={22} />} tint="bg-white/[0.06] text-gray-200" label="Standard Keys" value={summary.confirmedStandardKeys}
           detail={`${coverage.exactRewardEvents}/${summary.rewardEvents} rewards verified`} />

@@ -191,7 +191,7 @@ describe('StatsModal shared analytics shell', () => {
 
     expect(host.querySelector('[aria-selected="true"]')?.textContent).toContain('Dashboard');
     expect(host.textContent).toContain('Wins1');
-    expect(host.textContent).toContain('Pity keys1');
+    expect(host.textContent).toContain('Pity Keys1');
     expect(host.querySelector('[data-testid="dashboard-result"]')?.textContent).toBe('3/1/1');
   });
 

@@ -71,7 +71,7 @@ const outcomeLabels: Record<AnalyticsOutcome, string> = {
   'normal-win': 'Won a key',
   'omni-win': 'Won an Omni-Key',
   miss: 'No key',
-  pity: 'Pity key',
+  pity: 'Pity Key',
 };
 
 const outcomeSwatch: Record<AnalyticsOutcome, React.CSSProperties> = {
@@ -197,7 +197,7 @@ export const PrimaryAnalyticsCharts: React.FC<PrimaryAnalyticsChartsProps> = ({ 
             { label: 'Your wins', swatch: <LineSwatch color="#fbbf24" /> },
             { label: 'Expected', swatch: <LineSwatch color="#93c5fd" dashed /> },
             { label: 'Normal range', swatch: <BlockSwatch style={{ backgroundColor: 'rgba(96,165,250,0.25)' }} /> },
-            ...(pityDrawn ? [{ label: 'Pity key', swatch: <DiamondSwatch color="#fbbf24" /> }] : []),
+            ...(pityDrawn ? [{ label: 'Pity Key', swatch: <DiamondSwatch color="#fbbf24" /> }] : []),
           ]} />}
           empty={analytics.timeline.length === 0 ? 'No scoreable attempts match these filters.' : undefined}
         >

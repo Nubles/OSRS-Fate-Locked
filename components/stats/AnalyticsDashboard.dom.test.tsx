@@ -256,7 +256,7 @@ describe('PrimaryAnalyticsCharts', () => {
     const host = await mount(<PrimaryAnalyticsCharts analytics={analyticsFor(withoutPity)} />);
 
     expect(host.querySelector('[aria-label="Pity marker — diamond"]')).toBeNull();
-    expect(host.querySelector('[aria-label="Luck over time legend"]')?.textContent).not.toContain('Pity key');
+    expect(host.querySelector('[aria-label="Luck over time legend"]')?.textContent).not.toContain('Pity Key');
   });
 
   it('labels category expectation and delta as not modelled without scoreable attempts', async () => {
