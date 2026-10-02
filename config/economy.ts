@@ -307,9 +307,11 @@ export const KEY_TYPES: KeyTypeInfo[] = [
     accent: 'text-osrs-gold',
     tagline: 'Your bread-and-butter currency.',
     earn: [
-      'Any successful Farm Key roll (+1, or +2 under Ritual of Greed).',
+      'Any successful roll, wherever you log it (+1, or +2 with the Ritual of Greed).',
       'A Pity Key when Fate Points hit your mode’s threshold.',
-      'The bonus Key that rides along with every Omni-Key roll.',
+      'A won Void Gambit.',
+      `Chunked: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels while you hold only your start chunk.`,
+      `The ${STARTING_KEYS} every run starts with.`,
     ],
     spend: 'Cash in on a table you choose to unlock one RANDOM entry from it.',
   },

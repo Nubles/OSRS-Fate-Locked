@@ -7,7 +7,7 @@ import {
   VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule,
   FAILURE_FATE_BY_SOURCE, SKILL_CHAOS_MILESTONES,
   failureFateForSkillLevel, failureFateForSource, isSkillChaosMilestone,
-  gambitKeys, getRitual, ritualEffect, ritualFateCost, STARTING_KEYS,
+  gambitKeys, getRitual, ritualEffect, ritualFateCost, STARTING_KEYS, CHUNKED_MILESTONE_INTERVAL,
 } from './economy';
 import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
@@ -65,6 +65,15 @@ describe('economy ↔ engine consistency', () => {
     for (const percent of new Set(fixedTiers.flatMap(t => t.omni ?? []))) {
       expect(omniText, `Omni-Key text mentions ${percent}%`).toContain(`${percent}%`);
     }
+  });
+
+  it('lists every way to get a Standard Key, not only Farm Keys rolls', () => {
+    const earn = KEY_TYPES.find(k => k.id === 'standard')!.earn.join(' ');
+    expect(earn).toContain('Any successful roll, wherever you log it');
+    expect(earn).not.toContain('Farm Key');
+    expect(earn).toContain('A won Void Gambit.');
+    expect(earn).toContain(`Chunked: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels while you hold only your start chunk.`);
+    expect(earn).toContain(`The ${STARTING_KEYS} every run starts with.`);
   });
 
   it('never documents the same DropSource twice', () => {
