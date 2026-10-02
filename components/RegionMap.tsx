@@ -13,7 +13,7 @@ import type { GameModeRules } from '../config/gameModes';
 import { consumePendingChunk, chunkUnlocked, chunkForPlace } from '../utils/chunkLocations';
 import { isFreeArea } from '../utils/freeAreas';
 import { chunkContentService, type OverlayPoint } from '../services/ChunkContentService';
-import { chunkReachability } from '../utils/chunkReach';
+import { travelReachability } from '../utils/travelReach';
 import { entryBlockedGate } from '../utils/questDoability';
 import { QUEST_DATA } from '../data/questData';
 import { CHUNKED_START, isChunkUnlocked, isFrontierChunk } from '../utils/chunkAdjacency';
@@ -597,7 +597,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     // Reachability mode: paint your OWNED chunks by whether they connect to home.
     if (lens.kind === 'reach') {
       const gate = entryBlockedGate(chunkContentService.questSections(), new Set(unlocks.quests as string[]), new Set(Object.keys(QUEST_DATA)));
-      const res = chunkReachability(chunkContentService.connectGraph(), unlocks, isChunked ? CHUNKED_START : chunkForPlace('Lumbridge'), gate, isChunked ? 'chunked' : undefined);
+      const res = travelReachability(chunkContentService.connectGraph(), unlocks, isChunked ? CHUNKED_START : chunkForPlace('Lumbridge'), gate, isChunked ? 'chunked' : undefined);
       const chunks: { cx: number; cy: number; tone: LensTone }[] = [];
       for (const id of res.reachable) { const n = +id; chunks.push({ cx: Math.floor(n / 256), cy: n % 256, tone: 'good' }); }
       for (const id of res.stranded) { const n = +id; chunks.push({ cx: Math.floor(n / 256), cy: n % 256, tone: 'bad' }); }

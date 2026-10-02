@@ -90,6 +90,15 @@ describe('map unlock corrections', () => {
     expect(explanation.remaining).not.toContain('Shantay Pass');
     expect(chunkUnlockRequirement(53, 43, unlocks).remaining).toEqual([]);
   });
+  it('says a chunk no area covers has nothing to unlock', () => {
+    // 45,60, the mountains between Weiss and the frozen Wilderness, was reported as a bugged chunk.
+    const unlocks = createFreshState().unlocks;
+    const explanation = chunkUnlockRequirement(45, 60, unlocks);
+    expect(explanation.unmapped).toBe(true);
+    expect(explanation.text).toContain('Nothing to unlock');
+    expect(explanation.text).not.toContain('Unlock this chunk');
+    expect(chunkUnlockRequirement(53, 43, unlocks).unmapped).toBeUndefined();
+  });
   it('exports separate physical owners to RuneLite', async () => {
     const state = createFreshState();
     const bundle = await buildRuneliteBundle([], state);

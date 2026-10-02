@@ -3,17 +3,19 @@
  *
  * Owning an area isn't the same as being able to reach it: roll the Ruins of
  * Uzer without the desert around it and every way there crosses locked land.
- * This walks the map's own reachability graph (chunkReachability: owned land
- * and transport links, from the run's start) to find the owned areas no route
- * reaches, so the Diary Journal can't call their tasks doable while the map
- * calls them stranded.
+ * This walks the map's own reachability graph (travelReachability: owned land,
+ * transport links and boats, and only the travel networks the run has
+ * unlocked, from the run's start) to find the owned areas no route reaches,
+ * so the Diary Journal can't call their tasks doable while the map calls them
+ * stranded.
  *
  * The map's quest gates are left out: a quest that opens an area, such as
  * Priest in Peril for Morytania, is a requirement of the task itself.
  *
  * Islands and enclaves with reviewed entry routes (data/areaAccess.ts) are
- * left to those routes, which know which transport each way needs; the graph
- * here has no per-link requirements and errs toward "reachable".
+ * left to those routes, which know which transport each way needs; elsewhere
+ * the graph knows no per-link requirements but a network's unlock, and errs
+ * toward "reachable".
  */
 
 import { REGION_CHUNKS } from '../data/regionChunks';
@@ -23,9 +25,9 @@ import { canonicalAreaName } from '../data/areaMapPolicy';
 import type { UnlockState } from '../types';
 import { CHUNKED_START } from './chunkAdjacency';
 import { chunkForPlace, chunkUnlocked } from './chunkLocations';
-import { chunkReachability } from './chunkReach';
 import { getFreeAreas } from './freeAreas';
 import { isAreaReachable } from './reachability';
+import { travelReachability } from './travelReach';
 
 export interface AreaRoutes {
   /** Canonical names of owned areas none of whose chunks a route reaches. */
@@ -60,6 +62,13 @@ const homeChunk = (unlocks: UnlockState, gameModeId: string | undefined): Chunk 
   return null;
 };
 
+/** The chunks of areas left to their reviewed entry routes, which the graph can't judge. */
+const ROUTED_CHUNKS: ReadonlySet<string> = new Set(
+  [...new Set([...Object.keys(SUB_AREA_CHUNKS), ...Object.keys(REGION_CHUNKS)])]
+    .filter(name => AREA_ENTRY_ROUTES[canonicalAreaName(name)]?.length)
+    .flatMap(name => areaChunks(name).map(idOf)),
+);
+
 /**
  * The owned areas and chunks with no route, or null when the run has no
  * owned start to route from (nothing is then called stranded).
@@ -71,7 +80,7 @@ export function computeAreaRoutes(
 ): AreaRoutes | null {
   const home = homeChunk(unlocks, gameModeId);
   if (!home) return null;
-  const reach = chunkReachability(connect, unlocks, home, undefined, gameModeId);
+  const reach = travelReachability(connect, unlocks, home, undefined, gameModeId);
 
   const strandedAreas = new Set<string>();
   for (const name of new Set([...Object.keys(SUB_AREA_CHUNKS), ...Object.keys(REGION_CHUNKS)])) {
@@ -82,8 +91,10 @@ export function computeAreaRoutes(
     if (!chunks.length || !isAreaReachable(name, unlocks, gameModeId)) continue;
     if (!chunks.some(chunk => reach.reachable.has(idOf(chunk)))) strandedAreas.add(canonical);
   }
+  // Chunked mode has no entry routes: its chunk reach is all it has.
+  const leftToRoutes = gameModeId === 'chunked' ? new Set<string>() : ROUTED_CHUNKS;
   return {
     strandedAreas,
-    strandedChunks: new Set([...reach.stranded].map(keyOf)),
+    strandedChunks: new Set([...reach.stranded].filter(id => !leftToRoutes.has(id)).map(keyOf)),
   };
 }

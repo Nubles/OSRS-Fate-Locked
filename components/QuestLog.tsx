@@ -4,7 +4,7 @@ import { useGame } from '../context/GameContext';
 import { QUEST_DATA, QuestData } from '../data/questData';
 import { WIKI_OVERRIDES, SLOT_CONFIG } from '../constants';
 import { CheckCircle2, Lock, Bookmark, Layers, List, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
-import { BookOpen, Sparkles, Scroll } from './OsrsIcon';
+import { BookOpen, MapPin, Sparkles, Scroll } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
 import { chunkContentService } from '../services/ChunkContentService';
 import { questLocations } from '../utils/questLocations';
@@ -12,6 +12,7 @@ import { showChunkOnMap } from '../utils/chunkLocations';
 import { enforcedQuestAreas, selectQuestGeography } from '../utils/questGeographyDisplay';
 import { isAlmostThere } from '../utils/journalProgress';
 import {
+  type EligibilityBlocker,
   evaluateQuestEligibility,
   meetsSkillRequirement,
   type QuestEligibility,
@@ -29,6 +30,8 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
 import { QuestInsights } from './JournalInsights';
 import { QuestGeographyChips } from './QuestGeographyChips';
+import { useAreaRoutes } from '../hooks/useAreaRoutes';
+import type { AreaRoutes } from '../utils/areaRoutes';
 
 interface QuestLogProps {
   searchTerm?: string;
@@ -39,7 +42,15 @@ export const questLogEligibility = (
   quest: QuestData,
   unlocks: UnlockState,
   gameModeId?: string,
-) => evaluateQuestEligibility(quest, unlocks, gameModeId);
+  areaRoutes?: AreaRoutes | null,
+) => evaluateQuestEligibility(quest, unlocks, gameModeId, areaRoutes);
+
+/** An owned area or place that no route reaches yet. */
+const isTravelBlocker = (
+  blocker: EligibilityBlocker,
+): blocker is Extract<EligibilityBlocker, { kind: 'alternative' }> => (
+  blocker.kind === 'alternative' && blocker.travel !== undefined
+);
 
 export function splitJournalEntriesByKind<T extends Pick<QuestData, 'kind'>>(
   entries: readonly T[],
@@ -239,6 +250,14 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                                 : 'bg-red-900/10 text-red-400 border-red-500/20')}
                             title={`Fate equipment unlock: ${requirement.slot} T${requirement.tier}. ${requirement.reason}`}>
                               <WikiIcon file={SLOT_CONFIG[requirement.slot]?.file ?? "Worn_Equipment.png"} alt="" size={8} /> {requirement.slot} T{requirement.tier} — {requirement.reason}
+                          </span>
+                      ))}
+                      {/* An owned area that no route reaches yet, as in the Diary Journal. */}
+                      {eligibility.blockers.filter(isTravelBlocker).map(blocker => (
+                          <span key={'travel:' + blocker.label}
+                            className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border bg-red-900/10 text-red-400 border-red-500/20"
+                            title="You own it, but every way there crosses locked land. The map's Reachability lens shows which areas would connect it.">
+                              <MapPin size={8} /> {blocker.label}
                           </span>
                       ))}
                       {eligibility.manualChecks.map((requirement: string) => (
@@ -443,9 +462,10 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   // input drives.
   const searchTerm = externalSearch || localSearch;
 
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
   const allQuests = useMemo(() => {
     return Object.values(QUEST_DATA).map(q => {
-      const eligibility = questLogEligibility(q, unlocks, gameModeId);
+      const eligibility = questLogEligibility(q, unlocks, gameModeId, areaRoutes);
       return { ...q, status: eligibility.status, eligibility };
     }).sort((a, b) => {
         const score = (quest: QuestCardQuest) => questFilterStatus(quest) === 'AVAILABLE' ? 0 : questFilterStatus(quest) === 'LOCKED' ? 1 : 2;
@@ -453,7 +473,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
     });
     // chunkTick: refresh informational map-location chips once the chunk index loads.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unlocks, gameModeId, chunkTick]);
+  }, [unlocks, gameModeId, chunkTick, areaRoutes]);
 
   // Area options come from what the quest engine actually gates on:
   // location-policy quests keep broad `regions` only as a description.
