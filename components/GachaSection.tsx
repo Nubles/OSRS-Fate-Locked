@@ -101,7 +101,7 @@ export const SpendCard: React.FC<SpendCardProps> = ({
         type="button"
         onClick={onClick}
         disabled={!isClickable}
-        aria-label={`Roll ${label}`}
+        aria-label={`Unlock from ${label}`}
         title={blocked && !complete ? 'No entry here is eligible yet — open more locations or quests first.' : undefined}
         className={`relative overflow-hidden rounded-lg border-2 w-full text-left group flex flex-col p-2.5 min-h-[104px] transition-all duration-200 active:scale-[0.98]
         ${isClickable
@@ -148,7 +148,7 @@ export const SpendCard: React.FC<SpendCardProps> = ({
         <span className="text-[9px] font-mono text-gray-400 font-bold shrink-0 leading-none">{unlocked}<span className="text-gray-600">/{total}</span></span>
         {isClickable && (
           <span className={`flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider shrink-0 ${a.ctaText} ${a.titleHover} transition-colors`}>
-            Roll <Dices size={11} className="group-hover:rotate-[24deg] transition-transform duration-300" />
+            Unlock <Dices size={11} className="group-hover:rotate-[24deg] transition-transform duration-300" />
           </span>
         )}
       </div>

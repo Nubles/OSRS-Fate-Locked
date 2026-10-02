@@ -51,7 +51,7 @@ export const CommandPalette: React.FC = () => {
     return [
       // Navigate — dashboard tabs
       { id: 'tab-char', title: 'Character', subtitle: 'Gear, skills, Equipment Lab & DPS', group: 'Navigate', icon: User, keywords: 'character gear equipment skills dps loadout combat', run: go('tab:CHARACTER') },
-      { id: 'tab-world', title: 'World', subtitle: 'Unlocked regions on the map', group: 'Navigate', icon: Globe, keywords: 'world map regions areas travel', run: go('tab:WORLD') },
+      { id: 'tab-world', title: 'World', subtitle: 'Unlocked areas on the map', group: 'Navigate', icon: Globe, keywords: 'world map regions areas travel', run: go('tab:WORLD') },
       { id: 'tab-act', title: 'Activities & Utility', subtitle: 'Bosses, minigames, storage & more', group: 'Navigate', icon: Swords, keywords: 'activities utility bosses minigames guilds storage', run: go('tab:ACTIVITIES') },
       { id: 'tab-journal', title: 'Journal', subtitle: 'Quests, diaries & combat achievements', group: 'Navigate', icon: BookOpen, keywords: 'journal quests diaries combat achievements tasks', run: go('tab:JOURNAL') },
       { id: 'tab-coll', title: 'Collection Log', subtitle: 'Your logged unique drops', group: 'Navigate', icon: Library, keywords: 'collection log uniques drops items', run: go('tab:COLLECTION') },
@@ -64,18 +64,18 @@ export const CommandPalette: React.FC = () => {
       { id: 'open-kill', title: 'Boss Kill Planner', subtitle: 'DPS & readiness vs your bosses', group: 'Plan', icon: Skull, keywords: 'boss kill planner dps ttk readiness', run: go('open:killplanner') },
       { id: 'open-forecast', title: 'Fate Forecast', subtitle: 'Odds & time-to-unlock', group: 'Plan', icon: Sparkles, keywords: 'forecast odds probability chance predict', run: go('open:forecast') },
       { id: 'open-supply', title: 'Resource Engine', subtitle: 'Supplies a goal needs', group: 'Plan', icon: Gauge, keywords: 'resource engine supply chain materials cost', run: go('open:supply') },
-      { id: 'open-strategy', title: 'Strategy Guide', subtitle: 'How to approach each unlock', group: 'Plan', icon: Map, keywords: 'strategy guide advice tips order', run: go('open:strategy') },
+      { id: 'open-strategy', title: 'Strategy Guide', subtitle: 'What you can do now, and what is next', group: 'Plan', icon: Map, keywords: 'strategy guide advice tips order', run: go('open:strategy') },
       // Track
       { id: 'open-ach', title: 'Achievements', subtitle: 'Milestones & completion', group: 'Track', icon: Trophy, keywords: 'achievements milestones trophies', run: go('open:achievements') },
       { id: 'open-stats', title: 'Fate Analytics', subtitle: 'Luck, pace & distribution', group: 'Track', icon: BarChart3, keywords: 'analytics stats luck numbers graphs', run: go('open:stats') },
-      { id: 'open-fatethread', title: 'Fate Thread', subtitle: 'Your run as a living tapestry', group: 'Track', icon: Sparkles, keywords: 'fate thread tapestry constellation web graph map visual unlocks destiny', run: go('open:fatethread') },
+      { id: 'open-fatethread', title: 'Fate Thread', subtitle: 'Every unlock, grouped by table', group: 'Track', icon: Sparkles, keywords: 'fate thread tapestry constellation web graph map visual unlocks destiny', run: go('open:fatethread') },
       { id: 'open-rival', title: 'Rival', subtitle: 'Race a rival ghost', group: 'Track', icon: Swords, keywords: 'rival ghost race compare pace', run: go('open:rival') },
       // Account
-      { id: 'open-altar', title: 'Void Altar', subtitle: 'Spend Fate Points on rituals', group: 'Account', icon: Wand2, keywords: 'void altar ritual fate points sacrifice', run: go('open:altar') },
+      { id: 'open-altar', title: 'Void Altar', subtitle: 'Spend Fate Points on rituals', group: 'Account', icon: Wand2, keywords: 'void altar ritual Fate Points sacrifice', run: go('open:altar') },
       { id: 'open-share', title: 'Share Run', subtitle: 'Generate a shareable card', group: 'Account', icon: Share2, keywords: 'share run card image export', run: go('open:share') },
       { id: 'open-sync', title: 'Sync Code', subtitle: 'Back up / move your run', group: 'Account', icon: RefreshCw, keywords: 'sync code backup export import transfer', run: go('open:sync') },
       { id: 'open-runelite-guide', title: 'RuneLite Plugin Guide', subtitle: 'Install, connect, configure and troubleshoot RuneLite', group: 'Account', icon: BookOpen, keywords: 'runelite plugin connect sidebar strict mode alerts display hud world map settings', run: go('open:runelite-guide') },
-      { id: 'open-ref', title: 'Reference / Codex', subtitle: 'Rules & equipment tiers', group: 'Account', icon: BookOpen, keywords: 'reference codex rules help tiers how', run: go('open:reference') },
+      { id: 'open-ref', title: 'Rules', subtitle: 'How rolls, Keys and unlocks work', group: 'Account', icon: BookOpen, keywords: 'reference codex rules help tiers how', run: go('open:reference') },
       { id: 'open-mode', title: 'Game Mode', subtitle: 'Vanilla or Chunked, plus run seed', group: 'Account', icon: Settings2, keywords: 'game mode ruleset vanilla chunked seed', run: go('open:gamemode') },
       { id: 'open-gallery', title: '3D Model Gallery', subtitle: 'Review every boss 3D model', group: 'Account', icon: Film, keywords: '3d model gallery review bosses preview', run: go('open:gallery') },
       { id: 'open-oracle', title: 'Search all content…', subtitle: 'Find any unlockable via the Oracle', group: 'Navigate', icon: Search, keywords: 'oracle search content items find anything lookup', run: go('open:oracle') },

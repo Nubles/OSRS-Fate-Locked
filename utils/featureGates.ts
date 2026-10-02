@@ -99,7 +99,7 @@ export const FEATURE_GATES: GateDef[] = [
     id: 'tool:stats',
     when: (s) => s.history.length >= 5,
     fallbackHistory: 5,
-    revealMessage: 'Stats unlocked — charts of your luck and progress',
+    revealMessage: 'Fate Analytics unlocked: charts of your luck and progress',
     flashSelector: '[data-reveal="tools"]',
   },
   {
