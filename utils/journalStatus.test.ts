@@ -714,7 +714,6 @@ describe('manual diary task requirements', () => {
   it.each([
     ['mor_easy_3', ['Priest in Peril'], ['Canifis']],
     ['var_med_9', [], ['Edgeville']],
-    ['lum_med_10', ['Lost City'], ['Zanaris']],
   ] as const)('accepts the Slayer cape route for %s', (id, quests, regions) => {
     const task = ALL_DIARY_TASKS.find(candidate => candidate.id === id)!;
     const result = evaluateDiaryTaskEligibility(task, unlocked({
@@ -725,6 +724,22 @@ describe('manual diary task requirements', () => {
     }));
 
     expect(result).toMatchObject({ machineEligible: true, eligible: true });
+  });
+
+  it('accepts the Slayer cape route for Chaeldar, once a staff takes you into Zanaris', () => {
+    const task = ALL_DIARY_TASKS.find(candidate => candidate.id === 'lum_med_10')!;
+    const cape = unlocked({
+      skills: { Slayer: 10 }, levels: { Slayer: 99 },
+      quests: ['Lost City'], regions: ['Zanaris'],
+    });
+
+    expect(evaluateDiaryTaskEligibility(task, cape).blockers)
+      .toEqual([expect.objectContaining({ kind: 'equipment', slot: 'Weapon', tier: 1 })]);
+    expect(evaluateDiaryTaskEligibility(task, { ...cape, equipment: { Weapon: 1 } })).toMatchObject({
+      machineEligible: true,
+      eligible: false,
+      manualChecks: [expect.stringContaining('Dramen or lunar staff to enter Zanaris')],
+    });
   });
 
   it('requires Priest in Peril for both Mazchna combat and Slayer cape routes', () => {

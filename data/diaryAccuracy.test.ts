@@ -364,3 +364,37 @@ describe('Diary tasks that need a minigame’s or a boss’s loot', () => {
     }
   });
 });
+
+describe('Diary tasks in Zanaris', () => {
+  // Zanaris is entered "by wielding a dramen staff or lunar staff" (wiki rev 15351742). The Lumbridge
+  // Elite reward, fairy rings without a staff, comes after these tiers, so it never waives the staff here.
+  const STAFF = {
+    slot: 'Weapon', tier: 1, reason: 'Dramen or lunar staff to enter Zanaris',
+    manualCheck: 'Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier',
+  };
+
+  it('needs a wielded dramen or lunar staff to get a Slayer task from Chaeldar', () => {
+    expect(task('lum_med_10')).toMatchObject({
+      quests: ['Lost City'], regions: ['Zanaris'], equipmentRequirements: [STAFF],
+    });
+    expect(task('lum_med_10').equipmentRequirements?.[0].unlessDiary).toBeUndefined();
+  });
+
+  it('reaches the cosmic altar with the staff or through the Abyss, after Lost City either way', () => {
+    expect(task('lum_hard_2')).toMatchObject({
+      quests: ['Lost City'], regions: ['Zanaris'],
+      oneOf: [
+        { label: 'Zanaris', equipmentRequirements: [STAFF] },
+        { label: 'The Abyss', quests: ['Enter the Abyss'], regions: ['Edgeville'] },
+      ],
+    });
+    // The altar takes a cosmic or catalytic talisman or tiara, unless you arrive through the Abyss.
+    expect(task('lum_hard_3')).toMatchObject({
+      quests: ['Lost City'], regions: ['Zanaris'],
+      oneOf: [
+        { label: 'Zanaris', items: ['Cosmic or catalytic talisman or tiara'], equipmentRequirements: [STAFF] },
+        { label: 'The Abyss', quests: ['Enter the Abyss'], regions: ['Edgeville'] },
+      ],
+    });
+  });
+});

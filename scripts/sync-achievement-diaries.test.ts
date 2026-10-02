@@ -544,6 +544,8 @@ describe('Achievement Diary id-classification audit', () => {
       'kar_med_9',
       'kou_hard_7',
       'lum_elite_5',
+      'lum_hard_2',
+      'lum_hard_3',
       'lum_med_10',
       'lum_med_11',
       'mor_easy_2',

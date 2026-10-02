@@ -7379,6 +7379,14 @@
             "Slayer": 99
           }
         }
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Dramen or lunar staff to enter Zanaris",
+          "manualCheck": "Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier"
+        }
       ]
     },
     {
@@ -7487,7 +7495,29 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Lost City 46 Agility Dramen or Lunar staff to enter Zanaris, or access to the Abyss"
+      "sourceRequirements": "Completion of Lost City 46 Agility Dramen or Lunar staff to enter Zanaris, or access to the Abyss",
+      "oneOf": [
+        {
+          "label": "Zanaris",
+          "equipmentRequirements": [
+            {
+              "slot": "Weapon",
+              "tier": 1,
+              "reason": "Dramen or lunar staff to enter Zanaris",
+              "manualCheck": "Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "regions": [
+            "Edgeville"
+          ]
+        }
+      ]
     },
     {
       "id": "lum_hard_3",
@@ -7508,7 +7538,32 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 56 Cosmic runes simultaneously.",
-      "sourceRequirements": "Completion of Lost City 59 Runecraft 28 pure or daeyalt essence (less may suffice with Raiments of the Eye pieces) Access to the Cosmic Altar ( cosmic talisman / tiara, catalytic talisman / tiara, or the Abyss )"
+      "sourceRequirements": "Completion of Lost City 59 Runecraft 28 pure or daeyalt essence (less may suffice with Raiments of the Eye pieces) Access to the Cosmic Altar ( cosmic talisman / tiara, catalytic talisman / tiara, or the Abyss )",
+      "oneOf": [
+        {
+          "label": "Zanaris",
+          "items": [
+            "Cosmic or catalytic talisman or tiara"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Weapon",
+              "tier": 1,
+              "reason": "Dramen or lunar staff to enter Zanaris",
+              "manualCheck": "Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "regions": [
+            "Edgeville"
+          ]
+        }
+      ]
     },
     {
       "id": "lum_hard_4",
