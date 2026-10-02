@@ -20,7 +20,7 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   'Grotesque Guardians': ['Slayer Tower'],
   Kraken: ['Piscatoris Fishing Colony'],
   Skotizo: ['Catacombs of Kourend'],
-  'Thermonuclear Smoke Devil': ['Castle Wars'],
+  'Thermonuclear Smoke Devil': ['Feldip Hills'],
   "Calvar'ion": ['Graveyard of Shadows'],
   'Crazy Archaeologist': ['Forgotten Cemetery'],
   Scorpia: ["Scorpia's Cave"],

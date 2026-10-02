@@ -983,11 +983,17 @@ describe('audited diary route eligibility', () => {
   });
 
   it('allows a pre-cooked oomlie wrap without the cooking route, once confirmed', () => {
-    expect(evaluateDiaryTaskEligibility(task('kar_hard_3'), unlocked())).toMatchObject({
+    // Oomlie birds and palm leaves are only in the Kharazi Jungle, which needs Legends' Quest started.
+    expect(evaluateDiaryTaskEligibility(task('kar_hard_3'), unlocked({ regions: ['Kharazi Jungle'] }))).toMatchObject({
       machineEligible: true,
       eligible: false,
-      manualChecks: ['Cooked oomlie wrap'],
+      manualChecks: [
+        "Reached the required progress in Legends' Quest for: Eat an oomlie wrap.",
+        'Cooked oomlie wrap',
+      ],
     });
+    expect(evaluateDiaryTaskEligibility(task('kar_hard_3'), unlocked()).blockers)
+      .toContainEqual({ kind: 'region', label: 'Kharazi Jungle' });
   });
 
   it('allows an existing or mounted Digsite pendant without crafting Magic, once confirmed', () => {

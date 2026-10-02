@@ -1657,8 +1657,9 @@
       "quests": [
         "Desert Treasure I"
       ],
-      "regions": [
-        "Sophanem"
+      "anyOfRegions": [
+        "Bandit Camp",
+        "Pollnivneach"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -4703,7 +4704,7 @@
       },
       "quests": [],
       "regions": [
-        "Legends' Guild"
+        "Baxtorian Falls"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -5692,7 +5693,9 @@
       "description": "Eat an oomlie wrap.",
       "skills": {},
       "quests": [],
-      "regions": [],
+      "regions": [
+        "Kharazi Jungle"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Cooked oomlie wrap, or the requirements to make it ( 50 Cooking, a palm leaf, and a raw oomlie )",
@@ -5713,6 +5716,12 @@
             "Raw oomlie"
           ]
         }
+      ],
+      "questProgress": [
+        {
+          "quest": "Legends' Quest",
+          "label": "Reached the required progress in Legends' Quest for: Eat an oomlie wrap."
+        }
       ]
     },
     {
@@ -5726,7 +5735,8 @@
         "Runecraft": 44
       },
       "quests": [],
-      "regions": [
+      "anyOfRegions": [
+        "Shilo Village",
         "Tai Bwo Wannai"
       ],
       "aliases": [],
@@ -5908,7 +5918,8 @@
         "Runecraft": 91
       },
       "quests": [],
-      "regions": [
+      "anyOfRegions": [
+        "Shilo Village",
         "Tai Bwo Wannai"
       ],
       "aliases": [],
@@ -10512,6 +10523,9 @@
       "quests": [
         "Roving Elves"
       ],
+      "regions": [
+        "Falador"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Roving Elves 65 Construction 3 mahogany planks, saw, and hammer Isafdar painting (bought from Sir Renitee for 2,000 coins ) 25,000 coins to construct a Quest Hall if you haven't already"
@@ -10626,7 +10640,7 @@
       "classification": "preserved-semantic",
       "sourceRequirements": "93 Slayer See the strategy guide",
       "regions": [
-        "Castle Wars"
+        "Feldip Hills"
       ],
       "bosses": [
         "Thermonuclear Smoke Devil"

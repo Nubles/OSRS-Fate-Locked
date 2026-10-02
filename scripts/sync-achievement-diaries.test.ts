@@ -727,7 +727,7 @@ describe('Achievement Diary id-classification audit', () => {
       ],
     });
     expect(byId.get('kar_hard_3')).toMatchObject({
-      skills: {}, regions: [],
+      skills: {}, regions: ['Kharazi Jungle'],
       oneOf: [
         { label: 'Pre-cooked', items: ['Cooked oomlie wrap'] },
         expect.objectContaining({ label: 'Cook it yourself', skills: { Cooking: 50 } }),
