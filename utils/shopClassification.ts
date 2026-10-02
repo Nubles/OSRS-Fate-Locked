@@ -62,6 +62,7 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   "regath's wares": 'Magic Shops',
   "efaritay's supplies": 'Weapon Shops',
   "ivan's supplies": 'Weapon Shops',
+  "old man ral's supplies": 'Weapon Shops', // Ivan's stock, once Ivan leaves (The Blood Moon Rises)
   "tzhaar-hur-tel's equipment store": 'Weapon Shops',
   "tzhaar-hur-zal's equipment store": 'Weapon Shops',
   // The only shop with yew bows sells nothing but bows and arrows.
@@ -99,6 +100,9 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   "the esoterican arms": 'Bars & Inns',
   'the flaming arrow': 'Bars & Inns',
   "the haymaker's arms": 'Bars & Inns',
+  // Pubs whose names have no pub word: the Hunter Guild's cavern and Port Phasmatys' inn.
+  'the burrow': 'Bars & Inns',
+  'the green ghost': 'Bars & Inns',
 
   // Currency/reward exchanges and ordinary clothing shops must not be
   // inferred from words such as Hunter, Stuff, Wares, or Cape.
@@ -120,6 +124,10 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   "gabooty's tai bwo wannai cooperative": 'Reward Shops',
   "gabooty's tai bwo wannai drinky store": 'Reward Shops',
   "alry the angler's angling accessories": 'Reward Shops',
+  // Stardust, barronite shards and spirit flakes.
+  "dusuri's star shop": 'Reward Shops',
+  "ramarno's shard exchange": 'Reward Shops',
+  "flakes 'n' flotsam": 'Reward Shops',
   'beach kit': 'Clothes Shops',
   "darren's wilderness cape shop": 'Clothes Shops',
   "edmond's wilderness cape shop": 'Clothes Shops',
@@ -135,6 +143,9 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   "where wyrmscraig's wear wares were": 'Clothes Shops',
   "william's wilderness cape shop": 'Clothes Shops',
   "yrsa's accoutrements": 'Clothes Shops',
+
+  // Escape crystals for coins at the Theatre of Blood's entrance: no specialist sells them.
+  'mysterious stranger (shop)': 'General Stores',
 
   // The Culinaromancer's Chest has stock snapshots for each RFD stage.
   "culinaromancer's chest": 'Cooking Shops',

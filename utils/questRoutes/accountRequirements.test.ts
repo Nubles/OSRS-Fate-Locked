@@ -136,6 +136,15 @@ describe('account requirements', () => {
     ]);
   });
 
+  it('reads "Play" a boss as that boss\'s unlock, for a shop taking its currency (Flakes \'n\' Flotsam)', () => {
+    const gates = compileRawRequirements([entity('Play Tempoross')]);
+    expect(gates).toEqual([{ type: 'UNLOCK', category: 'bosses', id: 'Tempoross', label: 'Tempoross' }]);
+    expect(evaluateRouteGates(gates, unlocks()).blockers).toEqual(gates);
+    expect(evaluateRouteGates(gates, unlocks({ bosses: ['Tempoross'] }))).toEqual({ blockers: [], hasDataGap: false });
+    // Only "Play" reads as a boss's unlock: other wording naming a boss stays unresolved.
+    expect(compileRawRequirements([entity('Access Tempoross')])[0]).toMatchObject({ type: 'UNRESOLVED' });
+  });
+
   it('does not silently satisfy unknown requirement wording', () => {
     const gates = compileRawRequirements([entity('Access the sealed workshop')]);
     expect(gates).toEqual([{ type: 'UNRESOLVED', label: 'Access the sealed workshop', raw: 'Access the sealed workshop' }]);

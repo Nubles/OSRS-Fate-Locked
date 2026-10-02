@@ -314,6 +314,7 @@ describe("U1: a reward shop needs Reward Shops and its activity's unlock", () =>
     "Worm Tounge's Wares": 'the Colossal Wyrm Agility Course',
     "Mairin's Market": 'Underwater Agility and Thieving',
     "Alry the Angler's Angling Accessories": 'aerial fishing',
+    "Ramarno's Shard Exchange": 'the Ruins of Camdozaal',
   };
 
   it('puts the shops that take an activity currency in Reward Shops', () => {
@@ -525,6 +526,53 @@ describe('U6: each hardwood patch asks for its own way in', () => {
     expect(readiness.status).toBe('READY');
     expect(getActivityReq('Hardwood Tree')?.note).toMatch(/Bone Voyage.*The Ribbiting Tale of a Lily Pad Labour Dispute.*51 Sailing/);
     expect(getActivityRegion('Hardwood Tree')).toBe('Islands & Others');
+  });
+});
+
+describe('the shops the data was missing are added, each where the wiki puts it', () => {
+  // Shop, category, place (chunk, and interior where it is inside one), what to take away, and the
+  // access without it. Each record cites its page's revision in data/sources/shop-overrides.json.
+  const ADDED: [string, string, number, number, string | undefined, Partial<UnlockState>, string, string[]][] = [
+    ["Kjut's Kebabs", 'Kebab Sellers', 43, 58, '11679', { quests: questsWithout('The Giant Dwarf') }, 'UNKNOWN', ['Started The Giant Dwarf']],
+    ['The Green Ghost', 'Bars & Inns', 57, 54, '14747', { quests: questsWithout('Priest in Peril') }, 'NOT_READY', ['Priest in Peril']],
+    ["Apothecary's Potions", 'Herblore Shops', 49, 53, undefined, {}, 'ALLOWED', []],
+    ["Dusuri's Star Shop", 'Reward Shops', 47, 52, undefined,
+      { minigames: MINIGAMES_LIST.filter(game => game !== 'Shooting Stars') }, 'NOT_READY', ['Shooting Stars']],
+    ['Barbarian Assault Reward Shop', 'Reward Shops', 39, 55, undefined,
+      { minigames: MINIGAMES_LIST.filter(game => game !== 'Barbarian Assault') }, 'NOT_READY', ['Barbarian Assault']],
+    ['The Burrow', 'Bars & Inns', 24, 47, '6291', { levels: { ...levels(99), Hunter: 45 } }, 'NOT_READY', ['Hunter level 46']],
+    ["Ramarno's Shard Exchange", 'Reward Shops', 46, 54, 'Ruins of Camdozaal',
+      { quests: questsWithout('Below Ice Mountain') }, 'NOT_READY', ['Below Ice Mountain']],
+    ["Flakes 'n' Flotsam", 'Reward Shops', 49, 44, undefined,
+      { bosses: BOSSES_LIST.filter(boss => boss !== 'Tempoross') }, 'NOT_READY', ['Tempoross']],
+    ['Mysterious Stranger (shop)', 'General Stores', 57, 50, undefined, { quests: questsWithout('Priest in Peril') }, 'NOT_READY', ['Priest in Peril']],
+    ["Old Man Ral's Supplies", 'Weapon Shops', 56, 50, undefined,
+      { quests: questsWithout('The Blood Moon Rises') }, 'UNKNOWN', ['Started The Blood Moon Rises']],
+  ];
+
+  it.each(ADDED)('%s: a %s shop at %i,%i', (shop, category, cx, cy, sourceId, without, status, reasons) => {
+    expect(classifyShop(shop)).toBe(category);
+    const locations = service.entityLocations(shop, ['shop'])!.locations;
+    expect(locations.map(location => [location.cx, location.cy, location.sourceId])).toEqual([[cx, cy, sourceId]]);
+    const at = (unlocks: UnlockState) => evaluateEntityAccess(shop, 'shop', locations[0], unlocks, 'vanilla', service);
+    expect(at(everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(at(everything(99, { merchants: MERCHANTS_LIST.filter(merchant => merchant !== category) })))
+      .toEqual({ status: 'LOCKED', reasons: [`Unlock ${category}`] });
+    expect(at(everything(99, without))).toEqual({ status, reasons });
+    expect(rawContent.shopItems[shop]?.length, shop).toBeGreaterThan(0);
+    expect(shopsByCategory()!.get(category)!.some(entry => entry.name === shop)).toBe(true);
+  });
+
+  it('asks for the Hunter Guild at The Burrow, inside it', () => {
+    const burrow = service.entityLocations('The Burrow', ['shop'])!.locations[0];
+    expect(evaluateEntityAccess('The Burrow', 'shop', burrow, everything(99, { guilds: GUILDS_LIST.filter(guild => guild !== 'Hunter Guild') }), 'vanilla', service))
+      .toEqual({ status: 'NOT_READY', reasons: ['Hunter Guild'] });
+  });
+
+  it('sells Kjut\'s kebabs as Kebab Sellers stock, beside the Varlamorian kebab', () => {
+    const kebabs = [...new Set(Object.entries(rawContent.shopItems)
+      .filter(([shop]) => classifyShop(shop) === 'Kebab Sellers').flatMap(([, items]) => items))].sort();
+    expect(kebabs).toEqual(expect.arrayContaining(['Kebab', 'Varlamorian kebab']));
   });
 });
 

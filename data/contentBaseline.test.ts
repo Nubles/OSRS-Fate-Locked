@@ -313,7 +313,8 @@ describe('deterministic current content baseline', () => {
       connections: 1110,
       slayerMasters: 10,
       shortcuts: 219,
-      shops: 439,
+      // Up from 439: the ten shops added from the wiki (accuracy audit, missing shops).
+      shops: 449,
       dropTables: 800,
       questSections: 134,
       banks: 127,

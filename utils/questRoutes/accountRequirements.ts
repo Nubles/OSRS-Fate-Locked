@@ -1,4 +1,5 @@
 import {
+  BOSSES_LIST,
   GUILDS_LIST,
   MERCHANTS_LIST,
   MINIGAMES_LIST,
@@ -39,6 +40,8 @@ const unlockAliases: readonly [UnlockCategory, readonly string[], readonly strin
   ['minigames', MINIGAMES_LIST, ['play ', 'access the ', 'access ', 'enter the ', 'enter ']],
   ['mobility', MOBILITY_LIST, ['use ', 'access ', 'travel by ']],
   ['slayerUnlocks', SLAYER_UNLOCKS_LIST, ['', 'requires ', 'required: ']],
+  // A reward shop that takes a boss's currency, such as Tempoross's spirit flakes (owner call U1).
+  ['bosses', BOSSES_LIST, ['play ']],
 ];
 
 /** Source labels that intentionally differ from the corresponding UnlockState ID. */

@@ -177430,7 +177430,7 @@
         "Quality Armour Shop",
         "Ratpit bar (Keldagrim)"
       ],
-      "detail": "18 source values capped at 8"
+      "detail": "19 source values capped at 8"
     },
     {
       "category": "lite",
@@ -177698,15 +177698,15 @@
       "reason": "lite-cap",
       "targetKeys": [
         "Crossbow Shop (Dwarven Mine)",
+        "Dusuri's Star Shop",
         "Dwarven shopping store",
         "Falador Party Room",
         "Garden Centre",
         "Hendor's Awesome Ores",
         "Mining Guild Mineral Exchange",
-        "Nurmof's Pickaxe Shop",
-        "Yarsul's Prodigious Pickaxes"
+        "Nurmof's Pickaxe Shop"
       ],
-      "detail": "10 source values capped at 8"
+      "detail": "11 source values capped at 8"
     },
     {
       "category": "lite",

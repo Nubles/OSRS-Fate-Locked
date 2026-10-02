@@ -490,6 +490,197 @@
         "url": "https://oldschool.runescape.wiki/w/Petrified_Pete's_Ore_Shop?oldid=15318722",
         "revision": 15318722
       }
+    },
+    {
+      "name": "Kjut's Kebabs",
+      "status": "stocked",
+      "items": [
+        "Kebab"
+      ],
+      "npcNames": [
+        "Kjut"
+      ],
+      "note": "Kjut sells kebabs through his dialogue.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Kjut's_Kebabs?oldid=15318644",
+        "revision": 15318644
+      }
+    },
+    {
+      "name": "The Green Ghost",
+      "status": "stocked",
+      "items": [
+        "Ale yeast"
+      ],
+      "npcNames": [
+        "Metarialus"
+      ],
+      "note": "Metarialus sells ale yeast for ecto-tokens in the inn's basement brewery.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/The_Green_Ghost?oldid=15273760",
+        "revision": 15273760
+      }
+    },
+    {
+      "name": "Apothecary's Potions",
+      "status": "stocked",
+      "items": [
+        "Strength potion(4)",
+        "Energy potion(4)",
+        "Antipoison(4)"
+      ],
+      "npcNames": [
+        "Apothecary"
+      ],
+      "note": "The Apothecary makes each potion from ingredients the player brings.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Apothecary's_Potions?oldid=15336348",
+        "revision": 15336348
+      }
+    },
+    {
+      "name": "Dusuri's Star Shop",
+      "status": "stocked",
+      "items": [
+        "Celestial ring (uncharged)",
+        "Star fragment",
+        "Bag full of gems",
+        "Soft clay pack"
+      ],
+      "npcNames": [
+        "Dusuri"
+      ],
+      "requirements": [
+        "Play Shooting Stars"
+      ],
+      "note": "Takes stardust from Shooting Stars.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Dusuri's_Star_Shop?oldid=15318549",
+        "revision": 15318549
+      }
+    },
+    {
+      "name": "Barbarian Assault Reward Shop",
+      "status": "stocked",
+      "items": [
+        "Fighter hat",
+        "Ranger hat",
+        "Healer hat",
+        "Runner hat",
+        "Fighter torso",
+        "Penance skirt",
+        "Runner boots",
+        "Penance gloves",
+        "Granite body"
+      ],
+      "npcNames": [
+        "Commander Connad"
+      ],
+      "requirements": [
+        "Play Barbarian Assault"
+      ],
+      "note": "Takes Honour points; the role upgrades and gambles are left out.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Barbarian_Assault_Reward_Shop?oldid=15298666",
+        "revision": 15298666
+      }
+    },
+    {
+      "name": "The Burrow",
+      "status": "stocked",
+      "items": [
+        "Trapper's tipple",
+        "Stew"
+      ],
+      "npcNames": [
+        "Huntmaster Gilman (Novice)"
+      ],
+      "requirements": [
+        "Access the Hunter Guild",
+        "Hunter level 46"
+      ],
+      "note": "The Hunter Guild's cavern, which needs 46 Hunter to enter.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/The_Burrow?oldid=15318802",
+        "revision": 15318802
+      }
+    },
+    {
+      "name": "Ramarno's Shard Exchange",
+      "status": "stocked",
+      "items": [
+        "Fishing buff",
+        "Preparation buff",
+        "Defence buff",
+        "Mining buff",
+        "Luck buff",
+        "Boost buff"
+      ],
+      "npcNames": [
+        "Ramarno"
+      ],
+      "note": "Sells buffs for barronite shards, for use inside the Ruins of Camdozaal.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Ramarno's_Shard_Exchange?oldid=14783923",
+        "revision": 14783923
+      }
+    },
+    {
+      "name": "Flakes 'n' Flotsam",
+      "status": "stocked",
+      "items": [
+        "Fish barrel",
+        "Tackle box"
+      ],
+      "npcNames": [
+        "Spirit Angler"
+      ],
+      "requirements": [
+        "Play Tempoross"
+      ],
+      "note": "Takes spirit flakes from Tempoross.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Flakes_'n'_Flotsam?oldid=15318570",
+        "revision": 15318570
+      }
+    },
+    {
+      "name": "Mysterious Stranger (shop)",
+      "status": "stocked",
+      "items": [
+        "Escape crystal"
+      ],
+      "npcNames": [
+        "Mysterious Stranger"
+      ],
+      "note": "Sells escape crystals at the Theatre of Blood's entrance.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Mysterious_Stranger_(shop)?oldid=15318697",
+        "revision": 15318697
+      }
+    },
+    {
+      "name": "Old Man Ral's Supplies",
+      "status": "stocked",
+      "items": [
+        "Silver sickle",
+        "Silver sickle (b)",
+        "Rod of Ivandis (10)",
+        "Ivandis flail",
+        "Blisterwood flail",
+        "Blisterwood sickle"
+      ],
+      "npcNames": [
+        "Old Man Ral"
+      ],
+      "requirements": [
+        "Started The Blood Moon Rises"
+      ],
+      "note": "Opens when Ivan leaves the Myreque hideout during The Blood Moon Rises, with Ivan's stock.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Old_Man_Ral's_Supplies?oldid=15318712",
+        "revision": 15318712
+      }
     }
   ]
 }
