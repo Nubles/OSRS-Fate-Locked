@@ -316,6 +316,7 @@ describe("U1: a reward shop needs Reward Shops and its activity's unlock", () =>
     "Mairin's Market": 'Underwater Agility and Thieving',
     "Alry the Angler's Angling Accessories": 'aerial fishing',
     "Ramarno's Shard Exchange": 'the Ruins of Camdozaal',
+    "Grace's Graceful Clothing": 'the rooftop agility courses',
   };
 
   it('puts the shops that take an activity currency in Reward Shops', () => {

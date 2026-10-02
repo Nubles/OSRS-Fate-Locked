@@ -107,7 +107,7 @@ export const CHANGELOG_RELEASES = [
         'The planner smelts steel, mithril, adamantite and rune bars at any furnace, not only the Blast Furnace.',
         'Trees, rocks, fishing spots, stalls and implings open at the levels the game asks, such as 92 Woodcutting for rosewood and 82 Thieving for the ore stall.',
         'Shops sit under what they sell. The Runic Emporium and Regath’s Wares are Magic Shops, the TzHaar equipment stores and the vampyre weapon sellers are Weapon Shops, Sian’s is an Archery Shop, the Ore seller is an Ore Merchant, and the Lost Pickaxe and King’s Axe Inn are pubs. Intelligence Gathering is in Shayzien.',
-        'A reward shop needs Reward Shops and the activity whose points it takes: Temple Supplies needs Guardians of the Rift, for example.',
+        'A reward shop needs Reward Shops and the activity whose points it takes: Temple Supplies needs Guardians of the Rift, for example. Grace’s graceful clothing, bought with marks of grace, now needs Reward Shops instead of Clothes Shops.',
         'Armour shops with mixed stock are filed by most of what they sell, and the shop directory marks an item only one shop sells, such as Scavvo’s rune sword.',
         'Mine Carts no longer needs The Giant Dwarf, since the Lovakengj carts need no quest. Keldagrim still asks for it.',
         'Hardwood patches ask for what each place needs: Bone Voyage on Fossil Island, The Ribbiting Tale at the Locus Oasis and 51 Sailing on Anglers’ Retreat.',

@@ -106,7 +106,7 @@ describe('authored changelog releases', () => {
       expect.stringMatching(/Farming Guild patches open at their own tier: 65 Farming.*85/),
       expect.stringMatching(/bank inside a guild needs that guild.*Burgh de Rott and Darkmeyer/),
       expect.stringMatching(/smelts steel, mithril, adamantite and rune bars at any furnace/),
-      expect.stringMatching(/reward shop needs Reward Shops and the activity/),
+      expect.stringMatching(/reward shop needs Reward Shops and the activity.*Grace’s graceful clothing.*Reward Shops instead of Clothes Shops/),
       expect.stringMatching(/Mine Carts no longer needs The Giant Dwarf/),
       expect.stringMatching(/Bone Voyage on Fossil Island.*51 Sailing on Anglers’ Retreat/),
     ]));

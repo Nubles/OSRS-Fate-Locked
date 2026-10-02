@@ -126,6 +126,9 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   "alry the angler's angling accessories": 'Reward Shops',
   // Stardust, barronite shards and spirit flakes.
   "dusuri's star shop": 'Reward Shops',
+  // Marks of grace from the rooftop courses (wiki rev 15310506), the only shop with graceful.
+  // No unlock covers the courses, so Reward Shops alone opens it (owner call, 2 October 2026).
+  "grace's graceful clothing": 'Reward Shops',
   "ramarno's shard exchange": 'Reward Shops',
   "flakes 'n' flotsam": 'Reward Shops',
   'beach kit': 'Clothes Shops',

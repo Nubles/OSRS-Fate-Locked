@@ -76,6 +76,8 @@ describe('classifyShop', () => {
       ['Ore store', 'Ore Merchants'],
       // Petrified Pete takes Volcanic Mine points, so it is a Reward Shop (owner call U1).
       ["Petrified Pete's Ore Shop", 'Reward Shops'],
+      // Grace takes marks of grace, so graceful needs Reward Shops, not Clothes Shops.
+      ["Grace's Graceful Clothing", 'Reward Shops'],
       ['Port Roberts Ore Stall', 'Ore Merchants'],
       ["Thirus Urkar's Fine Dynamite Store", 'Mining Shops'],
       // Names which previously overrode their actual stock or service.
