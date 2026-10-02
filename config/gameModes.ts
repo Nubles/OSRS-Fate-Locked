@@ -62,14 +62,15 @@ export const GAME_MODES: GameMode[] = [
   {
     id: 'vanilla',
     name: 'Vanilla',
-    description: 'The standard Fate Locked ruleset — balanced for a full-length run.',
+    description: 'You unlock named areas, such as Catherby or Rellekka, and all of Misthalin is free from the start.',
     tagline: 'The original experience',
     rules: { ...VANILLA_RULES },
   },
   {
     id: 'chunked',
     name: 'Chunked',
-    description: 'The classic "Chunked Ironman" format: you start in a single Lumbridge chunk and unlock adjacent land one chunk at a time. After completing Pandemonium and unlocking Sailing, the frontier also includes land reached across open sea from your coast and documented boat landings. Ocean navigation does not cost a land unlock.',
+    // CHUNKED_MILESTONE_INTERVAL (config/economy.ts) sets the 25; gameModes.test.ts pins it.
+    description: 'One chunk at a time, as in Chunk Locked ironman. You start in one chunk of Lumbridge and unlock land next to the chunks you hold. Once you have done Pandemonium and unlocked Sailing, land across open sea from your coast, and land a boat from your land sails to, count as next to your land too; the sea itself costs no unlock. While you hold only your start chunk, every 25 total levels gives you a guaranteed Key.',
     tagline: 'Adjacent land and Sailing frontiers',
     rules: {
       pityEnabled: true,

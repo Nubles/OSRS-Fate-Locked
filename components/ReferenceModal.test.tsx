@@ -5,9 +5,10 @@ import { GameProvider } from '../context/GameContext';
 import { ReferenceModal } from './ReferenceModal';
 import { unlockableAreas } from '../utils/freeAreas';
 import { MISTHALIN_AREAS } from '../constants';
-import { STARTING_KEYS } from '../config/economy';
+import { CHUNKED_MILESTONE_INTERVAL, STARTING_KEYS } from '../config/economy';
+import { GAME_MODES } from '../config/gameModes';
 
-type CodexTab = 'core' | 'economy' | 'drops' | 'unlocks' | 'altar';
+type CodexTab = 'core' | 'economy' | 'modes' | 'drops' | 'unlocks' | 'altar';
 
 const renderCodex = (tab: CodexTab, gameModeId = 'vanilla') => {
   const save = JSON.stringify({ gameModeId });
@@ -31,6 +32,24 @@ afterEach(() => vi.unstubAllGlobals());
 describe('ReferenceModal Core Rules', () => {
   it('says how many Keys a new run starts with', () => {
     expect(renderCodex('core')).toContain(`You start with ${STARTING_KEYS} Keys`);
+  });
+});
+
+describe('ReferenceModal Game Modes', () => {
+  it('says what differs between the modes instead of the retired rule knobs', () => {
+    const modes = renderCodex('modes');
+    const shared = GAME_MODES[0].rules;
+    expect(modes).toContain('What Differs Between the Modes');
+    expect(modes).toContain('you unlock named areas, and all of Misthalin is free from the start');
+    expect(modes).toContain('roll at no less than 25%, 15% and 10%');
+    expect(modes).toContain(`every ${CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key`);
+    expect(modes).toContain(`a Pity Key at ${shared.pityThreshold} Fate Points, a ${shared.omniChanceBase}% base Omni-Key chance`);
+    expect(modes).toContain('Your mode is fixed as soon as you apply it.');
+    expect(modes).not.toMatch(/Rule Knobs|Region Modifiers|Omni base|permanently locked|verified history/);
+  });
+
+  it('has no Region Bonuses tab', () => {
+    expect(renderCodex('core')).not.toContain('Region Bonuses');
   });
 });
 

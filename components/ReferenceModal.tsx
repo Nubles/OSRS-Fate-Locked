@@ -6,8 +6,7 @@ import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
-import { REGION_MODIFIERS } from '../config/regionModifiers';
-import { CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, ritualEffect, type Ritual } from '../config/economy';
+import { CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { TableType } from '../types';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
@@ -18,7 +17,14 @@ interface ReferenceModalProps {
   initialTab?: TabId;
 }
 
-type TabId = 'core' | 'economy' | 'modes' | 'drops' | 'altar' | 'region' | 'unlocks' | 'equipment' | 'storage';
+type TabId = 'core' | 'economy' | 'modes' | 'drops' | 'altar' | 'unlocks' | 'equipment' | 'storage';
+
+// The values every mode a player can pick shares (gameModes.test.ts checks they do).
+const SHARED_MODE_RULES = GAME_MODES[0].rules;
+
+/** "a, b and c". */
+export const andList = (items: readonly (string | number)[]): string =>
+  items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 
 // Colour a roll rate along the OSRS difficulty gradient (rare → guaranteed).
 const rateColor = (rate: number): string =>
@@ -106,7 +112,6 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
     { id: 'modes', label: 'Game Modes', icon: SlidersHorizontal },
     { id: 'drops', label: 'RNG & Drop Rates', icon: Dices },
     { id: 'altar', label: 'The Void Altar', icon: Zap },
-    { id: 'region', label: 'Region Bonuses', icon: Compass },
     { id: 'unlocks', label: 'Unlock Systems', icon: Lock },
     { id: 'equipment', label: 'Equipment Tiers', icon: Shield },
     { id: 'storage', label: 'Storage', icon: Package },
@@ -377,35 +382,32 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-2">Game Modes</h1>
-                                <p className="text-gray-400">Every run is played under one fixed ruleset.</p>
+                                <p className="text-gray-400">Every run is played under one fixed mode.</p>
                             </div>
 
                             <div className="bg-[#222] p-6 rounded-xl border border-amber-500/20">
                                 <h3 className="text-amber-400 font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
-                                    <Lock size={16} /> The Mode Locks On Start
+                                    <Lock size={16} /> Your Mode Is Fixed
                                 </h3>
                                 <p className="text-sm text-gray-300 leading-relaxed">
-                                    You pick a mode when a profile is created. The moment the run logs
-                                    its first action, the mode is <b>permanently locked</b> — this keeps a
-                                    run's ruleset fixed and its verified history meaningful. To play a
+                                    Your mode is fixed as soon as you apply it. If you never choose one, the run is
+                                    Vanilla, and that is fixed once anything appears in your History. To play a
                                     different mode, start a new profile.
                                 </p>
                             </div>
 
                             <div className="bg-[#222] p-6 rounded-xl border border-white/5">
-                                <h3 className="text-gray-200 font-bold uppercase tracking-widest mb-4">The Rule Knobs</h3>
+                                <h3 className="text-gray-200 font-bold uppercase tracking-widest mb-4">What Differs Between the Modes</h3>
                                 <ul className="space-y-3 text-sm text-gray-400">
-                                    <li><b className="text-sky-400">Pity System</b> — whether failed rolls eventually guarantee a Key, and after how many Fate Points.</li>
-                                    <li><b className="text-purple-400">Base Omni Chance</b> — the % chance a successful roll upgrades to an Omni-Key.</li>
-                                    <li><b className="text-amber-400">Ritual Cost</b> — a multiplier applied to every Void Altar ritual's Fate cost.</li>
-                                    <li><b className="text-emerald-400">Region Modifiers</b> — whether explored continents grant passive bonuses (see the Region Bonuses tab).</li>
+                                    <li><b className="text-amber-300">Vanilla:</b> you unlock named areas, and all of Misthalin is free from the start. Each boss pays a few Keys and then stops, your first three clue Keys roll at no less than {andList(CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`))}, and Keys only unlock bosses and minigames you can reach.</li>
+                                    <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, next to land you hold. Every boss kill rolls, with no limit. While you hold only your start chunk, every {CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key.</li>
+                                    <li><b className="text-gray-200">Both:</b> a Pity Key at {SHARED_MODE_RULES.pityThreshold} Fate Points, a {SHARED_MODE_RULES.omniChanceBase}% base Omni-Key chance, the same ritual prices, and every bank locked until you unlock it.</li>
                                 </ul>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {GAME_MODES.map(mode => {
                                     const isActive = mode.id === activeMode.id;
-                                    const r = (mode.id === 'custom' && isActive) ? rules : mode.rules;
                                     return (
                                         <div key={mode.id} className={`bg-[#222] p-5 rounded-xl border ${isActive ? 'border-amber-500/60' : 'border-white/5'}`}>
                                             <div className="flex items-center justify-between mb-1">
@@ -413,20 +415,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                                 {isActive && <span className="text-[9px] uppercase tracking-wider bg-emerald-900/60 text-emerald-300 px-1.5 py-0.5 rounded">Your run</span>}
                                             </div>
                                             <p className="text-xs text-amber-300/70 mb-2">{mode.tagline}</p>
-                                            <p className="text-xs text-gray-400 mb-3 leading-relaxed">{mode.description}</p>
-                                            <div className="grid grid-cols-2 gap-y-1.5 text-[11px] font-mono bg-black/30 p-3 rounded border border-white/5">
-                                                <span className="text-gray-500">Pity</span>
-                                                <span className="text-gray-200">{r.pityEnabled ? `${r.pityThreshold} Fate` : 'Disabled'}</span>
-                                                <span className="text-gray-500">Omni base</span>
-                                                <span className="text-gray-200">{r.omniChanceBase}%</span>
-                                                <span className="text-gray-500">Ritual cost</span>
-                                                <span className="text-gray-200">{r.ritualCostMultiplier.toFixed(2)}×</span>
-                                                <span className="text-gray-500">Regions</span>
-                                                <span className="text-gray-200">{r.regionModifiers ? 'On' : 'Off'}</span>
-                                            </div>
-                                            {mode.id === 'custom' && !isActive && (
-                                                <p className="text-[10px] text-gray-600 mt-2 italic">Defaults shown — every value is tunable in the mode picker.</p>
-                                            )}
+                                            <p className="text-xs text-gray-400 leading-relaxed">{mode.description}</p>
                                         </div>
                                     );
                                 })}
@@ -518,7 +507,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         Any successful key roll has a <b>{rules.omniChanceBase}% chance</b> to upgrade to an Omni-Key in <b>{activeMode.name}</b> mode.
                                         <br/><br/>
                                         High-effort sources keep elevated odds: pet drops <b>25%</b>, Grandmaster quests <b>20%</b>, raids <b>15%</b>, Elite diaries and high-tier bosses <b>10%</b>.
-                                        {rules.regionModifiers && <><br/><br/><span className="text-emerald-400">Region bonuses add to this — see the Region Bonuses tab.</span></>}
+                                        {rules.regionModifiers && <><br/><br/><span className="text-emerald-400">Your run's region bonuses add to this.</span></>}
                                     </p>
                                 </div>
                                 <div className="bg-black/20 p-4 rounded-lg border border-red-500/30">
@@ -575,52 +564,6 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     );
                                 })}
                             </div>
-                        </div>
-                    )}
-
-                    {/* --- REGION BONUSES --- */}
-                    {activeTab === 'region' && (
-                        <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
-                            <div>
-                                <h1 className="text-3xl font-black text-white mb-2">Region Bonuses</h1>
-                                <p className="text-gray-400">Passive modifiers granted by the continents you've explored.</p>
-                            </div>
-
-                            <div className={`p-4 rounded-xl border ${rules.regionModifiers ? 'bg-emerald-950/30 border-emerald-500/30' : 'bg-[#222] border-white/5'}`}>
-                                <p className="text-sm text-gray-300 leading-relaxed">
-                                    {rules.regionModifiers ? (
-                                        <><b className="text-emerald-400">Active in {activeMode.name} mode.</b> A continent's passive switches on once you unlock any region inside it, and every active bonus stacks.</>
-                                    ) : (
-                                        <><b className="text-gray-500">Inactive in {activeMode.name} mode.</b> Region passives only apply to runs started under a mode with Region Modifiers — the retired Region Rush, or a legacy Custom run with the toggle on.</>
-                                    )}
-                                </p>
-                            </div>
-
-                            <div className="bg-[#222] rounded-xl border border-white/5 overflow-hidden">
-                                <table className="w-full text-left text-sm">
-                                    <thead className="bg-[#111] text-gray-400 uppercase text-xs">
-                                        <tr>
-                                            <th className="p-4">Continent</th>
-                                            <th className="p-4">Passive</th>
-                                            <th className="p-4">Effect</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-800 text-gray-300">
-                                        {REGION_MODIFIERS.map(mod => (
-                                            <tr key={mod.continent}>
-                                                <td className="p-4 font-bold text-white">{mod.continent}</td>
-                                                <td className="p-4 text-emerald-300">{mod.name}</td>
-                                                <td className="p-4 text-gray-400 text-xs">{mod.description}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <p className="text-xs text-gray-500 italic">
-                                Misthalin's passive is always active — it's your homeland. Bonuses shift the
-                                effective success threshold and Omni chance of every roll.
-                            </p>
                         </div>
                     )}
 
