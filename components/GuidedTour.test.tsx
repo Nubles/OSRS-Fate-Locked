@@ -15,6 +15,19 @@ describe('GuidedTour copy', () => {
     const welcome = screen.getByText(/^You start with/).textContent ?? '';
     expect(welcome).toContain(`You start with ${STARTING_KEYS} Keys, Misthalin (or one Lumbridge chunk in Chunked)`);
     expect(welcome).not.toContain('nothing');
+    expect(welcome).not.toMatch(/\d+-second/);
+  });
+
+  it('names every Farm Keys tab and describes the rituals plainly', () => {
+    render(<GuidedTour />);
+    act(() => { window.dispatchEvent(new Event('fate:start-tour')); });
+    const next = () => fireEvent.click(screen.getByRole('button', { name: /Next/ }));
+    next();
+    expect(screen.getByText(/^Roll here when you finish a Slayer task, a clue, a boss kill or a minigame\./)).toBeTruthy();
+    next(); next(); next();
+    const altar = screen.getByText(/^Spend Fate Points on rituals/).textContent ?? '';
+    expect(altar).toContain('roll twice and keep the better');
+    expect(altar).not.toMatch(/high-risk|rerolls/);
   });
 });
 
@@ -31,7 +44,7 @@ describe('GuidedTour keyboard', () => {
     fireEvent.keyDown(next, { key: 'Enter' });
     fireEvent.click(next);
 
-    expect(screen.getByText('1 · Farm keys')).toBeTruthy();
+    expect(screen.getByText('1 · Farm Keys')).toBeTruthy();
   });
 
   it('still advances on Enter when no control has focus', () => {
@@ -40,7 +53,7 @@ describe('GuidedTour keyboard', () => {
 
     fireEvent.keyDown(window, { key: 'Enter' });
 
-    expect(screen.getByText('1 · Farm keys')).toBeTruthy();
+    expect(screen.getByText('1 · Farm Keys')).toBeTruthy();
   });
 });
 
@@ -66,7 +79,7 @@ describe('GuidedTour focus', () => {
     expect(document.activeElement).toBe(next);
 
     await user.click(next);
-    expect(screen.getByText('1 · Farm keys')).toBeTruthy();
+    expect(screen.getByText('1 · Farm Keys')).toBeTruthy();
     expect(document.activeElement).toBe(next);
     await user.tab();
     expect(document.activeElement).toBe(end);

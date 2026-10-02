@@ -56,8 +56,8 @@ export const CommandPalette: React.FC = () => {
       { id: 'tab-journal', title: 'Journal', subtitle: 'Quests, diaries & combat achievements', group: 'Navigate', icon: BookOpen, keywords: 'journal quests diaries combat achievements tasks', run: go('tab:JOURNAL') },
       { id: 'tab-coll', title: 'Collection Log', subtitle: 'Your logged unique drops', group: 'Navigate', icon: Library, keywords: 'collection log uniques drops items', run: go('tab:COLLECTION') },
       // Earn & spend — control panel
-      { id: 'ctrl-farm', title: 'Farm Keys', subtitle: 'Roll slayer & clues for keys', group: 'Earn & Spend', icon: Coins, keywords: 'farm earn keys slayer clue roll', run: go('ctrl:FARM') },
-      { id: 'ctrl-spend', title: 'Spend Keys', subtitle: 'Gacha — unlock random content', group: 'Earn & Spend', icon: ShoppingBag, keywords: 'spend keys gacha unlock roll', run: go('ctrl:SPEND') },
+      { id: 'ctrl-farm', title: 'Farm Keys', subtitle: 'Roll for Keys: Slayer, clues, bosses and minigames', group: 'Earn & Spend', icon: Coins, keywords: 'farm earn keys slayer clue roll', run: go('ctrl:FARM') },
+      { id: 'ctrl-spend', title: 'Spend Keys', subtitle: 'Spend Keys to unlock at random', group: 'Earn & Spend', icon: ShoppingBag, keywords: 'spend keys gacha unlock roll', run: go('ctrl:SPEND') },
       { id: 'ctrl-log', title: 'History', subtitle: 'Your full run log', group: 'Earn & Spend', icon: ScrollText, keywords: 'history log timeline events', run: go('ctrl:LOG') },
       // Plan
       { id: 'open-goal', title: 'Goal Planner', subtitle: 'Route to any unlock', group: 'Plan', icon: Route, keywords: 'goal planner plan route target path', run: go('open:goal') },
@@ -80,7 +80,7 @@ export const CommandPalette: React.FC = () => {
       { id: 'open-gallery', title: '3D Model Gallery', subtitle: 'Review every boss 3D model', group: 'Account', icon: Film, keywords: '3d model gallery review bosses preview', run: go('open:gallery') },
       { id: 'open-oracle', title: 'Search all content…', subtitle: 'Find any unlockable via the Oracle', group: 'Navigate', icon: Search, keywords: 'oracle search content items find anything lookup', run: go('open:oracle') },
       // Actions
-      { id: 'act-tour', title: 'Take the guided tour', subtitle: 'A 60-second walkthrough of the app', group: 'Action', icon: Compass, keywords: 'tour guide walkthrough help onboarding learn how', run: () => { setOpen(false); setTimeout(() => window.dispatchEvent(new CustomEvent('fate:start-tour')), 60); } },
+      { id: 'act-tour', title: 'Take the guided tour', subtitle: 'A short walkthrough of the tracker', group: 'Action', icon: Compass, keywords: 'tour guide walkthrough help onboarding learn how', run: () => { setOpen(false); setTimeout(() => window.dispatchEvent(new CustomEvent('fate:start-tour')), 60); } },
       { id: 'act-anim', title: animationsEnabled ? 'Turn animations off' : 'Turn animations on', subtitle: 'Toggle motion & effects', group: 'Action', icon: Zap, keywords: 'animations motion effects toggle reduce', run: () => { toggleAnimations(); setOpen(false); } },
     ];
   }, [animationsEnabled, toggleAnimations]);
