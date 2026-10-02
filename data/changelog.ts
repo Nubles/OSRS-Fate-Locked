@@ -19,6 +19,19 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-02-slayer-rewards',
+    title: 'Slayer Rewards Add Their Tasks',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'Slayer rewards that add a task now add it to the Slayer panel and RuneLite. Seeing Red, Watch the Birdie, Hot Stuff, Reptile Got Ripped, Actual Vampyre Slayer, Warped Reality, Basilocked, Lured In and Wings Spread give the masters who use them 30 more tasks, each waiting until you buy its reward.',
+      ],
+      added: [
+        'Boss tasks: once you buy Like a Boss, Konar, Nieve, Duradel and Krystilia list a boss task. It’s ready when you’ve unlocked a boss you have the Slayer level for. Krystilia gives only Wilderness bosses, and only Konar gives the Alchemical Hydra.',
+      ],
+    },
+  },
+  {
     id: '2026-10-02-ritual-of-greed',
     title: 'Greed Pays on an Omni-Key Too',
     date: '2026-10-02',

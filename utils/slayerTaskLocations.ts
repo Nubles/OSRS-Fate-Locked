@@ -11,7 +11,10 @@ export interface SlayerLocation { name: string; location: EntityLocation; }
 /** Exact reviewed monster families and the assignment's actual location constraint. */
 export function locateSlayerTask(task: string, entities: readonly EntityHit[], assignment?: SlayerAssignment, master?: string): SlayerLocation[] {
   const [family, suffix] = task.split(' - ');
-  const members: string[] = families.families[family.toLowerCase()] ?? [family.replace(/s$/i, '')];
+  // A boss task counts the monsters of each boss the master may pick.
+  const members: string[] = assignment?.bosses?.flatMap(boss => boss.monsters)
+    ?? families.families[family.toLowerCase()]
+    ?? [family.replace(/s$/i, '')];
   const names = new Set(members.map(name => name.toLowerCase()));
   // Konar names the place in the task; her row's own locations count too.
   const constraints = [

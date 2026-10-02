@@ -62,6 +62,14 @@ export interface SlayerAssignment {
   skills?: Record<string, number>;
   /** The Slayer reward the master needs bought first, e.g. "I Wildy More Slayer". */
   unlock?: string;
+  /** A boss task: the bosses the master may pick from, each with the monsters that count. */
+  bosses?: SlayerBossOption[];
+}
+export interface SlayerBossOption {
+  name: string;
+  monsters: string[];
+  /** The Slayer level the master needs before assigning this boss. */
+  slayer?: number;
 }
 export type SlayerMasters = Record<string, Record<string, SlayerAssignment>>;
 
@@ -244,7 +252,7 @@ export interface ItemSourceRecord {
 
 // Bump when public/chunk-content.json changes so the fetch URL changes and
 // browsers don't serve a stale cached copy (the filename itself never changes).
-export const CHUNK_CONTENT_DATA_VERSION = 15;
+export const CHUNK_CONTENT_DATA_VERSION = 16;
 // A stalled request must fail, so its panels offer Retry instead of loading
 // forever. The file is about 300 kB gzipped, so this only ends a request that
 // has stopped, not a slow one.

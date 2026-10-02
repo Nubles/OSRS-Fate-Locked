@@ -12,6 +12,7 @@ import { UnlockState } from '../types';
 import { SlayerMasters, SlayerAssignment } from '../services/ChunkContentService';
 import { SLAYER_MASTER_REQUIREMENTS, type SlayerMasterRequirementOption } from '../data/slayerMasterRequirements';
 import { isAreaReachable } from './reachability';
+import { canonicalBossId } from './contentIdentity';
 import { pendingQuestProgress } from '../data/questProgress';
 
 export type SlayerStatus =
@@ -143,7 +144,16 @@ export function slayerReachability(
     const masterGate = masterBlocker(master, unlocks, gameModeId, questSet, combat);
     const rows: SlayerTaskRow[] = [];
     for (const [monster, info] of Object.entries(tasks)) {
-      const loc = locate(monster, info, master);
+      // A boss task: the master picks only a boss whose Slayer level the run has.
+      const assignment = info.bosses
+        ? { ...info, bosses: info.bosses.filter(boss => slayerLevel >= (boss.slayer ?? 1)) }
+        : info;
+      const loc = locate(monster, assignment, master);
+      // Fate Locked locks each boss too: a boss task with none of its bosses unlocked says so.
+      const noBossUnlocked = assignment.bosses && !assignment.bosses.some(boss => boss.monsters.some(name => {
+        const bossId = canonicalBossId(name);
+        return !bossId || (unlocks.bosses ?? []).includes(bossId);
+      }));
       const gates = evaluateRouteGates(compileRawRequirements((info.req ?? []).map(raw => ({ raw, origin: 'ENTITY' as const }))), unlocks);
       const missingSkill = Object.entries(info.skills ?? {}).find(([skill, level]) => effectiveSkillLevel(unlocks, skill) < level);
       const missingReward = info.unlock && !(unlocks.slayerUnlocks ?? []).includes(info.unlock) ? info.unlock : undefined;
@@ -160,7 +170,10 @@ export function slayerReachability(
       else if (!loc) status = 'no-location';
       else if (loc.accessStatus === 'UNKNOWN') status = 'access-unknown';
       else if (loc.accessStatus === 'NOT_READY') status = 'access-blocked';
-      else if (!loc.unlocked) status = 'area-locked';
+      else if (!loc.unlocked) {
+        status = 'area-locked';
+        if (noBossUnlocked) rowBlocker = 'Needs a boss unlock';
+      }
       else status = 'ready';
 
       rows.push({

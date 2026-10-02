@@ -149,8 +149,10 @@ function buildSlayerMasters(data, audit) {
 
 /**
  * Reviewed corrections to the source's Slayer rows, each with its wiki revision
- * (data/sources/slayer-corrections.json). utils/slayerAccuracy.test.ts checks every
- * one reached the generated rows; small test sources simply lack the rows.
+ * (data/sources/slayer-corrections.json): fixes to its rows, the rows a Slayer
+ * reward adds (the source has only the tasks a master gives without one), and
+ * each master's boss task. utils/slayerAccuracy.test.ts checks every one reached
+ * the generated rows; small test sources simply lack the masters.
  */
 function applySlayerCorrections(masters) {
   for (const correction of slayerCorrections.corrections) {
@@ -161,6 +163,25 @@ function applySlayerCorrections(masters) {
       if (!row.req.length) delete row.req;
     }
     Object.assign(row, structuredClone(correction.set ?? {}));
+  }
+  for (const addition of slayerCorrections.additions) {
+    const tasks = masters[addition.master];
+    // A row the source has since gained keeps the source's values; the test flags any difference.
+    if (!tasks || tasks[addition.task]) continue;
+    tasks[addition.task] = structuredClone(addition.row);
+  }
+  const { bossTasks } = slayerCorrections;
+  for (const [master, rule] of Object.entries(bossTasks.masters)) {
+    const tasks = masters[master];
+    if (!tasks) continue;
+    const bosses = bossTasks.bosses
+      .filter(({ boss }) => (!rule.only || rule.only.includes(boss)) && !(rule.except ?? []).includes(boss))
+      .map(({ boss, slayer, monsters, substitutes }) => ({
+        name: boss,
+        monsters: [...(monsters ?? [boss]), ...((rule.noSubstitutes ?? []).includes(boss) ? [] : substitutes ?? [])],
+        ...(slayer ? { slayer } : {}),
+      }));
+    tasks.Bosses = { weight: rule.weight, unlock: bossTasks.unlock, bosses };
   }
 }
 

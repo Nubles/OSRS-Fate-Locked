@@ -20,7 +20,14 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-ritual-of-greed');
+    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-slayer-rewards');
+  });
+
+  it('announces the tasks Slayer rewards add, and boss tasks', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-slayer-rewards');
+    expect(release?.title).toBe('Slayer Rewards Add Their Tasks');
+    expect(release?.sections.fixed).toEqual([expect.stringMatching(/Seeing Red.*Wings Spread.*30 more tasks/)]);
+    expect(release?.sections.added).toEqual([expect.stringMatching(/Like a Boss.*Krystilia gives only Wilderness bosses.*Alchemical Hydra/)]);
   });
 
   it('announces that Greed pays on an Omni-Key roll', () => {

@@ -24,6 +24,10 @@
       "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FAraxytes?oldid=15322536",
       "revision": 15322536
     },
+    "Aviansies": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FAviansie?oldid=15299787",
+      "revision": 15299787
+    },
     "Bandits": {
       "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FBandits?oldid=15250998",
       "revision": 15250998
@@ -250,6 +254,10 @@
     "Lesser demons": {
       "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
     },
+    "Lizardmen": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FLizardmen?oldid=15250962",
+      "revision": 15250962
+    },
     "Lizards": {
       "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FLizards?oldid=15116877",
       "revision": 15116877
@@ -306,6 +314,10 @@
     "Rats": {
       "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FRats?oldid=15251205",
       "revision": 15251205
+    },
+    "Red dragons": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FRed_dragons?oldid=15250964",
+      "revision": 15250964
     },
     "Revenants": {
       "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
@@ -366,6 +378,10 @@
     "Turoths": {
       "source": "RuneLite Slayer Task enum; exact source NPC names reviewed from its target aliases"
     },
+    "TzHaar": {
+      "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FTzHaar?oldid=15316995",
+      "revision": 15316995
+    },
     "Vampyres": {
       "url": "https://oldschool.runescape.wiki/w/Slayer_task%2FVampyres?oldid=15320360",
       "revision": 15320360
@@ -423,6 +439,13 @@
     "araxytes": [
       "Araxxor",
       "Araxyte"
+    ],
+    "aviansies": [
+      "Aviansie",
+      "Flight Kilisa",
+      "Flockleader Geerin",
+      "Kree'arra",
+      "Wingman Skree"
     ],
     "bandits": [
       "Bandit",
@@ -728,6 +751,11 @@
       "Lesser demon (Melzar's Maze)",
       "Zakl'n Gritch"
     ],
+    "lizardmen": [
+      "Lizardman",
+      "Lizardman brute",
+      "Lizardman shaman"
+    ],
     "lizards": [
       "Desert Lizard",
       "Grimy Lizard",
@@ -812,6 +840,11 @@
       "Rat",
       "Scurrius",
       "Zombie rat"
+    ],
+    "red dragons": [
+      "Baby red dragon",
+      "Brutal red dragon",
+      "Red dragon"
     ],
     "revenants": [
       "Revenant cyclops",
@@ -938,6 +971,14 @@
     ],
     "turoths": [
       "Turoth"
+    ],
+    "tzhaar": [
+      "TzHaar-Hur",
+      "TzHaar-Ket",
+      "TzHaar-Mej",
+      "TzHaar-Xil",
+      "TzKal-Zuk",
+      "TzTok-Jad"
     ],
     "vampyres": [
       "Feral Vampyre",

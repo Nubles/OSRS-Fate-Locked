@@ -62,7 +62,7 @@ export function slayerReason(row: SlayerTaskRow): string | undefined {
     case 'slayer-locked': return row.blocker ?? (row.slayer ? `Slayer ${row.slayer}` : 'Slayer locked');
     case 'combat-locked': return row.combat ? `Combat ${row.combat}` : 'Combat level';
     case 'quest-locked': return 'Quest requirements';
-    case 'area-locked': return 'Area locked';
+    case 'area-locked': return row.blocker ?? 'Area locked';
     case 'access-blocked': return 'Entry requirements';
     case 'access-unknown': return 'Access needs review';
     case 'no-location': return 'No known location';
