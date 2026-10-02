@@ -128,7 +128,29 @@ export function validateBankLocationRegistry(registry, { validChunkIds, validBan
     assertNonEmptyString(exclusion.name, 'Bank exclusion name');
     assertNonEmptyString(exclusion.reason, `Bank exclusion ${exclusion.name} reason`);
   }
+
+  // A merged unlock opens no bank of its own; a save that owns it owns the bank it leads to.
+  const merges = registry.merges ?? [];
+  if (!Array.isArray(merges)) throw new Error('Bank merges must be an array');
+  const merged = new Set(merges.map(merge => merge?.id));
+  for (const merge of merges) {
+    assertCanonicalChunkId(merge.id, 'Merged bank id');
+    assertNonEmptyString(merge.into, `Merged bank ${merge.id} target`);
+    if (merges.filter(other => other.id === merge.id).length > 1) throw new Error(`Duplicate bank merge: ${merge.id}`);
+    if (merge.into === merge.id || merged.has(merge.into)) throw new Error(`Bank merge ${merge.id} must lead to a bank that stays`);
+    if (validBankIds instanceof Set && !validBankIds.has(merge.id)) throw new Error(`Merged bank ${merge.id} is not a bank`);
+    if (validBankIds instanceof Set && !validBankIds.has(merge.into) && !ids.has(merge.into) && !virtualIds.has(merge.into)) {
+      throw new Error(`Bank merge ${merge.id} leads to an unknown bank: ${merge.into}`);
+    }
+    assertNonEmptyString(merge.reason, `Bank merge ${merge.id} reason`);
+    validateWikiEvidence(merge.wiki, `Bank merge ${merge.id}`, sourceUrls);
+  }
   return registry;
+}
+
+/** Each merged bank unlock and the bank it leads to, as id pairs. */
+export function bankMerges(registry) {
+  return (registry.merges ?? []).map(({ id, into }) => ({ id: String(id), into: String(into) }));
 }
 
 export function bankLocationLabels(registry) {

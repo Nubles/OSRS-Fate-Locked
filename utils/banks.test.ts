@@ -12,10 +12,12 @@ const unlocks = (over: Partial<UnlockState> = {}): UnlockState => ({
 });
 
 describe('bank data', () => {
-  it('has 128 uniquely-named, uniquely-keyed banks', () => {
-    expect(BANKS.length).toBe(128);
-    expect(new Set(BANK_IDS).size).toBe(128);
-    expect(new Set(BANKS.map(b => b.name)).size).toBe(128);
+  it('has 126 uniquely-named, uniquely-keyed banks', () => {
+    // Two of the Chunk Picker's 127 bank chunks open no bank and are merged into
+    // the bank each leads to (data/sources/bank-locations.json merges).
+    expect(BANKS.length).toBe(126);
+    expect(new Set(BANK_IDS).size).toBe(126);
+    expect(new Set(BANKS.map(b => b.name)).size).toBe(126);
   });
 
   it('contains every reviewed fixed-location addition with facility-first labels', () => {
@@ -30,7 +32,7 @@ describe('bank data', () => {
     expect(BANK_BY_ID['11830'].name).toBe('Ruins of Camdozaal (via Ice Mountain)');
     expect(BANK_BY_ID['14132'].name).toBe('Sangvesti and Castle Drakan banking');
     expect(BANK_BY_ID['woodcutting-leprechaun'].name).toBe('Woodcutting Leprechaun (Forestry)');
-    expect(BANK_IDS.filter(id => /^\d+$/.test(id))).toHaveLength(127);
+    expect(BANK_IDS.filter(id => /^\d+$/.test(id))).toHaveLength(125);
   });
 
   it('names the Ardougne banks under their existing chunk ids', () => {

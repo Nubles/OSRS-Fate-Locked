@@ -31,6 +31,7 @@ describe('authored changelog releases', () => {
       expect.stringMatching(/Fremennik Slayer Dungeon belongs to Mountain Camp.*every Kandarin area/),
       expect.stringMatching(/Corporeal Beast needs Chaos Temple.*God Wars Dungeon bosses Burthorpe.*Chaos Elemental Scorpia’s Cave/),
       expect.stringMatching(/Emir’s Arena also counts with the Mage Training Arena/),
+      expect.stringMatching(/Rellekka Peninsula now counts as Keldagrim’s bank.*Asgarnian Road as East Falador’s.*Key back/),
     ]);
   });
 

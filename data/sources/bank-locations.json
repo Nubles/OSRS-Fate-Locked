@@ -16,7 +16,8 @@
     { "title": "Bank Deposit Box", "revision": 15345896, "url": "https://oldschool.runescape.wiki/w/Bank_Deposit_Box" },
     { "title": "Sangvesti bank", "revision": 15262093, "url": "https://oldschool.runescape.wiki/w/Sangvesti_bank" },
     { "title": "Castle Drakan", "revision": 15283343, "url": "https://oldschool.runescape.wiki/w/Castle_Drakan" },
-    { "title": "Forestry event", "revision": 14430593, "url": "https://oldschool.runescape.wiki/w/Forestry_event" }
+    { "title": "Forestry event", "revision": 14430593, "url": "https://oldschool.runescape.wiki/w/Forestry_event" },
+    { "title": "Motherlode Mine", "revision": 15359659, "url": "https://oldschool.runescape.wiki/w/Motherlode_Mine" }
   ],
   "locations": [
     { "id": "11066", "cx": 43, "cy": 58, "name": "Keldagrim bank and Blast Furnace chest", "referenceKind": "entrance", "accessVia": "Keldagrim entrance north-east of Rellekka; start The Giant Dwarf", "facilities": ["Keldagrim bank", "Blast Furnace bank chest"], "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim", "https://oldschool.runescape.wiki/w/Blast_Furnace"] },
@@ -72,5 +73,9 @@
     { "name": "Player-owned house servants", "reason": "Variable-location fetching service, not a fixed bank or deposit facility." },
     { "name": "Ferox Enclave mercenary", "reason": "Unnoting and token exchange service, not a deposit facility." },
     { "name": "Removed banks", "reason": "No longer accessible in normal play." }
+  ],
+  "merges": [
+    { "id": "10810", "into": "11066", "reason": "Rellekka Peninsula holds no bank: its chunk is the way into Keldagrim, whose bank and Blast Furnace chest are 11066.", "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim"] },
+    { "id": "12085", "into": "12084", "reason": "Asgarnian Road holds no bank: its chunk only leads into the Dwarven Mine, whose Motherlode Mine bank chest is listed under East Falador (12084).", "wiki": ["https://oldschool.runescape.wiki/w/Motherlode_Mine"] }
   ]
 }

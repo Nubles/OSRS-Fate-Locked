@@ -28,6 +28,7 @@ export const CHANGELOG_RELEASES = [
         'The Fremennik Slayer Dungeon belongs to Mountain Camp, beside its entrance. It used to open only with every Kandarin area.',
         'Boss and minigame rolls ask for the area the map puts their entrance in: the Corporeal Beast needs Chaos Temple, the Thermonuclear Smoke Devil Feldip Hills, Yama Mount Karuulm, and the Giants’ Foundry Giants’ Plateau. Bosses any Vanilla run could roll now need their area too: the God Wars Dungeon bosses Burthorpe, the Tombs of Amascut Sophanem, Duke Sucellus and the Phantom Muspah Weiss, the Leviathan the Wizards’ Tower, the Whisperer Goblin Village, Amoxliatl Ralos’ Rise, the Maggot King and Araxxor Darkmeyer, and the Chaos Elemental Scorpia’s Cave.',
         'Emir’s Arena also counts with the Mage Training Arena, whose chunk holds the arena’s bank, altar and entrance.',
+        'Two bank unlocks that opened no bank have left the Banks table. Rellekka Peninsula now counts as Keldagrim’s bank, and Asgarnian Road as East Falador’s, with the Motherlode Mine chest. If you had already unlocked the bank it leads to, you get the Key back.',
       ],
     },
   },
