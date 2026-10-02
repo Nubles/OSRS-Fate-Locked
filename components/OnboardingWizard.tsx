@@ -3,8 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { STARTING_KEYS } from '../config/economy';
+import { DEFAULT_MODE_ID, getGameMode } from '../config/gameModes';
 import { ArrowRight, Check, Lock, MousePointer2 } from 'lucide-react';
 import { Dices, Skull, Shield, Sparkles, Key, Dna, Zap } from './OsrsIcon';
+
+// Onboarding comes before the mode choice, and every mode a player can pick
+// shares this threshold (config/gameModes.ts; pinned in the onboarding test).
+const PITY_THRESHOLD = getGameMode(DEFAULT_MODE_ID).rules.pityThreshold;
 
 // --- SHARED STYLES ---
 const CARD_BASE = "relative overflow-hidden rounded-lg border-2 transition-all duration-300 bg-[#2a2620] border-[#4a453d]";
@@ -32,7 +37,7 @@ const ConceptVisual: React.FC = () => {
       <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[2px]">
         <div className="text-center">
           <div className="text-3xl font-black text-red-500 tracking-widest drop-shadow-[0_0_10px_rgba(239,68,68,0.8)] animate-pulse">LOCKED</div>
-          <div className="text-[10px] text-gray-400 font-mono uppercase mt-1">Fate Decides All</div>
+          <div className="text-[10px] text-gray-400 font-mono uppercase mt-1">Unlock with Keys</div>
         </div>
       </div>
     </div>
@@ -303,7 +308,7 @@ const AltarVisual: React.FC = () => {
             </div>
             <div className="flex-1">
                 <div className={`text-xs font-bold uppercase tracking-wider ${active ? 'text-blue-300' : 'text-gray-500'}`}>Ritual of Clarity</div>
-                <div className="text-[9px] text-gray-500">Next roll has Advantage</div>
+                <div className="text-[9px] text-gray-500">Roll twice, keep the better</div>
             </div>
             
             {/* Click Effect */}
@@ -334,40 +339,40 @@ export const OnboardingWizard: React.FC = () => {
   const STEPS = [
     {
       title: "Fate Locked",
-      subtitle: "The Concept",
+      subtitle: "How it works",
       desc: `You start with ${STARTING_KEYS} Keys and nearly everything locked: no gear slots, no skills except Hitpoints, no transport, no banks and no shops. In Vanilla you can go anywhere in Misthalin from the start. In Chunked you start in one chunk of Lumbridge.`,
       visual: <ConceptVisual />,
       color: "text-red-500",
       bg: "from-red-900/20"
     },
     {
-      title: "The Roll",
-      subtitle: "Earning Keys",
-      desc: "Complete tasks in-game (Slayer, Quests, Clues) then click the matching card. Rolls are based on difficulty. Success grants a Key.",
+      title: "Earn Keys",
+      subtitle: "Roll for what you finish",
+      desc: "Finish something in game, such as a Slayer task, a quest or a clue, then click its card here to roll. Harder content rolls better. A success gives you a Key.",
       visual: <RollVisual />,
       color: "text-green-400",
       bg: "from-green-900/20"
     },
     {
-      title: "The Unlocking",
-      subtitle: "Spending Keys",
-      desc: "Spend your hard-earned Keys to randomly unlock content tiers. Unlocks are permanent and open up new training methods.",
+      title: "Spend Keys",
+      subtitle: "Unlock at random",
+      desc: "Spend a Key on a table, such as Equipment, Skills or Bosses, to unlock a random entry from it. Unlocks are permanent and open up new things to do.",
       visual: <UnlockVisual />,
       color: "text-yellow-400",
       bg: "from-yellow-900/20"
     },
     {
-      title: "Cruel Fate",
-      subtitle: "Pity System",
-      desc: "RNG can be cruel. Failed rolls grant Fate Points instead of Keys. Build up enough Fate Points to receive a guaranteed Pity Key — the exact threshold depends on the game mode you pick next.",
+      title: "Fate Points",
+      subtitle: "The pity system",
+      desc: `A failed roll gives you 1 to 3 Fate Points instead of a Key, more for harder content. When a failed roll takes you to ${PITY_THRESHOLD} Fate Points, you get a guaranteed Pity Key instead, and any Fate over ${PITY_THRESHOLD} carries over.`,
       visual: <FateVisual />,
       color: "text-amber-500",
       bg: "from-amber-900/20"
     },
     {
-      title: "The Altar",
-      subtitle: "Bending Luck",
-      desc: "Spend Fate Points at the Void Altar to perform Rituals — roll with Advantage, gamble for double loot, or forge rare keys. And whenever you want every rate, key and ritual in one place, open the Codex from the top bar.",
+      title: "The Void Altar",
+      subtitle: "Spend Fate Points",
+      desc: "Spend Fate Points at the Void Altar on rituals: roll twice and keep the better, try to double your next Key, or buy a Chaos Key. A successful roll resets your Fate to 0, so spend it first. Every rate, Key and ritual is on the Rules page: the ? in the top bar.",
       visual: <AltarVisual />,
       color: "text-blue-400",
       bg: "from-blue-900/20"
@@ -438,7 +443,7 @@ export const OnboardingWizard: React.FC = () => {
                     onClick={handleNext}
                     className="group px-8 py-4 bg-white text-black font-black uppercase tracking-widest rounded-lg hover:bg-gray-200 transition-all flex items-center gap-3 shadow-lg hover:shadow-white/20"
                 >
-                    {step === STEPS.length - 1 ? "Enter The Void" : "Next"}
+                    {step === STEPS.length - 1 ? "Start" : "Next"}
                     <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                 </button>
             </div>

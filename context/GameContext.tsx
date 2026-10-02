@@ -1201,7 +1201,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         ...state,
         fatePoints: state.fatePoints - ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
         activeBuff: 'LUCK',
-        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Clarity', details: 'Next roll has Advantage.', meta: { ritual: 'LUCK', fateCost: ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier) } }],
+        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Clarity', details: 'Your next Key roll is made twice and the better result is kept.', meta: { ritual: 'LUCK', fateCost: ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier) } }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'LUCK' } }
       };
 
