@@ -86,6 +86,16 @@ describe('ReferenceModal Omni-Keys', () => {
   });
 });
 
+describe('ReferenceModal Unlock Systems land', () => {
+  it('describes the Chunked start chunk and frontier as the code builds them', () => {
+    const unlocks = renderCodex('unlocks', 'chunked');
+    expect(unlocks).toContain('each a square of 64 by 64 tiles');
+    expect(unlocks).toContain('You start in one free chunk: central Lumbridge, with the castle, church and shops.');
+    expect(unlocks).toContain('Fate picks a random chunk from the frontier');
+    expect(unlocks).not.toMatch(/courtyard|random tile|granularity/);
+  });
+});
+
 describe('ReferenceModal Smart Play', () => {
   it('says a success wipes Fate, and shows the rates and Omni-Key chances the code uses', () => {
     const economy = renderCodex('economy');
@@ -169,8 +179,8 @@ describe('ReferenceModal Vanilla policy', () => {
     expect(unlocks).toContain('Standard and Chaos random unlocks respect hard location access');
     expect(unlocks).toContain('empty eligible pool means no unlock occurs');
     expect(unlocks).toContain('Omni-Key direct unlocks bypass that filter with a warning');
-    expect(unlocks).toContain('Vanilla named-area rolls can be scattered');
-    expect(unlocks).toContain('Only Chunked mode enforces adjacent expansion');
+    expect(unlocks).toContain('In Vanilla the areas you roll don&#x27;t have to touch each other.');
+    expect(unlocks).toContain('Only Chunked makes you grow out from land you hold.');
     expect(unlocks).toContain('Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99, a 2% chance on every level-up, or the Ritual of Chaos.');
     expect(unlocks).toContain('Every eligible entry is equally likely, so big tables such as Areas and Banks come up most.');
     expect(renderCodex('unlocks', 'chunked')).toContain('so big tables such as Banks come up most.');

@@ -643,27 +643,28 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <Map size={24} className="text-emerald-400" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-gray-200 text-lg">{gameModeId === 'chunked' ? 'Chunks' : 'Regions'}</h3>
+                                        <h3 className="font-bold text-gray-200 text-lg">{gameModeId === 'chunked' ? 'Chunks' : 'Areas'}</h3>
                                         {gameModeId === 'chunked' ? (
                                             <p className="text-sm text-gray-400 mt-1 leading-relaxed">
-                                                Chunked mode uses a different model entirely: no named regions.
-                                                You start in a single free chunk — the Lumbridge castle courtyard.
+                                                Chunked mode has no named areas: you unlock map chunks, each a square of
+                                                64 by 64 tiles. You start in one free chunk: central Lumbridge, with the
+                                                castle, church and shops.
                                                 <br/>
-                                                1 Key = Unlock a <b>random frontier chunk</b> next to one you already
-                                                hold (map-region granularity, not a named area). After Pandemonium and
-                                                Sailing, coast reached across open sea joins the frontier.
+                                                1 Key = a <b>random frontier chunk</b>, one next to a chunk you already hold.
+                                                After Pandemonium, with Sailing unlocked, coast across open sea from your
+                                                land joins the frontier too.
                                                 <br/>
-                                                You can only enter chunks you've unlocked, one step out from your
-                                                territory at a time — Fate hands you a random tile of the frontier,
-                                                not the one you wanted.
+                                                You can only enter chunks you've unlocked. Fate picks a random chunk from
+                                                the frontier, not the one you want; only the Ritual of the Cartographer
+                                                lets you choose.
                                             </p>
                                         ) : (
                                             <p className="text-sm text-gray-400 mt-1 leading-relaxed">
-                                                You start in <b>Misthalin</b> (Lumbridge/Varrock/Draynor).
+                                                All of <b>Misthalin</b> (Lumbridge, Varrock, Draynor Village and more) is free from the start.
                                                 <br/>
-                                                1 Key = Unlock a random named area (e.g. "Catherby", "Rellekka"). Vanilla named-area rolls can be scattered.
+                                                1 Key = a random named area, such as Catherby or Rellekka. In Vanilla the areas you roll don't have to touch each other.
                                                 <br/>
-                                                Only Chunked mode enforces adjacent expansion. You can only enter unlocked regions.
+                                                Only Chunked makes you grow out from land you hold. You can only enter areas you've unlocked.
                                             </p>
                                         )}
                                     </div>
