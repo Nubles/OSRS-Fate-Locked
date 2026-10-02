@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { CheckCircle2, Circle, Route } from 'lucide-react';
-import { Dices, Map as MapIcon, BookOpen, Swords, Package, Shield, Store, Gamepad2 } from './OsrsIcon';
+import { Dices, Map as MapIcon, BookOpen, Swords, Package, Shield, Store, Gamepad2, Flag, Sprout, Home, Skull } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { buildGoalRoute } from '../utils/goalRoute';
 import { WikiLink } from './WikiLink';
@@ -146,6 +146,54 @@ export const GoalRouteView: React.FC<{ goalId: string }> = ({ goalId }) => {
           <div>
             <Head icon={<Swords size={11} />} label="Bosses" done={met(route.bosses)} total={route.bosses.length} />
             {route.bosses.map(requirement => (
+              <div key={requirement.name} className="flex items-start gap-1.5 py-px">
+                <Tick met={requirement.met} />
+                <span className="text-gray-300">{requirement.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!!route.guilds?.length && (
+          <div>
+            <Head icon={<Flag size={11} />} label="Guilds" done={met(route.guilds)} total={route.guilds.length} />
+            {route.guilds.map(requirement => (
+              <div key={requirement.name} className="flex items-start gap-1.5 py-px">
+                <Tick met={requirement.met} />
+                <span className="text-gray-300">{requirement.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!!route.farming?.length && (
+          <div>
+            <Head icon={<Sprout size={11} />} label="Farming patches" done={met(route.farming)} total={route.farming.length} />
+            {route.farming.map(requirement => (
+              <div key={requirement.name} className="flex items-start gap-1.5 py-px">
+                <Tick met={requirement.met} />
+                <span className="text-gray-300">{requirement.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!!route.housing?.length && (
+          <div>
+            <Head icon={<Home size={11} />} label="House rooms" done={met(route.housing)} total={route.housing.length} />
+            {route.housing.map(requirement => (
+              <div key={requirement.name} className="flex items-start gap-1.5 py-px">
+                <Tick met={requirement.met} />
+                <span className="text-gray-300">{requirement.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!!route.slayerUnlocks?.length && (
+          <div>
+            <Head icon={<Skull size={11} />} label="Slayer rewards" done={met(route.slayerUnlocks)} total={route.slayerUnlocks.length} />
+            {route.slayerUnlocks.map(requirement => (
               <div key={requirement.name} className="flex items-start gap-1.5 py-px">
                 <Tick met={requirement.met} />
                 <span className="text-gray-300">{requirement.name}</span>

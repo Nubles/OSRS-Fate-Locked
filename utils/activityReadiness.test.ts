@@ -211,8 +211,9 @@ describe('evaluateActivityReadiness', () => {
 
   it("gates Warriors' Guild entry on tier-capped levels, as its diary task does", () => {
     const task = ALL_DIARY_TASKS.find(candidate => candidate.id === 'fal_hard_10')!;
+    // The diary task also names the guild itself, which this compares only for its levels.
     const profile = (skills: Record<string, number>, levels: Record<string, number>) =>
-      unlocked({ regions: ["Warriors' Guild"], skills, levels });
+      unlocked({ regions: ["Warriors' Guild"], guilds: ["Warriors' Guild"], skills, levels });
     const cases = [
       // Raw 70 + 60 is 130, but tier 5 caps both at 50.
       profile({ Attack: 5, Strength: 5 }, { Attack: 70, Strength: 60 }),

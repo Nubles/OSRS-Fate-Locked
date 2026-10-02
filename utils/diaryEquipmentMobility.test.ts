@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DIARY_DATA } from '../data/diaryData';
 import { QUEST_DATA } from '../data/questData';
-import { ARCANA_LIST, BOSSES_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, MINIGAMES_LIST, MOBILITY_LIST, REGION_GROUPS, SKILLS_LIST } from '../data/items';
+import {
+  ARCANA_LIST, BOSSES_LIST, EQUIPMENT_SLOTS, FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST, MINIGAMES_LIST, MOBILITY_LIST,
+  POH_LIST, REGION_GROUPS, SKILLS_LIST, SLAYER_UNLOCKS_LIST,
+} from '../data/items';
 import { TableType, type GameState, type UnlockState } from '../types';
 import { countDoableTasks, evaluateDiaryTaskEligibility, getDiaryStatus } from './journalStatus';
 import { diaryTaskCompletionDecision } from './journalCompletion';
@@ -26,6 +29,7 @@ const skilledAccount = (overrides: Partial<UnlockState> = {}) => account({
   regions: [...Object.keys(REGION_GROUPS), ...Object.values(REGION_GROUPS).flat()],
   arcana: [...ARCANA_LIST], quests: Object.keys(QUEST_DATA), mobility: [...MOBILITY_LIST], merchants: [...MERCHANTS_LIST],
   minigames: [...MINIGAMES_LIST], bosses: [...BOSSES_LIST],
+  guilds: [...GUILDS_LIST], farming: [...FARMING_PATCH_LIST], housing: [...POH_LIST], slayerUnlocks: [...SLAYER_UNLOCKS_LIST],
   ...overrides,
 });
 

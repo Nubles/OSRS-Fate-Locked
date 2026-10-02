@@ -48,6 +48,40 @@ describe('authored changelog releases', () => {
     ]);
   });
 
+  it('announces the guild, farming patch, house and Slayer reward gates, and that logging stays free', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-diary-unlock-gates');
+    expect(release?.title).toBe('Diary Tasks Ask for Guilds, Patches and House Rooms');
+    expect(release?.date).toBe('2026-10-02');
+    expect(Object.keys(release?.sections ?? {})).toEqual(['fixed']);
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/done inside a guild now need that guild unlocked.*Magic Guild needs the Wizards’ Guild.*Rogues’ Den.*Woodcutting Guild.*14 tasks.*only changes the Journal: you can still log the task by hand/),
+      expect.stringMatching(/farming patch need that patch unlocked.*Flower patch.*Fruit Tree patch.*Allotment patch if you grow the watermelon.*21 tasks/),
+      expect.stringMatching(/house need the room or mount.*Menagerie.*Portal Chamber or Portal Nexus.*Xeric’s talisman or Digsite pendant.*Yanille or Hosidius needs Real Estate Agents/),
+      expect.stringMatching(/Slayer helmet needs the Malevolent Masquerade Slayer reward/),
+    ]);
+  });
+
+  it('announces the Diary tasks checked against the game, with examples of each fix', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-diary-accuracy');
+    expect(release?.title).toBe('Diary Tasks Checked Against the Game');
+    expect(release?.date).toBe('2026-10-02');
+    expect(Object.keys(release?.sections ?? {})).toEqual(['fixed']);
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Morytania Diary tasks now need Priest in Peril.*“Kill a Ghoul” and the Salve bridge shortcut/),
+      expect.stringMatching(/named the wrong area.*Ancient Magicks altar.*Baxtorian Falls.*Feldip Hills.*Shilo Village or Tai Bwo Wannai.*Kharazi Jungle.*Falador/),
+      expect.stringMatching(/chunk the map gives to the next area.*Catherby farming patches \(Camelot\).*granite quarry \(Agility Pyramid\).*Musa Point \(Port Sarim\).*West Ardougne \(East Ardougne\).*Emir’s Arena \(Mage Training Arena\)/),
+      expect.stringMatching(/Trips now need both ends.*Uzer and Pollnivneach.*Entrana, Ardougne and Land’s End.*Dorgesh-Kaan train.*Mage Arena’s chunk.*Burthorpe’s chunk.*Waterbirth Island.*Taverley/),
+      expect.stringMatching(/“in the desert” no longer count Al Kharid, the Duel Arena or the Mage Training Arena/),
+      expect.stringMatching(/part of Barbarian Training they use.*clears once the miniquest is done.*Only the spear and hasta tasks need Tai Bwo Wannai Trio/),
+      expect.stringMatching(/shop or service need its merchant unlock.*Sbott’s tanning \(Tanners\).*Sawmill \(Sawmill Operators\).*estate agents \(Real Estate Agents\).*Pet Shops.*Hunter Shops.*Nardah Herbalist \(Decanters\).*Taxidermists/),
+      expect.stringMatching(/minigame’s or a boss’s loot.*Intelligence Gathering.*fire cape \(TzHaar Fight Cave\).*KQ head \(Kalphite Queen\).*Tai Bwo Wannai Cleanup/),
+      expect.stringMatching(/Zanaris tasks need a dramen or lunar staff.*Abyss instead/),
+      expect.stringMatching(/only part of a quest no longer ask for all of it.*Death Plateau and Troll Stronghold under way.*Forsaken Tower.*Nature Spirit started/),
+      expect.stringMatching(/wyrm.*boots of stone, brimstone or granite.*Kourend Elite reward.*Real Estate Agents.*not Teleport Tablets/),
+      expect.stringMatching(/spottier cape needs 69 Hunter.*gryphon route.*51 Slayer, 45 Sailing, Troubled Tortugans and the Great Conch/),
+    ]);
+  });
+
   it('announces the tasks Slayer rewards add, and boss tasks', () => {
     const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-slayer-rewards');
     expect(release?.title).toBe('Slayer Rewards Add Their Tasks');

@@ -3,7 +3,10 @@ import { QUEST_DATA, QuestData } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DIARY_DATA } from '../data/diaryData';
 import { DropSource, UnlockState } from '../types';
-import { ARCANA_LIST, BOSSES_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, MINIGAMES_LIST, MOBILITY_LIST, REGION_GROUPS, SKILLS_LIST } from '../data/items';
+import {
+  ARCANA_LIST, BOSSES_LIST, EQUIPMENT_SLOTS, FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST, MINIGAMES_LIST, MOBILITY_LIST,
+  POH_LIST, REGION_GROUPS, SKILLS_LIST, SLAYER_UNLOCKS_LIST,
+} from '../data/items';
 import { combatLevel } from './slayerReach';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { ACTIVITY_REQUIREMENTS } from '../data/activityRequirements';
@@ -90,6 +93,7 @@ describe('manual journal readiness', () => {
     const low = evaluateDiaryTaskEligibility(task, unlocked({
       quests: ['Cook\'s Assistant'],
       regions: ['Varrock'],
+      guilds: ["Champions' Guild"],
     }));
     expect(low.machineEligible).toBe(false);
     expect(low.blockers).toContainEqual({
@@ -100,6 +104,7 @@ describe('manual journal readiness', () => {
     const enough = evaluateDiaryTaskEligibility(task, unlocked({
       quests: questIdsWorthAtLeast(32),
       regions: ['Varrock'],
+      guilds: ["Champions' Guild"],
     }));
     expect(enough).toMatchObject({
       machineEligible: true,
@@ -714,7 +719,6 @@ describe('manual diary task requirements', () => {
   it.each([
     ['mor_easy_3', ['Priest in Peril'], ['Canifis']],
     ['var_med_9', [], ['Edgeville']],
-    ['lum_med_10', ['Lost City'], ['Zanaris']],
   ] as const)('accepts the Slayer cape route for %s', (id, quests, regions) => {
     const task = ALL_DIARY_TASKS.find(candidate => candidate.id === id)!;
     const result = evaluateDiaryTaskEligibility(task, unlocked({
@@ -725,6 +729,22 @@ describe('manual diary task requirements', () => {
     }));
 
     expect(result).toMatchObject({ machineEligible: true, eligible: true });
+  });
+
+  it('accepts the Slayer cape route for Chaeldar, once a staff takes you into Zanaris', () => {
+    const task = ALL_DIARY_TASKS.find(candidate => candidate.id === 'lum_med_10')!;
+    const cape = unlocked({
+      skills: { Slayer: 10 }, levels: { Slayer: 99 },
+      quests: ['Lost City'], regions: ['Zanaris'],
+    });
+
+    expect(evaluateDiaryTaskEligibility(task, cape).blockers)
+      .toEqual([expect.objectContaining({ kind: 'equipment', slot: 'Weapon', tier: 1 })]);
+    expect(evaluateDiaryTaskEligibility(task, { ...cape, equipment: { Weapon: 1 } })).toMatchObject({
+      machineEligible: true,
+      eligible: false,
+      manualChecks: [expect.stringContaining('Dramen or lunar staff to enter Zanaris')],
+    });
   });
 
   it('requires Priest in Peril for both Mazchna combat and Slayer cape routes', () => {
@@ -810,6 +830,10 @@ describe('canonical diary tier eligibility', () => {
       merchants: [...MERCHANTS_LIST],
       minigames: [...MINIGAMES_LIST],
       bosses: [...BOSSES_LIST],
+      guilds: [...GUILDS_LIST],
+      farming: [...FARMING_PATCH_LIST],
+      housing: [...POH_LIST],
+      slayerUnlocks: [...SLAYER_UNLOCKS_LIST],
       skills: Object.fromEntries(taskSkills.map(skill => [skill, 10])),
       levels: Object.fromEntries(taskSkills.map(skill => [skill, 99])),
       regions: [...new Set(regions)],
@@ -830,9 +854,10 @@ describe('canonical diary tier eligibility', () => {
     const { cas, ...partialUnlocks } = canonicalUnlocks();
     void cas;
 
+    // Entering the Troll Stronghold takes Troll Stronghold under way (so Death Plateau done) or the Easy CAs.
     expect(getDiaryStatus(DIARY_DATA['Fremennik Easy'], {
       ...partialUnlocks,
-      quests: partialUnlocks.quests.filter(quest => quest !== 'Troll Stronghold'),
+      quests: partialUnlocks.quests.filter(quest => quest !== 'Troll Stronghold' && quest !== 'Death Plateau'),
     })).toBe('LOCKED_QUEST');
   });
 
@@ -886,18 +911,27 @@ describe('audited diary route eligibility', () => {
     }));
     expect(kharazi.machineEligible).toBe(true);
     expect(kharazi.manualChecks).toContain('Any axe');
-    expect(evaluateDiaryTaskEligibility(task('kar_med_9'), unlocked({
+    // The Hardwood Grove's trading sticks come only from Tai Bwo Wannai Cleanup.
+    const grove = unlocked({
       ...shared,
       regions: ['Tai Bwo Wannai'],
       quests: ['Jungle Potion'],
-    })).machineEligible).toBe(true);
+    });
+    expect(evaluateDiaryTaskEligibility(task('kar_med_9'), grove).machineEligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task('kar_med_9'), {
+      ...grove, minigames: ['Tai Bwo Wannai Cleanup'],
+    }).machineEligible).toBe(true);
   });
 
   it('allows Tai Bwo Wannai Cleanup without Shilo Village access', () => {
-    expect(evaluateDiaryTaskEligibility(task('kar_med_19'), unlocked({
+    const cleanup = unlocked({
       skills: { Mining: 4 }, levels: { Mining: 40 },
       quests: ['Jungle Potion'], regions: ['Tai Bwo Wannai'],
-    })).machineEligible).toBe(true);
+    });
+    expect(evaluateDiaryTaskEligibility(task('kar_med_19'), cleanup).machineEligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task('kar_med_19'), {
+      ...cleanup, minigames: ['Tai Bwo Wannai Cleanup'],
+    }).machineEligible).toBe(true);
   });
 
   it('does not require 79 Agility on the Kharazi machete route', () => {
@@ -936,7 +970,12 @@ describe('audited diary route eligibility', () => {
     expect(eligible.blockers).not.toContainEqual({
       kind: 'quest', label: 'Barbarian Training',
     });
-    expect(eligible.evidence.join(' ')).toContain('Access to Barbarian Fishing');
+    // Only the barehanded part of Barbarian Training is needed, so it is a confirmation.
+    expect(eligible.manualChecks).toContain('Learned barehanded fishing in Barbarian Training');
+    expect(eligible.evidence.join(' ')).toContain('Bare-handed fishing');
+    expect(evaluateDiaryTaskEligibility(bareHandedTask, unlocked({
+      ...common, quests: [...common.quests, 'Barbarian Training'], levels: { Cooking: 80, Fishing: 96, Strength: 76 },
+    })).manualChecks).not.toContain('Learned barehanded fishing in Barbarian Training');
   });
 
   it('asks to confirm Morytania bare-handed fishing access while retaining its gates', () => {
@@ -951,7 +990,7 @@ describe('audited diary route eligibility', () => {
     expect(eligible.blockers).not.toContainEqual({
       kind: 'quest', label: 'Barbarian Training',
     });
-    expect(eligible.manualChecks).toContain('Access to Barbarian Fishing');
+    expect(eligible.manualChecks).toContain('Learned barehanded fishing in Barbarian Training');
 
     const missingQuest = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked({
       ...common, quests: [],
@@ -983,11 +1022,17 @@ describe('audited diary route eligibility', () => {
   });
 
   it('allows a pre-cooked oomlie wrap without the cooking route, once confirmed', () => {
-    expect(evaluateDiaryTaskEligibility(task('kar_hard_3'), unlocked())).toMatchObject({
+    // Oomlie birds and palm leaves are only in the Kharazi Jungle, which needs Legends' Quest started.
+    expect(evaluateDiaryTaskEligibility(task('kar_hard_3'), unlocked({ regions: ['Kharazi Jungle'] }))).toMatchObject({
       machineEligible: true,
       eligible: false,
-      manualChecks: ['Cooked oomlie wrap'],
+      manualChecks: [
+        "Reached the required progress in Legends' Quest for: Eat an oomlie wrap.",
+        'Cooked oomlie wrap',
+      ],
     });
+    expect(evaluateDiaryTaskEligibility(task('kar_hard_3'), unlocked()).blockers)
+      .toContainEqual({ kind: 'region', label: 'Kharazi Jungle' });
   });
 
   it('allows an existing or mounted Digsite pendant without crafting Magic, once confirmed', () => {
@@ -1000,11 +1045,11 @@ describe('audited diary route eligibility', () => {
 
   it('accepts each Warriors Guild skill route', () => {
     expect(evaluateDiaryTaskEligibility(task('fal_hard_10'), unlocked({
-      regions: ["Warriors' Guild"],
+      regions: ["Warriors' Guild"], guilds: ["Warriors' Guild"],
       skills: { Attack: 7, Strength: 7 }, levels: { Attack: 65, Strength: 65 },
     })).eligible).toBe(true);
     expect(evaluateDiaryTaskEligibility(task('fal_hard_10'), unlocked({
-      regions: ["Warriors' Guild"],
+      regions: ["Warriors' Guild"], guilds: ["Warriors' Guild"],
       skills: { Attack: 10, Strength: 1 }, levels: { Attack: 99, Strength: 1 },
     })).eligible).toBe(true);
   });
@@ -1070,7 +1115,8 @@ describe('skills gated by an unlocking quest', () => {
   });
 
   it('blocks a Herblore diary task until Druidic Ritual is complete', () => {
-    const desert = unlocked({ regions: ['Al Kharid'], skills: { Herblore: 4 }, levels: { Herblore: 36 } });
+    // Al Kharid is north of the Shantay Pass and not desert; the Pass itself is.
+    const desert = unlocked({ regions: ['Shantay Pass'], skills: { Herblore: 4 }, levels: { Herblore: 36 } });
     expect(evaluateDiaryTaskEligibility(task('des_med_8'), desert, 'vanilla')).toMatchObject({
       eligible: false, blockers: [{ kind: 'quest', label: 'Druidic Ritual' }],
     });

@@ -45,6 +45,40 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-10-02-diary-unlock-gates',
+    title: 'Diary Tasks Ask for Guilds, Patches and House Rooms',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'Diary tasks done inside a guild now need that guild unlocked before the Journal calls them doable: entering the Magic Guild needs the Wizards’ Guild, a Rogues’ Den wall safe the Rogues’ Den, and the redwoods the Woodcutting Guild, among 14 tasks. Like the patches, rooms and Slayer reward below, this only changes the Journal: you can still log the task by hand.',
+        'Diary tasks that use a farming patch need that patch unlocked, as RuneLite already locks it: the Catherby limpwurt needs the Flower patch, the palm trees the Fruit Tree patch, and the scarecrows a Flower patch, plus an Allotment patch if you grow the watermelon, among 21 tasks.',
+        'Tasks in your house need the room or mount they use: the Menagerie for the pet rock, a Portal Chamber or Portal Nexus for the Kharyrll portal, and the mounted Xeric’s talisman or Digsite pendant if you use your own. Entering your house from Yanille or Hosidius needs Real Estate Agents to move it there.',
+        'Killing a dust devil in a Slayer helmet needs the Malevolent Masquerade Slayer reward, which the helmet takes to make.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-02-diary-accuracy',
+    title: 'Diary Tasks Checked Against the Game',
+    date: '2026-10-02',
+    sections: {
+      fixed: [
+        'Morytania Diary tasks now need Priest in Peril wherever the map keeps their area locked until it, so “Kill a Ghoul” and the Salve bridge shortcut no longer show as doable at the start of a run.',
+        'Some Diary tasks named the wrong area. The Ancient Magicks altar is beside the Bandit Camp and Pollnivneach, the Shadow Dungeon is entered at Baxtorian Falls, the Thermonuclear Smoke Devil and its roll are in the Feldip Hills, crafting nature runes needs Shilo Village or Tai Bwo Wannai, oomlie wraps need the Kharazi Jungle, and the Isafdar painting needs Falador.',
+        'Where a task’s spot is in a chunk the map gives to the next area, the task now asks for that area: the Catherby farming patches (Camelot), the granite quarry (Agility Pyramid), the boat from Musa Point (Port Sarim), the anvil by West Ardougne (East Ardougne) and the altar at Emir’s Arena (Mage Training Arena).',
+        'Trips now need both ends: the magic carpets to Uzer and Pollnivneach, the boats to Entrana, Ardougne and Land’s End, the Dorgesh-Kaan train, the Ardougne and Edgeville levers (they land in the Mage Arena’s chunk) and the Trollheim shortcut (Trollheim is in Burthorpe’s chunk). Visiting the Lighthouse from Waterbirth Island needs Waterbirth Island, and the Water Obelisk tasks need Taverley, whose dungeon is the only way there.',
+        'Making a combat potion, casting Humidify and casting Ice Barrage “in the desert” no longer count Al Kharid, the Duel Arena or the Mage Training Arena, which are outside it.',
+        'Barbarian skill tasks, such as the leaping sturgeon, the pyre ship and the bare-handed sharks, ask you to confirm the part of Barbarian Training they use, and the confirmation clears once the miniquest is done. Only the spear and hasta tasks need Tai Bwo Wannai Trio.',
+        'Tasks that use a shop or service need its merchant unlock, as RuneLite already did: Sbott’s tanning (Tanners), the Sawmill (Sawmill Operators), the estate agents (Real Estate Agents), Gertrude’s kitten (Pet Shops), Aleck’s Hunter Emporium (Hunter Shops), the Nardah Herbalist (Decanters) and the Canifis taxidermist (Taxidermists).',
+        'Tasks that use a minigame’s or a boss’s loot need it unlocked: intelligence for Captain Ginea (Intelligence Gathering), the fire cape (TzHaar Fight Cave), the KQ head (Kalphite Queen), and the trading sticks and gem rocks of Tai Bwo Wannai Cleanup, on the routes that use them.',
+        'Zanaris tasks need a dramen or lunar staff in your Weapon slot. The jutting wall and the 56 cosmic runes can use the Abyss instead.',
+        'Tasks that need only part of a quest no longer ask for all of it: the Troll Stronghold, God Wars Dungeon and Trollheim shortcut tasks need Death Plateau and Troll Stronghold under way, smelting in the Forsaken Tower needs that quest under way, and the Swampy boat needs Nature Spirit started.',
+        'Killing a wyrm in the Karuulm Slayer Dungeon needs boots of stone, brimstone or granite until you have the Kourend Elite reward. The redirected house tablet task follows the ironman rule: it needs Real Estate Agents to move your house to Pollnivneach, not Teleport Tablets, as ironmen go in through the Pollnivneach portal.',
+        'The spottier cape needs 69 Hunter, since an ironman catches the dashing kebbits. The scarecrow tasks’ gryphon route for a watermelon now checks 51 Slayer, 45 Sailing, Troubled Tortugans and the Great Conch, instead of a tick-box.',
+      ],
+    },
+  },
+  {
     id: '2026-10-02-slayer-rewards',
     title: 'Slayer Rewards Add Their Tasks',
     date: '2026-10-02',

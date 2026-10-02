@@ -20,11 +20,15 @@ import { buildGoalRoute } from './goalRoute';
  */
 const REVIEWED: Record<string, string> = {
   des_hard_4: 'Kalphite Queen',
+  // 2 October 2026: a boss's loot counts too. The KQ head drops only from the Kalphite Queen.
+  des_elite_4: 'Kalphite Queen',
   fal_hard_3: 'Giant Mole',
   frem_elite_1: 'Dagannoth Kings',
   frem_elite_5: "Kree'arra, General Graardor, Commander Zilyana, K'ril Tsutsaroth",
   kar_easy_9: 'TzHaar Fight Cave',
   kar_hard_2: 'TzHaar Fight Cave',
+  // The fire cape comes only from the Fight Cave, and the Inferno takes one to enter.
+  kar_elite_4: 'TzHaar Fight Cave',
   kou_elite_3: 'Skotizo',
   kou_elite_7: 'Chambers of Xeric',
   kou_med_11: 'Wintertodt',
