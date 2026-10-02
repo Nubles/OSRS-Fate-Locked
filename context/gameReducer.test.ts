@@ -1004,6 +1004,10 @@ describe('LEVEL_UP — Chunked milestone insurance', () => {
       run = levelUp(run);
       expect(run.keys).toBe(initialState.keys + 1);
       expect(run.history.at(-1)?.message).toContain(`Total Level ${firstPayout}`);
+      // The Key comes on total level alone; a start-chunk player can still roll other things.
+      expect(run.history.at(-1)?.details).toBe(
+        `Start-chunk milestone: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels until you unlock another chunk.`,
+      );
     });
 
     it('leave runs that chose their mode before this rule on their original schedule', () => {

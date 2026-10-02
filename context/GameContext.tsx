@@ -734,8 +734,8 @@ const startMilestoneInsurance = (
         id: generateId(),
         timestamp: now,
         type: 'XTREME_MILESTONE',
-        message: `Xtreme milestone: Total Level ${eligible * XTREME_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
-        details: `Stuck at the start area with nothing else to roll — Fate steps in every ${XTREME_MILESTONE_INTERVAL} total levels.`,
+        message: `Xtreme milestone: Total Level ${eligible * XTREME_MILESTONE_INTERVAL} gives ${gained === 1 ? 'a guaranteed Key' : `${gained} guaranteed Keys`}.`,
+        details: `Start-area milestone: a guaranteed Key every ${XTREME_MILESTONE_INTERVAL} total levels until you unlock an area.`,
         meta: { totalLevel, gained }
       });
     }
@@ -752,8 +752,8 @@ const startMilestoneInsurance = (
         id: generateId(),
         timestamp: now,
         type: 'XTREME_MILESTONE',
-        message: `Chunked milestone: Total Level ${eligible * CHUNKED_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
-        details: `Stuck in the start chunk with nothing else to roll — Fate steps in every ${CHUNKED_MILESTONE_INTERVAL} total levels.`,
+        message: `Chunked milestone: Total Level ${eligible * CHUNKED_MILESTONE_INTERVAL} gives ${gained === 1 ? 'a guaranteed Key' : `${gained} guaranteed Keys`}.`,
+        details: `Start-chunk milestone: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels until you unlock another chunk.`,
         meta: { totalLevel, gained }
       });
     }
