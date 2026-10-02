@@ -179218,6 +179218,17 @@
     },
     {
       "category": "overrides",
+      "sourceKey": "requirements/Objects/Hardwood tree patch/9770",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "9770"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Special_patches/Patches?oldid=15319393"
+    },
+    {
+      "category": "overrides",
       "sourceKey": "requirements/Objects/Herb patch/11321",
       "terminal": false,
       "disposition": "normalized",

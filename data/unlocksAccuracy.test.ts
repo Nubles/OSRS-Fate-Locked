@@ -25,6 +25,7 @@ import { evaluateActivityReadiness } from '../utils/activityReadiness';
 import { TRAVEL_NETWORKS } from './travelLinks';
 import { TRAVEL_METHODS } from './travelMethods';
 import interiorAccess from './sources/interior-access.json';
+import { getActivityRegion } from './activityRegions';
 import {
   FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST, MINIGAMES_LIST, MISTHALIN_AREAS, MOBILITY_LIST,
   REGIONS_LIST, SKILLS_LIST, BOSSES_LIST,
@@ -492,6 +493,38 @@ describe("U4: Mine Carts asks for The Giant Dwarf only on Keldagrim's carts", ()
   it("still asks for the quest on the way into Keldagrim, where its carts run", () => {
     expect(TRAVEL_NETWORKS.find(network => network.label === 'Keldagrim mine carts')?.opensWith).toEqual([{ mobility: 'Mine Carts' }]);
     expect(interiorAccess.locations.Keldagrim.requirements).toEqual(['Started The Giant Dwarf']);
+  });
+});
+
+describe('U6: each hardwood patch asks for its own way in', () => {
+  // Special patches/Patches, oldid 15319393: three patches on Fossil Island, one at the Locus Oasis
+  // (The Ribbiting Tale of a Lily Pad Labour Dispute) and one on Anglers' Retreat (51 Sailing).
+  const PATCHES: [string, number, number, Partial<UnlockState>, string][] = [
+    ['Fossil Island, west', 57, 59, { quests: questsWithout('Bone Voyage') }, 'Bone Voyage'],
+    ['Fossil Island, east', 58, 59, { quests: questsWithout('Bone Voyage') }, 'Bone Voyage'],
+    ['the Locus Oasis', 26, 46, { quests: questsWithout('The Ribbiting Tale') }, 'The Ribbiting Tale'],
+    ["Anglers' Retreat", 38, 42, { levels: { ...levels(99), Sailing: 50 } }, 'Sailing level 51'],
+  ];
+
+  it.each(PATCHES)('the patch at %s needs %s', (_place, cx, cy, without, reason) => {
+    const access = (unlocks: UnlockState) => evaluateEntityAccess('Hardwood tree patch', 'object', { cx, cy }, unlocks, 'vanilla', service);
+    expect(access(everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(access(everything(99, without))).toEqual({ status: 'NOT_READY', reasons: [reason] });
+  });
+
+  it('has the five patches the wiki lists, and nowhere else', () => {
+    const raw = content as unknown as { chunks: Record<string, { o?: [string, number][] }> };
+    const patches = Object.entries(raw.chunks).flatMap(([id, entry]) => (entry.o ?? [])
+      .filter(([name]) => name === 'Hardwood tree patch')
+      .map(([, count]) => [`${Math.floor(Number(id) / 256)},${Number(id) % 256}`, count]));
+    expect(Object.fromEntries(patches)).toEqual({ '57,59': 2, '58,59': 1, '26,46': 1, '38,42': 1 });
+  });
+
+  it('asks no quest of the unlock itself, and tags it where most patches are', () => {
+    const readiness = evaluateActivityReadiness(true, getActivityReq('Hardwood Tree'), everything(99, { quests: [] }), 'vanilla');
+    expect(readiness.status).toBe('READY');
+    expect(getActivityReq('Hardwood Tree')?.note).toMatch(/Bone Voyage.*The Ribbiting Tale of a Lily Pad Labour Dispute.*51 Sailing/);
+    expect(getActivityRegion('Hardwood Tree')).toBe('Islands & Others');
   });
 });
 

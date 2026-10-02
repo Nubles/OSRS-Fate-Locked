@@ -33,6 +33,7 @@
     { "category": "Objects", "name": "Celastrus patch", "chunkId": "4922", "requirements": ["Access the Farming Guild", "Farming level 85"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002", "note": "The advanced tier, the north wing." },
     { "category": "Objects", "name": "Redwood tree patch", "chunkId": "4922", "requirements": ["Access the Farming Guild", "Farming level 85"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002", "note": "The advanced tier, the north wing." },
     { "category": "Objects", "name": "Herb patch", "chunkId": "11321", "requirements": ["My Arm's Big Adventure Complete the quest"], "source": "https://oldschool.runescape.wiki/w/Herb_patch?oldid=15359652", "note": "The patch on the Troll Stronghold's roof." },
-    { "category": "Objects", "name": "Herb patch", "chunkId": "11325", "requirements": ["Making Friends with My Arm Complete the quest"], "source": "https://oldschool.runescape.wiki/w/Herb_patch?oldid=15359652", "note": "The patch in Weiss." }
+    { "category": "Objects", "name": "Herb patch", "chunkId": "11325", "requirements": ["Making Friends with My Arm Complete the quest"], "source": "https://oldschool.runescape.wiki/w/Herb_patch?oldid=15359652", "note": "The patch in Weiss." },
+    { "category": "Objects", "name": "Hardwood tree patch", "chunkId": "9770", "requirements": ["Sailing level 51"], "source": "https://oldschool.runescape.wiki/w/Special_patches/Patches?oldid=15319393", "note": "The patch on Anglers' Retreat, where mooring needs 51 Sailing." }
   ]
 }

@@ -249,7 +249,9 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Brimhaven Agility Arena': { note: 'Agility (Brimhaven).' },
 
   // ---- Farming patches (access/level-gated; basic patches need nothing) ------
-  'Hardwood Tree': { quests: ['Bone Voyage'], note: 'Fossil Island.' },
+  // Each place asks for its own way in, and each patch carries it (owner call U6;
+  // Special patches/Patches, oldid 15319393): no quest is asked of the unlock itself.
+  'Hardwood Tree': { note: "Fossil Island's three patches need Bone Voyage, the Locus Oasis patch The Ribbiting Tale of a Lily Pad Labour Dispute, and the Anglers' Retreat patch 51 Sailing." },
   'Seaweed': { quests: ['Bone Voyage'], note: 'Underwater, Fossil Island.' },
   'Spirit Tree': { skills: { Farming: 83 }, note: 'Grow a spirit tree.' },
   'Celastrus': { skills: { Farming: 85 }, note: 'Farming Guild (high tier).' },

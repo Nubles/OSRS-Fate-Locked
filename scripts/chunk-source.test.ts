@@ -225,8 +225,8 @@ describe('pinned Chunk Picker source', () => {
       banks: 127,
       tags: 29,
       // Up from 27,654: the transform records each "F2P Only" tag it drops and each requirement it
-      // rewrites or overrides (accuracy audit S11, G4, G5).
-      auditEvents: 28082,
+      // rewrites or overrides (accuracy audit S11, G4, G5, U6).
+      auditEvents: 28083,
       unresolvedTaskUnlocks: 0,
     });
     expect(taskUnlockTotals.source).toBe(1959);
