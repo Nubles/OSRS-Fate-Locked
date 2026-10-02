@@ -360,7 +360,7 @@ export const SPEND_TABLES: SpendTable[] = [
   { type: TableType.STORAGE,         label: 'Storage',    count: STORAGE_LIST.length,    blurb: 'Looting bag, rune pouch, seed box and other storage. Banks are their own table.' },
   { type: TableType.POH,             label: 'Housing',    count: ROLLABLE_POH_ITEMS.length, blurb: 'Player-owned house rooms and facilities.' },
   { type: TableType.MERCHANTS,       label: 'Merchants',  count: MERCHANTS_LIST.length,  blurb: 'Shops and traders you’re permitted to use.' },
-  { type: TableType.MINIGAMES,       label: 'Minigames',  count: MINIGAMES_LIST.length,  blurb: 'Activities, from Pest Control to the Inferno.' },
+  { type: TableType.MINIGAMES,       label: 'Minigames',  count: MINIGAMES_LIST.length,  blurb: 'Activities, from Pest Control to Guardians of the Rift.' },
   { type: TableType.BOSSES,          label: 'Bosses',     count: BOSSES_LIST.length,     blurb: 'Permission to fight each major boss encounter.' },
   { type: TableType.GUILDS,          label: 'Guilds',     count: GUILDS_LIST.length,     blurb: 'Skill guilds and their perks.' },
   { type: TableType.FARMING_LAYERS,  label: 'Farming',    count: FARMING_PATCH_LIST.length, blurb: 'Farming patches across the world.' },

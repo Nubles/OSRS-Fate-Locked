@@ -11,7 +11,7 @@ import {
 } from './economy';
 import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
-import { BOSSES_LIST } from '../data/items';
+import { BOSSES_LIST, MINIGAMES_LIST } from '../data/items';
 import { describeVanillaRandomAccessPolicy, formatVanillaBossSchedule } from '../components/ReferenceModal';
 import { skillLevelKeyChance } from '../utils/keyRoll';
 import { createFreshState, initialState, prepareKeyRollAction } from '../context/GameContext';
@@ -137,6 +137,18 @@ describe('economy ↔ engine consistency', () => {
   it('lists every spend table with a non-empty pool', () => {
     expect(SPEND_TABLES.length).toBeGreaterThanOrEqual(12);
     for (const t of SPEND_TABLES) expect(t.count, t.label).toBeGreaterThan(0);
+  });
+
+  it('names only Minigames entries in the Minigames blurb', () => {
+    const minigames = SPEND_TABLES.find(t => t.type === TableType.MINIGAMES)!;
+    for (const name of ['Pest Control', 'Guardians of the Rift']) {
+      expect(minigames.blurb).toContain(name);
+      expect(MINIGAMES_LIST).toContain(name);
+    }
+    // The Inferno is on the Bosses table.
+    expect(minigames.blurb).not.toContain('Inferno');
+    expect(BOSSES_LIST).toContain('Inferno');
+    expect(MINIGAMES_LIST).not.toContain('Inferno');
   });
 
   it('presents Arcana as Combat Powers without changing its type', () => {
