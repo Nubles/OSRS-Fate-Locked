@@ -552,16 +552,17 @@ describe('App changelog lifecycle', () => {
     );
     render(<App />);
 
+    // The pairing dialog loads lazily, which takes a while under a full test run.
     const dialog = await screen.findByRole('dialog', {
       name: 'Connect RuneLite tracker',
-    });
+    }, { timeout: 10_000 });
     expect(window.location.hash).toBe('');
     expect(within(dialog).getByText('Lifecycle test')).toBeTruthy();
     expect(within(dialog).getByText('No bound account')).toBeTruthy();
     expect(screen.queryByRole('dialog', {
       name: "What's New",
     })).toBeNull();
-  });
+  }, 25_000);
 
   it('pairs RuneLite with the profile the player approved', async () => {
     const code = '0123456789abcdef0123456789abcdef';
@@ -575,7 +576,7 @@ describe('App changelog lifecycle', () => {
       render(<App />);
       const dialog = await screen.findByRole('dialog', {
         name: 'Connect RuneLite tracker',
-      });
+      }, { timeout: 10_000 });
       await user.click(within(dialog).getByRole('button', {
         name: 'Connect tracker',
       }));
@@ -587,7 +588,7 @@ describe('App changelog lifecycle', () => {
     } finally {
       relaySync.disable();
     }
-  });
+  }, 25_000);
 
   it('lets the player close the pairing dialog after the profile fails to send', async () => {
     const code = '0123456789abcdef0123456789abcdef';
@@ -601,7 +602,7 @@ describe('App changelog lifecycle', () => {
       render(<App />);
       const dialog = await screen.findByRole('dialog', {
         name: 'Connect RuneLite tracker',
-      });
+      }, { timeout: 10_000 });
       await user.click(within(dialog).getByRole('button', {
         name: 'Connect tracker',
       }));
