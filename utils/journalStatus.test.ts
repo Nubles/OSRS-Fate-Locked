@@ -191,7 +191,7 @@ describe('manual journal readiness', () => {
     const result = evaluateQuestEligibility(
       QUEST_DATA['The Slug Menace'],
       unlocked({
-        regions: ['Observatory', 'Witchaven', 'Falador'],
+        regions: ['East Ardougne', 'Witchaven', 'Falador'],
         quests: ['Sea Slug', 'Wanted!'],
         skills: { Crafting: 30, Runecraft: 30, Slayer: 30, Thieving: 30 },
         levels: { Crafting: 30, Runecraft: 30, Slayer: 30, Thieving: 30 },
@@ -374,8 +374,8 @@ describe('reported quest access', () => {
 
   it('requires the exact South Falador Farm chunk in Chunked mode', () => {
     const q = QUEST_DATA['A Porcine of Interest'];
-    const near = unlocked({ chunks: ['46,51', '48,50'] });
-    const exact = unlocked({ chunks: ['47,51', '48,50'] });
+    const near = unlocked({ chunks: ['46,51', '48,50', '49,52', '48,51'] });
+    const exact = unlocked({ chunks: ['47,51', '48,50', '49,52', '48,51'] });
     expect(evaluateQuestEligibility(q, near, 'chunked').status).toBe('LOCKED_REGION');
     expect(evaluateQuestEligibility(q, exact, 'chunked').status).toBe('AVAILABLE');
   });

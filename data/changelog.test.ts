@@ -82,6 +82,23 @@ describe('authored changelog releases', () => {
     ]);
   });
 
+  it('announces that quests ask for every place their steps happen in, and the shops and rings they need', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-quest-areas');
+    expect(release?.title).toBe('Quests Ask for Every Place They Need');
+    expect(release?.date).toBe('2026-10-02');
+    expect(Object.keys(release?.sections ?? {})).toEqual(['fixed']);
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Temple of Ikov needs East Ardougne, where Lucien starts it.*Fishing Contest needs Taverley and Seers’ Village.*complete any quest by hand/),
+      expect.stringMatching(/Enakhra’s Lament no longer asks for the whole Kharidian Desert, only the Agility Pyramid.*Yanille.*instead of the Feldip Hills.*Draynor Village/),
+      expect.stringMatching(/In Chunked runs.*Plague City for Edmond’s house.*Scrambled! for Tal Teklan.*Wizards’ Tower/),
+      expect.stringMatching(/chunk no area covers.*Cold War’s icebergs.*Jaldraocht Pyramid.*Jorral’s Outpost.*In Vanilla runs.*area you reach them from/),
+      expect.stringMatching(/Prince Ali Rescue needs Clothes Shops for the pink skirt and Bars & Inns.*Wine Traders for the vinegar.*Pirate’s Treasure.*Alfred Grimhand’s Barcrawl needs Bars & Inns/),
+      expect.stringMatching(/Hopespear’s Will and Fairytale II - Cure a Queen need Fairy Rings/),
+      expect.stringMatching(/What Lies Below needs one way to the Chaos Altar: Mining 42.*Chaos Temple ruins.*Enter the Abyss.*Lunar Diplomacy.*One Small Favour/),
+      expect.stringMatching(/Fremennik Exiles lists Mining 60.*priest gown.*Guidor in Varrock.*Grand Exchange/),
+    ]);
+  });
+
   it('announces the tasks Slayer rewards add, and boss tasks', () => {
     const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-slayer-rewards');
     expect(release?.title).toBe('Slayer Rewards Add Their Tasks');

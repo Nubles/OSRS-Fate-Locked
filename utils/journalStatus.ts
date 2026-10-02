@@ -24,7 +24,7 @@ import { canonicalAreaName } from '../data/areaMapPolicy';
 import type { AreaRoutes } from './areaRoutes';
 import { farmingPatchLabel } from './farmingPatches';
 
-export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_QUEST';
+export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_MOBILITY' | 'LOCKED_MERCHANT' | 'LOCKED_QUEST';
 export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_MOBILITY' | 'LOCKED_ARCANA' | 'LOCKED_MERCHANT' | 'LOCKED_MINIGAME' | 'LOCKED_BOSS' | 'LOCKED_GUILD' | 'LOCKED_FARMING' | 'LOCKED_HOUSING' | 'LOCKED_SLAYER' | 'LOCKED_QUEST';
 
 export type DiaryStatusUnlocks =
@@ -205,12 +205,16 @@ export const questRequirementOptionMet = (
 ): boolean =>
   (option.regions ?? []).every(region =>
     isAreaReachable(region, unlocks, gameModeId)) &&
+  (!option.anyOfRegions?.length || option.anyOfRegions.some(region =>
+    isAreaReachable(region, unlocks, gameModeId))) &&
   (option.guilds ?? []).every(guild =>
     unlocks.guilds.includes(guild)) &&
   (option.locations ?? []).every(location =>
     locationRequirementMet(location, unlocks, gameModeId)) &&
   Object.entries(option.skills ?? {}).every(([skill, level]) =>
-    meetsSkillRequirement(unlocks, skill, level));
+    meetsSkillRequirement(unlocks, skill, level)) &&
+  (option.quests ?? []).every(quest => unlocks.quests.includes(quest)) &&
+  (option.merchants ?? []).every(merchant => unlocks.merchants?.includes(merchant));
 
 /** An owned area that no route reaches yet (utils/areaRoutes.ts). */
 const strandedArea = (area: string, areaRoutes?: AreaRoutes | null): boolean =>
@@ -237,6 +241,9 @@ const strandedOption = (
   areaRoutes?: AreaRoutes | null,
 ): boolean =>
   (option.regions ?? []).some(region => strandedArea(region, areaRoutes)) ||
+  (!!option.anyOfRegions?.length && option.anyOfRegions
+    .filter(region => isAreaReachable(region, unlocks, gameModeId))
+    .every(region => strandedArea(region, areaRoutes))) ||
   (option.locations ?? []).some(location => strandedLocation(location, unlocks, gameModeId, areaRoutes));
 
 export const questAlternativesMet = (
@@ -252,9 +259,12 @@ export const questRequirementOptionLabel = (
   option: QuestRequirementOption,
 ): string => [
   ...(option.regions ?? []),
+  ...(option.anyOfRegions?.length ? ['any of ' + option.anyOfRegions.join(', ')] : []),
   ...(option.guilds ?? []),
   ...(option.locations ?? []).map(location => location.label),
   ...Object.entries(option.skills ?? {}).map(([skill, level]) => skill + ' ' + level),
+  ...(option.quests ?? []),
+  ...(option.merchants ?? []),
 ].join(' + ');
 
 export const currentQuestPoints = (unlocks: { readonly quests: readonly string[] }): number =>
@@ -362,6 +372,15 @@ export function evaluateQuestEligibility(
     if (Number.isFinite(tier) && tier >= requirement.tier) evidence.push(label);
     else blockers.push({ kind: 'equipment', slot: requirement.slot, tier: requirement.tier, label });
   }
+  // A shop-only item or a travel network, read with the Diary evaluator.
+  if (quest.merchants?.length || quest.mobility?.length) {
+    const unlocked = evaluateDiaryRequirement(
+      { merchants: quest.merchants, mobility: quest.mobility }, unlocks, gameModeId, NO_AREAS, areaRoutes,
+    );
+    blockers.push(...unlocked.blockers);
+    evidence.push(...unlocked.evidence);
+    manualChecks.push(...unlocked.manualChecks);
+  }
   // Includes Druidic Ritual for a Herblore level, and Pandemonium for Sailing.
   for (const prereq of withSkillGateQuests(quest.prereqs, quest.skills, quest.id)) {
     if (unlocks.quests.includes(prereq)) evidence.push(prereq);
@@ -371,6 +390,8 @@ export function evaluateQuestEligibility(
   const status: QuestStatus = blockers.some(x => x.kind === 'region' || x.kind === 'alternative') ? 'LOCKED_REGION'
     : blockers.some(x => x.kind === 'skill' || x.kind === 'combat') ? 'LOCKED_SKILL'
     : blockers.some(x => x.kind === 'equipment') ? 'LOCKED_EQUIPMENT'
+    : blockers.some(x => x.kind === 'mobility') ? 'LOCKED_MOBILITY'
+    : blockers.some(x => x.kind === 'merchant') ? 'LOCKED_MERCHANT'
     : blockers.some(x => x.kind === 'quest') ? 'LOCKED_QUEST'
     : 'AVAILABLE';
   const manual = readinessFields(blockers, manualChecks);

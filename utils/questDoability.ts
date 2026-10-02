@@ -99,6 +99,7 @@ export const hasCanonicalQuestLocationEvidence = (quest: QuestData): boolean =>
   || (quest.locations?.length ?? 0) > 0
   || (quest.oneOf?.some(option =>
     (option.regions?.length ?? 0) > 0
+    || (option.anyOfRegions?.length ?? 0) > 0
     || (option.guilds?.length ?? 0) > 0
     || (option.locations?.length ?? 0) > 0
   ) ?? false);
