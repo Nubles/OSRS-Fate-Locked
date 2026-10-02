@@ -1,7 +1,7 @@
 {
  "schema": 2,
  "exportedAt": "2026-09-25T12:00:00.000Z",
- "chunkContentDataVersion": 14,
+ "chunkContentDataVersion": 15,
  "equipmentCatalogue": "equipment-catalogue.294c0a5ab539ea503cb22f0fafe1cb4521049724.json",
  "scenarios": [
   {
