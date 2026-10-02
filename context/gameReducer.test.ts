@@ -16,6 +16,7 @@ import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import { MAX_COUNTER, validateAndMigrateSave } from '../utils/saveSchema';
+import { replayInvariants } from '../utils/integrity';
 
 /**
  * Tests for the core game reducer — every roll, unlock, ritual, level-up and
@@ -148,6 +149,7 @@ describe('ROLL_RESULT', () => {
     ['pity', { ...base(), fatePoints: 49 }, roll({ pity: true }), { rewardKind: 'pity', standardKeysAwarded: 1 }],
     ['omni', base(), roll({ success: true, omni: true }), { rewardKind: 'omni', standardKeysAwarded: 1 }],
     ['greed', { ...base(), activeBuff: 'GREED' as const }, roll({ success: true }), { rewardKind: 'greed', standardKeysAwarded: 2 }],
+    ['greed omni', { ...base(), activeBuff: 'GREED' as const }, roll({ success: true, omni: true }), { rewardKind: 'omni', standardKeysAwarded: 2 }],
   ])('records universal %s analytics metadata', (_label, state, action, expected) => {
     const result = gameReducer(state, action);
 
@@ -545,6 +547,17 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
     expect(next.bossStandardKeysAwarded?.Zulrah).toBe(1);
   });
 
+  it('clamps a Greed Omni-Key roll to the one remaining boss allowance', () => {
+    const start = { ...vanillaState(), activeBuff: 'GREED' as const, bossStandardKeysAwarded: { Zulrah: 1 } };
+    const next = gameReducer(start, roll({ success: true, omni: true, context: bossContext }));
+
+    expect(next.keys).toBe(initialState.keys + 1);
+    expect(next.specialKeys).toBe(initialState.specialKeys + 1);
+    expect(next.bossStandardKeysAwarded?.Zulrah).toBe(2);
+    expect(next.history.at(-1)?.message).toBe('LEGENDARY DROP! You found an Omni-Key! (Greed awarded 1 Standard Key)');
+    expect(replayInvariants(next.history, start.keys).final.keys).toBe(next.keys);
+  });
+
   it('tracks the actual Standard Key award for a Greed clue result', () => {
     const next = gameReducer(
       { ...vanillaState(), activeBuff: 'GREED' },
@@ -769,6 +782,41 @@ describe('rituals', () => {
     const s = gameReducer(armed, roll({ success: true }));
     expect(s.keys).toBe(initialState.keys + 2);
     expect(s.activeBuff).toBe('NONE');
+  });
+
+  it('an Omni-Key roll under GREED pays double too, as well as the Omni-Key', () => {
+    const armed = gameReducer({ ...base(), fatePoints: 15 }, { type: 'RITUAL_GREED' });
+    const s = gameReducer(armed, roll({ success: true, omni: true }));
+    expect(s.keys).toBe(initialState.keys + 2);
+    expect(s.specialKeys).toBe(initialState.specialKeys + 1);
+    expect(s.activeBuff).toBe('NONE');
+    expect(s.history.at(-1)).toMatchObject({
+      type: 'ROLL_OMNI',
+      message: 'LEGENDARY DROP! You found an Omni-Key and 2 Keys! (Doubled)',
+      meta: { rewardKind: 'omni', standardKeysAwarded: 2 },
+    });
+  });
+
+  it('a fail under GREED that brings the Pity Key pays that Key and refunds nothing', () => {
+    const plain = gameReducer({ ...base(), fatePoints: 49 }, roll({ pity: true }));
+    const greedy = gameReducer({ ...base(), fatePoints: 49, activeBuff: 'GREED' as const }, roll({ pity: true }));
+    expect(greedy.keys).toBe(plain.keys);
+    expect(greedy.fatePoints).toBe(plain.fatePoints);
+    expect(greedy.history.at(-1)?.message).toBe(plain.history.at(-1)?.message);
+    expect(greedy.activeBuff).toBe('NONE');
+  });
+
+  it.each([
+    ['a Greed success', roll({ success: true })],
+    ['a Greed Omni-Key roll', roll({ success: true, omni: true })],
+    ['a Greed fail', roll({ success: false })],
+  ])('the integrity replay counts the Keys from %s', (_label, action) => {
+    const armed = { ...base(), activeBuff: 'GREED' as const };
+    const s = gameReducer(armed, action);
+    const { final, violations } = replayInvariants(s.history, armed.keys);
+    expect(violations).toEqual([]);
+    expect(final.keys).toBe(s.keys);
+    expect(final.specialKeys).toBe(s.specialKeys - armed.specialKeys);
   });
 
   it('Void Gambit: a win pays the pre-rolled keys and zeroes fate', () => {

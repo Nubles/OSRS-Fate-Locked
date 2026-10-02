@@ -956,8 +956,10 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         : `${thresholdText} effective (${formatKeyPercent(baseThreshold)} base)`;
       const luckApplied = state.activeBuff === 'LUCK';
       const isGreed = state.activeBuff === 'GREED';
+      // Greed doubles any success's Standard Key, an Omni-Key roll's included.
+      // A fail that brings the Pity Key pays that Key and refunds nothing.
       const requestedStandardKeys = success || pity
-        ? success && !omni && isGreed ? 2 : 1
+        ? success && isGreed ? 2 : 1
         : 0;
       const standardKeysAwarded = bossStage
         ? Math.min(requestedStandardKeys, bossStage.remaining)
@@ -1031,6 +1033,12 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       }
 
       if (success) {
+        // "(Doubled)" is what the integrity replay counts as 2 Standard Keys.
+        const greedMessage = isGreed
+          ? standardKeysAwarded === 2
+            ? ' (Doubled)'
+            : ` (Greed awarded ${standardKeysAwarded} Standard Key${standardKeysAwarded === 1 ? '' : 's'})`
+          : '';
         if (omni) {
           newState.specialKeys += 1;
           newState.keys += standardKeysAwarded;
@@ -1039,7 +1047,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
              id: generateId(),
              timestamp: now,
              type: 'ROLL_OMNI',
-             message: 'LEGENDARY DROP! You found an Omni-Key!',
+             message: isGreed && standardKeysAwarded === 2
+               ? 'LEGENDARY DROP! You found an Omni-Key and 2 Keys! (Doubled)'
+               : `LEGENDARY DROP! You found an Omni-Key!${greedMessage}`,
              details: `Critical Success! Rolled ${rollText} vs ${comparisonChanceText}.`,
              meta: entryMeta(0),
              result: 'SUCCESS',
@@ -1051,11 +1061,6 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           newState.lastEvent = { id: generateId(), type: 'ROLL_OMNI', x, y, meta: eventMeta };
         } else {
           newState.keys += standardKeysAwarded;
-          const greedMessage = isGreed
-            ? standardKeysAwarded === 2
-              ? ' (Doubled)'
-              : ` (Greed awarded ${standardKeysAwarded} Standard Key${standardKeysAwarded === 1 ? '' : 's'})`
-            : '';
 
           newHistory.push({
              id: generateId(),

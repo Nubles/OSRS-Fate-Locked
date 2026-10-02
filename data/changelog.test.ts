@@ -20,7 +20,14 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-slayer-tasks');
+    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-ritual-of-greed');
+  });
+
+  it('announces that Greed pays on an Omni-Key roll', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-ritual-of-greed');
+    expect(release?.title).toBe('Greed Pays on an Omni-Key Too');
+    expect(release?.sections.balance).toEqual([expect.stringMatching(/2 Keys on an Omni-Key roll/)]);
+    expect(release?.sections.fixed).toEqual([expect.stringMatching(/Pity Key refunds no Fate.*Vanilla boss/)]);
   });
 
   it('announces the Slayer task fixes', () => {

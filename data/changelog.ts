@@ -19,6 +19,19 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-02-ritual-of-greed',
+    title: 'Greed Pays on an Omni-Key Too',
+    date: '2026-10-02',
+    sections: {
+      balance: [
+        'The Ritual of Greed now gives 2 Keys on an Omni-Key roll too, as on any other success. Before, an Omni-Key roll used Greed up for nothing.',
+      ],
+      fixed: [
+        'Greed’s description now says that a fail which brings a Pity Key refunds no Fate, and that a Vanilla boss with 1 Key left gives 1.',
+      ],
+    },
+  },
+  {
     id: '2026-10-02-slayer-tasks',
     title: 'Slayer Tasks Ask What the Masters Ask',
     date: '2026-10-02',

@@ -404,7 +404,7 @@ export const GREED_REFUND_FRACTION = 0.5;
 
 export const RITUALS: Ritual[] = [
   { id: 'LUCK',         name: 'Ritual of Clarity',       tagline: 'Roll with advantage.',   fateCost: 8,  effect: 'Your next roll is made twice — the better result is kept.' },
-  { id: 'GREED',        name: 'Ritual of Greed',         tagline: 'Double or… something.',  fateCost: 15, effect: 'If your next roll succeeds you get 2 Keys. If it fails, half the Fate is refunded.' },
+  { id: 'GREED',        name: 'Ritual of Greed',         tagline: 'Double or… something.',  fateCost: 15, effect: 'If your next Key roll succeeds you get 2 Keys, even when it also brings an Omni-Key (a Vanilla boss with 1 Key left gives 1). If it fails, half the Fate comes back, unless the fail brings a Pity Key.' },
   { id: 'CHAOS',        name: 'Ritual of Chaos',         tagline: 'Embrace entropy.',       fateCost: 25, effect: 'Immediately forge 1 Chaos Key (a random unlock from ANY table).' },
   { id: 'GAMBIT',       name: 'Void Gambit',             tagline: 'Before Fate reclaims it.', fateCost: GAMBIT_STAKE, stakesAllFate: true,
     effect: gambitText(GAMBIT_STAKE) },

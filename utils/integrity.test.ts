@@ -159,6 +159,25 @@ describe('replayInvariants', () => {
     expect(final.omnis).toBe(1);
   });
 
+  it('awards two keys for a doubled (Greed) Omni roll', () => {
+    const { final } = replayInvariants([mk({
+      type: 'ROLL_OMNI',
+      message: 'LEGENDARY DROP! You found an Omni-Key and 2 Keys! (Doubled)',
+      details: 'Critical Success! Rolled 1.0 vs 50.0%.',
+    })], 0);
+    expect(final.keys).toBe(2);
+    expect(final.specialKeys).toBe(1);
+  });
+
+  it('keeps an Omni roll from before Greed doubled them at one key', () => {
+    const { final } = replayInvariants([mk({
+      type: 'ROLL_OMNI',
+      message: 'LEGENDARY DROP! You found an Omni-Key!',
+      details: 'Critical Success! Rolled 1.0 vs 50.0%.',
+    })], 0);
+    expect(final.keys).toBe(1);
+  });
+
   it('counts a pity key', () => {
     const { final } = replayInvariants([mk({ type: 'PITY', message: 'Pity Key' })], 0);
     expect(final.keys).toBe(1);
