@@ -13,8 +13,12 @@ import {
 export const ONLINE_BACKUP_INTERVAL_MS = 15 * 60 * 1000;
 /** Let a burst of changes settle before uploading. */
 export const ONLINE_BACKUP_SETTLE_MS = 30 * 1000;
-/** The relay takes a new upload for a backup at most once a minute. */
-const RELAY_MIN_INTERVAL_MS = 60 * 1000;
+/**
+ * Leaving the page sends a waiting change early, but at most every 5 minutes:
+ * players switch between the game and the tracker all the time, and the relay's
+ * free plan allows 1,000 uploads a day for everyone.
+ */
+export const ONLINE_BACKUP_HIDDEN_MIN_MS = 5 * 60 * 1000;
 
 /** How long until the next scheduled upload of a changed run. */
 export const nextUploadDelay = (lastUploadAt: number | undefined, now: number): number =>
@@ -23,9 +27,9 @@ export const nextUploadDelay = (lastUploadAt: number | undefined, now: number): 
 /**
  * Keeps the active run's online backup current (utils/onlineBackup.ts): when the
  * run changes, it uploads once things settle, at most every 15 minutes, and
- * again when the page is hidden with a change waiting. "Back up now" and
- * turning backup on upload at once. Only the tab that owns the save uploads.
- * Renders nothing.
+ * earlier when the page is hidden with a change waiting, at most every 5
+ * minutes. "Back up now" and turning backup on upload at once. Only the tab
+ * that owns the save uploads. Renders nothing.
  */
 export const OnlineBackupDriver: React.FC = () => {
   const {
@@ -84,12 +88,12 @@ export const OnlineBackupDriver: React.FC = () => {
     return () => window.removeEventListener(ONLINE_BACKUP_EVENT, onRequest);
   }, [storageKey, clearTimer]);
 
-  // Leaving the page with a change waiting: send it, if the relay will take it.
+  // Leaving the page with a change waiting: send it now, unless one went lately.
   useEffect(() => {
     const onHide = () => {
       if (document.visibilityState !== 'hidden' || timer.current === null) return;
       const record = readOnlineBackupRecord(storageKey);
-      if (Date.now() - (record.lastUploadAt ?? 0) < RELAY_MIN_INTERVAL_MS) return;
+      if (Date.now() - (record.lastUploadAt ?? 0) < ONLINE_BACKUP_HIDDEN_MIN_MS) return;
       clearTimer();
       void runRef.current(false);
     };

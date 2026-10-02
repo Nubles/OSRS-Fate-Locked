@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { writeOnlineBackupRecord, requestOnlineBackupNow } from '../utils/onlineBackupRecord';
 import {
   OnlineBackupDriver,
+  ONLINE_BACKUP_HIDDEN_MIN_MS,
   ONLINE_BACKUP_INTERVAL_MS,
   ONLINE_BACKUP_SETTLE_MS,
   nextUploadDelay,
@@ -96,14 +97,20 @@ describe('OnlineBackupDriver', () => {
     expect(backupRun).toHaveBeenCalledTimes(1);
   });
 
-  it('sends a waiting change when the page is hidden', async () => {
-    writeOnlineBackupRecord('P', { code: '0123456789ABCDEFGHJK', lastUploadAt: Date.now() - 5 * 60_000 });
+  it('sends a waiting change when the page is hidden, at most every 5 minutes', async () => {
+    const hide = async () => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+      await act(async () => { document.dispatchEvent(new Event('visibilitychange')); await Promise.resolve(); });
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
+    };
+    writeOnlineBackupRecord('P', { code: '0123456789ABCDEFGHJK', lastUploadAt: Date.now() - ONLINE_BACKUP_HIDDEN_MIN_MS + 1 });
     render(<OnlineBackupDriver />);
+    await hide();
     expect(backupRun).not.toHaveBeenCalled();
-    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
-    await act(async () => { document.dispatchEvent(new Event('visibilitychange')); await Promise.resolve(); });
+
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    await hide();
     expect(backupRun).toHaveBeenCalledTimes(1);
-    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
   });
 
   it('retries when the relay asks it to', async () => {
