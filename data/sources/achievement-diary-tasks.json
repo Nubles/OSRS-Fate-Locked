@@ -350,7 +350,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "31 Farming 3 strawberry seeds, spade, seed dibber (or Barbarian Farming ), and a rake Basket of apples recommended to pay the nearby farmer to protect the crop"
+      "sourceRequirements": "31 Farming 3 strawberry seeds, spade, seed dibber (or Barbarian Farming ), and a rake Basket of apples recommended to pay the nearby farmer to protect the crop",
+      "farming": [
+        "Allotment"
+      ]
     },
     {
       "id": "ard_med_4",
@@ -726,6 +729,9 @@
       "sourceRequirements": "68 Farming Palm sapling, spade and a rake 15 Papaya fruit recommended to pay the gardener",
       "regions": [
         "Observatory"
+      ],
+      "farming": [
+        "Fruit Tree"
       ]
     },
     {
@@ -744,7 +750,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "70 Farming Poison ivy seed, seed dibber (or Barbarian Farming ), and a rake Note: Poison ivy cannot get diseased while growing."
+      "sourceRequirements": "70 Farming Poison ivy seed, seed dibber (or Barbarian Farming ), and a rake Note: Poison ivy cannot get diseased while growing.",
+      "farming": [
+        "Bush"
+      ]
     },
     {
       "id": "ard_hard_9",
@@ -967,7 +976,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "85 Farming Torstol seed, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended"
+      "sourceRequirements": "85 Farming Torstol seed, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended",
+      "farming": [
+        "Herb"
+      ]
     },
     {
       "id": "ard_elite_7",
@@ -2158,7 +2170,10 @@
           "label": "Grow watermelons",
           "skills": {
             "Farming": 47
-          }
+          },
+          "farming": [
+            "Allotment"
+          ]
         },
         {
           "label": "Obtain a watermelon from gryphons",
@@ -2176,6 +2191,9 @@
       ],
       "regions": [
         "Falador"
+      ],
+      "farming": [
+        "Flower"
       ]
     },
     {
@@ -3174,7 +3192,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "91 Farming and 75 Woodcutting Magic sapling, spade and any axe"
+      "sourceRequirements": "91 Farming and 75 Woodcutting Magic sapling, spade and any axe",
+      "farming": [
+        "Wood Tree"
+      ]
     },
     {
       "id": "fal_elite_4",
@@ -4203,7 +4224,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "13 Farming 3 jute seeds, rake, and a seed dibber"
+      "sourceRequirements": "13 Farming 3 jute seeds, rake, and a seed dibber",
+      "farming": [
+        "Hops"
+      ]
     },
     {
       "id": "kan_easy_6",
@@ -4491,7 +4515,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "26 Farming Limpwurt seed, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended"
+      "sourceRequirements": "26 Farming Limpwurt seed, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended",
+      "farming": [
+        "Flower"
+      ]
     },
     {
       "id": "kan_med_9",
@@ -4935,7 +4962,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "79 Farming Dwarf weed seed, spade, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended"
+      "sourceRequirements": "79 Farming Dwarf weed seed, spade, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended",
+      "farming": [
+        "Herb"
+      ]
     },
     {
       "id": "kan_elite_3",
@@ -5632,7 +5662,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "27 Farming Any fruit tree sapling, a spade, and a rake"
+      "sourceRequirements": "27 Farming Any fruit tree sapling, a spade, and a rake",
+      "farming": [
+        "Fruit Tree"
+      ]
     },
     {
       "id": "kar_med_14",
@@ -6097,7 +6130,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "68 Farming Palm sapling, spade and rake 15 papaya fruit recommended to pay the gardener"
+      "sourceRequirements": "68 Farming Palm sapling, spade and rake 15 papaya fruit recommended to pay the gardener",
+      "farming": [
+        "Fruit Tree"
+      ]
     },
     {
       "id": "karamja_elite_4",
@@ -6133,6 +6169,9 @@
       "sourceRequirements": "72 Farming Calquat sapling, spade and rake 8 poison ivy berries recommended to pay the gardener",
       "regions": [
         "Tai Bwo Wannai"
+      ],
+      "farming": [
+        "Calquat"
       ]
     },
     {
@@ -7021,6 +7060,9 @@
       "sourceRequirements": "85 Farming and 40 Fletching Celastrus sapling, knife, spade, rake, and any axe 8 potato cacti recommended to protect your sapling",
       "guilds": [
         "Farming Guild"
+      ],
+      "farming": [
+        "Celastrus"
       ]
     },
     {
@@ -7742,7 +7784,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "63 Farming Belladonna seed, seed dibber, spade, rake and any gloves"
+      "sourceRequirements": "63 Farming Belladonna seed, seed dibber, spade, rake and any gloves",
+      "farming": [
+        "Belladonna"
+      ]
     },
     {
       "id": "lum_hard_9",
@@ -8290,7 +8335,10 @@
           "label": "Grow watermelons",
           "skills": {
             "Farming": 47
-          }
+          },
+          "farming": [
+            "Allotment"
+          ]
         },
         {
           "label": "Obtain a watermelon from gryphons",
@@ -8305,6 +8353,9 @@
             "The Great Conch"
           ]
         }
+      ],
+      "farming": [
+        "Flower"
       ]
     },
     {
@@ -8715,6 +8766,9 @@
           "quest": "The Great Brain Robbery",
           "label": "Reached the required progress in The Great Brain Robbery for: Harvest some Watermelon from the Allotment patch on Harmony Island."
         }
+      ],
+      "farming": [
+        "Allotment"
       ]
     },
     {
@@ -8797,7 +8851,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "53 Farming Mushroom spore, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended"
+      "sourceRequirements": "53 Farming Mushroom spore, seed dibber (or Barbarian Farming ), and a rake Ultracompost recommended",
+      "farming": [
+        "Mushroom"
+      ]
     },
     {
       "id": "mor_hard_8",
@@ -8933,6 +8990,9 @@
       "sourceRequirements": "Completion of Lunar Diplomacy 83 Magic Lunar spellbook selected Means to cast Fertile Soil ( )",
       "arcana": [
         "Lunar Spellbook"
+      ],
+      "farming": [
+        "Herb"
       ]
     },
     {
@@ -9767,7 +9827,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "68 Farming and 60 Woodcutting Yew sapling, any axe, and a spade 10 cactus spines recommended to pay the gardener"
+      "sourceRequirements": "68 Farming and 60 Woodcutting Yew sapling, any axe, and a spade 10 cactus spines recommended to pay the gardener",
+      "farming": [
+        "Wood Tree"
+      ]
     },
     {
       "id": "var_hard_9",
@@ -10773,6 +10836,9 @@
           "quest": "Mourning's End Part I",
           "label": "Reached the required progress in Mourning's End Part I for: Check the health of your Palm tree in Lletya."
         }
+      ],
+      "farming": [
+        "Fruit Tree"
       ]
     },
     {
@@ -10945,7 +11011,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "75 Farming Magic sapling, 25 coconuts, rake, and a spade"
+      "sourceRequirements": "75 Farming Magic sapling, 25 coconuts, rake, and a spade",
+      "farming": [
+        "Wood Tree"
+      ]
     },
     {
       "id": "west_elite_4",

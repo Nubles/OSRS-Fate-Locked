@@ -495,13 +495,17 @@ describe('Diary tasks an ironman does the ironman way', () => {
     // Gryphons need 51 Slayer, live on the Great Conch, and need Troubled Tortugans and 45 Sailing to
     // reach (Gryphon rev 15352305); they drop watermelons.
     expect(task(id).oneOf).toEqual([
-      { label: 'Grow watermelons', skills: { Farming: 47 } },
+      { label: 'Grow watermelons', skills: { Farming: 47 }, farming: ['Allotment'] },
       {
         label: 'Obtain a watermelon from gryphons',
         skills: { Sailing: 45, Slayer: 51 }, quests: ['Troubled Tortugans'], regions: ['The Great Conch'],
       },
     ]);
-    const farmer = account({ skills: { Farming: 10 }, levels: { Farming: 23 }, regions: [...(task(id).regions ?? [])], quests: [...(task(id).quests ?? [])] });
+    // The scarecrow goes in the flower patch, a Farming Patches unlock, on either route.
+    const farmer = account({
+      skills: { Farming: 10 }, levels: { Farming: 23 }, farming: ['Flower'],
+      regions: [...(task(id).regions ?? [])], quests: [...(task(id).quests ?? [])],
+    });
     expect(evaluateDiaryTaskEligibility(task(id), farmer).machineEligible).toBe(false);
     expect(evaluateDiaryTaskEligibility(task(id), {
       ...farmer,
@@ -566,5 +570,33 @@ describe('Diary unlock names', () => {
       }
     }
     expect(used).toContain('guilds');
+  });
+});
+
+describe('Diary tasks that use a farming patch', () => {
+  // The owner's call D3: a farming patch is a rolled unlock, by its kind on the Farming Patches table.
+  it.each([
+    ['ard_med_3', 'Allotment'], ['mor_hard_3', 'Allotment'],
+    ['ard_hard_7', 'Fruit Tree'], ['kar_med_13', 'Fruit Tree'], ['kar_elite_2', 'Fruit Tree'], ['west_hard_8', 'Fruit Tree'],
+    ['ard_hard_8', 'Bush'],
+    ['ard_elite_6', 'Herb'], ['kan_elite_2', 'Herb'], ['mor_elite_3', 'Herb'],
+    ['fal_med_4', 'Flower'], ['kan_med_8', 'Flower'], ['mor_easy_8', 'Flower'],
+    ['fal_elite_3', 'Wood Tree'], ['var_hard_8', 'Wood Tree'], ['west_elite_3', 'Wood Tree'],
+    ['kan_easy_5', 'Hops'],
+    ['karamja_elite_5', 'Calquat'],
+    ['kou_elite_8', 'Celastrus'],
+    ['lum_hard_8', 'Belladonna'],
+    ['mor_hard_7', 'Mushroom'],
+  ])('tags %s with the %s patch', (id, patch) => {
+    expect(task(id).farming).toEqual([patch]);
+  });
+
+  it.each(['fal_med_4', 'mor_easy_8'])('grows the %s scarecrow’s watermelon in an allotment, unless a gryphon drops one', id => {
+    // The scarecrow goes in the flower patch on either route.
+    expect(task(id).oneOf).toEqual([
+      { label: 'Grow watermelons', skills: { Farming: 47 }, farming: ['Allotment'] },
+      expect.objectContaining({ label: 'Obtain a watermelon from gryphons' }),
+    ]);
+    expect(task(id).oneOf?.[1].farming).toBeUndefined();
   });
 });

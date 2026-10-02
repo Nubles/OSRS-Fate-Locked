@@ -133,3 +133,42 @@ describe('A Diary task done inside a guild', () => {
     expect(getDiaryStatus(DIARY_DATA[row.tierId], unlocked, 'vanilla')).toBe('AVAILABLE');
   });
 });
+
+describe('A Diary task that uses a farming patch', () => {
+  it('locks the Catherby limpwurt, its tier, plan and route until the Flower patch is unlocked, but never its logging', () => {
+    const row = task('kan_med_8');
+    const locked = everything({ farming: [], completedTasks: exceptTask(row.id) });
+
+    expect(evaluateDiaryTaskEligibility(row, locked, 'vanilla').blockers)
+      .toEqual([{ kind: 'farming', label: 'Flower patch', patch: 'Flower' }]);
+    expect(getDiaryStatus(DIARY_DATA[row.tierId], locked, 'vanilla')).toBe('LOCKED_FARMING');
+    expect(planForTarget('diary', row.tierId, locked, 'vanilla')?.farmingSteps).toEqual([
+      expect.objectContaining({ kind: 'farming', id: 'Flower', label: 'Flower patch', unlockTable: TableType.FARMING_LAYERS }),
+    ]);
+    const route = buildGoalRoute(row.tierId, { unlocks: locked, gameModeId: 'vanilla' } as GameState)!;
+    expect(route.farming).toEqual([expect.objectContaining({ name: 'Flower patch', met: false })]);
+    expect(route.tables).toContainEqual(expect.objectContaining({ table: TableType.FARMING_LAYERS, needed: ['Flower'] }));
+    expect(diaryTaskCompletionDecision(row, locked, 'vanilla')).toEqual({ ok: true });
+
+    const unlocked = { ...locked, farming: ['Flower'] };
+    expect(evaluateDiaryTaskEligibility(row, unlocked, 'vanilla').eligible).toBe(true);
+    expect(getDiaryStatus(DIARY_DATA[row.tierId], unlocked, 'vanilla')).toBe('AVAILABLE');
+  });
+
+  it('needs the allotment only on the scarecrow route that grows the watermelon', () => {
+    const row = task('fal_med_4');
+    const farmer = everything({ farming: ['Flower'], skills: { Farming: 10 }, levels: { Farming: 50 }, quests: [] });
+    expect(evaluateDiaryTaskEligibility(row, farmer, 'vanilla').blockers).toEqual([
+      expect.objectContaining({
+        kind: 'alternative',
+        routes: [
+          { label: 'Grow watermelons: Farming 47 + Allotment patch', blockers: [{ kind: 'farming', label: 'Allotment patch', patch: 'Allotment' }] },
+          expect.objectContaining({ label: expect.stringContaining('Obtain a watermelon from gryphons') }),
+        ],
+      }),
+    ]);
+    expect(evaluateDiaryTaskEligibility(row, { ...farmer, farming: ['Flower', 'Allotment'] }, 'vanilla').eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(row, everything({ farming: ['Allotment'] }), 'vanilla').blockers)
+      .toEqual([{ kind: 'farming', label: 'Flower patch', patch: 'Flower' }]);
+  });
+});
