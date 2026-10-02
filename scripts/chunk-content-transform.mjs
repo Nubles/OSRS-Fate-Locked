@@ -1,6 +1,7 @@
 import { buildEntranceIndex, indexNamedTaskUnlockRegistry } from './named-task-unlock-locations.mjs';
 import { readFileSync } from 'node:fs';
 import { buildInteriorContent, assertInteriorMetadataConservation } from './chunk-interiors.mjs';
+import { reviewRequirement } from './chunk-requirements.mjs';
 const shopOverrides = JSON.parse(readFileSync(new URL('../data/sources/shop-overrides.json', import.meta.url), 'utf8'));
 const contentAliases = JSON.parse(readFileSync(new URL('../data/contentAliases.json', import.meta.url), 'utf8'));
 const contentOverrides = JSON.parse(readFileSync(new URL('../data/sources/chunk-content-overrides.json', import.meta.url), 'utf8'));
@@ -12,6 +13,7 @@ const REASONS = new Set([
   'empty-walkable-chunk', 'broad-quest-gate-suppressed', 'lite-cap',
   'duplicate-deduped', 'role-promoted-to-first', 'variant-collision-merged',
   'named-location-mapped', 'named-location-instance-only', 'named-location-non-purchasable',
+  'reviewed-requirement-rewritten',
 ]);
 
 const cleanName = (value) => String(value).split('#')[0].trim();
@@ -414,7 +416,14 @@ function applyReviewedContent(data, chunks, interiors, taskUnlocks, audit) {
 
 function cleanReqs(values, audit, sourceKey, category) {
   const result = new Set(); let duplicated = false;
-  for (const value of values) for (const raw of Object.keys(value ?? {})) { const clean = stripWiki(raw).replace(/\s+/g, ' ').trim(); if (clean) { if (result.has(clean)) duplicated = true; result.add(clean); } }
+  for (const value of values) for (const raw of Object.keys(value ?? {})) {
+    const clean = stripWiki(raw).replace(/\s+/g, ' ').trim();
+    if (!clean) continue;
+    // Reviewed wording (scripts/chunk-requirements.mjs): a dropped tag, or a requirement rewritten.
+    const reviewed = reviewRequirement(clean);
+    if (reviewed.length !== 1 || reviewed[0] !== clean) audit.add(category, sourceKey, 'normalized', 'reviewed-requirement-rewritten', reviewed, false, clean);
+    for (const requirement of reviewed) { if (result.has(requirement)) duplicated = true; result.add(requirement); }
+  }
   if (duplicated) audit.add(category, sourceKey, 'normalized', 'duplicate-deduped', [...result], false);
   return [...result].sort();
 }

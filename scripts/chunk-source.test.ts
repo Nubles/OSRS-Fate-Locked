@@ -224,7 +224,8 @@ describe('pinned Chunk Picker source', () => {
       questSections: 134,
       banks: 127,
       tags: 29,
-      auditEvents: 27654,
+      // Up from 27,654: the transform records each "F2P Only" tag it drops (accuracy audit S11).
+      auditEvents: 28047,
       unresolvedTaskUnlocks: 0,
     });
     expect(taskUnlockTotals.source).toBe(1959);
@@ -259,11 +260,13 @@ describe('pinned Chunk Picker source', () => {
       .map(([chunkId]) => chunkId)
       .sort((left, right) => Number(left) - Number(right));
 
+    // The Crossbow Shop and the red spiders' eggs once stood here with "F2P Only", which the
+    // transform now drops (accuracy audit S11), so other named-location rows stand in for them.
     const representatives = [
       ['Monsters', 'Abyssal demon', 'Abyssal demon wilderness task', ['12857', '13114']],
-      ['Shops', 'Crossbow Shop (Dwarven Mine)', 'F2P Only', ['12084', '12085']],
+      ['Spawns', 'Shiny key', 'Temple of Ikov 4', ['10549', '10550']],
       ['Objects', 'Barrel (beer)', 'Temple of Ikov 4', ['10549', '10550']],
-      ['Spawns', "Red spiders' eggs", 'F2P Only', ['12341', '12342']],
+      ['Spawns', 'Steel arrowtips', 'Access the monkey bars under Edgeville shortcut', ['12341', '12342']],
       ['NPCs', 'Movario', 'Temple of Ikov Complete the quest', ['12848', '12850']],
     ] as const;
     for (const [category, entity, requirement, expectedChunks] of representatives) {
@@ -271,6 +274,8 @@ describe('pinned Chunk Picker source', () => {
       expect(actualChunks, `${category}/${entity}`).toEqual(expectedChunks);
       expect(new Set(actualChunks).size, `${category}/${entity}`).toBe(actualChunks.length);
     }
+    expect(chunksWithRequirement(taskUnlocks.Shops?.['Crossbow Shop (Dwarven Mine)'], 'F2P Only')).toEqual([]);
+    expect(chunksWithRequirement(taskUnlocks.Spawns?.["Red spiders' eggs"], 'F2P Only')).toEqual([]);
 
     const exclusions = audit.events
       .filter(event => event.category === 'taskUnlocks' && event.disposition === 'excluded')

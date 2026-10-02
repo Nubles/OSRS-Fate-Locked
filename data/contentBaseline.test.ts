@@ -318,7 +318,8 @@ describe('deterministic current content baseline', () => {
       questSections: 134,
       banks: 127,
       tags: 29,
-      auditEvents: 27654,
+      // Up from 27,654: the transform records each "F2P Only" tag it drops (accuracy audit S11).
+      auditEvents: 28047,
       unresolvedTaskUnlocks: 0,
     });
     expect(taskUnlockTotals.source).toBe(1959);

@@ -309,6 +309,28 @@ describe('transformChunkContent', () => {
     });
   });
 
+  it("drops the Chunk Picker's F2P Only tag, which the tracker has no mode for (accuracy audit S11)", () => {
+    const result = transformChunkContent({
+      walkableChunks: [256],
+      chunks: { 256: { Nickname: 'Town', Shop: { 'Garden Centre': true, 'Pie Shop': true } } },
+      slayerMonsters: {},
+      taskUnlocks: {
+        Shops: {
+          'Garden Centre': { 256: [{ 'F2P Only': 'Nonskill' }] },
+          'Pie Shop': { 256: [{ 'F2P Only': 'Nonskill', "~|Access the Cooks' Guild|~": 'Nonskill' }] },
+        },
+      },
+    }, manifest);
+    // A shop that was only tagged has no requirement left; the others keep theirs.
+    expect(result.full.taskUnlocks).toEqual({ Shops: { 'Pie Shop': { 256: ["Access the Cooks' Guild"] } } });
+    expect(JSON.stringify(result.full)).not.toContain('F2P Only');
+    expect(result.audit.events.filter((event) => event.reason === 'reviewed-requirement-rewritten'))
+      .toEqual([
+        expect.objectContaining({ sourceKey: 'Shops/Garden Centre/256', terminal: false, targetKeys: [], detail: 'F2P Only' }),
+        expect.objectContaining({ sourceKey: 'Shops/Pie Shop/256', terminal: false, targetKeys: [], detail: 'F2P Only' }),
+      ]);
+  });
+
   it('accounts independently for duplicate banks and nested consumed records', () => {
     const result = transformChunkContent({
       walkableChunks: [], chunks: {}, slayerMonsters: {},
