@@ -569,7 +569,7 @@ describe('Diary unlock names', () => {
         }
       }
     }
-    expect(used).toContain('guilds');
+    expect(new Set(used)).toEqual(new Set(['guilds', 'farming', 'housing', 'slayerUnlocks']));
   });
 });
 
@@ -598,5 +598,36 @@ describe('Diary tasks that use a farming patch', () => {
       expect.objectContaining({ label: 'Obtain a watermelon from gryphons' }),
     ]);
     expect(task(id).oneOf?.[1].farming).toBeUndefined();
+  });
+});
+
+describe('Diary tasks that use a house room or a Slayer reward', () => {
+  // The owner's call D6: house rooms and Slayer rewards are rolled unlocks too.
+  it('needs the Menagerie for the pet rock, and a portal chamber or nexus for the Kharyrll portal', () => {
+    expect(task('frem_med_7').housing).toEqual(['Menagerie']);
+    expect(task('mor_hard_1').oneOf).toEqual([{ housing: ['Portal Chamber'] }, { housing: ['Portal Nexus'] }]);
+  });
+
+  it('needs the mounted talisman or pendant only on the routes that use your house’s', () => {
+    expect(task('kou_hard_7').oneOf).toEqual([
+      { label: 'Held Xeric talisman', items: ["Charged Xeric's talisman"] },
+      { label: 'Mounted Xeric talisman', items: ["Mounted Xeric's talisman in your house"], housing: ["Mounted Xeric's Talisman"] },
+    ]);
+    expect(task('var_med_7').oneOf).toEqual([
+      { label: 'Existing Digsite pendant', items: ['Digsite pendant'] },
+      { label: 'Mounted Digsite pendant', items: ['Mounted Digsite pendant in your house'], housing: ['Mounted Digsite Pendant'] },
+      expect.objectContaining({ label: 'Craft a Digsite pendant' }),
+    ]);
+    expect(task('var_med_7').oneOf?.[2].housing).toBeUndefined();
+  });
+
+  it('needs the Malevolent Masquerade reward to make the Slayer helmet', () => {
+    expect(task('des_hard_6').slayerUnlocks).toEqual(['Malevolent Masquerade']);
+  });
+
+  it('needs an estate agent to move the house for every task that enters it from somewhere new', () => {
+    for (const id of ['ard_hard_10', 'kou_easy_9', 'des_med_11']) {
+      expect(task(id).merchants, id).toEqual(['Real Estate Agents']);
+    }
   });
 });

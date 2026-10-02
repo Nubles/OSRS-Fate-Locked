@@ -172,3 +172,39 @@ describe('A Diary task that uses a farming patch', () => {
       .toEqual([{ kind: 'farming', label: 'Flower patch', patch: 'Flower' }]);
   });
 });
+
+describe('A Diary task that uses a house room or a Slayer reward', () => {
+  it.each([
+    ['frem_med_7', 'Menagerie', 'housing', 'LOCKED_HOUSING', 'housingSteps', TableType.POH, 'housing'],
+    ['des_hard_6', 'Malevolent Masquerade', 'slayerUnlocks', 'LOCKED_SLAYER', 'slayerSteps', TableType.SLAYER_UNLOCKS, 'slayerUnlocks'],
+  ] as const)('locks %s, its tier, plan and route until %s is unlocked, but never its logging', (id, name, field, status, steps, table, routeField) => {
+    const row = task(id);
+    const locked = everything({ [field]: [], completedTasks: exceptTask(row.id) } as Partial<UnlockState>);
+
+    expect(evaluateDiaryTaskEligibility(row, locked, 'vanilla').blockers)
+      .toEqual([{ kind: field === 'housing' ? 'housing' : 'slayer', label: name }]);
+    expect(getDiaryStatus(DIARY_DATA[row.tierId], locked, 'vanilla')).toBe(status);
+    expect(planForTarget('diary', row.tierId, locked, 'vanilla')?.[steps]).toEqual([
+      expect.objectContaining({ id: name, label: name, unlockTable: table }),
+    ]);
+    const route = buildGoalRoute(row.tierId, { unlocks: locked, gameModeId: 'vanilla' } as GameState)!;
+    expect(route[routeField]).toEqual([expect.objectContaining({ name, met: false })]);
+    expect(route.tables).toContainEqual(expect.objectContaining({ table, needed: [name] }));
+    expect(diaryTaskCompletionDecision(row, locked, 'vanilla', { manualConfirmed: true })).toEqual({ ok: true });
+
+    const unlocked = { ...locked, [field]: [name] };
+    expect(evaluateDiaryTaskEligibility(row, unlocked, 'vanilla').machineEligible).toBe(true);
+    expect(getDiaryStatus(DIARY_DATA[row.tierId], unlocked, 'vanilla')).toBe('AVAILABLE');
+  });
+
+  it('takes either portal room for the Kharyrll portal', () => {
+    const row = task('mor_hard_1');
+    const noRooms = everything({ housing: [] });
+    expect(evaluateDiaryTaskEligibility(row, noRooms, 'vanilla').blockers).toEqual([
+      expect.objectContaining({ kind: 'alternative', label: 'Portal Chamber or Portal Nexus' }),
+    ]);
+    expect(evaluateDiaryTaskEligibility(row, { ...noRooms, housing: ['Portal Chamber'] }, 'vanilla').eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(row, { ...noRooms, housing: ['Portal Nexus'] }, 'vanilla').eligible).toBe(true);
+    expect(diaryTaskCompletionDecision(row, noRooms, 'vanilla')).toEqual({ ok: true });
+  });
+});

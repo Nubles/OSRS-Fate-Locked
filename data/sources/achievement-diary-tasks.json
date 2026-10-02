@@ -791,7 +791,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "50 Construction 25,000 coins for an estate agent to move your house to Yanille Note: In Deadman Mode, the task is instead \"Ask the Estate Agent to move your house to Yanille.\" This does not cost anything as your house will not be moved."
+      "sourceRequirements": "50 Construction 25,000 coins for an estate agent to move your house to Yanille Note: In Deadman Mode, the task is instead \"Ask the Estate Agent to move your house to Yanille.\" This does not cost anything as your house will not be moved.",
+      "merchants": [
+        "Real Estate Agents"
+      ]
     },
     {
       "id": "ard_hard_11",
@@ -1665,6 +1668,9 @@
           "tier": 6,
           "reason": "Slayer helmet"
         }
+      ],
+      "slayerUnlocks": [
+        "Malevolent Masquerade"
       ]
     },
     {
@@ -3682,6 +3688,9 @@
           "quest": "The Fremennik Trials",
           "label": "Reached the required progress in The Fremennik Trials for: Pick up your Pet Rock from your POH Menagerie."
         }
+      ],
+      "housing": [
+        "Menagerie"
       ]
     },
     {
@@ -6331,7 +6340,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "25 Construction 8,750 coins for an estate agent to move your house to Hosidius (can only be done after you've visited Great Kourend )"
+      "sourceRequirements": "25 Construction 8,750 coins for an estate agent to move your house to Hosidius (can only be done after you've visited Great Kourend )",
+      "merchants": [
+        "Real Estate Agents"
+      ]
     },
     {
       "id": "kou_easy_10",
@@ -6824,7 +6836,10 @@
         {
           "label": "Mounted Xeric talisman",
           "items": [
-            "Mounted Xeric's talisman or house-party access"
+            "Mounted Xeric's talisman in your house"
+          ],
+          "housing": [
+            "Mounted Xeric's Talisman"
           ]
         }
       ],
@@ -8721,7 +8736,19 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Desert Treasure I 66 Magic and 50 Construction 100,000 coins, 2 limestone bricks, 3 teak planks, hammer, and saw to construct a portal chamber with an activatable teak portal and teleport focus, if you haven't already 200 law runes and 100 blood runes to direct a portal to Kharyrll, or 2000 law runes and 1000 blood runes if adding the portal to a portal nexus instead"
+      "sourceRequirements": "Completion of Desert Treasure I 66 Magic and 50 Construction 100,000 coins, 2 limestone bricks, 3 teak planks, hammer, and saw to construct a portal chamber with an activatable teak portal and teleport focus, if you haven't already 200 law runes and 100 blood runes to direct a portal to Kharyrll, or 2000 law runes and 1000 blood runes if adding the portal to a portal nexus instead",
+      "oneOf": [
+        {
+          "housing": [
+            "Portal Chamber"
+          ]
+        },
+        {
+          "housing": [
+            "Portal Nexus"
+          ]
+        }
+      ]
     },
     {
       "id": "mor_hard_2",
@@ -9507,7 +9534,10 @@
         {
           "label": "Mounted Digsite pendant",
           "items": [
-            "Mounted Digsite pendant or house-party access"
+            "Mounted Digsite pendant in your house"
+          ],
+          "housing": [
+            "Mounted Digsite Pendant"
           ]
         },
         {

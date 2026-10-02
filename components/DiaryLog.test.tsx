@@ -79,6 +79,8 @@ describe('DiaryLog access evidence', () => {
   it.each([
     ['Enter the Ranging guild', 'kan_med_3', 'guild', 'Ranging Guild'],
     ['Pick some Limpwurt root', 'kan_med_8', 'farming', 'Flower patch'],
+    ['Pick up your Pet Rock', 'frem_med_7', 'housing', 'Menagerie'],
+    ['Slay a Dust Devil', 'des_hard_6', 'slayer', 'Malevolent Masquerade'],
   ])('names the unlock "%s" uses, locked until it is unlocked', (searchTerm, id, kind, name) => {
     const markup = renderToStaticMarkup(<DiaryLog searchTerm={searchTerm} suspendModals />);
     const row = elementMarkup(markup, `<div data-diary-task-row="${id}"`);
