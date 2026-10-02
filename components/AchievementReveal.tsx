@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Trophy } from './OsrsIcon';
 import { Achievement } from '../utils/achievements';
-import { ACHIEVEMENT_ICON } from './AchievementsModal';
+import { ACHIEVEMENT_ICON } from './achievementIcons';
 import { usePortalHost } from '../hooks/usePortalHost';
 
 /**

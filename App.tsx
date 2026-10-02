@@ -14,11 +14,7 @@ import { PopOnChange } from './components/PopOnChange';
 import { WikiIcon } from './components/WikiIcon';
 import { EffectsLayer } from './components/EffectsLayer';
 import { OnlineSyncDriver } from './components/OnlineSyncDriver';
-import {
-  canDismissRunelitePairing,
-  RunelitePairingDialog,
-  type RunelitePairingPhase,
-} from './components/RunelitePairingDialog';
+import { canDismissRunelitePairing, type RunelitePairingPhase } from './components/runelitePairingPhase';
 import { RollInboxDriver } from './components/RollInboxDriver';
 import { CoachStrip } from './components/CoachStrip';
 import { FeatureRevealDriver } from './components/FeatureRevealDriver';
@@ -65,6 +61,7 @@ import {
 const StatsModal = lazyWithRetry(() => import('./components/StatsModal').then(m => ({ default: m.StatsModal })));
 const FateThread = lazyWithRetry(() => import('./components/FateThread').then(m => ({ default: m.FateThread })));
 const ReferenceModal = lazyWithRetry(() => import('./components/ReferenceModal').then(m => ({ default: m.ReferenceModal })));
+const RunelitePairingDialog = lazyWithRetry(() => import('./components/RunelitePairingDialog').then(m => ({ default: m.RunelitePairingDialog })));
 const OracleSearch = lazyWithRetry(() => import('./components/OracleSearch').then(m => ({ default: m.OracleSearch })));
 const StrategyGuide = lazyWithRetry(() => import('./components/StrategyGuide').then(m => ({ default: m.StrategyGuide })));
 const SupplyChainCalculator = lazyWithRetry(() => import('./components/SupplyChainCalculator').then(m => ({ default: m.SupplyChainCalculator })));
@@ -1068,6 +1065,7 @@ const GameLayout = () => {
         {modalRenderPolicy.renderGlobalDialogOverlays && <QuestCompleteOverlay />}
       </Suspense>
       {modalRenderPolicy.renderGlobalDialogOverlays && runelitePairCode && (
+        <Suspense fallback={null}>
         <RunelitePairingDialog
           code={runelitePairCode}
           replacing={relaySync.enabled}
@@ -1099,6 +1097,7 @@ const GameLayout = () => {
           }}
           onClose={closeRunelitePairing}
         />
+        </Suspense>
       )}
 
       {/* One contextual "next step" hint under the header — teaches the loop. */}
