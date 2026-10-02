@@ -155,47 +155,47 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
   {
     category: 'Quests',
     icon: `${WIKI}Quest_point_icon.png`,
-    where: 'Journal → Quests — tick a quest as you complete it.',
-    blurb: 'The backbone of early progress: every quest rolls once, scaling hard with difficulty.',
+    where: 'Journal → Quests: tick a quest when you finish it.',
+    blurb: 'Every quest rolls once, and harder quests roll better.',
     tiers: [
       { tier: 'Novice',       source: DropSource.QUEST_NOVICE,       rate: DROP_RATES[DropSource.QUEST_NOVICE] },
       { tier: 'Intermediate', source: DropSource.QUEST_INTERMEDIATE, rate: DROP_RATES[DropSource.QUEST_INTERMEDIATE] },
       { tier: 'Experienced',  source: DropSource.QUEST_EXPERIENCED,  rate: DROP_RATES[DropSource.QUEST_EXPERIENCED] },
       { tier: 'Master',       source: DropSource.QUEST_MASTER,       rate: DROP_RATES[DropSource.QUEST_MASTER] },
-      { tier: 'Grandmaster',  source: DropSource.QUEST_GRANDMASTER,  rate: DROP_RATES[DropSource.QUEST_GRANDMASTER], omni: 20, bonus: 'Guaranteed Key + the best Omni odds of any quest.' },
+      { tier: 'Grandmaster',  source: DropSource.QUEST_GRANDMASTER,  rate: DROP_RATES[DropSource.QUEST_GRANDMASTER], omni: 20, bonus: 'A guaranteed Key, and the best Omni-Key chance of any quest.' },
     ],
   },
   {
     category: 'Achievement Diaries',
     icon: `${WIKI}Achievement_Diaries_icon.png`,
-    where: 'Journal → Diaries — tick each diary task.',
-    blurb: 'Rolls per individual task, with the rate climbing steeply toward Elite.',
+    where: 'Journal → Diaries: tick each diary task.',
+    blurb: 'Each diary task rolls once, and harder tiers roll better.',
     tiers: [
       { tier: 'Easy',   source: DropSource.DIARY_EASY,   rate: DROP_RATES[DropSource.DIARY_EASY] },
       { tier: 'Medium', source: DropSource.DIARY_MEDIUM, rate: DROP_RATES[DropSource.DIARY_MEDIUM] },
       { tier: 'Hard',   source: DropSource.DIARY_HARD,   rate: DROP_RATES[DropSource.DIARY_HARD] },
-      { tier: 'Elite',  source: DropSource.DIARY_ELITE,  rate: DROP_RATES[DropSource.DIARY_ELITE], omni: 10, bonus: 'The best diary rate, with an elevated Omni chance.' },
+      { tier: 'Elite',  source: DropSource.DIARY_ELITE,  rate: DROP_RATES[DropSource.DIARY_ELITE], omni: 10, bonus: 'The best diary rate, and a raised Omni-Key chance.' },
     ],
   },
   {
     category: 'Combat Achievements',
     icon: `${WIKI}Combat_Achievements_icon.png`,
-    where: 'Journal → Combat Achievements — tick each task.',
-    blurb: 'Your reward for PvM mastery; rolls per task from Easy through Grandmaster.',
+    where: 'Journal → Combat Achievements: tick each task.',
+    blurb: 'Each Combat Achievement task rolls once, from Easy to Grandmaster.',
     tiers: [
       { tier: 'Easy',        source: DropSource.CA_EASY,        rate: DROP_RATES[DropSource.CA_EASY] },
       { tier: 'Medium',      source: DropSource.CA_MEDIUM,      rate: DROP_RATES[DropSource.CA_MEDIUM] },
       { tier: 'Hard',        source: DropSource.CA_HARD,        rate: DROP_RATES[DropSource.CA_HARD] },
       { tier: 'Elite',       source: DropSource.CA_ELITE,       rate: DROP_RATES[DropSource.CA_ELITE] },
       { tier: 'Master',      source: DropSource.CA_MASTER,      rate: DROP_RATES[DropSource.CA_MASTER] },
-      { tier: 'Grandmaster', source: DropSource.CA_GRANDMASTER, rate: DROP_RATES[DropSource.CA_GRANDMASTER], bonus: 'The biggest CA payout.' },
+      { tier: 'Grandmaster', source: DropSource.CA_GRANDMASTER, rate: DROP_RATES[DropSource.CA_GRANDMASTER], bonus: 'The best Combat Achievement rate.' },
     ],
   },
   {
     category: 'Clue Scrolls',
     icon: `${WIKI}Clue_scroll_%28master%29.png`,
-    where: 'Farm Keys → Clue Scrolls — roll a casket card on completion.',
-    blurb: 'Cash in completed caskets; rarer tiers pay out far more often.',
+    where: 'Farm Keys → Clues: roll that tier’s card for each clue you finish.',
+    blurb: 'Each finished clue rolls once, and harder tiers roll better.',
     tiers: [
       { tier: 'Beginner', source: DropSource.CLUE_BEGINNER, rate: DROP_RATES[DropSource.CLUE_BEGINNER] },
       { tier: 'Easy',     source: DropSource.CLUE_EASY,     rate: DROP_RATES[DropSource.CLUE_EASY] },
@@ -208,8 +208,8 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
   {
     category: 'Slayer Tasks',
     icon: `${WIKI}Slayer_icon.png`,
-    where: 'Farm Keys → Slayer Tasks — roll a master card per finished task.',
-    blurb: 'Your most repeatable income. Higher masters demand more but pay far better.',
+    where: 'Farm Keys → Slayer: roll your master’s card for each task you finish.',
+    blurb: 'Every finished task rolls, with no limit, and higher masters roll better.',
     tiers: [
       { tier: 'Turael / Spria',     source: DropSource.SLAYER_BEGINNER,  rate: DROP_RATES[DropSource.SLAYER_BEGINNER] },
       { tier: 'Mazchna',            source: DropSource.SLAYER_MAZCHNA,    rate: DROP_RATES[DropSource.SLAYER_MAZCHNA] },
@@ -237,8 +237,8 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
   {
     category: 'Activities',
     icon: `${WIKI}Minigames.png`,
-    where: 'Farm Keys → Activities — roll on each completion.',
-    blurb: 'Minigames keep paying out long after the journal is done.',
+    where: 'Farm Keys → Activities: roll each time you finish one.',
+    blurb: 'Every finished minigame rolls, with no limit.',
     tiers: [
       { tier: 'Minigame', source: DropSource.ACTIVITY_MINIGAME, rate: DROP_RATES[DropSource.ACTIVITY_MINIGAME] },
     ],
@@ -246,16 +246,16 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
   {
     category: 'Pets',
     icon: `${WIKI}Pet_kraken.png`,
-    where: 'Farm Keys → Activities — roll the moment a pet drops.',
-    blurb: 'The jackpot: any pet is a guaranteed key, with the best Omni odds going.',
+    where: 'Farm Keys → Activities: roll when a pet drops.',
+    blurb: 'Any pet drop is a guaranteed Key, with the best Omni-Key chance.',
     tiers: [
-      { tier: 'Any pet drop', source: DropSource.PET, rate: DROP_RATES[DropSource.PET], omni: 25, bonus: 'Guaranteed Key + top-tier Omni odds.' },
+      { tier: 'Any pet drop', source: DropSource.PET, rate: DROP_RATES[DropSource.PET], omni: 25, bonus: 'A guaranteed Key, and the best Omni-Key chance of any source.' },
     ],
   },
   {
     category: 'Collection Log',
     icon: `${WIKI}Collection_log.png`,
-    where: 'Collection Log tab — log a new unique item.',
+    where: 'Collection Log tab: log a new unique item.',
     blurb: 'Every unique slot you fill for the first time rolls once.',
     tiers: [
       { tier: 'Any new unique', source: DropSource.COLLECTION_LOG, rate: DROP_RATES[DropSource.COLLECTION_LOG] },
@@ -264,7 +264,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
   {
     category: 'Level Ups',
     icon: `${WIKI}Stats_icon.png`,
-    where: 'Dashboard → click an unlocked skill to bank a level.',
+    where: 'Character tab: click an unlocked skill to log a level.',
     blurb: 'Every level you gain rolls once, and higher levels roll better. Level-ups also give Chaos Keys.',
     dynamic: true,
     tiers: [

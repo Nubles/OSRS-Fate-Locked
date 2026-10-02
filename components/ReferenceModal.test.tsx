@@ -48,6 +48,15 @@ describe('ReferenceModal Core Rules', () => {
   it('says how many Keys a new run starts with', () => {
     expect(renderCodex('core')).toContain(`You start with ${STARTING_KEYS} Keys`);
   });
+
+  it('calls itself Rules, as the top-bar button does, and the site the tracker', () => {
+    const core = renderCodex('core');
+    expect(core).toContain('aria-label="Rules"');
+    expect(core).toContain('>Rules</h2>');
+    expect(core).toContain('The tracker draws to 0.1% precision');
+    expect(core).toContain('a diary task');
+    expect(core).not.toMatch(/Codex|Game reference|Fate is absolute|The app |Diary step/);
+  });
 });
 
 describe('ReferenceModal Omni-Keys', () => {
@@ -169,7 +178,9 @@ describe('ReferenceModal Vanilla policy', () => {
     const drops = renderCodex('drops');
     const unlocks = renderCodex('unlocks');
 
-    expect(economy).toContain('118 finite boss safety-reserve Standard Keys');
+    expect(economy).toContain('Vanilla bosses pay 118 Keys in all, then stop.');
+    expect(economy).not.toMatch(/safety-reserve|onboarding minimums/);
+    expect(drops).toContain('Your first three clue Keys, from any tier, roll at no less than');
     expect(drops).toContain('Brutus: 10% (1 key)');
     expect(drops).toContain('Low: 15% (1 key)');
     expect(drops).toContain('Mid: 30% → 15% (2 keys)');

@@ -115,7 +115,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
   ];
 
   return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Game reference" tabIndex={-1} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Rules" tabIndex={-1} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
       <div className="bg-[#121212] border border-osrs-border w-full max-w-5xl rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col h-[85vh]">
         
         {/* Header */}
@@ -124,7 +124,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
              <div className="bg-osrs-gold/10 p-2 rounded-lg border border-osrs-gold/20">
                 <HelpCircle className="w-5 h-5 text-osrs-gold" />
              </div>
-            <h2 className="text-xl font-bold text-gray-100 tracking-wide">Fate Locked Ironman: Codex</h2>
+            <h2 className="text-xl font-bold text-gray-100 tracking-wide">Rules</h2>
             <span
               className="text-[10px] font-bold uppercase tracking-wider text-amber-200 bg-amber-900/40 px-2 py-1 rounded border border-amber-500/30"
               title={activeMode.description}
@@ -134,7 +134,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
           </div>
           <button 
             onClick={onClose}
-            aria-label="Close the Codex"
+            aria-label="Close the Rules"
             className="p-2 hover:bg-white/10 rounded-full transition-colors group"
           >
             <X className="w-6 h-6 text-gray-400 group-hover:text-white" />
@@ -170,7 +170,6 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                 {/* Flavor Text at bottom of sidebar */}
                 <div className="mt-auto p-6 text-center opacity-30">
                     <img src="https://oldschool.runescape.wiki/images/Ironman_chat_badge.png" alt="Ironman" className="w-8 h-8 mx-auto mb-2 grayscale" />
-                    <p className="text-[10px] font-mono text-gray-500">Fate is absolute.</p>
                 </div>
             </div>
 
@@ -209,7 +208,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <div>
                                             <h4 className="font-bold text-gray-200">The Grind</h4>
                                             <p className="text-sm text-gray-400 mt-1">
-                                                Complete an in-game task (e.g., finish a Quest, complete a Diary step, or gain a Level).
+                                                Complete something in game: finish a quest, a diary task or a clue, or gain a level.
                                             </p>
                                         </div>
                                     </div>
@@ -218,7 +217,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <div>
                                             <h4 className="font-bold text-gray-200">The Roll</h4>
                                             <p className="text-sm text-gray-400 mt-1">
-                                                The app draws to 0.1% precision, from 0.1 to 100.0 (Vanilla boss and clue rolls use 0.01%).
+                                                The tracker draws to 0.1% precision, from 0.1 to 100.0 (Vanilla boss and clue rolls use 0.01%).
                                                 <br/>
                                                 <span className="text-green-400">Success:</span> Roll at or under the threshold to get a Key.
                                                 <br/>
@@ -231,7 +230,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <div>
                                             <h4 className="font-bold text-gray-200">The Unlock</h4>
                                             <p className="text-sm text-gray-400 mt-1">
-                                                 Spend Keys to randomly unlock content (Skills, Gear Slots, Regions).
+                                                 Spend Keys to unlock content at random (skills, gear slots, areas and more).
                                             </p>
                                         </div>
                                     </div>
@@ -248,7 +247,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         {rules.pityEnabled ? (
                                           <span className="text-white font-bold">{rules.pityThreshold} Points = 1 Guaranteed (Pity) Key.</span>
                                         ) : (
-                                          <span className="text-red-400 font-bold">Pity is DISABLED in {activeMode.name} mode — Fate Points only fuel the Void Altar.</span>
+                                          <span className="text-red-400 font-bold">Pity is off in {activeMode.name} mode: Fate Points only pay for Void Altar rituals.</span>
                                         )}
                                     </p>
                                 </div>
@@ -275,7 +274,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             </div>
 
                             <div className="bg-amber-950/20 p-4 rounded-xl border border-amber-500/30 text-sm text-gray-300">
-                                <b className="text-amber-300">{VANILLA_BOSS_STANDARD_KEY_TOTAL} finite boss safety-reserve Standard Keys.</b> Vanilla boss encounters pay from this capped reserve, so repeated farming cannot create unlimited Standard Keys.
+                                <b className="text-amber-300">Vanilla bosses pay {VANILLA_BOSS_STANDARD_KEY_TOTAL} Keys in all, then stop.</b> Each boss pays 1 to 3 Keys at falling odds (see RNG &amp; Drop Rates); after that, its kills no longer roll.
                             </div>
 
                             {/* The loop */}
@@ -324,11 +323,11 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="bg-gradient-to-br from-[#1d2230] to-[#222] p-6 rounded-xl border border-blue-500/20">
                                 <h3 className="text-blue-300 font-bold uppercase tracking-widest mb-4 flex items-center gap-2"><Dices size={18}/> A single roll, start to finish</h3>
                                 <ol className="space-y-3 text-sm text-gray-300">
-                                    <li><b className="text-white">1.</b> You finish <b>Desert Treasure I</b> — a <b className="text-purple-400">Master</b> quest — and tick it off in the Journal.</li>
-                                    <li><b className="text-white">2.</b> The app draws to <span className="font-mono">0.1%</span> precision against its <b className="text-purple-400">95.0%</b> threshold. You roll <span className="font-mono text-green-400">42.0</span> → a Key!</li>
+                                    <li><b className="text-white">1.</b> You finish <b>Desert Treasure I</b>, a <b className="text-purple-400">Master</b> quest, and tick it off in the Journal.</li>
+                                    <li><b className="text-white">2.</b> The tracker draws to <span className="font-mono">0.1%</span> precision against its <b className="text-purple-400">95.0%</b> threshold. You roll <span className="font-mono text-green-400">42.0</span> → a Key!</li>
                                     <li><b className="text-white">3.</b> Every success also has a chance at a bonus <b className="text-purple-400">Omni-Key</b>: <b className="text-purple-400">{rules.omniChanceBase}%</b> in {activeMode.name} mode, or {omniFloor(DropSource.QUEST_GRANDMASTER)}% for a Grandmaster quest. Either way, you keep the Key.</li>
-                                    <li><b className="text-white">4.</b> Take the Key to <b className="text-osrs-gold">Spend Keys</b>, choose the <b>Skills</b> table, and unlock a random skill tier — say Slayer. Those new Slayer levels open fresh tasks to roll on.</li>
-                                    <li className="text-gray-500 text-xs pt-1">Roll <span className="font-mono">95.1–100.0</span> instead and you'd get no Key — but you would gain +3 Fate{rules.pityEnabled ? <>, inching toward a guaranteed Key at <b>{rules.pityThreshold}</b></> : ''}.</li>
+                                    <li><b className="text-white">4.</b> Take the Key to <b className="text-osrs-gold">Spend Keys</b>, choose the <b>Skills</b> table, and unlock a random skill tier, say Slayer. Those new Slayer levels open new tasks to roll on.</li>
+                                    <li className="text-gray-500 text-xs pt-1">Roll <span className="font-mono">95.1–100.0</span> instead and you get no Key, but you would gain +3 Fate{rules.pityEnabled ? <>, toward a guaranteed Key at <b>{rules.pityThreshold}</b></> : ''}.</li>
                                 </ol>
                             </div>
 
@@ -359,7 +358,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             </div>
 
                             <p className="text-xs text-gray-500">
-                                Standard Keys cash in across <b className="text-gray-300">{spendTables.length} tables</b> — {spendTables.map(t => t.label).join(', ')} — at a flat <b className="text-osrs-gold">{UNLOCK_KEY_COST} Key</b> each. The Unlock Systems tab breaks down what every table does.
+                                A Key unlocks a random entry from one of <b className="text-gray-300">{spendTables.length} tables</b>: {spendTables.map(t => t.label).join(', ')}. Each unlock costs <b className="text-osrs-gold">{UNLOCK_KEY_COST} Key</b>. The Unlock Systems tab says what every table does.
                             </p>
 
                             {/* Smart play */}
@@ -426,16 +425,16 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                              <div>
                                 <h1 className="text-3xl font-black text-white mb-2">RNG & Drop Rates</h1>
-                                <p className="text-gray-400">How to obtain the Keys of Fate.</p>
+                                <p className="text-gray-400">Every way to earn Keys.</p>
                                 <p className="text-xs text-amber-300 mt-2 font-bold">{vanillaPolicyLabel}</p>
                              </div>
 
                             <div className="bg-amber-950/20 p-4 rounded-xl border border-amber-500/30">
-                                <h3 className="font-bold text-amber-300 mb-2">Vanilla boss reserve schedules</h3>
+                                <h3 className="font-bold text-amber-300 mb-2">Vanilla: Keys per boss</h3>
                                 <ul className="text-sm text-gray-300 space-y-1">
                                     {Object.entries(VANILLA_BOSS_KEY_RATES).map(([bossClass, rates]) => <li key={bossClass}>{formatVanillaBossSchedule(bossClass, rates)}</li>)}
                                 </ul>
-                                <p className="text-xs text-gray-400 mt-3">All clue tiers share onboarding minimums of <b>{CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`).join(' → ')}</b> for the first three Standard Keys, then use their normal tier rate.</p>
+                                <p className="text-xs text-gray-400 mt-3">Each boss pays its Keys in order, at these odds, then its kills stop rolling. Your first three clue Keys, from any tier, roll at no less than <b>{CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`).join(' → ')}</b>; after that each tier uses its normal rate.</p>
                             </div>
 
                             <div className="bg-[#222] rounded-xl border border-white/5 overflow-hidden">
@@ -528,7 +527,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         {rules.pityEnabled ? (
                                           <>{rules.pityThreshold} Fate grants 1 Guaranteed Key; overflow carries forward.<br/><br/>Any successful roll resets your Fate. Combat Achievements: Easy / Medium: +1 Fate; Hard / Elite: +2 Fate; Master / GM: +3 Fate.</>
                                         ) : (
-                                          <span className="text-red-400">Disabled in {activeMode.name} mode — there is no safety net. Failed rolls only build Fate for the Altar.</span>
+                                          <span className="text-red-400">Off in {activeMode.name} mode: there is no Pity Key. Failed rolls only build Fate for the Altar.</span>
                                         )}
                                     </p>
                                 </div>
@@ -541,7 +540,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-2">The Void Altar</h1>
-                                <p className="text-gray-400">Spend your Fate Points to influence destiny.</p>
+                                <p className="text-gray-400">Spend Fate Points on rituals.</p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -570,7 +569,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-2">Unlock Systems</h1>
-                                <p className="text-gray-400">What do Keys actually do?</p>
+                                <p className="text-gray-400">What each unlock does.</p>
                                 <p className="text-xs text-amber-300 mt-2 font-bold">{vanillaPolicyLabel}</p>
                             </div>
 
@@ -674,7 +673,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             {/* Every spend table */}
                             <div>
                                 <h3 className="text-osrs-gold font-bold uppercase tracking-widest mb-3 flex items-center gap-2"><Coins size={16}/> Every Spend Table</h3>
-                                <p className="text-xs text-gray-500 mb-4">A Standard Key cashes in on whichever table you choose, for a random entry from it. Equipment and Skills are tiered — repeat unlocks deepen them (slots × tiers); the rest are one-and-done.</p>
+                                <p className="text-xs text-gray-500 mb-4">A Key unlocks a random entry from the table you choose. Equipment and Skills have tiers, so each later unlock raises a slot or skill by one (slots × tiers); every other entry is unlocked once.</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {spendTables.map(t => (
                                         <div key={t.label} className="bg-[#222] rounded-lg border border-white/5 p-3 flex items-start gap-3">
@@ -697,7 +696,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-2">Equipment Tiers</h1>
-                                <p className="text-gray-400">Progression of gear power.</p>
+                                <p className="text-gray-400">What each tier lets you wear.</p>
                             </div>
 
                             <div className="bg-[#222] rounded-xl border border-white/5 overflow-hidden">
