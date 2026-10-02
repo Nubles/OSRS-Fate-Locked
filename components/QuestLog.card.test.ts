@@ -137,6 +137,36 @@ describe('QuestCard mandatory equipment', () => {
   });
 });
 
+describe('QuestCard shop and travel unlocks', () => {
+  const renderGated = (over: Partial<UnlockState>) => {
+    const quest = {
+      ...QUEST_DATA["Hopespear's Will"],
+      accessPolicy: 'regions' as const, regions: ['Misthalin'], locations: [], skills: {}, prereqs: [],
+      manualRequirements: [], merchants: ['Clothes Shops'], mobility: ['Fairy Rings'],
+    };
+    const state = { ...unlocks, ...over };
+    const eligibility = evaluateQuestEligibility(quest, state);
+    return renderToStaticMarkup(React.createElement(QuestCard, {
+      quest: { ...quest, status: eligibility.status, eligibility },
+      unlocks: state, currentQP: 0, onToggle: vi.fn(),
+    }));
+  };
+
+  it('shows each missing shop type and travel network, and counts them', () => {
+    const html = renderGated({});
+    expect(html).toContain('Clothes Shops');
+    expect(html).toContain('General_store_icon.png');
+    expect(html).toContain('Fairy Rings');
+    expect(html).toContain('Graceful_boots.png');
+    expect(html).toContain('1/3 reqs');
+    expect(html).not.toContain('Ready to complete!');
+  });
+
+  it('is ready once the run owns them', () => {
+    expect(renderGated({ merchants: ['Clothes Shops'], mobility: ['Fairy Rings'] })).toContain('Ready to complete!');
+  });
+});
+
 describe('QuestCard skill-gated prerequisites', () => {
   const renderDigSite = (quests: string[]) => {
     const state = {

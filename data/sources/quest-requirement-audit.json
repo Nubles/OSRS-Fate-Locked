@@ -348,7 +348,7 @@
       "id": "Alfred Grimhand's Barcrawl",
       "kind": "miniquest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Alfred_Grimhand's_Barcrawl&oldid=15237159",
         "revision": 15237159,
@@ -356,7 +356,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\",\"Misthalin\",\"Karamja\",\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":39,\"cy\":55}],\"id\":\"barbarian-outpost\",\"label\":\"Barbarian Outpost\",\"standardAreas\":[\"Barbarian Outpost\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"blue-moon-inn\",\"label\":\"Blue Moon Inn\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":38,\"cy\":54}],\"id\":\"grand-tree-bar\",\"label\":\"Blurberry Bar in the Grand Tree\",\"standardAreas\":[\"Tree Gnome Stronghold\"]},{\"chunkOptions\":[{\"cx\":43,\"cy\":49}],\"id\":\"brimhaven-bar\",\"label\":\"Dead Man's Chest in Brimhaven\",\"standardAreas\":[\"Brimhaven\"]},{\"chunkOptions\":[{\"cx\":39,\"cy\":48}],\"id\":\"yanille-bar\",\"label\":\"Dragon Inn in Yanille\",\"standardAreas\":[\"Yanille\"]},{\"chunkOptions\":[{\"cx\":40,\"cy\":51}],\"id\":\"east-ardougne-bar\",\"label\":\"Flying Horse Inn in East Ardougne\",\"standardAreas\":[\"East Ardougne\"]},{\"chunkOptions\":[{\"cx\":42,\"cy\":54}],\"id\":\"seers-village-bar\",\"label\":\"Forester's Arms in Seers' Village\",\"standardAreas\":[\"Seers' Village\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"jolly-boar-inn\",\"label\":\"Jolly Boar Inn\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":45,\"cy\":49}],\"id\":\"musa-point-bar\",\"label\":\"Karamja Spirits Bar at Musa Point\",\"standardAreas\":[\"Musa Point\"]},{\"chunkOptions\":[{\"cx\":46,\"cy\":52}],\"id\":\"falador-bar\",\"label\":\"Rising Sun Inn in Falador\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":50}],\"id\":\"port-sarim-bar\",\"label\":\"Rusty Anchor in Port Sarim\",\"standardAreas\":[\"Port Sarim\"]}],\"skills\":{},\"prereqs\":[],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\",\"Misthalin\",\"Karamja\",\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":39,\"cy\":55}],\"id\":\"barbarian-outpost\",\"label\":\"Barbarian Outpost\",\"standardAreas\":[\"Barbarian Outpost\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"blue-moon-inn\",\"label\":\"Blue Moon Inn\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":38,\"cy\":54}],\"id\":\"grand-tree-bar\",\"label\":\"Blurberry Bar in the Grand Tree\",\"standardAreas\":[\"Tree Gnome Stronghold\"]},{\"chunkOptions\":[{\"cx\":43,\"cy\":49}],\"id\":\"brimhaven-bar\",\"label\":\"Dead Man's Chest in Brimhaven\",\"standardAreas\":[\"Brimhaven\"]},{\"chunkOptions\":[{\"cx\":39,\"cy\":48}],\"id\":\"yanille-bar\",\"label\":\"Dragon Inn in Yanille\",\"standardAreas\":[\"Yanille\"]},{\"chunkOptions\":[{\"cx\":40,\"cy\":51}],\"id\":\"east-ardougne-bar\",\"label\":\"Flying Horse Inn in East Ardougne\",\"standardAreas\":[\"East Ardougne\"]},{\"chunkOptions\":[{\"cx\":42,\"cy\":54}],\"id\":\"seers-village-bar\",\"label\":\"Forester's Arms in Seers' Village\",\"standardAreas\":[\"Seers' Village\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"jolly-boar-inn\",\"label\":\"Jolly Boar Inn\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":45,\"cy\":49}],\"id\":\"musa-point-bar\",\"label\":\"Karamja Spirits Bar at Musa Point\",\"standardAreas\":[\"Musa Point\"]},{\"chunkOptions\":[{\"cx\":46,\"cy\":52}],\"id\":\"falador-bar\",\"label\":\"Rising Sun Inn in Falador\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":50}],\"id\":\"port-sarim-bar\",\"label\":\"Rusty Anchor in Port Sarim\",\"standardAreas\":[\"Port Sarim\"]}],\"skills\":{},\"prereqs\":[],\"merchants\":[\"Bars & Inns\"],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "39,48",
@@ -406,7 +406,8 @@
       ],
       "notes": {
         "items": [
-          "The ten required drinks cost 208 coins; item possession is not machine-enforced."
+          "The ten required drinks cost 208 coins; item possession is not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: barkeeper purchases need Bars & Inns, and every drink on the barcrawl card is bought from one (Wiki revision 15292247)."
         ],
         "travel": [
           "The Wiki requires the Barbarian Outpost and ten pubs. The exact location policy uses Wiki map coordinates for the Grand Tree bar (38,54) and East Ardougne bar (40,51), which have no pinned Chunk Picker first/step row; the other unavoidable stops match the nine pinned rows."
@@ -1398,7 +1399,7 @@
       "id": "Daddy's Home",
       "kind": "miniquest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Daddy's_Home&oldid=15233724",
         "revision": 15233724,
@@ -1406,7 +1407,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":54}],\"id\":\"varrock-palace\",\"label\":\"Marlo at Varrock's Estate Agent\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"varrock-center\",\"label\":\"Old Man Yarlo's house in Varrock\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"lumber-yard\",\"label\":\"Lumber Yard\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":54}],\"id\":\"varrock-palace\",\"label\":\"Marlo at Varrock's Estate Agent\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"varrock-center\",\"label\":\"Old Man Yarlo's house in Varrock\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"lumber-yard\",\"label\":\"Lumber Yard\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[],\"merchants\":[\"Sawmill Operators\"],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "50,53",
@@ -1426,7 +1427,8 @@
       ],
       "notes": {
         "items": [
-          "Planks, bolts of cloth, nails, a hammer, and a saw are required; item possession is not machine-enforced."
+          "Planks, bolts of cloth, nails, a hammer, and a saw are required; item possession is not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the bolts of cloth (and the planks) come from the Varrock sawmill (Wiki revision 15337234); the quest now needs Sawmill Operators."
         ],
         "travel": [
           "Marlo at Varrock's Estate Agent, Old Man Yarlo's house, and the Lumber Yard are all unavoidable and match the pinned first/step chunks."
@@ -2636,7 +2638,7 @@
       "id": "Fairytale II - Cure a Queen",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Fairytale_II_-_Cure_a_Queen&oldid=15266901",
         "revision": 15266901,
@@ -2644,7 +2646,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Islands & Others\",\"Misthalin\",\"Kandarin\",\"Tirannwn\"],\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":50}],\"id\":\"draynor-village\",\"label\":\"Draynor Village\",\"standardAreas\":[\"Draynor Village\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":49}],\"id\":\"zanaris\",\"label\":\"Zanaris\",\"standardAreas\":[\"Zanaris\"]},{\"chunkOptions\":[{\"cx\":34,\"cy\":48}],\"id\":\"poison-waste\",\"label\":\"Poison Waste\",\"standardAreas\":[\"Poison Waste\"]},{\"chunkOptions\":[{\"cx\":42,\"cy\":50}],\"id\":\"horseshoe-mine\",\"label\":\"Horseshoe Mine\",\"standardAreas\":[\"Brimhaven\"]}],\"skills\":{\"Farming\":49,\"Herblore\":57,\"Thieving\":40},\"prereqs\":[\"Fairytale I - Growing Pains\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Islands & Others\",\"Misthalin\",\"Kandarin\",\"Tirannwn\"],\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":50}],\"id\":\"draynor-village\",\"label\":\"Draynor Village\",\"standardAreas\":[\"Draynor Village\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":49}],\"id\":\"zanaris\",\"label\":\"Zanaris\",\"standardAreas\":[\"Zanaris\"]},{\"chunkOptions\":[{\"cx\":34,\"cy\":48}],\"id\":\"poison-waste\",\"label\":\"Poison Waste\",\"standardAreas\":[\"Poison Waste\"]},{\"chunkOptions\":[{\"cx\":42,\"cy\":50}],\"id\":\"horseshoe-mine\",\"label\":\"Horseshoe Mine\",\"standardAreas\":[\"Brimhaven\"]}],\"skills\":{\"Farming\":49,\"Herblore\":57,\"Thieving\":40},\"prereqs\":[\"Fairytale I - Growing Pains\"],\"mobility\":[\"Fairy Rings\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "34,48",
@@ -2668,7 +2670,8 @@
         ],
         "travel": [
           "The fixed route uses Draynor, Zanaris, Poison Waste, and Horseshoe Mine.",
-          "Standard mode has no Horseshoe Mine alias, so the truthful mine label uses the existing Kandarin unlock; Chunked mode uses exact chunk 42,50."
+          "Standard mode has no Horseshoe Mine alias, so the truthful mine label uses the existing Kandarin unlock; Chunked mode uses exact chunk 42,50.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the Fairy Queen's hideout is reached only through the fairy rings AIR, DLR, DJQ and AJS, and the cosmic and gorak planes only by CKP and DIR (Wiki revision 15292318), so the quest now needs the Fairy Rings mobility unlock, as Diary tasks that use a fairy ring do."
         ],
         "instances": [
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
@@ -2940,7 +2943,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"Draynor Village\",\"Edgeville\",\"Falador\",\"Burthorpe\",\"East Ardougne\",\"Catherby\",\"Port Phasmatys\",\"Taverley\"],\"skills\":{\"Farming\":25},\"prereqs\":[\"Creature of Fenkenstrain\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"Draynor Village\",\"Edgeville\",\"Falador\",\"Burthorpe\",\"East Ardougne\",\"Catherby\",\"Port Phasmatys\",\"Taverley\"],\"skills\":{\"Farming\":25},\"prereqs\":[\"Creature of Fenkenstrain\"],\"merchants\":[\"Farming Shops\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "41,52",
@@ -3000,7 +3003,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Garden of Tranquillity were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Garden of Tranquillity were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the plant cure, filled plant pot, gardening trowel, secateurs and watering can come only from farming shops in the export (Wiki revision 15344256); the quest now needs Farming Shops."
         ],
         "travel": [
           "The unavoidable garden route crosses Varrock, Draynor, Falador, Taverley, Burthorpe, Catherby, Ardougne, and Port Phasmatys; the four retained regions cover all fixed patches.",
@@ -3447,7 +3451,7 @@
       "id": "Hopespear's Will",
       "kind": "miniquest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Hopespear's_Will&oldid=15262386",
         "revision": 15262386,
@@ -3455,7 +3459,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hemenster\"],\"skills\":{\"Prayer\":50},\"prereqs\":[\"Desert Treasure I\",\"Fairytale II - Cure a Queen\",\"Land of the Goblins\"],\"manualRequirements\":[\"Started The Restless Ghost\"],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hemenster\"],\"skills\":{\"Prayer\":50},\"prereqs\":[\"Desert Treasure I\",\"Fairytale II - Cure a Queen\",\"Land of the Goblins\"],\"manualRequirements\":[\"Started The Restless Ghost\"],\"mobility\":[\"Fairy Rings\"],\"points\":0}",
       "chunkEvidence": [],
       "notes": {
         "items": [
@@ -3463,7 +3467,8 @@
         ],
         "travel": [
           "The direct route uses Goblin Cave/Goblin Temple in Kandarin and Yu'biusk by fairy ring. There is no pinned Chunk Picker first/step row.",
-          "The catalogue-wide parent-region audit replaced Kandarin with the exact tracked access set: Hemenster."
+          "The catalogue-wide parent-region audit replaced Kandarin with the exact tracked access set: Hemenster.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: Yu'biusk is reached only by fairy ring BLQ (Wiki revision 15335611), so the miniquest now needs the Fairy Rings mobility unlock, as Diary tasks that use a fairy ring do."
         ],
         "instances": [
           "The Goblin Temple crypt and Yu'biusk are special route spaces reached from Kandarin/fairy-ring access."
@@ -3521,7 +3526,7 @@
       "id": "Icthlarin's Little Helper",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Icthlarin's_Little_Helper&oldid=15264128",
         "revision": 15264128,
@@ -3529,7 +3534,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Sophanem\"],\"skills\":{},\"prereqs\":[\"Gertrude's Cat\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Sophanem\"],\"skills\":{},\"prereqs\":[\"Gertrude's Cat\"],\"merchants\":[\"Clothes Shops\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "51,43",
@@ -3544,7 +3549,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Icthlarin's Little Helper were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Icthlarin's Little Helper were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the linen is sold only by Raetul's cloth store in Sophanem (Wiki revision 15292330); the quest now needs Clothes Shops."
         ],
         "travel": [
           "The desert wanderer, Sophanem, pyramid, and tomb route remains within the Kharidian Desert.",
@@ -4164,7 +4170,7 @@
       "id": "Making Friends with My Arm",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Making_Friends_with_My_Arm&oldid=15265992",
         "revision": 15265992,
@@ -4172,7 +4178,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Burthorpe\",\"Rellekka\",\"Weiss\",\"Draynor Village\",\"Varrock\"],\"skills\":{\"Agility\":68,\"Construction\":35,\"Firemaking\":66,\"Mining\":72},\"prereqs\":[\"My Arm's Big Adventure\",\"Swan Song\",\"Cold War\",\"Romeo & Juliet\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Burthorpe\",\"Rellekka\",\"Weiss\",\"Draynor Village\",\"Varrock\"],\"skills\":{\"Agility\":68,\"Construction\":35,\"Firemaking\":66,\"Mining\":72},\"prereqs\":[\"My Arm's Big Adventure\",\"Swan Song\",\"Cold War\",\"Romeo & Juliet\"],\"merchants\":[\"Sawmill Operators\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "42,58",
@@ -4207,7 +4213,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Making Friends with My Arm were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Making Friends with My Arm were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the bolt of cloth comes from the Varrock sawmill (Wiki revision 15345660); the quest now needs Sawmill Operators."
         ],
         "travel": [
           "The route crosses Troll Country and Weiss plus mandatory Draynor and Varrock stops in Misthalin.",
@@ -5099,7 +5106,7 @@
       "id": "Pirate's Treasure",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-22",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Pirate's_Treasure&oldid=15315445",
         "revision": 15315445,
@@ -5107,7 +5114,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Sarim\",\"Falador\",\"Varrock\",\"Musa Point\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear a white apron to enter the grocery storeroom\",\"slot\":\"Body\",\"tier\":1}],\"prereqs\":[],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Sarim\",\"Falador\",\"Varrock\",\"Musa Point\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear a white apron to enter the grocery storeroom\",\"slot\":\"Body\",\"tier\":1}],\"prereqs\":[],\"oneOf\":[{\"merchants\":[\"Wine Traders\"]},{\"merchants\":[\"Bars & Inns\"],\"regions\":[\"Brimhaven\"]}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "45,49",
@@ -5133,7 +5140,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Pirate's Treasure were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Fate equipment review 2026-09-22: Body T1: Wear a white apron to enter the grocery storeroom. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
+          "Fate equipment review 2026-09-22: Body T1: Wear a white apron to enter the grocery storeroom. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the Karamjan rum is bought from Zembo at Musa Point (Wine Traders by the app's shop classification) or the Dead Man's Chest in Brimhaven (Bars & Inns); a one-of now asks for either (Wiki revision 15315445)."
         ],
         "travel": [
           "The compulsory rum-smuggling route crosses Port Sarim/Asgarnia, Musa Point/Karamja, Varrock/Misthalin, and Falador/Asgarnia.",
@@ -5225,7 +5233,7 @@
       "id": "Prince Ali Rescue",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Prince_Ali_Rescue&oldid=15260348",
         "revision": 15260348,
@@ -5233,7 +5241,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\",\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":51,\"cy\":49}],\"id\":\"al-kharid-palace\",\"label\":\"Al Kharid Palace\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":50}],\"id\":\"draynor-village-and-jail\",\"label\":\"Draynor Village and the jail\",\"standardAreas\":[\"Draynor Village\"]}],\"skills\":{},\"prereqs\":[],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\",\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":51,\"cy\":49}],\"id\":\"al-kharid-palace\",\"label\":\"Al Kharid Palace\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":50}],\"id\":\"draynor-village-and-jail\",\"label\":\"Draynor Village and the jail\",\"standardAreas\":[\"Draynor Village\"]}],\"skills\":{},\"prereqs\":[],\"merchants\":[\"Clothes Shops\",\"Bars & Inns\"],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "48,50",
@@ -5248,7 +5256,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Prince Ali Rescue were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Prince Ali Rescue were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decisions of 2 Oct: the pink skirt is sold only by clothes shops (Thessalia; Wiki revision 15260348) and Joe's three beers are bought from a barkeeper, so the quest now needs Clothes Shops and Bars & Inns."
         ],
         "travel": [
           "Al Kharid Palace and the Draynor jail/rescue route are unavoidable; ingredient and furnace choices are not location gates."
@@ -5317,7 +5326,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Draynor Village\",\"Silvarea\"],\"skills\":{},\"prereqs\":[],\"oneOf\":[{\"regions\":[\"Musa Point\"]},{\"anyOfRegions\":[\"Catherby\",\"Seers' Village\",\"Yanille\",\"Hosidius\"],\"regions\":[\"Shilo Village\"]},{\"anyOfRegions\":[\"Catherby\",\"Seers' Village\",\"Yanille\",\"Hosidius\"],\"regions\":[\"East Ardougne\"],\"skills\":{\"Magic\":33}}],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Draynor Village\",\"Silvarea\"],\"skills\":{},\"prereqs\":[],\"oneOf\":[{\"regions\":[\"Musa Point\"]},{\"anyOfRegions\":[\"Catherby\",\"Seers' Village\",\"Yanille\",\"Hosidius\"],\"regions\":[\"Shilo Village\"]},{\"anyOfRegions\":[\"Catherby\",\"Seers' Village\",\"Yanille\",\"Hosidius\"],\"regions\":[\"East Ardougne\"],\"skills\":{\"Magic\":33}}],\"merchants\":[\"Wine Traders\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "48,50",
@@ -5327,7 +5336,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Rag and Bone Man I were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Rag and Bone Man I were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the eight jugs of vinegar are bought from Fortunato's wine shop in Draynor (Wiki revision 15292348); the quest now needs Wine Traders."
         ],
         "travel": [
           "The Odd Old Man and Draynor vinegar route remain covered by Misthalin; monster-bone sources have multiple item-source alternatives.",
@@ -5345,7 +5355,7 @@
       "id": "Rag and Bone Man II",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_II&oldid=15273866",
         "revision": 15273866,
@@ -5353,7 +5363,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Silvarea\",\"Draynor Village\",\"Taverley\",\"Tree Gnome Stronghold\",\"Feldip Hills\",\"Nardah\",\"Rellekka\",\"Canifis\",\"Haunted Woods\",\"Fenkenstrain's Castle\",\"Slayer Tower\"],\"skills\":{\"Slayer\":40},\"prereqs\":[\"Rag and Bone Man I\",\"Skippy and the Mogres\"],\"manualRequirements\":[\"Completed Horror from the Deep or started The Fremennik Trials for dagannoth access\",\"Reached an experiment after starting Creature of Fenkenstrain or completing Grim Tales\",\"Reached a listed fire giant source after partially completing Waterfall Quest or by an alternative route\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Silvarea\",\"Draynor Village\",\"Taverley\",\"Tree Gnome Stronghold\",\"Feldip Hills\",\"Nardah\",\"Rellekka\",\"Canifis\",\"Haunted Woods\",\"Fenkenstrain's Castle\",\"Slayer Tower\"],\"skills\":{\"Slayer\":40},\"prereqs\":[\"Rag and Bone Man I\",\"Skippy and the Mogres\"],\"manualRequirements\":[\"Completed Horror from the Deep or started The Fremennik Trials for dagannoth access\",\"Reached an experiment after starting Creature of Fenkenstrain or completing Grim Tales\",\"Reached a listed fire giant source after partially completing Waterfall Quest or by an alternative route\"],\"merchants\":[\"Wine Traders\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "48,50",
@@ -5363,7 +5373,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Rag and Bone Man II were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Rag and Bone Man II were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the jugs of vinegar are bought from Fortunato's wine shop in Draynor, the only source in the export; the quest now needs Wine Traders."
         ],
         "travel": [
           "The pinned route explicitly requires monster access across Misthalin, Asgarnia, Kandarin, the desert, Fremennik, and Morytania.",
@@ -5686,7 +5697,7 @@
       "id": "RFD: King Awowogei",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-22",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_King_Awowogei&oldid=15331685",
         "revision": 15331685,
@@ -5694,7 +5705,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Ape Atoll\"],\"skills\":{\"Agility\":48,\"Cooking\":70},\"prereqs\":[\"RFD: The Cook\",\"Monkey Madness I\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Ape Atoll\"],\"skills\":{\"Agility\":48,\"Cooking\":70},\"prereqs\":[\"RFD: The Cook\",\"Monkey Madness I\"],\"merchants\":[\"Food Shops\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "42,43",
@@ -5719,7 +5730,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for RFD: King Awowogei were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for RFD: King Awowogei were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the monkey nuts are sold only by Solihib's food stall on Ape Atoll in the export; the quest now needs Food Shops."
         ],
         "travel": [
           "Compatibility-preserved King Awowogei chapter evidence covers Lumbridge, Ape Atoll, Crash Island, and its dungeon for the Recipe for Disaster parent route.",
@@ -6314,7 +6326,7 @@
       "id": "Shades of Mort'ton",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Shades_of_Mort'ton&oldid=15240980",
         "revision": 15240980,
@@ -6322,7 +6334,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Morytania\"],\"locations\":[{\"chunkOptions\":[{\"cx\":54,\"cy\":51}],\"id\":\"mortton\",\"label\":\"Mort'ton and the Flamtaer Temple\",\"standardAreas\":[\"Mort'ton\"]}],\"skills\":{\"Crafting\":20,\"Firemaking\":5,\"Herblore\":15},\"prereqs\":[\"Priest in Peril\"],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Morytania\"],\"locations\":[{\"chunkOptions\":[{\"cx\":54,\"cy\":51}],\"id\":\"mortton\",\"label\":\"Mort'ton and the Flamtaer Temple\",\"standardAreas\":[\"Mort'ton\"]}],\"skills\":{\"Crafting\":20,\"Firemaking\":5,\"Herblore\":15},\"prereqs\":[\"Priest in Peril\"],\"merchants\":[\"General Stores\",\"Real Estate Agents\"],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "54,51",
@@ -6332,7 +6344,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Shades of Mort'ton were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Shades of Mort'ton were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: Razmire sells the olive oil (his general store) and the timber beams (his builders' merchant, a Real Estate Agent by the app's shop classification); the quest now needs both."
         ],
         "travel": [
           "The quest is confined to Mort'ton and its Flamtaer Temple, represented by the pinned chunk.",
@@ -6859,7 +6872,7 @@
       "id": "Tai Bwo Wannai Trio",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Tai_Bwo_Wannai_Trio&oldid=15265886",
         "revision": 15265886,
@@ -6867,7 +6880,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tai Bwo Wannai\",\"Shilo Village\",\"Brimhaven\",\"Musa Point\"],\"skills\":{\"Agility\":15,\"Cooking\":30,\"Fishing\":5},\"prereqs\":[\"Jungle Potion\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tai Bwo Wannai\",\"Shilo Village\",\"Brimhaven\",\"Musa Point\"],\"skills\":{\"Agility\":15,\"Cooking\":30,\"Fishing\":5},\"prereqs\":[\"Jungle Potion\"],\"oneOf\":[{\"merchants\":[\"Wine Traders\"]},{\"merchants\":[\"Bars & Inns\"]}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "43,46",
@@ -6902,7 +6915,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Tai Bwo Wannai Trio were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Tai Bwo Wannai Trio were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the Karamjan rum is bought from Zembo at Musa Point (Wine Traders) or the Dead Man's Chest in Brimhaven (Bars & Inns); a one-of now asks for either (Wiki revision 15265886)."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Cairn Isle (43,46, step); South Tai Bwo Wannai (43,47, step); North Tai Bwo Wannai (43,48, first); Brimhaven (43,49, step); Karambwan Shore (45,48, step); Musa Point (45,49, step), and unavoidable travel remains represented by region gate Karamja.",
@@ -7493,7 +7507,7 @@
       "id": "The Feud",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-02",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Feud&oldid=15265909",
         "revision": 15265909,
@@ -7501,7 +7515,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Al Kharid\",\"Pollnivneach\"],\"skills\":{\"Thieving\":30},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Al Kharid\",\"Pollnivneach\"],\"skills\":{\"Thieving\":30},\"prereqs\":[],\"merchants\":[\"General Stores\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "51,50",
@@ -7516,7 +7530,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for The Feud were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for The Feud were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the Kharidian headpiece and fake beard are sold by Ali Morrisane (Ali's Discount Wares) or the Pollnivneach general store (Wiki revision 15315438); the quest now needs General Stores."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are North Al Kharid (51,50, first); Pollnivneach (52,46, step), and unavoidable travel remains represented by region gate Kharidian Desert.",
@@ -8640,7 +8655,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Bedabin Camp\",\"Shantay Pass\"],\"locations\":[{\"chunkOptions\":[{\"cx\":51,\"cy\":47}],\"id\":\"desert-mining-camp\",\"label\":\"Desert Mining Camp\",\"standardAreas\":[\"Shantay Pass\"]}],\"skills\":{\"Fletching\":10,\"Smithing\":20},\"equipmentRequirements\":[{\"reason\":\"Wear the slave shirt inside the mining camp\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear the slave robe inside the mining camp\",\"slot\":\"Legs\",\"tier\":1},{\"reason\":\"Wear the slave boots inside the mining camp\",\"slot\":\"Boots\",\"tier\":1}],\"prereqs\":[],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Bedabin Camp\",\"Shantay Pass\"],\"locations\":[{\"chunkOptions\":[{\"cx\":51,\"cy\":47}],\"id\":\"desert-mining-camp\",\"label\":\"Desert Mining Camp\",\"standardAreas\":[\"Shantay Pass\"]}],\"skills\":{\"Fletching\":10,\"Smithing\":20},\"equipmentRequirements\":[{\"reason\":\"Wear the slave shirt inside the mining camp\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear the slave robe inside the mining camp\",\"slot\":\"Legs\",\"tier\":1},{\"reason\":\"Wear the slave boots inside the mining camp\",\"slot\":\"Boots\",\"tier\":1}],\"prereqs\":[],\"oneOf\":[{\"merchants\":[\"General Stores\"]},{\"merchants\":[\"Clothes Shops\"],\"regions\":[\"Sophanem\"]}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "49,47",
@@ -8661,7 +8676,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for The Tourist Trap were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Fate equipment review 2026-09-22: Body T1: Wear the slave shirt inside the mining camp; Legs T1: Wear the slave robe inside the mining camp; Boots T1: Wear the slave boots inside the mining camp. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
+          "Fate equipment review 2026-09-22: Body T1: Wear the slave shirt inside the mining camp; Legs T1: Wear the slave robe inside the mining camp; Boots T1: Wear the slave boots inside the mining camp. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged.",
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the desert shirt, robe and boots are sold by the Shantay Pass, Bandit Camp and Pollnivneach general stores, or Raetul's cloth store in Sophanem; a one-of now asks for General Stores, or Sophanem with Clothes Shops (Wiki revision 15350316)."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Bedabin Camp (49,47, step); Rocky Desert (50,47, step); Shantay Pass (51,48, first), and unavoidable travel remains represented by region gate Kharidian Desert.",

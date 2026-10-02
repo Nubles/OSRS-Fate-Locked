@@ -236,6 +236,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'draynor-village-and-jail', label: 'Draynor Village and the jail', standardAreas: ['Draynor Village'], chunkOptions: [{ cx: 48, cy: 50 }] },
     ],
     skills: {}, prereqs: [], points: 3, series: 'Kharidian',
+    // Only clothes shops sell the pink skirt (Thessalia), and Joe's three beers are bought at a bar.
+    merchants: ['Clothes Shops', 'Bars & Inns'],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Doric\'s Quest': {
@@ -298,6 +300,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     equipmentRequirements: [{ slot: 'Body', tier: 1, reason: 'Wear a white apron to enter the grocery storeroom' }],
     regions: ['Port Sarim', 'Falador', 'Varrock', 'Musa Point'],
     skills: {}, prereqs: [], points: 2,
+    // The Karamjan rum: Zembo's wine shop at Musa Point, or the Dead Man's Chest bar in Brimhaven.
+    oneOf: [{ merchants: ['Wine Traders'] }, { regions: ['Brimhaven'], merchants: ['Bars & Inns'] }],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Dragon Slayer I': {
@@ -594,6 +598,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'desert-mining-camp', label: 'Desert Mining Camp', standardAreas: ['Shantay Pass'], chunkOptions: [{ cx: 51, cy: 47 }] },
     ],
     skills: { 'Fletching': 10, 'Smithing': 20 }, prereqs: [], points: 2,
+    // The desert clothes: the Shantay Pass and Bandit Camp general stores, or Raetul's cloth store in Sophanem.
+    oneOf: [{ merchants: ['General Stores'] }, { regions: ['Sophanem'], merchants: ['Clothes Shops'] }],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Watchtower': {
@@ -723,6 +729,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Tai Bwo Wannai Trio', name: 'Tai Bwo Wannai Trio',
     regions: ['Tai Bwo Wannai', 'Shilo Village', 'Brimhaven', 'Musa Point'],
     skills: { 'Agility': 15, 'Cooking': 30, 'Fishing': 5 }, prereqs: ['Jungle Potion'], points: 2,
+    // The Karamjan rum: Zembo's wine shop at Musa Point, or the Dead Man's Chest bar in Brimhaven.
+    oneOf: [{ merchants: ['Wine Traders'] }, { merchants: ['Bars & Inns'] }],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Regicide': {
@@ -747,6 +755,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'mortton', label: "Mort'ton and the Flamtaer Temple", standardAreas: ["Mort'ton"], chunkOptions: [{ cx: 54, cy: 51 }] },
     ],
     skills: { 'Crafting': 20, 'Firemaking': 5, 'Herblore': 15 }, prereqs: ['Priest in Peril'], points: 3,
+    // Razmire sells the olive oil (his general store) and the timber beams (his builders' merchant).
+    merchants: ['General Stores', 'Real Estate Agents'],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Fremennik Trials': {
@@ -857,6 +867,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'The Feud', name: 'The Feud',
     regions: ['Al Kharid', 'Pollnivneach'],
     skills: { 'Thieving': 30 }, prereqs: [], points: 1,
+    // The Kharidian headpiece and fake beard are sold by Ali Morrisane or the Pollnivneach general store.
+    merchants: ['General Stores'],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Golem': {
@@ -887,6 +899,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Icthlarin\'s Little Helper', name: 'Icthlarin\'s Little Helper',
     regions: ['Sophanem'],
     skills: {}, prereqs: ['Gertrude\'s Cat'], points: 2, series: 'Kharidian',
+    // The linen is sold only by Raetul's cloth store in Sophanem.
+    merchants: ['Clothes Shops'],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Tears of Guthix': {
@@ -954,6 +968,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Garden of Tranquillity', name: 'Garden of Tranquillity',
     regions: ['Varrock', 'Draynor Village', 'Edgeville', 'Falador', 'Burthorpe', 'East Ardougne', 'Catherby', 'Port Phasmatys', 'Taverley'],
     skills: { 'Farming': 25 }, prereqs: ['Creature of Fenkenstrain'], points: 2,
+    // The plant cure, plant pot, trowel, secateurs and watering can come from farming shops.
+    merchants: ['Farming Shops'],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'A Tail of Two Cats': {
@@ -1122,6 +1138,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'RFD: King Awowogei', name: 'RFD: King Awowogei',
     regions: ['Ape Atoll'],
     skills: { 'Cooking': 70, 'Agility': 48 }, prereqs: ['RFD: The Cook', 'Monkey Madness I'], points: 1, series: 'Recipe for Disaster',
+    // The monkey nuts are sold only by Solihib's food stall on Ape Atoll.
+    merchants: ['Food Shops'],
     difficulty: DropSource.QUEST_MASTER
   },
   'RFD: Finale': {
@@ -1166,6 +1184,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { regions: ['East Ardougne'], anyOfRegions: ['Catherby', 'Seers\' Village', 'Yanille', 'Hosidius'], skills: { Magic: 33 } },
     ],
     skills: {}, prereqs: [], points: 1, series: 'Rag and Bone Man',
+    // The jugs of vinegar are bought from Fortunato's wine shop in Draynor.
+    merchants: ['Wine Traders'],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Swan Song': {
@@ -1214,6 +1234,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "horseshoe-mine", label: "Horseshoe Mine", standardAreas: ["Brimhaven"], chunkOptions: [{ cx: 42, cy: 50 }] },
     ],
     skills: { 'Thieving': 40, 'Farming': 49, 'Herblore': 57 }, prereqs: ['Fairytale I - Growing Pains'], points: 2, series: 'Fairy Tale',
+    // The Fairy Queen's hideout (AIR, DLR, DJQ, AJS), the cosmic plane (CKP) and the gorak plane (DIR) are reached only by fairy ring.
+    mobility: ['Fairy Rings'],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Lunar Diplomacy': {
@@ -1426,6 +1448,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
       'Reached a listed fire giant source after partially completing Waterfall Quest or by an alternative route',
     ],
     skills: { 'Slayer': 40 }, prereqs: ['Rag and Bone Man I', 'Skippy and the Mogres'], points: 1, series: 'Rag and Bone Man',
+    // The jugs of vinegar are bought from Fortunato's wine shop in Draynor.
+    merchants: ['Wine Traders'],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Bone Voyage': {
@@ -1481,6 +1505,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Making Friends with My Arm', name: 'Making Friends with My Arm',
     regions: ['Burthorpe', 'Rellekka', 'Weiss', 'Draynor Village', 'Varrock'],
     skills: { 'Firemaking': 66, 'Mining': 72, 'Construction': 35, 'Agility': 68 }, prereqs: ['My Arm\'s Big Adventure', 'Swan Song', 'Cold War', 'Romeo & Juliet'], points: 2, series: 'Troll',
+    // The bolt of cloth comes from the Varrock sawmill.
+    merchants: ['Sawmill Operators'],
     difficulty: DropSource.QUEST_MASTER
   },
   'The Forsaken Tower': {
@@ -1897,6 +1923,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
       LOCATIONS.faladorBar, LOCATIONS.portSarimBar,
     ],
     skills: {}, prereqs: [], points: 0,
+    // Every drink on the card is bought from a barkeeper.
+    merchants: ['Bars & Inns'],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Barbarian Training': {
@@ -1934,6 +1962,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Misthalin'],
     locations: [LOCATIONS.varrockPalace, LOCATIONS.varrockCenter, LOCATIONS.lumberYard],
     skills: {}, prereqs: [], points: 0,
+    // The bolts of cloth and planks come from the Varrock sawmill.
+    merchants: ['Sawmill Operators'],
     difficulty: DropSource.QUEST_NOVICE
   },
   'The Enchanted Key': {
@@ -2005,6 +2035,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: { 'Prayer': 50 },
     prereqs: ['Desert Treasure I', 'Fairytale II - Cure a Queen', 'Land of the Goblins'],
     manualRequirements: ['Started The Restless Ghost'], points: 0,
+    // Yu'biusk is reached only by fairy ring BLQ.
+    mobility: ['Fairy Rings'],
     difficulty: DropSource.QUEST_MASTER
   },
   'In Search of Knowledge': {

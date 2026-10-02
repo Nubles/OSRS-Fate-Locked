@@ -4087,16 +4087,30 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Port Sarim",
-              "Falador",
-              "Varrock",
-              "Musa Point"
+          "Port Sarim",
+          "Falador",
+          "Varrock",
+          "Musa Point"
         ],
         "locations": null,
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "merchants": [
+              "Wine Traders"
+            ]
+          },
+          {
+            "regions": [
+              "Brimhaven"
+            ],
+            "merchants": [
+              "Bars & Inns"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 2,
         "difficulty": "Quest (Novice)"
@@ -4699,7 +4713,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Lumbridge"
+          "Lumbridge"
         ],
         "locations": null,
         "skills": {
@@ -5572,10 +5586,10 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-              "Tai Bwo Wannai",
-              "Shilo Village",
-              "Brimhaven",
-              "Musa Point"
+          "Tai Bwo Wannai",
+          "Shilo Village",
+          "Brimhaven",
+          "Musa Point"
         ],
         "locations": null,
         "skills": {
@@ -5587,7 +5601,18 @@ describe('audited current quest requirements', () => {
         "prereqs": [
           "Jungle Potion"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "merchants": [
+              "Wine Traders"
+            ]
+          },
+          {
+            "merchants": [
+              "Bars & Inns"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 2,
         "difficulty": "Quest (Intermediate)"
@@ -6488,7 +6513,21 @@ describe('audited current quest requirements', () => {
         },
         "combatLevel": null,
         "prereqs": [],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "merchants": [
+              "General Stores"
+            ]
+          },
+          {
+            "regions": [
+              "Sophanem"
+            ],
+            "merchants": [
+              "Clothes Shops"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 2,
         "difficulty": "Quest (Intermediate)"
