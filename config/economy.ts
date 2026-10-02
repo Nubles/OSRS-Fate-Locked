@@ -23,6 +23,9 @@ import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDi
 import { skillLevelKeyChance } from '../utils/keyRoll';
 const WIKI = 'https://oldschool.runescape.wiki/images/';
 
+/** Keys every new run starts with. GameContext's fresh state and the Rules text both read it. */
+export const STARTING_KEYS = 3;
+
 // ── Skill levelling is the one dynamic rate (computed per attempt) ───────────
 export const SKILLS_TIER_CAP = 10;     // tiers per skill (1 Key each)
 export const LEVEL_ROLL_MAX = skillLevelKeyChance(99);

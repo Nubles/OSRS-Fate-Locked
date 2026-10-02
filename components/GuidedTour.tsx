@@ -2,6 +2,7 @@ import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from
 import { createPortal } from 'react-dom';
 import { X, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Compass } from './OsrsIcon';
+import { STARTING_KEYS } from '../config/economy';
 
 /**
  * A replayable, spotlight-style guided tour. Each step highlights a real element
@@ -19,7 +20,7 @@ interface Step {
 }
 
 const STEPS: Step[] = [
-  { sel: null, title: 'Welcome to Fate Locked', body: 'You start with nothing — every skill, item and region is locked until fate decides otherwise. Here’s the 60-second tour of how it all fits together.' },
+  { sel: null, title: 'Welcome to Fate Locked', body: `You start with ${STARTING_KEYS} Keys, Misthalin (or one Lumbridge chunk in Chunked) and almost everything else locked. Here’s the 60-second tour of how it all fits together.` },
   { sel: '[data-tour="farm"]', title: '1 · Farm keys', body: 'Roll slayer tasks and clue scrolls here. Each roll has a chance to drop a Key — the currency everything runs on. Failed rolls build Fate Points.', place: 'right' },
   { sel: '[data-tour="spend"]', title: '2 · Spend keys', body: 'Spend a Key to let fate unlock a random piece of content from a category — gear, regions, bosses, skills and more. This is the heart of the game.', place: 'right' },
   { sel: '[data-tour="keys"]', title: 'Keys & Fate Points', body: 'Your Keys, Omni-keys and Fate Points live up here, and tick over as you earn them.', place: 'bottom' },

@@ -7,7 +7,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
 import { REGION_MODIFIERS } from '../config/regionModifiers';
-import { CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, ritualEffect, type Ritual } from '../config/economy';
+import { CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { TableType } from '../types';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
@@ -189,9 +189,10 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     <Skull size={18} /> The Concept
                                 </h3>
                                 <p className="text-gray-300 leading-relaxed text-sm">
-                                    A challenge for Old School RuneScape ironman accounts. You start with everything locked: you
-                                    can't equip armour, train skills past level 1, enter most of the map, or use transport. What
-                                    you unlock, and when, is down to the rolls.
+                                    A challenge for Old School RuneScape ironman accounts. You start with {STARTING_KEYS} Keys and
+                                    almost everything else locked: you can't equip armour, train any skill but Hitpoints, leave
+                                    your start area, or use transport, banks or shops. What you unlock, and when, is down to the
+                                    rolls.
                                 </p>
                             </div>
 

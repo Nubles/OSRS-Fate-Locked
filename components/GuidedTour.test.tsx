@@ -3,9 +3,20 @@ import React from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
+import { STARTING_KEYS } from '../config/economy';
 import { GuidedTour } from './GuidedTour';
 
 afterEach(() => cleanup());
+
+describe('GuidedTour copy', () => {
+  it('opens with the Keys and the land a new run starts with', () => {
+    render(<GuidedTour />);
+    act(() => { window.dispatchEvent(new Event('fate:start-tour')); });
+    const welcome = screen.getByText(/^You start with/).textContent ?? '';
+    expect(welcome).toContain(`You start with ${STARTING_KEYS} Keys, Misthalin (or one Lumbridge chunk in Chunked)`);
+    expect(welcome).not.toContain('nothing');
+  });
+});
 
 describe('GuidedTour keyboard', () => {
   it('advances one step when Enter activates the focused Next button', () => {

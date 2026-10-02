@@ -5,6 +5,7 @@ import { GameProvider } from '../context/GameContext';
 import { ReferenceModal } from './ReferenceModal';
 import { unlockableAreas } from '../utils/freeAreas';
 import { MISTHALIN_AREAS } from '../constants';
+import { STARTING_KEYS } from '../config/economy';
 
 type CodexTab = 'core' | 'economy' | 'drops' | 'unlocks' | 'altar';
 
@@ -26,6 +27,12 @@ const renderCodex = (tab: CodexTab, gameModeId = 'vanilla') => {
 
 beforeEach(() => vi.unstubAllGlobals());
 afterEach(() => vi.unstubAllGlobals());
+
+describe('ReferenceModal Core Rules', () => {
+  it('says how many Keys a new run starts with', () => {
+    expect(renderCodex('core')).toContain(`You start with ${STARTING_KEYS} Keys`);
+  });
+});
 
 describe('ReferenceModal Void Altar', () => {
   it("names the Gambit's price per Key as the run's mode sets it", () => {

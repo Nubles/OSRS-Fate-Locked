@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
+import { STARTING_KEYS } from '../config/economy';
 import { ArrowRight, Check, Lock, MousePointer2 } from 'lucide-react';
 import { Dices, Skull, Shield, Sparkles, Key, Dna, Zap } from './OsrsIcon';
 
@@ -334,7 +335,7 @@ export const OnboardingWizard: React.FC = () => {
     {
       title: "Fate Locked",
       subtitle: "The Concept",
-      desc: "You begin with nothing. No skills. No equipment. No map access. Your account is completely locked until Fate decides otherwise.",
+      desc: `You start with ${STARTING_KEYS} Keys and nearly everything locked: no gear slots, no skills except Hitpoints, no transport, no banks and no shops. In Vanilla you can go anywhere in Misthalin from the start. In Chunked you start in one chunk of Lumbridge.`,
       visual: <ConceptVisual />,
       color: "text-red-500",
       bg: "from-red-900/20"

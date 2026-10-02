@@ -7,14 +7,14 @@ import {
   VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule,
   FAILURE_FATE_BY_SOURCE, SKILL_CHAOS_MILESTONES,
   failureFateForSkillLevel, failureFateForSource, isSkillChaosMilestone,
-  gambitKeys, getRitual, ritualEffect, ritualFateCost,
+  gambitKeys, getRitual, ritualEffect, ritualFateCost, STARTING_KEYS,
 } from './economy';
 import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { BOSSES_LIST } from '../data/items';
 import { describeVanillaRandomAccessPolicy, formatVanillaBossSchedule } from '../components/ReferenceModal';
 import { skillLevelKeyChance } from '../utils/keyRoll';
-import { createFreshState, prepareKeyRollAction } from '../context/GameContext';
+import { createFreshState, initialState, prepareKeyRollAction } from '../context/GameContext';
 import { resolveModeRules } from './gameModes';
 
 /**
@@ -25,6 +25,11 @@ import { resolveModeRules } from './gameModes';
  */
 describe('economy ↔ engine consistency', () => {
   const fixedTiers = EARN_METHODS.flatMap(m => m.tiers.filter(t => t.source));
+
+  it('starts a new run with the Keys the Rules, onboarding and tour name', () => {
+    expect(initialState.keys).toBe(STARTING_KEYS);
+    expect(createFreshState().keys).toBe(STARTING_KEYS);
+  });
 
   it('every fixed earn rate equals DROP_RATES exactly', () => {
     for (const t of fixedTiers) {
