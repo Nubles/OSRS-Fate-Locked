@@ -181,11 +181,11 @@ describe('ReferenceModal Vanilla policy', () => {
     expect(economy).toContain('Vanilla bosses pay 118 Keys in all, then stop.');
     expect(economy).not.toMatch(/safety-reserve|onboarding minimums/);
     expect(drops).toContain('Your first three clue Keys, from any tier, roll at no less than');
-    expect(drops).toContain('Brutus: 10% (1 key)');
-    expect(drops).toContain('Low: 15% (1 key)');
-    expect(drops).toContain('Mid: 30% → 15% (2 keys)');
-    expect(drops).toContain('High: 50% → 25% (2 keys)');
-    expect(drops).toContain('Raid: 65% → 32.5% → 16.25% (3 keys)');
+    expect(drops).toContain('Brutus: 10% (1 Key)');
+    expect(drops).toContain('Low: 15% (1 Key)');
+    expect(drops).toContain('Mid: 30% → 15% (2 Keys)');
+    expect(drops).toContain('High: 50% → 25% (2 Keys)');
+    expect(drops).toContain('Raid: 65% → 32.5% → 16.25% (3 Keys)');
     expect(drops).toContain('25% → 15% → 10%');
     expect(unlocks).toContain('In Vanilla, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas you own.');
     expect(unlocks).toContain('If none can be reached, nothing is unlocked. You keep the Key.');

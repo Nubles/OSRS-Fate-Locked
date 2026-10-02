@@ -277,7 +277,7 @@ describe('economy ↔ engine consistency', () => {
   });
 
   it('formats Codex policy directly from the shared Vanilla configuration', () => {
-    expect(formatVanillaBossSchedule('Raid', VANILLA_BOSS_KEY_RATES.raid)).toBe('Raid: 65% → 32.5% → 16.25% (3 keys)');
+    expect(formatVanillaBossSchedule('Raid', VANILLA_BOSS_KEY_RATES.raid)).toBe('Raid: 65% → 32.5% → 16.25% (3 Keys)');
     expect(describeVanillaRandomAccessPolicy(VANILLA_RANDOM_ACCESS_POLICY)).toBe(
       'In Vanilla, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas you own. '
       + "If none can be reached, nothing is unlocked. You keep the Key. A seeded run's next roll stays the same. "

@@ -68,9 +68,9 @@ export const AnalyticsTooltip: React.FC<AnalyticsTooltipProps> = ({ active, payl
 };
 
 const outcomeLabels: Record<AnalyticsOutcome, string> = {
-  'normal-win': 'Won a key',
+  'normal-win': 'Won a Key',
   'omni-win': 'Won an Omni-Key',
-  miss: 'No key',
+  miss: 'No Key',
   pity: 'Pity Key',
 };
 
@@ -240,7 +240,7 @@ export const PrimaryAnalyticsCharts: React.FC<PrimaryAnalyticsChartsProps> = ({ 
             </ResponsiveContainer>
             <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-2xl font-black tabular-nums text-gray-50">{percent(wins, summary.attempts)}</span>
-              <span className="text-[10px] uppercase tracking-wider text-gray-500">won a key</span>
+              <span className="text-[10px] uppercase tracking-wider text-gray-500">won a Key</span>
             </div>
           </div>
           <ul aria-label="Outcome pattern legend" className="w-full flex-1 space-y-2.5">

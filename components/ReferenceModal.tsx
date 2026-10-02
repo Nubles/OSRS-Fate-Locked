@@ -44,7 +44,7 @@ const ALTAR_UI: Record<string, { icon: any; color: string; border: string }> = {
 
 export const formatVanillaBossSchedule = (bossClass: string, rates: readonly number[]): string => {
   const label = `${bossClass.slice(0, 1).toUpperCase()}${bossClass.slice(1)}`;
-  return `${label}: ${rates.map(rate => `${rate}%`).join(' → ')} (${rates.length} ${rates.length === 1 ? 'key' : 'keys'})`;
+  return `${label}: ${rates.map(rate => `${rate}%`).join(' → ')} (${rates.length} ${rates.length === 1 ? 'Key' : 'Keys'})`;
 };
 
 export const describeVanillaRandomAccessPolicy = (
