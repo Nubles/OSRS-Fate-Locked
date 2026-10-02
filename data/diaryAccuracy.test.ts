@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { ALL_DIARY_TASKS, type DiaryTask } from './diaryTasks';
+import chunkContent from '../public/chunk-content.json';
+import { namedAreaChunks } from '../utils/reachability';
+import { ALL_DIARY_TASKS, type DiaryTask, type DiaryTaskRequirementOption } from './diaryTasks';
 import { ACTIVITY_ACCESS_AREAS } from './activityAccess';
+import { QUEST_DATA } from './questData';
 
 /**
  * Players reported wrong Achievement Diary data, so every task was checked
@@ -129,5 +132,112 @@ describe('Desert Diary tasks done in the desert', () => {
     for (const row of inTheDesert) {
       expect(placesOf(row).filter(area => NOT_DESERT.includes(area)), row.id).toEqual([]);
     }
+  });
+});
+
+/** The quests the map makes you finish before you may enter a chunk, by chunk id (cx * 256 + cy). */
+const MAP_QUEST_GATES = (chunkContent as { questSections: Record<string, string[]> }).questSections;
+type Chunk = { cx: number; cy: number };
+
+/** Every quest that must be done before `quest`, by QUEST_DATA's prerequisites. */
+const prerequisitesOf = (quest: string, into = new Set<string>()): Set<string> => {
+  for (const before of QUEST_DATA[quest]?.prereqs ?? []) {
+    if (into.has(before)) continue;
+    into.add(before);
+    prerequisitesOf(before, into);
+  }
+  return into;
+};
+
+/** A chunk's gate quests, each with the quests it needs first. */
+const gatesOfChunk = ({ cx, cy }: Chunk): Set<string> => {
+  const gates = new Set<string>();
+  for (const quest of MAP_QUEST_GATES[String(cx * 256 + cy)] ?? []) {
+    gates.add(quest);
+    prerequisitesOf(quest, gates);
+  }
+  return gates;
+};
+
+/** What every one of several places needs: one place is enough, so only the quests all of them need. */
+const commonTo = (sets: readonly Set<string>[]): Set<string> => (sets.length
+  ? new Set([...sets[0]].filter(quest => sets.every(set => set.has(quest))))
+  : new Set());
+
+/** The quests an area needs: the gate on any of its chunks. (No area a task names is only partly gated.) */
+const areaGates = (area: string): Set<string> => new Set(namedAreaChunks(area).flatMap(chunk => [...gatesOfChunk(chunk)]));
+
+/** The quests a requirement's areas and places need. */
+const gatesNeeded = (requirement: DiaryTaskRequirementOption & { anyOfRegions?: string[] }): Set<string> => {
+  const needed = new Set<string>();
+  const add = (set: Set<string>) => set.forEach(quest => needed.add(quest));
+  for (const area of requirement.regions ?? []) add(areaGates(area));
+  if (requirement.anyOfRegions?.length) add(commonTo(requirement.anyOfRegions.map(areaGates)));
+  for (const location of requirement.locations ?? []) add(commonTo(location.chunkOptions.map(gatesOfChunk)));
+  return needed;
+};
+
+/** The quests a requirement shows are done: those it lists, what they need first, and what a quest in progress needed first. */
+const questsDone = (...requirements: (DiaryTaskRequirementOption | undefined)[]): Set<string> => {
+  const done = new Set<string>();
+  for (const requirement of requirements) {
+    for (const quest of requirement?.quests ?? []) {
+      done.add(quest);
+      prerequisitesOf(quest, done);
+    }
+    for (const { quest } of requirement?.questProgress ?? []) prerequisitesOf(quest, done);
+  }
+  return done;
+};
+
+/** Gate quests a task's areas need but no route of it shows are done. */
+const missingGates = (row: DiaryTask): string[] => {
+  if (row.allQuests) return [];
+  const missing = new Set<string>();
+  const routes = row.oneOf?.length ? row.oneOf : [undefined];
+  for (const route of routes) {
+    if (route?.allQuests) continue;
+    const done = questsDone(row, route);
+    const needed = new Set([...gatesNeeded(row), ...(route ? gatesNeeded(route) : [])]);
+    needed.forEach(quest => { if (!done.has(quest)) missing.add(quest); });
+  }
+  return [...missing].sort();
+};
+
+describe('Diary tasks behind a quest gate on the map', () => {
+  it('ask for Priest in Peril wherever Morytania’s map gate needs it', () => {
+    // The map puts 40 Morytania chunks, Paterdomus's among them, behind Priest in Peril.
+    for (const id of [
+      'mor_easy_1', 'mor_easy_2', 'mor_easy_4', 'mor_easy_5', 'mor_easy_6', 'mor_easy_7', 'mor_easy_8',
+      'mor_easy_9', 'mor_easy_10', 'mor_med_1', 'mor_med_2', 'mor_med_3', 'mor_med_4', 'mor_med_8',
+      'mor_hard_2', 'mor_hard_7', 'mor_hard_9', 'mor_elite_3', 'mor_elite_4', 'mor_elite_5', 'mor_elite_6',
+    ]) {
+      expect(task(id).quests, id).toContain('Priest in Peril');
+    }
+    // Killing a ghoul and the Salve bridge shortcut are tagged Paterdomus, whose chunk is behind the gate.
+    expect(task('mor_easy_7')).toMatchObject({ regions: ['Paterdomus'], quests: ['Priest in Peril'] });
+    expect(task('mor_hard_9')).toMatchObject({ regions: ['Paterdomus'], quests: ['Priest in Peril'] });
+  });
+
+  it('keep the quests they had before Priest in Peril', () => {
+    expect(task('mor_med_8').quests).toEqual(['Dwarf Cannon', 'Priest in Peril']);
+    expect(task('mor_elite_3').quests).toEqual(['Lunar Diplomacy', 'Priest in Peril']);
+  });
+
+  it('list the quest that opens every area they need, or a quest that needs it first', () => {
+    const gated = ALL_DIARY_TASKS.filter(row => [...gatesNeeded(row), ...(row.oneOf ?? []).flatMap(option => [...gatesNeeded(option)])].length);
+    // The check covers the Morytania tasks, Mos Le'Harmless and Harmony Island.
+    expect(gated.length).toBeGreaterThan(30);
+    const missing = Object.fromEntries(gated.map(row => [row.id, missingGates(row)]).filter(([, quests]) => quests.length));
+    expect(missing).toEqual({});
+  });
+
+  it('finds a missing gate quest, so the check can fail', () => {
+    expect(missingGates({ id: 'probe', tierId: 'Morytania Easy', description: 'Kill a Ghoul.', regions: ['Paterdomus'] }))
+      .toEqual(['Priest in Peril']);
+    expect(missingGates({ id: 'probe', tierId: 'Morytania Easy', description: 'Kill a Ghoul.', regions: ['Paterdomus'], quests: ['Nature Spirit'] }))
+      .toEqual([]);
+    expect(missingGates({ id: 'probe', tierId: 'Morytania Hard', description: 'Visit Mos Le’Harmless.', anyOfRegions: ["Mos Le'Harmless", 'Harmony Island'] }))
+      .toEqual(expect.arrayContaining(['Cabin Fever', 'Priest in Peril']));
   });
 });

@@ -7884,7 +7884,9 @@
       "skills": {
         "Crafting": 15
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "15 Crafting Chisel Any blamish shell",
@@ -7919,7 +7921,9 @@
       "skills": {
         "Cooking": 12
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Port Phasmatys"
       ],
@@ -7979,7 +7983,9 @@
       "skills": {
         "Slayer": 15
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Slayer Tower"
       ],
@@ -7995,7 +8001,9 @@
       "ordinal": 5,
       "description": "Have Sbott in Canifis tan something for you.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Canifis"
       ],
@@ -8011,7 +8019,9 @@
       "ordinal": 6,
       "description": "Enter Mort Myre Swamp.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Mort Myre Swamp"
       ],
@@ -8027,7 +8037,9 @@
       "ordinal": 7,
       "description": "Kill a Ghoul.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Weaponry",
@@ -8045,7 +8057,9 @@
       "skills": {
         "Farming": 23
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Port Phasmatys"
       ],
@@ -8075,7 +8089,9 @@
       "ordinal": 9,
       "description": "Offer some bonemeal at the Ectofuntus.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Port Phasmatys"
       ],
@@ -8091,7 +8107,9 @@
       "ordinal": 10,
       "description": "Kill a werewolf in its human form using the Wolfbane Dagger.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Canifis"
       ],
@@ -8135,7 +8153,9 @@
       "skills": {
         "Hunter": 29
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Mort Myre Swamp"
       ],
@@ -8153,7 +8173,9 @@
       "skills": {
         "Agility": 40
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Canifis"
       ],
@@ -8171,7 +8193,9 @@
       "skills": {
         "Woodcutting": 45
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "anyOfRegions": [
         "Haunted Woods",
         "Darkmeyer",
@@ -8189,7 +8213,9 @@
       "ordinal": 4,
       "description": "Travel to Dragontooth Isle.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Dragontooth Island"
       ],
@@ -8295,7 +8321,8 @@
         "Smithing": 35
       },
       "quests": [
-        "Dwarf Cannon"
+        "Dwarf Cannon",
+        "Priest in Peril"
       ],
       "regions": [
         "Port Phasmatys"
@@ -8422,7 +8449,9 @@
       "skills": {
         "Agility": 71
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Slayer Tower"
       ],
@@ -8527,7 +8556,9 @@
       "skills": {
         "Farming": 53
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Canifis"
       ],
@@ -8570,7 +8601,9 @@
       "skills": {
         "Agility": 65
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "65 Agility",
@@ -8653,7 +8686,8 @@
         "Magic": 83
       },
       "quests": [
-        "Lunar Diplomacy"
+        "Lunar Diplomacy",
+        "Priest in Peril"
       ],
       "regions": [
         "Port Phasmatys"
@@ -8675,7 +8709,9 @@
       "skills": {
         "Crafting": 84
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Canifis"
       ],
@@ -8693,7 +8729,9 @@
       "skills": {
         "Slayer": 85
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Slayer Tower"
       ],
@@ -8711,7 +8749,9 @@
       "skills": {
         "Defence": 70
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Barrows"
       ],
