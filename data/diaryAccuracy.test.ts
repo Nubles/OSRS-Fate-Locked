@@ -56,3 +56,22 @@ describe('Diary tasks are in the areas the game has them in', () => {
     expect(task('west_hard_10').regions).toEqual(['Falador']);
   });
 });
+
+describe('Diary tasks name the area that owns their chunk on the map', () => {
+  // The owner kept the map and moved the tasks: each place is in a chunk the
+  // map gives to the area beside the one the task names.
+  it.each([
+    ['kan_med_8', 'Camelot', 'the Catherby farming patches are in 43,54'],
+    ['kan_elite_2', 'Camelot', 'the Catherby herb patch is in 43,54'],
+    ['des_hard_2', 'Agility Pyramid', 'the granite quarry is in 49,45'],
+    ['kar_easy_4', 'Port Sarim', 'the dock east of Musa Point is in 46,49'],
+    ['ard_hard_11', 'East Ardougne', 'the anvil near West Ardougne is in 39,52'],
+    ['lum_hard_10', 'Mage Training Arena', 'the altar at Emir’s Arena is in 52,51'],
+  ])('tags %s with %s, because %s', (id, area) => {
+    expect(task(id).regions).toEqual([area]);
+  });
+
+  it('still needs Plague City progress to smith the shield in West Ardougne', () => {
+    expect(task('ard_hard_11').questProgress).toEqual([expect.objectContaining({ quest: 'Plague City' })]);
+  });
+});

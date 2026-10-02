@@ -786,7 +786,7 @@
       },
       "quests": [],
       "regions": [
-        "West Ardougne"
+        "East Ardougne"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -1531,7 +1531,7 @@
       },
       "quests": [],
       "regions": [
-        "Bandit Camp"
+        "Agility Pyramid"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -4423,7 +4423,7 @@
       },
       "quests": [],
       "regions": [
-        "Catherby"
+        "Camelot"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -4837,7 +4837,7 @@
       },
       "quests": [],
       "regions": [
-        "Catherby"
+        "Camelot"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -5037,7 +5037,7 @@
       "skills": {},
       "quests": [],
       "regions": [
-        "Musa Point"
+        "Port Sarim"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -7557,7 +7557,7 @@
       "classification": "preserved-semantic",
       "sourceRequirements": "52 Prayer",
       "regions": [
-        "Emir's Arena"
+        "Mage Training Arena"
       ]
     },
     {
