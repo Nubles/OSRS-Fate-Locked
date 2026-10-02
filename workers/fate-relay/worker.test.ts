@@ -5,23 +5,40 @@ import { FATE_EVENT_TYPES } from '../../services/fateEventProtocol';
 class MemoryKv {
   records = new Map<string, string>();
   ttls = new Map<string, number | undefined>();
+  metadata = new Map<string, unknown>();
   puts: string[] = [];
   failNextPut = false;
 
   async get(key: string, options?: { type?: string }) {
     const value = this.records.get(key);
     if (value === undefined) return null;
+    if (options?.type === 'arrayBuffer') return new TextEncoder().encode(value).buffer;
     return options?.type === 'json' ? JSON.parse(value) : value;
   }
 
-  async put(key: string, value: string, options?: { expirationTtl?: number }) {
+  async getWithMetadata(key: string, options?: { type?: string }) {
+    const value = this.records.get(key);
+    if (value === undefined) return { value: null, metadata: null };
+    return {
+      value: options?.type === 'stream' ? new Response(value).body : value,
+      metadata: this.metadata.get(key) ?? null,
+    };
+  }
+
+  async put(key: string, value: string | Uint8Array | ArrayBuffer, options?: { expirationTtl?: number; metadata?: unknown }) {
     if (this.failNextPut) {
       this.failNextPut = false;
       throw new Error('simulated put failure');
     }
-    this.records.set(key, value);
+    this.records.set(key, typeof value === 'string' ? value : new TextDecoder().decode(value));
     this.ttls.set(key, options?.expirationTtl);
+    if (options?.metadata !== undefined) this.metadata.set(key, options.metadata);
     this.puts.push(key);
+  }
+
+  async delete(key: string) {
+    this.records.delete(key);
+    this.metadata.delete(key);
   }
 }
 
@@ -184,7 +201,7 @@ describe('Fate relay event resources', () => {
 
     expect(response.status).toBe(503);
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://app.example.test');
-    expect(response.headers.get('Access-Control-Expose-Headers')).toBe('ETag');
+    expect(response.headers.get('Access-Control-Expose-Headers')).toBe('ETag, X-Backup-Updated-At');
   });
 
   it('lets browsers cache preflights', async () => {
@@ -307,6 +324,165 @@ describe('Fate relay event resources', () => {
         ...Array.from({ length: 95 }, (_, index) => `evt-${index + 10}`),
         ...Array.from({ length: 5 }, (_, index) => `evt-${index}`),
       ]);
+  });
+});
+
+describe('Fate relay online backups', () => {
+  let kv: MemoryKv;
+  let env: { RELAY: MemoryKv };
+  const id = 'Bk'.repeat(21) + 'A';
+  const token = 'Tk'.repeat(21) + 'B';
+  const other = 'Ot'.repeat(21) + 'C';
+  const envelope = 'FLBK1.' + 'i'.repeat(16) + '.' + 'c'.repeat(64);
+  const thisBrowser = 'Wr'.repeat(11);
+  const otherBrowser = 'Ow'.repeat(11);
+
+  beforeEach(() => {
+    kv = new MemoryKv();
+    env = { RELAY: kv };
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  const request = (path: string, init?: RequestInit) =>
+    worker.fetch(new Request(`https://relay.test${path}`, init), env);
+  const upload = (body: string, bearer: string | null = token, writer: string | null = thisBrowser) =>
+    request(`/b/${id}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain',
+        ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
+        ...(writer ? { 'X-Backup-Writer': writer } : {}),
+      },
+      body,
+    });
+  const remove = (bearer: string | null = token) =>
+    request(`/b/${id}`, { method: 'DELETE', headers: bearer ? { Authorization: `Bearer ${bearer}` } : {} });
+
+  it('stores a backup under its id and hands it back with its upload time, for 90 days', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.UTC(2026, 9, 2, 12));
+    const saved = await upload(envelope);
+    expect(saved.status).toBe(200);
+    expect(await saved.json()).toEqual({ updatedAt: Date.UTC(2026, 9, 2, 12) });
+    expect(kv.ttls.get(`b:${id}`)).toBe(90 * 86400);
+
+    const fetched = await request(`/b/${id}`);
+    expect(fetched.status).toBe(200);
+    expect(await fetched.text()).toBe(envelope);
+    expect(fetched.headers.get('X-Backup-Updated-At')).toBe(String(Date.UTC(2026, 9, 2, 12)));
+  });
+
+  it('keeps only a hash of the write token, never the token', async () => {
+    await upload(envelope);
+    expect(kv.metadata.get(`b:${id}`)).toEqual({
+      writeHash: await sha256Hex(token),
+      updatedAt: expect.any(Number),
+      writer: thisBrowser,
+    });
+    expect([...kv.records.values()].join('')).not.toContain(token);
+  });
+
+  it('answers 404 for a backup nobody has uploaded, and for a malformed id', async () => {
+    expect((await request(`/b/${id}`)).status).toBe(404);
+    expect((await request('/b/too-short')).status).toBe(404);
+  });
+
+  it('refuses an upload or a delete without the token that claimed the id', async () => {
+    await upload(envelope);
+    expect((await upload(envelope, other)).status).toBe(403);
+    expect((await upload(envelope, null)).status).toBe(403);
+    expect((await remove(other)).status).toBe(403);
+    expect(await (await request(`/b/${id}`)).text()).toBe(envelope);
+  });
+
+  it('lets the owner delete the backup, with its previous copy', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.UTC(2026, 9, 2, 12));
+    await upload(envelope);
+    vi.setSystemTime(Date.UTC(2026, 9, 2, 12, 1));
+    await upload(envelope.replace('c', 'd'), token, otherBrowser);
+    const deleted = await remove();
+    expect(await deleted.json()).toEqual({ deleted: true });
+    expect((await request(`/b/${id}`)).status).toBe(404);
+    expect((await request(`/b/${id}/previous`)).status).toBe(404);
+    expect(kv.records.size).toBe(0);
+  });
+
+  it('keeps the copy another browser wrote as the previous copy', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.UTC(2026, 9, 2, 12));
+    await upload(envelope);
+    vi.setSystemTime(Date.UTC(2026, 9, 3, 12));
+    await upload(envelope.replace('c', 'd'), token, otherBrowser);
+
+    const latest = await request(`/b/${id}`);
+    expect(await latest.text()).toBe(envelope.replace('c', 'd'));
+    expect(latest.headers.get('X-Backup-Updated-At')).toBe(String(Date.UTC(2026, 9, 3, 12)));
+    const previous = await request(`/b/${id}/previous`);
+    expect(await previous.text()).toBe(envelope);
+    expect(previous.headers.get('X-Backup-Updated-At')).toBe(String(Date.UTC(2026, 9, 2, 12)));
+    expect(kv.ttls.get(`b:${id}:previous`)).toBe(90 * 86400);
+  });
+
+  it('replaces only its own copy when the same browser backs up again', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.UTC(2026, 9, 2, 12));
+    await upload(envelope);
+    vi.setSystemTime(Date.UTC(2026, 9, 2, 12, 1));
+    await upload(envelope.replace('c', 'd'), token, otherBrowser);
+    vi.setSystemTime(Date.UTC(2026, 9, 2, 12, 2));
+    await upload(envelope.replace('c', 'e'), token, otherBrowser);
+
+    expect(await (await request(`/b/${id}`)).text()).toBe(envelope.replace('c', 'e'));
+    expect(await (await request(`/b/${id}/previous`)).text()).toBe(envelope);
+    expect(kv.puts.filter(key => key === `b:${id}:previous`)).toHaveLength(1);
+  });
+
+  it('refuses an upload that names no browser, and any write to the previous copy', async () => {
+    expect((await upload(envelope, token, null)).status).toBe(400);
+    expect((await upload(envelope, token, 'short')).status).toBe(400);
+    const direct = await request(`/b/${id}/previous`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'X-Backup-Writer': thisBrowser },
+      body: envelope,
+    });
+    expect(direct.status).toBe(405);
+    expect(kv.records.size).toBe(0);
+  });
+
+  it('takes a new upload at most once a minute', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.UTC(2026, 9, 2, 12));
+    await upload(envelope);
+    vi.setSystemTime(Date.UTC(2026, 9, 2, 12, 0, 30));
+    const early = await upload(envelope.replace('c', 'd'));
+    expect(early.status).toBe(429);
+    expect(early.headers.get('Retry-After')).toBe('30');
+    vi.setSystemTime(Date.UTC(2026, 9, 2, 12, 1));
+    expect((await upload(envelope.replace('c', 'd'))).status).toBe(200);
+  });
+
+  it('refuses an oversized backup and one that is not an encrypted backup', async () => {
+    const huge = 'FLBK1.' + 'x'.repeat(3 * 1024 * 1024);
+    expect((await upload(huge)).status).toBe(413);
+    expect((await upload('{"payload":"plain"}')).status).toBe(400);
+    expect((await upload('FLBK1.')).status).toBe(400);
+    expect(kv.records.size).toBe(0);
+  });
+
+  it('lets browsers send the token header and delete in a cached preflight', async () => {
+    const preflight = await request(`/b/${id}`, {
+      method: 'OPTIONS',
+      headers: { Origin: 'https://app.example.test', 'Access-Control-Request-Method': 'DELETE' },
+    });
+    expect(preflight.headers.get('Access-Control-Allow-Methods')).toContain('DELETE');
+    expect(preflight.headers.get('Access-Control-Allow-Headers')).toContain('Authorization');
+    expect(preflight.headers.get('Access-Control-Allow-Headers')).toContain('X-Backup-Writer');
+    expect(preflight.headers.get('Access-Control-Expose-Headers')).toContain('X-Backup-Updated-At');
   });
 });
 

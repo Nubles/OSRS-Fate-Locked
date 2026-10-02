@@ -155,6 +155,7 @@ export const GUIDES: Record<string, Guide> = {
       'Export your full run to a compact, integrity-checked code.',
       'Import a code on another device to restore that run.',
       'Before an import replaces your save, a backup of it is kept on the Backups tab.',
+      'Online keeps an encrypted copy of your run on the relay, opened only by your backup code, so a cleared browser can get it back.',
     ],
   },
   GOAL_PLANNER: {

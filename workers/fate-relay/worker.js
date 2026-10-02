@@ -3,7 +3,10 @@
  * Legacy /r/:code, /state, and /suggest resources remain compatible.
  */
 import {
+  BACKUP_MIN_INTERVAL_MS,
+  BACKUP_TTL_SECONDS,
   EVENT_TTL_SECONDS,
+  MAX_BACKUP_BYTES,
   MAX_REQUEST_BYTES,
   appendUnique,
   appendUniqueNewest,
@@ -18,13 +21,20 @@ const OWNER_REFRESH_MS = 86400 * 1000;
 // versions across deploys and accept only a higher one.
 const RELAY_VERSION_EPOCH_MS = Date.UTC(2026, 0, 1);
 const CODE_RE = /^\/r\/([A-Za-z0-9-]{4,40})(\/state|\/suggest|\/events|\/acks)?$/;
+// An online backup's id and write token: 32 bytes each, in base64url, derived from the
+// player's backup code in the browser. The relay never sees the code or the key.
+const BACKUP_RE = /^\/b\/([A-Za-z0-9_-]{43})(\/previous)?$/;
+const BACKUP_TOKEN_RE = /^Bearer ([A-Za-z0-9_-]{43})$/;
+// Which browser wrote a backup: 16 random bytes in base64url, made when it turned backup on.
+const BACKUP_WRITER_RE = /^[A-Za-z0-9_-]{22}$/;
+const BACKUP_PREFIX = new TextEncoder().encode('FLBK1.');
 
 function cors(origin) {
   return {
     'Access-Control-Allow-Origin': origin || '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, If-None-Match',
-    'Access-Control-Expose-Headers': 'ETag',
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, If-None-Match, Authorization, X-Backup-Writer',
+    'Access-Control-Expose-Headers': 'ETag, X-Backup-Updated-At',
     // Cache preflights (browsers cap this lower), so publishes and the
     // overlay's conditional polls don't each cost an extra OPTIONS request.
     'Access-Control-Max-Age': '86400',
@@ -55,9 +65,15 @@ function structuredResource(resource) {
  * instead of being buffered in full before the size check.
  */
 async function readBodyWithin(request, limit) {
+  const bytes = await readBytesWithin(request, limit);
+  return bytes === null ? null : new TextDecoder().decode(bytes);
+}
+
+/** The body's bytes, at most `limit` of them, as readBodyWithin reads them, or null when larger. */
+async function readBytesWithin(request, limit) {
   const declared = Number(request.headers.get('Content-Length'));
   if (Number.isFinite(declared) && declared > limit) return null;
-  if (!request.body) return '';
+  if (!request.body) return new Uint8Array(0);
   const reader = request.body.getReader();
   const chunks = [];
   let total = 0;
@@ -77,7 +93,7 @@ async function readBodyWithin(request, limit) {
     bytes.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return new TextDecoder().decode(bytes);
+  return bytes;
 }
 
 /**
@@ -145,12 +161,75 @@ async function recordOwner(env, key, owner) {
   }
 }
 
+/**
+ * Online backups: a run's save, encrypted in the browser, under an id derived from the
+ * player's backup code. The relay keeps the ciphertext as it arrives, with the SHA-256 of
+ * the write token, the upload time and the writing browser as the record's metadata, so
+ * an upload is one KV write and the large body is never parsed (the free plan allows
+ * 10 ms of CPU a request). The first upload claims the id; later uploads and the delete
+ * need the same token. When another browser uploads, the copy it replaces is kept as the
+ * previous copy, so a browser with an older run can't erase newer progress. Each copy
+ * lasts 90 days after it was stored.
+ */
+async function backupRoute(request, env, headers, id, previous) {
+  const key = `b:${id}`;
+  const previousKey = `${key}:previous`;
+  if (request.method === 'GET') {
+    const { value, metadata } = await env.RELAY.getWithMetadata(previous ? previousKey : key, { type: 'stream' });
+    if (value === null || !metadata) return json({}, headers, 404);
+    return new Response(value, {
+      headers: { ...headers, 'Content-Type': 'text/plain', 'X-Backup-Updated-At': String(metadata.updatedAt) },
+    });
+  }
+  if (previous || (request.method !== 'POST' && request.method !== 'DELETE')) {
+    return new Response('method not allowed', { status: 405, headers });
+  }
+  const token = (request.headers.get('Authorization') || '').match(BACKUP_TOKEN_RE)?.[1];
+  if (!token) return new Response('forbidden', { status: 403, headers });
+  const writeHash = await tokenHash(token);
+  const existing = await env.RELAY.getWithMetadata(key, { type: 'stream' });
+  await existing.value?.cancel();
+  if (existing.metadata && existing.metadata.writeHash !== writeHash) {
+    return new Response('forbidden', { status: 403, headers });
+  }
+  if (request.method === 'DELETE') {
+    await env.RELAY.delete(key);
+    await env.RELAY.delete(previousKey);
+    return json({ deleted: true }, headers);
+  }
+  const writer = request.headers.get('X-Backup-Writer') || '';
+  if (!BACKUP_WRITER_RE.test(writer)) return new Response('bad request', { status: 400, headers });
+  const body = await readBytesWithin(request, MAX_BACKUP_BYTES);
+  if (body === null) return new Response('payload too large', { status: 413, headers });
+  if (body.byteLength <= BACKUP_PREFIX.byteLength
+    || BACKUP_PREFIX.some((byte, index) => body[index] !== byte)) {
+    return new Response('bad request', { status: 400, headers });
+  }
+  const sinceLast = Date.now() - (existing.metadata?.updatedAt ?? 0);
+  if (sinceLast < BACKUP_MIN_INTERVAL_MS) {
+    return json({ updatedAt: existing.metadata.updatedAt }, headers, 429,
+      { 'Retry-After': String(Math.ceil((BACKUP_MIN_INTERVAL_MS - sinceLast) / 1000)) });
+  }
+  if (existing.metadata && existing.metadata.writer !== writer) {
+    const replaced = await env.RELAY.get(key, { type: 'arrayBuffer' });
+    if (replaced !== null) {
+      await env.RELAY.put(previousKey, replaced, { expirationTtl: BACKUP_TTL_SECONDS, metadata: existing.metadata });
+    }
+  }
+  const updatedAt = Date.now();
+  await env.RELAY.put(key, body, { expirationTtl: BACKUP_TTL_SECONDS, metadata: { writeHash, updatedAt, writer } });
+  return json({ updatedAt }, headers);
+}
+
 const routes = {
   async fetch(request, env) {
     const url = new URL(request.url);
     const headers = cors(request.headers.get('Origin'));
 
     if (request.method === 'OPTIONS') return new Response(null, { headers });
+
+    const backup = url.pathname.match(BACKUP_RE);
+    if (backup) return backupRoute(request, env, headers, backup[1], Boolean(backup[2]));
 
     const match = url.pathname.match(CODE_RE);
     if (!match) return new Response('not found', { status: 404, headers });

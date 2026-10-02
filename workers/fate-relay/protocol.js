@@ -3,6 +3,16 @@ export const MAX_RECORDS = 100;
 export const MAX_EVENT_BYTES = 8 * 1024;
 export const MAX_REQUEST_BYTES = 256 * 1024;
 
+/** An online backup lasts this long after its last upload. */
+export const BACKUP_TTL_SECONDS = 90 * 86400;
+/**
+ * The largest online backup: an encrypted sync code. Sync codes stop at 2 MiB of text,
+ * and encryption with base64url adds about a third.
+ */
+export const MAX_BACKUP_BYTES = 3 * 1024 * 1024;
+/** A backup is replaced at most once a minute, so a stuck client can't spend KV's daily writes. */
+export const BACKUP_MIN_INTERVAL_MS = 60 * 1000;
+
 const EVENT_TYPES = new Set([
   'SKILL_LEVEL',
   'QUEST',

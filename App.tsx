@@ -18,7 +18,6 @@ import { canDismissRunelitePairing, type RunelitePairingPhase } from './componen
 import { RollInboxDriver } from './components/RollInboxDriver';
 import { CoachStrip } from './components/CoachStrip';
 import { FeatureRevealDriver } from './components/FeatureRevealDriver';
-import { BackupNagBanner } from './components/BackupNagBanner';
 import { SaveConflictBanner } from './components/SaveConflictBanner';
 import { SaveFailureBanner } from './components/SaveFailureBanner';
 import { effectiveSaveDurability, SaveDurabilityStatus } from './components/SaveDurabilityStatus';
@@ -67,6 +66,9 @@ const StrategyGuide = lazyWithRetry(() => import('./components/StrategyGuide').t
 const SupplyChainCalculator = lazyWithRetry(() => import('./components/SupplyChainCalculator').then(m => ({ default: m.SupplyChainCalculator })));
 const GameModePicker = lazyWithRetry(() => import('./components/GameModePicker').then(m => ({ default: m.GameModePicker })));
 const SyncCodeModal = lazyWithRetry(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
+const OnlineBackupDriver = lazyWithRetry(() => import('./components/OnlineBackupDriver').then(m => ({ default: m.OnlineBackupDriver })));
+const OnlineBackupPrompt = lazyWithRetry(() => import('./components/OnlineBackupPrompt').then(m => ({ default: m.OnlineBackupPrompt })));
+const BackupNagBanner = lazyWithRetry(() => import('./components/BackupNagBanner').then(m => ({ default: m.BackupNagBanner })));
 const ModelGallery = lazyWithRetry(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
 const DiscordSettingsModal = lazyWithRetry(() => import('./components/DiscordSettingsModal'));
 // The release notes load with the modal; only the latest release's id is
@@ -836,6 +838,13 @@ const GameLayout = () => {
         returnFocusTarget?: HTMLElement | null;
       }>).detail;
       const target = detail?.target ?? '';
+      if (target === 'open:online-backup') {
+        // A sync link's code would open the Import tab instead.
+        setSyncImportCode(undefined);
+        setSyncInitialTab('ONLINE');
+        setShowSyncCode(true);
+        return;
+      }
       if (target === 'open:runelite-guide') {
         openRuneliteGuide(
           detail?.returnFocusTarget
@@ -865,6 +874,7 @@ const GameLayout = () => {
   const [showDiscord, setShowDiscord] = useState(false);
   const [showSyncCode, setShowSyncCode] = useState(false);
   const [syncImportCode, setSyncImportCode] = useState<string | undefined>(undefined);
+  const [syncInitialTab, setSyncInitialTab] = useState<'ONLINE' | undefined>(undefined);
   const [activeRitualAnim, setActiveRitualAnim] = useState<'NONE' | 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE'>('NONE');
 
   // Deep link: a `#sync=<code>` fragment (from a shared link or scanned QR)
@@ -974,6 +984,7 @@ const GameLayout = () => {
     <div className="min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative">
       <EffectsLayer />
       <OnlineSyncDriver />
+      <Suspense fallback={null}><OnlineBackupDriver /></Suspense>
       <RollInboxDriver />
       {/* Progressive-disclosure watcher — always mounted (same rule as
           RollInboxDriver): detected events must queue from every screen. */}
@@ -1006,7 +1017,7 @@ const GameLayout = () => {
             {showStrategy && <StrategyGuide onClose={() => setShowStrategy(false)} />}
             {showSupplyChain && <SupplyChainCalculator initialQuery={supplyChainPreset} onClose={() => { setShowSupplyChain(false); setSupplyChainPreset(undefined); }} />}
             {showGameMode && <GameModePicker onClose={() => setShowGameMode(false)} />}
-            {showSyncCode && <SyncCodeModal onClose={() => { setShowSyncCode(false); setSyncImportCode(undefined); }} initialImportCode={syncImportCode} />}
+            {showSyncCode && <SyncCodeModal onClose={() => { setShowSyncCode(false); setSyncImportCode(undefined); setSyncInitialTab(undefined); }} initialImportCode={syncImportCode} initialTab={syncInitialTab} />}
             {showGallery && <ModelGallery onClose={() => setShowGallery(false)} />}
             {showDiscord && <DiscordSettingsModal onClose={() => setShowDiscord(false)} />}
           </>
@@ -1103,8 +1114,10 @@ const GameLayout = () => {
       {/* One contextual "next step" hint under the header — teaches the loop. */}
       <CoachStrip />
 
+      {/* Asks once per run whether to turn on online backup. */}
+      <Suspense fallback={null}><OnlineBackupPrompt /></Suspense>
       {/* Dismissible "export a .fate backup" reminder for unbacked-up runs. */}
-      <BackupNagBanner />
+      <Suspense fallback={null}><BackupNagBanner /></Suspense>
       {/* Posts new unlocks to the profile's Discord webhook (if configured). */}
       <DiscordSyncDriver />
 
