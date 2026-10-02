@@ -2,6 +2,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { SkillRollOdds } from './SkillRollOdds';
+import { SKILL_CHAOS_MILESTONES } from '../config/economy';
 
 describe('SkillRollOdds', () => {
   it('shows the exact chance for the next level', () => {
@@ -11,8 +12,17 @@ describe('SkillRollOdds', () => {
 
     expect(html).toContain('Next Lv 42');
     expect(html).toContain('8.4% Key');
-    expect(html).toContain('separate 2% Chaos Key chance');
+    expect(html).toContain('Each level-up also has a separate 2% chance of a Chaos Key.');
     expect(html).toContain('pointer-events-auto');
+  });
+
+  it('names the guaranteed Chaos Key when the next level is a milestone', () => {
+    for (const level of SKILL_CHAOS_MILESTONES) {
+      const html = renderToStaticMarkup(
+        <SkillRollOdds currentLevel={level - 1} isUnlocked descriptionId="attack-key-roll-description" />,
+      );
+      expect(html, `level ${level}`).toContain(`Level ${level} also gives a guaranteed Chaos Key, and a separate 2% chance of another.`);
+    }
   });
 
   it('shows the maximum eligible chance at level 98', () => {
@@ -52,6 +62,6 @@ describe('SkillRollOdds', () => {
     expect(html).toContain('group-focus-within:opacity-100');
     expect(html).not.toContain('sr-only');
     expect(html).not.toContain('title=');
-    expect(html).toContain('Every level also has a separate 2% Chaos Key chance.');
+    expect(html).toContain('Each level-up also has a separate 2% chance of a Chaos Key.');
   });
 });

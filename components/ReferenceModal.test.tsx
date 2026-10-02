@@ -70,8 +70,9 @@ describe('ReferenceModal Vanilla policy', () => {
     expect(drops).toContain('Levels 2-19: +1 Fate');
     expect(drops).toContain('Levels 20-79: +2 Fate');
     expect(drops).toContain('Levels 80-99: +3 Fate');
-    expect(drops).toContain('30, 40, 50, 60, 70, 80, 90, 99');
-    expect(drops).toContain('separate 2% Chaos chance on every level');
+    expect(drops).toContain('Every skill gives a guaranteed Chaos Key at levels 30, 40, 50, 60, 70, 80, 90 and 99.');
+    expect(drops).toContain('Each level-up also has a separate 2% chance of one, milestones included.');
+    expect(drops).not.toMatch(/Rare Level-Up|2% Chance on Level Up/);
     expect(drops).toContain('overflow carries forward');
     expect(drops).toContain('Combat Achievements: Easy / Medium: +1 Fate; Hard / Elite: +2 Fate; Master / GM: +3 Fate.');
     expect(core).toContain('Failed rolls award +1 to +3 Fate by difficulty.');
@@ -100,6 +101,9 @@ describe('ReferenceModal Vanilla policy', () => {
     expect(unlocks).toContain('Omni-Key direct unlocks bypass that filter with a warning');
     expect(unlocks).toContain('Vanilla named-area rolls can be scattered');
     expect(unlocks).toContain('Only Chunked mode enforces adjacent expansion');
+    expect(unlocks).toContain('Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99, a 2% chance on every level-up, or the Ritual of Chaos.');
+    expect(unlocks).toContain('Every eligible entry is equally likely, so big tables such as Areas and Banks come up most.');
+    expect(renderCodex('unlocks', 'chunked')).toContain('so big tables such as Banks come up most.');
   });
 
   it('labels the Vanilla policy as inactive outside Vanilla', () => {

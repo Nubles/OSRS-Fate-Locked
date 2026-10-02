@@ -10,6 +10,7 @@ import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST,
 import { HelpCircle, Lock, TrendingUp, AlertTriangle, Check } from 'lucide-react';
 import { Sparkles, Dices, Dna, Sprout, Key } from './OsrsIcon';
 import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
+import { andList, LEVEL_CHAOS_CHANCE, SKILL_CHAOS_MILESTONES } from '../config/economy';
 import { openDashboardPool } from '../utils/dashboardPoolNavigation';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, chunkLabel } from '../utils/chunkAdjacency';
 
@@ -254,7 +255,7 @@ export const GachaSection: React.FC = () => {
                             Chaos Key Available
                             <span className="text-[10px] bg-red-500/20 px-1.5 py-0.5 rounded border border-red-500/30 text-red-300 animate-pulse">WILDCARD</span>
                         </h3>
-                        <p className="text-xs text-red-300/60 font-mono">Unlocks a random item from ANY category.</p>
+                        <p className="text-xs text-red-300/60 font-mono">Unlocks a random entry from all the tables at once.</p>
                     </div>
                 </div>
                 <div className="text-2xl font-bold text-red-500 group-hover:scale-110 transition-transform relative z-10 text-shadow-osrs">{chaosKeys}</div>
@@ -265,9 +266,9 @@ export const GachaSection: React.FC = () => {
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-black/40 rounded-full border border-white/10 grayscale opacity-50"><Dna className="text-gray-500 w-5 h-5" /></div>
                     <div>
-                        <h3 className="text-gray-400 font-bold uppercase tracking-widest text-xs">Chaos Entropy</h3>
+                        <h3 className="text-gray-400 font-bold uppercase tracking-widest text-xs">Chaos Keys</h3>
                         <p className="text-[10px] text-gray-600 font-mono flex items-center gap-1">
-                           <AlertTriangle size={10} /> 2% Chance on Level Up
+                           <AlertTriangle size={10} className="shrink-0" /> Guaranteed at skill levels {andList(SKILL_CHAOS_MILESTONES)}, plus a {LEVEL_CHAOS_CHANCE}% chance on any level-up
                         </p>
                     </div>
                 </div>

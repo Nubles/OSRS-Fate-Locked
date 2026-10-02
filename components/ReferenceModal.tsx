@@ -6,7 +6,7 @@ import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
-import { CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, ritualEffect, type Ritual } from '../config/economy';
+import { andList, CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { TableType } from '../types';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
@@ -21,10 +21,6 @@ type TabId = 'core' | 'economy' | 'modes' | 'drops' | 'altar' | 'unlocks' | 'equ
 
 // The values every mode a player can pick shares (gameModes.test.ts checks they do).
 const SHARED_MODE_RULES = GAME_MODES[0].rules;
-
-/** "a, b and c". */
-export const andList = (items: readonly (string | number)[]): string =>
-  items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 
 // Colour a roll rate along the OSRS difficulty gradient (rare → guaranteed).
 const rateColor = (rate: number): string =>
@@ -516,9 +512,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <h4 className="font-bold text-red-400">Chaos Keys</h4>
                                     </div>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Every level has a separate {LEVEL_CHAOS_CHANCE}% Chaos chance on every level. Guaranteed Chaos Keys also arrive at levels {SKILL_CHAOS_MILESTONES.join(', ')}.
+                                        Every skill gives a guaranteed Chaos Key at levels {andList(SKILL_CHAOS_MILESTONES)}. Each level-up also has a separate {LEVEL_CHAOS_CHANCE}% chance of one, milestones included.
                                         <br/><br/>
-                                        Also obtainable via the Ritual of Chaos ({ritualCost('CHAOS')} Fate Points).
+                                        The Ritual of Chaos also makes one for {ritualCost('CHAOS')} Fate Points.
                                     </p>
                                 </div>
                                 <div className="bg-black/20 p-4 rounded-lg border border-amber-500/30">
@@ -599,8 +595,10 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <div className="bg-[#222] p-4 rounded-xl border border-red-500/30">
                                     <h4 className="font-bold text-red-400 mb-1 flex items-center gap-2"><Dna size={16}/> Chaos Key</h4>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Unlocks a <b>random entry from ANY table</b> — you don't choose the
-                                        table. Rare Level-Up drop, or the Ritual of Chaos.
+                                        Unlocks a <b>random entry from all the tables at once</b>. Every eligible entry is
+                                        equally likely, so big tables such as {gameModeId === 'chunked' ? 'Banks' : 'Areas and Banks'} come up most.
+                                        Guaranteed at skill levels {andList(SKILL_CHAOS_MILESTONES)}, a {LEVEL_CHAOS_CHANCE}% chance on
+                                        every level-up, or the Ritual of Chaos.
                                     </p>
                                 </div>
                             </div>

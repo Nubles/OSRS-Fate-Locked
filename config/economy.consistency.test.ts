@@ -14,6 +14,7 @@ import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '..
 import { BOSSES_LIST, MINIGAMES_LIST } from '../data/items';
 import { describeVanillaRandomAccessPolicy, formatVanillaBossSchedule } from '../components/ReferenceModal';
 import { skillLevelKeyChance } from '../utils/keyRoll';
+import { randomUnlockPool } from '../utils/gameEngine';
 import { createFreshState, initialState, prepareKeyRollAction } from '../context/GameContext';
 import { resolveModeRules } from './gameModes';
 
@@ -124,6 +125,22 @@ describe('economy ↔ engine consistency', () => {
       }
       expect(tier.fateOnFailure).toBe(failureFateForSource(tier.source!));
     }
+  });
+
+  it('says most Chaos Keys are guaranteed, and that big tables come up most', () => {
+    const chaos = KEY_TYPES.find(k => k.id === 'chaos')!;
+    expect(chaos.earn[0]).toBe(`Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99: ${SKILL_CHAOS_MILESTONES.length} per skill.`);
+    expect([...chaos.earn, chaos.spend].join(' ')).not.toMatch(/rare|ANY table/i);
+    // A Chaos Key draws once from every eligible entry of every table, so a
+    // table's share is its size: on a fresh run Banks is among the biggest.
+    const tableSizes = (mode: string) => {
+      const sizes = new Map<TableType, number>();
+      for (const { table } of randomUnlockPool(createFreshState().unlocks, mode, 'chaosKey')) sizes.set(table, (sizes.get(table) ?? 0) + 1);
+      return [...sizes].sort((a, b) => b[1] - a[1]).map(([table]) => table);
+    };
+    expect(tableSizes('vanilla').slice(0, 2)).toEqual([TableType.REGIONS, TableType.BANKS]);
+    expect(tableSizes('chunked')[0]).toBe(TableType.BANKS);
+    expect(chaos.spend).toContain('Every eligible entry is equally likely, so big tables such as Banks come up most.');
   });
 
   it('defines Chaos milestones exactly and recognizes only milestone levels', () => {

@@ -26,6 +26,10 @@ const WIKI = 'https://oldschool.runescape.wiki/images/';
 /** Keys every new run starts with. GameContext's fresh state and the Rules text both read it. */
 export const STARTING_KEYS = 3;
 
+/** "a, b and c": for lists the Rules text reads out. */
+export const andList = (items: readonly (string | number)[]): string =>
+  items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+
 // ── Skill levelling is the one dynamic rate (computed per attempt) ───────────
 export const SKILLS_TIER_CAP = 10;     // tiers per skill (1 Key each)
 export const LEVEL_ROLL_MAX = skillLevelKeyChance(99);
@@ -261,14 +265,14 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
     category: 'Level Ups',
     icon: `${WIKI}Stats_icon.png`,
     where: 'Dashboard → click an unlocked skill to bank a level.',
-    blurb: 'The slow drip that rewards raw XP — and the only routine Chaos Key source.',
+    blurb: 'Every level you gain rolls once, and higher levels roll better. Level-ups also give Chaos Keys.',
     dynamic: true,
     tiers: [
       {
         tier: 'Per level gained',
         rate: LEVEL_ROLL_MAX,
         rateLabel: `Level ÷ 5 (up to ${LEVEL_ROLL_MAX.toFixed(1)}% at level 99)`,
-        bonus: `Failure Fate: +1 at levels 2-19, +2 at 20-79, +3 at 80-99. ${LEVEL_CHAOS_CHANCE}% chance of a Chaos Key on every level, plus guaranteed Chaos Keys at levels ${SKILL_CHAOS_MILESTONES.join(', ')}.`,
+        bonus: `Failure Fate: +1 at levels 2-19, +2 at 20-79, +3 at 80-99. Guaranteed Chaos Keys at levels ${andList(SKILL_CHAOS_MILESTONES)}, plus a separate ${LEVEL_CHAOS_CHANCE}% chance of one on every level-up.`,
       },
     ],
   },
@@ -334,11 +338,11 @@ export const KEY_TYPES: KeyTypeInfo[] = [
     accent: 'text-red-400',
     tagline: 'Surrender to entropy.',
     earn: [
-      `A separate ${LEVEL_CHAOS_CHANCE}% chance on every Level Up.`,
-      `Guaranteed at skill levels ${SKILL_CHAOS_MILESTONES.join(', ')}.`,
-      'Ritual of Chaos — convert Fate Points into one.',
+      `Guaranteed at skill levels ${andList(SKILL_CHAOS_MILESTONES)}: ${SKILL_CHAOS_MILESTONES.length} per skill.`,
+      `A separate ${LEVEL_CHAOS_CHANCE}% chance on every level-up, milestones included.`,
+      'The Ritual of Chaos turns Fate Points into one.',
     ],
-    spend: 'Unlocks one RANDOM entry from ANY table — you don’t even pick the table.',
+    spend: 'Unlocks one random entry from all the tables at once. Every eligible entry is equally likely, so big tables such as Banks come up most.',
   },
 ];
 
