@@ -1,12 +1,26 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { GameProvider } from '../context/GameContext';
+import { createFreshState, GameProvider, prepareKeyRollAction } from '../context/GameContext';
 import { ReferenceModal } from './ReferenceModal';
 import { unlockableAreas } from '../utils/freeAreas';
 import { MISTHALIN_AREAS } from '../constants';
 import { CHUNKED_MILESTONE_INTERVAL, STARTING_KEYS } from '../config/economy';
 import { GAME_MODES } from '../config/gameModes';
+import { DropSource } from '../types';
+
+const CHUNKED_LAND = 'In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.';
+
+/** The highest Omni die that still gives an Omni-Key: the chance the roll engine really uses. */
+const engineOmniChance = (source: DropSource): number => {
+  const state = { ...createFreshState(), gameModeId: 'vanilla' };
+  for (let chance = 100; chance > 0; chance--) {
+    // Die 0 is the Key roll (a success here); die 2 is the Omni roll.
+    const dice = (_purpose: string, index = 0, max = 100) => index === 0 ? 1 : index === 2 ? chance : max;
+    if (prepareKeyRollAction(state, source, 100, 1, dice).payload.omni) return chance;
+  }
+  return 0;
+};
 
 type CodexTab = 'core' | 'economy' | 'modes' | 'drops' | 'unlocks' | 'altar';
 
@@ -32,6 +46,42 @@ afterEach(() => vi.unstubAllGlobals());
 describe('ReferenceModal Core Rules', () => {
   it('says how many Keys a new run starts with', () => {
     expect(renderCodex('core')).toContain(`You start with ${STARTING_KEYS} Keys`);
+  });
+});
+
+describe('ReferenceModal Omni-Keys', () => {
+  it('says an Omni-Key comes on top of the Key, never that it upgrades one', () => {
+    const core = renderCodex('core');
+    const drops = renderCodex('drops');
+    const economy = renderCodex('economy');
+    const unlocks = renderCodex('unlocks');
+    expect(core).toContain('to give a bonus Omni-Key as well as the Key');
+    expect(drops).toContain('to give a bonus Omni-Key as well as the Key');
+    expect(economy).toContain('Either way, you keep the Key.');
+    expect(economy).toContain('A bonus on a successful roll, on top of the Key');
+    expect(unlocks).toContain('You get them as a bonus on successful rolls, or for 5 Keys at the Void Altar.');
+    for (const page of [core, drops, economy, unlocks]) {
+      expect(page).not.toMatch(/upgrades? to an Omni|upgrading a successful roll|Rare upgrade|lucky upgrade|rolls for an upgrade|gacha/);
+    }
+  });
+
+  it('says Omni-Keys cannot pick land in Chunked', () => {
+    expect(renderCodex('core', 'chunked')).toContain(CHUNKED_LAND);
+    expect(renderCodex('unlocks', 'chunked')).toContain(CHUNKED_LAND);
+    expect(renderCodex('economy', 'chunked')).toContain(CHUNKED_LAND);
+    expect(renderCodex('core')).not.toContain(CHUNKED_LAND);
+  });
+
+  it('shows the raised Omni-Key chances the roll engine uses', () => {
+    const drops = renderCodex('drops');
+    const raised: Array<[string, DropSource]> = [
+      ['pet drops', DropSource.PET], ['Grandmaster quests', DropSource.QUEST_GRANDMASTER],
+      ['raids', DropSource.RAID], ['Elite diaries', DropSource.DIARY_ELITE], ['high-tier bosses', DropSource.BOSS_HIGH],
+    ];
+    for (const [label, source] of raised) {
+      expect(drops, label).toContain(`${label} <b>${engineOmniChance(source)}%</b>`);
+    }
+    expect(renderCodex('economy')).toContain(`or ${engineOmniChance(DropSource.QUEST_GRANDMASTER)}% for a Grandmaster quest`);
   });
 });
 

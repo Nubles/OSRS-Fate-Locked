@@ -6,9 +6,9 @@ import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
-import { andList, CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, ritualEffect, type Ritual } from '../config/economy';
+import { andList, CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
-import { TableType } from '../types';
+import { DropSource, TableType } from '../types';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { unlockableAreas } from '../utils/freeAreas';
 
@@ -254,9 +254,10 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                  <div className="bg-[#222] p-4 rounded-xl border border-white/5">
                                     <h4 className="font-bold text-gray-200 mb-2 flex items-center gap-2"><Sparkles size={16} className="text-purple-400"/> Omni-Keys</h4>
                                     <p className="text-xs text-gray-400">
-                                        Rare upgrade on a successful roll (<span className="text-white font-bold">{rules.omniChanceBase}% base chance</span> in your mode).
+                                        A successful roll has a <span className="text-white font-bold">{rules.omniChanceBase}% chance</span> in your mode to give a bonus Omni-Key as well as the Key.
                                         <br/><br/>
-                                        These let you <span className="text-white font-bold">pick exactly what you want</span> to unlock, bypassing the RNG gacha.
+                                        Spend one to <span className="text-white font-bold">pick exactly what you unlock</span>, instead of a random entry.
+                                        {gameModeId === 'chunked' && ' In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.'}
                                     </p>
                                 </div>
                             </div>
@@ -324,7 +325,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <ol className="space-y-3 text-sm text-gray-300">
                                     <li><b className="text-white">1.</b> You finish <b>Desert Treasure I</b> — a <b className="text-purple-400">Master</b> quest — and tick it off in the Journal.</li>
                                     <li><b className="text-white">2.</b> The app draws to <span className="font-mono">0.1%</span> precision against its <b className="text-purple-400">95.0%</b> threshold. You roll <span className="font-mono text-green-400">42.0</span> → a Key!</li>
-                                    <li><b className="text-white">3.</b> Every success then rolls for an upgrade. In {activeMode.name} mode that's a <b className="text-purple-400">{rules.omniChanceBase}%</b> Omni chance (Grandmaster quests raise it to 20%). Miss it and you bank a Standard Key; hit it and you <i>also</i> pocket an <b className="text-purple-400">Omni-Key</b>.</li>
+                                    <li><b className="text-white">3.</b> Every success also has a chance at a bonus <b className="text-purple-400">Omni-Key</b>: <b className="text-purple-400">{rules.omniChanceBase}%</b> in {activeMode.name} mode, or {omniFloor(DropSource.QUEST_GRANDMASTER)}% for a Grandmaster quest. Either way, you keep the Key.</li>
                                     <li><b className="text-white">4.</b> Take the Key to <b className="text-osrs-gold">Spend Keys</b>, choose the <b>Skills</b> table, and unlock a random skill tier — say Slayer. Those new Slayer levels open fresh tasks to roll on.</li>
                                     <li className="text-gray-500 text-xs pt-1">Roll <span className="font-mono">95.1–100.0</span> instead and you'd get no Key — but you would gain +3 Fate{rules.pityEnabled ? <>, inching toward a guaranteed Key at <b>{rules.pityThreshold}</b></> : ''}.</li>
                                 </ol>
@@ -500,9 +501,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <h4 className="font-bold text-purple-400">Omni-Key Chance</h4>
                                     </div>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Any successful key roll has a <b>{rules.omniChanceBase}% chance</b> to upgrade to an Omni-Key in <b>{activeMode.name}</b> mode.
+                                        Any successful roll has a <b>{rules.omniChanceBase}% chance</b> in <b>{activeMode.name}</b> mode to give a bonus Omni-Key as well as the Key.
                                         <br/><br/>
-                                        High-effort sources keep elevated odds: pet drops <b>25%</b>, Grandmaster quests <b>20%</b>, raids <b>15%</b>, Elite diaries and high-tier bosses <b>10%</b>.
+                                        Some sources have a higher chance: pet drops <b>{omniFloor(DropSource.PET)}%</b>, Grandmaster quests <b>{omniFloor(DropSource.QUEST_GRANDMASTER)}%</b>, raids <b>{omniFloor(DropSource.RAID)}%</b>, Elite diaries <b>{omniFloor(DropSource.DIARY_ELITE)}%</b> and high-tier bosses <b>{omniFloor(DropSource.BOSS_HIGH)}%</b>.
                                         {rules.regionModifiers && <><br/><br/><span className="text-emerald-400">Your run's region bonuses add to this.</span></>}
                                     </p>
                                 </div>
@@ -588,8 +589,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <div className="bg-[#222] p-4 rounded-xl border border-purple-500/30">
                                     <h4 className="font-bold text-purple-400 mb-1 flex items-center gap-2"><Sparkles size={16}/> Omni-Key</h4>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Spend on a table to <b>pick exactly</b> the entry you want — no RNG.
-                                        Earned by upgrading a successful roll, or forged at the Altar.
+                                        Click a locked entry on the Dashboard to <b>pick exactly</b> what you unlock. You get them as a
+                                        bonus on successful rolls, or for {getRitual('TRANSMUTE').keyCost} Keys at the Void Altar.
+                                        {gameModeId === 'chunked' && ' In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.'}
                                     </p>
                                 </div>
                                 <div className="bg-[#222] p-4 rounded-xl border border-red-500/30">

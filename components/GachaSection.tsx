@@ -235,7 +235,7 @@ export const GachaSection: React.FC = () => {
               {specialKeys} Omni-Key{specialKeys > 1 ? 's' : ''} Ready
             </h3>
             <p className="text-[11px] text-purple-300/70 font-mono leading-snug">
-              Omni-Keys aren't rolled here — click any locked skill, gear slot, {isChunked ? '' : 'region '}or boss in the <span className="text-purple-200">Progression Dashboard</span> to pick exactly what to unlock.
+              Omni-Keys aren't spent here. Click a locked skill, gear slot, {isChunked ? '' : 'area, '}boss or other entry on the <span className="text-purple-200">Dashboard</span> to pick exactly what to unlock.
             </p>
           </div>
         </div>

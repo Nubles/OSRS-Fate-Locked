@@ -447,8 +447,8 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                    <WikiIcon file="Crystal_key.png" alt="Keys" Fallback={Key} size={17} className="drop-shadow" />
                    <span className="font-bold text-amber-100 text-lg leading-none"><PopOnChange value={keys} /></span>
                 </div>
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors min-w-[60px] justify-center ${specialKeys > 0 ? 'bg-purple-500/20 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'bg-white/5 border-white/10 opacity-50'}`} title="Omni-keys — click any locked item in the Dashboard to unlock exactly it">
-                   <WikiIcon file="Enhanced_crystal_key.png" alt="Omni-keys" Fallback={Sparkles} size={18} className={specialKeys > 0 ? 'animate-pulse' : 'opacity-50 grayscale'} />
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors min-w-[60px] justify-center ${specialKeys > 0 ? 'bg-purple-500/20 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'bg-white/5 border-white/10 opacity-50'}`} title={`Omni-Keys: click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ' In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.' : ''}`}>
+                   <WikiIcon file="Enhanced_crystal_key.png" alt="Omni-Keys" Fallback={Sparkles} size={18} className={specialKeys > 0 ? 'animate-pulse' : 'opacity-50 grayscale'} />
                    <span className={`font-bold text-lg leading-none ${specialKeys > 0 ? 'text-purple-200' : 'text-gray-500'}`}><PopOnChange value={specialKeys} /></span>
                 </div>
                 {chaosKeys > 0 && (

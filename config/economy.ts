@@ -285,6 +285,16 @@ export const EARN_METHODS: EarnMethod[] = EARN_METHOD_DEFINITIONS.map(method => 
     : tier),
 }));
 
+/**
+ * The raised Omni-Key chance a source rolls at, if it has one. These are the tiers' `omni`
+ * values, which economy.consistency.test.ts pins to the roll engine.
+ */
+export const omniFloor = (source: DropSource): number => {
+  const omni = EARN_METHODS.flatMap(m => m.tiers).find(t => t.source === source)?.omni;
+  if (omni === undefined) throw new Error(`No raised Omni-Key chance for ${source}`);
+  return omni;
+};
+
 /** Min/max fixed success rate across all tiers of a method (for summary chips). */
 export const earnRange = (m: EarnMethod): [number, number] => {
   const rates = m.tiers.map(t => t.rate);
@@ -326,10 +336,10 @@ export const KEY_TYPES: KeyTypeInfo[] = [
     accent: 'text-purple-400',
     tagline: 'Bend Fate to your will.',
     earn: [
-      'A lucky upgrade on a successful roll (mode base %, raised to 25% on pet drops, 20% on Grandmaster quests, 15% on raids and 10% on Elite diaries and high-tier bosses).',
-      'Ritual of Transmutation — fuse 5 standard Keys into 1.',
+      'A bonus on a successful roll, on top of the Key: your mode’s base chance, raised to 25% on pet drops, 20% on Grandmaster quests, 15% on raids and 10% on Elite diaries and high-tier bosses.',
+      'The Ritual of Transmutation: 5 Keys make 1 Omni-Key.',
     ],
-    spend: 'Hold one and the Dashboard lights up — click any locked skill, gear slot, region or boss to unlock EXACTLY it. No RNG, no table roll.',
+    spend: 'Click a locked skill, gear slot, area, boss or other entry on the Dashboard to unlock exactly that. In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.',
   },
   {
     id: 'chaos',
