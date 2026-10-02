@@ -20,7 +20,20 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-diary-accuracy');
+    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-diary-unlock-gates');
+  });
+
+  it('announces the guild, farming patch, house and Slayer reward gates, and that logging stays free', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-02-diary-unlock-gates');
+    expect(release?.title).toBe('Diary Tasks Ask for Guilds, Patches and House Rooms');
+    expect(release?.date).toBe('2026-10-02');
+    expect(Object.keys(release?.sections ?? {})).toEqual(['fixed']);
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/done inside a guild now need that guild unlocked.*Magic Guild needs the Wizards’ Guild.*Rogues’ Den.*Woodcutting Guild.*14 tasks.*only changes the Journal: you can still log the task by hand/),
+      expect.stringMatching(/farming patch need that patch unlocked.*Flower patch.*Fruit Tree patch.*Allotment patch if you grow the watermelon.*21 tasks/),
+      expect.stringMatching(/house need the room or mount.*Menagerie.*Portal Chamber or Portal Nexus.*Xeric’s talisman or Digsite pendant.*Yanille or Hosidius needs Real Estate Agents/),
+      expect.stringMatching(/Slayer helmet needs the Malevolent Masquerade Slayer reward/),
+    ]);
   });
 
   it('announces the Diary tasks checked against the game, with examples of each fix', () => {
