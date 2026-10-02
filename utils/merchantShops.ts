@@ -1,7 +1,7 @@
 import { MERCHANT_SERVICES } from '../data/merchantServices';
 import type { EntityKind } from '../services/ChunkContentService';
 import { chunkContentService } from '../services/ChunkContentService';
-import { classifyShop } from './shopClassification';
+import { classifyShop, onlyShopSource } from './shopClassification';
 
 export { classifyShop } from './shopClassification';
 
@@ -10,6 +10,8 @@ export interface CategoryShop {
   kind?: EntityKind;
   category?: string;
   stockStatus?: string;
+  /** Items no other shop sells, which this shop's category therefore unlocks (owner call U2). */
+  onlySource?: readonly string[];
   locations: { cx: number; cy: number }[];
 }
 
@@ -24,7 +26,11 @@ export function shopsByCategory(): Map<string, CategoryShop[]> | null {
     const category = classifyShop(hit.name);
     if (!category) continue;
     if (!out.has(category)) out.set(category, []);
-    out.get(category)!.push({ name: hit.name, kind: 'shop', category, stockStatus: chunkContentService.shopInfo(hit.name)?.status, locations: hit.locations });
+    const onlySource = onlyShopSource(hit.name);
+    out.get(category)!.push({
+      name: hit.name, kind: 'shop', category, stockStatus: chunkContentService.shopInfo(hit.name)?.status,
+      ...(onlySource.length ? { onlySource } : {}), locations: hit.locations,
+    });
   }
   for (const hit of chunkContentService.entitiesOfKind('npc')) {
     const service = MERCHANT_SERVICES[hit.name]; if (!service) continue;

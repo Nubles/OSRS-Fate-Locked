@@ -16,7 +16,8 @@ import { SKILL_UNLOCK_DATA } from './skillUnlocks';
 import { resourceReqFor } from '../utils/chunkResources';
 import { skillChunkNodes } from '../utils/skillChunkNodes';
 import { chunkContentService } from '../services/ChunkContentService';
-import { classifyShop } from '../utils/shopClassification';
+import { classifyShop, ONLY_SHOP_SOURCE } from '../utils/shopClassification';
+import { shopsByCategory } from '../utils/merchantShops';
 import shopOverrides from './sources/shop-overrides.json';
 import { compileRawRequirements } from '../utils/questRoutes/accountRequirements';
 import {
@@ -361,6 +362,61 @@ describe("U1: a reward shop needs Reward Shops and its activity's unlock", () =>
     expect(exchange(everything(59)).reasons).toContain('Mining level 60');
     expect(exchange(everything(99, { guilds: GUILDS_LIST.filter(guild => guild !== 'Mining Guild') })))
       .toEqual({ status: 'NOT_READY', reasons: ['Mining Guild'] });
+  });
+});
+
+describe('U2: a mixed-stock armour shop goes by its stock, and its only-source items are marked', () => {
+  // More than half the stock decides; else the game's own type for the shop (minimap icon, or
+  // the wiki's speciality where it has no icon). Ranged armour counts for Archery Shops.
+  const SHOPS: Readonly<Record<string, string>> = {
+    'Armour Shop (Jatizso)': 'Platebody Shops', "Blair's Armour": 'Chainbody Shops',
+    "Myths' Guild Armoury": 'Platebody Shops', 'Quality Armour Shop': 'Chainbody Shops',
+    "Reldak's Leather Armour": 'Archery Shops', "Scavvo's Rune Store": 'Chainbody Shops',
+    "Seddu's Adventurer's Store": 'Platelegs Shops', Armoury: 'Sword Shops',
+  };
+  /** The category whose speciality an item is. */
+  const kindOf = (item: string) => ([
+    [/platebody|dragon metal (shard|lump)/i, 'Platebody Shops'], [/chainbody/i, 'Chainbody Shops'],
+    [/platelegs/i, 'Platelegs Shops'], [/plateskirt/i, 'Plateskirt Shops'], [/helm\b/i, 'Helmet Shops'],
+    [/shield|kiteshield/i, 'Shield Shops'], [/\bmace\b/i, 'Mace Shops'], [/battleaxe|\baxe\b/i, 'Axe Shops'],
+    [/sword|dagger/i, 'Sword Shops'], [/crossbow/i, 'Crossbow Shops'],
+    [/arrow|bolts|bow\b|coif|d'hide|leather/i, 'Archery Shops'],
+  ] as const).find(([pattern]) => pattern.test(item))?.[1] ?? 'other';
+  const sellers = (item: string) => Object.entries(rawContent.shopItems).filter(([, items]) => items.includes(item)).map(([shop]) => shop);
+
+  it('puts each shop where most of its stock, or its own icon, puts it', () => {
+    expect(Object.fromEntries(Object.keys(SHOPS).map(shop => [shop, classifyShop(shop)]))).toEqual(SHOPS);
+    // Where one category holds more than half the stock, it is that one.
+    for (const [shop, category] of Object.entries(SHOPS)) {
+      const stock = rawContent.shopItems[shop] ?? [];
+      const counts = new Map<string, number>();
+      for (const item of stock) counts.set(kindOf(item), (counts.get(kindOf(item)) ?? 0) + 1);
+      const majority = [...counts].find(([, count]) => count * 2 > stock.length)?.[0];
+      if (majority) expect(category, shop).toBe(majority);
+    }
+  });
+
+  it('marks every item such a shop alone sells that is not of its category', () => {
+    const marked = Object.fromEntries(Object.keys(SHOPS).flatMap(shop => {
+      const only = (rawContent.shopItems[shop] ?? []).filter(item => sellers(item).length === 1 && kindOf(item) !== SHOPS[shop]);
+      return only.length ? [[shop.toLowerCase(), only]] : [];
+    }));
+    expect(marked).toEqual(ONLY_SHOP_SOURCE);
+  });
+
+  it('keeps each marked item reachable through its shop, and shows it in the shop directory', () => {
+    for (const [shop, items] of Object.entries(ONLY_SHOP_SOURCE)) {
+      for (const item of items) {
+        // Monsters drop them too; no other shop sells them.
+        const records = service.itemSourceRecords(item).filter(record => record.kind === 'shop');
+        expect(records.length, item).toBeGreaterThan(0);
+        expect(records.map(record => record.hostName.toLowerCase()), item).toEqual(records.map(() => shop));
+        for (const record of records) expect(record.rawRequirements.map(requirement => requirement.raw), item).toContain(`Use the ${classifyShop(shop)}`);
+      }
+    }
+    const directory = [...shopsByCategory()!.values()].flat();
+    expect(directory.find(entry => entry.name === "Scavvo's Rune Store")?.onlySource).toEqual(['Rune sword']);
+    expect(directory.find(entry => entry.name === "Seddu's Adventurer's Store")?.onlySource).toEqual(['Black med helm']);
   });
 });
 

@@ -13,15 +13,24 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   'mage arena shop': 'Magic Shops', // Resource catalogue alias for Lundail's arena-side rune shop.
   "martin thwait's lost and found": 'Claw Shops',
   "quartermaster's stores": 'Halberd Shops',
-  // Armour shops whose names do not reveal their actual speciality.
-  'armour shop (jatizso)': 'Chainbody Shops',
-  "scavvo's rune store": 'Chainbody Shops',
+  // Armour shops whose names do not reveal their actual speciality. A shop
+  // with mixed stock goes to the category more than half of its stock
+  // belongs to; where no category has that, to the game's own type for the
+  // shop, its minimap icon or else the wiki's speciality for it (owner call
+  // U2). The few items such a shop alone sells are marked in ONLY_SHOP_SOURCE.
+  'armour shop (jatizso)': 'Platebody Shops', // a full mithril set; Platebody shop icon
+  "blair's armour": 'Chainbody Shops', // three each of chainbodies, platelegs, plateskirts and med helms; Chainbody shop icon
+  "myths' guild armoury": 'Platebody Shops', // a dragon metal shard and a shield half; Platebody shop icon
+  'quality armour shop': 'Chainbody Shops', // four chainbodies and three med helms
+  "reldak's leather armour": 'Archery Shops', // frog-leather, ranged armour as at Aaron's
+  "scavvo's rune store": 'Chainbody Shops', // no icon; the wiki calls it a chainmail shop
+  "seddu's adventurer's store": 'Platelegs Shops', // Platelegs shop icon
   "sir tiffy cashien (recruitment drive)": 'Platebody Shops',
   "sir tiffy cashien (the slug menace)": 'Platebody Shops',
   "valaine's shop of champions": 'Platebody Shops',
 
   // Specific equipment shops hidden behind generic or misleading names.
-  'armoury': 'Archery Shops',
+  'armoury': 'Sword Shops', // 2h swords, axes and archery gear, none of them half; Sword shop icon
   "ava's odds and ends": 'Archery Shops',
   "brian's battleaxe bazaar": 'Axe Shops',
   "fairy fixit's fairy enchantment": 'Magic Shops',
@@ -72,7 +81,6 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   "keldagrim's best bread": 'Food Shops',
   "kenelme's wares": 'Food Shops',
   "lovecraft's tackle": 'Fishing Shops',
-  "seddu's adventurer's store": 'Platelegs Shops',
   'shop of distaste': 'Vegetable Shops',
   'the shrimp and parrot': 'Food Shops',
   "yarnio's baked goods": 'Food Shops',
@@ -209,3 +217,17 @@ export const classifyShop = (shopName: string): string | null => {
   }
   return null;
 };
+
+/**
+ * Items a mixed-stock armour shop is the only shop to sell, though they are
+ * not of its category's kind: they are bought with the shop's category, and
+ * the shop directory says so (owner call U2). Keyed by lowercase shop name.
+ */
+export const ONLY_SHOP_SOURCE: Readonly<Record<string, readonly string[]>> = {
+  "scavvo's rune store": ['Rune sword'],
+  "seddu's adventurer's store": ['Black med helm'],
+};
+
+/** The items only this shop sells, as ONLY_SHOP_SOURCE marks them. */
+export const onlyShopSource = (shopName: string): readonly string[] =>
+  ONLY_SHOP_SOURCE[shopName.trim().toLowerCase().replace(/#.*$/, '').replace(/\.$/, '')] ?? [];

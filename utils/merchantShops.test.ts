@@ -51,9 +51,15 @@ describe('classifyShop', () => {
 
   it('uses reviewed categories for misleading and non-descriptive shop names', () => {
     const cases: [string, string][] = [
-      // Armour and equipment specialities.
-      ['Armour Shop (Jatizso)', 'Chainbody Shops'],
-      ['Armoury', 'Archery Shops'],
+      // Armour and equipment specialities. Mixed-stock shops go by most of their stock, or else
+      // the game's own icon for them (owner call U2): Jatizso's full mithril set has a Platebody
+      // shop icon, and the Armoury's 2h swords, axes and bows a Sword shop icon.
+      ['Armour Shop (Jatizso)', 'Platebody Shops'],
+      ['Armoury', 'Sword Shops'],
+      ["Blair's Armour", 'Chainbody Shops'],
+      ['Quality Armour Shop', 'Chainbody Shops'],
+      ["Reldak's Leather Armour", 'Archery Shops'],
+      ["Myths' Guild Armoury", 'Platebody Shops'],
       ["Ava's Odds and Ends", 'Archery Shops'],
       ["Brian's Battleaxe Bazaar", 'Axe Shops'],
       ["Filamina's Wares", 'Staff Shops'],
