@@ -33,6 +33,7 @@ describe('authored changelog releases', () => {
     ]);
     expect(release?.sections.changed).toEqual([
       expect.stringMatching(/Logging by hand, rolling and spending Keys are unchanged/),
+      expect.stringMatching(/RuneLite guide calls the website the tracker throughout/),
     ]);
     expect(release?.sections.fixed).toEqual([
       expect.stringMatching(/Strict Mode.*a teleport of a kind your run hasn’t unlocked.*even to an unlocked place.*worn item’s teleport.*glory’s Edgeville.*What it stops is unchanged/),

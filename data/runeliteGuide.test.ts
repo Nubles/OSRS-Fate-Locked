@@ -208,6 +208,17 @@ describe('RuneLite guide, as the plugin does it', () => {
     expect(callout('here', 'skills')).toContain('the level the tracker has for you');
   });
 
+  it('calls the website the tracker, as the plugin’s buttons do (owner’s call T1)', () => {
+    // Ids and file names aren't shown, so the confirmation picture keeps its name.
+    const shown = JSON.stringify(
+      [RUNELITE_GUIDE_CHAPTERS, RUNELITE_GUIDE_SETTINGS, RUNELITE_GUIDE_TROUBLESHOOTING, RUNELITE_GUIDE_GLOSSARY,
+        RUNELITE_GUIDE_FIGURES],
+      (key, value: unknown) => (['id', 'src', 'figureId'].includes(key) ? undefined : value),
+    );
+    expect(shown).toContain('the tracker');
+    expect(shown).not.toMatch(/companion/i);
+  });
+
   it('names the banner’s button and says what Recently stopped lists (P-6, P-19)', () => {
     expect(chapter('strict-mode')).toContain('a Pause Strict Mode for 60s button');
     expect(setting('strictMode').visibleResult).toContain('Pause Strict Mode for 60s');

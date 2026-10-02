@@ -30,6 +30,7 @@ export const CHANGELOG_RELEASES = [
       ],
       changed: [
         'Logging by hand, rolling and spending Keys are unchanged. Skip any row you’ve already logged by hand.',
+        'The RuneLite guide calls the website the tracker throughout, as RuneLite’s own buttons do.',
       ],
       fixed: [
         'Strict Mode’s setting, its card in RuneLite and the RuneLite guide now say all it stops: a teleport to a place your rules lock, and a teleport of a kind your run hasn’t unlocked, such as Jewelry Teleports, even to an unlocked place. A worn item’s teleport, such as a glory’s Edgeville, counts. What it stops is unchanged.',

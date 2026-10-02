@@ -25,7 +25,7 @@ export type GuideChapterId = typeof RUNELITE_GUIDE_CHAPTER_IDS[number];
 
 /**
  * Where a picture comes from: drawn by the plugin's own code, in RuneLite's own theme, or
- * captured from the companion.
+ * captured from the tracker.
  */
 export type GuideFigureSource = 'rendered' | 'web-capture';
 
@@ -213,7 +213,7 @@ export const RUNELITE_GUIDE_FIGURES: readonly GuideFigure[] = [
     height: 616,
     scale: 2,
     callouts: [
-      callout('open-tracker', 1, [0.649, 0.026, 0.324, 0.091], 'Open tracker', 'Opens the companion in your browser.'),
+      callout('open-tracker', 1, [0.649, 0.026, 0.324, 0.091], 'Open tracker', 'Opens the tracker in your browser.'),
       callout('status', 2, [0.027, 0.143, 0.947, 0.221], 'Status card', 'Whether your rules are current and for this character, and the one thing to do about it.'),
       callout('cards', 3, [0.027, 0.383, 0.947, 0.5], 'Five cards', 'Here, Strict Mode, Run, Roll inbox and Connection & backup. Each opens and closes on its own.'),
       callout('more-settings', 4, [0.027, 0.903, 0.947, 0.078], 'More settings', 'Everything else is in RuneLite’s configuration, under Fate Locked Ironman.'),
@@ -230,8 +230,8 @@ export const RUNELITE_GUIDE_FIGURES: readonly GuideFigure[] = [
     id: 'companion-confirmation',
     src: '/guides/runelite/companion-confirmation.png',
     source: 'web-capture',
-    title: 'Confirm the profile in the companion',
-    alt: 'The companion’s Connect RuneLite tracker dialog for the fictional Iron Example profile, with Cancel and Connect tracker.',
+    title: 'Confirm the profile in the tracker',
+    alt: 'The tracker’s Connect RuneLite tracker dialog for the fictional Iron Example profile, with Cancel and Connect tracker.',
     width: 896,
     height: 692,
     scale: 2,
@@ -299,7 +299,7 @@ export const RUNELITE_GUIDE_FIGURES: readonly GuideFigure[] = [
     callouts: [
       callout('character', 1, [0.054, 0.132, 0.891, 0.07], 'Character', 'Whose run this is, with (you) when you’re logged in on it.'),
       callout('progress', 2, [0.054, 0.308, 0.891, 0.07], 'Progress', 'How much of the run you’ve unlocked, in areas, or chunks in Chunked mode. The percentage counts the same.'),
-      callout('keys', 3, [0.054, 0.454, 0.891, 0.3], 'Keys', 'Keys, Omni-Keys and Chaos Keys, as the companion counts them.'),
+      callout('keys', 3, [0.054, 0.454, 0.891, 0.3], 'Keys', 'Keys, Omni-Keys and Chaos Keys, as the tracker counts them.'),
       callout('fate-points', 4, [0.054, 0.771, 0.891, 0.088], 'Fate Points', 'What your failed rolls have built up.'),
       callout('ritual', 5, [0.054, 0.877, 0.891, 0.07], 'Ritual', 'The ritual waiting on your next roll, if any.'),
     ],
@@ -380,7 +380,7 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
   rollNudges: {
     purpose: 'A chat line when RuneLite adds something to your Roll inbox: a level, a quest, a finished diary tier (not each task), a combat task, a clue scroll, a boss or raid kill, a collection log item or a Slayer task. Only on the character your run is linked to.',
     visibleResult: 'The line says what happened, such as Attack level 71: added to your Roll inbox. It never rolls and never changes your run.',
-    changeWhen: 'Turn it off if you roll in the companion on your own schedule.',
+    changeWhen: 'Turn it off if you roll in the tracker on your own schedule.',
   },
   useNotifier: {
     purpose: 'Also sends a RuneLite notification with each locked-area alert’s chat line, each rule warning, and the warning that you’re on a character your run isn’t linked to.',
@@ -450,7 +450,7 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
   reimportHotkey: {
     purpose: 'Imports your rules from the clipboard, as the sidebar’s Import from clipboard does.',
     visibleResult: 'The status card says Using a backup, where the rules came from and when they were exported.',
-    changeWhen: 'Set it if you copy rules from the companion often, for example with online sync off.',
+    changeWhen: 'Set it if you copy rules from the tracker often, for example with online sync off.',
   },
 };
 
@@ -532,7 +532,7 @@ export const RUNELITE_GUIDE_TROUBLESHOOTING: readonly GuideTroubleshootingItem[]
   {
     id: 'out-of-date-or-expired',
     symptom: 'The status card says Rules may be out of date, Tracker copy expired, or Tracker has older rules.',
-    likelyCause: 'RuneLite couldn’t reach the relay for more than 15 minutes, the companion hasn’t sent your rules in 24 hours, or the relay has an older copy than yours. Your current rules stay in use.',
+    likelyCause: 'RuneLite couldn’t reach the relay for more than 15 minutes, the tracker hasn’t sent your rules in 24 hours, or the relay has an older copy than yours. Your current rules stay in use.',
     fix: [
       'For Rules may be out of date, check your internet connection, then select Check now.',
       'For the others, select Open web tracker: opening your profile there sends the rules again.',
@@ -542,11 +542,11 @@ export const RUNELITE_GUIDE_TROUBLESHOOTING: readonly GuideTroubleshootingItem[]
   {
     id: 'not-usable-or-update',
     symptom: 'The status card says Tracker rules not usable, Couldn’t apply the tracker’s rules, or Plugin update needed.',
-    likelyCause: 'The companion sent rules this plugin couldn’t read, or in a newer format than it knows. Your current rules stay in use.',
+    likelyCause: 'The tracker sent rules this plugin couldn’t read, or in a newer format than it knows. Your current rules stay in use.',
     fix: [
       'For Plugin update needed, restart RuneLite to get the latest Fate Locked from the Plugin Hub.',
       'For the others, select Open web tracker to send the rules again.',
-      'Never edit the rules by hand; a backup from the companion is always safe to import.',
+      'Never edit the rules by hand; a backup from the tracker is always safe to import.',
     ],
   },
   {
@@ -596,9 +596,9 @@ export const RUNELITE_GUIDE_TROUBLESHOOTING: readonly GuideTroubleshootingItem[]
   {
     id: 'clipboard-import',
     symptom: 'Import from clipboard doesn’t load your rules.',
-    likelyCause: 'The clipboard doesn’t hold one complete copy of your rules from the companion.',
+    likelyCause: 'The clipboard doesn’t hold one complete copy of your rules from the tracker.',
     fix: [
-      'Copy the rules again in the companion.',
+      'Copy the rules again in the tracker.',
       `Select Import from clipboard, or press your ${label('reimportHotkey')}, once.`,
       'A failed import keeps the rules you had.',
     ],
@@ -687,7 +687,7 @@ export const RUNELITE_GUIDE_GLOSSARY: readonly GuideGlossaryItem[] = [
     term: 'Relay',
     definition: 'The one fixed Fate Locked service that hands RuneLite your paired profile’s rules. It sees your IP address, as any internet service does.',
   },
-  { term: 'Backup', definition: 'Your rules copied from the companion to the clipboard or a file, for playing without the relay.' },
+  { term: 'Backup', definition: 'Your rules copied from the tracker to the clipboard or a file, for playing without the relay.' },
 ];
 
 export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
@@ -711,7 +711,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
           },
           {
             title: 'Connect your tracker',
-            body: 'Select Connect tracker. The first time, RuneLite asks to turn on online sync and warns that the relay sees your IP address. Your browser then opens the companion.',
+            body: 'Select Connect tracker. The first time, RuneLite asks to turn on online sync and warns that the relay sees your IP address. Your browser then opens the tracker.',
           },
           {
             title: 'Confirm the profile',
@@ -735,7 +735,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
       {
         kind: 'note',
         title: 'It only reads your run',
-        text: 'RuneLite downloads your run’s rules and does not upload gameplay data. It never rolls, spends Keys or unlocks anything: the companion is still where your run changes.',
+        text: 'RuneLite downloads your run’s rules and does not upload gameplay data. It never rolls, spends Keys or unlocks anything: the tracker is still where your run changes.',
       },
       {
         kind: 'text',
@@ -779,7 +779,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
         items: [
           { figureId: 'status-up-to-date', title: 'Rules up to date', body: 'Synced recently, for this character. Nothing to do.' },
           { figureId: 'status-out-of-date', title: 'Rules may be out of date', body: 'RuneLite couldn’t check for more than 15 minutes. Your rules stay in use; Strict Mode waits.' },
-          { figureId: 'status-expired', title: 'Tracker copy expired', body: 'The companion hasn’t sent your rules in 24 hours. Open it to send them again.' },
+          { figureId: 'status-expired', title: 'Tracker copy expired', body: 'The tracker hasn’t sent your rules in 24 hours. Open it to send them again.' },
           { figureId: 'status-backup', title: 'Using a backup', body: 'Rules from the clipboard or a file. Connect tracker goes back to the relay.' },
           { figureId: 'status-different-character', title: 'Different character', body: 'The run is linked to another character, so warnings and Strict Mode are off.' },
           { figureId: 'status-not-connected', title: 'Not connected', body: 'Connect your tracker, or use a backup instead.' },
@@ -886,7 +886,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
       },
       {
         kind: 'text',
-        text: 'The card only reads your run. Rolling, spending Keys and unlocking all happen in the companion.',
+        text: 'The card only reads your run. Rolling, spending Keys and unlocking all happen in the tracker.',
       },
     ],
   },
@@ -950,11 +950,11 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
         steps: [
           {
             title: 'From the clipboard',
-            body: 'Copy your rules in the companion, then select Import from clipboard, or press the import hotkey if you’ve set one.',
+            body: 'Copy your rules in the tracker, then select Import from clipboard, or press the import hotkey if you’ve set one.',
           },
           {
             title: 'From a file',
-            body: 'Save your rules from the companion as fate-locked-bundle-*.json in %USERPROFILE%\\.runelite\\fate-locked\\ on Windows, then select Load newest backup file.',
+            body: 'Save your rules from the tracker as fate-locked-bundle-*.json in %USERPROFILE%\\.runelite\\fate-locked\\ on Windows, then select Load newest backup file.',
           },
         ],
       },
@@ -1049,7 +1049,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
     id: 'glossary',
     number: 12,
     title: 'Glossary',
-    lede: 'The words the plugin and the companion share, and what they mean.',
+    lede: 'The words the plugin and the tracker share, and what they mean.',
     icon: 'Quest_point_icon.png',
     blocks: [{ kind: 'glossary' }],
   },
