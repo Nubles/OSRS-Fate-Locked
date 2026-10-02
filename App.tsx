@@ -839,6 +839,8 @@ const GameLayout = () => {
       }>).detail;
       const target = detail?.target ?? '';
       if (target === 'open:online-backup') {
+        // A sync link's code would open the Import tab instead.
+        setSyncImportCode(undefined);
         setSyncInitialTab('ONLINE');
         setShowSyncCode(true);
         return;
