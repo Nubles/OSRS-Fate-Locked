@@ -331,6 +331,20 @@ describe('transformChunkContent', () => {
       ]);
   });
 
+  it("gives a reviewed shop its activity's unlock wherever it stands, in place of the source's wording (owner call U1)", () => {
+    const result = transformChunkContent({
+      walkableChunks: [13631],
+      chunks: { 13631: { Nickname: "Daimon's Crater", Shop: { 'Bounty Hunter Store': true } } },
+      slayerMonsters: {},
+      shopItems: { 'Bounty Hunter Store': { 'Bounty hunter hat (tier 1)': true } },
+      taskUnlocks: { Shops: { 'Bounty Hunter Store': { 13631: [{ 'Access Bounty Hunter Store': 'Nonskill', 'Example Quest Complete the quest': 'Nonskill' }] } } },
+    }, manifest);
+    // data/sources/shop-overrides.json: "Play Bounty Hunter" replaces "Access Bounty Hunter Store".
+    expect(result.full.taskUnlocks.Shops).toEqual({
+      'Bounty Hunter Store': { 13631: ['Example Quest Complete the quest', 'Play Bounty Hunter'] },
+    });
+  });
+
   it("rewrites the Farming Guild's tier wording and sets each reviewed patch's own tier (accuracy audit G4)", () => {
     const beginner = [{ '~|Access the Farming Guild#Beginner tier|~': 'Nonskill' }];
     const result = transformChunkContent({

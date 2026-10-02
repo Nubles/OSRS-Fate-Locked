@@ -82,10 +82,13 @@ const parseQuest = (requirement: RawRouteRequirement): RouteGate | null => {
 };
 
 const parseSkill = (raw: string): RouteGate | null => {
-  const match = raw.match(/^(.+?)\s+level\s+(\d+)$/i);
-  if (!match) return null;
-  const skill = skills.get(normalise(match[1]));
-  const level = Number(match[2]);
+  // "Mining level 60", or "60 Mining" as the reviewed entrance registry words the Mining
+  // Guild's door and the Slayer lairs' (data/sources/named-task-unlock-locations.json).
+  const long = raw.match(/^(.+?)\s+level\s+(\d+)$/i);
+  const short = long ? null : raw.match(/^(\d+)\s+(.+)$/);
+  const name = long?.[1] ?? short?.[2];
+  const level = Number(long?.[2] ?? short?.[1]);
+  const skill = name ? skills.get(normalise(name)) : undefined;
   return skill && level > 0 ? { type: 'SKILL', skill, level, label: `${skill} level ${level}` } : null;
 };
 

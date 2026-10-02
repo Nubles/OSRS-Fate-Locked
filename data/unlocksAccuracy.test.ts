@@ -18,6 +18,7 @@ import { skillChunkNodes } from '../utils/skillChunkNodes';
 import { chunkContentService } from '../services/ChunkContentService';
 import { classifyShop } from '../utils/shopClassification';
 import shopOverrides from './sources/shop-overrides.json';
+import { compileRawRequirements } from '../utils/questRoutes/accountRequirements';
 import {
   FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST, MINIGAMES_LIST, MISTHALIN_AREAS, MOBILITY_LIST,
   REGIONS_LIST, SKILLS_LIST, BOSSES_LIST,
@@ -287,6 +288,79 @@ describe('S1 to S10: each shop sits in the category its stock calls for', () => 
     const shop = (unlocks: UnlockState) => evaluateEntityAccess("Efaritay's Supplies", 'shop', { cx: 56, cy: 52, sourceId: '10105' }, unlocks, 'vanilla', service);
     expect(shop(everything())).toEqual({ status: 'ALLOWED', reasons: [] });
     expect(shop(everything(99, { quests: questsWithout('The Blood Moon Rises') }))).toEqual({ status: 'NOT_READY', reasons: ['The Blood Moon Rises'] });
+  });
+});
+
+/** The shop's requirements at each place it stands: a surface chunk, or an interior. */
+const shopPlaces = (shop: string): string[][] => [
+  ...Object.entries(rawContent.chunks).filter(([, entry]) => entry.s?.includes(shop))
+    .map(([id]) => rawContent.taskUnlocks.Shops?.[shop]?.[id] ?? []),
+  ...Object.values(rawContent.interiors).filter(entry => entry.content.s?.includes(shop))
+    .map(entry => entry.requirements.shop?.[shop] ?? []),
+];
+
+describe("U1: a reward shop needs Reward Shops and its activity's unlock", () => {
+  // Reward shops whose activity has no unlock of its own in the app: Reward Shops alone opens them.
+  const NO_ACTIVITY_UNLOCK: Readonly<Record<string, string>> = {
+    'Leagues Reward Shop': 'Leagues',
+    "Prospector Percy's Nugget Shop": 'the Motherlode Mine',
+    "Worm Tounge's Wares": 'the Colossal Wyrm Agility Course',
+    "Mairin's Market": 'Underwater Agility and Thieving',
+    "Alry the Angler's Angling Accessories": 'aerial fishing',
+  };
+
+  it('puts the shops that take an activity currency in Reward Shops', () => {
+    for (const shop of [
+      'Temple Supplies', "Mairin's Market", 'Mining Guild Mineral Exchange', "Petrified Pete's Ore Shop",
+      "Gabooty's Tai Bwo Wannai Cooperative", "Gabooty's Tai Bwo Wannai Drinky Store", "Alry the Angler's Angling Accessories",
+    ]) expect(classifyShop(shop), shop).toBe('Reward Shops');
+  });
+
+  it("asks for the activity's unlock wherever a reward shop stands", () => {
+    const rewardShops = allShops.filter(shop => classifyShop(shop) === 'Reward Shops');
+    expect(rewardShops.length).toBeGreaterThanOrEqual(25);
+    const missing = rewardShops.filter(shop => !(shop in NO_ACTIVITY_UNLOCK)).flatMap(shop => shopPlaces(shop)
+      .filter(requirements => !compileRawRequirements(requirements.map(raw => ({ raw, origin: 'ENTITY' as const })))
+        .some(gate => gate.type === 'UNLOCK' && ['minigames', 'guilds', 'bosses'].includes(gate.category)))
+      .map(() => shop));
+    expect(missing).toEqual([]);
+  });
+
+  it('opens Temple Supplies, and the ring of the elements it sells, only with both unlocks', () => {
+    const temple = (unlocks: UnlockState) => evaluateEntityAccess('Temple Supplies', 'shop', { cx: 48, cy: 49, sourceId: 'Temple of the Eye' }, unlocks, 'vanilla', service);
+    expect(temple(everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(temple(everything(99, { merchants: MERCHANTS_LIST.filter(merchant => merchant !== 'Reward Shops') })))
+      .toEqual({ status: 'LOCKED', reasons: ['Unlock Reward Shops'] });
+    expect(temple(everything(99, { minigames: MINIGAMES_LIST.filter(minigame => minigame !== 'Guardians of the Rift') })))
+      .toEqual({ status: 'NOT_READY', reasons: ['Guardians of the Rift'] });
+    const ring = service.itemSourceRecords('Ring of the elements').filter(record => record.hostName === 'Temple Supplies');
+    expect(ring.length).toBeGreaterThan(0);
+    for (const record of ring) {
+      expect(record.rawRequirements.map(requirement => requirement.raw))
+        .toEqual(expect.arrayContaining(['Use the Reward Shops', 'Play Guardians of the Rift']));
+    }
+  });
+
+  it("makes the resource planner ask for the activity too", () => {
+    const missingAt = (minigames: string[]) => {
+      const state = createFreshState();
+      state.gameModeId = 'vanilla';
+      state.unlocks.merchants = ['Reward Shops'];
+      state.unlocks.minigames = minigames;
+      return calculateSupplyChain('Bucket of Sand', state)!.sources
+        .find(route => route.source.name === "Dom Onion's Reward Shop")!.status.missing;
+    };
+    expect(missingAt([])).toContain('Unlock: Nightmare Zone');
+    expect(missingAt(['Nightmare Zone'])).not.toContain('Unlock: Nightmare Zone');
+    expect(missingAt(['Nightmare Zone'])).not.toContain('Merchant: Reward Shops');
+  });
+
+  it("opens the Mineral Exchange only in the Mining Guild, at the guild's 60 Mining", () => {
+    const exchange = (unlocks: UnlockState) => evaluateEntityAccess('Mining Guild Mineral Exchange', 'shop', { cx: 47, cy: 52, sourceId: '12183' }, unlocks, 'vanilla', service);
+    expect(exchange(everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(exchange(everything(59)).reasons).toContain('Mining level 60');
+    expect(exchange(everything(99, { guilds: GUILDS_LIST.filter(guild => guild !== 'Mining Guild') })))
+      .toEqual({ status: 'NOT_READY', reasons: ['Mining Guild'] });
   });
 });
 

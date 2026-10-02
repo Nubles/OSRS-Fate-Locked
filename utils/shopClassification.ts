@@ -63,7 +63,6 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   'deepfin point ore exchange': 'Ore Merchants',
   'ore seller': 'Ore Merchants',
   'ore store': 'Ore Merchants',
-  "petrified pete's ore shop": 'Ore Merchants',
   'port roberts ore stall': 'Ore Merchants',
 
   // Food, fishing, and service shops with non-descriptive proper names.
@@ -73,7 +72,6 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   "keldagrim's best bread": 'Food Shops',
   "kenelme's wares": 'Food Shops',
   "lovecraft's tackle": 'Fishing Shops',
-  "mairin's market": 'Fishing Shops',
   "seddu's adventurer's store": 'Platelegs Shops',
   'shop of distaste': 'Vegetable Shops',
   'the shrimp and parrot': 'Food Shops',
@@ -104,6 +102,16 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   // The Guardians of the Rift reward shop, and the only shop with the ring of the elements.
   'temple supplies': 'Reward Shops',
   "worm tounge's wares": 'Reward Shops',
+  // Shops that take an activity's own currency are Reward Shops whatever they sell, and
+  // also need the activity's unlock where the app has one (owner call U1;
+  // data/sources/shop-overrides.json): mermaid's tears, unidentified minerals, Volcanic
+  // Mine points, trading sticks and molch pearls.
+  "mairin's market": 'Reward Shops',
+  'mining guild mineral exchange': 'Reward Shops',
+  "petrified pete's ore shop": 'Reward Shops',
+  "gabooty's tai bwo wannai cooperative": 'Reward Shops',
+  "gabooty's tai bwo wannai drinky store": 'Reward Shops',
+  "alry the angler's angling accessories": 'Reward Shops',
   'beach kit': 'Clothes Shops',
   "darren's wilderness cape shop": 'Clothes Shops',
   "edmond's wilderness cape shop": 'Clothes Shops',
