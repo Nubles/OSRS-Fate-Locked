@@ -13,6 +13,7 @@ import {
   REGIONS_LIST, SKILLS_LIST, BOSSES_LIST,
 } from './items';
 import { QUEST_DATA } from './questData';
+import contentOverrides from './sources/chunk-content-overrides.json';
 import type { UnlockState } from '../types';
 
 const service = new ChunkContentService();
@@ -55,6 +56,59 @@ describe('S11: members content does not wait on a free-to-play tag', () => {
     for (const [name, cx, cy] of shops) {
       expect(evaluateEntityAccess(name, 'shop', { cx, cy }, everything(), 'vanilla', service), name)
         .toEqual({ status: 'ALLOWED', reasons: [] });
+    }
+  });
+});
+
+/** Every quest but these. */
+const questsWithout = (...missing: string[]) => Object.keys(QUEST_DATA).filter(quest => !missing.includes(quest));
+
+describe('G4: each Farming Guild patch opens at its own tier', () => {
+  const FARMING_GUILD = { cx: 19, cy: 58 };
+  // The wiki's tiers (Farming Guild, oldid 15274002): beginner 45, intermediate 65, advanced 85.
+  const TIERS: [string, number][] = [
+    ['Allotment patch', 45], ['Flower Patch', 45], ['Bush Patch', 45], ['Cactus patch', 45],
+    ['Herb patch', 65], ['Tree patch', 65], ['Anima patch', 65],
+    ['Fruit Tree Patch', 85], ['Spirit Tree Patch', 85], ['Celastrus patch', 85], ['Redwood tree patch', 85],
+  ];
+
+  it.each(TIERS)('%s needs %i Farming and the guild', (patch, level) => {
+    const access = (unlocks: UnlockState) => evaluateEntityAccess(patch, 'object', FARMING_GUILD, unlocks, 'vanilla', service);
+    expect(access(everything(level))).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(access(everything(level - 1))).toEqual({ status: 'NOT_READY', reasons: [`Farming level ${level}`] });
+    expect(access(everything(99, { guilds: GUILDS_LIST.filter(guild => guild !== 'Farming Guild') })))
+      .toEqual({ status: 'NOT_READY', reasons: ['Farming Guild'] });
+  });
+
+  it("leaves none of the source's tier wording, which no gate could check", () => {
+    expect(JSON.stringify(content)).not.toContain('Access the Farming Guild#');
+  });
+});
+
+describe('G5: the disease-free herb patches need the quests that open them', () => {
+  // Herb patch, oldid 15359652: "unlocked with My Arm's Big Adventure and Making Friends with My Arm".
+  it.each([
+    ['Troll Stronghold', 44, 57, "My Arm's Big Adventure"],
+    ['Weiss', 44, 61, 'Making Friends with My Arm'],
+  ] as const)('the herb patch at %s needs %s', (_place, cx, cy, quest) => {
+    const access = (unlocks: UnlockState) => evaluateEntityAccess('Herb patch', 'object', { cx, cy }, unlocks, 'vanilla', service);
+    expect(access(everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(access(everything(99, { quests: questsWithout(quest) }))).toEqual({ status: 'NOT_READY', reasons: [quest] });
+  });
+});
+
+describe('reviewed chunk-content corrections', () => {
+  it('cite a wiki revision for every rewrite and requirement, and reach the generated data', () => {
+    for (const rewrite of contentOverrides.requirementRewrites) {
+      expect(rewrite.source, rewrite.from).toMatch(/^https:\/\/oldschool\.runescape\.wiki\/w\/.+\?oldid=\d+$/);
+      expect(rewrite.to.length, rewrite.from).toBeGreaterThan(0);
+    }
+    const taskUnlocks = content.taskUnlocks as Record<string, Record<string, Record<string, string[]>>>;
+    for (const override of contentOverrides.entityRequirements) {
+      const key = `${override.category}/${override.name}/${override.chunkId}`;
+      expect(override.source, key).toMatch(/^https:\/\/oldschool\.runescape\.wiki\/w\/.+\?oldid=\d+$/);
+      expect(taskUnlocks[override.category]?.[override.name]?.[override.chunkId], key)
+        .toEqual([...override.requirements].sort());
     }
   });
 });

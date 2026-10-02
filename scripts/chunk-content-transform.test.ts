@@ -331,6 +331,29 @@ describe('transformChunkContent', () => {
       ]);
   });
 
+  it("rewrites the Farming Guild's tier wording and sets each reviewed patch's own tier (accuracy audit G4)", () => {
+    const beginner = [{ '~|Access the Farming Guild#Beginner tier|~': 'Nonskill' }];
+    const result = transformChunkContent({
+      walkableChunks: [4922, 11321],
+      chunks: {
+        4922: { Nickname: 'Farming Guild', Object: { 'Allotment patch': 2, 'Herb patch': 1 } },
+        11321: { Nickname: 'Troll Stronghold', Object: { 'Soil patch': 1 } },
+      },
+      slayerMonsters: {},
+      taskUnlocks: { Objects: { 'Allotment patch': { 4922: beginner }, 'Herb patch': { 4922: beginner } } },
+    }, manifest);
+    expect(result.full.taskUnlocks.Objects).toEqual({
+      // The source's beginner tier, in words a gate checks.
+      'Allotment patch': { 4922: ['Access the Farming Guild', 'Farming level 45'] },
+      // The herb patch is in the intermediate tier; the reviewed override says so. The Troll
+      // Stronghold has no herb patch in this fixture, so it gains no requirement.
+      'Herb patch': { 4922: ['Access the Farming Guild', 'Farming level 65'] },
+    });
+    expect(result.audit.events).toContainEqual(expect.objectContaining({
+      category: 'overrides', sourceKey: 'requirements/Objects/Herb patch/4922', reason: 'reviewed-content-override',
+    }));
+  });
+
   it('accounts independently for duplicate banks and nested consumed records', () => {
     const result = transformChunkContent({
       walkableChunks: [], chunks: {}, slayerMonsters: {},

@@ -179184,6 +179184,105 @@
       "detail": "https://oldschool.runescape.wiki/w/Roving_Elves?oldid=15315441"
     },
     {
+      "category": "overrides",
+      "sourceKey": "requirements/Objects/Anima patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "4922"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "requirements/Objects/Celastrus patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "4922"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "requirements/Objects/Fruit Tree Patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "4922"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "requirements/Objects/Herb patch/11321",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "11321"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Herb_patch?oldid=15359652"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "requirements/Objects/Herb patch/11325",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "11325"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Herb_patch?oldid=15359652"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "requirements/Objects/Herb patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "4922"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "requirements/Objects/Redwood tree patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "4922"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "requirements/Objects/Spirit Tree Patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "4922"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "requirements/Objects/Tree patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "4922"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002"
+    },
+    {
       "category": "questSections",
       "sourceKey": "10016",
       "terminal": true,
@@ -229429,6 +229528,18 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "Monsters/Duck/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 65"
+      ],
+      "detail": "Access the Farming Guild#Intermediate tier"
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "Monsters/Duck/6454-1",
       "terminal": true,
       "disposition": "normalized",
@@ -229446,6 +229557,18 @@
       "targetKeys": [
         "Duckling/4922"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Duckling/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 65"
+      ],
+      "detail": "Access the Farming Guild#Intermediate tier"
     },
     {
       "category": "taskUnlocks",
@@ -231749,6 +231872,18 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "NPCs/Banker/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 85"
+      ],
+      "detail": "Access the Farming Guild#Advanced tier"
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "NPCs/Banker/6191-1",
       "terminal": true,
       "disposition": "normalized",
@@ -231766,6 +231901,18 @@
       "targetKeys": [
         "Guildmaster Jane/4922"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "NPCs/Guildmaster Jane/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
     },
     {
       "category": "taskUnlocks",
@@ -231816,6 +231963,18 @@
       "targetKeys": [
         "Master Farmer/4922"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "NPCs/Master Farmer/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
     },
     {
       "category": "taskUnlocks",
@@ -232000,6 +232159,18 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "NPCs/Tool Leprechaun/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "NPCs/Trader Crewmember/11823-1",
       "terminal": true,
       "disposition": "normalized",
@@ -232027,6 +232198,18 @@
       "targetKeys": [
         "Allotment patch/4922"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Objects/Allotment patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
     },
     {
       "category": "taskUnlocks",
@@ -232094,6 +232277,18 @@
       "targetKeys": [
         "Anima patch/4922"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Objects/Anima patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
     },
     {
       "category": "taskUnlocks",
@@ -232208,6 +232403,18 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "Objects/Big Compost Bin/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "Objects/Blisterwood Tree/14388-1",
       "terminal": true,
       "disposition": "normalized",
@@ -232238,6 +232445,18 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "Objects/Bush Patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "Objects/Cabbage/11573-1",
       "terminal": false,
       "disposition": "normalized",
@@ -232265,6 +232484,18 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "Objects/Cactus patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "Objects/Carved redwood/6198-1",
       "terminal": true,
       "disposition": "normalized",
@@ -232282,6 +232513,18 @@
       "targetKeys": [
         "Celastrus patch/4922"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Objects/Celastrus patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
     },
     {
       "category": "taskUnlocks",
@@ -232627,6 +232870,18 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "Objects/Flower Patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "Objects/Fountain (wine)/5677-3",
       "terminal": true,
       "disposition": "normalized",
@@ -232674,6 +232929,18 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "Objects/Fountain/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "Objects/Fountain/5677-3",
       "terminal": true,
       "disposition": "normalized",
@@ -232691,6 +232958,18 @@
       "targetKeys": [
         "Fruit Tree Patch/4922"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Objects/Fruit Tree Patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
     },
     {
       "category": "taskUnlocks",
@@ -232791,6 +233070,18 @@
       "targetKeys": [
         "Herb patch/4922"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Objects/Herb patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
     },
     {
       "category": "taskUnlocks",
@@ -233279,6 +233570,18 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "Objects/Redwood tree patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "Objects/Redwood tree/6198-1",
       "terminal": true,
       "disposition": "normalized",
@@ -233353,6 +233656,18 @@
       "targetKeys": [
         "Seed vault/4922"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Objects/Seed vault/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
     },
     {
       "category": "taskUnlocks",
@@ -233563,6 +233878,18 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "Objects/Spirit Tree Patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "Objects/Spit roast/10553-1",
       "terminal": true,
       "disposition": "normalized",
@@ -233700,6 +234027,18 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "Objects/Tree patch/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "Objects/Tree/11066",
       "terminal": true,
       "disposition": "imported",
@@ -233795,6 +234134,18 @@
       "targetKeys": [
         "Water barrel/4922"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Objects/Water barrel/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
     },
     {
       "category": "taskUnlocks",
@@ -234048,6 +234399,18 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "Shops/Allanna's Farming Shop/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "Shops/Alry the Angler's Angling Accessories/5432-1",
       "terminal": true,
       "disposition": "normalized",
@@ -234065,6 +234428,18 @@
       "targetKeys": [
         "Amelia's Seed Shop/4922"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Amelia's Seed Shop/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
     },
     {
       "category": "taskUnlocks",
@@ -235102,6 +235477,18 @@
       "targetKeys": [
         "Garden Centre/4922"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Garden Centre/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
     },
     {
       "category": "taskUnlocks",
@@ -236270,6 +236657,18 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "Spawns/Bucket/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "Spawns/Burnt fish (anchovies)/9772-1",
       "terminal": true,
       "disposition": "normalized",
@@ -236781,6 +237180,18 @@
       "targetKeys": [
         "Spade/4922"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Spawns/Spade/4922",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Access the Farming Guild",
+        "Farming level 45"
+      ],
+      "detail": "Access the Farming Guild#Beginner tier"
     },
     {
       "category": "taskUnlocks",

@@ -412,6 +412,21 @@ function applyReviewedContent(data, chunks, interiors, taskUnlocks, audit) {
     ((taskUnlocks.NPCs ??= {})[override.name] ??= {})[override.chunkId] = override.requirements;
     audit.add('overrides', `npc/${override.name}`, 'normalized', 'reviewed-content-override', [override.chunkId], false, override.source);
   }
+  // Reviewed requirements for one entity in one chunk, in place of the source's, such as the
+  // tier each Farming Guild patch is in. A chunk without the entity gains nothing.
+  for (const override of contentOverrides.entityRequirements ?? []) {
+    if (!hasEntity(chunks[override.chunkId], override.category, override.name)) continue;
+    ((taskUnlocks[override.category] ??= {})[override.name] ??= {})[override.chunkId] = [...override.requirements].sort();
+    audit.add('overrides', `requirements/${override.category}/${override.name}/${override.chunkId}`, 'normalized', 'reviewed-content-override', [override.chunkId], false, override.source);
+  }
+}
+
+const ENTITY_FIELDS = { Monsters: 'm', NPCs: 'p', Objects: 'o', Shops: 's', Spawns: 'i' };
+
+function hasEntity(entry, category, name) {
+  const field = ENTITY_FIELDS[category];
+  if (!field) throw new Error(`Unknown reviewed requirement category: ${category}`);
+  return (entry?.[field] ?? []).some((value) => (Array.isArray(value) ? value[0] : value) === name);
 }
 
 function cleanReqs(values, audit, sourceKey, category) {
