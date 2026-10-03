@@ -11,9 +11,7 @@ const trackedFiles = () =>
     .split('\0')
     .filter(Boolean);
 
-const archivedBoundaryReferencePath = (relativePath: string) =>
-  relativePath.startsWith('docs/superpowers/plans/') ||
-  relativePath.startsWith('docs/superpowers/specs/') ||
+const isBoundaryTestFile = (relativePath: string) =>
   relativePath === 'scripts/runeliteRepositoryBoundary.test.ts';
 const textFilePattern = /\.(?:[cm]?[jt]sx?|json|md|ya?ml|toml|ini|properties|xml|txt)$/i;
 const staleMirrorOrSourcePinPattern =
@@ -97,7 +95,7 @@ const isProhibitedPluginSourceArtifact = (relativePath: string, content: string)
 const trackedCommandSurfaces = (): CommandSurface[] => {
   const trackedCommandFiles = trackedFiles().filter(
     (relativePath) =>
-      !archivedBoundaryReferencePath(relativePath) &&
+      !isBoundaryTestFile(relativePath) &&
       (relativePath.startsWith('scripts/') || /\.ya?ml$/i.test(relativePath)),
   );
   const packageJson = JSON.parse(readFileSync(atRoot('package.json'), 'utf8')) as {
@@ -292,7 +290,7 @@ describe('RuneLite repository ownership boundary', () => {
   it('rejects stale mirror and source-pin references in active tracked text', () => {
     const staleActiveReferences = trackedFiles().filter(
       (relativePath) =>
-        !archivedBoundaryReferencePath(relativePath) &&
+        !isBoundaryTestFile(relativePath) &&
         textFilePattern.test(relativePath) &&
         hasProhibitedActiveOwnership(readFileSync(atRoot(relativePath), 'utf8')),
     );
