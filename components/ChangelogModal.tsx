@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, ChevronDown, RefreshCw, X } from 'lucide-react';
 import { ScrollText, Sparkles } from './OsrsIcon';
 import type { ChangelogRelease, ChangelogSection } from '../data/changelog';
@@ -21,7 +21,13 @@ export interface ChangelogModalProps {
   petsClaimed?: readonly number[];
   /** Fate the pet offer's 'gamble' choice gives for each Key: the mode's Void Gambit stake. */
   petGambitStake?: number;
-  onResolvePetCompensation?: (choice: PetCompensationChoice, pets: ReadonlyArray<{ id: number; name: string }>) => void;
+  /** When each earlier pet roll was made, oldest first, so the offer can say which is which. */
+  petRollTimes?: { keyOnly: readonly number[]; omni: readonly number[] };
+  onResolvePetCompensation?: (
+    choice: PetCompensationChoice,
+    keyOnly: Array<{ id: number; name: string } | null>,
+    omni: Array<{ id: number; name: string } | null>,
+  ) => void;
   onClose: () => void;
   /** Persistent control to receive focus after a manual close. */
   returnFocusTarget?: HTMLElement | null;
@@ -71,6 +77,7 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
   petCompensation,
   petsClaimed,
   petGambitStake = 15,
+  petRollTimes,
   onResolvePetCompensation,
   returnFocusTarget,
 }) => {
@@ -87,6 +94,12 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
     : undefined;
   useFocusTrap(dialogRef, true, returnFocusTarget);
   useEscapeKey(onClose, !hasPendingCompensation);
+  // Focusing the first control scrolls an offer's own control into view, past
+  // its heading and explanation; start at the top so the player reads them first.
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (hasPendingCompensation && bodyRef.current) bodyRef.current.scrollTop = 0;
+  }, [hasPendingCompensation]);
 
   return (
     <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm">
@@ -120,7 +133,7 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
           </button>
         </header>
 
-        <div className="overflow-y-auto custom-scrollbar p-3 sm:p-4">
+        <div ref={bodyRef} className="overflow-y-auto custom-scrollbar p-3 sm:p-4">
           <div className="space-y-2">
             {/* A pending choice blocks closing, so it must be the first thing
                 shown, not inside an older release that starts collapsed. */}
@@ -129,7 +142,8 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
                 offer={petCompensation}
                 claimed={petsClaimed}
                 gambitStake={petGambitStake}
-                onResolve={(choice, pets) => onResolvePetCompensation?.(choice, pets)}
+                rollTimes={petRollTimes}
+                onResolve={(choice, keyOnly, omni) => onResolvePetCompensation?.(choice, keyOnly, omni)}
               />
             )}
             {hasPendingFateCompensation && compensation && (

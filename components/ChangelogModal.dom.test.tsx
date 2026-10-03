@@ -199,7 +199,7 @@ describe('ChangelogModal pet offer', () => {
     const { PETS } = await import('../data/pets');
     const { PET_COMPENSATION_ID } = await import('../utils/petCompensation');
     const onClose = vi.fn();
-    const settled: Array<[string, number[]]> = [];
+    const settled: Array<[string, Array<number | null>]> = [];
     const { host } = await mount(
       <ChangelogModal
         releases={releases}
@@ -207,7 +207,7 @@ describe('ChangelogModal pet offer', () => {
         petCompensation={{ releaseId: PET_COMPENSATION_ID, status: 'pending', keyOnlyPets: 1, omniPets: 0 }}
         petsClaimed={[]}
         petGambitStake={15}
-        onResolvePetCompensation={(choice, pets) => settled.push([choice, pets.map(pet => pet.id)])}
+        onResolvePetCompensation={(choice, keyOnly) => settled.push([choice, keyOnly.map(pet => pet?.id ?? null)])}
       />,
     );
 

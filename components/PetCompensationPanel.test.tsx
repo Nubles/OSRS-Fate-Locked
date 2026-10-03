@@ -15,56 +15,84 @@ const offer = (keyOnlyPets: number, omniPets = 0) => ({
   omniPets,
 });
 
-const name = (index: number, petIndex: number) =>
-  fireEvent.change(screen.getByLabelText(`Earlier pet ${index}`), { target: { value: String(PETS[petIndex].id) } });
+const answer = (index: number, value: string) =>
+  fireEvent.change(screen.getByLabelText(`Earlier pet ${index}`), { target: { value } });
+const name = (index: number, petIndex: number) => answer(index, String(PETS[petIndex].id));
+const notAPet = (index: number) => answer(index, 'none');
 
 describe('PetCompensationPanel', () => {
-  it('asks for every earlier pet before any choice can be made', () => {
+  it('asks about every earlier pet roll before any choice is offered', () => {
     const onResolve = vi.fn();
     render(<PetCompensationPanel offer={offer(2, 1)} claimed={[]} gambitStake={15} onResolve={onResolve} />);
-    expect(screen.getByText('Your run logged 3 pets before this change. Name each one, so it counts once.')).toBeTruthy();
-    const owe = screen.getByRole('button', { name: /^Give up my next Keys\s*2 Omni-Keys now/ });
-    expect(owe).toHaveProperty('disabled', true);
+    expect(screen.getByText(/Your run logged 3 pet rolls before this change\./)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save my pets' })).toHaveProperty('disabled', true);
+    expect(screen.getByText('Answer each pet roll, then choose how to even it out.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^Give up my next Keys/ })).toBeNull();
 
     name(1, 0);
     name(2, 1);
-    expect(owe).toHaveProperty('disabled', true);
     name(3, 2);
-    expect(owe).toHaveProperty('disabled', false);
+    const owe = screen.getByRole('button', { name: /^Give up my next Keys\s*2 Omni-Keys now/ });
     fireEvent.click(owe);
-    expect(onResolve).toHaveBeenCalledWith('owe', [PETS[0], PETS[1], PETS[2]]);
+    expect(onResolve).toHaveBeenCalledWith('owe', [PETS[0], PETS[1]], [PETS[2]]);
   });
 
-  it('offers each pet once across the names, and none already claimed', () => {
+  it('can always be finished: any roll can be not a new pet', () => {
+    const onResolve = vi.fn();
+    render(<PetCompensationPanel offer={offer(2, 1)} claimed={[]} gambitStake={15} onResolve={onResolve} />);
+    notAPet(1);
+    notAPet(2);
+    notAPet(3);
+    fireEvent.click(screen.getByRole('button', { name: 'Save my pets' }));
+    expect(onResolve).toHaveBeenCalledWith('free', [null, null], [null]);
+  });
+
+  it('counts only Key-only rolls named as a pet towards the Omni-Keys', () => {
+    const onResolve = vi.fn();
+    render(<PetCompensationPanel offer={offer(2, 1)} claimed={[]} gambitStake={30} onResolve={onResolve} />);
+    name(1, 0);
+    notAPet(2);
+    name(3, 2);
+    expect(screen.getByText(/^1 roll paid a Key for a new pet, with no Omni-Key\./)).toBeTruthy();
+    expect(screen.getByText(/1 Omni-Key and 30 Fate for a Void Gambit now, and your next Standard Key goes to this\. A won roll resets Fate, so gamble before your next win\./)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^Give up my next Key for Fate/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Just the Omni-Key/ }));
+    expect(onResolve.mock.calls.map(([choice]) => choice)).toEqual(['gamble', 'free']);
+    expect(onResolve).toHaveBeenLastCalledWith('free', [PETS[0], null], [PETS[2]]);
+  });
+
+  it('offers each pet once across the answers, none already claimed, and not a new pet in every row', () => {
     render(<PetCompensationPanel offer={offer(2)} claimed={[PETS[5].id]} gambitStake={15} onResolve={vi.fn()} />);
     name(1, 0);
     const second = [...(screen.getByLabelText('Earlier pet 2') as HTMLSelectElement).options].map((o) => o.value);
+    expect(second).toContain('none');
     expect(second).not.toContain(String(PETS[0].id));
     expect(second).not.toContain(String(PETS[5].id));
     expect(second).toContain(String(PETS[1].id));
   });
 
-  it("states each choice's cost, with the mode's Gambit stake of Fate", () => {
-    const onResolve = vi.fn();
-    render(<PetCompensationPanel offer={offer(2, 1)} claimed={[]} gambitStake={30} onResolve={onResolve} />);
-    expect(screen.getByText('1 of them already brought an Omni-Key, so it needs nothing more.')).toBeTruthy();
-    expect(screen.getByText('2 Omni-Keys now, and your next 2 Standard Keys go to this.')).toBeTruthy();
-    expect(screen.getByText(/2 Omni-Keys and 60 Fate for a Void Gambit now, and your next 2 Standard Keys go to this\. A won roll resets Fate, so gamble before your next win\./)).toBeTruthy();
-    expect(screen.getByText('2 Omni-Keys, and nothing else changes.')).toBeTruthy();
-    name(1, 0);
-    name(2, 1);
-    name(3, 2);
-    fireEvent.click(screen.getByRole('button', { name: /Give up my next Keys for Fate/ }));
-    fireEvent.click(screen.getByRole('button', { name: /Just the Omni-Keys/ }));
-    expect(onResolve.mock.calls.map(([choice]) => choice)).toEqual(['gamble', 'free']);
+  it('dates each roll and says what it paid', () => {
+    const at = Date.UTC(2026, 8, 20, 12);
+    render(
+      <PetCompensationPanel
+        offer={offer(1, 1)}
+        claimed={[]}
+        gambitStake={15}
+        rollTimes={{ keyOnly: [at], omni: [at] }}
+        onResolve={vi.fn()}
+      />,
+    );
+    expect(screen.getByText(/^Pet roll 1, .*: paid a Key$/)).toBeTruthy();
+    expect(screen.getByText(/^Pet roll 2, .*: paid a Key and an Omni-Key$/)).toBeTruthy();
   });
 
-  it('only names the pets when every one already brought an Omni-Key', () => {
+  it('only asks for names when every roll already brought an Omni-Key', () => {
     const onResolve = vi.fn();
     render(<PetCompensationPanel offer={offer(0, 1)} claimed={[]} gambitStake={15} onResolve={onResolve} />);
-    expect(screen.queryByRole('button', { name: /Give up/ })).toBeNull();
+    expect(screen.getByText('Answer each pet roll.')).toBeTruthy();
     name(1, 3);
+    expect(screen.queryByRole('button', { name: /Give up/ })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Save my pets' }));
-    expect(onResolve).toHaveBeenCalledWith('free', [PETS[3]]);
+    expect(onResolve).toHaveBeenCalledWith('free', [], [PETS[3]]);
   });
 });

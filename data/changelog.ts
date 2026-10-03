@@ -30,7 +30,7 @@ export const CHANGELOG_RELEASES = [
       ],
       added: [
         'Farm Keys → Activities has a New Pet card: choose the pet you got and claim its Omni-Key.',
-        'If your run logged pets before this change, What’s New asks you to name each one, so it counts once. Each one that paid a Key and no Omni-Key earns an Omni-Key now, and you choose what’s fair: give up your next Key, give up your next Key for Fate towards a Void Gambit, or just take the Omni-Key.',
+        'If your run logged pets before this change, What’s New asks you to name each one, so it counts once, or to mark it as not a new pet: a duplicate, a mistake, or one you can’t remember keeps its Key. Each new pet that paid a Key and no Omni-Key earns an Omni-Key now, and you choose what’s fair: give up your next Key, give up your next Key for Fate towards a Void Gambit, or just take the Omni-Key.',
         'Keys you choose to give up show on the Spend panel until the Keys you earn have paid them.',
       ],
     },

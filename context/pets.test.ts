@@ -29,8 +29,15 @@ const [first, second, third] = PETS;
 const nameOf = (petId: number) => petById(petId)?.name ?? 'Not a pet';
 const claim = (state: Run, petId: number) =>
   gameReducer(state, { type: 'CLAIM_PET', payload: { petId, petName: nameOf(petId) } });
-const resolve = (state: Run, choice: PetCompensationChoice, petIds: number[]) =>
-  gameReducer(state, { type: 'RESOLVE_PET_COMPENSATION', payload: { choice, petIds, petNames: petIds.map(nameOf) } });
+/** Settle the offer: what each earlier Key-only roll was, then each earlier Omni-Key roll; null is not a new pet. */
+const resolve = (state: Run, choice: PetCompensationChoice, keyOnly: Array<number | null>, omni: Array<number | null> = []) =>
+  gameReducer(state, {
+    type: 'RESOLVE_PET_COMPENSATION',
+    payload: {
+      choice, keyOnly, omni,
+      petNames: [...keyOnly, ...omni].filter((id): id is number => id !== null).map(nameOf),
+    },
+  });
 const rolled = (state: Run, success: boolean) => gameReducer(state, {
   type: 'ROLL_RESULT',
   payload: {
@@ -125,7 +132,7 @@ describe('the pet compensation', () => {
   });
 
   it("'owe' gives the Omni-Keys and owes the Keys; later Keys pay them first", () => {
-    const resolved = resolve(pending(), 'owe', [first.id, second.id, third.id]);
+    const resolved = resolve(pending(), 'owe', [first.id, second.id], [third.id]);
     expect(resolved).toMatchObject({
       keys: 4, specialKeys: 3, fatePoints: 10, keysOwed: 2,
       petsClaimed: [PETS[40].id, first.id, second.id, third.id],
@@ -152,14 +159,14 @@ describe('the pet compensation', () => {
   });
 
   it('a won Void Gambit pays what is owed too, and spending owes nothing', () => {
-    const owing = resolve(pending(30), 'owe', [first.id, second.id, third.id]);
+    const owing = resolve(pending(30), 'owe', [first.id, second.id], [third.id]);
     const gambit = gameReducer(owing, { type: 'RITUAL_GAMBIT', payload: { won: true, stake: 30, keysWon: 2 } });
     expect(gambit).toMatchObject({ keys: 4, keysOwed: 0, fatePoints: 0 });
     replaysTo(gambit);
   });
 
   it("'gamble' adds the Gambit stake of Fate for each Key-only pet", () => {
-    const resolved = resolve(pending(), 'gamble', [first.id, second.id, third.id]);
+    const resolved = resolve(pending(), 'gamble', [first.id, second.id], [third.id]);
     expect(resolved).toMatchObject({ keys: 4, specialKeys: 3, fatePoints: 40, keysOwed: 2 });
     expect(resolved.history.at(-1)?.message)
       .toBe('Pet compensation: 2 Omni-Keys and 30 Fate towards a Void Gambit. The next 2 Standard Keys you earn are owed.');
@@ -167,14 +174,14 @@ describe('the pet compensation', () => {
   });
 
   it("'gamble' Fate past the pity line pays a Pity Key, which settles an owed Key at once", () => {
-    const resolved = resolve(pending(45), 'gamble', [first.id, second.id, third.id]);
+    const resolved = resolve(pending(45), 'gamble', [first.id, second.id], [third.id]);
     // 45 + 30 = 75: one Pity Key and 25 carried; the Pity Key settles one of the two owed.
     expect(resolved).toMatchObject({ keys: 4, fatePoints: 25, keysOwed: 1 });
     replaysTo(resolved);
   });
 
   it("'free' gives only the Omni-Keys", () => {
-    const resolved = resolve(pending(), 'free', [first.id, second.id, third.id]);
+    const resolved = resolve(pending(), 'free', [first.id, second.id], [third.id]);
     expect(resolved).toMatchObject({ keys: 4, specialKeys: 3, fatePoints: 10, petCompensation: { status: 'free' } });
     expect(resolved.keysOwed ?? 0).toBe(0);
     expect(win(resolved).keys).toBe(5);
@@ -185,6 +192,7 @@ describe('the pet compensation', () => {
     const resolved = resolve(
       pending(10, { petCompensation: { releaseId: PET_COMPENSATION_ID, status: 'pending', keyOnlyPets: 0, omniPets: 1 } }),
       'free',
+      [],
       [vorki.id],
     );
     expect(resolved).toMatchObject({ specialKeys: 1, petsClaimed: [PETS[40].id, vorki.id] });
@@ -194,15 +202,41 @@ describe('the pet compensation', () => {
   it('refuses names that do not fit the offer, and an offer that is not pending', () => {
     const offer = pending();
     expect(resolve(offer, 'free', [first.id, second.id])).toBe(offer);
-    expect(resolve(offer, 'free', [first.id, first.id, second.id])).toBe(offer);
+    expect(resolve(offer, 'free', [first.id, first.id], [second.id])).toBe(offer);
     const claimedAlready = pending(10, { petsClaimed: [first.id] });
-    expect(resolve(claimedAlready, 'free', [first.id, second.id, third.id])).toBe(claimedAlready);
-    const settled = resolve(offer, 'free', [first.id, second.id, third.id]);
-    expect(resolve(settled, 'owe', [vorki.id, PETS[10].id, PETS[11].id])).toBe(settled);
+    expect(resolve(claimedAlready, 'free', [first.id, second.id], [third.id])).toBe(claimedAlready);
+    const settled = resolve(offer, 'free', [first.id, second.id], [third.id]);
+    expect(resolve(settled, 'owe', [vorki.id, PETS[10].id], [PETS[11].id])).toBe(settled);
+  });
+
+  it('a roll that was not a new pet keeps its Key, earns nothing and claims no pet', () => {
+    // The Omni-Key roll named as a pet is claimed, but it had its Omni-Key already.
+    const resolved = resolve(pending(), 'owe', [first.id, null], [third.id]);
+    expect(resolved).toMatchObject({ keys: 4, specialKeys: 2, fatePoints: 10, keysOwed: 1 });
+    expect(resolved.petsClaimed).toEqual([PETS[40].id, first.id, third.id]);
+    expect(resolved.history.at(-1)).toMatchObject({
+      message: 'Pet compensation: 1 Omni-Key. The next Standard Key you earn is owed.',
+      meta: { keyOnlyPetIds: [first.id, null], omniPetIds: [third.id] },
+    });
+    replaysTo(resolved);
+  });
+
+  it('can always be settled, even with more earlier rolls than pets left to name', () => {
+    const allButFirst = PETS.slice(1).map((pet) => pet.id);
+    const crowded = pending(10, {
+      petsClaimed: allButFirst,
+      petCompensation: { releaseId: PET_COMPENSATION_ID, status: 'pending', keyOnlyPets: 3, omniPets: 0 },
+    });
+    const resolved = resolve(crowded, 'free', [PETS[0].id, null, null]);
+    expect(resolved.petCompensation.status).toBe('free');
+    expect(resolved.specialKeys).toBe(2);
+    const none = resolve(crowded, 'free', [null, null, null]);
+    expect(none.petCompensation.status).toBe('free');
+    expect(none.history.at(-1)?.message).toBe('Earlier pet rolls kept as they were.');
   });
 
   it('a pet named in the offer cannot be claimed again', () => {
-    const resolved = resolve(pending(), 'free', [first.id, second.id, third.id]);
+    const resolved = resolve(pending(), 'free', [first.id, second.id], [third.id]);
     expect(claim(resolved, first.id)).toBe(resolved);
   });
 });

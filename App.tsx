@@ -44,7 +44,7 @@ import { importUiDecision, isCurrentImportRequest } from './utils/gamePersistenc
 import { prefetchHeavyChunks } from './utils/prefetch';
 import { LATEST_CHANGELOG_ID } from './data/changelogLatest';
 import type { FateCompensationChoice, PetCompensationChoice } from './types';
-import { gambitStakeFor } from './utils/petCompensation';
+import { earlierPetRollTimes, gambitStakeFor } from './utils/petCompensation';
 import {
   changelogVisibilityReducer, markChangelogSeen, mayAutoOpenChangelogAgain,
   resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
@@ -775,8 +775,12 @@ const GameLayout = () => {
     resolveFateCompensation(choice);
     markChangelogSeen(LATEST_CHANGELOG_ID);
   };
-  const resolvePets = (choice: PetCompensationChoice, pets: ReadonlyArray<{ id: number; name: string }>) => {
-    resolvePetCompensation(choice, pets);
+  const resolvePets = (
+    choice: PetCompensationChoice,
+    keyOnly: Array<{ id: number; name: string } | null>,
+    omni: Array<{ id: number; name: string } | null>,
+  ) => {
+    resolvePetCompensation(choice, keyOnly, omni);
     markChangelogSeen(LATEST_CHANGELOG_ID);
   };
 
@@ -1046,6 +1050,7 @@ const GameLayout = () => {
             petCompensation={petCompensation}
             petsClaimed={petsClaimed}
             petGambitStake={gambitStakeFor(resolveModeRules(gameModeId, customMode))}
+            petRollTimes={petCompensation.status === 'pending' ? earlierPetRollTimes(history) : undefined}
             onResolvePetCompensation={resolvePets}
             returnFocusTarget={changelogReturnFocusTarget.current}
           />

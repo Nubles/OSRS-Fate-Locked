@@ -46,19 +46,36 @@ export const petCompensationOffer = (history: readonly LogEntry[]): PetCompensat
 export const gambitStakeFor = (rules: Pick<GameModeRules, 'ritualCostMultiplier'>): number =>
   ritualFateCost('GAMBIT', rules.ritualCostMultiplier);
 
+/** When each earlier pet roll was made, oldest first, so the offer can say which is which. */
+export const earlierPetRollTimes = (history: readonly LogEntry[]): { keyOnly: number[]; omni: number[] } => {
+  const keyOnly: number[] = [];
+  const omni: number[] = [];
+  for (const entry of history) {
+    if (entry.source !== DropSource.PET) continue;
+    if (entry.type === 'ROLL_SUCCESS') keyOnly.push(entry.timestamp);
+    else if (entry.type === 'ROLL_OMNI') omni.push(entry.timestamp);
+  }
+  return { keyOnly, omni };
+};
+
 /**
- * Pets the player named for the offer: one per earlier pet roll, each a known
- * pet, none twice and none already claimed.
+ * What the player said each earlier pet roll was: a pet, or null for one that
+ * was not a new pet (a duplicate, a mistake, or one they can't remember). A
+ * pet must be known, named once and not already claimed. Null is always
+ * allowed, so the offer can always be settled and never traps What's New.
  */
 export const validCompensationPets = (
   offer: PetCompensationState,
-  petIds: readonly number[],
+  keyOnly: ReadonlyArray<number | null>,
+  omni: ReadonlyArray<number | null>,
   claimed: readonly number[] | undefined,
 ): boolean => {
   const taken = new Set(claimed ?? []);
-  return petIds.length === offer.keyOnlyPets + offer.omniPets
-    && new Set(petIds).size === petIds.length
-    && petIds.every((id) => isPetId(id) && !taken.has(id));
+  const named = [...keyOnly, ...omni].filter((id): id is number => id !== null);
+  return keyOnly.length === offer.keyOnlyPets
+    && omni.length === offer.omniPets
+    && new Set(named).size === named.length
+    && named.every((id) => isPetId(id) && !taken.has(id));
 };
 
 export interface PetCompensationResult {
@@ -72,8 +89,9 @@ export interface PetCompensationResult {
 }
 
 /**
- * What a choice does to the run. Every pet roll that paid only a Key earns an
- * Omni-Key. 'owe' and 'gamble' give up one future Standard Key for each, and
+ * What a choice does to the run, for the pet rolls that paid only a Key and
+ * were named as a pet (earned): each earns an Omni-Key. 'owe' and 'gamble' give
+ * up one future Standard Key for each, and
  * 'gamble' adds a Gambit stake of Fate for each: Fate that reaches the pity
  * threshold pays its Pity Key and carries the rest, as a failed roll's does,
  * and any Key it pays settles what the run owes first. No counter passes
@@ -81,12 +99,12 @@ export interface PetCompensationResult {
  */
 export const petCompensationResult = (
   state: Pick<GameState, 'keys' | 'specialKeys' | 'keysOwed' | 'fatePoints'>,
-  offer: PetCompensationState,
+  earned: number,
   choice: PetCompensationChoice,
   rules: Pick<GameModeRules, 'ritualCostMultiplier' | 'pityEnabled' | 'pityThreshold'>,
   maxCounter = Number.MAX_SAFE_INTEGER,
 ): PetCompensationResult => {
-  const pets = offer.keyOnlyPets;
+  const pets = earned;
   const specialKeysAwarded = Math.min(pets, Math.max(0, maxCounter - state.specialKeys));
   const keysOwedAdded = choice === 'free' ? 0 : pets;
   const grant = choice === 'gamble' ? gambitStakeFor(rules) * pets : 0;
