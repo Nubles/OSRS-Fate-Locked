@@ -1,5 +1,6 @@
 import { LogEntry } from '../types';
 import { CUSTOM_RULE_BOUNDS, type GameModeRules } from '../config/gameModes';
+import { PET_COMPENSATION_ID } from './petCompensation';
 
 /** The ruleset a run was played under, recorded in the verified bundle. */
 export interface RunMode {
@@ -272,6 +273,21 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3, rules?: Rep
         break;
       }
       case 'COMPENSATION': {
+        // The pet offer and the owed Keys it settles later say what they paid and took.
+        if (e.meta?.releaseId === PET_COMPENSATION_ID) {
+          const count = (key: string): number => {
+            const value = e.meta?.[key];
+            return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0 ? value : 0;
+          };
+          s.specialKeys += count('specialKeysAwarded');
+          s.keys += count('pityKeysAwarded') - count('keysWithheld');
+          const fateAfter = e.meta?.fatePointsAfter;
+          if (typeof fateAfter === 'number' && Number.isSafeInteger(fateAfter) && fateAfter >= 0) {
+            s.fatePoints = fateAfter;
+            fateEstimate = false;
+          }
+          break;
+        }
         const choice = e.meta?.choice;
         if (choice === 'chaos' || choice === 'full') {
           const chaosAwarded = e.meta?.chaosKeysAwarded;
@@ -300,6 +316,12 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3, rules?: Rep
       case 'XTREME_MILESTONE':
         s.keys += typeof e.meta?.gained === 'number' ? e.meta.gained : 1;
         break;
+      // A new pet's Omni-Key. It isn't a roll: Fate stays as it was.
+      case 'PET': {
+        const awarded = e.meta?.specialKeysAwarded;
+        s.specialKeys += typeof awarded === 'number' && Number.isSafeInteger(awarded) && awarded >= 0 ? awarded : 1;
+        break;
+      }
     }
     check(i);
   }

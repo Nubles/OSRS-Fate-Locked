@@ -67,6 +67,22 @@ export interface FateCompensationState {
   choice?: FateCompensationChoice;
 }
 
+/**
+ * How a run that logged pets before they gave an Omni-Key evens it out:
+ * 'owe' gives up its next Standard Keys, 'gamble' gives them up for Fate
+ * towards a Void Gambit, and 'free' keeps everything.
+ */
+export type PetCompensationChoice = 'owe' | 'gamble' | 'free';
+
+export interface PetCompensationState {
+  releaseId: string;
+  status: 'pending' | 'not_eligible' | PetCompensationChoice;
+  /** Earlier pet rolls that paid a Standard Key and no Omni-Key: each now earns an Omni-Key. */
+  keyOnlyPets: number;
+  /** Earlier pet rolls that already brought an Omni-Key: named, but nothing more is owed. */
+  omniPets: number;
+}
+
 
 
 /** Fate awarded when a key roll fails. */
@@ -102,7 +118,7 @@ export interface LogEntry {
   // outcomes; the bare 'ROLL' literal was a footgun (consumers filtered for
   // it expecting all rolls and got nothing). Use isRollEntry() in utils
   // instead of comparing to 'ROLL'.
-  type: 'UNLOCK' | 'PITY' | 'ALTAR' | 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'LEVEL_UP' | 'XTREME_MILESTONE' | 'COMPENSATION';
+  type: 'UNLOCK' | 'PITY' | 'ALTAR' | 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'LEVEL_UP' | 'XTREME_MILESTONE' | 'COMPENSATION' | 'PET';
   source?: string;
   result?: 'SUCCESS' | 'FAIL';
   rollValue?: number;
@@ -155,6 +171,7 @@ export type DetectedProgress =
   | { kind: 'CA_TASK'; taskId: string }
   | { kind: 'DIARY_TASK'; taskId: string }
   | { kind: 'COLLECTION_ITEM'; itemId: number }
+  | { kind: 'PET'; petId: number }
   | { kind: 'NONE' };
 
 export interface EventCandidate {
@@ -247,6 +264,12 @@ export interface GameState {
   fatePoints: number;
   /** Frozen one-time offer for the weighted-Fate balance release. */
   fateCompensation: FateCompensationState;
+  /** Frozen one-time offer for runs that logged pets before a pet gave an Omni-Key. */
+  petCompensation: PetCompensationState;
+  /** Pets claimed for their Omni-Key, by id from data/pets.ts: each pet counts once. */
+  petsClaimed?: number[];
+  /** Standard Keys the run gave up in the pet compensation: the next ones it earns pay these first. */
+  keysOwed?: number;
   activeBuff: 'NONE' | 'LUCK' | 'GREED';
   unlocks: UnlockState;
   history: LogEntry[];

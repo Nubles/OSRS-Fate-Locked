@@ -246,10 +246,10 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
   {
     category: 'Pets',
     icon: `${WIKI}Pet_kraken.png`,
-    where: 'Farm Keys → Activities: roll when a pet drops.',
-    blurb: 'Any pet drop is a guaranteed Key, with the best Omni-Key chance.',
+    where: 'Farm Keys → Activities: claim each new pet.',
+    blurb: 'Each new pet gives an Omni-Key, once per pet.',
     tiers: [
-      { tier: 'Any pet drop', source: DropSource.PET, rate: DROP_RATES[DropSource.PET], omni: 25, bonus: 'A guaranteed Key, and the best Omni-Key chance of any source.' },
+      { tier: 'Each new pet', source: DropSource.PET, rate: DROP_RATES[DropSource.PET], rateLabel: 'Omni-Key', bonus: 'An Omni-Key instead of a Key, once per pet. Claiming one isn’t a roll: Fate and rituals stay as they are.' },
     ],
   },
   {
@@ -336,7 +336,8 @@ export const KEY_TYPES: KeyTypeInfo[] = [
     accent: 'text-purple-400',
     tagline: 'Pick what you unlock.',
     earn: [
-      'A bonus on a successful roll, on top of the Key: your mode’s base chance, raised to 25% on pet drops, 20% on Grandmaster quests, 15% on raids and 10% on Elite diaries and high-tier bosses.',
+      'A bonus on a successful roll, on top of the Key: your mode’s base chance, raised to 20% on Grandmaster quests, 15% on raids and 10% on Elite diaries and high-tier bosses.',
+      'Each new pet: an Omni-Key instead of a Key, once per pet.',
       'The Ritual of Transmutation: 5 Keys make 1 Omni-Key.',
     ],
     spend: 'Click a locked skill, gear slot, area, boss or other entry on the Dashboard to unlock exactly that. In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.',

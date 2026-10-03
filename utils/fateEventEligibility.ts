@@ -7,6 +7,7 @@ import { BOSS_TIERS, TIER_SOURCE, type BossTier } from '../data/bossKeyTiers';
 import { COLLECTION_LOG_DATA, type CollectionLogItem } from '../data/collectionLogData';
 import { collectionItemNeedsIdentityReview } from '../services/CollectionLogSyncService';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import { petById, unclaimedPets } from '../data/pets';
 import { QUEST_DATA, type QuestData } from '../data/questData';
 import type { FateEventEnvelope, FateEventType } from '../services/fateEventProtocol';
 import { normalizeAccountName } from './accountName';
@@ -160,7 +161,7 @@ function candidates<T>(
   return values.slice(0, limit).map((value) => ({ label: label(value), target: target(value) }));
 }
 
-function confirmationCandidates(event: FateEventEnvelope): EventCandidate[] | undefined {
+function confirmationCandidates(event: FateEventEnvelope, state: GameState): EventCandidate[] | undefined {
   if (event.eventType === 'SLAYER_TASK') {
     const detected = detectedSlayerSource(event);
     const sources = detected ? [detected, ...SLAYER_SOURCES.filter((source) => source !== detected)] : SLAYER_SOURCES;
@@ -176,8 +177,8 @@ function confirmationCandidates(event: FateEventEnvelope): EventCandidate[] | un
       : undefined;
   }
   if (event.eventType === 'PET_DROP') {
-    const label = event.canonicalLabel ?? 'Pet drop';
-    return [{ label, target: label }];
+    // RuneLite can't tell which pet dropped: the player picks one the run hasn't claimed.
+    return unclaimedPets(state.petsClaimed).map((pet) => ({ label: pet.name, target: String(pet.id) }));
   }
   if (
     event.eventType === 'MINIGAME_COMPLETION'
@@ -390,10 +391,13 @@ export function classifyFateEvent(
   }  if (state.history.some((entry) => entry.meta?.fateEventId === event.eventId)) {
     return { state: 'DUPLICATE', reason: 'This event has already been rolled.' };
   }
+  if (event.eventType === 'PET_DROP' && unclaimedPets(state.petsClaimed).length === 0) {
+    return blocked('Every pet is already claimed.');
+  }
   if (policy.handling !== 'EXACT' || event.confidence !== 'EXACT') {
     return needsConfirmation(
       'Detector version is not approved for exact handling.',
-      confirmationCandidates(event),
+      confirmationCandidates(event, state),
     );
   }
 
@@ -457,10 +461,13 @@ export function classifyFateEventCandidate(
     return ready(source, task.description, { kind: 'DIARY_TASK', taskId: task.id });
   }
   if (event.eventType === 'PET_DROP') {
-    const label = event.canonicalLabel ?? 'Pet drop';
-    return target === label
-      ? ready(DropSource.PET, label, { kind: 'NONE' })
-      : needsConfirmation('Confirm the detected pet.');
+    const pet = petById(Number(target));
+    if (!pet || String(pet.id) !== target) {
+      return needsConfirmation('Choose the pet you got.', confirmationCandidates(event, state));
+    }
+    if ((state.petsClaimed ?? []).includes(pet.id)) return blocked('This pet is already claimed.');
+    // A pet isn't rolled: claiming it gives its Omni-Key (see GameContext's CLAIM_PET).
+    return ready(DropSource.PET, pet.name, { kind: 'PET', petId: pet.id });
   }
   if (event.eventType === 'MINIGAME_COMPLETION') {
     return event.canonicalLabel && target === event.canonicalLabel

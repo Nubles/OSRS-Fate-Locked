@@ -19,6 +19,23 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-03-pet-omni-keys',
+    title: 'Pets Give an Omni-Key',
+    date: '2026-10-04',
+    sections: {
+      balance: [
+        'As the community poll chose, each new pet now gives an Omni-Key instead of a Key.',
+        'Each pet counts once: you pick which pet you got, and a pet you’ve claimed can’t be picked again.',
+        'Claiming a pet isn’t a roll, so it doesn’t reset your Fate, and an active Clarity or Greed waits for your next roll.',
+      ],
+      added: [
+        'Farm Keys → Activities has a New Pet card: choose the pet you got and claim its Omni-Key.',
+        'If your run logged pets before this change, What’s New asks you to name each one, so it counts once. Each one that paid a Key and no Omni-Key earns an Omni-Key now, and you choose what’s fair: give up your next Key, give up your next Key for Fate towards a Void Gambit, or just take the Omni-Key.',
+        'Keys you choose to give up show on the Spend panel until the Keys you earn have paid them.',
+      ],
+    },
+  },
+  {
     id: '2026-10-04-slayer-cave-ankou',
     title: 'Diary Places Checked Against the Wiki',
     date: '2026-10-04',

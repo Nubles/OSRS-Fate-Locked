@@ -27,7 +27,7 @@ export const DETECTOR_POLICIES: DetectorPolicy[] = [
   { detectorId: 'slayer-task-varp-v1', maxApprovedVersion: 1, handling: 'CONFIRMATION', eventTypes: ['SLAYER_TASK'] },
   // A diary tier's varbit; the player picks the task (version 2 remembers per character).
   { detectorId: 'diary-task-v1', maxApprovedVersion: 2, handling: 'CONFIRMATION', eventTypes: ['DIARY_TASK'] },
-  // Unchanged while the owner's poll on pet rewards runs; RuneLite doesn't copy pets yet.
+  // RuneLite can't tell which pet dropped, so the player picks it; each pet gives its Omni-Key once.
   { detectorId: 'pet-drop-v1', maxApprovedVersion: 1, handling: 'CONFIRMATION', eventTypes: ['PET_DROP'] },
 ];
 

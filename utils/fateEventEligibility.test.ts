@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DROP_RATES } from '../config/rules';
 import { initialState } from '../context/GameContext';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
+import { PETS } from '../data/pets';
 import type { FateEventEnvelope, FateEventType } from '../services/fateEventProtocol';
 import { DropSource, type GameState } from '../types';
 import { classifyFateEvent, classifyFateEventCandidate } from './fateEventEligibility';
@@ -347,13 +348,41 @@ describe('classifyFateEvent', () => {
       ]),
     });
 
-    const pet = classifyFateEvent(event('PET_DROP', 'Pet kraken', {
+    // RuneLite can't tell which pet dropped: the choices are every pet the run hasn't claimed.
+    const pet = classifyFateEvent(event('PET_DROP', null, {
       detectorId: 'pet-drop-v1', confidence: 'UNCERTAIN',
-    }), state());
-    expect(pet).toMatchObject({
-      state: 'NEEDS_CONFIRMATION',
-      candidates: [{ label: 'Pet kraken', target: 'Pet kraken' }],
+    }), state({ petsClaimed: [PETS[0].id] }));
+    expect(pet.state).toBe('NEEDS_CONFIRMATION');
+    const choices = pet.state === 'NEEDS_CONFIRMATION' ? pet.candidates ?? [] : [];
+    expect(choices).toHaveLength(PETS.length - 1);
+    expect(choices[0]).toEqual({ label: PETS[1].name, target: String(PETS[1].id) });
+    expect(choices.map((choice) => choice.target)).not.toContain(String(PETS[0].id));
+  });
+
+  it('claims the pet the player picks for its Omni-Key, once per pet', () => {
+    const pet = event('PET_DROP', null, { detectorId: 'pet-drop-v1', confidence: 'UNCERTAIN' });
+    const vorki = PETS.find((candidate) => candidate.name === 'Vorki')!;
+    expect(classifyFateEventCandidate(pet, state(), String(vorki.id))).toMatchObject({
+      state: 'READY',
+      intent: { source: DropSource.PET, target: 'Vorki' },
+      progress: { kind: 'PET', petId: vorki.id },
     });
+    expect(classifyFateEventCandidate(pet, state({ petsClaimed: [vorki.id] }), String(vorki.id)))
+      .toEqual({ state: 'BLOCKED', reason: 'This pet is already claimed.' });
+    expect(classifyFateEventCandidate(pet, state(), 'Pet drop'))
+      .toMatchObject({ state: 'NEEDS_CONFIRMATION', reason: 'Choose the pet you got.' });
+    expect(classifyFateEventCandidate(pet, state(), '157004'))
+      .toMatchObject({ state: 'NEEDS_CONFIRMATION', reason: 'Choose the pet you got.' });
+  });
+
+  it('blocks a pet when every pet is claimed, and a pet event claimed before', () => {
+    const pet = event('PET_DROP', null, { detectorId: 'pet-drop-v1', confidence: 'UNCERTAIN' });
+    expect(classifyFateEvent(pet, state({ petsClaimed: PETS.map((candidate) => candidate.id) })))
+      .toEqual({ state: 'BLOCKED', reason: 'Every pet is already claimed.' });
+    const claimed = state({
+      history: [{ id: 'h1', timestamp: 1, type: 'PET', message: 'Vorki: Omni-Key Found!', meta: { fateEventId: 'evt-1' } }],
+    });
+    expect(classifyFateEvent(pet, claimed).state).toBe('DUPLICATE');
   });
 
   it('puts the Slayer master RuneLite read first, so the review starts on it', () => {

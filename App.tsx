@@ -42,7 +42,8 @@ import { showToast } from './utils/toast';
 import { importUiDecision, isCurrentImportRequest } from './utils/gamePersistence';
 import { prefetchHeavyChunks } from './utils/prefetch';
 import { LATEST_CHANGELOG_ID } from './data/changelogLatest';
-import type { FateCompensationChoice } from './types';
+import type { FateCompensationChoice, PetCompensationChoice } from './types';
+import { gambitStakeFor } from './utils/petCompensation';
 import {
   changelogVisibilityReducer, markChangelogSeen,
   resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
@@ -200,13 +201,14 @@ const ToastNotification = () => {
 
     const undoableTypes = [
       'ROLL_SUCCESS', 'ROLL_FAIL', 'ROLL_OMNI', 'ROLL_PITY',
-      'UNLOCK', 'RITUAL', 'LEVEL_UP'
+      'UNLOCK', 'RITUAL', 'LEVEL_UP', 'PET'
     ];
 
     if (undoableTypes.includes(lastEvent.type)) {
       let msg = 'Action Complete';
       if (lastEvent.type.includes('ROLL')) msg = 'Roll Recorded';
       if (lastEvent.type === 'UNLOCK') msg = 'Content Unlocked';
+      if (lastEvent.type === 'PET') msg = 'New Pet: Omni-Key Found!';
       if (lastEvent.type === 'RITUAL') {
         const rm = lastEvent.meta as any;
         msg = rm?.type === 'GAMBIT'
@@ -236,7 +238,7 @@ const ToastNotification = () => {
       setMessage(msg);
       // A won key's natural next beat is spending it — hand the player there
       // instead of dead-ending at "Roll Recorded".
-      if (lastEvent.type === 'ROLL_SUCCESS' || lastEvent.type === 'ROLL_OMNI' || lastEvent.type === 'ROLL_PITY') {
+      if (lastEvent.type === 'ROLL_SUCCESS' || lastEvent.type === 'ROLL_OMNI' || lastEvent.type === 'ROLL_PITY' || lastEvent.type === 'PET') {
         setAction({
           label: 'Spend it',
           run: () => {
@@ -680,9 +682,12 @@ const GameLayout = () => {
   const {
     lastEvent, animationsEnabled, hasSeenOnboarding, history, linkedAccount,
     fateCompensation, resolveFateCompensation, saveDurability, saveStatus,
+    petCompensation, resolvePetCompensation, petsClaimed, gameModeId, customMode,
     saveOwnershipBlockReason, retrySave,
     getExportData,
   } = useGame();
+  // A pending offer from a balance change keeps What's New open until it's settled.
+  const hasPendingOffer = fateCompensation.status === 'pending' || petCompensation.status === 'pending';
   const {
     recentlyCreatedId,
     activeProfileId,
@@ -729,7 +734,7 @@ const GameLayout = () => {
       startupHash: typeof window === 'undefined' ? '' : window.location.hash,
       hasPendingGameModePrompt: recentlyCreatedId === activeProfileId,
       hasPendingGuidePrompt: directGuideRequested,
-      hasPendingCompensation: fateCompensation.status === 'pending',
+      hasPendingCompensation: hasPendingOffer,
     }),
   );
 
@@ -760,13 +765,17 @@ const GameLayout = () => {
     dispatchChangelog({ type: 'OPEN' });
   };
   const closeChangelog = () => {
-    if (fateCompensation.status === 'pending') return;
+    if (hasPendingOffer) return;
     markChangelogSeen(LATEST_CHANGELOG_ID);
     dispatchChangelog({ type: 'DISMISS' });
     changelogReturnFocusTarget.current = null;
   };
   const resolveCompensation = (choice: FateCompensationChoice) => {
     resolveFateCompensation(choice);
+    markChangelogSeen(LATEST_CHANGELOG_ID);
+  };
+  const resolvePets = (choice: PetCompensationChoice, petIds: number[]) => {
+    resolvePetCompensation(choice, petIds);
     markChangelogSeen(LATEST_CHANGELOG_ID);
   };
 
@@ -941,7 +950,7 @@ const GameLayout = () => {
         hasPendingGameModePrompt,
         hasPendingSyncPrompt,
         hasPendingGuidePrompt: showRuneliteGuide,
-        hasPendingCompensation: fateCompensation.status === 'pending',
+        hasPendingCompensation: hasPendingOffer,
       })
     ) return;
 
@@ -950,7 +959,7 @@ const GameLayout = () => {
   }, [
     activeProfileId,
     changelogAutoOpenKey,
-    fateCompensation.status,
+    hasPendingOffer,
     hasPendingGameModePrompt,
     hasPendingSyncPrompt,
     hasSeenOnboarding,
@@ -1033,6 +1042,10 @@ const GameLayout = () => {
             onClose={closeChangelog}
             compensation={fateCompensation}
             onResolveCompensation={resolveCompensation}
+            petCompensation={petCompensation}
+            petsClaimed={petsClaimed}
+            petGambitStake={gambitStakeFor(resolveModeRules(gameModeId, customMode))}
+            onResolvePetCompensation={resolvePets}
             returnFocusTarget={changelogReturnFocusTarget.current}
           />
         )}

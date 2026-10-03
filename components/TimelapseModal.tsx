@@ -18,6 +18,7 @@ const TICK_MS = 350; // base event interval at 1x
 
 const typeTheme: Record<string, { bg: string; border: string; glow: string; tint: string; label: string }> = {
   ROLL_OMNI:    { bg: 'bg-amber-950/70',    border: 'border-amber-400/70',    glow: 'shadow-[0_0_40px_rgba(251,191,36,0.5)]', tint: 'from-amber-500/20',   label: 'OMNI-KEY' },
+  PET:          { bg: 'bg-amber-950/70',    border: 'border-amber-400/70',    glow: 'shadow-[0_0_40px_rgba(251,191,36,0.5)]', tint: 'from-amber-500/20',   label: 'NEW PET' },
   ROLL_SUCCESS: { bg: 'bg-emerald-950/70',  border: 'border-emerald-500/60',  glow: 'shadow-[0_0_30px_rgba(16,185,129,0.4)]',  tint: 'from-emerald-500/15', label: 'KEY FOUND' },
   PITY:         { bg: 'bg-sky-950/70',      border: 'border-sky-400/60',      glow: 'shadow-[0_0_30px_rgba(56,189,248,0.4)]',  tint: 'from-sky-500/15',     label: 'PITY KEY' },
   ROLL_FAIL:    { bg: 'bg-red-950/60',      border: 'border-red-500/40',      glow: '',                                        tint: 'from-red-500/10',     label: 'NO KEY' },

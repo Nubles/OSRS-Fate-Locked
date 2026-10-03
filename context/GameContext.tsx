@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { PendingUnlockReveal } from '../components/PendingUnlockReveal';
-import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type FailureFateAward, type FateCompensationChoice, type GameEventMeta as DetectedGameEventMeta, type RollAnalyticsMeta, type RollIntent } from '../types';
+import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type FailureFateAward, type FateCompensationChoice, type PetCompensationChoice, type GameEventMeta as DetectedGameEventMeta, type RollAnalyticsMeta, type RollIntent } from '../types';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
 import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
@@ -54,6 +54,15 @@ import { migrateLegacyBackupRing } from '../utils/legacyBackupMigration';
 import { profileBackupKey } from '../utils/profileStorage';
 import { showToast } from '../utils/toast';
 import { LEGACY_FATE_COMPENSATION_ID } from '../utils/fateCompensation';
+import {
+  gambitStakeFor,
+  keysToWithhold,
+  notEligiblePetCompensation,
+  PET_COMPENSATION_ID,
+  petCompensationResult,
+  validCompensationPets,
+} from '../utils/petCompensation';
+import { petById } from '../data/pets';
 import { normalizeAccountName } from '../utils/accountName';
 import { collectionItemNeedsIdentityReview, emptyCollectionLogIdentity } from '../services/CollectionLogSyncService';
 import {
@@ -169,7 +178,7 @@ type GameEventMeta = (RollEventMeta & DetectedGameEventMeta) | UnlockEventMeta |
 
 type GameEvent = {
   id: string;
-  type: 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'ROLL_PITY' | 'UNLOCK' | 'RITUAL' | 'LEVEL_UP';
+  type: 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'ROLL_PITY' | 'UNLOCK' | 'RITUAL' | 'LEVEL_UP' | 'PET';
   x?: number;
   y?: number;
   meta?: GameEventMeta;
@@ -219,6 +228,10 @@ interface GameContextType extends GameState {
   toggleRevealAll: () => void;
   completeOnboarding: () => void;
   resolveFateCompensation: (choice: FateCompensationChoice) => void;
+  /** Settle the pet offer: one pet named for each earlier pet roll, and how to even it out. */
+  resolvePetCompensation: (choice: PetCompensationChoice, petIds: number[]) => void;
+  /** A new pet: its Omni-Key, once per pet. It isn't a roll, so Fate and rituals stay as they are. */
+  claimPet: (petId: number, x?: number, y?: number) => void;
   setGameMode: (modeId: string, customRules?: GameModeRules) => void;
   /** Seeded runs — set/clear the seed (only while the run has no history). */
   setSeed: (seed: string) => void;
@@ -304,6 +317,7 @@ export const initialState: GameState = {
     pityKeys: 0,
     fatePoints: 0,
   },
+  petCompensation: notEligiblePetCompensation(),
   activeBuff: 'NONE',
   unlocks: getInitialUnlocks(),
   history: [],
@@ -358,6 +372,18 @@ export type Action =
   | { type: 'SET_SEED'; payload: string }
   | { type: 'COMPLETE_ONBOARDING' }
   | { type: 'RESOLVE_FATE_COMPENSATION'; payload: FateCompensationChoice }
+  | { type: 'RESOLVE_PET_COMPENSATION'; payload: { choice: PetCompensationChoice; petIds: number[] } }
+  | { type: 'CLAIM_PET'; payload: { petId: number; x?: number; y?: number; meta?: DetectedGameEventMeta } }
+  | {
+    type: 'ACCEPT_DETECTED_PET';
+    payload: {
+      petId: number;
+      meta: DetectedGameEventMeta;
+      expected: DetectedEventIdentity;
+      /** The run's revision when the player confirmed the pet: it lands only on that state. */
+      preparedRevision: number;
+    };
+  }
   | { type: 'ROLL_RESULT'; payload: PreparedRollResult }
   | {
     type: 'ACCEPT_DETECTED_EVENT';
@@ -519,7 +545,6 @@ export function prepareKeyRollAction(
     let omniChance = mode.omniChanceBase + omniBonus;
     if (source === DropSource.QUEST_GRANDMASTER) omniChance = Math.max(omniChance, 20);
     else if (source === DropSource.DIARY_ELITE) omniChance = Math.max(omniChance, 10);
-    else if (source === DropSource.PET) omniChance = Math.max(omniChance, 25);
     else if (source === DropSource.RAID) omniChance = Math.max(omniChance, 15);
     else if (source === DropSource.BOSS_HIGH) omniChance = Math.max(omniChance, 10);
 
@@ -823,6 +848,83 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       };
     }
 
+    case 'RESOLVE_PET_COMPENSATION': {
+      const offer = state.petCompensation;
+      if (offer.status !== 'pending') return state;
+      const { choice, petIds } = action.payload;
+      if (!validCompensationPets(offer, petIds, state.petsClaimed)) return state;
+      const rules = resolveModeRules(state.gameModeId, state.customMode);
+      const result = petCompensationResult(state, offer, choice, rules, MAX_COUNTER);
+      const omniKeys = result.specialKeysAwarded;
+      const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`;
+      const owedText = result.keysOwedAdded > 0
+        ? ` The next ${plural(result.keysOwedAdded, 'Standard Key')} you earn ${result.keysOwedAdded === 1 ? 'is' : 'are'} owed.`
+        : '';
+      const fateText = choice === 'gamble' && omniKeys > 0
+        ? ` and ${gambitStakeFor(rules) * omniKeys} Fate towards a Void Gambit`
+        : '';
+      const log: LogEntry = {
+        id: generateId(),
+        timestamp: now,
+        type: 'COMPENSATION',
+        message: omniKeys > 0
+          ? `Pet compensation: ${plural(omniKeys, 'Omni-Key')}${fateText}.${owedText}`
+          : 'Pets named for the Omni-Key change.',
+        details: `Pets named: ${petIds.map(id => petById(id)!.name).join(', ')}.`,
+        meta: {
+          releaseId: PET_COMPENSATION_ID,
+          choice,
+          petIds,
+          specialKeysAwarded: omniKeys,
+          keysOwedAdded: result.keysOwedAdded,
+          pityKeysAwarded: result.pityKeysAwarded,
+          keysWithheld: result.keysWithheld,
+          fatePointsAfter: result.fatePoints,
+        },
+      };
+      return {
+        ...state,
+        keys: result.keys,
+        specialKeys: state.specialKeys + omniKeys,
+        fatePoints: result.fatePoints,
+        keysOwed: result.keysOwed,
+        petsClaimed: [...(state.petsClaimed ?? []), ...petIds],
+        petCompensation: { ...offer, status: choice },
+        history: [...state.history, log],
+      };
+    }
+
+    case 'CLAIM_PET': {
+      const { petId, x, y, meta } = action.payload;
+      const pet = petById(petId);
+      if (!pet || (state.petsClaimed ?? []).includes(petId) || state.specialKeys >= MAX_COUNTER) return state;
+      return {
+        ...state,
+        specialKeys: state.specialKeys + 1,
+        petsClaimed: [...(state.petsClaimed ?? []), petId],
+        history: [...state.history, {
+          id: generateId(),
+          timestamp: now,
+          type: 'PET',
+          message: `${pet.name}: Omni-Key Found!`,
+          details: 'Each new pet gives an Omni-Key, once per pet.',
+          meta: { ...meta, petId, specialKeysAwarded: 1 },
+          source: DropSource.PET,
+        }],
+        lastEvent: { id: generateId(), type: 'PET', x, y },
+      };
+    }
+
+    case 'ACCEPT_DETECTED_PET': {
+      // As with a detected roll: only on the state the player confirmed it on, for this run.
+      if (state.runRevision !== action.payload.preparedRevision) return state;
+      if (!detectedEventIdentityMatches(state, action.payload.expected)) return state;
+      return rawReducer(state, {
+        type: 'CLAIM_PET',
+        payload: { petId: action.payload.petId, meta: action.payload.meta },
+      });
+    }
+
     case 'SET_GAME_MODE': {
       // The mode is permanent once chosen — or if the run already has history
       // (defensive, covers saves predating the lock flag).
@@ -921,6 +1023,8 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           },
         };
       }
+      // A pet is claimed with its Omni-Key (CLAIM_PET), never synced on its own.
+      if (progress.kind === 'PET') return state;
       if (collectionItemNeedsIdentityReview(state.unlocks.collectionLog, progress.itemId, state.collectionLogIdentity)) return state;
       const current = state.unlocks.collectionLog[progress.itemId] ?? 0;
       if (current >= 1) return state;
@@ -1439,6 +1543,34 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
   }
 };
 
+/**
+ * The Standard Keys a run gave up in the pet compensation come out of the next
+ * ones it earns, whatever earned them, and the history says so.
+ */
+const settleKeysOwed = (
+  before: GameState & { lastEvent: GameEvent | null },
+  after: GameState & { lastEvent: GameEvent | null },
+  action: Action,
+): GameState & { lastEvent: GameEvent | null } => {
+  if (action.type === 'RESOLVE_PET_COMPENSATION') return after;
+  const withheld = keysToWithhold(after.keysOwed, before.keys, after.keys);
+  if (withheld === 0) return after;
+  const owedAfter = (after.keysOwed ?? 0) - withheld;
+  return {
+    ...after,
+    keys: after.keys - withheld,
+    keysOwed: owedAfter,
+    history: [...after.history, {
+      id: generateId(),
+      timestamp: Date.now(),
+      type: 'COMPENSATION',
+      message: `${withheld === 1 ? 'A Standard Key' : `${withheld} Standard Keys`} went to the pet compensation you chose.`,
+      details: owedAfter > 0 ? `${owedAfter} still owed.` : 'Nothing more is owed.',
+      meta: { releaseId: PET_COMPENSATION_ID, keysWithheld: withheld },
+    }],
+  };
+};
+
 export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
   if (action.type === 'COMMIT_STATE') return action.payload;
   const rawNext = rawReducer(state, action);
@@ -1446,9 +1578,10 @@ export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, 
   // A replacement brings its own history. Chaining it as an append would
   // splice in, or link to, entries of the run it replaces.
   if (action.type === 'LOAD_SAVE' || action.type === 'RESET') return rawNext;
-  const next = rawNext.history === state.history
-    ? rawNext
-    : { ...rawNext, history: chainAppendedHistory(state.history, rawNext.history) };
+  const settled = settleKeysOwed(state, rawNext, action);
+  const next = settled.history === state.history
+    ? settled
+    : { ...settled, history: chainAppendedHistory(state.history, settled.history) };
   return { ...next, runRevision: state.runRevision + 1 };
 };
 
@@ -2426,6 +2559,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     meta?: DetectedGameEventMeta,
     context?: KeyRollContext,
   ) => {
+    // A pet gives its Omni-Key through claimPet; it never rolls.
+    if (source === DropSource.PET) return;
     const current = stateRef.current;
     const action = context
       ? prepareKeyRollAction(current, source, threshold, failureFate, nextDice, x, y, meta, context)
@@ -2513,6 +2648,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   ): boolean => {
     const current = stateRef.current;
     if (!detectedEventIdentityMatches(current, expected)) return false;
+    if (progress.kind === 'PET') {
+      return commitAction({
+        type: 'ACCEPT_DETECTED_PET',
+        payload: { petId: progress.petId, meta, expected, preparedRevision: current.runRevision },
+      }) !== current;
+    }
     try {
       const action = prepareDetectedEventAcceptanceAction(
         current,
@@ -2549,6 +2690,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     commitAction({ type: 'COMPLETE_ONBOARDING' }), [commitAction]);
   const resolveFateCompensation = useCallback((choice: FateCompensationChoice) =>
     commitAction({ type: 'RESOLVE_FATE_COMPENSATION', payload: choice }), [commitAction]);
+  const resolvePetCompensation = useCallback((choice: PetCompensationChoice, petIds: number[]) =>
+    commitAction({ type: 'RESOLVE_PET_COMPENSATION', payload: { choice, petIds } }), [commitAction]);
+  const claimPet = useCallback((petId: number, x?: number, y?: number) =>
+    commitAction({ type: 'CLAIM_PET', payload: { petId, x, y } }), [commitAction]);
   const setGameMode = useCallback((modeId: string, customRules?: GameModeRules) =>
     commitAction({ type: 'SET_GAME_MODE', payload: { modeId, customRules } }), [commitAction]);
   const toggleAnimations = useCallback(() => commitAction({ type: 'TOGGLE_ANIMATIONS' }), [commitAction]);
@@ -3000,6 +3145,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     toggleRevealAll,
     completeOnboarding,
     resolveFateCompensation,
+    resolvePetCompensation,
+    claimPet,
     setGameMode,
     setSeed,
     nextFloat,
@@ -3049,6 +3196,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     toggleRevealAll,
     completeOnboarding,
     resolveFateCompensation,
+    resolvePetCompensation,
+    claimPet,
     setGameMode,
     setSeed,
     nextFloat,

@@ -77,6 +77,9 @@ export const EffectsLayer: React.FC = () => {
     } else if (type === 'ROLL_OMNI') {
       spawnParticle(x, y, 'omni');
       spawnFeedback(x, y, roll?.roll ?? 0, roll?.threshold ?? 0, 'OMNI');
+    } else if (type === 'PET') {
+      // A pet isn't rolled, so there's no roll to show: only its Omni-Key.
+      spawnParticle(x, y, 'omni');
     } else if (type === 'ROLL_FAIL') {
       spawnFeedback(x, y, roll?.roll ?? 0, roll?.threshold ?? 0, 'FAIL');
     } else if (type === 'ROLL_PITY') {

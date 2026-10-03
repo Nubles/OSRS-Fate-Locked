@@ -46,6 +46,8 @@ interface RollInboxViewProps {
 }
 
 const TERMINAL = new Set(['COMPLETED', 'DISMISSED', 'DUPLICATE']);
+/** RuneLite can't tell which pet dropped, so a pet starts with no choice made for the player. */
+const mustChoose = (row: RollInboxRow) => row.event.eventType === 'PET_DROP';
 const CONFIRMED_PREFIX = 'candidate:';
 
 type ClassifiedRow = { row: RollInboxRow; classification: EventClassification };
@@ -234,7 +236,7 @@ export function RollInboxView({
   const review = (row: RollInboxRow, classification: EventClassification) => {
     if (classification.state !== 'NEEDS_CONFIRMATION') return;
     const target = selection[row.event.eventId]
-      ?? classification.candidates?.[0]?.target;
+      ?? (mustChoose(row) ? undefined : classification.candidates?.[0]?.target);
     if (!target) return;
     const originalTarget = classification.candidates?.[0]?.target;
     store.transition(
@@ -329,14 +331,16 @@ export function RollInboxView({
                 >
                   <div className="mt-2 flex items-center gap-2">
                     <span className="text-[11px] text-gray-500">
-                      {classification.state === 'READY' && `${classification.intent.threshold}% chance`}
+                      {classification.state === 'READY' && (classification.progress.kind === 'PET'
+                        ? 'An Omni-Key, once per pet'
+                        : `${classification.intent.threshold}% chance`)}
                     </span>
                     <button
                       type="button"
                       onClick={() => roll(row, classification)}
                       className="ml-auto rounded-md bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-500"
                     >
-                      Roll
+                      {classification.state === 'READY' && classification.progress.kind === 'PET' ? 'Claim' : 'Roll'}
                     </button>
                     <button
                       type="button"
@@ -368,13 +372,15 @@ export function RollInboxView({
                   <div className="mt-2 flex items-center gap-2">
                     {classification.candidates?.length ? (
                       <select
-                        value={selection[row.event.eventId] ?? classification.candidates[0].target}
+                        aria-label={mustChoose(row) ? 'The pet you got' : undefined}
+                        value={selection[row.event.eventId] ?? (mustChoose(row) ? '' : classification.candidates[0].target)}
                         onChange={(e) => setSelection((current) => ({
                           ...current,
                           [row.event.eventId]: e.target.value,
                         }))}
                         className="min-w-0 flex-1 rounded-md border border-white/10 bg-black/70 px-2 py-1.5 text-[11px] text-gray-200"
                       >
+                        {mustChoose(row) && <option value="" disabled>Choose the pet you got…</option>}
                         {classification.candidates.map((candidate) => (
                           <option key={candidate.target} value={candidate.target}>
                             {candidate.label}
@@ -386,7 +392,7 @@ export function RollInboxView({
                     )}
                     <button
                       type="button"
-                      disabled={!classification.candidates?.length}
+                      disabled={!classification.candidates?.length || (mustChoose(row) && !selection[row.event.eventId])}
                       onClick={() => review(row, classification)}
                       className="rounded-md bg-amber-600 px-2.5 py-1.5 text-[11px] font-bold text-white enabled:hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-40"
                     >

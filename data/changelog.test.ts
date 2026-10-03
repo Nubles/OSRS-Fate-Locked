@@ -20,7 +20,7 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-10-04-slayer-cave-ankou');
+    expect(LATEST_CHANGELOG.id).toBe('2026-10-03-pet-omni-keys');
   });
 
   it('announces the Diary places checked against the wiki and the spent bosses RuneLite stops offering', () => {

@@ -85,13 +85,20 @@ describe('ReferenceModal Omni-Keys', () => {
   it('shows the raised Omni-Key chances the roll engine uses', () => {
     const drops = renderCodex('drops');
     const raised: Array<[string, DropSource]> = [
-      ['pet drops', DropSource.PET], ['Grandmaster quests', DropSource.QUEST_GRANDMASTER],
+      ['Grandmaster quests', DropSource.QUEST_GRANDMASTER],
       ['raids', DropSource.RAID], ['Elite diaries', DropSource.DIARY_ELITE], ['high-tier bosses', DropSource.BOSS_HIGH],
     ];
     for (const [label, source] of raised) {
       expect(drops, label).toContain(`${label} <b>${engineOmniChance(source)}%</b>`);
     }
     expect(renderCodex('economy')).toContain(`or ${engineOmniChance(DropSource.QUEST_GRANDMASTER)}% for a Grandmaster quest`);
+  });
+
+  it('says a new pet gives an Omni-Key instead of a Key, not a chance at one', () => {
+    const drops = renderCodex('drops');
+    expect(drops).toContain('Each new pet gives an Omni-Key instead of a Key, once per pet.');
+    expect(drops).not.toContain('pet drops <b>');
+    expect(renderCodex('economy')).toContain('A new pet gives an Omni-Key outright.');
   });
 });
 
@@ -112,8 +119,7 @@ describe('ReferenceModal Smart Play', () => {
     expect(economy).toContain('Any successful roll resets them to 0, so spend them at the Void Altar before that.');
     expect(economy).not.toMatch(/banks Fate|save toward a Chaos Key|fuel for the Void Altar/);
     expect(economy).toContain(`Konar ${DROP_RATES[DropSource.SLAYER_KONAR]}%, Duradel ${DROP_RATES[DropSource.SLAYER_DURADEL]}%, boss tasks ${DROP_RATES[DropSource.SLAYER_BOSS]}%`);
-    expect(economy).toContain(`a guaranteed Key and a ${engineOmniChance(DropSource.QUEST_GRANDMASTER)}% Omni-Key chance`);
-    expect(economy).toContain(`Only pet drops (${engineOmniChance(DropSource.PET)}%) have a better Omni-Key chance.`);
+    expect(economy).toContain(`a guaranteed Key and a ${engineOmniChance(DropSource.QUEST_GRANDMASTER)}% Omni-Key chance, the best of any roll.`);
     expect(economy).toContain(`Raids give ${engineOmniChance(DropSource.RAID)}%, Elite diaries ${engineOmniChance(DropSource.DIARY_ELITE)}% and high-tier bosses ${engineOmniChance(DropSource.BOSS_HIGH)}%.`);
   });
 

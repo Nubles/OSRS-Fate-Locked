@@ -2,7 +2,13 @@ import React, { useRef, useState } from 'react';
 import { CheckCircle2, ChevronDown, RefreshCw, X } from 'lucide-react';
 import { ScrollText, Sparkles } from './OsrsIcon';
 import type { ChangelogRelease, ChangelogSection } from '../data/changelog';
-import type { FateCompensationChoice, FateCompensationState } from '../types';
+import type {
+  FateCompensationChoice,
+  FateCompensationState,
+  PetCompensationChoice,
+  PetCompensationState,
+} from '../types';
+import { PetCompensationPanel } from './PetCompensationPanel';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
@@ -10,6 +16,12 @@ export interface ChangelogModalProps {
   releases: readonly ChangelogRelease[];
   compensation?: FateCompensationState;
   onResolveCompensation?: (choice: FateCompensationChoice) => void;
+  /** The one-time offer for runs that logged pets before a pet gave an Omni-Key. */
+  petCompensation?: PetCompensationState;
+  petsClaimed?: readonly number[];
+  /** Fate the pet offer's 'gamble' choice gives for each Key: the mode's Void Gambit stake. */
+  petGambitStake?: number;
+  onResolvePetCompensation?: (choice: PetCompensationChoice, petIds: number[]) => void;
   onClose: () => void;
   /** Persistent control to receive focus after a manual close. */
   returnFocusTarget?: HTMLElement | null;
@@ -56,6 +68,10 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
   onClose,
   compensation,
   onResolveCompensation,
+  petCompensation,
+  petsClaimed,
+  petGambitStake = 15,
+  onResolvePetCompensation,
   returnFocusTarget,
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -63,8 +79,10 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
     () => new Set(releases[0] ? [releases[0].id] : []),
   );
 
-  const hasPendingCompensation = compensation?.status === 'pending';
-  const compensationRelease = hasPendingCompensation
+  const hasPendingFateCompensation = compensation?.status === 'pending';
+  const hasPendingPetCompensation = petCompensation?.status === 'pending';
+  const hasPendingCompensation = hasPendingFateCompensation || hasPendingPetCompensation;
+  const compensationRelease = hasPendingFateCompensation
     ? releases.find(release => release.id === compensation?.releaseId)
     : undefined;
   useFocusTrap(dialogRef, true, returnFocusTarget);
@@ -106,7 +124,15 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
           <div className="space-y-2">
             {/* A pending choice blocks closing, so it must be the first thing
                 shown, not inside an older release that starts collapsed. */}
-            {hasPendingCompensation && compensation && (
+            {hasPendingPetCompensation && petCompensation && (
+              <PetCompensationPanel
+                offer={petCompensation}
+                claimed={petsClaimed}
+                gambitStake={petGambitStake}
+                onResolve={(choice, petIds) => onResolvePetCompensation?.(choice, petIds)}
+              />
+            )}
+            {hasPendingFateCompensation && compensation && (
               <div className="rounded-lg border border-violet-400/30 bg-violet-950/20 p-3">
                 <h4 className="text-sm font-bold text-violet-200">Your compensation options</h4>
                 {compensationRelease && (

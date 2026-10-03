@@ -7,6 +7,8 @@ export const narrate = (e: LogEntry): string => {
   switch (e.type) {
     case 'ROLL_OMNI':
       return `The dice glow gold — an Omni-Key materialises${e.source ? ` from ${e.source}` : ''}.`;
+    case 'PET':
+      return 'A new pet joins the run, and an Omni-Key comes with it.';
     case 'ROLL_SUCCESS':
       return `${e.source ?? 'The source'} yields a key. ${
         e.rollValue === undefined ? '?' : formatKeyRollValue(e.rollValue)
@@ -55,6 +57,7 @@ export const detectMilestones = (history: LogEntry[]): Milestone[] => {
 
     if (i === 0) push('First fate cast', 'Mind_rune.png');
     if (e.type === 'ROLL_OMNI' && !seen.has('omni')) { seen.add('omni'); push('First Omni-Key!', 'Crystal_key.png'); }
+    if (e.type === 'PET' && !seen.has('pet')) { seen.add('pet'); push('First pet!', 'Vorki.png'); }
     if (e.type === 'PITY' && !seen.has('pity')) { seen.add('pity'); push('First Pity Key', 'Shield_slot.png'); }
     if (e.type === 'ROLL_SUCCESS' && !seen.has('success')) { seen.add('success'); push('First Key earned', 'Brass_key.png'); }
     if (e.type === 'UNLOCK' && !seen.has('unlock')) { seen.add('unlock'); push(`First unlock: ${e.meta?.item ?? '?'}`, 'Brass_key.png'); }
