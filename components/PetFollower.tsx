@@ -52,7 +52,7 @@ export const PetFollowerView: React.FC<PetFollowerViewProps> = ({ runId, claimed
       {pet && !prefs.hidden && (
         // Clicks pass through the pet to the page beneath; only its name tag takes them.
         <div className="pointer-events-none fixed bottom-2 left-2 z-40 flex w-24 flex-col items-center" data-testid="pet-follower">
-          <div className={`h-24 w-24 ${moving && isStillPet(pet.id) ? 'animate-pet-bob' : ''}`}>
+          <div className={`h-16 w-16 sm:h-24 sm:w-24 ${moving && isStillPet(pet.id) ? 'animate-pet-bob' : ''}`}>
             <EntityModel
               src={petModelUrl(pet.id)}
               alt={pet.name}
