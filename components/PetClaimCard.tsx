@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { PETS, unclaimedPets, type Pet } from '../data/pets';
+import { OPEN_PETS_EVENT } from '../utils/petFollower';
 
 const WIKI_IMG = 'https://oldschool.runescape.wiki/images/';
 
@@ -58,9 +59,20 @@ export const PetClaimCard: React.FC<PetClaimCardProps> = ({ claimed, onClaim }) 
             </button>
           </div>
         )}
-        <p className="mt-1.5 text-[10px] text-gray-500">
-          {PETS.length - left.length} of {PETS.length} pets claimed
-        </p>
+        <div className="mt-1.5 flex items-center justify-between gap-2">
+          <p className="text-[10px] text-gray-500">
+            {PETS.length - left.length} of {PETS.length} pets claimed
+          </p>
+          {left.length < PETS.length && (
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event(OPEN_PETS_EVENT))}
+              className="text-[10px] font-bold text-[#facc15] hover:underline"
+            >
+              Your pets
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

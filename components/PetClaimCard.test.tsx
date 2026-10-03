@@ -3,6 +3,7 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PETS } from '../data/pets';
+import { OPEN_PETS_EVENT } from '../utils/petFollower';
 import { PetClaimCard } from './PetClaimCard';
 
 afterEach(cleanup);
@@ -35,5 +36,16 @@ describe('PetClaimCard', () => {
     render(<PetClaimCard claimed={PETS.map((pet) => pet.id)} onClaim={vi.fn()} />);
     expect(screen.getByText('Every pet is claimed.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Claim Omni-Key' })).toBeNull();
+  });
+
+  it('opens Your Pets once the run has a pet', () => {
+    const { rerender } = render(<PetClaimCard claimed={[]} onClaim={vi.fn()} />);
+    expect(screen.queryByRole('button', { name: 'Your pets' })).toBeNull();
+    const opened = vi.fn();
+    window.addEventListener(OPEN_PETS_EVENT, opened);
+    rerender(<PetClaimCard claimed={[PETS[0].id]} onClaim={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Your pets' }));
+    window.removeEventListener(OPEN_PETS_EVENT, opened);
+    expect(opened).toHaveBeenCalledTimes(1);
   });
 });

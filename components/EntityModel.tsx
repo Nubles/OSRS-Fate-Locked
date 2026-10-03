@@ -38,6 +38,13 @@ interface Props {
   interactive?: boolean;
   /** Gentle auto-spin (respect the app's animations toggle). */
   autoRotate?: boolean;
+  /**
+   * Spin with the animation, or play only the model's own animation (a pet idling
+   * in place). Defaults to autoRotate; the animation still follows autoRotate.
+   */
+  spin?: boolean;
+  /** Where the camera starts, as model-viewer's camera-orbit ("30deg 75deg auto"). */
+  cameraOrbit?: string;
   /** Fill the parent container (width/height 100%) instead of a fixed `size`. */
   fill?: boolean;
   /**
@@ -50,8 +57,9 @@ interface Props {
 }
 
 export const EntityModel: React.FC<Props> = ({
-  src, poster, alt, size = 160, interactive = false, autoRotate = true, fill = false, orientation, className,
+  src, poster, alt, size = 160, interactive = false, autoRotate = true, spin, fill = false, orientation, cameraOrbit, className,
 }) => {
+  const rotates = spin ?? autoRotate;
   const dims = fill ? { width: '100%', height: '100%' } : { width: `${size}px`, height: `${size}px` };
   const [ready, setReady] = useState(scriptState === 'ready');
   const [failed, setFailed] = useState(false);
@@ -102,8 +110,10 @@ export const EntityModel: React.FC<Props> = ({
     // Spin + animation are both tied to the app's animations toggle (passed as
     // autoRotate) so "animations off" leaves the model fully still. `autoplay`
     // is a best-effort fallback; the real driver is the play() effect above.
-    ...(autoRotate ? { 'auto-rotate': true, 'auto-rotate-delay': 0, 'rotation-per-second': '24deg', autoplay: true } : {}),
+    ...(autoRotate ? { autoplay: true } : {}),
+    ...(rotates ? { 'auto-rotate': true, 'auto-rotate-delay': 0, 'rotation-per-second': '24deg' } : {}),
     ...(orientation ? { orientation } : {}),
+    ...(cameraOrbit ? { 'camera-orbit': cameraOrbit } : {}),
     'interaction-prompt': 'none',
     'shadow-intensity': '0.6',
     exposure: '1.1',

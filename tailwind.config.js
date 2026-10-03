@@ -39,6 +39,8 @@ export default {
         'loading-bar': 'loading-bar 0.6s linear forwards',
         'count-pop': 'count-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)',
         'fade-in-up': 'fade-in-up 0.4s ease-out both',
+        // A pet whose model has no idle animation breathes gently instead.
+        'pet-bob': 'pet-bob 2.4s ease-in-out infinite',
         'pop-in': 'pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both',
         'pulse-glow': 'pulse-glow 2.2s ease-in-out infinite',
         'bloom': 'bloom 0.9s ease-in-out forwards',
@@ -102,6 +104,10 @@ export default {
         'fade-in-up': {
           '0%': { opacity: '0', transform: 'translateY(8px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'pet-bob': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-4px)' },
         },
         'pop-in': {
           '0%': { opacity: '0', transform: 'scale(0.6)' },

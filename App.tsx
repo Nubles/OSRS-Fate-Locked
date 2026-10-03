@@ -11,6 +11,8 @@ import { Dashboard } from './components/Dashboard';
 const LogViewer = lazyWithRetry(() => import('./components/LogViewer').then(m => ({ default: m.LogViewer })));
 // Re-checks the Roll Inbox's saved rows in the background, so its rules load after the first paint.
 const RollInboxDriver = lazyWithRetry(() => import('./components/RollInboxDriver'));
+// The claimed pet that follows the player, with Your Pets; it loads once the run has a pet.
+const PetFollower = lazyWithRetry(() => import('./components/PetFollower'));
 import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { PopOnChange } from './components/PopOnChange';
 import { WikiIcon } from './components/WikiIcon';
@@ -1000,6 +1002,7 @@ const GameLayout = () => {
       <OnlineSyncDriver />
       <Suspense fallback={null}><OnlineBackupDriver /></Suspense>
       <Suspense fallback={null}><RollInboxDriver /></Suspense>
+      {(petsClaimed?.length ?? 0) > 0 && <Suspense fallback={null}><PetFollower /></Suspense>}
       {/* Progressive-disclosure watcher — always mounted (same rule as
           RollInboxDriver): detected events must queue from every screen. */}
       <FeatureRevealDriver />
