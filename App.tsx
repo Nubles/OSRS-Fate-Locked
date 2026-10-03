@@ -9,13 +9,14 @@ import { ActionSection } from './components/ActionSection';
 import { GachaSection } from './components/GachaSection';
 import { Dashboard } from './components/Dashboard';
 const LogViewer = lazyWithRetry(() => import('./components/LogViewer').then(m => ({ default: m.LogViewer })));
+// Re-checks the Roll Inbox's saved rows in the background, so its rules load after the first paint.
+const RollInboxDriver = lazyWithRetry(() => import('./components/RollInboxDriver'));
 import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { PopOnChange } from './components/PopOnChange';
 import { WikiIcon } from './components/WikiIcon';
 import { EffectsLayer } from './components/EffectsLayer';
 import { OnlineSyncDriver } from './components/OnlineSyncDriver';
 import { canDismissRunelitePairing, type RunelitePairingPhase } from './components/runelitePairingPhase';
-import { RollInboxDriver } from './components/RollInboxDriver';
 import { CoachStrip } from './components/CoachStrip';
 import { FeatureRevealDriver } from './components/FeatureRevealDriver';
 import { SaveConflictBanner } from './components/SaveConflictBanner';
@@ -774,8 +775,8 @@ const GameLayout = () => {
     resolveFateCompensation(choice);
     markChangelogSeen(LATEST_CHANGELOG_ID);
   };
-  const resolvePets = (choice: PetCompensationChoice, petIds: number[]) => {
-    resolvePetCompensation(choice, petIds);
+  const resolvePets = (choice: PetCompensationChoice, pets: ReadonlyArray<{ id: number; name: string }>) => {
+    resolvePetCompensation(choice, pets);
     markChangelogSeen(LATEST_CHANGELOG_ID);
   };
 
@@ -994,7 +995,7 @@ const GameLayout = () => {
       <EffectsLayer />
       <OnlineSyncDriver />
       <Suspense fallback={null}><OnlineBackupDriver /></Suspense>
-      <RollInboxDriver />
+      <Suspense fallback={null}><RollInboxDriver /></Suspense>
       {/* Progressive-disclosure watcher — always mounted (same rule as
           RollInboxDriver): detected events must queue from every screen. */}
       <FeatureRevealDriver />

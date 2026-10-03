@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { gameReducer, initialState } from './GameContext';
-import { PETS } from '../data/pets';
+import { petById, PETS } from '../data/pets';
 import { DropSource, type FailureFateAward, type GameState, type LogEntry, type PetCompensationChoice } from '../types';
 import { PET_COMPENSATION_ID } from '../utils/petCompensation';
 import { replayInvariants } from '../utils/integrity';
@@ -26,9 +26,11 @@ const base = (over: Partial<GameState> = {}): Run => ({
 const vorki = PETS.find((pet) => pet.name === 'Vorki')!;
 const [first, second, third] = PETS;
 
-const claim = (state: Run, petId: number) => gameReducer(state, { type: 'CLAIM_PET', payload: { petId } });
+const nameOf = (petId: number) => petById(petId)?.name ?? 'Not a pet';
+const claim = (state: Run, petId: number) =>
+  gameReducer(state, { type: 'CLAIM_PET', payload: { petId, petName: nameOf(petId) } });
 const resolve = (state: Run, choice: PetCompensationChoice, petIds: number[]) =>
-  gameReducer(state, { type: 'RESOLVE_PET_COMPENSATION', payload: { choice, petIds } });
+  gameReducer(state, { type: 'RESOLVE_PET_COMPENSATION', payload: { choice, petIds, petNames: petIds.map(nameOf) } });
 const rolled = (state: Run, success: boolean) => gameReducer(state, {
   type: 'ROLL_RESULT',
   payload: {
@@ -93,6 +95,7 @@ describe('a pet from RuneLite', () => {
     type: 'ACCEPT_DETECTED_PET',
     payload: {
       petId: vorki.id,
+      petName: 'Vorki',
       meta: { fateEventId: 'evt-pet', detectorId: 'pet-drop-v1', detectorVersion: 1 },
       expected,
       preparedRevision,

@@ -1,6 +1,6 @@
 import { ritualFateCost } from '../config/economy';
 import type { GameModeRules } from '../config/gameModes';
-import { petById } from '../data/pets';
+import { isPetId } from '../data/petIds';
 import {
   DropSource,
   type GameState,
@@ -58,7 +58,7 @@ export const validCompensationPets = (
   const taken = new Set(claimed ?? []);
   return petIds.length === offer.keyOnlyPets + offer.omniPets
     && new Set(petIds).size === petIds.length
-    && petIds.every((id) => petById(id) !== undefined && !taken.has(id));
+    && petIds.every((id) => isPetId(id) && !taken.has(id));
 };
 
 export interface PetCompensationResult {

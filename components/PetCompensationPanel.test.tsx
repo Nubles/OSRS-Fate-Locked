@@ -32,7 +32,7 @@ describe('PetCompensationPanel', () => {
     name(3, 2);
     expect(owe).toHaveProperty('disabled', false);
     fireEvent.click(owe);
-    expect(onResolve).toHaveBeenCalledWith('owe', [PETS[0].id, PETS[1].id, PETS[2].id]);
+    expect(onResolve).toHaveBeenCalledWith('owe', [PETS[0], PETS[1], PETS[2]]);
   });
 
   it('offers each pet once across the names, and none already claimed', () => {
@@ -65,6 +65,6 @@ describe('PetCompensationPanel', () => {
     expect(screen.queryByRole('button', { name: /Give up/ })).toBeNull();
     name(1, 3);
     fireEvent.click(screen.getByRole('button', { name: 'Save my pets' }));
-    expect(onResolve).toHaveBeenCalledWith('free', [PETS[3].id]);
+    expect(onResolve).toHaveBeenCalledWith('free', [PETS[3]]);
   });
 });

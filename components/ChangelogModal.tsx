@@ -21,7 +21,7 @@ export interface ChangelogModalProps {
   petsClaimed?: readonly number[];
   /** Fate the pet offer's 'gamble' choice gives for each Key: the mode's Void Gambit stake. */
   petGambitStake?: number;
-  onResolvePetCompensation?: (choice: PetCompensationChoice, petIds: number[]) => void;
+  onResolvePetCompensation?: (choice: PetCompensationChoice, pets: ReadonlyArray<{ id: number; name: string }>) => void;
   onClose: () => void;
   /** Persistent control to receive focus after a manual close. */
   returnFocusTarget?: HTMLElement | null;
@@ -129,7 +129,7 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
                 offer={petCompensation}
                 claimed={petsClaimed}
                 gambitStake={petGambitStake}
-                onResolve={(choice, petIds) => onResolvePetCompensation?.(choice, petIds)}
+                onResolve={(choice, pets) => onResolvePetCompensation?.(choice, pets)}
               />
             )}
             {hasPendingFateCompensation && compensation && (

@@ -12,7 +12,9 @@ import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { EARN_METHODS, failureFateForSource, LEVEL_ROLL_MAX } from '../config/economy';
 import { BRUTUS_BOSS_NAME, effectiveVanillaClueRate, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
 import { BossKeyProgress, ClueKeyProgress } from './VanillaKeyProgress';
-import { PetClaimCard } from './PetClaimCard';
+import { lazyWithRetry } from '../utils/lazyRetry';
+// The pet card and the pet names load when the Activities tab opens.
+const PetClaimCard = lazyWithRetry(() => import('./PetClaimCard').then(m => ({ default: m.PetClaimCard })));
 import { VANILLA_BOSS_SEARCH_PLACEHOLDER, vanillaBossNote, vanillaBossSearchEmptyMessage } from './vanillaBossSearchCopy';
 
 // OSRS Wiki Icon URLs
@@ -668,7 +670,9 @@ export const ActionSection: React.FC = () => {
               className={animationsEnabled ? 'animate-fade-in-up' : ''}
               style={animationsEnabled ? { animationDelay: `${ACTIVITY_ROLLS.length * 35}ms` } : undefined}
             >
-              <PetClaimCard claimed={petsClaimed} onClaim={(petId, e) => claimPet(petId, e.clientX, e.clientY)} />
+              <React.Suspense fallback={<div className="h-28 rounded-lg border-2 border-[#4c462a] bg-[#262314]" />}>
+                <PetClaimCard claimed={petsClaimed} onClaim={(pet, e) => claimPet(pet, e.clientX, e.clientY)} />
+              </React.Suspense>
             </div>
           </div>
         )}

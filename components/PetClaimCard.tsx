@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { PETS, unclaimedPets } from '../data/pets';
+import { PETS, unclaimedPets, type Pet } from '../data/pets';
 
 const WIKI_IMG = 'https://oldschool.runescape.wiki/images/';
 
 interface PetClaimCardProps {
   /** Pets the run has claimed already, by id. */
   claimed: readonly number[] | undefined;
-  onClaim: (petId: number, e: React.MouseEvent) => void;
+  onClaim: (pet: Pet, e: React.MouseEvent) => void;
 }
 
 /**
@@ -48,7 +48,7 @@ export const PetClaimCard: React.FC<PetClaimCardProps> = ({ claimed, onClaim }) 
               disabled={!pet}
               onClick={(e) => {
                 if (!pet) return;
-                onClaim(pet.id, e);
+                onClaim(pet, e);
                 setChosen('');
               }}
               className="shrink-0 rounded-md bg-[#a16207] px-3 py-1.5 text-[11px] font-bold text-white enabled:hover:bg-[#ca8a04] disabled:cursor-not-allowed disabled:opacity-40"

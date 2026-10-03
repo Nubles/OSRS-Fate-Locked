@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { COLLECTION_LOG_DATA } from './collectionLogData';
+import { PET_IDS } from './petIds';
 import { petById, PETS, unclaimedPets } from './pets';
 
 describe('pets', () => {
@@ -7,7 +8,8 @@ describe('pets', () => {
     expect(PETS).toEqual(COLLECTION_LOG_DATA.Other.pages['All Pets'].items);
   });
 
-  it('each have one id', () => {
+  it('each have one id, as the game state knows them', () => {
+    expect(PETS.map((pet) => pet.id)).toEqual(PET_IDS);
     expect(new Set(PETS.map((pet) => pet.id)).size).toBe(PETS.length);
     expect(petById(502070)?.name).toBe('Aggy');
     expect(petById(157004)).toBeUndefined();

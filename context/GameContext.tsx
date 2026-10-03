@@ -62,7 +62,7 @@ import {
   petCompensationResult,
   validCompensationPets,
 } from '../utils/petCompensation';
-import { petById } from '../data/pets';
+import { isPetId } from '../data/petIds';
 import { normalizeAccountName } from '../utils/accountName';
 import { collectionItemNeedsIdentityReview, emptyCollectionLogIdentity } from '../services/CollectionLogSyncService';
 import {
@@ -229,9 +229,9 @@ interface GameContextType extends GameState {
   completeOnboarding: () => void;
   resolveFateCompensation: (choice: FateCompensationChoice) => void;
   /** Settle the pet offer: one pet named for each earlier pet roll, and how to even it out. */
-  resolvePetCompensation: (choice: PetCompensationChoice, petIds: number[]) => void;
+  resolvePetCompensation: (choice: PetCompensationChoice, pets: ReadonlyArray<{ id: number; name: string }>) => void;
   /** A new pet: its Omni-Key, once per pet. It isn't a roll, so Fate and rituals stay as they are. */
-  claimPet: (petId: number, x?: number, y?: number) => void;
+  claimPet: (pet: { id: number; name: string }, x?: number, y?: number) => void;
   setGameMode: (modeId: string, customRules?: GameModeRules) => void;
   /** Seeded runs — set/clear the seed (only while the run has no history). */
   setSeed: (seed: string) => void;
@@ -372,12 +372,13 @@ export type Action =
   | { type: 'SET_SEED'; payload: string }
   | { type: 'COMPLETE_ONBOARDING' }
   | { type: 'RESOLVE_FATE_COMPENSATION'; payload: FateCompensationChoice }
-  | { type: 'RESOLVE_PET_COMPENSATION'; payload: { choice: PetCompensationChoice; petIds: number[] } }
-  | { type: 'CLAIM_PET'; payload: { petId: number; x?: number; y?: number; meta?: DetectedGameEventMeta } }
+  | { type: 'RESOLVE_PET_COMPENSATION'; payload: { choice: PetCompensationChoice; petIds: number[]; petNames: string[] } }
+  | { type: 'CLAIM_PET'; payload: { petId: number; petName: string; x?: number; y?: number; meta?: DetectedGameEventMeta } }
   | {
     type: 'ACCEPT_DETECTED_PET';
     payload: {
       petId: number;
+      petName: string;
       meta: DetectedGameEventMeta;
       expected: DetectedEventIdentity;
       /** The run's revision when the player confirmed the pet: it lands only on that state. */
@@ -851,7 +852,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     case 'RESOLVE_PET_COMPENSATION': {
       const offer = state.petCompensation;
       if (offer.status !== 'pending') return state;
-      const { choice, petIds } = action.payload;
+      const { choice, petIds, petNames } = action.payload;
       if (!validCompensationPets(offer, petIds, state.petsClaimed)) return state;
       const rules = resolveModeRules(state.gameModeId, state.customMode);
       const result = petCompensationResult(state, offer, choice, rules, MAX_COUNTER);
@@ -870,7 +871,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         message: omniKeys > 0
           ? `Pet compensation: ${plural(omniKeys, 'Omni-Key')}${fateText}.${owedText}`
           : 'Pets named for the Omni-Key change.',
-        details: `Pets named: ${petIds.map(id => petById(id)!.name).join(', ')}.`,
+        details: `Pets named: ${petNames.join(', ')}.`,
         meta: {
           releaseId: PET_COMPENSATION_ID,
           choice,
@@ -895,9 +896,8 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     }
 
     case 'CLAIM_PET': {
-      const { petId, x, y, meta } = action.payload;
-      const pet = petById(petId);
-      if (!pet || (state.petsClaimed ?? []).includes(petId) || state.specialKeys >= MAX_COUNTER) return state;
+      const { petId, petName, x, y, meta } = action.payload;
+      if (!isPetId(petId) || (state.petsClaimed ?? []).includes(petId) || state.specialKeys >= MAX_COUNTER) return state;
       return {
         ...state,
         specialKeys: state.specialKeys + 1,
@@ -906,7 +906,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           id: generateId(),
           timestamp: now,
           type: 'PET',
-          message: `${pet.name}: Omni-Key Found!`,
+          message: `${petName}: Omni-Key Found!`,
           details: 'Each new pet gives an Omni-Key, once per pet.',
           meta: { ...meta, petId, specialKeysAwarded: 1 },
           source: DropSource.PET,
@@ -921,7 +921,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       if (!detectedEventIdentityMatches(state, action.payload.expected)) return state;
       return rawReducer(state, {
         type: 'CLAIM_PET',
-        payload: { petId: action.payload.petId, meta: action.payload.meta },
+        payload: { petId: action.payload.petId, petName: action.payload.petName, meta: action.payload.meta },
       });
     }
 
@@ -2651,7 +2651,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     if (progress.kind === 'PET') {
       return commitAction({
         type: 'ACCEPT_DETECTED_PET',
-        payload: { petId: progress.petId, meta, expected, preparedRevision: current.runRevision },
+        payload: { petId: progress.petId, petName: intent.target, meta, expected, preparedRevision: current.runRevision },
       }) !== current;
     }
     try {
@@ -2690,10 +2690,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     commitAction({ type: 'COMPLETE_ONBOARDING' }), [commitAction]);
   const resolveFateCompensation = useCallback((choice: FateCompensationChoice) =>
     commitAction({ type: 'RESOLVE_FATE_COMPENSATION', payload: choice }), [commitAction]);
-  const resolvePetCompensation = useCallback((choice: PetCompensationChoice, petIds: number[]) =>
-    commitAction({ type: 'RESOLVE_PET_COMPENSATION', payload: { choice, petIds } }), [commitAction]);
-  const claimPet = useCallback((petId: number, x?: number, y?: number) =>
-    commitAction({ type: 'CLAIM_PET', payload: { petId, x, y } }), [commitAction]);
+  const resolvePetCompensation = useCallback((choice: PetCompensationChoice, pets: ReadonlyArray<{ id: number; name: string }>) =>
+    commitAction({
+      type: 'RESOLVE_PET_COMPENSATION',
+      payload: { choice, petIds: pets.map(pet => pet.id), petNames: pets.map(pet => pet.name) },
+    }), [commitAction]);
+  const claimPet = useCallback((pet: { id: number; name: string }, x?: number, y?: number) =>
+    commitAction({ type: 'CLAIM_PET', payload: { petId: pet.id, petName: pet.name, x, y } }), [commitAction]);
   const setGameMode = useCallback((modeId: string, customRules?: GameModeRules) =>
     commitAction({ type: 'SET_GAME_MODE', payload: { modeId, customRules } }), [commitAction]);
   const toggleAnimations = useCallback(() => commitAction({ type: 'TOGGLE_ANIMATIONS' }), [commitAction]);

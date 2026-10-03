@@ -207,7 +207,7 @@ describe('ChangelogModal pet offer', () => {
         petCompensation={{ releaseId: PET_COMPENSATION_ID, status: 'pending', keyOnlyPets: 1, omniPets: 0 }}
         petsClaimed={[]}
         petGambitStake={15}
-        onResolvePetCompensation={(choice, petIds) => settled.push([choice, petIds])}
+        onResolvePetCompensation={(choice, pets) => settled.push([choice, pets.map(pet => pet.id)])}
       />,
     );
 

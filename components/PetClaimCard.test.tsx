@@ -19,7 +19,7 @@ describe('PetClaimCard', () => {
     fireEvent.change(screen.getByLabelText('The pet you got'), { target: { value: String(PETS[25].id) } });
     expect(claim).toHaveProperty('disabled', false);
     fireEvent.click(claim);
-    expect(onClaim).toHaveBeenCalledWith(PETS[25].id, expect.anything());
+    expect(onClaim).toHaveBeenCalledWith(PETS[25], expect.anything());
   });
 
   it('offers only the pets the run has not claimed', () => {

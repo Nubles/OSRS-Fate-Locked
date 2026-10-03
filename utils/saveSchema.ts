@@ -19,7 +19,7 @@ import { vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
 
 import { calculateLegacyFateCompensation, LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
 import { PET_COMPENSATION_ID, petCompensationOffer } from './petCompensation';
-import { petById, PETS } from '../data/pets';
+import { isPetId, PET_IDS } from '../data/petIds';
 /** Version 5 freezes the one-time pet offer and stores claimed pets and owed Keys. */
 export const CURRENT_SAVE_VERSION = 5;
 /**
@@ -781,10 +781,10 @@ const normalizePetCompensation = (value: unknown): Outcome<PetCompensationState>
 
 /** Claimed pets: known pet ids, each once. */
 const normalizePetsClaimed = (value: unknown): Outcome<number[]> => {
-  if (!Array.isArray(value) || value.length > PETS.length) return invalid('invalid_field', 'petsClaimed');
+  if (!Array.isArray(value) || value.length > PET_IDS.length) return invalid('invalid_field', 'petsClaimed');
   const seen = new Set<number>();
   for (const id of value) {
-    if (typeof id !== 'number' || !Number.isSafeInteger(id) || !petById(id) || seen.has(id)) {
+    if (typeof id !== 'number' || !Number.isSafeInteger(id) || !isPetId(id) || seen.has(id)) {
       return invalid('invalid_field', 'petsClaimed');
     }
     seen.add(id);

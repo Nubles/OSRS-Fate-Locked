@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { unclaimedPets } from '../data/pets';
+import { petById, unclaimedPets, type Pet } from '../data/pets';
 import type { PetCompensationChoice, PetCompensationState } from '../types';
 
 interface PetCompensationPanelProps {
@@ -8,7 +8,7 @@ interface PetCompensationPanelProps {
   claimed: readonly number[] | undefined;
   /** The Fate the 'gamble' choice gives for each Key it gives up: the mode's Void Gambit stake. */
   gambitStake: number;
-  onResolve: (choice: PetCompensationChoice, petIds: number[]) => void;
+  onResolve: (choice: PetCompensationChoice, pets: Pet[]) => void;
 }
 
 const plural = (count: number, word: string): string => `${count} ${word}${count === 1 ? '' : 's'}`;
@@ -28,13 +28,13 @@ export const PetCompensationPanel: React.FC<PetCompensationPanelProps> = ({
   const [named, setNamed] = useState<string[]>(() => Array.from({ length: total }, () => ''));
   const available = unclaimedPets(claimed);
   const complete = named.every((value) => value !== '');
-  const petIds = named.map(Number);
+  const pets = named.map((value) => petById(Number(value))).filter((pet): pet is Pet => pet !== undefined);
   const owed = offer.keyOnlyPets;
   const omniKeys = plural(owed, 'Omni-Key');
   const nextKeys = owed === 1 ? 'your next Standard Key goes' : `your next ${owed} Standard Keys go`;
 
   const choose = (choice: PetCompensationChoice) => {
-    if (complete) onResolve(choice, petIds);
+    if (complete) onResolve(choice, pets);
   };
 
   return (
