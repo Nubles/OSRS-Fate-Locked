@@ -19,8 +19,10 @@ web app exports rules bundles and processes plugin events through the relay.
 2. The user's local `flitest-main` download is NOT a git repo. Clone the
    GitHub repo into your session scratchpad to commit or push. Stored git
    credentials work from PowerShell; no `gh` CLI is installed.
-3. Check `docs/superpowers/specs/` and `docs/superpowers/plans/` for prior
-   design decisions before proposing new ones.
+3. Plans and specs stay on your machine: `docs/superpowers/` is ignored by
+   git, so never force-add it. Those written before October 2026 are in git
+   history (`git show 8d6b1d8:docs/superpowers/...`); ROADMAP.md records the
+   decisions that still apply.
 
 ## How to break problems down
 
