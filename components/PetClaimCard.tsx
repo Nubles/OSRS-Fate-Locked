@@ -31,12 +31,13 @@ export const PetClaimCard: React.FC<PetClaimCardProps> = ({ claimed, onClaim }) 
         {left.length === 0 ? (
           <p className="text-[11px] text-[#facc15]/80">Every pet is claimed.</p>
         ) : (
-          <div className="flex items-center gap-2">
+          // Stacked, so the list keeps its width in the narrow two-column layout.
+          <div className="flex flex-col gap-1.5">
             <select
               aria-label="The pet you got"
               value={pet ? chosen : ''}
               onChange={(e) => setChosen(e.target.value)}
-              className="min-w-0 flex-1 rounded-md border border-[#4c462a] bg-black/70 px-2 py-1.5 text-[11px] text-gray-200"
+              className="w-full rounded-md border border-[#4c462a] bg-black/70 px-2 py-1.5 text-[11px] text-gray-200"
             >
               <option value="" disabled>Choose the pet you got…</option>
               {left.map((candidate) => (
@@ -51,7 +52,7 @@ export const PetClaimCard: React.FC<PetClaimCardProps> = ({ claimed, onClaim }) 
                 onClaim(pet, e);
                 setChosen('');
               }}
-              className="shrink-0 rounded-md bg-[#a16207] px-3 py-1.5 text-[11px] font-bold text-white enabled:hover:bg-[#ca8a04] disabled:cursor-not-allowed disabled:opacity-40"
+              className="w-full rounded-md bg-[#a16207] px-3 py-1.5 text-[11px] font-bold text-white enabled:hover:bg-[#ca8a04] disabled:cursor-not-allowed disabled:opacity-40"
             >
               Claim Omni-Key
             </button>

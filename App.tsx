@@ -46,7 +46,7 @@ import { LATEST_CHANGELOG_ID } from './data/changelogLatest';
 import type { FateCompensationChoice, PetCompensationChoice } from './types';
 import { gambitStakeFor } from './utils/petCompensation';
 import {
-  changelogVisibilityReducer, markChangelogSeen,
+  changelogVisibilityReducer, markChangelogSeen, mayAutoOpenChangelogAgain,
   resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
   shouldEnableUnderlyingModalEscape, shouldShowChangelog,
 } from './utils/changelogState';
@@ -943,7 +943,7 @@ const GameLayout = () => {
   useEffect(() => {
     if (
       showChangelog
-      || changelogAutoOpenedRelease.current === changelogAutoOpenKey
+      || !mayAutoOpenChangelogAgain(changelogAutoOpenedRelease.current === changelogAutoOpenKey, hasPendingOffer)
       || !shouldAutoOpenChangelog({
         hasSeenOnboarding,
         releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG_ID),
