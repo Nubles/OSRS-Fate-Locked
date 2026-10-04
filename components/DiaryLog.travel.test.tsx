@@ -28,13 +28,15 @@ vi.mock('./JournalInsights', () => ({ DiaryInsights: () => null }));
 vi.mock('./SkillTrainingPopover', () => ({ SkillTrainingPopover: () => null }));
 
 describe('DiaryLog travel to an owned island or enclave', () => {
-  it('shows why an Ankou in the owned Forgotten Cemetery is not doable yet', () => {
+  it('shows why an Ankou in the owned Forgotten Cemetery is not doable yet, and the Slayer Cave', () => {
     const markup = renderToStaticMarkup(<DiaryLog searchTerm="Ankou" suspendModals />);
     const row = markup.slice(markup.indexOf('data-diary-task-row="wilderness_med_6"'));
-    const chip = row.slice(row.lastIndexOf('<span', row.indexOf('Travel to Forgotten Cemetery')), row.indexOf('</span>', row.indexOf('Travel to Forgotten Cemetery')));
+    const label = 'Forgotten Cemetery or Wilderness Slayer Cave entrance';
+    const chip = row.slice(row.lastIndexOf('<span', row.indexOf(label)), row.indexOf('</span>', row.indexOf(label)));
 
     expect(chip).toContain('border-red-500/30');
-    expect(chip).toContain('Walk in from Chaos Altar (needs Chaos Altar)');
-    expect(chip).toContain('Cemetery Teleport (Arceuus spell or tablet) (needs Arceuus Spellbook + Magic 71)');
+    expect(chip).toContain('Forgotten Cemetery, via Walk in from Chaos Altar (needs Chaos Altar)');
+    expect(chip).toContain('Forgotten Cemetery, via Cemetery Teleport (Arceuus spell or tablet) (needs Arceuus Spellbook + Magic 71)');
+    expect(chip).toContain('Wilderness Slayer Cave entrance, via Chaos Temple · Wilderness (50, 57) (needs Chaos Temple)');
   });
 });

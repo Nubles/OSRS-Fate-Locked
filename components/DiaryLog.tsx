@@ -26,11 +26,20 @@ import { requestManualAttestation } from '../utils/manualAttestation';
 import { diaryTaskLoggingEligibility } from '../utils/journalCompletion';
 import { farmingPatchLabel } from '../utils/farmingPatches';
 
-const isTravelBlocker = (
-  blocker: EligibilityBlocker,
-): blocker is Extract<EligibilityBlocker, { kind: 'alternative' }> => (
+type AlternativeBlocker = Extract<EligibilityBlocker, { kind: 'alternative' }>;
+
+const isTravelBlocker = (blocker: EligibilityBlocker): blocker is AlternativeBlocker => (
   blocker.kind === 'alternative' && blocker.travel !== undefined
 );
+
+/** A choice's tooltip: each way through it, with what that way still needs. */
+const routesTitle = (blocker: AlternativeBlocker): string => ['One of:', ...blocker.routes.map(route => route.blockers.length
+  ? `${route.label} (needs ${route.blockers.map(routeBlocker => routeBlocker.label).join(' + ')})`
+  : route.label)].join('\n');
+
+/** The unmet choice with this label, if the task has one. */
+const unmetChoice = (blockers: readonly EligibilityBlocker[], label: string): AlternativeBlocker | undefined =>
+  blockers.find((blocker): blocker is AlternativeBlocker => blocker.kind === 'alternative' && blocker.label === label);
 
 // Doable-now counting lives in utils/journalStatus (shared with the
 // insights band) — see countDoableTasks there.
@@ -501,11 +510,17 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                           <BookOpen size={8} /> Confirm: {requirement}
                                         </span>
                                       ))}
-                                      {alternativeLabel && (
-                                        <span className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${taskEligibility.blockers.some(blocker => blocker.kind === 'alternative' && blocker.label === alternativeLabel) ? 'border-red-500/30 text-red-400 bg-red-900/10' : 'border-white/5 text-gray-500 bg-black/30'}`}>
-                                          <BookOpen size={8} /> One of: {alternativeLabel}
-                                        </span>
-                                      )}
+                                      {alternativeLabel && (() => {
+                                        const unmet = unmetChoice(taskEligibility.blockers, alternativeLabel);
+                                        return (
+                                          <span
+                                            title={unmet ? routesTitle(unmet) : undefined}
+                                            className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${unmet ? 'border-red-500/30 text-red-400 bg-red-900/10' : 'border-white/5 text-gray-500 bg-black/30'}`}
+                                          >
+                                            <BookOpen size={8} /> One of: {alternativeLabel}
+                                          </span>
+                                        );
+                                      })()}
                                       {anyRegionAlternativeLabel && (
                                         <span className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${taskEligibility.blockers.some(blocker => blocker.kind === 'alternative' && blocker.label === anyRegionAlternativeLabel) ? 'border-red-500/30 text-red-400 bg-red-900/10' : 'border-white/5 text-gray-500 bg-black/30'}`}>
                                           <MapPin size={8} /> Any area: {anyRegionAlternativeLabel}
@@ -516,9 +531,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                         <span
                                           key={blocker.label}
                                           title={blocker.routes.length
-                                            ? ['One of:', ...blocker.routes.map(route => route.blockers.length
-                                              ? `${route.label} (needs ${route.blockers.map(routeBlocker => routeBlocker.label).join(' + ')})`
-                                              : route.label)].join('\n')
+                                            ? routesTitle(blocker)
                                             : 'You own it, but every way there crosses locked land. The map\'s Reachability lens shows which areas would connect it.'}
                                           className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-red-500/30 text-red-400 bg-red-900/10"
                                         >

@@ -906,8 +906,9 @@ export function evaluateDiaryTaskEligibility(
   const routes: AlternativeEligibilityRoute[] = task.oneOf.flatMap((option, index) => {
     const label = diaryRequirementOptionLabel(option);
     const optionBlockers = routeResults[index].blockers;
-    // An option on an out-of-reach island lists each way there instead.
-    return optionBlockers.some(isTravelBlocker)
+    // An option on an out-of-reach island lists each way there instead, and
+    // an option at a map location each chunk it could be in.
+    return optionBlockers.some(blocker => blocker.kind === 'alternative')
       ? expandRoute(label, optionBlockers)
       : [{ label, blockers: optionBlockers as DirectEligibilityBlocker[] }];
   });

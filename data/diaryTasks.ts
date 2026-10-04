@@ -553,7 +553,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'wild_easy_2', tierId: 'Wilderness Medium', description: 'Enter the Wilderness Godwars Dungeon.', regions: ['Wilderness God Wars Dungeon'], oneOf: [{ skills: { 'Agility': 60 } }, { skills: { 'Strength': 60 } }] },
   { id: 'wild_med_1', tierId: 'Wilderness Medium', description: 'Complete a lap of the Wilderness Agility course.', skills: { 'Agility': 52 }, regions: ['Wilderness Agility Course'] },
   { id: 'wild_med_2', tierId: 'Wilderness Medium', description: 'Kill a Green Dragon.', locations: [{"label":"Wilderness green dragons or Slayer Cave entrance","chunkOptions":[{"cx":46,"cy":56},{"cx":48,"cy":59},{"cx":49,"cy":57},{"cx":52,"cy":57},{"cx":50,"cy":57},{"cx":51,"cy":58}]}] },
-  { id: 'wilderness_med_6', tierId: 'Wilderness Medium', description: 'Kill an Ankou in the Wilderness.', regions: ['Forgotten Cemetery'] },
+  { id: 'wilderness_med_6', tierId: 'Wilderness Medium', description: 'Kill an Ankou in the Wilderness.', oneOf: [{ regions: ['Forgotten Cemetery'] }, { locations: [{"label":"Wilderness Slayer Cave entrance","chunkOptions":[{"cx":50,"cy":57},{"cx":51,"cy":58}]}] }] },
   { id: 'wild_med_5', tierId: 'Wilderness Medium', description: 'Charge an Earth Orb.', skills: { 'Magic': 60 }, regions: ['Edgeville'] },
   { id: 'wild_med_3', tierId: 'Wilderness Medium', description: 'Kill a Bloodveld in the Wilderness Godwars Dungeon.', skills: { 'Slayer': 50 }, regions: ['Wilderness God Wars Dungeon'], oneOf: [{ skills: { 'Agility': 60 } }, { skills: { 'Strength': 60 } }] },
   { id: 'wilderness_med_9', tierId: 'Wilderness Medium', description: 'Talk to the Emblem Trader in Edgeville about emblems. (He\'s just north of the bank)', regions: ['Edgeville'] },

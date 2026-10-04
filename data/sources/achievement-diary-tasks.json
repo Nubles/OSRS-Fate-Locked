@@ -11695,9 +11695,35 @@
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "Weaponry",
-      "regions": [
-        "Forgotten Cemetery"
-      ]
+      "oneOf": [
+        {
+          "regions": [
+            "Forgotten Cemetery"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Wilderness Slayer Cave entrance",
+              "chunkOptions": [
+                {
+                  "cx": 50,
+                  "cy": 57
+                },
+                {
+                  "cx": 51,
+                  "cy": 58
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+        "notes": "Ankou in the Forgotten Cemetery or the Wilderness Slayer Cave (WildernessMedium6[+]: 11834 or the cave), the cave by its two entrance chunks. A player confirmed a cave Ankou completes the task."
+      }
     },
     {
       "id": "wild_med_5",

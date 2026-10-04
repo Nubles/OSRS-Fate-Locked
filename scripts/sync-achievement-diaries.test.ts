@@ -590,6 +590,7 @@ describe('Achievement Diary id-classification audit', () => {
       'wild_med_3',
       'wild_med_7',
       'wilderness_easy_4',
+      'wilderness_med_6',
     ]);
     // The Mage of Zamorak only teleports into the Abyss after Enter the
     // Abyss (wilderness_easy_11 gates the same teleport).
