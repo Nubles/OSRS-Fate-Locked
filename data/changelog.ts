@@ -19,6 +19,20 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-04-slayer-cave-ankou',
+    title: 'Slayer Cave Ankou and Spent Bosses',
+    date: '2026-10-04',
+    sections: {
+      fixed: [
+        'The Wilderness Medium task to kill an Ankou counts the Wilderness Slayer Cave too, as the game does: owning Chaos Temple, or in Chunked either of the cave’s entrance chunks, is enough, as well as a Forgotten Cemetery you can get to.',
+        'In RuneLite, a Vanilla boss or raid that has given every Standard Key it holds, such as Brutus after his one, no longer says “added to your Roll inbox” after each kill, and its kills leave the Roll inbox card: the tracker can’t roll them. This comes with the next RuneLite plugin update.',
+      ],
+      changed: [
+        'In the Journal, a diary task with a choice of ways, shown as One of, lists each way and what it still needs when you point at it.',
+      ],
+    },
+  },
+  {
     id: '2026-10-02-paste-from-runelite',
     title: 'Paste from RuneLite',
     date: '2026-10-02',

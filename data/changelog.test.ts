@@ -20,7 +20,15 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-paste-from-runelite');
+    expect(LATEST_CHANGELOG.id).toBe('2026-10-04-slayer-cave-ankou');
+  });
+
+  it('announces the Slayer Cave Ankou and the spent bosses RuneLite stops offering', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-04-slayer-cave-ankou');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Ankou counts the Wilderness Slayer Cave too.*Chaos Temple.*Chunked either of the cave’s entrance chunks.*Forgotten Cemetery you can get to/),
+      expect.stringMatching(/Brutus after his one.*no longer says “added to your Roll inbox”.*next RuneLite plugin update/),
+    ]);
   });
 
   it('announces Paste from RuneLite, and that manual play is unchanged', () => {
