@@ -52,9 +52,10 @@ describe('reaching an owned island or enclave for a diary task (Vanilla)', () =>
 
     expect(result).toMatchObject({ eligible: false, machineEligible: false });
     const choice = result.blockers.find(blocker => blocker.kind === 'alternative');
-    expect(choice?.label).toBe(seaweed.anyOfRegions!.join(' or '));
+    // The places with travel rules, then anywhere else on Karamja (the place audit of 4 October 2026).
+    expect(choice?.label).toBe('Mor Ul Rek (TzHaar City) or Crandor or Ship Yard or Anywhere on Karamja');
     expect(choice?.kind === 'alternative' && choice.routes).toContainEqual(expect.objectContaining({
-      label: 'Ship Yard: Gnome glider to Gandius from Ta Quir Priw, Sindarpos or Kar-Hewo',
+      label: 'Ship Yard, via Gnome glider to Gandius from Ta Quir Priw, Sindarpos or Kar-Hewo',
       travel: 'Ship Yard',
       blockers: expect.arrayContaining([{ kind: 'mobility', label: 'Gnome Gliders' }]),
     }));

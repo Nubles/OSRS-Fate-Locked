@@ -62,11 +62,14 @@ describe('manual journal readiness', () => {
   it('allows a broad Wilderness task with any one Wilderness child area', () => {
     const task = ALL_DIARY_TASKS.find(({ id }) => id === 'wild_easy_8')!;
 
-    const blocked = evaluateDiaryTaskEligibility(task, unlocked());
+    // Anywhere in the Wilderness counts, Edgeville's and Varrock's chunks past the ditch too, and
+    // those are free in Vanilla; Chunked shows the choice.
+    const blocked = evaluateDiaryTaskEligibility(task, unlocked(), 'chunked');
     expect(blocked.blockers).toContainEqual(expect.objectContaining({
       kind: 'alternative',
       blockerKinds: ['region'],
     }));
+    expect(evaluateDiaryTaskEligibility(task, unlocked({ equipment: { Cape: 1 } }), 'vanilla').machineEligible).toBe(true);
 
     const reachable = evaluateDiaryTaskEligibility(task, unlocked({
       regions: [REGION_GROUPS.Wilderness[0]],

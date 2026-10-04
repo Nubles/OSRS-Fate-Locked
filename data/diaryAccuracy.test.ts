@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import chunkContent from '../public/chunk-content.json';
 import diarySource from './sources/achievement-diary-tasks.json';
 import { namedAreaChunks } from '../utils/reachability';
+import { SUB_AREA_CHUNKS } from './subAreaChunks';
 import { ALL_DIARY_TASKS, type DiaryTask, type DiaryTaskRequirementOption } from './diaryTasks';
 import { ACTIVITY_ACCESS_AREAS } from './activityAccess';
 import { QUEST_DATA } from './questData';
@@ -131,17 +132,32 @@ describe('Diary trips need the place you leave from and the place you arrive in'
 
 /** North of the Shantay Pass: no desert heat, and the Desert Diary's areas leave them out. */
 const NOT_DESERT = ['Al Kharid', 'Duel Arena / PvP Arena', 'Mage Training Arena'];
+/** The areas a task names, and the areas its location chunks belong to. */
+const AREA_OF_CHUNK = new Map(Object.entries(SUB_AREA_CHUNKS as Record<string, { cx: number; cy: number }[]>)
+  .flatMap(([area, chunks]) => chunks.map(({ cx, cy }) => [`${cx},${cy}`, area] as const)));
+const locationChunks = (row: DiaryTask): string[] => [row, ...(row.oneOf ?? [])]
+  .flatMap(requirement => requirement.locations ?? [])
+  .flatMap(group => group.chunkOptions.map(({ cx, cy }) => `${cx},${cy}`));
 const placesOf = (row: DiaryTask): string[] => [
   ...(row.regions ?? []), ...(row.anyOfRegions ?? []), ...(row.oneOf ?? []).flatMap(option => option.regions ?? []),
+  ...locationChunks(row).flatMap(chunk => AREA_OF_CHUNK.get(chunk) ?? []),
 ];
 
 describe('Desert Diary tasks done in the desert', () => {
-  it('accept any desert area for a combat potion, Humidify and Ice Barrage', () => {
+  it('accept any desert area for a combat potion, Humidify and Ice Barrage, and the open sand between', () => {
+    const areas = [
+      'Shantay Pass', 'Pollnivneach', 'Nardah', 'Sophanem', 'Menaphos', 'Bandit Camp', 'Bedabin Camp',
+      'Ruins of Uzer', 'Agility Pyramid', "Giants' Plateau", 'Kalphite Lair', 'Ruins of Unkah',
+    ];
     for (const id of ['des_med_8', 'des_hard_3', 'des_elite_2']) {
-      expect(task(id).anyOfRegions, id).toEqual([
-        'Shantay Pass', 'Pollnivneach', 'Nardah', 'Sophanem', 'Menaphos', 'Bandit Camp', 'Bedabin Camp',
-        'Ruins of Uzer', 'Agility Pyramid', "Giants' Plateau", 'Kalphite Lair', 'Ruins of Unkah',
-      ]);
+      // One group of chunks: every chunk of those areas, and the desert chunks that have no area
+      // (the place audit of 4 October 2026, so Chunked runs can do them on open sand).
+      const chunks = locationChunks(task(id));
+      for (const area of areas) {
+        expect(namedAreaChunks(area).every(({ cx, cy }) => chunks.includes(`${cx},${cy}`)), `${id}: ${area}`).toBe(true);
+      }
+      expect(chunks.filter(chunk => !AREA_OF_CHUNK.has(chunk)), id).toEqual(expect.arrayContaining(['50,45', '53,48', '53,49']));
+      expect(task(id).anyOfRegions, id).toBeUndefined();
     }
   });
 

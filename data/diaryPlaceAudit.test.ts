@@ -210,3 +210,31 @@ describe('Diary tasks that named the wrong place', () => {
     });
   });
 });
+
+describe('Diary tasks that count anywhere in a province', () => {
+  // One group of every chunk the task's areas hold, plus the province's chunks that belong to no
+  // area, so a Chunked run on open sand, open Wilderness or the Karamja River counts. Areas with
+  // travel rules stay as their own options.
+  it.each([
+    ['des_med_8', '53,49', { quests: ['Druidic Ritual'], skills: { Herblore: 10 }, levels: { Herblore: 99 } }],
+    ['des_elite_2', '50,46', { quests: ['Desert Treasure I'], arcana: ['Ancient Magicks'], skills: { Magic: 10 }, levels: { Magic: 99 } }],
+    ['des_easy_10', '52,47', {}],
+    ['wild_easy_8', '49,58', { equipment: { Cape: 1 } }],
+    ['kar_easy_8', '45,47', {}],
+    ['frem_easy_10', '41,56', { skills: { Firemaking: 10, Woodcutting: 10 }, levels: { Firemaking: 99, Woodcutting: 99 } }],
+  ] as const)('%s counts in Chunked on %s', (id, chunk, run) => {
+    expect(doable(id, account({ ...(run as Partial<UnlockState>), chunks: [chunk] }), 'chunked')).toBe(true);
+  });
+
+  it("takes Giants' Plateau's cacti for the waterskin", () => {
+    expect(doable('des_easy_10', account({ regions: ["Giants' Plateau"] }))).toBe(true);
+  });
+
+  it("counts a team cape in Edgeville's and Varrock's chunks past the ditch", () => {
+    const chunks = (task('wild_easy_8').oneOf ?? []).flatMap(option => option.locations ?? [])
+      .flatMap(group => group.chunkOptions.map(({ cx, cy }) => `${cx},${cy}`));
+    expect(chunks).toEqual(expect.arrayContaining(['48,55', '50,55', '51,55', '46,55']));
+    expect(chunks).not.toContain('46,58');
+    expect(task('wild_easy_8').oneOf?.[0]).toEqual({ regions: ['Forgotten Cemetery'] });
+  });
+});

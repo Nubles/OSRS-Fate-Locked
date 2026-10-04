@@ -1339,21 +1339,173 @@
       "description": "Cut a desert cactus open to fill a waterskin.",
       "skills": {},
       "quests": [],
-      "anyOfRegions": [
-        "Shantay Pass",
-        "Pollnivneach",
-        "Bedabin Camp",
-        "Kalphite Lair",
-        "Agility Pyramid",
-        "Menaphos",
-        "Ruins of Unkah",
-        "Sophanem",
-        "Nardah",
-        "Ruins of Uzer"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Knife or a slash weapon, and an empty waterskin"
+      "sourceRequirements": "Knife or a slash weapon, and an empty waterskin",
+      "locations": [
+        {
+          "label": "Anywhere in the desert",
+          "chunkOptions": [
+            {
+              "cx": 51,
+              "cy": 42
+            },
+            {
+              "cx": 52,
+              "cy": 42
+            },
+            {
+              "cx": 49,
+              "cy": 43
+            },
+            {
+              "cx": 50,
+              "cy": 43
+            },
+            {
+              "cx": 51,
+              "cy": 43
+            },
+            {
+              "cx": 52,
+              "cy": 43
+            },
+            {
+              "cx": 53,
+              "cy": 43
+            },
+            {
+              "cx": 47,
+              "cy": 44
+            },
+            {
+              "cx": 48,
+              "cy": 44
+            },
+            {
+              "cx": 49,
+              "cy": 44
+            },
+            {
+              "cx": 50,
+              "cy": 44
+            },
+            {
+              "cx": 51,
+              "cy": 44
+            },
+            {
+              "cx": 52,
+              "cy": 44
+            },
+            {
+              "cx": 53,
+              "cy": 44
+            },
+            {
+              "cx": 49,
+              "cy": 45
+            },
+            {
+              "cx": 50,
+              "cy": 45
+            },
+            {
+              "cx": 51,
+              "cy": 45
+            },
+            {
+              "cx": 52,
+              "cy": 45
+            },
+            {
+              "cx": 53,
+              "cy": 45
+            },
+            {
+              "cx": 54,
+              "cy": 45
+            },
+            {
+              "cx": 50,
+              "cy": 46
+            },
+            {
+              "cx": 51,
+              "cy": 46
+            },
+            {
+              "cx": 52,
+              "cy": 46
+            },
+            {
+              "cx": 53,
+              "cy": 46
+            },
+            {
+              "cx": 54,
+              "cy": 46
+            },
+            {
+              "cx": 49,
+              "cy": 47
+            },
+            {
+              "cx": 50,
+              "cy": 47
+            },
+            {
+              "cx": 51,
+              "cy": 47
+            },
+            {
+              "cx": 52,
+              "cy": 47
+            },
+            {
+              "cx": 53,
+              "cy": 47
+            },
+            {
+              "cx": 54,
+              "cy": 47
+            },
+            {
+              "cx": 50,
+              "cy": 48
+            },
+            {
+              "cx": 51,
+              "cy": 48
+            },
+            {
+              "cx": 52,
+              "cy": 48
+            },
+            {
+              "cx": 53,
+              "cy": 48
+            },
+            {
+              "cx": 54,
+              "cy": 48
+            },
+            {
+              "cx": 52,
+              "cy": 49
+            },
+            {
+              "cx": 53,
+              "cy": 49
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Counts anywhere in the Kharidian Desert, including the open sand that belongs to no named area."
+      }
     },
     {
       "id": "des_easy_11",
@@ -1622,20 +1774,174 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "36 Herblore Harralander potion (unf) and goat horn dust",
-      "anyOfRegions": [
-        "Shantay Pass",
-        "Pollnivneach",
-        "Nardah",
-        "Sophanem",
-        "Menaphos",
-        "Bandit Camp",
-        "Bedabin Camp",
-        "Ruins of Uzer",
-        "Agility Pyramid",
-        "Giants' Plateau",
-        "Kalphite Lair",
-        "Ruins of Unkah"
-      ]
+      "locations": [
+        {
+          "label": "Anywhere in the desert",
+          "chunkOptions": [
+            {
+              "cx": 51,
+              "cy": 42
+            },
+            {
+              "cx": 52,
+              "cy": 42
+            },
+            {
+              "cx": 49,
+              "cy": 43
+            },
+            {
+              "cx": 50,
+              "cy": 43
+            },
+            {
+              "cx": 51,
+              "cy": 43
+            },
+            {
+              "cx": 52,
+              "cy": 43
+            },
+            {
+              "cx": 53,
+              "cy": 43
+            },
+            {
+              "cx": 47,
+              "cy": 44
+            },
+            {
+              "cx": 48,
+              "cy": 44
+            },
+            {
+              "cx": 49,
+              "cy": 44
+            },
+            {
+              "cx": 50,
+              "cy": 44
+            },
+            {
+              "cx": 51,
+              "cy": 44
+            },
+            {
+              "cx": 52,
+              "cy": 44
+            },
+            {
+              "cx": 53,
+              "cy": 44
+            },
+            {
+              "cx": 49,
+              "cy": 45
+            },
+            {
+              "cx": 50,
+              "cy": 45
+            },
+            {
+              "cx": 51,
+              "cy": 45
+            },
+            {
+              "cx": 52,
+              "cy": 45
+            },
+            {
+              "cx": 53,
+              "cy": 45
+            },
+            {
+              "cx": 54,
+              "cy": 45
+            },
+            {
+              "cx": 49,
+              "cy": 46
+            },
+            {
+              "cx": 50,
+              "cy": 46
+            },
+            {
+              "cx": 51,
+              "cy": 46
+            },
+            {
+              "cx": 52,
+              "cy": 46
+            },
+            {
+              "cx": 53,
+              "cy": 46
+            },
+            {
+              "cx": 54,
+              "cy": 46
+            },
+            {
+              "cx": 49,
+              "cy": 47
+            },
+            {
+              "cx": 50,
+              "cy": 47
+            },
+            {
+              "cx": 51,
+              "cy": 47
+            },
+            {
+              "cx": 52,
+              "cy": 47
+            },
+            {
+              "cx": 53,
+              "cy": 47
+            },
+            {
+              "cx": 54,
+              "cy": 47
+            },
+            {
+              "cx": 50,
+              "cy": 48
+            },
+            {
+              "cx": 51,
+              "cy": 48
+            },
+            {
+              "cx": 52,
+              "cy": 48
+            },
+            {
+              "cx": 53,
+              "cy": 48
+            },
+            {
+              "cx": 54,
+              "cy": 48
+            },
+            {
+              "cx": 52,
+              "cy": 49
+            },
+            {
+              "cx": 53,
+              "cy": 49
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Counts anywhere in the Kharidian Desert, including the open sand that belongs to no named area."
+      }
     },
     {
       "id": "des_med_9",
@@ -1819,23 +2125,177 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Dream Mentor 68 Magic Lunar spellbook selected Waterskin that isn't full and means to cast Humidify ( )",
-      "anyOfRegions": [
-        "Shantay Pass",
-        "Pollnivneach",
-        "Nardah",
-        "Sophanem",
-        "Menaphos",
-        "Bandit Camp",
-        "Bedabin Camp",
-        "Ruins of Uzer",
-        "Agility Pyramid",
-        "Giants' Plateau",
-        "Kalphite Lair",
-        "Ruins of Unkah"
-      ],
       "arcana": [
         "Lunar Spellbook"
-      ]
+      ],
+      "locations": [
+        {
+          "label": "Anywhere in the desert",
+          "chunkOptions": [
+            {
+              "cx": 51,
+              "cy": 42
+            },
+            {
+              "cx": 52,
+              "cy": 42
+            },
+            {
+              "cx": 49,
+              "cy": 43
+            },
+            {
+              "cx": 50,
+              "cy": 43
+            },
+            {
+              "cx": 51,
+              "cy": 43
+            },
+            {
+              "cx": 52,
+              "cy": 43
+            },
+            {
+              "cx": 53,
+              "cy": 43
+            },
+            {
+              "cx": 47,
+              "cy": 44
+            },
+            {
+              "cx": 48,
+              "cy": 44
+            },
+            {
+              "cx": 49,
+              "cy": 44
+            },
+            {
+              "cx": 50,
+              "cy": 44
+            },
+            {
+              "cx": 51,
+              "cy": 44
+            },
+            {
+              "cx": 52,
+              "cy": 44
+            },
+            {
+              "cx": 53,
+              "cy": 44
+            },
+            {
+              "cx": 49,
+              "cy": 45
+            },
+            {
+              "cx": 50,
+              "cy": 45
+            },
+            {
+              "cx": 51,
+              "cy": 45
+            },
+            {
+              "cx": 52,
+              "cy": 45
+            },
+            {
+              "cx": 53,
+              "cy": 45
+            },
+            {
+              "cx": 54,
+              "cy": 45
+            },
+            {
+              "cx": 49,
+              "cy": 46
+            },
+            {
+              "cx": 50,
+              "cy": 46
+            },
+            {
+              "cx": 51,
+              "cy": 46
+            },
+            {
+              "cx": 52,
+              "cy": 46
+            },
+            {
+              "cx": 53,
+              "cy": 46
+            },
+            {
+              "cx": 54,
+              "cy": 46
+            },
+            {
+              "cx": 49,
+              "cy": 47
+            },
+            {
+              "cx": 50,
+              "cy": 47
+            },
+            {
+              "cx": 51,
+              "cy": 47
+            },
+            {
+              "cx": 52,
+              "cy": 47
+            },
+            {
+              "cx": 53,
+              "cy": 47
+            },
+            {
+              "cx": 54,
+              "cy": 47
+            },
+            {
+              "cx": 50,
+              "cy": 48
+            },
+            {
+              "cx": 51,
+              "cy": 48
+            },
+            {
+              "cx": 52,
+              "cy": 48
+            },
+            {
+              "cx": 53,
+              "cy": 48
+            },
+            {
+              "cx": 54,
+              "cy": 48
+            },
+            {
+              "cx": 52,
+              "cy": 49
+            },
+            {
+              "cx": 53,
+              "cy": 49
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Counts anywhere in the Kharidian Desert, including the open sand that belongs to no named area."
+      }
     },
     {
       "id": "des_hard_4",
@@ -2085,23 +2545,177 @@
       "classification": "preserved-semantic",
       "previousDescription": "Cast Ice Barrage against a foe in the Desert.",
       "sourceRequirements": "Completion of Desert Treasure I 94 Magic Means to cast Ice Barrage ( )",
-      "anyOfRegions": [
-        "Shantay Pass",
-        "Pollnivneach",
-        "Nardah",
-        "Sophanem",
-        "Menaphos",
-        "Bandit Camp",
-        "Bedabin Camp",
-        "Ruins of Uzer",
-        "Agility Pyramid",
-        "Giants' Plateau",
-        "Kalphite Lair",
-        "Ruins of Unkah"
-      ],
       "arcana": [
         "Ancient Magicks"
-      ]
+      ],
+      "locations": [
+        {
+          "label": "Anywhere in the desert",
+          "chunkOptions": [
+            {
+              "cx": 51,
+              "cy": 42
+            },
+            {
+              "cx": 52,
+              "cy": 42
+            },
+            {
+              "cx": 49,
+              "cy": 43
+            },
+            {
+              "cx": 50,
+              "cy": 43
+            },
+            {
+              "cx": 51,
+              "cy": 43
+            },
+            {
+              "cx": 52,
+              "cy": 43
+            },
+            {
+              "cx": 53,
+              "cy": 43
+            },
+            {
+              "cx": 47,
+              "cy": 44
+            },
+            {
+              "cx": 48,
+              "cy": 44
+            },
+            {
+              "cx": 49,
+              "cy": 44
+            },
+            {
+              "cx": 50,
+              "cy": 44
+            },
+            {
+              "cx": 51,
+              "cy": 44
+            },
+            {
+              "cx": 52,
+              "cy": 44
+            },
+            {
+              "cx": 53,
+              "cy": 44
+            },
+            {
+              "cx": 49,
+              "cy": 45
+            },
+            {
+              "cx": 50,
+              "cy": 45
+            },
+            {
+              "cx": 51,
+              "cy": 45
+            },
+            {
+              "cx": 52,
+              "cy": 45
+            },
+            {
+              "cx": 53,
+              "cy": 45
+            },
+            {
+              "cx": 54,
+              "cy": 45
+            },
+            {
+              "cx": 49,
+              "cy": 46
+            },
+            {
+              "cx": 50,
+              "cy": 46
+            },
+            {
+              "cx": 51,
+              "cy": 46
+            },
+            {
+              "cx": 52,
+              "cy": 46
+            },
+            {
+              "cx": 53,
+              "cy": 46
+            },
+            {
+              "cx": 54,
+              "cy": 46
+            },
+            {
+              "cx": 49,
+              "cy": 47
+            },
+            {
+              "cx": 50,
+              "cy": 47
+            },
+            {
+              "cx": 51,
+              "cy": 47
+            },
+            {
+              "cx": 52,
+              "cy": 47
+            },
+            {
+              "cx": 53,
+              "cy": 47
+            },
+            {
+              "cx": 54,
+              "cy": 47
+            },
+            {
+              "cx": 50,
+              "cy": 48
+            },
+            {
+              "cx": 51,
+              "cy": 48
+            },
+            {
+              "cx": 52,
+              "cy": 48
+            },
+            {
+              "cx": 53,
+              "cy": 48
+            },
+            {
+              "cx": 54,
+              "cy": 48
+            },
+            {
+              "cx": 52,
+              "cy": 49
+            },
+            {
+              "cx": 53,
+              "cy": 49
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Counts anywhere in the Kharidian Desert, including the open sand that belongs to no named area."
+      }
     },
     {
       "id": "des_elite_3",
@@ -5891,16 +6505,117 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Seaweed (can be found near Jiminua's Jungle Store )",
-      "anyOfRegions": [
-        "Musa Point",
-        "Brimhaven",
-        "Tai Bwo Wannai",
-        "Shilo Village",
-        "Kharazi Jungle",
-        "Mor Ul Rek (TzHaar City)",
-        "Crandor",
-        "Ship Yard"
-      ]
+      "oneOf": [
+        {
+          "regions": [
+            "Mor Ul Rek (TzHaar City)"
+          ]
+        },
+        {
+          "regions": [
+            "Crandor"
+          ]
+        },
+        {
+          "regions": [
+            "Ship Yard"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Anywhere on Karamja",
+              "chunkOptions": [
+                {
+                  "cx": 43,
+                  "cy": 45
+                },
+                {
+                  "cx": 44,
+                  "cy": 45
+                },
+                {
+                  "cx": 45,
+                  "cy": 45
+                },
+                {
+                  "cx": 46,
+                  "cy": 45
+                },
+                {
+                  "cx": 42,
+                  "cy": 46
+                },
+                {
+                  "cx": 43,
+                  "cy": 46
+                },
+                {
+                  "cx": 44,
+                  "cy": 46
+                },
+                {
+                  "cx": 45,
+                  "cy": 46
+                },
+                {
+                  "cx": 43,
+                  "cy": 47
+                },
+                {
+                  "cx": 44,
+                  "cy": 47
+                },
+                {
+                  "cx": 45,
+                  "cy": 47
+                },
+                {
+                  "cx": 43,
+                  "cy": 48
+                },
+                {
+                  "cx": 44,
+                  "cy": 48
+                },
+                {
+                  "cx": 45,
+                  "cy": 48
+                },
+                {
+                  "cx": 42,
+                  "cy": 49
+                },
+                {
+                  "cx": 43,
+                  "cy": 49
+                },
+                {
+                  "cx": 44,
+                  "cy": 49
+                },
+                {
+                  "cx": 45,
+                  "cy": 49
+                },
+                {
+                  "cx": 42,
+                  "cy": 50
+                },
+                {
+                  "cx": 43,
+                  "cy": 50
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Counts anywhere on Karamja, including the Karamja River chunk (45,47)."
+      }
     },
     {
       "id": "kar_easy_9",
@@ -13195,23 +13910,6 @@
       "classification": "preserved-semantic",
       "previousDescription": "Equip a Team Cape.",
       "sourceRequirements": "Any team cape",
-      "anyOfRegions": [
-        "Ferox Enclave",
-        "Wilderness Volcano",
-        "Chaos Temple",
-        "Rogues' Castle",
-        "Lava Maze",
-        "Wilderness Bandit Camp",
-        "Dark Warriors' Fortress",
-        "Graveyard of Shadows",
-        "Forgotten Cemetery",
-        "Mage Arena",
-        "Scorpia's Cave",
-        "Fountain of Rune",
-        "Wilderness God Wars Dungeon",
-        "Daimon's Crater",
-        "Chaos Altar"
-      ],
       "equipmentRequirements": [
         {
           "slot": "Cape",
@@ -13219,7 +13917,225 @@
           "reason": "Team cape",
           "manualCheck": "Have Team cape and confirm that the specific item is permitted by your equipment tier"
         }
-      ]
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Forgotten Cemetery"
+          ]
+        },
+        {
+          "regions": [
+            "Wilderness God Wars Dungeon"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Anywhere in the Wilderness",
+              "chunkOptions": [
+                {
+                  "cx": 46,
+                  "cy": 55
+                },
+                {
+                  "cx": 47,
+                  "cy": 55
+                },
+                {
+                  "cx": 48,
+                  "cy": 55
+                },
+                {
+                  "cx": 49,
+                  "cy": 55
+                },
+                {
+                  "cx": 50,
+                  "cy": 55
+                },
+                {
+                  "cx": 51,
+                  "cy": 55
+                },
+                {
+                  "cx": 52,
+                  "cy": 55
+                },
+                {
+                  "cx": 46,
+                  "cy": 56
+                },
+                {
+                  "cx": 47,
+                  "cy": 56
+                },
+                {
+                  "cx": 48,
+                  "cy": 56
+                },
+                {
+                  "cx": 49,
+                  "cy": 56
+                },
+                {
+                  "cx": 50,
+                  "cy": 56
+                },
+                {
+                  "cx": 51,
+                  "cy": 56
+                },
+                {
+                  "cx": 52,
+                  "cy": 56
+                },
+                {
+                  "cx": 46,
+                  "cy": 57
+                },
+                {
+                  "cx": 47,
+                  "cy": 57
+                },
+                {
+                  "cx": 48,
+                  "cy": 57
+                },
+                {
+                  "cx": 49,
+                  "cy": 57
+                },
+                {
+                  "cx": 50,
+                  "cy": 57
+                },
+                {
+                  "cx": 51,
+                  "cy": 57
+                },
+                {
+                  "cx": 52,
+                  "cy": 57
+                },
+                {
+                  "cx": 47,
+                  "cy": 58
+                },
+                {
+                  "cx": 48,
+                  "cy": 58
+                },
+                {
+                  "cx": 49,
+                  "cy": 58
+                },
+                {
+                  "cx": 50,
+                  "cy": 58
+                },
+                {
+                  "cx": 51,
+                  "cy": 58
+                },
+                {
+                  "cx": 52,
+                  "cy": 58
+                },
+                {
+                  "cx": 46,
+                  "cy": 59
+                },
+                {
+                  "cx": 47,
+                  "cy": 59
+                },
+                {
+                  "cx": 48,
+                  "cy": 59
+                },
+                {
+                  "cx": 49,
+                  "cy": 59
+                },
+                {
+                  "cx": 50,
+                  "cy": 59
+                },
+                {
+                  "cx": 51,
+                  "cy": 59
+                },
+                {
+                  "cx": 52,
+                  "cy": 59
+                },
+                {
+                  "cx": 46,
+                  "cy": 60
+                },
+                {
+                  "cx": 47,
+                  "cy": 60
+                },
+                {
+                  "cx": 48,
+                  "cy": 60
+                },
+                {
+                  "cx": 49,
+                  "cy": 60
+                },
+                {
+                  "cx": 50,
+                  "cy": 60
+                },
+                {
+                  "cx": 51,
+                  "cy": 60
+                },
+                {
+                  "cx": 52,
+                  "cy": 60
+                },
+                {
+                  "cx": 46,
+                  "cy": 61
+                },
+                {
+                  "cx": 47,
+                  "cy": 61
+                },
+                {
+                  "cx": 48,
+                  "cy": 61
+                },
+                {
+                  "cx": 49,
+                  "cy": 61
+                },
+                {
+                  "cx": 50,
+                  "cy": 61
+                },
+                {
+                  "cx": 51,
+                  "cy": 61
+                },
+                {
+                  "cx": 52,
+                  "cy": 61
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The task counts anywhere in the Wilderness, including Edgeville's and Varrock's chunks past the ditch."
+      }
     },
     {
       "id": "wilderness_med_1",
