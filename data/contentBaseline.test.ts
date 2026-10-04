@@ -628,7 +628,7 @@ describe('independent generated-content contract', () => {
       unresolvedExistingRows: 0,
       unresolvedDuplicateIds: 0,
       unknownReferences: 0,
-      combatLevelRequirementsStructured: 9,
+      combatLevelRequirementsStructured: 10,
       allQuestsRequirementsStructured: 2,
     });
     expect(historicalIds).toHaveLength(485);

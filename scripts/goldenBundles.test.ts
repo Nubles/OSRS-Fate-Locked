@@ -42,6 +42,7 @@ import { REGION_GROUPS } from '../data/items';
 import { BANKS } from '../data/banks';
 import { OCEAN_CHUNK_KEYS } from '../utils/oceanAccess';
 import { RUNELITE_WORDING } from '../data/runeliteWording';
+import { vanillaSpentBosses } from '../config/vanillaKeyEconomy';
 import { MAX_REQUEST_BYTES } from '../workers/fate-relay/protocol.js';
 import type { UnlockState } from '../types';
 
@@ -80,6 +81,8 @@ interface Scenario {
   mobility?: string[];
   arcana?: string[];
   diaries?: string[];
+  /** The Standard Keys each boss has given. */
+  bossKeys?: Record<string, number>;
 }
 
 const customRules = (startArea: 'misthalin' | 'lumbridge' | 'none', bankLocks: boolean): GameModeRules =>
@@ -107,6 +110,8 @@ const SCENARIOS: Scenario[] = [
     regions: ['Falador', 'Port Sarim', 'Catherby', 'Baxtorian Falls', 'Keldagrim', 'Zanaris'],
     banks: bankIds(AL_KHARID_BANK, ARDOUGNE_SOUTH_BANK),
     equipment: { Weapon: 2, Body: 1 },
+    // Brutus and the Theatre spent, Zulrah with a Key left.
+    bossKeys: { Brutus: 1, Zulrah: 1, 'Theatre of Blood': 3 },
   },
   {
     id: 'vanilla-asgarnia-complete',
@@ -117,7 +122,14 @@ const SCENARIOS: Scenario[] = [
   },
   { id: 'vanilla-continent', covers: 'a continent rolled directly', mode: 'vanilla', account: ACCOUNT, regions: ['Kandarin'] },
   { id: 'vanilla-unbound', covers: 'no bound account', mode: 'vanilla', regions: ['Falador'] },
-  { id: 'xtreme-varrock', covers: 'Lumbridge-only start plus Varrock', mode: 'xtreme', account: ACCOUNT, regions: ['Varrock'] },
+  {
+    id: 'xtreme-varrock',
+    covers: 'Lumbridge-only start plus Varrock, where every boss kill rolls',
+    mode: 'xtreme',
+    account: ACCOUNT,
+    regions: ['Varrock'],
+    bossKeys: { Brutus: 1 },
+  },
   { id: 'chunked-fresh', covers: 'Chunked with only the free start chunk', mode: 'chunked', account: ACCOUNT, chunks: [] },
   {
     id: 'chunked-walk',
@@ -310,6 +322,7 @@ async function generate(scenario: Scenario, fresh: UnlockState): Promise<Generat
     linkedAccount: scenario.account,
     gameModeId: scenario.mode,
     customMode: scenario.custom,
+    bossStandardKeysAwarded: scenario.bossKeys,
   }, { requireRulesData: true });
   const bundle = JSON.parse(json) as Record<string, unknown> & { rules: { chunks: Record<string, unknown> } };
 
@@ -350,6 +363,8 @@ async function generate(scenario: Scenario, fresh: UnlockState): Promise<Generat
       bankStatus,
       freeAreas: freeAreasFor(scenario.mode, scenario.custom),
       progress: runProgress(unlocks, scenario.mode),
+      // Bosses whose kills don't roll again: only Vanilla runs out of Keys.
+      spentBosses: scenario.mode === 'vanilla' ? vanillaSpentBosses(scenario.bossKeys) : [],
       slayer: Object.fromEntries(Object.entries(slayerDecisions(slayerReachability(chunkContentService.slayerMasters(), unlocks,
         slayerLocate(chunkContentService, unlocks, scenario.mode), scenario.mode))).map(([key, task]) => [key, task.status])),
       travel: Object.fromEntries(TRAVEL_ANSWERS.map((key) =>
@@ -801,6 +816,8 @@ describe('golden bundles', () => {
         .toEqual([free, free]);
       expect((bundle.rules as { progress: unknown }).progress, `${scenario.id}: progress`)
         .toEqual((answers as { progress: unknown }).progress);
+      expect((bundle.rules as { spentBosses: unknown }).spentBosses, `${scenario.id}: spent bosses`)
+        .toEqual((answers as { spentBosses: unknown }).spentBosses);
 
       // Every task slayerChunks knows, with the pinned status.
       const tasks = (bundle.rules as { slayerTasks: Record<string, { status: string }> }).slayerTasks;

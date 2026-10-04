@@ -52,9 +52,10 @@ describe('reaching an owned island or enclave for a diary task (Vanilla)', () =>
 
     expect(result).toMatchObject({ eligible: false, machineEligible: false });
     const choice = result.blockers.find(blocker => blocker.kind === 'alternative');
-    expect(choice?.label).toBe(seaweed.anyOfRegions!.join(' or '));
+    // The places with travel rules, then anywhere else on Karamja (the place audit of 4 October 2026).
+    expect(choice?.label).toBe('Mor Ul Rek (TzHaar City) or Crandor or Ship Yard or Anywhere on Karamja');
     expect(choice?.kind === 'alternative' && choice.routes).toContainEqual(expect.objectContaining({
-      label: 'Ship Yard: Gnome glider to Gandius from Ta Quir Priw, Sindarpos or Kar-Hewo',
+      label: 'Ship Yard, via Gnome glider to Gandius from Ta Quir Priw, Sindarpos or Kar-Hewo',
       travel: 'Ship Yard',
       blockers: expect.arrayContaining([{ kind: 'mobility', label: 'Gnome Gliders' }]),
     }));
@@ -100,42 +101,59 @@ describe('reaching an owned island or enclave for a diary task (Vanilla)', () =>
       .toEqual([{ kind: 'region', label: 'Shilo Village' }]);
   });
 
-  it('needs a way into the Forgotten Cemetery before an Ankou counts as doable', () => {
+  it('needs a way into the Forgotten Cemetery, or the Wilderness Slayer Cave, before an Ankou counts as doable', () => {
     const ankou = task('wilderness_med_6');
     const cemeteryOnly = account({ regions: ['Forgotten Cemetery'] });
     const result = evaluateDiaryTaskEligibility(ankou, cemeteryOnly, 'vanilla');
 
     expect(result).toMatchObject({ eligible: false, machineEligible: false, evidence: [] });
-    expect(result.blockers).toEqual([{
+    expect(result.blockers).toHaveLength(1);
+    const [choice] = result.blockers;
+    expect(choice).toMatchObject({
       kind: 'alternative',
-      label: 'Travel to Forgotten Cemetery',
-      travel: 'Forgotten Cemetery',
+      label: 'Forgotten Cemetery or Wilderness Slayer Cave entrance',
       blockerKinds: ['arcana', 'skill', 'region'],
-      routes: [
-        {
-          label: 'Cemetery Teleport (Arceuus spell or tablet)',
-          travel: 'Forgotten Cemetery',
-          blockers: [
-            { kind: 'arcana', label: 'Arceuus Spellbook' },
-            { kind: 'skill', label: 'Magic 71', requirement: { type: 'single', skill: 'Magic', level: 71 } },
-          ],
-        },
-        { label: 'Walk in from Chaos Altar', travel: 'Forgotten Cemetery', blockers: [{ kind: 'region', label: 'Chaos Altar' }] },
-        {
-          label: 'Walk in from the Wilderness Bandit Camp',
-          travel: 'Forgotten Cemetery',
-          blockers: [{ kind: 'region', label: 'Wilderness Bandit Camp' }],
-        },
-      ],
-    }]);
+    });
+    const routes = choice.kind === 'alternative' ? choice.routes : [];
+    // Each way into the cemetery, then each chunk with a way into the cave.
+    expect(routes.slice(0, 3)).toEqual([
+      {
+        label: 'Forgotten Cemetery, via Cemetery Teleport (Arceuus spell or tablet)',
+        travel: 'Forgotten Cemetery',
+        blockers: [
+          { kind: 'arcana', label: 'Arceuus Spellbook' },
+          { kind: 'skill', label: 'Magic 71', requirement: { type: 'single', skill: 'Magic', level: 71 } },
+        ],
+      },
+      {
+        label: 'Forgotten Cemetery, via Walk in from Chaos Altar',
+        travel: 'Forgotten Cemetery',
+        blockers: [{ kind: 'region', label: 'Chaos Altar' }],
+      },
+      {
+        label: 'Forgotten Cemetery, via Walk in from the Wilderness Bandit Camp',
+        travel: 'Forgotten Cemetery',
+        blockers: [{ kind: 'region', label: 'Wilderness Bandit Camp' }],
+      },
+    ]);
+    expect(routes[3]).toEqual({
+      label: 'Wilderness Slayer Cave entrance, via Chaos Temple · Wilderness (50, 57)',
+      blockers: [{ kind: 'region', label: 'Chaos Temple' }],
+    });
+    // The northern entrance's chunk belongs to no named area, so it needs the whole Wilderness.
+    expect(routes[4].label).toBe('Wilderness Slayer Cave entrance, via Wilderness (51, 58)');
+    expect(routes[4].blockers).toContainEqual({ kind: 'region', label: 'Chaos Temple' });
+    expect(routes).toHaveLength(5);
     expect(diaryTaskCompletionDecision(ankou, cemeteryOnly, 'vanilla', { manualConfirmed: true })).toEqual({
-      ok: false, reason: 'Requires: Travel to Forgotten Cemetery',
+      ok: false, reason: 'Requires: Forgotten Cemetery or Wilderness Slayer Cave entrance',
     });
 
     for (const unlocked of [
       { arcana: ['Arceuus Spellbook'], skills: { Magic: 8 }, levels: { Magic: 71 } },
       { regions: ['Forgotten Cemetery', 'Chaos Altar'] },
       { regions: ['Forgotten Cemetery', 'Wilderness Bandit Camp'] },
+      // A player confirmed that an Ankou in the Slayer Cave completes the task.
+      { regions: ['Chaos Temple'] },
     ]) {
       const reachable = { ...cemeteryOnly, ...unlocked };
       expect(evaluateDiaryTaskEligibility(ankou, reachable, 'vanilla').eligible, JSON.stringify(unlocked)).toBe(true);
@@ -218,22 +236,30 @@ describe('diary surfaces for a travel block', () => {
 
   it('names the trip in Next Best', () => {
     expect(diaryUnmet(DIARY_DATA['Wilderness Medium'], cemeteryLeft, 'vanilla')).toEqual([
-      { kind: 'alternative', label: 'Travel to Forgotten Cemetery' },
+      { kind: 'alternative', label: 'Forgotten Cemetery or Wilderness Slayer Cave entrance' },
     ]);
   });
 
   it('plans the transport unlocks that reach the island', () => {
     const cemeteryPlan = planForTarget('diary', 'Wilderness Medium', cemeteryLeft, 'vanilla')!;
     expect(cemeteryPlan.alternativeSteps).toEqual([expect.objectContaining({
-      label: 'One of: Travel to Forgotten Cemetery',
+      label: 'One of: Forgotten Cemetery or Wilderness Slayer Cave entrance',
       routes: expect.arrayContaining([
         expect.objectContaining({
-          label: 'Cemetery Teleport (Arceuus spell or tablet)',
+          label: 'Forgotten Cemetery, via Cemetery Teleport (Arceuus spell or tablet)',
           blockers: expect.arrayContaining([
             expect.objectContaining({ kind: 'arcana', id: 'Arceuus Spellbook', unlockTable: TableType.ARCANA }),
           ]),
         }),
-        { label: 'Walk in from Chaos Altar', blockers: [expect.objectContaining({ id: 'Chaos Altar', unlockTable: TableType.REGIONS })] },
+        {
+          label: 'Forgotten Cemetery, via Walk in from Chaos Altar',
+          blockers: [expect.objectContaining({ id: 'Chaos Altar', unlockTable: TableType.REGIONS })],
+        },
+        // The cave's entrance plans as the area to unlock, not as a skill.
+        {
+          label: 'Wilderness Slayer Cave entrance, via Chaos Temple · Wilderness (50, 57)',
+          blockers: [expect.objectContaining({ kind: 'region', id: 'Chaos Temple', unlockTable: TableType.REGIONS })],
+        },
       ]),
     })]);
 
@@ -282,6 +308,11 @@ describe('what travel checks leave alone', () => {
   it('leaves Chunked mode to its own chunk reach', () => {
     const cemeteryChunk = account({ chunks: ['46,58'] } as Partial<UnlockState>);
     expect(evaluateDiaryTaskEligibility(task('wilderness_med_6'), cemeteryChunk, 'chunked').eligible).toBe(true);
+    // Either chunk with a way into the Wilderness Slayer Cave counts; the chunk beside one doesn't.
+    for (const [chunk, doable] of [['50,57', true], ['51,58', true], ['50,56', false]] as const) {
+      const owned = account({ chunks: [chunk] } as Partial<UnlockState>);
+      expect(evaluateDiaryTaskEligibility(task('wilderness_med_6'), owned, 'chunked').eligible, chunk).toBe(doable);
+    }
     expect(evaluateDiaryTaskEligibility(task('wilderness_med_6'), account({ regions: ['Forgotten Cemetery'] }), 'vanilla').eligible)
       .toBe(false);
   });

@@ -5,6 +5,7 @@ import {
   effectiveVanillaClueRate,
   vanillaBossKeyStage,
   vanillaBossKeySchedule,
+  vanillaSpentBosses,
 } from './vanillaKeyEconomy';
 
 describe('Vanilla key economy', () => {
@@ -34,6 +35,18 @@ describe('Vanilla key economy', () => {
       remaining: 0,
       capped: true,
     });
+  });
+
+  it('names the bosses that have given every Standard Key they hold', () => {
+    expect(vanillaSpentBosses(undefined)).toEqual([]);
+    expect(vanillaSpentBosses({
+      [BRUTUS_BOSS_NAME]: 1,
+      Zulrah: 1,
+      Vardorvis: 2,
+      'Theatre of Blood': 3,
+      Obor: 0,
+      'A boss from an old save': 9,
+    })).toEqual([BRUTUS_BOSS_NAME, 'Theatre of Blood', 'Vardorvis']);
   });
 
   it('shares clue onboarding floors across all clue tiers', () => {

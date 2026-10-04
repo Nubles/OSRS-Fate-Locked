@@ -20,7 +20,24 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-10-02-paste-from-runelite');
+    expect(LATEST_CHANGELOG.id).toBe('2026-10-04-slayer-cave-ankou');
+  });
+
+  it('announces the Diary places checked against the wiki and the spent bosses RuneLite stops offering', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-04-slayer-cave-ankou');
+    expect(release?.sections.fixed).toEqual([
+      expect.stringMatching(/Ankou counts the Wilderness Slayer Cave too.*Chaos Temple.*Chunked either of the cave’s entrance chunks.*Forgotten Cemetery you can get to/),
+      expect.stringMatching(/checked against the OSRS Wiki.*rune altars through the Abyss.*Puro-Puro by a crop circle/),
+      expect.stringMatching(/named the wrong place.*Trollheim shortcut.*not on the islands/),
+      expect.stringMatching(/In Chunked.*chunks that belong to no named area/),
+      expect.stringMatching(/every place an ironman can get it counts.*jungle spider.*Sarachnis.*dropped and picked up in the Wilderness/),
+      expect.stringMatching(/Brutus after his one.*no longer says “added to your Roll inbox”.*next RuneLite plugin update/),
+    ]);
+    expect(release?.sections.changed).toEqual([
+      expect.stringMatching(/One of, lists each way.*map buttons.*one map button/),
+      expect.stringMatching(/both ends.*Waka canoe needs Edgeville.*already ticked stay ticked/),
+      expect.stringMatching(/team cape counts in Edgeville’s and Varrock’s Wilderness/),
+    ]);
   });
 
   it('announces Paste from RuneLite, and that manual play is unchanged', () => {

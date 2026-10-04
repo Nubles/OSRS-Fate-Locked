@@ -220,15 +220,36 @@ describe('buildRuneliteRulesManifest - capabilities', () => {
 
   it('names exactly the Stage 2 sections the rules have', async () => {
     expect((await build('vanilla', true)).capabilities)
-      .toEqual(['banks', 'chunkDetails', 'chunkEntries', 'detection', 'freeAreas', 'places', 'progress', 'travel']);
+      .toEqual(['banks', 'chunkDetails', 'chunkEntries', 'detection', 'freeAreas', 'places', 'progress', 'spentBosses', 'travel']);
     expect((await build('chunked', true)).capabilities)
-      .toEqual(['banks', 'chunkDetails', 'chunkEntries', 'detection', 'freeAreas', 'frontier', 'places', 'progress', 'travel']);
+      .toEqual(['banks', 'chunkDetails', 'chunkEntries', 'detection', 'freeAreas', 'frontier', 'places', 'progress', 'spentBosses', 'travel']);
   });
 
   it('leaves out the sections that need chunk data when it did not load', async () => {
-    // The detection tables need no chunk data either.
-    expect((await build('vanilla', false)).capabilities).toEqual(['detection', 'freeAreas', 'progress']);
-    expect((await build('chunked', false)).capabilities).toEqual(['detection', 'freeAreas', 'frontier', 'progress']);
+    // The detection tables and the spent bosses need no chunk data either.
+    expect((await build('vanilla', false)).capabilities).toEqual(['detection', 'freeAreas', 'progress', 'spentBosses']);
+    expect((await build('chunked', false)).capabilities).toEqual(['detection', 'freeAreas', 'frontier', 'progress', 'spentBosses']);
+  });
+});
+
+describe('buildRuneliteRulesManifest - spent bosses', () => {
+  const awarded = { Brutus: 1, Zulrah: 1, 'Theatre of Blood': 3 };
+  const build = async (gameModeId: string, bossStandardKeysAwarded?: Record<string, number>) =>
+    (await buildRuneliteRulesManifest({
+      unlocks: initialState.unlocks,
+      run: { runId: 'spent', runRevision: 1, gameModeId, bossStandardKeysAwarded },
+      contentService: { ...contentSource, init: async () => false },
+      itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+    })).spentBosses;
+
+  it("sends a Vanilla run's bosses with no Standard Keys left, so RuneLite stops offering their kills", async () => {
+    expect(await build('vanilla', awarded)).toEqual(['Brutus', 'Theatre of Blood']);
+    expect(await build('vanilla')).toEqual([]);
+  });
+
+  it('sends none for a mode that rolls every kill', async () => {
+    expect(await build('xtreme', awarded)).toEqual([]);
+    expect(await build('chunked', awarded)).toEqual([]);
   });
 });
 

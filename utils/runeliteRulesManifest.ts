@@ -21,6 +21,7 @@ import { slayerDecisions, slayerLocate, type SlayerDecision, type SlayerLocation
 import { slayerReachability } from './slayerReach';
 import { travelDecisions, type TravelMethodDecision } from './travelDecisions';
 import type { RulesDetection } from './runeliteDetection';
+import { vanillaSpentBosses } from '../config/vanillaKeyEconomy';
 import {
   buildChunkPermissionSnapshot,
   type ChunkPermissionSnapshot,
@@ -43,7 +44,8 @@ const DETECTOR_CONTRACT_VERSION = 2;
  * whose capability it knows.
  */
 export const RULES_CAPABILITIES = [
-  'banks', 'chunkDetails', 'chunkEntries', 'detection', 'freeAreas', 'frontier', 'places', 'progress', 'slayerTasks', 'travel',
+  'banks', 'chunkDetails', 'chunkEntries', 'detection', 'freeAreas', 'frontier', 'places', 'progress', 'slayerTasks', 'spentBosses',
+  'travel',
 ] as const;
 export type RulesCapability = typeof RULES_CAPABILITIES[number];
 
@@ -101,6 +103,11 @@ export interface RuneliteRulesManifest {
   travel?: Record<string, TravelMethodDecision>;
   /** Stage 4: the app's ids for what RuneLite notices: bosses by kill-count name, quests and diary tiers. */
   detection?: RulesDetection;
+  /**
+   * The bosses and raids, by the app's boss key, whose kills don't roll again this run: in Vanilla,
+   * each has given every Standard Key it holds. Every other mode rolls every kill, so sends none.
+   */
+  spentBosses?: string[];
   /** The Stage 2 sections this bundle has, by capability. */
   capabilities?: RulesCapability[];
 }
@@ -134,6 +141,8 @@ export interface RulesManifestRunInput {
   rulesVersion?: string;
   contentVersion?: number;
   detectorContractVersion?: number;
+  /** Vanilla: the Standard Keys each boss has given, by boss key. */
+  bossStandardKeysAwarded?: Record<string, number>;
 }
 
 export interface RulesManifestInput {
@@ -238,6 +247,7 @@ export async function buildRuneliteRulesManifest(
     freeAreas: freeAreasFor(input.run.gameModeId, input.run.customMode),
     progress: runProgress(input.unlocks, input.run.gameModeId),
     detection: rulesDetection(),
+    spentBosses: input.run.gameModeId === 'vanilla' ? vanillaSpentBosses(input.run.bossStandardKeysAwarded) : [],
   };
   const capabilities = RULES_CAPABILITIES.filter((capability) => (capability === 'chunkDetails'
     ? Object.keys(chunks).length > 0

@@ -76,6 +76,8 @@ export interface RuneliteRunInput {
   rulesVersion?: string;
   contentVersion?: number;
   detectorContractVersion?: number;
+  /** Vanilla: the Standard Keys each boss has given, so RuneLite can stop offering a spent boss's kills. */
+  bossStandardKeysAwarded?: Record<string, number>;
 }
 
 export interface BundlePayloadOptions {

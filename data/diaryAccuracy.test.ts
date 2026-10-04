@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import chunkContent from '../public/chunk-content.json';
 import diarySource from './sources/achievement-diary-tasks.json';
 import { namedAreaChunks } from '../utils/reachability';
+import { SUB_AREA_CHUNKS } from './subAreaChunks';
 import { ALL_DIARY_TASKS, type DiaryTask, type DiaryTaskRequirementOption } from './diaryTasks';
 import { ACTIVITY_ACCESS_AREAS } from './activityAccess';
 import { QUEST_DATA } from './questData';
@@ -36,7 +37,11 @@ const account = (overrides: Partial<UnlockState> = {}): UnlockState => ({
 describe('Diary tasks are in the areas the game has them in', () => {
   it('puts the Jaldraocht Pyramid altar beside the pyramid, not in Sophanem', () => {
     // The pyramid's chunk (50,45) has no area of its own; Bandit Camp and Pollnivneach border it.
-    expect(task('des_hard_7')).toMatchObject({ anyOfRegions: ['Bandit Camp', 'Pollnivneach'] });
+    // In Chunked the chunk itself counts too (the place audit, diaryPlaceAudit.test.ts).
+    expect(task('des_hard_7').oneOf).toEqual([
+      { regions: ['Bandit Camp'] }, { regions: ['Pollnivneach'] },
+      { locations: [{ label: 'Jaldraocht Pyramid', chunkOptions: [{ cx: 50, cy: 45 }] }] },
+    ]);
     expect(task('des_hard_7').regions).toBeUndefined();
   });
 
@@ -44,10 +49,14 @@ describe('Diary tasks are in the areas the game has them in', () => {
     expect(task('kan_hard_7').regions).toEqual(['Baxtorian Falls']);
   });
 
-  it('puts the Nature Altar in Shilo Village’s chunk, reached from Tai Bwo Wannai', () => {
+  it('puts the Nature Altar in Shilo Village’s chunk, or through the Abyss', () => {
+    // The ruins are at (2868, 3018), in Shilo Village's chunk 44,47, far from Tai Bwo Wannai's
+    // chunks; the place audit of 4 October 2026 dropped Tai Bwo Wannai (diaryPlaceAudit.test.ts).
     for (const id of ['kar_hard_4', 'kar_elite_1']) {
-      expect(task(id), id).toMatchObject({ anyOfRegions: ['Shilo Village', 'Tai Bwo Wannai'] });
+      expect(task(id).oneOf?.[0], id).toEqual({ regions: ['Shilo Village'] });
+      expect(task(id).oneOf?.[1], id).toMatchObject({ label: 'The Abyss', quests: ['Enter the Abyss'] });
       expect(task(id).regions, id).toBeUndefined();
+      expect(task(id).anyOfRegions, id).toBeUndefined();
     }
   });
 
@@ -81,7 +90,6 @@ describe('Diary tasks name the area that owns their chunk on the map', () => {
   it.each([
     ['kan_med_8', 'Camelot', 'the Catherby farming patches are in 43,54'],
     ['kan_elite_2', 'Camelot', 'the Catherby herb patch is in 43,54'],
-    ['des_hard_2', 'Agility Pyramid', 'the granite quarry is in 49,45'],
     ['kar_easy_4', 'Port Sarim', 'the dock east of Musa Point is in 46,49'],
     ['ard_hard_11', 'East Ardougne', 'the anvil near West Ardougne is in 39,52'],
     ['lum_hard_10', 'Mage Training Arena', 'the altar at Emir’s Arena is in 52,51'],
@@ -101,9 +109,7 @@ describe('Diary trips need the place you leave from and the place you arrive in'
     ['des_easy_11', 'the magic carpet to Pollnivneach', ['Shantay Pass', 'Pollnivneach']],
     ['fal_easy_8', 'the boat to Entrana', ['Port Sarim', 'Entrana']],
     ['kar_easy_5', 'the boat from Brimhaven to Ardougne', ['Brimhaven', 'East Ardougne']],
-    ['lum_hard_6', 'the train from Dorgesh-Kaan to Keldagrim', ['Lumbridge', 'Keldagrim']],
     ['ard_easy_8', 'the Ardougne lever to the Deserted Keep (49,61)', ['East Ardougne', 'Mage Arena']],
-    ['wild_hard_8', 'the shortcut from Trollheim (45,57)', ['Burthorpe', 'Wilderness God Wars Dungeon']],
     ['frem_med_8', 'the walk from Waterbirth Island to the Lighthouse', ['Lighthouse', 'Waterbirth Island']],
     ['kan_med_4', 'the Water Obelisk grapple, reached through Taverley Dungeon', ['Catherby', 'Taverley']],
     ['kan_hard_5', 'the Water Obelisk, reached through Taverley Dungeon', ['Catherby', 'Taverley']],
@@ -126,17 +132,32 @@ describe('Diary trips need the place you leave from and the place you arrive in'
 
 /** North of the Shantay Pass: no desert heat, and the Desert Diary's areas leave them out. */
 const NOT_DESERT = ['Al Kharid', 'Duel Arena / PvP Arena', 'Mage Training Arena'];
+/** The areas a task names, and the areas its location chunks belong to. */
+const AREA_OF_CHUNK = new Map<string, string>(Object.entries(SUB_AREA_CHUNKS as Record<string, { cx: number; cy: number }[]>)
+  .flatMap(([area, chunks]) => chunks.map(({ cx, cy }) => [`${cx},${cy}`, area] as const)));
+const locationChunks = (row: DiaryTask): string[] => [row, ...(row.oneOf ?? [])]
+  .flatMap(requirement => requirement.locations ?? [])
+  .flatMap(group => group.chunkOptions.map(({ cx, cy }) => `${cx},${cy}`));
 const placesOf = (row: DiaryTask): string[] => [
   ...(row.regions ?? []), ...(row.anyOfRegions ?? []), ...(row.oneOf ?? []).flatMap(option => option.regions ?? []),
+  ...locationChunks(row).flatMap(chunk => AREA_OF_CHUNK.get(chunk) ?? []),
 ];
 
 describe('Desert Diary tasks done in the desert', () => {
-  it('accept any desert area for a combat potion, Humidify and Ice Barrage', () => {
+  it('accept any desert area for a combat potion, Humidify and Ice Barrage, and the open sand between', () => {
+    const areas = [
+      'Shantay Pass', 'Pollnivneach', 'Nardah', 'Sophanem', 'Menaphos', 'Bandit Camp', 'Bedabin Camp',
+      'Ruins of Uzer', 'Agility Pyramid', "Giants' Plateau", 'Kalphite Lair', 'Ruins of Unkah',
+    ];
     for (const id of ['des_med_8', 'des_hard_3', 'des_elite_2']) {
-      expect(task(id).anyOfRegions, id).toEqual([
-        'Shantay Pass', 'Pollnivneach', 'Nardah', 'Sophanem', 'Menaphos', 'Bandit Camp', 'Bedabin Camp',
-        'Ruins of Uzer', 'Agility Pyramid', "Giants' Plateau", 'Kalphite Lair', 'Ruins of Unkah',
-      ]);
+      // One group of chunks: every chunk of those areas, and the desert chunks that have no area
+      // (the place audit of 4 October 2026, so Chunked runs can do them on open sand).
+      const chunks = locationChunks(task(id));
+      for (const area of areas) {
+        expect(namedAreaChunks(area).every(({ cx, cy }) => chunks.includes(`${cx},${cy}`)), `${id}: ${area}`).toBe(true);
+      }
+      expect(chunks.filter(chunk => !AREA_OF_CHUNK.has(chunk)), id).toEqual(expect.arrayContaining(['50,45', '53,48', '53,49']));
+      expect(task(id).anyOfRegions, id).toBeUndefined();
     }
   });
 

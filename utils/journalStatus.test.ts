@@ -62,11 +62,14 @@ describe('manual journal readiness', () => {
   it('allows a broad Wilderness task with any one Wilderness child area', () => {
     const task = ALL_DIARY_TASKS.find(({ id }) => id === 'wild_easy_8')!;
 
-    const blocked = evaluateDiaryTaskEligibility(task, unlocked());
+    // Anywhere in the Wilderness counts, Edgeville's and Varrock's chunks past the ditch too, and
+    // those are free in Vanilla; Chunked shows the choice.
+    const blocked = evaluateDiaryTaskEligibility(task, unlocked(), 'chunked');
     expect(blocked.blockers).toContainEqual(expect.objectContaining({
       kind: 'alternative',
       blockerKinds: ['region'],
     }));
+    expect(evaluateDiaryTaskEligibility(task, unlocked({ equipment: { Cape: 1 } }), 'vanilla').machineEligible).toBe(true);
 
     const reachable = evaluateDiaryTaskEligibility(task, unlocked({
       regions: [REGION_GROUPS.Wilderness[0]],
@@ -1059,12 +1062,14 @@ describe('audited diary route eligibility', () => {
       ['fal_hard_1', 42], ['fal_elite_1', 55],
       ['lum_elite_5', 38], ['var_elite_5', 52],
     ] as const;
+    // The altar's ruins: each Raiments route also comes with the Abyss as a way in.
+    const ruins: Record<string, string[]> = { fal_hard_1: ['Goblin Village'], lum_elite_5: ['Lumbridge'], var_elite_5: ['Varrock'] };
     for (const [id, level] of cases) {
       const diaryTask = task(id);
       expect(evaluateDiaryTaskEligibility(diaryTask, unlocked({
         equipment: { Head: 1, Body: 1, Legs: 1, Boots: 1 },
         skills: { Runecraft: 10 }, levels: { Runecraft: level },
-        regions: diaryTask.regions ?? [], quests: diaryTask.quests ?? [],
+        regions: [...(diaryTask.regions ?? []), ...(ruins[id] ?? [])], quests: diaryTask.quests ?? [],
       })).confirmable, id).toBe(true);
     }
   });

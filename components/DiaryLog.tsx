@@ -3,7 +3,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
-import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
+import { ALL_DIARY_TASKS, DiaryTask, type DiaryLocationRequirement } from '../data/diaryTasks';
 import { CheckCircle2, Lock, ChevronDown, CheckSquare, Square, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { Map, Sparkles, BookOpen, MapPin, Flag, Sprout, Home, Skull } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
@@ -26,11 +26,34 @@ import { requestManualAttestation } from '../utils/manualAttestation';
 import { diaryTaskLoggingEligibility } from '../utils/journalCompletion';
 import { farmingPatchLabel } from '../utils/farmingPatches';
 
-const isTravelBlocker = (
-  blocker: EligibilityBlocker,
-): blocker is Extract<EligibilityBlocker, { kind: 'alternative' }> => (
+type AlternativeBlocker = Extract<EligibilityBlocker, { kind: 'alternative' }>;
+
+const isTravelBlocker = (blocker: EligibilityBlocker): blocker is AlternativeBlocker => (
   blocker.kind === 'alternative' && blocker.travel !== undefined
 );
+
+/** A choice's tooltip: each way through it, with what that way still needs. */
+const routesTitle = (blocker: AlternativeBlocker): string => ['One of:', ...blocker.routes.map(route => route.blockers.length
+  ? `${route.label} (needs ${route.blockers.map(routeBlocker => routeBlocker.label).join(' + ')})`
+  : route.label)].join('\n');
+
+/** More chunks than this in one place show as a single button. */
+const MAX_CHUNK_BUTTONS = 8;
+
+/** A task's places, and those of each way in a choice, each once. */
+const placesToShow = (task: DiaryTask): DiaryLocationRequirement[] => {
+  const seen = new Set<string>();
+  return [task, ...(task.oneOf ?? [])].flatMap(requirement => requirement.locations ?? []).filter(location => {
+    const key = location.label + '|' + location.chunkOptions.map(({ cx, cy }) => `${cx},${cy}`).join(' ');
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
+/** The unmet choice with this label, if the task has one. */
+const unmetChoice = (blockers: readonly EligibilityBlocker[], label: string): AlternativeBlocker | undefined =>
+  blockers.find((blocker): blocker is AlternativeBlocker => blocker.kind === 'alternative' && blocker.label === label);
 
 // Doable-now counting lives in utils/journalStatus (shared with the
 // insights band) — see countDoableTasks there.
@@ -381,15 +404,17 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                           const unmetSkillRequirements = skillRequirements.filter(([skill, level]) =>
                             !meetsSkillRequirement(unlocks, skill, level as number),
                           );
-                          const regionRequirements = [
+                          const regionRequirements = [...new Set([
                             ...(task.regions ?? []),
                             ...(task.anyOfRegions ?? []),
-                          ].map((region) => ({
+                            ...(task.oneOf ?? []).flatMap(option => option.regions ?? []),
+                          ])].map((region) => ({
                             region,
                             chunk: chunkForPlace(region),
                           }));
+                          const locationRequirements = placesToShow(task);
                           const hasRequirementActions = unmetSkillRequirements.length > 0
-                            || regionRequirements.length > 0 || (task.locations?.length ?? 0) > 0;
+                            || regionRequirements.length > 0 || locationRequirements.length > 0;
                           const completionLabel = task.description
                             ? `Complete diary task: ${task.description}`
                             : 'Complete diary task';
@@ -501,11 +526,17 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                           <BookOpen size={8} /> Confirm: {requirement}
                                         </span>
                                       ))}
-                                      {alternativeLabel && (
-                                        <span className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${taskEligibility.blockers.some(blocker => blocker.kind === 'alternative' && blocker.label === alternativeLabel) ? 'border-red-500/30 text-red-400 bg-red-900/10' : 'border-white/5 text-gray-500 bg-black/30'}`}>
-                                          <BookOpen size={8} /> One of: {alternativeLabel}
-                                        </span>
-                                      )}
+                                      {alternativeLabel && (() => {
+                                        const unmet = unmetChoice(taskEligibility.blockers, alternativeLabel);
+                                        return (
+                                          <span
+                                            title={unmet ? routesTitle(unmet) : undefined}
+                                            className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${unmet ? 'border-red-500/30 text-red-400 bg-red-900/10' : 'border-white/5 text-gray-500 bg-black/30'}`}
+                                          >
+                                            <BookOpen size={8} /> One of: {alternativeLabel}
+                                          </span>
+                                        );
+                                      })()}
                                       {anyRegionAlternativeLabel && (
                                         <span className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${taskEligibility.blockers.some(blocker => blocker.kind === 'alternative' && blocker.label === anyRegionAlternativeLabel) ? 'border-red-500/30 text-red-400 bg-red-900/10' : 'border-white/5 text-gray-500 bg-black/30'}`}>
                                           <MapPin size={8} /> Any area: {anyRegionAlternativeLabel}
@@ -516,9 +547,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                         <span
                                           key={blocker.label}
                                           title={blocker.routes.length
-                                            ? ['One of:', ...blocker.routes.map(route => route.blockers.length
-                                              ? `${route.label} (needs ${route.blockers.map(routeBlocker => routeBlocker.label).join(' + ')})`
-                                              : route.label)].join('\n')
+                                            ? routesTitle(blocker)
                                             : 'You own it, but every way there crosses locked land. The map\'s Reachability lens shows which areas would connect it.'}
                                           className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-red-500/30 text-red-400 bg-red-900/10"
                                         >
@@ -560,7 +589,19 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                       </button>
                                     );
                                   })}
-                                  {task.locations?.map(location => <div key={location.label} className="basis-full flex flex-wrap items-center gap-1.5">
+                                  {locationRequirements.map(location => location.chunkOptions.length > MAX_CHUNK_BUTTONS ? (
+                                    // A whole province: one button, to its first chunk you don't own.
+                                    (() => {
+                                      const owned = location.chunkOptions.filter(({ cx, cy }) => chunkUnlocked(cx, cy, unlocks, gameModeId));
+                                      const target = location.chunkOptions.find(({ cx, cy }) => !chunkUnlocked(cx, cy, unlocks, gameModeId)) ?? location.chunkOptions[0];
+                                      return <button key={location.label} type="button" onClick={() => showChunkOnMap(target.cx, target.cy)}
+                                        title={`Any of ${location.chunkOptions.length} chunks; you own ${owned.length}`}
+                                        aria-label={`Show ${location.label} on the map`}
+                                        className={`rounded border px-1.5 py-0.5 text-[9px] ${owned.length ? 'border-white/10 text-gray-400' : 'border-red-500/30 text-red-400'}`}>
+                                        <MapPin size={8} className="inline" /> {location.label} ({location.chunkOptions.length} chunks)
+                                      </button>;
+                                    })()
+                                  ) : <div key={location.label} className="basis-full flex flex-wrap items-center gap-1.5">
                                     <span className="text-[9px] text-gray-400">{location.label} — one of:</span>
                                     {location.chunkOptions.map(({ cx, cy }) => {
                                       const met = chunkUnlocked(cx, cy, unlocks, gameModeId);

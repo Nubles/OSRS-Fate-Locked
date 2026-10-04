@@ -89,7 +89,7 @@
     "unresolvedExistingRows": 0,
     "unresolvedDuplicateIds": 0,
     "unknownReferences": 0,
-    "combatLevelRequirementsStructured": 9,
+    "combatLevelRequirementsStructured": 10,
     "allQuestsRequirementsStructured": 2
   },
   "tasks": [
@@ -772,11 +772,35 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "68 Smithing 5 mithril bars and a hammer",
-      "anyOfRegions": [
-        "Port Khazard",
-        "Yanille",
-        "West Ardougne"
-      ]
+      "oneOf": [
+        {
+          "regions": [
+            "Port Khazard"
+          ]
+        },
+        {
+          "regions": [
+            "Yanille"
+          ]
+        },
+        {
+          "label": "West Ardougne anvil",
+          "regions": [
+            "East Ardougne"
+          ],
+          "questProgress": [
+            {
+              "quest": "Plague City",
+              "label": "Reached the required progress in Plague City for: Smith a Mithril platebody near Ardougne."
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "West Ardougne's anvil, along the north wall, is in 39,52, which the map gives East Ardougne (as for the Dragon sq shield)."
+      }
     },
     {
       "id": "ard_hard_10",
@@ -836,12 +860,38 @@
       "quests": [
         "Mourning's End Part II"
       ],
-      "regions": [
-        "West Ardougne"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Mourning's End Part II 65 Runecraft Pure or daeyalt essence Note: Crafting runes using Guardian essence will NOT complete this achievement Access to the Death Altar via the Abyss"
+      "sourceRequirements": "Completion of Mourning's End Part II 65 Runecraft Pure or daeyalt essence Note: Crafting runes using Guardian essence will NOT complete this achievement Access to the Death Altar via the Abyss",
+      "oneOf": [
+        {
+          "regions": [
+            "West Ardougne"
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance."
+      }
     },
     {
       "id": "ard_elite_1",
@@ -1042,12 +1092,38 @@
         "Hunter": 5
       },
       "quests": [],
-      "regions": [
-        "Ruins of Uzer"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "5 Hunter Bird snare Necklace of passage recommended for quick access to Eagle's Eyrie, near the Uzer Hunter area"
+      "sourceRequirements": "5 Hunter Bird snare Necklace of passage recommended for quick access to Eagle's Eyrie, near the Uzer Hunter area",
+      "oneOf": [
+        {
+          "regions": [
+            "Ruins of Uzer"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Uzer Hunter area",
+              "chunkOptions": [
+                {
+                  "cx": 53,
+                  "cy": 48
+                },
+                {
+                  "cx": 53,
+                  "cy": 49
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Golden warblers live only in the Uzer Hunter area (53,48 and 53,49)."
+      }
     },
     {
       "id": "des_easy_2",
@@ -1060,12 +1136,34 @@
         "Mining": 1
       },
       "quests": [],
-      "regions": [
-        "Ruins of Uzer"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Any pickaxe Necklace of passage recommended for quick access to Eagle's Eyrie, near the Uzer mine"
+      "sourceRequirements": "Any pickaxe Necklace of passage recommended for quick access to Eagle's Eyrie, near the Uzer mine",
+      "oneOf": [
+        {
+          "regions": [
+            "Ruins of Uzer"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Uzer mine",
+              "chunkOptions": [
+                {
+                  "cx": 53,
+                  "cy": 49
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Uzer mine is north-west of the Ruins of Uzer, in 53,49."
+      }
     },
     {
       "id": "des_easy_3",
@@ -1131,12 +1229,18 @@
       "quests": [],
       "anyOfRegions": [
         "Menaphos",
-        "Agility Pyramid"
+        "Agility Pyramid",
+        "Sophanem"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Kill a Vulture.",
-      "sourceRequirements": "Weaponry, preferably Ranged or Magic"
+      "sourceRequirements": "Weaponry, preferably Ranged or Magic",
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Vultures also stand north of Sophanem (51,44)."
+      }
     },
     {
       "id": "des_easy_6",
@@ -1235,21 +1339,173 @@
       "description": "Cut a desert cactus open to fill a waterskin.",
       "skills": {},
       "quests": [],
-      "anyOfRegions": [
-        "Shantay Pass",
-        "Pollnivneach",
-        "Bedabin Camp",
-        "Kalphite Lair",
-        "Agility Pyramid",
-        "Menaphos",
-        "Ruins of Unkah",
-        "Sophanem",
-        "Nardah",
-        "Ruins of Uzer"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Knife or a slash weapon, and an empty waterskin"
+      "sourceRequirements": "Knife or a slash weapon, and an empty waterskin",
+      "locations": [
+        {
+          "label": "Anywhere in the desert",
+          "chunkOptions": [
+            {
+              "cx": 51,
+              "cy": 42
+            },
+            {
+              "cx": 52,
+              "cy": 42
+            },
+            {
+              "cx": 49,
+              "cy": 43
+            },
+            {
+              "cx": 50,
+              "cy": 43
+            },
+            {
+              "cx": 51,
+              "cy": 43
+            },
+            {
+              "cx": 52,
+              "cy": 43
+            },
+            {
+              "cx": 53,
+              "cy": 43
+            },
+            {
+              "cx": 47,
+              "cy": 44
+            },
+            {
+              "cx": 48,
+              "cy": 44
+            },
+            {
+              "cx": 49,
+              "cy": 44
+            },
+            {
+              "cx": 50,
+              "cy": 44
+            },
+            {
+              "cx": 51,
+              "cy": 44
+            },
+            {
+              "cx": 52,
+              "cy": 44
+            },
+            {
+              "cx": 53,
+              "cy": 44
+            },
+            {
+              "cx": 49,
+              "cy": 45
+            },
+            {
+              "cx": 50,
+              "cy": 45
+            },
+            {
+              "cx": 51,
+              "cy": 45
+            },
+            {
+              "cx": 52,
+              "cy": 45
+            },
+            {
+              "cx": 53,
+              "cy": 45
+            },
+            {
+              "cx": 54,
+              "cy": 45
+            },
+            {
+              "cx": 50,
+              "cy": 46
+            },
+            {
+              "cx": 51,
+              "cy": 46
+            },
+            {
+              "cx": 52,
+              "cy": 46
+            },
+            {
+              "cx": 53,
+              "cy": 46
+            },
+            {
+              "cx": 54,
+              "cy": 46
+            },
+            {
+              "cx": 49,
+              "cy": 47
+            },
+            {
+              "cx": 50,
+              "cy": 47
+            },
+            {
+              "cx": 51,
+              "cy": 47
+            },
+            {
+              "cx": 52,
+              "cy": 47
+            },
+            {
+              "cx": 53,
+              "cy": 47
+            },
+            {
+              "cx": 54,
+              "cy": 47
+            },
+            {
+              "cx": 50,
+              "cy": 48
+            },
+            {
+              "cx": 51,
+              "cy": 48
+            },
+            {
+              "cx": 52,
+              "cy": 48
+            },
+            {
+              "cx": 53,
+              "cy": 48
+            },
+            {
+              "cx": 54,
+              "cy": 48
+            },
+            {
+              "cx": 52,
+              "cy": 49
+            },
+            {
+              "cx": 53,
+              "cy": 49
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Counts anywhere in the Kharidian Desert, including the open sand that belongs to no named area."
+      }
     },
     {
       "id": "des_easy_11",
@@ -1300,12 +1556,37 @@
         "Slayer": 22
       },
       "quests": [],
-      "regions": [
-        "Shantay Pass"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "22 Slayer Ice cooler"
+      "sourceRequirements": "22 Slayer Ice cooler",
+      "locations": [
+        {
+          "label": "Desert lizards",
+          "chunkOptions": [
+            {
+              "cx": 52,
+              "cy": 47
+            },
+            {
+              "cx": 53,
+              "cy": 47
+            },
+            {
+              "cx": 54,
+              "cy": 47
+            },
+            {
+              "cx": 52,
+              "cy": 43
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Desert lizards stand along the River Elid (52,47 to 54,47) and west of Ullek (52,43); none near Shantay Pass."
+      }
     },
     {
       "id": "des_med_3",
@@ -1318,13 +1599,39 @@
         "Hunter": 47
       },
       "quests": [],
-      "anyOfRegions": [
-        "Ruins of Uzer",
-        "Sophanem"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "47 Hunter Rope and a small fishing net"
+      "sourceRequirements": "47 Hunter Rope and a small fishing net",
+      "oneOf": [
+        {
+          "regions": [
+            "Ruins of Uzer"
+          ]
+        },
+        {
+          "regions": [
+            "Sophanem"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Uzer Hunter area",
+              "chunkOptions": [
+                {
+                  "cx": 53,
+                  "cy": 48
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Orange salamanders are caught in the Uzer Hunter area (53,48) and the Necropolis Hunter area (Sophanem)."
+      }
     },
     {
       "id": "des_med_4",
@@ -1337,12 +1644,34 @@
         "Thieving": 25
       },
       "quests": [],
-      "regions": [
-        "Ruins of Uzer"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "25 Thieving"
+      "sourceRequirements": "25 Thieving",
+      "oneOf": [
+        {
+          "regions": [
+            "Ruins of Uzer"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Desert Phoenix",
+              "chunkOptions": [
+                {
+                  "cx": 53,
+                  "cy": 49
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Desert Phoenix is just south of the clay mine, in 53,49."
+      }
     },
     {
       "id": "des_med_5",
@@ -1378,14 +1707,39 @@
         "Eagles' Peak"
       ],
       "regions": [
-        "Ruins of Uzer"
+        "Eagles' Peak"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Eagles' Peak Rope",
       "mobility": [
         "Eagle Transport"
-      ]
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Ruins of Uzer"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Desert eagle lair, north of the Uzer Hunter area",
+              "chunkOptions": [
+                {
+                  "cx": 53,
+                  "cy": 49
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The trip starts from the Eagles' Peak Dungeon and lands at the desert eagle lair in 53,49."
+      }
     },
     {
       "id": "des_med_7",
@@ -1420,20 +1774,174 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "36 Herblore Harralander potion (unf) and goat horn dust",
-      "anyOfRegions": [
-        "Shantay Pass",
-        "Pollnivneach",
-        "Nardah",
-        "Sophanem",
-        "Menaphos",
-        "Bandit Camp",
-        "Bedabin Camp",
-        "Ruins of Uzer",
-        "Agility Pyramid",
-        "Giants' Plateau",
-        "Kalphite Lair",
-        "Ruins of Unkah"
-      ]
+      "locations": [
+        {
+          "label": "Anywhere in the desert",
+          "chunkOptions": [
+            {
+              "cx": 51,
+              "cy": 42
+            },
+            {
+              "cx": 52,
+              "cy": 42
+            },
+            {
+              "cx": 49,
+              "cy": 43
+            },
+            {
+              "cx": 50,
+              "cy": 43
+            },
+            {
+              "cx": 51,
+              "cy": 43
+            },
+            {
+              "cx": 52,
+              "cy": 43
+            },
+            {
+              "cx": 53,
+              "cy": 43
+            },
+            {
+              "cx": 47,
+              "cy": 44
+            },
+            {
+              "cx": 48,
+              "cy": 44
+            },
+            {
+              "cx": 49,
+              "cy": 44
+            },
+            {
+              "cx": 50,
+              "cy": 44
+            },
+            {
+              "cx": 51,
+              "cy": 44
+            },
+            {
+              "cx": 52,
+              "cy": 44
+            },
+            {
+              "cx": 53,
+              "cy": 44
+            },
+            {
+              "cx": 49,
+              "cy": 45
+            },
+            {
+              "cx": 50,
+              "cy": 45
+            },
+            {
+              "cx": 51,
+              "cy": 45
+            },
+            {
+              "cx": 52,
+              "cy": 45
+            },
+            {
+              "cx": 53,
+              "cy": 45
+            },
+            {
+              "cx": 54,
+              "cy": 45
+            },
+            {
+              "cx": 49,
+              "cy": 46
+            },
+            {
+              "cx": 50,
+              "cy": 46
+            },
+            {
+              "cx": 51,
+              "cy": 46
+            },
+            {
+              "cx": 52,
+              "cy": 46
+            },
+            {
+              "cx": 53,
+              "cy": 46
+            },
+            {
+              "cx": 54,
+              "cy": 46
+            },
+            {
+              "cx": 49,
+              "cy": 47
+            },
+            {
+              "cx": 50,
+              "cy": 47
+            },
+            {
+              "cx": 51,
+              "cy": 47
+            },
+            {
+              "cx": 52,
+              "cy": 47
+            },
+            {
+              "cx": 53,
+              "cy": 47
+            },
+            {
+              "cx": 54,
+              "cy": 47
+            },
+            {
+              "cx": 50,
+              "cy": 48
+            },
+            {
+              "cx": 51,
+              "cy": 48
+            },
+            {
+              "cx": 52,
+              "cy": 48
+            },
+            {
+              "cx": 53,
+              "cy": 48
+            },
+            {
+              "cx": 54,
+              "cy": 48
+            },
+            {
+              "cx": 52,
+              "cy": 49
+            },
+            {
+              "cx": 53,
+              "cy": 49
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Counts anywhere in the Kharidian Desert, including the open sand that belongs to no named area."
+      }
     },
     {
       "id": "des_med_9",
@@ -1447,14 +1955,19 @@
         "Enakhra's Lament"
       ],
       "regions": [
-        "Bandit Camp"
+        "Agility Pyramid"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Enakhra's Lament Camulet",
       "mobility": [
         "Camulet"
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Camulet lands by Enakhra's Temple in 49,45 (the Desert Quarry), not at the Bandit Camp."
+      }
     },
     {
       "id": "des_med_10",
@@ -1465,9 +1978,6 @@
       "description": "Visit the Genie.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Nardah"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Started Spirits of the Elid Rope and light source",
@@ -1476,7 +1986,32 @@
           "quest": "Spirits of the Elid",
           "label": "Reached the required progress in Spirits of the Elid for: Visit the Genie."
         }
-      ]
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Nardah"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Genie's cave crevice",
+              "chunkOptions": [
+                {
+                  "cx": 52,
+                  "cy": 45
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Genie's cave is entered by the crevice west of Nardah, in 52,45."
+      }
     },
     {
       "id": "des_med_11",
@@ -1560,12 +2095,19 @@
         "Mining": 45
       },
       "quests": [],
-      "regions": [
-        "Agility Pyramid"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "45 Mining Any pickaxe"
+      "sourceRequirements": "45 Mining Any pickaxe",
+      "anyOfRegions": [
+        "Agility Pyramid",
+        "Sophanem",
+        "The Great Conch"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Granite is also mined at the Necropolis mine (51,42) and, per the diary page, at Cape Conch on The Great Conch."
+      }
     },
     {
       "id": "des_hard_3",
@@ -1583,23 +2125,177 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Dream Mentor 68 Magic Lunar spellbook selected Waterskin that isn't full and means to cast Humidify ( )",
-      "anyOfRegions": [
-        "Shantay Pass",
-        "Pollnivneach",
-        "Nardah",
-        "Sophanem",
-        "Menaphos",
-        "Bandit Camp",
-        "Bedabin Camp",
-        "Ruins of Uzer",
-        "Agility Pyramid",
-        "Giants' Plateau",
-        "Kalphite Lair",
-        "Ruins of Unkah"
-      ],
       "arcana": [
         "Lunar Spellbook"
-      ]
+      ],
+      "locations": [
+        {
+          "label": "Anywhere in the desert",
+          "chunkOptions": [
+            {
+              "cx": 51,
+              "cy": 42
+            },
+            {
+              "cx": 52,
+              "cy": 42
+            },
+            {
+              "cx": 49,
+              "cy": 43
+            },
+            {
+              "cx": 50,
+              "cy": 43
+            },
+            {
+              "cx": 51,
+              "cy": 43
+            },
+            {
+              "cx": 52,
+              "cy": 43
+            },
+            {
+              "cx": 53,
+              "cy": 43
+            },
+            {
+              "cx": 47,
+              "cy": 44
+            },
+            {
+              "cx": 48,
+              "cy": 44
+            },
+            {
+              "cx": 49,
+              "cy": 44
+            },
+            {
+              "cx": 50,
+              "cy": 44
+            },
+            {
+              "cx": 51,
+              "cy": 44
+            },
+            {
+              "cx": 52,
+              "cy": 44
+            },
+            {
+              "cx": 53,
+              "cy": 44
+            },
+            {
+              "cx": 49,
+              "cy": 45
+            },
+            {
+              "cx": 50,
+              "cy": 45
+            },
+            {
+              "cx": 51,
+              "cy": 45
+            },
+            {
+              "cx": 52,
+              "cy": 45
+            },
+            {
+              "cx": 53,
+              "cy": 45
+            },
+            {
+              "cx": 54,
+              "cy": 45
+            },
+            {
+              "cx": 49,
+              "cy": 46
+            },
+            {
+              "cx": 50,
+              "cy": 46
+            },
+            {
+              "cx": 51,
+              "cy": 46
+            },
+            {
+              "cx": 52,
+              "cy": 46
+            },
+            {
+              "cx": 53,
+              "cy": 46
+            },
+            {
+              "cx": 54,
+              "cy": 46
+            },
+            {
+              "cx": 49,
+              "cy": 47
+            },
+            {
+              "cx": 50,
+              "cy": 47
+            },
+            {
+              "cx": 51,
+              "cy": 47
+            },
+            {
+              "cx": 52,
+              "cy": 47
+            },
+            {
+              "cx": 53,
+              "cy": 47
+            },
+            {
+              "cx": 54,
+              "cy": 47
+            },
+            {
+              "cx": 50,
+              "cy": 48
+            },
+            {
+              "cx": 51,
+              "cy": 48
+            },
+            {
+              "cx": 52,
+              "cy": 48
+            },
+            {
+              "cx": 53,
+              "cy": 48
+            },
+            {
+              "cx": 54,
+              "cy": 48
+            },
+            {
+              "cx": 52,
+              "cy": 49
+            },
+            {
+              "cx": 53,
+              "cy": 49
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Counts anywhere in the Kharidian Desert, including the open sand that belongs to no named area."
+      }
     },
     {
       "id": "des_hard_4",
@@ -1687,16 +2383,42 @@
       "quests": [
         "Desert Treasure I"
       ],
-      "anyOfRegions": [
-        "Bandit Camp",
-        "Pollnivneach"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Desert Treasure I",
       "arcana": [
         "Ancient Magicks"
-      ]
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Bandit Camp"
+          ]
+        },
+        {
+          "regions": [
+            "Pollnivneach"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Jaldraocht Pyramid",
+              "chunkOptions": [
+                {
+                  "cx": 50,
+                  "cy": 45
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Jaldraocht Pyramid is in 50,45, between the Bandit Camp and Pollnivneach."
+      }
     },
     {
       "id": "des_hard_8",
@@ -1709,9 +2431,6 @@
         "Attack": 50
       },
       "quests": [],
-      "regions": [
-        "Sophanem"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Partial completion of Contact! 50 Attack Keris or Keris partisan, and any light source",
@@ -1728,7 +2447,32 @@
           "reason": "Keris (or a higher-tier keris partisan)",
           "manualCheck": "Have Keris (or a higher-tier keris partisan) and confirm that the specific item is permitted by your equipment tier"
         }
-      ]
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Sophanem"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Scabaras Dungeon entrance, Ruins of Ullek",
+              "chunkOptions": [
+                {
+                  "cx": 53,
+                  "cy": 44
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Locust riders also live in the Scabaras Dungeon, entered at the Ruins of Ullek (53,44)."
+      }
     },
     {
       "id": "des_hard_9",
@@ -1801,23 +2545,177 @@
       "classification": "preserved-semantic",
       "previousDescription": "Cast Ice Barrage against a foe in the Desert.",
       "sourceRequirements": "Completion of Desert Treasure I 94 Magic Means to cast Ice Barrage ( )",
-      "anyOfRegions": [
-        "Shantay Pass",
-        "Pollnivneach",
-        "Nardah",
-        "Sophanem",
-        "Menaphos",
-        "Bandit Camp",
-        "Bedabin Camp",
-        "Ruins of Uzer",
-        "Agility Pyramid",
-        "Giants' Plateau",
-        "Kalphite Lair",
-        "Ruins of Unkah"
-      ],
       "arcana": [
         "Ancient Magicks"
-      ]
+      ],
+      "locations": [
+        {
+          "label": "Anywhere in the desert",
+          "chunkOptions": [
+            {
+              "cx": 51,
+              "cy": 42
+            },
+            {
+              "cx": 52,
+              "cy": 42
+            },
+            {
+              "cx": 49,
+              "cy": 43
+            },
+            {
+              "cx": 50,
+              "cy": 43
+            },
+            {
+              "cx": 51,
+              "cy": 43
+            },
+            {
+              "cx": 52,
+              "cy": 43
+            },
+            {
+              "cx": 53,
+              "cy": 43
+            },
+            {
+              "cx": 47,
+              "cy": 44
+            },
+            {
+              "cx": 48,
+              "cy": 44
+            },
+            {
+              "cx": 49,
+              "cy": 44
+            },
+            {
+              "cx": 50,
+              "cy": 44
+            },
+            {
+              "cx": 51,
+              "cy": 44
+            },
+            {
+              "cx": 52,
+              "cy": 44
+            },
+            {
+              "cx": 53,
+              "cy": 44
+            },
+            {
+              "cx": 49,
+              "cy": 45
+            },
+            {
+              "cx": 50,
+              "cy": 45
+            },
+            {
+              "cx": 51,
+              "cy": 45
+            },
+            {
+              "cx": 52,
+              "cy": 45
+            },
+            {
+              "cx": 53,
+              "cy": 45
+            },
+            {
+              "cx": 54,
+              "cy": 45
+            },
+            {
+              "cx": 49,
+              "cy": 46
+            },
+            {
+              "cx": 50,
+              "cy": 46
+            },
+            {
+              "cx": 51,
+              "cy": 46
+            },
+            {
+              "cx": 52,
+              "cy": 46
+            },
+            {
+              "cx": 53,
+              "cy": 46
+            },
+            {
+              "cx": 54,
+              "cy": 46
+            },
+            {
+              "cx": 49,
+              "cy": 47
+            },
+            {
+              "cx": 50,
+              "cy": 47
+            },
+            {
+              "cx": 51,
+              "cy": 47
+            },
+            {
+              "cx": 52,
+              "cy": 47
+            },
+            {
+              "cx": 53,
+              "cy": 47
+            },
+            {
+              "cx": 54,
+              "cy": 47
+            },
+            {
+              "cx": 50,
+              "cy": 48
+            },
+            {
+              "cx": 51,
+              "cy": 48
+            },
+            {
+              "cx": 52,
+              "cy": 48
+            },
+            {
+              "cx": 53,
+              "cy": 48
+            },
+            {
+              "cx": 54,
+              "cy": 48
+            },
+            {
+              "cx": 52,
+              "cy": 49
+            },
+            {
+              "cx": 53,
+              "cy": 49
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Counts anywhere in the Kharidian Desert, including the open sand that belongs to no named area."
+      }
     },
     {
       "id": "des_elite_3",
@@ -2029,12 +2927,38 @@
         "Runecraft": 1
       },
       "quests": [],
-      "regions": [
-        "Ice Mountain"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Tiara and a mind talisman"
+      "sourceRequirements": "Tiara and a mind talisman",
+      "oneOf": [
+        {
+          "regions": [
+            "Ice Mountain"
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance."
+      }
     },
     {
       "id": "fal_easy_8",
@@ -2062,12 +2986,34 @@
       "description": "Repair a broken strut in the Motherlode Mine.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Motherlode Mine"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Hammer and any pickaxe"
+      "sourceRequirements": "Hammer and any pickaxe",
+      "oneOf": [
+        {
+          "regions": [
+            "Motherlode Mine"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Dwarven Mine camp entrance, Ice Mountain's foothills",
+              "chunkOptions": [
+                {
+                  "cx": 47,
+                  "cy": 53
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Motherlode Mine's north entrance is in the Dwarven Mine, entered from the camp south of Ice Mountain (47,53)."
+      }
     },
     {
       "id": "fal_easy_10",
@@ -2467,22 +3413,42 @@
       "description": "Craft 140 Mind runes simultaneously from Essence without the use of Extracts.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Goblin Village"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 140 Mind runes simultaneously.",
       "sourceRequirements": "56 Runecraft 42 Runecraft with 3+ Raiments of the Eye pieces 28 pure, daeyalt, or rune essence (less may suffice at higher Runecraft levels) Access to the Mind Altar ( mind talisman / tiara, catalytic talisman / tiara, or the Abyss )",
       "oneOf": [
         {
-          "label": "No Raiments",
+          "label": "No Raiments, Goblin Village ruins",
           "skills": {
             "Runecraft": 56
-          }
+          },
+          "regions": [
+            "Goblin Village"
+          ]
         },
         {
-          "label": "3+ Raiments of the Eye pieces (Head, Body, Legs)",
+          "label": "No Raiments, through the Abyss",
+          "skills": {
+            "Runecraft": 56
+          },
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3+ Raiments of the Eye pieces (Head, Body, Legs), Goblin Village ruins",
           "skills": {
             "Runecraft": 42
           },
@@ -2508,10 +3474,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Goblin Village"
           ]
         },
         {
-          "label": "3+ Raiments of the Eye pieces (Head, Body, Boots)",
+          "label": "3+ Raiments of the Eye pieces (Head, Body, Legs), through the Abyss",
+          "skills": {
+            "Runecraft": 42
+          },
+          "items": [
+            "3+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3+ Raiments of the Eye pieces (Head, Body, Boots), Goblin Village ruins",
           "skills": {
             "Runecraft": 42
           },
@@ -2537,10 +3549,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Goblin Village"
           ]
         },
         {
-          "label": "3+ Raiments of the Eye pieces (Head, Legs, Boots)",
+          "label": "3+ Raiments of the Eye pieces (Head, Body, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 42
+          },
+          "items": [
+            "3+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3+ Raiments of the Eye pieces (Head, Legs, Boots), Goblin Village ruins",
           "skills": {
             "Runecraft": 42
           },
@@ -2566,10 +3624,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Goblin Village"
           ]
         },
         {
-          "label": "3+ Raiments of the Eye pieces (Body, Legs, Boots)",
+          "label": "3+ Raiments of the Eye pieces (Head, Legs, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 42
+          },
+          "items": [
+            "3+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3+ Raiments of the Eye pieces (Body, Legs, Boots), Goblin Village ruins",
           "skills": {
             "Runecraft": 42
           },
@@ -2594,10 +3698,61 @@
               "tier": 1,
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "regions": [
+            "Goblin Village"
+          ]
+        },
+        {
+          "label": "3+ Raiments of the Eye pieces (Body, Legs, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 42
+          },
+          "items": [
+            "3+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
             }
           ]
         }
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance."
+      }
     },
     {
       "id": "fal_hard_2",
@@ -3319,12 +4474,18 @@
       "description": "Kill 5 Rock crabs.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Rellekka"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Weaponry"
+      "sourceRequirements": "Weaponry",
+      "anyOfRegions": [
+        "Rellekka",
+        "Waterbirth Island"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Rock crabs live by Rellekka and on Waterbirth Island; only the giant rock crabs and rock lobsters there do not count."
+      }
     },
     {
       "id": "frem_easy_4",
@@ -3492,19 +4653,38 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "15 Woodcutting and 15 Firemaking Any axe (can be found north of the Rellekka mine ) and a tinderbox",
-      "anyOfRegions": [
-        "Rellekka",
-        "Neitiznot",
-        "Jatizso",
-        "Miscellania & Etceteria",
-        "Waterbirth Island",
-        "Lunar Isle",
-        "Mountain Camp",
-        "Lighthouse",
-        "Keldagrim",
-        "Weiss",
-        "Pirates' Cove"
-      ]
+      "locations": [
+        {
+          "label": "Oak trees around Rellekka",
+          "chunkOptions": [
+            {
+              "cx": 42,
+              "cy": 57
+            },
+            {
+              "cx": 40,
+              "cy": 56
+            },
+            {
+              "cx": 43,
+              "cy": 56
+            },
+            {
+              "cx": 41,
+              "cy": 56
+            },
+            {
+              "cx": 42,
+              "cy": 56
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Oaks in the Fremennik Province grow around Rellekka: by the house portal (41,56), the forest (42,56), Rellekka, the Lighthouse and the Mountain Camp; the islands have none."
+      }
     },
     {
       "id": "frem_med_1",
@@ -3542,14 +4722,20 @@
         "Eagles' Peak"
       ],
       "regions": [
-        "Rellekka"
+        "Rellekka",
+        "Eagles' Peak"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Eagles' Peak Rope",
       "mobility": [
         "Eagle Transport"
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The eagle trip to the Snowy Hunter Area starts from the Eagles' Peak Dungeon."
+      }
     },
     {
       "id": "frem_med_3",
@@ -3814,19 +5000,58 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "66 Herblore Cadantine potion (unf) and white berries",
-      "anyOfRegions": [
-        "Rellekka",
-        "Neitiznot",
-        "Jatizso",
-        "Miscellania & Etceteria",
-        "Waterbirth Island",
-        "Lunar Isle",
-        "Mountain Camp",
-        "Lighthouse",
-        "Keldagrim",
-        "Weiss",
-        "Pirates' Cove"
-      ]
+      "locations": [
+        {
+          "label": "In or near Rellekka",
+          "chunkOptions": [
+            {
+              "cx": 40,
+              "cy": 57
+            },
+            {
+              "cx": 41,
+              "cy": 57
+            },
+            {
+              "cx": 42,
+              "cy": 57
+            },
+            {
+              "cx": 41,
+              "cy": 58
+            },
+            {
+              "cx": 42,
+              "cy": 58
+            },
+            {
+              "cx": 42,
+              "cy": 59
+            },
+            {
+              "cx": 40,
+              "cy": 56
+            },
+            {
+              "cx": 43,
+              "cy": 56
+            },
+            {
+              "cx": 41,
+              "cy": 56
+            },
+            {
+              "cx": 42,
+              "cy": 56
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The diary page says this has to be done in or near Rellekka."
+      }
     },
     {
       "id": "frem_hard_4",
@@ -4385,8 +5610,14 @@
       "sourceRequirements": "48 Herblore Vial of water, irit leaf, unicorn horn dust",
       "anyOfRegions": [
         "Seers' Village",
-        "Catherby"
-      ]
+        "Catherby",
+        "Camelot"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Camelot (43,54), with the Catherby herb patches, lies between Seers' Village and Catherby."
+      }
     },
     {
       "id": "kan_med_3",
@@ -5280,16 +6511,117 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Seaweed (can be found near Jiminua's Jungle Store )",
-      "anyOfRegions": [
-        "Musa Point",
-        "Brimhaven",
-        "Tai Bwo Wannai",
-        "Shilo Village",
-        "Kharazi Jungle",
-        "Mor Ul Rek (TzHaar City)",
-        "Crandor",
-        "Ship Yard"
-      ]
+      "oneOf": [
+        {
+          "regions": [
+            "Mor Ul Rek (TzHaar City)"
+          ]
+        },
+        {
+          "regions": [
+            "Crandor"
+          ]
+        },
+        {
+          "regions": [
+            "Ship Yard"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Anywhere on Karamja",
+              "chunkOptions": [
+                {
+                  "cx": 43,
+                  "cy": 45
+                },
+                {
+                  "cx": 44,
+                  "cy": 45
+                },
+                {
+                  "cx": 45,
+                  "cy": 45
+                },
+                {
+                  "cx": 46,
+                  "cy": 45
+                },
+                {
+                  "cx": 42,
+                  "cy": 46
+                },
+                {
+                  "cx": 43,
+                  "cy": 46
+                },
+                {
+                  "cx": 44,
+                  "cy": 46
+                },
+                {
+                  "cx": 45,
+                  "cy": 46
+                },
+                {
+                  "cx": 43,
+                  "cy": 47
+                },
+                {
+                  "cx": 44,
+                  "cy": 47
+                },
+                {
+                  "cx": 45,
+                  "cy": 47
+                },
+                {
+                  "cx": 43,
+                  "cy": 48
+                },
+                {
+                  "cx": 44,
+                  "cy": 48
+                },
+                {
+                  "cx": 45,
+                  "cy": 48
+                },
+                {
+                  "cx": 42,
+                  "cy": 49
+                },
+                {
+                  "cx": 43,
+                  "cy": 49
+                },
+                {
+                  "cx": 44,
+                  "cy": 49
+                },
+                {
+                  "cx": 45,
+                  "cy": 49
+                },
+                {
+                  "cx": 42,
+                  "cy": 50
+                },
+                {
+                  "cx": 43,
+                  "cy": 50
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Counts anywhere on Karamja, including the Karamja River chunk (45,47)."
+      }
     },
     {
       "id": "kar_easy_9",
@@ -5365,9 +6697,6 @@
       "description": "Discover hidden wall in the dungeon below the volcano.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Musa Point"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Started Dragon Slayer I",
@@ -5376,7 +6705,16 @@
           "quest": "Dragon Slayer I",
           "label": "Reached the required progress in Dragon Slayer I for: Discover hidden wall in the dungeon below the volcano."
         }
-      ]
+      ],
+      "anyOfRegions": [
+        "Musa Point",
+        "Crandor"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Once Dragon Slayer I has taken you to Crandor, the wall opens from the cave under Crandor too."
+      }
     },
     {
       "id": "kar_med_3",
@@ -5411,12 +6749,18 @@
       "quests": [
         "Shilo Village"
       ],
-      "regions": [
-        "Brimhaven"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Shilo Village 200 coins"
+      "sourceRequirements": "Completion of Shilo Village 200 coins",
+      "anyOfRegions": [
+        "Brimhaven",
+        "Shilo Village"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The cart runs both ways between Hajedy in Brimhaven and Vigroy in Shilo Village."
+      }
     },
     {
       "id": "kar_med_5",
@@ -5452,12 +6796,70 @@
         "Cooking": 16
       },
       "quests": [],
-      "regions": [
-        "Tai Bwo Wannai"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "16 Cooking Spider carcass, and a skewer stick or an arrow shaft"
+      "sourceRequirements": "16 Cooking Spider carcass, and a skewer stick or an arrow shaft",
+      "oneOf": [
+        {
+          "locations": [
+            {
+              "label": "Jungle spiders",
+              "chunkOptions": [
+                {
+                  "cx": 43,
+                  "cy": 47
+                },
+                {
+                  "cx": 43,
+                  "cy": 48
+                },
+                {
+                  "cx": 44,
+                  "cy": 48
+                },
+                {
+                  "cx": 43,
+                  "cy": 46
+                },
+                {
+                  "cx": 44,
+                  "cy": 47
+                },
+                {
+                  "cx": 45,
+                  "cy": 46
+                },
+                {
+                  "cx": 45,
+                  "cy": 47
+                },
+                {
+                  "cx": 41,
+                  "cy": 48
+                },
+                {
+                  "cx": 43,
+                  "cy": 50
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Sarachnis",
+          "regions": [
+            "Hosidius"
+          ],
+          "bosses": [
+            "Sarachnis"
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "A spider carcass drops from jungle spiders (Tai Bwo Wannai, Shilo Village, the Karamja River, Brimhaven and east of Yanille) or Sarachnis; the cooking needn't be on Karamja (Karamja Diary note)."
+      }
     },
     {
       "id": "kar_med_7",
@@ -5690,12 +7092,29 @@
         "Hunter": 41
       },
       "quests": [],
-      "regions": [
-        "Tai Bwo Wannai"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "41 Hunter Teasing stick or Hunter's spear, knife, and any logs."
+      "sourceRequirements": "41 Hunter Teasing stick or Hunter's spear, knife, and any logs.",
+      "locations": [
+        {
+          "label": "Karamja Hunter area",
+          "chunkOptions": [
+            {
+              "cx": 43,
+              "cy": 46
+            },
+            {
+              "cx": 43,
+              "cy": 47
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The horned graahk and their pits are in 43,46 (Shilo Village) and 43,47 (Tai Bwo Wannai)."
+      }
     },
     {
       "id": "kar_med_15",
@@ -5907,13 +7326,38 @@
         "Runecraft": 44
       },
       "quests": [],
-      "anyOfRegions": [
-        "Shilo Village",
-        "Tai Bwo Wannai"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "44 Runecraft Pure or daeyalt essence Access to the Nature Altar ( nature talisman / tiara, catalytic talisman / tiara, or the Abyss )"
+      "sourceRequirements": "44 Runecraft Pure or daeyalt essence Access to the Nature Altar ( nature talisman / tiara, catalytic talisman / tiara, or the Abyss )",
+      "oneOf": [
+        {
+          "regions": [
+            "Shilo Village"
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance. The ruins are at 44,47, a Shilo Village chunk, not Tai Bwo Wannai."
+      }
     },
     {
       "id": "kar_hard_5",
@@ -5975,9 +7419,6 @@
         "Strength": 21
       },
       "quests": [],
-      "regions": [
-        "Musa Point"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "53 Agility, 42 Ranged and 21 Strength Mith grapple and any crossbow",
@@ -5993,7 +7434,27 @@
           "tier": 3,
           "reason": "Mith grapple for the shortcut"
         }
-      ]
+      ],
+      "locations": [
+        {
+          "label": "Strong tree, either side",
+          "chunkOptions": [
+            {
+              "cx": 44,
+              "cy": 49
+            },
+            {
+              "cx": 44,
+              "cy": 48
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Strong Tree shortcut runs both ways between Musa Point (44,49) and the Harpie bug swarms (44,48)."
+      }
     },
     {
       "id": "kar_hard_8",
@@ -6072,12 +7533,33 @@
         "Woodcutting": 10
       },
       "quests": [],
-      "regions": [
-        "Brimhaven"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "10 Woodcutting Any axe, protection from dragonfire, and weaponry 875 coins (unless you have unlocked permanently free access via either Saniboch or Banisoch )"
+      "sourceRequirements": "10 Woodcutting Any axe, protection from dragonfire, and weaponry 875 coins (unless you have unlocked permanently free access via either Saniboch or Banisoch )",
+      "oneOf": [
+        {
+          "regions": [
+            "Brimhaven"
+          ]
+        },
+        {
+          "label": "Banisoch's entrance",
+          "regions": [
+            "Tai Bwo Wannai"
+          ],
+          "quests": [
+            "Jungle Potion"
+          ],
+          "minigames": [
+            "Tai Bwo Wannai Cleanup"
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Banisoch's entrance west of Tai Bwo Wannai (43,47) leads straight to the bronze dragons, for trading sticks."
+      }
     },
     {
       "id": "kar_elite_1",
@@ -6090,14 +7572,39 @@
         "Runecraft": 91
       },
       "quests": [],
-      "anyOfRegions": [
-        "Shilo Village",
-        "Tai Bwo Wannai"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 56 nature runes simultaneously from Essence without the use of Extracts.",
-      "sourceRequirements": "91 Runecraft 28 pure or daeyalt essence (less may suffice with Raiments of the Eye pieces) Access to the Nature Altar ( nature talisman / tiara, catalytic talisman / tiara, or the Abyss )"
+      "sourceRequirements": "91 Runecraft 28 pure or daeyalt essence (less may suffice with Raiments of the Eye pieces) Access to the Nature Altar ( nature talisman / tiara, catalytic talisman / tiara, or the Abyss )",
+      "oneOf": [
+        {
+          "regions": [
+            "Shilo Village"
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance. The ruins are at 44,47, a Shilo Village chunk, not Tai Bwo Wannai."
+      }
     },
     {
       "id": "kar_elite_4",
@@ -6447,12 +7954,21 @@
       "description": "Kill a Lizardman.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Shayzien"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Combat gear Antipoison recommended"
+      "sourceRequirements": "Combat gear Antipoison recommended",
+      "anyOfRegions": [
+        "Shayzien",
+        "Molch",
+        "Lovakengj",
+        "Mount Karuulm",
+        "Mount Quidamortem"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Lizardmen spawn at Shayziens' Wall, the Lizardman Canyon, the Settlement, Molch, the Kebos Swamp and the Battlefront."
+      }
     },
     {
       "id": "kou_med_3",
@@ -7169,12 +8685,38 @@
         "Runecraft": 5
       },
       "quests": [],
-      "regions": [
-        "Lumbridge"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "5 Runecraft Pure, daeyalt, or rune essence Access to the Water Altar ( water talisman / tiara, elemental talisman / tiara, or the Abyss )"
+      "sourceRequirements": "5 Runecraft Pure, daeyalt, or rune essence Access to the Water Altar ( water talisman / tiara, elemental talisman / tiara, or the Abyss )",
+      "oneOf": [
+        {
+          "regions": [
+            "Lumbridge"
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance."
+      }
     },
     {
       "id": "lum_easy_5",
@@ -7560,15 +9102,12 @@
         "Hunter": 42
       },
       "quests": [],
-      "regions": [
-        "Zanaris"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "42 Hunter Dramen or Lunar staff to enter Zanaris Butterfly net and impling jar",
       "oneOf": [
         {
-          "label": "Catch an essence impling with a net",
+          "label": "Catch an essence impling with a net, through Zanaris",
           "skills": {
             "Hunter": 42
           },
@@ -7582,21 +9121,216 @@
           ],
           "items": [
             "Impling jar"
+          ],
+          "regions": [
+            "Zanaris"
           ]
         },
         {
-          "label": "Catch an essence impling bare-handed",
+          "label": "Catch an essence impling with a net, through a crop circle",
+          "skills": {
+            "Hunter": 42
+          },
+          "equipmentRequirements": [
+            {
+              "slot": "Weapon",
+              "tier": 1,
+              "reason": "Butterfly net or magic butterfly net",
+              "manualCheck": "Have Butterfly net or magic butterfly net and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "items": [
+            "Impling jar"
+          ],
+          "locations": [
+            {
+              "label": "A wheat field with the crop circle",
+              "chunkOptions": [
+                {
+                  "cx": 46,
+                  "cy": 53
+                },
+                {
+                  "cx": 40,
+                  "cy": 48
+                },
+                {
+                  "cx": 48,
+                  "cy": 51
+                },
+                {
+                  "cx": 46,
+                  "cy": 50
+                },
+                {
+                  "cx": 49,
+                  "cy": 54
+                },
+                {
+                  "cx": 20,
+                  "cy": 57
+                },
+                {
+                  "cx": 27,
+                  "cy": 55
+                },
+                {
+                  "cx": 34,
+                  "cy": 53
+                },
+                {
+                  "cx": 44,
+                  "cy": 54
+                },
+                {
+                  "cx": 38,
+                  "cy": 54
+                },
+                {
+                  "cx": 43,
+                  "cy": 50
+                },
+                {
+                  "cx": 45,
+                  "cy": 53
+                },
+                {
+                  "cx": 25,
+                  "cy": 56
+                },
+                {
+                  "cx": 49,
+                  "cy": 51
+                },
+                {
+                  "cx": 21,
+                  "cy": 45
+                },
+                {
+                  "cx": 41,
+                  "cy": 52
+                },
+                {
+                  "cx": 50,
+                  "cy": 52
+                },
+                {
+                  "cx": 26,
+                  "cy": 47
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Catch an essence impling bare-handed, through Zanaris",
           "skills": {
             "Hunter": 52
           },
           "items": [
             "Impling jar"
+          ],
+          "regions": [
+            "Zanaris"
+          ]
+        },
+        {
+          "label": "Catch an essence impling bare-handed, through a crop circle",
+          "skills": {
+            "Hunter": 52
+          },
+          "items": [
+            "Impling jar"
+          ],
+          "locations": [
+            {
+              "label": "A wheat field with the crop circle",
+              "chunkOptions": [
+                {
+                  "cx": 46,
+                  "cy": 53
+                },
+                {
+                  "cx": 40,
+                  "cy": 48
+                },
+                {
+                  "cx": 48,
+                  "cy": 51
+                },
+                {
+                  "cx": 46,
+                  "cy": 50
+                },
+                {
+                  "cx": 49,
+                  "cy": 54
+                },
+                {
+                  "cx": 20,
+                  "cy": 57
+                },
+                {
+                  "cx": 27,
+                  "cy": 55
+                },
+                {
+                  "cx": 34,
+                  "cy": 53
+                },
+                {
+                  "cx": 44,
+                  "cy": 54
+                },
+                {
+                  "cx": 38,
+                  "cy": 54
+                },
+                {
+                  "cx": 43,
+                  "cy": 50
+                },
+                {
+                  "cx": 45,
+                  "cy": 53
+                },
+                {
+                  "cx": 25,
+                  "cy": 56
+                },
+                {
+                  "cx": 49,
+                  "cy": 51
+                },
+                {
+                  "cx": 21,
+                  "cy": 45
+                },
+                {
+                  "cx": 41,
+                  "cy": 52
+                },
+                {
+                  "cx": 50,
+                  "cy": 52
+                },
+                {
+                  "cx": 26,
+                  "cy": 47
+                }
+              ]
+            }
           ]
         }
       ],
       "minigames": [
         "Impetuous Impulses"
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Puro-Puro is also entered through a crop circle that moves between wheat fields; Lost City is not needed that way."
+      }
     },
     {
       "id": "lum_med_12",
@@ -7609,12 +9343,38 @@
         "Runecraft": 23
       },
       "quests": [],
-      "regions": [
-        "Al Kharid"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "23 Runecraft Earth talisman, earth runes, and pure or daeyalt essence Access to the Fire Altar ( fire talisman / tiara, elemental talisman / tiara, or the Abyss ) Binding necklace recommended to guarantee the runes are successfully crafted"
+      "sourceRequirements": "23 Runecraft Earth talisman, earth runes, and pure or daeyalt essence Access to the Fire Altar ( fire talisman / tiara, elemental talisman / tiara, or the Abyss ) Binding necklace recommended to guarantee the runes are successfully crafted",
+      "oneOf": [
+        {
+          "regions": [
+            "Al Kharid"
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance."
+      }
     },
     {
       "id": "lum_hard_1",
@@ -7737,14 +9497,20 @@
       },
       "quests": [],
       "regions": [
-        "Lumbridge"
+        "Lumbridge",
+        "Edgeville"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "57 Woodcutting Any axe",
       "mobility": [
         "Canoes"
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The canoe trip ends in Edgeville."
+      }
     },
     {
       "id": "lum_hard_5",
@@ -7779,12 +9545,29 @@
         "Another Slice of H.A.M."
       ],
       "regions": [
-        "Lumbridge",
         "Keldagrim"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Another Slice of H.A.M."
+      "sourceRequirements": "Completion of Another Slice of H.A.M.",
+      "oneOf": [
+        {
+          "regions": [
+            "Lumbridge"
+          ]
+        },
+        {
+          "label": "Through the Kalphite Lair",
+          "regions": [
+            "Kalphite Lair"
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Dorgesh-Kaan is entered from the Lumbridge cellar or, through the South Dungeon, from the Kalphite Lair."
+      }
     },
     {
       "id": "lum_hard_7",
@@ -7896,12 +9679,18 @@
       "quests": [
         "Death to the Dorgeshuun"
       ],
-      "regions": [
-        "Lumbridge"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Death to the Dorgeshuun 78 Thieving Lockpick"
+      "sourceRequirements": "Completion of Death to the Dorgeshuun 78 Thieving Lockpick",
+      "anyOfRegions": [
+        "Lumbridge",
+        "Kalphite Lair"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Dorgesh-Kaan is entered from the Lumbridge cellar or, through the South Dungeon, from the Kalphite Lair."
+      }
     },
     {
       "id": "lum_elite_2",
@@ -7918,9 +9707,6 @@
       "quests": [
         "Death to the Dorgeshuun"
       ],
-      "regions": [
-        "Lumbridge"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Death to the Dorgeshuun 70 Agility, 70 Ranged and 70 Strength Mith grapple, any crossbow, and a light source",
@@ -7936,7 +9722,16 @@
           "tier": 3,
           "reason": "Mith grapple for the shortcut"
         }
-      ]
+      ],
+      "anyOfRegions": [
+        "Lumbridge",
+        "Kalphite Lair"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Dorgesh-Kaan is entered from the Lumbridge cellar or, through the South Dungeon, from the Kalphite Lair."
+      }
     },
     {
       "id": "lum_elite_3",
@@ -7983,22 +9778,42 @@
       "description": "Craft 140 or more Water runes simultaneously from Essence without the use of Extracts.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Lumbridge"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 140 or more Water runes simultaneously.",
       "sourceRequirements": "76 Runecraft 57 Runecraft with 3 Raiments of the Eye pieces 38 Runecraft with 4 Raiments of the Eye pieces (random chance, not guaranteed) 28 pure, daeyalt, or rune essence (less may suffice at higher Runecraft levels) Access to the Water Altar ( water talisman / tiara, elemental talisman / tiara, or the Abyss )",
       "oneOf": [
         {
-          "label": "No Raiments",
+          "label": "No Raiments, Lumbridge ruins",
           "skills": {
             "Runecraft": 76
-          }
+          },
+          "regions": [
+            "Lumbridge"
+          ]
         },
         {
-          "label": "3 Raiments of the Eye pieces (Head, Body, Legs)",
+          "label": "No Raiments, through the Abyss",
+          "skills": {
+            "Runecraft": 76
+          },
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Head, Body, Legs), Lumbridge ruins",
           "skills": {
             "Runecraft": 57
           },
@@ -8024,10 +9839,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Lumbridge"
           ]
         },
         {
-          "label": "3 Raiments of the Eye pieces (Head, Body, Boots)",
+          "label": "3 Raiments of the Eye pieces (Head, Body, Legs), through the Abyss",
+          "skills": {
+            "Runecraft": 57
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Head, Body, Boots), Lumbridge ruins",
           "skills": {
             "Runecraft": 57
           },
@@ -8053,10 +9914,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Lumbridge"
           ]
         },
         {
-          "label": "3 Raiments of the Eye pieces (Head, Legs, Boots)",
+          "label": "3 Raiments of the Eye pieces (Head, Body, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 57
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Head, Legs, Boots), Lumbridge ruins",
           "skills": {
             "Runecraft": 57
           },
@@ -8082,10 +9989,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Lumbridge"
           ]
         },
         {
-          "label": "3 Raiments of the Eye pieces (Body, Legs, Boots)",
+          "label": "3 Raiments of the Eye pieces (Head, Legs, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 57
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Body, Legs, Boots), Lumbridge ruins",
           "skills": {
             "Runecraft": 57
           },
@@ -8111,10 +10064,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Lumbridge"
           ]
         },
         {
-          "label": "4 Raiments of the Eye pieces (Head, Body, Legs, Boots)",
+          "label": "3 Raiments of the Eye pieces (Body, Legs, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 57
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "4 Raiments of the Eye pieces (Head, Body, Legs, Boots), Lumbridge ruins",
           "skills": {
             "Runecraft": 38
           },
@@ -8146,9 +10145,66 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Lumbridge"
+          ]
+        },
+        {
+          "label": "4 Raiments of the Eye pieces (Head, Body, Legs, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 38
+          },
+          "items": [
+            "4 Raiments of the Eye pieces (random chance)"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
           ]
         }
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance."
+      }
     },
     {
       "id": "lum_elite_6",
@@ -8472,12 +10528,34 @@
       "quests": [
         "Priest in Peril"
       ],
-      "regions": [
-        "Mort Myre Swamp"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "29 Hunter Rope and small fishing net"
+      "sourceRequirements": "29 Hunter Rope and small fishing net",
+      "oneOf": [
+        {
+          "regions": [
+            "Mort Myre Swamp"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Swamp lizards north-west of Slepe",
+              "chunkOptions": [
+                {
+                  "cx": 57,
+                  "cy": 53
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Swamp lizards are caught in the Canifis Hunter area and north-west of Slepe (57,53)."
+      }
     },
     {
       "id": "mor_med_2",
@@ -8855,14 +10933,20 @@
         "In Aid of the Myreque"
       ],
       "regions": [
-        "Burgh de Rott"
+        "Burgh de Rott",
+        "Paterdomus"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of In Aid of the Myreque See the recommendations",
       "minigames": [
         "Temple Trekking"
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "A temple trek runs between Paterdomus and Burgh de Rott."
+      }
     },
     {
       "id": "mor_hard_6",
@@ -9362,12 +11446,38 @@
         "Runecraft": 9
       },
       "quests": [],
-      "regions": [
-        "Varrock"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "9 Runecraft Pure, daeyalt, or rune essence Access to the Earth Altar ( earth talisman / tiara, elemental talisman / tiara, or the Abyss )"
+      "sourceRequirements": "9 Runecraft Pure, daeyalt, or rune essence Access to the Earth Altar ( earth talisman / tiara, elemental talisman / tiara, or the Abyss )",
+      "oneOf": [
+        {
+          "regions": [
+            "Varrock"
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance."
+      }
     },
     {
       "id": "var_easy_13",
@@ -9606,23 +11716,52 @@
       "description": "Get a Slayer task from Vannaka.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Edgeville"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "40 Combat level",
       "oneOf": [
         {
-          "combatLevel": 40
+          "combatLevel": 40,
+          "label": "from Edgeville",
+          "regions": [
+            "Edgeville"
+          ]
         },
         {
-          "label": "Slayer cape",
+          "combatLevel": 40,
+          "label": "through the Varrock Sewers",
+          "regions": [
+            "Varrock"
+          ],
+          "skills": {
+            "Agility": 51
+          }
+        },
+        {
+          "label": "Slayer cape, from Edgeville",
           "skills": {
             "Slayer": 99
-          }
+          },
+          "regions": [
+            "Edgeville"
+          ]
+        },
+        {
+          "label": "Slayer cape, through the Varrock Sewers",
+          "skills": {
+            "Slayer": 99,
+            "Agility": 51
+          },
+          "regions": [
+            "Varrock"
+          ]
         }
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The obstacle pipe (51 Agility) joins the Varrock Sewers, entered just east of Varrock Palace (50,54), to the Edgeville Dungeon both ways."
+      }
     },
     {
       "id": "var_med_10",
@@ -9915,12 +12054,27 @@
         "Agility": 51
       },
       "quests": [],
-      "regions": [
-        "Edgeville"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "51 Agility"
+      "sourceRequirements": "51 Agility",
+      "oneOf": [
+        {
+          "regions": [
+            "Edgeville"
+          ]
+        },
+        {
+          "label": "Through the Varrock Sewers",
+          "regions": [
+            "Varrock"
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The obstacle pipe (51 Agility) joins the Varrock Sewers, entered just east of Varrock Palace (50,54), to the Edgeville Dungeon both ways."
+      }
     },
     {
       "id": "var_elite_1",
@@ -10056,22 +12210,42 @@
       "description": "Craft 100 or more earth runes simultaneously from Essence without the use of Extracts.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Varrock"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 100 or more earth runes simultaneously.",
       "sourceRequirements": "78 Runecraft 52 Runecraft with 2+ Raiments of the Eye pieces 28 pure, daeyalt, or rune essence (fewer may suffice with more Raiments of the Eye pieces) Access to the Earth Altar ( earth talisman / tiara, elemental talisman / tiara, or the Abyss )",
       "oneOf": [
         {
-          "label": "No Raiments",
+          "label": "No Raiments, Varrock ruins",
           "skills": {
             "Runecraft": 78
-          }
+          },
+          "regions": [
+            "Varrock"
+          ]
         },
         {
-          "label": "2+ Raiments of the Eye pieces (Head, Body)",
+          "label": "No Raiments, through the Abyss",
+          "skills": {
+            "Runecraft": 78
+          },
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Body), Varrock ruins",
           "skills": {
             "Runecraft": 52
           },
@@ -10091,10 +12265,50 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Varrock"
           ]
         },
         {
-          "label": "2+ Raiments of the Eye pieces (Head, Legs)",
+          "label": "2+ Raiments of the Eye pieces (Head, Body), through the Abyss",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Legs), Varrock ruins",
           "skills": {
             "Runecraft": 52
           },
@@ -10114,10 +12328,50 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Varrock"
           ]
         },
         {
-          "label": "2+ Raiments of the Eye pieces (Head, Boots)",
+          "label": "2+ Raiments of the Eye pieces (Head, Legs), through the Abyss",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Boots), Varrock ruins",
           "skills": {
             "Runecraft": 52
           },
@@ -10137,10 +12391,50 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Varrock"
           ]
         },
         {
-          "label": "2+ Raiments of the Eye pieces (Body, Legs)",
+          "label": "2+ Raiments of the Eye pieces (Head, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Body, Legs), Varrock ruins",
           "skills": {
             "Runecraft": 52
           },
@@ -10160,10 +12454,50 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Varrock"
           ]
         },
         {
-          "label": "2+ Raiments of the Eye pieces (Body, Boots)",
+          "label": "2+ Raiments of the Eye pieces (Body, Legs), through the Abyss",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Body, Boots), Varrock ruins",
           "skills": {
             "Runecraft": 52
           },
@@ -10183,10 +12517,50 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Varrock"
           ]
         },
         {
-          "label": "2+ Raiments of the Eye pieces (Legs, Boots)",
+          "label": "2+ Raiments of the Eye pieces (Body, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Legs, Boots), Varrock ruins",
           "skills": {
             "Runecraft": 52
           },
@@ -10205,10 +12579,55 @@
               "tier": 1,
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "regions": [
+            "Varrock"
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Legs, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
             }
           ]
         }
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance."
+      }
     },
     {
       "id": "west_easy_1",
@@ -10706,9 +13125,6 @@
       "quests": [
         "Roving Elves"
       ],
-      "regions": [
-        "Isafdar"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Roving Elves 70 Ranged Crystal bow or Bow of faerdhinen",
@@ -10718,7 +13134,30 @@
           "tier": 8,
           "reason": "Crystal bow or bow of faerdhinen"
         }
-      ]
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Lletya"
+          ],
+          "questProgress": [
+            {
+              "quest": "Mourning's End Part I",
+              "label": "Reached the required progress in Mourning's End Part I for: Kill an Elf with a Crystal bow."
+            }
+          ]
+        },
+        {
+          "regions": [
+            "Iorwerth Camp"
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Attackable elves are in Lletya and Iorwerth Camp; Isafdar has none, and Mourners or the elves by the dark beasts do not count."
+      }
     },
     {
       "id": "west_hard_2",
@@ -10855,9 +13294,6 @@
         "Mining": 70
       },
       "quests": [],
-      "regions": [
-        "Isafdar"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Started Regicide 70 Mining Any pickaxe",
@@ -10866,7 +13302,28 @@
           "quest": "Regicide",
           "label": "Reached the required progress in Regicide for: Mine some Adamantite ore in Tirannwn."
         }
-      ]
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Isafdar"
+          ]
+        },
+        {
+          "label": "Trahaearn mine",
+          "regions": [
+            "Prifddinas"
+          ],
+          "quests": [
+            "Song of the Elves"
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Adamantite in Tirannwn: the Isafdar mine, or the Trahaearn mine in Prifddinas after Song of the Elves (diary note)."
+      }
     },
     {
       "id": "west_hard_8",
@@ -10989,12 +13446,19 @@
         "Thieving": 75
       },
       "quests": [],
-      "regions": [
-        "Tree Gnome Stronghold"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "75 Thieving"
+      "sourceRequirements": "75 Thieving",
+      "anyOfRegions": [
+        "Tree Gnome Stronghold",
+        "Gnome Village",
+        "Khazard Battlefield"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The pickpocketable Gnome also stands in Tree Gnome Village and on the Battlefield of Khazard."
+      }
     },
     {
       "id": "west_elite_1",
@@ -11169,9 +13633,6 @@
         "Thieving": 85
       },
       "quests": [],
-      "regions": [
-        "Lletya"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Started Mourning's End Part I 85 Thieving",
@@ -11180,7 +13641,28 @@
           "quest": "Mourning's End Part I",
           "label": "Reached the required progress in Mourning's End Part I for: Pickpocket an Elf."
         }
-      ]
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Lletya"
+          ]
+        },
+        {
+          "label": "Prifddinas elves",
+          "regions": [
+            "Prifddinas"
+          ],
+          "quests": [
+            "Song of the Elves"
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Pickpocketable elves live in Lletya and, after Song of the Elves, in Prifddinas."
+      }
     },
     {
       "id": "wild_easy_1",
@@ -11341,13 +13823,31 @@
         "Agility": 15
       },
       "quests": [],
-      "regions": [
-        "Edgeville"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Kill an Earth Warrior.",
-      "sourceRequirements": "15 Agility Weaponry"
+      "sourceRequirements": "15 Agility Weaponry",
+      "oneOf": [
+        {
+          "regions": [
+            "Edgeville"
+          ]
+        },
+        {
+          "label": "Through the Varrock Sewers",
+          "regions": [
+            "Varrock"
+          ],
+          "skills": {
+            "Agility": 51
+          }
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The obstacle pipe (51 Agility) joins the Varrock Sewers, entered just east of Varrock Palace (50,54), to the Edgeville Dungeon both ways."
+      }
     },
     {
       "id": "wild_easy_5",
@@ -11407,9 +13907,642 @@
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "None",
-      "regions": [
-        "Edgeville"
-      ]
+      "oneOf": [
+        {
+          "regions": [
+            "Edgeville"
+          ]
+        },
+        {
+          "label": "Through the Varrock Sewers",
+          "regions": [
+            "Varrock"
+          ],
+          "skills": {
+            "Agility": 51
+          }
+        },
+        {
+          "label": "Varrock Sewers eggs, dropped and picked up in the Wilderness",
+          "regions": [
+            "Varrock"
+          ],
+          "locations": [
+            {
+              "label": "Anywhere in the Wilderness",
+              "chunkOptions": [
+                {
+                  "cx": 46,
+                  "cy": 55
+                },
+                {
+                  "cx": 47,
+                  "cy": 55
+                },
+                {
+                  "cx": 48,
+                  "cy": 55
+                },
+                {
+                  "cx": 49,
+                  "cy": 55
+                },
+                {
+                  "cx": 50,
+                  "cy": 55
+                },
+                {
+                  "cx": 51,
+                  "cy": 55
+                },
+                {
+                  "cx": 52,
+                  "cy": 55
+                },
+                {
+                  "cx": 46,
+                  "cy": 56
+                },
+                {
+                  "cx": 47,
+                  "cy": 56
+                },
+                {
+                  "cx": 48,
+                  "cy": 56
+                },
+                {
+                  "cx": 49,
+                  "cy": 56
+                },
+                {
+                  "cx": 50,
+                  "cy": 56
+                },
+                {
+                  "cx": 51,
+                  "cy": 56
+                },
+                {
+                  "cx": 52,
+                  "cy": 56
+                },
+                {
+                  "cx": 46,
+                  "cy": 57
+                },
+                {
+                  "cx": 47,
+                  "cy": 57
+                },
+                {
+                  "cx": 48,
+                  "cy": 57
+                },
+                {
+                  "cx": 49,
+                  "cy": 57
+                },
+                {
+                  "cx": 50,
+                  "cy": 57
+                },
+                {
+                  "cx": 51,
+                  "cy": 57
+                },
+                {
+                  "cx": 52,
+                  "cy": 57
+                },
+                {
+                  "cx": 47,
+                  "cy": 58
+                },
+                {
+                  "cx": 48,
+                  "cy": 58
+                },
+                {
+                  "cx": 49,
+                  "cy": 58
+                },
+                {
+                  "cx": 50,
+                  "cy": 58
+                },
+                {
+                  "cx": 51,
+                  "cy": 58
+                },
+                {
+                  "cx": 52,
+                  "cy": 58
+                },
+                {
+                  "cx": 46,
+                  "cy": 59
+                },
+                {
+                  "cx": 47,
+                  "cy": 59
+                },
+                {
+                  "cx": 48,
+                  "cy": 59
+                },
+                {
+                  "cx": 49,
+                  "cy": 59
+                },
+                {
+                  "cx": 50,
+                  "cy": 59
+                },
+                {
+                  "cx": 51,
+                  "cy": 59
+                },
+                {
+                  "cx": 52,
+                  "cy": 59
+                },
+                {
+                  "cx": 46,
+                  "cy": 60
+                },
+                {
+                  "cx": 47,
+                  "cy": 60
+                },
+                {
+                  "cx": 48,
+                  "cy": 60
+                },
+                {
+                  "cx": 49,
+                  "cy": 60
+                },
+                {
+                  "cx": 50,
+                  "cy": 60
+                },
+                {
+                  "cx": 51,
+                  "cy": 60
+                },
+                {
+                  "cx": 52,
+                  "cy": 60
+                },
+                {
+                  "cx": 46,
+                  "cy": 61
+                },
+                {
+                  "cx": 47,
+                  "cy": 61
+                },
+                {
+                  "cx": 48,
+                  "cy": 61
+                },
+                {
+                  "cx": 49,
+                  "cy": 61
+                },
+                {
+                  "cx": 50,
+                  "cy": 61
+                },
+                {
+                  "cx": 51,
+                  "cy": 61
+                },
+                {
+                  "cx": 52,
+                  "cy": 61
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Arandar eggs, dropped and picked up in the Wilderness",
+          "regions": [
+            "Arandar"
+          ],
+          "locations": [
+            {
+              "label": "Anywhere in the Wilderness",
+              "chunkOptions": [
+                {
+                  "cx": 46,
+                  "cy": 55
+                },
+                {
+                  "cx": 47,
+                  "cy": 55
+                },
+                {
+                  "cx": 48,
+                  "cy": 55
+                },
+                {
+                  "cx": 49,
+                  "cy": 55
+                },
+                {
+                  "cx": 50,
+                  "cy": 55
+                },
+                {
+                  "cx": 51,
+                  "cy": 55
+                },
+                {
+                  "cx": 52,
+                  "cy": 55
+                },
+                {
+                  "cx": 46,
+                  "cy": 56
+                },
+                {
+                  "cx": 47,
+                  "cy": 56
+                },
+                {
+                  "cx": 48,
+                  "cy": 56
+                },
+                {
+                  "cx": 49,
+                  "cy": 56
+                },
+                {
+                  "cx": 50,
+                  "cy": 56
+                },
+                {
+                  "cx": 51,
+                  "cy": 56
+                },
+                {
+                  "cx": 52,
+                  "cy": 56
+                },
+                {
+                  "cx": 46,
+                  "cy": 57
+                },
+                {
+                  "cx": 47,
+                  "cy": 57
+                },
+                {
+                  "cx": 48,
+                  "cy": 57
+                },
+                {
+                  "cx": 49,
+                  "cy": 57
+                },
+                {
+                  "cx": 50,
+                  "cy": 57
+                },
+                {
+                  "cx": 51,
+                  "cy": 57
+                },
+                {
+                  "cx": 52,
+                  "cy": 57
+                },
+                {
+                  "cx": 47,
+                  "cy": 58
+                },
+                {
+                  "cx": 48,
+                  "cy": 58
+                },
+                {
+                  "cx": 49,
+                  "cy": 58
+                },
+                {
+                  "cx": 50,
+                  "cy": 58
+                },
+                {
+                  "cx": 51,
+                  "cy": 58
+                },
+                {
+                  "cx": 52,
+                  "cy": 58
+                },
+                {
+                  "cx": 46,
+                  "cy": 59
+                },
+                {
+                  "cx": 47,
+                  "cy": 59
+                },
+                {
+                  "cx": 48,
+                  "cy": 59
+                },
+                {
+                  "cx": 49,
+                  "cy": 59
+                },
+                {
+                  "cx": 50,
+                  "cy": 59
+                },
+                {
+                  "cx": 51,
+                  "cy": 59
+                },
+                {
+                  "cx": 52,
+                  "cy": 59
+                },
+                {
+                  "cx": 46,
+                  "cy": 60
+                },
+                {
+                  "cx": 47,
+                  "cy": 60
+                },
+                {
+                  "cx": 48,
+                  "cy": 60
+                },
+                {
+                  "cx": 49,
+                  "cy": 60
+                },
+                {
+                  "cx": 50,
+                  "cy": 60
+                },
+                {
+                  "cx": 51,
+                  "cy": 60
+                },
+                {
+                  "cx": 52,
+                  "cy": 60
+                },
+                {
+                  "cx": 46,
+                  "cy": 61
+                },
+                {
+                  "cx": 47,
+                  "cy": 61
+                },
+                {
+                  "cx": 48,
+                  "cy": 61
+                },
+                {
+                  "cx": 49,
+                  "cy": 61
+                },
+                {
+                  "cx": 50,
+                  "cy": 61
+                },
+                {
+                  "cx": 51,
+                  "cy": 61
+                },
+                {
+                  "cx": 52,
+                  "cy": 61
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Forthos Dungeon eggs, dropped and picked up in the Wilderness",
+          "regions": [
+            "Hosidius"
+          ],
+          "locations": [
+            {
+              "label": "Anywhere in the Wilderness",
+              "chunkOptions": [
+                {
+                  "cx": 46,
+                  "cy": 55
+                },
+                {
+                  "cx": 47,
+                  "cy": 55
+                },
+                {
+                  "cx": 48,
+                  "cy": 55
+                },
+                {
+                  "cx": 49,
+                  "cy": 55
+                },
+                {
+                  "cx": 50,
+                  "cy": 55
+                },
+                {
+                  "cx": 51,
+                  "cy": 55
+                },
+                {
+                  "cx": 52,
+                  "cy": 55
+                },
+                {
+                  "cx": 46,
+                  "cy": 56
+                },
+                {
+                  "cx": 47,
+                  "cy": 56
+                },
+                {
+                  "cx": 48,
+                  "cy": 56
+                },
+                {
+                  "cx": 49,
+                  "cy": 56
+                },
+                {
+                  "cx": 50,
+                  "cy": 56
+                },
+                {
+                  "cx": 51,
+                  "cy": 56
+                },
+                {
+                  "cx": 52,
+                  "cy": 56
+                },
+                {
+                  "cx": 46,
+                  "cy": 57
+                },
+                {
+                  "cx": 47,
+                  "cy": 57
+                },
+                {
+                  "cx": 48,
+                  "cy": 57
+                },
+                {
+                  "cx": 49,
+                  "cy": 57
+                },
+                {
+                  "cx": 50,
+                  "cy": 57
+                },
+                {
+                  "cx": 51,
+                  "cy": 57
+                },
+                {
+                  "cx": 52,
+                  "cy": 57
+                },
+                {
+                  "cx": 47,
+                  "cy": 58
+                },
+                {
+                  "cx": 48,
+                  "cy": 58
+                },
+                {
+                  "cx": 49,
+                  "cy": 58
+                },
+                {
+                  "cx": 50,
+                  "cy": 58
+                },
+                {
+                  "cx": 51,
+                  "cy": 58
+                },
+                {
+                  "cx": 52,
+                  "cy": 58
+                },
+                {
+                  "cx": 46,
+                  "cy": 59
+                },
+                {
+                  "cx": 47,
+                  "cy": 59
+                },
+                {
+                  "cx": 48,
+                  "cy": 59
+                },
+                {
+                  "cx": 49,
+                  "cy": 59
+                },
+                {
+                  "cx": 50,
+                  "cy": 59
+                },
+                {
+                  "cx": 51,
+                  "cy": 59
+                },
+                {
+                  "cx": 52,
+                  "cy": 59
+                },
+                {
+                  "cx": 46,
+                  "cy": 60
+                },
+                {
+                  "cx": 47,
+                  "cy": 60
+                },
+                {
+                  "cx": 48,
+                  "cy": 60
+                },
+                {
+                  "cx": 49,
+                  "cy": 60
+                },
+                {
+                  "cx": 50,
+                  "cy": 60
+                },
+                {
+                  "cx": 51,
+                  "cy": 60
+                },
+                {
+                  "cx": 52,
+                  "cy": 60
+                },
+                {
+                  "cx": 46,
+                  "cy": 61
+                },
+                {
+                  "cx": 47,
+                  "cy": 61
+                },
+                {
+                  "cx": 48,
+                  "cy": 61
+                },
+                {
+                  "cx": 49,
+                  "cy": 61
+                },
+                {
+                  "cx": 50,
+                  "cy": 61
+                },
+                {
+                  "cx": 51,
+                  "cy": 61
+                },
+                {
+                  "cx": 52,
+                  "cy": 61
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The eggs spawn in the Edgeville Dungeon's Wilderness part, the Varrock Sewers, Arandar and the Forthos Dungeon; eggs brought into the Wilderness count when dropped and picked up five times (Wilderness Diary note)."
+      }
     },
     {
       "id": "wild_easy_10",
@@ -11486,23 +14619,6 @@
       "classification": "preserved-semantic",
       "previousDescription": "Equip a Team Cape.",
       "sourceRequirements": "Any team cape",
-      "anyOfRegions": [
-        "Ferox Enclave",
-        "Wilderness Volcano",
-        "Chaos Temple",
-        "Rogues' Castle",
-        "Lava Maze",
-        "Wilderness Bandit Camp",
-        "Dark Warriors' Fortress",
-        "Graveyard of Shadows",
-        "Forgotten Cemetery",
-        "Mage Arena",
-        "Scorpia's Cave",
-        "Fountain of Rune",
-        "Wilderness God Wars Dungeon",
-        "Daimon's Crater",
-        "Chaos Altar"
-      ],
       "equipmentRequirements": [
         {
           "slot": "Cape",
@@ -11510,7 +14626,225 @@
           "reason": "Team cape",
           "manualCheck": "Have Team cape and confirm that the specific item is permitted by your equipment tier"
         }
-      ]
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Forgotten Cemetery"
+          ]
+        },
+        {
+          "regions": [
+            "Wilderness God Wars Dungeon"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Anywhere in the Wilderness",
+              "chunkOptions": [
+                {
+                  "cx": 46,
+                  "cy": 55
+                },
+                {
+                  "cx": 47,
+                  "cy": 55
+                },
+                {
+                  "cx": 48,
+                  "cy": 55
+                },
+                {
+                  "cx": 49,
+                  "cy": 55
+                },
+                {
+                  "cx": 50,
+                  "cy": 55
+                },
+                {
+                  "cx": 51,
+                  "cy": 55
+                },
+                {
+                  "cx": 52,
+                  "cy": 55
+                },
+                {
+                  "cx": 46,
+                  "cy": 56
+                },
+                {
+                  "cx": 47,
+                  "cy": 56
+                },
+                {
+                  "cx": 48,
+                  "cy": 56
+                },
+                {
+                  "cx": 49,
+                  "cy": 56
+                },
+                {
+                  "cx": 50,
+                  "cy": 56
+                },
+                {
+                  "cx": 51,
+                  "cy": 56
+                },
+                {
+                  "cx": 52,
+                  "cy": 56
+                },
+                {
+                  "cx": 46,
+                  "cy": 57
+                },
+                {
+                  "cx": 47,
+                  "cy": 57
+                },
+                {
+                  "cx": 48,
+                  "cy": 57
+                },
+                {
+                  "cx": 49,
+                  "cy": 57
+                },
+                {
+                  "cx": 50,
+                  "cy": 57
+                },
+                {
+                  "cx": 51,
+                  "cy": 57
+                },
+                {
+                  "cx": 52,
+                  "cy": 57
+                },
+                {
+                  "cx": 47,
+                  "cy": 58
+                },
+                {
+                  "cx": 48,
+                  "cy": 58
+                },
+                {
+                  "cx": 49,
+                  "cy": 58
+                },
+                {
+                  "cx": 50,
+                  "cy": 58
+                },
+                {
+                  "cx": 51,
+                  "cy": 58
+                },
+                {
+                  "cx": 52,
+                  "cy": 58
+                },
+                {
+                  "cx": 46,
+                  "cy": 59
+                },
+                {
+                  "cx": 47,
+                  "cy": 59
+                },
+                {
+                  "cx": 48,
+                  "cy": 59
+                },
+                {
+                  "cx": 49,
+                  "cy": 59
+                },
+                {
+                  "cx": 50,
+                  "cy": 59
+                },
+                {
+                  "cx": 51,
+                  "cy": 59
+                },
+                {
+                  "cx": 52,
+                  "cy": 59
+                },
+                {
+                  "cx": 46,
+                  "cy": 60
+                },
+                {
+                  "cx": 47,
+                  "cy": 60
+                },
+                {
+                  "cx": 48,
+                  "cy": 60
+                },
+                {
+                  "cx": 49,
+                  "cy": 60
+                },
+                {
+                  "cx": 50,
+                  "cy": 60
+                },
+                {
+                  "cx": 51,
+                  "cy": 60
+                },
+                {
+                  "cx": 52,
+                  "cy": 60
+                },
+                {
+                  "cx": 46,
+                  "cy": 61
+                },
+                {
+                  "cx": 47,
+                  "cy": 61
+                },
+                {
+                  "cx": 48,
+                  "cy": 61
+                },
+                {
+                  "cx": 49,
+                  "cy": 61
+                },
+                {
+                  "cx": 50,
+                  "cy": 61
+                },
+                {
+                  "cx": 51,
+                  "cy": 61
+                },
+                {
+                  "cx": 52,
+                  "cy": 61
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The task counts anywhere in the Wilderness, including Edgeville's and Varrock's chunks past the ditch."
+      }
     },
     {
       "id": "wilderness_med_1",
@@ -11695,9 +15029,35 @@
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "Weaponry",
-      "regions": [
-        "Forgotten Cemetery"
-      ]
+      "oneOf": [
+        {
+          "regions": [
+            "Forgotten Cemetery"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Wilderness Slayer Cave entrance",
+              "chunkOptions": [
+                {
+                  "cx": 50,
+                  "cy": 57
+                },
+                {
+                  "cx": 51,
+                  "cy": 58
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
+        "notes": "Ankou in the Forgotten Cemetery or the Wilderness Slayer Cave (WildernessMedium6[+]: 11834 or the cave), the cave by its two entrance chunks. A player confirmed a cave Ankou completes the task."
+      }
     },
     {
       "id": "wild_med_5",
@@ -11713,9 +15073,27 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "60 Magic Unpowered orb and means to cast Charge Earth Orb ( )",
-      "regions": [
-        "Edgeville"
-      ]
+      "oneOf": [
+        {
+          "regions": [
+            "Edgeville"
+          ]
+        },
+        {
+          "label": "Through the Varrock Sewers",
+          "regions": [
+            "Varrock"
+          ],
+          "skills": {
+            "Agility": 51
+          }
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The obstacle pipe (51 Agility) joins the Varrock Sewers, entered just east of Varrock Palace (50,54), to the Edgeville Dungeon both ways."
+      }
     },
     {
       "id": "wild_med_3",
@@ -11942,14 +15320,18 @@
             {
               "cx": 50,
               "cy": 60
+            },
+            {
+              "cx": 49,
+              "cy": 59
             }
           ]
         }
       ],
       "geographyVerification": {
-        "reviewedAt": "2026-09-12",
-        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
-        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Two of the Lava Dragon Isle spawns are in 49,59."
       }
     },
     {
@@ -11961,15 +15343,21 @@
       "description": "Kill the Chaos Elemental.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Rogues' Castle"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "See the strategy guide",
       "bosses": [
         "Chaos Elemental"
-      ]
+      ],
+      "anyOfRegions": [
+        "Rogues' Castle",
+        "Scorpia's Cave"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Chaos Elemental spawns at 50,61, which the map gives Scorpia's Cave, and wanders to Rogues' Castle."
+      }
     },
     {
       "id": "wild_hard_7",
@@ -12058,9 +15446,24 @@
         }
       ],
       "regions": [
-        "Burthorpe",
-        "Wilderness God Wars Dungeon"
-      ]
+        "Burthorpe"
+      ],
+      "locations": [
+        {
+          "label": "Where the Trollheim shortcut lands, west of the Ruins",
+          "chunkOptions": [
+            {
+              "cx": 46,
+              "cy": 57
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The shortcut is the Trollheim rocks at (2945,3678), landing in 46,57; the rocky handholds by the God Wars Dungeon are a different one."
+      }
     },
     {
       "id": "wild_hard_9",
@@ -12549,6 +15952,7 @@
       "kan_med_11",
       "kar_easy_9",
       "kar_hard_1",
+      "kar_hard_10",
       "kar_med_1",
       "kar_med_19",
       "kar_med_5",
@@ -12599,6 +16003,7 @@
       "kar_easy_9",
       "kar_elite_4",
       "kar_hard_2",
+      "kar_med_6",
       "kou_elite_3",
       "kou_elite_7",
       "kou_med_11",

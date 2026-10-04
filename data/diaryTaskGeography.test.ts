@@ -38,7 +38,6 @@ interface SourceTask {
 /** Where the export and the app's map disagree, reviewed; the tag stands. */
 const REVIEWED: Readonly<Record<string, string>> = {
   mor_hard_7: 'The Canifis mushroom patch is in 53,54, which the map gives to Paterdomus.',
-  wild_hard_6: "The Chaos Elemental roams 50,61, west of Rogues' Castle, which the map calls Scorpia's Cave.",
 };
 
 const EXPORT_DIARY: Readonly<Record<string, string>> = {
@@ -152,7 +151,7 @@ describe('Diary tasks are tagged where the game has them', () => {
       const places = placesOf(task);
       expect(places.length, id).toBeGreaterThan(0);
       expect(agrees(task, places), id).toBe(true);
-      expect(agrees({ ...task, regions: ['Al Kharid'], anyOfRegions: undefined }, places), id).toBe(false);
+      expect(agrees({ ...task, regions: ['Al Kharid'], anyOfRegions: undefined, oneOf: undefined, locations: undefined }, places), id).toBe(false);
     }
   });
 });
