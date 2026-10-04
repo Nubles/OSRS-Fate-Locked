@@ -6796,12 +6796,70 @@
         "Cooking": 16
       },
       "quests": [],
-      "regions": [
-        "Tai Bwo Wannai"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "16 Cooking Spider carcass, and a skewer stick or an arrow shaft"
+      "sourceRequirements": "16 Cooking Spider carcass, and a skewer stick or an arrow shaft",
+      "oneOf": [
+        {
+          "locations": [
+            {
+              "label": "Jungle spiders",
+              "chunkOptions": [
+                {
+                  "cx": 43,
+                  "cy": 47
+                },
+                {
+                  "cx": 43,
+                  "cy": 48
+                },
+                {
+                  "cx": 44,
+                  "cy": 48
+                },
+                {
+                  "cx": 43,
+                  "cy": 46
+                },
+                {
+                  "cx": 44,
+                  "cy": 47
+                },
+                {
+                  "cx": 45,
+                  "cy": 46
+                },
+                {
+                  "cx": 45,
+                  "cy": 47
+                },
+                {
+                  "cx": 41,
+                  "cy": 48
+                },
+                {
+                  "cx": 43,
+                  "cy": 50
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Sarachnis",
+          "regions": [
+            "Hosidius"
+          ],
+          "bosses": [
+            "Sarachnis"
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "A spider carcass drops from jungle spiders (Tai Bwo Wannai, Shilo Village, the Karamja River, Brimhaven and east of Yanille) or Sarachnis; the cooking needn't be on Karamja (Karamja Diary note)."
+      }
     },
     {
       "id": "kar_med_7",
@@ -13849,9 +13907,642 @@
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "None",
-      "regions": [
-        "Edgeville"
-      ]
+      "oneOf": [
+        {
+          "regions": [
+            "Edgeville"
+          ]
+        },
+        {
+          "label": "Through the Varrock Sewers",
+          "regions": [
+            "Varrock"
+          ],
+          "skills": {
+            "Agility": 51
+          }
+        },
+        {
+          "label": "Varrock Sewers eggs, dropped and picked up in the Wilderness",
+          "regions": [
+            "Varrock"
+          ],
+          "locations": [
+            {
+              "label": "Anywhere in the Wilderness",
+              "chunkOptions": [
+                {
+                  "cx": 46,
+                  "cy": 55
+                },
+                {
+                  "cx": 47,
+                  "cy": 55
+                },
+                {
+                  "cx": 48,
+                  "cy": 55
+                },
+                {
+                  "cx": 49,
+                  "cy": 55
+                },
+                {
+                  "cx": 50,
+                  "cy": 55
+                },
+                {
+                  "cx": 51,
+                  "cy": 55
+                },
+                {
+                  "cx": 52,
+                  "cy": 55
+                },
+                {
+                  "cx": 46,
+                  "cy": 56
+                },
+                {
+                  "cx": 47,
+                  "cy": 56
+                },
+                {
+                  "cx": 48,
+                  "cy": 56
+                },
+                {
+                  "cx": 49,
+                  "cy": 56
+                },
+                {
+                  "cx": 50,
+                  "cy": 56
+                },
+                {
+                  "cx": 51,
+                  "cy": 56
+                },
+                {
+                  "cx": 52,
+                  "cy": 56
+                },
+                {
+                  "cx": 46,
+                  "cy": 57
+                },
+                {
+                  "cx": 47,
+                  "cy": 57
+                },
+                {
+                  "cx": 48,
+                  "cy": 57
+                },
+                {
+                  "cx": 49,
+                  "cy": 57
+                },
+                {
+                  "cx": 50,
+                  "cy": 57
+                },
+                {
+                  "cx": 51,
+                  "cy": 57
+                },
+                {
+                  "cx": 52,
+                  "cy": 57
+                },
+                {
+                  "cx": 47,
+                  "cy": 58
+                },
+                {
+                  "cx": 48,
+                  "cy": 58
+                },
+                {
+                  "cx": 49,
+                  "cy": 58
+                },
+                {
+                  "cx": 50,
+                  "cy": 58
+                },
+                {
+                  "cx": 51,
+                  "cy": 58
+                },
+                {
+                  "cx": 52,
+                  "cy": 58
+                },
+                {
+                  "cx": 46,
+                  "cy": 59
+                },
+                {
+                  "cx": 47,
+                  "cy": 59
+                },
+                {
+                  "cx": 48,
+                  "cy": 59
+                },
+                {
+                  "cx": 49,
+                  "cy": 59
+                },
+                {
+                  "cx": 50,
+                  "cy": 59
+                },
+                {
+                  "cx": 51,
+                  "cy": 59
+                },
+                {
+                  "cx": 52,
+                  "cy": 59
+                },
+                {
+                  "cx": 46,
+                  "cy": 60
+                },
+                {
+                  "cx": 47,
+                  "cy": 60
+                },
+                {
+                  "cx": 48,
+                  "cy": 60
+                },
+                {
+                  "cx": 49,
+                  "cy": 60
+                },
+                {
+                  "cx": 50,
+                  "cy": 60
+                },
+                {
+                  "cx": 51,
+                  "cy": 60
+                },
+                {
+                  "cx": 52,
+                  "cy": 60
+                },
+                {
+                  "cx": 46,
+                  "cy": 61
+                },
+                {
+                  "cx": 47,
+                  "cy": 61
+                },
+                {
+                  "cx": 48,
+                  "cy": 61
+                },
+                {
+                  "cx": 49,
+                  "cy": 61
+                },
+                {
+                  "cx": 50,
+                  "cy": 61
+                },
+                {
+                  "cx": 51,
+                  "cy": 61
+                },
+                {
+                  "cx": 52,
+                  "cy": 61
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Arandar eggs, dropped and picked up in the Wilderness",
+          "regions": [
+            "Arandar"
+          ],
+          "locations": [
+            {
+              "label": "Anywhere in the Wilderness",
+              "chunkOptions": [
+                {
+                  "cx": 46,
+                  "cy": 55
+                },
+                {
+                  "cx": 47,
+                  "cy": 55
+                },
+                {
+                  "cx": 48,
+                  "cy": 55
+                },
+                {
+                  "cx": 49,
+                  "cy": 55
+                },
+                {
+                  "cx": 50,
+                  "cy": 55
+                },
+                {
+                  "cx": 51,
+                  "cy": 55
+                },
+                {
+                  "cx": 52,
+                  "cy": 55
+                },
+                {
+                  "cx": 46,
+                  "cy": 56
+                },
+                {
+                  "cx": 47,
+                  "cy": 56
+                },
+                {
+                  "cx": 48,
+                  "cy": 56
+                },
+                {
+                  "cx": 49,
+                  "cy": 56
+                },
+                {
+                  "cx": 50,
+                  "cy": 56
+                },
+                {
+                  "cx": 51,
+                  "cy": 56
+                },
+                {
+                  "cx": 52,
+                  "cy": 56
+                },
+                {
+                  "cx": 46,
+                  "cy": 57
+                },
+                {
+                  "cx": 47,
+                  "cy": 57
+                },
+                {
+                  "cx": 48,
+                  "cy": 57
+                },
+                {
+                  "cx": 49,
+                  "cy": 57
+                },
+                {
+                  "cx": 50,
+                  "cy": 57
+                },
+                {
+                  "cx": 51,
+                  "cy": 57
+                },
+                {
+                  "cx": 52,
+                  "cy": 57
+                },
+                {
+                  "cx": 47,
+                  "cy": 58
+                },
+                {
+                  "cx": 48,
+                  "cy": 58
+                },
+                {
+                  "cx": 49,
+                  "cy": 58
+                },
+                {
+                  "cx": 50,
+                  "cy": 58
+                },
+                {
+                  "cx": 51,
+                  "cy": 58
+                },
+                {
+                  "cx": 52,
+                  "cy": 58
+                },
+                {
+                  "cx": 46,
+                  "cy": 59
+                },
+                {
+                  "cx": 47,
+                  "cy": 59
+                },
+                {
+                  "cx": 48,
+                  "cy": 59
+                },
+                {
+                  "cx": 49,
+                  "cy": 59
+                },
+                {
+                  "cx": 50,
+                  "cy": 59
+                },
+                {
+                  "cx": 51,
+                  "cy": 59
+                },
+                {
+                  "cx": 52,
+                  "cy": 59
+                },
+                {
+                  "cx": 46,
+                  "cy": 60
+                },
+                {
+                  "cx": 47,
+                  "cy": 60
+                },
+                {
+                  "cx": 48,
+                  "cy": 60
+                },
+                {
+                  "cx": 49,
+                  "cy": 60
+                },
+                {
+                  "cx": 50,
+                  "cy": 60
+                },
+                {
+                  "cx": 51,
+                  "cy": 60
+                },
+                {
+                  "cx": 52,
+                  "cy": 60
+                },
+                {
+                  "cx": 46,
+                  "cy": 61
+                },
+                {
+                  "cx": 47,
+                  "cy": 61
+                },
+                {
+                  "cx": 48,
+                  "cy": 61
+                },
+                {
+                  "cx": 49,
+                  "cy": 61
+                },
+                {
+                  "cx": 50,
+                  "cy": 61
+                },
+                {
+                  "cx": 51,
+                  "cy": 61
+                },
+                {
+                  "cx": 52,
+                  "cy": 61
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Forthos Dungeon eggs, dropped and picked up in the Wilderness",
+          "regions": [
+            "Hosidius"
+          ],
+          "locations": [
+            {
+              "label": "Anywhere in the Wilderness",
+              "chunkOptions": [
+                {
+                  "cx": 46,
+                  "cy": 55
+                },
+                {
+                  "cx": 47,
+                  "cy": 55
+                },
+                {
+                  "cx": 48,
+                  "cy": 55
+                },
+                {
+                  "cx": 49,
+                  "cy": 55
+                },
+                {
+                  "cx": 50,
+                  "cy": 55
+                },
+                {
+                  "cx": 51,
+                  "cy": 55
+                },
+                {
+                  "cx": 52,
+                  "cy": 55
+                },
+                {
+                  "cx": 46,
+                  "cy": 56
+                },
+                {
+                  "cx": 47,
+                  "cy": 56
+                },
+                {
+                  "cx": 48,
+                  "cy": 56
+                },
+                {
+                  "cx": 49,
+                  "cy": 56
+                },
+                {
+                  "cx": 50,
+                  "cy": 56
+                },
+                {
+                  "cx": 51,
+                  "cy": 56
+                },
+                {
+                  "cx": 52,
+                  "cy": 56
+                },
+                {
+                  "cx": 46,
+                  "cy": 57
+                },
+                {
+                  "cx": 47,
+                  "cy": 57
+                },
+                {
+                  "cx": 48,
+                  "cy": 57
+                },
+                {
+                  "cx": 49,
+                  "cy": 57
+                },
+                {
+                  "cx": 50,
+                  "cy": 57
+                },
+                {
+                  "cx": 51,
+                  "cy": 57
+                },
+                {
+                  "cx": 52,
+                  "cy": 57
+                },
+                {
+                  "cx": 47,
+                  "cy": 58
+                },
+                {
+                  "cx": 48,
+                  "cy": 58
+                },
+                {
+                  "cx": 49,
+                  "cy": 58
+                },
+                {
+                  "cx": 50,
+                  "cy": 58
+                },
+                {
+                  "cx": 51,
+                  "cy": 58
+                },
+                {
+                  "cx": 52,
+                  "cy": 58
+                },
+                {
+                  "cx": 46,
+                  "cy": 59
+                },
+                {
+                  "cx": 47,
+                  "cy": 59
+                },
+                {
+                  "cx": 48,
+                  "cy": 59
+                },
+                {
+                  "cx": 49,
+                  "cy": 59
+                },
+                {
+                  "cx": 50,
+                  "cy": 59
+                },
+                {
+                  "cx": 51,
+                  "cy": 59
+                },
+                {
+                  "cx": 52,
+                  "cy": 59
+                },
+                {
+                  "cx": 46,
+                  "cy": 60
+                },
+                {
+                  "cx": 47,
+                  "cy": 60
+                },
+                {
+                  "cx": 48,
+                  "cy": 60
+                },
+                {
+                  "cx": 49,
+                  "cy": 60
+                },
+                {
+                  "cx": 50,
+                  "cy": 60
+                },
+                {
+                  "cx": 51,
+                  "cy": 60
+                },
+                {
+                  "cx": 52,
+                  "cy": 60
+                },
+                {
+                  "cx": 46,
+                  "cy": 61
+                },
+                {
+                  "cx": 47,
+                  "cy": 61
+                },
+                {
+                  "cx": 48,
+                  "cy": 61
+                },
+                {
+                  "cx": 49,
+                  "cy": 61
+                },
+                {
+                  "cx": 50,
+                  "cy": 61
+                },
+                {
+                  "cx": 51,
+                  "cy": 61
+                },
+                {
+                  "cx": 52,
+                  "cy": 61
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The eggs spawn in the Edgeville Dungeon's Wilderness part, the Varrock Sewers, Arandar and the Forthos Dungeon; eggs brought into the Wilderness count when dropped and picked up five times (Wilderness Diary note)."
+      }
     },
     {
       "id": "wild_easy_10",
@@ -15312,6 +16003,7 @@
       "kar_easy_9",
       "kar_elite_4",
       "kar_hard_2",
+      "kar_med_6",
       "kou_elite_3",
       "kou_elite_7",
       "kou_med_11",

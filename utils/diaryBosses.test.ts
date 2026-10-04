@@ -27,6 +27,8 @@ const REVIEWED: Record<string, string> = {
   frem_elite_5: "Kree'arra, General Graardor, Commander Zilyana, K'ril Tsutsaroth",
   kar_easy_9: 'TzHaar Fight Cave',
   kar_hard_2: 'TzHaar Fight Cave',
+  // 4 October 2026: a spider carcass also drops from Sarachnis (the place review), one way of two.
+  kar_med_6: 'Sarachnis',
   // The fire cape comes only from the Fight Cave, and the Inferno takes one to enter.
   kar_elite_4: 'TzHaar Fight Cave',
   kou_elite_3: 'Skotizo',

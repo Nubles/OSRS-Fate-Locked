@@ -30,6 +30,7 @@ describe('authored changelog releases', () => {
       expect.stringMatching(/checked against the OSRS Wiki.*rune altars through the Abyss.*Puro-Puro by a crop circle/),
       expect.stringMatching(/named the wrong place.*Trollheim shortcut.*not on the islands/),
       expect.stringMatching(/In Chunked.*chunks that belong to no named area/),
+      expect.stringMatching(/every place an ironman can get it counts.*jungle spider.*Sarachnis.*dropped and picked up in the Wilderness/),
       expect.stringMatching(/Brutus after his one.*no longer says “added to your Roll inbox”.*next RuneLite plugin update/),
     ]);
     expect(release?.sections.changed).toEqual([

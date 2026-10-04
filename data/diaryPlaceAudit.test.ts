@@ -255,3 +255,38 @@ describe('Diary trips that need the end they asked too little of', () => {
     expect(doable('frem_med_2', account({ ...run, regions: ['Rellekka', "Eagles' Peak"] }))).toBe(true);
   });
 });
+
+describe('Diary tasks whose material comes from more than one place', () => {
+  // The owner, 4 October 2026: where the action can be done anywhere, accept every place an
+  // ironman can get the material, with the wiki's word for each.
+  it.each([
+    ['43,48', 'jungle spiders by Tai Bwo Wannai'],
+    ['45,46', 'jungle spiders in the Kharazi Jungle edge of Shilo Village'],
+    ['45,47', 'jungle spiders by the Karamja River'],
+    ['41,48', 'the "Yanille Chain" jungle spiders, east of Yanille'],
+    ['43,50', 'jungle spiders by Brimhaven'],
+  ] as const)('cooks a spider on a stick from a carcass found in %s: %s', (chunk, _why) => {
+    const run = account({ chunks: [chunk], skills: { Cooking: 10 }, levels: { Cooking: 99 } });
+    expect(doable('kar_med_6', run, 'chunked')).toBe(true);
+  });
+
+  it('takes a carcass from Sarachnis too, and no longer needs Tai Bwo Wannai', () => {
+    const cook = { skills: { Cooking: 10 }, levels: { Cooking: 99 } };
+    expect(doable('kar_med_6', account({ ...cook, regions: ['Hosidius'], bosses: ['Sarachnis'] }))).toBe(true);
+    expect(doable('kar_med_6', account({ ...cook, regions: ['Hosidius'] }))).toBe(false);
+    expect(doable('kar_med_6', account({ ...cook, regions: ['Yanille'] }))).toBe(true);
+  });
+
+  it("collects red spiders' eggs in the Wilderness from every place they spawn", () => {
+    // In the Edgeville Dungeon's Wilderness part, through its pipe from the Varrock Sewers, or
+    // brought into the Wilderness and dropped and picked up five times (Wilderness Diary note).
+    const wild = '49,58';
+    expect(doable('wilderness_easy_9', account({ chunks: ['48,54'] }), 'chunked'), 'Edgeville').toBe(true);
+    expect(doable('wilderness_easy_9', account({ chunks: ['50,54'] }), 'chunked'), 'pipe').toBe(true);
+    expect(doable('wilderness_easy_9', account({ chunks: ['50,54'], levels: { Agility: 50 } }), 'chunked'), 'no Agility, no Wilderness').toBe(false);
+    expect(doable('wilderness_easy_9', account({ chunks: ['50,54', wild], levels: { Agility: 50 } }), 'chunked'), 'sewer eggs').toBe(true);
+    expect(doable('wilderness_easy_9', account({ chunks: ['36,51', wild] }), 'chunked'), 'Arandar eggs').toBe(true);
+    expect(doable('wilderness_easy_9', account({ chunks: ['26,55', wild] }), 'chunked'), 'Forthos eggs').toBe(true);
+    expect(doable('wilderness_easy_9', account({ chunks: ['36,51'] }), 'chunked'), 'eggs but no Wilderness').toBe(false);
+  });
+});

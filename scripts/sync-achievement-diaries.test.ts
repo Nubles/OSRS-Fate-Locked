@@ -579,6 +579,7 @@ describe('Achievement Diary id-classification audit', () => {
       'kar_hard_8',
       'kar_hard_9',
       'kar_med_19',
+      'kar_med_6',
       'kar_med_8',
       'kar_med_9',
       'kou_elite_2',
@@ -618,6 +619,7 @@ describe('Achievement Diary id-classification audit', () => {
       'wild_med_5',
       'wild_med_7',
       'wilderness_easy_4',
+      'wilderness_easy_9',
       'wilderness_med_6',
     ]);
     // The Mage of Zamorak only teleports into the Abyss after Enter the
