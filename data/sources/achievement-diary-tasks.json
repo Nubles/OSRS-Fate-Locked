@@ -836,12 +836,38 @@
       "quests": [
         "Mourning's End Part II"
       ],
-      "regions": [
-        "West Ardougne"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Mourning's End Part II 65 Runecraft Pure or daeyalt essence Note: Crafting runes using Guardian essence will NOT complete this achievement Access to the Death Altar via the Abyss"
+      "sourceRequirements": "Completion of Mourning's End Part II 65 Runecraft Pure or daeyalt essence Note: Crafting runes using Guardian essence will NOT complete this achievement Access to the Death Altar via the Abyss",
+      "oneOf": [
+        {
+          "regions": [
+            "West Ardougne"
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance."
+      }
     },
     {
       "id": "ard_elite_1",
@@ -2029,12 +2055,38 @@
         "Runecraft": 1
       },
       "quests": [],
-      "regions": [
-        "Ice Mountain"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Tiara and a mind talisman"
+      "sourceRequirements": "Tiara and a mind talisman",
+      "oneOf": [
+        {
+          "regions": [
+            "Ice Mountain"
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance."
+      }
     },
     {
       "id": "fal_easy_8",
@@ -2467,22 +2519,42 @@
       "description": "Craft 140 Mind runes simultaneously from Essence without the use of Extracts.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Goblin Village"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 140 Mind runes simultaneously.",
       "sourceRequirements": "56 Runecraft 42 Runecraft with 3+ Raiments of the Eye pieces 28 pure, daeyalt, or rune essence (less may suffice at higher Runecraft levels) Access to the Mind Altar ( mind talisman / tiara, catalytic talisman / tiara, or the Abyss )",
       "oneOf": [
         {
-          "label": "No Raiments",
+          "label": "No Raiments, Goblin Village ruins",
           "skills": {
             "Runecraft": 56
-          }
+          },
+          "regions": [
+            "Goblin Village"
+          ]
         },
         {
-          "label": "3+ Raiments of the Eye pieces (Head, Body, Legs)",
+          "label": "No Raiments, through the Abyss",
+          "skills": {
+            "Runecraft": 56
+          },
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3+ Raiments of the Eye pieces (Head, Body, Legs), Goblin Village ruins",
           "skills": {
             "Runecraft": 42
           },
@@ -2508,10 +2580,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Goblin Village"
           ]
         },
         {
-          "label": "3+ Raiments of the Eye pieces (Head, Body, Boots)",
+          "label": "3+ Raiments of the Eye pieces (Head, Body, Legs), through the Abyss",
+          "skills": {
+            "Runecraft": 42
+          },
+          "items": [
+            "3+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3+ Raiments of the Eye pieces (Head, Body, Boots), Goblin Village ruins",
           "skills": {
             "Runecraft": 42
           },
@@ -2537,10 +2655,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Goblin Village"
           ]
         },
         {
-          "label": "3+ Raiments of the Eye pieces (Head, Legs, Boots)",
+          "label": "3+ Raiments of the Eye pieces (Head, Body, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 42
+          },
+          "items": [
+            "3+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3+ Raiments of the Eye pieces (Head, Legs, Boots), Goblin Village ruins",
           "skills": {
             "Runecraft": 42
           },
@@ -2566,10 +2730,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Goblin Village"
           ]
         },
         {
-          "label": "3+ Raiments of the Eye pieces (Body, Legs, Boots)",
+          "label": "3+ Raiments of the Eye pieces (Head, Legs, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 42
+          },
+          "items": [
+            "3+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3+ Raiments of the Eye pieces (Body, Legs, Boots), Goblin Village ruins",
           "skills": {
             "Runecraft": 42
           },
@@ -2594,10 +2804,61 @@
               "tier": 1,
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "regions": [
+            "Goblin Village"
+          ]
+        },
+        {
+          "label": "3+ Raiments of the Eye pieces (Body, Legs, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 42
+          },
+          "items": [
+            "3+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
             }
           ]
         }
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance."
+      }
     },
     {
       "id": "fal_hard_2",
@@ -5907,13 +6168,38 @@
         "Runecraft": 44
       },
       "quests": [],
-      "anyOfRegions": [
-        "Shilo Village",
-        "Tai Bwo Wannai"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "44 Runecraft Pure or daeyalt essence Access to the Nature Altar ( nature talisman / tiara, catalytic talisman / tiara, or the Abyss )"
+      "sourceRequirements": "44 Runecraft Pure or daeyalt essence Access to the Nature Altar ( nature talisman / tiara, catalytic talisman / tiara, or the Abyss )",
+      "oneOf": [
+        {
+          "regions": [
+            "Shilo Village"
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance. The ruins are at 44,47, a Shilo Village chunk, not Tai Bwo Wannai."
+      }
     },
     {
       "id": "kar_hard_5",
@@ -6090,14 +6376,39 @@
         "Runecraft": 91
       },
       "quests": [],
-      "anyOfRegions": [
-        "Shilo Village",
-        "Tai Bwo Wannai"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 56 nature runes simultaneously from Essence without the use of Extracts.",
-      "sourceRequirements": "91 Runecraft 28 pure or daeyalt essence (less may suffice with Raiments of the Eye pieces) Access to the Nature Altar ( nature talisman / tiara, catalytic talisman / tiara, or the Abyss )"
+      "sourceRequirements": "91 Runecraft 28 pure or daeyalt essence (less may suffice with Raiments of the Eye pieces) Access to the Nature Altar ( nature talisman / tiara, catalytic talisman / tiara, or the Abyss )",
+      "oneOf": [
+        {
+          "regions": [
+            "Shilo Village"
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance. The ruins are at 44,47, a Shilo Village chunk, not Tai Bwo Wannai."
+      }
     },
     {
       "id": "kar_elite_4",
@@ -7169,12 +7480,38 @@
         "Runecraft": 5
       },
       "quests": [],
-      "regions": [
-        "Lumbridge"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "5 Runecraft Pure, daeyalt, or rune essence Access to the Water Altar ( water talisman / tiara, elemental talisman / tiara, or the Abyss )"
+      "sourceRequirements": "5 Runecraft Pure, daeyalt, or rune essence Access to the Water Altar ( water talisman / tiara, elemental talisman / tiara, or the Abyss )",
+      "oneOf": [
+        {
+          "regions": [
+            "Lumbridge"
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance."
+      }
     },
     {
       "id": "lum_easy_5",
@@ -7609,12 +7946,38 @@
         "Runecraft": 23
       },
       "quests": [],
-      "regions": [
-        "Al Kharid"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "23 Runecraft Earth talisman, earth runes, and pure or daeyalt essence Access to the Fire Altar ( fire talisman / tiara, elemental talisman / tiara, or the Abyss ) Binding necklace recommended to guarantee the runes are successfully crafted"
+      "sourceRequirements": "23 Runecraft Earth talisman, earth runes, and pure or daeyalt essence Access to the Fire Altar ( fire talisman / tiara, elemental talisman / tiara, or the Abyss ) Binding necklace recommended to guarantee the runes are successfully crafted",
+      "oneOf": [
+        {
+          "regions": [
+            "Al Kharid"
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance."
+      }
     },
     {
       "id": "lum_hard_1",
@@ -7983,22 +8346,42 @@
       "description": "Craft 140 or more Water runes simultaneously from Essence without the use of Extracts.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Lumbridge"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 140 or more Water runes simultaneously.",
       "sourceRequirements": "76 Runecraft 57 Runecraft with 3 Raiments of the Eye pieces 38 Runecraft with 4 Raiments of the Eye pieces (random chance, not guaranteed) 28 pure, daeyalt, or rune essence (less may suffice at higher Runecraft levels) Access to the Water Altar ( water talisman / tiara, elemental talisman / tiara, or the Abyss )",
       "oneOf": [
         {
-          "label": "No Raiments",
+          "label": "No Raiments, Lumbridge ruins",
           "skills": {
             "Runecraft": 76
-          }
+          },
+          "regions": [
+            "Lumbridge"
+          ]
         },
         {
-          "label": "3 Raiments of the Eye pieces (Head, Body, Legs)",
+          "label": "No Raiments, through the Abyss",
+          "skills": {
+            "Runecraft": 76
+          },
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Head, Body, Legs), Lumbridge ruins",
           "skills": {
             "Runecraft": 57
           },
@@ -8024,10 +8407,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Lumbridge"
           ]
         },
         {
-          "label": "3 Raiments of the Eye pieces (Head, Body, Boots)",
+          "label": "3 Raiments of the Eye pieces (Head, Body, Legs), through the Abyss",
+          "skills": {
+            "Runecraft": 57
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Head, Body, Boots), Lumbridge ruins",
           "skills": {
             "Runecraft": 57
           },
@@ -8053,10 +8482,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Lumbridge"
           ]
         },
         {
-          "label": "3 Raiments of the Eye pieces (Head, Legs, Boots)",
+          "label": "3 Raiments of the Eye pieces (Head, Body, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 57
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Head, Legs, Boots), Lumbridge ruins",
           "skills": {
             "Runecraft": 57
           },
@@ -8082,10 +8557,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Lumbridge"
           ]
         },
         {
-          "label": "3 Raiments of the Eye pieces (Body, Legs, Boots)",
+          "label": "3 Raiments of the Eye pieces (Head, Legs, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 57
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Body, Legs, Boots), Lumbridge ruins",
           "skills": {
             "Runecraft": 57
           },
@@ -8111,10 +8632,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Lumbridge"
           ]
         },
         {
-          "label": "4 Raiments of the Eye pieces (Head, Body, Legs, Boots)",
+          "label": "3 Raiments of the Eye pieces (Body, Legs, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 57
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "4 Raiments of the Eye pieces (Head, Body, Legs, Boots), Lumbridge ruins",
           "skills": {
             "Runecraft": 38
           },
@@ -8146,9 +8713,66 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Lumbridge"
+          ]
+        },
+        {
+          "label": "4 Raiments of the Eye pieces (Head, Body, Legs, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 38
+          },
+          "items": [
+            "4 Raiments of the Eye pieces (random chance)"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
           ]
         }
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance."
+      }
     },
     {
       "id": "lum_elite_6",
@@ -9362,12 +9986,38 @@
         "Runecraft": 9
       },
       "quests": [],
-      "regions": [
-        "Varrock"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "9 Runecraft Pure, daeyalt, or rune essence Access to the Earth Altar ( earth talisman / tiara, elemental talisman / tiara, or the Abyss )"
+      "sourceRequirements": "9 Runecraft Pure, daeyalt, or rune essence Access to the Earth Altar ( earth talisman / tiara, elemental talisman / tiara, or the Abyss )",
+      "oneOf": [
+        {
+          "regions": [
+            "Varrock"
+          ]
+        },
+        {
+          "label": "The Abyss",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance."
+      }
     },
     {
       "id": "var_easy_13",
@@ -10056,22 +10706,42 @@
       "description": "Craft 100 or more earth runes simultaneously from Essence without the use of Extracts.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Varrock"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 100 or more earth runes simultaneously.",
       "sourceRequirements": "78 Runecraft 52 Runecraft with 2+ Raiments of the Eye pieces 28 pure, daeyalt, or rune essence (fewer may suffice with more Raiments of the Eye pieces) Access to the Earth Altar ( earth talisman / tiara, elemental talisman / tiara, or the Abyss )",
       "oneOf": [
         {
-          "label": "No Raiments",
+          "label": "No Raiments, Varrock ruins",
           "skills": {
             "Runecraft": 78
-          }
+          },
+          "regions": [
+            "Varrock"
+          ]
         },
         {
-          "label": "2+ Raiments of the Eye pieces (Head, Body)",
+          "label": "No Raiments, through the Abyss",
+          "skills": {
+            "Runecraft": 78
+          },
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Body), Varrock ruins",
           "skills": {
             "Runecraft": 52
           },
@@ -10091,10 +10761,50 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Varrock"
           ]
         },
         {
-          "label": "2+ Raiments of the Eye pieces (Head, Legs)",
+          "label": "2+ Raiments of the Eye pieces (Head, Body), through the Abyss",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Legs), Varrock ruins",
           "skills": {
             "Runecraft": 52
           },
@@ -10114,10 +10824,50 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Varrock"
           ]
         },
         {
-          "label": "2+ Raiments of the Eye pieces (Head, Boots)",
+          "label": "2+ Raiments of the Eye pieces (Head, Legs), through the Abyss",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Boots), Varrock ruins",
           "skills": {
             "Runecraft": 52
           },
@@ -10137,10 +10887,50 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Varrock"
           ]
         },
         {
-          "label": "2+ Raiments of the Eye pieces (Body, Legs)",
+          "label": "2+ Raiments of the Eye pieces (Head, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Body, Legs), Varrock ruins",
           "skills": {
             "Runecraft": 52
           },
@@ -10160,10 +10950,50 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Varrock"
           ]
         },
         {
-          "label": "2+ Raiments of the Eye pieces (Body, Boots)",
+          "label": "2+ Raiments of the Eye pieces (Body, Legs), through the Abyss",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Body, Boots), Varrock ruins",
           "skills": {
             "Runecraft": 52
           },
@@ -10183,10 +11013,50 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Varrock"
           ]
         },
         {
-          "label": "2+ Raiments of the Eye pieces (Legs, Boots)",
+          "label": "2+ Raiments of the Eye pieces (Body, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Legs, Boots), Varrock ruins",
           "skills": {
             "Runecraft": 52
           },
@@ -10205,10 +11075,55 @@
               "tier": 1,
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "regions": [
+            "Varrock"
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Legs, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
             }
           ]
         }
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Achievement Diary page lists the Abyss as a way into this altar; the Mage of Zamorak (48,55) is its only entrance."
+      }
     },
     {
       "id": "west_easy_1",

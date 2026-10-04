@@ -44,10 +44,14 @@ describe('Diary tasks are in the areas the game has them in', () => {
     expect(task('kan_hard_7').regions).toEqual(['Baxtorian Falls']);
   });
 
-  it('puts the Nature Altar in Shilo Village’s chunk, reached from Tai Bwo Wannai', () => {
+  it('puts the Nature Altar in Shilo Village’s chunk, or through the Abyss', () => {
+    // The ruins are at (2868, 3018), in Shilo Village's chunk 44,47, far from Tai Bwo Wannai's
+    // chunks; the place audit of 4 October 2026 dropped Tai Bwo Wannai (diaryPlaceAudit.test.ts).
     for (const id of ['kar_hard_4', 'kar_elite_1']) {
-      expect(task(id), id).toMatchObject({ anyOfRegions: ['Shilo Village', 'Tai Bwo Wannai'] });
+      expect(task(id).oneOf?.[0], id).toEqual({ regions: ['Shilo Village'] });
+      expect(task(id).oneOf?.[1], id).toMatchObject({ label: 'The Abyss', quests: ['Enter the Abyss'] });
       expect(task(id).regions, id).toBeUndefined();
+      expect(task(id).anyOfRegions, id).toBeUndefined();
     }
   });
 

@@ -454,7 +454,12 @@ describe('planForTarget — diaries', () => {
         .map(task => task.id),
     }))!;
 
-    const step = plan.regionSteps.find(regionStep => regionStep.id === canonical);
+    // A task with a choice of ways (the mind tiara: its ruins or the Abyss) plans its areas within
+    // the choice's routes.
+    const step = [
+      ...plan.regionSteps,
+      ...plan.alternativeSteps.flatMap(alternative => alternative.routes.flatMap(route => route.blockers)),
+    ].find(regionStep => regionStep.id === canonical);
     expect(step?.label).toContain(canonical);
     expect(step?.label).toContain(alias);
   });

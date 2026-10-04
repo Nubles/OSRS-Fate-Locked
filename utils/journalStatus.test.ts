@@ -1059,12 +1059,14 @@ describe('audited diary route eligibility', () => {
       ['fal_hard_1', 42], ['fal_elite_1', 55],
       ['lum_elite_5', 38], ['var_elite_5', 52],
     ] as const;
+    // The altar's ruins: each Raiments route also comes with the Abyss as a way in.
+    const ruins: Record<string, string[]> = { fal_hard_1: ['Goblin Village'], lum_elite_5: ['Lumbridge'], var_elite_5: ['Varrock'] };
     for (const [id, level] of cases) {
       const diaryTask = task(id);
       expect(evaluateDiaryTaskEligibility(diaryTask, unlocked({
         equipment: { Head: 1, Body: 1, Legs: 1, Boots: 1 },
         skills: { Runecraft: 10 }, levels: { Runecraft: level },
-        regions: diaryTask.regions ?? [], quests: diaryTask.quests ?? [],
+        regions: [...(diaryTask.regions ?? []), ...(ruins[id] ?? [])], quests: diaryTask.quests ?? [],
       })).confirmable, id).toBe(true);
     }
   });
