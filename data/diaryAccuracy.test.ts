@@ -36,7 +36,11 @@ const account = (overrides: Partial<UnlockState> = {}): UnlockState => ({
 describe('Diary tasks are in the areas the game has them in', () => {
   it('puts the Jaldraocht Pyramid altar beside the pyramid, not in Sophanem', () => {
     // The pyramid's chunk (50,45) has no area of its own; Bandit Camp and Pollnivneach border it.
-    expect(task('des_hard_7')).toMatchObject({ anyOfRegions: ['Bandit Camp', 'Pollnivneach'] });
+    // In Chunked the chunk itself counts too (the place audit, diaryPlaceAudit.test.ts).
+    expect(task('des_hard_7').oneOf).toEqual([
+      { regions: ['Bandit Camp'] }, { regions: ['Pollnivneach'] },
+      { locations: [{ label: 'Jaldraocht Pyramid', chunkOptions: [{ cx: 50, cy: 45 }] }] },
+    ]);
     expect(task('des_hard_7').regions).toBeUndefined();
   });
 
@@ -105,7 +109,6 @@ describe('Diary trips need the place you leave from and the place you arrive in'
     ['fal_easy_8', 'the boat to Entrana', ['Port Sarim', 'Entrana']],
     ['kar_easy_5', 'the boat from Brimhaven to Ardougne', ['Brimhaven', 'East Ardougne']],
     ['ard_easy_8', 'the Ardougne lever to the Deserted Keep (49,61)', ['East Ardougne', 'Mage Arena']],
-    ['wild_hard_8', 'the shortcut from Trollheim (45,57)', ['Burthorpe', 'Wilderness God Wars Dungeon']],
     ['frem_med_8', 'the walk from Waterbirth Island to the Lighthouse', ['Lighthouse', 'Waterbirth Island']],
     ['kan_med_4', 'the Water Obelisk grapple, reached through Taverley Dungeon', ['Catherby', 'Taverley']],
     ['kan_hard_5', 'the Water Obelisk, reached through Taverley Dungeon', ['Catherby', 'Taverley']],

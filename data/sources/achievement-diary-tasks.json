@@ -772,11 +772,35 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "68 Smithing 5 mithril bars and a hammer",
-      "anyOfRegions": [
-        "Port Khazard",
-        "Yanille",
-        "West Ardougne"
-      ]
+      "oneOf": [
+        {
+          "regions": [
+            "Port Khazard"
+          ]
+        },
+        {
+          "regions": [
+            "Yanille"
+          ]
+        },
+        {
+          "label": "West Ardougne anvil",
+          "regions": [
+            "East Ardougne"
+          ],
+          "questProgress": [
+            {
+              "quest": "Plague City",
+              "label": "Reached the required progress in Plague City for: Smith a Mithril platebody near Ardougne."
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "West Ardougne's anvil, along the north wall, is in 39,52, which the map gives East Ardougne (as for the Dragon sq shield)."
+      }
     },
     {
       "id": "ard_hard_10",
@@ -1068,12 +1092,38 @@
         "Hunter": 5
       },
       "quests": [],
-      "regions": [
-        "Ruins of Uzer"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "5 Hunter Bird snare Necklace of passage recommended for quick access to Eagle's Eyrie, near the Uzer Hunter area"
+      "sourceRequirements": "5 Hunter Bird snare Necklace of passage recommended for quick access to Eagle's Eyrie, near the Uzer Hunter area",
+      "oneOf": [
+        {
+          "regions": [
+            "Ruins of Uzer"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Uzer Hunter area",
+              "chunkOptions": [
+                {
+                  "cx": 53,
+                  "cy": 48
+                },
+                {
+                  "cx": 53,
+                  "cy": 49
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Golden warblers live only in the Uzer Hunter area (53,48 and 53,49)."
+      }
     },
     {
       "id": "des_easy_2",
@@ -1086,12 +1136,34 @@
         "Mining": 1
       },
       "quests": [],
-      "regions": [
-        "Ruins of Uzer"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Any pickaxe Necklace of passage recommended for quick access to Eagle's Eyrie, near the Uzer mine"
+      "sourceRequirements": "Any pickaxe Necklace of passage recommended for quick access to Eagle's Eyrie, near the Uzer mine",
+      "oneOf": [
+        {
+          "regions": [
+            "Ruins of Uzer"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Uzer mine",
+              "chunkOptions": [
+                {
+                  "cx": 53,
+                  "cy": 49
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Uzer mine is north-west of the Ruins of Uzer, in 53,49."
+      }
     },
     {
       "id": "des_easy_3",
@@ -1332,12 +1404,37 @@
         "Slayer": 22
       },
       "quests": [],
-      "regions": [
-        "Shantay Pass"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "22 Slayer Ice cooler"
+      "sourceRequirements": "22 Slayer Ice cooler",
+      "locations": [
+        {
+          "label": "Desert lizards",
+          "chunkOptions": [
+            {
+              "cx": 52,
+              "cy": 47
+            },
+            {
+              "cx": 53,
+              "cy": 47
+            },
+            {
+              "cx": 54,
+              "cy": 47
+            },
+            {
+              "cx": 52,
+              "cy": 43
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Desert lizards stand along the River Elid (52,47 to 54,47) and west of Ullek (52,43); none near Shantay Pass."
+      }
     },
     {
       "id": "des_med_3",
@@ -1350,13 +1447,39 @@
         "Hunter": 47
       },
       "quests": [],
-      "anyOfRegions": [
-        "Ruins of Uzer",
-        "Sophanem"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "47 Hunter Rope and a small fishing net"
+      "sourceRequirements": "47 Hunter Rope and a small fishing net",
+      "oneOf": [
+        {
+          "regions": [
+            "Ruins of Uzer"
+          ]
+        },
+        {
+          "regions": [
+            "Sophanem"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Uzer Hunter area",
+              "chunkOptions": [
+                {
+                  "cx": 53,
+                  "cy": 48
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Orange salamanders are caught in the Uzer Hunter area (53,48) and the Necropolis Hunter area (Sophanem)."
+      }
     },
     {
       "id": "des_med_4",
@@ -1369,12 +1492,34 @@
         "Thieving": 25
       },
       "quests": [],
-      "regions": [
-        "Ruins of Uzer"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "25 Thieving"
+      "sourceRequirements": "25 Thieving",
+      "oneOf": [
+        {
+          "regions": [
+            "Ruins of Uzer"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Desert Phoenix",
+              "chunkOptions": [
+                {
+                  "cx": 53,
+                  "cy": 49
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Desert Phoenix is just south of the clay mine, in 53,49."
+      }
     },
     {
       "id": "des_med_5",
@@ -1410,14 +1555,39 @@
         "Eagles' Peak"
       ],
       "regions": [
-        "Ruins of Uzer"
+        "Eagles' Peak"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Eagles' Peak Rope",
       "mobility": [
         "Eagle Transport"
-      ]
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Ruins of Uzer"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Desert eagle lair, north of the Uzer Hunter area",
+              "chunkOptions": [
+                {
+                  "cx": 53,
+                  "cy": 49
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The trip starts from the Eagles' Peak Dungeon and lands at the desert eagle lair in 53,49."
+      }
     },
     {
       "id": "des_med_7",
@@ -1479,14 +1649,19 @@
         "Enakhra's Lament"
       ],
       "regions": [
-        "Bandit Camp"
+        "Agility Pyramid"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Enakhra's Lament Camulet",
       "mobility": [
         "Camulet"
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Camulet lands by Enakhra's Temple in 49,45 (the Desert Quarry), not at the Bandit Camp."
+      }
     },
     {
       "id": "des_med_10",
@@ -1497,9 +1672,6 @@
       "description": "Visit the Genie.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Nardah"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Started Spirits of the Elid Rope and light source",
@@ -1508,7 +1680,32 @@
           "quest": "Spirits of the Elid",
           "label": "Reached the required progress in Spirits of the Elid for: Visit the Genie."
         }
-      ]
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Nardah"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Genie's cave crevice",
+              "chunkOptions": [
+                {
+                  "cx": 52,
+                  "cy": 45
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Genie's cave is entered by the crevice west of Nardah, in 52,45."
+      }
     },
     {
       "id": "des_med_11",
@@ -1726,16 +1923,42 @@
       "quests": [
         "Desert Treasure I"
       ],
-      "anyOfRegions": [
-        "Bandit Camp",
-        "Pollnivneach"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Desert Treasure I",
       "arcana": [
         "Ancient Magicks"
-      ]
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Bandit Camp"
+          ]
+        },
+        {
+          "regions": [
+            "Pollnivneach"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Jaldraocht Pyramid",
+              "chunkOptions": [
+                {
+                  "cx": 50,
+                  "cy": 45
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Jaldraocht Pyramid is in 50,45, between the Bandit Camp and Pollnivneach."
+      }
     },
     {
       "id": "des_hard_8",
@@ -1748,9 +1971,6 @@
         "Attack": 50
       },
       "quests": [],
-      "regions": [
-        "Sophanem"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Partial completion of Contact! 50 Attack Keris or Keris partisan, and any light source",
@@ -1767,7 +1987,32 @@
           "reason": "Keris (or a higher-tier keris partisan)",
           "manualCheck": "Have Keris (or a higher-tier keris partisan) and confirm that the specific item is permitted by your equipment tier"
         }
-      ]
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Sophanem"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Scabaras Dungeon entrance, Ruins of Ullek",
+              "chunkOptions": [
+                {
+                  "cx": 53,
+                  "cy": 44
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Locust riders also live in the Scabaras Dungeon, entered at the Ruins of Ullek (53,44)."
+      }
     },
     {
       "id": "des_hard_9",
@@ -3794,19 +4039,38 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "15 Woodcutting and 15 Firemaking Any axe (can be found north of the Rellekka mine ) and a tinderbox",
-      "anyOfRegions": [
-        "Rellekka",
-        "Neitiznot",
-        "Jatizso",
-        "Miscellania & Etceteria",
-        "Waterbirth Island",
-        "Lunar Isle",
-        "Mountain Camp",
-        "Lighthouse",
-        "Keldagrim",
-        "Weiss",
-        "Pirates' Cove"
-      ]
+      "locations": [
+        {
+          "label": "Oak trees around Rellekka",
+          "chunkOptions": [
+            {
+              "cx": 42,
+              "cy": 57
+            },
+            {
+              "cx": 40,
+              "cy": 56
+            },
+            {
+              "cx": 43,
+              "cy": 56
+            },
+            {
+              "cx": 41,
+              "cy": 56
+            },
+            {
+              "cx": 42,
+              "cy": 56
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Oaks in the Fremennik Province grow around Rellekka: by the house portal (41,56), the forest (42,56), Rellekka, the Lighthouse and the Mountain Camp; the islands have none."
+      }
     },
     {
       "id": "frem_med_1",
@@ -4116,19 +4380,58 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "66 Herblore Cadantine potion (unf) and white berries",
-      "anyOfRegions": [
-        "Rellekka",
-        "Neitiznot",
-        "Jatizso",
-        "Miscellania & Etceteria",
-        "Waterbirth Island",
-        "Lunar Isle",
-        "Mountain Camp",
-        "Lighthouse",
-        "Keldagrim",
-        "Weiss",
-        "Pirates' Cove"
-      ]
+      "locations": [
+        {
+          "label": "In or near Rellekka",
+          "chunkOptions": [
+            {
+              "cx": 40,
+              "cy": 57
+            },
+            {
+              "cx": 41,
+              "cy": 57
+            },
+            {
+              "cx": 42,
+              "cy": 57
+            },
+            {
+              "cx": 41,
+              "cy": 58
+            },
+            {
+              "cx": 42,
+              "cy": 58
+            },
+            {
+              "cx": 42,
+              "cy": 59
+            },
+            {
+              "cx": 40,
+              "cy": 56
+            },
+            {
+              "cx": 43,
+              "cy": 56
+            },
+            {
+              "cx": 41,
+              "cy": 56
+            },
+            {
+              "cx": 42,
+              "cy": 56
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The diary page says this has to be done in or near Rellekka."
+      }
     },
     {
       "id": "frem_hard_4",
@@ -12031,9 +12334,6 @@
       "quests": [
         "Roving Elves"
       ],
-      "regions": [
-        "Isafdar"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Roving Elves 70 Ranged Crystal bow or Bow of faerdhinen",
@@ -12043,7 +12343,30 @@
           "tier": 8,
           "reason": "Crystal bow or bow of faerdhinen"
         }
-      ]
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Lletya"
+          ],
+          "questProgress": [
+            {
+              "quest": "Mourning's End Part I",
+              "label": "Reached the required progress in Mourning's End Part I for: Kill an Elf with a Crystal bow."
+            }
+          ]
+        },
+        {
+          "regions": [
+            "Iorwerth Camp"
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Attackable elves are in Lletya and Iorwerth Camp; Isafdar has none, and Mourners or the elves by the dark beasts do not count."
+      }
     },
     {
       "id": "west_hard_2",
@@ -13498,9 +13821,24 @@
         }
       ],
       "regions": [
-        "Burthorpe",
-        "Wilderness God Wars Dungeon"
-      ]
+        "Burthorpe"
+      ],
+      "locations": [
+        {
+          "label": "Where the Trollheim shortcut lands, west of the Ruins",
+          "chunkOptions": [
+            {
+              "cx": 46,
+              "cy": 57
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The shortcut is the Trollheim rocks at (2945,3678), landing in 46,57; the rocky handholds by the God Wars Dungeon are a different one."
+      }
     },
     {
       "id": "wild_hard_9",

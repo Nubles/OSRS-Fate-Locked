@@ -147,3 +147,66 @@ describe('Diary tasks the game counts in more than one place', () => {
     });
   });
 });
+
+describe('Diary tasks that named the wrong place', () => {
+  it('lands the Trollheim shortcut west of the Ruins, not at the God Wars Dungeon', () => {
+    // The rocks at (2945, 3678) land in 46,57; the rocky handholds by the God Wars Dungeon are
+    // another shortcut. Both ends of the trip are needed (the owner's rule).
+    expect(task('wild_hard_8')).toMatchObject({
+      regions: ['Burthorpe'],
+      locations: [{ chunkOptions: [{ cx: 46, cy: 57 }] }],
+    });
+  });
+
+  it.each([
+    ['des_med_2', ['52,47', '53,47', '54,47', '52,43'], 'desert lizards along the Elid and west of Ullek'],
+    ['frem_easy_10', ['42,57', '40,56', '43,56', '41,56', '42,56'], 'the oaks around Rellekka'],
+  ] as const)('%s takes exactly %j: %s', (id, chunks) => {
+    const groups = task(id).locations ?? [];
+    expect(groups).toHaveLength(1);
+    expect(groups[0].chunkOptions.map(({ cx, cy }) => `${cx},${cy}`)).toEqual(chunks);
+    expect(task(id).regions).toBeUndefined();
+    expect(task(id).anyOfRegions).toBeUndefined();
+  });
+
+  it('keeps the Fremennik super defence in or near Rellekka, not on the islands', () => {
+    const chunks = (task('frem_hard_3').locations ?? [])[0].chunkOptions.map(({ cx, cy }) => `${cx},${cy}`);
+    expect(chunks).toEqual(expect.arrayContaining(['42,57', '41,56', '42,56', '40,56', '43,56']));
+    expect(task('frem_hard_3').anyOfRegions).toBeUndefined();
+    expect(doable('frem_easy_10', account({ regions: ['Neitiznot'], skills: { Firemaking: 10, Woodcutting: 10 }, levels: { Firemaking: 99, Woodcutting: 99 } })))
+      .toBe(false);
+  });
+
+  it.each([
+    ['des_med_9', { regions: ['Agility Pyramid'], quests: ["Enakhra's Lament"], mobility: ['Camulet'] }, "the Camulet lands in the Desert Quarry (49,45)"],
+    ['ard_hard_9', { regions: ['East Ardougne'], skills: { Smithing: 10 }, levels: { Smithing: 99 } }, "West Ardougne's anvil is in 39,52"],
+    ['west_hard_1', { regions: ['Iorwerth Camp'], quests: ['Roving Elves'], equipment: { Weapon: 8 }, skills: { Ranged: 10 }, levels: { Ranged: 99 } }, 'elves at Iorwerth Camp'],
+  ] as const)('%s counts with %j: %s', (id, run) => {
+    expect(doable(id, account(run as Partial<UnlockState>))).toBe(true);
+  });
+
+  it('no longer takes a place with nothing to do there', () => {
+    expect(doable('des_med_9', account({ regions: ['Bandit Camp'], quests: ["Enakhra's Lament"], mobility: ['Camulet'] }))).toBe(false);
+    expect(doable('west_hard_1', account({ regions: ['Isafdar'], quests: ['Roving Elves'], equipment: { Weapon: 8 }, skills: { Ranged: 10 }, levels: { Ranged: 99 } })))
+      .toBe(false);
+    expect(doable('des_med_2', account({ regions: ['Shantay Pass'], skills: { Slayer: 10 }, levels: { Slayer: 99 } }))).toBe(false);
+  });
+
+  it.each([
+    ['des_easy_1', '53,48'], ['des_easy_2', '53,49'], ['des_med_4', '53,49'], ['des_med_10', '52,45'],
+    ['des_hard_7', '50,45'], ['des_med_3', '53,48'], ['des_hard_8', '53,44'],
+  ] as const)('%s also takes its own desert chunk, %s, which has no area', (id, chunk) => {
+    const chunks = (task(id).oneOf ?? []).flatMap(option => option.locations ?? [])
+      .flatMap(group => group.chunkOptions.map(({ cx, cy }) => `${cx},${cy}`));
+    expect(chunks).toContain(chunk);
+    // The area beside it, as the map files the chunk's tasks, still counts.
+    expect((task(id).oneOf ?? []).some(option => option.regions?.length)).toBe(true);
+  });
+
+  it("starts the eagle to the desert at Eagles' Peak and lands by the Uzer Hunter area", () => {
+    expect(task('des_med_6')).toMatchObject({
+      regions: ["Eagles' Peak"],
+      oneOf: [{ regions: ['Ruins of Uzer'] }, { locations: [{ chunkOptions: [{ cx: 53, cy: 49 }] }] }],
+    });
+  });
+});
