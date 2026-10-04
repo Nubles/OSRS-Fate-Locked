@@ -20,15 +20,20 @@ export interface ChangelogRelease {
 export const CHANGELOG_RELEASES = [
   {
     id: '2026-10-04-slayer-cave-ankou',
-    title: 'Slayer Cave Ankou and Spent Bosses',
+    title: 'Diary Places Checked Against the Wiki',
     date: '2026-10-04',
     sections: {
       fixed: [
         'The Wilderness Medium task to kill an Ankou counts the Wilderness Slayer Cave too, as the game does: owning Chaos Temple, or in Chunked either of the cave’s entrance chunks, is enough, as well as a Forgotten Cemetery you can get to.',
+        'Every Diary task’s places were checked against the OSRS Wiki, and more now count where the game counts them: rune altars through the Abyss; lizardmen beyond Shayzien, rock crabs on Waterbirth Island, gnomes in Tree Gnome Village, elves and adamantite in Prifddinas, the Chaos Elemental’s spawn, more lava dragons, vultures and granite by Sophanem; Puro-Puro by a crop circle, Dorgesh-Kaan from the Kalphite Lair, the Edgeville Dungeon from the Varrock Sewers and Brimhaven Dungeon’s dragons by Banisoch.',
+        'Some Diary tasks named the wrong place and now name the right one: the Trollheim shortcut lands west of the Ruins, desert lizards live along the River Elid, the Camulet lands at the Desert Quarry, West Ardougne’s anvil is in East Ardougne’s chunk, crystal-bow elves are in Lletya and Iorwerth Camp, and the Fremennik oaks and super defence are round Rellekka, not on the islands.',
+        'In Chunked, tasks done anywhere in the desert, the Wilderness or on Karamja, and desert spots on open sand such as the golden warbler and the Genie, count on chunks that belong to no named area.',
         'In RuneLite, a Vanilla boss or raid that has given every Standard Key it holds, such as Brutus after his one, no longer says “added to your Roll inbox” after each kill, and its kills leave the Roll inbox card: the tracker can’t roll them. This comes with the next RuneLite plugin update.',
       ],
       changed: [
         'In the Journal, a diary task with a choice of ways, shown as One of, lists each way and what it still needs when you point at it.',
+        'Three trips need both ends, as other trips do: the Waka canoe needs Edgeville, a temple trek Paterdomus, and the eagle to the Snowy Hunter Area Eagles’ Peak. Tasks you’ve already ticked stay ticked.',
+        'A team cape counts in Edgeville’s and Varrock’s Wilderness past the ditch, so in Vanilla it needs only the cape.',
       ],
     },
   },

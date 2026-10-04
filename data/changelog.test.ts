@@ -23,11 +23,19 @@ describe('authored changelog releases', () => {
     expect(LATEST_CHANGELOG.id).toBe('2026-10-04-slayer-cave-ankou');
   });
 
-  it('announces the Slayer Cave Ankou and the spent bosses RuneLite stops offering', () => {
+  it('announces the Diary places checked against the wiki and the spent bosses RuneLite stops offering', () => {
     const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-04-slayer-cave-ankou');
     expect(release?.sections.fixed).toEqual([
       expect.stringMatching(/Ankou counts the Wilderness Slayer Cave too.*Chaos Temple.*Chunked either of the cave’s entrance chunks.*Forgotten Cemetery you can get to/),
+      expect.stringMatching(/checked against the OSRS Wiki.*rune altars through the Abyss.*Puro-Puro by a crop circle/),
+      expect.stringMatching(/named the wrong place.*Trollheim shortcut.*not on the islands/),
+      expect.stringMatching(/In Chunked.*chunks that belong to no named area/),
       expect.stringMatching(/Brutus after his one.*no longer says “added to your Roll inbox”.*next RuneLite plugin update/),
+    ]);
+    expect(release?.sections.changed).toEqual([
+      expect.stringMatching(/One of, lists each way/),
+      expect.stringMatching(/both ends.*Waka canoe needs Edgeville.*already ticked stay ticked/),
+      expect.stringMatching(/team cape counts in Edgeville’s and Varrock’s Wilderness/),
     ]);
   });
 
