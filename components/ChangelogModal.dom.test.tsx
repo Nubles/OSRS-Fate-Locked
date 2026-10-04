@@ -220,11 +220,10 @@ describe('ChangelogModal pet offer', () => {
     });
     expect(onClose).not.toHaveBeenCalled();
 
-    const select = host.querySelector('select[aria-label="Earlier pet 1"]') as HTMLSelectElement;
-    await act(async () => {
-      select.value = String(PETS[4].id);
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+    const box = host.querySelector('input[aria-label="Earlier pet 1"]') as HTMLInputElement;
+    await act(async () => { box.focus(); });
+    const option = host.querySelector(`[role="option"][data-value="${PETS[4].id}"]`) as HTMLElement;
+    await act(async () => { option.click(); });
     const free = Array.from(host.querySelectorAll('button'))
       .find(button => button.textContent?.startsWith('Just the Omni-Key')) as HTMLButtonElement;
     await click(free);

@@ -28,6 +28,8 @@ import {
   classifyFateEventCandidate,
 } from '../utils/fateEventEligibility';
 import { parsePastedEvents, pasteSummary } from '../utils/runelitePaste';
+import { petById, type Pet } from '../data/pets';
+import { PetPicker } from './PetPicker';
 
 export interface RollInboxGame {
   state: GameState;
@@ -144,6 +146,8 @@ export function RollInboxView({
 }: RollInboxViewProps) {
   const [, refresh] = useState(0);
   const [selection, setSelection] = useState<Record<string, string>>({});
+  // A pet's claim waits for the player to check the pet: each pet counts once.
+  const [confirmingPet, setConfirmingPet] = useState<string | null>(null);
   const [pasting, setPasting] = useState(false);
   const [pasteText, setPasteText] = useState('');
   const [pasteNote, setPasteNote] = useState<string | null>(null);
@@ -329,6 +333,28 @@ export function RollInboxView({
                   account={whose(row)}
                   tone="border-emerald-500/25 bg-emerald-500/[0.06]"
                 >
+                  {classification.progress.kind === 'PET' && confirmingPet === row.event.eventId ? (
+                    <div role="group" aria-label="Check your pet" className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="text-[11px] text-gray-300">
+                        Claim an Omni-Key for {petById(classification.progress.petId)?.name ?? 'this pet'}? Each pet counts
+                        once, so check it’s the one you got.
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => { setConfirmingPet(null); roll(row, classification); }}
+                        className="ml-auto rounded-md bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-500"
+                      >
+                        Yes, I got {petById(classification.progress.petId)?.name ?? 'it'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmingPet(null)}
+                        className="rounded-md px-2 py-1.5 text-[11px] text-gray-400 hover:bg-white/5 hover:text-white"
+                      >
+                        Back
+                      </button>
+                    </div>
+                  ) : (
                   <div className="mt-2 flex items-center gap-2">
                     <span className="text-[11px] text-gray-500">
                       {classification.state === 'READY' && (classification.progress.kind === 'PET'
@@ -337,7 +363,9 @@ export function RollInboxView({
                     </span>
                     <button
                       type="button"
-                      onClick={() => roll(row, classification)}
+                      onClick={() => (classification.progress.kind === 'PET'
+                        ? setConfirmingPet(row.event.eventId)
+                        : roll(row, classification))}
                       className="ml-auto rounded-md bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-500"
                     >
                       {classification.state === 'READY' && classification.progress.kind === 'PET' ? 'Claim' : 'Roll'}
@@ -350,6 +378,7 @@ export function RollInboxView({
                       Not eligible
                     </button>
                   </div>
+                  )}
                 </RowFrame>
               ))}
             </div>
@@ -370,7 +399,18 @@ export function RollInboxView({
                 >
                   <p className="mt-1 text-[11px] text-amber-200/80">{classification.reason}</p>
                   <div className="mt-2 flex items-center gap-2">
-                    {classification.candidates?.length ? (
+                    {classification.candidates?.length && mustChoose(row) ? (
+                      <div className="min-w-0 flex-1">
+                        <PetPicker
+                          label="The pet you got"
+                          pets={classification.candidates
+                            .map((candidate) => petById(Number(candidate.target)))
+                            .filter((pet): pet is Pet => pet !== undefined)}
+                          value={selection[row.event.eventId] ?? ''}
+                          onChange={(value) => setSelection((current) => ({ ...current, [row.event.eventId]: value }))}
+                        />
+                      </div>
+                    ) : classification.candidates?.length ? (
                       <select
                         aria-label={mustChoose(row) ? 'The pet you got' : undefined}
                         value={selection[row.event.eventId] ?? (mustChoose(row) ? '' : classification.candidates[0].target)}

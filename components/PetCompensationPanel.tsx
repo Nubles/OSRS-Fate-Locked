@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { petById, unclaimedPets, type Pet } from '../data/pets';
 import type { PetCompensationChoice, PetCompensationState } from '../types';
+import { PetPicker } from './PetPicker';
 
 /** A row's value for a roll that was not a new pet: a duplicate, a mistake, or one the player can't remember. */
 const NOT_A_PET = 'none';
@@ -60,23 +61,16 @@ export const PetCompensationPanel: React.FC<PetCompensationPanelProps> = ({
     const date = dateOf(times[index]);
     const brought = index < offer.keyOnlyPets ? 'paid a Key' : 'paid a Key and an Omni-Key';
     return (
-      <label key={index} className="flex flex-col gap-1 text-xs text-gray-400">
+      <div key={index} className="flex flex-col gap-1 text-xs text-gray-400">
         <span>Pet roll {index + 1}{date ? `, ${date}` : ''}: {brought}</span>
-        <select
-          aria-label={`Earlier pet ${index + 1}`}
+        <PetPicker
+          label={`Earlier pet ${index + 1}`}
+          pets={available.filter((pet) => String(pet.id) === value || !rows.includes(String(pet.id)))}
           value={value}
-          onChange={(e) => setRows((current) => current.map((old, i) => (i === index ? e.target.value : old)))}
-          className="w-full rounded-md border border-white/10 bg-black/70 px-2 py-1.5 text-[11px] text-gray-200"
-        >
-          <option value="" disabled>Choose the pet…</option>
-          <option value={NOT_A_PET}>Not a new pet (a duplicate, a mistake, or I can’t remember)</option>
-          {available
-            .filter((pet) => String(pet.id) === value || !rows.includes(String(pet.id)))
-            .map((pet) => (
-              <option key={pet.id} value={pet.id}>{pet.name}</option>
-            ))}
-        </select>
-      </label>
+          onChange={(next) => setRows((current) => current.map((old, i) => (i === index ? next : old)))}
+          extra={{ value: NOT_A_PET, label: 'Not a new pet (a duplicate, a mistake, or I can’t remember)' }}
+        />
+      </div>
     );
   };
 

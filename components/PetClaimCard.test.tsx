@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import React from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import React, { StrictMode } from 'react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PETS } from '../data/pets';
 import { OPEN_PETS_EVENT } from '../utils/petFollower';
@@ -8,32 +8,61 @@ import { PetClaimCard } from './PetClaimCard';
 
 afterEach(cleanup);
 
+const card = (claimed: number[], onClaim = vi.fn()) =>
+  render(<StrictMode><PetClaimCard claimed={claimed} onClaim={onClaim} /></StrictMode>);
+const box = () => screen.getByRole('combobox', { name: 'The pet you got' });
+const shown = () => within(screen.getByRole('listbox')).getAllByRole('option').map((option) => option.dataset.value);
+/** Type into the picker, then pick the pet with this id from what it shows. */
+const pick = (query: string, id: number) => {
+  fireEvent.change(box(), { target: { value: query } });
+  const option = within(screen.getByRole('listbox')).getAllByRole('option').find((o) => o.dataset.value === String(id));
+  fireEvent.click(option!);
+};
+
 describe('PetClaimCard', () => {
-  it('claims nothing until the player picks a pet', () => {
+  it('claims nothing until the player picks a pet and confirms it', () => {
     const onClaim = vi.fn();
-    render(<PetClaimCard claimed={[]} onClaim={onClaim} />);
+    const vorki = PETS.find((pet) => pet.name === 'Vorki')!;
+    card([], onClaim);
     const claim = screen.getByRole('button', { name: 'Claim Omni-Key' });
     expect(claim).toHaveProperty('disabled', true);
     fireEvent.click(claim);
     expect(onClaim).not.toHaveBeenCalled();
 
-    fireEvent.change(screen.getByLabelText('The pet you got'), { target: { value: String(PETS[25].id) } });
-    expect(claim).toHaveProperty('disabled', false);
-    fireEvent.click(claim);
-    expect(onClaim).toHaveBeenCalledWith(PETS[25], expect.anything());
+    pick('vorkath', vorki.id);
+    fireEvent.click(screen.getByRole('button', { name: 'Claim Omni-Key' }));
+    // Each pet counts once, so it asks first, naming the pet and where it's from.
+    const check = screen.getByRole('group', { name: 'Check your pet' });
+    expect(check.textContent).toContain('Claim an Omni-Key for Vorki?');
+    expect(check.textContent).toContain('From Vorkath');
+    expect(onClaim).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, I got Vorki' }));
+    expect(onClaim).toHaveBeenCalledWith(vorki, expect.anything());
+    expect(screen.queryByRole('group', { name: 'Check your pet' })).toBeNull();
+  });
+
+  it('goes back to the picker, keeping the choice, without claiming', () => {
+    const onClaim = vi.fn();
+    const beaver = PETS.find((pet) => pet.name === 'Beaver')!;
+    card([], onClaim);
+    pick('woodcutting', beaver.id);
+    fireEvent.click(screen.getByRole('button', { name: 'Claim Omni-Key' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(onClaim).not.toHaveBeenCalled();
+    expect((box() as HTMLInputElement).value).toBe('Beaver');
   });
 
   it('offers only the pets the run has not claimed', () => {
-    render(<PetClaimCard claimed={[PETS[0].id, PETS[1].id]} onClaim={vi.fn()} />);
-    const names = [...(screen.getByLabelText('The pet you got') as HTMLSelectElement).options].map((o) => o.text);
-    expect(names).not.toContain(PETS[0].name);
-    expect(names).not.toContain(PETS[1].name);
-    expect(names).toContain(PETS[2].name);
+    card([PETS[0].id, PETS[1].id]);
+    fireEvent.focus(box());
+    expect(shown()).not.toContain(String(PETS[0].id));
+    expect(shown()).not.toContain(String(PETS[1].id));
+    expect(shown()).toContain(String(PETS[2].id));
     expect(screen.getByText(`2 of ${PETS.length} pets claimed`)).toBeTruthy();
   });
 
   it('says when every pet is claimed', () => {
-    render(<PetClaimCard claimed={PETS.map((pet) => pet.id)} onClaim={vi.fn()} />);
+    card(PETS.map((pet) => pet.id));
     expect(screen.getByText('Every pet is claimed.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Claim Omni-Key' })).toBeNull();
   });

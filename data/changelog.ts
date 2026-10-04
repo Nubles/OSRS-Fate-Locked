@@ -29,7 +29,7 @@ export const CHANGELOG_RELEASES = [
         'Claiming a pet isn’t a roll, so it doesn’t reset your Fate, and an active Clarity or Greed waits for your next roll.',
       ],
       added: [
-        'Farm Keys → Activities has a New Pet card: choose the pet you got and claim its Omni-Key.',
+        'Farm Keys → Activities has a New Pet card: find the pet you got by typing its name or where it comes from (“vorkath”, “cox”, “mining”), check it’s the right one, and claim its Omni-Key. The Roll Inbox and the question about earlier pets use the same search, and a pet RuneLite noticed asks you to check it too.',
         'If your run logged pets before this change, What’s New asks you to name each one, so it counts once, or to mark it as not a new pet: a duplicate, a mistake, or one you can’t remember keeps its Key. Each new pet that paid a Key and no Omni-Key earns an Omni-Key now, and you choose what’s fair: give up your next Key, give up your next Key for Fate towards a Void Gambit, or just take the Omni-Key.',
         'Keys you choose to give up show on the Spend panel until the Keys you earn have paid them.',
         'Your newest pet follows you, in 3D, in the bottom-left corner, doing its idle animation from the game. Click its name for Your Pets: every pet you’ve claimed, up close, and which one follows.',

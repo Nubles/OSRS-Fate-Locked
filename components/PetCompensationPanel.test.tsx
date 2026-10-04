@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PETS } from '../data/pets';
 import { PET_COMPENSATION_ID } from '../utils/petCompensation';
@@ -15,8 +15,18 @@ const offer = (keyOnlyPets: number, omniPets = 0) => ({
   omniPets,
 });
 
-const answer = (index: number, value: string) =>
-  fireEvent.change(screen.getByLabelText(`Earlier pet ${index}`), { target: { value } });
+/** Open the row's pet picker and pick the choice with this value. */
+const answer = (index: number, value: string) => {
+  fireEvent.focus(screen.getByRole('combobox', { name: `Earlier pet ${index}` }));
+  const option = within(screen.getByRole('listbox')).getAllByRole('option').find((o) => o.dataset.value === value);
+  fireEvent.click(option!);
+};
+const offered = (index: number) => {
+  fireEvent.focus(screen.getByRole('combobox', { name: `Earlier pet ${index}` }));
+  const values = within(screen.getByRole('listbox')).getAllByRole('option').map((o) => o.dataset.value);
+  fireEvent.blur(screen.getByRole('combobox', { name: `Earlier pet ${index}` }));
+  return values;
+};
 const name = (index: number, petIndex: number) => answer(index, String(PETS[petIndex].id));
 const notAPet = (index: number) => answer(index, 'none');
 
@@ -64,7 +74,7 @@ describe('PetCompensationPanel', () => {
   it('offers each pet once across the answers, none already claimed, and not a new pet in every row', () => {
     render(<PetCompensationPanel offer={offer(2)} claimed={[PETS[5].id]} gambitStake={15} onResolve={vi.fn()} />);
     name(1, 0);
-    const second = [...(screen.getByLabelText('Earlier pet 2') as HTMLSelectElement).options].map((o) => o.value);
+    const second = offered(2);
     expect(second).toContain('none');
     expect(second).not.toContain(String(PETS[0].id));
     expect(second).not.toContain(String(PETS[5].id));
