@@ -1,0 +1,306 @@
+{
+  "_comment": "Each pet, by its id in data/pets.ts, and the follower NPC whose model and idle animation `npm run models:export -- --cache <dir> --pets` exports to public/models/pets/<petId>.gltf. Found by scanning the cache for follower NPCs with the pet's name; the boss pets' followers are named Jr. (Zilyana Jr.), and the Penance Queen's is Penance Pet. Where a pet has colour or form variants, the follower is the OSRS Wiki's version 1 (the Phoenix is 7370, not the recoloured 3081). 'exclude' drops the flat shadow discs some followers carry, by model id. 'still' lists pets whose idle doesn't export cleanly (the Heron's renders as nothing): they're exported without it.",
+  "pets": {
+    "502001": {
+      "pet": "Abyssal orphan",
+      "npc": 5884
+    },
+    "502002": {
+      "pet": "Ikkle Hydra (serpentine)",
+      "npc": 8492
+    },
+    "502003": {
+      "pet": "Callisto cub",
+      "npc": 5558
+    },
+    "502004": {
+      "pet": "Hellpuppy",
+      "npc": 3099
+    },
+    "502005": {
+      "pet": "Pet chaos elemental",
+      "npc": 2055
+    },
+    "502006": {
+      "pet": "Pet Zilyana",
+      "npc": 6633
+    },
+    "502007": {
+      "pet": "Pet dark core",
+      "npc": 318
+    },
+    "502008": {
+      "pet": "Pet Dagannoth Prime",
+      "npc": 6629
+    },
+    "502009": {
+      "pet": "Pet Dagannoth Supreme",
+      "npc": 6628
+    },
+    "502010": {
+      "pet": "Pet Dagannoth Rex",
+      "npc": 6630
+    },
+    "502011": {
+      "pet": "TzRek-Jad",
+      "npc": 5893
+    },
+    "502012": {
+      "pet": "Pet General Graardor",
+      "npc": 6632
+    },
+    "502013": {
+      "pet": "Baby Mole",
+      "npc": 6635
+    },
+    "502014": {
+      "pet": "Noon",
+      "npc": 7892
+    },
+    "502015": {
+      "pet": "Jal-Nib-Rek",
+      "npc": 7675
+    },
+    "502016": {
+      "pet": "Kalphite Princess",
+      "npc": 6638
+    },
+    "502017": {
+      "pet": "Prince Black Dragon",
+      "npc": 6636
+    },
+    "502018": {
+      "pet": "Pet Kraken",
+      "npc": 6640
+    },
+    "502019": {
+      "pet": "Pet Kree'arra",
+      "npc": 6631
+    },
+    "502020": {
+      "pet": "Pet K'ril Tsutsaroth",
+      "npc": 6634
+    },
+    "502021": {
+      "pet": "Scorpia's offspring",
+      "npc": 5561
+    },
+    "502022": {
+      "pet": "Skotos",
+      "npc": 7671
+    },
+    "502023": {
+      "pet": "Pet Smoke Devil",
+      "npc": 6639
+    },
+    "502024": {
+      "pet": "Venenatis spiderling",
+      "npc": 5557
+    },
+    "502025": {
+      "pet": "Vet'ion Jr.",
+      "npc": 5559
+    },
+    "502026": {
+      "pet": "Vorki",
+      "npc": 8029
+    },
+    "502027": {
+      "pet": "Phoenix",
+      "npc": 7370
+    },
+    "502028": {
+      "pet": "Pet Snakeling",
+      "npc": 2130
+    },
+    "502029": {
+      "pet": "Olmlet",
+      "npc": 7520
+    },
+    "502030": {
+      "pet": "Lil' Zik",
+      "npc": 8337
+    },
+    "502031": {
+      "pet": "Bloodhound",
+      "npc": 7232
+    },
+    "502032": {
+      "pet": "Pet Penance Queen",
+      "npc": 6674
+    },
+    "502033": {
+      "pet": "Heron",
+      "npc": 6722
+    },
+    "502034": {
+      "pet": "Rock golem",
+      "npc": 7451
+    },
+    "502035": {
+      "pet": "Beaver",
+      "npc": 12181
+    },
+    "502036": {
+      "pet": "Baby chinchompa (grey)",
+      "npc": 6757
+    },
+    "502037": {
+      "pet": "Giant Squirrel",
+      "npc": 7351
+    },
+    "502038": {
+      "pet": "Tangleroot",
+      "npc": 7352
+    },
+    "502039": {
+      "pet": "Rocky",
+      "npc": 7353
+    },
+    "502040": {
+      "pet": "Rift guardian (fire)",
+      "npc": 7354
+    },
+    "502041": {
+      "pet": "Herbi",
+      "npc": 7760
+    },
+    "502042": {
+      "pet": "Chompy chick",
+      "npc": 4002
+    },
+    "502043": {
+      "pet": "Sraracha",
+      "npc": 2144
+    },
+    "502044": {
+      "pet": "Smolcano",
+      "npc": 8739
+    },
+    "502045": {
+      "pet": "Youngllef",
+      "npc": 8737
+    },
+    "502046": {
+      "pet": "Little Nightmare",
+      "npc": 9399
+    },
+    "502047": {
+      "pet": "Lil' Creator",
+      "npc": 3566
+    },
+    "502048": {
+      "pet": "Tiny tempor",
+      "npc": 10637
+    },
+    "502049": {
+      "pet": "Nexling",
+      "npc": 11277
+    },
+    "502050": {
+      "pet": "Abyssal protector",
+      "npc": 11429
+    },
+    "502051": {
+      "pet": "Tumeken's guardian",
+      "npc": 11812
+    },
+    "502052": {
+      "pet": "Muphin (ranged)",
+      "npc": 12014
+    },
+    "502053": {
+      "pet": "Wisp",
+      "npc": 12157
+    },
+    "502054": {
+      "pet": "Baron",
+      "npc": 12159
+    },
+    "502055": {
+      "pet": "Butch",
+      "npc": 12158
+    },
+    "502056": {
+      "pet": "Lil'viathan",
+      "npc": 12160
+    },
+    "502057": {
+      "pet": "Scurry",
+      "npc": 7616
+    },
+    "502058": {
+      "pet": "Smol Heredit",
+      "npc": 12857
+    },
+    "502059": {
+      "pet": "Quetzin",
+      "npc": 12858
+    },
+    "502060": {
+      "pet": "Nid",
+      "npc": 13683
+    },
+    "502061": {
+      "pet": "Huberte",
+      "npc": 14045
+    },
+    "502062": {
+      "pet": "Moxi",
+      "npc": 14046
+    },
+    "502063": {
+      "pet": "Bran",
+      "npc": 12593
+    },
+    "502064": {
+      "pet": "Yami",
+      "npc": 14204
+    },
+    "502065": {
+      "pet": "Dom",
+      "npc": 14785
+    },
+    "502066": {
+      "pet": "Soup",
+      "npc": 14930
+    },
+    "502067": {
+      "pet": "Gull (pet)",
+      "npc": 14931
+    },
+    "502068": {
+      "pet": "Beef",
+      "npc": 15631
+    },
+    "502069": {
+      "pet": "Maggot marquess",
+      "npc": 15740
+    },
+    "502070": {
+      "pet": "Aggy",
+      "npc": 16317
+    },
+    "502071": {
+      "pet": "Mr McGroot",
+      "npc": 16316
+    }
+  },
+  "exclude": {
+    "502006": [
+      27937
+    ],
+    "502017": [
+      17423
+    ],
+    "502019": [
+      28020
+    ],
+    "502032": [
+      20716
+    ]
+  },
+  "still": [
+    "502033"
+  ]
+}

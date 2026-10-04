@@ -172,7 +172,7 @@ export const SpendCard: React.FC<SpendCardProps> = ({
 };
 
 export const GachaSection: React.FC = () => {
-  const { keys, specialKeys, chaosKeys, unlocks, rollUnlock, pendingUnlock, animationsEnabled, gameModeId, customMode } = useGame();
+  const { keys, specialKeys, chaosKeys, keysOwed, unlocks, rollUnlock, pendingUnlock, animationsEnabled, gameModeId, customMode } = useGame();
   const isChunked = gameModeId === 'chunked';
   const bankLocks = bankLocksActive(gameModeId, customMode);
 
@@ -238,6 +238,18 @@ export const GachaSection: React.FC = () => {
               Omni-Keys aren't spent here. Click a locked skill, gear slot, {isChunked ? '' : 'area, '}boss or other entry on the <span className="text-purple-200">Dashboard</span> to pick exactly what to unlock.
             </p>
           </div>
+        </div>
+      )}
+
+      {/* Keys the run gave up in the pet compensation: the next ones it earns pay these first. */}
+      {(keysOwed ?? 0) > 0 && (
+        <div className="mb-3 w-full rounded-lg border border-amber-500/40 bg-amber-950/20 p-3">
+          <h3 className="text-sm font-bold uppercase tracking-widest text-amber-300">
+            {keysOwed} Standard Key{keysOwed === 1 ? '' : 's'} owed
+          </h3>
+          <p className="text-[11px] font-mono leading-snug text-amber-200/70">
+            From the pet compensation you chose: the next {keysOwed === 1 ? 'Standard Key you earn pays' : `${keysOwed} Standard Keys you earn pay`} this first.
+          </p>
         </div>
       )}
 

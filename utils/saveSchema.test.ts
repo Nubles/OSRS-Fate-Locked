@@ -23,6 +23,7 @@ import {
   type SaveValidationResult,
 } from './saveSchema';
 import { LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
+import { notEligiblePetCompensation } from './petCompensation';
 
 const baseUnlocks = (): UnlockState => ({
   equipment: { Head: 0, Body: 0 },
@@ -68,6 +69,7 @@ const defaultsFixture = (): GameState => ({
     pityKeys: 0,
     fatePoints: 0,
   },
+  petCompensation: notEligiblePetCompensation(),
   activeBuff: 'NONE',
   unlocks: baseUnlocks(),
   history: [],
@@ -104,6 +106,7 @@ const fullStateFixture = (): GameState => ({
     fatePoints: 5,
     choice: 'full',
   },
+  petCompensation: notEligiblePetCompensation(),
   activeBuff: 'LUCK',
   unlocks: {
     equipment: { Head: 9, Body: 4 },
@@ -211,13 +214,12 @@ const expectRejected = (
 };
 
 describe('save schema compatibility', () => {
-  it('accepts a complete strict v4 export and preserves every GameState field', () => {
+  it('accepts a complete strict current export and preserves every GameState field', () => {
     const current = fullStateFixture();
-    current.version = 4;
     expect(validateAndMigrateSave(current, defaultsFixture())).toEqual({
       ok: true,
       state: current,
-      sourceVersion: 4,
+      sourceVersion: CURRENT_SAVE_VERSION,
       warnings: [],
     });
   });
@@ -251,7 +253,7 @@ describe('save schema compatibility', () => {
     const result = expectAccepted(validateAndMigrateSave(legacy, defaultsFixture()));
 
     expect(result.sourceVersion).toBe(3);
-    expect(result.state.version).toBe(4);
+    expect(result.state.version).toBe(CURRENT_SAVE_VERSION);
     expect(result.state.fateCompensation).toEqual({
       releaseId: LEGACY_FATE_COMPENSATION_ID,
       status: 'pending',

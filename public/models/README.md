@@ -35,6 +35,22 @@ It reads the entities in `scripts/models.config.json` (`names` are auto-resolved
 by scanning the cache; `aliases` map raids/multi-boss names to a representative
 NPC; `npcIds` pin an explicit id) and writes `<slug>.gltf` here.
 
+## Pets
+
+`pets/<petId>.gltf` holds every pet in `data/pets.ts`, each with its idle
+animation, for the follower and the Your Pets panel. They aren't in the
+manifest; a test checks that every pet has one. To export them again, for
+example after a game update changes a pet:
+
+```bash
+npm run models:export -- --cache "<RuneLite folder>/jagexcache/oldschool/LIVE" --pets
+```
+
+`scripts/pet-models.config.json` maps each pet to its NPC, leaves out flat
+shadow models, and lists pets to keep still. A pet whose idle the reader can't
+bake is exported still, and the script lists the still pets in
+`data/petModels.ts`, which the app bobs gently instead.
+
 ## Or export one at a time
 
 Use a cache viewer such as RuneMonk or RuneApps (both have a glTF export) and drop

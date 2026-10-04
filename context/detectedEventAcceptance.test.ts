@@ -37,7 +37,7 @@ const fail: Dice = (_purpose, _index = 0, max = 100) => max;
 
 const DETECTORS: Record<DetectedProgress['kind'], string> = {
   SKILL_LEVEL: 'skill-level-v1', QUEST: 'quest-state-v1', CA_TASK: 'combat-achievement-chat-v1',
-  DIARY_TASK: 'diary-task-v1', COLLECTION_ITEM: 'collection-log-chat-v1', NONE: 'boss-kill-count-v1',
+  DIARY_TASK: 'diary-task-v1', COLLECTION_ITEM: 'collection-log-chat-v1', PET: 'pet-drop-v1', NONE: 'boss-kill-count-v1',
 };
 
 const accept = (state: Run, progress: DetectedProgress, intent: RollIntent, dice: Dice, eventId = 'evt') =>

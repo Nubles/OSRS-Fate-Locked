@@ -20,7 +20,12 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-10-04-slayer-cave-ankou');
+    expect(LATEST_CHANGELOG.id).toBe('2026-10-03-pet-omni-keys');
+  });
+
+  it('announces the pet search and the check before a pet is claimed', () => {
+    const release = CHANGELOG_RELEASES.find(item => item.id === '2026-10-03-pet-omni-keys');
+    expect(release?.sections.added).toContainEqual(expect.stringMatching(/find the pet you got by typing its name or where it comes from.*check it’s the right one/));
   });
 
   it('announces the Diary places checked against the wiki and the spent bosses RuneLite stops offering', () => {

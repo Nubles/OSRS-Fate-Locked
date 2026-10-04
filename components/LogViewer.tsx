@@ -38,6 +38,7 @@ const getLogStyle = (entry: LogEntry) => {
         glow: 'group-hover:shadow-[inset_0_0_20px_rgba(239,68,68,0.1)]'
       };
     case 'ROLL_OMNI':
+    case 'PET':
       return {
         icon: Sparkles,
         color: 'text-purple-400',

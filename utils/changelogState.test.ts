@@ -1,11 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
   CHANGELOG_STORAGE_KEY, ChangelogStorage,
-  changelogVisibilityReducer, markChangelogSeen, resolveChangelogRestoreTarget,
+  changelogVisibilityReducer, markChangelogSeen, mayAutoOpenChangelogAgain, resolveChangelogRestoreTarget,
   resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
   shouldEnableUnderlyingModalEscape,
   shouldRenderUnderlyingModals, shouldShowChangelog,
 } from './changelogState';
+
+describe('opening What\'s New again in one visit', () => {
+  it('waits for the next visit, unless an offer arrived since', () => {
+    expect(mayAutoOpenChangelogAgain(false, false)).toBe(true);
+    expect(mayAutoOpenChangelogAgain(true, false)).toBe(false);
+    expect(mayAutoOpenChangelogAgain(true, true)).toBe(true);
+  });
+});
 
 class MemoryStorage implements ChangelogStorage {
   values = new Map<string, string>();

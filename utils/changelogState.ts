@@ -76,6 +76,16 @@ export const shouldAutoOpenChangelog = ({
     && startupHash.length > SYNC_HASH_PREFIX.length)
   && parseRunelitePairFragment(startupHash) == null;
 
+/**
+ * What's New opens on its own once a visit for a release, but again for an offer
+ * that arrives later in the visit, such as an imported or restored save's: the
+ * offer keeps it open until the player settles it.
+ */
+export const mayAutoOpenChangelogAgain = (
+  alreadyOpenedThisVisit: boolean,
+  hasPendingCompensation: boolean,
+): boolean => !alreadyOpenedThisVisit || hasPendingCompensation;
+
 export const resolveChangelogRestoreTarget = <T>(
   source: ChangelogOpenSource,
   persistentTrigger: T | null,

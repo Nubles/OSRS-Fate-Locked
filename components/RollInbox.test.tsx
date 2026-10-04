@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { initialState } from '../context/GameContext';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
+import { PETS } from '../data/pets';
 import type { FateEventEnvelope, FateEventType } from '../services/fateEventProtocol';
 import { RUNELITE_COPY_FORMAT } from '../utils/runelitePaste';
 import { relaySync } from '../services/relaySync';
@@ -75,6 +76,41 @@ function setup(envelope = event(), state = gameState(), storage = new MemoryStor
 afterEach(cleanup);
 
 describe('RollInbox', () => {
+  it('makes the player pick a pet, then claims its Omni-Key instead of rolling', async () => {
+    const user = userEvent.setup();
+    const vorki = PETS.find((pet) => pet.name === 'Vorki')!;
+    const { acceptDetectedEvent } = setup(
+      event('PET_DROP', null, { detectorId: 'pet-drop-v1', confidence: 'UNCERTAIN', evidence: { signature: 'followed' } }),
+      gameState({ petsClaimed: [PETS[0].id] }),
+    );
+    const review = await screen.findByRole('button', { name: 'Review' });
+    // RuneLite can't tell which pet it was, so nothing is chosen for the player.
+    expect(review).toHaveProperty('disabled', true);
+    const box = screen.getByRole('combobox', { name: 'The pet you got' });
+    await user.click(box);
+    const values = () => within(screen.getByRole('listbox')).getAllByRole('option').map((option) => option.dataset.value);
+    expect(values()).not.toContain(String(PETS[0].id));
+    await user.type(box, 'vorkath');
+    expect(values()).toEqual([String(vorki.id)]);
+    await user.click(within(screen.getByRole('listbox')).getAllByRole('option')[0]);
+    await user.click(review);
+
+    expect(await screen.findByText('An Omni-Key, once per pet')).toBeTruthy();
+    // Each pet counts once: Claim asks first, and Back claims nothing.
+    await user.click(screen.getByRole('button', { name: 'Claim' }));
+    expect(screen.getByRole('group', { name: 'Check your pet' }).textContent).toContain('Claim an Omni-Key for Vorki?');
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(acceptDetectedEvent).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Claim' }));
+    await user.click(screen.getByRole('button', { name: 'Yes, I got Vorki' }));
+    expect(acceptDetectedEvent).toHaveBeenCalledWith(
+      { kind: 'PET', petId: vorki.id },
+      expect.objectContaining({ source: 'Pet Drop', target: 'Vorki' }),
+      expect.objectContaining({ fateEventId: 'evt-1', detectorId: 'pet-drop-v1' }),
+      expect.objectContaining({ runId: 'run-1' }),
+    );
+  });
+
   it('never rolls on ingest or render', async () => {
     const { acceptDetectedEvent } = setup();
     expect(await screen.findByText("Cook's Assistant")).toBeTruthy();

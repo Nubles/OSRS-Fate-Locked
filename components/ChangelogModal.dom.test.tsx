@@ -194,6 +194,43 @@ describe('ChangelogModal linked notes', () => {
   });
 });
 
+describe('ChangelogModal pet offer', () => {
+  it('stays open until the pet offer is settled, and shows it first', async () => {
+    const { PETS } = await import('../data/pets');
+    const { PET_COMPENSATION_ID } = await import('../utils/petCompensation');
+    const onClose = vi.fn();
+    const settled: Array<[string, Array<number | null>]> = [];
+    const { host } = await mount(
+      <ChangelogModal
+        releases={releases}
+        onClose={onClose}
+        petCompensation={{ releaseId: PET_COMPENSATION_ID, status: 'pending', keyOnlyPets: 1, omniPets: 0 }}
+        petsClaimed={[]}
+        petGambitStake={15}
+        onResolvePetCompensation={(choice, keyOnly) => settled.push([choice, keyOnly.map(pet => pet?.id ?? null)])}
+      />,
+    );
+
+    expect(host.textContent).toContain('Pets now give an Omni-Key');
+    const headerClose = findCloseButton(host);
+    expect(headerClose.disabled).toBe(true);
+    await click(headerClose);
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+    expect(onClose).not.toHaveBeenCalled();
+
+    const box = host.querySelector('input[aria-label="Earlier pet 1"]') as HTMLInputElement;
+    await act(async () => { box.focus(); });
+    const option = host.querySelector(`[role="option"][data-value="${PETS[4].id}"]`) as HTMLElement;
+    await act(async () => { option.click(); });
+    const free = Array.from(host.querySelectorAll('button'))
+      .find(button => button.textContent?.startsWith('Just the Omni-Key')) as HTMLButtonElement;
+    await click(free);
+    expect(settled).toEqual([['free', [PETS[4].id]]]);
+  });
+});
+
 describe('ChangelogModal compensation choices', () => {
   it('shows the pending choice first when it belongs to an older, collapsed release', async () => {
     const { CHANGELOG_RELEASES } = await import('../data/changelog');

@@ -113,8 +113,7 @@ describe('the detected-events contract', () => {
 
   it('covers every detector RuneLite copies, and has cases with no event', () => {
     const covered = new Set(contract.cases.flatMap((item) => item.events.map((event) => event.detectorId)));
-    // Pets wait for the owner's poll on pet rewards; RuneLite doesn't copy them yet.
-    const copied = DETECTOR_POLICIES.map((policy) => policy.detectorId).filter((id) => id !== 'pet-drop-v1');
+    const copied = DETECTOR_POLICIES.map((policy) => policy.detectorId);
     expect([...covered].sort()).toEqual([...copied].sort());
     expect(contract.cases.filter((item) => item.events.length === 0).length).toBeGreaterThanOrEqual(5);
   });

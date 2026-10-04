@@ -12,6 +12,9 @@ import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { EARN_METHODS, failureFateForSource, LEVEL_ROLL_MAX } from '../config/economy';
 import { BRUTUS_BOSS_NAME, effectiveVanillaClueRate, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
 import { BossKeyProgress, ClueKeyProgress } from './VanillaKeyProgress';
+import { lazyWithRetry } from '../utils/lazyRetry';
+// The pet card and the pet names load when the Activities tab opens.
+const PetClaimCard = lazyWithRetry(() => import('./PetClaimCard').then(m => ({ default: m.PetClaimCard })));
 import { VANILLA_BOSS_SEARCH_PLACEHOLDER, vanillaBossNote, vanillaBossSearchEmptyMessage } from './vanillaBossSearchCopy';
 
 // OSRS Wiki Icon URLs
@@ -115,7 +118,6 @@ const TIER_STYLE: Record<BossTier, typeof TIER_STYLES.GREEN> = {
 };
 const ACTIVITY_ROLLS = [
   { name: 'Minigame', subText: 'Pest Control, BA, Castle Wars, Soul Wars…', source: DropSource.ACTIVITY_MINIGAME, image: `${WIKI_IMG}Void_knight_mace.png`, style: TIER_STYLES.STONE },
-  { name: 'Any Pet',  subText: 'A guaranteed Key on a pet drop.',            source: DropSource.PET,               image: `${WIKI_IMG}Vorki.png`,           style: TIER_STYLES.GOLD },
 ];
 
 type TierStyle = typeof TIER_STYLES.GREEN;
@@ -378,7 +380,7 @@ const InfoChip: React.FC<{
 type FarmSubTab = 'SLAYER' | 'CLUES' | 'BOSSING' | 'ACTIVITIES';
 
 export const ActionSection: React.FC = () => {
-  const { rollForKey, unlocks, gameModeId, customMode, animationsEnabled, bossStandardKeysAwarded, clueStandardKeysAwarded } = useGame();
+  const { rollForKey, claimPet, petsClaimed, unlocks, gameModeId, customMode, animationsEnabled, bossStandardKeysAwarded, clueStandardKeysAwarded } = useGame();
   const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
   const [bossQuery, setBossQuery] = useState('');
 
@@ -485,7 +487,7 @@ export const ActionSection: React.FC = () => {
     { id: 'SLAYER', label: 'Slayer', icon: OSRS_ICONS.SLAYER, count: slayers.length },
     { id: 'CLUES', label: 'Clues', icon: OSRS_ICONS.CLUE, count: CLUE_SCROLLS.length },
     { id: 'BOSSING', label: 'Bossing', icon: OSRS_ICONS.BOSS, count: isVanilla ? vanillaBosses.length : BOSSES_LIST.length },
-    { id: 'ACTIVITIES', label: 'Activities', icon: OSRS_ICONS.ACTIVITY, count: ACTIVITY_ROLLS.length },
+    { id: 'ACTIVITIES', label: 'Activities', icon: OSRS_ICONS.ACTIVITY, count: ACTIVITY_ROLLS.length + 1 },
   ];
 
   return (
@@ -664,6 +666,14 @@ export const ActionSection: React.FC = () => {
                 />
               </div>
             ))}
+            <div
+              className={animationsEnabled ? 'animate-fade-in-up' : ''}
+              style={animationsEnabled ? { animationDelay: `${ACTIVITY_ROLLS.length * 35}ms` } : undefined}
+            >
+              <React.Suspense fallback={<div className="h-28 rounded-lg border-2 border-[#4c462a] bg-[#262314]" />}>
+                <PetClaimCard claimed={petsClaimed} onClaim={(pet, e) => claimPet(pet, e.clientX, e.clientY)} />
+              </React.Suspense>
+            </div>
           </div>
         )}
       </div>

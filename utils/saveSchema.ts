@@ -4,7 +4,7 @@ import { EQUIPMENT_SLOTS, RETIRED_BOSSES, RETIRED_POH_ITEMS } from '../data/item
 import { migrateAreaUnlocks } from './areaUnlockMigration';
 import { mergedBankId, settleMergedBanks } from './bankUnlockMerges';
 import { settleCanonicalAreaUnlocks } from '../data/areaMapPolicy';
-import type { CollectionLogIdentity, FateCompensationState, GameState, LogEntry, RivalState, RuneProofProgress, UnlockState } from '../types';
+import type { CollectionLogIdentity, FateCompensationState, GameState, PetCompensationState, LogEntry, RivalState, RuneProofProgress, UnlockState } from '../types';
 import { captureCollectionLogIdentity } from '../services/CollectionLogSyncService';
 import { TableType } from '../types';
 import { getPoolAndStateKey } from './gameEngine';
@@ -18,8 +18,10 @@ import {
 import { vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
 
 import { calculateLegacyFateCompensation, LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
-/** Version 4 freezes and strictly validates one-time Fate compensation. */
-export const CURRENT_SAVE_VERSION = 4;
+import { PET_COMPENSATION_ID, petCompensationOffer } from './petCompensation';
+import { isPetId, PET_IDS } from '../data/petIds';
+/** Version 5 freezes the one-time pet offer and stores claimed pets and owed Keys. */
+export const CURRENT_SAVE_VERSION = 5;
 /**
  * The save version that introduced weighted Fate and stores its one-time
  * compensation offer. Fixed to that release: raising CURRENT_SAVE_VERSION
@@ -29,6 +31,14 @@ export const WEIGHTED_FATE_SAVE_VERSION = 4;
 /** Only saves from before weighted Fate have their offer calculated on load. */
 export const calculatesLegacyFateCompensation = (sourceVersion: number): boolean =>
   sourceVersion < WEIGHTED_FATE_SAVE_VERSION;
+/**
+ * The save version from which a new pet gives an Omni-Key and the run stores
+ * its pet offer. Fixed to that release, as WEIGHTED_FATE_SAVE_VERSION is.
+ */
+export const PET_OMNI_SAVE_VERSION = 5;
+/** Only saves from before pets gave an Omni-Key have their pet offer calculated on load. */
+export const calculatesPetCompensation = (sourceVersion: number): boolean =>
+  sourceVersion < PET_OMNI_SAVE_VERSION;
 const MIN_SUPPORTED_SAVE_VERSION = 1;
 export const MAX_SAVE_BYTES = 5 * 1024 * 1024;
 export const MAX_HISTORY_ENTRIES = 100_000;
@@ -465,7 +475,7 @@ const HISTORY_KEYS = new Set([
 ]);
 const HISTORY_TYPES = new Set([
   'UNLOCK', 'PITY', 'ALTAR', 'ROLL_SUCCESS', 'ROLL_FAIL', 'ROLL_OMNI',
-  'LEVEL_UP', 'XTREME_MILESTONE', 'COMPENSATION',
+  'LEVEL_UP', 'XTREME_MILESTONE', 'COMPENSATION', 'PET',
 ]);
 const HISTORY_RESULTS = new Set(['SUCCESS', 'FAIL']);
 const MAX_METADATA_DEPTH = 16;
@@ -733,6 +743,54 @@ const FATE_COMPENSATION_STATUSES = new Set([
   'pending', 'not_eligible', 'none', 'chaos', 'full',
 ]);
 const FATE_COMPENSATION_CHOICES = new Set(['none', 'chaos', 'full']);
+const PET_COMPENSATION_KEYS = new Set(['releaseId', 'status', 'keyOnlyPets', 'omniPets']);
+const PET_COMPENSATION_STATUSES = new Set(['pending', 'not_eligible', 'owe', 'gamble', 'free']);
+
+const normalizePetCompensation = (value: unknown): Outcome<PetCompensationState> => {
+  const path = 'petCompensation';
+  const inspected = inspectRecord(value, PET_COMPENSATION_KEYS, 'invalid_field', path);
+  if (inspected.ok === false) return inspected;
+  for (const required of PET_COMPENSATION_KEYS) {
+    if (!own(inspected.value, required)) return invalid('invalid_field', pathOf(path, required));
+  }
+  if (readOwn(inspected.value, 'releaseId') !== PET_COMPENSATION_ID) {
+    return invalid('invalid_field', `${path}.releaseId`);
+  }
+  const status = readOwn(inspected.value, 'status');
+  if (typeof status !== 'string' || !PET_COMPENSATION_STATUSES.has(status)) {
+    return invalid('invalid_field', `${path}.status`);
+  }
+  const keyOnlyPets = boundedInteger(
+    readOwn(inspected.value, 'keyOnlyPets'), `${path}.keyOnlyPets`, 0, MAX_COUNTER,
+  );
+  if (keyOnlyPets.ok === false) return keyOnlyPets;
+  const omniPets = boundedInteger(
+    readOwn(inspected.value, 'omniPets'), `${path}.omniPets`, 0, MAX_COUNTER,
+  );
+  if (omniPets.ok === false) return omniPets;
+  return {
+    ok: true,
+    value: {
+      releaseId: PET_COMPENSATION_ID,
+      status: status as PetCompensationState['status'],
+      keyOnlyPets: keyOnlyPets.value,
+      omniPets: omniPets.value,
+    },
+  };
+};
+
+/** Claimed pets: known pet ids, each once. */
+const normalizePetsClaimed = (value: unknown): Outcome<number[]> => {
+  if (!Array.isArray(value) || value.length > PET_IDS.length) return invalid('invalid_field', 'petsClaimed');
+  const seen = new Set<number>();
+  for (const id of value) {
+    if (typeof id !== 'number' || !Number.isSafeInteger(id) || !isPetId(id) || seen.has(id)) {
+      return invalid('invalid_field', 'petsClaimed');
+    }
+    seen.add(id);
+  }
+  return { ok: true, value: [...seen] };
+};
 
 const normalizeFateCompensation = (value: unknown): Outcome<FateCompensationState> => {
   const path = 'fateCompensation';
@@ -884,6 +942,7 @@ const TOP_LEVEL_KEYS = new Set([
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
   'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
   'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'fateCompensation',
+  'petCompensation', 'petsClaimed', 'keysOwed',
 ]);
 
 export const parseAndMigrateSave = (
@@ -938,6 +997,9 @@ const normalizeState = (
     }
     if (!calculatesLegacyFateCompensation(sourceVersion)) {
       required.push('fateCompensation');
+    }
+    if (!calculatesPetCompensation(sourceVersion)) {
+      required.push('petCompensation');
     }
     for (const key of required) {
       if (!own(input, key)) return invalid('invalid_field', key);
@@ -1040,6 +1102,13 @@ const normalizeState = (
     if (checked.ok === false) return checked;
     storedCompensation = checked.value;
   }
+  // Saves from before pets gave an Omni-Key have no pet offer; theirs is read from their history below.
+  let storedPetCompensation: PetCompensationState | undefined;
+  if (!calculatesPetCompensation(sourceVersion)) {
+    const checked = normalizePetCompensation(readOwn(input, 'petCompensation'));
+    if (checked.ok === false) return checked;
+    storedPetCompensation = checked.value;
+  }
 
   const selectedGoals = readPreferred(input, defaultRecord, 'pinnedGoals');
   if (!selectedGoals.present) return invalid('invalid_field', 'pinnedGoals');
@@ -1073,6 +1142,7 @@ const normalizeState = (
     fatePoints: fatePoints.value,
     // Replaced below for saves without a stored offer, once the mode is known.
     fateCompensation: storedCompensation ?? notEligibleFateCompensation(),
+    petCompensation: storedPetCompensation ?? petCompensationOffer(history.value),
     bossStandardKeysAwarded,
     clueStandardKeysAwarded,
     activeBuff: selectedBuff.value,
@@ -1163,6 +1233,16 @@ const normalizeState = (
     const checked = normalizeRival(selectedRival.value);
     if (checked.ok === false) return checked;
     state.rival = checked.value;
+  }
+  if (own(input, 'petsClaimed')) {
+    const checked = normalizePetsClaimed(readOwn(input, 'petsClaimed'));
+    if (checked.ok === false) return checked;
+    if (checked.value.length > 0) state.petsClaimed = checked.value;
+  }
+  if (own(input, 'keysOwed')) {
+    const checked = boundedInteger(readOwn(input, 'keysOwed'), 'keysOwed', 0, MAX_COUNTER);
+    if (checked.ok === false) return checked;
+    if (checked.value > 0) state.keysOwed = checked.value;
   }
   for (const key of ['xtremeMilestoneClaimed', 'chunkedMilestoneClaimed'] as const) {
     const selected = readPreferred(input, defaultRecord, key);

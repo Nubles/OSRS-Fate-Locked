@@ -68,7 +68,8 @@ export function eventRarity(type: string | undefined, meta?: Record<string, any>
     case 'ROLL_SUCCESS': return 'common';
     case 'ROLL_PITY':
     case 'PITY': return 'uncommon';
-    case 'ROLL_OMNI': return 'legendary';
+    case 'ROLL_OMNI':
+    case 'PET': return 'legendary';
     case 'LEVEL_UP': return meta?.chaosKeyAwarded || meta?.chaosKeysAwarded > 0 ? 'epic' : null;
     case 'UNLOCK': return categoryRarity(meta?.category);
     default: return null; // ROLL_FAIL, ALTAR, etc.
