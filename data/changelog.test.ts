@@ -33,7 +33,7 @@ describe('authored changelog releases', () => {
       expect.stringMatching(/Brutus after his one.*no longer says “added to your Roll inbox”.*next RuneLite plugin update/),
     ]);
     expect(release?.sections.changed).toEqual([
-      expect.stringMatching(/One of, lists each way/),
+      expect.stringMatching(/One of, lists each way.*map buttons.*one map button/),
       expect.stringMatching(/both ends.*Waka canoe needs Edgeville.*already ticked stay ticked/),
       expect.stringMatching(/team cape counts in Edgeville’s and Varrock’s Wilderness/),
     ]);

@@ -31,7 +31,7 @@ export const CHANGELOG_RELEASES = [
         'In RuneLite, a Vanilla boss or raid that has given every Standard Key it holds, such as Brutus after his one, no longer says “added to your Roll inbox” after each kill, and its kills leave the Roll inbox card: the tracker can’t roll them. This comes with the next RuneLite plugin update.',
       ],
       changed: [
-        'In the Journal, a diary task with a choice of ways, shown as One of, lists each way and what it still needs when you point at it.',
+        'In the Journal, a diary task with a choice of ways, shown as One of, lists each way and what it still needs when you point at it, and each way’s places have their map buttons. A task that counts anywhere in a province has one map button for it.',
         'Three trips need both ends, as other trips do: the Waka canoe needs Edgeville, a temple trek Paterdomus, and the eagle to the Snowy Hunter Area Eagles’ Peak. Tasks you’ve already ticked stay ticked.',
         'A team cape counts in Edgeville’s and Varrock’s Wilderness past the ditch, so in Vanilla it needs only the cape.',
       ],
