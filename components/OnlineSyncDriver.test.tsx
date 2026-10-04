@@ -18,6 +18,7 @@ const stableGameState = vi.hoisted(() => ({
   linkedAccount: 'Nubles UIM',
   gameModeId: 'standard',
   customMode: null,
+  bossStandardKeysAwarded: { Brutus: 1 },
   saveOwnershipStatus: 'owner' as 'checking' | 'owner' | 'blocked',
 }));
 
@@ -94,6 +95,13 @@ describe('OnlineSyncDriver', () => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+  });
+
+  it("sends the Keys each boss has given, so RuneLite knows which bosses are spent", async () => {
+    expect(relaySync.adoptCode('cccccccccccccccccccccccccccccccc')).toBe(true);
+    render(<OnlineSyncDriver />);
+    await advance(QUIET_MS);
+    expect(buildBundlePayloadMock.mock.calls[0]?.[1]).toMatchObject({ bossStandardKeysAwarded: { Brutus: 1 } });
   });
 
   it('publishes a new pairing at once, without a run change', async () => {

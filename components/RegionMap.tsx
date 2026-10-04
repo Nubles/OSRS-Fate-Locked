@@ -380,6 +380,8 @@ interface GameSnapshot {
   equipment?: Record<string, number>;
   gameModeId: string;
   customMode?: GameModeRules;
+  /** Vanilla: the Standard Keys each boss has given. */
+  bossStandardKeysAwarded?: Record<string, number>;
 }
 
 const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGameSnapshot }: { regionUnlocks: string[]; chunkUnlocks: string[]; isChunked: boolean; getGameSnapshot: () => GameSnapshot }) => {
@@ -1930,7 +1932,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
 }, (prev, next) => prev.regionUnlocks === next.regionUnlocks && prev.chunkUnlocks === next.chunkUnlocks && prev.isChunked === next.isChunked);
 
 export const RegionMap: React.FC = () => {
-  const { unlocks, runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode } = useGame();
+  const { unlocks, runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode, bossStandardKeysAwarded } = useGame();
   const visibleRegionUnlocks = useMemo(
     () => visibleAreaUnlocks(unlocks.regions),
     [unlocks.regions],
@@ -1938,7 +1940,7 @@ export const RegionMap: React.FC = () => {
   // Live run state for the RuneLite bundle, read lazily at export time via a
   // stable getter so MapContent's memoization (regionUnlocks-only) holds.
   const snapRef = useRef<GameSnapshot>({ runId, runRevision, keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [] as string[], gameModeId: gameModeId ?? 'vanilla' });
-  snapRef.current = { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [], linkedAccount, equipment: unlocks.equipment, gameModeId: gameModeId ?? 'vanilla', customMode };
+  snapRef.current = { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [], linkedAccount, equipment: unlocks.equipment, gameModeId: gameModeId ?? 'vanilla', customMode, bossStandardKeysAwarded };
   const getGameSnapshot = useCallback(() => snapRef.current, []);
   return <MapContent regionUnlocks={visibleRegionUnlocks} chunkUnlocks={unlocks.chunks ?? []} isChunked={gameModeId === 'chunked'} getGameSnapshot={getGameSnapshot} />;
 };

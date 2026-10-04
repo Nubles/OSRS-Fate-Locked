@@ -43,6 +43,18 @@ export const vanillaBossKeyStage = (bossName: string, rawAwarded: number) => {
   };
 };
 
+/**
+ * The bosses and raids that have given every Standard Key they hold (Brutus
+ * his one), so in Vanilla their kills don't roll again this run. A name the
+ * app doesn't know is left out.
+ */
+export const vanillaSpentBosses = (awarded: Readonly<Record<string, number>> | undefined): string[] =>
+  Object.entries(awarded ?? {})
+    .filter(([name, count]) => (name === BRUTUS_BOSS_NAME || Object.prototype.hasOwnProperty.call(BOSS_TIERS, name))
+      && vanillaBossKeyStage(name, count).capped)
+    .map(([name]) => name)
+    .sort((left, right) => left.localeCompare(right));
+
 export const clueOnboardingMinimum = (awarded: number): number =>
   CLUE_ONBOARDING_MINIMUMS[Math.max(0, Math.floor(awarded || 0))] ?? 0;
 

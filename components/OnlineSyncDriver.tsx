@@ -23,7 +23,7 @@ export const NOT_SAVING_PUBLISH_MESSAGE =
  * same profile may hold older progress, and RuneLite would enforce it.
  */
 export function OnlineSyncDriver() {
-  const { unlocks, runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode, saveOwnershipStatus } = useGame() as any;
+  const { unlocks, runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode, bossStandardKeysAwarded, saveOwnershipStatus } = useGame() as any;
   const [, force] = useState(0);
   useEffect(() => relaySync.subscribe(() => force((n) => n + 1)), []);
   const enabled = relaySync.enabled;
@@ -32,7 +32,7 @@ export function OnlineSyncDriver() {
 
   // A publish builds from the state current when it starts, not when scheduled.
   const latestRun = useRef<[UnlockState, RuneliteRunInput]>(null!);
-  latestRun.current = [unlocks, { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId: gameModeId ?? 'vanilla', customMode }];
+  latestRun.current = [unlocks, { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId: gameModeId ?? 'vanilla', customMode, bossStandardKeysAwarded }];
   const schedule = useRef<((immediate: boolean) => void) | null>(null);
   const seenPushRequest = useRef(pushRequestRevision);
   const ownership = useRef(saveOwnershipStatus);
