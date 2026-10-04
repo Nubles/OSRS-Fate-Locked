@@ -94,8 +94,8 @@ describe('Diary tasks the game counts in more than one place', () => {
     ['wild_hard_6', { regions: ["Scorpia's Cave"], bosses: ['Chaos Elemental'] }, 'its spawn west of the castle'],
     ['des_hard_2', { regions: ['Sophanem'] }, 'granite at the Necropolis mine'],
     ['des_easy_5', { regions: ['Sophanem'] }, 'vultures north of Sophanem'],
-  ] as const)('%s counts with %j: %s', (id, run) => {
-    expect(doable(id, account(run as Partial<UnlockState>))).toBe(true);
+  ] as const)('%s counts with %j: %s', (id, run, _why) => {
+    expect(doable(id, account(run as unknown as Partial<UnlockState>))).toBe(true);
   });
 
   it.each([
@@ -105,7 +105,7 @@ describe('Diary tasks the game counts in more than one place', () => {
     ['kar_hard_7', ['44,48'], [], 'the Harpie bug side of the Strong Tree'],
     ['wild_hard_5', ['49,59'], [], 'two Lava Dragon Isle spawns'],
     ['lum_med_11', ['46,53'], [], "the crop circle by Doric's hut"],
-  ] as const)('%s counts in Chunked with %j: %s', (id, chunks, quests) => {
+  ] as const)('%s counts in Chunked with %j: %s', (id, chunks, quests, _why) => {
     const extra = {
       equipment: { Head: 1, Body: 1, Legs: 1, Boots: 1, Weapon: 1, Ammo: 3 },
       skills: { Hunter: 10, Agility: 10, Ranged: 10, Strength: 10, Mining: 10 },
@@ -161,7 +161,7 @@ describe('Diary tasks that named the wrong place', () => {
   it.each([
     ['des_med_2', ['52,47', '53,47', '54,47', '52,43'], 'desert lizards along the Elid and west of Ullek'],
     ['frem_easy_10', ['42,57', '40,56', '43,56', '41,56', '42,56'], 'the oaks around Rellekka'],
-  ] as const)('%s takes exactly %j: %s', (id, chunks) => {
+  ] as const)('%s takes exactly %j: %s', (id, chunks, _why) => {
     const groups = task(id).locations ?? [];
     expect(groups).toHaveLength(1);
     expect(groups[0].chunkOptions.map(({ cx, cy }) => `${cx},${cy}`)).toEqual(chunks);
@@ -181,8 +181,8 @@ describe('Diary tasks that named the wrong place', () => {
     ['des_med_9', { regions: ['Agility Pyramid'], quests: ["Enakhra's Lament"], mobility: ['Camulet'] }, "the Camulet lands in the Desert Quarry (49,45)"],
     ['ard_hard_9', { regions: ['East Ardougne'], skills: { Smithing: 10 }, levels: { Smithing: 99 } }, "West Ardougne's anvil is in 39,52"],
     ['west_hard_1', { regions: ['Iorwerth Camp'], quests: ['Roving Elves'], equipment: { Weapon: 8 }, skills: { Ranged: 10 }, levels: { Ranged: 99 } }, 'elves at Iorwerth Camp'],
-  ] as const)('%s counts with %j: %s', (id, run) => {
-    expect(doable(id, account(run as Partial<UnlockState>))).toBe(true);
+  ] as const)('%s counts with %j: %s', (id, run, _why) => {
+    expect(doable(id, account(run as unknown as Partial<UnlockState>))).toBe(true);
   });
 
   it('no longer takes a place with nothing to do there', () => {
@@ -223,7 +223,7 @@ describe('Diary tasks that count anywhere in a province', () => {
     ['kar_easy_8', '45,47', {}],
     ['frem_easy_10', '41,56', { skills: { Firemaking: 10, Woodcutting: 10 }, levels: { Firemaking: 99, Woodcutting: 99 } }],
   ] as const)('%s counts in Chunked on %s', (id, chunk, run) => {
-    expect(doable(id, account({ ...(run as Partial<UnlockState>), chunks: [chunk] }), 'chunked')).toBe(true);
+    expect(doable(id, account({ ...(run as unknown as Partial<UnlockState>), chunks: [chunk] }), 'chunked')).toBe(true);
   });
 
   it("takes Giants' Plateau's cacti for the waterskin", () => {
@@ -245,7 +245,7 @@ describe('Diary trips that need the end they asked too little of', () => {
     ['lum_hard_4', ['Lumbridge', 'Edgeville'], 'the Waka canoe lands in Edgeville'],
     ['mor_hard_5', ['Burgh de Rott', 'Paterdomus'], 'a temple trek runs from Paterdomus to Burgh de Rott'],
     ['frem_med_2', ['Rellekka', "Eagles' Peak"], "the eagle leaves from the Eagles' Peak Dungeon"],
-  ] as const)('%s needs %j: %s', (id, areas) => {
+  ] as const)('%s needs %j: %s', (id, areas, _why) => {
     expect(task(id).regions).toEqual(areas);
   });
 

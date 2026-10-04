@@ -61,27 +61,28 @@ describe('owned areas no route reaches', () => {
 });
 
 describe('diary tasks in an owned area with no route', () => {
-  const uzer = account({ regions: ['Ruins of Uzer'], completedTasks: exceptTask('des_easy_1') });
+  // Teak near Uzer names only the Ruins of Uzer (the warbler now also takes its own chunk).
+  const uzer = account({ regions: ['Ruins of Uzer'], completedTasks: exceptTask('des_med_12') });
 
   it('are not doable, and say there is no route', () => {
     const routes = routesFor(uzer);
-    const result = evaluateDiaryTaskEligibility(task('des_easy_1'), uzer, 'vanilla', routes);
+    const result = evaluateDiaryTaskEligibility(task('des_med_12'), uzer, 'vanilla', routes);
 
     expect(result.eligible).toBe(false);
     expect(result.blockers).toEqual([noRoute('Ruins of Uzer')]);
-    expect(getDiaryStatus(DIARY_DATA['Desert Easy'], uzer, 'vanilla', routes)).toBe('LOCKED_REGION');
-    expect(countDoableTasks([task('des_easy_1')], uzer, 'vanilla', routes)).toBe(0);
+    expect(getDiaryStatus(DIARY_DATA['Desert Medium'], uzer, 'vanilla', routes)).toBe('LOCKED_REGION');
+    expect(countDoableTasks([task('des_med_12')], uzer, 'vanilla', routes)).toBe(0);
   });
 
   it('become doable once a route reaches the area', () => {
     const joined = routesFor(uzer, { [id(50, 50)]: [id(54, 47)] });
 
-    expect(evaluateDiaryTaskEligibility(task('des_easy_1'), uzer, 'vanilla', joined).eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(task('des_med_12'), uzer, 'vanilla', joined).eligible).toBe(true);
   });
 
   it('keep the old answer until the map data has loaded', () => {
-    expect(evaluateDiaryTaskEligibility(task('des_easy_1'), uzer, 'vanilla').eligible).toBe(true);
-    expect(evaluateDiaryTaskEligibility(task('des_easy_1'), uzer, 'vanilla', null).eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(task('des_med_12'), uzer, 'vanilla').eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(task('des_med_12'), uzer, 'vanilla', null).eligible).toBe(true);
   });
 
   it('cover Tindel Marchant in a stranded Port Khazard', () => {

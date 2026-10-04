@@ -133,7 +133,7 @@ describe('Diary trips need the place you leave from and the place you arrive in'
 /** North of the Shantay Pass: no desert heat, and the Desert Diary's areas leave them out. */
 const NOT_DESERT = ['Al Kharid', 'Duel Arena / PvP Arena', 'Mage Training Arena'];
 /** The areas a task names, and the areas its location chunks belong to. */
-const AREA_OF_CHUNK = new Map(Object.entries(SUB_AREA_CHUNKS as Record<string, { cx: number; cy: number }[]>)
+const AREA_OF_CHUNK = new Map<string, string>(Object.entries(SUB_AREA_CHUNKS as Record<string, { cx: number; cy: number }[]>)
   .flatMap(([area, chunks]) => chunks.map(({ cx, cy }) => [`${cx},${cy}`, area] as const)));
 const locationChunks = (row: DiaryTask): string[] => [row, ...(row.oneOf ?? [])]
   .flatMap(requirement => requirement.locations ?? [])

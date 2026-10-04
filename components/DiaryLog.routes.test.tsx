@@ -7,7 +7,7 @@ import { DiaryLog } from './DiaryLog';
 vi.mock('../context/GameContext', () => ({
   useGame: () => ({
     unlocks: {
-      equipment: {}, skills: { Hunter: 10 }, levels: { Hunter: 99 }, regions: ['Ruins of Uzer'], mobility: [], arcana: [],
+      equipment: {}, skills: { Woodcutting: 10 }, levels: { Woodcutting: 99 }, regions: ['Ruins of Uzer'], mobility: [], arcana: [],
       housing: [], merchants: [], minigames: [], bosses: [], storage: [], guilds: [],
       farming: [], slayerUnlocks: [], quests: [], diaries: [], cas: [],
       completedTasks: [], collectionLog: {},
@@ -31,9 +31,9 @@ vi.mock('./JournalInsights', () => ({ DiaryInsights: () => null }));
 vi.mock('./SkillTrainingPopover', () => ({ SkillTrainingPopover: () => null }));
 
 describe('DiaryLog in an owned area no route reaches', () => {
-  it('shows the Golden Warbler as out of reach, and why', () => {
-    const markup = renderToStaticMarkup(<DiaryLog searchTerm="Golden Warbler" suspendModals />);
-    const row = markup.slice(markup.indexOf('data-diary-task-row="des_easy_1"'));
+  it('shows the teak near Uzer as out of reach, and why', () => {
+    const markup = renderToStaticMarkup(<DiaryLog searchTerm="Teak Logs near Uzer" suspendModals />);
+    const row = markup.slice(markup.indexOf('data-diary-task-row="des_med_12"'));
     const at = row.indexOf('No route to Ruins of Uzer');
     const chip = row.slice(row.lastIndexOf('<span', at), row.indexOf('</span>', at));
 
