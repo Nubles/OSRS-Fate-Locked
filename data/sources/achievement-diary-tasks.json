@@ -4722,14 +4722,20 @@
         "Eagles' Peak"
       ],
       "regions": [
-        "Rellekka"
+        "Rellekka",
+        "Eagles' Peak"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Eagles' Peak Rope",
       "mobility": [
         "Eagle Transport"
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The eagle trip to the Snowy Hunter Area starts from the Eagles' Peak Dungeon."
+      }
     },
     {
       "id": "frem_med_3",
@@ -9433,14 +9439,20 @@
       },
       "quests": [],
       "regions": [
-        "Lumbridge"
+        "Lumbridge",
+        "Edgeville"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "57 Woodcutting Any axe",
       "mobility": [
         "Canoes"
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The canoe trip ends in Edgeville."
+      }
     },
     {
       "id": "lum_hard_5",
@@ -10863,14 +10875,20 @@
         "In Aid of the Myreque"
       ],
       "regions": [
-        "Burgh de Rott"
+        "Burgh de Rott",
+        "Paterdomus"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of In Aid of the Myreque See the recommendations",
       "minigames": [
         "Temple Trekking"
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "A temple trek runs between Paterdomus and Burgh de Rott."
+      }
     },
     {
       "id": "mor_hard_6",

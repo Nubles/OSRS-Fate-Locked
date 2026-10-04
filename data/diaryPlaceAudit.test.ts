@@ -238,3 +238,20 @@ describe('Diary tasks that count anywhere in a province', () => {
     expect(task('wild_easy_8').oneOf?.[0]).toEqual({ regions: ['Forgotten Cemetery'] });
   });
 });
+
+describe('Diary trips that need the end they asked too little of', () => {
+  // The owner's rule: a travel task needs both ends of the trip.
+  it.each([
+    ['lum_hard_4', ['Lumbridge', 'Edgeville'], 'the Waka canoe lands in Edgeville'],
+    ['mor_hard_5', ['Burgh de Rott', 'Paterdomus'], 'a temple trek runs from Paterdomus to Burgh de Rott'],
+    ['frem_med_2', ['Rellekka', "Eagles' Peak"], "the eagle leaves from the Eagles' Peak Dungeon"],
+  ] as const)('%s needs %j: %s', (id, areas) => {
+    expect(task(id).regions).toEqual(areas);
+  });
+
+  it("needs Eagles' Peak for the eagle to the Snowy Hunter Area", () => {
+    const run = { quests: ["Eagles' Peak"], mobility: ['Eagle Transport'] };
+    expect(doable('frem_med_2', account({ ...run, regions: ['Rellekka'] }))).toBe(false);
+    expect(doable('frem_med_2', account({ ...run, regions: ['Rellekka', "Eagles' Peak"] }))).toBe(true);
+  });
+});
