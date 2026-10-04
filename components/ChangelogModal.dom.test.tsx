@@ -214,6 +214,8 @@ describe('ChangelogModal pet offer', () => {
     expect(host.textContent).toContain('Pets now give an Omni-Key');
     const headerClose = findCloseButton(host);
     expect(headerClose.disabled).toBe(true);
+    // It says why it won't close, so the window never looks stuck.
+    expect(host.textContent).toContain('Answer the question at the top to close.');
     await click(headerClose);
     await act(async () => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));

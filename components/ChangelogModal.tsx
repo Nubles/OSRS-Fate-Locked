@@ -275,12 +275,16 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
           </div>
         </div>
 
-        <footer className="flex justify-end border-t border-white/10 bg-[#171717] p-4">
+        <footer className="flex items-center justify-end gap-3 border-t border-white/10 bg-[#171717] p-4">
+          {hasPendingCompensation && (
+            // Say why it won't close yet, so a waiting question never looks like a stuck window.
+            <p className="text-xs text-amber-200/80">Answer the question at the top to close.</p>
+          )}
           <button
             type="button"
             onClick={onClose}
             disabled={hasPendingCompensation}
-            className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-black hover:bg-amber-500"
+            className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-black enabled:hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Got it
           </button>
