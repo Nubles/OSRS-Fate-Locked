@@ -89,7 +89,7 @@
     "unresolvedExistingRows": 0,
     "unresolvedDuplicateIds": 0,
     "unknownReferences": 0,
-    "combatLevelRequirementsStructured": 9,
+    "combatLevelRequirementsStructured": 10,
     "allQuestsRequirementsStructured": 2
   },
   "tasks": [
@@ -1157,12 +1157,18 @@
       "quests": [],
       "anyOfRegions": [
         "Menaphos",
-        "Agility Pyramid"
+        "Agility Pyramid",
+        "Sophanem"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Kill a Vulture.",
-      "sourceRequirements": "Weaponry, preferably Ranged or Magic"
+      "sourceRequirements": "Weaponry, preferably Ranged or Magic",
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Vultures also stand north of Sophanem (51,44)."
+      }
     },
     {
       "id": "des_easy_6",
@@ -1586,12 +1592,19 @@
         "Mining": 45
       },
       "quests": [],
-      "regions": [
-        "Agility Pyramid"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "45 Mining Any pickaxe"
+      "sourceRequirements": "45 Mining Any pickaxe",
+      "anyOfRegions": [
+        "Agility Pyramid",
+        "Sophanem",
+        "The Great Conch"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Granite is also mined at the Necropolis mine (51,42) and, per the diary page, at Cape Conch on The Great Conch."
+      }
     },
     {
       "id": "des_hard_3",
@@ -2114,12 +2127,34 @@
       "description": "Repair a broken strut in the Motherlode Mine.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Motherlode Mine"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Hammer and any pickaxe"
+      "sourceRequirements": "Hammer and any pickaxe",
+      "oneOf": [
+        {
+          "regions": [
+            "Motherlode Mine"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Dwarven Mine camp entrance, Ice Mountain's foothills",
+              "chunkOptions": [
+                {
+                  "cx": 47,
+                  "cy": 53
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Motherlode Mine's north entrance is in the Dwarven Mine, entered from the camp south of Ice Mountain (47,53)."
+      }
     },
     {
       "id": "fal_easy_10",
@@ -3580,12 +3615,18 @@
       "description": "Kill 5 Rock crabs.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Rellekka"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Weaponry"
+      "sourceRequirements": "Weaponry",
+      "anyOfRegions": [
+        "Rellekka",
+        "Waterbirth Island"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Rock crabs live by Rellekka and on Waterbirth Island; only the giant rock crabs and rock lobsters there do not count."
+      }
     },
     {
       "id": "frem_easy_4",
@@ -4646,8 +4687,14 @@
       "sourceRequirements": "48 Herblore Vial of water, irit leaf, unicorn horn dust",
       "anyOfRegions": [
         "Seers' Village",
-        "Catherby"
-      ]
+        "Catherby",
+        "Camelot"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Camelot (43,54), with the Catherby herb patches, lies between Seers' Village and Catherby."
+      }
     },
     {
       "id": "kan_med_3",
@@ -5626,9 +5673,6 @@
       "description": "Discover hidden wall in the dungeon below the volcano.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Musa Point"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Started Dragon Slayer I",
@@ -5637,7 +5681,16 @@
           "quest": "Dragon Slayer I",
           "label": "Reached the required progress in Dragon Slayer I for: Discover hidden wall in the dungeon below the volcano."
         }
-      ]
+      ],
+      "anyOfRegions": [
+        "Musa Point",
+        "Crandor"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Once Dragon Slayer I has taken you to Crandor, the wall opens from the cave under Crandor too."
+      }
     },
     {
       "id": "kar_med_3",
@@ -5672,12 +5725,18 @@
       "quests": [
         "Shilo Village"
       ],
-      "regions": [
-        "Brimhaven"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Shilo Village 200 coins"
+      "sourceRequirements": "Completion of Shilo Village 200 coins",
+      "anyOfRegions": [
+        "Brimhaven",
+        "Shilo Village"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The cart runs both ways between Hajedy in Brimhaven and Vigroy in Shilo Village."
+      }
     },
     {
       "id": "kar_med_5",
@@ -5951,12 +6010,29 @@
         "Hunter": 41
       },
       "quests": [],
-      "regions": [
-        "Tai Bwo Wannai"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "41 Hunter Teasing stick or Hunter's spear, knife, and any logs."
+      "sourceRequirements": "41 Hunter Teasing stick or Hunter's spear, knife, and any logs.",
+      "locations": [
+        {
+          "label": "Karamja Hunter area",
+          "chunkOptions": [
+            {
+              "cx": 43,
+              "cy": 46
+            },
+            {
+              "cx": 43,
+              "cy": 47
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The horned graahk and their pits are in 43,46 (Shilo Village) and 43,47 (Tai Bwo Wannai)."
+      }
     },
     {
       "id": "kar_med_15",
@@ -6261,9 +6337,6 @@
         "Strength": 21
       },
       "quests": [],
-      "regions": [
-        "Musa Point"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "53 Agility, 42 Ranged and 21 Strength Mith grapple and any crossbow",
@@ -6279,7 +6352,27 @@
           "tier": 3,
           "reason": "Mith grapple for the shortcut"
         }
-      ]
+      ],
+      "locations": [
+        {
+          "label": "Strong tree, either side",
+          "chunkOptions": [
+            {
+              "cx": 44,
+              "cy": 49
+            },
+            {
+              "cx": 44,
+              "cy": 48
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Strong Tree shortcut runs both ways between Musa Point (44,49) and the Harpie bug swarms (44,48)."
+      }
     },
     {
       "id": "kar_hard_8",
@@ -6358,12 +6451,33 @@
         "Woodcutting": 10
       },
       "quests": [],
-      "regions": [
-        "Brimhaven"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "10 Woodcutting Any axe, protection from dragonfire, and weaponry 875 coins (unless you have unlocked permanently free access via either Saniboch or Banisoch )"
+      "sourceRequirements": "10 Woodcutting Any axe, protection from dragonfire, and weaponry 875 coins (unless you have unlocked permanently free access via either Saniboch or Banisoch )",
+      "oneOf": [
+        {
+          "regions": [
+            "Brimhaven"
+          ]
+        },
+        {
+          "label": "Banisoch's entrance",
+          "regions": [
+            "Tai Bwo Wannai"
+          ],
+          "quests": [
+            "Jungle Potion"
+          ],
+          "minigames": [
+            "Tai Bwo Wannai Cleanup"
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Banisoch's entrance west of Tai Bwo Wannai (43,47) leads straight to the bronze dragons, for trading sticks."
+      }
     },
     {
       "id": "kar_elite_1",
@@ -6758,12 +6872,21 @@
       "description": "Kill a Lizardman.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Shayzien"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Combat gear Antipoison recommended"
+      "sourceRequirements": "Combat gear Antipoison recommended",
+      "anyOfRegions": [
+        "Shayzien",
+        "Molch",
+        "Lovakengj",
+        "Mount Karuulm",
+        "Mount Quidamortem"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Lizardmen spawn at Shayziens' Wall, the Lizardman Canyon, the Settlement, Molch, the Kebos Swamp and the Battlefront."
+      }
     },
     {
       "id": "kou_med_3",
@@ -7897,15 +8020,12 @@
         "Hunter": 42
       },
       "quests": [],
-      "regions": [
-        "Zanaris"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "42 Hunter Dramen or Lunar staff to enter Zanaris Butterfly net and impling jar",
       "oneOf": [
         {
-          "label": "Catch an essence impling with a net",
+          "label": "Catch an essence impling with a net, through Zanaris",
           "skills": {
             "Hunter": 42
           },
@@ -7919,21 +8039,216 @@
           ],
           "items": [
             "Impling jar"
+          ],
+          "regions": [
+            "Zanaris"
           ]
         },
         {
-          "label": "Catch an essence impling bare-handed",
+          "label": "Catch an essence impling with a net, through a crop circle",
+          "skills": {
+            "Hunter": 42
+          },
+          "equipmentRequirements": [
+            {
+              "slot": "Weapon",
+              "tier": 1,
+              "reason": "Butterfly net or magic butterfly net",
+              "manualCheck": "Have Butterfly net or magic butterfly net and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "items": [
+            "Impling jar"
+          ],
+          "locations": [
+            {
+              "label": "A wheat field with the crop circle",
+              "chunkOptions": [
+                {
+                  "cx": 46,
+                  "cy": 53
+                },
+                {
+                  "cx": 40,
+                  "cy": 48
+                },
+                {
+                  "cx": 48,
+                  "cy": 51
+                },
+                {
+                  "cx": 46,
+                  "cy": 50
+                },
+                {
+                  "cx": 49,
+                  "cy": 54
+                },
+                {
+                  "cx": 20,
+                  "cy": 57
+                },
+                {
+                  "cx": 27,
+                  "cy": 55
+                },
+                {
+                  "cx": 34,
+                  "cy": 53
+                },
+                {
+                  "cx": 44,
+                  "cy": 54
+                },
+                {
+                  "cx": 38,
+                  "cy": 54
+                },
+                {
+                  "cx": 43,
+                  "cy": 50
+                },
+                {
+                  "cx": 45,
+                  "cy": 53
+                },
+                {
+                  "cx": 25,
+                  "cy": 56
+                },
+                {
+                  "cx": 49,
+                  "cy": 51
+                },
+                {
+                  "cx": 21,
+                  "cy": 45
+                },
+                {
+                  "cx": 41,
+                  "cy": 52
+                },
+                {
+                  "cx": 50,
+                  "cy": 52
+                },
+                {
+                  "cx": 26,
+                  "cy": 47
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Catch an essence impling bare-handed, through Zanaris",
           "skills": {
             "Hunter": 52
           },
           "items": [
             "Impling jar"
+          ],
+          "regions": [
+            "Zanaris"
+          ]
+        },
+        {
+          "label": "Catch an essence impling bare-handed, through a crop circle",
+          "skills": {
+            "Hunter": 52
+          },
+          "items": [
+            "Impling jar"
+          ],
+          "locations": [
+            {
+              "label": "A wheat field with the crop circle",
+              "chunkOptions": [
+                {
+                  "cx": 46,
+                  "cy": 53
+                },
+                {
+                  "cx": 40,
+                  "cy": 48
+                },
+                {
+                  "cx": 48,
+                  "cy": 51
+                },
+                {
+                  "cx": 46,
+                  "cy": 50
+                },
+                {
+                  "cx": 49,
+                  "cy": 54
+                },
+                {
+                  "cx": 20,
+                  "cy": 57
+                },
+                {
+                  "cx": 27,
+                  "cy": 55
+                },
+                {
+                  "cx": 34,
+                  "cy": 53
+                },
+                {
+                  "cx": 44,
+                  "cy": 54
+                },
+                {
+                  "cx": 38,
+                  "cy": 54
+                },
+                {
+                  "cx": 43,
+                  "cy": 50
+                },
+                {
+                  "cx": 45,
+                  "cy": 53
+                },
+                {
+                  "cx": 25,
+                  "cy": 56
+                },
+                {
+                  "cx": 49,
+                  "cy": 51
+                },
+                {
+                  "cx": 21,
+                  "cy": 45
+                },
+                {
+                  "cx": 41,
+                  "cy": 52
+                },
+                {
+                  "cx": 50,
+                  "cy": 52
+                },
+                {
+                  "cx": 26,
+                  "cy": 47
+                }
+              ]
+            }
           ]
         }
       ],
       "minigames": [
         "Impetuous Impulses"
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Puro-Puro is also entered through a crop circle that moves between wheat fields; Lost City is not needed that way."
+      }
     },
     {
       "id": "lum_med_12",
@@ -8142,12 +8457,29 @@
         "Another Slice of H.A.M."
       ],
       "regions": [
-        "Lumbridge",
         "Keldagrim"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Another Slice of H.A.M."
+      "sourceRequirements": "Completion of Another Slice of H.A.M.",
+      "oneOf": [
+        {
+          "regions": [
+            "Lumbridge"
+          ]
+        },
+        {
+          "label": "Through the Kalphite Lair",
+          "regions": [
+            "Kalphite Lair"
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Dorgesh-Kaan is entered from the Lumbridge cellar or, through the South Dungeon, from the Kalphite Lair."
+      }
     },
     {
       "id": "lum_hard_7",
@@ -8259,12 +8591,18 @@
       "quests": [
         "Death to the Dorgeshuun"
       ],
-      "regions": [
-        "Lumbridge"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Death to the Dorgeshuun 78 Thieving Lockpick"
+      "sourceRequirements": "Completion of Death to the Dorgeshuun 78 Thieving Lockpick",
+      "anyOfRegions": [
+        "Lumbridge",
+        "Kalphite Lair"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Dorgesh-Kaan is entered from the Lumbridge cellar or, through the South Dungeon, from the Kalphite Lair."
+      }
     },
     {
       "id": "lum_elite_2",
@@ -8281,9 +8619,6 @@
       "quests": [
         "Death to the Dorgeshuun"
       ],
-      "regions": [
-        "Lumbridge"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Death to the Dorgeshuun 70 Agility, 70 Ranged and 70 Strength Mith grapple, any crossbow, and a light source",
@@ -8299,7 +8634,16 @@
           "tier": 3,
           "reason": "Mith grapple for the shortcut"
         }
-      ]
+      ],
+      "anyOfRegions": [
+        "Lumbridge",
+        "Kalphite Lair"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Dorgesh-Kaan is entered from the Lumbridge cellar or, through the South Dungeon, from the Kalphite Lair."
+      }
     },
     {
       "id": "lum_elite_3",
@@ -9096,12 +9440,34 @@
       "quests": [
         "Priest in Peril"
       ],
-      "regions": [
-        "Mort Myre Swamp"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "29 Hunter Rope and small fishing net"
+      "sourceRequirements": "29 Hunter Rope and small fishing net",
+      "oneOf": [
+        {
+          "regions": [
+            "Mort Myre Swamp"
+          ]
+        },
+        {
+          "locations": [
+            {
+              "label": "Swamp lizards north-west of Slepe",
+              "chunkOptions": [
+                {
+                  "cx": 57,
+                  "cy": 53
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Swamp lizards are caught in the Canifis Hunter area and north-west of Slepe (57,53)."
+      }
     },
     {
       "id": "mor_med_2",
@@ -10256,23 +10622,52 @@
       "description": "Get a Slayer task from Vannaka.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Edgeville"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "40 Combat level",
       "oneOf": [
         {
-          "combatLevel": 40
+          "combatLevel": 40,
+          "label": "from Edgeville",
+          "regions": [
+            "Edgeville"
+          ]
         },
         {
-          "label": "Slayer cape",
+          "combatLevel": 40,
+          "label": "through the Varrock Sewers",
+          "regions": [
+            "Varrock"
+          ],
+          "skills": {
+            "Agility": 51
+          }
+        },
+        {
+          "label": "Slayer cape, from Edgeville",
           "skills": {
             "Slayer": 99
-          }
+          },
+          "regions": [
+            "Edgeville"
+          ]
+        },
+        {
+          "label": "Slayer cape, through the Varrock Sewers",
+          "skills": {
+            "Slayer": 99,
+            "Agility": 51
+          },
+          "regions": [
+            "Varrock"
+          ]
         }
-      ]
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The obstacle pipe (51 Agility) joins the Varrock Sewers, entered just east of Varrock Palace (50,54), to the Edgeville Dungeon both ways."
+      }
     },
     {
       "id": "var_med_10",
@@ -10565,12 +10960,27 @@
         "Agility": 51
       },
       "quests": [],
-      "regions": [
-        "Edgeville"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "51 Agility"
+      "sourceRequirements": "51 Agility",
+      "oneOf": [
+        {
+          "regions": [
+            "Edgeville"
+          ]
+        },
+        {
+          "label": "Through the Varrock Sewers",
+          "regions": [
+            "Varrock"
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The obstacle pipe (51 Agility) joins the Varrock Sewers, entered just east of Varrock Palace (50,54), to the Edgeville Dungeon both ways."
+      }
     },
     {
       "id": "var_elite_1",
@@ -11770,9 +12180,6 @@
         "Mining": 70
       },
       "quests": [],
-      "regions": [
-        "Isafdar"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Started Regicide 70 Mining Any pickaxe",
@@ -11781,7 +12188,28 @@
           "quest": "Regicide",
           "label": "Reached the required progress in Regicide for: Mine some Adamantite ore in Tirannwn."
         }
-      ]
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Isafdar"
+          ]
+        },
+        {
+          "label": "Trahaearn mine",
+          "regions": [
+            "Prifddinas"
+          ],
+          "quests": [
+            "Song of the Elves"
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Adamantite in Tirannwn: the Isafdar mine, or the Trahaearn mine in Prifddinas after Song of the Elves (diary note)."
+      }
     },
     {
       "id": "west_hard_8",
@@ -11904,12 +12332,19 @@
         "Thieving": 75
       },
       "quests": [],
-      "regions": [
-        "Tree Gnome Stronghold"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "75 Thieving"
+      "sourceRequirements": "75 Thieving",
+      "anyOfRegions": [
+        "Tree Gnome Stronghold",
+        "Gnome Village",
+        "Khazard Battlefield"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The pickpocketable Gnome also stands in Tree Gnome Village and on the Battlefield of Khazard."
+      }
     },
     {
       "id": "west_elite_1",
@@ -12084,9 +12519,6 @@
         "Thieving": 85
       },
       "quests": [],
-      "regions": [
-        "Lletya"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Started Mourning's End Part I 85 Thieving",
@@ -12095,7 +12527,28 @@
           "quest": "Mourning's End Part I",
           "label": "Reached the required progress in Mourning's End Part I for: Pickpocket an Elf."
         }
-      ]
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Lletya"
+          ]
+        },
+        {
+          "label": "Prifddinas elves",
+          "regions": [
+            "Prifddinas"
+          ],
+          "quests": [
+            "Song of the Elves"
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Pickpocketable elves live in Lletya and, after Song of the Elves, in Prifddinas."
+      }
     },
     {
       "id": "wild_easy_1",
@@ -12256,13 +12709,31 @@
         "Agility": 15
       },
       "quests": [],
-      "regions": [
-        "Edgeville"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Kill an Earth Warrior.",
-      "sourceRequirements": "15 Agility Weaponry"
+      "sourceRequirements": "15 Agility Weaponry",
+      "oneOf": [
+        {
+          "regions": [
+            "Edgeville"
+          ]
+        },
+        {
+          "label": "Through the Varrock Sewers",
+          "regions": [
+            "Varrock"
+          ],
+          "skills": {
+            "Agility": 51
+          }
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The obstacle pipe (51 Agility) joins the Varrock Sewers, entered just east of Varrock Palace (50,54), to the Edgeville Dungeon both ways."
+      }
     },
     {
       "id": "wild_easy_5",
@@ -12654,9 +13125,27 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "60 Magic Unpowered orb and means to cast Charge Earth Orb ( )",
-      "regions": [
-        "Edgeville"
-      ]
+      "oneOf": [
+        {
+          "regions": [
+            "Edgeville"
+          ]
+        },
+        {
+          "label": "Through the Varrock Sewers",
+          "regions": [
+            "Varrock"
+          ],
+          "skills": {
+            "Agility": 51
+          }
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The obstacle pipe (51 Agility) joins the Varrock Sewers, entered just east of Varrock Palace (50,54), to the Edgeville Dungeon both ways."
+      }
     },
     {
       "id": "wild_med_3",
@@ -12883,14 +13372,18 @@
             {
               "cx": 50,
               "cy": 60
+            },
+            {
+              "cx": 49,
+              "cy": 59
             }
           ]
         }
       ],
       "geographyVerification": {
-        "reviewedAt": "2026-09-12",
-        "source": "source-chunk/chunk-picker-v2@a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
-        "notes": "Exact surface locations or underground access entrances; alternatives within each location group, all groups required."
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Two of the Lava Dragon Isle spawns are in 49,59."
       }
     },
     {
@@ -12902,15 +13395,21 @@
       "description": "Kill the Chaos Elemental.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Rogues' Castle"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "See the strategy guide",
       "bosses": [
         "Chaos Elemental"
-      ]
+      ],
+      "anyOfRegions": [
+        "Rogues' Castle",
+        "Scorpia's Cave"
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-10-04",
+        "source": "oldschool.runescape.wiki",
+        "notes": "The Chaos Elemental spawns at 50,61, which the map gives Scorpia's Cave, and wanders to Rogues' Castle."
+      }
     },
     {
       "id": "wild_hard_7",

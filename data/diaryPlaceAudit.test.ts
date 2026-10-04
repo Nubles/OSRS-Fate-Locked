@@ -76,3 +76,74 @@ describe('Rune altars reached through the Abyss', () => {
     expect(task('lum_hard_3')).toMatchObject({ quests: ['Lost City'], regions: ['Zanaris'] });
   });
 });
+
+describe('Diary tasks the game counts in more than one place', () => {
+  it.each([
+    // [task, run, why]
+    ['west_hard_7', { regions: ['Prifddinas'], quests: ['Song of the Elves'] }, 'adamantite in the Trahaearn mine'],
+    ['west_elite_7', { regions: ['Prifddinas'], quests: ['Song of the Elves'] }, 'the elves of Prifddinas'],
+    ['west_hard_13', { regions: ['Gnome Village'] }, 'gnomes in Tree Gnome Village'],
+    ['west_hard_13', { regions: ['Khazard Battlefield'] }, 'gnomes on the Battlefield of Khazard'],
+    ['kar_hard_10', { regions: ['Tai Bwo Wannai'], quests: ['Jungle Potion'], minigames: ['Tai Bwo Wannai Cleanup'], skills: { Woodcutting: 10 }, levels: { Woodcutting: 99 } }, "Banisoch's entrance"],
+    ['kar_med_14', { regions: ['Shilo Village'] }, 'the graahk pits in 43,46'],
+    ['kan_med_2', { regions: ['Camelot'], quests: ['Druidic Ritual'], skills: { Herblore: 10 }, levels: { Herblore: 99 } }, 'Camelot, between Seers and Catherby'],
+    ['kar_med_4', { regions: ['Shilo Village'], quests: ['Shilo Village'] }, "Vigroy's end of the cart"],
+    ['kou_med_2', { regions: ['Molch'] }, 'lizardmen at Molch'],
+    ['lum_elite_1', { regions: ['Kalphite Lair'], quests: ['Death to the Dorgeshuun'] }, 'Dorgesh-Kaan through the Kalphite Lair'],
+    ['lum_hard_6', { regions: ['Kalphite Lair', 'Keldagrim'], quests: ['Another Slice of H.A.M.'] }, 'both ends of the train'],
+    ['wild_hard_6', { regions: ["Scorpia's Cave"], bosses: ['Chaos Elemental'] }, 'its spawn west of the castle'],
+    ['des_hard_2', { regions: ['Sophanem'] }, 'granite at the Necropolis mine'],
+    ['des_easy_5', { regions: ['Sophanem'] }, 'vultures north of Sophanem'],
+  ] as const)('%s counts with %j: %s', (id, run) => {
+    expect(doable(id, account(run as Partial<UnlockState>))).toBe(true);
+  });
+
+  it.each([
+    ['fal_easy_9', ['47,53'], [], "the Dwarven Mine camp's way into the Motherlode Mine"],
+    ['mor_med_1', ['57,53'], ['Priest in Peril'], 'swamp lizards north-west of Slepe'],
+    ['kar_med_14', ['43,46'], [], 'the graahk pits'],
+    ['kar_hard_7', ['44,48'], [], 'the Harpie bug side of the Strong Tree'],
+    ['wild_hard_5', ['49,59'], [], 'two Lava Dragon Isle spawns'],
+    ['lum_med_11', ['46,53'], [], "the crop circle by Doric's hut"],
+  ] as const)('%s counts in Chunked with %j: %s', (id, chunks, quests) => {
+    const extra = {
+      equipment: { Head: 1, Body: 1, Legs: 1, Boots: 1, Weapon: 1, Ammo: 3 },
+      skills: { Hunter: 10, Agility: 10, Ranged: 10, Strength: 10, Mining: 10 },
+      levels: { Hunter: 99, Agility: 99, Ranged: 99, Strength: 99, Mining: 99 },
+      minigames: ['Impetuous Impulses'],
+    };
+    expect(doable(id, account({ ...extra, chunks: [...chunks], quests: [...quests] }), 'chunked')).toBe(true);
+  });
+
+  it('enters the Edgeville Dungeon from the Varrock Sewers, with 51 Agility', () => {
+    // Edgeville and Varrock are both free in Vanilla, so Chunked shows it: Varrock Palace's chunk.
+    for (const id of ['var_hard_10', 'var_med_9', 'wild_easy_4', 'wild_med_5']) {
+      expect(doable(id, account({ chunks: ['50,54'], skills: { Agility: 10, Magic: 10 }, levels: { Agility: 51, Magic: 99 } }), 'chunked'), id)
+        .toBe(true);
+      expect(doable(id, account({ chunks: ['50,54'], skills: { Agility: 10, Magic: 10 }, levels: { Agility: 50, Magic: 99 } }), 'chunked'), id)
+        .toBe(false);
+    }
+  });
+
+  it('enters Puro-Puro through a crop circle without Zanaris', () => {
+    const impling = task('lum_med_11');
+    expect(impling.regions).toBeUndefined();
+    expect(impling.oneOf).toHaveLength(4);
+    // Crop circles in areas with travel rules (Harmony Island, Mos Le'Harmless, Miscellania) are left out.
+    const circles = impling.oneOf!.flatMap(option => option.locations ?? []).flatMap(group => group.chunkOptions);
+    expect(circles.some(({ cx, cy }) => cx === 59 && cy === 44)).toBe(false);
+  });
+
+  it('names the places with travel rules as areas', () => {
+    expect(task('frem_easy_3').anyOfRegions).toEqual(['Rellekka', 'Waterbirth Island']);
+    expect(task('kar_med_2').anyOfRegions).toEqual(['Musa Point', 'Crandor']);
+    expect(task('des_hard_2').anyOfRegions).toEqual(['Agility Pyramid', 'Sophanem', 'The Great Conch']);
+  });
+
+  it('keeps the trip from Dorgesh-Kaan to Keldagrim to both ends', () => {
+    // The owner's rule: a travel task needs both ends of the trip.
+    expect(task('lum_hard_6')).toMatchObject({
+      regions: ['Keldagrim'], oneOf: [{ regions: ['Lumbridge'] }, { label: 'Through the Kalphite Lair', regions: ['Kalphite Lair'] }],
+    });
+  });
+});

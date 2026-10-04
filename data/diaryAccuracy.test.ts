@@ -85,7 +85,6 @@ describe('Diary tasks name the area that owns their chunk on the map', () => {
   it.each([
     ['kan_med_8', 'Camelot', 'the Catherby farming patches are in 43,54'],
     ['kan_elite_2', 'Camelot', 'the Catherby herb patch is in 43,54'],
-    ['des_hard_2', 'Agility Pyramid', 'the granite quarry is in 49,45'],
     ['kar_easy_4', 'Port Sarim', 'the dock east of Musa Point is in 46,49'],
     ['ard_hard_11', 'East Ardougne', 'the anvil near West Ardougne is in 39,52'],
     ['lum_hard_10', 'Mage Training Arena', 'the altar at Emir’s Arena is in 52,51'],
@@ -105,7 +104,6 @@ describe('Diary trips need the place you leave from and the place you arrive in'
     ['des_easy_11', 'the magic carpet to Pollnivneach', ['Shantay Pass', 'Pollnivneach']],
     ['fal_easy_8', 'the boat to Entrana', ['Port Sarim', 'Entrana']],
     ['kar_easy_5', 'the boat from Brimhaven to Ardougne', ['Brimhaven', 'East Ardougne']],
-    ['lum_hard_6', 'the train from Dorgesh-Kaan to Keldagrim', ['Lumbridge', 'Keldagrim']],
     ['ard_easy_8', 'the Ardougne lever to the Deserted Keep (49,61)', ['East Ardougne', 'Mage Arena']],
     ['wild_hard_8', 'the shortcut from Trollheim (45,57)', ['Burthorpe', 'Wilderness God Wars Dungeon']],
     ['frem_med_8', 'the walk from Waterbirth Island to the Lighthouse', ['Lighthouse', 'Waterbirth Island']],
