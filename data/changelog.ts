@@ -34,6 +34,7 @@ export const CHANGELOG_RELEASES = [
         'Keys you choose to give up show on the Spend panel until the Keys you earn have paid them.',
         'Your newest pet follows you, in 3D, in the bottom-left corner, doing its idle animation from the game. Click its name for Your Pets: every pet you’ve claimed, up close, and which one follows.',
         'The × beside the follower hides it, and Show a follower in Your Pets brings it back. With Animations off in the settings menu, pets stand still.',
+        'Since the RuneLite plugin’s 5 October update, a new pet goes into its Roll inbox with a chat reminder. Paste it into the tracker and pick which pet it was. The RuneLite guide says so.',
       ],
     },
   },
