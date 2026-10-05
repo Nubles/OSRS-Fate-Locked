@@ -378,7 +378,7 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     changeWhen: 'Turn it off if you’d rather see menus as the game shows them.',
   },
   rollNudges: {
-    purpose: 'A chat line when RuneLite adds something to your Roll inbox: a level, a quest, a finished diary tier (not each task), a combat task, a clue scroll, a boss or raid kill, a collection log item or a Slayer task. Collection log items need the game’s own collection log notification, in chat or as a popup. Only on the character your run is linked to.',
+    purpose: 'A chat line when RuneLite adds something to your Roll inbox: a level, a quest, a finished diary tier (not each task), a combat task, a clue scroll, a boss or raid kill, a collection log item, a Slayer task or a new pet. Collection log items need the game’s own collection log notification, in chat or as a popup. Only on the character your run is linked to.',
     visibleResult: 'The line says what happened, such as Attack level 71: added to your Roll inbox. It never rolls and never changes your run.',
     changeWhen: 'Turn it off if you roll in the tracker on your own schedule.',
   },
@@ -900,12 +900,12 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
       { kind: 'figure', figureId: 'roll-inbox' },
       {
         kind: 'text',
-        text: 'RuneLite notices level-ups, quests, finished achievement diary tiers (not single tasks), combat tasks, boss and raid kills, clue scrolls, collection log items and Slayer tasks. It keeps the last 30 days on this computer, up to 250 events. The card lists the newest and counts the rest.',
+        text: 'RuneLite notices level-ups, quests, finished achievement diary tiers (not single tasks), combat tasks, boss and raid kills, clue scrolls, collection log items, Slayer tasks and new pets. It keeps the last 30 days on this computer, up to 250 events. The card lists the newest and counts the rest.',
       },
       {
         kind: 'note',
         title: 'What it can’t notice',
-        text: 'A collection log item is noticed only with the game’s own collection log notification turned on, in chat or as a popup. When RuneLite can’t notice anything, such as on a character your run isn’t linked to or on a Leagues world, the card says why.',
+        text: 'A collection log item is noticed only with the game’s own collection log notification turned on, in chat or as a popup. The game doesn’t say which pet you got, so the tracker asks when you paste one. When RuneLite can’t notice anything, such as on a character your run isn’t linked to or on a Leagues world, the card says why.',
       },
       { kind: 'heading', text: 'Rolling what RuneLite noticed' },
       {

@@ -160,6 +160,13 @@ describe('RuneLite guide, as the plugin does it', () => {
     expect(setting('rollNudges').purpose).toContain('Collection log items need the game’s own collection log notification');
   });
 
+  it('says RuneLite notices new pets, and the tracker asks which pet', () => {
+    const inbox = chapter('roll-inbox');
+    expect(inbox).toContain('collection log items, Slayer tasks and new pets');
+    expect(inbox).toContain('The game doesn’t say which pet you got, so the tracker asks when you paste one');
+    expect(setting('rollNudges').purpose).toContain('a collection log item, a Slayer task or a new pet');
+  });
+
   it('offers the chunk grid without the dashed locked edges, on the world map and the ground', () => {
     expect(setting('worldMapBorders').purpose).toContain('Chunk grid is a faint line along every chunk edge, without the dashed one');
     expect(setting('worldMapBorders').changeWhen).toContain('Pick Chunk grid to see the chunk grid without the dashed line');
