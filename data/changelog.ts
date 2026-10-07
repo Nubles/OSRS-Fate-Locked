@@ -19,6 +19,17 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-07-corsair-cove-foundry-bank',
+    title: 'Corsair Cove by Boat',
+    date: '2026-10-07',
+    sections: {
+      fixed: [
+        'Captain Tock’s ship from Rimmington now counts as a way to Corsair Cove, so a Corsair Cove you own is no longer called out of reach when you own Rimmington too.',
+        'The bank chest in the Giants’ Foundry is now called the Giants’ Foundry bank chest. It was called Desert Battlefield, after the land above it. It’s the same unlock, so a run that already has it keeps it.',
+      ],
+    },
+  },
+  {
     id: '2026-10-03-pet-omni-keys',
     title: 'Pets Give an Omni-Key and Follow You',
     date: '2026-10-04',
