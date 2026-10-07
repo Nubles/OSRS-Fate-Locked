@@ -68,3 +68,35 @@ describe('STRATEGY_DATABASE references resolve', () => {
     expect(bad, 'strategy entries referencing unknown diary tiers').toEqual([]);
   });
 });
+
+describe('Strategy Guide corrections from the roll data audit (7 October 2026)', () => {
+  // Each checked against the OSRS Wiki that day.
+  const skills = (key: string) => STRATEGY_DATABASE[key].skills;
+  it('pins corrected levels', () => {
+    expect(skills('Sinister Chest')).toEqual({ Agility: 49 });
+    expect(skills('Miscellania Dock Stepping Stone')).toEqual({ Agility: 55 });
+    expect(skills('Observatory Grapple')).toEqual({ Agility: 23, Strength: 28, Ranged: 24 });
+    expect(skills('Red Dragon Isle')).toEqual({ Agility: 56 });
+    expect(skills("Angler's Outfit")).toEqual({ Fishing: 34 });
+    expect(skills('Superglass Make')).toEqual({ Magic: 77 });
+    expect(skills('Games Necklace (Wintertodt)')).toEqual({ Crafting: 22 });
+    expect(skills('Necklace of Passage')).toEqual({ Crafting: 25 });
+    expect(skills('Bonecrusher')).toEqual({});
+    expect(skills('Boots of Brimstone')).toEqual({ Slayer: 44 });
+  });
+  it('takes 60 Strength or 60 Agility in the Wilderness God Wars Dungeon, not both', () => {
+    for (const key of ['Wilderness God Wars Dungeon', 'Spiritual Rangers', 'Spiritual Warriors']) {
+      expect(skills(key).Agility, key).toBeUndefined();
+      expect(STRATEGY_DATABASE[key].accessRoutes?.map(r => r.label), key).toEqual(['60 Strength', '60 Agility']);
+    }
+  });
+  it('pins corrected diaries, quests and regions', () => {
+    expect(STRATEGY_DATABASE['Red Dragon Isle'].diaries).toBeUndefined();
+    expect(STRATEGY_DATABASE['Gem Rocks (Underground)'].diaries).toEqual(['Karamja Medium']);
+    expect(STRATEGY_DATABASE['Limestone Mine']).toMatchObject({ regions: ['Misthalin'] });
+    expect(STRATEGY_DATABASE['Limestone Mine'].quests).toBeUndefined();
+    expect(STRATEGY_DATABASE['Resurrect Crops'].quests).toBeUndefined();
+    expect(STRATEGY_DATABASE['Fairy Ring BJS (Zulrah)'].quests).toContain('Regicide');
+    expect(STRATEGY_DATABASE['Red Salamanders'].regions).toEqual(['Kandarin']);
+  });
+});

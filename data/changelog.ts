@@ -19,6 +19,24 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-07-roll-data-audit',
+    title: 'Requirements Checked Against the Wiki',
+    date: '2026-10-07',
+    sections: {
+      fixed: [
+        'Callisto, Venenatis and Vet’ion now ask for the Medium Wilderness Diary or that boss’s Slayer task before they count as ready, as their lairs do in game.',
+        'The Theatre of Blood, The Nightmare, Phosani’s Nightmare and the Grotesque Guardians now ask for Priest in Peril, which opens Morytania. The Fortis Colosseum and the Hueycoatl now ask for Children of the Sun, which opens Varlamore.',
+        'Phosani’s Nightmare no longer asks you to kill The Nightmare first; the game dropped that rule in 2022.',
+        'Zalcano now asks for 70 Mining and 70 Smithing, Nex for Desert Treasure I (needed for The Frozen Door), and the Barrows for His Faithful Servants started, which lets you dig into the crypts.',
+        'The Inferno now says you hand over a fire cape to enter.',
+        'Minigames: the Sorceress’s Garden asks for Prince Ali Rescue and lists its real Thieving levels (1, 25, 45 and 65), Puro-Puro opens with 17 Hunter or Lost City rather than both, the Volcanic Mine no longer asks for Kudos, the Archery Competition asks for 40 Ranged, the Gnome Restaurant for 29 Cooking and its tutorial, and the Mage Arena for the Mage Arena I miniquest.',
+        'The Servants’ Guild is tagged Kandarin (it is in East Ardougne), the Colossal pouch needs 25 Runecraft rather than 85, and the mounted Xeric’s talisman and digsite pendant ask for 72 and 82 Construction in the portal nexus room.',
+        'Strategy Guide fixes: the Wilderness God Wars Dungeon takes 60 Strength or 60 Agility, not both; the Taverley blue dragons can be reached with a dusty key; Red Dragon Isle needs 56 Agility and no diary; the Shilo gem rocks need the Medium Karamja diary; the Limestone mine is in Silvarea with no quest; and several shortcut, crafting and spell levels are corrected.',
+        'Skill unlocks: the basic jewellery box is at 81 Construction, iron limbs at 23 Smithing and the Falador grapple at 37 Strength, and Hunter no longer claims a second trap at 20.',
+      ],
+    },
+  },
+  {
     id: '2026-10-07-steady-unlock-reveal',
     title: 'Unlock Rolls Stay Put',
     date: '2026-10-07',

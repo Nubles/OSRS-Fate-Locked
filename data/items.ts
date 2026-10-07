@@ -115,7 +115,7 @@ export const FARMING_UNLOCK_DETAILS: Record<string, string> = {
   'Bush': "Redberry, Whiteberry, Poison Ivy",
   'Wood Tree': "Oak, Yew, Magic",
   'Fruit Tree': "Apple, Palm, Dragonfruit",
-  'Hardwood Tree': "Teak, Mahogany",
+  'Hardwood Tree': "Teak, Mahogany, Camphor, Ironwood, Rosewood",
   'Cactus': "Cactus Spine, Potato Cactus",
   'Mushroom': "Bittercap",
   'Belladonna': "Nightshade",
