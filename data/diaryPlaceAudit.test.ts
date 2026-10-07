@@ -151,11 +151,10 @@ describe('Diary tasks the game counts in more than one place', () => {
 describe('Diary tasks that named the wrong place', () => {
   it('lands the Trollheim shortcut west of the Ruins, not at the God Wars Dungeon', () => {
     // The rocks at (2945, 3678) land in 46,57; the rocky handholds by the God Wars Dungeon are
-    // another shortcut. Both ends of the trip are needed (the owner's rule).
-    expect(task('wild_hard_8')).toMatchObject({
-      regions: ['Burthorpe'],
-      locations: [{ chunkOptions: [{ cx: 46, cy: 57 }] }],
-    });
+    // another shortcut. Both ends of the trip are needed (the owner's rule). Since 7 October
+    // 2026, 46,57 belongs to Forgotten Cemetery, so the landing is named by that area.
+    expect(task('wild_hard_8')).toMatchObject({ regions: ['Burthorpe', 'Forgotten Cemetery'] });
+    expect(task('wild_hard_8').locations).toBeUndefined();
   });
 
   it.each([
