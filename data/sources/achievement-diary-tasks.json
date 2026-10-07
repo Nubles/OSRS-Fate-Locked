@@ -13988,10 +13988,6 @@
                   "cy": 56
                 },
                 {
-                  "cx": 46,
-                  "cy": 57
-                },
-                {
                   "cx": 47,
                   "cy": 57
                 },
@@ -14193,10 +14189,6 @@
                   "cy": 56
                 },
                 {
-                  "cx": 46,
-                  "cy": 57
-                },
-                {
                   "cx": 47,
                   "cy": 57
                 },
@@ -14396,10 +14388,6 @@
                 {
                   "cx": 52,
                   "cy": 56
-                },
-                {
-                  "cx": 46,
-                  "cy": 57
                 },
                 {
                   "cx": 47,
@@ -14698,10 +14686,6 @@
                 {
                   "cx": 52,
                   "cy": 56
-                },
-                {
-                  "cx": 46,
-                  "cy": 57
                 },
                 {
                   "cx": 47,
@@ -15374,15 +15358,6 @@
       "sourceRequirements": "See the individual strategy guides for the Crazy archaeologist, Chaos Fanatic, and Scorpia",
       "locations": [
         {
-          "label": "Crazy Archaeologist",
-          "chunkOptions": [
-            {
-              "cx": 46,
-              "cy": 57
-            }
-          ]
-        },
-        {
           "label": "Chaos Fanatic",
           "chunkOptions": [
             {
@@ -15410,6 +15385,9 @@
         "Crazy Archaeologist",
         "Chaos Fanatic",
         "Scorpia"
+      ],
+      "regions": [
+        "Forgotten Cemetery"
       ]
     },
     {
@@ -15446,18 +15424,8 @@
         }
       ],
       "regions": [
-        "Burthorpe"
-      ],
-      "locations": [
-        {
-          "label": "Where the Trollheim shortcut lands, west of the Ruins",
-          "chunkOptions": [
-            {
-              "cx": 46,
-              "cy": 57
-            }
-          ]
-        }
+        "Burthorpe",
+        "Forgotten Cemetery"
       ],
       "geographyVerification": {
         "reviewedAt": "2026-10-04",
