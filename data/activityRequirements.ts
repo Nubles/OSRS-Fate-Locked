@@ -68,7 +68,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Araxxor': { skills: { Slayer: 92 }, quests: ['Priest in Peril'], manualRequirements: ['Araxyte/spider Slayer task or boss task.'] },
   'Skotizo': { manualRequirements: ['Summoned with a Dark totem in the Catacombs of Kourend.'] },
   'Vorkath': { quests: ['Dragon Slayer II'] },
-  'Moons of Peril': { skills: { Slayer: 48, Hunter: 20, Fishing: 20 }, quests: ['Perilous Moons'], note: 'Repeatable boss access after completing Perilous Moons.' },
+  // The boss has no skill gate of its own; these levels belong to Perilous Moons (owner call, 7 October 2026).
+  'Moons of Peril': { quests: ['Perilous Moons'], note: 'Repeatable boss access after completing Perilous Moons.' },
   'Duke Sucellus': { quests: ['Desert Treasure II'] },
   'The Leviathan': { quests: ['Desert Treasure II'] },
   'The Whisperer': { quests: ['Desert Treasure II'] },

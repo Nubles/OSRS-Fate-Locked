@@ -32,6 +32,8 @@ export const CHANGELOG_RELEASES = [
         'Minigames: the Sorceress’s Garden asks for Prince Ali Rescue and lists its real Thieving levels (1, 25, 45 and 65), Puro-Puro opens with 17 Hunter or Lost City rather than both, the Volcanic Mine no longer asks for Kudos, the Archery Competition asks for 40 Ranged, the Gnome Restaurant for 29 Cooking and its tutorial, and the Mage Arena for the Mage Arena I miniquest.',
         'The Servants’ Guild is tagged Kandarin (it is in East Ardougne), the Colossal pouch needs 25 Runecraft rather than 85, and the mounted Xeric’s talisman and digsite pendant ask for 72 and 82 Construction in the portal nexus room.',
         'Strategy Guide fixes: the Wilderness God Wars Dungeon takes 60 Strength or 60 Agility, not both; the Taverley blue dragons can be reached with a dusty key; Red Dragon Isle needs 56 Agility and no diary; the Shilo gem rocks need the Medium Karamja diary; the Limestone mine is in Silvarea with no quest; and several shortcut, crafting and spell levels are corrected.',
+        'The Spice Pouch leaves the Storage table: it isn’t an item in OSRS. Runs that rolled it keep it, but it no longer counts toward completion.',
+        'At First Light now rolls Keys as an Intermediate quest, as the OSRS Wiki rates it, and the Moons of Peril no longer list Perilous Moons’ quest levels as boss requirements.',
         'Skill unlocks: the basic jewellery box is at 81 Construction, iron limbs at 23 Smithing and the Falador grapple at 37 Strength, and Hunter no longer claims a second trap at 20.',
       ],
     },

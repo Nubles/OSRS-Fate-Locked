@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'rea
 import { 
   EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, MISTHALIN_AREAS, 
   MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, ROLLABLE_POH_ITEMS,
-  MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, SLAYER_UNLOCKS_LIST,
+  MERCHANTS_LIST, ROLLABLE_STORAGE_ITEMS, GUILDS_LIST, SLAYER_UNLOCKS_LIST,
   FARMING_PATCH_LIST, FARMING_UNLOCK_DETAILS, MERCHANT_UNLOCK_DETAILS, EQUIPMENT_TIER_MAX,
   REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, wikiUrlFor, UTILITY_ITEM_IDS,
   SKILL_UNLOCK_DATA
@@ -901,7 +901,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         { id: 'GUILDS',    label: 'Guilds',             color: 'text-teal-400',   bar: 'bg-teal-500',   list: GUILDS_LIST,        unlocked: unlocks.guilds,    type: TableType.GUILDS },
         { id: 'ARCANA',    label: COMBAT_POWERS_LABEL,  color: 'text-violet-400', bar: 'bg-violet-500', list: ARCANA_LIST,        unlocked: unlocks.arcana,    type: TableType.ARCANA },
         { id: 'POH',       label: 'Player Owned House', color: 'text-orange-400', bar: 'bg-orange-500', list: ROLLABLE_POH_ITEMS,  unlocked: ROLLABLE_POH_ITEMS.filter(item => unlocks.housing.includes(item)),   type: TableType.POH },
-        { id: 'STORAGE',   label: 'Storage',            color: 'text-amber-600',  bar: 'bg-amber-600',  list: STORAGE_LIST,       unlocked: unlocks.storage,   type: TableType.STORAGE },
+        { id: 'STORAGE',   label: 'Storage',            color: 'text-amber-600',  bar: 'bg-amber-600',  list: ROLLABLE_STORAGE_ITEMS, unlocked: ROLLABLE_STORAGE_ITEMS.filter(item => unlocks.storage.includes(item)), type: TableType.STORAGE },
         { id: 'MERCHANTS', label: 'Merchants',          color: 'text-yellow-400', bar: 'bg-yellow-500', list: MERCHANTS_LIST,     unlocked: unlocks.merchants, type: TableType.MERCHANTS, details: MERCHANT_UNLOCK_DETAILS },
         { id: 'SLAYER',    label: 'Slayer Unlocks',     color: 'text-rose-400',   bar: 'bg-rose-500',   list: SLAYER_UNLOCKS_LIST, unlocked: unlocks.slayerUnlocks,   type: TableType.SLAYER_UNLOCKS },
         // Banks are keyed by chunk id but shown by place name; only present when

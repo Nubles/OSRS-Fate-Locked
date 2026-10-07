@@ -115,6 +115,7 @@ describe('boss access, from the roll data audit (7 October 2026)', () => {
     expect(ACTIVITY_REQUIREMENTS.Zalcano.skills).toEqual({ Mining: 70, Smithing: 70 });
     expect(ACTIVITY_REQUIREMENTS.Nex.quests).toEqual(['Desert Treasure I']);
     expect(ACTIVITY_REQUIREMENTS['Barrows Brothers'].questProgress?.[0].quest).toBe('His Faithful Servants');
+    expect(ACTIVITY_REQUIREMENTS['Moons of Peril'].skills).toBeUndefined();
     expect(ACTIVITY_REQUIREMENTS.Inferno.manualRequirements).toEqual([expect.stringContaining('fire cape')]);
   });
 

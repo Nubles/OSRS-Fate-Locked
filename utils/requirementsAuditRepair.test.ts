@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { QUEST_DATA } from '../data/questData';
-import { REGIONS_LIST, SKILLS_LIST, POH_LIST, ROLLABLE_POH_ITEMS } from '../data/items';
+import { REGIONS_LIST, SKILLS_LIST, POH_LIST, ROLLABLE_POH_ITEMS, STORAGE_LIST, ROLLABLE_STORAGE_ITEMS } from '../data/items';
+import { playerUnlockPoints } from './completion';
 import { getActivityReq } from '../data/activityRequirements';
 import { STRATEGY_DATABASE } from '../data/requirements';
 import { TableType, type GameState, type UnlockState } from '../types';
@@ -67,7 +68,7 @@ describe('audited activity hard gates and confirmations', () => {
     ['General Graardor', 'Strength', 70], ['Commander Zilyana', 'Agility', 70], ["Kree'arra", 'Ranged', 70], ["K'ril Tsutsaroth", 'Hitpoints', 70],
     ['Nex', 'Strength', 70], ['Nex', 'Agility', 70], ['Nex', 'Ranged', 70], ['Nex', 'Hitpoints', 70],
     ['Hunter Guild', 'Hunter', 46], ['Stealing Artefacts', 'Thieving', 49], ['Crystal Tree', 'Farming', 74],
-    ['Spirit Tree (POH)', 'Farming', 83], ['Bones to Peaches', 'Magic', 60], ['Moons of Peril', 'Hunter', 20], ['Moons of Peril', 'Fishing', 20],
+    ['Spirit Tree (POH)', 'Farming', 83], ['Bones to Peaches', 'Magic', 60],
   ] as const)('%s enforces %s %s', (name, skill, level) => {
     const unlocks = profile({ quests: Object.keys(QUEST_DATA) });
     unlocks.levels[skill] = level - 1;
@@ -116,6 +117,15 @@ describe('audited activity hard gates and confirmations', () => {
     expect(randomUnlockPool(profile(), 'vanilla', 'key', TableType.POH).map(item => item.item)).not.toContain('Aquarium');
     expect(checkUnlockAvailability(profile({housing: [...ROLLABLE_POH_ITEMS]})).poh).toBe(false);
     expect(checkUnlockAvailability(profile({housing: ['Aquarium', ...ROLLABLE_POH_ITEMS.slice(1)]})).poh).toBe(true);
+  });
+  it('retires the Spice Pouch, which is not an OSRS item, as the Aquarium was', () => {
+    expect(STORAGE_LIST).toContain('Spice Pouch');
+    expect(ROLLABLE_STORAGE_ITEMS).not.toContain('Spice Pouch');
+    expect(randomUnlockPool(profile(), 'vanilla', 'key', TableType.STORAGE).map(item => item.item)).not.toContain('Spice Pouch');
+    expect(checkUnlockAvailability(profile({storage: [...ROLLABLE_STORAGE_ITEMS]})).storage).toBe(false);
+    // An owned Spice Pouch neither counts toward completion nor blocks 100%.
+    const withPouch = profile({storage: ['Spice Pouch']});
+    expect(playerUnlockPoints(withPouch)).toBe(playerUnlockPoints(profile()));
   });
 });
 
