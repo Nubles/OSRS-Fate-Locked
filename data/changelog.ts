@@ -19,6 +19,16 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-07-steady-unlock-reveal',
+    title: 'Unlock Rolls Stay Put',
+    date: '2026-10-07',
+    sections: {
+      fixed: [
+        'Rolling an unlock no longer blanks the whole page while it saves, shows the reveal twice, or sends you back to the top of the page. The run stays where it was behind the reveal.',
+      ],
+    },
+  },
+  {
     id: '2026-10-07-discord-progress',
     title: 'Show Your Run in the Fate Locked Discord',
     date: '2026-10-07',
