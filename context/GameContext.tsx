@@ -3258,13 +3258,30 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     ackRival
   ]);
 
+  // A rolled unlock is revealed only once it is saved, so a refresh can't
+  // reroll it. Once its reveal has shown, later saves (the run keeps saving
+  // while the reveal is open) must not take it down again: that replayed the
+  // reveal and flashed the whole app a second time.
+  const pendingUnlockId = state.pendingUnlock?.id ?? null;
+  const rollSaved = saveStatus === 'saved' && !hasPendingChanges;
+  const [revealedUnlockId, setRevealedUnlockId] = useState<string | null>(null);
+  if (pendingUnlockId && rollSaved && revealedUnlockId !== pendingUnlockId) setRevealedUnlockId(pendingUnlockId);
+  const rollAwaitingSave = !!pendingUnlockId && !rollSaved && revealedUnlockId !== pendingUnlockId;
+  const hideRunForFailedRoll = rollAwaitingSave && saveStatus === 'failed';
+
   return (
     <GameContext.Provider value={contextValue}>
-      <div style={{ display: state.pendingUnlock && (saveStatus !== 'saved' || hasPendingChanges) ? 'none' : 'contents' }}>{children}</div>
-      {state.pendingUnlock && (saveStatus !== 'saved' || hasPendingChanges) ? (
-        <div role="status" className="fixed inset-0 z-[300] bg-[#121212] text-gray-100 flex flex-col items-center justify-center gap-4 p-6 text-center">
-          <p>{saveStatus === 'failed' ? 'Your roll is waiting to be saved. Retry to reveal the same result.' : 'Saving your roll…'}</p>
-          <button type="button" className="px-4 py-2 rounded border border-amber-400 text-amber-300" onClick={() => void retrySave()}>Retry save</button>
+      <div style={{ display: hideRunForFailedRoll ? 'none' : 'contents' }}>{children}</div>
+      {rollAwaitingSave ? (
+        // While the roll is still being written, cover the run without hiding
+        // it: hiding it reset every scroll position and flashed the whole app
+        // away and back. Only a failed save takes the run off screen.
+        <div role="status" className={`fixed inset-0 z-[300] text-gray-100 flex flex-col items-center justify-center gap-4 p-6 text-center ${
+          saveStatus === 'failed' ? 'bg-[#121212]' : 'bg-black/60 backdrop-blur-md'}`}>
+          <div className={saveStatus === 'failed' ? 'contents' : 'contents [&>*]:opacity-0 [&>*]:animate-[fade-in-up_0.3s_ease-out_0.5s_forwards]'}>
+            <p>{saveStatus === 'failed' ? 'Your roll is waiting to be saved. Retry to reveal the same result.' : 'Saving your roll…'}</p>
+            <button type="button" className="px-4 py-2 rounded border border-amber-400 text-amber-300" onClick={() => void retrySave()}>Retry save</button>
+          </div>
         </div>
       ) : state.pendingUnlock ? <PendingUnlockReveal pending={state.pendingUnlock} animationsEnabled={state.animationsEnabled} onAccept={acknowledgeUnlock}
         tier={state.pendingUnlock.table === TableType.SKILLS ? state.unlocks.skills[state.pendingUnlock.item] : undefined} /> : null}

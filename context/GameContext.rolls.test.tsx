@@ -123,3 +123,24 @@ it.each([
   expect(current.keys).toBe(keys);
   expect(current.history.find(e => e.meta?.ritual === 'GAMBIT')?.meta?.keysAwarded).toBe(keys);
 });
+
+it('keeps the run on screen while a roll saves and does not replay the reveal on a later save', async () => {
+  localStorage.setItem('roll-audit', JSON.stringify({ ...createFreshState(), keys: 3, animationsEnabled: false }));
+  mount(); await settle();
+  const run = screen.getByText('No reveal');
+  const states: string[] = [];
+  const observer = new MutationObserver(() => {
+    states.push(`${run.parentElement?.style.display}|${screen.queryByRole('status') ? 'cover' : ''}|${screen.queryByRole('button', { name: 'Continue' }) ? 'reveal' : ''}`);
+  });
+  observer.observe(document.body, { subtree: true, childList: true, attributes: true });
+  act(() => current.rollUnlock(TableType.EQUIPMENT));
+  await act(async () => { await vi.advanceTimersByTimeAsync(550); });
+  const reveal = screen.getByRole('button', { name: 'Continue' });
+  // The run keeps saving while the reveal is open (a note here); the reveal stays put.
+  act(() => current.saveNote('audit', 'Saved behind the reveal'));
+  await act(async () => { await vi.advanceTimersByTimeAsync(550); });
+  observer.disconnect();
+  expect(screen.getByRole('button', { name: 'Continue' })).toBe(reveal);
+  expect(states.every(s => !s.startsWith('none'))).toBe(true);
+  expect(states.filter((s, i) => s.endsWith('reveal') && !states[i - 1]?.endsWith('reveal'))).toHaveLength(1);
+});
