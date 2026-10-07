@@ -23,6 +23,10 @@ export const profileDiscordKey = (storageKey: string): string =>
 export const profileOnlineBackupKey = (storageKey: string): string =>
   `${storageKey}__onlineBackup`;
 
+/** This browser's shared-progress record for a run: its id, write token and whether it publishes. */
+export const profileProgressShareKey = (storageKey: string): string =>
+  `${storageKey}__progressShare`;
+
 export const profileDiscordCursorKey = (storageKey: string): string =>
   `${storageKey}__discordCursor`;
 
@@ -152,6 +156,7 @@ export const profileOwnedKeys = (profileId: string): readonly string[] => {
     profileDiscordKey(storageKey),
     profileDiscordCursorKey(storageKey),
     profileOnlineBackupKey(storageKey),
+    profileProgressShareKey(storageKey),
     profileFeatureSeenKey(profileId),
     writerLeaseKey(storageKey),
     profileMirrorMetadataKey(storageKey),
