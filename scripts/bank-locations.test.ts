@@ -29,7 +29,7 @@ const EXCLUSIONS = [
 // below fails on the check it names rather than on an unknown override id.
 const TEST_VALIDATION_OPTIONS = {
   validChunkIds: new Set(ADDITION_IDS),
-  validBankIds: new Set(['10275', '11830', '10292', '10547']),
+  validBankIds: new Set(['10275', '11830', '10292', '10547', '13361']),
 };
 
 describe('reviewed bank-location registry', () => {
