@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useProfiles } from '../context/ProfileContext';
 import { useGame } from '../context/GameContext';
 import {
@@ -7,7 +7,12 @@ import {
 } from '../utils/discordWebhook';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { showToast } from '../utils/toast';
-import { X, Webhook, Send } from 'lucide-react';
+import { X, Webhook, Send, Link2 } from 'lucide-react';
+import { relaySync } from '../services/relaySync';
+import {
+  deleteProgress, formatLinkCode, newProgressShareRecord, publishProgress,
+  readProgressShare, requestLinkCode, writeProgressShare,
+} from '../utils/progressShare';
 
 /**
  * Settings for Discord unlock announcements. The URL is stored per profile in
@@ -18,6 +23,7 @@ export const DiscordSettingsModal: React.FC<{ onClose: () => void }> = ({ onClos
   const { storageKeyForActiveProfile: storageKey } = useProfiles();
   const { history } = useGame();
   const [cfg, setCfg] = useState(() => readDiscordConfig(storageKey));
+  const [showLink, setShowLink] = useState(() => readProgressShare(storageKey)?.enabled === true);
   const [testing, setTesting] = useState(false);
   useEscapeKey(onClose, true);
 
@@ -94,7 +100,129 @@ export const DiscordSettingsModal: React.FC<{ onClose: () => void }> = ({ onClos
             <Send size={12} /> {testing ? 'Sending…' : 'Send test'}
           </button>
         </div>
+
+        <ProgressLinkSection storageKey={storageKey} expanded={showLink} onExpand={() => setShowLink(true)} />
       </div>
+    </div>
+  );
+};
+
+type LinkState =
+  | { kind: 'idle' }
+  | { kind: 'working' }
+  | { kind: 'code'; code: string; expiresAt: number }
+  | { kind: 'error'; message: string };
+
+/**
+ * Link the run to the Fate Locked Discord: turning it on publishes a progress
+ * summary to the relay (ProgressShareDriver keeps it current), and a one-time
+ * code ties it to the player's Discord account through the bot's /link.
+ */
+const ProgressLinkSection: React.FC<{ storageKey: string; expanded: boolean; onExpand: () => void }> = ({
+  storageKey, expanded, onExpand,
+}) => {
+  const game = useGame();
+  const [record, setRecord] = useState(() => readProgressShare(storageKey));
+  const [link, setLink] = useState<LinkState>({ kind: 'idle' });
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (link.kind !== 'code') return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [link.kind]);
+
+  const getCode = useCallback(async () => {
+    setLink({ kind: 'working' });
+    const current = readProgressShare(storageKey);
+    const next = current ? { ...current, enabled: true } : newProgressShareRecord();
+    writeProgressShare(storageKey, next);
+    setRecord(next);
+    const base = relaySync.base();
+    // A code needs a published run, so publish now. A refusal within a minute means one is already there.
+    const { buildProgressSnapshot } = await import('../utils/progressSnapshot');
+    const snapshot = buildProgressSnapshot({
+      unlocks: game.unlocks, history: game.history, gameModeId: game.gameModeId,
+      customMode: game.customMode, linkedAccount: game.linkedAccount,
+    });
+    const published = await publishProgress(base, next, snapshot);
+    if (!published.ok && 'error' in published) {
+      setLink({ kind: 'error', message: published.error === 'network'
+        ? 'Could not reach the relay. Check your connection and try again.'
+        : 'The relay refused this run\'s progress. Turn sharing off and on, then try again.' });
+      return;
+    }
+    const issued = await requestLinkCode(base, next);
+    setNow(Date.now());
+    setLink(issued.ok
+      ? { kind: 'code', code: issued.code, expiresAt: issued.expiresAt }
+      : { kind: 'error', message: 'Could not get a link code. Try again in a minute.' });
+  }, [storageKey, game.unlocks, game.history, game.gameModeId, game.customMode, game.linkedAccount]);
+
+  const stop = useCallback(async () => {
+    const current = readProgressShare(storageKey);
+    if (!current) return;
+    writeProgressShare(storageKey, { ...current, enabled: false });
+    setRecord({ ...current, enabled: false });
+    setLink({ kind: 'idle' });
+    const deleted = await deleteProgress(relaySync.base(), current);
+    showToast(deleted ? 'Stopped sharing progress with Discord' : 'Sharing is off; the relay copy expires on its own');
+  }, [storageKey]);
+
+  const sharing = record?.enabled === true;
+  const secondsLeft = link.kind === 'code' ? Math.max(0, Math.ceil((link.expiresAt - now) / 1000)) : 0;
+
+  return (
+    <div className="mt-4 pt-3 border-t border-white/10">
+      <h3 className="text-[11px] font-black uppercase tracking-wider text-gray-200 flex items-center gap-2 mb-1.5">
+        <Link2 size={13} className="text-indigo-400" /> Fate Locked Discord
+      </h3>
+      {!expanded && !sharing ? (
+        <button onClick={onExpand} className="text-[11px] text-indigo-300 hover:text-indigo-200 underline">
+          Show your progress in the Fate Locked Discord
+        </button>
+      ) : (
+        <>
+          <p className="text-[12px] text-gray-400 mb-2">
+            Share a summary of this run (mode, areas, quests, diaries, Combat Achievements and your
+            last few unlocks) so <span className="text-gray-200">/progress</span> in the Fate Locked
+            Discord can show it. Your save never leaves this device.
+          </p>
+          {link.kind === 'code' && secondsLeft > 0 ? (
+            <div className="bg-black/40 border border-indigo-500/40 rounded-lg p-3 mb-2 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">In the Discord, type</div>
+              <div className="font-mono text-lg text-indigo-200 select-all">/link {formatLinkCode(link.code)}</div>
+              <div className="text-[10px] text-gray-500 mt-1">
+                Works once, for the next {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')}
+              </div>
+            </div>
+          ) : link.kind === 'error' ? (
+            <p className="text-[11px] text-red-400 mb-2">{link.message}</p>
+          ) : null}
+          <div className="flex items-center justify-between gap-2">
+            <button
+              onClick={getCode}
+              disabled={link.kind === 'working'}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white transition-colors"
+            >
+              <Link2 size={12} /> {link.kind === 'working' ? 'Getting code…' : sharing ? 'Get a link code' : 'Share and get a link code'}
+            </button>
+            {sharing && (
+              <button
+                onClick={stop}
+                className="px-3 py-1.5 rounded-lg text-[11px] font-bold border bg-[#252525] border-white/15 text-gray-400 hover:text-white transition-colors"
+              >
+                Stop sharing
+              </button>
+            )}
+          </div>
+          {sharing && (
+            <p className="text-[10px] text-gray-600 mt-1.5">
+              Sharing is on. It updates about a minute after your progress changes.
+            </p>
+          )}
+        </>
+      )}
     </div>
   );
 };

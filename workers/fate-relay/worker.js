@@ -13,6 +13,15 @@ import {
   validAcknowledgement,
   validEvent,
 } from './protocol.js';
+import {
+  LINK_CODE_TTL_SECONDS,
+  MAX_PROGRESS_BYTES,
+  PROGRESS_MIN_INTERVAL_MS,
+  PROGRESS_TTL_SECONDS,
+  newLinkCode,
+  normalizeLinkCode,
+  validProgressSnapshot,
+} from './progress.js';
 
 const TTL_SECONDS = 86400;
 const OWNER_TTL_SECONDS = 90 * 86400;
@@ -28,6 +37,11 @@ const BACKUP_TOKEN_RE = /^Bearer ([A-Za-z0-9_-]{43})$/;
 // Which browser wrote a backup: 16 random bytes in base64url, made when it turned backup on.
 const BACKUP_WRITER_RE = /^[A-Za-z0-9_-]{22}$/;
 const BACKUP_PREFIX = new TextEncoder().encode('FLBK1.');
+// Shared progress: 16 random bytes in base64url, made in the browser when the player
+// turns sharing on. Its write token has the backup token's shape.
+const PROGRESS_RE = /^\/p\/([A-Za-z0-9_-]{22})(\/link-code)?$/;
+// A Discord user id. Only the Discord bot, holding PROGRESS_BOT_SECRET, reaches these.
+const DISCORD_LINK_RE = /^\/l\/(\d{17,20})$/;
 
 function cors(origin) {
   return {
@@ -221,6 +235,109 @@ async function backupRoute(request, env, headers, id, previous) {
   return json({ updatedAt }, headers);
 }
 
+/**
+ * Shared progress, written by the player's browser. The first publish claims the id with
+ * its write token (kept as a SHA-256 hash in the record's metadata); later publishes, the
+ * delete and link codes need the same token. Nothing here is readable without the bot's
+ * secret: the bot reads a run only through a Discord link the player made with a code.
+ */
+async function progressRoute(request, env, headers, id, linkCode) {
+  if (request.method !== 'POST' && request.method !== 'DELETE') {
+    return new Response('method not allowed', { status: 405, headers });
+  }
+  if (linkCode && request.method !== 'POST') return new Response('method not allowed', { status: 405, headers });
+  const token = (request.headers.get('Authorization') || '').match(BACKUP_TOKEN_RE)?.[1];
+  if (!token) return new Response('forbidden', { status: 403, headers });
+  const key = `p:${id}`;
+  const writeHash = await tokenHash(token);
+  const existing = await env.RELAY.getWithMetadata(key);
+  if (existing.metadata && existing.metadata.writeHash !== writeHash) {
+    return new Response('forbidden', { status: 403, headers });
+  }
+
+  if (request.method === 'DELETE') {
+    await env.RELAY.delete(key);
+    return json({ deleted: true }, headers);
+  }
+
+  if (linkCode) {
+    // A code names a run that has been published, so the bot always has something to show.
+    if (existing.value === null) return json({}, headers, 404);
+    const code = newLinkCode();
+    await env.RELAY.put(`lc:${code}`, id, { expirationTtl: LINK_CODE_TTL_SECONDS });
+    return json({ code, expiresAt: Date.now() + LINK_CODE_TTL_SECONDS * 1000 }, headers);
+  }
+
+  const raw = await readBodyWithin(request, MAX_PROGRESS_BYTES);
+  if (raw === null) return new Response('payload too large', { status: 413, headers });
+  let snapshot;
+  try {
+    snapshot = validProgressSnapshot(JSON.parse(raw));
+  } catch {
+    snapshot = null;
+  }
+  if (!snapshot) return new Response('bad request', { status: 400, headers });
+  const sinceLast = Date.now() - (existing.metadata?.updatedAt ?? 0);
+  if (sinceLast < PROGRESS_MIN_INTERVAL_MS) {
+    return json({ updatedAt: existing.metadata.updatedAt }, headers, 429,
+      { 'Retry-After': String(Math.ceil((PROGRESS_MIN_INTERVAL_MS - sinceLast) / 1000)) });
+  }
+  const updatedAt = Date.now();
+  await env.RELAY.put(key, JSON.stringify(snapshot), {
+    expirationTtl: PROGRESS_TTL_SECONDS,
+    metadata: { writeHash, updatedAt },
+  });
+  return json({ updatedAt }, headers);
+}
+
+/** Whether the request carries the Discord bot's secret. Unset, nothing does. */
+async function fromDiscordBot(request, env) {
+  const secret = env.PROGRESS_BOT_SECRET;
+  if (typeof secret !== 'string' || secret.length < 32) return false;
+  const presented = (request.headers.get('Authorization') || '').match(/^Bearer (\S+)$/)?.[1];
+  // Comparing hashes keeps the comparison's timing independent of the secret.
+  return typeof presented === 'string' && await tokenHash(presented) === await tokenHash(secret);
+}
+
+/** The run a Discord user linked, as the bot shows it. */
+async function linkedProgress(env, runId) {
+  const { value, metadata } = await env.RELAY.getWithMetadata(`p:${runId}`, { type: 'json' });
+  return value === null ? { linked: true, snapshot: null } : { linked: true, snapshot: value, updatedAt: metadata?.updatedAt ?? null };
+}
+
+/**
+ * Discord links, for the bot only: POST claims a link code for a Discord user, GET reads
+ * that user's shared progress, DELETE forgets the link. A link outlives the player turning
+ * sharing off; the bot then reports that the run isn't shared.
+ */
+async function discordLinkRoute(request, env, headers, discordId) {
+  if (!await fromDiscordBot(request, env)) return new Response('forbidden', { status: 403, headers });
+  const key = `l:${discordId}`;
+  if (request.method === 'GET') {
+    const runId = await env.RELAY.get(key);
+    if (runId === null) return json({ linked: false }, headers, 404);
+    return json(await linkedProgress(env, runId), headers);
+  }
+  if (request.method === 'DELETE') {
+    await env.RELAY.delete(key);
+    return json({ deleted: true }, headers);
+  }
+  if (request.method !== 'POST') return new Response('method not allowed', { status: 405, headers });
+  const raw = await readBodyWithin(request, 1024);
+  let code = null;
+  try {
+    code = raw === null ? null : normalizeLinkCode(JSON.parse(raw)?.code);
+  } catch {
+    code = null;
+  }
+  if (!code) return new Response('bad request', { status: 400, headers });
+  const runId = await env.RELAY.get(`lc:${code}`);
+  if (runId === null) return json({ error: 'unknown code' }, headers, 404);
+  await env.RELAY.delete(`lc:${code}`);
+  await env.RELAY.put(key, runId);
+  return json(await linkedProgress(env, runId), headers);
+}
+
 const routes = {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -230,6 +347,12 @@ const routes = {
 
     const backup = url.pathname.match(BACKUP_RE);
     if (backup) return backupRoute(request, env, headers, backup[1], Boolean(backup[2]));
+
+    const progress = url.pathname.match(PROGRESS_RE);
+    if (progress) return progressRoute(request, env, headers, progress[1], Boolean(progress[2]));
+
+    const discordLink = url.pathname.match(DISCORD_LINK_RE);
+    if (discordLink) return discordLinkRoute(request, env, headers, discordLink[1]);
 
     const match = url.pathname.match(CODE_RE);
     if (!match) return new Response('not found', { status: 404, headers });
