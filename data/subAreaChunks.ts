@@ -73,7 +73,7 @@ export const SUB_AREA_CHUNKS: Record<string, ChunkCoord[]> = {
   'Giants\' Plateau': [{ cx: 52, cy: 49 }],
   'Gnome Village': [{ cx: 39, cy: 49 }],
   'Goblin Village': [{ cx: 46, cy: 54 }],
-  'Graveyard of Shadows': [{ cx: 49, cy: 57 }],
+  'Graveyard of Shadows': [{ cx: 49, cy: 57 }, { cx: 48, cy: 57 }, { cx: 49, cy: 58 }],
   'Grimstone': [{ cx: 45, cy: 63 }],
   'Gwenith': [{ cx: 34, cy: 53 }],
   'Harmony Island': [{ cx: 59, cy: 44 }],
