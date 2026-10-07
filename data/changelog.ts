@@ -33,6 +33,17 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-10-07-journal-quest-count',
+    title: 'Quests Ready, Counted Once',
+    date: '2026-10-07',
+    sections: {
+      fixed: [
+        'The Journal summary on the Dashboard counts the quests the Quest Log calls ready: a quest in an area you own but have no way to reach no longer counts as ready there.',
+        'The summary names miniquests apart, such as “6 quests and 3 miniquests ready to complete”, as the Quest Log lists them under two headings.',
+      ],
+    },
+  },
+  {
     id: '2026-10-07-corsair-cove-foundry-bank',
     title: 'Corsair Cove by Boat',
     date: '2026-10-07',
