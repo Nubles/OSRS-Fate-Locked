@@ -8,6 +8,7 @@ import { QUEST_DATA, type QuestData } from '../data/questData';
 import { DIARY_DATA, type DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import type { UnlockState } from '../types';
+import type { AreaRoutes } from '../utils/areaRoutes';
 import { CA_DATA } from '../data/caData';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import {
@@ -41,6 +42,8 @@ interface Recommendation {
 
 export interface JournalQuestRecommendationAnalysis {
   available: number;
+  /** How many of the available entries are miniquests, which the Quest Log lists apart. */
+  availableMiniquests: number;
   candidates: QuestData[];
   best: { name: string; nq: number; nd: number; impact: number } | null;
 }
@@ -50,10 +53,13 @@ export function analyzeJournalQuestRecommendations(
   allDiaries: DiaryTier[],
   unlocks: UnlockState,
   gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
 ): JournalQuestRecommendationAnalysis {
+  // Read with the routes, as the Quest Log is, so a quest in an owned area no
+  // route reaches is counted by neither (a player's report, 7 Oct 2026).
   const baseQ = new Map(allQuests.map(quest => [
     quest.id,
-    evaluateQuestEligibility(quest, unlocks, gameModeId),
+    evaluateQuestEligibility(quest, unlocks, gameModeId, areaRoutes),
   ]));
   const candidates = allQuests.filter(quest => (
     !unlocks.quests.includes(quest.id) && baseQ.get(quest.id)!.eligible
@@ -64,7 +70,7 @@ export function analyzeJournalQuestRecommendations(
   };
   const baseD = new Map(allDiaries.map(diary => [
     diary.id,
-    evaluateDiaryTierEligibility(diary, unlocks, gameModeId).eligible,
+    evaluateDiaryTierEligibility(diary, unlocks, gameModeId, areaRoutes).eligible,
   ]));
 
   let best: JournalQuestRecommendationAnalysis['best'] = null;
@@ -73,19 +79,24 @@ export function analyzeJournalQuestRecommendations(
     let nq = 0;
     for (const otherQuest of allQuests) {
       if (otherQuest.id === quest.id || wasOpen(otherQuest.id)) continue;
-      if (evaluateQuestEligibility(otherQuest, sim, gameModeId).eligible) nq++;
+      if (evaluateQuestEligibility(otherQuest, sim, gameModeId, areaRoutes).eligible) nq++;
     }
     let nd = 0;
     for (const diary of allDiaries) {
       const status = baseD.get(diary.id);
       if (status) continue;
-      if (evaluateDiaryTierEligibility(diary, sim, gameModeId).eligible) nd++;
+      if (evaluateDiaryTierEligibility(diary, sim, gameModeId, areaRoutes).eligible) nd++;
     }
     const impact = nq * 2 + nd;
     if (!best || impact > best.impact) best = { name: quest.name, nq, nd, impact };
   }
 
-  return { available: candidates.length, candidates, best };
+  return {
+    available: candidates.length,
+    availableMiniquests: candidates.filter(quest => quest.kind === 'miniquest').length,
+    candidates,
+    best,
+  };
 }
 
 /**
@@ -94,8 +105,11 @@ export function analyzeJournalQuestRecommendations(
  * tasks, then any available quest, then CA grind. Returns a celebratory state
  * when nothing is left.
  */
-export function recommendNextAction(unlocks: UnlockState, diaryDoable: number, caLeft: number, gameModeId?: string): Recommendation {
-  const { best } = analyzeJournalQuestRecommendations(Object.values(QUEST_DATA), Object.values(DIARY_DATA), unlocks, gameModeId);
+export function recommendNextAction(
+  unlocks: UnlockState, diaryDoable: number, caLeft: number, gameModeId?: string, areaRoutes?: AreaRoutes | null,
+): Recommendation {
+  const { best } = analyzeJournalQuestRecommendations(
+    Object.values(QUEST_DATA), Object.values(DIARY_DATA), unlocks, gameModeId, areaRoutes);
   // Canonical automatic eligibility is analyzed once by the shared helper.
   if (best && best.impact > 0) {
     const parts: string[] = [];
@@ -121,6 +135,15 @@ export function recommendNextAction(unlocks: UnlockState, diaryDoable: number, c
   return { tab: null, headline: `Everything's done!`, detail: `All journal content completed` };
 }
 
+/** "6 quests and 3 miniquests", as the Quest Log lists them under two headings. */
+export function questsReadyLabel(available: number, miniquests: number): string {
+  const quests = available - miniquests;
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  if (miniquests === 0) return String(available);
+  if (quests === 0) return plural(miniquests, 'miniquest');
+  return `${plural(quests, 'quest')} and ${plural(miniquests, 'miniquest')}`;
+}
+
 export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
   const { unlocks, advisorsEnabled, gameModeId } = useGame();
   const areaRoutes = useAreaRoutes(unlocks, gameModeId);
@@ -129,7 +152,7 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
     // ── Quests available ─────────────────────────────────────────────────────
     const allQuests = Object.values(QUEST_DATA);
     const questAnalysis = analyzeJournalQuestRecommendations(
-      allQuests, Object.values(DIARY_DATA), unlocks, gameModeId);
+      allQuests, Object.values(DIARY_DATA), unlocks, gameModeId, areaRoutes);
     const questsAvailable = questAnalysis.available;
     const questsTotal    = allQuests.length;
     const questsDone     = unlocks.quests.length;
@@ -155,7 +178,9 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
     const nextCATier = CA_TIER_ORDER.find(tier => !caEarnedTiers.includes(tier));
 
     return {
-      quests: { available: questsAvailable, done: questsDone, total: questsTotal },
+      quests: {
+        available: questsAvailable, miniquests: questAnalysis.availableMiniquests, done: questsDone, total: questsTotal,
+      },
       diaries: { doable: diaryTasksDoable, done: diaryTasksDone, total: diaryTasksTotal },
       ca: {
         left: caTasksLeft,
@@ -172,8 +197,8 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
 
   // The single best next action — computed once per unlocks change.
   const recommendation = useMemo(
-    () => recommendNextAction(unlocks, stats.diaries.doable, stats.ca.left, gameModeId),
-    [unlocks, stats.diaries.doable, stats.ca.left, gameModeId],
+    () => recommendNextAction(unlocks, stats.diaries.doable, stats.ca.left, gameModeId, areaRoutes),
+    [unlocks, stats.diaries.doable, stats.ca.left, gameModeId, areaRoutes],
   );
 
   const rows: Array<{
@@ -197,7 +222,7 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
       badgeColor: 'bg-blue-900/40 text-blue-300 border-blue-500/30',
       headline: `${stats.quests.done}/${stats.quests.total} done`,
       sub: stats.quests.available > 0
-        ? `${stats.quests.available} ready to complete`
+        ? `${questsReadyLabel(stats.quests.available, stats.quests.miniquests)} ready to complete`
         : 'None available yet',
       pct: Math.round((stats.quests.done / stats.quests.total) * 100),
       badgeValue: stats.quests.available,

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { QUEST_DATA, type QuestData } from '../data/questData';
 import type { UnlockState } from '../types';
-import { analyzeJournalQuestRecommendations, recommendNextAction } from './JournalSummaryCard';
+import { analyzeJournalQuestRecommendations, questsReadyLabel, recommendNextAction } from './JournalSummaryCard';
+import type { AreaRoutes } from '../utils/areaRoutes';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 
@@ -48,6 +49,37 @@ describe('analyzeJournalQuestRecommendations', () => {
   });
 });
 
+/**
+ * A player reported on 7 October 2026 that the Journal summary said 9 quests
+ * were ready to complete while the Quest Log listed 6: the summary didn't
+ * read the routes the Quest Log reads, so it counted quests in owned areas
+ * no route reaches.
+ */
+describe('the Journal summary counts what the Quest Log lists', () => {
+  const barcrawl = QUEST_DATA["Alfred Grimhand's Barcrawl"];
+  const bars: UnlockState = {
+    ...pryingTimesUnlocks(),
+    skills: {}, levels: {}, quests: [], merchants: ['Bars & Inns'],
+    regions: [...new Set(barcrawl.locations!.flatMap(location => location.standardAreas))],
+  };
+  const strandedAt = (...areas: string[]): AreaRoutes => ({ strandedAreas: new Set(areas), strandedChunks: new Set() });
+
+  it('leaves out a quest no route reaches', () => {
+    expect(analyzeJournalQuestRecommendations([barcrawl], [], bars, 'vanilla').available).toBe(1);
+    const stranded = analyzeJournalQuestRecommendations([barcrawl], [], bars, 'vanilla', strandedAt('Brimhaven'));
+    expect(stranded.available).toBe(0);
+    expect(stranded.best).toBeNull();
+  });
+
+  it('names miniquests apart, as the Quest Log lists them', () => {
+    expect(barcrawl.kind).toBe('miniquest');
+    expect(analyzeJournalQuestRecommendations([barcrawl], [], bars, 'vanilla').availableMiniquests).toBe(1);
+    expect(questsReadyLabel(9, 0)).toBe('9');
+    expect(questsReadyLabel(9, 3)).toBe('6 quests and 3 miniquests');
+    expect(questsReadyLabel(2, 1)).toBe('1 quest and 1 miniquest');
+    expect(questsReadyLabel(2, 2)).toBe('2 miniquests');
+  });
+});
 
 describe('journal completion recommendations in Vanilla', () => {
   const completedAccount = (): UnlockState => ({
