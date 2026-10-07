@@ -178,6 +178,13 @@ export const BOAT_CROSSINGS: readonly BoatCrossing[] = [
     source: wiki('Captain Barnaby', 15315238),
   },
   {
+    // Captain Tock sails once The Corsair Curse is started, and Cabin Boy Colin after it; the quest has no
+    // requirements to start, so the crossing asks for none (a player's report, 29 Sept 2026).
+    label: 'Captain Tock and Cabin Boy Colin, from Rimmington to Corsair Cove',
+    docks: ['45,50', '40,44'],
+    source: wiki('Corsair Cove', 15352458),
+  },
+  {
     // The barge guard stands at 3362,3448, in the Digsite's chunk.
     label: 'The canal barge from the Digsite to Fossil Island',
     docks: ['52,53', '58,59'],

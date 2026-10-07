@@ -180,6 +180,9 @@ describe('what is stranded', () => {
     expect(stranded(wilderness).has('Entrana')).toBe(true);
     expect(stranded(run({ regions: ['Port Sarim', 'Piscarilius'] })).has('Piscarilius')).toBe(false);
     expect(stranded(run({ regions: ['Piscarilius'] })).has('Piscarilius')).toBe(true);
+    // Captain Tock from Rimmington, which the graph left out (a player's report, 29 Sept 2026).
+    expect(stranded(run({ regions: ['Port Sarim', 'Rimmington', 'Corsair Cove'] })).has('Corsair Cove')).toBe(false);
+    expect(stranded(run({ regions: ['Corsair Cove'] })).has('Corsair Cove')).toBe(true);
 
     // A charter ship from Port Sarim, and to Port Tyras only after Regicide.
     expect(stranded(run({ regions: ['Port Sarim', 'Brimhaven'], mobility: ['Charter Ships'] })).has('Brimhaven')).toBe(false);
