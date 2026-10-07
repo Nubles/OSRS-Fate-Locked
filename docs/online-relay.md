@@ -300,3 +300,6 @@ https address, or http on localhost for local development.
 
 From `workers/fate-relay/`, install Wrangler, authenticate, configure the
 `RELAY` KV namespace in `wrangler.toml`, and run `wrangler deploy`.
+
+The shared-progress routes for the Discord bot (`/p/` and `/l/`) also need the
+`PROGRESS_BOT_SECRET` Worker secret; see `docs/shared-progress.md`.

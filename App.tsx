@@ -71,6 +71,7 @@ const SupplyChainCalculator = lazyWithRetry(() => import('./components/SupplyCha
 const GameModePicker = lazyWithRetry(() => import('./components/GameModePicker').then(m => ({ default: m.GameModePicker })));
 const SyncCodeModal = lazyWithRetry(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
 const OnlineBackupDriver = lazyWithRetry(() => import('./components/OnlineBackupDriver').then(m => ({ default: m.OnlineBackupDriver })));
+const ProgressShareDriver = lazyWithRetry(() => import('./components/ProgressShareDriver').then(m => ({ default: m.ProgressShareDriver })));
 const OnlineBackupPrompt = lazyWithRetry(() => import('./components/OnlineBackupPrompt').then(m => ({ default: m.OnlineBackupPrompt })));
 const BackupNagBanner = lazyWithRetry(() => import('./components/BackupNagBanner').then(m => ({ default: m.BackupNagBanner })));
 const ModelGallery = lazyWithRetry(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
@@ -1142,6 +1143,8 @@ const GameLayout = () => {
       <Suspense fallback={null}><BackupNagBanner /></Suspense>
       {/* Posts new unlocks to the profile's Discord webhook (if configured). */}
       <DiscordSyncDriver />
+      {/* Keeps the run's shared progress current for the Discord bot's /progress (if sharing is on). */}
+      <Suspense fallback={null}><ProgressShareDriver /></Suspense>
 
       {/* Main Command Center Layout */}
       <main className="max-w-[1600px] mx-auto px-4 py-4 h-[calc(100vh-80px)]">

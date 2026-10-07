@@ -33,6 +33,18 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-10-07-discord-progress',
+    title: 'Show Your Run in the Fate Locked Discord',
+    date: '2026-10-07',
+    sections: {
+      added: [
+        'Discord notifications has a new Fate Locked Discord section. Share and get a link code shares a summary of your run, then type /link with the code in the Fate Locked Discord, within ten minutes. After that, anyone there can see your run with /progress.',
+        'The summary is your mode (with a rules tag for Custom runs, so runs with the same rules match), areas or chunks, quests, diary tasks, Combat Achievements and your last five unlocks. It updates about a minute after your progress changes. Your save never leaves this device.',
+        'Stop sharing removes the summary; /unlink in the Discord removes the link.',
+      ],
+    },
+  },
+  {
     id: '2026-10-07-journal-quest-count',
     title: 'Quests Ready, Counted Once',
     date: '2026-10-07',
