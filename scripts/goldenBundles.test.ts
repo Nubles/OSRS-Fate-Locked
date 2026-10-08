@@ -178,11 +178,12 @@ const SCENARIOS: Scenario[] = [
     account: ACCOUNT,
     // Keldagrim with its entrance and quest; Musa Point without the TzHaar city.
     // The Warriors' Guild's chunk is the walk from Taverley to Mountain Camp.
+    // Keldagrim's entrance walks only to Rellekka, so the run rides the carts in.
     regions: ['Keldagrim', 'Mountain Camp', 'Port Sarim', 'Musa Point', 'Taverley', 'Burthorpe', "Warriors' Guild", 'Zanaris'],
     quests: ['The Giant Dwarf', 'Lost City', 'Priest in Peril'],
     skills: { Slayer: 6, Attack: 6, Strength: 6, Defence: 6, Hitpoints: 6, Ranged: 6, Magic: 6, Prayer: 5 },
     levels: { Slayer: 55, Attack: 60, Strength: 60, Defence: 60, Hitpoints: 60, Ranged: 60, Magic: 60, Prayer: 43 },
-    mobility: ['Jewelry Teleports', 'Teleport Tablets'],
+    mobility: ['Jewelry Teleports', 'Teleport Tablets', 'Mine Carts'],
     arcana: ['Ancient Magicks'],
     diaries: ['Varrock Medium'],
   },

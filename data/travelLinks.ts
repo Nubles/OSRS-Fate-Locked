@@ -148,8 +148,10 @@ export const TRAVEL_NETWORKS: readonly TravelNetwork[] = [
   },
   {
     // The carts want The Giant Dwarf started, which the app can't see.
+    // 45,158 is the carts' own tunnel, joining the Grand Exchange, Ice
+    // Mountain and White Wolf Mountain stations.
     label: 'Keldagrim mine carts',
-    nodes: ['Keldagrim'],
+    nodes: ['Keldagrim', '45,158'],
     opensWith: [{ mobility: 'Mine Carts' }],
     source: wiki('Keldagrim minecart system', 15323246),
   },

@@ -274,6 +274,12 @@ describe('walking between owned chunks', () => {
       .toBe(false);
   });
 
+  it("keeps the mine carts' own tunnel shut with the rest of the carts", () => {
+    // It joins the Grand Exchange, Ice Mountain and White Wolf Mountain stations.
+    expect(closedTravelNodes(run()).has(graphNode('45,158'))).toBe(true);
+    expect(closedTravelNodes(run({ mobility: ['Mine Carts'] })).has(graphNode('45,158'))).toBe(false);
+  });
+
   it('strands nothing an owned-everything run reached by the old chunk grid', () => {
     const everything = run({ regions: Object.keys(AREAS) });
     const all = travelReachability(connect, everything, LUMBRIDGE, undefined, 'vanilla').reachable;

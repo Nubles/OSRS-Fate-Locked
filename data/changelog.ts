@@ -25,7 +25,7 @@ export const CHANGELOG_RELEASES = [
     sections: {
       fixed: [
         'Owned land beside other owned land no longer counts as a walk when a river, a cliff or a wall stands between them. A Seers’ Village you can only reach by the strip beside the Warriors’ Guild is now out of reach, so the Diary Journal stops offering its tasks, and the Ruins of Uzer no longer joins on to Morytania.',
-        'The eagles from Eagles’ Peak no longer count as a way to the desert, the jungle or the north before you have Eagle Transport.',
+        'The eagles from Eagles’ Peak no longer count as a way to the desert, the jungle or the north before you have Eagle Transport, and the Keldagrim mine carts no longer join the Grand Exchange, Ice Mountain and White Wolf Mountain before you have Mine Carts.',
         'RuneLite now says Not ready wherever the tracker says you have no way there yet, such as Kourend, Varlamore or the elf camps without the boat or teleport that reaches them. It used to say Unlocked. This comes with your rules, so there is no plugin update to wait for.',
       ],
     },
