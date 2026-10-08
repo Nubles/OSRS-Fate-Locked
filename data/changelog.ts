@@ -19,6 +19,18 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-08-runelite-tiers-unlocks-outlines',
+    title: 'Coming to RuneLite: Skill Tiers, New Unlocks and Outlines',
+    date: '2026-10-08',
+    sections: {
+      added: [
+        'With the next RuneLite plugin update, right-clicking a tree, rock or fishing spot your skill tier doesn’t open yet will say (Locked), and clicking it will name the tier it needs in chat.',
+        'With the same update, RuneLite will name what a roll opened in chat, show it in a banner for a few seconds, and make the new land glow gold on the world map until you stand in it. Announce new unlocks turns it off.',
+        'It will also outline locked banks, shops, skilling spots and monsters near you in the game view, with a few words saying why. Outline locked things turns them all off, with a setting for each kind under it. The RuneLite guide already lists the new settings.',
+      ],
+    },
+  },
+  {
     id: '2026-10-08-map-in-between-chunks',
     title: 'More of the Map Opens with Its Areas',
     date: '2026-10-08',

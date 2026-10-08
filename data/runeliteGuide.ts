@@ -373,8 +373,8 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     changeWhen: 'Leave it on unless your run doesn’t lock banks, Slayer tasks or gear tiers.',
   },
   tagLockedOptions: {
-    purpose: 'Adds (Locked) to right-click options on NPCs, objects, items on the ground and teleports your rules lock.',
-    visibleResult: 'The tag follows the option in the locked colour. It only tells you; it never blocks a click.',
+    purpose: 'Adds (Locked) to right-click options on NPCs, objects, items on the ground and teleports your rules lock, and to skilling spots your skill tier doesn’t open yet.',
+    visibleResult: 'The tag follows the option in the locked colour. Clicking a skilling spot your tier doesn’t open says in chat which tier it needs. It only tells you; it never blocks a click.',
     changeWhen: 'Turn it off if you’d rather see menus as the game shows them.',
   },
   rollNudges: {
@@ -386,6 +386,11 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     purpose: 'Also sends a RuneLite notification with each locked-area alert’s chat line, each rule warning, and the warning that you’re on a character your run isn’t linked to.',
     visibleResult: 'They arrive however RuneLite delivers notifications, such as a tray message while the client is in the background.',
     changeWhen: 'Turn it on if you often play with RuneLite behind other windows.',
+  },
+  announceUnlocks: {
+    purpose: 'Says when a sync brings something new, such as an area, a bank or a skill tier.',
+    visibleResult: 'A chat line names what opened, a banner shows it for a few seconds, and new land glows gold on the world map until you stand in it.',
+    changeWhen: 'Turn it off if you’d rather check the tracker yourself.',
   },
   hudMode: {
     purpose: 'A box over the game. Compact shows where you are, its status and why, Strict Mode, and the nearest bank and shop.',
@@ -421,6 +426,31 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     purpose: 'The game view’s chunk lines on the minimap, as Chunk borders in the game view is set: locked edges, the chunk grid, or both.',
     visibleResult: 'Locked edges show even with Chunk borders in the game view set to Off. With Shade locked land nearby on, locked land nearby is darkened too.',
     changeWhen: 'Turn it off to keep the minimap as the game draws it.',
+  },
+  outlineLocked: {
+    purpose: 'Outlines locked banks, shops, skilling spots and monsters near you in the game view, with a few words saying why.',
+    visibleResult: 'Locked ones are outlined in the locked colour; ones your skill tier doesn’t open yet in the not-ready colour. Land locked as a whole is left to its borders. Off hides every outline.',
+    changeWhen: 'Turn it off for a clear view, or keep it on and pick the kinds below.',
+  },
+  outlineBanksAndShops: {
+    purpose: 'With Outline locked things on, outlines bank booths, bank chests, bankers and shop keepers.',
+    visibleResult: 'A locked bank or shop near you is outlined before you click it.',
+    changeWhen: 'Turn it off if the bank warning in chat is enough.',
+  },
+  outlineSkilling: {
+    purpose: 'With Outline locked things on, outlines trees, rocks, fishing spots, stalls and farming patches.',
+    visibleResult: 'A spot your skill tier doesn’t open yet shows the tier it needs beside it.',
+    changeWhen: 'Turn it off if you know your tiers by heart.',
+  },
+  outlineMonsters: {
+    purpose: 'With Outline locked things on, outlines monsters and bosses the rules lock.',
+    visibleResult: 'A locked monster near you is outlined, with what unlocks it.',
+    changeWhen: 'Turn it off in busy places where the outlines crowd the view.',
+  },
+  outlineOpen: {
+    purpose: 'With Outline locked things on, also outlines the banks, shops, spots and monsters you can use.',
+    visibleResult: 'Open ones are outlined in the unlocked colour, without words.',
+    changeWhen: 'Turn it on while learning what a new area holds.',
   },
   showInfoBoxes: {
     purpose: 'RuneLite infoboxes for your Keys, Fate Points and unlock progress.',
