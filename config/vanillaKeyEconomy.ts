@@ -1,5 +1,6 @@
 import { BOSS_TIERS, bossTier, type BossTier } from '../data/bossKeyTiers';
-import { BOSSES_LIST } from '../data/items';
+import { BOSSES_LIST, MINIGAMES_LIST } from '../data/items';
+import { MINIGAME_TIERS, minigameTier, type MinigameTier } from '../data/minigameKeyTiers';
 
 export const BRUTUS_BOSS_NAME = 'Brutus' as const;
 
@@ -7,7 +8,8 @@ export type VanillaBossClass = BossTier | 'brutus';
 
 export type KeyRollContext =
   | { kind: 'boss'; bossName: string; bossClass: VanillaBossClass }
-  | { kind: 'clue'; clueTier: string };
+  | { kind: 'clue'; clueTier: string }
+  | { kind: 'minigame'; minigameName: string; minigameTier: MinigameTier };
 
 export const VANILLA_BOSS_KEY_RATES: Readonly<Record<VanillaBossClass, readonly number[]>> = {
   brutus: [10],
@@ -29,8 +31,7 @@ export const vanillaBossKeySchedule = (bossName: string): readonly number[] => {
   return VANILLA_BOSS_KEY_RATES[bossTier(bossName)];
 };
 
-export const vanillaBossKeyStage = (bossName: string, rawAwarded: number) => {
-  const rates = vanillaBossKeySchedule(bossName);
+const keyReserveStage = (rates: readonly number[], rawAwarded: number) => {
   const awarded = Math.min(rates.length, Math.max(0, Math.floor(rawAwarded || 0)));
   return {
     rates,
@@ -42,6 +43,11 @@ export const vanillaBossKeyStage = (bossName: string, rawAwarded: number) => {
     capped: awarded >= rates.length,
   };
 };
+
+export type KeyReserveStage = ReturnType<typeof keyReserveStage>;
+
+export const vanillaBossKeyStage = (bossName: string, rawAwarded: number): KeyReserveStage =>
+  keyReserveStage(vanillaBossKeySchedule(bossName), rawAwarded);
 
 /**
  * The bosses and raids that have given every Standard Key they hold (Brutus
@@ -63,3 +69,44 @@ export const effectiveVanillaClueRate = (baseRate: number, awarded: number): num
 
 export const VANILLA_BOSS_STANDARD_KEY_TOTAL =
   1 + BOSSES_LIST.reduce((sum, name) => sum + vanillaBossKeySchedule(name).length, 0);
+
+// ── Minigames ───────────────────────────────────────────────────────────────
+// In Vanilla each unlocked minigame holds a few Standard Keys at falling odds,
+// like a boss, sized by how long one finished run takes (data/minigameKeyTiers).
+export const VANILLA_MINIGAME_KEY_RATES: Readonly<Record<MinigameTier, readonly number[]>> = {
+  quick: [10],
+  standard: [20, 10],
+  long: [30, 15],
+};
+
+export const isKnownVanillaMinigame = (name: string): boolean =>
+  Object.prototype.hasOwnProperty.call(MINIGAME_TIERS, name);
+
+export const vanillaMinigameKeySchedule = (name: string): readonly number[] => {
+  if (!isKnownVanillaMinigame(name)) {
+    throw new Error(`Missing minigame key tier for "${name}".`);
+  }
+  return VANILLA_MINIGAME_KEY_RATES[minigameTier(name)];
+};
+
+export const vanillaMinigameKeyStage = (name: string, rawAwarded: number): KeyReserveStage =>
+  keyReserveStage(vanillaMinigameKeySchedule(name), rawAwarded);
+
+export const VANILLA_MINIGAME_STANDARD_KEY_TOTAL =
+  MINIGAMES_LIST.reduce((sum, name) => sum + vanillaMinigameKeySchedule(name).length, 0);
+
+/** Drops unknown names and bad counts, and clamps each count to its minigame's reserve. */
+export const normalizeMinigameStandardKeysAwarded = (value: unknown): Record<string, number> => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return {};
+  const normalized: Record<string, number> = {};
+  for (const [name, awarded] of Object.entries(value)) {
+    if (
+      !isKnownVanillaMinigame(name)
+      || typeof awarded !== 'number'
+      || !Number.isInteger(awarded)
+      || awarded <= 0
+    ) continue;
+    normalized[name] = Math.min(awarded, vanillaMinigameKeySchedule(name).length);
+  }
+  return normalized;
+};

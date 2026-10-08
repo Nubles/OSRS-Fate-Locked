@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { DropSource } from '../types';
-import { DROP_RATES, BOSSES_LIST } from '../constants';
+import { DROP_RATES, BOSSES_LIST, MINIGAMES_LIST } from '../constants';
 import { bossTier, TIER_SOURCE, TIER_LABEL, TIER_ORDER, BossTier } from '../data/bossKeyTiers';
 import { useGame } from '../context/GameContext';
 import { BookOpen, ScrollText, Dices } from './OsrsIcon';
@@ -15,6 +15,8 @@ import { BossKeyProgress, ClueKeyProgress } from './VanillaKeyProgress';
 import { lazyWithRetry } from '../utils/lazyRetry';
 // The pet card and the pet names load when the Activities tab opens.
 const PetClaimCard = lazyWithRetry(() => import('./PetClaimCard').then(m => ({ default: m.PetClaimCard })));
+// Vanilla's per-minigame cards load when the Activities tab opens.
+const VanillaMinigameRolls = lazyWithRetry(() => import('./VanillaMinigameRolls').then(m => ({ default: m.VanillaMinigameRolls })));
 import { VANILLA_BOSS_SEARCH_PLACEHOLDER, vanillaBossNote, vanillaBossSearchEmptyMessage } from './vanillaBossSearchCopy';
 
 // OSRS Wiki Icon URLs
@@ -56,7 +58,7 @@ const WikiIcon = ({ name, fallbackSrc, className }: { name: string, fallbackSrc?
 };
 
 // Unified OSRS Difficulty Tier Styles
-const TIER_STYLES = {
+export const TIER_STYLES = {
   STONE: {
     bg: 'bg-[#2a2620]',
     border: 'border-[#4a453d]',
@@ -330,14 +332,15 @@ const BossRollCard: React.FC<{ name: string; displayRate: number; bonus: number;
   );
 };
 
-const VanillaBossRollCard: React.FC<{
+export const VanillaBossRollCard: React.FC<{
   name: string;
   displayRate: number;
   style: TierStyle;
   stage: ReturnType<typeof vanillaBossKeyStage>;
   note?: string;
+  cappedText?: string;
   onClick: (e: React.MouseEvent) => void;
-}> = ({ name, displayRate, style, stage, note, onClick }) => {
+}> = ({ name, displayRate, style, stage, note, cappedText, onClick }) => {
   const { isRolling, triggerRoll } = useRollSuspense(onClick);
   const capped = stage.capped;
 
@@ -350,7 +353,7 @@ const VanillaBossRollCard: React.FC<{
       <div className="min-w-0 flex-1">
         <span className={`block text-xs font-semibold truncate ${style.text}`}>{name}</span>
         {note && <span className="block text-[10px] text-amber-300/90">{note}</span>}
-        <BossKeyProgress stage={stage} />
+        <BossKeyProgress stage={stage} cappedText={cappedText} />
       </div>
       <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border shrink-0 ${style.pill}`}>
         {capped ? 'CAPPED' : `${displayRate}%`}
@@ -380,7 +383,7 @@ const InfoChip: React.FC<{
 type FarmSubTab = 'SLAYER' | 'CLUES' | 'BOSSING' | 'ACTIVITIES';
 
 export const ActionSection: React.FC = () => {
-  const { rollForKey, claimPet, petsClaimed, unlocks, gameModeId, customMode, animationsEnabled, bossStandardKeysAwarded, clueStandardKeysAwarded } = useGame();
+  const { rollForKey, claimPet, petsClaimed, unlocks, gameModeId, customMode, animationsEnabled, bossStandardKeysAwarded, minigameStandardKeysAwarded, clueStandardKeysAwarded } = useGame();
   const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
   const [bossQuery, setBossQuery] = useState('');
 
@@ -403,6 +406,7 @@ export const ActionSection: React.FC = () => {
     BRUTUS_BOSS_NAME,
     ...unlocks.bosses.filter(name => BOSSES_LIST.includes(name)),
   ];
+  const vanillaMinigames = unlocks.minigames.filter(name => MINIGAMES_LIST.includes(name));
   const clueKeysAwarded = clueStandardKeysAwarded ?? 0;
 
   const slayers = useMemo(() => {
@@ -487,7 +491,7 @@ export const ActionSection: React.FC = () => {
     { id: 'SLAYER', label: 'Slayer', icon: OSRS_ICONS.SLAYER, count: slayers.length },
     { id: 'CLUES', label: 'Clues', icon: OSRS_ICONS.CLUE, count: CLUE_SCROLLS.length },
     { id: 'BOSSING', label: 'Bossing', icon: OSRS_ICONS.BOSS, count: isVanilla ? vanillaBosses.length : BOSSES_LIST.length },
-    { id: 'ACTIVITIES', label: 'Activities', icon: OSRS_ICONS.ACTIVITY, count: ACTIVITY_ROLLS.length + 1 },
+    { id: 'ACTIVITIES', label: 'Activities', icon: OSRS_ICONS.ACTIVITY, count: (isVanilla ? vanillaMinigames.length : ACTIVITY_ROLLS.length) + 1 },
   ];
 
   return (
@@ -647,9 +651,18 @@ export const ActionSection: React.FC = () => {
             )}
           </div>
         )}
+        {subTab === 'ACTIVITIES' && isVanilla && (
+          <React.Suspense fallback={<div className="h-28 mb-3" />}>
+            <VanillaMinigameRolls
+              minigames={vanillaMinigames}
+              awarded={minigameStandardKeysAwarded}
+              onRoll={(context, rate, e) => handleRoll(DropSource.ACTIVITY_MINIGAME, rate, e, context)}
+            />
+          </React.Suspense>
+        )}
         {subTab === 'ACTIVITIES' && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-            {ACTIVITY_ROLLS.map((a, i) => (
+            {!isVanilla && ACTIVITY_ROLLS.map((a, i) => (
               <div
                 key={a.name}
                 className={animationsEnabled ? 'animate-fade-in-up' : ''}

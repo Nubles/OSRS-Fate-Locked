@@ -267,6 +267,26 @@ describe('classifyFateEvent', () => {
     expect(chunked.state === 'READY' && chunked.intent.context).toBeUndefined();
   });
 
+  it('rolls a confirmed Vanilla minigame only while unlocked, from its own key reserve', () => {
+    const confirm = (label: string, run: GameState) =>
+      classifyFateEventCandidate(event('MINIGAME_COMPLETION', label), run, label);
+    expect(confirm('Pest Control', state()))
+      .toEqual({ state: 'BLOCKED', reason: 'Unlock this minigame before it can roll.' });
+
+    const pestControl = (awarded: number) => confirm('Pest Control', withUnlocks(
+      { minigames: ['Pest Control'] },
+      { minigameStandardKeysAwarded: awarded ? { 'Pest Control': awarded } : {} },
+    ));
+    const context = { kind: 'minigame', minigameName: 'Pest Control', minigameTier: 'standard' };
+    expect(pestControl(0)).toMatchObject({ state: 'READY', intent: { source: DropSource.ACTIVITY_MINIGAME, threshold: 20, context } });
+    expect(pestControl(1)).toMatchObject({ state: 'READY', intent: { threshold: 10, context } });
+    expect(pestControl(2)).toEqual({ state: 'BLOCKED', reason: 'This minigame has no Standard Keys left to award.' });
+
+    const chunked = confirm('Tempoross', state({ gameModeId: 'chunked' }));
+    expect(chunked).toMatchObject({ state: 'READY', intent: { source: DropSource.ACTIVITY_MINIGAME, threshold: DROP_RATES[DropSource.ACTIVITY_MINIGAME] } });
+    expect(chunked.state === 'READY' && chunked.intent.context).toBeUndefined();
+  });
+
   it('rolls Vanilla clue caskets at the Clues card rates', () => {
     expect(classifyFateEvent(event('CLUE_CASKET', 'Casket (hard)'), state())).toMatchObject({
       state: 'READY',

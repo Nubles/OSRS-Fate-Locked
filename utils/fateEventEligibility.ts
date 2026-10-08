@@ -1,7 +1,8 @@
 import { DROP_RATES } from '../config/rules';
 import { policyFor } from '../config/detectorPolicies';
 import { failureFateForSkillLevel, failureFateForSource } from '../config/economy';
-import { BRUTUS_BOSS_NAME, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
+import { BRUTUS_BOSS_NAME, vanillaBossKeyStage, vanillaMinigameKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
+import { MINIGAME_TIERS } from '../data/minigameKeyTiers';
 import { ALL_CA_TASKS, type CATask } from '../data/caTasks';
 import { BOSS_TIERS, TIER_SOURCE, type BossTier } from '../data/bossKeyTiers';
 import { COLLECTION_LOG_DATA, type CollectionLogItem } from '../data/collectionLogData';
@@ -83,6 +84,10 @@ for (const tab of Object.values(COLLECTION_LOG_DATA)) {
 // card as a low-tier kill with its own Vanilla key reserve.
 const BOSS_INDEX = new Map(
   [...Object.keys(BOSS_TIERS), BRUTUS_BOSS_NAME].map((name) => [normalize(name), name]),
+);
+
+const MINIGAME_INDEX = new Map(
+  Object.keys(MINIGAME_TIERS).map((name) => [normalize(name), name]),
 );
 
 const SLAYER_SOURCES = [
@@ -356,6 +361,20 @@ function classifyBoss(event: FateEventEnvelope, state: GameState): EventClassifi
   });
 }
 
+function classifyMinigame(label: string, state: GameState): EventClassification {
+  if (state.gameModeId !== 'vanilla') return ready(DropSource.ACTIVITY_MINIGAME, label, { kind: 'NONE' });
+  // Vanilla's Activities list rolls only unlocked minigames, each from its own key reserve.
+  const name = MINIGAME_INDEX.get(normalize(label));
+  if (!name) return needsConfirmation('Minigame is not in the current rules.');
+  if (!state.unlocks.minigames.includes(name)) return blocked('Unlock this minigame before it can roll.');
+  const stage = vanillaMinigameKeyStage(name, state.minigameStandardKeysAwarded?.[name] ?? 0);
+  if (stage.currentRate === null) return blocked('This minigame has no Standard Keys left to award.');
+  return ready(DropSource.ACTIVITY_MINIGAME, name, { kind: 'NONE' }, {
+    threshold: stage.currentRate,
+    context: { kind: 'minigame', minigameName: name, minigameTier: MINIGAME_TIERS[name] },
+  });
+}
+
 export function classifyFateEvent(
   event: FateEventEnvelope,
   state: GameState,
@@ -471,7 +490,7 @@ export function classifyFateEventCandidate(
   }
   if (event.eventType === 'MINIGAME_COMPLETION') {
     return event.canonicalLabel && target === event.canonicalLabel
-      ? ready(DropSource.ACTIVITY_MINIGAME, target, { kind: 'NONE' })
+      ? classifyMinigame(target, state)
       : needsConfirmation('Confirm the completed minigame.');
   }
   if (event.eventType === 'BOSS_KILL' || event.eventType === 'RAID_COMPLETION') {

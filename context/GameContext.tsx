@@ -85,7 +85,7 @@ import {
   resolveKeyRoll,
   skillLevelKeyChance,
 } from '../utils/keyRoll';
-import { effectiveVanillaClueRate, vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
+import { effectiveVanillaClueRate, vanillaBossKeyStage, vanillaMinigameKeyStage } from '../config/vanillaKeyEconomy';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import {
   blockPendingSave,
@@ -329,6 +329,7 @@ export const initialState: GameState = {
   unlocks: getInitialUnlocks(),
   history: [],
   bossStandardKeysAwarded: {},
+  minigameStandardKeysAwarded: {},
   clueStandardKeysAwarded: 0,
   animationsEnabled: true,
   advisorsEnabled: false,
@@ -499,9 +500,20 @@ export function prepareKeyRollAction(
   const bossStage = vanillaBossContext
     ? vanillaBossKeyStage(vanillaBossContext.bossName, recordedBossAwarded)
     : null;
+  const vanillaMinigameContext = state.gameModeId === 'vanilla' && context?.kind === 'minigame'
+    ? context
+    : null;
+  const minigameStage = vanillaMinigameContext
+    ? vanillaMinigameKeyStage(
+      vanillaMinigameContext.minigameName,
+      state.minigameStandardKeysAwarded?.[vanillaMinigameContext.minigameName] ?? 0,
+    )
+    : null;
+  // A boss or a minigame: both pay from a fixed Key reserve.
+  const reserveStage = bossStage ?? minigameStage;
 
-  // Do not advance seeded RNG (or consume a buff) after a boss reserve ends.
-  if (bossStage?.capped) return null;
+  // Do not advance seeded RNG (or consume a buff) after a boss or minigame reserve ends.
+  if (reserveStage?.capped) return null;
 
   const mode = resolveModeRules(state.gameModeId, state.customMode);
   let successBonus = 0;
@@ -513,9 +525,11 @@ export function prepareKeyRollAction(
   }
 
   const clueAwarded = vanillaClueContext ? state.clueStandardKeysAwarded ?? 0 : 0;
-  const isVanillaContext = vanillaBossContext !== null || vanillaClueContext !== null;
+  const isVanillaContext = vanillaBossContext !== null || vanillaClueContext !== null || vanillaMinigameContext !== null;
   const rollPurpose = vanillaBossContext
     ? `roll:boss:${vanillaBossContext.bossName}:${bossStage!.awarded}`
+    : vanillaMinigameContext
+    ? `roll:minigame:${vanillaMinigameContext.minigameName}:${minigameStage!.awarded}`
     : vanillaClueContext
       ? `roll:clue:${vanillaClueContext.clueTier}:${clueAwarded}`
       : 'roll';
@@ -528,7 +542,7 @@ export function prepareKeyRollAction(
   let effectiveThreshold: number;
   let success: boolean;
   if (isVanillaContext) {
-    baseThreshold = bossStage?.currentRate
+    baseThreshold = reserveStage?.currentRate
       ?? effectiveVanillaClueRate(threshold, clueAwarded);
     effectiveThreshold = normalizePercent(Math.max(0, Math.min(100, baseThreshold + successBonus)));
     const exactRoll = (index: number) => resolveKeyRoll(
@@ -1069,10 +1083,20 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const bossStage = vanillaBossContext
         ? vanillaBossKeyStage(vanillaBossContext.bossName, recordedBossAwarded)
         : null;
+      const vanillaMinigameContext = state.gameModeId === 'vanilla' && context?.kind === 'minigame'
+        ? context
+        : null;
+      const minigameStage = vanillaMinigameContext
+        ? vanillaMinigameKeyStage(
+          vanillaMinigameContext.minigameName,
+          state.minigameStandardKeysAwarded?.[vanillaMinigameContext.minigameName] ?? 0,
+        )
+        : null;
+      const reserveStage = bossStage ?? minigameStage;
 
       // Callback work can race with an earlier accepted roll. This reducer-side
       // backstop rejects the stale action without changing buffs, history, or RNG state.
-      if (bossStage?.capped) return state;
+      if (reserveStage?.capped) return state;
 
       const rollText = formatKeyRollValue(roll);
       const thresholdsMatch = baseThreshold === threshold;
@@ -1090,11 +1114,11 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const requestedStandardKeys = success || pity
         ? success && isGreed ? 2 : 1
         : 0;
-      const standardKeysAwarded = bossStage
-        ? Math.min(requestedStandardKeys, bossStage.remaining)
+      const standardKeysAwarded = reserveStage
+        ? Math.min(requestedStandardKeys, reserveStage.remaining)
         : requestedStandardKeys;
-      const remainingStage = bossStage
-        ? bossStage.remaining - standardKeysAwarded
+      const remainingStage = reserveStage
+        ? reserveStage.remaining - standardKeysAwarded
         : null;
       const outcome = omni
         ? 'omni'
@@ -1108,14 +1132,16 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
             context,
             ...(context.kind === 'boss'
               ? { bossName: context.bossName, bossClass: context.bossClass }
-              : { clueTier: context.clueTier }),
+              : context.kind === 'minigame'
+                ? { minigameName: context.minigameName, minigameTier: context.minigameTier }
+                : { clueTier: context.clueTier }),
             effectiveRate: threshold,
             standardKeysAwarded,
-            currentStage: bossStage?.awarded ?? null,
+            currentStage: reserveStage?.awarded ?? null,
             remainingStage,
             remainingReserve: remainingStage,
             outcome,
-            exhausted: bossStage ? remainingStage === 0 : false,
+            exhausted: reserveStage ? remainingStage === 0 : false,
           }
         : {};
       const singleDrawProbability = Math.max(0, Math.min(1, threshold / 100));
@@ -1129,7 +1155,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const analyticsMeta: RollAnalyticsMeta = {
         successProbability,
         luckApplied,
-        drawResolution: vanillaBossContext || vanillaClueContext ? 10000 : 1000,
+        drawResolution: vanillaBossContext || vanillaClueContext || vanillaMinigameContext ? 10000 : 1000,
         standardKeysAwarded,
         rewardKind,
       };
@@ -1155,6 +1181,12 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         newState.bossStandardKeysAwarded = {
           ...(state.bossStandardKeysAwarded ?? {}),
           [vanillaBossContext.bossName]: bossStage!.awarded + standardKeysAwarded,
+        };
+      }
+      if (vanillaMinigameContext && standardKeysAwarded > 0) {
+        newState.minigameStandardKeysAwarded = {
+          ...(state.minigameStandardKeysAwarded ?? {}),
+          [vanillaMinigameContext.minigameName]: minigameStage!.awarded + standardKeysAwarded,
         };
       }
       if (vanillaClueContext && standardKeysAwarded > 0) {
