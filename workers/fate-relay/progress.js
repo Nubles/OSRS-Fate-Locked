@@ -94,3 +94,15 @@ export function normalizeLinkCode(value) {
   const code = value.toUpperCase().replace(/[\s-]/g, '').replace(/O/g, '0').replace(/[IL]/g, '1');
   return code.length === LINK_CODE_LENGTH && [...code].every(symbol => LINK_CODE_ALPHABET.includes(symbol)) ? code : null;
 }
+
+/**
+ * The unlocks in `next` that `previous` didn't have yet, oldest first, for the
+ * Discord bot's unlock feed. A run with no earlier snapshot has nothing new:
+ * the feed starts from the first publish it can compare against, so turning
+ * sharing on never posts a run's backlog.
+ */
+export function newUnlocksSince(previous, next) {
+  if (!previous || !Array.isArray(previous.recent)) return [];
+  const seen = previous.recent.reduce((latest, entry) => Math.max(latest, entry.at), 0);
+  return next.recent.filter(entry => entry.at > seen).reverse();
+}
