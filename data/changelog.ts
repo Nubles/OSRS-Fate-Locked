@@ -26,7 +26,7 @@ export const CHANGELOG_RELEASES = [
       added: [
         'With the next RuneLite plugin update, right-clicking a tree, rock or fishing spot your skill tier doesn’t open yet will say (Locked), and clicking it will name the tier it needs in chat.',
         'With the same update, RuneLite will name what a roll opened in chat, show it in a banner for a few seconds, and make the new land glow gold on the world map until you stand in it. Announce new unlocks turns it off.',
-        'It will also outline locked banks, shops, skilling spots and monsters near you in the game view, with a few words saying why. Outline locked things turns them all off, with a setting for each kind under it. The RuneLite guide already lists the new settings.',
+        'It will also outline the banks, shops, skilling spots and monsters near you in colour: red for locked, orange for a skill your tier doesn’t reach yet, and green for open. Outline locked things turns them all off, with a setting for each kind under it. The RuneLite guide already lists the new settings.',
       ],
     },
   },

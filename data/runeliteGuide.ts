@@ -428,8 +428,8 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     changeWhen: 'Turn it off to keep the minimap as the game draws it.',
   },
   outlineLocked: {
-    purpose: 'Outlines locked banks, shops, skilling spots and monsters near you in the game view, with a few words saying why.',
-    visibleResult: 'Locked ones are outlined in the locked colour; ones your skill tier doesn’t open yet in the not-ready colour. Land locked as a whole is left to its borders. Off hides every outline.',
+    purpose: 'Outlines the banks, shops, skilling spots and monsters near you in the game view, in colour: red for locked, orange for a skill your tier doesn’t reach yet, green for open.',
+    visibleResult: 'Only things you can click are outlined, with no words over them. Land locked as a whole is left to its borders. Off hides every outline.',
     changeWhen: 'Turn it off for a clear view, or keep it on and pick the kinds below.',
   },
   outlineBanksAndShops: {
@@ -439,18 +439,18 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
   },
   outlineSkilling: {
     purpose: 'With Outline locked things on, outlines trees, rocks, fishing spots, stalls and farming patches.',
-    visibleResult: 'A spot your skill tier doesn’t open yet shows the tier it needs beside it.',
+    visibleResult: 'A spot your skill tier doesn’t open yet is outlined in orange; right-click it to see which tier it needs.',
     changeWhen: 'Turn it off if you know your tiers by heart.',
   },
   outlineMonsters: {
-    purpose: 'With Outline locked things on, outlines monsters and bosses the rules lock.',
-    visibleResult: 'A locked monster near you is outlined, with what unlocks it.',
+    purpose: 'With Outline locked things on, outlines monsters and bosses.',
+    visibleResult: 'A monster you can attack near you is outlined in red, orange or green.',
     changeWhen: 'Turn it off in busy places where the outlines crowd the view.',
   },
   outlineOpen: {
     purpose: 'With Outline locked things on, also outlines the banks, shops, spots and monsters you can use.',
-    visibleResult: 'Open ones are outlined in the unlocked colour, without words.',
-    changeWhen: 'Turn it on while learning what a new area holds.',
+    visibleResult: 'Open ones are outlined in green.',
+    changeWhen: 'Turn it off to outline only what’s locked.',
   },
   showInfoBoxes: {
     purpose: 'RuneLite infoboxes for your Keys, Fate Points and unlock progress.',

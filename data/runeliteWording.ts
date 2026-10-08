@@ -110,7 +110,7 @@ export const RUNELITE_SETTINGS: readonly RuneliteSetting[] = [
   { key: 'outlineBanksAndShops', section: 'Display', name: 'Outline banks and shops', defaultValue: 'On' },
   { key: 'outlineSkilling', section: 'Display', name: 'Outline skilling spots', defaultValue: 'On' },
   { key: 'outlineMonsters', section: 'Display', name: 'Outline monsters and bosses', defaultValue: 'On' },
-  { key: 'outlineOpen', section: 'Display', name: 'Outline open ones too', defaultValue: 'Off' },
+  { key: 'outlineOpen', section: 'Display', name: 'Outline open ones too', defaultValue: 'On' },
   { key: 'showInfoBoxes', section: 'Display', name: 'Infoboxes', defaultValue: 'Off' },
   {
     key: 'colourPreset',
