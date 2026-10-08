@@ -25,7 +25,7 @@ export const REGION_CHUNKS: Record<string, ChunkCoord[]> = {
     { cx: 45, cy: 56 }, { cx: 44, cy: 57 }, { cx: 45, cy: 57 }, { cx: 45, cy: 58 },
   ],
   'Fremennik': [
-    { cx: 39, cy: 56 }, { cx: 40, cy: 56 }, { cx: 43, cy: 56 }, { cx: 40, cy: 57 }, { cx: 41, cy: 57 }, { cx: 42, cy: 57 }, { cx: 43, cy: 57 }, { cx: 36, cy: 58 }, { cx: 39, cy: 58 }, { cx: 41, cy: 58 },
+    { cx: 39, cy: 56 }, { cx: 40, cy: 56 }, { cx: 41, cy: 56 }, { cx: 42, cy: 56 }, { cx: 43, cy: 56 }, { cx: 40, cy: 57 }, { cx: 41, cy: 57 }, { cx: 42, cy: 57 }, { cx: 43, cy: 57 }, { cx: 36, cy: 58 }, { cx: 39, cy: 58 }, { cx: 41, cy: 58 },
     { cx: 42, cy: 58 }, { cx: 43, cy: 58 }, { cx: 44, cy: 58 }, { cx: 34, cy: 59 }, { cx: 36, cy: 59 }, { cx: 37, cy: 59 }, { cx: 39, cy: 59 }, { cx: 42, cy: 59 },
     { cx: 43, cy: 59 }, { cx: 44, cy: 59 }, { cx: 45, cy: 59 }, { cx: 32, cy: 60 }, { cx: 33, cy: 60 }, { cx: 36, cy: 60 }, { cx: 37, cy: 60 }, { cx: 39, cy: 60 },
     { cx: 40, cy: 60 }, { cx: 41, cy: 60 }, { cx: 43, cy: 60 }, { cx: 44, cy: 60 }, { cx: 32, cy: 61 }, { cx: 33, cy: 61 }, { cx: 44, cy: 61 }, { cx: 45, cy: 61 },
@@ -41,7 +41,7 @@ export const REGION_CHUNKS: Record<string, ChunkCoord[]> = {
     { cx: 40, cy: 52 }, { cx: 41, cy: 52 }, { cx: 42, cy: 52 }, { cx: 36, cy: 53 }, { cx: 37, cy: 53 }, { cx: 38, cy: 53 }, { cx: 39, cy: 53 }, { cx: 40, cy: 53 },
     { cx: 41, cy: 53 }, { cx: 42, cy: 53 }, { cx: 43, cy: 53 }, { cx: 44, cy: 53 }, { cx: 35, cy: 54 }, { cx: 36, cy: 54 }, { cx: 37, cy: 54 }, { cx: 38, cy: 54 }, { cx: 39, cy: 54 },
     { cx: 40, cy: 54 }, { cx: 41, cy: 54 }, { cx: 42, cy: 54 }, { cx: 43, cy: 54 }, { cx: 35, cy: 55 }, { cx: 36, cy: 55 }, { cx: 37, cy: 55 }, { cx: 38, cy: 55 }, { cx: 39, cy: 55 },
-    { cx: 41, cy: 55 }, { cx: 42, cy: 55 }, { cx: 43, cy: 55 }, { cx: 35, cy: 56 }, { cx: 36, cy: 56 }, { cx: 37, cy: 56 }, { cx: 41, cy: 56 }, { cx: 42, cy: 56 },
+    { cx: 41, cy: 55 }, { cx: 42, cy: 55 }, { cx: 43, cy: 55 }, { cx: 35, cy: 56 }, { cx: 36, cy: 56 }, { cx: 37, cy: 56 },
     { cx: 36, cy: 57 },
   ],
   'Karamja': [
@@ -60,7 +60,6 @@ export const REGION_CHUNKS: Record<string, ChunkCoord[]> = {
     { cx: 51, cy: 50 }, { cx: 52, cy: 50 }, { cx: 51, cy: 51 }, { cx: 52, cy: 51 },
   ],
   'Kourend & Kebos': [
-    { cx: 19, cy: 52 }, { cx: 19, cy: 53 },
     { cx: 23, cy: 53 }, { cx: 24, cy: 53 }, { cx: 25, cy: 53 }, { cx: 26, cy: 53 }, { cx: 27, cy: 53 }, { cx: 28, cy: 53 }, { cx: 18, cy: 54 }, { cx: 19, cy: 54 },
     { cx: 20, cy: 54 }, { cx: 21, cy: 54 }, { cx: 22, cy: 54 }, { cx: 23, cy: 54 }, { cx: 24, cy: 54 }, { cx: 25, cy: 54 }, { cx: 26, cy: 54 }, { cx: 27, cy: 54 },
     { cx: 28, cy: 54 }, { cx: 29, cy: 54 }, { cx: 18, cy: 55 }, { cx: 19, cy: 55 }, { cx: 20, cy: 55 }, { cx: 21, cy: 55 }, { cx: 22, cy: 55 }, { cx: 23, cy: 55 },
@@ -103,8 +102,9 @@ export const REGION_CHUNKS: Record<string, ChunkCoord[]> = {
     { cx: 21, cy: 48 }, { cx: 22, cy: 48 }, { cx: 23, cy: 48 }, { cx: 24, cy: 48 }, { cx: 25, cy: 48 }, { cx: 26, cy: 48 }, { cx: 27, cy: 48 }, { cx: 28, cy: 48 },
     { cx: 29, cy: 48 }, { cx: 19, cy: 49 }, { cx: 20, cy: 49 }, { cx: 21, cy: 49 }, { cx: 22, cy: 49 }, { cx: 23, cy: 49 }, { cx: 24, cy: 49 }, { cx: 25, cy: 49 },
     { cx: 26, cy: 49 }, { cx: 27, cy: 49 }, { cx: 28, cy: 49 }, { cx: 21, cy: 50 }, { cx: 22, cy: 50 }, { cx: 23, cy: 50 }, { cx: 24, cy: 50 }, { cx: 25, cy: 50 },
-    { cx: 26, cy: 50 }, { cx: 17, cy: 51 }, { cx: 18, cy: 51 }, { cx: 19, cy: 51 }, { cx: 20, cy: 51 }, { cx: 21, cy: 51 }, { cx: 22, cy: 51 }, { cx: 23, cy: 51 }, { cx: 24, cy: 51 }, { cx: 25, cy: 51 },
-    { cx: 26, cy: 51 }, { cx: 17, cy: 52 }, { cx: 18, cy: 52 }, { cx: 20, cy: 52 }, { cx: 21, cy: 52 }, { cx: 22, cy: 52 }, { cx: 23, cy: 52 }, { cx: 24, cy: 52 }, { cx: 17, cy: 53 }, { cx: 18, cy: 53 }, { cx: 20, cy: 53 }, { cx: 21, cy: 53 },
+    { cx: 26, cy: 50 }, { cx: 17, cy: 51 }, { cx: 18, cy: 51 }, { cx: 19, cy: 51 }, { cx: 20, cy: 51 }, { cx: 21, cy: 51 }, { cx: 22, cy: 51 }, { cx: 23, cy: 51 },
+    { cx: 24, cy: 51 }, { cx: 25, cy: 51 }, { cx: 26, cy: 51 }, { cx: 17, cy: 52 }, { cx: 18, cy: 52 }, { cx: 19, cy: 52 }, { cx: 20, cy: 52 }, { cx: 21, cy: 52 },
+    { cx: 22, cy: 52 }, { cx: 23, cy: 52 }, { cx: 24, cy: 52 }, { cx: 17, cy: 53 }, { cx: 18, cy: 53 }, { cx: 19, cy: 53 }, { cx: 20, cy: 53 }, { cx: 21, cy: 53 },
   ],
   'Wilderness': [
     { cx: 46, cy: 56 }, { cx: 47, cy: 56 }, { cx: 48, cy: 56 }, { cx: 49, cy: 56 }, { cx: 50, cy: 56 }, { cx: 51, cy: 56 }, { cx: 52, cy: 56 }, { cx: 46, cy: 57 },

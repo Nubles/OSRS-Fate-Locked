@@ -1542,7 +1542,7 @@ describe('audited current quest requirements', () => {
                             "id": "desert-quarry-and-temple",
                             "label": "Desert Quarry and Enakhra's Temple",
                             "standardAreas": [
-                                  "Agility Pyramid"
+                                  "Bandit Camp"
                             ],
                             "chunkOptions": [
                                   {
@@ -2596,7 +2596,7 @@ describe('audited current quest requirements', () => {
             "id": "gnomish-scout",
             "label": "Gnomish scout outside the Gnome Stronghold",
             "standardAreas": [
-              "Tree Gnome Stronghold"
+              "East Ardougne"
             ],
             "chunkOptions": [
               {

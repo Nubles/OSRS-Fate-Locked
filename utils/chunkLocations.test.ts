@@ -17,11 +17,11 @@ describe('placeOf', () => {
   });
 
   it('falls back to the continent for unnamed terrain', () => {
-    // 49,55 = "Center Wildy Ditch" — painted Misthalin, no sub-area
-    const p = placeOf(49, 55);
+    // 45,59 = "Lucien's Camp" — painted Fremennik, no sub-area
+    const p = placeOf(45, 59);
     expect(p.subArea).toBeNull();
-    expect(p.region).toBe('Misthalin');
-    expect(p.label).toBe('Misthalin');
+    expect(p.region).toBe('Fremennik');
+    expect(p.label).toBe('Fremennik');
   });
 
   it('labels unpainted chunks by coordinate', () => {

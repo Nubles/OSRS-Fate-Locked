@@ -137,7 +137,7 @@ describe('Diary tasks the game counts in more than one place', () => {
   it('names the places with travel rules as areas', () => {
     expect(task('frem_easy_3').anyOfRegions).toEqual(['Rellekka', 'Waterbirth Island']);
     expect(task('kar_med_2').anyOfRegions).toEqual(['Musa Point', 'Crandor']);
-    expect(task('des_hard_2').anyOfRegions).toEqual(['Agility Pyramid', 'Sophanem', 'The Great Conch']);
+    expect(task('des_hard_2').anyOfRegions).toEqual(['Bandit Camp', 'Sophanem', 'The Great Conch']);
   });
 
   it('keeps the trip from Dorgesh-Kaan to Keldagrim to both ends', () => {

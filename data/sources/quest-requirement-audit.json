@@ -2396,7 +2396,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":45}],\"id\":\"desert-quarry-and-temple\",\"label\":\"Desert Quarry and Enakhra's Temple\",\"standardAreas\":[\"Agility Pyramid\"]}],\"skills\":{\"Crafting\":50,\"Firemaking\":45,\"Magic\":39,\"Prayer\":43},\"prereqs\":[],\"manualRequirements\":[\"Must be on the standard spellbook\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":45}],\"id\":\"desert-quarry-and-temple\",\"label\":\"Desert Quarry and Enakhra's Temple\",\"standardAreas\":[\"Bandit Camp\"]}],\"skills\":{\"Crafting\":50,\"Firemaking\":45,\"Magic\":39,\"Prayer\":43},\"prereqs\":[],\"manualRequirements\":[\"Must be on the standard spellbook\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "49,45",
@@ -2411,7 +2411,8 @@
         "travel": [
           "The unavoidable Desert Quarry and temple entrance are represented by the pinned chunk.",
           "Standard mode has no Desert Quarry alias, so the truthful quarry label uses the existing Kharidian Desert unlock; Chunked mode uses exact chunk 49,45.",
-          "Accuracy review 2026-10-02: The Desert Quarry location asked for the whole Kharidian Desert, which in the area modes opens only when every desert area is owned; its chunk 49,45 is the Agility Pyramid's, which is now asked for instead (Wiki revision 15350737)."
+          "Accuracy review 2026-10-02: The Desert Quarry location asked for the whole Kharidian Desert, which in the area modes opens only when every desert area is owned; its chunk 49,45 is the Agility Pyramid's, which is now asked for instead (Wiki revision 15350737).",
+          "Map data audit 2026-10-08: the Desert Quarry (49,45) now belongs to the Bandit Camp, just north of it, so the quarry and Enakhra's Temple ask for the Bandit Camp."
         ],
         "instances": [
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
@@ -7902,7 +7903,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Rellekka\",\"Seers' Village\",\"Tree Gnome Stronghold\",\"Shilo Village\",\"Falador\",\"Draynor Village\",\"Shantay Pass\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":56}],\"id\":\"general-khazard\",\"label\":\"General Khazard south-east of Rellekka\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":38,\"cy\":52}],\"id\":\"gnomish-scout\",\"label\":\"Gnomish scout outside the Gnome Stronghold\",\"standardAreas\":[\"Tree Gnome Stronghold\"]}],\"skills\":{},\"prereqs\":[\"Fight Arena\",\"Curse of the Empty Lord\"],\"oneOf\":[{\"regions\":[\"Fishing Guild\"]},{\"regions\":[\"Hemenster\"]}],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Rellekka\",\"Seers' Village\",\"Tree Gnome Stronghold\",\"Shilo Village\",\"Falador\",\"Draynor Village\",\"Shantay Pass\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":56}],\"id\":\"general-khazard\",\"label\":\"General Khazard south-east of Rellekka\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":38,\"cy\":52}],\"id\":\"gnomish-scout\",\"label\":\"Gnomish scout outside the Gnome Stronghold\",\"standardAreas\":[\"East Ardougne\"]}],\"skills\":{},\"prereqs\":[\"Fight Arena\",\"Curse of the Empty Lord\"],\"oneOf\":[{\"regions\":[\"Fishing Guild\"]},{\"regions\":[\"Hemenster\"]}],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "38,52",
@@ -7937,7 +7938,8 @@
         "travel": [
           "The Wiki requires south-east Rellekka, Seers' Village, Tai Bwo Wannai, the Tree Gnome Stronghold entrance, the Falador/Draynor fence, Shantay Pass, and Goblin Cave. The picker omits Tai Bwo Wannai and Goblin Cave, so the source-supported five-region policy is retained.",
           "The catalogue-wide parent-region audit replaced Fremennik, Kandarin, Karamja, Asgarnia, Kharidian Desert with the exact tracked access set: Rellekka, Observatory, Seers' Village, Tree Gnome Stronghold, Tai Bwo Wannai, Falador, Shantay Pass.",
-          "Accuracy review 2026-10-02: The scouts and the Goblin Cave as the map has them: the Karamjan scout is in 44,47 (Shilo Village, replacing Tai Bwo Wannai), the Falador scout in 48,52 (Draynor Village), and Bouncer's ghost in the Goblin Cave between the Fishing Guild and Hemenster (a one-of). General Khazard (42,56) and the Gnomish scout (38,52) are stand-ins for chunks no area owns (owner decision of 2 Oct), asking for Rellekka and the Tree Gnome Stronghold. The Observatory stand-in is dropped (Wiki revision 15336893)."
+          "Accuracy review 2026-10-02: The scouts and the Goblin Cave as the map has them: the Karamjan scout is in 44,47 (Shilo Village, replacing Tai Bwo Wannai), the Falador scout in 48,52 (Draynor Village), and Bouncer's ghost in the Goblin Cave between the Fishing Guild and Hemenster (a one-of). General Khazard (42,56) and the Gnomish scout (38,52) are stand-ins for chunks no area owns (owner decision of 2 Oct), asking for Rellekka and the Tree Gnome Stronghold. The Observatory stand-in is dropped (Wiki revision 15336893).",
+          "Map data audit 2026-10-08: Jorral's Outpost (38,52) now belongs to East Ardougne, so the Gnomish scout at the Gnome Stronghold's gate asks for East Ardougne."
         ],
         "instances": [
           "The final Ghost of Bouncer fight occurs beyond a crack in Goblin Cave."
