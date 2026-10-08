@@ -2099,14 +2099,14 @@
       "classification": "preserved-semantic",
       "sourceRequirements": "45 Mining Any pickaxe",
       "anyOfRegions": [
-        "Agility Pyramid",
+        "Bandit Camp",
         "Sophanem",
         "The Great Conch"
       ],
       "geographyVerification": {
-        "reviewedAt": "2026-10-04",
+        "reviewedAt": "2026-10-08",
         "source": "oldschool.runescape.wiki",
-        "notes": "Granite is also mined at the Necropolis mine (51,42) and, per the diary page, at Cape Conch on The Great Conch."
+        "notes": "Granite is mined at the Desert Quarry (49,45), just south of the Bandit Camp, at the Necropolis mine (51,42) and, per the diary page, at Cape Conch on The Great Conch."
       }
     },
     {

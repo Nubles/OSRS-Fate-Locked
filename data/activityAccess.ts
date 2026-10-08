@@ -51,7 +51,7 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   "TzHaar-Ket-Rak's Challenges": ['Mor Ul Rek (TzHaar City)'],
   'Tormented Demons': ['Lumbridge'],
   'The Royal Titans': ['Asgarnian Ice Dungeon'],
-  Yama: ['Mount Karuulm'],
+  Yama: ['Shayzien'],
   'Doom of Mokhaiotl': ['Tlati Rainforest'],
   'Gemstone Crab': ['Tlati Rainforest'],
   'Shellbane Gryphon': ['The Great Conch'],

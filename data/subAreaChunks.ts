@@ -12,7 +12,7 @@ import type { ChunkCoord } from '../utils/mapCoords';
  * invariants (known names, no chunk in two sub-areas, chunk exists on map).
  */
 export const SUB_AREA_CHUNKS: Record<string, ChunkCoord[]> = {
-  'Agility Pyramid': [{ cx: 52, cy: 44 }, { cx: 49, cy: 45 }],
+  'Agility Pyramid': [{ cx: 52, cy: 44 }],
   'Al Kharid': [{ cx: 51, cy: 49 }, { cx: 51, cy: 50 }, { cx: 51, cy: 51 }],
   'Aldarin': [{ cx: 22, cy: 45 }, { cx: 23, cy: 45 }, { cx: 20, cy: 46 }, { cx: 21, cy: 46 }, { cx: 22, cy: 46 }, { cx: 21, cy: 45 }, { cx: 20, cy: 45 }],
   'Anglers\' Retreat': [{ cx: 38, cy: 42 }],
@@ -21,7 +21,7 @@ export const SUB_AREA_CHUNKS: Record<string, ChunkCoord[]> = {
   'Arceuus': [{ cx: 25, cy: 58 }, { cx: 26, cy: 58 }, { cx: 24, cy: 59 }, { cx: 25, cy: 59 }, { cx: 26, cy: 59 }, { cx: 27, cy: 59 }, { cx: 24, cy: 60 }, { cx: 25, cy: 60 }, { cx: 26, cy: 60 }, { cx: 27, cy: 60 }, { cx: 28, cy: 60 }, { cx: 23, cy: 61 }, { cx: 24, cy: 61 }, { cx: 26, cy: 61 }, { cx: 27, cy: 61 }],
   'Auburnvale': [{ cx: 22, cy: 51 }, { cx: 21, cy: 52 }, { cx: 22, cy: 52 }, { cx: 21, cy: 53 }, { cx: 21, cy: 51 }, { cx: 21, cy: 50 }, { cx: 23, cy: 52 }, { cx: 20, cy: 51 }, { cx: 20, cy: 52 }, { cx: 20, cy: 53 }, { cx: 19, cy: 52 }, { cx: 19, cy: 53 }],
   'Avium Savannah': [{ cx: 25, cy: 45 }, { cx: 25, cy: 46 }, { cx: 26, cy: 46 }, { cx: 25, cy: 47 }, { cx: 27, cy: 46 }, { cx: 26, cy: 45 }, { cx: 27, cy: 45 }],
-  'Bandit Camp': [{ cx: 49, cy: 46 }],
+  'Bandit Camp': [{ cx: 49, cy: 46 }, { cx: 49, cy: 45 }],
   'Barbarian Outpost': [{ cx: 39, cy: 55 }],
   'Barbarian Village': [{ cx: 48, cy: 53 }],
   'Barrows': [{ cx: 55, cy: 51 }],
@@ -115,7 +115,7 @@ export const SUB_AREA_CHUNKS: Record<string, ChunkCoord[]> = {
   'Mort Myre Swamp': [{ cx: 53, cy: 52 }, { cx: 54, cy: 52 }, { cx: 53, cy: 53 }, { cx: 54, cy: 53 }, { cx: 55, cy: 53 }],
   'Mort\'ton': [{ cx: 53, cy: 51 }, { cx: 54, cy: 51 }],
   'Mos Le\'Harmless': [{ cx: 57, cy: 45 }, { cx: 57, cy: 46 }, { cx: 58, cy: 46 }, { cx: 59, cy: 46 }, { cx: 60, cy: 46 }, { cx: 57, cy: 47 }, { cx: 58, cy: 47 }, { cx: 59, cy: 47 }, { cx: 60, cy: 47 }],
-  'Mount Karuulm': [{ cx: 22, cy: 57 }, { cx: 19, cy: 59 }, { cx: 20, cy: 59 }, { cx: 20, cy: 60 }, { cx: 20, cy: 58 }],
+  'Mount Karuulm': [{ cx: 19, cy: 59 }, { cx: 20, cy: 59 }, { cx: 20, cy: 60 }, { cx: 20, cy: 58 }],
   'Mount Quidamortem': [{ cx: 18, cy: 54 }, { cx: 19, cy: 54 }, { cx: 21, cy: 54 }, { cx: 18, cy: 55 }, { cx: 19, cy: 55 }, { cx: 20, cy: 54 }, { cx: 22, cy: 54 }],
   'Mountain Camp': [{ cx: 43, cy: 57 }, { cx: 43, cy: 58 }, { cx: 44, cy: 58 }, { cx: 43, cy: 59 }, { cx: 44, cy: 59 }, { cx: 43, cy: 56 }, { cx: 43, cy: 60 }, { cx: 44, cy: 60 }],
   'Mudskipper Point': [{ cx: 46, cy: 48 }],
@@ -148,7 +148,7 @@ export const SUB_AREA_CHUNKS: Record<string, ChunkCoord[]> = {
   'Scorpia\'s Cave': [{ cx: 50, cy: 61 }],
   'Seers\' Village': [{ cx: 42, cy: 53 }, { cx: 40, cy: 54 }, { cx: 41, cy: 54 }, { cx: 42, cy: 54 }, { cx: 42, cy: 55 }, { cx: 43, cy: 55 }, { cx: 41, cy: 55 }],
   'Shantay Pass': [{ cx: 51, cy: 48 }],
-  'Shayzien': [{ cx: 21, cy: 55 }, { cx: 22, cy: 55 }, { cx: 23, cy: 55 }, { cx: 24, cy: 55 }, { cx: 22, cy: 56 }, { cx: 23, cy: 56 }, { cx: 24, cy: 56 }, { cx: 23, cy: 57 }],
+  'Shayzien': [{ cx: 21, cy: 55 }, { cx: 22, cy: 55 }, { cx: 23, cy: 55 }, { cx: 24, cy: 55 }, { cx: 22, cy: 56 }, { cx: 23, cy: 56 }, { cx: 24, cy: 56 }, { cx: 23, cy: 57 }, { cx: 22, cy: 57 }],
   'Shilo Village': [{ cx: 42, cy: 46 }, { cx: 43, cy: 46 }, { cx: 44, cy: 46 }, { cx: 44, cy: 47 }, { cx: 45, cy: 46 }],
   'Shimmering Atoll': [{ cx: 24, cy: 43 }],
   'Ship Yard': [{ cx: 46, cy: 47 }, { cx: 46, cy: 46 }],

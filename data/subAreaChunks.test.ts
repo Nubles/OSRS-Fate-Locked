@@ -103,6 +103,9 @@ describe('sub-area chunk assignments', () => {
       '25,51': ["Ralos' Rise", 'Salvager Overlook'],
       '41,56': ['Rellekka', 'the strange altar in the Fremennik Province, south of Rellekka'],
       '35,53': ['Gwenith', 'Gorlah, beside Gwenith'],
+      // The Wiki puts the Chasm of Fire in north-west Shayzien and the Desert Quarry south of the Bandit Camp.
+      '22,57': ['Shayzien', 'the Chasm of Fire (Yama)'],
+      '49,45': ['Bandit Camp', 'the Desert Quarry'],
     };
     for (const [chunk, [area, place]] of Object.entries(PLACES)) {
       expect(SUB_AREA_CHUNKS[area].map(({ cx, cy }) => `${cx},${cy}`), `${place} (${chunk})`).toContain(chunk);

@@ -1056,7 +1056,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Enakhra\'s Lament', name: 'Enakhra\'s Lament',
     regions: ["Kharidian Desert"],
     locations: [
-      { id: "desert-quarry-and-temple", label: "Desert Quarry and Enakhra's Temple", standardAreas: ["Agility Pyramid"], chunkOptions: [{ cx: 49, cy: 45 }] },
+      { id: "desert-quarry-and-temple", label: "Desert Quarry and Enakhra's Temple", standardAreas: ["Bandit Camp"], chunkOptions: [{ cx: 49, cy: 45 }] },
     ],
     skills: { 'Crafting': 50, 'Firemaking': 45, 'Magic': 39, 'Prayer': 43 }, prereqs: [],
     manualRequirements: ["Must be on the standard spellbook"], points: 2, series: 'Mahjarrat',

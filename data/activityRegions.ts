@@ -73,7 +73,7 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Tormented Demons': 'Misthalin',     // 2024 rework: Ancient Guthixian Temple (was Lithkren)
   'Amoxliatl': 'Varlamore',
   'The Royal Titans': 'Asgarnia',
-  'Yama': 'Kourend & Kebos',           // Chasm of Fire, Kebos Lowlands
+  'Yama': 'Kourend & Kebos',           // Chasm of Fire, north-west Shayzien
 
   'Doom of Mokhaiotl': 'Varlamore',
   'Gemstone Crab': 'Varlamore',

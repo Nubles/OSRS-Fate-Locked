@@ -2396,7 +2396,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":45}],\"id\":\"desert-quarry-and-temple\",\"label\":\"Desert Quarry and Enakhra's Temple\",\"standardAreas\":[\"Agility Pyramid\"]}],\"skills\":{\"Crafting\":50,\"Firemaking\":45,\"Magic\":39,\"Prayer\":43},\"prereqs\":[],\"manualRequirements\":[\"Must be on the standard spellbook\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":45}],\"id\":\"desert-quarry-and-temple\",\"label\":\"Desert Quarry and Enakhra's Temple\",\"standardAreas\":[\"Bandit Camp\"]}],\"skills\":{\"Crafting\":50,\"Firemaking\":45,\"Magic\":39,\"Prayer\":43},\"prereqs\":[],\"manualRequirements\":[\"Must be on the standard spellbook\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "49,45",
@@ -2411,7 +2411,8 @@
         "travel": [
           "The unavoidable Desert Quarry and temple entrance are represented by the pinned chunk.",
           "Standard mode has no Desert Quarry alias, so the truthful quarry label uses the existing Kharidian Desert unlock; Chunked mode uses exact chunk 49,45.",
-          "Accuracy review 2026-10-02: The Desert Quarry location asked for the whole Kharidian Desert, which in the area modes opens only when every desert area is owned; its chunk 49,45 is the Agility Pyramid's, which is now asked for instead (Wiki revision 15350737)."
+          "Accuracy review 2026-10-02: The Desert Quarry location asked for the whole Kharidian Desert, which in the area modes opens only when every desert area is owned; its chunk 49,45 is the Agility Pyramid's, which is now asked for instead (Wiki revision 15350737).",
+          "Map data audit 2026-10-08: the Desert Quarry (49,45) now belongs to the Bandit Camp, just north of it, so the quarry and Enakhra's Temple ask for the Bandit Camp."
         ],
         "instances": [
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
