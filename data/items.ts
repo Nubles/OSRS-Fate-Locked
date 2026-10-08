@@ -81,6 +81,11 @@ export const STORAGE_LIST = [
   'Colossal Pouch', 'Dizana\'s Quiver', 'Forestry Kit', 'Gricoller\'s Can'
 ];
 
+// Spice Pouch is not an OSRS item (roll data audit, 7 October 2026; owner call).
+// Saves that own it keep it, as with the Aquarium, but it is never rolled again.
+export const RETIRED_STORAGE_ITEMS = ['Spice Pouch'];
+export const ROLLABLE_STORAGE_ITEMS = STORAGE_LIST.filter(item => !RETIRED_STORAGE_ITEMS.includes(item));
+
 export const GUILDS_LIST = [
   'Champions\' Guild', 'Cooks\' Guild', 'Crafting Guild', 'Mining Guild', 'Prayer Guild', 
   'Farming Guild', 'Fishing Guild', 'Heroes\' Guild', 'Hunter Guild', 'Legends\' Guild',
@@ -115,7 +120,7 @@ export const FARMING_UNLOCK_DETAILS: Record<string, string> = {
   'Bush': "Redberry, Whiteberry, Poison Ivy",
   'Wood Tree': "Oak, Yew, Magic",
   'Fruit Tree': "Apple, Palm, Dragonfruit",
-  'Hardwood Tree': "Teak, Mahogany",
+  'Hardwood Tree': "Teak, Mahogany, Camphor, Ironwood, Rosewood",
   'Cactus': "Cactus Spine, Potato Cactus",
   'Mushroom': "Bittercap",
   'Belladonna': "Nightshade",

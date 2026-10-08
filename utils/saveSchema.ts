@@ -1,6 +1,6 @@
 import { CUSTOM_RULE_BOUNDS, resolveModeRules, type GameModeRules } from '../config/gameModes';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
-import { EQUIPMENT_SLOTS, RETIRED_BOSSES, RETIRED_POH_ITEMS } from '../data/items';
+import { EQUIPMENT_SLOTS, RETIRED_BOSSES, RETIRED_POH_ITEMS, RETIRED_STORAGE_ITEMS } from '../data/items';
 import { migrateAreaUnlocks } from './areaUnlockMigration';
 import { mergedBankId, settleMergedBanks } from './bankUnlockMerges';
 import { settleCanonicalAreaUnlocks } from '../data/areaMapPolicy';
@@ -1213,6 +1213,7 @@ const normalizeState = (
         // Already paid before Aquarium left the roll pool; retired items stay
         // valid in older saves, so the reveal must still load and complete.
         && !(p.table === TableType.POH && RETIRED_POH_ITEMS.includes(item))
+        && !(p.table === TableType.STORAGE && RETIRED_STORAGE_ITEMS.includes(item))
         // A retired boss's reveal loads so its refund can settle it.
         && !(p.table === TableType.BOSSES && RETIRED_BOSSES.includes(item)))
       || (p.costType !== 'key' && p.costType !== 'chaosKey') || p.cost !== 1) return invalid('invalid_field', 'pendingUnlock');

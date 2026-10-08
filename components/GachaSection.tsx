@@ -6,7 +6,7 @@ import { bankLocksActive, isAreaReachable } from '../utils/reachability';
 import { unlockableAreas } from '../utils/freeAreas';
 import { BANK_IDS, BANK_BY_ID } from '../data/banks';
 import { checkUnlockAvailability, getPoolAndStateKey, randomUnlockPool } from '../utils/gameEngine';
-import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, ROLLABLE_POH_ITEMS, MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, UTILITY_ITEM_IDS } from '../constants';
+import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, ROLLABLE_POH_ITEMS, MERCHANTS_LIST, ROLLABLE_STORAGE_ITEMS, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, UTILITY_ITEM_IDS } from '../constants';
 import { HelpCircle, Lock, TrendingUp, AlertTriangle, Check } from 'lucide-react';
 import { Sparkles, Dices, Dna, Sprout, Key } from './OsrsIcon';
 import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
@@ -210,7 +210,7 @@ export const GachaSection: React.FC = () => {
       : { type: TableType.REGIONS, label: 'Areas', subLabel: 'New Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: areaPool.filter(area => isAreaReachable(area, unlocks, gameModeId)).length, total: areaPool.length, can: canUnlock.regions },
     { type: TableType.MOBILITY, label: 'Mobility', subLabel: 'Travel Networks', iconSrc: OSRS_GACHA_ICONS.MOBILITY, unlocked: (unlocks.mobility ?? []).length, total: MOBILITY_LIST.length, can: canUnlock.mobility },
     { type: TableType.ARCANA, label: COMBAT_POWERS_LABEL, subLabel: COMBAT_POWERS_DESCRIPTION, iconSrc: OSRS_GACHA_ICONS.ARCANA, unlocked: (unlocks.arcana ?? []).length, total: ARCANA_LIST.length, can: canUnlock.arcana },
-    { type: TableType.STORAGE, label: 'Storage', subLabel: 'Inventory Space', iconSrc: OSRS_GACHA_ICONS.STORAGE, unlocked: (unlocks.storage ?? []).length, total: STORAGE_LIST.length, can: canUnlock.storage },
+    { type: TableType.STORAGE, label: 'Storage', subLabel: 'Inventory Space', iconSrc: OSRS_GACHA_ICONS.STORAGE, unlocked: ROLLABLE_STORAGE_ITEMS.filter(item => (unlocks.storage ?? []).includes(item)).length, total: ROLLABLE_STORAGE_ITEMS.length, can: canUnlock.storage },
     { type: TableType.POH, label: 'Housing', subLabel: 'POH Facilities', iconSrc: OSRS_GACHA_ICONS.POH, unlocked: ROLLABLE_POH_ITEMS.filter(item => (unlocks.housing ?? []).includes(item)).length, total: ROLLABLE_POH_ITEMS.length, can: canUnlock.poh },
     { type: TableType.MERCHANTS, label: 'Merchants', subLabel: 'Shops & Wares', iconSrc: OSRS_GACHA_ICONS.MERCHANTS, unlocked: (unlocks.merchants ?? []).length, total: MERCHANTS_LIST.length, can: canUnlock.merchants },
     { type: TableType.MINIGAMES, label: 'Minigames', subLabel: 'Activities', iconSrc: OSRS_GACHA_ICONS.MINIGAMES, unlocked: (unlocks.minigames ?? []).length, total: MINIGAMES_LIST.length, can: canUnlock.minigames },

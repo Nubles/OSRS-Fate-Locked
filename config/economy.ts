@@ -15,7 +15,7 @@ import { BANK_IDS } from '../data/banks';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from './rules';
 import {
   SKILLS_LIST, EQUIPMENT_SLOTS, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST,
-  ROLLABLE_POH_ITEMS, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST,
+  ROLLABLE_POH_ITEMS, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, ROLLABLE_STORAGE_ITEMS,
   GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST,
 } from '../data/items';
 import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
@@ -374,7 +374,7 @@ export const SPEND_TABLES: SpendTable[] = [
   { type: TableType.REGIONS,         label: 'Areas',      count: REGIONS_LIST.length,    blurb: 'Unlock a new area you can go to.' },
   { type: TableType.MOBILITY,        label: 'Mobility',   count: MOBILITY_LIST.length,   blurb: 'Teleports, spirit trees, fairy rings and transport networks.' },
   { type: TableType.ARCANA,          label: COMBAT_POWERS_LABEL, count: ARCANA_LIST.length, blurb: COMBAT_POWERS_DESCRIPTION },
-  { type: TableType.STORAGE,         label: 'Storage',    count: STORAGE_LIST.length,    blurb: 'Looting bag, rune pouch, seed box and other storage. Banks are their own table.' },
+  { type: TableType.STORAGE,         label: 'Storage',    count: ROLLABLE_STORAGE_ITEMS.length, blurb: 'Looting bag, rune pouch, seed box and other storage. Banks are their own table.' },
   { type: TableType.POH,             label: 'Housing',    count: ROLLABLE_POH_ITEMS.length, blurb: 'Player-owned house rooms and facilities.' },
   { type: TableType.MERCHANTS,       label: 'Merchants',  count: MERCHANTS_LIST.length,  blurb: 'Shops and traders you’re permitted to use.' },
   { type: TableType.MINIGAMES,       label: 'Minigames',  count: MINIGAMES_LIST.length,  blurb: 'Activities, from Pest Control to Guardians of the Rift.' },
