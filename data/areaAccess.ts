@@ -138,8 +138,7 @@ export const AREA_ENTRY_ROUTES: Readonly<Record<string, readonly AreaEntryRoute[
     },
     {
       // DKP lands at 2900,3111 in Tai Bwo Wannai's chunk. The path south-east
-      // crosses chunk 45,47, which belongs to no named area, so it opens only
-      // with every Karamja area.
+      // crosses the Karamja River chunk 45,47, which opens with Tai Bwo Wannai.
       label: 'Fairy ring DKP, then walk south-east through the jungle',
       ...FAIRY_RING,
       locations: [{ label: 'Karamja jungle between the DKP fairy ring and the Shipyard', chunkOptions: [{ cx: 45, cy: 47 }] }],

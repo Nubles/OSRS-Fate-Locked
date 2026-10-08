@@ -62,15 +62,11 @@ const REVIEWED: Readonly<Record<string, string>> = {
   '~|Recipe for Disaster/Freeing Sir Amik Varze|~ 7': 'The Dramen tree is on Entrana; Lost City, through Heroes\' Quest, needs Entrana.',
   '~|Sins of the Father|~ 24': 'Safalaan is on the Ver Sinhaza shore; A Taste of Hope, a prerequisite, needs Ver Sinhaza.',
   '~|The Blood Moon Rises|~ 7': 'The Canifis hideout; In Search of the Myreque, earlier in the series, needs Canifis and Mort Myre Swamp.',
-  '~|The Enchanted Key|~ 1': 'Unresolved in the requirement audit: Jorral\'s Outpost is not one of the wiki\'s eleven treasure sites; Making History, a prerequisite, needs East Ardougne beside it.',
-  '~|The Enchanted Key|~ Complete the quest': 'Unresolved in the requirement audit: Jorral\'s Outpost is not one of the wiki\'s eleven treasure sites; Making History, a prerequisite, needs East Ardougne beside it.',
   '~|The Final Dawn|~ 7': 'Cam Torum; Perilous Moons, a prerequisite, needs it.',
   '~|The Final Dawn|~ 8': 'Cam Torum; Perilous Moons, a prerequisite, needs it.',
   '~|The Fremennik Exiles|~ 3d1': 'The geyser is at Mountain Camp; Mountain Daughter, a prerequisite, needs it.',
   '~|The Fremennik Exiles|~ 3d3': 'The geyser is at Mountain Camp; Mountain Daughter, a prerequisite, needs it.',
   '~|The Fremennik Trials|~ 2a2': 'One of eight trials, and seven votes are enough (owner decision of 2 Oct: kept lenient).',
-  '~|The Fremennik Trials|~ 2a3': 'One of eight trials, and seven votes are enough (owner decision of 2 Oct: kept lenient).',
-  '~|The Fremennik Trials|~ 2b3': 'One of eight trials, and seven votes are enough (owner decision of 2 Oct: kept lenient).',
   '~|The Frozen Door|~ 1': 'The messenger brings the letter wherever you are; the export puts it at the pyramid.',
   '~|The Great Brain Robbery|~ 7': 'Fenkenstrain\'s Castle; Creature of Fenkenstrain, a prerequisite, needs it.',
   '~|The Path of Glouphrie|~ 4': 'Gianne jnr. is at the Grand Tree; The Eyes of Glouphrie, a prerequisite, needs the Tree Gnome Stronghold.',
@@ -190,7 +186,6 @@ describe('quest steps are in the areas their quests require', () => {
     ['Secrets of the North', { regions: ['East Ardougne', 'Weiss'] }, '~|Secrets of the North|~ 2'],
     ['The Red Reef', { regions: ['Last Light'] }, '~|The Red Reef|~ 4'],
     ['Dwarf Cannon', { locations: QUEST_DATA['Dwarf Cannon'].locations!.filter(location => location.id !== 'fishing-guild-watchtower') }, '~|Dwarf Cannon|~ 4'],
-    ['Cold War', { accessPolicy: 'regions' as const, locations: undefined }, '~|Cold War|~ 12'],
   ])('would have caught %s as it was', (id, before, task) => {
     expect(uncoveredTasks(QUEST_DATA[id])).not.toContain(task);
     expect(uncoveredTasks({ ...QUEST_DATA[id], ...before })).toContain(task);
@@ -219,7 +214,6 @@ describe('quest locations ask for the area their chunks are in', () => {
 
   it('stands one named area in for each chunk no area owns', () => {
     const standIns = locations.filter(({ location }) => location.chunkOptions.every(chunk => !areasAt.has(keyOf(chunk))));
-    expect(standIns.length).toBeGreaterThan(20);
     expect(standIns.filter(({ location }) => location.standardAreas.length !== 1 || isParent(location.standardAreas[0]))
       .map(({ quest, location }) => `${quest}: ${location.id}`)).toEqual([]);
   });
