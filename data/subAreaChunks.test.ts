@@ -88,6 +88,11 @@ describe('sub-area chunk assignments', () => {
       '27,46': ['Avium Savannah', 'Stonecutter Outpost'],
       '41,48': ['Yanille', 'Hazelmere and fairy ring CLS, on the Yanille Chain'],
       '43,56': ['Mountain Camp', 'the Fremennik Slayer Dungeon entrance'],
+      // Owner decision, 7 October 2026: a Wilderness boss's spawn chunk opens with its gate area.
+      '46,57': ['Forgotten Cemetery', 'the Crazy Archaeologist at the Dareeyak Ruins'],
+      '46,60': ['Lava Maze', 'the Chaos Fanatic at the Western Obelisk'],
+      '48,57': ['Graveyard of Shadows', "Artio's cave entrance (Hunter's End)"],
+      '49,58': ['Graveyard of Shadows', "Spindel's cave entrance (Web Chasm), at the Eastern Ruins"],
     };
     for (const [chunk, [area, place]] of Object.entries(PLACES)) {
       expect(SUB_AREA_CHUNKS[area].map(({ cx, cy }) => `${cx},${cy}`), `${place} (${chunk})`).toContain(chunk);
@@ -109,8 +114,6 @@ describe('sub-area chunk assignments', () => {
       '53,49': 'Citharede Abbey, in the open desert (owner decision M4)',
       '23,50': 'Quetzacalli Gorge, in the Hailstorm Mountains',
       '25,51': 'Salvager Overlook, north of Civitas illa Fortis',
-      '46,57': 'The Dareeyak Ruins, in the Wilderness (owner decision M4)',
-      '49,58': 'The Eastern Ruins, in the Wilderness (owner decision M4)',
       '48,59': "Edmond's cape shop, in the Wilderness (owner decision M4)",
       '50,60': "William's cape shop on Lava Dragon Isle, in the Wilderness (owner decision M4)",
       '47,61': "Darren's cape shop at the Pirates' Hideout, in the Wilderness (owner decision M4)",

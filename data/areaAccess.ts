@@ -148,9 +148,10 @@ export const AREA_ENTRY_ROUTES: Readonly<Record<string, readonly AreaEntryRoute[
   ],
 
   // The cemetery's only walking links go north to Chaos Altar, east to the
-  // Wilderness Bandit Camp and south into unnamed Wilderness. Dareeyak Teleport
-  // lands in that unnamed Wilderness chunk (46,57), and the level-27 obelisk in
-  // the Bandit Camp, so neither adds a route of its own.
+  // Wilderness Bandit Camp and south into unnamed Wilderness. Its area also
+  // holds the Dareeyak Ruins (46,57), where Dareeyak Teleport and the Trollheim
+  // shortcut land; neither is listed as a route yet. The level-27 obelisk is in
+  // the Bandit Camp, so it adds no route of its own.
   'Forgotten Cemetery': [
     {
       label: 'Cemetery Teleport (Arceuus spell or tablet)',

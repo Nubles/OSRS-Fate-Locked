@@ -22,7 +22,10 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   Skotizo: ['Catacombs of Kourend'],
   'Thermonuclear Smoke Devil': ['Feldip Hills'],
   "Calvar'ion": ['Graveyard of Shadows'],
+  Artio: ['Graveyard of Shadows'],
+  Spindel: ['Graveyard of Shadows'],
   'Crazy Archaeologist': ['Forgotten Cemetery'],
+  'Chaos Fanatic': ['Lava Maze'],
   Scorpia: ["Scorpia's Cave"],
   'The Hueycoatl': ['Darkfrost'],
   'Moons of Peril': ['Cam Torum'],
@@ -115,10 +118,7 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
 export const NO_HARD_LOCATION_GATE = new Set<string>([
   // Boss venues or entrances not represented by a single tracked named area.
   'Abyssal Sire', // no tracked named-area gate (fairy-ring interior)
-  'Artio', // no tracked named-area gate (Wilderness bear cave)
   'Callisto', // no tracked named-area gate (Wilderness bear cave)
-  'Chaos Fanatic', // no tracked named-area gate (Wilderness altar site)
-  'Spindel', // no tracked named-area gate (Wilderness spider cave)
   'Venenatis', // no tracked named-area gate (Wilderness spider cave)
   "Vet'ion", // no tracked named-area gate (Wilderness skeleton cave)
   'Vorkath', // no tracked named-area gate (Ungael)

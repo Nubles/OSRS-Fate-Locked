@@ -53,6 +53,11 @@ describe('vanilla activity access declarations', () => {
     expect(ACTIVITY_ACCESS_AREAS['Guardians of the Rift']).toEqual(["Wizards' Tower"]);
     expect(ACTIVITY_ACCESS_AREAS['Crazy Archaeologist']).toEqual(['Forgotten Cemetery']);
     expect(NO_HARD_LOCATION_GATE.has('Crazy Archaeologist')).toBe(false);
+    expect(ACTIVITY_ACCESS_AREAS['Chaos Fanatic']).toEqual(['Lava Maze']);
+    expect(NO_HARD_LOCATION_GATE.has('Chaos Fanatic')).toBe(false);
+    for (const boss of ["Calvar'ion", 'Artio', 'Spindel']) {
+      expect(ACTIVITY_ACCESS_AREAS[boss], boss).toEqual(['Graveyard of Shadows']);
+    }
     expect(ACTIVITY_ACCESS_AREAS['The Mad Angel']).toEqual(['Wyrmscraig']);
 
     for (const activity of ['Mimic', 'Shooting Stars', 'Mahogany Homes', 'Forestry', 'Rat Pits']) {

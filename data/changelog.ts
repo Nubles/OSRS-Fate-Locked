@@ -19,6 +19,20 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-07-wilderness-boss-chunks',
+    title: 'Wilderness Bosses Open with Their Areas',
+    date: '2026-10-07',
+    sections: {
+      changed: [
+        'The Crazy Archaeologist’s ruins now open with Forgotten Cemetery, which you already need to roll him. Before, his spot stayed locked on the map and in RuneLite until you owned the whole Wilderness.',
+        'The Chaos Fanatic’s spot by the Western Obelisk now opens with Lava Maze, and rolling him now needs Lava Maze.',
+        'Artio’s and Spindel’s cave entrances now open with Graveyard of Shadows, beside Calvar’ion’s, and rolling either of them now needs Graveyard of Shadows.',
+        'The Dareeyak Ruins come with Forgotten Cemetery too, so the Trollheim shortcut and the Crazy Archaeologist Diary tasks now ask for Forgotten Cemetery instead of the whole Wilderness.',
+        'Nothing you already own is taken away.',
+      ],
+    },
+  },
+  {
     id: '2026-10-07-roll-data-audit',
     title: 'Requirements Checked Against the Wiki',
     date: '2026-10-07',
