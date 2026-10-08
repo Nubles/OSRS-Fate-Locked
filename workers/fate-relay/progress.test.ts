@@ -4,6 +4,7 @@ import {
   LINK_CODE_TTL_SECONDS,
   PROGRESS_TTL_SECONDS,
   newLinkCode,
+  newUnlocksSince,
   normalizeLinkCode,
   validProgressSnapshot,
 } from './progress.js';
@@ -92,6 +93,14 @@ describe('progress snapshots', () => {
     expect(normalizeLinkCode('ILOU0000')).toBeNull();
     expect(normalizeLinkCode('ABC')).toBeNull();
   });
+
+  it('finds the unlocks a publish added, oldest first, and none on a first publish', () => {
+    const before = snapshot({ recent: [{ text: 'B', at: 20 }, { text: 'A', at: 10 }] });
+    const after = snapshot({ recent: [{ text: 'D', at: 40 }, { text: 'C', at: 30 }, { text: 'B', at: 20 }] });
+    expect(newUnlocksSince(before, after)).toEqual([{ text: 'C', at: 30 }, { text: 'D', at: 40 }]);
+    expect(newUnlocksSince(after, after)).toEqual([]);
+    expect(newUnlocksSince(null, after)).toEqual([]);
+  });
 });
 
 describe('Fate relay shared progress', () => {
@@ -164,6 +173,89 @@ describe('Fate relay shared progress', () => {
     const unlinked = await bot(env, 'GET');
     expect(unlinked.status).toBe(404);
     expect(await unlinked.json()).toEqual({ linked: false });
+  });
+
+  describe('telling the Discord bot about a linked run', () => {
+    const EVENTS_URL = 'https://bot.test/api/progress-events';
+    let sent: { url: string; init: RequestInit }[];
+
+    beforeEach(() => {
+      sent = [];
+      vi.stubGlobal('fetch', vi.fn(async (url: string, init: RequestInit) => {
+        sent.push({ url, init });
+        return new Response('{}');
+      }));
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    const linkRun = async () => {
+      await publish(env, snapshot());
+      const issued = await call(env, `/p/${RUN}/link-code`, { method: 'POST', headers: { Authorization: `Bearer ${TOKEN}` } });
+      await bot(env, 'POST', await issued.json());
+    };
+
+    const republish = async (body: unknown) => {
+      vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 61_000);
+      return publish(env, body);
+    };
+
+    it('sends a linked run\'s new unlocks with the bot\'s secret, after the response when it can', async () => {
+      (env as Record<string, unknown>).DISCORD_EVENTS_URL = EVENTS_URL;
+      await linkRun();
+      expect(kv.records.get(`ld:${RUN}`)).toBe(DISCORD_ID);
+      expect(sent).toHaveLength(0);
+
+      const next = snapshot({ recent: [{ text: 'Unlocked Lava Maze', at: 1_790_000_100_000 }, ...snapshot().recent] });
+      const waits: Promise<unknown>[] = [];
+      vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 61_000);
+      const response = await worker.fetch(new Request(`https://relay.test/p/${RUN}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${TOKEN}` },
+        body: JSON.stringify(next),
+      }), env as never, { waitUntil: (work: Promise<unknown>) => waits.push(work) } as never);
+      expect(response.status).toBe(200);
+      await Promise.all(waits);
+
+      expect(sent).toHaveLength(1);
+      expect(sent[0].url).toBe(EVENTS_URL);
+      expect((sent[0].init.headers as Record<string, string>).Authorization).toBe(`Bearer ${SECRET}`);
+      expect(JSON.parse(sent[0].init.body as string)).toMatchObject({
+        discordId: DISCORD_ID,
+        snapshot: next,
+        newUnlocks: [{ text: 'Unlocked Lava Maze', at: 1_790_000_100_000 }],
+      });
+    });
+
+    it('sends nothing for an unlinked run, without an events URL, or after /unlink', async () => {
+      await linkRun();
+      await republish(snapshot());
+      expect(sent).toHaveLength(0);
+
+      (env as Record<string, unknown>).DISCORD_EVENTS_URL = EVENTS_URL;
+      await bot(env, 'DELETE');
+      expect(kv.records.has(`ld:${RUN}`)).toBe(false);
+      vi.restoreAllMocks();
+      await republish(snapshot());
+      expect(sent).toHaveLength(0);
+    });
+
+    it('still accepts the publish when the bot cannot be reached', async () => {
+      (env as Record<string, unknown>).DISCORD_EVENTS_URL = EVENTS_URL;
+      vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('offline'); }));
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      await linkRun();
+      expect((await republish(snapshot())).status).toBe(200);
+    });
+
+    it('gives a link made before the reverse index its pointer when the bot reads it', async () => {
+      await publish(env, snapshot());
+      kv.records.set(`l:${DISCORD_ID}`, RUN);
+      await bot(env, 'GET');
+      expect(kv.records.get(`ld:${RUN}`)).toBe(DISCORD_ID);
+    });
   });
 
   it('serves Discord links only to the bot, and to nobody when no secret is set', async () => {

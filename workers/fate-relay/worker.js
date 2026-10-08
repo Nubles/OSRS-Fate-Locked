@@ -19,6 +19,7 @@ import {
   PROGRESS_MIN_INTERVAL_MS,
   PROGRESS_TTL_SECONDS,
   newLinkCode,
+  newUnlocksSince,
   normalizeLinkCode,
   validProgressSnapshot,
 } from './progress.js';
@@ -241,7 +242,7 @@ async function backupRoute(request, env, headers, id, previous) {
  * delete and link codes need the same token. Nothing here is readable without the bot's
  * secret: the bot reads a run only through a Discord link the player made with a code.
  */
-async function progressRoute(request, env, headers, id, linkCode) {
+async function progressRoute(request, env, headers, id, linkCode, ctx) {
   if (request.method !== 'POST' && request.method !== 'DELETE') {
     return new Response('method not allowed', { status: 405, headers });
   }
@@ -287,7 +288,47 @@ async function progressRoute(request, env, headers, id, linkCode) {
     expirationTtl: PROGRESS_TTL_SECONDS,
     metadata: { writeHash, updatedAt },
   });
+  let previous = null;
+  try {
+    previous = existing.value === null ? null : JSON.parse(existing.value);
+  } catch {
+    previous = null;
+  }
+  await inBackground(ctx, notifyDiscordBot(env, id, previous, snapshot, updatedAt));
   return json({ updatedAt }, headers);
+}
+
+/** Run `work` after the response when the runtime allows it, else before. */
+async function inBackground(ctx, work) {
+  if (ctx && typeof ctx.waitUntil === 'function') ctx.waitUntil(work);
+  else await work;
+}
+
+const DISCORD_EVENTS_TIMEOUT_MS = 5000;
+
+/**
+ * Tell the Discord bot a linked run published, so it can post the run's new
+ * unlocks in its feed and keep the player's roles current. Only a run some
+ * Discord user linked is sent, and only to the bot's own https endpoint
+ * (DISCORD_EVENTS_URL) with the bot's secret. A failure never fails the publish.
+ */
+async function notifyDiscordBot(env, runId, previous, snapshot, updatedAt) {
+  const url = env.DISCORD_EVENTS_URL;
+  const secret = env.PROGRESS_BOT_SECRET;
+  if (typeof url !== 'string' || !url.startsWith('https://')) return;
+  if (typeof secret !== 'string' || secret.length < 32) return;
+  try {
+    const discordId = await env.RELAY.get(`ld:${runId}`);
+    if (discordId === null || await env.RELAY.get(`l:${discordId}`) !== runId) return;
+    await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${secret}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ discordId, snapshot, newUnlocks: newUnlocksSince(previous, snapshot), updatedAt }),
+      signal: AbortSignal.timeout(DISCORD_EVENTS_TIMEOUT_MS),
+    });
+  } catch (error) {
+    console.error('discord bot notify failed', error?.name ?? 'error');
+  }
 }
 
 /** Whether the request carries the Discord bot's secret. Unset, nothing does. */
@@ -316,10 +357,12 @@ async function discordLinkRoute(request, env, headers, discordId) {
   if (request.method === 'GET') {
     const runId = await env.RELAY.get(key);
     if (runId === null) return json({ linked: false }, headers, 404);
+    // Links made before the reverse index existed gain it the first time the bot reads them.
+    if (await env.RELAY.get(`ld:${runId}`) === null) await env.RELAY.put(`ld:${runId}`, discordId);
     return json(await linkedProgress(env, runId), headers);
   }
   if (request.method === 'DELETE') {
-    await env.RELAY.delete(key);
+    await forgetLink(env, discordId);
     return json({ deleted: true }, headers);
   }
   if (request.method !== 'POST') return new Response('method not allowed', { status: 405, headers });
@@ -334,12 +377,23 @@ async function discordLinkRoute(request, env, headers, discordId) {
   const runId = await env.RELAY.get(`lc:${code}`);
   if (runId === null) return json({ error: 'unknown code' }, headers, 404);
   await env.RELAY.delete(`lc:${code}`);
+  await forgetLink(env, discordId);
   await env.RELAY.put(key, runId);
+  // The reverse index lets a publish find who to tell; the newest link to a run wins.
+  await env.RELAY.put(`ld:${runId}`, discordId);
   return json(await linkedProgress(env, runId), headers);
 }
 
+/** Drop a Discord user's link, and the run's pointer back to them when it is theirs. */
+async function forgetLink(env, discordId) {
+  const runId = await env.RELAY.get(`l:${discordId}`);
+  if (runId === null) return;
+  await env.RELAY.delete(`l:${discordId}`);
+  if (await env.RELAY.get(`ld:${runId}`) === discordId) await env.RELAY.delete(`ld:${runId}`);
+}
+
 const routes = {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const headers = cors(request.headers.get('Origin'));
 
@@ -349,7 +403,7 @@ const routes = {
     if (backup) return backupRoute(request, env, headers, backup[1], Boolean(backup[2]));
 
     const progress = url.pathname.match(PROGRESS_RE);
-    if (progress) return progressRoute(request, env, headers, progress[1], Boolean(progress[2]));
+    if (progress) return progressRoute(request, env, headers, progress[1], Boolean(progress[2]), ctx);
 
     const discordLink = url.pathname.match(DISCORD_LINK_RE);
     if (discordLink) return discordLinkRoute(request, env, headers, discordLink[1]);
@@ -482,9 +536,9 @@ export default {
    * headers. Without them the browser hides the status and reports only
    * "Failed to fetch".
    */
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     try {
-      return await routes.fetch(request, env);
+      return await routes.fetch(request, env, ctx);
     } catch (error) {
       console.error('relay request failed', error);
       return new Response('relay unavailable', {
