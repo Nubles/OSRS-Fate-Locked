@@ -1,7 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { beforeAll, describe, it, expect } from 'vitest';
 import { chunkReachability } from './chunkReach';
 import { chunkForPlace } from './chunkLocations';
 import { UnlockState } from '../types';
+import { loadWalkSections } from './walkSections';
+
+// Routes walk the Chunk Picker sections, which load with the chunk content.
+beforeAll(() => loadWalkSections());
 
 const base = (over: Partial<UnlockState> = {}): UnlockState => ({
   equipment: {}, skills: {}, levels: {}, regions: [], mobility: [], arcana: [],
