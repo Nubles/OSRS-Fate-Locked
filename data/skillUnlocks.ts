@@ -275,9 +275,10 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 75: Spirit Tree (Farming 83), Gilded Altar',
       'Lvl 77: STASH Units (Elite)',
       'Lvl 80: Achievement Gallery, Ancient Altar',
-      'Lvl 80: Rejuvenation Pool, Jewellery Box'
+      'Lvl 80: Rejuvenation Pool'
     ],
     9: [
+      'Lvl 81: Jewellery Box',
       'Lvl 82: Gilded Portal Nexus',
       'Lvl 85: Fairy Ring, Fancy Rejuvenation Pool',
       'Lvl 88: STASH Units (Master)',
@@ -876,8 +877,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 14: Oak Bird Houses',
       'Lvl 15: Ruby Harvests, Sandworms',
       'Lvl 17: Puro-Puro, Baby Implings',
-      'Lvl 19: Tropical Wagtails',
-      'Lvl 20: 2 Traps'
+      'Lvl 19: Tropical Wagtails'
     ],
     3: [
       'Lvl 21: Red Crabs',
@@ -1543,9 +1543,9 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 20: Silver Bars, Iron Scimitar'
     ],
     3: [
-      'Lvl 21: Iron Longsword/Limbs',
+      'Lvl 21: Iron Longsword',
       'Lvl 22: Iron Full Helm/Knives/Keel',
-      'Lvl 23: Iron Sq Shield',
+      'Lvl 23: Iron Sq Shield/Limbs',
       'Lvl 24: Iron Warhammer',
       'Lvl 25: Iron Battleaxe, Lead Bars',
       'Lvl 26: Iron Chainbody, Oil Lantern Frame',
@@ -1668,8 +1668,9 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     4: [
       'Lvl 35: Barehanded Tuna/Harpoonfish',
-      'Lvl 35: Catherby/Fally Grapples',
+      'Lvl 35: Catherby Grapple',
       'Lvl 35: Crystal Halberd (Att 70)',
+      'Lvl 37: Falador Grapple',
       'Lvl 40: Barrelchest Anchor (Att 60)',
       'Lvl 40: Rune Warhammers'
     ],

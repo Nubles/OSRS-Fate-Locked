@@ -380,7 +380,7 @@ describe('audited current quest requirements', () => {
                 "oneOf": null,
                 "manualRequirements": null,
                 "points": 1,
-                "difficulty": "Quest (Novice)"
+                "difficulty": "Quest (Intermediate)"
           },
           "Below Ice Mountain": {
                 "kind": "quest",

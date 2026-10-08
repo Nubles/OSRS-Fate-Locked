@@ -84,6 +84,54 @@ describe('boss access', () => {
   });
 });
 
+describe('boss access, from the roll data audit (7 October 2026)', () => {
+  // Each line checked against the boss's OSRS Wiki page that day.
+  it('asks for the Medium Wilderness diary or the boss task at Callisto, Venenatis and Vet\'ion', () => {
+    for (const boss of ['Callisto', 'Venenatis', "Vet'ion"]) {
+      expect(ACTIVITY_REQUIREMENTS[boss].oneOf, boss).toEqual([
+        { diaries: ['Wilderness Medium'] },
+        { manualRequirements: [expect.stringContaining(`${boss} boss Slayer task`)] },
+      ]);
+    }
+  });
+
+  it('asks for Priest in Peril at every Morytania boss', () => {
+    for (const boss of ['Theatre of Blood', 'The Nightmare', "Phosani's Nightmare", 'Grotesque Guardians', 'Barrows Brothers', 'Araxxor']) {
+      expect(ACTIVITY_REQUIREMENTS[boss].quests, boss).toContain('Priest in Peril');
+    }
+  });
+
+  it('needs no Nightmare kill before Phosani\'s Nightmare', () => {
+    expect(ACTIVITY_REQUIREMENTS["Phosani's Nightmare"].manualRequirements).toBeUndefined();
+  });
+
+  it('asks for Children of the Sun at Varlamore bosses', () => {
+    for (const boss of ['Fortis Colosseum', 'The Hueycoatl', 'Gemstone Crab']) {
+      expect(ACTIVITY_REQUIREMENTS[boss].quests, boss).toContain('Children of the Sun');
+    }
+  });
+
+  it('pins the remaining corrections', () => {
+    expect(ACTIVITY_REQUIREMENTS.Zalcano.skills).toEqual({ Mining: 70, Smithing: 70 });
+    expect(ACTIVITY_REQUIREMENTS.Nex.quests).toEqual(['Desert Treasure I']);
+    expect(ACTIVITY_REQUIREMENTS['Barrows Brothers'].questProgress?.[0].quest).toBe('His Faithful Servants');
+    expect(ACTIVITY_REQUIREMENTS['Moons of Peril'].skills).toBeUndefined();
+    expect(ACTIVITY_REQUIREMENTS.Inferno.manualRequirements).toEqual([expect.stringContaining('fire cape')]);
+  });
+
+  it('pins the minigame and utility corrections', () => {
+    expect(ACTIVITY_REQUIREMENTS["Sorceress's Garden"].quests).toEqual(['Prince Ali Rescue']);
+    expect(ACTIVITY_REQUIREMENTS['Impetuous Impulses'].oneOf).toHaveLength(2);
+    expect(ACTIVITY_REQUIREMENTS['Volcanic Mine'].manualRequirements).toBeUndefined();
+    expect(ACTIVITY_REQUIREMENTS['Archery Competition'].skills).toEqual({ Ranged: 40 });
+    expect(ACTIVITY_REQUIREMENTS['Gnome Restaurant'].skills).toEqual({ Cooking: 29 });
+    expect(ACTIVITY_REQUIREMENTS['Colossal Pouch'].skills).toEqual({ Runecraft: 25 });
+    expect(ACTIVITY_REQUIREMENTS["Mounted Xeric's Talisman"].skills).toEqual({ Construction: 72 });
+    expect(ACTIVITY_REQUIREMENTS['Mounted Digsite Pendant'].skills).toEqual({ Construction: 82 });
+    expect(ACTIVITY_REGIONS["Servants' Guild"]).toBe('Kandarin');
+  });
+});
+
 describe('Galvek leaves the boss table', () => {
   // He is fought once, inside Dragon Slayer II (owner decision B3).
   const migrate = (state: ReturnType<typeof createFreshState>) => {

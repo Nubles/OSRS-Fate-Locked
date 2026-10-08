@@ -1,6 +1,6 @@
 
 import { UnlockState, TableType } from '../types';
-import { SKILLS_LIST, EQUIPMENT_SLOTS, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST } from '../data/items';
+import { SKILLS_LIST, EQUIPMENT_SLOTS, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST } from '../data/items';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, isFrontierChunk } from './chunkAdjacency';
 import { BANK_IDS } from '../data/banks';
@@ -10,7 +10,7 @@ import { canonicalAreaName } from '../data/areaMapPolicy';
 import { bankLocksActive, isAreaReachable } from './reachability';
 import { unlockableAreas } from './freeAreas';
 import type { GameModeRules } from '../config/gameModes';
-import { ROLLABLE_POH_ITEMS } from '../data/items';
+import { ROLLABLE_POH_ITEMS, ROLLABLE_STORAGE_ITEMS } from '../data/items';
 
 /** The same tables and eligible entries drive rolls and their displayed odds. */
 export const randomUnlockTables = (mode?: string, custom?: GameModeRules): TableType[] => [
@@ -42,7 +42,7 @@ export const checkUnlockAvailability = (unlocks: UnlockState, mode?: string, cus
         merchants: unlocks.merchants.length < MERCHANTS_LIST.length,
         minigames: unlocks.minigames.length < MINIGAMES_LIST.length,
         bosses: unlocks.bosses.length < BOSSES_LIST.length,
-        storage: unlocks.storage.length < STORAGE_LIST.length,
+        storage: ROLLABLE_STORAGE_ITEMS.some(item => !unlocks.storage.includes(item)),
         guilds: unlocks.guilds.length < GUILDS_LIST.length,
         farming: unlocks.farming.length < FARMING_PATCH_LIST.length,
         slayerUnlocks: unlocks.slayerUnlocks.length < SLAYER_UNLOCKS_LIST.length,
@@ -161,7 +161,7 @@ export const getPoolAndStateKey = (table: TableType, mode?: string, custom?: Gam
         case TableType.MERCHANTS: return { pool: MERCHANTS_LIST, stateKey: 'merchants' };
         case TableType.MINIGAMES: return { pool: MINIGAMES_LIST, stateKey: 'minigame' };
         case TableType.BOSSES: return { pool: BOSSES_LIST, stateKey: 'boss' };
-        case TableType.STORAGE: return { pool: STORAGE_LIST, stateKey: 'storage' };
+        case TableType.STORAGE: return { pool: ROLLABLE_STORAGE_ITEMS, stateKey: 'storage' };
         case TableType.GUILDS: return { pool: GUILDS_LIST, stateKey: 'guild' };
         case TableType.FARMING_LAYERS: return { pool: FARMING_PATCH_LIST, stateKey: 'farming' };
         case TableType.SLAYER_UNLOCKS: return { pool: SLAYER_UNLOCKS_LIST, stateKey: 'slayerUnlocks' };

@@ -179,6 +179,7 @@ describe('evaluateActivityReadiness', () => {
     // The God Wars Dungeon's entrance is in Burthorpe's chunk, which gates Nex.
     expect(evaluateActivityReadiness(true, req, unlocked({
       regions: ['Burthorpe'],
+      quests: ['Desert Treasure I'],
       skills: { Strength: 7, Agility: 7, Ranged: 7, Hitpoints: 7 },
       levels: { Strength: 70, Agility: 70, Ranged: 70, Hitpoints: 70 },
     }))).toMatchObject({

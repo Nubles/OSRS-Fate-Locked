@@ -134,7 +134,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Kourend & Kebos'],
     skills: { 'Agility': 54, 'Thieving': 52, 'Woodcutting': 52, 'Herblore': 50, 'Mining': 42, 'Crafting': 38, 'Magic': 35 },
     quests: ['The Depths of Despair', 'The Queen of Thieves', 'Tale of the Righteous', 'The Forsaken Tower', 'The Ascent of Arceuus'], // Xeric's questline
-    description: 'Unlocks Arceuus Spellbook and Thralls.'
+    description: 'Unlocks 24 Arceuus spells, including the thralls (the spellbook itself needs no quest).'
   },
   'Beneath Cursed Sands': {
     id: 'Beneath Cursed Sands',
@@ -420,14 +420,18 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Wilderness God Wars Dungeon',
     category: TableType.MINIGAMES, // Dungeon
     regions: ['Wilderness'],
-    skills: { 'Agility': 60, 'Strength': 60 }, // Entry reqs
+    skills: {}, // The entrance is open; the inner shortcut takes 60 Strength or 60 Agility
+    accessRoutes: [
+      { label: '60 Strength', skills: { Strength: 60 } },
+      { label: '60 Agility', skills: { Agility: 60 } },
+    ],
     description: 'Source of Ecumenical Keys (Skip GWD kill count).'
   },
   'Ecumenical Keys': {
     id: 'Ecumenical Keys',
     category: TableType.MINIGAMES, // Grind
     regions: ['Wilderness'],
-    skills: { 'Agility': 60 },
+    skills: {}, // Every Wilderness God Wars Dungeon monster can drop one
     description: 'Farm keys in Wildy GWD to skip boss KC.'
   },
   'Rogues\' Castle': {
@@ -511,8 +515,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Taverley Dungeon Pipe', // Mapped to shortcut for access
     category: TableType.MINIGAMES,
     regions: ['Asgarnia'],
-    skills: { 'Agility': 70 },
-    description: 'Access to Blue Dragons for bones/hides.'
+    skills: {}, // The 70 Agility pipe, or a dusty key through the gate
+    description: 'Access to Blue Dragons for bones/hides (70 Agility pipe or a dusty key).'
   },
   'Red Dragons (Brimhaven)': {
     id: 'Red Dragons',
@@ -532,14 +536,22 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Spiritual Rangers',
     category: TableType.MINIGAMES,
     regions: ['Asgarnia'], // GWD
-    skills: { 'Slayer': 63, 'Agility': 60 },
+    skills: { 'Slayer': 63 },
+    accessRoutes: [
+      { label: '60 Strength', skills: { Strength: 60 } },
+      { label: '60 Agility', skills: { Agility: 60 } },
+    ],
     description: 'Source of Dragon Arrowtips.'
   },
   'Spiritual Warriors': {
     id: 'Spiritual Warriors',
     category: TableType.MINIGAMES,
     regions: ['Asgarnia'], // GWD
-    skills: { 'Slayer': 68, 'Agility': 60 },
+    skills: { 'Slayer': 68 },
+    accessRoutes: [
+      { label: '60 Strength', skills: { Strength: 60 } },
+      { label: '60 Agility', skills: { Agility: 60 } },
+    ],
     description: 'Source of Alchables in GWD.'
   },
   'Ancient Wyverns': {
@@ -601,7 +613,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.GUILDS,
     regions: ['Kourend & Kebos'],
     skills: { 'Woodcutting': 60 },
-    description: 'Offer Red eggs for prayer outfit/nests.'
+    description: 'Offer bird\'s eggs for Prayer XP, seed nests and the evil chicken outfit.'
   },
   'Farming Guild (Contracts)': {
     id: 'Farming Guild',
@@ -629,7 +641,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.GUILDS,
     regions: ['Misthalin'],
     skills: {}, // 32 QP
-    description: 'Shop sells Adamant Platebody and Legs.'
+    description: 'Shop sells an adamant platebody and black platelegs.'
   },
   'Ranging Guild (Minigame)': {
     id: 'Ranging Guild',
@@ -680,7 +692,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.AGILITY_COURSES,
     regions: ['Kourend & Kebos'],
     skills: { 'Agility': 34 },
-    description: 'Northern shortcut to Hill Giants.'
+    description: 'Crack between the warped jellies and the greater nechryael.'
   },
   'Xeric\'s Lookout': {
     id: 'Xeric\'s Lookout',
@@ -721,7 +733,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Miscellania Dock Stepping Stone',
     category: TableType.AGILITY_COURSES,
     regions: ['Fremennik'],
-    skills: { 'Agility': 45 },
+    skills: { 'Agility': 55 },
     description: 'Shortcut on Miscellania.'
   },
   'Coal Trucks Log Balance (Seers)': {
@@ -743,7 +755,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Observatory Grapple',
     category: TableType.AGILITY_COURSES,
     regions: ['Kandarin'],
-    skills: { 'Agility': 23, 'Strength': 24, 'Ranged': 28 }, // Mith Grapple req
+    skills: { 'Agility': 23, 'Strength': 28, 'Ranged': 24 }, // Mith Grapple req
     quests: ['Observatory Quest'],
     description: 'Grapple shortcut to the Observatory.'
   },
@@ -785,7 +797,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Bonecrusher',
     category: TableType.MINIGAMES, // Activity Reward
     regions: ['Morytania'],
-    skills: { 'Prayer': 70 },
+    skills: {},
     diaries: ['Morytania Hard'], // Hard
     description: 'Auto-buries bones for Prayer XP. Morytania Hard Diary.'
   },
@@ -862,7 +874,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Red Salamanders': {
     id: 'Red Salamanders',
     category: TableType.MINIGAMES,
-    regions: ['Misthalin'], // Ourania Altar
+    regions: ['Kandarin'], // Ourania Altar
     skills: { 'Hunter': 59 },
     description: 'Excellent XP/hr near Ourania Altar.'
   },
@@ -885,7 +897,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kandarin'], // Piscatoris
     skills: { 'Hunter': 37 },
-    description: 'Falconry required.'
+    description: 'Caught with deadfall traps in Piscatoris.'
   },
   'Sabre-toothed Kebbits': {
     id: 'Sabre-toothed Kebbits',
@@ -1204,7 +1216,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Infernal Tools',
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos', 'Asgarnia'], // Cerberus (Smouldering Stone) + Tool
-    skills: { 'Slayer': 91, 'Smithing': 85 },
+    skills: { 'Slayer': 91, 'Smithing': 85 }, // The pickaxe; the axe needs 85 Firemaking, the harpoon 85 Cooking and 75 Fishing
     description: 'Create Infernal Pickaxe/Axe/Harpoon.'
   },
   'Rune Defender': {
@@ -1290,7 +1302,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Shayzien
     skills: { 'Defence': 20 },
-    description: 'Required to fight Lizardman Shamans.'
+    description: 'Reduces the damage of Lizardman shamans\' acid attack.'
   },
   'Mining Gloves': {
     id: 'Mining Gloves',
@@ -1303,7 +1315,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Angler\'s Outfit',
     category: TableType.MINIGAMES,
     regions: ['Kandarin'], // Fishing Trawler
-    skills: { 'Fishing': 15 },
+    skills: { 'Fishing': 34 }, // To wear
     description: 'Fishing XP boosting set.'
   },
   'Lumberjack Outfit': {
@@ -1370,7 +1382,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Boots of Brimstone',
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Drakes/Wyrms (Component)
-    skills: { 'Slayer': 44, 'Runecraft': 44 }, // To create
+    skills: { 'Slayer': 44 }, // To wear (with 70 Defence, Magic or Ranged); no skill to make
     description: 'Best hybrid boots.'
   },
   'Devout Boots': {
@@ -1555,8 +1567,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Red Dragon Isle',
     category: TableType.MINIGAMES,
     regions: ['Karamja'], // Brimhaven Dungeon
-    skills: {},
-    diaries: ['Karamja Hard'], // Hard
+    skills: { 'Agility': 56 }, // No diary since May 2024
     description: 'Shortcut to Red Dragons in Brimhaven Dungeon.'
   },
   'Mos Le\'Harmless Cave': {
@@ -2109,7 +2120,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Sinister Chest',
     category: TableType.MINIGAMES,
     regions: ['Kandarin'], // Yanille Agility Dungeon
-    skills: { 'Agility': 40 }, // To enter dungeon
+    skills: { 'Agility': 49 }, // The pipe past the 40 ledge
     description: 'Redeem Sinister Keys for high level herbs (Torstol).'
   },
   'Grubby Chest': {
@@ -2157,9 +2168,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Limestone Mine': {
     id: 'Limestone Mine',
     category: TableType.MINIGAMES,
-    regions: ['Morytania'], // East of Paterdomus
+    regions: ['Misthalin'], // Silvarea, west of the Salve
     skills: { 'Mining': 10 },
-    quests: ['Priest in Peril'],
     description: 'Source of Limestone for Temple Trekking/Construction.'
   },
   'Salt Mine (Weiss)': {
@@ -2175,7 +2185,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Karamja'], // Shilo Underground
     skills: { 'Mining': 40 },
-    diaries: ['Karamja Hard'], // Hard
+    diaries: ['Karamja Medium'],
     description: 'Better gem rocks inside Shilo mine.'
   },
   'Essence Mine (Varrock)': {
@@ -2363,7 +2373,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Blue Dragon Scales',
     category: TableType.MINIGAMES,
     regions: ['Kandarin', 'Asgarnia'], // Myths Guild or Taverley
-    skills: { 'Agility': 70 }, // Taverley shortcut makes it viable
+    skills: {}, // Taverley: 70 Agility pipe or a dusty key
     description: 'Ground spawns in Taverley Dungeon or Myths Guild.'
   },
   'White Berries (Isle)': {
@@ -2385,7 +2395,6 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Fremennik'], // Waterbirth Island
     skills: {},
-    quests: ['The Fremennik Trials'],
     description: 'Ground spawns on Waterbirth Island.'
   },
   'Amylase Crystals': {
@@ -2478,7 +2487,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'],
     skills: { 'Slayer': 62 },
-    description: '1/2000 from Wyrms.'
+    description: '1/10,000 from wyrms (1/2,000 on a wyrm task).'
   },
   'Dragon Harpoon (Tempoross)': {
     id: 'Dragon Harpoon (Tempoross)',
@@ -2505,7 +2514,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MOBILITY,
     regions: ['Tirannwn'],
     skills: { 'Agility': 76 }, // Shortcut to useful area
-    quests: ['Fairytale II - Cure a Queen'],
+    quests: ['Fairytale II - Cure a Queen', 'Regicide'],
     description: 'Teleport near Zul-Andra (Requires Agility).'
   },
   'Fairy Ring DKS (Polar)': {
@@ -2554,7 +2563,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Misthalin'], // Salve River
     skills: {},
     quests: ['Fairytale II - Cure a Queen'],
-    description: 'Teleport to Polypore Dungeon/Salve River.'
+    description: 'Teleport to an island on the River Salve, south-west of Mort Myre.'
   },
   'Fairy Ring CIR (Mount K)': {
     id: 'Fairy Ring CIR',
@@ -2580,14 +2589,14 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Games Necklace (Wintertodt)',
     category: TableType.MOBILITY,
     regions: ['Kourend & Kebos'],
-    skills: { 'Crafting': 6 }, // Sapphire jewelry
+    skills: { 'Crafting': 22 }, // Sapphire necklace
     description: 'Direct teleport to Wintertodt Camp.'
   },
   'Games Necklace (Barb Assault)': {
     id: 'Games Necklace (BA)',
     category: TableType.MOBILITY,
     regions: ['Kandarin'],
-    skills: { 'Crafting': 6 },
+    skills: { 'Crafting': 22 }, // Sapphire necklace
     description: 'Direct teleport to Barbarian Outpost.'
   },
   'Dueling Ring (Ferox)': {
@@ -2608,7 +2617,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Necklace of Passage',
     category: TableType.MOBILITY,
     regions: ['Misthalin', 'Kandarin'], // Wizards Tower / Outpost
-    skills: { 'Crafting': 56 }, // Jade
+    skills: { 'Crafting': 25 }, // Jade necklace
     description: 'Teleport to Wizards Tower or Outpost.'
   },
   'Skills Necklace': {
@@ -2642,7 +2651,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Superglass Make',
     category: TableType.ARCANA,
     regions: ['Fremennik'], // Lunar Isle access
-    skills: { 'Magic': 77, 'Crafting': 61 },
+    skills: { 'Magic': 77 },
     quests: ['Lunar Diplomacy'],
     description: 'Best Crafting XP/Sand processing method in the game.'
   },
@@ -2683,7 +2692,6 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.ARCANA,
     regions: ['Kourend & Kebos'], // Arceuus
     skills: { 'Magic': 78 },
-    quests: ['A Kingdom Divided'],
     description: 'Save dead farming patches (Crucial for Ranarrs).'
   },
   'Demonic Offering': {

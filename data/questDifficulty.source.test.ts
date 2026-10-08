@@ -38,6 +38,12 @@ const QUEST_HELPER_NAME: Record<string, string> = {
   'RFD: Finale': 'RECIPE_FOR_DISASTER_FINALE',
 };
 
+/** Where the owner follows the OSRS Wiki over Quest Helper's rating. */
+const WIKI_RATING: Record<string, string> = {
+  // Wiki infobox and Quests/List say Intermediate (roll data audit, 7 October 2026).
+  'At First Light': 'INTERMEDIATE',
+};
+
 /** Released after the pinned snapshot; review their ratings when it is refreshed. */
 const NOT_IN_SNAPSHOT = ['A Ruff Situation', 'Crab Quest', 'Learning the Ropes'];
 
@@ -74,7 +80,7 @@ describe('quest difficulty', () => {
       const key = QUEST_HELPER_NAME[quest.id] ?? QUEST_HELPER_NAME[quest.name]
         ?? [enumName(quest.name), `THE_${enumName(quest.name)}`, enumName(quest.name).replace(/^THE_/, '')]
           .find(candidate => ratings.has(candidate));
-      const rating = key === undefined ? undefined : ratings.get(key);
+      const rating = WIKI_RATING[quest.id] ?? (key === undefined ? undefined : ratings.get(key));
       if (rating === undefined) {
         unlisted.push(quest.id);
         continue;

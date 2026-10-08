@@ -1707,7 +1707,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'At First Light', name: 'At First Light',
     regions: ['Hunter\'s Guild', 'Avium Savannah', 'Civitas illa Fortis'],
     skills: { 'Hunter': 46, 'Herblore': 30, 'Construction': 27 }, prereqs: ["Children of the Sun","Eagles' Peak"], points: 1,
-    difficulty: DropSource.QUEST_NOVICE
+    // The OSRS Wiki rates it Intermediate; Quest Helper's snapshot says Novice (owner call, 7 October 2026).
+    difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Perilous Moons': {
     kind: 'quest', accessPolicy: 'locations',
