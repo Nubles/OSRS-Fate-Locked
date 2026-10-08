@@ -7902,7 +7902,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Rellekka\",\"Seers' Village\",\"Tree Gnome Stronghold\",\"Shilo Village\",\"Falador\",\"Draynor Village\",\"Shantay Pass\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":56}],\"id\":\"general-khazard\",\"label\":\"General Khazard south-east of Rellekka\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":38,\"cy\":52}],\"id\":\"gnomish-scout\",\"label\":\"Gnomish scout outside the Gnome Stronghold\",\"standardAreas\":[\"Tree Gnome Stronghold\"]}],\"skills\":{},\"prereqs\":[\"Fight Arena\",\"Curse of the Empty Lord\"],\"oneOf\":[{\"regions\":[\"Fishing Guild\"]},{\"regions\":[\"Hemenster\"]}],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Rellekka\",\"Seers' Village\",\"Tree Gnome Stronghold\",\"Shilo Village\",\"Falador\",\"Draynor Village\",\"Shantay Pass\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":56}],\"id\":\"general-khazard\",\"label\":\"General Khazard south-east of Rellekka\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":38,\"cy\":52}],\"id\":\"gnomish-scout\",\"label\":\"Gnomish scout outside the Gnome Stronghold\",\"standardAreas\":[\"East Ardougne\"]}],\"skills\":{},\"prereqs\":[\"Fight Arena\",\"Curse of the Empty Lord\"],\"oneOf\":[{\"regions\":[\"Fishing Guild\"]},{\"regions\":[\"Hemenster\"]}],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "38,52",
@@ -7937,7 +7937,8 @@
         "travel": [
           "The Wiki requires south-east Rellekka, Seers' Village, Tai Bwo Wannai, the Tree Gnome Stronghold entrance, the Falador/Draynor fence, Shantay Pass, and Goblin Cave. The picker omits Tai Bwo Wannai and Goblin Cave, so the source-supported five-region policy is retained.",
           "The catalogue-wide parent-region audit replaced Fremennik, Kandarin, Karamja, Asgarnia, Kharidian Desert with the exact tracked access set: Rellekka, Observatory, Seers' Village, Tree Gnome Stronghold, Tai Bwo Wannai, Falador, Shantay Pass.",
-          "Accuracy review 2026-10-02: The scouts and the Goblin Cave as the map has them: the Karamjan scout is in 44,47 (Shilo Village, replacing Tai Bwo Wannai), the Falador scout in 48,52 (Draynor Village), and Bouncer's ghost in the Goblin Cave between the Fishing Guild and Hemenster (a one-of). General Khazard (42,56) and the Gnomish scout (38,52) are stand-ins for chunks no area owns (owner decision of 2 Oct), asking for Rellekka and the Tree Gnome Stronghold. The Observatory stand-in is dropped (Wiki revision 15336893)."
+          "Accuracy review 2026-10-02: The scouts and the Goblin Cave as the map has them: the Karamjan scout is in 44,47 (Shilo Village, replacing Tai Bwo Wannai), the Falador scout in 48,52 (Draynor Village), and Bouncer's ghost in the Goblin Cave between the Fishing Guild and Hemenster (a one-of). General Khazard (42,56) and the Gnomish scout (38,52) are stand-ins for chunks no area owns (owner decision of 2 Oct), asking for Rellekka and the Tree Gnome Stronghold. The Observatory stand-in is dropped (Wiki revision 15336893).",
+          "Map data audit 2026-10-08: Jorral's Outpost (38,52) now belongs to East Ardougne, so the Gnomish scout at the Gnome Stronghold's gate asks for East Ardougne."
         ],
         "instances": [
           "The final Ghost of Bouncer fight occurs beyond a crack in Goblin Cave."

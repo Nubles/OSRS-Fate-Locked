@@ -56,6 +56,8 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   'Gemstone Crab': ['Tlati Rainforest'],
   'Shellbane Gryphon': ['The Great Conch'],
   'The Mad Angel': ['Wyrmscraig'],
+  // Torfinn sails to Ungael from Rellekka, and the island's chunk opens with Rellekka.
+  Vorkath: ['Rellekka'],
   // Each entrance's chunk, as the map owns it.
   'Tombs of Amascut': ['Sophanem'],
   Nex: ['Burthorpe'],
@@ -121,7 +123,6 @@ export const NO_HARD_LOCATION_GATE = new Set<string>([
   'Callisto', // no tracked named-area gate (Wilderness bear cave)
   'Venenatis', // no tracked named-area gate (Wilderness spider cave)
   "Vet'ion", // no tracked named-area gate (Wilderness skeleton cave)
-  'Vorkath', // no tracked named-area gate (Ungael)
   'Mimic', // no tracked named-area gate (casket-triggered encounter)
 
   // Distributed, event, or untracked-content activities.

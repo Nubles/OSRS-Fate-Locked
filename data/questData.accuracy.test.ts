@@ -2596,7 +2596,7 @@ describe('audited current quest requirements', () => {
             "id": "gnomish-scout",
             "label": "Gnomish scout outside the Gnome Stronghold",
             "standardAreas": [
-              "Tree Gnome Stronghold"
+              "East Ardougne"
             ],
             "chunkOptions": [
               {

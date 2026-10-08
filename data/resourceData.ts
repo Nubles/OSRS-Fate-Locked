@@ -2525,7 +2525,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Desert Goat Horn': 1 }, notes: 'Grind with a Pestle and mortar' }
   ],
   'Unicorn Horn': [
-    { type: 'DROP', name: 'Unicorn', regions: ['Misthalin', 'Kandarin', 'Asgarnia', 'Kourend & Kebos', 'Varlamore', 'The Open Seas', 'Islands & Others'], rarity: 'Always' }
+    { type: 'DROP', name: 'Unicorn', regions: ['Misthalin', 'Kandarin', 'Fremennik', 'Asgarnia', 'Kourend & Kebos', 'Varlamore', 'The Open Seas', 'Islands & Others'], rarity: 'Always' }
   ],
   'Unicorn Horn Dust': [
     { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Unicorn Horn': 1 }, notes: 'Grind with a Pestle and mortar' }

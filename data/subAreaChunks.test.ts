@@ -93,6 +93,16 @@ describe('sub-area chunk assignments', () => {
       '46,60': ['Lava Maze', 'the Chaos Fanatic at the Western Obelisk'],
       '48,57': ['Graveyard of Shadows', "Artio's cave entrance (Hunter's End)"],
       '49,58': ['Graveyard of Shadows', "Spindel's cave entrance (Web Chasm), at the Eastern Ruins"],
+      // Map data audit, 8 October 2026: in-between chunks join the area beside them.
+      '35,63': ['Rellekka', "Ungael (Vorkath), reached on Torfinn's boat from Rellekka"],
+      '19,47': ['Tlati Rainforest', 'a Gemstone Crab spawn in the Tlati Rainforest'],
+      '20,47': ['Tlati Rainforest', 'the Crypt of Tonali and its cavern'],
+      '23,49': ["Ralos' Rise", 'the Teomat, on top of Ralos\' Rise'],
+      '23,50': ["Ralos' Rise", 'the Quetzacalli Gorge bank'],
+      '25,50': ["Ralos' Rise", 'the Tower of Ascension, beside the Twilight Temple'],
+      '25,51': ["Ralos' Rise", 'Salvager Overlook'],
+      '41,56': ['Rellekka', 'the strange altar in the Fremennik Province, south of Rellekka'],
+      '35,53': ['Gwenith', 'Gorlah, beside Gwenith'],
     };
     for (const [chunk, [area, place]] of Object.entries(PLACES)) {
       expect(SUB_AREA_CHUNKS[area].map(({ cx, cy }) => `${cx},${cy}`), `${place} (${chunk})`).toContain(chunk);
@@ -107,13 +117,9 @@ describe('sub-area chunk assignments', () => {
     // Giants' Foundry, Kraken Cove and Tal Teklan did. These places have no area of
     // their own, so they keep opening with their whole region.
     const REVIEWED: Readonly<Record<string, string>> = {
-      '41,56': 'Strange altar in the Fremennik Province, south of Rellekka',
-      '35,53': 'Gorlah, in Tirannwn',
       '50,45': 'The Jaldraocht Pyramid, in the open desert (owner decision M4)',
       '53,44': 'The Ruins of Ullek, in the open desert (owner decision M4)',
       '53,49': 'Citharede Abbey, in the open desert (owner decision M4)',
-      '23,50': 'Quetzacalli Gorge, in the Hailstorm Mountains',
-      '25,51': 'Salvager Overlook, north of Civitas illa Fortis',
       '48,59': "Edmond's cape shop, in the Wilderness (owner decision M4)",
       '50,60': "William's cape shop on Lava Dragon Isle, in the Wilderness (owner decision M4)",
       '47,61': "Darren's cape shop at the Pirates' Hideout, in the Wilderness (owner decision M4)",
