@@ -74,6 +74,7 @@ export const RUNELITE_SETTINGS: readonly RuneliteSetting[] = [
   { key: 'tagLockedOptions', section: 'Alerts', name: 'Tag locked right-click options', defaultValue: 'On' },
   { key: 'rollNudges', section: 'Alerts', name: 'Roll reminders', defaultValue: 'On' },
   { key: 'useNotifier', section: 'Alerts', name: 'Also send RuneLite notifications', defaultValue: 'Off' },
+  { key: 'announceUnlocks', section: 'Alerts', name: 'Announce new unlocks', defaultValue: 'On' },
   {
     key: 'hudMode',
     section: 'Display',
@@ -105,6 +106,11 @@ export const RUNELITE_SETTINGS: readonly RuneliteSetting[] = [
   },
   { key: 'shadeNearbyLocked', section: 'Display', name: 'Shade locked land nearby', defaultValue: 'On' },
   { key: 'drawMinimap', section: 'Display', name: 'Minimap chunk borders', defaultValue: 'On' },
+  { key: 'outlineLocked', section: 'Display', name: 'Outline locked things', defaultValue: 'On' },
+  { key: 'outlineBanksAndShops', section: 'Display', name: 'Outline banks and shops', defaultValue: 'On' },
+  { key: 'outlineSkilling', section: 'Display', name: 'Outline skilling spots', defaultValue: 'On' },
+  { key: 'outlineMonsters', section: 'Display', name: 'Outline monsters and bosses', defaultValue: 'On' },
+  { key: 'outlineOpen', section: 'Display', name: 'Outline open ones too', defaultValue: 'Off' },
   { key: 'showInfoBoxes', section: 'Display', name: 'Infoboxes', defaultValue: 'Off' },
   {
     key: 'colourPreset',
