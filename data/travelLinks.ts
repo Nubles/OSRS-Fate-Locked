@@ -139,15 +139,19 @@ export const TRAVEL_NETWORKS: readonly TravelNetwork[] = [
   },
   {
     // The eyrie in Eagles' Peak (31,77) links the desert, jungle and polar lairs.
+    // The graph also joins the lairs' caves to Eagles' Peak through the
+    // dungeon, which is the same flight.
     label: 'Eagle transport',
-    nodes: ['31,77', 'Desert eagle lair', 'Jungle eagle lair', 'Polar eagle lair'],
+    nodes: ['31,77', 'Desert eagle lair', 'Jungle eagle lair', 'Polar eagle lair', "Eagles' Peak Dungeon"],
     opensWith: [{ mobility: 'Eagle Transport', quests: ["Eagles' Peak"] }],
     source: wiki('Eagle transport system', 15212928),
   },
   {
     // The carts want The Giant Dwarf started, which the app can't see.
+    // 45,158 is the carts' own tunnel, joining the Grand Exchange, Ice
+    // Mountain and White Wolf Mountain stations.
     label: 'Keldagrim mine carts',
-    nodes: ['Keldagrim'],
+    nodes: ['Keldagrim', '45,158'],
     opensWith: [{ mobility: 'Mine Carts' }],
     source: wiki('Keldagrim minecart system', 15323246),
   },

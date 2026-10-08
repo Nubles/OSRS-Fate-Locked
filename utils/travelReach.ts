@@ -3,12 +3,9 @@
  * reviewed corrections in data/travelLinks.ts. A travel network the run hasn't
  * unlocked makes no route, and the boats the graph leaves out join their
  * docks. The Diary Journal and the Quest Log (through utils/areaRoutes.ts),
- * the map's reachability lens and Chunked mode's Doable tab all ask this, so
- * they agree on what is stranded.
- *
- * RuneLite's chunk statuses (utils/chunkEntry.ts) still read the plain graph,
- * which errs toward "reachable": in game, a place is never called unreachable
- * because of a route this app doesn't know.
+ * the map's reachability lens, Chunked mode's Doable tab and RuneLite's
+ * chunk statuses (utils/chunkEntry.ts) all ask this, so they agree on what
+ * is stranded.
  */
 
 import { BOAT_CROSSINGS, TRAVEL_NETWORKS, type BoatCrossing, type NetworkOpener } from '../data/travelLinks';

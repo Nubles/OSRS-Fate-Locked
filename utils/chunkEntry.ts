@@ -11,8 +11,8 @@ import { CHUNKED_START } from './chunkAdjacency';
 import { chunkForPlace, chunkUnlocked, placeOf } from './chunkLocations';
 import { canNavigateOcean, OCEAN_CHUNK_KEYS } from './oceanAccess';
 import type { PermissionStatus } from './chunkPermissionSnapshot';
-import { chunkReachability } from './chunkReach';
 import { entryBlockedGate } from './questDoability';
+import { chunkReachability } from './chunkReach';
 
 /** Quests the entry gate knows, by id and by name. */
 const KNOWN_QUESTS = new Set([
@@ -25,17 +25,34 @@ export interface ReachSource {
   questSections(): Record<string, string[]>;
 }
 
+type TravelReachability = typeof import('./travelReach').travelReachability;
+let travelReachability: TravelReachability | null = null;
+
+/**
+ * Loads the app's routes for runReach, once. They load with the map's chunk
+ * content (ChunkContentService.init), not with the app: the travel rules
+ * would push the entry chunk over its budget, and runReach only runs once
+ * the chunk content is in.
+ */
+export const loadRunRoutes = (): Promise<void> => import('./travelReach')
+  .then(module => { travelReachability = module.travelReachability; });
+
 /**
  * The owned chunks a route from the run's start reaches, as numeric ids
  * (cx * 256 + cy). Chunked runs start in their free chunk, the rest at
- * Lumbridge. A chunk whose entry needs an unfinished quest is not reached,
- * and routes don't pass through it.
+ * Lumbridge. Routes are the ones the app shows (utils/travelReach.ts): a
+ * travel network the run hasn't unlocked makes none, so RuneLite's "Not
+ * ready" agrees with the Diary Journal's "stranded". Until those routes
+ * load, the plain graph stands in, which errs toward reachable. A chunk
+ * whose entry needs an unfinished quest is not reached, and routes don't
+ * pass through it.
  */
 export function runReach(source: ReachSource, unlocks: UnlockState, gameModeId: string): Set<string> {
   const completed = new Set(unlocks.quests);
   const blocked = entryBlockedGate(source.questSections(), completed, KNOWN_QUESTS);
   const start = gameModeId === 'chunked' ? CHUNKED_START : chunkForPlace('Lumbridge');
-  return chunkReachability(source.connectGraph(), unlocks, start, blocked, gameModeId).reachable;
+  const reach = travelReachability ?? chunkReachability;
+  return reach(source.connectGraph(), unlocks, start, blocked, gameModeId).reachable;
 }
 
 /**

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import content from '../public/chunk-content.json';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
@@ -13,6 +13,10 @@ import { computeAreaRoutes } from './areaRoutes';
 import { chunkReachability } from './chunkReach';
 import { chunkForPlace } from './chunkLocations';
 import { closedTravelNodes, graphNode, routeGraph, travelReachability } from './travelReach';
+import { loadWalkSections } from './walkSections';
+
+// Routes walk the Chunk Picker sections, which load with the chunk content.
+beforeAll(() => loadWalkSections());
 
 /**
  * A player reported on 29 September 2026 that the Diary Journal called tasks
@@ -195,10 +199,11 @@ describe('what is stranded', () => {
     const everything = run({ regions: Object.keys(AREAS) });
     const reaches = (unlocks: UnlockState, dock: string) =>
       travelReachability(connect, unlocks, LUMBRIDGE, undefined, 'vanilla').reachable.has(graphNode(dock));
-    // The squire's boat from Port Sarim needs nothing; the plain graph never reached the outpost.
-    expect(reaches(run({ regions: ['Port Sarim', "Void Knights' Outpost"] }), '41,41')).toBe(true);
-    expect(chunkReachability(connect, everything, LUMBRIDGE, undefined, 'vanilla').reachable.has(graphNode('41,41')))
-      .toBe(false);
+    // The squire's boat from Port Sarim needs nothing, and the walking sections sail it too.
+    const outpost = run({ regions: ['Port Sarim', "Void Knights' Outpost"] });
+    expect(reaches(outpost, '41,41')).toBe(true);
+    expect(chunkReachability(connect, outpost, LUMBRIDGE, undefined, 'vanilla').reachable.has(graphNode('41,41')))
+      .toBe(true);
     // Lokar Searunner sails from Rellekka to Pirates' Cove after The Fremennik Trials.
     expect(stranded(everything).has("Pirates' Cove")).toBe(true);
     const trials = { ...everything, quests: ['The Fremennik Trials'] };
@@ -234,5 +239,53 @@ describe('what is stranded', () => {
     const voyage = travelReachability(connect, { ...everything, quests: ['Bone Voyage'] }, LUMBRIDGE, undefined, 'vanilla');
     expect(plain.has(graphNode('58,59'))).toBe(false);
     expect(voyage.reachable.has(graphNode('58,59'))).toBe(true);
+  });
+});
+
+/**
+ * Players reported on 8 October 2026 that the Diary Journal offered Seers'
+ * Village tasks, and the map joined the Ruins of Uzer to Morytania, where
+ * owned chunks sit side by side with no way to walk between them.
+ */
+describe('walking between owned chunks', () => {
+  const reached = (unlocks: UnlockState, cx: number, cy: number) =>
+    travelReachability(connect, unlocks, LUMBRIDGE, undefined, 'vanilla').reachable.has(idOf({ cx, cy }));
+
+  it('needs a way across: no walk from the Haunted Mine into the Ruins of Uzer', () => {
+    const uzer = run({ regions: ['Ruins of Uzer', 'Haunted Mine', "Mort'ton", 'Mort Myre Swamp', 'Digsite'] });
+    expect(reached(uzer, 53, 50)).toBe(true);
+    expect(reached(uzer, 53, 49)).toBe(false);
+    expect(stranded(uzer).has('Ruins of Uzer')).toBe(true);
+  });
+
+  it("walks the strip of Seers' Village beside the Warriors' Guild, but no further into the village", () => {
+    const seers = run({ regions: ["Seers' Village", "Warriors' Guild", 'Taverley', 'Falador'] });
+    expect(reached(seers, 44, 55)).toBe(true);
+    expect(reached(seers, 43, 55)).toBe(true);
+    for (const [cx, cy] of [[42, 55], [42, 54], [41, 54], [42, 53]]) expect(reached(seers, cx, cy), `${cx},${cy}`).toBe(false);
+    expect(stranded(seers).has("Seers' Village")).toBe(true);
+    // With Camelot between them, the village is a walk away.
+    expect(stranded({ ...seers, regions: [...seers.regions, 'Camelot', 'Catherby'] }).has("Seers' Village")).toBe(false);
+  });
+
+  it("keeps the eagles' dungeon shut with the rest of the eagle network", () => {
+    expect(closedTravelNodes(run()).has("Eagles' Peak Dungeon")).toBe(true);
+    expect(closedTravelNodes(run({ mobility: ['Eagle Transport'], quests: ["Eagles' Peak"] })).has("Eagles' Peak Dungeon"))
+      .toBe(false);
+  });
+
+  it("keeps the mine carts' own tunnel shut with the rest of the carts", () => {
+    // It joins the Grand Exchange, Ice Mountain and White Wolf Mountain stations.
+    expect(closedTravelNodes(run()).has(graphNode('45,158'))).toBe(true);
+    expect(closedTravelNodes(run({ mobility: ['Mine Carts'] })).has(graphNode('45,158'))).toBe(false);
+  });
+
+  it('strands nothing an owned-everything run reached by the old chunk grid', () => {
+    const everything = run({ regions: Object.keys(AREAS) });
+    const all = travelReachability(connect, everything, LUMBRIDGE, undefined, 'vanilla').reachable;
+    // The islands the walking sections can't reach keep their way in from the chunk next door.
+    for (const area of ['Miscellania & Etceteria', 'Neitiznot', 'Jatizso', 'Lithkren', 'Weiss', 'The Stranglewood']) {
+      expect(AREAS[area].some(chunk => all.has(idOf(chunk))), area).toBe(true);
+    }
   });
 });
