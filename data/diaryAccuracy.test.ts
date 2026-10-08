@@ -156,7 +156,7 @@ describe('Desert Diary tasks done in the desert', () => {
       for (const area of areas) {
         expect(namedAreaChunks(area).every(({ cx, cy }) => chunks.includes(`${cx},${cy}`)), `${id}: ${area}`).toBe(true);
       }
-      expect(chunks.filter(chunk => !AREA_OF_CHUNK.has(chunk)), id).toEqual(expect.arrayContaining(['50,45', '53,48', '53,49']));
+      expect(chunks, id).toEqual(expect.arrayContaining(['50,45', '53,48', '53,49']));
       expect(task(id).anyOfRegions, id).toBeUndefined();
     }
   });

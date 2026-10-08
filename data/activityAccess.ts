@@ -26,6 +26,10 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   Spindel: ['Graveyard of Shadows'],
   'Crazy Archaeologist': ['Forgotten Cemetery'],
   'Chaos Fanatic': ['Lava Maze'],
+  // The Escape Caves entrances (50,59 51,58 51,59) open with Chaos Temple, beside the Bone Yard.
+  Callisto: ['Chaos Temple'],
+  Venenatis: ['Chaos Temple'],
+  "Vet'ion": ['Chaos Temple'],
   Scorpia: ["Scorpia's Cave"],
   'The Hueycoatl': ['Darkfrost'],
   'Moons of Peril': ['Cam Torum'],
@@ -51,11 +55,13 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   "TzHaar-Ket-Rak's Challenges": ['Mor Ul Rek (TzHaar City)'],
   'Tormented Demons': ['Lumbridge'],
   'The Royal Titans': ['Asgarnian Ice Dungeon'],
-  Yama: ['Mount Karuulm'],
+  Yama: ['Shayzien'],
   'Doom of Mokhaiotl': ['Tlati Rainforest'],
   'Gemstone Crab': ['Tlati Rainforest'],
   'Shellbane Gryphon': ['The Great Conch'],
   'The Mad Angel': ['Wyrmscraig'],
+  // Torfinn sails to Ungael from Rellekka, and the island's chunk opens with Rellekka.
+  Vorkath: ['Rellekka'],
   // Each entrance's chunk, as the map owns it.
   'Tombs of Amascut': ['Sophanem'],
   Nex: ['Burthorpe'],
@@ -118,10 +124,6 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
 export const NO_HARD_LOCATION_GATE = new Set<string>([
   // Boss venues or entrances not represented by a single tracked named area.
   'Abyssal Sire', // no tracked named-area gate (fairy-ring interior)
-  'Callisto', // no tracked named-area gate (Wilderness bear cave)
-  'Venenatis', // no tracked named-area gate (Wilderness spider cave)
-  "Vet'ion", // no tracked named-area gate (Wilderness skeleton cave)
-  'Vorkath', // no tracked named-area gate (Ungael)
   'Mimic', // no tracked named-area gate (casket-triggered encounter)
 
   // Distributed, event, or untracked-content activities.

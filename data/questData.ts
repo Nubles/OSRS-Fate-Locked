@@ -119,7 +119,7 @@ const LOCATIONS = {
   necropolisMainTemple: { id: 'necropolis-main-temple', label: 'Necropolis main temple', standardAreas: ['Sophanem'], chunkOptions: [{ cx: 52, cy: 42 }] },
   abandonedMine: { id: 'abandoned-mine', label: "Haunted Mine and Tarn's Lair", standardAreas: ['Haunted Mine'], chunkOptions: [{ cx: 53, cy: 50 }] },
   skippysCamp: { id: 'skippys-camp', label: "Skippy's camp south-east of Rimmington", standardAreas: ['Port Sarim'], chunkOptions: [{ cx: 46, cy: 49 }] },
-  // Stand-in: Jorral's Outpost (38,52) belongs to no area; it is on the road out of East Ardougne (39,52).
+  // Jorral's Outpost (38,52) belongs to East Ardougne; it is on the road out of East Ardougne (39,52).
   jorralsOutpost: { id: 'jorrals-outpost', label: "Jorral's Outpost", standardAreas: ['East Ardougne'], chunkOptions: [{ cx: 38, cy: 52 }] },
   // The elemental altars' ruins.
   airAltar: { id: 'air-altar', label: 'Air altar', standardAreas: ['Falador'], chunkOptions: [{ cx: 46, cy: 51 }] },
@@ -594,7 +594,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     ],
     regions: ['Bedabin Camp', 'Shantay Pass'],
     locations: [
-      // Stand-in: the Desert Mining Camp (51,47) belongs to no area; it is just south of the Shantay Pass (51,48).
+      // The Desert Mining Camp (51,47) belongs to Shantay Pass; it is just south of the Shantay Pass (51,48).
       { id: 'desert-mining-camp', label: 'Desert Mining Camp', standardAreas: ['Shantay Pass'], chunkOptions: [{ cx: 51, cy: 47 }] },
     ],
     skills: { 'Fletching': 10, 'Smithing': 20 }, prereqs: [], points: 2,
@@ -876,7 +876,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'The Golem', name: 'The Golem',
     regions: ['Ruins of Uzer', 'Varrock', 'Digsite'],
     locations: [
-      // Stand-in: the desert phoenix's clay mine (53,49) belongs to no area; it is just north-west of the Ruins of Uzer.
+      // The desert phoenix's clay mine (53,49) belongs to Ruins of Uzer; it is just north-west of the Ruins of Uzer.
       { id: 'desert-phoenix', label: 'Desert phoenix north of Uzer', standardAreas: ['Ruins of Uzer'], chunkOptions: [{ cx: 53, cy: 49 }] },
     ],
     skills: { 'Crafting': 20, 'Thieving': 25 }, prereqs: [], points: 1,
@@ -888,7 +888,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skillAlternatives: [{ skill: 'Slayer', quests: ['Plague City'], manualRequirements: ['Have a gas mask from Plague City for the smoke dungeon (alternative to Slayer 10)'] }],
     regions: ['Bandit Camp', 'Bedabin Camp', 'Pollnivneach', 'Entrana', 'Burthorpe', 'Baxtorian Falls', 'Canifis', 'Mort Myre Swamp', 'Mountain Camp', 'Digsite', 'Draynor Village'],
     locations: [
-      // Stand-in: the Jaldraocht Pyramid (50,45) belongs to no area; it is reached on foot from the Bandit Camp (49,46).
+      // The Jaldraocht Pyramid (50,45) belongs to Bandit Camp; it is reached on foot from the Bandit Camp (49,46).
       { id: 'jaldraocht-pyramid', label: 'Jaldraocht Pyramid', standardAreas: ['Bandit Camp'], chunkOptions: [{ cx: 50, cy: 45 }] },
     ],
     skills: { 'Thieving': 53, 'Firemaking': 50, 'Slayer': 10, 'Magic': 50 }, prereqs: ['The Dig Site', 'Temple of Ikov', 'The Tourist Trap', 'Troll Stronghold', 'Priest in Peril', 'Waterfall Quest'], points: 3, series: 'Mahjarrat',
@@ -950,7 +950,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Mourning\'s End Part I', name: 'Mourning\'s End Part I',
     regions: ['Lletya', 'Tyras Camp', 'Isafdar', 'Arandar', 'West Ardougne', 'Taverley', 'Rimmington', 'East Ardougne', 'Feldip Hills'],
     locations: [
-      // Stand-in: the orchard by Jorral's Outpost (38,52) belongs to no area; it is on the road out of East Ardougne (39,52).
+      // The orchard by Jorral's Outpost (38,52) belongs to East Ardougne; it is on the road out of East Ardougne (39,52).
       { id: 'jorrals-orchard', label: "Apple orchard by Jorral's Outpost", standardAreas: ['East Ardougne'], chunkOptions: [{ cx: 38, cy: 52 }] },
     ],
     skills: { 'Ranged': 60, 'Thieving': 50 }, prereqs: ['Roving Elves', 'Big Chompy Bird Hunting', 'Sheep Herder'], points: 2, series: 'Elf',
@@ -1028,9 +1028,9 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Spirits of the Elid', name: 'Spirits of the Elid',
     regions: ['Nardah'],
     locations: [
-      // Stand-in: the Water Ravine (52,48) belongs to no area; you walk to it up the River Elid from Nardah.
+      // The Water Ravine (52,48) belongs to Nardah; you walk to it up the River Elid from Nardah.
       { id: 'water-ravine', label: 'Water Ravine at the source of the River Elid', standardAreas: ['Nardah'], chunkOptions: [{ cx: 52, cy: 48 }] },
-      // Stand-in: the genie's cave (52,45) belongs to no area; it is across the River Elid from Nardah.
+      // The genie's cave (52,45) belongs to Nardah; it is across the River Elid from Nardah.
       { id: 'genie-cave', label: "Genie's cave", standardAreas: ['Nardah'], chunkOptions: [{ cx: 52, cy: 45 }] },
     ],
     skills: { 'Magic': 33, 'Ranged': 37, 'Mining': 37, 'Thieving': 37 }, prereqs: [], points: 2,
@@ -1056,7 +1056,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Enakhra\'s Lament', name: 'Enakhra\'s Lament',
     regions: ["Kharidian Desert"],
     locations: [
-      { id: "desert-quarry-and-temple", label: "Desert Quarry and Enakhra's Temple", standardAreas: ["Agility Pyramid"], chunkOptions: [{ cx: 49, cy: 45 }] },
+      { id: "desert-quarry-and-temple", label: "Desert Quarry and Enakhra's Temple", standardAreas: ["Bandit Camp"], chunkOptions: [{ cx: 49, cy: 45 }] },
     ],
     skills: { 'Crafting': 50, 'Firemaking': 45, 'Magic': 39, 'Prayer': 43 }, prereqs: [],
     manualRequirements: ["Must be on the standard spellbook"], points: 2, series: 'Mahjarrat',
@@ -1257,7 +1257,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'The Eyes of Glouphrie', name: 'The Eyes of Glouphrie',
     regions: ['Tree Gnome Stronghold', 'Yanille'],
     locations: [
-      // Stand-in: the giant tortoises' pen (37,55) belongs to no area; it is inside the Gnome Stronghold's walls.
+      // The giant tortoises' pen (37,55) belongs to Tree Gnome Stronghold; it is inside the Gnome Stronghold's walls.
       { id: 'giant-tortoises', label: 'Giant tortoises in the Gnome Stronghold', standardAreas: ['Tree Gnome Stronghold'], chunkOptions: [{ cx: 37, cy: 55 }] },
     ],
     skills: { 'Construction': 5, 'Magic': 46 }, prereqs: ['The Grand Tree'], points: 2, series: 'Gnome',
@@ -1336,9 +1336,9 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Cold War', name: 'Cold War',
     regions: ['Rellekka', 'East Ardougne', 'Lumbridge'],
     locations: [
-      // Stand-in: the icebergs (41,62) belong to no area; Larry's boat to them leaves from Rellekka's dock.
+      // The icebergs (41,62) belong to Rellekka; Larry's boat to them leaves from Rellekka's dock.
       { id: 'south-iceberg', label: 'South iceberg', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 41, cy: 62 }] },
-      // Stand-in: the icebergs (41,63) belong to no area; Larry's boat to them leaves from Rellekka's dock.
+      // The icebergs (41,63) belong to Rellekka; Larry's boat to them leaves from Rellekka's dock.
       { id: 'north-iceberg', label: 'North iceberg', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 41, cy: 63 }] },
     ],
     skills: { 'Hunter': 10, 'Agility': 30, 'Crafting': 30, 'Construction': 34, 'Thieving': 15 }, prereqs: [],
@@ -1350,7 +1350,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'The Fremennik Isles', name: 'The Fremennik Isles',
     regions: ['Rellekka', 'Neitiznot', 'Jatizso'],
     locations: [
-      // Stand-in: the ice trolls' land (36,60) belongs to no area; its bridges cross from Neitiznot.
+      // The ice trolls' land (36,60) belongs to Neitiznot; its bridges cross from Neitiznot.
       { id: 'ice-troll-lands', label: 'Ice troll lands north of Neitiznot', standardAreas: ['Neitiznot'], chunkOptions: [{ cx: 36, cy: 60 }] },
     ],
     skills: { 'Construction': 20 }, prereqs: ['The Fremennik Trials'], points: 1, series: 'Fremennik',
@@ -1487,7 +1487,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Dragon Slayer II', name: 'Dragon Slayer II',
     regions: ['Draynor Village', 'Varrock', 'Falador', 'Baxtorian Falls', 'Corsair Cove', 'Lunar Isle', 'Rellekka', 'Shayzien', 'Crandor', 'Kharazi Jungle', 'Musa Point', 'Sophanem', 'Port Phasmatys', 'Fossil Island', 'Lithkren', 'Mort Myre Swamp', 'East Ardougne'],
     locations: [
-      // Stand-in: Ungael (35,63) belongs to no area; Torfinn's boat to it leaves from Rellekka.
+      // Ungael (35,63) belongs to Rellekka; Torfinn's boat to it leaves from Rellekka.
       { id: 'ungael', label: 'Ungael', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 35, cy: 63 }] },
     ],
     skills: { 'Magic': 75, 'Smithing': 70, 'Mining': 68, 'Crafting': 62, 'Agility': 60, 'Thieving': 60, 'Construction': 50, 'Hitpoints': 50, 'Quest Points': 200 }, prereqs: ['Legends\' Quest', 'Dream Mentor', 'A Tail of Two Cats', 'Animal Magnetism', 'Ghosts Ahoy', 'Bone Voyage', 'Client of Kourend'],
@@ -1544,11 +1544,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'The Fremennik Exiles', name: 'The Fremennik Exiles',
     regions: ['Rellekka', 'Lunar Isle'],
     locations: [
-      // Stand-in: the Fremennik Forest (42,56) belongs to no area; Brundt waits just south of Rellekka.
+      // The Fremennik Forest (42,56) belongs to Rellekka; Brundt waits just south of Rellekka.
       { id: 'brundt-outside-rellekka', label: 'Brundt outside Rellekka', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 42, cy: 56 }] },
-      // Stand-in: Fossegrimen's lake (41,56) belongs to no area; it is just south of Rellekka.
+      // Fossegrimen's lake (41,56) belongs to Rellekka; it is just south of Rellekka.
       { id: 'fossegrimen', label: "Fossegrimen's lake", standardAreas: ['Rellekka'], chunkOptions: [{ cx: 41, cy: 56 }] },
-      // Stand-in: the Island of Stone (38,62) belongs to no area; the boat to it leaves from Rellekka.
+      // The Island of Stone (38,62) belongs to Rellekka; the boat to it leaves from Rellekka.
       { id: 'island-of-stone', label: 'Island of Stone', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 38, cy: 62 }] },
     ],
     skills: { 'Crafting': 65, 'Slayer': 60, 'Smithing': 60, 'Fishing': 60, 'Mining': 60, 'Runecraft': 55 }, prereqs: ['The Fremennik Isles', 'Lunar Diplomacy', 'Mountain Daughter', 'Heroes\' Quest'], points: 2, series: 'Fremennik',
@@ -1624,11 +1624,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Beneath Cursed Sands', name: 'Beneath Cursed Sands',
     regions: ['Sophanem', 'Nardah'],
     locations: [
-      // Stand-in: the Ruins of Ullek (53,43) belong to no area; the path to them runs round the cliffs from Maisa's camp by Sophanem.
+      // The Ruins of Ullek (53,43) belong to Sophanem; the path to them runs round the cliffs from Maisa's camp by Sophanem.
       { id: 'ullek-swamp', label: 'Ullek swamp, where the chest is buried', standardAreas: ['Sophanem'], chunkOptions: [{ cx: 53, cy: 43 }] },
-      // Stand-in: the Ruins of Ullek (53,44) belong to no area; the path to them runs round the cliffs from Maisa's camp by Sophanem.
+      // The Ruins of Ullek (53,44) belong to Sophanem; the path to them runs round the cliffs from Maisa's camp by Sophanem.
       { id: 'ruins-of-ullek', label: 'Ruins of Ullek', standardAreas: ['Sophanem'], chunkOptions: [{ cx: 53, cy: 44 }] },
-      // Stand-in: the lily island in the River Elid (52,45) belongs to no area; Zahur sends you west to it from Nardah.
+      // The lily island in the River Elid (52,45) belongs to Nardah; Zahur sends you west to it from Nardah.
       { id: 'lily-of-the-elid', label: 'Lily of the Elid island', standardAreas: ['Nardah'], chunkOptions: [{ cx: 52, cy: 45 }] },
     ],
     skills: { 'Agility': 62, 'Crafting': 55, 'Firemaking': 55 }, prereqs: ['Contact!'], points: 2, series: 'Kharidian',
@@ -1649,7 +1649,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'The Garden of Death', name: 'The Garden of Death',
     regions: ['Molch', 'Mount Quidamortem'],
     locations: [
-      // Stand-in: the Ruins of Morra (22,54) belong to no area; they are beside Mount Quidamortem (21,54).
+      // The Ruins of Morra (22,54) belong to Mount Quidamortem; they are beside Mount Quidamortem (21,54).
       { id: 'ruins-of-morra', label: 'Ruins of Morra', standardAreas: ['Mount Quidamortem'], chunkOptions: [{ cx: 22, cy: 54 }] },
     ],
     skills: { 'Farming': 20 }, prereqs: [], points: 1, series: 'Twisted Tales',
@@ -1751,9 +1751,9 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'The Heart of Darkness', name: 'The Heart of Darkness',
     regions: ['Ralos\' Rise', 'Civitas illa Fortis'],
     locations: [
-      // Stand-in: the Quetzacalli Gorge (23,50) belongs to no area; it is beside Ralos' Rise (22,49).
+      // The Quetzacalli Gorge (23,50) belongs to Ralos' Rise; it is beside Ralos' Rise (22,49).
       { id: 'quetzacalli-gorge', label: 'Quetzacalli Gorge', standardAreas: ["Ralos' Rise"], chunkOptions: [{ cx: 23, cy: 50 }] },
-      // Stand-in: the Twilight Trialist Tower (25,50) belongs to no area; it is beside Ralos' Rise and the Twilight Temple (26,50).
+      // The Twilight Trialist Tower (25,50) belongs to Ralos' Rise; it is beside Ralos' Rise and the Twilight Temple (26,50).
       { id: 'twilight-trialist-tower', label: 'Twilight Trialist Tower', standardAreas: ["Ralos' Rise"], chunkOptions: [{ cx: 25, cy: 50 }] },
     ],
     skills: { 'Mining': 55, 'Thieving': 48, 'Slayer': 48, 'Agility': 46 }, prereqs: ['Twilight\'s Promise'], points: 2, series: 'Twilight Emissaries',
@@ -1798,9 +1798,9 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'The Curse of Arrav', name: 'The Curse of Arrav',
     regions: ['Varrock', 'Ruins of Uzer', 'Mountain Camp', 'Silvarea'],
     locations: [
-      // Stand-in: Trollweiss Mountain (43,60) belongs to no area; its path climbs from Mountain Camp (43,59).
+      // Trollweiss Mountain (43,60) belongs to Mountain Camp; its path climbs from Mountain Camp (43,59).
       { id: 'trollweiss-mountain', label: 'Cave on Trollweiss Mountain', standardAreas: ['Mountain Camp'], chunkOptions: [{ cx: 43, cy: 60 }] },
-      // Stand-in: Zemouregal's Fortress (44,60) belongs to no area; the Trollweiss cave from Mountain Camp leads to it.
+      // Zemouregal's Fortress (44,60) belongs to Mountain Camp; the Trollweiss cave from Mountain Camp leads to it.
       { id: 'zemouregals-fortress', label: "Zemouregal's Fortress", standardAreas: ['Mountain Camp'], chunkOptions: [{ cx: 44, cy: 60 }] },
     ],
     skills: { 'Agility': 61, 'Ranged': 62, 'Strength': 58, 'Thieving': 62, 'Mining': 64, 'Slayer': 37 }, prereqs: ['Defender of Varrock', 'Troll Romance'], points: 2, series: 'Mahjarrat',
@@ -1811,7 +1811,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'The Final Dawn', name: 'The Final Dawn',
     regions: ['Tlati Rainforest', 'Civitas illa Fortis', 'Ralos\' Rise'],
     locations: [
-      // Stand-in: the Crypt of Tonali (20,47) belongs to no area; its entrance is just south of the Tlati Rainforest (20,48).
+      // The Crypt of Tonali (20,47) belongs to Tlati Rainforest; its entrance is just south of the Tlati Rainforest (20,48).
       { id: 'crypt-of-tonali', label: 'Crypt of Tonali', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 20, cy: 47 }] },
     ],
     skills: { 'Thieving': 66, 'Fletching': 52, 'Runecraft': 52 }, prereqs: ['The Heart of Darkness', 'Perilous Moons'], points: 3, series: 'Twilight Emissaries',
@@ -2022,10 +2022,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     // Bouncer's ghost is in the Goblin Cave, whose mouth is between the Fishing Guild (40,53) and Hemenster (41,53).
     oneOf: [{ regions: ['Fishing Guild'] }, { regions: ['Hemenster'] }],
     locations: [
-      // Stand-in: General Khazard's spot (42,56) belongs to no area; it is just south-east of Rellekka.
+      // General Khazard's spot (42,56) belongs to Rellekka; it is just south-east of Rellekka.
       { id: 'general-khazard', label: 'General Khazard south-east of Rellekka', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 42, cy: 56 }] },
-      // Stand-in: the Gnomish scout stands at the Gnome Stronghold's gate, in 38,52, which belongs to no area.
-      { id: 'gnomish-scout', label: 'Gnomish scout outside the Gnome Stronghold', standardAreas: ['Tree Gnome Stronghold'], chunkOptions: [{ cx: 38, cy: 52 }] },
+      // The Gnomish scout stands at the Gnome Stronghold's gate, in 38,52, which belongs to East Ardougne.
+      { id: 'gnomish-scout', label: 'Gnomish scout outside the Gnome Stronghold', standardAreas: ['East Ardougne'], chunkOptions: [{ cx: 38, cy: 52 }] },
     ],
     skills: {}, prereqs: ['Fight Arena', 'Curse of the Empty Lord'], points: 0, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_EXPERIENCED

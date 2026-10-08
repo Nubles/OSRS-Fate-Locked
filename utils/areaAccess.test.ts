@@ -89,16 +89,16 @@ describe('reaching an owned island or enclave for a diary task (Vanilla)', () =>
     const afterQuest = { ...charter, quests: ['The Grand Tree', 'Monkey Madness I'] };
     expect(evaluateDiaryTaskEligibility(task('kar_med_18'), afterQuest, 'vanilla').eligible).toBe(true);
 
-    // The DKP path crosses jungle that belongs to Karamja as a whole.
+    // The DKP path crosses the Karamja River chunk, which opens with Tai Bwo Wannai.
     const fairyRing = account({
-      regions: [...REGION_GROUPS.Karamja], mobility: ['Fairy Rings', 'Gnome Gliders'],
+      regions: ['Ship Yard', 'Tai Bwo Wannai'], mobility: ['Fairy Rings', 'Gnome Gliders'],
       quests: ['The Grand Tree', 'Fairytale II - Cure a Queen'], diaries: ['Lumbridge Elite'],
     });
     expect(evaluateDiaryTaskEligibility(glider, fairyRing, 'vanilla').eligible).toBe(true);
-    const missingShilo = { ...fairyRing, regions: REGION_GROUPS.Karamja.filter(area => area !== 'Shilo Village') };
-    const blocked = evaluateDiaryTaskEligibility(glider, missingShilo, 'vanilla').blockers[0];
+    const missingTaiBwoWannai = { ...fairyRing, regions: ['Ship Yard'] };
+    const blocked = evaluateDiaryTaskEligibility(glider, missingTaiBwoWannai, 'vanilla').blockers[0];
     expect(blocked.kind === 'alternative' && blocked.routes.find(route => route.label.startsWith('Fairy ring DKP'))?.blockers)
-      .toEqual([{ kind: 'region', label: 'Shilo Village' }]);
+      .toEqual([{ kind: 'region', label: 'Tai Bwo Wannai' }]);
   });
 
   it('needs a way into the Forgotten Cemetery, or the Wilderness Slayer Cave, before an Ankou counts as doable', () => {
@@ -140,8 +140,8 @@ describe('reaching an owned island or enclave for a diary task (Vanilla)', () =>
       label: 'Wilderness Slayer Cave entrance, via Chaos Temple · Wilderness (50, 57)',
       blockers: [{ kind: 'region', label: 'Chaos Temple' }],
     });
-    // The northern entrance's chunk belongs to no named area, so it needs the whole Wilderness.
-    expect(routes[4].label).toBe('Wilderness Slayer Cave entrance, via Wilderness (51, 58)');
+    // The northern entrance, by the Bone Yard, opens with Chaos Temple too.
+    expect(routes[4].label).toBe('Wilderness Slayer Cave entrance, via Chaos Temple · Wilderness (51, 58)');
     expect(routes[4].blockers).toContainEqual({ kind: 'region', label: 'Chaos Temple' });
     expect(routes).toHaveLength(5);
     expect(diaryTaskCompletionDecision(ankou, cemeteryOnly, 'vanilla', { manualConfirmed: true })).toEqual({
