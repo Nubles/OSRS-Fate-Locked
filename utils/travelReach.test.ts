@@ -280,6 +280,17 @@ describe('walking between owned chunks', () => {
     expect(closedTravelNodes(run({ mobility: ['Mine Carts'] })).has(graphNode('45,158'))).toBe(false);
   });
 
+  it('walks from anywhere in Auburnvale or the Gnome Stronghold to every one of its chunks', () => {
+    // The Auburn Valley Path walks only to Darkfrost, and the Crash Site Cavern only to the Barbarian Outpost.
+    for (const area of ['Auburnvale', 'Darkfrost', 'Tree Gnome Stronghold', 'Barbarian Outpost']) {
+      const chunks = SUB_AREA_CHUNKS[area];
+      for (const start of chunks) {
+        const reachable = travelReachability(connect, run({ regions: [area] }), start, undefined, 'vanilla').reachable;
+        expect(chunks.filter(chunk => !reachable.has(idOf(chunk))), `${area} from ${start.cx},${start.cy}`).toEqual([]);
+      }
+    }
+  });
+
   it('strands nothing an owned-everything run reached by the old chunk grid', () => {
     const everything = run({ regions: Object.keys(AREAS) });
     const all = travelReachability(connect, everything, LUMBRIDGE, undefined, 'vanilla').reachable;

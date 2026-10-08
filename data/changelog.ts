@@ -19,6 +19,16 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-08-cut-off-chunks',
+    title: 'Two Chunks Join the Area You Walk In From',
+    date: '2026-10-08',
+    sections: {
+      changed: [
+        'The Auburn Valley Path chunk now belongs to Darkfrost instead of Auburnvale, and the Crash Site Cavern chunk to the Barbarian Outpost instead of the Tree Gnome Stronghold. Each one can only be walked into from its new area, so owning the old area alone gave you a chunk you could never reach.',
+      ],
+    },
+  },
+  {
     id: '2026-10-08-discord-feed-roles-area',
     title: 'Live Unlocks, Roles and Area Answers in the Discord',
     date: '2026-10-08',
