@@ -19,6 +19,18 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-08-discord-feed-roles-area',
+    title: 'Live Unlocks, Roles and Area Answers in the Discord',
+    date: '2026-10-08',
+    sections: {
+      added: [
+        'If you’ve linked your run in the Fate Locked Discord, your new unlocks now post in #live-unlocks, and the bot gives you your mode’s role and a milestone role as your run grows. /unlink stops both.',
+        'Ask the Discord bot about any area with /area: what it opens, which quests need it, its banks and the ways in.',
+        'Found a bug? /report in the Discord files it straight to us.',
+      ],
+    },
+  },
+  {
     id: '2026-10-08-runelite-tiers-unlocks-outlines',
     title: 'Coming to RuneLite: Skill Tiers, New Unlocks and Outlines',
     date: '2026-10-08',

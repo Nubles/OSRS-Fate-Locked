@@ -21,6 +21,19 @@ browser: only the summary in `utils/progressSnapshot.ts` is sent.
    for 30 seconds and publishes are at least a minute apart, since each is a
    KV write. An unchanged summary is not sent again.
 
+## Unlock feed and roles
+
+When a linked run publishes, the relay tells the bot: it POSTs
+`{discordId, snapshot, newUnlocks, updatedAt}` to `DISCORD_EVENTS_URL` with
+the `PROGRESS_BOT_SECRET` as a Bearer token, after answering the browser.
+`newUnlocks` are the `recent` entries newer than the previous summary's, so
+the first publish after sharing starts never posts a backlog. The bot posts
+them in `#live-unlocks` and keeps the player's mode and milestone roles in
+step with the run. To find the Discord user, the relay keeps `ld:<run id>`
+beside each `l:<discordId>` link; links made before it existed gain it the
+next time the bot reads them. With `DISCORD_EVENTS_URL` unset, nothing is
+sent.
+
 **Stop sharing** deletes the summary from the relay. The Discord link stays
 until the player runs `/unlink`; meanwhile `/progress` says the run isn't
 shared. An unrefreshed summary expires after 90 days.
@@ -50,6 +63,7 @@ checks that the relay accepts what the app builds.
 ```sh
 cd workers/fate-relay
 wrangler secret put PROGRESS_BOT_SECRET   # 32+ random characters
+wrangler secret put DISCORD_EVENTS_URL    # https://<bot origin>/api/progress-events
 wrangler deploy
 ```
 
