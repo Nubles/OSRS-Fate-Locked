@@ -16,6 +16,8 @@ import { locateSlayerTask } from '../utils/slayerTaskLocations';
 import type { Coverage, RawRouteRequirement } from '../utils/questRoutes/model';
 import type { InteriorRecord } from '../utils/interiorEntry';
 import { classifyShop } from '../utils/shopClassification';
+import { loadRunRoutes } from '../utils/chunkEntry';
+import { loadWalkSections } from '../utils/walkSections';
 
 export interface ChunkMonster { name: string; count: number; slayer: number | null }
 export interface ChunkContent {
@@ -288,8 +290,12 @@ export class ChunkContentService {
       const base = (import.meta as any).env?.BASE_URL ?? '/';
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), CHUNK_CONTENT_TIMEOUT_MS);
+      // The walking sections and RuneLite's routes go with the transport graph.
+      const walking = Promise.all([loadWalkSections(), loadRunRoutes()]);
+      walking.catch(() => {}); // Reported once the content arrives.
       this.promise = fetch(`${base}chunk-content.json?v=${CHUNK_CONTENT_DATA_VERSION}`, { signal: controller.signal })
         .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+        .then(async (doc: RawDoc) => { await walking; return doc; })
         .then((doc: RawDoc) => {
           this.doc = doc; this.error = null;
           this.index = null; this.interiorIndex = null; this.taskIdx = null;

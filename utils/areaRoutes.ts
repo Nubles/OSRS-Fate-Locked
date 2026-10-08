@@ -27,10 +27,15 @@ import { CHUNKED_START } from './chunkAdjacency';
 import { chunkForPlace, chunkUnlocked } from './chunkLocations';
 import { getFreeAreas } from './freeAreas';
 import { isAreaReachable } from './reachability';
+import { OCEAN_CHUNK_KEYS } from './oceanAccess';
 import { travelReachability } from './travelReach';
 
 export interface AreaRoutes {
-  /** Canonical names of owned areas none of whose chunks a route reaches. */
+  /**
+   * Canonical names of owned areas a route doesn't reach: fewer than half of
+   * their land chunks, as a strip of Seers' Village beside the Warriors'
+   * Guild is no way into the village.
+   */
   strandedAreas: ReadonlySet<string>;
   /** Owned chunks, as "cx,cy", that no route reaches. */
   strandedChunks: ReadonlySet<string>;
@@ -62,6 +67,23 @@ const homeChunk = (unlocks: UnlockState, gameModeId: string | undefined): Chunk 
   return null;
 };
 
+/**
+ * Whether a route reaches at least half of an area's owned land chunks, or
+ * any of its chunks for an area at sea.
+ */
+const mostlyReached = (
+  chunks: readonly Chunk[],
+  reachable: ReadonlySet<string>,
+  unlocks: UnlockState,
+  gameModeId: string | undefined,
+): boolean => {
+  const land = chunks.filter(chunk => (
+    !OCEAN_CHUNK_KEYS.has(`${chunk.cx},${chunk.cy}`) && chunkUnlocked(chunk.cx, chunk.cy, unlocks, gameModeId)
+  ));
+  if (!land.length) return chunks.some(chunk => reachable.has(idOf(chunk)));
+  return land.filter(chunk => reachable.has(idOf(chunk))).length * 2 >= land.length;
+};
+
 /** The chunks of areas left to their reviewed entry routes, which the graph can't judge. */
 const ROUTED_CHUNKS: ReadonlySet<string> = new Set(
   [...new Set([...Object.keys(SUB_AREA_CHUNKS), ...Object.keys(REGION_CHUNKS)])]
@@ -89,7 +111,7 @@ export function computeAreaRoutes(
     if (AREA_ENTRY_ROUTES[canonical]?.length) continue;
     const chunks = areaChunks(name);
     if (!chunks.length || !isAreaReachable(name, unlocks, gameModeId)) continue;
-    if (!chunks.some(chunk => reach.reachable.has(idOf(chunk)))) strandedAreas.add(canonical);
+    if (!mostlyReached(chunks, reach.reachable, unlocks, gameModeId)) strandedAreas.add(canonical);
   }
   // Chunked mode has no entry routes: its chunk reach is all it has.
   const leftToRoutes = gameModeId === 'chunked' ? new Set<string>() : ROUTED_CHUNKS;

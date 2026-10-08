@@ -1,10 +1,15 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { initialState } from '../context/GameContext';
+import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import type { UnlockState } from '../types';
-import { chunkEntry, chunkEntryReason, runReach, type ReachSource } from './chunkEntry';
+import { chunkEntry, chunkEntryReason, loadRunRoutes, runReach, type ReachSource } from './chunkEntry';
+import { loadWalkSections } from './walkSections';
 import { CHUNKED_START } from './chunkAdjacency';
 import { chunkForPlace } from './chunkLocations';
 import { OCEAN_CHUNK_KEYS } from './oceanAccess';
+
+// Routes walk the Chunk Picker sections, which load with the chunk content.
+beforeAll(() => Promise.all([loadWalkSections(), loadRunRoutes()]));
 
 const fresh = (): UnlockState => structuredClone(initialState.unlocks);
 const idOf = ({ cx, cy }: { cx: number; cy: number }) => String(cx * 256 + cy);
@@ -60,6 +65,20 @@ describe('runReach', () => {
 
   it('leaves out chunks the run does not own', () => {
     expect(runReach(source, fresh(), 'vanilla').has(idOf(falador))).toBe(false);
+  });
+
+  // A player reported on 8 October 2026 that RuneLite called their Kourend
+  // and elf camp chunks Unlocked while the tracker called them stranded.
+  it('takes no travel network the run has not unlocked, as the tracker does', () => {
+    const hosidius = SUB_AREA_CHUNKS.Hosidius[0];
+    const fairyRings = { ...source, connectGraph: () => ({ [idOf(lumbridge)]: ['Zanaris'], Zanaris: [idOf(hosidius)] }) };
+    const kourend = { ...fresh(), regions: [...fresh().regions, 'Hosidius'] };
+    const across = (unlocks: UnlockState) => runReach(fairyRings, unlocks, 'vanilla').has(idOf(hosidius));
+    expect(across(kourend)).toBe(false);
+    const rings = {
+      ...kourend, mobility: ['Fairy Rings'], quests: ['Fairytale I - Growing Pains'], equipment: { ...kourend.equipment, Weapon: 1 },
+    };
+    expect(across(rings)).toBe(true);
   });
 });
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DIARY_DATA } from '../data/diaryData';
 import { QUEST_DATA } from '../data/questData';
@@ -8,6 +8,10 @@ import {
 import type { UnlockState } from '../types';
 import { computeAreaRoutes, type AreaRoutes } from './areaRoutes';
 import { countDoableTasks, evaluateDiaryTaskEligibility, getDiaryStatus } from './journalStatus';
+import { loadWalkSections } from './walkSections';
+
+// Routes walk the Chunk Picker sections, which load with the chunk content.
+beforeAll(() => loadWalkSections());
 
 /**
  * A player reported on 26 September 2026 that diary tasks in owned areas the
