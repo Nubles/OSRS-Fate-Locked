@@ -24,12 +24,14 @@ export const CHANGELOG_RELEASES = [
     date: '2026-10-08',
     sections: {
       changed: [
-        '48 stretches of land that belonged to no area, and so stayed locked until you owned a whole region, now open with the area beside them. Most are in Varlamore, Fremennik, Kandarin and Tirannwn.',
+        '77 stretches of land that belonged to no area, and so stayed locked until you owned a whole region, now open with the area beside them. Only Lucien’s Camp and Rock Island Prison are left, as no area beside them leads in.',
         'Vorkath’s island, Ungael, now opens with Rellekka, where Torfinn’s boat leaves from, and rolling Vorkath now needs Rellekka. The Island of Stone and the Cold War icebergs open with Rellekka too.',
         'Ralos’ Rise now takes in the Teomat, Mons Gratia, the Proudspire, the Quetzacalli Gorge and its bank, Salvager Overlook, and the Tower of Ascension beside the Twilight Temple, which leads to Amoxliatl.',
         'All three Gemstone Crab spawns and the Crypt of Tonali now open with the Tlati Rainforest.',
         'The Custodia Pass, between Auburnvale and the Kebos Lowlands, is part of Varlamore and opens with Auburnvale. The Fremennik Province south of Rellekka, with Fossegrimen’s lake and the unicorns, is part of Fremennik and opens with Rellekka.',
         'Jorral’s Outpost opens with East Ardougne, so the Gnomish scout in The General’s Shadow now asks for East Ardougne instead of the Tree Gnome Stronghold.',
+        'The rest of the open Wilderness now opens with the area beside it. The Bone Yard and the Escape Caves entrances open with Chaos Temple, and rolling Callisto, Venenatis or Vet’ion now needs Chaos Temple. The three Wilderness cape shops open with Lava Maze, Scorpia’s Cave and Mage Arena.',
+        'The open desert does the same: the Jaldraocht Pyramid opens with the Bandit Camp, the Ruins of Ullek with Sophanem, Citharede Abbey with the Ruins of Uzer, the Desert Mining Camp with Shantay Pass, and the genie’s cave and the Water Ravine with Nardah.',
         'The Chasm of Fire now opens with Shayzien, the area the Wiki puts it in, and rolling Yama now needs Shayzien instead of Mount Karuulm.',
         'The Desert Quarry now opens with the Bandit Camp, just north of it, instead of the Agility Pyramid. The granite Diary task and Enakhra’s Lament follow it.',
         'Nothing you already own is taken away, except the two chunks above, and that owning every Kandarin or every Kourend area no longer opens the Fremennik Province or the Custodia Pass.',

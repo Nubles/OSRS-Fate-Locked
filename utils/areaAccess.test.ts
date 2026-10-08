@@ -140,8 +140,8 @@ describe('reaching an owned island or enclave for a diary task (Vanilla)', () =>
       label: 'Wilderness Slayer Cave entrance, via Chaos Temple · Wilderness (50, 57)',
       blockers: [{ kind: 'region', label: 'Chaos Temple' }],
     });
-    // The northern entrance's chunk belongs to no named area, so it needs the whole Wilderness.
-    expect(routes[4].label).toBe('Wilderness Slayer Cave entrance, via Wilderness (51, 58)');
+    // The northern entrance, by the Bone Yard, opens with Chaos Temple too.
+    expect(routes[4].label).toBe('Wilderness Slayer Cave entrance, via Chaos Temple · Wilderness (51, 58)');
     expect(routes[4].blockers).toContainEqual({ kind: 'region', label: 'Chaos Temple' });
     expect(routes).toHaveLength(5);
     expect(diaryTaskCompletionDecision(ankou, cemeteryOnly, 'vanilla', { manualConfirmed: true })).toEqual({

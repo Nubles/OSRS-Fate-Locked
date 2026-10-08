@@ -594,7 +594,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     ],
     regions: ['Bedabin Camp', 'Shantay Pass'],
     locations: [
-      // Stand-in: the Desert Mining Camp (51,47) belongs to no area; it is just south of the Shantay Pass (51,48).
+      // The Desert Mining Camp (51,47) belongs to Shantay Pass; it is just south of the Shantay Pass (51,48).
       { id: 'desert-mining-camp', label: 'Desert Mining Camp', standardAreas: ['Shantay Pass'], chunkOptions: [{ cx: 51, cy: 47 }] },
     ],
     skills: { 'Fletching': 10, 'Smithing': 20 }, prereqs: [], points: 2,
@@ -876,7 +876,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'The Golem', name: 'The Golem',
     regions: ['Ruins of Uzer', 'Varrock', 'Digsite'],
     locations: [
-      // Stand-in: the desert phoenix's clay mine (53,49) belongs to no area; it is just north-west of the Ruins of Uzer.
+      // The desert phoenix's clay mine (53,49) belongs to Ruins of Uzer; it is just north-west of the Ruins of Uzer.
       { id: 'desert-phoenix', label: 'Desert phoenix north of Uzer', standardAreas: ['Ruins of Uzer'], chunkOptions: [{ cx: 53, cy: 49 }] },
     ],
     skills: { 'Crafting': 20, 'Thieving': 25 }, prereqs: [], points: 1,
@@ -888,7 +888,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skillAlternatives: [{ skill: 'Slayer', quests: ['Plague City'], manualRequirements: ['Have a gas mask from Plague City for the smoke dungeon (alternative to Slayer 10)'] }],
     regions: ['Bandit Camp', 'Bedabin Camp', 'Pollnivneach', 'Entrana', 'Burthorpe', 'Baxtorian Falls', 'Canifis', 'Mort Myre Swamp', 'Mountain Camp', 'Digsite', 'Draynor Village'],
     locations: [
-      // Stand-in: the Jaldraocht Pyramid (50,45) belongs to no area; it is reached on foot from the Bandit Camp (49,46).
+      // The Jaldraocht Pyramid (50,45) belongs to Bandit Camp; it is reached on foot from the Bandit Camp (49,46).
       { id: 'jaldraocht-pyramid', label: 'Jaldraocht Pyramid', standardAreas: ['Bandit Camp'], chunkOptions: [{ cx: 50, cy: 45 }] },
     ],
     skills: { 'Thieving': 53, 'Firemaking': 50, 'Slayer': 10, 'Magic': 50 }, prereqs: ['The Dig Site', 'Temple of Ikov', 'The Tourist Trap', 'Troll Stronghold', 'Priest in Peril', 'Waterfall Quest'], points: 3, series: 'Mahjarrat',
@@ -1028,9 +1028,9 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Spirits of the Elid', name: 'Spirits of the Elid',
     regions: ['Nardah'],
     locations: [
-      // Stand-in: the Water Ravine (52,48) belongs to no area; you walk to it up the River Elid from Nardah.
+      // The Water Ravine (52,48) belongs to Nardah; you walk to it up the River Elid from Nardah.
       { id: 'water-ravine', label: 'Water Ravine at the source of the River Elid', standardAreas: ['Nardah'], chunkOptions: [{ cx: 52, cy: 48 }] },
-      // Stand-in: the genie's cave (52,45) belongs to no area; it is across the River Elid from Nardah.
+      // The genie's cave (52,45) belongs to Nardah; it is across the River Elid from Nardah.
       { id: 'genie-cave', label: "Genie's cave", standardAreas: ['Nardah'], chunkOptions: [{ cx: 52, cy: 45 }] },
     ],
     skills: { 'Magic': 33, 'Ranged': 37, 'Mining': 37, 'Thieving': 37 }, prereqs: [], points: 2,
@@ -1624,11 +1624,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Beneath Cursed Sands', name: 'Beneath Cursed Sands',
     regions: ['Sophanem', 'Nardah'],
     locations: [
-      // Stand-in: the Ruins of Ullek (53,43) belong to no area; the path to them runs round the cliffs from Maisa's camp by Sophanem.
+      // The Ruins of Ullek (53,43) belong to Sophanem; the path to them runs round the cliffs from Maisa's camp by Sophanem.
       { id: 'ullek-swamp', label: 'Ullek swamp, where the chest is buried', standardAreas: ['Sophanem'], chunkOptions: [{ cx: 53, cy: 43 }] },
-      // Stand-in: the Ruins of Ullek (53,44) belong to no area; the path to them runs round the cliffs from Maisa's camp by Sophanem.
+      // The Ruins of Ullek (53,44) belong to Sophanem; the path to them runs round the cliffs from Maisa's camp by Sophanem.
       { id: 'ruins-of-ullek', label: 'Ruins of Ullek', standardAreas: ['Sophanem'], chunkOptions: [{ cx: 53, cy: 44 }] },
-      // Stand-in: the lily island in the River Elid (52,45) belongs to no area; Zahur sends you west to it from Nardah.
+      // The lily island in the River Elid (52,45) belongs to Nardah; Zahur sends you west to it from Nardah.
       { id: 'lily-of-the-elid', label: 'Lily of the Elid island', standardAreas: ['Nardah'], chunkOptions: [{ cx: 52, cy: 45 }] },
     ],
     skills: { 'Agility': 62, 'Crafting': 55, 'Firemaking': 55 }, prereqs: ['Contact!'], points: 2, series: 'Kharidian',

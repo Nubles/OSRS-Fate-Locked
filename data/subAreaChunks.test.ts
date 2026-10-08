@@ -106,6 +106,16 @@ describe('sub-area chunk assignments', () => {
       // The Wiki puts the Chasm of Fire in north-west Shayzien and the Desert Quarry south of the Bandit Camp.
       '22,57': ['Shayzien', 'the Chasm of Fire (Yama)'],
       '49,45': ['Bandit Camp', 'the Desert Quarry'],
+      // Owner decision M4 (2 Oct) reversed: the open Wilderness and desert join their neighbours.
+      '50,59': ['Chaos Temple', "the Escape Caves entrance by Vet'ion's Rest"],
+      '51,58': ['Chaos Temple', 'the Escape Caves entrance by the Bone Yard'],
+      '51,59': ['Chaos Temple', 'the Escape Caves entrance by the Silk Chasm'],
+      '48,59': ['Lava Maze', "Edmond's cape shop and the Revenant Caves' south entrance"],
+      '50,60': ["Scorpia's Cave", "William's cape shop on Lava Dragon Isle"],
+      '47,61': ['Mage Arena', "Darren's cape shop at the Pirates' Hideout"],
+      '50,45': ['Bandit Camp', 'the Jaldraocht Pyramid, east of the Desert Quarry'],
+      '53,44': ['Sophanem', 'the Ruins of Ullek, round the cliffs from Sophanem'],
+      '53,49': ['Ruins of Uzer', 'Citharede Abbey'],
     };
     for (const [chunk, [area, place]] of Object.entries(PLACES)) {
       expect(SUB_AREA_CHUNKS[area].map(({ cx, cy }) => `${cx},${cy}`), `${place} (${chunk})`).toContain(chunk);
@@ -117,16 +127,9 @@ describe('sub-area chunk assignments', () => {
 
   it('puts every chunk with a shop, bank, altar, anvil, furnace or patch in an area, bar places with no area', () => {
     // A place in a chunk no area owns opens only with every area of its region, as the
-    // Giants' Foundry, Kraken Cove and Tal Teklan did. These places have no area of
-    // their own, so they keep opening with their whole region.
-    const REVIEWED: Readonly<Record<string, string>> = {
-      '50,45': 'The Jaldraocht Pyramid, in the open desert (owner decision M4)',
-      '53,44': 'The Ruins of Ullek, in the open desert (owner decision M4)',
-      '53,49': 'Citharede Abbey, in the open desert (owner decision M4)',
-      '48,59': "Edmond's cape shop, in the Wilderness (owner decision M4)",
-      '50,60': "William's cape shop on Lava Dragon Isle, in the Wilderness (owner decision M4)",
-      '47,61': "Darren's cape shop at the Pirates' Hideout, in the Wilderness (owner decision M4)",
-    };
+    // Giants' Foundry, Kraken Cove and Tal Teklan did. Since the map data audit of
+    // 8 October 2026 every such place belongs to the area beside it.
+    const REVIEWED: Readonly<Record<string, string>> = {};
     const NOTABLE = /bank|altar|anvil|furnace|patch|fairy ring|spirit tree/i;
     const owned = new Set(Object.values(SUB_AREA_CHUNKS).flat().map(({ cx, cy }) => `${cx},${cy}`));
     const content = CHUNK_CONTENT_LITE as Readonly<Record<string, { shop?: string[]; poi?: string[] }>>;

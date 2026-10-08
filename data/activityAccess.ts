@@ -26,6 +26,10 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   Spindel: ['Graveyard of Shadows'],
   'Crazy Archaeologist': ['Forgotten Cemetery'],
   'Chaos Fanatic': ['Lava Maze'],
+  // The Escape Caves entrances (50,59 51,58 51,59) open with Chaos Temple, beside the Bone Yard.
+  Callisto: ['Chaos Temple'],
+  Venenatis: ['Chaos Temple'],
+  "Vet'ion": ['Chaos Temple'],
   Scorpia: ["Scorpia's Cave"],
   'The Hueycoatl': ['Darkfrost'],
   'Moons of Peril': ['Cam Torum'],
@@ -120,9 +124,6 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
 export const NO_HARD_LOCATION_GATE = new Set<string>([
   // Boss venues or entrances not represented by a single tracked named area.
   'Abyssal Sire', // no tracked named-area gate (fairy-ring interior)
-  'Callisto', // no tracked named-area gate (Wilderness bear cave)
-  'Venenatis', // no tracked named-area gate (Wilderness spider cave)
-  "Vet'ion", // no tracked named-area gate (Wilderness skeleton cave)
   'Mimic', // no tracked named-area gate (casket-triggered encounter)
 
   // Distributed, event, or untracked-content activities.

@@ -78,17 +78,18 @@ describe('map unlock corrections', () => {
     }
   });
   it('accepts legacy parent ownership consistently and explains generic completion', () => {
-    const unlocks = { ...createFreshState().unlocks, regions: ['Kharidian Desert'] };
-    expect(isAreaReachable('Shantay Pass', unlocks)).toBe(true);
-    expect(chunkUnlocked(51, 48, unlocks)).toBe(true);
-    expect(isValidUnlock(TableType.REGIONS, 'Shantay Pass', unlocks)).toBe(false);
-    const partial = { ...unlocks, regions: ['Shantay Pass'] };
-    expect(chunkUnlocked(53, 43, partial)).toBe(false);
-    const explanation = chunkUnlockRequirement(53, 43, partial);
-    expect(explanation.text).toContain('(1/15)');
-    expect(explanation.remaining).toHaveLength(14);
-    expect(explanation.remaining).not.toContain('Shantay Pass');
-    expect(chunkUnlockRequirement(53, 43, unlocks).remaining).toEqual([]);
+    // 45,59, Lucien's Camp, is Fremennik land no area owns.
+    const unlocks = { ...createFreshState().unlocks, regions: ['Fremennik'] };
+    expect(isAreaReachable('Rellekka', unlocks)).toBe(true);
+    expect(chunkUnlocked(41, 57, unlocks)).toBe(true);
+    expect(isValidUnlock(TableType.REGIONS, 'Rellekka', unlocks)).toBe(false);
+    const partial = { ...unlocks, regions: ['Rellekka'] };
+    expect(chunkUnlocked(45, 59, partial)).toBe(false);
+    const explanation = chunkUnlockRequirement(45, 59, partial);
+    expect(explanation.text).toContain('(1/11)');
+    expect(explanation.remaining).toHaveLength(10);
+    expect(explanation.remaining).not.toContain('Rellekka');
+    expect(chunkUnlockRequirement(45, 59, unlocks).remaining).toEqual([]);
   });
   it('says a chunk no area covers has nothing to unlock', () => {
     // 45,60, the mountains between Weiss and the frozen Wilderness, was reported as a bugged chunk.
@@ -97,7 +98,7 @@ describe('map unlock corrections', () => {
     expect(explanation.unmapped).toBe(true);
     expect(explanation.text).toContain('Nothing to unlock');
     expect(explanation.text).not.toContain('Unlock this chunk');
-    expect(chunkUnlockRequirement(53, 43, unlocks).unmapped).toBeUndefined();
+    expect(chunkUnlockRequirement(45, 59, unlocks).unmapped).toBeUndefined();
   });
   it('exports separate physical owners to RuneLite', async () => {
     const state = createFreshState();
