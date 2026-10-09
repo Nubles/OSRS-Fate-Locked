@@ -40,6 +40,8 @@ describe('quest doability presentation in Vanilla', () => {
       ...account(), skills: { Thieving: 6, Firemaking: 5, Magic: 5 },
       levels: { Thieving: 53, Firemaking: 50, Magic: 50 },
       regions: [...quest.regions], quests: [...quest.prereqs],
+      merchants: ['Claw Shops', 'Spice Shops'],
+      equipment: { Head: 1, Ring: 1, Gloves: 1, Boots: 1 },
     };
     const eligibility = evaluateQuestEligibility(quest, unlocks, 'vanilla');
     const row = evaluateQuestDoability(quest, unlocks, null, [], 'vanilla');

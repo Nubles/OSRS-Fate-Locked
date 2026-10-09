@@ -424,6 +424,7 @@ describe('official quest and miniquest audit coverage', () => {
     });
     expect(byId.get("Witch's Potion")?.notes.items).toEqual([
       'An eye of newt may be obtained before the quest; Port Sarim travel and item possession are not machine-enforced.',
+      "Item gate review 2026-10-09: gated for Eye of newt, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
     ]);
     expect(byId.get('Murder Mystery')).toMatchObject({
       status: 'verified',

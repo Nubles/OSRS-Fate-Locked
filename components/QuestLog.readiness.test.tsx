@@ -83,6 +83,8 @@ describe('quest journal skill alternatives in Vanilla', () => {
       levels: { Thieving: 53, Firemaking: 50, Magic: 50, Slayer: 10 },
       regions: [...quest.regions],
       quests: [...quest.prereqs, ...(plagueCity ? ['Plague City'] : [])],
+      merchants: ['Claw Shops', 'Spice Shops'],
+      equipment: { Head: 1, Ring: 1, Gloves: 1, Boots: 1 },
     };
     const eligibility = evaluateQuestEligibility(quest, unlocks, 'vanilla');
     return renderToStaticMarkup(<QuestCard quest={{ ...quest, status: eligibility.status, eligibility }}
@@ -98,7 +100,7 @@ describe('quest journal skill alternatives in Vanilla', () => {
   it('counts the gas-mask confirmation once instead of also demanding Slayer training', () => {
     const html = desertTreasure(true);
     expect(html).toContain('Have a gas mask from Plague City');
-    expect(html).toContain('21/22 reqs');
+    expect(html).toContain('27/28 reqs');
     expect(html).not.toContain('Training guide: Slayer');
     expect(html).not.toContain('Ready to complete!');
   });

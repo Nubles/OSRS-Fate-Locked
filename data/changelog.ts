@@ -31,6 +31,12 @@ export const CHANGELOG_RELEASES = [
         'The start of Recipe for Disaster needs the shops and places for the cook’s items: Yanille’s Dragon Inn (Bars & Inns) for the Greenman’s ale, Vegetable Shops for the rotten tomato, the Gnome Stronghold’s Food Shops for the fruit blast, and Betty in Port Sarim (Magic Shops) or Herblore Shops for the eye of newt.',
         'The Doable tab no longer lists quests in an owned area no route reaches, such as The Ribbiting Tale and Enter the Abyss. It now agrees with the Quests tab and files them under Locked.',
       ],
+      changed: [
+        'Every quest and diary task was checked against the Wiki for items you can’t get with your unlocks. 69 quests and 20 diary tasks now ask for what their items need.',
+        'Items you have to wear need their slot, such as the mourner disguise, the ghostly robes, the M’speak amulet and the anti-dragon shield for Elvarg.',
+        'Items only sold in shops need that shop, such as the ice cooler and mirror shield from Slayer masters, Desert Treasure’s lockpicks and the gold leaf for the Kalphite Queen head.',
+        'Items you can only make need the skill, such as bronze wire (4 Smithing) and Dragon Slayer’s unfired bowl (8 Crafting). Items you can buy or make take either, such as iron bars (15 Smithing, with 15 Mining or an ore shop), steel nails and stew.',
+      ],
     },
   },
   {

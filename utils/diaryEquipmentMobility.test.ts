@@ -36,7 +36,7 @@ const skilledAccount = (overrides: Partial<UnlockState> = {}) => account({
 describe('diary equipment and mobility permissions in Vanilla', () => {
   it('blocks wearing a team cape until Cape T1, including completion and plans', () => {
     const row = task('wild_easy_8');
-    const locked = account({ regions: ['Ferox Enclave'], completedTasks: exceptTask(row.id) });
+    const locked = account({ regions: ['Ferox Enclave'], merchants: ['Clothes Shops'], completedTasks: exceptTask(row.id) });
     expect(evaluateDiaryTaskEligibility(row, locked, 'vanilla').eligible).toBe(false);
     expect(countDoableTasks([row], locked, 'vanilla')).toBe(0);
     expect(diaryTaskCompletionDecision(row, locked, 'vanilla', { manualConfirmed: true }).ok).toBe(false);

@@ -64,6 +64,7 @@ describe('buildChunkPermissionSnapshot', () => {
         unlocks: {
           ...initialState.unlocks,
           regions: ['Rimmington'],
+          merchants: ['Magic Shops'],
         },
         questStatuses: { "Witch's Potion": 'LOCKED' },
       }),

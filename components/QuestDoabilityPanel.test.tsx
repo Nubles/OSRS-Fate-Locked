@@ -253,6 +253,8 @@ describe('evaluateQuestDoability', () => {
         quests: ['Pandemonium', "The Knight's Sword"],
         skills: { Smithing: 3, Sailing: 2 },
         levels: { Smithing: 30, Sailing: 12 },
+        // Food Shops sell the redberry pie the quest needs.
+        merchants: ['Food Shops'],
       }),
       reachableChunk,
     );
