@@ -51,7 +51,8 @@ export function interiorEntry(record: InteriorRecord, context: InteriorContext):
     ), context.unlocks);
     const routeStatus: PermissionStatus = !route.blockers.length ? 'ALLOWED'
       : route.hasDataGap ? 'UNKNOWN' : 'NOT_READY';
-    return leastUsable(chunkEntry(coord, context.unlocks, context.gameModeId, context.reachable), routeStatus);
+    // Interiors take no quest's way in: Pandemonium's route stops at the cave mouth.
+    return leastUsable(chunkEntry(coord, context.unlocks, context.gameModeId, context.reachable, false), routeStatus);
   });
   return mostUsable(ways) ?? 'UNKNOWN';
 }

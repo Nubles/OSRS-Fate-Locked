@@ -12,6 +12,8 @@ import { BOAT_CROSSINGS, TRAVEL_NETWORKS, type BoatCrossing, type NetworkOpener 
 import type { UnlockState } from '../types';
 import { chunkReachability, type ReachResult } from './chunkReach';
 
+export { pandemoniumOpens } from './pandemoniumRoute';
+
 type Graph = Record<string, string[]>;
 
 /** A node as the graph keys it: named places as they are, "cx,cy" as cx*256+cy. */
