@@ -27,7 +27,7 @@ import { freeAreasFor, setStartArea } from '../utils/freeAreas';
 import { getGameMode, resolveModeRules, type GameModeRules } from '../config/gameModes';
 import { normalizeAccountName } from '../services/fateEventProtocol';
 import { chunkContentService, CHUNK_CONTENT_DATA_VERSION } from '../services/ChunkContentService';
-import { runReach } from '../utils/chunkEntry';
+import { PANDEMONIUM_ROUTE, runReach } from '../utils/chunkEntry';
 import { chunkEntries, rulesPlaces } from '../utils/chunkEntries';
 import { bankDecisions } from '../utils/bankDecisions';
 import { runProgress } from '../utils/runProgress';
@@ -763,6 +763,8 @@ describe('golden bundles', () => {
       const pinned = answers as { chunks: Record<string, boolean>; banks: Record<string, boolean> };
       const rules = bundle.rules as { chunks: Record<string, { entry: string; categories: Record<string, { name: string; status: string }[]> }> };
       const entries = Object.entries(rules.chunks)
+        // Pandemonium's route opens for the quest without being owned (utils/chunkEntry.ts).
+        .filter(([key]) => !PANDEMONIUM_ROUTE.has(key))
         .filter(([key, snapshot]) => key in pinned.chunks && (snapshot.entry !== 'LOCKED') !== pinned.chunks[key])
         .map(([key, snapshot]) => `${key} entry ${snapshot.entry}, pinned ${pinned.chunks[key] ? 'unlocked' : 'locked'}`);
       expect(entries.slice(0, 10), `${scenario.id}: chunk entries`).toEqual([]);

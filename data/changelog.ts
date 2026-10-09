@@ -19,6 +19,16 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-09-pandemonium-route',
+    title: 'Pandemonium No Longer Locks Its Own Route',
+    date: '2026-10-09',
+    sections: {
+      fixed: [
+        'While you are doing Pandemonium, the RuneLite plugin now lets you into the places the quest takes you: the sea between Port Sarim and The Pandemonium, The Pandemonium itself, and the Shipyard. Before, it called them Locked because the sea only opens once Pandemonium is done. You still need Port Sarim to start the quest, and once it is finished these places follow their usual rules again.',
+      ],
+    },
+  },
+  {
     id: '2026-10-09-forgotten-cemetery-routes',
     title: 'More Ways Into the Forgotten Cemetery',
     date: '2026-10-09',

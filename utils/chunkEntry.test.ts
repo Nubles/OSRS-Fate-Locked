@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { initialState } from '../context/GameContext';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import type { UnlockState } from '../types';
-import { chunkEntry, chunkEntryReason, loadRunRoutes, runReach, type ReachSource } from './chunkEntry';
+import { chunkEntry, chunkEntryReason, loadRunRoutes, PANDEMONIUM_ROUTE, runReach, type ReachSource } from './chunkEntry';
 import { loadWalkSections } from './walkSections';
 import { CHUNKED_START } from './chunkAdjacency';
 import { chunkForPlace } from './chunkLocations';
@@ -47,6 +47,25 @@ describe('chunkEntry', () => {
     expect(chunkEntry(ocean, fresh(), 'vanilla')).toBe('LOCKED');
     const sailor = { ...fresh(), skills: { ...fresh().skills, Sailing: 1 }, quests: ['Pandemonium'] };
     expect(chunkEntry(ocean, sailor, 'vanilla')).toBe('ALLOWED');
+  });
+
+  // A player reported on 9 October 2026 that RuneLite locked the sea and the
+  // Shipyard mid-Pandemonium, while the quest list said they could do it.
+  it('opens the chunks Pandemonium uses while the quest is under way from Port Sarim', () => {
+    const route = [...PANDEMONIUM_ROUTE].map((key) => {
+      const [cx, cy] = key.split(',').map(Number);
+      return { cx, cy };
+    });
+    const portSarim = { ...fresh(), regions: [...fresh().regions, 'Port Sarim'] };
+    for (const coord of route) {
+      expect(chunkEntry(coord, fresh(), 'vanilla'), `${coord.cx},${coord.cy} without Port Sarim`).toBe('LOCKED');
+      expect(chunkEntry(coord, portSarim, 'vanilla'), `${coord.cx},${coord.cy} from Port Sarim`).toBe('ALLOWED');
+    }
+    const done = { ...portSarim, quests: ['Pandemonium'] };
+    expect(chunkEntry({ cx: 47, cy: 47 }, done, 'vanilla')).toBe('LOCKED');
+    expect(chunkEntry({ cx: 32, cy: 42 }, done, 'vanilla')).toBe('LOCKED');
+    // No route reaches Port Sarim, so the quest can't start.
+    expect(chunkEntry({ cx: 47, cy: 46 }, portSarim, 'vanilla', new Set())).toBe('LOCKED');
   });
 });
 
