@@ -4,7 +4,7 @@
  "covers": "interiors behind open and locked entrances and areas, with Slayer levels so masters differ, and travel unlocks",
  "gameModeId": "vanilla",
  "account": "Iron Example",
- "oceanChunkCount": 548,
+ "oceanChunkCount": 549,
  "chunks": {
   "15,43": false,
   "15,44": false,
@@ -3527,7 +3527,7 @@
   "total": 187,
   "chunks": {
    "unlocked": 55,
-   "total": 624
+   "total": 623
   }
  },
  "spentBosses": [],

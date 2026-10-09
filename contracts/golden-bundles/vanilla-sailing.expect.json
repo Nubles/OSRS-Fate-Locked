@@ -4,7 +4,7 @@
  "covers": "Sailing with Pandemonium done, so every ocean chunk opens",
  "gameModeId": "vanilla",
  "account": "Iron Example",
- "oceanChunkCount": 548,
+ "oceanChunkCount": 549,
  "chunks": {
   "15,43": true,
   "15,44": true,
@@ -413,7 +413,7 @@
   "32,39": true,
   "32,40": false,
   "32,41": true,
-  "32,42": false,
+  "32,42": true,
   "32,43": true,
   "32,44": false,
   "32,45": false,
@@ -2055,7 +2055,7 @@
   "32,39": "NOT_READY",
   "32,40": "LOCKED",
   "32,41": "NOT_READY",
-  "32,42": "LOCKED",
+  "32,42": "NOT_READY",
   "32,43": "NOT_READY",
   "32,44": "LOCKED",
   "32,45": "LOCKED",
@@ -3527,7 +3527,7 @@
   "total": 187,
   "chunks": {
    "unlocked": 42,
-   "total": 624
+   "total": 623
   }
  },
  "spentBosses": [],

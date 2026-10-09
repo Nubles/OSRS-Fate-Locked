@@ -33,16 +33,16 @@ describe('runProgress', () => {
   });
 
   it("counts a Chunked run's chunks plus its free start chunk, out of every land chunk", () => {
-    const chunks = (owned: number) => ({ unlocked: owned, total: 624 });
+    const chunks = (owned: number) => ({ unlocked: owned, total: 623 });
     expect(runProgress(run({ regions: [], chunks: [] }), 'chunked'))
-      .toEqual({ unit: 'chunks', unlocked: 1, total: 624, chunks: chunks(1) });
+      .toEqual({ unit: 'chunks', unlocked: 1, total: 623, chunks: chunks(1) });
     expect(runProgress(run({ regions: [], chunks: ['49,50', '48,50'] }), 'chunked'))
-      .toEqual({ unit: 'chunks', unlocked: 3, total: 624, chunks: chunks(3) });
+      .toEqual({ unit: 'chunks', unlocked: 3, total: 623, chunks: chunks(3) });
   });
 
   it('counts the land chunks a run owns, whatever it unlocks by', () => {
     const fresh = runProgress(run({}), 'vanilla').chunks;
-    expect(fresh.total).toBe(624);
+    expect(fresh.total).toBe(623);
     expect(fresh.unlocked).toBeGreaterThan(0);
     expect(runProgress(run({ regions: ['Falador'] }), 'vanilla').chunks.unlocked)
       .toBe(fresh.unlocked + SUB_AREA_CHUNKS.Falador.length);

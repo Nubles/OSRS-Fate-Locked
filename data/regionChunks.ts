@@ -116,7 +116,7 @@ export const REGION_CHUNKS: Record<string, ChunkCoord[]> = {
     { cx: 52, cy: 64 }, { cx: 53, cy: 64 }, { cx: 54, cy: 64 },
   ],
   'Islands & Others': [
-    { cx: 32, cy: 42 }, { cx: 42, cy: 42 }, { cx: 43, cy: 42 }, { cx: 45, cy: 42 }, { cx: 33, cy: 43 }, { cx: 34, cy: 43 }, { cx: 35, cy: 43 }, { cx: 42, cy: 43 },
+    { cx: 42, cy: 42 }, { cx: 43, cy: 42 }, { cx: 45, cy: 42 }, { cx: 33, cy: 43 }, { cx: 34, cy: 43 }, { cx: 35, cy: 43 }, { cx: 42, cy: 43 },
     { cx: 43, cy: 43 }, { cx: 32, cy: 44 }, { cx: 33, cy: 44 }, { cx: 34, cy: 44 }, { cx: 35, cy: 44 }, { cx: 36, cy: 44 }, { cx: 32, cy: 45 },
     { cx: 33, cy: 45 }, { cx: 34, cy: 45 }, { cx: 35, cy: 45 }, { cx: 36, cy: 45 }, { cx: 32, cy: 46 }, { cx: 33, cy: 46 }, { cx: 34, cy: 46 }, { cx: 35, cy: 46 }, { cx: 36, cy: 46 }, { cx: 57, cy: 57 }, { cx: 57, cy: 58 }, { cx: 58, cy: 58 }, { cx: 59, cy: 58 }, { cx: 57, cy: 59 }, { cx: 58, cy: 59 }, { cx: 59, cy: 59 }, { cx: 57, cy: 60 }, { cx: 58, cy: 60 }, { cx: 59, cy: 60 }, { cx: 55, cy: 62 }, { cx: 56, cy: 62 },
   ],

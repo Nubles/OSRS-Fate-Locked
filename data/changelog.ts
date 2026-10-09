@@ -20,11 +20,12 @@ export interface ChangelogRelease {
 export const CHANGELOG_RELEASES = [
   {
     id: '2026-10-09-pandemonium-route',
-    title: 'Pandemonium No Longer Locks Its Own Route',
+    title: 'Pandemonium and the Shipyard Open the Way You Reach Them',
     date: '2026-10-09',
     sections: {
       fixed: [
         'While you are doing Pandemonium, the RuneLite plugin now lets you into the places the quest takes you: the sea between Port Sarim and The Pandemonium, The Pandemonium itself, and the Shipyard. Before, it called them Locked because the sea only opens once Pandemonium is done. You still need Port Sarim to start the quest, and once it is finished these places follow their usual rules again.',
+        'The Shipyard where you customise your boat no longer counts as part of the Isle of Souls. You reach it from a shipwright at a port, not from the Isle of Souls, so it now opens with the sea once you have Sailing and Pandemonium. The Isle of Souls has one chunk fewer, and the land total on the run card drops from 624 to 623.',
       ],
     },
   },

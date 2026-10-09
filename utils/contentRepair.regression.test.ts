@@ -201,7 +201,7 @@ describe('reviewed content repairs', () => {
 });
 
 describe('ocean navigation and the complete land frontier', () => {
-  it('gates ocean access and reaches all 624 land chunks without charging for water', () => {
+  it('gates ocean access and reaches all 623 land chunks without charging for water', () => {
     const state = account(); state.chunks = [];
     for (let i = 0; i < 100; i++) {
       const next = getChunkFrontier(state.chunks, state).map(chunkKey);
@@ -219,7 +219,7 @@ describe('ocean navigation and the complete land frontier', () => {
       if (!next.length) break; state.chunks.push(...next);
     }
     expect(new Set(['50,50', ...state.chunks])).toEqual(new Set(ALL_CHUNK_KEYS));
-    expect(ALL_CHUNK_KEYS).toHaveLength(624);
+    expect(ALL_CHUNK_KEYS).toHaveLength(623);
     expect(checkUnlockAvailability(state).chunks).toBe(false);
   });
 });

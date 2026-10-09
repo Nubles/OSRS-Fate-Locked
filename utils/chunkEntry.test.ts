@@ -65,6 +65,10 @@ describe('chunkEntry', () => {
     const done = { ...portSarim, quests: ['Pandemonium'] };
     expect(chunkEntry({ cx: 47, cy: 47 }, done, 'vanilla')).toBe('LOCKED');
     expect(chunkEntry({ cx: 32, cy: 42 }, done, 'vanilla')).toBe('LOCKED');
+    // After the quest the Shipyard opens with Sailing, as the sea does, not with the Isle of Souls.
+    const sailor = { ...done, skills: { ...done.skills, Sailing: 1 } };
+    expect(chunkEntry({ cx: 32, cy: 42 }, sailor, 'vanilla')).toBe('ALLOWED');
+    expect(chunkEntryReason({ cx: 32, cy: 42 }, 'LOCKED', done, 'vanilla', [])).toBe('Needs Sailing and Pandemonium');
     // No route reaches Port Sarim, so the quest can't start.
     expect(chunkEntry({ cx: 47, cy: 46 }, portSarim, 'vanilla', new Set())).toBe('LOCKED');
   });
