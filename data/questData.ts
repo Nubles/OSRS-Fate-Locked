@@ -656,9 +656,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
       LOCATIONS.lumberYard,
     ],
     skills: {}, prereqs: [], points: 1,
-    // The raw sardine: an ironman buys it, or the bait to catch it, from a
-    // fishing shop such as Gerrant's Fishy Business.
-    merchants: ['Fishing Shops'],
+    // The raw sardine: bought from a fishing shop such as Gerrant's Fishy
+    // Business, or caught at 5 Fishing with a rod (it spawns) and bait (men,
+    // women and muggers drop it).
+    oneOf: [{ merchants: ['Fishing Shops'] }, { skills: { Fishing: 5 } }],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Legends\' Quest': {

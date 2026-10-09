@@ -2960,7 +2960,7 @@ describe('audited current quest requirements', () => {
     "skills": {},
     "combatLevel": null,
     "prereqs": [],
-    "oneOf": null,
+    "oneOf": [{ "merchants": ["Fishing Shops"] }, { "skills": { "Fishing": 5 } }],
     "manualRequirements": null,
     "points": 1,
     "difficulty": "Quest (Novice)"

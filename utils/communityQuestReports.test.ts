@@ -100,11 +100,12 @@ describe('shop-only quest items (player report, 9 October 2026)', () => {
   const blockerLabels = (id: string, unlocks: UnlockState) =>
     evaluateQuestEligibility(QUEST_DATA[id], unlocks, 'vanilla').blockers.map(blocker => blocker.label);
 
-  it('asks Gertrude\'s Cat for Fishing Shops, for the sardine or its bait', () => {
+  it('asks Gertrude\'s Cat for a way to the sardine: a fishing shop, or 5 Fishing to catch it', () => {
     const unlocks: UnlockState = { ...account(), regions: ['Varrock'] };
-    expect(blockerLabels('Gertrude\'s Cat', unlocks)).toContain('Fishing Shops');
-    expect(evaluateQuestEligibility(QUEST_DATA['Gertrude\'s Cat'], { ...unlocks, merchants: ['Fishing Shops'] }, 'vanilla').eligible)
-      .toBe(true);
+    const quest = QUEST_DATA['Gertrude\'s Cat'];
+    expect(evaluateQuestEligibility(quest, unlocks, 'vanilla').eligible).toBe(false);
+    expect(evaluateQuestEligibility(quest, { ...unlocks, merchants: ['Fishing Shops'] }, 'vanilla').eligible).toBe(true);
+    expect(evaluateQuestEligibility(quest, { ...unlocks, skills: { Fishing: 1 }, levels: { Fishing: 5 } }, 'vanilla').eligible).toBe(true);
   });
 
   it('asks the start of Recipe for Disaster for the shops and places of the cook\'s items', () => {
