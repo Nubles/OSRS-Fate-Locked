@@ -19,6 +19,17 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-09-forgotten-cemetery-routes',
+    title: 'More Ways Into the Forgotten Cemetery',
+    date: '2026-10-09',
+    sections: {
+      fixed: [
+        'Owning the Forgotten Cemetery and the Dark Warriors’ Fortress now counts as a way there, so the Ankou Diary task shows as doable. Since the last map update the open Wilderness just south of the cemetery belongs to the Dark Warriors’ Fortress, and the cemetery hadn’t caught up.',
+        'Dareeyak Teleport also counts as a way into the Forgotten Cemetery: it lands at the ruins just south of it.',
+      ],
+    },
+  },
+  {
     id: '2026-10-08-cut-off-chunks',
     title: 'Two Chunks Join the Area You Walk In From',
     date: '2026-10-08',
