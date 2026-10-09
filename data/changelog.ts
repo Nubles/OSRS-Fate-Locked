@@ -19,6 +19,19 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-09-new-player-reports',
+    title: 'Pet Fish, A Soul’s Bane and the Doable Tab',
+    date: '2026-10-09',
+    sections: {
+      fixed: [
+        'The Kandarin Easy pet fish task now needs what Harry asks for: Fishing Shops for the tiny net, 10 Fishing, and a fishbowl, from 42 Crafting or from Mogres after Skippy and the Mogres with 32 Slayer.',
+        'A Soul’s Bane needs a Weapon slot, as the rage room makes you wield its weapons.',
+        'Diary tasks you can do now say Can do now, and a way in you don’t need is no longer drawn as a lock. The Falador Easy strut repair counts from the Dwarven Mine entrance in Falador, so it showed as available while its Motherlode Mine chip looked locked.',
+        'The Doable tab no longer lists quests in an owned area no route reaches, such as The Ribbiting Tale and Enter the Abyss. It now agrees with the Quests tab and files them under Locked.',
+      ],
+    },
+  },
+  {
     id: '2026-10-09-forgotten-cemetery-routes',
     title: 'More Ways Into the Forgotten Cemetery',
     date: '2026-10-09',

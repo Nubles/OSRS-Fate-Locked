@@ -248,7 +248,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'kan_easy_5', tierId: 'Kandarin Easy', description: 'Plant some Jute seeds in the patch north of McGrubor\'s Wood.', skills: { 'Farming': 13 }, farming: ['Hops'], regions: ['Seers\' Village'] },
   { id: 'kan_easy_6', tierId: 'Kandarin Easy', description: 'Have Galahad make you a cup of tea.', regions: ['Seers\' Village'] },
   { id: 'kan_easy_7', tierId: 'Kandarin Easy', description: 'Defeat one of each elemental in the workshop.', questProgress: [{"quest":"Elemental Workshop I","label":"Reached the required progress in Elemental Workshop I for: Defeat one of each elemental in the workshop."}], regions: ['Seers\' Village'] },
-  { id: 'kan_easy_8', tierId: 'Kandarin Easy', description: 'Get a pet fish from Harry in Catherby.', regions: ['Catherby'] },
+  { id: 'kan_easy_8', tierId: 'Kandarin Easy', description: 'Get a pet fish from Harry in Catherby.', skills: { 'Fishing': 10 }, merchants: ['Fishing Shops'], regions: ['Catherby'], oneOf: [{ label: 'Blow a fishbowl', skills: { 'Crafting': 42 } }, { label: 'Fishbowl from Mogres', skills: { 'Slayer': 32 }, quests: ['Skippy and the Mogres'] }] },
   { id: 'kan_easy_9', tierId: 'Kandarin Easy', description: 'Buy a Stew from the Seers\' pub.', merchants: ['Bars & Inns'], regions: ['Seers\' Village'] },
   { id: 'kan_easy_10', tierId: 'Kandarin Easy', description: 'Speak to Sherlock.', regions: ['Seers\' Village'] },
   { id: 'kan_easy_11', tierId: 'Kandarin Easy', description: 'Cross the Coal truck log shortcut.', skills: { 'Agility': 20 }, regions: ['Seers\' Village'] },

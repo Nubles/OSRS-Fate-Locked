@@ -15,6 +15,8 @@ import {
 import { actualCombatLevel } from '../utils/slayerReach';
 import { WIKI_OVERRIDES } from '../constants';
 import { UnlockState } from '../types';
+import { useAreaRoutes } from '../hooks/useAreaRoutes';
+import type { AreaRoutes } from '../utils/areaRoutes';
 
 interface Props { searchTerm?: string }
 
@@ -58,8 +60,11 @@ export const evaluateQuestDoability = (
   chunk: QuestChunkStatus | null,
   chunkLockedAreas: string[] = [],
   gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
 ): QuestDoabilityEvaluation => {
-  const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId);
+  // The same routes as the Quests tab, so an owned area no route reaches
+  // never reads as doable here while the Quests tab calls it locked.
+  const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId, areaRoutes);
   const completed = eligibility.status === 'COMPLETED';
   const isChunked = gameModeId === 'chunked';
   // Known catalogue entries may intentionally have no area gate (the tutorial).
@@ -133,7 +138,8 @@ export const evaluateQuestDoability = (
     ? quest.oneOf.map(questRequirementOptionLabel).join(' or ')
     : '';
   const canonicalRegionBlockers = eligibility.blockers
-    .filter(blocker => blocker.kind === 'region')
+    .filter(blocker => blocker.kind === 'region'
+      || (blocker.kind === 'alternative' && blocker.travel !== undefined))
     .map(blocker => blocker.label === alternativeLabel
       ? 'One of: ' + blocker.label
       : blocker.label);
@@ -193,6 +199,7 @@ export const questDoabilityRequirementLabels = (
 ];
 export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
   const { unlocks, gameModeId } = useGame();
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
   const isChunked = gameModeId === 'chunked';
   const [ready, setReady] = useState(() => isChunked && chunkContentService.ready);
   useEffect(() => {
@@ -203,7 +210,7 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
   const rows = useMemo<Row[]>(() => {
     if (!isChunked) {
       return Object.values(QUEST_DATA).map(quest => ({
-        ...evaluateQuestDoability(quest, unlocks, null, [], gameModeId),
+        ...evaluateQuestDoability(quest, unlocks, null, [], gameModeId, areaRoutes),
         strandedChunk: null,
       }));
     }
@@ -224,7 +231,7 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
         ? questLocations(q.id, unlocks, gameModeId).lockedPlaces.map(place => place.label)
         : [];
       const evaluation = evaluateQuestDoability(
-        q, unlocks, chunk, chunkLockedAreas, gameModeId,
+        q, unlocks, chunk, chunkLockedAreas, gameModeId, areaRoutes,
       );
       const strandedFirst = evaluation.bucket === 'STRANDED'
         ? chunk?.blockers.find(blocker => blocker.access === 'STRANDED')
@@ -239,7 +246,7 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
 
       return { ...evaluation, strandedChunk };
     });
-  }, [ready, unlocks, gameModeId, isChunked]);
+  }, [ready, unlocks, gameModeId, isChunked, areaRoutes]);
 
   const filtered = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();

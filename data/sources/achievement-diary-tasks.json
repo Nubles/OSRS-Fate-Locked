@@ -5511,14 +5511,36 @@
       "tierId": "Kandarin Easy",
       "ordinal": 8,
       "description": "Get a pet fish from Harry in Catherby.",
-      "skills": {},
+      "skills": {
+        "Fishing": 10
+      },
       "quests": [],
       "regions": [
         "Catherby"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Fishbowl with water, seaweed, and 10 coins"
+      "sourceRequirements": "Fishbowl with water, seaweed, and 10 coins",
+      "merchants": [
+        "Fishing Shops"
+      ],
+      "oneOf": [
+        {
+          "label": "Blow a fishbowl",
+          "skills": {
+            "Crafting": 42
+          }
+        },
+        {
+          "label": "Fishbowl from Mogres",
+          "quests": [
+            "Skippy and the Mogres"
+          ],
+          "skills": {
+            "Slayer": 32
+          }
+        }
+      ]
     },
     {
       "id": "kan_easy_9",

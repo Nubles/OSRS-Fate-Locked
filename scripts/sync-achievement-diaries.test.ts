@@ -566,6 +566,7 @@ describe('Achievement Diary id-classification audit', () => {
       'frem_elite_6',
       'frem_med_6',
       'frem_med_8',
+      'kan_easy_8',
       'kan_elite_3',
       'kan_hard_5',
       'kan_med_4',

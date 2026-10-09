@@ -71,3 +71,27 @@ describe('community quest reports in Vanilla', () => {
       .toContainEqual(expect.objectContaining({ kind: 'equipment', slot: 'Neck', tier: 1 }));
   });
 });
+
+describe('A Soul\'s Bane (player report, 9 October 2026)', () => {
+  const quest = QUEST_DATA['A Soul\'s Bane'];
+  const unlocks: UnlockState = { ...account(), regions: ['Varrock'] };
+
+  it('needs a weapon slot, as the rage room makes you wield its weapons', () => {
+    expect(evaluateQuestEligibility(quest, unlocks, 'vanilla').blockers)
+      .toContainEqual(expect.objectContaining({ kind: 'equipment', slot: 'Weapon', tier: 1 }));
+    expect(evaluateQuestEligibility(quest, { ...unlocks, equipment: { Weapon: 1 } }, 'vanilla').eligible).toBe(true);
+  });
+});
+
+describe('Doable tab and Quests tab agree on owned areas no route reaches (player report, 9 October 2026)', () => {
+  it('files a quest in a stranded area under Locked, as the Quests tab does', () => {
+    const quest = QUEST_DATA['Enter the Abyss'];
+    const unlocks: UnlockState = { ...account(), regions: ['Wilderness', 'Tree Gnome Stronghold'], quests: ['Rune Mysteries'] };
+    const routes = { strandedAreas: new Set(['Tree Gnome Stronghold']), strandedChunks: new Set<string>() };
+    expect(evaluateQuestDoability(quest, unlocks, null, [], 'vanilla').bucket).toBe('DOABLE');
+    const row = evaluateQuestDoability(quest, unlocks, null, [], 'vanilla', routes);
+    expect(evaluateQuestEligibility(quest, unlocks, 'vanilla', routes).eligible).toBe(false);
+    expect(row.bucket).toBe('LOCKED');
+    expect(row.lockedAreas).toContain('No route to Tree Gnome Stronghold');
+  });
+});

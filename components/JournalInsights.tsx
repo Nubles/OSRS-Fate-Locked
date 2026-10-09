@@ -16,6 +16,8 @@ import {
 } from '../utils/caProgress';
 import { DropSource, UnlockState } from '../types';
 import { countDoableDiaryTasks } from '../utils/journalStatus';
+import { useAreaRoutes } from '../hooks/useAreaRoutes';
+import type { AreaRoutes } from '../utils/areaRoutes';
 
 /**
  * Collapsible "insights" band for each Journal sub-tab: the at-a-glance
@@ -101,6 +103,7 @@ export const calculateDiaryInsightStats = (
   tierIds: readonly string[],
   unlocks: UnlockState,
   gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
 ) => {
   const doneTasks = new Set(unlocks.completedTasks);
   const completedTiers = new Set(unlocks.diaries);
@@ -127,7 +130,7 @@ export const calculateDiaryInsightStats = (
     areas.set(area, areaProgress);
     const left = tasks.length - done;
     if (tierComplete || left === 0) continue;
-    const doable = countDoableDiaryTasks(tasks, unlocks, gameModeId);
+    const doable = countDoableDiaryTasks(tasks, unlocks, gameModeId, areaRoutes);
     const key: [number, number, number] = [doable > 0 ? 0 : 1, left, -doable];
     if (!closest
       || key[0] < closest.key[0]
@@ -146,11 +149,12 @@ export const calculateDiaryInsightStats = (
 
 export const DiaryInsights: React.FC = () => {
   const { unlocks, gameModeId } = useGame();
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
   const stats = useMemo(
     () => calculateDiaryInsightStats(
-      ALL_DIARY_TASKS, Object.keys(DIARY_DATA), unlocks, gameModeId,
+      ALL_DIARY_TASKS, Object.keys(DIARY_DATA), unlocks, gameModeId, areaRoutes,
     ),
-    [unlocks, gameModeId],
+    [unlocks, gameModeId, areaRoutes],
   );
 
   return (

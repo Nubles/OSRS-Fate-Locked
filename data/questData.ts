@@ -1166,6 +1166,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     locations: [
       { id: "soul-bane-rift", label: "Rift east of Varrock", standardAreas: ["Varrock"], chunkOptions: [{ cx: 51, cy: 53 }] },
     ],
+    equipmentRequirements: [{ slot: 'Weapon', tier: 1, reason: 'Wield the anger weapons from the rack in the rage room' }],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
