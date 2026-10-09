@@ -58,9 +58,9 @@ export function runReach(source: ReachSource, unlocks: UnlockState, gameModeId: 
 
 /**
  * The run's entry for one chunk. Without a reach set (the chunk data didn't
- * load), an owned chunk counts as reached. Once the routes load, the chunks
- * Pandemonium uses are open during the quest (utils/pandemoniumRoute.ts);
- * questRoute false leaves them out, for interiors.
+ * load), an owned chunk counts as reached. Once the routes load, Pandemonium
+ * opens its route during the quest and the sea after it, from Port Sarim
+ * (utils/pandemoniumRoute.ts); questRoute false leaves that out, for interiors.
  */
 export function chunkEntry(
   coord: { cx: number; cy: number },
@@ -69,7 +69,7 @@ export function chunkEntry(
   reachable?: Set<string>,
   questRoute = true,
 ): PermissionStatus {
-  if (questRoute && pandemoniumOpens?.(coord, unlocks, (start) => chunkEntry(start, unlocks, gameModeId, reachable))) return 'ALLOWED';
+  if (questRoute && pandemoniumOpens?.(coord, unlocks, (other) => chunkEntry(other, unlocks, gameModeId, reachable, false))) return 'ALLOWED';
   if (!chunkUnlocked(coord.cx, coord.cy, unlocks, gameModeId)) return 'LOCKED';
   if (reachable && !reachable.has(String(coord.cx * 256 + coord.cy))) return 'NOT_READY';
   return 'ALLOWED';

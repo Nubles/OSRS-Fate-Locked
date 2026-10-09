@@ -881,6 +881,9 @@ describe('golden bundles', () => {
     const answers = (id: string) => results.get(id)!.expect as Answers;
     // Sailing opens every ocean chunk.
     expect([...OCEAN_CHUNK_KEYS].filter((key) => !answers('vanilla-sailing').chunks[key])).toEqual([]);
+    // With Port Sarim too, every one of them is open to enter, not just owned.
+    const sailingEntries = (results.get('vanilla-sailing')!.expect as { entries: Record<string, string> }).entries;
+    expect([...OCEAN_CHUNK_KEYS].filter((key) => sailingEntries[key] !== 'ALLOWED')).toEqual([]);
     expect([...OCEAN_CHUNK_KEYS].some((key) => answers('vanilla-mid').chunks[key])).toBe(false);
     // Land across the sea from the coast joins the Chunked frontier.
     expect(answers('chunked-sailing').frontier).toEqual(expect.arrayContaining(['49,47', '50,48']));
