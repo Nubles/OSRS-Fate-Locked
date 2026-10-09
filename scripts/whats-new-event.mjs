@@ -1,5 +1,5 @@
 // The newest What's New entries, as the signed `whats_new` event the Discord
-// bot (Nubles/Fate-Locked-Discord src/whats-new.ts) posts to #announcements.
+// bot (Nubles/Fate-Locked-Discord src/whats-new.ts) posts to #updates.
 // The bot skips any entry it has posted already, so sending the same entries
 // again after a later deploy posts nothing twice.
 

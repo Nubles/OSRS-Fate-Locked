@@ -9,7 +9,7 @@ import {
 
 const release = (id: string, date: string) => ({ id, title: id, date, sections: { fixed: [`${id} note`] } });
 
-describe("What's New entries for the Discord announcements", () => {
+describe("What's New entries for the Discord's #updates", () => {
   it('sends the newest entries since the first announced date, oldest first', () => {
     const releases = [
       release('c', '2026-10-11'),

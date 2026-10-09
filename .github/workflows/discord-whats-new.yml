@@ -1,7 +1,7 @@
 name: Announce What's New
 
 # Once a push to main is live on Pages, post its new What's New entries in the
-# Discord's announcements channel (scripts/send-whats-new-event.mjs).
+# Discord's #updates channel (scripts/send-whats-new-event.mjs).
 on:
   workflow_run:
     workflows: [Deploy to GitHub Pages]
