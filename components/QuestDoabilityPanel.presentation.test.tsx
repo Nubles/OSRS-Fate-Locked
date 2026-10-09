@@ -20,7 +20,7 @@ vi.mock('../context/GameContext', () => ({
   useGame: () => ({ unlocks: account(), gameModeId: 'vanilla' }),
 }));
 const chunkMocks = vi.hoisted(() => ({
-  init: vi.fn().mockResolvedValue(false), questSections: vi.fn(() => ({})),
+  init: vi.fn().mockResolvedValue(false), subscribe: vi.fn(() => () => {}), questSections: vi.fn(() => ({})),
   connectGraph: vi.fn(() => ({})), entityLocations: vi.fn(() => null),
   reachability: vi.fn(() => ({ reachable: new Set() })),
 }));
@@ -40,6 +40,8 @@ describe('quest doability presentation in Vanilla', () => {
       ...account(), skills: { Thieving: 6, Firemaking: 5, Magic: 5 },
       levels: { Thieving: 53, Firemaking: 50, Magic: 50 },
       regions: [...quest.regions], quests: [...quest.prereqs],
+      merchants: ['Claw Shops', 'Spice Shops'],
+      equipment: { Head: 1, Ring: 1, Gloves: 1, Boots: 1 },
     };
     const eligibility = evaluateQuestEligibility(quest, unlocks, 'vanilla');
     const row = evaluateQuestDoability(quest, unlocks, null, [], 'vanilla');
@@ -85,12 +87,15 @@ describe('Vanilla doability uses canonical area requirements', () => {
     }
   });
 
-  it('renders immediately without loading or consulting a cold chunk service', () => {
+  it('renders immediately without waiting on or consulting a cold chunk service', () => {
     const view = render(<QuestDoabilityPanel searchTerm="Sheep Shearer" />);
     expect(view.getByText('Sheep Shearer')).toBeTruthy();
     expect(view.queryByText(/Loading chunk data/)).toBeNull();
     expect(view.queryByText(/chunk reachability|transport links|Stranded|no chunk data/i)).toBeNull();
-    for (const fn of Object.values(chunkMocks)) expect(fn).not.toHaveBeenCalled();
+    // The map data may start loading for the area routes the Quests tab also
+    // uses, but nothing waits on it or reads chunk evidence while it is cold.
+    const { init: _init, subscribe: _subscribe, ...consulted } = chunkMocks;
+    for (const fn of Object.values(consulted)) expect(fn).not.toHaveBeenCalled();
   });
 
   it('retains canonical locked areas and confirmation checks while ignoring unrelated chunk evidence', () => {

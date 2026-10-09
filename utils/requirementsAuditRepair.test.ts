@@ -133,8 +133,11 @@ describe('audited quest prerequisites and unified goals', () => {
   it.each([['Secrets of the North','Devious Minds'], ['Desert Treasure II','His Faithful Servants'], ['RFD: Finale','Desert Treasure I'], ['RFD: Finale','Horror from the Deep'], ...['Dwarf','Goblins','Pirate Pete','Lumbridge Guide','Evil Dave','Skrach Uglogwee','Sir Amik Varze','King Awowogei'].map(name => [`RFD: ${name}`,'RFD: The Cook'])])('%s requires %s', (id, prerequisite) => {
     expect(evaluateQuestEligibility(QUEST_DATA[id], questProfile(id,[prerequisite]),'vanilla').blockers).toContainEqual({kind:'quest',label:prerequisite});
   });
-  it.each([["Mourning's End Part II",'Agility',56],['RFD: Evil Dave','Cooking',10]] as const)('%s does not enforce recommendations', (id, skill, level) => {
-    const unlocks=questProfile(id); unlocks.levels[skill]=level;
+  it.each([
+    ["Mourning's End Part II",'Agility',56,{equipment:{Head:1,Body:1,Legs:1,Gloves:1,Boots:1,Cape:1}}],
+    ['RFD: Evil Dave','Cooking',10,{merchants:['Bars & Inns']}],
+  ] as const)('%s does not enforce recommendations', (id, skill, level, gear) => {
+    const unlocks={...questProfile(id),...gear} as UnlockState; unlocks.levels[skill]=level;
     expect(evaluateQuestEligibility(QUEST_DATA[id],unlocks,'vanilla').eligible).toBe(true);
   });
   it('Sir Amik requires Jungle progress and the real completed prerequisites', () => {
@@ -144,6 +147,7 @@ describe('audited quest prerequisites and unified goals', () => {
   });
   it('Desert Treasure I accepts either Slayer 10 or the confirmed gas-mask route', () => {
     const quest=QUEST_DATA['Desert Treasure I']; const unlocks=questProfile(quest.id,['Plague City']);
+    unlocks.merchants=['Claw Shops','Spice Shops']; unlocks.equipment={Head:1,Ring:1,Gloves:1,Boots:1};
     unlocks.levels.Slayer=1;
     expect(evaluateQuestEligibility(quest,unlocks,'vanilla').machineEligible).toBe(false);
     unlocks.quests.push('Plague City');

@@ -263,6 +263,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "black-knights-fortress", label: "Black Knights' Fortress", standardAreas: ["Edgeville"], chunkOptions: [{ cx: 47, cy: 54 }] },
     ],
     skills: { 'Quest Points': 12 }, prereqs: [], points: 3,
+    // Items checked on the Wiki: Iron chainbody.
+    oneOf: [
+      { skills: { 'Smithing': 26 } },
+      { merchants: ['Chainbody Shops'] },
+      { merchants: ['Platebody Shops'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Witch\'s Potion': {
@@ -275,13 +281,23 @@ export const QUEST_DATA: Record<string, QuestData> = {
       chunkOptions: [{ cx: 46, cy: 50 }],
     }],
     skills: {}, prereqs: [], points: 1,
+    // Items checked on the Wiki: Eye of newt.
+    oneOf: [
+      { merchants: ['Magic Shops'] },
+      { merchants: ['Herblore Shops'] },
+    ],
     difficulty: DropSource.QUEST_NOVICE
   },
   'The Knight\'s Sword': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Knight\'s Sword', name: 'The Knight\'s Sword',
     regions: ['Falador', 'Port Sarim', 'Asgarnian Ice Dungeon', 'Varrock'],
-    skills: { 'Mining': 10 }, prereqs: [], points: 1,
+    skills: { 'Mining': 10, 'Smithing': 15 }, prereqs: [], points: 1,
+    // Items checked on the Wiki: 2 iron bars.
+    oneOf: [
+      { skills: { 'Mining': 15 } },
+      { merchants: ['Ore Merchants'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Goblin Diplomacy': {
@@ -308,7 +324,21 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Dragon Slayer I', name: 'Dragon Slayer I',
     regions: ['Varrock', 'Edgeville', 'Draynor Village', 'Lumbridge', 'Rimmington', 'Port Sarim', 'Crandor', 'Dwarven Mine'],
-    skills: {"Quest Points":32}, prereqs: [], points: 2, series: 'Dragonkin',
+    skills: { 'Quest Points': 32, 'Crafting': 8 }, prereqs: [], points: 2, series: 'Dragonkin',
+    // Items checked on the Wiki: Unfired bowl; Wizard's mind bomb; 90 steel nails; Silk; Anti-dragon shield.
+    equipmentRequirements: [
+      { slot: 'Shield', tier: 1, reason: "Equip the anti-dragon shield against Elvarg's dragonfire" },
+    ],
+    oneOf: [
+      { skills: { 'Smithing': 34 }, merchants: ['Bars & Inns', 'Clothes Shops'] },
+      { skills: { 'Smithing': 34 }, merchants: ['Bars & Inns', 'Silk Shops'] },
+      { skills: { 'Smithing': 34, 'Thieving': 20 }, merchants: ['Bars & Inns'] },
+      { merchants: ['Bars & Inns', 'Sawmill Operators', 'Clothes Shops'] },
+      { merchants: ['Bars & Inns', 'Sawmill Operators', 'Silk Shops'] },
+      { skills: { 'Thieving': 20 }, merchants: ['Bars & Inns', 'Sawmill Operators'] },
+      { skills: { 'Smithing': 34 }, merchants: ['General Stores'] },
+      { merchants: ['General Stores', 'Sawmill Operators'] },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Rune Mysteries': {
@@ -390,6 +420,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Witch\'s House', name: 'Witch\'s House',
     regions: ['Taverley'],
     skills: {}, prereqs: [], points: 4,
+    // Items checked on the Wiki: Leather gloves (worn).
+    equipmentRequirements: [
+      { slot: 'Gloves', tier: 1, reason: 'Equip leather gloves (or listed gloves) to go through the gate' },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Merlin\'s Crystal': {
@@ -429,6 +463,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "jolly-boar-inn", label: "Jolly Boar Inn", standardAreas: ["Varrock"], chunkOptions: [{ cx: 51, cy: 54 }] },
     ],
     skills: { 'Mining': 40, 'Smithing': 40, 'Magic': 59, 'Crafting': 40 }, prereqs: [], points: 1,
+    // Items checked on the Wiki: Cooked shrimps, salmon, tuna, bass, swordfish.
+    oneOf: [
+      { skills: { 'Fishing': 50, 'Cooking': 45 } },
+      { merchants: ['Food Shops'] },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Tribal Totem': {
@@ -460,6 +499,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Temple of Ikov', name: 'Temple of Ikov',
     regions: ['Hemenster', 'East Ardougne', 'Edgeville'],
     skills: { 'Thieving': 42 }, prereqs: [], points: 1, series: 'Mahjarrat',
+    // Items checked on the Wiki: Ranged weapon, Pendant of Lucien, Boots of lightness.
+    equipmentRequirements: [
+      { slot: 'Weapon', tier: 1, reason: 'Bow (yew+) or thrown weapon e.g. iron darts must be equipped vs Fire Warrior' },
+      { slot: 'Ammo', tier: 1, reason: 'Ice arrows (given in quest) must be equipped' },
+      { slot: 'Neck', tier: 1, reason: 'Pendant of Lucien must be equipped to open the north door/cross bridge' },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Clock Tower': {
@@ -474,6 +519,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Holy Grail', name: 'Holy Grail',
     regions: ['Camelot', 'Seers\' Village', 'Entrana', 'Goblin Village', 'Draynor Village', 'Brimhaven'],
     skills: { 'Attack': 20 }, prereqs: ['Merlin\'s Crystal'], points: 2, series: 'Camelot',
+    // Items checked on the Wiki: Excalibur (wielded).
+    equipmentRequirements: [
+      { slot: 'Weapon', tier: 1, reason: 'Wield Excalibur for the killing blow on the Black Knight Titan (20 Attack, quest item)' },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Tree Gnome Village': {
@@ -488,6 +537,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Fight Arena', name: 'Fight Arena',
     regions: ['Fight Arena'],
     skills: {}, prereqs: [], points: 2, series: 'Mahjarrat',
+    // Items checked on the Wiki: Khazard armour (worn).
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Wear Khazard helmet to enter the prison' },
+      { slot: 'Body', tier: 1, reason: 'Wear Khazard platebody to enter the prison' },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Hazeel Cult': {
@@ -564,7 +618,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Shilo Village', name: 'Shilo Village',
     regions: ['Shilo Village', 'Tai Bwo Wannai'],
-    skills: { 'Crafting': 20, 'Agility': 32 }, prereqs: ['Jungle Potion'], points: 2,
+    skills: { 'Crafting': 20, 'Agility': 32, 'Smithing': 4 }, prereqs: ['Jungle Potion'], points: 2,
+    // Items checked on the Wiki: Bronze wire.
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Underground Pass': {
@@ -656,6 +711,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
       LOCATIONS.lumberYard,
     ],
     skills: {}, prereqs: [], points: 1,
+    // The raw sardine: bought from a fishing shop such as Gerrant's Fishy
+    // Business, or caught at 5 Fishing with a rod (it spawns) and bait (men,
+    // women and muggers drop it).
+    oneOf: [{ merchants: ['Fishing Shops'] }, { skills: { Fishing: 5 } }],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Legends\' Quest': {
@@ -664,6 +723,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Legends\' Guild', 'Kharazi Jungle', 'Tai Bwo Wannai'],
     skills: { 'Quest Points': 107, 'Herblore': 45, 'Prayer': 42, 'Strength': 50, 'Agility': 50, 'Thieving': 50, 'Crafting': 50, 'Smithing': 50, 'Mining': 52, 'Woodcutting': 50, 'Magic': 56 }, 
     prereqs: ['Family Crest', 'Heroes\' Quest', 'Shilo Village', 'Underground Pass', 'Waterfall Quest'], points: 4,
+    // Items checked on the Wiki: Rune, dragon or infernal axe; Soul rune.
+    oneOf: [
+      { skills: { 'Smithing': 86 }, merchants: ['Magic Shops'] },
+      { skills: { 'Smithing': 86, 'Runecraft': 90 } },
+      { merchants: ['Axe Shops', 'Magic Shops'] },
+      { skills: { 'Runecraft': 90 }, merchants: ['Axe Shops'] },
+    ],
     difficulty: DropSource.QUEST_MASTER
   },
   'Big Chompy Bird Hunting': {
@@ -671,6 +737,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Big Chompy Bird Hunting', name: 'Big Chompy Bird Hunting',
     regions: ['Feldip Hills'],
     skills: { 'Fletching': 5, 'Cooking': 30, 'Ranged': 30 }, prereqs: [], points: 2,
+    // Items checked on the Wiki: Ogre bow.
+    equipmentRequirements: [
+      { slot: 'Weapon', tier: 1, reason: 'Wield the ogre bow with ogre arrows to hunt the chompy' },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Elemental Workshop I': {
@@ -703,6 +773,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'nature-grotto', label: 'Nature Grotto in Mort Myre Swamp', standardAreas: ['Mort Myre Swamp'], chunkOptions: [{ cx: 53, cy: 52 }] },
     ],
     skills: {}, prereqs: ['Priest in Peril', 'The Restless Ghost'], points: 2, series: 'Myreque',
+    // Items checked on the Wiki: Silver sickle; Ghostspeak amulet (worn).
+    equipmentRequirements: [
+      { slot: 'Neck', tier: 1, reason: 'Equip amulet of ghostspeak to talk to Filliman' },
+    ],
+    oneOf: [
+      { skills: { 'Crafting': 18 } },
+      { merchants: ['Weapon Shops'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Death Plateau': {
@@ -715,6 +793,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "death-plateau", label: "Death Plateau", standardAreas: ["Burthorpe"], chunkOptions: [{ cx: 44, cy: 56 }] },
     ],
     skills: {}, prereqs: [], points: 1, series: 'Troll',
+    // Items checked on the Wiki: 10 cooked trout.
+    oneOf: [
+      { skills: { 'Fishing': 20, 'Cooking': 15 } },
+      { merchants: ['Food Shops'] },
+    ],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Troll Stronghold': {
@@ -738,6 +821,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Regicide', name: 'Regicide',
     regions: ['Tyras Camp', 'Iorwerth Camp', 'Isafdar', 'Arandar', 'East Ardougne', 'West Ardougne', 'Rimmington', 'Poison Waste'],
     skills: { 'Agility': 56, 'Crafting': 10 }, prereqs: ['Underground Pass'], points: 3, series: 'Elf',
+    // Items checked on the Wiki: Limestone; Gloves.
+    equipmentRequirements: [
+      { slot: 'Gloves', tier: 1, reason: 'Gloves must be worn when using limestone on a furnace and grinding quicklime' },
+    ],
+    oneOf: [
+      { skills: { 'Mining': 10 } },
+      { merchants: ['Real Estate Agents'] },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Eadgar\'s Ruse': {
@@ -745,6 +836,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Eadgar\'s Ruse', name: 'Eadgar\'s Ruse',
     regions: ['Burthorpe', 'Taverley', 'East Ardougne'],
     skills: { 'Herblore': 31 }, prereqs: ['Druidic Ritual', 'Troll Stronghold'], points: 1, series: 'Troll',
+    // Items checked on the Wiki: Vodka.
+    oneOf: [
+      { merchants: ['Bars & Inns'] },
+      { merchants: ['Food Shops'] },
+      { merchants: ['General Stores'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Shades of Mort\'ton': {
@@ -777,7 +874,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Throne of Miscellania', name: 'Throne of Miscellania',
     regions: ['Miscellania & Etceteria'],
-    skills: {}, prereqs: ['The Fremennik Trials', 'Heroes\' Quest'], points: 1, series: 'Miscellania',
+    skills: { 'Smithing': 15 }, prereqs: ['The Fremennik Trials', 'Heroes\' Quest'], points: 1, series: 'Miscellania',
+    // Items checked on the Wiki: Iron bar.
+    oneOf: [
+      { skills: { 'Mining': 15 } },
+      { merchants: ['Ore Merchants'] },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Monkey Madness I': {
@@ -785,6 +887,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Monkey Madness I', name: 'Monkey Madness I',
     regions: ['Tree Gnome Stronghold', 'Ship Yard', 'Ape Atoll', 'East Ardougne'],
     skills: {}, prereqs: ['The Grand Tree', 'Tree Gnome Village'], points: 3, series: 'Gnome',
+    // Items checked on the Wiki: Monkey greegree, M'speak amulet, 10th squad sigil (worn).
+    equipmentRequirements: [
+      { slot: 'Weapon', tier: 1, reason: 'Wield monkey greegree to become a monkey' },
+      { slot: 'Neck', tier: 1, reason: "Wear M'speak amulet / 10th squad sigil" },
+    ],
     difficulty: DropSource.QUEST_MASTER
   },
   'Haunted Mine': {
@@ -801,7 +908,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Troll Romance', name: 'Troll Romance',
     regions: ['Burthorpe', 'Warriors\' Guild', 'Mountain Camp'],
-    skills: { 'Agility': 28 }, prereqs: ['Troll Stronghold'], points: 2,
+    skills: { 'Agility': 28, 'Smithing': 15 }, prereqs: ['Troll Stronghold'], points: 2,
+    // Items checked on the Wiki: Iron bar.
+    oneOf: [
+      { skills: { 'Mining': 15 } },
+      { merchants: ['Ore Merchants'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'In Search of the Myreque': {
@@ -809,14 +921,27 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'In Search of the Myreque', name: 'In Search of the Myreque',
     regions: ['Canifis', 'Mort Myre Swamp', 'Barrows'],
     skills: { 'Agility': 25 }, prereqs: ['Nature Spirit'], points: 2, series: 'Myreque',
+    // Items checked on the Wiki: Steel longsword, 2 steel swords, steel mace, steel warhammer, steel dagger; 225 steel nails.
+    oneOf: [
+      { skills: { 'Smithing': 39 } },
+      { skills: { 'Smithing': 34 }, merchants: ['Weapon Shops'] },
+      { merchants: ['Weapon Shops', 'Sawmill Operators'] },
+      { skills: { 'Smithing': 34 }, merchants: ['Sword Shops', 'Mace Shops', 'Warhammer Shops'] },
+      { merchants: ['Sword Shops', 'Mace Shops', 'Warhammer Shops', 'Sawmill Operators'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Creature of Fenkenstrain': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Creature of Fenkenstrain', name: 'Creature of Fenkenstrain',
     regions: ['Canifis', 'Fenkenstrain\'s Castle', 'Haunted Woods'],
-    skills: { 'Crafting': 20, 'Thieving': 25 }, prereqs: ["Priest in Peril"],
+    skills: { 'Crafting': 20, 'Thieving': 25, 'Smithing': 4 }, prereqs: ["Priest in Peril"],
     manualRequirements: ["Started The Restless Ghost"], points: 2,
+    // Items checked on the Wiki: 3 bronze wire; Silver bar.
+    oneOf: [
+      { skills: { 'Mining': 20, 'Smithing': 20 } },
+      { merchants: ['Silver Shops'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Roving Elves': {
@@ -835,6 +960,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     ],
     regions: ['Port Phasmatys', 'Fenkenstrain\'s Castle', 'Dragontooth Island'],
     skills: { 'Agility': 25, 'Cooking': 20 }, prereqs: ['Priest in Peril', 'The Restless Ghost'], points: 2,
+    // Items checked on the Wiki: Oak longbow.
+    oneOf: [
+      { skills: { 'Fletching': 25 } },
+      { merchants: ['Archery Shops'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'One Small Favour': {
@@ -852,6 +982,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Mountain Camp', 'Rellekka'],
     oneOf: [{ regions: ['Taverley'] }, { regions: ['Catherby'] }],
     skills: { 'Agility': 20 }, prereqs: [], points: 2,
+    // Items checked on the Wiki: Gloves (worn).
+    equipmentRequirements: [
+      { slot: 'Gloves', tier: 1, reason: 'Wear gloves to pick the fruit without taking damage and to get the seed' },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Between a Rock...': {
@@ -869,6 +1003,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: { 'Thieving': 30 }, prereqs: [], points: 1,
     // The Kharidian headpiece and fake beard are sold by Ali Morrisane or the Pollnivneach general store.
     merchants: ['General Stores'],
+    // Items checked on the Wiki: Desert disguise and gloves.
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Desert disguise (Kharidian headpiece + fake beard) must be equipped' },
+      { slot: 'Gloves', tier: 1, reason: 'Gloves must be equipped for the villa job' },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Golem': {
@@ -892,6 +1031,19 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'jaldraocht-pyramid', label: 'Jaldraocht Pyramid', standardAreas: ['Bandit Camp'], chunkOptions: [{ cx: 50, cy: 45 }] },
     ],
     skills: { 'Thieving': 53, 'Firemaking': 50, 'Slayer': 10, 'Magic': 50 }, prereqs: ['The Dig Site', 'Temple of Ikov', 'The Tourist Trap', 'Troll Stronghold', 'Priest in Peril', 'Waterfall Quest'], points: 3, series: 'Mahjarrat',
+    // Items checked on the Wiki: Spice; 20-50+ lockpicks; Facemask, ring of visibility, ice gloves, spiked boots.
+    merchants: ['Claw Shops'],
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Wear a facemask/gas mask/slayer helmet in the Smoke Dungeon' },
+      { slot: 'Ring', tier: 1, reason: 'Wear the ring of visibility for the Damis fight' },
+      { slot: 'Gloves', tier: 1, reason: 'Wear ice gloves to fight Fareed' },
+      { slot: 'Boots', tier: 1, reason: 'Wear spiked boots to climb the ice ledge' },
+    ],
+    oneOf: [
+      { merchants: ['Spice Shops'] },
+      { merchants: ['Food Shops'] },
+      { merchants: ['General Stores'] },
+    ],
     difficulty: DropSource.QUEST_MASTER
   },
   'Icthlarin\'s Little Helper': {
@@ -932,7 +1084,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Giant Dwarf', name: 'The Giant Dwarf',
     regions: ['Keldagrim', 'Varrock', 'Port Sarim'],
-    skills: { 'Crafting': 12, 'Firemaking': 16, 'Magic': 33, 'Thieving': 14 }, prereqs: [], points: 2, series: 'Red Axe',
+    skills: { 'Crafting': 12, 'Firemaking': 16, 'Magic': 33, 'Thieving': 14, 'Smithing': 15 }, prereqs: [], points: 2, series: 'Red Axe',
+    // Items checked on the Wiki: 3 cut sapphires; Iron bar.
+    oneOf: [
+      { skills: { 'Crafting': 20, 'Mining': 15 } },
+      { skills: { 'Crafting': 20 }, merchants: ['Ore Merchants'] },
+      { skills: { 'Mining': 15 }, merchants: ['Gem Shops'] },
+      { merchants: ['Gem Shops', 'Ore Merchants'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Recruitment Drive': {
@@ -954,6 +1113,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'jorrals-orchard', label: "Apple orchard by Jorral's Outpost", standardAreas: ['East Ardougne'], chunkOptions: [{ cx: 38, cy: 52 }] },
     ],
     skills: { 'Ranged': 60, 'Thieving': 50 }, prereqs: ['Roving Elves', 'Big Chompy Bird Hunting', 'Sheep Herder'], points: 2, series: 'Elf',
+    // Items checked on the Wiki: Leather.
+    oneOf: [
+      { merchants: ['Tanners'] },
+      { skills: { 'Magic': 78 } },
+    ],
     difficulty: DropSource.QUEST_MASTER
   },
   'Forgettable Tale...': {
@@ -961,6 +1125,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Forgettable Tale...', name: 'Forgettable Tale of a Drunken Dwarf',
     regions: ['Keldagrim', 'Taverley'],
     skills: { 'Cooking': 22, 'Farming': 17 }, prereqs: ['The Giant Dwarf', 'Fishing Contest'], points: 2, series: 'Red Axe',
+    // Items checked on the Wiki: Kebab and 2 beers.
+    merchants: ['Bars & Inns'],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Garden of Tranquillity': {
@@ -970,6 +1136,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: { 'Farming': 25 }, prereqs: ['Creature of Fenkenstrain'], points: 2,
     // The plant cure, plant pot, trowel, secateurs and watering can come from farming shops.
     merchants: ['Farming Shops'],
+    // Items checked on the Wiki: Ring of Charos (worn).
+    equipmentRequirements: [
+      { slot: 'Ring', tier: 1, reason: 'Wear the Ring of Charos for charm dialogue' },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'A Tail of Two Cats': {
@@ -977,6 +1147,18 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'A Tail of Two Cats', name: 'A Tail of Two Cats',
     regions: ['Burthorpe', 'Varrock', 'Sophanem'],
     skills: {}, prereqs: ['Icthlarin\'s Little Helper'], points: 2, series: 'Dragonkin',
+    // Items checked on the Wiki: 4 potato seeds; Disguise and catspeak amulet.
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: "Wear the doctor's/nurse hat for the disguise" },
+      { slot: 'Body', tier: 1, reason: "Wear the desert shirt/druid's robe top for the disguise" },
+      { slot: 'Legs', tier: 1, reason: "Wear the desert robe/druid's robe for the disguise" },
+      { slot: 'Neck', tier: 1, reason: 'Wear the catspeak amulet' },
+    ],
+    oneOf: [
+      { merchants: ['Farming Shops'] },
+      { merchants: ['Vegetable Shops'] },
+      { skills: { 'Thieving': 10 } },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Wanted!': {
@@ -991,6 +1173,15 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Mourning\'s End Part II', name: 'Mourning\'s End Part II',
     regions: ['Lletya', 'West Ardougne'],
     skills: {}, prereqs: ['Mourning\'s End Part I'], points: 2, series: 'Elf',
+    // Items checked on the Wiki: Full mourner outfit (worn).
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Mourner gas mask' },
+      { slot: 'Body', tier: 1, reason: 'Mourner top' },
+      { slot: 'Legs', tier: 1, reason: 'Mourner trousers' },
+      { slot: 'Gloves', tier: 1, reason: 'Mourner gloves' },
+      { slot: 'Boots', tier: 1, reason: 'Mourner boots' },
+      { slot: 'Cape', tier: 1, reason: 'Mourner cloak' },
+    ],
     difficulty: DropSource.QUEST_MASTER
   },
   'Rum Deal': {
@@ -1005,6 +1196,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Shadow of the Storm', name: 'Shadow of the Storm',
     regions: ['Al Kharid', 'Ruins of Uzer'],
     skills: { 'Crafting': 30 }, prereqs: ['Demon Slayer', 'The Golem'], points: 1, series: 'Demon Slayer',
+    // Items checked on the Wiki: Silver bar.
+    oneOf: [
+      { merchants: ['Silver Shops'] },
+      { skills: { 'Mining': 20, 'Smithing': 20 } },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Making History': {
@@ -1012,7 +1208,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Making History', name: 'Making History',
     regions: ['Observatory', 'East Ardougne', 'Rellekka', 'Port Phasmatys'],
     locations: [LOCATIONS.jorralsOutpost],
-    skills: {}, prereqs: ['Priest in Peril', 'The Restless Ghost'], points: 3,
+    skills: { 'Crafting': 24 }, prereqs: ['Priest in Peril', 'The Restless Ghost'], points: 3,
+    // Items checked on the Wiki: Sapphire amulet (strung).
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Ratcatchers': {
@@ -1042,6 +1239,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Paterdomus', 'Entrana', 'Falador'],
     locations: [LOCATIONS.edgevilleDitch],
     skills: { 'Smithing': 65, 'Runecraft': 50, 'Fletching': 50 }, prereqs: ['Wanted!', 'Troll Stronghold', 'Doric\'s Quest'], points: 1, series: 'Mahjarrat',
+    // Items checked on the Wiki: Bow string.
+    oneOf: [
+      { skills: { 'Crafting': 10 } },
+      { merchants: ['Archery Shops'] },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'The Hand in the Sand': {
@@ -1079,8 +1281,15 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'RFD: The Cook': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'RFD: The Cook', name: 'RFD: Start (The Cook)',
-    regions: ['Lumbridge'],
+    // The cook's items, for an ironman: Greenman's ale from the Dragon Inn bar
+    // in Yanille, a rotten tomato from a Pelters' Veg Stall or the Shop of
+    // Distaste, the fruit blast from Hudo's fruit and the cocktail gear in
+    // the Gnome Stronghold, and an eye of newt from Betty in Port Sarim or a
+    // herblore shop.
+    regions: ['Lumbridge', 'Yanille', 'Tree Gnome Stronghold'],
     skills: { 'Cooking': 10 }, prereqs: ['Cook\'s Assistant'], points: 1, series: 'Recipe for Disaster',
+    merchants: ['Bars & Inns', 'Vegetable Shops', 'Food Shops'],
+    oneOf: [{ regions: ['Port Sarim'], merchants: ['Magic Shops'] }, { merchants: ['Herblore Shops'] }],
     difficulty: DropSource.QUEST_NOVICE
   },
   'RFD: Dwarf': {
@@ -1088,6 +1297,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'RFD: Dwarf', name: 'RFD: Dwarf',
     regions: ['Taverley', 'Falador'],
     skills: {}, prereqs: ['RFD: The Cook', 'Fishing Contest'], points: 1, series: 'Recipe for Disaster',
+    // Items checked on the Wiki: Asgarnian ale (x4).
+    oneOf: [
+      { merchants: ['Bars & Inns'] },
+      { skills: { 'Cooking': 24 } },
+    ],
     difficulty: DropSource.QUEST_NOVICE
   },
   'RFD: Goblins': {
@@ -1095,13 +1309,28 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'RFD: Goblins', name: 'RFD: Goblins',
     regions: ['Goblin Village'],
     skills: {}, prereqs: ['RFD: The Cook', 'Goblin Diplomacy'], points: 1, series: 'Recipe for Disaster',
+    // Items checked on the Wiki: Spice or gnome spice; Orange.
+    oneOf: [
+      { merchants: ['Food Shops'] },
+      { merchants: ['Spice Shops', 'Vegetable Shops'] },
+      { merchants: ['Spice Shops', 'General Stores'] },
+      { merchants: ['Spice Shops'], skills: { 'Farming': 39 } },
+    ],
     difficulty: DropSource.QUEST_NOVICE
   },
   'RFD: Pirate Pete': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'RFD: Pirate Pete', name: 'RFD: Pirate Pete',
     regions: ['Port Khazard'],
-    skills: { 'Cooking': 31 }, prereqs: ['RFD: The Cook'], points: 1, series: 'Recipe for Disaster',
+    skills: { 'Cooking': 31, 'Smithing': 4 }, prereqs: ['RFD: The Cook'], points: 1, series: 'Recipe for Disaster',
+    // Items checked on the Wiki: Bronze wire (x3); Raw cod; Fishbowl helmet / diving apparatus (worn).
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Wear fishbowl helmet to dive' },
+    ],
+    oneOf: [
+      { skills: { 'Fishing': 23 } },
+      { merchants: ['Fishing Shops'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'RFD: Lumbridge Guide': {
@@ -1116,6 +1345,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'RFD: Evil Dave', name: 'RFD: Evil Dave',
     regions: ['Edgeville'],
     skills: {}, prereqs: ['RFD: The Cook', 'Gertrude\'s Cat', 'Shadow of the Storm'], points: 1, series: 'Recipe for Disaster',
+    // Items checked on the Wiki: Stews (up to 9).
+    oneOf: [
+      { skills: { 'Cooking': 25 } },
+      { merchants: ['Bars & Inns'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'RFD: Skrach Uglogwee': {
@@ -1140,6 +1374,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: { 'Cooking': 70, 'Agility': 48 }, prereqs: ['RFD: The Cook', 'Monkey Madness I'], points: 1, series: 'Recipe for Disaster',
     // The monkey nuts are sold only by Solihib's food stall on Ape Atoll.
     merchants: ['Food Shops'],
+    // Items checked on the Wiki: Greegrees and M'speak amulet (worn).
+    equipmentRequirements: [
+      { slot: 'Weapon', tier: 1, reason: 'Wield greegrees (enter Ape Atoll, ninja/gorilla/zombie steps)' },
+      { slot: 'Neck', tier: 1, reason: "Equip M'speak amulet to talk to the Elder Guard and Awowogei" },
+    ],
     difficulty: DropSource.QUEST_MASTER
   },
   'RFD: Finale': {
@@ -1166,6 +1405,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     locations: [
       { id: "soul-bane-rift", label: "Rift east of Varrock", standardAreas: ["Varrock"], chunkOptions: [{ cx: 51, cy: 53 }] },
     ],
+    equipmentRequirements: [{ slot: 'Weapon', tier: 1, reason: 'Wield the anger weapons from the rack in the rage room' }],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1268,6 +1508,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Darkness of Hallowvale', name: 'Darkness of Hallowvale',
     regions: ['Burgh de Rott', 'Darkmeyer', 'Meiyerditch', 'Varrock', 'Paterdomus'],
     skills: { 'Construction': 5, 'Mining': 20, 'Thieving': 22, 'Agility': 26, 'Crafting': 32, 'Magic': 33, 'Strength': 40 }, prereqs: ['In Aid of the Myreque'], points: 2, series: 'Myreque',
+    // Items checked on the Wiki: 8 nails.
+    oneOf: [
+      { skills: { 'Smithing': 4 } },
+      { merchants: ['Sawmill Operators'] },
+      { merchants: ['General Stores'] },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'The Slug Menace': {
@@ -1303,6 +1549,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "south-taverley", label: "South Taverley", standardAreas: ["Taverley"], chunkOptions: [{ cx: 45, cy: 53 }] },
     ],
     skills: {"Firemaking":20,"Farming":30,"Crafting":36,"Quest Points":20}, prereqs: [], points: 1,
+    // Items checked on the Wiki: 10 silk.
+    oneOf: [
+      { skills: { 'Thieving': 20 } },
+      { merchants: ['Clothes Shops'] },
+      { merchants: ['Silk Shops'] },
+      { merchants: ['General Stores'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Eagles\' Peak': {
@@ -1310,6 +1563,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Eagles\' Peak', name: 'Eagles\' Peak',
     regions: ['Eagles\' Peak', 'Varrock', 'East Ardougne'],
     skills: { 'Hunter': 27 }, prereqs: [], points: 2,
+    // Items checked on the Wiki: Eagle disguise (fake beak + eagle cape).
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Wear fake beak (eagle disguise)' },
+      { slot: 'Cape', tier: 1, reason: 'Wear eagle cape (eagle disguise)' },
+    ],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Animal Magnetism': {
@@ -1318,6 +1576,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     equipmentRequirements: [{ slot: 'Neck', tier: 1, reason: 'Wear the ghostspeak amulet when speaking to the old crone' }],
     regions: ['Draynor Village', 'Burthorpe', 'Fenkenstrain\'s Castle', 'Port Phasmatys', 'Rimmington'],
     skills: { 'Slayer': 18, 'Crafting': 19, 'Ranged': 30, 'Woodcutting': 35 }, prereqs: ['The Restless Ghost', 'Ernest the Chicken', 'Priest in Peril'], points: 1,
+    // Items checked on the Wiki: Mithril axe; Hard leather.
+    merchants: ['Tanners'],
+    oneOf: [
+      { skills: { 'Smithing': 51 } },
+      { merchants: ['Axe Shops'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Contact!': {
@@ -1343,6 +1607,17 @@ export const QUEST_DATA: Record<string, QuestData> = {
     ],
     skills: { 'Hunter': 10, 'Agility': 30, 'Crafting': 30, 'Construction': 34, 'Thieving': 15 }, prereqs: [],
     manualRequirements: ["Access to a crafting table 3"], points: 1, series: 'Penguin',
+    // Items checked on the Wiki: 10 steel nails; Silk.
+    oneOf: [
+      { skills: { 'Smithing': 34 }, merchants: ['Silk Shops'] },
+      { skills: { 'Smithing': 34 }, merchants: ['Clothes Shops'] },
+      { skills: { 'Smithing': 34 }, merchants: ['General Stores'] },
+      { skills: { 'Smithing': 34, 'Thieving': 20 } },
+      { merchants: ['Sawmill Operators', 'Silk Shops'] },
+      { merchants: ['Sawmill Operators', 'Clothes Shops'] },
+      { merchants: ['Sawmill Operators', 'General Stores'] },
+      { skills: { 'Thieving': 20 }, merchants: ['Sawmill Operators'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Fremennik Isles': {
@@ -1375,6 +1650,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Canifis', 'Mos Le\'Harmless', 'Harmony Island', 'Edgeville'],
     manualRequirements: ['Access to a player-owned house workshop and crafting table'],
     skills: { 'Crafting': 16, 'Construction': 30, 'Prayer': 50 }, prereqs: ['Creature of Fenkenstrain', 'Cabin Fever', 'RFD: Pirate Pete'], points: 2, series: 'Pirate',
+    // Items checked on the Wiki: Fishbowl helmet, diving apparatus, holy symbol, Ring of Charos (worn); Planks (about 22 normal planks).
+    merchants: ['Sawmill Operators'],
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Wear fishbowl helmet underwater' },
+      { slot: 'Cape', tier: 1, reason: 'Wear diving apparatus underwater' },
+      { slot: 'Neck', tier: 1, reason: 'Equip holy symbol to use the prayer book' },
+      { slot: 'Ring', tier: 1, reason: 'Wear Ring of Charos when talking to Rufus' },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'What Lies Below': {
@@ -1415,6 +1698,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Dream Mentor', name: 'Dream Mentor',
     regions: ['Lunar Isle'],
     skills: {}, combatLevel: 85, prereqs: ['Lunar Diplomacy', 'Eadgar\'s Ruse'], points: 2,
+    // Items checked on the Wiki: Astral rune.
+    oneOf: [
+      { skills: { 'Runecraft': 40 } },
+      { merchants: ['Magic Shops'] },
+    ],
     difficulty: DropSource.QUEST_MASTER
   },
   'Grim Tales': {
@@ -1428,7 +1716,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'King\'s Ransom', name: 'King\'s Ransom',
     regions: ['East Ardougne', 'Seers\' Village', 'Camelot', 'Edgeville'],
-    skills: { 'Magic': 45, 'Defence': 65 }, prereqs: ['Black Knights\' Fortress', 'Holy Grail', 'Murder Mystery', 'One Small Favour'], points: 1, series: 'Camelot',
+    skills: { 'Magic': 45, 'Defence': 65, 'Mining': 45 }, prereqs: ['Black Knights\' Fortress', 'Holy Grail', 'Murder Mystery', 'One Small Favour'], points: 1, series: 'Camelot',
+    // Items checked on the Wiki: Full black armour (worn); Granite (any size).
+    merchants: ['Platebody Shops'],
+    equipmentRequirements: [
+      { slot: 'Head', tier: 2, reason: 'Wear black full helm to push the wall' },
+      { slot: 'Body', tier: 2, reason: 'Wear black platebody to push the wall' },
+      { slot: 'Legs', tier: 2, reason: 'Wear black platelegs/plateskirt to push the wall' },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Monkey Madness II': {
@@ -1437,6 +1732,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Ape Atoll', 'Tree Gnome Stronghold', 'Entrana', 'Burthorpe', 'Feldip Hills'],
     manualRequirements: ['Unlocked the Gnome Stronghold balloon route'],
     skills: { 'Slayer': 69, 'Crafting': 70, 'Hunter': 60, 'Agility': 55, 'Thieving': 55, 'Firemaking': 60 }, prereqs: ['Monkey Madness I', 'Enlightened Journey', 'The Eyes of Glouphrie', 'Troll Stronghold', 'Watchtower', 'RFD: King Awowogei'], points: 4, series: 'Gnome',
+    // Items checked on the Wiki: M'speak amulet + greegree (worn).
+    equipmentRequirements: [
+      { slot: 'Neck', tier: 1, reason: "Equip M'speak amulet to talk to Garkor" },
+      { slot: 'Weapon', tier: 1, reason: 'Wield greegree (ninja/gorilla, Kruk) to talk to Garkor and ride the rowboat' },
+    ],
     difficulty: DropSource.QUEST_GRANDMASTER
   },
   'Client of Kourend': {
@@ -1457,7 +1757,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     ],
     skills: { 'Slayer': 40 }, prereqs: ['Rag and Bone Man I', 'Skippy and the Mogres'], points: 1, series: 'Rag and Bone Man',
     // The jugs of vinegar are bought from Fortunato's wine shop in Draynor.
-    merchants: ['Wine Traders'],
+    merchants: ['Wine Traders', 'Slayer Equipment'],
+    // Items checked on the Wiki: Ice coolers, fishing explosives, mirror shield.
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Bone Voyage': {
@@ -1466,6 +1767,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Varrock', 'Fossil Island', 'Port Sarim', 'Woodcutting Guild', 'Digsite', 'Silvarea'],
     skills: {}, prereqs: ['The Dig Site'],
     manualRequirements: ["100 Kudos"], points: 1,
+    // Items checked on the Wiki: 2 Vodka.
+    oneOf: [
+      { merchants: ['Bars & Inns'] },
+      { merchants: ['Food Shops'] },
+      { merchants: ['General Stores'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Queen of Thieves': {
@@ -1473,6 +1780,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'The Queen of Thieves', name: 'The Queen of Thieves',
     regions: ['Hosidius', 'Piscarilius'],
     skills: { 'Thieving': 20 }, prereqs: ['Client of Kourend'], points: 1, series: 'Great Kourend',
+    // Items checked on the Wiki: Stew.
+    oneOf: [
+      { skills: { 'Cooking': 25 } },
+      { merchants: ['Bars & Inns'] },
+      { merchants: ['Food Shops'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Depths of Despair': {
@@ -1492,6 +1805,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     ],
     skills: { 'Magic': 75, 'Smithing': 70, 'Mining': 68, 'Crafting': 62, 'Agility': 60, 'Thieving': 60, 'Construction': 50, 'Hitpoints': 50, 'Quest Points': 200 }, prereqs: ['Legends\' Quest', 'Dream Mentor', 'A Tail of Two Cats', 'Animal Magnetism', 'Ghosts Ahoy', 'Bone Voyage', 'Client of Kourend'],
     manualRequirements: ["Started the pyre ship portion of Barbarian Training"], points: 5, series: 'Dragonkin',
+    // Items checked on the Wiki: Machete.
+    merchants: ['General Stores'],
     difficulty: DropSource.QUEST_GRANDMASTER
   },
   'Tale of the Righteous': {
@@ -1505,7 +1820,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'A Taste of Hope', name: 'A Taste of Hope',
     regions: ['Meiyerditch', 'Ver Sinhaza'],
-    skills: { 'Crafting': 48, 'Agility': 45, 'Attack': 40, 'Herblore': 40, 'Slayer': 38 }, prereqs: ['Darkness of Hallowvale'], points: 1, series: 'Myreque',
+    skills: { 'Crafting': 48, 'Agility': 45, 'Attack': 40, 'Herblore': 40, 'Slayer': 38, 'Magic': 27 }, prereqs: ['Darkness of Hallowvale'], points: 1, series: 'Myreque',
+    // Items checked on the Wiki: Lvl-2 Enchant on the emerald sickle.
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Making Friends with My Arm': {
@@ -1537,6 +1853,24 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Lletya', 'Zul-Andra', 'Poison Waste', 'Iorwerth Camp', 'Isafdar', 'Prifddinas', 'Arandar', 'East Ardougne', 'West Ardougne', 'Baxtorian Falls'],
     skills: { 'Agility': 70, 'Construction': 70, 'Farming': 70, 'Herblore': 70, 'Hunter': 70, 'Mining': 70, 'Smithing': 70, 'Woodcutting': 70 },
     prereqs: ['Mourning\'s End Part II', 'Making History', 'Druidic Ritual'], points: 4, series: 'Elf',
+    // Items checked on the Wiki: Adamant chainbody; Limestone brick x8; Silk; Ardougne knight disguise and mourner gear.
+    equipmentRequirements: [
+      { slot: 'Head', tier: 2, reason: 'Wear steel full helm (dyed) as Ardougne knight disguise' },
+      { slot: 'Body', tier: 2, reason: 'Wear steel platebody + tabard as Ardougne knight disguise' },
+      { slot: 'Legs', tier: 2, reason: 'Wear steel platelegs (Edmond can polish for pures)' },
+      { slot: 'Gloves', tier: 1, reason: 'Full mourner outfit worn in West Ardougne' },
+      { slot: 'Boots', tier: 1, reason: 'Full mourner outfit worn in West Ardougne' },
+    ],
+    oneOf: [
+      { skills: { 'Crafting': 12 }, merchants: ['Chainbody Shops', 'Clothes Shops'] },
+      { skills: { 'Crafting': 12, 'Thieving': 20 }, merchants: ['Chainbody Shops'] },
+      { merchants: ['Chainbody Shops', 'Stonemasons', 'Clothes Shops'] },
+      { skills: { 'Thieving': 20 }, merchants: ['Chainbody Shops', 'Stonemasons'] },
+      { skills: { 'Smithing': 81, 'Crafting': 12 }, merchants: ['Clothes Shops'] },
+      { skills: { 'Smithing': 81, 'Crafting': 12, 'Thieving': 20 } },
+      { skills: { 'Smithing': 81 }, merchants: ['Stonemasons', 'Clothes Shops'] },
+      { skills: { 'Smithing': 81, 'Thieving': 20 }, merchants: ['Stonemasons'] },
+    ],
     difficulty: DropSource.QUEST_GRANDMASTER
   },
   'The Fremennik Exiles': {
@@ -1552,6 +1886,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'island-of-stone', label: 'Island of Stone', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 38, cy: 62 }] },
     ],
     skills: { 'Crafting': 65, 'Slayer': 60, 'Smithing': 60, 'Fishing': 60, 'Mining': 60, 'Runecraft': 55 }, prereqs: ['The Fremennik Isles', 'Lunar Diplomacy', 'Mountain Daughter', 'Heroes\' Quest'], points: 2, series: 'Fremennik',
+    // Items checked on the Wiki: Mirror shield.
+    merchants: ['Slayer Equipment'],
+    equipmentRequirements: [
+      { slot: 'Shield', tier: 1, reason: 'Mirror shield must be equipped vs Basilisk Youngling' },
+      { slot: 'Gloves', tier: 1, reason: 'Ice gloves must be worn when submerging the pet rock in the geyser' },
+    ],
     difficulty: DropSource.QUEST_MASTER
   },
   'Sins of the Father': {
@@ -1587,6 +1927,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'A Night at the Theatre', name: 'A Night at the Theatre',
     regions: ['Mort Myre Swamp', 'Ver Sinhaza', 'Slepe'],
     skills: {}, prereqs: ['A Taste of Hope'], points: 2,
+    // Items checked on the Wiki: Ivandis/Blisterwood flail.
+    equipmentRequirements: [
+      { slot: 'Weapon', tier: 1, reason: 'Wield the Ivandis/Blisterwood flail to kill a vyrewatch' },
+    ],
     difficulty: DropSource.QUEST_MASTER
   },
   'The Blood Moon Rises': {
@@ -1610,6 +1954,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Land of the Goblins', name: 'Land of the Goblins',
     regions: ['Hemenster', 'Lumbridge', 'Crafting Guild', 'Draynor Village'],
     skills: { 'Agility': 38, 'Thieving': 45, 'Fishing': 40, 'Herblore': 48 }, prereqs: ['Another Slice of H.A.M.', 'Fishing Contest'], points: 2, series: 'Dorgeshuun',
+    // Items checked on the Wiki: Goblin mail (worn disguise).
+    equipmentRequirements: [
+      { slot: 'Body', tier: 1, reason: 'Wear (dyed) goblin mail as a goblin disguise in the Goblin Temple' },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Temple of the Eye': {
@@ -1668,6 +2016,16 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Desert Treasure II', name: 'Desert Treasure II - The Fallen Empire',
     regions: ['Nardah', 'Goblin Village', 'Weiss', 'The Stranglewood', 'Digsite', 'Lovakengj', 'Hosidius', 'Wizards\' Tower'],
     skills: { 'Magic': 75, 'Firemaking': 75, 'Thieving': 70, 'Herblore': 62, 'Runecraft': 60, 'Construction': 60 }, prereqs: ['Desert Treasure I', 'Secrets of the North', 'Enakhra\'s Lament', 'Temple of the Eye', 'The Garden of Death', 'Below Ice Mountain', 'His Faithful Servants'], points: 5, series: 'Mahjarrat',
+    // Items checked on the Wiki: Facemask or Slayer helm; Ring of visibility; 2 soul runes.
+    merchants: ['Slayer Equipment'],
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Wear a facemask or slayer helm' },
+      { slot: 'Ring', tier: 1, reason: 'Wear the ring of visibility' },
+    ],
+    oneOf: [
+      { merchants: ['Magic Shops'] },
+      { skills: { 'Runecraft': 90 } },
+    ],
     difficulty: DropSource.QUEST_GRANDMASTER
   },
   'The Path of Glouphrie': {
@@ -1693,6 +2051,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Defender of Varrock', name: 'Defender of Varrock',
     regions: ['Varrock', 'Goblin Village', 'Silvarea'],
     skills: { 'Smithing': 55, 'Hunter': 52 }, prereqs: ['Shield of Arrav', 'Romeo & Juliet', 'Demon Slayer', 'Temple of Ikov', 'Below Ice Mountain', 'Family Crest', 'Garden of Tranquillity', 'What Lies Below'], points: 2, series: 'Mahjarrat',
+    // Items checked on the Wiki: Shield of Arrav.
+    equipmentRequirements: [
+      { slot: 'Shield', tier: 1, reason: 'Equip the Shield of Arrav for the Dimintheis step' },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Twilight\'s Promise': {
@@ -1736,7 +2098,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
       // Stand-in: Lucien's camp (45,59) belongs to no area; you reach it by teleorb and leave by the Chaos Temple ledge (46,59).
       { id: 'luciens-camp', label: "Lucien's camp", standardAreas: ['Chaos Altar'], chunkOptions: [{ cx: 45, cy: 59 }] },
     ],
-    skills: { 'Quest Points': 180, 'Thieving': 72, 'Magic': 67, 'Agility': 66, 'Farming': 65, 'Herblore': 65, 'Hunter': 62 },
+    skills: { 'Quest Points': 180, 'Thieving': 72, 'Magic': 67, 'Agility': 66, 'Farming': 65, 'Herblore': 65, 'Hunter': 62, 'Firemaking': 49 },
     manualRequirements: ["Warriors' Guild access with Attack + Strength at least 130, or 99 Attack, or 99 Strength"],
     prereqs: [
       'Defender of Varrock', 'The Path of Glouphrie', 'Fight Arena', 'Dream Mentor',
@@ -1744,6 +2106,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
       'Nature Spirit', 'A Tail of Two Cats'
     ],
     points: 5, series: 'Mahjarrat',
+    // Items checked on the Wiki: Lit sapphire lantern; Bronze med helm, iron chainbody / Dark Squall robes (worn disguise).
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: "Wear disguise helm/hood to enter Black Knights' Fortress" },
+      { slot: 'Body', tier: 1, reason: 'Wear disguise body (iron chainbody / Dark Squall robe)' },
+      { slot: 'Legs', tier: 1, reason: 'Wear Dark Squall robe bottom as disguise' },
+    ],
     difficulty: DropSource.QUEST_GRANDMASTER
   },
   'The Heart of Darkness': {
@@ -1757,6 +2125,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'twilight-trialist-tower', label: 'Twilight Trialist Tower', standardAreas: ["Ralos' Rise"], chunkOptions: [{ cx: 25, cy: 50 }] },
     ],
     skills: { 'Mining': 55, 'Thieving': 48, 'Slayer': 48, 'Agility': 46 }, prereqs: ['Twilight\'s Promise'], points: 2, series: 'Twilight Emissaries',
+    // Items checked on the Wiki: Twilight Emissary robes (worn).
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Wear Twilight Emissary hood' },
+      { slot: 'Body', tier: 1, reason: 'Wear Twilight Emissary robe top' },
+      { slot: 'Legs', tier: 1, reason: 'Wear Twilight Emissary robe bottom' },
+      { slot: 'Boots', tier: 1, reason: 'Wear Twilight Emissary sandals' },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Death on the Isle': {
@@ -1769,6 +2144,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "villa-lucens-theatre", label: "Villa Lucens Theatre", standardAreas: ["Aldarin"], chunkOptions: [{ cx: 23, cy: 45 }] },
     ],
     skills: { 'Thieving': 34, 'Agility': 32 }, prereqs: ['Children of the Sun'], points: 2,
+    // Items checked on the Wiki: Butler's uniform.
+    equipmentRequirements: [
+      { slot: 'Body', tier: 1, reason: "Wear the butler's uniform (top)" },
+      { slot: 'Legs', tier: 1, reason: "Wear the butler's uniform (bottom)" },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Meat and Greet': {
@@ -1804,6 +2184,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'zemouregals-fortress', label: "Zemouregal's Fortress", standardAreas: ['Mountain Camp'], chunkOptions: [{ cx: 44, cy: 60 }] },
     ],
     skills: { 'Agility': 61, 'Ranged': 62, 'Strength': 58, 'Thieving': 62, 'Mining': 64, 'Slayer': 37 }, prereqs: ['Defender of Varrock', 'Troll Romance'], points: 2, series: 'Mahjarrat',
+    // Items checked on the Wiki: Insulated boots.
+    merchants: ['Slayer Equipment'],
     difficulty: DropSource.QUEST_MASTER
   },
   'The Final Dawn': {
@@ -1877,6 +2259,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     ],
     skills: { 'Smithing': 30, 'Sailing': 12 }, prereqs: ['Pandemonium', 'The Knight\'s Sword'],
     manualRequirements: ['One open Sailing task slot'], points: 1,
+    // Items checked on the Wiki: Redberry pie.
+    oneOf: [
+      { skills: { 'Cooking': 10 } },
+      { merchants: ['Food Shops'] },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Current Affairs': {
@@ -1942,6 +2329,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Baxtorian Falls'],
     skills: { 'Fishing': 55, 'Firemaking': 35, 'Strength': 35, 'Agility': 15, 'Farming': 15, 'Crafting': 11, 'Smithing': 5, 'Herblore': 4 },
     prereqs: ['Tai Bwo Wannai Trio'], points: 0,
+    // Items checked on the Wiki: Any sapling.
+    merchants: ['Farming Shops'],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Bear Your Soul': {
@@ -1963,6 +2352,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: { 'Thieving': 53 }, prereqs: [],
     manualRequirements: ['Started Desert Treasure I', 'Started The Restless Ghost'],
     points: 0, series: 'Mahjarrat',
+    // Items checked on the Wiki: Ring of visibility and ghostspeak amulet.
+    equipmentRequirements: [
+      { slot: 'Ring', tier: 1, reason: 'Wear the ring of visibility while speaking to the ghosts' },
+      { slot: 'Neck', tier: 1, reason: 'Wear the ghostspeak amulet (sequence 1 requires the amulet)' },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Daddy\'s Home': {
@@ -2028,6 +2422,17 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'gnomish-scout', label: 'Gnomish scout outside the Gnome Stronghold', standardAreas: ['East Ardougne'], chunkOptions: [{ cx: 38, cy: 52 }] },
     ],
     skills: {}, prereqs: ['Fight Arena', 'Curse of the Empty Lord'], points: 0, series: 'Mahjarrat',
+    // Items checked on the Wiki: Ghostly robes set, ring of visibility, ghostspeak amulet (worn).
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Wear ghostly hood' },
+      { slot: 'Body', tier: 1, reason: 'Wear ghostly robe top' },
+      { slot: 'Legs', tier: 1, reason: 'Wear ghostly robe bottom' },
+      { slot: 'Gloves', tier: 1, reason: 'Wear ghostly gloves' },
+      { slot: 'Boots', tier: 1, reason: 'Wear ghostly boots' },
+      { slot: 'Cape', tier: 1, reason: 'Wear ghostly cloak' },
+      { slot: 'Ring', tier: 1, reason: 'Wear ring of visibility' },
+      { slot: 'Neck', tier: 1, reason: 'Wear ghostspeak amulet' },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'His Faithful Servants': {
@@ -2046,6 +2451,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     manualRequirements: ['Started The Restless Ghost'], points: 0,
     // Yu'biusk is reached only by fairy ring BLQ.
     mobility: ['Fairy Rings'],
+    // Items checked on the Wiki: Ghostspeak amulet and Ring of visibility (worn).
+    equipmentRequirements: [
+      { slot: 'Ring', tier: 1, reason: 'Equip ring of visibility or ring of shadows inside the temple' },
+      { slot: 'Neck', tier: 1, reason: 'Equip ghostspeak amulet inside the temple (Morytania legs 2+ in Legs slot also works)' },
+    ],
     difficulty: DropSource.QUEST_MASTER
   },
   'In Search of Knowledge': {
@@ -2093,6 +2503,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Skippy and the Mogres', name: 'Skippy and the Mogres',
     regions: ['Asgarnia'], locations: [LOCATIONS.skippysCamp],
     skills: { 'Cooking': 20 }, prereqs: [], points: 0,
+    // Items checked on the Wiki: Chocolate bar (for chocolate dust).
+    merchants: ['Food Shops'],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Vale Totems': {

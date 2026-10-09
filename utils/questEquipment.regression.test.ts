@@ -62,7 +62,7 @@ describe('mandatory quest equipment readiness', () => {
   it('requires every mandatory disguise slot', () => {
     const quest = QUEST_DATA["Black Knights' Fortress"];
     // Keep unrelated Quest Points/geography fixed while checking the disguise.
-    const base = { ...fresh(), regions: ['Edgeville', 'Falador'],
+    const base = { ...fresh(), regions: ['Edgeville', 'Falador'], merchants: ['Chainbody Shops'],
       quests: Object.keys(QUEST_DATA).filter(id => id !== quest.id) };
     expect(evaluateQuestEligibility(quest, { ...base, equipment: { Head: 1 } }).blockers)
       .toContainEqual(expect.objectContaining({ kind: 'equipment', slot: 'Body', tier: 1 }));

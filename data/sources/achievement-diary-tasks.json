@@ -511,7 +511,24 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Tower of Life Raw chicken and raw swordfish Weaponry"
+      "sourceRequirements": "Completion of Tower of Life Raw chicken and raw swordfish Weaponry",
+      "oneOf": [
+        {
+          "skills": {
+            "Fishing": 50
+          }
+        },
+        {
+          "merchants": [
+            "Fishing Shops"
+          ]
+        },
+        {
+          "merchants": [
+            "Food Shops"
+          ]
+        }
+      ]
     },
     {
       "id": "ard_med_11",
@@ -594,7 +611,10 @@
       "tierId": "Ardougne Hard",
       "ordinal": 1,
       "description": "Recharge some Jewellery at the Totem in the Legends Guild.",
-      "skills": {},
+      "skills": {
+        "Crafting": 72,
+        "Magic": 68
+      },
       "quests": [
         "Legends' Quest"
       ],
@@ -1586,7 +1606,10 @@
         "reviewedAt": "2026-10-04",
         "source": "oldschool.runescape.wiki",
         "notes": "Desert lizards stand along the River Elid (52,47 to 54,47) and west of Ullek (52,43); none near Shantay Pass."
-      }
+      },
+      "merchants": [
+        "Slayer Equipment"
+      ]
     },
     {
       "id": "des_med_3",
@@ -2370,6 +2393,9 @@
       ],
       "slayerUnlocks": [
         "Malevolent Masquerade"
+      ],
+      "merchants": [
+        "Slayer Equipment"
       ]
     },
     {
@@ -2755,7 +2781,8 @@
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Priest in Peril 78 Construction 2 mahogany planks, 2 gold leaves, saw, and hammer Kq head or Kq head (tattered), and 50,000 coins to have the taxidermist stuff it Additional 15,000 coins to construct a Skill Hall if you haven't already",
       "merchants": [
-        "Taxidermists"
+        "Taxidermists",
+        "Stonemasons"
       ],
       "bosses": [
         "Kalphite Queen"
@@ -2932,26 +2959,60 @@
       "sourceRequirements": "Tiara and a mind talisman",
       "oneOf": [
         {
+          "skills": {
+            "Crafting": 23
+          },
           "regions": [
             "Ice Mountain"
           ]
         },
         {
-          "label": "The Abyss",
-          "quests": [
-            "Enter the Abyss"
-          ],
+          "skills": {
+            "Thieving": 50
+          },
+          "regions": [
+            "Ice Mountain"
+          ]
+        },
+        {
+          "skills": {
+            "Crafting": 23
+          },
           "locations": [
             {
-              "label": "Mage of Zamorak (Abyss)",
               "chunkOptions": [
                 {
                   "cx": 48,
                   "cy": 55
                 }
-              ]
+              ],
+              "label": "Mage of Zamorak (Abyss)"
             }
-          ]
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "label": "The Abyss"
+        },
+        {
+          "skills": {
+            "Thieving": 50
+          },
+          "locations": [
+            {
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ],
+              "label": "Mage of Zamorak (Abyss)"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "label": "The Abyss"
         }
       ],
       "geographyVerification": {
@@ -3069,7 +3130,20 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "49 Firemaking Tinderbox and a regular bullseye lantern"
+      "sourceRequirements": "49 Firemaking Tinderbox and a regular bullseye lantern",
+      "oneOf": [
+        {
+          "skills": {
+            "Smithing": 49,
+            "Crafting": 49
+          }
+        },
+        {
+          "merchants": [
+            "Candle Shops"
+          ]
+        }
+      ]
     },
     {
       "id": "fal_med_2",
@@ -3169,7 +3243,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Skippy and the Mogres 32 Slayer Fishing explosive. It is not possible to skip having to complete Skippy and the Mogres, or needing a fishing explosive, by killing them through a boat cannon through the Sailing skill."
+      "sourceRequirements": "Completion of Skippy and the Mogres 32 Slayer Fishing explosive. It is not possible to skip having to complete Skippy and the Mogres, or needing a fishing explosive, by killing them through a boat cannon through the Sailing skill.",
+      "merchants": [
+        "Slayer Equipment"
+      ]
     },
     {
       "id": "fal_med_6",
@@ -3280,6 +3357,9 @@
           "tier": 3,
           "reason": "Full Initiate armour"
         }
+      ],
+      "merchants": [
+        "Platebody Shops"
       ]
     },
     {
@@ -3310,6 +3390,9 @@
               "reason": "Brown or golden apron",
               "manualCheck": "Have Brown or golden apron and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "merchants": [
+            "Clothes Shops"
           ]
         },
         {
@@ -3855,6 +3938,9 @@
       ],
       "guilds": [
         "Mining Guild"
+      ],
+      "merchants": [
+        "Reward Shops"
       ]
     },
     {
@@ -3935,6 +4021,9 @@
           "tier": 5,
           "reason": "Full Proselyte armour"
         }
+      ],
+      "merchants": [
+        "Platebody Shops"
       ]
     },
     {
@@ -5511,14 +5600,36 @@
       "tierId": "Kandarin Easy",
       "ordinal": 8,
       "description": "Get a pet fish from Harry in Catherby.",
-      "skills": {},
+      "skills": {
+        "Fishing": 10
+      },
       "quests": [],
       "regions": [
         "Catherby"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Fishbowl with water, seaweed, and 10 coins"
+      "sourceRequirements": "Fishbowl with water, seaweed, and 10 coins",
+      "merchants": [
+        "Fishing Shops"
+      ],
+      "oneOf": [
+        {
+          "label": "Blow a fishbowl",
+          "skills": {
+            "Crafting": 42
+          }
+        },
+        {
+          "label": "Fishbowl from Mogres",
+          "quests": [
+            "Skippy and the Mogres"
+          ],
+          "skills": {
+            "Slayer": 32
+          }
+        }
+      ]
     },
     {
       "id": "kan_easy_9",
@@ -7377,7 +7488,21 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Tai Bwo Wannai Trio (speak to Tinsay after the quest) 30 Cooking Raw karambwan, multiple recommended in case of burning one"
+      "sourceRequirements": "Completion of Tai Bwo Wannai Trio (speak to Tinsay after the quest) 30 Cooking Raw karambwan, multiple recommended in case of burning one",
+      "oneOf": [
+        {
+          "skills": {
+            "Fishing": 65
+          },
+          "label": "Fish it"
+        },
+        {
+          "merchants": [
+            "Food Shops"
+          ],
+          "label": "Tiadeche's Karambwan Stall"
+        }
+      ]
     },
     {
       "id": "kar_hard_6",
@@ -8412,6 +8537,9 @@
           "unlessDiary": "Kourend Elite",
           "manualCheck": "Have Boots of stone, brimstone or granite and confirm that the specific item is permitted by your equipment tier"
         }
+      ],
+      "merchants": [
+        "Slayer Equipment"
       ]
     },
     {
@@ -8535,7 +8663,21 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "82 Fishing and 84 Cooking Fishing rod and some sandworms"
+      "sourceRequirements": "82 Fishing and 84 Cooking Fishing rod and some sandworms",
+      "oneOf": [
+        {
+          "skills": {
+            "Hunter": 15
+          },
+          "label": "Dig sandworms"
+        },
+        {
+          "merchants": [
+            "Fishing Shops"
+          ],
+          "label": "Tynan's Fishing Supplies"
+        }
+      ]
     },
     {
       "id": "kou_elite_5",
@@ -8563,7 +8705,9 @@
       "ordinal": 6,
       "description": "Create an Ape Atoll teleport tablet.",
       "skills": {
-        "Magic": 90
+        "Magic": 90,
+        "Mining": 38,
+        "Crafting": 38
       },
       "quests": [],
       "regions": [
@@ -9609,6 +9753,14 @@
       "sourceRequirements": "63 Farming Belladonna seed, seed dibber, spade, rake and any gloves",
       "farming": [
         "Belladonna"
+      ],
+      "equipmentRequirements": [
+        {
+          "slot": "Gloves",
+          "tier": 1,
+          "reason": "Gloves must be worn to pick belladonna",
+          "manualCheck": "Have gloves must be worn to pick belladonna and confirm that the specific item is permitted by your equipment tier"
+        }
       ]
     },
     {
@@ -13050,7 +13202,10 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Make a Chocolate Bomb.",
-      "sourceRequirements": "42 Cooking Gnomebowl mould, Gianne dough, 4 chocolate bars, an equa leaf, 2 pots of cream, and chocolate dust (can all be purchased at Grand Tree Groceries )"
+      "sourceRequirements": "42 Cooking Gnomebowl mould, Gianne dough, 4 chocolate bars, an equa leaf, 2 pots of cream, and chocolate dust (can all be purchased at Grand Tree Groceries )",
+      "merchants": [
+        "Food Shops"
+      ]
     },
     {
       "id": "west_med_7",
@@ -13072,6 +13227,9 @@
       "sourceRequirements": "Completion of the Gnome Restaurant tutorial 29-42 Cooking (varies per food)",
       "minigames": [
         "Gnome Restaurant"
+      ],
+      "merchants": [
+        "Food Shops"
       ]
     },
     {
@@ -14828,7 +14986,10 @@
         "reviewedAt": "2026-10-04",
         "source": "oldschool.runescape.wiki",
         "notes": "The task counts anywhere in the Wilderness, including Edgeville's and Varrock's chunks past the ditch."
-      }
+      },
+      "merchants": [
+        "Clothes Shops"
+      ]
     },
     {
       "id": "wilderness_med_1",

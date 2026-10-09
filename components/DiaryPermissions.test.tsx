@@ -36,6 +36,8 @@ describe('Vanilla diary permission display', () => {
 
   it('keeps item confirmation out of the Available count and filter', () => {
     state.unlocks.equipment.Cape = 1;
+    // Team capes are bought from a Clothes Shops merchant.
+    state.unlocks.merchants = ['Clothes Shops'];
     const markup = renderToStaticMarkup(<DiaryLog searchTerm="Equip any team cape" suspendModals />);
     expect(markup).toContain('Needs confirmation');
     expect(markup).toContain('specific item is permitted');

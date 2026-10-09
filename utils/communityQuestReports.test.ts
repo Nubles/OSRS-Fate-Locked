@@ -71,3 +71,56 @@ describe('community quest reports in Vanilla', () => {
       .toContainEqual(expect.objectContaining({ kind: 'equipment', slot: 'Neck', tier: 1 }));
   });
 });
+
+describe('A Soul\'s Bane (player report, 9 October 2026)', () => {
+  const quest = QUEST_DATA['A Soul\'s Bane'];
+  const unlocks: UnlockState = { ...account(), regions: ['Varrock'] };
+
+  it('needs a weapon slot, as the rage room makes you wield its weapons', () => {
+    expect(evaluateQuestEligibility(quest, unlocks, 'vanilla').blockers)
+      .toContainEqual(expect.objectContaining({ kind: 'equipment', slot: 'Weapon', tier: 1 }));
+    expect(evaluateQuestEligibility(quest, { ...unlocks, equipment: { Weapon: 1 } }, 'vanilla').eligible).toBe(true);
+  });
+});
+
+describe('Doable tab and Quests tab agree on owned areas no route reaches (player report, 9 October 2026)', () => {
+  it('files a quest in a stranded area under Locked, as the Quests tab does', () => {
+    const quest = QUEST_DATA['Enter the Abyss'];
+    const unlocks: UnlockState = { ...account(), regions: ['Wilderness', 'Tree Gnome Stronghold'], quests: ['Rune Mysteries'] };
+    const routes = { strandedAreas: new Set(['Tree Gnome Stronghold']), strandedChunks: new Set<string>() };
+    expect(evaluateQuestDoability(quest, unlocks, null, [], 'vanilla').bucket).toBe('DOABLE');
+    const row = evaluateQuestDoability(quest, unlocks, null, [], 'vanilla', routes);
+    expect(evaluateQuestEligibility(quest, unlocks, 'vanilla', routes).eligible).toBe(false);
+    expect(row.bucket).toBe('LOCKED');
+    expect(row.lockedAreas).toContain('No route to Tree Gnome Stronghold');
+  });
+});
+
+describe('shop-only quest items (player report, 9 October 2026)', () => {
+  const blockerLabels = (id: string, unlocks: UnlockState) =>
+    evaluateQuestEligibility(QUEST_DATA[id], unlocks, 'vanilla').blockers.map(blocker => blocker.label);
+
+  it('asks Gertrude\'s Cat for a way to the sardine: a fishing shop, or 5 Fishing to catch it', () => {
+    const unlocks: UnlockState = { ...account(), regions: ['Varrock'] };
+    const quest = QUEST_DATA['Gertrude\'s Cat'];
+    expect(evaluateQuestEligibility(quest, unlocks, 'vanilla').eligible).toBe(false);
+    expect(evaluateQuestEligibility(quest, { ...unlocks, merchants: ['Fishing Shops'] }, 'vanilla').eligible).toBe(true);
+    expect(evaluateQuestEligibility(quest, { ...unlocks, skills: { Fishing: 1 }, levels: { Fishing: 5 } }, 'vanilla').eligible).toBe(true);
+  });
+
+  it('asks the start of Recipe for Disaster for the shops and places of the cook\'s items', () => {
+    const ready: UnlockState = {
+      ...account(), skills: { Cooking: 1 }, levels: { Cooking: 10 }, quests: ['Cook\'s Assistant'],
+      regions: ['Lumbridge', 'Yanille', 'Tree Gnome Stronghold'],
+      merchants: ['Bars & Inns', 'Vegetable Shops', 'Food Shops', 'Herblore Shops'],
+    };
+    expect(evaluateQuestEligibility(QUEST_DATA['RFD: The Cook'], ready, 'vanilla').eligible).toBe(true);
+    expect(blockerLabels('RFD: The Cook', { ...ready, regions: ['Lumbridge'], merchants: [] }))
+      .toEqual(expect.arrayContaining(['Yanille', 'Tree Gnome Stronghold', 'Bars & Inns', 'Vegetable Shops', 'Food Shops']));
+    expect(evaluateQuestEligibility(QUEST_DATA['RFD: The Cook'], { ...ready, merchants: ['Bars & Inns', 'Vegetable Shops', 'Food Shops'] }, 'vanilla').eligible)
+      .toBe(false);
+    expect(evaluateQuestEligibility(QUEST_DATA['RFD: The Cook'], {
+      ...ready, regions: [...ready.regions, 'Port Sarim'], merchants: ['Bars & Inns', 'Vegetable Shops', 'Food Shops', 'Magic Shops'],
+    }, 'vanilla').eligible).toBe(true);
+  });
+});

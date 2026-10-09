@@ -349,9 +349,12 @@ describe('Diary tasks that use a shop or a service', () => {
     ['ard_easy_9', 'Hunter Shops', 'it views Aleck’s Hunter Emporium'],
     ['ard_easy_3', 'Silk Shops', 'the silk trader buys the silk'],
     ['des_easy_6', 'Decanters', 'Zahur, the Nardah Herbalist, cleans the herb'],
-    ['des_elite_4', 'Taxidermists', 'the Canifis taxidermist stuffs the KQ head'],
   ])('asks %s for %s, because %s', (id, merchant) => {
     expect(task(id).merchants).toEqual([merchant]);
+  });
+
+  it('asks des_elite_4 for Taxidermists, because the Canifis taxidermist stuffs the KQ head, and Stonemasons for the gold leaves', () => {
+    expect(task('des_elite_4').merchants).toEqual(['Taxidermists', 'Stonemasons']);
   });
 
   it('lets an ironman reach Pollnivneach through the house portal, without teleport tablets', () => {
@@ -493,7 +496,9 @@ describe('Diary tasks in the Karuulm Slayer Dungeon', () => {
 
   it('needs boots of stone, brimstone or granite to kill a wyrm, unless the Kourend Elite reward is claimed', () => {
     expect(task('kou_hard_9')).toMatchObject({ regions: ['Mount Karuulm'], equipmentRequirements: [BOOTS] });
-    const wyrmHunter = account({ regions: ['Mount Karuulm'], skills: { Slayer: 10 }, levels: { Slayer: 62 } });
+    const wyrmHunter = account({
+      regions: ['Mount Karuulm'], merchants: ['Slayer Equipment'], skills: { Slayer: 10 }, levels: { Slayer: 62 },
+    });
     expect(evaluateDiaryTaskEligibility(task('kou_hard_9'), wyrmHunter).blockers)
       .toEqual([expect.objectContaining({ kind: 'equipment', slot: 'Boots', tier: 1 })]);
     expect(evaluateDiaryTaskEligibility(task('kou_hard_9'), { ...wyrmHunter, equipment: { Boots: 1 } }))

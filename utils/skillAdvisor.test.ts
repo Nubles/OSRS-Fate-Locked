@@ -101,12 +101,13 @@ describe('rankSkillBottlenecks', () => {
   });
 
   it('never offers a locked skill as trainable', () => {
-    // Mining at tier 0 needs a Skills unlock before it can be levelled.
+    // Mining at tier 0 needs a Skills unlock before it can be levelled. Ore Merchants sell
+    // the ore for the iron bars, so only Mining 10 gates the quest.
     const quests = Object.keys(QUEST_DATA).filter(id => id !== "The Knight's Sword");
     const skills = (mining: number) => Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? mining : 10]));
     const levels = Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? 1 : 99]));
-    const locked = rankSkillBottlenecks(regionsAndQuestsDone({ quests, levels, skills: skills(0) }));
-    const unlocked = rankSkillBottlenecks(regionsAndQuestsDone({ quests, levels, skills: skills(1) }));
+    const locked = rankSkillBottlenecks(regionsAndQuestsDone({ quests, levels, merchants: ['Ore Merchants'], skills: skills(0) }));
+    const unlocked = rankSkillBottlenecks(regionsAndQuestsDone({ quests, levels, merchants: ['Ore Merchants'], skills: skills(1) }));
 
     expect(locked.find(candidate => candidate.id === 'Mining')).toBeUndefined();
     expect(unlocked.find(candidate => candidate.id === 'Mining')).toMatchObject({ targetLevel: 10 });

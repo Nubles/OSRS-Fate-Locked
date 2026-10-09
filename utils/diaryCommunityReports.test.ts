@@ -74,3 +74,30 @@ describe('community diary reports in Vanilla', () => {
     expect(evaluateDiaryTaskEligibility(row, { ...unlocked, merchants: [category] }, 'vanilla').eligible).toBe(true);
   });
 });
+
+describe('pet fish from Harry (player report, 9 October 2026)', () => {
+  const fish = task('kan_easy_8');
+  const ready = account({
+    regions: ['Catherby'], merchants: ['Fishing Shops'],
+    skills: { Fishing: 1, Crafting: 5 }, levels: { Fishing: 10, Crafting: 42 },
+  });
+
+  it('needs Harry\'s Fishing Shop, 10 Fishing for the tiny net and a way to get a fishbowl', () => {
+    expect(evaluateDiaryTaskEligibility(fish, ready, 'vanilla').eligible).toBe(true);
+    const blockersWithout = (overrides: Partial<UnlockState>) =>
+      evaluateDiaryTaskEligibility(fish, { ...ready, ...overrides }, 'vanilla').blockers;
+    expect(blockersWithout({ merchants: [] })).toContainEqual({ kind: 'merchant', label: 'Fishing Shops' });
+    expect(blockersWithout({ levels: { ...ready.levels, Fishing: 9 } }))
+      .toContainEqual(expect.objectContaining({ kind: 'skill', label: 'Fishing 10' }));
+    expect(blockersWithout({ levels: { ...ready.levels, Crafting: 41 } }))
+      .toContainEqual(expect.objectContaining({ kind: 'alternative' }));
+  });
+
+  it('accepts a fishbowl from Mogres instead of glassblowing', () => {
+    const mogres = account({
+      regions: ['Catherby'], merchants: ['Fishing Shops'], quests: ['Skippy and the Mogres'],
+      skills: { Fishing: 1, Slayer: 4 }, levels: { Fishing: 10, Slayer: 32 },
+    });
+    expect(evaluateDiaryTaskEligibility(fish, mogres, 'vanilla').eligible).toBe(true);
+  });
+});

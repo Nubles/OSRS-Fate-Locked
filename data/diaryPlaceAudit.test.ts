@@ -218,7 +218,7 @@ describe('Diary tasks that count anywhere in a province', () => {
     ['des_med_8', '53,49', { quests: ['Druidic Ritual'], skills: { Herblore: 10 }, levels: { Herblore: 99 } }],
     ['des_elite_2', '50,46', { quests: ['Desert Treasure I'], arcana: ['Ancient Magicks'], skills: { Magic: 10 }, levels: { Magic: 99 } }],
     ['des_easy_10', '52,47', {}],
-    ['wild_easy_8', '49,58', { equipment: { Cape: 1 } }],
+    ['wild_easy_8', '49,58', { equipment: { Cape: 1 }, merchants: ['Clothes Shops'] }],
     ['kar_easy_8', '45,47', {}],
     ['frem_easy_10', '41,56', { skills: { Firemaking: 10, Woodcutting: 10 }, levels: { Firemaking: 99, Woodcutting: 99 } }],
   ] as const)('%s counts in Chunked on %s', (id, chunk, run) => {

@@ -302,7 +302,23 @@ describe('audited current quest requirements', () => {
                 "prereqs": [
                       "Icthlarin's Little Helper"
                 ],
-                "oneOf": null,
+                "oneOf": [
+                      {
+                            "merchants": [
+                                  "Farming Shops"
+                            ]
+                      },
+                      {
+                            "merchants": [
+                                  "Vegetable Shops"
+                            ]
+                      },
+                      {
+                            "skills": {
+                                  "Thieving": 10
+                            }
+                      }
+                ],
                 "manualRequirements": null,
                 "points": 2,
                 "difficulty": "Quest (Intermediate)"
@@ -330,7 +346,18 @@ describe('audited current quest requirements', () => {
                       "Ernest the Chicken",
                       "Priest in Peril"
                 ],
-                "oneOf": null,
+                "oneOf": [
+                      {
+                            "skills": {
+                                  "Smithing": 51
+                            }
+                      },
+                      {
+                            "merchants": [
+                                  "Axe Shops"
+                            ]
+                      }
+                ],
                 "manualRequirements": null,
                 "points": 1,
                 "difficulty": "Quest (Intermediate)"
@@ -575,7 +602,23 @@ describe('audited current quest requirements', () => {
                 },
                 "combatLevel": null,
                 "prereqs": [],
-                "oneOf": null,
+                "oneOf": [
+                      {
+                            "skills": {
+                                  "Smithing": 26
+                            }
+                      },
+                      {
+                            "merchants": [
+                                  "Chainbody Shops"
+                            ]
+                      },
+                      {
+                            "merchants": [
+                                  "Platebody Shops"
+                            ]
+                      }
+                ],
                 "manualRequirements": null,
                 "points": 3,
                 "difficulty": "Quest (Intermediate)"
@@ -597,7 +640,23 @@ describe('audited current quest requirements', () => {
                 "prereqs": [
                       "The Dig Site"
                 ],
-                "oneOf": null,
+                "oneOf": [
+                      {
+                            "merchants": [
+                                  "Bars & Inns"
+                            ]
+                      },
+                      {
+                            "merchants": [
+                                  "Food Shops"
+                            ]
+                      },
+                      {
+                            "merchants": [
+                                  "General Stores"
+                            ]
+                      }
+                ],
                 "manualRequirements": [
                       "100 Kudos"
                 ],
@@ -736,7 +795,64 @@ describe('audited current quest requirements', () => {
                 },
                 "combatLevel": null,
                 "prereqs": [],
-                "oneOf": null,
+                "oneOf": [
+                      {
+                            "skills": {
+                                  "Smithing": 34
+                            },
+                            "merchants": [
+                                  "Silk Shops"
+                            ]
+                      },
+                      {
+                            "skills": {
+                                  "Smithing": 34
+                            },
+                            "merchants": [
+                                  "Clothes Shops"
+                            ]
+                      },
+                      {
+                            "skills": {
+                                  "Smithing": 34
+                            },
+                            "merchants": [
+                                  "General Stores"
+                            ]
+                      },
+                      {
+                            "skills": {
+                                  "Smithing": 34,
+                                  "Thieving": 20
+                            }
+                      },
+                      {
+                            "merchants": [
+                                  "Sawmill Operators",
+                                  "Silk Shops"
+                            ]
+                      },
+                      {
+                            "merchants": [
+                                  "Sawmill Operators",
+                                  "Clothes Shops"
+                            ]
+                      },
+                      {
+                            "merchants": [
+                                  "Sawmill Operators",
+                                  "General Stores"
+                            ]
+                      },
+                      {
+                            "skills": {
+                                  "Thieving": 20
+                            },
+                            "merchants": [
+                                  "Sawmill Operators"
+                            ]
+                      }
+                ],
                 "manualRequirements": [
                       "Access to a crafting table 3"
                 ],
@@ -828,13 +944,26 @@ describe('audited current quest requirements', () => {
                 "locations": null,
                 "skills": {
                       "Crafting": 20,
-                      "Thieving": 25
+                      "Thieving": 25,
+                      "Smithing": 4
                 },
                 "combatLevel": null,
                 "prereqs": [
                       "Priest in Peril"
                 ],
-                "oneOf": null,
+                "oneOf": [
+                      {
+                            "skills": {
+                                  "Mining": 20,
+                                  "Smithing": 20
+                            }
+                      },
+                      {
+                            "merchants": [
+                                  "Silver Shops"
+                            ]
+                      }
+                ],
                 "manualRequirements": [
                       "Started The Restless Ghost"
                 ],
@@ -885,7 +1014,23 @@ describe('audited current quest requirements', () => {
                 "prereqs": [
                       "In Aid of the Myreque"
                 ],
-                "oneOf": null,
+                "oneOf": [
+                      {
+                            "skills": {
+                                  "Smithing": 4
+                            }
+                      },
+                      {
+                            "merchants": [
+                                  "Sawmill Operators"
+                            ]
+                      },
+                      {
+                            "merchants": [
+                                  "General Stores"
+                            ]
+                      }
+                ],
                 "manualRequirements": null,
                 "points": 2,
                 "difficulty": "Quest (Experienced)"
@@ -1000,7 +1145,19 @@ describe('audited current quest requirements', () => {
                 "skills": {},
                 "combatLevel": null,
                 "prereqs": [],
-                "oneOf": null,
+                "oneOf": [
+                      {
+                            "skills": {
+                                  "Fishing": 20,
+                                  "Cooking": 15
+                            }
+                      },
+                      {
+                            "merchants": [
+                                  "Food Shops"
+                            ]
+                      }
+                ],
                 "manualRequirements": null,
                 "points": 1,
                 "difficulty": "Quest (Novice)"
@@ -1148,7 +1305,23 @@ describe('audited current quest requirements', () => {
                       "Priest in Peril",
                       "Waterfall Quest"
                 ],
-                "oneOf": null,
+                "oneOf": [
+                      {
+                            "merchants": [
+                                  "Spice Shops"
+                            ]
+                      },
+                      {
+                            "merchants": [
+                                  "Food Shops"
+                            ]
+                      },
+                      {
+                            "merchants": [
+                                  "General Stores"
+                            ]
+                      }
+                ],
                 "manualRequirements": null,
                 "points": 3,
                 "difficulty": "Quest (Master)"
@@ -1185,7 +1358,18 @@ describe('audited current quest requirements', () => {
                       "Below Ice Mountain",
                       "His Faithful Servants"
                 ],
-                "oneOf": null,
+                "oneOf": [
+                      {
+                            "merchants": [
+                                  "Magic Shops"
+                            ]
+                      },
+                      {
+                            "skills": {
+                                  "Runecraft": 90
+                            }
+                      }
+                ],
                 "manualRequirements": null,
                 "points": 5,
                 "difficulty": "Quest (Grandmaster)"
@@ -1224,7 +1408,18 @@ describe('audited current quest requirements', () => {
                       "Troll Stronghold",
                       "Doric's Quest"
                 ],
-                "oneOf": null,
+                "oneOf": [
+                      {
+                            "skills": {
+                                  "Crafting": 10
+                            }
+                      },
+                      {
+                            "merchants": [
+                                  "Archery Shops"
+                            ]
+                      }
+                ],
                 "manualRequirements": null,
                 "points": 1,
                 "difficulty": "Quest (Experienced)"
@@ -1273,11 +1468,77 @@ describe('audited current quest requirements', () => {
                 ],
                 "locations": null,
                 "skills": {
-                      "Quest Points": 32
+                      "Quest Points": 32,
+                      "Crafting": 8
                 },
                 "combatLevel": null,
                 "prereqs": [],
-                "oneOf": null,
+                "oneOf": [
+                      {
+                            "skills": {
+                                  "Smithing": 34
+                            },
+                            "merchants": [
+                                  "Bars & Inns",
+                                  "Clothes Shops"
+                            ]
+                      },
+                      {
+                            "skills": {
+                                  "Smithing": 34
+                            },
+                            "merchants": [
+                                  "Bars & Inns",
+                                  "Silk Shops"
+                            ]
+                      },
+                      {
+                            "skills": {
+                                  "Smithing": 34,
+                                  "Thieving": 20
+                            },
+                            "merchants": [
+                                  "Bars & Inns"
+                            ]
+                      },
+                      {
+                            "merchants": [
+                                  "Bars & Inns",
+                                  "Sawmill Operators",
+                                  "Clothes Shops"
+                            ]
+                      },
+                      {
+                            "merchants": [
+                                  "Bars & Inns",
+                                  "Sawmill Operators",
+                                  "Silk Shops"
+                            ]
+                      },
+                      {
+                            "skills": {
+                                  "Thieving": 20
+                            },
+                            "merchants": [
+                                  "Bars & Inns",
+                                  "Sawmill Operators"
+                            ]
+                      },
+                      {
+                            "skills": {
+                                  "Smithing": 34
+                            },
+                            "merchants": [
+                                  "General Stores"
+                            ]
+                      },
+                      {
+                            "merchants": [
+                                  "General Stores",
+                                  "Sawmill Operators"
+                            ]
+                      }
+                ],
                 "manualRequirements": null,
                 "points": 2,
                 "difficulty": "Quest (Experienced)"
@@ -1611,7 +1872,28 @@ describe('audited current quest requirements', () => {
                 },
                 "combatLevel": null,
                 "prereqs": [],
-                "oneOf": null,
+                "oneOf": [
+                      {
+                            "skills": {
+                                  "Thieving": 20
+                            }
+                      },
+                      {
+                            "merchants": [
+                                  "Clothes Shops"
+                            ]
+                      },
+                      {
+                            "merchants": [
+                                  "Silk Shops"
+                            ]
+                      },
+                      {
+                            "merchants": [
+                                  "General Stores"
+                            ]
+                      }
+                ],
                 "manualRequirements": null,
                 "points": 1,
                 "difficulty": "Quest (Intermediate)"
@@ -1968,7 +2250,19 @@ describe('audited current quest requirements', () => {
                 },
                 "combatLevel": null,
                 "prereqs": [],
-                "oneOf": null,
+                "oneOf": [
+                      {
+                            "skills": {
+                                  "Fishing": 50,
+                                  "Cooking": 45
+                            }
+                      },
+                      {
+                            "merchants": [
+                                  "Food Shops"
+                            ]
+                      }
+                ],
                 "manualRequirements": null,
                 "points": 1,
                 "difficulty": "Quest (Experienced)"
@@ -2235,14 +2529,14 @@ describe('audited current quest requirements', () => {
         ],
         "locations": null,
         "skills": {
-          "Agility": 15,
-          "Crafting": 11,
-          "Farming": 15,
-          "Firemaking": 35,
           "Fishing": 55,
-          "Herblore": 4,
+          "Firemaking": 35,
+          "Strength": 35,
+          "Agility": 15,
+          "Farming": 15,
+          "Crafting": 11,
           "Smithing": 5,
-          "Strength": 35
+          "Herblore": 4
         },
         "combatLevel": null,
         "prereqs": [
@@ -2282,43 +2576,33 @@ describe('audited current quest requirements', () => {
         "combatLevel": null,
         "prereqs": [],
         "oneOf": [
-
-              {
-
-                    "regions": [
-                          "Wilderness Agility Course",
-                          "Chaos Temple",
-                          "Rogues' Castle",
-                          "Entrana",
-                          "Wizards' Tower"
-                    ]
-
-              },
-
-              {
-
-                    "regions": [
-                          "Wilderness Bandit Camp",
-                          "Graveyard of Shadows",
-                          "Port Sarim",
-                          "Edgeville",
-                          "Slayer Tower"
-                    ]
-
-              },
-
-              {
-
-                    "regions": [
-                          "Bandit Camp",
-                          "Lava Maze",
-                          "Tree Gnome Stronghold",
-                          "Falador",
-                          "Edgeville"
-                    ]
-
-              }
-
+          {
+            "regions": [
+              "Wilderness Agility Course",
+              "Chaos Temple",
+              "Rogues' Castle",
+              "Entrana",
+              "Wizards' Tower"
+            ]
+          },
+          {
+            "regions": [
+              "Wilderness Bandit Camp",
+              "Graveyard of Shadows",
+              "Port Sarim",
+              "Edgeville",
+              "Slayer Tower"
+            ]
+          },
+          {
+            "regions": [
+              "Bandit Camp",
+              "Lava Maze",
+              "Tree Gnome Stronghold",
+              "Falador",
+              "Edgeville"
+            ]
+          }
         ],
         "manualRequirements": [
           "Started Desert Treasure I",
@@ -2960,7 +3244,7 @@ describe('audited current quest requirements', () => {
     "skills": {},
     "combatLevel": null,
     "prereqs": [],
-    "oneOf": null,
+    "oneOf": [{ "merchants": ["Fishing Shops"] }, { "skills": { "Fishing": 5 } }],
     "manualRequirements": null,
     "points": 1,
     "difficulty": "Quest (Novice)"
@@ -3002,7 +3286,18 @@ describe('audited current quest requirements', () => {
       "Priest in Peril",
       "The Restless Ghost"
     ],
-    "oneOf": null,
+    "oneOf": [
+      {
+        "skills": {
+          "Fletching": 25
+        }
+      },
+      {
+        "merchants": [
+          "Archery Shops"
+        ]
+      }
+    ],
     "manualRequirements": null,
     "points": 2,
     "difficulty": "Quest (Intermediate)"
@@ -3280,7 +3575,45 @@ describe('audited current quest requirements', () => {
     "prereqs": [
       "Nature Spirit"
     ],
-    "oneOf": null,
+    "oneOf": [
+      {
+        "skills": {
+          "Smithing": 39
+        }
+      },
+      {
+        "skills": {
+          "Smithing": 34
+        },
+        "merchants": [
+          "Weapon Shops"
+        ]
+      },
+      {
+        "merchants": [
+          "Weapon Shops",
+          "Sawmill Operators"
+        ]
+      },
+      {
+        "skills": {
+          "Smithing": 34
+        },
+        "merchants": [
+          "Sword Shops",
+          "Mace Shops",
+          "Warhammer Shops"
+        ]
+      },
+      {
+        "merchants": [
+          "Sword Shops",
+          "Mace Shops",
+          "Warhammer Shops",
+          "Sawmill Operators"
+        ]
+      }
+    ],
     "manualRequirements": null,
     "points": 2,
     "difficulty": "Quest (Intermediate)"
@@ -3317,7 +3650,8 @@ describe('audited current quest requirements', () => {
     "locations": null,
     "skills": {
       "Magic": 45,
-      "Defence": 65
+      "Defence": 65,
+      "Mining": 45
     },
     "combatLevel": null,
     "prereqs": [
@@ -3387,7 +3721,36 @@ describe('audited current quest requirements', () => {
       "Underground Pass",
       "Waterfall Quest"
     ],
-    "oneOf": null,
+    "oneOf": [
+      {
+        "skills": {
+          "Smithing": 86
+        },
+        "merchants": [
+          "Magic Shops"
+        ]
+      },
+      {
+        "skills": {
+          "Smithing": 86,
+          "Runecraft": 90
+        }
+      },
+      {
+        "merchants": [
+          "Axe Shops",
+          "Magic Shops"
+        ]
+      },
+      {
+        "skills": {
+          "Runecraft": 90
+        },
+        "merchants": [
+          "Axe Shops"
+        ]
+      }
+    ],
     "manualRequirements": null,
     "points": 4,
     "difficulty": "Quest (Master)"
@@ -3572,7 +3935,9 @@ describe('audited current quest requirements', () => {
         ]
       }
     ],
-    "skills": {},
+    "skills": {
+      "Crafting": 24
+    },
     "combatLevel": null,
     "prereqs": [
       "Priest in Peril",
@@ -3803,7 +4168,18 @@ describe('audited current quest requirements', () => {
       "Big Chompy Bird Hunting",
       "Sheep Herder"
     ],
-    "oneOf": null,
+    "oneOf": [
+      {
+        "merchants": [
+          "Tanners"
+        ]
+      },
+      {
+        "skills": {
+          "Magic": 78
+        }
+      }
+    ],
     "manualRequirements": null,
     "points": 2,
     "difficulty": "Quest (Master)"
@@ -4314,7 +4690,8 @@ describe('audited current quest requirements', () => {
         "locations": null,
         "skills": {
           "Crafting": 20,
-          "Agility": 32
+          "Agility": 32,
+          "Smithing": 4
         },
         "combatLevel": null,
         "prereqs": [
@@ -4437,7 +4814,18 @@ describe('audited current quest requirements', () => {
           "Priest in Peril",
           "The Restless Ghost"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Crafting": 18
+            }
+          },
+          {
+            "merchants": [
+              "Weapon Shops"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 2,
         "difficulty": "Quest (Intermediate)"
@@ -4464,7 +4852,18 @@ describe('audited current quest requirements', () => {
         "prereqs": [
           "Underground Pass"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Mining": 10
+            }
+          },
+          {
+            "merchants": [
+              "Real Estate Agents"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 3,
         "difficulty": "Quest (Experienced)"
@@ -4645,7 +5044,19 @@ describe('audited current quest requirements', () => {
           "Demon Slayer",
           "The Golem"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "merchants": [
+              "Silver Shops"
+            ]
+          },
+          {
+            "skills": {
+              "Mining": 20,
+              "Smithing": 20
+            }
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Intermediate)"
@@ -4724,7 +5135,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Lumbridge"
+          "Lumbridge",
+          "Yanille",
+          "Tree Gnome Stronghold"
         ],
         "locations": null,
         "skills": {
@@ -4734,7 +5147,21 @@ describe('audited current quest requirements', () => {
         "prereqs": [
           "Cook's Assistant"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "regions": [
+              "Port Sarim"
+            ],
+            "merchants": [
+              "Magic Shops"
+            ]
+          },
+          {
+            "merchants": [
+              "Herblore Shops"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Novice)"
@@ -4753,7 +5180,18 @@ describe('audited current quest requirements', () => {
           "RFD: The Cook",
           "Fishing Contest"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "merchants": [
+              "Bars & Inns"
+            ]
+          },
+          {
+            "skills": {
+              "Cooking": 24
+            }
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Novice)"
@@ -4771,7 +5209,33 @@ describe('audited current quest requirements', () => {
           "RFD: The Cook",
           "Goblin Diplomacy"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "merchants": [
+              "Food Shops"
+            ]
+          },
+          {
+            "merchants": [
+              "Spice Shops",
+              "Vegetable Shops"
+            ]
+          },
+          {
+            "merchants": [
+              "Spice Shops",
+              "General Stores"
+            ]
+          },
+          {
+            "merchants": [
+              "Spice Shops"
+            ],
+            "skills": {
+              "Farming": 39
+            }
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Novice)"
@@ -4784,13 +5248,25 @@ describe('audited current quest requirements', () => {
         ],
         "locations": null,
         "skills": {
-          "Cooking": 31
+          "Cooking": 31,
+          "Smithing": 4
         },
         "combatLevel": null,
         "prereqs": [
           "RFD: The Cook"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Fishing": 23
+            }
+          },
+          {
+            "merchants": [
+              "Fishing Shops"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Intermediate)"
@@ -4836,7 +5312,18 @@ describe('audited current quest requirements', () => {
           "Gertrude's Cat",
           "Shadow of the Storm"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Cooking": 25
+            }
+          },
+          {
+            "merchants": [
+              "Bars & Inns"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Intermediate)"
@@ -5176,7 +5663,76 @@ describe('audited current quest requirements', () => {
           "Making History",
           "Druidic Ritual"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Crafting": 12
+            },
+            "merchants": [
+              "Chainbody Shops",
+              "Clothes Shops"
+            ]
+          },
+          {
+            "skills": {
+              "Crafting": 12,
+              "Thieving": 20
+            },
+            "merchants": [
+              "Chainbody Shops"
+            ]
+          },
+          {
+            "merchants": [
+              "Chainbody Shops",
+              "Stonemasons",
+              "Clothes Shops"
+            ]
+          },
+          {
+            "skills": {
+              "Thieving": 20
+            },
+            "merchants": [
+              "Chainbody Shops",
+              "Stonemasons"
+            ]
+          },
+          {
+            "skills": {
+              "Smithing": 81,
+              "Crafting": 12
+            },
+            "merchants": [
+              "Clothes Shops"
+            ]
+          },
+          {
+            "skills": {
+              "Smithing": 81,
+              "Crafting": 12,
+              "Thieving": 20
+            }
+          },
+          {
+            "skills": {
+              "Smithing": 81
+            },
+            "merchants": [
+              "Stonemasons",
+              "Clothes Shops"
+            ]
+          },
+          {
+            "skills": {
+              "Smithing": 81,
+              "Thieving": 20
+            },
+            "merchants": [
+              "Stonemasons"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 4,
         "difficulty": "Quest (Grandmaster)"
@@ -5499,7 +6055,18 @@ describe('audited current quest requirements', () => {
           "Pandemonium",
           "The Knight's Sword"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Cooking": 10
+            }
+          },
+          {
+            "merchants": [
+              "Food Shops"
+            ]
+          }
+        ],
         "manualRequirements": [
           "One open Sailing task slot"
         ],
@@ -6134,11 +6701,41 @@ describe('audited current quest requirements', () => {
           "Crafting": 12,
           "Firemaking": 16,
           "Magic": 33,
-          "Thieving": 14
+          "Thieving": 14,
+          "Smithing": 15
         },
         "combatLevel": null,
         "prereqs": [],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Crafting": 20,
+              "Mining": 15
+            }
+          },
+          {
+            "skills": {
+              "Crafting": 20
+            },
+            "merchants": [
+              "Ore Merchants"
+            ]
+          },
+          {
+            "skills": {
+              "Mining": 15
+            },
+            "merchants": [
+              "Gem Shops"
+            ]
+          },
+          {
+            "merchants": [
+              "Gem Shops",
+              "Ore Merchants"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 2,
         "difficulty": "Quest (Intermediate)"
@@ -6321,11 +6918,23 @@ describe('audited current quest requirements', () => {
         ],
         "locations": null,
         "skills": {
-          "Mining": 10
+          "Mining": 10,
+          "Smithing": 15
         },
         "combatLevel": null,
         "prereqs": [],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Mining": 15
+            }
+          },
+          {
+            "merchants": [
+              "Ore Merchants"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Intermediate)"
@@ -6396,7 +7005,23 @@ describe('audited current quest requirements', () => {
         "prereqs": [
           "Client of Kourend"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Cooking": 25
+            }
+          },
+          {
+            "merchants": [
+              "Bars & Inns"
+            ]
+          },
+          {
+            "merchants": [
+              "Food Shops"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Intermediate)"
@@ -6551,13 +7176,26 @@ describe('audited current quest requirements', () => {
               "Miscellania & Etceteria"
         ],
         "locations": null,
-        "skills": {},
+        "skills": {
+          "Smithing": 15
+        },
         "combatLevel": null,
         "prereqs": [
           "The Fremennik Trials",
           "Heroes' Quest"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Mining": 15
+            }
+          },
+          {
+            "merchants": [
+              "Ore Merchants"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Experienced)"
@@ -6624,13 +7262,25 @@ describe('audited current quest requirements', () => {
         ],
         "locations": null,
         "skills": {
-          "Agility": 28
+          "Agility": 28,
+          "Smithing": 15
         },
         "combatLevel": null,
         "prereqs": [
           "Troll Stronghold"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Mining": 15
+            }
+          },
+          {
+            "merchants": [
+              "Ore Merchants"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 2,
         "difficulty": "Quest (Intermediate)"
@@ -6899,7 +7549,8 @@ describe('audited current quest requirements', () => {
           "Agility": 66,
           "Farming": 65,
           "Herblore": 65,
-          "Hunter": 62
+          "Hunter": 62,
+          "Firemaking": 49
         },
         "combatLevel": null,
         "prereqs": [
@@ -6960,7 +7611,18 @@ describe('audited current quest requirements', () => {
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "merchants": [
+              "Magic Shops"
+            ]
+          },
+          {
+            "merchants": [
+              "Herblore Shops"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Novice)"

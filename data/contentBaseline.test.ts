@@ -124,7 +124,9 @@ describe('cross-surface quest eligibility contract', () => {
       label: "Witch's Potion after Rimmington",
       id: "Witch's Potion",
       gameModeId: 'chunked',
-      unlocks: maxedQuestUnlocks("Witch's Potion", { chunks: ['46,50'] }),
+      unlocks: maxedQuestUnlocks("Witch's Potion", {
+        chunks: ['46,50'], merchants: ['Magic Shops'],
+      }),
       expectedStatus: 'AVAILABLE',
       expectedReadiness: 'READY',
       firstBlocker: undefined,
@@ -189,6 +191,7 @@ describe('cross-surface quest eligibility contract', () => {
       gameModeId: undefined,
       unlocks: maxedQuestUnlocks('Mountain Daughter', {
         regions: ['Mountain Camp', 'Rellekka', 'Taverley'],
+        equipment: { Gloves: 1 },
       }),
       expectedStatus: 'AVAILABLE',
       expectedReadiness: 'READY',
@@ -426,7 +429,8 @@ describe('deterministic current content baseline', () => {
     });
     expect(questRequirementFields('Dream Mentor')).toEqual({
       regions: ['Lunar Isle'], locations: undefined, skills: {}, combatLevel: 85,
-      prereqs: ['Lunar Diplomacy', "Eadgar's Ruse"], oneOf: undefined,
+      prereqs: ['Lunar Diplomacy', "Eadgar's Ruse"],
+      oneOf: [{ skills: { Runecraft: 40 } }, { merchants: ['Magic Shops'] }],
       manualRequirements: undefined,
     });
     expect(questRequirementFields('Ethically Acquired Antiquities')).toEqual({
@@ -470,7 +474,8 @@ describe('deterministic current content baseline', () => {
     expect(questRequirementFields('Prying Times')).toEqual({
       regions: ['The Open Seas'], locations: ['the-pandemonium', 'port-sarim-docks', 'thurgos-hut'],
       skills: { Smithing: 30, Sailing: 12 }, combatLevel: undefined,
-      prereqs: ['Pandemonium', "The Knight's Sword"], oneOf: undefined,
+      prereqs: ['Pandemonium', "The Knight's Sword"],
+      oneOf: [{ skills: { Cooking: 10 } }, { merchants: ['Food Shops'] }],
       manualRequirements: ['One open Sailing task slot'],
     });
     expect(questRequirementFields('Current Affairs')).toEqual({

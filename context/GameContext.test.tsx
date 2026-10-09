@@ -2264,7 +2264,7 @@ describe('quest completion integration', () => {
 
   it("leaves the complete run unchanged when Witch's Potion is machine-blocked", () => {
     const current = renderStoredGame('blocked-witch-completion', {
-      unlocks: { regions: ['Falador'] },
+      unlocks: { regions: ['Falador'], merchants: ['Magic Shops'] },
     });
     const before = providerSnapshot(current());
     let result: ReturnType<Game['completeQuest']> | undefined;
@@ -2308,7 +2308,7 @@ describe('quest completion integration', () => {
   it('completes a valid quest with exactly one roll and makes its repeat a full-state no-op', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.999);
     const current = renderStoredGame('valid-quest-completion', {
-      unlocks: { regions: ['Asgarnia', 'Rimmington'] },
+      unlocks: { regions: ['Asgarnia', 'Rimmington'], merchants: ['Magic Shops'] },
     });
     const before = providerSnapshot(current());
     let first: ReturnType<Game['completeQuest']> | undefined;

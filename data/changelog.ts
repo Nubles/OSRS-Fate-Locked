@@ -19,6 +19,27 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-09-new-player-reports',
+    title: 'Quest and Diary Fixes From Player Reports',
+    date: '2026-10-09',
+    sections: {
+      fixed: [
+        'The Kandarin Easy pet fish task now needs what Harry asks for: Fishing Shops for the tiny net, 10 Fishing, and a fishbowl, from 42 Crafting or from Mogres after Skippy and the Mogres with 32 Slayer.',
+        'A Soul’s Bane needs a Weapon slot, as the rage room makes you wield its weapons.',
+        'Diary tasks you can do now say Can do now, and a way in you don’t need is no longer drawn as a lock. The Falador Easy strut repair counts from the Dwarven Mine entrance in Falador, so it showed as available while its Motherlode Mine chip looked locked.',
+        'Gertrude’s Cat needs a way to get the raw sardine: Fishing Shops to buy it, or 5 Fishing to catch it with a rod and bait.',
+        'The start of Recipe for Disaster needs the shops and places for the cook’s items: Yanille’s Dragon Inn (Bars & Inns) for the Greenman’s ale, Vegetable Shops for the rotten tomato, the Gnome Stronghold’s Food Shops for the fruit blast, and Betty in Port Sarim (Magic Shops) or Herblore Shops for the eye of newt.',
+        'The Doable tab no longer lists quests in an owned area no route reaches, such as The Ribbiting Tale and Enter the Abyss. It now agrees with the Quests tab and files them under Locked.',
+      ],
+      changed: [
+        'Every quest and diary task was checked against the Wiki for items you can’t get with your unlocks. 69 quests and 20 diary tasks now ask for what their items need.',
+        'Items you have to wear need their slot, such as the mourner disguise, the ghostly robes, the M’speak amulet and the anti-dragon shield for Elvarg.',
+        'Items only sold in shops need that shop, such as the ice cooler and mirror shield from Slayer masters, Desert Treasure’s lockpicks and the gold leaf for the Kalphite Queen head.',
+        'Items you can only make need the skill, such as bronze wire (4 Smithing) and Dragon Slayer’s unfired bowl (8 Crafting). Items you can buy or make take either, such as iron bars (15 Smithing, with 15 Mining or an ore shop), steel nails and stew.',
+      ],
+    },
+  },
+  {
     id: '2026-10-09-forgotten-cemetery-routes',
     title: 'More Ways Into the Forgotten Cemetery',
     date: '2026-10-09',
