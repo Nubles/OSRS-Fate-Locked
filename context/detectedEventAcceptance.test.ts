@@ -132,7 +132,7 @@ describe('detected event acceptance follows manual completion', () => {
 describe('detected level-ups and the start-area milestone Keys', () => {
   it.each([
     ['xtreme', XTREME_MILESTONE_INTERVAL, 'xtremeMilestoneClaimed', 'Xtreme milestone'],
-    ['chunked', CHUNKED_MILESTONE_INTERVAL, 'chunkedMilestoneClaimed', 'Chunked milestone'],
+    ['chunked', CHUNKED_MILESTONE_INTERVAL, 'chunkedLevelKeysClaimed', 'Chunked milestone'],
   ] as const)('pays a %s run the milestone Key a manual level-up pays', (gameModeId, interval, claimedKey, message) => {
     const fresh = run({ gameModeId });
     const others = Object.entries(fresh.unlocks.levels)

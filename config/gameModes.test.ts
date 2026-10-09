@@ -15,11 +15,11 @@ describe('the game modes a player can pick', () => {
     }
   });
 
-  it('describe Chunked as in Chunk Locked, with its start-chunk milestone Keys', () => {
+  it('describe Chunked as in Chunk Locked, with its all-game milestone Keys and Skills rule', () => {
     const chunked = getGameMode('chunked');
     expect(chunked.description).toMatch(/^One chunk at a time, as in Chunk Locked ironman\./);
     expect(chunked.description).toContain(
-      `While you hold only your start chunk, every ${CHUNKED_MILESTONE_INTERVAL} total levels gives you a guaranteed Key.`,
+      `Every ${CHUNKED_MILESTONE_INTERVAL} total levels gives you a guaranteed Key, all game, and a Skills Key only rolls skills your chunks can train.`,
     );
     expect(chunked.description).not.toMatch(/Chunked Ironman|classic|documented/);
   });

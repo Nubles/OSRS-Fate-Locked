@@ -397,7 +397,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <h3 className="text-gray-200 font-bold uppercase tracking-widest mb-4">What Differs Between the Modes</h3>
                                 <ul className="space-y-3 text-sm text-gray-400">
                                     <li><b className="text-amber-300">Vanilla:</b> you unlock named areas, and all of Misthalin is free from the start. Each boss pays a few Keys and then stops, your first three clue Keys roll at no less than {andList(CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`))}, and Keys only unlock bosses and minigames you can reach.</li>
-                                    <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, next to land you hold. Every boss kill rolls, with no limit. While you hold only your start chunk, every {CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key.</li>
+                                    <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, next to land you hold. Every boss kill rolls, with no limit. Every {CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key, all game, and a Skills Key only rolls skills your chunks can train.</li>
                                     <li><b className="text-gray-200">Both:</b> a Pity Key at {SHARED_MODE_RULES.pityThreshold} Fate Points, a {SHARED_MODE_RULES.omniChanceBase}% base Omni-Key chance, the same ritual prices, and every bank locked until you unlock it.</li>
                                 </ul>
                             </div>

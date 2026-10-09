@@ -750,20 +750,22 @@ const chainAppendedHistory = (prev: GameState['history'], next: GameState['histo
 };
 
 /**
- * Anti-softlock insurance for runs still stuck at their start: Xtreme Start
- * (see XTREME_MILESTONE_INTERVAL in config/economy.ts) before any area is
- * unlocked, and Chunked (CHUNKED_MILESTONE_INTERVAL, tighter because one
- * chunk is a much smaller training footprint than Lumbridge) before any
- * chunk is. A guaranteed Key every interval of total level; deterministic,
- * not RNG. A manual level-up and a detected RuneLite level-up both pay it.
+ * Guaranteed Keys for total level. Xtreme Start (XTREME_MILESTONE_INTERVAL in
+ * config/economy.ts) pays them before any area is unlocked. Chunked
+ * (CHUNKED_MILESTONE_INTERVAL) pays them all game, because levels are nearly a
+ * chunk run's only income. Deterministic, not RNG. A manual level-up and a
+ * detected RuneLite level-up both pay it. `previousTotal` is the total before
+ * this level-up: a Chunked run from before the all-game rule counts from it,
+ * so the change pays no back-dated Keys.
  */
 const startMilestoneInsurance = (
   state: GameState,
   totalLevel: number,
+  previousTotal: number,
   now: number,
 ): Pick<GameState, 'keys'> & {
   xtremeMilestoneClaimed: number;
-  chunkedMilestoneClaimed: number;
+  chunkedLevelKeysClaimed: number | undefined;
   entries: LogEntry[];
 } => {
   let keys = state.keys;
@@ -786,24 +788,25 @@ const startMilestoneInsurance = (
     }
   }
 
-  let chunkedMilestoneClaimed = state.chunkedMilestoneClaimed ?? 0;
-  if (state.gameModeId === 'chunked' && (state.unlocks.chunks ?? []).length === 0) {
+  let chunkedLevelKeysClaimed = state.chunkedLevelKeysClaimed;
+  if (state.gameModeId === 'chunked') {
+    const claimed = chunkedLevelKeysClaimed ?? Math.floor(previousTotal / CHUNKED_MILESTONE_INTERVAL);
     const eligible = Math.floor(totalLevel / CHUNKED_MILESTONE_INTERVAL);
-    if (eligible > chunkedMilestoneClaimed) {
-      const gained = eligible - chunkedMilestoneClaimed;
+    chunkedLevelKeysClaimed = Math.max(claimed, eligible);
+    if (eligible > claimed) {
+      const gained = eligible - claimed;
       keys += gained;
-      chunkedMilestoneClaimed = eligible;
       entries.push({
         id: generateId(),
         timestamp: now,
         type: 'XTREME_MILESTONE',
         message: `Chunked milestone: Total Level ${eligible * CHUNKED_MILESTONE_INTERVAL} gives ${gained === 1 ? 'a guaranteed Key' : `${gained} guaranteed Keys`}.`,
-        details: `Start-chunk milestone: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels until you unlock another chunk.`,
+        details: `Chunked milestone: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels, all game.`,
         meta: { totalLevel, gained }
       });
     }
   }
-  return { keys, xtremeMilestoneClaimed, chunkedMilestoneClaimed, entries };
+  return { keys, xtremeMilestoneClaimed, chunkedLevelKeysClaimed, entries };
 };
 
 const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
@@ -963,7 +966,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         customMode: action.payload.customRules,
         gameModeLocked: true,
         xtremeMilestoneClaimed: Math.max(state.xtremeMilestoneClaimed ?? 0, Math.floor(startTotal / XTREME_MILESTONE_INTERVAL)),
-        chunkedMilestoneClaimed: Math.max(state.chunkedMilestoneClaimed ?? 0, Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL)),
+        chunkedLevelKeysClaimed: Math.max(state.chunkedLevelKeysClaimed ?? 0, Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL)),
       };
     }
 
@@ -997,12 +1000,13 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       // A detected level-up pays the start-area milestone Keys a manual one does.
       if (progress.kind === 'SKILL_LEVEL') {
         const totalLevel = Object.values(rolled.unlocks.levels).reduce((a, b) => a + b, 0);
-        const insurance = startMilestoneInsurance(rolled, totalLevel, now);
+        const previousTotal = Object.values(state.unlocks.levels).reduce((a, b) => a + b, 0);
+        const insurance = startMilestoneInsurance(rolled, totalLevel, previousTotal, now);
         return insurance.entries.length === 0 ? rolled : {
           ...rolled,
           keys: insurance.keys,
           xtremeMilestoneClaimed: insurance.xtremeMilestoneClaimed,
-          chunkedMilestoneClaimed: insurance.chunkedMilestoneClaimed,
+          chunkedLevelKeysClaimed: insurance.chunkedLevelKeysClaimed,
           history: [...rolled.history, ...insurance.entries],
         };
       }
@@ -1452,8 +1456,8 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         });
       }
 
-      const { keys, xtremeMilestoneClaimed, chunkedMilestoneClaimed, entries } =
-        startMilestoneInsurance(state, totalLevel, now);
+      const { keys, xtremeMilestoneClaimed, chunkedLevelKeysClaimed, entries } =
+        startMilestoneInsurance(state, totalLevel, totalLevel - 1, now);
       logs.push(...entries);
 
       const eventMeta: LevelUpEventMeta = { skill, level: newLevel, totalLevel, chaosKeysAwarded, chaosKeyAwarded };
@@ -1464,7 +1468,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         keys,
         chaosKeys,
         xtremeMilestoneClaimed,
-        chunkedMilestoneClaimed,
+        chunkedLevelKeysClaimed,
         history: logs,
         lastEvent: { id: generateId(), type: 'LEVEL_UP', meta: eventMeta }
       };

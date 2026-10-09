@@ -311,8 +311,17 @@ export interface GameState {
    * key economy for any other mode.
    */
   xtremeMilestoneClaimed?: number;
-  /** Same insurance as xtremeMilestoneClaimed, for the 'chunked' mode — see CHUNKED_MILESTONE_INTERVAL. */
+  /**
+   * Legacy Chunked insurance (a Key every 25 total levels while on the start
+   * chunk), kept so older saves round-trip. Superseded by chunkedLevelKeysClaimed.
+   */
   chunkedMilestoneClaimed?: number;
+  /**
+   * Chunked: how many CHUNKED_MILESTONE_INTERVAL steps of total level have paid
+   * their guaranteed Key, all game. Absent on Chunked runs from before October
+   * 2026; their first level-up after the change counts from where they stand.
+   */
+  chunkedLevelKeysClaimed?: number;
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

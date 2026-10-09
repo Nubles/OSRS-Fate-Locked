@@ -11,6 +11,7 @@ import { bankLocksActive, isAreaReachable } from './reachability';
 import { unlockableAreas } from './freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { ROLLABLE_POH_ITEMS, ROLLABLE_STORAGE_ITEMS } from '../data/items';
+import { chunkedSkillRollable } from './chunkedSkillPool';
 
 /** The same tables and eligible entries drive rolls and their displayed odds. */
 export const randomUnlockTables = (mode?: string, custom?: GameModeRules): TableType[] => [
@@ -87,7 +88,8 @@ export interface RandomPoolBlockerSummary {
 
 /**
  * Applies the Vanilla exact-area policy only to random boss and minigame
- * unlocks. All other modes and tables retain their existing validity rules.
+ * unlocks, and Chunked's trainable-skill rule to random Skills unlocks. All
+ * other modes and tables retain their existing validity rules.
  */
 export const isRandomUnlockEligible = (
     table: TableType,
@@ -98,6 +100,8 @@ export const isRandomUnlockEligible = (
     policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
 ): boolean => {
     if (!isValidUnlock(table, item, unlocks)) return false;
+    // Chunked: random Skills rolls only land on skills the run's chunks can train.
+    if (modeId === 'chunked' && table === TableType.SKILLS) return chunkedSkillRollable(item, unlocks);
     if (modeId !== 'vanilla') return true;
     if (!policy.randomCosts.includes(randomCost)) return true;
     if (!policy.filteredTables.some(candidate => candidate === table)) return true;

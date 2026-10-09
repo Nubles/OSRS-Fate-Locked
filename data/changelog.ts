@@ -19,6 +19,17 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-09-chunked-keys',
+    title: 'Chunked Runs Keep Earning Keys',
+    date: '2026-10-09',
+    sections: {
+      balance: [
+        'In Chunked, every 5 total levels now gives a guaranteed Key for the whole run. It used to be every 25 levels, and only while you held just your start chunk. Runs already under way count from where they stand now.',
+        'A Skills Key in Chunked now only rolls a skill your chunks can train at the levels it opens, so it can’t hand you Sailing while you stand in Lumbridge Castle. Skills are still rolled with Keys, tier by tier.',
+      ],
+    },
+  },
+  {
     id: '2026-10-09-forgotten-cemetery-routes',
     title: 'More Ways Into the Forgotten Cemetery',
     date: '2026-10-09',

@@ -941,7 +941,7 @@ const TOP_LEVEL_KEYS = new Set([
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
   'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
-  'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'fateCompensation',
+  'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'chunkedLevelKeysClaimed', 'fateCompensation',
   'petCompensation', 'petsClaimed', 'keysOwed',
 ]);
 
@@ -1245,7 +1245,7 @@ const normalizeState = (
     if (checked.ok === false) return checked;
     if (checked.value > 0) state.keysOwed = checked.value;
   }
-  for (const key of ['xtremeMilestoneClaimed', 'chunkedMilestoneClaimed'] as const) {
+  for (const key of ['xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'chunkedLevelKeysClaimed'] as const) {
     const selected = readPreferred(input, defaultRecord, key);
     if (!selected.present) continue;
     const checked = boundedInteger(selected.value, key, 0, MAX_COUNTER);

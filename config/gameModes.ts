@@ -69,8 +69,8 @@ export const GAME_MODES: GameMode[] = [
   {
     id: 'chunked',
     name: 'Chunked',
-    // CHUNKED_MILESTONE_INTERVAL (config/economy.ts) sets the 25; gameModes.test.ts pins it.
-    description: 'One chunk at a time, as in Chunk Locked ironman. You start in one chunk of Lumbridge and unlock land next to the chunks you hold. Once you have done Pandemonium and unlocked Sailing, land across open sea from your coast, and land a boat from your land sails to, count as next to your land too; the sea itself costs no unlock. While you hold only your start chunk, every 25 total levels gives you a guaranteed Key.',
+    // CHUNKED_MILESTONE_INTERVAL (config/economy.ts) sets the 5; gameModes.test.ts pins it.
+    description: 'One chunk at a time, as in Chunk Locked ironman. You start in one chunk of Lumbridge and unlock land next to the chunks you hold. Once you have done Pandemonium and unlocked Sailing, land across open sea from your coast, and land a boat from your land sails to, count as next to your land too; the sea itself costs no unlock. Every 5 total levels gives you a guaranteed Key, all game, and a Skills Key only rolls skills your chunks can train.',
     tagline: 'Adjacent land and Sailing frontiers',
     rules: {
       pityEnabled: true,

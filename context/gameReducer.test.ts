@@ -1002,83 +1002,63 @@ describe('LEVEL_UP — Xtreme milestone insurance', () => {
   });
 });
 
-// --- Chunked milestone insurance ---------------------------------------------
+// --- Chunked milestone Keys ---------------------------------------------------
 
-describe('LEVEL_UP — Chunked milestone insurance', () => {
-  const chunkedIsolated = () => ({ ...base(), gameModeId: 'chunked', unlocks: { ...initialState.unlocks, chunks: [] } });
+describe('LEVEL_UP — Chunked milestone Keys', () => {
+  const startTotal = Object.values(initialState.unlocks.levels).reduce((a, b) => a + b, 0);
+  const levelUp = (state: Parameters<typeof gameReducer>[0]) =>
+    gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
+  const newChunkedRun = () =>
+    gameReducer(base(), { type: 'SET_GAME_MODE', payload: { modeId: 'chunked' } });
 
-  it('does nothing outside Chunked mode, even with no chunks unlocked', () => {
-    const state = { ...base(), gameModeId: 'vanilla', unlocks: { ...initialState.unlocks, chunks: [] } };
-    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
+  it('does nothing outside Chunked mode', () => {
+    const s = levelUp({ ...base(), gameModeId: 'vanilla', unlocks: { ...initialState.unlocks, chunks: [] } });
     expect(s.keys).toBe(initialState.keys);
-    expect(s.chunkedMilestoneClaimed ?? 0).toBe(0);
+    expect(s.chunkedLevelKeysClaimed).toBeUndefined();
   });
 
-  it('does nothing in Chunked mode once a chunk has been unlocked', () => {
+  it('counts from the starting total level, so a new run\'s first level-up pays nothing unless it crosses a step', () => {
+    const run = newChunkedRun();
+    expect(run.chunkedLevelKeysClaimed).toBe(Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL));
+  });
+
+  it('pays a Key at every multiple of the interval, all game, with chunks unlocked', () => {
     const target = chunkKey({ cx: CHUNKED_START.cx + 1, cy: CHUNKED_START.cy });
-    const state = { ...chunkedIsolated(), unlocks: { ...initialState.unlocks, chunks: [target] } };
-    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
-    expect(s.keys).toBe(initialState.keys);
+    let run: Parameters<typeof gameReducer>[0] = { ...newChunkedRun(), unlocks: { ...newChunkedRun().unlocks, chunks: [target] } };
+    const firstPayout = CHUNKED_MILESTONE_INTERVAL * (Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL) + 1);
+    for (let total = startTotal; total < firstPayout - 1; total++) run = levelUp(run);
+    expect(run.keys).toBe(initialState.keys);
+    run = levelUp(run);
+    expect(run.keys).toBe(initialState.keys + 1);
+    expect(run.history.at(-1)?.message).toContain(`Total Level ${firstPayout}`);
+    expect(run.history.at(-1)?.details).toBe(
+      `Chunked milestone: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels, all game.`,
+    );
+    for (let i = 0; i < CHUNKED_MILESTONE_INTERVAL; i++) run = levelUp(run);
+    expect(run.keys).toBe(initialState.keys + 2);
   });
 
-  it('grants a guaranteed key the instant total level crosses the (tighter) interval, isolated in Chunked', () => {
-    const startingTotal = Object.values(initialState.unlocks.levels).reduce((a, b) => a + b, 0);
-    const state = {
-      ...chunkedIsolated(),
-      unlocks: { ...chunkedIsolated().unlocks, levels: { ...chunkedIsolated().unlocks.levels, Attack: CHUNKED_MILESTONE_INTERVAL - startingTotal } },
-    };
-    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
-    expect(s.keys).toBe(initialState.keys + 1);
-    expect(s.chunkedMilestoneClaimed).toBe(1);
-  });
-
-  it('does not re-grant the same milestone on a level-up that does not cross a new threshold', () => {
-    const already = { ...chunkedIsolated(), chunkedMilestoneClaimed: 1, keys: 10 };
-    const s = gameReducer(already, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
+  it('does not re-grant a step already paid', () => {
+    const run = { ...newChunkedRun(), chunkedLevelKeysClaimed: 1000, keys: 10 };
+    const s = levelUp(run);
     expect(s.keys).toBe(10);
-    expect(s.chunkedMilestoneClaimed).toBe(1);
+    expect(s.chunkedLevelKeysClaimed).toBe(1000);
   });
 
-  describe('new runs', () => {
-    const startTotal = Object.values(initialState.unlocks.levels).reduce((a, b) => a + b, 0);
-    const levelUp = (state: ReturnType<typeof base>) =>
-      gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
-    const newChunkedRun = () =>
-      gameReducer(base(), { type: 'SET_GAME_MODE', payload: { modeId: 'chunked' } });
-
-    it('count milestones from the starting total level, so the first level-up pays nothing', () => {
-      const run = newChunkedRun();
-      expect(run.chunkedMilestoneClaimed).toBe(Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL));
-      expect(levelUp(run).keys).toBe(run.keys);
-    });
-
-    it('pay their first milestone key at the next multiple of the interval', () => {
-      let run = newChunkedRun();
-      const firstPayout = CHUNKED_MILESTONE_INTERVAL * (Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL) + 1);
-      for (let total = startTotal; total < firstPayout - 1; total++) run = levelUp(run);
-      expect(run.keys).toBe(initialState.keys);
-      run = levelUp(run);
-      expect(run.keys).toBe(initialState.keys + 1);
-      expect(run.history.at(-1)?.message).toContain(`Total Level ${firstPayout}`);
-      // The Key comes on total level alone; a start-chunk player can still roll other things.
-      expect(run.history.at(-1)?.details).toBe(
-        `Start-chunk milestone: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels until you unlock another chunk.`,
-      );
-    });
-
-    it('leave runs that chose their mode before this rule on their original schedule', () => {
-      const existing = { ...chunkedIsolated(), gameModeLocked: true, chunkedMilestoneClaimed: 0 };
-      expect(levelUp(existing).keys).toBe(initialState.keys + 1);
-    });
+  it('starts a Chunked run from before the change at its current total, with no back-dated Keys', () => {
+    const levels = { ...initialState.unlocks.levels, Attack: 40 };
+    const total = Object.values(levels).reduce((a, b) => a + b, 0);
+    const existing = { ...base(), gameModeId: 'chunked', gameModeLocked: true, chunkedMilestoneClaimed: 1,
+      unlocks: { ...initialState.unlocks, levels, chunks: [] } };
+    const s = levelUp(existing);
+    const crossed = Math.floor((total + 1) / CHUNKED_MILESTONE_INTERVAL) - Math.floor(total / CHUNKED_MILESTONE_INTERVAL);
+    expect(s.keys).toBe(existing.keys + crossed);
+    expect(s.chunkedLevelKeysClaimed).toBe(Math.floor((total + 1) / CHUNKED_MILESTONE_INTERVAL));
   });
 
-  it('the two modes\' milestone counters are independent', () => {
-    const state = { ...chunkedIsolated(), xtremeMilestoneClaimed: 3 };
-    const s = gameReducer(state, {
-      type: 'LEVEL_UP',
-      payload: { skill: 'Attack', chaosRoll: 0.5 },
-    });
-    expect(s.xtremeMilestoneClaimed).toBe(3); // untouched — this run is Chunked, not Xtreme
+  it('leaves the Xtreme counter alone', () => {
+    const s = levelUp({ ...newChunkedRun(), xtremeMilestoneClaimed: 3 });
+    expect(s.xtremeMilestoneClaimed).toBe(3);
   });
 });
 

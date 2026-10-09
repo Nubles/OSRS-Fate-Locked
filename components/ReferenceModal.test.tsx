@@ -137,7 +137,7 @@ describe('ReferenceModal Game Modes', () => {
     expect(modes).toContain('What Differs Between the Modes');
     expect(modes).toContain('you unlock named areas, and all of Misthalin is free from the start');
     expect(modes).toContain('roll at no less than 25%, 15% and 10%');
-    expect(modes).toContain(`every ${CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key`);
+    expect(modes).toContain(`Every ${CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key, all game`);
     expect(modes).toContain(`a Pity Key at ${shared.pityThreshold} Fate Points, a ${shared.omniChanceBase}% base Omni-Key chance`);
     expect(modes).toContain('Your mode is fixed as soon as you apply it.');
     expect(modes).not.toMatch(/Rule Knobs|Region Modifiers|Omni base|permanently locked|verified history/);

@@ -74,7 +74,7 @@ describe('economy ↔ engine consistency', () => {
     expect(earn).toContain('Any successful roll, wherever you log it');
     expect(earn).not.toContain('Farm Key');
     expect(earn).toContain('A won Void Gambit.');
-    expect(earn).toContain(`Chunked: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels while you hold only your start chunk.`);
+    expect(earn).toContain(`Chunked: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels, all game.`);
     expect(earn).toContain(`The ${STARTING_KEYS} every run starts with.`);
   });
 
