@@ -5,8 +5,7 @@ import { QUEST_DATA } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import type { LogEntry, UnlockState } from '../types';
 import { validProgressSnapshot } from '../workers/fate-relay/progress.js';
-import { ALL_CHUNKS } from './chunkAdjacency';
-import { MAP_GRID, buildProgressSnapshot, encodeChunkMap, rulesTag } from './progressSnapshot';
+import { buildProgressSnapshot, rulesTag } from './progressSnapshot';
 
 const run = (changes: Partial<UnlockState>): UnlockState => ({ ...structuredClone(initialState.unlocks), ...changes });
 
@@ -50,24 +49,6 @@ describe('buildProgressSnapshot', () => {
     expect(snapshot.recent).toHaveLength(5);
     expect(snapshot.recent[0]).toEqual({ text: 'Unlocked Desert Battlefield (Banks)', at: 3000 });
     expect(snapshot.recent[1].text).toBe('Unlocked Area 6 (Areas)');
-  });
-
-  it('maps exactly the chunks it counts, on a grid that holds every land chunk', () => {
-    for (const { cx, cy } of ALL_CHUNKS) {
-      expect(cx - MAP_GRID.minCx).toBeGreaterThanOrEqual(0);
-      expect(cx - MAP_GRID.minCx).toBeLessThan(MAP_GRID.cols);
-      expect(MAP_GRID.maxCy - cy).toBeGreaterThanOrEqual(0);
-      expect(MAP_GRID.maxCy - cy).toBeLessThan(MAP_GRID.rows);
-    }
-    const bytes = Uint8Array.from(atob(snapshot.map!), char => char.charCodeAt(0));
-    expect(snapshot.map).toHaveLength(272);
-    const set = [...bytes].reduce((sum, byte) => sum + byte.toString(2).replace(/0/g, '').length, 0);
-    expect(set).toBe(snapshot.chunks.unlocked);
-    // Bits run row by row from the north-west corner: Lumbridge's 50,50 is row 15, column 35.
-    const one = Uint8Array.from(atob(encodeChunkMap((cx, cy) => cx === 50 && cy === 50)), char => char.charCodeAt(0));
-    const bit = 15 * MAP_GRID.cols + 35;
-    expect(one[bit >> 3]).toBe(1 << (bit & 7));
-    expect(one.reduce((sum, byte) => sum + byte, 0)).toBe(1 << (bit & 7));
   });
 
   it('is what the relay accepts, unchanged', () => {

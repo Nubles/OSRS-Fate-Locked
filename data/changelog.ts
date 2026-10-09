@@ -19,18 +19,6 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-09-discord-maps-recap',
-    title: 'Your Map in the Discord, Celebrations and a Weekly Recap',
-    date: '2026-10-09',
-    sections: {
-      added: [
-        'Linked runs now show their map in the Fate Locked Discord: each post in #live-unlocks and each /progress comes with a picture of the areas you own, with what you just opened lit up in gold.',
-        'Earning a milestone role (Wayfarer, Pathfinder, Trailblazer, Fate Unbound or Quest Cape) gets its own celebration post.',
-        'Every Sunday the bot posts a recap of the week: total unlocks, the top three runners, new milestones and the most popular unlock.',
-      ],
-    },
-  },
-  {
     id: '2026-10-09-forgotten-cemetery-routes',
     title: 'More Ways Into the Forgotten Cemetery',
     date: '2026-10-09',
