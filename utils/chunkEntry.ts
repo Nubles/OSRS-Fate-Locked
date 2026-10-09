@@ -27,6 +27,7 @@ export interface ReachSource {
 
 type TravelReachability = typeof import('./travelReach').travelReachability;
 let travelReachability: TravelReachability | null = null;
+let pandemoniumOpens: typeof import('./travelReach').pandemoniumOpens | null = null;
 
 /**
  * Loads the app's routes for runReach, once. They load with the map's chunk
@@ -35,7 +36,7 @@ let travelReachability: TravelReachability | null = null;
  * the chunk content is in.
  */
 export const loadRunRoutes = (): Promise<void> => import('./travelReach')
-  .then(module => { travelReachability = module.travelReachability; });
+  .then(module => { ({ travelReachability, pandemoniumOpens } = module); });
 
 /**
  * The owned chunks a route from the run's start reaches, as numeric ids
@@ -56,47 +57,22 @@ export function runReach(source: ReachSource, unlocks: UnlockState, gameModeId: 
 }
 
 /**
- * Pandemonium starts at Port Sarim, sails south past the Salty Grouper wreck
- * to The Pandemonium, and Junior Jim's raft takes you to the Shipyard. The sea
- * only opens once the quest is done, so until then the chunks the quest uses
- * are open whenever Port Sarim is, as the quest list (which asks only for Port
- * Sarim) already says. A player reported on 9 October 2026 that RuneLite
- * called them Locked mid-quest.
- */
-const PANDEMONIUM_START = { cx: 47, cy: 50 };
-export const PANDEMONIUM_ROUTE: ReadonlySet<string> = new Set([
-  '47,48', '47,47', '48,46', // the sea between Port Sarim and The Pandemonium
-  '47,46', // The Pandemonium
-  '32,42', // the Shipyard
-]);
-
-/** The chunk's entry from ownership and routes alone, with no quest's way in. */
-export const ownEntry = (
-  coord: { cx: number; cy: number },
-  unlocks: UnlockState,
-  gameModeId: string | undefined,
-  reachable?: Set<string>,
-): PermissionStatus => {
-  if (!chunkUnlocked(coord.cx, coord.cy, unlocks, gameModeId)) return 'LOCKED';
-  if (reachable && !reachable.has(String(coord.cx * 256 + coord.cy))) return 'NOT_READY';
-  return 'ALLOWED';
-};
-
-/**
  * The run's entry for one chunk. Without a reach set (the chunk data didn't
- * load), an owned chunk counts as reached.
+ * load), an owned chunk counts as reached. Once the routes load, the chunks
+ * Pandemonium uses are open during the quest (utils/pandemoniumRoute.ts);
+ * questRoute false leaves them out, for interiors.
  */
 export function chunkEntry(
   coord: { cx: number; cy: number },
   unlocks: UnlockState,
   gameModeId: string | undefined,
   reachable?: Set<string>,
+  questRoute = true,
 ): PermissionStatus {
-  const entry = ownEntry(coord, unlocks, gameModeId, reachable);
-  if (entry !== 'ALLOWED' && PANDEMONIUM_ROUTE.has(`${coord.cx},${coord.cy}`)
-    && !unlocks.quests.includes('Pandemonium')
-    && ownEntry(PANDEMONIUM_START, unlocks, gameModeId, reachable) === 'ALLOWED') return 'ALLOWED';
-  return entry;
+  if (questRoute && pandemoniumOpens?.(coord, unlocks, (start) => chunkEntry(start, unlocks, gameModeId, reachable))) return 'ALLOWED';
+  if (!chunkUnlocked(coord.cx, coord.cy, unlocks, gameModeId)) return 'LOCKED';
+  if (reachable && !reachable.has(String(coord.cx * 256 + coord.cy))) return 'NOT_READY';
+  return 'ALLOWED';
 }
 
 /**
