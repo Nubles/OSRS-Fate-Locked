@@ -11,11 +11,15 @@
  */
 import type { UnlockState } from '../types';
 import type { PermissionStatus } from './chunkPermissionSnapshot';
-import { OCEAN_CHUNK_KEYS } from './oceanAccess';
+import { canNavigateOcean, OCEAN_CHUNK_KEYS } from './oceanAccess';
 
 const PORT_SARIM = { cx: 47, cy: 50 };
+const SHIPYARD = '32,42';
 export const PANDEMONIUM_ROUTE: ReadonlySet<string> = new Set([
-  '47,48', '47,47', '48,46', // the sea between Port Sarim and The Pandemonium
+  // The sea between Port Sarim and The Pandemonium: the Bay of Sarim and
+  // Mudskipper Sound (47,48), the Salty Grouper wreck (47,47), and the water
+  // off the Pandemonium's east docks (48,46, 48,47).
+  '47,48', '47,47', '48,46', '48,47',
   '47,46', // The Pandemonium
   '32,42', // the Shipyard
 ]);
@@ -33,8 +37,10 @@ export const pandemoniumOpens = (
   entryOf: (coord: { cx: number; cy: number }) => PermissionStatus,
 ): boolean => {
   const key = `${coord.cx},${coord.cy}`;
-  const opens = unlocks.quests.includes('Pandemonium')
-    ? OCEAN_CHUNK_KEYS.has(key) && entryOf(coord) === 'NOT_READY'
-    : PANDEMONIUM_ROUTE.has(key);
+  // The Shipyard lies past a barrier no boat crosses, so Chunked runs never
+  // own it by sailing from their coast: it opens with Sailing instead.
+  const opens = !unlocks.quests.includes('Pandemonium') ? PANDEMONIUM_ROUTE.has(key)
+    : key === SHIPYARD ? canNavigateOcean(unlocks)
+      : OCEAN_CHUNK_KEYS.has(key) && entryOf(coord) === 'NOT_READY';
   return opens && entryOf(PORT_SARIM) === 'ALLOWED';
 };
