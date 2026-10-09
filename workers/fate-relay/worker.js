@@ -18,7 +18,11 @@ import {
   MAX_PROGRESS_BYTES,
   PROGRESS_MIN_INTERVAL_MS,
   PROGRESS_TTL_SECONDS,
+  RECAP_MAX_RUNNERS,
+  WEEK_TTL_SECONDS,
   newLinkCode,
+  nextWeekRecord,
+  recapRunner,
   newUnlocksSince,
   normalizeLinkCode,
   validProgressSnapshot,
@@ -320,15 +324,82 @@ async function notifyDiscordBot(env, runId, previous, snapshot, updatedAt) {
   try {
     const discordId = await env.RELAY.get(`ld:${runId}`);
     if (discordId === null || await env.RELAY.get(`l:${discordId}`) !== runId) return;
+    const newUnlocks = newUnlocksSince(previous, snapshot);
+    await recordWeek(env, runId, discordId, previous, snapshot, newUnlocks, updatedAt);
     await fetch(url, {
       method: 'POST',
       headers: { Authorization: `Bearer ${secret}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ discordId, snapshot, newUnlocks: newUnlocksSince(previous, snapshot), updatedAt }),
+      body: JSON.stringify({
+        discordId,
+        snapshot,
+        newUnlocks,
+        updatedAt,
+        // The run's map before this publish, so the bot can light up what is new.
+        ...(typeof previous?.map === 'string' ? { previousMap: previous.map } : {}),
+      }),
       signal: AbortSignal.timeout(DISCORD_EVENTS_TIMEOUT_MS),
     });
   } catch (error) {
     console.error('discord bot notify failed', error?.name ?? 'error');
   }
+}
+
+/** Add a linked run's publish to its week record (see nextWeekRecord). */
+async function recordWeek(env, runId, discordId, previous, snapshot, newUnlocks, now) {
+  const key = `wk:${runId}`;
+  const record = await env.RELAY.get(key, { type: 'json' });
+  const next = nextWeekRecord(record, discordId, previous, snapshot, newUnlocks, now);
+  if (next) await env.RELAY.put(key, JSON.stringify(next), { expirationTtl: WEEK_TTL_SECONDS });
+}
+
+/**
+ * The weekly recap, run by the cron trigger in wrangler.toml: every linked
+ * run's week record goes to the Discord bot in one call, and the records are
+ * cleared once the bot has them, so the next week starts fresh. A record whose
+ * run is no longer linked to the same Discord user is dropped unsent. If the
+ * bot can't be reached, the records stay and the next recap covers both weeks.
+ */
+async function sendWeeklyRecap(env, now = Date.now()) {
+  const url = env.DISCORD_EVENTS_URL;
+  const secret = env.PROGRESS_BOT_SECRET;
+  if (typeof url !== 'string' || !url.startsWith('https://')) return { sent: false, runners: 0 };
+  if (typeof secret !== 'string' || secret.length < 32) return { sent: false, runners: 0 };
+  const keys = [];
+  let cursor;
+  do {
+    const page = await env.RELAY.list({ prefix: 'wk:', cursor });
+    keys.push(...page.keys.map(key => key.name));
+    cursor = page.list_complete ? undefined : page.cursor;
+  } while (cursor && keys.length < RECAP_MAX_RUNNERS);
+
+  const runners = [];
+  const collected = [];
+  for (const key of keys.slice(0, RECAP_MAX_RUNNERS)) {
+    const record = await env.RELAY.get(key, { type: 'json' });
+    const linked = record && typeof record.discordId === 'string'
+      && await env.RELAY.get(`l:${record.discordId}`) === key.slice(3);
+    if (!linked) {
+      await env.RELAY.delete(key);
+      continue;
+    }
+    runners.push(recapRunner(record));
+    collected.push({ key, since: record.since });
+  }
+  if (runners.length === 0) return { sent: false, runners: 0 };
+
+  const from = Math.min(...collected.map(entry => entry.since));
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${secret}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'recap', from, to: now, runners }),
+    signal: AbortSignal.timeout(DISCORD_EVENTS_TIMEOUT_MS * 4),
+  });
+  if (!response.ok) {
+    console.error('weekly recap failed', response.status);
+    return { sent: false, runners: runners.length };
+  }
+  for (const { key } of collected) await env.RELAY.delete(key);
+  return { sent: true, runners: runners.length };
 }
 
 /** Whether the request carries the Discord bot's secret. Unset, nothing does. */
@@ -536,6 +607,11 @@ export default {
    * headers. Without them the browser hides the status and reports only
    * "Failed to fetch".
    */
+  /** The cron trigger in wrangler.toml: the Discord bot's weekly recap. */
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(sendWeeklyRecap(env).catch(error => console.error('weekly recap failed', error?.name ?? 'error')));
+  },
+
   async fetch(request, env, ctx) {
     try {
       return await routes.fetch(request, env, ctx);
