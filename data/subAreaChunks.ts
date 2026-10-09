@@ -86,7 +86,7 @@ export const SUB_AREA_CHUNKS: Record<string, ChunkCoord[]> = {
   'Iorwerth Camp': [{ cx: 33, cy: 50 }, { cx: 34, cy: 50 }],
   'Isafdar': [{ cx: 35, cy: 49 }, { cx: 35, cy: 50 }],
   'Isle of Bones': [{ cx: 39, cy: 39 }],
-  'Isle of Souls': [{ cx: 32, cy: 42 }, { cx: 33, cy: 43 }, { cx: 34, cy: 43 }, { cx: 35, cy: 43 }, { cx: 32, cy: 44 }, { cx: 33, cy: 44 }, { cx: 34, cy: 44 }, { cx: 35, cy: 44 }, { cx: 36, cy: 44 }, { cx: 32, cy: 45 }, { cx: 33, cy: 45 }, { cx: 34, cy: 45 }, { cx: 35, cy: 45 }, { cx: 36, cy: 45 }, { cx: 32, cy: 46 }, { cx: 33, cy: 46 }, { cx: 34, cy: 46 }, { cx: 35, cy: 46 }, { cx: 36, cy: 46 }],
+  'Isle of Souls': [{ cx: 33, cy: 43 }, { cx: 34, cy: 43 }, { cx: 35, cy: 43 }, { cx: 32, cy: 44 }, { cx: 33, cy: 44 }, { cx: 34, cy: 44 }, { cx: 35, cy: 44 }, { cx: 36, cy: 44 }, { cx: 32, cy: 45 }, { cx: 33, cy: 45 }, { cx: 34, cy: 45 }, { cx: 35, cy: 45 }, { cx: 36, cy: 45 }, { cx: 32, cy: 46 }, { cx: 33, cy: 46 }, { cx: 34, cy: 46 }, { cx: 35, cy: 46 }, { cx: 36, cy: 46 }],
   'Jatizso': [{ cx: 37, cy: 59 }, { cx: 37, cy: 60 }],
   'Kalphite Lair': [{ cx: 50, cy: 48 }],
   'Kebos Lowlands': [{ cx: 18, cy: 56 }, { cx: 19, cy: 56 }, { cx: 18, cy: 57 }, { cx: 18, cy: 58 }, { cx: 18, cy: 59 }],

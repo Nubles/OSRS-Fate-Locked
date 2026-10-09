@@ -30,6 +30,18 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-10-09-pandemonium-route',
+    title: 'Pandemonium and the Shipyard Open the Way You Reach Them',
+    date: '2026-10-09',
+    sections: {
+      fixed: [
+        'While you are doing Pandemonium, the RuneLite plugin now lets you into the places the quest takes you: the sea between Port Sarim and The Pandemonium, The Pandemonium itself, and the Shipyard. Before, it called them Locked because the sea only opens once Pandemonium is done. You still need Port Sarim to start the quest, and once it is finished these places follow their usual rules again.',
+        'Once you have finished Pandemonium and have Sailing and Port Sarim, the RuneLite plugin opens the whole open sea. Before, most of it showed Not ready, because no walking route from Lumbridge reaches the sea.',
+        'The Shipyard where you customise your boat no longer counts as part of the Isle of Souls. You reach it from a shipwright at a port, not from the Isle of Souls, so it now opens with the sea once you have Sailing and Pandemonium. The Isle of Souls has one chunk fewer, and the land total on the run card drops from 624 to 623.',
+      ],
+    },
+  },
+  {
     id: '2026-10-09-forgotten-cemetery-routes',
     title: 'More Ways Into the Forgotten Cemetery',
     date: '2026-10-09',

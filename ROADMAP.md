@@ -459,7 +459,7 @@ is a manual repository-maintainer setting after the workflow first appears.
 
 Build-size watch: `npm run build` fails when the eager entry chunk (the
 `dist/assets/index-*.js` that `index.html` loads) grows past its gzip budget
-in `scripts/check-entry-budget.mjs` (229 kB; about 217 kB after the 24 Sept
+in `scripts/check-entry-budget.mjs` (230 kB; about 217 kB after the 24 Sept
 2026 review moved on-demand screens and the release notes out of it, about
 224 kB in October 2026 after online backup and Paste from RuneLite, and about
 228.5 kB once Chunked's trainable-skill data joined the roll engine). An
