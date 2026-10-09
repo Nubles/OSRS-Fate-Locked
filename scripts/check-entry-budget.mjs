@@ -11,7 +11,7 @@ import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
-// Raised 225 -> 230 in October 2026 on purpose: Chunked's Skills rolls need
+// Raised 226 -> 230 in October 2026 on purpose: Chunked's Skills rolls need
 // data/chunkSkillNodes.ts (about 3 kB gzip) inside the synchronous roll engine,
 // where a lazy load could change a seeded roll's pool.
 // 230 rather than 229 leaves a little room for other PRs that land alongside it.
