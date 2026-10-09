@@ -60,6 +60,7 @@ const defaultsFixture = (): GameState => ({
   specialKeys: 0,
   chaosKeys: 0,
   bossStandardKeysAwarded: {},
+  minigameStandardKeysAwarded: {},
   clueStandardKeysAwarded: 0,
   fatePoints: 0,
   fateCompensation: {
@@ -96,6 +97,7 @@ const fullStateFixture = (): GameState => ({
   specialKeys: 2,
   chaosKeys: 3,
   bossStandardKeysAwarded: { Zulrah: 1 },
+  minigameStandardKeysAwarded: { 'Pest Control': 1 },
   clueStandardKeysAwarded: 2,
   fatePoints: 41,
   fateCompensation: {
@@ -783,6 +785,24 @@ describe('save schema compatibility', () => {
     malformed.bossStandardKeysAwarded = { Zulrah: 3 };
 
     expectRejected(malformed, 'invalid_number', 'bossStandardKeysAwarded.Zulrah');
+  });
+
+  it('starts every minigame reserve full for a save made before minigame reserves', () => {
+    const older = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    delete older.minigameStandardKeysAwarded;
+    const accepted = expectAccepted(validateAndMigrateSave(older, defaultsFixture()));
+    expect(accepted.state.minigameStandardKeysAwarded).toEqual({});
+  });
+
+  it('rejects a minigame counter beyond its reserve and drops a minigame that left the list', () => {
+    const over = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    over.minigameStandardKeysAwarded = { 'Rat Pits': 2 };
+    expectRejected(over, 'invalid_number', 'minigameStandardKeysAwarded.Rat Pits');
+
+    const retired = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    retired.minigameStandardKeysAwarded = { 'Old Minigame': 1, 'Pest Control': 2 };
+    const accepted = expectAccepted(validateAndMigrateSave(retired, defaultsFixture()));
+    expect(accepted.state.minigameStandardKeysAwarded).toEqual({ 'Pest Control': 2 });
   });
 
   it('rejects unknown and inherited boss counters in a strict v3 export', () => {

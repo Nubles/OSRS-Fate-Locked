@@ -11,7 +11,9 @@ import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
-export const ENTRY_GZIP_BUDGET_KB = 225;
+// 227 since the Vanilla minigame Key reserves (October 2026): the tier table
+// and reserve rules load with the save, so they can't be lazy. Their cards are.
+export const ENTRY_GZIP_BUDGET_KB = 227;
 
 /** The entry script that dist/index.html loads, as a path inside distDir. */
 export const entryScriptPath = (distDir, indexHtml) => {

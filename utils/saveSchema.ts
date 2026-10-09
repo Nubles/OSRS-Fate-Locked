@@ -15,7 +15,7 @@ import {
   normalizeBossStandardKeysAwarded,
   normalizeClueStandardKeysAwarded,
 } from './vanillaKeyProgress';
-import { vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
+import { isKnownVanillaMinigame, normalizeMinigameStandardKeysAwarded, vanillaBossKeyStage, vanillaMinigameKeyStage } from '../config/vanillaKeyEconomy';
 
 import { calculateLegacyFateCompensation, LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
 import { PET_COMPENSATION_ID, petCompensationOffer } from './petCompensation';
@@ -937,7 +937,7 @@ const TOP_LEVEL_KEYS = new Set([
   'collectionLogIdentity',
   'runeProofProgress',
   'version', 'runId', 'runRevision', 'keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'activeBuff',
-  'bossStandardKeysAwarded', 'clueStandardKeysAwarded',
+  'bossStandardKeysAwarded', 'clueStandardKeysAwarded', 'minigameStandardKeysAwarded',
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
   'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
@@ -1075,6 +1075,35 @@ const normalizeState = (
     );
   }
 
+  // Added after save v5 without a version bump: a save without it starts every
+  // minigame's reserve full.
+  const selectedMinigameProgress = readPreferred(input, defaultRecord, 'minigameStandardKeysAwarded');
+  let minigameStandardKeysAwarded: Record<string, number> = {};
+  if (selectedMinigameProgress.present && sourceVersion >= 3) {
+    const strictMinigameProgress = inspectRecord(
+      selectedMinigameProgress.value,
+      null,
+      'invalid_field',
+      'minigameStandardKeysAwarded',
+    );
+    if (strictMinigameProgress.ok === false) return strictMinigameProgress;
+    for (const name of Object.getOwnPropertyNames(strictMinigameProgress.value)) {
+      const path = pathOf('minigameStandardKeysAwarded', name);
+      // A minigame that leaves the list has no reserve left to count.
+      if (!isKnownVanillaMinigame(name)) continue;
+      const awarded = boundedInteger(
+        readOwn(strictMinigameProgress.value, name),
+        path,
+        0,
+        vanillaMinigameKeyStage(name, 0).cap,
+      );
+      if (awarded.ok === false) return awarded;
+      minigameStandardKeysAwarded[name] = awarded.value;
+    }
+  } else if (selectedMinigameProgress.present) {
+    minigameStandardKeysAwarded = normalizeMinigameStandardKeysAwarded(selectedMinigameProgress.value);
+  }
+
   const selectedBuff = readPreferred(input, defaultRecord, 'activeBuff');
   if (!selectedBuff.present
     || (selectedBuff.value !== 'NONE' && selectedBuff.value !== 'LUCK' && selectedBuff.value !== 'GREED')) {
@@ -1144,6 +1173,7 @@ const normalizeState = (
     fateCompensation: storedCompensation ?? notEligibleFateCompensation(),
     petCompensation: storedPetCompensation ?? petCompensationOffer(history.value),
     bossStandardKeysAwarded,
+    minigameStandardKeysAwarded,
     clueStandardKeysAwarded,
     activeBuff: selectedBuff.value,
     unlocks: unlocks.value.value,

@@ -259,6 +259,8 @@ export interface GameState {
   chaosKeys: number;
   /** Vanilla boss standard keys already awarded, by canonical boss name. */
   bossStandardKeysAwarded?: Record<string, number>;
+  /** Vanilla minigame standard keys already awarded, by minigame name. */
+  minigameStandardKeysAwarded?: Record<string, number>;
   /** Vanilla clue standard keys already awarded across every clue tier. */
   clueStandardKeysAwarded?: number;
   fatePoints: number;
