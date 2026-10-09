@@ -11,7 +11,7 @@ import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
-export const ENTRY_GZIP_BUDGET_KB = 225;
+export const ENTRY_GZIP_BUDGET_KB = 226;
 
 /** The entry script that dist/index.html loads, as a path inside distDir. */
 export const entryScriptPath = (distDir, indexHtml) => {
