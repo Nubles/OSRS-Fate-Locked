@@ -5,7 +5,6 @@ import {
   PROGRESS_TTL_SECONDS,
   newLinkCode,
   newUnlocksSince,
-  nextWeekRecord,
   normalizeLinkCode,
   validProgressSnapshot,
 } from './progress.js';
@@ -35,10 +34,6 @@ class MemoryKv {
   async delete(key: string) {
     this.records.delete(key);
     this.metadata.delete(key);
-  }
-
-  async list({ prefix }: { prefix: string; cursor?: string }) {
-    return { keys: [...this.records.keys()].filter(key => key.startsWith(prefix)).map(name => ({ name })), list_complete: true };
   }
 }
 
@@ -89,37 +84,6 @@ describe('progress snapshots', () => {
     expect(validProgressSnapshot(snapshot({ v: 2 }))).toBeNull();
     expect(validProgressSnapshot(snapshot({ rulesTag: 'R-7F3A', account: 'Nubles', startedAt: 1 })))
       .toMatchObject({ rulesTag: 'R-7F3A', account: 'Nubles', startedAt: 1 });
-  });
-
-  it('keeps a well-formed chunk map and refuses any other', () => {
-    const map = 'A'.repeat(270) + 'Q=';
-    expect(validProgressSnapshot(snapshot({ map: 'B'.repeat(272) }))?.map).toBe('B'.repeat(272));
-    expect(validProgressSnapshot(snapshot({ map }))).toBeNull();
-    expect(validProgressSnapshot(snapshot({ map: 'B'.repeat(200) }))).toBeNull();
-    expect(validProgressSnapshot(snapshot({ map: 42 }))).toBeNull();
-  });
-
-  it('builds a week record from the first unlock of the week and adds to it after', () => {
-    const before = snapshot();
-    const after = snapshot({ areas: { unit: 'areas', unlocked: 36, total: 88 } });
-    const unlocks = [{ text: 'A', at: 10 }, { text: 'B', at: 20 }];
-    expect(nextWeekRecord(null, DISCORD_ID, before, before, [], 5)).toBeNull();
-    const first = nextWeekRecord(null, DISCORD_ID, before, after, unlocks, 5);
-    expect(first).toEqual({
-      discordId: DISCORD_ID,
-      since: 5,
-      mode: 'Vanilla',
-      base: { areas: { unlocked: 34, total: 88 }, quests: { done: 21, total: 212 } },
-      now: { areas: { unlocked: 36, total: 88 }, quests: { done: 21, total: 212 } },
-      unlocks: 2,
-      recent: ['B', 'A'],
-    });
-    const quest = snapshot({ ...after, quests: { done: 22, total: 212 } });
-    const second = nextWeekRecord(first, DISCORD_ID, after, quest, [], 9);
-    expect(second).toMatchObject({ since: 5, base: first!.base, unlocks: 2, now: { quests: { done: 22, total: 212 } } });
-    const many = Array.from({ length: 12 }, (_, index) => ({ text: `U${index}`, at: 100 + index }));
-    expect(nextWeekRecord(second, DISCORD_ID, quest, quest, many, 9)!.recent).toEqual(
-      ['U11', 'U10', 'U9', 'U8', 'U7', 'U6', 'U5', 'U4', 'U3', 'U2']);
   });
 
   it('makes link codes from the unambiguous alphabet and reads them back however they were typed', () => {
@@ -263,54 +227,6 @@ describe('Fate relay shared progress', () => {
         snapshot: next,
         newUnlocks: [{ text: 'Unlocked Lava Maze', at: 1_790_000_100_000 }],
       });
-    });
-
-    it('sends the map from before the publish and starts the run\'s week record', async () => {
-      (env as Record<string, unknown>).DISCORD_EVENTS_URL = EVENTS_URL;
-      await publish(env, snapshot({ map: 'A'.repeat(272) }));
-      const issued = await call(env, `/p/${RUN}/link-code`, { method: 'POST', headers: { Authorization: `Bearer ${TOKEN}` } });
-      await bot(env, 'POST', await issued.json());
-      const next = snapshot({ map: 'B'.repeat(272), recent: [{ text: 'Unlocked Lava Maze', at: 1_790_000_100_000 }, ...snapshot().recent] });
-      await republish(next);
-
-      expect(JSON.parse(sent[0].init.body as string)).toMatchObject({ previousMap: 'A'.repeat(272), snapshot: { map: 'B'.repeat(272) } });
-      expect(JSON.parse(kv.records.get(`wk:${RUN}`)!)).toMatchObject({ discordId: DISCORD_ID, unlocks: 1, recent: ['Unlocked Lava Maze'] });
-    });
-
-    const recap = async () => {
-      const waits: Promise<unknown>[] = [];
-      await worker.scheduled({} as never, env as never, { waitUntil: (work: Promise<unknown>) => waits.push(work) } as never);
-      await Promise.all(waits);
-    };
-
-    it('sends every linked run\'s week in one weekly recap, then starts a new week', async () => {
-      (env as Record<string, unknown>).DISCORD_EVENTS_URL = EVENTS_URL;
-      await linkRun();
-      await republish(snapshot({ recent: [{ text: 'Unlocked Lava Maze', at: 1_790_000_100_000 }, ...snapshot().recent] }));
-      kv.records.set('wk:BBBBBBBBBBBBBBBBBBBBBB', JSON.stringify({ discordId: '999999999999999999', since: 1, unlocks: 3 }));
-      sent = [];
-
-      await recap();
-      expect(sent).toHaveLength(1);
-      const body = JSON.parse(sent[0].init.body as string);
-      expect(body).toMatchObject({ type: 'recap', runners: [{ discordId: DISCORD_ID, unlocks: 1, recent: ['Unlocked Lava Maze'] }] });
-      expect(body.runners).toHaveLength(1);
-      expect(body.from).toBeLessThanOrEqual(body.to);
-      expect([...kv.records.keys()].filter(key => key.startsWith('wk:'))).toEqual([]);
-
-      sent = [];
-      await recap();
-      expect(sent).toHaveLength(0);
-    });
-
-    it('keeps the week for next time when the bot does not take the recap', async () => {
-      (env as Record<string, unknown>).DISCORD_EVENTS_URL = EVENTS_URL;
-      await linkRun();
-      await republish(snapshot({ recent: [{ text: 'Unlocked Lava Maze', at: 1_790_000_100_000 }, ...snapshot().recent] }));
-      vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 502 })));
-      vi.spyOn(console, 'error').mockImplementation(() => undefined);
-      await recap();
-      expect(kv.records.has(`wk:${RUN}`)).toBe(true);
     });
 
     it('sends nothing for an unlinked run, without an events URL, or after /unlink', async () => {

@@ -14,19 +14,11 @@ import { QUEST_DATA } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import type { LogEntry, UnlockState } from '../types';
 import { completedCAPoints, earnedCATiers } from './caProgress';
-import { ALL_CHUNKS } from './chunkAdjacency';
-import { chunkUnlocked } from './chunkLocations';
 import { simpleHash } from './integrity';
 import { runProgress } from './runProgress';
 import { tableDisplayName } from './tableDisplay';
 
 export const MAX_RECENT_UNLOCKS = 5;
-
-/**
- * The world map grid the snapshot's `map` covers: the tracker's map image,
- * chunks 15..62 west to east and 65..32 north to south (utils/mapCoords.ts).
- */
-export const MAP_GRID = { minCx: 15, maxCy: 65, cols: 48, rows: 34 } as const;
 
 export interface ProgressSnapshot {
   v: 1;
@@ -47,25 +39,6 @@ export interface ProgressSnapshot {
   ca: { points: number; tier: string | null };
   /** The newest unlocks, newest first. */
   recent: { text: string; at: number }[];
-  /**
-   * The land chunks the run owns, for the bot's map picture: one bit per
-   * MAP_GRID cell, row by row from the north-west corner, low bit first, in
-   * base64. Present on every snapshot this tracker builds.
-   */
-  map?: string;
-}
-
-/** The `map` field for the chunks `owned` says the run has. */
-export function encodeChunkMap(owned: (cx: number, cy: number) => boolean): string {
-  const bytes = new Uint8Array(Math.ceil((MAP_GRID.cols * MAP_GRID.rows) / 8));
-  for (const { cx, cy } of ALL_CHUNKS) {
-    const col = cx - MAP_GRID.minCx;
-    const row = MAP_GRID.maxCy - cy;
-    if (col < 0 || col >= MAP_GRID.cols || row < 0 || row >= MAP_GRID.rows || !owned(cx, cy)) continue;
-    const bit = row * MAP_GRID.cols + col;
-    bytes[bit >> 3] |= 1 << (bit & 7);
-  }
-  return btoa(String.fromCharCode(...bytes));
 }
 
 export interface ProgressSource {
@@ -124,6 +97,5 @@ export function buildProgressSnapshot(source: ProgressSource): ProgressSnapshot 
     },
     ca: { points: caPoints, tier: caTiers.length > 0 ? caTiers[caTiers.length - 1] : null },
     recent,
-    map: encodeChunkMap((cx, cy) => chunkUnlocked(cx, cy, unlocks, gameModeId)),
   };
 }
