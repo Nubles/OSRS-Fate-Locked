@@ -19,14 +19,25 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-08-minigame-keys',
+    id: '2026-10-09-minigame-keys',
     title: 'Minigames Hold a Few Keys Each',
-    date: '2026-10-08',
+    date: '2026-10-09',
     sections: {
       balance: [
         'In Vanilla, minigames now work like bosses. Each minigame you’ve unlocked holds a few Keys at falling odds and stops rolling once it has paid them all. Quick ones like Rat Pits or Gnome Ball hold 1 Key at 10%. Standard ones like Pest Control or Guardians of the Rift hold 2 Keys at 20% then 10%. Long ones like Barbarian Assault or Hallowed Sepulchre hold 2 Keys at 30% then 15%.',
         'Farm Keys → Activities now lists your unlocked minigames by name, each showing how many Keys it has paid. A minigame you haven’t unlocked no longer rolls, and every minigame starts with its full stash, including on runs already under way.',
         'Chunked runs keep rolling every finished minigame at 10%, with no limit.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-09-forgotten-cemetery-routes',
+    title: 'More Ways Into the Forgotten Cemetery',
+    date: '2026-10-09',
+    sections: {
+      fixed: [
+        'Owning the Forgotten Cemetery and the Dark Warriors’ Fortress now counts as a way there, so the Ankou Diary task shows as doable. Since the last map update the open Wilderness just south of the cemetery belongs to the Dark Warriors’ Fortress, and the cemetery hadn’t caught up.',
+        'Dareeyak Teleport also counts as a way into the Forgotten Cemetery: it lands at the ruins just south of it.',
       ],
     },
   },

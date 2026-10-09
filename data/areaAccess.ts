@@ -146,10 +146,12 @@ export const AREA_ENTRY_ROUTES: Readonly<Record<string, readonly AreaEntryRoute[
     },
   ],
 
-  // The cemetery's only walking links go north to Chaos Altar, east to the
-  // Wilderness Bandit Camp and south into unnamed Wilderness. Its area also
-  // holds the Dareeyak Ruins (46,57), where Dareeyak Teleport and the Trollheim
-  // shortcut land; neither is listed as a route yet. The level-27 obelisk is in
+  // The cemetery's walking links go north to Chaos Altar, east to the
+  // Wilderness Bandit Camp and south to the Dark Warriors' Fortress, whose
+  // area holds the open Wilderness at 46,56 since the 8 October map update.
+  // Its area also holds the Dareeyak Ruins (46,57), where Dareeyak Teleport
+  // lands. The Trollheim shortcut lands on a strip of 46,57 the walking graph
+  // joins only to Trollheim, so it isn't listed. The level-27 obelisk is in
   // the Bandit Camp, so it adds no route of its own.
   'Forgotten Cemetery': [
     {
@@ -166,6 +168,18 @@ export const AREA_ENTRY_ROUTES: Readonly<Record<string, readonly AreaEntryRoute[
     {
       label: 'Walk in from the Wilderness Bandit Camp',
       regions: ['Wilderness Bandit Camp'],
+      source: 'https://oldschool.runescape.wiki/w/The_Forgotten_Cemetery?oldid=15266153',
+    },
+    {
+      label: "Walk in from the Dark Warriors' Fortress",
+      regions: ["Dark Warriors' Fortress"],
+      source: 'https://oldschool.runescape.wiki/w/The_Forgotten_Cemetery?oldid=15266153',
+    },
+    {
+      label: 'Dareeyak Teleport (Ancient Magicks), then walk north',
+      arcana: ['Ancient Magicks'],
+      skills: { Magic: 78 },
+      quests: ['Desert Treasure I'],
       source: 'https://oldschool.runescape.wiki/w/The_Forgotten_Cemetery?oldid=15266153',
     },
   ],

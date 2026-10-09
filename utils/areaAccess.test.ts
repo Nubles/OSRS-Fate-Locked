@@ -3,6 +3,7 @@ import { AREA_ENTRY_ROUTES, areaEntryDependencies, type AreaEntryRoute } from '.
 import { canonicalAreaName } from '../data/areaMapPolicy';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DIARY_DATA } from '../data/diaryData';
+import WALKING_GRAPH from '../data/questWalkingGraph.json';
 import { QUEST_DATA } from '../data/questData';
 import { ARCANA_LIST, EQUIPMENT_SLOTS, MOBILITY_LIST, REGION_GROUPS, REGIONS_LIST, SKILLS_LIST } from '../data/items';
 import { TableType, type UnlockState } from '../types';
@@ -112,11 +113,11 @@ describe('reaching an owned island or enclave for a diary task (Vanilla)', () =>
     expect(choice).toMatchObject({
       kind: 'alternative',
       label: 'Forgotten Cemetery or Wilderness Slayer Cave entrance',
-      blockerKinds: ['arcana', 'skill', 'region'],
+      blockerKinds: ['arcana', 'skill', 'region', 'quest'],
     });
     const routes = choice.kind === 'alternative' ? choice.routes : [];
     // Each way into the cemetery, then each chunk with a way into the cave.
-    expect(routes.slice(0, 3)).toEqual([
+    expect(routes.slice(0, 5)).toEqual([
       {
         label: 'Forgotten Cemetery, via Cemetery Teleport (Arceuus spell or tablet)',
         travel: 'Forgotten Cemetery',
@@ -135,15 +136,29 @@ describe('reaching an owned island or enclave for a diary task (Vanilla)', () =>
         travel: 'Forgotten Cemetery',
         blockers: [{ kind: 'region', label: 'Wilderness Bandit Camp' }],
       },
+      {
+        label: "Forgotten Cemetery, via Walk in from the Dark Warriors' Fortress",
+        travel: 'Forgotten Cemetery',
+        blockers: [{ kind: 'region', label: "Dark Warriors' Fortress" }],
+      },
+      {
+        label: 'Forgotten Cemetery, via Dareeyak Teleport (Ancient Magicks), then walk north',
+        travel: 'Forgotten Cemetery',
+        blockers: [
+          { kind: 'arcana', label: 'Ancient Magicks' },
+          { kind: 'skill', label: 'Magic 78', requirement: { type: 'single', skill: 'Magic', level: 78 } },
+          { kind: 'quest', label: 'Desert Treasure I' },
+        ],
+      },
     ]);
-    expect(routes[3]).toEqual({
+    expect(routes[5]).toEqual({
       label: 'Wilderness Slayer Cave entrance, via Chaos Temple · Wilderness (50, 57)',
       blockers: [{ kind: 'region', label: 'Chaos Temple' }],
     });
     // The northern entrance, by the Bone Yard, opens with Chaos Temple too.
-    expect(routes[4].label).toBe('Wilderness Slayer Cave entrance, via Chaos Temple · Wilderness (51, 58)');
-    expect(routes[4].blockers).toContainEqual({ kind: 'region', label: 'Chaos Temple' });
-    expect(routes).toHaveLength(5);
+    expect(routes[6].label).toBe('Wilderness Slayer Cave entrance, via Chaos Temple · Wilderness (51, 58)');
+    expect(routes[6].blockers).toContainEqual({ kind: 'region', label: 'Chaos Temple' });
+    expect(routes).toHaveLength(7);
     expect(diaryTaskCompletionDecision(ankou, cemeteryOnly, 'vanilla', { manualConfirmed: true })).toEqual({
       ok: false, reason: 'Requires: Forgotten Cemetery or Wilderness Slayer Cave entrance',
     });
@@ -152,6 +167,10 @@ describe('reaching an owned island or enclave for a diary task (Vanilla)', () =>
       { arcana: ['Arceuus Spellbook'], skills: { Magic: 8 }, levels: { Magic: 71 } },
       { regions: ['Forgotten Cemetery', 'Chaos Altar'] },
       { regions: ['Forgotten Cemetery', 'Wilderness Bandit Camp'] },
+      // A player reported this one: since the 8 October map update the open
+      // Wilderness south of the cemetery belongs to the Dark Warriors' Fortress.
+      { regions: ['Forgotten Cemetery', "Dark Warriors' Fortress"] },
+      { arcana: ['Ancient Magicks'], skills: { Magic: 8 }, levels: { Magic: 78 }, quests: ['Desert Treasure I'] },
       // A player confirmed that an Ankou in the Slayer Cave completes the task.
       { regions: ['Chaos Temple'] },
     ]) {
@@ -423,6 +442,48 @@ describe('the reviewed entry routes', () => {
       finished.add(area);
     };
     for (const area of areas) visit(area, []);
+  });
+
+  it('lists a walk in from every neighbouring area the walking graph joins it to', () => {
+    // A player found the Ankou task blocked with the Forgotten Cemetery and the
+    // land south of it owned: the 8 October map update gave that land to the
+    // Dark Warriors' Fortress, and the cemetery's routes still called it
+    // unnamed Wilderness. Map changes that give an entry-routed area a new
+    // walking neighbour now fail here until a route or a reason is added.
+    const NOT_A_WAY_IN: Record<string, Record<string, string>> = {
+      'Ship Yard': {
+        'Tai Bwo Wannai': "The yard's sections join only the DKP strip, covered by the fairy ring route.",
+        'Shilo Village': "The yard's sections join only the DKP strip, covered by the fairy ring route.",
+        'Kharazi Jungle': 'The jungle reaches only the land south of the yard fence.',
+      },
+      'Forgotten Cemetery': { Burthorpe: 'The graph joins Trollheim only to a strip of 46,57 apart from the cemetery; the one-way Agility shortcut is not a route here.' },
+      Crandor: { Witchaven: 'Sea between Crandor and the Fishing Platform chunk; after Dragon Slayer I only the volcano reaches it.' },
+      Neitiznot: { Jatizso: 'No bridge between the islands; The Fremennik Isles always ferries through Rellekka.' },
+      Jatizso: { Neitiznot: 'No bridge between the islands; The Fremennik Isles always ferries through Rellekka.' },
+    };
+    const nodes = (WALKING_GRAPH as { nodes: Record<string, { chunk: string; edges: { to: string }[] }> }).nodes;
+    const areaOf = (key: string) => {
+      const [cx, cy] = key.split(',').map(Number);
+      const place = placeOf(cx, cy);
+      return place.subArea ?? place.region;
+    };
+    const missing: string[] = [];
+    for (const [area, routes] of Object.entries(AREA_ENTRY_ROUTES)) {
+      const walksFrom = new Set(routes.flatMap(route => [...(route.regions ?? []), ...(route.anyOfRegions ?? [])]));
+      for (const node of Object.values(nodes)) {
+        for (const { to } of node.edges) {
+          const next = nodes[to];
+          if (!next) continue;
+          for (const [here, there] of [[node.chunk, next.chunk], [next.chunk, node.chunk]]) {
+            const neighbour = areaOf(there);
+            if (areaOf(here) !== area || !neighbour || neighbour === area) continue;
+            if (walksFrom.has(neighbour) || NOT_A_WAY_IN[area]?.[neighbour]) continue;
+            missing.push(`${area} <- ${neighbour} (${there} -> ${here})`);
+          }
+        }
+      }
+    }
+    expect([...new Set(missing)]).toEqual([]);
   });
 
   it('covers only areas diary tasks need, and never an area a diary location chunk lies in', () => {
