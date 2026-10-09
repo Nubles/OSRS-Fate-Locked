@@ -8,7 +8,3 @@ compatibility_date = "2024-11-01"
 [[kv_namespaces]]
 binding = "RELAY"
 id = "f225f7fa3c294e98a942d89ff50e07fa"
-
-# The Discord bot's weekly recap (worker.js sendWeeklyRecap): Sundays, 18:00 UTC.
-[triggers]
-crons = ["0 18 * * SUN"]

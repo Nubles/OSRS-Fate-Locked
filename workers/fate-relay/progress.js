@@ -16,8 +16,6 @@ export const LINK_CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 export const MAX_RECENT_UNLOCKS = 5;
 
 const MAX_COUNT = 1_000_000;
-// The snapshot's chunk map: 48 x 34 bits (utils/progressSnapshot.ts MAP_GRID) in base64.
-const CHUNK_MAP_RE = /^[A-Za-z0-9+/]{272}$/;
 
 const object = value => (value !== null && typeof value === 'object' && !Array.isArray(value) ? value : null);
 
@@ -64,7 +62,6 @@ export function validProgressSnapshot(body) {
   if (record.rulesTag !== undefined && !(typeof record.rulesTag === 'string' && /^R-[0-9A-F]{4,8}$/.test(record.rulesTag))) return null;
   if (record.account !== undefined && !text(record.account, 32)) return null;
   if (record.startedAt !== undefined && !timestamp(record.startedAt)) return null;
-  if (record.map !== undefined && !(typeof record.map === 'string' && CHUNK_MAP_RE.test(record.map))) return null;
 
   return {
     v: 1,
@@ -79,7 +76,6 @@ export function validProgressSnapshot(body) {
     diaryTasks,
     ca: { points: ca.points, tier: ca.tier },
     recent,
-    ...(record.map !== undefined ? { map: record.map } : {}),
   };
 }
 
@@ -109,49 +105,4 @@ export function newUnlocksSince(previous, next) {
   if (!previous || !Array.isArray(previous.recent)) return [];
   const seen = previous.recent.reduce((latest, entry) => Math.max(latest, entry.at), 0);
   return next.recent.filter(entry => entry.at > seen).reverse();
-}
-
-/** How long a linked run's week record lasts if the weekly recap never collects it. */
-export const WEEK_TTL_SECONDS = 21 * 86400;
-/** Unlock names a week record keeps, newest first. */
-export const WEEK_MAX_UNLOCKS = 10;
-/** Runners one weekly recap covers, so it stays inside the Worker's KV limits. */
-export const RECAP_MAX_RUNNERS = 200;
-
-const weekCounts = snapshot => ({
-  areas: { unlocked: snapshot.areas.unlocked, total: snapshot.areas.total },
-  quests: { done: snapshot.quests.done, total: snapshot.quests.total },
-});
-
-/**
- * A linked run's week so far, for the Discord bot's weekly recap, after a
- * publish: the counts it started the week with, how many unlocks it made,
- * the newest of their names and its counts now. Null when the publish
- * changed nothing the recap shows (no unlock and no quest), so a quiet
- * publish costs no KV write.
- */
-export function nextWeekRecord(record, discordId, previous, snapshot, newUnlocks, now) {
-  const questsMoved = Boolean(previous) && previous.quests?.done !== snapshot.quests.done;
-  if (newUnlocks.length === 0 && !questsMoved) return null;
-  return {
-    discordId,
-    since: record?.since ?? now,
-    mode: snapshot.mode,
-    base: record?.base ?? weekCounts(previous ?? snapshot),
-    now: weekCounts(snapshot),
-    unlocks: (record?.unlocks ?? 0) + newUnlocks.length,
-    recent: [...newUnlocks.map(entry => entry.text).reverse(), ...(record?.recent ?? [])].slice(0, WEEK_MAX_UNLOCKS),
-  };
-}
-
-/** What the recap sends the bot for one run's week. */
-export function recapRunner(record) {
-  return {
-    discordId: record.discordId,
-    mode: record.mode,
-    unlocks: record.unlocks,
-    recent: record.recent,
-    base: record.base,
-    now: record.now,
-  };
 }

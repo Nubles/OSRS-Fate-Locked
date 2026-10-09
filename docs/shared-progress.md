@@ -34,22 +34,6 @@ beside each `l:<discordId>` link; links made before it existed gain it the
 next time the bot reads them. With `DISCORD_EVENTS_URL` unset, nothing is
 sent.
 
-The summary's `map` holds the land chunks the run owns, one bit per cell of
-the tracker's 48 x 34 chunk grid (`MAP_GRID` in `utils/progressSnapshot.ts`),
-so the bot can draw the run's map. The relay adds the previous summary's map
-as `previousMap`, which lets the bot light up the chunks a publish opened.
-
-## Weekly recap
-
-Each linked publish that adds unlocks or quests also updates a week record,
-`wk:<run id>`: the counts the run started the week with, its unlock count,
-its newest unlock names and its counts now. A cron trigger (`wrangler.toml`,
-Sundays 18:00 UTC) sends every record whose run is still linked to the same
-Discord user to `DISCORD_EVENTS_URL` as one `{type: "recap", from, to,
-runners}` call, then deletes them, so the next week starts fresh. If the bot
-doesn't take it, the records stay and the next recap covers both weeks.
-Records expire after 21 days.
-
 **Stop sharing** deletes the summary from the relay. The Discord link stays
 until the player runs `/unlink`; meanwhile `/progress` says the run isn't
 shared. An unrefreshed summary expires after 90 days.
