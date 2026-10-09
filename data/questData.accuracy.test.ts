@@ -4724,7 +4724,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Lumbridge"
+          "Lumbridge",
+          "Yanille",
+          "Tree Gnome Stronghold"
         ],
         "locations": null,
         "skills": {
@@ -4734,7 +4736,21 @@ describe('audited current quest requirements', () => {
         "prereqs": [
           "Cook's Assistant"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "regions": [
+              "Port Sarim"
+            ],
+            "merchants": [
+              "Magic Shops"
+            ]
+          },
+          {
+            "merchants": [
+              "Herblore Shops"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Novice)"

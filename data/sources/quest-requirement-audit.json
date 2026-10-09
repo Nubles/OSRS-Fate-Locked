@@ -3022,7 +3022,7 @@
       "id": "Gertrude's Cat",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-10-09",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Gertrude's_Cat&oldid=15240971",
         "revision": 15240971,
@@ -3030,7 +3030,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":53}],\"id\":\"west-varrock\",\"label\":\"Gertrude's house in west Varrock\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"varrock-square\",\"label\":\"Varrock square\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"lumber-yard\",\"label\":\"Lumber Yard\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":53}],\"id\":\"west-varrock\",\"label\":\"Gertrude's house in west Varrock\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"varrock-square\",\"label\":\"Varrock square\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"lumber-yard\",\"label\":\"Lumber Yard\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[],\"merchants\":[\"Fishing Shops\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "49,53",
@@ -3050,7 +3050,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Gertrude's Cat were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Gertrude's Cat were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-09 (player report): Fishing Shops. The raw sardine is sold by Gerrant's Fishy Business and other fishing shops, and catching one needs fishing bait, which only fishing shops sell outside rare drops and one Kastori spawn."
         ],
         "travel": [
           "The fixed search route is represented by west Varrock, Varrock square, and the Lumber Yard chunks."
@@ -5912,7 +5913,7 @@
       "id": "RFD: The Cook",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-09",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FAnother_Cook's_Quest&oldid=15241017",
         "revision": 15241017,
@@ -5920,11 +5921,12 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lumbridge\"],\"skills\":{\"Cooking\":10},\"prereqs\":[\"Cook's Assistant\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lumbridge\",\"Yanille\",\"Tree Gnome Stronghold\"],\"skills\":{\"Cooking\":10},\"prereqs\":[\"Cook's Assistant\"],\"oneOf\":[{\"merchants\":[\"Magic Shops\"],\"regions\":[\"Port Sarim\"]},{\"merchants\":[\"Herblore Shops\"]}],\"merchants\":[\"Bars & Inns\",\"Vegetable Shops\",\"Food Shops\"],\"points\":1}",
       "chunkEvidence": [],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for RFD: The Cook were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for RFD: The Cook were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Accuracy review 2026-10-09 (player report): the cook's items need their shops. Greenman's ale is sold at the Dragon Inn bar in Yanille (Bars & Inns); the rotten tomato at a Pelters' Veg Stall or the Shop of Distaste (Vegetable Shops); the fruit blast from Hudo's fruit and the cocktail gear in the Gnome Stronghold (Food Shops); the eye of newt from Betty's Magic Emporium in Port Sarim (Magic Shops) or a herblore shop (Herblore Shops). Brewing Greenman's ale is left out."
         ],
         "travel": [
           "Compatibility-preserved opening chapter evidence starts the parent route in Lumbridge; its ingredients may be obtained beforehand.",

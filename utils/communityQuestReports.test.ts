@@ -95,3 +95,31 @@ describe('Doable tab and Quests tab agree on owned areas no route reaches (playe
     expect(row.lockedAreas).toContain('No route to Tree Gnome Stronghold');
   });
 });
+
+describe('shop-only quest items (player report, 9 October 2026)', () => {
+  const blockerLabels = (id: string, unlocks: UnlockState) =>
+    evaluateQuestEligibility(QUEST_DATA[id], unlocks, 'vanilla').blockers.map(blocker => blocker.label);
+
+  it('asks Gertrude\'s Cat for Fishing Shops, for the sardine or its bait', () => {
+    const unlocks: UnlockState = { ...account(), regions: ['Varrock'] };
+    expect(blockerLabels('Gertrude\'s Cat', unlocks)).toContain('Fishing Shops');
+    expect(evaluateQuestEligibility(QUEST_DATA['Gertrude\'s Cat'], { ...unlocks, merchants: ['Fishing Shops'] }, 'vanilla').eligible)
+      .toBe(true);
+  });
+
+  it('asks the start of Recipe for Disaster for the shops and places of the cook\'s items', () => {
+    const ready: UnlockState = {
+      ...account(), skills: { Cooking: 1 }, levels: { Cooking: 10 }, quests: ['Cook\'s Assistant'],
+      regions: ['Lumbridge', 'Yanille', 'Tree Gnome Stronghold'],
+      merchants: ['Bars & Inns', 'Vegetable Shops', 'Food Shops', 'Herblore Shops'],
+    };
+    expect(evaluateQuestEligibility(QUEST_DATA['RFD: The Cook'], ready, 'vanilla').eligible).toBe(true);
+    expect(blockerLabels('RFD: The Cook', { ...ready, regions: ['Lumbridge'], merchants: [] }))
+      .toEqual(expect.arrayContaining(['Yanille', 'Tree Gnome Stronghold', 'Bars & Inns', 'Vegetable Shops', 'Food Shops']));
+    expect(evaluateQuestEligibility(QUEST_DATA['RFD: The Cook'], { ...ready, merchants: ['Bars & Inns', 'Vegetable Shops', 'Food Shops'] }, 'vanilla').eligible)
+      .toBe(false);
+    expect(evaluateQuestEligibility(QUEST_DATA['RFD: The Cook'], {
+      ...ready, regions: [...ready.regions, 'Port Sarim'], merchants: ['Bars & Inns', 'Vegetable Shops', 'Food Shops', 'Magic Shops'],
+    }, 'vanilla').eligible).toBe(true);
+  });
+});

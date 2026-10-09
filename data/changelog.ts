@@ -20,13 +20,15 @@ export interface ChangelogRelease {
 export const CHANGELOG_RELEASES = [
   {
     id: '2026-10-09-new-player-reports',
-    title: 'Pet Fish, A Soul’s Bane and the Doable Tab',
+    title: 'Quest and Diary Fixes From Player Reports',
     date: '2026-10-09',
     sections: {
       fixed: [
         'The Kandarin Easy pet fish task now needs what Harry asks for: Fishing Shops for the tiny net, 10 Fishing, and a fishbowl, from 42 Crafting or from Mogres after Skippy and the Mogres with 32 Slayer.',
         'A Soul’s Bane needs a Weapon slot, as the rage room makes you wield its weapons.',
         'Diary tasks you can do now say Can do now, and a way in you don’t need is no longer drawn as a lock. The Falador Easy strut repair counts from the Dwarven Mine entrance in Falador, so it showed as available while its Motherlode Mine chip looked locked.',
+        'Gertrude’s Cat needs Fishing Shops, as the raw sardine, or the bait to catch one, comes from a fishing shop.',
+        'The start of Recipe for Disaster needs the shops and places for the cook’s items: Yanille’s Dragon Inn (Bars & Inns) for the Greenman’s ale, Vegetable Shops for the rotten tomato, the Gnome Stronghold’s Food Shops for the fruit blast, and Betty in Port Sarim (Magic Shops) or Herblore Shops for the eye of newt.',
         'The Doable tab no longer lists quests in an owned area no route reaches, such as The Ribbiting Tale and Enter the Abyss. It now agrees with the Quests tab and files them under Locked.',
       ],
     },

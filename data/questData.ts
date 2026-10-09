@@ -656,6 +656,9 @@ export const QUEST_DATA: Record<string, QuestData> = {
       LOCATIONS.lumberYard,
     ],
     skills: {}, prereqs: [], points: 1,
+    // The raw sardine: an ironman buys it, or the bait to catch it, from a
+    // fishing shop such as Gerrant's Fishy Business.
+    merchants: ['Fishing Shops'],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Legends\' Quest': {
@@ -1079,8 +1082,15 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'RFD: The Cook': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'RFD: The Cook', name: 'RFD: Start (The Cook)',
-    regions: ['Lumbridge'],
+    // The cook's items, for an ironman: Greenman's ale from the Dragon Inn bar
+    // in Yanille, a rotten tomato from a Pelters' Veg Stall or the Shop of
+    // Distaste, the fruit blast from Hudo's fruit and the cocktail gear in
+    // the Gnome Stronghold, and an eye of newt from Betty in Port Sarim or a
+    // herblore shop.
+    regions: ['Lumbridge', 'Yanille', 'Tree Gnome Stronghold'],
     skills: { 'Cooking': 10 }, prereqs: ['Cook\'s Assistant'], points: 1, series: 'Recipe for Disaster',
+    merchants: ['Bars & Inns', 'Vegetable Shops', 'Food Shops'],
+    oneOf: [{ regions: ['Port Sarim'], merchants: ['Magic Shops'] }, { merchants: ['Herblore Shops'] }],
     difficulty: DropSource.QUEST_NOVICE
   },
   'RFD: Dwarf': {
