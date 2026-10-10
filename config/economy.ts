@@ -106,18 +106,24 @@ export const isSkillChaosMilestone = (level: number): boolean =>
 // Crafting/Prayer/Thieving/Farming), not a freebie.
 export const XTREME_MILESTONE_INTERVAL = 50; // total-level gap between guaranteed keys
 
-// Chunked mode pays a guaranteed Key for total level all game. A chunk run has
-// no Misthalin to lean on: quests span several chunks, Slayer masters and clue
-// routes are far away, so levels are nearly its only income, and a Skills
-// tier pays back less than one Key until about level 30. The October 2026
-// simulation (200 runs per rule set) had every run stuck within 5 chunks under
-// the old Key-every-25-levels-on-the-start-chunk rule, and none stuck with a
-// Key every 5 levels plus Skills rolls limited to trainable skills
-// (utils/chunkedSkillPool.ts). Over a maxed account that is about 440 Keys,
-// roughly the extra land Chunked sells (624 chunks against 178 areas).
-// A new run counts from its starting total; a run from before the change
-// counts from its total at its first level-up after it.
-export const CHUNKED_MILESTONE_INTERVAL = 5; // total-level gap between guaranteed keys
+// Chunked mode is the same anti-softlock problem, worse: the frontier can be
+// a single ~64x64-tile chunk with barely any trainable resources at all (vs.
+// Xtreme's whole 6-chunk Lumbridge). Same deterministic-key mechanic, gated
+// on gameModeId === 'chunked' && unlocks.chunks.length === 0 (still on the
+// free start chunk, nothing rolled yet), but a tighter interval since the
+// training footprint is so much smaller. A new run's first key comes at total
+// 50; runs that chose Chunked before SET_GAME_MODE counted the start (the
+// 24 September 2026 release) were paid their first key on the first level-up.
+export const CHUNKED_MILESTONE_INTERVAL = 25; // total-level gap between guaranteed keys
+
+// Chunked Breakthrough: when a skill reaches the cap of its tier and the run's
+// chunks can train its next tier, fate rolls once (per skill, per tier) to open
+// that tier. Fate's Mercy: when a Chunked run has no Keys of any kind and every
+// skill its chunks can train is capped, fate draws one random neighbouring
+// chunk or trainable skill tier. Nothing is guaranteed and the player never
+// picks what opens. October 2026 simulation (200 runs from Lumbridge Castle):
+// no run stuck, with Mercy needed about 14 times over an 80-chunk run.
+export const BREAKTHROUGH_CHANCE = 0.5;
 
 // ── Earning ──────────────────────────────────────────────────────────────────
 export type EarnCategory =
@@ -327,7 +333,7 @@ export const KEY_TYPES: KeyTypeInfo[] = [
       'Any successful roll, wherever you log it (+1, or +2 with the Ritual of Greed).',
       'A Pity Key when Fate Points hit your mode’s threshold.',
       'A won Void Gambit.',
-      `Chunked: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels, all game.`,
+      `Chunked: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels while you hold only your start chunk.`,
       `The ${STARTING_KEYS} every run starts with.`,
     ],
     spend: 'Spend it on a table you choose to unlock a random entry from it.',

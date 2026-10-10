@@ -19,12 +19,15 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-09-chunked-keys',
-    title: 'Chunked Runs Keep Earning Keys',
-    date: '2026-10-09',
+    id: '2026-10-10-chunked-fate',
+    title: 'Fate Keeps Chunked Runs Moving',
+    date: '2026-10-10',
     sections: {
+      added: [
+        'Breakthroughs in Chunked: when a skill reaches the cap of its tier, and your chunks can train it at the next tier, you get one 50% roll to open that tier. Roll it from the Keys screen. Win or lose, each skill gets one roll per tier.',
+        'Fate’s Mercy in Chunked: if you have no Keys of any kind, every skill you can train is capped, every Breakthrough is rolled and no quest in your chunks is doable, Call on Fate draws one neighbouring chunk or skill tier for you. Fate picks it, not you.',
+      ],
       balance: [
-        'In Chunked, every 5 total levels now gives a guaranteed Key for the whole run. It used to be every 25 levels, and only while you held just your start chunk. Runs already under way count from where they stand now.',
         'A Skills Key in Chunked now only rolls a skill your chunks can train at the levels it opens, so it can’t hand you Sailing while you stand in Lumbridge Castle. Skills are still rolled with Keys, tier by tier.',
       ],
     },

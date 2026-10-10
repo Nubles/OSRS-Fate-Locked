@@ -311,17 +311,13 @@ export interface GameState {
    * key economy for any other mode.
    */
   xtremeMilestoneClaimed?: number;
-  /**
-   * Legacy Chunked insurance (a Key every 25 total levels while on the start
-   * chunk), kept so older saves round-trip. Superseded by chunkedLevelKeysClaimed.
-   */
+  /** Same insurance as xtremeMilestoneClaimed, for the 'chunked' mode — see CHUNKED_MILESTONE_INTERVAL. */
   chunkedMilestoneClaimed?: number;
   /**
-   * Chunked: how many CHUNKED_MILESTONE_INTERVAL steps of total level have paid
-   * their guaranteed Key, all game. Absent on Chunked runs from before October
-   * 2026; their first level-up after the change counts from where they stand.
+   * Chunked Breakthroughs already rolled: skill -> the tier its last roll was
+   * for (utils/chunkedFate.ts). One roll per skill per tier, won or lost.
    */
-  chunkedLevelKeysClaimed?: number;
+  chunkedBreakthroughs?: Record<string, number>;
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

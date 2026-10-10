@@ -11,11 +11,12 @@ import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
-// Raised 226 -> 230 in October 2026 on purpose: Chunked's Skills rolls need
-// data/chunkSkillNodes.ts (about 3 kB gzip) inside the synchronous roll engine,
-// where a lazy load could change a seeded roll's pool.
-// 230 rather than 229 leaves a little room for other PRs that land alongside it.
-export const ENTRY_GZIP_BUDGET_KB = 230;
+// Raised 226 -> 231 in October 2026 on purpose: Chunked's Skills rolls,
+// Breakthroughs and Fate's Mercy need data/chunkSkillNodes.ts (about 3 kB gzip)
+// inside the synchronous roll engine and reducer, where a lazy load could
+// change a seeded roll's pool. The build is about 229.6 kB; 231 leaves a
+// little room for PRs that land alongside it.
+export const ENTRY_GZIP_BUDGET_KB = 231;
 
 /** The entry script that dist/index.html loads, as a path inside distDir. */
 export const entryScriptPath = (distDir, indexHtml) => {
