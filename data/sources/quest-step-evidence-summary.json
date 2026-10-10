@@ -4,8 +4,8 @@
   "sources": {
     "chunkPicker": {
       "repository": "source-chunk/chunk-picker-v2",
-      "commit": "fa71ed3b207e6a501444987dee23b875ec27cacd",
-      "sha256": "C66BB47E4978B3F41115573EA825391E26E0A458B9D93903A4FA0DFF9AF5C48C"
+      "commit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
+      "sha256": "81E1A4740E9B1B5E6C5F7E1DBF682003FCB17E7D8CF0FE9B9EE20FFF672EC878"
     },
     "questHelper": {
       "repository": "Zoinkwiz/quest-helper",
@@ -15,7 +15,7 @@
     },
     "chunkRuntime": {
       "version": 9,
-      "sha256": "6b2acdb6ff2c66611d498e3627c83d0d169438b0c18ad2b68271d23b9af05f8a"
+      "sha256": "b3dbe8e578de7145a8b3f08521628aa388f329ba8ef926b1e1c692f6cb0411f2"
     }
   },
   "counts": {
@@ -4855,6 +4855,6 @@
       "coverage": "STATIC_PARTIAL"
     }
   ],
-  "catalogueSha256": "49c72c9261268a8fd430852cfe389f3e73317293753c9b792a3aa132a7a27c7b",
+  "catalogueSha256": "ecdfab7c538a979422990a3e46c25d4afb46db9954ac3e555bf4070a76420efb",
   "catalogueBytes": 49102183
 }

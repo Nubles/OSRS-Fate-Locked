@@ -19,6 +19,20 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-10-chunk-picker-october',
+    title: 'Map Content Brought Up to Date With October',
+    date: '2026-10-10',
+    sections: {
+      changed: [
+        'The chunk content behind the map and the RuneLite plugin now matches the Chunk Picker data from 7 October. The areas you own, what they cost and how you reach them are unchanged.',
+        'Emissary Ascended at the Twilight Temple now shows as a monster you can fight, with its own drops, instead of a plain NPC.',
+        'Pete Kayer now shows in the Ferox Enclave’s chunk information.',
+        'The four Hunter shops (Aleck’s Hunter Emporium, Elder Strom’s Hunting Stall, Imia’s Supplies and the Nardah Hunter Shop) now list the new net trap among their stock.',
+        'Goblins list Energy potion(3) among their drops.',
+      ],
+    },
+  },
+  {
     id: '2026-10-09-pandemonium-route',
     title: 'Pandemonium and the Shipyard Open the Way You Reach Them',
     date: '2026-10-09',

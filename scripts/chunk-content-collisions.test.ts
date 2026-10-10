@@ -64,7 +64,7 @@ describe('pinned normalized chunk-source collisions', () => {
     expect(collisions.reduce((count, [, rows]) => count + rows.length, 0)).toBe(132);
     expect(impacted).toHaveLength(51);
     expect(impacted.reduce((count, [, rows]) => count + rows.length, 0)).toBe(115);
-    expect(lostItems).toHaveLength(537);
+    expect(lostItems).toHaveLength(538);
 
     const result = transformChunkContent(data, manifest);
     const missing = dropRows.flatMap((row) => {
