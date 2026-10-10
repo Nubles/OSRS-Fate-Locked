@@ -10,6 +10,10 @@
 - App: **212** quest entries (includes miniquests / sub-quests, so a higher number is expected).
 - Watch the wiki total: an increase means a new quest was released — add it to `data/questData.ts`.
 
+### Quest list by name
+
+- Every quest and miniquest on the Wiki's Quests/List is in the app, and the app has none the list lacks.
+
 ## Combat Achievements
 
 | Tier | Wiki | App | Δ |
@@ -30,6 +34,10 @@ _diary content is flagged on manual review._
 
 - App: **492** diary tasks across **48** region/tier groups.
 
+## Map and chunk content
+
+- The Chunk Picker export the tracker reads has changed since the reviewed pin in `data/sources/chunk-content-source.json`. Review it for new areas, shops, monsters or quest locations, then re-pin (see docs/CONTENT_SYNC.md).
+
 ## Action needed
 
-- ✅ Nothing — all tracked counts are consistent.
+- ⚠️ Chunk Picker: the export has changed since the reviewed pin — review it for map or chunk content changes and re-pin.

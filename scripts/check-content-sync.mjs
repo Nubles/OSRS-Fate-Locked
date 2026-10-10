@@ -73,22 +73,6 @@ async function wikiCaTasks() {
   return tasks;
 }
 
-// Rows on the Wiki's all-achievements Diary table (the source of
-// data/sources/achievement-diary-tasks.json), for a drift count.
-async function wikiDiaryRowCount() {
-  const j = await api({ action: 'parse', page: 'Achievement Diary/All achievements', prop: 'text' });
-  const html = j.parse.text['*'];
-  let rows = 0;
-  for (const table of html.matchAll(/<table\b([^>]*)>([\s\S]*?)<\/table>/g)) {
-    const bodyRows = [...table[2].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)].filter(row => /<td\b/.test(row[1]));
-    const header = cellText((table[2].match(/<th\b[^>]*>([\s\S]*?)<\/th>/) ?? [])[1] ?? '').slice(0, 40);
-    console.log(`  diary table: ${table[1].trim().slice(0, 80)} | first header "${header}" | ${bodyRows.length} rows`);
-    if (/wikitable/.test(table[1])) rows += bodyRows.length;
-  }
-  if (!rows) throw new Error('no diary rows found');
-  return rows;
-}
-
 // What moved upstream since the Chunk Picker pin: whether the pinned export
 // file itself changed (the only file the tracker reads) and the commit titles.
 async function chunkSourceChanges({ pinnedCommit, latestCommit }) {
@@ -201,17 +185,7 @@ export function buildReport({ quests, cas, diaries, questNames = undefined, chun
   lines.push('_App-side counts are tracked here so accidental data loss shows up; genuinely new_');
   lines.push('_diary content is flagged on manual review._', '');
   const diaryTotal = Object.values(diaries.app).reduce((a, b) => a + b, 0);
-  lines.push(`- App: **${diaryTotal}** diary tasks across **${Object.keys(diaries.app).length}** region/tier groups.`);
-  if (diaries.wiki !== undefined) {
-    if (Number.isFinite(diaries.wiki)) {
-      lines.push(`- Wiki (Achievement Diary/All achievements): **${diaries.wiki}** task rows.`);
-      if (diaries.wiki !== diaryTotal) actions.push(`Achievement Diaries: wiki ${diaries.wiki} task rows, app ${diaryTotal} — refresh data/sources/achievement-diary-tasks.json and run npm run diary:sync.`);
-    } else {
-      lines.push('- (Wiki diary rows unavailable this run.)');
-      unavailable.push('Achievement Diary Wiki rows unavailable; retry the content check');
-    }
-  }
-  lines.push('');
+  lines.push(`- App: **${diaryTotal}** diary tasks across **${Object.keys(diaries.app).length}** region/tier groups.`, '');
 
   if (chunkSource !== undefined) {
     lines.push('## Map and chunk content', '');
@@ -247,7 +221,6 @@ async function main() {
 
   try { quests.wiki = await wikiQuestCounts(); } catch (e) { console.warn('[content:check] quest counts failed:', e.message); }
   try { cas.wiki = await wikiCaCounts(); } catch (e) { console.warn('[content:check] CA counts failed:', e.message); }
-  try { diaries.wiki = await wikiDiaryRowCount(); } catch (e) { diaries.wiki = null; console.warn('[content:check] diary rows failed:', e.message); }
   if (cas.wiki && CA_TIERS.some(tier => cas.wiki[tier] !== cas.app[tier])) {
     try {
       const live = await wikiCaTasks();
@@ -259,7 +232,6 @@ async function main() {
   let questNames = null;
   try { questNames = await questListDrift(); } catch (e) { console.warn('[content:check] quest list failed:', e.message); }
   if (questNames) console.log(`[content:check] Quests/List rows: ${questNames.liveCounts.quests} quests, ${questNames.liveCounts.miniquests} miniquests; new ${questNames.liveOnly.length}, missing ${questNames.runtimeMissing.length}`);
-  if (Number.isFinite(diaries.wiki)) console.log(`[content:check] diary rows wiki=${diaries.wiki}`);
   let chunkSource = null;
   try { chunkSource = await checkChunkSourceDrift(); } catch (e) { console.warn('[content:check] Chunk Picker check failed:', e.message); }
   if (chunkSource?.moved) {

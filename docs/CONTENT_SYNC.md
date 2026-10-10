@@ -50,7 +50,7 @@ Two scheduled jobs keep the bundled data current. Neither touches `main`.
    tab). The Wiki's API is only reachable from GitHub's runners, so this is
    where the exact checks happen: it syncs the collection log, re-renders the
    Combat Achievements, and writes `docs/SYNC_STATUS.md` with the quest list
-   by name, Combat Achievement and Diary counts, and whether the Chunk Picker
+   by name, Combat Achievement counts, and whether the Chunk Picker
    export has moved past its pin. Then it runs the tests; failures are not a
    gate, they are the curation to-do list (a new pet fails `data/pets.test.ts`
    until it is wired in). When anything changed it force-pushes the result to

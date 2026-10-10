@@ -59,13 +59,6 @@ describe('content-sync report builder', () => {
     expect(actions).toEqual(expect.arrayContaining([expect.stringContaining('"A New Quest"')]));
   });
 
-  it('compares the Wiki diary row count with the app', () => {
-    const drift = buildReport({ ...base, cas: { app: {}, wiki: {} }, diaries: { app: { 'Ardougne Easy': 10 }, wiki: 11 } });
-    expect(drift.actions).toEqual(expect.arrayContaining([expect.stringContaining('Achievement Diaries: wiki 11')]));
-    const same = buildReport({ ...base, cas: { app: {}, wiki: {} }, diaries: { app: { 'Ardougne Easy': 10 }, wiki: 10 } });
-    expect(same.actions).toEqual([]);
-  });
-
   it('confirms the quest list when every row is in the app', () => {
     const { actions, markdown } = buildReport({
       ...base,
