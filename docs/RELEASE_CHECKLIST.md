@@ -20,7 +20,11 @@ separate operation.
 2. For every player-facing change, add a newest-first entry to
    `data/changelog.ts`, then run `npm run changelog:verify`. Tests,
    documentation, workflows, and maintainer-only scripts are exempt when they
-   are the only files changed.
+   are the only files changed. Write it the way the comment at the top of
+   `data/changelog.ts` says: a short sentence-case title, one plain line per
+   bullet, no backstory, six bullets at most. Entries are posted to the
+   Discord's #updates channel as written, and `data/changelog.test.ts` checks
+   the limits.
 3. Run the full test suite.
 4. Run the TypeScript check.
 5. Run deterministic content verification.

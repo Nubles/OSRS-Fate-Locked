@@ -521,14 +521,10 @@ describe('deterministic current content baseline', () => {
       .join(' ');
 
     expect(wording).toContain('Draynor Village and South Falador Farm');
-    expect(wording).toContain('Recent quest skill, combat, prerequisite, and access requirements were refreshed');
-    expect(wording).toContain('492 current tasks');
-    expect(wording).toContain('646 current tasks, including the Maggot King');
-    expect(wording).toContain('cumulative points');
-    expect(wording).toContain('Exports now capture the run currently visible on screen.');
-    expect(wording).toContain('Malformed or oversized imports and backups are now rejected without overwriting progress.');
-    expect(wording).toContain('File imports, sync-code imports, and backup restores now report their real outcomes.');
-    expect(wording).toContain('Deleting a profile now also clears its local backups and profile-specific settings.');
+    expect(wording).toContain('492 Diary tasks');
+    expect(wording).toContain('646 Combat Achievements');
+    expect(wording).toContain('CA points adding up across tiers');
+    expect(wording).toContain('Broken imports are rejected without touching your progress');
     expect(wording).not.toMatch(/plugin|relay|balance/i);
   });
 
@@ -543,14 +539,10 @@ describe('deterministic current content baseline', () => {
       .map(note => typeof note === 'string' ? note : note.text)
       .join(' ');
 
-    expect(auditRelease.id).toBe('2026-07-28-quest-chunk-audit');
-    expect(wording).toMatch(/Witch's Potion[^.]*Rimmington/i);
-    expect(wording).toMatch(/Murder Mystery[^.]*Sinclair Mansion[^.]*Seers' Village/i);
-    expect(wording).toMatch(/190 quests and 19 miniquests[^.]*reviewed requirement evidence/i);
-    expect(wording).toMatch(/three[^.]*source discrepancies[^.]*documented[^.]*conservatively/i);
-    expect(wording).toMatch(/Chunk Picker[^.]*pinned[^.]*deterministic/i);
-    expect(wording).toMatch(/unmet machine requirements[^.]*manual confirmation/i);
-    expect(wording).toMatch(/rejected and repeated completions[^.]*extra rolls/i);
+    expect(wording).toMatch(/Witch’s Potion[^.]*Rimmington/i);
+    expect(wording).toMatch(/Murder Mystery[^.]*Sinclair Mansion[^.]*Seers’ Village/i);
+    expect(wording).toMatch(/190 quests and 19 miniquests[^.]*checked requirements/i);
+    expect(wording).toMatch(/extra rolls/i);
     expect(wording).toMatch(/Learning the Ropes/i);
     expect(wording).toMatch(/The Blood Moon Rises/i);
     expect(wording).not.toMatch(/inventory tracking|completion override|key rates?|Fate Points?|pity|balance changes?/i);
