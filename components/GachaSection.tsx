@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { TableType } from '../types';
 import { useGame } from '../context/GameContext';
 import { bankLocksActive, isAreaReachable } from '../utils/reachability';
@@ -13,6 +13,9 @@ import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDi
 import { andList, LEVEL_CHAOS_CHANCE, SKILL_CHAOS_MILESTONES } from '../config/economy';
 import { openDashboardPool } from '../utils/dashboardPoolNavigation';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, chunkLabel } from '../utils/chunkAdjacency';
+import { lazyWithRetry } from '../utils/lazyRetry';
+
+const ChunkedFatePanel = lazyWithRetry(() => import('./ChunkedFatePanel').then(m => ({ default: m.ChunkedFatePanel })));
 
 // --- Inner Components ---
 interface Accent {
@@ -292,6 +295,13 @@ export const GachaSection: React.FC = () => {
             </div>
         )}
       </div>
+
+      {/* Chunked: Breakthrough rolls and Fate's Mercy. */}
+      {isChunked && (
+        <Suspense fallback={null}>
+          <ChunkedFatePanel />
+        </Suspense>
+      )}
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2.5 custom-scrollbar content-start">

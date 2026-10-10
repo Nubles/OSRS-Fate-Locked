@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GAME_MODES, getGameMode } from './gameModes';
-import { CHUNKED_MILESTONE_INTERVAL } from './economy';
+import { BREAKTHROUGH_CHANCE, CHUNKED_MILESTONE_INTERVAL } from './economy';
 
 describe('the game modes a player can pick', () => {
   it('share the values the Rules page lists for both modes', () => {
@@ -20,6 +20,9 @@ describe('the game modes a player can pick', () => {
     expect(chunked.description).toMatch(/^One chunk at a time, as in Chunk Locked ironman\./);
     expect(chunked.description).toContain(
       `While you hold only your start chunk, every ${CHUNKED_MILESTONE_INTERVAL} total levels gives you a guaranteed Key.`,
+    );
+    expect(chunked.description).toContain(
+      `A skill at its cap gets one ${BREAKTHROUGH_CHANCE * 100}% Breakthrough roll to open its next tier`,
     );
     expect(chunked.description).not.toMatch(/Chunked Ironman|classic|documented/);
   });

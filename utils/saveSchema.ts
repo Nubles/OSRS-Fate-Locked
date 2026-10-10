@@ -1,6 +1,6 @@
 import { CUSTOM_RULE_BOUNDS, resolveModeRules, type GameModeRules } from '../config/gameModes';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
-import { EQUIPMENT_SLOTS, RETIRED_BOSSES, RETIRED_POH_ITEMS, RETIRED_STORAGE_ITEMS } from '../data/items';
+import { EQUIPMENT_SLOTS, SKILLS_LIST, RETIRED_BOSSES, RETIRED_POH_ITEMS, RETIRED_STORAGE_ITEMS } from '../data/items';
 import { migrateAreaUnlocks } from './areaUnlockMigration';
 import { mergedBankId, settleMergedBanks } from './bankUnlockMerges';
 import { settleCanonicalAreaUnlocks } from '../data/areaMapPolicy';
@@ -941,7 +941,7 @@ const TOP_LEVEL_KEYS = new Set([
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
   'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
-  'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'fateCompensation',
+  'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'chunkedBreakthroughs', 'fateCompensation',
   'petCompensation', 'petsClaimed', 'keysOwed',
 ]);
 
@@ -1244,6 +1244,18 @@ const normalizeState = (
     const checked = boundedInteger(readOwn(input, 'keysOwed'), 'keysOwed', 0, MAX_COUNTER);
     if (checked.ok === false) return checked;
     if (checked.value > 0) state.keysOwed = checked.value;
+  }
+  if (own(input, 'chunkedBreakthroughs')) {
+    const inspected = inspectRecord(readOwn(input, 'chunkedBreakthroughs'), null, 'invalid_field', 'chunkedBreakthroughs');
+    if (inspected.ok === false) return inspected;
+    const breakthroughs: Record<string, number> = {};
+    for (const skill of Object.getOwnPropertyNames(inspected.value)) {
+      if (!SKILLS_LIST.includes(skill)) return invalid('invalid_field', pathOf('chunkedBreakthroughs', skill));
+      const tier = boundedInteger(readOwn(inspected.value, skill), pathOf('chunkedBreakthroughs', skill), 2, 10);
+      if (tier.ok === false) return tier;
+      breakthroughs[skill] = tier.value;
+    }
+    if (Object.keys(breakthroughs).length > 0) state.chunkedBreakthroughs = breakthroughs;
   }
   for (const key of ['xtremeMilestoneClaimed', 'chunkedMilestoneClaimed'] as const) {
     const selected = readPreferred(input, defaultRecord, key);
