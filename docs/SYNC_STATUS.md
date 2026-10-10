@@ -36,8 +36,8 @@ _diary content is flagged on manual review._
 
 ## Map and chunk content
 
-- The Chunk Picker export the tracker reads has changed since the reviewed pin in `data/sources/chunk-content-source.json`. Review it for new areas, shops, monsters or quest locations, then re-pin (see docs/CONTENT_SYNC.md).
+- The Chunk Picker source has not moved since the reviewed pin.
 
 ## Action needed
 
-- ⚠️ Chunk Picker: the export has changed since the reviewed pin — review it for map or chunk content changes and re-pin.
+- ✅ Nothing — all tracked counts are consistent.
