@@ -59,6 +59,13 @@ describe('content-sync report builder', () => {
     expect(actions).toEqual(expect.arrayContaining([expect.stringContaining('"A New Quest"')]));
   });
 
+  it('compares the Wiki diary row count with the app', () => {
+    const drift = buildReport({ ...base, cas: { app: {}, wiki: {} }, diaries: { app: { 'Ardougne Easy': 10 }, wiki: 11 } });
+    expect(drift.actions).toEqual(expect.arrayContaining([expect.stringContaining('Achievement Diaries: wiki 11')]));
+    const same = buildReport({ ...base, cas: { app: {}, wiki: {} }, diaries: { app: { 'Ardougne Easy': 10 }, wiki: 10 } });
+    expect(same.actions).toEqual([]);
+  });
+
   it('confirms the quest list when every row is in the app', () => {
     const { actions, markdown } = buildReport({
       ...base,
@@ -77,6 +84,13 @@ describe('content-sync report builder', () => {
     });
     expect(moved.actions).toEqual(expect.arrayContaining([expect.stringContaining('Chunk Picker')]));
     expect(moved.markdown).not.toMatch(/bbb/);
+    const unchangedExport = buildReport({
+      ...base,
+      cas: { app: {}, wiki: {} },
+      chunkSource: { moved: true, exportChanged: false, pinnedCommit: 'aaa', latestCommit: 'bbb' },
+    });
+    expect(unchangedExport.actions).toEqual([]);
+    expect(unchangedExport.markdown).toMatch(/export the tracker reads is unchanged/);
     const unavailable = buildReport({ ...base, cas: { app: {}, wiki: {} }, chunkSource: null });
     expect(unavailable.status).toBe('UNKNOWN');
   });
