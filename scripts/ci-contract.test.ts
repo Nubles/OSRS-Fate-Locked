@@ -567,22 +567,26 @@ describe('release documentation contract', () => {
 });
 
 describe('content sync workflow contract', () => {
-  it('dispatches CI on the sync pull request it opens with GITHUB_TOKEN', async () => {
+  it('only ever pushes the bot branch, never main, and opens no pull request', async () => {
     const workflow = await readRepositoryFile('.github/workflows/sync-content.yml');
-    const permissionsBlock = yamlBlock(workflow, 'permissions');
 
-    // Pull requests opened with GITHUB_TOKEN start no workflows, so the sync
-    // must dispatch CI itself, on the branch its pull request uses.
-    expect(permissionsBlock).toMatch(/^\s{2}actions:\s*write\s*$/m);
-    expect(workflow).toMatch(/- name: Open or update the sync PR\n\s+id: cpr\n\s+if: success\(\)\n\s+uses: peter-evans\/create-pull-request@v6/);
-    expect(workflow).toMatch(/^\s+branch: bot\/wiki-content-sync\s*$/m);
-    expect(workflow).toMatch(
-      /- name: Run CI on the sync PR\n\s+if: success\(\) && \(steps\.cpr\.outputs\.pull-request-operation == 'created' \|\| steps\.cpr\.outputs\.pull-request-operation == 'updated'\)\n\s+env:\n\s+GH_TOKEN: \$\{\{ github\.token \}\}/,
-    );
-    expect(activeRunCommands(workflow).at(-1)).toBe(
-      'gh workflow run ci.yml --repo "${{ github.repository }}" --ref bot/wiki-content-sync',
-    );
-    expect(yamlBlock(await readRepositoryFile('.github/workflows/ci.yml'), 'on'))
-      .toMatch(/^\s{2}workflow_dispatch:\s*$/m);
+    // The weekly Claude routine opens the one draft pull request; this
+    // workflow only leaves the Wiki's answers on bot/wiki-content-sync.
+    expect(yamlBlock(workflow, 'permissions')).toMatch(/^\s{2}contents:\s*write\s*$/m);
+    expect(workflow).not.toMatch(/create-pull-request|gh pr create/);
+    const pushes = activeRunCommands(workflow).filter(command => /git push/.test(command));
+    expect(pushes.length).toBeGreaterThan(0);
+    for (const command of pushes) {
+      expect(command).toMatch(/bot\/wiki-content-sync/);
+      expect(command).not.toMatch(/\bmain\b/);
+    }
+  });
+
+  it('runs the morning after the Wednesday game update and lets tests report instead of gate', async () => {
+    const workflow = await readRepositoryFile('.github/workflows/sync-content.yml');
+
+    expect(workflow).toMatch(/cron: '0 5 \* \* 4'/);
+    expect(workflow).toMatch(/^\s{2}workflow_dispatch:/m);
+    expect(workflow).toMatch(/- name: Run tests[^\n]*\n\s+id: tests\n\s+continue-on-error: true/);
   });
 });

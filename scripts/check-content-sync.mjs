@@ -11,11 +11,17 @@
 // Robust signals (no fragile scraping):
 //   • Quests — the wiki's {{Globals|quests}} count variables (rendered via API).
 //   • Combat Achievements — per-tier `data-ca-task-id` rows on each tier page.
+//   • Quest names — the live Quests/List rows against data/questData.ts, so the
+//     report names a new quest or miniquest instead of only counting it.
+//   • Chunk Picker — whether the upstream branch has moved past the reviewed pin
+//     (map/chunk content changes arrive there).
 //   • Diaries — no clean wiki marker, so the app side is self-audited (diary
 //     content changes extremely rarely; new tasks are flagged on manual review).
 //
 // Run:  npm run content:check    (also part of `npm run content:sync`)
 import { readFileSync, writeFileSync } from 'node:fs';
+import { questListDrift } from './sync-quest-sources.mjs';
+import { checkChunkSourceDrift } from './chunk-source.mjs';
 
 const API = 'https://oldschool.runescape.wiki/api.php';
 const UA = { 'Api-User-Agent': 'FateLockedUIM/1.0 (content-sync detector)' };
@@ -72,7 +78,7 @@ function appDiaryCounts() {
 }
 
 // ---------- pure report builder (deterministic; unit-tested) --------------
-export function buildReport({ quests, cas, diaries }) {
+export function buildReport({ quests, cas, diaries, questNames, chunkSource }) {
   const lines = [];
   const actions = [];
   const unavailable = [];
@@ -94,6 +100,27 @@ export function buildReport({ quests, cas, diaries }) {
     unavailable.push('Quest Wiki counts unavailable; retry the content check');
   }
   lines.push('');
+
+  if (questNames !== undefined) {
+    lines.push('### Quest list by name', '');
+    if (questNames) {
+      if (!questNames.liveOnly.length && !questNames.runtimeMissing.length) {
+        lines.push('- Every quest and miniquest on the Wiki\'s Quests/List is in the app, and the app has none the list lacks.');
+      }
+      for (const row of questNames.liveOnly) {
+        lines.push(`- New on the Wiki: **${row.pageTitle}** (${row.kind}).`);
+        actions.push(`Quests: "${row.pageTitle}" (${row.kind}) is on the Wiki's Quests/List but not in data/questData.ts — add it with its requirements.`);
+      }
+      for (const id of questNames.runtimeMissing) {
+        lines.push(`- In the app but not on the Wiki list: **${id}**.`);
+        actions.push(`Quests: "${id}" is in data/questData.ts but no longer on the Wiki's Quests/List — check for a rename or removal.`);
+      }
+    } else {
+      lines.push('- (Quest list unavailable this run.)');
+      unavailable.push('Quest list by name unavailable; retry the content check');
+    }
+    lines.push('');
+  }
 
   // Combat Achievements
   lines.push('## Combat Achievements', '');
@@ -124,6 +151,20 @@ export function buildReport({ quests, cas, diaries }) {
   const diaryTotal = Object.values(diaries.app).reduce((a, b) => a + b, 0);
   lines.push(`- App: **${diaryTotal}** diary tasks across **${Object.keys(diaries.app).length}** region/tier groups.`, '');
 
+  if (chunkSource !== undefined) {
+    lines.push('## Map and chunk content', '');
+    if (chunkSource) {
+      lines.push(chunkSource.moved
+        ? '- The Chunk Picker source has new commits since the reviewed pin in `data/sources/chunk-content-source.json`. Review them for new areas, shops, monsters or quest locations, then re-pin (see docs/CONTENT_SYNC.md).'
+        : '- The Chunk Picker source has not moved since the reviewed pin.');
+      if (chunkSource.moved) actions.push('Chunk Picker: upstream has moved past the reviewed pin — review the new commits for map or chunk content changes.');
+    } else {
+      lines.push('- (Chunk Picker check unavailable this run.)');
+      unavailable.push('Chunk Picker drift check unavailable; retry the content check');
+    }
+    lines.push('');
+  }
+
   // Action summary
   lines.push('## Action needed', '');
   lines.push([...actions, ...unavailable].length ? [...actions, ...unavailable].map(a => `- ⚠️ ${a}`).join('\n') : '- ✅ Nothing — all tracked counts are consistent.');
@@ -141,8 +182,13 @@ async function main() {
 
   try { quests.wiki = await wikiQuestCounts(); } catch (e) { console.warn('[content:check] quest counts failed:', e.message); }
   try { cas.wiki = await wikiCaCounts(); } catch (e) { console.warn('[content:check] CA counts failed:', e.message); }
+  let questNames = null;
+  try { questNames = await questListDrift(); } catch (e) { console.warn('[content:check] quest list failed:', e.message); }
+  let chunkSource = null;
+  try { chunkSource = await checkChunkSourceDrift(); } catch (e) { console.warn('[content:check] Chunk Picker check failed:', e.message); }
+  if (chunkSource) console.log(`[content:check] Chunk Picker pinned=${chunkSource.pinnedCommit} upstream=${chunkSource.latestCommit}`);
 
-  const { markdown, actions, status } = buildReport({ quests, cas, diaries });
+  const { markdown, actions, status } = buildReport({ quests, cas, diaries, questNames, chunkSource });
   writeFileSync(new URL('../docs/SYNC_STATUS.md', import.meta.url), markdown);
 
   console.log('[content:check] wrote docs/SYNC_STATUS.md');
