@@ -77,9 +77,13 @@ async function wikiCaTasks() {
 // data/sources/achievement-diary-tasks.json), for a drift count.
 async function wikiDiaryRowCount() {
   const j = await api({ action: 'parse', page: 'Achievement Diary/All achievements', prop: 'text' });
+  const html = j.parse.text['*'];
   let rows = 0;
-  for (const table of j.parse.text['*'].matchAll(/<table\b[^>]*wikitable[^>]*>([\s\S]*?)<\/table>/g)) {
-    rows += [...table[1].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)].filter(row => /<td\b/.test(row[1])).length;
+  for (const table of html.matchAll(/<table\b([^>]*)>([\s\S]*?)<\/table>/g)) {
+    const bodyRows = [...table[2].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)].filter(row => /<td\b/.test(row[1]));
+    const header = cellText((table[2].match(/<th\b[^>]*>([\s\S]*?)<\/th>/) ?? [])[1] ?? '').slice(0, 40);
+    console.log(`  diary table: ${table[1].trim().slice(0, 80)} | first header "${header}" | ${bodyRows.length} rows`);
+    if (/wikitable/.test(table[1])) rows += bodyRows.length;
   }
   if (!rows) throw new Error('no diary rows found');
   return rows;
