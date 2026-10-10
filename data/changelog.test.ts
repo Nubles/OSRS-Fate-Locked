@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CHANGELOG_RELEASES,
   LATEST_CHANGELOG,
+  type ChangelogNote,
   type ChangelogSection,
 } from './changelog';
 import { LATEST_CHANGELOG_ID } from './changelogLatest';
@@ -791,5 +792,64 @@ describe('authored changelog releases', () => {
       'Dragon Claws now list Chambers of Xeric instead of Tormented Demons.',
       'Quest and diary recommendations now respect unlocked skill-method caps as well as recorded levels.',
     ]));
+  });
+});
+
+// The writing rules at the top of data/changelog.ts. Entries are read in the
+// app and in the Discord's #updates channel, so new ones stay short and plain.
+// Entries from before the rules keep their original wording.
+const STYLE_RULES_FROM = '2026-10-10';
+const styledReleases = CHANGELOG_RELEASES.filter((release) => release.date >= STYLE_RULES_FROM);
+const noteText = (note: ChangelogNote): string =>
+  typeof note === 'string' ? note : `${note.text} ${note.link.label}.`;
+const styledNotes = styledReleases.flatMap((release) =>
+  Object.values(release.sections).flatMap((notes) =>
+    (notes ?? []).map((note) => ({ id: release.id, text: noteText(note) })),
+  ),
+);
+
+describe('What’s New writing style', () => {
+  it('keeps titles short', () => {
+    const long = styledReleases
+      .filter((release) => release.title.length > 50)
+      .map((release) => `${release.id}: ${release.title} (${release.title.length})`);
+    expect(long).toEqual([]);
+  });
+
+  it('writes titles in sentence case, not Title Case', () => {
+    // Names are fine, so a title only fails when all its later words are capitalised.
+    const smallWords = /^(?:a|an|and|as|at|by|for|from|in|into|of|on|or|the|to|with)$/i;
+    const titleCase = styledReleases
+      .filter((release) => {
+        const words = release.title.split(/\s+/).slice(1).filter((word) => /^[A-Za-z]/.test(word) && !smallWords.test(word));
+        return words.length >= 3 && words.every((word) => /^[A-Z]/.test(word));
+      })
+      .map((release) => `${release.id}: ${release.title}`);
+    expect(titleCase).toEqual([]);
+  });
+
+  it('keeps each bullet to one short line', () => {
+    const long = styledNotes
+      .filter((note) => note.text.length > 160)
+      .map((note) => `${note.id}: ${note.text.length} characters`);
+    expect(long).toEqual([]);
+  });
+
+  it('keeps each release to six bullets at most', () => {
+    const crowded = styledReleases
+      .map((release) => ({
+        id: release.id,
+        count: Object.values(release.sections).reduce((total, notes) => total + (notes?.length ?? 0), 0),
+      }))
+      .filter((release) => release.count > 6)
+      .map((release) => `${release.id}: ${release.count} bullets`);
+    expect(crowded).toEqual([]);
+  });
+
+  it('skips the backstory and the em dashes', () => {
+    const flagged = styledNotes
+      .filter((note) => /—|\bBefore,|\bPreviously\b|\bseamless|\brobust\b|\bcomprehensive\b|\bstreamlined?\b|\bleverag/i.test(note.text))
+      .map((note) => `${note.id}: ${note.text}`);
+    expect(flagged).toEqual([]);
   });
 });

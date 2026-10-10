@@ -17,6 +17,24 @@ export interface ChangelogRelease {
   sections: Partial<Record<ChangelogSection, readonly ChangelogNote[]>>;
 }
 
+/*
+ * How to write a What's New entry. Players read these in the app and in the
+ * Discord's #updates channel, so write them like a person posting an update,
+ * not like release documentation. data/changelog.test.ts checks the limits on
+ * every entry dated on or after 2026-10-10; older entries keep their wording.
+ *
+ * - Title: a few words in normal sentence case, like a forum post subject.
+ *   "Pandemonium and the open sea", not "Pandemonium and the Shipyard Open
+ *   the Way You Reach Them". 50 characters at most.
+ * - One short line per bullet (160 characters at most) saying what changed
+ *   for the player. Lead with the thing they'll notice.
+ * - Skip the backstory: no "Before, it did X because Y", no how it was built.
+ * - Plain words and contractions ("you're", "doesn't"). No em dashes.
+ * - Six bullets at most. If there's more, keep what players will notice and
+ *   drop the rest.
+ * - Put the newest entry first and set LATEST_CHANGELOG_ID in
+ *   data/changelogLatest.ts to its id.
+ */
 export const CHANGELOG_RELEASES = [
   {
     id: '2026-10-10-chunk-picker-october',
