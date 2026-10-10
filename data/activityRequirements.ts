@@ -179,6 +179,13 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Rat Pits': { quests: ['Ratcatchers'] },
   'Vale Totems': { skills: { Fletching: 20 }, note: 'Vale Totems miniquest (Auburn Valley).' },
   'Barracuda Trials': { skills: { Sailing: 30 }, note: 'Trials at 30 / 55 / 72 Sailing; the 72 trial needs Regicide.' },
+  // Anyone can take the challenges; claiming the rewards needs 750 total level
+  // and the Easy Wilderness Diary (Jagex plans to drop the diary, Oct 2026).
+  "Pete Kayer's Challenges": {
+    totalLevel: 750,
+    oneOf: [{ diaries: ['Wilderness Easy'] }],
+    note: 'Pete Kayer at Ferox Enclave. The 750 total level and Easy Wilderness Diary are needed to claim rewards.',
+  },
   'Blast Furnace': { note: '60 Smithing to use free; under 60, pay a fee.' },
   'Nightmare Zone': {
     manualRequirements: ['Completed at least five quests with bosses eligible for Nightmare Zone'],
