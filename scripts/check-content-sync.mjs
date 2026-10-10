@@ -126,7 +126,7 @@ function appDiaryCounts() {
 }
 
 // ---------- pure report builder (deterministic; unit-tested) --------------
-export function buildReport({ quests, cas, diaries, questNames, chunkSource }) {
+export function buildReport({ quests, cas, diaries, questNames = undefined, chunkSource = undefined }) {
   const lines = [];
   const actions = [];
   const unavailable = [];

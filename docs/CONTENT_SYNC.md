@@ -13,7 +13,8 @@ and conditions whenever the pinned source or authored guide revision changes.
 
 The app **detects collection-log additions in the browser**, while changes to
 the playable catalogue ship through a reviewed build. A weekly repository
-workflow is configured to propose source updates as a pull request.
+workflow checks the Wiki and a weekly Claude routine turns what it finds into a
+draft pull request.
 
 ## The two layers
 
@@ -40,19 +41,27 @@ player's progress.
 Both additions to existing pages and brand-new pages require reviewed build-time
 updates before they become collectible slots.
 
-### 2. Automated repo sync — reviewed, then auto-deployed (everything)
+### 2. Weekly check, then a curated draft pull request
 
-`.github/workflows/sync-content.yml` runs weekly (and on demand). It re-runs the
-wiki sync, runs the **full test suite** (including the cross-data invariants),
-and opens a **pull request** with whatever the wiki changed. That pull request
-is opened with the workflow's `GITHUB_TOKEN`, which starts no other workflows,
-so the sync then dispatches the CI workflow on the pull request's branch; its
-checks appear on the pull request. A maintainer reviews and merges; the merge
-triggers the existing Deploy workflow and ships.
+Two scheduled jobs keep the bundled data current. Neither touches `main`.
 
-This is what bakes wiki changes into the committed bundle (so first-load is
-correct and names get the wiki's polished forms), and it's where anything that
-needs human curation surfaces as a reviewable diff instead of shipping blind.
+1. **`.github/workflows/sync-content.yml`** runs every Thursday at 05:00 UTC,
+   the morning after the Wednesday game update (and on demand from the Actions
+   tab). The Wiki's API is only reachable from GitHub's runners, so this is
+   where the exact checks happen: it syncs the collection log, re-renders the
+   Combat Achievements, and writes `docs/SYNC_STATUS.md` with the quest list
+   by name, Combat Achievement and Diary counts, and whether the Chunk Picker
+   export has moved past its pin. Then it runs the tests; failures are not a
+   gate, they are the curation to-do list (a new pet fails `data/pets.test.ts`
+   until it is wired in). When anything changed it force-pushes the result to
+   `bot/wiki-content-sync`, with the report as the commit message and the job
+   summary. When nothing changed it deletes that branch.
+2. **A weekly Claude routine** runs a few hours later. It reads that branch's
+   report and the week's game update notes on the Wiki, does the curation the
+   tests and notes call for (the boss, quest or minigame cascade, Diary or CA
+   snapshot updates, the Discord area guide, golden bundles), adds the What's
+   New entry and opens one draft pull request. A maintainer reviews and
+   merges; the merge deploys. Weeks with nothing to change open nothing.
 
 Run it locally any time:
 
@@ -226,15 +235,17 @@ wiki's own authoritative numbers next to the app's in **`docs/SYNC_STATUS.md`**:
 
 Because the report is **deterministic** (no timestamps), git only shows a diff
 when an upstream number actually moves — so the weekly workflow turns "a new
-quest/CA shipped" into a reviewable PR (`docs/SYNC_STATUS.md` is in its
-`add-paths`). A human then curates the real entry in `data/questData.ts` /
-`data/caTasks.ts`.
+quest/CA shipped" into a change on `bot/wiki-content-sync`, which the weekly
+routine curates into the real entry in `data/questData.ts` /
+`data/sources/combat-achievement-tasks.json`. When a CA tier drifts, the live
+Wiki rows are saved to `docs/sync-evidence/combat-achievements-live.json` so the
+new tasks can be copied exactly; delete that file once the snapshot is updated.
 
 > The detector originally surfaced that the app tracked only 223 of the wiki's
 > then-current 637 combat achievements; a reviewed snapshot refresh followed by
 > `ca:sync` backfilled the full set (now 655/655 in `SYNC_STATUS.md`). Adding another content type later follows the same pattern:
 > a `sync-*` script (if fully wiki-defined) or a detector entry, joining the same
-> weekly PR automatically.
+> weekly report automatically.
 
 ## Achievement Diary snapshot
 
