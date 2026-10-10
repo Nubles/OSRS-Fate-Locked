@@ -111,11 +111,17 @@ The reviewed Chunk Picker pin is recorded in
 repository, branch, commit, blob, byte count, and raw SHA-256. Never replace it
 with a moving branch response.
 
-The current September content pin is commit
-`fa71ed3b207e6a501444987dee23b875ec27cacd`, reviewed on 2026-09-21. Its
-immutable export is additionally identified by blob `8d14fdb3f2024a4068d2f742ea4cd274e071f10d`
-and raw SHA-256
-`C66BB47E4978B3F41115573EA825391E26E0A458B9D93903A4FA0DFF9AF5C48C`.
+The current October content pin is commit
+`629e9fee6183773e8df26d7e4bc5db792290ce0b` (the 7 October 2026 export), reviewed
+on 2026-10-10. Its immutable export is additionally identified by blob
+`dc55e978a90dd7eb913a187d544694618d0370a6` and raw SHA-256
+`81E1A4740E9B1B5E6C5F7E1DBF682003FCB17E7D8CF0FE9B9EE20FFF672EC878`.
+
+Cloud sessions cannot read `source-chunk/chunk-picker-v2` directly. For that
+re-pin the export was fetched by a one-off `workflow_dispatch` run on the work
+branch (GitHub's own runner downloaded the raw file at the exact commit and
+recorded its byte count, blob SHA-1 and SHA-256), then checked again locally by
+`node scripts/chunk-source.mjs --rewrite` before any output was regenerated.
 
 Interior records are retained separately in `public/chunk-content.json`, with
 their original IDs, entrance routes, and access requirements. Reviewed overrides
