@@ -7,7 +7,7 @@ describe('canonical area completion accounting', () => {
   it('pins physical-overlap area count in the global denominator', () => {
     expect(REGIONS_LIST).toHaveLength(178);
     expect(REGIONS_LIST).not.toContain('Elf Camp');
-    expect(COMPLETION_DENOMINATOR).toBe(972); // Spice Pouch retired from Storage (7 October 2026)
+    expect(COMPLETION_DENOMINATOR).toBe(973); // Pete Kayer's Challenges added to Minigames (10 October 2026)
   });
 
   it('does not award completion for pending overlap refund markers', () => {
