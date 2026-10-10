@@ -259,7 +259,7 @@
       "id": "A Tail of Two Cats",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Tail_of_Two_Cats&oldid=15276846",
         "revision": 15276846,
@@ -267,7 +267,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Burthorpe\",\"Varrock\",\"Sophanem\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the doctor's/nurse hat for the disguise\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the desert shirt/druid's robe top for the disguise\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear the desert robe/druid's robe for the disguise\",\"slot\":\"Legs\",\"tier\":1},{\"reason\":\"Wear the catspeak amulet\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"Icthlarin's Little Helper\"],\"oneOf\":[{\"merchants\":[\"Farming Shops\"]},{\"merchants\":[\"Vegetable Shops\"]},{\"skills\":{\"Thieving\":10}}],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Burthorpe\",\"Varrock\",\"Sophanem\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the doctor's/nurse hat for the disguise\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the desert shirt/druid's robe top for the disguise\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear the desert robe/druid's robe for the disguise\",\"slot\":\"Legs\",\"tier\":1},{\"reason\":\"Wear the catspeak amulet\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"Icthlarin's Little Helper\"],\"oneOf\":[{\"merchants\":[\"Farming Shops\"],\"skills\":{\"Cooking\":40}},{\"merchants\":[\"Farming Shops\"],\"skills\":{\"Thieving\":5}},{\"merchants\":[\"Vegetable Shops\"],\"quests\":[\"Barbarian Training\"],\"skills\":{\"Cooking\":40}},{\"merchants\":[\"Vegetable Shops\"],\"quests\":[\"Barbarian Training\"],\"skills\":{\"Thieving\":5}},{\"quests\":[\"Barbarian Training\"],\"skills\":{\"Thieving\":10}}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "45,55",
@@ -293,7 +293,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for A Tail of Two Cats were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for 4 potato seeds; Disguise and catspeak amulet, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for 4 potato seeds; Disguise and catspeak amulet, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Seed dibber; Chocolate cake, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The route crosses Asgarnia, Misthalin, and Sophanem in the Kharidian Desert while Bob's roaming search is non-fixed.",
@@ -424,7 +425,7 @@
       "id": "Animal Magnetism",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Animal_Magnetism&oldid=15327014",
         "revision": 15327014,
@@ -432,7 +433,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Draynor Village\",\"Burthorpe\",\"Fenkenstrain's Castle\",\"Port Phasmatys\",\"Rimmington\"],\"skills\":{\"Crafting\":19,\"Ranged\":30,\"Slayer\":18,\"Woodcutting\":35},\"equipmentRequirements\":[{\"reason\":\"Wear the ghostspeak amulet when speaking to the old crone\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"The Restless Ghost\",\"Ernest the Chicken\",\"Priest in Peril\"],\"oneOf\":[{\"skills\":{\"Smithing\":51}},{\"merchants\":[\"Axe Shops\"]}],\"merchants\":[\"Tanners\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Draynor Village\",\"Burthorpe\",\"Fenkenstrain's Castle\",\"Port Phasmatys\",\"Rimmington\"],\"skills\":{\"Crafting\":19,\"Ranged\":30,\"Slayer\":18,\"Woodcutting\":35},\"equipmentRequirements\":[{\"reason\":\"Wear the ghostspeak amulet when speaking to the old crone\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"The Restless Ghost\",\"Ernest the Chicken\",\"Priest in Peril\"],\"oneOf\":[{\"skills\":{\"Mining\":20,\"Smithing\":51}},{\"merchants\":[\"Silver Shops\"],\"skills\":{\"Smithing\":51}},{\"merchants\":[\"Axe Shops\"],\"skills\":{\"Mining\":20,\"Smithing\":20}},{\"merchants\":[\"Axe Shops\",\"Silver Shops\"]}],\"merchants\":[\"Tanners\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "45,55",
@@ -454,7 +455,8 @@
         "items": [
           "The pinned Wiki item requirements for Animal Magnetism were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
           "Fate equipment review 2026-09-22: Neck T1: Wear the ghostspeak amulet when speaking to the old crone. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged.",
-          "Item gate review 2026-10-09: gated for Mithril axe; Hard leather, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Mithril axe; Hard leather, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Holy symbol (silver bar), so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The route visits Draynor Manor, Taverley, and Port Phasmatys, represented by Misthalin, Asgarnia, and Morytania.",
@@ -1137,7 +1139,7 @@
       "id": "Cold War",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Cold_War&oldid=15271161",
         "revision": 15271161,
@@ -1145,7 +1147,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Rellekka\",\"East Ardougne\",\"Lumbridge\"],\"locations\":[{\"chunkOptions\":[{\"cx\":41,\"cy\":62}],\"id\":\"south-iceberg\",\"label\":\"South iceberg\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":41,\"cy\":63}],\"id\":\"north-iceberg\",\"label\":\"North iceberg\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Agility\":30,\"Construction\":34,\"Crafting\":30,\"Hunter\":10,\"Thieving\":15},\"prereqs\":[],\"oneOf\":[{\"merchants\":[\"Silk Shops\"],\"skills\":{\"Smithing\":34}},{\"merchants\":[\"Clothes Shops\"],\"skills\":{\"Smithing\":34}},{\"merchants\":[\"General Stores\"],\"skills\":{\"Smithing\":34}},{\"skills\":{\"Smithing\":34,\"Thieving\":20}},{\"merchants\":[\"Sawmill Operators\",\"Silk Shops\"]},{\"merchants\":[\"Sawmill Operators\",\"Clothes Shops\"]},{\"merchants\":[\"Sawmill Operators\",\"General Stores\"]},{\"merchants\":[\"Sawmill Operators\"],\"skills\":{\"Thieving\":20}}],\"manualRequirements\":[\"Access to a crafting table 3\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Rellekka\",\"East Ardougne\",\"Lumbridge\"],\"locations\":[{\"chunkOptions\":[{\"cx\":41,\"cy\":62}],\"id\":\"south-iceberg\",\"label\":\"South iceberg\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":41,\"cy\":63}],\"id\":\"north-iceberg\",\"label\":\"North iceberg\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Agility\":30,\"Construction\":34,\"Crafting\":30,\"Hunter\":10,\"Thieving\":15,\"Woodcutting\":50},\"prereqs\":[],\"oneOf\":[{\"merchants\":[\"Sawmill Operators\",\"Tanners\"],\"skills\":{\"Smithing\":34}},{\"merchants\":[\"Clothes Shops\"],\"skills\":{\"Smithing\":34}},{\"merchants\":[\"General Stores\"],\"skills\":{\"Smithing\":34}},{\"skills\":{\"Smithing\":34,\"Thieving\":20}},{\"merchants\":[\"Sawmill Operators\",\"Silk Shops\"]},{\"merchants\":[\"Sawmill Operators\",\"Clothes Shops\"]},{\"merchants\":[\"Sawmill Operators\",\"General Stores\"]},{\"merchants\":[\"Sawmill Operators\"],\"skills\":{\"Thieving\":20}}],\"manualRequirements\":[\"Access to a crafting table 3\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "41,62",
@@ -1171,7 +1173,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Cold War were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for 10 steel nails; Silk, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for 10 steel nails; Silk, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Oak and mahogany planks; Leather, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The route crosses Rellekka/Fremennik, Ardougne/Kandarin, and Lumbridge/Misthalin.",
@@ -1743,7 +1746,7 @@
       "id": "Desert Treasure I",
       "kind": "quest",
       "status": "unresolved",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Desert_Treasure_I&oldid=15350966",
         "revision": 15350966,
@@ -1751,7 +1754,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Bandit Camp\",\"Bedabin Camp\",\"Pollnivneach\",\"Entrana\",\"Burthorpe\",\"Baxtorian Falls\",\"Canifis\",\"Mort Myre Swamp\",\"Mountain Camp\",\"Digsite\",\"Draynor Village\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":45}],\"id\":\"jaldraocht-pyramid\",\"label\":\"Jaldraocht Pyramid\",\"standardAreas\":[\"Bandit Camp\"]}],\"skills\":{\"Firemaking\":50,\"Magic\":50,\"Slayer\":10,\"Thieving\":53},\"equipmentRequirements\":[{\"reason\":\"Wear a facemask/gas mask/slayer helmet in the Smoke Dungeon\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the ring of visibility for the Damis fight\",\"slot\":\"Ring\",\"tier\":1},{\"reason\":\"Wear ice gloves to fight Fareed\",\"slot\":\"Gloves\",\"tier\":1},{\"reason\":\"Wear spiked boots to climb the ice ledge\",\"slot\":\"Boots\",\"tier\":1}],\"prereqs\":[\"The Dig Site\",\"Temple of Ikov\",\"The Tourist Trap\",\"Troll Stronghold\",\"Priest in Peril\",\"Waterfall Quest\"],\"oneOf\":[{\"merchants\":[\"Spice Shops\"]},{\"merchants\":[\"Food Shops\"]},{\"merchants\":[\"General Stores\"]}],\"skillAlternatives\":[{\"manualRequirements\":[\"Have a gas mask from Plague City for the smoke dungeon (alternative to Slayer 10)\"],\"quests\":[\"Plague City\"],\"skill\":\"Slayer\"}],\"merchants\":[\"Claw Shops\"],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Bandit Camp\",\"Bedabin Camp\",\"Pollnivneach\",\"Entrana\",\"Burthorpe\",\"Baxtorian Falls\",\"Canifis\",\"Mort Myre Swamp\",\"Mountain Camp\",\"Digsite\",\"Draynor Village\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":45}],\"id\":\"jaldraocht-pyramid\",\"label\":\"Jaldraocht Pyramid\",\"standardAreas\":[\"Bandit Camp\"]}],\"skills\":{\"Firemaking\":50,\"Magic\":50,\"Slayer\":10,\"Smithing\":30,\"Thieving\":53},\"equipmentRequirements\":[{\"reason\":\"Wear a facemask/gas mask/slayer helmet in the Smoke Dungeon\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the ring of visibility for the Damis fight\",\"slot\":\"Ring\",\"tier\":1},{\"reason\":\"Wear ice gloves to fight Fareed\",\"slot\":\"Gloves\",\"tier\":1},{\"reason\":\"Wear spiked boots to climb the ice ledge\",\"slot\":\"Boots\",\"tier\":1}],\"prereqs\":[\"The Dig Site\",\"Temple of Ikov\",\"The Tourist Trap\",\"Troll Stronghold\",\"Priest in Peril\",\"Waterfall Quest\"],\"oneOf\":[{\"merchants\":[\"Spice Shops\"],\"skills\":{\"Woodcutting\":75}},{\"merchants\":[\"Spice Shops\"],\"regions\":[\"Wintertodt Camp\"],\"skills\":{\"Firemaking\":50}},{\"merchants\":[\"Food Shops\"],\"skills\":{\"Woodcutting\":75}},{\"merchants\":[\"Food Shops\"],\"regions\":[\"Wintertodt Camp\"],\"skills\":{\"Firemaking\":50}},{\"merchants\":[\"General Stores\"],\"skills\":{\"Woodcutting\":75}},{\"merchants\":[\"General Stores\"],\"regions\":[\"Wintertodt Camp\"],\"skills\":{\"Firemaking\":50}}],\"skillAlternatives\":[{\"manualRequirements\":[\"Have a gas mask from Plague City for the smoke dungeon (alternative to Slayer 10)\"],\"quests\":[\"Plague City\"],\"skill\":\"Slayer\"}],\"merchants\":[\"Claw Shops\"],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "39,53",
@@ -1812,7 +1815,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Desert Treasure I were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for Spice; 20-50+ lockpicks; Facemask, ring of visibility, ice gloves, spiked boots, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Spice; 20-50+ lockpicks; Facemask, ring of visibility, ice gloves, spiked boots, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for 12 magic logs; 6 steel bars, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The route crosses the desert, Asgarnia, Kandarin, Morytania, and Misthalin; Wilderness was not unavoidable in the pinned route.",
@@ -2023,7 +2027,7 @@
       "id": "Dragon Slayer II",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Dragon_Slayer_II&oldid=15270141",
         "revision": 15270141,
@@ -2031,7 +2035,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Draynor Village\",\"Varrock\",\"Falador\",\"Baxtorian Falls\",\"Corsair Cove\",\"Lunar Isle\",\"Rellekka\",\"Shayzien\",\"Crandor\",\"Kharazi Jungle\",\"Musa Point\",\"Sophanem\",\"Port Phasmatys\",\"Fossil Island\",\"Lithkren\",\"Mort Myre Swamp\",\"East Ardougne\"],\"locations\":[{\"chunkOptions\":[{\"cx\":35,\"cy\":63}],\"id\":\"ungael\",\"label\":\"Ungael\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Agility\":60,\"Construction\":50,\"Crafting\":62,\"Hitpoints\":50,\"Magic\":75,\"Mining\":68,\"Quest Points\":200,\"Smithing\":70,\"Thieving\":60},\"prereqs\":[\"Legends' Quest\",\"Dream Mentor\",\"A Tail of Two Cats\",\"Animal Magnetism\",\"Ghosts Ahoy\",\"Bone Voyage\",\"Client of Kourend\"],\"manualRequirements\":[\"Started the pyre ship portion of Barbarian Training\"],\"merchants\":[\"General Stores\"],\"points\":5}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Draynor Village\",\"Varrock\",\"Falador\",\"Baxtorian Falls\",\"Corsair Cove\",\"Lunar Isle\",\"Rellekka\",\"Shayzien\",\"Crandor\",\"Kharazi Jungle\",\"Musa Point\",\"Sophanem\",\"Port Phasmatys\",\"Fossil Island\",\"Lithkren\",\"Mort Myre Swamp\",\"East Ardougne\"],\"locations\":[{\"chunkOptions\":[{\"cx\":35,\"cy\":63}],\"id\":\"ungael\",\"label\":\"Ungael\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Agility\":60,\"Construction\":50,\"Crafting\":62,\"Hitpoints\":50,\"Magic\":75,\"Mining\":68,\"Quest Points\":200,\"Smithing\":70,\"Thieving\":60},\"prereqs\":[\"Legends' Quest\",\"Dream Mentor\",\"A Tail of Two Cats\",\"Animal Magnetism\",\"Ghosts Ahoy\",\"Bone Voyage\",\"Client of Kourend\"],\"oneOf\":[{\"skills\":{\"Runecraft\":40}},{\"merchants\":[\"Magic Shops\"]}],\"manualRequirements\":[\"Started the pyre ship portion of Barbarian Training\"],\"merchants\":[\"General Stores\"],\"points\":5}",
       "chunkEvidence": [
         {
           "chunkId": "24,55",
@@ -2122,7 +2126,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Dragon Slayer II were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for Machete, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Machete, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Astral rune, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The long route crosses the nine retained regions, including Karamja, the desert, Morytania, and island destinations.",
@@ -3129,7 +3134,7 @@
       "id": "Ghosts Ahoy",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Ghosts_Ahoy&oldid=15315208",
         "revision": 15315208,
@@ -3137,7 +3142,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Phasmatys\",\"Fenkenstrain's Castle\",\"Dragontooth Island\"],\"skills\":{\"Agility\":25,\"Cooking\":20},\"equipmentRequirements\":[{\"reason\":\"Wear the enchanted ghostspeak amulet to command Necrovarus\",\"slot\":\"Neck\",\"tier\":1},{\"reason\":\"Wear the bedsheet disguise to gather signatures\",\"slot\":\"Head\",\"tier\":1}],\"prereqs\":[\"Priest in Peril\",\"The Restless Ghost\"],\"oneOf\":[{\"skills\":{\"Fletching\":25}},{\"merchants\":[\"Archery Shops\"]}],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Phasmatys\",\"Fenkenstrain's Castle\",\"Dragontooth Island\"],\"skills\":{\"Agility\":25,\"Cooking\":20},\"equipmentRequirements\":[{\"reason\":\"Wear the enchanted ghostspeak amulet to command Necrovarus\",\"slot\":\"Neck\",\"tier\":1},{\"reason\":\"Wear the bedsheet disguise to gather signatures\",\"slot\":\"Head\",\"tier\":1}],\"prereqs\":[\"Priest in Peril\",\"The Restless Ghost\"],\"oneOf\":[{\"skills\":{\"Fletching\":25,\"Thieving\":20}},{\"merchants\":[\"Clothes Shops\"],\"skills\":{\"Fletching\":25}},{\"merchants\":[\"Silk Shops\"],\"skills\":{\"Fletching\":25}},{\"merchants\":[\"General Stores\"],\"skills\":{\"Fletching\":25}},{\"merchants\":[\"Archery Shops\"],\"skills\":{\"Thieving\":20}},{\"merchants\":[\"Archery Shops\",\"Clothes Shops\"]},{\"merchants\":[\"Archery Shops\",\"Silk Shops\"]},{\"merchants\":[\"Archery Shops\",\"General Stores\"]}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "54,55",
@@ -3159,7 +3164,8 @@
         "items": [
           "The pinned Wiki item requirements for Ghosts Ahoy were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
           "Fate equipment review 2026-09-22: Neck T1: Wear the enchanted ghostspeak amulet to command Necrovarus; Head T1: Wear the bedsheet disguise to gather signatures. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged.",
-          "Item gate review 2026-10-09: gated for Oak longbow, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Oak longbow, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Silk, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "Port Phasmatys, the Ectofuntus, and the mausoleum remain within Morytania.",
@@ -3918,7 +3924,7 @@
       "id": "Land of the Goblins",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Land_of_the_Goblins&oldid=15241061",
         "revision": 15241061,
@@ -3926,7 +3932,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hemenster\",\"Lumbridge\",\"Crafting Guild\",\"Draynor Village\"],\"skills\":{\"Agility\":38,\"Fishing\":40,\"Herblore\":48,\"Thieving\":45},\"equipmentRequirements\":[{\"reason\":\"Wear (dyed) goblin mail as a goblin disguise in the Goblin Temple\",\"slot\":\"Body\",\"tier\":1}],\"prereqs\":[\"Another Slice of H.A.M.\",\"Fishing Contest\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hemenster\",\"Lumbridge\",\"Crafting Guild\",\"Draynor Village\"],\"skills\":{\"Agility\":38,\"Fishing\":40,\"Herblore\":48,\"Thieving\":45},\"equipmentRequirements\":[{\"reason\":\"Wear (dyed) goblin mail as a goblin disguise in the Goblin Temple\",\"slot\":\"Body\",\"tier\":1}],\"prereqs\":[\"Another Slice of H.A.M.\",\"Fishing Contest\"],\"oneOf\":[{\"merchants\":[\"Dye Shops\"]},{\"merchants\":[\"Clothes Shops\"],\"regions\":[\"Lletya\"]},{\"regions\":[\"Falador\",\"Varrock\"]},{\"skills\":{\"Farming\":25}}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "45,51",
@@ -3942,7 +3948,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Land of the Goblins were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for Goblin mail (worn disguise), so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Goblin mail (worn disguise), so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Blue and red dyes, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The fixed route crosses Kandarin, Dorgesh-Kaan/Misthalin, and Goblin Village/Asgarnia.",
@@ -3986,7 +3993,7 @@
       "id": "Legends' Quest",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Legends'_Quest&oldid=15272434",
         "revision": 15272434,
@@ -3994,7 +4001,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Legends' Guild\",\"Kharazi Jungle\",\"Tai Bwo Wannai\"],\"skills\":{\"Agility\":50,\"Crafting\":50,\"Herblore\":45,\"Magic\":56,\"Mining\":52,\"Prayer\":42,\"Quest Points\":107,\"Smithing\":50,\"Strength\":50,\"Thieving\":50,\"Woodcutting\":50},\"prereqs\":[\"Family Crest\",\"Heroes' Quest\",\"Shilo Village\",\"Underground Pass\",\"Waterfall Quest\"],\"oneOf\":[{\"merchants\":[\"Magic Shops\"],\"skills\":{\"Smithing\":86}},{\"skills\":{\"Runecraft\":90,\"Smithing\":86}},{\"merchants\":[\"Axe Shops\",\"Magic Shops\"]},{\"merchants\":[\"Axe Shops\"],\"skills\":{\"Runecraft\":90}}],\"points\":4}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Legends' Guild\",\"Kharazi Jungle\",\"Tai Bwo Wannai\"],\"skills\":{\"Agility\":50,\"Crafting\":50,\"Herblore\":45,\"Magic\":56,\"Mining\":52,\"Prayer\":42,\"Quest Points\":107,\"Smithing\":50,\"Strength\":50,\"Thieving\":50,\"Woodcutting\":50},\"prereqs\":[\"Family Crest\",\"Heroes' Quest\",\"Shilo Village\",\"Underground Pass\",\"Waterfall Quest\"],\"oneOf\":[{\"merchants\":[\"Magic Shops\",\"Claw Shops\"],\"regions\":[\"Burthorpe\"],\"skills\":{\"Smithing\":86}},{\"merchants\":[\"Magic Shops\"],\"skills\":{\"Hunter\":22,\"Smithing\":86}},{\"merchants\":[\"Claw Shops\"],\"regions\":[\"Burthorpe\"],\"skills\":{\"Runecraft\":90,\"Smithing\":86}},{\"skills\":{\"Hunter\":22,\"Runecraft\":90,\"Smithing\":86}},{\"merchants\":[\"Axe Shops\",\"Magic Shops\",\"Claw Shops\"],\"regions\":[\"Burthorpe\"]},{\"merchants\":[\"Axe Shops\",\"Magic Shops\"],\"skills\":{\"Hunter\":22}},{\"merchants\":[\"Axe Shops\",\"Claw Shops\"],\"regions\":[\"Burthorpe\"],\"skills\":{\"Runecraft\":90}},{\"merchants\":[\"Axe Shops\"],\"skills\":{\"Hunter\":22,\"Runecraft\":90}}],\"points\":4}",
       "chunkEvidence": [
         {
           "chunkId": "42,52",
@@ -4030,7 +4037,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Legends' Quest were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for Rune, dragon or infernal axe; Soul rune, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Rune, dragon or infernal axe; Soul rune, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Lockpicks, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The Legends’ Guild route enters the Kharazi Jungle, requiring both Kandarin and Karamja.",
@@ -4087,7 +4095,7 @@
       "id": "Lunar Diplomacy",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-02",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Lunar_Diplomacy&oldid=15266897",
         "revision": 15266897,
@@ -4095,7 +4103,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lunar Isle\",\"Pirates' Cove\",\"Rellekka\"],\"skills\":{\"Crafting\":61,\"Defence\":40,\"Firemaking\":49,\"Herblore\":5,\"Magic\":65,\"Mining\":60,\"Woodcutting\":55},\"prereqs\":[\"The Fremennik Trials\",\"Lost City\",\"Rune Mysteries\",\"Shilo Village\"],\"oneOf\":[{\"locations\":[{\"chunkOptions\":[{\"cx\":46,\"cy\":51}],\"id\":\"air-altar\",\"label\":\"Air altar\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":50}],\"id\":\"fire-altar\",\"label\":\"Fire altar\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":49}],\"id\":\"water-altar\",\"label\":\"Water altar\",\"standardAreas\":[\"Lumbridge\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"earth-altar\",\"label\":\"Earth altar\",\"standardAreas\":[\"Varrock\"]}]},{\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":55}],\"id\":\"edgeville-ditch\",\"label\":\"Edgeville ditch\",\"standardAreas\":[\"Edgeville\"]}],\"quests\":[\"Enter the Abyss\"]}],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Lunar Isle\",\"Pirates' Cove\",\"Rellekka\"],\"skills\":{\"Crafting\":61,\"Defence\":40,\"Firemaking\":49,\"Herblore\":5,\"Magic\":65,\"Mining\":60,\"Woodcutting\":55},\"equipmentRequirements\":[{\"reason\":\"Equip the lunar helm to enter the Dream World\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Equip the lunar torso to enter the Dream World\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Equip the lunar legs to enter the Dream World\",\"slot\":\"Legs\",\"tier\":1},{\"reason\":\"Equip the lunar gloves to enter the Dream World\",\"slot\":\"Gloves\",\"tier\":1},{\"reason\":\"Equip the lunar boots to enter the Dream World\",\"slot\":\"Boots\",\"tier\":1},{\"reason\":\"Equip the lunar cape to enter the Dream World\",\"slot\":\"Cape\",\"tier\":1},{\"reason\":\"Equip the lunar amulet to enter the Dream World\",\"slot\":\"Neck\",\"tier\":1},{\"reason\":\"Equip the lunar ring to enter the Dream World\",\"slot\":\"Ring\",\"tier\":1},{\"reason\":\"Equip the lunar staff to enter the Dream World\",\"slot\":\"Weapon\",\"tier\":1}],\"prereqs\":[\"The Fremennik Trials\",\"Lost City\",\"Rune Mysteries\",\"Shilo Village\"],\"oneOf\":[{\"locations\":[{\"chunkOptions\":[{\"cx\":46,\"cy\":51}],\"id\":\"air-altar\",\"label\":\"Air altar\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":50}],\"id\":\"fire-altar\",\"label\":\"Fire altar\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":49}],\"id\":\"water-altar\",\"label\":\"Water altar\",\"standardAreas\":[\"Lumbridge\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"earth-altar\",\"label\":\"Earth altar\",\"standardAreas\":[\"Varrock\"]}]},{\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":55}],\"id\":\"edgeville-ditch\",\"label\":\"Edgeville ditch\",\"standardAreas\":[\"Edgeville\"]}],\"quests\":[\"Enter the Abyss\"]}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "32,60",
@@ -4135,7 +4143,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Lunar Diplomacy were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Lunar Diplomacy were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Lunar outfit and staff (worn), so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "Rellekka, Pirates’ Cove, Lunar Isle, and the dream instance remain covered by Fremennik; Herblore 5 is a listed requirement.",
@@ -4179,7 +4188,7 @@
       "id": "Mage Arena II",
       "kind": "miniquest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Mage_Arena_II&oldid=15274527",
         "revision": 15274527,
@@ -4187,11 +4196,12 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Mage Arena\"],\"skills\":{\"Magic\":75},\"prereqs\":[\"Mage Arena I\"],\"manualRequirements\":[\"Cast Claws of Guthix, Flames of Zamorak, and Saradomin Strike 100 times each inside the Mage Arena\",\"Access to all three assigned demonic follower locations in the Wilderness\"],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Mage Arena\"],\"skills\":{\"Magic\":75},\"equipmentRequirements\":[{\"reason\":\"Wield your god staff to cast the god spells\",\"slot\":\"Weapon\",\"tier\":1}],\"prereqs\":[\"Mage Arena I\"],\"manualRequirements\":[\"Cast Claws of Guthix, Flames of Zamorak, and Saradomin Strike 100 times each inside the Mage Arena\",\"Access to all three assigned demonic follower locations in the Wilderness\"],\"points\":0}",
       "chunkEvidence": [],
       "notes": {
         "items": [
-          "God staves, runes, and a web-cutting item are required but not machine-enforced."
+          "God staves, runes, and a web-cutting item are required but not machine-enforced.",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for God staff (wielded), so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The start, randomized follower spawns, kills, and hand-ins are all within the Wilderness; there is no pinned Chunk Picker first/step row."
@@ -4489,7 +4499,7 @@
       "id": "Monkey Madness I",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Monkey_Madness_I&oldid=15271778",
         "revision": 15271778,
@@ -4497,7 +4507,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tree Gnome Stronghold\",\"Ship Yard\",\"Ape Atoll\",\"East Ardougne\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wield monkey greegree to become a monkey\",\"slot\":\"Weapon\",\"tier\":1},{\"reason\":\"Wear M'speak amulet / 10th squad sigil\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"The Grand Tree\",\"Tree Gnome Village\"],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tree Gnome Stronghold\",\"Ship Yard\",\"Ape Atoll\",\"East Ardougne\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wield monkey greegree to become a monkey\",\"slot\":\"Weapon\",\"tier\":1},{\"reason\":\"Wear M'speak amulet / 10th squad sigil\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"The Grand Tree\",\"Tree Gnome Village\"],\"oneOf\":[{\"skills\":{\"Smithing\":40}},{\"quests\":[\"Goblin Diplomacy\"]},{\"quests\":[\"Waterfall Quest\"]},{\"quests\":[\"The Dig Site\"]}],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "42,43",
@@ -4528,7 +4538,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Monkey Madness I were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for Monkey greegree, M'speak amulet, 10th squad sigil (worn), so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Monkey greegree, M'speak amulet, 10th squad sigil (worn), so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Gold bar, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The route crosses Kandarin, the Karamja Ship Yard, and the Crash Island/Ape Atoll island chain.",
@@ -4543,7 +4554,7 @@
       "id": "Monkey Madness II",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Monkey_Madness_II&oldid=15272900",
         "revision": 15272900,
@@ -4551,7 +4562,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Ape Atoll\",\"Tree Gnome Stronghold\",\"Entrana\",\"Burthorpe\",\"Feldip Hills\"],\"skills\":{\"Agility\":55,\"Crafting\":70,\"Firemaking\":60,\"Hunter\":60,\"Slayer\":69,\"Thieving\":55},\"equipmentRequirements\":[{\"reason\":\"Equip M'speak amulet to talk to Garkor\",\"slot\":\"Neck\",\"tier\":1},{\"reason\":\"Wield greegree (ninja/gorilla, Kruk) to talk to Garkor and ride the rowboat\",\"slot\":\"Weapon\",\"tier\":1}],\"prereqs\":[\"Monkey Madness I\",\"Enlightened Journey\",\"The Eyes of Glouphrie\",\"Troll Stronghold\",\"Watchtower\",\"RFD: King Awowogei\"],\"manualRequirements\":[\"Unlocked the Gnome Stronghold balloon route\"],\"points\":4}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Ape Atoll\",\"Tree Gnome Stronghold\",\"Entrana\",\"Burthorpe\",\"Feldip Hills\"],\"skills\":{\"Agility\":55,\"Crafting\":70,\"Firemaking\":60,\"Hunter\":60,\"Slayer\":69,\"Thieving\":55},\"equipmentRequirements\":[{\"reason\":\"Equip M'speak amulet to talk to Garkor\",\"slot\":\"Neck\",\"tier\":1},{\"reason\":\"Wield greegree (ninja/gorilla, Kruk) to talk to Garkor and ride the rowboat\",\"slot\":\"Weapon\",\"tier\":1}],\"prereqs\":[\"Monkey Madness I\",\"Enlightened Journey\",\"The Eyes of Glouphrie\",\"Troll Stronghold\",\"Watchtower\",\"RFD: King Awowogei\"],\"oneOf\":[{\"merchants\":[\"Food Shops\"]},{\"merchants\":[\"Bars & Inns\"]},{\"merchants\":[\"Vegetable Shops\"]},{\"regions\":[\"Hosidius\"],\"skills\":{\"Thieving\":25}}],\"manualRequirements\":[\"Unlocked the Gnome Stronghold balloon route\"],\"points\":4}",
       "chunkEvidence": [
         {
           "chunkId": "37,54",
@@ -4597,7 +4608,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Monkey Madness II were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for M'speak amulet + greegree (worn), so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for M'speak amulet + greegree (worn), so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Lemon, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The route crosses the Gnome Stronghold/Kandarin, Troll Stronghold/Asgarnia, and the Ape Atoll island chain; the Gnome Stronghold balloon route must already be unlocked.",
@@ -4658,7 +4670,7 @@
       "id": "Mourning's End Part I",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Mourning's_End_Part_I&oldid=15173030",
         "revision": 15173030,
@@ -4666,7 +4678,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Lletya\",\"Tyras Camp\",\"Isafdar\",\"Arandar\",\"West Ardougne\",\"Taverley\",\"Rimmington\",\"East Ardougne\",\"Feldip Hills\"],\"locations\":[{\"chunkOptions\":[{\"cx\":38,\"cy\":52}],\"id\":\"jorrals-orchard\",\"label\":\"Apple orchard by Jorral's Outpost\",\"standardAreas\":[\"East Ardougne\"]}],\"skills\":{\"Ranged\":60,\"Thieving\":50},\"prereqs\":[\"Roving Elves\",\"Big Chompy Bird Hunting\",\"Sheep Herder\"],\"oneOf\":[{\"merchants\":[\"Tanners\"]},{\"skills\":{\"Magic\":78}}],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Lletya\",\"Tyras Camp\",\"Isafdar\",\"Arandar\",\"West Ardougne\",\"Taverley\",\"Rimmington\",\"East Ardougne\",\"Feldip Hills\"],\"locations\":[{\"chunkOptions\":[{\"cx\":38,\"cy\":52}],\"id\":\"jorrals-orchard\",\"label\":\"Apple orchard by Jorral's Outpost\",\"standardAreas\":[\"East Ardougne\"]}],\"skills\":{\"Ranged\":60,\"Thieving\":50},\"equipmentRequirements\":[{\"reason\":\"Wear the mourner gas mask to get into the Mourner headquarters\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the mourner top to get into the Mourner headquarters\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear the mourner trousers to get into the Mourner headquarters\",\"slot\":\"Legs\",\"tier\":1},{\"reason\":\"Wear the mourner gloves to get into the Mourner headquarters\",\"slot\":\"Gloves\",\"tier\":1},{\"reason\":\"Wear the mourner boots to get into the Mourner headquarters\",\"slot\":\"Boots\",\"tier\":1},{\"reason\":\"Wear the mourner cloak to get into the Mourner headquarters\",\"slot\":\"Cape\",\"tier\":1}],\"prereqs\":[\"Roving Elves\",\"Big Chompy Bird Hunting\",\"Sheep Herder\"],\"oneOf\":[{\"merchants\":[\"Tanners\",\"Clothes Shops\",\"Food Shops\"],\"regions\":[\"Tree Gnome Stronghold\"],\"skills\":{\"Woodcutting\":75}},{\"merchants\":[\"Tanners\",\"Dye Shops\",\"Food Shops\"],\"regions\":[\"Tree Gnome Stronghold\"],\"skills\":{\"Woodcutting\":75}},{\"merchants\":[\"Tanners\",\"Clothes Shops\",\"Food Shops\"],\"regions\":[\"Wintertodt Camp\",\"Tree Gnome Stronghold\"],\"skills\":{\"Firemaking\":50}},{\"merchants\":[\"Tanners\",\"Dye Shops\",\"Food Shops\"],\"regions\":[\"Wintertodt Camp\",\"Tree Gnome Stronghold\"],\"skills\":{\"Firemaking\":50}},{\"merchants\":[\"Clothes Shops\",\"Food Shops\"],\"regions\":[\"Tree Gnome Stronghold\"],\"skills\":{\"Magic\":78,\"Woodcutting\":75}},{\"merchants\":[\"Dye Shops\",\"Food Shops\"],\"regions\":[\"Tree Gnome Stronghold\"],\"skills\":{\"Magic\":78,\"Woodcutting\":75}},{\"merchants\":[\"Clothes Shops\",\"Food Shops\"],\"regions\":[\"Wintertodt Camp\",\"Tree Gnome Stronghold\"],\"skills\":{\"Firemaking\":50,\"Magic\":78}},{\"merchants\":[\"Dye Shops\",\"Food Shops\"],\"regions\":[\"Wintertodt Camp\",\"Tree Gnome Stronghold\"],\"skills\":{\"Firemaking\":50,\"Magic\":78}}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "34,49",
@@ -4702,7 +4714,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Mourning's End Part I were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for Leather, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Leather, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Magic logs; Dyes; Toad crunchies; Mourner outfit (worn), so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The fixed route crosses Tirannwn and West Ardougne/Kandarin; the South Taverley picker row is an item-source marker rather than unavoidable travel.",
@@ -5201,7 +5214,7 @@
       "id": "Plague City",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-02",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Plague_City&oldid=15343824",
         "revision": 15343824,
@@ -5209,7 +5222,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":40,\"cy\":52}],\"id\":\"east-ardougne-edmond\",\"label\":\"Edmond's house in East Ardougne\",\"standardAreas\":[\"East Ardougne\"]},{\"chunkOptions\":[{\"cx\":39,\"cy\":51}],\"id\":\"west-ardougne\",\"label\":\"West Ardougne\",\"standardAreas\":[\"West Ardougne\"]}],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the gas mask when entering West Ardougne from the sewer\",\"slot\":\"Head\",\"tier\":1}],\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":40,\"cy\":52}],\"id\":\"east-ardougne-edmond\",\"label\":\"Edmond's house in East Ardougne\",\"standardAreas\":[\"East Ardougne\"]},{\"chunkOptions\":[{\"cx\":39,\"cy\":51}],\"id\":\"west-ardougne\",\"label\":\"West Ardougne\",\"standardAreas\":[\"West Ardougne\"]}],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the gas mask when entering West Ardougne from the sewer\",\"slot\":\"Head\",\"tier\":1}],\"prereqs\":[],\"oneOf\":[{\"anyOfRegions\":[\"Rimmington\",\"Hosidius\",\"Karamja\"],\"merchants\":[\"Food Shops\"]},{\"merchants\":[\"Food Shops\"],\"skills\":{\"Farming\":61}},{\"anyOfRegions\":[\"Rimmington\",\"Hosidius\",\"Karamja\"],\"merchants\":[\"Cooking Shops\"]},{\"merchants\":[\"Cooking Shops\"],\"skills\":{\"Farming\":61}},{\"anyOfRegions\":[\"Rimmington\",\"Hosidius\",\"Karamja\"],\"regions\":[\"Zanaris\"]},{\"regions\":[\"Zanaris\"],\"skills\":{\"Farming\":61}}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "39,51",
@@ -5225,7 +5238,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Plague City were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Fate equipment review 2026-09-22: Head T1: Wear the gas mask when entering West Ardougne from the sewer. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged."
+          "Fate equipment review 2026-09-22: Head T1: Wear the gas mask when entering West Ardougne from the sewer. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged.",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Chocolate bar; Snape grass, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "Edmond's East Ardougne garden and West Ardougne are the fixed quest locations represented by the two pinned chunks.",
@@ -5241,7 +5255,7 @@
       "id": "Priest in Peril",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Priest_in_Peril&oldid=15240978",
         "revision": 15240978,
@@ -5249,7 +5263,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\",\"Morytania\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":54}],\"id\":\"varrock-palace\",\"label\":\"Varrock Palace\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":53,\"cy\":54}],\"id\":\"paterdomus\",\"label\":\"Paterdomus Temple and mausoleum\",\"standardAreas\":[\"Paterdomus\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\",\"Morytania\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":54}],\"id\":\"varrock-palace\",\"label\":\"Varrock Palace\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":53,\"cy\":54}],\"id\":\"paterdomus\",\"label\":\"Paterdomus Temple and mausoleum\",\"standardAreas\":[\"Paterdomus\"]}],\"skills\":{},\"prereqs\":[],\"oneOf\":[{\"quests\":[\"Rune Mysteries\"]}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "50,54",
@@ -5264,7 +5278,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Priest in Peril were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Priest in Peril were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for 50 rune or pure essence, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "Varrock Palace and Paterdomus, including the temple and mausoleum, are the two unavoidable sites."
@@ -5838,7 +5853,7 @@
       "id": "RFD: Pirate Pete",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Pirate_Pete&oldid=15292338",
         "revision": 15292338,
@@ -5846,7 +5861,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Khazard\"],\"skills\":{\"Cooking\":31,\"Smithing\":4},\"equipmentRequirements\":[{\"reason\":\"Wear fishbowl helmet to dive\",\"slot\":\"Head\",\"tier\":1}],\"prereqs\":[\"RFD: The Cook\"],\"oneOf\":[{\"skills\":{\"Fishing\":23}},{\"merchants\":[\"Fishing Shops\"]}],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Khazard\"],\"skills\":{\"Cooking\":31,\"Smithing\":4},\"equipmentRequirements\":[{\"reason\":\"Wear fishbowl helmet to dive\",\"slot\":\"Head\",\"tier\":1}],\"prereqs\":[\"RFD: The Cook\"],\"oneOf\":[{\"skills\":{\"Crafting\":42,\"Fishing\":23}},{\"quests\":[\"Rum Deal\"],\"skills\":{\"Fishing\":23}},{\"merchants\":[\"Fishing Shops\"],\"skills\":{\"Crafting\":42}},{\"merchants\":[\"Fishing Shops\"],\"quests\":[\"Rum Deal\"]}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "41,49",
@@ -5857,7 +5872,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for RFD: Pirate Pete were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for Bronze wire (x3); Raw cod; Fishbowl helmet / diving apparatus (worn), so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Bronze wire (x3); Raw cod; Fishbowl helmet / diving apparatus (worn), so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Empty fishbowl, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "Compatibility-preserved Pirate Pete chapter evidence covers Lumbridge, Port Khazard, and the underwater instance for the Recipe for Disaster parent route.",
@@ -5876,7 +5892,7 @@
       "id": "RFD: Sir Amik Varze",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-22",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Sir_Amik_Varze&oldid=15320990",
         "revision": 15320990,
@@ -5884,7 +5900,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kharazi Jungle\",\"Draynor Village\",\"Zanaris\"],\"skills\":{\"Quest Points\":107},\"prereqs\":[\"RFD: The Cook\",\"Family Crest\",\"Heroes' Quest\",\"Shilo Village\",\"Underground Pass\",\"Waterfall Quest\"],\"questProgress\":[{\"label\":\"Started Legends' Quest and gained access to the Kharazi Jungle\",\"quest\":\"Legends' Quest\"}],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kharazi Jungle\",\"Draynor Village\",\"Zanaris\"],\"skills\":{\"Quest Points\":107},\"prereqs\":[\"RFD: The Cook\",\"Family Crest\",\"Heroes' Quest\",\"Shilo Village\",\"Underground Pass\",\"Waterfall Quest\"],\"oneOf\":[{\"skills\":{\"Farming\":20}},{\"regions\":[\"Civitas illa Fortis\"]}],\"questProgress\":[{\"label\":\"Started Legends' Quest and gained access to the Kharazi Jungle\",\"quest\":\"Legends' Quest\"}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "44,45",
@@ -5904,7 +5920,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for RFD: Sir Amik Varze were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for RFD: Sir Amik Varze were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Sweetcorn, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "Compatibility-preserved Sir Amik chapter evidence covers Lumbridge, Draynor, Kharazi Jungle, Zanaris, and the Evil Chicken lair for the Recipe for Disaster parent route.",
@@ -5923,7 +5940,7 @@
       "id": "RFD: Skrach Uglogwee",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-22",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Skrach_Uglogwee&oldid=15292343",
         "revision": 15292343,
@@ -5931,7 +5948,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Feldip Hills\",\"Tai Bwo Wannai\"],\"skills\":{\"Cooking\":41,\"Firemaking\":20},\"prereqs\":[\"RFD: The Cook\",\"Big Chompy Bird Hunting\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Feldip Hills\",\"Tai Bwo Wannai\"],\"skills\":{\"Cooking\":41,\"Firemaking\":20},\"prereqs\":[\"RFD: The Cook\",\"Big Chompy Bird Hunting\"],\"oneOf\":[{\"skills\":{\"Smithing\":17}},{\"regions\":[\"Weiss\"]}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "41,46",
@@ -5946,7 +5963,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for RFD: Skrach Uglogwee were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for RFD: Skrach Uglogwee were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Iron spit, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "Compatibility-preserved Skrach Uglogwee chapter evidence covers Lumbridge, Feldip Hills, and Karamja for the Recipe for Disaster parent route.",
@@ -6451,7 +6469,7 @@
       "id": "Shadows of Custodia",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Shadows_of_Custodia&oldid=15215306",
         "revision": 15215306,
@@ -6459,7 +6477,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Auburnvale\"],\"skills\":{\"Construction\":41,\"Fishing\":45,\"Hunter\":36,\"Slayer\":54},\"prereqs\":[\"Children of the Sun\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Auburnvale\"],\"skills\":{\"Construction\":41,\"Fishing\":45,\"Hunter\":36,\"Slayer\":54,\"Woodcutting\":45},\"prereqs\":[\"Children of the Sun\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "20,52",
@@ -6469,7 +6487,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Shadows of Custodia were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Shadows of Custodia were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Four maple logs, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "Auburnvale, Custodia Pass, and the Stalker Den remain within Varlamore; the lone bridge activity row is not treated as the whole route.",
@@ -6881,7 +6900,7 @@
       "id": "Swan Song",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-02",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Swan_Song&oldid=15266910",
         "revision": 15266910,
@@ -6889,7 +6908,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Piscatoris Fishing Colony\",\"Yanille\",\"Draynor Village\",\"Falador\",\"Crafting Guild\"],\"skills\":{\"Cooking\":62,\"Crafting\":40,\"Firemaking\":42,\"Fishing\":62,\"Magic\":66,\"Quest Points\":100,\"Smithing\":45},\"prereqs\":[\"One Small Favour\",\"Garden of Tranquillity\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Piscatoris Fishing Colony\",\"Yanille\",\"Draynor Village\",\"Falador\",\"Crafting Guild\"],\"skills\":{\"Cooking\":62,\"Crafting\":40,\"Firemaking\":42,\"Fishing\":62,\"Magic\":66,\"Quest Points\":100,\"Runecraft\":23,\"Smithing\":45},\"prereqs\":[\"One Small Favour\",\"Garden of Tranquillity\"],\"oneOf\":[{\"merchants\":[\"Magic Shops\"]},{\"skills\":{\"Runecraft\":77}}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "36,57",
@@ -6914,7 +6933,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Swan Song were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Swan Song were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Mist, lava and blood runes, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The route crosses Piscatoris and Yanille/Kandarin, Draynor/Misthalin, and the Crafting Guild plus Malignius/Asgarnia.",
@@ -6931,7 +6951,7 @@
       "id": "Tai Bwo Wannai Trio",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-02",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Tai_Bwo_Wannai_Trio&oldid=15265886",
         "revision": 15265886,
@@ -6939,7 +6959,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tai Bwo Wannai\",\"Shilo Village\",\"Brimhaven\",\"Musa Point\"],\"skills\":{\"Agility\":15,\"Cooking\":30,\"Fishing\":5},\"prereqs\":[\"Jungle Potion\"],\"oneOf\":[{\"merchants\":[\"Wine Traders\"]},{\"merchants\":[\"Bars & Inns\"]}],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tai Bwo Wannai\",\"Shilo Village\",\"Brimhaven\",\"Musa Point\"],\"skills\":{\"Agility\":15,\"Cooking\":30,\"Fishing\":5,\"Herblore\":34},\"prereqs\":[\"Jungle Potion\"],\"oneOf\":[{\"merchants\":[\"Wine Traders\"]},{\"merchants\":[\"Bars & Inns\"]}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "43,46",
@@ -6975,7 +6995,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Tai Bwo Wannai Trio were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the Karamjan rum is bought from Zembo at Musa Point (Wine Traders) or the Dead Man's Chest in Brimhaven (Bars & Inns); a one-of now asks for either (Wiki revision 15265886)."
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the Karamjan rum is bought from Zembo at Musa Point (Wine Traders) or the Dead Man's Chest in Brimhaven (Bars & Inns); a one-of now asks for either (Wiki revision 15265886).",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Agility potion, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Cairn Isle (43,46, step); South Tai Bwo Wannai (43,47, step); North Tai Bwo Wannai (43,48, first); Brimhaven (43,49, step); Karambwan Shore (45,48, step); Musa Point (45,49, step), and unavoidable travel remains represented by region gate Karamja.",
@@ -7315,7 +7336,7 @@
       "id": "The Curse of Arrav",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Curse_of_Arrav&oldid=15271605",
         "revision": 15271605,
@@ -7323,7 +7344,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Varrock\",\"Ruins of Uzer\",\"Mountain Camp\",\"Silvarea\"],\"locations\":[{\"chunkOptions\":[{\"cx\":43,\"cy\":60}],\"id\":\"trollweiss-mountain\",\"label\":\"Cave on Trollweiss Mountain\",\"standardAreas\":[\"Mountain Camp\"]},{\"chunkOptions\":[{\"cx\":44,\"cy\":60}],\"id\":\"zemouregals-fortress\",\"label\":\"Zemouregal's Fortress\",\"standardAreas\":[\"Mountain Camp\"]}],\"skills\":{\"Agility\":61,\"Mining\":64,\"Ranged\":62,\"Slayer\":37,\"Strength\":58,\"Thieving\":62},\"prereqs\":[\"Defender of Varrock\",\"Troll Romance\"],\"merchants\":[\"Slayer Equipment\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Varrock\",\"Ruins of Uzer\",\"Mountain Camp\",\"Silvarea\"],\"locations\":[{\"chunkOptions\":[{\"cx\":43,\"cy\":60}],\"id\":\"trollweiss-mountain\",\"label\":\"Cave on Trollweiss Mountain\",\"standardAreas\":[\"Mountain Camp\"]},{\"chunkOptions\":[{\"cx\":44,\"cy\":60}],\"id\":\"zemouregals-fortress\",\"label\":\"Zemouregal's Fortress\",\"standardAreas\":[\"Mountain Camp\"]}],\"skills\":{\"Agility\":61,\"Mining\":64,\"Ranged\":62,\"Slayer\":37,\"Strength\":58,\"Thieving\":62},\"prereqs\":[\"Defender of Varrock\",\"Troll Romance\"],\"oneOf\":[{\"skills\":{\"Crafting\":43,\"Fletching\":59,\"Magic\":57,\"Smithing\":59}},{\"skills\":{\"Fletching\":59,\"Hunter\":65,\"Smithing\":59}},{\"quests\":[\"Barbarian Training\"],\"skills\":{\"Crafting\":43,\"Firemaking\":35,\"Magic\":57}},{\"quests\":[\"Barbarian Training\"],\"skills\":{\"Firemaking\":35,\"Hunter\":65}}],\"merchants\":[\"Slayer Equipment\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "43,60",
@@ -7334,7 +7355,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for The Curse of Arrav were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for Insulated boots, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Insulated boots, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Mith grapple; Ring of life, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The route through Varrock, the desert and Trollweiss Mountain is represented by Misthalin, Kharidian Desert and Fremennik.",
@@ -7510,7 +7532,7 @@
       "id": "The Eyes of Glouphrie",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-02",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Eyes_of_Glouphrie&oldid=15266891",
         "revision": 15266891,
@@ -7518,7 +7540,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Tree Gnome Stronghold\",\"Yanille\"],\"locations\":[{\"chunkOptions\":[{\"cx\":37,\"cy\":55}],\"id\":\"giant-tortoises\",\"label\":\"Giant tortoises in the Gnome Stronghold\",\"standardAreas\":[\"Tree Gnome Stronghold\"]}],\"skills\":{\"Construction\":5,\"Magic\":46},\"prereqs\":[\"The Grand Tree\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Tree Gnome Stronghold\",\"Yanille\"],\"locations\":[{\"chunkOptions\":[{\"cx\":37,\"cy\":55}],\"id\":\"giant-tortoises\",\"label\":\"Giant tortoises in the Gnome Stronghold\",\"standardAreas\":[\"Tree Gnome Stronghold\"]}],\"skills\":{\"Construction\":5,\"Magic\":46,\"Runecraft\":13,\"Woodcutting\":45},\"prereqs\":[\"The Grand Tree\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "37,53",
@@ -7548,7 +7570,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for The Eyes of Glouphrie were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for The Eyes of Glouphrie were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Mud rune; Maple logs, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Brimstail's Cave Entrance (37,53, first); Gnome Ball Field (37,54, step); Jorral's Outpost (38,52, step); Tree Gnome Stronghold (38,53, step); Hazelmere's Island (41,48, step), and unavoidable travel remains represented by region gate Kandarin.",
@@ -7824,7 +7847,7 @@
       "id": "The Fremennik Trials",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Fremennik_Trials&oldid=15271703",
         "revision": 15271703,
@@ -7832,7 +7855,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Rellekka\"],\"skills\":{},\"prereqs\":[],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Rellekka\"],\"skills\":{},\"prereqs\":[],\"oneOf\":[{\"skills\":{\"Fishing\":76}},{\"merchants\":[\"Food Shops\"],\"regions\":[\"Canifis\"]},{\"merchants\":[\"Fishing Shops\"]}],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "41,56",
@@ -7857,7 +7880,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for The Fremennik Trials were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for The Fremennik Trials were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Raw shark, manta ray or sea turtle, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Fremennik Province (41,56, step); Rellekka (41,57, first); Seers' Village (42,54, step); Fremennik Forest (42,56, step), and unavoidable travel remains represented by region gate Fremennik.",
@@ -8351,7 +8375,7 @@
       "id": "The Knight's Sword",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Knight's_Sword&oldid=15249358",
         "revision": 15249358,
@@ -8359,7 +8383,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Falador\",\"Port Sarim\",\"Asgarnian Ice Dungeon\",\"Varrock\"],\"skills\":{\"Mining\":10,\"Smithing\":15},\"prereqs\":[],\"oneOf\":[{\"skills\":{\"Mining\":15}},{\"merchants\":[\"Ore Merchants\"]}],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Falador\",\"Port Sarim\",\"Asgarnian Ice Dungeon\",\"Varrock\"],\"skills\":{\"Mining\":10,\"Smithing\":15},\"prereqs\":[],\"oneOf\":[{\"skills\":{\"Cooking\":10,\"Mining\":15}},{\"merchants\":[\"Food Shops\"],\"regions\":[\"Cam Torum\"],\"skills\":{\"Mining\":15}},{\"merchants\":[\"Ore Merchants\"],\"skills\":{\"Cooking\":10}},{\"merchants\":[\"Ore Merchants\",\"Food Shops\"],\"regions\":[\"Cam Torum\"]}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "46,49",
@@ -8380,7 +8404,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for The Knight's Sword were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for 2 iron bars, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for 2 iron bars, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Redberry pie, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Port Sarim Church (46,49, step); West Falador (46,52, first); Varrock Palace (50,54, step), and unavoidable travel remains represented by region gates Asgarnia, Misthalin.",
@@ -8449,7 +8474,7 @@
       "id": "The Path of Glouphrie",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-02",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Path_of_Glouphrie&oldid=15265989",
         "revision": 15265989,
@@ -8457,7 +8482,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Gnome Village\",\"Castle Wars\",\"Yanille\"],\"skills\":{\"Agility\":45,\"Ranged\":47,\"Slayer\":56,\"Strength\":60,\"Thieving\":56},\"prereqs\":[\"The Eyes of Glouphrie\",\"Waterfall Quest\",\"Tree Gnome Village\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Gnome Village\",\"Castle Wars\",\"Yanille\"],\"skills\":{\"Agility\":45,\"Ranged\":47,\"Slayer\":56,\"Strength\":60,\"Thieving\":56},\"equipmentRequirements\":[{\"reason\":\"Equip a crossbow to fire the grapple\",\"slot\":\"Weapon\",\"tier\":1},{\"reason\":\"Equip the mith grapple\",\"slot\":\"Ammo\",\"tier\":3}],\"prereqs\":[\"The Eyes of Glouphrie\",\"Waterfall Quest\",\"Tree Gnome Village\"],\"oneOf\":[{\"skills\":{\"Fletching\":59,\"Smithing\":59}},{\"quests\":[\"Barbarian Training\"],\"skills\":{\"Firemaking\":35}}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "39,49",
@@ -8472,7 +8497,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for The Path of Glouphrie were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for The Path of Glouphrie were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Mith grapple, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Tree Gnome Village (39,49, first); Hazelmere's Island (41,48, step), and unavoidable travel remains represented by region gate Kandarin.",
@@ -8924,7 +8950,7 @@
       "id": "Troll Romance",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Troll_Romance&oldid=15240985",
         "revision": 15240985,
@@ -8932,7 +8958,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Burthorpe\",\"Warriors' Guild\",\"Mountain Camp\"],\"skills\":{\"Agility\":28,\"Smithing\":15},\"prereqs\":[\"Troll Stronghold\"],\"oneOf\":[{\"skills\":{\"Mining\":15}},{\"merchants\":[\"Ore Merchants\"]}],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Burthorpe\",\"Warriors' Guild\",\"Mountain Camp\"],\"skills\":{\"Agility\":28,\"Smithing\":15,\"Woodcutting\":45},\"prereqs\":[\"Troll Stronghold\"],\"oneOf\":[{\"regions\":[\"Catherby\",\"Seers' Village\"],\"skills\":{\"Mining\":15}},{\"merchants\":[\"Ore Merchants\"],\"regions\":[\"Catherby\",\"Seers' Village\"]}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "44,55",
@@ -8953,7 +8979,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Troll Romance were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for Iron bar, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Iron bar, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Maple logs; Bucket of wax, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Warriors' Guild (44,55, step); Troll Stronghold (44,57, first); Burthorpe (45,55, step), and unavoidable travel remains represented by region gate Asgarnia.",
@@ -9181,7 +9208,7 @@
       "id": "Vale Totems",
       "kind": "miniquest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Vale_Totems_(miniquest)&oldid=15264448",
         "revision": 15264448,
@@ -9189,11 +9216,12 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Auburnvale\"],\"skills\":{\"Fletching\":20},\"prereqs\":[\"Children of the Sun\"],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Auburnvale\"],\"skills\":{\"Fletching\":20,\"Woodcutting\":15},\"prereqs\":[\"Children of the Sun\"],\"points\":0}",
       "chunkEvidence": [],
       "notes": {
         "items": [
-          "Logs, a knife, and four matching fletched items are required but not machine-enforced; the Ironman-only 15 Woodcutting note is an item-source condition."
+          "Logs, a knife, and four matching fletched items are required but not machine-enforced; the Ironman-only 15 Woodcutting note is an item-source condition.",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Oak logs, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "All unavoidable activity is at Auburnvale in Varlamore; there is no pinned Chunk Picker first/step row.",
@@ -9299,7 +9327,7 @@
       "id": "Watchtower",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-02",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Watchtower&oldid=15266880",
         "revision": 15266880,
@@ -9307,7 +9335,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Yanille\",\"Feldip Hills\"],\"skills\":{\"Agility\":25,\"Herblore\":14,\"Magic\":14,\"Mining\":40,\"Thieving\":15},\"prereqs\":[],\"points\":4}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Yanille\",\"Feldip Hills\"],\"skills\":{\"Agility\":25,\"Herblore\":14,\"Magic\":14,\"Mining\":40,\"Thieving\":15},\"prereqs\":[],\"oneOf\":[{\"skills\":{\"Smithing\":40}},{\"regions\":[\"Varrock\"],\"skills\":{\"Magic\":33}},{\"quests\":[\"Dragon Slayer I\"],\"regions\":[\"Corsair Cove\"]}],\"points\":4}",
       "chunkEvidence": [
         {
           "chunkId": "39,48",
@@ -9322,7 +9350,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Watchtower were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Watchtower were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Gold bar, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are West Yanille (39,48, first); Gu'Tanoth Island (40,47, step), and unavoidable travel remains represented by region gate Kandarin.",
@@ -9614,7 +9643,7 @@
       "id": "Zogre Flesh Eaters",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-10-10",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Zogre_Flesh_Eaters&oldid=15276519",
         "revision": 15276519,
@@ -9622,7 +9651,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Feldip Hills\",\"Yanille\"],\"skills\":{\"Herblore\":8,\"Ranged\":30,\"Smithing\":4},\"prereqs\":[\"Big Chompy Bird Hunting\",\"Jungle Potion\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Feldip Hills\",\"Yanille\"],\"skills\":{\"Herblore\":8,\"Ranged\":30,\"Smithing\":4},\"prereqs\":[\"Big Chompy Bird Hunting\",\"Jungle Potion\"],\"oneOf\":[{\"skills\":{\"Fletching\":7}},{\"skills\":{\"Magic\":39}}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "38,47",
@@ -9642,7 +9671,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Zogre Flesh Eaters were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Zogre Flesh Eaters were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Judgement-call item gate review (Alex chose to gate them) 2026-10-10: gated for Brutal arrows or Crumble Undead, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Jiggig (38,47, first); West Yanille (39,48, step); East Yanille (40,48, step), and unavoidable travel remains represented by region gate Kandarin.",

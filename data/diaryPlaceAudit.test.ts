@@ -36,16 +36,16 @@ describe('Rune altars reached through the Abyss', () => {
   // The Diary page lists the Abyss as a way into each of these altars. The Mage of Zamorak, in
   // the Wilderness north of Edgeville (48,55), is the Abyss's only way in.
   const ALTARS: readonly (readonly [string, string, readonly string[]])[] = [
-    ['lum_easy_4', 'Lumbridge', []],
-    ['lum_elite_5', 'Lumbridge', []],
-    ['var_easy_12', 'Varrock', []],
-    ['var_elite_5', 'Varrock', []],
-    ['lum_med_12', 'Al Kharid', []],
+    ['lum_easy_4', 'Lumbridge', ['Rune Mysteries']],
+    ['lum_elite_5', 'Lumbridge', ['Rune Mysteries']],
+    ['var_easy_12', 'Varrock', ['Rune Mysteries']],
+    ['var_elite_5', 'Varrock', ['Rune Mysteries']],
+    ['lum_med_12', 'Al Kharid', ['Rune Mysteries']],
     ['fal_easy_7', 'Ice Mountain', []],
-    ['fal_hard_1', 'Goblin Village', []],
-    ['kar_hard_4', 'Shilo Village', []],
-    ['kar_elite_1', 'Shilo Village', []],
-    ["ard_hard_12", 'West Ardougne', ["Mourning's End Part II"]],
+    ['fal_hard_1', 'Goblin Village', ['Rune Mysteries']],
+    ['kar_hard_4', 'Shilo Village', ['Rune Mysteries']],
+    ['kar_elite_1', 'Shilo Village', ['Rune Mysteries']],
+    ["ard_hard_12", 'West Ardougne', ["Mourning's End Part II", 'Rune Mysteries']],
   ];
 
   it.each(ALTARS)('%s takes its ruins in %s, or the Abyss', (id, place, quests) => {
@@ -73,7 +73,7 @@ describe('Rune altars reached through the Abyss', () => {
   });
 
   it('keeps the Cosmic altar in Zanaris either way, as the map counts its interior there', () => {
-    expect(task('lum_hard_3')).toMatchObject({ quests: ['Lost City'], regions: ['Zanaris'] });
+    expect(task('lum_hard_3')).toMatchObject({ quests: ['Lost City', 'Rune Mysteries'], regions: ['Zanaris'] });
   });
 });
 
@@ -108,8 +108,8 @@ describe('Diary tasks the game counts in more than one place', () => {
   ] as const)('%s counts in Chunked with %j: %s', (id, chunks, quests, _why) => {
     const extra = {
       equipment: { Head: 1, Body: 1, Legs: 1, Boots: 1, Weapon: 1, Ammo: 3 },
-      skills: { Hunter: 10, Agility: 10, Ranged: 10, Strength: 10, Mining: 10 },
-      levels: { Hunter: 99, Agility: 99, Ranged: 99, Strength: 99, Mining: 99 },
+      skills: { Hunter: 10, Agility: 10, Ranged: 10, Strength: 10, Mining: 10, Fletching: 10, Smithing: 10 },
+      levels: { Hunter: 99, Agility: 99, Ranged: 99, Strength: 99, Mining: 99, Fletching: 99, Smithing: 99 },
       minigames: ['Impetuous Impulses'],
     };
     expect(doable(id, account({ ...extra, chunks: [...chunks], quests: [...quests] }), 'chunked')).toBe(true);
@@ -118,9 +118,9 @@ describe('Diary tasks the game counts in more than one place', () => {
   it('enters the Edgeville Dungeon from the Varrock Sewers, with 51 Agility', () => {
     // Edgeville and Varrock are both free in Vanilla, so Chunked shows it: Varrock Palace's chunk.
     for (const id of ['var_hard_10', 'var_med_9', 'wild_easy_4', 'wild_med_5']) {
-      expect(doable(id, account({ chunks: ['50,54'], skills: { Agility: 10, Magic: 10 }, levels: { Agility: 51, Magic: 99 } }), 'chunked'), id)
+      expect(doable(id, account({ chunks: ['50,54'], skills: { Agility: 10, Magic: 10, Crafting: 10 }, levels: { Agility: 51, Magic: 99, Crafting: 99 } }), 'chunked'), id)
         .toBe(true);
-      expect(doable(id, account({ chunks: ['50,54'], skills: { Agility: 10, Magic: 10 }, levels: { Agility: 50, Magic: 99 } }), 'chunked'), id)
+      expect(doable(id, account({ chunks: ['50,54'], skills: { Agility: 10, Magic: 10, Crafting: 10 }, levels: { Agility: 50, Magic: 99, Crafting: 99 } }), 'chunked'), id)
         .toBe(false);
     }
   });

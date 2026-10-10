@@ -304,19 +304,50 @@ describe('audited current quest requirements', () => {
                 ],
                 "oneOf": [
                       {
+                            "skills": {
+                                  "Cooking": 40
+                            },
                             "merchants": [
                                   "Farming Shops"
                             ]
                       },
                       {
+                            "skills": {
+                                  "Thieving": 5
+                            },
+                            "merchants": [
+                                  "Farming Shops"
+                            ]
+                      },
+                      {
+                            "skills": {
+                                  "Cooking": 40
+                            },
                             "merchants": [
                                   "Vegetable Shops"
+                            ],
+                            "quests": [
+                                  "Barbarian Training"
+                            ]
+                      },
+                      {
+                            "skills": {
+                                  "Thieving": 5
+                            },
+                            "merchants": [
+                                  "Vegetable Shops"
+                            ],
+                            "quests": [
+                                  "Barbarian Training"
                             ]
                       },
                       {
                             "skills": {
                                   "Thieving": 10
-                            }
+                            },
+                            "quests": [
+                                  "Barbarian Training"
+                            ]
                       }
                 ],
                 "manualRequirements": null,
@@ -349,12 +380,31 @@ describe('audited current quest requirements', () => {
                 "oneOf": [
                       {
                             "skills": {
-                                  "Smithing": 51
+                                  "Smithing": 51,
+                                  "Mining": 20
                             }
                       },
                       {
+                            "skills": {
+                                  "Smithing": 51
+                            },
+                            "merchants": [
+                                  "Silver Shops"
+                            ]
+                      },
+                      {
+                            "skills": {
+                                  "Mining": 20,
+                                  "Smithing": 20
+                            },
                             "merchants": [
                                   "Axe Shops"
+                            ]
+                      },
+                      {
+                            "merchants": [
+                                  "Axe Shops",
+                                  "Silver Shops"
                             ]
                       }
                 ],
@@ -791,7 +841,8 @@ describe('audited current quest requirements', () => {
                       "Agility": 30,
                       "Crafting": 30,
                       "Construction": 34,
-                      "Thieving": 15
+                      "Thieving": 15,
+                      "Woodcutting": 50
                 },
                 "combatLevel": null,
                 "prereqs": [],
@@ -801,7 +852,8 @@ describe('audited current quest requirements', () => {
                                   "Smithing": 34
                             },
                             "merchants": [
-                                  "Silk Shops"
+                                  "Sawmill Operators",
+                                  "Tanners"
                             ]
                       },
                       {
@@ -1294,7 +1346,8 @@ describe('audited current quest requirements', () => {
                       "Thieving": 53,
                       "Firemaking": 50,
                       "Slayer": 10,
-                      "Magic": 50
+                      "Magic": 50,
+                      "Smithing": 30
                 },
                 "combatLevel": null,
                 "prereqs": [
@@ -1307,18 +1360,60 @@ describe('audited current quest requirements', () => {
                 ],
                 "oneOf": [
                       {
+                            "skills": {
+                                  "Woodcutting": 75
+                            },
                             "merchants": [
                                   "Spice Shops"
                             ]
                       },
                       {
+                            "skills": {
+                                  "Firemaking": 50
+                            },
+                            "merchants": [
+                                  "Spice Shops"
+                            ],
+                            "regions": [
+                                  "Wintertodt Camp"
+                            ]
+                      },
+                      {
+                            "skills": {
+                                  "Woodcutting": 75
+                            },
                             "merchants": [
                                   "Food Shops"
                             ]
                       },
                       {
+                            "skills": {
+                                  "Firemaking": 50
+                            },
+                            "merchants": [
+                                  "Food Shops"
+                            ],
+                            "regions": [
+                                  "Wintertodt Camp"
+                            ]
+                      },
+                      {
+                            "skills": {
+                                  "Woodcutting": 75
+                            },
                             "merchants": [
                                   "General Stores"
+                            ]
+                      },
+                      {
+                            "skills": {
+                                  "Firemaking": 50
+                            },
+                            "merchants": [
+                                  "General Stores"
+                            ],
+                            "regions": [
+                                  "Wintertodt Camp"
                             ]
                       }
                 ],
@@ -1601,7 +1696,18 @@ describe('audited current quest requirements', () => {
                       "Bone Voyage",
                       "Client of Kourend"
                 ],
-                "oneOf": null,
+                "oneOf": [
+                      {
+                            "skills": {
+                                  "Runecraft": 40
+                            }
+                      },
+                      {
+                            "merchants": [
+                                  "Magic Shops"
+                            ]
+                      }
+                ],
                 "manualRequirements": [
                       "Started the pyre ship portion of Barbarian Training"
                 ],
@@ -3110,7 +3216,8 @@ describe('audited current quest requirements', () => {
         ],
         "locations": null,
         "skills": {
-          "Fletching": 20
+          "Fletching": 20,
+          "Woodcutting": 15
         },
         "combatLevel": null,
         "prereqs": [
@@ -3289,12 +3396,58 @@ describe('audited current quest requirements', () => {
     "oneOf": [
       {
         "skills": {
-          "Fletching": 25
+          "Fletching": 25,
+          "Thieving": 20
         }
       },
       {
+        "skills": {
+          "Fletching": 25
+        },
+        "merchants": [
+          "Clothes Shops"
+        ]
+      },
+      {
+        "skills": {
+          "Fletching": 25
+        },
+        "merchants": [
+          "Silk Shops"
+        ]
+      },
+      {
+        "skills": {
+          "Fletching": 25
+        },
+        "merchants": [
+          "General Stores"
+        ]
+      },
+      {
+        "skills": {
+          "Thieving": 20
+        },
         "merchants": [
           "Archery Shops"
+        ]
+      },
+      {
+        "merchants": [
+          "Archery Shops",
+          "Clothes Shops"
+        ]
+      },
+      {
+        "merchants": [
+          "Archery Shops",
+          "Silk Shops"
+        ]
+      },
+      {
+        "merchants": [
+          "Archery Shops",
+          "General Stores"
         ]
       }
     ],
@@ -3686,7 +3839,32 @@ describe('audited current quest requirements', () => {
       "Another Slice of H.A.M.",
       "Fishing Contest"
     ],
-    "oneOf": null,
+    "oneOf": [
+      {
+        "merchants": [
+          "Dye Shops"
+        ]
+      },
+      {
+        "merchants": [
+          "Clothes Shops"
+        ],
+        "regions": [
+          "Lletya"
+        ]
+      },
+      {
+        "regions": [
+          "Falador",
+          "Varrock"
+        ]
+      },
+      {
+        "skills": {
+          "Farming": 25
+        }
+      }
+    ],
     "manualRequirements": null,
     "points": 2,
     "difficulty": "Quest (Experienced)"
@@ -3727,6 +3905,19 @@ describe('audited current quest requirements', () => {
           "Smithing": 86
         },
         "merchants": [
+          "Magic Shops",
+          "Claw Shops"
+        ],
+        "regions": [
+          "Burthorpe"
+        ]
+      },
+      {
+        "skills": {
+          "Smithing": 86,
+          "Hunter": 22
+        },
+        "merchants": [
           "Magic Shops"
         ]
       },
@@ -3734,9 +3925,35 @@ describe('audited current quest requirements', () => {
         "skills": {
           "Smithing": 86,
           "Runecraft": 90
+        },
+        "merchants": [
+          "Claw Shops"
+        ],
+        "regions": [
+          "Burthorpe"
+        ]
+      },
+      {
+        "skills": {
+          "Smithing": 86,
+          "Runecraft": 90,
+          "Hunter": 22
         }
       },
       {
+        "merchants": [
+          "Axe Shops",
+          "Magic Shops",
+          "Claw Shops"
+        ],
+        "regions": [
+          "Burthorpe"
+        ]
+      },
+      {
+        "skills": {
+          "Hunter": 22
+        },
         "merchants": [
           "Axe Shops",
           "Magic Shops"
@@ -3745,6 +3962,19 @@ describe('audited current quest requirements', () => {
       {
         "skills": {
           "Runecraft": 90
+        },
+        "merchants": [
+          "Axe Shops",
+          "Claw Shops"
+        ],
+        "regions": [
+          "Burthorpe"
+        ]
+      },
+      {
+        "skills": {
+          "Runecraft": 90,
+          "Hunter": 22
         },
         "merchants": [
           "Axe Shops"
@@ -4060,7 +4290,28 @@ describe('audited current quest requirements', () => {
       "The Grand Tree",
       "Tree Gnome Village"
     ],
-    "oneOf": null,
+    "oneOf": [
+      {
+        "skills": {
+          "Smithing": 40
+        }
+      },
+      {
+        "quests": [
+          "Goblin Diplomacy"
+        ]
+      },
+      {
+        "quests": [
+          "Waterfall Quest"
+        ]
+      },
+      {
+        "quests": [
+          "The Dig Site"
+        ]
+      }
+    ],
     "manualRequirements": null,
     "points": 3,
     "difficulty": "Quest (Master)"
@@ -4093,7 +4344,31 @@ describe('audited current quest requirements', () => {
       "Watchtower",
       "RFD: King Awowogei"
     ],
-    "oneOf": null,
+    "oneOf": [
+      {
+        "merchants": [
+          "Food Shops"
+        ]
+      },
+      {
+        "merchants": [
+          "Bars & Inns"
+        ]
+      },
+      {
+        "merchants": [
+          "Vegetable Shops"
+        ]
+      },
+      {
+        "skills": {
+          "Thieving": 25
+        },
+        "regions": [
+          "Hosidius"
+        ]
+      }
+    ],
     "manualRequirements": [
       "Unlocked the Gnome Stronghold balloon route"
     ],
@@ -4170,14 +4445,112 @@ describe('audited current quest requirements', () => {
     ],
     "oneOf": [
       {
+        "skills": {
+          "Woodcutting": 75
+        },
         "merchants": [
-          "Tanners"
+          "Tanners",
+          "Clothes Shops",
+          "Food Shops"
+        ],
+        "regions": [
+          "Tree Gnome Stronghold"
         ]
       },
       {
         "skills": {
-          "Magic": 78
-        }
+          "Woodcutting": 75
+        },
+        "merchants": [
+          "Tanners",
+          "Dye Shops",
+          "Food Shops"
+        ],
+        "regions": [
+          "Tree Gnome Stronghold"
+        ]
+      },
+      {
+        "skills": {
+          "Firemaking": 50
+        },
+        "merchants": [
+          "Tanners",
+          "Clothes Shops",
+          "Food Shops"
+        ],
+        "regions": [
+          "Wintertodt Camp",
+          "Tree Gnome Stronghold"
+        ]
+      },
+      {
+        "skills": {
+          "Firemaking": 50
+        },
+        "merchants": [
+          "Tanners",
+          "Dye Shops",
+          "Food Shops"
+        ],
+        "regions": [
+          "Wintertodt Camp",
+          "Tree Gnome Stronghold"
+        ]
+      },
+      {
+        "skills": {
+          "Magic": 78,
+          "Woodcutting": 75
+        },
+        "merchants": [
+          "Clothes Shops",
+          "Food Shops"
+        ],
+        "regions": [
+          "Tree Gnome Stronghold"
+        ]
+      },
+      {
+        "skills": {
+          "Magic": 78,
+          "Woodcutting": 75
+        },
+        "merchants": [
+          "Dye Shops",
+          "Food Shops"
+        ],
+        "regions": [
+          "Tree Gnome Stronghold"
+        ]
+      },
+      {
+        "skills": {
+          "Magic": 78,
+          "Firemaking": 50
+        },
+        "merchants": [
+          "Clothes Shops",
+          "Food Shops"
+        ],
+        "regions": [
+          "Wintertodt Camp",
+          "Tree Gnome Stronghold"
+        ]
+      },
+      {
+        "skills": {
+          "Magic": 78,
+          "Firemaking": 50
+        },
+        "merchants": [
+          "Dye Shops",
+          "Food Shops"
+        ],
+        "regions": [
+          "Wintertodt Camp",
+          "Tree Gnome Stronghold"
+        ]
       }
     ],
     "manualRequirements": null,
@@ -4631,7 +5004,62 @@ describe('audited current quest requirements', () => {
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "merchants": [
+              "Food Shops"
+            ],
+            "anyOfRegions": [
+              "Rimmington",
+              "Hosidius",
+              "Karamja"
+            ]
+          },
+          {
+            "skills": {
+              "Farming": 61
+            },
+            "merchants": [
+              "Food Shops"
+            ]
+          },
+          {
+            "merchants": [
+              "Cooking Shops"
+            ],
+            "anyOfRegions": [
+              "Rimmington",
+              "Hosidius",
+              "Karamja"
+            ]
+          },
+          {
+            "skills": {
+              "Farming": 61
+            },
+            "merchants": [
+              "Cooking Shops"
+            ]
+          },
+          {
+            "regions": [
+              "Zanaris"
+            ],
+            "anyOfRegions": [
+              "Rimmington",
+              "Hosidius",
+              "Karamja"
+            ]
+          },
+          {
+            "skills": {
+              "Farming": 61
+            },
+            "regions": [
+              "Zanaris"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Novice)"
@@ -4769,7 +5197,13 @@ describe('audited current quest requirements', () => {
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "quests": [
+              "Rune Mysteries"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Novice)"
@@ -5258,12 +5692,32 @@ describe('audited current quest requirements', () => {
         "oneOf": [
           {
             "skills": {
-              "Fishing": 23
+              "Fishing": 23,
+              "Crafting": 42
             }
+          },
+          {
+            "skills": {
+              "Fishing": 23
+            },
+            "quests": [
+              "Rum Deal"
+            ]
+          },
+          {
+            "skills": {
+              "Crafting": 42
+            },
+            "merchants": [
+              "Fishing Shops"
+            ]
           },
           {
             "merchants": [
               "Fishing Shops"
+            ],
+            "quests": [
+              "Rum Deal"
             ]
           }
         ],
@@ -5345,7 +5799,18 @@ describe('audited current quest requirements', () => {
           "RFD: The Cook",
           "Big Chompy Bird Hunting"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Smithing": 17
+            }
+          },
+          {
+            "regions": [
+              "Weiss"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Intermediate)"
@@ -5371,7 +5836,18 @@ describe('audited current quest requirements', () => {
           "Underground Pass",
           "Waterfall Quest"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Farming": 20
+            }
+          },
+          {
+            "regions": [
+              "Civitas illa Fortis"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Master)"
@@ -5491,14 +5967,26 @@ describe('audited current quest requirements', () => {
           "Fishing": 62,
           "Smithing": 45,
           "Firemaking": 42,
-          "Crafting": 40
+          "Crafting": 40,
+          "Runecraft": 23
         },
         "combatLevel": null,
         "prereqs": [
           "One Small Favour",
           "Garden of Tranquillity"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "merchants": [
+              "Magic Shops"
+            ]
+          },
+          {
+            "skills": {
+              "Runecraft": 77
+            }
+          }
+        ],
         "manualRequirements": null,
         "points": 2,
         "difficulty": "Quest (Master)"
@@ -5874,7 +6362,8 @@ describe('audited current quest requirements', () => {
           "Slayer": 54,
           "Fishing": 45,
           "Construction": 41,
-          "Hunter": 36
+          "Hunter": 36,
+          "Woodcutting": 45
         },
         "combatLevel": null,
         "prereqs": [
@@ -6173,7 +6662,8 @@ describe('audited current quest requirements', () => {
         "skills": {
           "Agility": 15,
           "Cooking": 30,
-          "Fishing": 5
+          "Fishing": 5,
+          "Herblore": 34
         },
         "combatLevel": null,
         "prereqs": [
@@ -6384,7 +6874,42 @@ describe('audited current quest requirements', () => {
           "Defender of Varrock",
           "Troll Romance"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Fletching": 59,
+              "Smithing": 59,
+              "Magic": 57,
+              "Crafting": 43
+            }
+          },
+          {
+            "skills": {
+              "Fletching": 59,
+              "Smithing": 59,
+              "Hunter": 65
+            }
+          },
+          {
+            "skills": {
+              "Firemaking": 35,
+              "Magic": 57,
+              "Crafting": 43
+            },
+            "quests": [
+              "Barbarian Training"
+            ]
+          },
+          {
+            "skills": {
+              "Firemaking": 35,
+              "Hunter": 65
+            },
+            "quests": [
+              "Barbarian Training"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 2,
         "difficulty": "Quest (Master)"
@@ -6453,7 +6978,9 @@ describe('audited current quest requirements', () => {
         ],
         "skills": {
           "Construction": 5,
-          "Magic": 46
+          "Magic": 46,
+          "Runecraft": 13,
+          "Woodcutting": 45
         },
         "combatLevel": null,
         "prereqs": [
@@ -6651,7 +7178,26 @@ describe('audited current quest requirements', () => {
         "skills": {},
         "combatLevel": null,
         "prereqs": [],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Fishing": 76
+            }
+          },
+          {
+            "merchants": [
+              "Food Shops"
+            ],
+            "regions": [
+              "Canifis"
+            ]
+          },
+          {
+            "merchants": [
+              "Fishing Shops"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 3,
         "difficulty": "Quest (Intermediate)"
@@ -6926,12 +7472,36 @@ describe('audited current quest requirements', () => {
         "oneOf": [
           {
             "skills": {
-              "Mining": 15
+              "Mining": 15,
+              "Cooking": 10
             }
           },
           {
+            "skills": {
+              "Mining": 15
+            },
+            "merchants": [
+              "Food Shops"
+            ],
+            "regions": [
+              "Cam Torum"
+            ]
+          },
+          {
+            "skills": {
+              "Cooking": 10
+            },
             "merchants": [
               "Ore Merchants"
+            ]
+          },
+          {
+            "merchants": [
+              "Ore Merchants",
+              "Food Shops"
+            ],
+            "regions": [
+              "Cam Torum"
             ]
           }
         ],
@@ -6985,7 +7555,22 @@ describe('audited current quest requirements', () => {
           "Waterfall Quest",
           "Tree Gnome Village"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Fletching": 59,
+              "Smithing": 59
+            }
+          },
+          {
+            "skills": {
+              "Firemaking": 35
+            },
+            "quests": [
+              "Barbarian Training"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 2,
         "difficulty": "Quest (Experienced)"
@@ -7263,7 +7848,8 @@ describe('audited current quest requirements', () => {
         "locations": null,
         "skills": {
           "Agility": 28,
-          "Smithing": 15
+          "Smithing": 15,
+          "Woodcutting": 45
         },
         "combatLevel": null,
         "prereqs": [
@@ -7273,11 +7859,19 @@ describe('audited current quest requirements', () => {
           {
             "skills": {
               "Mining": 15
-            }
+            },
+            "regions": [
+              "Catherby",
+              "Seers' Village"
+            ]
           },
           {
             "merchants": [
               "Ore Merchants"
+            ],
+            "regions": [
+              "Catherby",
+              "Seers' Village"
             ]
           }
         ],
@@ -7427,7 +8021,29 @@ describe('audited current quest requirements', () => {
         },
         "combatLevel": null,
         "prereqs": [],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Smithing": 40
+            }
+          },
+          {
+            "skills": {
+              "Magic": 33
+            },
+            "regions": [
+              "Varrock"
+            ]
+          },
+          {
+            "quests": [
+              "Dragon Slayer I"
+            ],
+            "regions": [
+              "Corsair Cove"
+            ]
+          }
+        ],
         "manualRequirements": null,
         "points": 4,
         "difficulty": "Quest (Intermediate)"
@@ -7662,7 +8278,18 @@ describe('audited current quest requirements', () => {
           "Big Chompy Bird Hunting",
           "Jungle Potion"
         ],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "skills": {
+              "Fletching": 7
+            }
+          },
+          {
+            "skills": {
+              "Magic": 39
+            }
+          }
+        ],
         "manualRequirements": null,
         "points": 1,
         "difficulty": "Quest (Intermediate)"

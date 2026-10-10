@@ -427,8 +427,9 @@ describe('Diary tasks in Zanaris', () => {
       ],
     });
     // The altar takes a cosmic or catalytic talisman or tiara, unless you arrive through the Abyss.
+    // Essence for it needs Rune Mysteries.
     expect(task('lum_hard_3')).toMatchObject({
-      quests: ['Lost City'], regions: ['Zanaris'],
+      quests: ['Lost City', 'Rune Mysteries'], regions: ['Zanaris'],
       oneOf: [
         { label: 'Zanaris', items: ['Cosmic or catalytic talisman or tiara'], equipmentRequirements: [STAFF] },
         { label: 'The Abyss', quests: ['Enter the Abyss'], regions: ['Edgeville'] },
@@ -512,8 +513,11 @@ describe('Diary tasks an ironman does the ironman way', () => {
   it('needs 69 Hunter for the spottier cape, as an ironman catches the dashing kebbits', () => {
     // "Catching dashing kebbits at the Piscatoris falconry area requires 69 Hunter" (Spottier cape rev 15183240).
     expect(task('var_hard_1')).toMatchObject({
-      skills: { Hunter: 69 }, items: ['800 coins'], regions: ['Varrock'],
-      equipmentRequirements: [expect.objectContaining({ slot: 'Cape', tier: 1, reason: 'Spottier cape' })],
+      skills: { Hunter: 69 }, items: ['800 coins'], regions: ['Varrock', 'Piscatoris Fishing Colony'],
+      equipmentRequirements: [
+        expect.objectContaining({ slot: 'Cape', tier: 1, reason: 'Spottier cape' }),
+        expect.objectContaining({ slot: 'Weapon', tier: 1, reason: "Falconer's glove for falconry" }),
+      ],
     });
     expect(task('var_hard_1').oneOf).toBeUndefined();
   });

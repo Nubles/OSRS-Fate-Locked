@@ -34,6 +34,8 @@ const REVIEWED: Record<string, string> = {
   // Banisoch's entrance to Brimhaven Dungeon takes trading sticks (the place review, 4 October 2026).
   kar_hard_10: 'Tai Bwo Wannai Cleanup',
   kar_med_1: 'Brimhaven Agility Arena',
+  // 10 October 2026 item audit: the gems for a machete come from the Cleanup.
+  kar_med_11: 'Tai Bwo Wannai Cleanup',
   kar_med_19: 'Tai Bwo Wannai Cleanup',
   kar_med_5: 'Tai Bwo Wannai Cleanup',
   // 2 October 2026: loot counts too. Only the Hardwood Grove and gem rock routes use the Cleanup.

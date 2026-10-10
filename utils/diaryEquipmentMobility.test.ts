@@ -48,13 +48,15 @@ describe('diary equipment and mobility permissions in Vanilla', () => {
     expect(diaryTaskCompletionDecision(row, readyForCheck, 'vanilla', { manualConfirmed: true }).ok).toBe(true);
   });
 
-  it('requires every desert outfit slot, without requiring the shop that supplied it', () => {
+  it('requires every desert outfit slot, and since the 10 October 2026 item audit a shop that sells it', () => {
     const row = task('des_easy_4');
-    // Entered at Shantay Pass or off the boat to the Ruins of Unkah.
-    const locked = account({ regions: ['Shantay Pass'], equipment: { Body: 1, Legs: 1 } });
+    // Entered at Shantay Pass or off the boat to the Ruins of Unkah; the Shantay Pass Shop sells the robes.
+    const locked = account({ regions: ['Shantay Pass'], merchants: ['General Stores'], equipment: { Body: 1, Legs: 1 } });
     expect(evaluateDiaryTaskEligibility(row, locked, 'vanilla').blockers)
       .toContainEqual(expect.objectContaining({ kind: 'equipment', slot: 'Boots', tier: 1 }));
-    expect(evaluateDiaryTaskEligibility(row, { ...locked, equipment: { ...locked.equipment, Boots: 1 } }, 'vanilla').confirmable).toBe(true);
+    const outfitted = { ...locked, equipment: { ...locked.equipment, Boots: 1 } };
+    expect(evaluateDiaryTaskEligibility(row, outfitted, 'vanilla').confirmable).toBe(true);
+    expect(evaluateDiaryTaskEligibility(row, { ...outfitted, merchants: [] }, 'vanilla').confirmable).toBe(false);
   });
 
   it('does not mistake quest completion for the Fairy Rings unlock', () => {

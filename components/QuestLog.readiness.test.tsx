@@ -79,8 +79,9 @@ describe('quest journal skill alternatives in Vanilla', () => {
     const quest = QUEST_DATA['Desert Treasure I'];
     const unlocks: UnlockState = {
       ...account(),
-      skills: { Thieving: 6, Firemaking: 5, Magic: 5, Slayer: slayerTier },
-      levels: { Thieving: 53, Firemaking: 50, Magic: 50, Slayer: 10 },
+      // Smithing (steel bars) and Woodcutting (magic logs) since the 10 October 2026 item audit.
+      skills: { Thieving: 6, Firemaking: 5, Magic: 5, Slayer: slayerTier, Smithing: 3, Woodcutting: 8 },
+      levels: { Thieving: 53, Firemaking: 50, Magic: 50, Slayer: 10, Smithing: 30, Woodcutting: 75 },
       regions: [...quest.regions],
       quests: [...quest.prereqs, ...(plagueCity ? ['Plague City'] : [])],
       merchants: ['Claw Shops', 'Spice Shops'],
@@ -100,7 +101,7 @@ describe('quest journal skill alternatives in Vanilla', () => {
   it('counts the gas-mask confirmation once instead of also demanding Slayer training', () => {
     const html = desertTreasure(true);
     expect(html).toContain('Have a gas mask from Plague City');
-    expect(html).toContain('27/28 reqs');
+    expect(html).toContain('28/29 reqs');
     expect(html).not.toContain('Training guide: Slayer');
     expect(html).not.toContain('Ready to complete!');
   });

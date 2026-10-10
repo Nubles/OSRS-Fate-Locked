@@ -31,6 +31,8 @@ const REVIEWED: Record<string, string> = {
   kar_med_6: 'Sarachnis',
   // The fire cape comes only from the Fight Cave, and the Inferno takes one to enter.
   kar_elite_4: 'TzHaar Fight Cave',
+  // 10 October 2026 item audit: Zulrah's scales, one way of two (sacred eels are the other).
+  karamja_elite_4: 'Zulrah',
   kou_elite_3: 'Skotizo',
   kou_elite_7: 'Chambers of Xeric',
   kou_med_11: 'Wintertodt',

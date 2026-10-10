@@ -335,6 +335,27 @@
           "tier": 3,
           "reason": "Mith grapple for the shortcut"
         }
+      ],
+      "oneOf": [
+        {
+          "skills": {
+            "Fletching": 59,
+            "Smithing": 59
+          },
+          "label": "Make a mith grapple"
+        },
+        {
+          "skills": {
+            "Firemaking": 35
+          },
+          "questProgress": [
+            {
+              "label": "Barbarian Firemaking (Ancient Cavern access)",
+              "quest": "Barbarian Training"
+            }
+          ],
+          "label": "Ancient Cavern drops"
+        }
       ]
     },
     {
@@ -386,7 +407,8 @@
       "ordinal": 5,
       "description": "Travel to Castlewars by Hot Air Balloon.",
       "skills": {
-        "Firemaking": 50
+        "Firemaking": 50,
+        "Woodcutting": 60
       },
       "quests": [
         "Enlightened Journey"
@@ -875,10 +897,12 @@
       "ordinal": 12,
       "description": "Craft some Death runes from Essence.",
       "skills": {
-        "Runecraft": 65
+        "Runecraft": 65,
+        "Mining": 30
       },
       "quests": [
-        "Mourning's End Part II"
+        "Mourning's End Part II",
+        "Rune Mysteries"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -1235,6 +1259,35 @@
           "tier": 1,
           "reason": "Desert boots",
           "manualCheck": "Have Desert boots and confirm that the specific item is permitted by your equipment tier"
+        }
+      ],
+      "oneOf": [
+        {
+          "merchants": [
+            "General Stores"
+          ],
+          "regions": [
+            "Shantay Pass"
+          ],
+          "label": "Shantay Pass Shop"
+        },
+        {
+          "merchants": [
+            "General Stores"
+          ],
+          "regions": [
+            "Bandit Camp"
+          ],
+          "label": "Bandit Bargains"
+        },
+        {
+          "merchants": [
+            "Clothes Shops"
+          ],
+          "regions": [
+            "Sophanem"
+          ],
+          "label": "Raetul and Co's Cloth Store"
         }
       ]
     },
@@ -2508,7 +2561,8 @@
       "ordinal": 9,
       "description": "Burn some yew logs on the Nardah Mayor's balcony.",
       "skills": {
-        "Firemaking": 60
+        "Firemaking": 60,
+        "Woodcutting": 60
       },
       "quests": [],
       "regions": [
@@ -2546,7 +2600,9 @@
       "skills": {
         "Cooking": 85
       },
-      "quests": [],
+      "quests": [
+        "Big Chompy Bird Hunting"
+      ],
       "regions": [
         "Nardah"
       ],
@@ -3301,6 +3357,27 @@
           "tier": 3,
           "reason": "Mith grapple for the shortcut"
         }
+      ],
+      "oneOf": [
+        {
+          "skills": {
+            "Fletching": 59,
+            "Smithing": 59
+          },
+          "label": "Make a mith grapple"
+        },
+        {
+          "skills": {
+            "Firemaking": 35
+          },
+          "questProgress": [
+            {
+              "label": "Barbarian Firemaking (Ancient Cavern access)",
+              "quest": "Barbarian Training"
+            }
+          ],
+          "label": "Ancient Cavern drops"
+        }
       ]
     },
     {
@@ -3495,7 +3572,9 @@
       "ordinal": 1,
       "description": "Craft 140 Mind runes simultaneously from Essence without the use of Extracts.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Rune Mysteries"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 140 Mind runes simultaneously.",
@@ -3891,7 +3970,29 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "72 Slayer Protection from the wyvern's icy breath and weaponry to slay it"
+      "sourceRequirements": "72 Slayer Protection from the wyvern's icy breath and weaponry to slay it",
+      "equipmentRequirements": [
+        {
+          "slot": "Shield",
+          "tier": 1,
+          "reason": "Elemental or mind shield against the wyverns' icy breath",
+          "manualCheck": "Have elemental or mind shield against the wyverns' icy breath and confirm that the specific item is permitted by your equipment tier"
+        }
+      ],
+      "oneOf": [
+        {
+          "quests": [
+            "Elemental Workshop I"
+          ],
+          "label": "Elemental shield"
+        },
+        {
+          "quests": [
+            "Elemental Workshop II"
+          ],
+          "label": "Mind shield"
+        }
+      ]
     },
     {
       "id": "fal_hard_5",
@@ -4101,7 +4202,9 @@
       "ordinal": 1,
       "description": "Craft 252 Air Runes simultaneously from Essence without the use of Extracts.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Rune Mysteries"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 252 Air Runes simultaneously.",
@@ -5773,15 +5876,50 @@
       "sourceRequirements": "36 Agility, 22 Strength, and 39 Ranged Mith grapple and any crossbow Dusty key or 70 Agility Protection from dragonfire recommended",
       "oneOf": [
         {
-          "label": "Dusty key",
+          "skills": {
+            "Fletching": 59,
+            "Smithing": 59
+          },
           "manualRequirements": [
             "Confirm: Dusty key"
-          ]
+          ],
+          "label": "Dusty key + Make a mith grapple"
         },
         {
           "skills": {
-            "Agility": 70
-          }
+            "Firemaking": 35
+          },
+          "manualRequirements": [
+            "Confirm: Dusty key"
+          ],
+          "questProgress": [
+            {
+              "label": "Barbarian Firemaking (Ancient Cavern access)",
+              "quest": "Barbarian Training"
+            }
+          ],
+          "label": "Dusty key + Ancient Cavern drops"
+        },
+        {
+          "skills": {
+            "Agility": 70,
+            "Fletching": 59,
+            "Smithing": 59
+          },
+          "label": "Make a mith grapple"
+        },
+        {
+          "skills": {
+            "Agility": 70,
+            "Firemaking": 35
+          },
+          "questProgress": [
+            {
+              "label": "Barbarian Firemaking (Ancient Cavern access)",
+              "quest": "Barbarian Training"
+            }
+          ],
+          "label": "Ancient Cavern drops"
         }
       ],
       "equipmentRequirements": [
@@ -5843,7 +5981,8 @@
       "ordinal": 7,
       "description": "String a Maple shortbow in Seers' Village bank.",
       "skills": {
-        "Fletching": 50
+        "Fletching": 50,
+        "Woodcutting": 45
       },
       "quests": [],
       "regions": [
@@ -5851,7 +5990,24 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "50 Fletching Maple shortbow (u) and bow string"
+      "sourceRequirements": "50 Fletching Maple shortbow (u) and bow string",
+      "oneOf": [
+        {
+          "skills": {
+            "Crafting": 10
+          },
+          "label": "Spin flax"
+        },
+        {
+          "merchants": [
+            "Archery Shops"
+          ],
+          "regions": [
+            "Feldip Hills"
+          ],
+          "label": "Uglug's stuffsies"
+        }
+      ]
     },
     {
       "id": "kan_med_8",
@@ -6068,7 +6224,24 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "70 Fletching and 60 Woodcutting Any axe, bow string (can be spun from flax ), and a knife"
+      "sourceRequirements": "70 Fletching and 60 Woodcutting Any axe, bow string (can be spun from flax ), and a knife",
+      "oneOf": [
+        {
+          "skills": {
+            "Crafting": 10
+          },
+          "label": "Spin flax"
+        },
+        {
+          "merchants": [
+            "Archery Shops"
+          ],
+          "regions": [
+            "Feldip Hills"
+          ],
+          "label": "Uglug's stuffsies"
+        }
+      ]
     },
     {
       "id": "kan_hard_4",
@@ -6114,15 +6287,42 @@
       "sourceRequirements": "56 Magic Dusty key or 70 Agility Unpowered orb and means to cast Charge Water Orb ( ) Protection from dragonfire recommended",
       "oneOf": [
         {
-          "label": "Dusty key",
+          "skills": {
+            "Crafting": 46
+          },
           "manualRequirements": [
             "Confirm: Dusty key"
-          ]
+          ],
+          "label": "Dusty key + Glassblow"
         },
         {
           "skills": {
-            "Agility": 70
-          }
+            "Thieving": 52
+          },
+          "manualRequirements": [
+            "Confirm: Dusty key"
+          ],
+          "quests": [
+            "Death to the Dorgeshuun"
+          ],
+          "label": "Dusty key + Dorgesh-Kaan chests"
+        },
+        {
+          "skills": {
+            "Agility": 70,
+            "Crafting": 46
+          },
+          "label": "Glassblow"
+        },
+        {
+          "skills": {
+            "Agility": 70,
+            "Thieving": 52
+          },
+          "quests": [
+            "Death to the Dorgeshuun"
+          ],
+          "label": "Dorgesh-Kaan chests"
         }
       ]
     },
@@ -6134,7 +6334,8 @@
       "ordinal": 6,
       "description": "Burn some Maple logs with a bow in Seers' Village.",
       "skills": {
-        "Firemaking": 65
+        "Firemaking": 65,
+        "Woodcutting": 45
       },
       "quests": [],
       "regions": [
@@ -6263,7 +6464,9 @@
       "ordinal": 11,
       "description": "Smith an Adamant spear at Otto's Grotto.",
       "skills": {
-        "Smithing": 75
+        "Smithing": 75,
+        "Woodcutting": 60,
+        "Mining": 70
       },
       "quests": [
         "Tai Bwo Wannai Trio"
@@ -6385,7 +6588,9 @@
       "description": "Mix a Stamina Mix on top of the Seers' Village bank.",
       "skills": {
         "Agility": 60,
-        "Herblore": 86
+        "Herblore": 86,
+        "Fishing": 70,
+        "Strength": 45
       },
       "quests": [],
       "regions": [
@@ -6409,7 +6614,9 @@
       "ordinal": 5,
       "description": "Smith a Rune Hasta at Otto's Grotto.",
       "skills": {
-        "Smithing": 90
+        "Smithing": 90,
+        "Woodcutting": 75,
+        "Mining": 85
       },
       "quests": [
         "Tai Bwo Wannai Trio"
@@ -6436,7 +6643,8 @@
       "description": "Construct a Pyre ship from Magic Logs.",
       "skills": {
         "Crafting": 85,
-        "Firemaking": 85
+        "Firemaking": 85,
+        "Woodcutting": 75
       },
       "quests": [],
       "regions": [
@@ -7148,7 +7356,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Jungle Potion Gout tuber, as well one of the following: 300 trading sticks and 3 cut or uncut opals 600 trading sticks and 3 cut or uncut jades 1200 trading sticks and 3 cut or uncut red topaz You need to speak to Sharimika and go through the dialogue options and you must have picked up some trading sticks from a villager as reward before the dialogue options will show up for this diary step."
+      "sourceRequirements": "Completion of Jungle Potion Gout tuber, as well one of the following: 300 trading sticks and 3 cut or uncut opals 600 trading sticks and 3 cut or uncut jades 1200 trading sticks and 3 cut or uncut red topaz You need to speak to Sharimika and go through the dialogue options and you must have picked up some trading sticks from a villager as reward before the dialogue options will show up for this diary step.",
+      "minigames": [
+        "Tai Bwo Wannai Cleanup"
+      ]
     },
     {
       "id": "kar_med_12",
@@ -7434,9 +7645,12 @@
       "ordinal": 4,
       "description": "Craft some nature runes from Essence.",
       "skills": {
-        "Runecraft": 44
+        "Runecraft": 44,
+        "Mining": 30
       },
-      "quests": [],
+      "quests": [
+        "Rune Mysteries"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "44 Runecraft Pure or daeyalt essence Access to the Nature Altar ( nature talisman / tiara, catalytic talisman / tiara, or the Abyss )",
@@ -7579,7 +7793,28 @@
         "reviewedAt": "2026-10-04",
         "source": "oldschool.runescape.wiki",
         "notes": "The Strong Tree shortcut runs both ways between Musa Point (44,49) and the Harpie bug swarms (44,48)."
-      }
+      },
+      "oneOf": [
+        {
+          "skills": {
+            "Fletching": 59,
+            "Smithing": 59
+          },
+          "label": "Make a mith grapple"
+        },
+        {
+          "skills": {
+            "Firemaking": 35
+          },
+          "questProgress": [
+            {
+              "label": "Barbarian Firemaking (Ancient Cavern access)",
+              "quest": "Barbarian Training"
+            }
+          ],
+          "label": "Ancient Cavern drops"
+        }
+      ]
     },
     {
       "id": "kar_hard_8",
@@ -7694,9 +7929,12 @@
       "ordinal": 1,
       "description": "Craft 56 Nature runes simultaneously from Essence without the use of Extracts.",
       "skills": {
-        "Runecraft": 91
+        "Runecraft": 91,
+        "Mining": 30
       },
-      "quests": [],
+      "quests": [
+        "Rune Mysteries"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 56 nature runes simultaneously from Essence without the use of Extracts.",
@@ -7789,12 +8027,30 @@
       "skills": {
         "Herblore": 87
       },
-      "quests": [],
+      "quests": [
+        "Regicide"
+      ],
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "87 Herblore Antidote++ and 5-20 Zulrah's scales (5 per dose)",
       "regions": [
-        "Brimhaven"
+        "Brimhaven",
+        "Zul-Andra"
+      ],
+      "oneOf": [
+        {
+          "bosses": [
+            "Zulrah"
+          ],
+          "label": "Kill Zulrah"
+        },
+        {
+          "skills": {
+            "Fishing": 87,
+            "Cooking": 72
+          },
+          "label": "Dissect sacred eels"
+        }
       ]
     },
     {
@@ -8034,7 +8290,30 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "20 Fishing Fly fishing rod and some feathers (bring enough feathers to account for fishing raw salmon multiple times before you get a raw trout)"
+      "sourceRequirements": "20 Fishing Fly fishing rod and some feathers (bring enough feathers to account for fishing raw salmon multiple times before you get a raw trout)",
+      "oneOf": [
+        {
+          "merchants": [
+            "Fishing Shops"
+          ],
+          "label": "Buy"
+        },
+        {
+          "regions": [
+            "Isle of Souls"
+          ],
+          "label": "Spawn"
+        },
+        {
+          "regions": [
+            "Sunset Coast"
+          ],
+          "label": "Spawn",
+          "quests": [
+            "Children of the Sun"
+          ]
+        }
+      ]
     },
     {
       "id": "kou_med_1",
@@ -8147,6 +8426,20 @@
           "tier": 1,
           "reason": "Face mask, gas mask or slayer helmet for volcanic sulphur",
           "manualCheck": "Have Face mask, gas mask or slayer helmet for volcanic sulphur and confirm that the specific item is permitted by your equipment tier"
+        }
+      ],
+      "oneOf": [
+        {
+          "merchants": [
+            "Slayer Equipment"
+          ],
+          "label": "Face mask"
+        },
+        {
+          "quests": [
+            "Plague City"
+          ],
+          "label": "Gas mask"
         }
       ]
     },
@@ -8828,7 +9121,9 @@
       "skills": {
         "Runecraft": 5
       },
-      "quests": [],
+      "quests": [
+        "Rune Mysteries"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "5 Runecraft Pure, daeyalt, or rune essence Access to the Water Altar ( water talisman / tiara, elemental talisman / tiara, or the Abyss )",
@@ -9052,6 +9347,27 @@
           "tier": 3,
           "reason": "Mith grapple for the shortcut"
         }
+      ],
+      "oneOf": [
+        {
+          "skills": {
+            "Fletching": 59,
+            "Smithing": 59
+          },
+          "label": "Make a mith grapple"
+        },
+        {
+          "skills": {
+            "Firemaking": 35
+          },
+          "questProgress": [
+            {
+              "label": "Barbarian Firemaking (Ancient Cavern access)",
+              "quest": "Barbarian Training"
+            }
+          ],
+          "label": "Ancient Cavern drops"
+        }
       ]
     },
     {
@@ -9142,7 +9458,30 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "30 Fishing Fly fishing rod and some feathers"
+      "sourceRequirements": "30 Fishing Fly fishing rod and some feathers",
+      "oneOf": [
+        {
+          "merchants": [
+            "Fishing Shops"
+          ],
+          "label": "Buy"
+        },
+        {
+          "regions": [
+            "Isle of Souls"
+          ],
+          "label": "Spawn"
+        },
+        {
+          "regions": [
+            "Sunset Coast"
+          ],
+          "label": "Spawn",
+          "quests": [
+            "Children of the Sun"
+          ]
+        }
+      ]
     },
     {
       "id": "lum_med_7",
@@ -9160,7 +9499,27 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "38 Crafting Leather, and a needle and thread or the costume needle"
+      "sourceRequirements": "38 Crafting Leather, and a needle and thread or the costume needle",
+      "oneOf": [
+        {
+          "merchants": [
+            "Tanners"
+          ],
+          "label": "Tanner"
+        },
+        {
+          "skills": {
+            "Magic": 78
+          },
+          "quests": [
+            "Lunar Diplomacy"
+          ],
+          "arcana": [
+            "Lunar Spellbook"
+          ],
+          "label": "Tan Leather spell"
+        }
+      ]
     },
     {
       "id": "lum_med_8",
@@ -9484,9 +9843,12 @@
       "ordinal": 12,
       "description": "Craft some Lava runes at the fire altar in Al Kharid.",
       "skills": {
-        "Runecraft": 23
+        "Runecraft": 23,
+        "Mining": 30
       },
-      "quests": [],
+      "quests": [
+        "Rune Mysteries"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "23 Runecraft Earth talisman, earth runes, and pure or daeyalt essence Access to the Fire Altar ( fire talisman / tiara, elemental talisman / tiara, or the Abyss ) Binding necklace recommended to guarantee the runes are successfully crafted",
@@ -9591,10 +9953,12 @@
       "ordinal": 3,
       "description": "Craft 56 Cosmic runes simultaneously from Essence without the use of Extracts.",
       "skills": {
-        "Runecraft": 59
+        "Runecraft": 59,
+        "Mining": 30
       },
       "quests": [
-        "Lost City"
+        "Lost City",
+        "Rune Mysteries"
       ],
       "regions": [
         "Zanaris"
@@ -9773,7 +10137,9 @@
       "skills": {
         "Firemaking": 65
       },
-      "quests": [],
+      "quests": [
+        "The Lost Tribe"
+      ],
       "regions": [
         "Lumbridge"
       ],
@@ -9816,7 +10182,21 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "70 Crafting and 57 Magic Gold bar, cut diamond, amulet mould, ball of wool Means to cast Lvl-4 Enchant ( )"
+      "sourceRequirements": "70 Crafting and 57 Magic Gold bar, cut diamond, amulet mould, ball of wool Means to cast Lvl-4 Enchant ( )",
+      "oneOf": [
+        {
+          "merchants": [
+            "Crafting Shops"
+          ],
+          "label": "Buy"
+        },
+        {
+          "guilds": [
+            "Crafting Guild"
+          ],
+          "label": "Crafting Guild spawn"
+        }
+      ]
     },
     {
       "id": "lum_elite_1",
@@ -9883,7 +10263,28 @@
         "reviewedAt": "2026-10-04",
         "source": "oldschool.runescape.wiki",
         "notes": "Dorgesh-Kaan is entered from the Lumbridge cellar or, through the South Dungeon, from the Kalphite Lair."
-      }
+      },
+      "oneOf": [
+        {
+          "skills": {
+            "Fletching": 59,
+            "Smithing": 59
+          },
+          "label": "Make a mith grapple"
+        },
+        {
+          "skills": {
+            "Firemaking": 35
+          },
+          "questProgress": [
+            {
+              "label": "Barbarian Firemaking (Ancient Cavern access)",
+              "quest": "Barbarian Training"
+            }
+          ],
+          "label": "Ancient Cavern drops"
+        }
+      ]
     },
     {
       "id": "lum_elite_3",
@@ -9929,7 +10330,9 @@
       "ordinal": 5,
       "description": "Craft 140 or more Water runes simultaneously from Essence without the use of Extracts.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Rune Mysteries"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 140 or more Water runes simultaneously.",
@@ -10417,6 +10820,18 @@
         "Braindeath Island",
         "Dragontooth Island",
         "Icyene Graveyard"
+      ],
+      "oneOf": [
+        {
+          "regions": [
+            "Mort Myre Swamp"
+          ]
+        },
+        {
+          "regions": [
+            "Haunted Woods"
+          ]
+        }
       ]
     },
     {
@@ -10442,13 +10857,44 @@
         {
           "quests": [
             "Ghosts Ahoy"
-          ]
+          ],
+          "regions": [
+            "Mort Myre Swamp"
+          ],
+          "label": "Blamish snails"
         },
         {
-          "label": "Ecto-tokens or charter ship",
+          "quests": [
+            "Ghosts Ahoy"
+          ],
+          "merchants": [
+            "General Stores"
+          ],
+          "regions": [
+            "Burgh de Rott"
+          ],
+          "label": "Aurel's Supplies"
+        },
+        {
+          "regions": [
+            "Mort Myre Swamp"
+          ],
           "manualRequirements": [
             "Confirm: Ecto-tokens or charter ship"
-          ]
+          ],
+          "label": "Ecto-tokens or charter ship + Blamish snails"
+        },
+        {
+          "merchants": [
+            "General Stores"
+          ],
+          "manualRequirements": [
+            "Confirm: Ecto-tokens or charter ship"
+          ],
+          "regions": [
+            "Burgh de Rott"
+          ],
+          "label": "Ecto-tokens or charter ship + Aurel's Supplies"
         }
       ]
     },
@@ -10969,6 +11415,24 @@
           "quest": "In Aid of the Myreque",
           "label": "Reached the required progress in In Aid of the Myreque for: Mix a Guthix Balance potion while in Morytania."
         }
+      ],
+      "regions": [
+        "Port Phasmatys"
+      ],
+      "oneOf": [
+        {
+          "skills": {
+            "Mining": 20,
+            "Smithing": 20
+          },
+          "label": "Smelt a silver bar"
+        },
+        {
+          "merchants": [
+            "Silver Shops"
+          ],
+          "label": "Buy a silver bar"
+        }
       ]
     },
     {
@@ -11243,7 +11707,8 @@
       "ordinal": 2,
       "description": "Cremate any Shade remains on a Magic or Redwood pyre.",
       "skills": {
-        "Firemaking": 80
+        "Firemaking": 80,
+        "Woodcutting": 75
       },
       "quests": [
         "Shades of Mort'ton"
@@ -11253,7 +11718,10 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Shades of Mort'ton 80 Firemaking Magic or Redwood pyre logs, any shade remains, and a tinderbox"
+      "sourceRequirements": "Completion of Shades of Mort'ton 80 Firemaking Magic or Redwood pyre logs, any shade remains, and a tinderbox",
+      "merchants": [
+        "General Stores"
+      ]
     },
     {
       "id": "mor_elite_3",
@@ -11300,7 +11768,27 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "84 Crafting 3 black dragon leather, and a needle and thread or the costume needle"
+      "sourceRequirements": "84 Crafting 3 black dragon leather, and a needle and thread or the costume needle",
+      "oneOf": [
+        {
+          "merchants": [
+            "Tanners"
+          ],
+          "label": "Tanner"
+        },
+        {
+          "skills": {
+            "Magic": 78
+          },
+          "quests": [
+            "Lunar Diplomacy"
+          ],
+          "arcana": [
+            "Lunar Spellbook"
+          ],
+          "label": "Tan Leather spell"
+        }
+      ]
     },
     {
       "id": "mor_elite_5",
@@ -11597,7 +12085,9 @@
       "skills": {
         "Runecraft": 9
       },
-      "quests": [],
+      "quests": [
+        "Rune Mysteries"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "9 Runecraft Pure, daeyalt, or rune essence Access to the Earth Altar ( earth talisman / tiara, elemental talisman / tiara, or the Abyss )",
@@ -11647,7 +12137,30 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "20 Fishing Fly fishing rod and some feathers"
+      "sourceRequirements": "20 Fishing Fly fishing rod and some feathers",
+      "oneOf": [
+        {
+          "merchants": [
+            "Fishing Shops"
+          ],
+          "label": "Buy"
+        },
+        {
+          "regions": [
+            "Isle of Souls"
+          ],
+          "label": "Spawn"
+        },
+        {
+          "regions": [
+            "Sunset Coast"
+          ],
+          "label": "Spawn",
+          "quests": [
+            "Children of the Sun"
+          ]
+        }
+      ]
     },
     {
       "id": "var_easy_14",
@@ -11922,7 +12435,9 @@
       "tierId": "Varrock Medium",
       "ordinal": 10,
       "description": "Make 20 Mahogany Planks in one go.",
-      "skills": {},
+      "skills": {
+        "Woodcutting": 50
+      },
       "quests": [],
       "regions": [
         "Varrock"
@@ -12008,7 +12523,8 @@
       },
       "quests": [],
       "regions": [
-        "Varrock"
+        "Varrock",
+        "Piscatoris Fishing Colony"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -12022,6 +12538,12 @@
           "tier": 1,
           "reason": "Spottier cape",
           "manualCheck": "Have Spottier cape and confirm that the specific item is permitted by your equipment tier"
+        },
+        {
+          "slot": "Weapon",
+          "tier": 1,
+          "reason": "Falconer's glove for falconry",
+          "manualCheck": "Have falconer's glove for falconry and confirm that the specific item is permitted by your equipment tier"
         }
       ]
     },
@@ -12256,7 +12778,8 @@
       "ordinal": 2,
       "description": "Use Lunar magic to make 20 mahogany planks at the Lumberyard.",
       "skills": {
-        "Magic": 86
+        "Magic": 86,
+        "Woodcutting": 50
       },
       "quests": [
         "Dream Mentor"
@@ -12279,7 +12802,8 @@
       "ordinal": 3,
       "description": "Bake a summer pie in the Cooking Guild.",
       "skills": {
-        "Cooking": 95
+        "Cooking": 95,
+        "Farming": 31
       },
       "quests": [],
       "regions": [
@@ -12290,42 +12814,124 @@
       "sourceRequirements": "95 Cooking Raw summer pie Chef's hat, golden chef's hat, Varrock armour 3, or Cooking cape",
       "oneOf": [
         {
-          "label": "Wear a chef's hat",
-          "equipmentRequirements": [
-            {
-              "slot": "Head",
-              "tier": 1,
-              "reason": "Chef's hat or golden chef's hat",
-              "manualCheck": "Have Chef's hat or golden chef's hat and confirm that the specific item is permitted by your equipment tier"
-            }
-          ]
-        },
-        {
-          "label": "Wear a Cooking cape",
           "skills": {
-            "Cooking": 99
+            "Farming": 47
           },
           "equipmentRequirements": [
             {
-              "slot": "Cape",
-              "tier": 6,
-              "reason": "Cooking cape"
+              "manualCheck": "Have Chef's hat or golden chef's hat and confirm that the specific item is permitted by your equipment tier",
+              "reason": "Chef's hat or golden chef's hat",
+              "slot": "Head",
+              "tier": 1
             }
-          ]
+          ],
+          "farming": [
+            "Allotment"
+          ],
+          "label": "Wear a chef's hat + Grow watermelons"
         },
         {
-          "label": "Wear Varrock armour 3 or 4",
+          "skills": {
+            "Sailing": 45,
+            "Slayer": 51
+          },
           "equipmentRequirements": [
             {
-              "slot": "Body",
-              "tier": 1,
+              "manualCheck": "Have Chef's hat or golden chef's hat and confirm that the specific item is permitted by your equipment tier",
+              "reason": "Chef's hat or golden chef's hat",
+              "slot": "Head",
+              "tier": 1
+            }
+          ],
+          "quests": [
+            "Troubled Tortugans"
+          ],
+          "regions": [
+            "The Great Conch"
+          ],
+          "label": "Wear a chef's hat + Watermelon from gryphons"
+        },
+        {
+          "skills": {
+            "Cooking": 99,
+            "Farming": 47
+          },
+          "equipmentRequirements": [
+            {
+              "reason": "Cooking cape",
+              "slot": "Cape",
+              "tier": 6
+            }
+          ],
+          "farming": [
+            "Allotment"
+          ],
+          "label": "Wear a Cooking cape + Grow watermelons"
+        },
+        {
+          "skills": {
+            "Cooking": 99,
+            "Sailing": 45,
+            "Slayer": 51
+          },
+          "equipmentRequirements": [
+            {
+              "reason": "Cooking cape",
+              "slot": "Cape",
+              "tier": 6
+            }
+          ],
+          "quests": [
+            "Troubled Tortugans"
+          ],
+          "regions": [
+            "The Great Conch"
+          ],
+          "label": "Wear a Cooking cape + Watermelon from gryphons"
+        },
+        {
+          "skills": {
+            "Farming": 47
+          },
+          "equipmentRequirements": [
+            {
+              "manualCheck": "Have Varrock armour 3 or 4 and confirm that the specific item is permitted by your equipment tier",
               "reason": "Varrock armour 3 or 4",
-              "manualCheck": "Have Varrock armour 3 or 4 and confirm that the specific item is permitted by your equipment tier"
+              "slot": "Body",
+              "tier": 1
             }
           ],
           "manualRequirements": [
             "Have earned Varrock armour 3 or 4"
-          ]
+          ],
+          "farming": [
+            "Allotment"
+          ],
+          "label": "Wear Varrock armour 3 or 4 + Grow watermelons"
+        },
+        {
+          "skills": {
+            "Sailing": 45,
+            "Slayer": 51
+          },
+          "equipmentRequirements": [
+            {
+              "manualCheck": "Have Varrock armour 3 or 4 and confirm that the specific item is permitted by your equipment tier",
+              "reason": "Varrock armour 3 or 4",
+              "slot": "Body",
+              "tier": 1
+            }
+          ],
+          "manualRequirements": [
+            "Have earned Varrock armour 3 or 4"
+          ],
+          "quests": [
+            "Troubled Tortugans"
+          ],
+          "regions": [
+            "The Great Conch"
+          ],
+          "label": "Wear Varrock armour 3 or 4 + Watermelon from gryphons"
         }
       ],
       "guilds": [
@@ -12341,7 +12947,8 @@
       "description": "Smith and fletch ten rune darts within Varrock.",
       "skills": {
         "Fletching": 81,
-        "Smithing": 89
+        "Smithing": 89,
+        "Mining": 85
       },
       "quests": [
         "The Tourist Trap"
@@ -12361,7 +12968,9 @@
       "ordinal": 5,
       "description": "Craft 100 or more earth runes simultaneously from Essence without the use of Extracts.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Rune Mysteries"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 100 or more earth runes simultaneously.",
@@ -12797,6 +13406,26 @@
       "sourceRequirements": "9 Hunter Bird snare",
       "regions": [
         "Piscatoris Fishing Colony"
+      ],
+      "oneOf": [
+        {
+          "merchants": [
+            "Hunter Shops"
+          ],
+          "label": "Buy"
+        },
+        {
+          "regions": [
+            "Isle of Souls"
+          ],
+          "label": "Spawn"
+        },
+        {
+          "regions": [
+            "Land's End"
+          ],
+          "label": "Land's End crate"
+        }
       ]
     },
     {
@@ -12967,7 +13596,24 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Fletch an Oak shortbow.",
-      "sourceRequirements": "20 Fletching Oak shortbow (u) and bow string"
+      "sourceRequirements": "20 Fletching Oak shortbow (u) and bow string",
+      "oneOf": [
+        {
+          "skills": {
+            "Crafting": 10
+          },
+          "label": "Spin flax"
+        },
+        {
+          "merchants": [
+            "Archery Shops"
+          ],
+          "regions": [
+            "Feldip Hills"
+          ],
+          "label": "Uglug's stuffsies"
+        }
+      ]
     },
     {
       "id": "west_easy_7",
@@ -13536,7 +14182,8 @@
       "ordinal": 10,
       "description": "Build an Isafdar painting in your POH Quest hall.",
       "skills": {
-        "Construction": 65
+        "Construction": 65,
+        "Woodcutting": 50
       },
       "quests": [
         "Roving Elves"
@@ -13546,7 +14193,27 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Roving Elves 65 Construction 3 mahogany planks, saw, and hammer Isafdar painting (bought from Sir Renitee for 2,000 coins ) 25,000 coins to construct a Quest Hall if you haven't already"
+      "sourceRequirements": "Completion of Roving Elves 65 Construction 3 mahogany planks, saw, and hammer Isafdar painting (bought from Sir Renitee for 2,000 coins ) 25,000 coins to construct a Quest Hall if you haven't already",
+      "oneOf": [
+        {
+          "merchants": [
+            "Sawmill Operators"
+          ],
+          "label": "Sawmill"
+        },
+        {
+          "skills": {
+            "Magic": 86
+          },
+          "quests": [
+            "Dream Mentor"
+          ],
+          "arcana": [
+            "Lunar Spellbook"
+          ],
+          "label": "Plank Make"
+        }
+      ]
     },
     {
       "id": "west_hard_11",
@@ -13626,7 +14293,8 @@
       "ordinal": 1,
       "description": "Fletch a Magic Longbow in Tirannwn.",
       "skills": {
-        "Fletching": 85
+        "Fletching": 85,
+        "Woodcutting": 75
       },
       "quests": [],
       "aliases": [],
@@ -13647,6 +14315,23 @@
         {
           "quest": "Regicide",
           "label": "Reached the required progress in Regicide for: Fletch a Magic Longbow in Tirannwn."
+        }
+      ],
+      "oneOf": [
+        {
+          "skills": {
+            "Crafting": 10
+          },
+          "label": "Spin flax"
+        },
+        {
+          "merchants": [
+            "Archery Shops"
+          ],
+          "regions": [
+            "Feldip Hills"
+          ],
+          "label": "Uglug's stuffsies"
         }
       ]
     },
@@ -15220,18 +15905,48 @@
       "sourceRequirements": "60 Magic Unpowered orb and means to cast Charge Earth Orb ( )",
       "oneOf": [
         {
+          "skills": {
+            "Crafting": 46
+          },
           "regions": [
             "Edgeville"
-          ]
+          ],
+          "label": "Glassblow"
         },
         {
-          "label": "Through the Varrock Sewers",
+          "skills": {
+            "Thieving": 52
+          },
+          "regions": [
+            "Edgeville"
+          ],
+          "quests": [
+            "Death to the Dorgeshuun"
+          ],
+          "label": "Dorgesh-Kaan chests"
+        },
+        {
+          "skills": {
+            "Agility": 51,
+            "Crafting": 46
+          },
           "regions": [
             "Varrock"
           ],
+          "label": "Through the Varrock Sewers + Glassblow"
+        },
+        {
           "skills": {
-            "Agility": 51
-          }
+            "Agility": 51,
+            "Thieving": 52
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Death to the Dorgeshuun"
+          ],
+          "label": "Through the Varrock Sewers + Dorgesh-Kaan chests"
         }
       ],
       "geographyVerification": {
@@ -15391,6 +16106,23 @@
       "sourceRequirements": "66 Magic Unpowered orb and means to cast Charge Air Orb ( )",
       "regions": [
         "Edgeville"
+      ],
+      "oneOf": [
+        {
+          "skills": {
+            "Crafting": 46
+          },
+          "label": "Glassblow"
+        },
+        {
+          "skills": {
+            "Thieving": 52
+          },
+          "quests": [
+            "Death to the Dorgeshuun"
+          ],
+          "label": "Dorgesh-Kaan chests"
+        }
       ]
     },
     {
@@ -15636,13 +16368,32 @@
         "Fishing": 53,
         "Herblore": 25
       },
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Lava Maze"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "53 Fishing and 25 Herblore Oily fishing rod, fishing bait Knife, Wilderness sword 1 or 2, or a slashing weapon"
+      "sourceRequirements": "53 Fishing and 25 Herblore Oily fishing rod, fishing bait Knife, Wilderness sword 1 or 2, or a slashing weapon",
+      "oneOf": [
+        {
+          "regions": [
+            "Mort Myre Swamp"
+          ],
+          "label": "Blamish snails"
+        },
+        {
+          "merchants": [
+            "General Stores"
+          ],
+          "regions": [
+            "Burgh de Rott"
+          ],
+          "label": "Aurel's Supplies"
+        }
+      ]
     },
     {
       "id": "wild_elite_1",
@@ -16083,6 +16834,7 @@
       "kar_hard_1",
       "kar_hard_10",
       "kar_med_1",
+      "kar_med_11",
       "kar_med_19",
       "kar_med_5",
       "kar_med_8",
@@ -16116,7 +16868,7 @@
       "western_med_7": "A Gnome Glider trip.",
       "wild_hard_1": "The god spells come from Mage Arena I, already a quest requirement."
     },
-    "followUp": "Owner decision, 2 October 2026: a task needs the minigame whose loot it uses, on the route that uses it. The Hardwood Grove routes of kar_med_8 and kar_med_9 need trading sticks, and kar_med_19's Cleanup route its gem rocks, so those routes need Tai Bwo Wannai Cleanup; kou_med_8 delivers intelligence, which only Intelligence Gathering gives."
+    "followUp": "Owner decision, 2 October 2026: a task needs the minigame whose loot it uses, on the route that uses it. The Hardwood Grove routes of kar_med_8 and kar_med_9 need trading sticks, and kar_med_19's Cleanup route its gem rocks, so those routes need Tai Bwo Wannai Cleanup; kou_med_8 delivers intelligence, which only Intelligence Gathering gives. Item audit, 10 October 2026: kar_med_11's gem machetes also cost trading sticks, which only Tai Bwo Wannai Cleanup gives."
   },
   "bossAudit": {
     "reviewedAt": "2026-09-26",
@@ -16133,6 +16885,7 @@
       "kar_elite_4",
       "kar_hard_2",
       "kar_med_6",
+      "karamja_elite_4",
       "kou_elite_3",
       "kou_elite_7",
       "kou_med_11",
@@ -16150,6 +16903,6 @@
       "lum_hard_7": "Barrows gloves come from Recipe for Disaster, not from the Barrows.",
       "wilderness_easy_8": "Only enters the King Black Dragon's lair; the boss is not fought."
     },
-    "followUp": "Owner decision, 2 October 2026: a task that needs a boss's loot needs that boss. The KQ head (des_elite_4) drops only from the Kalphite Queen, and the fire cape (kar_elite_4) comes only from the TzHaar Fight Cave; the infernal cape needs a fire cape to enter the Inferno."
+    "followUp": "Owner decision, 2 October 2026: a task that needs a boss's loot needs that boss. The KQ head (des_elite_4) drops only from the Kalphite Queen, and the fire cape (kar_elite_4) comes only from the TzHaar Fight Cave; the infernal cape needs a fire cape to enter the Inferno. Item audit, 10 October 2026: karamja_elite_4's antivenom needs Zulrah's scales, which come from Zulrah or from dissecting sacred eels at Zul-Andra."
   }
 }

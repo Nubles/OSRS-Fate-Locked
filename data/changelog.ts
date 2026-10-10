@@ -43,8 +43,8 @@ export const CHANGELOG_RELEASES = [
     sections: {
       changed: [
         'Quests and diary tasks now need what their items need: the slot to wear it, the shop that sells it, or the skill to make it.',
-        'Gertrude’s Cat needs a fishing shop or 5 Fishing for the sardine.',
-        'The start of Recipe for Disaster needs the shops and places that have the cook’s items.',
+        'Logs need the Woodcutting level to cut them, rune essence needs Rune Mysteries, and mithril grapples need a way to make or find one.',
+        'Gertrude’s Cat needs a fishing shop or 5 Fishing, and the start of Recipe for Disaster needs the shops that sell the cook’s items.',
         'The Kandarin Easy pet fish needs Fishing Shops, 10 Fishing and a way to get a fishbowl.',
         'A Soul’s Bane needs a Weapon slot, since you wield the rage room’s weapons.',
       ],

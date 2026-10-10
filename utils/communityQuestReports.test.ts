@@ -65,7 +65,8 @@ describe('community quest reports in Vanilla', () => {
   });
 
   it('does not mistake Priest in Peril reward XP for a Prayer or Neck requirement', () => {
-    expect(evaluateQuestEligibility(QUEST_DATA['Priest in Peril'], account(), 'vanilla'))
+    // The 50 essence it needs come from Rune Mysteries (10 October 2026 item audit).
+    expect(evaluateQuestEligibility(QUEST_DATA['Priest in Peril'], { ...account(), quests: ['Rune Mysteries'] }, 'vanilla'))
       .toMatchObject({ eligible: true, blockers: [], manualChecks: [] });
     expect(evaluateQuestEligibility(QUEST_DATA['The Restless Ghost'], account(), 'vanilla').blockers)
       .toContainEqual(expect.objectContaining({ kind: 'equipment', slot: 'Neck', tier: 1 }));
