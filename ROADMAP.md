@@ -461,7 +461,10 @@ Build-size watch: `npm run build` fails when the eager entry chunk (the
 `dist/assets/index-*.js` that `index.html` loads) grows past its gzip budget
 in `scripts/check-entry-budget.mjs` (225 kB; about 217 kB after the 24 Sept
 2026 review moved on-demand screens and the release notes out of it, and
-about 224 kB in October 2026, after online backup and Paste from RuneLite). An
+about 224 kB in October 2026, after online backup and Paste from RuneLite;
+raised to 226 kB on 9 October 2026, when the entry sat at 224.9-225.0 kB and
+builds of the same commit landed either side of 225, so the main-branch
+deploy of #92 failed while its PR passed). An
 overrun usually means something that should load through `lazyWithRetry` was
 imported eagerly. Inspect the built file for content markers rather than
 relying only on the import graph, and raise the budget only on purpose.

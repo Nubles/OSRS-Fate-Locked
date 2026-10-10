@@ -3,6 +3,7 @@ import { initialState } from '../context/GameContext';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import type { UnlockState } from '../types';
 import { chunkEntry, chunkEntryReason, loadRunRoutes, runReach, type ReachSource } from './chunkEntry';
+import { PANDEMONIUM_ROUTE } from './pandemoniumRoute';
 import { loadWalkSections } from './walkSections';
 import { CHUNKED_START } from './chunkAdjacency';
 import { chunkForPlace } from './chunkLocations';
@@ -47,6 +48,40 @@ describe('chunkEntry', () => {
     expect(chunkEntry(ocean, fresh(), 'vanilla')).toBe('LOCKED');
     const sailor = { ...fresh(), skills: { ...fresh().skills, Sailing: 1 }, quests: ['Pandemonium'] };
     expect(chunkEntry(ocean, sailor, 'vanilla')).toBe('ALLOWED');
+  });
+
+  // A player reported on 9 October 2026 that RuneLite locked the sea and the
+  // Shipyard mid-Pandemonium, while the quest list said they could do it.
+  it('opens the chunks Pandemonium uses while the quest is under way from Port Sarim', () => {
+    const route = [...PANDEMONIUM_ROUTE].map((key) => {
+      const [cx, cy] = key.split(',').map(Number);
+      return { cx, cy };
+    });
+    const portSarim = { ...fresh(), regions: [...fresh().regions, 'Port Sarim'] };
+    for (const coord of route) {
+      expect(chunkEntry(coord, fresh(), 'vanilla'), `${coord.cx},${coord.cy} without Port Sarim`).toBe('LOCKED');
+      expect(chunkEntry(coord, portSarim, 'vanilla'), `${coord.cx},${coord.cy} from Port Sarim`).toBe('ALLOWED');
+    }
+    const done = { ...portSarim, quests: ['Pandemonium'] };
+    expect(chunkEntry({ cx: 47, cy: 47 }, done, 'vanilla')).toBe('LOCKED');
+    expect(chunkEntry({ cx: 32, cy: 42 }, done, 'vanilla')).toBe('LOCKED');
+    // After the quest the Shipyard opens with Sailing, as the sea does, not with the Isle of Souls.
+    const sailor = { ...done, skills: { ...done.skills, Sailing: 1 } };
+    expect(chunkEntry({ cx: 32, cy: 42 }, sailor, 'vanilla')).toBe('ALLOWED');
+    expect(chunkEntryReason({ cx: 32, cy: 42 }, 'LOCKED', done, 'vanilla', [])).toBe('Needs Sailing and Pandemonium');
+    // No route reaches Port Sarim, so the quest can't start.
+    expect(chunkEntry({ cx: 47, cy: 46 }, portSarim, 'vanilla', new Set())).toBe('LOCKED');
+  });
+
+  // Alex, 9 October 2026: Pandemonium, Port Sarim and Sailing open the whole sea.
+  it('opens the sea from Port Sarim once Pandemonium is done, with no walking route to it', () => {
+    const sea = { cx: 47, cy: 47 };
+    const reached = new Set([idOf({ cx: 47, cy: 50 })]);
+    const sailor = { ...fresh(), regions: [...fresh().regions, 'Port Sarim'], skills: { ...fresh().skills, Sailing: 1 }, quests: ['Pandemonium'] };
+    expect(chunkEntry(ocean, sailor, 'vanilla', reached)).toBe('ALLOWED');
+    expect(chunkEntry(sea, sailor, 'vanilla', reached)).toBe('ALLOWED');
+    const inland = { ...sailor, regions: fresh().regions };
+    expect(chunkEntry(sea, inland, 'vanilla', new Set())).toBe('NOT_READY');
   });
 });
 

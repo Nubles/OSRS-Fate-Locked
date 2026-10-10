@@ -205,7 +205,7 @@ describe('buildRuneliteRulesManifest - progress', () => {
       contentService: contentSource,
       itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
     });
-    expect(manifest.progress).toMatchObject({ unit: 'areas', unlocked: 10, total: 187, chunks: { total: 624 } });
+    expect(manifest.progress).toMatchObject({ unit: 'areas', unlocked: 10, total: 187, chunks: { total: 623 } });
     expect(manifest.progress?.chunks.unlocked).toBeGreaterThan(0);
   });
 });

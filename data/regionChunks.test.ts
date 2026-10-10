@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { readPinnedChunkSource } from '../scripts/chunk-source.mjs';
+import ocean from './oceanChunks.json';
 import { REGION_CHUNKS } from './regionChunks';
+
+// Named chunks reached only by boat (the Shipyard) sit in the ocean registry.
+const OCEAN = new Set(ocean.keys);
 
 const coord = ({ cx, cy }: { cx: number; cy: number }) => `${cx},${cy}`;
 
@@ -15,10 +19,11 @@ describe('reviewed continent chunk universe', () => {
         return (chunk?.Nickname ?? chunk?.Name) !== 'Ocean Chunk';
       })
       .map((id) => `${Number(id) >> 8},${Number(id) & 255}`)
+      .filter((key) => !OCEAN.has(key))
       .sort();
     const authored = Object.values(REGION_CHUNKS).flat().map(coord).sort();
 
-    expect(source).toHaveLength(624);
+    expect(source).toHaveLength(623);
     expect(new Set(authored).size).toBe(authored.length);
     expect(authored).toEqual(source);
   });

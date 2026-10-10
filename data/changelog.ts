@@ -17,25 +17,65 @@ export interface ChangelogRelease {
   sections: Partial<Record<ChangelogSection, readonly ChangelogNote[]>>;
 }
 
+/*
+ * How to write a What's New entry. Players read these in the app and in the
+ * Discord's #updates channel, so write them like a person posting an update,
+ * not like release documentation. data/changelog.test.ts checks the limits on
+ * every entry dated on or after 2026-10-10; older entries keep their wording.
+ *
+ * - Title: a few words in normal sentence case, like a forum post subject.
+ *   "Pandemonium and the open sea", not "Pandemonium and the Shipyard Open
+ *   the Way You Reach Them". 50 characters at most.
+ * - One short line per bullet (160 characters at most) saying what changed
+ *   for the player. Lead with the thing they'll notice.
+ * - Skip the backstory: no "Before, it did X because Y", no how it was built.
+ * - Plain words and contractions ("you're", "doesn't"). No em dashes.
+ * - Six bullets at most. If there's more, keep what players will notice and
+ *   drop the rest.
+ * - Put the newest entry first and set LATEST_CHANGELOG_ID in
+ *   data/changelogLatest.ts to its id.
+ */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-09-new-player-reports',
-    title: 'Quest and Diary Fixes From Player Reports',
+    id: '2026-10-10-quest-item-checks',
+    title: 'Quests and diaries check the items you need',
+    date: '2026-10-10',
+    sections: {
+      changed: [
+        'Quests and diary tasks now need what their items need: the slot to wear it, the shop that sells it, or the skill to make it.',
+        'Gertrude’s Cat needs a fishing shop or 5 Fishing for the sardine.',
+        'The start of Recipe for Disaster needs the shops and places that have the cook’s items.',
+        'The Kandarin Easy pet fish needs Fishing Shops, 10 Fishing and a way to get a fishbowl.',
+        'A Soul’s Bane needs a Weapon slot, since you wield the rage room’s weapons.',
+      ],
+      fixed: [
+        'The Doable tab no longer lists quests in areas you can’t reach. Diary tasks you can do now say Can do now.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-10-chunk-picker-october',
+    title: 'Map content updated for October',
+    date: '2026-10-10',
+    sections: {
+      changed: [
+        'The map and RuneLite now use the 7 October Chunk Picker data. Your areas, what they cost and how you reach them don’t change.',
+        'Emissary Ascended at the Twilight Temple shows as a monster you can fight, with its own drops.',
+        'Pete Kayer shows up in the Ferox Enclave’s chunk info.',
+        'The four Hunter shops list the new net trap in their stock.',
+        'Goblins list Energy potion(3) in their drops.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-09-pandemonium-route',
+    title: 'Pandemonium and the Shipyard Open the Way You Reach Them',
     date: '2026-10-09',
     sections: {
       fixed: [
-        'The Kandarin Easy pet fish task now needs what Harry asks for: Fishing Shops for the tiny net, 10 Fishing, and a fishbowl, from 42 Crafting or from Mogres after Skippy and the Mogres with 32 Slayer.',
-        'A Soul’s Bane needs a Weapon slot, as the rage room makes you wield its weapons.',
-        'Diary tasks you can do now say Can do now, and a way in you don’t need is no longer drawn as a lock. The Falador Easy strut repair counts from the Dwarven Mine entrance in Falador, so it showed as available while its Motherlode Mine chip looked locked.',
-        'Gertrude’s Cat needs a way to get the raw sardine: Fishing Shops to buy it, or 5 Fishing to catch it with a rod and bait.',
-        'The start of Recipe for Disaster needs the shops and places for the cook’s items: Yanille’s Dragon Inn (Bars & Inns) for the Greenman’s ale, Vegetable Shops for the rotten tomato, the Gnome Stronghold’s Food Shops for the fruit blast, and Betty in Port Sarim (Magic Shops) or Herblore Shops for the eye of newt.',
-        'The Doable tab no longer lists quests in an owned area no route reaches, such as The Ribbiting Tale and Enter the Abyss. It now agrees with the Quests tab and files them under Locked.',
-      ],
-      changed: [
-        'Every quest and diary task was checked against the Wiki for items you can’t get with your unlocks. 69 quests and 20 diary tasks now ask for what their items need.',
-        'Items you have to wear need their slot, such as the mourner disguise, the ghostly robes, the M’speak amulet and the anti-dragon shield for Elvarg.',
-        'Items only sold in shops need that shop, such as the ice cooler and mirror shield from Slayer masters, Desert Treasure’s lockpicks and the gold leaf for the Kalphite Queen head.',
-        'Items you can only make need the skill, such as bronze wire (4 Smithing) and Dragon Slayer’s unfired bowl (8 Crafting). Items you can buy or make take either, such as iron bars (15 Smithing, with 15 Mining or an ore shop), steel nails and stew.',
+        'While you are doing Pandemonium, the RuneLite plugin now lets you into the places the quest takes you: the sea between Port Sarim and The Pandemonium, The Pandemonium itself, and the Shipyard. Before, it called them Locked because the sea only opens once Pandemonium is done. You still need Port Sarim to start the quest, and once it is finished these places follow their usual rules again.',
+        'Once you have finished Pandemonium and have Sailing and Port Sarim, the RuneLite plugin opens the whole open sea. Before, most of it showed Not ready, because no walking route from Lumbridge reaches the sea.',
+        'The Shipyard where you customise your boat no longer counts as part of the Isle of Souls. You reach it from a shipwright at a port, not from the Isle of Souls, so it now opens with the sea once you have Sailing and Pandemonium. The Isle of Souls has one chunk fewer, and the land total on the run card drops from 624 to 623.',
       ],
     },
   },

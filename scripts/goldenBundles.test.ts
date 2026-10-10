@@ -28,6 +28,7 @@ import { getGameMode, resolveModeRules, type GameModeRules } from '../config/gam
 import { normalizeAccountName } from '../services/fateEventProtocol';
 import { chunkContentService, CHUNK_CONTENT_DATA_VERSION } from '../services/ChunkContentService';
 import { runReach } from '../utils/chunkEntry';
+import { PANDEMONIUM_ROUTE } from '../utils/pandemoniumRoute';
 import { chunkEntries, rulesPlaces } from '../utils/chunkEntries';
 import { bankDecisions } from '../utils/bankDecisions';
 import { runProgress } from '../utils/runProgress';
@@ -763,6 +764,8 @@ describe('golden bundles', () => {
       const pinned = answers as { chunks: Record<string, boolean>; banks: Record<string, boolean> };
       const rules = bundle.rules as { chunks: Record<string, { entry: string; categories: Record<string, { name: string; status: string }[]> }> };
       const entries = Object.entries(rules.chunks)
+        // Pandemonium's route opens for the quest without being owned (utils/chunkEntry.ts).
+        .filter(([key]) => !PANDEMONIUM_ROUTE.has(key))
         .filter(([key, snapshot]) => key in pinned.chunks && (snapshot.entry !== 'LOCKED') !== pinned.chunks[key])
         .map(([key, snapshot]) => `${key} entry ${snapshot.entry}, pinned ${pinned.chunks[key] ? 'unlocked' : 'locked'}`);
       expect(entries.slice(0, 10), `${scenario.id}: chunk entries`).toEqual([]);
@@ -878,6 +881,9 @@ describe('golden bundles', () => {
     const answers = (id: string) => results.get(id)!.expect as Answers;
     // Sailing opens every ocean chunk.
     expect([...OCEAN_CHUNK_KEYS].filter((key) => !answers('vanilla-sailing').chunks[key])).toEqual([]);
+    // With Port Sarim too, every one of them is open to enter, not just owned.
+    const sailingEntries = (results.get('vanilla-sailing')!.expect as { entries: Record<string, string> }).entries;
+    expect([...OCEAN_CHUNK_KEYS].filter((key) => sailingEntries[key] !== 'ALLOWED')).toEqual([]);
     expect([...OCEAN_CHUNK_KEYS].some((key) => answers('vanilla-mid').chunks[key])).toBe(false);
     // Land across the sea from the coast joins the Chunked frontier.
     expect(answers('chunked-sailing').frontier).toEqual(expect.arrayContaining(['49,47', '50,48']));
