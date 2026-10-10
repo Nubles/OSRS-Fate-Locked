@@ -1,24 +1,29 @@
-# Keeps the DEPLOYED app's bundled game data current with the OSRS Wiki.
+# Checks the tracker's game data against the OSRS Wiki every week.
 #
-# The browser reports collection-log additions without changing catalogue or
-# save identities. This workflow proposes reviewed build-time data updates and
-# runs the tests before opening a pull request. New bosses and quests still
-# need human curation of unlocks, requirements, models, and rewards.
+# The Wiki can only be read from here (Claude's cloud sessions can't reach its
+# API), so this workflow does the exact, machine-checkable part:
+#   1. syncs the collection log and re-renders Combat Achievements,
+#   2. writes docs/SYNC_STATUS.md (quest list by name, CA counts, Chunk Picker
+#      movement),
+#   3. runs the tests, whose failures name the follow-up curation (a new pet,
+#      boss or quest that still needs its unlocks, tiers and areas).
 #
-# Flow: weekly (or manual) -> sync from wiki -> test -> open/refresh a PR ->
-# dispatch CI on it. A maintainer reviews + merges; the merge pushes to main
-# and the existing Deploy workflow publishes it. Nothing ships unreviewed.
+# When anything changed it pushes the result to the bot/wiki-content-sync
+# branch, with the report as the commit message and the job summary. It never
+# opens a pull request and never touches main. A weekly Claude routine reads
+# that branch a few hours later, reads the week's game update notes, does the
+# curation, adds the What's New entry and opens one draft pull request for a
+# maintainer to merge. When nothing changed the branch is deleted, so its
+# existence alone means "something to review".
 name: Sync content from the OSRS Wiki
 
 on:
   schedule:
-    - cron: '0 6 * * 1' # Mondays 06:00 UTC
+    - cron: '0 5 * * 4' # Thursdays 05:00 UTC, the morning after Wednesday's game update
   workflow_dispatch: {}  # manual run from the Actions tab
 
 permissions:
   contents: write
-  pull-requests: write
-  actions: write # dispatch CI on the sync PR branch
 
 concurrency:
   group: wiki-content-sync
@@ -38,51 +43,68 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Sync data from the wiki
-        run: npm run content:sync | tee sync-output.txt
-
-      - name: Run tests (gates the sync — must stay green to open a PR)
-        run: npm test
-
-      - name: Build the PR description from the sync log
-        if: success()
+        id: sync
+        continue-on-error: true
         run: |
-          {
-            echo "Automated sync of game data from the **OSRS Wiki** (\`npm run content:sync\`)."
-            echo ""
-            echo "Review the data diff below, then merge to deploy. If the sync reports a"
-            echo "brand-new page (e.g. a new boss), it needs manual curation — add it to the"
-            echo "relevant unlock list / model / economy before or after merging."
-            echo ""
-            echo '```'
-            cat sync-output.txt
-            echo '```'
-          } > pr-body.md
+          set -o pipefail
+          status=0
+          npm run --silent clog:sync 2>&1 | tee "$RUNNER_TEMP/clog.txt" || status=1
+          npm run --silent ca:sync 2>&1 | tee "$RUNNER_TEMP/ca.txt" || status=1
+          npm run --silent content:check 2>&1 | tee "$RUNNER_TEMP/check.txt" || status=1
+          exit $status
 
-      - name: Open or update the sync PR
-        id: cpr
-        if: success()
-        uses: peter-evans/create-pull-request@v6
-        with:
-          branch: bot/wiki-content-sync
-          delete-branch: true
-          # Only ever commit the generated data/report — never the scratch logs above.
-          add-paths: |
-            data/collectionLogData.ts
-            data/caTasks.ts
-            docs/SYNC_STATUS.md
-          commit-message: "chore(data): sync collection log from the OSRS Wiki"
-          title: "🔄 Sync game data from the OSRS Wiki"
-          body-path: pr-body.md
-          labels: data-sync
+      - name: Run tests (failures are the curation to-do list, not a gate)
+        id: tests
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npx vitest run 2>&1 | tee "$RUNNER_TEMP/tests.txt"
 
-      # A pull request opened with GITHUB_TOKEN doesn't trigger other
-      # workflows, so CI never ran on the sync PR. workflow_dispatch is the one
-      # event GITHUB_TOKEN may start, and its checks attach to the PR's head.
-      - name: Run CI on the sync PR
-        if: success() && (steps.cpr.outputs.pull-request-operation == 'created' || steps.cpr.outputs.pull-request-operation == 'updated')
+      - name: Write the report
+        id: report
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run ci.yml --repo "${{ github.repository }}" --ref bot/wiki-content-sync
+          SYNC_OUTCOME: ${{ steps.sync.outcome }}
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+        run: |
+          report="$RUNNER_TEMP/report.md"
+          strip() { sed -E 's/\x1B\[[0-9;]*[A-Za-z]//g'; }
+          {
+            echo "Weekly game data check from the OSRS Wiki"
+            echo ""
+            echo "Sync: $SYNC_OUTCOME. Tests: $TESTS_OUTCOME."
+            echo ""
+            echo "## Changed files"
+            git status --porcelain | sed 's/^/- /'
+            echo ""
+            echo "## Collection log"
+            strip < "$RUNNER_TEMP/clog.txt" | grep -E '^\s*(RENAME|ADD|MOVE|\+|\?)|\[clog:sync\] (renames|failed|WARNING|[0-9]+ NEW)' || echo "(no changes)"
+            echo ""
+            echo "## Freshness check"
+            strip < "$RUNNER_TEMP/check.txt" | grep -E '\[content:check\]|^\s{2}' | grep -v 'wrote docs' || true
+            echo ""
+            echo "## Failing tests"
+            strip < "$RUNNER_TEMP/tests.txt" | grep -E '^\s*(FAIL|×)' | sort -u | head -60 || true
+          } > "$report"
+          cat "$report" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$(git status --porcelain -- data docs)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push the result for review
+        if: steps.report.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B bot/wiki-content-sync
+          git add data docs/SYNC_STATUS.md
+          git commit -F "$RUNNER_TEMP/report.md"
+          git push --force origin bot/wiki-content-sync
+
+      - name: Clear the branch when nothing changed
+        if: steps.report.outputs.changed != 'true'
+        run: git push origin --delete bot/wiki-content-sync 2>/dev/null || true

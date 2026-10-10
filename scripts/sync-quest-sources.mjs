@@ -644,15 +644,63 @@ async function refresh() {
   }
 }
 
-const args = process.argv.slice(2);
-if (args.length > 1 || args.some(arg => arg !== '--check' && arg !== '--refresh')) {
-  throw new Error('Usage: node scripts/sync-quest-sources.mjs [--check|--refresh]');
+/**
+ * Network-backed, read-only drift check used by the weekly freshness report
+ * (scripts/check-content-sync.mjs). Compares the live Quests/List page with
+ * the runtime quest data by page title and writes nothing.
+ */
+export async function questListDrift() {
+  const runtime = readRuntimeQuestData();
+  const parse = await wikiRequest({
+    action: 'parse',
+    page: WIKI_LIST_TITLE,
+    prop: 'text|revid',
+  }, 'official quest list parse');
+  const listHtml = parse.parse?.text;
+  if (typeof listHtml !== 'string') {
+    throw new Error('official quest list parse returned no HTML');
+  }
+  const liveRows = parseOfficialRows(listHtml, runtime);
+  const liveTitles = new Set(liveRows.map(row => row.pageTitle.toLocaleLowerCase()));
+  const runtimeTitles = new Set(['recipe for disaster']);
+  for (const quest of Object.values(runtime)) {
+    for (const name of [quest.id, quest.name, WIKI_PAGE_TITLES[quest.id]]) {
+      if (name) runtimeTitles.add(name.toLocaleLowerCase());
+    }
+  }
+  return {
+    listRevision: parse.parse?.revid ?? null,
+    liveCounts: {
+      quests: liveRows.filter(row => row.kind === 'quest').length,
+      miniquests: liveRows.filter(row => row.kind === 'miniquest').length,
+    },
+    liveOnly: liveRows
+      .filter(row => !runtimeTitles.has(row.pageTitle.toLocaleLowerCase()))
+      .map(row => ({ pageTitle: row.pageTitle, kind: row.kind }))
+      .sort((left, right) => left.pageTitle.localeCompare(right.pageTitle)),
+    runtimeMissing: Object.values(runtime)
+      .filter(quest => !String(quest.id).startsWith('RFD: '))
+      .filter(quest => ![quest.id, quest.name, WIKI_PAGE_TITLES[quest.id]]
+        .some(name => name && liveTitles.has(name.toLocaleLowerCase())))
+      .map(quest => quest.id)
+      .sort(),
+  };
 }
-if (args.includes('--refresh')) {
-  await refresh();
-} else {
-  assertSnapshots(
-    readJson(OFFICIAL_PATH, 'quest-list snapshot'),
-    readJson(AUDIT_PATH, 'quest-requirement-audit snapshot'),
-  );
+
+const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) {
+  const args = process.argv.slice(2);
+  if (args.length > 1 || args.some(arg => arg !== '--check' && arg !== '--refresh' && arg !== '--drift')) {
+    throw new Error('Usage: node scripts/sync-quest-sources.mjs [--check|--refresh|--drift]');
+  }
+  if (args.includes('--refresh')) {
+    await refresh();
+  } else if (args.includes('--drift')) {
+    console.log(JSON.stringify(await questListDrift(), null, 2));
+  } else {
+    assertSnapshots(
+      readJson(OFFICIAL_PATH, 'quest-list snapshot'),
+      readJson(AUDIT_PATH, 'quest-requirement-audit snapshot'),
+    );
+  }
 }

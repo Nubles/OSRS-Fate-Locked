@@ -87,6 +87,7 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   // Captain Ginea runs it from the Shayzien encampment, 23,56 (accuracy audit G1).
   'Intelligence Gathering': ['Shayzien'],
   'Last Man Standing': ['Ferox Enclave'],
+  "Pete Kayer's Challenges": ['Ferox Enclave'],
   'Mage Arena': ['Mage Arena'],
   'Nightmare Zone': ['Yanille'],
   'Pest Control': ["Void Knights' Outpost"],

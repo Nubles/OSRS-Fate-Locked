@@ -48,4 +48,43 @@ describe('content-sync report builder', () => {
     expect(markdown).toMatch(/Wiki: \*\*180\*\* quests/);
     expect(markdown).toMatch(/new quest was released/);
   });
+
+  it('names a quest the Wiki lists but the app lacks', () => {
+    const { actions, markdown } = buildReport({
+      ...base,
+      cas: { app: {}, wiki: {} },
+      questNames: { liveOnly: [{ pageTitle: 'A New Quest', kind: 'quest' }], runtimeMissing: [] },
+    });
+    expect(markdown).toMatch(/New on the Wiki: \*\*A New Quest\*\* \(quest\)/);
+    expect(actions).toEqual(expect.arrayContaining([expect.stringContaining('"A New Quest"')]));
+  });
+
+  it('confirms the quest list when every row is in the app', () => {
+    const { actions, markdown } = buildReport({
+      ...base,
+      cas: { app: {}, wiki: {} },
+      questNames: { liveOnly: [], runtimeMissing: [] },
+    });
+    expect(actions).toEqual([]);
+    expect(markdown).toMatch(/Every quest and miniquest/);
+  });
+
+  it('flags Chunk Picker movement without recording commit hashes', () => {
+    const moved = buildReport({
+      ...base,
+      cas: { app: {}, wiki: {} },
+      chunkSource: { moved: true, pinnedCommit: 'aaa', latestCommit: 'bbb' },
+    });
+    expect(moved.actions).toEqual(expect.arrayContaining([expect.stringContaining('Chunk Picker')]));
+    expect(moved.markdown).not.toMatch(/bbb/);
+    const unchangedExport = buildReport({
+      ...base,
+      cas: { app: {}, wiki: {} },
+      chunkSource: { moved: true, exportChanged: false, pinnedCommit: 'aaa', latestCommit: 'bbb' },
+    });
+    expect(unchangedExport.actions).toEqual([]);
+    expect(unchangedExport.markdown).toMatch(/export the tracker reads is unchanged/);
+    const unavailable = buildReport({ ...base, cas: { app: {}, wiki: {} }, chunkSource: null });
+    expect(unavailable.status).toBe('UNKNOWN');
+  });
 });

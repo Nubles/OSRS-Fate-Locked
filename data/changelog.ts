@@ -37,16 +37,28 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-10-pete-kayer',
+    title: 'Pete Kayer’s Challenges can be rolled',
+    date: '2026-10-10',
+    sections: {
+      added: [
+        'Pete Kayer’s Challenges from the 7 October update is a Minigame you can roll now. It needs Ferox Enclave unlocked.',
+        'Like in the game, its rewards need 750 total level and the Easy Wilderness Diary.',
+        'Your completion total goes up by one to make room for it.',
+      ],
+    },
+  },
+  {
     id: '2026-10-10-chunk-picker-october',
-    title: 'Map Content Brought Up to Date With October',
+    title: 'Map content updated for October',
     date: '2026-10-10',
     sections: {
       changed: [
-        'The chunk content behind the map and the RuneLite plugin now matches the Chunk Picker data from 7 October. The areas you own, what they cost and how you reach them are unchanged.',
-        'Emissary Ascended at the Twilight Temple now shows as a monster you can fight, with its own drops, instead of a plain NPC.',
-        'Pete Kayer now shows in the Ferox Enclave’s chunk information.',
-        'The four Hunter shops (Aleck’s Hunter Emporium, Elder Strom’s Hunting Stall, Imia’s Supplies and the Nardah Hunter Shop) now list the new net trap among their stock.',
-        'Goblins list Energy potion(3) among their drops.',
+        'The map and RuneLite now use the 7 October Chunk Picker data. Your areas, what they cost and how you reach them don’t change.',
+        'Emissary Ascended at the Twilight Temple shows as a monster you can fight, with its own drops.',
+        'Pete Kayer shows up in the Ferox Enclave’s chunk info.',
+        'The four Hunter shops list the new net trap in their stock.',
+        'Goblins list Energy potion(3) in their drops.',
       ],
     },
   },
