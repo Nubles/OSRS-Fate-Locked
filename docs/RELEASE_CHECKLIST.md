@@ -24,7 +24,7 @@ separate operation.
    `data/changelog.ts` says: a short sentence-case title, one plain line per
    bullet, no backstory, six bullets at most. Entries are posted to the
    Discord's #updates channel as written, and `data/changelog.test.ts` checks
-   the limits.
+   the limits on entries dated from 10 October 2026.
 3. Run the full test suite.
 4. Run the TypeScript check.
 5. Run deterministic content verification.
