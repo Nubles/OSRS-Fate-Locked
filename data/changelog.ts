@@ -20,11 +20,13 @@ export interface ChangelogRelease {
 export const CHANGELOG_RELEASES = [
   {
     id: '2026-10-10-pete-kayer',
-    title: "Pete Kayer's Challenges Join the Minigames",
+    title: 'Pete Kayer’s Challenges can be rolled',
     date: '2026-10-10',
     sections: {
       added: [
-        "Pete Kayer's Challenges, the new Ferox Enclave activity from the 7 October game update, is now a Minigame you can roll. It needs Ferox Enclave, and claiming its rewards needs 750 total level and the Easy Wilderness Diary, as in the game. Your completion total grows by one to make room for it.",
+        'Pete Kayer’s Challenges from the 7 October update is a Minigame you can roll now. It needs Ferox Enclave unlocked.',
+        'Like in the game, its rewards need 750 total level and the Easy Wilderness Diary.',
+        'Your completion total goes up by one to make room for it.',
       ],
     },
   },
