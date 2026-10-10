@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "policyVersion": 3,
-  "sourceCommit": "fa71ed3b207e6a501444987dee23b875ec27cacd",
+  "sourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
   "categoryTotals": {
     "walkableChunks": {
       "source": 1172,
@@ -32,9 +32,9 @@
       "unresolved": 0
     },
     "taskUnlocks": {
-      "source": 1959,
-      "imported": 1298,
-      "normalized": 657,
+      "source": 1958,
+      "imported": 1300,
+      "normalized": 654,
       "excluded": 4,
       "unresolved": 0
     },
@@ -46,15 +46,15 @@
       "unresolved": 0
     },
     "challenges": {
-      "source": 14772,
+      "source": 14777,
       "imported": 219,
       "normalized": 0,
-      "excluded": 14553,
+      "excluded": 14558,
       "unresolved": 0
     },
     "drops": {
-      "source": 873,
-      "imported": 740,
+      "source": 874,
+      "imported": 741,
       "normalized": 133,
       "excluded": 0,
       "unresolved": 0
@@ -48218,6 +48218,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Extra/Complete all of ~|Pete Kayer|~'s challenges for the first time",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Extra/Complete the ~|Natural History Quiz|~",
       "terminal": true,
       "disposition": "excluded",
@@ -51699,6 +51707,14 @@
     {
       "category": "challenges",
       "sourceKey": "Extra/Obtain an ~|alchemist's amulet|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Extra/Obtain an ~|ancient fabric|~",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -60483,6 +60499,14 @@
     {
       "category": "challenges",
       "sourceKey": "Hunter/Complete an expert ~|Hunters' Rumour|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Hunter/Create a ~|net trap (item)|~",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -75788,6 +75812,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Nonskill/Enakhra's Temple access",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Nonskill/Enchant a salve amulet",
       "terminal": true,
       "disposition": "excluded",
@@ -88277,6 +88309,14 @@
     {
       "category": "challenges",
       "sourceKey": "Nonskill/Train Prayer for ecto-tokens*",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Nonskill/Trawling net access",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -169513,6 +169553,16 @@
     },
     {
       "category": "drops",
+      "sourceKey": "Emissary Ascended",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Emissary Ascended"
+      ]
+    },
+    {
+      "category": "drops",
       "sourceKey": "Emissary Chosen",
       "terminal": true,
       "disposition": "imported",
@@ -214807,6 +214857,16 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "Items/Angler's paint^/*",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Angler's paint^/*"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "Items/Annakarl teleport^/*",
       "terminal": true,
       "disposition": "imported",
@@ -229046,40 +229106,6 @@
     },
     {
       "category": "taskUnlocks",
-      "sourceKey": "Monsters/Bull shark/11059-W1",
-      "terminal": false,
-      "disposition": "normalized",
-      "reason": "reviewed-requirement-rewritten",
-      "targetKeys": [],
-      "detail": "F2P Only"
-    },
-    {
-      "category": "taskUnlocks",
-      "sourceKey": "Monsters/Bull shark/11059-W1",
-      "terminal": true,
-      "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
-      "targetKeys": []
-    },
-    {
-      "category": "taskUnlocks",
-      "sourceKey": "Monsters/Bull shark/11313-W2",
-      "terminal": false,
-      "disposition": "normalized",
-      "reason": "reviewed-requirement-rewritten",
-      "targetKeys": [],
-      "detail": "F2P Only"
-    },
-    {
-      "category": "taskUnlocks",
-      "sourceKey": "Monsters/Bull shark/11313-W2",
-      "terminal": true,
-      "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
-      "targetKeys": []
-    },
-    {
-      "category": "taskUnlocks",
       "sourceKey": "Monsters/Bull shark/11314-W1",
       "terminal": false,
       "disposition": "normalized",
@@ -229107,23 +229133,6 @@
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Bull shark/11315-W1",
-      "terminal": true,
-      "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
-      "targetKeys": []
-    },
-    {
-      "category": "taskUnlocks",
-      "sourceKey": "Monsters/Bull shark/11569-W1",
-      "terminal": false,
-      "disposition": "normalized",
-      "reason": "reviewed-requirement-rewritten",
-      "targetKeys": [],
-      "detail": "F2P Only"
-    },
-    {
-      "category": "taskUnlocks",
-      "sourceKey": "Monsters/Bull shark/11569-W1",
       "terminal": true,
       "disposition": "normalized",
       "reason": "subarea-suffix-collapsed",
@@ -232017,6 +232026,23 @@
       "targetKeys": [
         "Orange salamander/13098"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "NPCs/Pete Kayer/12600",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": []
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "NPCs/Pete Kayer/12600",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [],
+      "detail": "F2P Only"
     },
     {
       "category": "taskUnlocks",

@@ -263,21 +263,21 @@ describe('deterministic current content baseline', () => {
       schemaVersion: 1,
       repository: 'source-chunk/chunk-picker-v2',
       branch: 'gh-pages',
-      commit: 'fa71ed3b207e6a501444987dee23b875ec27cacd',
-      blobSha: '8d14fdb3f2024a4068d2f742ea4cd274e071f10d',
-      rawSha256: 'C66BB47E4978B3F41115573EA825391E26E0A458B9D93903A4FA0DFF9AF5C48C',
-      rawBytes: 7611072,
+      commit: '629e9fee6183773e8df26d7e4bc5db792290ce0b',
+      blobSha: 'dc55e978a90dd7eb913a187d544694618d0370a6',
+      rawSha256: '81E1A4740E9B1B5E6C5F7E1DBF682003FCB17E7D8CF0FE9B9EE20FFF672EC878',
+      rawBytes: 7612597,
       policyVersion: 3,
-      reviewedAt: '2026-09-21',
+      reviewedAt: '2026-10-10',
     });
     const generatedChunkContent = fullChunkContent as typeof fullChunkContent & {
       entrances?: Record<string, Array<{ location: string; label: string }>>;
     };
     expect(generatedChunkContent.sourceMeta).toEqual({
       repository: 'source-chunk/chunk-picker-v2',
-      commit: 'fa71ed3b207e6a501444987dee23b875ec27cacd',
-      blobSha: '8d14fdb3f2024a4068d2f742ea4cd274e071f10d',
-      rawSha256: 'C66BB47E4978B3F41115573EA825391E26E0A458B9D93903A4FA0DFF9AF5C48C',
+      commit: '629e9fee6183773e8df26d7e4bc5db792290ce0b',
+      blobSha: 'dc55e978a90dd7eb913a187d544694618d0370a6',
+      rawSha256: '81E1A4740E9B1B5E6C5F7E1DBF682003FCB17E7D8CF0FE9B9EE20FFF672EC878',
       policyVersion: 3,
       namedLocationPolicyVersion: 1,
       namedLocationReviewedAt: '2026-08-03',
@@ -315,23 +315,25 @@ describe('deterministic current content baseline', () => {
       shortcuts: 219,
       // Up from 439: the ten shops added from the wiki (accuracy audit, missing shops).
       shops: 449,
-      dropTables: 800,
+      // Up from 800: Emissary Ascended (Varlamore) gained a drop table in the 7 Oct export.
+      dropTables: 801,
       questSections: 134,
       banks: 127,
       tags: 29,
       // Up from 27,654: the transform records each "F2P Only" tag it drops and each requirement it
       // rewrites or overrides (accuracy audit S11, G4, G5, U6).
-      auditEvents: 28083,
+      // Up from 28,083 with the 7 Oct 2026 Chunk Picker export (net +3 ledger events).
+      auditEvents: 28086,
       unresolvedTaskUnlocks: 0,
     });
-    expect(taskUnlockTotals.source).toBe(1959);
+    expect(taskUnlockTotals.source).toBe(1958);
     expect(taskUnlockTotals.unresolved).toBe(0);
     expect(taskUnlockTotals.imported + taskUnlockTotals.normalized + taskUnlockTotals.excluded)
-      .toBe(1959);
+      .toBe(1958);
     expect(taskUnlockTotals).toEqual({
-      source: 1959,
-      imported: 1298,
-      normalized: 657,
+      source: 1958,
+      imported: 1300,
+      normalized: 654,
       excluded: 4,
       unresolved: 0,
     });
@@ -394,7 +396,7 @@ describe('deterministic current content baseline', () => {
   it('pins reviewed August Chunk Picker content sentinels', () => {
     expect(Object.keys(fullChunkContent.chunks)).toHaveLength(938);
     expect(fullChunkContent.shortcuts).toHaveLength(219);
-    expect(Object.keys(fullChunkContent.drops)).toHaveLength(800);
+    expect(Object.keys(fullChunkContent.drops)).toHaveLength(801);
     expect(fullChunkContent.chunks['7482']).toBeDefined();
     expect(fullChunkContent.drops['Vampyre Snail']).toBeDefined();
     expect(fullChunkContent.drops['Mad Angel']).toEqual(expect.arrayContaining([
