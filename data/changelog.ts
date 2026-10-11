@@ -17,18 +17,50 @@ export interface ChangelogRelease {
   sections: Partial<Record<ChangelogSection, readonly ChangelogNote[]>>;
 }
 
+/*
+ * How to write a What's New entry. Players read these in the app and in the
+ * Discord's #updates channel, so write them like a person posting an update,
+ * not like release documentation. data/changelog.test.ts checks the limits on
+ * every entry dated on or after 2026-10-10; older entries keep their wording.
+ *
+ * - Title: a few words in normal sentence case, like a forum post subject.
+ *   "Pandemonium and the open sea", not "Pandemonium and the Shipyard Open
+ *   the Way You Reach Them". 50 characters at most.
+ * - One short line per bullet (160 characters at most) saying what changed
+ *   for the player. Lead with the thing they'll notice.
+ * - Skip the backstory: no "Before, it did X because Y", no how it was built.
+ * - Plain words and contractions ("you're", "doesn't"). No em dashes.
+ * - Six bullets at most. If there's more, keep what players will notice and
+ *   drop the rest.
+ * - Put the newest entry first and set LATEST_CHANGELOG_ID in
+ *   data/changelogLatest.ts to its id.
+ */
 export const CHANGELOG_RELEASES = [
   {
     id: '2026-10-10-chunked-fate',
-    title: 'Fate Keeps Chunked Runs Moving',
+    title: 'Fate keeps Chunked runs moving',
     date: '2026-10-10',
     sections: {
       added: [
-        'Breakthroughs in Chunked: when a skill reaches the cap of its tier, and your chunks can train it at the next tier, you get one 50% roll to open that tier. Roll it from the Keys screen. Win or lose, each skill gets one roll per tier.',
-        'Fate’s Mercy in Chunked: if you have no Keys of any kind, every skill you can train is capped, every Breakthrough is rolled and no quest in your chunks is doable, Call on Fate draws one neighbouring chunk or skill tier for you. Fate picks it, not you.',
+        'Breakthroughs: a skill at its cap gets one 50% roll to open its next tier, if your chunks can train it there. Roll it from the Keys screen.',
+        'Fate’s Mercy: with no Keys, nothing left to train, no Breakthroughs and no doable quests, Call on Fate draws a nearby chunk or skill tier.',
       ],
       balance: [
-        'A Skills Key in Chunked now only rolls a skill your chunks can train at the levels it opens, so it can’t hand you Sailing while you stand in Lumbridge Castle. Skills are still rolled with Keys, tier by tier.',
+        'A Skills Key in Chunked only rolls skills your chunks can train, so it won’t hand you Sailing in Lumbridge Castle.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-10-chunk-picker-october',
+    title: 'Map content updated for October',
+    date: '2026-10-10',
+    sections: {
+      changed: [
+        'The map and RuneLite now use the 7 October Chunk Picker data. Your areas, what they cost and how you reach them don’t change.',
+        'Emissary Ascended at the Twilight Temple shows as a monster you can fight, with its own drops.',
+        'Pete Kayer shows up in the Ferox Enclave’s chunk info.',
+        'The four Hunter shops list the new net trap in their stock.',
+        'Goblins list Energy potion(3) in their drops.',
       ],
     },
   },
