@@ -8,6 +8,7 @@ import { travelReachability } from '../utils/travelReach';
 import { CHUNKED_START } from '../utils/chunkAdjacency';
 import { chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
 import { questLocations } from '../utils/questLocations';
+import { questsForMode } from '../utils/questScope';
 import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate, hasCanonicalQuestLocationEvidence, QuestChunkStatus } from '../utils/questDoability';
 import {
   evaluateQuestEligibility, questRequirementOptionLabel, withSkillGateQuests,
@@ -230,6 +231,19 @@ export const chunkedQuestRows = (unlocks: UnlockState, gameModeId: string): Row[
   });
 };
 
+/**
+ * Every quest row the run's mode shows, for the Doable tab and Fate's Mercy:
+ * Chunked walks its chunks (chunkContentService must be ready), and
+ * Free-to-play lists only the free-to-play quests.
+ */
+export const fateQuestRows = (unlocks: UnlockState, gameModeId: string): Row[] =>
+  gameModeId === 'chunked'
+    ? chunkedQuestRows(unlocks, gameModeId)
+    : questsForMode(gameModeId).map(quest => ({
+        ...evaluateQuestDoability(quest, unlocks, null, [], gameModeId),
+        strandedChunk: null,
+      }));
+
 export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
   const { unlocks, gameModeId } = useGame();
   const isChunked = gameModeId === 'chunked';
@@ -240,14 +254,8 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
   const [open, setOpen] = useState<Record<string, boolean>>({ DOABLE: true, REQS: true, STRANDED: true, LOCKED: true });
 
   const rows = useMemo<Row[]>(() => {
-    if (!isChunked) {
-      return Object.values(QUEST_DATA).map(quest => ({
-        ...evaluateQuestDoability(quest, unlocks, null, [], gameModeId),
-        strandedChunk: null,
-      }));
-    }
-    if (!ready) return [];
-    return chunkedQuestRows(unlocks, gameModeId);
+    if (isChunked && !ready) return [];
+    return fateQuestRows(unlocks, gameModeId);
   }, [ready, unlocks, gameModeId, isChunked]);
 
   const filtered = useMemo(() => {

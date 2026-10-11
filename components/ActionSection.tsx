@@ -7,7 +7,7 @@ import { useGame } from '../context/GameContext';
 import { BookOpen, ScrollText, Dices } from './OsrsIcon';
 import { Crosshair } from 'lucide-react';
 import { wikiService } from '../services/WikiService';
-import { resolveModeRules } from '../config/gameModes';
+import { resolveModeRules, usesVanillaRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { EARN_METHODS, failureFateForSource, LEVEL_ROLL_MAX } from '../config/economy';
 import { BRUTUS_BOSS_NAME, effectiveVanillaClueRate, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
@@ -398,7 +398,7 @@ export const ActionSection: React.FC = () => {
     rollForKey(source, chance, failureFateForSource(source as DropSource), e.clientX, e.clientY, undefined, context);
   };
 
-  const isVanilla = gameModeId === 'vanilla';
+  const isVanilla = usesVanillaRules(gameModeId);
   const vanillaBosses = [
     BRUTUS_BOSS_NAME,
     ...unlocks.bosses.filter(name => BOSSES_LIST.includes(name)),

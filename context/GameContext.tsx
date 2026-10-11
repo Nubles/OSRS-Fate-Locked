@@ -4,7 +4,7 @@ import { PendingUnlockReveal } from '../components/PendingUnlockReveal';
 import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type FailureFateAward, type FateCompensationChoice, type PetCompensationChoice, type GameEventMeta as DetectedGameEventMeta, type RollAnalyticsMeta, type RollIntent } from '../types';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
-import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
+import { resolveModeRules, DEFAULT_MODE_ID, isF2PMode, usesVanillaRules } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
@@ -19,7 +19,7 @@ import { QUEST_DATA } from '../data/questData';
 import { breakthroughTier, mercyBlocker, mercyPool, tierCap } from '../utils/chunkedFate';
 import { tierBand } from '../utils/skillTiers';
 import { chunkLabel } from '../utils/chunkAdjacency';
-import { UNLOCK_COST, randomUnlockPool, pickRandomPoolEntry, isRandomUnlockEligible, isValidUnlock } from '../utils/gameEngine';
+import { UNLOCK_COST, randomUnlockPool, pickRandomPoolEntry, isRandomUnlockEligible, isValidUnlock, isF2PUnlockable } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { drawFloat, seededContext } from '../utils/seededRng';
 import { hashEntry, ensureChain } from '../utils/integrity';
@@ -496,10 +496,10 @@ export function prepareKeyRollAction(
   meta?: DetectedGameEventMeta,
   context?: KeyRollContext,
 ): RollResultAction | null {
-  const vanillaBossContext = state.gameModeId === 'vanilla' && context?.kind === 'boss'
+  const vanillaBossContext = usesVanillaRules(state.gameModeId) && context?.kind === 'boss'
     ? context
     : null;
-  const vanillaClueContext = state.gameModeId === 'vanilla' && context?.kind === 'clue'
+  const vanillaClueContext = usesVanillaRules(state.gameModeId) && context?.kind === 'clue'
     ? context
     : null;
   const recordedBossAwarded = vanillaBossContext
@@ -1099,10 +1099,10 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
     case 'ROLL_RESULT': {
       const { success, omni, pity, roll, baseThreshold, threshold, source, failureFate = 1, x, y, meta, context } = action.payload;
-      const vanillaBossContext = state.gameModeId === 'vanilla' && context?.kind === 'boss'
+      const vanillaBossContext = usesVanillaRules(state.gameModeId) && context?.kind === 'boss'
         ? context
         : null;
-      const vanillaClueContext = state.gameModeId === 'vanilla' && context?.kind === 'clue'
+      const vanillaClueContext = usesVanillaRules(state.gameModeId) && context?.kind === 'clue'
         ? context
         : null;
       const recordedBossAwarded = vanillaBossContext
@@ -1307,7 +1307,8 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       if (!action.payload.revealId && (
         (costType === 'specialKey' ? state.specialKeys < 1
           : costType === 'key' ? state.keys < cost : state.chaosKeys < 1)
-        || !isValidUnlock(table, item, state.unlocks))) return state;
+        || !isValidUnlock(table, item, state.unlocks)
+        || (isF2PMode(state.gameModeId) && !isF2PUnlockable(table, item, state.unlocks)))) return state;
 
       const newUnlocks = applyTableUnlock(state.unlocks, table, item);
 
@@ -1460,7 +1461,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
     case 'CALL_ON_FATE': {
       // Fate's Mercy: only when the run has truly run dry. Fate draws from the
-      // same Chunks and Skills pools a Key would roll; nothing is spent.
+      // same land (Chunks or Areas) and Skills pools a Key would roll; nothing is spent.
       if (mercyBlocker(state) !== null) return state;
       const pool = mercyPool(state);
       const pick = pool[Math.min(pool.length - 1, Math.floor(action.payload.roll * pool.length))];

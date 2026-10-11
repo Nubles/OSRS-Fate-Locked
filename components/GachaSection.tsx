@@ -1,11 +1,11 @@
 
 import React, { Suspense, useMemo } from 'react';
-import { TableType } from '../types';
+import { TableType, type UnlockState } from '../types';
 import { useGame } from '../context/GameContext';
 import { bankLocksActive, isAreaReachable } from '../utils/reachability';
 import { unlockableAreas } from '../utils/freeAreas';
 import { BANK_IDS, BANK_BY_ID } from '../data/banks';
-import { checkUnlockAvailability, getPoolAndStateKey, randomUnlockPool } from '../utils/gameEngine';
+import { checkUnlockAvailability, getPoolAndStateKey, randomUnlockPool, randomUnlockTables } from '../utils/gameEngine';
 import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, ROLLABLE_POH_ITEMS, MERCHANTS_LIST, ROLLABLE_STORAGE_ITEMS, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, UTILITY_ITEM_IDS } from '../constants';
 import { HelpCircle, Lock, TrendingUp, AlertTriangle, Check } from 'lucide-react';
 import { Sparkles, Dices, Dna, Sprout, Key } from './OsrsIcon';
@@ -14,6 +14,7 @@ import { andList, LEVEL_CHAOS_CHANCE, SKILL_CHAOS_MILESTONES } from '../config/e
 import { openDashboardPool } from '../utils/dashboardPoolNavigation';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, chunkLabel } from '../utils/chunkAdjacency';
 import { lazyWithRetry } from '../utils/lazyRetry';
+import { isF2PMode, usesFateRules, type GameModeRules } from '../config/gameModes';
 
 const ChunkedFatePanel = lazyWithRetry(() => import('./ChunkedFatePanel').then(m => ({ default: m.ChunkedFatePanel })));
 
@@ -174,6 +175,25 @@ export const SpendCard: React.FC<SpendCardProps> = ({
   );
 };
 
+type SpendCategory = { type: TableType; label: string; subLabel: string; iconSrc?: string; icon?: any; unlocked: number; total: number; can: boolean };
+
+const F2P_OWNED: Partial<Record<TableType, (unlocks: UnlockState) => readonly string[] | undefined>> = {
+  [TableType.MOBILITY]: u => u.mobility, [TableType.MERCHANTS]: u => u.merchants, [TableType.MINIGAMES]: u => u.minigames,
+  [TableType.BOSSES]: u => u.bosses, [TableType.GUILDS]: u => u.guilds, [TableType.BANKS]: u => u.banks,
+};
+
+const f2pCategories = (all: SpendCategory[], unlocks: UnlockState, gameModeId: string, customMode?: GameModeRules): SpendCategory[] => {
+  const tables = new Set(randomUnlockTables(gameModeId, customMode));
+  return all.filter(c => tables.has(c.type)).map(c => {
+    const pool = getPoolAndStateKey(c.type, gameModeId, customMode).pool;
+    if (c.type === TableType.SKILLS) return { ...c, unlocked: pool.filter(skill => (unlocks.skills[skill] ?? 0) > 0).length, total: pool.length };
+    const owned = F2P_OWNED[c.type];
+    if (!owned) return c;
+    const have = new Set(owned(unlocks) ?? []);
+    return { ...c, unlocked: pool.filter(item => have.has(item)).length, total: pool.length };
+  });
+};
+
 export const GachaSection: React.FC = () => {
   const { keys, specialKeys, chaosKeys, keysOwed, unlocks, rollUnlock, pendingUnlock, animationsEnabled, gameModeId, customMode } = useGame();
   const isChunked = gameModeId === 'chunked';
@@ -204,7 +224,7 @@ export const GachaSection: React.FC = () => {
   // per-card progress bars. Equipment/Skills count slots/skills started (tier>0).
   const tierCount = (rec: Record<string, number> | undefined) =>
     Object.values(rec ?? {}).filter((v) => (v as number) > 0).length;
-  const SPEND_CATEGORIES: { type: TableType; label: string; subLabel: string; iconSrc?: string; icon?: any; unlocked: number; total: number; can: boolean }[] = [
+  const SPEND_CATEGORIES: SpendCategory[] = [
     { type: TableType.EQUIPMENT, label: 'Equipment', subLabel: 'Upgrade Gear', iconSrc: OSRS_GACHA_ICONS.EQUIPMENT, unlocked: tierCount(unlocks.equipment), total: EQUIPMENT_SLOTS.length, can: canUnlock.equipment },
     { type: TableType.SKILLS, label: 'Skills', subLabel: 'Unlock next methods tier', iconSrc: OSRS_GACHA_ICONS.SKILLS, unlocked: tierCount(unlocks.skills), total: SKILLS_LIST.length, can: canUnlock.skills },
     isChunked
@@ -223,6 +243,8 @@ export const GachaSection: React.FC = () => {
     { type: TableType.SLAYER_UNLOCKS, label: 'Slayer', subLabel: 'Reward Unlocks', iconSrc: OSRS_GACHA_ICONS.SLAYER_UNLOCKS, unlocked: (unlocks.slayerUnlocks ?? []).length, total: SLAYER_UNLOCKS_LIST.length, can: canUnlock.slayerUnlocks },
     ...(bankLocks ? [{ type: TableType.BANKS, label: 'Banks', subLabel: 'Bank Access', iconSrc: OSRS_GACHA_ICONS.BANKS, unlocked: (unlocks.banks ?? []).length, total: BANK_IDS.length, can: (canUnlock as any).banks as boolean }] : []),
   ];
+  // Free-to-play shows only the tables it rolls, counting their free-to-play entries.
+  const categories = isF2PMode(gameModeId) ? f2pCategories(SPEND_CATEGORIES, unlocks, gameModeId!, customMode) : SPEND_CATEGORIES;
 
   return (
     <div className="h-full flex flex-col relative p-4">
@@ -296,8 +318,8 @@ export const GachaSection: React.FC = () => {
         )}
       </div>
 
-      {/* Chunked: Breakthrough rolls and Fate's Mercy. */}
-      {isChunked && (
+      {/* Chunked and Free-to-play: Breakthrough rolls and Fate's Mercy. */}
+      {usesFateRules(gameModeId) && (
         <Suspense fallback={null}>
           <ChunkedFatePanel />
         </Suspense>
@@ -305,7 +327,7 @@ export const GachaSection: React.FC = () => {
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2.5 custom-scrollbar content-start">
-        {SPEND_CATEGORIES.map((c, i) => (
+        {categories.map((c, i) => (
           <SpendCard
             key={c.label}
             type={c.type}

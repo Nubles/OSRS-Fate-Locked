@@ -5,7 +5,7 @@ import { Shield, Package, BookOpen, Dices, Sparkles, Map, Zap, Scroll, Skull, Ac
 import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
-import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
+import { GAME_MODES, getGameMode, resolveModeRules, usesVanillaRules } from '../config/gameModes';
 import { andList, BREAKTHROUGH_CHANCE, CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { DropSource, TableType } from '../types';
@@ -86,7 +86,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
   const rules = resolveModeRules(gameModeId, customMode);
   const ritualCost = (id: Ritual['id']) => ritualFateCost(id, rules.ritualCostMultiplier);
   const ritualText = (id: Ritual['id']) => ritualEffect(id, rules.ritualCostMultiplier);
-  const vanillaPolicyLabel = gameModeId === 'vanilla'
+  const vanillaPolicyLabel = usesVanillaRules(gameModeId)
     ? 'Vanilla-only rules'
     : 'Vanilla-only (not active for this run)';
 

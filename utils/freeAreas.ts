@@ -16,17 +16,20 @@
 
 import { MISTHALIN_AREAS, REGIONS_LIST } from '../constants';
 import { resolveModeRules, type GameModeRules } from '../config/gameModes';
+import { F2P_AREAS, F2P_START_AREAS } from '../data/f2pContent';
 
 const FULL_MISTHALIN = new Set<string>(['Misthalin', ...MISTHALIN_AREAS]);
 const LUMBRIDGE_ONLY = new Set<string>(['Lumbridge']);
 const NONE = new Set<string>();
+const F2P_START = new Set<string>(F2P_START_AREAS);
+const F2P_UNLOCKABLE: string[] = [...F2P_AREAS];
 
 const freeSetFor = (startArea?: string): Set<string> =>
-  startArea === 'lumbridge' ? LUMBRIDGE_ONLY : startArea === 'none' ? NONE : FULL_MISTHALIN;
+  startArea === 'lumbridge' ? LUMBRIDGE_ONLY : startArea === 'none' ? NONE : startArea === 'f2p' ? F2P_START : FULL_MISTHALIN;
 
 let current: Set<string> = FULL_MISTHALIN;
 
-/** Set the free baseline from a mode's startArea ('lumbridge' | 'misthalin' | 'none'). */
+/** Set the free baseline from a mode's startArea ('lumbridge' | 'misthalin' | 'none' | 'f2p'). */
 export const setStartArea = (startArea?: string): void => {
   current = freeSetFor(startArea);
 };
@@ -43,6 +46,8 @@ const UNLOCKABLE_AREAS_BY_START = new Map<string | undefined, string[]>();
 export const unlockableAreas = (gameModeId?: string, customMode?: GameModeRules): string[] => {
   if (gameModeId === 'chunked') return REGIONS_LIST;
   const startArea = resolveModeRules(gameModeId, customMode).startArea;
+  // Free-to-play rolls only the free-to-play areas (data/f2pContent.ts).
+  if (startArea === 'f2p') return F2P_UNLOCKABLE;
   let areas = UNLOCKABLE_AREAS_BY_START.get(startArea);
   if (!areas) {
     const free = freeSetFor(startArea);

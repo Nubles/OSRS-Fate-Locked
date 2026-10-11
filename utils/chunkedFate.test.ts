@@ -66,7 +66,7 @@ describe("Fate's Mercy", () => {
     expect(chunkedSkillHasRoom('Woodcutting', room.unlocks)).toBe(true);
     expect(mercyBlocker(room)).toBe('skill_room');
     expect(mercyBlocker(dry())).toBe('breakthrough');
-    expect(mercyBlocker({ ...dry(), gameModeId: 'vanilla' })).toBe('not_chunked');
+    expect(mercyBlocker({ ...dry(), gameModeId: 'vanilla' })).toBe('no_fate_rules');
   });
 
   it('opens once every Breakthrough is rolled, and draws only frontier chunks and trainable skills', () => {

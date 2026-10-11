@@ -5,6 +5,9 @@
  * Castle, and early Chunked runs ran out of Keys (October 2026 simulation:
  * 200 of 200 runs stuck within 5 chunks).
  *
+ * Free-to-play runs use the same rule, over the chunks of every free-to-play
+ * area they hold (fateTrainingChunks).
+ *
  * Facts come from data/chunkSkillNodes.ts (generated). Some skills follow from
  * others: anything to fight trains melee, Ranged, Magic and Prayer (bones);
  * logs train Firemaking and Fletching; a Slayer master trains Slayer; a herb
@@ -13,6 +16,9 @@
 import type { UnlockState } from '../types';
 import { CHUNK_SKILL_FACTS, CHUNK_SKILL_TIERS } from '../data/chunkSkillNodes';
 import { CHUNKED_START_KEY } from './chunkAdjacency';
+import { isAreaReachable, namedAreaChunks } from './reachability';
+import { F2P_AREAS, F2P_START_AREAS } from '../data/f2pContent';
+import { isF2PMode } from '../config/gameModes';
 
 const COMBAT_SKILLS = ['Attack', 'Strength', 'Defence', 'Hitpoints', 'Ranged', 'Magic', 'Prayer'];
 
@@ -42,5 +48,20 @@ export const chunkedTrainingTiers = (chunks: readonly string[]): ReadonlyMap<str
 /** Whether the skill's next tier opens a level the run's chunks can train it at. */
 export const chunkedSkillRollable = (skill: string, unlocks: Pick<UnlockState, 'skills' | 'chunks'>): boolean => {
   const lowest = chunkedTrainingTiers(unlocks.chunks ?? []).get(skill);
+  return lowest !== undefined && lowest <= (unlocks.skills[skill] ?? 0) + 1;
+};
+
+/** The chunks of every free-to-play area a Free-to-play run holds, starting areas included. */
+export const f2pTrainingChunks = (unlocks: UnlockState): string[] =>
+  [...F2P_START_AREAS, ...F2P_AREAS.filter(area => isAreaReachable(area, unlocks))]
+    .flatMap(area => namedAreaChunks(area).map(({ cx, cy }) => `${cx},${cy}`));
+
+/** The chunks a run trains in: Chunked's own chunks, or a Free-to-play run's areas. */
+export const fateTrainingChunks = (unlocks: UnlockState, gameModeId?: string): string[] =>
+  isF2PMode(gameModeId) ? f2pTrainingChunks(unlocks) : unlocks.chunks ?? [];
+
+/** chunkedSkillRollable for any mode with fate rules (Chunked and Free-to-play). */
+export const fateSkillRollable = (skill: string, unlocks: UnlockState, gameModeId?: string): boolean => {
+  const lowest = chunkedTrainingTiers(fateTrainingChunks(unlocks, gameModeId)).get(skill);
   return lowest !== undefined && lowest <= (unlocks.skills[skill] ?? 0) + 1;
 };

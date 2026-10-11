@@ -25,6 +25,7 @@ import {
 import { requestManualAttestation } from '../utils/manualAttestation';
 import { diaryTaskLoggingEligibility } from '../utils/journalCompletion';
 import { farmingPatchLabel } from '../utils/farmingPatches';
+import { isF2PMode } from '../config/gameModes';
 
 type AlternativeBlocker = Extract<EligibilityBlocker, { kind: 'alternative' }>;
 
@@ -209,6 +210,14 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
       if (attestation === null) return;
       completeDiaryTask(task.id, e.clientX, e.clientY, attestation);
   };
+
+  if (isF2PMode(gameModeId)) {
+    return (
+      <div className="flex h-full items-center justify-center rounded-lg border border-white/10 bg-[#121212] p-6 text-center text-xs text-gray-400">
+        Achievement Diaries are members content, so a Free-to-play run has none to log.
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-[#121212] border border-white/10 rounded-lg overflow-hidden">

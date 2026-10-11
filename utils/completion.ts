@@ -18,6 +18,9 @@ import type { GameModeRules } from '../config/gameModes';
 import { UnlockState } from '../types';
 import { BANK_IDS } from '../data/banks';
 import { visibleAreaUnlocks } from '../data/areaMapPolicy';
+import { isF2PMode } from '../config/gameModes';
+import { TableType } from '../types';
+import { F2P_EQUIPMENT_TIER_MAX, F2P_SKILLS, F2P_TABLE_ITEMS } from '../data/f2pContent';
 
 /** Total unlock points available for 100% completion. */
 export const COMPLETION_DENOMINATOR =
@@ -32,7 +35,33 @@ export const COMPLETION_DENOMINATOR =
   // (A Custom banks-off run — no longer selectable — would cap just under 100%.)
   BANK_IDS.length;
 
+// Free-to-play counts only free-to-play content: its skills, gear up to rune
+// and each table's free-to-play entries.
+const F2P_LIST_TABLES = [
+  TableType.REGIONS, TableType.MOBILITY, TableType.MERCHANTS, TableType.MINIGAMES,
+  TableType.BOSSES, TableType.GUILDS, TableType.BANKS,
+] as const;
+const F2P_UNLOCK_KEY = {
+  [TableType.REGIONS]: 'regions', [TableType.MOBILITY]: 'mobility', [TableType.MERCHANTS]: 'merchants',
+  [TableType.MINIGAMES]: 'minigames', [TableType.BOSSES]: 'bosses', [TableType.GUILDS]: 'guilds', [TableType.BANKS]: 'banks',
+} as const;
+
+const f2pDenominator = (mode?: string, custom?: GameModeRules): number =>
+  F2P_SKILLS.length * 10 + EQUIPMENT_SLOTS.length * F2P_EQUIPMENT_TIER_MAX
+  + F2P_LIST_TABLES.reduce((total, table) =>
+    total + (table === TableType.BANKS && !bankLocksActive(mode, custom) ? 0 : F2P_TABLE_ITEMS[table]!.length), 0);
+
+const f2pPoints = (u: UnlockState, mode?: string, custom?: GameModeRules): number =>
+  F2P_SKILLS.reduce((total, skill) => total + (u.skills[skill] ?? 0), 0)
+  + EQUIPMENT_SLOTS.reduce((total, slot) => total + Math.min(F2P_EQUIPMENT_TIER_MAX, u.equipment[slot] ?? 0), 0)
+  + F2P_LIST_TABLES.reduce((total, table) => {
+    if (table === TableType.BANKS && !bankLocksActive(mode, custom)) return total;
+    const owned = new Set<string>(u[F2P_UNLOCK_KEY[table]] ?? []);
+    return total + F2P_TABLE_ITEMS[table]!.filter(item => owned.has(item)).length;
+  }, 0);
+
 export const completionDenominator = (mode?: string, custom?: GameModeRules): number =>
+  isF2PMode(mode) ? f2pDenominator(mode, custom) :
   COMPLETION_DENOMINATOR - REGIONS_LIST.length
   // Chunked counts chunks; other modes count every area they must unlock.
   + (mode === 'chunked' ? ALL_CHUNK_KEYS.length - 1 : unlockableAreas(mode, custom).length)
@@ -44,6 +73,7 @@ const len = (a: unknown[] | undefined) => (Array.isArray(a) ? a.length : 0);
 
 /** Unlock points the player has accrued. */
 export const playerUnlockPoints = (u: UnlockState, mode?: string, custom?: GameModeRules): number =>
+  isF2PMode(mode) ? f2pPoints(u, mode, custom) :
   sum(u.skills) + sum(u.equipment) +
   (mode === 'chunked' ? [...new Set(u.chunks ?? [])].filter(k => k !== CHUNKED_START_KEY && ALL_CHUNK_KEYS.includes(k)).length : visibleAreaUnlocks(u.regions).length) + len(u.mobility) + len(u.arcana) + ROLLABLE_POH_ITEMS.filter(item => u.housing?.includes(item)).length +
   len(u.merchants) + len(u.minigames) + len(u.bosses) + ROLLABLE_STORAGE_ITEMS.filter(item => u.storage?.includes(item)).length +

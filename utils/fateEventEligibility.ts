@@ -1,4 +1,5 @@
 import { DROP_RATES } from '../config/rules';
+import { usesVanillaRules } from '../config/gameModes';
 import { policyFor } from '../config/detectorPolicies';
 import { failureFateForSkillLevel, failureFateForSource } from '../config/economy';
 import { BRUTUS_BOSS_NAME, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
@@ -329,7 +330,7 @@ function classifyClue(event: FateEventEnvelope, state: GameState): EventClassifi
   }
   const target = event.canonicalLabel?.trim() || `Clue scroll (${clue.tier.toLowerCase()})`;
   // Vanilla clue keys use the Clues card's onboarding rates.
-  return ready(clue.source, target, { kind: 'NONE' }, state.gameModeId === 'vanilla'
+  return ready(clue.source, target, { kind: 'NONE' }, usesVanillaRules(state.gameModeId)
     ? { context: { kind: 'clue', clueTier: clue.tier } }
     : {});
 }
@@ -344,7 +345,7 @@ function classifyBoss(event: FateEventEnvelope, state: GameState): EventClassifi
   if (event.eventType !== expectedType) {
     return needsConfirmation('The detected encounter type does not match this activity.');
   }
-  if (state.gameModeId !== 'vanilla') return ready(TIER_SOURCE[tier], bossName, { kind: 'NONE' });
+  if (!usesVanillaRules(state.gameModeId)) return ready(TIER_SOURCE[tier], bossName, { kind: 'NONE' });
   // Vanilla's Bossing list rolls only unlocked bosses (Brutus is always
   // there), each from its own key reserve.
   if (!isBrutus && !state.unlocks.bosses.includes(bossName)) return blocked('Unlock this boss before its kills can roll.');

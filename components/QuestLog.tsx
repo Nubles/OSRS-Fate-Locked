@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA, QuestData } from '../data/questData';
+import { questsForMode } from '../utils/questScope';
 import { WIKI_OVERRIDES, SLOT_CONFIG } from '../constants';
 import { CheckCircle2, Lock, Bookmark, Layers, List, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { BookOpen, MapPin, Sparkles, Scroll } from './OsrsIcon';
@@ -485,7 +486,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
 
   const areaRoutes = useAreaRoutes(unlocks, gameModeId);
   const allQuests = useMemo(() => {
-    return Object.values(QUEST_DATA).map(q => {
+    return questsForMode(gameModeId).map(q => {
       const eligibility = questLogEligibility(q, unlocks, gameModeId, areaRoutes);
       return { ...q, status: eligibility.status, eligibility };
     }).sort((a, b) => {
@@ -574,7 +575,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
       window.dispatchEvent(new CustomEvent('fate:quest-complete', { detail: { name: quest.name } }));
   };
 
-  const allEntriesByKind = splitJournalEntriesByKind(Object.values(QUEST_DATA));
+  const allEntriesByKind = splitJournalEntriesByKind(questsForMode(gameModeId));
   const totalQuests = allEntriesByKind.quests.length;
   const totalMinis = allEntriesByKind.miniquests.length;
   const completedMain = unlocks.quests.filter(id => QUEST_DATA[id]?.kind === 'quest').length;

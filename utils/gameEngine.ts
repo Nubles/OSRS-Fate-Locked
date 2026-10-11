@@ -9,12 +9,17 @@ import { getActivityAccess } from './activityAccess';
 import { canonicalAreaName } from '../data/areaMapPolicy';
 import { bankLocksActive, isAreaReachable } from './reachability';
 import { unlockableAreas } from './freeAreas';
-import type { GameModeRules } from '../config/gameModes';
+import { isF2PMode, usesVanillaRules, type GameModeRules } from '../config/gameModes';
 import { ROLLABLE_POH_ITEMS, ROLLABLE_STORAGE_ITEMS } from '../data/items';
-import { chunkedSkillRollable } from './chunkedSkillPool';
+import { chunkedSkillRollable, fateSkillRollable } from './chunkedSkillPool';
+import { F2P_EQUIPMENT_TIER_MAX, F2P_TABLE_ITEMS, isF2PEntry } from '../data/f2pContent';
 
 /** The same tables and eligible entries drive rolls and their displayed odds. */
-export const randomUnlockTables = (mode?: string, custom?: GameModeRules): TableType[] => [
+export const randomUnlockTables = (mode?: string, custom?: GameModeRules): TableType[] => allRandomUnlockTables(mode, custom)
+    // Free-to-play skips the tables with no free-to-play entries.
+    .filter(table => !isF2PMode(mode) || F2P_TABLE_ITEMS[table]?.length !== 0);
+
+const allRandomUnlockTables = (mode?: string, custom?: GameModeRules): TableType[] => [
     TableType.EQUIPMENT, TableType.SKILLS,
     mode === 'chunked' ? TableType.CHUNKS : TableType.REGIONS,
     TableType.MOBILITY, TableType.ARCANA, TableType.POH, TableType.MERCHANTS,
@@ -29,7 +34,25 @@ export const randomUnlockPool = (unlocks: UnlockState, mode = 'vanilla', costTyp
 
 export const rollDice = (max: number = 100) => Math.floor(Math.random() * max) + 1;
 
+/** Whether a Free-to-play run can still unlock this entry: free-to-play content, gear up to rune. */
+export const isF2PUnlockable = (table: TableType, item: string, unlocks: UnlockState): boolean =>
+    isF2PEntry(table, item)
+    && (table !== TableType.EQUIPMENT || (unlocks.equipment[item] || 0) < F2P_EQUIPMENT_TIER_MAX)
+    && isValidUnlock(table, item, unlocks);
+
+const anyF2PUnlockable = (table: TableType, unlocks: UnlockState, mode: string): boolean =>
+    getPoolAndStateKey(table, mode).pool.some(item => isF2PUnlockable(table, item, unlocks));
+
 export const checkUnlockAvailability = (unlocks: UnlockState, mode?: string, custom?: GameModeRules) => {
+    if (isF2PMode(mode)) {
+        const f2p = (table: TableType) => anyF2PUnlockable(table, unlocks, mode!);
+        return {
+            equipment: f2p(TableType.EQUIPMENT), skills: f2p(TableType.SKILLS), regions: f2p(TableType.REGIONS), chunks: false,
+            mobility: f2p(TableType.MOBILITY), arcana: false, poh: false, merchants: f2p(TableType.MERCHANTS),
+            minigames: f2p(TableType.MINIGAMES), bosses: f2p(TableType.BOSSES), storage: false, guilds: f2p(TableType.GUILDS),
+            farming: false, slayerUnlocks: false, banks: bankLocksActive(mode, custom) && f2p(TableType.BANKS),
+        };
+    }
     const totalSkillTiers = (Object.values(unlocks.skills) as number[]).reduce((a, b) => a + b, 0);
     const totalEquipTiers = (Object.values(unlocks.equipment) as number[]).reduce((a, b) => a + b, 0);
     return {
@@ -102,7 +125,12 @@ export const isRandomUnlockEligible = (
     if (!isValidUnlock(table, item, unlocks)) return false;
     // Chunked: random Skills rolls only land on skills the run's chunks can train.
     if (modeId === 'chunked' && table === TableType.SKILLS) return chunkedSkillRollable(item, unlocks);
-    if (modeId !== 'vanilla') return true;
+    // Free-to-play: only free-to-play content, and skills its areas can train.
+    if (isF2PMode(modeId)) {
+        if (!isF2PUnlockable(table, item, unlocks)) return false;
+        if (table === TableType.SKILLS) return fateSkillRollable(item, unlocks, modeId);
+    }
+    if (!usesVanillaRules(modeId)) return true;
     if (!policy.randomCosts.includes(randomCost)) return true;
     if (!policy.filteredTables.some(candidate => candidate === table)) return true;
     if (!policy.requiresTrackedHardGeography) return true;
@@ -117,7 +145,8 @@ export const isOmniDirectUnlockAvailable = (
     modeId: string,
     policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
 ): boolean => {
-    if (modeId !== 'vanilla') return true;
+    if (isF2PMode(modeId) && !isF2PUnlockable(table, item, unlocks)) return false;
+    if (!usesVanillaRules(modeId)) return true;
     if (!policy.filteredTables.some(candidate => candidate === table)) return true;
     if (!policy.requiresTrackedHardGeography || policy.omniDirect.allowsLocationIneligible) return true;
     return getActivityAccess(item, unlocks, modeId).eligible;
@@ -153,8 +182,22 @@ export const pickRandomPoolEntry = <T>(pool: readonly T[], nextFloat: () => numb
     return pool[Math.floor(nextFloat() * pool.length)];
 };
 
-/** Each table's pool; the Areas pool depends on which areas the run's mode frees. */
+/**
+ * Each table's pool; the Areas pool depends on which areas the run's mode
+ * frees, and a Free-to-play run's pools hold only free-to-play content.
+ */
 export const getPoolAndStateKey = (table: TableType, mode?: string, custom?: GameModeRules) => {
+    const entry = allPoolAndStateKey(table, mode, custom);
+    if (!isF2PMode(mode)) return entry;
+    let pool = F2P_POOLS.get(table);
+    if (!pool) F2P_POOLS.set(table, pool = entry.pool.filter(item => isF2PEntry(table, item)));
+    return { pool, stateKey: entry.stateKey };
+};
+
+/** Free-to-play pools, in each table's own order, built on first use. */
+const F2P_POOLS = new Map<TableType, string[]>();
+
+function allPoolAndStateKey(table: TableType, mode?: string, custom?: GameModeRules) {
     switch (table) {
         case TableType.SKILLS: return { pool: SKILLS_LIST, stateKey: 'skill' };
         case TableType.EQUIPMENT: return { pool: EQUIPMENT_SLOTS, stateKey: 'equipment' };
@@ -171,9 +214,9 @@ export const getPoolAndStateKey = (table: TableType, mode?: string, custom?: Gam
         case TableType.SLAYER_UNLOCKS: return { pool: SLAYER_UNLOCKS_LIST, stateKey: 'slayerUnlocks' };
         case TableType.CHUNKS: return { pool: ALL_CHUNK_KEYS, stateKey: 'chunks' };
         case TableType.BANKS: return { pool: BANK_IDS, stateKey: 'banks' };
-        default: return { pool: [], stateKey: '' };
+        default: return { pool: [] as string[], stateKey: '' };
     }
-};
+}
 
 // Unlock cost is a flat 1 key for all content types
 export const UNLOCK_COST = 1;

@@ -19,9 +19,10 @@ export interface GameModeRules {
    * Which NAMED areas are free at the start. 'misthalin' (default) frees the
    * whole starter region; 'lumbridge' frees only Lumbridge — the Xtreme start;
    * 'none' frees no named area — required for 'chunked' mode, whose free
-   * baseline is a single map-region chunk (chunkGranularity), not a name.
+   * baseline is a single map-region chunk (chunkGranularity), not a name;
+   * 'f2p' frees the free-to-play half of Misthalin (data/f2pContent.ts).
    */
-  startArea?: 'misthalin' | 'lumbridge' | 'none';
+  startArea?: 'misthalin' | 'lumbridge' | 'none' | 'f2p';
   /**
    * Chunked mode only: unlocking happens one map-region chunk at a time,
    * adjacent to the unlocked set (TableType.CHUNKS), instead of whole named
@@ -85,6 +86,14 @@ export const GAME_MODES: GameMode[] = [
       bankLocks: true,
     },
   },
+  {
+    id: 'f2p',
+    name: 'Free-to-play',
+    // BREAKTHROUGH_CHANCE (config/economy.ts) sets the 50; gameModes.test.ts pins it.
+    description: 'Vanilla on a free-to-play account. Lumbridge, Varrock, Draynor, Edgeville, Barbarian Village and the Wizards\' Tower are free, and Keys only roll free-to-play content: 15 skills, gear up to rune, 23 areas and the free-to-play quests. A Skills Key only rolls skills your areas can train. A skill at its cap gets one 50% Breakthrough roll to open its next tier, and if you ever run out of everything, Fate\'s Mercy draws an area or skill tier for you.',
+    tagline: 'Free-to-play content only',
+    rules: { ...VANILLA_RULES, startArea: 'f2p' },
+  },
   // NOTE: Casual / Hardcore / Region Rush / Xtreme Start / Custom were removed
   // from the picker "for now" — VANILLA_RULES and the Custom-editor machinery
   // (GameModePicker) are intact, so restoring any of them is just re-adding the
@@ -92,6 +101,21 @@ export const GAME_MODES: GameMode[] = [
 ];
 
 export const DEFAULT_MODE_ID = 'vanilla';
+
+/** The Free-to-play mode's id. */
+export const F2P_MODE_ID = 'f2p';
+
+/** Whether a run is the Free-to-play mode. */
+export const isF2PMode = (id?: string): boolean => id === F2P_MODE_ID;
+
+/**
+ * Free-to-play is Vanilla on a free-to-play account, so every Vanilla-only
+ * rule (boss and clue Key reserves, the exact-area policy) applies to it too.
+ */
+export const usesVanillaRules = (id?: string): boolean => id === 'vanilla' || id === F2P_MODE_ID;
+
+/** Modes with fate-driven dead-end rules: Breakthroughs and Fate's Mercy (utils/chunkedFate.ts). */
+export const usesFateRules = (id?: string): boolean => id === 'chunked' || id === F2P_MODE_ID;
 
 // Retired picker entries remain resolvable for existing saves. Definitions from 8b9eb2c^.
 const LEGACY_MODES: GameMode[] = [

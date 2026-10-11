@@ -37,6 +37,19 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-11-free-to-play',
+    title: 'New mode: Free-to-play',
+    date: '2026-10-11',
+    sections: {
+      added: [
+        'Pick Free-to-play when you start a run to play Fate Locked on a free-to-play account.',
+        'Keys only roll free-to-play content: 15 skills, gear up to rune, 23 areas, 2 bosses, 6 minigames and the free-to-play quests.',
+        'You start with Lumbridge, Varrock, Draynor, Edgeville, Barbarian Village and the Wizards’ Tower.',
+        'Breakthroughs and Fate’s Mercy work here too, so a run never gets stuck.',
+      ],
+    },
+  },
+  {
     id: '2026-10-10-chunked-fate',
     title: 'Fate keeps Chunked runs moving',
     date: '2026-10-10',

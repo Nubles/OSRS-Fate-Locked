@@ -5,26 +5,29 @@ import { BREAKTHROUGH_CHANCE } from '../config/economy';
 import { breakthroughTier, mercyBlocker, pendingBreakthroughs, tierCap } from '../utils/chunkedFate';
 import { tierBand } from '../utils/skillTiers';
 import { chunkContentService } from '../services/ChunkContentService';
-import { chunkedQuestRows } from './QuestDoabilityPanel';
+import { fateQuestRows } from './QuestDoabilityPanel';
 
 /**
- * Chunked runs' fate-driven way out of a dead end: a Breakthrough roll for each
- * capped skill, and Fate's Mercy once nothing else is left. Loaded lazily from
- * the Keys screen because the quest check needs the chunk content.
+ * Chunked and Free-to-play runs' fate-driven way out of a dead end: a
+ * Breakthrough roll for each capped skill, and Fate's Mercy once nothing else
+ * is left. Loaded lazily from the Keys screen because Chunked's quest check
+ * needs the chunk content.
  */
 export const ChunkedFatePanel: React.FC = () => {
   const game = useGame();
   const { unlocks, gameModeId, pendingUnlock, rollBreakthrough, callOnFate } = game;
   const waiting = pendingBreakthroughs(game);
   const mercyOpen = mercyBlocker(game) === null;
+  const isChunked = gameModeId === 'chunked';
+  const land = isChunked ? 'chunks' : 'areas';
 
-  const [ready, setReady] = useState(() => chunkContentService.ready);
+  const [ready, setReady] = useState(() => !isChunked || chunkContentService.ready);
   useEffect(() => {
     if (mercyOpen && !ready) chunkContentService.init().then(() => setReady(true));
   }, [mercyOpen, ready]);
-  // Mercy stays shut while a quest in the run's chunks is doable now.
+  // Mercy stays shut while a quest in the run's land is doable now.
   const doableQuests = useMemo(
-    () => (mercyOpen && ready ? chunkedQuestRows(unlocks, gameModeId).filter(row => row.bucket === 'DOABLE').map(row => row.id) : []),
+    () => (mercyOpen && ready ? fateQuestRows(unlocks, gameModeId ?? 'chunked').filter(row => row.bucket === 'DOABLE').map(row => row.id) : []),
     [mercyOpen, ready, unlocks, gameModeId],
   );
 
@@ -40,7 +43,7 @@ export const ChunkedFatePanel: React.FC = () => {
               Breakthrough{waiting.length === 1 ? '' : 's'} ready
             </h3>
             <p className="text-[11px] font-mono leading-snug text-amber-200/70">
-              A skill at its cap gets one {chance}% roll to open its next tier, if your chunks can train it there.
+              A skill at its cap gets one {chance}% roll to open its next tier, if your {land} can train it there.
             </p>
           </div>
           <ul className="grid gap-1.5">
@@ -74,10 +77,10 @@ export const ChunkedFatePanel: React.FC = () => {
               <h3 className="text-sm font-bold uppercase tracking-widest text-sky-300">Fate's Mercy</h3>
               <p className="text-[11px] font-mono leading-snug text-sky-200/70">
                 {!ready
-                  ? 'Checking your chunks for quests you can still do…'
+                  ? `Checking your ${land} for quests you can still do…`
                   : doableQuests.length > 0
-                    ? `Opens once you have done what your chunks offer: ${doableQuests.length === 1 ? `${doableQuests[0]} is` : `${doableQuests.length} quests are`} doable now.`
-                    : 'You have no Keys and every skill you can train is capped. Fate draws one neighbouring chunk or skill tier for you.'}
+                    ? `Opens once you have done what your ${land} offer: ${doableQuests.length === 1 ? `${doableQuests[0]} is` : `${doableQuests.length} quests are`} doable now.`
+                    : `You have no Keys and every skill you can train is capped. Fate draws ${isChunked ? 'one neighbouring chunk' : 'one area'} or skill tier for you.`}
               </p>
             </div>
           </div>

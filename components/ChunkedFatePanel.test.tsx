@@ -11,7 +11,7 @@ vi.mock('../context/GameContext', async importOriginal => ({
 }));
 // No quest is doable in this test's chunks; the real check needs chunk content.
 vi.mock('../services/ChunkContentService', () => ({ chunkContentService: { ready: true, init: () => Promise.resolve() } }));
-vi.mock('./QuestDoabilityPanel', () => ({ chunkedQuestRows: () => [] }));
+vi.mock('./QuestDoabilityPanel', () => ({ fateQuestRows: () => [] }));
 
 afterEach(cleanup);
 
