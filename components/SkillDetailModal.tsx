@@ -172,7 +172,7 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
             <p className="text-sm text-blue-200/80 leading-relaxed">
               {tab === 'gather'
                 ? 'Everything this skill can gather on the world map, grouped by the tier that unlocks it. Click a resource to pick a region and jump straight there.'
-                : 'Unlocking a tier grants access to training methods and equipment within that level range. You may train beyond your unlocked tier, but you can only use unlocked content.'}
+                : 'Unlocking a tier grants access to training methods and equipment within that level range. You may train beyond your unlocked tier, but you can only use unlocked content. Wearing gear also needs its equipment slot tier, which goes by material, not level (see Equipment Tiers in the Codex).'}
             </p>
           </div>
 

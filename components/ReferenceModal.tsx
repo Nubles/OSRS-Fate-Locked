@@ -697,6 +697,11 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-2">Equipment Tiers</h1>
                                 <p className="text-gray-400">What each tier lets you wear.</p>
+                                <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                                    Equipment tiers go by material, one step per metal, not by the level needed to wear it.
+                                    That puts steel to rune gear one tier above the skill tier for its level: adamant needs Attack Tier 3 and Weapon Tier 4.
+                                    You need both to wear an item.
+                                </p>
                             </div>
 
                             <div className="bg-[#222] rounded-xl border border-white/5 overflow-hidden">

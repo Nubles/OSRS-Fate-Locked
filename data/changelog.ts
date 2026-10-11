@@ -37,6 +37,17 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-11-equipment-tier-note',
+    title: 'Why gear tiers and skill tiers differ',
+    date: '2026-10-11',
+    sections: {
+      changed: [
+        'The Codex and skill pages now explain that equipment tiers go by material, not level, so adamant needs Attack Tier 3 and Weapon Tier 4.',
+        'Nothing about what you can wear has changed.',
+      ],
+    },
+  },
+  {
     id: '2026-10-10-chunk-picker-october',
     title: 'Map content updated for October',
     date: '2026-10-10',
