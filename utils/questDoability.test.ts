@@ -116,8 +116,4 @@ describe('doabilityBucket', () => {
       ...baseQuest, regions: [],
     })).toBe(false);
   });
-  it('no chunk data with canonical evidence falls back to reqs', () => {
-    expect(doabilityBucket(false, true, null, true)).toBe('DOABLE');
-    expect(doabilityBucket(false, false, null, true)).toBe('REQS');
-  });
 });

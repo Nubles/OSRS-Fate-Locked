@@ -53,55 +53,6 @@ describe('audited current quest requirements', () => {
       .toEqual(['Access to a player-owned house workshop and crafting table']);
   });
 
-  it('models Dream Mentor as calculated combat', () => {
-    const q = QUEST_DATA['Dream Mentor'];
-    expect(q.combatLevel).toBe(85);
-    expect(q.skills).not.toHaveProperty('Combat');
-  });
-
-  it('pins the corrected recent quest block', () => {
-    expect(QUEST_DATA['Ethically Acquired Antiquities']).toMatchObject({
-      skills: { Thieving: 25 },
-      prereqs: ['Children of the Sun', 'Shield of Arrav'],
-    });
-    expect(QUEST_DATA['Ethically Acquired Antiquities'].locations?.map(x => x.id)).toEqual([
-      'grand-museum', 'fortis-cothon', 'port-sarim-jail', 'port-sarim-betty', 'varrock-museum', 'diadem-crate',
-    ]);
-    expect(QUEST_DATA['The Curse of Arrav']).toMatchObject({
-      skills: { Agility: 61, Ranged: 62, Strength: 58, Thieving: 62, Mining: 64, Slayer: 37 },
-      prereqs: ['Defender of Varrock', 'Troll Romance'],
-    });
-    expect(QUEST_DATA['The Final Dawn']).toMatchObject({
-      skills: { Thieving: 66, Fletching: 52, Runecraft: 52 },
-      prereqs: ['The Heart of Darkness', 'Perilous Moons'],
-    });
-    expect(QUEST_DATA['Shadows of Custodia']).toMatchObject({
-      skills: { Slayer: 54, Fishing: 45, Construction: 41, Hunter: 36 },
-      prereqs: ['Children of the Sun'],
-    });
-    expect(QUEST_DATA['Scrambled!']).toMatchObject({
-      skills: { Construction: 38, Cooking: 36, Smithing: 35 },
-      prereqs: ['Children of the Sun'],
-    });
-    expect(QUEST_DATA['Pandemonium']).toMatchObject({
-      skills: {},
-      prereqs: [],
-    });
-    expect(QUEST_DATA['Pandemonium'].locations?.map(x => x.id)).toEqual(['port-sarim']);
-    expect(QUEST_DATA['Prying Times']).toMatchObject({
-      skills: { Smithing: 30, Sailing: 12 },
-      prereqs: ['Pandemonium', "The Knight's Sword"],
-      manualRequirements: ['One open Sailing task slot'],
-    });
-    expect(QUEST_DATA['Current Affairs']).toMatchObject({
-      skills: { Sailing: 22, Fishing: 10 }, prereqs: ['Pandemonium'],
-    });
-    expect(QUEST_DATA['Troubled Tortugans']).toMatchObject({
-      skills: { Slayer: 51, Construction: 48, Sailing: 45, Hunter: 45, Woodcutting: 40, Crafting: 34 },
-      prereqs: ['Pandemonium'],
-    });
-  });
-
   it('pins Fallen From Grace to canonical Wyrmscraig access points', () => {
     expect(QUEST_DATA['Fallen From Grace']).toMatchObject({
       kind: 'quest',

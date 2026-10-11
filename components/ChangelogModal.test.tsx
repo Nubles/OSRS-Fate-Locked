@@ -156,11 +156,9 @@ describe('ChangelogModal focus restoration', () => {
 describe('toggleExpandedRelease', () => {
   it('opens an older release without collapsing the latest release or changing seen state', () => {
     const latestId = '2026-07-26-latest';
-    const latestSeenId = latestId;
     const expanded = toggleExpandedRelease(new Set([latestId]), '2026-07-23-previous');
 
     expect([...expanded]).toEqual([latestId, '2026-07-23-previous']);
-    expect(latestSeenId).toBe(latestId);
   });
 
   it('collapses only the release that is toggled', () => {
