@@ -48,7 +48,7 @@ export const CHANGELOG_RELEASES = [
       ],
       changed: [
         'The Void Altar looks like an in-game window now.',
-        'Click or press Esc to skip an animation. They only play with Animations on, and reduced motion shows the last frame.',
+        'Click or press Esc to skip an animation, or turn Animations off in Settings to hide them.',
       ],
     },
   },
