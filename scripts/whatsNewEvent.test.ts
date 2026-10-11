@@ -20,6 +20,16 @@ describe("What's New entries for the Discord's #updates", () => {
     expect(releasesToAnnounce(releases).map((entry: { id: string }) => entry.id)).toEqual(['a', 'b', 'c']);
   });
 
+  it('leaves out entries a previous run already announced, even old ones', () => {
+    const releases = [
+      release('new', '2026-10-11'),
+      release('b', '2026-10-10'),
+      release('a', FIRST_ANNOUNCED_DATE),
+    ];
+    expect(releasesToAnnounce(releases, new Set(['a', 'b'])).map((entry: { id: string }) => entry.id)).toEqual(['new']);
+    expect(whatsNewEvent(releases, '2026-10-11T12:00:00.000Z', new Set(['a', 'b', 'new'])).releases).toEqual([]);
+  });
+
   it('sends at most ten, the newest', () => {
     const releases = Array.from({ length: 12 }, (_, index) => release(`r${index}`, '2026-10-20'));
     const ids = releasesToAnnounce(releases).map((entry: { id: string }) => entry.id);
