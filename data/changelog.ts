@@ -37,6 +37,22 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-11-ritual-animations',
+    title: 'New Void Altar animations',
+    date: '2026-10-11',
+    sections: {
+      added: [
+        'Every ritual now has its own animation, drawn with real OSRS item sprites and the RuneScape font.',
+        'The Void Gambit flips a coin over a portal, and you see the Keys you won or the Fate you lost.',
+        'The Cartographer unrolls the world map and marks your new chunk with an X.',
+      ],
+      changed: [
+        'The Void Altar looks like an in-game window now.',
+        'Click or press Esc to skip an animation. They only play with Animations on, and reduced motion shows the last frame.',
+      ],
+    },
+  },
+  {
     id: '2026-10-10-chunk-picker-october',
     title: 'Map content updated for October',
     date: '2026-10-10',

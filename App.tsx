@@ -41,6 +41,7 @@ import { JournalSummaryCard } from './components/JournalSummaryCard';
 import { isChunkLoadError, reloadOnceForChunkError } from './utils/chunkLoadError';
 import { useEscapeKey } from './hooks/useEscapeKey';
 import { resolveModeRules } from './config/gameModes';
+import { RITUALS, type Ritual } from './config/economy';
 import { showToast } from './utils/toast';
 import { importUiDecision, isCurrentImportRequest } from './utils/gamePersistence';
 import { prefetchHeavyChunks } from './utils/prefetch';
@@ -91,10 +92,7 @@ const ChangelogModal = lazyWithRetry(() =>
 // chunk.
 const OnboardingWizard = lazyWithRetry(() => import('./components/OnboardingWizard').then(m => ({ default: m.OnboardingWizard })));
 const VoidAltar = lazyWithRetry(() => import('./components/VoidAltar').then(m => ({ default: m.VoidAltar })));
-const TransmutationEffect = lazyWithRetry(() => import('./components/TransmutationEffect').then(m => ({ default: m.TransmutationEffect })));
-const ClarityEffect = lazyWithRetry(() => import('./components/RitualEffects').then(m => ({ default: m.ClarityEffect })));
-const GreedEffect = lazyWithRetry(() => import('./components/RitualEffects').then(m => ({ default: m.GreedEffect })));
-const ChaosEffect = lazyWithRetry(() => import('./components/RitualEffects').then(m => ({ default: m.ChaosEffect })));
+const RitualAnimation = lazyWithRetry(() => import('./components/RitualAnimation').then(m => ({ default: m.RitualAnimation })));
 const CommandPalette = lazyWithRetry(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
 const GuidedTour = lazyWithRetry(() => import('./components/GuidedTour').then(m => ({ default: m.GuidedTour })));
 const QuestCompleteOverlay = lazyWithRetry(() => import('./components/QuestCompleteOverlay').then(m => ({ default: m.QuestCompleteOverlay })));
@@ -684,7 +682,7 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
 
 const GameLayout = () => {
   const {
-    lastEvent, animationsEnabled, hasSeenOnboarding, history, linkedAccount,
+    lastEvent, animationsEnabled, hasSeenOnboarding, history, linkedAccount, unlocks,
     fateCompensation, resolveFateCompensation, saveDurability, saveStatus,
     petCompensation, resolvePetCompensation, petsClaimed, gameModeId, customMode,
     saveOwnershipBlockReason, retrySave,
@@ -892,7 +890,7 @@ const GameLayout = () => {
   const [showSyncCode, setShowSyncCode] = useState(false);
   const [syncImportCode, setSyncImportCode] = useState<string | undefined>(undefined);
   const [syncInitialTab, setSyncInitialTab] = useState<'ONLINE' | undefined>(undefined);
-  const [activeRitualAnim, setActiveRitualAnim] = useState<'NONE' | 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE'>('NONE');
+  const [activeRitual, setActiveRitual] = useState<{ id: string; ritual: Ritual['id']; meta: Record<string, unknown> } | null>(null);
 
   // Deep link: a `#sync=<code>` fragment (from a shared link or scanned QR)
   // opens the Sync Code modal pre-filled on the Import tab, then clears the
@@ -912,9 +910,9 @@ const GameLayout = () => {
 
   // Watch for ritual events to trigger animations
   React.useEffect(() => {
-    if (lastEvent?.type === 'RITUAL' && animationsEnabled) {
-       setActiveRitualAnim((lastEvent.meta as any).type);
-    }
+    if (lastEvent?.type !== 'RITUAL' || !animationsEnabled) return;
+    const meta = (lastEvent.meta ?? {}) as Record<string, unknown>;
+    if (RITUALS.some(r => r.id === meta.type)) setActiveRitual({ id: lastEvent.id, ritual: meta.type as Ritual['id'], meta });
   }, [lastEvent, animationsEnabled]);
 
   // Ctrl/⌘+K now opens the command palette (which can jump to the Oracle and
@@ -1018,10 +1016,10 @@ const GameLayout = () => {
       <Suspense fallback={null}>
         {!hasSeenOnboarding && !topLevelGuideOpen && <OnboardingWizard />}
 
-        {activeRitualAnim === 'TRANSMUTE' && <TransmutationEffect onComplete={() => setActiveRitualAnim('NONE')} />}
-        {activeRitualAnim === 'LUCK' && <ClarityEffect onComplete={() => setActiveRitualAnim('NONE')} />}
-        {activeRitualAnim === 'GREED' && <GreedEffect onComplete={() => setActiveRitualAnim('NONE')} />}
-        {activeRitualAnim === 'CHAOS' && <ChaosEffect onComplete={() => setActiveRitualAnim('NONE')} />}
+        {activeRitual && (
+          <RitualAnimation key={activeRitual.id} ritual={activeRitual.ritual} meta={activeRitual.meta}
+            ownedChunks={unlocks.chunks ?? []} onComplete={() => setActiveRitual(null)} />
+        )}
       </Suspense>
 
       <Suspense fallback={<ModalFallback />}>
