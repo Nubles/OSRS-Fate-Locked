@@ -1,5 +1,5 @@
 import { DROP_RATES } from '../config/rules';
-import { usesVanillaRules } from '../config/gameModes';
+import { isF2PMode, usesVanillaRules } from '../config/gameModes';
 import { policyFor } from '../config/detectorPolicies';
 import { failureFateForSkillLevel, failureFateForSource } from '../config/economy';
 import { BRUTUS_BOSS_NAME, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
@@ -357,6 +357,17 @@ function classifyBoss(event: FateEventEnvelope, state: GameState): EventClassifi
   });
 }
 
+/** Members-only Key sources a Free-to-play run can't log: Slayer, diaries, and clues above beginner. */
+function f2pEventBlock(event: FateEventEnvelope): string | null {
+  if (event.eventType === 'SLAYER_TASK') return 'Slayer is members only, so it gives no Keys in Free-to-play.';
+  if (event.eventType === 'DIARY_TASK') return 'Achievement Diaries are members only, so they give no Keys in Free-to-play.';
+  if (event.eventType === 'CLUE_CASKET') {
+    const clue = detectedClue(event);
+    if (clue && clue.tier !== 'Beginner') return 'Only beginner clues are free-to-play, so this casket gives no Key in Free-to-play.';
+  }
+  return null;
+}
+
 export function classifyFateEvent(
   event: FateEventEnvelope,
   state: GameState,
@@ -374,6 +385,8 @@ export function classifyFateEvent(
   ) {
     return { state: 'BLOCKED', reason: 'This event is from another character.' };
   }
+  const f2pBlock = isF2PMode(state.gameModeId) ? f2pEventBlock(event) : null;
+  if (f2pBlock) return blocked(f2pBlock);
   // Every roll raises the run's revision, so an event from an earlier revision
   // is checked against the run as it is now, as a manual log would be.
   if (event.runRevision > state.runRevision) {

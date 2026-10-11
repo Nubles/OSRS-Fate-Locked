@@ -45,6 +45,7 @@ export const CHANGELOG_RELEASES = [
         'Pick Free-to-play when you start a run to play Fate Locked on a free-to-play account.',
         'Keys only roll free-to-play content: 15 skills, gear up to rune, 23 areas, 2 bosses, 6 minigames and the free-to-play quests.',
         'You start with Lumbridge, Varrock, Draynor, Edgeville, Barbarian Village and the Wizards’ Tower.',
+        'Slayer and diaries are members only, so they’re off, and only beginner clues give Keys.',
         'Breakthroughs and Fate’s Mercy work here too, so a run never gets stuck.',
       ],
     },

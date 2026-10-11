@@ -7,7 +7,7 @@ import { useGame } from '../context/GameContext';
 import { BookOpen, ScrollText, Dices } from './OsrsIcon';
 import { Crosshair } from 'lucide-react';
 import { wikiService } from '../services/WikiService';
-import { resolveModeRules, usesVanillaRules } from '../config/gameModes';
+import { isF2PMode, resolveModeRules, usesVanillaRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { EARN_METHODS, failureFateForSource, LEVEL_ROLL_MAX } from '../config/economy';
 import { BRUTUS_BOSS_NAME, effectiveVanillaClueRate, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
@@ -381,7 +381,7 @@ type FarmSubTab = 'SLAYER' | 'CLUES' | 'BOSSING' | 'ACTIVITIES';
 
 export const ActionSection: React.FC = () => {
   const { rollForKey, claimPet, petsClaimed, unlocks, gameModeId, customMode, animationsEnabled, bossStandardKeysAwarded, clueStandardKeysAwarded } = useGame();
-  const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
+  const [subTab, setSubTab] = useState<FarmSubTab>(() => (isF2PMode(gameModeId) ? 'CLUES' : 'SLAYER'));
   const [bossQuery, setBossQuery] = useState('');
 
   // When the run's mode enables region passives, rolls are boosted. rollForKey
@@ -483,12 +483,16 @@ export const ActionSection: React.FC = () => {
     ];
   }, [unlocks.quests]);
 
-  const tabs: { id: FarmSubTab; label: string; icon: string; count: number }[] = [
+  // Free-to-play: Slayer is members only, and only beginner clues are free-to-play.
+  const isF2P = isF2PMode(gameModeId);
+  const clueScrolls = isF2P ? CLUE_SCROLLS.filter(clue => clue.tier === 'Beginner') : CLUE_SCROLLS;
+  const allTabs: { id: FarmSubTab; label: string; icon: string; count: number }[] = [
     { id: 'SLAYER', label: 'Slayer', icon: OSRS_ICONS.SLAYER, count: slayers.length },
-    { id: 'CLUES', label: 'Clues', icon: OSRS_ICONS.CLUE, count: CLUE_SCROLLS.length },
+    { id: 'CLUES', label: 'Clues', icon: OSRS_ICONS.CLUE, count: clueScrolls.length },
     { id: 'BOSSING', label: 'Bossing', icon: OSRS_ICONS.BOSS, count: isVanilla ? vanillaBosses.length : BOSSES_LIST.length },
     { id: 'ACTIVITIES', label: 'Activities', icon: OSRS_ICONS.ACTIVITY, count: ACTIVITY_ROLLS.length + 1 },
   ];
+  const tabs = isF2P ? allTabs.filter(tab => tab.id !== 'SLAYER') : allTabs;
 
   return (
     <div className="h-full p-4 flex flex-col gap-3">
@@ -516,7 +520,7 @@ export const ActionSection: React.FC = () => {
 
       {/* Active list — full-width 2-column grid */}
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar -mr-1 pr-1">
-        {subTab === 'SLAYER' && (
+        {subTab === 'SLAYER' && !isF2P && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
             {slayers.map((master, i) => (
               <div
@@ -539,7 +543,7 @@ export const ActionSection: React.FC = () => {
         )}
         {subTab === 'CLUES' && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-            {CLUE_SCROLLS.map((clue, i) => {
+            {clueScrolls.map((clue, i) => {
               const baseRate = DROP_RATES[clue.source];
               const displayRate = isVanilla
                 ? effectiveVanillaClueRate(baseRate, clueKeysAwarded)
@@ -694,7 +698,7 @@ export const ActionSection: React.FC = () => {
             icon={<ScrollText className="w-3.5 h-3.5 text-cyan-600" />}
             label="Journal Activities"
             accent="text-cyan-500"
-            desc={<>Complete Quests, Diaries & CAs in the <span className="text-cyan-200">Journal Tab</span>.</>}
+            desc={<>Complete Quests{isF2P ? '' : ', Diaries'} & CAs in the <span className="text-cyan-200">Journal Tab</span>.</>}
             rate={`Variable (${JOURNAL_MIN}% - ${JOURNAL_MAX}%)`}
             badge="bg-cyan-900/20 border-cyan-900/30 text-cyan-400"
           />

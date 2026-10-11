@@ -419,3 +419,18 @@ describe('classifyFateEvent', () => {
     });
   });
 });
+
+describe('Free-to-play detected events', () => {
+  const f2p = state({ gameModeId: 'f2p' });
+
+  it('turn away members-only Key sources', () => {
+    expect(classifyFateEvent(event('SLAYER_TASK', 'Abyssal demons', { confidence: 'UNCERTAIN' }), f2p))
+      .toMatchObject({ state: 'BLOCKED', reason: 'Slayer is members only, so it gives no Keys in Free-to-play.' });
+    expect(classifyFateEvent(event('CLUE_CASKET', 'Casket (hard)'), f2p)).toMatchObject({ state: 'BLOCKED' });
+  });
+
+  it('still take beginner clues and quests', () => {
+    expect(classifyFateEvent(event('CLUE_CASKET', 'Casket (beginner)'), f2p).state).toBe('READY');
+    expect(classifyFateEvent(event('QUEST', "Cook's Assistant"), f2p).state).toBe('READY');
+  });
+});
