@@ -37,6 +37,17 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-12-faster-updates',
+    title: 'Faster updates',
+    date: '2026-10-12',
+    sections: {
+      changed: [
+        'New versions of the tracker now go live in about half the time.',
+        'We tidied up old code nothing used anymore. Your run and the app work the same as before.',
+      ],
+    },
+  },
+  {
     id: '2026-10-11-ritual-animations',
     title: 'New Void Altar animations',
     date: '2026-10-11',

@@ -78,10 +78,6 @@ export const seededContext = (state: Pick<GameState, 'history' | 'rngVersion'>):
 export const drawDice = (seed: string, context: string, purpose: string, index = 0, max = 100): number =>
   Math.floor(drawFloat(seed, context, purpose, index) * max) + 1;
 
-/** Deterministic pool pick (undefined on an empty pool). */
-export const drawPick = <T>(arr: readonly T[], seed: string, context: string, purpose: string, index = 0): T | undefined =>
-  arr.length === 0 ? undefined : arr[Math.floor(drawFloat(seed, context, purpose, index) * arr.length)];
-
 // ── Seed helpers ────────────────────────────────────────────────────────────
 
 /** ISO-8601 week label, e.g. "FATE-2026-W28" — the community weekly seed. */

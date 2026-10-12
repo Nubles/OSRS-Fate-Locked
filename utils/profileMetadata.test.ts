@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   discoverProfileSaveIds,
-  isProfileDeletionPending,
   parseProfileMetadata,
   resolveProfileMetadata,
 } from './profileMetadata';
@@ -235,22 +234,6 @@ describe('parseProfileMetadata', () => {
       status: 'invalid',
       reason: 'invalid_deletions',
     });
-  });
-
-  it('reports whether a profile has durable cleanup pending', () => {
-    const withDeletion = {
-      ...current(),
-      deletions: [{
-        version: 1 as const,
-        deletionId: 'delete-beta-1',
-        profileId: 'beta',
-        requestedAt: 12,
-        phase: 'pending_cleanup' as const,
-      }],
-    };
-
-    expect(isProfileDeletionPending(withDeletion, 'beta')).toBe(true);
-    expect(isProfileDeletionPending(withDeletion, 'alpha')).toBe(false);
   });
 
   it.each(['alpha_beta', 'alpha/beta', 'alpha beta', 'a'.repeat(129)])(

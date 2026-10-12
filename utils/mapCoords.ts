@@ -62,13 +62,3 @@ export const tileToChunk = ({ tx, ty }: TileCoord): ChunkCoord => ({
   cy: Math.floor(ty / CHUNK_TILES),
 });
 
-export const chunkOriginTile = ({ cx, cy }: ChunkCoord): TileCoord => ({
-  tx: cx * CHUNK_TILES,
-  ty: cy * CHUNK_TILES,
-});
-
-// Percent-of-image (0-100), for overlays using viewBox="0 0 100 100".
-export const tileToPercent = (t: TileCoord) => {
-  const { px, py } = tileToPixel(t);
-  return { x: (px / MAP_IMAGE.width) * 100, y: (py / MAP_IMAGE.height) * 100 };
-};

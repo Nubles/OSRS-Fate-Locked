@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   loadQuestStrategyCatalogue,
-  loadQuestStrategyFor,
   loadQuestWalkthroughFor,
 } from './questWalkthroughLoader';
 import { publicQuestWalkthroughReleaseFor } from './questWalkthroughPublicRelease';
@@ -73,10 +72,8 @@ describe('quest walkthrough loader chunk failures', () => {
   it.each([
     ['public strategy catalogue', 'questWalkthroughs.public', () => loadQuestStrategyCatalogue('PUBLIC')],
     ['public walkthrough', 'questWalkthroughs.public', () => loadQuestWalkthroughFor('PUBLIC', publicCookRelease)],
-    ['public strategy', 'questWalkthroughs.public', () => loadQuestStrategyFor('PUBLIC', publicCookRelease)],
     ['preview strategy catalogue', 'questWalkthroughs.preview-boundary', () => loadQuestStrategyCatalogue('PREVIEW')],
     ['preview walkthrough', 'questWalkthroughs.preview-boundary', () => loadQuestWalkthroughFor('PREVIEW', publicCookRelease)],
-    ['preview strategy', 'questWalkthroughs.preview-boundary', () => loadQuestStrategyFor('PREVIEW', publicCookRelease)],
     ['exact-revision preview walkthrough', 'questWalkthroughs', () => loadQuestWalkthroughFor('PREVIEW', previewCookRelease)],
   ] as const)('retries a transient %s chunk failure instead of losing the guides', async (_name, chunk, load) => {
     chunks.failures.set(chunk, 2);

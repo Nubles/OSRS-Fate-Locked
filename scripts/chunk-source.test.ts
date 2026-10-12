@@ -182,7 +182,8 @@ describe('pinned Chunk Picker source', () => {
       await writeApprovedChunkSource(raw, manifest, targetUrl);
       const compressed = await readFile(targetUrl);
       expect([...compressed.subarray(0, 10)]).toEqual([31, 139, 8, 0, 0, 0, 0, 0, 2, 10]);
-      await expect(unzip(compressed)).resolves.toEqual(raw);
+      // Buffer.equals, not toEqual: a deep-equal walk over 7.6 MB took ~45s.
+      expect((await unzip(compressed)).equals(raw)).toBe(true);
       expect((await readdir(tempDir)).filter(name => name.endsWith('.tmp'))).toEqual([]);
     } finally {
       await rm(tempDir, { force: true, recursive: true });

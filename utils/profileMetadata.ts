@@ -274,9 +274,6 @@ export const parseProfileMetadata = (raw: string | null): ProfileMetadataParseRe
   };
 };
 
-export const isProfileDeletionPending = (metadata: ProfileMetadata, profileId: string): boolean =>
-  metadata.deletions.some(deletion => deletion.profileId === profileId);
-
 export interface ProfileRecoveryEnvelopeV1 {
   version: 1;
   capturedAt: number;
