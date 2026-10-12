@@ -1,5 +1,5 @@
 import { CA_DATA } from '../data/caData';
-import { caTaskInMode } from './modeContent';
+import { caTaskInMode } from './modeScope';
 import { canonicalBossId } from './contentIdentity';
 import { ALL_CA_TASKS, CATask } from '../data/caTasks';
 import type { CompletionResult } from './journalCompletion';

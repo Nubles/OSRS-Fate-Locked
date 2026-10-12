@@ -14,7 +14,7 @@ import { OCEAN_CHUNK_KEYS } from './oceanAccess';
 import { evaluateQuestEligibility, meetsSkillRequirement } from './journalStatus';
 import { isF2PMode } from '../config/gameModes';
 import { F2P_SKILLS } from '../data/f2pContent';
-import { f2pQuestMembershipFor } from '../data/f2pQuestMembership';
+import { isF2PQuest } from '../data/f2pQuestIds';
 import { farmingPatchFor } from './farmingPatches';
 import { isBankReachable } from './reachability';
 import { canonicalBossId, resolveQuest } from './contentIdentity';
@@ -95,7 +95,7 @@ function questStatus(
 ): EntityAccessResult {
   const quest = resolveQuest(name);
   if (!quest) return { status: 'UNKNOWN', reasons: ['Quest requirements need review'] };
-  if (isF2PMode(context.gameModeId) && !f2pQuestMembershipFor(quest.id)) return { status: 'LOCKED', reasons: ['Members quest'] };
+  if (isF2PMode(context.gameModeId) && !isF2PQuest(quest.id)) return { status: 'LOCKED', reasons: ['Members quest'] };
   const result = evaluateQuestEligibility(quest, context.unlocks, context.gameModeId);
   if (result.eligible) return { status: 'ALLOWED', reasons: [] };
   return { status: result.status === 'LOCKED_REGION' ? 'LOCKED' : result.machineEligible ? 'UNKNOWN' : 'NOT_READY',

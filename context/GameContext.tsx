@@ -5,8 +5,8 @@ import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, ty
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
 import { resolveModeRules, DEFAULT_MODE_ID, isF2PMode, usesVanillaRules } from '../config/gameModes';
-import { petInMode } from '../utils/modeContent';
-import { collectionLogItemInMode } from '../utils/collectionLogMode';
+import { petInMode } from '../utils/modeScope';
+import { collectionLogItemInMode } from '../utils/modeScope';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';

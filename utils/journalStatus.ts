@@ -24,7 +24,7 @@ import { canonicalAreaName } from '../data/areaMapPolicy';
 import type { AreaRoutes } from './areaRoutes';
 import { farmingPatchLabel } from './farmingPatches';
 import { isF2PMode } from '../config/gameModes';
-import { f2pQuestMembershipFor } from '../data/f2pQuestMembership';
+import { isF2PQuest } from '../data/f2pQuestIds';
 
 /** Why a Free-to-play run can't do a members quest or diary. */
 export const MEMBERS_QUEST_LABEL = 'Members quest: not in Free-to-play';
@@ -298,7 +298,7 @@ export function evaluateQuestEligibility(
     };
   }
   // Free-to-play runs can only do the free-to-play quests.
-  if (isF2PMode(gameModeId) && !f2pQuestMembershipFor(quest.id)) {
+  if (isF2PMode(gameModeId) && !isF2PQuest(quest.id)) {
     const blocker: EligibilityBlocker = { kind: 'quest', label: MEMBERS_QUEST_LABEL };
     return { ...readinessFields([blocker], []), status: 'LOCKED_QUEST', blockers: [blocker], evidence: [] };
   }

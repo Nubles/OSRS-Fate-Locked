@@ -132,9 +132,20 @@ export const F2P_PET_IDS: readonly number[] = [];
  * left out.
  */
 export const F2P_COLLECTION_LOG_PAGES = ['Obor', 'Bryophyta', 'Brutus', 'Beginner Treasure Trails', 'Castle Wars'] as const;
+
+/**
+ * Collection log item ids are the page's number times 1000 plus the item's
+ * place (data/collectionLogData.ts), so a page's items share one block.
+ * utils/f2pMode.test.ts checks these blocks against the pages.
+ */
+export const F2P_COLLECTION_LOG_BLOCKS: Readonly<Record<(typeof F2P_COLLECTION_LOG_PAGES)[number], number>> = {
+  Obor: 136, Bryophyta: 106, Brutus: 155, 'Beginner Treasure Trails': 301, 'Castle Wars': 404,
+};
+const F2P_LOG_BLOCK_SET = new Set(Object.values(F2P_COLLECTION_LOG_BLOCKS));
 const F2P_CASTLE_WARS_LAST_ITEM = 404030;
 
 /** Whether a Free-to-play run can log this collection log item. */
-export const isF2PCollectionLogItem = (page: string, itemId: number): boolean =>
-  (F2P_COLLECTION_LOG_PAGES as readonly string[]).includes(page)
-  && (page !== 'Castle Wars' || itemId <= F2P_CASTLE_WARS_LAST_ITEM);
+export const isF2PCollectionLogItemId = (itemId: number): boolean => {
+  const block = Math.floor(itemId / 1000);
+  return F2P_LOG_BLOCK_SET.has(block) && (block !== F2P_COLLECTION_LOG_BLOCKS['Castle Wars'] || itemId <= F2P_CASTLE_WARS_LAST_ITEM);
+};

@@ -1,5 +1,5 @@
 import { DROP_RATES } from '../config/rules';
-import { collectionLogItemInMode, MEMBERS_LOG_ITEM_REASON } from './collectionLogMode';
+import { collectionLogItemInMode, MEMBERS_LOG_ITEM_REASON } from './modeScope';
 import { isF2PEntry } from '../data/f2pContent';
 import { TableType } from '../types';
 import { isF2PMode, usesVanillaRules } from '../config/gameModes';

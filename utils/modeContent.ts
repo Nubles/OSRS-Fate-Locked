@@ -6,15 +6,15 @@
 import { QUEST_DATA, type QuestData } from '../data/questData';
 import { DIARY_DATA, type DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
-import { f2pQuestMembershipFor } from '../data/f2pQuestMembership';
-import { F2P_CA_TASK_IDS, F2P_EQUIPMENT_TIER_MAX, F2P_PET_IDS, F2P_SKILLS, f2pEquipmentTierCap } from '../data/f2pContent';
+import { isF2PQuest } from '../data/f2pQuestIds';
+import { F2P_CA_TASK_IDS, F2P_EQUIPMENT_TIER_MAX, F2P_SKILLS, f2pEquipmentTierCap } from '../data/f2pContent';
 import { ALL_CA_TASKS, type CATask } from '../data/caTasks';
 import { SKILLS_LIST } from '../data/items';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { isF2PMode } from '../config/gameModes';
 
 const ALL_QUESTS = Object.values(QUEST_DATA);
-const F2P_QUESTS = ALL_QUESTS.filter(quest => f2pQuestMembershipFor(quest.id) !== undefined);
+const F2P_QUESTS = ALL_QUESTS.filter(quest => isF2PQuest(quest.id));
 const ALL_DIARIES = Object.values(DIARY_DATA);
 
 /** The quests a run can do: the free-to-play quests in Free-to-play, every quest otherwise. */
@@ -41,11 +41,7 @@ export const equipmentTierMaxFor = (gameModeId?: string, slot?: string): number 
 const F2P_CA_TASK_SET = new Set<string>(F2P_CA_TASK_IDS);
 const F2P_CA_TASKS = ALL_CA_TASKS.filter(task => F2P_CA_TASK_SET.has(task.id));
 
-/** Whether a run can do this Combat Achievement task. */
-export const caTaskInMode = (taskId: string, gameModeId?: string): boolean => !isF2PMode(gameModeId) || F2P_CA_TASK_SET.has(taskId);
-
-/** Whether a run can claim this pet. */
-export const petInMode = (petId: number, gameModeId?: string): boolean => !isF2PMode(gameModeId) || F2P_PET_IDS.includes(petId);
+export { caTaskInMode, petInMode } from './modeScope';
 
 /** Combat Achievement tasks a run can do: only free-to-play monsters in Free-to-play. */
 export const caTasksForMode = (gameModeId?: string): CATask[] => (isF2PMode(gameModeId) ? F2P_CA_TASKS : ALL_CA_TASKS);

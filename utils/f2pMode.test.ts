@@ -8,13 +8,14 @@ import {
 } from '../data/items';
 import { BANK_IDS } from '../data/banks';
 import {
-  F2P_AREAS, F2P_BANK_IDS, F2P_CA_TASK_IDS, F2P_EQUIPMENT_TIER_CAPS, F2P_SKILLS, F2P_START_AREAS, F2P_TABLE_ITEMS,
+  F2P_AREAS, F2P_BANK_IDS, F2P_CA_TASK_IDS, F2P_COLLECTION_LOG_BLOCKS, F2P_EQUIPMENT_TIER_CAPS, F2P_SKILLS, F2P_START_AREAS, F2P_TABLE_ITEMS,
 } from '../data/f2pContent';
 import { QUEST_DATA } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import { PETS } from '../data/pets';
 import content from '../public/chunk-content.json';
+import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
 import { f2pQuestMembership } from '../data/f2pQuestMembership';
 import { checkUnlockAvailability, getPoolAndStateKey, isOmniDirectUnlockAvailable, randomUnlockPool, randomUnlockTables } from './gameEngine';
 import { freeAreasFor, setStartArea, unlockableAreas } from './freeAreas';
@@ -81,6 +82,15 @@ describe('Free-to-play content lists', () => {
     expect(tasks).toHaveLength(18);
     expect(tasks.map(task => task.id)).not.toContain('ca_40'); // A Slow Death needs poison or venom
     expect(Object.keys(F2P_EQUIPMENT_TIER_CAPS).sort()).toEqual([...EQUIPMENT_SLOTS].sort());
+  });
+
+  it("find each free-to-play collection log page by its items' id block", () => {
+    const pages = Object.values(COLLECTION_LOG_DATA).flatMap(tab => Object.values(tab.pages));
+    for (const [name, block] of Object.entries(F2P_COLLECTION_LOG_BLOCKS)) {
+      const page = pages.find(candidate => candidate.name === name)!;
+      expect(page.items.every(item => Math.floor(item.id / 1000) === block), name).toBe(true);
+      expect(pages.filter(other => other !== page).some(other => other.items.some(item => Math.floor(item.id / 1000) === block)), name).toBe(false);
+    }
   });
 
   it('cover the 24 free-to-play quests', () => {
