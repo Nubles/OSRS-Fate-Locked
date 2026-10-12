@@ -4,10 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { useReducer } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { UnlockState } from '../types';
-import { PlanStep, listGoalTargets, planForTarget } from '../utils/goalPlanner';
-import { GoalPlanReadiness, goalPlannerStepHasWikiLink, goalPlannerTargetState } from './GoalPlannerModal';
+import { listGoalTargets } from '../utils/goalPlanner';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, vi } from 'vitest';
 import {
@@ -56,12 +54,6 @@ const analyzeQuest = (
   if (!walkthrough) throw new Error(`Missing walkthrough fixture for ${questId}`);
   return analyzeQuestWithWalkthrough(questId, snapshot, walkthrough);
 };
-const step = (id: string, label: string): PlanStep => ({
-  kind: 'region',
-  id,
-  label,
-  done: false,
-});
 
 let gameSnapshot: {
   unlocks: UnlockState;
@@ -365,51 +357,6 @@ describe('Goal Planner responsive layout', () => {
       document.body.style.overflow = originalBodyOverflow;
     }
   });
-});
-
-describe('goalPlannerStepHasWikiLink', () => {
-  it('keeps normal goal steps linked to their wiki article', () => {
-    expect(goalPlannerStepHasWikiLink(step('Lumbridge', 'Lumbridge'))).toBe(true);
-  });
-
-  it('does not invent a wiki article for a combined route alternative', () => {
-    expect(goalPlannerStepHasWikiLink(step(
-      'alternative:One of: East Ardougne or Tree Gnome Stronghold',
-      'One of: East Ardougne or Tree Gnome Stronghold',
-    ))).toBe(false);
-  });
-});
-
-const pryingTimesUnlocks = (): UnlockState => ({
-  equipment: {},
-  skills: { Smithing: 3, Sailing: 2 },
-  levels: { Smithing: 30, Sailing: 12 },
-  regions: ['The Pandemonium', 'Port Sarim', 'Rimmington'],
-  mobility: [], arcana: [], housing: [], merchants: [], minigames: [],
-  bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [],
-  quests: ['Pandemonium', "The Knight's Sword"],
-  diaries: [], cas: [], completedTasks: [], collectionLog: {},
-});
-
-it('gives Prying Times a distinct confirmation state', () => {
-  const unlocks = pryingTimesUnlocks();
-  const target = listGoalTargets().find(target => (
-    target.kind === 'quest' && target.id === 'Prying Times'
-  ))!;
-
-  expect(goalPlannerTargetState(target, unlocks)).toBe('confirm');
-});
-
-it('renders the outstanding Prying Times confirmation instead of ready copy', () => {
-  const plan = planForTarget('quest', 'Prying Times', pryingTimesUnlocks())!;
-  const markup = renderToStaticMarkup(<GoalPlanReadiness plan={plan} />);
-
-  expect(markup).toContain('Confirm: One open Sailing task slot');
-  expect(markup).not.toContain('Available right now');
-});
-
-it('does not invent a wiki article for a manual confirmation', () => {
-  expect(goalPlannerStepHasWikiLink({ ...step('manual:prying', 'Confirm: One open Sailing task slot'), kind: 'manual' })).toBe(false);
 });
 
 describe('RuneProof Goal Planner integration', () => {

@@ -8,12 +8,16 @@ const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const readRepositoryFile = (path: string) =>
   readFile(resolve(repositoryRoot, path), 'utf8');
 
+// Tests run in their own sharded job (see expectShardedTestJob); these are the
+// gates the quality and deploy build jobs run.
 const verificationCommands = [
-  'npm test',
   'npx tsc --noEmit',
   'npm run content:verify',
   'npm run build',
 ];
+
+const TEST_SHARDS = 3;
+const shardedTestCommand = `npm test -- --shard=\${{ matrix.shard }}/${TEST_SHARDS}`;
 
 const pullRequestCommandOrder = [
   'npm ci --no-audit --no-fund',
@@ -251,6 +255,20 @@ const expectCiSecurityContract = (workflowText: string) => {
   ).toEqual([]);
 };
 
+const expectShardedTestJob = (testJob: string) => {
+  expect(testJob).toMatch(/^\s{4}runs-on:\s*ubuntu-latest\s*$/m);
+  expect(testJob).toMatch(/^\s{10}node-version:\s*22\s*$/m);
+  expect(testJob).toMatch(/^\s{10}cache:\s*npm\s*$/m);
+  expect(activeUses(testJob)).toEqual(['actions/checkout@v4', 'actions/setup-node@v4']);
+  expect(activeRunCommands(testJob)).toEqual(['npm ci --no-audit --no-fund', shardedTestCommand]);
+  // Every shard must be listed, or part of the suite silently never runs.
+  const shards = testJob.match(/^\s{8}shard:\s*\[([^\]]*)\]\s*$/m)?.[1]
+    .split(',').map(value => Number(value.trim()));
+  expect(shards, 'test job must list every shard').toEqual(
+    Array.from({ length: TEST_SHARDS }, (_, index) => index + 1),
+  );
+};
+
 const expectDeployBuildOperations = (buildJob: string) => {
   const commands = activeRunCommands(buildJob);
   expectInOrder(commands, deployCommandOrder);
@@ -328,6 +346,8 @@ describe('CI workflow contract', () => {
     expect(qualityJob).toMatch(
       /- name: Build\n\s+run: npm run build\n\s+env:\n\s+VITE_BASE: \/\$\{\{ github\.event\.repository\.name \}\}\//,
     );
+
+    expectShardedTestJob(yamlBlock(jobsBlock, 'tests', 2));
   });
 
   it('does not grant or invoke deployment behavior in pull-request CI', async () => {
@@ -445,8 +465,8 @@ describe('workflow contract mutation coverage', () => {
 
     const withoutUpload = workflow.replace(uploadPattern, '');
     const mutated = withoutUpload.replace(
-      /      - name: Run tests/ ,
-      uploadStep!.trimEnd() + '\n\n      - name: Run tests',
+      /      - name: Type-check/ ,
+      uploadStep!.trimEnd() + '\n\n      - name: Type-check',
     );
     const buildJob = yamlBlock(yamlBlock(mutated, 'jobs'), 'build', 2);
 
@@ -497,7 +517,8 @@ describe('Pages deployment workflow contract', () => {
 
     expectDeployBuildOperations(buildJob);
 
-    expect(deployJob).toMatch(/^\s{4}needs:\s*build\s*$/m);
+    expectShardedTestJob(yamlBlock(jobsBlock, 'test', 2));
+    expect(deployJob).toMatch(/^\s{4}needs:\s*\[\s*test\s*,\s*build\s*\]\s*$/m);
     expect(deployJob).toMatch(/^\s{6}pages:\s*write\s*$/m);
     expect(deployJob).toMatch(/^\s{6}id-token:\s*write\s*$/m);
     expect(deployJob).toMatch(/^\s{4}environment:\s*$/m);

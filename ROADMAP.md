@@ -454,8 +454,9 @@ of `chunked-sailing`).
 
 Use the [release verification checklist](docs/RELEASE_CHECKLIST.md) for the
 single authoritative command order, generated-data review, and GitHub handoff.
-The required GitHub check is `CI / quality`; enabling it in branch protection
-is a manual repository-maintainer setting after the workflow first appears.
+The required GitHub checks are `CI / quality` and the three `CI / tests (n/3)`
+groups; enabling them in branch protection is a manual repository-maintainer
+setting after the workflow first appears.
 
 Build-size watch: `npm run build` fails when the eager entry chunk (the
 `dist/assets/index-*.js` that `index.html` loads) grows past its gzip budget

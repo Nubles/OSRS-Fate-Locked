@@ -1,7 +1,10 @@
 // Sends the newest What's New entries to the Discord bot after a Pages deploy
 // (.github/workflows/discord-whats-new.yml). Run with
 // `node --experimental-strip-types`, so it can read data/changelog.ts.
+// PREVIOUS_CHANGELOG is a copy of data/changelog.ts from the commit the last
+// successful announcement ran on; entries already in it are not sent again.
 import { createHmac } from 'node:crypto';
+import { pathToFileURL } from 'node:url';
 import { CHANGELOG_RELEASES } from '../data/changelog.ts';
 import { whatsNewEvent } from './whats-new-event.mjs';
 
@@ -22,8 +25,16 @@ const safeResponse = (value) => {
 
 const required = (name) => process.env[name]?.trim() || null;
 
+/** Ids of the entries the last successful run announced, or none when there was no such run. */
+const announcedIds = async () => {
+  const path = required('PREVIOUS_CHANGELOG');
+  if (!path) return new Set();
+  const previous = await import(pathToFileURL(path).href);
+  return new Set(previous.CHANGELOG_RELEASES.map((release) => release.id));
+};
+
 const main = async () => {
-  const event = whatsNewEvent(CHANGELOG_RELEASES);
+  const event = whatsNewEvent(CHANGELOG_RELEASES, undefined, await announcedIds());
   if (event.releases.length === 0) {
     log(0, { skipped: 'no entries to announce' });
     return;

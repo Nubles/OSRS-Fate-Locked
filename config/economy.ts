@@ -304,12 +304,6 @@ export const omniFloor = (source: DropSource): number => {
   return omni;
 };
 
-/** Min/max fixed success rate across all tiers of a method (for summary chips). */
-export const earnRange = (m: EarnMethod): [number, number] => {
-  const rates = m.tiers.map(t => t.rate);
-  return [Math.min(...rates), Math.max(...rates)];
-};
-
 // ── Key types ────────────────────────────────────────────────────────────────
 export interface KeyTypeInfo {
   id: 'standard' | 'omni' | 'chaos';

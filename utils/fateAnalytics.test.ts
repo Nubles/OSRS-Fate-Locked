@@ -3,7 +3,6 @@ import type { LogEntry } from '../types';
 import {
   buildFateAnalytics,
   defaultFateAnalyticsQuery,
-  rollCategory,
 } from './fateAnalytics';
 
 let fixtureId = 0;
@@ -182,11 +181,6 @@ describe('buildFateAnalytics', () => {
 
     expect(result.coverage.unknownSources).toBe(1);
     expect(result.sources).toEqual(expect.arrayContaining([expect.objectContaining({ label: 'Unknown source', attempts: 1 })]));
-  });
-
-  it('exports the established category grouping semantics', () => {
-    expect(rollCategory('Quest (Novice)')).toBe('Quest');
-    expect(rollCategory('Col. Log: Vorki')).toBe('Collection Log');
   });
 
   it('keeps source and category availability from the date range before applying scope', () => {

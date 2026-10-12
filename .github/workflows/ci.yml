@@ -36,9 +36,6 @@ jobs:
         env:
           CHANGELOG_BASE_REF: ${{ github.event.pull_request.base.sha }}
 
-      - name: Run tests
-        run: npm test
-
       - name: Type-check
         run: npx tsc --noEmit
 
@@ -49,3 +46,28 @@ jobs:
         run: npm run build
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
+
+  # The test suite is split into three groups that run side by side, so CI
+  # finishes in about half the time of one runner working through all of it.
+  tests:
+    name: tests (${{ matrix.shard }}/3)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run tests
+        run: npm test -- --shard=${{ matrix.shard }}/3

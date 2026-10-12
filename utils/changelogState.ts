@@ -44,7 +44,6 @@ export const changelogVisibilityReducer = (
   _state: boolean, action: ChangelogVisibilityAction,
 ): boolean => action.type === 'OPEN';
 
-export type ChangelogOpenSource = 'automatic' | 'manual';
 
 interface ChangelogStartupContext {
   hasSeenOnboarding: boolean;
@@ -85,11 +84,6 @@ export const mayAutoOpenChangelogAgain = (
   alreadyOpenedThisVisit: boolean,
   hasPendingCompensation: boolean,
 ): boolean => !alreadyOpenedThisVisit || hasPendingCompensation;
-
-export const resolveChangelogRestoreTarget = <T>(
-  source: ChangelogOpenSource,
-  persistentTrigger: T | null,
-): T | null => source === 'manual' ? persistentTrigger : null;
 
 export const shouldEnableUnderlyingModalEscape = (
   anyUnderlyingModalOpen: boolean,

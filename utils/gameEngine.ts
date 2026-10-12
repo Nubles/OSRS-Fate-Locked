@@ -103,12 +103,6 @@ export interface RandomUnlockCandidate {
     item: string;
 }
 
-/** A deterministic small sample of currently valid items blocked by location access. */
-export interface RandomPoolBlockerSummary {
-    sample: string[];
-    remaining: number;
-}
-
 /**
  * Applies the Vanilla exact-area policy only to random boss and minigame
  * unlocks, and Chunked's trainable-skill rule to random Skills unlocks. All
@@ -150,30 +144,6 @@ export const isOmniDirectUnlockAvailable = (
     if (!policy.filteredTables.some(candidate => candidate === table)) return true;
     if (!policy.requiresTrackedHardGeography || policy.omniDirect.allowsLocationIneligible) return true;
     return getActivityAccess(item, unlocks, modeId).eligible;
-};
-
-/**
- * Describe valid items excluded only by the Vanilla location policy. The
- * caller supplies the candidate order, so the examples are stable and this
- * helper never consumes gameplay RNG.
- */
-export const describeRandomPoolBlockers = (
-    candidates: readonly RandomUnlockCandidate[],
-    unlocks: UnlockState,
-    modeId: string,
-    randomCost: 'key' | 'chaosKey',
-    sampleSize = 3,
-    policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
-): RandomPoolBlockerSummary => {
-    const blockers = candidates.flatMap(({ table, item }) => {
-        if (!isValidUnlock(table, item, unlocks) || isRandomUnlockEligible(table, item, unlocks, modeId, randomCost, policy)) return [];
-
-        const { explanation } = getActivityAccess(item, unlocks, modeId);
-        return [`${item} — ${explanation.replace(/^Needs\b/, 'needs')}`];
-    });
-    const sample = blockers.slice(0, sampleSize);
-
-    return { sample, remaining: blockers.length - sample.length };
 };
 
 /** Draw from a non-empty random pool without touching RNG for an empty pool. */

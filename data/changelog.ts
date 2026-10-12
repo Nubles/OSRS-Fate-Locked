@@ -37,9 +37,9 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-11-free-to-play',
+    id: '2026-10-12-free-to-play',
     title: 'New mode: Free-to-play',
-    date: '2026-10-11',
+    date: '2026-10-12',
     sections: {
       added: [
         'Pick Free-to-play when you start a run to play Fate Locked on a free-to-play account.',
@@ -47,6 +47,33 @@ export const CHANGELOG_RELEASES = [
         'You start with Lumbridge, Varrock, Draynor, Edgeville, Barbarian Village and the Wizards’ Tower.',
         'Slayer and diaries are members only, so they’re off, and only beginner clues give Keys.',
         'Breakthroughs and Fate’s Mercy work here too, so a run never gets stuck.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-12-faster-updates',
+    title: 'Faster updates',
+    date: '2026-10-12',
+    sections: {
+      changed: [
+        'New versions of the tracker now go live in about half the time.',
+        'We tidied up old code nothing used anymore. Your run and the app work the same as before.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-11-ritual-animations',
+    title: 'New Void Altar animations',
+    date: '2026-10-11',
+    sections: {
+      added: [
+        'Every ritual now has its own animation, drawn with real OSRS item sprites and the RuneScape font.',
+        'The Void Gambit flips a coin over a portal, and you see the Keys you won or the Fate you lost.',
+        'The Cartographer unrolls the world map and marks your new chunk with an X.',
+      ],
+      changed: [
+        'The Void Altar looks like an in-game window now.',
+        'Click or press Esc to skip an animation, or turn Animations off in Settings to hide them.',
       ],
     },
   },

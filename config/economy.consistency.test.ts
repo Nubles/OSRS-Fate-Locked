@@ -3,7 +3,7 @@ import { DROP_RATES, EQUIPMENT_TIER_MAX } from './rules';
 import { DropSource, TableType } from '../types';
 import {
   EARN_METHODS, KEY_TYPES, SPEND_TABLES, RITUALS,
-  SKILLS_TIER_CAP, LEVEL_ROLL_MAX, earnRange,
+  SKILLS_TIER_CAP, LEVEL_ROLL_MAX,
   VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule,
   FAILURE_FATE_BY_SOURCE, SKILL_CHAOS_MILESTONES,
   failureFateForSkillLevel, failureFateForSource, isSkillChaosMilestone,
@@ -148,13 +148,6 @@ describe('economy ↔ engine consistency', () => {
     expect(SKILL_CHAOS_MILESTONES).toEqual([30, 40, 50, 60, 70, 80, 90, 99]);
     expect(isSkillChaosMilestone(70)).toBe(true);
     expect(isSkillChaosMilestone(79)).toBe(false);
-  });
-
-  it('earnRange returns the min/max of a method’s fixed tiers', () => {
-    const slayer = EARN_METHODS.find(m => m.category === 'Slayer Tasks')!;
-    const [lo, hi] = earnRange(slayer);
-    expect(lo).toBe(DROP_RATES[DropSource.SLAYER_BEGINNER]); // 5
-    expect(hi).toBe(DROP_RATES[DropSource.SLAYER_BOSS]);     // 80 — the number the old Codex got wrong
   });
 
   it('exposes exactly the three key types', () => {
