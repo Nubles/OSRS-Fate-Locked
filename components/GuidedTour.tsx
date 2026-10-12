@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { X, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Compass } from './OsrsIcon';
 import { STARTING_KEYS } from '../config/economy';
+import { useGame } from '../context/GameContext';
+import { isF2PMode } from '../config/gameModes';
 
 /**
  * A replayable, spotlight-style guided tour. Each step highlights a real element
@@ -19,7 +21,7 @@ interface Step {
   place?: 'right' | 'bottom' | 'left' | 'top';
 }
 
-const STEPS: Step[] = [
+const ALL_STEPS: Step[] = [
   { sel: null, title: 'Welcome to Fate Locked', body: `You start with ${STARTING_KEYS} Keys, Misthalin (or one Lumbridge chunk in Chunked) and almost everything else locked. Here’s a short tour of where everything is.` },
   { sel: '[data-tour="farm"]', title: '1 · Farm Keys', body: 'Roll here when you finish a Slayer task, a clue, a boss kill or a minigame. Each roll has a chance at a Key, and Keys pay for unlocks. Failed rolls build Fate Points.', place: 'right' },
   { sel: '[data-tour="spend"]', title: '2 · Spend Keys', body: 'Spend a Key on a table (gear, areas, bosses, skills and more) to unlock a random entry from it.', place: 'right' },
@@ -28,6 +30,21 @@ const STEPS: Step[] = [
   { sel: '[data-tour="dashtabs"]', title: 'Your account', body: 'Everything you’ve unlocked lives on the right: gear & skills, the world map, activities, your journal and collection log. Each tab has a “?” for details.', place: 'bottom' },
   { sel: '[data-tour="palette"]', title: 'Jump to anything', body: 'Press ⌘K (or click here) anytime to open the command palette and jump straight to any tab or tool. That’s the tour. Good luck!', place: 'bottom' },
 ];
+
+/** Free-to-play wording for the steps that name members content (Slayer). */
+const F2P_STEPS: Step[] = ALL_STEPS.map((step, n) =>
+  n === 0 ? { ...step, body: `You start with ${STARTING_KEYS} Keys, the free-to-play part of Misthalin and almost everything else locked. Here’s a short tour of where everything is.` }
+  : step.sel === '[data-tour="farm"]' ? { ...step, body: 'Roll here when you finish a clue, a boss kill or a minigame. Each roll has a chance at a Key, and Keys pay for unlocks. Failed rolls build Fate Points.' }
+  : step);
+
+/** The run's mode, or undefined where no game is loaded. */
+const useGameModeId = (): string | undefined => {
+  try {
+    return useGame().gameModeId;
+  } catch {
+    return undefined;
+  }
+};
 
 const TIP_W = 330;
 const PAD = 8;
@@ -40,6 +57,7 @@ export const GuidedTour: React.FC = () => {
   const cardRef = useRef<HTMLDivElement>(null);
   const primaryRef = useRef<HTMLButtonElement>(null);
 
+  const STEPS = isF2PMode(useGameModeId()) ? F2P_STEPS : ALL_STEPS;
   const step = STEPS[i];
 
   const measure = useCallback(() => {

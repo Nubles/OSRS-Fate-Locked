@@ -3,10 +3,11 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Award, BookOpen, Map as MapIcon } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
-import { ALL_CA_TASKS, CATask } from '../data/caTasks';
+import { CATask } from '../data/caTasks';
+import { caTasksForMode, questsForMode } from '../utils/modeContent';
+import { isF2PMode } from '../config/gameModes';
 import {
   CA_TASK_POINTS,
   CA_TIER_ORDER,
@@ -68,19 +69,19 @@ const QUEST_DIFFS: { label: string; src: DropSource; color: string }[] = [
 ];
 
 export const QuestInsights: React.FC = () => {
-  const { unlocks } = useGame();
+  const { unlocks, gameModeId } = useGame();
   const stats = useMemo(() => {
     const done = new Set(unlocks.quests);
     let qpEarned = 0, qpTotal = 0;
     const byDiff = QUEST_DIFFS.map(d => ({ ...d, done: 0, total: 0 }));
-    for (const q of Object.values(QUEST_DATA)) {
+    for (const q of questsForMode(gameModeId)) {
       qpTotal += q.points;
       if (done.has(q.id)) qpEarned += q.points;
       const bucket = byDiff.find(d => d.src === q.difficulty);
       if (bucket) { bucket.total++; if (done.has(q.id)) bucket.done++; }
     }
-    return { qpEarned, qpTotal, byDiff };
-  }, [unlocks.quests]);
+    return { qpEarned, qpTotal, byDiff: byDiff.filter(d => d.total > 0 || !isF2PMode(gameModeId)) };
+  }, [unlocks.quests, gameModeId]);
 
   return (
     <Shell storageKey="jrnl:insights:quests" title="Quest insights" icon={<BookOpen size={11} />}
@@ -146,12 +147,16 @@ export const calculateDiaryInsightStats = (
 
 export const DiaryInsights: React.FC = () => {
   const { unlocks, gameModeId } = useGame();
+  const f2p = isF2PMode(gameModeId);
   const stats = useMemo(
     () => calculateDiaryInsightStats(
       ALL_DIARY_TASKS, Object.keys(DIARY_DATA), unlocks, gameModeId,
     ),
     [unlocks, gameModeId],
   );
+
+  // Achievement Diaries are members only.
+  if (f2p) return null;
 
   return (
     <Shell storageKey="jrnl:insights:diaries" title="Diary insights" icon={<MapIcon size={11} />}
@@ -207,15 +212,18 @@ export const calculateCAInsightStats = (
 };
 
 export const CAInsights: React.FC = () => {
-  const { unlocks } = useGame();
+  const { unlocks, gameModeId } = useGame();
+  const f2p = isF2PMode(gameModeId);
   const stats = useMemo(
-    () => calculateCAInsightStats(ALL_CA_TASKS, unlocks),
-    [unlocks.completedTasks, unlocks.cas],
+    () => calculateCAInsightStats(caTasksForMode(gameModeId), unlocks),
+    [unlocks.completedTasks, unlocks.cas, gameModeId],
   );
 
   return (
     <Shell storageKey="jrnl:insights:ca" title="CA insights" icon={<Award size={11} />}
-      summary={`${stats.pointsEarned}/${stats.pointsTotal} points · ${stats.earnedTiers.length}/6 rewards`}>
+      summary={f2p
+        ? `${stats.pointsEarned}/${stats.pointsTotal} points · no reward tier in Free-to-play`
+        : `${stats.pointsEarned}/${stats.pointsTotal} points · ${stats.earnedTiers.length}/6 rewards`}>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1.5">
         <Bar label="CA Points" done={stats.pointsEarned} total={stats.pointsTotal} color="bg-yellow-500" suffix=" pts" />
         {stats.tiers.map(t => (

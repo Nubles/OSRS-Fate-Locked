@@ -5,13 +5,18 @@ import { Shield, Package, BookOpen, Dices, Sparkles, Map, Zap, Scroll, Skull, Ac
 import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
-import { GAME_MODES, getGameMode, resolveModeRules, usesVanillaRules } from '../config/gameModes';
+import { GAME_MODES, getGameMode, isF2PMode, resolveModeRules, usesVanillaRules } from '../config/gameModes';
 import { andList, BREAKTHROUGH_CHANCE, CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { DropSource, TableType } from '../types';
 import { DROP_RATES } from '../config/rules';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { unlockableAreas } from '../utils/freeAreas';
+import { getPoolAndStateKey, randomUnlockTables } from '../utils/gameEngine';
+import { equipmentTierMaxFor } from '../utils/modeContent';
+
+/** Key sources Free-to-play runs don't have: Diaries, Slayer and pets are members only. */
+const MEMBERS_EARN_METHODS = new Set(['Achievement Diaries', 'Slayer Tasks', 'Pets']);
 
 interface ReferenceModalProps {
   onClose: () => void;
@@ -95,7 +100,17 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
   // Spend Keys actually shows (see components/GachaSection.tsx). Other modes
   // count the run's own Areas list, which includes any Misthalin areas the
   // mode leaves locked.
-  const spendTables = gameModeId === 'chunked'
+  const isF2P = isF2PMode(gameModeId);
+  const earnMethods = isF2P ? EARN_METHODS.filter(m => !MEMBERS_EARN_METHODS.has(m.category)) : EARN_METHODS;
+  // Free-to-play rolls only the tables with free-to-play entries, counted from their free-to-play pools.
+  const f2pTables = isF2P ? randomUnlockTables(gameModeId, customMode) : [];
+  const spendTables = isF2P
+    ? SPEND_TABLES.filter(t => f2pTables.includes(t.type)).map(t => ({
+        ...t,
+        count: getPoolAndStateKey(t.type, gameModeId, customMode).pool.length,
+        ...(t.type === TableType.EQUIPMENT ? { tiers: equipmentTierMaxFor(gameModeId) } : {}),
+      }))
+    : gameModeId === 'chunked'
     ? SPEND_TABLES.map(t => t.type === TableType.REGIONS
         ? { ...t, type: TableType.CHUNKS, label: 'Chunks', count: ALL_CHUNK_KEYS.length - 1, blurb: 'Unlock a random frontier chunk: land next to your territory, plus coast reached by sea after Pandemonium and Sailing.' }
         : t)
@@ -208,7 +223,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <div>
                                             <h4 className="font-bold text-gray-200">The Grind</h4>
                                             <p className="text-sm text-gray-400 mt-1">
-                                                Complete something in game: finish a quest, a diary task or a clue, or gain a level.
+                                                {isF2P
+                                                    ? 'Complete something in game: finish a quest or a clue, or gain a level.'
+                                                    : 'Complete something in game: finish a quest, a diary task or a clue, or gain a level.'}
                                             </p>
                                         </div>
                                     </div>
@@ -323,10 +340,14 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="bg-gradient-to-br from-[#1d2230] to-[#222] p-6 rounded-xl border border-blue-500/20">
                                 <h3 className="text-blue-300 font-bold uppercase tracking-widest mb-4 flex items-center gap-2"><Dices size={18}/> A single roll, start to finish</h3>
                                 <ol className="space-y-3 text-sm text-gray-300">
-                                    <li><b className="text-white">1.</b> You finish <b>Desert Treasure I</b>, a <b className="text-purple-400">Master</b> quest, and tick it off in the Journal.</li>
-                                    <li><b className="text-white">2.</b> The tracker draws to <span className="font-mono">0.1%</span> precision against its <b className="text-purple-400">95.0%</b> threshold. You roll <span className="font-mono text-green-400">42.0</span> → a Key!</li>
-                                    <li><b className="text-white">3.</b> Every success also has a chance at a bonus <b className="text-purple-400">Omni-Key</b>: <b className="text-purple-400">{rules.omniChanceBase}%</b> in {activeMode.name} mode, or {omniFloor(DropSource.QUEST_GRANDMASTER)}% for a Grandmaster quest. Either way, you keep the Key.</li>
-                                    <li><b className="text-white">4.</b> Take the Key to <b className="text-osrs-gold">Spend Keys</b>, choose the <b>Skills</b> table, and unlock a random skill tier, say Slayer. Those new Slayer levels open new tasks to roll on.</li>
+                                    {isF2P
+                                        ? <li><b className="text-white">1.</b> You finish <b>Dragon Slayer I</b>, an <b className="text-blue-400">Experienced</b> quest, and tick it off in the Journal.</li>
+                                        : <li><b className="text-white">1.</b> You finish <b>Desert Treasure I</b>, a <b className="text-purple-400">Master</b> quest, and tick it off in the Journal.</li>}
+                                    <li><b className="text-white">2.</b> The tracker draws to <span className="font-mono">0.1%</span> precision against its <b className={isF2P ? 'text-blue-400' : 'text-purple-400'}>{isF2P ? DROP_RATES[DropSource.QUEST_EXPERIENCED] : 95}.0%</b> threshold. You roll <span className="font-mono text-green-400">42.0</span> → a Key!</li>
+                                    <li><b className="text-white">3.</b> Every success also has a chance at a bonus <b className="text-purple-400">Omni-Key</b>: <b className="text-purple-400">{rules.omniChanceBase}%</b> in {activeMode.name} mode{isF2P ? '' : <>, or {omniFloor(DropSource.QUEST_GRANDMASTER)}% for a Grandmaster quest</>}. Either way, you keep the Key.</li>
+                                    {isF2P
+                                        ? <li><b className="text-white">4.</b> Take the Key to <b className="text-osrs-gold">Spend Keys</b>, choose the <b>Skills</b> table, and unlock a random skill tier, say Mining. Those new Mining levels open new rocks to mine.</li>
+                                        : <li><b className="text-white">4.</b> Take the Key to <b className="text-osrs-gold">Spend Keys</b>, choose the <b>Skills</b> table, and unlock a random skill tier, say Slayer. Those new Slayer levels open new tasks to roll on.</li>}
                                     <li className="text-gray-500 text-xs pt-1">Roll <span className="font-mono">95.1–100.0</span> instead and you get no Key, but you would gain +3 Fate{rules.pityEnabled ? <>, toward a guaranteed Key at <b>{rules.pityThreshold}</b></> : ''}.</li>
                                 </ol>
                             </div>
@@ -365,10 +386,10 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="bg-gradient-to-br from-emerald-950/40 to-[#222] p-6 rounded-xl border border-emerald-500/20">
                                 <h3 className="text-emerald-300 font-bold uppercase tracking-widest mb-3 flex items-center gap-2"><Compass size={18}/> Smart Play</h3>
                                 <ul className="space-y-2 text-sm text-gray-300">
-                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Slayer never runs out.</b> Every task you finish rolls, and higher masters roll better (Konar {DROP_RATES[DropSource.SLAYER_KONAR]}%, Duradel {DROP_RATES[DropSource.SLAYER_DURADEL]}%, boss tasks {DROP_RATES[DropSource.SLAYER_BOSS]}%). Move up as soon as you can survive their tasks.</span></li>
+                                    {!isF2P && <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Slayer never runs out.</b> Every task you finish rolls, and higher masters roll better (Konar {DROP_RATES[DropSource.SLAYER_KONAR]}%, Duradel {DROP_RATES[DropSource.SLAYER_DURADEL]}%, boss tasks {DROP_RATES[DropSource.SLAYER_BOSS]}%). Move up as soon as you can survive their tasks.</span></li>}
                                     <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Save Omni-Keys for what you need most.</b> Pick a must-have, such as a boss, a gear slot or a skill, rather than something from a small table that a Key will soon give you anyway.</span></li>
                                     <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Spend Fate before your next success.</b> Failed rolls give Fate, but any successful roll resets it to 0, so spend it first: {ritualCost('LUCK')} on Clarity before a big roll, or {ritualCost('CHAOS')} on a Chaos Key.</span></li>
-                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Grandmaster quests are the best Journal roll:</b> a guaranteed Key and a {omniFloor(DropSource.QUEST_GRANDMASTER)}% Omni-Key chance, the best of any roll. A new pet gives an Omni-Key outright. Raids give {omniFloor(DropSource.RAID)}%, Elite diaries {omniFloor(DropSource.DIARY_ELITE)}% and high-tier bosses {omniFloor(DropSource.BOSS_HIGH)}%.</span></li>
+                                    {!isF2P && <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Grandmaster quests are the best Journal roll:</b> a guaranteed Key and a {omniFloor(DropSource.QUEST_GRANDMASTER)}% Omni-Key chance, the best of any roll. A new pet gives an Omni-Key outright. Raids give {omniFloor(DropSource.RAID)}%, Elite diaries {omniFloor(DropSource.DIARY_ELITE)}% and high-tier bosses {omniFloor(DropSource.BOSS_HIGH)}%.</span></li>}
                                 </ul>
                             </div>
                         </div>
@@ -448,7 +469,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-800 text-gray-300">
-                                        {EARN_METHODS.map(method => (
+                                        {earnMethods.map(method => (
                                             <tr key={method.category}>
                                                 <td className="p-4 align-top">
                                                     <div className="flex items-center gap-2">
@@ -502,8 +523,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     </div>
                                     <p className="text-xs text-gray-400 leading-relaxed">
                                         Any successful roll has a <b>{rules.omniChanceBase}% chance</b> in <b>{activeMode.name}</b> mode to give a bonus Omni-Key as well as the Key.
-                                        <br/><br/>
-                                        Each new pet gives an Omni-Key instead of a Key, once per pet. Some rolls have a higher chance: Grandmaster quests <b>{omniFloor(DropSource.QUEST_GRANDMASTER)}%</b>, raids <b>{omniFloor(DropSource.RAID)}%</b>, Elite diaries <b>{omniFloor(DropSource.DIARY_ELITE)}%</b> and high-tier bosses <b>{omniFloor(DropSource.BOSS_HIGH)}%</b>.
+                                        {isF2P ? null : <><br/><br/>Each new pet gives an Omni-Key instead of a Key, once per pet. Some rolls have a higher chance: Grandmaster quests <b>{omniFloor(DropSource.QUEST_GRANDMASTER)}%</b>, raids <b>{omniFloor(DropSource.RAID)}%</b>, Elite diaries <b>{omniFloor(DropSource.DIARY_ELITE)}%</b> and high-tier bosses <b>{omniFloor(DropSource.BOSS_HIGH)}%</b>.</>}
                                         {rules.regionModifiers && <><br/><br/><span className="text-emerald-400">Your run's region bonuses add to this.</span></>}
                                     </p>
                                 </div>

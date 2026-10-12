@@ -5,6 +5,9 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SKILLS_LIST } from '../data/items';
 import { DROP_RATES } from '../config/rules';
 import { DropSource } from '../types';
+import { useGame } from '../context/GameContext';
+import { isF2PMode } from '../config/gameModes';
+import { F2P_SKILLS } from '../data/f2pContent';
 
 /**
  * A small "?" button that opens a short popover explaining a section: what it
@@ -234,10 +237,76 @@ export const GUIDES: Record<string, Guide> = {
   },
 };
 
+/**
+ * Free-to-play wording for the guides that name members content (Achievement
+ * Diaries, Slayer, pets, members skills). Other modes use GUIDES as written.
+ */
+const F2P_GUIDES: Record<string, Guide> = {
+  JOURNAL: {
+    title: 'Journal',
+    blurb: 'Quests and Combat Achievements: tick them off to roll for Keys.',
+    bullets: [
+      'Tick off quests and Combat Achievement tasks as you complete them in game.',
+      'Each one you tick rolls once for a Key.',
+      'The “Do this next” banner suggests the highest-impact thing to tackle.',
+    ],
+  },
+  FARM: {
+    title: 'Farm Keys',
+    blurb: 'Roll for Keys when you finish a clue, a boss kill or a minigame.',
+    bullets: [
+      'Tabs for Clues, Bossing and Activities.',
+      'Harder content rolls better, and a harder failed roll gives more Fate.',
+      'Failed rolls build Fate Points; at the pity threshold you get a guaranteed Pity Key.',
+      'Quests and Combat Achievements roll from the Journal, and levels from the Character tab.',
+    ],
+  },
+  SKILLS: {
+    title: 'Skills',
+    blurb: `Your ${F2P_SKILLS.length} free-to-play skills, each unlocked and raised a tier at a time.`,
+    bullets: [
+      'Unlock a skill or raise its tier with a Key on the Skills table (a random skill) or an Omni-Key (your choice). Each tier opens 10 more levels of training methods.',
+      'Click an unlocked skill to log a level as you gain it in game; each level rolls for a Key.',
+      'The Skill Advisor ranks which skill to train next by how much quest content it unlocks.',
+    ],
+  },
+  STRATEGY: {
+    title: 'Fate Strategy Guide',
+    blurb: 'What you can do now, what each locked goal still needs, and the goals you’re closest to.',
+    bullets: [
+      'Available: quests and other content your unlocks allow now.',
+      'Locked: what each goal still needs, such as areas, levels and quests.',
+      'Closest: the ten goals nearest to reach. Pin one to keep it on your dashboard.',
+    ],
+  },
+  JOURNAL_SUMMARY: {
+    title: 'Journal Summary',
+    blurb: 'A glance at your Key-earning progress and what to do next.',
+    bullets: [
+      'See the quests and Combat Achievements ready to complete.',
+      'The “Do this next” banner picks the highest-impact action you can take.',
+      'Click a row to jump to that Journal tab.',
+    ],
+  },
+};
+
+/** The run's mode, or undefined where no game is loaded (some tests render guides alone). */
+const useGameModeId = (): string | undefined => {
+  try {
+    return useGame().gameModeId;
+  } catch {
+    return undefined;
+  }
+};
+
+/** The guide for a section in the run's mode. */
+export const guideFor = (id: string, gameModeId?: string): Guide | undefined =>
+  (isF2PMode(gameModeId) ? F2P_GUIDES[id] : undefined) ?? GUIDES[id];
+
 interface Props { id: string; className?: string; suspendModals?: boolean }
 
 export const SectionGuide: React.FC<Props> = ({ id, className, suspendModals = false }) => {
-  const guide = GUIDES[id];
+  const guide = guideFor(id, useGameModeId());
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);

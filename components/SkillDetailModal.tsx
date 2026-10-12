@@ -10,6 +10,7 @@ import { chunkContentService } from '../services/ChunkContentService';
 import { summarisePlaces, showChunkOnMap } from '../utils/chunkLocations';
 import { useGame } from '../context/GameContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { isF2PMode } from '../config/gameModes';
 
 interface SkillDetailModalProps {
   skill: string;
@@ -73,6 +74,7 @@ const RegionPicker: React.FC<{ node: string; onJump: (cx: number, cy: number) =>
 export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, currentTier, onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
+  const { gameModeId } = useGame();
   const unlockData = SKILL_UNLOCK_DATA[skill] || {};
   const tiers = Array.from({ length: 10 }, (_, i) => i + 1);
 
@@ -173,6 +175,7 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
               {tab === 'gather'
                 ? 'Everything this skill can gather on the world map, grouped by the tier that unlocks it. Click a resource to pick a region and jump straight there.'
                 : 'Unlocking a tier grants access to training methods and equipment within that level range. You may train beyond your unlocked tier, but you can only use unlocked content.'}
+              {isF2PMode(gameModeId) && ' Some methods listed here are members only and can’t be used on free-to-play worlds.'}
             </p>
           </div>
 

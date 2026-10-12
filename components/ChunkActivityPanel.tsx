@@ -26,6 +26,10 @@ import { isAreaReachable, isBankReachable, bankLocksActive } from '../utils/reac
 import { farmingPatchFor } from '../utils/farmingPatches';
 import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST, MOBILITY_LIST, BOSSES_LIST } from '../constants';
 import type { ChunkCoord } from '../utils/mapCoords';
+import { isF2PMode } from '../config/gameModes';
+import { questsForMode } from '../utils/modeContent';
+import { F2P_SKILLS, isF2PEntry } from '../data/f2pContent';
+import { TableType } from '../types';
 import { WikiLink } from './WikiLink';
 import { chunkUnlockRequirement } from '../utils/chunkLocations';
 import { displayAreaName } from '../data/areaMapPolicy';
@@ -387,9 +391,20 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const slayerLevel = effectiveSkillLevel(unlocks, 'Slayer');
   const slayerUnlocked = (unlocks.skills?.['Slayer'] ?? 0) > 0;
 
+  // Free-to-play runs see only free-to-play content: no Diaries, Farming,
+  // Slayer or members skills, and only free-to-play quests, bosses, shops,
+  // guilds, minigames and transport.
+  const f2p = isF2PMode(gameModeId);
+
   const questRows = useMemo(() => {
     if (!content) return [];
+    const f2pQuestIds = f2p ? new Set(questsForMode(gameModeId).map(q => q.id)) : null;
     return Object.entries(content.quests)
+      .filter(([name]) => {
+        if (!f2pQuestIds) return true;
+        const data = resolveQuest(name);
+        return !!data && f2pQuestIds.has(data.id);
+      })
       .map(([name, kind]) => {
         const data = resolveQuest(name);
         const status = data ? getQuestStatus(data, unlocks, gameModeId) : null;
@@ -397,7 +412,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
         return { name, kind, status, eligibility };
       })
       .sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === 'first' ? -1 : 1));
-  }, [content, unlocks, gameModeId]);
+  }, [content, unlocks, gameModeId, f2p]);
 
   // ── Derived sections with their own unlock gates ──────────────────────────
   const derived = useMemo(() => {
@@ -411,7 +426,11 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       return access.some(result => result.status === 'ALLOWED') ? [] : [...new Set(access.flatMap(result => result.reasons.length ? result.reasons : ['Access requirements need review']))];
     };
     // Shops → merchant category gate.
-    const shops = content.shops.map(name => {
+    const inF2P = (table: TableType, name: string) => !f2p || isF2PEntry(table, name);
+    const shops = content.shops.filter(name => {
+      const category = classifyShop(name);
+      return category == null || inF2P(TableType.MERCHANTS, category);
+    }).map(name => {
       const category = classifyShop(name);
       const catUnlocked = category != null && unlocks.merchants.includes(category);
       const requirements = requirementsFor(name, 'shop');
@@ -425,15 +444,17 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     for (const m of content.monsters) {
       const requirements = requirementsFor(m.name, 'monster');
       if (canonicalBossId(m.name)) {
+        if (!inF2P(TableType.BOSSES, canonicalBossId(m.name)!)) continue;
         bosses.push({ name: m.name, count: m.count, usable: unlocks.bosses.includes(canonicalBossId(m.name)!), requirements });
       } else {
+        if (f2p && m.slayer != null) continue;
         monsters.push({ ...m, requirements });
       }
     }
 
     // Objects split four ways: Transport nodes (mobility gate), Farming patches
     // (own table), gatherable Resources (skill tier + level), and inert scenery.
-    const transport = chunkTransportNodes(content).map(node => ({
+    const transport = chunkTransportNodes(content).filter(node => inF2P(TableType.MOBILITY, node.network)).map(node => ({
       ...node,
       usable: unlocks.mobility.includes(node.network),
       requirements: requirementsFor(node.name, node.kind),
@@ -448,8 +469,10 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       const req = resourceReqFor(name);
       const requirements = requirementsFor(name, 'object');
       if (patch && FARMING_PATCH_LIST.includes(patch)) {
+        if (f2p) continue;
         farming.push({ name, count, patch, usable: unlocks.farming.includes(patch), requirements });
       } else if (req) {
+        if (f2p && !(F2P_SKILLS as readonly string[]).includes(req.skill)) continue;
         resources.push({ name, count, skill: req.skill, level: req.level, usable: resourceUsable(req, unlocks), requirements });
       } else {
         objects.push([name, count]);
@@ -459,7 +482,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     resources.sort((a, b) => a.skill.localeCompare(b.skill) || a.level - b.level || a.name.localeCompare(b.name));
 
     // Diary tasks → reachable when the diary's home region is unlocked.
-    const diaries = Object.entries(content.diaries).map(([area, refs]) => {
+    const diaries = (f2p ? [] : Object.entries(content.diaries)).map(([area, refs]) => {
       const region = DIARY_AREA_REGION[area];
       const reachable = !region || isAreaReachable(region, unlocks, gameModeId);
       return { area, refs, region, reachable };
@@ -472,12 +495,14 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       ...content.shops, ...Object.keys(content.quests), ...content.spawns,
     ].join(' | '));
     const guilds = matchListInText(GUILDS_LIST, haystack)
+      .filter(name => inF2P(TableType.GUILDS, name))
       .map(name => ({ name, usable: unlocks.guilds.includes(name) }));
     const minigames = matchListInText(MINIGAMES_LIST, haystack)
+      .filter(name => inF2P(TableType.MINIGAMES, name))
       .map(name => ({ name, usable: unlocks.minigames.includes(name) }));
 
     return { shops, bosses, monsters, transport, farming, resources, objects, npcs, guilds, minigames, diaries };
-  }, [content, subArea, unlocks, gameModeId, mode, regionChunks, chunk]);
+  }, [content, subArea, unlocks, gameModeId, mode, regionChunks, chunk, f2p]);
 
   // Scope determines whether Whole area can make a trustworthy availability claim.
   const scope = getChunkInfoScope(mode, wholeAreaOwnershipMixed, unlocked);

@@ -15,9 +15,12 @@ import { gzipSync } from 'node:zlib';
 // Breakthroughs and Fate's Mercy need data/chunkSkillNodes.ts (about 3 kB gzip)
 // inside the synchronous roll engine and reducer, where a lazy load could
 // change a seeded roll's pool. Then to 232 for the Free-to-play mode's content
-// lists, which the roll engine filters every pool by. The build is about
-// 230.5 kB; 232 leaves a little room for PRs that land alongside it.
-export const ENTRY_GZIP_BUDGET_KB = 232;
+// lists, which the roll engine filters every pool by. Then to 234 for the
+// Free-to-play review: the reducer and journal checks that refuse members
+// quests, pets, Combat Achievement tasks and log items, and the F2P guides on
+// the always-loaded screens. The build is about 232.4 kB; 234 leaves a little
+// room for PRs that land alongside it.
+export const ENTRY_GZIP_BUDGET_KB = 234;
 
 /** The entry script that dist/index.html loads, as a path inside distDir. */
 export const entryScriptPath = (distDir, indexHtml) => {

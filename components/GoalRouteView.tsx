@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { CheckCircle2, Circle, Route } from 'lucide-react';
 import { Dices, Map as MapIcon, BookOpen, Swords, Package, Shield, Store, Gamepad2, Flag, Sprout, Home, Skull } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
+import { isF2PMode } from '../config/gameModes';
 import { buildGoalRoute } from '../utils/goalRoute';
 import { WikiLink } from './WikiLink';
 import { EntityLocations } from './EntityLocations';
@@ -246,7 +247,7 @@ export const GoalRouteView: React.FC<{ goalId: string }> = ({ goalId }) => {
 
         {(route.diaries.length > 0 || route.questPoints) && (
           <div>
-            <Head icon={<BookOpen size={11} />} label="Diaries & QP"
+            <Head icon={<BookOpen size={11} />} label={isF2PMode(gameState.gameModeId) ? 'Quest points' : 'Diaries & QP'}
               done={met(route.diaries) + (route.questPoints?.met ? 1 : 0)}
               total={route.diaries.length + (route.questPoints ? 1 : 0)} />
             {route.diaries.map(d => (

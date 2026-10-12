@@ -4,7 +4,6 @@ import { SectionGuide } from './SectionGuide';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { STRATEGY_DATABASE, ContentRequirement } from '../data/requirements';
 import { QUEST_DATA } from '../data/questData';
-import { DIARY_DATA } from '../data/diaryData';
 import { TableType } from '../types';
 import { isAreaReachable } from '../utils/reachability';
 import { 
@@ -20,6 +19,16 @@ import { getActivityReq } from '../data/activityRequirements';
 import { evaluateActivityReadiness } from '../utils/activityReadiness';
 import { effectiveSkillLevel } from '../utils/slayerReach';
 import { enforcedQuestAreas } from '../utils/questGeographyDisplay';
+import { isF2PMode } from '../config/gameModes';
+import { diariesForMode, questsForMode } from '../utils/modeContent';
+import { F2P_AREAS, F2P_START_AREAS, isF2PEntry } from '../data/f2pContent';
+
+const F2P_PLACES = new Set<string>([...F2P_START_AREAS, ...F2P_AREAS]);
+/** Whether a Free-to-play run can do this strategy entry (no Agility courses, free-to-play entries and places only). */
+const strategyEntryInF2P = (req: ContentRequirement): boolean => {
+    if (req.category === TableType.AGILITY_COURSES) return false;
+    return isF2PEntry(req.category, req.id) || F2P_PLACES.has(req.id);
+};
 
 const ROOT_UNLOCKS = {
     [TableType.EQUIPMENT]: new Set(EQUIPMENT_SLOTS),
@@ -150,7 +159,9 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
 
     const allContent = useMemo<Record<string, ContentRequirement>>(() => {
         const database: Record<string, ContentRequirement> = {};
-        Object.values(QUEST_DATA).forEach(q => {
+        const f2p = isF2PMode(gameModeId);
+        const modeQuestIds = new Set(questsForMode(gameModeId).flatMap(q => [q.id, q.name]));
+        questsForMode(gameModeId).forEach(q => {
             if (unlocks.quests.includes(q.name)) return;
             database[q.name] = {
                 id: q.name,
@@ -161,7 +172,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                 description: `Series: ${q.series || 'None'} | Difficulty: ${q.difficulty.replace('Quest (', '').replace(')', '')}`
             };
         });
-        Object.values(DIARY_DATA).forEach(d => {
+        diariesForMode(gameModeId).forEach(d => {
             if (unlocks.diaries.includes(d.id)) return;
             const eligibility = evaluateDiaryTierEligibility(d, unlocks, gameModeId);
             const skills = Object.fromEntries(eligibility.blockers
@@ -199,9 +210,11 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
         Object.entries(STRATEGY_DATABASE).forEach(([key, val]) => {
             if (val.category === TableType.QUESTS && unlocks.quests.includes(val.id)) return;
             if (val.category === TableType.QUESTS) {
+                if (!modeQuestIds.has(val.id) && f2p) return;
                 if (database[key]) database[key].description = val.description ?? database[key].description;
                 return;
             }
+            if (f2p && !strategyEntryInF2P(val)) return;
             database[key] = { ...val };
         });
         return database;

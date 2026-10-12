@@ -14,6 +14,9 @@ import { planBoss, BossPlan, BOSS_ALIASES, bestBoostPrayers, defaultBossVersion,
 import { EntityModel } from './EntityModel';
 import { modelFor, orientationFor } from '../data/entityModels';
 import { WikiLink } from './WikiLink';
+import { isF2PMode } from '../config/gameModes';
+import { isF2PEntry } from '../data/f2pContent';
+import { TableType } from '../types';
 
 interface Props { onClose: () => void }
 type Status = 'loading' | 'ready' | 'error';
@@ -41,6 +44,12 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
   const { unlocks, loadout: rawLoadout, gameModeId } = useGame();
   const loadout = rawLoadout || {};
   useEscapeKey(onClose, true);
+  const f2p = isF2PMode(gameModeId);
+  // Free-to-play runs plan only the free-to-play bosses (Obor and Bryophyta).
+  const bosses = useMemo(
+    () => (unlocks.bosses || []).filter((boss) => !f2p || isF2PEntry(TableType.BOSSES, boss)),
+    [unlocks.bosses, f2p],
+  );
 
   const [status, setStatus] = useState<Status>(gearService.ready && monsterService.ready ? 'ready' : 'loading');
   const [boostsOn, setBoostsOn] = useState(true);
@@ -69,7 +78,11 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
   }, [loadout, status]);
 
   // Boosts assume the best attack prayer the player has unlocked, not Piety/Rigour.
-  const prayers = useMemo(() => bestBoostPrayers(unlocks, gameModeId), [unlocks, gameModeId]);
+  // Eagle Eye is members only, so Free-to-play plans ranged without a prayer.
+  const prayers = useMemo(() => {
+    const best = bestBoostPrayers(unlocks, gameModeId);
+    return f2p ? { ...best, ranged: 'none' } : best;
+  }, [unlocks, gameModeId, f2p]);
   const player: PlayerCombat = useMemo(() => {
     const L = unlocks.levels || {};
     return {
@@ -77,15 +90,16 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
       gear: { bonuses: gear.bonuses, speedTicks: gear.speedTicks, category: gear.category, rangedDamageType: rangedOverride === 'auto' ? gear.rangedDamageType ?? 'standard' : rangedOverride },
       boostsOn,
       prayers,
+      freeToPlay: f2p,
     };
-  }, [unlocks.levels, gear, boostsOn, prayers, rangedOverride]);
+  }, [unlocks.levels, gear, boostsOn, prayers, rangedOverride, f2p]);
 
   // Resolve unlocked bosses → monster + plan; split matched vs. encounters.
   const { ranked, encounters } = useMemo(() => {
     const matched: { boss: string; monster: MonsterStats; versions: MonsterStats[]; plan: BossPlan }[] = [];
     const enc: string[] = [];
     if (status === 'ready') {
-      for (const boss of unlocks.bosses || []) {
+      for (const boss of bosses) {
         const versions = monsterService.versionsOf(BOSS_ALIASES[boss] ?? boss);
         const m = versions.find(version => version.version === versionChoice[boss]) ?? defaultBossVersion(versions);
         if (m) matched.push({ boss, monster: m, versions, plan: planBoss(player, m) });
@@ -94,7 +108,7 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
     }
     matched.sort((a, b) => READY_ORDER.indexOf(a.plan.readiness) - READY_ORDER.indexOf(b.plan.readiness) || b.plan.dps - a.plan.dps);
     return { ranked: matched, encounters: enc };
-  }, [unlocks.bosses, player, status, versionChoice]);
+  }, [bosses, player, status, versionChoice]);
 
   const current = ranked.find((r) => r.boss === selected) ?? ranked[0];
 
@@ -130,7 +144,7 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
             <p className="text-[12px]">{status === 'loading' ? 'Loading gear + monster data…' : (monsterService.error || 'Could not load data.')}</p>
             {status === 'error' && <button onClick={retry} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#252525] border border-white/10 text-gray-200 text-[11px] font-bold"><RefreshCw size={12} /> Retry</button>}
           </div>
-        ) : (unlocks.bosses || []).length === 0 ? (
+        ) : bosses.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 text-gray-500 px-8">
             <Skull size={26} className="text-gray-600" />
             <p className="text-[12px]">No bosses unlocked yet — unlock some via fate, then plan your kills here.</p>

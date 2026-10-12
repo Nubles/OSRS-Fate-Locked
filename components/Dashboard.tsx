@@ -983,7 +983,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
             {/* Slayer only: which assignable monsters you can actually reach now. */}
             {selected.id === 'SLAYER' && <SlayerReachabilityPanel />}
             {/* Mobility only: agility shortcuts with level + real chunk location. */}
-            {selected.id === 'MOBILITY' && <ShortcutsPanel />}
+            {selected.id === 'MOBILITY' && !isF2P && <ShortcutsPanel />}
             {renderGridSection(selected.list, selected.unlocked, selected.type, SPECIAL_ICONS, selected.details, selected.nameMap)}
             {/* Merchants only: the real shops behind each category, from the
                 chunk dataset, with per-location lock state. */}

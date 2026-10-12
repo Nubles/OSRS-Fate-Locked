@@ -2,13 +2,15 @@ import React, { useMemo, useState } from 'react';
 import { CheckCircle2, Lock, ChevronDown, ChevronRight } from 'lucide-react';
 import { Store } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
-import { MERCHANTS_LIST, MERCHANT_UNLOCK_DETAILS } from '../constants';
+import { MERCHANT_UNLOCK_DETAILS } from '../constants';
 import { chunkContentService } from '../services/ChunkContentService';
 import { shopsByCategory, type CategoryShop } from '../utils/merchantShops';
 import { summarisePlaces, showChunkOnMap } from '../utils/chunkLocations';
 import { WikiLink } from './WikiLink';
 import { useChunkContent } from '../hooks/useChunkContent';
 import { evaluateEntityAccess } from '../utils/entityAccess';
+import { getPoolAndStateKey } from '../utils/gameEngine';
+import { TableType } from '../types';
 
 /**
  * The shop directory under the Merchants grid: every real shop from the chunk
@@ -32,7 +34,8 @@ export const MerchantShopsPanel: React.FC = () => {
     );
   }
 
-  const categories = MERCHANTS_LIST;
+  // Free-to-play runs list only the free-to-play merchant categories.
+  const categories = getPoolAndStateKey(TableType.MERCHANTS, gameModeId).pool;
   const accessFor = (shop: CategoryShop) => shop.locations.map(location => evaluateEntityAccess(shop.name, shop.kind ?? 'shop', location, unlocks, gameModeId));
   const toggle = (c: string) =>
     setOpenCats(prev => {

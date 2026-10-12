@@ -11,12 +11,16 @@ import {
   MOBILITY_LIST, ARCANA_LIST, POH_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, SLOT_CONFIG,
   STORAGE_LIST, GUILDS_LIST, SLAYER_UNLOCKS_LIST, MISTHALIN_AREAS, wikiUrlFor
 } from '../constants';
-import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { CA_DATA } from '../data/caData';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
 import { TableType } from '../types';
 import { TestSuiteRunner } from './TestSuiteRunner';
+import { isF2PMode } from '../config/gameModes';
+import { getPoolAndStateKey } from '../utils/gameEngine';
+import { questsForMode } from '../utils/modeContent';
+import { collectionLogItemInMode } from '../utils/modeScope';
+import { F2P_AREAS, F2P_START_AREAS } from '../data/f2pContent';
 
 import { chunkContentService, EntityHit, EntityKind } from '../services/ChunkContentService';
 import { EntityLocations } from './EntityLocations';
@@ -104,14 +108,19 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
   // Aggregate Data
   const searchIndex = useMemo<SearchItem[]>(() => {
     const items: SearchItem[] = [];
+    // Free-to-play runs search only free-to-play content: each table's
+    // free-to-play pool, no Diaries, Slayer or Combat Achievement tiers.
+    const f2p = isF2PMode(gameModeId);
+    const f2pPlaces = new Set<string>([...F2P_START_AREAS, ...F2P_AREAS]);
 
-    const addGroup = (list: string[], type: string, category: TableType, icon: any, req: string) => {
-      list.forEach(name => items.push({ name, type, category, icon, reqText: req }));
+    const addGroup = (list: readonly string[], type: string, category: TableType, icon: any, req: string) => {
+      const names = f2p ? getPoolAndStateKey(category, gameModeId).pool : list;
+      names.forEach(name => items.push({ name, type, category, icon, reqText: req }));
     };
 
     // Core Unlocks
     addGroup(SKILLS_LIST, 'Skill', TableType.SKILLS, BookOpen, 'Requires Key in Skills Table');
-    REGIONS_LIST.forEach((name) => items.push({
+    (f2p ? REGIONS_LIST.filter(name => f2pPlaces.has(name)) : REGIONS_LIST).forEach((name) => items.push({
       name,
       displayName: displayAreaName(name),
       type: 'Region',
@@ -120,7 +129,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
       mapPlace: name,
       reqText: 'Requires Key in Regions Table',
     }));
-    Object.entries(AREA_ALIAS_POLICIES).forEach(([alias, policy]) => items.push({
+    Object.entries(AREA_ALIAS_POLICIES).filter(([, policy]) => !f2p || f2pPlaces.has(policy.canonical)).forEach(([alias, policy]) => items.push({
       name: alias,
       type: 'Region',
       category: TableType.REGIONS,
@@ -128,7 +137,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
       reqText: `Canonical area: ${policy.canonical}`,
       mapPlace: alias,
     }));
-    addGroup(MISTHALIN_AREAS, 'Region', TableType.REGIONS, Map, 'Starting region (free unless the mode restricts it)');
+    (f2p ? F2P_START_AREAS : MISTHALIN_AREAS).forEach(name => items.push({ name, type: 'Region', category: TableType.REGIONS, icon: Map, reqText: 'Starting region (free unless the mode restricts it)' }));
     addGroup(BOSSES_LIST, 'Boss', TableType.BOSSES, Skull, 'Requires Key in Bosses Table');
     addGroup(MINIGAMES_LIST, 'Minigame', TableType.MINIGAMES, Gamepad2, 'Requires Key in Minigames Table');
     addGroup(FARMING_PATCH_LIST, 'Farming Patch', TableType.FARMING_LAYERS, Sprout, 'Requires Key in Farming Table');
@@ -142,17 +151,17 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
     addGroup(EQUIPMENT_SLOTS, 'Equipment Slot', TableType.EQUIPMENT, Shield, 'Requires Key in Equipment Table');
 
     // Quests
-    Object.values(QUEST_DATA).forEach(q => {
+    questsForMode(gameModeId).forEach(q => {
         items.push({ name: q.name, type: 'Quest', category: TableType.QUESTS, icon: ScrollText, reqText: 'Quest Journal', id: q.id });
     });
 
-    // Diaries
-    Object.values(DIARY_DATA).forEach(d => {
+    // Diaries (members only)
+    if (!f2p) Object.values(DIARY_DATA).forEach(d => {
         items.push({ name: d.id, type: 'Diary', category: TableType.DIARIES, icon: BookOpen, reqText: 'Diary Journal', id: d.id });
     });
 
-    // Combat Achievements
-    Object.values(CA_DATA).forEach(ca => {
+    // Combat Achievements (no tier is reachable in Free-to-play)
+    if (!f2p) Object.values(CA_DATA).forEach(ca => {
         items.push({ name: `${ca.id} Tier`, type: 'Combat Achievement', category: TableType.COMBAT_ACHIEVEMENTS, icon: Swords, reqText: 'CA Journal', id: ca.id });
     });
 
@@ -160,6 +169,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
     Object.entries(COLLECTION_LOG_DATA).forEach(([tabName, tabData]) => {
         Object.entries(tabData.pages).forEach(([pageName, pageData]) => {
             pageData.items.forEach(item => {
+                if (!collectionLogItemInMode(item.id, gameModeId)) return;
                 items.push({
                     name: item.name,
                     type: 'Collection Log',
@@ -173,7 +183,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
     });
 
     return items;
-  }, []);
+  }, [gameModeId]);
 
   // Filter + rank results. Without ranking, an alphabetical slice of "rune"
   // would surface "Ancient Mace" before "Rune Platebody" purely on title
