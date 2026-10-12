@@ -37,6 +37,23 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-12-achievement-rewards',
+    title: 'More achievements, now with rewards',
+    date: '2026-10-12',
+    sections: {
+      added: [
+        "There are now over 100 achievements, including ones for Key rolls, Void Altar rituals, pets and every unlock table.",
+        "Every achievement is a title you can wear. Pick one in the Achievements window and it shows on your dashboard.",
+        "Harder achievements give 5, 10 or 25 Fate. The biggest also give a free Ritual of Clarity at the Void Altar.",
+        "A few achievements are hidden until you earn them.",
+      ],
+      changed: [
+        "Achievements you'd already earned keep their title but don't pay out. Rewards start with the next one you earn.",
+        "Apprentice now needs a skill you unlocked with a Key. Hitpoints doesn't count, since every run starts with it.",
+      ],
+    },
+  },
+  {
     id: '2026-10-12-faster-updates',
     title: 'Faster updates',
     date: '2026-10-12',

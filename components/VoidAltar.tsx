@@ -33,7 +33,7 @@ let pinnedCartographerOffer: { tip: string; keys: string[] } | null = null;
 export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
-  const { fatePoints, keys, activeBuff, performRitual, performGambit, performCartographer, unlocks, gameModeId, customMode, nextFloat, runId, history } = useGame();
+  const { fatePoints, keys, activeBuff, performRitual, performGambit, performCartographer, unlocks, gameModeId, customMode, nextFloat, runId, history, freeClarity } = useGame();
 
   // The Gambit is irreversible and stakes everything — arm on first click,
   // fire on the second, disarm when anything else is touched.
@@ -97,14 +97,17 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
     .map((r) => {
       const fate = ritualFateCost(r.id, rules.ritualCostMultiplier);
       const isGambit = r.id === 'GAMBIT';
+      // Achievements can give free Rituals of Clarity; the engine uses one before any Fate.
+      const free = r.id === 'LUCK' ? freeClarity ?? 0 : 0;
       return {
         id: r.id,
         name: r.name,
         desc: ritualEffect(r.id, rules.ritualCostMultiplier),
         cost: r.keyCost ? `${r.keyCost} Keys`
           : isGambit ? `ALL Fate (min ${fate})`
+          : free > 0 ? `Free (${free} from achievements)`
           : `${fate} Fate Points`,
-        canAfford: r.keyCost ? keys >= r.keyCost : fatePoints >= fate,
+        canAfford: r.keyCost ? keys >= r.keyCost : free > 0 || fatePoints >= fate,
         active: (r.id === 'LUCK' && activeBuff === 'LUCK') || (r.id === 'GREED' && activeBuff === 'GREED'),
         // Only one buff can wait for the next roll; buying the other would
         // silently replace it and waste its Fate.

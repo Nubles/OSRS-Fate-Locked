@@ -2,7 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Trophy } from './OsrsIcon';
-import { Achievement } from '../utils/achievements';
+import type { Achievement } from '../utils/achievements';
+import { rewardLabel } from '../utils/achievementRewards';
 import { ACHIEVEMENT_ICON } from './achievementIcons';
 import { usePortalHost } from '../hooks/usePortalHost';
 
@@ -86,6 +87,7 @@ export const AchievementReveal: React.FC<Props> = ({ data, onDismiss, onView }) 
                 <div className="min-w-0">
                   <p className="text-[11px] font-bold text-amber-200 truncate">{a.title}</p>
                   <p className="text-[9px] text-gray-500 truncate">{a.description}</p>
+                  {rewardLabel(a) && <p className="text-[9px] text-cyan-300 truncate">{rewardLabel(a)}</p>}
                 </div>
               </div>
             );

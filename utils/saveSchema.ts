@@ -475,7 +475,7 @@ const HISTORY_KEYS = new Set([
 ]);
 const HISTORY_TYPES = new Set([
   'UNLOCK', 'PITY', 'ALTAR', 'ROLL_SUCCESS', 'ROLL_FAIL', 'ROLL_OMNI',
-  'LEVEL_UP', 'XTREME_MILESTONE', 'COMPENSATION', 'PET',
+  'LEVEL_UP', 'XTREME_MILESTONE', 'COMPENSATION', 'PET', 'ACHIEVEMENT',
 ]);
 const HISTORY_RESULTS = new Set(['SUCCESS', 'FAIL']);
 const MAX_METADATA_DEPTH = 16;
@@ -779,6 +779,20 @@ const normalizePetCompensation = (value: unknown): Outcome<PetCompensationState>
   };
 };
 
+/** Settled achievement ids: short strings, each once. Unknown ids stay, for saves from a newer version. */
+const MAX_ACHIEVEMENT_IDS = 2_000;
+const normalizeAchievementsClaimed = (value: unknown): Outcome<string[]> => {
+  if (!Array.isArray(value) || value.length > MAX_ACHIEVEMENT_IDS) return invalid('invalid_field', 'achievementsClaimed');
+  const seen = new Set<string>();
+  for (const id of value) {
+    if (typeof id !== 'string' || id.length === 0 || id.length > MAX_IDENTIFIER_CHARS) {
+      return invalid('invalid_field', 'achievementsClaimed');
+    }
+    seen.add(id);
+  }
+  return { ok: true, value: [...seen] };
+};
+
 /** Claimed pets: known pet ids, each once. */
 const normalizePetsClaimed = (value: unknown): Outcome<number[]> => {
   if (!Array.isArray(value) || value.length > PET_IDS.length) return invalid('invalid_field', 'petsClaimed');
@@ -943,6 +957,7 @@ const TOP_LEVEL_KEYS = new Set([
   'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
   'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'fateCompensation',
   'petCompensation', 'petsClaimed', 'keysOwed',
+  'achievementsClaimed', 'achievementTitle', 'freeClarity',
 ]);
 
 export const parseAndMigrateSave = (
@@ -1239,6 +1254,23 @@ const normalizeState = (
     const checked = normalizePetsClaimed(readOwn(input, 'petsClaimed'));
     if (checked.ok === false) return checked;
     if (checked.value.length > 0) state.petsClaimed = checked.value;
+  }
+  // Absent means the run predates achievement rewards (see GameState), so an
+  // empty list is kept rather than dropped.
+  if (own(input, 'achievementsClaimed') && readOwn(input, 'achievementsClaimed') !== undefined) {
+    const checked = normalizeAchievementsClaimed(readOwn(input, 'achievementsClaimed'));
+    if (checked.ok === false) return checked;
+    state.achievementsClaimed = checked.value;
+  }
+  if (own(input, 'achievementTitle') && readOwn(input, 'achievementTitle') !== undefined) {
+    const checked = stringValue(readOwn(input, 'achievementTitle'), 'achievementTitle', MAX_IDENTIFIER_CHARS);
+    if (checked.ok === false) return checked;
+    if (checked.value.length > 0) state.achievementTitle = checked.value;
+  }
+  if (own(input, 'freeClarity') && readOwn(input, 'freeClarity') !== undefined) {
+    const checked = boundedInteger(readOwn(input, 'freeClarity'), 'freeClarity', 0, MAX_COUNTER);
+    if (checked.ok === false) return checked;
+    if (checked.value > 0) state.freeClarity = checked.value;
   }
   if (own(input, 'keysOwed')) {
     const checked = boundedInteger(readOwn(input, 'keysOwed'), 'keysOwed', 0, MAX_COUNTER);

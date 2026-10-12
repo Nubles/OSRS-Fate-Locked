@@ -126,8 +126,9 @@ export const GUIDES: Record<string, Guide> = {
     blurb: 'Milestones that reward you for how your run unfolds.',
     bullets: [
       'Browse locked and unlocked achievements across categories.',
-      'They unlock by themselves as you reach gear, skill, area and luck milestones.',
-      'Track your overall completion at a glance.',
+      'They unlock by themselves as you reach quest, skill, area, gear, roll, ritual, unlock and pet milestones.',
+      'Each one is a title you can wear. Harder ones also give Fate, and the biggest a free Ritual of Clarity.',
+      'Achievements earned before rewards arrived keep their title but pay nothing.',
     ],
   },
   FORECAST: {

@@ -8,6 +8,7 @@ vi.mock('../context/GameContext', async () => {
   return {
     ...actual,
     useGame: () => ({
+      settleAchievements: () => {},
       ...actual.initialState,
       // The tab pane only animates (and keeps a transform) with animations on.
       animationsEnabled: true,

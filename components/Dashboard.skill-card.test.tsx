@@ -10,6 +10,7 @@ vi.mock('../context/GameContext', async () => {
   return {
     ...actual,
     useGame: () => ({
+      settleAchievements: () => {},
       ...actual.initialState,
       unlocks: { ...actual.initialState.unlocks, skills: { Attack: 1 }, levels: { Attack: 5 } },
       animationsEnabled: false,

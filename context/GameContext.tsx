@@ -40,6 +40,7 @@ import {
   type ImportResult,
 } from '../utils/gamePersistence';
 import { CURRENT_SAVE_VERSION, MAX_COUNTER, parseAndMigrateSave, validateAndMigrateSave } from '../utils/saveSchema';
+import { AchievementPayout, settleAchievements } from '../utils/achievementRewards';
 import { emptyRuneProofProgress, migrateLocalRuneProofProgress, updateRuneProofProgress, type RuneProofMutation } from '../utils/runeProofProgress';
 import { checksumSave } from '../utils/saveIntegrity';
 import { openRecoveryDatabase } from '../utils/recoveryDatabase';
@@ -239,6 +240,10 @@ interface GameContextType extends GameState {
   ) => void;
   /** A new pet: its Omni-Key, once per pet. It isn't a roll, so Fate and rituals stay as they are. */
   claimPet: (pet: { id: number; name: string }, x?: number, y?: number) => void;
+  /** Pay newly earned achievements once (a run from before rewards records what it has, unpaid). `earned` is every earned achievement. */
+  settleAchievements: (earned: AchievementPayout[]) => void;
+  /** Wear an earned achievement as the run's title, or null to take it off. */
+  setAchievementTitle: (id: string | null) => void;
   setGameMode: (modeId: string, customRules?: GameModeRules) => void;
   /** Seeded runs — set/clear the seed (only while the run has no history). */
   setSeed: (seed: string) => void;
@@ -351,6 +356,8 @@ export const createFreshState = (): GameState => ({
   loadout: {},
   runId: newRunId(),
   runRevision: 0,
+  // A new run is paid for every achievement it earns (see GameState).
+  achievementsClaimed: [],
 });
 
 // --- Reducer ---
@@ -392,6 +399,8 @@ export type Action =
     };
   }
   | { type: 'CLAIM_PET'; payload: { petId: number; petName: string; x?: number; y?: number; meta?: DetectedGameEventMeta } }
+  | { type: 'SETTLE_ACHIEVEMENTS'; payload: AchievementPayout[] }
+  | { type: 'SET_ACHIEVEMENT_TITLE'; payload: string | null }
   | {
     type: 'ACCEPT_DETECTED_PET';
     payload: {
@@ -919,6 +928,30 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       };
     }
 
+    case 'SETTLE_ACHIEVEMENTS': {
+      const settled = settleAchievements(state, action.payload, now, generateId, MAX_COUNTER);
+      if (!settled) return state;
+      return {
+        ...state,
+        achievementsClaimed: settled.achievementsClaimed,
+        fatePoints: settled.fatePoints,
+        ...(settled.freeClarity > 0 ? { freeClarity: settled.freeClarity } : {}),
+        history: settled.entries.length > 0 ? [...state.history, ...settled.entries] : state.history,
+      };
+    }
+
+    case 'SET_ACHIEVEMENT_TITLE': {
+      const id = action.payload;
+      if (id === null) {
+        if (state.achievementTitle === undefined) return state;
+        const { achievementTitle: _cleared, ...rest } = state;
+        return rest;
+      }
+      // Only an earned (settled) achievement can be worn.
+      if (id === state.achievementTitle || !state.achievementsClaimed?.includes(id)) return state;
+      return { ...state, achievementTitle: id };
+    }
+
     case 'CLAIM_PET': {
       const { petId, petName, x, y, meta } = action.payload;
       if (!isPetId(petId) || (state.petsClaimed ?? []).includes(petId) || state.specialKeys >= MAX_COUNTER) return state;
@@ -1328,6 +1361,16 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     }
 
     case 'RITUAL_LUCK':
+      // A free Ritual of Clarity from an achievement is used before any Fate.
+      if (state.activeBuff === 'NONE' && (state.freeClarity ?? 0) > 0) {
+        return {
+          ...state,
+          freeClarity: (state.freeClarity ?? 0) - 1,
+          activeBuff: 'LUCK',
+          history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Clarity', details: 'A free ritual from an achievement: your next Key roll is made twice and the better result is kept.', meta: { ritual: 'LUCK', fateCost: 0, freeClarity: true } }],
+          lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'LUCK' } }
+        };
+      }
       // One buff waits for the next roll; a second would overwrite the first.
       if (state.activeBuff !== 'NONE'
         || state.fatePoints < ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier)) return state;
@@ -2729,6 +2772,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   }), [commitAction]);
   const claimPet = useCallback((pet: { id: number; name: string }, x?: number, y?: number) =>
     commitAction({ type: 'CLAIM_PET', payload: { petId: pet.id, petName: pet.name, x, y } }), [commitAction]);
+  const settleAchievementsCallback = useCallback((earned: AchievementPayout[]) => commitAction({ type: 'SETTLE_ACHIEVEMENTS', payload: earned }), [commitAction]);
+  const setAchievementTitle = useCallback((id: string | null) =>
+    commitAction({ type: 'SET_ACHIEVEMENT_TITLE', payload: id }), [commitAction]);
   const setGameMode = useCallback((modeId: string, customRules?: GameModeRules) =>
     commitAction({ type: 'SET_GAME_MODE', payload: { modeId, customRules } }), [commitAction]);
   const toggleAnimations = useCallback(() => commitAction({ type: 'TOGGLE_ANIMATIONS' }), [commitAction]);
@@ -3182,6 +3228,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     resolveFateCompensation,
     resolvePetCompensation,
     claimPet,
+    settleAchievements: settleAchievementsCallback,
+    setAchievementTitle,
     setGameMode,
     setSeed,
     nextFloat,
@@ -3233,6 +3281,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     resolveFateCompensation,
     resolvePetCompensation,
     claimPet,
+    settleAchievementsCallback,
+    setAchievementTitle,
     setGameMode,
     setSeed,
     nextFloat,

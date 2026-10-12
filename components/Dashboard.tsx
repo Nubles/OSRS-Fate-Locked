@@ -54,7 +54,7 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useUnlockReveal } from '../hooks/useUnlockReveal';
 import { UnlockReveal } from './UnlockReveal';
-import { useAchievementReveal } from '../hooks/useAchievementReveal';
+import { useAchievementCatalog, useAchievementReveal } from '../hooks/useAchievementReveal';
 import { AchievementReveal } from './AchievementReveal';
 import { getGameMode } from '../config/gameModes';
 import { getActivityRegion } from '../data/activityRegions';
@@ -351,7 +351,12 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) => {
-  const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode, pendingUnlock } = useGame();
+  const {
+    unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode, pendingUnlock,
+    history, petsClaimed, achievementsClaimed, settleAchievements, stateReplacements, achievementTitle,
+  } = useGame();
+  const achievementCatalog = useAchievementCatalog();
+  const titleAchievement = achievementTitle ? achievementCatalog?.achievementById(achievementTitle) : undefined;
   const runeProofMode = runeProofAvailability((import.meta as any).env ?? {});
   const goalPlannerEntry = runeProofMode !== 'OFF'
     ? { label: 'RuneProof', title: 'Get the next reviewed action for your run' }
@@ -398,7 +403,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const [selectedSkillForDetails, setSelectedSkillForDetails] = useState<{name: string, tier: number} | null>(null);
 
   const [unlockReveal, dismissReveal, unlockRevealId] = useUnlockReveal(unlocks, gameModeId);
-  const [achievementReveal, dismissAchievementReveal, achievementRevealId] = useAchievementReveal(unlocks, gameModeId, customMode);
+  const [achievementReveal, dismissAchievementReveal, achievementRevealId] = useAchievementReveal(
+    { unlocks, history, gameModeId, customMode, petsClaimed },
+    { claimed: achievementsClaimed, settle: settleAchievements, replacements: stateReplacements },
+  );
 
   useEscapeKey(() => setShowRunCard(false), showRunCard && !suspendModals);
   useEscapeKey(() => setSelectedSkillForDetails(null), selectedSkillForDetails !== null && !suspendModals);
@@ -1092,6 +1100,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                  >
                     {activeMode.name} Mode
                  </span>
+                 {titleAchievement && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAchievements(true)}
+                      className="text-[10px] font-normal text-[#ff981f] bg-[#2b251c] px-2 py-0.5 rounded border border-[#5c5244] whitespace-nowrap shrink-0 hover:bg-[#352d22]"
+                      title={`Your title, from the achievement "${titleAchievement.title}": ${titleAchievement.description}`}
+                    >
+                      {titleAchievement.title}
+                    </button>
+                 )}
                  {specialKeys > 0 && (
                     <span className={`text-[10px] font-normal text-purple-200 bg-purple-900/50 px-2 py-0.5 rounded border border-purple-500/30 flex items-center gap-1 whitespace-nowrap shrink-0 ${animationsEnabled ? 'animate-pulse' : ''}`}>
                         <Sparkles size={10} /> Omni-Key Active

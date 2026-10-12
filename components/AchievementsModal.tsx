@@ -4,7 +4,7 @@ import { Trophy } from './OsrsIcon';
 import { ACHIEVEMENT_ICON } from './achievementIcons';
 import { useGame } from '../context/GameContext';
 import {
-  evaluateAchievements, EvaluatedAchievement, AchievementCategory,
+  evaluateAchievements, EvaluatedAchievement, AchievementCategory, rewardLabel,
 } from '../utils/achievements';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';
@@ -14,14 +14,33 @@ interface Props {
 }
 
 const CATEGORY_ORDER: AchievementCategory[] = [
-  'Quests', 'Skills', 'Areas', 'Equipment', 'Diaries', 'Combat', 'Activities', 'Collection', 'Mastery',
+  'Quests', 'Skills', 'Areas', 'Equipment', 'Diaries', 'Combat', 'Activities', 'Collection',
+  'Fate', 'Void Altar', 'Unlocks', 'Pets', 'Mastery',
 ];
 
+const formatDate = (timestamp: number) =>
+  new Date(timestamp).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+
 export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
-  const { unlocks , gameModeId, customMode} = useGame();
+  const {
+    unlocks, gameModeId, customMode, history, petsClaimed, achievementTitle, setAchievementTitle, freeClarity,
+  } = useGame();
   useEscapeKey(onClose, true);
 
-  const all = useMemo(() => evaluateAchievements(unlocks, gameModeId, customMode), [unlocks, gameModeId, customMode]);
+  const all = useMemo(
+    () => evaluateAchievements({ unlocks, gameModeId, customMode, history, petsClaimed }),
+    [unlocks, gameModeId, customMode, history, petsClaimed],
+  );
+  // When each was earned, from the run's log (achievements earned before rewards have no date).
+  const earnedAt = useMemo(() => {
+    const at = new Map<string, number>();
+    for (const e of history) {
+      const id = e.type === 'ACHIEVEMENT' ? e.meta?.achievementId : undefined;
+      if (typeof id === 'string' && !at.has(id)) at.set(id, e.timestamp);
+    }
+    return at;
+  }, [history]);
+  const title = all.find((a) => a.id === achievementTitle && a.earned);
   const earnedCount = all.filter((a) => a.earned).length;
   const pct = all.length > 0 ? Math.round((earnedCount / all.length) * 100) : 0;
 
@@ -58,6 +77,15 @@ export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
             <h2 className="text-base font-bold text-white leading-none flex items-center gap-1.5">Achievements <SectionGuide id="ACHIEVEMENTS" /></h2>
             <p className="text-[11px] text-gray-500 mt-1">
               {earnedCount} of {all.length} earned · {pct}% complete
+            </p>
+            <p className="text-[11px] text-gray-400 mt-1">
+              {title ? (
+                <>Your title: <span className="text-[#ff981f] font-bold">{title.title}</span>{' '}
+                  <button onClick={() => setAchievementTitle(null)} className="underline text-gray-500 hover:text-gray-300">Take off</button></>
+              ) : 'Pick any earned achievement to wear as your title.'}
+              {(freeClarity ?? 0) > 0 && (
+                <span className="text-cyan-300"> · {freeClarity} free Ritual{freeClarity === 1 ? '' : 's'} of Clarity waiting at the Void Altar</span>
+              )}
             </p>
           </div>
           <button
@@ -105,7 +133,13 @@ export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
         <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {shown.map((a) => (
-              <AchievementCard key={a.id} a={a} />
+              <AchievementCard
+                key={a.id}
+                a={a}
+                earnedAt={earnedAt.get(a.id)}
+                worn={a.id === achievementTitle}
+                onWear={() => setAchievementTitle(a.id)}
+              />
             ))}
           </div>
         </div>
@@ -114,8 +148,16 @@ export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
   );
 };
 
-const AchievementCard: React.FC<{ a: EvaluatedAchievement }> = ({ a }) => {
+const AchievementCard: React.FC<{
+  a: EvaluatedAchievement;
+  earnedAt?: number;
+  worn: boolean;
+  onWear: () => void;
+}> = ({ a, earnedAt, worn, onWear }) => {
   const Icon = ACHIEVEMENT_ICON[a.icon] ?? Trophy;
+  // A hidden achievement stays a mystery until it is earned, like an unseen log slot.
+  const secret = a.hidden && !a.earned;
+  const reward = rewardLabel(a);
   return (
     <div
       className={`relative flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${
@@ -136,7 +178,7 @@ const AchievementCard: React.FC<{ a: EvaluatedAchievement }> = ({ a }) => {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <span className={`text-[12px] font-bold truncate ${a.earned ? 'text-amber-200' : 'text-gray-400'}`}>
-            {a.title}
+            {secret ? '???' : a.title}
           </span>
           {a.earned ? (
             <CheckCircle2 size={12} className="text-amber-400 shrink-0" aria-hidden />
@@ -144,8 +186,15 @@ const AchievementCard: React.FC<{ a: EvaluatedAchievement }> = ({ a }) => {
             <Lock size={10} className="text-gray-600 shrink-0" aria-hidden />
           )}
         </div>
-        <p className="text-[10px] text-gray-500 truncate">{a.description}</p>
-        {!a.earned && (
+        <p className="text-[10px] text-gray-500 truncate">{secret ? 'A hidden achievement' : a.description}</p>
+        <p className="text-[10px] text-gray-500 truncate">
+          <span className={a.earned ? 'text-cyan-300/80' : 'text-gray-600'}>{reward ? `${reward} · title` : 'Title'}</span>
+          {a.earned && earnedAt !== undefined && <span className="text-gray-600"> · earned {formatDate(earnedAt)}</span>}
+          {a.earned && (worn
+            ? <span className="text-[#ff981f]"> · worn</span>
+            : <> · <button onClick={onWear} className="underline text-gray-400 hover:text-white">Wear title</button></>)}
+        </p>
+        {!a.earned && !secret && (
           <div className="mt-1.5 flex items-center gap-2">
             <div className="flex-1 h-[3px] bg-black/50 rounded-full overflow-hidden">
               <div
