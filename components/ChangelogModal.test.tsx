@@ -3,7 +3,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { ChangelogRelease } from '../data/changelog';
 import type { FateCompensationState } from '../types';
-import { shouldAutoOpenAfterOnboarding } from '../utils/changelogModalState';
 import { resolveFocusRestorationTarget } from '../hooks/useFocusTrap';
 import { ChangelogModal, toggleExpandedRelease } from './ChangelogModal';
 
@@ -130,16 +129,6 @@ describe('ChangelogModal initial render', () => {
     expect(markup).toContain('1 missed Chaos Key');
     expect(markup).not.toContain('1 missed Chaos Keys');
     expect(markup).toContain('2 missed Standard Pity Keys');
-  });
-});
-
-describe('changelog auto-open eligibility', () => {
-  it('waits for onboarding and opens only for an unseen latest release', () => {
-    const latestId = '2026-07-26-latest';
-
-    expect(shouldAutoOpenAfterOnboarding(false, latestId, null)).toBe(false);
-    expect(shouldAutoOpenAfterOnboarding(true, latestId, latestId)).toBe(false);
-    expect(shouldAutoOpenAfterOnboarding(true, latestId, '2026-07-23-previous')).toBe(true);
   });
 });
 

@@ -43,23 +43,6 @@ export const loadQuestWalkthroughFor = async (
   return walkthrough?.revision === release.revision ? walkthrough : undefined;
 };
 
-export const loadQuestStrategyFor = async (
-  availability: RuneProofAvailability,
-  release: QuestWalkthroughRelease,
-): Promise<QuestStrategyDefinition | undefined> => {
-  if (availability === 'PUBLIC') {
-    const catalogue = await loadPublicCatalogue();
-    const strategy = catalogue.questStrategyFor(release.questId);
-    return strategy?.revision === release.revision ? strategy : undefined;
-  }
-  if (availability !== 'PREVIEW') return undefined;
-
-  const catalogue = await loadPreviewStrategyCatalogue();
-  const strategy = catalogue.questStrategyFor(release.questId);
-
-  return strategy?.revision === release.revision ? strategy : undefined;
-};
-
 export const loadQuestStrategyCatalogue = async (
   availability: RuneProofAvailability,
 ): Promise<readonly QuestStrategyDefinition[]> => {

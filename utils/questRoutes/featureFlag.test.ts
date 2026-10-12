@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canRenderQuestWalkthrough, runeProofAvailability } from './featureFlag';
+import { runeProofAvailability } from './featureFlag';
 
 describe('runeProofAvailability', () => {
   it('makes the independently authored public pack available by default', () => {
@@ -12,12 +12,4 @@ describe('runeProofAvailability', () => {
     expect(runeProofAvailability({ MODE: 'runeproof-preview', VITE_RUNEPROOF_PREVIEW: '1' })).toBe('PREVIEW');
     expect(runeProofAvailability({ MODE: 'production', VITE_RUNEPROOF_PREVIEW: '1' })).toBe('PUBLIC');
   });
-});
-
-it('renders only approved walkthroughs in public RuneProof', () => {
-  expect(canRenderQuestWalkthrough('PUBLIC', 'APPROVED')).toBe(true);
-  expect(canRenderQuestWalkthrough('PUBLIC', 'PREVIEW_ONLY')).toBe(false);
-  expect(canRenderQuestWalkthrough('PREVIEW', 'PREVIEW_ONLY')).toBe(true);
-  expect(canRenderQuestWalkthrough('PREVIEW', 'APPROVED')).toBe(true);
-  expect(canRenderQuestWalkthrough('OFF', 'APPROVED')).toBe(false);
 });

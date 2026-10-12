@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   CHANGELOG_STORAGE_KEY, ChangelogStorage,
-  changelogVisibilityReducer, markChangelogSeen, mayAutoOpenChangelogAgain, resolveChangelogRestoreTarget,
+  changelogVisibilityReducer, markChangelogSeen, mayAutoOpenChangelogAgain,
   resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
   shouldEnableUnderlyingModalEscape,
   shouldRenderUnderlyingModals, shouldShowChangelog,
@@ -139,17 +139,6 @@ describe('changelog state', () => {
     expect(shouldAutoOpenChangelog({ ...clearStartup, hasPendingGuidePrompt: true })).toBe(false);
     expect(shouldAutoOpenChangelog({ ...clearStartup, hasPendingGameModePrompt: true })).toBe(false);
     expect(shouldAutoOpenChangelog({ ...clearStartup, hasSeenOnboarding: false })).toBe(false);
-  });
-
-  it('targets the persistent settings trigger only for manual opens', () => {
-    const settingsTrigger = { id: 'settings-trigger' };
-
-    expect(resolveChangelogRestoreTarget('manual', settingsTrigger))
-      .toBe(settingsTrigger);
-    expect(resolveChangelogRestoreTarget('automatic', settingsTrigger))
-      .toBeNull();
-    expect(resolveChangelogRestoreTarget('manual', null))
-      .toBeNull();
   });
 
   it('disables the underlying modal Escape closer while the changelog is topmost', () => {

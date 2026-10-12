@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { drawFloat, drawDice, drawPick, weeklySeed, randomSeed, normalizeSeed } from './seededRng';
+import { drawFloat, drawDice, weeklySeed, randomSeed, normalizeSeed } from './seededRng';
 
 describe('drawFloat determinism', () => {
   it('same inputs → same output', () => {
@@ -29,7 +29,7 @@ describe('drawFloat determinism', () => {
   });
 });
 
-describe('drawDice / drawPick', () => {
+describe('drawDice', () => {
   it('dice covers [1,max] and is deterministic', () => {
     const seen = new Set<number>();
     for (let i = 0; i < 500; i++) {
@@ -40,12 +40,6 @@ describe('drawDice / drawPick', () => {
     }
     expect(seen.size).toBe(6);
     expect(drawDice('s', 'c', 'roll')).toBe(drawDice('s', 'c', 'roll'));
-  });
-
-  it('pick returns a pool member (undefined on empty)', () => {
-    const pool = ['a', 'b', 'c'];
-    expect(pool).toContain(drawPick(pool, 's', 'c', 'gacha'));
-    expect(drawPick([], 's', 'c', 'gacha')).toBeUndefined();
   });
 });
 

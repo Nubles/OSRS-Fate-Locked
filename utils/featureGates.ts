@@ -142,8 +142,5 @@ export function visibleFeatures(_s: GateInput): Set<FeatureId> {
   return new Set(ALL_FEATURE_IDS);
 }
 
-export const isFeatureVisible = (id: FeatureId, s: GateInput): boolean =>
-  visibleFeatures(s).has(id);
-
 export const gateMeta = (id: FeatureId): GateDef | undefined =>
   FEATURE_GATES.find((g) => g.id === id);
