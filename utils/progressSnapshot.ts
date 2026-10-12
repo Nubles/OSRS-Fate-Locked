@@ -10,8 +10,7 @@
  */
 import type { GameModeRules } from '../config/gameModes';
 import { getGameMode, resolveModeRules } from '../config/gameModes';
-import { QUEST_DATA } from '../data/questData';
-import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import { diaryTasksForMode, questsForMode } from './modeContent';
 import type { LogEntry, UnlockState } from '../types';
 import { completedCAPoints, earnedCATiers } from './caProgress';
 import { simpleHash } from './integrity';
@@ -69,7 +68,8 @@ const unlockText = (entry: LogEntry): string => {
 export function buildProgressSnapshot(source: ProgressSource): ProgressSnapshot {
   const { unlocks, history, gameModeId, customMode, linkedAccount } = source;
   const progress = runProgress(unlocks, gameModeId);
-  const diaryIds = new Set(ALL_DIARY_TASKS.map(task => task.id));
+  const diaryTasks = diaryTasksForMode(gameModeId);
+  const diaryIds = new Set(diaryTasks.map(task => task.id));
   const caPoints = completedCAPoints(unlocks.completedTasks);
   const caTiers = earnedCATiers(caPoints, unlocks.cas);
   const recent = history
@@ -78,7 +78,9 @@ export function buildProgressSnapshot(source: ProgressSource): ProgressSnapshot 
     .reverse()
     .map(entry => ({ text: unlockText(entry), at: entry.timestamp }));
   const account = linkedAccount?.trim();
-  const questTotal = Object.keys(QUEST_DATA).length;
+  // Free-to-play runs count only the free-to-play quests, and have no diaries.
+  const questIds = new Set(questsForMode(gameModeId).map(quest => quest.id));
+  const questTotal = questIds.size;
   const mode = getGameMode(gameModeId);
 
   return {
@@ -90,10 +92,10 @@ export function buildProgressSnapshot(source: ProgressSource): ProgressSnapshot 
     ...(history[0]?.timestamp ? { startedAt: history[0].timestamp } : {}),
     areas: { unit: progress.unit, unlocked: Math.min(progress.unlocked, progress.total), total: progress.total },
     chunks: { unlocked: Math.min(progress.chunks.unlocked, progress.chunks.total), total: progress.chunks.total },
-    quests: { done: Math.min(unlocks.quests.length, questTotal), total: questTotal },
+    quests: { done: Math.min(unlocks.quests.filter(id => questIds.has(id)).length, questTotal), total: questTotal },
     diaryTasks: {
       done: unlocks.completedTasks.filter(id => diaryIds.has(id)).length,
-      total: ALL_DIARY_TASKS.length,
+      total: diaryTasks.length,
     },
     ca: { points: caPoints, tier: caTiers.length > 0 ? caTiers[caTiers.length - 1] : null },
     recent,

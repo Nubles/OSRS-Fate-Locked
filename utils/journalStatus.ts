@@ -23,6 +23,12 @@ import { AREA_ENTRY_ROUTES } from '../data/areaAccess';
 import { canonicalAreaName } from '../data/areaMapPolicy';
 import type { AreaRoutes } from './areaRoutes';
 import { farmingPatchLabel } from './farmingPatches';
+import { isF2PMode } from '../config/gameModes';
+import { f2pQuestMembershipFor } from '../data/f2pQuestMembership';
+
+/** Why a Free-to-play run can't do a members quest or diary. */
+export const MEMBERS_QUEST_LABEL = 'Members quest: not in Free-to-play';
+export const MEMBERS_DIARY_LABEL = 'Achievement Diaries are members only';
 
 export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_MOBILITY' | 'LOCKED_MERCHANT' | 'LOCKED_QUEST';
 export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_EQUIPMENT' | 'LOCKED_MOBILITY' | 'LOCKED_ARCANA' | 'LOCKED_MERCHANT' | 'LOCKED_MINIGAME' | 'LOCKED_BOSS' | 'LOCKED_GUILD' | 'LOCKED_FARMING' | 'LOCKED_HOUSING' | 'LOCKED_SLAYER' | 'LOCKED_QUEST';
@@ -290,6 +296,11 @@ export function evaluateQuestEligibility(
       blockers: [],
       evidence: ['Completed'],
     };
+  }
+  // Free-to-play runs can only do the free-to-play quests.
+  if (isF2PMode(gameModeId) && !f2pQuestMembershipFor(quest.id)) {
+    const blocker: EligibilityBlocker = { kind: 'quest', label: MEMBERS_QUEST_LABEL };
+    return { ...readinessFields([blocker], []), status: 'LOCKED_QUEST', blockers: [blocker], evidence: [] };
   }
   const configurationErrors = questAccessPolicyStructureErrors(quest);
   if (configurationErrors.length) {
@@ -877,6 +888,10 @@ export function evaluateDiaryTaskEligibility(
   gameModeId?: string,
   areaRoutes?: AreaRoutes | null,
 ): DiaryTaskEligibility {
+  if (isF2PMode(gameModeId)) {
+    const blocker: EligibilityBlocker = { kind: 'quest', label: MEMBERS_DIARY_LABEL };
+    return { ...readinessFields([blocker], []), eligible: false, blockers: [blocker], evidence: [] };
+  }
   const shared = evaluateDiaryRequirement(task, unlocks, gameModeId, NO_AREAS, areaRoutes);
   if (!task.oneOf?.length) return shared;
 
@@ -957,6 +972,10 @@ export function evaluateDiaryTierEligibility(
 ): DiaryTierEligibility {
   if (unlocks.diaries.includes(diary.id)) {
     return { ...readinessFields([], []), status: 'COMPLETED', blockers: [], evidence: ['Completed'] };
+  }
+  if (isF2PMode(gameModeId)) {
+    const blocker: EligibilityBlocker = { kind: 'quest', label: MEMBERS_DIARY_LABEL };
+    return { ...readinessFields([blocker], []), eligible: false, status: 'LOCKED_QUEST', blockers: [blocker], evidence: [] };
   }
 
   const normalizedUnlocks: UnlockState = {

@@ -8,7 +8,8 @@
  * is stranded.
  */
 
-import { BOAT_CROSSINGS, TRAVEL_NETWORKS, type BoatCrossing, type NetworkOpener } from '../data/travelLinks';
+import { BOAT_CROSSINGS, F2P_CROSSINGS, TRAVEL_NETWORKS, type BoatCrossing, type NetworkOpener } from '../data/travelLinks';
+import { isF2PMode } from '../config/gameModes';
 import type { UnlockState } from '../types';
 import { chunkReachability, type ReachResult } from './chunkReach';
 
@@ -55,8 +56,9 @@ const servedDocks = (crossing: BoatCrossing, unlocks: UnlockState): string[] => 
 const forRuns = new WeakMap<Graph, Map<string, Graph>>();
 
 /** The route graph with the boats this run can take, and without the network stops it can't use yet. */
-export function routeGraph(connect: Graph, unlocks: UnlockState): Graph {
-  const open = BOAT_CROSSINGS.map(crossing => servedDocks(crossing, unlocks)).filter(docks => docks.length > 1);
+export function routeGraph(connect: Graph, unlocks: UnlockState, gameModeId?: string): Graph {
+  const crossings = isF2PMode(gameModeId) ? [...BOAT_CROSSINGS, ...F2P_CROSSINGS] : BOAT_CROSSINGS;
+  const open = crossings.map(crossing => servedDocks(crossing, unlocks)).filter(docks => docks.length > 1);
   const shut = TRAVEL_NETWORKS.flatMap(network => (network.stops ?? [])
     .filter(stop => !done(stop.quests, unlocks))
     .map(stop => ({ nodes: network.nodes.map(graphNode), stop: graphNode(stop.node) })));
@@ -92,7 +94,7 @@ export function travelReachability(
 ): ReachResult {
   const closed = closedTravelNodes(unlocks);
   return chunkReachability(
-    routeGraph(connect, unlocks), unlocks, home,
+    routeGraph(connect, unlocks, gameModeId), unlocks, home,
     chunkId => closed.has(chunkId) || !!blocked?.(chunkId), gameModeId,
   );
 }

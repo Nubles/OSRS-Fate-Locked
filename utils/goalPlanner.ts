@@ -15,6 +15,9 @@
 import { QUEST_CAPE_QUEST_IDS, QUEST_DATA, QuestData } from '../data/questData';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import { F2P_AREAS } from '../data/f2pContent';
+import { isF2PMode } from '../config/gameModes';
+import { diariesForMode, questsForMode } from './modeContent';
 import { REGION_GROUPS } from '../data/items';
 import { canonicalAreaName, displayAreaName } from '../data/areaMapPolicy';
 import { TableType } from '../types';
@@ -844,24 +847,26 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
  * Every selectable goal target for the picker — locked-or-not, so the player
  * can plan ahead. Sorted with the most "interesting" (incomplete) first.
  */
-export function listGoalTargets(): Selectable[] {
-  const quests: Selectable[] = Object.values(QUEST_DATA).map((q) => ({
+export function listGoalTargets(gameModeId?: string): Selectable[] {
+  // Free-to-play runs plan only free-to-play quests and areas: no diaries.
+  const f2p = isF2PMode(gameModeId);
+  const quests: Selectable[] = questsForMode(gameModeId).map((q) => ({
     kind: 'quest' as const,
     id: q.id,
     label: q.name,
     group: q.series ?? 'Quests',
   }));
-  const diaries: Selectable[] = Object.values(DIARY_DATA).map((d) => ({
+  const diaries: Selectable[] = diariesForMode(gameModeId).map((d) => ({
     kind: 'diary' as const,
     id: d.id,
     label: d.id,
     group: d.region,
   }));
-  const regions: Selectable[] = UNLOCKABLE_REGIONS.map((r) => ({
+  const regions: Selectable[] = (f2p ? F2P_AREAS : UNLOCKABLE_REGIONS).map((r) => ({
     kind: 'region' as const,
     id: r,
     label: r,
-    group: 'Regions',
+    group: f2p ? 'Areas' : 'Regions',
   }));
   return [...quests, ...diaries, ...regions];
 }

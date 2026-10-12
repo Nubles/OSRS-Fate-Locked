@@ -12,7 +12,7 @@ import { unlockableAreas } from './freeAreas';
 import { isF2PMode, usesVanillaRules, type GameModeRules } from '../config/gameModes';
 import { ROLLABLE_POH_ITEMS, ROLLABLE_STORAGE_ITEMS } from '../data/items';
 import { chunkedSkillRollable, fateSkillRollable } from './chunkedSkillPool';
-import { F2P_EQUIPMENT_TIER_MAX, F2P_TABLE_ITEMS, isF2PEntry } from '../data/f2pContent';
+import { F2P_TABLE_ITEMS, f2pEquipmentTierCap, isF2PEntry } from '../data/f2pContent';
 
 /** The same tables and eligible entries drive rolls and their displayed odds. */
 export const randomUnlockTables = (mode?: string, custom?: GameModeRules): TableType[] => allRandomUnlockTables(mode, custom)
@@ -34,10 +34,10 @@ export const randomUnlockPool = (unlocks: UnlockState, mode = 'vanilla', costTyp
 
 export const rollDice = (max: number = 100) => Math.floor(Math.random() * max) + 1;
 
-/** Whether a Free-to-play run can still unlock this entry: free-to-play content, gear up to rune. */
+/** Whether a Free-to-play run can still unlock this entry: free-to-play content, gear up to each slot's best free-to-play tier. */
 export const isF2PUnlockable = (table: TableType, item: string, unlocks: UnlockState): boolean =>
     isF2PEntry(table, item)
-    && (table !== TableType.EQUIPMENT || (unlocks.equipment[item] || 0) < F2P_EQUIPMENT_TIER_MAX)
+    && (table !== TableType.EQUIPMENT || (unlocks.equipment[item] || 0) < f2pEquipmentTierCap(item))
     && isValidUnlock(table, item, unlocks);
 
 const anyF2PUnlockable = (table: TableType, unlocks: UnlockState, mode: string): boolean =>

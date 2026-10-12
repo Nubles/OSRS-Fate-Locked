@@ -1,4 +1,5 @@
 import { CA_DATA } from '../data/caData';
+import { caTaskInMode } from './modeContent';
 import { canonicalBossId } from './contentIdentity';
 import { ALL_CA_TASKS, CATask } from '../data/caTasks';
 import type { CompletionResult } from './journalCompletion';
@@ -56,12 +57,16 @@ export const newlyEarnedCATiers = (
   return earnedCATiers(points, stored).filter(tier => !previous.has(tier));
 };
 
+export const MEMBERS_CA_REASON = 'This Combat Achievement task is members only, so it gives no Key in Free-to-play.';
+
 /** Whether a Combat Achievement task can be completed and rolled for now. */
 export const caTaskCompletionDecision = (
   task: Pick<CATask, 'id' | 'tierId'>,
   completedTaskIds: readonly string[],
+  gameModeId?: string,
 ): CompletionResult => {
   if (completedTaskIds.includes(task.id)) return { ok: false, reason: 'Already completed' };
+  if (!caTaskInMode(task.id, gameModeId)) return { ok: false, reason: MEMBERS_CA_REASON };
   if (!CA_DATA[task.tierId]) return { ok: false, reason: 'Unknown Combat Achievement tier' };
   return { ok: true };
 };

@@ -669,7 +669,7 @@ const normalizeCustomMode = (value: unknown): Outcome<GameModeRules> => {
   };
   if (own(inspected.value, 'startArea')) {
     const startArea = readOwn(inspected.value, 'startArea');
-    if (startArea !== 'misthalin' && startArea !== 'lumbridge' && startArea !== 'none') {
+    if (startArea !== 'misthalin' && startArea !== 'lumbridge' && startArea !== 'none' && startArea !== 'f2p') {
       return invalid('invalid_field', 'customMode.startArea');
     }
     out.startArea = startArea;

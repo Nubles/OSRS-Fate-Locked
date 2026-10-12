@@ -5,6 +5,8 @@ import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, ty
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
 import { resolveModeRules, DEFAULT_MODE_ID, isF2PMode, usesVanillaRules } from '../config/gameModes';
+import { petInMode } from '../utils/modeContent';
+import { collectionLogItemInMode } from '../utils/collectionLogMode';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
@@ -658,7 +660,7 @@ export const prepareCATaskCompletionActions = (
   result: CompletionResult;
   actions: TransitionAction[];
 } => {
-  const decision = caTaskCompletionDecision(task, state.unlocks.completedTasks);
+  const decision = caTaskCompletionDecision(task, state.unlocks.completedTasks, state.gameModeId);
   if (decision.ok === false) return { result: decision, actions: [] };
   const tier = CA_DATA[task.tierId];
 
@@ -963,7 +965,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
     case 'CLAIM_PET': {
       const { petId, petName, x, y, meta } = action.payload;
-      if (!isPetId(petId) || (state.petsClaimed ?? []).includes(petId) || state.specialKeys >= MAX_COUNTER) return state;
+      if (!isPetId(petId) || !petInMode(petId, state.gameModeId) || (state.petsClaimed ?? []).includes(petId) || state.specialKeys >= MAX_COUNTER) return state;
       return {
         ...state,
         specialKeys: state.specialKeys + 1,
@@ -1616,6 +1618,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     case 'LOG_ITEM': {
       const itemId = action.payload;
       if (collectionItemNeedsIdentityReview(state.unlocks.collectionLog, itemId, state.collectionLogIdentity)) return state;
+      if (!collectionLogItemInMode(itemId, state.gameModeId)) return state;
       const currentCount = state.unlocks.collectionLog[itemId] || 0;
 
       const newUnlocks = {

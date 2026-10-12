@@ -8,7 +8,7 @@ import { travelReachability } from '../utils/travelReach';
 import { CHUNKED_START } from '../utils/chunkAdjacency';
 import { chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
 import { questLocations } from '../utils/questLocations';
-import { questsForMode } from '../utils/questScope';
+import { questsForMode } from '../utils/modeContent';
 import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate, hasCanonicalQuestLocationEvidence, QuestChunkStatus } from '../utils/questDoability';
 import {
   evaluateQuestEligibility, questRequirementOptionLabel, withSkillGateQuests,

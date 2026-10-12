@@ -3,11 +3,12 @@
  * on the OSRS Wiki: the Free-to-play, Bank, Bank deposit box and Shop pages,
  * and each location's own infobox (Members: No). Members content on F2P land
  * (Rogues' Castle, the Chaos Altar, the Crafting Guild bank, Scurrius) is left
- * out. A table with no free-to-play entries (Arcana, Player-owned house,
+ * out (the Chaos Altar hut is free to visit, but its altar only works for
+ * members). A table with no free-to-play entries (Arcana, Player-owned house,
  * Storage, Farming, Slayer unlocks) is not rolled at all.
  *
  * Each list only holds names that already exist in data/items.ts or
- * data/banks.ts; data/f2pContent.test.ts checks that.
+ * data/banks.ts; utils/f2pMode.test.ts checks that.
  */
 import { TableType } from '../types';
 
@@ -19,6 +20,18 @@ export const F2P_SKILLS = [
 
 /** Rune is the best gear free-to-play worlds offer (equipment tier 5). */
 export const F2P_EQUIPMENT_TIER_MAX = 5;
+
+/**
+ * The best free-to-play tier in each slot (utils/gearTiers.ts tiers): rune
+ * where rune exists, green d'hide vambraces (4), gold decorative boots (4),
+ * amulet of power (3), and only stat-less capes and rings (1).
+ */
+export const F2P_EQUIPMENT_TIER_CAPS: Readonly<Record<string, number>> = {
+  Head: 5, Cape: 1, Neck: 3, Ammo: 5, Weapon: 5, Body: 5, Shield: 5, Legs: 5, Gloves: 4, Boots: 4, Ring: 1,
+};
+
+/** The highest tier a Free-to-play run can unlock in this equipment slot. */
+export const f2pEquipmentTierCap = (slot: string): number => F2P_EQUIPMENT_TIER_CAPS[slot] ?? F2P_EQUIPMENT_TIER_MAX;
 
 /** Free from the start: the free-to-play half of Misthalin. */
 export const F2P_START_AREAS = [
@@ -59,6 +72,7 @@ export const F2P_BANK_IDS = [
   '9776', // Castle Wars Lobby
   '12344', // West Ferox Enclave
   '11830', // Ruins of Camdozaal
+  '13363', // Emir's Arena bank chest (banks.ts names the chunk after the Mage Training Arena)
 ] as const;
 
 /** Each table's free-to-play entries. Skills, equipment and areas use the lists above. */
@@ -73,8 +87,7 @@ export const F2P_TABLE_ITEMS: Partial<Record<TableType, readonly string[]>> = {
     'Archery Shops', 'Axe Shops', 'Mace Shops', 'Scimitar Shops', 'Staff Shops', 'Sword Shops',
     'Chainbody Shops', 'Clothes Shops', 'Helmet Shops', 'Platebody Shops', 'Platelegs Shops',
     'Plateskirt Shops', 'Shield Shops', 'Crafting Shops', 'Dye Shops', 'Fishing Shops', 'Gem Shops',
-    'Mining Shops', 'Silk Shops', 'Magic Shops', 'Jewellery Shops', 'Tanners', 'Lost Property',
-    'Reward Shops',
+    'Mining Shops', 'Silk Shops', 'Magic Shops', 'Herblore Shops', 'Tanners', 'Reward Shops',
   ],
   [TableType.MINIGAMES]: ['Castle Wars', 'Clan Wars', "Emir's Arena", 'Last Man Standing', 'Shooting Stars', 'Forestry'],
   [TableType.BOSSES]: ['Obor', 'Bryophyta'],
@@ -94,3 +107,34 @@ export const isF2PEntry = (table: TableType, item: string): boolean => {
   const set = F2P_SETS.get(table);
   return set === undefined || set.has(item);
 };
+
+/**
+ * The 18 Combat Achievement tasks free-to-play worlds can complete (OSRS Wiki,
+ * Combat Achievements/Free-to-play): Obor, Bryophyta (not A Slow Death), the
+ * Greater Demon tasks and Brutus (not the Elite speed task). 27 points in all,
+ * so no Combat Achievement tier can be finished on free-to-play worlds.
+ */
+export const F2P_CA_TASK_IDS = [
+  'ca_129', 'ca_130', 'ca_131', 'ca_132', 'ca_133', 'ca_134',
+  'ca_35', 'ca_36', 'ca_37', 'ca_38', 'ca_39', 'ca_41',
+  'ca_120', 'ca_121',
+  'ca_632', 'ca_633', 'ca_635', 'ca_636',
+] as const;
+
+/** Every pet is members only, so a Free-to-play run claims none. */
+export const F2P_PET_IDS: readonly number[] = [];
+
+/**
+ * Collection log pages a free-to-play world can fill. Castle Wars only gives
+ * free-to-play players the red, white and gold melee pieces, hoods, cloaks
+ * and banners (ids 404001-404030); its magic and ranged pieces and halos are
+ * members only. Pages the wiki doesn't confirm (Random Events, Camdozaal) are
+ * left out.
+ */
+export const F2P_COLLECTION_LOG_PAGES = ['Obor', 'Bryophyta', 'Brutus', 'Beginner Treasure Trails', 'Castle Wars'] as const;
+const F2P_CASTLE_WARS_LAST_ITEM = 404030;
+
+/** Whether a Free-to-play run can log this collection log item. */
+export const isF2PCollectionLogItem = (page: string, itemId: number): boolean =>
+  (F2P_COLLECTION_LOG_PAGES as readonly string[]).includes(page)
+  && (page !== 'Castle Wars' || itemId <= F2P_CASTLE_WARS_LAST_ITEM);

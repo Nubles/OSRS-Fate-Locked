@@ -20,7 +20,7 @@ import { BANK_IDS } from '../data/banks';
 import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { isF2PMode } from '../config/gameModes';
 import { TableType } from '../types';
-import { F2P_EQUIPMENT_TIER_MAX, F2P_SKILLS, F2P_TABLE_ITEMS } from '../data/f2pContent';
+import { F2P_SKILLS, F2P_TABLE_ITEMS, f2pEquipmentTierCap } from '../data/f2pContent';
 
 /** Total unlock points available for 100% completion. */
 export const COMPLETION_DENOMINATOR =
@@ -47,13 +47,13 @@ const F2P_UNLOCK_KEY = {
 } as const;
 
 const f2pDenominator = (mode?: string, custom?: GameModeRules): number =>
-  F2P_SKILLS.length * 10 + EQUIPMENT_SLOTS.length * F2P_EQUIPMENT_TIER_MAX
+  F2P_SKILLS.length * 10 + EQUIPMENT_SLOTS.reduce((total, slot) => total + f2pEquipmentTierCap(slot), 0)
   + F2P_LIST_TABLES.reduce((total, table) =>
     total + (table === TableType.BANKS && !bankLocksActive(mode, custom) ? 0 : F2P_TABLE_ITEMS[table]!.length), 0);
 
 const f2pPoints = (u: UnlockState, mode?: string, custom?: GameModeRules): number =>
   F2P_SKILLS.reduce((total, skill) => total + (u.skills[skill] ?? 0), 0)
-  + EQUIPMENT_SLOTS.reduce((total, slot) => total + Math.min(F2P_EQUIPMENT_TIER_MAX, u.equipment[slot] ?? 0), 0)
+  + EQUIPMENT_SLOTS.reduce((total, slot) => total + Math.min(f2pEquipmentTierCap(slot), u.equipment[slot] ?? 0), 0)
   + F2P_LIST_TABLES.reduce((total, table) => {
     if (table === TableType.BANKS && !bankLocksActive(mode, custom)) return total;
     const owned = new Set<string>(u[F2P_UNLOCK_KEY[table]] ?? []);

@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA, QuestData } from '../data/questData';
-import { questsForMode } from '../utils/questScope';
+import { questsForMode } from '../utils/modeContent';
 import { WIKI_OVERRIDES, SLOT_CONFIG } from '../constants';
 import { CheckCircle2, Lock, Bookmark, Layers, List, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { BookOpen, MapPin, Sparkles, Scroll } from './OsrsIcon';

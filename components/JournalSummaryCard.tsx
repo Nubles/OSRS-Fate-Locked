@@ -4,13 +4,13 @@ import { BookOpen, Map as MapIcon, Swords, Sparkles, Target, PartyPopper } from 
 import { WikiIcon } from './WikiIcon';
 import { useGame } from '../context/GameContext';
 import { useAreaRoutes } from '../hooks/useAreaRoutes';
-import { QUEST_DATA, type QuestData } from '../data/questData';
-import { DIARY_DATA, type DiaryTier } from '../data/diaryData';
-import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import type { QuestData } from '../data/questData';
+import type { DiaryTier } from '../data/diaryData';
 import type { UnlockState } from '../types';
 import type { AreaRoutes } from '../utils/areaRoutes';
 import { CA_DATA } from '../data/caData';
-import { ALL_CA_TASKS } from '../data/caTasks';
+import { caTasksForMode, diariesForMode, diaryTasksForMode, questsForMode } from '../utils/modeContent';
+import { isF2PMode } from '../config/gameModes';
 import {
   countDoableDiaryTasks, evaluateQuestEligibility, evaluateDiaryTierEligibility,
 } from '../utils/journalStatus';
@@ -109,7 +109,7 @@ export function recommendNextAction(
   unlocks: UnlockState, diaryDoable: number, caLeft: number, gameModeId?: string, areaRoutes?: AreaRoutes | null,
 ): Recommendation {
   const { best } = analyzeJournalQuestRecommendations(
-    Object.values(QUEST_DATA), Object.values(DIARY_DATA), unlocks, gameModeId, areaRoutes);
+    questsForMode(gameModeId), diariesForMode(gameModeId), unlocks, gameModeId, areaRoutes);
   // Canonical automatic eligibility is analyzed once by the shared helper.
   if (best && best.impact > 0) {
     const parts: string[] = [];
@@ -126,10 +126,10 @@ export function recommendNextAction(
   if (caLeft > 0) {
     return { tab: 'CA', headline: `Grind combat achievements`, detail: `${caLeft} tasks remaining` };
   }
-  if (Object.values(QUEST_DATA).some(quest => !unlocks.quests.includes(quest.id))) {
+  if (questsForMode(gameModeId).some(quest => !unlocks.quests.includes(quest.id))) {
     return { tab: 'QUESTS', headline: 'Review remaining quests', detail: 'Check missing unlocks or requirements that need confirmation' };
   }
-  if (Object.values(DIARY_DATA).some(diary => !unlocks.diaries.includes(diary.id))) {
+  if (diariesForMode(gameModeId).some(diary => !unlocks.diaries.includes(diary.id))) {
     return { tab: 'DIARIES', headline: 'Review remaining diaries', detail: 'Check unfinished tasks and diary rewards' };
   }
   return { tab: null, headline: `Everything's done!`, detail: `All journal content completed` };
@@ -147,31 +147,34 @@ export function questsReadyLabel(available: number, miniquests: number): string 
 export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
   const { unlocks, advisorsEnabled, gameModeId } = useGame();
   const areaRoutes = useAreaRoutes(unlocks, gameModeId);
+  const isF2P = isF2PMode(gameModeId);
 
   const stats = useMemo(() => {
     // ── Quests available ─────────────────────────────────────────────────────
-    const allQuests = Object.values(QUEST_DATA);
+    const allQuests = questsForMode(gameModeId);
     const questAnalysis = analyzeJournalQuestRecommendations(
-      allQuests, Object.values(DIARY_DATA), unlocks, gameModeId, areaRoutes);
+      allQuests, diariesForMode(gameModeId), unlocks, gameModeId, areaRoutes);
     const questsAvailable = questAnalysis.available;
     const questsTotal    = allQuests.length;
-    const questsDone     = unlocks.quests.length;
+    const questsDone     = allQuests.filter(quest => unlocks.quests.includes(quest.id)).length;
 
     // ── Diary tasks doable ───────────────────────────────────────────────────
+    const diaryTasks = diaryTasksForMode(gameModeId);
     const diaryTasksDoable = countDoableDiaryTasks(
-      ALL_DIARY_TASKS, unlocks, gameModeId, areaRoutes);
-    const diaryTasksTotal  = ALL_DIARY_TASKS.length;
+      diaryTasks, unlocks, gameModeId, areaRoutes);
+    const diaryTasksTotal  = diaryTasks.length;
     const diaryTasksDone   = unlocks.completedTasks.filter((id: string) =>
-      ALL_DIARY_TASKS.some((t) => t.id === id),
+      diaryTasks.some((t) => t.id === id),
     ).length;
 
     // ── CA tasks remaining ───────────────────────────────────────────────────
     const caTiersTotal = CA_TIER_ORDER.length;
     const caPoints = completedCAPoints(unlocks.completedTasks);
     const caEarnedTiers = earnedCATiers(caPoints, unlocks.cas);
-    const caTasksTotal = ALL_CA_TASKS.length;
+    const caTasks = caTasksForMode(gameModeId);
+    const caTasksTotal = caTasks.length;
     const completedTaskIds = new Set(unlocks.completedTasks);
-    const caTasksDone = ALL_CA_TASKS.filter(
+    const caTasksDone = caTasks.filter(
       task => completedTaskIds.has(task.id),
     ).length;
     const caTasksLeft = caTasksTotal - caTasksDone;
@@ -248,15 +251,23 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
       accent: 'text-red-300',
       barColor: 'bg-red-500/50',
       badgeColor: 'bg-red-900/40 text-red-300 border-red-500/30',
-      headline: `${stats.ca.points}/${stats.ca.pointsTotal} points · ${stats.ca.done}/${stats.ca.total} rewards`,
-      sub: stats.ca.nextTier
-        ? `${CA_DATA[stats.ca.nextTier].pointsRequired - stats.ca.points} points to ${stats.ca.nextTier}`
-        : 'All reward tiers earned!',
-      pct: Math.round((stats.ca.points / stats.ca.pointsTotal) * 100),
+      // Free-to-play can't reach the reward tiers, so it counts its tasks instead.
+      headline: isF2P
+        ? `${stats.ca.tasksDone}/${stats.ca.tasksTotal} tasks done`
+        : `${stats.ca.points}/${stats.ca.pointsTotal} points · ${stats.ca.done}/${stats.ca.total} rewards`,
+      sub: isF2P
+        ? `${stats.ca.left} free-to-play task${stats.ca.left === 1 ? '' : 's'} left`
+        : stats.ca.nextTier
+          ? `${CA_DATA[stats.ca.nextTier].pointsRequired - stats.ca.points} points to ${stats.ca.nextTier}`
+          : 'All reward tiers earned!',
+      pct: isF2P
+        ? Math.round((stats.ca.tasksDone / Math.max(1, stats.ca.tasksTotal)) * 100)
+        : Math.round((stats.ca.points / stats.ca.pointsTotal) * 100),
       badgeValue: stats.ca.left,
     },
   ];
 
+  const shownRows = isF2P ? rows.filter(row => row.key !== 'DIARIES') : rows;
   const noneLeft = recommendation.tab === null;
 
   return (
@@ -293,7 +304,7 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
       ))}
 
       <div className="space-y-2" role="list">
-        {rows.map((row, idx) => (
+        {shownRows.map((row, idx) => (
           <button
             key={row.key}
             role="listitem"

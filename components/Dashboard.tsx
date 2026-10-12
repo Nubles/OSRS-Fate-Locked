@@ -1003,12 +1003,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
               >
                   Quests
               </button>
+              {!isF2P && (
               <button 
                   onClick={() => setJournalSubTab('DIARIES')}
                   className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${journalSubTab === 'DIARIES' ? 'bg-[#222] text-green-400 border-b-2 border-green-400' : 'text-gray-500 hover:text-gray-300'}`}
               >
                   Diaries
               </button>
+              )}
               <button
                   onClick={() => setJournalSubTab('CA')}
                   className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${journalSubTab === 'CA' ? 'bg-[#222] text-red-400 border-b-2 border-red-400' : 'text-gray-500 hover:text-gray-300'}`}

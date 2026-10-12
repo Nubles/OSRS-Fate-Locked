@@ -12,10 +12,17 @@ import { placeOf } from './chunkLocations';
 import { chunkEntry, chunkEntryReason } from './chunkEntry';
 import { OCEAN_CHUNK_KEYS } from './oceanAccess';
 import { evaluateQuestEligibility, meetsSkillRequirement } from './journalStatus';
+import { isF2PMode } from '../config/gameModes';
+import { F2P_SKILLS } from '../data/f2pContent';
+import { f2pQuestMembershipFor } from '../data/f2pQuestMembership';
 import { farmingPatchFor } from './farmingPatches';
 import { isBankReachable } from './reachability';
 import { canonicalBossId, resolveQuest } from './contentIdentity';
 import { evaluateEntityAccess, evaluateBankRequirements, type EntityAccessSource, type EntityAccessResult } from './entityAccess';
+
+const F2P_SKILL_SET = new Set<string>(F2P_SKILLS);
+/** A skill free-to-play worlds can't train, so no Key will ever open it. */
+const membersSkill = (skill: string, gameModeId?: string) => isF2PMode(gameModeId) && !F2P_SKILL_SET.has(skill);
 
 export type PermissionStatus = 'ALLOWED' | 'NOT_READY' | 'LOCKED' | 'UNKNOWN';
 export type ChunkCategoryId =
@@ -88,6 +95,7 @@ function questStatus(
 ): EntityAccessResult {
   const quest = resolveQuest(name);
   if (!quest) return { status: 'UNKNOWN', reasons: ['Quest requirements need review'] };
+  if (isF2PMode(context.gameModeId) && !f2pQuestMembershipFor(quest.id)) return { status: 'LOCKED', reasons: ['Members quest'] };
   const result = evaluateQuestEligibility(quest, context.unlocks, context.gameModeId);
   if (result.eligible) return { status: 'ALLOWED', reasons: [] };
   return { status: result.status === 'LOCKED_REGION' ? 'LOCKED' : result.machineEligible ? 'UNKNOWN' : 'NOT_READY',
@@ -217,6 +225,10 @@ export function buildChunkPermissionSnapshot(
     const level = context.unlocks.levels[requirement.skill] ?? 1;
     const tier = context.unlocks.skills[requirement.skill] ?? 0;
     const cap = Math.min(99, tier * 10);
+    if (membersSkill(requirement.skill, context.gameModeId)) {
+      add('SKILLING', { key: `skill:${name.toLowerCase()}`, name, status: 'LOCKED', detail: `${requirement.skill} is members only`, targetKind: 'OBJECT' });
+      continue;
+    }
     add('SKILLING', {
       key: `skill:${name.toLowerCase()}`,
       name,
@@ -232,6 +244,10 @@ export function buildChunkPermissionSnapshot(
   for (const shortcut of context.shortcuts ?? []) {
     if (!shortcut.chunks.includes(numericId)) continue;
     const level = context.unlocks.levels[shortcut.skill] ?? 1;
+    if (membersSkill(shortcut.skill, context.gameModeId)) {
+      add('TRAVEL', { key: `travel:${shortcut.name.toLowerCase()}`, name: shortcut.name, status: 'LOCKED', detail: `${shortcut.skill} is members only`, targetKind: 'TELEPORT' });
+      continue;
+    }
     const status: PermissionStatus = meetsSkillRequirement(context.unlocks, shortcut.skill, shortcut.level)
       ? 'ALLOWED'
       : 'NOT_READY';

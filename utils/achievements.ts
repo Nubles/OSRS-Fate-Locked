@@ -13,7 +13,7 @@ import type { GameModeRules } from '../config/gameModes';
 
 import { UnlockState } from '../types';
 import {
-  SKILLS_LIST, REGIONS_LIST, EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX,
+  SKILLS_LIST, REGIONS_LIST, EQUIPMENT_SLOTS,
 } from '../constants';
 import { completionPercent } from './completion';
 import { QUEST_DATA, QUEST_CAPE_QUEST_IDS } from '../data/questData';
@@ -21,6 +21,8 @@ import { DIARY_DATA } from '../data/diaryData';
 import { CA_DATA } from '../data/caData';
 import { isAreaReachable } from './reachability';
 import { unlockableAreas } from './freeAreas';
+import { isF2PMode } from '../config/gameModes';
+import { equipmentTierMaxFor, questsForMode, skillsForMode } from './modeContent';
 
 export type AchievementCategory =
   | 'Quests' | 'Skills' | 'Areas' | 'Equipment'
@@ -37,6 +39,8 @@ export interface Achievement {
   description: string;
   category: AchievementCategory;
   icon: AchievementIcon;
+  /** Whether a run of this mode can earn it at all (default: every mode). */
+  availableIn?: (mode?: string) => boolean;
   /** Current/target progress for this snapshot. Earned when current >= target. */
   progress: (u: UnlockState, mode?: string, custom?: GameModeRules) => { current: number; target: number };
 }
@@ -60,7 +64,14 @@ const TOTAL_EQUIP_SLOTS = EQUIPMENT_SLOTS.length;
 const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
 
 // ── Metric helpers ─────────────────────────────────────────────────────────
-const questsDone = (u: UnlockState) => QUEST_CAPE_QUEST_IDS.filter(id => u.quests.includes(id)).length;
+// Free-to-play runs count their own quests (24, 46 Quest Points), skills
+// (15) and best gear per slot; they have no diaries, no Combat Achievement
+// tier they can finish, and two bosses.
+const F2P_QUEST_IDS = questsForMode('f2p').map(quest => quest.id);
+const F2P_QUEST_POINTS = questsForMode('f2p').reduce((total, quest) => total + (quest.points ?? 0), 0);
+const notF2P = (mode?: string) => !isF2PMode(mode);
+const questsDone = (u: UnlockState, mode?: string) =>
+  (isF2PMode(mode) ? F2P_QUEST_IDS : QUEST_CAPE_QUEST_IDS).filter(id => u.quests.includes(id)).length;
 const questPoints = (u: UnlockState) =>
   u.quests.reduce((acc, qid) => acc + (QUEST_DATA[qid]?.points ?? 0), 0);
 const skillsStarted = (u: UnlockState) =>
@@ -70,8 +81,8 @@ const skillsAt99 = (u: UnlockState) =>
   Object.values(u.levels).filter((l) => l >= 99).length;
 const equipUnlocked = (u: UnlockState) =>
   EQUIPMENT_SLOTS.filter((s) => (u.equipment[s] || 0) > 0).length;
-const equipMaxed = (u: UnlockState) =>
-  EQUIPMENT_SLOTS.filter((s) => (u.equipment[s] || 0) >= EQUIPMENT_TIER_MAX).length;
+const equipMaxed = (u: UnlockState, mode?: string) =>
+  EQUIPMENT_SLOTS.filter((s) => (u.equipment[s] || 0) >= equipmentTierMaxFor(mode, s)).length;
 const collectionItems = (u: UnlockState) =>
   Object.values(u.collectionLog || {}).filter((c) => c > 0).length;
 // Areas the run has opened, by the same reachability check as the map, so
@@ -92,6 +103,7 @@ function tiers(
     title: string; description: string; target: number; icon?: AchievementIcon;
     /** A target that depends on the run's mode; `target` still names the id. */
     targetFor?: (mode?: string, custom?: GameModeRules) => number;
+    availableIn?: (mode?: string) => boolean;
   }>,
 ): Achievement[] {
   return steps.map((s) => ({
@@ -100,6 +112,7 @@ function tiers(
     description: s.description,
     category,
     icon: s.icon ?? defaultIcon,
+    ...(s.availableIn ? { availableIn: s.availableIn } : {}),
     progress: (u: UnlockState, mode?: string, custom?: GameModeRules) => ({
       current: metric(u, mode, custom),
       target: s.targetFor?.(mode, custom) ?? s.target,
@@ -113,26 +126,29 @@ export const ACHIEVEMENTS: Achievement[] = [
   ...tiers('quests', 'Quests', 'quest', questsDone, [
     { title: 'First Steps', description: 'Complete your first quest', target: 1 },
     { title: 'Adventurer', description: 'Complete 10 quests', target: 10 },
-    { title: 'Seasoned Hero', description: 'Complete 25 quests', target: 25 },
-    { title: 'Veteran', description: 'Complete 50 quests', target: 50 },
-    { title: 'Quest Cape', description: 'Complete every quest', target: TOTAL_QUESTS, icon: 'crown' },
+    { title: 'Seasoned Hero', description: 'Complete 25 quests', target: 25, availableIn: mode => !isF2PMode(mode) || F2P_QUEST_IDS.length >= 25 },
+    { title: 'Veteran', description: 'Complete 50 quests', target: 50, availableIn: notF2P },
+    {
+      title: 'Quest Cape', description: 'Complete every quest', target: TOTAL_QUESTS, icon: 'crown',
+      targetFor: mode => (isF2PMode(mode) ? F2P_QUEST_IDS.length : TOTAL_QUESTS),
+    },
   ]),
   ...tiers('qp', 'Quests', 'star', questPoints, [
-    { title: 'Point Collector', description: 'Earn 50 Quest Points', target: 50 },
-    { title: 'Point Hoarder', description: 'Earn 150 Quest Points', target: 150 },
+    { title: 'Point Collector', description: 'Earn 50 Quest Points', target: 50, availableIn: mode => !isF2PMode(mode) || F2P_QUEST_POINTS >= 50 },
+    { title: 'Point Hoarder', description: 'Earn 150 Quest Points', target: 150, availableIn: notF2P },
   ]),
 
   // Skills
   ...tiers('skills-start', 'Skills', 'skill', skillsStarted, [
     { title: 'Apprentice', description: 'Unlock your first skill', target: 1 },
-    { title: 'Polymath', description: 'Unlock every skill', target: TOTAL_SKILLS },
+    { title: 'Polymath', description: 'Unlock every skill', target: TOTAL_SKILLS, targetFor: mode => skillsForMode(mode).length },
   ]),
   ...tiers('skill-tiers', 'Skills', 'flame', skillTiers, [
     { title: 'Tier Climber', description: 'Reach 50 total skill tiers', target: 50 },
   ]),
   ...tiers('skills-99', 'Skills', 'crown', skillsAt99, [
     { title: 'Ninety-Nine', description: 'Reach level 99 in any skill', target: 1 },
-    { title: 'Maxed', description: 'Reach level 99 in every skill', target: TOTAL_SKILLS, icon: 'trophy' },
+    { title: 'Maxed', description: 'Reach level 99 in every skill', target: TOTAL_SKILLS, icon: 'trophy', targetFor: mode => skillsForMode(mode).length },
   ]),
 
   // Areas (the ids keep their old 'regions' prefix, so earned achievements stay earned)
@@ -151,26 +167,26 @@ export const ACHIEVEMENTS: Achievement[] = [
     { title: 'Fully Equipped', description: 'Unlock every equipment slot', target: TOTAL_EQUIP_SLOTS },
   ]),
   ...tiers('equip-max', 'Equipment', 'equipment', equipMaxed, [
-    { title: 'Best in Slot', description: `Max a slot to Tier ${EQUIPMENT_TIER_MAX}`, target: 1, icon: 'star' },
+    { title: 'Best in Slot', description: 'Max a slot to its highest tier', target: 1, icon: 'star' },
     { title: 'Maxed Gear', description: 'Max every equipment slot', target: TOTAL_EQUIP_SLOTS, icon: 'trophy' },
   ]),
 
   // Diaries
   ...tiers('diaries', 'Diaries', 'diary', (u) => u.diaries.length, [
-    { title: 'Diary Keeper', description: 'Complete your first diary tier', target: 1 },
-    { title: 'Diary Master', description: 'Complete every diary tier', target: TOTAL_DIARIES, icon: 'crown' },
+    { title: 'Diary Keeper', description: 'Complete your first diary tier', target: 1, availableIn: notF2P },
+    { title: 'Diary Master', description: 'Complete every diary tier', target: TOTAL_DIARIES, icon: 'crown', availableIn: notF2P },
   ]),
 
   // Combat Achievements
   ...tiers('ca', 'Combat', 'combat', (u) => u.cas.length, [
-    { title: 'Combat Novice', description: 'Complete your first CA tier', target: 1 },
-    { title: 'Combat Master', description: 'Complete every CA tier', target: TOTAL_CA, icon: 'trophy' },
+    { title: 'Combat Novice', description: 'Complete your first CA tier', target: 1, availableIn: notF2P },
+    { title: 'Combat Master', description: 'Complete every CA tier', target: TOTAL_CA, icon: 'trophy', availableIn: notF2P },
   ]),
 
   // Activities
   ...tiers('bosses', 'Activities', 'boss', (u) => u.bosses.length, [
     { title: 'Boss Hunter', description: 'Unlock your first boss', target: 1 },
-    { title: 'Boss Slayer', description: 'Unlock 10 bosses', target: 10 },
+    { title: 'Boss Slayer', description: 'Unlock 10 bosses', target: 10, availableIn: notF2P },
   ]),
   ...tiers('minigames', 'Activities', 'minigame', (u) => u.minigames.length, [
     { title: 'Minigamer', description: 'Unlock your first minigame', target: 1 },
@@ -190,9 +206,12 @@ export const ACHIEVEMENTS: Achievement[] = [
   ]),
 ];
 
+/** The achievements a run of this mode can earn. */
+export const achievementsFor = (mode?: string): Achievement[] => ACHIEVEMENTS.filter(a => a.availableIn?.(mode) ?? true);
+
 /** Score every achievement against the snapshot. Pure — safe in useMemo. */
 export function evaluateAchievements(u: UnlockState, mode?: string, custom?: GameModeRules): EvaluatedAchievement[] {
-  return ACHIEVEMENTS.map((a) => {
+  return achievementsFor(mode).map((a) => {
     const { current, target } = a.progress(u, mode, custom);
     const earned = current >= target;
     const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
@@ -203,7 +222,7 @@ export function evaluateAchievements(u: UnlockState, mode?: string, custom?: Gam
 /** Set of earned achievement ids — used by the "newly earned" detector. */
 export function earnedIds(u: UnlockState, mode?: string, custom?: GameModeRules): Set<string> {
   const set = new Set<string>();
-  for (const a of ACHIEVEMENTS) {
+  for (const a of achievementsFor(mode)) {
     const { current, target } = a.progress(u, mode, custom);
     if (current >= target) set.add(a.id);
   }

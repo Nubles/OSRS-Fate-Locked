@@ -20,6 +20,7 @@
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { evaluateQuestEligibility, evaluateDiaryTierEligibility } from './journalStatus';
+import { diariesForMode, questsForMode } from './modeContent';
 
 export interface UnlockImpact {
   /** Quests LOCKED → AVAILABLE in one step. */
@@ -65,8 +66,8 @@ export function prepareUnlockImpactContext(
   baseUnlocks: any,
   gameModeId?: string,
 ): PreparedUnlockImpactContext {
-  const allQuests = Object.values(QUEST_DATA);
-  const allDiaries = Object.values(DIARY_DATA);
+  const allQuests = questsForMode(gameModeId);
+  const allDiaries = diariesForMode(gameModeId);
   const baseQuestEligibility = new Map(
     allQuests.map(q => [q.id, evaluateQuestEligibility(q, baseUnlocks, gameModeId)]),
   );

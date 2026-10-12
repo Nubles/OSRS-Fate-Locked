@@ -1,4 +1,7 @@
 import { DROP_RATES } from '../config/rules';
+import { collectionLogItemInMode, MEMBERS_LOG_ITEM_REASON } from './collectionLogMode';
+import { isF2PEntry } from '../data/f2pContent';
+import { TableType } from '../types';
 import { isF2PMode, usesVanillaRules } from '../config/gameModes';
 import { policyFor } from '../config/detectorPolicies';
 import { failureFateForSkillLevel, failureFateForSource } from '../config/economy';
@@ -282,12 +285,13 @@ function classifyCombatAchievement(event: FateEventEnvelope, state: GameState): 
   const task = matches[0];
   const source = CA_SOURCES[task.tierId];
   if (!source) return { state: 'BLOCKED', reason: 'Combat task tier is not supported.' };
-  const decision = caTaskCompletionDecision(task, state.unlocks.completedTasks);
+  const decision = caTaskCompletionDecision(task, state.unlocks.completedTasks, state.gameModeId);
   if (decision.ok === false) return blocked(decision.reason);
   return ready(source, task.name ?? task.description, { kind: 'CA_TASK', taskId: task.id });
 }
 
 function collectionItemBlock(state: GameState, itemId: number): EventClassification | null {
+  if (!collectionLogItemInMode(itemId, state.gameModeId)) return blocked(MEMBERS_LOG_ITEM_REASON);
   if (collectionItemNeedsIdentityReview(state.unlocks.collectionLog, itemId, state.collectionLogIdentity)) {
     return { state: 'BLOCKED', reason: 'Saved Collection Log entries need identity review before this item can be logged or rewarded.' };
   }
@@ -357,9 +361,17 @@ function classifyBoss(event: FateEventEnvelope, state: GameState): EventClassifi
   });
 }
 
-/** Members-only Key sources a Free-to-play run can't log: Slayer, diaries, and clues above beginner. */
+/**
+ * Members-only Key sources a Free-to-play run can't log: Slayer, diaries,
+ * pets, members minigames and clues above beginner. Members quests, Combat
+ * Achievement tasks and collection log items are refused by their own checks.
+ */
 function f2pEventBlock(event: FateEventEnvelope): string | null {
   if (event.eventType === 'SLAYER_TASK') return 'Slayer is members only, so it gives no Keys in Free-to-play.';
+  if (event.eventType === 'PET_DROP') return 'Pets are members only, so they give no Keys in Free-to-play.';
+  if (event.eventType === 'MINIGAME_COMPLETION' && event.canonicalLabel && !isF2PEntry(TableType.MINIGAMES, event.canonicalLabel)) {
+    return 'This minigame is members only, so it gives no Key in Free-to-play.';
+  }
   if (event.eventType === 'DIARY_TASK') return 'Achievement Diaries are members only, so they give no Keys in Free-to-play.';
   if (event.eventType === 'CLUE_CASKET') {
     const clue = detectedClue(event);

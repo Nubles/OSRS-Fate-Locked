@@ -119,6 +119,8 @@ const TIER_STYLE: Record<BossTier, typeof TIER_STYLES.GREEN> = {
 const ACTIVITY_ROLLS = [
   { name: 'Minigame', subText: 'Pest Control, BA, Castle Wars, Soul Wars…', source: DropSource.ACTIVITY_MINIGAME, image: `${WIKI_IMG}Void_knight_mace.png`, style: TIER_STYLES.STONE },
 ];
+// Free-to-play worlds only have the free-to-play minigames, and no pets.
+const F2P_ACTIVITY_ROLLS = ACTIVITY_ROLLS.map(roll => ({ ...roll, subText: 'Castle Wars, Clan Wars, LMS, Emir\'s Arena…' }));
 
 type TierStyle = typeof TIER_STYLES.GREEN;
 
@@ -490,7 +492,7 @@ export const ActionSection: React.FC = () => {
     { id: 'SLAYER', label: 'Slayer', icon: OSRS_ICONS.SLAYER, count: slayers.length },
     { id: 'CLUES', label: 'Clues', icon: OSRS_ICONS.CLUE, count: clueScrolls.length },
     { id: 'BOSSING', label: 'Bossing', icon: OSRS_ICONS.BOSS, count: isVanilla ? vanillaBosses.length : BOSSES_LIST.length },
-    { id: 'ACTIVITIES', label: 'Activities', icon: OSRS_ICONS.ACTIVITY, count: ACTIVITY_ROLLS.length + 1 },
+    { id: 'ACTIVITIES', label: 'Activities', icon: OSRS_ICONS.ACTIVITY, count: ACTIVITY_ROLLS.length + (isF2P ? 0 : 1) },
   ];
   const tabs = isF2P ? allTabs.filter(tab => tab.id !== 'SLAYER') : allTabs;
 
@@ -653,7 +655,7 @@ export const ActionSection: React.FC = () => {
         )}
         {subTab === 'ACTIVITIES' && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-            {ACTIVITY_ROLLS.map((a, i) => (
+            {(isF2P ? F2P_ACTIVITY_ROLLS : ACTIVITY_ROLLS).map((a, i) => (
               <div
                 key={a.name}
                 className={animationsEnabled ? 'animate-fade-in-up' : ''}
@@ -670,6 +672,7 @@ export const ActionSection: React.FC = () => {
                 />
               </div>
             ))}
+            {!isF2P && (
             <div
               className={animationsEnabled ? 'animate-fade-in-up' : ''}
               style={animationsEnabled ? { animationDelay: `${ACTIVITY_ROLLS.length * 35}ms` } : undefined}
@@ -678,6 +681,7 @@ export const ActionSection: React.FC = () => {
                 <PetClaimCard claimed={petsClaimed} onClaim={(pet, e) => claimPet(pet, e.clientX, e.clientY)} />
               </React.Suspense>
             </div>
+            )}
           </div>
         )}
       </div>
