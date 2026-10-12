@@ -13,6 +13,7 @@
 import { QUEST_DATA } from '../data/questData';
 import { evaluateQuestEligibility } from './journalStatus';
 import { computeUnlockImpact, prepareUnlockImpactContext } from './unlockImpact';
+import { diariesForMode, questsForMode } from './modeContent';
 
 export interface RankedQuest {
   id: string;
@@ -40,7 +41,7 @@ export interface RankedQuest {
  * @param gameModeId  Active mode used by canonical quest access checks
  */
 export function rankAvailableQuests(unlocks: any, gameModeId?: string): RankedQuest[] {
-  const allQuests = Object.values(QUEST_DATA);
+  const allQuests = questsForMode(gameModeId);
   const available = allQuests.filter(
     quest => !unlocks.quests.includes(quest.id)
       && evaluateQuestEligibility(quest, unlocks, gameModeId).eligible,

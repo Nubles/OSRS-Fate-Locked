@@ -127,7 +127,7 @@ describe('audited process repairs', () => {
   });
 
   it('restores retired preset rules without returning them to the picker', () => {
-    expect(GAME_MODES.map(m => m.id)).toEqual(['vanilla', 'chunked']);
+    expect(GAME_MODES.map(m => m.id)).toEqual(['vanilla', 'chunked', 'f2p']);
     expect(resolveModeRules('casual')).toMatchObject({ pityThreshold: 30, omniChanceBase: 4, ritualCostMultiplier: 0.6 });
     expect(resolveModeRules('hardcore')).toMatchObject({ pityEnabled: false, omniChanceBase: 1, ritualCostMultiplier: 1.5 });
     expect(resolveModeRules('region-rush')).toMatchObject({ pityThreshold: 45, regionModifiers: true });

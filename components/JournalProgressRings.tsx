@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { useGame } from '../context/GameContext';
-import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
-import { ALL_CA_TASKS } from '../data/caTasks';
+import { caTasksForMode, questsForMode } from '../utils/modeContent';
+import { isF2PMode } from '../config/gameModes';
 
 /**
  * Journal hero — three radial completion rings (Quests / Diaries / Combat),
@@ -30,22 +30,27 @@ const Ring: React.FC<{ done: number; total: number; color: string; label: string
 };
 
 export const JournalProgressRings: React.FC = () => {
-  const { unlocks } = useGame();
+  const { unlocks, gameModeId } = useGame();
+  const f2p = isF2PMode(gameModeId);
   const stats = useMemo(() => {
-    const questTotal = Object.keys(QUEST_DATA).length;
-    const questDone = unlocks.quests.length;
-    const qp = unlocks.quests.reduce((a, id) => a + (QUEST_DATA[id]?.points ?? 0), 0);
+    // Free-to-play counts only free-to-play quests and Combat Achievement tasks.
+    const quests = questsForMode(gameModeId);
+    const done = new Set(unlocks.quests);
+    const questTotal = quests.length;
+    const questDone = f2p ? quests.filter(q => done.has(q.id)).length : unlocks.quests.length;
+    const qp = quests.reduce((a, q) => a + (done.has(q.id) ? q.points : 0), 0);
     const diaryTotal = Object.keys(DIARY_DATA).length;
     const diaryDone = unlocks.diaries.length;
-    const caTotal = ALL_CA_TASKS.length;
-    const caDone = ALL_CA_TASKS.filter(t => unlocks.completedTasks.includes(t.id)).length;
+    const caTasks = caTasksForMode(gameModeId);
+    const caTotal = caTasks.length;
+    const caDone = caTasks.filter(t => unlocks.completedTasks.includes(t.id)).length;
     return { questTotal, questDone, qp, diaryTotal, diaryDone, caTotal, caDone };
-  }, [unlocks]);
+  }, [unlocks, gameModeId, f2p]);
 
   return (
     <div className="shrink-0 flex gap-2 px-2 pt-2">
       <Ring done={stats.questDone} total={stats.questTotal} color="#60a5fa" label="Quests" sub={`${stats.qp} QP`} />
-      <Ring done={stats.diaryDone} total={stats.diaryTotal} color="#4ade80" label="Diaries" sub="tiers complete" />
+      {!f2p && <Ring done={stats.diaryDone} total={stats.diaryTotal} color="#4ade80" label="Diaries" sub="tiers complete" />}
       <Ring done={stats.caDone} total={stats.caTotal} color="#f59e0b" label="Combat" sub="achievements" />
     </div>
   );

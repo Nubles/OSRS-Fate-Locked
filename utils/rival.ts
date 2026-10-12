@@ -16,6 +16,9 @@ import {
 import type { GameModeRules } from '../config/gameModes';
 import { completionDenominator } from './completion';
 import { RivalState } from '../types';
+import { isF2PEntry } from '../data/f2pContent';
+import { isF2PMode } from '../config/gameModes';
+import { TableType } from '../types';
 
 const MS_PER_DAY = 86_400_000;
 
@@ -68,6 +71,8 @@ export const rivalDaysTo = (rival: RivalState, now: number, targetPct: number, m
   return (targetKeys - have) / rival.keysPerDay;
 };
 
+const NOTABLE_TABLE = { boss: TableType.BOSSES, region: TableType.REGIONS, minigame: TableType.MINIGAMES, guild: TableType.GUILDS } as const;
+
 // A pool of "notable" unlocks for flavor headlines, in a stable order.
 const NOTABLE = [
   ...BOSSES_LIST.map((n) => ({ kind: 'boss' as const, name: n })),
@@ -76,9 +81,12 @@ const NOTABLE = [
   ...GUILDS_LIST.map((n) => ({ kind: 'guild' as const, name: n })),
 ];
 
+// A Free-to-play rival only finds free-to-play content.
+const F2P_NOTABLE = NOTABLE.filter(({ kind, name }) => isF2PEntry(NOTABLE_TABLE[kind], name));
+
 // Seeded Fisher–Yates so each rival "discovers" notable unlocks in its own order.
-const shuffled = (seed: number) => {
-  const a = NOTABLE.slice();
+const shuffled = (seed: number, mode?: string) => {
+  const a = (isF2PMode(mode) ? F2P_NOTABLE : NOTABLE).slice();
   let s = seed >>> 0;
   const rng = () => {
     s = (s * 1664525 + 1013904223) >>> 0;
@@ -94,8 +102,8 @@ const shuffled = (seed: number) => {
 export interface Headline { kind: 'boss' | 'region' | 'minigame' | 'guild'; name: string }
 
 /** The notable unlocks the rival has reached at `pct` completion (most-recent last). */
-export const rivalHeadlines = (rival: RivalState, pct: number): Headline[] => {
-  const order = shuffled(rival.seed || 1);
+export const rivalHeadlines = (rival: RivalState, pct: number, mode?: string): Headline[] => {
+  const order = shuffled(rival.seed || 1, mode);
   const count = Math.min(order.length, Math.floor((pct / 100) * order.length));
   return order.slice(0, count);
 };

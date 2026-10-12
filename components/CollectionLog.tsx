@@ -1,7 +1,9 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useGame } from '../context/GameContext';
-import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
+import { COLLECTION_LOG_DATA, type CollectionLogTab } from '../data/collectionLogData';
+import { isF2PMode } from '../config/gameModes';
+import { collectionLogItemInMode } from '../utils/modeScope';
 import { Search, CheckCircle2, Lock, ListFilter, TrendingUp } from 'lucide-react';
 import { Coins } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
@@ -101,7 +103,8 @@ const Cell = ({ columnIndex, rowIndex, style, data }: any) => {
 };
 
 export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' }) => {
-  const { unlocks: savedUnlocks, collectionLogIdentity, logCollectionItem, rollForKey } = useGame();
+  const { unlocks: savedUnlocks, collectionLogIdentity, logCollectionItem, rollForKey, gameModeId } = useGame();
+  const f2p = isF2PMode(gameModeId);
   const identityReview = useMemo(() => collectionIdentityReview(savedUnlocks.collectionLog, collectionLogIdentity ? [] : collectionLogSync.legacyMappings(), COLLECTION_LOG_DATA, collectionLogIdentity), [savedUnlocks.collectionLog, collectionLogIdentity]);
   const unlocks = useMemo(() => ({ ...savedUnlocks, collectionLog: Object.fromEntries(Object.entries(savedUnlocks.collectionLog).filter(([id]) => !identityReview.blockedIds.has(Number(id)))) }), [savedUnlocks, identityReview]);
   const [activeTab, setActiveTab] = useState(Object.keys(COLLECTION_LOG_DATA)[0]);
@@ -122,6 +125,21 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
     collectionLogSync.init();
     return unsub;
   }, []);
+
+  // Free-to-play runs see only the free-to-play pages and items; other modes see the whole log.
+  const logData = useMemo<Record<string, CollectionLogTab>>(() => {
+    if (!f2p) return COLLECTION_LOG_DATA;
+    const out: Record<string, CollectionLogTab> = {};
+    Object.entries(COLLECTION_LOG_DATA).forEach(([tabName, tab]) => {
+      const pages: CollectionLogTab['pages'] = {};
+      Object.entries(tab.pages).forEach(([key, page]) => {
+        const items = page.items.filter(item => collectionLogItemInMode(item.id, gameModeId));
+        if (items.length > 0) pages[key] = { ...page, items };
+      });
+      if (Object.keys(pages).length > 0) out[tabName] = { ...tab, pages };
+    });
+    return out;
+  }, [f2p, gameModeId, syncVersion]);
 
   // Init Prices and Calculate Wealth
   useEffect(() => {
@@ -180,7 +198,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
     return () => observer.disconnect();
   }, []);
 
-  const currentTabContent = COLLECTION_LOG_DATA[activeTab];
+  const currentTabContent = logData[activeTab] ?? logData[Object.keys(logData)[0]];
   
   // Reset to default page on tab switch if not searching or if invalid page
   useEffect(() => {
@@ -201,6 +219,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
 
   const handleItemClick = (e: React.MouseEvent, itemId: number, itemName: string) => {
     if (identityReview.blockedIds.has(itemId)) return;
+    if (!collectionLogItemInMode(itemId, gameModeId)) return;
     const isNewUnlock = !unlocks.collectionLog[itemId];
     logCollectionItem(itemId);
     if (isNewUnlock) {
@@ -213,7 +232,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
     if (searchTerm) {
         const lowerSearch = searchTerm.toLowerCase();
         const results: { tab: string; key: string; data: any }[] = [];
-        Object.entries(COLLECTION_LOG_DATA).forEach(([tabName, tabData]) => {
+        Object.entries(logData).forEach(([tabName, tabData]) => {
             Object.entries(tabData.pages).forEach(([pageKey, pageData]) => {
                 const nameMatch = pageData.name.toLowerCase().includes(lowerSearch);
                 const itemMatch = pageData.items.some(item => item.name.toLowerCase().includes(lowerSearch));
@@ -224,7 +243,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
     }
     if (!currentTabContent) return [];
     return Object.entries(currentTabContent.pages).map(([key, data]) => ({ tab: activeTab, key, data }));
-  }, [activeTab, currentTabContent, searchTerm, syncVersion]);
+  }, [activeTab, currentTabContent, searchTerm, syncVersion, logData]);
 
   // 2. Gather ALL matching items for "All Results" view
   const allSearchItems = useMemo(() => {
@@ -232,7 +251,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
       const lowerSearch = searchTerm.toLowerCase();
       const results: any[] = [];
       
-      Object.entries(COLLECTION_LOG_DATA).forEach(([tabName, tabData]) => {
+      Object.entries(logData).forEach(([tabName, tabData]) => {
         Object.entries(tabData.pages).forEach(([pageKey, pageData]) => {
           const pageNameMatch = pageData.name.toLowerCase().includes(lowerSearch);
           if (pageNameMatch) {
@@ -249,7 +268,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
         });
       });
       return results;
-  }, [searchTerm, syncVersion]);
+  }, [searchTerm, syncVersion, logData]);
 
   // 3. Determine which items to show in the Grid
   const activeItems = useMemo(() => {
@@ -269,12 +288,12 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
 
   const globalStats = useMemo(() => {
     let obtained = 0, total = 0;
-    Object.values(COLLECTION_LOG_DATA).forEach(tab => Object.values(tab.pages).forEach(page => page.items.forEach(item => {
+    Object.values(logData).forEach(tab => Object.values(tab.pages).forEach(page => page.items.forEach(item => {
         total++;
         if (unlocks.collectionLog[item.id]) obtained++;
     })));
     return { obtained, total };
-  }, [unlocks.collectionLog, syncVersion]);
+  }, [unlocks.collectionLog, syncVersion, logData]);
 
   // Reachable %: how much of the log is even obtainable given current unlocks
   // (boss/minigame sources), and which unlocks would open the most new slots.
@@ -313,18 +332,18 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
             <div className="text-xs font-mono bg-black/30 px-2 py-1 rounded border border-[#5a5245]">
                <span className="text-white">{globalStats.obtained}</span> / {globalStats.total}
             </div>
-            <button
+            {!f2p && <button
               onClick={() => setShowReach(s => !s)}
               title="Collection Log source unlock coverage"
               className={`text-xs font-mono px-2 py-1 rounded border transition-colors ${showReach ? 'bg-emerald-900/40 border-emerald-500/50' : 'bg-black/30 border-[#5a5245] hover:border-emerald-500/40'}`}
             >
               <span className="text-emerald-300">{reach.pct}%</span> <span className="text-[#d4c5b0]">unlock coverage</span>
-            </button>
+            </button>}
         </div>
       </div>
 
       {/* Reachability strip — obtainable now + top unlocks to open more slots */}
-      {showReach && (
+      {showReach && !f2p && (
         <div className="bg-[#2c241b] border-b-2 border-[#5a5245] px-3 py-2 shrink-0 text-[11px]">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
             <span className="text-[#d4c5b0]">
@@ -355,7 +374,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
 
       {/* Tabs Row */}
       <div className="flex bg-[#3e3529] border-b border-[#5a5245] overflow-x-auto no-scrollbar shrink-0">
-        {Object.keys(COLLECTION_LOG_DATA).map(tab => (
+        {Object.keys(logData).map(tab => (
           <button
             key={tab}
             onClick={() => { setActiveTab(tab); setViewMode('PAGE'); }}

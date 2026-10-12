@@ -12,6 +12,11 @@ import { exportRuneliteBundle } from '../utils/runeliteExport';
 import type { GameModeRules } from '../config/gameModes';
 import { consumePendingChunk, chunkUnlocked, chunkForPlace } from '../utils/chunkLocations';
 import { isFreeArea } from '../utils/freeAreas';
+import { isF2PMode } from '../config/gameModes';
+import { F2P_AREAS, F2P_START_AREAS } from '../data/f2pContent';
+
+/** The areas a Free-to-play run can visit. */
+const F2P_PLACES = new Set<string>([...F2P_START_AREAS, ...F2P_AREAS]);
 import { chunkContentService, type OverlayPoint } from '../services/ChunkContentService';
 import { travelReachability } from '../utils/travelReach';
 import { entryBlockedGate } from '../utils/questDoability';
@@ -248,6 +253,8 @@ interface MapSurfaceProps {
   regionUnlocks: string[];
   chunkUnlocks: string[];
   isChunked: boolean;
+  /** Free-to-play: list only free-to-play areas and the continents that hold them. */
+  isF2P?: boolean;
 }
 
 // Progressive map: a tiny low-res placeholder shows instantly (and sizes the
@@ -289,7 +296,7 @@ const ProgressiveMapImage: React.FC = () => {
   );
 };
 
-const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectKind, regionUnlocks, chunkUnlocks, isChunked }: MapSurfaceProps) => (
+const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectKind, regionUnlocks, chunkUnlocks, isChunked, isF2P = false }: MapSurfaceProps) => (
   <>
     <ProgressiveMapImage />
 
@@ -345,7 +352,9 @@ const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectK
       const isUnlocked = isChunked
         ? isNamedAreaReachableViaChunks(region, chunkUnlocks)
         : isRegionUnlocked(region, regionUnlocks);
-      const subRegions = isMisthalin ? MISTHALIN_AREAS : REGION_GROUPS[region] || [];
+      const allSubRegions = isMisthalin ? MISTHALIN_AREAS : REGION_GROUPS[region] || [];
+      const subRegions = isF2P ? allSubRegions.filter(area => F2P_PLACES.has(area)) : allSubRegions;
+      if (isF2P && subRegions.length === 0) return null;
       return (
         <div
           key={region}
@@ -384,7 +393,7 @@ interface GameSnapshot {
   bossStandardKeysAwarded?: Record<string, number>;
 }
 
-const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGameSnapshot }: { regionUnlocks: string[]; chunkUnlocks: string[]; isChunked: boolean; getGameSnapshot: () => GameSnapshot }) => {
+const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, isF2P = false, getGameSnapshot }: { regionUnlocks: string[]; chunkUnlocks: string[]; isChunked: boolean; isF2P?: boolean; getGameSnapshot: () => GameSnapshot }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapContentRef = useRef<HTMLDivElement>(null);
 
@@ -1535,6 +1544,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
             regionUnlocks={regionUnlocks}
             chunkUnlocks={chunkUnlocks}
             isChunked={isChunked}
+            isF2P={isF2P}
           />
 
           {/* Chunk-lens highlight overlay — inside the transformed layer so the
@@ -1942,5 +1952,5 @@ export const RegionMap: React.FC = () => {
   const snapRef = useRef<GameSnapshot>({ runId, runRevision, keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [] as string[], gameModeId: gameModeId ?? 'vanilla' });
   snapRef.current = { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [], linkedAccount, equipment: unlocks.equipment, gameModeId: gameModeId ?? 'vanilla', customMode, bossStandardKeysAwarded };
   const getGameSnapshot = useCallback(() => snapRef.current, []);
-  return <MapContent regionUnlocks={visibleRegionUnlocks} chunkUnlocks={unlocks.chunks ?? []} isChunked={gameModeId === 'chunked'} getGameSnapshot={getGameSnapshot} />;
+  return <MapContent regionUnlocks={visibleRegionUnlocks} chunkUnlocks={unlocks.chunks ?? []} isChunked={gameModeId === 'chunked'} isF2P={isF2PMode(gameModeId)} getGameSnapshot={getGameSnapshot} />;
 };

@@ -287,3 +287,18 @@ export const BOAT_CROSSINGS: readonly BoatCrossing[] = [
     source: wiki('Charter ship', 15321518),
   },
 ];
+
+/**
+ * Ways that exist only on free-to-play worlds. Free-to-play Castle Wars is
+ * world 383, reached through the green Castle Wars portal just outside The
+ * Old Nite in east Ferox Enclave (OSRS Wiki, Castle Wars, reviewed 12 October
+ * 2026). Without it a Free-to-play run could own Castle Wars and never reach
+ * it, since the land around it is members only.
+ */
+export const F2P_CROSSINGS: readonly BoatCrossing[] = [
+  {
+    label: 'The Castle Wars portal in Ferox Enclave (free-to-play worlds)',
+    docks: ['49,56', '38,48'],
+    source: 'https://oldschool.runescape.wiki/w/Castle_Wars',
+  },
+];

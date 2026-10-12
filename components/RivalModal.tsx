@@ -47,7 +47,7 @@ export const RivalModal: React.FC<Props> = ({ onClose }) => {
 
   const rivalPct = rivalCompletion(rival, now, gameModeId, customMode);
   const st = standing(playerPct, rivalPct);
-  const headlines = rival.mode === 'sim' ? rivalHeadlines(rival, rivalPct) : [];
+  const headlines = rival.mode === 'sim' ? rivalHeadlines(rival, rivalPct, gameModeId) : [];
   const recent = headlines.slice(-3).reverse();
   const reach100 = rivalDaysTo(rival, now, 100, gameModeId, customMode);
   const catchUp = rival.mode === 'sim' && st.lead > 0 ? rivalDaysTo(rival, now, playerPct, gameModeId, customMode) : null;

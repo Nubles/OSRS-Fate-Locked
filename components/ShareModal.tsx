@@ -8,7 +8,10 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { RunCardModal } from './RunCard';
 import { SectionGuide } from './SectionGuide';
-import { getGameMode } from '../config/gameModes';
+import { getGameMode, isF2PMode } from '../config/gameModes';
+import { F2P_AREAS, F2P_SKILLS, F2P_START_AREAS } from '../data/f2pContent';
+
+const F2P_PLACES = new Set<string>([...F2P_START_AREAS, ...F2P_AREAS]);
 import { showToast } from '../utils/toast';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGION_GROUPS, SLOT_CONFIG } from '../constants';
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
@@ -61,7 +64,10 @@ const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ on
 
   // Region Mastery — chunk-aware: in Chunked mode an area counts once you
   // hold a chunk foothold in it (same rule as the map and World tab).
-  const regionMastery = Object.entries(REGION_GROUPS).map(([group, areas]) => {
+  // Free-to-play counts only free-to-play areas, so members areas don't pad the totals.
+  const isF2P = isF2PMode(gameModeId);
+  const regionMastery = Object.entries(REGION_GROUPS).map(([group, allAreas]) => {
+      const areas = isF2P ? allAreas.filter(a => F2P_PLACES.has(a)) : allAreas;
       const unlockedCount = areas.filter(a => isAreaReachable(a, unlocks, gameModeId)).length;
       return { group, count: unlockedCount, total: areas.length, percent: unlockedCount / areas.length };
   }).filter(r => r.count > 0).sort((a, b) => b.percent - a.percent);
@@ -323,7 +329,7 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
                             <WikiIcon file="Stats_icon.png" alt="" size={14} /> Skill Mastery
                         </h3>
                         <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                             {SKILLS_LIST.map(skill => {
+                             {(isF2P ? F2P_SKILLS : SKILLS_LIST).map(skill => {
                                  const tier = unlocks.skills[skill] || 0;
                                  return (
                                      <div key={skill} className={`bg-black/40 rounded border ${ts.deco} p-1.5 flex flex-col items-center relative overflow-hidden group`}>

@@ -36,6 +36,8 @@ export interface PlayerCombat {
   boostsOn: boolean;
   /** Prayer id per style the player can use (see bestBoostPrayers); none when omitted. */
   prayers?: Partial<Record<PlannedStyle, string>>;
+  /** Free-to-play: attack and strength potions at best (the same boost as a combat potion), no ranging potion. */
+  freeToPlay?: boolean;
 }
 
 type PlannedStyle = 'melee' | 'ranged';
@@ -134,7 +136,9 @@ export const bestBoostPrayers = (unlocks: UnlockState, gameModeId?: string): Rec
 
 const boostsFor = (p: PlayerCombat, style: Style) => ({
   prayerId: p.boostsOn && style !== 'magic' ? p.prayers?.[style] ?? 'none' : 'none',
-  potionId: p.boostsOn ? (style === 'ranged' ? 'ranging' : 'super') : 'none',
+  potionId: !p.boostsOn ? 'none'
+    : p.freeToPlay ? (style === 'melee' ? 'combat' : 'none')
+    : style === 'ranged' ? 'ranging' : 'super',
 });
 const boostLabel = (list: ReadonlyArray<{ id: string; label: string }>, id: string): string | null =>
   id === 'none' ? null : list.find(entry => entry.id === id)?.label ?? null;

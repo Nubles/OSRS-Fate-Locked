@@ -14,6 +14,8 @@ import { itemObtainability } from '../utils/itemObtainability';
 import { MapPin } from './OsrsIcon';
 import { WikiLink } from './WikiLink';
 import { UnlockState } from '../types';
+import { equipmentTierMaxFor } from '../utils/modeContent';
+import { isF2PMode } from '../config/gameModes';
 
 const emptySlotImg = (slot: string) =>
   `https://oldschool.runescape.wiki/images/${SLOT_CONFIG[slot]?.file ?? 'Globe_icon.png'}`;
@@ -39,7 +41,7 @@ const topBonus = (b: GearBonuses): string => {
 interface GearViewProps { suspendModals?: boolean }
 
 export const GearView: React.FC<GearViewProps> = ({ suspendModals = false }) => {
-  const { unlocks, loadout, setLoadoutSlot } = useGame();
+  const { unlocks, loadout, setLoadoutSlot, gameModeId } = useGame();
   const equipped = loadout || {};
   const [status, setStatus] = useState<Status>(gearService.ready ? 'ready' : 'loading');
   const [selected, setSelected] = useState<string | null>(null);
@@ -153,6 +155,7 @@ export const GearView: React.FC<GearViewProps> = ({ suspendModals = false }) => 
           status={status}
           currentItemId={equipped[selected]}
           unlockedTier={unlocks.equipment[selected] || 0}
+          tierMax={isF2PMode(gameModeId) ? equipmentTierMaxFor(gameModeId, selected) : undefined}
           unlocks={unlocks}
           onClose={() => setSelected(null)}
           onEquip={equip}
@@ -170,6 +173,8 @@ interface PickerProps {
   status: Status;
   currentItemId?: number;
   unlockedTier: number;
+  /** The slot's highest tier in the run's mode; items above it are not listed. */
+  tierMax?: number;
   unlocks: UnlockState;
   onClose: () => void;
   onEquip: (item: GearItem) => void;
@@ -177,7 +182,7 @@ interface PickerProps {
   onRetry: () => void;
 }
 
-const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlockedTier, unlocks, onClose, onEquip, onRemove, onRetry }) => {
+const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlockedTier, tierMax, unlocks, onClose, onEquip, onRemove, onRetry }) => {
   useEscapeKey(onClose, true);
   const [query, setQuery] = useState('');
   // Lazy-load the chunk-content dataset so we can show where each item is
@@ -187,7 +192,11 @@ const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlock
     if (!contentReady) chunkContentService.init().then((ok) => setContentReady(ok));
   }, [contentReady]);
 
-  const all = status === 'ready' ? gearService.bySlot(slot) : [];
+  // Free-to-play runs list nothing above the slot's best free-to-play tier.
+  const all = useMemo(
+    () => (status === 'ready' ? gearService.bySlot(slot).filter((i) => tierMax === undefined || gearService.tierOf(i.id) <= tierMax) : []),
+    [status, slot, tierMax],
+  );
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = (q ? all.filter((i) => i.name.toLowerCase().includes(q)) : all).slice();

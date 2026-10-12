@@ -460,7 +460,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
     };
   }, []);
 
-  const targets = useMemo(() => listGoalTargets(), []);
+  const targets = useMemo(() => listGoalTargets(gameModeId), [gameModeId]);
   const [query, setQuery] = useState('');
   const [legacySelected, setLegacySelected] = useState<{ kind: GoalKind; id: string } | null>(initialTarget ?? null);
   const [objectivePickerOpen, setObjectivePickerOpen] = useState(false);

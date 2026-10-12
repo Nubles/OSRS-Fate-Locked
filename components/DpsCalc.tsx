@@ -14,6 +14,19 @@ import {
 import { WikiLink } from './WikiLink';
 import { rangedDefenceFor, type RangedDamageType } from '../utils/rangedDamage';
 import { dpsCombatOptions } from '../utils/weaponCombat';
+import { isF2PMode } from '../config/gameModes';
+
+/**
+ * Free-to-play choices: Improved Reflexes and Superhuman Strength are the only
+ * modelled free-to-play prayers (Eagle Eye, Mystic Might and up are members),
+ * and attack and strength potions boost like the members combat potion
+ * (3 + 10%), so they reuse its id. Ranged and magic potions are members.
+ */
+const F2P_PRAYER_IDS = new Set(['none', 'clarity']);
+const f2pPotions = (style: Style) =>
+  style === 'melee'
+    ? POTIONS.melee.filter((p) => p.id === 'none' || p.id === 'combat').map((p) => (p.id === 'combat' ? { ...p, label: 'Attack and strength potions' } : p))
+    : POTIONS[style].filter((p) => p.id === 'none');
 
 type Status = 'loading' | 'ready' | 'error';
 
@@ -35,7 +48,8 @@ const selectCls = 'bg-black/40 border border-white/10 rounded px-2 py-1.5 text-[
 interface DpsCalcProps { suspendModals?: boolean }
 
 export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
-  const { unlocks, loadout: rawLoadout } = useGame();
+  const { unlocks, loadout: rawLoadout, gameModeId } = useGame();
+  const f2p = isF2PMode(gameModeId);
   const loadout = rawLoadout || {};
 
   const [status, setStatus] = useState<Status>(gearService.ready && monsterService.ready ? 'ready' : 'loading');
@@ -168,12 +182,12 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
         </Field>
         <Field label="Prayer">
           <select value={prayerId} onChange={(e) => setPrayerId(e.target.value)} className={selectCls}>
-            {PRAYERS[style].map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+            {(f2p ? PRAYERS[style].filter((p) => F2P_PRAYER_IDS.has(p.id)) : PRAYERS[style]).map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
         </Field>
         <Field label="Potion">
           <select value={potionId} onChange={(e) => setPotionId(e.target.value)} className={selectCls}>
-            {POTIONS[style].map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+            {(f2p ? f2pPotions(style) : POTIONS[style]).map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
         </Field>
         {style === 'magic' && (

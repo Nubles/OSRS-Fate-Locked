@@ -4,7 +4,9 @@ import { lazyWithRetry } from '../utils/lazyRetry';
 import { X, ChevronsUp, AlertCircle, RotateCcw, Plus, Minus, SlidersHorizontal, Lock } from 'lucide-react';
 import { Sparkles, Crown, Swords } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
-import { EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, SLOT_CONFIG } from '../constants';
+import { EQUIPMENT_SLOTS, SLOT_CONFIG } from '../constants';
+import { equipmentTierMaxFor } from '../utils/modeContent';
+import { isF2PMode } from '../config/gameModes';
 import { NoteTrigger } from './NoteTrigger';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { TIER_LABELS } from '../utils/combatPower';
@@ -12,6 +14,9 @@ import { EQUIP_TIER_COLORS, equipTierColor } from '../utils/equipTiers';
 const GearView = lazyWithRetry(() => import('./GearView').then(module => ({ default: module.GearView })));
 import { SectionGuide } from './SectionGuide';
 const DpsCalc = lazyWithRetry(() => import('./DpsCalc').then(module => ({ default: module.DpsCalc })));
+
+/** Free-to-play gear per tier (TIER_LABELS name members gear such as White and Mystic). */
+const F2P_TIER_LABELS = ['Bronze / Iron', 'Steel / Black', 'Mithril', "Adamant / Green d'hide", 'Rune'] as const;
 
 const slotImg = (slot: string) =>
   `https://oldschool.runescape.wiki/images/${SLOT_CONFIG[slot]?.file ?? 'Globe_icon.png'}`;
@@ -23,8 +28,13 @@ interface Props {
 }
 
 export const EquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false }) => {
-  const { unlocks, specialKeys } = useGame();
+  const { unlocks, specialKeys, gameModeId } = useGame();
   const equipment = unlocks.equipment;
+  // Free-to-play runs cap each slot at its best free-to-play tier.
+  const tierMax = (slot: string) => equipmentTierMaxFor(gameModeId, slot);
+  const bestTier = equipmentTierMaxFor(gameModeId);
+  const tierLabels: readonly string[] = isF2PMode(gameModeId) ? F2P_TIER_LABELS : TIER_LABELS;
+  const tierColors = EQUIP_TIER_COLORS.slice(0, bestTier);
 
   const [mode, setMode] = useState<'tiers' | 'gear' | 'dps'>('tiers');
   const [selected, setSelected] = useState<string | null>(null);
@@ -35,7 +45,7 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
     () => EQUIPMENT_SLOTS.reduce((a, s) => a + (equipment[s] || 0), 0),
     [equipment],
   );
-  const maxPossible = EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX;
+  const maxPossible = EQUIPMENT_SLOTS.reduce((a, s) => a + tierMax(s), 0);
 
   const stats = useMemo(() => {
     const entries = EQUIPMENT_SLOTS.map((slot) => ({ slot, tier: equipment[slot] || 0 }));
@@ -43,12 +53,12 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
     return {
       entries,
       weakest,
-      maxed: entries.filter((e) => e.tier >= EQUIPMENT_TIER_MAX).length,
+      maxed: entries.filter((e) => e.tier >= tierMax(e.slot)).length,
       unlocked: entries.filter((e) => e.tier > 0).length,
       avg: totalEquipTiers / EQUIPMENT_SLOTS.length,
       pct: Math.round((totalEquipTiers / maxPossible) * 100),
     };
-  }, [equipment, totalEquipTiers, maxPossible]);
+  }, [equipment, totalEquipTiers, maxPossible, gameModeId]);
 
 
   // ── Loadout planner ──────────────────────────────────────────────────────
@@ -58,9 +68,9 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
     [targets, equipment],
   );
   const setTarget = (slot: string, value: number) =>
-    setTargets((t) => ({ ...t, [slot]: Math.min(EQUIPMENT_TIER_MAX, Math.max(equipment[slot] || 0, value)) }));
+    setTargets((t) => ({ ...t, [slot]: Math.min(tierMax(slot), Math.max(equipment[slot] || 0, value)) }));
   const resetPlan = () => setTargets({});
-  const maxPlan = () => setTargets(Object.fromEntries(EQUIPMENT_SLOTS.map((s) => [s, EQUIPMENT_TIER_MAX])));
+  const maxPlan = () => setTargets(Object.fromEntries(EQUIPMENT_SLOTS.map((s) => [s, tierMax(s)])));
 
   const enterPlan = () => { resetPlan(); setPlanMode(true); };
 
@@ -122,7 +132,7 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
           {EQUIPMENT_SLOTS.map((slot) => {
             const tier = equipment[slot] || 0;
             const isUnlocked = tier > 0;
-            const canUnlock = tier < EQUIPMENT_TIER_MAX && specialKeys > 0;
+            const canUnlock = tier < tierMax(slot) && specialKeys > 0;
             const config = SLOT_CONFIG[slot];
             if (!config) return null;
             return (
@@ -181,7 +191,7 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
                   <img src={slotImg(slot)} alt="" className={`w-4 h-4 object-contain shrink-0 ${cur > 0 ? '' : 'grayscale opacity-40'}`} />
                   <span className="text-[10px] font-semibold w-14 shrink-0 text-gray-300">{slot}</span>
                   <div className="flex gap-px flex-1 h-1.5 bg-black/50 rounded-sm overflow-hidden border border-white/5">
-                    {Array.from({ length: EQUIPMENT_TIER_MAX }).map((_, i) => (
+                    {Array.from({ length: tierMax(slot) }).map((_, i) => (
                       <div
                         key={i}
                         className={`flex-1 transition-all duration-300 ${
@@ -193,7 +203,7 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
                   <div className="flex items-center gap-1 shrink-0">
                     <button onClick={() => setTarget(slot, tgt - 1)} disabled={tgt <= cur} className="w-5 h-5 rounded bg-[#1f1f1f] border border-white/10 text-gray-400 disabled:opacity-30 hover:text-white flex items-center justify-center"><Minus size={10} /></button>
                     <span className="text-[10px] font-mono font-bold w-6 text-center text-cyan-200">T{tgt}</span>
-                    <button onClick={() => setTarget(slot, tgt + 1)} disabled={tgt >= EQUIPMENT_TIER_MAX} className="w-5 h-5 rounded bg-[#1f1f1f] border border-white/10 text-gray-400 disabled:opacity-30 hover:text-white flex items-center justify-center"><Plus size={10} /></button>
+                    <button onClick={() => setTarget(slot, tgt + 1)} disabled={tgt >= tierMax(slot)} className="w-5 h-5 rounded bg-[#1f1f1f] border border-white/10 text-gray-400 disabled:opacity-30 hover:text-white flex items-center justify-center"><Plus size={10} /></button>
                   </div>
                 </div>
               );
@@ -216,7 +226,7 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
             {[
               { label: 'Gear', value: `${stats.pct}%`, sub: `${totalEquipTiers}/${maxPossible}`, color: 'text-amber-300' },
               { label: 'Avg Tier', value: stats.avg.toFixed(1), sub: `${stats.unlocked}/${EQUIPMENT_SLOTS.length} used`, color: 'text-gray-200' },
-              { label: 'Maxed', value: `${stats.maxed}`, sub: `at T${EQUIPMENT_TIER_MAX}`, color: 'text-yellow-400' },
+              { label: 'Maxed', value: `${stats.maxed}`, sub: isF2PMode(gameModeId) ? 'at best tier' : `at T${bestTier}`, color: 'text-yellow-400' },
               { label: 'Weakest', value: stats.weakest.slot, sub: `T${stats.weakest.tier}`, color: 'text-red-300' },
             ].map((t) => (
               <div key={t.label} className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2 hover-lift">
@@ -229,8 +239,8 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
 
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-[9px] uppercase tracking-widest text-gray-500 mr-1">Low</span>
-            {EQUIP_TIER_COLORS.map((c, i) => (
-              <div key={i} className="flex flex-col items-center gap-0.5" title={`Tier ${i + 1} · ${TIER_LABELS[i]}`}>
+            {tierColors.map((c, i) => (
+              <div key={i} className="flex flex-col items-center gap-0.5" title={`Tier ${i + 1} · ${tierLabels[i]}`}>
                 <div className={`w-4 h-2.5 rounded-sm ${c}`} />
                 <span className="text-[8px] text-gray-600 font-mono leading-none">{i + 1}</span>
               </div>
@@ -244,11 +254,11 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
                 <img src={slotImg(slot)} alt="" className={`w-4 h-4 object-contain shrink-0 ${tier > 0 ? '' : 'grayscale opacity-40'}`} />
                 <span className={`text-[10px] font-semibold w-14 shrink-0 ${tier > 0 ? 'text-gray-300' : 'text-gray-600'}`}>{slot}</span>
                 <div className="flex gap-px flex-1 h-1.5 bg-black/50 rounded-sm overflow-hidden border border-white/5">
-                  {Array.from({ length: EQUIPMENT_TIER_MAX }).map((_, i) => (
+                  {Array.from({ length: tierMax(slot) }).map((_, i) => (
                     <div key={i} className={`flex-1 transition-all duration-500 ${tier > i ? equipTierColor(tier) : 'bg-[#1a1a1a]'}`} />
                   ))}
                 </div>
-                <span className={`text-[9px] font-mono font-bold w-7 text-right shrink-0 ${tier >= EQUIPMENT_TIER_MAX ? 'text-yellow-400' : tier > 0 ? 'text-amber-300/80' : 'text-gray-600'}`}>T{tier}</span>
+                <span className={`text-[9px] font-mono font-bold w-7 text-right shrink-0 ${tier >= tierMax(slot) ? 'text-yellow-400' : tier > 0 ? 'text-amber-300/80' : 'text-gray-600'}`}>T{tier}</span>
               </div>
             ))}
           </div>
@@ -261,6 +271,8 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
           slot={selected}
           tier={equipment[selected] || 0}
           specialKeys={specialKeys}
+          tierMax={tierMax(selected)}
+          tierLabels={tierLabels}
           onClose={() => setSelected(null)}
           onUpgrade={() => { onUpgrade(selected); setSelected(null); }}
         />
@@ -276,16 +288,19 @@ interface SlotDetailProps {
   slot: string;
   tier: number;
   specialKeys: number;
+  /** The highest tier this slot can reach in the run's mode. */
+  tierMax: number;
+  tierLabels: readonly string[];
   onClose: () => void;
   onUpgrade: () => void;
 }
 
-const SlotDetail: React.FC<SlotDetailProps> = ({ slot, tier, specialKeys, onClose, onUpgrade }) => {
+const SlotDetail: React.FC<SlotDetailProps> = ({ slot, tier, specialKeys, tierMax, tierLabels, onClose, onUpgrade }) => {
   useEscapeKey(onClose, true);
-  const isMaxed = tier >= EQUIPMENT_TIER_MAX;
+  const isMaxed = tier >= tierMax;
   const nextTier = tier + 1;
   const canUpgrade = !isMaxed && specialKeys > 0;
-  const curLabel = tier > 0 ? TIER_LABELS[tier - 1] : 'Locked';
+  const curLabel = tier > 0 ? tierLabels[tier - 1] : 'Locked';
 
   // Escape dashboard animation/overflow ancestors so the dialog fits the viewport.
   return createPortal(
@@ -319,12 +334,12 @@ const SlotDetail: React.FC<SlotDetailProps> = ({ slot, tier, specialKeys, onClos
         {/* Tier ladder */}
         <div className="p-4 space-y-3">
           <div className="flex items-end gap-1">
-            {EQUIP_TIER_COLORS.map((c, i) => {
+            {EQUIP_TIER_COLORS.slice(0, tierMax).map((c, i) => {
               const t = i + 1;
               const reached = tier >= t;
               const isNext = t === nextTier;
               return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1" title={`Tier ${t} · ${TIER_LABELS[i]}`}>
+                <div key={i} className="flex-1 flex flex-col items-center gap-1" title={`Tier ${t} · ${tierLabels[i]}`}>
                   <div
                     className={`w-full h-8 rounded-sm transition-all ${reached ? c : 'bg-[#221d15]'} ${isNext ? 'ring-2 ring-purple-400/70' : ''} ${reached ? '' : 'opacity-40'}`}
                   />
@@ -338,14 +353,14 @@ const SlotDetail: React.FC<SlotDetailProps> = ({ slot, tier, specialKeys, onClos
           {isMaxed ? (
             <div className="flex items-center gap-2 rounded-lg border border-yellow-500/30 bg-yellow-950/20 px-3 py-2.5 text-yellow-300">
               <Crown size={15} className="shrink-0" />
-              <span className="text-[12px] font-bold">Maxed — Tier {EQUIPMENT_TIER_MAX} ({TIER_LABELS[EQUIPMENT_TIER_MAX - 1]})</span>
+              <span className="text-[12px] font-bold">Maxed — Tier {tierMax} ({tierLabels[tierMax - 1]})</span>
             </div>
           ) : (
             <div className="space-y-2">
               <div className="flex items-center justify-between rounded-lg border border-white/10 bg-[#211d15] px-3 py-2">
                 <span className="text-[11px] text-gray-400">
                   Next: <span className="font-bold text-gray-200">Tier {nextTier}</span>
-                  <span className="text-amber-300"> · {TIER_LABELS[nextTier - 1]}</span>
+                  <span className="text-amber-300"> · {tierLabels[nextTier - 1]}</span>
                 </span>
                 <span className="flex items-center gap-1 text-[11px] font-bold text-purple-300">
                   <Sparkles size={12} /> 1 Omni-Key

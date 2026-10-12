@@ -1,4 +1,5 @@
 import type { GameModeRules } from '../config/gameModes';
+import { usesVanillaRules } from '../config/gameModes';
 import { MOBILITY_LIST } from '../data/items';
 import { DETECTOR_POLICIES, type DetectorPolicy } from '../config/detectorPolicies';
 import { gearService } from '../services/GearService';
@@ -247,7 +248,7 @@ export async function buildRuneliteRulesManifest(
     freeAreas: freeAreasFor(input.run.gameModeId, input.run.customMode),
     progress: runProgress(input.unlocks, input.run.gameModeId),
     detection: rulesDetection(),
-    spentBosses: input.run.gameModeId === 'vanilla' ? vanillaSpentBosses(input.run.bossStandardKeysAwarded) : [],
+    spentBosses: usesVanillaRules(input.run.gameModeId) ? vanillaSpentBosses(input.run.bossStandardKeysAwarded) : [],
   };
   const capabilities = RULES_CAPABILITIES.filter((capability) => (capability === 'chunkDetails'
     ? Object.keys(chunks).length > 0

@@ -4,12 +4,26 @@ import {
   effectiveVanillaClueRate,
   type vanillaBossKeyStage,
 } from '../config/vanillaKeyEconomy';
+import { useGame } from '../context/GameContext';
+import { isF2PMode } from '../config/gameModes';
+
+/** Whether this is a Free-to-play run; false where no game is loaded. */
+const useIsF2P = (): boolean => {
+  try {
+    return isF2PMode(useGame().gameModeId);
+  } catch {
+    return false;
+  }
+};
 
 type BossKeyProgressProps = {
   stage: ReturnType<typeof vanillaBossKeyStage>;
 };
 
-export const BossKeyProgress: React.FC<BossKeyProgressProps> = ({ stage }) => (
+export const BossKeyProgress: React.FC<BossKeyProgressProps> = ({ stage }) => {
+  // Pets are members only, so a Free-to-play boss has none to roll.
+  const isF2P = useIsF2P();
+  return (
   <div className="mt-1.5 text-[9px] font-mono leading-snug text-gray-400">
     <div className="flex items-center justify-between gap-2">
       <span>{stage.awarded} of {stage.cap} Keys paid</span>
@@ -20,12 +34,15 @@ export const BossKeyProgress: React.FC<BossKeyProgressProps> = ({ stage }) => (
       )}
     </div>
     {stage.capped ? (
-      <p className="mt-0.5 text-gray-500">This boss no longer rolls for Keys or Fate. Its Combat Achievements, Collection Log items and pet still roll.</p>
+      <p className="mt-0.5 text-gray-500">{isF2P
+        ? 'This boss no longer rolls for Keys or Fate. Its Combat Achievements and Collection Log items still roll.'
+        : 'This boss no longer rolls for Keys or Fate. Its Combat Achievements, Collection Log items and pet still roll.'}</p>
     ) : stage.nextRate !== null ? (
       <p className="mt-0.5 text-gray-500">{stage.nextRate}% next</p>
     ) : null}
   </div>
-);
+  );
+};
 
 type ClueKeyProgressProps = {
   awarded: number;

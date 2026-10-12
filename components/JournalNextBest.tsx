@@ -2,9 +2,11 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, ListChecks, Route, ExternalLink } from 'lucide-react';
 import { Sparkles, Map as MapIcon, Scroll, Navigation, BookOpen, Gift } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
-import { QUEST_DATA, QuestData } from '../data/questData';
+import { QuestData } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import { diariesForMode, diaryTasksForMode, questsForMode } from '../utils/modeContent';
+import { isF2PMode } from '../config/gameModes';
 import { DropSource, UnlockState } from '../types';
 import { questUnmet, diaryUnmet } from '../utils/journalProgress';
 import { questLocations } from '../utils/questLocations';
@@ -87,7 +89,10 @@ const ActionMenu: React.FC<{ a: JournalNextBestAction; onPick: (s: SubTab) => vo
       { ...unlocks, quests: [...unlocks.quests, a.id] },
       gameModeId,
     );
-    return { quests: imp.directQuestNames, diaries: imp.directDiaryIds };
+    if (!isF2PMode(gameModeId)) return { quests: imp.directQuestNames, diaries: imp.directDiaryIds };
+    // Free-to-play runs unlock only free-to-play quests and no Achievement Diaries.
+    const f2pNames = new Set(questsForMode(gameModeId).map(q => q.name));
+    return { quests: imp.directQuestNames.filter(name => f2pNames.has(name)), diaries: [] };
   }, [a, unlocks, gameModeId]);
 
   const Row: React.FC<{ icon: React.ReactNode; label: string; onClick?: () => void; disabled?: boolean }> = ({ icon, label, onClick, disabled }) => (
@@ -163,13 +168,14 @@ export const selectJournalNextBestActions = (
   gameModeId?: string,
 ): JournalNextBestAction[] => {
   const out: JournalNextBestAction[] = [];
-  for (const quest of Object.values(QUEST_DATA)) {
+  for (const quest of questsForMode(gameModeId)) {
     const action = journalNextBestQuestAction(quest, unlocks, gameModeId);
     if (action) out.push(action);
   }
-  for (const d of Object.values(DIARY_DATA)) {
+  const diaryTasks = diaryTasksForMode(gameModeId);
+  for (const d of diariesForMode(gameModeId)) {
     if (unlocks.diaries.includes(d.id)) continue;
-    const tasks = ALL_DIARY_TASKS.filter(task => task.tierId === d.id);
+    const tasks = diaryTasks.filter(task => task.tierId === d.id);
     if (tasks.length > 0 && tasks.every(task => unlocks.completedTasks.includes(task.id))) {
       continue;
     }

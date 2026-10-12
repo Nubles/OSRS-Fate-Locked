@@ -2,7 +2,9 @@
 import React, { useMemo, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { CA_DATA, CATier } from '../data/caData';
-import { ALL_CA_TASKS, CATask } from '../data/caTasks';
+import { CATask } from '../data/caTasks';
+import { caTasksForMode } from '../utils/modeContent';
+import { isF2PMode } from '../config/gameModes';
 import { CheckCircle2, Info, ChevronDown, CheckSquare, Square, Lock, ExternalLink } from 'lucide-react';
 import { Swords, Sparkles, Skull } from './OsrsIcon';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
@@ -22,7 +24,19 @@ interface CALogProps {
 }
 
 export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' }) => {
-  const { unlocks, completeCATask, completeCATier, advisorsEnabled } = useGame();
+  const { unlocks, completeCATask, completeCATier, advisorsEnabled, gameModeId } = useGame();
+  // Free-to-play runs list only the free-to-play tasks (27 points, so no reward tier).
+  const f2p = isF2PMode(gameModeId);
+  const modeTasks = useMemo(() => caTasksForMode(gameModeId), [gameModeId]);
+  const modeTiers = useMemo(
+    () => CA_TIER_ORDER.filter(id => !f2p || modeTasks.some(t => t.tierId === id)),
+    [f2p, modeTasks],
+  );
+  const tierTasksDone = (tierId: string) => {
+    const tasks = modeTasks.filter(t => t.tierId === tierId);
+    return tasks.length > 0 && tasks.every(t => unlocks.completedTasks.includes(t.id));
+  };
+  const modeTasksDone = modeTasks.filter(t => unlocks.completedTasks.includes(t.id)).length;
   const [expandedId, setExpandedId] = useState<string | null>(null);
   // Filter state persisted across sessions.
   const [filterStatus, setFilterStatus] = useLocalStorage<JournalStatus>('jrnl:ca:status', 'ALL');
@@ -85,8 +99,9 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
   };
 
   const filteredCAs = Object.values(CA_DATA).filter(ca => {
-      const isCompleted = unlocks.cas.includes(ca.id);
-      const isAvailable = !isCompleted && totalPoints >= ca.pointsRequired;
+      if (!(modeTiers as readonly string[]).includes(ca.id)) return false;
+      const isCompleted = f2p ? tierTasksDone(ca.id) : unlocks.cas.includes(ca.id);
+      const isAvailable = !isCompleted && (f2p || totalPoints >= ca.pointsRequired);
       if (filterTier !== 'ALL' && ca.id !== filterTier) return false;
       if (filterStatus === 'COMPLETED' && !isCompleted) return false;
       if (filterStatus === 'AVAILABLE' && !isAvailable) return false;
@@ -95,11 +110,15 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
       if (!searchTerm) return true;
       const lowerSearch = searchTerm.toLowerCase();
       if (ca.id.toLowerCase().includes(lowerSearch)) return true;
-      const tasks = ALL_CA_TASKS.filter(t => t.tierId === ca.id);
+      const tasks = modeTasks.filter(t => t.tierId === ca.id);
       return tasks.some(t => t.monster.toLowerCase().includes(lowerSearch) || t.description.toLowerCase().includes(lowerSearch));
   });
 
   const statusCounts = useMemo(() => {
+    if (f2p) {
+      const completed = modeTiers.filter(id => tierTasksDone(id)).length;
+      return { ALL: modeTiers.length, AVAILABLE: modeTiers.length - completed, LOCKED: 0, COMPLETED: completed };
+    }
     const total = CA_TIER_ORDER.length;
     const completed = CA_TIER_ORDER.filter(id => unlocks.cas.includes(id)).length;
     const available = CA_TIER_ORDER.filter(id => !unlocks.cas.includes(id) && totalPoints >= CA_DATA[id].pointsRequired).length;
@@ -109,7 +128,8 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
       LOCKED: total - completed - available,
       COMPLETED: completed,
     };
-  }, [unlocks.cas, totalPoints]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unlocks.cas, unlocks.completedTasks, totalPoints, f2p, modeTiers]);
 
   // Lowest incomplete tiers — these are the player's next combat-achievement
   return (
@@ -124,8 +144,8 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
         status={filterStatus}
         onStatusChange={setFilterStatus}
         statusCounts={statusCounts}
-        completed={statusCounts.COMPLETED}
-        total={Object.keys(CA_DATA).length}
+        completed={f2p ? modeTasksDone : statusCounts.COMPLETED}
+        total={f2p ? modeTasks.length : Object.keys(CA_DATA).length}
         tiers={[
           { id: 'Easy', colorClass: 'bg-green-900/40 text-green-300' },
           { id: 'Medium', colorClass: 'bg-blue-900/40 text-blue-300' },
@@ -143,7 +163,9 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
       <div className="border-b border-white/10 bg-black/20 px-4 py-2 text-[11px] text-gray-400">
         <span className="font-bold text-amber-300">{totalPoints.toLocaleString()}</span>
         {' '}Combat Achievement points
-        {nextTier
+        {f2p
+          ? ` · ${modeTasksDone}/${modeTasks.length} free-to-play tasks done · no reward tier is reachable in Free-to-play`
+          : nextTier
           ? ` · next reward: ${nextTier} at ${CA_DATA[nextTier].pointsRequired.toLocaleString()}`
           : ' · all reward tiers earned'}
       </div>
@@ -151,13 +173,13 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
       <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
         {filteredCAs.map(ca => {
             const isRecorded = unlocks.cas.includes(ca.id);
-            const isCompleted = isRecorded;
+            const isCompleted = f2p ? tierTasksDone(ca.id) : isRecorded;
             const style = getStyle(ca.id);
             const isSearching = searchTerm.length > 0;
             const isExpanded = expandedId === ca.id || isSearching;
 
             // Get tasks
-            const tasks = ALL_CA_TASKS.filter(t => t.tierId === ca.id);
+            const tasks = modeTasks.filter(t => t.tierId === ca.id);
             const hasTasks = tasks.length > 0;
             const tasksCompletedCount = tasks.filter(t => unlocks.completedTasks.includes(t.id)).length;
 
@@ -176,7 +198,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                                 <h3 className={`font-bold text-lg ${isCompleted ? 'text-gray-400 line-through' : 'text-white'}`}>{ca.id} Tier</h3>
-                                <span className="text-[10px] bg-black/40 px-2 py-0.5 rounded border border-white/10 text-gray-400 font-mono">{totalPoints}/{ca.pointsRequired} cumulative pts</span>
+                                {!f2p && <span className="text-[10px] bg-black/40 px-2 py-0.5 rounded border border-white/10 text-gray-400 font-mono">{totalPoints}/{ca.pointsRequired} cumulative pts</span>}
                                 {hasTasks && (
                                     <span className="text-[10px] text-gray-400 font-mono">
                                         {tasksCompletedCount}/{tasks.length}
@@ -198,7 +220,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                                 </div>
                             )}
 
-                            {!isExpanded && (
+                            {!isExpanded && !f2p && (
                                 <div className="flex flex-wrap gap-1">
                                     {ca.keyUnlocks.map(boss => {
                                         const unlocked = unlocks.bosses.includes(boss);
@@ -213,7 +235,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <button
+                            {!f2p && <button
                                 onClick={(e) => handleTierComplete(e, ca)}
                                 disabled={isRecorded}
                                 className={`w-10 h-10 flex items-center justify-center rounded-full border transition-all shrink-0 z-10
@@ -223,7 +245,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                                 title={isRecorded ? "Reward tier recorded" : isActionable ? "Record earned reward tier" : `Requires ${ca.pointsRequired} cumulative points`}
                             >
                                 {isRecorded ? <CheckCircle2 size={20} /> : isActionable ? <Sparkles size={18} /> : <Lock size={16} />}
-                            </button>
+                            </button>}
                             {hasTasks && <ChevronDown size={16} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />}
                         </div>
                     </div>

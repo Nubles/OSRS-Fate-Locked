@@ -6,6 +6,8 @@ import { STARTING_KEYS } from '../config/economy';
 import { DEFAULT_MODE_ID, getGameMode } from '../config/gameModes';
 import { ArrowRight, Check, Lock, MousePointer2 } from 'lucide-react';
 import { Dices, Skull, Shield, Sparkles, Key, Dna, Zap } from './OsrsIcon';
+import { DROP_RATES } from '../config/rules';
+import { DropSource } from '../types';
 
 // Onboarding comes before the mode choice, and every mode a player can pick
 // shares this threshold (config/gameModes.ts; pinned in the onboarding test).
@@ -76,7 +78,7 @@ const RollVisual: React.FC = () => {
 
   return (
     <div className="relative w-full max-w-[320px] p-6 flex flex-col items-center">
-      {/* Fake Slayer Card */}
+      {/* Fake clue card: beginner clues are in every mode, Free-to-play included */}
       <div className={`
         relative w-full h-20 overflow-hidden rounded-lg border-2 transition-all duration-300
         bg-[#142618] border-[#2a4c30]
@@ -85,10 +87,10 @@ const RollVisual: React.FC = () => {
       `}>
         {/* Content */}
         <div className="absolute inset-0 flex flex-col justify-center items-start pl-4 z-10">
-          <h3 className="font-black text-base uppercase tracking-wider text-[#4ade80]">Mazchna</h3>
-          <p className="text-[10px] text-gray-400 font-mono mb-1.5">Canifis (Easy)</p>
+          <h3 className="font-black text-base uppercase tracking-wider text-[#4ade80]">Beginner clue</h3>
+          <p className="text-[10px] text-gray-400 font-mono mb-1.5">Treasure Trails</p>
           <div className="px-2 py-0.5 rounded text-[10px] font-bold border bg-[#0a150c] border-[#1f3823] text-[#4ade80] flex items-center gap-1.5">
-             <Skull size={10} /> 10% Chance
+             <Skull size={10} /> {DROP_RATES[DropSource.CLUE_BEGINNER]}% Chance
           </div>
         </div>
         
@@ -340,7 +342,7 @@ export const OnboardingWizard: React.FC = () => {
     {
       title: "Fate Locked",
       subtitle: "How it works",
-      desc: `You start with ${STARTING_KEYS} Keys and nearly everything locked: no gear slots, no skills except Hitpoints, no transport, no banks and no shops. In Vanilla you can go anywhere in Misthalin from the start. In Chunked you start in one chunk of Lumbridge.`,
+      desc: `You start with ${STARTING_KEYS} Keys and nearly everything locked: no gear slots, no skills except Hitpoints, no transport, no banks and no shops. In Vanilla you can go anywhere in Misthalin from the start. In Free-to-play you start in the free-to-play part of Misthalin. In Chunked you start in one chunk of Lumbridge.`,
       visual: <ConceptVisual />,
       color: "text-red-500",
       bg: "from-red-900/20"
@@ -348,7 +350,7 @@ export const OnboardingWizard: React.FC = () => {
     {
       title: "Earn Keys",
       subtitle: "Roll for what you finish",
-      desc: "Finish something in game, such as a Slayer task, a quest or a clue, then click its card here to roll. Harder content rolls better. A success gives you a Key.",
+      desc: "Finish something in game, such as a quest, a clue or a boss kill, then click its card here to roll. Harder content rolls better. A success gives you a Key.",
       visual: <RollVisual />,
       color: "text-green-400",
       bg: "from-green-900/20"

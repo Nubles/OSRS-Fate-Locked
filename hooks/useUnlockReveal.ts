@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { QUEST_DATA } from '../data/questData';
-import { DIARY_DATA } from '../data/diaryData';
+import { diariesForMode, questsForMode } from '../utils/modeContent';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import type { UnlockState } from '../types';
 import {
@@ -52,7 +52,7 @@ export function getUnlockRevealTransition(
     return null;
   }
 
-  const newQuestsAvailable = Object.values(QUEST_DATA)
+  const newQuestsAvailable = questsForMode(gameModeId)
     .filter(quest => !current.quests.includes(quest.id))
     .filter(quest => (
       !evaluateQuestEligibility(quest, previous, gameModeId).eligible
@@ -60,7 +60,7 @@ export function getUnlockRevealTransition(
     ))
     .map(quest => ({ id: quest.id, name: quest.name }));
 
-  const newDiaryTiersAvailable = Object.values(DIARY_DATA)
+  const newDiaryTiersAvailable = diariesForMode(gameModeId)
     .filter(diary => !current.diaries.includes(diary.id))
     .filter(diary => (
       !diaryTierIsAutomaticallyEligible(diary.id, previous, gameModeId)

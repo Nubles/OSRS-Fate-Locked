@@ -7,9 +7,13 @@ import type { UnlockState } from '../types';
 import { ALL_CHUNKS, ALL_CHUNK_KEYS } from './chunkAdjacency';
 import { chunkUnlocked } from './chunkLocations';
 import { isAreaReachable } from './reachability';
+import { isF2PMode } from '../config/gameModes';
+import { F2P_AREAS, F2P_START_AREAS } from '../data/f2pContent';
 
 /** Every named area a run counts: Misthalin's and those outside it. */
 const NAMED_AREAS = [...MISTHALIN_AREAS, ...REGIONS_LIST];
+/** A Free-to-play run counts only the free-to-play areas. */
+const F2P_NAMED_AREAS = [...F2P_START_AREAS, ...F2P_AREAS];
 
 export interface RunProgress {
   /** What the run unlocks one at a time. */
@@ -33,10 +37,11 @@ export function runProgress(unlocks: UnlockState, gameModeId: string | undefined
   if (gameModeId === 'chunked') {
     return { unit: 'chunks', unlocked: (unlocks.chunks ?? []).length + 1, total: ALL_CHUNK_KEYS.length, chunks };
   }
+  const named = isF2PMode(gameModeId) ? F2P_NAMED_AREAS : NAMED_AREAS;
   return {
     unit: 'areas',
-    unlocked: NAMED_AREAS.filter((area) => isAreaReachable(area, unlocks, gameModeId)).length,
-    total: NAMED_AREAS.length,
+    unlocked: named.filter((area) => isAreaReachable(area, unlocks, gameModeId)).length,
+    total: named.length,
     chunks,
   };
 }

@@ -1,4 +1,8 @@
 import { DROP_RATES } from '../config/rules';
+import { collectionLogItemInMode, MEMBERS_LOG_ITEM_REASON } from './modeScope';
+import { isF2PEntry } from '../data/f2pContent';
+import { TableType } from '../types';
+import { isF2PMode, usesVanillaRules } from '../config/gameModes';
 import { policyFor } from '../config/detectorPolicies';
 import { failureFateForSkillLevel, failureFateForSource } from '../config/economy';
 import { BRUTUS_BOSS_NAME, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
@@ -281,12 +285,13 @@ function classifyCombatAchievement(event: FateEventEnvelope, state: GameState): 
   const task = matches[0];
   const source = CA_SOURCES[task.tierId];
   if (!source) return { state: 'BLOCKED', reason: 'Combat task tier is not supported.' };
-  const decision = caTaskCompletionDecision(task, state.unlocks.completedTasks);
+  const decision = caTaskCompletionDecision(task, state.unlocks.completedTasks, state.gameModeId);
   if (decision.ok === false) return blocked(decision.reason);
   return ready(source, task.name ?? task.description, { kind: 'CA_TASK', taskId: task.id });
 }
 
 function collectionItemBlock(state: GameState, itemId: number): EventClassification | null {
+  if (!collectionLogItemInMode(itemId, state.gameModeId)) return blocked(MEMBERS_LOG_ITEM_REASON);
   if (collectionItemNeedsIdentityReview(state.unlocks.collectionLog, itemId, state.collectionLogIdentity)) {
     return { state: 'BLOCKED', reason: 'Saved Collection Log entries need identity review before this item can be logged or rewarded.' };
   }
@@ -329,7 +334,7 @@ function classifyClue(event: FateEventEnvelope, state: GameState): EventClassifi
   }
   const target = event.canonicalLabel?.trim() || `Clue scroll (${clue.tier.toLowerCase()})`;
   // Vanilla clue keys use the Clues card's onboarding rates.
-  return ready(clue.source, target, { kind: 'NONE' }, state.gameModeId === 'vanilla'
+  return ready(clue.source, target, { kind: 'NONE' }, usesVanillaRules(state.gameModeId)
     ? { context: { kind: 'clue', clueTier: clue.tier } }
     : {});
 }
@@ -344,7 +349,7 @@ function classifyBoss(event: FateEventEnvelope, state: GameState): EventClassifi
   if (event.eventType !== expectedType) {
     return needsConfirmation('The detected encounter type does not match this activity.');
   }
-  if (state.gameModeId !== 'vanilla') return ready(TIER_SOURCE[tier], bossName, { kind: 'NONE' });
+  if (!usesVanillaRules(state.gameModeId)) return ready(TIER_SOURCE[tier], bossName, { kind: 'NONE' });
   // Vanilla's Bossing list rolls only unlocked bosses (Brutus is always
   // there), each from its own key reserve.
   if (!isBrutus && !state.unlocks.bosses.includes(bossName)) return blocked('Unlock this boss before its kills can roll.');
@@ -354,6 +359,25 @@ function classifyBoss(event: FateEventEnvelope, state: GameState): EventClassifi
     threshold: stage.currentRate,
     context: { kind: 'boss', bossName, bossClass: isBrutus ? 'brutus' : tier },
   });
+}
+
+/**
+ * Members-only Key sources a Free-to-play run can't log: Slayer, diaries,
+ * pets, members minigames and clues above beginner. Members quests, Combat
+ * Achievement tasks and collection log items are refused by their own checks.
+ */
+function f2pEventBlock(event: FateEventEnvelope): string | null {
+  if (event.eventType === 'SLAYER_TASK') return 'Slayer is members only, so it gives no Keys in Free-to-play.';
+  if (event.eventType === 'PET_DROP') return 'Pets are members only, so they give no Keys in Free-to-play.';
+  if (event.eventType === 'MINIGAME_COMPLETION' && event.canonicalLabel && !isF2PEntry(TableType.MINIGAMES, event.canonicalLabel)) {
+    return 'This minigame is members only, so it gives no Key in Free-to-play.';
+  }
+  if (event.eventType === 'DIARY_TASK') return 'Achievement Diaries are members only, so they give no Keys in Free-to-play.';
+  if (event.eventType === 'CLUE_CASKET') {
+    const clue = detectedClue(event);
+    if (clue && clue.tier !== 'Beginner') return 'Only beginner clues are free-to-play, so this casket gives no Key in Free-to-play.';
+  }
+  return null;
 }
 
 export function classifyFateEvent(
@@ -373,6 +397,8 @@ export function classifyFateEvent(
   ) {
     return { state: 'BLOCKED', reason: 'This event is from another character.' };
   }
+  const f2pBlock = isF2PMode(state.gameModeId) ? f2pEventBlock(event) : null;
+  if (f2pBlock) return blocked(f2pBlock);
   // Every roll raises the run's revision, so an event from an earlier revision
   // is checked against the run as it is now, as a manual log would be.
   if (event.runRevision > state.runRevision) {

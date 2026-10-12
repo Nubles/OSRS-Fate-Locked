@@ -313,6 +313,11 @@ export interface GameState {
   xtremeMilestoneClaimed?: number;
   /** Same insurance as xtremeMilestoneClaimed, for the 'chunked' mode — see CHUNKED_MILESTONE_INTERVAL. */
   chunkedMilestoneClaimed?: number;
+  /**
+   * Chunked Breakthroughs already rolled: skill -> the tier its last roll was
+   * for (utils/chunkedFate.ts). One roll per skill per tier, won or lost.
+   */
+  chunkedBreakthroughs?: Record<string, number>;
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

@@ -1,4 +1,5 @@
 import reviewedMembership from './sources/f2p-quest-membership.json';
+import { F2P_QUEST_IDS } from './f2pQuestIds';
 
 export interface F2PQuestMembership {
   readonly questId: string;
@@ -10,32 +11,7 @@ export interface F2PQuestMembership {
   readonly evidenceQuestId: string;
 }
 
-const EXPECTED_QUEST_IDS = [
-  "Cook's Assistant",
-  "Sheep Shearer",
-  "The Restless Ghost",
-  "Rune Mysteries",
-  "Imp Catcher",
-  "X Marks the Spot",
-  "Romeo & Juliet",
-  "Demon Slayer",
-  "Ernest the Chicken",
-  "Doric's Quest",
-  "Goblin Diplomacy",
-  "Witch's Potion",
-  "The Knight's Sword",
-  "Black Knights' Fortress",
-  "Vampyre Slayer",
-  "Prince Ali Rescue",
-  "Pirate's Treasure",
-  "Misthalin Mystery",
-  "Below Ice Mountain",
-  "The Corsair Curse",
-  "Shield of Arrav",
-  "Dragon Slayer I",
-  "Learning the Ropes",
-  "The Ides of Milk"
-] as const;
+const EXPECTED_QUEST_IDS = F2P_QUEST_IDS;
 
 const EXPECTED_SLUGS = [
   "cooks-assistant",

@@ -16,7 +16,7 @@ import { Search, ExternalLink, Unlock, Lock, ChevronDown, ChevronsUp, AlertCircl
 import { Sparkles, User, Map, Swords, Package, Compass, BookOpen, ScrollText, Globe, MapPin, Trophy, Skull } from './OsrsIcon';
 import { VoidReveal } from './VoidReveal';
 import { ActivityAccessWarning } from './ActivityAccessWarning';
-import { isOmniDirectUnlockAvailable } from '../utils/gameEngine';
+import { getPoolAndStateKey, isOmniDirectUnlockAvailable } from '../utils/gameEngine';
 import { TableType } from '../types';
 import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
@@ -56,7 +56,8 @@ import { useUnlockReveal } from '../hooks/useUnlockReveal';
 import { UnlockReveal } from './UnlockReveal';
 import { useAchievementReveal } from '../hooks/useAchievementReveal';
 import { AchievementReveal } from './AchievementReveal';
-import { getGameMode } from '../config/gameModes';
+import { getGameMode, isF2PMode } from '../config/gameModes';
+import { freeAreasFor } from '../utils/freeAreas';
 import { getActivityRegion } from '../data/activityRegions';
 import { isAreaReachable, bankLocksActive } from '../utils/reachability';
 import { BANKS, BANK_IDS, BANK_BY_ID } from '../data/banks';
@@ -538,6 +539,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
 
   // --- Render Sections ---
 
+  const skillList = getPoolAndStateKey(TableType.SKILLS, gameModeId, customMode).pool;
+  // Free-to-play lists only its free starting areas and the free-to-play areas it rolls.
+  const isF2P = isF2PMode(gameModeId);
+  const f2pAreas = isF2P ? new Set(getPoolAndStateKey(TableType.REGIONS, gameModeId, customMode).pool) : null;
+  const misthalinShown = isF2P ? MISTHALIN_AREAS.filter(area => freeAreasFor(gameModeId, customMode).includes(area)) : MISTHALIN_AREAS;
+  const regionGroupsShown = Object.entries(REGION_GROUPS)
+    .map(([group, areas]) => [group, f2pAreas ? areas.filter(area => f2pAreas.has(area)) : areas] as const)
+    .filter(([, areas]) => areas.length > 0);
   const renderCharacterTab = () => (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10">
         {/* Equipment Lab — interactive paper-doll (click a slot for its tier
@@ -548,7 +557,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         <div className="space-y-4">
             <div className="flex justify-between items-center bg-[#151515] p-2 rounded border border-white/5">
                 <h3 className="text-blue-400 font-bold text-sm flex items-center gap-1.5">Skills <SectionGuide id="SKILLS" suspendModals={suspendModals} /></h3>
-                <span className="text-xs text-blue-400/60 font-mono">{totalSkillTiers}/{SKILLS_LIST.length * 10} Tiers</span>
+                <span className="text-xs text-blue-400/60 font-mono">{totalSkillTiers}/{skillList.length * 10} Tiers</span>
             </div>
 
             {/* Skill Advisor — ranks which skill to train next (and to what
@@ -557,7 +566,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
             {advisorsEnabled && <SkillAdvisorPanel />}
 
             <div className="grid grid-cols-3 gap-2">
-                {SKILLS_LIST.map(skill => {
+                {skillList.map(skill => {
                     const tier = unlocks.skills[skill] || 0;
                     const level = unlocks.levels[skill] || 1;
                     const isUnlocked = tier > 0;
@@ -773,19 +782,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                             <NoteTrigger id="Misthalin" title="Misthalin" suspendModals={suspendModals} />
                       </div>
                       {(() => {
-                        const freeCount = MISTHALIN_AREAS.filter(a => isAreaReachable(a, unlocks, gameModeId)).length;
-                        const allFree = freeCount === MISTHALIN_AREAS.length;
+                        const freeCount = misthalinShown.filter(a => isAreaReachable(a, unlocks, gameModeId)).length;
+                        const allFree = freeCount === misthalinShown.length;
                         return (
                           <>
                             <div className="flex items-center gap-2 mb-2 relative z-10">
                                 <Compass className="w-5 h-5 text-emerald-400" />
                                 <span className="font-bold text-sm text-emerald-200">Misthalin (Starter Area)</span>
                                 <span className={`ml-auto text-xs font-mono flex items-center gap-1 ${allFree ? 'text-emerald-400' : 'text-amber-400'}`}>
-                                    <Unlock size={10} /> {allFree ? 'Unlocked' : `${freeCount}/${MISTHALIN_AREAS.length}`}
+                                    <Unlock size={10} /> {allFree ? 'Unlocked' : `${freeCount}/${misthalinShown.length}`}
                                 </span>
                             </div>
                             <div className="flex flex-wrap gap-1.5 relative z-10 pr-6">
-                                {MISTHALIN_AREAS.map(area => {
+                                {misthalinShown.map(area => {
                                     const free = isAreaReachable(area, unlocks, gameModeId);
                                     // Chunked mode: named areas can't be bought — chunks only.
                                     const canUnlock = !free && gameModeId !== 'chunked' && specialKeys > 0;
@@ -809,7 +818,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {Object.entries(REGION_GROUPS).map(([group, areas]) => {
+                      {regionGroupsShown.map(([group, areas]) => {
                           // Chunked mode: "unlocked" means you hold a chunk foothold in the
                           // area (same rule as the map); named areas can't be bought with
                           // keys there — chunks are the only unlock currency.
@@ -893,7 +902,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         /** id → display name, for categories keyed by id (Banks). */
         nameMap?: Record<string, string>;
       };
-      const categories: ActivityCategory[] = [
+      const allCategories: ActivityCategory[] = [
         { id: 'BOSSES',    label: 'Bosses & Raids',     color: 'text-red-400',    bar: 'bg-red-500',    list: BOSSES_LIST,        unlocked: unlocks.bosses,    type: TableType.BOSSES },
         { id: 'MINIGAMES', label: 'Minigames',          color: 'text-cyan-400',   bar: 'bg-cyan-500',   list: MINIGAMES_LIST,     unlocked: unlocks.minigames, type: TableType.MINIGAMES },
         { id: 'FARMING',   label: 'Farming Patches',    color: 'text-green-400',  bar: 'bg-green-500',  list: FARMING_PATCH_LIST, unlocked: unlocks.farming,   type: TableType.FARMING_LAYERS, details: FARMING_UNLOCK_DETAILS },
@@ -908,6 +917,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         // the run locks banks (see bankLocksActive).
         ...(bankLocksActive(gameModeId, customMode) ? [{ id: 'BANKS', label: 'Banks', color: 'text-amber-300', bar: 'bg-amber-400', list: BANK_IDS, unlocked: (unlocks.banks ?? []), type: TableType.BANKS, nameMap: Object.fromEntries(BANKS.map(b => [b.id, b.name])) as Record<string, string> }] : []),
       ];
+
+      // Free-to-play lists only free-to-play entries, and drops tables with none.
+      const categories = isF2PMode(gameModeId)
+        ? allCategories.map(c => ({ ...c, list: getPoolAndStateKey(c.type, gameModeId, customMode).pool })).filter(c => c.list.length > 0)
+        : allCategories;
 
       // Search mode: span every category so a search isn't trapped in one tab.
       if (searchQuery) {
@@ -969,7 +983,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
             {/* Slayer only: which assignable monsters you can actually reach now. */}
             {selected.id === 'SLAYER' && <SlayerReachabilityPanel />}
             {/* Mobility only: agility shortcuts with level + real chunk location. */}
-            {selected.id === 'MOBILITY' && <ShortcutsPanel />}
+            {selected.id === 'MOBILITY' && !isF2P && <ShortcutsPanel />}
             {renderGridSection(selected.list, selected.unlocked, selected.type, SPECIAL_ICONS, selected.details, selected.nameMap)}
             {/* Merchants only: the real shops behind each category, from the
                 chunk dataset, with per-location lock state. */}
@@ -989,12 +1003,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
               >
                   Quests
               </button>
+              {!isF2P && (
               <button 
                   onClick={() => setJournalSubTab('DIARIES')}
                   className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${journalSubTab === 'DIARIES' ? 'bg-[#222] text-green-400 border-b-2 border-green-400' : 'text-gray-500 hover:text-gray-300'}`}
               >
                   Diaries
               </button>
+              )}
               <button
                   onClick={() => setJournalSubTab('CA')}
                   className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${journalSubTab === 'CA' ? 'bg-[#222] text-red-400 border-b-2 border-red-400' : 'text-gray-500 hover:text-gray-300'}`}

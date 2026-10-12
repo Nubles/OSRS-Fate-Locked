@@ -419,3 +419,26 @@ describe('classifyFateEvent', () => {
     });
   });
 });
+
+describe('Free-to-play detected events', () => {
+  const f2p = state({ gameModeId: 'f2p' });
+
+  it('turn away members-only Key sources', () => {
+    expect(classifyFateEvent(event('SLAYER_TASK', 'Abyssal demons', { confidence: 'UNCERTAIN' }), f2p))
+      .toMatchObject({ state: 'BLOCKED', reason: 'Slayer is members only, so it gives no Keys in Free-to-play.' });
+    expect(classifyFateEvent(event('CLUE_CASKET', 'Casket (hard)'), f2p)).toMatchObject({ state: 'BLOCKED' });
+    expect(classifyFateEvent(event('PET_DROP', null, { confidence: 'UNCERTAIN' }), f2p))
+      .toMatchObject({ state: 'BLOCKED', reason: 'Pets are members only, so they give no Keys in Free-to-play.' });
+    expect(classifyFateEvent(event('MINIGAME_COMPLETION', 'Pest Control'), f2p)).toMatchObject({ state: 'BLOCKED' });
+    expect(classifyFateEvent(event('QUEST', "Gertrude's Cat"), f2p).state).toBe('BLOCKED');
+    expect(classifyFateEvent(event('COMBAT_ACHIEVEMENT', 'Zulrah Adept'), f2p).state).toBe('BLOCKED');
+    expect(classifyFateEvent(event('COLLECTION_LOG', 'Tanzanite fang'), f2p).state).toBe('BLOCKED');
+  });
+
+  it('still take beginner clues, free-to-play quests, tasks and log items', () => {
+    expect(classifyFateEvent(event('CLUE_CASKET', 'Casket (beginner)'), f2p).state).toBe('READY');
+    expect(classifyFateEvent(event('QUEST', "Cook's Assistant"), f2p).state).toBe('READY');
+    expect(classifyFateEvent(event('COMBAT_ACHIEVEMENT', 'Obor Novice'), f2p).state).toBe('READY');
+    expect(classifyFateEvent(event('COLLECTION_LOG', 'Hill giant club'), f2p).state).toBe('READY');
+  });
+});

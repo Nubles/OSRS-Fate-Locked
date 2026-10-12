@@ -37,6 +37,21 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-12-free-to-play',
+    title: 'New mode: Free-to-play',
+    date: '2026-10-12',
+    sections: {
+      added: [
+        'Pick Free-to-play when you start a run to play Fate Locked on a free-to-play account.',
+        'Keys only roll free-to-play content: 15 skills, each slot’s best free-to-play gear, 23 areas, 2 bosses and 6 minigames.',
+        'You start with Lumbridge, Varrock, Draynor, Edgeville, Barbarian Village and the Wizards’ Tower.',
+        'Slayer, diaries and pets are members only, so they’re off, and only beginner clues give Keys.',
+        'Quests, Combat Achievements, the collection log, goals and achievements only show free-to-play content.',
+        'Breakthroughs and Fate’s Mercy work here too, so a run never gets stuck.',
+      ],
+    },
+  },
+  {
     id: '2026-10-12-faster-updates',
     title: 'Faster updates',
     date: '2026-10-12',
@@ -60,6 +75,20 @@ export const CHANGELOG_RELEASES = [
       changed: [
         'The Void Altar looks like an in-game window now.',
         'Click or press Esc to skip an animation, or turn Animations off in Settings to hide them.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-10-chunked-fate',
+    title: 'Fate keeps Chunked runs moving',
+    date: '2026-10-10',
+    sections: {
+      added: [
+        'Breakthroughs: a skill at its cap gets one 50% roll to open its next tier, if your chunks can train it there. Roll it from the Keys screen.',
+        'Fate’s Mercy: with no Keys, nothing left to train, no Breakthroughs and no doable quests, Call on Fate draws a nearby chunk or skill tier.',
+      ],
+      balance: [
+        'A Skills Key in Chunked only rolls skills your chunks can train, so it won’t hand you Sailing in Lumbridge Castle.',
       ],
     },
   },

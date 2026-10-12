@@ -8,6 +8,7 @@ import { travelReachability } from '../utils/travelReach';
 import { CHUNKED_START } from '../utils/chunkAdjacency';
 import { chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
 import { questLocations } from '../utils/questLocations';
+import { questsForMode } from '../utils/modeContent';
 import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate, hasCanonicalQuestLocationEvidence, QuestChunkStatus } from '../utils/questDoability';
 import {
   evaluateQuestEligibility, questRequirementOptionLabel, withSkillGateQuests,
@@ -48,7 +49,7 @@ export interface QuestDoabilityEvaluation {
   otherRequirements: string[];
 }
 
-interface Row extends QuestDoabilityEvaluation {
+export interface Row extends QuestDoabilityEvaluation {
   strandedChunk: { cx: number; cy: number; label: string } | null;
 }
 
@@ -191,6 +192,58 @@ export const questDoabilityRequirementLabels = (
   ...row.manualChecks.map(check => `Confirm: ${check}`),
   ...row.otherRequirements,
 ];
+/**
+ * Every quest's Chunked doability, walked from the free start chunk. Needs
+ * chunkContentService to be ready. Fate's Mercy reads it too: it stays shut
+ * while a quest here is doable.
+ */
+export const chunkedQuestRows = (unlocks: UnlockState, gameModeId: string): Row[] => {
+  // Gate reachability on per-chunk quest-entry requirements (questSections),
+  // so a quest whose step sits behind an un-done quest reads correctly.
+  const completed = new Set<string>(unlocks.quests as string[]);
+  const known = new Set<string>(Object.keys(QUEST_DATA));
+  const gate = entryBlockedGate(chunkContentService.questSections(), completed, known);
+  // Walk from the free start chunk the map and RuneLite export use; the
+  // Lumbridge place chunk is only corner-adjacent to it and starts locked.
+  const reach = travelReachability(chunkContentService.connectGraph(), unlocks, CHUNKED_START, gate, gameModeId);
+  const isUnlocked = (cx: number, cy: number) => chunkUnlocked(cx, cy, unlocks, gameModeId);
+  return Object.values(QUEST_DATA).map((q) => {
+    const hit = chunkContentService.entityLocations(q.id, ['quest']);
+    const chunk = hit ? questChunkStatus(hit.locations, reach.reachable, isUnlocked) : null;
+    const chunkLockedAreas = chunk?.access === 'LOCKED'
+      ? questLocations(q.id, unlocks, gameModeId).lockedPlaces.map(place => place.label)
+      : [];
+    const evaluation = evaluateQuestDoability(
+      q, unlocks, chunk, chunkLockedAreas, gameModeId,
+    );
+    const strandedFirst = evaluation.bucket === 'STRANDED'
+      ? chunk?.blockers.find(blocker => blocker.access === 'STRANDED')
+      : null;
+    const strandedChunk = strandedFirst
+      ? {
+          cx: strandedFirst.cx,
+          cy: strandedFirst.cy,
+          label: placeOf(strandedFirst.cx, strandedFirst.cy).label,
+        }
+      : null;
+
+    return { ...evaluation, strandedChunk };
+  });
+};
+
+/**
+ * Every quest row the run's mode shows, for the Doable tab and Fate's Mercy:
+ * Chunked walks its chunks (chunkContentService must be ready), and
+ * Free-to-play lists only the free-to-play quests.
+ */
+export const fateQuestRows = (unlocks: UnlockState, gameModeId: string): Row[] =>
+  gameModeId === 'chunked'
+    ? chunkedQuestRows(unlocks, gameModeId)
+    : questsForMode(gameModeId).map(quest => ({
+        ...evaluateQuestDoability(quest, unlocks, null, [], gameModeId),
+        strandedChunk: null,
+      }));
+
 export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
   const { unlocks, gameModeId } = useGame();
   const isChunked = gameModeId === 'chunked';
@@ -201,44 +254,8 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
   const [open, setOpen] = useState<Record<string, boolean>>({ DOABLE: true, REQS: true, STRANDED: true, LOCKED: true });
 
   const rows = useMemo<Row[]>(() => {
-    if (!isChunked) {
-      return Object.values(QUEST_DATA).map(quest => ({
-        ...evaluateQuestDoability(quest, unlocks, null, [], gameModeId),
-        strandedChunk: null,
-      }));
-    }
-    if (!ready) return [];
-    // Gate reachability on per-chunk quest-entry requirements (questSections),
-    // so a quest whose step sits behind an un-done quest reads correctly.
-    const completed = new Set<string>(unlocks.quests as string[]);
-    const known = new Set<string>(Object.keys(QUEST_DATA));
-    const gate = entryBlockedGate(chunkContentService.questSections(), completed, known);
-    // Walk from the free start chunk the map and RuneLite export use; the
-    // Lumbridge place chunk is only corner-adjacent to it and starts locked.
-    const reach = travelReachability(chunkContentService.connectGraph(), unlocks, CHUNKED_START, gate, gameModeId);
-    const isUnlocked = (cx: number, cy: number) => chunkUnlocked(cx, cy, unlocks, gameModeId);
-    return Object.values(QUEST_DATA).map((q) => {
-      const hit = chunkContentService.entityLocations(q.id, ['quest']);
-      const chunk = hit ? questChunkStatus(hit.locations, reach.reachable, isUnlocked) : null;
-      const chunkLockedAreas = chunk?.access === 'LOCKED'
-        ? questLocations(q.id, unlocks, gameModeId).lockedPlaces.map(place => place.label)
-        : [];
-      const evaluation = evaluateQuestDoability(
-        q, unlocks, chunk, chunkLockedAreas, gameModeId,
-      );
-      const strandedFirst = evaluation.bucket === 'STRANDED'
-        ? chunk?.blockers.find(blocker => blocker.access === 'STRANDED')
-        : null;
-      const strandedChunk = strandedFirst
-        ? {
-            cx: strandedFirst.cx,
-            cy: strandedFirst.cy,
-            label: placeOf(strandedFirst.cx, strandedFirst.cy).label,
-          }
-        : null;
-
-      return { ...evaluation, strandedChunk };
-    });
+    if (isChunked && !ready) return [];
+    return fateQuestRows(unlocks, gameModeId);
   }, [ready, unlocks, gameModeId, isChunked]);
 
   const filtered = useMemo(() => {

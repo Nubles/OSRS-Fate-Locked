@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, X } from 'lucide-react';
 import { Lightbulb } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
-import { resolveModeRules } from '../config/gameModes';
+import { isF2PMode, resolveModeRules } from '../config/gameModes';
 import { relaySync } from '../services/relaySync';
 import { getRollInboxStore } from '../services/rollInboxRuntime';
 import { isRollEntry } from '../utils/logEntry';
@@ -98,7 +98,9 @@ export const CoachStrip: React.FC = () => {
     if (!hasRolled) {
       return {
         id: 'farm',
-        text: 'Finish something in game (a Slayer task, a quest, a clue), then click its card to roll for a Key.',
+        text: isF2PMode(gameModeId)
+          ? 'Finish something in game (a quest, a clue, a boss kill), then click its card to roll for a Key.'
+          : 'Finish something in game (a Slayer task, a quest, a clue), then click its card to roll for a Key.',
         cta: 'Farm Keys',
         act: () => nav('ctrl:FARM'),
       };
