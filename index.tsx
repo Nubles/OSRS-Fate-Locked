@@ -28,11 +28,21 @@ if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
-const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    {isOverlay
-      ? <Suspense fallback={null}><StreamOverlay /></Suspense>
-      : <App />}
-  </React.StrictMode>
-);
+const start = () => {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
+      {isOverlay
+        ? <Suspense fallback={null}><StreamOverlay /></Suspense>
+        : <App />}
+    </React.StrictMode>
+  );
+};
+
+// The private preview build carries its own copies of wiki images; the live
+// build drops this branch at compile time.
+if (import.meta.env.VITE_PREVIEW_IMAGE_PACK === '1') {
+  import('./utils/previewImagePack').then(m => m.installPreviewImagePack()).catch(() => {}).finally(start);
+} else {
+  start();
+}
