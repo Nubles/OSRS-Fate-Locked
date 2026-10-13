@@ -534,7 +534,7 @@ describe('buildRuneliteBundle - v4 category snapshot', () => {
     const { REGIONS_LIST, SKILLS_LIST } = await import('../data/items');
     const unlocks = {
       ...structuredClone(initialState.unlocks),
-      regions: [...REGIONS_LIST], bosses: ['General Graardor'],
+      regions: [...REGIONS_LIST], bosses: ['General Graardor'], merchants: ['General Stores'],
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
       quests: Object.keys(QUEST_DATA).filter(id => id !== 'Dragon Slayer II'),

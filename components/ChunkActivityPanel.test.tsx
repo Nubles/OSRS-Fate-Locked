@@ -17,7 +17,8 @@ const pryingTimesUnlocks = (): UnlockState => ({
   mobility: [],
   arcana: [],
   housing: [],
-  merchants: [],
+  // Food Shops sell the redberry pie the quest needs.
+  merchants: ['Food Shops'],
   minigames: [],
   bosses: [],
   storage: [],

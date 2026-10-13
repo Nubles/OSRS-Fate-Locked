@@ -391,6 +391,8 @@ describe('ChunkActivityPanel activity accordions', () => {
     mocks.state.regions = ['The Pandemonium', 'Port Sarim', 'Rimmington'];
     mocks.state.skills = { Smithing: 3, Sailing: 2 };
     mocks.state.levels = { Smithing: 30, Sailing: 12 };
+    // Food Shops sell the redberry pie the quest needs.
+    mocks.state.merchants = ['Food Shops'];
 
     render(<ChunkActivityPanel {...baseProps} />);
 

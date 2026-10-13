@@ -37,6 +37,23 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-13-quest-item-checks',
+    title: 'Quests and diaries check the items you need',
+    date: '2026-10-13',
+    sections: {
+      changed: [
+        'Quests and diary tasks now need a way to get their items, such as a shop, a skill, a drop or a spawn, and the slot to wear them.',
+        'Logs need the Woodcutting level to cut them, rune essence needs Rune Mysteries, and mithril grapples need a way to make or find one.',
+        'Gertrude’s Cat needs a fishing shop or 5 Fishing, and the start of Recipe for Disaster needs the shops that sell the cook’s items.',
+        'The Kandarin Easy pet fish needs Fishing Shops, 10 Fishing and a way to get a fishbowl.',
+        'A Soul’s Bane needs a Weapon slot, since you wield the rage room’s weapons.',
+      ],
+      fixed: [
+        'The Doable tab no longer lists quests in areas you can’t reach. Diary tasks you can do now say Can do now.',
+      ],
+    },
+  },
+  {
     id: '2026-10-13-old-compensation-offer',
     title: 'No more surprise compensation offer',
     date: '2026-10-13',
