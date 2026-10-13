@@ -37,9 +37,9 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-12-achievement-rewards',
+    id: '2026-10-13-achievement-rewards',
     title: 'More achievements, now with rewards',
-    date: '2026-10-12',
+    date: '2026-10-13',
     sections: {
       added: [
         "There are now over 100 achievements, including ones for Key rolls, Void Altar rituals, pets and every unlock table.",
@@ -50,6 +50,32 @@ export const CHANGELOG_RELEASES = [
       changed: [
         "Achievements you'd already earned keep their title but don't pay out. Rewards start with the next one you earn.",
         "Apprentice now needs a skill you unlocked with a Key. Hitpoints doesn't count, since every run starts with it.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-13-safer-saves',
+    title: 'Safer saves and backups',
+    date: '2026-10-13',
+    sections: {
+      fixed: [
+        "If another site changes your save in this browser, the tracker now asks which copy to keep instead of loading it.",
+        "Online backup now asks before replacing a backup of a different or longer run, like after a Reset.",
+        "If sending your rules to RuneLite fails, the tracker tries again on its own and tells you if it keeps failing.",
+      ],
+      changed: [
+        "Crashes are now reported automatically so they can be fixed faster. Reports never include your save.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-13-old-compensation-offer',
+    title: 'No more surprise compensation offer',
+    date: '2026-10-13',
+    sections: {
+      fixed: [
+        'Runs played since Weighted Fate no longer get its old compensation offer by mistake.',
+        'It could pop up after opening the RS3 tracker in the same browser as your OSRS run.',
       ],
     },
   },

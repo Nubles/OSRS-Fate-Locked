@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
 import { isChunkLoadError, reloadOnceForChunkError } from '../utils/chunkLoadError';
+import { reportError } from '../utils/errorBeacon';
 
 interface Props {
   /** Human-readable panel name, shown in the fallback message. */
@@ -27,6 +28,7 @@ export class PanelErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error(`[${this.props.name}] panel error:`, error, info);
+    reportError('panel', error); // before the reload below, as in App's boundary
     // A code-split chunk 404'd because a newer build has since been deployed —
     // retrying the same import can't succeed, so reload to fetch the new build.
     if (isChunkLoadError(error)) reloadOnceForChunkError();

@@ -8,6 +8,12 @@
 # Flow: weekly (or manual) -> sync from wiki -> test -> open/refresh a PR ->
 # dispatch CI on it. A maintainer reviews + merges; the merge pushes to main
 # and the existing Deploy workflow publishes it. Nothing ships unreviewed.
+#
+# Two jobs, so the step that runs third-party code never holds a write token:
+# `sync` installs the lockfile's dependencies, runs the wiki sync and the
+# tests with read-only permissions and no stored git credentials, and hands
+# the three generated files plus the PR text to `open-pr` as an artifact.
+# `open-pr` runs no npm code; it alone may write, to open the PR and start CI.
 name: Sync content from the OSRS Wiki
 
 on:
@@ -16,9 +22,7 @@ on:
   workflow_dispatch: {}  # manual run from the Actions tab
 
 permissions:
-  contents: write
-  pull-requests: write
-  actions: write # dispatch CI on the sync PR branch
+  contents: read
 
 concurrency:
   group: wiki-content-sync
@@ -27,18 +31,22 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Sync data from the wiki
         run: npm run content:sync | tee sync-output.txt
@@ -61,14 +69,46 @@ jobs:
             echo '```'
           } > pr-body.md
 
+      # Only the generated data/report and the PR text cross to the job that
+      # can write — never the scratch logs or anything else in the workspace.
+      - name: Hand the synced files to the PR job
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: wiki-content-sync
+          path: |
+            data/collectionLogData.ts
+            data/caTasks.ts
+            docs/SYNC_STATUS.md
+            pr-body.md
+          if-no-files-found: error
+          retention-days: 1
+
+  open-pr:
+    needs: sync
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write # dispatch CI on the sync PR branch
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Take the synced files from the sync job
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: wiki-content-sync
+          path: .
+
       - name: Open or update the sync PR
         id: cpr
         if: success()
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c # v6.1.0
         with:
           branch: bot/wiki-content-sync
           delete-branch: true
-          # Only ever commit the generated data/report — never the scratch logs above.
+          # Only ever commit the generated data/report — never the PR text above.
           add-paths: |
             data/collectionLogData.ts
             data/caTasks.ts

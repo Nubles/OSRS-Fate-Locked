@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { initialState } from '../context/GameContext';
 import type { GameState } from '../types';
 import { checksumSave } from './saveIntegrity';
+import { createLifecycleMark } from './lifecycleMark';
 import {
   resolveSaveRecovery,
   type SaveRecoveryInput,
@@ -215,13 +216,14 @@ describe('pure startup save recovery arbitration', () => {
     });
   });
 
-  it('recognizes a lifecycle mirror whose stale sidecar still matches the head', async () => {
+  it('recognizes a marked lifecycle mirror whose stale sidecar still matches the head', async () => {
     const head = await record({ persistenceRevision: 5, runRevision: 5, note: 'head' });
     const primary = await record({ persistenceRevision: 6, runRevision: 6, note: 'same-batch lifecycle' });
 
     const decision = await resolveSaveRecovery(fixture({
       primaryRaw: primary.data,
       mirrorMetadataRaw: await metadata({ data: head.data, ...head }),
+      lifecycleMarkRaw: createLifecycleMark(primary.data),
       head,
     }));
 
@@ -232,6 +234,30 @@ describe('pure startup save recovery arbitration', () => {
       persistenceRevision: 6,
       needsJournalImport: true,
       data: primary.data,
+    });
+  });
+
+  // SAVE-1: another app on the same address rewriting the primary leaves the
+  // same evidence as a page-hide write. Without this app's mark, it must not
+  // be journaled as newer; the player chooses, with the head offered first.
+  it('asks before trusting an unmarked primary whose stale sidecar matches the head', async () => {
+    const head = await record({ persistenceRevision: 5, runRevision: 5, note: 'head' });
+    const primary = await record({ persistenceRevision: 6, runRevision: 6, note: 'unmarked rewrite' });
+
+    const decision = await resolveSaveRecovery(fixture({
+      primaryRaw: primary.data,
+      mirrorMetadataRaw: await metadata({ data: head.data, ...head }),
+      head,
+    }));
+
+    expect(decision).toMatchObject({
+      kind: 'recovery_required',
+      cause: 'unconfirmed_primary',
+      primaryRaw: primary.data,
+      candidates: [
+        expect.objectContaining({ source: 'journal', persistenceRevision: 5, data: head.data }),
+        expect.objectContaining({ source: 'mirror', persistenceRevision: 0, data: primary.data }),
+      ],
     });
   });
 

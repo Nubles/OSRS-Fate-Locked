@@ -28,6 +28,8 @@ export const CURRENT_SAVE_VERSION = 5;
  * must never offer the compensation again to saves that already hold one.
  */
 export const WEIGHTED_FATE_SAVE_VERSION = 4;
+/** Start of the day weighted Fate shipped (2 Aug 2026, UTC). */
+export const WEIGHTED_FATE_RELEASED_AT = Date.UTC(2026, 7, 2);
 /** Only saves from before weighted Fate have their offer calculated on load. */
 export const calculatesLegacyFateCompensation = (sourceVersion: number): boolean =>
   sourceVersion < WEIGHTED_FATE_SAVE_VERSION;
@@ -41,6 +43,13 @@ export const calculatesPetCompensation = (sourceVersion: number): boolean =>
   sourceVersion < PET_OMNI_SAVE_VERSION;
 const MIN_SUPPORTED_SAVE_VERSION = 1;
 export const MAX_SAVE_BYTES = 5 * 1024 * 1024;
+/**
+ * Written into every save this tracker stores or exports (gamePersistence's
+ * serializeCurrent). Other apps share this tracker's address and storage, so a
+ * save stamped with a different app is refused. Saves from before the stamp
+ * have none and still load.
+ */
+export const SAVE_APP_ID = 'osrs-fate-locked';
 export const MAX_HISTORY_ENTRIES = 100_000;
 export const MAX_IDENTIFIER_ARRAY = 25_000;
 export const MAX_COLLECTION_LOG_ENTRIES = 25_000;
@@ -60,7 +69,8 @@ export type SaveErrorCode =
   | 'invalid_number'
   | 'invalid_history'
   | 'invalid_unlocks'
-  | 'decode_failed';
+  | 'decode_failed'
+  | 'foreign_app';
 
 export type SaveWarning = {
   code: 'migrated' | 'storage_warning';
@@ -96,6 +106,7 @@ const messageFor = (code: SaveErrorCode, path?: string): string => {
     case 'invalid_history': return `Save history is invalid${suffix}.`;
     case 'invalid_unlocks': return `Save unlock data is invalid${suffix}.`;
     case 'decode_failed': return 'Save data could not be decoded.';
+    case 'foreign_app': return 'This save was made by a different app, not the OSRS Fate Locked tracker.';
     default: return `Save data contains an invalid field${suffix}.`;
   }
 };
@@ -873,10 +884,19 @@ const notEligibleFateCompensation = (): FateCompensationState => ({
   fatePoints: 0,
 });
 
-/** Freeze the one-time offer for a save from before weighted Fate, under its own mode's pity rule. */
+/**
+ * Freeze the one-time offer for a save from before weighted Fate, under its own mode's pity rule.
+ * A run with anything recorded on or after the update's day was played under
+ * weighted Fate and already got its milestone Chaos Keys; its save only reads
+ * as old because another app rewrote it (the RS3 tracker on the same site
+ * stamps its own lower version), so it gets no offer.
+ */
 const legacyFateCompensationOffer = (
   state: Pick<GameState, 'unlocks' | 'history' | 'fatePoints' | 'gameModeId' | 'customMode'>,
 ): FateCompensationState => {
+  if (state.history.some(entry => entry.timestamp >= WEIGHTED_FATE_RELEASED_AT)) {
+    return notEligibleFateCompensation();
+  }
   const calculated = calculateLegacyFateCompensation(
     state,
     resolveModeRules(state.gameModeId, state.customMode),
@@ -948,6 +968,7 @@ const normalizeCollectionLogIdentity = (value: unknown): Outcome<CollectionLogId
 };
 
 const TOP_LEVEL_KEYS = new Set([
+  'app',
   'collectionLogIdentity',
   'runeProofProgress',
   'version', 'runId', 'runRevision', 'keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'activeBuff',
@@ -980,6 +1001,7 @@ export const validateAndMigrateSave = (
   if (!isPlainRecord(input)) return invalid('invalid_root');
   const inspected = inspectRecord(input, TOP_LEVEL_KEYS, 'invalid_field', '');
   if (inspected.ok === false) return inspected;
+  if (own(input, 'app') && readOwn(input, 'app') !== SAVE_APP_ID) return invalid('foreign_app', 'app');
   const hasVersion = own(input, 'version');
   const rawVersion = hasVersion ? readOwn(input, 'version') : undefined;
   let sourceVersion = 0;

@@ -39,6 +39,7 @@ import { UpdateBanner } from './components/UpdateBanner';
 import { ModalFallback } from './components/LoadingFallback';
 import { JournalSummaryCard } from './components/JournalSummaryCard';
 import { isChunkLoadError, reloadOnceForChunkError } from './utils/chunkLoadError';
+import { reportError } from './utils/errorBeacon';
 import { useEscapeKey } from './hooks/useEscapeKey';
 import { resolveModeRules } from './config/gameModes';
 import { RITUALS, type Ritual } from './config/economy';
@@ -75,6 +76,7 @@ const OnlineBackupDriver = lazyWithRetry(() => import('./components/OnlineBackup
 const ProgressShareDriver = lazyWithRetry(() => import('./components/ProgressShareDriver').then(m => ({ default: m.ProgressShareDriver })));
 const OnlineBackupPrompt = lazyWithRetry(() => import('./components/OnlineBackupPrompt').then(m => ({ default: m.OnlineBackupPrompt })));
 const BackupNagBanner = lazyWithRetry(() => import('./components/BackupNagBanner').then(m => ({ default: m.BackupNagBanner })));
+const RelayPublishBanner = lazyWithRetry(() => import('./components/RelayPublishBanner'));
 const ModelGallery = lazyWithRetry(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
 const DiscordSettingsModal = lazyWithRetry(() => import('./components/DiscordSettingsModal'));
 // The release notes load with the modal; only the latest release's id is
@@ -123,6 +125,9 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Application error:', error, errorInfo);
+    // Before the reload below: a chunk error is reported only when the last
+    // reload didn't fix it (utils/errorBeacon.ts).
+    reportError('boundary', error);
     // Stale chunk from a superseded deploy — retrying in-app can't fix it,
     // so reload once to pick up the current build.
     if (isChunkLoadError(error)) reloadOnceForChunkError();
@@ -1087,6 +1092,9 @@ const GameLayout = () => {
       )}
 
       <SaveFailureBanner />
+
+      {/* Says when the RuneLite profile couldn't be sent, and when it's tried again. */}
+      <Suspense fallback={null}><RelayPublishBanner /></Suspense>
 
       <Suspense fallback={null}>
         {/* Global ⌘K command palette — navigates via fate:nav events. */}

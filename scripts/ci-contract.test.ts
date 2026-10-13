@@ -17,6 +17,18 @@ const verificationCommands = [
 ];
 
 const TEST_SHARDS = 3;
+
+// Every action is pinned to a full commit SHA (a moved tag can't change what
+// runs), with its release tag as a trailing comment for humans and Dependabot.
+// Get a SHA with `git ls-remote https://github.com/<owner>/<repo> refs/tags/<tag>`.
+const CHECKOUT = 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262';
+const SETUP_NODE = 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020';
+const UPLOAD_PAGES_ARTIFACT = 'actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa';
+const DEPLOY_PAGES = 'actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e';
+const UPLOAD_ARTIFACT = 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02';
+const DOWNLOAD_ARTIFACT = 'actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093';
+const CREATE_PULL_REQUEST = 'peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c';
+const WORKFLOWS = ['ci.yml', 'deploy.yml', 'sync-content.yml', 'discord-release.yml', 'discord-whats-new.yml'];
 const shardedTestCommand = `npm test -- --shard=\${{ matrix.shard }}/${TEST_SHARDS}`;
 
 const pullRequestCommandOrder = [
@@ -259,7 +271,7 @@ const expectShardedTestJob = (testJob: string) => {
   expect(testJob).toMatch(/^\s{4}runs-on:\s*ubuntu-latest\s*$/m);
   expect(testJob).toMatch(/^\s{10}node-version:\s*22\s*$/m);
   expect(testJob).toMatch(/^\s{10}cache:\s*npm\s*$/m);
-  expect(activeUses(testJob)).toEqual(['actions/checkout@v4', 'actions/setup-node@v4']);
+  expect(activeUses(testJob)).toEqual([CHECKOUT, SETUP_NODE]);
   expect(activeRunCommands(testJob)).toEqual(['npm ci --no-audit --no-fund', shardedTestCommand]);
   // Every shard must be listed, or part of the suite silently never runs.
   const shards = testJob.match(/^\s{8}shard:\s*\[([^\]]*)\]\s*$/m)?.[1]
@@ -276,10 +288,10 @@ const expectDeployBuildOperations = (buildJob: string) => {
   expectNoNpmInstall(commands);
 
   const expectedOperations = [
-    'uses:actions/checkout@v4',
-    'uses:actions/setup-node@v4',
+    `uses:${CHECKOUT}`,
+    `uses:${SETUP_NODE}`,
     ...deployCommandOrder.map((command) => `run:${command}`),
-    'uses:actions/upload-pages-artifact@v3',
+    `uses:${UPLOAD_PAGES_ARTIFACT}`,
   ];
   expect(
     activeStepOperations(buildJob),
@@ -328,12 +340,9 @@ describe('CI workflow contract', () => {
     expect(qualityJob).toMatch(/^\s{4}runs-on:\s*ubuntu-latest\s*$/m);
     expect(qualityJob).toMatch(/^\s{10}node-version:\s*22\s*$/m);
     expect(qualityJob).toMatch(/^\s{10}cache:\s*npm\s*$/m);
-    expect(activeUses(qualityJob)).toEqual([
-      'actions/checkout@v4',
-      'actions/setup-node@v4',
-    ]);
+    expect(activeUses(qualityJob)).toEqual([CHECKOUT, SETUP_NODE]);
     expect(qualityJob).toMatch(
-      /- name: Checkout\n\s+uses: actions\/checkout@v4\n\s+with:\n\s+fetch-depth: 0/,
+      new RegExp(`- name: Checkout\\n\\s+uses: ${escapeRegExp(CHECKOUT)}\\n\\s+with:\\n\\s+fetch-depth: 0`),
     );
     expect(qualityJob).toMatch(
       /- name: Verify player-facing What's New\n\s+if: github\.event_name == 'pull_request'\n\s+run: npm run changelog:verify\n\s+env:\n\s+CHANGELOG_BASE_REF: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/,
@@ -343,8 +352,11 @@ describe('CI workflow contract', () => {
     expectInOrder(commands, pullRequestCommandOrder);
     expect(commands).toEqual(pullRequestCommandOrder);
     expectNoNpmInstall(commands);
+    // The same 40-character BUILD_ID as the deploy build: the id is in the
+    // entry chunk, so a different length moves its gzip size against the
+    // budget, and a PR could pass CI and then fail its deploy.
     expect(qualityJob).toMatch(
-      /- name: Build\n\s+run: npm run build\n\s+env:\n\s+VITE_BASE: \/\$\{\{ github\.event\.repository\.name \}\}\//,
+      /- name: Build\n\s+run: npm run build\n\s+env:\n\s+VITE_BASE: \/\$\{\{ github\.event\.repository\.name \}\}\/\n\s+BUILD_ID: \$\{\{ github\.sha \}\}/,
     );
 
     expectShardedTestJob(yamlBlock(jobsBlock, 'tests', 2));
@@ -459,7 +471,7 @@ describe('workflow contract mutation coverage', () => {
   it('rejects a Pages artifact upload moved ahead of the quality gates', async () => {
     const workflow = await readRepositoryFile('.github/workflows/deploy.yml');
     const uploadPattern =
-      /      - name: Upload artifact\r?\n        uses: actions\/upload-pages-artifact@v3\r?\n        with:\r?\n          path: \.\/dist\r?\n?/;
+      new RegExp(`      - name: Upload artifact\\r?\\n        uses: ${escapeRegExp(UPLOAD_PAGES_ARTIFACT)} # v3\\.0\\.1\\r?\\n        with:\\r?\\n          path: \\./dist\\r?\\n?`);
     const uploadStep = workflow.match(uploadPattern)?.[0];
     expect(uploadStep, 'upload step fixture missing').toBeTruthy();
 
@@ -503,16 +515,12 @@ describe('Pages deployment workflow contract', () => {
     expect(buildJob).toMatch(/^\s{4}runs-on:\s*ubuntu-latest\s*$/m);
     expect(buildJob).toMatch(/^\s{10}node-version:\s*22\s*$/m);
     expect(buildJob).toMatch(/^\s{10}cache:\s*npm\s*$/m);
-    expect(activeUses(buildJob)).toEqual([
-      'actions/checkout@v4',
-      'actions/setup-node@v4',
-      'actions/upload-pages-artifact@v3',
-    ]);
+    expect(activeUses(buildJob)).toEqual([CHECKOUT, SETUP_NODE, UPLOAD_PAGES_ARTIFACT]);
     expect(buildJob).toMatch(
       /- name: Build\n\s+run: npm run build\n\s+env:\n\s+VITE_BASE: \/\$\{\{ github\.event\.repository\.name \}\}\/\n\s+BUILD_ID: \$\{\{ github\.sha \}\}/,
     );
     expect(buildJob).toMatch(
-      /uses: actions\/upload-pages-artifact@v3\n\s+with:\n\s+path: \.\/dist/,
+      new RegExp(`uses: ${escapeRegExp(UPLOAD_PAGES_ARTIFACT)}\\n\\s+with:\\n\\s+path: \\./dist`),
     );
 
     expectDeployBuildOperations(buildJob);
@@ -526,7 +534,7 @@ describe('Pages deployment workflow contract', () => {
       'url: ${{ steps.deployment.outputs.page_url }}',
     );
     expect(deployJob).toMatch(/^\s{8}id:\s*deployment\s*$/m);
-    expect(activeUses(deployJob)).toEqual(['actions/deploy-pages@v4']);
+    expect(activeUses(deployJob)).toEqual([DEPLOY_PAGES]);
   });
 });
 
@@ -590,14 +598,14 @@ describe('release documentation contract', () => {
 describe('content sync workflow contract', () => {
   it('dispatches CI on the sync pull request it opens with GITHUB_TOKEN', async () => {
     const workflow = await readRepositoryFile('.github/workflows/sync-content.yml');
-    const permissionsBlock = yamlBlock(workflow, 'permissions');
+    const openPrJob = yamlBlock(yamlBlock(workflow, 'jobs'), 'open-pr', 2);
 
     // Pull requests opened with GITHUB_TOKEN start no workflows, so the sync
     // must dispatch CI itself, on the branch its pull request uses.
-    expect(permissionsBlock).toMatch(/^\s{2}actions:\s*write\s*$/m);
-    expect(workflow).toMatch(/- name: Open or update the sync PR\n\s+id: cpr\n\s+if: success\(\)\n\s+uses: peter-evans\/create-pull-request@v6/);
-    expect(workflow).toMatch(/^\s+branch: bot\/wiki-content-sync\s*$/m);
-    expect(workflow).toMatch(
+    expect(openPrJob).toMatch(/^\s{6}actions:\s*write\s*$/m);
+    expect(openPrJob).toMatch(new RegExp(`- name: Open or update the sync PR\\n\\s+id: cpr\\n\\s+if: success\\(\\)\\n\\s+uses: ${escapeRegExp(CREATE_PULL_REQUEST)}\\n`));
+    expect(openPrJob).toMatch(/^\s+branch: bot\/wiki-content-sync\s*$/m);
+    expect(openPrJob).toMatch(
       /- name: Run CI on the sync PR\n\s+if: success\(\) && \(steps\.cpr\.outputs\.pull-request-operation == 'created' \|\| steps\.cpr\.outputs\.pull-request-operation == 'updated'\)\n\s+env:\n\s+GH_TOKEN: \$\{\{ github\.token \}\}/,
     );
     expect(activeRunCommands(workflow).at(-1)).toBe(
@@ -605,5 +613,57 @@ describe('content sync workflow contract', () => {
     );
     expect(yamlBlock(await readRepositoryFile('.github/workflows/ci.yml'), 'on'))
       .toMatch(/^\s{2}workflow_dispatch:\s*$/m);
+  });
+
+  it('runs third-party code only in a read-only job without stored credentials', async () => {
+    const workflow = await readRepositoryFile('.github/workflows/sync-content.yml');
+    const jobsBlock = yamlBlock(workflow, 'jobs');
+    const syncJob = yamlBlock(jobsBlock, 'sync', 2);
+    const openPrJob = yamlBlock(jobsBlock, 'open-pr', 2);
+
+    // Workflow default and the sync job: read-only.
+    expect(yamlBlock(workflow, 'permissions').trim()).toBe('permissions:\n  contents: read');
+    expect(yamlBlock(syncJob, 'permissions', 4).trim()).toBe('permissions:\n      contents: read');
+    // The sync job installs from the lockfile and keeps no git token on disk.
+    expect(activeRunCommands(syncJob).slice(0, 3)).toEqual([
+      'npm ci --no-audit --no-fund',
+      'npm run content:sync | tee sync-output.txt',
+      'npm test',
+    ]);
+    expectNoNpmInstall(activeRunCommands(workflow));
+    expect(syncJob).toMatch(
+      new RegExp(`- name: Checkout\\n\\s+uses: ${escapeRegExp(CHECKOUT)}\\n\\s+with:\\n\\s+persist-credentials: false`),
+    );
+    expect(activeUses(syncJob)).toEqual([CHECKOUT, SETUP_NODE, UPLOAD_ARTIFACT]);
+
+    // Only the job that runs no npm code may write, and it gets only the
+    // generated files and the PR text from the sync job.
+    expect(openPrJob).toMatch(/^\s{4}needs:\s*sync\s*$/m);
+    expect(yamlBlock(openPrJob, 'permissions', 4).trim()).toBe(
+      'permissions:\n      contents: write\n      pull-requests: write\n      actions: write',
+    );
+    expect(activeUses(openPrJob)).toEqual([CHECKOUT, DOWNLOAD_ARTIFACT, CREATE_PULL_REQUEST]);
+    expect(activeRunCommands(openPrJob).filter((command) => /\b(?:npm|npx|node)\b/.test(command))).toEqual([]);
+    expect(syncJob).toMatch(
+      /path: \|\n\s+data\/collectionLogData\.ts\n\s+data\/caTasks\.ts\n\s+docs\/SYNC_STATUS\.md\n\s+pr-body\.md\n/,
+    );
+    expect(openPrJob).toMatch(
+      /add-paths: \|\n\s+data\/collectionLogData\.ts\n\s+data\/caTasks\.ts\n\s+docs\/SYNC_STATUS\.md\n/,
+    );
+  });
+});
+
+describe('action pinning contract', () => {
+  it('pins every action in every workflow to a full commit SHA with its tag as a comment', async () => {
+    for (const name of WORKFLOWS) {
+      const workflow = await readRepositoryFile(`.github/workflows/${name}`);
+      const usesLines = workflow.split(/\r?\n/).filter((line) => /^\s*(?:-\s*)?uses:/.test(line));
+      expect(usesLines.length, `${name} has no actions`).toBeGreaterThan(0);
+      for (const line of usesLines) {
+        expect(line, `${name}: ${line.trim()}`).toMatch(
+          /^\s*(?:-\s*)?uses: [\w.-]+\/[\w.-]+@[0-9a-f]{40} # v\d+\.\d+\.\d+\s*$/,
+        );
+      }
+    }
   });
 });
