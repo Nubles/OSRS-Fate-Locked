@@ -219,6 +219,8 @@ The limits slow abuse down; they don't make the daily KV quota safe. One
 address at the write limit could still spend the free plan's 1,000 writes in
 about half an hour, and many addresses faster. Moving the relay to Workers
 Paid (1 million writes a day) is what makes the quota hard to exhaust.
+The owner chose on 13 October 2026 to stay on the free plan for now and
+revisit the upgrade later.
 
 ## Error reports
 
