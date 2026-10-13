@@ -6,10 +6,11 @@ import { itemSrc } from './OsrsDashGems';
 import './osrs-dashboard.css';
 
 /**
- * OSRS layout of the Progression Dashboard's chrome: the title row (mode
- * badge, tool buttons, % complete) and the tab strip with the unlock filter.
- * Every control calls the same handler the classic header does; Dashboard
- * passes them in.
+ * OSRS layout of the Progression window's chrome (Main board): the title row
+ * ("Progression", the mode badge and the tool buttons) and the tab strip with
+ * the unlock filter. Every control calls the same handler the classic header
+ * does; Dashboard passes them in. The run's % complete (a ring and bar in the
+ * classic header) is on the title: hover it, or right-click > Examine.
  */
 
 export interface OsrsDashTab { id: string; label: string }
@@ -35,29 +36,29 @@ export const OsrsDashHeader: React.FC<HeaderProps> = ({
   onFateThread, rival, onKillPlanner, onShareRun, completionPercent,
 }) => (
   <div className="osrs-dash-head shrink-0">
-    <div className="osrs-dash-head-row">
-      <h2 className="osrs-title" style={{ margin: 0, whiteSpace: 'nowrap' }}>Progression Dashboard</h2>
-      <span className="osrs-dash-badge" title={modeDescription}>{modeName} Mode</span>
-      {specialKeys > 0 && (
-        <span className="osrs-dash-badge is-omni">
-          <img className="osrs-px" src={itemSrc('omni_key')} alt="" aria-hidden="true" width={18} height={16} />
-          Omni-Key Active
-        </span>
-      )}
-      <div className="osrs-dash-tools">
-        <button type="button" className="osrs-btn" onClick={onGoalPlanner} title={goalPlanner.title}>{goalPlanner.label}</button>
-        <button type="button" className="osrs-btn" onClick={onAchievements} title="View achievements & milestones">Achievements</button>
-        <button type="button" className="osrs-btn" onClick={onForecast} title="Forecast how long Fate will take to unlock something">Forecast</button>
-        <button type="button" className="osrs-btn" onClick={onFateThread} title="See every unlock, grouped by table, and replay them in order">Fate Thread</button>
-        {rival}
-        <button type="button" className="osrs-btn" onClick={onKillPlanner} title="Plan boss kills: DPS, time-to-kill and readiness">Kill Planner</button>
-        <button type="button" className="osrs-btn" onClick={onShareRun} title="Generate shareable run card">Share Run</button>
-      </div>
-      <div className="osrs-dash-complete" title={`${completionPercent}% complete`}>
-        <span className="osrs-dash-complete-n">{completionPercent}%</span>
-        <span className="osrs-dash-complete-l">complete</span>
-        <span className="osrs-dash-bar" aria-hidden="true"><span style={{ width: `${completionPercent}%` }} /></span>
-      </div>
+    <h2
+      className="osrs-title osrs-dash-headtitle"
+      title={`${completionPercent}% complete`}
+      data-examine-name="Progression"
+      data-examine={`Your run is ${completionPercent}% complete.`}
+    >
+      Progression
+    </h2>
+    <span className="osrs-dash-badge" title={modeDescription}>{modeName}</span>
+    {specialKeys > 0 && (
+      <span className="osrs-dash-badge is-omni">
+        <img className="osrs-px" src={itemSrc('omni_key')} alt="" aria-hidden="true" width={18} height={16} />
+        Omni-Key Active
+      </span>
+    )}
+    <div className="osrs-dash-tools">
+      <button type="button" className="osrs-btn" onClick={onGoalPlanner} title={goalPlanner.title}>{goalPlanner.label}</button>
+      <button type="button" className="osrs-btn" onClick={onAchievements} title="View achievements & milestones">Achievements</button>
+      <button type="button" className="osrs-btn" onClick={onForecast} title="Forecast how long Fate will take to unlock something">Forecast</button>
+      <button type="button" className="osrs-btn" onClick={onFateThread} title="See every unlock, grouped by table, and replay them in order">Fate Thread</button>
+      {rival}
+      <button type="button" className="osrs-btn" onClick={onKillPlanner} title="Plan boss kills: DPS, time-to-kill and readiness">Kill Planner</button>
+      <button type="button" className="osrs-btn" onClick={onShareRun} title="Generate shareable run card">Share Run</button>
     </div>
   </div>
 );
@@ -73,6 +74,9 @@ interface TabsProps {
   suspendModals: boolean;
 }
 
+/** In-game tab names (the classic strip says "Collection Log"). */
+const TAB_LABEL: Record<string, string> = { COLLECTION: 'Collection' };
+
 export const OsrsDashTabs: React.FC<TabsProps> = ({
   tabs, activeTab, onTab, searchQuery, onSearch, showOnlyActionable, onToggleActionable, suspendModals,
 }) => (
@@ -83,12 +87,12 @@ export const OsrsDashTabs: React.FC<TabsProps> = ({
           key={tab.id}
           type="button"
           role="tab"
-          data-dash-tab={tab.label}
+          data-dash-tab={TAB_LABEL[tab.id] ?? tab.label}
           aria-selected={activeTab === tab.id}
           className="osrs-tab"
           onClick={() => onTab(tab.id)}
         >
-          {tab.label}
+          {TAB_LABEL[tab.id] ?? tab.label}
         </button>
       ))}
     </div>

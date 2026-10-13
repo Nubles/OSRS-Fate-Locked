@@ -69,9 +69,12 @@ interface DiaryLogProps {
   suspendModals?: boolean;
 }
 
-export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch = '', suspendModals = false }) => {
+/**
+ * The Diary Journal's state, filters, sort and handlers, shared by the
+ * classic Diary Log and the OSRS layout's Journal window.
+ */
+export const useDiaryJournal = (externalSearch = '') => {
   const { unlocks, completeDiaryTask, completeDiaryTier, advisorsEnabled, gameModeId } = useGame();
-  const isOsrs = useIsOsrsUi();
   // Owned areas with no route are not doable; null until the map data loads.
   const areaRoutes = useAreaRoutes(unlocks, gameModeId);
   // Filter state persisted across sessions.
@@ -216,6 +219,25 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
       if (attestation === null) return;
       completeDiaryTask(task.id, e.clientX, e.clientY, attestation);
   };
+
+  return {
+    unlocks, gameModeId, advisorsEnabled, areaRoutes,
+    filterRegion, setFilterRegion, expandedId, setExpandedId, filterStatus, setFilterStatus,
+    filterTier, setFilterTier, sortMode, setSortMode, localSearch, setLocalSearch, highlightedId,
+    skillPopover, setSkillPopover, searchTerm, focusCard, getStatus, getDiaryWikiLink,
+    diaries, filteredDiaries, regions, sortedDiaries, statusCounts, handleToggle, handleTaskToggle,
+  };
+};
+
+export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch = '', suspendModals = false }) => {
+  const isOsrs = useIsOsrsUi();
+  const {
+    unlocks, gameModeId, advisorsEnabled, areaRoutes,
+    filterRegion, setFilterRegion, expandedId, setExpandedId, filterStatus, setFilterStatus,
+    filterTier, setFilterTier, sortMode, setSortMode, localSearch, setLocalSearch, highlightedId,
+    skillPopover, setSkillPopover, searchTerm, focusCard, getDiaryWikiLink,
+    regions, sortedDiaries, statusCounts, handleToggle, handleTaskToggle,
+  } = useDiaryJournal(externalSearch);
 
   return (
     <div className={`flex flex-col h-full bg-[#121212] border border-white/10 rounded-lg overflow-hidden${isOsrs ? ' ojr-root' : ''}`}>

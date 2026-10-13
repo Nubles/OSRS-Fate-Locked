@@ -1,5 +1,4 @@
 import { TableType } from '../../types';
-import { OSRS_GACHA_ICONS } from '../GachaSection';
 
 /** Local OSRS sprites shared by Spend Keys, History and the roll reveal. */
 const BASE = import.meta.env.BASE_URL;
@@ -11,34 +10,33 @@ export const KEY_ICON = osrsItem('key.png');
 export const OMNI_KEY_ICON = osrsItem('omni_key.png');
 export const CHAOS_KEY_ICON = osrsItem('chaos_key.png');
 export const VOID_SEAL_ICON = osrsItem('void_seal.png');
-export const CASKET_ICON = osrsItem('405.png');
-export const WATCH_ICON = osrsItem('2575.png');
+/** Reward casket: the Spend Keys tab and the Unlocks filter on the boards. */
+export const CASKET_ICON = osrsItem('20546.png');
+export const BANK_CHEST_ICON = osrsItem('405.png');
+export const QUEST_ICON = `${import.meta.env.BASE_URL}osrs-ui/quest_point_icon.png`;
 
 /** Tier I..X gem ladder. */
 const GEMS = ['opal', 'jade', 'red_topaz', 'sapphire', 'emerald', 'ruby', 'diamond', 'dragonstone', 'onyx', 'zenyte'];
 export const tierGem = (tier: number): string | null =>
   tier > 0 ? `${BASE}osrs-ui/gems/${GEMS[Math.min(tier, GEMS.length) - 1]}.png` : null;
 
-/**
- * One item sprite per unlock table. Tables with no matching local sprite keep
- * the classic wiki icon (the preview swaps wiki images for a packed copy).
- */
+/** One item sprite per unlock table, as the World and SpendRoll boards draw them. */
 export const TABLE_SPRITE: Partial<Record<TableType, string>> = {
   [TableType.EQUIPMENT]: osrsItem('1127.png'),
   [TableType.SKILLS]: osrsItem('2528.png'),
-  [TableType.REGIONS]: osrsItem('1795.png'),
-  [TableType.CHUNKS]: osrsItem('1795.png'),
-  [TableType.MOBILITY]: osrsItem('1704.png'),
+  [TableType.REGIONS]: osrsItem('1538.png'),
+  [TableType.CHUNKS]: osrsItem('1538.png'),
+  [TableType.MOBILITY]: osrsItem('1712.png'),
   [TableType.ARCANA]: osrsItem('563.png'),
   [TableType.STORAGE]: osrsItem('12791.png'),
   [TableType.POH]: osrsItem('8013.png'),
-  [TableType.MERCHANTS]: OSRS_GACHA_ICONS.MERCHANTS,
-  [TableType.MINIGAMES]: OSRS_GACHA_ICONS.MINIGAMES,
+  [TableType.MERCHANTS]: osrsItem('1004.png'),
+  [TableType.MINIGAMES]: osrsItem('4067.png'),
   [TableType.BOSSES]: osrsItem('4151.png'),
   [TableType.GUILDS]: osrsItem('1757.png'),
   [TableType.FARMING_LAYERS]: osrsItem('5343.png'),
   [TableType.SLAYER_UNLOCKS]: osrsItem('4155.png'),
-  [TableType.BANKS]: osrsItem('7956.png'),
+  [TableType.BANKS]: BANK_CHEST_ICON,
 };
 export const tableSprite = (table?: string): string =>
   (table && TABLE_SPRITE[table as TableType]) || CASKET_ICON;

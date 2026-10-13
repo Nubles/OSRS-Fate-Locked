@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import './osrs-spend.css';
-import { TableType } from '../../types';
+import { TableType, type LogEntry } from '../../types';
 import { useSpendModel, SpendCategory } from '../GachaSection';
 import { openDashboardPool } from '../../utils/dashboardPoolNavigation';
 import { unlockableAreas } from '../../utils/freeAreas';
@@ -11,12 +11,13 @@ import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, chunkLabel } from '../../utils/chunk
 import { andList, LEVEL_CHAOS_CHANCE, SKILL_CHAOS_MILESTONES } from '../../config/economy';
 import { categoryColor } from '../../utils/rarity';
 import { useGame } from '../../context/GameContext';
-import { CHAOS_KEY_ICON, KEY_ICON, OMNI_KEY_ICON, osrsSkillIcon, tableSprite, tierGem } from './OsrsSpendShared';
+import { openOsrsScreen, setOsrsKeysTab } from '../../utils/osrsNav';
+import { CASKET_ICON, CHAOS_KEY_ICON, KEY_ICON, OMNI_KEY_ICON, ON_PARCHMENT, osrsSkillIcon, tableSprite, tierGem } from './OsrsSpendShared';
+import { clock, lineDetails, look, speaker } from './OsrsHistoryShared';
+import { setRevealHost, setSpendTable, useKeysView } from './OsrsKeysState';
+import { OsrsKeysTabs } from './OsrsKeysTabs';
 
 type Chip = { text: string; icon?: string; gem?: string | null; on: boolean; examine: string };
-
-const sh: React.CSSProperties = { textShadow: '1px 1px 0 #000' };
-const RS = (size = 16, family = 'RS'): React.CSSProperties => ({ font: `${size}px '${family}', sans-serif` });
 
 /** What a table's card can do right now; the same rules as the classic SpendCard. */
 const cardState = (c: SpendCategory, rollable: boolean, keys: number, pending: boolean) => {
@@ -27,19 +28,158 @@ const cardState = (c: SpendCategory, rollable: boolean, keys: number, pending: b
   const clickable = !disabled && keysAvailable && !complete;
   return { complete, blocked, clickable, keysAvailable };
 };
+type CardState = ReturnType<typeof cardState>;
 
-/** Spend Keys drawn as an OSRS interface: the unlock tables as item slots, and the chosen table's detail. */
-const OsrsSpend: React.FC = () => {
+const BLOCKED_TITLE = 'No entry here is eligible yet — open more locations or quests first.';
+/** "Shops & Wares" -> "Shops & wares": the boards' short-label style. */
+const sentence = (s: string) => s.charAt(0) + s.slice(1).toLowerCase();
+const statusText = (st: CardState) =>
+  st.complete ? 'Complete.' : st.blocked ? 'Blocked: no entry here is eligible yet.' : !st.keysAvailable ? 'Needs a Key to roll.' : 'Ready to roll for 1 Key.';
+
+/** Notices that only show when they apply: Omni-Keys ready and Keys owed. */
+const Notices: React.FC<{ specialKeys: number; keysOwed: number; isChunked: boolean }> = ({ specialKeys, keysOwed, isChunked }) => (
+  <>
+    {specialKeys > 0 && (
+      <div className="ospend-note">
+        <div className="osrs-slot ospend-note-slot">
+          <img className="osrs-px" src={OMNI_KEY_ICON} alt="" aria-hidden="true" />
+          <span className="osrs-stack">{specialKeys}</span>
+        </div>
+        <div className="ospend-note-words">
+          <span className="t" style={{ color: '#c77dff' }}>{specialKeys} Omni-Key{specialKeys > 1 ? 's' : ''} Ready</span>
+          <span className="s">
+            Omni-Keys aren't spent here. Click a locked skill, gear slot, {isChunked ? '' : 'area, '}boss or other entry on the <span style={{ color: '#c77dff' }}>Dashboard</span> to pick exactly what to unlock.
+          </span>
+        </div>
+      </div>
+    )}
+    {keysOwed > 0 && (
+      <div className="ospend-note">
+        <div className="osrs-slot ospend-note-slot">
+          <img className="osrs-px" src={KEY_ICON} alt="" aria-hidden="true" style={{ filter: 'grayscale(1) brightness(.6)' }} />
+          <span className="osrs-stack" style={{ color: '#ff3030' }}>{keysOwed}</span>
+        </div>
+        <div className="ospend-note-words">
+          <span className="t">{keysOwed} Standard Key{keysOwed === 1 ? '' : 's'} owed</span>
+          <span className="s">
+            From the pet compensation you chose: the next {keysOwed === 1 ? 'Standard Key you earn pays' : `${keysOwed} Standard Keys you earn pay`} this first.
+          </span>
+        </div>
+      </div>
+    )}
+  </>
+);
+
+/** Chaos Keys: a button when there is one to spend, an info row otherwise. */
+const ChaosRow: React.FC<{ chaosKeys: number; totalLevel: number; onSpend: () => void; wide: boolean }> = ({ chaosKeys, totalLevel, onSpend, wide }) => {
+  const rule = `Guaranteed at skill levels ${andList(SKILL_CHAOS_MILESTONES)}, plus a ${LEVEL_CHAOS_CHANCE}% chance on any level-up`;
+  if (chaosKeys > 0) {
+    return (
+      <button type="button" className={`ospend-chaos is-live${wide ? ' wide' : ''}`} onClick={onSpend}
+        data-examine-name="Chaos Key" data-examine="Unlocks a random entry from all the tables at once.">
+        <span className="osrs-slot ospend-note-slot">
+          <img className="osrs-px" src={CHAOS_KEY_ICON} alt="" aria-hidden="true" />
+          <span className="osrs-stack">{chaosKeys}</span>
+        </span>
+        <span className="ospend-note-words">
+          <span className="t ospend-chaos-title" style={{ color: '#ff3030' }}>Chaos Key Available</span>
+          <span className="s">Unlocks a random entry from all the tables at once.</span>
+        </span>
+        <span className="ospend-chaos-cta">Spend</span>
+      </button>
+    );
+  }
+  if (!wide) {
+    return (
+      <div className="ospend-chaos" title={rule} data-examine-name="Chaos Keys" data-examine={`${rule}.`}>
+        <img className="osrs-px" src={CHAOS_KEY_ICON} alt="" aria-hidden="true" style={{ width: 36, height: 32 }} />
+        <span className="ospend-note-words">
+          <span className="t">Chaos Keys</span>
+          <span className="s">{LEVEL_CHAOS_CHANCE}% chance on every level up</span>
+        </span>
+        <span className="ospend-total">Total level {totalLevel}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="ospend-chaos wide">
+      <div className="osrs-slot ospend-note-slot">
+        <img className="osrs-px" src={CHAOS_KEY_ICON} alt="" aria-hidden="true" style={{ filter: 'grayscale(1) brightness(.6)' }} />
+        <span className="osrs-stack">0</span>
+      </div>
+      <span className="ospend-note-words">
+        <span className="t">Chaos Keys</span>
+        <span className="s">{rule}</span>
+      </span>
+      <span className="ospend-total-big"><span className="n">{totalLevel}</span><span className="l">Total Level</span></span>
+    </div>
+  );
+};
+
+/** Compact: one table as a stone card (World board): sprite and count, name, short blurb, Roll. */
+const TableCard: React.FC<{ c: SpendCategory; st: CardState; onRoll: () => void; onOpen: () => void }> = ({ c, st, onRoll, onOpen }) => (
+  <div className="ospend-card" data-examine-name={c.label} data-examine={`${c.label}: ${c.subLabel}. ${c.unlocked} of ${c.total} unlocked. ${statusText(st)}`}>
+    <button type="button" className="osrs-slot ospend-card-slot" onClick={onOpen} title={`${c.label}: ${c.unlocked} of ${c.total} unlocked. Open in the full window.`}
+      aria-label={`${c.label}: ${c.unlocked} of ${c.total} unlocked. Open in the full window`}>
+      <img className="osrs-px" src={tableSprite(c.type)} alt="" aria-hidden="true" style={{ opacity: st.keysAvailable || st.complete ? 1 : 0.55 }} />
+      <span className="osrs-stack">{c.unlocked}</span>
+    </button>
+    <button type="button" className="ospend-card-name" onClick={onOpen} tabIndex={-1} aria-hidden="true"
+      style={{ color: st.complete ? '#0dc10d' : '#ff981f' }}>{c.label}</button>
+    <span className="ospend-card-row">
+      <span className="what">{sentence(c.subLabel)}</span>
+      <button type="button" className="osrs-btn ospend-roll" disabled={!st.clickable} onClick={onRoll}
+        aria-label={`Unlock from ${c.label}`} title={st.blocked && !st.complete ? BLOCKED_TITLE : undefined}>
+        {st.complete ? 'Done' : st.blocked ? 'Blocked' : <><img className="osrs-px" src={KEY_ICON} alt="" aria-hidden="true" />Roll</>}
+      </button>
+    </span>
+  </div>
+);
+
+/** The recent game messages under the reveal window (SpendRoll board). */
+const CHAT_LINES = 7;
+const RecentChat: React.FC<{ history: readonly LogEntry[]; name: string }> = ({ history, name }) => {
+  const lines = useMemo(() => history.slice(-CHAT_LINES), [history]);
+  return (
+    <div className="osrs-chat ospend-chat">
+      <div className="ospend-chat-lines">
+        {lines.map(e => {
+          const l = look(e);
+          const who = speaker(e);
+          const d = lineDetails(e);
+          return (
+            <div key={e.id} className="ln">
+              [{clock(e.timestamp)}] {who && <span style={{ color: '#0000ff' }}>{who}:</span>} <span style={{ color: ON_PARCHMENT[l.tone] }}>{e.message}</span>{d ? ` ${d}` : ''}
+            </div>
+          );
+        })}
+      </div>
+      <div className="ospend-chat-name">{name}: <span style={{ color: '#0000ff' }}>*</span></div>
+    </div>
+  );
+};
+
+/**
+ * Spend Keys drawn as an OSRS interface. Compact (home screen Keys panel,
+ * World board): the Chaos Keys row and a 2-column card per table. Wide (Keys
+ * screen, SpendRoll board): the unlock tables as item slots, the chosen
+ * table's detail, and the reveal window. Every table, count and handler comes
+ * from GachaSection's useSpendModel.
+ */
+const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
   const { keys, specialKeys, chaosKeys, keysOwed, unlocks, pendingUnlock, gameModeId, isChunked, rollable, totalLevel, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES } = useSpendModel();
-  const { customMode } = useGame();
-  const [selType, setSelType] = useState<TableType>(SPEND_CATEGORIES[0].type);
-  const sel = SPEND_CATEGORIES.find(c => c.type === selType) ?? SPEND_CATEGORIES[0];
-  const selState = cardState(sel, !!rollable.get(sel.type), keys, !!pendingUnlock);
+  const { customMode, history, linkedAccount } = useGame();
+  const { spendTable } = useKeysView();
+  const sel = SPEND_CATEGORIES.find(c => c.type === spendTable) ?? SPEND_CATEGORIES.find(c => c.type === TableType.REGIONS || c.type === TableType.CHUNKS) ?? SPEND_CATEGORIES[0];
+  const stateOf = (c: SpendCategory) => cardState(c, !!rollable.get(c.type), keys, !!pendingUnlock);
+  const selState = stateOf(sel);
 
   // What the player already owns from the chosen table, read from the same unlocks.
   const chips = useMemo((): Chip[] => {
+    if (!wide) return [];
     const owned = (list: string[] | undefined, label: (s: string) => string = s => s) =>
-      (list ?? []).map(item => ({ text: label(item), on: true, examine: `${label(item)}: unlocked from the ${sel.label} table.` }));
+      (list ?? []).map(item => ({ text: label(item), on: true, examine: `${label(item)}: unlocked from the ${sel.label} table.` }))
+        .sort((a, b) => a.text.localeCompare(b.text));
     switch (sel.type) {
       case TableType.SKILLS:
         return SKILLS_LIST.map(skill => {
@@ -68,151 +208,139 @@ const OsrsSpend: React.FC = () => {
       case TableType.BANKS: return owned(unlocks.banks, id => BANK_BY_ID[id]?.name ?? id);
       default: return [];
     }
-  }, [sel.type, sel.label, unlocks, gameModeId, customMode]);
+  }, [wide, sel.type, sel.label, unlocks, gameModeId, customMode]);
+
+  if (!wide) {
+    return (
+      <div className="ospend ospend-compact">
+        <Notices specialKeys={specialKeys} keysOwed={keysOwed ?? 0} isChunked={isChunked} />
+        <ChaosRow chaosKeys={chaosKeys} totalLevel={totalLevel} onSpend={handleChaosUnlock} wide={false} />
+        <div className="osrs-inner ospend-cards">
+          {SPEND_CATEGORIES.map(c => (
+            <TableCard key={c.label} c={c} st={stateOf(c)} onRoll={() => handleUnlock(c.type)}
+              onOpen={() => { setSpendTable(c.type); openOsrsScreen('keys', 'spend'); }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const tiered = sel.type === TableType.SKILLS || sel.type === TableType.EQUIPMENT;
   const listTitle = tiered ? 'Your tiers' : chips.length ? 'Already unlocked' : 'Nothing unlocked from this table yet';
   const pct = selState.complete ? 100 : sel.total > 0 ? Math.round((sel.unlocked / sel.total) * 100) : 0;
   const cta = selState.complete ? 'Done' : selState.blocked ? 'Blocked' : !selState.keysAvailable ? 'Need Keys' : 'Unlock';
+  const playerName = linkedAccount || 'You';
+
+  // The reveal window when no roll is playing: the game's "Select an Option" for the chosen table.
+  const pick = selState.complete
+    ? { text: `Every entry on the ${sel.label} table is unlocked.`, yes: null as string | null, no: null as string | null }
+    : selState.blocked
+      ? { text: `No entry on the ${sel.label} table is eligible yet: open more locations or quests first.`, yes: null, no: null }
+      : !selState.keysAvailable
+        ? { text: 'You have no Keys. Farm Keys to earn more, then come back.', yes: null, no: 'Go to Farm Keys.' }
+        : { text: `Spend 1 Key on the ${sel.label} table? It unlocks a random locked entry from it.`, yes: 'Yes, spend 1 Key.', no: null };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 4, color: '#ff981f', ...RS() }}>
-      {specialKeys > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '3px 10px 3px 4px', background: 'var(--osrs-well, #1f1a14)', border: '1px solid #000', ...sh }}>
-          <div className="osrs-slot" style={{ width: 44, height: 40, flexShrink: 0 }}>
-            <img className="osrs-px" src={OMNI_KEY_ICON} alt="" aria-hidden="true" style={{ width: 36, height: 32 }} />
-            <span className="osrs-stack">{specialKeys}</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '17px', minWidth: 0 }}>
-            <span style={{ ...RS(16, 'RSBold'), color: '#c77dff' }}>{specialKeys} Omni-Key{specialKeys > 1 ? 's' : ''} Ready</span>
-            <span style={{ ...RS(16, 'RSSmall'), color: 'var(--osrs-tan, #c8b897)' }}>
-              Omni-Keys aren't spent here. Click a locked skill, gear slot, {isChunked ? '' : 'area, '}boss or other entry on the <span style={{ color: '#c77dff' }}>Dashboard</span> to pick exactly what to unlock.
-            </span>
-          </div>
-        </div>
-      )}
+    <div className="ospend ospend-wide">
+      <div className="osrs-win ospend-main">
+        <OsrsKeysTabs hint="Spend a Key on a table to unlock a random entry from it." small />
+        <Notices specialKeys={specialKeys} keysOwed={keysOwed ?? 0} isChunked={isChunked} />
+        <ChaosRow chaosKeys={chaosKeys} totalLevel={totalLevel} onSpend={handleChaosUnlock} wide />
 
-      {(keysOwed ?? 0) > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '3px 10px 3px 4px', background: 'var(--osrs-well, #1f1a14)', border: '1px solid #000', ...sh }}>
-          <div className="osrs-slot" style={{ width: 44, height: 40, flexShrink: 0 }}>
-            <img className="osrs-px" src={KEY_ICON} alt="" aria-hidden="true" style={{ width: 36, height: 32, filter: 'grayscale(1) brightness(.6)' }} />
-            <span className="osrs-stack" style={{ color: '#ff3030' }}>{keysOwed}</span>
+        {/* The unlock tables, one item slot each. */}
+        <div className="osrs-inner ospend-tables">
+          <div className="ospend-tables-head">
+            <h2>Unlock tables</h2>
+            <span>Number = what you already own</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '17px', minWidth: 0 }}>
-            <span style={{ ...RS(16, 'RSBold'), color: '#ff981f' }}>{keysOwed} Standard Key{keysOwed === 1 ? '' : 's'} owed</span>
-            <span style={{ ...RS(16, 'RSSmall'), color: 'var(--osrs-tan, #c8b897)' }}>
-              From the pet compensation you chose: the next {keysOwed === 1 ? 'Standard Key you earn pays' : `${keysOwed} Standard Keys you earn pay`} this first.
-            </span>
+          <div className="ospend-cells">
+            {SPEND_CATEGORIES.map(c => {
+              const st = stateOf(c);
+              const on = c.type === sel.type;
+              return (
+                <button key={c.label} type="button" className="ospend-cell" aria-pressed={on} onClick={() => setSpendTable(c.type)}
+                  title={`${c.label}: ${c.unlocked} of ${c.total} unlocked`}
+                  data-examine-name={c.label}
+                  data-examine={`${c.label}: ${c.subLabel}. ${c.unlocked} of ${c.total} unlocked. ${statusText(st)}`}>
+                  <span className={`osrs-slot ospend-cell-slot${on ? ' on' : ''}`}>
+                    <img className="osrs-px" src={tableSprite(c.type)} alt="" aria-hidden="true"
+                      style={{ opacity: st.keysAvailable || on || st.complete ? 1 : 0.55 }} />
+                    <span className="osrs-stack">{c.unlocked}</span>
+                  </span>
+                  <span className="ospend-cname" style={{ color: on ? '#ffffff' : st.complete ? '#0dc10d' : '#ff981f' }}>{c.label}</span>
+                  <span className="ospend-cfrac">{c.unlocked}/{c.total}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
-      )}
 
-      {/* Chaos Keys: a button when there is one to spend, an info row otherwise. */}
-      {chaosKeys > 0 ? (
-        <button type="button" className="ospend-chaos" onClick={handleChaosUnlock}
-          data-examine-name="Chaos Key" data-examine="Unlocks a random entry from all the tables at once."
-          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '3px 10px 3px 4px', background: '#3a1414', border: '1px solid #000', boxShadow: 'inset 1px 1px 0 #6b2a2a, inset -1px -1px 0 #1a0808', ...sh }}>
-          <span className="osrs-slot" style={{ width: 44, height: 40, flexShrink: 0 }}>
-            <img className="osrs-px" src={CHAOS_KEY_ICON} alt="" aria-hidden="true" style={{ width: 36, height: 32 }} />
-            <span className="osrs-stack">{chaosKeys}</span>
-          </span>
-          <span style={{ display: 'flex', flexDirection: 'column', lineHeight: '17px', minWidth: 0 }}>
-            <span className="ospend-chaos-title" style={{ ...RS(16, 'RSBold'), color: '#ff3030' }}>Chaos Key Available</span>
-            <span style={{ ...RS(16, 'RSSmall'), color: 'var(--osrs-tan, #c8b897)' }}>Unlocks a random entry from all the tables at once.</span>
-          </span>
-          <span style={{ marginLeft: 'auto', ...RS(16, 'RSBold'), color: '#ff981f', flexShrink: 0 }}>Spend</span>
-        </button>
-      ) : (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '3px 10px 3px 4px', background: 'var(--osrs-well, #1f1a14)', border: '1px solid #000', ...sh }}>
-          <div className="osrs-slot" style={{ width: 44, height: 40, flexShrink: 0 }}>
-            <img className="osrs-px" src={CHAOS_KEY_ICON} alt="" aria-hidden="true" style={{ width: 36, height: 32, filter: 'grayscale(1) brightness(.6)' }} />
-            <span className="osrs-stack">0</span>
+        {/* The chosen table: roll it, view its pool, see what it already gave. */}
+        <div className="osrs-inner ospend-detail">
+          <div className="ospend-detail-head">
+            <div className="osrs-slot" style={{ width: 52, height: 48, flexShrink: 0 }}>
+              <img className="osrs-px" src={tableSprite(sel.type)} alt="" aria-hidden="true" style={{ width: 36, height: 32, objectFit: 'contain' }} />
+            </div>
+            <div className="ospend-detail-name">
+              <span className="t">{sel.label}</span>
+              <span className="s">{sel.subLabel}</span>
+            </div>
+            <div className="ospend-detail-tools">
+              <span className="ospend-price" title="Price">
+                <img className="osrs-px" src={KEY_ICON} alt="" aria-hidden="true" />1
+              </span>
+              <button type="button" className="osrs-btn" disabled={!selState.clickable} onClick={() => handleUnlock(sel.type)}
+                aria-label={`Unlock from ${sel.label}`} title={selState.blocked && !selState.complete ? BLOCKED_TITLE : undefined}
+                style={{ height: 30, padding: '0 14px' }}>{cta}</button>
+              <button type="button" className="osrs-btn" onClick={() => openDashboardPool(sel.type)} style={{ height: 30, padding: '0 10px' }}>View pool</button>
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '17px', minWidth: 0 }}>
-            <span style={{ ...RS(16, 'RSBold'), color: '#ff981f' }}>Chaos Keys</span>
-            <span style={{ ...RS(16, 'RSSmall'), color: 'var(--osrs-tan, #c8b897)' }}>
-              Guaranteed at skill levels {andList(SKILL_CHAOS_MILESTONES)}, plus a {LEVEL_CHAOS_CHANCE}% chance on any level-up
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="ospend-bar" style={{ flex: 1 }}>
+              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${Math.max(pct, sel.unlocked > 0 ? 1 : 0)}%`, background: selState.complete ? '#0dc10d' : categoryColor(sel.type), boxShadow: 'inset 0 -3px 0 rgba(0,0,0,.35)' }} />
+            </div>
+            <span className="ospend-frac">{sel.unlocked}/{sel.total} unlocked</span>
           </div>
-          <span style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: '17px', flexShrink: 0 }}>
-            <span style={{ ...RS(16, 'RSBold'), color: '#ffff00' }}>{totalLevel}</span>
-            <span style={{ ...RS(16, 'RSSmall'), color: 'var(--osrs-muted, #8a7c66)' }}>Total Level</span>
-          </span>
-        </div>
-      )}
-
-      {/* The unlock tables, one item slot each. */}
-      <div className="osrs-inner" style={{ padding: '6px 8px 8px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap', ...sh }}>
-          <h2 style={{ margin: 0, ...RS(16, 'RSBold'), color: '#ff981f' }}>Unlock tables</h2>
-          <span style={{ ...RS(16, 'RSSmall'), color: 'var(--osrs-tan, #c8b897)' }}>Number = what you already own</span>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))', gap: '8px 6px' }}>
-          {SPEND_CATEGORIES.map(c => {
-            const st = cardState(c, !!rollable.get(c.type), keys, !!pendingUnlock);
-            const on = c.type === sel.type;
-            const status = st.complete ? 'Complete.' : st.blocked ? 'Blocked: no entry here is eligible yet.' : !st.keysAvailable ? 'Needs a Key to roll.' : 'Ready to roll for 1 Key.';
-            return (
-              <button key={c.label} type="button" className="ospend-cell" aria-pressed={on} onClick={() => setSelType(c.type)}
-                title={`${c.label}: ${c.unlocked} of ${c.total} unlocked`}
-                data-examine-name={c.label}
-                data-examine={`${c.label}: ${c.subLabel}. ${c.unlocked} of ${c.total} unlocked. ${status}`}>
-                <span className="osrs-slot" style={{ width: '100%', maxWidth: 86, height: 76, boxShadow: on ? 'inset 0 0 0 2px #ffffff, inset 1px 1px 0 3px var(--osrs-slot-hi, #2a231a)' : undefined }}>
-                  <img className="osrs-px" src={tableSprite(c.type)} alt="" aria-hidden="true"
-                    style={{ width: 54, height: 48, objectFit: 'contain', opacity: st.keysAvailable || on || st.complete ? 1 : 0.55 }} />
-                  <span className="osrs-stack">{c.unlocked}</span>
+          <span className="ospend-listtitle">{listTitle}</span>
+          {chips.length > 0 && (
+            <div className="ospend-chips">
+              {chips.map(c => (
+                <span key={c.text} className={`ospend-chip${c.on ? '' : ' off'}`} data-examine-name={c.text} data-examine={c.examine}>
+                  {c.icon && <img className="osrs-px" src={c.icon} alt="" aria-hidden="true" style={{ width: 18, height: 18, objectFit: 'contain', filter: c.on ? 'none' : 'grayscale(1) brightness(.6)' }} />}
+                  {c.text}
+                  {c.gem && <img className="osrs-px" src={c.gem} alt="" aria-hidden="true" style={{ width: 18, height: 16 }} />}
                 </span>
-                <span className="ospend-cname" style={{ maxWidth: '100%', ...RS(), color: on ? '#ffffff' : st.complete ? '#0dc10d' : '#ff981f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.label}</span>
-                <span style={{ ...RS(16, 'RSSmall'), color: 'var(--osrs-tan, #c8b897)', lineHeight: '13px' }}>{c.unlocked}/{c.total}</span>
-              </button>
-            );
-          })}
+              ))}
+            </div>
+          )}
+          <span className="ospend-foot">
+            Omni-Keys (spent on the Dashboard) pick the exact unlock; Chaos Keys unlock at random from every table at once.
+          </span>
         </div>
       </div>
 
-      {/* The chosen table: roll it, view its pool, see what it already gave. */}
-      <div className="osrs-inner" style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <div className="osrs-slot" style={{ width: 52, height: 48, flexShrink: 0 }}>
-            <img className="osrs-px" src={tableSprite(sel.type)} alt="" aria-hidden="true" style={{ width: 36, height: 32, objectFit: 'contain' }} />
-          </div>
-          <div style={{ minWidth: 0, flex: '1 1 120px', display: 'flex', flexDirection: 'column', lineHeight: '18px', ...sh }}>
-            <span style={{ ...RS(16, 'RSBold'), color: '#ff981f' }}>{sel.label}</span>
-            <span style={{ ...RS(16, 'RSSmall'), color: 'var(--osrs-tan, #c8b897)' }}>{sel.subLabel}</span>
-          </div>
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span title="Price" style={{ height: 30, boxSizing: 'border-box', display: 'flex', alignItems: 'center', gap: 4, padding: '0 8px 0 4px', background: 'var(--osrs-well, #1f1a14)', border: '1px solid #000', ...RS(16, 'RSBold'), color: '#ffff00', ...sh }}>
-              <img className="osrs-px" src={KEY_ICON} alt="" aria-hidden="true" style={{ width: 27, height: 24 }} />1
-            </span>
-            <button type="button" className="osrs-btn" disabled={!selState.clickable} onClick={() => handleUnlock(sel.type)}
-              aria-label={`Unlock from ${sel.label}`}
-              title={selState.blocked && !selState.complete ? 'No entry here is eligible yet — open more locations or quests first.' : undefined}
-              style={{ height: 30, padding: '0 14px' }}>{cta}</button>
-            <button type="button" className="osrs-btn" onClick={() => openDashboardPool(sel.type)} style={{ height: 30, padding: '0 10px' }}>View pool</button>
-          </div>
+      <div className="ospend-side">
+        <div className="osrs-win ospend-reveal">
+          {/* While a roll plays, the reveal (PendingUnlockReveal) draws in here. */}
+          <div ref={setRevealHost} className="ospend-reveal-host" hidden={!pendingUnlock} />
+          {!pendingUnlock && (
+            <>
+              <div className="ospend-reveal-title"><h2>Spend Keys</h2></div>
+              <div className="osrs-inner ospend-pick">
+                <div className="osrs-slot ospend-pick-slot">
+                  <img className="osrs-px" src={CASKET_ICON} alt="" aria-hidden="true" style={{ filter: selState.clickable ? 'none' : 'grayscale(1) brightness(.6)' }} />
+                </div>
+                <div className="osrs-chat ospend-pick-dialog" role="group" aria-label="Select an Option">
+                  <span style={{ color: '#800000' }}>Select an Option</span>
+                  <span style={{ lineHeight: '18px' }}>{pick.text}</span>
+                  {pick.yes && <button type="button" className="ospend-opt" onClick={() => handleUnlock(sel.type)} disabled={!selState.clickable}>{pick.yes}</button>}
+                  {pick.no && <button type="button" className="ospend-opt" onClick={() => setOsrsKeysTab('farm')}>{pick.no}</button>}
+                </div>
+              </div>
+            </>
+          )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div className="ospend-bar" style={{ flex: 1 }}>
-            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${pct}%`, background: selState.complete ? '#0dc10d' : categoryColor(sel.type), boxShadow: 'inset 0 -3px 0 rgba(0,0,0,.35)' }} />
-          </div>
-          <span style={{ ...RS(), color: '#ffffff', ...sh }}>{sel.unlocked}/{sel.total} unlocked</span>
-        </div>
-        <span style={{ ...RS(16, 'RSBold'), color: '#ff981f', ...sh }}>{listTitle}</span>
-        {chips.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignContent: 'flex-start', gap: 4 }}>
-            {chips.map(c => (
-              <span key={c.text} data-examine-name={c.text} data-examine={c.examine}
-                style={{ height: 24, boxSizing: 'border-box', display: 'inline-flex', alignItems: 'center', gap: 5, padding: '0 7px 0 5px', background: c.on ? 'var(--osrs-window, #3e3529)' : '#241e17', border: '1px solid #000', ...RS(), color: c.on ? '#ffffff' : '#7d705c', ...sh }}>
-                {c.icon && <img className="osrs-px" src={c.icon} alt="" aria-hidden="true" style={{ width: 16, height: 16, filter: c.on ? 'none' : 'grayscale(1) brightness(.6)' }} />}
-                {c.text}
-                {c.gem && <img className="osrs-px" src={c.gem} alt="" aria-hidden="true" style={{ width: 18, height: 16 }} />}
-              </span>
-            ))}
-          </div>
-        )}
-        <span style={{ ...RS(16, 'RSSmall'), color: 'var(--osrs-muted, #8a7c66)', ...sh }}>
-          Omni-Keys (spent on the Dashboard) pick the exact unlock; Chaos Keys unlock at random from every table at once.
-        </span>
+        <RecentChat history={history} name={playerName} />
       </div>
     </div>
   );

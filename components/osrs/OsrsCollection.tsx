@@ -6,8 +6,12 @@ import { COLLECTION_LOG_DATA } from '../../data/collectionLogData';
 import { collectionLogSync } from '../../services/CollectionLogSyncService';
 import { wikiService } from '../../services/WikiService';
 import { useCollectionLogModel } from '../CollectionLog';
-import { Coins } from '../OsrsIcon';
 import { WikiIcon } from '../WikiIcon';
+import { UTILITY_ITEM_IDS } from '../../constants';
+import { DROP_RATES } from '../../config/rules';
+import { failureFateForSource } from '../../config/economy';
+import { DropSource } from '../../types';
+import { itemSrc } from './OsrsDashGems';
 
 const sh: React.CSSProperties = { textShadow: '1px 1px 0 #000' };
 const RS = (size = 16, family = 'RS'): React.CSSProperties => ({ font: `${size}px '${family}', sans-serif` });
@@ -19,6 +23,15 @@ const tabStyle = (on: boolean): React.CSSProperties => ({
   ...RS(), color: '#ff981f', textShadow: '1px 1px 0 #000', border: '1px solid var(--osrs-bevel-hi, #5c5244)', borderBottom: 0,
   ...(on ? { background: 'var(--osrs-selected, #5a4c3a)', position: 'relative', top: 1, color: '#ffffff' } : { background: 'var(--osrs-inner, #2e271e)' }),
 });
+
+/** A Key-table unlock's item sprite: local copy, then the wiki sprite, then the table's icon. */
+const UnlockSprite: React.FC<{ name: string; boss: boolean }> = ({ name, boss }) => {
+  const id = UTILITY_ITEM_IDS[name];
+  const [step, setStep] = useState(0);
+  const srcs = id ? [itemSrc(id), `https://chisel.weirdgloop.org/static/img/osrs-sprite/${id}.png`] : [];
+  if (step >= srcs.length) return <WikiIcon file={boss ? 'Slayer_icon.png' : 'Minigames.png'} alt="" size={22} />;
+  return <img src={srcs[step]} alt="" aria-hidden="true" className="osrs-px" style={{ maxWidth: 32, maxHeight: 30 }} onError={() => setStep(n => n + 1)} />;
+};
 
 /** The item's sprite, looked up by name the same way the classic log does. */
 const ItemSprite: React.FC<{ name: string }> = ({ name }) => {
@@ -68,7 +81,7 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
     unlocks, identityReview, activeTab, setActiveTab, activePage, setActivePage, viewMode, setViewMode,
     vaultValue, mostValuable, formatNumber, currentTabContent, handleItemClick, filteredPages, allSearchItems,
     activeItems, globalStats, reach, showReach, setShowReach, pendingReviewCount,
-  } = useCollectionLogModel(searchTerm);
+  } = useCollectionLogModel(searchTerm, { showReachDefault: true });
   const { history } = useGame();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -118,9 +131,9 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
   const rolls = useMemo(() => history.filter(e => e.source?.startsWith('Col. Log:')).slice(-40).reverse(), [history]);
 
   const reachPanel = (
-    <div className="osrs-win" style={{ padding: 4, display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
+    <div className="osrs-win" style={{ padding: 4, display: 'flex', flexDirection: 'column', gap: 4, flex: '0 1 auto', minHeight: 120 }}>
       <h2 style={{ margin: '2px 0', textAlign: 'center', ...RS(16, 'RSBold'), color: '#ff981f', ...sh }}>Unlock coverage</h2>
-      <div className="osrs-inner" style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 10px', ...sh }}>
+      <div className="osrs-inner" style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 10px', minHeight: 0, overflowY: 'auto', ...sh }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
           <span style={{ ...RS(32, 'RSBold'), lineHeight: '28px', color: '#00ff00' }}>{reach.pct}%</span>
           <span style={{ ...RS(), color: 'var(--osrs-tan, #c8b897)' }}><span style={{ color: '#ffffff' }}>{reach.obtainable}</span> / {reach.total} slots covered by source unlocks</span>
@@ -136,17 +149,17 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
         {reach.suggestions.length > 0 && (
           <>
             <span style={{ marginTop: 4, ...RS(16, 'RSBold'), color: '#ff981f' }}>Expand unlock coverage</span>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 4 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 6 }}>
               {reach.suggestions.slice(0, 6).map(s => (
                 <div key={s.tab + s.page} data-examine-name={s.unlock}
-                  data-examine={`Unlocking ${s.unlock} would cover ${s.items} more collection log slot${s.items === 1 ? '' : 's'}.`}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '2px 8px 2px 2px', background: 'var(--osrs-window, #3e3529)', border: '1px solid #000', boxShadow: 'inset 1px 1px 0 var(--osrs-bevel-hi, #5c5244), inset -1px -1px 0 var(--osrs-bevel-lo, #14110d)' }}>
+                  data-examine={`Unlocking ${s.unlock} (${s.kind === 'boss' ? 'Bosses' : 'Minigames'} table) would cover ${s.items} more collection log slot${s.items === 1 ? '' : 's'}.`}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 8px 3px 3px', background: 'var(--osrs-window, #3e3529)', border: '1px solid #000', boxShadow: 'inset 1px 1px 0 var(--osrs-bevel-hi, #5c5244), inset -1px -1px 0 var(--osrs-bevel-lo, #14110d)' }}>
                   <span className="osrs-slot" style={{ width: 40, height: 36, flexShrink: 0 }}>
-                    <WikiIcon file={s.kind === 'boss' ? 'Slayer_icon.png' : 'Minigames.png'} alt="" size={22} />
+                    <UnlockSprite name={s.unlock} boss={s.kind === 'boss'} />
                   </span>
                   <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', lineHeight: '17px' }}>
                     <span style={{ ...RS(), color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.unlock}</span>
-                    <span style={{ ...RS(16, 'RSSmall'), color: 'var(--osrs-tan, #c8b897)' }}>{s.kind === 'boss' ? 'Bosses table' : 'Minigames table'}</span>
+                    <span style={{ ...RS(16, 'RSSmall'), color: 'var(--osrs-tan, #c8b897)' }}>{s.kind === 'minigame' ? 'Minigame' : s.tab === 'Raids' ? 'Raid' : 'Boss'}</span>
                   </span>
                   <span style={{ ...RS(16, 'RSBold'), color: '#00ff00' }}>+{s.items}</span>
                 </div>
@@ -162,9 +175,10 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
   );
 
   const rollsPanel = (
-    <div className="osrs-win" style={{ padding: 4, display: 'flex', flexDirection: 'column', gap: 4, flex: wide ? 1 : undefined, height: wide ? undefined : 118, minHeight: 0, flexShrink: 0 }}>
+    <div className="osrs-win" style={{ padding: 4, display: 'flex', flexDirection: 'column', gap: 4, flex: wide ? '1 0 170px' : undefined, height: wide ? undefined : 150, minHeight: 0, flexShrink: 0 }}>
       <h2 style={{ margin: '2px 0', textAlign: 'center', ...RS(16, 'RSBold'), color: '#ff981f', ...sh }}>Collection log rolls</h2>
-      <div className="osrs-chat" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 1, padding: '6px 8px' }}>
+      <div className="osrs-chat" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: 0 }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 1, padding: '6px 8px' }}>
         {rolls.length === 0 && <div style={{ flexShrink: 0, lineHeight: '18px' }}>No collection log rolls yet. Each new item you log rolls for a Key.</div>}
         {rolls.map(e => {
           const ok = e.type === 'ROLL_SUCCESS' || e.type === 'PITY' || e.type === 'ROLL_OMNI';
@@ -176,12 +190,16 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
           );
         })}
       </div>
+      <div style={{ flexShrink: 0, margin: '0 8px', padding: '4px 0 6px', borderTop: '1px solid #a8987a', lineHeight: '18px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        Each new item rolls for a Key at <span style={{ color: '#005f00' }}>{DROP_RATES[DropSource.COLLECTION_LOG]}%</span>. A miss adds <span style={{ color: '#7f0000' }}>+{failureFateForSource(DropSource.COLLECTION_LOG)} Fate</span>.
+      </div>
+      </div>
     </div>
   );
 
   return (
     <div ref={rootRef} style={{ height: '100%', minHeight: 0, gap: 8, color: '#ff981f', ...RS(),
-      ...(wide ? { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 380px', gridTemplateRows: 'minmax(0, 1fr)' }
+      ...(wide ? { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(380px, 35%)', gridTemplateRows: 'minmax(0, 1fr)' }
         : { display: 'flex', flexDirection: 'column', overflowY: 'auto' }) }}>
       {!wide && showReach && reachPanel}
 
@@ -200,7 +218,7 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span title={mostValuable ? `Most valuable: ${mostValuable.name} (${formatNumber(mostValuable.value)})` : undefined}
               style={{ display: 'flex', alignItems: 'center', gap: 4, height: 26, padding: '0 8px 0 2px', background: 'var(--osrs-well, #1f1a14)', border: '1px solid #000', ...RS(16, 'RSSmall'), color: '#ffff00' }}>
-              <Coins size={22} aria-hidden="true" />{formatNumber(vaultValue)} gp
+              <img src={itemSrc(1004)} alt="" aria-hidden="true" className="osrs-px" style={{ height: 22 }} />{formatNumber(vaultValue)} gp
             </span>
             {mostValuable && rootW >= 760 && (
               <span style={{ ...RS(16, 'RSSmall'), color: 'var(--osrs-tan, #c8b897)', whiteSpace: 'nowrap' }}>
@@ -223,7 +241,7 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
           ))}
         </div>
 
-        <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'minmax(150px, 34%) minmax(0, 1fr)', gap: 4 }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'minmax(150px, min(276px, 34%)) minmax(0, 1fr)', gap: 4 }}>
           {/* Page list */}
           <div className="osrs-inner" style={{ minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             {searchTerm && (

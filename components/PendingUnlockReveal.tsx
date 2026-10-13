@@ -6,6 +6,7 @@ import { chunkLabel } from '../utils/chunkAdjacency';
 import { VoidReveal } from './VoidReveal';
 import { lazyWithRetry } from '../utils/lazyRetry';
 import { useIsOsrsUi } from '../utils/uiStyle';
+import { useOsrsNav } from '../utils/osrsNav';
 
 const OsrsSpendReveal = lazyWithRetry(() => import('./osrs/OsrsSpendReveal'));
 
@@ -16,6 +17,9 @@ export function PendingUnlockReveal({ pending, animationsEnabled, onAccept, tier
   tier?: number;
 }) {
   const osrs = useIsOsrsUi();
+  // With the wide Spend Keys board open, the OSRS reveal draws in its reveal window.
+  const nav = useOsrsNav();
+  const docked = nav.screen === 'keys' && nav.keysTab === 'spend';
   const label = pending.table === TableType.BANKS ? BANK_BY_ID[pending.item]?.name ?? pending.item
     : pending.table === TableType.CHUNKS ? chunkLabel(pending.item) : pending.item;
   const file = pending.table === TableType.SKILLS ? `${pending.item}_icon.png`
@@ -27,6 +31,6 @@ export function PendingUnlockReveal({ pending, animationsEnabled, onAccept, tier
   const props = { itemName: label, itemType: pending.table, itemImage: image, isChaos: pending.costType === 'chaosKey',
     animationsEnabled, tier, onComplete: () => onAccept(pending.id) };
   // The OSRS layout draws the same roll as an OSRS interface window.
-  if (osrs) return <Suspense key={pending.id} fallback={null}><OsrsSpendReveal {...props} /></Suspense>;
+  if (osrs) return <Suspense key={pending.id} fallback={null}><OsrsSpendReveal {...props} docked={docked} /></Suspense>;
   return <VoidReveal key={pending.id} {...props} />;
 }

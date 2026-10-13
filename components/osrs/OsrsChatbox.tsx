@@ -6,7 +6,9 @@ import { lazyWithRetry } from '../../utils/lazyRetry';
 import { isRollEntry } from '../../utils/logEntry';
 import { TableType, type LogEntry } from '../../types';
 import { ModalFallback } from '../LoadingFallback';
+import { useOsrsNav } from '../../utils/osrsNav';
 import { OsrsLevelUp, levelUpMessage, unlockCostType, type LevelUpMessage } from './OsrsLevelUp';
+import { useOsrsChatNotices } from './OsrsShellChatNotices';
 import './osrs-shell.css';
 
 const TimelapseModal = lazyWithRetry(() => import('../TimelapseModal').then(m => ({ default: m.TimelapseModal })));
@@ -74,7 +76,15 @@ export const OsrsChatbox: React.FC = () => {
   const { history, lastEvent, unlocks, linkedAccount } = useGame();
   const { activeProfileName } = useProfiles();
   const [tab, setTab] = useState<ChatTab>('All');
-  const [collapsed, setCollapsed] = useState(readCollapsed);
+  const { screen, progressionWide } = useOsrsNav();
+  const notices = useOsrsChatNotices();
+  // Home keeps the saved open/closed choice. The wide Keys and Journal screens
+  // and the full-width Progression tabs are drawn without a chatbox, so there
+  // it starts folded to its tab row.
+  const [homeCollapsed, setHomeCollapsed] = useState(readCollapsed);
+  const [otherCollapsed, setOtherCollapsed] = useState(true);
+  const onHome = screen === 'home' && !progressionWide;
+  const collapsed = onHome ? homeCollapsed : otherCollapsed;
   const [showTimelapse, setShowTimelapse] = useState(false);
   const [queue, setQueue] = useState<Array<{ id: string; message: LevelUpMessage }>>([]);
   const dockRef = useRef<HTMLDivElement>(null);
@@ -110,7 +120,9 @@ export const OsrsChatbox: React.FC = () => {
     return picked.reverse();
   }, [history, tab]);
 
-  const setCollapsedAndSave = (next: boolean) => { setCollapsed(next); writeCollapsed(next); };
+  const setCollapsedAndSave = (next: boolean) => {
+    if (onHome) { setHomeCollapsed(next); writeCollapsed(next); } else setOtherCollapsed(next);
+  };
   const pickTab = (next: ChatTab) => {
     if (next === tab) setCollapsedAndSave(!collapsed);
     else { setTab(next); if (collapsed) setCollapsedAndSave(false); }
@@ -128,7 +140,9 @@ export const OsrsChatbox: React.FC = () => {
     return () => { observer?.disconnect(); root.style.removeProperty('--osrs-chat-h'); };
   }, []);
 
-  const bodyOpen = !collapsed || !!levelUp;
+  // Off home the screen draws its own unlock reveal, so a level-up message
+  // waits for home instead of unfolding the chatbox over it.
+  const bodyOpen = !collapsed || (!!levelUp && onHome);
   const name = linkedAccount || activeProfileName;
   const note = tab === 'All'
     ? `Fate Timeline · ${history.length.toLocaleString()} ${history.length === 1 ? 'entry' : 'entries'}`
@@ -136,8 +150,7 @@ export const OsrsChatbox: React.FC = () => {
 
   return (
     <>
-    <div ref={dockRef} className="osrs-chatdock">
-      <div className="osrs-chatdock-wrap">
+    <div ref={dockRef} className={`osrs-chatdock${bodyOpen ? '' : ' is-collapsed'}`}>
         {bodyOpen && (
           <div className="osrs-chat osrs-chat-body">
             {levelUp ? (
@@ -149,6 +162,14 @@ export const OsrsChatbox: React.FC = () => {
                     {lines.length === 0
                       ? <div className="osrs-chat-line" style={{ color: '#000080' }}>Welcome to Fate Locked. Your rolls, unlocks and rituals will show here.</div>
                       : lines.map(entry => <ChatLine key={entry.id} entry={entry} />)}
+                    {notices.map(notice => (
+                      <div key={notice.id} className="osrs-chat-line osrs-chat-notice" title={notice.text}>
+                        <span style={{ color: '#000080' }}>{notice.text}</span>
+                        {notice.actions.map(action => (
+                          <button key={action.label} type="button" className="osrs-chat-link" title={action.title} onClick={action.run}>{action.label}</button>
+                        ))}
+                      </div>
+                    ))}
                   </div>
                 </div>
                 <div className="osrs-chat-input" aria-hidden="true">{name ? `${name}: ` : ''}<span style={{ color: '#0000ff' }}>*</span></div>
@@ -181,21 +202,7 @@ export const OsrsChatbox: React.FC = () => {
           >
             Timelapse
           </button>
-          <button
-            type="button"
-            className="osrs-ctab"
-            style={{ width: 40 }}
-            onClick={() => setCollapsedAndSave(!collapsed)}
-            aria-label={collapsed ? 'Show the chatbox' : 'Hide the chatbox'}
-            title={collapsed ? 'Show the chatbox' : 'Hide the chatbox'}
-            aria-expanded={!collapsed}
-          >
-            <svg aria-hidden="true" width="12" height="8" viewBox="0 0 12 8">
-              <path d={collapsed ? 'M1 7l5-5 5 5' : 'M1 1l5 5 5-5'} fill="none" stroke="currentColor" strokeWidth="2" />
-            </svg>
-          </button>
         </div>
-      </div>
     </div>
       {showTimelapse && (
         <Suspense fallback={<ModalFallback label="Loading timelapse…" />}>

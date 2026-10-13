@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, Search, CheckCircle2, AlertTriangle, RefreshCw, Lock } from 'lucide-react';
 import { Sparkles, Dice5 } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
@@ -6,6 +6,8 @@ import { RollInbox } from './RollInbox';
 import { RuneLiteOnboarding } from './RuneLiteOnboarding';
 import { WikiIcon } from './WikiIcon';
 import { SKILLS_LIST } from '../data/items';
+import { lazyWithRetry } from '../utils/lazyRetry';
+import { useIsOsrsUi } from '../utils/uiStyle';
 import {
   GROUP_IRON_TITLES,
   GROUP_TITLES,
@@ -92,7 +94,11 @@ export async function fetchPlayer(name: string): Promise<Fetched> {
   };
 }
 
-export function AutoRollPanel() {
+/**
+ * Everything Sync & Roll shows and does, shared by the classic panel and the
+ * OSRS layout so both bind, fetch and roll through the same handlers.
+ */
+export function useAutoRoll() {
   const { unlocks, createBackup, levelUpSkill, keys, specialKeys, chaosKeys, linkedAccount, setLinkedAccount } = useGame() as any;
   // Each run binds to one OSRS account: once set, the input is locked to it.
   const [name, setName] = useState(linkedAccount ?? '');
@@ -223,6 +229,26 @@ export function AutoRollPanel() {
   }, [fetched, gains, createBackup, setSkillRollingState]);
 
   const totalGain = gains.reduce((a, s) => a + (s.level - s.current), 0);
+
+  return {
+    linkedAccount: linkedAccount as string | null | undefined, name, setName, status, error, fetched, groupTitle, chooseGroupTitle, title,
+    rolledTo, applied, skillRolling, skillKeysGained, currentLevels, isUnlocked, gains, onFetch, autoRoll, totalGain,
+  };
+}
+
+const OsrsSyncRoll = lazyWithRetry(() => import('./osrs/OsrsSyncRoll'));
+
+export function AutoRollPanel() {
+  return useIsOsrsUi()
+    ? <Suspense fallback={null}><OsrsSyncRoll /></Suspense>
+    : <ClassicAutoRollPanel />;
+}
+
+function ClassicAutoRollPanel() {
+  const {
+    linkedAccount, name, setName, status, error, fetched, groupTitle, chooseGroupTitle, title,
+    rolledTo, applied, skillRolling, skillKeysGained, currentLevels, isUnlocked, gains, onFetch, autoRoll, totalGain,
+  } = useAutoRoll();
 
   return (
     <div className="h-full overflow-y-auto custom-scrollbar p-4 space-y-4">

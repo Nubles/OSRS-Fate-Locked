@@ -11,21 +11,32 @@ import { useSyncExternalStore } from 'react';
 export type OsrsScreen = 'home' | 'keys' | 'journal';
 export type OsrsKeysTab = 'farm' | 'spend' | 'history';
 
-interface NavState { screen: OsrsScreen; keysTab: OsrsKeysTab }
+/**
+ * progressionWide: the Progression tab on show is drawn full width on its
+ * board (Sync & Roll, Activities & Utility, Collection), so the home screen
+ * hides its left column (Journal card + Keys panel). Dashboard sets it.
+ */
+interface NavState { screen: OsrsScreen; keysTab: OsrsKeysTab; progressionWide: boolean }
 
-let state: NavState = { screen: 'home', keysTab: 'farm' };
+let state: NavState = { screen: 'home', keysTab: 'farm', progressionWide: false };
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(l => l());
 
 export const getOsrsNav = (): NavState => state;
 
 export const openOsrsScreen = (screen: OsrsScreen, keysTab?: OsrsKeysTab): void => {
-  state = { screen, keysTab: keysTab ?? state.keysTab };
+  state = { ...state, screen, keysTab: keysTab ?? state.keysTab };
   emit();
 };
 
 export const setOsrsKeysTab = (keysTab: OsrsKeysTab): void => {
   state = { ...state, keysTab };
+  emit();
+};
+
+export const setOsrsProgressionWide = (progressionWide: boolean): void => {
+  if (state.progressionWide === progressionWide) return;
+  state = { ...state, progressionWide };
   emit();
 };
 

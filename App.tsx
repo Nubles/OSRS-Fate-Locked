@@ -100,7 +100,7 @@ const GuidedTour = lazyWithRetry(() => import('./components/GuidedTour').then(m 
 const QuestCompleteOverlay = lazyWithRetry(() => import('./components/QuestCompleteOverlay').then(m => ({ default: m.QuestCompleteOverlay })));
 // The OSRS layout's shell (utils/uiStyle.ts): loaded only while that layout is on.
 const OsrsHeader = lazyWithRetry(() => import('./components/osrs/OsrsHeader').then(m => ({ default: m.OsrsHeader })));
-const OsrsChatbox = lazyWithRetry(() => import('./components/osrs/OsrsChatbox').then(m => ({ default: m.OsrsChatbox })));
+const OsrsShellFrame = lazyWithRetry(() => import('./components/osrs/OsrsShellFrame'));
 const OsrsContextMenu = lazyWithRetry(() => import('./components/osrs/OsrsContextMenu').then(m => ({ default: m.OsrsContextMenu })));
 const RunelitePluginGuide = lazyWithRetry(() =>
   import('./components/runelite-guide/RunelitePluginGuide').then(module => ({
@@ -110,6 +110,7 @@ const RunelitePluginGuide = lazyWithRetry(() =>
 import { deobfuscateFateSave, MAX_FATE_FILE_BYTES } from './utils/encryption';
 import { Download, Upload, RotateCcw, BarChart3, HelpCircle, PlayCircle, PauseCircle, Search, Database, SlidersHorizontal, Link2, Radio, Settings, MessageCircle } from 'lucide-react';
 import { setUiStyle, useIsOsrsUi, useUiStyle } from './utils/uiStyle';
+import { openOsrsScreen, setOsrsKeysTab, useOsrsNav, type OsrsKeysTab } from './utils/osrsNav';
 import { Key, Sparkles, Dna, Swords, ShoppingBag, ScrollText, Compass, Lightbulb } from './components/OsrsIcon';
 import { exportRuneliteBundle } from './utils/runeliteExport';
 import { BookOpen } from './components/OsrsIcon';
@@ -433,7 +434,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
   if (osrsHeader) return (
     <>
       {fileInput}
-      <Suspense fallback={<div style={{ height: 72 }} />}>
+      <Suspense fallback={<div style={{ height: 64 }} />}>
         <OsrsHeader
           setShowAltar={setShowAltar} setShowStats={setShowStats} setShowReference={setShowReference}
           setShowOracle={setShowOracle} setShowStrategy={setShowStrategy} setShowSupplyChain={setShowSupplyChain}
@@ -634,6 +635,9 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
 };
 
 // --- New Control Panel Component ---
+const PANEL_TO_KEYS_TAB: Record<'FARM' | 'SPEND' | 'LOG', OsrsKeysTab> = { FARM: 'farm', SPEND: 'spend', LOG: 'history' };
+const KEYS_TAB_TO_PANEL: Record<OsrsKeysTab, 'FARM' | 'SPEND' | 'LOG'> = { farm: 'FARM', spend: 'SPEND', history: 'LOG' };
+
 const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = false }) => {
   const [activeTab, setActiveTab] = useState<'FARM' | 'SPEND' | 'LOG'>('FARM');
   const isOsrs = useIsOsrsUi();
@@ -645,6 +649,17 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
   // hidden was pure wasted work on the critical path.
   const [logVisited, setLogVisited] = useState(false);
   useEffect(() => { if (activeTab === 'LOG') setLogVisited(true); }, [activeTab]);
+
+  // OSRS layout: this panel's tab and the wide Keys screen's tab are one choice
+  // (utils/osrsNav.ts), so opening the Keys screen lands on the same tab and
+  // closing it brings the choice back here.
+  const { keysTab } = useOsrsNav();
+  useEffect(() => {
+    if (isOsrs) setOsrsKeysTab(PANEL_TO_KEYS_TAB[activeTab]);
+  }, [isOsrs, activeTab]);
+  useEffect(() => {
+    if (isOsrs) setActiveTab(KEYS_TAB_TO_PANEL[keysTab]);
+  }, [isOsrs, keysTab]);
 
   // Command-palette navigation to a control tab.
   const panelRef = useRef<HTMLDivElement>(null);
@@ -665,15 +680,28 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
   return (
     <div ref={panelRef} className={isOsrs ? 'osrs-win flex flex-col h-full overflow-hidden p-1 gap-1' : 'flex flex-col h-full bg-[#1b1b1b] border border-[#333] rounded-lg overflow-hidden shadow-xl'}>
       {isOsrs ? <>
-      {/* OSRS layout: the same three tabs as OSRS interface tabs. */}
-      <div role="tablist" className="flex shrink-0" style={{ gap: 3, padding: '2px 2px 0', borderBottom: '1px solid var(--osrs-rule, #5c5244)' }}>
-        <button type="button" role="tab" data-tour="farm" aria-selected={activeTab === 'FARM'} onClick={() => setActiveTab('FARM')} className="osrs-tab" style={{ flex: 1, textAlign: 'center' }}>Farm Keys</button>
-        <button type="button" role="tab" data-tour="spend" aria-selected={activeTab === 'SPEND'} onClick={() => setActiveTab('SPEND')} className="osrs-tab" style={{ flex: 1, textAlign: 'center' }}>Spend Keys</button>
-        {showLogTab && <button type="button" role="tab" aria-selected={activeTab === 'LOG'} onClick={() => setActiveTab('LOG')} className="osrs-tab" style={{ flex: 1, textAlign: 'center' }}>History</button>}
-      </div>
-      <div className="flex items-center justify-end gap-1.5 px-1.5 shrink-0 text-[11px] text-gray-400">
-        <span>{GUIDES[activeTab]?.title}</span>
-        <SectionGuide id={activeTab} suspendModals={suspendModals} />
+      {/* OSRS layout: the Main board's tab strip, plus a small control that
+          opens the wide Keys screen on the same tab. The panel guide sits
+          beside it (the board has no row for it). */}
+      <div className="flex shrink-0 items-end" style={{ gap: 3, padding: '2px 2px 0', borderBottom: '1px solid var(--osrs-rule, #5c5244)' }}>
+        <div role="tablist" className="flex" style={{ flex: 1, minWidth: 0, gap: 3 }}>
+          <button type="button" role="tab" data-tour="farm" aria-selected={activeTab === 'FARM'} onClick={() => setActiveTab('FARM')} className="osrs-tab" style={{ flex: 1, textAlign: 'center' }}>Farm Keys</button>
+          <button type="button" role="tab" data-tour="spend" aria-selected={activeTab === 'SPEND'} onClick={() => setActiveTab('SPEND')} className="osrs-tab" style={{ flex: 1, textAlign: 'center' }}>Spend Keys</button>
+          {showLogTab && <button type="button" role="tab" aria-selected={activeTab === 'LOG'} onClick={() => setActiveTab('LOG')} className="osrs-tab" style={{ flex: 1, textAlign: 'center' }}>History</button>}
+        </div>
+        <span className="osrs-keys-guide flex items-center justify-center" style={{ width: 22, height: 26, marginBottom: 1 }}>
+          <SectionGuide id={activeTab} suspendModals={suspendModals} />
+        </span>
+        <button
+          type="button"
+          className="osrs-btn"
+          onClick={() => openOsrsScreen('keys', PANEL_TO_KEYS_TAB[activeTab])}
+          title={`Open the full ${activeTab === 'FARM' ? 'Farm Keys' : activeTab === 'SPEND' ? 'Spend Keys' : 'History'} window`}
+          aria-label={`Open the full ${activeTab === 'FARM' ? 'Farm Keys' : activeTab === 'SPEND' ? 'Spend Keys' : 'History'} window`}
+          style={{ width: 26, height: 26, padding: 0, marginBottom: 2, flexShrink: 0 }}
+        >
+          <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d="M7 1h4v4M11 1L6.5 5.5M5 11H1V7M1 11l4.5-4.5" fill="none" stroke="currentColor" strokeWidth="2" /></svg>
+        </button>
       </div>
       </> : <>
       {/* Tabs */}
@@ -707,12 +735,12 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
       </div>
       </>}
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-1">
-        <div className={activeTab === 'FARM' ? 'block' : 'hidden'}>
+      {/* Content. The OSRS layout's compact Keys views fill a definite height and scroll inside themselves. */}
+      <div className={isOsrs ? 'flex-1 min-h-0 overflow-hidden' : 'flex-1 overflow-y-auto custom-scrollbar p-1'}>
+        <div className={activeTab === 'FARM' ? (isOsrs ? 'block h-full' : 'block') : 'hidden'}>
            <ActionSection />
         </div>
-        <div className={activeTab === 'SPEND' ? 'block' : 'hidden'}>
+        <div className={activeTab === 'SPEND' ? (isOsrs ? 'block h-full' : 'block') : 'hidden'}>
            <GachaSection />
         </div>
         <div className={activeTab === 'LOG' ? 'block h-full' : 'hidden'}>
@@ -1043,8 +1071,46 @@ const GameLayout = () => {
   }, shouldEnableUnderlyingModalEscape(anyModalOpen, topLevelGuideOpen));
   const modalRenderPolicy = resolveChangelogModalRenderPolicy(topLevelGuideOpen);
 
+  // Shared between the classic grid and the OSRS frame (same components, same props).
+  const headerEl = (
+    <Header
+      setShowAltar={setShowAltar}
+      setShowStats={setShowStats}
+      setShowReference={setShowReference}
+      setShowOracle={setShowOracle}
+      setShowStrategy={setShowStrategy}
+      setShowSupplyChain={setShowSupplyChain}
+      setShowGameMode={setShowGameMode}
+      setShowSyncCode={setShowSyncCode}
+      setShowDiscord={setShowDiscord}
+      onOpenRuneliteGuide={openRuneliteGuide}
+      onOpenChangelog={openChangelog}
+    />
+  );
+  const journalCardEl = (
+    <PanelErrorBoundary name="Journal summary">
+      <JournalSummaryCard
+        onNavClick={(tab) =>
+          window.dispatchEvent(new CustomEvent('navigate-journal', { detail: { tab } }))
+        }
+      />
+    </PanelErrorBoundary>
+  );
+  const controlPanelEl = (
+    <PanelErrorBoundary name="Control panel">
+      <ControlPanel suspendModals={modalRenderPolicy.suspendDashboardModals} />
+    </PanelErrorBoundary>
+  );
+  const dashboardEl = (
+    <PanelErrorBoundary name="Dashboard">
+      <Dashboard suspendModals={modalRenderPolicy.suspendDashboardModals} />
+    </PanelErrorBoundary>
+  );
+
   return (
-    <div className="min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative">
+    <div className={isOsrs
+      ? 'osrs-shell min-h-screen bg-osrs-bg text-osrs-text font-sans selection:bg-osrs-gold selection:text-black relative'
+      : 'min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative'}>
       <EffectsLayer />
       <OnlineSyncDriver />
       <Suspense fallback={null}><OnlineBackupDriver /></Suspense>
@@ -1109,26 +1175,14 @@ const GameLayout = () => {
         )}
       </Suspense>
 
-      <Header
-        setShowAltar={setShowAltar}
-        setShowStats={setShowStats}
-        setShowReference={setShowReference}
-        setShowOracle={setShowOracle}
-        setShowStrategy={setShowStrategy}
-        setShowSupplyChain={setShowSupplyChain}
-        setShowGameMode={setShowGameMode}
-        setShowSyncCode={setShowSyncCode}
-        setShowDiscord={setShowDiscord}
-        onOpenRuneliteGuide={openRuneliteGuide}
-        onOpenChangelog={openChangelog}
-      />
+      {!isOsrs && headerEl}
 
-      <ProfileRecoveryBanner />
+      {!isOsrs && <ProfileRecoveryBanner />}
 
-      <SaveConflictBanner />
+      {!isOsrs && <SaveConflictBanner />}
 
       {/* Compact durability status for ordinary saves and degraded recovery. */}
-      {!dualStorageFailure && (
+      {!isOsrs && !dualStorageFailure && (
         <SaveDurabilityStatus
           snapshot={effectiveDurability}
           retrySave={retrySave}
@@ -1136,10 +1190,10 @@ const GameLayout = () => {
         />
       )}
 
-      <SaveFailureBanner />
+      {!isOsrs && <SaveFailureBanner />}
 
       {/* Says when the RuneLite profile couldn't be sent, and when it's tried again. */}
-      <Suspense fallback={null}><RelayPublishBanner /></Suspense>
+      {!isOsrs && <Suspense fallback={null}><RelayPublishBanner /></Suspense>}
 
       <Suspense fallback={null}>
         {/* Global ⌘K command palette — navigates via fate:nav events. */}
@@ -1186,20 +1240,36 @@ const GameLayout = () => {
       )}
 
       {/* One contextual "next step" hint under the header — teaches the loop. */}
-      <CoachStrip />
+      {!isOsrs && <CoachStrip />}
 
       {/* Asks once per run whether to turn on online backup. */}
-      <Suspense fallback={null}><OnlineBackupPrompt /></Suspense>
+      {!isOsrs && <Suspense fallback={null}><OnlineBackupPrompt /></Suspense>}
       {/* Dismissible "export a .fate backup" reminder for unbacked-up runs. */}
-      <Suspense fallback={null}><BackupNagBanner /></Suspense>
+      {!isOsrs && <Suspense fallback={null}><BackupNagBanner /></Suspense>}
       {/* Posts new unlocks to the profile's Discord webhook (if configured). */}
       <DiscordSyncDriver />
       {/* Keeps the run's shared progress current for the Discord bot's /progress (if sharing is on). */}
       <Suspense fallback={null}><ProgressShareDriver /></Suspense>
 
       {/* Main Command Center Layout */}
-      {/* The OSRS layout docks a chatbox under this; --osrs-chat-h is its height. */}
-      <main className="max-w-[1600px] mx-auto px-4 py-4 h-[calc(100vh-80px)]" style={isOsrs ? { height: 'calc(100vh - 80px - var(--osrs-chat-h, 0px) - var(--osrs-client-inset, 0px))', minHeight: 560 } : undefined}>
+      {isOsrs ? (
+        /* The OSRS layout: header, parchment line, one screen, docked chatbox,
+           all inside the window (components/osrs/OsrsShellFrame.tsx). */
+        <Suspense fallback={null}>
+          <OsrsShellFrame
+            header={headerEl}
+            criticalBanners={<><ProfileRecoveryBanner /><SaveConflictBanner /><SaveFailureBanner /></>}
+            journalCard={journalCardEl}
+            keysPanel={controlPanelEl}
+            progression={dashboardEl}
+            durability={effectiveDurability}
+            showDurability={!dualStorageFailure}
+            retrySave={retrySave}
+            exportBackup={exportBackup}
+          />
+        </Suspense>
+      ) : (
+      <main className="max-w-[1600px] mx-auto px-4 py-4 h-[calc(100vh-80px)]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
 
           {/* LEFT: Journal summary + Interaction & Control (35%).
@@ -1208,33 +1278,23 @@ const GameLayout = () => {
               `navigate-journal` event the Dashboard listens for. */}
           <div className="lg:col-span-4 h-full min-h-[500px] flex flex-col gap-4">
             <div className="shrink-0">
-              <PanelErrorBoundary name="Journal summary">
-                <JournalSummaryCard
-                  onNavClick={(tab) =>
-                    window.dispatchEvent(new CustomEvent('navigate-journal', { detail: { tab } }))
-                  }
-                />
-              </PanelErrorBoundary>
+              {journalCardEl}
             </div>
             <div className="flex-1 min-h-0">
-              <PanelErrorBoundary name="Control panel">
-                <ControlPanel suspendModals={modalRenderPolicy.suspendDashboardModals} />
-              </PanelErrorBoundary>
+              {controlPanelEl}
             </div>
           </div>
 
           {/* RIGHT: Dashboard Visualization (65%) */}
           <div className="lg:col-span-8 h-full min-h-[500px] flex flex-col gap-4">
              <div className="flex-1 overflow-hidden h-full">
-               <PanelErrorBoundary name="Dashboard">
-                 <Dashboard suspendModals={modalRenderPolicy.suspendDashboardModals} />
-               </PanelErrorBoundary>
+               {dashboardEl}
              </div>
           </div>
 
         </div>
       </main>
-      {isOsrs && <Suspense fallback={null}><OsrsChatbox /></Suspense>}
+      )}
     </div>
   );
 };

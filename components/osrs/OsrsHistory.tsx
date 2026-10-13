@@ -9,9 +9,13 @@ import { formatKeyPercent, formatKeyRollValue } from '../../utils/keyRoll';
 import { tableDisplayName } from '../../utils/tableDisplay';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { lazyWithRetry } from '../../utils/lazyRetry';
+import { openOsrsScreen } from '../../utils/osrsNav';
 import { ModalFallback } from '../LoadingFallback';
 import { filterHistory, historyFilterMatches, HistoryFilter, HistorySort } from '../LogViewer';
-import { CASKET_ICON, CHAOS_KEY_ICON, KEY_ICON, OMNI_KEY_ICON, ON_PARCHMENT, ON_STONE, VOID_SEAL_ICON, WATCH_ICON, tableSprite } from './OsrsSpendShared';
+import { CASKET_ICON, CHAOS_KEY_ICON, KEY_ICON, ON_PARCHMENT, ON_STONE, QUEST_ICON, VOID_SEAL_ICON } from './OsrsSpendShared';
+import { clock, examineFor, lineDetails, look, speaker } from './OsrsHistoryShared';
+import { setHistoryEntry, useKeysView } from './OsrsKeysState';
+import { OsrsKeysTabs } from './OsrsKeysTabs';
 
 const TimelapseModal = lazyWithRetry(() => import('../TimelapseModal').then(m => ({ default: m.TimelapseModal })));
 
@@ -19,59 +23,19 @@ const sh: React.CSSProperties = { textShadow: '1px 1px 0 #000' };
 const RS = (size = 16, family = 'RS'): React.CSSProperties => ({ font: `${size}px '${family}', sans-serif` });
 const LINE = 20;
 
-type Tone = keyof typeof ON_PARCHMENT;
+interface RowData { entries: LogEntry[]; selected: string | null; onPick: (id: string) => void; wide: boolean }
 
-/** How each kind of history entry reads as a game message. */
-const look = (e: LogEntry): { tone: Tone; icon: string; dim: boolean; kind: string } => {
-  switch (e.type) {
-    case 'ROLL_SUCCESS': return { tone: 'success', icon: KEY_ICON, dim: false, kind: 'Roll: Key found' };
-    case 'PITY': return { tone: 'success', icon: KEY_ICON, dim: false, kind: 'Roll: pity Key' };
-    case 'ROLL_FAIL': return { tone: 'fail', icon: KEY_ICON, dim: true, kind: 'Roll: no Key' };
-    case 'ROLL_OMNI': return { tone: 'void', icon: OMNI_KEY_ICON, dim: false, kind: 'Roll: Omni-Key' };
-    case 'PET': return { tone: 'void', icon: OMNI_KEY_ICON, dim: false, kind: 'Pet' };
-    case 'UNLOCK': return { tone: 'unlock', icon: e.meta?.category ? tableSprite(e.meta.category) : CASKET_ICON, dim: false, kind: 'Unlock' };
-    case 'ALTAR': return { tone: 'void', icon: VOID_SEAL_ICON, dim: false, kind: 'Void Altar ritual' };
-    case 'LEVEL_UP': return { tone: 'level', icon: CHAOS_KEY_ICON, dim: false, kind: 'Level up' };
-    case 'XTREME_MILESTONE': return { tone: 'success', icon: CHAOS_KEY_ICON, dim: false, kind: 'Xtreme milestone' };
-    case 'COMPENSATION': return { tone: 'void', icon: OMNI_KEY_ICON, dim: false, kind: 'Compensation' };
-    default: return { tone: 'plain', icon: CASKET_ICON, dim: false, kind: e.type };
-  }
-};
-
-/** The blue speaker before the message: the roll's source, the unlock's table, or the system that wrote it. */
-const speaker = (e: LogEntry): string => {
-  if (e.source) return e.source;
-  if (e.type === 'UNLOCK' && e.meta?.category) return tableDisplayName(e.meta.category);
-  if (e.type === 'ALTAR') return 'Void Altar';
-  if (e.type === 'LEVEL_UP') return 'Level up';
-  return '';
-};
-
-const clock = (ts: number) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-/** Unlock lines already name the table, so their "Category: X" detail would only repeat it. */
-const lineDetails = (e: LogEntry) => (e.type === 'UNLOCK' ? '' : e.details ?? '');
-
-const examineFor = (e: LogEntry): string => {
-  const parts = [`${look(e).kind}.`, e.message + (e.message.endsWith('.') || e.message.endsWith('!') ? '' : '.')];
-  if (e.details) parts.push(e.details);
-  if (isRollEntry(e) && e.rollValue !== undefined && e.threshold !== undefined) {
-    parts.push(`Rolled ${formatKeyRollValue(e.rollValue)} against ${formatKeyPercent(e.threshold)}.`);
-  }
-  return parts.join(' ');
-};
-
-interface RowData { entries: LogEntry[]; selected: string | null; onPick: (id: string) => void }
-
+/** One timeline line: [time] icon Source: message details, and on the wide board the roll against its chance. */
 const Line = ({ index, style, data }: ListChildComponentProps<RowData>) => {
   const e = data.entries[index];
   const l = look(e);
   const who = speaker(e);
   const details = lineDetails(e);
-  const roll = isRollEntry(e) && e.rollValue !== undefined && e.threshold !== undefined;
+  const roll = data.wide && isRollEntry(e) && e.rollValue !== undefined && e.threshold !== undefined;
   const hit = roll && e.rollValue! <= e.threshold!;
   return (
     <div style={style}>
-      <button type="button" className="ohist-line" aria-pressed={data.selected === e.id} onClick={() => data.onPick(e.id)}
+      <button type="button" className={`ohist-line${data.wide ? ' wide' : ''}`} aria-pressed={data.selected === e.id} onClick={() => data.onPick(e.id)}
         data-examine-name={who || l.kind} data-examine={examineFor(e)}>
         <span>[{clock(e.timestamp)}]</span>
         <img className="osrs-px" src={l.icon} alt="" aria-hidden="true" style={{ width: 18, height: 16, objectFit: 'contain', filter: l.dim ? 'grayscale(1) brightness(.7)' : 'none' }} />
@@ -96,7 +60,7 @@ const Line = ({ index, style, data }: ListChildComponentProps<RowData>) => {
 };
 
 const FILTERS: { id: HistoryFilter; label: string; icon: string }[] = [
-  { id: 'ALL', label: 'All', icon: WATCH_ICON },
+  { id: 'ALL', label: 'All', icon: QUEST_ICON },
   { id: 'ROLLS', label: 'Rolls', icon: KEY_ICON },
   { id: 'UNLOCKS', label: 'Unlocks', icon: CASKET_ICON },
   { id: 'RITUALS', label: 'Rituals', icon: VOID_SEAL_ICON },
@@ -104,7 +68,7 @@ const FILTERS: { id: HistoryFilter; label: string; icon: string }[] = [
 ];
 
 /** The chosen entry in full: what kind it is, where it came from, its Key roll and its place in the chain. */
-const EntryDetail: React.FC<{ entry: LogEntry; num: number; total: number; onClose: () => void }> = ({ entry: e, num, total, onClose }) => {
+const EntryDetail: React.FC<{ entry: LogEntry; num: number; total: number }> = ({ entry: e, num, total }) => {
   const l = look(e);
   const roll = isRollEntry(e) && e.rollValue !== undefined && e.threshold !== undefined;
   const hit = roll && e.rollValue! <= e.threshold!;
@@ -118,13 +82,10 @@ const EntryDetail: React.FC<{ entry: LogEntry; num: number; total: number; onClo
   } else if (e.details) rows.push({ k: 'Details', v: e.details });
   const date = new Date(e.timestamp);
   return (
-    <div className="osrs-inner" style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8, padding: 8, maxHeight: '45%', overflowY: 'auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...sh }}>
+    <div className="osrs-inner ohist-detail">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', ...sh }}>
         <span style={{ ...RS(16, 'RSBold'), color: '#ff981f' }}>Entry {num.toLocaleString()}</span>
         <span style={{ ...RS(16, 'RSSmall'), color: 'var(--osrs-tan, #c8b897)' }}>of {total.toLocaleString()}</span>
-        <button type="button" className="osrs-btn" onClick={onClose} aria-label="Close entry" style={{ marginLeft: 'auto', width: 24, height: 24, padding: 0 }}>
-          <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d="M2 2l8 8M10 2l-8 8" stroke="#ff981f" strokeWidth="2.5" /></svg>
-        </button>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div className="osrs-slot" style={{ width: 52, height: 48, flexShrink: 0 }}>
@@ -132,12 +93,14 @@ const EntryDetail: React.FC<{ entry: LogEntry; num: number; total: number; onClo
         </div>
         <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2, ...sh }}>
           <span style={{ ...RS(16, 'RSBold'), color: ON_STONE[l.tone] }}>{e.message}</span>
-          <span style={{ ...RS(16, 'RSSmall'), color: 'var(--osrs-tan, #c8b897)' }}>{date.toLocaleDateString()} · {clock(e.timestamp)}</span>
+          <span style={{ ...RS(16, 'RSSmall'), color: 'var(--osrs-tan, #c8b897)' }}>
+            {date.toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' })} · {clock(e.timestamp)}
+          </span>
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid var(--osrs-well, #1f1a14)' }}>
         {rows.map(r => (
-          <div key={r.k} style={{ display: 'grid', gridTemplateColumns: '84px minmax(0, 1fr)', columnGap: 8, padding: '4px 2px', borderBottom: '1px solid var(--osrs-well, #1f1a14)', ...RS(), lineHeight: '18px', ...sh }}>
+          <div key={r.k} style={{ display: 'grid', gridTemplateColumns: '76px minmax(0, 1fr)', columnGap: 8, padding: '5px 2px', borderBottom: '1px solid var(--osrs-well, #1f1a14)', ...RS(), lineHeight: '18px', ...sh }}>
             <span style={{ color: 'var(--osrs-tan, #c8b897)' }}>{r.k}</span><span style={{ color: r.color ?? '#ffffff', overflowWrap: 'anywhere' }}>{r.v}</span>
           </div>
         ))}
@@ -160,7 +123,7 @@ const EntryDetail: React.FC<{ entry: LogEntry; num: number; total: number; onClo
         </div>
       )}
       {e.hash && (
-        <div className="osrs-chat" style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '6px 8px', lineHeight: '18px' }}>
+        <div className="osrs-chat" style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 10px', lineHeight: '18px' }}>
           <span><span style={{ color: '#800000' }}>Chain:</span> {e.prevHash === 'GENESIS' ? 'the start of the run' : e.prevHash ? `#${e.prevHash}` : 'unknown'} <span style={{ color: 'var(--osrs-bevel-hi, #5c5244)' }}>to</span> #{e.hash}</span>
           <span>Each entry is chained to the one before it, so the tracker can spot a hand-edited save. It is a check in your browser, not proof for anyone else.</span>
         </div>
@@ -169,15 +132,20 @@ const EntryDetail: React.FC<{ entry: LogEntry; num: number; total: number; onClo
   );
 };
 
-/** History as an OSRS chatbox: every roll, unlock and ritual as a coloured game message. */
-const OsrsHistory: React.FC = () => {
+/**
+ * History in the OSRS layout: the Fate Timeline as a chatbox of coloured game
+ * messages. Compact on the home screen's Keys panel; wide (History board) on
+ * the Keys screen, with the chosen entry in full beside it. Same filters,
+ * search, sort and timelapse as the classic timeline.
+ */
+const OsrsHistory: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
   const { history, linkedAccount } = useGame();
   const listRef = useRef<List>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<HistoryFilter>('ALL');
   const [sortOrder, setSortOrder] = useState<HistorySort>('ASC');
   const [showTimelapse, setShowTimelapse] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
+  const { historyEntry } = useKeysView();
 
   useEscapeKey(() => setShowTimelapse(false), showTimelapse);
 
@@ -199,76 +167,126 @@ const OsrsHistory: React.FC = () => {
     }
   }, [filteredHistory.length, searchTerm, filterType, sortOrder]);
 
-  // Opening an entry shrinks the chatbox, so keep the chosen line in view.
-  useEffect(() => {
-    if (!selected) return;
-    const i = filteredHistory.findIndex(e => e.id === selected);
-    if (i >= 0) requestAnimationFrame(() => listRef.current?.scrollToItem(i, 'smart'));
-  }, [selected]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The wide board always shows an entry: the chosen one, else the latest Key found.
+  const selIndex = useMemo(() => {
+    if (historyEntry) {
+      const i = history.findIndex(e => e.id === historyEntry);
+      if (i >= 0) return i;
+    }
+    for (let i = history.length - 1; i >= 0; i--) if (history[i].type === 'ROLL_SUCCESS') return i;
+    return history.length - 1;
+  }, [history, historyEntry]);
+  const selectedId = wide && selIndex >= 0 ? history[selIndex].id : null;
 
-  const selIndex = selected ? history.findIndex(e => e.id === selected) : -1;
+  // Keep the chosen line in view when the wide board opens on it.
+  useEffect(() => {
+    if (!wide || !selectedId) return;
+    const i = filteredHistory.findIndex(e => e.id === selectedId);
+    if (i >= 0) requestAnimationFrame(() => listRef.current?.scrollToItem(i, 'smart'));
+  }, [wide, historyEntry]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const itemData = useMemo<RowData>(() => ({
-    entries: filteredHistory, selected, onPick: (id: string) => setSelected(cur => (cur === id ? null : id)),
-  }), [filteredHistory, selected]);
+    entries: filteredHistory,
+    selected: selectedId,
+    wide,
+    // On the compact panel a line opens the full History window on that entry.
+    onPick: (id: string) => {
+      setHistoryEntry(id);
+      if (!wide) openOsrsScreen('keys', 'history');
+    },
+  }), [filteredHistory, selectedId, wide]);
+
+  const sortBtn = (
+    <button type="button" className={wide ? 'osrs-btn ohist-big' : 'osrs-btn ohist-small'} onClick={() => setSortOrder(prev => prev === 'ASC' ? 'DESC' : 'ASC')}
+      title={sortOrder === 'ASC' ? 'Sort: Oldest First' : 'Sort: Newest First'} style={wide ? { marginLeft: 'auto' } : undefined}>
+      <span>{sortOrder === 'ASC' ? 'Old -> New' : 'New -> Old'}</span>{wide && <span className="sub">Sort</span>}
+    </button>
+  );
+  const timelapseBtn = (
+    <button type="button" className={wide ? 'osrs-btn ohist-big' : 'osrs-btn ohist-small'} onClick={() => setShowTimelapse(true)} title="Play back history as a verified timelapse">
+      <span>Timelapse</span>{wide && <span className="sub">Play back</span>}
+    </button>
+  );
+
+  const title = (
+    <div className={`ohist-title${wide ? ' wide' : ''}`}>
+      <h2>Fate Timeline</h2>
+      <span className="count">{filteredHistory.length.toLocaleString()}</span>
+      {!wide && <span className="tools">{sortBtn}{timelapseBtn}</span>}
+    </div>
+  );
+
+  const chat = (
+    <div className="osrs-chat ohist-chat">
+      <div style={{ flex: 1, minHeight: 0, padding: wide ? '6px 4px' : '4px 2px' }}>
+        {filteredHistory.length === 0 ? (
+          <div style={{ padding: 20, textAlign: 'center' }}>No records found matching criteria.</div>
+        ) : (
+          <AutoSizer>
+            {({ height, width }) => height > 0 && (
+              <List ref={listRef} height={height} width={width} itemCount={filteredHistory.length} itemSize={LINE} itemData={itemData}
+                initialScrollOffset={sortOrder === 'ASC' ? Math.max(0, filteredHistory.length * LINE - height) : 0}>
+                {Line}
+              </List>
+            )}
+          </AutoSizer>
+        )}
+      </div>
+      <label className="ohist-searchline">
+        <span>{linkedAccount ? `${linkedAccount}:` : 'Search:'}</span>
+        <input type="text" className="ohist-search" placeholder="Search history..." aria-label="Search history"
+          value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+      </label>
+    </div>
+  );
+
+  const filters = (
+    <div role="tablist" aria-label="Filter history" className={`ohist-filters${wide ? ' wide' : ''}`}>
+      {FILTERS.map(f => (
+        <button key={f.id} type="button" role="tab" className="ohist-ftab" aria-selected={filterType === f.id} onClick={() => setFilterType(f.id)}>
+          <img className="osrs-px" src={f.icon} alt="" aria-hidden="true" />
+          <span className="ohist-fwords">
+            <span className="ohist-flabel" style={{ color: filterType === f.id ? '#ffffff' : '#ff981f' }}>{f.label}</span>
+            <span className="ohist-fcount">{counts[f.id].toLocaleString()}</span>
+          </span>
+        </button>
+      ))}
+      {wide && sortBtn}
+      {wide && timelapseBtn}
+    </div>
+  );
+
+  const timelapse = showTimelapse && (
+    <Suspense fallback={<ModalFallback label="Loading timelapse…" />}>
+      <TimelapseModal history={history} onClose={() => setShowTimelapse(false)} />
+    </Suspense>
+  );
+
+  if (!wide) {
+    return (
+      <div className="ohist ohist-compact">
+        {title}
+        {chat}
+        {filters}
+        {timelapse}
+      </div>
+    );
+  }
 
   return (
-    <div style={{ height: '100%', minHeight: 420, display: 'flex', flexDirection: 'column', gap: 4, padding: 4, color: '#ff981f', ...RS() }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', ...sh }}>
-        <h2 style={{ margin: 0, ...RS(16, 'RSBold'), color: '#ff981f' }}>Fate Timeline</h2>
-        <span style={{ ...RS(16, 'RSSmall'), color: '#ffff00', padding: '0 6px', background: 'var(--osrs-well, #1f1a14)', border: '1px solid #000', lineHeight: '18px' }}>{filteredHistory.length.toLocaleString()}</span>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
-          <button type="button" className="osrs-btn" onClick={() => setShowTimelapse(true)} title="Play back history as a verified timelapse" style={{ height: 26 }}>Timelapse</button>
-          <button type="button" className="osrs-btn" onClick={() => setSortOrder(prev => prev === 'ASC' ? 'DESC' : 'ASC')}
-            title={sortOrder === 'ASC' ? 'Sort: Oldest First' : 'Sort: Newest First'} style={{ height: 26 }}>
-            {sortOrder === 'ASC' ? 'Old -> New' : 'New -> Old'}
-          </button>
+    <div className="osrs-win ohist ohist-wide">
+      <OsrsKeysTabs hint="History: every roll, unlock and ritual in your run." />
+      <div className="ohist-body">
+        <div className="ohist-left">
+          {title}
+          {chat}
+          {filters}
         </div>
+        {selIndex >= 0
+          ? <EntryDetail entry={history[selIndex]} num={selIndex + 1} total={history.length} />
+          : <div className="osrs-inner ohist-detail"><span style={{ color: 'var(--osrs-muted, #8a7c66)' }}>Nothing logged yet.</span></div>}
       </div>
-
-      <div className="osrs-chat" style={{ flex: 1, minHeight: 160, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, minHeight: 0, padding: '4px 2px' }}>
-          {filteredHistory.length === 0 ? (
-            <div style={{ padding: 20, textAlign: 'center' }}>No records found matching criteria.</div>
-          ) : (
-            <AutoSizer>
-              {({ height, width }) => height > 0 && (
-                <List ref={listRef} height={height} width={width} itemCount={filteredHistory.length} itemSize={LINE} itemData={itemData}
-                  initialScrollOffset={sortOrder === 'ASC' ? Math.max(0, filteredHistory.length * LINE - height) : 0}>
-                  {Line}
-                </List>
-              )}
-            </AutoSizer>
-          )}
-        </div>
-        <label style={{ height: 26, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4, padding: '0 10px', borderTop: '1px solid #8f8062' }}>
-          <span>{linkedAccount ? `${linkedAccount}:` : 'Search:'}</span>
-          <input type="text" className="ohist-search" placeholder="Search history..." aria-label="Search history"
-            value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-          <span aria-hidden="true" style={{ color: '#0000ff' }}>*</span>
-        </label>
-      </div>
-
-      <div role="tablist" aria-label="Filter history" style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
-        {FILTERS.map(f => (
-          <button key={f.id} type="button" role="tab" className="ohist-ftab" aria-selected={filterType === f.id} onClick={() => setFilterType(f.id)}>
-            <img className="osrs-px" src={f.icon} alt="" aria-hidden="true" style={{ width: 22, height: 20, objectFit: 'contain', flexShrink: 0 }} />
-            <span style={{ display: 'flex', flexDirection: 'column', lineHeight: '16px', minWidth: 0 }}>
-              <span className="ohist-flabel" style={{ ...RS(), color: filterType === f.id ? '#ffffff' : '#ff981f' }}>{f.label}</span>
-              <span style={{ ...RS(16, 'RSSmall'), color: '#00ff00' }}>{counts[f.id].toLocaleString()}</span>
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {selIndex >= 0 && (
-        <EntryDetail entry={history[selIndex]} num={selIndex + 1} total={history.length} onClose={() => setSelected(null)} />
-      )}
-
-      {showTimelapse && (
-        <Suspense fallback={<ModalFallback label="Loading timelapse…" />}>
-          <TimelapseModal history={history} onClose={() => setShowTimelapse(false)} />
-        </Suspense>
-      )}
+      {timelapse}
     </div>
   );
 };

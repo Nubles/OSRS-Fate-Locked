@@ -71,6 +71,13 @@ import { SkillAdvisorPanel } from './SkillAdvisorPanel';
 import { showChunkOnMap } from '../utils/chunkLocations';
 import { runeProofAvailability } from '../utils/questRoutes/featureFlag';
 import { useIsOsrsUi } from '../utils/uiStyle';
+import { setOsrsProgressionWide } from '../utils/osrsNav';
+import { openOsrsJournal, type OsrsJournalTab } from './osrs/OsrsJournalNav';
+import type { OsrsLabView } from './osrs/OsrsEquipment';
+
+const OSRS_JOURNAL_TAB: Record<'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE', OsrsJournalTab> = {
+  QUESTS: 'quests', DIARIES: 'diaries', CA: 'combat', DOABLE: 'ready',
+};
 
 // Code-split: the run card pulls in html2canvas only when actually opened.
 const ShareModal = lazyWithRetry(() => import('./ShareModal').then(m => ({ default: m.ShareModal })));
@@ -91,7 +98,7 @@ const AutoRollPanel = lazyWithRetry(() => import('./AutoRollPanel').then(m => ({
 const OsrsDashHeader = lazyWithRetry(() => import('./osrs/OsrsDashChrome').then(m => ({ default: m.OsrsDashHeader })));
 const OsrsDashTabs = lazyWithRetry(() => import('./osrs/OsrsDashChrome').then(m => ({ default: m.OsrsDashTabs })));
 const OsrsConfirmOmni = lazyWithRetry(() => import('./osrs/OsrsDashChrome').then(m => ({ default: m.OsrsConfirmOmni })));
-const OsrsSkills = lazyWithRetry(() => import('./osrs/OsrsSkills').then(m => ({ default: m.OsrsSkills })));
+const OsrsCharTab = lazyWithRetry(() => import('./osrs/OsrsCharTab').then(m => ({ default: m.OsrsCharTab })));
 const OsrsWorldTab = lazyWithRetry(() => import('./osrs/OsrsWorldTab').then(m => ({ default: m.OsrsWorldTab })));
 const OsrsDashActivities = lazyWithRetry(() => import('./osrs/OsrsDashActivities').then(m => ({ default: m.OsrsDashActivities })));
 
@@ -368,6 +375,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const activeMode = getGameMode(gameModeId);
   const isOsrs = useIsOsrsUi();
   const [activeTab, setActiveTab] = useState('CHARACTER');
+  // OSRS layout: the Equipment Lab opened over the whole Character tab (Gear
+  // board); null shows the compact lab beside Skills (Main board).
+  const [osrsLab, setOsrsLab] = useState<OsrsLabView | null>(null);
+  const [journalSubTab, setJournalSubTab] = useLocalStorage<'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE'>('jrnl:subtab', 'QUESTS');
+  useEffect(() => { setOsrsLab(null); }, [activeTab]);
+  // OSRS layout: the Journal is its own full screen, so any route to the
+  // Journal tab (the tab itself, palette jumps, unlock reveals) opens it.
+  useEffect(() => {
+    if (!isOsrs || activeTab !== 'JOURNAL') return;
+    openOsrsJournal(OSRS_JOURNAL_TAB[journalSubTab]);
+    setActiveTab('CHARACTER');
+  }, [isOsrs, activeTab, journalSubTab]);
+  // OSRS layout: tabs drawn full width on their boards hide the home screen's
+  // left column (Sync & Roll, Activities & Utility, Collection, and the open
+  // Equipment Lab).
+  useEffect(() => {
+    setOsrsProgressionWide(isOsrs && (
+      activeTab === 'AUTOROLL' || activeTab === 'ACTIVITIES' || activeTab === 'COLLECTION'
+      || (activeTab === 'CHARACTER' && osrsLab !== null)
+    ));
+  }, [isOsrs, activeTab, osrsLab]);
+  useEffect(() => () => setOsrsProgressionWide(false), []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -390,7 +419,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
     (t) => t.id === 'CHARACTER' || t.id === activeTab || gates.has(`dash:${t.id}` as FeatureId),
   );
   const [activityCategory, setActivityCategory] = useState('BOSSES');
-  const [journalSubTab, setJournalSubTab] = useLocalStorage<'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE'>('jrnl:subtab', 'QUESTS');
   const [worldView, setWorldView] = useState<'LIST' | 'MAP'>('MAP');
   const [showRunCard, setShowRunCard] = useState(false);
   const [showGoalPlanner, setShowGoalPlanner] = useState(false);
@@ -689,30 +717,36 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
             </div>
         </div>
     );
+    if (isOsrs) {
+      return (
+        <Suspense fallback={<PaneFallback />}>
+          <OsrsCharTab
+            lab={osrsLab}
+            onLab={setOsrsLab}
+            onUpgrade={(slot) => handleSpecialUnlock(TableType.EQUIPMENT, slot)}
+            unlocks={unlocks}
+            specialKeys={specialKeys}
+            totalSkillTiers={totalSkillTiers}
+            searchQuery={searchQuery}
+            showOnlyActionable={showOnlyActionable}
+            levelingSkill={levelingSkill}
+            advisorsEnabled={advisorsEnabled}
+            suspendModals={suspendModals}
+            onLevelUp={handleLevelUp}
+            onSpecialUnlock={handleSpecialUnlock}
+            onOpenDetails={(name, tier) => setSelectedSkillForDetails({ name, tier })}
+          />
+        </Suspense>
+      );
+    }
     return (
-    <div className={isOsrs ? 'grid grid-cols-1 xl:grid-cols-2 gap-2 h-full overflow-y-auto pr-1 custom-scrollbar pb-4 items-start' : 'grid grid-cols-1 xl:grid-cols-2 gap-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10'}>
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10">
         {/* Equipment Lab — interactive paper-doll (click a slot for its tier
             ladder + upgrade), a target-loadout planner, and a DPS calculator. */}
         <EquipmentLab onUpgrade={(slot) => handleSpecialUnlock(TableType.EQUIPMENT, slot)} suspendModals={suspendModals} />
 
         {/* Skills Section */}
-        {isOsrs ? (
-          <Suspense fallback={null}>
-            <OsrsSkills
-              unlocks={unlocks}
-              specialKeys={specialKeys}
-              totalSkillTiers={totalSkillTiers}
-              searchQuery={searchQuery}
-              showOnlyActionable={showOnlyActionable}
-              levelingSkill={levelingSkill}
-              advisorsEnabled={advisorsEnabled}
-              suspendModals={suspendModals}
-              onLevelUp={handleLevelUp}
-              onSpecialUnlock={handleSpecialUnlock}
-              onOpenDetails={(name, tier) => setSelectedSkillForDetails({ name, tier })}
-            />
-          </Suspense>
-        ) : classicSkills}
+        {classicSkills}
     </div>
     );
   };
@@ -1068,7 +1102,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
 
   return (
     <>
-    <div className={isOsrs ? 'osrs-win flex flex-col h-full overflow-hidden relative' : 'bg-osrs-panel border border-osrs-border rounded-lg shadow-lg flex flex-col h-full overflow-hidden relative'}>
+    <div className={isOsrs ? 'osrs-win osrs-dash-win flex flex-col h-full overflow-hidden relative' : 'bg-osrs-panel border border-osrs-border rounded-lg shadow-lg flex flex-col h-full overflow-hidden relative'}>
       {!suspendModals && pendingSpecial && (
           <VoidReveal itemName={pendingSpecial.item} itemType={pendingSpecial.table} itemImage={pendingSpecial.image} onComplete={finalizeSpecial} animationsEnabled={animationsEnabled}
             tier={pendingSpecial.table === TableType.SKILLS ? (unlocks.skills[pendingSpecial.item] || 0) + 1 : undefined} />
@@ -1153,7 +1187,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
           <OsrsDashTabs
             tabs={visibleTabs}
             activeTab={activeTab}
-            onTab={setActiveTab}
+            onTab={(id) => (id === 'JOURNAL' ? openOsrsJournal() : setActiveTab(id))}
             searchQuery={searchQuery}
             onSearch={setSearchQuery}
             showOnlyActionable={showOnlyActionable}
@@ -1298,7 +1332,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       </>)}
 
       {/* Content Area */}
-      <div className={isOsrs ? 'flex-1 overflow-hidden p-1' : 'flex-1 overflow-hidden p-4 bg-[#111]'}>
+      <div className={isOsrs ? 'osrs-dash-body flex-1 overflow-hidden' : 'flex-1 overflow-hidden p-4 bg-[#111]'}>
           <Suspense fallback={<ModalFallback />}>
               <GoalTracker />
           </Suspense>
@@ -1318,7 +1352,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                 </Suspense>
             ) : renderWorldTab())}
             {activeTab === 'ACTIVITIES' && renderActivitiesTab()}
-            {activeTab === 'JOURNAL' && renderJournalTab()}
+            {activeTab === 'JOURNAL' && !isOsrs && renderJournalTab()}
             {activeTab === 'COLLECTION' && (
                 <div className="h-full p-2">
                     <Suspense fallback={<PaneFallback />}>

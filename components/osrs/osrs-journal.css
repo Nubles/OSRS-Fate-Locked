@@ -169,23 +169,23 @@ html[data-ui="osrs"] .ojr-menu-item[disabled] { cursor: default; color: var(--os
 html[data-ui="osrs"] .ojr-menu-note { padding: 1px 4px 3px 4px; font: 16px 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); text-shadow: 1px 1px 0 #000; }
 
 /* Home page Journal window (left column). */
-html[data-ui="osrs"] .ojr-sum { padding: 4px; display: flex; flex-direction: column; gap: 4px; }
-html[data-ui="osrs"] .ojr-sum-title { margin: 2px 0; text-align: center; font: 16px 'RSBold', sans-serif; color: #ff981f; text-shadow: 1px 1px 0 #000; }
+html[data-ui="osrs"] .ojr-sum { flex-shrink: 0; padding: 4px; display: flex; flex-direction: column; gap: 4px; }
+html[data-ui="osrs"] .ojr-sum-title { margin: 1px 0; text-align: center; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ff981f; text-shadow: var(--osrs-shadow, 1px 1px 0 #000); }
+/* One 26px line per row, as on the Main and Idea-Chatbox boards. */
 html[data-ui="osrs"] .ojr-sum-row {
   all: unset; box-sizing: border-box; cursor: pointer; width: 100%;
-  display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; column-gap: 8px; align-items: center;
-  padding: 5px 10px; border-bottom: 1px solid var(--osrs-well, #1f1a14); font: 16px 'RS', sans-serif; text-shadow: 1px 1px 0 #000;
+  display: grid; grid-template-columns: 18px minmax(0, 1fr) auto auto; column-gap: 8px; align-items: center;
+  height: 26px; padding: 0 10px; border-bottom: 1px solid var(--osrs-well, #1f1a14); font: var(--osrs-fs, 16px) 'RS', sans-serif; text-shadow: var(--osrs-shadow, 1px 1px 0 #000);
 }
 html[data-ui="osrs"] .ojr-sum-row:last-child { border-bottom: 0; }
 html[data-ui="osrs"] .ojr-sum-row:hover { background: rgba(255, 236, 196, 0.06); }
+html[data-ui="osrs"] .ojr-sum-row:hover .ojr-sum-label { color: #fff; }
 html[data-ui="osrs"] .ojr-sum-row:focus-visible { outline: 1px solid #ffff00; outline-offset: -1px; }
-html[data-ui="osrs"] .ojr-sum-row > .ojr-sum-icon { grid-row: span 2; display: flex; align-items: center; justify-content: center; }
 html[data-ui="osrs"] .ojr-sum-row .ojr-sum-label { color: #ff981f; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-html[data-ui="osrs"] .ojr-sum-row .ojr-sum-val { color: #fff; text-align: right; white-space: nowrap; }
-html[data-ui="osrs"] .ojr-sum-row .ojr-sum-sub { font-family: 'RSSmall', sans-serif; color: #ffff00; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html[data-ui="osrs"] .ojr-sum-row .ojr-sum-val { color: #fff; min-width: 62px; text-align: right; white-space: nowrap; }
+html[data-ui="osrs"] .ojr-sum-row .ojr-sum-sub { font-family: 'RSSmall', sans-serif; color: #ffff00; white-space: nowrap; }
 html[data-ui="osrs"] .ojr-sum-row .ojr-sum-sub.is-none { color: var(--osrs-muted, #8a7c66); }
-html[data-ui="osrs"] .ojr-sum-row .ojr-sum-open { font-family: 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); text-align: right; }
-html[data-ui="osrs"] .ojr-sum-row:hover .ojr-sum-open { color: #fff; }
+@media (max-width: 380px) { html[data-ui="osrs"] .ojr-sum-row .ojr-sum-sub { display: none; } }
 html[data-ui="osrs"] .ojr-sum-next { padding: 5px 10px 6px 10px; border-bottom: 1px solid var(--osrs-well, #1f1a14); }
 html[data-ui="osrs"] .ojr-sum-next .ojr-sum-label { color: var(--osrs-tan, #c8b897); font-family: 'RSSmall', sans-serif; }
 html[data-ui="osrs"] .ojr-sum-next .ojr-sum-head { color: #fff; font-family: 'RSBold', sans-serif; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -211,3 +211,112 @@ html[data-ui="osrs"] .ojr-wiki td svg { display: none; }
 html[data-ui="osrs"] .ojr-dcell.ojr-done { color: #0dc10d; }
 html[data-ui="osrs"] .ojr-dcell.ojr-ready { color: #ffff00; }
 html[data-ui="osrs"] .ojr-dcell.ojr-locked { color: #ff0000; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   The full Journal window (screen 'journal', OsrsJournalScreen). Sizes,
+   colours and copy follow the Journal board (Journal.dc.html) one to one.
+   ───────────────────────────────────────────────────────────────────────── */
+html[data-ui="osrs"] .ojs-root { flex: 1; min-height: 0; min-width: 0; height: 100%; display: flex; flex-direction: column; gap: 8px; font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #ff981f; text-shadow: var(--osrs-shadow, 1px 1px 0 #000); }
+html[data-ui="osrs"] .ojs-small { font-family: 'RSSmall', sans-serif; }
+
+/* Summary bar */
+html[data-ui="osrs"] .ojs-bar { height: 52px; flex-shrink: 0; box-sizing: border-box; display: flex; align-items: center; gap: 28px; padding: 0 14px; overflow: hidden; }
+html[data-ui="osrs"] .ojs-bar-title { display: flex; align-items: center; gap: 8px; font-family: 'RSBold', sans-serif; color: #ff981f; white-space: nowrap; }
+html[data-ui="osrs"] .ojs-stat { color: var(--osrs-tan, #c8b897); white-space: nowrap; }
+html[data-ui="osrs"] .ojs-stat .w { color: #fff; }
+html[data-ui="osrs"] .ojs-stat .y { color: #ffff00; }
+html[data-ui="osrs"] .ojs-bar-keys { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+/* The window */
+html[data-ui="osrs"] .ojs-win { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+html[data-ui="osrs"] .ojs-titlebar { position: relative; height: 34px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #1d1812; }
+html[data-ui="osrs"] .ojs-titlebar h2 { margin: 0; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ff981f; }
+html[data-ui="osrs"] .ojs-close { position: absolute; right: 8px; top: 6px; width: 22px; height: 22px; padding: 0; display: flex; align-items: center; justify-content: center; background: #4a3f30; border-top: 1px solid #7a6a52; border-left: 1px solid #7a6a52; border-bottom: 1px solid #120f0b; border-right: 1px solid #120f0b; cursor: pointer; }
+html[data-ui="osrs"] .ojs-close:hover path { stroke: #fff; }
+html[data-ui="osrs"] .ojs-close:focus-visible { outline: 1px solid #ffff00; }
+
+html[data-ui="osrs"] .ojs-tabs { position: relative; display: flex; align-items: flex-end; gap: 3px; padding: 6px 8px 0 8px; border-bottom: 1px solid #6a5c48; flex-shrink: 0; }
+html[data-ui="osrs"] .ojs-tab { all: unset; box-sizing: border-box; cursor: pointer; padding: 0 14px; height: 28px; line-height: 30px; font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #ff981f; text-shadow: var(--osrs-shadow, 1px 1px 0 #000); border: 1px solid #6a5c48; border-bottom: 0; background: var(--osrs-inner, #2e271e); white-space: nowrap; }
+html[data-ui="osrs"] .ojs-tab:hover { color: #fff; }
+html[data-ui="osrs"] .ojs-tab[aria-selected="true"] { background: var(--osrs-selected, #5a4c3a); position: relative; top: 1px; }
+html[data-ui="osrs"] .ojs-tab:focus-visible { outline: 1px solid #ffff00; outline-offset: -1px; }
+html[data-ui="osrs"] .ojs-hint { margin-left: auto; align-self: center; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+html[data-ui="osrs"] .ojs-filter-btn { align-self: center; height: 24px; padding: 0 8px; margin-left: 10px; margin-bottom: 3px; flex-shrink: 0; }
+html[data-ui="osrs"] .ojs-filters { position: absolute; right: 8px; top: calc(100% + 4px); z-index: 20; width: min(640px, calc(100% - 16px)); max-height: 70vh; overflow-y: auto; padding: 2px; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4); }
+html[data-ui="osrs"] .ojs-filters .ojr-bar { border-bottom: 0; }
+
+html[data-ui="osrs"] .ojs-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 420px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 8px; padding: 8px; }
+
+/* Left: the list */
+html[data-ui="osrs"] .ojs-list { position: relative; min-height: 0; display: flex; flex-direction: column; }
+html[data-ui="osrs"] .ojs-topline { display: flex; justify-content: space-between; padding: 6px 10px; border-bottom: 1px solid var(--osrs-inner-ring, #4f4434); font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ff981f; }
+html[data-ui="osrs"] .ojs-topline > span { color: #fff; }
+html[data-ui="osrs"] .ojs-list-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 0; }
+html[data-ui="osrs"] .ojs-list-scroll::-webkit-scrollbar { width: 16px; }
+html[data-ui="osrs"] .ojs-list-scroll::-webkit-scrollbar-track { background: #2a231a; border-left: 1px solid #000; }
+html[data-ui="osrs"] .ojs-list-scroll::-webkit-scrollbar-thumb { background: #5a4c3a; border: 1px solid #000; box-shadow: inset 1px 1px 0 #7a6a52; }
+html[data-ui="osrs"] .ojs-head { display: flex; align-items: center; gap: 6px; padding: 7px 10px 3px 10px; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #fff; }
+html[data-ui="osrs"] .ojs-head img, html[data-ui="osrs"] .ojs-bar-title img { width: 18px; height: 18px; image-rendering: pixelated; }
+html[data-ui="osrs"] .ojs-count { margin-left: auto; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); }
+html[data-ui="osrs"] .ojs-row { all: unset; cursor: pointer; display: flex; justify-content: space-between; gap: 10px; width: 100%; box-sizing: border-box; padding: 1px 10px 1px 34px; line-height: 19px; font: var(--osrs-fs, 16px) 'RS', sans-serif; text-shadow: var(--osrs-shadow, 1px 1px 0 #000); }
+html[data-ui="osrs"] .ojs-row.is-bold { font-family: 'RSBold', sans-serif; padding-top: 4px; }
+html[data-ui="osrs"] .ojs-row:hover { background: rgba(255, 236, 196, 0.07); }
+html[data-ui="osrs"] .ojs-row.is-sel { background: var(--osrs-selected, #5a4c3a); }
+html[data-ui="osrs"] .ojs-row:focus-visible { outline: 1px solid #ffff00; outline-offset: -1px; }
+html[data-ui="osrs"] .ojs-row-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html[data-ui="osrs"] .ojs-row-key { flex-shrink: 0; font-family: 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .ojs-empty { padding: 1px 10px; line-height: 19px; color: var(--osrs-muted, #8a7c66); }
+html[data-ui="osrs"] .ojs-legend { display: flex; gap: 14px; padding: 5px 10px; border-top: 1px solid var(--osrs-inner-ring, #4f4434); font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .ojs-dgrid { display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, 54px); padding: 1px 10px; line-height: 21px; }
+html[data-ui="osrs"] .ojs-darea { color: #ff981f; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html[data-ui="osrs"] .ojs-dhdr { text-align: center; font-family: 'RSSmall', sans-serif; color: #fff; }
+html[data-ui="osrs"] .ojs-dcell { all: unset; cursor: pointer; text-align: center; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; line-height: 21px; text-shadow: var(--osrs-shadow, 1px 1px 0 #000); }
+html[data-ui="osrs"] .ojs-dcell:hover { background: rgba(255, 236, 196, 0.07); }
+html[data-ui="osrs"] .ojs-dcell.is-sel { background: var(--osrs-selected, #5a4c3a); }
+html[data-ui="osrs"] .ojs-dcell:focus-visible { outline: 1px solid #ffff00; outline-offset: -1px; }
+
+/* The Choose Option menu */
+html[data-ui="osrs"] .ojs-menu { position: absolute; z-index: 5; min-width: 230px; max-width: 400px; background: #5d5447; padding: 1px; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4); }
+html[data-ui="osrs"] .ojs-menu-title { background: #000; color: #5d5447; padding: 2px 4px; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; text-shadow: none; }
+html[data-ui="osrs"] .ojs-menu-body { background: #000; margin-top: 1px; padding: 1px 0; }
+html[data-ui="osrs"] .ojs-menu-item { all: unset; cursor: pointer; display: block; width: 100%; box-sizing: border-box; padding: 1px 4px; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #fff; text-shadow: 1px 1px 0 #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .ojs-menu-item .t { color: #ff9040; }
+html[data-ui="osrs"] .ojs-menu-item:hover, html[data-ui="osrs"] .ojs-menu-item:focus-visible { color: #ffff00; outline: none; }
+html[data-ui="osrs"] .ojs-menu-item[disabled] { cursor: default; color: var(--osrs-muted, #8a7c66); }
+html[data-ui="osrs"] .ojs-menu-item[disabled] .t { color: var(--osrs-muted, #8a7c66); }
+html[data-ui="osrs"] .ojs-menu-note { padding: 1px 4px 3px 4px; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); white-space: normal; }
+
+/* Right: the journal scroll, Details, the two buttons */
+html[data-ui="osrs"] .ojs-detail { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+html[data-ui="osrs"] .ojs-detail-body { min-height: 0; flex: 0 1 auto; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+html[data-ui="osrs"] .ojs-detail-body::-webkit-scrollbar { width: 16px; }
+html[data-ui="osrs"] .ojs-detail-body::-webkit-scrollbar-track { background: #2a231a; border-left: 1px solid #000; }
+html[data-ui="osrs"] .ojs-detail-body::-webkit-scrollbar-thumb { background: #5a4c3a; border: 1px solid #000; box-shadow: inset 1px 1px 0 #7a6a52; }
+html[data-ui="osrs"] .ojs-scroll { flex-shrink: 0; }
+html[data-ui="osrs"] .ojs-detail .ojr-wiki { flex-shrink: 0; }
+html[data-ui="osrs"] .ojs-red { color: #800000; }
+html[data-ui="osrs"] .ojs-scroll .ojs-small { font-family: 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .ojs-scroll .ojr-link.ojs-red { color: #800000; }
+html[data-ui="osrs"] .ojs-task { margin: 0 -4px; padding: 0 4px; }
+html[data-ui="osrs"] .ojs-task.is-sel { background: rgba(255, 255, 255, 0.28); }
+html[data-ui="osrs"] .ojs-task-row { display: flex; align-items: flex-start; gap: 8px; padding: 2px 4px; }
+html[data-ui="osrs"] .ojs-task-row.is-ready { background: rgba(255, 255, 255, 0.28); }
+html[data-ui="osrs"] .ojs-actions { display: flex; gap: 8px; margin-top: auto; flex-shrink: 0; }
+html[data-ui="osrs"] .ojs-btn { flex: 1; height: 40px; box-sizing: border-box; padding: 0 8px; background: #3a3126; border-top: 2px solid #6a5c48; border-left: 2px solid #6a5c48; border-bottom: 2px solid #120f0b; border-right: 2px solid #120f0b; color: #ff981f; text-shadow: 1px 1px 0 #000; font: var(--osrs-fs, 16px) 'RS', sans-serif; cursor: pointer; }
+html[data-ui="osrs"] .ojs-btn.is-main { flex: 2; background: #4a3f30; border-top-color: #7a6a52; border-left-color: #7a6a52; font-family: 'RSBold', sans-serif; }
+html[data-ui="osrs"] .ojs-btn:hover { color: #fff; }
+html[data-ui="osrs"] .ojs-btn:focus-visible { outline: 1px solid #ffff00; }
+html[data-ui="osrs"] .ojs-btn[disabled] { cursor: default; color: var(--osrs-btn-off, #7d705c); }
+
+/* Footer line */
+html[data-ui="osrs"] .ojs-foot { height: 26px; flex-shrink: 0; display: flex; align-items: center; gap: 18px; padding: 0 12px; border-top: 1px solid #6a5c48; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: #ff981f; white-space: nowrap; overflow: hidden; }
+html[data-ui="osrs"] .ojs-foot-note { margin-left: auto; color: var(--osrs-tan, #c8b897); overflow: hidden; text-overflow: ellipsis; }
+
+/* Narrow windows: the list above the scroll. */
+@media (max-width: 900px) {
+  html[data-ui="osrs"] .ojs-bar { gap: 14px; height: auto; min-height: 52px; flex-wrap: wrap; padding: 6px 10px; }
+  html[data-ui="osrs"] .ojs-tabs { overflow-x: auto; }
+  html[data-ui="osrs"] .ojs-hint { display: none; }
+  html[data-ui="osrs"] .ojs-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(200px, 40%) minmax(0, 1fr); }
+  html[data-ui="osrs"] .ojs-foot-note { display: none; }
+}

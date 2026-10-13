@@ -54,7 +54,7 @@ export const questExamine = (quest: QuestCardQuest, difficulty: string): string 
   return `${kind}.${points} ${state}`;
 };
 
-interface Line {
+export interface Line {
   key: string;
   text: string;
   met: boolean;
@@ -74,7 +74,7 @@ const chunkOfBlocker = (b: EligibilityBlocker): { cx: number; cy: number } | nul
 };
 
 /** The journal's requirement lines: quests and levels, then the Fate Locked unlocks. */
-const questLines = (
+export const questLines = (
   quest: QuestCardQuest,
   unlocks: UnlockState,
   currentQP: number,
@@ -160,7 +160,7 @@ const questLines = (
   return { game, fate, checks };
 };
 
-const LineView: React.FC<{ line: Line }> = ({ line }) => {
+export const LineView: React.FC<{ line: Line }> = ({ line }) => {
   const body = (
     <>
       {line.icon && <SkillIcon skill={line.icon} />}

@@ -185,7 +185,7 @@ export const OsrsJournalDiaries: React.FC<Props> = ({
 };
 
 /** Where a task happens, as map links: its areas, and a chunk of each place. */
-const placesOf = (task: DiaryTask, unlocks: UnlockState, gameModeId?: string) => {
+export const placesOf = (task: DiaryTask, unlocks: UnlockState, gameModeId?: string) => {
   const out: Array<{ label: string; cx: number; cy: number }> = [];
   const seen = new Set<string>();
   const regions = [...new Set([
@@ -204,7 +204,7 @@ const placesOf = (task: DiaryTask, unlocks: UnlockState, gameModeId?: string) =>
   return out;
 };
 
-const blockerChunk = (b: EligibilityBlocker): { cx: number; cy: number } | null => {
+export const blockerChunk = (b: EligibilityBlocker): { cx: number; cy: number } | null => {
   if (b.kind === 'region') return b.chunk ?? b.location?.chunks[0] ?? chunkForPlace(b.label);
   if (b.kind === 'alternative' && b.travel) return chunkForPlace(b.travel);
   return null;

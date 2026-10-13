@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { QUEST_DATA, type QuestData } from '../data/questData';
 import type { UnlockState } from '../types';
-import { analyzeJournalQuestRecommendations, questsReadyLabel, recommendNextAction } from './JournalSummaryCard';
+import { analyzeJournalQuestRecommendations, doableCATasks, doableDiaryTasks, questsReadyLabel, recommendNextAction } from './JournalSummaryCard';
+import { countDoableDiaryTasks } from '../utils/journalStatus';
+import { ALL_CA_TASKS } from '../data/caTasks';
+import { caTaskLockedBoss } from '../utils/caProgress';
+import { canonicalBossId } from '../utils/contentIdentity';
 import type { AreaRoutes } from '../utils/areaRoutes';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
@@ -108,5 +112,28 @@ describe('journal completion recommendations in Vanilla', () => {
   it('celebrates only when all journal content is completed', () => {
     expect(recommendNextAction(completedAccount(), 0, 0, 'vanilla'))
       .toMatchObject({ tab: null, headline: "Everything's done!" });
+  });
+});
+
+describe('the Journal window\'s doable lists', () => {
+  it('lists exactly the diary tasks the doable count counts', () => {
+    const unlocks: UnlockState = {
+      ...pryingTimesUnlocks(),
+      regions: ['Misthalin', 'Asgarnia', 'Varrock', 'Lumbridge'],
+      completedTasks: [ALL_DIARY_TASKS[0].id],
+    };
+    const listed = doableDiaryTasks(ALL_DIARY_TASKS, unlocks);
+    expect(listed.length).toBe(countDoableDiaryTasks(ALL_DIARY_TASKS, unlocks));
+    expect(listed.some(task => task.id === ALL_DIARY_TASKS[0].id)).toBe(false);
+  });
+
+  it('counts a Combat Achievement task as doable only at an unlocked boss, and never once done', () => {
+    const task = ALL_CA_TASKS.find(t => canonicalBossId(t.monster))!;
+    const boss = canonicalBossId(task.monster)!;
+    const locked = { completedTasks: [] as string[], bosses: [] as string[] };
+    expect(doableCATasks([task], locked)).toEqual([]);
+    expect(caTaskLockedBoss(task, locked.bosses)).toBe(boss);
+    expect(doableCATasks([task], { completedTasks: [], bosses: [boss] })).toEqual([task]);
+    expect(doableCATasks([task], { completedTasks: [task.id], bosses: [boss] })).toEqual([]);
   });
 });

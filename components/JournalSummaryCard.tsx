@@ -12,8 +12,11 @@ import type { AreaRoutes } from '../utils/areaRoutes';
 import { CA_DATA } from '../data/caData';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import {
-  countDoableDiaryTasks, evaluateQuestEligibility, evaluateDiaryTierEligibility,
+  countDoableDiaryTasks, evaluateDiaryTaskEligibility, evaluateQuestEligibility, evaluateDiaryTierEligibility,
 } from '../utils/journalStatus';
+import { canonicalBossId } from '../utils/contentIdentity';
+import type { DiaryTask } from '../data/diaryTasks';
+import type { CATask } from '../data/caTasks';
 import {
   CA_TIER_ORDER,
   completedCAPoints,
@@ -140,6 +143,34 @@ export function recommendNextAction(
   return { tab: null, headline: `Everything's done!`, detail: `All journal content completed` };
 }
 
+/**
+ * The diary tasks doable right now, as a list: the tasks countDoableDiaryTasks
+ * counts (in a tier not yet complete, not done, every requirement met).
+ */
+export function doableDiaryTasks<T extends DiaryTask>(
+  tasks: readonly T[], unlocks: UnlockState, gameModeId?: string, areaRoutes?: AreaRoutes | null,
+): T[] {
+  return tasks.filter(task => !unlocks.diaries.includes(task.tierId)
+    && !unlocks.completedTasks.includes(task.id)
+    && evaluateDiaryTaskEligibility(task, unlocks, gameModeId, areaRoutes).eligible);
+}
+
+/**
+ * Combat Achievement tasks doable now: not done, and fought at a boss the run
+ * has unlocked (the opposite of caTaskLockedBoss). Tasks at a monster that is
+ * not a boss carry no unlock to check, so they are not counted.
+ */
+export function doableCATasks<T extends Pick<CATask, 'id' | 'monster'>>(
+  tasks: readonly T[], unlocks: Pick<UnlockState, 'completedTasks' | 'bosses'>,
+): T[] {
+  const done = new Set(unlocks.completedTasks);
+  return tasks.filter(task => {
+    if (done.has(task.id)) return false;
+    const boss = canonicalBossId(task.monster);
+    return !!boss && unlocks.bosses.includes(boss);
+  });
+}
+
 /** "6 quests and 3 miniquests", as the Quest Log lists them under two headings. */
 export function questsReadyLabel(available: number, miniquests: number): string {
   const quests = available - miniquests;
@@ -186,6 +217,7 @@ export function useJournalSummaryModel() {
     ).length;
     const caTasksLeft = caTasksTotal - caTasksDone;
     const nextCATier = CA_TIER_ORDER.find(tier => !caEarnedTiers.includes(tier));
+    const caTasksDoable = doableCATasks(ALL_CA_TASKS, unlocks).length;
 
     return {
       quests: {
@@ -194,6 +226,7 @@ export function useJournalSummaryModel() {
       diaries: { doable: diaryTasksDoable, done: diaryTasksDone, total: diaryTasksTotal },
       ca: {
         left: caTasksLeft,
+        doable: caTasksDoable,
         done: caEarnedTiers.length,
         total: caTiersTotal,
         tasksDone: caTasksDone,
@@ -230,6 +263,12 @@ export const journalSummaryCASub = (stats: JournalSummaryModel['stats']): string
   stats.ca.nextTier
     ? `${CA_DATA[stats.ca.nextTier].pointsRequired - stats.ca.points} points to ${stats.ca.nextTier}`
     : 'All reward tiers earned!';
+
+/** "12/41 pts": points toward the next reward tier (all of them once every tier is earned). */
+export const caPointsLabel = (stats: JournalSummaryModel['stats']): string => {
+  const goal = stats.ca.nextTier ? CA_DATA[stats.ca.nextTier].pointsRequired : stats.ca.pointsTotal;
+  return `${stats.ca.points.toLocaleString()}/${goal.toLocaleString()} pts`;
+};
 
 /** The home page Journal summary: the OSRS Journal window, or the classic card. */
 export const JournalSummaryCard: React.FC<Props> = (props) => (

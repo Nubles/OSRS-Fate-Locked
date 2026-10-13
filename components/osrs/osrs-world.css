@@ -1,0 +1,442 @@
+/* OSRS layout: the Progression window's World tab (World + WorldAdvisors
+   boards). Scoped to html[data-ui="osrs"]; colours read the skin variables
+   (osrs-skin.css) so the 2010 interface style can recolour the stone. */
+
+html[data-ui="osrs"] .owm-root {
+  height: 100%; min-height: 0; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 8px;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif; color: var(--osrs-orange, #ff981f); -webkit-font-smoothing: none;
+}
+html[data-ui="osrs"] .owm-side {
+  min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 8px; text-shadow: 1px 1px 0 #000; overflow: hidden;
+}
+html[data-ui="osrs"] .owm-h { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); text-shadow: 1px 1px 0 #000; }
+html[data-ui="osrs"] .owm-small { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; line-height: 15px; }
+html[data-ui="osrs"] .owm-tan { color: var(--osrs-tan, #c8b897); }
+html[data-ui="osrs"] .owm-muted { color: var(--osrs-muted, #8a7c66); font-family: 'RSSmall', sans-serif; }
+
+html[data-ui="osrs"] .owm-searchwrap { position: relative; flex-shrink: 0; }
+html[data-ui="osrs"] .owm-search {
+  display: flex; align-items: center; gap: 6px; height: 28px; box-sizing: border-box; padding: 0 8px;
+  background: var(--osrs-well, #1f1a14); border: 1px solid #000;
+}
+html[data-ui="osrs"] .owm-search input {
+  all: unset; flex: 1; min-width: 0; font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #fff; text-shadow: none;
+}
+html[data-ui="osrs"] .owm-search input::placeholder { color: var(--osrs-muted, #8a7c66); }
+html[data-ui="osrs"] .owm-x { all: unset; cursor: pointer; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-tan, #c8b897); }
+html[data-ui="osrs"] .owm-x:hover { color: #fff; }
+html[data-ui="osrs"] .owm-suggest {
+  position: absolute; left: 0; right: 0; top: 30px; z-index: 40; max-height: 260px; overflow-y: auto;
+  background: var(--osrs-inner, #2e271e); border: 1px solid #000; box-shadow: inset 0 0 0 1px var(--osrs-inner-ring, #4f4434);
+}
+html[data-ui="osrs"] .owm-suggest button {
+  all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 6px;
+  height: 22px; padding: 0 8px; border-bottom: 1px solid var(--osrs-row, #1f1a14); text-shadow: 1px 1px 0 #000;
+}
+html[data-ui="osrs"] .owm-suggest button:hover, html[data-ui="osrs"] .owm-suggest button:focus-visible { background: var(--osrs-selected, #5a4c3a); }
+html[data-ui="osrs"] .owm-sg-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+html[data-ui="osrs"] .owm-sg-meta { flex-shrink: 0; font-family: 'RSSmall', sans-serif; color: var(--osrs-muted, #8a7c66); }
+
+html[data-ui="osrs"] .owm-lens {
+  flex-shrink: 0; display: flex; flex-direction: column; gap: 3px; padding: 4px 6px;
+  background: var(--osrs-well, #1f1a14); border: 1px solid #000;
+}
+
+html[data-ui="osrs"] .owm-legend { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
+html[data-ui="osrs"] .owm-legend > span { display: flex; align-items: center; gap: 8px; color: #fff; }
+html[data-ui="osrs"] .owm-legend b { margin-left: auto; font-weight: normal; color: var(--osrs-yellow, #ffff00); }
+html[data-ui="osrs"] .owm-sw { display: inline-block; width: 14px; height: 14px; box-sizing: border-box; border: 1px solid #000; flex-shrink: 0; }
+
+html[data-ui="osrs"] .owm-check { display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--osrs-orange, #ff981f); flex-shrink: 0; min-width: 0; }
+html[data-ui="osrs"] .owm-check:hover { color: #fff; }
+html[data-ui="osrs"] .owm-box {
+  appearance: none; -webkit-appearance: none; margin: 0; flex-shrink: 0; width: 14px; height: 14px; cursor: pointer;
+  background: var(--osrs-well, #1f1a14); border: 1px solid #000; box-shadow: inset 1px 1px 0 #000;
+}
+html[data-ui="osrs"] .owm-box:checked { background: var(--osrs-orange, #ff981f); box-shadow: inset 0 0 0 2px var(--osrs-well, #1f1a14); }
+html[data-ui="osrs"] .owm-box:disabled { cursor: default; opacity: .5; }
+html[data-ui="osrs"] .owm-box:focus-visible { outline: 1px solid #ffff00; }
+html[data-ui="osrs"] .owm-overlays { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 2px; }
+html[data-ui="osrs"] .owm-ov-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .owm-count { margin-left: auto; flex-shrink: 0; font-family: 'RSSmall', sans-serif; color: var(--osrs-yellow, #ffff00); }
+html[data-ui="osrs"] .owm-world {
+  all: unset; box-sizing: border-box; width: 52px; height: 20px; padding: 0 4px; margin-left: auto;
+  background: var(--osrs-well, #1f1a14); border: 1px solid #000; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: #fff;
+}
+html[data-ui="osrs"] .owm-viewbtns { margin-top: auto; display: flex; gap: 4px; flex-shrink: 0; }
+html[data-ui="osrs"] .owm-viewbtns .osrs-btn { flex: 1; height: 28px; }
+
+html[data-ui="osrs"] .owm-main { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+html[data-ui="osrs"] .owm-mapbox {
+  position: relative; flex-shrink: 0; width: 100%; box-sizing: border-box; overflow: hidden;
+  border: 2px solid #000; box-shadow: 0 0 0 1px var(--osrs-bevel-hi, #5c5244); background: #0e0c0a; user-select: none;
+}
+html[data-ui="osrs"] .owm-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 5; }
+html[data-ui="osrs"] .owm-labels > span {
+  position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif; text-shadow: 1px 1px 0 #000;
+}
+html[data-ui="osrs"] .owm-tip {
+  position: absolute; z-index: 25; pointer-events: none; display: flex; flex-direction: column;
+  padding: 2px 5px; background: #ffffa0; border: 1px solid #000;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #000; line-height: 16px; white-space: nowrap; text-shadow: none;
+}
+html[data-ui="osrs"] .owm-author { position: absolute; top: 6px; right: 6px; z-index: 30; }
+html[data-ui="osrs"] .owm-foot {
+  flex-shrink: 0; display: flex; align-items: center; gap: 12px; min-height: 32px; box-sizing: border-box; padding: 3px 8px;
+  background: var(--osrs-well, #1f1a14); border: 1px solid #000;
+  font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); text-shadow: 1px 1px 0 #000;
+}
+html[data-ui="osrs"] .owm-foot-text { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .owm-foot-btns { margin-left: auto; display: flex; gap: 4px; flex-shrink: 0; }
+html[data-ui="osrs"] .owm-foot-btns .osrs-btn { height: 24px; padding: 0 8px; }
+html[data-ui="osrs"] .owm-foot-btns .owm-zoom { width: 24px; padding: 0; }
+
+/* ── Activities & Utility (Activities board) ─────────────────────────────── */
+html[data-ui="osrs"] .oact-root {
+  height: 100%; min-height: 0; display: grid; grid-template-columns: 262px minmax(0, 1fr) 392px; gap: 6px;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif; color: var(--osrs-orange, #ff981f); text-shadow: 1px 1px 0 #000; -webkit-font-smoothing: none;
+}
+@media (max-width: 1180px) { html[data-ui="osrs"] .oact-root { grid-template-columns: 230px minmax(0, 1fr) 330px; } }
+html[data-ui="osrs"] .oact-h { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); }
+html[data-ui="osrs"] .oact-small { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; line-height: 15px; }
+html[data-ui="osrs"] .oact-tan { color: var(--osrs-tan, #c8b897); }
+html[data-ui="osrs"] .oact-muted { color: var(--osrs-muted, #8a7c66); }
+html[data-ui="osrs"] .oact-yellow-s { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-yellow, #ffff00); }
+
+html[data-ui="osrs"] .oact-cats { min-height: 0; display: flex; flex-direction: column; gap: 3px; padding: 4px; overflow-y: auto; }
+html[data-ui="osrs"] .oact-cats-head { display: flex; justify-content: space-between; padding: 2px 4px 4px; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; flex-shrink: 0; }
+html[data-ui="osrs"] .oact-cat {
+  all: unset; box-sizing: border-box; cursor: pointer; flex: 1 1 0; min-height: 44px; max-height: 58px; display: flex; align-items: center; gap: 8px;
+  padding: 2px 8px 2px 4px; text-shadow: 1px 1px 0 #000; border: 1px solid #000;
+  background: var(--osrs-window, #3e3529); box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi, #5c5244), inset -1px -1px 0 var(--osrs-bevel-lo, #14110d);
+}
+html[data-ui="osrs"] .oact-cat:hover { filter: brightness(1.12); }
+html[data-ui="osrs"] .oact-cat:focus-visible { outline: 1px solid #ffff00; }
+html[data-ui="osrs"] .oact-cat.is-on { background: var(--osrs-selected, #5a4c3a); box-shadow: inset 0 0 0 1px #ffff00; }
+html[data-ui="osrs"] .oact-cat-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+html[data-ui="osrs"] .oact-cat-label { min-width: 0; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .oact-cat.is-on .oact-cat-label { color: #fff; }
+html[data-ui="osrs"] .oact-bar { position: relative; display: block; height: 8px; background: var(--osrs-well, #1f1a14); border: 1px solid #000; }
+html[data-ui="osrs"] .oact-bar > span { position: absolute; left: 0; top: 0; bottom: 0; background: #0dc10d; box-shadow: inset 0 -2px 0 rgba(0,0,0,.35); }
+
+html[data-ui="osrs"] .oact-list { min-height: 0; min-width: 0; display: flex; flex-direction: column; }
+html[data-ui="osrs"] .oact-list-head { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid #000; background: var(--osrs-slot, #3b3226); flex-shrink: 0; }
+html[data-ui="osrs"] .oact-list-head h3 { margin: 0; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); white-space: nowrap; }
+html[data-ui="osrs"] .oact-legend { margin-left: auto; display: flex; gap: 12px; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; white-space: nowrap; }
+html[data-ui="osrs"] .oact-names { flex: 1; min-height: 0; display: grid; grid-auto-flow: column; align-content: start; column-gap: 6px; padding: 6px 6px 0; overflow-y: auto; }
+html[data-ui="osrs"] .oact-name-row {
+  all: unset; box-sizing: border-box; cursor: pointer; display: block; padding: 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif; text-shadow: 1px 1px 0 #000;
+}
+html[data-ui="osrs"] .oact-name-row:hover { background: var(--osrs-slot, #3b3226); }
+html[data-ui="osrs"] .oact-name-row:focus-visible { outline: 1px solid #ffff00; }
+html[data-ui="osrs"] .oact-name-row.is-on { background: var(--osrs-selected, #5a4c3a); box-shadow: inset 0 0 0 1px #ffff00; }
+html[data-ui="osrs"] .oact-empty { padding: 14px; color: var(--osrs-tan, #c8b897); }
+html[data-ui="osrs"] .oact-msg {
+  margin-top: auto; flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 6px 10px;
+  background: var(--osrs-parchment, #c9b994); border-top: 2px solid #000; box-shadow: inset 1px 1px 0 #e0d3b2;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #000; text-shadow: none;
+}
+
+html[data-ui="osrs"] .oact-right { min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+html[data-ui="osrs"] .oact-detail { min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+html[data-ui="osrs"] .oact-stage {
+  position: relative; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: center; overflow: hidden;
+  background: #221c15; border-bottom: 1px solid #000;
+}
+html[data-ui="osrs"] .oact-stage-shadow { position: absolute; left: 50%; bottom: 10px; width: 60%; height: 14px; transform: translateX(-50%); border-radius: 50%; background: rgba(0,0,0,.45); }
+html[data-ui="osrs"] .oact-stage-slot { width: 88px; height: 80px; margin-bottom: 40px; }
+html[data-ui="osrs"] .oact-stage-tl, html[data-ui="osrs"] .oact-stage-tr { position: absolute; top: 6px; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; text-shadow: 1px 1px 0 #000; }
+html[data-ui="osrs"] .oact-stage-tl { left: 8px; color: #ffff00; }
+html[data-ui="osrs"] .oact-stage-tr { right: 8px; }
+html[data-ui="osrs"] .oact-body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 5px; padding: 8px 10px; overflow-y: auto; }
+html[data-ui="osrs"] .oact-name { min-width: 0; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .oact-wiki { margin-left: auto; flex-shrink: 0; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); text-decoration: none; }
+html[data-ui="osrs"] .oact-wiki:hover { color: #fff; }
+html[data-ui="osrs"] .oact-reqs { display: flex; flex-direction: column; gap: 2px; }
+html[data-ui="osrs"] .oact-req { display: flex; align-items: flex-start; gap: 6px; line-height: 18px; }
+html[data-ui="osrs"] .oact-dash { width: 16px; flex-shrink: 0; text-align: center; }
+html[data-ui="osrs"] .oact-foot { margin-top: auto; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; padding-top: 4px; }
+html[data-ui="osrs"] .oact-badge {
+  display: flex; align-items: center; gap: 8px; padding: 5px 8px; text-shadow: none;
+  background: var(--osrs-parchment, #c9b994); border: 2px solid #000; box-shadow: inset 1px 1px 0 #e0d3b2, inset -1px -1px 0 #8f8062;
+}
+html[data-ui="osrs"] .oact-badge b { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; font-weight: normal; flex-shrink: 0; }
+html[data-ui="osrs"] .oact-badge span { font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #000; line-height: 17px; max-height: 34px; overflow: hidden; }
+html[data-ui="osrs"] .oact-omni { flex: 1; height: 28px; color: #c77dff; }
+html[data-ui="osrs"] .oact-omni[disabled] { color: #c77dff; opacity: .75; }
+/* NoteTrigger's icon button, drawn as the board's "Note" stone button. */
+html[data-ui="osrs"] .oact-note > button {
+  all: unset; box-sizing: border-box; cursor: pointer; height: 28px; padding: 0 10px; display: inline-flex; align-items: center; gap: 6px;
+  background: var(--osrs-btn, #4a4033); border: 1px solid #000; box-shadow: inset 1px 1px 0 var(--osrs-btn-hi, #6b5f4d), inset -1px -1px 0 var(--osrs-btn-lo, #2b241b);
+  color: #ff981f; text-shadow: 1px 1px 0 #000; font: var(--osrs-fs, 16px) 'RS', sans-serif;
+}
+html[data-ui="osrs"] .oact-note > button::after { content: 'Note'; }
+html[data-ui="osrs"] .oact-note > button svg { display: none; }
+html[data-ui="osrs"] .oact-note > button[title="View Note"] { color: #ffff00; }
+html[data-ui="osrs"] .oact-note > button:hover { color: #fff; }
+
+html[data-ui="osrs"] .oact-tool { flex: 1 0 220px; min-height: 0; display: flex; flex-direction: column; }
+html[data-ui="osrs"] .oact-tool-head { display: flex; align-items: center; gap: 8px; padding: 5px 8px; background: var(--osrs-slot, #3b3226); border-bottom: 1px solid #000; flex-shrink: 0; }
+html[data-ui="osrs"] .oact-tool-right { margin-left: auto; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); white-space: nowrap; }
+html[data-ui="osrs"] .oact-tool-list { flex: 1; min-height: 0; overflow-y: auto; }
+html[data-ui="osrs"] .oact-tool-foot { flex-shrink: 0; padding: 4px 8px; border-top: 1px solid #000; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-muted, #8a7c66); line-height: 15px; }
+html[data-ui="osrs"] .oact-tool-empty { padding: 8px; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); }
+html[data-ui="osrs"] .oact-tool-filters { display: flex; gap: 3px; padding: 4px 6px; border-bottom: 1px solid var(--osrs-row, #1f1a14); flex-shrink: 0; }
+html[data-ui="osrs"] .oact-tool-filters .osrs-btn { flex: 1; height: 24px; font-family: 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .oact-trow {
+  all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px;
+  border-bottom: 1px solid var(--osrs-row, #1f1a14); text-shadow: 1px 1px 0 #000;
+}
+html[data-ui="osrs"] .oact-trow:hover, html[data-ui="osrs"] .oact-trow.is-open { background: var(--osrs-slot, #3b3226); }
+html[data-ui="osrs"] .oact-trow:focus-visible { outline: 1px solid #ffff00; }
+html[data-ui="osrs"] .oact-chev { width: 12px; flex-shrink: 0; color: var(--osrs-muted, #8a7c66); }
+html[data-ui="osrs"] .oact-trow-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .oact-trow-tag { flex-shrink: 0; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .oact-trow-count { flex-shrink: 0; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; text-align: right; }
+html[data-ui="osrs"] .oact-tsub {
+  display: flex; align-items: center; gap: 6px; min-height: 20px; padding: 0 8px 0 26px; box-sizing: border-box;
+  background: #241e17; border-bottom: 1px solid var(--osrs-row, #1f1a14); font: var(--osrs-fs, 16px) 'RSSmall', sans-serif;
+}
+html[data-ui="osrs"] .oact-wrap { flex-wrap: wrap; row-gap: 2px; padding-top: 2px; padding-bottom: 2px; }
+html[data-ui="osrs"] .oact-pin { all: unset; cursor: pointer; width: 12px; height: 14px; flex-shrink: 0; display: inline-flex; }
+html[data-ui="osrs"] .oact-chip { all: unset; cursor: pointer; padding: 0 4px; height: 16px; line-height: 15px; border: 1px solid #000; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .oact-link { all: unset; cursor: pointer; color: #ffff00; text-decoration: underline; }
+
+/* ── World List view (WorldAdvisors board, in the Progression window) ─────── */
+html[data-ui="osrs"] .owl-root {
+  height: 100%; min-height: 0; display: grid; grid-template-columns: 430px minmax(0, 1fr); gap: 8px;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif; color: var(--osrs-orange, #ff981f); text-shadow: 1px 1px 0 #000; -webkit-font-smoothing: none;
+}
+@media (max-width: 1100px) { html[data-ui="osrs"] .owl-root { grid-template-columns: 360px minmax(0, 1fr); } }
+html[data-ui="osrs"] .owl-left { min-height: 0; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+html[data-ui="osrs"] .owl-sec-head { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-bottom: 1px solid var(--osrs-inner-ring, #4f4434); flex-shrink: 0; }
+html[data-ui="osrs"] .owl-sec-head h3 { margin: 0; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); }
+html[data-ui="osrs"] .owl-muted-s { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-muted, #8a7c66); }
+html[data-ui="osrs"] .owl-yellow-s { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-yellow, #ffff00); }
+html[data-ui="osrs"] .owl-sub { margin: 0; padding: 5px 10px 3px; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); line-height: 15px; flex-shrink: 0; }
+html[data-ui="osrs"] .owl-empty { padding: 12px; text-align: center; color: var(--osrs-tan, #c8b897); }
+html[data-ui="osrs"] .owl-adv { flex-shrink: 0; display: flex; flex-direction: column; }
+html[data-ui="osrs"] .owl-adv-list { display: flex; flex-direction: column; gap: 4px; padding: 4px 8px 6px; }
+html[data-ui="osrs"] .owl-adv-row {
+  all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 18px minmax(0, 1fr) 14px; column-gap: 6px; align-items: start;
+  padding: 5px 8px; background: var(--osrs-window, #3e3529); border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi, #5c5244), inset -1px -1px 0 var(--osrs-bevel-lo, #14110d); text-shadow: 1px 1px 0 #000;
+}
+html[data-ui="osrs"] .owl-adv-row.is-top { background: var(--osrs-selected, #5a4c3a); box-shadow: inset 0 0 0 1px #ffff00; }
+html[data-ui="osrs"] .owl-adv-row:hover { filter: brightness(1.12); }
+html[data-ui="osrs"] .owl-adv-row:focus-visible { outline: 1px solid #ffff00; }
+html[data-ui="osrs"] .owl-rank { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-muted, #8a7c66); text-align: right; }
+html[data-ui="osrs"] .owl-adv-mid { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+html[data-ui="osrs"] .owl-adv-title { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+html[data-ui="osrs"] .owl-adv-title b { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; font-weight: normal; color: var(--osrs-orange, #ff981f); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .owl-adv-title span { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-muted, #8a7c66); flex-shrink: 0; }
+html[data-ui="osrs"] .owl-adv-bar { position: relative; height: 6px; background: var(--osrs-well, #1f1a14); border: 1px solid #000; }
+html[data-ui="osrs"] .owl-adv-bar > span { position: absolute; left: 0; top: 0; bottom: 0; background: var(--osrs-orange, #ff981f); box-shadow: inset 0 -2px 0 rgba(0,0,0,.35); }
+html[data-ui="osrs"] .owl-adv-pills { display: flex; align-items: center; gap: 6px; min-width: 0; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .owl-pill { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; padding: 0 4px; background: var(--osrs-well, #1f1a14); border: 1px solid #000; color: #fff; }
+html[data-ui="osrs"] .owl-names { color: var(--osrs-tan, #c8b897); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .owl-more { color: var(--osrs-muted, #8a7c66); flex-shrink: 0; }
+html[data-ui="osrs"] .owl-foot-note { padding: 0 10px 6px; text-align: right; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-muted, #8a7c66); }
+
+html[data-ui="osrs"] .owl-dir { flex: 1 0 260px; min-height: 260px; display: flex; flex-direction: column; }
+html[data-ui="osrs"] .owl-dir-list { flex: 1; min-height: 0; overflow-y: auto; }
+html[data-ui="osrs"] .owl-dir-row {
+  all: unset; box-sizing: border-box; cursor: pointer; width: 100%; height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 10px;
+  border-bottom: 1px solid var(--osrs-row, #1f1a14); text-shadow: 1px 1px 0 #000;
+}
+html[data-ui="osrs"] .owl-dir-row:hover { background: var(--osrs-slot, #3b3226); }
+html[data-ui="osrs"] .owl-dir-row.is-on { background: var(--osrs-selected, #5a4c3a); box-shadow: inset 0 0 0 1px #ffff00; }
+html[data-ui="osrs"] .owl-dir-row:focus-visible { outline: 1px solid #ffff00; }
+html[data-ui="osrs"] .owl-dir-name { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .owl-dir-count { margin-left: auto; flex-shrink: 0; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .owl-viewbtns { display: flex; gap: 4px; padding: 6px 8px 8px; flex-shrink: 0; border-top: 1px solid var(--osrs-inner-ring, #4f4434); position: sticky; bottom: 0; z-index: 1; background: var(--osrs-inner, #2e271e); }
+html[data-ui="osrs"] .owl-viewbtns .osrs-btn { flex: 1; height: 28px; }
+
+html[data-ui="osrs"] .owl-areas { min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 4px; }
+html[data-ui="osrs"] .owl-areas-head { display: flex; align-items: center; gap: 10px; padding: 2px 6px; flex-shrink: 0; min-height: 30px; }
+html[data-ui="osrs"] .owl-areas-head h3 { margin: 0; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); white-space: nowrap; }
+html[data-ui="osrs"] .owl-legend { margin-left: auto; display: flex; gap: 12px; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; white-space: nowrap; }
+html[data-ui="osrs"] .owl-area-list {
+  flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); align-content: start;
+  column-gap: 0; padding: 2px 0;
+}
+html[data-ui="osrs"] .owl-area {
+  display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 8px; box-sizing: border-box; border-bottom: 1px solid var(--osrs-row, #1f1a14);
+}
+html[data-ui="osrs"] .owl-area:hover { background: var(--osrs-slot, #3b3226); }
+html[data-ui="osrs"] .owl-area.is-flash { background: var(--osrs-selected, #5a4c3a); box-shadow: inset 0 0 0 1px #ffff00; }
+html[data-ui="osrs"] .owl-area-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
+html[data-ui="osrs"] .owl-area-name:hover { text-decoration: underline; }
+html[data-ui="osrs"] .owl-tag { flex-shrink: 0; padding: 0 5px; height: 16px; line-height: 15px; border: 1px solid #000; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .owl-omni { height: 22px; padding: 0 6px; color: #c77dff; flex-shrink: 0; }
+
+/* ── Sync & Roll (SyncRoll board) ─────────────────────────────────────────
+   The Roll Inbox and the RuneLite guide are the classic components; the
+   rules under .osync-inbox / .osync-rl only restyle them as interface rows,
+   stone buttons and parchment, without changing what they show or do. */
+html[data-ui="osrs"] .osync-root {
+  height: 100%; min-height: 0; display: flex; flex-direction: column; gap: 8px; overflow-y: auto;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif; color: var(--osrs-orange, #ff981f); -webkit-font-smoothing: none; text-shadow: 1px 1px 0 #000;
+}
+html[data-ui="osrs"] .osync-root.is-wide { display: grid; grid-template-columns: minmax(0, 1fr) minmax(460px, 40%); grid-template-rows: minmax(0, 1fr); overflow: hidden; }
+html[data-ui="osrs"] .osync-right { min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+html[data-ui="osrs"] .osync-root.is-wide .osync-right { overflow-y: auto; }
+html[data-ui="osrs"] .osync-panel { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; flex-shrink: 0; }
+html[data-ui="osrs"] .osync-head { display: flex; align-items: center; gap: 8px; }
+html[data-ui="osrs"] .osync-head h2 { margin: 0; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); }
+html[data-ui="osrs"] .osync-tag { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; padding: 0 5px; border: 1px solid #000; line-height: 16px; }
+html[data-ui="osrs"] .osync-small { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; line-height: 16px; }
+html[data-ui="osrs"] .osync-input {
+  flex: 1; min-width: 0; height: 30px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 8px;
+  background: var(--osrs-well, #1f1a14); border: 1px solid #000; box-shadow: inset 1px 1px 0 #000;
+}
+html[data-ui="osrs"] .osync-input input { all: unset; flex: 1; min-width: 0; font: var(--osrs-fs, 16px) 'RS', sans-serif; text-shadow: 1px 1px 0 #000; }
+html[data-ui="osrs"] .osync-input input::placeholder { color: var(--osrs-muted, #8a7c66); }
+html[data-ui="osrs"] .osync-account {
+  display: flex; align-items: center; gap: 10px; padding: 6px 8px; background: var(--osrs-window, #3e3529); border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi, #5c5244), inset -1px -1px 0 var(--osrs-bevel-lo, #14110d);
+}
+html[data-ui="osrs"] .osync-link { all: unset; cursor: pointer; color: var(--osrs-tan, #c8b897); text-decoration: underline; }
+html[data-ui="osrs"] .osync-link:hover { color: #ffffff; }
+html[data-ui="osrs"] .osync-skills { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; }
+html[data-ui="osrs"] .osync-skill {
+  height: 28px; box-sizing: border-box; display: flex; align-items: center; gap: 6px; padding: 0 7px 0 4px;
+  background: var(--osrs-window, #3e3529); border: 1px solid #000; color: var(--osrs-tan, #c8b897);
+}
+html[data-ui="osrs"] .osync-skill img { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; }
+html[data-ui="osrs"] .osync-skill.is-locked { background: #241e17; color: var(--osrs-btn-off, #7d705c); }
+html[data-ui="osrs"] .osync-skill.is-locked img { filter: grayscale(1) brightness(.55); }
+html[data-ui="osrs"] .osync-skill.is-gain { box-shadow: inset 0 0 0 1px rgba(13, 193, 13, .45); }
+html[data-ui="osrs"] .osync-skill-name { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .osync-skill-lvl { margin-left: auto; flex-shrink: 0; font-family: 'RSBold', sans-serif; white-space: nowrap; }
+html[data-ui="osrs"] .osync-empty { padding: 14px; text-align: center; color: var(--osrs-muted, #8a7c66); border: 1px dashed var(--osrs-bevel-hi, #5c5244); }
+html[data-ui="osrs"] .osync-inbox { min-height: 0; overflow-y: auto; padding: 6px 8px 8px; }
+html[data-ui="osrs"] .osync-rl { padding: 8px 10px; flex: 1 0 auto; display: flex; flex-direction: column; }
+
+/* Roll Inbox (classic RollInbox inside .osync-inbox). */
+html[data-ui="osrs"] .osync-inbox > section { padding: 0; background: none; border: 0; border-radius: 0; box-shadow: none; display: flex; flex-direction: column; gap: 4px; }
+html[data-ui="osrs"] .osync-inbox > section > div:first-child { margin: 0; min-height: 30px; gap: 8px; flex-wrap: wrap; }
+html[data-ui="osrs"] .osync-inbox > section > div:first-child > svg:first-child { display: none; }
+html[data-ui="osrs"] .osync-inbox > section > div:first-child::before {
+  content: ''; width: 27px; height: 24px; flex-shrink: 0; background: var(--osync-inbox-icon) center / contain no-repeat; image-rendering: pixelated;
+}
+html[data-ui="osrs"] .osync-inbox > section > div:first-child > h3 { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); text-transform: none; letter-spacing: 0; }
+html[data-ui="osrs"] .osync-inbox > section > div:first-child > h3 + [class~="rounded-full"] {
+  border-radius: 0; padding: 0 6px; background: var(--osrs-well, #1f1a14); border: 1px solid #000; color: #ffff00; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; line-height: 18px;
+}
+html[data-ui="osrs"] .osync-inbox > section > div:first-child > [class~="ml-auto"] { color: var(--osrs-muted, #8a7c66); }
+html[data-ui="osrs"] .osync-inbox button {
+  all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0;
+  height: 28px; padding: 0 10px; background: var(--osrs-btn, #4a4033); border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 var(--osrs-btn-hi, #6b5f4d), inset -1px -1px 0 var(--osrs-btn-lo, #2b241b);
+  color: var(--osrs-orange, #ff981f); text-shadow: 1px 1px 0 #000; font: var(--osrs-fs, 16px) 'RS', sans-serif;
+}
+html[data-ui="osrs"] .osync-inbox button:hover:not(:disabled) { color: #ffffff; }
+html[data-ui="osrs"] .osync-inbox button:disabled { cursor: default; color: var(--osrs-btn-off, #7d705c); background: var(--osrs-btn-off-bg, #3a3228); box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi, #5c5244); }
+html[data-ui="osrs"] .osync-inbox button > svg { display: none; }
+html[data-ui="osrs"] .osync-inbox button[class~="bg-fuchsia-600"] { color: #c77dff; }
+html[data-ui="osrs"] .osync-inbox button[class~="bg-emerald-600"] { height: 30px; min-width: 76px; color: #00ff00; }
+html[data-ui="osrs"] .osync-inbox button[class~="bg-amber-600"] { color: #ffff00; }
+html[data-ui="osrs"] .osync-inbox button[aria-label="Dismiss"] { width: 28px; padding: 0; }
+html[data-ui="osrs"] .osync-inbox button[aria-label="Dismiss"] > svg { display: block; }
+/* Not eligible, Back, Cancel, Dismiss (text buttons in the classic panel): plain links, as on the board. */
+html[data-ui="osrs"] .osync-inbox button[class~="text-gray-400"]:not([aria-label]) {
+  background: none; border: 0; box-shadow: none; padding: 0 6px; color: var(--osrs-tan, #c8b897);
+}
+html[data-ui="osrs"] .osync-inbox button[class~="text-gray-400"]:not([aria-label]):hover { color: #ffffff; }
+html[data-ui="osrs"] .osync-inbox [role="status"] { color: #c77dff; margin: 0; }
+html[data-ui="osrs"] .osync-inbox [class~="space-y-3"] > p:first-child { color: var(--osrs-muted, #8a7c66); text-align: right; margin-top: -4px; }
+html[data-ui="osrs"] .osync-inbox [class~="space-y-3"] > * + * { margin-top: 6px; }
+html[data-ui="osrs"] .osync-inbox [class~="space-y-1.5"] > * + * { margin-top: 3px; }
+/* Group heads: Ready / Needs review / Blocked. */
+html[data-ui="osrs"] .osync-inbox [class~="space-y-1.5"] > div:first-child[class~="uppercase"] {
+  height: 20px; gap: 6px; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; text-transform: none; letter-spacing: 0;
+}
+html[data-ui="osrs"] .osync-inbox [class~="text-emerald-400"] { color: #0dc10d; }
+html[data-ui="osrs"] .osync-inbox [class~="text-amber-400"] { color: #ffff00; }
+html[data-ui="osrs"] .osync-inbox [class~="text-red-400"] { color: #ff3030; }
+/* Rows: a stone row with the title on the left and its buttons on the right. */
+html[data-ui="osrs"] .osync-inbox [class~="rounded-lg"][class~="px-3"][class~="py-2.5"] {
+  border-radius: 0; min-height: 48px; box-sizing: border-box; padding: 4px 8px 4px 10px; display: flex; align-items: center;
+  background: var(--osrs-window, #3e3529); border: 1px solid #000; text-shadow: 1px 1px 0 #000;
+  box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi, #5c5244), inset -1px -1px 0 var(--osrs-bevel-lo, #14110d), inset 0 0 0 1px rgba(13, 193, 13, .35);
+}
+html[data-ui="osrs"] .osync-inbox [class~="border-amber-500/25"] { box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi, #5c5244), inset -1px -1px 0 var(--osrs-bevel-lo, #14110d), inset 0 0 0 1px rgba(255, 255, 0, .25) !important; }
+html[data-ui="osrs"] .osync-inbox [class~="border-red-500/20"] { box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi, #5c5244), inset -1px -1px 0 var(--osrs-bevel-lo, #14110d), inset 0 0 0 1px rgba(255, 48, 48, .3) !important; }
+html[data-ui="osrs"] .osync-inbox [class~="py-2.5"] > div { flex: 1; min-width: 0; }
+html[data-ui="osrs"] .osync-inbox [class~="py-2.5"] > div > div {
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-columns: auto; column-gap: 4px; align-items: center; line-height: 18px;
+}
+html[data-ui="osrs"] .osync-inbox [class~="py-2.5"] > div > div > div:first-child { grid-column: 1; grid-row: 1; gap: 8px; align-items: baseline; }
+html[data-ui="osrs"] .osync-inbox [class~="py-2.5"] > div > div > div ~ div,
+html[data-ui="osrs"] .osync-inbox [class~="py-2.5"] > div > div > div[role="group"] { display: contents; }
+html[data-ui="osrs"] .osync-inbox [class~="py-2.5"] > div > div > p,
+html[data-ui="osrs"] .osync-inbox [class~="py-2.5"] > div > div > div ~ div > p,
+html[data-ui="osrs"] .osync-inbox [class~="py-2.5"] > div > div > div ~ div > span:first-child { grid-column: 1; grid-row: 2; margin: 0; }
+html[data-ui="osrs"] .osync-inbox [class~="py-2.5"] > div > div > div ~ div > div:first-child { width: 220px; }
+html[data-ui="osrs"] .osync-inbox [class~="py-2.5"] > div > div > div ~ div > :not(p):not(span:first-child) { grid-row: 1 / span 2; margin: 0; }
+html[data-ui="osrs"] .osync-inbox [class~="py-2.5"] [class~="text-fuchsia-300"] { color: #c77dff; text-transform: none; font-family: 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .osync-inbox [class~="py-2.5"] [class~="text-sm"][class~="font-semibold"] { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ffffff; }
+html[data-ui="osrs"] .osync-inbox [class~="py-2.5"] [class~="text-gray-600"] { color: var(--osrs-muted, #8a7c66); }
+html[data-ui="osrs"] .osync-inbox [class~="py-2.5"] span[class~="text-gray-500"] { color: #ffff00; font-family: 'RS', sans-serif; }
+html[data-ui="osrs"] .osync-inbox [class~="text-amber-200/80"] { color: #ffd27a; font-family: 'RS', sans-serif; }
+html[data-ui="osrs"] .osync-inbox [class~="text-red-200/75"] { color: #ff6060; font-family: 'RS', sans-serif; }
+html[data-ui="osrs"] .osync-inbox [class~="py-2.5"] [role="group"] > span:first-child { color: var(--osrs-tan, #c8b897); font-family: 'RS', sans-serif; }
+html[data-ui="osrs"] .osync-inbox select {
+  appearance: none; -webkit-appearance: none; box-sizing: border-box; height: 28px; width: 196px; max-width: 100%; padding: 0 24px 0 8px; border-radius: 0;
+  background: var(--osrs-well, #1f1a14) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8'%3E%3Cpath d='M1 1l4 5 4-5' fill='none' stroke='%23ff981f' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 8px center;
+  border: 1px solid #000; box-shadow: inset 1px 1px 0 #000; font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #ffffff;
+}
+html[data-ui="osrs"] .osync-inbox [class~="py-2.5"] [class~="w-full"] { width: 220px; }
+/* Already handled, empty inbox, paste box. */
+html[data-ui="osrs"] .osync-inbox [class~="border-sky-500/20"] { border-radius: 0; margin-top: 6px; padding: 5px 8px; background: var(--osrs-well, #1f1a14); border: 1px solid #000; }
+html[data-ui="osrs"] .osync-inbox [class~="border-sky-500/20"] > svg { color: #5a7cf0; }
+html[data-ui="osrs"] .osync-inbox [class~="border-sky-500/20"] > span { color: var(--osrs-tan, #c8b897); font-family: 'RS', sans-serif; }
+html[data-ui="osrs"] .osync-inbox [class~="border-dashed"] { border-radius: 0; padding: 18px; border: 1px dashed var(--osrs-bevel-hi, #5c5244); color: var(--osrs-muted, #8a7c66); font-family: 'RS', sans-serif; }
+html[data-ui="osrs"] .osync-inbox textarea { border-radius: 0; background: var(--osrs-well, #1f1a14); border: 1px solid #000; color: #ffffff; font: var(--osrs-fs, 16px) 'RS', sans-serif; }
+
+/* Connect RuneLite (classic RuneLiteOnboarding inside .osync-rl). */
+html[data-ui="osrs"] .osync-rl > div { flex: 1; padding: 0; background: none; border: 0; border-radius: 0; display: flex; flex-direction: column; gap: 6px; }
+html[data-ui="osrs"] .osync-rl > div > * { margin: 0 !important; }
+html[data-ui="osrs"] .osync-rl > div > div:first-child { gap: 8px; }
+html[data-ui="osrs"] .osync-rl > div > div:first-child > svg:first-child { display: none; }
+html[data-ui="osrs"] .osync-rl > div > div:first-child::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--osync-rl-dot, #8a7c66); box-shadow: 0 0 0 1px #000; flex-shrink: 0; }
+html[data-ui="osrs"] .osync-rl > div > div:first-child > h3 { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); text-transform: none; letter-spacing: 0; text-shadow: 1px 1px 0 #000; }
+html[data-ui="osrs"] .osync-rl > div > div:first-child > h3 + span { border-radius: 0; padding: 0 5px; border: 1px solid #000; background: #1f2a17; color: #0dc10d; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .osync-rl > div > div:first-child > h3 + span > svg { display: none; }
+html[data-ui="osrs"] .osync-rl button {
+  all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0;
+  height: 24px; padding: 0 8px; background: var(--osrs-btn, #4a4033); border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 var(--osrs-btn-hi, #6b5f4d), inset -1px -1px 0 var(--osrs-btn-lo, #2b241b);
+  color: var(--osrs-orange, #ff981f); text-shadow: 1px 1px 0 #000; font: var(--osrs-fs, 16px) 'RS', sans-serif;
+}
+html[data-ui="osrs"] .osync-rl button:hover { color: #ffffff; }
+html[data-ui="osrs"] .osync-rl button[aria-label="Collapse guide"] { width: 24px; height: 22px; padding: 0; }
+html[data-ui="osrs"] .osync-rl ol { display: grid; gap: 4px; }
+html[data-ui="osrs"] .osync-rl ol > li > * { margin-top: 0 !important; }
+html[data-ui="osrs"] .osync-rl ol > li { gap: 8px; align-items: flex-start; }
+html[data-ui="osrs"] .osync-rl ol > li > span:first-child {
+  width: 20px; height: 20px; border-radius: 0; background: var(--osrs-btn, #4a4033); border: 1px solid #000; color: #ffffff; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif;
+}
+html[data-ui="osrs"] .osync-rl ol > li > span[class~="bg-emerald-600"] { background: #1f7a1f; }
+html[data-ui="osrs"] .osync-rl ol > li > div { font: var(--osrs-fs, 16px) 'RS', sans-serif; line-height: 18px; color: var(--osrs-tan, #c8b897); text-shadow: 1px 1px 0 #000; }
+html[data-ui="osrs"] .osync-rl ol > li > div [class~="font-semibold"] { font: inherit; color: #ffffff; }
+html[data-ui="osrs"] .osync-rl ol > li > div a { color: #0dc10d; }
+html[data-ui="osrs"] .osync-rl ol > li > div a > svg { display: none; }
+html[data-ui="osrs"] .osync-rl ol > li > div [class~="text-emerald-200"] { color: #0dc10d; }
+html[data-ui="osrs"] .osync-rl ol > li > div [class~="text-amber-200"] { color: #ffff00; }
+html[data-ui="osrs"] .osync-rl ol > li > div [class~="text-red-200"] { color: #ff3030; }
+html[data-ui="osrs"] .osync-rl > div > div[class~="rounded-md"] {
+  border-radius: 0; padding: 6px 8px; background: #c9b994; border: 2px solid #000; box-shadow: inset 1px 1px 0 #e0d3b2, inset -1px -1px 0 #8f8062;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif; line-height: 18px; color: #000000; text-shadow: none;
+}
+html[data-ui="osrs"] .osync-rl > div > div[class~="rounded-md"] > span { font: inherit; color: #800000; }
+html[data-ui="osrs"] .osync-rl > div > div[class~="flex-wrap"] { margin-top: auto !important; justify-content: flex-end; gap: 6px; color: var(--osrs-muted, #8a7c66); font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; text-shadow: 1px 1px 0 #000; }
+html[data-ui="osrs"] .osync-rl > div > div[class~="flex-wrap"] > span { color: var(--osrs-muted, #8a7c66); }
+/* Collapsed guide: one stone row. */
+html[data-ui="osrs"] .osync-rl > button { width: 100%; height: 30px; justify-content: flex-start; }
+html[data-ui="osrs"] .osync-rl > button > svg:first-child { display: none; }
+html[data-ui="osrs"] .osync-rl > button > span:first-of-type { font-family: 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); }
+html[data-ui="osrs"] .osync-rl > div > div:first-child:has(h3 + span)::before { background: #00ff00; }

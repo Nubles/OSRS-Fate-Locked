@@ -389,11 +389,13 @@ const InfoChip: React.FC<{
 
 type FarmSubTab = 'SLAYER' | 'CLUES' | 'BOSSING' | 'ACTIVITIES';
 
-export const ActionSection: React.FC = () => {
-  const { rollForKey, claimPet, petsClaimed, unlocks, gameModeId, customMode, animationsEnabled, bossStandardKeysAwarded, clueStandardKeysAwarded } = useGame();
-  const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
-  const [bossQuery, setBossQuery] = useState('');
-  const isOsrsUi = useIsOsrsUi();
+/**
+ * Every Farm Keys source, rate and roll handler, shared by the classic cards
+ * and the OSRS layout (compact panel and wide Keys screen) so all of them read
+ * the same rules.
+ */
+export const useFarmModel = () => {
+  const { rollForKey, unlocks, gameModeId, customMode, clueStandardKeysAwarded } = useGame();
 
   // When the run's mode enables region passives, rolls are boosted. rollForKey
   // applies the bonus internally, so handleRoll still passes the BASE rate —
@@ -494,39 +496,44 @@ export const ActionSection: React.FC = () => {
     ];
   }, [unlocks.quests]);
 
+  return {
+    slayers,
+    clues: CLUE_SCROLLS,
+    activities: ACTIVITY_ROLLS,
+    isVanilla,
+    vanillaBosses,
+    clueKeysAwarded,
+    regionBonus,
+    effectiveRate,
+    handleRoll,
+    journalMin: JOURNAL_MIN,
+    journalMax: JOURNAL_MAX,
+    tabIcons: { SLAYER: OSRS_UI_ICONS.SLAYER, CLUES: OSRS_UI_ICONS.CLUE, BOSSING: OSRS_ICONS.BOSS, ACTIVITIES: OSRS_ICONS.ACTIVITY },
+    statsIcon: OSRS_UI_ICONS.STATS,
+    collLogIcon: OSRS_ICONS.COLL_LOG,
+  };
+};
+export type FarmModel = ReturnType<typeof useFarmModel>;
+
+/** Farm Keys: the classic cards, or the OSRS layout's panel when that layout is on. */
+export const ActionSection: React.FC = () => (
+  useIsOsrsUi()
+    ? <React.Suspense fallback={null}><OsrsFarmKeys /></React.Suspense>
+    : <ClassicActionSection />
+);
+
+const ClassicActionSection: React.FC = () => {
+  const { claimPet, petsClaimed, unlocks, animationsEnabled, bossStandardKeysAwarded } = useGame();
+  const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
+  const [bossQuery, setBossQuery] = useState('');
+  const { slayers, isVanilla, vanillaBosses, clueKeysAwarded, regionBonus, effectiveRate, handleRoll } = useFarmModel();
+
   const tabs: { id: FarmSubTab; label: string; icon: string; count: number }[] = [
     { id: 'SLAYER', label: 'Slayer', icon: OSRS_ICONS.SLAYER, count: slayers.length },
     { id: 'CLUES', label: 'Clues', icon: OSRS_ICONS.CLUE, count: CLUE_SCROLLS.length },
     { id: 'BOSSING', label: 'Bossing', icon: OSRS_ICONS.BOSS, count: isVanilla ? vanillaBosses.length : BOSSES_LIST.length },
     { id: 'ACTIVITIES', label: 'Activities', icon: OSRS_ICONS.ACTIVITY, count: ACTIVITY_ROLLS.length + 1 },
   ];
-
-  if (isOsrsUi) {
-    return (
-      <React.Suspense fallback={null}>
-        <OsrsFarmKeys
-          subTab={subTab}
-          setSubTab={setSubTab}
-          bossQuery={bossQuery}
-          setBossQuery={setBossQuery}
-          slayers={slayers}
-          clues={CLUE_SCROLLS}
-          activities={ACTIVITY_ROLLS}
-          tabIcons={{ SLAYER: OSRS_UI_ICONS.SLAYER, CLUES: OSRS_UI_ICONS.CLUE, BOSSING: OSRS_ICONS.BOSS, ACTIVITIES: OSRS_ICONS.ACTIVITY }}
-          isVanilla={isVanilla}
-          vanillaBosses={vanillaBosses}
-          clueKeysAwarded={clueKeysAwarded}
-          regionBonus={regionBonus}
-          effectiveRate={effectiveRate}
-          handleRoll={handleRoll}
-          journalMin={JOURNAL_MIN}
-          journalMax={JOURNAL_MAX}
-          statsIcon={OSRS_UI_ICONS.STATS}
-          collLogIcon={OSRS_ICONS.COLL_LOG}
-        />
-      </React.Suspense>
-    );
-  }
 
   return (
     <div className="h-full p-4 flex flex-col gap-3">

@@ -21,50 +21,31 @@ import { PetPicker } from '../PetPicker';
 import { WikiIcon } from '../WikiIcon';
 import { isRollEntry } from '../../utils/logEntry';
 import { formatKeyPercent, formatKeyRollValue } from '../../utils/keyRoll';
+import { useFarmModel } from '../ActionSection';
+import { setBossQuery, setFarmTab, useKeysView, type FarmSubTab } from './OsrsKeysState';
+import { OsrsKeysTabs } from './OsrsKeysTabs';
 
 /**
- * Farm Keys in the OSRS layout. A presentation of ActionSection: every source,
- * rate, roll and handler comes from ActionSection's props and the same
- * GameContext; this file only draws them as an OSRS interface. Each Slayer
- * master, clue tier, boss and activity is an NPC card topped by the gem of its
- * odds tier, and the last roll answers in an NPC dialogue box.
+ * Farm Keys in the OSRS layout, in two sizes:
+ *   compact (home screen Keys panel, Main board): category buttons, then one
+ *     list row per source with its rate and a Roll button;
+ *   wide (Keys screen, FarmKeys-NPCs board): an NPC card per source topped by
+ *     the gem of its odds tier, with the last roll as an NPC dialogue, the odds
+ *     ladder and the recent rolls beside it.
+ * Every source, rate and roll handler comes from ActionSection's useFarmModel
+ * and the same GameContext; this file only draws them.
  */
 
-export type FarmSubTab = 'SLAYER' | 'CLUES' | 'BOSSING' | 'ACTIVITIES';
 type RollPoint = { clientX: number; clientY: number };
 
-export interface FarmSlayerSource { name: string; subText: string; source: DropSource; image: string }
-export interface FarmClueSource { tier: string; source: DropSource; itemId: number }
-export interface FarmActivitySource { name: string; subText: string; source: DropSource; image: string }
-
-export interface OsrsFarmKeysProps {
-  subTab: FarmSubTab;
-  setSubTab: (tab: FarmSubTab) => void;
-  bossQuery: string;
-  setBossQuery: (query: string) => void;
-  slayers: readonly FarmSlayerSource[];
-  clues: readonly FarmClueSource[];
-  activities: readonly FarmActivitySource[];
-  tabIcons: Record<FarmSubTab, string>;
-  isVanilla: boolean;
-  vanillaBosses: readonly string[];
-  clueKeysAwarded: number;
-  regionBonus: number;
-  effectiveRate: (source: string) => number;
-  handleRoll: (source: string, chance: number, e: RollPoint, context?: KeyRollContext) => void;
-  journalMin: number;
-  journalMax: number;
-  statsIcon: string;
-  collLogIcon: string;
-}
-
 const UI = `${import.meta.env.BASE_URL}osrs-ui/`;
-const WIKI_IMG = 'https://oldschool.runescape.wiki/images/';
 const KEY_IMG = `${UI}items/key.png`;
 const OMNI_IMG = `${UI}items/omni_key.png`;
+const BOSS_TASK_IMG = `${UI}items/11864.png`;
+const MINIGAME_IMG = `${UI}items/4067.png`;
 
-// ── Gem tiers: the same ladder as the design board (opal .. zenyte). A source
-// sits on the first gem whose ceiling its rate does not pass. ──────────────
+// ── Gem tiers: the ladder of the design board (opal .. zenyte). A source sits
+// on the first gem whose ceiling its rate does not pass. ─────────────────────
 const GEMS: readonly { name: string; file: string; color: string; max: number }[] = [
   { name: 'Opal', file: 'opal', color: '#d9cfc0', max: 5 },
   { name: 'Jade', file: 'jade', color: '#6fbf6a', max: 10 },
@@ -89,7 +70,6 @@ const rgba = (hex: string, a: number) => {
 };
 
 // ── Local sprites. Anything without one keeps the classic wiki image. ──────
-// Keyed by lower-case name, so "Crazy Archaeologist" and "Crazy archaeologist" both match.
 const NPC_SPRITES: Record<string, string> = {
   turael: 'turael', spria: 'spria', mazchna: 'mazchna', vannaka: 'vannaka', chaeldar: 'chaeldar',
   konar: 'konar', nieve: 'nieve', krystilia: 'krystilia', duradel: 'duradel',
@@ -110,6 +90,12 @@ const npcHead = (name: string): string | null => {
 const CLUE_SCROLL_IDS: Record<string, number> = { Beginner: 23182, Easy: 2677, Medium: 2801, Hard: 2722, Elite: 12073, Master: 19835 };
 const clueSprite = (tier: string) => `${UI}items/${CLUE_SCROLL_IDS[tier] ?? 19835}.png`;
 
+// Category button icons, as each board draws them.
+const COMPACT_TAB_ICONS: Record<FarmSubTab, string> = {
+  SLAYER: `${UI}skills/slayer.png`, CLUES: `${UI}items/1538.png`, BOSSING: `${UI}items/4151.png`, ACTIVITIES: MINIGAME_IMG,
+};
+const WIDE_TAB_ICONS: Record<FarmSubTab, string> = { ...COMPACT_TAB_ICONS, CLUES: `${UI}items/19835.png` };
+
 const BLURBS: Record<FarmSubTab, string> = {
   SLAYER: 'Finish a task, then roll your master. Harder masters roll better.',
   CLUES: 'Finish a clue, then roll its tier. Harder caskets roll better.',
@@ -118,8 +104,11 @@ const BLURBS: Record<FarmSubTab, string> = {
 };
 const VANILLA_BOSS_BLURB = 'Vanilla: each boss holds a small Key stash. Once it is empty, kills stop rolling.';
 const LADDER_TITLES: Record<FarmSubTab, string> = {
-  SLAYER: 'Slayer odds by tier', CLUES: 'Clue odds by tier', BOSSING: 'Boss odds', ACTIVITIES: 'Activity odds',
+  SLAYER: 'Slayer odds by tier', CLUES: 'Clue odds by tier', BOSSING: 'Boss odds, next Key', ACTIVITIES: 'Activity odds',
 };
+const TABS: { id: FarmSubTab; label: string }[] = [
+  { id: 'SLAYER', label: 'Slayer' }, { id: 'CLUES', label: 'Clues' }, { id: 'BOSSING', label: 'Bossing' }, { id: 'ACTIVITIES', label: 'Activities' },
+];
 
 // ── Roll suspense: the same 0.6s pause the classic cards make before rolling.
 const useRollSuspense = (onRoll: (p: RollPoint) => void) => {
@@ -141,18 +130,17 @@ const useRollSuspense = (onRoll: (p: RollPoint) => void) => {
 };
 
 /** Image fetched from the wiki by page name, as the classic WikiIcon helper does. */
-const WikiNamedImg: React.FC<{ name: string; fallback?: string; className?: string }> = ({ name, fallback, className }) => {
+const WikiNamedImg: React.FC<{ name: string; className?: string; style?: React.CSSProperties }> = ({ name, className, style }) => {
   const [src, setSrc] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
     wikiService.fetchImage(name).then((url) => { if (live && url) setSrc(url); });
     return () => { live = false; };
   }, [name]);
-  const shown = src || fallback;
-  return shown ? <img src={shown} alt={name} className={className} /> : null;
+  return src ? <img src={src} alt={name} className={className} style={style} /> : null;
 };
 
-// ── One source as an NPC card ─────────────────────────────────────────────
+// ── One source, as a model both sizes draw ────────────────────────────────
 type Art =
   | { kind: 'body'; src: string; big?: boolean }
   | { kind: 'item'; src: string }
@@ -167,7 +155,8 @@ interface CardModel {
   bonus: number;
   art: Art;
   status: { text: string; color: string };
-  lines: { text: string; color: string; wrap?: boolean }[];
+  stats: string;
+  extra?: { text: string; color: string };
   stash?: { cap: number; awarded: number };
   disabled?: boolean;
   btn: string;
@@ -179,40 +168,32 @@ interface CardModel {
 const BonusTag: React.FC<{ bonus: number }> = ({ bonus }) =>
   bonus ? <span title="Region passive modifier active" style={{ color: bonus > 0 ? '#00ff00' : '#ff3030', marginLeft: 3 }}>{bonus > 0 ? '+' : '−'}{Math.abs(bonus)}</span> : null;
 
+/** Wide: the NPC card (FarmKeys-NPCs board). */
 const NpcCard: React.FC<{ card: CardModel }> = ({ card }) => {
   const { isRolling, trigger } = useRollSuspense(card.onRoll);
   const gem = gemFor(card.rate);
   const live = !card.disabled;
-  const frame = live ? `inset 0 0 0 2px ${gem.color}` : 'inset 0 0 0 2px var(--osrs-inner-ring, #4f4434)';
   const stageBg = live
     ? `radial-gradient(ellipse at 50% 92%, ${rgba(gem.color, 0.32)} 0%, ${rgba(gem.color, 0.08)} 45%, rgba(0,0,0,0) 70%), linear-gradient(#2a231b, #1c1712)`
     : 'linear-gradient(#24201a, #171410)';
   const filter = live ? undefined : 'grayscale(.9) brightness(.45)';
   const art = card.art;
   return (
-    <div
-      className="osrs-farm-card"
-      title={card.title}
-      data-examine={card.examine}
-      data-examine-name={card.name}
-    >
-      <div className="osrs-farm-card-head">
+    <div className="okf-card" title={card.title} data-examine={card.examine} data-examine-name={card.name} data-examine-kind="npc"
+      style={{ boxShadow: live ? `inset 0 0 0 2px ${gem.color}` : 'inset 0 0 0 2px var(--osrs-inner-ring, #4f4434)' }}>
+      <div className="okf-card-head">
         <img className="osrs-px" src={gem.src} alt="" aria-hidden="true" />
         <span className="tier" style={{ color: gem.color }}>{gem.label}</span>
-        <span className="rate">{card.disabled && card.stash ? 'Spent' : `${card.rate}%`}<BonusTag bonus={card.bonus} /></span>
+        <span className="rate">{card.rate}%<BonusTag bonus={card.bonus} /></span>
       </div>
-      <div className="osrs-farm-stage" style={{ background: stageBg }}>
+      <div className="okf-stage" style={{ background: stageBg }}>
         <div className="shadow" />
-        {art.kind === 'body' && <img className={`body osrs-smooth${art.big ? ' big' : ''}`} src={art.src} alt={card.name} style={{ filter }} />}
-        {art.kind === 'item' && <img className="item" src={art.src} alt={card.name} style={{ filter }} />}
-        {art.kind === 'wiki' && <img className="body osrs-smooth" src={art.src} alt={card.name} style={{ filter, height: '78%' }} />}
-        {art.kind === 'wikiName' && (
-          <span style={{ position: 'relative', display: 'flex', height: '78%', marginBottom: 8, filter }}>
-            <WikiNamedImg name={art.name} className="osrs-smooth" />
-          </span>
-        )}
+        {art.kind === 'body' && <img className={`body${art.big ? ' big' : ''}`} src={art.src} alt={card.name} style={{ filter }} />}
+        {art.kind === 'item' && <img className="item osrs-px" src={art.src} alt={card.name} style={{ filter }} />}
+        {art.kind === 'wiki' && <img className="body" src={art.src} alt={card.name} style={{ filter, height: '70%' }} />}
+        {art.kind === 'wikiName' && <WikiNamedImg name={art.name} className="body" style={{ filter, height: '70%' }} />}
         {card.stash && (
-          <div className="osrs-farm-stash" aria-label={`${card.stash.awarded} of ${card.stash.cap} Keys paid`}>
+          <div className="okf-stash" aria-label={`${card.stash.awarded} of ${card.stash.cap} Keys paid`}>
             {Array.from({ length: card.stash.cap }, (_, i) => (
               <div key={i} className={`osrs-slot${i < card.stash!.awarded ? ' paid' : ''}`}>
                 <img className="osrs-px" src={KEY_IMG} alt="" aria-hidden="true" />
@@ -221,34 +202,45 @@ const NpcCard: React.FC<{ card: CardModel }> = ({ card }) => {
           </div>
         )}
       </div>
-      <div className="osrs-farm-card-foot">
+      <div className="okf-card-foot">
         <span className="name">{card.name}</span>
         <span className="small" style={{ color: 'var(--osrs-tan, #c8b897)' }}>{card.sub}</span>
         <span className="small" style={{ color: card.status.color }}>{card.status.text}</span>
-        {card.lines.map((l, i) => (
-          <span key={i} className={`small${l.wrap ? ' wrap' : ''}`} style={{ color: l.color }}>{l.text}</span>
-        ))}
-        <div className="spacer" />
+        {card.extra && <span className="small" style={{ color: card.extra.color }}>{card.extra.text}</span>}
+        <span className="small" style={{ color: '#ffffff' }}>{card.stats}</span>
         <button type="button" className="osrs-btn" disabled={card.disabled || isRolling} onClick={trigger}>
           {isRolling ? 'Rolling...' : card.btn}
         </button>
       </div>
-      <div className="osrs-farm-frame" style={{ boxShadow: frame }} aria-hidden="true" />
     </div>
   );
 };
 
-/** A compact row for the long all-boss list outside Vanilla. */
+/** Compact: one list row (Main board). */
+const SourceRow: React.FC<{ card: CardModel }> = ({ card }) => {
+  const { isRolling, trigger } = useRollSuspense(card.onRoll);
+  return (
+    <div className="okf-row" title={card.title} data-examine={card.examine} data-examine-name={card.name} data-examine-kind="npc">
+      <div className="who">
+        <div className="name">{card.name}</div>
+        <div className="where">{card.extra?.text ?? card.sub}</div>
+      </div>
+      <span className="rate">{card.disabled && card.stash ? 'Spent' : `${card.rate}%`}<BonusTag bonus={card.bonus} /></span>
+      <button type="button" className="osrs-btn" disabled={card.disabled || isRolling} onClick={trigger}>{isRolling ? '...' : card.btn}</button>
+    </div>
+  );
+};
+
+/** A row of the long all-boss list outside Vanilla (both sizes). */
 const BossRow: React.FC<{ name: string; rate: number; bonus: number; tierLabel: string; onRoll: (p: RollPoint) => void }> = ({ name, rate, bonus, tierLabel, onRoll }) => {
   const { isRolling, trigger } = useRollSuspense(onRoll);
   return (
-    <div
-      className="osrs-farm-row"
-      data-examine={`${tierLabel}-tier boss. ${rate}% chance of a Key per kill.`}
-      data-examine-name={name}
-    >
-      <span className="name">{name}</span>
-      <span className="rate">{rate}%{bonus > 0 ? <span style={{ color: '#00ff00' }}> +{bonus}</span> : ''}</span>
+    <div className="okf-row" data-examine={`${tierLabel}-tier boss. ${rate}% chance of a Key per kill.`} data-examine-name={name} data-examine-kind="npc">
+      <div className="who">
+        <div className="name">{name}</div>
+        <div className="where">{tierLabel}-tier boss</div>
+      </div>
+      <span className="rate">{rate}%<BonusTag bonus={bonus} /></span>
       <button type="button" className="osrs-btn" disabled={isRolling} onClick={trigger}>{isRolling ? '...' : 'Roll'}</button>
     </div>
   );
@@ -256,27 +248,24 @@ const BossRow: React.FC<{ name: string; rate: number; bonus: number; tierLabel: 
 
 // ── Odds ladder ───────────────────────────────────────────────────────────
 interface LadderRow { label: string; rate: number; live: boolean }
-const Ladder: React.FC<{ title: string; rows: LadderRow[] }> = ({ title, rows }) => {
-  if (rows.length < 2) return null;
-  return (
-    <div className="osrs-win" style={{ padding: 4 }}>
-      <h3 className="osrs-title" style={{ margin: '2px 0 4px', textAlign: 'center' }}>{title}</h3>
-      <div className="osrs-inner osrs-farm-ladder">
-        {rows.map((r) => {
-          const gem = gemFor(r.rate);
-          return (
-            <div key={`${r.label}-${r.rate}`} className="osrs-farm-ladder-row" style={{ opacity: r.live ? 1 : 0.5 }}>
-              <img className="osrs-px" src={gem.src} alt={gem.name} />
-              <span className="name">{r.label}</span>
-              <div className="osrs-farm-bar"><div style={{ width: `${Math.min(100, r.rate)}%`, background: gem.color }} /></div>
-              <span className="rate">{r.rate}%</span>
-            </div>
-          );
-        })}
-      </div>
+const Ladder: React.FC<{ title: string; rows: LadderRow[] }> = ({ title, rows }) => (
+  <div className="osrs-win okf-side">
+    <h2 className="okf-wtitle">{title}</h2>
+    <div className="osrs-inner okf-ladder">
+      {rows.map((r) => {
+        const gem = gemFor(r.rate);
+        return (
+          <div key={`${r.label}-${r.rate}`} className="okf-ladder-row" style={{ opacity: r.live ? 1 : 0.5 }}>
+            <img className="osrs-px" src={gem.src} alt={gem.name} />
+            <span className="name">{r.label}</span>
+            <div className="okf-bar"><div style={{ width: `${Math.min(100, r.rate)}%`, background: gem.color }} /></div>
+            <span className="rate">{r.rate}%</span>
+          </div>
+        );
+      })}
     </div>
-  );
-};
+  </div>
+);
 
 const buildLadder = (cards: { label: string; rate: number; live: boolean }[]): LadderRow[] => {
   const byRate = new Map<number, LadderRow & { labels: string[] }>();
@@ -293,25 +282,28 @@ const buildLadder = (cards: { label: string; rate: number; live: boolean }[]): L
 };
 
 // ── Pet claim (same flow as PetClaimCard) ─────────────────────────────────
-const OsrsPetClaim: React.FC<{ claimed: readonly number[] | undefined; onClaim: (pet: Pet, e: React.MouseEvent) => void }> = ({ claimed, onClaim }) => {
+const OsrsPetClaim: React.FC<{ claimed: readonly number[] | undefined; onClaim: (pet: Pet, e: React.MouseEvent) => void; wide?: boolean }> = ({ claimed, onClaim, wide }) => {
   const left = useMemo(() => unclaimedPets(claimed), [claimed]);
   const [chosen, setChosen] = useState('');
   const [confirming, setConfirming] = useState(false);
   const pet = left.find((candidate) => String(candidate.id) === chosen);
   return (
-    <div
-      className="osrs-win"
-      style={{ gridColumn: '1 / -1', padding: 4 }}
-      data-examine="An Omni-Key for each new pet, once per pet. Not a roll."
-      data-examine-name="New Pet"
-    >
-      <h3 className="osrs-title" style={{ margin: '2px 0 4px', textAlign: 'center' }}>New Pet</h3>
-      <div className="osrs-inner osrs-farm-pet">
-        <span style={{ fontFamily: 'RSSmall, sans-serif', lineHeight: '15px' }}>An Omni-Key for each new pet, once per pet.</span>
+    <div className={wide ? 'okf-card okf-pet wide' : 'okf-pet'}
+      data-examine="An Omni-Key for each new pet, once per pet. Not a roll." data-examine-name="New Pet">
+      {wide && (
+        <div className="okf-card-head">
+          <img className="osrs-px" src={OMNI_IMG} alt="" aria-hidden="true" />
+          <span className="tier" style={{ color: '#c77dff' }}>New Pet</span>
+          <span className="rate">Omni-Key</span>
+        </div>
+      )}
+      <div className="okf-pet-body">
+        {!wide && <span className="name">New Pet</span>}
+        <span className="small">An Omni-Key for each new pet, once per pet.</span>
         {left.length === 0 ? (
           <span style={{ color: '#ffff00' }}>Every pet is claimed.</span>
         ) : confirming && pet ? (
-          <div role="group" aria-label="Check your pet" className="osrs-chat confirm">
+          <div role="group" aria-label="Check your pet" className="osrs-chat okf-pet-confirm">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <WikiIcon file={petImageFile(pet)} alt="" size={36} className="shrink-0" />
               <div style={{ minWidth: 0 }}>
@@ -320,11 +312,7 @@ const OsrsPetClaim: React.FC<{ claimed: readonly number[] | undefined; onClaim: 
               </div>
             </div>
             <div>Each pet counts once, so check it’s the one you got.</div>
-            <button
-              type="button"
-              className="osrs-btn"
-              onClick={(e) => { onClaim(pet, e); setChosen(''); setConfirming(false); }}
-            >
+            <button type="button" className="osrs-btn" onClick={(e) => { onClaim(pet, e); setChosen(''); setConfirming(false); }}>
               Yes, I got {pet.name}
             </button>
             <button type="button" className="osrs-btn" onClick={() => setConfirming(false)}>Back</button>
@@ -333,15 +321,15 @@ const OsrsPetClaim: React.FC<{ claimed: readonly number[] | undefined; onClaim: 
           <>
             <PetPicker pets={left} value={pet ? chosen : ''} onChange={setChosen} label="The pet you got" />
             <button type="button" className="osrs-btn" disabled={!pet} onClick={() => { if (pet) setConfirming(true); }}>
-              <img className="osrs-px" src={OMNI_IMG} alt="" aria-hidden="true" style={{ width: 27, height: 24 }} />
+              <img className="osrs-px" src={OMNI_IMG} alt="" aria-hidden="true" style={{ width: 22, height: 20 }} />
               Claim Omni-Key
             </button>
           </>
         )}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-          <span style={{ fontFamily: 'RSSmall, sans-serif', color: 'var(--osrs-muted, #8a7c66)' }}>{PETS.length - left.length} of {PETS.length} pets claimed</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 'auto' }}>
+          <span className="small" style={{ color: 'var(--osrs-muted, #8a7c66)' }}>{PETS.length - left.length} of {PETS.length} pets claimed</span>
           {left.length < PETS.length && (
-            <button type="button" className="osrs-farm-link" onClick={() => window.dispatchEvent(new Event(OPEN_PETS_EVENT))}>Your pets</button>
+            <button type="button" className="okf-link" onClick={() => window.dispatchEvent(new Event(OPEN_PETS_EVENT))}>Your pets</button>
           )}
         </div>
       </div>
@@ -349,7 +337,45 @@ const OsrsPetClaim: React.FC<{ claimed: readonly number[] | undefined; onClaim: 
   );
 };
 
-// ── Last roll as an NPC dialogue ──────────────────────────────────────────
+// ── Other Key Sources (not on the boards): a small stone button opens them. ─
+const OtherSources: React.FC<{ journalMin: number; journalMax: number; statsIcon: string; collLogIcon: string; onClose: () => void; className: string }> = (p) => (
+  <div className={`osrs-win okf-other ${p.className}`} role="dialog" aria-label="Other Key Sources">
+    <div className="okf-other-head">
+      <h2 className="okf-wtitle">Other Key Sources</h2>
+      <button type="button" className="osrs-btn okeys-sq" aria-label="Close" onClick={p.onClose}>
+        <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="2.5" /></svg>
+      </button>
+    </div>
+    <div className="osrs-inner">
+      <div className="okf-other-row" data-examine={`Click unlocked skills in the Dashboard to roll. Chance = Level / 5 (up to ${LEVEL_ROLL_MAX.toFixed(1)}%).`} data-examine-name="Skill Rolling">
+        <img className="osrs-px" src={p.statsIcon} alt="" aria-hidden="true" />
+        <div>
+          <div className="label">Skill Rolling</div>
+          <div className="desc">Click unlocked skills in the <em>Dashboard</em> to roll.</div>
+          <div className="rate">Chance = Level / 5 (up to {LEVEL_ROLL_MAX.toFixed(1)}%)</div>
+        </div>
+      </div>
+      <div className="okf-other-row" data-examine={`Complete Quests, Diaries and CAs in the Journal Tab. Variable (${p.journalMin}% - ${p.journalMax}%).`} data-examine-name="Journal Activities">
+        <img src={`${UI}quest_point_icon.png`} alt="" aria-hidden="true" />
+        <div>
+          <div className="label">Journal Activities</div>
+          <div className="desc">Complete Quests, Diaries &amp; CAs in the <em>Journal Tab</em>.</div>
+          <div className="rate">Variable ({p.journalMin}% - {p.journalMax}%)</div>
+        </div>
+      </div>
+      <div className="okf-other-row" data-examine={`Log new unique items in the Collection Log Tab to roll. ${DROP_RATES[DropSource.COLLECTION_LOG]}% Drop Chance.`} data-examine-name="Collection Log">
+        <img src={p.collLogIcon} alt="" aria-hidden="true" />
+        <div>
+          <div className="label">Collection Log</div>
+          <div className="desc">Log new unique items in the <em>Collection Log Tab</em> to roll.</div>
+          <div className="rate">{DROP_RATES[DropSource.COLLECTION_LOG]}% Drop Chance</div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Who speaks for a roll ─────────────────────────────────────────────────
 interface Speaker { who: string; head: string | null; headIsItem: boolean }
 interface PendingRoll extends Speaker { source: string; at: number }
 
@@ -362,9 +388,13 @@ const SOURCE_SPEAKER: Partial<Record<string, Speaker>> = {
   [DropSource.SLAYER_NIEVE]: { who: 'Nieve', head: npcHead('Nieve'), headIsItem: false },
   [DropSource.SLAYER_KRYSTILIA]: { who: 'Krystilia', head: npcHead('Krystilia'), headIsItem: false },
   [DropSource.SLAYER_DURADEL]: { who: 'Duradel', head: npcHead('Duradel'), headIsItem: false },
-  [DropSource.SLAYER_BOSS]: { who: 'Boss Task', head: `${WIKI_IMG}Purple_slayer_helmet.png`, headIsItem: true },
-  [DropSource.ACTIVITY_MINIGAME]: { who: 'Minigame', head: `${WIKI_IMG}Void_knight_mace.png`, headIsItem: true },
+  [DropSource.SLAYER_BOSS]: { who: 'Boss Task', head: BOSS_TASK_IMG, headIsItem: true },
+  [DropSource.ACTIVITY_MINIGAME]: { who: 'Minigame', head: MINIGAME_IMG, headIsItem: true },
 };
+const SLAYER_SOURCES = new Set<string>([
+  DropSource.SLAYER_BEGINNER, DropSource.SLAYER_MAZCHNA, DropSource.SLAYER_VANNAKA, DropSource.SLAYER_CHAELDAR, DropSource.SLAYER_KONAR,
+  DropSource.SLAYER_NIEVE, DropSource.SLAYER_KRYSTILIA, DropSource.SLAYER_DURADEL, DropSource.SLAYER_BOSS,
+]);
 const CLUE_SOURCES: [string, DropSource][] = [
   ['Beginner', DropSource.CLUE_BEGINNER], ['Easy', DropSource.CLUE_EASY], ['Medium', DropSource.CLUE_MEDIUM],
   ['Hard', DropSource.CLUE_HARD], ['Elite', DropSource.CLUE_ELITE], ['Master', DropSource.CLUE_MASTER],
@@ -376,6 +406,7 @@ for (const tier of TIER_ORDER) {
   SOURCE_SPEAKER[TIER_SOURCE[tier]] = { who: `${TIER_LABEL[tier]}-tier boss`, head: KEY_IMG, headIsItem: true };
 }
 const FARM_SOURCES = new Set(Object.keys(SOURCE_SPEAKER));
+const isFarmRoll = (h: LogEntry) => isRollEntry(h) && !!h.source && FARM_SOURCES.has(h.source);
 
 const speakerFor = (entry: LogEntry, pending: PendingRoll | null): Speaker => {
   if (pending && pending.source === entry.source && entry.timestamp >= pending.at) return pending;
@@ -387,64 +418,128 @@ const speakerFor = (entry: LogEntry, pending: PendingRoll | null): Speaker => {
   return SOURCE_SPEAKER[entry.source ?? ''] ?? { who: entry.source ?? 'Fate', head: KEY_IMG, headIsItem: true };
 };
 
-const LastRollDialogue: React.FC<{ history: readonly LogEntry[]; pending: PendingRoll | null }> = ({ history, pending }) => {
-  const [dismissed, setDismissed] = useState<string | null>(null);
-  const entry = useMemo(() => {
-    for (let i = history.length - 1; i >= 0; i--) {
-      const h = history[i];
-      if (isRollEntry(h) && h.source && FARM_SOURCES.has(h.source)) return h;
-    }
-    return null;
-  }, [history]);
-  // Only a roll made from this panel opens the dialogue, as talking to an NPC
-  // does; "Click here to continue" closes it until the next roll.
-  if (!entry || !pending || entry.id === dismissed) return null;
-  if (pending.source !== entry.source || entry.timestamp < pending.at) return null;
-  const speaker = speakerFor(entry, pending);
+/** What the speaker says about a roll, and what it paid. */
+const rollWords = (entry: LogEntry) => {
   const roll = typeof entry.rollValue === 'number' ? entry.rollValue : (entry.meta?.roll as number | undefined);
   const threshold = typeof entry.threshold === 'number' ? entry.threshold : (entry.meta?.threshold as number | undefined);
   const won = entry.result === 'SUCCESS';
   const keys = Number(entry.meta?.standardKeysAwarded ?? 1);
   const fate = Number(entry.meta?.fatePointsEarned ?? 0);
   const omni = entry.type === 'ROLL_OMNI';
+  const intro = entry.source && SLAYER_SOURCES.has(entry.source) ? 'Task done. ' : '';
   const rolled = roll !== undefined && threshold !== undefined
     ? `You rolled ${formatKeyRollValue(roll)}, needing ${formatKeyPercent(threshold)} or under. `
     : '';
   const verdict = entry.type === 'PITY'
     ? entry.message
-    : won ? `Fate smiles on you. ${entry.message}` : 'No Key this time, but Fate remembers.';
+    : won ? (omni ? `Fate smiles on you. ${entry.message}` : 'Fate smiles on you. Take this Key.') : 'No Key this time, but Fate remembers.';
+  return { roll, threshold, won, keys, fate, omni, line: `${intro}${rolled}${verdict}` };
+};
+
+const DialogueBody: React.FC<{ entry: LogEntry; speaker: Speaker }> = ({ entry, speaker }) => {
+  const w = rollWords(entry);
   return (
-    <div className="osrs-farm-dialogue-dock">
-      <button
-        type="button"
-        className="osrs-farm-dialogue"
-        onClick={() => setDismissed(entry.id)}
-        aria-label={`${speaker.who}: ${rolled}${verdict} Click here to continue`}
-      >
-        {speaker.head
-          ? <img className={`chathead${speaker.headIsItem ? ' item' : ' osrs-smooth'}`} src={speaker.head} alt="" aria-hidden="true" />
-          : <span />}
-        <span className="text">
-          <span className="who">{speaker.who}</span>
-          <span className="line">{rolled}{verdict}</span>
-          <span className="cont">Click here to continue</span>
+    <>
+      {speaker.head
+        ? <img className={`chathead${speaker.headIsItem ? ' item osrs-px' : ''}`} src={speaker.head} alt="" aria-hidden="true" />
+        : <span />}
+      <span className="text">
+        <span className="who">{speaker.who}</span>
+        <span className="line">{w.line}</span>
+        <span className="cont">Click here to continue</span>
+      </span>
+      {w.won ? (
+        <span className="osrs-slot won" title={w.omni ? 'Key and Omni-Key won' : 'Key won'}>
+          <img className="osrs-px" src={w.omni ? OMNI_IMG : KEY_IMG} alt={w.omni ? 'Omni-Key won' : 'Key won'} />
+          <span className="osrs-stack" style={{ color: '#00ff00' }}>+{w.omni ? 1 : w.keys}</span>
         </span>
-        {won ? (
-          <span className="osrs-slot won" title={omni ? 'Key and Omni-Key won' : 'Key won'}>
-            <img className="osrs-px" src={omni ? OMNI_IMG : KEY_IMG} alt={omni ? 'Omni-Key won' : 'Key won'} />
-            <span className="osrs-stack" style={{ color: '#00ff00' }}>+{omni ? 1 : keys}</span>
-          </span>
-        ) : fate > 0 ? <span className="fate">+{fate} Fate</span> : null}
+      ) : w.fate > 0 ? <span className="fate">+{w.fate} Fate</span> : null}
+    </>
+  );
+};
+
+const lastFarmRoll = (history: readonly LogEntry[]) => {
+  for (let i = history.length - 1; i >= 0; i--) if (isFarmRoll(history[i])) return history[i];
+  return null;
+};
+
+/** Compact: the last roll made from this panel answers in a dialogue docked at the bottom. */
+const DockedDialogue: React.FC<{ history: readonly LogEntry[]; pending: PendingRoll | null }> = ({ history, pending }) => {
+  const [dismissed, setDismissed] = useState<string | null>(null);
+  const entry = useMemo(() => lastFarmRoll(history), [history]);
+  if (!entry || !pending || entry.id === dismissed) return null;
+  if (pending.source !== entry.source || entry.timestamp < pending.at) return null;
+  const speaker = speakerFor(entry, pending);
+  return (
+    <div className="okf-dock">
+      <button type="button" className="okf-dialogue" onClick={() => setDismissed(entry.id)}
+        aria-label={`${speaker.who}: ${rollWords(entry).line} Click here to continue`}>
+        <DialogueBody entry={entry} speaker={speaker} />
       </button>
     </div>
   );
 };
 
+/** Wide: the "Last roll" window always holds the latest Farm Keys roll. */
+const LastRollWindow: React.FC<{ history: readonly LogEntry[]; pending: PendingRoll | null }> = ({ history, pending }) => {
+  const [dismissed, setDismissed] = useState<string | null>(null);
+  const entry = useMemo(() => lastFarmRoll(history), [history]);
+  const shown = entry && entry.id !== dismissed ? entry : null;
+  const speaker = shown ? speakerFor(shown, pending) : null;
+  return (
+    <div className="osrs-win okf-side">
+      <h2 className="okf-wtitle">Last roll</h2>
+      {shown && speaker ? (
+        <button type="button" className="okf-dialogue big" onClick={() => setDismissed(shown.id)}
+          aria-label={`${speaker.who}: ${rollWords(shown).line} Click here to continue`}>
+          <DialogueBody entry={shown} speaker={speaker} />
+        </button>
+      ) : (
+        <div className="okf-dialogue big empty"><span /><span className="text"><span className="line">No Farm Keys roll to show.</span></span></div>
+      )}
+    </div>
+  );
+};
+
+/** Wide: the latest Farm Keys rolls as game messages, newest first. */
+const RecentRolls: React.FC<{ history: readonly LogEntry[] }> = ({ history }) => {
+  const lines = useMemo(() => {
+    const out: LogEntry[] = [];
+    for (let i = history.length - 1; i >= 0 && out.length < 40; i--) if (isFarmRoll(history[i])) out.push(history[i]);
+    return out;
+  }, [history]);
+  return (
+    <div className="osrs-win okf-side grow">
+      <h2 className="okf-wtitle">Recent rolls</h2>
+      <div className="okf-recent">
+        {lines.length === 0 && <div className="ln">No Farm Keys rolls yet.</div>}
+        {lines.map((e) => {
+          const w = rollWords(e);
+          const who = speakerFor(e, null).who;
+          const need = w.threshold !== undefined ? formatKeyPercent(w.threshold) : '';
+          const detail = w.roll !== undefined
+            ? `Rolled ${formatKeyRollValue(w.roll)}, needed ${need}${w.won ? ' or under.' : `.${w.fate > 0 ? ` +${w.fate} Fate` : ''}`}`
+            : e.details ?? '';
+          return (
+            <div key={e.id} className="ln" title={`${who}: ${e.message} ${detail}`}>
+              <span style={{ color: '#0000ff' }}>{who}:</span>{' '}
+              <span style={{ color: w.won ? '#005f00' : '#7f0000' }}>{w.won ? 'Key found!' : 'No Key.'}</span> {detail}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 // ── The panel ─────────────────────────────────────────────────────────────
-export const OsrsFarmKeys: React.FC<OsrsFarmKeysProps> = (p) => {
+export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
   const { claimPet, petsClaimed, unlocks, bossStandardKeysAwarded, history } = useGame();
+  const p = useFarmModel();
+  const { farmTab: subTab, bossQuery } = useKeysView();
   const [pending, setPending] = useState<PendingRoll | null>(null);
-  const { subTab, isVanilla, regionBonus, effectiveRate, handleRoll } = p;
+  const [otherOpen, setOtherOpen] = useState(false);
+  const { isVanilla, regionBonus, effectiveRate, handleRoll } = p;
 
   const roll = (speaker: Speaker, source: string, chance: number, context?: KeyRollContext) => (pt: RollPoint) => {
     setPending({ ...speaker, source, at: Date.now() });
@@ -454,19 +549,13 @@ export const OsrsFarmKeys: React.FC<OsrsFarmKeysProps> = (p) => {
   // Rolls per source from the log, for each card's tally.
   const tally = useMemo(() => {
     const bySource = new Map<string, { rolled: number; keys: number }>();
-    const byBoss = new Map<string, { rolled: number; keys: number }>();
     for (const h of history) {
-      if (!isRollEntry(h) || !h.source || !FARM_SOURCES.has(h.source)) continue;
+      if (!isFarmRoll(h)) continue;
       const won = h.result === 'SUCCESS' ? 1 : 0;
-      const s = bySource.get(h.source) ?? { rolled: 0, keys: 0 };
-      bySource.set(h.source, { rolled: s.rolled + 1, keys: s.keys + won });
-      const boss = h.meta?.bossName as string | undefined;
-      if (boss) {
-        const b = byBoss.get(boss) ?? { rolled: 0, keys: 0 };
-        byBoss.set(boss, { rolled: b.rolled + 1, keys: b.keys + won });
-      }
+      const s = bySource.get(h.source!) ?? { rolled: 0, keys: 0 };
+      bySource.set(h.source!, { rolled: s.rolled + 1, keys: s.keys + won });
     }
-    return { bySource, byBoss };
+    return bySource;
   }, [history]);
   const tallyText = (t: { rolled: number; keys: number } | undefined) =>
     t && t.rolled ? `${t.rolled} rolled · ${t.keys} Key${t.keys === 1 ? '' : 's'}` : '0 rolled';
@@ -475,41 +564,36 @@ export const OsrsFarmKeys: React.FC<OsrsFarmKeysProps> = (p) => {
 
   const slayerCards: CardModel[] = p.slayers.map((m) => {
     const rate = effectiveRate(m.source);
+    const isBossTask = m.source === DropSource.SLAYER_BOSS;
     const body = npcBody(m.name);
-    const isItem = m.source === DropSource.SLAYER_BOSS;
     const sharer = p.slayers.find((o) => o.source === m.source);
     const shared = sharer && sharer.name !== m.name;
-    const head = isItem ? null : npcHead(m.name);
+    const head = isBossTask ? BOSS_TASK_IMG : npcHead(m.name);
     return {
       id: m.name,
       name: m.name,
       sub: m.subText,
       rate,
       bonus: regionBonus,
-      art: body ? { kind: 'body', src: body } : { kind: 'wiki', src: m.image },
+      art: isBossTask ? { kind: 'item', src: BOSS_TASK_IMG } : body ? { kind: 'body', src: body } : { kind: 'wiki', src: m.image },
       status: ready,
-      lines: [{ text: shared ? `Shares ${sharer!.name}’s odds` : tallyText(tally.bySource.get(m.source)), color: '#ffffff' }],
+      stats: shared ? `Shares ${sharer!.name}’s odds` : tallyText(tally.get(m.source)),
       btn: 'Roll',
       title: `${m.name}: ${gemFor(rate).label} (${gemFor(rate).name}), ${rate}% per roll`,
       examine: `${m.subText}. ${rate}% chance of a Key per task.`,
-      onRoll: roll({ who: m.name, head: head ?? m.image, headIsItem: isItem || !head }, m.source, DROP_RATES[m.source]),
+      onRoll: roll({ who: m.name, head: head ?? m.image, headIsItem: isBossTask || !head }, m.source, DROP_RATES[m.source]),
     };
   });
 
   const clueCards: CardModel[] = p.clues.map((c) => {
     const baseRate = DROP_RATES[c.source];
     const rate = isVanilla ? effectiveVanillaClueRate(baseRate, p.clueKeysAwarded) : effectiveRate(c.source);
-    const lines: CardModel['lines'] = [{ text: tallyText(tally.bySource.get(c.source)), color: '#ffffff' }];
+    let extra: CardModel['extra'];
     if (isVanilla) {
       const onboarding = p.clueKeysAwarded < CLUE_ONBOARDING_MINIMUMS.length && rate > baseRate;
-      lines.push({
-        text: `First clue Keys: ${Math.min(p.clueKeysAwarded, CLUE_ONBOARDING_MINIMUMS.length)} of ${CLUE_ONBOARDING_MINIMUMS.length}`,
-        color: 'var(--osrs-tan, #c8b897)',
-      });
-      lines.push({
-        text: onboarding ? `${rate}% for your first Keys` : (p.clueKeysAwarded >= CLUE_ONBOARDING_MINIMUMS.length ? 'Normal tier rates apply' : `${rate}% tier rate`),
-        color: onboarding ? '#00ff00' : 'var(--osrs-tan, #c8b897)',
-      });
+      extra = onboarding
+        ? { text: `${rate}% for your first Keys (${Math.min(p.clueKeysAwarded, CLUE_ONBOARDING_MINIMUMS.length)} of ${CLUE_ONBOARDING_MINIMUMS.length})`, color: '#00ff00' }
+        : { text: p.clueKeysAwarded >= CLUE_ONBOARDING_MINIMUMS.length ? 'Normal tier rates apply' : `${rate}% tier rate`, color: 'var(--osrs-tan, #c8b897)' };
     }
     const name = `${c.tier} clue`;
     const sprite = clueSprite(c.tier);
@@ -521,7 +605,8 @@ export const OsrsFarmKeys: React.FC<OsrsFarmKeysProps> = (p) => {
       bonus: isVanilla ? 0 : regionBonus,
       art: { kind: 'item', src: sprite },
       status: ready,
-      lines,
+      extra,
+      stats: tallyText(tally.get(c.source)),
       btn: 'Roll',
       title: `${name}: ${gemFor(rate).label} (${gemFor(rate).name}), ${rate}% per roll`,
       examine: `Clue scroll (${c.tier.toLowerCase()}). ${rate}% chance of a Key per casket.`,
@@ -532,7 +617,7 @@ export const OsrsFarmKeys: React.FC<OsrsFarmKeysProps> = (p) => {
     };
   });
 
-  const q = p.bossQuery.trim().toLowerCase();
+  const q = bossQuery.trim().toLowerCase();
   const vanillaBossCards: CardModel[] = isVanilla ? p.vanillaBosses
     .filter((name) => name.toLowerCase().includes(q))
     .map((name) => {
@@ -544,10 +629,6 @@ export const OsrsFarmKeys: React.FC<OsrsFarmKeysProps> = (p) => {
       const body = npcBody(name);
       const head = npcHead(name);
       const classLabel = bossClass === 'brutus' ? 'Low' : TIER_LABEL[bossClass];
-      const lines: CardModel['lines'] = [];
-      if (note) lines.push({ text: note, color: '#ffff00', wrap: true });
-      lines.push({ text: `${stage.awarded} of ${stage.cap} Keys paid`, color: '#ffffff' });
-      if (!stage.capped && stage.nextRate !== null) lines.push({ text: `${stage.nextRate}% next`, color: 'var(--osrs-tan, #c8b897)' });
       const rates = stage.rates.map((r) => `${r}%`).join(', then ');
       return {
         id: name,
@@ -556,8 +637,13 @@ export const OsrsFarmKeys: React.FC<OsrsFarmKeysProps> = (p) => {
         rate: stage.capped ? (stage.rates[stage.rates.length - 1] ?? 0) : rate,
         bonus: 0,
         art: body ? { kind: 'body', src: body, big: isBigBody(name) } : { kind: 'wikiName', name },
-        status: stage.capped ? { text: 'All Keys paid', color: 'var(--osrs-muted, #8a7c66)' } : { text: `${rate}% now`, color: '#0dc10d' },
-        lines,
+        status: stage.capped
+          ? { text: 'Stash empty: kills no longer roll', color: 'var(--osrs-muted, #8a7c66)' }
+          : { text: 'Ready to roll', color: '#0dc10d' },
+        extra: note ? { text: note, color: '#ffff00' } : undefined,
+        stats: stage.capped
+          ? `${stage.awarded} of ${stage.cap} Keys paid`
+          : `Stash ${stage.cap} Key${stage.cap === 1 ? '' : 's'}: ${rates} · ${stage.awarded} paid`,
         stash: { cap: stage.cap, awarded: stage.awarded },
         disabled: stage.capped,
         btn: stage.capped ? 'Spent' : 'Roll',
@@ -579,13 +665,13 @@ export const OsrsFarmKeys: React.FC<OsrsFarmKeysProps> = (p) => {
       sub: a.subText,
       rate,
       bonus: regionBonus,
-      art: { kind: 'wiki', src: a.image },
+      art: { kind: 'item', src: MINIGAME_IMG },
       status: ready,
-      lines: [{ text: tallyText(tally.bySource.get(a.source)), color: '#ffffff' }],
+      stats: tallyText(tally.get(a.source)),
       btn: 'Roll',
       title: `${a.name}: ${gemFor(rate).label} (${gemFor(rate).name}), ${rate}% per roll`,
       examine: `${a.subText}. ${rate}% chance of a Key per game.`,
-      onRoll: roll({ who: a.name, head: a.image, headIsItem: true }, a.source, DROP_RATES[a.source]),
+      onRoll: roll({ who: a.name, head: MINIGAME_IMG, headIsItem: true }, a.source, DROP_RATES[a.source]),
     };
   });
 
@@ -595,9 +681,6 @@ export const OsrsFarmKeys: React.FC<OsrsFarmKeysProps> = (p) => {
     BOSSING: isVanilla ? p.vanillaBosses.length : BOSSES_LIST.length,
     ACTIVITIES: p.activities.length + 1,
   };
-  const TABS: { id: FarmSubTab; label: string }[] = [
-    { id: 'SLAYER', label: 'Slayer' }, { id: 'CLUES', label: 'Clues' }, { id: 'BOSSING', label: 'Bossing' }, { id: 'ACTIVITIES', label: 'Activities' },
-  ];
 
   const ladderRows: LadderRow[] = (() => {
     if (subTab === 'SLAYER') return buildLadder(slayerCards.map((c) => ({ label: c.name, rate: c.rate, live: true })));
@@ -609,131 +692,118 @@ export const OsrsFarmKeys: React.FC<OsrsFarmKeysProps> = (p) => {
     return buildLadder(activityCards.map((c) => ({ label: c.name, rate: c.rate, live: true })));
   })();
 
+  const categoryButtons = (icons: Record<FarmSubTab, string>) => (
+    <div className={`okf-cats${wide ? ' wide' : ''}`} role="tablist" aria-label="Key sources">
+      {TABS.map((t) => (
+        <button key={t.id} type="button" role="tab" aria-selected={subTab === t.id} className="okf-cat" onClick={() => setFarmTab(t.id)}>
+          <img className="osrs-px" src={icons[t.id]} alt="" aria-hidden="true" />
+          {t.label}
+          <span className="count">{counts[t.id]}</span>
+        </button>
+      ))}
+    </div>
+  );
+
+  const bossSearch = subTab === 'BOSSING' && (
+    <input className="okf-search" value={bossQuery} onChange={(e) => setBossQuery(e.target.value)}
+      placeholder={isVanilla ? VANILLA_BOSS_SEARCH_PLACEHOLDER : 'Search bosses…'} aria-label="Search bosses" />
+  );
+
+  // The long all-boss list outside Vanilla, grouped by tier (both sizes).
+  const tierGroups = !isVanilla && subTab === 'BOSSING' && (
+    <>
+      {TIER_ORDER.map((tier: BossTier) => {
+        const list = BOSSES_LIST.filter((b) => bossTier(b) === tier && b.toLowerCase().includes(q));
+        if (list.length === 0) return null;
+        const source = TIER_SOURCE[tier];
+        const rate = effectiveRate(source);
+        const gem = gemFor(rate);
+        return (
+          <div key={tier} className="okf-group">
+            <div className="okf-group-head">
+              <img className="osrs-px" src={gem.src} alt="" aria-hidden="true" />
+              <span style={{ fontFamily: "'RSBold', sans-serif", color: gem.color }}>{gem.label}</span>
+              <span style={{ color: '#ff981f' }}>{TIER_LABEL[tier]}-tier</span>
+              <span style={{ marginLeft: 'auto', color: '#ffff00' }}>{rate}%</span>
+              <span className="small">· {list.length}</span>
+            </div>
+            <div className={wide ? 'okf-group-rows' : undefined}>
+              {list.map((name) => (
+                <BossRow key={name} name={name} rate={rate} bonus={regionBonus} tierLabel={TIER_LABEL[tier]}
+                  onRoll={roll({ who: name, head: npcHead(name) ?? KEY_IMG, headIsItem: !npcHead(name) }, source, DROP_RATES[source])} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+      {BOSSES_LIST.filter((b) => b.toLowerCase().includes(q)).length === 0 && (
+        <div className="okf-empty">No bosses match “{bossQuery}”.</div>
+      )}
+    </>
+  );
+
+  const cards = subTab === 'SLAYER' ? slayerCards : subTab === 'CLUES' ? clueCards : subTab === 'BOSSING' ? vanillaBossCards : activityCards;
+  const emptyBosses = subTab === 'BOSSING' && isVanilla && vanillaBossCards.length === 0
+    ? <div className="okf-empty">{vanillaBossSearchEmptyMessage(bossQuery)}</div> : null;
+  const petClaim = subTab === 'ACTIVITIES'
+    ? <OsrsPetClaim claimed={petsClaimed} wide={wide} onClaim={(pet, e) => claimPet(pet, e.clientX, e.clientY)} /> : null;
+  const other = otherOpen && (
+    <OtherSources journalMin={p.journalMin} journalMax={p.journalMax} statsIcon={p.statsIcon} collLogIcon={p.collLogIcon}
+      onClose={() => setOtherOpen(false)} className={wide ? 'at-wide' : 'at-compact'} />
+  );
+  const otherBtn = (
+    <button type="button" className="osrs-btn okf-small-btn" aria-expanded={otherOpen} onClick={() => setOtherOpen((o) => !o)}>Other sources</button>
+  );
+
+  if (!wide) {
+    return (
+      <div className="okf okf-compact" data-osrs-farm="">
+        {categoryButtons(COMPACT_TAB_ICONS)}
+        <div className="osrs-inner okf-list">
+          <div className="okf-list-scroll">
+            {bossSearch}
+            {subTab === 'BOSSING' && !isVanilla ? tierGroups : cards.map((c) => <SourceRow key={c.id} card={c} />)}
+            {emptyBosses}
+            {petClaim}
+          </div>
+          <div className="okf-list-foot">
+            {otherBtn}
+          </div>
+          {other}
+          <DockedDialogue history={history} pending={pending} />
+        </div>
+      </div>
+    );
+  }
+
+  const cols = subTab === 'SLAYER' || cards.length > 6 ? 5 : 3;
   return (
-    <div className="osrs-farm" data-osrs-farm="">
-      <div className="osrs-farm-tabs" role="tablist" aria-label="Key sources">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={subTab === t.id}
-            className="osrs-farm-tab"
-            onClick={() => p.setSubTab(t.id)}
-          >
-            <img className="osrs-px" src={p.tabIcons[t.id]} alt="" aria-hidden="true" />
-            {t.label}
-            <span className="osrs-farm-count">{counts[t.id]}</span>
-          </button>
-        ))}
-      </div>
-
-      <div className="osrs-farm-blurb">
-        <span>{subTab === 'BOSSING' && isVanilla ? VANILLA_BOSS_BLURB : BLURBS[subTab]}</span>
-        <span className="hint"><b>Gem = odds tier.</b> Same gem, same chance, on every tab.</span>
-      </div>
-
-      {subTab === 'SLAYER' && (
-        <div className="osrs-farm-grid">{slayerCards.map((c) => <NpcCard key={c.id} card={c} />)}</div>
-      )}
-
-      {subTab === 'CLUES' && (
-        <div className="osrs-farm-grid">{clueCards.map((c) => <NpcCard key={c.id} card={c} />)}</div>
-      )}
-
-      {subTab === 'BOSSING' && (
-        <>
-          <input
-            className="osrs-farm-search"
-            value={p.bossQuery}
-            onChange={(e) => p.setBossQuery(e.target.value)}
-            placeholder={isVanilla ? VANILLA_BOSS_SEARCH_PLACEHOLDER : 'Search bosses…'}
-            aria-label="Search bosses"
-          />
-          {isVanilla ? (
-            vanillaBossCards.length > 0
-              ? <div className="osrs-farm-grid">{vanillaBossCards.map((c) => <NpcCard key={c.id} card={c} />)}</div>
-              : <div className="osrs-farm-empty">{vanillaBossSearchEmptyMessage(p.bossQuery)}</div>
-          ) : (
-            <>
-              {TIER_ORDER.map((tier: BossTier) => {
-                const list = BOSSES_LIST.filter((b) => bossTier(b) === tier && b.toLowerCase().includes(q));
-                if (list.length === 0) return null;
-                const source = TIER_SOURCE[tier];
-                const rate = effectiveRate(source);
-                const gem = gemFor(rate);
-                return (
-                  <div key={tier} className="osrs-win" style={{ padding: 2, boxShadow: `inset 0 0 0 2px ${gem.color}` }}>
-                    <div className="osrs-farm-group-head">
-                      <img className="osrs-px" src={gem.src} alt="" aria-hidden="true" />
-                      <span style={{ fontFamily: 'RSBold, sans-serif', color: gem.color }}>{gem.label}</span>
-                      <span className="osrs-title" style={{ marginLeft: 4 }}>{TIER_LABEL[tier]}-tier</span>
-                      <span style={{ marginLeft: 'auto', color: '#ffff00' }}>{rate}%</span>
-                      <span style={{ fontFamily: 'RSSmall, sans-serif', color: 'var(--osrs-tan, #c8b897)' }}>· {list.length}</span>
-                    </div>
-                    <div className="osrs-inner osrs-farm-rows">
-                      {list.map((name) => (
-                        <BossRow
-                          key={name}
-                          name={name}
-                          rate={rate}
-                          bonus={regionBonus}
-                          tierLabel={TIER_LABEL[tier]}
-                          onRoll={roll({ who: name, head: npcHead(name) ?? KEY_IMG, headIsItem: !npcHead(name) }, source, DROP_RATES[source])}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-              {BOSSES_LIST.filter((b) => b.toLowerCase().includes(q)).length === 0 && (
-                <div className="osrs-farm-empty">No bosses match “{p.bossQuery}”.</div>
-              )}
-            </>
-          )}
-        </>
-      )}
-
-      {subTab === 'ACTIVITIES' && (
-        <div className="osrs-farm-grid">
-          {activityCards.map((c) => <NpcCard key={c.id} card={c} />)}
-          <OsrsPetClaim claimed={petsClaimed} onClaim={(pet, e) => claimPet(pet, e.clientX, e.clientY)} />
+    <div className="okf okf-wide" data-osrs-farm="">
+      <div className="osrs-win okf-main">
+        <OsrsKeysTabs />
+        {categoryButtons(WIDE_TAB_ICONS)}
+        <div className="okf-blurb">
+          <span>{subTab === 'BOSSING' && isVanilla ? VANILLA_BOSS_BLURB : BLURBS[subTab]}</span>
+          <span className="hint"><b>Gem = odds tier.</b> Same gem, same chance, on every tab.</span>
+          {otherBtn}
         </div>
-      )}
-
-      <Ladder title={LADDER_TITLES[subTab]} rows={ladderRows} />
-
-      <div className="osrs-win" style={{ padding: 4 }}>
-        <h3 className="osrs-title" style={{ margin: '2px 0 4px', textAlign: 'center' }}>Other Key Sources</h3>
-        <div className="osrs-inner osrs-farm-other">
-          <div className="osrs-farm-other-row" data-examine={`Click unlocked skills in the Dashboard to roll. Chance = Level / 5 (up to ${LEVEL_ROLL_MAX.toFixed(1)}%).`} data-examine-name="Skill Rolling">
-            <img className="osrs-px" src={p.statsIcon} alt="" aria-hidden="true" />
-            <div>
-              <div className="label">Skill Rolling</div>
-              <div className="desc">Click unlocked skills in the <em>Dashboard</em> to roll.</div>
-              <div className="rate">Chance = Level / 5 (up to {LEVEL_ROLL_MAX.toFixed(1)}%)</div>
-            </div>
+        {bossSearch}
+        {subTab === 'BOSSING' && !isVanilla ? (
+          <div className="osrs-inner okf-tiers">{tierGroups}</div>
+        ) : (
+          <div className="okf-grid" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+            {cards.map((c) => <NpcCard key={c.id} card={c} />)}
+            {petClaim}
+            {emptyBosses}
           </div>
-          <div className="osrs-farm-other-row" data-examine={`Complete Quests, Diaries and CAs in the Journal Tab. Variable (${p.journalMin}% - ${p.journalMax}%).`} data-examine-name="Journal Activities">
-            <img src={`${WIKI_IMG}Quest_point_icon.png`} alt="" aria-hidden="true" />
-            <div>
-              <div className="label">Journal Activities</div>
-              <div className="desc">Complete Quests, Diaries &amp; CAs in the <em>Journal Tab</em>.</div>
-              <div className="rate">Variable ({p.journalMin}% - {p.journalMax}%)</div>
-            </div>
-          </div>
-          <div className="osrs-farm-other-row" data-examine={`Log new unique items in the Collection Log Tab to roll. ${DROP_RATES[DropSource.COLLECTION_LOG]}% Drop Chance.`} data-examine-name="Collection Log">
-            <img src={p.collLogIcon} alt="" aria-hidden="true" />
-            <div>
-              <div className="label">Collection Log</div>
-              <div className="desc">Log new unique items in the <em>Collection Log Tab</em> to roll.</div>
-              <div className="rate">{DROP_RATES[DropSource.COLLECTION_LOG]}% Drop Chance</div>
-            </div>
-          </div>
-        </div>
+        )}
+        {other}
       </div>
-
-      <LastRollDialogue history={history} pending={pending} />
+      <div className="okf-col">
+        <LastRollWindow history={history} pending={pending} />
+        {ladderRows.length > 0 && <Ladder title={LADDER_TITLES[subTab]} rows={ladderRows} />}
+        <RecentRolls history={history} />
+      </div>
     </div>
   );
 };

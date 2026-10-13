@@ -106,7 +106,7 @@ const Cell = ({ columnIndex, rowIndex, style, data }: any) => {
  * Everything the Collection Log shows and does, shared by the classic log and
  * the OSRS layout so both read the same items, counts and click handler.
  */
-export const useCollectionLogModel = (searchTerm: string) => {
+export const useCollectionLogModel = (searchTerm: string, opts?: { showReachDefault?: boolean }) => {
   const { unlocks: savedUnlocks, collectionLogIdentity, logCollectionItem, rollForKey } = useGame();
   const identityReview = useMemo(() => collectionIdentityReview(savedUnlocks.collectionLog, collectionLogIdentity ? [] : collectionLogSync.legacyMappings(), COLLECTION_LOG_DATA, collectionLogIdentity), [savedUnlocks.collectionLog, collectionLogIdentity]);
   const unlocks = useMemo(() => ({ ...savedUnlocks, collectionLog: Object.fromEntries(Object.entries(savedUnlocks.collectionLog).filter(([id]) => !identityReview.blockedIds.has(Number(id)))) }), [savedUnlocks, identityReview]);
@@ -263,7 +263,7 @@ export const useCollectionLogModel = (searchTerm: string) => {
   // Reachable %: how much of the log is even obtainable given current unlocks
   // (boss/minigame sources), and which unlocks would open the most new slots.
   const reach = useMemo(() => collogReachability(unlocks), [unlocks, syncVersion]);
-  const [showReach, setShowReach] = useState(false);
+  const [showReach, setShowReach] = useState(opts?.showReachDefault ?? false);
 
   const pendingReviewCount = collectionLogSync.pendingAdditions.length;
 

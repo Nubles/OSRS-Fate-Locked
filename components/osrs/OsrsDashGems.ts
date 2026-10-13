@@ -38,3 +38,17 @@ export const tint = (hex: string, a: number): string => {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
 };
+
+/**
+ * Item sprite by OSRS item id: the packed local copy under osrs-ui/items when
+ * there is one. Pair it with {@link itemSpriteFallback} on the <img>'s
+ * onError so items without a local sprite load the wiki image instead.
+ */
+export const itemSpriteSrc = (id: number): string => itemSrc(id);
+export const wikiImageSrc = (file: string): string =>
+  `https://oldschool.runescape.wiki/images/${(file || '').replace(/ /g, '_')}`;
+export const itemSpriteFallback = (wikiFile?: string) => (e: { currentTarget: HTMLImageElement }) => {
+  const img = e.currentTarget;
+  if (wikiFile && !img.dataset.fallback) { img.dataset.fallback = '1'; img.src = wikiImageSrc(wikiFile); return; }
+  img.style.visibility = 'hidden';
+};

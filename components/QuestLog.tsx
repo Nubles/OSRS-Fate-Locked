@@ -429,9 +429,13 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
     );
 };
 
-export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch = '', suspendModals = false }) => {
+/**
+ * The Quest Journal's state, filters, sort and handlers, shared by the
+ * classic Quest Log and the OSRS layout's Journal window so both read the
+ * same rules. Filter state persists in localStorage under the same keys.
+ */
+export const useQuestJournal = (externalSearch = '') => {
   const { unlocks, completeQuest, advisorsEnabled, gameModeId } = useGame();
-  const isOsrs = useIsOsrsUi();
   // Filter state is persisted in localStorage so returning players don't have
   // to re-apply their preferred view every session.
   const [filter, setFilter] = useLocalStorage<JournalStatus>('jrnl:quest:filter', 'ALL');
@@ -592,6 +596,32 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
 
   const openSkillPopover = (skill: string, req: number, cur: number, rect: DOMRect) =>
     setSkillPopover({ skill, requiredLevel: req, currentLevel: cur, anchorRect: rect });
+
+  return {
+    unlocks, gameModeId, advisorsEnabled,
+    filter, setFilter, groupBySeries, setGroupBySeries, advisorMode, setAdvisorMode,
+    localSearch, setLocalSearch, searchTerm, regionFilter, setRegionFilter, diffFilter, setDiffFilter,
+    sortMode, setSortMode, highlightedId, skillPopover, setSkillPopover, focusCard,
+    areaRoutes, allQuests, questRegions, activeRegion, filteredQuests, statusCounts,
+    showAdvisorStrip, rankedQuests, mainQuests, miniquests, seriesGroups, handleQuestToggle,
+    allEntriesByKind, totalQuests, totalMinis, completedMain, completedMinis, currentQP,
+    maxQP: allEntriesByKind.quests.reduce((acc, quest) => acc + quest.points, 0),
+    openSkillPopover, wikiUrl: getWikiUrl, difficultyLabel: (quest: QuestData) => getDifficultyLabel(quest.difficulty),
+  };
+};
+
+export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch = '', suspendModals = false }) => {
+  const isOsrs = useIsOsrsUi();
+  const {
+    unlocks, gameModeId, advisorsEnabled,
+    filter, setFilter, groupBySeries, setGroupBySeries, advisorMode, setAdvisorMode,
+    localSearch, setLocalSearch, searchTerm, setRegionFilter, diffFilter, setDiffFilter,
+    sortMode, setSortMode, highlightedId, skillPopover, setSkillPopover, focusCard,
+    questRegions, activeRegion, statusCounts,
+    showAdvisorStrip, rankedQuests, mainQuests, miniquests, seriesGroups, handleQuestToggle,
+    allEntriesByKind, totalQuests, totalMinis, completedMain, completedMinis, currentQP,
+    openSkillPopover,
+  } = useQuestJournal(externalSearch);
 
   // OSRS layout: the same filters, sort and handlers, drawn as the in-game
   // quest list (grouped by type or by series, as chosen) and journal scroll.

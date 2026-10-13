@@ -1,5 +1,4 @@
 import React from 'react';
-import { WikiIcon } from '../WikiIcon';
 import './osrs-journal.css';
 
 /**
@@ -26,14 +25,15 @@ export const SkillIcon: React.FC<{ skill: string }> = ({ skill }) => {
 export type JournalKind = 'quest' | 'diary' | 'ca';
 
 const KIND_FILE: Record<JournalKind, string> = {
-  quest: 'Quest_point_icon.png',
-  diary: 'Achievement_Diaries_icon.png',
-  ca: 'Combat_Achievements_icon.png',
+  quest: 'quest_point_icon.png',
+  diary: 'achievement_diaries_icon.png',
+  ca: 'combat_achievements_icon.png',
 };
 
-/** The quest point, diary and combat achievement icons from the game. */
+/** The quest point, diary and combat achievement icons from the game (local sprites). */
 export const JournalIcon: React.FC<{ kind: JournalKind; size?: number }> = ({ kind, size = 18 }) => (
-  <WikiIcon file={KIND_FILE[kind]} alt="" size={size} className="osrs-px" />
+  <img src={osrsAsset(`items/${KIND_FILE[kind]}`)} alt="" aria-hidden="true" width={size} height={size}
+    className="osrs-px" style={{ objectFit: 'contain', display: 'inline-block', flexShrink: 0 }} draggable={false} />
 );
 
 export const Legend: React.FC<{ items: Array<{ label: string; cls: string }> }> = ({ items }) => (
