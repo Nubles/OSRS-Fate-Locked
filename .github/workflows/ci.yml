@@ -46,6 +46,9 @@ jobs:
         run: npm run build
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
+          # Same 40-character id as the deploy build, so the entry chunk's
+          # gzip size (checked against its budget) matches what will ship.
+          BUILD_ID: ${{ github.sha }}
 
   # The test suite is split into three groups that run side by side, so CI
   # finishes in about half the time of one runner working through all of it.

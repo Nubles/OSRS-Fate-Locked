@@ -343,8 +343,11 @@ describe('CI workflow contract', () => {
     expectInOrder(commands, pullRequestCommandOrder);
     expect(commands).toEqual(pullRequestCommandOrder);
     expectNoNpmInstall(commands);
+    // The same 40-character BUILD_ID as the deploy build: the id is in the
+    // entry chunk, so a different length moves its gzip size against the
+    // budget, and a PR could pass CI and then fail its deploy.
     expect(qualityJob).toMatch(
-      /- name: Build\n\s+run: npm run build\n\s+env:\n\s+VITE_BASE: \/\$\{\{ github\.event\.repository\.name \}\}\//,
+      /- name: Build\n\s+run: npm run build\n\s+env:\n\s+VITE_BASE: \/\$\{\{ github\.event\.repository\.name \}\}\/\n\s+BUILD_ID: \$\{\{ github\.sha \}\}/,
     );
 
     expectShardedTestJob(yamlBlock(jobsBlock, 'tests', 2));
