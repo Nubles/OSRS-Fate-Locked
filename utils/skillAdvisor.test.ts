@@ -77,22 +77,6 @@ describe('rankSkillBottlenecks', () => {
     }
   });
 
-  it('targets the NEAREST gating threshold for a skill', () => {
-    const ranked = rankSkillBottlenecks(lowSkills());
-    for (const r of ranked) {
-      // No quest requiring this skill at a level strictly between current and
-      // target should have been skipped if it would have unlocked something —
-      // i.e. the target is the smallest threshold that unlocks anything.
-      const lowerThresholds = Object.values(QUEST_DATA)
-        .map((q) => (q.skills as Record<string, number>)[r.id])
-        .filter((lvl) => lvl && lvl > r.currentLevel && lvl < r.targetLevel);
-      // A lower threshold may exist but only if it unlocked nothing; we can't
-      // easily re-derive that here, so just assert target is a real requirement.
-      expect(Number.isFinite(r.targetLevel)).toBe(true);
-      expect(lowerThresholds.every((l) => l < r.targetLevel)).toBe(true);
-    }
-  });
-
   it('cascade score is at least the direct score', () => {
     const ranked = rankSkillBottlenecks(lowSkills());
     for (const r of ranked) {

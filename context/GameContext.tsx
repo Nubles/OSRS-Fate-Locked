@@ -171,7 +171,7 @@ const completionFailure = (reason: string): CompletionResult => {
 
 type RollEventMeta = { roll: number; baseThreshold: number; threshold: number };
 type UnlockEventMeta = { item: string; cost: number; category?: TableType };
-type RitualEventMeta = { type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE' | 'GAMBIT' | 'CARTOGRAPHER'; won?: boolean; chunk?: string };
+type RitualEventMeta = { type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE' | 'GAMBIT' | 'CARTOGRAPHER'; won?: boolean; stake?: number; keysWon?: number; chunk?: string };
 type LevelUpEventMeta = { skill: string; level: number; totalLevel: number; chaosKeysAwarded: number; chaosKeyAwarded: boolean };
 
 type GameEventMeta = (RollEventMeta & DetectedGameEventMeta) | UnlockEventMeta | RitualEventMeta | LevelUpEventMeta;
@@ -1385,7 +1385,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           details: won ? `Staked ${stake} Fate and won.` : `Staked ${stake} Fate and lost it.`,
           meta: { ritual: 'GAMBIT', fateCost: stake, keysAwarded: won ? keysWon : 0 },
         }],
-        lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'GAMBIT', won } }
+        lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'GAMBIT', won, stake, keysWon: won ? keysWon : 0 } }
       };
     }
 

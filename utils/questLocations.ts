@@ -90,17 +90,3 @@ export function questLocations(questName: string, unlocks: UnlockState, gameMode
   const hit = chunkContentService.entityLocations(questName, ['quest']);
   return summariseQuestPlaces(hit?.locations ?? [], unlocks, gameModeId);
 }
-
-/**
- * Compatibility helper for legacy display callers. Canonical authored access is
- * the only source of `met`; chunk evidence may be shown separately through the
- * supplied `QuestLocationInfo`, but can never promote a blocked quest.
- */
-export function refineQuestRegion(
-  authoredMet: boolean,
-  _info: QuestLocationInfo,
-): { met: boolean; via: 'authored' | 'chunks' | 'locked' } {
-  return authoredMet
-    ? { met: true, via: 'authored' }
-    : { met: false, via: 'locked' };
-}

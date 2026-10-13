@@ -206,11 +206,6 @@ describe('official quest and miniquest audit coverage', () => {
     const partial = QUEST_DATA['RFD: Sir Amik Varze'];
     expect(questRequirementFingerprint(partial)).not.toBe(questRequirementFingerprint({ ...partial, questProgress: undefined }));
   });
-  it('matches official, runtime, and audit IDs one-to-one', () => {
-    expect(validateQuestRequirementAudit(QUEST_DATA, official, audit).errors)
-      .toEqual([]);
-  });
-
   it('has no unaudited official or runtime entry', () => {
     expect(validateQuestRequirementAudit(QUEST_DATA, official, audit).errors).toEqual([]);
     expect(audit.entries.filter(entry =>

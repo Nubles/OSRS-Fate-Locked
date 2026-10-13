@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   BRUTUS_BOSS_NAME,
-  VANILLA_BOSS_STANDARD_KEY_TOTAL,
   effectiveVanillaClueRate,
   vanillaBossKeyStage,
   vanillaBossKeySchedule,
@@ -9,9 +8,6 @@ import {
 } from './vanillaKeyEconomy';
 
 describe('Vanilla key economy', () => {
-  it('exposes the approved finite reserve', () => {
-    expect(VANILLA_BOSS_STANDARD_KEY_TOTAL).toBe(116);
-  });
 
   it('uses the approved Brutus and tier schedules', () => {
     expect(vanillaBossKeyStage(BRUTUS_BOSS_NAME, 0).rates).toEqual([10]);

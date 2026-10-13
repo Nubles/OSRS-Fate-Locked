@@ -37,9 +37,9 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-10-quest-item-checks',
+    id: '2026-10-13-quest-item-checks',
     title: 'Quests and diaries check the items you need',
-    date: '2026-10-10',
+    date: '2026-10-13',
     sections: {
       changed: [
         'Quests and diary tasks now need what their items need: the slot to wear it, the shop that sells it, or the skill to make it.',
@@ -50,6 +50,44 @@ export const CHANGELOG_RELEASES = [
       ],
       fixed: [
         'The Doable tab no longer lists quests in areas you can’t reach. Diary tasks you can do now say Can do now.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-13-old-compensation-offer',
+    title: 'No more surprise compensation offer',
+    date: '2026-10-13',
+    sections: {
+      fixed: [
+        'Runs played since Weighted Fate no longer get its old compensation offer by mistake.',
+        'It could pop up after opening the RS3 tracker in the same browser as your OSRS run.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-12-faster-updates',
+    title: 'Faster updates',
+    date: '2026-10-12',
+    sections: {
+      changed: [
+        'New versions of the tracker now go live in about half the time.',
+        'We tidied up old code nothing used anymore. Your run and the app work the same as before.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-11-ritual-animations',
+    title: 'New Void Altar animations',
+    date: '2026-10-11',
+    sections: {
+      added: [
+        'Every ritual now has its own animation, drawn with real OSRS item sprites and the RuneScape font.',
+        'The Void Gambit flips a coin over a portal, and you see the Keys you won or the Fate you lost.',
+        'The Cartographer unrolls the world map and marks your new chunk with an X.',
+      ],
+      changed: [
+        'The Void Altar looks like an in-game window now.',
+        'Click or press Esc to skip an animation, or turn Animations off in Settings to hide them.',
       ],
     },
   },

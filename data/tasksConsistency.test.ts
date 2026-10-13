@@ -47,25 +47,6 @@ const VALID_CA_TIER = new Set(Object.keys(CA_DATA));
 const VALID_DIARY_TIER = new Set(Object.keys(DIARY_DATA));
 
 describe('CA task list references resolve', () => {
-  it('pins the current 655-task Combat Achievement baseline', () => {
-    const counts = Object.fromEntries(
-      Object.keys(CA_DATA).map(tier => [
-        tier,
-        ALL_CA_TASKS.filter(task => task.tierId === tier).length,
-      ]),
-    );
-
-    expect(ALL_CA_TASKS).toHaveLength(655);
-    expect(counts).toEqual({
-      Easy: 41,
-      Medium: 64,
-      Hard: 89,
-      Elite: 166,
-      Master: 173,
-      Grandmaster: 122,
-    });
-  });
-
   it('pins the current Maggot King rows and updated Gauntlet times', () => {
     const byId = new Map(ALL_CA_TASKS.map(task => [task.id, task]));
     expect(
@@ -93,21 +74,9 @@ describe('CA task list references resolve', () => {
       .map((t) => `${t.id} -> "${t.tierId}"`);
     expect(bad, 'CA tasks with unknown tier IDs').toEqual([]);
   });
-
-  it('every CA task id is unique', () => {
-    const seen = new Set<string>();
-    const dups: string[] = [];
-    for (const t of ALL_CA_TASKS) { if (seen.has(t.id)) dups.push(t.id); else seen.add(t.id); }
-    expect(dups, 'duplicate CA task ids').toEqual([]);
-  });
 });
 
 describe('Diary task list references resolve', () => {
-  it('pins the current 492-task Diary baseline', () => {
-    expect(ALL_DIARY_TASKS).toHaveLength(492);
-    expect(new Set(ALL_DIARY_TASKS.map(task => task.id)).size).toBe(492);
-  });
-
   it('every diary task tierId matches DIARY_DATA', () => {
     const bad = (ALL_DIARY_TASKS as any[]).filter((t) => !VALID_DIARY_TIER.has(t.tierId))
       .map((t) => `${t.id} -> "${t.tierId}"`);

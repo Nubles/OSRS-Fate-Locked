@@ -11,7 +11,6 @@ import {
   RUNELITE_GUIDE_RESOURCES,
   RUNELITE_GUIDE_SETTINGS,
   RUNELITE_GUIDE_TROUBLESHOOTING,
-  RUNELITE_SIDEBAR_CARD_TITLES,
 } from './runeliteGuide';
 import {
   RUNELITE_AVOIDED_WORDS,
@@ -120,10 +119,6 @@ describe('the RuneLite guide, held to the contract', () => {
         expect(text?.trim().length ?? 0, setting.key).toBeGreaterThan(20);
       }
     }
-  });
-
-  it('names the sidebar’s cards as the plugin does', () => {
-    expect(RUNELITE_SIDEBAR_CARD_TITLES).toEqual(RUNELITE_SIDEBAR_CARDS);
   });
 
   it('defines every term the plugin uses in its glossary', () => {

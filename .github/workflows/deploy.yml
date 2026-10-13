@@ -15,8 +15,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  # Tests run in three groups side by side while the build job type-checks and
+  # builds. Nothing goes live unless every group and the build pass (deploy
+  # needs both jobs).
+  test:
+    name: test (${{ matrix.shard }}/3)
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,7 +38,22 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Run tests
-        run: npm test
+        run: npm test -- --shard=${{ matrix.shard }}/3
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
 
       - name: Type-check
         run: npx tsc --noEmit
@@ -61,7 +83,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    needs: build
+    needs: [test, build]
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to GitHub Pages
