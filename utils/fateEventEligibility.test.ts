@@ -124,9 +124,11 @@ describe('classifyFateEvent', () => {
         state: 'BLOCKED',
         reason: 'Requires: Rimmington, Port Sarim, Crandor, Dwarven Mine, '
           + 'Smithing 34 + Bars & Inns + Clothes Shops or Smithing 34 + Bars & Inns + Silk Shops'
-          + ' or Smithing 34 + Thieving 20 + Bars & Inns or Bars & Inns + Sawmill Operators + Clothes Shops'
-          + ' or Bars & Inns + Sawmill Operators + Silk Shops or Thieving 20 + Bars & Inns + Sawmill Operators'
-          + ' or Smithing 34 + General Stores or General Stores + Sawmill Operators, Quest Points 32, Crafting 8, '
+          + ' or Smithing 34 + Thieving 20 + Bars & Inns or Civitas illa Fortis + Smithing 34 + Bars & Inns'
+          + ' or Smithing 34 + General Stores or Sawmill Operators + Bars & Inns + Clothes Shops'
+          + ' or Sawmill Operators + Bars & Inns + Silk Shops or Thieving 20 + Sawmill Operators + Bars & Inns'
+          + ' or Civitas illa Fortis + Sawmill Operators + Bars & Inns or Sawmill Operators + General Stores'
+          + ', Quest Points 32, Crafting 8, '
           + "Shield T1: Equip the anti-dragon shield against Elvarg's dragonfire",
       });
 

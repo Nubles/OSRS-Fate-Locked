@@ -897,26 +897,102 @@
       "ordinal": 12,
       "description": "Craft some Death runes from Essence.",
       "skills": {
-        "Runecraft": 65,
-        "Mining": 30
+        "Runecraft": 65
       },
       "quests": [
-        "Mourning's End Part II",
-        "Rune Mysteries"
+        "Mourning's End Part II"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Mourning's End Part II 65 Runecraft Pure or daeyalt essence Note: Crafting runes using Guardian essence will NOT complete this achievement Access to the Death Altar via the Abyss",
       "oneOf": [
         {
+          "label": "Mine pure essence",
+          "skills": {
+            "Mining": 30
+          },
           "regions": [
             "West Ardougne"
+          ],
+          "quests": [
+            "Rune Mysteries"
           ]
         },
         {
-          "label": "The Abyss",
+          "label": "Minotaur drops",
+          "regions": [
+            "West Ardougne",
+            "Barbarian Village"
+          ]
+        },
+        {
+          "label": "Daeyalt essence",
+          "skills": {
+            "Mining": 60
+          },
+          "regions": [
+            "West Ardougne"
+          ],
+          "quests": [
+            "Sins of the Father"
+          ]
+        },
+        {
+          "label": "Temple Trekking",
+          "regions": [
+            "West Ardougne"
+          ],
+          "minigames": [
+            "Temple Trekking"
+          ]
+        },
+        {
+          "label": "The Abyss + Mine pure essence",
+          "skills": {
+            "Mining": 30
+          },
           "quests": [
             "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "The Abyss + Minotaur drops",
+          "regions": [
+            "Barbarian Village"
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "The Abyss + Temple Trekking",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "minigames": [
+            "Temple Trekking"
           ],
           "locations": [
             {
@@ -1288,6 +1364,15 @@
             "Sophanem"
           ],
           "label": "Raetul and Co's Cloth Store"
+        },
+        {
+          "label": "Shantay Pass Shop (Ruins of Unkah)",
+          "merchants": [
+            "General Stores"
+          ],
+          "regions": [
+            "Ruins of Unkah"
+          ]
         }
       ]
     },
@@ -3195,8 +3280,21 @@
           }
         },
         {
-          "merchants": [
-            "Candle Shops"
+          "label": "Darkmeyer spawn",
+          "regions": [
+            "Darkmeyer"
+          ],
+          "quests": [
+            "Sins of the Father"
+          ]
+        },
+        {
+          "label": "Pickpocket cave goblins",
+          "skills": {
+            "Thieving": 36
+          },
+          "quests": [
+            "Death to the Dorgeshuun"
           ]
         }
       ]
@@ -3460,6 +3558,9 @@
       "oneOf": [
         {
           "label": "Wear an apron",
+          "merchants": [
+            "Clothes Shops"
+          ],
           "equipmentRequirements": [
             {
               "slot": "Body",
@@ -3467,9 +3568,34 @@
               "reason": "Brown or golden apron",
               "manualCheck": "Have Brown or golden apron and confirm that the specific item is permitted by your equipment tier"
             }
+          ]
+        },
+        {
+          "label": "Wear an apron (tool store)",
+          "skills": {
+            "Construction": 35
+          },
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Brown or golden apron",
+              "manualCheck": "Have Brown or golden apron and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "Wear an apron (Swan Song)",
+          "quests": [
+            "Swan Song"
           ],
-          "merchants": [
-            "Clothes Shops"
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Brown or golden apron",
+              "manualCheck": "Have Brown or golden apron and confirm that the specific item is permitted by your equipment tier"
+            }
           ]
         },
         {
@@ -5981,8 +6107,7 @@
       "ordinal": 7,
       "description": "String a Maple shortbow in Seers' Village bank.",
       "skills": {
-        "Fletching": 50,
-        "Woodcutting": 45
+        "Fletching": 50
       },
       "quests": [],
       "regions": [
@@ -5993,19 +6118,88 @@
       "sourceRequirements": "50 Fletching Maple shortbow (u) and bow string",
       "oneOf": [
         {
+          "label": "Spin flax",
+          "skills": {
+            "Crafting": 10,
+            "Woodcutting": 45
+          }
+        },
+        {
+          "label": "Spin flax + Managing Miscellania",
           "skills": {
             "Crafting": 10
           },
-          "label": "Spin flax"
+          "regions": [
+            "Miscellania & Etceteria"
+          ],
+          "quests": [
+            "Throne of Miscellania"
+          ]
         },
         {
+          "label": "Uglug's stuffsies",
+          "skills": {
+            "Woodcutting": 45
+          },
           "merchants": [
             "Archery Shops"
           ],
           "regions": [
             "Feldip Hills"
+          ]
+        },
+        {
+          "label": "Uglug's stuffsies + Managing Miscellania",
+          "merchants": [
+            "Archery Shops"
           ],
-          "label": "Uglug's stuffsies"
+          "regions": [
+            "Feldip Hills",
+            "Miscellania & Etceteria"
+          ],
+          "quests": [
+            "Throne of Miscellania"
+          ]
+        },
+        {
+          "label": "Temple Trekking",
+          "skills": {
+            "Woodcutting": 45
+          },
+          "minigames": [
+            "Temple Trekking"
+          ]
+        },
+        {
+          "label": "Temple Trekking + Managing Miscellania",
+          "regions": [
+            "Miscellania & Etceteria"
+          ],
+          "quests": [
+            "Throne of Miscellania"
+          ],
+          "minigames": [
+            "Temple Trekking"
+          ]
+        },
+        {
+          "label": "Young implings",
+          "skills": {
+            "Hunter": 22,
+            "Woodcutting": 45
+          }
+        },
+        {
+          "label": "Young implings + Managing Miscellania",
+          "skills": {
+            "Hunter": 22
+          },
+          "regions": [
+            "Miscellania & Etceteria"
+          ],
+          "quests": [
+            "Throne of Miscellania"
+          ]
         }
       ]
     },
@@ -6334,8 +6528,7 @@
       "ordinal": 6,
       "description": "Burn some Maple logs with a bow in Seers' Village.",
       "skills": {
-        "Firemaking": 65,
-        "Woodcutting": 45
+        "Firemaking": 65
       },
       "quests": [],
       "regions": [
@@ -6348,6 +6541,22 @@
         {
           "quest": "Barbarian Training",
           "label": "Learned to light fires with a bow in Barbarian Training"
+        }
+      ],
+      "oneOf": [
+        {
+          "skills": {
+            "Woodcutting": 45
+          }
+        },
+        {
+          "label": "Wintertodt",
+          "skills": {
+            "Firemaking": 50
+          },
+          "regions": [
+            "Wintertodt Camp"
+          ]
         }
       ]
     },
@@ -6465,8 +6674,7 @@
       "description": "Smith an Adamant spear at Otto's Grotto.",
       "skills": {
         "Smithing": 75,
-        "Woodcutting": 60,
-        "Mining": 70
+        "Woodcutting": 60
       },
       "quests": [
         "Tai Bwo Wannai Trio"
@@ -6481,6 +6689,25 @@
         {
           "quest": "Barbarian Training",
           "label": "Learned to smith spears in Barbarian Training"
+        }
+      ],
+      "oneOf": [
+        {
+          "skills": {
+            "Mining": 70
+          }
+        },
+        {
+          "label": "Buy ore",
+          "merchants": [
+            "Ore Merchants"
+          ]
+        },
+        {
+          "label": "Volcanic Mine",
+          "minigames": [
+            "Volcanic Mine"
+          ]
         }
       ]
     },
@@ -6614,9 +6841,7 @@
       "ordinal": 5,
       "description": "Smith a Rune Hasta at Otto's Grotto.",
       "skills": {
-        "Smithing": 90,
-        "Woodcutting": 75,
-        "Mining": 85
+        "Smithing": 90
       },
       "quests": [
         "Tai Bwo Wannai Trio"
@@ -6631,6 +6856,69 @@
         {
           "quest": "Barbarian Training",
           "label": "Learned to smith hastae in Barbarian Training"
+        }
+      ],
+      "oneOf": [
+        {
+          "skills": {
+            "Woodcutting": 75,
+            "Mining": 85
+          }
+        },
+        {
+          "label": "Zalcano",
+          "skills": {
+            "Woodcutting": 75
+          },
+          "bosses": [
+            "Zalcano"
+          ]
+        },
+        {
+          "label": "Volcanic Mine",
+          "skills": {
+            "Woodcutting": 75
+          },
+          "minigames": [
+            "Volcanic Mine"
+          ]
+        },
+        {
+          "label": "Wintertodt",
+          "skills": {
+            "Firemaking": 50,
+            "Woodcutting": 50,
+            "Mining": 85
+          },
+          "regions": [
+            "Wintertodt Camp"
+          ]
+        },
+        {
+          "label": "Wintertodt + Zalcano",
+          "skills": {
+            "Firemaking": 50,
+            "Woodcutting": 50
+          },
+          "regions": [
+            "Wintertodt Camp"
+          ],
+          "bosses": [
+            "Zalcano"
+          ]
+        },
+        {
+          "label": "Wintertodt + Volcanic Mine",
+          "skills": {
+            "Firemaking": 50,
+            "Woodcutting": 50
+          },
+          "regions": [
+            "Wintertodt Camp"
+          ],
+          "minigames": [
+            "Volcanic Mine"
+          ]
         }
       ]
     },
@@ -7645,25 +7933,100 @@
       "ordinal": 4,
       "description": "Craft some nature runes from Essence.",
       "skills": {
-        "Runecraft": 44,
-        "Mining": 30
+        "Runecraft": 44
       },
-      "quests": [
-        "Rune Mysteries"
-      ],
+      "quests": [],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "44 Runecraft Pure or daeyalt essence Access to the Nature Altar ( nature talisman / tiara, catalytic talisman / tiara, or the Abyss )",
       "oneOf": [
         {
+          "label": "Mine pure essence",
+          "skills": {
+            "Mining": 30
+          },
           "regions": [
             "Shilo Village"
+          ],
+          "quests": [
+            "Rune Mysteries"
           ]
         },
         {
-          "label": "The Abyss",
+          "label": "Minotaur drops",
+          "regions": [
+            "Shilo Village",
+            "Barbarian Village"
+          ]
+        },
+        {
+          "label": "Daeyalt essence",
+          "skills": {
+            "Mining": 60
+          },
+          "regions": [
+            "Shilo Village"
+          ],
+          "quests": [
+            "Sins of the Father"
+          ]
+        },
+        {
+          "label": "Temple Trekking",
+          "regions": [
+            "Shilo Village"
+          ],
+          "minigames": [
+            "Temple Trekking"
+          ]
+        },
+        {
+          "label": "The Abyss + Mine pure essence",
+          "skills": {
+            "Mining": 30
+          },
           "quests": [
             "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "The Abyss + Minotaur drops",
+          "regions": [
+            "Barbarian Village"
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "The Abyss + Temple Trekking",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "minigames": [
+            "Temple Trekking"
           ],
           "locations": [
             {
@@ -7929,26 +8292,101 @@
       "ordinal": 1,
       "description": "Craft 56 Nature runes simultaneously from Essence without the use of Extracts.",
       "skills": {
-        "Runecraft": 91,
-        "Mining": 30
+        "Runecraft": 91
       },
-      "quests": [
-        "Rune Mysteries"
-      ],
+      "quests": [],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 56 nature runes simultaneously from Essence without the use of Extracts.",
       "sourceRequirements": "91 Runecraft 28 pure or daeyalt essence (less may suffice with Raiments of the Eye pieces) Access to the Nature Altar ( nature talisman / tiara, catalytic talisman / tiara, or the Abyss )",
       "oneOf": [
         {
+          "label": "Mine pure essence",
+          "skills": {
+            "Mining": 30
+          },
           "regions": [
             "Shilo Village"
+          ],
+          "quests": [
+            "Rune Mysteries"
           ]
         },
         {
-          "label": "The Abyss",
+          "label": "Minotaur drops",
+          "regions": [
+            "Shilo Village",
+            "Barbarian Village"
+          ]
+        },
+        {
+          "label": "Daeyalt essence",
+          "skills": {
+            "Mining": 60
+          },
+          "regions": [
+            "Shilo Village"
+          ],
+          "quests": [
+            "Sins of the Father"
+          ]
+        },
+        {
+          "label": "Temple Trekking",
+          "regions": [
+            "Shilo Village"
+          ],
+          "minigames": [
+            "Temple Trekking"
+          ]
+        },
+        {
+          "label": "The Abyss + Mine pure essence",
+          "skills": {
+            "Mining": 30
+          },
           "quests": [
             "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "The Abyss + Minotaur drops",
+          "regions": [
+            "Barbarian Village"
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "The Abyss + Temple Trekking",
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "minigames": [
+            "Temple Trekking"
           ],
           "locations": [
             {
@@ -8440,6 +8878,15 @@
             "Plague City"
           ],
           "label": "Gas mask"
+        },
+        {
+          "label": "Facemask spawn (Telekinetic Grab)",
+          "skills": {
+            "Magic": 33
+          },
+          "regions": [
+            "Kourend Castle"
+          ]
         }
       ]
     },
@@ -9121,16 +9568,37 @@
       "skills": {
         "Runecraft": 5
       },
-      "quests": [
-        "Rune Mysteries"
-      ],
+      "quests": [],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "5 Runecraft Pure, daeyalt, or rune essence Access to the Water Altar ( water talisman / tiara, elemental talisman / tiara, or the Abyss )",
       "oneOf": [
         {
+          "label": "Mine rune essence",
           "regions": [
             "Lumbridge"
+          ],
+          "quests": [
+            "Rune Mysteries"
+          ]
+        },
+        {
+          "label": "Minotaur drops",
+          "regions": [
+            "Lumbridge",
+            "Barbarian Village"
+          ]
+        },
+        {
+          "label": "Daeyalt essence",
+          "skills": {
+            "Mining": 60
+          },
+          "regions": [
+            "Lumbridge"
+          ],
+          "quests": [
+            "Sins of the Father"
           ]
         },
         {
@@ -9953,12 +10421,10 @@
       "ordinal": 3,
       "description": "Craft 56 Cosmic runes simultaneously from Essence without the use of Extracts.",
       "skills": {
-        "Runecraft": 59,
-        "Mining": 30
+        "Runecraft": 59
       },
       "quests": [
-        "Lost City",
-        "Rune Mysteries"
+        "Lost City"
       ],
       "regions": [
         "Zanaris"
@@ -9969,7 +10435,13 @@
       "sourceRequirements": "Completion of Lost City 59 Runecraft 28 pure or daeyalt essence (less may suffice with Raiments of the Eye pieces) Access to the Cosmic Altar ( cosmic talisman / tiara, catalytic talisman / tiara, or the Abyss )",
       "oneOf": [
         {
-          "label": "Zanaris",
+          "label": "Zanaris + Mine pure essence",
+          "skills": {
+            "Mining": 30
+          },
+          "quests": [
+            "Rune Mysteries"
+          ],
           "items": [
             "Cosmic or catalytic talisman or tiara"
           ],
@@ -9983,12 +10455,91 @@
           ]
         },
         {
-          "label": "The Abyss",
+          "label": "Zanaris + Minotaur drops",
+          "regions": [
+            "Barbarian Village"
+          ],
+          "items": [
+            "Cosmic or catalytic talisman or tiara"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Weapon",
+              "tier": 1,
+              "reason": "Dramen or lunar staff to enter Zanaris",
+              "manualCheck": "Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "Zanaris + Daeyalt essence",
+          "skills": {
+            "Mining": 60
+          },
+          "quests": [
+            "Sins of the Father"
+          ],
+          "items": [
+            "Cosmic or catalytic talisman or tiara"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Weapon",
+              "tier": 1,
+              "reason": "Dramen or lunar staff to enter Zanaris",
+              "manualCheck": "Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "Zanaris + Temple Trekking",
+          "minigames": [
+            "Temple Trekking"
+          ],
+          "items": [
+            "Cosmic or catalytic talisman or tiara"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Weapon",
+              "tier": 1,
+              "reason": "Dramen or lunar staff to enter Zanaris",
+              "manualCheck": "Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "The Abyss + Mine pure essence",
+          "skills": {
+            "Mining": 30
+          },
+          "regions": [
+            "Edgeville"
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ]
+        },
+        {
+          "label": "The Abyss + Minotaur drops",
+          "regions": [
+            "Edgeville",
+            "Barbarian Village"
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ]
+        },
+        {
+          "label": "The Abyss + Temple Trekking",
+          "regions": [
+            "Edgeville"
+          ],
           "quests": [
             "Enter the Abyss"
           ],
-          "regions": [
-            "Edgeville"
+          "minigames": [
+            "Temple Trekking"
           ]
         }
       ]
@@ -10195,6 +10746,30 @@
             "Crafting Guild"
           ],
           "label": "Crafting Guild spawn"
+        },
+        {
+          "label": "Keldagrim crafting stall",
+          "skills": {
+            "Thieving": 5
+          },
+          "regions": [
+            "Keldagrim"
+          ]
+        },
+        {
+          "label": "Ape Atoll crafting stall",
+          "skills": {
+            "Thieving": 5
+          },
+          "regions": [
+            "Ape Atoll"
+          ]
+        },
+        {
+          "label": "House tool store",
+          "skills": {
+            "Construction": 44
+          }
         }
       ]
     },
@@ -11432,6 +12007,31 @@
             "Silver Shops"
           ],
           "label": "Buy a silver bar"
+        },
+        {
+          "label": "Buy silver ore",
+          "skills": {
+            "Smithing": 20
+          },
+          "merchants": [
+            "Ore Merchants"
+          ]
+        },
+        {
+          "label": "Silver stall",
+          "skills": {
+            "Thieving": 50,
+            "Smithing": 20
+          },
+          "regions": [
+            "East Ardougne"
+          ]
+        },
+        {
+          "label": "Temple Trekking",
+          "minigames": [
+            "Temple Trekking"
+          ]
         }
       ]
     },
@@ -11707,8 +12307,7 @@
       "ordinal": 2,
       "description": "Cremate any Shade remains on a Magic or Redwood pyre.",
       "skills": {
-        "Firemaking": 80,
-        "Woodcutting": 75
+        "Firemaking": 80
       },
       "quests": [
         "Shades of Mort'ton"
@@ -11719,8 +12318,44 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Shades of Mort'ton 80 Firemaking Magic or Redwood pyre logs, any shade remains, and a tinderbox",
-      "merchants": [
-        "General Stores"
+      "oneOf": [
+        {
+          "skills": {
+            "Woodcutting": 75
+          },
+          "merchants": [
+            "General Stores"
+          ]
+        },
+        {
+          "label": "Wintertodt",
+          "skills": {
+            "Woodcutting": 50
+          },
+          "merchants": [
+            "General Stores"
+          ],
+          "regions": [
+            "Wintertodt Camp"
+          ]
+        },
+        {
+          "label": "Serum 207 olive oil",
+          "skills": {
+            "Herblore": 15,
+            "Woodcutting": 75
+          }
+        },
+        {
+          "label": "Serum 207 olive oil + Wintertodt",
+          "skills": {
+            "Herblore": 15,
+            "Woodcutting": 50
+          },
+          "regions": [
+            "Wintertodt Camp"
+          ]
+        }
       ]
     },
     {
@@ -12085,16 +12720,37 @@
       "skills": {
         "Runecraft": 9
       },
-      "quests": [
-        "Rune Mysteries"
-      ],
+      "quests": [],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "9 Runecraft Pure, daeyalt, or rune essence Access to the Earth Altar ( earth talisman / tiara, elemental talisman / tiara, or the Abyss )",
       "oneOf": [
         {
+          "label": "Mine rune essence",
           "regions": [
             "Varrock"
+          ],
+          "quests": [
+            "Rune Mysteries"
+          ]
+        },
+        {
+          "label": "Minotaur drops",
+          "regions": [
+            "Varrock",
+            "Barbarian Village"
+          ]
+        },
+        {
+          "label": "Daeyalt essence",
+          "skills": {
+            "Mining": 60
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Sins of the Father"
           ]
         },
         {
@@ -12435,9 +13091,7 @@
       "tierId": "Varrock Medium",
       "ordinal": 10,
       "description": "Make 20 Mahogany Planks in one go.",
-      "skills": {
-        "Woodcutting": 50
-      },
+      "skills": {},
       "quests": [],
       "regions": [
         "Varrock"
@@ -12447,6 +13101,22 @@
       "sourceRequirements": "20 mahogany logs and 30,000 coins",
       "merchants": [
         "Sawmill Operators"
+      ],
+      "oneOf": [
+        {
+          "skills": {
+            "Woodcutting": 50
+          }
+        },
+        {
+          "label": "Managing Miscellania",
+          "regions": [
+            "Miscellania & Etceteria"
+          ],
+          "quests": [
+            "Royal Trouble"
+          ]
+        }
       ]
     },
     {
@@ -12802,8 +13472,7 @@
       "ordinal": 3,
       "description": "Bake a summer pie in the Cooking Guild.",
       "skills": {
-        "Cooking": 95,
-        "Farming": 31
+        "Cooking": 95
       },
       "quests": [],
       "regions": [
@@ -12947,8 +13616,7 @@
       "description": "Smith and fletch ten rune darts within Varrock.",
       "skills": {
         "Fletching": 81,
-        "Smithing": 89,
-        "Mining": 85
+        "Smithing": 89
       },
       "quests": [
         "The Tourist Trap"
@@ -12958,7 +13626,26 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of The Tourist Trap 89 Smithing and 81 Fletching Runite bar, 10 feathers and a hammer"
+      "sourceRequirements": "Completion of The Tourist Trap 89 Smithing and 81 Fletching Runite bar, 10 feathers and a hammer",
+      "oneOf": [
+        {
+          "skills": {
+            "Mining": 85
+          }
+        },
+        {
+          "label": "Volcanic Mine",
+          "minigames": [
+            "Volcanic Mine"
+          ]
+        },
+        {
+          "label": "Zalcano",
+          "bosses": [
+            "Zalcano"
+          ]
+        }
+      ]
     },
     {
       "id": "var_elite_5",
@@ -12968,21 +13655,561 @@
       "ordinal": 5,
       "description": "Craft 100 or more earth runes simultaneously from Essence without the use of Extracts.",
       "skills": {},
-      "quests": [
-        "Rune Mysteries"
-      ],
+      "quests": [],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 100 or more earth runes simultaneously.",
       "sourceRequirements": "78 Runecraft 52 Runecraft with 2+ Raiments of the Eye pieces 28 pure, daeyalt, or rune essence (fewer may suffice with more Raiments of the Eye pieces) Access to the Earth Altar ( earth talisman / tiara, elemental talisman / tiara, or the Abyss )",
       "oneOf": [
         {
-          "label": "No Raiments, Varrock ruins",
+          "label": "No Raiments, Varrock ruins + Mine rune essence",
           "skills": {
             "Runecraft": 78
           },
           "regions": [
             "Varrock"
+          ],
+          "quests": [
+            "Rune Mysteries"
+          ]
+        },
+        {
+          "label": "No Raiments, Varrock ruins + Minotaur drops",
+          "skills": {
+            "Runecraft": 78
+          },
+          "regions": [
+            "Varrock",
+            "Barbarian Village"
+          ]
+        },
+        {
+          "label": "No Raiments, Varrock ruins + Daeyalt essence",
+          "skills": {
+            "Runecraft": 78,
+            "Mining": 60
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Sins of the Father"
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Body), Varrock ruins + Mine rune essence",
+          "skills": {
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Rune Mysteries"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Body), Varrock ruins + Minotaur drops",
+          "skills": {
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock",
+            "Barbarian Village"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Body), Varrock ruins + Daeyalt essence",
+          "skills": {
+            "Runecraft": 52,
+            "Mining": 60
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Sins of the Father"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Legs), Varrock ruins + Mine rune essence",
+          "skills": {
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Rune Mysteries"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Legs), Varrock ruins + Minotaur drops",
+          "skills": {
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock",
+            "Barbarian Village"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Legs), Varrock ruins + Daeyalt essence",
+          "skills": {
+            "Runecraft": 52,
+            "Mining": 60
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Sins of the Father"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Boots), Varrock ruins + Mine rune essence",
+          "skills": {
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Rune Mysteries"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Boots), Varrock ruins + Minotaur drops",
+          "skills": {
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock",
+            "Barbarian Village"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Head, Boots), Varrock ruins + Daeyalt essence",
+          "skills": {
+            "Runecraft": 52,
+            "Mining": 60
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Sins of the Father"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Body, Legs), Varrock ruins + Mine rune essence",
+          "skills": {
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Rune Mysteries"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Body, Legs), Varrock ruins + Minotaur drops",
+          "skills": {
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock",
+            "Barbarian Village"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Body, Legs), Varrock ruins + Daeyalt essence",
+          "skills": {
+            "Runecraft": 52,
+            "Mining": 60
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Sins of the Father"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Body, Boots), Varrock ruins + Mine rune essence",
+          "skills": {
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Rune Mysteries"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Body, Boots), Varrock ruins + Minotaur drops",
+          "skills": {
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock",
+            "Barbarian Village"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Body, Boots), Varrock ruins + Daeyalt essence",
+          "skills": {
+            "Runecraft": 52,
+            "Mining": 60
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Sins of the Father"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Legs, Boots), Varrock ruins + Mine rune essence",
+          "skills": {
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Rune Mysteries"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Legs, Boots), Varrock ruins + Minotaur drops",
+          "skills": {
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock",
+            "Barbarian Village"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces (Legs, Boots), Varrock ruins + Daeyalt essence",
+          "skills": {
+            "Runecraft": 52,
+            "Mining": 60
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Sins of the Father"
+          ],
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
           ]
         },
         {
@@ -13006,53 +14233,10 @@
           ]
         },
         {
-          "label": "2+ Raiments of the Eye pieces (Head, Body), Varrock ruins",
-          "skills": {
-            "Runecraft": 52
-          },
-          "items": [
-            "2+ Raiments of the Eye pieces"
-          ],
-          "equipmentRequirements": [
-            {
-              "slot": "Head",
-              "tier": 1,
-              "reason": "Raiments of the Eye",
-              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
-            },
-            {
-              "slot": "Body",
-              "tier": 1,
-              "reason": "Raiments of the Eye",
-              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
-            }
-          ],
-          "regions": [
-            "Varrock"
-          ]
-        },
-        {
           "label": "2+ Raiments of the Eye pieces (Head, Body), through the Abyss",
           "skills": {
             "Runecraft": 52
           },
-          "items": [
-            "2+ Raiments of the Eye pieces"
-          ],
-          "equipmentRequirements": [
-            {
-              "slot": "Head",
-              "tier": 1,
-              "reason": "Raiments of the Eye",
-              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
-            },
-            {
-              "slot": "Body",
-              "tier": 1,
-              "reason": "Raiments of the Eye",
-              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
-            }
-          ],
           "quests": [
             "Enter the Abyss"
           ],
@@ -13066,13 +14250,7 @@
                 }
               ]
             }
-          ]
-        },
-        {
-          "label": "2+ Raiments of the Eye pieces (Head, Legs), Varrock ruins",
-          "skills": {
-            "Runecraft": 52
-          },
+          ],
           "items": [
             "2+ Raiments of the Eye pieces"
           ],
@@ -13084,14 +14262,11 @@
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             },
             {
-              "slot": "Legs",
+              "slot": "Body",
               "tier": 1,
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
-          ],
-          "regions": [
-            "Varrock"
           ]
         },
         {
@@ -13099,6 +14274,20 @@
           "skills": {
             "Runecraft": 52
           },
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ],
           "items": [
             "2+ Raiments of the Eye pieces"
           ],
@@ -13115,46 +14304,6 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
-          ],
-          "quests": [
-            "Enter the Abyss"
-          ],
-          "locations": [
-            {
-              "label": "Mage of Zamorak (Abyss)",
-              "chunkOptions": [
-                {
-                  "cx": 48,
-                  "cy": 55
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "label": "2+ Raiments of the Eye pieces (Head, Boots), Varrock ruins",
-          "skills": {
-            "Runecraft": 52
-          },
-          "items": [
-            "2+ Raiments of the Eye pieces"
-          ],
-          "equipmentRequirements": [
-            {
-              "slot": "Head",
-              "tier": 1,
-              "reason": "Raiments of the Eye",
-              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
-            },
-            {
-              "slot": "Boots",
-              "tier": 1,
-              "reason": "Raiments of the Eye",
-              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
-            }
-          ],
-          "regions": [
-            "Varrock"
           ]
         },
         {
@@ -13162,6 +14311,20 @@
           "skills": {
             "Runecraft": 52
           },
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ],
           "items": [
             "2+ Raiments of the Eye pieces"
           ],
@@ -13178,46 +14341,6 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
-          ],
-          "quests": [
-            "Enter the Abyss"
-          ],
-          "locations": [
-            {
-              "label": "Mage of Zamorak (Abyss)",
-              "chunkOptions": [
-                {
-                  "cx": 48,
-                  "cy": 55
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "label": "2+ Raiments of the Eye pieces (Body, Legs), Varrock ruins",
-          "skills": {
-            "Runecraft": 52
-          },
-          "items": [
-            "2+ Raiments of the Eye pieces"
-          ],
-          "equipmentRequirements": [
-            {
-              "slot": "Body",
-              "tier": 1,
-              "reason": "Raiments of the Eye",
-              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
-            },
-            {
-              "slot": "Legs",
-              "tier": 1,
-              "reason": "Raiments of the Eye",
-              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
-            }
-          ],
-          "regions": [
-            "Varrock"
           ]
         },
         {
@@ -13225,6 +14348,20 @@
           "skills": {
             "Runecraft": 52
           },
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ],
           "items": [
             "2+ Raiments of the Eye pieces"
           ],
@@ -13241,46 +14378,6 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
-          ],
-          "quests": [
-            "Enter the Abyss"
-          ],
-          "locations": [
-            {
-              "label": "Mage of Zamorak (Abyss)",
-              "chunkOptions": [
-                {
-                  "cx": 48,
-                  "cy": 55
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "label": "2+ Raiments of the Eye pieces (Body, Boots), Varrock ruins",
-          "skills": {
-            "Runecraft": 52
-          },
-          "items": [
-            "2+ Raiments of the Eye pieces"
-          ],
-          "equipmentRequirements": [
-            {
-              "slot": "Body",
-              "tier": 1,
-              "reason": "Raiments of the Eye",
-              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
-            },
-            {
-              "slot": "Boots",
-              "tier": 1,
-              "reason": "Raiments of the Eye",
-              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
-            }
-          ],
-          "regions": [
-            "Varrock"
           ]
         },
         {
@@ -13288,6 +14385,20 @@
           "skills": {
             "Runecraft": 52
           },
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ],
           "items": [
             "2+ Raiments of the Eye pieces"
           ],
@@ -13304,46 +14415,6 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
-          ],
-          "quests": [
-            "Enter the Abyss"
-          ],
-          "locations": [
-            {
-              "label": "Mage of Zamorak (Abyss)",
-              "chunkOptions": [
-                {
-                  "cx": 48,
-                  "cy": 55
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "label": "2+ Raiments of the Eye pieces (Legs, Boots), Varrock ruins",
-          "skills": {
-            "Runecraft": 52
-          },
-          "items": [
-            "2+ Raiments of the Eye pieces"
-          ],
-          "equipmentRequirements": [
-            {
-              "slot": "Legs",
-              "tier": 1,
-              "reason": "Raiments of the Eye",
-              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
-            },
-            {
-              "slot": "Boots",
-              "tier": 1,
-              "reason": "Raiments of the Eye",
-              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
-            }
-          ],
-          "regions": [
-            "Varrock"
           ]
         },
         {
@@ -13351,6 +14422,20 @@
           "skills": {
             "Runecraft": 52
           },
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ],
           "items": [
             "2+ Raiments of the Eye pieces"
           ],
@@ -13366,20 +14451,6 @@
               "tier": 1,
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
-            }
-          ],
-          "quests": [
-            "Enter the Abyss"
-          ],
-          "locations": [
-            {
-              "label": "Mage of Zamorak (Abyss)",
-              "chunkOptions": [
-                {
-                  "cx": 48,
-                  "cy": 55
-                }
-              ]
             }
           ]
         }
@@ -13425,6 +14496,27 @@
             "Land's End"
           ],
           "label": "Land's End crate"
+        },
+        {
+          "label": "Hunting expert kit",
+          "regions": [
+            "Feldip Hills"
+          ]
+        },
+        {
+          "label": "Hunting expert kit",
+          "regions": [
+            "Rellekka"
+          ]
+        },
+        {
+          "label": "Hunter Kit spell",
+          "skills": {
+            "Magic": 71
+          },
+          "quests": [
+            "Dream Mentor"
+          ]
         }
       ]
     },
@@ -13599,19 +14691,31 @@
       "sourceRequirements": "20 Fletching Oak shortbow (u) and bow string",
       "oneOf": [
         {
+          "label": "Spin flax",
           "skills": {
             "Crafting": 10
-          },
-          "label": "Spin flax"
+          }
         },
         {
+          "label": "Uglug's stuffsies",
           "merchants": [
             "Archery Shops"
           ],
           "regions": [
             "Feldip Hills"
-          ],
-          "label": "Uglug's stuffsies"
+          ]
+        },
+        {
+          "label": "Temple Trekking",
+          "minigames": [
+            "Temple Trekking"
+          ]
+        },
+        {
+          "label": "Young implings",
+          "skills": {
+            "Hunter": 22
+          }
         }
       ]
     },
@@ -14182,8 +15286,7 @@
       "ordinal": 10,
       "description": "Build an Isafdar painting in your POH Quest hall.",
       "skills": {
-        "Construction": 65,
-        "Woodcutting": 50
+        "Construction": 65
       },
       "quests": [
         "Roving Elves"
@@ -14196,22 +15299,54 @@
       "sourceRequirements": "Completion of Roving Elves 65 Construction 3 mahogany planks, saw, and hammer Isafdar painting (bought from Sir Renitee for 2,000 coins ) 25,000 coins to construct a Quest Hall if you haven't already",
       "oneOf": [
         {
+          "label": "Sawmill",
+          "skills": {
+            "Woodcutting": 50
+          },
+          "merchants": [
+            "Sawmill Operators"
+          ]
+        },
+        {
+          "label": "Sawmill + Managing Miscellania",
           "merchants": [
             "Sawmill Operators"
           ],
-          "label": "Sawmill"
+          "regions": [
+            "Miscellania & Etceteria"
+          ],
+          "quests": [
+            "Royal Trouble"
+          ]
         },
         {
+          "label": "Plank Make",
           "skills": {
-            "Magic": 86
+            "Magic": 86,
+            "Woodcutting": 50
           },
           "quests": [
             "Dream Mentor"
           ],
           "arcana": [
             "Lunar Spellbook"
+          ]
+        },
+        {
+          "label": "Plank Make + Managing Miscellania",
+          "skills": {
+            "Magic": 86
+          },
+          "regions": [
+            "Miscellania & Etceteria"
           ],
-          "label": "Plank Make"
+          "quests": [
+            "Dream Mentor",
+            "Royal Trouble"
+          ],
+          "arcana": [
+            "Lunar Spellbook"
+          ]
         }
       ]
     },
@@ -14293,8 +15428,7 @@
       "ordinal": 1,
       "description": "Fletch a Magic Longbow in Tirannwn.",
       "skills": {
-        "Fletching": 85,
-        "Woodcutting": 75
+        "Fletching": 85
       },
       "quests": [],
       "aliases": [],
@@ -14319,19 +15453,88 @@
       ],
       "oneOf": [
         {
+          "label": "Spin flax",
           "skills": {
-            "Crafting": 10
-          },
-          "label": "Spin flax"
+            "Crafting": 10,
+            "Woodcutting": 75
+          }
         },
         {
+          "label": "Spin flax + Wintertodt",
+          "skills": {
+            "Crafting": 10,
+            "Firemaking": 50,
+            "Woodcutting": 50
+          },
+          "regions": [
+            "Wintertodt Camp"
+          ]
+        },
+        {
+          "label": "Uglug's stuffsies",
+          "skills": {
+            "Woodcutting": 75
+          },
           "merchants": [
             "Archery Shops"
           ],
           "regions": [
             "Feldip Hills"
+          ]
+        },
+        {
+          "label": "Uglug's stuffsies + Wintertodt",
+          "skills": {
+            "Firemaking": 50,
+            "Woodcutting": 50
+          },
+          "merchants": [
+            "Archery Shops"
           ],
-          "label": "Uglug's stuffsies"
+          "regions": [
+            "Feldip Hills",
+            "Wintertodt Camp"
+          ]
+        },
+        {
+          "label": "Temple Trekking",
+          "skills": {
+            "Woodcutting": 75
+          },
+          "minigames": [
+            "Temple Trekking"
+          ]
+        },
+        {
+          "label": "Temple Trekking + Wintertodt",
+          "skills": {
+            "Firemaking": 50,
+            "Woodcutting": 50
+          },
+          "regions": [
+            "Wintertodt Camp"
+          ],
+          "minigames": [
+            "Temple Trekking"
+          ]
+        },
+        {
+          "label": "Young implings",
+          "skills": {
+            "Hunter": 22,
+            "Woodcutting": 75
+          }
+        },
+        {
+          "label": "Young implings + Wintertodt",
+          "skills": {
+            "Hunter": 22,
+            "Firemaking": 50,
+            "Woodcutting": 50
+          },
+          "regions": [
+            "Wintertodt Camp"
+          ]
         }
       ]
     },
@@ -16823,16 +18026,22 @@
       "ard_elite_1",
       "ard_elite_5",
       "ard_elite_8",
+      "ard_hard_12",
       "des_easy_8",
       "des_easy_9",
       "des_elite_5",
       "frem_hard_9",
       "kan_elite_1",
+      "kan_elite_5",
+      "kan_hard_11",
       "kan_hard_9",
       "kan_med_11",
+      "kan_med_7",
       "kar_easy_9",
+      "kar_elite_1",
       "kar_hard_1",
       "kar_hard_10",
+      "kar_hard_4",
       "kar_med_1",
       "kar_med_11",
       "kar_med_19",
@@ -16842,11 +18051,16 @@
       "kou_hard_5",
       "kou_hard_8",
       "kou_med_8",
+      "lum_hard_3",
       "lum_hard_5",
       "lum_med_11",
       "mor_hard_5",
+      "mor_med_11",
       "mor_med_6",
+      "var_elite_4",
       "west_easy_2",
+      "west_easy_6",
+      "west_elite_1",
       "west_elite_5",
       "west_hard_3",
       "west_med_7",
@@ -16868,7 +18082,7 @@
       "western_med_7": "A Gnome Glider trip.",
       "wild_hard_1": "The god spells come from Mage Arena I, already a quest requirement."
     },
-    "followUp": "Owner decision, 2 October 2026: a task needs the minigame whose loot it uses, on the route that uses it. The Hardwood Grove routes of kar_med_8 and kar_med_9 need trading sticks, and kar_med_19's Cleanup route its gem rocks, so those routes need Tai Bwo Wannai Cleanup; kou_med_8 delivers intelligence, which only Intelligence Gathering gives. Item audit, 10 October 2026: kar_med_11's gem machetes also cost trading sticks, which only Tai Bwo Wannai Cleanup gives."
+    "followUp": "Owner decision, 2 October 2026: a task needs the minigame whose loot it uses, on the route that uses it. The Hardwood Grove routes of kar_med_8 and kar_med_9 need trading sticks, and kar_med_19's Cleanup route its gem rocks, so those routes need Tai Bwo Wannai Cleanup; kou_med_8 delivers intelligence, which only Intelligence Gathering gives. Item audit, 10 October 2026: kar_med_11's gem machetes also cost trading sticks, which only Tai Bwo Wannai Cleanup gives. Item audit recheck, 13 October 2026: a minigame can also be one route to an item, so Temple Trekking (essence, bow string, silver bars) and Volcanic Mine (adamantite and runite ore) are routes on the tasks that use those items."
   },
   "bossAudit": {
     "reviewedAt": "2026-09-26",
@@ -16881,6 +18095,7 @@
       "fal_hard_3",
       "frem_elite_1",
       "frem_elite_5",
+      "kan_elite_5",
       "kar_easy_9",
       "kar_elite_4",
       "kar_hard_2",
@@ -16890,6 +18105,7 @@
       "kou_elite_7",
       "kou_med_11",
       "mor_elite_6",
+      "var_elite_4",
       "west_elite_2",
       "west_hard_11",
       "wild_elite_1",
@@ -16903,6 +18119,6 @@
       "lum_hard_7": "Barrows gloves come from Recipe for Disaster, not from the Barrows.",
       "wilderness_easy_8": "Only enters the King Black Dragon's lair; the boss is not fought."
     },
-    "followUp": "Owner decision, 2 October 2026: a task that needs a boss's loot needs that boss. The KQ head (des_elite_4) drops only from the Kalphite Queen, and the fire cape (kar_elite_4) comes only from the TzHaar Fight Cave; the infernal cape needs a fire cape to enter the Inferno. Item audit, 10 October 2026: karamja_elite_4's antivenom needs Zulrah's scales, which come from Zulrah or from dissecting sacred eels at Zul-Andra."
+    "followUp": "Owner decision, 2 October 2026: a task that needs a boss's loot needs that boss. The KQ head (des_elite_4) drops only from the Kalphite Queen, and the fire cape (kar_elite_4) comes only from the TzHaar Fight Cave; the infernal cape needs a fire cape to enter the Inferno. Item audit, 10 October 2026: karamja_elite_4's antivenom needs Zulrah's scales, which come from Zulrah or from dissecting sacred eels at Zul-Andra. Item audit recheck, 13 October 2026: Zalcano drops runite ore, so it is one route to the runite bars of kan_elite_5 and var_elite_4."
   }
 }

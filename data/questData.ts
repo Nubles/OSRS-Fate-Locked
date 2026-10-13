@@ -268,8 +268,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { skills: { 'Smithing': 26 } },
       { merchants: ['Chainbody Shops'] },
       { merchants: ['Platebody Shops'] },
+      { quests: ['The Lost Tribe'] },
     ],
-    difficulty: DropSource.QUEST_INTERMEDIATE
+    difficulty: DropSource.QUEST_INTERMEDIATE,
+    // Alternatives rechecked on the Wiki (13 Oct): iron chainbody also drops from cave goblin guards after The Lost Tribe.
   },
   'Witch\'s Potion': {
     kind: 'quest', accessPolicy: 'locations',
@@ -335,13 +337,16 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { skills: { 'Smithing': 34 }, merchants: ['Bars & Inns', 'Clothes Shops'] },
       { skills: { 'Smithing': 34 }, merchants: ['Bars & Inns', 'Silk Shops'] },
       { skills: { 'Smithing': 34, 'Thieving': 20 }, merchants: ['Bars & Inns'] },
-      { merchants: ['Bars & Inns', 'Sawmill Operators', 'Clothes Shops'] },
-      { merchants: ['Bars & Inns', 'Sawmill Operators', 'Silk Shops'] },
-      { skills: { 'Thieving': 20 }, merchants: ['Bars & Inns', 'Sawmill Operators'] },
+      { skills: { 'Smithing': 34 }, merchants: ['Bars & Inns'], regions: ['Civitas illa Fortis'] },
       { skills: { 'Smithing': 34 }, merchants: ['General Stores'] },
-      { merchants: ['General Stores', 'Sawmill Operators'] },
+      { merchants: ['Sawmill Operators', 'Bars & Inns', 'Clothes Shops'] },
+      { merchants: ['Sawmill Operators', 'Bars & Inns', 'Silk Shops'] },
+      { skills: { 'Thieving': 20 }, merchants: ['Sawmill Operators', 'Bars & Inns'] },
+      { merchants: ['Sawmill Operators', 'Bars & Inns'], regions: ['Civitas illa Fortis'] },
+      { merchants: ['Sawmill Operators', 'General Stores'] },
     ],
-    difficulty: DropSource.QUEST_EXPERIENCED
+    difficulty: DropSource.QUEST_EXPERIENCED,
+    // Alternatives rechecked on the Wiki (13 Oct): silk also spawns in Civitas illa Fortis.
   },
   'Rune Mysteries': {
     kind: 'quest', accessPolicy: 'locations',
@@ -469,8 +474,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     oneOf: [
       { skills: { 'Fishing': 50, 'Cooking': 45 } },
       { merchants: ['Food Shops'] },
+      { skills: { 'Cooking': 45 }, merchants: ['Fishing Shops', 'General Stores'] },
     ],
-    difficulty: DropSource.QUEST_EXPERIENCED
+    difficulty: DropSource.QUEST_EXPERIENCED,
+    // Alternatives rechecked on the Wiki (13 Oct): raw fish also from Fishing Shops, cooked at 45 Cooking.
   },
   'Tribal Totem': {
     kind: 'quest', accessPolicy: 'regions',
@@ -572,14 +579,17 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: {}, prereqs: [], points: 1, series: 'Elf',
     // Items checked on the Wiki: Chocolate bar; Snape grass.
     oneOf: [
-      { merchants: ['Food Shops'], anyOfRegions: ['Rimmington', 'Hosidius', 'Karamja'] },
+      { merchants: ['Food Shops'], anyOfRegions: ['Rimmington', 'Hosidius', 'Karamja', 'Waterbirth Island'] },
       { skills: { 'Farming': 61 }, merchants: ['Food Shops'] },
-      { merchants: ['Cooking Shops'], anyOfRegions: ['Rimmington', 'Hosidius', 'Karamja'] },
+      { merchants: ['Cooking Shops'], anyOfRegions: ['Rimmington', 'Hosidius', 'Karamja', 'Waterbirth Island'] },
       { skills: { 'Farming': 61 }, merchants: ['Cooking Shops'] },
-      { regions: ['Zanaris'], anyOfRegions: ['Rimmington', 'Hosidius', 'Karamja'] },
+      { regions: ['Zanaris'], anyOfRegions: ['Rimmington', 'Hosidius', 'Karamja', 'Waterbirth Island'] },
       { skills: { 'Farming': 61 }, regions: ['Zanaris'] },
+      { anyOfRegions: ['Rimmington', 'Hosidius', 'Karamja', 'Waterbirth Island'], guilds: ["Cooks' Guild"] },
+      { skills: { 'Farming': 61 }, guilds: ["Cooks' Guild"] },
     ],
-    difficulty: DropSource.QUEST_NOVICE
+    difficulty: DropSource.QUEST_NOVICE,
+    // Alternatives rechecked on the Wiki (13 Oct): snape grass also spawns on Waterbirth Island; chocolate bars also spawn in the Cooks' Guild.
   },
   'Sea Slug': {
     kind: 'quest', accessPolicy: 'locations',
@@ -742,16 +752,15 @@ export const QUEST_DATA: Record<string, QuestData> = {
     prereqs: ['Family Crest', 'Heroes\' Quest', 'Shilo Village', 'Underground Pass', 'Waterfall Quest'], points: 4,
     // Items checked on the Wiki: Rune, dragon or infernal axe; Soul rune; Lockpicks.
     oneOf: [
-      { skills: { 'Smithing': 86 }, merchants: ['Magic Shops', 'Claw Shops'], regions: ['Burthorpe'] },
-      { skills: { 'Smithing': 86, 'Hunter': 22 }, merchants: ['Magic Shops'] },
-      { skills: { 'Smithing': 86, 'Runecraft': 90 }, merchants: ['Claw Shops'], regions: ['Burthorpe'] },
-      { skills: { 'Smithing': 86, 'Runecraft': 90, 'Hunter': 22 } },
-      { merchants: ['Axe Shops', 'Magic Shops', 'Claw Shops'], regions: ['Burthorpe'] },
-      { skills: { 'Hunter': 22 }, merchants: ['Axe Shops', 'Magic Shops'] },
-      { skills: { 'Runecraft': 90 }, merchants: ['Axe Shops', 'Claw Shops'], regions: ['Burthorpe'] },
-      { skills: { 'Runecraft': 90, 'Hunter': 22 }, merchants: ['Axe Shops'] },
+      { skills: { 'Smithing': 86 }, merchants: ['Magic Shops'] },
+      { skills: { 'Smithing': 86, 'Runecraft': 90 } },
+      { skills: { 'Smithing': 86 }, regions: ['Mage Training Arena'] },
+      { merchants: ['Axe Shops', 'Magic Shops'] },
+      { skills: { 'Runecraft': 90 }, merchants: ['Axe Shops'] },
+      { merchants: ['Axe Shops'], regions: ['Mage Training Arena'] },
     ],
-    difficulty: DropSource.QUEST_MASTER
+    difficulty: DropSource.QUEST_MASTER,
+    // Alternatives rechecked on the Wiki (13 Oct): lockpicks are pickpocketed from rogues and bandits, so they are no longer gated; soul runes also from the Mage Training Arena.
   },
   'Big Chompy Bird Hunting': {
     kind: 'quest', accessPolicy: 'regions',
@@ -784,10 +793,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     ],
     skills: {}, prereqs: [], points: 1, series: 'Myreque',
     // Items checked on the Wiki: 50 rune or pure essence.
-    oneOf: [
-      { quests: ['Rune Mysteries'] },
-    ],
-    difficulty: DropSource.QUEST_NOVICE
+    difficulty: DropSource.QUEST_NOVICE,
+    // Alternatives rechecked on the Wiki (13 Oct): essence is no longer gated: minotaurs in the Stronghold of Security (Misthalin) drop it.
   },
   'Nature Spirit': {
     kind: 'quest', accessPolicy: 'locations',
@@ -822,8 +829,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     oneOf: [
       { skills: { 'Fishing': 20, 'Cooking': 15 } },
       { merchants: ['Food Shops'] },
+      { skills: { 'Cooking': 15 }, merchants: ['Fishing Shops'], anyOfRegions: ['Port Roberts', 'The Summer Shore'] },
     ],
-    difficulty: DropSource.QUEST_NOVICE
+    difficulty: DropSource.QUEST_NOVICE,
+    // Alternatives rechecked on the Wiki (13 Oct): raw trout also sold by Fishing Shops in Port Roberts and The Summer Shore.
   },
   'Troll Stronghold': {
     kind: 'quest', accessPolicy: 'regions',
@@ -892,8 +901,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { skills: { 'Fishing': 76 } },
       { merchants: ['Food Shops'], regions: ['Canifis'] },
       { merchants: ['Fishing Shops'] },
+      { skills: { 'Thieving': 72 }, regions: ['East Ardougne'] },
     ],
-    difficulty: DropSource.QUEST_INTERMEDIATE
+    difficulty: DropSource.QUEST_INTERMEDIATE,
+    // Alternatives rechecked on the Wiki (13 Oct): raw shark also from the Ardougne Castle chest (72 Thieving).
   },
   'Horror from the Deep': {
     kind: 'quest', accessPolicy: 'regions',
@@ -906,13 +917,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Throne of Miscellania', name: 'Throne of Miscellania',
     regions: ['Miscellania & Etceteria'],
-    skills: { 'Smithing': 15 }, prereqs: ['The Fremennik Trials', 'Heroes\' Quest'], points: 1, series: 'Miscellania',
+    skills: {}, prereqs: ['The Fremennik Trials', 'Heroes\' Quest'], points: 1, series: 'Miscellania',
     // Items checked on the Wiki: Iron bar.
-    oneOf: [
-      { skills: { 'Mining': 15 } },
-      { merchants: ['Ore Merchants'] },
-    ],
-    difficulty: DropSource.QUEST_EXPERIENCED
+    difficulty: DropSource.QUEST_EXPERIENCED,
+    // Alternatives rechecked on the Wiki (13 Oct): the iron bar is no longer gated: dwarves drop them.
   },
   'Monkey Madness I': {
     kind: 'quest', accessPolicy: 'regions',
@@ -929,8 +937,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { quests: ['Goblin Diplomacy'] },
       { quests: ['Waterfall Quest'] },
       { quests: ['The Dig Site'] },
+      { skills: { 'Magic': 33 }, regions: ['Varrock'] },
+      { regions: ['Corsair Cove'], quests: ['Dragon Slayer I'] },
     ],
-    difficulty: DropSource.QUEST_MASTER
+    difficulty: DropSource.QUEST_MASTER,
+    // Alternatives rechecked on the Wiki (13 Oct): gold bar also by Telekinetic Grab in Varrock or the Corsair Cove spawn.
   },
   'Haunted Mine': {
     kind: 'quest', accessPolicy: 'locations',
@@ -946,13 +957,16 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Troll Romance', name: 'Troll Romance',
     regions: ['Burthorpe', 'Warriors\' Guild', 'Mountain Camp'],
-    skills: { 'Agility': 28, 'Smithing': 15, 'Woodcutting': 45 }, prereqs: ['Troll Stronghold'], points: 2,
+    skills: { 'Agility': 28, 'Smithing': 15 }, prereqs: ['Troll Stronghold'], points: 2,
     // Items checked on the Wiki: Iron bar; Maple logs; Bucket of wax.
     oneOf: [
-      { skills: { 'Mining': 15 }, regions: ['Catherby', "Seers' Village"] },
-      { merchants: ['Ore Merchants'], regions: ['Catherby', "Seers' Village"] },
+      { skills: { 'Mining': 15, 'Woodcutting': 45 }, regions: ['Catherby', "Seers' Village"] },
+      { skills: { 'Mining': 15, 'Firemaking': 50 }, regions: ['Catherby', "Seers' Village", 'Wintertodt Camp'] },
+      { skills: { 'Woodcutting': 45 }, merchants: ['Ore Merchants'], regions: ['Catherby', "Seers' Village"] },
+      { skills: { 'Firemaking': 50 }, merchants: ['Ore Merchants'], regions: ['Catherby', "Seers' Village", 'Wintertodt Camp'] },
     ],
-    difficulty: DropSource.QUEST_INTERMEDIATE
+    difficulty: DropSource.QUEST_INTERMEDIATE,
+    // Alternatives rechecked on the Wiki (13 Oct): maple logs also from the Wintertodt reward cart.
   },
   'In Search of the Myreque': {
     kind: 'quest', accessPolicy: 'regions',
@@ -979,8 +993,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     oneOf: [
       { skills: { 'Mining': 20, 'Smithing': 20 } },
       { merchants: ['Silver Shops'] },
+      { skills: { 'Thieving': 50 }, regions: ['East Ardougne'] },
+      { regions: ['Barbarian Village'] },
     ],
-    difficulty: DropSource.QUEST_INTERMEDIATE
+    difficulty: DropSource.QUEST_INTERMEDIATE,
+    // Alternatives rechecked on the Wiki (13 Oct): silver bar also from the East Ardougne silver stall (50 Thieving) or Stronghold of Security flesh crawlers.
   },
   'Roving Elves': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1008,8 +1025,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { merchants: ['Archery Shops', 'Clothes Shops'] },
       { merchants: ['Archery Shops', 'Silk Shops'] },
       { merchants: ['Archery Shops', 'General Stores'] },
+      { skills: { 'Fletching': 25 }, regions: ['Civitas illa Fortis'] },
+      { merchants: ['Archery Shops'], regions: ['Civitas illa Fortis'] },
     ],
-    difficulty: DropSource.QUEST_INTERMEDIATE
+    difficulty: DropSource.QUEST_INTERMEDIATE,
+    // Alternatives rechecked on the Wiki (13 Oct): silk also spawns in Civitas illa Fortis.
   },
   'One Small Favour': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1076,7 +1096,6 @@ export const QUEST_DATA: Record<string, QuestData> = {
     ],
     skills: { 'Thieving': 53, 'Firemaking': 50, 'Slayer': 10, 'Magic': 50, 'Smithing': 30 }, prereqs: ['The Dig Site', 'Temple of Ikov', 'The Tourist Trap', 'Troll Stronghold', 'Priest in Peril', 'Waterfall Quest'], points: 3, series: 'Mahjarrat',
     // Items checked on the Wiki: Spice; 20-50+ lockpicks; Facemask, ring of visibility, ice gloves, spiked boots; 12 magic logs; 6 steel bars.
-    merchants: ['Claw Shops'],
     equipmentRequirements: [
       { slot: 'Head', tier: 1, reason: 'Wear a facemask/gas mask/slayer helmet in the Smoke Dungeon' },
       { slot: 'Ring', tier: 1, reason: 'Wear the ring of visibility for the Damis fight' },
@@ -1085,13 +1104,16 @@ export const QUEST_DATA: Record<string, QuestData> = {
     ],
     oneOf: [
       { skills: { 'Woodcutting': 75 }, merchants: ['Spice Shops'] },
-      { skills: { 'Firemaking': 50 }, merchants: ['Spice Shops'], regions: ['Wintertodt Camp'] },
       { skills: { 'Woodcutting': 75 }, merchants: ['Food Shops'] },
-      { skills: { 'Firemaking': 50 }, merchants: ['Food Shops'], regions: ['Wintertodt Camp'] },
       { skills: { 'Woodcutting': 75 }, merchants: ['General Stores'] },
-      { skills: { 'Firemaking': 50 }, merchants: ['General Stores'], regions: ['Wintertodt Camp'] },
+      { skills: { 'Woodcutting': 75, 'Thieving': 65 }, anyOfRegions: ['East Ardougne', 'Civitas illa Fortis', 'Port Roberts', 'Prifddinas'] },
+      { skills: { 'Firemaking': 50, 'Woodcutting': 50 }, merchants: ['Spice Shops'], regions: ['Wintertodt Camp'] },
+      { skills: { 'Firemaking': 50, 'Woodcutting': 50 }, merchants: ['Food Shops'], regions: ['Wintertodt Camp'] },
+      { skills: { 'Firemaking': 50, 'Woodcutting': 50 }, merchants: ['General Stores'], regions: ['Wintertodt Camp'] },
+      { skills: { 'Firemaking': 50, 'Woodcutting': 50, 'Thieving': 65 }, regions: ['Wintertodt Camp'], anyOfRegions: ['East Ardougne', 'Civitas illa Fortis', 'Port Roberts', 'Prifddinas'] },
     ],
-    difficulty: DropSource.QUEST_MASTER
+    difficulty: DropSource.QUEST_MASTER,
+    // Alternatives rechecked on the Wiki (13 Oct): lockpicks are pickpocketed from bandits (53 Thieving); spice also from a spice stall (65 Thieving); Wintertodt gives magic logs at 50 Woodcutting.
   },
   'Icthlarin\'s Little Helper': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1119,11 +1141,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Feldip Hills', 'Yanille'],
     skills: { 'Smithing': 4, 'Herblore': 8, 'Ranged': 30 }, prereqs: ['Big Chompy Bird Hunting', 'Jungle Potion'], points: 1,
     // Items checked on the Wiki: Brutal arrows or Crumble Undead.
-    oneOf: [
-      { skills: { 'Fletching': 7 } },
-      { skills: { 'Magic': 39 } },
-    ],
-    difficulty: DropSource.QUEST_INTERMEDIATE
+    difficulty: DropSource.QUEST_INTERMEDIATE,
+    // Alternatives rechecked on the Wiki (13 Oct): brutal arrows or Crumble Undead only speed up the fight, so they are no longer gated.
   },
   'The Lost Tribe': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1169,12 +1188,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     oneOf: [
       { skills: { 'Woodcutting': 75 }, merchants: ['Tanners', 'Clothes Shops', 'Food Shops'], regions: ['Tree Gnome Stronghold'] },
       { skills: { 'Woodcutting': 75 }, merchants: ['Tanners', 'Dye Shops', 'Food Shops'], regions: ['Tree Gnome Stronghold'] },
-      { skills: { 'Firemaking': 50 }, merchants: ['Tanners', 'Clothes Shops', 'Food Shops'], regions: ['Wintertodt Camp', 'Tree Gnome Stronghold'] },
-      { skills: { 'Firemaking': 50 }, merchants: ['Tanners', 'Dye Shops', 'Food Shops'], regions: ['Wintertodt Camp', 'Tree Gnome Stronghold'] },
-      { skills: { 'Magic': 78, 'Woodcutting': 75 }, merchants: ['Clothes Shops', 'Food Shops'], regions: ['Tree Gnome Stronghold'] },
-      { skills: { 'Magic': 78, 'Woodcutting': 75 }, merchants: ['Dye Shops', 'Food Shops'], regions: ['Tree Gnome Stronghold'] },
-      { skills: { 'Magic': 78, 'Firemaking': 50 }, merchants: ['Clothes Shops', 'Food Shops'], regions: ['Wintertodt Camp', 'Tree Gnome Stronghold'] },
-      { skills: { 'Magic': 78, 'Firemaking': 50 }, merchants: ['Dye Shops', 'Food Shops'], regions: ['Wintertodt Camp', 'Tree Gnome Stronghold'] },
+      { skills: { 'Woodcutting': 75, 'Magic': 78 }, merchants: ['Clothes Shops', 'Food Shops'], regions: ['Tree Gnome Stronghold'], quests: ['Lunar Diplomacy'] },
+      { skills: { 'Woodcutting': 75, 'Magic': 78 }, merchants: ['Dye Shops', 'Food Shops'], regions: ['Tree Gnome Stronghold'], quests: ['Lunar Diplomacy'] },
+      { skills: { 'Firemaking': 50, 'Woodcutting': 50 }, merchants: ['Tanners', 'Clothes Shops', 'Food Shops'], regions: ['Wintertodt Camp', 'Tree Gnome Stronghold'] },
+      { skills: { 'Firemaking': 50, 'Woodcutting': 50 }, merchants: ['Tanners', 'Dye Shops', 'Food Shops'], regions: ['Wintertodt Camp', 'Tree Gnome Stronghold'] },
+      { skills: { 'Firemaking': 50, 'Woodcutting': 50, 'Magic': 78 }, merchants: ['Clothes Shops', 'Food Shops'], regions: ['Wintertodt Camp', 'Tree Gnome Stronghold'], quests: ['Lunar Diplomacy'] },
+      { skills: { 'Firemaking': 50, 'Woodcutting': 50, 'Magic': 78 }, merchants: ['Dye Shops', 'Food Shops'], regions: ['Wintertodt Camp', 'Tree Gnome Stronghold'], quests: ['Lunar Diplomacy'] },
     ],
     equipmentRequirements: [
       { slot: 'Head', tier: 1, reason: 'Wear the mourner gas mask to get into the Mourner headquarters' },
@@ -1184,7 +1203,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { slot: 'Boots', tier: 1, reason: 'Wear the mourner boots to get into the Mourner headquarters' },
       { slot: 'Cape', tier: 1, reason: 'Wear the mourner cloak to get into the Mourner headquarters' },
     ],
-    difficulty: DropSource.QUEST_MASTER
+    difficulty: DropSource.QUEST_MASTER,
+    // Alternatives rechecked on the Wiki (13 Oct): Wintertodt magic logs need 50 Woodcutting; Tan Leather needs Lunar Diplomacy.
   },
   'Forgettable Tale...': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1192,8 +1212,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Keldagrim', 'Taverley'],
     skills: { 'Cooking': 22, 'Farming': 17 }, prereqs: ['The Giant Dwarf', 'Fishing Contest'], points: 2, series: 'Red Axe',
     // Items checked on the Wiki: Kebab and 2 beers.
-    merchants: ['Bars & Inns'],
-    difficulty: DropSource.QUEST_INTERMEDIATE
+    difficulty: DropSource.QUEST_INTERMEDIATE,
+    // Alternatives rechecked on the Wiki (13 Oct): beer is no longer gated: it spawns in Barbarian Village and goblins drop it.
   },
   'Garden of Tranquillity': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1221,13 +1241,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { slot: 'Neck', tier: 1, reason: 'Wear the catspeak amulet' },
     ],
     oneOf: [
-      { skills: { 'Cooking': 40 }, merchants: ['Farming Shops'] },
-      { skills: { 'Thieving': 5 }, merchants: ['Farming Shops'] },
-      { skills: { 'Cooking': 40 }, merchants: ['Vegetable Shops'], quests: ['Barbarian Training'] },
-      { skills: { 'Thieving': 5 }, merchants: ['Vegetable Shops'], quests: ['Barbarian Training'] },
-      { skills: { 'Thieving': 10 }, quests: ['Barbarian Training'] },
+      { skills: { 'Cooking': 50 }, merchants: ['Farming Shops'] },
+      { merchants: ['Farming Shops'], quests: ["Gertrude's Cat"] },
+      { skills: { 'Cooking': 50 }, quests: ['Barbarian Training'] },
+      { quests: ['Barbarian Training', "Gertrude's Cat"] },
     ],
-    difficulty: DropSource.QUEST_INTERMEDIATE
+    difficulty: DropSource.QUEST_INTERMEDIATE,
+    // Alternatives rechecked on the Wiki (13 Oct): seed dibber from Farming Shops or Barbarian Training; chocolate cake needs 50 Cooking or the Gertrude's Cat reward; potato seeds are a common drop.
   },
   'Wanted!': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1266,10 +1286,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: { 'Crafting': 30 }, prereqs: ['Demon Slayer', 'The Golem'], points: 1, series: 'Demon Slayer',
     // Items checked on the Wiki: Silver bar.
     oneOf: [
-      { merchants: ['Silver Shops'] },
       { skills: { 'Mining': 20, 'Smithing': 20 } },
+      { merchants: ['Silver Shops'] },
+      { skills: { 'Thieving': 50 }, regions: ['East Ardougne'] },
+      { regions: ['Barbarian Village'] },
     ],
-    difficulty: DropSource.QUEST_INTERMEDIATE
+    difficulty: DropSource.QUEST_INTERMEDIATE,
+    // Alternatives rechecked on the Wiki (13 Oct): silver bar also from the East Ardougne silver stall (50 Thieving) or Stronghold of Security flesh crawlers.
   },
   'Making History': {
     kind: 'quest', accessPolicy: 'regions-and-locations',
@@ -1354,11 +1377,25 @@ export const QUEST_DATA: Record<string, QuestData> = {
     // Distaste, the fruit blast from Hudo's fruit and the cocktail gear in
     // the Gnome Stronghold, and an eye of newt from Betty in Port Sarim or a
     // herblore shop.
-    regions: ['Lumbridge', 'Yanille', 'Tree Gnome Stronghold'],
+    regions: ['Lumbridge'],
     skills: { 'Cooking': 10 }, prereqs: ['Cook\'s Assistant'], points: 1, series: 'Recipe for Disaster',
-    merchants: ['Bars & Inns', 'Vegetable Shops', 'Food Shops'],
-    oneOf: [{ regions: ['Port Sarim'], merchants: ['Magic Shops'] }, { merchants: ['Herblore Shops'] }],
-    difficulty: DropSource.QUEST_NOVICE
+    merchants: ['Vegetable Shops'],
+    oneOf: [
+      { merchants: ['Bars & Inns', 'Food Shops', 'Magic Shops'], regions: ['Yanille', 'Tree Gnome Stronghold', 'Port Sarim'] },
+      { merchants: ['Bars & Inns', 'Food Shops', 'Herblore Shops'], regions: ['Yanille', 'Tree Gnome Stronghold'] },
+      { merchants: ['Bars & Inns', 'Magic Shops'], regions: ['Yanille', 'Varrock', 'Port Sarim'], quests: ['The Dig Site'] },
+      { merchants: ['Bars & Inns', 'Herblore Shops'], regions: ['Yanille', 'Varrock'], quests: ['The Dig Site'] },
+      { merchants: ['Bars & Inns', 'Food Shops', 'Magic Shops'], regions: ['Aldarin', 'Tree Gnome Stronghold', 'Port Sarim'] },
+      { merchants: ['Bars & Inns', 'Food Shops', 'Herblore Shops'], regions: ['Aldarin', 'Tree Gnome Stronghold'] },
+      { merchants: ['Bars & Inns', 'Magic Shops'], regions: ['Aldarin', 'Varrock', 'Port Sarim'], quests: ['The Dig Site'] },
+      { merchants: ['Bars & Inns', 'Herblore Shops'], regions: ['Aldarin', 'Varrock'], quests: ['The Dig Site'] },
+      { merchants: ['General Stores', 'Food Shops', 'Magic Shops'], regions: ['Tree Gnome Stronghold', 'Port Sarim'], anyOfRegions: ['Lighthouse', 'Baxtorian Falls'] },
+      { merchants: ['General Stores', 'Food Shops', 'Herblore Shops'], regions: ['Tree Gnome Stronghold'], anyOfRegions: ['Lighthouse', 'Baxtorian Falls'] },
+      { merchants: ['General Stores', 'Magic Shops'], regions: ['Varrock', 'Port Sarim'], anyOfRegions: ['Lighthouse', 'Baxtorian Falls'], quests: ['The Dig Site'] },
+      { merchants: ['General Stores', 'Herblore Shops'], regions: ['Varrock'], anyOfRegions: ['Lighthouse', 'Baxtorian Falls'], quests: ['The Dig Site'] },
+    ],
+    difficulty: DropSource.QUEST_NOVICE,
+    // Alternatives rechecked on the Wiki (13 Oct): Greenman's ale also sold in Aldarin, the Lighthouse and by Rasolo; the fruit blast also comes from the Dig Site certificate reward.
   },
   'RFD: Dwarf': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1369,8 +1406,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     oneOf: [
       { merchants: ['Bars & Inns'] },
       { skills: { 'Cooking': 24 } },
+      { regions: ['Burthorpe'] },
     ],
-    difficulty: DropSource.QUEST_NOVICE
+    difficulty: DropSource.QUEST_NOVICE,
+    // Alternatives rechecked on the Wiki (13 Oct): Asgarnian ale also spawns in the Burthorpe pub.
   },
   'RFD: Goblins': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1382,9 +1421,15 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { merchants: ['Food Shops'] },
       { merchants: ['Spice Shops', 'Vegetable Shops'] },
       { merchants: ['Spice Shops', 'General Stores'] },
-      { merchants: ['Spice Shops'], skills: { 'Farming': 39 } },
+      { skills: { 'Farming': 39 }, merchants: ['Spice Shops'] },
+      { merchants: ['Spice Shops', 'Bars & Inns'] },
+      { skills: { 'Thieving': 65 }, merchants: ['Vegetable Shops'], anyOfRegions: ['East Ardougne', 'Civitas illa Fortis', 'Port Roberts', 'Prifddinas'] },
+      { skills: { 'Thieving': 65 }, merchants: ['General Stores'], anyOfRegions: ['East Ardougne', 'Civitas illa Fortis', 'Port Roberts', 'Prifddinas'] },
+      { skills: { 'Thieving': 65, 'Farming': 39 }, anyOfRegions: ['East Ardougne', 'Civitas illa Fortis', 'Port Roberts', 'Prifddinas'] },
+      { skills: { 'Thieving': 65 }, merchants: ['Bars & Inns'], anyOfRegions: ['East Ardougne', 'Civitas illa Fortis', 'Port Roberts', 'Prifddinas'] },
     ],
-    difficulty: DropSource.QUEST_NOVICE
+    difficulty: DropSource.QUEST_NOVICE,
+    // Alternatives rechecked on the Wiki (13 Oct): spice also from a spice stall (65 Thieving); oranges also from Bars & Inns.
   },
   'RFD: Pirate Pete': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1419,8 +1464,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     oneOf: [
       { skills: { 'Cooking': 25 } },
       { merchants: ['Bars & Inns'] },
+      { merchants: ['Food Shops'], regions: ['Prifddinas'] },
+      { merchants: ['Food Shops'], guilds: ["Warriors' Guild"] },
     ],
-    difficulty: DropSource.QUEST_INTERMEDIATE
+    difficulty: DropSource.QUEST_INTERMEDIATE,
+    // Alternatives rechecked on the Wiki (13 Oct): stew also sold by the food shops in Prifddinas and the Warriors' Guild.
   },
   'RFD: Skrach Uglogwee': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1444,8 +1492,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     oneOf: [
       { skills: { 'Farming': 20 } },
       { regions: ['Civitas illa Fortis'] },
+      { regions: ['Cam Torum'] },
     ],
-    difficulty: DropSource.QUEST_MASTER
+    difficulty: DropSource.QUEST_MASTER,
+    // Alternatives rechecked on the Wiki (13 Oct): sweetcorn also spawns at Cam Torum.
   },
   'RFD: King Awowogei': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1512,14 +1562,16 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Swan Song', name: 'Swan Song',
     regions: ['Piscatoris Fishing Colony', 'Yanille', 'Draynor Village', 'Falador', 'Crafting Guild'],
-    skills: { 'Quest Points': 100, 'Magic': 66, 'Cooking': 62, 'Fishing': 62, 'Smithing': 45, 'Firemaking': 42, 'Crafting': 40, 'Runecraft': 23 },
+    skills: { 'Quest Points': 100, 'Magic': 66, 'Cooking': 62, 'Fishing': 62, 'Smithing': 45, 'Firemaking': 42, 'Crafting': 40 },
     prereqs: ['One Small Favour', 'Garden of Tranquillity'], points: 2,
     // Items checked on the Wiki: Mist, lava and blood runes.
     oneOf: [
-      { merchants: ['Magic Shops'] },
+      { skills: { 'Runecraft': 23 }, merchants: ['Magic Shops'] },
       { skills: { 'Runecraft': 77 } },
+      { regions: ['Mage Training Arena'] },
     ],
-    difficulty: DropSource.QUEST_MASTER
+    difficulty: DropSource.QUEST_MASTER,
+    // Alternatives rechecked on the Wiki (13 Oct): mist, lava and blood runes also from the Mage Training Arena.
   },
   'Royal Trouble': {
     kind: 'quest', accessPolicy: 'locations',
@@ -1597,9 +1649,16 @@ export const QUEST_DATA: Record<string, QuestData> = {
       // The giant tortoises' pen (37,55) belongs to Tree Gnome Stronghold; it is inside the Gnome Stronghold's walls.
       { id: 'giant-tortoises', label: 'Giant tortoises in the Gnome Stronghold', standardAreas: ['Tree Gnome Stronghold'], chunkOptions: [{ cx: 37, cy: 55 }] },
     ],
-    skills: { 'Construction': 5, 'Magic': 46, 'Runecraft': 13, 'Woodcutting': 45 }, prereqs: ['The Grand Tree'], points: 2, series: 'Gnome',
+    skills: { 'Construction': 5, 'Magic': 46 }, prereqs: ['The Grand Tree'], points: 2, series: 'Gnome',
     // Items checked on the Wiki: Mud rune; Maple logs.
-    difficulty: DropSource.QUEST_INTERMEDIATE
+    difficulty: DropSource.QUEST_INTERMEDIATE,
+    // Alternatives rechecked on the Wiki (13 Oct): mud runes also from the Mage Training Arena; maple logs also from Managing Miscellania.
+    oneOf: [
+      { skills: { 'Runecraft': 13, 'Woodcutting': 45 } },
+      { skills: { 'Runecraft': 13 }, regions: ['Miscellania & Etceteria'], quests: ['Throne of Miscellania'] },
+      { skills: { 'Woodcutting': 45 }, regions: ['Mage Training Arena'] },
+      { regions: ['Mage Training Arena', 'Miscellania & Etceteria'], quests: ['Throne of Miscellania'] },
+    ],
   },
   'Darkness of Hallowvale': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1677,12 +1736,17 @@ export const QUEST_DATA: Record<string, QuestData> = {
     // Items checked on the Wiki: Mithril axe; Hard leather; Holy symbol (silver bar).
     merchants: ['Tanners'],
     oneOf: [
-      { skills: { 'Smithing': 51, 'Mining': 20 } },
-      { skills: { 'Smithing': 51 }, merchants: ['Silver Shops'] },
+      { skills: { 'Mining': 20, 'Smithing': 51 } },
       { skills: { 'Mining': 20, 'Smithing': 20 }, merchants: ['Axe Shops'] },
-      { merchants: ['Axe Shops', 'Silver Shops'] },
+      { skills: { 'Smithing': 51 }, merchants: ['Silver Shops'] },
+      { merchants: ['Silver Shops', 'Axe Shops'] },
+      { skills: { 'Thieving': 50, 'Smithing': 51 }, regions: ['East Ardougne'] },
+      { skills: { 'Thieving': 50 }, merchants: ['Axe Shops'], regions: ['East Ardougne'] },
+      { skills: { 'Smithing': 51 }, regions: ['Barbarian Village'] },
+      { merchants: ['Axe Shops'], regions: ['Barbarian Village'] },
     ],
-    difficulty: DropSource.QUEST_INTERMEDIATE
+    difficulty: DropSource.QUEST_INTERMEDIATE,
+    // Alternatives rechecked on the Wiki (13 Oct): silver bar also from the East Ardougne silver stall (50 Thieving) or Stronghold of Security flesh crawlers.
   },
   'Contact!': {
     kind: 'quest', accessPolicy: 'locations',
@@ -1709,16 +1773,15 @@ export const QUEST_DATA: Record<string, QuestData> = {
     manualRequirements: ["Access to a crafting table 3"], points: 1, series: 'Penguin',
     // Items checked on the Wiki: 10 steel nails; Silk; Oak and mahogany planks; Leather.
     oneOf: [
-      { skills: { 'Smithing': 34 }, merchants: ['Sawmill Operators', 'Tanners'] },
-      { skills: { 'Smithing': 34 }, merchants: ['Clothes Shops'] },
-      { skills: { 'Smithing': 34 }, merchants: ['General Stores'] },
-      { skills: { 'Smithing': 34, 'Thieving': 20 } },
-      { merchants: ['Sawmill Operators', 'Silk Shops'] },
-      { merchants: ['Sawmill Operators', 'Clothes Shops'] },
-      { merchants: ['Sawmill Operators', 'General Stores'] },
-      { skills: { 'Thieving': 20 }, merchants: ['Sawmill Operators'] },
+      { merchants: ['Silk Shops'] },
+      { merchants: ['Clothes Shops'] },
+      { merchants: ['General Stores'] },
+      { skills: { 'Thieving': 20 } },
+      { regions: ['Civitas illa Fortis'] },
     ],
-    difficulty: DropSource.QUEST_INTERMEDIATE
+    difficulty: DropSource.QUEST_INTERMEDIATE,
+    // Alternatives rechecked on the Wiki (13 Oct): planks need a sawmill and leather a tanner; silk from shops, the Ardougne stall or the Civitas illa Fortis spawn.
+    merchants: ['Sawmill Operators', 'Tanners'],
   },
   'The Fremennik Isles': {
     kind: 'quest', accessPolicy: 'regions-and-locations',
@@ -1751,14 +1814,19 @@ export const QUEST_DATA: Record<string, QuestData> = {
     manualRequirements: ['Access to a player-owned house workshop and crafting table'],
     skills: { 'Crafting': 16, 'Construction': 30, 'Prayer': 50 }, prereqs: ['Creature of Fenkenstrain', 'Cabin Fever', 'RFD: Pirate Pete'], points: 2, series: 'Pirate',
     // Items checked on the Wiki: Fishbowl helmet, diving apparatus, holy symbol, Ring of Charos (worn); Planks (about 22 normal planks).
-    merchants: ['Sawmill Operators'],
     equipmentRequirements: [
       { slot: 'Head', tier: 1, reason: 'Wear fishbowl helmet underwater' },
       { slot: 'Cape', tier: 1, reason: 'Wear diving apparatus underwater' },
       { slot: 'Neck', tier: 1, reason: 'Equip holy symbol to use the prayer book' },
       { slot: 'Ring', tier: 1, reason: 'Wear Ring of Charos when talking to Rufus' },
     ],
-    difficulty: DropSource.QUEST_EXPERIENCED
+    difficulty: DropSource.QUEST_EXPERIENCED,
+    // Alternatives rechecked on the Wiki (13 Oct): planks also spawn at the Barbarian Outpost, or Plank Make.
+    oneOf: [
+      { merchants: ['Sawmill Operators'] },
+      { regions: ['Barbarian Outpost'] },
+      { skills: { 'Magic': 86 }, quests: ['Dream Mentor'] },
+    ],
   },
   'What Lies Below': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1842,8 +1910,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { merchants: ['Bars & Inns'] },
       { merchants: ['Vegetable Shops'] },
       { skills: { 'Thieving': 25 }, regions: ['Hosidius'] },
+      { skills: { 'Thieving': 25 }, regions: ['Kourend Castle'] },
     ],
-    difficulty: DropSource.QUEST_GRANDMASTER
+    difficulty: DropSource.QUEST_GRANDMASTER,
+    // Alternatives rechecked on the Wiki (13 Oct): lemon also from the Kourend Castle fruit stall.
   },
   'Client of Kourend': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1912,12 +1982,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: { 'Magic': 75, 'Smithing': 70, 'Mining': 68, 'Crafting': 62, 'Agility': 60, 'Thieving': 60, 'Construction': 50, 'Hitpoints': 50, 'Quest Points': 200 }, prereqs: ['Legends\' Quest', 'Dream Mentor', 'A Tail of Two Cats', 'Animal Magnetism', 'Ghosts Ahoy', 'Bone Voyage', 'Client of Kourend'],
     manualRequirements: ["Started the pyre ship portion of Barbarian Training"], points: 5, series: 'Dragonkin',
     // Items checked on the Wiki: Machete; Astral rune.
-    merchants: ['General Stores'],
     oneOf: [
       { skills: { 'Runecraft': 40 } },
       { merchants: ['Magic Shops'] },
     ],
-    difficulty: DropSource.QUEST_GRANDMASTER
+    difficulty: DropSource.QUEST_GRANDMASTER,
+    // Alternatives rechecked on the Wiki (13 Oct): the machete is no longer gated: Legends' Quest, which it needs, gives one.
   },
   'Tale of the Righteous': {
     kind: 'quest', accessPolicy: 'regions',
@@ -1974,14 +2044,25 @@ export const QUEST_DATA: Record<string, QuestData> = {
     oneOf: [
       { skills: { 'Crafting': 12 }, merchants: ['Chainbody Shops', 'Clothes Shops'] },
       { skills: { 'Crafting': 12, 'Thieving': 20 }, merchants: ['Chainbody Shops'] },
+      { skills: { 'Crafting': 12 }, merchants: ['Chainbody Shops', 'Silk Shops'] },
       { merchants: ['Chainbody Shops', 'Stonemasons', 'Clothes Shops'] },
       { skills: { 'Thieving': 20 }, merchants: ['Chainbody Shops', 'Stonemasons'] },
+      { merchants: ['Chainbody Shops', 'Stonemasons', 'Silk Shops'] },
+      { merchants: ['Chainbody Shops', 'Real Estate Agents', 'Clothes Shops'] },
+      { skills: { 'Thieving': 20 }, merchants: ['Chainbody Shops', 'Real Estate Agents'] },
+      { merchants: ['Chainbody Shops', 'Real Estate Agents', 'Silk Shops'] },
       { skills: { 'Smithing': 81, 'Crafting': 12 }, merchants: ['Clothes Shops'] },
       { skills: { 'Smithing': 81, 'Crafting': 12, 'Thieving': 20 } },
+      { skills: { 'Smithing': 81, 'Crafting': 12 }, merchants: ['Silk Shops'] },
       { skills: { 'Smithing': 81 }, merchants: ['Stonemasons', 'Clothes Shops'] },
       { skills: { 'Smithing': 81, 'Thieving': 20 }, merchants: ['Stonemasons'] },
+      { skills: { 'Smithing': 81 }, merchants: ['Stonemasons', 'Silk Shops'] },
+      { skills: { 'Smithing': 81 }, merchants: ['Real Estate Agents', 'Clothes Shops'] },
+      { skills: { 'Smithing': 81, 'Thieving': 20 }, merchants: ['Real Estate Agents'] },
+      { skills: { 'Smithing': 81 }, merchants: ['Real Estate Agents', 'Silk Shops'] },
     ],
-    difficulty: DropSource.QUEST_GRANDMASTER
+    difficulty: DropSource.QUEST_GRANDMASTER,
+    // Alternatives rechecked on the Wiki (13 Oct): silk also from Silk Shops; limestone bricks also from Real Estate Agents.
   },
   'The Fremennik Exiles': {
     kind: 'quest', accessPolicy: 'regions-and-locations',
@@ -2073,8 +2154,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { merchants: ['Clothes Shops'], regions: ['Lletya'] },
       { regions: ['Falador', 'Varrock'] },
       { skills: { 'Farming': 25 } },
+      { regions: ['Falador', "Land's End"] },
     ],
-    difficulty: DropSource.QUEST_EXPERIENCED
+    difficulty: DropSource.QUEST_EXPERIENCED,
+    // Alternatives rechecked on the Wiki (13 Oct): redberries also grow at Land's End.
   },
   'Temple of the Eye': {
     kind: 'quest', accessPolicy: 'regions',
@@ -2133,16 +2216,20 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Nardah', 'Goblin Village', 'Weiss', 'The Stranglewood', 'Digsite', 'Lovakengj', 'Hosidius', 'Wizards\' Tower'],
     skills: { 'Magic': 75, 'Firemaking': 75, 'Thieving': 70, 'Herblore': 62, 'Runecraft': 60, 'Construction': 60 }, prereqs: ['Desert Treasure I', 'Secrets of the North', 'Enakhra\'s Lament', 'Temple of the Eye', 'The Garden of Death', 'Below Ice Mountain', 'His Faithful Servants'], points: 5, series: 'Mahjarrat',
     // Items checked on the Wiki: Facemask or Slayer helm; Ring of visibility; 2 soul runes.
-    merchants: ['Slayer Equipment'],
     equipmentRequirements: [
       { slot: 'Head', tier: 1, reason: 'Wear a facemask or slayer helm' },
       { slot: 'Ring', tier: 1, reason: 'Wear the ring of visibility' },
     ],
     oneOf: [
-      { merchants: ['Magic Shops'] },
-      { skills: { 'Runecraft': 90 } },
+      { merchants: ['Slayer Equipment', 'Magic Shops'] },
+      { skills: { 'Runecraft': 90 }, merchants: ['Slayer Equipment'] },
+      { merchants: ['Slayer Equipment'], regions: ['Mage Training Arena'] },
+      { merchants: ['Magic Shops'], regions: ['Kourend Castle'] },
+      { skills: { 'Runecraft': 90 }, regions: ['Kourend Castle'] },
+      { regions: ['Kourend Castle', 'Mage Training Arena'] },
     ],
-    difficulty: DropSource.QUEST_GRANDMASTER
+    difficulty: DropSource.QUEST_GRANDMASTER,
+    // Alternatives rechecked on the Wiki (13 Oct): facemask also spawns in Kourend Castle (Telekinetic Grab); soul runes also from the Mage Training Arena.
   },
   'The Path of Glouphrie': {
     kind: 'quest', accessPolicy: 'regions',
@@ -2312,12 +2399,15 @@ export const QUEST_DATA: Record<string, QuestData> = {
     // Items checked on the Wiki: Insulated boots; Mith grapple; Ring of life.
     merchants: ['Slayer Equipment'],
     oneOf: [
-      { skills: { 'Fletching': 59, 'Smithing': 59, 'Magic': 57, 'Crafting': 43 } },
-      { skills: { 'Fletching': 59, 'Smithing': 59, 'Hunter': 65 } },
-      { skills: { 'Firemaking': 35, 'Magic': 57, 'Crafting': 43 }, quests: ['Barbarian Training'] },
-      { skills: { 'Firemaking': 35, 'Hunter': 65 }, quests: ['Barbarian Training'] },
+      { skills: { 'Magic': 57, 'Crafting': 43, 'Fletching': 59, 'Smithing': 59 } },
+      { skills: { 'Magic': 57, 'Crafting': 43, 'Firemaking': 35 }, quests: ['Barbarian Training'] },
+      { skills: { 'Hunter': 65, 'Fletching': 59, 'Smithing': 59 } },
+      { skills: { 'Hunter': 65, 'Firemaking': 35 }, quests: ['Barbarian Training'] },
+      { skills: { 'Fletching': 59, 'Smithing': 59 }, quests: ['The Lost Tribe'] },
+      { skills: { 'Firemaking': 35 }, quests: ['The Lost Tribe', 'Barbarian Training'] },
     ],
-    difficulty: DropSource.QUEST_MASTER
+    difficulty: DropSource.QUEST_MASTER,
+    // Alternatives rechecked on the Wiki (13 Oct): ring of life also from The Lost Tribe reward.
   },
   'The Final Dawn': {
     kind: 'quest', accessPolicy: 'regions-and-locations',
@@ -2334,9 +2424,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Shadows of Custodia', name: 'Shadows of Custodia',
     regions: ['Auburnvale'],
-    skills: { 'Slayer': 54, 'Fishing': 45, 'Construction': 41, 'Hunter': 36, 'Woodcutting': 45 }, prereqs: ['Children of the Sun'], points: 2,
+    skills: { 'Slayer': 54, 'Fishing': 45, 'Construction': 41, 'Hunter': 36 }, prereqs: ['Children of the Sun'], points: 2,
     // Items checked on the Wiki: Four maple logs.
-    difficulty: DropSource.QUEST_EXPERIENCED
+    difficulty: DropSource.QUEST_EXPERIENCED,
+    // Alternatives rechecked on the Wiki (13 Oct): maple logs also from the Wintertodt reward cart.
+    oneOf: [
+      { skills: { 'Woodcutting': 45 } },
+      { skills: { 'Firemaking': 50 }, regions: ['Wintertodt Camp'] },
+    ],
   },
   'Scrambled!': {
     kind: 'quest', accessPolicy: 'locations',
@@ -2640,8 +2735,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Asgarnia'], locations: [LOCATIONS.skippysCamp],
     skills: { 'Cooking': 20 }, prereqs: [], points: 0,
     // Items checked on the Wiki: Chocolate bar (for chocolate dust).
-    merchants: ['Food Shops'],
-    difficulty: DropSource.QUEST_NOVICE
+    difficulty: DropSource.QUEST_NOVICE,
+    // Alternatives rechecked on the Wiki (13 Oct): chocolate bars also spawn in the Cooks' Guild and Zanaris.
+    oneOf: [
+      { merchants: ['Food Shops'] },
+      { skills: { 'Cooking': 32 }, guilds: ["Cooks' Guild"] },
+      { regions: ['Zanaris'], quests: ['Lost City'] },
+    ],
   },
   'Vale Totems': {
     kind: 'miniquest', accessPolicy: 'regions',

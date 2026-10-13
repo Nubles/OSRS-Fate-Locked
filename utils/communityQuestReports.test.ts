@@ -116,8 +116,9 @@ describe('shop-only quest items (player report, 9 October 2026)', () => {
       merchants: ['Bars & Inns', 'Vegetable Shops', 'Food Shops', 'Herblore Shops'],
     };
     expect(evaluateQuestEligibility(QUEST_DATA['RFD: The Cook'], ready, 'vanilla').eligible).toBe(true);
-    expect(blockerLabels('RFD: The Cook', { ...ready, regions: ['Lumbridge'], merchants: [] }))
-      .toEqual(expect.arrayContaining(['Yanille', 'Tree Gnome Stronghold', 'Bars & Inns', 'Vegetable Shops', 'Food Shops']));
+    const labels = blockerLabels('RFD: The Cook', { ...ready, regions: ['Lumbridge'], merchants: [] });
+    expect(labels).toContain('Vegetable Shops');
+    expect(labels.find(label => label.includes(' or '))).toContain('Yanille + Tree Gnome Stronghold + Bars & Inns + Food Shops');
     expect(evaluateQuestEligibility(QUEST_DATA['RFD: The Cook'], { ...ready, merchants: ['Bars & Inns', 'Vegetable Shops', 'Food Shops'] }, 'vanilla').eligible)
       .toBe(false);
     expect(evaluateQuestEligibility(QUEST_DATA['RFD: The Cook'], {

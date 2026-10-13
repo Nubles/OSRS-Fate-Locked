@@ -53,8 +53,14 @@ describe('Diary tasks are in the areas the game has them in', () => {
     // The ruins are at (2868, 3018), in Shilo Village's chunk 44,47, far from Tai Bwo Wannai's
     // chunks; the place audit of 4 October 2026 dropped Tai Bwo Wannai (diaryPlaceAudit.test.ts).
     for (const id of ['kar_hard_4', 'kar_elite_1']) {
-      expect(task(id).oneOf?.[0], id).toEqual({ regions: ['Shilo Village'] });
-      expect(task(id).oneOf?.[1], id).toMatchObject({ label: 'The Abyss', quests: ['Enter the Abyss'] });
+      // Each way of getting essence is crossed with the two ways to the altar.
+      const routes = task(id).oneOf ?? [];
+      const viaAbyss = routes.filter(route => route.label?.startsWith('The Abyss'));
+      const viaRuins = routes.filter(route => !route.label?.startsWith('The Abyss'));
+      expect(viaRuins.length, id).toBeGreaterThan(0);
+      for (const route of viaRuins) expect(route.regions, id).toContain('Shilo Village');
+      expect(viaAbyss.length, id).toBeGreaterThan(0);
+      for (const route of viaAbyss) expect(route, id).toMatchObject({ quests: ['Enter the Abyss'] });
       expect(task(id).regions, id).toBeUndefined();
       expect(task(id).anyOfRegions, id).toBeUndefined();
     }
@@ -427,14 +433,21 @@ describe('Diary tasks in Zanaris', () => {
       ],
     });
     // The altar takes a cosmic or catalytic talisman or tiara, unless you arrive through the Abyss.
-    // Essence for it needs Rune Mysteries.
-    expect(task('lum_hard_3')).toMatchObject({
-      quests: ['Lost City', 'Rune Mysteries'], regions: ['Zanaris'],
-      oneOf: [
-        { label: 'Zanaris', items: ['Cosmic or catalytic talisman or tiara'], equipmentRequirements: [STAFF] },
-        { label: 'The Abyss', quests: ['Enter the Abyss'], regions: ['Edgeville'] },
-      ],
-    });
+    // Essence for it comes from Rune Mysteries, minotaurs, Daeyalt or Temple Trekking.
+    expect(task('lum_hard_3')).toMatchObject({ quests: ['Lost City'], regions: ['Zanaris'] });
+    const routes = task('lum_hard_3').oneOf ?? [];
+    expect(routes.map(route => route.label)).toEqual([
+      'Zanaris + Mine pure essence', 'Zanaris + Minotaur drops', 'Zanaris + Daeyalt essence', 'Zanaris + Temple Trekking',
+      'The Abyss + Mine pure essence', 'The Abyss + Minotaur drops', 'The Abyss + Temple Trekking',
+    ]);
+    expect(routes[0]).toMatchObject({ quests: ['Rune Mysteries'], skills: { Mining: 30 } });
+    for (const route of routes.slice(0, 4)) {
+      expect(route).toMatchObject({ items: ['Cosmic or catalytic talisman or tiara'], equipmentRequirements: [STAFF] });
+    }
+    for (const route of routes.slice(4)) {
+      expect(route).toMatchObject({ quests: ['Enter the Abyss'], regions: expect.arrayContaining(['Edgeville']) });
+      expect(route.items).toBeUndefined();
+    }
   });
 });
 

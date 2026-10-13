@@ -450,11 +450,14 @@ describe('deterministic current content baseline', () => {
       },
       combatLevel: undefined, prereqs: ['Defender of Varrock', 'Troll Romance'],
       // 10 October 2026 item audit: the mith grapple is made, or dropped in the Ancient Cavern.
+      // 13 October 2026 recheck: the ring of life also comes from The Lost Tribe.
       oneOf: [
         { skills: { Fletching: 59, Smithing: 59, Magic: 57, Crafting: 43 } },
-        { skills: { Fletching: 59, Smithing: 59, Hunter: 65 } },
         { skills: { Firemaking: 35, Magic: 57, Crafting: 43 }, quests: ['Barbarian Training'] },
+        { skills: { Fletching: 59, Smithing: 59, Hunter: 65 } },
         { skills: { Firemaking: 35, Hunter: 65 }, quests: ['Barbarian Training'] },
+        { skills: { Fletching: 59, Smithing: 59 }, quests: ['The Lost Tribe'] },
+        { skills: { Firemaking: 35 }, quests: ['The Lost Tribe', 'Barbarian Training'] },
       ],
       manualRequirements: undefined,
     });
@@ -467,9 +470,10 @@ describe('deterministic current content baseline', () => {
     expect(questRequirementFields('Shadows of Custodia')).toEqual({
       regions: ['Auburnvale'], locations: undefined,
       // 10 October 2026 item audit: four maple logs.
-      skills: { Slayer: 54, Fishing: 45, Construction: 41, Hunter: 36, Woodcutting: 45 },
+      skills: { Slayer: 54, Fishing: 45, Construction: 41, Hunter: 36 },
       combatLevel: undefined, prereqs: ['Children of the Sun'],
-      oneOf: undefined, manualRequirements: undefined,
+      oneOf: [{ skills: { Woodcutting: 45 } }, { skills: { Firemaking: 50 }, regions: ['Wintertodt Camp'] }],
+      manualRequirements: undefined,
     });
     expect(questRequirementFields('Scrambled!')).toEqual({
       regions: ['Varlamore'], locations: ['tal-teklan-dock', 'tal-teok', 'tal-teklan', 'tlati-rainforest', 'dragon-nest'],

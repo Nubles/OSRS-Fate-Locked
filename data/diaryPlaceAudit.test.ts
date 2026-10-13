@@ -73,7 +73,7 @@ describe('Rune altars reached through the Abyss', () => {
   });
 
   it('keeps the Cosmic altar in Zanaris either way, as the map counts its interior there', () => {
-    expect(task('lum_hard_3')).toMatchObject({ quests: ['Lost City', 'Rune Mysteries'], regions: ['Zanaris'] });
+    expect(task('lum_hard_3')).toMatchObject({ quests: ['Lost City'], regions: ['Zanaris'] });
   });
 });
 
