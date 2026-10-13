@@ -293,8 +293,10 @@ replacing the last valid snapshot.
 ## Worker deployment
 
 The app defaults to `https://fate-relay.fatelocked.workers.dev`. A deployment
-can override it with `VITE_FATE_RELAY`; local development can set
-`fate_relay_base` in browser storage. A copied stream overlay URL then names
+can override it with `VITE_FATE_RELAY`; local development (and the tests) can
+set `fate_relay_base` in browser storage. Production builds ignore that key:
+other pages on nubles.github.io share the storage, and every relay call
+carries a write token (`resolveRelayBase` in `utils/relayBase.ts`). A copied stream overlay URL then names
 that relay in a `relay=` parameter, and the overlay polls it only if it is an
 https address, or http on localhost for local development.
 
