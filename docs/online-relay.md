@@ -211,6 +211,11 @@ holds no profile data and no token, only the token's hash and a timestamp,
 and expires 90 days after its last refresh. Use clipboard or local-file import
 if relay data should not leave the machine.
 
+Separately from sync, when the tracker crashes it sends the relay a short
+error report (the build id, the error message and stack trace, and the page
+path without its query or `#` part), at most five per visit. It is built to
+leave out save data, profile names, RSNs, pairing codes and tokens.
+
 ## RuneLite bundle v4
 
 The app exports `version: 4` with a canonical `rules` manifest. It includes
