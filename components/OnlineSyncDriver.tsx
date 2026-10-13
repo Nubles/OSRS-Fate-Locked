@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../context/GameContext';
-import { relaySync } from '../services/relaySync';
+import { relaySync, relayRetryDelayMs } from '../services/relaySync';
 import type { UnlockState } from '../types';
 import { buildBundlePayload, RunChangedError, type RuneliteRunInput } from '../utils/runeliteExport';
 
@@ -21,6 +21,10 @@ export const NOT_SAVING_PUBLISH_MESSAGE =
  * failure is shown as the relay error and the last good publish stays. Only
  * the tab that holds this profile's save lease publishes: another tab of the
  * same profile may hold older progress, and RuneLite would enforce it.
+ *
+ * A failed publish is tried again by itself after 15 s, 1 min, then every
+ * 5 min (relayRetryDelayMs) until one works, unless retrying can't help (the
+ * relay refused the pairing or the profile). RelayPublishBanner says so.
  */
 export function OnlineSyncDriver() {
   const { unlocks, runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode, bossStandardKeysAwarded, saveOwnershipStatus } = useGame() as any;
@@ -43,22 +47,45 @@ export function OnlineSyncDriver() {
     if (!enabled || !sessionCode) return;
     let cancelled = false;
     let timer: number | null = null;
+    let retryTimer: number | null = null;
     let pendingSince: number | null = null;
     let inFlight = false;
     let again = false;
     let explicit = false;
     const isCurrent = () => !cancelled && relaySync.code === sessionCode;
 
+    const clearRetry = () => {
+      if (retryTimer != null) window.clearTimeout(retryTimer);
+      retryTimer = null;
+    };
+    // After a failure, try again by itself once the backoff has passed. Any
+    // publish before then (a run change, Retry) replaces the scheduled one.
+    const scheduleRetry = () => {
+      clearRetry();
+      if (!isCurrent() || relaySync.status !== 'error' || !relaySync.retryable) {
+        if (isCurrent()) relaySync.setRetryAt(null);
+        return;
+      }
+      const delay = relayRetryDelayMs(relaySync.failures);
+      relaySync.setRetryAt(Date.now() + delay);
+      retryTimer = window.setTimeout(() => {
+        retryTimer = null;
+        schedule.current?.(true);
+      }, delay);
+    };
+
     const publish = async (): Promise<void> => {
       if (timer != null) window.clearTimeout(timer);
       timer = null;
       pendingSince = null;
+      clearRetry();
       // Only the saving tab publishes. While the lease is still being checked,
       // wait: a publish follows once this tab holds it. A blocked tab says why
-      // instead of showing "syncing" forever.
+      // instead of showing "syncing" forever; retrying can't help it.
       if (ownership.current !== 'owner') {
+        relaySync.setRetryAt(null);
         if (ownership.current === 'blocked' && relaySync.lastError !== NOT_SAVING_PUBLISH_MESSAGE) {
-          relaySync.reportPushFailure(new Error(NOT_SAVING_PUBLISH_MESSAGE));
+          relaySync.reportPushFailure(new Error(NOT_SAVING_PUBLISH_MESSAGE), false);
         }
         return;
       }
@@ -84,6 +111,8 @@ export function OnlineSyncDriver() {
         if (again && !cancelled) {
           again = false;
           void publish();
+        } else if (!cancelled && timer == null) {
+          scheduleRetry();
         }
       }
     };
@@ -110,6 +139,8 @@ export function OnlineSyncDriver() {
       schedule.current = null;
       document.removeEventListener('visibilitychange', onVisibilityChange);
       if (timer != null) window.clearTimeout(timer);
+      clearRetry();
+      relaySync.setRetryAt(null, true);
     };
   }, [enabled, sessionCode]);
 
