@@ -23,6 +23,7 @@ import {
   normalizeBackupCode,
   readOnlineBackupRecord,
   requestOnlineBackupNow,
+  requestOnlineBackupReplace,
   writeOnlineBackupRecord,
   type OnlineBackupError,
   type OnlineBackupEventDetail,
@@ -130,7 +131,7 @@ const CodeBox: React.FC<{ code: string; profileName: string }> = ({ code, profil
  * OnlineBackupDriver's.
  */
 export const OnlineBackupPanel: React.FC = () => {
-  const { importSave } = useGame();
+  const { importSave, history } = useGame();
   const { storageKeyForActiveProfile: storageKey, activeProfileName } = useProfiles();
   const profileName = activeProfileName || 'This run';
   const [record, setRecord] = useState<OnlineBackupRecord>(() => readOnlineBackupRecord(storageKey));
@@ -206,6 +207,28 @@ export const OnlineBackupPanel: React.FC = () => {
 
   // ── Restore ────────────────────────────────────────────────────────────────
   const [restoreInput, setRestoreInput] = useState('');
+
+  // ── A held upload: the backup is of another run, or a longer one ──────────
+  const replaceHeldBackup = () => {
+    if (!record.code || !record.held) return;
+    if (!window.confirm('Replace your online backup with this run? The run in the old backup can’t be brought back from it afterwards.')) return;
+    requestOnlineBackupReplace(storageKey);
+  };
+
+  const keepOldBackup = () => {
+    if (!record.code || !record.held) return;
+    if (!window.confirm('Keep the old backup? It stays on the relay, and its code still restores it. This browser stops backing up to it and forgets the code, so copy the code or save it as a file first. To back up this run, turn online backup on again: it gets a new code.')) return;
+    const keptCode = formatBackupCode(record.code);
+    const current = readOnlineBackupRecord(storageKey);
+    if (!writeOnlineBackupRecord(storageKey, { promptAnsweredAt: current.promptAnsweredAt ?? Date.now() })) {
+      showToast('This browser wouldn’t store the backup settings');
+      return;
+    }
+    setShowCode(false);
+    // Ready to restore at once, if the run here is the one that went wrong.
+    setRestoreInput(keptCode);
+    showToast('Old backup kept. Its code is under Restore a run, below.');
+  };
   const [restoreBusy, setRestoreBusy] = useState(false);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [found, setFound] = useState<{ code: string; copies: FoundCopy[] } | null>(null);
@@ -285,6 +308,34 @@ export const OnlineBackupPanel: React.FC = () => {
               ? <>Online backup is on. Last backed up <b>{ago(record.lastUploadAt)}</b>.</>
               : <>Online backup is on. Waiting for the first backup…</>}
           </p>
+          {record.held && (
+            <div role="alert" data-testid="online-backup-held"
+              className="rounded-lg border border-amber-500/30 bg-amber-950/40 p-3 text-amber-300 space-y-2">
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle size={15} className="shrink-0 mt-0.5" />
+                <p className="text-[11px] leading-relaxed">
+                  <b>Online backup is paused.</b>{' '}
+                  {record.held === 'other-run'
+                    ? 'This profile now holds a different run from the one in your online backup. Backing it up would replace your online backup of a different run.'
+                    : `This run has ${history.length} History entr${history.length === 1 ? 'y' : 'ies'}, and your online backup has ${record.lastHistoryLength ?? 'more'}. Backing it up would replace your online backup of a longer run.`}
+                </p>
+              </div>
+              <p className="text-[11px] leading-relaxed text-amber-200/80">
+                Keep the old backup if this isn’t the run you meant to keep: its code restores it.
+              </p>
+              <CodeBox code={formatted} profileName={profileName} />
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={replaceHeldBackup}
+                  className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-[11px] font-bold">
+                  Replace it
+                </button>
+                <button type="button" onClick={keepOldBackup}
+                  className="px-3 py-1.5 rounded-lg bg-[#252525] border border-white/10 hover:border-cyan-500/40 text-gray-300 text-[11px] font-bold">
+                  Keep the old backup
+                </button>
+              </div>
+            </div>
+          )}
           {record.lastError && (
             <div role="alert" className="flex items-start gap-2.5 rounded-lg border border-amber-500/30 bg-amber-950/40 p-3 text-amber-300">
               <AlertTriangle size={15} className="shrink-0 mt-0.5" />

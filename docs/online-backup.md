@@ -38,15 +38,26 @@ now** and turning backup on upload at once. An unchanged run is not sent again. 
 save uploads. A failed upload is tried again after 5 minutes, and the Online
 tab says why it failed until one works.
 
-The browser keeps the code and the last upload's time and checksum in its own
-record per profile (`<profile>__onlineBackup`, `utils/onlineBackupRecord.ts`).
+The browser keeps the code and the last upload's time, checksum, run id and
+History length in its own record per profile (`<profile>__onlineBackup`,
+`utils/onlineBackupRecord.ts`).
+
+An upload never replaces a backup of a different run, or of a longer one,
+without asking: after Reset, a new run in the same profile, or a save another
+page rewrote, uploads pause (`held` in the record, `backupRun`'s `held`
+outcome), "Back up now" included. A banner and the Online backup tab then
+offer **Replace it** or **Keep the old backup**; keeping it leaves the relay's
+copy alone, forgets its code in this browser after showing it, and puts the
+code under Restore a run. A record from before run ids were recorded holds
+nothing back until its next upload records one.
 
 ## Two browsers, two copies
 
 Each browser names the copy it writes with 16 random bytes, made when it turns
 backup on or restores a run. When another browser uploads, the relay keeps
-the copy it replaces as the previous copy. A browser holding an older run
-therefore can't erase newer progress: a restore offers both copies, with when
+the copy it replaces as the previous copy. A browser holding an older copy
+of the run therefore can't erase another browser's newer progress: a restore
+offers both copies, with when
 each was backed up and how much History it holds. The same browser backing up
 again replaces only its own copy.
 

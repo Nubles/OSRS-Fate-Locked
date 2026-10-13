@@ -11,9 +11,13 @@ export const BACKUP_CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 export const BACKUP_CODE_LENGTH = 20;
 const GROUP_LENGTH = 5;
 
-/** Fired on window when a run's record changes, or to ask for an upload now (detail.action 'now'). */
+/**
+ * Fired on window when a run's record changes, or to ask for an upload now
+ * (detail.action 'now'), or to replace a backup that upload is holding back
+ * (detail.action 'replace').
+ */
 export const ONLINE_BACKUP_EVENT = 'fate:online-backup';
-export interface OnlineBackupEventDetail { storageKey: string; action?: 'now' }
+export interface OnlineBackupEventDetail { storageKey: string; action?: 'now' | 'replace' }
 
 /** "ABCDE-FGHJK-MNPQR-STVWX": the canonical symbols in groups of five. */
 export const formatBackupCode = (canonical: string): string =>
@@ -32,6 +36,13 @@ export const normalizeBackupCode = (input: string): string | null => {
 
 export type OnlineBackupError = 'network' | 'unavailable' | 'forbidden' | 'too-large' | 'too-large-to-share';
 
+/**
+ * Why uploads wait for the player: the run in this profile is not the one last
+ * backed up ('other-run'), or it has less History than that upload ('shorter').
+ * Either way an upload would overwrite the only copy kept outside this browser.
+ */
+export type OnlineBackupHold = 'other-run' | 'shorter';
+
 export interface OnlineBackupRecord {
   /** The canonical backup code, when online backup is on for this run. */
   code?: string;
@@ -48,6 +59,11 @@ export interface OnlineBackupRecord {
   lastChecksum?: string;
   /** Why the last upload failed, until one succeeds. */
   lastError?: OnlineBackupError;
+  /** The run id and History length at the last successful upload. */
+  lastRunId?: string;
+  lastHistoryLength?: number;
+  /** Set while uploads wait for the player to replace or keep the backup. */
+  held?: OnlineBackupHold;
   /** When the player answered the one-time prompt, either way. */
   promptAnsweredAt?: number;
 }
@@ -62,7 +78,7 @@ export const ONLINE_BACKUP_CURRENT_MS = 7 * 24 * 60 * 60 * 1000;
  */
 export const onlineBackupHoldsReminder = (record: OnlineBackupRecord, now = Date.now()): boolean =>
   (!record.code && !record.promptAnsweredAt)
-  || (!!record.code && record.lastUploadAt !== undefined && now - record.lastUploadAt < ONLINE_BACKUP_CURRENT_MS);
+  || (!!record.code && !record.held && record.lastUploadAt !== undefined && now - record.lastUploadAt < ONLINE_BACKUP_CURRENT_MS);
 
 const ERRORS: ReadonlySet<string> = new Set(['network', 'unavailable', 'forbidden', 'too-large', 'too-large-to-share']);
 const WRITER_RE = /^[A-Za-z0-9_-]{22}$/;
@@ -80,6 +96,9 @@ export const readOnlineBackupRecord = (storageKey: string): OnlineBackupRecord =
     }
     if (typeof parsed.lastChecksum === 'string') record.lastChecksum = parsed.lastChecksum;
     if (typeof parsed.lastError === 'string' && ERRORS.has(parsed.lastError)) record.lastError = parsed.lastError as OnlineBackupError;
+    if (typeof parsed.lastRunId === 'string' && parsed.lastRunId.length <= 512) record.lastRunId = parsed.lastRunId;
+    if (Number.isSafeInteger(parsed.lastHistoryLength) && parsed.lastHistoryLength >= 0) record.lastHistoryLength = parsed.lastHistoryLength;
+    if (parsed.held === 'other-run' || parsed.held === 'shorter') record.held = parsed.held;
     return record;
   } catch {
     return {};
@@ -105,4 +124,9 @@ export const writeOnlineBackupRecord = (storageKey: string, record: OnlineBackup
 /** Asks the backup driver to upload this run now (after turning backup on, or "Back up now"). */
 export const requestOnlineBackupNow = (storageKey: string): void => {
   announce({ storageKey, action: 'now' });
+};
+
+/** The player chose to replace a backup that uploads were holding back. */
+export const requestOnlineBackupReplace = (storageKey: string): void => {
+  announce({ storageKey, action: 'replace' });
 };

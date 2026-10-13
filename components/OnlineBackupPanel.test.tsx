@@ -17,6 +17,7 @@ const WRITER = 'Wr'.repeat(11);
 
 const game = vi.hoisted(() => ({
   importSave: vi.fn(async (_state: unknown) => ({ ok: true as const, warnings: [] })),
+  history: [] as unknown[],
 }));
 const backup = vi.hoisted(() => ({
   generateBackupCode: vi.fn(() => '01234-56789-ABCDE-FGHJK'),
@@ -196,5 +197,63 @@ describe('OnlineBackupPanel', () => {
     await user.click(screen.getByRole('button', { name: 'Find backup' }));
     expect((await screen.findByRole('alert')).textContent).toMatch(/A backup code has 20 letters and digits/);
     expect(game.importSave).not.toHaveBeenCalled();
+  });
+  describe('when uploads are held back (SAVE-2)', () => {
+    const replaceRequests = () => {
+      const seen: OnlineBackupEventDetail[] = [];
+      const listener = (event: Event) => seen.push((event as CustomEvent<OnlineBackupEventDetail>).detail);
+      window.addEventListener(ONLINE_BACKUP_EVENT, listener);
+      return {
+        count: () => seen.filter(detail => detail.action === 'replace' && detail.storageKey === 'P').length,
+        stop: () => window.removeEventListener(ONLINE_BACKUP_EVENT, listener),
+      };
+    };
+
+    it('asks before replacing a backup of a different run', async () => {
+      const user = userEvent.setup();
+      writeOnlineBackupRecord('P', { code: CODE, writer: WRITER, lastUploadAt: Date.now(), lastRunId: 'run-1', lastHistoryLength: 40, held: 'other-run' });
+      const requests = replaceRequests();
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
+      render(<OnlineBackupPanel />);
+
+      const held = screen.getByTestId('online-backup-held');
+      expect(held.textContent).toMatch(/Online backup is paused\./);
+      expect(held.textContent).toMatch(/would replace your online backup of a different run/);
+      expect(held.textContent).toContain('01234-56789-ABCDE-FGHJK');
+
+      await user.click(screen.getByRole('button', { name: 'Replace it' }));
+      expect(requests.count()).toBe(0);
+      await user.click(screen.getByRole('button', { name: 'Replace it' }));
+      expect(confirm).toHaveBeenCalledTimes(2);
+      expect(requests.count()).toBe(1);
+      requests.stop();
+    });
+
+    it('says how much History each side has when this run is shorter', () => {
+      game.history = [1, 2];
+      writeOnlineBackupRecord('P', { code: CODE, lastRunId: 'run-1', lastHistoryLength: 40, held: 'shorter' });
+      render(<OnlineBackupPanel />);
+      expect(screen.getByTestId('online-backup-held').textContent)
+        .toMatch(/This run has 2 History entries, and your online backup has 40\. Backing it up would replace your online backup of a longer run\./);
+      game.history = [];
+    });
+
+    it('keeps the old backup: nothing is deleted, and its code is ready to restore', async () => {
+      const user = userEvent.setup();
+      writeOnlineBackupRecord('P', { code: CODE, writer: WRITER, lastRunId: 'run-1', lastHistoryLength: 40, held: 'shorter', promptAnsweredAt: 7 });
+      const requests = replaceRequests();
+      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      render(<OnlineBackupPanel />);
+
+      await user.click(screen.getByRole('button', { name: 'Keep the old backup' }));
+
+      expect(backup.deleteBackup).not.toHaveBeenCalled();
+      expect(requests.count()).toBe(0);
+      expect(readOnlineBackupRecord('P')).toEqual({ promptAnsweredAt: 7 });
+      expect(screen.queryByTestId('online-backup-held')).toBeNull();
+      expect((screen.getByRole('textbox', { name: 'Backup code' }) as HTMLInputElement).value).toBe('01234-56789-ABCDE-FGHJK');
+      expect(toast).toHaveBeenCalledWith('Old backup kept. Its code is under Restore a run, below.');
+      requests.stop();
+    });
   });
 });
