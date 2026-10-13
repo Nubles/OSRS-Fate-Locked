@@ -411,16 +411,22 @@ export const ACHIEVEMENTS: Achievement[] = [
     { title: 'Tempt Fate', description: 'Make your first Key roll', target: 1 },
     { title: 'Regular', description: 'Make 100 Key rolls', target: 100 },
     { title: 'Devotee', description: 'Make 1,000 Key rolls', target: 1000, fate: 5 },
-    { title: 'Fate-Bound', description: 'Make 5,000 Key rolls', target: 5000, fate: 10 },
+    { title: 'Zealot', description: 'Make 2,500 Key rolls', target: 2500, fate: 5 },
+    { title: 'Fate-Bound', description: 'Make 4,000 Key rolls', target: 4000, fate: 10 },
+    { title: "Fate's Chosen", description: 'Make 7,500 Key rolls', target: 7500, fate: 10 },
   ]),
   ...tiers('keys-won', 'Fate', 'key', ({ stats }) => stats.keysWon, [
     { title: 'Key Ring', description: 'Win 10 Keys from rolls', target: 10 },
     { title: 'Key Chain', description: 'Win 50 Keys from rolls', target: 50, fate: 5 },
-    { title: 'Keymaster', description: 'Win 250 Keys from rolls', target: 250, fate: 10 },
+    { title: 'Keymaster', description: 'Win 250 Keys from rolls', target: 250, fate: 5 },
+    { title: 'Locksmith', description: 'Win 500 Keys from rolls', target: 500, fate: 10 },
+    { title: 'Gatekeeper', description: 'Win 1,000 Keys from rolls', target: 1000, fate: 10 },
   ]),
   ...tiers('win-streak', 'Fate', 'flame', ({ stats }) => stats.longestWinStreak, [
     { title: 'Lightning Strikes Twice', description: 'Win two Key rolls in a row', target: 2, fate: 5 },
-    { title: 'Hat-trick', description: 'Win three Key rolls in a row', target: 3, fate: 10 },
+    { title: 'Hat-trick', description: 'Win three Key rolls in a row', target: 3, fate: 5 },
+    { title: 'On a Roll', description: 'Win five Key rolls in a row', target: 5, fate: 10 },
+    { title: "Fate's Favourite", description: 'Win eight Key rolls in a row', target: 8, fate: 10 },
   ]),
   once('roll-1pct', 'Fate', 'sparkles', 'One in a Hundred', 'Win a Key roll with a 1% chance or less',
     ({ stats }) => stats.luckiestWin <= 0.01, { fate: 10 }),
@@ -429,9 +435,11 @@ export const ACHIEVEMENTS: Achievement[] = [
   ...tiers('chaos-keys', 'Fate', 'chaos', ({ stats }) => stats.chaosKeys, [
     { title: 'Chaos Theory', description: 'Get your first Chaos Key', target: 1 },
     { title: 'Agent of Chaos', description: 'Get 100 Chaos Keys', target: 100, fate: 5 },
+    { title: 'Avatar of Chaos', description: 'Get 200 Chaos Keys', target: 200, fate: 10 },
   ]),
   ...tiers('miss-streak', 'Fate', 'flame', ({ stats }) => stats.longestMissStreak, [
-    { title: 'Cursed', description: 'Miss 100 Key rolls in a row', target: 100, fate: 10, hidden: true },
+    { title: 'Unlucky', description: 'Miss 100 Key rolls in a row', target: 100 },
+    { title: 'Cursed', description: 'Miss 200 Key rolls in a row', target: 200, fate: 10, hidden: true },
   ]),
 
   // The Void Altar
