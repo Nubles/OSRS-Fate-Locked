@@ -479,7 +479,9 @@ in `scripts/check-entry-budget.mjs` (225 kB; about 217 kB after the 24 Sept
 about 224 kB in October 2026, after online backup and Paste from RuneLite;
 raised to 226 kB on 9 October 2026, when the entry sat at 224.9-225.0 kB and
 builds of the same commit landed either side of 225, so the main-branch
-deploy of #92 failed while its PR passed). That split came from the build
+deploy of #92 failed while its PR passed; raised to 228 kB on 13 October
+2026, when the save-safety checks that recovery needs at startup and the
+crash-report hook put the entry at 226.1 kB). That split came from the build
 id stamped into the entry: CI built with a 13-digit timestamp and the deploy
 with the 40-character commit SHA. CI now stamps the SHA too (on a pull
 request, its merge commit's), and a build without `BUILD_ID` stamps a random

@@ -78,12 +78,12 @@ describe('error beacon', () => {
     });
   });
 
-  it('uses the relay the rest of the app publishes to', async () => {
+  it('uses the relay the rest of the app publishes to, ignoring the dev override in production', async () => {
     localStorage.setItem('fate_relay_base', 'http://localhost:8787/');
     const { reportError } = await loadBeacon(true);
     reportError('boundary', new Error('boom'));
     await flush();
-    expect(sendBeacon.mock.calls[0][0]).toBe('http://localhost:8787/e');
+    expect(sendBeacon.mock.calls[0][0]).toBe(`${DEFAULT_BASE}/e`);
   });
 
   it('never sends the query or hash, which can carry a pairing code', async () => {

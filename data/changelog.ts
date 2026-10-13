@@ -37,6 +37,21 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-13-safer-saves',
+    title: 'Safer saves and backups',
+    date: '2026-10-13',
+    sections: {
+      fixed: [
+        "If another site changes your save in this browser, the tracker now asks which copy to keep instead of loading it.",
+        "Online backup now asks before replacing a backup of a different or longer run, like after a Reset.",
+        "If sending your rules to RuneLite fails, the tracker tries again on its own and tells you if it keeps failing.",
+      ],
+      changed: [
+        "Crashes are now reported automatically so they can be fixed faster. Reports never include your save.",
+      ],
+    },
+  },
+  {
     id: '2026-10-13-old-compensation-offer',
     title: 'No more surprise compensation offer',
     date: '2026-10-13',
