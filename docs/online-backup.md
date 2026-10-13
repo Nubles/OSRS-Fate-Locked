@@ -51,15 +51,29 @@ copy alone, forgets its code in this browser after showing it, and puts the
 code under Restore a run. A record from before run ids were recorded holds
 nothing back until its next upload records one.
 
-## Two browsers, two copies
+## The newest copy and the previous copy
 
-Each browser names the copy it writes with 16 random bytes, made when it turns
-backup on or restores a run. When another browser uploads, the relay keeps
-the copy it replaces as the previous copy. A browser holding an older copy
-of the run therefore can't erase another browser's newer progress: a restore
-offers both copies, with when
-each was backed up and how much History it holds. The same browser backing up
-again replaces only its own copy.
+The relay keeps two copies of a backup: the newest and a previous one. A
+restore offers both, with when each was backed up and how much History it
+holds. An upload replaces the newest copy, and the copy it replaces becomes
+the previous copy when either:
+
+- **another browser wrote it.** Each browser names the copy it writes with 16
+  random bytes, made when it turns backup on or restores a run. A browser
+  holding an older run therefore can't erase newer progress.
+- **a day has passed since the last time this happened** (`BACKUP_ROTATE_MS`,
+  24 hours). So the same browser uploading a damaged or reset run can't
+  erase the run as it was a day before: the upload that first follows the
+  day's mark keeps the copy it replaces, and every upload in the next 24
+  hours replaces only the newest copy. After a bad upload, the copy before
+  it therefore stays restorable for at least a day; after that, the next
+  upload may keep the bad copy in its place.
+
+A backup's first upload starts the day's count. The time of the last rotation
+travels in the newest copy's metadata (`rotatedAt`), so an upload that keeps
+nothing is still one KV write; one that keeps the previous copy costs one KV
+read and one more write. Copies stored before rotations were recorded keep
+their previous copy on their next upload.
 
 ## Restoring a run
 
@@ -86,14 +100,21 @@ has a copy from the last week, the "export a .fate backup" reminder waits.
 
 | Method | Path | Request | Response |
 |---|---|---|---|
-| `POST` | `/b/<id>` | Ciphertext, `Authorization: Bearer <write token>`, `X-Backup-Writer: <copy name>` | `{ updatedAt }`. `403` for another token, `413` over 3 MiB, `400` for anything but a `FLBK1.` envelope or without a copy name, `429` with `Retry-After` within a minute of the last upload. |
+| `POST` | `/b/<id>` | Ciphertext, `Authorization: Bearer <write token>`, `X-Backup-Writer: <copy name>` | `{ updatedAt }`. `403` for another token, `413` over the longest encrypted sync code (`MAX_BACKUP_BYTES`, about 2.67 MiB), `400` for anything but a `FLBK1.<iv>.<ciphertext>` envelope in base64url or without a copy name, `429` with `Retry-After` within a minute of the last upload or past the per-IP limits. |
 | `GET` | `/b/<id>` | | The newest copy, with `X-Backup-Updated-At`, or `404`. |
-| `GET` | `/b/<id>/previous` | | The copy another browser's upload replaced, or `404`. |
+| `GET` | `/b/<id>/previous` | | The previous copy (see above), or `404`. |
 | `DELETE` | `/b/<id>` | `Authorization: Bearer <write token>` | `{ deleted: true }`; both copies are gone. |
 
+An `<id>` that isn't 32 bytes in base64url is answered `400` before the relay
+looks anything up, as is an upload that isn't an envelope. Uploads and deletes
+count toward the relay's per-IP write limit, and a new id toward its claim
+limit; see "Abuse limits" in [online-relay.md](online-relay.md).
+
 The first upload claims the id. The relay stores the body as it arrives, with
-the SHA-256 of the write token (never the token), the upload time and the copy
-name as KV metadata, so an upload costs one KV write and no parsing.
+the SHA-256 of the write token (never the token), the upload time, the copy
+name and the last rotation time as KV metadata, so an upload costs one KV
+write and no parsing; the body is only checked, byte by byte, to be base64url
+in the envelope's shape.
 
 ## Privacy and retention
 
@@ -108,7 +129,14 @@ The relay runs on Cloudflare's free plan. KV allows 1,000 writes a day for
 everyone. A player uploads at most every 15 minutes, or every 5 minutes while
 switching between the game and the tracker, so a two-hour session costs at
 most 24 writes, and the plan covers a small community (the project expects 1
-to 20 players). An upload from a different browser than the last one costs one
-more write, to keep the copy it replaces. Storage is far
-below the 1 GB limit: a copy of a run with a 330 KB save is about 220 KB, and
-a copy is capped at 3 MiB, which any run small enough for a sync code fits.
+to 20 players). An upload from a different browser than the last one, and the
+first upload each day, costs one more write, to keep the copy it replaces.
+Storage is far below the 1 GB limit: a copy of a run with a 330 KB save is
+about 220 KB. A copy is capped at the longest sync code (2 MiB) encrypted,
+about 2.67 MiB, so any run small enough for a sync code fits: even a 1.3 MB
+save whose browser can't compress makes a 1.73 MB sync code and a 2.31 MB
+copy.
+
+This estimate counts backups only. The same 1,000 writes a day also pay for
+every RuneLite profile publish (up to about one a minute while playing) and
+every shared-progress publish, so they, not backups, use most of it.

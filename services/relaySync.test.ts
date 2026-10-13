@@ -200,7 +200,8 @@ describe('RelaySyncService', () => {
     const service = new RelaySyncService();
 
     const code = service.enable();
-    expect(code).toMatch(/^[23456789ABCDEFGHJKMNPQRSTVWXYZ]{8}$/);
+    // RuneLite's form, the only one the relay accepts.
+    expect(code).toMatch(/^[0-9a-f]{32}$/);
     expect(service.enabled).toBe(true);
     expect(storage[SESSION_KEY]).toBeTruthy();
 
@@ -208,6 +209,47 @@ describe('RelaySyncService', () => {
     expect(service.enabled).toBe(false);
     expect(service.status).toBe('off');
     expect(removeItem).toHaveBeenCalledWith(SESSION_KEY);
+  });
+
+  it("ignores a stored pairing whose code RuneLite can't have made", async () => {
+    storage[SESSION_KEY] = JSON.stringify({ code: 'ABCD2345', token: 'old-token' });
+    const { RelaySyncService } = await import('./relaySync');
+    expect(new RelaySyncService().enabled).toBe(false);
+
+    storage[SESSION_KEY] = JSON.stringify({ code: 'a'.repeat(32), token: 'token' });
+    expect(new RelaySyncService().code).toBe('a'.repeat(32));
+  });
+
+  it('counts failed publishes in a row, says whether retrying can help, and starts over on success', async () => {
+    const { RelaySyncService } = await import('./relaySync');
+    const service = new RelaySyncService();
+    service.adoptCode('a'.repeat(32));
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: false, status: 503 })
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce({ ok: false, status: 403 })
+      .mockResolvedValueOnce({ ok: true, status: 200 });
+    vi.stubGlobal('fetch', fetchMock);
+
+    expect(await service.push('FLGZ:one')).toBe(false);
+    expect([service.failures, service.retryable, service.lastError]).toEqual([1, true, 'relay 503']);
+    expect(await service.push('FLGZ:two')).toBe(false);
+    expect([service.failures, service.retryable]).toEqual([2, true]);
+    expect(await service.push('FLGZ:three')).toBe(false);
+    expect([service.failures, service.retryable, service.lastError]).toEqual([3, false, 'relay 403']);
+    service.setRetryAt(123);
+    expect(await service.push('FLGZ:four')).toBe(true);
+    expect([service.failures, service.retryable, service.retryAt, service.status]).toEqual([0, true, null, 'synced']);
+  });
+
+  it('backs off 15 s, 1 min, then every 5 min, and retries only what can pass', async () => {
+    const { relayRetryDelayMs, isRetryableRelayError, RelayHttpError } = await import('./relaySync');
+    expect([1, 2, 3, 4, 10].map(relayRetryDelayMs)).toEqual([15_000, 60_000, 300_000, 300_000, 300_000]);
+    expect(relayRetryDelayMs(0)).toBe(15_000);
+    for (const status of [500, 502, 503, 429, 408]) expect(isRetryableRelayError(new RelayHttpError(status))).toBe(true);
+    for (const status of [400, 403, 404, 413]) expect(isRetryableRelayError(new RelayHttpError(status))).toBe(false);
+    expect(isRetryableRelayError(new TypeError('Failed to fetch'))).toBe(true);
+    expect(isRetryableRelayError(new Error('relay timed out'))).toBe(true);
   });
 
   describe('Disconnect', () => {

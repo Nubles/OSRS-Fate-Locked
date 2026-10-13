@@ -171,7 +171,7 @@ describe('OnlineBackupPanel', () => {
     await user.click(screen.getByRole('button', { name: 'Find backup' }));
     expect((await screen.findByTestId('online-backup-found-latest')).textContent).toMatch(/Newest copy/);
     const older = screen.getByTestId('online-backup-found-previous');
-    expect(older.textContent).toMatch(/Older copy, kept when another browser backed this run up/);
+    expect(older.textContent).toMatch(/Older copy, kept from an earlier backup/);
     expect(older.textContent).toMatch(/Backed up 3 days ago: 4 History\s+entries/);
 
     const [, restoreOlder] = screen.getAllByRole('button', { name: 'Restore this copy' });

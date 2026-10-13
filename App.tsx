@@ -75,6 +75,7 @@ const OnlineBackupDriver = lazyWithRetry(() => import('./components/OnlineBackup
 const ProgressShareDriver = lazyWithRetry(() => import('./components/ProgressShareDriver').then(m => ({ default: m.ProgressShareDriver })));
 const OnlineBackupPrompt = lazyWithRetry(() => import('./components/OnlineBackupPrompt').then(m => ({ default: m.OnlineBackupPrompt })));
 const BackupNagBanner = lazyWithRetry(() => import('./components/BackupNagBanner').then(m => ({ default: m.BackupNagBanner })));
+const RelayPublishBanner = lazyWithRetry(() => import('./components/RelayPublishBanner'));
 const ModelGallery = lazyWithRetry(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
 const DiscordSettingsModal = lazyWithRetry(() => import('./components/DiscordSettingsModal'));
 // The release notes load with the modal; only the latest release's id is
@@ -1087,6 +1088,9 @@ const GameLayout = () => {
       )}
 
       <SaveFailureBanner />
+
+      {/* Says when the RuneLite profile couldn't be sent, and when it's tried again. */}
+      <Suspense fallback={null}><RelayPublishBanner /></Suspense>
 
       <Suspense fallback={null}>
         {/* Global ⌘K command palette — navigates via fate:nav events. */}

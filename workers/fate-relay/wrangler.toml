@@ -8,3 +8,34 @@ compatibility_date = "2024-11-01"
 [[kv_namespaces]]
 binding = "RELAY"
 id = "f225f7fa3c294e98a942d89ff50e07fa"
+
+# Per-IP rate limits (Workers Rate Limiting; needs Wrangler 4.36 or later, so
+# deploy with `npx wrangler@latest deploy`). Each namespace_id is a number of
+# our choosing that must be unique in the Cloudflare account. Counts are kept
+# per Cloudflare location and are approximate. The worker runs unchanged
+# without these bindings (tests, local development): nothing is limited then.
+# The reasons for each limit are in docs/online-relay.md, "Abuse limits".
+
+# Every POST and DELETE from browsers to /r/, /b/ and /p/.
+[[ratelimits]]
+name = "RELAY_WRITE_LIMITER"
+namespace_id = "7301"
+simple = { limit = 30, period = 60 }
+
+# Writes that create a record: a first publish to a pairing code, a new
+# backup id or shared-progress run, and each Discord link code.
+[[ratelimits]]
+name = "RELAY_CLAIM_LIMITER"
+namespace_id = "7302"
+simple = { limit = 4, period = 60 }
+
+# Error reports from the web app (POST /e).
+[[ratelimits]]
+name = "RELAY_ERROR_LIMITER"
+namespace_id = "7303"
+simple = { limit = 10, period = 60 }
+
+# Optional secrets (wrangler secret put <NAME>):
+#   PROGRESS_BOT_SECRET  the Discord bot's secret (docs/shared-progress.md)
+#   DISCORD_EVENTS_URL   the bot's unlock-feed endpoint (docs/shared-progress.md)
+#   ERROR_WEBHOOK_URL    a Discord webhook for the web app's error reports

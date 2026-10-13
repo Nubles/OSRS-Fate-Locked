@@ -1,17 +1,21 @@
 /**
- * Fate Locked online relay — outbound-only bundle sync plus durable event queues.
- * Legacy /r/:code, /state, and /suggest resources remain compatible.
+ * Fate Locked online relay: the RuneLite profile (/r/), online backups (/b/),
+ * shared progress for the Discord bot (/p/, /l/) and the web app's error
+ * reports (/e). Every route id must have the exact shape its client makes,
+ * and writes are rate-limited per IP, before any KV access.
  */
 import {
+  BACKUP_ID_RE,
   BACKUP_MIN_INTERVAL_MS,
+  BACKUP_ROTATE_MS,
   BACKUP_TTL_SECONDS,
-  EVENT_TTL_SECONDS,
+  DISCORD_ID_RE,
   MAX_BACKUP_BYTES,
   MAX_REQUEST_BYTES,
-  appendUnique,
-  appendUniqueNewest,
-  validAcknowledgement,
-  validEvent,
+  PAIRING_CODE_RE,
+  PROGRESS_ID_RE,
+  validBackupBody,
+  validBundlePayload,
 } from './protocol.js';
 import {
   LINK_CODE_TTL_SECONDS,
@@ -23,26 +27,65 @@ import {
   normalizeLinkCode,
   validProgressSnapshot,
 } from './progress.js';
+import { MAX_ERROR_BYTES, errorReport, firstInWindow, forwardError } from './errors.js';
 
-const TTL_SECONDS = 86400;
+/**
+ * A published profile lasts 30 days after the last publish, so RuneLite keeps
+ * its rules between play sessions without the tracker open.
+ */
+const PROFILE_TTL_SECONDS = 30 * 86400;
 const OWNER_TTL_SECONDS = 90 * 86400;
 const OWNER_REFRESH_MS = 86400 * 1000;
 // Versions count seconds from this instant. Never change it: clients hold
 // versions across deploys and accept only a higher one.
 const RELAY_VERSION_EPOCH_MS = Date.UTC(2026, 0, 1);
-const CODE_RE = /^\/r\/([A-Za-z0-9-]{4,40})(\/state|\/suggest|\/events|\/acks)?$/;
-// An online backup's id and write token: 32 bytes each, in base64url, derived from the
+// Route shapes. The id each one names is checked against the exact form its
+// client makes (protocol.js) before anything else.
+const PROFILE_ROUTE = /^\/r\/([^/]*)$/;
+const BACKUP_ROUTE = /^\/b\/([^/]*)(\/previous)?$/;
+const PROGRESS_ROUTE = /^\/p\/([^/]*)(\/link-code)?$/;
+const DISCORD_LINK_ROUTE = /^\/l\/([^/]*)$/;
+// An online backup's write token: 32 bytes in base64url, derived from the
 // player's backup code in the browser. The relay never sees the code or the key.
-const BACKUP_RE = /^\/b\/([A-Za-z0-9_-]{43})(\/previous)?$/;
 const BACKUP_TOKEN_RE = /^Bearer ([A-Za-z0-9_-]{43})$/;
 // Which browser wrote a backup: 16 random bytes in base64url, made when it turned backup on.
 const BACKUP_WRITER_RE = /^[A-Za-z0-9_-]{22}$/;
-const BACKUP_PREFIX = new TextEncoder().encode('FLBK1.');
-// Shared progress: 16 random bytes in base64url, made in the browser when the player
-// turns sharing on. Its write token has the backup token's shape.
-const PROGRESS_RE = /^\/p\/([A-Za-z0-9_-]{22})(\/link-code)?$/;
-// A Discord user id. Only the Discord bot, holding PROGRESS_BOT_SECRET, reaches these.
-const DISCORD_LINK_RE = /^\/l\/(\d{17,20})$/;
+
+/**
+ * Per-IP rate limits (Workers Rate Limiting bindings, wrangler.toml). Writes
+ * cover every POST and DELETE from browsers; claims, the writes that create a
+ * new record, have a tighter limit of their own. The Discord bot's routes are
+ * not limited: they need its secret. Without a binding (tests, local
+ * development) nothing is limited.
+ */
+const LIMITERS = {
+  write: 'RELAY_WRITE_LIMITER',
+  claim: 'RELAY_CLAIM_LIMITER',
+  error: 'RELAY_ERROR_LIMITER',
+};
+const RATE_LIMIT_RETRY_AFTER_SECONDS = 60;
+
+/** Whether `request`'s IP is within the named limit. Fails open: a missing or failing binding never refuses. */
+async function withinLimit(env, kind, request) {
+  const limiter = env?.[LIMITERS[kind]];
+  if (!limiter || typeof limiter.limit !== 'function') return true;
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  try {
+    const { success } = await limiter.limit({ key: `${kind}:${ip}` });
+    return success !== false;
+  } catch {
+    return true;
+  }
+}
+
+function tooManyRequests(headers) {
+  return new Response('too many requests', {
+    status: 429,
+    headers: { ...headers, 'Retry-After': String(RATE_LIMIT_RETRY_AFTER_SECONDS) },
+  });
+}
+
+const badRequest = headers => new Response('bad request', { status: 400, headers });
 
 function cors(origin) {
   return {
@@ -62,16 +105,6 @@ function json(body, headers, status = 200, extraHeaders = {}) {
     status,
     headers: { ...headers, 'Content-Type': 'application/json', ...extraHeaders },
   });
-}
-
-function structuredResource(resource) {
-  if (resource === '/events') {
-    return { field: 'events', validate: validEvent, retainNewest: false };
-  }
-  if (resource === '/acks') {
-    return { field: 'acknowledgements', validate: validAcknowledgement, retainNewest: true };
-  }
-  return null;
 }
 
 /**
@@ -147,18 +180,19 @@ async function tokenHash(token) {
 /**
  * Who may write `key`. A separate owner record holds a SHA-256 hash of the
  * write token (never the token) for 90 days after the last refresh, so a code
- * stays claimed after its 24-hour data record expires. Records written before
- * owner records existed are adopted on their owner's next write.
+ * stays claimed after its 30-day data record expires. Records written before
+ * owner records existed are adopted on their owner's next write. `claim` marks
+ * a write that takes a code nobody holds.
  */
 async function authorizeWrite(env, key, existing, presented) {
   const owner = await env.RELAY.get(`own:${key}`);
   if (owner) {
     const [hash, refreshedAt] = owner.split(':');
     if (typeof presented !== 'string' || await tokenHash(presented) !== hash) return null;
-    return { token: presented, refresh: !(Date.now() - Number(refreshedAt) < OWNER_REFRESH_MS) };
+    return { token: presented, refresh: !(Date.now() - Number(refreshedAt) < OWNER_REFRESH_MS), claim: false };
   }
   if (existing?.token && existing.token !== presented) return null;
-  return { token: existing?.token || presented || crypto.randomUUID(), refresh: true };
+  return { token: existing?.token || presented || crypto.randomUUID(), refresh: true, claim: !existing };
 }
 
 /**
@@ -182,9 +216,14 @@ async function recordOwner(env, key, owner) {
  * the write token, the upload time and the writing browser as the record's metadata, so
  * an upload is one KV write and the large body is never parsed (the free plan allows
  * 10 ms of CPU a request). The first upload claims the id; later uploads and the delete
- * need the same token. When another browser uploads, the copy it replaces is kept as the
- * previous copy, so a browser with an older run can't erase newer progress. Each copy
- * lasts 90 days after it was stored.
+ * need the same token.
+ *
+ * The copy an upload replaces is kept as the previous copy when another browser wrote
+ * it, so a browser with an older run can't erase newer progress, and otherwise when the
+ * last such rotation was at least BACKUP_ROTATE_MS ago, so an upload of a damaged or
+ * reset run can't replace the copy from a day before it. The rotation time travels in
+ * the newest copy's metadata, so an upload that doesn't rotate still costs one KV write.
+ * Each copy lasts 90 days after it was stored.
  */
 async function backupRoute(request, env, headers, id, previous) {
   const key = `b:${id}`;
@@ -201,6 +240,16 @@ async function backupRoute(request, env, headers, id, previous) {
   }
   const token = (request.headers.get('Authorization') || '').match(BACKUP_TOKEN_RE)?.[1];
   if (!token) return new Response('forbidden', { status: 403, headers });
+  let writer = null;
+  let body = null;
+  if (request.method === 'POST') {
+    // The upload is checked in full before the relay looks anything up.
+    writer = request.headers.get('X-Backup-Writer') || '';
+    if (!BACKUP_WRITER_RE.test(writer)) return badRequest(headers);
+    body = await readBytesWithin(request, MAX_BACKUP_BYTES);
+    if (body === null) return new Response('payload too large', { status: 413, headers });
+    if (!validBackupBody(body)) return badRequest(headers);
+  }
   const writeHash = await tokenHash(token);
   const existing = await env.RELAY.getWithMetadata(key, { type: 'stream' });
   await existing.value?.cancel();
@@ -212,28 +261,29 @@ async function backupRoute(request, env, headers, id, previous) {
     await env.RELAY.delete(previousKey);
     return json({ deleted: true }, headers);
   }
-  const writer = request.headers.get('X-Backup-Writer') || '';
-  if (!BACKUP_WRITER_RE.test(writer)) return new Response('bad request', { status: 400, headers });
-  const body = await readBytesWithin(request, MAX_BACKUP_BYTES);
-  if (body === null) return new Response('payload too large', { status: 413, headers });
-  if (body.byteLength <= BACKUP_PREFIX.byteLength
-    || BACKUP_PREFIX.some((byte, index) => body[index] !== byte)) {
-    return new Response('bad request', { status: 400, headers });
-  }
   const sinceLast = Date.now() - (existing.metadata?.updatedAt ?? 0);
   if (sinceLast < BACKUP_MIN_INTERVAL_MS) {
     return json({ updatedAt: existing.metadata.updatedAt }, headers, 429,
       { 'Retry-After': String(Math.ceil((BACKUP_MIN_INTERVAL_MS - sinceLast) / 1000)) });
   }
-  if (existing.metadata && existing.metadata.writer !== writer) {
+  if (!existing.metadata && !await withinLimit(env, 'claim', request)) return tooManyRequests(headers);
+  const now = Date.now();
+  // Copies stored before rotations were recorded rotate on their next upload.
+  const rotate = Boolean(existing.metadata) && (existing.metadata.writer !== writer
+    || !(now - (existing.metadata.rotatedAt ?? 0) < BACKUP_ROTATE_MS));
+  if (rotate) {
     const replaced = await env.RELAY.get(key, { type: 'arrayBuffer' });
     if (replaced !== null) {
       await env.RELAY.put(previousKey, replaced, { expirationTtl: BACKUP_TTL_SECONDS, metadata: existing.metadata });
     }
   }
-  const updatedAt = Date.now();
-  await env.RELAY.put(key, body, { expirationTtl: BACKUP_TTL_SECONDS, metadata: { writeHash, updatedAt, writer } });
-  return json({ updatedAt }, headers);
+  // A new backup counts from its first upload, so its second doesn't rotate at once.
+  const rotatedAt = rotate || !existing.metadata ? now : existing.metadata.rotatedAt;
+  await env.RELAY.put(key, body, {
+    expirationTtl: BACKUP_TTL_SECONDS,
+    metadata: { writeHash, updatedAt: now, writer, rotatedAt },
+  });
+  return json({ updatedAt: now }, headers);
 }
 
 /**
@@ -249,6 +299,19 @@ async function progressRoute(request, env, headers, id, linkCode, ctx) {
   if (linkCode && request.method !== 'POST') return new Response('method not allowed', { status: 405, headers });
   const token = (request.headers.get('Authorization') || '').match(BACKUP_TOKEN_RE)?.[1];
   if (!token) return new Response('forbidden', { status: 403, headers });
+  const publish = request.method === 'POST' && !linkCode;
+  let snapshot = null;
+  if (publish) {
+    // The summary is checked before the relay looks anything up.
+    const raw = await readBodyWithin(request, MAX_PROGRESS_BYTES);
+    if (raw === null) return new Response('payload too large', { status: 413, headers });
+    try {
+      snapshot = validProgressSnapshot(JSON.parse(raw));
+    } catch {
+      snapshot = null;
+    }
+    if (!snapshot) return badRequest(headers);
+  }
   const key = `p:${id}`;
   const writeHash = await tokenHash(token);
   const existing = await env.RELAY.getWithMetadata(key);
@@ -264,25 +327,19 @@ async function progressRoute(request, env, headers, id, linkCode, ctx) {
   if (linkCode) {
     // A code names a run that has been published, so the bot always has something to show.
     if (existing.value === null) return json({}, headers, 404);
+    // Each code is a new record.
+    if (!await withinLimit(env, 'claim', request)) return tooManyRequests(headers);
     const code = newLinkCode();
     await env.RELAY.put(`lc:${code}`, id, { expirationTtl: LINK_CODE_TTL_SECONDS });
     return json({ code, expiresAt: Date.now() + LINK_CODE_TTL_SECONDS * 1000 }, headers);
   }
 
-  const raw = await readBodyWithin(request, MAX_PROGRESS_BYTES);
-  if (raw === null) return new Response('payload too large', { status: 413, headers });
-  let snapshot;
-  try {
-    snapshot = validProgressSnapshot(JSON.parse(raw));
-  } catch {
-    snapshot = null;
-  }
-  if (!snapshot) return new Response('bad request', { status: 400, headers });
   const sinceLast = Date.now() - (existing.metadata?.updatedAt ?? 0);
   if (sinceLast < PROGRESS_MIN_INTERVAL_MS) {
     return json({ updatedAt: existing.metadata.updatedAt }, headers, 429,
       { 'Retry-After': String(Math.ceil((PROGRESS_MIN_INTERVAL_MS - sinceLast) / 1000)) });
   }
+  if (!existing.metadata && !await withinLimit(env, 'claim', request)) return tooManyRequests(headers);
   const updatedAt = Date.now();
   await env.RELAY.put(key, JSON.stringify(snapshot), {
     expirationTtl: PROGRESS_TTL_SECONDS,
@@ -392,6 +449,95 @@ async function forgetLink(env, discordId) {
   if (await env.RELAY.get(`ld:${runId}`) === discordId) await env.RELAY.delete(`ld:${runId}`);
 }
 
+/** A write token as clients send it: the tracker's 36 hex digits, or a UUID the relay issued. Bounded so a body can't store anything else in it. */
+const PROFILE_TOKEN_RE = /^[A-Za-z0-9_-]{1,128}$/;
+
+/**
+ * The RuneLite profile for a pairing code. The browser publishes it (or marks
+ * the code gone); RuneLite and the stream overlay read it, with ETags.
+ */
+async function profileRoute(request, env, headers, code) {
+  const key = `r:${code}`;
+
+  if (request.method === 'GET') {
+    const stored = await env.RELAY.get(key, { type: 'json' });
+    if (!stored) return json({}, headers, 404);
+    // The owner disconnected the code. A 404, as for a code with no
+    // profile, never a 410: the installed plugin builds read a 404 as a
+    // missing profile but back off from a 410 as an outage. No validator
+    // is consulted, since a tombstone has no content to be unchanged.
+    if (stored.gone === true) return json({ gone: true }, headers, 404);
+    if (validatorVersion(request.headers.get('If-None-Match')) === String(stored.version)) {
+      return new Response(null, {
+        status: 304,
+        headers: { ...headers, ETag: String(stored.version) },
+      });
+    }
+    return json({ version: stored.version, payload: stored.payload }, headers, 200,
+      { ETag: String(stored.version) });
+  }
+
+  if (request.method !== 'POST') return new Response('method not allowed', { status: 405, headers });
+  const rawBody = await readBodyWithin(request, MAX_REQUEST_BYTES);
+  if (rawBody === null) {
+    return new Response('payload too large', { status: 413, headers });
+  }
+  let body;
+  try {
+    body = JSON.parse(rawBody);
+  } catch {
+    return badRequest(headers);
+  }
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) return badRequest(headers);
+  if (body.token !== undefined && !(typeof body.token === 'string' && PROFILE_TOKEN_RE.test(body.token))) {
+    return badRequest(headers);
+  }
+  const gone = body.gone === true;
+  if (!gone && !validBundlePayload(body.payload)) return badRequest(headers);
+
+  const existing = await env.RELAY.get(key, { type: 'json' });
+  const owner = await authorizeWrite(env, key, existing, body.token);
+  if (!owner) return new Response('forbidden', { status: 403, headers });
+  if (owner.claim && !await withinLimit(env, 'claim', request)) return tooManyRequests(headers);
+  const version = nextVersion(existing?.version);
+
+  if (gone) {
+    // The owner's Disconnect: the profile gives way to a tombstone that
+    // holds no profile data, only the version and the token. It lasts
+    // 90 days, like an owner record, so RuneLite keeps being told the
+    // code is gone instead of seeing it expire into "no profile". A later
+    // publish with the owner's token replaces it as usual.
+    await env.RELAY.put(key, JSON.stringify({ gone: true, version, token: owner.token }),
+      { expirationTtl: OWNER_TTL_SECONDS });
+    await recordOwner(env, key, owner);
+    return json({ version, gone: true }, headers);
+  }
+
+  await env.RELAY.put(key, JSON.stringify({ version, payload: body.payload, token: owner.token }),
+    { expirationTtl: PROFILE_TTL_SECONDS });
+  await recordOwner(env, key, owner);
+  return json({ version, token: owner.token }, headers);
+}
+
+/**
+ * Error reports from the web app: always 204 at once, whatever the body, and
+ * nothing stored. A report is forwarded after the response, at most once per
+ * message and build in ERROR_DEDUPE_MS. Browsers may send it as a beacon
+ * (text/plain), so any content type is read as JSON.
+ */
+async function errorRoute(request, env, headers, ctx) {
+  if (request.method !== 'POST') return new Response('method not allowed', { status: 405, headers });
+  const accepted = new Response(null, { status: 204, headers });
+  if (!await withinLimit(env, 'error', request)) return accepted;
+  const raw = await readBodyWithin(request, MAX_ERROR_BYTES);
+  const report = raw === null ? null : errorReport(raw);
+  if (report && firstInWindow(report)) await inBackground(ctx, forwardError(env, report));
+  return accepted;
+}
+
+/** Whether a request changes something on the relay, and so counts toward the write limit. */
+const isWrite = method => method === 'POST' || method === 'DELETE';
+
 const routes = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -399,134 +545,28 @@ const routes = {
 
     if (request.method === 'OPTIONS') return new Response(null, { headers });
 
-    const backup = url.pathname.match(BACKUP_RE);
+    if (url.pathname === '/e') return errorRoute(request, env, headers, ctx);
+
+    const discordLink = url.pathname.match(DISCORD_LINK_ROUTE);
+    if (discordLink) {
+      if (!DISCORD_ID_RE.test(discordLink[1])) return badRequest(headers);
+      return discordLinkRoute(request, env, headers, discordLink[1]);
+    }
+
+    const profile = url.pathname.match(PROFILE_ROUTE);
+    const backup = url.pathname.match(BACKUP_ROUTE);
+    const progress = url.pathname.match(PROGRESS_ROUTE);
+    if (!profile && !backup && !progress) return new Response('not found', { status: 404, headers });
+    if ((profile && !PAIRING_CODE_RE.test(profile[1]))
+      || (backup && !BACKUP_ID_RE.test(backup[1]))
+      || (progress && !PROGRESS_ID_RE.test(progress[1]))) {
+      return badRequest(headers);
+    }
+    if (isWrite(request.method) && !await withinLimit(env, 'write', request)) return tooManyRequests(headers);
+
     if (backup) return backupRoute(request, env, headers, backup[1], Boolean(backup[2]));
-
-    const progress = url.pathname.match(PROGRESS_RE);
     if (progress) return progressRoute(request, env, headers, progress[1], Boolean(progress[2]), ctx);
-
-    const discordLink = url.pathname.match(DISCORD_LINK_RE);
-    if (discordLink) return discordLinkRoute(request, env, headers, discordLink[1]);
-
-    const match = url.pathname.match(CODE_RE);
-    if (!match) return new Response('not found', { status: 404, headers });
-    const resource = match[2] || '';
-    const key = `r:${match[1]}${resource}`;
-    const structured = structuredResource(resource);
-
-    if (request.method === 'GET') {
-      const stored = await env.RELAY.get(key, { type: 'json' });
-      if (!stored) return json({}, headers, 404);
-      // The owner disconnected the code. A 404, as for a code with no
-      // profile, never a 410: the installed plugin builds read a 404 as a
-      // missing profile but back off from a 410 as an outage. No validator
-      // is consulted, since a tombstone has no content to be unchanged.
-      if (stored.gone === true) return json({ gone: true }, headers, 404);
-      if (validatorVersion(request.headers.get('If-None-Match')) === String(stored.version)) {
-        return new Response(null, {
-          status: 304,
-          headers: { ...headers, ETag: String(stored.version) },
-        });
-      }
-      const body = structured
-        ? { version: stored.version, [structured.field]: stored.records || [] }
-        : { version: stored.version, payload: stored.payload };
-      return json(body, headers, 200, { ETag: String(stored.version) });
-    }
-
-    if (request.method === 'POST') {
-      const rawBody = await readBodyWithin(request, MAX_REQUEST_BYTES);
-      if (rawBody === null) {
-        return new Response('payload too large', { status: 413, headers });
-      }
-      let body;
-      try {
-        body = JSON.parse(rawBody);
-      } catch {
-        return new Response('bad request', { status: 400, headers });
-      }
-
-      if (structured) {
-        const incoming = body && body[structured.field];
-        if (!Array.isArray(incoming) || incoming.length > 100
-          || !incoming.every(structured.validate)) {
-          return new Response('bad request', { status: 400, headers });
-        }
-        const existing = await env.RELAY.get(key, { type: 'json' });
-        const owner = await authorizeWrite(env, key, existing, body.token);
-        if (!owner) return new Response('forbidden', { status: 403, headers });
-        const token = owner.token;
-        const version = nextVersion(existing?.version);
-        const appended = structured.retainNewest
-          ? appendUniqueNewest(existing?.records || [], incoming)
-          : appendUnique(existing?.records || [], incoming);
-        await env.RELAY.put(key, JSON.stringify({
-          version,
-          token,
-          records: appended.records,
-        }), { expirationTtl: EVENT_TTL_SECONDS });
-        await recordOwner(env, key, owner);
-
-        if (resource === '/acks') {
-          const eventKey = `r:${match[1]}/events`;
-          const eventQueue = await env.RELAY.get(eventKey, { type: 'json' });
-          // Pruning rewrites /events, so the token must be able to write it
-          // too: anyone who knows the code can claim an unused /acks.
-          if (eventQueue && await authorizeWrite(env, eventKey, eventQueue, body.token)) {
-            const acknowledged = new Set(incoming.map(entry => entry.eventId));
-            const retained = (eventQueue.records || [])
-              .filter(entry => !acknowledged.has(entry.eventId));
-            if (retained.length !== (eventQueue.records || []).length) {
-              await env.RELAY.put(eventKey, JSON.stringify({
-                ...eventQueue,
-                version: nextVersion(eventQueue.version),
-                records: retained,
-              }), { expirationTtl: EVENT_TTL_SECONDS });
-            }
-          }
-        }
-
-        const atCapacity = appended.capacity.length > 0;
-        return json({
-          version,
-          token,
-          accepted: appended.accepted,
-          duplicates: appended.duplicates,
-          ...(atCapacity ? { capacity: appended.capacity } : {}),
-        }, headers, atCapacity ? 429 : 200, atCapacity ? { 'Retry-After': '5' } : {});
-      }
-
-      if (resource === '' && body?.gone === true) {
-        // The owner's Disconnect: the profile gives way to a tombstone that
-        // holds no profile data, only the version and the token. It lasts
-        // 90 days, like an owner record, so RuneLite keeps being told the
-        // code is gone instead of seeing it expire into "no profile". A later
-        // publish with the owner's token replaces it as usual.
-        const existing = await env.RELAY.get(key, { type: 'json' });
-        const owner = await authorizeWrite(env, key, existing, body.token);
-        if (!owner) return new Response('forbidden', { status: 403, headers });
-        const version = nextVersion(existing?.version);
-        await env.RELAY.put(key, JSON.stringify({ gone: true, version, token: owner.token }),
-          { expirationTtl: OWNER_TTL_SECONDS });
-        await recordOwner(env, key, owner);
-        return json({ version, gone: true }, headers);
-      }
-
-      if (!body || typeof body.payload !== 'string') {
-        return new Response('bad request', { status: 400, headers });
-      }
-      const existing = await env.RELAY.get(key, { type: 'json' });
-      const owner = await authorizeWrite(env, key, existing, body.token);
-      if (!owner) return new Response('forbidden', { status: 403, headers });
-      const token = owner.token;
-      const version = nextVersion(existing?.version);
-      await env.RELAY.put(key, JSON.stringify({ version, payload: body.payload, token }),
-        { expirationTtl: TTL_SECONDS });
-      await recordOwner(env, key, owner);
-      return json({ version, token }, headers);
-    }
-
-    return new Response('method not allowed', { status: 405, headers });
+    return profileRoute(request, env, headers, profile[1]);
   },
 };
 

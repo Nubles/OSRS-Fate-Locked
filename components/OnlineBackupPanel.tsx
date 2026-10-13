@@ -244,7 +244,8 @@ export const OnlineBackupPanel: React.FC = () => {
     setRestoreError(null);
     try {
       const keys = await deriveBackupKeys(code);
-      // The previous copy exists only when a second browser backed this run up.
+      // The previous copy: the one another browser's backup replaced, or one
+      // the relay kept from a day or more before (docs/online-backup.md).
       const results = await Promise.all([openCopy(keys, 'latest'), openCopy(keys, 'previous')]);
       const copies = results.filter((result): result is FoundCopy => 'state' in result);
       if (!mounted.current) return;
@@ -409,7 +410,7 @@ export const OnlineBackupPanel: React.FC = () => {
           <div key={copy.copy} className="rounded-lg border border-white/10 bg-[#1a1a1a] p-3 space-y-2" data-testid={`online-backup-found-${copy.copy}`}>
             {found.copies.length > 1 && (
               <p className="text-[11px] font-bold text-gray-200">
-                {copy.copy === 'latest' ? 'Newest copy' : 'Older copy, kept when another browser backed this run up'}
+                {copy.copy === 'latest' ? 'Newest copy' : 'Older copy, kept from an earlier backup'}
               </p>
             )}
             <p className="text-[12px] text-gray-300">

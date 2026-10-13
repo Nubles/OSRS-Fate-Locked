@@ -70,7 +70,7 @@ always-mounted-driver / choke-point conventions.
    banner under the header nags when a run with 10+ events has no .fate
    export in 7 days; Export downloads in place, dismiss snoozes 7 days.
    Only real file downloads call `markExported` — sync codes don't count
-   (24h relay TTL is not durable storage).
+   (relay copies expire and are not durable storage).
 
 3. **Discord webhook announcements** (`utils/discordWebhook.ts`,
    `components/DiscordSyncDriver.tsx`, `components/DiscordSettingsModal.tsx`,
@@ -342,14 +342,28 @@ Follow-ups:
   `GET /r/:code` and optional ETag caching. The plugin does not write to the
   relay, and the browser receives no import receipt. Disconnect marks the
   code gone, which the plugin's `GET` then reports (`404 {"gone":true}`).
-  Full contract in `docs/online-relay.md`. Deployed at
-  `fate-relay.fatelocked.workers.dev`; redeploy with `wrangler deploy` from
-  `workers/fate-relay/` (KV id is committed in wrangler.toml).
-- **Legacy relay compatibility only:** the Worker temporarily retains
-  `/r/:code/state`, `/r/:code/events`, `/r/:code/acks`, and
-  `/r/:code/suggest` for older installed clients. They are not part of the
-  current Hub candidate's connection and must not be presented as current
-  product behavior.
+  A profile lasts 30 days after the last publish. A failed publish is
+  retried after 15 s, 1 min, then every 5 min, and `RelayPublishBanner`
+  says so. Full contract in `docs/online-relay.md`. Deployed at
+  `fate-relay.fatelocked.workers.dev`; redeploy with
+  `npx wrangler@latest deploy` from `workers/fate-relay/` (KV id and rate
+  limit bindings are committed in wrangler.toml; steps for the latest
+  changes in `workers/fate-relay/DEPLOY-NOTES.md`).
+- **Relay abuse limits:** every route id must have the exact shape its
+  client makes (pairing code: 32 hex digits; backup id: 32 bytes base64url;
+  run id: 16 bytes base64url), and a profile must be `FLGZ:` gzip or a JSON
+  object, a backup a `FLBK1.` envelope; anything else is `400` before KV.
+  Writes are limited per IP (30 a minute; record-creating writes 4 a
+  minute; error reports 10 a minute) by Workers Rate Limiting bindings. The
+  limits slow abuse but don't protect the free plan's 1,000 KV writes a day;
+  only Workers Paid does. See "Abuse limits" in `docs/online-relay.md`.
+- **Legacy relay resources removed:** `/r/:code/state`, `/events`, `/acks`
+  and `/suggest` answer 404. No app, plugin `main` or Plugin Hub build
+  (`0ae842d`) requested them.
+- **Error reports:** `POST /e` on the relay takes `{build, kind, message,
+  stack, path}` (8 KiB), always answers 204, stores nothing, and posts to
+  the `ERROR_WEBHOOK_URL` Discord webhook secret when set (once per message
+  and build in 10 minutes), else only logs.
 - **Plugin boundary:** [Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
   owns the plugin source, builds, releases, and local detection history. The
   app exports rules bundles but contains no Java plugin or download pipeline.

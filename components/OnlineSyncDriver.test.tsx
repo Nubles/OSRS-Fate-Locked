@@ -425,4 +425,97 @@ describe('OnlineSyncDriver', () => {
     expect(relaySync.status).toBe('synced');
   });
 
+  describe('after a failed publish', () => {
+    const failing = (status: number) => ({ ok: false, status });
+
+    it('tries again by itself after 15 s, 1 min, then every 5 min, and starts over once one works', async () => {
+      fetchMock.mockResolvedValueOnce(failing(503))
+        .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+        .mockResolvedValueOnce(failing(429))
+        .mockResolvedValueOnce(failing(502));
+      relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+      render(<OnlineSyncDriver />);
+      await advance(QUIET_MS);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(relaySync.status).toBe('error');
+      expect(relaySync.retryAt).toBe(Date.now() + 15_000);
+
+      await advance(14_999);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      // The retry publishes on the next tick (fake timers run a 0 ms timeout 1 ms later).
+      await advance(2);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      await advance(59_990);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      await advance(12);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+      await advance(299_990);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+      await advance(12);
+      expect(fetchMock).toHaveBeenCalledTimes(4);
+      expect(relaySync.failures).toBe(4);
+      await advance(300_002);
+      expect(fetchMock).toHaveBeenCalledTimes(5);
+      expect(relaySync.status).toBe('synced');
+      expect(relaySync.failures).toBe(0);
+      expect(relaySync.retryAt).toBeNull();
+
+      // Working again: nothing more is sent until the run changes.
+      await advance(30 * 60_000);
+      expect(fetchMock).toHaveBeenCalledTimes(5);
+      // Each retry rebuilds the current run, skipping a failed load's cool-down.
+      expect(buildBundlePayloadMock.mock.calls[1]?.[2]).toEqual({ requireRulesData: true, retryFailedLoads: true });
+    });
+
+    it("doesn't try again when the relay refused the pairing", async () => {
+      fetchMock.mockResolvedValueOnce(failing(403));
+      relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+      render(<OnlineSyncDriver />);
+      await advance(QUIET_MS);
+      expect(relaySync.status).toBe('error');
+      expect(relaySync.retryable).toBe(false);
+      expect(relaySync.retryAt).toBeNull();
+      await advance(30 * 60_000);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('tries a failed rules-data load again', async () => {
+      buildBundlePayloadMock.mockRejectedValueOnce(new Error(
+        "Couldn't load chunk data, so the profile wasn't sent. Check your connection and retry.",
+      ));
+      relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+      render(<OnlineSyncDriver />);
+      await advance(QUIET_MS);
+      expect(fetchMock).not.toHaveBeenCalled();
+      await advance(15_001);
+      expect(buildBundlePayloadMock.mock.calls[1]?.[2]).toEqual({ requireRulesData: true, retryFailedLoads: true });
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(relaySync.status).toBe('synced');
+    });
+
+    it('lets a run change send first, replacing the scheduled retry', async () => {
+      fetchMock.mockResolvedValueOnce(failing(503));
+      relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+      const view = render(<OnlineSyncDriver />);
+      await advance(QUIET_MS);
+      stableGameState.runRevision = 10;
+      view.rerender(<OnlineSyncDriver />);
+      await advance(QUIET_MS);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(relaySync.status).toBe('synced');
+      await advance(15_000);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("doesn't try again in a tab that isn't saving the profile", async () => {
+      stableGameState.saveOwnershipStatus = 'blocked';
+      relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+      render(<OnlineSyncDriver />);
+      await advance(QUIET_MS);
+      expect(relaySync.retryable).toBe(false);
+      expect(relaySync.retryAt).toBeNull();
+      await advance(10 * 60_000);
+      expect(buildBundlePayloadMock).not.toHaveBeenCalled();
+    });
+  });
 });
