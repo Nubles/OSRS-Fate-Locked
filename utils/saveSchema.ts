@@ -28,6 +28,8 @@ export const CURRENT_SAVE_VERSION = 5;
  * must never offer the compensation again to saves that already hold one.
  */
 export const WEIGHTED_FATE_SAVE_VERSION = 4;
+/** Start of the day weighted Fate shipped (2 Aug 2026, UTC). */
+export const WEIGHTED_FATE_RELEASED_AT = Date.UTC(2026, 7, 2);
 /** Only saves from before weighted Fate have their offer calculated on load. */
 export const calculatesLegacyFateCompensation = (sourceVersion: number): boolean =>
   sourceVersion < WEIGHTED_FATE_SAVE_VERSION;
@@ -859,10 +861,19 @@ const notEligibleFateCompensation = (): FateCompensationState => ({
   fatePoints: 0,
 });
 
-/** Freeze the one-time offer for a save from before weighted Fate, under its own mode's pity rule. */
+/**
+ * Freeze the one-time offer for a save from before weighted Fate, under its own mode's pity rule.
+ * A run with anything recorded on or after the update's day was played under
+ * weighted Fate and already got its milestone Chaos Keys; its save only reads
+ * as old because another app rewrote it (the RS3 tracker on the same site
+ * stamps its own lower version), so it gets no offer.
+ */
 const legacyFateCompensationOffer = (
   state: Pick<GameState, 'unlocks' | 'history' | 'fatePoints' | 'gameModeId' | 'customMode'>,
 ): FateCompensationState => {
+  if (state.history.some(entry => entry.timestamp >= WEIGHTED_FATE_RELEASED_AT)) {
+    return notEligibleFateCompensation();
+  }
   const calculated = calculateLegacyFateCompensation(
     state,
     resolveModeRules(state.gameModeId, state.customMode),

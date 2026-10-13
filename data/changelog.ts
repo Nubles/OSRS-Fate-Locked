@@ -37,6 +37,17 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-13-old-compensation-offer',
+    title: 'No more surprise compensation offer',
+    date: '2026-10-13',
+    sections: {
+      fixed: [
+        'Runs played since Weighted Fate no longer get its old compensation offer by mistake.',
+        'It could pop up after opening the RS3 tracker in the same browser as your OSRS run.',
+      ],
+    },
+  },
+  {
     id: '2026-10-12-faster-updates',
     title: 'Faster updates',
     date: '2026-10-12',
