@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, Suspense } from 'react';
 import { useGame } from '../context/GameContext';
 import { CA_DATA, CATier } from '../data/caData';
 import { ALL_CA_TASKS, CATask } from '../data/caTasks';
@@ -16,6 +16,12 @@ import {
   completedCAPoints,
   earnedCATiers,
 } from '../utils/caProgress';
+import { useIsOsrsUi } from '../utils/uiStyle';
+import { lazyWithRetry } from '../utils/lazyRetry';
+import './osrs/osrs-journal.css';
+
+// OSRS layout only: the tiers and tasks as an in-game list and journal scroll.
+const OsrsJournalCombat = lazyWithRetry(() => import('./osrs/OsrsJournalCombat'));
 
 interface CALogProps {
   searchTerm?: string;
@@ -23,6 +29,7 @@ interface CALogProps {
 
 export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' }) => {
   const { unlocks, completeCATask, completeCATier, advisorsEnabled } = useGame();
+  const isOsrs = useIsOsrsUi();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   // Filter state persisted across sessions.
   const [filterStatus, setFilterStatus] = useLocalStorage<JournalStatus>('jrnl:ca:status', 'ALL');
@@ -113,7 +120,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
 
   // Lowest incomplete tiers — these are the player's next combat-achievement
   return (
-    <div className="flex flex-col h-full bg-[#121212] border border-white/10 rounded-lg overflow-hidden">
+    <div className={`flex flex-col h-full bg-[#121212] border border-white/10 rounded-lg overflow-hidden${isOsrs ? ' ojr-root' : ''}`}>
       <JournalFilterBar
         title="Combat Achievements"
         icon={<Swords size={14} />}
@@ -140,6 +147,23 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
 
       {advisorsEnabled && <CAInsights />}
 
+      {isOsrs ? (
+        <Suspense fallback={null}>
+          <OsrsJournalCombat
+            tiers={filteredCAs}
+            unlocks={unlocks}
+            totalPoints={totalPoints}
+            nextTier={nextTier}
+            searchTerm={searchTerm}
+            selectedTierId={expandedId}
+            highlightedId={highlightedId}
+            onSelectTier={setExpandedId}
+            monsterWikiUrl={getWikiUrl}
+            onTierComplete={handleTierComplete}
+            onTaskComplete={handleTaskComplete}
+          />
+        </Suspense>
+      ) : <>
       <div className="border-b border-white/10 bg-black/20 px-4 py-2 text-[11px] text-gray-400">
         <span className="font-bold text-amber-300">{totalPoints.toLocaleString()}</span>
         {' '}Combat Achievement points
@@ -290,6 +314,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
             );
         })}
       </div>
+      </>}
     </div>
   );
 };

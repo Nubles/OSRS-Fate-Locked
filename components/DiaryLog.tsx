@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, Suspense } from 'react';
 import { useGame } from '../context/GameContext';
 import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
@@ -25,6 +25,12 @@ import {
 import { requestManualAttestation } from '../utils/manualAttestation';
 import { diaryTaskLoggingEligibility } from '../utils/journalCompletion';
 import { farmingPatchLabel } from '../utils/farmingPatches';
+import { useIsOsrsUi } from '../utils/uiStyle';
+import { lazyWithRetry } from '../utils/lazyRetry';
+import './osrs/osrs-journal.css';
+
+// OSRS layout only: the in-game diary list and the tier's journal scroll.
+const OsrsJournalDiaries = lazyWithRetry(() => import('./osrs/OsrsJournalDiaries'));
 
 type AlternativeBlocker = Extract<EligibilityBlocker, { kind: 'alternative' }>;
 
@@ -65,6 +71,7 @@ interface DiaryLogProps {
 
 export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch = '', suspendModals = false }) => {
   const { unlocks, completeDiaryTask, completeDiaryTier, advisorsEnabled, gameModeId } = useGame();
+  const isOsrs = useIsOsrsUi();
   // Owned areas with no route are not doable; null until the map data loads.
   const areaRoutes = useAreaRoutes(unlocks, gameModeId);
   // Filter state persisted across sessions.
@@ -211,7 +218,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#121212] border border-white/10 rounded-lg overflow-hidden">
+    <div className={`flex flex-col h-full bg-[#121212] border border-white/10 rounded-lg overflow-hidden${isOsrs ? ' ojr-root' : ''}`}>
       <JournalFilterBar
         title="Diaries"
         icon={<Map size={14} />}
@@ -239,7 +246,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
           <select
             value={sortMode}
             onChange={(e) => setSortMode(e.target.value)}
-            className="bg-black/40 border border-white/10 rounded text-[10px] text-gray-300 px-1 py-1 focus:outline-none focus:border-white/30 shrink-0"
+            className={isOsrs ? 'ojr-select' : "bg-black/40 border border-white/10 rounded text-[10px] text-gray-300 px-1 py-1 focus:outline-none focus:border-white/30 shrink-0"}
             title="Sort diaries"
             aria-label="Sort diaries"
           >
@@ -249,11 +256,30 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
         }
       />
 
-      <DiaryHeatmap onPick={focusCard} />
+      {/* The OSRS diary list below is this same area × tier grid. */}
+      {!isOsrs && <DiaryHeatmap onPick={focusCard} />}
 
       {advisorsEnabled && <DiaryInsights />}
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
+      {isOsrs ? (
+        <Suspense fallback={null}>
+          <OsrsJournalDiaries
+            diaries={sortedDiaries}
+            sortMode={sortMode}
+            unlocks={unlocks}
+            gameModeId={gameModeId}
+            areaRoutes={areaRoutes}
+            searchTerm={searchTerm}
+            selectedId={expandedId}
+            highlightedId={highlightedId}
+            onSelect={setExpandedId}
+            wikiUrl={getDiaryWikiLink}
+            onTierComplete={handleToggle}
+            onTaskComplete={handleTaskToggle}
+            onSkillClick={(skill, requiredLevel, currentLevel, anchorRect) => setSkillPopover({ skill, requiredLevel, currentLevel, anchorRect })}
+          />
+        </Suspense>
+      ) : <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
         {sortedDiaries.map(diary => {
           const isCompleted = diary.status === 'COMPLETED';
           const isAvailable = diary.status === 'AVAILABLE' && evaluateDiaryTierEligibility(diary, unlocks, gameModeId).eligible;
@@ -639,7 +665,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
             </div>
           );
         })}
-      </div>
+      </div>}
 
       {!suspendModals && skillPopover && (
         <SkillTrainingPopover

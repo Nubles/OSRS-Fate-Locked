@@ -11,6 +11,7 @@ import { isRollEntry } from '../utils/logEntry';
 import { ModalFallback } from './LoadingFallback';
 import { formatKeyPercent, formatKeyRollValue } from '../utils/keyRoll';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useIsOsrsUi } from '../utils/uiStyle';
 
 const TimelapseModal = lazyWithRetry(() => import('./TimelapseModal').then(m => ({ default: m.TimelapseModal })));
 
@@ -155,29 +156,25 @@ export const LogRow = ({ index, style, data }: ListChildComponentProps<{ entries
   );
 };
 
-export const LogViewer: React.FC = () => {
-  const { history } = useGame();
-  const listRef = useRef<List>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<FilterType>('ALL');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('ASC');
-  const [showTimelapse, setShowTimelapse] = useState(false);
+export type HistoryFilter = FilterType;
+export type HistorySort = SortOrder;
 
-  useEscapeKey(() => setShowTimelapse(false), showTimelapse);
+/** Which history entries a filter keeps; shared by the classic and OSRS timelines. */
+export const historyFilterMatches = (entry: LogEntry, filterType: FilterType): boolean => {
+  if (filterType === 'ROLLS') return isRollEntry(entry);
+  if (filterType === 'UNLOCKS') return entry.type === 'UNLOCK';
+  if (filterType === 'RITUALS') return entry.type === 'ALTAR';
+  if (filterType === 'PROGRESS') return entry.type === 'LEVEL_UP' || entry.type === 'XTREME_MILESTONE';
+  return true;
+};
 
-  // Filtering Logic
-  const filteredHistory = useMemo(() => {
+/** The timeline after the category filter, the search and the sort. */
+export const filterHistory = (history: LogEntry[], filterType: FilterType, searchTerm: string, sortOrder: SortOrder): LogEntry[] => {
     let filtered = [...history]; // Copy to avoid mutation during sort
 
     // 1. Category Filter
     if (filterType !== 'ALL') {
-      filtered = filtered.filter(entry => {
-        if (filterType === 'ROLLS') return isRollEntry(entry);
-        if (filterType === 'UNLOCKS') return entry.type === 'UNLOCK';
-        if (filterType === 'RITUALS') return entry.type === 'ALTAR';
-        if (filterType === 'PROGRESS') return entry.type === 'LEVEL_UP' || entry.type === 'XTREME_MILESTONE';
-        return true;
-      });
+      filtered = filtered.filter(entry => historyFilterMatches(entry, filterType));
     }
 
     // 2. Search Filter
@@ -198,7 +195,32 @@ export const LogViewer: React.FC = () => {
     });
 
     return filtered; 
-  }, [history, filterType, searchTerm, sortOrder]);
+};
+
+const OsrsHistory = lazyWithRetry(() => import('./osrs/OsrsHistory'));
+
+/** The Fate Timeline: classic rows, or an OSRS chatbox when that layout is on. */
+export const LogViewer: React.FC = () => (
+  useIsOsrsUi()
+    ? <Suspense fallback={null}><OsrsHistory /></Suspense>
+    : <ClassicLogViewer />
+);
+
+const ClassicLogViewer: React.FC = () => {
+  const { history } = useGame();
+  const listRef = useRef<List>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<FilterType>('ALL');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('ASC');
+  const [showTimelapse, setShowTimelapse] = useState(false);
+
+  useEscapeKey(() => setShowTimelapse(false), showTimelapse);
+
+  // Filtering Logic
+  const filteredHistory = useMemo(
+    () => filterHistory(history, filterType, searchTerm, sortOrder),
+    [history, filterType, searchTerm, sortOrder],
+  );
 
   // Auto-scroll logic
   useEffect(() => {

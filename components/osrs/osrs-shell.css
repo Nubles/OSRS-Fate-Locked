@@ -1,0 +1,118 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   OSRS layout: the app shell (header, XP drops, docked chatbox, level-up
+   message). Loaded only with the lazy OSRS shell components, and scoped to
+   html[data-ui="osrs"] so the classic layout never sees it.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+html[data-ui="osrs"] .osrs-hdr-bar { position: sticky; top: 0; z-index: 50; background: var(--osrs-page); }
+html[data-ui="osrs"] .osrs-hdr-wrap { max-width: 1600px; margin: 0 auto; padding: 8px 16px 0; box-sizing: border-box; }
+html[data-ui="osrs"] .osrs-hdr {
+  min-height: 64px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center;
+  column-gap: 16px; row-gap: 6px; padding: 6px 14px; color: #ff981f;
+}
+html[data-ui="osrs"] .osrs-hdr-title { font: var(--osrs-fs-big) 'RSBold', sans-serif; line-height: 26px; color: #ff981f; text-shadow: 1px 1px 0 #000; white-space: nowrap; }
+html[data-ui="osrs"] .osrs-hdr-sub { font: var(--osrs-fs) 'RSSmall', sans-serif; line-height: 15px; color: var(--osrs-tan); text-shadow: 1px 1px 0 #000; white-space: nowrap; }
+html[data-ui="osrs"] .osrs-hdr-controls { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; }
+
+/* Fate Points orb: a number box hanging off a round orb, like the
+   minimap's HP / Prayer / Run orbs. The ring fills as Fate builds. */
+html[data-ui="osrs"] .osrs-orb-num {
+  height: 22px; min-width: 22px; box-sizing: border-box; padding: 0 8px 0 6px; display: flex; align-items: center; justify-content: center;
+  background: var(--osrs-well); border: 1px solid #000; border-right: 0;
+  font: var(--osrs-fs) 'RSSmall', sans-serif; color: #00ff00; text-shadow: 1px 1px 0 #000;
+}
+html[data-ui="osrs"] .osrs-orb {
+  width: 40px; height: 40px; box-sizing: border-box; border-radius: 50%; border: 2px solid #000; box-shadow: inset 0 0 0 2px var(--osrs-bevel-hi);
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Jump to: drawn as the design's search box, but it is a button that opens
+   the command palette, exactly like the classic "Jump to" button. */
+html[data-ui="osrs"] .osrs-jump {
+  all: unset; box-sizing: border-box; cursor: text; display: flex; align-items: center; gap: 6px;
+  min-height: 34px; width: 170px; padding: 0 10px; background: var(--osrs-well); border: 1px solid #000; box-shadow: inset 1px 1px 0 #000;
+  font: var(--osrs-fs) 'RS', sans-serif; color: var(--osrs-muted); text-shadow: 1px 1px 0 #000;
+}
+html[data-ui="osrs"] .osrs-jump:hover { color: var(--osrs-tan); }
+html[data-ui="osrs"] .osrs-jump:focus-visible { outline: 1px solid #ffff00; }
+html[data-ui="osrs"] .osrs-jump kbd { margin-left: auto; font: var(--osrs-fs) 'RSSmall', sans-serif; color: var(--osrs-muted); }
+
+html[data-ui="osrs"] .osrs-ibtn { min-width: 34px; height: 34px; padding: 0; }
+html[data-ui="osrs"] .osrs-hbtn { height: 34px; padding: 0 12px; white-space: nowrap; }
+
+/* Settings menu: a stone window with option rows. */
+html[data-ui="osrs"] .osrs-menu { position: absolute; right: 0; top: 40px; z-index: 91; width: 260px; padding: 4px; display: flex; flex-direction: column; }
+html[data-ui="osrs"] .osrs-menu-title { text-align: center; margin: 2px 0 4px; }
+html[data-ui="osrs"] .osrs-menu-list { display: flex; flex-direction: column; padding: 2px 0; }
+html[data-ui="osrs"] .osrs-menu-item {
+  all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 8px; width: 100%;
+  min-height: 24px; padding: 2px 10px; font: var(--osrs-fs) 'RS', sans-serif; line-height: var(--osrs-lh); color: #ff981f; text-shadow: 1px 1px 0 #000;
+}
+html[data-ui="osrs"] .osrs-menu-item:hover,
+html[data-ui="osrs"] .osrs-menu-item:focus-visible { background: var(--osrs-selected); color: #ffffff; outline: none; }
+html[data-ui="osrs"] .osrs-menu-item.is-danger { color: #ff3030; }
+html[data-ui="osrs"] .osrs-menu-state { margin-left: auto; font: var(--osrs-fs) 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .osrs-menu-sep { height: 0; margin: 3px 0; border-top: 1px solid var(--osrs-well); border-bottom: 1px solid var(--osrs-inner-ring); }
+
+/* ── XP drops ──────────────────────────────────────────────────────────── */
+html[data-ui="osrs"] .osrs-xp-layer { position: absolute; left: 0; top: 100%; width: 220px; height: 0; pointer-events: none; z-index: 60; }
+html[data-ui="osrs"] .osrs-xp-drop {
+  position: absolute; left: 4px; top: 70px; height: 22px; display: flex; align-items: center; gap: 4px; white-space: nowrap;
+  font: var(--osrs-fs) 'RS', sans-serif; line-height: 22px; text-shadow: 1px 1px 0 #000; opacity: 0;
+  animation: osrs-xp-rise 1.2s linear forwards;
+}
+@keyframes osrs-xp-rise {
+  0% { opacity: 1; transform: translateY(0); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-60px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-ui="osrs"] .osrs-xp-layer { display: none; }
+}
+
+/* ── Docked chatbox ────────────────────────────────────────────────────── */
+html[data-ui="osrs"] .osrs-chatdock { position: relative; z-index: 40; background: var(--osrs-page); }
+html[data-ui="osrs"] .osrs-chatdock-wrap { max-width: 1600px; margin: 0 auto; padding: 4px 16px 8px; box-sizing: border-box; }
+html[data-ui="osrs"] .osrs-chat-body { height: 170px; display: flex; flex-direction: column; position: relative; }
+html[data-ui="osrs"] .osrs-chat-log {
+  flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column-reverse; margin: 3px 3px 0 0;
+  scrollbar-width: auto; scrollbar-color: var(--osrs-selected) var(--osrs-window);
+}
+html[data-ui="osrs"] .osrs-chat-log::-webkit-scrollbar { width: 16px; }
+html[data-ui="osrs"] .osrs-chat-log::-webkit-scrollbar-track { background: var(--osrs-window); border-left: 1px solid #000; box-shadow: inset 1px 0 0 var(--osrs-btn-lo); }
+html[data-ui="osrs"] .osrs-chat-log::-webkit-scrollbar-thumb { background: var(--osrs-selected); border: 1px solid #000; box-shadow: inset 1px 1px 0 #7a6a52, inset -1px -1px 0 var(--osrs-btn-lo); }
+html[data-ui="osrs"] .osrs-chat-line { font: var(--osrs-fs) 'RS', sans-serif; line-height: var(--osrs-lh); color: #000; text-shadow: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .osrs-chat-input {
+  min-height: 22px; flex-shrink: 0; display: flex; align-items: center; padding: 0 8px; border-top: 1px solid #8f8062; box-shadow: inset 0 1px 0 #e0d3b2;
+  font: var(--osrs-fs) 'RS', sans-serif; color: #000; text-shadow: none; white-space: pre;
+}
+html[data-ui="osrs"] .osrs-chat-tabs {
+  min-height: 38px; box-sizing: border-box; display: flex; align-items: stretch; gap: 3px; padding: 2px;
+  background: var(--osrs-bevel-lo); border: 2px solid #000; border-top: 0;
+}
+html[data-ui="osrs"] .osrs-chat-tabs.is-collapsed { border-top: 2px solid #000; }
+html[data-ui="osrs"] .osrs-ctab {
+  all: unset; box-sizing: border-box; cursor: pointer; width: 96px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid #000; text-shadow: 1px 1px 0 #000; font: var(--osrs-fs) 'RS', sans-serif; color: #ffffff;
+  background: var(--osrs-btn); box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo);
+}
+html[data-ui="osrs"] .osrs-ctab:hover { color: #ffff00; }
+html[data-ui="osrs"] .osrs-ctab:focus-visible { outline: 1px solid #ffff00; }
+html[data-ui="osrs"] .osrs-ctab[aria-selected="true"] { background: #6b5a42; box-shadow: inset 1px 1px 0 var(--osrs-slot-hi, #2a231a), inset -1px -1px 0 #8a7656; }
+html[data-ui="osrs"] .osrs-chat-note { align-self: center; margin-left: 14px; font: var(--osrs-fs) 'RSSmall', sans-serif; color: var(--osrs-tan); text-shadow: 1px 1px 0 #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+/* ── Level-up message (fills the chatbox, like the game's) ──────────────── */
+html[data-ui="osrs"] .osrs-lvl { height: 100%; display: grid; grid-template-columns: 140px minmax(0, 1fr) 140px; align-items: center; }
+html[data-ui="osrs"] .osrs-lvl-side { display: flex; align-items: center; justify-content: center; }
+html[data-ui="osrs"] .osrs-lvl-text { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; line-height: 20px; font: var(--osrs-fs) 'RS', sans-serif; text-shadow: none; }
+html[data-ui="osrs"] .osrs-lvl-cont { all: unset; cursor: pointer; font: var(--osrs-fs) 'RS', sans-serif; color: #0000ff; margin-top: 6px; }
+html[data-ui="osrs"] .osrs-lvl-cont:hover { color: #ffffff; }
+html[data-ui="osrs"] .osrs-lvl-cont:focus-visible { outline: 1px solid #000; }
+
+@media (max-width: 640px) {
+  html[data-ui="osrs"] .osrs-lvl { grid-template-columns: 72px minmax(0, 1fr) 48px; }
+  html[data-ui="osrs"] .osrs-ctab { width: auto; flex: 1; padding: 0 4px; }
+  html[data-ui="osrs"] .osrs-chat-note { display: none; }
+  html[data-ui="osrs"] .osrs-jump { width: 120px; }
+}

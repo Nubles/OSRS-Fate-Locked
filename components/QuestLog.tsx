@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA, QuestData } from '../data/questData';
 import { WIKI_OVERRIDES, SLOT_CONFIG } from '../constants';
@@ -32,6 +32,12 @@ import { QuestInsights } from './JournalInsights';
 import { QuestGeographyChips } from './QuestGeographyChips';
 import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import type { AreaRoutes } from '../utils/areaRoutes';
+import { useIsOsrsUi } from '../utils/uiStyle';
+import { lazyWithRetry } from '../utils/lazyRetry';
+import './osrs/osrs-journal.css';
+
+// OSRS layout only: the in-game quest list and quest journal scroll.
+const OsrsJournalQuests = lazyWithRetry(() => import('./osrs/OsrsJournalQuests'));
 
 interface QuestLogProps {
   searchTerm?: string;
@@ -425,6 +431,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
 
 export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch = '', suspendModals = false }) => {
   const { unlocks, completeQuest, advisorsEnabled, gameModeId } = useGame();
+  const isOsrs = useIsOsrsUi();
   // Filter state is persisted in localStorage so returning players don't have
   // to re-apply their preferred view every session.
   const [filter, setFilter] = useLocalStorage<JournalStatus>('jrnl:quest:filter', 'ALL');
@@ -583,8 +590,71 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
     QUEST_DATA[qid]?.kind === 'quest' ? QUEST_DATA[qid].points : 0
   ), 0);
 
+  const openSkillPopover = (skill: string, req: number, cur: number, rect: DOMRect) =>
+    setSkillPopover({ skill, requiredLevel: req, currentLevel: cur, anchorRect: rect });
+
+  // OSRS layout: the same filters, sort and handlers, drawn as the in-game
+  // quest list (grouped by type or by series, as chosen) and journal scroll.
+  const renderOsrsList = () => (
+    <Suspense fallback={null}>
+      <OsrsJournalQuests
+        sections={groupBySeries
+          ? seriesGroups.map(([seriesName, quests]) => ({ key: seriesName, title: seriesName, entries: quests }))
+          : [
+              { key: 'quests', title: 'Quests', entries: mainQuests },
+              { key: 'miniquests', title: 'Miniquests', entries: miniquests },
+            ]}
+        unlocks={unlocks}
+        gameModeId={gameModeId}
+        currentQP={currentQP}
+        maxQP={allEntriesByKind.quests.reduce((acc, quest) => acc + quest.points, 0)}
+        highlightedId={highlightedId}
+        wikiUrl={getWikiUrl}
+        difficultyLabel={(quest) => getDifficultyLabel(quest.difficulty)}
+        onComplete={handleQuestToggle}
+        onPrereqClick={focusCard}
+        onSkillClick={openSkillPopover}
+      />
+    </Suspense>
+  );
+
+  const osrsExtras = (
+    <div className="flex items-center gap-2 shrink-0">
+      <select
+        value={sortMode}
+        onChange={(e) => setSortMode(e.target.value)}
+        className="ojr-select"
+        title="Sort quests"
+        aria-label="Sort quests"
+      >
+        <option value="SMART">Smart</option>
+        <option value="NAME">A–Z</option>
+        <option value="QP">Quest Points</option>
+        <option value="DIFFICULTY">Difficulty</option>
+      </select>
+      <button
+        type="button"
+        onClick={() => setAdvisorMode(!advisorMode)}
+        className={`osrs-btn${advisorMode ? ' is-on' : ''}`}
+        style={{ height: 28, padding: '0 8px' }}
+        title={advisorMode ? 'Switch to Quick Wins (by difficulty)' : 'Switch to High Impact (by unlock count)'}
+      >
+        High impact
+      </button>
+      <button
+        type="button"
+        onClick={() => setGroupBySeries(!groupBySeries)}
+        className={`osrs-btn${groupBySeries ? ' is-on' : ''}`}
+        style={{ height: 28, padding: '0 8px' }}
+        title={groupBySeries ? 'Group by Type (Main/Mini)' : 'Group by Series'}
+      >
+        By series
+      </button>
+    </div>
+  );
+
   return (
-    <div className="bg-[#121212] flex flex-col h-full rounded-lg border border-white/10 overflow-hidden">
+    <div className={`bg-[#121212] flex flex-col h-full rounded-lg border border-white/10 overflow-hidden${isOsrs ? ' ojr-root' : ''}`}>
       <JournalFilterBar
         title="Quest Journal"
         icon={<BookOpen size={14} />}
@@ -609,7 +679,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
         ]}
         activeTier={diffFilter}
         onTierChange={setDiffFilter}
-        rightExtras={
+        rightExtras={isOsrs ? osrsExtras :
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-[10px] text-blue-300 font-mono font-bold whitespace-nowrap">QP {currentQP}</span>
             <select
@@ -652,7 +722,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
       )}
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-4">
+      {isOsrs ? renderOsrsList() : <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-4">
         
         {groupBySeries ? (
             // SERIES GROUPING VIEW
@@ -748,7 +818,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
             </>
         )}
 
-      </div>
+      </div>}
 
       {!suspendModals && skillPopover && (
         <SkillTrainingPopover

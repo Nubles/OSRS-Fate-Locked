@@ -16,6 +16,9 @@ import { lazyWithRetry } from '../utils/lazyRetry';
 // The pet card and the pet names load when the Activities tab opens.
 const PetClaimCard = lazyWithRetry(() => import('./PetClaimCard').then(m => ({ default: m.PetClaimCard })));
 import { VANILLA_BOSS_SEARCH_PLACEHOLDER, vanillaBossNote, vanillaBossSearchEmptyMessage } from './vanillaBossSearchCopy';
+import { useIsOsrsUi } from '../utils/uiStyle';
+// The OSRS layout's Farm Keys loads only when that layout is on.
+const OsrsFarmKeys = lazyWithRetry(() => import('./osrs/OsrsFarmKeys'));
 
 // OSRS Wiki Icon URLs
 const WIKI_IMG = 'https://oldschool.runescape.wiki/images/';
@@ -26,6 +29,13 @@ const OSRS_ICONS = {
   CLUE: 'https://oldschool.runescape.wiki/images/Clue_scroll_%28master%29.png',
   BOSS: 'https://oldschool.runescape.wiki/images/Combat_icon.png',
   ACTIVITY: 'https://oldschool.runescape.wiki/images/Minigames.png',
+};
+
+// Local sprites for the OSRS layout (public/osrs-ui).
+const OSRS_UI_ICONS = {
+  SLAYER: `${import.meta.env.BASE_URL}osrs-ui/skills/slayer.png`,
+  STATS: `${import.meta.env.BASE_URL}osrs-ui/skills/overall.png`,
+  CLUE: `${import.meta.env.BASE_URL}osrs-ui/items/19835.png`,
 };
 
 // Live min/max of the journal (one-time) faucets, so the "Other Key Sources"
@@ -383,6 +393,7 @@ export const ActionSection: React.FC = () => {
   const { rollForKey, claimPet, petsClaimed, unlocks, gameModeId, customMode, animationsEnabled, bossStandardKeysAwarded, clueStandardKeysAwarded } = useGame();
   const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
   const [bossQuery, setBossQuery] = useState('');
+  const isOsrsUi = useIsOsrsUi();
 
   // When the run's mode enables region passives, rolls are boosted. rollForKey
   // applies the bonus internally, so handleRoll still passes the BASE rate —
@@ -394,7 +405,7 @@ export const ActionSection: React.FC = () => {
   const effectiveRate = (source: string) =>
     Math.max(1, Math.min(100, (DROP_RATES[source] ?? 0) + regionBonus));
 
-  const handleRoll = (source: string, chance: number, e: React.MouseEvent, context?: KeyRollContext) => {
+  const handleRoll = (source: string, chance: number, e: { clientX: number; clientY: number }, context?: KeyRollContext) => {
     rollForKey(source, chance, failureFateForSource(source as DropSource), e.clientX, e.clientY, undefined, context);
   };
 
@@ -489,6 +500,33 @@ export const ActionSection: React.FC = () => {
     { id: 'BOSSING', label: 'Bossing', icon: OSRS_ICONS.BOSS, count: isVanilla ? vanillaBosses.length : BOSSES_LIST.length },
     { id: 'ACTIVITIES', label: 'Activities', icon: OSRS_ICONS.ACTIVITY, count: ACTIVITY_ROLLS.length + 1 },
   ];
+
+  if (isOsrsUi) {
+    return (
+      <React.Suspense fallback={null}>
+        <OsrsFarmKeys
+          subTab={subTab}
+          setSubTab={setSubTab}
+          bossQuery={bossQuery}
+          setBossQuery={setBossQuery}
+          slayers={slayers}
+          clues={CLUE_SCROLLS}
+          activities={ACTIVITY_ROLLS}
+          tabIcons={{ SLAYER: OSRS_UI_ICONS.SLAYER, CLUES: OSRS_UI_ICONS.CLUE, BOSSING: OSRS_ICONS.BOSS, ACTIVITIES: OSRS_ICONS.ACTIVITY }}
+          isVanilla={isVanilla}
+          vanillaBosses={vanillaBosses}
+          clueKeysAwarded={clueKeysAwarded}
+          regionBonus={regionBonus}
+          effectiveRate={effectiveRate}
+          handleRoll={handleRoll}
+          journalMin={JOURNAL_MIN}
+          journalMax={JOURNAL_MAX}
+          statsIcon={OSRS_UI_ICONS.STATS}
+          collLogIcon={OSRS_ICONS.COLL_LOG}
+        />
+      </React.Suspense>
+    );
+  }
 
   return (
     <div className="h-full p-4 flex flex-col gap-3">

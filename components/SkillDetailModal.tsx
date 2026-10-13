@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useRef, useEffect, useMemo, useState } from 'react';
 import { X, Lock, Unlock, ChevronRight, Search } from 'lucide-react';
 import { Star, MapPin, Navigation } from './OsrsIcon';
 import { SKILL_UNLOCK_DATA } from '../data/skillUnlocks';
@@ -10,6 +10,12 @@ import { chunkContentService } from '../services/ChunkContentService';
 import { summarisePlaces, showChunkOnMap } from '../utils/chunkLocations';
 import { useGame } from '../context/GameContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useIsOsrsUi } from '../utils/uiStyle';
+import { lazyWithRetry } from '../utils/lazyRetry';
+
+// OSRS layout (utils/uiStyle): the skill guide window. Its own chunk, so the
+// classic modal's chunk does not grow.
+const OsrsSkillGuide = lazyWithRetry(() => import('./osrs/OsrsSkillGuide').then(m => ({ default: m.OsrsSkillGuide })));
 
 interface SkillDetailModalProps {
   skill: string;
@@ -70,7 +76,13 @@ const RegionPicker: React.FC<{ node: string; onJump: (cx: number, cy: number) =>
   );
 };
 
-export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, currentTier, onClose }) => {
+export const SkillDetailModal: React.FC<SkillDetailModalProps> = (props) => (
+  useIsOsrsUi()
+    ? <Suspense fallback={null}><OsrsSkillGuide {...props} /></Suspense>
+    : <ClassicSkillDetailModal {...props} />
+);
+
+const ClassicSkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, currentTier, onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
   const unlockData = SKILL_UNLOCK_DATA[skill] || {};

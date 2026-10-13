@@ -1,5 +1,7 @@
 
-import React, { useMemo } from 'react';
+import React, { Suspense, useMemo } from 'react';
+import { lazyWithRetry } from '../utils/lazyRetry';
+import { useIsOsrsUi } from '../utils/uiStyle';
 import { TableType } from '../types';
 import { useGame } from '../context/GameContext';
 import { bankLocksActive, isAreaReachable } from '../utils/reachability';
@@ -66,7 +68,7 @@ interface SpendCardProps {
   animate?: boolean;
 }
 
-const OSRS_GACHA_ICONS = {
+export const OSRS_GACHA_ICONS = {
   EQUIPMENT: 'https://oldschool.runescape.wiki/images/Equipment_Stats.png',
   SKILLS: 'https://oldschool.runescape.wiki/images/Stats_icon.png',
   REGIONS: 'https://oldschool.runescape.wiki/images/World_map_icon.png',
@@ -171,7 +173,13 @@ export const SpendCard: React.FC<SpendCardProps> = ({
   );
 };
 
-export const GachaSection: React.FC = () => {
+export interface SpendCategory { type: TableType; label: string; subLabel: string; iconSrc?: string; icon?: any; unlocked: number; total: number; can: boolean }
+
+/**
+ * Everything Spend Keys shows, shared by the classic cards and the OSRS
+ * layout so both read the same tables, counts and roll handlers.
+ */
+export const useSpendModel = () => {
   const { keys, specialKeys, chaosKeys, keysOwed, unlocks, rollUnlock, pendingUnlock, animationsEnabled, gameModeId, customMode } = useGame();
   const isChunked = gameModeId === 'chunked';
   const bankLocks = bankLocksActive(gameModeId, customMode);
@@ -201,7 +209,7 @@ export const GachaSection: React.FC = () => {
   // per-card progress bars. Equipment/Skills count slots/skills started (tier>0).
   const tierCount = (rec: Record<string, number> | undefined) =>
     Object.values(rec ?? {}).filter((v) => (v as number) > 0).length;
-  const SPEND_CATEGORIES: { type: TableType; label: string; subLabel: string; iconSrc?: string; icon?: any; unlocked: number; total: number; can: boolean }[] = [
+  const SPEND_CATEGORIES: SpendCategory[] = [
     { type: TableType.EQUIPMENT, label: 'Equipment', subLabel: 'Upgrade Gear', iconSrc: OSRS_GACHA_ICONS.EQUIPMENT, unlocked: tierCount(unlocks.equipment), total: EQUIPMENT_SLOTS.length, can: canUnlock.equipment },
     { type: TableType.SKILLS, label: 'Skills', subLabel: 'Unlock next methods tier', iconSrc: OSRS_GACHA_ICONS.SKILLS, unlocked: tierCount(unlocks.skills), total: SKILLS_LIST.length, can: canUnlock.skills },
     isChunked
@@ -220,6 +228,21 @@ export const GachaSection: React.FC = () => {
     { type: TableType.SLAYER_UNLOCKS, label: 'Slayer', subLabel: 'Reward Unlocks', iconSrc: OSRS_GACHA_ICONS.SLAYER_UNLOCKS, unlocked: (unlocks.slayerUnlocks ?? []).length, total: SLAYER_UNLOCKS_LIST.length, can: canUnlock.slayerUnlocks },
     ...(bankLocks ? [{ type: TableType.BANKS, label: 'Banks', subLabel: 'Bank Access', iconSrc: OSRS_GACHA_ICONS.BANKS, unlocked: (unlocks.banks ?? []).length, total: BANK_IDS.length, can: (canUnlock as any).banks as boolean }] : []),
   ];
+
+  return { keys, specialKeys, chaosKeys, keysOwed, unlocks, pendingUnlock, animationsEnabled, gameModeId, isChunked, rollable, totalLevel, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES };
+};
+
+const OsrsSpend = lazyWithRetry(() => import('./osrs/OsrsSpend'));
+
+/** Spend Keys: the classic cards, or the OSRS interface when that layout is on. */
+export const GachaSection: React.FC = () => (
+  useIsOsrsUi()
+    ? <Suspense fallback={null}><OsrsSpend /></Suspense>
+    : <ClassicGachaSection />
+);
+
+const ClassicGachaSection: React.FC = () => {
+  const { keys, specialKeys, chaosKeys, keysOwed, pendingUnlock, animationsEnabled, isChunked, rollable, totalLevel, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES } = useSpendModel();
 
   return (
     <div className="h-full flex flex-col relative p-4">

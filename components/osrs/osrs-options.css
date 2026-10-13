@@ -1,0 +1,115 @@
+/* OSRS layout options (OsrsInterfaceOptions) and the right-click menu
+   (OsrsContextMenu). Both components render only while the OSRS layout is
+   on; the menu and toast are portalled to <body>. Sizes follow --osrs-fs so
+   Large text doubles them. */
+
+/* ── Options inside the settings menu ───────────────────────────────────── */
+html[data-ui="osrs"] .osrs-opts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 6px 6px;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif;
+  text-shadow: var(--osrs-shadow, 1px 1px 0 #000);
+}
+html[data-ui="osrs"] .osrs-opts-sec {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  background: var(--osrs-window, #3e3529);
+  border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi, #5c5244), inset -1px -1px 0 var(--osrs-bevel-lo, #14110d);
+  font-family: 'RSBold', sans-serif;
+  color: #ff981f;
+}
+html[data-ui="osrs"] .osrs-opt-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px 8px;
+  padding: 2px 2px 0;
+}
+html[data-ui="osrs"] .osrs-opt-label { color: #ffffff; white-space: nowrap; }
+html[data-ui="osrs"] .osrs-opt-seg {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--osrs-well, #1f1a14);
+  border: 1px solid #000;
+}
+html[data-ui="osrs"] .osrs-opt-seg .osrs-btn {
+  min-height: 24px;
+  padding: 0 8px;
+  line-height: calc(var(--osrs-fs, 16px) + 2px);
+  white-space: nowrap;
+}
+
+/* ── Right-click menu ("Choose Option") ─────────────────────────────────── */
+html[data-ui="osrs"] .osrs-ctx {
+  position: fixed;
+  z-index: 10050;
+  width: max-content;
+  min-width: 132px;
+  max-width: calc(100vw - 4px);
+  padding: 1px;
+  background: #5d5447;
+  font: var(--osrs-fs, 16px) 'RSBold', sans-serif;
+  -webkit-font-smoothing: none;
+  cursor: default;
+}
+html[data-ui="osrs"] .osrs-ctx-head {
+  height: calc(var(--osrs-fs, 16px) + 4px);
+  padding: 0 4px;
+  background: #000;
+  color: #5d5447;
+  line-height: calc(var(--osrs-fs, 16px) + 5px);
+  white-space: nowrap;
+  text-shadow: none;
+}
+html[data-ui="osrs"] .osrs-ctx-list {
+  margin-top: 1px;
+  padding: 2px 0 3px;
+  border: 1px solid #000;
+}
+html[data-ui="osrs"] .osrs-ctx-opt {
+  all: unset;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: calc(var(--osrs-fs, 16px) + 4px);
+  padding: 0 6px 0 4px;
+  cursor: pointer;
+  font: var(--osrs-fs, 16px) 'RSBold', sans-serif;
+  line-height: calc(var(--osrs-fs, 16px) + 5px);
+  white-space: pre;
+  color: #ffffff;
+  text-shadow: var(--osrs-shadow, 1px 1px 0 #000);
+}
+html[data-ui="osrs"] .osrs-ctx-opt:hover .osrs-ctx-act,
+html[data-ui="osrs"] .osrs-ctx-opt:focus .osrs-ctx-act { color: #ffff00; }
+html[data-ui="osrs"] .osrs-ctx-opt:focus,
+html[data-ui="osrs"] .osrs-ctx-opt:focus-visible { outline: none; }
+
+/* ── Examine toast: one game-message line on parchment ──────────────────── */
+html[data-ui="osrs"] .osrs-examine-toast {
+  position: fixed;
+  z-index: 10040;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(640px, calc(100vw - 32px));
+  padding: 4px 10px;
+  background: #c9b994;
+  border: 2px solid #000;
+  box-shadow: inset 1px 1px 0 #e0d3b2, inset -1px -1px 0 #8f8062;
+  color: #000000;
+  text-shadow: none;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif;
+  line-height: calc(var(--osrs-fs, 16px) + 4px);
+  pointer-events: none;
+}
+html[data-ui="osrs"] .osrs-examine-toast[hidden] { display: none; }

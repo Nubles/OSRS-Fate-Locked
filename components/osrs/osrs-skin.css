@@ -16,23 +16,76 @@
 html[data-ui="osrs"] {
   --osrs-window: #3e3529;
   --osrs-inner: #2e271e;
+  --osrs-inner-ring: #4f4434;
   --osrs-slot: #3b3226;
+  --osrs-slot-hi: #2a231a;
+  --osrs-slot-lo: #5c5244;
   --osrs-btn: #4a4033;
   --osrs-btn-hi: #6b5f4d;
   --osrs-btn-lo: #2b241b;
+  --osrs-btn-off: #7d705c;
+  --osrs-btn-off-bg: #3a3228;
   --osrs-bevel-hi: #5c5244;
   --osrs-bevel-lo: #14110d;
+  /* Second bevel step: the window colour in 2007 (invisible), metal in 2010. */
+  --osrs-bevel-hi2: #3e3529;
+  --osrs-bevel-lo2: #3e3529;
   --osrs-selected: #5a4c3a;
+  --osrs-selected-sh: #2a231a;
+  --osrs-row: #1f1a14;
+  --osrs-well: #1f1a14;
+  --osrs-rule: #5c5244;
   --osrs-orange: #ff981f;
   --osrs-yellow: #ffff00;
   --osrs-white: #ffffff;
   --osrs-tan: #c8b897;
+  --osrs-text-soft: #e2d6b8;
+  --osrs-text-dim: #a89878;
   --osrs-muted: #8a7c66;
   --osrs-green: #0dc10d;
   --osrs-red: #ff3030;
   --osrs-purple: #c77dff;
   --osrs-parchment: #c9b994;
   --osrs-page: #191512;
+  /* Type scale (see "Large text" below): body size, big-title size, shadow. */
+  --osrs-fs: 16px;
+  --osrs-lh: 18px;
+  --osrs-fs-big: 32px;
+  --osrs-shadow: 1px 1px 0 #000;
+  /* Height the fixed client frame takes from the viewport (0 when resizable):
+     use calc(100vh - var(--osrs-client-inset)) for full-height layouts. */
+  --osrs-client-inset: 0px;
+}
+
+/* ── 2010 interface style (Settings > Interface style): the same windows in
+   grey stone with a two-step metal bevel and rivets. Text colours, gems,
+   item sprites and the chatbox parchment never change. ─────────────────── */
+html[data-ui="osrs"][data-osrs-style="2010"] {
+  --osrs-page: #141618;
+  --osrs-window: #45494e;
+  --osrs-inner: #2f3236;
+  --osrs-inner-ring: #50555c;
+  --osrs-slot: #393c41;
+  --osrs-slot-hi: #232629;
+  --osrs-slot-lo: #63686f;
+  --osrs-btn: #555a61;
+  --osrs-btn-hi: #878d95;
+  --osrs-btn-lo: #2a2d31;
+  --osrs-btn-off: #7c8187;
+  --osrs-btn-off-bg: #3d4045;
+  --osrs-bevel-hi: #80868e;
+  --osrs-bevel-lo: #16181b;
+  --osrs-bevel-hi2: #5b6067;
+  --osrs-bevel-lo2: #2a2d31;
+  --osrs-selected: #6a717a;
+  --osrs-selected-sh: #24272b;
+  --osrs-row: #212427;
+  --osrs-well: #1d1f22;
+  --osrs-rule: #6a7078;
+  --osrs-tan: #c3c0b8;
+  --osrs-text-soft: #dedbd4;
+  --osrs-text-dim: #a3a7ac;
+  --osrs-muted: #878c92;
 }
 
 html[data-ui="osrs"] body {
@@ -41,7 +94,7 @@ html[data-ui="osrs"] body {
   font-family: 'RS', ui-sans-serif, sans-serif;
   -webkit-font-smoothing: none;
   -moz-osx-font-smoothing: grayscale;
-  text-shadow: 1px 1px 0 #000;
+  text-shadow: var(--osrs-shadow);
 }
 
 /* ── Type: the pixel fonts only read well at 16px, so every small size maps
@@ -82,10 +135,10 @@ html[data-ui="osrs"] h1, html[data-ui="osrs"] h2, html[data-ui="osrs"] h3 { colo
 html[data-ui="osrs"] .text-white,
 html[data-ui="osrs"] .text-gray-100,
 html[data-ui="osrs"] .text-gray-200 { color: var(--osrs-white); }
-html[data-ui="osrs"] .text-gray-300 { color: #e2d6b8; }
+html[data-ui="osrs"] .text-gray-300 { color: var(--osrs-text-soft); }
 html[data-ui="osrs"] .text-gray-400,
 html[data-ui="osrs"] .text-osrs-text { color: var(--osrs-tan); }
-html[data-ui="osrs"] .text-gray-500 { color: #a89878; }
+html[data-ui="osrs"] .text-gray-500 { color: var(--osrs-text-dim); }
 html[data-ui="osrs"] .text-gray-600,
 html[data-ui="osrs"] .text-gray-700 { color: var(--osrs-muted); }
 html[data-ui="osrs"] .text-osrs-gold,
@@ -164,7 +217,7 @@ html[data-ui="osrs"] [class~="border-white/20"],
 html[data-ui="osrs"] .border-gray-600,
 html[data-ui="osrs"] .border-gray-500 { border-color: var(--osrs-bevel-hi); }
 html[data-ui="osrs"] .divide-white\/5 > * + *,
-html[data-ui="osrs"] .divide-white\/10 > * + * { border-color: #1f1a14; }
+html[data-ui="osrs"] .divide-white\/10 > * + * { border-color: var(--osrs-row); }
 
 /* Square corners everywhere except true circles (orbs, dots, avatars). */
 html[data-ui="osrs"] [class*="rounded"]:not(.rounded-full) { border-radius: 0; }
@@ -177,9 +230,7 @@ html[data-ui="osrs"] .shadow-lg,
 html[data-ui="osrs"] .shadow-xl,
 html[data-ui="osrs"] .shadow-inner { box-shadow: none; }
 html[data-ui="osrs"] .shadow-2xl { box-shadow: 0 0 0 2px #000, 0 8px 24px rgba(0, 0, 0, 0.6); }
-html[data-ui="osrs"] .backdrop-blur,
-html[data-ui="osrs"] .backdrop-blur-sm,
-html[data-ui="osrs"] .backdrop-blur-md { backdrop-filter: none; }
+html[data-ui="osrs"] [class*="backdrop-blur"] { backdrop-filter: none; -webkit-backdrop-filter: none; }
 
 /* Gradient washes flatten to the stone colour. */
 html[data-ui="osrs"] [class*="bg-gradient-to-"]:not(.osrs-keep-gradient) { background-image: none; }
@@ -191,7 +242,7 @@ html[data-ui="osrs"] input[type="number"],
 html[data-ui="osrs"] input:not([type]),
 html[data-ui="osrs"] select,
 html[data-ui="osrs"] textarea {
-  background-color: #1f1a14;
+  background-color: var(--osrs-well);
   border-color: #000;
   color: var(--osrs-white);
   border-radius: 0;
@@ -206,26 +257,148 @@ html[data-ui="osrs"] :focus-visible { outline: 1px solid var(--osrs-yellow); bor
 html[data-ui="osrs"] ::-webkit-scrollbar { width: 16px; height: 16px; }
 html[data-ui="osrs"] ::-webkit-scrollbar-track { background: var(--osrs-inner); border-left: 1px solid #000; }
 html[data-ui="osrs"] ::-webkit-scrollbar-thumb { background: var(--osrs-btn); border: 1px solid #000; border-radius: 0; box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo); }
-html[data-ui="osrs"] ::-webkit-scrollbar-thumb:hover { background: #5a4e3e; }
+html[data-ui="osrs"] ::-webkit-scrollbar-thumb:hover { background: var(--osrs-selected); }
 
 /* Images that are game sprites stay crisp. */
 html[data-ui="osrs"] img { image-rendering: pixelated; }
 html[data-ui="osrs"] img.osrs-smooth { image-rendering: auto; }
 
 /* ── Shared OSRS building blocks for the components under components/osrs ── */
-.osrs-win { background: #3e3529; border: 2px solid #000; box-shadow: inset 1px 1px 0 #5c5244, inset -1px -1px 0 #14110d; }
-.osrs-inner { background: #2e271e; border: 1px solid #000; box-shadow: inset 0 0 0 1px #4f4434; }
-.osrs-sh { text-shadow: 1px 1px 0 #000; }
-.osrs-btn { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: #4a4033; border: 1px solid #000; box-shadow: inset 1px 1px 0 #6b5f4d, inset -1px -1px 0 #2b241b; color: #ff981f; text-shadow: 1px 1px 0 #000; font: 16px 'RS', sans-serif; padding: 0 10px; }
+.osrs-win { background-color: var(--osrs-window, #3e3529); border: 2px solid #000; box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi, #5c5244), inset -1px -1px 0 var(--osrs-bevel-lo, #14110d), inset 2px 2px 0 var(--osrs-bevel-hi2, #3e3529), inset -2px -2px 0 var(--osrs-bevel-lo2, #3e3529); }
+.osrs-inner { background: var(--osrs-inner, #2e271e); border: 1px solid #000; box-shadow: inset 0 0 0 1px var(--osrs-inner-ring, #4f4434); }
+.osrs-sh { text-shadow: var(--osrs-shadow, 1px 1px 0 #000); }
+.osrs-btn { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--osrs-btn, #4a4033); border: 1px solid #000; box-shadow: inset 1px 1px 0 var(--osrs-btn-hi, #6b5f4d), inset -1px -1px 0 var(--osrs-btn-lo, #2b241b); color: #ff981f; text-shadow: var(--osrs-shadow, 1px 1px 0 #000); font: var(--osrs-fs, 16px) 'RS', sans-serif; padding: 0 10px; }
 .osrs-btn:hover { color: #fff; }
 .osrs-btn:focus-visible { outline: 1px solid #ffff00; }
-.osrs-btn[disabled] { cursor: default; color: #7d705c; background: #3a3228; box-shadow: inset 1px 1px 0 #4f4434; }
-.osrs-btn.is-on { background: #5a4c3a; color: #fff; box-shadow: inset 1px 1px 0 #2a231a; }
-.osrs-slot { position: relative; display: flex; align-items: center; justify-content: center; background: #3b3226; border: 1px solid #000; box-shadow: inset 1px 1px 0 #2a231a, inset -1px -1px 0 #5c5244; }
-.osrs-stack { position: absolute; left: 3px; top: 1px; font: 16px 'RSSmall', sans-serif; color: #ffff00; text-shadow: 1px 1px 0 #000; line-height: 14px; }
+.osrs-btn[disabled] { cursor: default; color: var(--osrs-btn-off, #7d705c); background: var(--osrs-btn-off-bg, #3a3228); box-shadow: inset 1px 1px 0 var(--osrs-inner-ring, #4f4434); }
+.osrs-btn.is-on { background: var(--osrs-selected, #5a4c3a); color: #fff; box-shadow: inset 1px 1px 0 var(--osrs-selected-sh, #2a231a); }
+.osrs-slot { position: relative; display: flex; align-items: center; justify-content: center; background: var(--osrs-slot, #3b3226); border: 1px solid #000; box-shadow: inset 1px 1px 0 var(--osrs-slot-hi, #2a231a), inset -1px -1px 0 var(--osrs-slot-lo, #5c5244); }
+.osrs-stack { position: absolute; left: 3px; top: 1px; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: #ffff00; text-shadow: var(--osrs-shadow, 1px 1px 0 #000); line-height: 14px; }
 .osrs-px { image-rendering: pixelated; }
-.osrs-title { font: 16px 'RSBold', sans-serif; color: #ff981f; text-shadow: 1px 1px 0 #000; }
-.osrs-chat { background: #c9b994; border: 2px solid #000; box-shadow: inset 1px 1px 0 #e0d3b2, inset -1px -1px 0 #8f8062; color: #000; text-shadow: none; font: 16px 'RS', sans-serif; }
-.osrs-tab { all: unset; box-sizing: border-box; cursor: pointer; padding: 0 12px; height: 28px; line-height: 30px; font: 16px 'RS', sans-serif; color: #ff981f; text-shadow: 1px 1px 0 #000; border: 1px solid #5c5244; border-bottom: 0; background: #2e271e; }
-.osrs-tab[aria-selected="true"] { background: #5a4c3a; position: relative; top: 1px; }
-.osrs-tooltip { background: #ffffa0; border: 1px solid #000; color: #000; text-shadow: none; font: 16px 'RS', sans-serif; padding: 1px 4px; }
+.osrs-title { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ff981f; text-shadow: var(--osrs-shadow, 1px 1px 0 #000); }
+.osrs-chat { background: #c9b994; border: 2px solid #000; box-shadow: inset 1px 1px 0 #e0d3b2, inset -1px -1px 0 #8f8062; color: #000; text-shadow: none; font: var(--osrs-fs, 16px) 'RS', sans-serif; }
+.osrs-tab { all: unset; box-sizing: border-box; cursor: pointer; padding: 0 12px; height: 28px; line-height: 30px; font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #ff981f; text-shadow: var(--osrs-shadow, 1px 1px 0 #000); border: 1px solid var(--osrs-rule, #5c5244); border-bottom: 0; background: var(--osrs-inner, #2e271e); }
+.osrs-tab[aria-selected="true"] { background: var(--osrs-selected, #5a4c3a); position: relative; top: 1px; }
+.osrs-tooltip { background: #ffffa0; border: 1px solid #000; color: #000; text-shadow: none; font: var(--osrs-fs, 16px) 'RS', sans-serif; padding: 1px 4px; }
+
+/* ── Skin fixes ─────────────────────────────────────────────────────────── */
+/* The app root carries Tailwind's font-sans, which put un-sized text (modal
+   bodies, list items) back in the system font. */
+html[data-ui="osrs"] .font-sans { font-family: 'RS', ui-sans-serif, sans-serif; }
+
+/* Solid colour call-to-action buttons (amber "Got it", cyan "Set up", green
+   "Save", purple Void buttons) become stone buttons with orange text, like
+   every other OSRS button. Void (purple) keeps its purple label. */
+html[data-ui="osrs"] :is(button, a):is(.bg-amber-500, .bg-amber-600, .bg-amber-700, .bg-orange-600, .bg-osrs-gold, .bg-cyan-600, .bg-cyan-700, .bg-sky-600, .bg-sky-700, .bg-blue-600, .bg-blue-700, .bg-indigo-600, .bg-emerald-600, .bg-emerald-700, .bg-green-600, .bg-green-700, .bg-teal-600, .bg-purple-600, .bg-purple-700, .bg-violet-600) {
+  background-color: var(--osrs-btn);
+  background-image: none;
+  border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo);
+  color: var(--osrs-orange);
+  text-shadow: var(--osrs-shadow);
+}
+html[data-ui="osrs"] :is(button, a):is(.bg-purple-600, .bg-purple-700, .bg-violet-600) { color: var(--osrs-purple); }
+html[data-ui="osrs"] :is(button, a):is(.bg-amber-500, .bg-amber-600, .bg-amber-700, .bg-orange-600, .bg-osrs-gold, .bg-cyan-600, .bg-cyan-700, .bg-sky-600, .bg-sky-700, .bg-blue-600, .bg-blue-700, .bg-indigo-600, .bg-emerald-600, .bg-emerald-700, .bg-green-600, .bg-green-700, .bg-teal-600, .bg-purple-600, .bg-purple-700, .bg-violet-600):not(:disabled):hover {
+  background-color: var(--osrs-btn);
+  color: var(--osrs-white);
+}
+html[data-ui="osrs"] :is(button, a):is(.bg-amber-500, .bg-amber-600, .bg-amber-700, .bg-orange-600, .bg-osrs-gold, .bg-cyan-600, .bg-cyan-700, .bg-sky-600, .bg-sky-700, .bg-blue-600, .bg-blue-700, .bg-indigo-600, .bg-emerald-600, .bg-emerald-700, .bg-green-600, .bg-green-700, .bg-teal-600, .bg-purple-600, .bg-purple-700, .bg-violet-600):disabled {
+  opacity: 1;
+  color: var(--osrs-btn-off);
+  background-color: var(--osrs-btn-off-bg);
+  box-shadow: inset 1px 1px 0 var(--osrs-inner-ring);
+}
+
+/* White "selected" pills and the white onboarding button become the pressed
+   stone button. */
+html[data-ui="osrs"] :is(button, a).bg-white,
+html[data-ui="osrs"] :is(button, a).bg-white:hover {
+  background-color: var(--osrs-selected);
+  border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 var(--osrs-selected-sh);
+  color: var(--osrs-white);
+  text-shadow: var(--osrs-shadow);
+}
+
+/* ── 2010 interface style, continued ───────────────────────────────────────
+   Metal rivets in the four corners of every OSRS window. */
+html[data-ui="osrs"][data-osrs-style="2010"] .osrs-win {
+  --rv: radial-gradient(circle at 3.5px 3.5px, #dde1e5 0 0.9px, #a7adb4 0.9px 1.9px, #555b62 1.9px 2.5px, #000 2.5px 3.3px, transparent 3.5px);
+  background-image: var(--rv), var(--rv), var(--rv), var(--rv);
+  background-size: 7px 7px;
+  background-repeat: no-repeat;
+  background-position: left 0 top 0, right 0 top 0, left 0 bottom 0, right 0 bottom 0;
+}
+
+/* OSRS components that paint the 2007 stone inline (style="background:
+   #3e3529" and its bevels) follow the 2010 palette too. Matched on the
+   browser's serialised style attribute, so it needs the rgb() spelling. */
+html[data-ui="osrs"][data-osrs-style="2010"] :is([style*="background: rgb(25, 21, 18)"], [style*="background-color: rgb(25, 21, 18)"]) { background-color: var(--osrs-page) !important; }
+html[data-ui="osrs"][data-osrs-style="2010"] :is([style*="background: rgb(62, 53, 41)"], [style*="background-color: rgb(62, 53, 41)"]) { background-color: var(--osrs-window) !important; }
+html[data-ui="osrs"][data-osrs-style="2010"] :is([style*="background: rgb(46, 39, 30)"], [style*="background-color: rgb(46, 39, 30)"]) { background-color: var(--osrs-inner) !important; }
+html[data-ui="osrs"][data-osrs-style="2010"] :is([style*="background: rgb(59, 50, 38)"], [style*="background-color: rgb(59, 50, 38)"]) { background-color: var(--osrs-slot) !important; }
+html[data-ui="osrs"][data-osrs-style="2010"] :is([style*="background: rgb(74, 64, 51)"], [style*="background-color: rgb(74, 64, 51)"]) { background-color: var(--osrs-btn) !important; }
+html[data-ui="osrs"][data-osrs-style="2010"] :is([style*="background: rgb(90, 76, 58)"], [style*="background-color: rgb(90, 76, 58)"]) { background-color: var(--osrs-selected) !important; }
+html[data-ui="osrs"][data-osrs-style="2010"] :is([style*="background: rgb(31, 26, 20)"], [style*="background-color: rgb(31, 26, 20)"]) { background-color: var(--osrs-well) !important; }
+html[data-ui="osrs"][data-osrs-style="2010"] :is([style*="background: rgb(53, 45, 35)"], [style*="background-color: rgb(53, 45, 35)"]) { background-color: #3a3e43 !important; }
+html[data-ui="osrs"][data-osrs-style="2010"] [style*="box-shadow: rgb(92, 82, 68) 1px 1px 0px inset, rgb(20, 17, 13) -1px -1px 0px inset"] { box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi), inset -1px -1px 0 var(--osrs-bevel-lo), inset 2px 2px 0 var(--osrs-bevel-hi2), inset -2px -2px 0 var(--osrs-bevel-lo2) !important; }
+html[data-ui="osrs"][data-osrs-style="2010"] [style*="box-shadow: rgb(107, 95, 77) 1px 1px 0px inset, rgb(43, 36, 27) -1px -1px 0px inset"] { box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo) !important; }
+html[data-ui="osrs"][data-osrs-style="2010"] [style*="box-shadow: rgb(42, 35, 26) 1px 1px 0px inset, rgb(92, 82, 68) -1px -1px 0px inset"] { box-shadow: inset 1px 1px 0 var(--osrs-slot-hi), inset -1px -1px 0 var(--osrs-slot-lo) !important; }
+html[data-ui="osrs"][data-osrs-style="2010"] [style*="box-shadow: rgb(79, 68, 52) 0px 0px 0px 1px inset"] { box-shadow: inset 0 0 0 1px var(--osrs-inner-ring) !important; }
+html[data-ui="osrs"][data-osrs-style="2010"] [style*="color: rgb(200, 184, 151)"] { color: var(--osrs-tan) !important; }
+
+/* ── Fixed client (Settings > Client layout): the whole tracker sits in one
+   centred, fixed-width game-client frame (stone border, bevel, the page
+   colour around it), like the fixed-size OSRS client. Phones and narrow
+   windows keep the resizable layout. Nothing here uses transform, filter or
+   contain on an ancestor, so fixed-position modals, toasts and the map's
+   overlays still cover the whole window. ──────────────────────────────── */
+@media (min-width: 900px) {
+  html[data-ui="osrs"][data-osrs-client="fixed"] {
+    /* 12px page margin top and bottom, 2px frame, 6px stone, 2px inner frame. */
+    --osrs-client-inset: 44px;
+    background-color: var(--osrs-page);
+  }
+  html[data-ui="osrs"][data-osrs-client="fixed"] body { padding: 12px 0; }
+  html[data-ui="osrs"][data-osrs-client="fixed"] #root {
+    box-sizing: border-box;
+    width: 1416px;
+    max-width: calc(100% - 24px);
+    margin: 0 auto;
+    padding: 6px;
+    background-color: var(--osrs-window);
+    border: 2px solid #000;
+    box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi), inset -1px -1px 0 var(--osrs-bevel-lo), 0 0 0 1px var(--osrs-bevel-lo);
+  }
+  /* The app's own root (it sits in a display:contents wrapper). */
+  html[data-ui="osrs"][data-osrs-client="fixed"] #root .min-h-screen.bg-osrs-bg {
+    box-sizing: border-box;
+    border: 2px solid #000;
+    box-shadow: 0 0 0 1px var(--osrs-bevel-hi);
+  }
+  /* Full-height screens subtract the frame so the page does not scroll. */
+  html[data-ui="osrs"][data-osrs-client="fixed"] #root .min-h-screen.bg-osrs-bg { min-height: calc(100vh - 40px); }
+  html[data-ui="osrs"][data-osrs-client="fixed"] #root [class~="h-[calc(100vh-80px)]"] { height: calc(100vh - 80px - var(--osrs-client-inset)); }
+  html[data-ui="osrs"][data-osrs-client="fixed"] #root .h-screen { height: calc(100vh - var(--osrs-client-inset)); }
+}
+
+/* ── Large text (Settings > Text size): every RuneScape font at 2x, 32px,
+   the next size at which the pixel fonts stay crisp, with a 2px shadow.
+   Text that is already 32px (big titles) stays 32px. ───────────────────── */
+html[data-ui="osrs"][data-osrs-text="large"] {
+  --osrs-fs: 32px;
+  --osrs-lh: 32px;
+  --osrs-shadow: 2px 2px 0 #000;
+}
+html[data-ui="osrs"][data-osrs-text="large"] body { font-size: 32px; line-height: 32px; }
+html[data-ui="osrs"][data-osrs-text="large"] :is(.text-sm, .text-base, .text-lg, .text-xl, .text-xs, [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"], [class*="text-[13px]"], [class*="text-[14px]"], [class*="text-[15px]"]) { font-size: 32px; line-height: 32px; }
+html[data-ui="osrs"][data-osrs-text="large"] :is(.text-2xl, .text-3xl, .text-4xl) { line-height: 32px; }
+html[data-ui="osrs"][data-osrs-text="large"] :is(button, input, select, textarea, kbd) { font-size: 32px; }
+html[data-ui="osrs"][data-osrs-text="large"] .osrs-stack { line-height: 28px; }
+html[data-ui="osrs"][data-osrs-text="large"] .osrs-tab { height: auto; min-height: 36px; line-height: 36px; }
+/* Everything else (component stylesheets, inline 16px) goes to 32px too, as
+   on the board: one size for all text. SVG text is left alone. */
+html[data-ui="osrs"][data-osrs-text="large"] :is(#root, body > :not(#root)) :not(svg, svg *) { font-size: 32px; line-height: 32px; }
+/* OSRS components that size their text inline at 16px. */
+html[data-ui="osrs"][data-osrs-text="large"] :is([style*="font: 16px"], [style*="font-size: 16px"]) { font-size: 32px !important; line-height: 32px !important; }
+html[data-ui="osrs"][data-osrs-text="large"] [style*="text-shadow: rgb(0, 0, 0) 1px 1px 0px"] { text-shadow: 2px 2px 0 #000 !important; }

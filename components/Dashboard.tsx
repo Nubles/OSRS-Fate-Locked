@@ -70,6 +70,7 @@ import { FrontierAdvisorPanel } from './FrontierAdvisorPanel';
 import { SkillAdvisorPanel } from './SkillAdvisorPanel';
 import { showChunkOnMap } from '../utils/chunkLocations';
 import { runeProofAvailability } from '../utils/questRoutes/featureFlag';
+import { useIsOsrsUi } from '../utils/uiStyle';
 
 // Code-split: the run card pulls in html2canvas only when actually opened.
 const ShareModal = lazyWithRetry(() => import('./ShareModal').then(m => ({ default: m.ShareModal })));
@@ -85,6 +86,14 @@ const RivalModal = lazyWithRetry(() => import('./RivalModal').then(m => ({ defau
 const BossKillPlanner = lazyWithRetry(() => import('./BossKillPlanner').then(m => ({ default: m.BossKillPlanner })));
 // Auto-Roll (prototype) — sync a run from a real account via the hiscores API.
 const AutoRollPanel = lazyWithRetry(() => import('./AutoRollPanel').then(m => ({ default: m.AutoRollPanel })));
+// OSRS layout (utils/uiStyle): the dashboard drawn as OSRS interfaces. Lazy so
+// the classic entry chunk does not grow; each falls back to its classic markup.
+const OsrsDashHeader = lazyWithRetry(() => import('./osrs/OsrsDashChrome').then(m => ({ default: m.OsrsDashHeader })));
+const OsrsDashTabs = lazyWithRetry(() => import('./osrs/OsrsDashChrome').then(m => ({ default: m.OsrsDashTabs })));
+const OsrsConfirmOmni = lazyWithRetry(() => import('./osrs/OsrsDashChrome').then(m => ({ default: m.OsrsConfirmOmni })));
+const OsrsSkills = lazyWithRetry(() => import('./osrs/OsrsSkills').then(m => ({ default: m.OsrsSkills })));
+const OsrsWorldTab = lazyWithRetry(() => import('./osrs/OsrsWorldTab').then(m => ({ default: m.OsrsWorldTab })));
+const OsrsDashActivities = lazyWithRetry(() => import('./osrs/OsrsDashActivities').then(m => ({ default: m.OsrsDashActivities })));
 
 // --- Constants & Helpers ---
 
@@ -357,6 +366,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
     ? { label: 'RuneProof', title: 'Get the next reviewed action for your run' }
     : { label: 'Goal Planner', title: 'Plan the route to any quest, diary, or region' };
   const activeMode = getGameMode(gameModeId);
+  const isOsrs = useIsOsrsUi();
   const [activeTab, setActiveTab] = useState('CHARACTER');
 
   useEffect(() => {
@@ -538,13 +548,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
 
   // --- Render Sections ---
 
-  const renderCharacterTab = () => (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10">
-        {/* Equipment Lab — interactive paper-doll (click a slot for its tier
-            ladder + upgrade), a target-loadout planner, and a DPS calculator. */}
-        <EquipmentLab onUpgrade={(slot) => handleSpecialUnlock(TableType.EQUIPMENT, slot)} suspendModals={suspendModals} />
-
-        {/* Skills Section */}
+  const renderCharacterTab = () => {
+    const classicSkills = (
         <div className="space-y-4">
             <div className="flex justify-between items-center bg-[#151515] p-2 rounded border border-white/5">
                 <h3 className="text-blue-400 font-bold text-sm flex items-center gap-1.5">Skills <SectionGuide id="SKILLS" suspendModals={suspendModals} /></h3>
@@ -683,8 +688,34 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                 })}
             </div>
         </div>
+    );
+    return (
+    <div className={isOsrs ? 'grid grid-cols-1 xl:grid-cols-2 gap-2 h-full overflow-y-auto pr-1 custom-scrollbar pb-4 items-start' : 'grid grid-cols-1 xl:grid-cols-2 gap-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10'}>
+        {/* Equipment Lab — interactive paper-doll (click a slot for its tier
+            ladder + upgrade), a target-loadout planner, and a DPS calculator. */}
+        <EquipmentLab onUpgrade={(slot) => handleSpecialUnlock(TableType.EQUIPMENT, slot)} suspendModals={suspendModals} />
+
+        {/* Skills Section */}
+        {isOsrs ? (
+          <Suspense fallback={null}>
+            <OsrsSkills
+              unlocks={unlocks}
+              specialKeys={specialKeys}
+              totalSkillTiers={totalSkillTiers}
+              searchQuery={searchQuery}
+              showOnlyActionable={showOnlyActionable}
+              levelingSkill={levelingSkill}
+              advisorsEnabled={advisorsEnabled}
+              suspendModals={suspendModals}
+              onLevelUp={handleLevelUp}
+              onSpecialUnlock={handleSpecialUnlock}
+              onOpenDetails={(name, tier) => setSelectedSkillForDetails({ name, tier })}
+            />
+          </Suspense>
+        ) : classicSkills}
     </div>
-  );
+    );
+  };
 
   // `nameMap` lets a category key on a stable id (e.g. banks keyed by chunk id)
   // while displaying a friendly name — the card, search, region/req lookups and
@@ -909,6 +940,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         ...(bankLocksActive(gameModeId, customMode) ? [{ id: 'BANKS', label: 'Banks', color: 'text-amber-300', bar: 'bg-amber-400', list: BANK_IDS, unlocked: (unlocks.banks ?? []), type: TableType.BANKS, nameMap: Object.fromEntries(BANKS.map(b => [b.id, b.name])) as Record<string, string> }] : []),
       ];
 
+      if (isOsrs) {
+        return (
+          <Suspense fallback={<PaneFallback />}>
+            <OsrsDashActivities
+              categories={categories}
+              activeId={activityCategory}
+              onSelect={setActivityCategory}
+              searchQuery={searchQuery}
+              specialKeys={specialKeys}
+              renderGrid={(c) => renderGridSection(c.list, c.unlocked, c.type, SPECIAL_ICONS, c.details, c.nameMap)}
+            />
+          </Suspense>
+        );
+      }
+
       // Search mode: span every category so a search isn't trapped in one tab.
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -1022,7 +1068,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
 
   return (
     <>
-    <div className="bg-osrs-panel border border-osrs-border rounded-lg shadow-lg flex flex-col h-full overflow-hidden relative">
+    <div className={isOsrs ? 'osrs-win flex flex-col h-full overflow-hidden relative' : 'bg-osrs-panel border border-osrs-border rounded-lg shadow-lg flex flex-col h-full overflow-hidden relative'}>
       {!suspendModals && pendingSpecial && (
           <VoidReveal itemName={pendingSpecial.item} itemType={pendingSpecial.table} itemImage={pendingSpecial.image} onComplete={finalizeSpecial} animationsEnabled={animationsEnabled}
             tier={pendingSpecial.table === TableType.SKILLS ? (unlocks.skills[pendingSpecial.item] || 0) + 1 : undefined} />
@@ -1039,7 +1085,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       )}
 
       {/* Confirmation Modal */}
-      {!suspendModals && confirmOmni && (
+      {!suspendModals && confirmOmni && isOsrs && (
+          <Suspense fallback={null}>
+              <OsrsConfirmOmni item={confirmOmni.item} table={confirmOmni.table} unlocks={unlocks} modeId={gameModeId}
+                onCancel={() => setConfirmOmni(null)} onConfirm={proceedWithSpecialUnlock} />
+          </Suspense>
+      )}
+      {!suspendModals && confirmOmni && !isOsrs && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
               <div className="bg-[#1a1a1a] border border-purple-500/50 rounded-xl shadow-2xl p-6 max-w-sm w-full relative">
                   <div className="flex items-center gap-3 mb-4">
@@ -1082,6 +1134,34 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       )}
       
       {/* Header */}
+      {isOsrs ? (
+        <Suspense fallback={null}>
+          <OsrsDashHeader
+            modeName={activeMode.name}
+            modeDescription={activeMode.description}
+            specialKeys={specialKeys}
+            goalPlanner={goalPlannerEntry}
+            onGoalPlanner={() => setShowGoalPlanner(true)}
+            onAchievements={() => setShowAchievements(true)}
+            onForecast={() => setShowForecast(true)}
+            onFateThread={() => window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: 'open:fatethread' } }))}
+            rival={RIVAL_ENABLED ? <RivalHeaderButton onClick={() => setShowRival(true)} /> : null}
+            onKillPlanner={() => setShowBossPlanner(true)}
+            onShareRun={() => setShowRunCard(true)}
+            completionPercent={completionPercent}
+          />
+          <OsrsDashTabs
+            tabs={visibleTabs}
+            activeTab={activeTab}
+            onTab={setActiveTab}
+            searchQuery={searchQuery}
+            onSearch={setSearchQuery}
+            showOnlyActionable={showOnlyActionable}
+            onToggleActionable={() => setShowOnlyActionable(!showOnlyActionable)}
+            suspendModals={suspendModals}
+          />
+        </Suspense>
+      ) : (<>
       <div className="p-4 border-b border-white/5 bg-[#1b1b1b] shrink-0">
          <div className="flex flex-wrap justify-between items-center gap-y-2 mb-3">
              <h2 className="text-lg font-bold text-osrs-gold flex flex-wrap items-center gap-2 min-w-0">
@@ -1215,16 +1295,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
               <SectionGuide id={activeTab} className="p-1" suspendModals={suspendModals} />
           </div>
       </div>
+      </>)}
 
       {/* Content Area */}
-      <div className="flex-1 overflow-hidden p-4 bg-[#111]">
+      <div className={isOsrs ? 'flex-1 overflow-hidden p-1' : 'flex-1 overflow-hidden p-4 bg-[#111]'}>
           <Suspense fallback={<ModalFallback />}>
               <GoalTracker />
           </Suspense>
           {/* Keyed by tab so the content gently slides in when you switch. */}
           <div key={activeTab} className={`h-full relative ${animationsEnabled ? 'animate-fade-in-up' : ''}`}>
             {activeTab === 'CHARACTER' && renderCharacterTab()}
-            {activeTab === 'WORLD' && renderWorldTab()}
+            {activeTab === 'WORLD' && (isOsrs ? (
+                <Suspense fallback={<PaneFallback />}>
+                    <OsrsWorldTab
+                      worldView={worldView}
+                      onWorldView={setWorldView}
+                      searchQuery={searchQuery}
+                      showOnlyActionable={showOnlyActionable}
+                      onUnlockArea={(area) => handleSpecialUnlock(TableType.REGIONS, area)}
+                      suspendModals={suspendModals}
+                    />
+                </Suspense>
+            ) : renderWorldTab())}
             {activeTab === 'ACTIVITIES' && renderActivitiesTab()}
             {activeTab === 'JOURNAL' && renderJournalTab()}
             {activeTab === 'COLLECTION' && (
