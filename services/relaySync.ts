@@ -1,4 +1,5 @@
 import { isRunelitePairCode } from '../utils/runelitePairing';
+import { resolveRelayBase } from '../utils/relayBase';
 
 /**
  * Online relay sync (optional). Pushes the run bundle to a hosted Cloudflare
@@ -9,8 +10,8 @@ import { isRunelitePairCode } from '../utils/runelitePairing';
  * and the always-mounted driver stay in sync. No data leaves until the user
  * explicitly enables it.
  */
-const DEFAULT_BASE = 'https://fate-relay.fatelocked.workers.dev';
 const SESSION_KEY = 'fate_relay_session_v1';
+/** Development-only relay override; production ignores it (utils/relayBase.ts). */
 const BASE_KEY = 'fate_relay_base';
 /** A stalled POST fails after this long instead of holding up later publishes. */
 const REQUEST_TIMEOUT_MS = 15_000;
@@ -95,11 +96,15 @@ export class RelaySyncService {
     this.activeProfileId = profileId;
   }
 
+  /** Where every relay call goes. See resolveRelayBase: production ignores the override. */
   base(): string {
     const env = (import.meta as any).env?.VITE_FATE_RELAY as string | undefined;
-    let ls: string | null = null;
-    try { ls = localStorage.getItem(BASE_KEY); } catch { /* ignore */ }
-    return (env || ls || DEFAULT_BASE).replace(/\/$/, '');
+    const dev = import.meta.env.DEV === true;
+    let override: string | null = null;
+    if (dev) {
+      try { override = localStorage.getItem(BASE_KEY); } catch { /* ignore */ }
+    }
+    return resolveRelayBase({ env, override, dev });
   }
 
   subscribe(fn: () => void) { this.listeners.add(fn); return () => { this.listeners.delete(fn); }; }
