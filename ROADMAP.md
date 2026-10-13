@@ -479,7 +479,12 @@ in `scripts/check-entry-budget.mjs` (225 kB; about 217 kB after the 24 Sept
 about 224 kB in October 2026, after online backup and Paste from RuneLite;
 raised to 226 kB on 9 October 2026, when the entry sat at 224.9-225.0 kB and
 builds of the same commit landed either side of 225, so the main-branch
-deploy of #92 failed while its PR passed). An
+deploy of #92 failed while its PR passed). That split came from the build
+id stamped into the entry: CI built with a 13-digit timestamp and the deploy
+with the 40-character commit SHA. CI now stamps the SHA too (on a pull
+request, its merge commit's), and a build without `BUILD_ID` stamps a random
+40-character hex id. The id's own digits still move the gzip size by up to
+about 20 bytes between builds, but no longer by a fixed 32. An
 overrun usually means something that should load through `lazyWithRetry` was
 imported eagerly. Inspect the built file for content markers rather than
 relying only on the import graph, and raise the budget only on purpose.
