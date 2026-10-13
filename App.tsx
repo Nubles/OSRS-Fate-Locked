@@ -104,7 +104,8 @@ const RunelitePluginGuide = lazyWithRetry(() =>
   })),
 );
 import { deobfuscateFateSave, MAX_FATE_FILE_BYTES } from './utils/encryption';
-import { Download, Upload, RotateCcw, BarChart3, HelpCircle, PlayCircle, PauseCircle, Search, Database, SlidersHorizontal, Link2, Radio, Settings, MessageCircle } from 'lucide-react';
+import { Download, Upload, RotateCcw, BarChart3, HelpCircle, PlayCircle, PauseCircle, Search, Database, SlidersHorizontal, Link2, Radio, Settings, MessageCircle, Layout } from 'lucide-react';
+import { setUiStyle, useUiStyle } from './utils/uiStyle';
 import { Key, Sparkles, Dna, Swords, ShoppingBag, ScrollText, Compass, Lightbulb } from './components/OsrsIcon';
 import { exportRuneliteBundle } from './utils/runeliteExport';
 import { BookOpen } from './components/OsrsIcon';
@@ -298,6 +299,7 @@ interface HeaderProps {
 }
 
 const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, onOpenRuneliteGuide, onOpenChangelog }: HeaderProps) => {
+  const uiStyle = useUiStyle();
   const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount, runId, runRevision, bossStandardKeysAwarded } = useGame();
   // Progressive disclosure — advanced tools stay hidden until the run earns them.
   const gates = useFeatureGates();
@@ -573,6 +575,10 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                         <button onClick={() => { toggleAnimations(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={animationsEnabled}>
                            {animationsEnabled ? <PlayCircle size={13} className="text-green-400" /> : <PauseCircle size={13} className="text-gray-500" />}
                            Animations <span className="ml-auto text-[10px] text-gray-500">{animationsEnabled ? 'on' : 'off'}</span>
+                        </button>
+                        <button onClick={() => { setUiStyle(uiStyle === 'osrs' ? 'classic' : 'osrs'); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={uiStyle === 'osrs'}>
+                           <Layout size={13} className={uiStyle === 'osrs' ? 'text-amber-400' : 'text-gray-500'} />
+                           OSRS layout <span className="ml-auto text-[10px] text-gray-500">{uiStyle === 'osrs' ? 'on' : 'off'}</span>
                         </button>
                         <button onClick={() => { toggleAdvisors(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={advisorsEnabled}>
                            <Lightbulb size={13} className={advisorsEnabled ? 'text-amber-400' : 'text-gray-500'} />

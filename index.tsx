@@ -5,6 +5,8 @@ import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './styles.css';
+import './components/osrs/osrs-skin.css';
+import { applyUiStyle } from './utils/uiStyle';
 // NOTE: deliberately no `vite:preloadError` handler here. Calling
 // event.preventDefault() makes Vite SWALLOW the failure — the dynamic import
 // then resolves with an undefined module and call sites crash with a mangled
@@ -17,6 +19,9 @@ import './styles.css';
 // no router, lazy so the main bundle doesn't pay for it).
 const StreamOverlay = lazyWithRetry(() => import('./components/StreamOverlay'));
 const isOverlay = window.location.hash.startsWith('#/overlay');
+
+// Set <html data-ui> before the first paint so the OSRS skin never flashes.
+applyUiStyle();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
