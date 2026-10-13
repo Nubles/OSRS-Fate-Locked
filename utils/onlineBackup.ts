@@ -7,9 +7,10 @@
  * and ciphertext, so nobody without the code, the relay included, can read or
  * replace the backup. The code is the only way back in: it can't be reset.
  *
- * When a second browser backs up the same run, the relay keeps the copy it
- * replaced as the previous copy (/b/<id>/previous), so a browser holding an
- * older run can't erase newer progress: a restore offers both.
+ * The relay keeps one previous copy (/b/<id>/previous): the copy another
+ * browser's upload replaced, so a browser holding an older run can't erase
+ * newer progress, or else, at most once a day, the copy this browser's upload
+ * replaced, so a bad upload can't erase the day before. A restore offers both.
  */
 import {
   BACKUP_CODE_ALPHABET,
@@ -121,7 +122,7 @@ export type BackupFetchResult =
   | { ok: true; envelope: string; updatedAt: number }
   | { ok: false; reason: 'network' | 'unavailable' | 'not-found' };
 
-/** The newest copy, or the one it replaced when another browser backed the run up. */
+/** The newest copy, or the previous one the relay kept (docs/online-backup.md). */
 export type BackupCopy = 'latest' | 'previous';
 
 type Fetch = typeof fetch;

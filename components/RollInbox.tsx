@@ -133,9 +133,9 @@ function terminalAck(
 }
 
 /**
- * Current RuneLite builds keep detections local and never read the legacy
- * /acks resource (docs/online-relay.md), so by default a decision stays in
- * this browser's inbox. A caller can still pass fateEventRelay.acknowledge.
+ * RuneLite keeps detections local and the relay has no acknowledgement
+ * resource (docs/online-relay.md), so by default a decision stays in this
+ * browser's inbox.
  */
 const keepAcknowledgementLocal = async (): Promise<boolean> => false;
 

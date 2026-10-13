@@ -17,6 +17,13 @@ import {
   writeOnlineBackupRecord,
 } from './onlineBackup';
 import { profileOnlineBackupKey } from './profileStorage';
+import { MAX_SYNC_CODE_CHARS } from './syncCode';
+import {
+  BACKUP_ID_RE,
+  MAX_BACKUP_BYTES,
+  MAX_SYNC_CODE_CHARS as RELAY_MAX_SYNC_CODE_CHARS,
+  validBackupBody,
+} from '../workers/fate-relay/protocol.js';
 
 const CODE = '0123456789ABCDEFGHJK';
 
@@ -86,6 +93,26 @@ describe('backup encryption', () => {
     expect(await decryptBackup(`FLBK2.${iv}.${ciphertext}`, key)).toBeNull();
     expect(await decryptBackup(`${tag}.${iv}`, key)).toBeNull();
     expect(await decryptBackup('not a backup', key)).toBeNull();
+  });
+});
+
+describe('what the relay accepts', () => {
+  it('takes every backup this app makes, up to the longest sync code', async () => {
+    expect(RELAY_MAX_SYNC_CODE_CHARS).toBe(MAX_SYNC_CODE_CHARS);
+    const keys = await deriveBackupKeys(CODE);
+    expect(keys.id).toMatch(BACKUP_ID_RE);
+    for (const syncCode of ['FLSYNC.g1.payload.checksum', 'x'.repeat(MAX_SYNC_CODE_CHARS)]) {
+      const bytes = new TextEncoder().encode(await encryptBackup(syncCode, keys.key));
+      expect(validBackupBody(bytes)).toBe(true);
+      expect(bytes.byteLength).toBeLessThanOrEqual(MAX_BACKUP_BYTES);
+    }
+  });
+
+  it('gives each code an id of the shape the relay accepts', async () => {
+    for (let index = 0; index < 20; index += 1) {
+      const { id } = await deriveBackupKeys(normalizeBackupCode(generateBackupCode())!);
+      expect(id).toMatch(BACKUP_ID_RE);
+    }
   });
 });
 

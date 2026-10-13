@@ -3,6 +3,7 @@ import {
   deleteProgress, formatLinkCode, newProgressShareRecord, publishProgress,
   readProgressShare, requestLinkCode, writeProgressShare,
 } from './progressShare';
+import { PROGRESS_ID_RE } from '../workers/fate-relay/protocol.js';
 
 const BASE = 'https://relay.test';
 const record = newProgressShareRecord(bytes => bytes.fill(7));
@@ -25,6 +26,9 @@ describe('progress share record', () => {
     expect(record.id).toMatch(/^[A-Za-z0-9_-]{22}$/);
     expect(record.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(record.enabled).toBe(true);
+    // The relay refuses any run id but the exact form a random one takes.
+    for (let index = 0; index < 50; index += 1) expect(newProgressShareRecord().id).toMatch(PROGRESS_ID_RE);
+    for (const fill of [0, 7, 255]) expect(newProgressShareRecord(bytes => bytes.fill(fill)).id).toMatch(PROGRESS_ID_RE);
   });
 
   it('keeps the record per profile, outside the save, and forgets it', () => {

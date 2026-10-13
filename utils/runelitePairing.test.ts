@@ -7,9 +7,16 @@ import {
   parseRunelitePairFragment,
   runelitePairCodeHint,
 } from './runelitePairing';
+import { PAIRING_CODE_RE } from '../workers/fate-relay/protocol.js';
 
 describe('RuneLite pairing fragments', () => {
   const code = '0123456789abcdef0123456789abcdef';
+
+  it('accepts exactly the codes the relay accepts', () => {
+    // Both match RuneLite's PairingSupport.newCode: a UUID without its dashes.
+    expect(PAIRING_CODE_RE.source).toBe(RUNELITE_PAIR_CODE_PATTERN.source);
+    expect(PAIRING_CODE_RE.flags).toBe(RUNELITE_PAIR_CODE_PATTERN.flags);
+  });
 
   it('exposes the strict protocol constants and success copy', () => {
     expect(RUNELITE_PAIR_HASH_PREFIX).toBe('#runelite-pair=');
