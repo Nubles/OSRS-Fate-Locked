@@ -50,7 +50,12 @@ Bot     DELETE /l/<discordId>     forget the link
 ```
 
 The first publish claims an id; the relay keeps only a SHA-256 hash of its
-write token. There is no public read: summaries are served only to the bot,
+write token. A run id that isn't 16 bytes in base64url, or a Discord id that
+isn't a snowflake, is answered `400` before the relay looks anything up. The
+browser's publishes, deletes and link codes count toward the relay's per-IP
+write limit, and a new run or link code toward its claim limit; the bot's
+`/l/` requests are not limited (see "Abuse limits" in
+[online-relay.md](online-relay.md)). There is no public read: summaries are served only to the bot,
 which authenticates with the `PROGRESS_BOT_SECRET` Worker secret (the bot holds
 the same value as `FATE_RELAY_BOT_SECRET`). With the secret unset, every `/l/`
 request is refused. The relay keeps only the fields that

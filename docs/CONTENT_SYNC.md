@@ -50,6 +50,11 @@ so the sync then dispatches the CI workflow on the pull request's branch; its
 checks appear on the pull request. A maintainer reviews and merges; the merge
 triggers the existing Deploy workflow and ships.
 
+The install, sync and tests run in a read-only job that keeps no git
+credentials, from the lockfile (`npm ci`). Only the three generated files and
+the pull request text pass to a second job, which runs no npm code and alone
+holds the write permissions that open the pull request and start CI.
+
 This is what bakes wiki changes into the committed bundle (so first-load is
 correct and names get the wiki's polished forms), and it's where anything that
 needs human curation surfaces as a reviewable diff instead of shipping blind.

@@ -44,7 +44,7 @@ import { BANKS } from '../data/banks';
 import { OCEAN_CHUNK_KEYS } from '../utils/oceanAccess';
 import { RUNELITE_WORDING } from '../data/runeliteWording';
 import { vanillaSpentBosses } from '../config/vanillaKeyEconomy';
-import { MAX_REQUEST_BYTES } from '../workers/fate-relay/protocol.js';
+import { MAX_REQUEST_BYTES, validBundlePayload } from '../workers/fate-relay/protocol.js';
 import type { UnlockState } from '../types';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -713,6 +713,8 @@ describe('golden bundles', () => {
       const { compressed } = results.get(scenario.id)!;
       expect(compressed.startsWith('FLGZ:'), `${scenario.id} is compressed`).toBe(true);
       expect(relayBodyBytes(compressed), `${scenario.id}'s relay body in bytes`).toBeLessThan(RELAY_BODY_BUDGET_BYTES);
+      // The relay refuses a profile in any other form.
+      expect(validBundlePayload(compressed), `${scenario.id} is a profile the relay accepts`).toBe(true);
     }
   });
 

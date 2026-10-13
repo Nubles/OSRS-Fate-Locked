@@ -7,9 +7,10 @@
  * and ciphertext, so nobody without the code, the relay included, can read or
  * replace the backup. The code is the only way back in: it can't be reset.
  *
- * When a second browser backs up the same run, the relay keeps the copy it
- * replaced as the previous copy (/b/<id>/previous), so a browser holding an
- * older run can't erase newer progress: a restore offers both.
+ * The relay keeps one previous copy (/b/<id>/previous): the copy another
+ * browser's upload replaced, so a browser holding an older run can't erase
+ * newer progress, or else, at most once a day, the copy this browser's upload
+ * replaced, so a bad upload can't erase the day before. A restore offers both.
  */
 import {
   BACKUP_CODE_ALPHABET,
@@ -18,6 +19,8 @@ import {
   readOnlineBackupRecord,
   writeOnlineBackupRecord,
   type OnlineBackupError,
+  type OnlineBackupHold,
+  type OnlineBackupRecord,
 } from './onlineBackupRecord';
 import { encodeSyncCode } from './syncCode';
 import { simpleHash } from './integrity';
@@ -121,7 +124,7 @@ export type BackupFetchResult =
   | { ok: true; envelope: string; updatedAt: number }
   | { ok: false; reason: 'network' | 'unavailable' | 'not-found' };
 
-/** The newest copy, or the one it replaced when another browser backed the run up. */
+/** The newest copy, or the previous one the relay kept (docs/online-backup.md). */
 export type BackupCopy = 'latest' | 'previous';
 
 type Fetch = typeof fetch;
@@ -190,22 +193,65 @@ export type BackupRunOutcome =
   | { kind: 'unchanged' }
   | { kind: 'uploaded'; updatedAt: number }
   | { kind: 'retry'; afterMs: number }
-  | { kind: 'failed'; reason: OnlineBackupError };
+  | { kind: 'failed'; reason: OnlineBackupError }
+  | { kind: 'held'; reason: OnlineBackupHold };
+
+/** The run id and History length of an export, or null when it has neither. */
+export const exportRunShape = (exportJson: string): { runId: string; historyLength: number } | null => {
+  try {
+    const parsed = JSON.parse(exportJson) as { runId?: unknown; history?: unknown } | null;
+    return parsed && typeof parsed.runId === 'string' && Array.isArray(parsed.history)
+      ? { runId: parsed.runId, historyLength: parsed.history.length }
+      : null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Whether uploading this export would overwrite a backup of another run, or of
+ * a longer one: after Reset, a new run in the same profile, or a save another
+ * app damaged. History only grows in play, so a shorter one means replacement.
+ * A record from before runs were recorded holds nothing back.
+ */
+export const backupHoldFor = (
+  record: OnlineBackupRecord,
+  shape: { runId: string; historyLength: number } | null,
+): OnlineBackupHold | null => {
+  if (shape === null || record.lastRunId === undefined) return null;
+  if (shape.runId !== record.lastRunId) return 'other-run';
+  if (shape.historyLength < (record.lastHistoryLength ?? 0)) return 'shorter';
+  return null;
+};
 
 /**
  * Uploads a run's export, encrypted, when online backup is on for it and the run
- * changed since the last upload (or always, when `force`). The outcome goes in
- * the run's record, so the screens can say when it was last backed up or why
- * it wasn't; the driver uses the returned outcome to schedule a retry.
+ * changed since the last upload (or always, when `force`). It never replaces a
+ * backup of a different or longer run unless the player chose to (`replace`):
+ * it records the hold instead, and the screens ask. The outcome goes in the
+ * run's record, so the screens can say when it was last backed up or why it
+ * wasn't; the driver uses the returned outcome to schedule a retry.
  */
 export const backupRun = async (
   storageKey: string,
   exportJson: string,
   relayBase: string,
-  options: { force?: boolean; fetchImpl?: Fetch } = {},
+  options: { force?: boolean; replace?: boolean; fetchImpl?: Fetch } = {},
 ): Promise<BackupRunOutcome> => {
-  const record = readOnlineBackupRecord(storageKey);
+  let record = readOnlineBackupRecord(storageKey);
   if (!record.code) return { kind: 'off' };
+  const shape = exportRunShape(exportJson);
+  const hold = options.replace ? null : backupHoldFor(record, shape);
+  if (hold !== null) {
+    if (record.held !== hold) writeOnlineBackupRecord(storageKey, { ...record, held: hold });
+    return { kind: 'held', reason: hold };
+  }
+  if (record.held) {
+    // Replaced on purpose, or the backed-up run is back (restored).
+    const { held: _held, ...rest } = record;
+    record = rest;
+    writeOnlineBackupRecord(storageKey, record);
+  }
   const checksum = simpleHash(exportJson);
   if (!options.force && checksum === record.lastChecksum && !record.lastError) return { kind: 'unchanged' };
 
@@ -235,6 +281,13 @@ export const backupRun = async (
   // Backup may have been turned off, or its code changed, while this upload ran.
   const latest = readOnlineBackupRecord(storageKey);
   if (latest.code !== record.code) return { kind: 'off' };
-  writeOnlineBackupRecord(storageKey, { ...latest, lastUploadAt: result.updatedAt, lastChecksum: checksum, lastError: undefined });
+  const { held: _held, ...rest } = latest;
+  writeOnlineBackupRecord(storageKey, {
+    ...rest,
+    lastUploadAt: result.updatedAt,
+    lastChecksum: checksum,
+    lastError: undefined,
+    ...(shape === null ? {} : { lastRunId: shape.runId, lastHistoryLength: shape.historyLength }),
+  });
   return { kind: 'uploaded', updatedAt: result.updatedAt };
 };

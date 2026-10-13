@@ -1,3 +1,5 @@
+// First, so it reports errors thrown while the modules below load.
+import './utils/errorBeacon';
 import { lazyWithRetry } from './utils/lazyRetry';
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';

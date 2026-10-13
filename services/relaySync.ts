@@ -1,4 +1,5 @@
 import { isRunelitePairCode } from '../utils/runelitePairing';
+import { resolveRelayBase } from '../utils/relayBase';
 
 /**
  * Online relay sync (optional). Pushes the run bundle to a hosted Cloudflare
@@ -9,11 +10,37 @@ import { isRunelitePairCode } from '../utils/runelitePairing';
  * and the always-mounted driver stay in sync. No data leaves until the user
  * explicitly enables it.
  */
-const DEFAULT_BASE = 'https://fate-relay.fatelocked.workers.dev';
 const SESSION_KEY = 'fate_relay_session_v1';
+/** Development-only relay override; production ignores it (utils/relayBase.ts). */
 const BASE_KEY = 'fate_relay_base';
 /** A stalled POST fails after this long instead of holding up later publishes. */
 const REQUEST_TIMEOUT_MS = 15_000;
+/**
+ * After a failed publish the driver tries again after these delays, then
+ * every 5 minutes until one works, which starts the count over.
+ */
+export const RELAY_RETRY_DELAYS_MS = [15_000, 60_000, 5 * 60_000] as const;
+
+/** How long to wait before the automatic retry after `failures` failed publishes in a row. */
+export const relayRetryDelayMs = (failures: number): number =>
+  RELAY_RETRY_DELAYS_MS[Math.min(Math.max(failures, 1), RELAY_RETRY_DELAYS_MS.length) - 1];
+
+/** A publish the relay answered with an error status. */
+export class RelayHttpError extends Error {
+  constructor(readonly status: number) {
+    super(`relay ${status}`);
+    this.name = 'RelayHttpError';
+  }
+}
+
+/**
+ * Whether trying the same publish again can work: a network failure, a
+ * timeout, a busy relay or a relay outage can pass; a refusal of the pairing
+ * (403) or of the profile itself (400, 413) won't.
+ */
+export const isRetryableRelayError = (error: unknown): boolean =>
+  !(error instanceof RelayHttpError)
+  || error.status >= 500 || error.status === 429 || error.status === 408;
 
 export type RelayStatus = 'off' | 'syncing' | 'synced' | 'error';
 
@@ -34,7 +61,10 @@ function readStoredSession(): Session | null | undefined {
   try { raw = localStorage.getItem(SESSION_KEY); } catch { return undefined; }
   try {
     const parsed = raw ? JSON.parse(raw) : null;
-    return parsed && typeof parsed.code === 'string' && typeof parsed.token === 'string'
+    // A code RuneLite can't have made (very old builds of the app made their
+    // own) can't reach any RuneLite, and the relay refuses it.
+    return parsed && typeof parsed.code === 'string' && isRunelitePairCode(parsed.code)
+      && typeof parsed.token === 'string'
       ? parsed
       : null;
   } catch {
@@ -42,16 +72,11 @@ function readStoredSession(): Session | null | undefined {
   }
 }
 
-// Crockford base32 (no ambiguous 0/O/1/I/L/U) for a readable pairing code.
-const ALPHABET = '23456789ABCDEFGHJKMNPQRSTVWXYZ';
-function randomCode(len = 8): string {
-  const a = crypto.getRandomValues(new Uint8Array(len));
-  return Array.from(a, (x) => ALPHABET[x % ALPHABET.length]).join('');
-}
-function randomToken(): string {
-  const a = crypto.getRandomValues(new Uint8Array(18));
-  return Array.from(a, (x) => x.toString(16).padStart(2, '0')).join('');
-}
+const randomHex = (bytes: number): string =>
+  Array.from(crypto.getRandomValues(new Uint8Array(bytes)), (x) => x.toString(16).padStart(2, '0')).join('');
+/** A pairing code in RuneLite's form: 32 hex digits, the only form the relay accepts. */
+const randomCode = (): string => randomHex(16);
+const randomToken = (): string => randomHex(18);
 
 export class RelaySyncService {
   private session: Session | null = null;
@@ -64,6 +89,14 @@ export class RelaySyncService {
   lastError: string | null = null;
   lastSyncAt: number | null = null;
   pushRequestRevision = 0;
+  /** Failed publishes in a row since the last one that worked. */
+  failures = 0;
+  /** Why the last of them failed. Unlike lastError, kept while a retry is sending. */
+  lastFailure: string | null = null;
+  /** Whether trying the failed publish again can work. */
+  retryable = true;
+  /** When the driver will try a failed publish again by itself, or null. */
+  retryAt: number | null = null;
 
   constructor() {
     this.session = readStoredSession() ?? null;
@@ -95,11 +128,15 @@ export class RelaySyncService {
     this.activeProfileId = profileId;
   }
 
+  /** Where every relay call goes. See resolveRelayBase: production ignores the override. */
   base(): string {
     const env = (import.meta as any).env?.VITE_FATE_RELAY as string | undefined;
-    let ls: string | null = null;
-    try { ls = localStorage.getItem(BASE_KEY); } catch { /* ignore */ }
-    return (env || ls || DEFAULT_BASE).replace(/\/$/, '');
+    const dev = import.meta.env.DEV === true;
+    let override: string | null = null;
+    if (dev) {
+      try { override = localStorage.getItem(BASE_KEY); } catch { /* ignore */ }
+    }
+    return resolveRelayBase({ env, override, dev });
   }
 
   subscribe(fn: () => void) { this.listeners.add(fn); return () => { this.listeners.delete(fn); }; }
@@ -120,6 +157,7 @@ export class RelaySyncService {
     this.status = 'syncing';
     this.lastError = null;
     this.lastSyncAt = null;
+    this.resetFailures();
     this.pushRequestRevision += 1;
     this.emit();
     return true;
@@ -134,6 +172,7 @@ export class RelaySyncService {
     this.status = 'syncing';
     this.lastError = null;
     this.lastSyncAt = null;
+    this.resetFailures();
     this.pushRequestRevision += 1;
     this.emit();
     return this.session.code;
@@ -150,7 +189,26 @@ export class RelaySyncService {
     this.status = 'off';
     this.lastError = null;
     this.lastSyncAt = null;
+    this.resetFailures();
     this.emit();
+  }
+
+  private resetFailures(): void {
+    this.failures = 0;
+    this.lastFailure = null;
+    this.retryable = true;
+    this.retryAt = null;
+  }
+
+  /**
+   * Record when the driver will try a failed publish again (null: it won't).
+   * Silent while the driver is being torn down, which would otherwise emit
+   * into components that are unmounting.
+   */
+  setRetryAt(at: number | null, silent = false): void {
+    if (this.retryAt === at) return;
+    this.retryAt = at;
+    if (!silent) this.emit();
   }
 
   /**
@@ -159,7 +217,8 @@ export class RelaySyncService {
    * profile, and the linked account in it, to anyone who has the code. The
    * request waits for a publish already on its way, which would otherwise
    * land after it and restore the profile. It is best effort and never
-   * rejects: if it fails, the profile expires with its record within a day.
+   * rejects: if it fails, the profile expires with its record 30 days after
+   * the last publish.
    */
   disconnect(): Promise<void> {
     const session = this.session;
@@ -183,18 +242,25 @@ export class RelaySyncService {
     if (!this.enabled) return false;
     this.status = 'syncing';
     this.lastError = null;
+    this.retryAt = null;
     this.pushRequestRevision += 1;
     this.emit();
     return true;
   }
 
-  /** Surface a bundle-build failure owned by the current session. */
-  reportPushFailure(error: unknown): void {
+  /**
+   * Surface a bundle-build failure owned by the current session. `retryable`
+   * is false when trying again by itself can't help (this tab isn't saving).
+   */
+  reportPushFailure(error: unknown, retryable = true): void {
     if (!this.enabled) return;
     this.status = 'error';
     this.lastError = error instanceof Error
       ? error.message
       : String(error || 'bundle build failed');
+    this.failures += 1;
+    this.lastFailure = this.lastError;
+    this.retryable = retryable;
     this.emit();
   }
 
@@ -246,11 +312,13 @@ export class RelaySyncService {
       this.status = 'off';
       this.lastError = null;
       this.lastSyncAt = null;
+      this.resetFailures();
     } else if (this.code !== previousCode) {
       // Paired again for this profile; the driver publishes it from here too.
       this.status = 'syncing';
       this.lastError = null;
       this.lastSyncAt = null;
+      this.resetFailures();
     }
     this.emit();
   }
@@ -261,32 +329,22 @@ export class RelaySyncService {
     this.emit();
     try {
       const res = await this.post(`/r/${session.code}`, { token: session.token, payload });
-      if (!res.ok) throw new Error(`relay ${res.status}`);
+      if (!res.ok) throw new RelayHttpError(res.status);
       if (!isCurrent()) return false;
       this.status = 'synced';
       this.lastSyncAt = Date.now();
       this.lastError = null;
+      this.resetFailures();
       this.emit();
       return true;
     } catch (e: any) {
       if (!isCurrent()) return false;
       this.status = 'error';
       this.lastError = e?.message ?? 'push failed';
+      this.failures += 1;
+      this.lastFailure = this.lastError;
+      this.retryable = isRetryableRelayError(e);
       this.emit();
-      return false;
-    }
-  }
-
-  /** POST to an app-owned structured sub-resource using the private session token. */
-  async postOwnedSubresource(path: string, body: Record<string, unknown>): Promise<boolean> {
-    if (!this.enabled || !this.session) return false;
-    try {
-      const suffix = path.startsWith('/') ? path : `/${path}`;
-      const res = await this.post(`/r/${this.session.code}${suffix}`, {
-        token: this.session.token, ...body,
-      });
-      return res.ok;
-    } catch {
       return false;
     }
   }
