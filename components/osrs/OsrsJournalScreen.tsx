@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useGame } from '../../context/GameContext';
-import { openOsrsScreen } from '../../utils/osrsNav';
+import { openOsrsProgressionTab, openOsrsScreen, useOsrsNav } from '../../utils/osrsNav';
 import { QUEST_DATA, type QuestData } from '../../data/questData';
 import { DIARY_DATA } from '../../data/diaryData';
 import { ALL_DIARY_TASKS, type DiaryTask } from '../../data/diaryTasks';
@@ -34,6 +34,7 @@ import {
   compileJournalQuery, matchJournalFields, hitRanges, splitHighlight, questSearchFields, diaryTaskSearchFields, caTaskSearchFields,
   type Range,
 } from './OsrsJournalSearch';
+import './osrs-dashboard.css';
 import './osrs-journal.css';
 
 /**
@@ -123,6 +124,7 @@ const byChanceThenName = <T,>(rate: (x: T) => number, name: (x: T) => string) =>
 export const OsrsJournalScreen: React.FC = () => {
   const { keys } = useGame();
   const { tab } = useOsrsJournalNav();
+  const { progressionTabs } = useOsrsNav();
   const quest = useQuestJournal();
   const diary = useDiaryJournal();
   const ca = useCAJournal();
@@ -566,6 +568,23 @@ export const OsrsJournalScreen: React.FC = () => {
 
   return (
     <div className="ojs-root">
+      {/* The Progression tab row, so every other tab is one click away. */}
+      {progressionTabs.length > 0 && (
+        <div role="tablist" aria-label="Dashboard sections" className="osrs-dash-tablist ojs-navtabs no-scrollbar">
+          {progressionTabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={t.id === 'JOURNAL'}
+              className="osrs-tab"
+              onClick={() => (t.id === 'JOURNAL' ? undefined : openOsrsProgressionTab(t.id))}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
       {/* Summary bar */}
       <div className="osrs-win ojs-bar">
         <span className="ojs-bar-title"><JournalIcon kind="quest" />Journal</span>

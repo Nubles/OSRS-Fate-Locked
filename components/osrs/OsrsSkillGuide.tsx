@@ -313,9 +313,9 @@ export const OsrsSkillGuide: React.FC<Props> = ({ skill, currentTier, onClose })
         )}
 
         <div className="osrs-dash-guidebody">
-          <div className="osrs-inner osrs-dash-rungs" role="list" aria-label="Tier ladder">
+          <div className="osrs-inner osrs-dash-rungs" role="group" aria-label="Tier ladder">
             {showStationsRung && (
-              <button type="button" role="listitem" aria-pressed={sel === 'stations'} onClick={() => { setRung('stations'); setOpenNode(null); }}
+              <button type="button" aria-pressed={sel === 'stations'} onClick={() => { setRung('stations'); setOpenNode(null); }}
                 className="osrs-dash-rung" disabled={unlockedOnly && currentTier < 1}
                 style={sel === 'stations' ? { background: 'var(--osrs-selected, #5a4c3a)', boxShadow: 'inset 0 0 0 1px var(--osrs-yellow, #ff0)' } : undefined}>
                 <img className="osrs-px" src={skillIconSrc(skill)} alt="" aria-hidden="true" width={25} height={25} style={{ margin: '0 1px' }} />
@@ -337,7 +337,6 @@ export const OsrsSkillGuide: React.FC<Props> = ({ skill, currentTier, onClose })
                 <button
                   key={g.name}
                   type="button"
-                  role="listitem"
                   aria-pressed={on}
                   disabled={hidden}
                   onClick={() => { setRung(t); setOpenNode(null); }}

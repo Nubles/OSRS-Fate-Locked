@@ -118,7 +118,7 @@ const PickerBody: React.FC<{ slot: string; status: GearStatus; onRetry: () => vo
         <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder={`Search ${slot.toLowerCase()}...`} aria-label={`Search ${slot.toLowerCase()}`} />
       </label>
       <p className="osrs-dash-muted-s osrs-char-estnote" style={{ margin: 0, lineHeight: '16px' }}>Est. = a stat-based tier awaiting review.</p>
-      <div className="osrs-inner osrs-dash-picklist" role="list" aria-label={`${slot} items`}>
+      <div className="osrs-inner osrs-dash-picklist" role="group" aria-label={`${slot} items`}>
         {status === 'loading' && <p role="status" className="osrs-dash-muted-s osrs-dash-pickmsg">Loading equipment data...</p>}
         {status === 'error' && (
           <div className="osrs-dash-pickmsg" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
@@ -139,7 +139,6 @@ const PickerBody: React.FC<{ slot: string; status: GearStatus; onRetry: () => vo
             <button
               key={item.id}
               type="button"
-              role="listitem"
               onClick={() => !locked && equip(item)}
               disabled={locked}
               className={`osrs-dash-pickrow${isCurrent ? ' is-on' : ''}${locked ? ' is-locked' : ''}`}

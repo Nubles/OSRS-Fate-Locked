@@ -11,19 +11,19 @@ import { useSyncExternalStore } from 'react';
  * The OSRS layout has three options of its own, kept the same way (per
  * viewer, outside GameState): the interface style (2007 brown stone or 2010
  * grey stone), the client layout (resizable or a fixed-width game client) and
- * the text size (normal or large). All four are mirrored onto <html> data
+ * the text size (normal, medium or large). All four are mirrored onto <html> data
  * attributes by applyUiStyle(), which index.tsx calls before the first paint:
  *   data-ui="classic|osrs"
  *   data-osrs-style="2007|2010"
  *   data-osrs-client="resizable|fixed"
- *   data-osrs-text="normal|large"
+ *   data-osrs-text="normal|medium|large"
  * The OSRS stylesheets scope to html[data-ui="osrs"], so the options have no
  * effect while the classic layout is on.
  */
 export type UiStyle = 'classic' | 'osrs';
 export type InterfaceStyle = '2007' | '2010';
 export type ClientLayout = 'resizable' | 'fixed';
-export type TextSize = 'normal' | 'large';
+export type TextSize = 'normal' | 'medium' | 'large';
 
 export const UI_STYLE_KEY = 'fate_ui_style_v1';
 export const INTERFACE_STYLE_KEY = 'fate_osrs_interface_style_v1';
@@ -61,7 +61,7 @@ export const readInterfaceStyle = (): InterfaceStyle =>
 export const readClientLayout = (): ClientLayout =>
   readChoice<ClientLayout>(CLIENT_LAYOUT_KEY, ['resizable', 'fixed'], DEFAULT_CLIENT_LAYOUT);
 export const readTextSize = (): TextSize =>
-  readChoice<TextSize>(TEXT_SIZE_KEY, ['normal', 'large'], DEFAULT_TEXT_SIZE);
+  readChoice<TextSize>(TEXT_SIZE_KEY, ['normal', 'medium', 'large'], DEFAULT_TEXT_SIZE);
 
 /** The streamer overlay (#/overlay) is a transparent badge bar: never frame it as a fixed client. */
 const isOverlayRoute = (): boolean => {

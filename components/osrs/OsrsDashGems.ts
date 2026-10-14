@@ -9,12 +9,12 @@ export interface TierGem { name: string; file: string; color: string }
 export const TIER_GEMS: readonly TierGem[] = [
   { name: 'Opal', file: 'opal', color: '#d9cfc0' },
   { name: 'Jade', file: 'jade', color: '#6fbf6a' },
-  { name: 'Red topaz', file: 'red_topaz', color: '#e0703c' },
-  { name: 'Sapphire', file: 'sapphire', color: '#5a7cf0' },
+  { name: 'Red topaz', file: 'red_topaz', color: '#f08a5a' },
+  { name: 'Sapphire', file: 'sapphire', color: '#8aa4ff' },
   { name: 'Emerald', file: 'emerald', color: '#2fbf5a' },
-  { name: 'Ruby', file: 'ruby', color: '#e03535' },
+  { name: 'Ruby', file: 'ruby', color: '#ff7878' },
   { name: 'Diamond', file: 'diamond', color: '#dcecff' },
-  { name: 'Dragonstone', file: 'dragonstone', color: '#c060e0' },
+  { name: 'Dragonstone', file: 'dragonstone', color: '#d886f5' },
   { name: 'Onyx', file: 'onyx', color: '#a8a8a8' },
   { name: 'Zenyte', file: 'zenyte', color: '#f5a623' },
 ];

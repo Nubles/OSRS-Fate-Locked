@@ -88,7 +88,7 @@ const CATEGORY_ICON: Record<string, string> = {
 };
 
 type Status = 'ready' | 'owned' | 'locked' | 'omni';
-const STATUS_COLOR: Record<Status, string> = { ready: '#00ff00', owned: '#ffff00', locked: '#ff0000', omni: '#c77dff' };
+const STATUS_COLOR: Record<Status, string> = { ready: '#00ff00', owned: '#ffff00', locked: '#ff5050', omni: '#c77dff' };
 const statusOf = (c: CardData): Status =>
   c.isUnlocked ? (c.readiness?.status === 'READY' ? 'ready' : 'owned') : c.canUnlock ? 'omni' : 'locked';
 
@@ -277,7 +277,7 @@ export const OsrsDashActivities: React.FC<Props> = ({ categories, activeId, onSe
           <span className="oact-legend">
             <span style={{ color: '#00ff00' }}>Ready</span><span style={{ color: '#ffff00' }}>Owned, not ready</span>
             {specialKeys > 0 && <span style={{ color: '#c77dff' }}>Omni-Key</span>}
-            <span style={{ color: '#ff0000' }}>Locked</span>
+            <span style={{ color: '#ff5050' }}>Locked</span>
           </span>
         </div>
         <div className="oact-names" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${Math.max(1, Math.ceil(rows.length / cols))}, ${rowH}px)` }}>

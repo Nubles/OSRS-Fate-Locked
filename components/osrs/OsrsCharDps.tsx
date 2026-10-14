@@ -260,13 +260,13 @@ export const OsrsCharDps: React.FC<Props> = ({ onSummary }) => {
               <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14"><circle cx="6" cy="6" r="4.5" fill="none" stroke="#c8b897" strokeWidth="2" /><path d="M9.5 9.5l3.5 3.5" stroke="#c8b897" strokeWidth="2" /></svg>
               <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search monsters..." aria-label="Search monsters" />
             </label>
-            <div className="osrs-inner osrs-dash-targets" role="list" aria-label="Target monsters">
+            <div className="osrs-inner osrs-dash-targets" role="group" aria-label="Target monsters">
               {targets.length === 0 && <p className="osrs-dash-muted-s osrs-dash-pickmsg">No monsters match.</p>}
               {targets.map((m) => {
                 const key = monsterKey(m);
                 const on = key === targetKey;
                 return (
-                  <button key={key} type="button" role="listitem" aria-pressed={on} className={`osrs-dash-pickrow${on ? ' is-on' : ''}`} onClick={() => setTargetKey(key)}>
+                  <button key={key} type="button" aria-pressed={on} className={`osrs-dash-pickrow${on ? ' is-on' : ''}`} onClick={() => setTargetKey(key)}>
                     <span className="osrs-slot" style={{ width: 40, height: 36, flexShrink: 0 }}><Crosshair on={on} /></span>
                     <span className="osrs-dash-pickrow-text">
                       <span className="osrs-dash-pickrow-name" style={{ color: on ? 'var(--osrs-yellow, #ff0)' : '#fff' }}>

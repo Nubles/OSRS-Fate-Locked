@@ -42,14 +42,17 @@ html[data-ui="osrs"] .okf-link:focus-visible { outline: 1px solid #ffff00; }
 html[data-ui="osrs"] .okf-wtitle { margin: 2px 0; text-align: center; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ff981f; text-shadow: 1px 1px 0 #000; }
 
 /* List rows (Main board): name over location, rate, Roll. */
-html[data-ui="osrs"] .okf-row { display: grid; grid-template-columns: minmax(0, 1fr) 54px 64px; align-items: center; column-gap: 8px; padding: 4px 8px; border-bottom: 1px solid var(--osrs-well, #1f1a14); text-shadow: 1px 1px 0 #000; }
+html[data-ui="osrs"] .okf-row { display: grid; grid-template-columns: minmax(0, 1fr) calc(54px * var(--osrs-ts, 1)) calc(64px * var(--osrs-ts, 1)); align-items: center; column-gap: 8px; padding: 4px 8px; border-bottom: 1px solid var(--osrs-well, #1f1a14); text-shadow: 1px 1px 0 #000; }
 html[data-ui="osrs"] .okf-row .who { min-width: 0; }
 html[data-ui="osrs"] .okf-row .name { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ff981f; line-height: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 html[data-ui="osrs"] .okf-row .where { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); line-height: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 html[data-ui="osrs"] .okf-row .rate { font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #ffff00; text-align: right; white-space: nowrap; }
 html[data-ui="osrs"] .okf-row .osrs-btn { height: 28px; }
+/* A roll for something that isn't ready yet: still clickable, drawn greyed. */
+html[data-ui="osrs"] .osrs-btn.is-muted:not([disabled]) { color: var(--osrs-btn-off, #7d705c); background: var(--osrs-btn-off-bg, #3a3228); box-shadow: inset 1px 1px 0 var(--osrs-inner-ring, #4f4434); }
+html[data-ui="osrs"] .osrs-btn.is-muted:not([disabled]):hover { color: var(--osrs-tan, #c8b897); }
 /* Compact rows lead with the source's picture: a chathead in an inventory slot. */
-html[data-ui="osrs"] .okf-row.has-thumb { grid-template-columns: 38px minmax(0, 1fr) 54px 64px; padding-left: 4px; }
+html[data-ui="osrs"] .okf-row.has-thumb { grid-template-columns: 38px minmax(0, 1fr) calc(54px * var(--osrs-ts, 1)) calc(64px * var(--osrs-ts, 1)); padding-left: 4px; }
 html[data-ui="osrs"] .okf-thumb { width: 38px; height: 36px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--osrs-well, #1f1a14); box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 var(--osrs-bevel-hi, #5c5244); }
 html[data-ui="osrs"] .okf-thumb img { width: 36px; height: 36px; object-fit: contain; }
 html[data-ui="osrs"] .okf-thumb img.is-item { width: auto; height: auto; max-width: 36px; max-height: 32px; }
@@ -65,6 +68,9 @@ html[data-ui="osrs"] .okf-group-rows { display: grid; grid-template-columns: rep
 html[data-ui="osrs"] .okf-compact { height: 100%; min-height: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; }
 html[data-ui="osrs"] .okf-list { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
 html[data-ui="osrs"] .okf-list-scroll { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+/* Scrolling lists fade out at the bottom edge instead of cutting a row in
+   half, with room to scroll the last row clear of the fade. */
+html[data-ui="osrs"] :is(.okf-list-scroll, .okf-grid) { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent); padding-bottom: 22px; }
 html[data-ui="osrs"] .okf-list-scroll > .okf-search { margin: 4px; width: auto; }
 html[data-ui="osrs"] .okf-list-foot { flex-shrink: 0; display: flex; justify-content: flex-end; gap: 4px; padding: 4px; }
 
@@ -92,7 +98,7 @@ html[data-ui="osrs"] .okf-other-row .rate { font-family: 'RSSmall', sans-serif; 
 
 /* NPC dialogue (parchment, as in the game's chatbox). */
 html[data-ui="osrs"] .okf-dock { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; padding: 4px; background: var(--osrs-window, #3e3529); }
-html[data-ui="osrs"] .okf-dialogue { all: unset; box-sizing: border-box; cursor: pointer; position: relative; width: 100%; min-height: 104px; display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: center; column-gap: 6px; padding: 6px 10px 6px 6px; background: #c9b994; border: 2px solid #000; box-shadow: inset 1px 1px 0 #e0d3b2, inset -1px -1px 0 #8f8062; text-shadow: none; }
+html[data-ui="osrs"] .okf-dialogue { all: unset; box-sizing: border-box; cursor: pointer; position: relative; width: 100%; min-height: calc(104px * var(--osrs-ts, 1)); display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: center; column-gap: 6px; padding: 6px 10px 6px 6px; background: #c9b994; border: 2px solid #000; box-shadow: inset 1px 1px 0 #e0d3b2, inset -1px -1px 0 #8f8062; text-shadow: none; }
 html[data-ui="osrs"] .okf-dialogue:focus-visible { outline: 1px solid #ffff00; }
 html[data-ui="osrs"] .okf-dialogue .chathead { width: 80px; height: 80px; object-fit: contain; }
 html[data-ui="osrs"] .okf-dialogue .chathead.item { width: 54px; height: 48px; justify-self: center; }
@@ -104,7 +110,7 @@ html[data-ui="osrs"] .okf-dialogue:hover .cont { color: #fff; text-shadow: 1px 1
 html[data-ui="osrs"] .okf-dialogue .won { position: absolute; right: 6px; top: 6px; width: 40px; height: 36px; }
 html[data-ui="osrs"] .okf-dialogue .won img { width: 36px; height: 32px; }
 html[data-ui="osrs"] .okf-dialogue .fate { position: absolute; right: 8px; top: 8px; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: #7f0000; }
-html[data-ui="osrs"] .okf-dialogue.big { height: 140px; min-height: 0; grid-template-columns: 104px minmax(0, 1fr); }
+html[data-ui="osrs"] .okf-dialogue.big { height: calc(140px * var(--osrs-ts, 1)); min-height: 0; grid-template-columns: 104px minmax(0, 1fr); }
 html[data-ui="osrs"] .okf-dialogue.big .chathead { width: 100px; height: 100px; }
 html[data-ui="osrs"] .okf-dialogue.big .chathead.item { width: 72px; height: 64px; }
 html[data-ui="osrs"] .okf-dialogue.empty { cursor: default; }

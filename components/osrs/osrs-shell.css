@@ -12,7 +12,7 @@ html[data-ui="osrs"] .osrs-shell-frame {
 }
 html[data-ui="osrs"] .osrs-shell-frame > * { flex-shrink: 0; }
 html[data-ui="osrs"] .osrs-shell-frame > .osrs-shell-body { flex: 1 1 0; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
-html[data-ui="osrs"] .osrs-shell-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 8px; }
+html[data-ui="osrs"] .osrs-shell-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: min(calc(420px * var(--osrs-ts, 1)), 40%) minmax(0, 1fr); gap: 8px; }
 html[data-ui="osrs"] .osrs-shell-grid.is-wide { grid-template-columns: minmax(0, 1fr); }
 html[data-ui="osrs"] .osrs-shell-grid[hidden], html[data-ui="osrs"] .osrs-shell-left[hidden] { display: none; }
 html[data-ui="osrs"] .osrs-shell-left { min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -99,6 +99,15 @@ html[data-ui="osrs"] .osrs-ibtn { width: 34px; min-width: 34px; height: 34px; pa
 html[data-ui="osrs"] .osrs-hbtn { height: 34px; padding: 0 12px; white-space: nowrap; flex-shrink: 0; }
 
 /* Settings menu: a stone window with option rows. */
+html[data-ui="osrs"] .osrs-rl-menu { width: 240px; }
+html[data-ui="osrs"] .osrs-menu-note { display: flex; align-items: center; gap: 6px; padding: 3px 8px; color: var(--osrs-tan, #c8b897); font-family: 'RSSmall', sans-serif; }
+/* OSRS hover tooltip (yellow box) for header stacks and orbs. */
+html[data-ui="osrs"] .osrs-tip { position: relative; }
+html[data-ui="osrs"] .osrs-tip:hover::after {
+  content: attr(data-osrs-tip); position: absolute; top: calc(100% + 4px); left: 0; z-index: 95; width: max-content; max-width: 280px;
+  background: #ffffa0; border: 1px solid #000; color: #000; text-shadow: none; font: var(--osrs-fs, 16px) 'RS', sans-serif; line-height: var(--osrs-lh, 18px);
+  padding: 1px 4px; white-space: normal; pointer-events: none;
+}
 html[data-ui="osrs"] .osrs-menu { position: absolute; right: 0; top: 40px; z-index: 91; width: 260px; max-height: calc(100vh - 80px); overflow-y: auto; padding: 4px; display: flex; flex-direction: column; }
 html[data-ui="osrs"] a.osrs-menu-item { text-decoration: none; }
 html[data-ui="osrs"] .osrs-menu-title { text-align: center; margin: 2px 0 4px; }
@@ -134,11 +143,17 @@ html[data-ui="osrs"] .osrs-chatdock { position: relative; display: flex; flex-di
 /* The pet follower (PetFollower, fixed bottom-left in classic) would sit under
    the chatbox; here it idles in the empty right end of the chat parchment. */
 html[data-ui="osrs"] .osrs-shell [data-testid="pet-follower"] { left: auto; right: 34px; bottom: 62px; }
+/* Fixed client: the frame adds a page margin, a border and padding around the
+   shell, so the pet moves in by the same amount to stay on the parchment. */
+@media (min-width: 900px) {
+  html[data-ui="osrs"][data-osrs-client="fixed"] .osrs-shell [data-testid="pet-follower"] { right: calc(max(12px, (100vw - 1416px) / 2) + 44px); bottom: 82px; }
+}
 /* Folded chatbox: there is no parchment for the pet to idle on, and above the
    tab row it would cover the panels, so it waits until the chatbox opens. */
 html[data-ui="osrs"] .osrs-shell:has(.osrs-chatdock.is-collapsed) [data-testid="pet-follower"] { display: none; }
 html[data-ui="osrs"] .osrs-chat-body { height: 184px; box-sizing: border-box; display: flex; flex-direction: column; position: relative; }
 html[data-ui="osrs"] .osrs-chat-log {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 12px); mask-image: linear-gradient(to bottom, transparent 0, #000 12px);
   flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column-reverse; margin: 3px 3px 0 0;
   scrollbar-width: auto; scrollbar-color: var(--osrs-selected) var(--osrs-window);
 }

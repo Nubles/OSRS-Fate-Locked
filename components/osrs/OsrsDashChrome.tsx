@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { setOsrsProgressionTabs } from '../../utils/osrsNav';
 import { SectionGuide } from '../SectionGuide';
 import { ActivityAccessWarning } from '../ActivityAccessWarning';
 import type { TableType, UnlockState } from '../../types';
@@ -79,7 +80,14 @@ const TAB_LABEL: Record<string, string> = { COLLECTION: 'Collection' };
 
 export const OsrsDashTabs: React.FC<TabsProps> = ({
   tabs, activeTab, onTab, searchQuery, onSearch, showOnlyActionable, onToggleActionable, suspendModals,
-}) => (
+}) => {
+  const tabKey = tabs.map((t) => `${t.id}:${TAB_LABEL[t.id] ?? t.label}`).join('|');
+  // The Journal screen draws the same tab row, so publish it.
+  useEffect(() => {
+    setOsrsProgressionTabs(tabs.map((t) => ({ id: t.id, label: TAB_LABEL[t.id] ?? t.label })));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabKey]);
+  return (
   <div className="osrs-dash-tabrow shrink-0">
     <div data-tour="dashtabs" role="tablist" aria-label="Dashboard sections" className="osrs-dash-tablist no-scrollbar">
       {tabs.map((tab) => (
@@ -115,7 +123,8 @@ export const OsrsDashTabs: React.FC<TabsProps> = ({
       <SectionGuide id={activeTab} className="osrs-dash-guide" suspendModals={suspendModals} />
     </div>
   </div>
-);
+  );
+};
 
 interface ConfirmProps {
   item: string;

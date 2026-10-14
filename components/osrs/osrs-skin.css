@@ -382,23 +382,31 @@ html[data-ui="osrs"][data-osrs-style="2010"] [style*="color: rgb(200, 184, 151)"
   html[data-ui="osrs"][data-osrs-client="fixed"] #root .h-screen { height: calc(100vh - var(--osrs-client-inset)); }
 }
 
-/* ── Large text (Settings > Text size): every RuneScape font at 2x, 32px,
-   the next size at which the pixel fonts stay crisp, with a 2px shadow.
-   Text that is already 32px (big titles) stays 32px. ───────────────────── */
-html[data-ui="osrs"][data-osrs-text="large"] {
-  --osrs-fs: 32px;
-  --osrs-lh: 32px;
-  --osrs-shadow: 2px 2px 0 #000;
+/* ── Text size (Settings > Text size): Normal 16px, Medium 20px, Large
+   24px. Normal steps up to 20px on very wide windows so text doesn't shrink
+   to a sliver on a 1920 monitor. --osrs-ts is the text scale; layout widths
+   that hold text (the left column) grow with it. Big titles stay 32px. ── */
+html[data-ui="osrs"] { --osrs-ts: 1; }
+html[data-ui="osrs"][data-osrs-text="medium"] { --osrs-fs: 20px; --osrs-lh: 22px; --osrs-ts: 1.25; }
+html[data-ui="osrs"][data-osrs-text="large"] { --osrs-fs: 24px; --osrs-lh: 26px; --osrs-ts: 1.5; }
+@media (min-width: 1800px) {
+  html[data-ui="osrs"]:not([data-osrs-text]),
+  html[data-ui="osrs"][data-osrs-text="normal"] { --osrs-fs: 20px; --osrs-lh: 22px; --osrs-ts: 1.25; }
 }
-html[data-ui="osrs"][data-osrs-text="large"] body { font-size: 32px; line-height: 32px; }
-html[data-ui="osrs"][data-osrs-text="large"] :is(.text-sm, .text-base, .text-lg, .text-xl, .text-xs, [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"], [class*="text-[13px]"], [class*="text-[14px]"], [class*="text-[15px]"]) { font-size: 32px; line-height: 32px; }
-html[data-ui="osrs"][data-osrs-text="large"] :is(.text-2xl, .text-3xl, .text-4xl) { line-height: 32px; }
-html[data-ui="osrs"][data-osrs-text="large"] :is(button, input, select, textarea, kbd) { font-size: 32px; }
-html[data-ui="osrs"][data-osrs-text="large"] .osrs-stack { line-height: 28px; }
-html[data-ui="osrs"][data-osrs-text="large"] .osrs-tab { height: auto; min-height: 36px; line-height: 36px; }
-/* Everything else (component stylesheets, inline 16px) goes to 32px too, as
-   on the board: one size for all text. SVG text is left alone. */
-html[data-ui="osrs"][data-osrs-text="large"] :is(#root, body > :not(#root)) :not(svg, svg *) { font-size: 32px; line-height: 32px; }
-/* OSRS components that size their text inline at 16px. */
-html[data-ui="osrs"][data-osrs-text="large"] :is([style*="font: 16px"], [style*="font-size: 16px"]) { font-size: 32px !important; line-height: 32px !important; }
-html[data-ui="osrs"][data-osrs-text="large"] [style*="text-shadow: rgb(0, 0, 0) 1px 1px 0px"] { text-shadow: 2px 2px 0 #000 !important; }
+/* Every text size in the skin, the component stylesheets and inline 16px
+   styles follows --osrs-fs. At Normal on an ordinary window these resolve to
+   the same 16px they always had. SVG text is left alone. */
+html[data-ui="osrs"] body { font-size: var(--osrs-fs); }
+html[data-ui="osrs"]:is([data-osrs-text="medium"], [data-osrs-text="large"]) :is(.text-sm, .text-base, .text-lg, .text-xl, .text-xs, [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"], [class*="text-[13px]"], [class*="text-[14px]"], [class*="text-[15px]"]),
+html[data-ui="osrs"]:is([data-osrs-text="medium"], [data-osrs-text="large"]) :is(button, input, select, textarea, kbd),
+html[data-ui="osrs"]:is([data-osrs-text="medium"], [data-osrs-text="large"]) :is(#root, body > :not(#root)) :not(svg, svg *) { font-size: var(--osrs-fs); line-height: var(--osrs-lh); }
+html[data-ui="osrs"]:is([data-osrs-text="medium"], [data-osrs-text="large"]) :is([style*="font: 16px"], [style*="font-size: 16px"]) { font-size: var(--osrs-fs) !important; line-height: var(--osrs-lh) !important; }
+@media (min-width: 1800px) {
+  html[data-ui="osrs"]:is(:not([data-osrs-text]), [data-osrs-text="normal"]) :is(.text-sm, .text-base, .text-lg, .text-xl, .text-xs, [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"], [class*="text-[13px]"], [class*="text-[14px]"], [class*="text-[15px]"]),
+  html[data-ui="osrs"]:is(:not([data-osrs-text]), [data-osrs-text="normal"]) :is(button, input, select, textarea, kbd),
+  html[data-ui="osrs"]:is(:not([data-osrs-text]), [data-osrs-text="normal"]) :is(#root, body > :not(#root)) :not(svg, svg *) { font-size: var(--osrs-fs); line-height: var(--osrs-lh); }
+  html[data-ui="osrs"]:is(:not([data-osrs-text]), [data-osrs-text="normal"]) :is([style*="font: 16px"], [style*="font-size: 16px"]) { font-size: var(--osrs-fs) !important; line-height: var(--osrs-lh) !important; }
+}
+/* Big titles (32px) keep their size at every step. */
+html[data-ui="osrs"] :is(#root, body > :not(#root)) :is(.text-2xl, .text-3xl, .text-4xl, .osrs-hdr-title, [style*="font: 32px"]) { font-size: var(--osrs-fs-big) !important; line-height: 30px !important; }
+html[data-ui="osrs"] .osrs-tab { height: calc(28px * var(--osrs-ts)); line-height: calc(30px * var(--osrs-ts)); }

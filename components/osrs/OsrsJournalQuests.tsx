@@ -192,7 +192,7 @@ export const OsrsJournalQuests: React.FC<Props> = ({
     <div className="ojr-split">
       <div className="ojr-list">
         <div className="ojr-topline"><span>Quest Points:</span><span>{currentQP}/{maxQP}</span></div>
-        <div className="ojr-list-scroll" role="list" aria-label="Quest list">
+        <div className="ojr-list-scroll" role="group" aria-label="Quest list">
           {sections.map(section => section.entries.length > 0 && (
             <React.Fragment key={section.key}>
               <div className="ojr-head" role="presentation">
@@ -208,7 +208,6 @@ export const OsrsJournalQuests: React.FC<Props> = ({
                   <button
                     key={quest.id}
                     type="button"
-                    role="listitem"
                     data-journal-id={quest.id}
                     data-examine={questExamine(quest, difficultyLabel(quest))}
                     data-examine-name={quest.name}

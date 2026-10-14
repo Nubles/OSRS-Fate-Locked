@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './osrs-farm.css';
-import { DropSource, type LogEntry } from '../../types';
+import { DropSource, TableType, type LogEntry } from '../../types';
 import { DROP_RATES, BOSSES_LIST } from '../../constants';
 import { bossTier, TIER_SOURCE, TIER_LABEL, TIER_ORDER, type BossTier } from '../../data/bossKeyTiers';
 import { useGame } from '../../context/GameContext';
+import { evaluateActivityReadiness } from '../../utils/activityReadiness';
+import { getUtilityActivityReq } from '../../utils/utilityReadiness';
 import { wikiService } from '../../services/WikiService';
 import { LEVEL_ROLL_MAX } from '../../config/economy';
 import {
@@ -49,12 +51,12 @@ const MINIGAME_IMG = `${UI}items/4067.png`;
 const GEMS: readonly { name: string; file: string; color: string; max: number }[] = [
   { name: 'Opal', file: 'opal', color: '#d9cfc0', max: 5 },
   { name: 'Jade', file: 'jade', color: '#6fbf6a', max: 10 },
-  { name: 'Red topaz', file: 'red_topaz', color: '#e0703c', max: 20 },
-  { name: 'Sapphire', file: 'sapphire', color: '#5a7cf0', max: 25 },
+  { name: 'Red topaz', file: 'red_topaz', color: '#f08a5a', max: 20 },
+  { name: 'Sapphire', file: 'sapphire', color: '#8aa4ff', max: 25 },
   { name: 'Emerald', file: 'emerald', color: '#2fbf5a', max: 35 },
-  { name: 'Ruby', file: 'ruby', color: '#e03535', max: 50 },
+  { name: 'Ruby', file: 'ruby', color: '#ff7878', max: 50 },
   { name: 'Diamond', file: 'diamond', color: '#dcecff', max: 65 },
-  { name: 'Dragonstone', file: 'dragonstone', color: '#c060e0', max: 70 },
+  { name: 'Dragonstone', file: 'dragonstone', color: '#d886f5', max: 70 },
   { name: 'Onyx', file: 'onyx', color: '#a8a8a8', max: 80 },
   { name: 'Zenyte', file: 'zenyte', color: '#f5a623', max: 100 },
 ];
@@ -163,6 +165,9 @@ interface CardModel {
   extra?: { text: string; color: string };
   stash?: { cap: number; awarded: number };
   disabled?: boolean;
+  /** Owned but not reachable yet (Activities says "Not ready"): the roll
+   * stays available, drawn greyed out with what's missing. */
+  notReady?: string;
   btn: string;
   examine: string;
   title: string;
@@ -209,10 +214,10 @@ const NpcCard: React.FC<{ card: CardModel }> = ({ card }) => {
       <div className="okf-card-foot">
         <span className="name">{card.name}</span>
         <span className="small" style={{ color: 'var(--osrs-tan, #c8b897)' }}>{card.sub}</span>
-        <span className="small" style={{ color: card.status.color }}>{card.status.text}</span>
+        <span className="small" style={{ color: card.notReady ? '#ffff00' : card.status.color }}>{card.notReady ?? card.status.text}</span>
         {card.extra && <span className="small" style={{ color: card.extra.color }}>{card.extra.text}</span>}
         <span className="small" style={{ color: '#ffffff' }}>{card.stats}</span>
-        <button type="button" className="osrs-btn" disabled={card.disabled || isRolling} onClick={trigger}>
+        <button type="button" className={`osrs-btn${card.notReady ? ' is-muted' : ''}`} disabled={card.disabled || isRolling} onClick={trigger}>
           {isRolling ? 'Rolling...' : card.btn}
         </button>
       </div>
@@ -236,10 +241,10 @@ const SourceRow: React.FC<{ card: CardModel }> = ({ card }) => {
       <RowThumb thumb={card.thumb} dim={card.disabled} />
       <div className="who">
         <div className="name">{card.name}</div>
-        <div className="where">{card.extra?.text ?? card.sub}</div>
+        <div className="where" style={card.notReady ? { color: '#ffff00' } : undefined}>{card.notReady ?? card.extra?.text ?? card.sub}</div>
       </div>
       <span className="rate">{card.disabled && card.stash ? 'Spent' : `${card.rate}%`}<BonusTag bonus={card.bonus} /></span>
-      <button type="button" className="osrs-btn" disabled={card.disabled || isRolling} onClick={trigger}>{isRolling ? '...' : card.btn}</button>
+      <button type="button" className={`osrs-btn${card.notReady ? ' is-muted' : ''}`} disabled={card.disabled || isRolling} onClick={trigger}>{isRolling ? '...' : card.btn}</button>
     </div>
   );
 };
@@ -549,7 +554,7 @@ const RecentRolls: React.FC<{ history: readonly LogEntry[] }> = ({ history }) =>
 
 // ── The panel ─────────────────────────────────────────────────────────────
 export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
-  const { claimPet, petsClaimed, unlocks, bossStandardKeysAwarded, history } = useGame();
+  const { claimPet, petsClaimed, unlocks, bossStandardKeysAwarded, history, gameModeId } = useGame();
   const p = useFarmModel();
   const { farmTab: subTab, bossQuery } = useKeysView();
   const [pending, setPending] = useState<PendingRoll | null>(null);
@@ -647,6 +652,10 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       const head = npcHead(name);
       const classLabel = bossClass === 'brutus' ? 'Low' : TIER_LABEL[bossClass];
       const rates = stage.rates.map((r) => `${r}%`).join(', then ');
+      const readiness = evaluateActivityReadiness(true, getUtilityActivityReq(name, TableType.BOSSES, gameModeId), unlocks, gameModeId);
+      const notReady = !stage.capped && readiness.status === 'NOT_READY'
+        ? `Not ready: needs ${readiness.blockers.map((b) => b.label).join(', ')}`
+        : undefined;
       return {
         id: name,
         name,
@@ -664,10 +673,11 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
           : `Stash ${stage.cap} Key${stage.cap === 1 ? '' : 's'}: ${rates} · ${stage.awarded} paid`,
         stash: { cap: stage.cap, awarded: stage.awarded },
         disabled: stage.capped,
+        notReady,
         btn: stage.capped ? 'Spent' : 'Roll',
         title: stage.capped
           ? `${name}: This boss no longer rolls for Keys or Fate. Its Combat Achievements, Collection Log items and pet still roll.`
-          : `${name}: ${gemFor(rate).label} (${gemFor(rate).name}), ${rate}% for the next Key`,
+          : `${name}: ${gemFor(rate).label} (${gemFor(rate).name}), ${rate}% for the next Key${notReady ? `. ${notReady}.` : ''}`,
         examine: stage.capped
           ? `${classLabel} boss. All ${stage.cap} Key${stage.cap === 1 ? '' : 's'} paid: kills no longer roll for Keys or Fate.`
           : `${classLabel} boss. Stash of ${stage.cap} Key${stage.cap === 1 ? '' : 's'} at ${rates}. ${rate}% chance of a Key per kill now.`,

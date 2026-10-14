@@ -63,12 +63,11 @@ export const OsrsJournalSummary: React.FC<Props> = () => {
   return (
     <section className="osrs-win ojr-sum" aria-label="Journal summary" data-osrs-journal-card="">
       <h2 className="ojr-sum-title" data-examine={titleExamine} data-examine-name="Journal">Journal</h2>
-      <div className="osrs-inner" style={{ display: 'flex', flexDirection: 'column' }} role="list">
+      <div className="osrs-inner" style={{ display: 'flex', flexDirection: 'column' }} role="group">
         {rows.map(row => (
           <button
             key={row.key}
             type="button"
-            role="listitem"
             className="ojr-sum-row"
             onClick={() => openOsrsJournal(TAB[row.key])}
             aria-label={`${row.label}: ${row.value}, ${row.sub}. Open the Journal.`}

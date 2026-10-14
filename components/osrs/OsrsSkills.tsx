@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useGame } from '../../context/GameContext';
+import { rankSkillBottlenecks } from '../../utils/skillAdvisor';
 import { SKILLS_LIST } from '../../constants';
 import { TableType, type UnlockState } from '../../types';
 import { NoteTrigger } from '../NoteTrigger';
@@ -33,6 +35,7 @@ interface Props {
   specialKeys: number;
   totalSkillTiers: number;
   searchQuery: string;
+  onClearSearch?: () => void;
   showOnlyActionable: boolean;
   levelingSkill: string | null;
   advisorsEnabled: boolean;
@@ -43,11 +46,20 @@ interface Props {
 }
 
 export const OsrsSkills: React.FC<Props> = ({
-  unlocks, specialKeys, totalSkillTiers, searchQuery, showOnlyActionable, levelingSkill,
+  unlocks, specialKeys, totalSkillTiers, searchQuery, onClearSearch, showOnlyActionable, levelingSkill,
   advisorsEnabled, suspendModals, onLevelUp, onSpecialUnlock, onOpenDetails,
 }) => {
   const totalLevel = SKILLS_LIST.reduce((sum, s) => sum + (unlocks.levels[s] || 1), 0);
   const [showAdvisor, setShowAdvisor] = useState(false);
+  const { gameModeId } = useGame();
+  // With nothing to rank, the Advisor says so on its button instead of
+  // opening a panel over the skills just to say "nothing".
+  const advisorEmpty = useMemo(
+    () => advisorsEnabled && rankSkillBottlenecks(unlocks, gameModeId).length === 0,
+    [advisorsEnabled, unlocks, gameModeId],
+  );
+  const query = searchQuery.trim().toLowerCase();
+  const noMatches = query !== '' && !SKILLS_LIST.some((s) => s.toLowerCase().includes(query));
 
   return (
     <section className="osrs-inner osrs-dash-skills" aria-label="Skills">
@@ -60,11 +72,14 @@ export const OsrsSkills: React.FC<Props> = ({
           {advisorsEnabled && (
             <button
               type="button"
-              className={`osrs-dash-textbtn${showAdvisor ? ' is-on' : ''}`}
-              aria-pressed={showAdvisor}
-              aria-expanded={showAdvisor}
-              onClick={() => setShowAdvisor((v) => !v)}
-              title="Skill Advisor: which skill to train next, ranked by the quests and diaries it opens"
+              className={`osrs-dash-textbtn${showAdvisor && !advisorEmpty ? ' is-on' : ''}${advisorEmpty ? ' is-empty' : ''}`}
+              aria-pressed={showAdvisor && !advisorEmpty}
+              aria-expanded={showAdvisor && !advisorEmpty}
+              aria-disabled={advisorEmpty || undefined}
+              onClick={() => { if (!advisorEmpty) setShowAdvisor((v) => !v); }}
+              title={advisorEmpty
+                ? 'Skill Advisor: no skill is holding back a quest or diary right now.'
+                : 'Skill Advisor: which skill to train next, ranked by the quests and diaries it opens'}
             >
               Advisor
             </button>
@@ -74,7 +89,7 @@ export const OsrsSkills: React.FC<Props> = ({
       </div>
 
       <div className="osrs-dash-skillwrap">
-        {advisorsEnabled && showAdvisor && (
+        {advisorsEnabled && showAdvisor && !advisorEmpty && (
           <div className="osrs-win osrs-dash-advisor" role="region" aria-label="Skill Advisor">
             <button type="button" className="osrs-dash-close" onClick={() => setShowAdvisor(false)} aria-label="Close Skill Advisor">
               <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="2.5" /></svg>
@@ -83,6 +98,12 @@ export const OsrsSkills: React.FC<Props> = ({
           </div>
         )}
 
+        {noMatches && (
+          <div className="osrs-dash-nomatch" role="status">
+            <span>No skills match &lsquo;{searchQuery.trim()}&rsquo;.</span>
+            <button type="button" className="osrs-btn" onClick={() => onClearSearch?.()}>Clear</button>
+          </div>
+        )}
         <div className="osrs-dash-skillgrid">
           {SKILLS_LIST.map((skill) => {
             const tier = unlocks.skills[skill] || 0;

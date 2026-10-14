@@ -388,11 +388,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
     setActiveTab('CHARACTER');
   }, [isOsrs, activeTab, journalSubTab]);
   // OSRS layout: tabs drawn full width on their boards hide the home screen's
-  // left column (Sync & Roll, Activities & Utility, Collection). The
+  // left column (Activities & Utility, Collection). Sync & Roll keeps it: its
+  // inbox is mostly empty, and full width only stretched the emptiness. The
   // Equipment Lab stays inside its Character-tab panel, so it never widens.
   useEffect(() => {
     setOsrsProgressionWide(isOsrs && (
-      activeTab === 'AUTOROLL' || activeTab === 'ACTIVITIES' || activeTab === 'COLLECTION'
+      activeTab === 'ACTIVITIES' || activeTab === 'COLLECTION'
     ));
   }, [isOsrs, activeTab]);
   useEffect(() => () => setOsrsProgressionWide(false), []);
@@ -727,6 +728,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
             specialKeys={specialKeys}
             totalSkillTiers={totalSkillTiers}
             searchQuery={searchQuery}
+            onClearSearch={() => setSearchQuery('')}
             showOnlyActionable={showOnlyActionable}
             levelingSkill={levelingSkill}
             advisorsEnabled={advisorsEnabled}

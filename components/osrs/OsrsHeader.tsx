@@ -2,6 +2,7 @@ import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { useGame } from '../../context/GameContext';
 import { useProfiles } from '../../context/ProfileContext';
 import { useFeatureGates } from '../../hooks/useFeatureGates';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { getGameMode, resolveModeRules } from '../../config/gameModes';
 import { DISCORD_INVITE_URL } from '../../constants';
 import { RESET_CONFIRM_MESSAGE } from '../../utils/backups';
@@ -76,6 +77,10 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
   const nearPity = pityRules.pityEnabled && fatePoints >= pityRules.pityThreshold * 0.8;
   const fill = Math.max(0, Math.min(100, (fatePoints / pityCap) * 100));
   const [showMenu, setShowMenu] = useState(false);
+  const [showRlMenu, setShowRlMenu] = useState(false);
+  const runeliteRef = useRef<HTMLButtonElement>(null);
+  useEscapeKey(() => { setShowMenu(false); settingsRef.current?.focus(); }, showMenu);
+  useEscapeKey(() => { setShowRlMenu(false); runeliteRef.current?.focus(); }, showRlMenu);
   const relayDot = useRelayDot();
   const settingsRef = useRef<HTMLButtonElement>(null);
   const runName = [`${getGameMode(gameModeId).name} mode`, linkedAccount || activeProfileName].filter(Boolean).join(' · ');
@@ -103,7 +108,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
       <div className="osrs-hdr-profile" style={{ flexShrink: 0 }}><ProfileSwitcher /></div>
 
       {/* Fate Points orb */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 10, flexShrink: 0 }} title={fateTitle} role="img" aria-label={fateText}>
+      <div className="osrs-tip" style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 10, flexShrink: 0 }} data-osrs-tip={fateTitle} role="img" aria-label={`${fateText}. ${fateTitle}`}>
         <div className="osrs-orb-num" style={nearPity ? { color: '#ff0000' } : undefined}>{fatePoints}</div>
         <div className="osrs-orb" style={{ background: `conic-gradient(${nearPity ? '#c42f2f' : '#8a3fc4'} 0 ${fill}%, #2a1f33 ${fill}% 100%)` }}>
           <img className="osrs-px" src={sprite('void_seal.png')} alt="" aria-hidden="true" width={27} height={24} />
@@ -113,15 +118,15 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
 
       {/* Key stacks, with the XP drops rising past them */}
       <div data-tour="keys" style={{ position: 'relative', display: 'flex', gap: 4, marginLeft: 6, flexShrink: 0 }}>
-        <div className="osrs-slot" style={{ width: 44, height: 40 }} title="Keys: spend one on a table in Spend Keys for a random unlock">
+        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Keys: ${keys}. Spend one on a table in Spend Keys for a random unlock.`}>
           <img className="osrs-px" src={sprite('key.png')} alt="Keys" width={36} height={32} />
           <span className="osrs-stack">{keys}</span>
         </div>
-        <div className="osrs-slot" style={{ width: 44, height: 40 }} title={`Omni-Keys: click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ' In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.' : ''}`}>
+        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Omni-Keys: ${specialKeys}. Click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ' In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.' : ''}`}>
           <img className="osrs-px" src={sprite('omni_key.png')} alt="Omni-Keys" width={36} height={32} />
           <span className="osrs-stack">{specialKeys}</span>
         </div>
-        <div className="osrs-slot" style={{ width: 44, height: 40 }} title="Chaos Keys: each one unlocks a random entry from all the tables at once">
+        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Chaos Keys: ${chaosKeys}. Each one unlocks a random entry from all the tables at once.`}>
           <img className="osrs-px" src={sprite('chaos_key.png')} alt="Chaos Keys" width={36} height={32} />
           <span className="osrs-stack">{chaosKeys}</span>
         </div>
@@ -159,15 +164,37 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
           <span>Jump to...</span>
         </button>
 
-        <button
-          type="button"
-          onClick={onRuneliteExport}
-          className="osrs-btn osrs-hbtn"
-          title={`${relayDot ? `${relayDot.label}. ` : ''}Export your run for the RuneLite plugin (copies to clipboard + downloads). Then use 'Import from clipboard' in the plugin.`}
-        >
-          {relayDot && <span className="osrs-rl-dot" style={{ background: relayDot.colour }} aria-hidden="true" />}
-          RuneLite
-        </button>
+        {/* RuneLite opens a small menu: exporting copies + downloads a file,
+            which a plain "RuneLite" button shouldn't do on one click. */}
+        <div style={{ position: 'relative', height: 34, flexShrink: 0 }}>
+          <button
+            ref={runeliteRef}
+            type="button"
+            onClick={() => setShowRlMenu(v => !v)}
+            className={`osrs-btn osrs-hbtn${showRlMenu ? ' is-on' : ''}`}
+            style={{ height: 34 }}
+            aria-expanded={showRlMenu}
+            aria-haspopup="menu"
+            title={`${relayDot ? `${relayDot.label}. ` : ''}RuneLite plugin: export your run or open the guide`}
+          >
+            {relayDot && <span className="osrs-rl-dot" style={{ background: relayDot.colour }} aria-hidden="true" />}
+            RuneLite
+            <svg aria-hidden="true" width="9" height="6" viewBox="0 0 9 6"><path d="M0 0h9L4.5 6z" fill="currentColor" /></svg>
+          </button>
+          {showRlMenu && (
+            <>
+              <div style={{ position: 'fixed', inset: 0, zIndex: 90 }} onClick={() => setShowRlMenu(false)} />
+              <div className="osrs-win osrs-menu osrs-rl-menu" role="menu" aria-label="RuneLite">
+                <div className="osrs-title osrs-menu-title">RuneLite</div>
+                <div className="osrs-inner osrs-menu-list">
+                  {relayDot && <div className="osrs-menu-note"><span className="osrs-rl-dot" style={{ background: relayDot.colour }} aria-hidden="true" /> {relayDot.label}</div>}
+                  <button type="button" role="menuitem" className="osrs-menu-item" onClick={() => { setShowRlMenu(false); onRuneliteExport(); }} title="Copies your run to the clipboard and downloads it. Then use 'Import from clipboard' in the plugin.">Export run to RuneLite</button>
+                  <button type="button" role="menuitem" className="osrs-menu-item" onClick={() => { setShowRlMenu(false); onOpenRuneliteGuide(runeliteRef.current); }}>RuneLite Plugin Guide</button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
 
         {gates.has('tool:stats') && <button type="button" onClick={() => setShowStats(true)} className="osrs-btn osrs-ibtn" title="Fate Analytics" aria-label="Fate Analytics"><StatsIcon /></button>}
         <button type="button" onClick={() => setShowReference(true)} className="osrs-btn osrs-ibtn" title="Rules" aria-label="Rules" style={{ fontFamily: "'RSBold', sans-serif" }}>?</button>

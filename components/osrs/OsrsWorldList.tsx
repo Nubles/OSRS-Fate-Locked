@@ -118,14 +118,14 @@ export const OsrsWorldList: React.FC<Props> = ({ searchQuery, showOnlyActionable
             <span className="owl-muted-s">{adv.caption}</span>
           </div>
           {top.length > 0 && <p className="owl-sub">{adv.sub}</p>}
-          <div role="list" className="owl-adv-list">
+          <div role="group" className="owl-adv-list">
             {top.length === 0 && <div className="owl-empty">{adv.empty}</div>}
             {top.map((a, i) => {
               const pct = topScore > 0 ? Math.max(4, Math.round(((a.cascadeScore || a.score) / topScore) * 100)) : 0;
               const names = a.cascadeQuests.slice(0, 3);
               const more = a.cascadeQuests.length - names.length;
               return (
-                <button key={a.id} type="button" role="listitem" className={`owl-adv-row${i === 0 ? ' is-top' : ''}`} onClick={() => pickAdvisor(a)}
+                <button key={a.id} type="button" className={`owl-adv-row${i === 0 ? ' is-top' : ''}`} onClick={() => pickAdvisor(a)}
                   aria-label={`${a.title}: unlocks ${a.quests.length} quests and ${a.diaries.length} diary tiers directly`}>
                   <span className="owl-rank">{i + 1}.</span>
                   <span className="owl-adv-mid">

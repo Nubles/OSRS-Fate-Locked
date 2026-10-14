@@ -72,8 +72,9 @@ const CLIENTS = [
   { value: 'fixed', label: 'Fixed', hint: 'The tracker sits in a centred, fixed-width game client' },
 ] as const;
 const TEXT_SIZES = [
-  { value: 'normal', label: 'Normal', hint: 'RuneScape fonts at 16px' },
-  { value: 'large', label: 'Large', hint: 'RuneScape fonts at 32px' },
+  { value: 'normal', label: 'Normal', hint: 'RuneScape fonts at 16px, 20px on very wide windows' },
+  { value: 'medium', label: 'Medium', hint: 'RuneScape fonts at 20px' },
+  { value: 'large', label: 'Large', hint: 'RuneScape fonts at 24px' },
 ] as const;
 
 export const OsrsInterfaceOptions: React.FC = () => {

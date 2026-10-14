@@ -180,3 +180,21 @@ html[data-ui="osrs"] .osrs-char-dps { flex: 1; min-height: 0; display: flex; fle
   html[data-ui="osrs"] .osrs-char-plantier { width: 30px; font-family: 'RS', sans-serif; }
   html[data-ui="osrs"] .osrs-char-plan { width: 100%; max-width: 520px; align-self: center; }
 }
+
+/* A narrow Lab (laptop widths): the slot's ladder sits in a slim column
+   beside the doll instead of under it, so the doll keeps its size in Tiers.
+   The ladder runs bottom-up (Tier 1 at the foot), like a skill's tier bar. */
+@container osrs-lab (max-width: 419px) {
+  html[data-ui="osrs"] .osrs-char-tiersview { flex-direction: row; gap: 6px; }
+  html[data-ui="osrs"] .osrs-char-tiersview > .osrs-char-worn { flex: 1; min-width: 0; }
+  html[data-ui="osrs"] .osrs-char-tiersview > .osrs-char-detail { flex: 0 0 calc(90px * var(--osrs-ts, 1)); min-width: 0; overflow-y: auto; gap: 3px; padding: 4px; }
+  html[data-ui="osrs"] .osrs-char-tiersview .osrs-char-detailhead { height: auto; flex-wrap: wrap; white-space: normal; gap: 2px 4px; }
+  html[data-ui="osrs"] .osrs-char-tiersview .osrs-char-detailtier { margin-left: 0; flex-basis: 100%; white-space: normal; overflow: visible; line-height: 15px; }
+  html[data-ui="osrs"] .osrs-char-tiersview .osrs-char-ladder { display: flex; flex-direction: column-reverse; gap: 2px; }
+  html[data-ui="osrs"] .osrs-char-tiersview .osrs-char-ladder > span { height: 13px; line-height: 12px; }
+  html[data-ui="osrs"] .osrs-char-tiersview .osrs-char-detailnext { height: auto; flex-direction: column; align-items: flex-start; white-space: normal; line-height: 15px; }
+  html[data-ui="osrs"] .osrs-char-tiersview .osrs-char-detailnexttext { overflow: visible; }
+  html[data-ui="osrs"] .osrs-char-tiersview .osrs-char-detailact { flex-direction: column; align-items: stretch; gap: 2px; }
+  html[data-ui="osrs"] .osrs-char-tiersview .osrs-char-detailact > .osrs-btn { height: auto; min-height: 26px; padding: 2px 4px; white-space: normal; line-height: 15px; text-align: center; }
+  html[data-ui="osrs"] .osrs-char-tiersview .osrs-char-detailact > span { text-align: center; }
+}

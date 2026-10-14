@@ -90,6 +90,8 @@ export interface MainAction {
   label: string;
   title?: string;
   disabled?: boolean;
+  /** Clickable, but drawn greyed out: the entry isn't ready yet. */
+  muted?: boolean;
   onClick: (e: React.MouseEvent) => void;
 }
 
@@ -111,7 +113,7 @@ const Pane: React.FC<{
       <WikiTable href={wiki} rows={facts} />
     </div>
     <div className="ojs-actions">
-      <button type="button" className="ojs-btn is-main" disabled={main.disabled} title={main.title} onClick={main.onClick}>
+      <button type="button" className={`ojs-btn is-main${main.muted ? ' is-muted' : ''}`} disabled={main.disabled} title={main.title} onClick={main.onClick}>
         {main.label}
       </button>
       <button
@@ -171,6 +173,7 @@ export const QuestDetail: React.FC<{
     ? { label: 'Completed', disabled: true, title: 'Completed', onClick: () => {} }
     : {
         label: isAvailable ? 'Complete and roll for a Key' : needsConfirmation ? 'Confirm and complete' : 'Not ready yet',
+        muted: !isAvailable && !needsConfirmation,
         title: needsConfirmation ? 'Confirm & Complete' : 'Complete & Roll',
         onClick: (e) => onComplete(e, quest),
       };
@@ -278,7 +281,7 @@ export const DiaryTaskDetail: React.FC<{
       wiki={wikiUrl(task.tierId)}
       main={isDone
         ? { label: 'Completed', disabled: true, onClick: () => {} }
-        : { label: ready ? 'Complete and roll for a Key' : 'Not ready yet', onClick: (e) => onTaskComplete(task, e) }}
+        : { label: ready ? 'Complete and roll for a Key' : 'Not ready yet', muted: !ready, onClick: (e) => onTaskComplete(task, e) }}
       map={taskMapTarget(task, unlocks, gameModeId)}
     >
       <div style={{ textAlign: 'center', marginTop: -6, marginBottom: 6 }}>

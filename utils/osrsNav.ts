@@ -16,9 +16,12 @@ export type OsrsKeysTab = 'farm' | 'spend' | 'history';
  * board (Sync & Roll, Activities & Utility, Collection), so the home screen
  * hides its left column (Journal card + Keys panel). Dashboard sets it.
  */
-interface NavState { screen: OsrsScreen; keysTab: OsrsKeysTab; progressionWide: boolean }
+/** progressionTabs: the Progression tab row (id + label), published by the
+ * home screen so the Journal screen can show the same row. */
+export interface OsrsProgressionTab { id: string; label: string }
+interface NavState { screen: OsrsScreen; keysTab: OsrsKeysTab; progressionWide: boolean; progressionTabs: OsrsProgressionTab[] }
 
-let state: NavState = { screen: 'home', keysTab: 'farm', progressionWide: false };
+let state: NavState = { screen: 'home', keysTab: 'farm', progressionWide: false, progressionTabs: [] };
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(l => l());
 
@@ -40,6 +43,18 @@ export const setOsrsProgressionWide = (progressionWide: boolean): void => {
   emit();
 };
 
+export const setOsrsProgressionTabs = (progressionTabs: OsrsProgressionTab[]): void => {
+  const same = progressionTabs.length === state.progressionTabs.length
+    && progressionTabs.every((t, i) => t.id === state.progressionTabs[i].id && t.label === state.progressionTabs[i].label);
+  if (same) return;
+  state = { ...state, progressionTabs };
+  emit();
+};
+/** Leave the current screen for a Progression tab on the home screen. */
+export const openOsrsProgressionTab = (id: string): void => {
+  openOsrsScreen('home');
+  window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: `tab:${id}` } }));
+};
 const subscribe = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
 
 export const useOsrsNav = (): NavState => useSyncExternalStore(subscribe, getOsrsNav, getOsrsNav);

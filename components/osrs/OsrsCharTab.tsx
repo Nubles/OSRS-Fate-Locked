@@ -21,6 +21,7 @@ interface Props {
   specialKeys: number;
   totalSkillTiers: number;
   searchQuery: string;
+  onClearSearch?: () => void;
   showOnlyActionable: boolean;
   levelingSkill: string | null;
   advisorsEnabled: boolean;

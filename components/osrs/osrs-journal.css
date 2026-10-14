@@ -217,6 +217,7 @@ html[data-ui="osrs"] .ojr-dcell.ojr-locked { color: #ff0000; }
    colours and copy follow the Journal board (Journal.dc.html) one to one.
    ───────────────────────────────────────────────────────────────────────── */
 html[data-ui="osrs"] .ojs-root { flex: 1; min-height: 0; min-width: 0; height: 100%; display: flex; flex-direction: column; gap: 8px; font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #ff981f; text-shadow: var(--osrs-shadow, 1px 1px 0 #000); }
+html[data-ui="osrs"] .ojs-navtabs { flex-shrink: 0; margin-bottom: -8px; padding-left: 8px; position: relative; z-index: 1; }
 html[data-ui="osrs"] .ojs-small { font-family: 'RSSmall', sans-serif; }
 
 /* Summary bar */
@@ -256,7 +257,7 @@ html[data-ui="osrs"] .ojs-filters .ojr-search { display: none; }
 html[data-ui="osrs"] .ojs-filters { position: absolute; right: 8px; top: calc(100% + 4px); z-index: 20; width: min(640px, calc(100% - 16px)); max-height: 70vh; overflow-y: auto; padding: 2px; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4); }
 html[data-ui="osrs"] .ojs-filters .ojr-bar { border-bottom: 0; }
 
-html[data-ui="osrs"] .ojs-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 420px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 8px; padding: 8px; }
+html[data-ui="osrs"] .ojs-body { flex: 1; min-height: 0; display: grid; grid-template-columns: min(calc(420px * var(--osrs-ts, 1)), 40%) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 8px; padding: 8px; }
 
 /* Left: the list */
 html[data-ui="osrs"] .ojs-list { position: relative; min-height: 0; display: flex; flex-direction: column; }
@@ -328,6 +329,8 @@ html[data-ui="osrs"] .ojs-btn.is-main { flex: 2; background: #4a3f30; border-top
 html[data-ui="osrs"] .ojs-btn:hover { color: #fff; }
 html[data-ui="osrs"] .ojs-btn:focus-visible { outline: 1px solid #ffff00; }
 html[data-ui="osrs"] .ojs-btn[disabled] { cursor: default; color: var(--osrs-btn-off, #7d705c); }
+html[data-ui="osrs"] .ojs-btn.is-muted { color: var(--osrs-btn-off, #7d705c); background: var(--osrs-btn-off-bg, #3a3228); border-top-color: var(--osrs-inner-ring, #4f4434); border-left-color: var(--osrs-inner-ring, #4f4434); font-family: 'RS', sans-serif; }
+html[data-ui="osrs"] .ojs-btn.is-muted:hover { color: var(--osrs-tan, #c8b897); }
 
 /* Footer line */
 html[data-ui="osrs"] .ojs-foot { height: 26px; flex-shrink: 0; display: flex; align-items: center; gap: 18px; padding: 0 12px; border-top: 1px solid #6a5c48; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: #ff981f; white-space: nowrap; overflow: hidden; }
