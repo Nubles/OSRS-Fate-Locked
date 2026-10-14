@@ -13,6 +13,7 @@ import {
 import { ShareModal } from './ShareModal';
 import type { LogEntry } from '../types';
 import { computeRunId } from '../utils/integrity';
+import { UI_STYLE_KEY } from '../utils/uiStyle';
 
 const mockGame = vi.hoisted(() => ({
   current: {
@@ -192,5 +193,27 @@ describe('ShareModal region summary', () => {
     fireEvent.click(view.getByRole('button', { name: 'Copy Summary' }));
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     expect(view.getByText(expected)).toBeTruthy();
+  });
+});
+
+describe('ShareModal in the OSRS layout', () => {
+  afterEach(() => {
+    cleanup();
+    localStorage.removeItem(UI_STYLE_KEY);
+  });
+
+  it('opens on the OSRS card in a stone window and keeps the other themes', () => {
+    localStorage.setItem(UI_STYLE_KEY, 'osrs');
+    const onClose = vi.fn();
+    const view = render(<ShareModal onClose={onClose} />);
+    expect(view.getByRole('heading', { name: 'Share Run' })).toBeTruthy();
+    expect(view.getByRole('button', { name: 'Stats card' }).getAttribute('aria-pressed')).toBe('true');
+    expect(view.getByRole('button', { name: 'OSRS' }).getAttribute('aria-pressed')).toBe('true');
+    expect(document.getElementById('status-card')?.dataset.cardTheme).toBe('osrs');
+    fireEvent.click(view.getByRole('button', { name: 'Gilded' }));
+    expect(document.getElementById('status-card')?.dataset.cardTheme).toBeUndefined();
+    expect(view.getByRole('button', { name: 'Copy Summary' })).toBeTruthy();
+    fireEvent.click(view.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalled();
   });
 });

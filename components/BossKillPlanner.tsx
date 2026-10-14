@@ -14,6 +14,8 @@ import { planBoss, BossPlan, BOSS_ALIASES, bestBoostPrayers, defaultBossVersion,
 import { EntityModel } from './EntityModel';
 import { modelFor, orientationFor } from '../data/entityModels';
 import { WikiLink } from './WikiLink';
+import { useIsOsrsUi } from '../utils/uiStyle';
+import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
 
 interface Props { onClose: () => void }
 type Status = 'loading' | 'ready' | 'error';
@@ -41,6 +43,8 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
   const { unlocks, loadout: rawLoadout, gameModeId } = useGame();
   const loadout = rawLoadout || {};
   useEscapeKey(onClose, true);
+  // OSRS layout: stone window, orange title bar, stone buttons (osrs-windows-b.css).
+  const osrs = useIsOsrsUi();
 
   const [status, setStatus] = useState<Status>(gearService.ready && monsterService.ready ? 'ready' : 'loading');
   const [boostsOn, setBoostsOn] = useState(true);
@@ -100,8 +104,20 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose} role="dialog" aria-modal="true" aria-label="Boss Kill Planner">
-      <div className="bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full max-w-3xl h-[82vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+      <div className={osrs ? 'osrs-win owb-win owb-bkp w-full max-w-3xl h-[82vh] overflow-hidden' : 'bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full max-w-3xl h-[82vh] flex flex-col overflow-hidden'} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
+        {osrs ? (
+          <>
+            <OsrsTitleBar title={<>Boss Kill Planner <SectionGuide id="KILL_PLANNER" /></>} onClose={onClose} />
+            <div className="owb-toolbar">
+              <span className="owb-sub">Your DPS, kill times and readiness against the bosses you've unlocked.</span>
+              <span className="owb-toolbar-end">
+                <button type="button" className="osrs-btn" onClick={() => window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: 'open:gallery' } }))} title="Review all 3D models">Gallery</button>
+                <button type="button" className={`osrs-btn${boostsOn ? ' is-on' : ''}`} aria-pressed={boostsOn} onClick={() => setBoostsOn((b) => !b)} title="Toggle prayers + potions">Boosts {boostsOn ? 'on' : 'off'}</button>
+              </span>
+            </div>
+          </>
+        ) : (
         <div className="flex items-center gap-3 p-4 border-b border-white/10 bg-[#1b1b1b] shrink-0">
           <div className="p-2 bg-red-900/20 rounded-lg border border-red-500/30 text-red-300"><Skull size={18} /></div>
           <div className="flex-1 min-w-0">
@@ -116,8 +132,9 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
           </button>
           <button onClick={onClose} className="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white" aria-label="Close"><X size={18} /></button>
         </div>
+        )}
 
-        <label className="flex flex-wrap items-center gap-2 px-4 py-2 text-[11px] text-gray-400 border-b border-white/10">
+        <label className="owb-bkp-ranged flex flex-wrap items-center gap-2 px-4 py-2 text-[11px] text-gray-400 border-b border-white/10">
           Ranged damage type
           <select value={rangedOverride} onChange={e => setRangedOverride(e.target.value as typeof rangedOverride)} className="bg-[#1f1f1f] border border-white/10 rounded px-2 py-1 text-gray-200">
             <option value="auto">{gear.rangedDamageType ? `Weapon: ${gear.rangedDamageType}` : 'Standard assumed — select your type'}</option>
@@ -136,11 +153,11 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
             <p className="text-[12px]">No bosses unlocked yet — unlock some via fate, then plan your kills here.</p>
           </div>
         ) : (
-          <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2">
+          <div className="owb-bkp-body flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2">
             {/* Boss list */}
-            <div className="flex flex-col min-h-0 border-r border-white/10 overflow-y-auto custom-scrollbar p-2 space-y-1">
+            <div className="owb-bkp-list flex flex-col min-h-0 border-r border-white/10 overflow-y-auto custom-scrollbar p-2 space-y-1">
               {gear.count === 0 && (
-                <div className="text-[10px] text-amber-300/80 bg-amber-950/20 border border-amber-500/20 rounded-lg px-2.5 py-2 mb-1 flex items-start gap-1.5">
+                <div className="owb-bkp-note text-[10px] text-amber-300/80 bg-amber-950/20 border border-amber-500/20 rounded-lg px-2.5 py-2 mb-1 flex items-start gap-1.5">
                   <Info size={11} className="shrink-0 mt-0.5" /> No gear equipped — equip items in the Equipment Lab’s <span className="text-fuchsia-300">Gear</span> tab for real numbers.
                 </div>
               )}
@@ -148,7 +165,7 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
                 const r = READINESS[plan.readiness];
                 const isActive = current?.boss === boss;
                 return (
-                  <button key={boss} onClick={() => setSelected(boss)} className={`w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 border text-left transition-colors ${isActive ? 'border-red-500/40 bg-red-950/30' : 'border-transparent hover:bg-white/5'}`}>
+                  <button key={boss} onClick={() => setSelected(boss)} data-active={osrs && isActive ? true : undefined} className={`owb-bkp-row w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 border text-left transition-colors ${isActive ? 'border-red-500/40 bg-red-950/30' : 'border-transparent hover:bg-white/5'}`}>
                     <img src={monsterImg(monster.imageFile)} alt="" className="w-7 h-7 object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden'; }} />
                     <div className="flex-1 min-w-0">
                       <div className="text-[12px] font-semibold text-gray-200 truncate">{boss}</div>
@@ -171,7 +188,7 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
             </div>
 
             {/* Detail */}
-            <div className="flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-4">
+            <div className="owb-bkp-detail flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-4">
               {current && (
                 <Detail
                   boss={current.boss}
@@ -207,7 +224,7 @@ const Detail: React.FC<{
     <button
       onClick={() => setShow3D((s) => !s)}
       title={show3D ? 'Show 2D sprite' : 'Show 3D model'}
-      className={`flex items-center gap-1 px-2 py-1 rounded-md border border-white/10 bg-black/40 text-[10px] font-bold text-gray-300 hover:text-white hover:border-white/20 transition-colors ${cls}`}
+      className={`owb-bkp-3d flex items-center gap-1 px-2 py-1 rounded-md border border-white/10 bg-black/40 text-[10px] font-bold text-gray-300 hover:text-white hover:border-white/20 transition-colors ${cls}`}
     >
       <Box size={11} /> {show3D ? '3D' : '2D'}
     </button>
@@ -223,7 +240,7 @@ const Detail: React.FC<{
     <div className="space-y-4 animate-in fade-in duration-200">
       {/* Large 3D model viewer (drag to rotate, scroll to zoom) */}
       {model && show3D && (
-        <div className="relative w-full h-60 rounded-xl bg-gradient-to-b from-white/[0.05] to-black/30 border border-white/10 overflow-hidden">
+        <div className="owb-bkp-model relative w-full h-60 rounded-xl bg-gradient-to-b from-white/[0.05] to-black/30 border border-white/10 overflow-hidden">
           <EntityModel src={model} poster={monsterImg(monster.imageFile)} alt={boss} interactive autoRotate={animationsEnabled} orientation={orientationFor(boss)} fill />
           {toggleBtn('absolute top-2 right-2 z-10')}
         </div>
@@ -255,7 +272,7 @@ const Detail: React.FC<{
       </div>
 
       {/* Readiness banner */}
-      <div className={`flex items-center gap-2 rounded-lg border px-3 py-2 bg-[#1a1a1a] border-white/10`}>
+      <div className={`owb-bkp-banner flex items-center gap-2 rounded-lg border px-3 py-2 bg-[#1a1a1a] border-white/10`}>
         <span className={`w-2 h-2 rounded-full ${r.dot}`} />
         <span className={`text-[12px] font-bold ${r.cls}`}>{r.label}</span>
         <span className="text-[10px] text-gray-500">· best as <span className="text-gray-300 uppercase">{plan.style === 'melee' ? plan.attackType : plan.style} / {plan.stanceId}</span>{weaponName ? ` · ${weaponName}` : ''}</span>
@@ -273,13 +290,13 @@ const Detail: React.FC<{
       </div>
 
       {/* Gear gap */}
-      <div className="rounded-xl bg-[#1a1a1a] border border-white/10 p-3">
+      <div className="owb-bkp-gap rounded-xl bg-[#1a1a1a] border border-white/10 p-3">
         <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-gray-500 mb-1.5">
           <span className="flex items-center gap-1.5"><Gauge size={11} className="text-fuchsia-400" /> Gear vs strong setup</span>
           <span className="text-gray-300 font-bold">{plan.gearGapPct}%</span>
         </div>
-        <div className="h-2 rounded-full bg-black/50 border border-white/5 overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-red-500 via-amber-400 to-emerald-400 rounded-full transition-all duration-500" style={{ width: `${plan.gearGapPct}%` }} />
+        <div className="owb-bkp-gap-track h-2 rounded-full bg-black/50 border border-white/5 overflow-hidden">
+          <div className="owb-bkp-gap-fill h-full bg-gradient-to-r from-red-500 via-amber-400 to-emerald-400 rounded-full transition-all duration-500" style={{ width: `${plan.gearGapPct}%` }} />
         </div>
         <p className="text-[9px] text-gray-600 mt-1">Your DPS as a share of a strong endgame setup for this style.</p>
       </div>
@@ -303,13 +320,13 @@ const Detail: React.FC<{
 };
 
 const Stat: React.FC<{ label: string; value: React.ReactNode; accent: string; Icon: typeof Zap }> = ({ label, value, accent, Icon }) => (
-  <div className="rounded-lg bg-[#151515] border border-white/5 px-3 py-2">
+  <div className="owb-bkp-stat rounded-lg bg-[#151515] border border-white/5 px-3 py-2">
     <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-widest text-gray-500 mb-0.5"><Icon size={10} /> {label}</div>
-    <div className={`text-xl font-black leading-none ${accent}`}>{value}</div>
+    <div className={`owb-bkp-val text-xl font-black leading-none ${accent}`}>{value}</div>
   </div>
 );
 const Mini: React.FC<{ label: string; value: React.ReactNode; cls?: string; Icon: typeof Zap }> = ({ label, value, cls = 'text-gray-200', Icon }) => (
-  <div className="rounded-lg bg-[#151515] border border-white/5 px-2.5 py-2 text-center">
+  <div className="owb-bkp-stat rounded-lg bg-[#151515] border border-white/5 px-2.5 py-2 text-center">
     <div className="flex items-center justify-center gap-1 text-[8px] uppercase tracking-widest text-gray-600 mb-0.5"><Icon size={9} /> {label}</div>
     <div className={`text-[13px] font-bold ${cls}`}>{value}</div>
   </div>
