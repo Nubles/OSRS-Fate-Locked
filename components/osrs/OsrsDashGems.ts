@@ -73,4 +73,9 @@ const SLOT_SPRITE: Record<string, string> = {
 };
 export const slotSilhouetteSrc = (slot: string): string => `${base()}osrs-ui/slots/${SLOT_SPRITE[slot] ?? 'head'}.png`;
 /** Slot tile (sprite 170) and the connector lines (sprites 172 / 173). */
-export const slotUiSrc = (name: 'tile' | 'line-v' | 'line-h'): string => `${base()}osrs-ui/slots/${name}.png`;
+// Used inside CSS custom properties, where a relative url() would resolve
+// against the stylesheet instead of the page, so make it absolute.
+export const slotUiSrc = (name: 'tile' | 'line-v' | 'line-h'): string => {
+  const path = `${base()}osrs-ui/slots/${name}.png`;
+  try { return new URL(path, document.baseURI).href; } catch { return path; }
+};
