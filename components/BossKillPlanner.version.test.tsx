@@ -30,6 +30,7 @@ vi.mock('../services/MonsterService', () => ({ monsterService: {
   versionsOf: (name: string) => name === 'Vardorvis' ? VARDORVIS : [],
 } }));
 vi.mock('../data/entityModels', () => ({ modelFor: () => undefined, orientationFor: () => undefined }));
+vi.mock('../hooks/useModelFor', () => ({ useModelFor: () => undefined }));
 
 import { BossKillPlanner } from './BossKillPlanner';
 import { UI_STYLE_KEY } from '../utils/uiStyle';

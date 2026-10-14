@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import './osrs-spend.css';
 import { getItemDescription } from '../VoidReveal';
 import { EntityModel } from '../EntityModel';
-import { modelFor, orientationFor } from '../../data/entityModels';
+import { orientationFor } from '../../data/entityModels';
+import { useModelFor } from '../../hooks/useModelFor';
 import { OsrsAreaMap } from './OsrsAreaMap';
 import { chunksForArea } from '../../utils/areaMapCut';
 import { categoryColor, categoryRarity, rarityRank } from '../../utils/rarity';
@@ -71,7 +72,7 @@ const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, i
   const intense = isChaos || rarityRank(rarity) >= rarityRank('epic');
   const isRegion = itemType === TableType.REGIONS || itemType === TableType.CHUNKS;
   const isSkill = itemType === TableType.SKILLS;
-  const model = modelFor(itemName);
+  const model = useModelFor(itemName);
   const description = getItemDescription(itemType, itemName, tier);
   const title = phase === 'altering' ? 'Altering Fate...' : isChaos ? 'Chaos unlock' : `${display} unlocked`;
   const costIcon = isChaos ? CHAOS_KEY_ICON : KEY_ICON;

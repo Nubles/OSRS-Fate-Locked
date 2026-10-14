@@ -12,7 +12,26 @@
  * content; nothing here ships a game asset. Ships DORMANT (no model files →
  * everything falls back to the existing 2D sprites).
  */
-import { MODEL_FILES } from './modelManifest';
+
+/**
+ * The manifest (several hundred models) loads on demand, not at startup, so it
+ * stays out of the eager bundle. Until it arrives, modelFor() answers undefined
+ * and callers show their 2D picture; hooks/useModelFor re-renders them once it
+ * is in. A failed load is forgotten so the next caller can try again.
+ */
+let modelFiles: Record<string, string> | null = null;
+let manifestLoad: Promise<Record<string, string>> | null = null;
+
+export const modelManifestLoaded = (): boolean => modelFiles !== null;
+
+export const loadModelManifest = (): Promise<Record<string, string>> =>
+  (manifestLoad ??= import('./modelManifest').then(
+    (m) => (modelFiles = m.MODEL_FILES),
+    (err) => { manifestLoad = null; throw err; },
+  ));
+
+/** Every manifest slug → file, empty until loadModelManifest() resolves. */
+export const loadedModelFiles = (): Record<string, string> => modelFiles ?? {};
 
 /**
  * Prefix a /public path with the app's base URL so it resolves under a project
@@ -45,13 +64,13 @@ export const slugify = (name: string): string =>
 /** The model URL for an unlock name, or undefined to fall back to its sprite. */
 export const modelFor = (name: string): string | undefined => {
   if (MODEL_REGISTRY[name]) return MODEL_REGISTRY[name];
-  const file = MODEL_FILES[slugify(name)];
+  const file = modelFiles?.[slugify(name)];
   return file ? asset(`models/${file}`) : undefined;
 };
 
 /** Model URL for a manifest slug directly (used by the review gallery). */
 export const modelUrlBySlug = (slug: string): string | undefined => {
-  const file = MODEL_FILES[slug];
+  const file = modelFiles?.[slug];
   return file ? asset(`models/${file}`) : undefined;
 };
 

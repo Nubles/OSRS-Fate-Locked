@@ -29,6 +29,7 @@ vi.mock('../services/MonsterService', () => ({ monsterService: {
   versionsOf: (name: string) => name === 'General Graardor' ? [GRAARDOR] : [],
 } }));
 vi.mock('../data/entityModels', () => ({ modelFor: () => undefined, orientationFor: () => undefined }));
+vi.mock('../hooks/useModelFor', () => ({ useModelFor: () => undefined }));
 
 import { BossKillPlanner } from './BossKillPlanner';
 

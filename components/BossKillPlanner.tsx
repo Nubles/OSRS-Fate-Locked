@@ -12,7 +12,8 @@ import { attackBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
 import { formatTimeToKill } from '../utils/dps';
 import { planBoss, BossPlan, BOSS_ALIASES, bestBoostPrayers, defaultBossVersion, PlayerCombat, Readiness, Danger } from '../utils/bossPlanner';
 import { EntityModel } from './EntityModel';
-import { modelFor, orientationFor } from '../data/entityModels';
+import { orientationFor } from '../data/entityModels';
+import { useModelFor } from '../hooks/useModelFor';
 import { WikiLink } from './WikiLink';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
@@ -217,7 +218,7 @@ const Detail: React.FC<{
 }> = ({ boss, monster, versions, onVersionChange, plan, weaponName }) => {
   const r = READINESS[plan.readiness];
   const d = DANGER[plan.danger];
-  const model = modelFor(boss);
+  const model = useModelFor(boss);
   const { animationsEnabled } = useGame();
   const [show3D, setShow3D] = useState(true);
   const toggleBtn = (cls: string) => (

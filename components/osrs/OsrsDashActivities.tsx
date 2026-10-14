@@ -10,7 +10,8 @@ import { NoteTrigger } from '../NoteTrigger';
 import { OsrsActivitiesTools } from './OsrsActivitiesTools';
 import { itemSrc, skillIconSrc, wikiImageSrc } from './OsrsDashGems';
 import { EntityModel } from '../EntityModel';
-import { modelFor, orientationFor } from '../../data/entityModels';
+import { orientationFor } from '../../data/entityModels';
+import { useModelFor } from '../../hooks/useModelFor';
 import { useGame } from '../../context/GameContext';
 import './osrs-world.css';
 
@@ -99,7 +100,7 @@ const SKILL_NAMES = new Set(['Attack', 'Strength', 'Defence', 'Ranged', 'Prayer'
 
 /** The unlock's picture: its 3D model when it has one, else a big render for bosses and places, or an item slot for sprites. */
 const StageImage: React.FC<{ name: string; icon?: string; owned: boolean }> = ({ name, icon, owned }) => {
-  const model = modelFor(name);
+  const model = useModelFor(name);
   if (model) return <StageModel name={name} src={model} owned={owned} />;
   return <StagePicture name={name} icon={icon} owned={owned} />;
 };

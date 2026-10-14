@@ -14,7 +14,8 @@ import { DropSource } from '../../types';
 import { itemSrc } from './OsrsDashGems';
 import { useScrollMore } from '../../utils/scrollFade';
 import { EntityModel } from '../EntityModel';
-import { modelFor, orientationFor } from '../../data/entityModels';
+import { orientationFor } from '../../data/entityModels';
+import { useModelFor } from '../../hooks/useModelFor';
 
 const sh: React.CSSProperties = { textShadow: '1px 1px 0 #000' };
 const RS = (size = 16, family = 'RS'): React.CSSProperties => ({ font: `${size}px '${family}', sans-serif` });
@@ -42,7 +43,7 @@ const UnlockSprite: React.FC<{ name: string; boss: boolean }> = ({ name, boss })
  * up; nothing at all when the wiki has no picture for the page.
  */
 const PagePicture: React.FC<{ name: string; size: number; animate: boolean }> = ({ name, size, animate }) => {
-  const model = modelFor(name);
+  const model = useModelFor(name);
   const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
