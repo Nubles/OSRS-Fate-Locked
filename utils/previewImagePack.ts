@@ -30,10 +30,33 @@ const loadPack = async (file: string): Promise<Record<string, unknown>> => {
 let modelPack: Promise<Record<string, unknown>> | null = null;
 const MODEL_URL = /\/models\/([a-z0-9-]+\.gltf)(?:\?|$)/;
 
+/**
+ * The preview page's security policy refuses fetch() of data: URLs, and each
+ * model keeps its mesh and colour texture inline as data: URLs, so the 3D
+ * viewer could load the model file but none of its parts. Decode them here.
+ */
+const dataUrlResponse = (url: string): Response => {
+  const comma = url.indexOf(',');
+  const meta = url.slice(5, comma);
+  const payload = url.slice(comma + 1);
+  const base64 = meta.endsWith(';base64');
+  const type = (base64 ? meta.slice(0, -7) : meta) || 'text/plain';
+  let bytes: Uint8Array<ArrayBuffer>;
+  if (base64) {
+    const bin = atob(payload);
+    bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  } else {
+    bytes = new TextEncoder().encode(decodeURIComponent(payload)) as Uint8Array<ArrayBuffer>;
+  }
+  return new Response(bytes, { headers: { 'Content-Type': type } });
+};
+
 const installModelPack = () => {
   const realFetch = window.fetch.bind(window);
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    if (url.startsWith('data:')) return dataUrlResponse(url);
     const match = MODEL_URL.exec(url);
     if (match) {
       modelPack ??= loadPack('models-pack.json');
