@@ -43,8 +43,7 @@ html[data-ui="osrs"] .osrs-char-headtotal { display: none; margin-right: auto; f
 /* --s is the doll's scale; the osrs-doll container below picks it from the room it has. */
 html[data-ui="osrs"] .osrs-char-wornrow { display: flex; align-items: center; justify-content: center; min-width: 0; }
 html[data-ui="osrs"] .osrs-char-doll { --s: 1; position: relative; flex-shrink: 0; width: calc(var(--s, 1) * 148px); height: calc(var(--s, 1) * 192px); }
-/* The doll's art is high-resolution (osrs-ui/hd), so it is smoothed, not pixelated, at any scale. */
-html[data-ui="osrs"] .osrs-char-line { position: absolute; pointer-events: none; }
+html[data-ui="osrs"] .osrs-char-line { position: absolute; pointer-events: none; image-rendering: pixelated; }
 html[data-ui="osrs"] .osrs-char-line.is-v {
   width: calc(var(--s, 1) * 6px); background: var(--osrs-char-line-v) 0 0 / calc(var(--s, 1) * 6px) calc(var(--s, 1) * 36px) repeat-y;
 }
@@ -55,11 +54,9 @@ html[data-ui="osrs"] .osrs-char-dollcell { position: absolute; width: calc(var(-
 html[data-ui="osrs"] .osrs-char-dollcell:hover .osrs-dash-note { opacity: 1; }
 html[data-ui="osrs"] .osrs-char-slot {
   all: unset; box-sizing: border-box; cursor: pointer; position: relative; display: block; width: 100%; height: 100%;
-  background: var(--osrs-char-tile) 0 0 / 100% 100% no-repeat;
+  background: var(--osrs-char-tile) 0 0 / 100% 100% no-repeat; image-rendering: pixelated;
 }
-html[data-ui="osrs"] .osrs-char-slot > img { position: absolute; pointer-events: none; }
-/* A 36px sprite fallback (no high-resolution render) keeps its hard pixels. */
-html[data-ui="osrs"] .osrs-char-slot > img.osrs-px { image-rendering: pixelated; }
+html[data-ui="osrs"] .osrs-char-slot > img { position: absolute; image-rendering: pixelated; pointer-events: none; }
 html[data-ui="osrs"] .osrs-char-slotsil { left: 0; top: 0; width: 100%; height: 100%; }
 html[data-ui="osrs"] .osrs-char-slotitem { left: 0; top: calc(var(--s, 1) * 2px); width: calc(var(--s, 1) * 36px); height: calc(var(--s, 1) * 32px); object-fit: contain; }
 html[data-ui="osrs"] .osrs-char-slotgem { right: calc(var(--s, 1) * 1px); bottom: calc(var(--s, 1) * 1px); width: calc(var(--s, 1) * 11px); height: calc(var(--s, 1) * 12px); }

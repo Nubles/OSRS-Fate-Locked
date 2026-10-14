@@ -135,8 +135,8 @@ describe('Dashboard in the OSRS layout', () => {
     const head = await screen.findByRole('button', { name: 'Head: Tier 2. Click for its tier ladder.' }, { timeout: 10000 });
     // Tier 2 is a II numeral and a Jade gem on the slot; an empty slot shows its OSRS silhouette.
     expect(head.querySelector('.osrs-char-slottier')?.textContent).toBe('II');
-    expect(head.querySelector('.osrs-char-slotgem')?.getAttribute('src')).toContain('hd/gems/jade.png');
-    expect(head.querySelector('.osrs-char-slotsil')?.getAttribute('src')).toContain('hd/slots/head.svg');
+    expect(head.querySelector('.osrs-char-slotgem')?.getAttribute('src')).toContain('gem-jade');
+    expect(head.querySelector('.osrs-char-slotsil')?.getAttribute('src')).toContain('slots/head.png');
     const neck = screen.getByRole('button', { name: 'Neck: Tier 0. Click for its tier ladder.' });
     expect(neck.className).toContain('is-dim');
     expect(neck.querySelector('.osrs-char-slotgem')).toBeNull();
