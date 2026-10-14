@@ -375,8 +375,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const activeMode = getGameMode(gameModeId);
   const isOsrs = useIsOsrsUi();
   const [activeTab, setActiveTab] = useState('CHARACTER');
-  // OSRS layout: the Equipment Lab opened over the whole Character tab (Gear
-  // board); null shows the compact lab beside Skills (Main board).
+  // OSRS layout: the Equipment Lab view open inside its Character-tab panel
+  // (Tiers, Gear, DPS or Plan); null shows the panel's overview.
   const [osrsLab, setOsrsLab] = useState<OsrsLabView | null>(null);
   const [journalSubTab, setJournalSubTab] = useLocalStorage<'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE'>('jrnl:subtab', 'QUESTS');
   useEffect(() => { setOsrsLab(null); }, [activeTab]);
@@ -388,14 +388,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
     setActiveTab('CHARACTER');
   }, [isOsrs, activeTab, journalSubTab]);
   // OSRS layout: tabs drawn full width on their boards hide the home screen's
-  // left column (Sync & Roll, Activities & Utility, Collection, and the open
-  // Equipment Lab).
+  // left column (Sync & Roll, Activities & Utility, Collection). The
+  // Equipment Lab stays inside its Character-tab panel, so it never widens.
   useEffect(() => {
     setOsrsProgressionWide(isOsrs && (
       activeTab === 'AUTOROLL' || activeTab === 'ACTIVITIES' || activeTab === 'COLLECTION'
-      || (activeTab === 'CHARACTER' && osrsLab !== null)
     ));
-  }, [isOsrs, activeTab, osrsLab]);
+  }, [isOsrs, activeTab]);
   useEffect(() => () => setOsrsProgressionWide(false), []);
 
   useEffect(() => {

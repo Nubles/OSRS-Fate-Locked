@@ -7,16 +7,19 @@ const levelUpSkill = vi.hoisted(() => vi.fn());
 
 vi.mock('../../context/GameContext', async () => {
   const actual = await vi.importActual<typeof import('../../context/GameContext')>('../../context/GameContext');
+  // One unlocks object, as the real context keeps between renders (the DPS
+  // view copies unlocks.levels into its own state whenever it changes).
+  const unlocks = {
+    ...actual.initialState.unlocks,
+    skills: { Attack: 3 },
+    levels: { Attack: 25 },
+    equipment: { ...actual.initialState.unlocks.equipment, Head: 2 },
+  };
   return {
     ...actual,
     useGame: () => ({
       ...actual.initialState,
-      unlocks: {
-        ...actual.initialState.unlocks,
-        skills: { Attack: 3 },
-        levels: { Attack: 25 },
-        equipment: { ...actual.initialState.unlocks.equipment, Head: 2 },
-      },
+      unlocks,
       animationsEnabled: false,
       gameModeId: 'vanilla',
       customMode: undefined,
@@ -42,6 +45,17 @@ vi.mock('../../services/GearService', () => ({
     byId: vi.fn(() => undefined),
     bySlot: vi.fn(() => []),
     tierOf: vi.fn(() => 0),
+  },
+}));
+
+// The DPS view's monster list stays empty here (the real catalogue is large).
+vi.mock('../../services/MonsterService', () => ({
+  monsterKey: (m: { id: number; name: string; version?: string }) => `${m.id}:${m.name}:${m.version ?? ''}`,
+  monsterService: {
+    ready: true, error: null,
+    init: vi.fn(async () => undefined),
+    search: vi.fn(() => []),
+    byKey: vi.fn(() => undefined),
   },
 }));
 
@@ -116,7 +130,7 @@ describe('Dashboard in the OSRS layout', () => {
     expect(mining.getAttribute('data-examine')).toBe('Level 1. Locked: no tier unlocked yet.');
   });
 
-  it('shows each worn-equipment slot with its tier, and a slot opens the full Equipment Lab', { timeout: 20000 }, async () => {
+  it('shows each worn-equipment slot with its tier, and a slot opens its ladder inside the panel', { timeout: 20000 }, async () => {
     render(<Dashboard suspendModals />);
     const head = await screen.findByRole('button', { name: 'Head: Tier 2. Click for its tier ladder.' }, { timeout: 10000 });
     // Tier 2 is a Jade gem in the slot's corner; an empty slot shows its OSRS silhouette.
@@ -128,14 +142,51 @@ describe('Dashboard in the OSRS layout', () => {
     expect(screen.getByRole('list', { name: 'Tier per slot' }).textContent).toContain('Tier II · Steel / Black / White');
     expect(head.closest('[data-examine]')?.getAttribute('data-examine')).toBe('Head slot. Tier 2 unlocked: up to Steel / Black / White gear.');
 
+    // The slot's ladder opens inside the Equipment Lab panel: Skills and the left column stay.
     fireEvent.click(head);
+    const lab = screen.getByRole('region', { name: 'Equipment Lab' });
     const detail = await screen.findByRole('region', { name: 'Head details' }, { timeout: 10000 });
+    expect(lab.contains(detail)).toBe(true);
     expect(detail.textContent).toContain('Next: Tier 3');
-    expect(screen.getByRole('region', { name: 'Worn Equipment' })).toBeTruthy();
-    expect(getOsrsNav().progressionWide).toBe(true);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Close Equipment Lab' }));
-    expect(await screen.findByRole('region', { name: 'Skills' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Head: Tier 2. Click for its tier ladder.' }).className).toContain('is-sel');
+    expect(screen.getByRole('button', { name: 'Tiers' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('region', { name: 'Skills' })).toBeTruthy();
     expect(getOsrsNav().progressionWide).toBe(false);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close Equipment Lab view' }));
+    expect(screen.queryByRole('region', { name: 'Head details' })).toBeNull();
+    expect(screen.getByRole('group', { name: /^Equipment Stats/ })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Skills' })).toBeTruthy();
+  });
+
+  it('switches the Equipment Lab panel between Plan, Gear and DPS without widening the window', { timeout: 20000 }, async () => {
+    render(<Dashboard suspendModals />);
+    await screen.findByRole('region', { name: 'Equipment Lab' }, { timeout: 10000 });
+    const lab = screen.getByRole('region', { name: 'Equipment Lab' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Plan' }));
+    expect(screen.getByRole('button', { name: 'Plan' }).getAttribute('aria-pressed')).toBe('true');
+    const plan = screen.getByRole('region', { name: 'Target loadout' });
+    expect(lab.contains(plan)).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Raise Neck target' }));
+    expect(plan.textContent).toContain('1needed');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Gear' }));
+    expect(screen.queryByRole('region', { name: 'Target loadout' })).toBeNull();
+    expect(screen.getByRole('list', { name: 'Worn items' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Weapon: empty, unlocked up to Tier 0. Choose Weapon' }));
+    expect(lab.contains(screen.getByRole('region', { name: 'Choose Weapon' }))).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('region', { name: 'Choose Weapon' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'DPS' }));
+    expect(lab.contains(screen.getByRole('region', { name: 'DPS calculator' }))).toBe(true);
+    expect(getOsrsNav().progressionWide).toBe(false);
+
+    // The pressed mode button closes its view again.
+    fireEvent.click(screen.getByRole('button', { name: 'DPS' }));
+    expect(screen.queryByRole('region', { name: 'DPS calculator' })).toBeNull();
+    expect(screen.getByRole('list', { name: 'Tier per slot' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Skills' })).toBeTruthy();
   });
 });

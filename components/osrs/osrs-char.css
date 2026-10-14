@@ -116,10 +116,71 @@ html[data-ui="osrs"] .osrs-char-worn { flex: 1; min-height: 0; align-self: stret
   html[data-ui="osrs"] .osrs-char-bonuses { display: none; }
 }
 
-/* ── Full Equipment Lab: the Worn Equipment window ──────────────────────── */
-html[data-ui="osrs"] .osrs-dash-wornbody > .osrs-char-wornrow { flex-shrink: 0; margin: auto 0; }
-@media (min-width: 1001px) { html[data-ui="osrs"] .osrs-dash-wornbody { container-name: osrs-wornfull; } }
-@container osrs-wornfull (min-width: 320px) and (min-height: 480px) {
-  html[data-ui="osrs"] .osrs-char-wornrow { --s: 2; }
-  html[data-ui="osrs"] .osrs-char-slotomni { display: block; }
+/* ── Equipment Lab panel: head, mode buttons and the view body ──────────── */
+html[data-ui="osrs"] .osrs-char-labhead { flex-shrink: 0; padding: 0; height: 22px; }
+html[data-ui="osrs"] .osrs-char-labmodes { flex-shrink: 0; display: flex; gap: 6px; }
+html[data-ui="osrs"] .osrs-char-labmodes > [role="group"] { flex: 3; display: flex; gap: 3px; }
+html[data-ui="osrs"] .osrs-char-labmodes .osrs-btn { flex: 1; height: 26px; padding: 0; }
+/* The body holds the open view; it is the size the views lay themselves out by. */
+html[data-ui="osrs"] .osrs-char-labbody { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+@media (min-width: 861px) {
+  html[data-ui="osrs"] .osrs-char-labbody { container: osrs-lab / size; overflow-y: auto; overflow-x: hidden; }
+}
+
+/* The doll alone (Tiers, and Gear beside the picker): never shorter than the doll. */
+html[data-ui="osrs"] .osrs-char-worn.is-doll { min-height: 192px; }
+html[data-ui="osrs"] .osrs-char-slotlist > li.is-sel { background: var(--osrs-selected, #5a4c3a); box-shadow: inset 0 0 0 1px var(--osrs-yellow, #ff0); }
+html[data-ui="osrs"] .osrs-char-hint { flex-shrink: 0; margin: 0; text-align: center; line-height: 16px; display: none; }
+@container osrs-worn (min-height: 330px) { html[data-ui="osrs"] .osrs-char-hint { display: block; } }
+
+/* Tiers: the doll, and the chosen slot's ladder and upgrade beneath it. */
+html[data-ui="osrs"] .osrs-char-tiersview { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+html[data-ui="osrs"] .osrs-char-detail { flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; padding: 4px 6px 5px; text-shadow: 1px 1px 0 #000; }
+html[data-ui="osrs"] .osrs-char-detailhead { display: flex; align-items: center; gap: 6px; height: 24px; font: 16px 'RS', sans-serif; white-space: nowrap; min-width: 0; }
+html[data-ui="osrs"] .osrs-char-detailtier { margin-left: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-family: 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .osrs-char-ladder { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 2px; }
+html[data-ui="osrs"] .osrs-char-ladder > span {
+  height: 16px; box-sizing: border-box; border: 1px solid #000; background: var(--osrs-well, #1f1a14);
+  display: flex; align-items: center; justify-content: center; font: 16px 'RSSmall', sans-serif; line-height: 14px; color: var(--osrs-muted, #8a7c66);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .35);
+}
+html[data-ui="osrs"] .osrs-char-ladder > span.is-next { outline: 2px solid var(--osrs-purple, #c77dff); outline-offset: -1px; color: var(--osrs-purple, #c77dff); }
+html[data-ui="osrs"] .osrs-char-detailnext { display: flex; align-items: center; justify-content: space-between; gap: 6px; height: 18px; font: 16px 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); white-space: nowrap; }
+html[data-ui="osrs"] .osrs-char-detailnexttext { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .osrs-char-detailact { display: flex; align-items: center; gap: 8px; }
+html[data-ui="osrs"] .osrs-char-detailact > .osrs-btn { flex: 1; height: 26px; padding: 0 6px; }
+html[data-ui="osrs"] .osrs-char-detailact > span { flex-shrink: 0; }
+
+/* Plan: the slot rows scroll, Reset / Max and the cost stay in view. */
+html[data-ui="osrs"] .osrs-char-plan { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+html[data-ui="osrs"] .osrs-char-planrows { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; justify-content: space-around; gap: 1px; padding: 2px; }
+html[data-ui="osrs"] .osrs-char-planrows .osrs-dash-step { width: 20px; height: 20px; }
+html[data-ui="osrs"] .osrs-char-plantier { width: 22px; flex-shrink: 0; text-align: center; font: 16px 'RSSmall', sans-serif; text-shadow: 1px 1px 0 #000; }
+
+/* Gear: the doll with the worn items, or a slot's picker. */
+html[data-ui="osrs"] .osrs-char-gearview { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+html[data-ui="osrs"] .osrs-char-gearview.has-pick > .osrs-char-worn { display: none; }
+html[data-ui="osrs"] .osrs-char-pick { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+html[data-ui="osrs"] .osrs-char-pickbar { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 6px; height: 22px; }
+
+html[data-ui="osrs"] .osrs-char-picklegend { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0 10px; line-height: 16px; }
+html[data-ui="osrs"] .osrs-char-picklegend > span { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+@container osrs-lab (max-height: 400px) { html[data-ui="osrs"] .osrs-char-estnote { display: none; } }
+
+/* DPS */
+html[data-ui="osrs"] .osrs-char-dps { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+/* A wide panel: the picker beside the doll, DPS in two columns, a bigger ladder. */
+@container osrs-lab (min-width: 560px) {
+  html[data-ui="osrs"] .osrs-char-gearview.has-pick { flex-direction: row; gap: 10px; }
+  html[data-ui="osrs"] .osrs-char-gearview.has-pick > .osrs-char-worn { display: flex; flex: 0 0 300px; }
+  html[data-ui="osrs"] .osrs-dash-dpsgrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  html[data-ui="osrs"] .osrs-char-detail { gap: 6px; padding: 6px 10px 8px; }
+  html[data-ui="osrs"] .osrs-char-detailhead, html[data-ui="osrs"] .osrs-char-detailtier { font-family: 'RS', sans-serif; }
+  html[data-ui="osrs"] .osrs-char-ladder > span { height: 22px; }
+  html[data-ui="osrs"] .osrs-char-detailact > .osrs-btn { height: 30px; }
+  html[data-ui="osrs"] .osrs-dash-tierrow { gap: 10px; padding: 0 8px; }
+  html[data-ui="osrs"] .osrs-dash-tierrow-name { width: 70px; }
+  html[data-ui="osrs"] .osrs-char-plantier { width: 30px; font-family: 'RS', sans-serif; }
+  html[data-ui="osrs"] .osrs-char-plan { width: 100%; max-width: 520px; align-self: center; }
 }

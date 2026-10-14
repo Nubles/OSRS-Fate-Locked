@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useGame } from '../../context/GameContext';
 import { EQUIPMENT_SLOTS } from '../../constants';
 import { gearService } from '../../services/GearService';
@@ -11,10 +11,11 @@ import { dpsCombatOptions } from '../../utils/weaponCombat';
 import { skillIconSrc } from './OsrsDashGems';
 
 /**
- * Equipment Lab, DPS view (Gear board, DPS mode): the classic DpsCalc as one
- * OSRS window. Same state, options, data and computeDps call; the stance is
- * a 2 x 2 grid of buttons (each one an attack type + stance the weapon has)
- * and the target picker sits inline instead of in a popover.
+ * Equipment Lab, DPS view: the classic DpsCalc inside the Equipment Lab
+ * panel (one column when the panel is narrow, two when it is wide). Same
+ * state, options, data and computeDps call; the stance is a 2 x 2 grid of
+ * buttons (each one an attack type + stance the weapon has) and the target
+ * picker sits inline instead of in a popover.
  */
 
 type Status = 'loading' | 'ready' | 'error';
@@ -136,11 +137,13 @@ export const OsrsCharDps: React.FC<Props> = ({ onSummary }) => {
   useEffect(() => { onSummary?.(summary); }, [summary, onSummary]);
 
   const targets = useMemo(() => (status === 'ready' ? monsterService.search(query, 80) : []), [query, status]);
+  // In the narrow panel the result sits below the target list: bring it into view once a target is chosen.
+  const resultRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (targetKey) resultRef.current?.scrollIntoView?.({ block: 'nearest' }); }, [targetKey]);
 
   if (status !== 'ready') {
     return (
-      <section className="osrs-win osrs-dash-labwin" aria-label="DPS calculator">
-        <div className="osrs-dash-wintitle"><h3 className="osrs-title">DPS Calculator</h3></div>
+      <section className="osrs-char-dps" aria-label="DPS calculator">
         <div className="osrs-dash-labempty">
           <span role="status" className="osrs-sh" style={{ color: status === 'error' ? 'var(--osrs-red, #ff3030)' : 'var(--osrs-tan, #c8b897)' }}>
             {status === 'loading' ? 'Loading gear + monster data...' : (monsterService.error || gearService.error || 'Could not load data.')}
@@ -159,8 +162,7 @@ export const OsrsCharDps: React.FC<Props> = ({ onSummary }) => {
   const L = unlocks.levels || {};
 
   return (
-    <section className="osrs-win osrs-dash-labwin" aria-label="DPS calculator">
-      <div className="osrs-dash-wintitle"><h3 className="osrs-title">DPS Calculator</h3></div>
+    <section className="osrs-char-dps" aria-label="DPS calculator">
       <div className="osrs-dash-dpsgrid">
         <div className="osrs-dash-dpscol">
           <div role="group" aria-label="Combat style" className="osrs-dash-dpsstyles">
@@ -279,7 +281,7 @@ export const OsrsCharDps: React.FC<Props> = ({ onSummary }) => {
             </div>
           </div>
 
-          <div className="osrs-inner osrs-dash-dpsresult">
+          <div ref={resultRef} className="osrs-inner osrs-dash-dpsresult">
             {result && monster ? (
               <>
                 <div className="osrs-sh" style={{ display: 'flex', alignItems: 'baseline', gap: 8, color: '#fff' }}>
