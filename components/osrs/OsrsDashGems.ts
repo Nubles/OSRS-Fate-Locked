@@ -63,19 +63,29 @@ export const gemCropStyle = (t: number): React.CSSProperties => ({
   backgroundPosition: '-6px -5px',
   backgroundRepeat: 'no-repeat',
 });
-/** Half-size (11x12) gem for equipment slot corners, drawn at the doll's integer scale. */
+/** Half-size (11x12) gem sprite, drawn at an integer scale. */
 export const gemSmallSrc = (t: number): string => `${base()}osrs-ui/slots/gem-${TIER_GEMS[Math.min(Math.max(t, 1), TIER_GEMS.length) - 1].file}.png`;
 
-/** The OSRS worn-equipment empty-slot silhouettes (cache sprites 156-166), 36x36 over the slot tile. */
+/*
+ * The Worn Equipment doll is drawn at any scale (1x to 3x), so it uses
+ * high-resolution art (public/osrs-ui/hd/) instead of stretching the 36px
+ * game sprites: each slot's silhouette traced to SVG from cache sprites
+ * 156-166, the slot tile and connector lines (sprites 170, 172, 173) at 4x,
+ * and gems and worn items rendered from their OSRS cache models at 3-4x.
+ */
 const SLOT_SPRITE: Record<string, string> = {
   Head: 'head', Cape: 'cape', Neck: 'neck', Ammo: 'ammo', Weapon: 'weapon', Body: 'body',
   Shield: 'shield', Legs: 'legs', Gloves: 'hands', Boots: 'feet', Ring: 'ring',
 };
-export const slotSilhouetteSrc = (slot: string): string => `${base()}osrs-ui/slots/${SLOT_SPRITE[slot] ?? 'head'}.png`;
-/** Slot tile (sprite 170) and the connector lines (sprites 172 / 173). */
+export const slotSilhouetteSrc = (slot: string): string => `${base()}osrs-ui/hd/slots/${SLOT_SPRITE[slot] ?? 'head'}.svg`;
+/** Slot tile and the connector lines. */
 // Used inside CSS custom properties, where a relative url() would resolve
 // against the stylesheet instead of the page, so make it absolute.
-export const slotUiSrc = (name: 'tile' | 'line-v' | 'line-h'): string => absoluteUrl(`${base()}osrs-ui/slots/${name}.png`);
+export const slotUiSrc = (name: 'tile' | 'line-v' | 'line-h'): string => absoluteUrl(`${base()}osrs-ui/hd/${name}.png`);
+/** A tier's gem for an equipment slot corner. */
+export const gemHdSrc = (t: number): string => `${base()}osrs-ui/hd/gems/${TIER_GEMS[Math.min(Math.max(t, 1), TIER_GEMS.length) - 1].file}.png`;
+/** A worn item's icon at 3x (108x96), for every item in the equipment catalogue. */
+export const itemHdSrc = (id: number): string => `${base()}osrs-ui/hd/items/${id}.png`;
 /** A page-relative asset path made absolute, for url() inside CSS custom properties. */
 export const absoluteUrl = (path: string): string => {
   try { return new URL(path, document.baseURI).href; } catch { return path; }

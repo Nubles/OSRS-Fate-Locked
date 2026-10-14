@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NoteTrigger } from '../NoteTrigger';
-import { gemColor, gemSmallSrc, itemSrc, roman, itemSpriteSrc, itemSpriteFallback, slotSilhouetteSrc, slotUiSrc } from './OsrsDashGems';
+import { gemColor, gemHdSrc, itemHdSrc, itemSrc, roman, itemSpriteSrc, itemSpriteFallback, slotSilhouetteSrc, slotUiSrc } from './OsrsDashGems';
 import './osrs-char.css';
 
 /**
@@ -12,7 +12,8 @@ import './osrs-char.css';
  * skills, coloured alike); tier 0 has neither and the slot is dimmed.
  *
  * Drawn at a scale (`--s`) that osrs-char.css picks from the space the
- * doll's container has, so it fills the panel.
+ * doll's container has, so it fills the panel; the art is high-resolution
+ * (see OsrsDashGems) so it stays sharp at any scale.
  * Presentation only: every slot's click, label and Examine text come in.
  */
 
@@ -57,10 +58,16 @@ const LINES: [number, number, number, boolean][] = [
   [127, 96, 78, true], // Shield down to Ring
 ];
 
-/** A worn item's sprite; if neither the local nor the wiki sprite loads, the slot's silhouette. */
+/**
+ * A worn item's picture: its high-resolution render, then the 36px sprite
+ * (local, then the wiki's), then the slot's silhouette if none of them load.
+ */
 const SlotItem: React.FC<{ slot: string; itemId: number; imageFile?: string }> = ({ slot, itemId, imageFile }) => {
-  const [failed, setFailed] = useState(false);
-  if (failed) return <img key="silhouette" className="osrs-px osrs-char-slotsil" src={slotSilhouetteSrc(slot)} alt="" aria-hidden="true" />;
+  const [stage, setStage] = useState<'hd' | 'sprite' | 'none'>('hd');
+  if (stage === 'none') return <img key="silhouette" className="osrs-char-slotsil" src={slotSilhouetteSrc(slot)} alt="" aria-hidden="true" />;
+  if (stage === 'hd') {
+    return <img key="hd" className="osrs-char-slotitem is-hd" src={itemHdSrc(itemId)} alt="" aria-hidden="true" onError={() => setStage('sprite')} />;
+  }
   const fallback = itemSpriteFallback(imageFile);
   return (
     <img
@@ -69,7 +76,7 @@ const SlotItem: React.FC<{ slot: string; itemId: number; imageFile?: string }> =
       src={itemSpriteSrc(itemId)}
       alt=""
       aria-hidden="true"
-      onError={(e) => { fallback(e); if (e.currentTarget.style.visibility === 'hidden') setFailed(true); }}
+      onError={(e) => { fallback(e); if (e.currentTarget.style.visibility === 'hidden') setStage('none'); }}
     />
   );
 };
@@ -121,9 +128,9 @@ export const OsrsCharDoll: React.FC<{ slots: DollSlot[]; suspendModals?: boolean
           >
             {s.itemId != null
               ? <SlotItem key={s.itemId} slot={s.slot} itemId={s.itemId} imageFile={s.imageFile} />
-              : <img className="osrs-px osrs-char-slotsil" src={slotSilhouetteSrc(s.slot)} alt="" aria-hidden="true" />}
+              : <img className="osrs-char-slotsil" src={slotSilhouetteSrc(s.slot)} alt="" aria-hidden="true" />}
             {s.gem > 0 && <span className="osrs-char-slottier" style={{ color: gemColor(s.gem) }} aria-hidden="true">{roman(s.gem)}</span>}
-            {s.gem > 0 && <img className="osrs-px osrs-char-slotgem" src={gemSmallSrc(s.gem)} alt="" aria-hidden="true" />}
+            {s.gem > 0 && <img className="osrs-char-slotgem" src={gemHdSrc(s.gem)} alt="" aria-hidden="true" />}
             {s.omni && <img className="osrs-px osrs-char-slotomni" src={itemSrc('omni_key')} alt="" aria-hidden="true" title="An Omni-Key can raise this slot" />}
             {s.srText && <span className="sr-only">{s.srText}</span>}
           </button>
