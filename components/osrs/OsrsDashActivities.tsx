@@ -105,11 +105,11 @@ const StageImage: React.FC<{ name: string; icon?: string; owned: boolean }> = ({
   return <StagePicture name={name} icon={icon} owned={owned} />;
 };
 
-/** A turning 3D model on the stage; greyed like the pictures while the unlock is locked. */
-const StageModel: React.FC<{ name: string; src: string; owned: boolean }> = ({ name, src, owned }) => {
+/** A turning 3D model on the stage, in full colour whether owned or not (the corner label says which). */
+const StageModel: React.FC<{ name: string; src: string; owned: boolean }> = ({ name, src }) => {
   const { animationsEnabled } = useGame();
   return (
-    <div style={{ position: 'absolute', inset: '22px 0 0', filter: owned ? undefined : 'grayscale(.9) brightness(.55)' }}>
+    <div style={{ position: 'absolute', inset: '22px 0 0' }}>
       <EntityModel src={src} alt={name} fill interactive autoRotate={animationsEnabled} orientation={orientationFor(name)} />
     </div>
   );
