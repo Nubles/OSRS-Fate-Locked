@@ -4,6 +4,8 @@ import './osrs-spend.css';
 import { getItemDescription } from '../VoidReveal';
 import { EntityModel } from '../EntityModel';
 import { modelFor, orientationFor } from '../../data/entityModels';
+import { OsrsAreaMap } from './OsrsAreaMap';
+import { chunksForArea } from '../../utils/areaMapCut';
 import { categoryColor, categoryRarity, rarityRank } from '../../utils/rarity';
 import { tableDisplayName } from '../../utils/tableDisplay';
 import { wikiUrlFor } from '../../constants';
@@ -78,6 +80,14 @@ const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, i
   let shown: React.ReactNode;
   if (model) {
     shown = <EntityModel src={model} poster={itemImage} alt={itemName} size={220} interactive autoRotate={animationsEnabled} orientation={orientationFor(itemName)} />;
+  } else if (isRegion && chunksForArea(itemName).length) {
+    // An area has no single model: show its piece of the world map instead.
+    shown = (
+      <div style={{ position: 'relative' }}>
+        <OsrsAreaMap name={itemName} maxWidth={340} maxHeight={210} />
+        <span className="osrs-tooltip" style={{ position: 'absolute', left: 8, bottom: 6, lineHeight: '16px' }}>Now unlocked</span>
+      </div>
+    );
   } else if (image && !imageError && isRegion) {
     shown = (
       <div style={{ position: 'relative', maxWidth: 'min(340px, 80vw)', border: '2px solid #000', boxShadow: '0 0 0 1px var(--osrs-bevel-hi, #5c5244), 0 0 0 3px #000', background: '#0e0c0a' }}>

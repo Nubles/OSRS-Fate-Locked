@@ -9,6 +9,9 @@ import { wikiService } from '../../services/WikiService';
 import { NoteTrigger } from '../NoteTrigger';
 import { OsrsActivitiesTools } from './OsrsActivitiesTools';
 import { itemSrc, skillIconSrc, wikiImageSrc } from './OsrsDashGems';
+import { EntityModel } from '../EntityModel';
+import { modelFor, orientationFor } from '../../data/entityModels';
+import { useGame } from '../../context/GameContext';
 import './osrs-world.css';
 
 /**
@@ -94,8 +97,24 @@ const statusOf = (c: CardData): Status =>
 
 const SKILL_NAMES = new Set(['Attack', 'Strength', 'Defence', 'Ranged', 'Prayer', 'Magic', 'Runecraft', 'Construction', 'Hitpoints', 'Agility', 'Herblore', 'Thieving', 'Crafting', 'Fletching', 'Slayer', 'Hunter', 'Mining', 'Smithing', 'Fishing', 'Cooking', 'Firemaking', 'Woodcutting', 'Farming', 'Sailing']);
 
-/** The unlock's picture: a big render for bosses and places, an item slot for sprites. */
+/** The unlock's picture: its 3D model when it has one, else a big render for bosses and places, or an item slot for sprites. */
 const StageImage: React.FC<{ name: string; icon?: string; owned: boolean }> = ({ name, icon, owned }) => {
+  const model = modelFor(name);
+  if (model) return <StageModel name={name} src={model} owned={owned} />;
+  return <StagePicture name={name} icon={icon} owned={owned} />;
+};
+
+/** A turning 3D model on the stage; greyed like the pictures while the unlock is locked. */
+const StageModel: React.FC<{ name: string; src: string; owned: boolean }> = ({ name, src, owned }) => {
+  const { animationsEnabled } = useGame();
+  return (
+    <div style={{ position: 'absolute', inset: '22px 0 0', filter: owned ? undefined : 'grayscale(.9) brightness(.55)' }}>
+      <EntityModel src={src} alt={name} fill interactive autoRotate={animationsEnabled} orientation={orientationFor(name)} />
+    </div>
+  );
+};
+
+const StagePicture: React.FC<{ name: string; icon?: string; owned: boolean }> = ({ name, icon, owned }) => {
   const id = UTILITY_ITEM_IDS[name];
   const curated = icon || SPECIAL_ICONS[name];
   const [wiki, setWiki] = useState<string | null>(null);
