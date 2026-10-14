@@ -3,6 +3,9 @@
  * cannot load images from the OSRS Wiki, so the preview ships a pack of
  * wiki images as data URIs (wiki-pack.json next to index.html) and this
  * swaps any wiki image URL for its packed copy before the browser asks for it.
+ * Boss models are packed the same way (models-pack.json): the preview can
+ * hold only so many files, so a fetch for models/<slug>.gltf is answered
+ * from the pack, loaded the first time a model is asked for.
  * The live site never includes this module.
  */
 const WIKI_PREFIX = 'https://oldschool.runescape.wiki/images/';
@@ -24,7 +27,25 @@ const loadPack = async (file: string): Promise<Record<string, unknown>> => {
   } catch { return {}; }
 };
 
+let modelPack: Promise<Record<string, unknown>> | null = null;
+const MODEL_URL = /\/models\/([a-z0-9-]+\.gltf)(?:\?|$)/;
+
+const installModelPack = () => {
+  const realFetch = window.fetch.bind(window);
+  window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    const match = MODEL_URL.exec(url);
+    if (match) {
+      modelPack ??= loadPack('models-pack.json');
+      const body = (await modelPack)[match[1]];
+      if (typeof body === 'string') return new Response(body, { headers: { 'Content-Type': 'model/gltf+json' } });
+    }
+    return realFetch(input, init);
+  };
+};
+
 export const installPreviewImagePack = async (): Promise<void> => {
+  installModelPack();
   // The pack is split into several files (each published file has a size cap);
   // the first one lists the others under "__more".
   const first = await loadPack('wiki-pack.json');
