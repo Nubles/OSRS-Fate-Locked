@@ -48,6 +48,12 @@ html[data-ui="osrs"] .okf-row .name { font: var(--osrs-fs, 16px) 'RSBold', sans-
 html[data-ui="osrs"] .okf-row .where { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); line-height: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 html[data-ui="osrs"] .okf-row .rate { font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #ffff00; text-align: right; white-space: nowrap; }
 html[data-ui="osrs"] .okf-row .osrs-btn { height: 28px; }
+/* Compact rows lead with the source's picture: a chathead in an inventory slot. */
+html[data-ui="osrs"] .okf-row.has-thumb { grid-template-columns: 38px minmax(0, 1fr) 54px 64px; padding-left: 4px; }
+html[data-ui="osrs"] .okf-thumb { width: 38px; height: 36px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--osrs-well, #1f1a14); box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 var(--osrs-bevel-hi, #5c5244); }
+html[data-ui="osrs"] .okf-thumb img { width: 36px; height: 36px; object-fit: contain; }
+html[data-ui="osrs"] .okf-thumb img.is-item { width: auto; height: auto; max-width: 36px; max-height: 32px; }
+html[data-ui="osrs"] .okf-thumb.is-dim img { filter: grayscale(.9) brightness(.45); }
 
 /* Tier groups of the all-boss list outside Vanilla. */
 html[data-ui="osrs"] .okf-group-head { display: flex; align-items: center; gap: 5px; padding: 4px 8px 2px; border-bottom: 1px solid var(--osrs-well, #1f1a14); }

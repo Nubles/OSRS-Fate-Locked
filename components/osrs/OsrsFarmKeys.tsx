@@ -147,6 +147,9 @@ type Art =
   | { kind: 'wiki'; src: string }
   | { kind: 'wikiName'; name: string };
 
+/** The small picture on a compact list row: a chathead, an item sprite, or a wiki image by name. */
+type Thumb = { src: string; item?: boolean } | { wikiName: string };
+
 interface CardModel {
   id: string;
   name: string;
@@ -154,6 +157,7 @@ interface CardModel {
   rate: number;
   bonus: number;
   art: Art;
+  thumb: Thumb;
   status: { text: string; color: string };
   stats: string;
   extra?: { text: string; color: string };
@@ -216,11 +220,20 @@ const NpcCard: React.FC<{ card: CardModel }> = ({ card }) => {
   );
 };
 
-/** Compact: one list row (Main board). */
+const RowThumb: React.FC<{ thumb: Thumb; dim?: boolean }> = ({ thumb, dim }) => (
+  <span className={`okf-thumb${dim ? ' is-dim' : ''}`} aria-hidden="true">
+    {'wikiName' in thumb
+      ? <WikiNamedImg name={thumb.wikiName} />
+      : <img className={thumb.item ? 'osrs-px is-item' : undefined} src={thumb.src} alt="" />}
+  </span>
+);
+
+/** Compact: one list row (Main board), with the source's picture. */
 const SourceRow: React.FC<{ card: CardModel }> = ({ card }) => {
   const { isRolling, trigger } = useRollSuspense(card.onRoll);
   return (
-    <div className="okf-row" title={card.title} data-examine={card.examine} data-examine-name={card.name} data-examine-kind="npc">
+    <div className="okf-row has-thumb" title={card.title} data-examine={card.examine} data-examine-name={card.name} data-examine-kind="npc">
+      <RowThumb thumb={card.thumb} dim={card.disabled} />
       <div className="who">
         <div className="name">{card.name}</div>
         <div className="where">{card.extra?.text ?? card.sub}</div>
@@ -234,8 +247,10 @@ const SourceRow: React.FC<{ card: CardModel }> = ({ card }) => {
 /** A row of the long all-boss list outside Vanilla (both sizes). */
 const BossRow: React.FC<{ name: string; rate: number; bonus: number; tierLabel: string; onRoll: (p: RollPoint) => void }> = ({ name, rate, bonus, tierLabel, onRoll }) => {
   const { isRolling, trigger } = useRollSuspense(onRoll);
+  const head = npcHead(name);
   return (
-    <div className="okf-row" data-examine={`${tierLabel}-tier boss. ${rate}% chance of a Key per kill.`} data-examine-name={name} data-examine-kind="npc">
+    <div className="okf-row has-thumb" data-examine={`${tierLabel}-tier boss. ${rate}% chance of a Key per kill.`} data-examine-name={name} data-examine-kind="npc">
+      <RowThumb thumb={head ? { src: head } : { wikiName: name }} />
       <div className="who">
         <div className="name">{name}</div>
         <div className="where">{tierLabel}-tier boss</div>
@@ -576,6 +591,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       rate,
       bonus: regionBonus,
       art: isBossTask ? { kind: 'item', src: BOSS_TASK_IMG } : body ? { kind: 'body', src: body } : { kind: 'wiki', src: m.image },
+      thumb: isBossTask ? { src: BOSS_TASK_IMG, item: true } : { src: head ?? m.image },
       status: ready,
       stats: shared ? `Shares ${sharer!.name}’s odds` : tallyText(tally.get(m.source)),
       btn: 'Roll',
@@ -604,6 +620,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       rate,
       bonus: isVanilla ? 0 : regionBonus,
       art: { kind: 'item', src: sprite },
+      thumb: { src: sprite, item: true },
       status: ready,
       extra,
       stats: tallyText(tally.get(c.source)),
@@ -637,6 +654,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
         rate: stage.capped ? (stage.rates[stage.rates.length - 1] ?? 0) : rate,
         bonus: 0,
         art: body ? { kind: 'body', src: body, big: isBigBody(name) } : { kind: 'wikiName', name },
+        thumb: head ? { src: head } : { wikiName: name },
         status: stage.capped
           ? { text: 'Stash empty: kills no longer roll', color: 'var(--osrs-muted, #8a7c66)' }
           : { text: 'Ready to roll', color: '#0dc10d' },
@@ -666,6 +684,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       rate,
       bonus: regionBonus,
       art: { kind: 'item', src: MINIGAME_IMG },
+      thumb: { src: MINIGAME_IMG, item: true },
       status: ready,
       stats: tallyText(tally.get(a.source)),
       btn: 'Roll',
