@@ -12,6 +12,9 @@ import { itemSrc, skillIconSrc, wikiImageSrc } from './OsrsDashGems';
 import { EntityModel } from '../EntityModel';
 import { orientationFor } from '../../data/entityModels';
 import { useModelFor } from '../../hooks/useModelFor';
+import type { BankDef } from '../../data/banks';
+import { bankFor } from '../../utils/bankPicture';
+import { OsrsBankStage } from './OsrsBankPicture';
 import { useGame } from '../../context/GameContext';
 import './osrs-world.css';
 
@@ -99,8 +102,10 @@ const statusOf = (c: CardData): Status =>
 const SKILL_NAMES = new Set(['Attack', 'Strength', 'Defence', 'Ranged', 'Prayer', 'Magic', 'Runecraft', 'Construction', 'Hitpoints', 'Agility', 'Herblore', 'Thieving', 'Crafting', 'Fletching', 'Slayer', 'Hunter', 'Mining', 'Smithing', 'Fishing', 'Cooking', 'Firemaking', 'Woodcutting', 'Farming', 'Sailing']);
 
 /** The unlock's picture: its 3D model when it has one, else a big render for bosses and places, or an item slot for sprites. */
-const StageImage: React.FC<{ name: string; icon?: string; owned: boolean }> = ({ name, icon, owned }) => {
-  const model = useModelFor(name);
+const StageImage: React.FC<{ name: string; icon?: string; owned: boolean; bank?: BankDef }> = ({ name, icon, owned, bank }) => {
+  const model = useModelFor(bank ? '' : name);
+  const { animationsEnabled } = useGame();
+  if (bank) return <OsrsBankStage bank={bank} animate={animationsEnabled} />;
   if (model) return <StageModel name={name} src={model} owned={owned} />;
   return <StagePicture name={name} icon={icon} owned={owned} />;
 };
@@ -177,7 +182,7 @@ const Detail: React.FC<{ card: CardData; cat: OsrsActivityCategory; specialKeys:
     <div className="osrs-inner oact-detail" style={tool ? { flex: '0 0 auto', height: 388 } : { flex: 1 }}>
       <div className="oact-stage" style={{ height: tool ? 150 : 230 }}>
         <div className="oact-stage-shadow" aria-hidden="true" />
-        <StageImage key={card.id} name={card.item} icon={card.icon} owned={owned} />
+        <StageImage key={card.id} name={card.item} icon={card.icon} owned={owned} bank={cat.id === 'BANKS' ? bankFor(card.id) ?? bankFor(card.item) : undefined} />
         {tier && <span className="oact-stage-tl">{tier === 'raid' ? 'Raid' : `${TIER_LABEL[tier]} boss`}</span>}
         <span className="oact-stage-tr" style={{ color: owned ? '#00ff00' : '#ff3030' }}>{owned ? 'Owned' : 'Locked'}</span>
       </div>

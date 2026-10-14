@@ -5,6 +5,8 @@ import { getItemDescription } from '../VoidReveal';
 import { EntityModel } from '../EntityModel';
 import { orientationFor } from '../../data/entityModels';
 import { useModelFor } from '../../hooks/useModelFor';
+import { bankFor } from '../../utils/bankPicture';
+import { OsrsBankReveal } from './OsrsBankPicture';
 import { OsrsAreaMap } from './OsrsAreaMap';
 import { chunksForArea } from '../../utils/areaMapCut';
 import { categoryColor, categoryRarity, rarityRank } from '../../utils/rarity';
@@ -78,8 +80,11 @@ const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, i
   const costIcon = isChaos ? CHAOS_KEY_ICON : KEY_ICON;
   const image = isSkill ? osrsSkillIcon(itemName) : itemImage;
 
+  const bank = itemType === TableType.BANKS ? bankFor(itemName) : undefined;
   let shown: React.ReactNode;
-  if (model) {
+  if (bank) {
+    shown = <OsrsBankReveal bank={bank} animate={animationsEnabled} />;
+  } else if (model) {
     shown = <EntityModel src={model} poster={itemImage} alt={itemName} size={220} interactive autoRotate={animationsEnabled} orientation={orientationFor(itemName)} />;
   } else if (isRegion && chunksForArea(itemName).length) {
     // An area has no single model: show its piece of the world map instead.
