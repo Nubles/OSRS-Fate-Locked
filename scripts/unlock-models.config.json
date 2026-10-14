@@ -1,10 +1,14 @@
 {
- "_comment": "Which game model stands for each unlock, for `npm run models:export -- --cache <dir> --unlocks`. Keys are unlock names (the file is saved as public/models/<slug>.gltf, so modelFor(name) finds it). type: npc | object | item (inventory model) | worn (the item as worn, for capes). name is matched against the cache's names; '?' means choose one from the hint and record it here. Grouped by unlock type for review only.",
+ "_comment": "Which game model stands for each unlock, for `npm run models:export -- --cache <dir> --unlocks`. Keys are unlock names (the file is saved as public/models/<slug>.gltf, so modelFor(name) finds it). type: npc | object | item (inventory model) | worn (the item as worn, for capes). name is matched against the cache's names; '?' meant choose one from the hint; the choice is recorded in name (and id, which pins the exact def and wins over name). fallback is tried when name has no usable model; skip leaves the unlock without one. exclude drops sub-models by model id; dropGround (objects) drops faces at ground level, for a floor baked into the mesh. Grouped by unlock type for review only.",
  "Bosses (the 9 without a model)": {
   "Chambers of Xeric": {
    "type": "npc",
    "name": "Great Olm",
-   "hint": "the Olm's head; drop the hands if they come out as separate floating models"
+   "hint": "the Olm's head; drop the hands if they come out as separate floating models",
+   "fallback": {
+    "type": "object",
+    "name": "Great Olm display"
+   }
   },
   "Tombs of Amascut": {
    "type": "npc",
@@ -12,21 +16,29 @@
   },
   "The Gauntlet": {
    "type": "npc",
-   "name": "Crystalline Hunllef"
+   "name": "Crystalline Hunllef",
+   "id": 9021
   },
   "Zulrah": {
    "type": "npc",
    "name": "Zulrah",
-   "hint": "green (serpentine) form only; the multi-phase def did not merge before, so take one phase's model"
+   "hint": "green (serpentine) form only; the multi-phase def did not merge before, so take one phase's model",
+   "id": 2042
   },
   "Wintertodt": {
    "type": "npc",
    "name": "Wintertodt",
-   "hint": "if the Wintertodt itself has no usable model, use the Pyromancer NPC"
+   "hint": "if the Wintertodt itself has no usable model, use the Pyromancer NPC",
+   "fallback": {
+    "name": "Pyromancer"
+   }
   },
   "TzHaar-Ket-Rak's Challenges": {
    "type": "npc",
-   "name": "TzHaar-Ket-Rak"
+   "name": "TzHaar-Ket-Rak",
+   "fallback": {
+    "name": "TzHaar-Ket"
+   }
   },
   "The Royal Titans": {
    "type": "npc",
@@ -38,7 +50,7 @@
   },
   "The Mad Angel": {
    "type": "npc",
-   "name": "The Mad Angel"
+   "name": "Mad Angel"
   }
  },
  "Minigames": {
@@ -70,7 +82,7 @@
   },
   "Intelligence Gathering": {
    "type": "npc",
-   "name": "?",
+   "name": "Captain Ginea",
    "hint": "the minigame's main NPC; choose and report"
   },
   "Last Man Standing": {
@@ -95,7 +107,7 @@
   },
   "Temple Trekking": {
    "type": "npc",
-   "name": "?",
+   "name": "Dalcian Fang (easy)",
    "hint": "a Temple Trekking pilgrim or the Paterdomus start NPC"
   },
   "TzHaar Fight Pit": {
@@ -144,7 +156,7 @@
   },
   "Mastering Mixology": {
    "type": "npc",
-   "name": "?",
+   "name": "Supervisor Lalo",
    "hint": "the Mixology NPC at Aldarin; choose and report"
   },
   "Mess": {
@@ -178,12 +190,12 @@
   },
   "Vale Totems": {
    "type": "object",
-   "name": "?",
+   "name": "Oak totem",
    "hint": "a carved Vale Totems totem"
   },
   "Volcanic Mine": {
    "type": "npc",
-   "name": "?",
+   "name": "Petrified Pete",
    "hint": "the Volcanic Mine foreman/guide"
   },
   "Shades of Mort'ton": {
@@ -200,7 +212,7 @@
   },
   "Burthorpe Games Room": {
    "type": "npc",
-   "name": "?",
+   "name": "Rachael",
    "hint": "a Burthorpe games room host"
   },
   "Forestry": {
@@ -210,12 +222,15 @@
   },
   "Rat Pits": {
    "type": "npc",
-   "name": "?",
+   "name": "Felkrash",
    "hint": "a Rat Pits rat or Felkrash"
   },
   "Tears of Guthix": {
    "type": "npc",
-   "name": "Juna"
+   "name": "Juna",
+   "fallback": {
+    "name": "Light creature"
+   }
   },
   "Brimhaven Agility Arena": {
    "type": "npc",
@@ -228,7 +243,7 @@
   },
   "Barracuda Trials": {
    "type": "npc",
-   "name": "?",
+   "name": "Rum-dashed Ralph",
    "hint": "the Sailing trials host; choose and report"
   }
  },
@@ -247,12 +262,12 @@
   },
   "Mining Guild": {
    "type": "npc",
-   "name": "?",
+   "name": "Belona",
    "hint": "the Mining Guild dwarf at the door"
   },
   "Prayer Guild": {
    "type": "npc",
-   "name": "?",
+   "name": "Abbot Langley",
    "hint": "a Prayer Guild monk"
   },
   "Farming Guild": {
@@ -269,7 +284,7 @@
   },
   "Hunter Guild": {
    "type": "npc",
-   "name": "Guild Hunter Gilman",
+   "name": "Huntmaster Gilman (Novice)",
    "hint": "or any Hunter Guild master"
   },
   "Legends' Guild": {
@@ -278,7 +293,7 @@
   },
   "Myths' Guild": {
    "type": "npc",
-   "name": "Mythical guildmaster",
+   "name": "Alec Kincade",
    "hint": "choose the guild's master and report"
   },
   "Ranging Guild": {
@@ -322,8 +337,9 @@
   },
   "Sword Shops": {
    "type": "npc",
-   "name": "?",
-   "hint": "the Varrock sword shop keeper"
+   "name": "Shop keeper",
+   "hint": "the Varrock sword shop keeper",
+   "id": 2884
   },
   "Food Shops": {
    "type": "npc",
@@ -359,7 +375,7 @@
   },
   "Dye Shops": {
    "type": "npc",
-   "name": "?",
+   "name": "Aggie",
    "hint": "a dye trader"
   },
   "Axe Shops": {
@@ -447,9 +463,10 @@
    "name": "Spice seller"
   },
   "Vegetable Shops": {
-   "type": "npc",
-   "name": "?",
-   "hint": "a vegetable stall seller"
+   "type": "object",
+   "name": "Veg stall",
+   "hint": "a vegetable stall seller",
+   "id": 4706
   },
   "Wine Traders": {
    "type": "npc",
@@ -493,37 +510,37 @@
   },
   "Lost Property": {
    "type": "npc",
-   "name": "?",
+   "name": "Perdu",
    "hint": "the Lost Property NPC; choose and report"
   },
   "Warhammer Shops": {
    "type": "npc",
-   "name": "?",
+   "name": "Vigr",
    "hint": "a warhammer shopkeeper"
   },
   "Claw Shops": {
    "type": "npc",
-   "name": "?",
+   "name": "Skuli Myrka",
    "hint": "a claw shopkeeper"
   },
   "Halberd Shops": {
    "type": "npc",
-   "name": "?",
+   "name": "Quartermaster",
    "hint": "a halberd shopkeeper"
   },
   "Pet Shops": {
    "type": "npc",
-   "name": "?",
+   "name": "Gertrude",
    "hint": "a pet shop keeper"
   },
   "Weapon Shops": {
    "type": "npc",
-   "name": "?",
+   "name": "Briget",
    "hint": "a weapon shop keeper"
   },
   "Reward Shops": {
    "type": "npc",
-   "name": "?",
+   "name": "Grace",
    "hint": "a reward shop NPC"
   }
  },
@@ -578,27 +595,27 @@
   },
   "Beginner STASH": {
    "type": "object",
-   "name": "STASH unit"
+   "name": "STASH (beginner)"
   },
   "Easy STASH": {
    "type": "object",
-   "name": "STASH unit"
+   "name": "STASH (easy)"
   },
   "Medium STASH": {
    "type": "object",
-   "name": "STASH unit"
+   "name": "STASH (medium)"
   },
   "Hard STASH": {
    "type": "object",
-   "name": "STASH unit"
+   "name": "STASH (hard)"
   },
   "Elite STASH": {
    "type": "object",
-   "name": "STASH unit"
+   "name": "STASH (elite)"
   },
   "Master STASH": {
    "type": "object",
-   "name": "STASH unit"
+   "name": "STASH (master)"
   },
   "Tool Leprechauns": {
    "type": "npc",
@@ -656,15 +673,18 @@
  "Mobility (what you travel with)": {
   "Spirit Trees": {
    "type": "object",
-   "name": "Spirit tree"
+   "name": "Spirit tree",
+   "id": 26260
   },
   "Fairy Rings": {
    "type": "object",
-   "name": "Fairy ring"
+   "name": "Fairy ring",
+   "id": 12003,
+   "dropGround": true
   },
   "Gnome Gliders": {
    "type": "object",
-   "name": "?",
+   "name": "Gnome Glider",
    "hint": "a gnome glider; or the glider captain NPC"
   },
   "Charter Ships": {
@@ -682,16 +702,19 @@
   },
   "Canoes": {
    "type": "object",
-   "name": "Canoe station"
+   "name": "Canoe station",
+   "id": 12158
   },
   "Balloon Transport": {
    "type": "object",
-   "name": "?",
-   "hint": "the hot air balloon basket; or Auguste"
+   "name": "Basket",
+   "hint": "the hot air balloon basket; or Auguste",
+   "id": 19128
   },
   "Mine Carts": {
    "type": "object",
-   "name": "Mine cart"
+   "name": "Minecart",
+   "id": 28835
   },
   "Magic Carpets": {
    "type": "npc",
@@ -700,12 +723,14 @@
   "Wilderness Obelisks": {
    "type": "object",
    "name": "Obelisk",
-   "hint": "the Wilderness teleport obelisk"
+   "hint": "the Wilderness teleport obelisk",
+   "id": 14829
   },
   "Minigame Teleports": {
    "type": "item",
    "name": "?",
-   "hint": "no good model; leave out"
+   "hint": "no good model; leave out",
+   "skip": true
   },
   "Quetzal Network": {
    "type": "npc",
@@ -776,11 +801,12 @@
   },
   "Chapel Altar": {
    "type": "object",
-   "name": "Gilded altar"
+   "name": "Altar",
+   "id": 13197
   },
   "Portal Chamber": {
    "type": "object",
-   "name": "?",
+   "name": "Varrock Portal",
    "hint": "a built POH teleport portal"
   },
   "Portal Nexus": {
@@ -797,27 +823,30 @@
   },
   "Lectern": {
    "type": "object",
-   "name": "?",
-   "hint": "the mahogany demon lectern"
+   "name": "Lectern",
+   "hint": "the mahogany demon lectern",
+   "id": 13648
   },
   "Workshop Tools": {
    "type": "object",
-   "name": "Tool store"
+   "name": "Tools",
+   "id": 6790
   },
   "Kitchen": {
    "type": "object",
-   "name": "?",
+   "name": "Fancy range",
    "hint": "a built POH larder or range"
   },
   "Menagerie": {
    "type": "object",
-   "name": "?",
+   "name": "Mahogany house",
    "hint": "the POH pet house"
   },
   "Mounted Glory": {
    "type": "object",
    "name": "Amulet of Glory",
-   "hint": "the mounted glory"
+   "hint": "the mounted glory",
+   "id": 13523
   },
   "Combat Dummy": {
    "type": "object",
@@ -825,15 +854,19 @@
   },
   "Fairy Ring (POH)": {
    "type": "object",
-   "name": "Fairy ring"
+   "name": "Fairy ring",
+   "id": 12003,
+   "dropGround": true
   },
   "Spirit Tree (POH)": {
    "type": "object",
-   "name": "Spirit tree"
+   "name": "Spirit tree",
+   "id": 29227
   },
   "Wilderness Obelisk": {
    "type": "object",
-   "name": "Obelisk"
+   "name": "Obelisk",
+   "id": 31554
   },
   "Mounted Mythical Cape": {
    "type": "object",
@@ -852,16 +885,18 @@
   },
   "Spellbook Altars": {
    "type": "object",
-   "name": "Occult altar"
+   "name": "Altar of the Occult"
   },
   "Armour Case": {
    "type": "object",
-   "name": "Mahogany armour case"
+   "name": "Armour case",
+   "id": 18782
   },
   "Magic Wardrobe": {
    "type": "object",
-   "name": "?",
-   "hint": "the POH magic wardrobe"
+   "name": "Magic wardrobe",
+   "hint": "the POH magic wardrobe",
+   "id": 18796
   },
   "Cape Rack": {
    "type": "object",
@@ -869,8 +904,9 @@
   },
   "Treasure Chest (Clues)": {
    "type": "object",
-   "name": "?",
-   "hint": "the POH treasure chest"
+   "name": "Treasure chest",
+   "hint": "the POH treasure chest",
+   "id": 18808
   },
   "Toy Box": {
    "type": "object",
@@ -882,12 +918,14 @@
   },
   "Telescope": {
    "type": "object",
-   "name": "Teak telescope"
+   "name": "Telescope",
+   "id": 13657
   },
   "Dungeon": {
    "type": "object",
-   "name": "?",
-   "hint": "a POH dungeon door or oubliette"
+   "name": "Dungeon entrance",
+   "hint": "a POH dungeon door or oubliette",
+   "id": 4529
   },
   "Bedroom (Servant)": {
    "type": "npc",
@@ -899,8 +937,9 @@
   },
   "Achievement Cape Hanger": {
    "type": "object",
-   "name": "?",
-   "hint": "the achievement gallery cape hanger"
+   "name": "Mounted Max Cape",
+   "hint": "the achievement gallery cape hanger",
+   "id": 29170
   },
   "Dining Table": {
    "type": "object",
@@ -908,34 +947,40 @@
   },
   "Boss Lair": {
    "type": "object",
-   "name": "?",
+   "name": "Kraken display",
    "hint": "the POH boss lair display"
   },
   "Throne Room": {
    "type": "object",
-   "name": "Demonic throne"
+   "name": "Throne",
+   "id": 13671
   },
   "Garden Theme": {
    "type": "object",
-   "name": "?",
+   "name": "Ornamental fountain",
    "hint": "a built POH garden centrepiece"
   },
   "Mounted Coins": {
    "type": "object",
-   "name": "?",
+   "name": "Mounted Coins",
    "hint": "the POH mounted coins"
   }
  },
  "Farming patches (fully grown)": {
   "Allotment": {
    "type": "object",
-   "name": "?",
+   "name": "Watermelon",
    "hint": "a fully grown allotment (watermelons)"
   },
   "Herb": {
    "type": "object",
    "name": "Herbs",
-   "hint": "fully grown herb patch"
+   "hint": "fully grown herb patch",
+   "id": 18826,
+   "exclude": [
+    19148,
+    19152
+   ]
   },
   "Flower": {
    "type": "object",
@@ -944,8 +989,9 @@
   },
   "Hops": {
    "type": "object",
-   "name": "?",
-   "hint": "fully grown hops"
+   "name": "Asgarnian Hops",
+   "hint": "fully grown hops",
+   "id": 8159
   },
   "Bush": {
    "type": "object",
@@ -982,7 +1028,8 @@
   },
   "Seaweed": {
    "type": "object",
-   "name": "Giant seaweed"
+   "name": "Seaweed",
+   "id": 30491
   },
   "Calquat": {
    "type": "object",
@@ -990,7 +1037,8 @@
   },
   "Spirit Tree": {
    "type": "object",
-   "name": "Spirit tree"
+   "name": "Spirit tree",
+   "id": 8355
   },
   "Celastrus": {
    "type": "object",
@@ -1010,18 +1058,21 @@
   },
   "Anima": {
    "type": "object",
-   "name": "?",
-   "hint": "a grown Kronos/Iasor/Attas plant"
+   "name": "Kronos plant",
+   "hint": "a grown Kronos/Iasor/Attas plant",
+   "id": 34003
   },
   "Vinery": {
    "type": "object",
-   "name": "?",
-   "hint": "a grown grapevine"
+   "name": "Grapevine",
+   "hint": "a grown grapevine",
+   "id": 55005
   },
   "Coral Nursery": {
    "type": "object",
-   "name": "?",
-   "hint": "grown coral"
+   "name": "Elkhorn coral",
+   "hint": "grown coral",
+   "id": 58681
   }
  },
  "Skills (skillcape, as worn)": {
@@ -1095,7 +1146,7 @@
   },
   "Woodcutting": {
    "type": "worn",
-   "name": "Woodcut. cape"
+   "name": "Woodcutting cape"
   },
   "Runecraft": {
    "type": "worn",
