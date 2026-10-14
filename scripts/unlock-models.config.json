@@ -56,8 +56,7 @@
  "Minigames": {
   "Shooting Stars": {
    "type": "object",
-   "name": "Crashed star",
-   "still": true
+   "name": "Crashed star"
   },
   "Barbarian Assault": {
    "type": "npc",
@@ -74,8 +73,7 @@
   "Clan Wars": {
    "type": "object",
    "name": "Free-for-all portal",
-   "hint": "the Ferox Enclave Clan Wars portal",
-   "still": true
+   "hint": "the Ferox Enclave Clan Wars portal"
   },
   "Emir's Arena": {
    "type": "npc",
@@ -811,8 +809,7 @@
   "Portal Chamber": {
    "type": "object",
    "name": "Varrock Portal",
-   "hint": "a built POH teleport portal",
-   "still": true
+   "hint": "a built POH teleport portal"
   },
   "Portal Nexus": {
    "type": "object",

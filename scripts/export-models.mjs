@@ -77,6 +77,7 @@ const animate = new Set((cfg.animate ?? []).map((s) => slugify(s))); // slugs to
                                         // NPC's idle (standingAnimation) into as a looping
                                         // glTF morph animation. Off by default — animation
                                         // frames multiply file size ~4-9x, so opt in per slug.
+const stillSlugs = new Set(cfg.still ?? []); // slugs --idle leaves still (a one-frame idle)
 
 // ── load cache (confirmed API: new RSCache(dir) + await cache.onload) ─────────
 const { RSCache, IndexType, ConfigType, GLTFExporter, ModelGroup } = await import('osrscachereader');
@@ -233,7 +234,7 @@ async function exportNpc(id, slug, pet = false, { dropJunk = false, outDir, stil
   // Optional: bake the idle (standing) animation as a looping morph animation.
   exportNpc._lastAnim = 0;
   // A pet always idles: the follower and Your Pets panel show it moving.
-  if (((pet && !stillPets.has(slug)) || animate.has(slug) || (IDLE && !still)) && def.standingAnimation != null && def.standingAnimation !== -1) {
+  if (((pet && !stillPets.has(slug)) || animate.has(slug) || (IDLE && !still && !stillSlugs.has(slug))) && def.standingAnimation != null && def.standingAnimation !== -1) {
     const seq = await cache.getDef(IndexType.CONFIGS, ConfigType.SEQUENCE, def.standingAnimation);
     // A skeletal ("animaya") idle, as newer NPCs have, is beyond osrscachereader 1.1.x in
     // current caches: it misreads the keyframes' skeleton and crashes outside any await.
@@ -245,8 +246,78 @@ async function exportNpc(id, slug, pet = false, { dropJunk = false, outDir, stil
     }
   }
 
-  const gltf = exporter.export();
+  const gltf = pruneMorphTargets(exporter.export());
   writeFileSync(path.join(outDir ?? (pet ? PETS_DIR : OUT_DIR), `${slug}.gltf`), gltf);
+}
+
+// addSequence adds a morph target for every frame in the animation's frame archive,
+// most of them other animations' (the Nightmare's one-frame idle carried 63, taking
+// the file from 140 KB to 4 MB). Keep only the targets the animation ever weights,
+// then drop the accessors, buffer views and buffers nothing refers to any more.
+function pruneMorphTargets(text) {
+  const g = JSON.parse(text);
+  const mesh = g.meshes?.[0];
+  const prims = mesh?.primitives ?? [];
+  const n = prims[0]?.targets?.length ?? 0;
+  if (!n || !g.animations?.length) return text;
+  const bytesOf = (bv) => {
+    const raw = Buffer.from(g.buffers[bv.buffer].uri.split(',')[1], 'base64');
+    return raw.subarray(bv.byteOffset ?? 0, (bv.byteOffset ?? 0) + bv.byteLength);
+  };
+  const floatsOf = (i) => {
+    const a = g.accessors[i], b = bytesOf(g.bufferViews[a.bufferView]).subarray(a.byteOffset ?? 0);
+    return new Float32Array(b.buffer.slice(b.byteOffset, b.byteOffset + a.count * 4));
+  };
+  const outputs = [];
+  const used = new Set();
+  for (const anim of g.animations) {
+    for (const ch of anim.channels) {
+      if (ch.target.path !== 'weights') continue;
+      const sampler = anim.samplers[ch.sampler], w = floatsOf(sampler.output);
+      outputs.push([sampler, w]);
+      w.forEach((v, i) => { if (v !== 0) used.add(i % n); });
+    }
+  }
+  if (used.size === n || !outputs.length) return text;
+  const keep = [...used].sort((a, b) => a - b);
+  for (const [sampler, w] of outputs) {
+    const frames = w.length / n, kept = new Float32Array(frames * keep.length);
+    for (let f = 0; f < frames; f++) keep.forEach((t, j) => { kept[f * keep.length + j] = w[f * n + t]; });
+    const bytes = Buffer.from(kept.buffer);
+    g.buffers.push({ uri: `data:application/octet-stream;base64,${bytes.toString('base64')}`, byteLength: bytes.length });
+    g.bufferViews.push({ buffer: g.buffers.length - 1, byteOffset: 0, byteLength: bytes.length });
+    const a = g.accessors[sampler.output];
+    g.accessors.push({ ...a, bufferView: g.bufferViews.length - 1, byteOffset: 0, count: kept.length });
+    sampler.output = g.accessors.length - 1;
+  }
+  for (const prim of prims) if (prim.targets) prim.targets = keep.map((t) => prim.targets[t]);
+  if (mesh.weights?.length === n) mesh.weights = keep.map((t) => mesh.weights[t]);
+  // Renumber what is still referenced, in order, and drop the rest.
+  const remap = (list, used) => { const map = new Map(); [...used].sort((a, b) => a - b).forEach((old, i) => map.set(old, i)); return { map, list: [...map.keys()].map((i) => list[i]) }; };
+  const accUsed = new Set();
+  for (const mesh of g.meshes) for (const prim of mesh.primitives) {
+    Object.values(prim.attributes).forEach((i) => accUsed.add(i));
+    if (prim.indices != null) accUsed.add(prim.indices);
+    (prim.targets ?? []).forEach((t) => Object.values(t).forEach((i) => accUsed.add(i)));
+  }
+  for (const anim of g.animations) for (const sm of anim.samplers) { accUsed.add(sm.input); accUsed.add(sm.output); }
+  const acc = remap(g.accessors, accUsed);
+  const fix = (i) => acc.map.get(i);
+  for (const mesh of g.meshes) for (const prim of mesh.primitives) {
+    for (const k of Object.keys(prim.attributes)) prim.attributes[k] = fix(prim.attributes[k]);
+    if (prim.indices != null) prim.indices = fix(prim.indices);
+    (prim.targets ?? []).forEach((t) => { for (const k of Object.keys(t)) t[k] = fix(t[k]); });
+  }
+  for (const anim of g.animations) for (const sm of anim.samplers) { sm.input = fix(sm.input); sm.output = fix(sm.output); }
+  g.accessors = acc.list;
+  const bv = remap(g.bufferViews, new Set([...g.accessors.map((a) => a.bufferView), ...(g.images ?? []).map((im) => im.bufferView).filter((v) => v != null)]));
+  g.accessors.forEach((a) => { a.bufferView = bv.map.get(a.bufferView); });
+  (g.images ?? []).forEach((im) => { if (im.bufferView != null) im.bufferView = bv.map.get(im.bufferView); });
+  g.bufferViews = bv.list;
+  const buf = remap(g.buffers, new Set(g.bufferViews.map((v) => v.buffer)));
+  g.bufferViews.forEach((v) => { v.buffer = buf.map.get(v.buffer); });
+  g.buffers = buf.list;
+  return JSON.stringify(g);
 }
 
 // The exporter colours faces only by their colour, and a textured face's colour is
@@ -426,7 +497,7 @@ async function exportUnlocks() {
         catch { still = true; }
       }
     }
-    writeFileSync(path.join(OUT_DIR, `${slug}.gltf`), exporter.export());
+    writeFileSync(path.join(OUT_DIR, `${slug}.gltf`), pruneMorphTargets(exporter.export()));
     return { faces: merged.faceCount - ground, skipped, ground, anim, still };
   }
 
