@@ -16,6 +16,8 @@ import { CASKET_ICON, CHAOS_KEY_ICON, KEY_ICON, OMNI_KEY_ICON, ON_PARCHMENT, osr
 import { clock, lineDetails, look, speaker } from './OsrsHistoryShared';
 import { setRevealHost, setSpendTable, useKeysView } from './OsrsKeysState';
 import { OsrsKeysTabs } from './OsrsKeysTabs';
+import { sentenceCaseLabel } from '../../utils/labelCase';
+import { useScrollMore } from '../../utils/scrollFade';
 
 type Chip = { text: string; icon?: string; gem?: string | null; on: boolean; examine: string };
 
@@ -31,8 +33,6 @@ const cardState = (c: SpendCategory, rollable: boolean, keys: number, pending: b
 type CardState = ReturnType<typeof cardState>;
 
 const BLOCKED_TITLE = 'No entry here is eligible yet — open more locations or quests first.';
-/** "Shops & Wares" -> "Shops & wares": the boards' short-label style. */
-const sentence = (s: string) => s.charAt(0) + s.slice(1).toLowerCase();
 const statusText = (st: CardState) =>
   st.complete ? 'Complete.' : st.blocked ? 'Blocked: no entry here is eligible yet.' : !st.keysAvailable ? 'Needs a Key to roll.' : 'Ready to roll for 1 Key.';
 
@@ -116,25 +116,28 @@ const ChaosRow: React.FC<{ chaosKeys: number; totalLevel: number; onSpend: () =>
   );
 };
 
-/** Compact: one table as a stone card (World board): sprite and count, name, short blurb, Roll. */
-const TableCard: React.FC<{ c: SpendCategory; st: CardState; onRoll: () => void; onOpen: () => void }> = ({ c, st, onRoll, onOpen }) => (
-  <div className="ospend-card" data-examine-name={c.label} data-examine={`${c.label}: ${c.subLabel}. ${c.unlocked} of ${c.total} unlocked. ${statusText(st)}`}>
-    <button type="button" className="osrs-slot ospend-card-slot" onClick={onOpen} title={`${c.label}: ${c.unlocked} of ${c.total} unlocked. Open in the full window.`}
-      aria-label={`${c.label}: ${c.unlocked} of ${c.total} unlocked. Open in the full window`}>
-      <img className="osrs-px" src={tableSprite(c.type)} alt="" aria-hidden="true" style={{ opacity: st.keysAvailable || st.complete ? 1 : 0.55 }} />
-      <span className="osrs-stack">{c.unlocked}</span>
-    </button>
-    <button type="button" className="ospend-card-name" onClick={onOpen} tabIndex={-1} aria-hidden="true"
-      style={{ color: st.complete ? '#0dc10d' : '#ff981f' }}>{c.label}</button>
-    <span className="ospend-card-row">
-      <span className="what">{sentence(c.subLabel)}</span>
-      <button type="button" className="osrs-btn ospend-roll" disabled={!st.clickable} onClick={onRoll}
-        aria-label={`Unlock from ${c.label}`} title={st.blocked && !st.complete ? BLOCKED_TITLE : undefined}>
-        {st.complete ? 'Done' : st.blocked ? 'Blocked' : <><img className="osrs-px" src={KEY_ICON} alt="" aria-hidden="true" />Roll</>}
+/** Compact: one table as a stone card (World board): sprite and count, name and Roll, then its blurb (two lines, full text on hover). */
+const TableCard: React.FC<{ c: SpendCategory; st: CardState; onRoll: () => void; onOpen: () => void }> = ({ c, st, onRoll, onOpen }) => {
+  const what = sentenceCaseLabel(c.subLabel);
+  return (
+    <div className="ospend-card" data-examine-name={c.label} data-examine={`${c.label}: ${c.subLabel}. ${c.unlocked} of ${c.total} unlocked. ${statusText(st)}`}>
+      <button type="button" className="osrs-slot ospend-card-slot" onClick={onOpen} title={`${c.label}: ${c.unlocked} of ${c.total} unlocked. Open in the full window.`}
+        aria-label={`${c.label}: ${c.unlocked} of ${c.total} unlocked. Open in the full window`}>
+        <img className="osrs-px" src={tableSprite(c.type)} alt="" aria-hidden="true" style={{ opacity: st.keysAvailable || st.complete ? 1 : 0.55 }} />
+        <span className="osrs-stack">{c.unlocked}</span>
       </button>
-    </span>
-  </div>
-);
+      <span className="ospend-card-row">
+        <button type="button" className="ospend-card-name" onClick={onOpen} tabIndex={-1} aria-hidden="true"
+          style={{ color: st.complete ? '#0dc10d' : '#ff981f' }}>{c.label}</button>
+        <button type="button" className={`osrs-btn ospend-roll${st.complete || st.blocked ? '' : ' is-key'}`} disabled={!st.clickable} onClick={onRoll}
+          aria-label={`Unlock from ${c.label}`} title={st.blocked && !st.complete ? BLOCKED_TITLE : st.complete ? undefined : `Roll: spend 1 Key on ${c.label}`}>
+          {st.complete ? 'Done' : st.blocked ? 'Blocked' : <img className="osrs-px" src={KEY_ICON} alt="" aria-hidden="true" />}
+        </button>
+      </span>
+      <span className="what" title={what}>{what}</span>
+    </div>
+  );
+};
 
 /** The recent game messages under the reveal window (SpendRoll board). */
 const CHAT_LINES = 7;
@@ -173,6 +176,7 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
   const sel = SPEND_CATEGORIES.find(c => c.type === spendTable) ?? SPEND_CATEGORIES.find(c => c.type === TableType.REGIONS || c.type === TableType.CHUNKS) ?? SPEND_CATEGORIES[0];
   const stateOf = (c: SpendCategory) => cardState(c, !!rollable.get(c.type), keys, !!pendingUnlock);
   const selState = stateOf(sel);
+  const [cardsRef, cardsMore] = useScrollMore<HTMLDivElement>();
 
   // What the player already owns from the chosen table, read from the same unlocks.
   const chips = useMemo((): Chip[] => {
@@ -215,7 +219,7 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
       <div className="ospend ospend-compact">
         <Notices specialKeys={specialKeys} keysOwed={keysOwed ?? 0} isChunked={isChunked} />
         <ChaosRow chaosKeys={chaosKeys} totalLevel={totalLevel} onSpend={handleChaosUnlock} wide={false} />
-        <div className="osrs-inner ospend-cards">
+        <div ref={cardsRef} className={`osrs-inner ospend-cards${cardsMore ? ' is-more' : ''}`}>
           {SPEND_CATEGORIES.map(c => (
             <TableCard key={c.label} c={c} st={stateOf(c)} onRoll={() => handleUnlock(c.type)}
               onOpen={() => { setSpendTable(c.type); openOsrsScreen('keys', 'spend'); }} />
@@ -283,7 +287,7 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
             </div>
             <div className="ospend-detail-name">
               <span className="t">{sel.label}</span>
-              <span className="s">{sel.subLabel}</span>
+              <span className="s" title={sentenceCaseLabel(sel.subLabel)}>{sentenceCaseLabel(sel.subLabel)}</span>
             </div>
             <div className="ospend-detail-tools">
               <span className="ospend-price" title="Price">

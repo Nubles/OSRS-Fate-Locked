@@ -12,6 +12,7 @@ import { DROP_RATES } from '../../config/rules';
 import { failureFateForSource } from '../../config/economy';
 import { DropSource } from '../../types';
 import { itemSrc } from './OsrsDashGems';
+import { useScrollMore } from '../../utils/scrollFade';
 
 const sh: React.CSSProperties = { textShadow: '1px 1px 0 #000' };
 const RS = (size = 16, family = 'RS'): React.CSSProperties => ({ font: `${size}px '${family}', sans-serif` });
@@ -31,6 +32,25 @@ const UnlockSprite: React.FC<{ name: string; boss: boolean }> = ({ name, boss })
   const srcs = id ? [itemSrc(id), `https://chisel.weirdgloop.org/static/img/osrs-sprite/${id}.png`] : [];
   if (step >= srcs.length) return <WikiIcon file={boss ? 'Slayer_icon.png' : 'Minigames.png'} alt="" size={22} />;
   return <img src={srcs[step]} alt="" aria-hidden="true" className="osrs-px" style={{ maxWidth: 32, maxHeight: 30 }} onError={() => setStep(n => n + 1)} />;
+};
+
+/**
+ * The page's own picture (the boss, raid or activity), from the same wiki
+ * image lookup the items use. Shown at its own size or smaller, never scaled
+ * up; nothing at all when the wiki has no picture for the page.
+ */
+const PagePicture: React.FC<{ name: string }> = ({ name }) => {
+  const [src, setSrc] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    setSrc(null);
+    setFailed(false);
+    wikiService.fetchImage(name).then(url => { if (mounted) setSrc(url); });
+    return () => { mounted = false; };
+  }, [name]);
+  if (!src || failed) return null;
+  return <img src={src} alt="" aria-hidden="true" className="ocoll-picture" onError={() => setFailed(true)} />;
 };
 
 /** The item's sprite, looked up by name the same way the classic log does. */
@@ -79,7 +99,7 @@ const Cell = ({ columnIndex, rowIndex, style, data }: GridChildComponentProps<Ce
 const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) => {
   const {
     unlocks, identityReview, activeTab, setActiveTab, activePage, setActivePage, viewMode, setViewMode,
-    vaultValue, mostValuable, formatNumber, currentTabContent, handleItemClick, filteredPages, allSearchItems,
+    currentTabContent, handleItemClick, filteredPages, allSearchItems,
     activeItems, globalStats, reach, showReach, setShowReach, pendingReviewCount,
   } = useCollectionLogModel(searchTerm, { showReachDefault: true });
   const { history } = useGame();
@@ -117,7 +137,15 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
   const got = activeItems.filter((i: any) => unlocks.collectionLog[i.id]).length;
   const total = activeItems.length;
   const gotColor = got === 0 ? '#ff0000' : got === total ? '#00ff00' : '#ffff00';
+  // The grid fills the page's width: as many columns as fit, stretched evenly.
+  // It is only as tall as its rows, so the space under a short page is free
+  // for the page's picture.
   const cols = Math.max(1, Math.floor(gridSize.width / CELL_W));
+  const colW = gridSize.width > 0 ? Math.floor(gridSize.width / cols) : CELL_W;
+  const rowCount = Math.ceil(activeItems.length / cols);
+  const gridH = Math.min(gridSize.height, rowCount * CELL_H);
+  const pictureRoom = gridSize.height - gridH - 12;
+  const [reachRef, reachMore] = useScrollMore<HTMLDivElement>();
 
   const cellData = useMemo<CellData>(() => ({
     items: activeItems, cols, counts: unlocks.collectionLog, blocked: identityReview.blockedIds, searchTerm, pageName,
@@ -133,7 +161,7 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
   const reachPanel = (
     <div className="osrs-win" style={{ padding: 4, display: 'flex', flexDirection: 'column', gap: 4, flex: '0 1 auto', minHeight: 120 }}>
       <h2 style={{ margin: '2px 0', textAlign: 'center', ...RS(16, 'RSBold'), color: '#ff981f', ...sh }}>Unlock coverage</h2>
-      <div className="osrs-inner" style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 10px', minHeight: 0, overflowY: 'auto', ...sh }}>
+      <div ref={reachRef} className={`osrs-inner oscroll${reachMore ? ' is-more' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 10px', minHeight: 0, overflowY: 'auto', ...sh }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
           <span style={{ ...RS(32, 'RSBold'), lineHeight: '28px', color: '#00ff00' }}>{reach.pct}%</span>
           <span style={{ ...RS(), color: 'var(--osrs-tan, #c8b897)' }}><span style={{ color: '#ffffff' }}>{reach.obtainable}</span> / {reach.total} slots covered by source unlocks</span>
@@ -213,22 +241,12 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
           </div>
         )}
 
-        {/* Title row: the log's value, the title with the total, and the coverage toggle. */}
-        <div style={{ position: 'relative', minHeight: 30, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, flexWrap: 'wrap', ...sh }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span title={mostValuable ? `Most valuable: ${mostValuable.name} (${formatNumber(mostValuable.value)})` : undefined}
-              style={{ display: 'flex', alignItems: 'center', gap: 4, height: 26, padding: '0 8px 0 2px', background: 'var(--osrs-well, #1f1a14)', border: '1px solid #000', ...RS(16, 'RSSmall'), color: '#ffff00' }}>
-              <img src={itemSrc(1004)} alt="" aria-hidden="true" className="osrs-px" style={{ height: 22 }} />{formatNumber(vaultValue)} gp
-            </span>
-            {mostValuable && rootW >= 760 && (
-              <span style={{ ...RS(16, 'RSSmall'), color: 'var(--osrs-tan, #c8b897)', whiteSpace: 'nowrap' }}>
-                MVP: <span style={{ color: '#ffffff' }}>{mostValuable.name}</span> <span style={{ color: '#00ff00' }}>({formatNumber(mostValuable.value)})</span>
-              </span>
-            )}
-          </div>
-          <h2 style={{ margin: 0, ...RS(16, 'RSBold'), color: '#ff981f' }}>Collection Log - {globalStats.obtained}/{globalStats.total}</h2>
+        {/* Title row: the title with the total, and the coverage toggle. */}
+        <div style={{ position: 'relative', minHeight: 30, flexShrink: 0, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)', alignItems: 'center', gap: 6, ...sh }}>
+          <span aria-hidden="true" />
+          <h2 style={{ margin: 0, ...RS(16, 'RSBold'), color: '#ff981f', whiteSpace: 'nowrap' }}>Collection Log - {globalStats.obtained}/{globalStats.total}</h2>
           <button type="button" className={`osrs-btn${showReach ? ' is-on' : ''}`} aria-pressed={showReach} onClick={() => setShowReach(s => !s)}
-            title="Collection Log source unlock coverage" style={{ height: 26, padding: '0 8px' }}>
+            title="Collection Log source unlock coverage" style={{ height: 26, padding: '0 8px', justifySelf: 'end' }}>
             <span style={{ color: '#00ff00' }}>{reach.pct}%</span> unlock coverage
           </button>
         </div>
@@ -274,7 +292,7 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
           </div>
 
           {/* The page: its name, the obtained count, and the items. */}
-          <div className="osrs-inner" style={{ minHeight: 0, display: 'flex', flexDirection: 'column', background: '#1e1a15' }}>
+          <div className="osrs-inner" style={{ minHeight: 0, display: 'flex', flexDirection: 'column', background: 'var(--osrs-well, #1e1a15)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '8px 12px 6px', borderBottom: '1px solid #000', background: 'var(--osrs-inner, #2e271e)', ...sh }}>
               <span style={{ ...RS(16, 'RSBold'), color: '#ff981f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {searching ? `Search: "${searchTerm}"` : page?.name || 'Select a Category'}
@@ -285,10 +303,17 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
             </div>
             <div ref={gridRef} style={{ position: 'relative', flex: 1, minHeight: 0, padding: '4px 6px' }}>
               {activeItems.length > 0 && gridSize.width > 0 ? (
-                <Grid columnCount={cols} columnWidth={CELL_W} rowCount={Math.ceil(activeItems.length / cols)} rowHeight={CELL_H}
-                  width={gridSize.width} height={gridSize.height} itemData={cellData}>
-                  {Cell}
-                </Grid>
+                <>
+                  <Grid columnCount={cols} columnWidth={colW} rowCount={rowCount} rowHeight={CELL_H}
+                    width={gridSize.width} height={gridH} itemData={cellData}>
+                    {Cell}
+                  </Grid>
+                  {!searching && page && pictureRoom >= 96 && (
+                    <div className="ocoll-picture-box" style={{ top: gridH + 16, height: pictureRoom }}>
+                      <PagePicture name={page.name} />
+                    </div>
+                  )}
+                </>
               ) : (
                 <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--osrs-muted, #8a7c66)', ...sh }}>
                   {searchTerm && allSearchItems.length === 0 ? 'No matches found' : 'Select a category to view items'}

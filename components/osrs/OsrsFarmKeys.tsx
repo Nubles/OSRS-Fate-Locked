@@ -604,13 +604,12 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   const clueCards: CardModel[] = p.clues.map((c) => {
     const baseRate = DROP_RATES[c.source];
     const rate = isVanilla ? effectiveVanillaClueRate(baseRate, p.clueKeysAwarded) : effectiveRate(c.source);
-    let extra: CardModel['extra'];
-    if (isVanilla) {
-      const onboarding = p.clueKeysAwarded < CLUE_ONBOARDING_MINIMUMS.length && rate > baseRate;
-      extra = onboarding
-        ? { text: `${rate}% for your first Keys (${Math.min(p.clueKeysAwarded, CLUE_ONBOARDING_MINIMUMS.length)} of ${CLUE_ONBOARDING_MINIMUMS.length})`, color: '#00ff00' }
-        : { text: p.clueKeysAwarded >= CLUE_ONBOARDING_MINIMUMS.length ? 'Normal tier rates apply' : `${rate}% tier rate`, color: 'var(--osrs-tan, #c8b897)' };
-    }
+    // The subline: the onboarding rate while it applies, else this tier's own
+    // tally on the compact list (the wide card already shows it as its stats).
+    const onboarding = isVanilla && p.clueKeysAwarded < CLUE_ONBOARDING_MINIMUMS.length && rate > baseRate;
+    const extra: CardModel['extra'] = onboarding
+      ? { text: `${rate}% for your first Keys (${Math.min(p.clueKeysAwarded, CLUE_ONBOARDING_MINIMUMS.length)} of ${CLUE_ONBOARDING_MINIMUMS.length})`, color: '#00ff00' }
+      : wide ? undefined : { text: tallyText(tally.get(c.source)), color: 'var(--osrs-tan, #c8b897)' };
     const name = `${c.tier} clue`;
     const sprite = clueSprite(c.tier);
     return {

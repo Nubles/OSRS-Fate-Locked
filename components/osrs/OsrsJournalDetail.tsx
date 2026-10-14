@@ -13,6 +13,7 @@ import { questLocations } from '../../utils/questLocations';
 import { showChunkOnMap, summarisePlaces } from '../../utils/chunkLocations';
 import { effectiveSkillLevel } from '../../utils/slayerReach';
 import { evaluateDiaryTaskEligibility, evaluateDiaryTierEligibility } from '../../utils/journalStatus';
+import { formatDiaryChecks } from '../../utils/diaryCheckFormat';
 import { CA_TASK_POINTS, caTaskLockedBoss, isCATierId } from '../../utils/caProgress';
 import { chunkContentService } from '../../services/ChunkContentService';
 import { findEntityLocations } from '../../utils/entityLocationLookup';
@@ -229,8 +230,8 @@ const TaskNeeds: React.FC<{
               onClick={() => showChunkOnMap(chunk.cx, chunk.cy)}>{label}</button></React.Fragment>
           : <React.Fragment key={'b' + i}>{sep}{label}</React.Fragment>;
       })}
-      {e.manualChecks.map((check, i) => (
-        <React.Fragment key={'m' + i}>{e.blockers.length + i > 0 ? ', ' : ''}confirm {check}</React.Fragment>
+      {formatDiaryChecks(e.manualChecks, task.description).map((check, i) => (
+        <React.Fragment key={'m' + i}>{e.blockers.length + i > 0 ? '; ' : ''}{check}</React.Fragment>
       ))}
     </div>
   );

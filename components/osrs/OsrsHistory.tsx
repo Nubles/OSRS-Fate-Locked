@@ -12,10 +12,12 @@ import { lazyWithRetry } from '../../utils/lazyRetry';
 import { openOsrsScreen } from '../../utils/osrsNav';
 import { ModalFallback } from '../LoadingFallback';
 import { filterHistory, historyFilterMatches, HistoryFilter, HistorySort } from '../LogViewer';
-import { CASKET_ICON, CHAOS_KEY_ICON, KEY_ICON, ON_PARCHMENT, ON_STONE, QUEST_ICON, VOID_SEAL_ICON } from './OsrsSpendShared';
+import { CASKET_ICON, CHAOS_KEY_ICON, KEY_ICON, OMNI_KEY_ICON, ON_PARCHMENT, ON_STONE, QUEST_ICON, VOID_SEAL_ICON, osrsItem, osrsSkillIcon } from './OsrsSpendShared';
 import { clock, examineFor, lineDetails, look, speaker } from './OsrsHistoryShared';
 import { setHistoryEntry, useKeysView } from './OsrsKeysState';
 import { OsrsKeysTabs } from './OsrsKeysTabs';
+import { formatRate, summarizeKeyHistory, type KeySourceGroup } from '../../utils/keyHistorySummary';
+import { useScrollMore } from '../../utils/scrollFade';
 
 const TimelapseModal = lazyWithRetry(() => import('../TimelapseModal').then(m => ({ default: m.TimelapseModal })));
 
@@ -133,12 +135,12 @@ const EntryDetail: React.FC<{ entry: LogEntry; num: number; total: number }> = (
 };
 
 /**
- * History in the OSRS layout: the Fate Timeline as a chatbox of coloured game
- * messages. Compact on the home screen's Keys panel; wide (History board) on
- * the Keys screen, with the chosen entry in full beside it. Same filters,
- * search, sort and timelapse as the classic timeline.
+ * The History board (Keys screen, wide): the Fate Timeline as a chatbox of
+ * coloured game messages with the chosen entry in full beside it. Same
+ * filters, search, sort and timelapse as the classic timeline.
  */
-const OsrsHistory: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
+const HistoryBoard: React.FC = () => {
+  const wide = true;
   const { history, linkedAccount } = useGame();
   const listRef = useRef<List>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -262,17 +264,6 @@ const OsrsHistory: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
     </Suspense>
   );
 
-  if (!wide) {
-    return (
-      <div className="ohist ohist-compact">
-        {title}
-        {chat}
-        {filters}
-        {timelapse}
-      </div>
-    );
-  }
-
   return (
     <div className="osrs-win ohist ohist-wide">
       <OsrsKeysTabs hint="History: every roll, unlock and ritual in your run." />
@@ -290,5 +281,137 @@ const OsrsHistory: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
     </div>
   );
 };
+
+/* ── Compact: the Keys panel's History tab, a summary of the Key rolls ───── */
+
+const GROUP_ICON: Record<KeySourceGroup, string> = {
+  Slayer: osrsSkillIcon('slayer', true),
+  Clues: osrsItem('19835.png'),
+  Bosses: osrsItem('21907.png'),
+  Activities: osrsItem('4067.png'),
+  Quests: QUEST_ICON,
+  Diaries: osrsItem('achievement_diaries_icon.png'),
+  'Combat Achievements': osrsItem('combat_achievements_icon.png'),
+  'Collection log': osrsItem('22711.png'),
+  Levels: osrsSkillIcon('overall', true),
+  Pets: OMNI_KEY_ICON,
+  Other: CASKET_ICON,
+};
+
+/** "today 14:02" style stamp: the clock for today, else the short date too. */
+const when = (ts: number): string => {
+  const d = new Date(ts);
+  const today = new Date();
+  return d.toDateString() === today.toDateString()
+    ? clock(ts)
+    : `${d.toLocaleDateString([], { day: 'numeric', month: 'short' })}, ${clock(ts)}`;
+};
+
+/**
+ * Opens the chatbox's Fate Timeline (All tab, unfolded) and moves focus to it.
+ * The chatbox owns its state, so this presses its own tab buttons.
+ */
+const showChatboxLog = () => {
+  const dock = document.querySelector<HTMLElement>('.osrs-chatdock');
+  if (!dock) return;
+  const tabs = Array.from(dock.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+  const all = tabs.find(t => t.textContent?.trim() === 'All');
+  if (all && all.getAttribute('aria-selected') !== 'true') all.click();
+  else if (all && all.getAttribute('aria-expanded') === 'false') all.click();
+  dock.scrollIntoView({ block: 'nearest' });
+  requestAnimationFrame(() => all?.focus());
+};
+
+/** Opens the History board on one entry, as the old compact timeline's lines did. */
+const openEntry = (id: string) => {
+  setHistoryEntry(id);
+  openOsrsScreen('keys', 'history');
+};
+
+/**
+ * The Keys panel's History tab: what the rolls have paid so far, per source,
+ * with the run's luckiest roll, longest dry streak and latest Key. The full
+ * log is the chatbox right below it (and the History board), so it is not
+ * repeated here.
+ */
+const KeySummary: React.FC = () => {
+  const { history } = useGame();
+  const s = useMemo(() => summarizeKeyHistory(history), [history]);
+  const [tableRef, tableMore] = useScrollMore<HTMLDivElement>();
+  const latest = s.latestKey;
+  const lucky = s.luckiest;
+
+  return (
+    <div className="ohist ohist-compact ohsum">
+      <div className="ohist-title">
+        <h2>Key summary</h2>
+        <span className="count" title={`${s.keys} of ${s.rolls} rolls found a Key`}>{s.keys.toLocaleString()} Key{s.keys === 1 ? '' : 's'} from {s.rolls.toLocaleString()} roll{s.rolls === 1 ? '' : 's'}</span>
+        <span className="tools">
+          <button type="button" className="osrs-btn ohist-small" onClick={() => openOsrsScreen('keys', 'history')} title="Open the History board: every entry, filters and the roll detail">
+            History board
+          </button>
+        </span>
+      </div>
+
+      {s.rolls === 0 ? (
+        <div className="osrs-inner ohsum-empty">No Key rolls yet. Farm Keys to make your first roll; each one shows up here by source.</div>
+      ) : (
+        <div ref={tableRef} className={`osrs-inner ohsum-table oscroll${tableMore ? ' is-more' : ''}`} role="table" aria-label="Key rolls by source">
+          <div role="row" className="ohsum-row head">
+            <span role="columnheader">Source</span>
+            <span role="columnheader" className="n">Rolls</span>
+            <span role="columnheader" className="n">Keys</span>
+            <span role="columnheader" className="n">Win</span>
+          </div>
+          {s.rows.map(r => (
+            <div key={r.group} role="row" className="ohsum-row"
+              data-examine-name={r.group} data-examine={`${r.group}: ${r.rolls} roll${r.rolls === 1 ? '' : 's'}, ${r.keys} found a Key (${formatRate(r.rate)}).`}>
+              <span role="cell" className="src">
+                <img className="osrs-px" src={GROUP_ICON[r.group]} alt="" aria-hidden="true" />
+                <span>{r.group}</span>
+              </span>
+              <span role="cell" className="n">{r.rolls.toLocaleString()}</span>
+              <span role="cell" className="n k">{r.keys.toLocaleString()}</span>
+              <span role="cell" className="n" style={{ color: r.keys ? 'var(--osrs-green, #00ff00)' : 'var(--osrs-red, #ff3030)' }}>{formatRate(r.rate)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {s.rolls > 0 && (
+        <div className="ohsum-facts">
+          <button type="button" className="ohsum-fact" disabled={!latest} onClick={() => latest && openEntry(latest.id)}
+            title={latest ? `Latest Key: ${latest.source ?? 'roll'} (open on the History board)` : undefined}>
+            <span className="l">Latest Key</span>
+            {latest
+              ? <><span className="v">{latest.source ?? 'Roll'}</span><span className="d">{when(latest.timestamp)}</span></>
+              : <span className="v dim">None yet</span>}
+          </button>
+          <button type="button" className="ohsum-fact" disabled={!lucky} onClick={() => lucky && openEntry(lucky.entry.id)}
+            title={lucky ? `Luckiest roll: won at ${formatKeyPercent(lucky.chance)} (open on the History board)` : undefined}>
+            <span className="l">Luckiest roll</span>
+            {lucky
+              ? <><span className="v"><span style={{ color: 'var(--osrs-green, #00ff00)' }}>{formatKeyPercent(lucky.chance)}</span> chance</span><span className="d">{lucky.entry.source ?? 'Roll'}</span></>
+              : <span className="v dim">No wins yet</span>}
+          </button>
+          <div className="ohsum-fact" title="The most rolls in a row that found no Key">
+            <span className="l">Longest dry streak</span>
+            <span className="v">{s.longestDry.toLocaleString()} roll{s.longestDry === 1 ? '' : 's'}</span>
+            <span className="d">{s.currentDry > 0 ? `Now ${s.currentDry} without a Key` : 'Last roll found a Key'}</span>
+          </div>
+        </div>
+      )}
+
+      <div className="ohsum-foot">
+        <img className="osrs-px" src={KEY_ICON} alt="" aria-hidden="true" />
+        <span>Full log in the chatbox below.</span>
+        <button type="button" className="osrs-btn ohist-small" onClick={showChatboxLog}>Show log</button>
+      </div>
+    </div>
+  );
+};
+
+/** History in the OSRS layout: a Key summary on the home Keys panel, the full board on the Keys screen. */
+const OsrsHistory: React.FC<{ wide?: boolean }> = ({ wide = false }) => (wide ? <HistoryBoard /> : <KeySummary />);
 
 export default OsrsHistory;
