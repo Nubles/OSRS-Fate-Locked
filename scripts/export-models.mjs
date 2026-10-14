@@ -202,7 +202,7 @@ const uniqueJobs = jobs.filter((j) => (seen.has(j.slug) ? false : (seen.add(j.sl
 if (!uniqueJobs.length && !DO_UNLOCKS) { console.error('Nothing to export. Populate scripts/models.config.json.'); cache.close?.(); process.exit(1); }
 
 // ── export one NPC → a merged, coloured glTF (same flow as GLTFModelBuilder) ──
-async function exportNpc(id, slug, pet = false, { dropJunk = false, outDir } = {}) {
+async function exportNpc(id, slug, pet = false, { dropJunk = false, outDir, still = false } = {}) {
   const def = await getNpc(id);
   const entry = def?.models ?? [];
   const modelIds = Array.isArray(entry) ? entry : [entry];
@@ -233,7 +233,7 @@ async function exportNpc(id, slug, pet = false, { dropJunk = false, outDir } = {
   // Optional: bake the idle (standing) animation as a looping morph animation.
   exportNpc._lastAnim = 0;
   // A pet always idles: the follower and Your Pets panel show it moving.
-  if (((pet && !stillPets.has(slug)) || animate.has(slug) || IDLE) && def.standingAnimation != null && def.standingAnimation !== -1) {
+  if (((pet && !stillPets.has(slug)) || animate.has(slug) || (IDLE && !still)) && def.standingAnimation != null && def.standingAnimation !== -1) {
     const seq = await cache.getDef(IndexType.CONFIGS, ConfigType.SEQUENCE, def.standingAnimation);
     // A skeletal ("animaya") idle, as newer NPCs have, is beyond osrscachereader 1.1.x in
     // current caches: it misreads the keyframes' skeleton and crashes outside any await.
@@ -382,11 +382,13 @@ async function exportUnlocks() {
     return best;
   };
 
-  async function exportDef(kind, d, slug, { exclude = [], dropGround = false } = {}) {
+  // "still": true in the config keeps one unlock still under --idle, where its animation
+  // looks wrong on a loop (a crashed star that shrinks away, a portal that loses its surface).
+  async function exportDef(kind, d, slug, { exclude = [], dropGround = false, still: keepStill = false } = {}) {
     if (kind === 'npc') {
       excludes[slug] = exclude;
       exportNpc._lastSkipped = 0; exportNpc._lastStill = false;
-      await exportNpc(d.id, slug, false, { dropJunk: true, outDir: OUT_DIR });
+      await exportNpc(d.id, slug, false, { dropJunk: true, outDir: OUT_DIR, still: keepStill });
       return { faces: exportNpc._lastFaces, skipped: exportNpc._lastSkipped, ground: exportNpc._lastGround, anim: exportNpc._lastAnim, still: exportNpc._lastStill };
     }
     const ban = new Set(exclude.map(Number));
@@ -416,7 +418,7 @@ async function exportUnlocks() {
     exporter.addColors(merged);
     // An object's own animation (a fountain's water, a portal's swirl), with --idle.
     let anim = 0, still = false;
-    if (IDLE && kind === 'object' && d.animationID != null && d.animationID !== -1) {
+    if (IDLE && !keepStill && kind === 'object' && d.animationID != null && d.animationID !== -1) {
       const seq = await cache.getDef(IndexType.CONFIGS, ConfigType.SEQUENCE, d.animationID);
       if (seq && seq.animMayaID != null && seq.animMayaID !== -1) still = true; // skeletal: as for NPCs
       else if (seq) {

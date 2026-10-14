@@ -1,5 +1,5 @@
 {
- "_comment": "Which game model stands for each unlock, for `npm run models:export -- --cache <dir> --unlocks`. Keys are unlock names (the file is saved as public/models/<slug>.gltf, so modelFor(name) finds it). type: npc | object | item (inventory model) | worn (the item as worn, for capes). name is matched against the cache's names; '?' meant choose one from the hint; the choice is recorded in name (and id, which pins the exact def and wins over name). fallback is tried when name has no usable model; skip leaves the unlock without one. exclude drops sub-models by model id; dropGround (objects) drops faces at ground level, for a floor baked into the mesh. Grouped by unlock type for review only.",
+ "_comment": "Which game model stands for each unlock, for `npm run models:export -- --cache <dir> --unlocks`. Keys are unlock names (the file is saved as public/models/<slug>.gltf, so modelFor(name) finds it). type: npc | object | item (inventory model) | worn (the item as worn, for capes). name is matched against the cache's names; '?' meant choose one from the hint; the choice is recorded in name (and id, which pins the exact def and wins over name). fallback is tried when name has no usable model; skip leaves the unlock without one. exclude drops sub-models by model id; dropGround (objects) drops faces at ground level, for a floor baked into the mesh. Models idle (NPC standing animation, object animation); still keeps one still where its animation looks wrong in a loop. Grouped by unlock type for review only.",
  "Bosses (the 9 without a model)": {
   "Chambers of Xeric": {
    "type": "npc",
@@ -56,7 +56,8 @@
  "Minigames": {
   "Shooting Stars": {
    "type": "object",
-   "name": "Crashed star"
+   "name": "Crashed star",
+   "still": true
   },
   "Barbarian Assault": {
    "type": "npc",
@@ -73,7 +74,8 @@
   "Clan Wars": {
    "type": "object",
    "name": "Free-for-all portal",
-   "hint": "the Ferox Enclave Clan Wars portal"
+   "hint": "the Ferox Enclave Clan Wars portal",
+   "still": true
   },
   "Emir's Arena": {
    "type": "npc",
@@ -182,7 +184,8 @@
   },
   "Tithe Farm": {
    "type": "npc",
-   "name": "Farmer Gricoller"
+   "name": "Farmer Gricoller",
+   "still": true
   },
   "Trouble Brewing": {
    "type": "npc",
@@ -685,7 +688,8 @@
   "Gnome Gliders": {
    "type": "object",
    "name": "Gnome Glider",
-   "hint": "a gnome glider; or the glider captain NPC"
+   "hint": "a gnome glider; or the glider captain NPC",
+   "still": true
   },
   "Charter Ships": {
    "type": "npc",
@@ -807,7 +811,8 @@
   "Portal Chamber": {
    "type": "object",
    "name": "Varrock Portal",
-   "hint": "a built POH teleport portal"
+   "hint": "a built POH teleport portal",
+   "still": true
   },
   "Portal Nexus": {
    "type": "object",
