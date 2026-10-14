@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useGame } from '../../context/GameContext';
 import { EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX } from '../../constants';
-import { NoteTrigger } from '../NoteTrigger';
 import { SectionGuide } from '../SectionGuide';
 import { TIER_LABELS } from '../../utils/combatPower';
 import { canonicalTierFromName } from '../../utils/gearTiers';
 import { gearService } from '../../services/GearService';
-import { TIER_GEMS, gemSrc, gemColor, itemSrc, itemSpriteSrc, itemSpriteFallback } from './OsrsDashGems';
+import { TIER_GEMS, gemSrc, gemColor, gemCropStyle, gemSmallSrc, itemSrc, roman } from './OsrsDashGems';
+import { OsrsCharDoll, type DollSlot } from './OsrsCharDoll';
+import { BONUS_GROUPS } from '../../utils/gearStats';
 import { OsrsGearPicker, OsrsGearStats, useWornItems, type GearStatus } from './OsrsCharGear';
 import { OsrsCharDps } from './OsrsCharDps';
 import './osrs-dashboard.css';
@@ -14,10 +15,11 @@ import './osrs-dashboard.css';
 /**
  * Equipment Lab in the OSRS layout.
  *
- *  - OsrsLabCompact: the Character tab's left column (Main board): the worn
- *    equipment with each slot's real item sprite (from the Gear loadout) and
- *    a T-badge for the slot's unlocked tier, Tiers / Gear / DPS buttons and
- *    "Plan an upgrade".
+ *  - OsrsLabCompact: the Character tab's Equipment panel: the OSRS Worn
+ *    Equipment interface (OsrsCharDoll: the game's slot tiles, silhouettes
+ *    and connector lines, worn item sprites, a tier gem in each corner),
+ *    each slot's tier as a list beside it, the Equipment Stats bonuses of
+ *    what is worn when there is room, Tiers / Gear / DPS and Plan.
  *  - OsrsLabFull: the whole Character tab (Gear board) once a mode, a slot
  *    or the planner is opened from the compact panel: the Tiers breakdown and
  *    slot detail (with the Omni-Key upgrade), the Gear picker and stats, or
@@ -35,8 +37,6 @@ interface Props {
   suspendModals?: boolean;
 }
 
-/** The worn-equipment interface layout: 3 columns x 5 rows, as in game. */
-const DOLL_LAYOUT = ['', 'Head', '', 'Cape', 'Neck', 'Ammo', 'Weapon', 'Body', 'Shield', '', 'Legs', '', 'Gloves', 'Boots', 'Ring'];
 const EQUIP_GEMS = TIER_GEMS.slice(0, EQUIPMENT_TIER_MAX);
 const MAX_TIERS = EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX;
 
@@ -74,6 +74,56 @@ const LabGuide: React.FC<{ suspendModals: boolean }> = ({ suspendModals }) => (
 
 // ── Compact (Main board) ─────────────────────────────────────────────────────
 
+/** Each slot's tier, as a list beside the doll: gem, slot, "Tier I · Bronze / Iron". */
+const SlotTierList: React.FC<{ equipment: Record<string, number> }> = ({ equipment }) => (
+  <ul className="osrs-char-slotlist" aria-label="Tier per slot">
+    {EQUIPMENT_SLOTS.map((slot) => {
+      const t = equipment[slot] || 0;
+      const text = t > 0 ? `Tier ${roman(t)} · ${TIER_LABELS[t - 1]}` : 'Locked';
+      return (
+        <li key={slot} className={t > 0 ? undefined : 'is-zero'} title={`${slot}: ${t > 0 ? `Tier ${t}, up to ${TIER_LABELS[t - 1]} gear` : 'no tier unlocked yet'}`}>
+          <img className={`osrs-px is-gem is-small${t > 0 ? '' : ' is-none'}`} src={gemSmallSrc(Math.max(t, 1))} alt="" aria-hidden="true" />
+          <span className={`is-gem is-big${t > 0 ? '' : ' is-none'}`} style={gemCropStyle(Math.max(t, 1))} aria-hidden="true" />
+          <span className="is-name">{slot}</span>
+          <span className="is-tier" style={{ color: t > 0 ? gemColor(t) : 'var(--osrs-muted, #8a7c66)' }}>
+            <span className="is-small" aria-hidden="true">{t > 0 ? `Tier ${roman(t)}` : 'Locked'}</span>
+            <span className="is-big">{text}</span>
+            <span className="sr-only">{text}</span>
+          </span>
+        </li>
+      );
+    })}
+  </ul>
+);
+
+/** The OSRS Equipment Stats bonuses for what is worn (from the Gear loadout). */
+const WornBonuses: React.FC<{ status: GearStatus }> = ({ status }) => {
+  const { items, totals } = useWornItems(status);
+  return (
+    <div className="osrs-inner osrs-char-bonuses" role="group" aria-label={`Equipment Stats, ${items.length} of ${EQUIPMENT_SLOTS.length} slots worn`}
+      title={`Equipment Stats for what you wear (${items.length}/${EQUIPMENT_SLOTS.length} slots). Choose gear in the Gear view.`}>
+      {BONUS_GROUPS.map((group) => (
+        <div key={group.label} style={{ minWidth: 0 }}>
+          <h4>{group.label}</h4>
+          <dl>
+            {group.rows.map((row) => {
+              const v = totals[row.key];
+              return (
+                <React.Fragment key={row.key}>
+                  <dt>{row.label}:</dt>
+                  <dd style={{ color: v > 0 ? 'var(--osrs-yellow, #ff0)' : v < 0 ? 'var(--osrs-red, #ff3030)' : 'var(--osrs-muted, #8a7c66)' }}>
+                    {v > 0 ? '+' : ''}{v}{row.pct ? '%' : ''}
+                  </dd>
+                </React.Fragment>
+              );
+            })}
+          </dl>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export const OsrsLabCompact: React.FC<{ onOpen: (view: OsrsLabView) => void; suspendModals?: boolean }> = ({ onOpen, suspendModals = false }) => {
   const { unlocks, specialKeys, loadout } = useGame();
   const equipment = unlocks.equipment;
@@ -81,46 +131,49 @@ export const OsrsLabCompact: React.FC<{ onOpen: (view: OsrsLabView) => void; sus
   const { status } = useGearData();
   const total = EQUIPMENT_SLOTS.reduce((a, s) => a + (equipment[s] || 0), 0);
 
+  const slots: DollSlot[] = EQUIPMENT_SLOTS.map((slot) => {
+    const tier = equipment[slot] || 0;
+    const id = equipped[slot];
+    const item = status === 'ready' ? gearService.byId(id) : undefined;
+    return {
+      slot,
+      itemId: id,
+      imageFile: item?.imageFile,
+      gem: tier,
+      dim: tier === 0,
+      omni: tier < EQUIPMENT_TIER_MAX && specialKeys > 0,
+      label: `${slot}: ${id != null ? `${item?.name ?? 'equipped item'}, ` : ''}Tier ${tier}. Click for its tier ladder.`,
+      examine: slotExamine(slot, tier, item?.name),
+      onClick: () => onOpen({ mode: 'tiers', slot }),
+      note: true,
+    };
+  });
+
   return (
     <section className="osrs-inner osrs-dash-labmini" aria-label="Equipment Lab">
       <div className="osrs-dash-panelhead" style={{ alignSelf: 'stretch', padding: 0 }}>
         <h3 className="osrs-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>Equipment Lab <LabGuide suspendModals={suspendModals} /></h3>
         <span className="osrs-dash-yellow-s">{total}/{MAX_TIERS} tiers</span>
       </div>
-      <div role="group" aria-label="Equipment Lab view" style={{ display: 'flex', gap: 3, alignSelf: 'stretch' }}>
-        {(['tiers', 'gear', 'dps'] as const).map((m) => (
-          <button key={m} type="button" className={`osrs-btn${m === 'tiers' ? ' is-on' : ''}`} style={{ flex: 1, height: 26 }}
-            aria-pressed={m === 'tiers'} onClick={() => onOpen({ mode: m })}
-            title={m === 'tiers' ? 'Open the tier breakdown' : m === 'gear' ? 'Choose real items for each slot' : 'DPS calculator'}>
-            {m === 'tiers' ? 'Tiers' : m === 'gear' ? 'Gear' : 'DPS'}
-          </button>
-        ))}
+      <div style={{ display: 'flex', gap: 6, alignSelf: 'stretch' }}>
+        <div role="group" aria-label="Equipment Lab view" style={{ flex: 3, display: 'flex', gap: 3 }}>
+          {(['tiers', 'gear', 'dps'] as const).map((m) => (
+            <button key={m} type="button" className={`osrs-btn${m === 'tiers' ? ' is-on' : ''}`} style={{ flex: 1, height: 26, padding: 0 }}
+              aria-pressed={m === 'tiers'} onClick={() => onOpen({ mode: m })}
+              title={m === 'tiers' ? 'Open the tier breakdown' : m === 'gear' ? 'Choose real items for each slot' : 'DPS calculator'}>
+              {m === 'tiers' ? 'Tiers' : m === 'gear' ? 'Gear' : 'DPS'}
+            </button>
+          ))}
+        </div>
+        <button type="button" className="osrs-btn" style={{ flex: 1, height: 26, padding: 0 }} onClick={() => onOpen({ mode: 'tiers', plan: true })}
+          aria-label="Plan an upgrade" title="Plan an upgrade: a target loadout and its Omni-Key cost">Plan</button>
       </div>
-      <div className="osrs-dash-minidoll">
-        {DOLL_LAYOUT.map((slot, i) => {
-          if (!slot) return <span key={`gap-${i}`} aria-hidden="true" />;
-          const tier = equipment[slot] || 0;
-          const id = equipped[slot];
-          const item = status === 'ready' ? gearService.byId(id) : undefined;
-          const canUnlock = tier < EQUIPMENT_TIER_MAX && specialKeys > 0;
-          const label = `${slot}: ${id != null ? `${item?.name ?? 'equipped item'}, ` : ''}Tier ${tier}. Click for its tier ladder.`;
-          return (
-            <div key={slot} className="osrs-dash-minicell" data-examine-name={`${slot} slot`} data-examine={slotExamine(slot, tier, item?.name)}>
-              <button type="button" className={`osrs-dash-minislot${id != null ? ' has-item' : ''}`} onClick={() => onOpen({ mode: 'tiers', slot })} title={label} aria-label={label}>
-                {id != null
-                  ? <img className="osrs-px" src={itemSpriteSrc(id)} alt="" aria-hidden="true" width={36} height={32} onError={itemSpriteFallback(item?.imageFile)} />
-                  : <span className="osrs-dash-slotname">{slot}</span>}
-                <span className="osrs-dash-minitier" style={{ color: tier > 0 ? 'var(--osrs-yellow, #ff0)' : 'var(--osrs-muted, #8a7c66)' }}>T{tier}</span>
-                {canUnlock && <img className="osrs-px osrs-dash-dollomni" src={itemSrc('omni_key')} alt="" aria-hidden="true" width={18} height={16} title="An Omni-Key can raise this slot" />}
-              </button>
-              <span className="osrs-dash-note is-corner"><NoteTrigger id={`Equip_${slot}`} title={slot} suspendModals={suspendModals} /></span>
-            </div>
-          );
-        })}
-      </div>
-      <div style={{ marginTop: 'auto', alignSelf: 'stretch', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div className="osrs-dash-tan-s osrs-dash-labmini-note" style={{ textAlign: 'center' }}>Each slot shows the best tier you can wear.</div>
-        <button type="button" className="osrs-btn" style={{ height: 30 }} onClick={() => onOpen({ mode: 'tiers', plan: true })} title="Plan a target loadout and see the Omni-Key cost">Plan an upgrade</button>
+      <div className="osrs-char-worn">
+        <div className="osrs-char-wornrow">
+          <OsrsCharDoll slots={slots} suspendModals={suspendModals} />
+          <SlotTierList equipment={equipment} />
+        </div>
+        <WornBonuses status={status} />
       </div>
     </section>
   );
@@ -318,9 +371,8 @@ export const OsrsLabFull: React.FC<FullProps> = ({ view, onView, onClose, onUpgr
         <section className="osrs-win osrs-dash-wornwin" aria-label="Worn Equipment">
           <div className="osrs-dash-wintitle"><h3 className="osrs-title">Worn Equipment</h3></div>
           <div className="osrs-dash-wornbody">
-            <div className="osrs-dash-doll">
-              {DOLL_LAYOUT.map((slot, i) => {
-                if (!slot) return <span key={`gap-${i}`} aria-hidden="true" />;
+            <div className="osrs-char-wornrow">
+              <OsrsCharDoll suspendModals={suspendModals} slots={EQUIPMENT_SLOTS.map((slot): DollSlot => {
                 const ut = equipment[slot] || 0;
                 const id = equipped[slot];
                 const item = status === 'ready' ? gearService.byId(id) : undefined;
@@ -331,45 +383,23 @@ export const OsrsLabFull: React.FC<FullProps> = ({ view, onView, onClose, onUpgr
                   else if (mode === 'gear') onView({ mode: 'gear', slot });
                 };
                 if (mode === 'tiers') {
-                  return (
-                    <div key={slot} className="osrs-dash-dollcell" data-examine-name={`${slot} slot`} data-examine={slotExamine(slot, ut, item?.name)}>
-                      <button type="button" className={`osrs-dash-dollslot${ut > 0 ? ' is-on' : ''}${sel ? ' is-sel' : ''}`} onClick={pick}
-                        aria-label={`${slot}: Tier ${ut}, click for details`} title={`${slot}: Tier ${ut}, click for details`}>
-                        {ut > 0
-                          ? <img className="osrs-px" src={gemSrc(ut)} alt="" aria-hidden="true" width={36} height={32} style={{ marginTop: -14 }} />
-                          : <span className="osrs-dash-slotname">{slot}</span>}
-                        <span className="osrs-dash-dollbadge" style={{ color: ut > 0 ? 'var(--osrs-yellow, #ff0)' : 'var(--osrs-muted, #8a7c66)' }}>{ut > 0 ? `${slot} · ` : ''}T{ut}</span>
-                        {ut < EQUIPMENT_TIER_MAX && specialKeys > 0 && <img className="osrs-px osrs-dash-dollomni" src={itemSrc('omni_key')} alt="" aria-hidden="true" width={18} height={16} title="An Omni-Key can raise this slot" />}
-                      </button>
-                      <span className="osrs-dash-note is-corner"><NoteTrigger id={`Equip_${slot}`} title={slot} suspendModals={suspendModals} /></span>
-                    </div>
-                  );
+                  return {
+                    slot, itemId: id, imageFile: item?.imageFile, gem: ut, dim: ut === 0, selected: sel,
+                    omni: ut < EQUIPMENT_TIER_MAX && specialKeys > 0, note: true,
+                    label: `${slot}: Tier ${ut}, click for details`, examine: slotExamine(slot, ut, item?.name), onClick: pick,
+                  };
                 }
-                const it = item;
-                const tier = it ? gearService.tierOf(it.id) : 0;
-                const est = it ? canonicalTierFromName(it.name) == null : false;
+                // Gear and DPS: a worn item shows its own tier gem; an empty slot the tier it is unlocked to.
+                const tier = item ? gearService.tierOf(item.id) : 0;
+                const est = item ? canonicalTierFromName(item.name) == null : false;
                 const aria = id != null
-                  ? `${slot}: ${it?.name ?? 'equipped item'}${clickable ? `. Choose ${slot}` : ''}`
+                  ? `${slot}: ${item?.name ?? 'equipped item'}${item ? `, ${est ? 'Est. ' : ''}Tier ${tier}` : ''}${clickable ? `. Choose ${slot}` : ''}`
                   : `${slot}: empty, unlocked up to Tier ${ut}${clickable ? `. Choose ${slot}` : ''}`;
-                return (
-                  <div key={slot} className="osrs-dash-dollcell" data-examine-name={`${slot} slot`} data-examine={slotExamine(slot, ut, it?.name)}>
-                    <button type="button" className={`osrs-dash-dollslot${id != null ? ' has-item' : ''}${sel ? ' is-sel' : ''}`} onClick={pick} disabled={!clickable}
-                      aria-label={aria} title={aria}>
-                      {id != null
-                        ? <img className="osrs-px osrs-dash-dollimg" src={itemSpriteSrc(id)} alt="" aria-hidden="true" width={72} height={64} onError={itemSpriteFallback(it?.imageFile)} />
-                        : <span className="osrs-dash-slotname">{slot}</span>}
-                      {id != null && it
-                        ? (
-                          <span className="osrs-dash-dollbadge" style={{ color: gemColor(tier) }}>
-                            {tier > 0 && <img className="osrs-px" src={gemSrc(tier)} alt="" aria-hidden="true" width={18} height={16} />}
-                            {est ? 'Est. ' : ''}T{tier}
-                          </span>
-                        )
-                        : id == null && <span className="osrs-dash-dollbadge" style={{ color: 'var(--osrs-muted, #8a7c66)' }}>≤T{ut}</span>}
-                    </button>
-                  </div>
-                );
-              })}
+                return {
+                  slot, itemId: id, imageFile: item?.imageFile, gem: id != null ? tier : ut, dim: id == null && ut === 0, selected: sel,
+                  label: aria, examine: slotExamine(slot, ut, item?.name), onClick: pick, disabled: !clickable,
+                };
+              })} />
             </div>
             <div className="osrs-inner osrs-sh osrs-dash-worninfo">
               <span style={{ color: '#fff' }}>{info.title}</span>

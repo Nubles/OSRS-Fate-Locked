@@ -12,6 +12,7 @@ import { evaluateDiaryTaskEligibility, type EligibilityBlocker } from '../../uti
 import { isAlmostThere } from '../../utils/journalProgress';
 import { computeUnlockImpact } from '../../utils/unlockImpact';
 import { showChunkOnMap } from '../../utils/chunkLocations';
+import { questLocations } from '../../utils/questLocations';
 import { useQuestJournal, type QuestCardQuest } from '../QuestLog';
 import { useDiaryJournal } from '../DiaryLog';
 import { useCAJournal } from '../CALog';
@@ -29,6 +30,10 @@ import {
   questMapTarget, taskMapTarget, tierMapTarget, caTaskMapTarget, tasksOfTier,
   type JournalSel, type MapTarget, selKey,
 } from './OsrsJournalDetail';
+import {
+  compileJournalQuery, matchJournalFields, hitRanges, splitHighlight, questSearchFields, diaryTaskSearchFields, caTaskSearchFields,
+  type Range,
+} from './OsrsJournalSearch';
 import './osrs-journal.css';
 
 /**
@@ -54,13 +59,40 @@ const ORANGE = '#ff981f';
 const RED_KEY = '#ff3030';
 const TONE = { done: '#0dc10d', ready: '#ffff00', locked: '#ff0000' };
 
+/** Highlighted text: the search's matched characters in yellow. */
+interface Hit { text: string; hits: Range[] }
+
 type Item =
-  | { t: 'head'; key: string; title: string; icon?: JournalKind; count: string }
+  | { t: 'head'; key: string; title: string; icon?: JournalKind; count: string; found?: boolean }
   | {
       t: 'row'; key: string; title: string; sel: JournalSel; name: string;
       keyText?: string; keyColor?: string; color: string; pad: number; bold?: boolean; strike?: boolean; tip?: string;
+      /** Search hits in the title and the key text; `via` names the field that matched when the title did not. */
+      hits?: Range[]; keyHits?: Range[]; via?: Hit;
     }
   | { t: 'empty'; key: string; text: string };
+
+const SEARCH_KEY = 'fl.osrsJournal.search';
+const readSearch = (): string => { try { return sessionStorage.getItem(SEARCH_KEY) ?? ''; } catch { return ''; } };
+const writeSearch = (v: string) => { try { if (v) sessionStorage.setItem(SEARCH_KEY, v); else sessionStorage.removeItem(SEARCH_KEY); } catch { /* private window */ } };
+const isTypingTarget = (t: EventTarget | null): boolean => {
+  const el = t as HTMLElement | null;
+  if (!el || !el.tagName) return false;
+  return el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName);
+};
+
+/** The first field after the title that matched, when the title itself did not: why a row is in the results. */
+const viaOf = (m: Range[][], texts: string[], skip: number[] = []): Hit | undefined => {
+  if (m[0]?.length) return undefined;
+  for (let i = 1; i < m.length; i++) if (!skip.includes(i) && m[i].length && texts[i]) return { text: texts[i], hits: m[i] };
+  return undefined;
+};
+
+const rowDomId = (key: string) => 'ojs-r-' + key.replace(/[^\w-]/g, '_');
+
+const Hl: React.FC<{ text: string; hits?: Range[] }> = ({ text, hits }) => (
+  <>{splitHighlight(text, hits).map((s, i) => (s.hit ? <mark key={i} className="ojs-hit">{s.text}</mark> : <React.Fragment key={i}>{s.text}</React.Fragment>))}</>
+);
 
 /** "Needs Crafting", "Needs a quest": the one thing an almost-ready entry lacks, in a few words. */
 export const needsShort = (b: EligibilityBlocker | { kind: 'manual'; label: string }): string => {
@@ -105,6 +137,14 @@ export const OsrsJournalScreen: React.FC = () => {
   const [menuNote, setMenuNote] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // One search for every tab: it stays when the tab changes, and for the rest of the visit.
+  const [term, setTermState] = useState(readSearch);
+  const setTerm = useCallback((v: string) => { setTermState(v); writeSearch(v); }, []);
+  const query = useMemo(() => compileJournalQuery(term), [term]);
+  const searching = query !== null;
+  const [cursor, setCursor] = useState(-1);
 
   const select = useCallback((t: OsrsJournalTab, s: JournalSel) => setSelState(cur => ({ ...cur, [t]: s })), []);
 
@@ -153,74 +193,129 @@ export const OsrsJournalScreen: React.FC = () => {
     : combatSel?.kind === 'caTask' ? ALL_CA_TASKS.find(t => t.id === combatSel.id)?.tierId : undefined)
     ?? ca.expandedId ?? ca.filteredCAs.find(t => !unlocks.cas.includes(t.id))?.id ?? ca.filteredCAs[0]?.id;
 
+  // A quest's start point, searched with its name and series (only worked out while searching).
+  const questStart = useMemo(() => {
+    const map = new Map<string, string>();
+    if (!searching) return map;
+    for (const q of quest.allQuests) {
+      const label = questLocations(q.name, unlocks, gameModeId).startPlaces[0]?.label ?? q.locations?.[0]?.label;
+      if (label) map.set(q.id, label);
+    }
+    return map;
+  }, [searching, quest.allQuests, unlocks, gameModeId]);
+
   const items: Item[] = useMemo(() => {
     const row = (sel: JournalSel, title: string, extra: Partial<Extract<Item, { t: 'row' }>> = {}): Item => ({
       t: 'row', key: selKey(sel), sel, title, name: title, color: ORANGE, pad: 34, keyColor: YELLOW, ...extra,
     });
     const empty = (key: string, text: string): Item => ({ t: 'empty', key, text });
+
+    // Search: each entry's fields, and the hits to draw on its row.
+    const questHit = (q: QuestData) => {
+      const texts = questSearchFields(q, questStart.get(q.id));
+      const m = matchJournalFields(query, texts);
+      return m && { hits: m[0], via: viaOf(m, texts) };
+    };
+    const taskHit = (t: DiaryTask) => {
+      const m = matchJournalFields(query, diaryTaskSearchFields(t));
+      return m && { hits: m[0], via: m[0].length ? undefined : { text: t.tierId, hits: hitRanges(query, t.tierId) } };
+    };
+    const caHit = (t: CATask, monsterShown: boolean) => {
+      const texts = caTaskSearchFields(t);
+      const m = matchJournalFields(query, texts);
+      return m && { hits: m[0], keyHits: monsterShown ? m[2] : undefined, via: viaOf(m, texts, monsterShown ? [2, 3] : []) };
+    };
+    const pick = <T, H>(list: T[], hit: (x: T) => H | null): Array<[T, H | Record<string, never>]> =>
+      list.flatMap(x => { const h = searching ? hit(x) : {}; return h ? [[x, h] as [T, H | Record<string, never>]] : []; });
+
+    // A section: its heading (with "found / total" while searching), its rows, or a line when it has none.
+    const out: Item[] = [];
+    const section = (head: Omit<Extract<Item, { t: 'head' }>, 't' | 'count'> & { count: string }, total: number, rows: Item[], emptyText?: string) => {
+      if (searching && rows.length === 0) return;
+      out.push({ t: 'head', ...head, count: searching ? `${rows.length} / ${total}` : head.count, found: searching });
+      out.push(...rows);
+      if (rows.length === 0 && emptyText) out.push(empty('e-' + head.key, emptyText));
+    };
+
     if (tab === 'ready') {
-      return [
-        { t: 'head', key: 'h-q', title: 'Quests', icon: 'quest', count: String(readyQuests.length) },
-        ...readyQuests.map(q => row({ kind: 'quest', id: q.id }, q.name, { keyText: pct(DROP_RATES[q.difficulty]) })),
-        ...(readyQuests.length ? [] : [empty('e-q', 'No quest is ready yet.')]),
-        { t: 'head', key: 'h-d', title: 'Diary tasks', icon: 'diary', count: String(readyTasks.length) },
-        ...readyTasks.map(t => row({ kind: 'task', id: t.id }, t.description, { keyText: pct(taskRate(t)), tip: t.tierId })),
-        ...(readyTasks.length ? [] : [empty('e-d', 'No diary task is doable yet.')]),
-        { t: 'head', key: 'h-c', title: 'Combat Achievements', icon: 'ca', count: String(readyCA.length) },
-        ...readyCA.map(t => row({ kind: 'caTask', id: t.id }, t.name ?? t.description, { keyText: pct(caRate(t)), tip: `${t.tierId} · ${t.monster}` })),
-        ...(readyCA.length ? [] : [empty('e-c', 'No task at an unlocked boss.')]),
-      ];
+      const qs = pick(readyQuests, q => questHit(q)).map(([q, h]) => row({ kind: 'quest', id: q.id }, q.name, { keyText: pct(DROP_RATES[q.difficulty]), ...h }));
+      const ds = pick(readyTasks, taskHit).map(([t, h]) => row({ kind: 'task', id: t.id }, t.description, { keyText: pct(taskRate(t)), tip: t.tierId, ...h }));
+      const cs = pick(readyCA, t => caHit(t, false)).map(([t, h]) => row({ kind: 'caTask', id: t.id }, t.name ?? t.description, { keyText: pct(caRate(t)), tip: `${t.tierId} · ${t.monster}`, ...h }));
+      section({ key: 'h-q', title: 'Quests', icon: 'quest', count: String(readyQuests.length) }, readyQuests.length, qs, 'No quest is ready yet.');
+      section({ key: 'h-d', title: 'Diary tasks', icon: 'diary', count: String(readyTasks.length) }, readyTasks.length, ds, 'No diary task is doable yet.');
+      section({ key: 'h-c', title: 'Combat Achievements', icon: 'ca', count: String(readyCA.length) }, readyCA.length, cs, 'No task at an unlocked boss.');
+      return out;
     }
     if (tab === 'almost') {
-      return [
-        { t: 'head', key: 'h-q', title: 'Quests', icon: 'quest', count: '1 thing missing' },
-        ...almostQuests.map(({ q, unmet }) => row({ kind: 'quest', id: q.id }, q.name, { keyText: needsShort(unmet), keyColor: RED_KEY, tip: unmet.label })),
-        ...(almostQuests.length ? [] : [empty('e-q', 'No quest is one step away.')]),
-        { t: 'head', key: 'h-d', title: 'Diary tasks', icon: 'diary', count: '1 thing missing' },
-        ...almostTasks.map(({ task, unmet }) => row({ kind: 'task', id: task.id }, task.description, { keyText: needsShort(unmet), keyColor: RED_KEY, tip: unmet.label })),
-        ...(almostTasks.length ? [] : [empty('e-d', 'No diary task is one step away.')]),
-      ];
+      const qs = pick(almostQuests, ({ q }) => questHit(q)).map(([{ q, unmet }, h]) => row({ kind: 'quest', id: q.id }, q.name, { keyText: needsShort(unmet), keyColor: RED_KEY, tip: unmet.label, ...h }));
+      const ds = pick(almostTasks, ({ task }) => taskHit(task)).map(([{ task, unmet }, h]) => row({ kind: 'task', id: task.id }, task.description, { keyText: needsShort(unmet), keyColor: RED_KEY, tip: unmet.label, ...h }));
+      section({ key: 'h-q', title: 'Quests', icon: 'quest', count: '1 thing missing' }, almostQuests.length, qs, 'No quest is one step away.');
+      section({ key: 'h-d', title: 'Diary tasks', icon: 'diary', count: '1 thing missing' }, almostTasks.length, ds, 'No diary task is one step away.');
+      return out;
     }
     if (tab === 'quests') {
       const sections = quest.groupBySeries
         ? quest.seriesGroups.map(([title, entries]) => ({ key: title, title, entries }))
         : [{ key: 'quests', title: 'Quests', entries: quest.mainQuests }, { key: 'miniquests', title: 'Miniquests', entries: quest.miniquests }];
-      const out: Item[] = [];
       for (const s of sections) {
         if (s.entries.length === 0) continue;
-        out.push({ t: 'head', key: 'h-' + s.key, title: s.title, count: `${s.entries.filter(q => q.status === 'COMPLETED').length}/${s.entries.length}` });
-        for (const q of s.entries) out.push(row({ kind: 'quest', id: q.id }, q.name, { color: questTone(q), pad: 10 }));
+        const rows = pick(s.entries, q => questHit(q)).map(([q, h]) => row({ kind: 'quest', id: q.id }, q.name, { color: questTone(q), pad: 10, ...h }));
+        section({ key: 'h-' + s.key, title: s.title, count: `${s.entries.filter(q => q.status === 'COMPLETED').length}/${s.entries.length}` }, s.entries.length, rows);
       }
-      if (out.length === 0) out.push(empty('e', 'No quests found matching filter.'));
+      if (out.length === 0 && !searching) out.push(empty('e', 'No quests found matching filter.'));
+      return out;
+    }
+    if (tab === 'diaries') {
+      // The area grid has nowhere to show task text, so a search lists each tier and its matching tasks.
+      if (!searching) return out;
+      for (const d of diary.sortedDiaries) {
+        const all = tasksOfTier(d.id);
+        const rows = pick(all, taskHit).map(([t, h]) => {
+          const done = d.status === 'COMPLETED' || unlocks.completedTasks.includes(t.id);
+          const tone = done ? TONE.done : evaluateDiaryTaskEligibility(t, unlocks, gameModeId, areaRoutes).eligible ? TONE.ready : TONE.locked;
+          return row({ kind: 'task', id: t.id }, t.description, { pad: 22, color: tone, hits: h.hits });
+        });
+        if (rows.length === 0) continue;
+        const done = d.status === 'COMPLETED' ? all.length : all.filter(t => unlocks.completedTasks.includes(t.id)).length;
+        out.push(row({ kind: 'tier', id: d.id }, d.id, {
+          bold: true, pad: 10, keyText: `${rows.length} / ${all.length}`, keyColor: YELLOW, hits: hitRanges(query, d.id),
+          color: done === all.length && all.length > 0 ? TONE.done : done > 0 ? TONE.ready : TONE.locked,
+          tip: `${rows.length} of ${all.length} tasks match; ${done} done`,
+        }));
+        out.push(...rows);
+      }
       return out;
     }
     if (tab === 'combat') {
-      const out: Item[] = [];
-      const term = ca.searchTerm.toLowerCase();
       for (const tier of ca.filteredCAs) {
         const all = caTasksOf.get(tier.id) ?? [];
+        const shown = searching || tier.id === openCATier ? pick(all, t => caHit(t, true)) : [];
+        if (searching && shown.length === 0) continue;
         const done = all.filter(t => unlocks.completedTasks.includes(t.id)).length;
         const recorded = unlocks.cas.includes(tier.id);
         out.push(row({ kind: 'caTier', id: tier.id }, `${tier.id} tier`, {
-          bold: true, pad: 10, keyText: `${done}/${all.length}`, keyColor: '#c8b897',
+          bold: true, pad: 10,
+          keyText: searching ? `${shown.length} / ${all.length}` : `${done}/${all.length}`, keyColor: searching ? YELLOW : '#c8b897',
+          hits: hitRanges(query, tier.id),
+          tip: searching ? `${shown.length} of ${all.length} tasks match; ${done} done` : undefined,
           color: recorded ? TONE.done : ca.totalPoints >= tier.pointsRequired ? TONE.ready : '#ffffff',
         }));
-        if (term || tier.id === openCATier) {
-          for (const t of all) {
-            if (term && !t.description.toLowerCase().includes(term) && !t.monster.toLowerCase().includes(term) && !tier.id.toLowerCase().includes(term)) continue;
-            out.push(row({ kind: 'caTask', id: t.id }, t.name ?? t.description, { pad: 22, color: caTaskTone(t), keyText: t.monster, keyColor: '#c8b897' }));
-          }
+        for (const [t, h] of shown) {
+          out.push(row({ kind: 'caTask', id: t.id }, t.name ?? t.description, { pad: 22, color: caTaskTone(t), keyText: t.monster, keyColor: '#c8b897', ...h }));
         }
       }
-      if (out.length === 0) out.push(empty('e', 'No tiers found matching filter.'));
+      if (out.length === 0 && !searching) out.push(empty('e', 'No tiers found matching filter.'));
       return out;
     }
-    return [];
+    return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, readyQuests, readyTasks, readyCA, almostQuests, almostTasks, quest.groupBySeries, quest.seriesGroups,
-    quest.mainQuests, quest.miniquests, ca.filteredCAs, ca.searchTerm, ca.totalPoints, openCATier, unlocks, caTasksOf]);
+  }, [tab, query, questStart, readyQuests, readyTasks, readyCA, almostQuests, almostTasks, quest.groupBySeries, quest.seriesGroups,
+    quest.mainQuests, quest.miniquests, diary.sortedDiaries, ca.filteredCAs, ca.totalPoints, openCATier, unlocks, gameModeId, areaRoutes, caTasksOf]);
 
-  const firstRow = items.find((i): i is Extract<Item, { t: 'row' }> => i.t === 'row');
+  const navRows = useMemo(() => items.filter((i): i is Extract<Item, { t: 'row' }> => i.t === 'row'), [items]);
+  const noMatches = searching && navRows.length === 0;
+
+  const firstRow = navRows[0];
 
   // Diaries tab: the classic log's expanded tier is the selection, so jumps land on it.
   const diaryDefault: JournalSel | undefined = diary.expandedId
@@ -234,6 +329,8 @@ export const OsrsJournalScreen: React.FC = () => {
 
   const current: JournalSel | undefined = (() => {
     const s = sel[tab];
+    // While searching, the pane follows the results: a selection the search hides gives way to the first match.
+    if (searching && navRows.length > 0) return s && navRows.some(r => r.key === selKey(s)) ? s : firstRow.sel;
     if (tab === 'diaries') return s ?? diaryDefault;
     if (tab === 'quests' && s?.kind === 'quest' && !items.some(i => i.t === 'row' && i.key === selKey(s))) return firstRow?.sel;
     return s ?? firstRow?.sel;
@@ -262,6 +359,47 @@ export const OsrsJournalScreen: React.FC = () => {
 
   // Close the menu on tab change, Escape, a press elsewhere or scrolling the list.
   useEffect(() => { setMenu(null); setFiltersOpen(false); }, [tab]);
+
+  /* ── Search keys: "/" to search, Up/Down through the results, Enter to open, Escape to clear ── */
+
+  useEffect(() => { setCursor(-1); }, [tab, term]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented || isTypingTarget(e.target)) return;
+      const input = searchRef.current;
+      if (!input || input.getClientRects().length === 0) return;
+      e.preventDefault();
+      input.focus();
+      input.select();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+  const cursorKey = cursor >= 0 ? navRows[cursor]?.key ?? '' : '';
+  useLayoutEffect(() => {
+    if (!cursorKey) return;
+    scrollRef.current?.querySelector<HTMLElement>(`[data-sel-key="${CSS.escape(cursorKey)}"]`)?.scrollIntoView?.({ block: 'nearest' });
+  }, [cursorKey]);
+
+  const openRow = (r: Extract<Item, { t: 'row' }>) => {
+    select(tab, r.sel);
+    if (r.sel.kind === 'caTier') ca.setExpandedId(r.sel.id);
+  };
+  const onSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      if (navRows.length === 0) return;
+      e.preventDefault();
+      const from = cursor >= 0 ? cursor : Math.max(-1, navRows.findIndex(r => r.key === currentKey));
+      setCursor(e.key === 'ArrowDown' ? Math.min(navRows.length - 1, from + 1) : Math.max(0, from - 1));
+    } else if (e.key === 'Enter') {
+      const r = navRows[cursor >= 0 ? cursor : 0];
+      if (r) { e.preventDefault(); openRow(r); }
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (term) setTerm(''); else e.currentTarget.blur();
+    }
+  };
   useEffect(() => {
     if (!menu && !filtersOpen) return undefined;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setMenu(null); setFiltersOpen(false); } };
@@ -392,7 +530,7 @@ export const OsrsJournalScreen: React.FC = () => {
     if (current.kind === 'tier') {
       const d = diaryById(current.id);
       return d ? <DiaryTierDetail key={currentKey} diary={d} unlocks={unlocks} gameModeId={gameModeId} areaRoutes={areaRoutes}
-        searchTerm={tab === 'diaries' ? diary.searchTerm : ''} wikiUrl={diary.getDiaryWikiLink}
+        searchTerm={tab === 'diaries' && !noMatches ? term : ''} wikiUrl={diary.getDiaryWikiLink}
         onTierComplete={diary.handleToggle} onTaskComplete={diary.handleTaskToggle} onSkillClick={onSkillClick} onSelect={onSelect} /> : null;
     }
     if (current.kind === 'caTask') {
@@ -409,16 +547,20 @@ export const OsrsJournalScreen: React.FC = () => {
     : tab === 'diaries' ? ['Achievement Diaries', `${stats.diaries.done}/${stats.diaries.total} tasks`]
     : tab === 'combat' ? ['Combat Achievements', `${ca.totalPoints.toLocaleString()} pts`]
     : null;
-  const legend = tab === 'quests' ? [['Done', TONE.done], ['Can do now', TONE.ready], ['Not yet', TONE.locked]]
+  const legend = tab === 'quests' || (tab === 'diaries' && searching) ? [['Done', TONE.done], ['Can do now', TONE.ready], ['Not yet', TONE.locked]]
     : tab === 'diaries' ? [['Done', TONE.done], ['Started', TONE.ready], ['Not started', TONE.locked]]
     : tab === 'combat' ? [['Done', TONE.done], ['Boss unlocked', TONE.ready], ['Boss locked', TONE.locked]]
     : null;
 
   const activeFilters = tab === 'quests'
-    ? [quest.filter !== 'ALL', quest.activeRegion !== 'ALL', quest.diffFilter !== 'ALL', !!quest.localSearch, quest.sortMode !== 'SMART', quest.groupBySeries, quest.advisorMode].filter(Boolean).length
+    ? [quest.filter !== 'ALL', quest.activeRegion !== 'ALL', quest.diffFilter !== 'ALL', quest.sortMode !== 'SMART', quest.groupBySeries, quest.advisorMode].filter(Boolean).length
     : tab === 'diaries'
-      ? [diary.filterStatus !== 'ALL', diary.filterRegion !== 'ALL', diary.filterTier !== 'ALL', !!diary.localSearch, diary.sortMode !== 'AREA'].filter(Boolean).length
-      : tab === 'combat' ? [ca.filterStatus !== 'ALL', ca.filterTier !== 'ALL', !!ca.localSearch].filter(Boolean).length : 0;
+      ? [diary.filterStatus !== 'ALL', diary.filterRegion !== 'ALL', diary.filterTier !== 'ALL', diary.sortMode !== 'AREA'].filter(Boolean).length
+      : tab === 'combat' ? [ca.filterStatus !== 'ALL', ca.filterTier !== 'ALL'].filter(Boolean).length : 0;
+  // Filters that narrow the list (not sort or grouping), for the no-matches line.
+  const narrowing = tab === 'quests' ? quest.filter !== 'ALL' || quest.activeRegion !== 'ALL' || quest.diffFilter !== 'ALL'
+    : tab === 'diaries' ? diary.filterStatus !== 'ALL' || diary.filterRegion !== 'ALL' || diary.filterTier !== 'ALL'
+    : tab === 'combat' ? ca.filterStatus !== 'ALL' || ca.filterTier !== 'ALL' : false;
 
   const menuActions = menu ? actionsFor(menu.sel) : null;
 
@@ -457,10 +599,30 @@ export const OsrsJournalScreen: React.FC = () => {
           {TABS.map(([id, label]) => (
             <button key={id} type="button" role="tab" aria-selected={tab === id} className="ojs-tab" onClick={() => setOsrsJournalTab(id)}>{label}</button>
           ))}
-          <span className="ojs-hint">Right-click an entry for options</span>
+          <label className="ojs-search" title={'Search quests, series and start points, diary tasks and areas, combat tasks, bosses and tiers.\nPress / to search, Up and Down to move, Enter to open, Escape to clear.\nRight-click an entry for options.'}>
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14"><circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M9.5 9.5l3.5 3.5" stroke="currentColor" strokeWidth="2" /></svg>
+            <input
+              ref={searchRef}
+              type="search"
+              aria-label="Search the journal"
+              aria-controls="ojs-results"
+              aria-activedescendant={cursorKey ? rowDomId(cursorKey) : undefined}
+              placeholder="Search the journal ( / )"
+              spellCheck={false}
+              autoComplete="off"
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              onKeyDown={onSearchKey}
+            />
+            {term && (
+              <button type="button" className="ojs-search-x" aria-label="Clear search" title="Clear search" onClick={() => { setTerm(''); searchRef.current?.focus(); }}>
+                <svg aria-hidden="true" width="10" height="10" viewBox="0 0 10 10"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="2" /></svg>
+              </button>
+            )}
+          </label>
           {(tab === 'quests' || tab === 'diaries' || tab === 'combat') && (
             <button type="button" className="osrs-btn ojs-filter-btn" aria-expanded={filtersOpen} onClick={() => setFiltersOpen(o => !o)}
-              title="Search, filters, sort and insights">
+              title="Filters, sort and insights">
               Filters{activeFilters > 0 && <span style={{ color: YELLOW, fontFamily: 'RSSmall, sans-serif' }}>{activeFilters}</span>}
             </button>
           )}
@@ -476,8 +638,14 @@ export const OsrsJournalScreen: React.FC = () => {
         <div className="ojs-body">
           <div className="osrs-inner ojs-list" ref={listRef}>
             {topLine && <div className="ojs-topline">{topLine[0]}<span>{topLine[1]}</span></div>}
-            <div className="ojs-list-scroll" ref={scrollRef} onScroll={() => menu && setMenu(null)}>
-              {tab === 'diaries'
+            <div className="ojs-list-scroll" id="ojs-results" ref={scrollRef} onScroll={() => menu && setMenu(null)}>
+              {noMatches && (
+                <div className="ojs-nomatch" role="status">
+                  No matches for <span className="w">{query.raw}</span>{narrowing ? ' with these filters' : ''}.{' '}
+                  <button type="button" className="ojs-link" onClick={() => { setTerm(''); searchRef.current?.focus(); }}>Clear</button>
+                </div>
+              )}
+              {tab === 'diaries' && !searching
                 ? <DiaryGrid d={diary} unlocks={unlocks} currentKey={currentKey}
                     onPick={(id) => { diary.setExpandedId(id); select('diaries', { kind: 'tier', id }); }}
                     onMenu={(e, id) => openMenu(e, { kind: 'tier', id }, id)} />
@@ -485,7 +653,8 @@ export const OsrsJournalScreen: React.FC = () => {
                   if (item.t === 'head') {
                     return (
                       <div key={item.key} className="ojs-head">
-                        {item.icon && <JournalIcon kind={item.icon} />}{item.title}<span className="ojs-count">{item.count}</span>
+                        {item.icon && <JournalIcon kind={item.icon} />}{item.title}
+                        <span className={`ojs-count${item.found ? ' is-found' : ''}`} title={item.found ? `${item.count.replace(' / ', ' of ')} match` : undefined}>{item.count}</span>
                       </div>
                     );
                   }
@@ -494,20 +663,19 @@ export const OsrsJournalScreen: React.FC = () => {
                   return (
                     <button
                       key={item.key}
+                      id={rowDomId(item.key)}
                       type="button"
                       data-sel-key={item.key}
-                      className={`ojs-row${isSel ? ' is-sel' : ''}${item.bold ? ' is-bold' : ''}`}
+                      className={`ojs-row${isSel ? ' is-sel' : ''}${item.bold ? ' is-bold' : ''}${item.key === cursorKey ? ' is-cursor' : ''}`}
                       style={{ paddingLeft: item.pad, color: isSel && item.color === ORANGE ? '#ffffff' : item.color }}
                       title={item.tip}
                       aria-current={isSel ? 'true' : undefined}
-                      onClick={() => {
-                        select(tab, item.sel);
-                        if (item.sel.kind === 'caTier') ca.setExpandedId(item.sel.id);
-                      }}
+                      onClick={() => openRow(item)}
                       onContextMenu={(e) => { select(tab, item.sel); openMenu(e, item.sel, item.name); }}
                     >
-                      <span className="ojs-row-name">{item.title}</span>
-                      {item.keyText && <span className="ojs-row-key" style={{ color: item.keyColor }}>{item.keyText}</span>}
+                      <span className="ojs-row-name"><Hl text={item.title} hits={item.hits} /></span>
+                      {item.via && <span className="ojs-row-via"><Hl text={item.via.text} hits={item.via.hits} /></span>}
+                      {item.keyText && <span className="ojs-row-key" style={{ color: item.keyColor }}><Hl text={item.keyText} hits={item.keyHits} /></span>}
                     </button>
                   );
                 })}
@@ -560,7 +728,7 @@ export const OsrsJournalScreen: React.FC = () => {
           <span>Quest Points: <span style={{ color: '#ffffff' }}>{quest.currentQP}/{quest.maxQP}</span></span>
           <span>Ready: <span style={{ color: '#ffffff' }}>{readyCount}</span></span>
           <span>Keys waiting: <span style={{ color: YELLOW }}>{keysWaitingText}</span></span>
-          <span className="ojs-foot-note">A missed quest roll still gives a Fate Point.</span>
+          <span className="ojs-foot-note">Right-click an entry for options. A missed quest roll still gives a Fate Point.</span>
         </div>
       </section>
 

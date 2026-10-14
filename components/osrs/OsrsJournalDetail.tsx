@@ -21,6 +21,7 @@ import { EntityLocations } from '../EntityLocations';
 import { questLines, LineView, type Line } from './OsrsJournalQuests';
 import { placesOf, blockerChunk } from './OsrsJournalDiaries';
 import { SkillIcon, WikiTable, plural, type WikiRow } from './OsrsJournalParts';
+import { compileJournalQuery, journalMatches, diaryTaskSearchFields } from './OsrsJournalSearch';
 
 /**
  * The right half of the OSRS Journal window (board: Journal.dc.html): the
@@ -333,10 +334,9 @@ export const DiaryTierDetail: React.FC<{
   const allTasksDone = tasks.length === 0 || done === tasks.length;
   const tier = evaluateDiaryTierEligibility(diary, unlocks, gameModeId, areaRoutes);
   const rate = DROP_RATES[diary.difficulty];
-  const term = searchTerm.toLowerCase();
-  const shown = term && !diary.id.toLowerCase().includes(term)
-    ? tasks.filter(task => task.description.toLowerCase().includes(term))
-    : tasks;
+  // The Journal's search narrows the tier's tasks the way it narrows the list (OsrsJournalSearch).
+  const query = compileJournalQuery(searchTerm);
+  const shown = query ? tasks.filter(task => journalMatches(query, diaryTaskSearchFields(task))) : tasks;
 
   const facts: WikiRow[] = [
     { label: 'Tier', value: `${diary.id}, ${done}/${tasks.length} tasks done` },

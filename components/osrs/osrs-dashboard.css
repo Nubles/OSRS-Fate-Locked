@@ -90,12 +90,12 @@ html[data-ui="osrs"] .osrs-dash-note > button { padding: 2px; border-radius: 0; 
 html[data-ui="osrs"] .osrs-dash-note:focus-within,
 html[data-ui="osrs"] .osrs-dash-note:has(button[title="View Note"]),
 html[data-ui="osrs"] .osrs-dash-skill:hover .osrs-dash-note,
-html[data-ui="osrs"] .osrs-dash-minicell:hover .osrs-dash-note,
-html[data-ui="osrs"] .osrs-dash-dollcell:hover .osrs-dash-note { opacity: 1; }
+html[data-ui="osrs"] .osrs-char-dollcell:hover .osrs-dash-note { opacity: 1; }
 html[data-ui="osrs"] .osrs-dash-note.is-corner { position: absolute; right: -1px; bottom: -1px; z-index: 3; }
 
 /* ── Character tab: compact Equipment Lab beside Skills (Main board) ─────── */
-html[data-ui="osrs"] .osrs-dash-chartab { height: 100%; min-height: 0; display: grid; grid-template-columns: 300px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 8px; }
+/* Equipment takes what the Skills panel (capped at three 236px columns) leaves. */
+html[data-ui="osrs"] .osrs-dash-chartab { height: 100%; min-height: 0; display: grid; grid-template-columns: minmax(300px, 1fr) minmax(0, 742px); grid-template-rows: minmax(0, 1fr); gap: 8px; }
 @media (max-width: 860px) {
   html[data-ui="osrs"] .osrs-dash-chartab { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; grid-auto-rows: auto; overflow-y: auto; }
 }
@@ -106,10 +106,10 @@ html[data-ui="osrs"] .osrs-dash-skills > .osrs-dash-panelhead { padding: 0; }
 html[data-ui="osrs"] .osrs-dash-skillwrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
 html[data-ui="osrs"] .osrs-dash-skillgrid {
   flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-auto-rows: minmax(36px, 1fr); gap: 4px;
+  grid-auto-rows: minmax(39px, 76px); gap: 3px 4px;
 }
 html[data-ui="osrs"] .osrs-dash-skill {
-  position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; padding: 2px 10px;
+  position: relative; display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0; min-height: 0; padding: 2px 8px;
   background: var(--osrs-window, #3e3529); border: 1px solid #000;
   box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi, #5c5244), inset -1px -1px 0 var(--osrs-bevel-lo, #14110d);
   text-shadow: 1px 1px 0 #000; cursor: default; outline: none;
@@ -126,18 +126,15 @@ html[data-ui="osrs"] .osrs-dash-skill:focus-visible { outline: 1px solid var(--o
 /* Skill Advisor "show me" flash (it adds ring-2 to the card). */
 html[data-ui="osrs"] .osrs-dash-skill.ring-2 { outline: 2px solid var(--osrs-yellow, #ff0); outline-offset: -2px; }
 html[data-ui="osrs"] .osrs-dash-skill-icon {
-  all: unset; box-sizing: border-box; cursor: pointer; width: 31px; height: 31px; margin-left: -3px; flex-shrink: 0;
+  all: unset; box-sizing: border-box; cursor: pointer; width: 29px; height: 27px; margin: -1px 0 -1px -3px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center; border: 1px solid transparent;
 }
 html[data-ui="osrs"] .osrs-dash-skill-icon:hover,
 html[data-ui="osrs"] .osrs-dash-skill-icon:focus-visible { background: var(--osrs-inner, #2e271e); border-color: #000; box-shadow: inset 0 0 0 1px var(--osrs-orange, #ff981f); }
 html[data-ui="osrs"] .osrs-dash-skill.is-locked .osrs-dash-skill-icon img { filter: grayscale(1) brightness(.6); }
-html[data-ui="osrs"] .osrs-dash-skill-val { margin-left: auto; min-width: 0; display: flex; flex-direction: column; align-items: flex-end; line-height: 16px; }
-html[data-ui="osrs"] .osrs-dash-skill-lvl { font: 16px 'RS', sans-serif; color: var(--osrs-yellow, #ff0); }
+html[data-ui="osrs"] .osrs-dash-skill-lvl { font: 16px 'RSBold', sans-serif; line-height: 16px; color: var(--osrs-yellow, #ff0); }
 html[data-ui="osrs"] .osrs-dash-skill.is-locked .osrs-dash-skill-lvl { color: var(--osrs-muted, #8a7c66); }
-html[data-ui="osrs"] .osrs-dash-skill-sub { font: 16px 'RSSmall', sans-serif; color: var(--osrs-orange, #ff981f); white-space: nowrap; }
-html[data-ui="osrs"] .osrs-dash-skill-sub.is-locked { color: var(--osrs-red, #ff3030); }
-html[data-ui="osrs"] .osrs-dash-skill-tools { position: absolute; right: 2px; top: 2px; z-index: 5; display: flex; align-items: center; gap: 2px; }
+html[data-ui="osrs"] .osrs-dash-skill-tools { margin-left: auto; display: flex; align-items: center; gap: 2px; }
 html[data-ui="osrs"] .osrs-dash-omni {
   all: unset; box-sizing: border-box; cursor: pointer; width: 22px; height: 20px; display: flex; align-items: center; justify-content: center;
   background: var(--osrs-btn, #4a4033); border: 1px solid #000; box-shadow: inset 1px 1px 0 var(--osrs-btn-hi, #6b5f4d), inset -1px -1px 0 var(--osrs-btn-lo, #2b241b);
@@ -145,37 +142,12 @@ html[data-ui="osrs"] .osrs-dash-omni {
 html[data-ui="osrs"] .osrs-dash-omni:hover, html[data-ui="osrs"] .osrs-dash-omni:focus-visible { box-shadow: inset 0 0 0 1px var(--osrs-purple, #c77dff); }
 html[data-ui="osrs"] .osrs-dash-advisor { position: absolute; left: 0; right: 0; top: 0; z-index: 20; max-height: 100%; overflow-y: auto; padding: 30px 4px 4px; }
 html[data-ui="osrs"] .osrs-dash-skillfoot {
-  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; padding: 6px 10px; flex-shrink: 0;
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; padding: 4px 10px; flex-shrink: 0;
   background: var(--osrs-slot, #3b3226); border: 1px solid #000; text-shadow: 1px 1px 0 #000;
 }
 
 /* Compact Equipment Lab */
-html[data-ui="osrs"] .osrs-dash-labmini { min-width: 0; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px 8px 10px; }
-html[data-ui="osrs"] .osrs-dash-minidoll { display: grid; grid-template-columns: repeat(3, 52px); grid-auto-rows: 52px; gap: 10px 16px; margin-top: 6px; }
-html[data-ui="osrs"] .osrs-dash-minicell { position: relative; }
-html[data-ui="osrs"] .osrs-dash-minislot {
-  all: unset; box-sizing: border-box; cursor: pointer; position: relative; width: 52px; height: 52px;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--osrs-slot, #3b3226); border: 1px solid #000;
-  box-shadow: inset 1px 1px 0 var(--osrs-slot-hi, #2a231a), inset -1px -1px 0 var(--osrs-slot-lo, #5c5244);
-}
-html[data-ui="osrs"] .osrs-dash-minislot.has-item { outline: 1px solid var(--osrs-btn-hi, #6b5f4d); }
-html[data-ui="osrs"] .osrs-dash-minislot:hover { filter: brightness(1.15); }
-html[data-ui="osrs"] .osrs-dash-minislot:focus-visible { outline: 2px solid var(--osrs-yellow, #ff0); outline-offset: 1px; }
-html[data-ui="osrs"] .osrs-dash-minitier { position: absolute; left: 3px; top: 1px; font: 16px 'RSSmall', sans-serif; line-height: 14px; text-shadow: 1px 1px 0 #000; }
-html[data-ui="osrs"] .osrs-dash-slotname { font: 16px 'RSSmall', sans-serif; color: #6f6250; text-shadow: 1px 1px 0 #000; }
-html[data-ui="osrs"] .osrs-dash-dollomni { position: absolute; right: 1px; top: 1px; }
-
-/* Shorter windows: tighten the compact doll so "Plan an upgrade" stays in view. */
-@media (min-width: 861px) { html[data-ui="osrs"] .osrs-dash-labmini { container-type: size; } }
-@container (max-height: 480px) {
-  html[data-ui="osrs"] .osrs-dash-labmini > .osrs-dash-minidoll { grid-auto-rows: 46px; grid-template-columns: repeat(3, 46px); gap: 6px 18px; margin-top: 0; }
-  html[data-ui="osrs"] .osrs-dash-labmini .osrs-dash-minislot { width: 46px; height: 46px; }
-}
-@container (max-height: 420px) {
-  html[data-ui="osrs"] .osrs-dash-labmini > .osrs-dash-minidoll { gap: 3px 18px; }
-  html[data-ui="osrs"] .osrs-dash-labmini .osrs-dash-labmini-note { display: none; }
-}
+html[data-ui="osrs"] .osrs-dash-labmini { min-width: 0; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px; }
 
 /* ── Equipment Lab, full tab (Gear board) ───────────────────────────────── */
 html[data-ui="osrs"] .osrs-dash-labfull { height: 100%; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -193,39 +165,8 @@ html[data-ui="osrs"] .osrs-dash-labnote { flex-shrink: 0; margin: 0; padding: 6p
 /* Worn Equipment */
 html[data-ui="osrs"] .osrs-dash-wornwin { width: 520px; flex-shrink: 0; min-height: 0; display: flex; flex-direction: column; }
 html[data-ui="osrs"] .osrs-dash-wornbody { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 18px 16px 12px; }
-html[data-ui="osrs"] .osrs-dash-doll { display: grid; grid-template-columns: repeat(3, 80px); grid-auto-rows: 80px; gap: 24px 44px; }
-html[data-ui="osrs"] .osrs-dash-dollcell { position: relative; }
-html[data-ui="osrs"] .osrs-dash-dollslot {
-  all: unset; box-sizing: border-box; cursor: pointer; position: relative; width: 80px; height: 80px;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--osrs-slot, #3b3226); border: 1px solid #000;
-  box-shadow: inset 1px 1px 0 var(--osrs-slot-hi, #2a231a), inset -1px -1px 0 var(--osrs-slot-lo, #5c5244);
-}
-html[data-ui="osrs"] .osrs-dash-dollslot.is-on { background: #4a3d2c; }
-html[data-ui="osrs"] .osrs-dash-dollslot.has-item { outline: 1px solid var(--osrs-btn-hi, #6b5f4d); }
-html[data-ui="osrs"] .osrs-dash-dollslot.is-sel { outline: 2px solid var(--osrs-yellow, #ff0); outline-offset: 1px; }
-html[data-ui="osrs"] .osrs-dash-dollslot:hover:not([disabled]) { filter: brightness(1.15); }
-html[data-ui="osrs"] .osrs-dash-dollslot[disabled] { cursor: default; }
-html[data-ui="osrs"] .osrs-dash-dollslot:focus-visible { outline: 2px solid var(--osrs-yellow, #ff0); outline-offset: 1px; }
-html[data-ui="osrs"] .osrs-dash-dollbadge {
-  position: absolute; left: 50%; bottom: -12px; transform: translateX(-50%); height: 20px; box-sizing: border-box; padding: 0 5px 0 3px;
-  display: flex; align-items: center; gap: 3px; white-space: nowrap; background: var(--osrs-well, #1f1a14); border: 1px solid #000;
-  font: 16px 'RSSmall', sans-serif; line-height: 16px; text-shadow: 1px 1px 0 #000;
-}
-html[data-ui="osrs"] .osrs-dash-dollimg { width: 72px; height: 64px; object-fit: contain; }
-/* Shorter windows (the chatbox docked below): a smaller doll so it still fits. */
+/* The doll itself is OsrsCharDoll (osrs-char.css); this body is its container. */
 @media (min-width: 1001px) { html[data-ui="osrs"] .osrs-dash-wornbody { container-type: size; } }
-@container (max-height: 640px) {
-  html[data-ui="osrs"] .osrs-dash-wornbody > .osrs-dash-doll { grid-template-columns: repeat(3, 64px); grid-auto-rows: 64px; gap: 18px 32px; }
-  html[data-ui="osrs"] .osrs-dash-wornbody .osrs-dash-dollslot { width: 64px; height: 64px; }
-  html[data-ui="osrs"] .osrs-dash-wornbody .osrs-dash-dollimg { width: 54px; height: 48px; }
-}
-@container (max-height: 540px) {
-  html[data-ui="osrs"] .osrs-dash-wornbody > .osrs-dash-doll { grid-template-columns: repeat(3, 52px); grid-auto-rows: 52px; gap: 14px 22px; }
-  html[data-ui="osrs"] .osrs-dash-wornbody .osrs-dash-dollslot { width: 52px; height: 52px; }
-  html[data-ui="osrs"] .osrs-dash-wornbody .osrs-dash-dollimg { width: 36px; height: 32px; }
-  html[data-ui="osrs"] .osrs-dash-wornbody .osrs-dash-dollslot > img[style*="margin-top"] { margin-top: -10px !important; }
-}
 html[data-ui="osrs"] .osrs-dash-worninfo { align-self: stretch; margin-top: auto; display: flex; flex-direction: column; gap: 3px; padding: 8px 12px; font: 16px 'RS', sans-serif; line-height: 18px; }
 
 /* Tiers */
@@ -320,7 +261,6 @@ html[data-ui="osrs"] .osrs-dash-dpsminis { display: grid; grid-template-columns:
 
 @media (max-width: 1320px) {
   html[data-ui="osrs"] .osrs-dash-wornwin { width: 400px; }
-  html[data-ui="osrs"] .osrs-dash-doll { gap: 24px 28px; }
   html[data-ui="osrs"] .osrs-dash-labgear { grid-template-columns: minmax(0, 1fr) 300px; }
   html[data-ui="osrs"] .osrs-dash-labtiers { grid-template-columns: minmax(0, 1fr) 320px; }
   html[data-ui="osrs"] .osrs-dash-dpsgrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }

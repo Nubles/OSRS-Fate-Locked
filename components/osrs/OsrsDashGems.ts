@@ -1,3 +1,4 @@
+import type React from 'react';
 /**
  * The one tier ladder of the OSRS layout: Tier I..X drawn as the ten cut gems
  * from Opal to Zenyte. Skills use all ten; equipment slots (Tier 1..9) use
@@ -52,3 +53,24 @@ export const itemSpriteFallback = (wikiFile?: string) => (e: { currentTarget: HT
   if (wikiFile && !img.dataset.fallback) { img.dataset.fallback = '1'; img.src = wikiImageSrc(wikiFile); return; }
   img.style.visibility = 'hidden';
 };
+
+/**
+ * The gem's cut stone sits at (6,5) and measures 22x24 inside its 36x32 item
+ * sprite. Drawn as a background at native size so it stays pixel-crisp.
+ */
+export const gemCropStyle = (t: number): React.CSSProperties => ({
+  backgroundImage: `url(${gemSrc(t)})`,
+  backgroundPosition: '-6px -5px',
+  backgroundRepeat: 'no-repeat',
+});
+/** Half-size (11x12) gem for equipment slot corners, drawn at the doll's integer scale. */
+export const gemSmallSrc = (t: number): string => `${base()}osrs-ui/slots/gem-${TIER_GEMS[Math.min(Math.max(t, 1), TIER_GEMS.length) - 1].file}.png`;
+
+/** The OSRS worn-equipment empty-slot silhouettes (cache sprites 156-166), 36x36 over the slot tile. */
+const SLOT_SPRITE: Record<string, string> = {
+  Head: 'head', Cape: 'cape', Neck: 'neck', Ammo: 'ammo', Weapon: 'weapon', Body: 'body',
+  Shield: 'shield', Legs: 'legs', Gloves: 'hands', Boots: 'feet', Ring: 'ring',
+};
+export const slotSilhouetteSrc = (slot: string): string => `${base()}osrs-ui/slots/${SLOT_SPRITE[slot] ?? 'head'}.png`;
+/** Slot tile (sprite 170) and the connector lines (sprites 172 / 173). */
+export const slotUiSrc = (name: 'tile' | 'line-v' | 'line-h'): string => `${base()}osrs-ui/slots/${name}.png`;

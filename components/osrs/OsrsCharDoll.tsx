@@ -1,0 +1,135 @@
+import React, { useState } from 'react';
+import { NoteTrigger } from '../NoteTrigger';
+import { gemSmallSrc, itemSrc, itemSpriteSrc, itemSpriteFallback, slotSilhouetteSrc, slotUiSrc } from './OsrsDashGems';
+import './osrs-char.css';
+
+/**
+ * The OSRS Worn Equipment interface: the eleven slot tiles in the game's
+ * layout, joined by its connector lines. Empty slots show the game's own
+ * slot silhouettes, worn slots the item sprite. Each slot carries its tier
+ * as a small gem in the corner (the same Opal..Onyx ladder as the skills);
+ * tier 0 has no gem and the slot is dimmed.
+ *
+ * Drawn at an integer scale (`--s`, 1 or 2) that osrs-char.css picks from
+ * the space the doll's container has, so the sprites stay pixel-crisp.
+ * Presentation only: every slot's click, label and Examine text come in.
+ */
+
+export interface DollSlot {
+  slot: string;
+  /** Worn item id (sprite), if any. */
+  itemId?: number | null;
+  /** Wiki image file for the sprite fallback. */
+  imageFile?: string;
+  /** Tier the corner gem shows (0 = no gem). */
+  gem: number;
+  /** Draw the slot dimmed (nothing unlocked in it). */
+  dim: boolean;
+  selected?: boolean;
+  /** An Omni-Key could raise this slot now. */
+  omni?: boolean;
+  label: string;
+  examine: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  /** Show the slot's note button (NoteTrigger id `Equip_<slot>`). */
+  note?: boolean;
+  /** Extra text inside the button (kept for screen readers and tests). */
+  srText?: string;
+}
+
+/** Slot positions in the game's 148 x 192 equipment layout (native pixels). */
+export const DOLL_POS: Record<string, [number, number]> = {
+  Head: [56, 0],
+  Cape: [15, 39], Neck: [56, 39], Ammo: [97, 39],
+  Weapon: [0, 78], Body: [56, 78], Shield: [112, 78],
+  Legs: [56, 117],
+  Gloves: [0, 156], Boots: [56, 156], Ring: [112, 156],
+};
+
+/** Connector lines: [x, y, length, vertical], through the slot centres. */
+const LINES: [number, number, number, boolean][] = [
+  [71, 18, 156, true], // Head down to Boots
+  [33, 54, 82, false], // Cape - Neck - Ammo
+  [18, 93, 112, false], // Weapon - Body - Shield
+  [15, 96, 78, true], // Weapon down to Gloves
+  [127, 96, 78, true], // Shield down to Ring
+];
+
+/** A worn item's sprite; if neither the local nor the wiki sprite loads, the slot's silhouette. */
+const SlotItem: React.FC<{ slot: string; itemId: number; imageFile?: string }> = ({ slot, itemId, imageFile }) => {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <img key="silhouette" className="osrs-px osrs-char-slotsil" src={slotSilhouetteSrc(slot)} alt="" aria-hidden="true" />;
+  const fallback = itemSpriteFallback(imageFile);
+  return (
+    <img
+      key="item"
+      className="osrs-px osrs-char-slotitem"
+      src={itemSpriteSrc(itemId)}
+      alt=""
+      aria-hidden="true"
+      onError={(e) => { fallback(e); if (e.currentTarget.style.visibility === 'hidden') setFailed(true); }}
+    />
+  );
+};
+
+const px = (n: number) => `calc(var(--s) * ${n}px)`;
+
+export const OsrsCharDoll: React.FC<{ slots: DollSlot[]; suspendModals?: boolean; className?: string }> = ({ slots, suspendModals = false, className }) => (
+  <div
+    className={`osrs-char-doll${className ? ` ${className}` : ''}`}
+    style={{
+      '--osrs-char-tile': `url(${slotUiSrc('tile')})`,
+      '--osrs-char-line-v': `url(${slotUiSrc('line-v')})`,
+      '--osrs-char-line-h': `url(${slotUiSrc('line-h')})`,
+    } as React.CSSProperties}
+  >
+    {LINES.map(([x, y, len, v], i) => (
+      <span
+        key={i}
+        aria-hidden="true"
+        className={v ? 'osrs-char-line is-v' : 'osrs-char-line is-h'}
+        style={v
+          ? { left: px(x), top: px(y), height: px(len) }
+          : { left: px(x), top: px(y), width: px(len) }}
+      />
+    ))}
+    {slots.map((s) => {
+      const pos = DOLL_POS[s.slot];
+      if (!pos) return null;
+      return (
+        <div
+          key={s.slot}
+          className="osrs-char-dollcell"
+          style={{ left: px(pos[0]), top: px(pos[1]) }}
+          data-examine-name={`${s.slot} slot`}
+          data-examine={s.examine}
+        >
+          <button
+            type="button"
+            className={[
+              'osrs-char-slot',
+              s.dim ? 'is-dim' : '',
+              s.itemId != null ? 'has-item' : '',
+              s.selected ? 'is-sel' : '',
+            ].filter(Boolean).join(' ')}
+            onClick={s.onClick}
+            disabled={s.disabled}
+            title={s.label}
+            aria-label={s.label}
+          >
+            {s.itemId != null
+              ? <SlotItem key={s.itemId} slot={s.slot} itemId={s.itemId} imageFile={s.imageFile} />
+              : <img className="osrs-px osrs-char-slotsil" src={slotSilhouetteSrc(s.slot)} alt="" aria-hidden="true" />}
+            {s.gem > 0 && <img className="osrs-px osrs-char-slotgem" src={gemSmallSrc(s.gem)} alt="" aria-hidden="true" />}
+            {s.omni && <img className="osrs-px osrs-char-slotomni" src={itemSrc('omni_key')} alt="" aria-hidden="true" title="An Omni-Key can raise this slot" />}
+            {s.srText && <span className="sr-only">{s.srText}</span>}
+          </button>
+          {s.note && <span className="osrs-dash-note is-corner"><NoteTrigger id={`Equip_${s.slot}`} title={s.slot} suspendModals={suspendModals} /></span>}
+        </div>
+      );
+    })}
+  </div>
+);
+
+export default OsrsCharDoll;
