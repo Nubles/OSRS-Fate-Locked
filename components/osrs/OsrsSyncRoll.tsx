@@ -4,7 +4,7 @@ import { RollInbox } from '../RollInbox';
 import { RuneLiteOnboarding } from '../RuneLiteOnboarding';
 import { WikiIcon } from '../WikiIcon';
 import { GROUP_IRON_TITLES, GROUP_TITLES, type AccountTitle } from '../../utils/accountTitle';
-import { itemSrc, skillIconSrc } from './OsrsDashGems';
+import { absoluteUrl, itemSrc, skillIconSrc } from './OsrsDashGems';
 import './osrs-world.css';
 
 /**
@@ -202,7 +202,7 @@ const OsrsSyncRoll: React.FC = () => {
 
   return (
     <div ref={rootRef} className={`osync-root${wide ? ' is-wide' : ''}`}>
-      <div className="osrs-inner osync-inbox" style={{ ['--osync-inbox-icon' as string]: `url(${itemSrc(20546)})` }}>
+      <div className="osrs-inner osync-inbox" style={{ ['--osync-inbox-icon' as string]: `url(${absoluteUrl(itemSrc(20546))})` }}>
         <RollInbox />
       </div>
       <div className="osync-right">

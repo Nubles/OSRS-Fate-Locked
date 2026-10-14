@@ -75,7 +75,8 @@ export const slotSilhouetteSrc = (slot: string): string => `${base()}osrs-ui/slo
 /** Slot tile (sprite 170) and the connector lines (sprites 172 / 173). */
 // Used inside CSS custom properties, where a relative url() would resolve
 // against the stylesheet instead of the page, so make it absolute.
-export const slotUiSrc = (name: 'tile' | 'line-v' | 'line-h'): string => {
-  const path = `${base()}osrs-ui/slots/${name}.png`;
+export const slotUiSrc = (name: 'tile' | 'line-v' | 'line-h'): string => absoluteUrl(`${base()}osrs-ui/slots/${name}.png`);
+/** A page-relative asset path made absolute, for url() inside CSS custom properties. */
+export const absoluteUrl = (path: string): string => {
   try { return new URL(path, document.baseURI).href; } catch { return path; }
 };

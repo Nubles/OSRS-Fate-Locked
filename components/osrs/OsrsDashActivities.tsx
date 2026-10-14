@@ -74,7 +74,7 @@ const readCards = (node: React.ReactNode): CardData[] => {
 
 /** A local sprite for each unlock table (the board's icons). */
 const CATEGORY_ICON: Record<string, string> = {
-  BOSSES: itemSrc(4151),
+  BOSSES: itemSrc(21907),
   MINIGAMES: itemSrc(4067),
   FARMING: itemSrc(5343),
   MOBILITY: itemSrc(1712),
@@ -84,7 +84,7 @@ const CATEGORY_ICON: Record<string, string> = {
   STORAGE: itemSrc(12791),
   MERCHANTS: itemSrc(1004),
   SLAYER: itemSrc(4155),
-  BANKS: itemSrc(21213),
+  BANKS: `${import.meta.env.BASE_URL}osrs-ui/bank_icon.png`,
 };
 
 type Status = 'ready' | 'owned' | 'locked' | 'omni';
@@ -124,7 +124,7 @@ const StageImage: React.FC<{ name: string; icon?: string; owned: boolean }> = ({
   return small ? <span className="osrs-slot oact-stage-slot">{img}</span> : img;
 };
 
-const QUEST_ICON = wikiImageSrc('Quest_point_icon.png');
+const QUEST_ICON = `${import.meta.env.BASE_URL}osrs-ui/quest_point_icon.png`;
 
 const Detail: React.FC<{ card: CardData; cat: OsrsActivityCategory; specialKeys: number; tool: boolean }> = ({ card, cat, specialKeys, tool }) => {
   const st = statusOf(card);

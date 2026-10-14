@@ -12,7 +12,8 @@ export const CHAOS_KEY_ICON = osrsItem('chaos_key.png');
 export const VOID_SEAL_ICON = osrsItem('void_seal.png');
 /** Reward casket: the Spend Keys tab and the Unlocks filter on the boards. */
 export const CASKET_ICON = osrsItem('20546.png');
-export const BANK_CHEST_ICON = osrsItem('405.png');
+/** The bank map icon (cache sprite 1453), for the Banks table. */
+export const BANK_ICON = `${BASE}osrs-ui/bank_icon.png`;
 export const QUEST_ICON = `${import.meta.env.BASE_URL}osrs-ui/quest_point_icon.png`;
 
 /** Tier I..X gem ladder. */
@@ -32,11 +33,11 @@ export const TABLE_SPRITE: Partial<Record<TableType, string>> = {
   [TableType.POH]: osrsItem('8013.png'),
   [TableType.MERCHANTS]: osrsItem('1004.png'),
   [TableType.MINIGAMES]: osrsItem('4067.png'),
-  [TableType.BOSSES]: osrsItem('4151.png'),
-  [TableType.GUILDS]: osrsItem('1757.png'),
+  [TableType.BOSSES]: osrsItem('21907.png'),
+  [TableType.GUILDS]: osrsItem('8851.png'),
   [TableType.FARMING_LAYERS]: osrsItem('5343.png'),
   [TableType.SLAYER_UNLOCKS]: osrsItem('4155.png'),
-  [TableType.BANKS]: BANK_CHEST_ICON,
+  [TableType.BANKS]: BANK_ICON,
 };
 export const tableSprite = (table?: string): string =>
   (table && TABLE_SPRITE[table as TableType]) || CASKET_ICON;

@@ -92,7 +92,7 @@ const clueSprite = (tier: string) => `${UI}items/${CLUE_SCROLL_IDS[tier] ?? 1983
 
 // Category button icons, as each board draws them.
 const COMPACT_TAB_ICONS: Record<FarmSubTab, string> = {
-  SLAYER: `${UI}skills/slayer.png`, CLUES: `${UI}items/1538.png`, BOSSING: `${UI}items/4151.png`, ACTIVITIES: MINIGAME_IMG,
+  SLAYER: `${UI}skills/slayer.png`, CLUES: `${UI}items/19835.png`, BOSSING: `${UI}items/21907.png`, ACTIVITIES: MINIGAME_IMG,
 };
 const WIDE_TAB_ICONS: Record<FarmSubTab, string> = { ...COMPACT_TAB_ICONS, CLUES: `${UI}items/19835.png` };
 

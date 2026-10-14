@@ -8,7 +8,7 @@ import { chunkRegion } from '../../utils/chunkAdjacency';
 import { chunkContentService } from '../../services/ChunkContentService';
 import { displayAreaName } from '../../data/areaMapPolicy';
 import { NoteTrigger } from '../NoteTrigger';
-import { itemSrc, wikiImageSrc } from './OsrsDashGems';
+import { itemSrc } from './OsrsDashGems';
 import './osrs-world.css';
 
 /**
@@ -133,7 +133,7 @@ export const OsrsWorldList: React.FC<Props> = ({ searchQuery, showOnlyActionable
                     <span className="owl-adv-bar" title={`Cascade impact score: ${a.cascadeScore}`}><span style={{ width: `${pct}%` }} /></span>
                     {a.score > 0 ? (
                       <span className="owl-adv-pills">
-                        {a.quests.length > 0 && <span className="owl-pill"><img className="osrs-px" src={wikiImageSrc('Quest_point_icon.png')} alt="" aria-hidden="true" width={14} height={14} />+{a.quests.length} quest{a.quests.length === 1 ? '' : 's'}</span>}
+                        {a.quests.length > 0 && <span className="owl-pill"><img className="osrs-px" src={`${import.meta.env.BASE_URL}osrs-ui/quest_point_icon.png`} alt="" aria-hidden="true" width={14} height={14} />+{a.quests.length} quest{a.quests.length === 1 ? '' : 's'}</span>}
                         {a.diaries.length > 0 && <span className="owl-pill">+{a.diaries.length} diary tier{a.diaries.length === 1 ? '' : 's'}</span>}
                         <span className="owl-names">{names.join(' · ')}</span>
                         {more > 0 && <span className="owl-more">+{more} more</span>}
