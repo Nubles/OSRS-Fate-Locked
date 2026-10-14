@@ -52,14 +52,20 @@ html[data-ui="osrs"] .osrs-char-line.is-h {
 }
 html[data-ui="osrs"] .osrs-char-dollcell { position: absolute; width: calc(var(--s, 1) * 36px); height: calc(var(--s, 1) * 36px); }
 html[data-ui="osrs"] .osrs-char-dollcell:hover .osrs-dash-note { opacity: 1; }
+/* The classic tracker's slot box; its icon stays near its own 36px size so it is never blown up. */
 html[data-ui="osrs"] .osrs-char-slot {
-  all: unset; box-sizing: border-box; cursor: pointer; position: relative; display: block; width: 100%; height: 100%;
-  background: var(--osrs-char-tile) 0 0 / 100% 100% no-repeat; image-rendering: pixelated;
+  all: unset; box-sizing: border-box; cursor: pointer; position: relative; display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%; border-radius: calc(var(--s, 1) * 4px);
+  background: #28241d; border: 2px solid #453f36; box-shadow: inset 0 2px 4px rgba(0, 0, 0, .5);
 }
-html[data-ui="osrs"] .osrs-char-slot > img { position: absolute; image-rendering: pixelated; pointer-events: none; }
-html[data-ui="osrs"] .osrs-char-slotsil { left: 0; top: 0; width: 100%; height: 100%; }
-html[data-ui="osrs"] .osrs-char-slotitem { left: 0; top: calc(var(--s, 1) * 2px); width: calc(var(--s, 1) * 36px); height: calc(var(--s, 1) * 32px); object-fit: contain; }
-html[data-ui="osrs"] .osrs-char-slotgem { right: calc(var(--s, 1) * 1px); bottom: calc(var(--s, 1) * 1px); width: calc(var(--s, 1) * 11px); height: calc(var(--s, 1) * 12px); }
+html[data-ui="osrs"] .osrs-char-slot:not(.is-dim) { background: #322a1e; border-color: #857048; }
+html[data-ui="osrs"] .osrs-char-slot > img { position: absolute; pointer-events: none; }
+html[data-ui="osrs"] .osrs-char-slotsil, html[data-ui="osrs"] .osrs-char-slotitem {
+  position: static !important; width: clamp(28px, calc(var(--s, 1) * 36px - 14px), 40px); height: clamp(28px, calc(var(--s, 1) * 36px - 14px), 40px);
+  object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .5));
+}
+html[data-ui="osrs"] .osrs-char-slot.is-dim > .osrs-char-slotsil { opacity: .2; filter: grayscale(1); }
+html[data-ui="osrs"] .osrs-char-slotgem { right: calc(var(--s, 1) * 1px); bottom: calc(var(--s, 1) * 1px); width: 11px; height: 12px; image-rendering: pixelated; }
 html[data-ui="osrs"] .osrs-char-slotomni { right: 0; top: 0; width: 18px; height: 16px; display: none; }
 /* The slot's tier, where the game draws an item's stack count. */
 html[data-ui="osrs"] .osrs-char-slottier {
@@ -67,11 +73,10 @@ html[data-ui="osrs"] .osrs-char-slottier {
   font: calc(var(--s, 1) * 15px) 'RSBold', sans-serif; line-height: 1; letter-spacing: calc(var(--s, 1) * .5px);
   text-shadow: calc(var(--s, 1) * 1px) calc(var(--s, 1) * 1px) 0 #000;
 }
-html[data-ui="osrs"] .osrs-char-slot.is-dim { filter: brightness(.55); }
-html[data-ui="osrs"] .osrs-char-slot:hover:not([disabled]) { filter: brightness(1.18); }
-html[data-ui="osrs"] .osrs-char-slot.is-dim:hover:not([disabled]) { filter: brightness(.75); }
+html[data-ui="osrs"] .osrs-char-slot:hover:not([disabled]) { border-color: #a88c5a; }
+html[data-ui="osrs"] .osrs-char-slot.is-dim:hover:not([disabled]) > .osrs-char-slotsil { opacity: .4; }
 html[data-ui="osrs"] .osrs-char-slot[disabled] { cursor: default; }
-html[data-ui="osrs"] .osrs-char-slot.is-sel { outline: 2px solid var(--osrs-yellow, #ff0); outline-offset: 0; filter: none; }
+html[data-ui="osrs"] .osrs-char-slot.is-sel { outline: 2px solid var(--osrs-yellow, #ff0); outline-offset: 0; }
 html[data-ui="osrs"] .osrs-char-slot:focus-visible { outline: 2px solid var(--osrs-yellow, #ff0); outline-offset: 1px; }
 
 /* ── Equipment Stats (what is worn) ─────────────────────────────────────── */

@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { NoteTrigger } from '../NoteTrigger';
-import { gemColor, gemSmallSrc, itemSrc, roman, itemSpriteSrc, itemSpriteFallback, slotSilhouetteSrc, slotUiSrc } from './OsrsDashGems';
+import { SLOT_CONFIG } from '../../constants';
+import { gemColor, gemSmallSrc, itemSrc, roman, slotUiSrc, wikiImageSrc } from './OsrsDashGems';
 import './osrs-char.css';
 
 /**
- * The OSRS Worn Equipment interface: the eleven slot tiles in the game's
- * layout, joined by its connector lines. Empty slots show the game's own
- * slot silhouettes, worn slots the item sprite. Each slot carries its tier
- * on the tile: a numeral in the top-left corner, where the game draws stack
+ * The OSRS Worn Equipment interface: the eleven slots in the game's layout,
+ * joined by its connector lines. Slots use the same pictures as the classic
+ * tracker: the wiki slot icon when empty, the item's wiki image when worn,
+ * drawn near their own size inside a bigger slot box so they stay sharp.
+ * Each slot carries its tier on the box: a numeral in the top-left corner, where the game draws stack
  * counts, and a gem in the bottom-right (the same Opal..Onyx ladder as the
- * skills, coloured alike); tier 0 has neither and the slot is dimmed.
+ * skills, coloured alike); tier 0 has neither and its icon is faded.
  *
  * Drawn at a scale (`--s`) that osrs-char.css picks from the space the
  * doll's container has, so it fills the panel.
@@ -18,13 +20,13 @@ import './osrs-char.css';
 
 export interface DollSlot {
   slot: string;
-  /** Worn item id (sprite), if any. */
+  /** Worn item id, if any. */
   itemId?: number | null;
-  /** Wiki image file for the sprite fallback. */
+  /** The worn item's wiki image file. */
   imageFile?: string;
   /** Tier the slot shows as its numeral and corner gem (0 = neither). */
   gem: number;
-  /** Draw the slot dimmed (nothing unlocked in it). */
+  /** Fade the slot's icon (nothing unlocked in it). */
   dim: boolean;
   selected?: boolean;
   /** An Omni-Key could raise this slot now. */
@@ -57,21 +59,14 @@ const LINES: [number, number, number, boolean][] = [
   [127, 96, 78, true], // Shield down to Ring
 ];
 
-/** A worn item's sprite; if neither the local nor the wiki sprite loads, the slot's silhouette. */
-const SlotItem: React.FC<{ slot: string; itemId: number; imageFile?: string }> = ({ slot, itemId, imageFile }) => {
-  const [failed, setFailed] = useState(false);
-  if (failed) return <img key="silhouette" className="osrs-px osrs-char-slotsil" src={slotSilhouetteSrc(slot)} alt="" aria-hidden="true" />;
-  const fallback = itemSpriteFallback(imageFile);
-  return (
-    <img
-      key="item"
-      className="osrs-px osrs-char-slotitem"
-      src={itemSpriteSrc(itemId)}
-      alt=""
-      aria-hidden="true"
-      onError={(e) => { fallback(e); if (e.currentTarget.style.visibility === 'hidden') setFailed(true); }}
-    />
-  );
+/** The slot's icon, the same OSRS Wiki image the classic Equipment Lab and Gear view show. */
+const slotIconSrc = (slot: string): string => wikiImageSrc(SLOT_CONFIG[slot]?.file ?? 'Worn_Equipment.png');
+
+/** A worn item's wiki image (as the classic Gear view shows it); the slot icon if it does not load. */
+const SlotItem: React.FC<{ slot: string; imageFile?: string }> = ({ slot, imageFile }) => {
+  const [failed, setFailed] = useState(!imageFile);
+  if (failed) return <img key="icon" className="osrs-char-slotsil" src={slotIconSrc(slot)} alt="" aria-hidden="true" />;
+  return <img key="item" className="osrs-char-slotitem" src={wikiImageSrc(imageFile!)} alt="" aria-hidden="true" onError={() => setFailed(true)} />;
 };
 
 const px = (n: number) => `calc(var(--s) * ${n}px)`;
@@ -80,7 +75,6 @@ export const OsrsCharDoll: React.FC<{ slots: DollSlot[]; suspendModals?: boolean
   <div
     className={`osrs-char-doll${className ? ` ${className}` : ''}`}
     style={{
-      '--osrs-char-tile': `url(${slotUiSrc('tile')})`,
       '--osrs-char-line-v': `url(${slotUiSrc('line-v')})`,
       '--osrs-char-line-h': `url(${slotUiSrc('line-h')})`,
     } as React.CSSProperties}
@@ -120,8 +114,8 @@ export const OsrsCharDoll: React.FC<{ slots: DollSlot[]; suspendModals?: boolean
             aria-label={s.label}
           >
             {s.itemId != null
-              ? <SlotItem key={s.itemId} slot={s.slot} itemId={s.itemId} imageFile={s.imageFile} />
-              : <img className="osrs-px osrs-char-slotsil" src={slotSilhouetteSrc(s.slot)} alt="" aria-hidden="true" />}
+              ? <SlotItem key={s.itemId} slot={s.slot} imageFile={s.imageFile} />
+              : <img className="osrs-char-slotsil" src={slotIconSrc(s.slot)} alt="" aria-hidden="true" />}
             {s.gem > 0 && <span className="osrs-char-slottier" style={{ color: gemColor(s.gem) }} aria-hidden="true">{roman(s.gem)}</span>}
             {s.gem > 0 && <img className="osrs-px osrs-char-slotgem" src={gemSmallSrc(s.gem)} alt="" aria-hidden="true" />}
             {s.omni && <img className="osrs-px osrs-char-slotomni" src={itemSrc('omni_key')} alt="" aria-hidden="true" title="An Omni-Key can raise this slot" />}
