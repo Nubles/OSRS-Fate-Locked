@@ -1184,5 +1184,22 @@
    "name": "Dwarf multicannon",
    "hint": "the set-up cannon"
   }
+ },
+ "Banks (one shared model per kind of bank; the app picks by the bank's name)": {
+  "Bank booth": {
+   "type": "object",
+   "name": "Bank booth",
+   "id": 10355
+  },
+  "Bank chest": {
+   "type": "object",
+   "name": "Bank chest",
+   "id": 4483
+  },
+  "Bank deposit box": {
+   "type": "object",
+   "name": "Bank deposit box",
+   "id": 25937
+  }
  }
 }
