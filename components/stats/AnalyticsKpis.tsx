@@ -9,13 +9,13 @@ interface AnalyticsKpisProps { analytics: FateAnalyticsResult; }
 const rate = (value: number | null): string => value === null ? '—' : `${(value * 100).toFixed(1)}%`;
 
 const Tile: React.FC<{ icon: React.ReactNode; tint: string; label: string; value: React.ReactNode; detail?: React.ReactNode }> = ({ icon, tint, label, value, detail }) => (
-  <div className="rounded-xl border border-white/[0.06] bg-[#1a1a1a] p-4">
+  <div className="osrs-wa-tile rounded-xl border border-white/[0.06] bg-[#1a1a1a] p-4">
     <div className="flex items-center gap-2">
-      <span aria-hidden="true" className={`grid h-7 w-7 place-items-center rounded-lg ${tint}`}>{icon}</span>
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">{label}</span>
+      <span aria-hidden="true" className={`osrs-wa-ico grid h-7 w-7 place-items-center rounded-lg ${tint}`}>{icon}</span>
+      <span className="osrs-wa-label text-[11px] font-semibold uppercase tracking-wider text-gray-400">{label}</span>
     </div>
-    <div className="mt-2 text-3xl font-black tabular-nums text-gray-50">{value}</div>
-    {detail && <div className="mt-0.5 text-[11px] leading-4 text-gray-500">{detail}</div>}
+    <div className="osrs-wa-value osrs-wa-value-big mt-2 text-3xl font-black tabular-nums text-gray-50">{value}</div>
+    {detail && <div className="osrs-wa-detail mt-0.5 text-[11px] leading-4 text-gray-500">{detail}</div>}
   </div>
 );
 
@@ -24,7 +24,7 @@ export const AnalyticsKpis: React.FC<AnalyticsKpisProps> = ({ analytics }) => {
   if (summary.attempts === 0) {
     return (
       <section aria-label="Analytics summary">
-        <p role="status" className="rounded-xl border border-white/5 bg-[#1a1a1a] p-6 text-center text-sm italic text-gray-500">No roll attempts in this selection</p>
+        <p role="status" className="osrs-wa-card rounded-xl border border-white/5 bg-[#1a1a1a] p-6 text-center text-sm italic text-gray-500">No roll attempts in this selection</p>
       </section>
     );
   }
