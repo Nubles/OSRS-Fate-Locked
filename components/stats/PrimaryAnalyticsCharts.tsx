@@ -54,7 +54,7 @@ export const AnalyticsTooltip: React.FC<AnalyticsTooltipProps> = ({ active, payl
   const datum = payload?.[0]?.payload;
   if (!active || !datum) return null;
   return (
-    <div className="max-w-64 rounded-lg border border-white/15 bg-[#141414]/95 p-3 text-xs text-gray-300 shadow-xl backdrop-blur">
+    <div className="osrs-wa-tip max-w-64 rounded-lg border border-white/15 bg-[#141414]/95 p-3 text-xs text-gray-300 shadow-xl backdrop-blur">
       <p className="font-bold text-white">{datum.markLabel}</p>
       <p className="mt-1">Actual: {integer.format(datum.numerator)}/{integer.format(datum.denominator)}</p>
       <p>Expected: {datum.expectedValue === null ? 'not modelled' : datum.expectedValue.toFixed(2)}</p>
@@ -277,12 +277,13 @@ export const PrimaryAnalyticsCharts: React.FC<PrimaryAnalyticsChartsProps> = ({ 
                   <p className="truncate text-xs font-semibold text-gray-200">{row.label}</p>
                   <p className="text-[10px] text-gray-500">{plural(row.attempts, 'roll')}{limited ? ' · small sample' : ''}</p>
                 </div>
-                <div className={`relative h-3 rounded-full bg-white/[0.04] ${limited ? 'opacity-50' : ''}`}>
-                  <div aria-hidden="true" className="absolute -inset-y-1 left-1/2 w-px bg-white/25" />
+                <div className={`osrs-wa-meter relative h-3 rounded-full bg-white/[0.04] ${limited ? 'opacity-50' : ''}`}>
+                  <div aria-hidden="true" className="osrs-wa-meter-mid absolute -inset-y-1 left-1/2 w-px bg-white/25" />
                   {modelled && width > 0 && (
                     <div
                       aria-hidden="true"
-                      className={`absolute inset-y-0 ${positive ? 'left-1/2 rounded-r-full' : 'right-1/2 rounded-l-full'}`}
+                      data-osrs-luck={positive ? 'up' : 'down'}
+                      className={`osrs-wa-meter-fill absolute inset-y-0 ${positive ? 'left-1/2 rounded-r-full' : 'right-1/2 rounded-l-full'}`}
                       style={{ width: `${width}%`, ...(positive ? OUTCOME_STYLE.win : { backgroundColor: '#fb7185' }) }}
                     />
                   )}
@@ -325,9 +326,9 @@ export const PrimaryAnalyticsCharts: React.FC<PrimaryAnalyticsChartsProps> = ({ 
               { label: 'Longest drought', value: summary.longestDrought, unit: 'misses', tone: 'text-rose-300' },
               { label: 'Current drought', value: summary.currentDrought, unit: 'misses', tone: summary.currentDrought > 0 ? 'text-amber-200' : 'text-gray-200' },
             ].map(stat => (
-              <div key={stat.label} className="rounded-lg bg-black/20 px-3 py-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">{stat.label}</p>
-                <p className={`mt-0.5 text-xl font-black tabular-nums ${stat.tone}`}>{stat.value}<span className="ml-1 text-[11px] font-medium text-gray-500">{stat.unit}</span></p>
+              <div key={stat.label} className="osrs-wa-well rounded-lg bg-black/20 px-3 py-2">
+                <p className="osrs-wa-label text-[10px] font-semibold uppercase tracking-wider text-gray-500">{stat.label}</p>
+                <p className={`osrs-wa-value mt-0.5 text-xl font-black tabular-nums ${stat.tone}`}>{stat.value}<span className="ml-1 text-[11px] font-medium text-gray-500">{stat.unit}</span></p>
               </div>
             ))}
           </div>
@@ -340,7 +341,7 @@ export const PrimaryAnalyticsCharts: React.FC<PrimaryAnalyticsChartsProps> = ({ 
                 role="listitem"
                 aria-label={streakLabel[outcome]}
                 title={streakLabel[outcome]}
-                className={`aspect-square rounded-[4px] ${index === lastRolls.length - 1 ? 'ring-2 ring-white/80 ring-offset-1 ring-offset-[#1a1a1a]' : ''}`}
+                className={`osrs-wa-cell aspect-square rounded-[4px] ${index === lastRolls.length - 1 ? 'ring-2 ring-white/80 ring-offset-1 ring-offset-[#1a1a1a]' : ''}`}
                 style={streakSegmentStyle[outcome]}
               />
             ))}
@@ -366,7 +367,7 @@ export const PrimaryAnalyticsCharts: React.FC<PrimaryAnalyticsChartsProps> = ({ 
                     aria-current={current ? 'true' : undefined}
                     aria-label={`${label}, ${segment.length} ${segment.length === 1 ? 'attempt' : 'attempts'}, rolls ${segment.startIndex + 1} to ${segment.endIndex + 1}${current ? ', current segment' : ''}`}
                     title={`${label}: ${segment.length} ${segment.length === 1 ? 'roll' : 'rolls'} in a row`}
-                    className={`flex flex-none items-center justify-center text-[10px] font-black text-white/90 first:rounded-l-md last:rounded-r-md ${current ? 'relative z-10 ring-2 ring-inset ring-white' : ''}`}
+                    className={`osrs-wa-seg flex flex-none items-center justify-center text-[10px] font-black text-white/90 first:rounded-l-md last:rounded-r-md ${current ? 'relative z-10 ring-2 ring-inset ring-white' : ''}`}
                     style={{ ...streakSegmentStyle[segment.outcome], width: segmentWidth }}
                   >
                     {segmentWidth >= 24 && <span aria-hidden="true">{segment.length}</span>}

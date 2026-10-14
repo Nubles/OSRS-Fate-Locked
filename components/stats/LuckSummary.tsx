@@ -34,16 +34,16 @@ export const LuckMeter: React.FC<{ zScore: number | null; large?: boolean }> = (
         aria-label={zScore === null ? 'Luck meter: no reading yet' : `Luck meter at ${formatSigma(zScore)}; between −1σ and +1σ is fair`}
         className="relative"
       >
-        <div className={`flex overflow-hidden rounded-full ring-1 ring-inset ring-white/10 ${large ? 'h-3.5' : 'h-2.5'}`}>
-          {ZONES.map(zone => <div key={zone.label} className={`${zone.fill} border-r border-black/40 last:border-r-0`} style={{ width: zoneWidth(zone) }} />)}
+        <div className={`osrs-wa-zones flex overflow-hidden rounded-full ring-1 ring-inset ring-white/10 ${large ? 'h-3.5' : 'h-2.5'}`}>
+          {ZONES.map(zone => <div key={zone.label} data-osrs-zone={zone.label.toLowerCase()} className={`${zone.fill} border-r border-black/40 last:border-r-0`} style={{ width: zoneWidth(zone) }} />)}
         </div>
         {left !== null && (
           <div className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: `${left}%` }}>
-            <div className={`rounded-full border-[3px] border-[#141414] bg-white shadow-[0_0_14px_rgba(255,255,255,0.55)] ${large ? 'h-6 w-6' : 'h-[18px] w-[18px]'}`} />
+            <div className={`osrs-wa-thumb rounded-full border-[3px] border-[#141414] bg-white shadow-[0_0_14px_rgba(255,255,255,0.55)] ${large ? 'h-6 w-6' : 'h-[18px] w-[18px]'}`} />
           </div>
         )}
       </div>
-      <div aria-hidden="true" className={`mt-2 flex font-semibold uppercase tracking-wider text-gray-500 ${large ? 'text-[9px] sm:text-[11px]' : 'text-[9px] sm:text-[10px]'}`}>
+      <div aria-hidden="true" className={`osrs-wa-zonelabels mt-2 flex font-semibold uppercase tracking-wider text-gray-500 ${large ? 'text-[9px] sm:text-[11px]' : 'text-[9px] sm:text-[10px]'}`}>
         {ZONES.map(zone => <span key={zone.label} className="text-center" style={{ width: zoneWidth(zone) }}>{zone.label}</span>)}
       </div>
     </div>
@@ -65,7 +65,7 @@ const CopySummaryButton: React.FC<{ text: string }> = ({ text }) => {
     }
   };
   return (
-    <button type="button" onClick={copy} className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-gray-200 transition-colors hover:bg-white/10">
+    <button type="button" onClick={copy} className="osrs-wa-btn inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-gray-200 transition-colors hover:bg-white/10">
       {copied ? <Check size={14} className="text-emerald-300" /> : <Copy size={14} />}
       <span aria-live="polite">{copied ? 'Copied' : 'Copy summary'}</span>
     </button>
@@ -87,22 +87,22 @@ export const LuckSummary: React.FC<LuckSummaryProps> = ({ analytics, variant }) 
   const unjudged = summary.attempts - summary.scoreableAttempts;
 
   return (
-    <section aria-label="Your luck" className={`relative h-full overflow-hidden rounded-xl border ${tone.border} bg-[#181818] ${report ? 'p-6 sm:p-8' : 'p-5'}`}>
+    <section aria-label="Your luck" className={`osrs-wa-card osrs-wa-luckcard relative h-full overflow-hidden rounded-xl border ${tone.border} bg-[#181818] ${report ? 'p-6 sm:p-8' : 'p-5'}`}>
       <div aria-hidden="true" className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${tone.glow} via-transparent to-transparent`} />
       <div className={`relative flex h-full flex-col ${report ? 'items-center text-center' : ''}`}>
         <div className={`flex w-full gap-4 ${report ? 'flex-col items-center' : 'items-start justify-between'}`}>
           <div className={`flex items-center gap-3 ${report ? 'flex-col' : ''}`}>
-            <span className={`grid shrink-0 place-items-center rounded-xl bg-black/30 ring-1 ring-white/10 ${tone.text} ${report ? 'h-16 w-16' : 'h-11 w-11'}`}>
+            <span className={`osrs-wa-ico grid shrink-0 place-items-center rounded-xl bg-black/30 ring-1 ring-white/10 ${tone.text} ${report ? 'h-16 w-16' : 'h-11 w-11'}`}>
               <AnalyticsIcon art={art} size={report ? 48 : 32} className={report ? '[image-rendering:pixelated]' : undefined} />
             </span>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">{report ? 'Fate’s verdict' : 'Your luck'}</p>
-              <p className={`font-black leading-tight ${tone.text} ${report ? 'mt-1 text-4xl' : 'text-2xl'}`}>{tone.title}</p>
+              <p className="osrs-wa-label text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">{report ? 'Fate’s verdict' : 'Your luck'}</p>
+              <p data-osrs-verdict={summary.verdict ?? 'none'} className={`osrs-wa-verdict font-black leading-tight ${tone.text} ${report ? 'mt-1 text-4xl' : 'text-2xl'}`}>{tone.title}</p>
             </div>
           </div>
           {!report && (
             <div className="text-right" title="Standard deviations from what the odds expect. Between −1σ and +1σ is normal.">
-              <p className={`font-mono text-xl font-bold ${tone.text}`}>{judged ? formatSigma(summary.zScore) : '—'}</p>
+              <p data-osrs-verdict={summary.verdict ?? 'none'} className={`osrs-wa-verdict font-mono text-xl font-bold ${tone.text}`}>{judged ? formatSigma(summary.zScore) : '—'}</p>
               <p className="text-[10px] uppercase tracking-wider text-gray-500">luck score</p>
             </div>
           )}
@@ -116,7 +116,7 @@ export const LuckSummary: React.FC<LuckSummaryProps> = ({ analytics, variant }) 
 
         {summary.verdict === 'Building sample' && (
           <div className={`w-full ${report ? 'mt-4 max-w-xl' : 'mt-3'}`}>
-            <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+            <div className="osrs-wa-pbar h-1.5 overflow-hidden rounded-full bg-white/10">
               <div className="h-full rounded-full bg-gray-300" style={{ width: `${Math.min(100, (summary.scoreableAttempts / 10) * 100)}%` }} />
             </div>
             <p className="mt-1 text-[11px] text-gray-500">{summary.scoreableAttempts} of 10 rolls with known odds</p>
