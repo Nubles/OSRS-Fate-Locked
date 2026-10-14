@@ -5,7 +5,7 @@ import { SectionGuide } from '../SectionGuide';
 import { TIER_LABELS } from '../../utils/combatPower';
 import { canonicalTierFromName } from '../../utils/gearTiers';
 import { gearService } from '../../services/GearService';
-import { TIER_GEMS, gemSrc, gemColor, gemCropStyle, gemSmallSrc, itemSrc, roman } from './OsrsDashGems';
+import { TIER_GEMS, gemSrc, gemColor, itemSrc, roman } from './OsrsDashGems';
 import { OsrsCharDoll, type DollSlot } from './OsrsCharDoll';
 import { BONUS_GROUPS, type GearItem } from '../../utils/gearStats';
 import { OsrsGearPicker, useWornItems, type GearStatus } from './OsrsCharGear';
@@ -19,12 +19,13 @@ import './osrs-dashboard.css';
  * buttons switch what its body shows and a close button returns to the
  * overview:
  *  - Overview (no view): the OSRS Worn Equipment interface (OsrsCharDoll:
- *    slot tiles, silhouettes, worn sprites, a tier gem per slot), each
- *    slot's tier as a list beside it and the Equipment Stats of what is worn.
+ *    slot tiles, silhouettes, worn sprites, each slot's tier as a numeral
+ *    and gem on the tile), as big as the panel allows, and the Equipment
+ *    Stats of what is worn when there is room for them.
  *  - Tiers: the doll with the chosen slot outlined and that slot's ladder,
  *    next tier and Omni-Key upgrade beneath it.
  *  - Plan: the target loadout planner and its Omni-Key cost.
- *  - Gear: the doll and the worn items; a slot opens its item picker.
+ *  - Gear: the doll with each worn item's own tier; a slot opens its item picker.
  *  - DPS: the DPS calculator, one column when the panel is narrow.
  *
  * Same state, data and Omni-Key upgrade flow as the classic Equipment Lab,
@@ -73,71 +74,6 @@ const TierCells: React.FC<{ tier: number; target?: number }> = ({ tier, target =
 const CloseX: React.FC = () => (
   <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="2.5" /></svg>
 );
-
-// ── Slot list (beside the doll) ──────────────────────────────────────────────
-
-interface SlotRow {
-  slot: string;
-  /** Gem tier in front of the row (0 = none). */
-  gem: number;
-  /** Name column: the slot, or the worn item in the Gear view. */
-  name: string;
-  /** Muted name (nothing unlocked or nothing worn). */
-  zero: boolean;
-  /** Right column, short form (narrow panel) and long form (wide panel). */
-  small: string;
-  big: string;
-  color: string;
-  title: string;
-  selected?: boolean;
-}
-
-/** One row per slot beside the doll: gem, name and the right-hand column. */
-const SlotList: React.FC<{ rows: SlotRow[]; label: string }> = ({ rows, label }) => (
-  <ul className="osrs-char-slotlist" aria-label={label}>
-    {rows.map((r) => (
-      <li key={r.slot} className={[r.zero ? 'is-zero' : '', r.selected ? 'is-sel' : ''].filter(Boolean).join(' ') || undefined} title={r.title}>
-        <img className={`osrs-px is-gem is-small${r.gem > 0 ? '' : ' is-none'}`} src={gemSmallSrc(Math.max(r.gem, 1))} alt="" aria-hidden="true" />
-        <span className={`is-gem is-big${r.gem > 0 ? '' : ' is-none'}`} style={gemCropStyle(Math.max(r.gem, 1))} aria-hidden="true" />
-        <span className="is-name">{r.name}</span>
-        <span className="is-tier" style={{ color: r.color }}>
-          <span className="is-small" aria-hidden="true">{r.small}</span>
-          <span className="is-big">{r.big}</span>
-          <span className="sr-only">{r.big}</span>
-        </span>
-      </li>
-    ))}
-  </ul>
-);
-
-/** Each slot's tier: gem, slot, "Tier I · Bronze / Iron". */
-const tierRows = (equipment: Record<string, number>, selected?: string | null): SlotRow[] =>
-  EQUIPMENT_SLOTS.map((slot) => {
-    const t = equipment[slot] || 0;
-    return {
-      slot, gem: t, name: slot, zero: t === 0, selected: slot === selected,
-      small: t > 0 ? `Tier ${roman(t)}` : 'Locked',
-      big: t > 0 ? `Tier ${roman(t)} · ${TIER_LABELS[t - 1]}` : 'Locked',
-      color: t > 0 ? gemColor(t) : 'var(--osrs-muted, #8a7c66)',
-      title: `${slot}: ${t > 0 ? `Tier ${t}, up to ${TIER_LABELS[t - 1]} gear` : 'no tier unlocked yet'}`,
-    };
-  });
-
-/** What each slot wears: the item (with its own tier gem), Empty or Locked. */
-const wornRows = (equipment: Record<string, number>, items: (GearItem | undefined)[], selected?: string | null): SlotRow[] =>
-  EQUIPMENT_SLOTS.map((slot, i) => {
-    const ut = equipment[slot] || 0;
-    const item = items[i];
-    const tier = item ? gearService.tierOf(item.id) : 0;
-    const est = item ? canonicalTierFromName(item.name) == null : false;
-    const right = item ? `${est ? 'Est. ' : ''}T${tier}` : ut > 0 ? 'Empty' : 'Locked';
-    return {
-      slot, gem: tier, name: item?.name ?? slot, zero: !item, selected: slot === selected,
-      small: right, big: item ? `${est ? 'Est. ' : ''}Tier ${roman(tier)}` : right,
-      color: item ? gemColor(tier) : 'var(--osrs-muted, #8a7c66)',
-      title: item ? `${slot}: ${item.name}, ${est ? 'estimated ' : ''}Tier ${tier}` : `${slot}: ${ut > 0 ? `empty, unlocked up to Tier ${ut}` : 'no tier unlocked yet'}`,
-    };
-  });
 
 /** The OSRS Equipment Stats bonuses for what is worn (from the Gear loadout). */
 const WornBonuses: React.FC<{ status: GearStatus }> = ({ status }) => {
@@ -252,7 +188,6 @@ export const OsrsLabCompact: React.FC<PanelProps> = ({ view, onView, onUpgrade, 
       <div className="osrs-char-worn">
         <div className="osrs-char-wornrow">
           <OsrsCharDoll slots={dollSlots('tiers')} suspendModals={suspendModals} />
-          <SlotList rows={tierRows(equipment)} label="Tier per slot" />
         </div>
         <WornBonuses status={status} />
       </div>
@@ -294,7 +229,6 @@ export const OsrsLabCompact: React.FC<PanelProps> = ({ view, onView, onUpgrade, 
         <div className="osrs-char-worn is-doll">
           <div className="osrs-char-wornrow">
             <OsrsCharDoll slots={dollSlots('tiers')} suspendModals={suspendModals} />
-            <SlotList rows={tierRows(equipment, tSlot)} label="Tier per slot" />
           </div>
         </div>
         <SlotDetail slot={tSlot} tier={equipment[tSlot] || 0} specialKeys={specialKeys} onUpgrade={() => onUpgrade(tSlot)} />
@@ -306,7 +240,6 @@ export const OsrsLabCompact: React.FC<PanelProps> = ({ view, onView, onUpgrade, 
         <div className={`osrs-char-worn${pickSlot ? ' is-doll' : ''}`}>
           <div className="osrs-char-wornrow">
             <OsrsCharDoll slots={dollSlots('gear')} suspendModals={suspendModals} />
-            <SlotList rows={wornRows(equipment, wornItems, pickSlot)} label="Worn items" />
           </div>
           {!pickSlot && <WornBonuses status={status} />}
           {!pickSlot && <p className="osrs-dash-muted-s osrs-char-hint">Click a slot to choose its gear.</p>}

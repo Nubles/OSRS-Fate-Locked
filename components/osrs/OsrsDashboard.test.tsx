@@ -133,13 +133,14 @@ describe('Dashboard in the OSRS layout', () => {
   it('shows each worn-equipment slot with its tier, and a slot opens its ladder inside the panel', { timeout: 20000 }, async () => {
     render(<Dashboard suspendModals />);
     const head = await screen.findByRole('button', { name: 'Head: Tier 2. Click for its tier ladder.' }, { timeout: 10000 });
-    // Tier 2 is a Jade gem in the slot's corner; an empty slot shows its OSRS silhouette.
+    // Tier 2 is a II numeral and a Jade gem on the slot; an empty slot shows its OSRS silhouette.
+    expect(head.querySelector('.osrs-char-slottier')?.textContent).toBe('II');
     expect(head.querySelector('.osrs-char-slotgem')?.getAttribute('src')).toContain('gem-jade');
     expect(head.querySelector('.osrs-char-slotsil')?.getAttribute('src')).toContain('slots/head.png');
     const neck = screen.getByRole('button', { name: 'Neck: Tier 0. Click for its tier ladder.' });
     expect(neck.className).toContain('is-dim');
     expect(neck.querySelector('.osrs-char-slotgem')).toBeNull();
-    expect(screen.getByRole('list', { name: 'Tier per slot' }).textContent).toContain('Tier II · Steel / Black / White');
+    expect(neck.querySelector('.osrs-char-slottier')).toBeNull();
     expect(head.closest('[data-examine]')?.getAttribute('data-examine')).toBe('Head slot. Tier 2 unlocked: up to Steel / Black / White gear.');
 
     // The slot's ladder opens inside the Equipment Lab panel: Skills and the left column stay.
@@ -173,7 +174,6 @@ describe('Dashboard in the OSRS layout', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Gear' }));
     expect(screen.queryByRole('region', { name: 'Target loadout' })).toBeNull();
-    expect(screen.getByRole('list', { name: 'Worn items' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Weapon: empty, unlocked up to Tier 0. Choose Weapon' }));
     expect(lab.contains(screen.getByRole('region', { name: 'Choose Weapon' }))).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
@@ -186,7 +186,7 @@ describe('Dashboard in the OSRS layout', () => {
     // The pressed mode button closes its view again.
     fireEvent.click(screen.getByRole('button', { name: 'DPS' }));
     expect(screen.queryByRole('region', { name: 'DPS calculator' })).toBeNull();
-    expect(screen.getByRole('list', { name: 'Tier per slot' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Head: Tier 2. Click for its tier ladder.' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Skills' })).toBeTruthy();
   });
 });

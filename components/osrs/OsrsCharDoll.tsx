@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { NoteTrigger } from '../NoteTrigger';
-import { gemSmallSrc, itemSrc, itemSpriteSrc, itemSpriteFallback, slotSilhouetteSrc, slotUiSrc } from './OsrsDashGems';
+import { gemColor, gemSmallSrc, itemSrc, roman, itemSpriteSrc, itemSpriteFallback, slotSilhouetteSrc, slotUiSrc } from './OsrsDashGems';
 import './osrs-char.css';
 
 /**
  * The OSRS Worn Equipment interface: the eleven slot tiles in the game's
  * layout, joined by its connector lines. Empty slots show the game's own
  * slot silhouettes, worn slots the item sprite. Each slot carries its tier
- * as a small gem in the corner (the same Opal..Onyx ladder as the skills);
- * tier 0 has no gem and the slot is dimmed.
+ * on the tile: a numeral in the top-left corner, where the game draws stack
+ * counts, and a gem in the bottom-right (the same Opal..Onyx ladder as the
+ * skills, coloured alike); tier 0 has neither and the slot is dimmed.
  *
- * Drawn at an integer scale (`--s`, 1 or 2) that osrs-char.css picks from
- * the space the doll's container has, so the sprites stay pixel-crisp.
+ * Drawn at a scale (`--s`) that osrs-char.css picks from the space the
+ * doll's container has, so it fills the panel.
  * Presentation only: every slot's click, label and Examine text come in.
  */
 
@@ -21,7 +22,7 @@ export interface DollSlot {
   itemId?: number | null;
   /** Wiki image file for the sprite fallback. */
   imageFile?: string;
-  /** Tier the corner gem shows (0 = no gem). */
+  /** Tier the slot shows as its numeral and corner gem (0 = neither). */
   gem: number;
   /** Draw the slot dimmed (nothing unlocked in it). */
   dim: boolean;
@@ -121,6 +122,7 @@ export const OsrsCharDoll: React.FC<{ slots: DollSlot[]; suspendModals?: boolean
             {s.itemId != null
               ? <SlotItem key={s.itemId} slot={s.slot} itemId={s.itemId} imageFile={s.imageFile} />
               : <img className="osrs-px osrs-char-slotsil" src={slotSilhouetteSrc(s.slot)} alt="" aria-hidden="true" />}
+            {s.gem > 0 && <span className="osrs-char-slottier" style={{ color: gemColor(s.gem) }} aria-hidden="true">{roman(s.gem)}</span>}
             {s.gem > 0 && <img className="osrs-px osrs-char-slotgem" src={gemSmallSrc(s.gem)} alt="" aria-hidden="true" />}
             {s.omni && <img className="osrs-px osrs-char-slotomni" src={itemSrc('omni_key')} alt="" aria-hidden="true" title="An Omni-Key can raise this slot" />}
             {s.srText && <span className="sr-only">{s.srText}</span>}
