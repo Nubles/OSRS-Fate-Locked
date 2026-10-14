@@ -7,11 +7,14 @@
  * code changes — the manifest (data/modelManifest.ts) is regenerated before
  * dev/build, and any unlock whose slug is present resolves automatically.
  *
- * IP: OSRS models are Jagex's intellectual property — this repo does NOT bundle
- * them. You supply your own exports (e.g. via RuneMonk / RuneApps) as fan
- * content; nothing here ships a game asset. Ships DORMANT (no model files →
- * everything falls back to the existing 2D sprites).
+ * IP: OSRS models are Jagex's intellectual property, used here as fan content
+ * like the wiki images and game fonts the tracker already shows. The files in
+ * /public/models are exported from the game cache by scripts/export-models.mjs
+ * (picks in scripts/models.config.json and scripts/unlock-models.config.json).
+ * Any unlock without a file keeps its 2D sprite.
  */
+
+import { importWithRetry } from '../utils/lazyRetry';
 
 /**
  * The manifest (several hundred models) loads on demand, not at startup, so it
@@ -25,7 +28,7 @@ let manifestLoad: Promise<Record<string, string>> | null = null;
 export const modelManifestLoaded = (): boolean => modelFiles !== null;
 
 export const loadModelManifest = (): Promise<Record<string, string>> =>
-  (manifestLoad ??= import('./modelManifest').then(
+  (manifestLoad ??= importWithRetry(() => import('./modelManifest')).then(
     (m) => (modelFiles = m.MODEL_FILES),
     (err) => { manifestLoad = null; throw err; },
   ));

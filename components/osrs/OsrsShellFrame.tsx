@@ -1,10 +1,11 @@
-import React, { Suspense } from 'react';
-import { useOsrsNav } from '../../utils/osrsNav';
+import React, { Suspense, useEffect } from 'react';
+import { useOsrsNav, getOsrsNav, openOsrsScreen, screenForJump } from '../../utils/osrsNav';
 import { lazyWithRetry } from '../../utils/lazyRetry';
 import type { SaveDurabilitySnapshot, SaveRetryResult } from '../../utils/recoveryTypes';
 import type { FateSaveDownloadResult } from '../../utils/fateSaveFile';
 import { OsrsShellNotice } from './OsrsShellNotice';
 import { OsrsChatbox } from './OsrsChatbox';
+import { PanelErrorBoundary } from '../PanelErrorBoundary';
 import './osrs-shell.css';
 
 const OsrsKeysWorkspace = lazyWithRetry(() => import('./OsrsKeysWorkspace'));
@@ -46,6 +47,24 @@ export const OsrsShellFrame: React.FC<OsrsShellFrameProps> = ({
 }) => {
   const { screen, progressionWide } = useOsrsNav();
   const home = screen === 'home';
+  // Jumps fired from the Journal or Keys screen (palette, chat hints, "Show on
+  // map", "Plan a route") change the hidden home screen; bring it into view.
+  // Capture phase, so the screen switches before the home screen's own
+  // listeners act (a tab:JOURNAL jump then reopens the Journal screen).
+  useEffect(() => {
+    const follow = (target: string) => {
+      const next = screenForJump(target, getOsrsNav());
+      if (next) openOsrsScreen(next);
+    };
+    const onNav = (e: Event) => follow((e as CustomEvent<{ target?: string }>).detail?.target ?? '');
+    const onPlanGoal = () => follow('plan-goal');
+    window.addEventListener('fate:nav', onNav, true);
+    window.addEventListener('fate:plan-goal', onPlanGoal, true);
+    return () => {
+      window.removeEventListener('fate:nav', onNav, true);
+      window.removeEventListener('fate:plan-goal', onPlanGoal, true);
+    };
+  }, []);
   return (
     <div className="osrs-shell-frame">
       <Suspense fallback={<div style={{ height: 64 }} />}>{header}</Suspense>
@@ -79,7 +98,7 @@ export const OsrsShellFrame: React.FC<OsrsShellFrameProps> = ({
           </div>
         )}
       </div>
-      <OsrsChatbox />
+      <PanelErrorBoundary name="Chatbox"><OsrsChatbox /></PanelErrorBoundary>
     </div>
   );
 };

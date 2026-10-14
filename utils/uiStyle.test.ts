@@ -10,6 +10,7 @@ import {
   readClientLayout,
   readInterfaceStyle,
   readTextSize,
+  readEffectiveUiStyle,
   readUiStyle,
   setClientLayout,
   setInterfaceStyle,
@@ -112,5 +113,31 @@ describe('OSRS layout options', () => {
     setTextSize('large');
     window.removeEventListener('fate:ui-style', seen);
     expect(seen).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe('OSRS layout on narrow screens', () => {
+  const stubWidth = (wide: boolean) =>
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: wide, media: query, addEventListener: () => {}, removeEventListener: () => {} }));
+
+  it('draws the classic layout below the minimum width but keeps the saved choice', () => {
+    stubWidth(false);
+    setUiStyle('osrs');
+    expect(readUiStyle()).toBe('osrs');
+    expect(readEffectiveUiStyle()).toBe('classic');
+    expect(html().dataset.ui).toBe('classic');
+  });
+
+  it('draws the OSRS layout on wide screens', () => {
+    stubWidth(true);
+    setUiStyle('osrs');
+    expect(readEffectiveUiStyle()).toBe('osrs');
+    expect(html().dataset.ui).toBe('osrs');
+  });
+
+  it('never turns the OSRS layout on by itself', () => {
+    stubWidth(true);
+    setUiStyle('classic');
+    expect(readEffectiveUiStyle()).toBe('classic');
   });
 });

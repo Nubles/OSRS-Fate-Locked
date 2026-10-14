@@ -16,6 +16,7 @@ html[data-ui="osrs"] .ospend-chaos.wide { padding: 3px 10px 3px 4px; }
 html[data-ui="osrs"] .ospend-chaos.is-live { cursor: pointer; padding: 3px 10px 3px 4px; background: #3a1414; box-shadow: inset 1px 1px 0 #6b2a2a, inset -1px -1px 0 #1a0808; }
 html[data-ui="osrs"] .ospend-chaos.is-live:hover .ospend-chaos-title { color: #fff !important; }
 html[data-ui="osrs"] .ospend-chaos.is-live:focus-visible { outline: 1px solid #ffff00; }
+html[data-ui="osrs"] .ospend-chaos.is-live:disabled { cursor: default; opacity: .55; }
 html[data-ui="osrs"] .ospend-chaos-cta { margin-left: auto; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ff981f; flex-shrink: 0; }
 html[data-ui="osrs"] .ospend-total { margin-left: auto; flex-shrink: 0; font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #ffff00; white-space: nowrap; }
 html[data-ui="osrs"] .ospend-total-big { margin-left: auto; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; line-height: 17px; }

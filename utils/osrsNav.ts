@@ -55,6 +55,26 @@ export const openOsrsProgressionTab = (id: string): void => {
   openOsrsScreen('home');
   window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: `tab:${id}` } }));
 };
+/**
+ * The screen a jump needs. Palette jumps, chat hints, "Show on map" and "Plan
+ * a route" fire window events that change the home screen (a Progression tab,
+ * a modal it owns) or the Keys panel, so from the Journal or Keys screen they
+ * must bring that screen into view. null: the current screen already shows it.
+ *   tab:* / open:* / plan-goal -> home (Dashboard owns those tabs and modals)
+ *   ctrl:*                     -> the Keys panel: home when its left column is
+ *                                 showing, otherwise the wide Keys screen
+ */
+export const screenForJump = (target: string, nav: Pick<NavState, 'screen' | 'progressionWide'>): OsrsScreen | null => {
+  if (target.startsWith('ctrl:')) {
+    if (nav.screen === 'keys' || (nav.screen === 'home' && !nav.progressionWide)) return null;
+    return 'keys';
+  }
+  if (target.startsWith('tab:') || target.startsWith('open:') || target === 'plan-goal') {
+    return nav.screen === 'home' ? null : 'home';
+  }
+  return null;
+};
+
 const subscribe = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
 
 export const useOsrsNav = (): NavState => useSyncExternalStore(subscribe, getOsrsNav, getOsrsNav);

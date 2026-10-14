@@ -63,6 +63,26 @@ export const readClientLayout = (): ClientLayout =>
 export const readTextSize = (): TextSize =>
   readChoice<TextSize>(TEXT_SIZE_KEY, ['normal', 'medium', 'large'], DEFAULT_TEXT_SIZE);
 
+/**
+ * The OSRS layout is drawn for desktop-sized windows; below this width its
+ * fixed side panels leave no room (the World tab's areas column shrinks to
+ * nothing), so narrow screens show the classic layout while the choice stays
+ * saved. Widening the window brings the OSRS layout back.
+ */
+export const OSRS_MIN_WIDTH = 720;
+const WIDE_QUERY = `(min-width: ${OSRS_MIN_WIDTH}px)`;
+
+/** True when the window is wide enough for the OSRS layout (always true where matchMedia is missing). */
+export const isWideEnoughForOsrs = (): boolean => {
+  try {
+    return typeof window === 'undefined' || typeof window.matchMedia !== 'function' || window.matchMedia(WIDE_QUERY).matches;
+  } catch { return true; }
+};
+
+/** The layout actually drawn: the saved choice, except that narrow screens always get classic. */
+export const readEffectiveUiStyle = (): UiStyle =>
+  readUiStyle() === 'osrs' && isWideEnoughForOsrs() ? 'osrs' : 'classic';
+
 /** The streamer overlay (#/overlay) is a transparent badge bar: never frame it as a fixed client. */
 const isOverlayRoute = (): boolean => {
   try { return typeof window !== 'undefined' && window.location.hash.startsWith('#/overlay'); } catch { return false; }
@@ -76,7 +96,7 @@ const isOverlayRoute = (): boolean => {
 export const applyUiStyle = (style: UiStyle = readUiStyle()): void => {
   if (typeof document === 'undefined') return;
   const root = document.documentElement.dataset;
-  root.ui = style;
+  root.ui = style === 'osrs' && isWideEnoughForOsrs() ? 'osrs' : 'classic';
   root.osrsStyle = readInterfaceStyle();
   root.osrsClient = isOverlayRoute() ? 'resizable' : readClientLayout();
   root.osrsText = readTextSize();
@@ -103,15 +123,27 @@ const subscribe = (onChange: () => void) => {
   const onStorage = () => { applyUiStyle(); onChange(); };
   window.addEventListener(CHANGE_EVENT, onChange);
   window.addEventListener('storage', onStorage);
+  // Crossing the minimum width switches between the OSRS and classic layouts.
+  let media: MediaQueryList | null = null;
+  try { media = typeof window.matchMedia === 'function' ? window.matchMedia(WIDE_QUERY) : null; } catch { media = null; }
+  media?.addEventListener?.('change', onStorage);
   return () => {
     window.removeEventListener(CHANGE_EVENT, onChange);
     window.removeEventListener('storage', onStorage);
+    media?.removeEventListener?.('change', onStorage);
   };
 };
 
+/** The saved choice (what the menus show as on or off). */
 export const useUiStyle = (): UiStyle => useSyncExternalStore(subscribe, readUiStyle, defaultUiStyle);
 
-export const useIsOsrsUi = (): boolean => useUiStyle() === 'osrs';
+/** Whether the OSRS layout is drawn: the saved choice on a wide enough window. */
+export const useIsOsrsUi = (): boolean =>
+  useSyncExternalStore(subscribe, readEffectiveUiStyle, defaultUiStyle) === 'osrs';
+
+/** Whether the window is wide enough for the OSRS layout, kept current on resize. */
+export const useIsWideEnoughForOsrs = (): boolean =>
+  useSyncExternalStore(subscribe, isWideEnoughForOsrs, () => true);
 
 export const useInterfaceStyle = (): InterfaceStyle =>
   useSyncExternalStore(subscribe, readInterfaceStyle, () => DEFAULT_INTERFACE_STYLE);

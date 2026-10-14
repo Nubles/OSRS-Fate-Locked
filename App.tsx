@@ -1,6 +1,6 @@
 
 import { lazyWithRetry } from './utils/lazyRetry';
-import React, { useState, useRef, useEffect, useLayoutEffect, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useLayoutEffect, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { GameProvider, useGame } from './context/GameContext';
 import { usePortalHost } from './hooks/usePortalHost';
@@ -109,7 +109,7 @@ const RunelitePluginGuide = lazyWithRetry(() =>
 );
 import { deobfuscateFateSave, MAX_FATE_FILE_BYTES } from './utils/encryption';
 import { Download, Upload, RotateCcw, BarChart3, HelpCircle, PlayCircle, PauseCircle, Search, Database, SlidersHorizontal, Link2, Radio, Settings, MessageCircle } from 'lucide-react';
-import { setUiStyle, useIsOsrsUi, useUiStyle } from './utils/uiStyle';
+import { OSRS_MIN_WIDTH, readUiStyle, setUiStyle, useIsOsrsUi, useIsWideEnoughForOsrs, useUiStyle } from './utils/uiStyle';
 import { openOsrsScreen, setOsrsKeysTab, useOsrsNav, type OsrsKeysTab } from './utils/osrsNav';
 import { Key, Sparkles, Dna, Swords, ShoppingBag, ScrollText, Compass, Lightbulb } from './components/OsrsIcon';
 import { exportRuneliteBundle } from './utils/runeliteExport';
@@ -176,6 +176,20 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
             >
               Reload Application
             </button>
+            {readUiStyle() === 'osrs' && (
+              /* A crash in the OSRS layout would come straight back after a
+                 reload (the choice is saved), and its only switch is in the
+                 header that just crashed. */
+              <button
+                onClick={() => {
+                  setUiStyle('classic');
+                  window.location.reload();
+                }}
+                className="block mx-auto mt-3 text-sm text-gray-400 hover:text-white underline"
+              >
+                Switch to the classic layout and reload
+              </button>
+            )}
           </div>
         </div>
       );
@@ -305,6 +319,7 @@ interface HeaderProps {
 
 const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, onOpenRuneliteGuide, onOpenChangelog }: HeaderProps) => {
   const uiStyle = useUiStyle();
+  const osrsFits = useIsWideEnoughForOsrs();
   const osrsHeader = useIsOsrsUi();
   const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount, runId, runRevision, bossStandardKeysAwarded } = useGame();
   // Progressive disclosure — advanced tools stay hidden until the run earns them.
@@ -599,9 +614,9 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                            {animationsEnabled ? <PlayCircle size={13} className="text-green-400" /> : <PauseCircle size={13} className="text-gray-500" />}
                            Animations <span className="ml-auto text-[10px] text-gray-500">{animationsEnabled ? 'on' : 'off'}</span>
                         </button>
-                        <button onClick={() => { setUiStyle(uiStyle === 'osrs' ? 'classic' : 'osrs'); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={uiStyle === 'osrs'}>
+                        <button onClick={() => { setUiStyle(uiStyle === 'osrs' ? 'classic' : 'osrs'); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={uiStyle === 'osrs'} title={osrsFits ? undefined : `The OSRS layout shows on windows at least ${OSRS_MIN_WIDTH} pixels wide`}>
                            <SlidersHorizontal size={13} className={uiStyle === 'osrs' ? 'text-amber-400' : 'text-gray-500'} />
-                           OSRS layout <span className="ml-auto text-[10px] text-gray-500">{uiStyle === 'osrs' ? 'on' : 'off'}</span>
+                           OSRS layout <span className="ml-auto text-[10px] text-gray-500">{uiStyle === 'osrs' ? (osrsFits ? 'on' : 'on, wide screens') : 'off'}</span>
                         </button>
                         <button onClick={() => { toggleAdvisors(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={advisorsEnabled}>
                            <Lightbulb size={13} className={advisorsEnabled ? 'text-amber-400' : 'text-gray-500'} />
@@ -639,8 +654,19 @@ const PANEL_TO_KEYS_TAB: Record<'FARM' | 'SPEND' | 'LOG', OsrsKeysTab> = { FARM:
 const KEYS_TAB_TO_PANEL: Record<OsrsKeysTab, 'FARM' | 'SPEND' | 'LOG'> = { farm: 'FARM', spend: 'SPEND', history: 'LOG' };
 
 const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = false }) => {
-  const [activeTab, setActiveTab] = useState<'FARM' | 'SPEND' | 'LOG'>('FARM');
+  const [classicTab, setClassicTab] = useState<'FARM' | 'SPEND' | 'LOG'>('FARM');
   const isOsrs = useIsOsrsUi();
+  // OSRS layout: this panel's tab and the wide Keys screen's tab are one choice
+  // (utils/osrsNav.ts), so opening the Keys screen lands on the same tab and
+  // closing it brings the choice back here. The nav store is the only source
+  // of truth there; two effects syncing two copies could chase each other
+  // when they disagreed on mount.
+  const { keysTab } = useOsrsNav();
+  const activeTab = isOsrs ? KEYS_TAB_TO_PANEL[keysTab] : classicTab;
+  const setActiveTab = useCallback((tab: 'FARM' | 'SPEND' | 'LOG') => {
+    setClassicTab(tab);
+    setOsrsKeysTab(PANEL_TO_KEYS_TAB[tab]);
+  }, []);
   // History reveals with the first logged event (progressive disclosure).
   const gates = useFeatureGates();
   const showLogTab = gates.has('ctrl:LOG') || activeTab === 'LOG';
@@ -649,17 +675,6 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
   // hidden was pure wasted work on the critical path.
   const [logVisited, setLogVisited] = useState(false);
   useEffect(() => { if (activeTab === 'LOG') setLogVisited(true); }, [activeTab]);
-
-  // OSRS layout: this panel's tab and the wide Keys screen's tab are one choice
-  // (utils/osrsNav.ts), so opening the Keys screen lands on the same tab and
-  // closing it brings the choice back here.
-  const { keysTab } = useOsrsNav();
-  useEffect(() => {
-    if (isOsrs) setOsrsKeysTab(PANEL_TO_KEYS_TAB[activeTab]);
-  }, [isOsrs, activeTab]);
-  useEffect(() => {
-    if (isOsrs) setActiveTab(KEYS_TAB_TO_PANEL[keysTab]);
-  }, [isOsrs, keysTab]);
 
   // Command-palette navigation to a control tab.
   const panelRef = useRef<HTMLDivElement>(null);

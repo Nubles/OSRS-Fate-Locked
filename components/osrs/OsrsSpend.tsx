@@ -71,11 +71,11 @@ const Notices: React.FC<{ specialKeys: number; keysOwed: number; isChunked: bool
 );
 
 /** Chaos Keys: a button when there is one to spend, an info row otherwise. */
-const ChaosRow: React.FC<{ chaosKeys: number; totalLevel: number; onSpend: () => void; wide: boolean }> = ({ chaosKeys, totalLevel, onSpend, wide }) => {
+const ChaosRow: React.FC<{ chaosKeys: number; totalLevel: number; onSpend: () => void; wide: boolean; busy: boolean }> = ({ chaosKeys, totalLevel, onSpend, wide, busy }) => {
   const rule = `Guaranteed at skill levels ${andList(SKILL_CHAOS_MILESTONES)}, plus a ${LEVEL_CHAOS_CHANCE}% chance on any level-up`;
   if (chaosKeys > 0) {
     return (
-      <button type="button" className={`ospend-chaos is-live${wide ? ' wide' : ''}`} onClick={onSpend}
+      <button type="button" className={`ospend-chaos is-live${wide ? ' wide' : ''}`} onClick={onSpend} disabled={busy}
         data-examine-name="Chaos Key" data-examine="Unlocks a random entry from all the tables at once.">
         <span className="osrs-slot ospend-note-slot">
           <img className="osrs-px" src={CHAOS_KEY_ICON} alt="" aria-hidden="true" />
@@ -218,7 +218,7 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
     return (
       <div className="ospend ospend-compact">
         <Notices specialKeys={specialKeys} keysOwed={keysOwed ?? 0} isChunked={isChunked} />
-        <ChaosRow chaosKeys={chaosKeys} totalLevel={totalLevel} onSpend={handleChaosUnlock} wide={false} />
+        <ChaosRow chaosKeys={chaosKeys} totalLevel={totalLevel} onSpend={handleChaosUnlock} wide={false} busy={!!pendingUnlock} />
         <div ref={cardsRef} className={`osrs-inner ospend-cards${cardsMore ? ' is-more' : ''}`}>
           {SPEND_CATEGORIES.map(c => (
             <TableCard key={c.label} c={c} st={stateOf(c)} onRoll={() => handleUnlock(c.type)}
@@ -249,7 +249,7 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
       <div className="osrs-win ospend-main">
         <OsrsKeysTabs hint="Spend a Key on a table to unlock a random entry from it." small />
         <Notices specialKeys={specialKeys} keysOwed={keysOwed ?? 0} isChunked={isChunked} />
-        <ChaosRow chaosKeys={chaosKeys} totalLevel={totalLevel} onSpend={handleChaosUnlock} wide />
+        <ChaosRow chaosKeys={chaosKeys} totalLevel={totalLevel} onSpend={handleChaosUnlock} wide busy={!!pendingUnlock} />
 
         {/* The unlock tables, one item slot each. */}
         <div className="osrs-inner ospend-tables">
