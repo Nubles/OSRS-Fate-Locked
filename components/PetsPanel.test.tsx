@@ -3,6 +3,8 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PetsPanel } from './PetsPanel';
+import { PETS } from '../data/pets';
+import { UI_STYLE_KEY } from '../utils/uiStyle';
 
 vi.mock('./EntityModel', () => ({
   EntityModel: (props: { src?: string; interactive?: boolean; autoRotate?: boolean }) => (
@@ -48,6 +50,64 @@ describe('PetsPanel', () => {
 
   it('says where pets come from when there are none', () => {
     render(<PetsPanel claimed={[]} followerId={null} followerShown animationsEnabled {...handlers()} />);
+    expect(screen.getByText(/No pets yet\. Claim one in Farm Keys → Activities/)).toBeTruthy();
+  });
+});
+
+describe('PetsPanel in the OSRS layout', () => {
+  afterEach(() => localStorage.removeItem(UI_STYLE_KEY));
+  const osrs = () => localStorage.setItem(UI_STYLE_KEY, 'osrs');
+
+  it('shows every pet like the collection log, claimed ones lit and the rest as silhouettes', () => {
+    osrs();
+    render(<PetsPanel claimed={[502001, 502026]} followerId={502026} followerShown animationsEnabled {...handlers()} />);
+    expect(screen.getByText('2 of 71 pets claimed')).toBeTruthy();
+    const slots = document.querySelectorAll('[data-pet-slot]');
+    expect(slots).toHaveLength(PETS.length);
+    expect(document.querySelectorAll('[data-pet-slot="claimed"]')).toHaveLength(2);
+    // A silhouette is the same picture, darkened by CSS: never a different or scaled image.
+    const locked = screen.getByRole('button', { name: 'Hellpuppy (not claimed)' });
+    const img = locked.querySelector('img')!;
+    expect(img.className).toContain('is-locked');
+    expect(img.getAttribute('src')).toMatch(/Hellpuppy\.png$/);
+    expect(img.hasAttribute('width')).toBe(false);
+    // Claimed pets keep their behaviour: the follower previews in 3D and is following.
+    expect(screen.getByTestId('model').dataset.src).toMatch(/502026\.gltf$/);
+    expect(screen.getByRole('button', { name: 'Vorki is following' })).toHaveProperty('disabled', true);
+  });
+
+  it('previews a claimed pet and names an unclaimed one without its model', () => {
+    osrs();
+    const h = handlers();
+    render(<PetsPanel claimed={[502001, 502026]} followerId={502026} followerShown animationsEnabled {...h} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Abyssal orphan' }));
+    expect(screen.getByTestId('model').dataset.src).toMatch(/502001\.gltf$/);
+    fireEvent.click(screen.getByRole('button', { name: 'Make follower' }));
+    expect(h.onFollow).toHaveBeenCalledWith(502001);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hellpuppy (not claimed)' }));
+    expect(screen.queryByTestId('model')).toBeNull();
+    expect(screen.getByText('Not claimed yet.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Make follower' })).toBeNull();
+  });
+
+  it('has the OSRS close button and tick box', () => {
+    osrs();
+    const h = handlers();
+    render(<PetsPanel claimed={[502026]} followerId={502026} followerShown={false} animationsEnabled={false} {...h} />);
+    const box = screen.getByLabelText('Show a follower') as HTMLInputElement;
+    expect(box.checked).toBe(false);
+    fireEvent.click(box);
+    expect(h.onShowFollower).toHaveBeenCalledWith(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(h.onClose).toHaveBeenCalled();
+    expect(screen.queryByText(/^Close$/)).toBeNull();
+  });
+
+  it('still lists every pet when none are claimed', () => {
+    osrs();
+    render(<PetsPanel claimed={[]} followerId={null} followerShown animationsEnabled {...handlers()} />);
+    expect(document.querySelectorAll('[data-pet-slot="unclaimed"]')).toHaveLength(PETS.length);
     expect(screen.getByText(/No pets yet\. Claim one in Farm Keys → Activities/)).toBeTruthy();
   });
 });

@@ -32,6 +32,7 @@ vi.mock('../services/MonsterService', () => ({ monsterService: {
 vi.mock('../data/entityModels', () => ({ modelFor: () => undefined, orientationFor: () => undefined }));
 
 import { BossKillPlanner } from './BossKillPlanner';
+import { UI_STYLE_KEY } from '../utils/uiStyle';
 
 beforeEach(() => localStorage.clear());
 afterEach(cleanup);
@@ -58,5 +59,22 @@ describe('Boss Planner versions', () => {
     localStorage.setItem('bossplanner:versions', JSON.stringify({ Vardorvis: 'Retired variant' }));
     render(<BossKillPlanner onClose={() => {}} />);
     expect((await screen.findByRole('combobox', { name: 'Version of Vardorvis' }) as HTMLSelectElement).value).toBe('Post-quest');
+  });
+});
+
+describe('Boss Planner in the OSRS layout', () => {
+  it('keeps the same plan and controls in a stone window', async () => {
+    localStorage.setItem(UI_STYLE_KEY, 'osrs');
+    const onClose = vi.fn();
+    render(<BossKillPlanner onClose={onClose} />);
+    expect(screen.getByRole('heading', { name: /Boss Kill Planner/ })).toBeTruthy();
+    const boosts = screen.getByRole('button', { name: 'Boosts on' });
+    expect(boosts.className).toContain('osrs-btn');
+    fireEvent.click(boosts);
+    expect(screen.getByRole('button', { name: 'Boosts off' })).toBeTruthy();
+    const picker = await screen.findByRole('combobox', { name: 'Version of Vardorvis' }) as HTMLSelectElement;
+    expect(picker.value).toBe('Post-quest');
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalled();
   });
 });

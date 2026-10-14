@@ -17,12 +17,18 @@ import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { BANK_IDS } from '../data/banks';
 import { completionPercent } from '../utils/completion';
 import { computeRunId } from '../utils/integrity';
+import { useIsOsrsUi } from '../utils/uiStyle';
+import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
 
 interface ShareModalProps {
   onClose: () => void;
 }
 
-type CardTheme = 'VOID' | 'GILDED' | 'IRON' | 'BLOOD' | 'NATURE';
+type CardTheme = 'OSRS' | 'VOID' | 'GILDED' | 'IRON' | 'BLOOD' | 'NATURE';
+const CLASSIC_THEMES: CardTheme[] = ['VOID', 'GILDED', 'IRON', 'BLOOD', 'NATURE'];
+/** The OSRS layout adds a stone-window card (osrs-windows-b.css) and opens on it. */
+const OSRS_THEMES: CardTheme[] = ['OSRS', ...CLASSIC_THEMES];
+const THEME_LABEL: Record<CardTheme, string> = { OSRS: 'OSRS', VOID: 'Void', GILDED: 'Gilded', IRON: 'Iron', BLOOD: 'Blood', NATURE: 'Nature' };
 
 const TIER_COLORS = [
   'bg-[#292524]', // T1 Stone
@@ -45,7 +51,9 @@ const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ on
   useFocusTrap(dialogRef, !embedded);
   const [isCapturing, setIsCapturing] = useState(false);
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
-  const [theme, setTheme] = useState<CardTheme>('VOID');
+  const osrs = useIsOsrsUi();
+  const [theme, setTheme] = useState<CardTheme>(osrs ? 'OSRS' : 'VOID');
+  const osrsCard = theme === 'OSRS';
 
   // --- Stats Calculation ---
   const { unlocks, gameModeId, customMode } = gameState;
@@ -75,6 +83,18 @@ const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ on
   // --- Theme Styles ---
   const getThemeStyles = () => {
     switch (theme) {
+      case 'OSRS':
+        // Utility classes defined in osrs-windows-b.css (OSRS layout only).
+        return {
+          bg: 'owb-c-bg',
+          border: 'owb-c-border',
+          accent: 'owb-c-accent',
+          sub: 'owb-c-sub',
+          panel: 'owb-c-panel',
+          gradient: '',
+          deco: 'owb-c-deco',
+          bar: 'owb-c-bar'
+        };
       case 'GILDED':
         return {
           bg: 'bg-[#1a1814]',
@@ -235,6 +255,14 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
       <div className="flex flex-col gap-6 items-center w-full max-w-5xl my-auto">
 
         {/* Theme Selectors */}
+        {osrs ? (
+          <div className="owb-share-themes" role="group" aria-label="Card style">
+            <span className="owb-sub">Card style:</span>
+            {OSRS_THEMES.map(t => (
+              <button key={t} type="button" aria-pressed={theme === t} onClick={() => setTheme(t)} className={`osrs-btn${theme === t ? ' is-on' : ''}`}>{THEME_LABEL[t]}</button>
+            ))}
+          </div>
+        ) : (
         <div className="flex gap-2 p-1.5 bg-[#1a1a1a] rounded-full border border-white/10 shadow-xl overflow-x-auto max-w-full">
             {(['VOID', 'GILDED', 'IRON', 'BLOOD', 'NATURE'] as CardTheme[]).map(t => (
                 <button
@@ -246,12 +274,14 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
                 </button>
             ))}
         </div>
+        )}
 
         {/* --- THE CARD --- */}
         <div 
           ref={cardRef}
           id="status-card"
-          className={`
+          data-card-theme={osrsCard ? 'osrs' : undefined}
+          className={`${osrsCard ? 'owb-card ' : ''}
             w-full max-w-[850px]
             rounded-2xl border-[4px] ${ts.border}
             ${ts.bg} relative overflow-hidden shadow-2xl flex flex-col
@@ -264,9 +294,9 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
             <div className={`absolute top-0 right-0 p-32 bg-gradient-to-bl from-white/5 to-transparent rounded-bl-full pointer-events-none`}></div>
 
             {/* HEADER */}
-            <div className={`relative z-10 flex flex-wrap justify-between items-start gap-4 p-4 sm:p-8 sm:pb-6 border-b ${ts.deco}`}>
+            <div className={`owb-card-head relative z-10 flex flex-wrap justify-between items-start gap-4 p-4 sm:p-8 sm:pb-6 border-b ${ts.deco}`}>
                 <div className="flex items-center gap-3 sm:gap-6 min-w-0">
-                    <div className={`w-12 h-12 sm:w-20 sm:h-20 shrink-0 rounded-2xl border-2 ${ts.border} bg-black/40 flex items-center justify-center shadow-[0_0_25px_rgba(0,0,0,0.5)] backdrop-blur-md`}>
+                    <div className={`owb-card-badge w-12 h-12 sm:w-20 sm:h-20 shrink-0 rounded-2xl border-2 ${ts.border} bg-black/40 flex items-center justify-center shadow-[0_0_25px_rgba(0,0,0,0.5)] backdrop-blur-md`}>
                         <Shield className={`w-8 h-8 sm:w-12 sm:h-12 ${ts.accent} drop-shadow-lg`} />
                     </div>
                     <div>
@@ -279,7 +309,7 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
                 </div>
                 <div className="text-right">
                     <div className="flex flex-col items-end">
-                         <span className={`text-3xl sm:text-5xl font-black text-white leading-none flex items-center gap-2 drop-shadow-lg`}>
+                         <span className={`owb-card-pct text-3xl sm:text-5xl font-black text-white leading-none flex items-center gap-2 drop-shadow-lg`}>
                             {progressPercent}%
                          </span>
                          <span className={`text-[10px] font-mono uppercase tracking-[0.3em] ${ts.sub} mt-1`}>Completion</span>
@@ -288,7 +318,7 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
             </div>
 
             {/* STATS BAR */}
-            <div className={`relative z-10 grid grid-cols-3 sm:grid-cols-5 border-b ${ts.deco} bg-black/30 divide-x divide-white/5 backdrop-blur-sm`}>
+            <div className={`owb-card-stats relative z-10 grid grid-cols-3 sm:grid-cols-5 border-b ${ts.deco} bg-black/30 divide-x divide-white/5 backdrop-blur-sm`}>
                  <div className="py-3 px-2 flex flex-col items-center group">
                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5 group-hover:text-gray-300 transition-colors">Total Level</span>
                     <span className="text-lg font-bold text-white flex items-center gap-1.5"><Activity size={14} className={ts.accent} /> {totalLevel}</span>
@@ -326,7 +356,7 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
                              {SKILLS_LIST.map(skill => {
                                  const tier = unlocks.skills[skill] || 0;
                                  return (
-                                     <div key={skill} className={`bg-black/40 rounded border ${ts.deco} p-1.5 flex flex-col items-center relative overflow-hidden group`}>
+                                     <div key={skill} className={`owb-card-tile bg-black/40 rounded border ${ts.deco} p-1.5 flex flex-col items-center relative overflow-hidden group`}>
                                          <div className="relative z-10 w-6 h-6 flex items-center justify-center mb-1.5">
                                              <img 
                                                 src={getSkillImage(skill)} 
@@ -354,7 +384,7 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
                              {EQUIPMENT_SLOTS.map(slot => {
                                  const tier = unlocks.equipment[slot] || 0;
                                  return (
-                                     <div key={slot} className={`bg-black/40 rounded border ${ts.deco} p-1.5 flex flex-col items-center relative overflow-hidden group`}>
+                                     <div key={slot} className={`owb-card-tile bg-black/40 rounded border ${ts.deco} p-1.5 flex flex-col items-center relative overflow-hidden group`}>
                                          <div className="relative z-10 w-8 h-8 flex items-center justify-center mb-1.5">
                                              <img src={getSlotImage(slot)} alt={slot} className={`w-full h-full object-contain ${tier === 0 ? 'opacity-20 grayscale' : 'drop-shadow-md'}`} />
                                          </div>
@@ -373,31 +403,31 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
                             <Zap size={14} /> Unlocked Content
                         </h3>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            <div className={`${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
+                            <div className={`owb-card-count ${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
                                 <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Skull size={12} /> Bosses</div>
                                 <span className="font-bold text-white text-lg leading-none">{bossCount}</span>
                             </div>
-                            <div className={`${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
+                            <div className={`owb-card-count ${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
                                 <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Gamepad2 size={12} /> Minigames</div>
                                 <span className="font-bold text-white text-lg leading-none">{minigameCount}</span>
                             </div>
-                            <div className={`${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
+                            <div className={`owb-card-count ${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
                                 <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Store size={12} /> Merchants</div>
                                 <span className="font-bold text-white text-lg leading-none">{unlocks.merchants.length}</span>
                             </div>
-                            <div className={`${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
+                            <div className={`owb-card-count ${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
                                 <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Home size={12} /> POH</div>
                                 <span className="font-bold text-white text-lg leading-none">{pohCount}</span>
                             </div>
-                            <div className={`${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
+                            <div className={`owb-card-count ${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
                                 <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><WikiIcon file="Magic_icon.png" alt="" size={12} /> {COMBAT_POWERS_LABEL}</div>
                                 <span className="font-bold text-white text-lg leading-none">{arcanaCount}</span>
                             </div>
-                            <div className={`${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
+                            <div className={`owb-card-count ${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
                                 <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Package size={12} /> Storage</div>
                                 <span className="font-bold text-white text-lg leading-none">{unlocks.storage.length}</span>
                             </div>
-                            <div className={`${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
+                            <div className={`owb-card-count ${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
                                 <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Landmark size={12} /> Banks</div>
                                 <span className="font-bold text-white text-lg leading-none">{(unlocks.banks ?? []).length}</span>
                             </div>
@@ -412,7 +442,7 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
                         <Map size={14} /> World Mastery
                     </h3>
                     
-                    <div className={`flex-1 ${ts.panel} rounded border ${ts.deco} p-4 overflow-hidden flex flex-col shadow-inner bg-black/20`}>
+                    <div className={`owb-card-world flex-1 ${ts.panel} rounded border ${ts.deco} p-4 overflow-hidden flex flex-col shadow-inner bg-black/20`}>
                         <div className="space-y-3">
                             {regionMastery.length === 0 && (
                                 <div className="text-center py-10 text-xs italic text-gray-600">No regions explored...</div>
@@ -423,7 +453,7 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
                                         <span>{group}</span>
                                         <span className="opacity-70 font-mono">{Math.round(percent * 100)}%</span>
                                     </div>
-                                    <div className="h-1.5 w-full bg-black/60 rounded-full overflow-hidden border border-white/5">
+                                    <div className="owb-card-track h-1.5 w-full bg-black/60 rounded-full overflow-hidden border border-white/5">
                                         <div className={`h-full ${ts.bar} transition-all shadow-[0_0_5px_currentColor]`} style={{ width: `${percent * 100}%` }}></div>
                                     </div>
                                 </div>
@@ -437,7 +467,7 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
                             </h4>
                             <div className="flex flex-col gap-2">
                                 {notableFeats.length > 0 ? notableFeats.map((feat, i) => (
-                                    <div key={i} className="flex items-center gap-3 bg-black/40 p-2 rounded border border-white/5">
+                                    <div key={i} className="owb-card-feat flex items-center gap-3 bg-black/40 p-2 rounded border border-white/5">
                                         <feat.icon size={16} className={feat.color} />
                                         <span className="text-xs font-bold text-gray-300">{feat.label}</span>
                                     </div>
@@ -451,7 +481,7 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
             </div>
 
             {/* FOOTER */}
-            <div className={`relative z-10 py-3 px-4 sm:px-8 bg-black/60 backdrop-blur-md flex flex-wrap gap-2 justify-between items-center text-[10px] ${ts.sub} font-mono uppercase border-t ${ts.deco}`}>
+            <div className={`owb-card-foot relative z-10 py-3 px-4 sm:px-8 bg-black/60 backdrop-blur-md flex flex-wrap gap-2 justify-between items-center text-[10px] ${ts.sub} font-mono uppercase border-t ${ts.deco}`}>
                 <div className="flex items-center gap-2">
                     <Activity size={12} />
                     <span>Fate Locked Ironman</span>
@@ -461,6 +491,16 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
         </div>
 
         {/* Controls */}
+        {osrs ? (
+          <div className="owb-share-actions">
+            <button type="button" className="osrs-btn" onClick={handleCopyText}>
+              {copyStatus === 'copied' ? <span className="owb-ok">Copied!</span> : 'Copy Summary'}
+            </button>
+            <button type="button" className="osrs-btn" onClick={handleDownloadImage} disabled={isCapturing}>
+              {isCapturing ? 'Generating Image...' : 'Download Card'}
+            </button>
+          </div>
+        ) : (
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-[850px]">
             <button 
                 onClick={handleCopyText}
@@ -476,6 +516,7 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
                 {isCapturing ? <span className="animate-pulse">Generating Image...</span> : <><Download size={18} /> Download Card</>}
             </button>
         </div>
+        )}
         
         {!embedded && <button onClick={onClose} className="text-gray-500 hover:text-white text-sm underline pb-4">Close</button>}
       </div>
@@ -495,6 +536,38 @@ export const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
   useEscapeKey(onClose, true);
+  const osrs = useIsOsrsUi();
+  if (osrs) {
+    // OSRS layout: one stone window with the Journal's title bar, stone tabs
+    // for the two card styles and the card scrolling inside it.
+    return (
+      <div
+        className="fixed inset-0 z-[100] owb-share-backdrop"
+        onClick={onClose}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Share run"
+        ref={dialogRef}
+        tabIndex={-1}
+      >
+        <div className="osrs-win owb-win owb-share" onClick={(e) => e.stopPropagation()}>
+          <OsrsTitleBar title="Share Run" onClose={onClose} tools={<SectionGuide id="SHARE" />} />
+          <div className="owb-tabs">
+            {(['stats', 'map'] as const).map((s) => (
+              <button key={s} type="button" className="owb-tab" aria-pressed={style === s} onClick={() => setStyle(s)}>
+                {s === 'stats' ? 'Stats card' : 'Map card'}
+              </button>
+            ))}
+          </div>
+          <div className="owb-share-body custom-scrollbar">
+            {style === 'stats'
+              ? <StatsShareCard embedded onClose={onClose} />
+              : <div className="owb-mapcard"><RunCardModal embedded onClose={onClose} /></div>}
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div
       className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200"

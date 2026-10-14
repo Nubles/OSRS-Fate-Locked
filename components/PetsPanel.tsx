@@ -1,5 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { petById, PETS } from '../data/pets';
+import { PET_SOURCES, petImageFile } from '../data/petSources';
+import { useIsOsrsUi } from '../utils/uiStyle';
+import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { isStillPet, petModelUrl } from '../utils/petFollower';
@@ -34,6 +37,116 @@ export const PetsPanel: React.FC<PetsPanelProps> = ({
   const pets = (claimed ?? []).map((id) => petById(id)).filter((pet) => pet !== undefined);
   const [selectedId, setSelectedId] = useState<number | null>(followerId ?? pets[0]?.id ?? null);
   const selected = selectedId === null ? undefined : petById(selectedId);
+  const osrs = useIsOsrsUi();
+
+  if (osrs) {
+    // OSRS layout: every pet in a grid like the collection log's All Pets
+    // page. Claimed pets show their picture; the rest are dark silhouettes of
+    // the same picture. Picking a claimed pet previews it as before.
+    const claimedIds = new Set(pets.map((pet) => pet.id));
+    const selectedClaimed = selected !== undefined && claimedIds.has(selected.id);
+    const following = selected !== undefined && selected.id === followerId && followerShown;
+    return (
+      <div className="fixed inset-0 z-[120] owb-pets-backdrop">
+        <div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="your-pets-title"
+          tabIndex={-1}
+          className="osrs-win owb-win owb-pets"
+        >
+          <OsrsTitleBar id="your-pets-title" title="Your Pets" onClose={onClose} />
+          <div className="owb-pets-body">
+            <section className="osrs-inner owb-pets-log">
+              <div className="owb-pets-head">
+                <span className="owb-pets-heading">All Pets</span>
+                <span>{pets.length} of {PETS.length} pets claimed</span>
+              </div>
+              <ul className="owb-pets-grid" aria-label="All pets">
+                {PETS.map((pet) => {
+                  const isClaimed = claimedIds.has(pet.id);
+                  return (
+                    <li key={pet.id}>
+                      <button
+                        type="button"
+                        data-pet-slot={isClaimed ? 'claimed' : 'unclaimed'}
+                        aria-pressed={pet.id === selectedId}
+                        aria-label={isClaimed ? pet.name : `${pet.name} (not claimed)`}
+                        onClick={() => setSelectedId(pet.id)}
+                        className="owb-pet-slot"
+                      >
+                        <img
+                          src={`https://oldschool.runescape.wiki/images/${petImageFile(pet)}`}
+                          alt=""
+                          aria-hidden="true"
+                          draggable={false}
+                          loading="lazy"
+                          className={isClaimed ? 'owb-pet-img' : 'owb-pet-img is-locked'}
+                          onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }}
+                        />
+                        <span className="osrs-tooltip owb-pet-tip" aria-hidden="true">{pet.name}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+            <section className="osrs-inner owb-pets-view">
+              {pets.length === 0 && (selected === undefined || !selectedClaimed) && (
+                <p className="owb-pets-note">No pets yet. Claim one in Farm Keys → Activities when it drops.</p>
+              )}
+              {selected && (
+                <>
+                  <div className="owb-pets-name">{selected.name}</div>
+                  {selectedClaimed ? (
+                    <>
+                      <div className={`owb-pets-model ${animationsEnabled && isStillPet(selected.id) ? 'animate-pet-bob' : ''}`}>
+                        <EntityModel
+                          key={selected.id}
+                          src={petModelUrl(selected.id)}
+                          alt={selected.name}
+                          fill
+                          interactive
+                          autoRotate={animationsEnabled}
+                          spin={false}
+                          cameraOrbit="35deg 75deg auto"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        className="osrs-btn owb-pets-follow"
+                        disabled={following}
+                        onClick={() => onFollow(selected.id)}
+                      >
+                        {following ? `${selected.name} is following` : 'Make follower'}
+                      </button>
+                    </>
+                  ) : (
+                    <div className="owb-pets-locked">
+                      <span>Not claimed yet.</span>
+                      {PET_SOURCES[selected.id] && <span className="owb-dim">From: {PET_SOURCES[selected.id].source}</span>}
+                    </div>
+                  )}
+                </>
+              )}
+              <label className="owb-check owb-pets-show">
+                <input
+                  type="checkbox"
+                  checked={followerShown}
+                  onChange={(e) => onShowFollower(e.target.checked)}
+                />
+                <span className="box" aria-hidden="true">
+                  <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 5l3 3 5-7" fill="none" stroke="currentColor" strokeWidth="2" /></svg>
+                </span>
+                Show a follower
+              </label>
+            </section>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">

@@ -2,6 +2,7 @@ import React, { useId, useMemo, useState } from 'react';
 import type { Pet } from '../data/pets';
 import { PET_GROUPS, PET_SOURCES, petImageFile, petMatches } from '../data/petSources';
 import { WikiIcon } from './WikiIcon';
+import './osrs/osrs-windows-b.css';
 
 /** An extra choice above the pets, such as "Not a new pet". */
 export interface PetPickerExtra {
@@ -93,14 +94,14 @@ export const PetPicker: React.FC<PetPickerProps> = ({ pets, value, onChange, lab
         onMouseEnter={() => setActive(index)}
         onClick={() => pick(choice)}
         className={`flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] ${
-          index === activeIndex ? 'bg-[#a16207]/40 text-white' : 'text-gray-200'
+          index === activeIndex ? 'is-active bg-[#a16207]/40 text-white' : 'text-gray-200'
         } ${selected ? 'font-bold' : ''}`}
       >
         {choice.pet
           ? <WikiIcon file={petImageFile(choice.pet)} alt="" size={20} className="shrink-0" />
           : <span className="inline-block h-5 w-5 shrink-0" aria-hidden />}
         <span className="min-w-0 flex-1 truncate">{choice.label}</span>
-        {source && <span className="max-w-[45%] shrink-0 truncate text-[9px] text-gray-500">{source}</span>}
+        {source && <span className="owb-petpick-src max-w-[45%] shrink-0 truncate text-[9px] text-gray-500">{source}</span>}
       </li>
     );
   };
@@ -108,7 +109,7 @@ export const PetPicker: React.FC<PetPickerProps> = ({ pets, value, onChange, lab
   let index = extraShown ? 1 : 0;
   return (
     <div className="w-full">
-      <div className="flex items-center gap-1.5 rounded-md border border-[#4c462a] bg-black/70 px-1.5">
+      <div className="owb-petpick-box flex items-center gap-1.5 rounded-md border border-[#4c462a] bg-black/70 px-1.5">
         {chosen?.pet && !open
           ? <WikiIcon file={petImageFile(chosen.pet)} alt="" size={18} className="shrink-0" />
           : null}
@@ -136,12 +137,12 @@ export const PetPicker: React.FC<PetPickerProps> = ({ pets, value, onChange, lab
           id={listId}
           role="listbox"
           aria-label={label}
-          className="mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-[#4c462a] bg-black/90 p-1"
+          className="owb-petpick-list mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-[#4c462a] bg-black/90 p-1"
         >
           {extraShown && renderChoice({ value: extra.value, label: extra.label }, 0)}
           {groups.map(({ heading, choices }) => (
             <li key={heading} role="presentation">
-              <div className="px-1.5 pb-0.5 pt-1.5 text-[9px] font-bold uppercase tracking-wide text-[#facc15]/70">{heading}</div>
+              <div className="owb-petpick-group px-1.5 pb-0.5 pt-1.5 text-[9px] font-bold uppercase tracking-wide text-[#facc15]/70">{heading}</div>
               <ul role="group" aria-label={heading}>
                 {choices.map((choice) => renderChoice(choice, index++))}
               </ul>
