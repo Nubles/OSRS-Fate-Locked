@@ -27,7 +27,19 @@ const loadPack = async (file: string): Promise<Record<string, unknown>> => {
   } catch { return {}; }
 };
 
+// models-pack.json is either the models themselves, or (once they outgrow one
+// file) an "__index" of which models-pack-<n>.json part holds each model.
 let modelPack: Promise<Record<string, unknown>> | null = null;
+const modelParts = new Map<string, Promise<Record<string, unknown>>>();
+const packedModel = async (file: string): Promise<unknown> => {
+  modelPack ??= loadPack('models-pack.json');
+  const pack = await modelPack;
+  const index = pack.__index as Record<string, string> | undefined;
+  const part = index?.[file];
+  if (!part) return pack[file];
+  if (!modelParts.has(part)) modelParts.set(part, loadPack(part));
+  return (await modelParts.get(part)!)[file];
+};
 const MODEL_URL = /\/models\/([a-z0-9-]+\.gltf)(?:\?|$)/;
 
 /**
@@ -59,8 +71,7 @@ const installModelPack = () => {
     if (url.startsWith('data:')) return dataUrlResponse(url);
     const match = MODEL_URL.exec(url);
     if (match) {
-      modelPack ??= loadPack('models-pack.json');
-      const body = (await modelPack)[match[1]];
+      const body = await packedModel(match[1]);
       if (typeof body === 'string') return new Response(body, { headers: { 'Content-Type': 'model/gltf+json' } });
     }
     return realFetch(input, init);

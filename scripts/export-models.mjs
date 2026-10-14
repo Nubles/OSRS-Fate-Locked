@@ -27,6 +27,10 @@
  * model, or an item as worn (capes). Writes models-report.md in the repo root
  * listing what each unlock got (def id, faces, size) and what failed.
  *
+ * Add --idle (to the default boss export or to --unlocks) to bake each NPC's
+ * idle animation, and an object's own animation, as a looping morph animation
+ * (as pets always get). Files grow several times over; skeletal idles stay still.
+ *
  * IP: the cache + models are Jagex's; use is under their non-commercial Fan
  * Content Policy. This script bundles nothing — it processes a cache YOU provide
  * into files you own as fan content.
@@ -51,6 +55,7 @@ const LIMIT = Number(arg('--limit', Infinity));
 const DO_NAMES = args.includes('--names');
 const DO_PETS = args.includes('--pets');
 const DO_UNLOCKS = args.includes('--unlocks');
+const IDLE = args.includes('--idle'); // bake every NPC's (and animated object's) idle, not just pets'
 const PETS_DIR = path.join(OUT_DIR, 'pets');
 
 if (!CACHE_DIR) { console.error('Missing --cache <dir> (or OSRS_CACHE_DIR). See this file’s header.'); process.exit(1); }
@@ -228,13 +233,16 @@ async function exportNpc(id, slug, pet = false, { dropJunk = false, outDir } = {
   // Optional: bake the idle (standing) animation as a looping morph animation.
   exportNpc._lastAnim = 0;
   // A pet always idles: the follower and Your Pets panel show it moving.
-  if (((pet && !stillPets.has(slug)) || animate.has(slug)) && def.standingAnimation != null && def.standingAnimation !== -1) {
+  if (((pet && !stillPets.has(slug)) || animate.has(slug) || IDLE) && def.standingAnimation != null && def.standingAnimation !== -1) {
     const seq = await cache.getDef(IndexType.CONFIGS, ConfigType.SEQUENCE, def.standingAnimation);
     // A skeletal ("animaya") idle, as newer NPCs have, is beyond osrscachereader 1.1.x in
     // current caches: it misreads the keyframes' skeleton and crashes outside any await.
     // Such a model is exported still; the app gives it a gentle bob instead.
     if (seq && seq.animMayaID != null && seq.animMayaID !== -1) exportNpc._lastStill = true;
-    else if (seq) { await exporter.addSequence(cache, seq); exportNpc._lastAnim = seq.frameIDs?.length ?? 0; }
+    else if (seq) {
+      try { await exporter.addSequence(cache, seq); exportNpc._lastAnim = seq.frameIDs?.length ?? 0; }
+      catch { exportNpc._lastStill = true; } // a frame set that won't apply: keep the model, still
+    }
   }
 
   const gltf = exporter.export();
@@ -377,9 +385,9 @@ async function exportUnlocks() {
   async function exportDef(kind, d, slug, { exclude = [], dropGround = false } = {}) {
     if (kind === 'npc') {
       excludes[slug] = exclude;
-      exportNpc._lastSkipped = 0;
+      exportNpc._lastSkipped = 0; exportNpc._lastStill = false;
       await exportNpc(d.id, slug, false, { dropJunk: true, outDir: OUT_DIR });
-      return { faces: exportNpc._lastFaces, skipped: exportNpc._lastSkipped, ground: exportNpc._lastGround };
+      return { faces: exportNpc._lastFaces, skipped: exportNpc._lastSkipped, ground: exportNpc._lastGround, anim: exportNpc._lastAnim, still: exportNpc._lastStill };
     }
     const ban = new Set(exclude.map(Number));
     let models = [], skipped = 0;
@@ -406,8 +414,18 @@ async function exportUnlocks() {
     const ground = dropGround ? dropGroundFaces(merged) : 0;
     const exporter = new GLTFExporter(merged);
     exporter.addColors(merged);
+    // An object's own animation (a fountain's water, a portal's swirl), with --idle.
+    let anim = 0, still = false;
+    if (IDLE && kind === 'object' && d.animationID != null && d.animationID !== -1) {
+      const seq = await cache.getDef(IndexType.CONFIGS, ConfigType.SEQUENCE, d.animationID);
+      if (seq && seq.animMayaID != null && seq.animMayaID !== -1) still = true; // skeletal: as for NPCs
+      else if (seq) {
+        try { await exporter.addSequence(cache, seq); anim = seq.frameIDs?.length ?? 0; }
+        catch { still = true; }
+      }
+    }
     writeFileSync(path.join(OUT_DIR, `${slug}.gltf`), exporter.export());
-    return { faces: merged.faceCount - ground, skipped, ground };
+    return { faces: merged.faceCount - ground, skipped, ground, anim, still };
   }
 
   mkdirSync(OUT_DIR, { recursive: true });
@@ -434,10 +452,10 @@ async function exportUnlocks() {
         }
         if (!d) throw new Error(spec.name === '?' ? 'no pick yet ("?")' : `no ${kind} named "${spec.name}" with a model`);
         const kindUsed = row.note ? spec.fallback.type ?? kind : kind;
-        const { faces, skipped, ground } = await exportDef(kindUsed, d, slug, spec);
+        const { faces, skipped, ground, anim, still } = await exportDef(kindUsed, d, slug, spec);
         const kb = statSync(path.join(OUT_DIR, `${slug}.gltf`)).size / 1024;
-        Object.assign(row, { type: kindUsed, name: d.name, id: d.id, faces, kb, skipped, ground });
-        console.log(`✓ ${slug}.gltf (${kindUsed} ${d.id} "${d.name}", ${faces} faces, ${kb.toFixed(0)} KB${skipped ? `, dropped ${skipped} junk` : ''}${ground ? `, dropped ${ground} ground faces` : ''})`);
+        Object.assign(row, { type: kindUsed, name: d.name, id: d.id, faces, kb, skipped, ground, anim, still });
+        console.log(`✓ ${slug}.gltf (${kindUsed} ${d.id} "${d.name}", ${faces} faces, ${kb.toFixed(0)} KB${skipped ? `, dropped ${skipped} junk` : ''}${ground ? `, dropped ${ground} ground faces` : ''}${anim ? `, idle ${anim} frames` : ''}${still ? ', idle left still' : ''})`);
       } catch (e) {
         row.error = e?.message ?? String(e);
         console.warn(`  ! ${slug}: ${row.error}`);
@@ -453,7 +471,7 @@ async function exportUnlocks() {
     '',
     '| Group | Unlock | Type | Def | Name | Faces | KB | Notes |',
     '| --- | --- | --- | --- | --- | --- | --- | --- |',
-    ...rows.map((r) => `| ${r.group} | ${r.unlock} | ${r.type} | ${r.id ?? ''} | ${r.name ?? ''} | ${r.faces ?? ''} | ${r.kb != null ? r.kb.toFixed(0) : ''} | ${[r.error && `FAILED: ${r.error}`, r.note, r.skipped && `dropped ${r.skipped} junk sub-model(s)`, r.ground && `dropped ${r.ground} ground faces`].filter(Boolean).join('; ')} |`),
+    ...rows.map((r) => `| ${r.group} | ${r.unlock} | ${r.type} | ${r.id ?? ''} | ${r.name ?? ''} | ${r.faces ?? ''} | ${r.kb != null ? r.kb.toFixed(0) : ''} | ${[r.error && `FAILED: ${r.error}`, r.note, r.skipped && `dropped ${r.skipped} junk sub-model(s)`, r.ground && `dropped ${r.ground} ground faces`, r.anim && `idle ${r.anim} frames`, r.still && 'idle left still (skeletal or failed)'].filter(Boolean).join('; ')} |`),
     '',
   ];
   writeFileSync(path.join(ROOT, 'models-report.md'), lines.join('\n'));
