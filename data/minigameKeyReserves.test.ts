@@ -32,7 +32,7 @@ describe('minigame key reserves', () => {
     expect(vanillaMinigameKeySchedule('Pest Control')).toEqual([8, 4]);
     expect(vanillaMinigameKeySchedule('Nightmare Zone')).toEqual([50, 25, 13]);
     expect(vanillaMinigameKeySchedule('Mage Arena')).toEqual([100]);
-    expect(vanillaMinigameKeySchedule('Tears of Guthix')).toEqual([100]);
+    expect(vanillaMinigameKeySchedule('Tears of Guthix')).toEqual([50]);
     for (const spec of Object.values(MINIGAME_KEY_RESERVES)) {
       const rates = minigameReserveRates(spec);
       rates.forEach(rate => expect(Number.isInteger(rate) && rate >= 1).toBe(true));

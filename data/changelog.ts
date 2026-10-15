@@ -46,7 +46,7 @@ export const CHANGELOG_RELEASES = [
         'Minigames with no Collection Log page hold 3 Keys, and ones with a big log page hold fewer.',
         "Short runs roll at low odds and long runs at high odds, so each minigame's first Key takes about an hour.",
         "Each Key a minigame gives halves the chance of its next one. A miss under 5% doesn't give Fate.",
-        "Rat Pits is off the minigame table, since ironmen can't take part. Mage Arena and Tears of Guthix give one guaranteed Key.",
+        "Rat Pits is off the minigame table, since ironmen can't take part. Mage Arena gives one guaranteed Key, Tears of Guthix one Key at 50%.",
         'Minigames you haven\'t unlocked no longer roll. Chunked runs keep rolling every minigame at 10%.',
       ],
     },
