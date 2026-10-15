@@ -37,6 +37,21 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-15-minigame-keys',
+    title: 'Minigames hold a few Keys each',
+    date: '2026-10-15',
+    sections: {
+      balance: [
+        "In Vanilla, each minigame you've unlocked now holds 1 to 3 Keys, then stops rolling, like bosses.",
+        'Minigames with no Collection Log page hold 3 Keys, and ones with a big log page hold fewer.',
+        "Short runs roll at low odds and long runs at high odds, so each minigame's first Key takes about an hour.",
+        "Each Key a minigame gives halves the chance of its next one. A miss under 5% doesn't give Fate.",
+        "Rat Pits holds no Keys, since ironmen can't take part. Mage Arena and Tears of Guthix give one guaranteed Key.",
+        'Minigames you haven\'t unlocked no longer roll. Chunked runs keep rolling every minigame at 10%.',
+      ],
+    },
+  },
+  {
     id: '2026-10-15-ritual-pictures',
     title: 'Ritual pictures show up again',
     date: '2026-10-15',
