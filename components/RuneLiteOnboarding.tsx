@@ -206,7 +206,7 @@ export const RuneLiteOnboarding: React.FC = () => {
             <span>Profile sent {agoLabel(relaySync.lastSyncAt)}</span>
           )}
           <span className="text-gray-600">
-            · published data is ephemeral (24h)
+            · the relay drops it if you stop sending it
           </span>
           <div className="flex-1" />
           <button

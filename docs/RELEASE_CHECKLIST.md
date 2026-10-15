@@ -20,7 +20,11 @@ separate operation.
 2. For every player-facing change, add a newest-first entry to
    `data/changelog.ts`, then run `npm run changelog:verify`. Tests,
    documentation, workflows, and maintainer-only scripts are exempt when they
-   are the only files changed.
+   are the only files changed. Write it the way the comment at the top of
+   `data/changelog.ts` says: a short sentence-case title, one plain line per
+   bullet, no backstory, six bullets at most. Entries are posted to the
+   Discord's #updates channel as written, and `data/changelog.test.ts` checks
+   the limits on entries dated from 10 October 2026.
 3. Run the full test suite.
 4. Run the TypeScript check.
 5. Run deterministic content verification.
@@ -45,10 +49,13 @@ separate operation.
    - Check that no save data, tokens, credentials, webhooks, or environment
      dumps are present.
 
-8. Push the branch and wait for the actual GitHub check named `CI / quality`
-   to finish successfully. A local green run does not replace that result.
+8. Push the branch and wait for the actual GitHub checks named `CI / quality`
+   and `CI / tests (1/3)`, `(2/3)` and `(3/3)` to finish successfully. The
+   tests run in three groups side by side; `quality` runs every other gate. A
+   local green run does not replace those results.
 9. After the workflow first appears on GitHub, a repository maintainer manually
-   enables branch protection and requires `CI / quality` before merge. This
+   enables branch protection and requires `CI / quality` and the three
+   `CI / tests` checks before merge. This
    project change does not alter repository settings automatically.
 
 ## Content command boundaries
@@ -67,6 +74,8 @@ operations.
 
 The Pages workflow accepts pushes to main only and exposes no manual dispatch.
 Workflow-level permissions are read-only; Pages and OIDC write permissions are
-scoped to the deploy job. Artifact upload occurs only after install, tests, type
-checking, deterministic content verification, and build all succeed, and the
-deploy job depends on that gated build job.
+scoped to the deploy job. The tests run in three groups side by side with the
+build job, which uploads the artifact only after install, type checking,
+deterministic content verification, and build succeed. The deploy job depends
+on every test group and that gated build job, so nothing goes live unless all of
+them pass.

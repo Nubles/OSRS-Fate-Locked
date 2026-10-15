@@ -18,6 +18,8 @@ import {
   type CorruptSaveEvidence,
 } from '../utils/profileStorage';
 import { profileMirrorMetadataKey } from '../utils/storageRecovery';
+import { profileLifecycleMarkKey } from '../utils/lifecycleMark';
+import { serializeCurrent } from '../utils/gamePersistence';
 import {
   openRecoveryDatabase,
 } from '../utils/recoveryDatabase';
@@ -70,6 +72,8 @@ export interface SaveBootstrapDependencies {
   readPending: (storageKey: string) => string | null;
   readPrimary: (storageKey: string) => string | null;
   readMirrorMetadata: (storageKey: string) => string | null;
+  /** The page-hide mark (utils/lifecycleMark.ts); absent reads as no mark. */
+  readLifecycleMark?: (storageKey: string) => string | null;
   openRepository: (profileId: string) => RecoveryRepository | PromiseLike<RecoveryRepository>;
   resolveSaveRecovery: (
     input: SaveRecoveryInput,
@@ -626,6 +630,7 @@ export const productionSaveBootstrapDependencies: SaveBootstrapDependencies = {
   readPending: storageKey => pendingData(getPendingSave(storageKey)),
   readPrimary: storageKey => readStorage(storageKey),
   readMirrorMetadata: storageKey => readStorage(profileMirrorMetadataKey(storageKey)),
+  readLifecycleMark: storageKey => readStorage(profileLifecycleMarkKey(storageKey)),
   openRepository: _profileId => openProductionRepository(),
   resolveSaveRecovery,
   archiveCorruptEvidence: productionArchiveCorruptEvidence,
@@ -761,6 +766,7 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
           pendingRaw: dependencies.readPending(storageKey),
           primaryRaw: dependencies.readPrimary(storageKey),
           mirrorMetadataRaw: dependencies.readMirrorMetadata(storageKey),
+          lifecycleMarkRaw: dependencies.readLifecycleMark?.(storageKey) ?? null,
           defaults,
         };
 
@@ -860,7 +866,7 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
             onRecover={async (candidate: ValidatedRecoveryCandidate) => {
               if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
               const recoveredState = sealRuneProofReplacement(candidate.state);
-              const recoveredData = recoveredState === candidate.state ? candidate.data : JSON.stringify(recoveredState);
+              const recoveredData = recoveredState === candidate.state ? candidate.data : serializeCurrent(recoveredState);
               const replacement: SaveBootstrapReplacement = {
                 profileId,
                 storageKey,
@@ -905,7 +911,7 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
             onStartFresh={async () => {
               if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
               const state = dependencies.createFreshState();
-              const data = JSON.stringify(state);
+              const data = serializeCurrent(state);
               const replacement: SaveBootstrapReplacement = {
                 profileId,
                 storageKey,

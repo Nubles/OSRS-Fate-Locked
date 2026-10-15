@@ -40,6 +40,12 @@ const ALTAR_UI: Record<string, { icon: any; color: string; border: string }> = {
   GAMBIT:       { icon: Skull,    color: 'text-fuchsia-400', border: 'border-fuchsia-500/30' },
   CARTOGRAPHER: { icon: Map,      color: 'text-emerald-400', border: 'border-emerald-500/30' },
   TRANSMUTE: { icon: Sparkles, color: 'text-purple-400', border: 'border-purple-500/30' },
+  WARD:        { icon: Shield,   color: 'text-sky-300',     border: 'border-sky-400/30' },
+  TEARS:       { icon: Activity, color: 'text-cyan-400',    border: 'border-cyan-500/30' },
+  PACT:        { icon: Zap,      color: 'text-red-500',     border: 'border-red-600/30' },
+  INVOCATIONS: { icon: Scroll,   color: 'text-amber-300',   border: 'border-amber-400/30' },
+  BARROWS:     { icon: Package,  color: 'text-stone-300',   border: 'border-stone-400/30' },
+  SACRIFICE:   { icon: Key,      color: 'text-rose-400',    border: 'border-rose-500/30' },
 };
 
 export const formatVanillaBossSchedule = (bossClass: string, rates: readonly number[]): string => {
@@ -349,7 +355,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         {RITUALS.map(r => (
                                             <li key={r.id} className="flex justify-between gap-2">
                                                 <span>{r.name}{r.chunkedOnly ? ' (Chunked only)' : ''}</span>
-                                                <span className="font-mono text-gray-300 shrink-0">{r.keyCost ? `${r.keyCost} Keys` : r.stakesAllFate ? `All Fate (min ${ritualCost(r.id)})` : `${ritualCost(r.id)} Fate`}</span>
+                                                <span className="font-mono text-gray-300 shrink-0">{r.keyCost ? `${r.keyCost} Keys` : r.stakesAllFate ? `All Fate (min ${ritualCost(r.id)})` : r.fateCost === 0 ? 'Free, pay later' : `${ritualCost(r.id)} Fate`}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -557,7 +563,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                             <h3 className={`${ui.color} font-bold text-lg mb-2`}>{r.name}</h3>
                                             <p className="text-sm text-gray-300 mb-4">{r.tagline}{r.chunkedOnly ? ' (Chunked mode only)' : ''}</p>
                                             <div className="text-xs font-mono bg-black/40 p-3 rounded border border-white/5 text-gray-400">
-                                                Cost: <span className="text-white font-bold">{r.fateCost ? `${ritualCost(r.id)} Fate Points` : `${r.keyCost} Keys`}</span>
+                                                Cost: <span className="text-white font-bold">{r.keyCost ? `${r.keyCost} Keys` : r.fateCost === 0 ? 'Free now, pay later' : `${ritualCost(r.id)} Fate Points`}</span>
                                                 <br/>
                                                 Effect: {ritualText(r.id)}
                                             </div>

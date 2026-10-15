@@ -5,10 +5,14 @@ const { data, manifest } = await readPinnedChunkSource();
 const regionSource = readFileSync(new URL('../data/regionChunks.ts', import.meta.url), 'utf8');
 const land = new Set([...regionSource.matchAll(/cx: (\d+), cy: (\d+)/g)].map(([, x, y]) => `${x},${y}`));
 if (land.size < 600) throw new Error('Region chunk parser lost the land baseline');
+// Named chunks reached only from your boat, so they open with the sea. The
+// Sailing Shipyard (8234) is reached by a shipwright's teleport from a port
+// where your boat is docked; no walk or sail leads in from the Isle of Souls.
+const BOAT_ONLY = new Set([8234]);
 const keys = data.walkableChunks.map(Number).filter(id => !land.has(`${id >> 8},${id & 255}`));
 for (const id of keys) {
   const name = data.chunks[id]?.Nickname ?? data.chunks[id]?.Name;
-  if (name && name !== 'Ocean Chunk') throw new Error(`Unassigned named land chunk ${id}: ${name}`);
+  if (name && name !== 'Ocean Chunk' && !BOAT_ONLY.has(id)) throw new Error(`Unassigned named land chunk ${id}: ${name}`);
 }
 const text = JSON.stringify({ sourceCommit: manifest.commit, keys: keys.sort((a,b) => a-b).map(id => `${id >> 8},${id & 255}`) }, null, 2) + '\n';
 const out = new URL('../data/oceanChunks.json', import.meta.url);

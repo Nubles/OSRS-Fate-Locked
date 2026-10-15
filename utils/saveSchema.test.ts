@@ -18,6 +18,7 @@ import {
   MAX_USER_NOTES,
   parseAndMigrateSave,
   validateAndMigrateSave,
+  WEIGHTED_FATE_RELEASED_AT,
   WEIGHTED_FATE_SAVE_VERSION,
   type SaveErrorCode,
   type SaveValidationResult,
@@ -263,6 +264,29 @@ describe('save schema compatibility', () => {
       pityKeys: 1,
       fatePoints: 5,
     });
+  });
+
+  it('offers nothing to an old-version save with rolls from on or after the update', () => {
+    // The RS3 tracker shares this site's storage and rewrites an OSRS save
+    // with its own version 2, so a run played under weighted Fate can arrive
+    // looking old. It already got its milestone Chaos Keys and weighted Fate.
+    const rewritten = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    rewritten.version = 2;
+    delete rewritten.fateCompensation;
+    rewritten.fatePoints = 0;
+    (rewritten.unlocks as Record<string, unknown>).levels = { Attack: 55, Hitpoints: 36 };
+    rewritten.history = Array.from({ length: 60 }, (_, index) => ({
+      id: `weighted-${index}`,
+      timestamp: WEIGHTED_FATE_RELEASED_AT + index,
+      type: 'ROLL_FAIL',
+      source: 'Attack Level 50',
+      message: 'No Key.',
+      meta: { fatePointsEarned: 2 },
+    }));
+
+    const result = expectAccepted(validateAndMigrateSave(rewritten, defaultsFixture()));
+
+    expect(result.state.fateCompensation.status).toBe('not_eligible');
   });
 
   it('migrates a zero-benefit v3 run directly to not eligible', () => {

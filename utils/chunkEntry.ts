@@ -27,6 +27,7 @@ export interface ReachSource {
 
 type TravelReachability = typeof import('./travelReach').travelReachability;
 let travelReachability: TravelReachability | null = null;
+let pandemoniumOpens: typeof import('./travelReach').pandemoniumOpens | null = null;
 
 /**
  * Loads the app's routes for runReach, once. They load with the map's chunk
@@ -35,7 +36,7 @@ let travelReachability: TravelReachability | null = null;
  * the chunk content is in.
  */
 export const loadRunRoutes = (): Promise<void> => import('./travelReach')
-  .then(module => { travelReachability = module.travelReachability; });
+  .then(module => { ({ travelReachability, pandemoniumOpens } = module); });
 
 /**
  * The owned chunks a route from the run's start reaches, as numeric ids
@@ -57,14 +58,18 @@ export function runReach(source: ReachSource, unlocks: UnlockState, gameModeId: 
 
 /**
  * The run's entry for one chunk. Without a reach set (the chunk data didn't
- * load), an owned chunk counts as reached.
+ * load), an owned chunk counts as reached. Once the routes load, Pandemonium
+ * opens its route during the quest and the sea after it, from Port Sarim
+ * (utils/pandemoniumRoute.ts); questRoute false leaves that out, for interiors.
  */
 export function chunkEntry(
   coord: { cx: number; cy: number },
   unlocks: UnlockState,
   gameModeId: string | undefined,
   reachable?: Set<string>,
+  questRoute = true,
 ): PermissionStatus {
+  if (questRoute && pandemoniumOpens?.(coord, unlocks, (other) => chunkEntry(other, unlocks, gameModeId, reachable, false))) return 'ALLOWED';
   if (!chunkUnlocked(coord.cx, coord.cy, unlocks, gameModeId)) return 'LOCKED';
   if (reachable && !reachable.has(String(coord.cx * 256 + coord.cy))) return 'NOT_READY';
   return 'ALLOWED';

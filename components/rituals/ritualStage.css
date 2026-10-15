@@ -1,0 +1,35 @@
+/* Ritual scenes: a 420x300 stage scaled to fit, a title and an in-game item dialog. */
+.ritual-stage { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; overflow: hidden; background: rgba(10, 8, 6, 0.93); cursor: pointer; animation: ritual-stage-in 0.25s ease-out both; }
+@keyframes ritual-stage-in { from { opacity: 0; } to { opacity: 1; } }
+.ritual-fit { width: 420px; display: flex; flex-direction: column; align-items: center; gap: 10px; transform-origin: center center; flex: none; }
+.ritual-scene { position: relative; width: 420px; height: 300px; }
+.ritual-scene > * { position: absolute; }
+.ritual-fx { left: 0; top: 0; pointer-events: none; z-index: 5; }
+.ritual-node { width: 0; height: 0; display: flex; align-items: center; justify-content: center; overflow: visible; }
+.ritual-node > * { flex: none; }
+/* The app's base styles cap images at max-width: 100%, and a node is 0 wide, so a picture placed straight in a node would shrink to nothing. */
+.ritual-stage img { max-width: none; }
+.ritual-glow { width: 260px; height: 260px; border-radius: 50%; opacity: 0; }
+.ritual-label { white-space: nowrap; text-shadow: 1px 1px 0 #000; -webkit-font-smoothing: none; font-size: 16px; }
+.ritual-big { font-size: 32px; text-shadow: 2px 2px 0 #000; }
+.ritual-slot { width: 76px; height: 68px; display: grid; place-items: center; background: #1d1913; border: 1px solid #0d0b08; box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #4a4034; box-sizing: border-box; }
+.ritual-select { width: 76px; height: 68px; box-sizing: border-box; border: 2px solid #ffff00; }
+.ritual-title { margin: 0; font-size: 32px; line-height: 1; color: #ff981f; text-shadow: 2px 2px 0 #000; -webkit-font-smoothing: none; text-align: center; opacity: 0; }
+.ritual-dialog { width: 420px; max-width: 100%; box-sizing: border-box; display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: center; gap: 8px; padding: 8px 12px; background: #cdbb8e; border: 2px solid #000; box-shadow: inset 2px 2px 0 #e3d4a8, inset -2px -2px 0 #8a744c; opacity: 0; }
+.ritual-dialog-icon { display: grid; place-items: center; height: 68px; }
+.ritual-dialog-text { text-align: center; color: #000; font-size: 16px; line-height: 18px; -webkit-font-smoothing: none; }
+.ritual-continue { display: block; margin-top: 6px; color: #0000ff; visibility: hidden; }
+.ritual-map { width: 316px; height: 256px; box-sizing: border-box; padding: 8px; background: #b8995e; border: 2px solid #3b2a14; box-shadow: inset 0 0 0 2px #d9c18a, inset 0 0 0 6px #8a6a38; }
+.ritual-map-inner { position: relative; width: 300px; height: 240px; overflow: hidden; image-rendering: pixelated; background-repeat: no-repeat; }
+.ritual-map-inner > * { position: absolute; }
+.ritual-cell { width: 60px; height: 60px; box-sizing: border-box; border: 1px solid rgba(0, 0, 0, 0.45); }
+.ritual-fog { background-color: rgba(26, 18, 8, 0.66); }
+.ritual-owned { box-shadow: inset 0 0 0 1px rgba(0, 255, 0, 0.55); }
+.ritual-rod { width: 330px; height: 10px; background: #5a3d1a; border: 1px solid #000; box-shadow: inset 0 2px 0 #8a6332, inset 0 -2px 0 #3a2610; }
+.ritual-ribbon { background: #e2cf9a; border: 2px solid #3b2a14; padding: 2px 10px 3px; color: #3b2a14; white-space: nowrap; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4); font-size: 16px; -webkit-font-smoothing: none; }
+.ritual-tablet { width: 300px; box-sizing: border-box; padding: 8px 10px; background: #c9a86a; border: 2px solid #3b2a14; box-shadow: inset 0 0 0 2px #e6cf98, inset 0 0 0 5px #8a6a38; }
+.ritual-row { display: grid; grid-template-columns: 18px 1fr auto; align-items: center; gap: 8px; height: 26px; color: #3b2a14; font-size: 16px; -webkit-font-smoothing: none; }
+.ritual-tick { width: 14px; height: 14px; box-sizing: border-box; background: #5e4a28; border: 2px solid #2a1d0c; }
+.ritual-tick.ritual-on { background: #ffd84a; border-color: #7a4a00; box-shadow: inset -2px -2px 0 #c48a00; }
+.ritual-scroll { background: #d9c18a; border: 2px solid #3b0a0a; padding: 4px 12px 5px; color: #8a0000; white-space: nowrap; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5), inset 0 0 0 2px #b89a5c; font-size: 16px; -webkit-font-smoothing: none; }
+.ritual-beam { width: 40px; height: 120px; background: linear-gradient(180deg, rgba(255, 246, 200, 0.85), rgba(160, 220, 255, 0)); opacity: 0; }

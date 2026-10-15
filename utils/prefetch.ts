@@ -16,7 +16,7 @@ const IMPORTERS: Array<() => Promise<unknown>> = [
   () => import('../components/ReferenceModal'),
   () => import('../components/SkillDetailModal'),
   () => import('../components/VoidAltar'),
-  () => import('../components/RitualEffects'),
+  () => import('../components/RitualAnimation'),
 ];
 
 let started = false;

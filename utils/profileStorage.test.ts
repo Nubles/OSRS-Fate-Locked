@@ -19,18 +19,20 @@ const expectedKeys = (profileId: string): string[] => {
     `fate_features_seen_v1_${profileId}`,
     `${base}__writer`,
     `${base}__mirrorMeta`,
+    `${base}__lifecycleMark`,
     `${base}__corruptArchive`,
   ];
 };
 
 describe('profile-owned storage registry', () => {
-  it('lists the exact ten owned keys in stable order', () => {
+  it('lists the exact owned keys in stable order', () => {
     expect(profileOwnedKeys('target')).toEqual(expectedKeys('target'));
   });
 
   it('owns mirror metadata and corrupt evidence with the profile', () => {
     expect(profileOwnedKeys('alpha')).toEqual(expect.arrayContaining([
       'FATE_PROFILE_alpha__mirrorMeta',
+      'FATE_PROFILE_alpha__lifecycleMark',
       'FATE_PROFILE_alpha__corruptArchive',
     ]));
   });

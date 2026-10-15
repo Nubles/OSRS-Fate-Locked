@@ -20,6 +20,8 @@ import { isKnownVanillaMinigame, normalizeMinigameStandardKeysAwarded, vanillaBo
 import { calculateLegacyFateCompensation, LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
 import { PET_COMPENSATION_ID, petCompensationOffer } from './petCompensation';
 import { isPetId, PET_IDS } from '../data/petIds';
+import { BARROWS_BROTHERS, BARROWS_ROLLS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, type Invocation } from '../config/economy';
+import { tidyRituals, type RitualState } from './ritualEffects';
 /** Version 5 freezes the one-time pet offer and stores claimed pets and owed Keys. */
 export const CURRENT_SAVE_VERSION = 5;
 /**
@@ -28,6 +30,8 @@ export const CURRENT_SAVE_VERSION = 5;
  * must never offer the compensation again to saves that already hold one.
  */
 export const WEIGHTED_FATE_SAVE_VERSION = 4;
+/** Start of the day weighted Fate shipped (2 Aug 2026, UTC). */
+export const WEIGHTED_FATE_RELEASED_AT = Date.UTC(2026, 7, 2);
 /** Only saves from before weighted Fate have their offer calculated on load. */
 export const calculatesLegacyFateCompensation = (sourceVersion: number): boolean =>
   sourceVersion < WEIGHTED_FATE_SAVE_VERSION;
@@ -41,6 +45,13 @@ export const calculatesPetCompensation = (sourceVersion: number): boolean =>
   sourceVersion < PET_OMNI_SAVE_VERSION;
 const MIN_SUPPORTED_SAVE_VERSION = 1;
 export const MAX_SAVE_BYTES = 5 * 1024 * 1024;
+/**
+ * Written into every save this tracker stores or exports (gamePersistence's
+ * serializeCurrent). Other apps share this tracker's address and storage, so a
+ * save stamped with a different app is refused. Saves from before the stamp
+ * have none and still load.
+ */
+export const SAVE_APP_ID = 'osrs-fate-locked';
 export const MAX_HISTORY_ENTRIES = 100_000;
 export const MAX_IDENTIFIER_ARRAY = 25_000;
 export const MAX_COLLECTION_LOG_ENTRIES = 25_000;
@@ -60,7 +71,8 @@ export type SaveErrorCode =
   | 'invalid_number'
   | 'invalid_history'
   | 'invalid_unlocks'
-  | 'decode_failed';
+  | 'decode_failed'
+  | 'foreign_app';
 
 export type SaveWarning = {
   code: 'migrated' | 'storage_warning';
@@ -96,6 +108,7 @@ const messageFor = (code: SaveErrorCode, path?: string): string => {
     case 'invalid_history': return `Save history is invalid${suffix}.`;
     case 'invalid_unlocks': return `Save unlock data is invalid${suffix}.`;
     case 'decode_failed': return 'Save data could not be decoded.';
+    case 'foreign_app': return 'This save was made by a different app, not the OSRS Fate Locked tracker.';
     default: return `Save data contains an invalid field${suffix}.`;
   }
 };
@@ -779,6 +792,54 @@ const normalizePetCompensation = (value: unknown): Outcome<PetCompensationState>
   };
 };
 
+const RITUAL_KEYS = new Set(['ward', 'wardCooldown', 'tearsFailsLeft', 'tearsSpent', 'pactRollsLeft', 'pactDebt', 'invocations', 'barrows', 'sacrificesUsed']);
+
+/** The newer Void Altar rituals still running: each field bounded by what the rituals can set. */
+const normalizeRituals = (value: unknown): Outcome<RitualState | undefined> => {
+  const path = 'rituals';
+  const inspected = inspectRecord(value, RITUAL_KEYS, 'invalid_field', path);
+  if (inspected.ok === false) return inspected;
+  const raw = inspected.value;
+  const out: RitualState = {};
+  for (const key of ['ward', 'tearsSpent'] as const) {
+    if (!own(raw, key)) continue;
+    const checked = booleanValue(readOwn(raw, key), `${path}.${key}`);
+    if (checked.ok === false) return checked;
+    out[key] = checked.value;
+  }
+  for (const [key, max] of [['tearsFailsLeft', TEARS_FAILS], ['pactRollsLeft', PACT_ROLLS], ['pactDebt', PACT_DEBT], ['sacrificesUsed', SACRIFICE_USES_PER_RUN], ['wardCooldown', WARD_COOLDOWN_ROLLS]] as const) {
+    if (!own(raw, key)) continue;
+    const checked = boundedInteger(readOwn(raw, key), `${path}.${key}`, 0, max);
+    if (checked.ok === false) return checked;
+    out[key] = checked.value;
+  }
+  if (own(raw, 'invocations')) {
+    const sub = inspectRecord(readOwn(raw, 'invocations'), new Set(['ids', 'rollsLeft']), 'invalid_field', `${path}.invocations`);
+    if (sub.ok === false) return sub;
+    const ids = inspectArray(readOwn(sub.value, 'ids'), 'invalid_field', `${path}.invocations.ids`, INVOCATIONS.length);
+    if (ids.ok === false) return ids;
+    if (ids.value.length === 0 || new Set(ids.value).size !== ids.value.length
+      || !ids.value.every(id => INVOCATIONS.some(i => i.id === id))) return invalid('invalid_field', `${path}.invocations.ids`);
+    const left = boundedInteger(readOwn(sub.value, 'rollsLeft'), `${path}.invocations.rollsLeft`, 0, INVOCATION_ROLLS);
+    if (left.ok === false) return left;
+    out.invocations = { ids: ids.value as Invocation['id'][], rollsLeft: left.value };
+  }
+  if (own(raw, 'barrows')) {
+    const sub = inspectRecord(readOwn(raw, 'barrows'), new Set(['brother', 'rollsLeft', 'failed', 'fateCost']), 'invalid_field', `${path}.barrows`);
+    if (sub.ok === false) return sub;
+    const brother = BARROWS_BROTHERS.find(b => b.id === readOwn(sub.value, 'brother'));
+    if (!brother) return invalid('invalid_field', `${path}.barrows.brother`);
+    const left = boundedInteger(readOwn(sub.value, 'rollsLeft'), `${path}.barrows.rollsLeft`, 0, BARROWS_ROLLS);
+    if (left.ok === false) return left;
+    const failed = boundedInteger(readOwn(sub.value, 'failed'), `${path}.barrows.failed`, 0, BARROWS_ROLLS);
+    if (failed.ok === false) return failed;
+    const fateCost = boundedInteger(readOwn(sub.value, 'fateCost'), `${path}.barrows.fateCost`, 0, MAX_COUNTER);
+    if (fateCost.ok === false) return fateCost;
+    out.barrows = { brother: brother.id, rollsLeft: left.value, failed: failed.value, fateCost: fateCost.value };
+  }
+  return { ok: true, value: tidyRituals(out) };
+};
+
 /** Claimed pets: known pet ids, each once. */
 const normalizePetsClaimed = (value: unknown): Outcome<number[]> => {
   if (!Array.isArray(value) || value.length > PET_IDS.length) return invalid('invalid_field', 'petsClaimed');
@@ -859,10 +920,19 @@ const notEligibleFateCompensation = (): FateCompensationState => ({
   fatePoints: 0,
 });
 
-/** Freeze the one-time offer for a save from before weighted Fate, under its own mode's pity rule. */
+/**
+ * Freeze the one-time offer for a save from before weighted Fate, under its own mode's pity rule.
+ * A run with anything recorded on or after the update's day was played under
+ * weighted Fate and already got its milestone Chaos Keys; its save only reads
+ * as old because another app rewrote it (the RS3 tracker on the same site
+ * stamps its own lower version), so it gets no offer.
+ */
 const legacyFateCompensationOffer = (
   state: Pick<GameState, 'unlocks' | 'history' | 'fatePoints' | 'gameModeId' | 'customMode'>,
 ): FateCompensationState => {
+  if (state.history.some(entry => entry.timestamp >= WEIGHTED_FATE_RELEASED_AT)) {
+    return notEligibleFateCompensation();
+  }
   const calculated = calculateLegacyFateCompensation(
     state,
     resolveModeRules(state.gameModeId, state.customMode),
@@ -934,6 +1004,7 @@ const normalizeCollectionLogIdentity = (value: unknown): Outcome<CollectionLogId
 };
 
 const TOP_LEVEL_KEYS = new Set([
+  'app',
   'collectionLogIdentity',
   'runeProofProgress',
   'version', 'runId', 'runRevision', 'keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'activeBuff',
@@ -942,7 +1013,7 @@ const TOP_LEVEL_KEYS = new Set([
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
   'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
   'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'fateCompensation',
-  'petCompensation', 'petsClaimed', 'keysOwed',
+  'petCompensation', 'petsClaimed', 'keysOwed', 'rituals',
 ]);
 
 export const parseAndMigrateSave = (
@@ -965,6 +1036,7 @@ export const validateAndMigrateSave = (
   if (!isPlainRecord(input)) return invalid('invalid_root');
   const inspected = inspectRecord(input, TOP_LEVEL_KEYS, 'invalid_field', '');
   if (inspected.ok === false) return inspected;
+  if (own(input, 'app') && readOwn(input, 'app') !== SAVE_APP_ID) return invalid('foreign_app', 'app');
   const hasVersion = own(input, 'version');
   const rawVersion = hasVersion ? readOwn(input, 'version') : undefined;
   let sourceVersion = 0;
@@ -1269,6 +1341,11 @@ const normalizeState = (
     const checked = normalizePetsClaimed(readOwn(input, 'petsClaimed'));
     if (checked.ok === false) return checked;
     if (checked.value.length > 0) state.petsClaimed = checked.value;
+  }
+  if (own(input, 'rituals')) {
+    const checked = normalizeRituals(readOwn(input, 'rituals'));
+    if (checked.ok === false) return checked;
+    if (checked.value) state.rituals = checked.value;
   }
   if (own(input, 'keysOwed')) {
     const checked = boundedInteger(readOwn(input, 'keysOwed'), 'keysOwed', 0, MAX_COUNTER);

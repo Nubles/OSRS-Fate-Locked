@@ -2,7 +2,7 @@
 
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { writeOnlineBackupRecord, requestOnlineBackupNow } from '../utils/onlineBackupRecord';
+import { writeOnlineBackupRecord, requestOnlineBackupNow, requestOnlineBackupReplace } from '../utils/onlineBackupRecord';
 import {
   OnlineBackupDriver,
   ONLINE_BACKUP_HIDDEN_MIN_MS,
@@ -94,6 +94,15 @@ describe('OnlineBackupDriver', () => {
     await act(async () => { requestOnlineBackupNow('P'); await Promise.resolve(); });
     expect(backupRun).toHaveBeenCalledWith('P', '{"runId":"run-1"}', 'https://relay.test', { force: true });
     await act(async () => { requestOnlineBackupNow('another profile'); await Promise.resolve(); });
+    expect(backupRun).toHaveBeenCalledTimes(1);
+  });
+
+  it('replaces a held backup only when the player says so', async () => {
+    writeOnlineBackupRecord('P', { code: '0123456789ABCDEFGHJK', lastRunId: 'run-0', held: 'other-run' });
+    render(<OnlineBackupDriver />);
+    await act(async () => { requestOnlineBackupReplace('P'); await Promise.resolve(); });
+    expect(backupRun).toHaveBeenCalledWith('P', '{"runId":"run-1"}', 'https://relay.test', { force: true, replace: true });
+    await act(async () => { requestOnlineBackupReplace('another profile'); await Promise.resolve(); });
     expect(backupRun).toHaveBeenCalledTimes(1);
   });
 

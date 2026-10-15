@@ -12,6 +12,7 @@ import type {
 import type { SaveValidationResult } from './saveSchema';
 import type { SaveWriteAuthorization } from './profileWriterLease';
 import { createSaveCoordinator, type SaveCoordinator } from './saveCoordinator';
+import { lifecycleMarkMatches, profileLifecycleMarkKey } from './lifecycleMark';
 
 type Deferred<T> = {
   promise: Promise<T>;
@@ -88,6 +89,7 @@ const harness = (options: HarnessOptions = {}): Harness => {
         const checksum = (JSON.parse(data) as MirrorMetadata).checksum;
         events.push(`mirror-meta:${checksum.replace('checksum-', '')}`);
       }
+      else if (key.endsWith('__lifecycleMark')) events.push('lifecycle-mark');
       else events.push(`mirror:${noteFromData(data)}`);
       if (mirrorResult === 'failure') throw new Error('mirror unavailable');
       values.set(key, data);
@@ -477,7 +479,24 @@ describe('coalescing journal-first save coordinator', () => {
     const testHarness = harness();
 
     expect(testHarness.coordinator.mirrorLifecycle(save('lifecycle'))).toBe(true);
-    expect(testHarness.events).toEqual(['mirror:lifecycle']);
+    // The mark goes first, so a primary that lands is always covered by it.
+    expect(testHarness.events).toEqual(['lifecycle-mark', 'mirror:lifecycle']);
+    expect(lifecycleMarkMatches(
+      testHarness.storage.getItem(profileLifecycleMarkKey('FATE_PROFILE_alpha')),
+      save('lifecycle'),
+    )).toBe(true);
+  });
+
+  it('still writes the lifecycle save when its mark cannot be stored', () => {
+    const testHarness = harness();
+    const setItem = testHarness.storage.setItem;
+    testHarness.storage.setItem = (key, data) => {
+      if (key.endsWith('__lifecycleMark')) throw new Error('quota');
+      setItem(key, data);
+    };
+
+    expect(testHarness.coordinator.mirrorLifecycle(save('unmarked'))).toBe(true);
+    expect(testHarness.storage.getItem('FATE_PROFILE_alpha')).toBe(save('unmarked'));
   });
 
   it('does not discard a staged snapshot when disposed', () => {

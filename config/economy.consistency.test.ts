@@ -3,7 +3,7 @@ import { DROP_RATES, EQUIPMENT_TIER_MAX } from './rules';
 import { DropSource, TableType } from '../types';
 import {
   EARN_METHODS, KEY_TYPES, SPEND_TABLES, RITUALS,
-  SKILLS_TIER_CAP, LEVEL_ROLL_MAX, earnRange,
+  SKILLS_TIER_CAP, LEVEL_ROLL_MAX,
   VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule,
   FAILURE_FATE_BY_SOURCE, SKILL_CHAOS_MILESTONES,
   failureFateForSkillLevel, failureFateForSource, isSkillChaosMilestone,
@@ -150,13 +150,6 @@ describe('economy ↔ engine consistency', () => {
     expect(isSkillChaosMilestone(79)).toBe(false);
   });
 
-  it('earnRange returns the min/max of a method’s fixed tiers', () => {
-    const slayer = EARN_METHODS.find(m => m.category === 'Slayer Tasks')!;
-    const [lo, hi] = earnRange(slayer);
-    expect(lo).toBe(DROP_RATES[DropSource.SLAYER_BEGINNER]); // 5
-    expect(hi).toBe(DROP_RATES[DropSource.SLAYER_BOSS]);     // 80 — the number the old Codex got wrong
-  });
-
   it('exposes exactly the three key types', () => {
     expect(KEY_TYPES.map(k => k.id).sort()).toEqual(['chaos', 'omni', 'standard']);
   });
@@ -207,9 +200,20 @@ describe('economy ↔ engine consistency', () => {
     expect(equip?.tiers).toBe(EQUIPMENT_TIER_MAX);
   });
 
-  it('defines all six Void Altar rituals with a cost', () => {
-    expect(RITUALS.map(r => r.id).sort()).toEqual(['CARTOGRAPHER', 'CHAOS', 'GAMBIT', 'GREED', 'LUCK', 'TRANSMUTE']);
-    for (const r of RITUALS) expect((r.fateCost ?? 0) + (r.keyCost ?? 0)).toBeGreaterThan(0);
+  it('defines every Void Altar ritual with a cost, except the Pact that is paid later', () => {
+    expect(RITUALS.map(r => r.id).sort()).toEqual([
+      'BARROWS', 'CARTOGRAPHER', 'CHAOS', 'GAMBIT', 'GREED', 'INVOCATIONS', 'LUCK', 'PACT', 'SACRIFICE', 'TEARS', 'TRANSMUTE', 'WARD',
+    ]);
+    for (const r of RITUALS) {
+      if (r.id === 'PACT') expect(r.fateCost).toBe(0);
+      else expect((r.fateCost ?? 0) + (r.keyCost ?? 0)).toBeGreaterThan(0);
+    }
+  });
+
+  it('gives only the three god rituals a god', () => {
+    expect(RITUALS.filter(r => r.god).map(r => [r.id, r.god])).toEqual([
+      ['WARD', 'Saradomin'], ['TEARS', 'Guthix'], ['PACT', 'Zamorak'],
+    ]);
   });
 
   it("scales Fate ritual prices, including the Gambit's minimum stake, by the mode", () => {

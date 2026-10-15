@@ -17,7 +17,117 @@ export interface ChangelogRelease {
   sections: Partial<Record<ChangelogSection, readonly ChangelogNote[]>>;
 }
 
+/*
+ * How to write a What's New entry. Players read these in the app and in the
+ * Discord's #updates channel, so write them like a person posting an update,
+ * not like release documentation. data/changelog.test.ts checks the limits on
+ * every entry dated on or after 2026-10-10; older entries keep their wording.
+ *
+ * - Title: a few words in normal sentence case, like a forum post subject.
+ *   "Pandemonium and the open sea", not "Pandemonium and the Shipyard Open
+ *   the Way You Reach Them". 50 characters at most.
+ * - One short line per bullet (160 characters at most) saying what changed
+ *   for the player. Lead with the thing they'll notice.
+ * - Skip the backstory: no "Before, it did X because Y", no how it was built.
+ * - Plain words and contractions ("you're", "doesn't"). No em dashes.
+ * - Six bullets at most. If there's more, keep what players will notice and
+ *   drop the rest.
+ * - Put the newest entry first and set LATEST_CHANGELOG_ID in
+ *   data/changelogLatest.ts to its id.
+ */
 export const CHANGELOG_RELEASES = [
+  {
+    id: '2026-10-15-ritual-pictures',
+    title: 'Ritual pictures show up again',
+    date: '2026-10-15',
+    sections: {
+      fixed: [
+        "Ritual animations now show every picture, like the Barrows brother's armour and Tumeken's shadow, instead of leaving blank spaces.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-15-new-rituals',
+    title: 'Six new rituals at the Void Altar',
+    date: '2026-10-15',
+    sections: {
+      added: [
+        "Saradomin's Ward (30 Fate): your next Key on a boss, minigame, guild or bank only lands on one you can use right now. You can cast it again 25 rolls later.",
+        'Tears of Guthix (10 Fate): your next 10 failed rolls give double Fate, until a roll lands. Once per dry spell.',
+        "Zamorak's Pact (free): +15% odds on your next 3 rolls, then Zamorak takes the next 40 Fate you'd earn.",
+        "Amascut's Invocations (10 Fate): pick handicaps for your next 3 rolls, and each one raises your Omni-Key chance.",
+        'Barrows Chest (20 Fate): fate picks a brother, and his set effect powers your next 3 rolls.',
+        'Sacrifice (25 Fate): give up the top tier of 3 random skills or gear slots for an Omni-Key. Opens after 200 rolls, 3 uses per run.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-13-safer-saves',
+    title: 'Safer saves and backups',
+    date: '2026-10-13',
+    sections: {
+      fixed: [
+        "If another site changes your save in this browser, the tracker now asks which copy to keep instead of loading it.",
+        "Online backup now asks before replacing a backup of a different or longer run, like after a Reset.",
+        "If sending your rules to RuneLite fails, the tracker tries again on its own and tells you if it keeps failing.",
+      ],
+      changed: [
+        "Crashes are now reported automatically so they can be fixed faster. Reports never include your save.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-13-old-compensation-offer',
+    title: 'No more surprise compensation offer',
+    date: '2026-10-13',
+    sections: {
+      fixed: [
+        'Runs played since Weighted Fate no longer get its old compensation offer by mistake.',
+        'It could pop up after opening the RS3 tracker in the same browser as your OSRS run.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-12-faster-updates',
+    title: 'Faster updates',
+    date: '2026-10-12',
+    sections: {
+      changed: [
+        'New versions of the tracker now go live in about half the time.',
+        'We tidied up old code nothing used anymore. Your run and the app work the same as before.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-11-ritual-animations',
+    title: 'New Void Altar animations',
+    date: '2026-10-11',
+    sections: {
+      added: [
+        'Every ritual now has its own animation, drawn with real OSRS item sprites and the RuneScape font.',
+        'The Void Gambit flips a coin over a portal, and you see the Keys you won or the Fate you lost.',
+        'The Cartographer unrolls the world map and marks your new chunk with an X.',
+      ],
+      changed: [
+        'The Void Altar looks like an in-game window now.',
+        'Click or press Esc to skip an animation, or turn Animations off in Settings to hide them.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-10-chunk-picker-october',
+    title: 'Map content updated for October',
+    date: '2026-10-10',
+    sections: {
+      changed: [
+        'The map and RuneLite now use the 7 October Chunk Picker data. Your areas, what they cost and how you reach them don’t change.',
+        'Emissary Ascended at the Twilight Temple shows as a monster you can fight, with its own drops.',
+        'Pete Kayer shows up in the Ferox Enclave’s chunk info.',
+        'The four Hunter shops list the new net trap in their stock.',
+        'Goblins list Energy potion(3) in their drops.',
+      ],
+    },
+  },
   {
     id: '2026-10-09-minigame-keys',
     title: 'Minigames Hold a Few Keys Each',
@@ -27,6 +137,18 @@ export const CHANGELOG_RELEASES = [
         'In Vanilla, minigames now work like bosses. Each minigame you’ve unlocked holds a few Keys at falling odds and stops rolling once it has paid them all. Quick ones like Rat Pits or Gnome Ball hold 1 Key at 10%. Standard ones like Pest Control or Guardians of the Rift hold 2 Keys at 20% then 10%. Long ones like Barbarian Assault or Hallowed Sepulchre hold 2 Keys at 30% then 15%.',
         'Farm Keys → Activities now lists your unlocked minigames by name, each showing how many Keys it has paid. A minigame you haven’t unlocked no longer rolls, and every minigame starts with its full stash, including on runs already under way.',
         'Chunked runs keep rolling every finished minigame at 10%, with no limit.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-09-pandemonium-route',
+    title: 'Pandemonium and the Shipyard Open the Way You Reach Them',
+    date: '2026-10-09',
+    sections: {
+      fixed: [
+        'While you are doing Pandemonium, the RuneLite plugin now lets you into the places the quest takes you: the sea between Port Sarim and The Pandemonium, The Pandemonium itself, and the Shipyard. Before, it called them Locked because the sea only opens once Pandemonium is done. You still need Port Sarim to start the quest, and once it is finished these places follow their usual rules again.',
+        'Once you have finished Pandemonium and have Sailing and Port Sarim, the RuneLite plugin opens the whole open sea. Before, most of it showed Not ready, because no walking route from Lumbridge reaches the sea.',
+        'The Shipyard where you customise your boat no longer counts as part of the Isle of Souls. You reach it from a shipwright at a port, not from the Isle of Souls, so it now opens with the sea once you have Sailing and Pandemonium. The Isle of Souls has one chunk fewer, and the land total on the run card drops from 624 to 623.',
       ],
     },
   },

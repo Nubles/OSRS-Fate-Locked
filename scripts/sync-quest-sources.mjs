@@ -17,10 +17,11 @@ const CHUNK_SOURCE_PATH = resolve(ROOT, 'data', 'sources', 'chunkpicker-chunkinf
 const WIKI_API = 'https://oldschool.runescape.wiki/api.php';
 const WIKI_LIST_TITLE = 'Quests/List';
 const LEGACY_CHUNK_SOURCE_COMMIT = 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926';
-const CURRENT_CHUNK_SOURCE_COMMIT = 'fa71ed3b207e6a501444987dee23b875ec27cacd';
+const CURRENT_CHUNK_SOURCE_COMMIT = '629e9fee6183773e8df26d7e4bc5db792290ce0b';
 const APPROVED_CHUNK_SOURCE_COMMITS = new Set([
   LEGACY_CHUNK_SOURCE_COMMIT,
   'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
+  'fa71ed3b207e6a501444987dee23b875ec27cacd',
   CURRENT_CHUNK_SOURCE_COMMIT,
 ]);
 const RUNTIME_QUEST_COUNT = 193;

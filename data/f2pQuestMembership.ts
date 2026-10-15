@@ -232,12 +232,7 @@ export const f2pQuestMembership: readonly F2PQuestMembership[] = deepFreeze(
 );
 
 const membershipByQuestId = new Map(f2pQuestMembership.map(entry => [entry.questId, entry]));
-const membershipBySlug = new Map(f2pQuestMembership.map(entry => [entry.slug, entry]));
 
 export function f2pQuestMembershipFor(questId: string): F2PQuestMembership | undefined {
   return membershipByQuestId.get(questId);
-}
-
-export function f2pQuestMembershipBySlug(slug: string): F2PQuestMembership | undefined {
-  return membershipBySlug.get(slug);
 }

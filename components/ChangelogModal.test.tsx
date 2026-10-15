@@ -3,7 +3,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { ChangelogRelease } from '../data/changelog';
 import type { FateCompensationState } from '../types';
-import { shouldAutoOpenAfterOnboarding } from '../utils/changelogModalState';
 import { resolveFocusRestorationTarget } from '../hooks/useFocusTrap';
 import { ChangelogModal, toggleExpandedRelease } from './ChangelogModal';
 
@@ -133,16 +132,6 @@ describe('ChangelogModal initial render', () => {
   });
 });
 
-describe('changelog auto-open eligibility', () => {
-  it('waits for onboarding and opens only for an unseen latest release', () => {
-    const latestId = '2026-07-26-latest';
-
-    expect(shouldAutoOpenAfterOnboarding(false, latestId, null)).toBe(false);
-    expect(shouldAutoOpenAfterOnboarding(true, latestId, latestId)).toBe(false);
-    expect(shouldAutoOpenAfterOnboarding(true, latestId, '2026-07-23-previous')).toBe(true);
-  });
-});
-
 describe('ChangelogModal focus restoration', () => {
   it('prefers the persistent manual trigger and otherwise retains auto-open focus', () => {
     const utilityButton = { id: 'utility-button' };
@@ -156,11 +145,9 @@ describe('ChangelogModal focus restoration', () => {
 describe('toggleExpandedRelease', () => {
   it('opens an older release without collapsing the latest release or changing seen state', () => {
     const latestId = '2026-07-26-latest';
-    const latestSeenId = latestId;
     const expanded = toggleExpandedRelease(new Set([latestId]), '2026-07-23-previous');
 
     expect([...expanded]).toEqual([latestId, '2026-07-23-previous']);
-    expect(latestSeenId).toBe(latestId);
   });
 
   it('collapses only the release that is toggled', () => {

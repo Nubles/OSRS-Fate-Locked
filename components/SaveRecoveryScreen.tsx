@@ -102,6 +102,10 @@ const recoveryCauseCopy = (cause: Extract<SaveRecoveryDecision, { kind: 'recover
       return 'The browser contains saved evidence from more than one run. Choose the checkpoint that belongs to the run you want to continue.';
     case 'unsequenced_primary':
       return 'The current save cannot be ordered safely against the recovery journal. Choose a verified checkpoint before continuing.';
+    case 'unconfirmed_primary':
+      return 'The browser save changed after the tracker last saved it, and the tracker can’t confirm it made that change. Another page on the same website may have rewritten it. Your last confirmed save is selected below; nothing is replaced until you choose.';
+    case 'foreign_primary':
+      return 'The browser save was rewritten by a different app on the same website. Your last save from this tracker is selected below; the other app’s copy is kept until you choose.';
     case 'corrupt_primary':
     default:
       return 'The current browser save failed validation. Your verified recovery checkpoints remain untouched until you choose an action.';

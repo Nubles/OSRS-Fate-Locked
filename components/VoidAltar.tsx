@@ -1,14 +1,17 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { resolveModeRules } from '../config/gameModes';
-import { RITUALS, ritualEffect, ritualFateCost } from '../config/economy';
+import { BARROWS_BROTHERS, INVOCATIONS, INVOCATION_ROLLS, RITUALS, SACRIFICE_USES_PER_RUN, invocationAllowed, invocationOmniBonus, ritualEffect, ritualFateCost, type Invocation } from '../config/economy';
+import { ritualAvailability, rollRitualActive } from '../utils/ritualEffects';
+import type { NewRitualId } from '../context/GameContext';
 import { getChunkFrontier, chunkKey, chunkLabel } from '../utils/chunkAdjacency';
 import { chunkContentService } from '../services/ChunkContentService';
-import { X, ArrowRight } from 'lucide-react';
-import { Sparkles, Key, Shield, Dices, Dna, Coins, Skull, Map as MapIcon } from './OsrsIcon';
+import { X } from 'lucide-react';
+import { RitualIcon } from './rituals/RitualIcon';
+import { loadRitualFonts, RS_BOLD, RS_FONT, RS_SMALL } from './rituals/ritualAssets';
 
 interface VoidAltarProps {
   onClose: () => void;
@@ -32,11 +35,13 @@ let pinnedCartographerOffer: { tip: string; keys: string[] } | null = null;
 export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
-  const { fatePoints, keys, activeBuff, performRitual, performGambit, performCartographer, unlocks, animationsEnabled, gameModeId, customMode, nextFloat, runId, history } = useGame();
+  const { fatePoints, keys, activeBuff, performRitual, performGambit, performCartographer, castRitual, rituals: running, unlocks, gameModeId, customMode, nextFloat, runId, history } = useGame();
 
-  // The Gambit is irreversible and stakes everything — arm on first click,
-  // fire on the second, disarm when anything else is touched.
-  const [gambitArmed, setGambitArmed] = useState(false);
+  // The Gambit and Sacrifice can't be undone: arm on the first click, fire on
+  // the second, disarm when anything else is touched.
+  const [armedId, setArmedId] = useState<'GAMBIT' | 'SACRIFICE' | null>(null);
+  // Amascut's Invocations: null = closed, else the handicaps picked so far.
+  const [invocationPick, setInvocationPick] = useState<Invocation['id'][] | null>(null);
   // Cartographer chooser: null = closed, [] = frontier empty, else 3 options.
   const [chunkChoices, setChunkChoices] = useState<ChunkChoice[] | null>(null);
 
@@ -44,16 +49,8 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   // ritualFateCost the engine checks against.
   const rules = resolveModeRules(gameModeId, customMode);
 
-  // Visual identity per ritual — name, effect and cost all come from
-  // config/economy.ts (RITUALS), the same source the reducer and Codex use.
-  const RITUAL_UI: Record<string, { icon: any; color: string; border: string; bg: string; costColor: string }> = {
-    LUCK:         { icon: Dices,    color: 'text-blue-400',    border: 'border-blue-500/30',    bg: 'bg-blue-900/20',    costColor: 'text-osrs-pity' },
-    GREED:        { icon: Coins,    color: 'text-yellow-400',  border: 'border-yellow-500/30',  bg: 'bg-yellow-900/20',  costColor: 'text-osrs-pity' },
-    CHAOS:        { icon: Dna,      color: 'text-red-500',     border: 'border-red-500/30',     bg: 'bg-red-900/20',     costColor: 'text-osrs-pity' },
-    GAMBIT:       { icon: Skull,    color: 'text-fuchsia-400', border: 'border-fuchsia-500/30', bg: 'bg-fuchsia-950/30', costColor: 'text-osrs-pity' },
-    CARTOGRAPHER: { icon: MapIcon,  color: 'text-emerald-400', border: 'border-emerald-500/30', bg: 'bg-emerald-900/20', costColor: 'text-osrs-pity' },
-    TRANSMUTE:    { icon: Sparkles, color: 'text-purple-400',  border: 'border-purple-500/30',  bg: 'bg-purple-900/20',  costColor: 'text-osrs-gold' },
-  };
+  // The RuneScape fonts for the window's text; system fonts stand in until they load.
+  useEffect(() => { void loadRitualFonts(); }, []);
 
   const openCartographer = () => {
     // Draw 3 distinct candidates from the live frontier (fewer if it's small).
@@ -99,176 +96,220 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
     setChunkChoices(null);
   };
 
+  const r = running;
+  /** What a running ritual still has to do, shown on its card. */
+  const runningText = (id: string): string | null => {
+    if (id === 'LUCK' && activeBuff === 'LUCK') return 'Active';
+    if (id === 'GREED' && activeBuff === 'GREED') return 'Active';
+    if (id === 'WARD' && r?.ward) return 'Waiting for your next Key';
+    if (id === 'TEARS' && r?.tearsFailsLeft) return `${r.tearsFailsLeft} fails left`;
+    if (id === 'PACT' && r?.pactRollsLeft) return `${r.pactRollsLeft} rolls left`;
+    if (id === 'PACT' && r?.pactDebt) return `Debt: ${r.pactDebt} Fate`;
+    if (id === 'INVOCATIONS' && r?.invocations) return `${r.invocations.rollsLeft} rolls left`;
+    if (id === 'BARROWS' && r?.barrows) {
+      const name = BARROWS_BROTHERS.find(b => b.id === r.barrows!.brother)?.name.split(' ')[0];
+      return `${name}: ${r.barrows.rollsLeft} rolls left`;
+    }
+    return null;
+  };
+
   const rituals = RITUALS
-    .filter((r) => !r.chunkedOnly || gameModeId === 'chunked')
-    .map((r) => {
-      const fate = ritualFateCost(r.id, rules.ritualCostMultiplier);
-      const isGambit = r.id === 'GAMBIT';
+    .filter((ritual) => !ritual.chunkedOnly || gameModeId === 'chunked')
+    .map((ritual) => {
+      const fate = ritualFateCost(ritual.id, rules.ritualCostMultiplier);
+      const isGambit = ritual.id === 'GAMBIT';
+      const isBuff = ritual.id === 'LUCK' || ritual.id === 'GREED';
+      const isNew = ritual.god !== undefined || ritual.id === 'INVOCATIONS' || ritual.id === 'BARROWS' || ritual.id === 'SACRIFICE';
+      const availability = isNew ? ritualAvailability(ritual.id, ritual.god, { activeBuff, rituals: r, history, unlocks }) : null;
+      const status = runningText(ritual.id);
+      const sacrificesLeft = SACRIFICE_USES_PER_RUN - (r?.sacrificesUsed ?? 0);
       return {
-        id: r.id,
-        name: r.name,
-        desc: ritualEffect(r.id, rules.ritualCostMultiplier),
-        cost: r.keyCost ? `${r.keyCost} Keys`
+        id: ritual.id,
+        name: ritual.name,
+        desc: ritualEffect(ritual.id, rules.ritualCostMultiplier),
+        cost: ritual.keyCost ? `${ritual.keyCost} Keys`
           : isGambit ? `ALL Fate (min ${fate})`
+          : ritual.id === 'PACT' ? 'Free now, pay later'
           : `${fate} Fate Points`,
-        canAfford: r.keyCost ? keys >= r.keyCost : fatePoints >= fate,
-        active: (r.id === 'LUCK' && activeBuff === 'LUCK') || (r.id === 'GREED' && activeBuff === 'GREED'),
-        // Only one buff can wait for the next roll; buying the other would
+        canAfford: ritual.keyCost ? keys >= ritual.keyCost : fatePoints >= fate,
+        active: status !== null,
+        status: status ?? (ritual.id === 'SACRIFICE' && availability?.ok ? `${sacrificesLeft} left this run` : null),
+        // Only one ritual can shape the next rolls; buying another would
         // silently replace it and waste its Fate.
-        buffPending: (r.id === 'LUCK' || r.id === 'GREED') && activeBuff !== 'NONE' && activeBuff !== r.id,
-        ...RITUAL_UI[r.id],
+        blocked: isBuff
+          ? (activeBuff !== ritual.id && rollRitualActive(activeBuff, r) ? 'Another roll ritual is active' : null)
+          : status === null && availability && !availability.ok ? availability.reason ?? 'Not available' : null,
       };
     });
 
   const onRitualClick = (id: string) => {
-    if (id === 'GAMBIT') {
-      if (!gambitArmed) { setGambitArmed(true); return; }
-      setGambitArmed(false);
-      performGambit();
+    if (id === 'GAMBIT' || id === 'SACRIFICE') {
+      if (armedId !== id) { setArmedId(id); return; }
+      setArmedId(null);
+      if (id === 'GAMBIT') performGambit();
+      else castRitual('SACRIFICE');
       return;
     }
-    setGambitArmed(false);
+    setArmedId(null);
     if (id === 'CARTOGRAPHER') { openCartographer(); return; }
-    performRitual(id as 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE');
+    if (id === 'INVOCATIONS') { setInvocationPick([]); return; }
+    if (id === 'LUCK' || id === 'GREED' || id === 'CHAOS' || id === 'TRANSMUTE') performRitual(id);
+    else castRitual(id as NewRitualId);
   };
 
+  const toggleInvocation = (id: Invocation['id']) =>
+    setInvocationPick(picked => picked && (picked.includes(id) ? picked.filter(i => i !== id) : [...picked, id]));
+  const invoke = () => {
+    if (!invocationPick?.length) return;
+    castRitual('INVOCATIONS', INVOCATIONS.filter(i => invocationPick.includes(i.id)).map(i => i.id));
+    setInvocationPick(null);
+  };
+
+  // An in-game interface window: brown stone panels, orange titles, yellow values.
+  const rsText = (font: string): React.CSSProperties => ({ fontFamily: font, fontSize: 16, textShadow: '1px 1px 0 #000', WebkitFontSmoothing: 'none' });
+  const panel = 'bg-[#2b251c] border border-[#14110d] shadow-[inset_1px_1px_0_#5c5244,inset_-1px_-1px_0_#000]';
+  const slot = 'w-[76px] h-[68px] grid place-items-center bg-[#1d1913] border border-[#0d0b08] shadow-[inset_1px_1px_0_#000,inset_-1px_-1px_0_#4a4034]';
+
   return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Void altar" tabIndex={-1} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-      <div className="bg-[#121212] border border-purple-900/50 w-full max-w-5xl rounded-xl shadow-[0_0_50px_rgba(88,28,135,0.3)] overflow-hidden flex flex-col relative max-h-[90vh]">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Void altar" tabIndex={-1} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 animate-in fade-in duration-300">
+      <div className="bg-[#3e3529] border-2 border-black w-full max-w-5xl max-h-[90vh] flex flex-col p-1.5 gap-1.5 shadow-[inset_1px_1px_0_#5c5244,inset_-1px_-1px_0_#14110d,0_10px_40px_rgba(0,0,0,0.6)]">
 
-        {/* Background Effects */}
-        {animationsEnabled && (
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-[-50%] left-[-20%] w-[800px] h-[800px] bg-purple-900/10 rounded-full blur-3xl animate-pulse"></div>
-                <div className="absolute bottom-[-20%] right-[-20%] w-[600px] h-[600px] bg-blue-900/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s'}}></div>
-            </div>
-        )}
-
-        {/* Header */}
-        <div className="bg-[#1a1a1a] p-6 border-b border-purple-900/30 flex justify-between items-center relative z-10">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-950 rounded-lg border border-purple-700/50 shadow-inner">
-                <Sparkles className={`w-6 h-6 text-purple-400 ${animationsEnabled ? 'animate-spin-slow' : ''}`} />
-            </div>
-            <div>
-                <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-blue-300 uppercase tracking-widest flex items-center gap-2">The Void Altar <SectionGuide id="VOID_ALTAR" /></h2>
-                <p className="text-xs text-purple-400/60 font-mono mt-1">A successful roll resets your Fate to 0, so spend it first.</p>
-            </div>
-          </div>
+        {/* Title bar */}
+        <div className={`relative h-8 shrink-0 flex items-center justify-center ${panel}`}>
+          <h2 className="flex items-center gap-2 text-[#ff981f]" style={rsText(RS_BOLD)}>The Void Altar <SectionGuide id="VOID_ALTAR" /></h2>
           <button
             onClick={onClose}
             aria-label="Close the Void Altar"
-            className="p-2 hover:bg-white/5 rounded-full transition-colors text-gray-500 hover:text-white"
+            className="absolute right-1 top-1 w-6 h-[22px] grid place-items-center bg-[#4a4033] border border-black shadow-[inset_1px_1px_0_#6b5f4d,inset_-1px_-1px_0_#2b241b] text-[#ff981f] hover:text-white"
           >
-            <X className="w-6 h-6" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Resources Bar */}
-        <div className="bg-black/40 px-6 py-3 border-b border-white/5 flex gap-6 justify-center font-mono text-sm relative z-10">
-            <div className="flex items-center gap-2 text-osrs-pity">
-                <Shield size={16} />
-                <span>Fate Points: <span className="font-bold text-lg">{fatePoints}</span></span>
-            </div>
-            <div className="w-px h-6 bg-white/10"></div>
-            <div className="flex items-center gap-2 text-osrs-gold">
-                <Key size={16} />
-                <span>Keys: <span className="font-bold text-lg">{keys}</span></span>
-            </div>
+        {/* Resources */}
+        <div className="shrink-0 flex flex-wrap justify-center gap-x-6 gap-y-1 px-2 py-1.5 bg-[#1f1a14] border border-[#14110d] shadow-[inset_1px_1px_0_#000] text-[#ff981f]" style={rsText(RS_FONT)}>
+          <span>Fate Points: <span className="text-[#ffff00]">{fatePoints}</span></span>
+          <span>Keys: <span className="text-[#ffff00]">{keys}</span></span>
         </div>
+        <p className="shrink-0 text-center text-xs text-[#c9b993]">A successful roll resets your Fate to 0, so spend it first.</p>
 
         {/* Content */}
-        <div className="p-8 overflow-y-auto custom-scrollbar relative z-10">
-          {chunkChoices !== null ? (
+        <div className="overflow-y-auto custom-scrollbar">
+          {invocationPick !== null ? (
+            /* ── Amascut's Invocations: pick the handicaps ─────────────────── */
+            <div className="animate-in fade-in duration-300 p-2">
+              <div className="text-center mb-3">
+                <h3 className="text-[#ff981f]" style={rsText(RS_BOLD)}>Choose your invocations</h3>
+                <p className="text-xs text-[#c9b993] mt-1">Each handicap lasts for your next {INVOCATION_ROLLS} rolls and raises their Omni-Key chance. All four together add more.</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                {INVOCATIONS.map((inv) => {
+                  const on = invocationPick.includes(inv.id);
+                  const allowed = invocationAllowed(inv, fatePoints - ritualFateCost('INVOCATIONS', rules.ritualCostMultiplier));
+                  return (
+                    <button
+                      key={inv.id}
+                      aria-pressed={on}
+                      disabled={!allowed}
+                      onClick={() => toggleInvocation(inv.id)}
+                      className={`text-left grid grid-cols-[22px_minmax(0,1fr)_auto] items-center gap-x-2.5 p-2 ${panel} hover:bg-[#352d22] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent ${on ? 'shadow-[inset_0_0_0_1px_#ffff00]' : ''}`}
+                    >
+                      <span className={`w-4 h-4 border-2 ${on ? 'bg-[#ffd84a] border-[#7a4a00]' : 'bg-[#1d1913] border-[#0d0b08]'}`} />
+                      <span className="min-w-0">
+                        <span className="block text-[#ff981f]" style={rsText(RS_BOLD)}>{inv.name}</span>
+                        <span className="block text-xs text-[#d8ccb0]">{inv.handicap}</span>
+                        {!allowed && <span className="block text-xs text-[#ff7070]">Needs {inv.minFateLeft} Fate left after the ritual</span>}
+                      </span>
+                      <span className="text-[#ffff00]" style={rsText(RS_SMALL)}>+{inv.omniBonus}%</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-center mt-3 text-[#ffff00]" style={rsText(RS_FONT)}>
+                Omni-Key chance +{invocationOmniBonus(invocationPick)}% on your next {INVOCATION_ROLLS} rolls
+              </p>
+              <div className="flex justify-center gap-4 mt-3">
+                <button
+                  onClick={invoke}
+                  disabled={invocationPick.length === 0}
+                  className={`px-3 py-1 ${panel} text-[#ff981f] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#352d22]`}
+                  style={rsText(RS_FONT)}
+                >
+                  Invoke ({ritualFateCost('INVOCATIONS', rules.ritualCostMultiplier)} Fate)
+                </button>
+                <button onClick={() => setInvocationPick(null)} className="text-xs text-[#c9b993] hover:text-white underline underline-offset-2">
+                  Walk away (no Fate spent)
+                </button>
+              </div>
+            </div>
+          ) : chunkChoices !== null ? (
             /* ── Cartographer chooser ─────────────────────────────────────── */
-            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="text-center mb-6">
-                <h3 className="text-lg font-black text-emerald-300 uppercase tracking-widest">Choose a chunk</h3>
-                <p className="text-xs text-gray-400 mt-1">Pick the frontier chunk to unlock. This is the only way to choose land in Chunked.</p>
+            <div className="animate-in fade-in duration-300 p-2">
+              <div className="text-center mb-3">
+                <h3 className="text-[#ff981f]" style={rsText(RS_BOLD)}>Choose a chunk</h3>
+                <p className="text-xs text-[#c9b993] mt-1">Pick the frontier chunk to unlock. This is the only way to choose land in Chunked.</p>
               </div>
               {chunkChoices.length === 0 ? (
-                <p className="text-center text-gray-500 text-sm py-8">The frontier is empty: no chunk next to your land is left to unlock.</p>
+                <p className="text-center text-[#c9b993] text-sm py-8">The frontier is empty: no chunk next to your land is left to unlock.</p>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-1.5">
                   {chunkChoices.map((c) => (
                     <button
                       key={c.key}
                       onClick={() => chooseChunk(c)}
-                      className="group text-left rounded-xl border-2 border-emerald-500/30 bg-emerald-900/10 hover:bg-emerald-900/25 hover:scale-[1.02] hover:shadow-[0_0_25px_rgba(52,211,153,0.2)] transition-all p-5 min-h-[130px] flex flex-col"
+                      className={`text-left grid grid-cols-[76px_minmax(0,1fr)] gap-x-2.5 p-2 min-h-[90px] ${panel} hover:bg-[#352d22] hover:shadow-[inset_0_0_0_1px_#8f7f5f,inset_-1px_-1px_0_#000]`}
                     >
-                      <MapIcon size={18} className="text-emerald-400 mb-2" />
-                      <div className="font-bold text-emerald-100">{c.label}</div>
-                      <div className="text-[11px] text-gray-500 font-mono">({c.key})</div>
-                      {c.hint && <div className="text-[11px] text-emerald-300/70 mt-auto pt-2">{c.hint}</div>}
+                      <div className={slot}><RitualIcon id="CARTOGRAPHER" /></div>
+                      <div className="min-w-0">
+                        <div className="text-[#ff981f]" style={rsText(RS_BOLD)}>{c.label}</div>
+                        <div className="text-[#ffff00]" style={rsText(RS_SMALL)}>({c.key})</div>
+                        {c.hint && <div className="text-xs text-[#d8ccb0] mt-1">{c.hint}</div>}
+                      </div>
                     </button>
                   ))}
                 </div>
               )}
-              <div className="text-center mt-6">
-                <button onClick={() => setChunkChoices(null)} className="text-xs text-gray-500 hover:text-white underline underline-offset-2">
+              <div className="text-center mt-4">
+                <button onClick={() => setChunkChoices(null)} className="text-xs text-[#c9b993] hover:text-white underline underline-offset-2">
                   {chunkChoices.length === 0 ? 'Back' : 'Walk away (no Fate spent)'}
                 </button>
               </div>
             </div>
           ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1.5">
             {rituals.map((ritual) => {
-                const Icon = ritual.icon;
-                const armed = ritual.id === 'GAMBIT' && gambitArmed;
+                const armed = armedId === ritual.id;
+                const usable = ritual.canAfford && !ritual.active && !ritual.blocked;
                 return (
                     <button
                         key={ritual.id}
-                        disabled={!ritual.canAfford || ritual.active || ritual.buffPending}
+                        disabled={!usable}
                         onClick={() => onRitualClick(ritual.id)}
-                        onBlur={() => { if (ritual.id === 'GAMBIT') setGambitArmed(false); }}
-                        className={`
-                            relative group flex flex-col h-full text-left rounded-xl border-2 transition-all duration-300 overflow-hidden min-h-[200px]
-                            ${ritual.active
-                                ? 'border-green-500/50 bg-green-900/10 cursor-default ring-1 ring-green-500 shadow-[0_0_20px_rgba(34,197,94,0.1)]'
-                                : armed
-                                    ? 'border-fuchsia-400 bg-fuchsia-950/50 ring-2 ring-fuchsia-400/60 shadow-[0_0_30px_rgba(232,121,249,0.35)] cursor-pointer'
-                                : ritual.canAfford
-                                    ? `${ritual.border} ${ritual.bg} hover:scale-[1.02] hover:shadow-xl cursor-pointer`
-                                    : 'border-gray-800 bg-gray-900/50 opacity-50 cursor-not-allowed grayscale'
-                            }
-                        `}
+                        onBlur={() => { if (armed) setArmedId(null); }}
+                        className={`grid grid-cols-[76px_minmax(0,1fr)] grid-rows-[auto_1fr_auto] gap-x-2.5 p-2 text-left min-h-[132px] ${panel} ${
+                          ritual.active
+                            ? 'shadow-[inset_0_0_0_1px_#00ff00] cursor-default'
+                            : armed
+                              ? 'bg-[#3a2a12] shadow-[inset_0_0_0_2px_#ffff00] cursor-pointer'
+                              : usable
+                                ? 'cursor-pointer hover:bg-[#352d22] hover:shadow-[inset_0_0_0_1px_#8f7f5f,inset_-1px_-1px_0_#000]'
+                                : 'opacity-50 grayscale cursor-not-allowed'
+                        }`}
                     >
-                        {/* Hover Gradient */}
-                        {ritual.canAfford && !ritual.active && (
-                            <div className="absolute inset-0 bg-gradient-to-t from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        )}
-
-                        <div className="p-5 flex-1 flex flex-col gap-3">
-                            <div className="flex justify-between items-start">
-                                <div className={`p-2.5 rounded-lg bg-black/40 border border-white/5 ${ritual.color}`}>
-                                    <Icon size={20} />
-                                </div>
-                                {ritual.active && (
-                                    <span className="px-2 py-1 bg-green-500/20 text-green-400 text-[10px] font-bold uppercase tracking-wider rounded border border-green-500/30">Active</span>
-                                )}
-                                {armed && (
-                                    <span className="px-2 py-1 bg-fuchsia-500/20 text-fuchsia-300 text-[10px] font-bold uppercase tracking-wider rounded border border-fuchsia-500/40 animate-pulse">Armed</span>
-                                )}
-                                {ritual.buffPending && (
-                                    <span className="px-2 py-1 bg-gray-500/20 text-gray-400 text-[10px] font-bold uppercase tracking-wider rounded border border-gray-500/30">Other buff active</span>
-                                )}
-                            </div>
-
-                            <div>
-                                <h3 className={`font-bold text-lg mb-1 ${ritual.color}`}>{ritual.name}</h3>
-                                <p className="text-xs text-gray-400 leading-relaxed min-h-[40px]">
-                                  {armed
-                                    ? `${fatePoints} Fate hangs over the Void. Click again to let it decide — or click anywhere else to step back.`
-                                    : ritual.desc}
-                                </p>
-                            </div>
-
-                            <div className={`mt-auto pt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono font-bold ${ritual.canAfford ? ritual.costColor : 'text-gray-600'}`}>
-                                <span>{ritual.cost}</span>
-                                {ritual.canAfford && !ritual.active && (
-                                    <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                                )}
-                            </div>
+                        <div className={`row-span-3 ${slot}`}><RitualIcon id={ritual.id} /></div>
+                        <h3 className="text-[#ff981f] leading-[18px]" style={rsText(RS_BOLD)}>{ritual.name}</h3>
+                        <p className="text-[12.5px] leading-[1.45] text-[#d8ccb0] mt-1 mb-1.5">
+                          {armed && ritual.id === 'GAMBIT'
+                            ? `${fatePoints} Fate hangs over the Void. Click again to let it decide, or click anywhere else to step back.`
+                            : armed
+                              ? 'Fate will take the top tier of 3 random skills or gear slots. Click again to offer them, or click anywhere else to step back.'
+                              : ritual.desc}
+                        </p>
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-2 border-t border-[#1a1611] pt-1 shadow-[0_-1px_0_#4a4034]" style={rsText(RS_FONT)}>
+                            <span className={`whitespace-nowrap ${ritual.canAfford ? 'text-[#ffff00]' : 'text-[#8b8478]'}`}>{ritual.cost}</span>
+                            {ritual.status && <span className={ritual.active ? 'text-[#00ff00]' : 'text-[#c9b993]'} style={rsText(RS_SMALL)}>{ritual.status}</span>}
+                            {armed && <span className="text-[#ff3a2a]" style={rsText(RS_SMALL)}>Armed</span>}
+                            {ritual.blocked && <span className="text-[#8b8478] text-right" style={rsText(RS_SMALL)}>{ritual.blocked}</span>}
                         </div>
                     </button>
                 );

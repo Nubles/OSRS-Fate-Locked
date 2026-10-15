@@ -17,6 +17,14 @@ import {
   writeOnlineBackupRecord,
 } from './onlineBackup';
 import { profileOnlineBackupKey } from './profileStorage';
+import { onlineBackupHoldsReminder } from './onlineBackupRecord';
+import { MAX_SYNC_CODE_CHARS } from './syncCode';
+import {
+  BACKUP_ID_RE,
+  MAX_BACKUP_BYTES,
+  MAX_SYNC_CODE_CHARS as RELAY_MAX_SYNC_CODE_CHARS,
+  validBackupBody,
+} from '../workers/fate-relay/protocol.js';
 
 const CODE = '0123456789ABCDEFGHJK';
 
@@ -86,6 +94,26 @@ describe('backup encryption', () => {
     expect(await decryptBackup(`FLBK2.${iv}.${ciphertext}`, key)).toBeNull();
     expect(await decryptBackup(`${tag}.${iv}`, key)).toBeNull();
     expect(await decryptBackup('not a backup', key)).toBeNull();
+  });
+});
+
+describe('what the relay accepts', () => {
+  it('takes every backup this app makes, up to the longest sync code', async () => {
+    expect(RELAY_MAX_SYNC_CODE_CHARS).toBe(MAX_SYNC_CODE_CHARS);
+    const keys = await deriveBackupKeys(CODE);
+    expect(keys.id).toMatch(BACKUP_ID_RE);
+    for (const syncCode of ['FLSYNC.g1.payload.checksum', 'x'.repeat(MAX_SYNC_CODE_CHARS)]) {
+      const bytes = new TextEncoder().encode(await encryptBackup(syncCode, keys.key));
+      expect(validBackupBody(bytes)).toBe(true);
+      expect(bytes.byteLength).toBeLessThanOrEqual(MAX_BACKUP_BYTES);
+    }
+  });
+
+  it('gives each code an id of the shape the relay accepts', async () => {
+    for (let index = 0; index < 20; index += 1) {
+      const { id } = await deriveBackupKeys(normalizeBackupCode(generateBackupCode())!);
+      expect(id).toMatch(BACKUP_ID_RE);
+    }
   });
 });
 
@@ -260,5 +288,65 @@ describe('backing up a run', () => {
     }) as unknown as typeof fetch;
     expect(await backupRun('P', exportJson, base, { fetchImpl: slow })).toEqual({ kind: 'off' });
     expect(readOnlineBackupRecord('P')).toEqual({ promptAnsweredAt: 5 });
+  });
+  // SAVE-2: a Reset, a new run in the profile, or a damaged save must not
+  // overwrite the only copy kept outside this browser without asking.
+  describe('holding back a backup of another or a longer run', () => {
+    const run = (runId: string, entries: number, keys = 3) =>
+      JSON.stringify({ runId, keys, history: Array.from({ length: entries }, (_, index) => ({ id: `h${index}` })) });
+
+    it('records the run and its History length with each upload', async () => {
+      writeOnlineBackupRecord('P', { code: CODE });
+      await backupRun('P', run('run-1', 40), base, { fetchImpl });
+      expect(readOnlineBackupRecord('P')).toMatchObject({ lastRunId: 'run-1', lastHistoryLength: 40 });
+      expect(readOnlineBackupRecord('P').held).toBeUndefined();
+    });
+
+    it('holds a different run, even when asked to back up now, until the player replaces', async () => {
+      writeOnlineBackupRecord('P', { code: CODE });
+      await backupRun('P', run('run-1', 40), base, { fetchImpl });
+
+      expect(await backupRun('P', run('run-2', 0), base, { fetchImpl })).toEqual({ kind: 'held', reason: 'other-run' });
+      expect(await backupRun('P', run('run-2', 0), base, { fetchImpl, force: true })).toEqual({ kind: 'held', reason: 'other-run' });
+      expect(uploads).toHaveLength(1);
+      expect(readOnlineBackupRecord('P')).toMatchObject({ held: 'other-run', lastRunId: 'run-1', lastHistoryLength: 40 });
+
+      expect(await backupRun('P', run('run-2', 0), base, { fetchImpl, force: true, replace: true }))
+        .toEqual({ kind: 'uploaded', updatedAt: 1002 });
+      expect(readOnlineBackupRecord('P')).toMatchObject({ lastRunId: 'run-2', lastHistoryLength: 0 });
+      expect(readOnlineBackupRecord('P').held).toBeUndefined();
+    });
+
+    it('holds a run whose History shrank, as after the save was rewritten', async () => {
+      writeOnlineBackupRecord('P', { code: CODE });
+      await backupRun('P', run('run-1', 40), base, { fetchImpl });
+
+      expect(await backupRun('P', run('run-1', 0, 9), base, { fetchImpl })).toEqual({ kind: 'held', reason: 'shorter' });
+      expect(uploads).toHaveLength(1);
+      expect(readOnlineBackupRecord('P').held).toBe('shorter');
+    });
+
+    it('carries on, and clears the hold, once the backed-up run is back and growing', async () => {
+      writeOnlineBackupRecord('P', { code: CODE });
+      await backupRun('P', run('run-1', 40), base, { fetchImpl });
+      await backupRun('P', run('run-2', 0), base, { fetchImpl });
+      expect(readOnlineBackupRecord('P').held).toBe('other-run');
+
+      expect(await backupRun('P', run('run-1', 41), base, { fetchImpl })).toEqual({ kind: 'uploaded', updatedAt: 1002 });
+      expect(readOnlineBackupRecord('P')).toMatchObject({ lastRunId: 'run-1', lastHistoryLength: 41 });
+      expect(readOnlineBackupRecord('P').held).toBeUndefined();
+    });
+
+    it('lets the .fate reminder show again while uploads are held', () => {
+      const now = 10_000_000;
+      expect(onlineBackupHoldsReminder({ code: CODE, lastUploadAt: now - 1 }, now)).toBe(true);
+      expect(onlineBackupHoldsReminder({ code: CODE, lastUploadAt: now - 1, held: 'other-run' }, now)).toBe(false);
+    });
+
+    it('holds nothing back for a record from before runs were recorded', async () => {
+      writeOnlineBackupRecord('P', { code: CODE, lastUploadAt: 5, lastChecksum: 'old' });
+      expect((await backupRun('P', run('run-9', 1), base, { fetchImpl })).kind).toBe('uploaded');
+      expect(readOnlineBackupRecord('P')).toMatchObject({ lastRunId: 'run-9', lastHistoryLength: 1 });
+    });
   });
 });

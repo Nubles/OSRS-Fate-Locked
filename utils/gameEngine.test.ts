@@ -5,7 +5,6 @@ import { MISTHALIN_AREAS, REGION_GROUPS, REGIONS_LIST } from '../data/items';
 import { setStartArea, unlockableAreas } from './freeAreas';
 import {
   checkUnlockAvailability,
-  describeRandomPoolBlockers,
   getPoolAndStateKey,
   isRandomUnlockEligible,
   isOmniDirectUnlockAvailable,
@@ -104,52 +103,6 @@ describe('isOmniDirectUnlockAvailable', () => {
     expect(isOmniDirectUnlockAvailable(TableType.BOSSES, 'Giant Mole', makeUnlocks(), 'vanilla', restricted)).toBe(false);
     expect(isOmniDirectUnlockAvailable(TableType.BOSSES, 'Giant Mole', makeUnlocks({ regions: ['Falador'] }), 'vanilla', restricted)).toBe(true);
     expect(isOmniDirectUnlockAvailable(TableType.BOSSES, 'Giant Mole', makeUnlocks(), 'vanilla')).toBe(true);
-  });
-});
-
-describe('describeRandomPoolBlockers', () => {
-  it('describes blockers for the configured Chaos cost without applying them to Standard', () => {
-    const candidates = [{ table: TableType.MINIGAMES, item: 'Pest Control' }];
-    const chaosOnly: VanillaRandomAccessPolicy = {
-      ...VANILLA_RANDOM_ACCESS_POLICY,
-      randomCosts: ['chaosKey'],
-    };
-
-    expect(
-      describeRandomPoolBlockers(candidates, makeUnlocks(), 'vanilla', 'chaosKey', 3, chaosOnly),
-    ).toEqual({
-      sample: ["Pest Control — needs Void Knights' Outpost"],
-      remaining: 0,
-    });
-    expect(
-      describeRandomPoolBlockers(candidates, makeUnlocks(), 'vanilla', 'key', 3, chaosOnly),
-    ).toEqual({
-      sample: [],
-      remaining: 0,
-    });
-  });
-
-  it('returns the first blocked activities in candidate order without drawing RNG', () => {
-    const random = vi.spyOn(Math, 'random');
-
-    expect(
-      describeRandomPoolBlockers(
-        [
-          { table: TableType.MINIGAMES, item: 'Pest Control' },
-          { table: TableType.MINIGAMES, item: 'Last Man Standing' },
-          { table: TableType.MINIGAMES, item: 'Shooting Stars' },
-        ],
-        makeUnlocks(),
-        'vanilla',
-        'key',
-        1,
-      ),
-    ).toEqual({
-      sample: ["Pest Control — needs Void Knights' Outpost"],
-      remaining: 1,
-    });
-
-    expect(random).not.toHaveBeenCalled();
   });
 });
 

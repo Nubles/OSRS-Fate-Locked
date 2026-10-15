@@ -12,7 +12,7 @@ Generated from immutable source snapshots; candidate evidence only.
 ## Source pins
 
 - [Quest Helper a52646118f0e5ea63a6b3331cefa98087a7b4d6c](https://github.com/Zoinkwiz/quest-helper/tree/a52646118f0e5ea63a6b3331cefa98087a7b4d6c) — BSD 2-Clause; licence and per-file notices retained under docs/third-party.
-- [Chunk Picker fa71ed3b207e6a501444987dee23b875ec27cacd](https://github.com/source-chunk/chunk-picker-v2/tree/fa71ed3b207e6a501444987dee23b875ec27cacd).
+- [Chunk Picker 629e9fee6183773e8df26d7e4bc5db792290ce0b](https://github.com/source-chunk/chunk-picker-v2/tree/629e9fee6183773e8df26d7e4bc5db792290ce0b).
 
 ## Review boundary
 

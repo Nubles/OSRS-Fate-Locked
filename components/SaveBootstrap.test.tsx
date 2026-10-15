@@ -9,6 +9,7 @@ import type { SaveWriteAuthorization } from '../utils/profileWriterLease';
 import type { SaveRecoveryDecision } from '../utils/saveRecovery';
 import { resolveSaveRecovery } from '../utils/saveRecovery';
 import { checksumSave } from '../utils/saveIntegrity';
+import { serializeCurrent } from '../utils/gamePersistence';
 import { createSaveCoordinator } from '../utils/saveCoordinator';
 import { parseAndMigrateSave } from '../utils/saveSchema';
 import { profileMirrorMetadataKey } from '../utils/storageRecovery';
@@ -289,7 +290,8 @@ describe('SaveBootstrap', () => {
       userNotes: { recovery: 'confirmed older checkpoint' },
     };
     if (!hasGuideMetadata) delete recoveredState.runeProofProgress;
-    const expectedRecoveredData = JSON.stringify({ ...recoveredState,
+    // A sealed replacement is re-serialized, and so stamped with the app id.
+    const expectedRecoveredData = (hasGuideMetadata ? JSON.stringify : serializeCurrent)({ ...recoveredState,
       runeProofProgress: recoveredState.runeProofProgress ?? { version: 1, items: {}, actions: {} } });
     const recoveredData = JSON.stringify(recoveredState);
     const recoveredChecksum = await checksumSave(recoveredData);
