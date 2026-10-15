@@ -429,7 +429,7 @@ export const RITUALS: Ritual[] = [
     effect: 'See up to 3 random frontier chunks and choose which one unlocks. The only way to choose land in Chunked.' },
   { id: 'TRANSMUTE',    name: 'Ritual of Transmutation', tagline: 'Trade Keys for an Omni-Key.', keyCost: 5, effect: 'Trade 5 Keys for 1 Omni-Key.' },
   { id: 'WARD',         name: "Saradomin's Ward",        tagline: 'Only land on what you can use.', fateCost: 30, god: 'Saradomin',
-    effect: 'Your next Key can only land on something you can use right now. Fate still picks, just from places you can reach.' },
+    effect: 'Your next Key can only land on something you can use right now. Fate still picks, just from places you can reach. You can cast it again 25 rolls later.' },
   { id: 'TEARS',        name: 'Tears of Guthix',         tagline: 'Double Fate from fails.', fateCost: 10, god: 'Guthix',
     effect: 'Your next 10 failed rolls give double Fate. It ends when a roll lands, and works once per dry spell.' },
   { id: 'PACT',         name: "Zamorak's Pact",          tagline: 'Better odds now, pay later.', fateCost: 0, god: 'Zamorak',
@@ -449,6 +449,8 @@ export const PACT_ROLLS = 3;
 export const PACT_ODDS_BONUS = 15;
 export const PACT_DEBT = 40;
 export const TEARS_FAILS = 10;
+/** Rolls after casting Saradomin's Ward before it can be cast again. */
+export const WARD_COOLDOWN_ROLLS = 25;
 export const INVOCATION_ROLLS = 3;
 export const BARROWS_ROLLS = 3;
 export const SACRIFICE_TIERS = 3;

@@ -7,6 +7,7 @@ import { resolveModeRules } from '../config/gameModes';
 import { SACRIFICE_MIN_ROLLS } from '../config/economy';
 import { BOSSES_LIST } from '../data/items';
 import { wardUsable } from '../utils/ritualWard';
+import { ritualAvailability } from '../utils/ritualEffects';
 
 /**
  * The newer Void Altar rituals end to end through the reducer: what they cost,
@@ -97,7 +98,7 @@ describe('Tears of Guthix', () => {
 describe('the gods', () => {
   it("don't share: only one of Saradomin, Guthix or Zamorak at a time", () => {
     const warded = cast(base({ fatePoints: 60 }), { type: 'RITUAL_WARD' });
-    expect(warded.rituals).toEqual({ ward: true });
+    expect(warded.rituals).toEqual({ ward: true, wardCooldown: 25 });
     expect(cast(warded, { type: 'RITUAL_TEARS' })).toBe(warded);
     expect(cast(warded, { type: 'RITUAL_PACT' })).toBe(warded);
     expect(cast(warded, { type: 'RITUAL_WARD' })).toBe(warded);
@@ -265,24 +266,38 @@ describe("Saradomin's Ward", () => {
     expect(cast(s, unlock(near, TableType.BOSSES, false))).toBe(s);
     const landed = cast(s, unlock(near));
     expect(landed.unlocks.bosses).toContain(near);
-    expect(landed.rituals).toBeUndefined();
+    expect(landed.rituals).toEqual({ wardCooldown: 25 });
     expect(landed.history.at(-1)?.meta).toMatchObject({ ward: true });
+  });
+
+  it('can only be cast again 25 rolls later', () => {
+    let s = cast(base({ fatePoints: 30, keys: 5, gameModeId: 'chunked' }), { type: 'RITUAL_WARD' });
+    s = cast(s, unlock(near));
+    s = { ...s, fatePoints: 60 };
+    // The wait only holds back the Ward: Guthix is free once Saradomin's Key has landed.
+    expect(ritualAvailability('TEARS', 'Guthix', s).ok).toBe(true);
+    for (let i = 0; i < 24; i++) s = rollAt(s, MISS);
+    expect(ritualAvailability('WARD', 'Saradomin', s)).toEqual({ ok: false, reason: 'Again in 1 roll' });
+    expect(cast(s, { type: 'RITUAL_WARD' })).toBe(s);
+    s = rollAt(s, MISS);
+    expect(ritualAvailability('WARD', 'Saradomin', s).ok).toBe(true);
+    expect(cast(s, { type: 'RITUAL_WARD' }).rituals?.ward).toBe(true);
   });
 
   it('keeps waiting through a Key spent on a table with no places', () => {
     const s = cast(base({ fatePoints: 30, keys: 5, gameModeId: 'chunked' }), { type: 'RITUAL_WARD' });
-    expect(cast(s, unlock('Attack', TableType.SKILLS, false)).rituals).toEqual({ ward: true });
+    expect(cast(s, unlock('Attack', TableType.SKILLS, false)).rituals).toEqual({ ward: true, wardCooldown: 25 });
   });
 });
 
 describe('saves', () => {
   it('keep running rituals and refuse ones the Altar could never make', () => {
-    const rituals = { tearsFailsLeft: 4, tearsSpent: true, pactDebt: 12, barrows: { brother: 'KARIL' as const, rollsLeft: 2, failed: 1, fateCost: 20 }, sacrificesUsed: 2 };
+    const rituals = { tearsFailsLeft: 4, tearsSpent: true, pactDebt: 12, barrows: { brother: 'KARIL' as const, rollsLeft: 2, failed: 1, fateCost: 20 }, sacrificesUsed: 2, wardCooldown: 7 };
     const { lastEvent: _lastEvent, ...saved } = base({ runId: '0b6f6c1e-2d3a-4c5b-8e7f-9a0b1c2d3e4f' });
     const ok = validateAndMigrateSave(JSON.parse(JSON.stringify({ ...saved, rituals })), initialState);
     if (ok.ok === false) throw new Error(ok.message);
     expect(ok.state.rituals).toEqual(rituals);
-    for (const bad of [{ pactDebt: 41 }, { barrows: { brother: 'AKRISAE', rollsLeft: 1, failed: 0, fateCost: 20 } }, { invocations: { ids: [], rollsLeft: 3 } }, { mimic: true }]) {
+    for (const bad of [{ pactDebt: 41 }, { wardCooldown: 26 }, { barrows: { brother: 'AKRISAE', rollsLeft: 1, failed: 0, fateCost: 20 } }, { invocations: { ids: [], rollsLeft: 3 } }, { mimic: true }]) {
       expect(validateAndMigrateSave(JSON.parse(JSON.stringify({ ...saved, rituals: bad })), initialState).ok).toBe(false);
     }
   });

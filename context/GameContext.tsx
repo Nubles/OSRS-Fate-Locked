@@ -10,7 +10,7 @@ import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, gambitKeys, STARTING_KEYS } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
-import { BARROWS_BROTHERS, INVOCATIONS, SACRIFICE_TIERS, invocationAllowed, SACRIFICE_USES_PER_RUN, type BarrowsBrother, type Invocation, type Ritual } from '../config/economy';
+import { BARROWS_BROTHERS, INVOCATIONS, SACRIFICE_TIERS, WARD_COOLDOWN_ROLLS, invocationAllowed, SACRIFICE_USES_PER_RUN, type BarrowsBrother, type Invocation, type Ritual } from '../config/economy';
 import {
   afterRoll, applyOddsBonus, castBarrows, castInvocations, castPact, castTears, failFate,
   pickSacrifice, ritualAvailability, rollRitualActive, rollRitualPlan, sacrificeCandidates, tidyRituals, wardApplies,
@@ -1511,7 +1511,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       let details = ritual.effect;
       const meta: Record<string, unknown> = { ritual: id, fateCost: cost };
       const eventMeta: RitualEventMeta = { type: id };
-      if (action.type === 'RITUAL_WARD') rituals.ward = true;
+      if (action.type === 'RITUAL_WARD') rituals = { ...rituals, ward: true, wardCooldown: WARD_COOLDOWN_ROLLS };
       else if (action.type === 'RITUAL_TEARS') rituals = castTears(rituals);
       else if (action.type === 'RITUAL_PACT') rituals = castPact(rituals);
       else if (action.type === 'RITUAL_INVOCATIONS') {

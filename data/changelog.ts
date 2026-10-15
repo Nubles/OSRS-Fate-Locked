@@ -42,7 +42,7 @@ export const CHANGELOG_RELEASES = [
     date: '2026-10-15',
     sections: {
       added: [
-        "Saradomin's Ward (30 Fate): your next Key on a boss, minigame, guild or bank only lands on one you can use right now.",
+        "Saradomin's Ward (30 Fate): your next Key on a boss, minigame, guild or bank only lands on one you can use right now. You can cast it again 25 rolls later.",
         'Tears of Guthix (10 Fate): your next 10 failed rolls give double Fate, until a roll lands. Once per dry spell.',
         "Zamorak's Pact (free): +15% odds on your next 3 rolls, then Zamorak takes the next 40 Fate you'd earn.",
         "Amascut's Invocations (10 Fate): pick handicaps for your next 3 rolls, and each one raises your Omni-Key chance.",

@@ -6,13 +6,15 @@
  */
 import {
   BARROWS_ROLLS, BLOOD_PRICE_FATE, INVOCATION_ROLLS, PACT_DEBT, PACT_ODDS_BONUS, PACT_ROLLS, SACRIFICE_MIN_ROLLS, SACRIFICE_TIERS,
-  SACRIFICE_USES_PER_RUN, TEARS_FAILS, invocationOmniBonus, type BarrowsBrother, type Invocation, type Ritual,
+  SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, invocationOmniBonus, type BarrowsBrother, type Invocation, type Ritual,
 } from '../config/economy';
 import { TableType, type LogEntry, type UnlockState } from '../types';
 
 export interface RitualState {
   /** Saradomin's Ward waits for the next random Key or Chaos Key spend. */
   ward?: boolean;
+  /** Rolls left before Saradomin's Ward can be cast again. */
+  wardCooldown?: number;
   /** Tears of Guthix: failed rolls left that pay double Fate. */
   tearsFailsLeft?: number;
   /** Tears was cast in this dry spell; a successful roll clears it. */
@@ -67,6 +69,7 @@ export const ritualAvailability = (
   const running = activeGod(r);
   if (god && running) return running === god && id !== 'PACT' ? no('Already active') : no(running === god ? `Pay off Zamorak's debt first` : `${running} is active`);
   if (id === 'TEARS' && r?.tearsSpent) return no('Once per dry spell');
+  if (id === 'WARD' && (r?.wardCooldown ?? 0) > 0) return no(`Again in ${r!.wardCooldown} roll${r!.wardCooldown === 1 ? '' : 's'}`);
   if (id === 'PACT' || id === 'INVOCATIONS' || id === 'BARROWS') {
     if (rollRitualActive(state.activeBuff, r)) return no('Another roll ritual is active');
   }
@@ -174,6 +177,7 @@ export const failFate = (
 export const afterRoll = (r: RitualState | undefined, outcome: { success: boolean; debtPaid: number }): RitualState | undefined => {
   if (!r) return r;
   const next: RitualState = { ...r };
+  if ((next.wardCooldown ?? 0) > 0) next.wardCooldown = next.wardCooldown! - 1;
   if ((next.pactRollsLeft ?? 0) > 0) {
     next.pactRollsLeft = next.pactRollsLeft! - 1;
     if (next.pactRollsLeft === 0) { delete next.pactRollsLeft; next.pactDebt = PACT_DEBT; }
@@ -255,6 +259,7 @@ export const tidyRituals = (r: RitualState | undefined): RitualState | undefined
   if (!r) return undefined;
   const out: RitualState = {};
   if (r.ward) out.ward = true;
+  if ((r.wardCooldown ?? 0) > 0) out.wardCooldown = r.wardCooldown;
   if ((r.tearsFailsLeft ?? 0) > 0) out.tearsFailsLeft = r.tearsFailsLeft;
   if (r.tearsSpent) out.tearsSpent = true;
   if ((r.pactRollsLeft ?? 0) > 0) out.pactRollsLeft = r.pactRollsLeft;

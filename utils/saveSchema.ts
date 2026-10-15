@@ -20,7 +20,7 @@ import { vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
 import { calculateLegacyFateCompensation, LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
 import { PET_COMPENSATION_ID, petCompensationOffer } from './petCompensation';
 import { isPetId, PET_IDS } from '../data/petIds';
-import { BARROWS_BROTHERS, BARROWS_ROLLS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, type Invocation } from '../config/economy';
+import { BARROWS_BROTHERS, BARROWS_ROLLS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, type Invocation } from '../config/economy';
 import { tidyRituals, type RitualState } from './ritualEffects';
 /** Version 5 freezes the one-time pet offer and stores claimed pets and owed Keys. */
 export const CURRENT_SAVE_VERSION = 5;
@@ -792,7 +792,7 @@ const normalizePetCompensation = (value: unknown): Outcome<PetCompensationState>
   };
 };
 
-const RITUAL_KEYS = new Set(['ward', 'tearsFailsLeft', 'tearsSpent', 'pactRollsLeft', 'pactDebt', 'invocations', 'barrows', 'sacrificesUsed']);
+const RITUAL_KEYS = new Set(['ward', 'wardCooldown', 'tearsFailsLeft', 'tearsSpent', 'pactRollsLeft', 'pactDebt', 'invocations', 'barrows', 'sacrificesUsed']);
 
 /** The newer Void Altar rituals still running: each field bounded by what the rituals can set. */
 const normalizeRituals = (value: unknown): Outcome<RitualState | undefined> => {
@@ -807,7 +807,7 @@ const normalizeRituals = (value: unknown): Outcome<RitualState | undefined> => {
     if (checked.ok === false) return checked;
     out[key] = checked.value;
   }
-  for (const [key, max] of [['tearsFailsLeft', TEARS_FAILS], ['pactRollsLeft', PACT_ROLLS], ['pactDebt', PACT_DEBT], ['sacrificesUsed', SACRIFICE_USES_PER_RUN]] as const) {
+  for (const [key, max] of [['tearsFailsLeft', TEARS_FAILS], ['pactRollsLeft', PACT_ROLLS], ['pactDebt', PACT_DEBT], ['sacrificesUsed', SACRIFICE_USES_PER_RUN], ['wardCooldown', WARD_COOLDOWN_ROLLS]] as const) {
     if (!own(raw, key)) continue;
     const checked = boundedInteger(readOwn(raw, key), `${path}.${key}`, 0, max);
     if (checked.ok === false) return checked;
