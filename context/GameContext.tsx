@@ -8,8 +8,15 @@ import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
+import { achievementBoostFor } from '../utils/achievementBoosts';
 import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, gambitKeys, STARTING_KEYS } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
+import { BARROWS_BROTHERS, INVOCATIONS, SACRIFICE_TIERS, WARD_COOLDOWN_ROLLS, invocationAllowed, SACRIFICE_USES_PER_RUN, type BarrowsBrother, type Invocation, type Ritual } from '../config/economy';
+import {
+  afterRoll, applyOddsBonus, castBarrows, castInvocations, castPact, castTears, failFate,
+  pickSacrifice, ritualAvailability, rollRitualActive, rollRitualPlan, sacrificeCandidates, tidyRituals, wardApplies,
+  type RitualState, type SacrificeTier,
+} from '../utils/ritualEffects';
 import { tableDisplayName } from '../utils/tableDisplay';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
@@ -40,6 +47,7 @@ import {
   type ImportResult,
 } from '../utils/gamePersistence';
 import { CURRENT_SAVE_VERSION, MAX_COUNTER, parseAndMigrateSave, validateAndMigrateSave } from '../utils/saveSchema';
+import { AchievementPayout, pickFreeRitual, settleAchievements } from '../utils/achievementRewards';
 import { emptyRuneProofProgress, migrateLocalRuneProofProgress, updateRuneProofProgress, type RuneProofMutation } from '../utils/runeProofProgress';
 import { checksumSave } from '../utils/saveIntegrity';
 import { openRecoveryDatabase } from '../utils/recoveryDatabase';
@@ -85,7 +93,7 @@ import {
   resolveKeyRoll,
   skillLevelKeyChance,
 } from '../utils/keyRoll';
-import { effectiveVanillaClueRate, vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
+import { effectiveVanillaClueRate, isKnownVanillaMinigame, MINIGAME_MISS_FATE_MIN_RATE, minigameMissPaysFate, vanillaBossKeyStage, vanillaMinigameKeyStage, type KeyReserveStage } from '../config/vanillaKeyEconomy';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import {
   blockPendingSave,
@@ -171,7 +179,11 @@ const completionFailure = (reason: string): CompletionResult => {
 
 type RollEventMeta = { roll: number; baseThreshold: number; threshold: number };
 type UnlockEventMeta = { item: string; cost: number; category?: TableType };
-type RitualEventMeta = { type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE' | 'GAMBIT' | 'CARTOGRAPHER'; won?: boolean; stake?: number; keysWon?: number; chunk?: string };
+type RitualEventMeta = {
+  type: Ritual['id']; won?: boolean; stake?: number; keysWon?: number; chunk?: string;
+  /** For the newer rituals' scenes: the handicaps picked, the brother drawn, the tiers taken. */
+  invocations?: Invocation['id'][]; brother?: BarrowsBrother['id']; taken?: SacrificeTier[]; usesLeft?: number;
+};
 type LevelUpEventMeta = { skill: string; level: number; totalLevel: number; chaosKeysAwarded: number; chaosKeyAwarded: boolean };
 
 type GameEventMeta = (RollEventMeta & DetectedGameEventMeta) | UnlockEventMeta | RitualEventMeta | LevelUpEventMeta;
@@ -225,6 +237,8 @@ interface GameContextType extends GameState {
   performRitual: (type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE') => void;
   performGambit: () => void;
   performCartographer: (chunkKey: string, label: string) => void;
+  /** The newer Void Altar rituals. Invocations take the handicaps the player picked. */
+  castRitual: (id: NewRitualId, invocations?: Invocation['id'][]) => void;
   levelUpSkill: (skill: string) => void;
   toggleAnimations: () => void;
   toggleAdvisors: () => void;
@@ -239,6 +253,10 @@ interface GameContextType extends GameState {
   ) => void;
   /** A new pet: its Omni-Key, once per pet. It isn't a roll, so Fate and rituals stay as they are. */
   claimPet: (pet: { id: number; name: string }, x?: number, y?: number) => void;
+  /** Pay newly earned achievements once (a run from before rewards gets one back pay for what it has). `earned` is every earned achievement. */
+  settleAchievements: (earned: AchievementPayout[]) => void;
+  /** Wear an earned achievement as the run's title, or null to take it off. */
+  setAchievementTitle: (id: string | null) => void;
   setGameMode: (modeId: string, customRules?: GameModeRules) => void;
   /** Seeded runs — set/clear the seed (only while the run has no history). */
   setSeed: (seed: string) => void;
@@ -329,6 +347,7 @@ export const initialState: GameState = {
   unlocks: getInitialUnlocks(),
   history: [],
   bossStandardKeysAwarded: {},
+  minigameStandardKeysAwarded: {},
   clueStandardKeysAwarded: 0,
   animationsEnabled: true,
   advisorsEnabled: false,
@@ -351,6 +370,8 @@ export const createFreshState = (): GameState => ({
   loadout: {},
   runId: newRunId(),
   runRevision: 0,
+  // A new run is paid for every achievement it earns (see GameState).
+  achievementsClaimed: [],
 });
 
 // --- Reducer ---
@@ -367,7 +388,21 @@ interface PreparedRollResult {
   y?: number;
   meta?: DetectedGameEventMeta;
   context?: KeyRollContext;
+  /** What the run's rituals did to this roll, decided when it was prepared. */
+  ritual?: PreparedRitualRoll;
 }
+
+interface PreparedRitualRoll {
+  /** Percentage points the rituals added to (or took from) the odds. */
+  oddsBonus: number;
+  /** A fail that Verac hit through into a success. */
+  hitThrough?: boolean;
+  /** Karil's second Key on a success. */
+  secondKey?: boolean;
+}
+
+/** The rituals cast through castRitual rather than performRitual. */
+export type NewRitualId = Extract<Ritual['id'], 'WARD' | 'TEARS' | 'PACT' | 'INVOCATIONS' | 'BARROWS' | 'SACRIFICE'>;
 
 export type Action =
   | { type: 'UPDATE_RUNEPROOF'; payload: { expectedRunId: string; change: RuneProofMutation } }
@@ -392,6 +427,8 @@ export type Action =
     };
   }
   | { type: 'CLAIM_PET'; payload: { petId: number; petName: string; x?: number; y?: number; meta?: DetectedGameEventMeta } }
+  | { type: 'SETTLE_ACHIEVEMENTS'; payload: AchievementPayout[] }
+  | { type: 'SET_ACHIEVEMENT_TITLE'; payload: string | null }
   | {
     type: 'ACCEPT_DETECTED_PET';
     payload: {
@@ -420,7 +457,7 @@ export type Action =
     };
   }
   | { type: 'SYNC_DETECTED_PROGRESS'; payload: DetectedProgress }
-  | { type: 'UNLOCK'; payload: { table: TableType; item: string; costType: 'key' | 'specialKey' | 'chaosKey'; cost: number; revealId?: string } }
+  | { type: 'UNLOCK'; payload: { table: TableType; item: string; costType: 'key' | 'specialKey' | 'chaosKey'; cost: number; revealId?: string; /** Drawn under Saradomin's Ward. */ ward?: boolean } }
   | { type: 'ACKNOWLEDGE_UNLOCK'; payload: string }
   | { type: 'RITUAL_LUCK' }
   | { type: 'RITUAL_GREED' }
@@ -428,6 +465,12 @@ export type Action =
   | { type: 'RITUAL_TRANSMUTE' }
   | { type: 'RITUAL_GAMBIT'; payload: { won: boolean; stake: number; keysWon: number } }
   | { type: 'RITUAL_CARTOGRAPHER'; payload: { chunkKey: string; label: string } }
+  | { type: 'RITUAL_WARD' }
+  | { type: 'RITUAL_TEARS' }
+  | { type: 'RITUAL_PACT' }
+  | { type: 'RITUAL_INVOCATIONS'; payload: { ids: Invocation['id'][] } }
+  | { type: 'RITUAL_BARROWS'; payload: { brother: BarrowsBrother['id'] } }
+  | { type: 'RITUAL_SACRIFICE'; payload: { taken: SacrificeTier[] } }
   | { type: 'LEVEL_UP'; payload: { skill: string; chaosRoll: number } }
   | { type: 'ADD_LOG'; payload: LogEntry }
   | { type: 'TOGGLE_PIN'; payload: string }
@@ -449,6 +492,10 @@ export type TransitionAction = Exclude<Action, { type: 'COMMIT_STATE' }>;
 
 type DiceRoller = (purpose: string, index?: number, max?: number) => number;
 type RollResultAction = Extract<TransitionAction, { type: 'ROLL_RESULT' }>;
+
+// A missed roll on a low-odds minigame pays no Fate (see MINIGAME_MISS_FATE_MIN_RATE).
+const missFateBase = (failureFate: number, minigameStage: KeyReserveStage | null): number =>
+  minigameStage?.currentRate != null && !minigameMissPaysFate(minigameStage.currentRate) ? 0 : failureFate;
 
 /**
  * Resolves a key roll exclusively from the supplied state snapshot.
@@ -499,9 +546,22 @@ export function prepareKeyRollAction(
   const bossStage = vanillaBossContext
     ? vanillaBossKeyStage(vanillaBossContext.bossName, recordedBossAwarded)
     : null;
+  const vanillaMinigameContext = state.gameModeId === 'vanilla' && context?.kind === 'minigame'
+    ? context
+    : null;
+  // A minigame that left the table (Rat Pits) has nothing left to pay.
+  if (vanillaMinigameContext && !isKnownVanillaMinigame(vanillaMinigameContext.minigameName)) return null;
+  const minigameStage = vanillaMinigameContext
+    ? vanillaMinigameKeyStage(
+      vanillaMinigameContext.minigameName,
+      state.minigameStandardKeysAwarded?.[vanillaMinigameContext.minigameName] ?? 0,
+    )
+    : null;
+  // A boss or a minigame: both pay from a fixed Key reserve.
+  const reserveStage = bossStage ?? minigameStage;
 
-  // Do not advance seeded RNG (or consume a buff) after a boss reserve ends.
-  if (bossStage?.capped) return null;
+  // Do not advance seeded RNG (or consume a buff) after a boss or minigame reserve ends.
+  if (reserveStage?.capped) return null;
 
   const mode = resolveModeRules(state.gameModeId, state.customMode);
   let successBonus = 0;
@@ -511,11 +571,16 @@ export function prepareKeyRollAction(
     successBonus = bonuses.successBonus;
     omniBonus = bonuses.omniBonus;
   }
+  // Activity milestones the run has earned raise that activity's own rolls,
+  // apart from Vanilla minigame reserves, which keep their own pace.
+  if (!vanillaMinigameContext) successBonus += achievementBoostFor(source, state.achievementsClaimed);
 
   const clueAwarded = vanillaClueContext ? state.clueStandardKeysAwarded ?? 0 : 0;
-  const isVanillaContext = vanillaBossContext !== null || vanillaClueContext !== null;
+  const isVanillaContext = vanillaBossContext !== null || vanillaClueContext !== null || vanillaMinigameContext !== null;
   const rollPurpose = vanillaBossContext
     ? `roll:boss:${vanillaBossContext.bossName}:${bossStage!.awarded}`
+    : vanillaMinigameContext
+    ? `roll:minigame:${vanillaMinigameContext.minigameName}:${minigameStage!.awarded}`
     : vanillaClueContext
       ? `roll:clue:${vanillaClueContext.clueTier}:${clueAwarded}`
       : 'roll';
@@ -528,7 +593,7 @@ export function prepareKeyRollAction(
   let effectiveThreshold: number;
   let success: boolean;
   if (isVanillaContext) {
-    baseThreshold = bossStage?.currentRate
+    baseThreshold = reserveStage?.currentRate
       ?? effectiveVanillaClueRate(threshold, clueAwarded);
     effectiveThreshold = normalizePercent(Math.max(0, Math.min(100, baseThreshold + successBonus)));
     const exactRoll = (index: number) => resolveKeyRoll(
@@ -557,8 +622,22 @@ export function prepareKeyRollAction(
     success = result.success;
   }
 
+  // The run's rituals (Pact, Invocations, Barrows): odds first, then Verac's
+  // hit-through on a miss. Extra dice are drawn only while a ritual asks.
+  const plan = rollRitualPlan(state.rituals, state.fatePoints);
+  if (plan.oddsBonus !== 0) {
+    effectiveThreshold = normalizePercent(applyOddsBonus(effectiveThreshold, plan.oddsBonus));
+    success = roll <= effectiveThreshold;
+  }
+  let hitThrough = false;
+  if (!success && plan.hitThrough > 0 && nextDice(rollPurpose, 3) <= plan.hitThrough) {
+    success = true;
+    hitThrough = true;
+  }
+
   let omni = false;
   let pity = false;
+  let secondKey = false;
 
   if (success) {
     let omniChance = mode.omniChanceBase + omniBonus;
@@ -566,10 +645,12 @@ export function prepareKeyRollAction(
     else if (source === DropSource.DIARY_ELITE) omniChance = Math.max(omniChance, 10);
     else if (source === DropSource.RAID) omniChance = Math.max(omniChance, 15);
     else if (source === DropSource.BOSS_HIGH) omniChance = Math.max(omniChance, 10);
+    omniChance += plan.omniBonus;
 
     if (nextDice(rollPurpose, 2) <= omniChance) omni = true;
-  } else if (mode.pityEnabled && state.fatePoints + failureFate >= mode.pityThreshold) {
-    pity = true;
+    if (plan.secondKey > 0 && nextDice(rollPurpose, 4) <= plan.secondKey) secondKey = true;
+  } else {
+    pity = failFate(state.rituals, missFateBase(failureFate, minigameStage), state.fatePoints, mode.pityEnabled, mode.pityThreshold).pity;
   }
 
   return {
@@ -587,6 +668,7 @@ export function prepareKeyRollAction(
       y,
       meta,
       context,
+      ...(state.rituals ? { ritual: { oddsBonus: plan.oddsBonus, hitThrough, secondKey } } : {}),
     },
   };
 }
@@ -806,6 +888,31 @@ const startMilestoneInsurance = (
   return { keys, xtremeMilestoneClaimed, chunkedMilestoneClaimed, entries };
 };
 
+/** What a ritual costs now: nothing when an achievement's free ritual of that kind is waiting. */
+interface RitualPrice { id: Ritual['id']; cost: number; free: boolean }
+const ritualPrice = (state: GameState, id: Ritual['id']): RitualPrice => (state.freeRituals?.includes(id)
+  ? { id, cost: 0, free: true }
+  : { id, cost: ritualFateCost(id, resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier), free: false });
+/** The run after paying a ritual's price: its Fate, or one waiting free ritual of that kind. */
+const payRitual = <S extends GameState>(state: S, price: RitualPrice): S => {
+  if (!price.free) return { ...state, fatePoints: state.fatePoints - price.cost };
+  const at = state.freeRituals?.indexOf(price.id) ?? -1;
+  const rest = (state.freeRituals ?? []).filter((_, j) => j !== at);
+  if (rest.length > 0) return { ...state, freeRituals: rest };
+  const { freeRituals: _used, ...run } = state;
+  return run as S;
+};
+const freeMeta = (price: RitualPrice) => (price.free ? { freeRitual: true } : {});
+const freeNote = (price: RitualPrice) => (price.free ? 'A free ritual from an achievement. ' : '');
+/** What the waiting Ritual of Greed was paid with, so a free one refunds nothing. */
+const lastGreedCost = (state: GameState): number => {
+  for (let i = state.history.length - 1; i >= 0; i--) {
+    const e = state.history[i];
+    if (e.type === 'ALTAR' && e.meta?.ritual === 'GREED' && typeof e.meta.fateCost === 'number') return e.meta.fateCost;
+  }
+  return ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier);
+};
+
 const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
   const now = Date.now();
 
@@ -917,6 +1024,31 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         petCompensation: { ...offer, status: choice },
         history: [...state.history, log],
       };
+    }
+
+    case 'SETTLE_ACHIEVEMENTS': {
+      const settled = settleAchievements(state, action.payload, now, generateId, MAX_COUNTER);
+      if (!settled) return state;
+      return {
+        ...state,
+        achievementsClaimed: settled.achievementsClaimed,
+        fatePoints: settled.fatePoints,
+        chaosKeys: state.chaosKeys + settled.chaosKeys,
+        ...(settled.freeRituals.length > 0 ? { freeRituals: settled.freeRituals } : {}),
+        history: settled.entries.length > 0 ? [...state.history, ...settled.entries] : state.history,
+      };
+    }
+
+    case 'SET_ACHIEVEMENT_TITLE': {
+      const id = action.payload;
+      if (id === null) {
+        if (state.achievementTitle === undefined) return state;
+        const { achievementTitle: _cleared, ...rest } = state;
+        return rest;
+      }
+      // Only an earned (settled) achievement can be worn.
+      if (id === state.achievementTitle || !state.achievementsClaimed?.includes(id)) return state;
+      return { ...state, achievementTitle: id };
     }
 
     case 'CLAIM_PET': {
@@ -1056,7 +1188,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     }
 
     case 'ROLL_RESULT': {
-      const { success, omni, pity, roll, baseThreshold, threshold, source, failureFate = 1, x, y, meta, context } = action.payload;
+      const { success, omni, pity, roll, baseThreshold, threshold, source, failureFate = 1, x, y, meta, context, ritual: ritualRoll } = action.payload;
       const vanillaBossContext = state.gameModeId === 'vanilla' && context?.kind === 'boss'
         ? context
         : null;
@@ -1069,10 +1201,21 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const bossStage = vanillaBossContext
         ? vanillaBossKeyStage(vanillaBossContext.bossName, recordedBossAwarded)
         : null;
+      const vanillaMinigameContext = state.gameModeId === 'vanilla' && context?.kind === 'minigame'
+        ? context
+        : null;
+      if (vanillaMinigameContext && !isKnownVanillaMinigame(vanillaMinigameContext.minigameName)) return state;
+      const minigameStage = vanillaMinigameContext
+        ? vanillaMinigameKeyStage(
+          vanillaMinigameContext.minigameName,
+          state.minigameStandardKeysAwarded?.[vanillaMinigameContext.minigameName] ?? 0,
+        )
+        : null;
+      const reserveStage = bossStage ?? minigameStage;
 
       // Callback work can race with an earlier accepted roll. This reducer-side
       // backstop rejects the stale action without changing buffs, history, or RNG state.
-      if (bossStage?.capped) return state;
+      if (reserveStage?.capped) return state;
 
       const rollText = formatKeyRollValue(roll);
       const thresholdsMatch = baseThreshold === threshold;
@@ -1087,14 +1230,16 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const isGreed = state.activeBuff === 'GREED';
       // Greed doubles any success's Standard Key, an Omni-Key roll's included.
       // A fail that brings the Pity Key pays that Key and refunds nothing.
+      // Karil's second Key is a Standard Key too; Greed and the Barrows Chest never share a roll.
+      const secondKey = success && ritualRoll?.secondKey === true;
       const requestedStandardKeys = success || pity
-        ? success && isGreed ? 2 : 1
+        ? success && isGreed ? 2 : secondKey ? 2 : 1
         : 0;
-      const standardKeysAwarded = bossStage
-        ? Math.min(requestedStandardKeys, bossStage.remaining)
+      const standardKeysAwarded = reserveStage
+        ? Math.min(requestedStandardKeys, reserveStage.remaining)
         : requestedStandardKeys;
-      const remainingStage = bossStage
-        ? bossStage.remaining - standardKeysAwarded
+      const remainingStage = reserveStage
+        ? reserveStage.remaining - standardKeysAwarded
         : null;
       const outcome = omni
         ? 'omni'
@@ -1108,14 +1253,16 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
             context,
             ...(context.kind === 'boss'
               ? { bossName: context.bossName, bossClass: context.bossClass }
-              : { clueTier: context.clueTier }),
+              : context.kind === 'minigame'
+                ? { minigameName: context.minigameName }
+                : { clueTier: context.clueTier }),
             effectiveRate: threshold,
             standardKeysAwarded,
-            currentStage: bossStage?.awarded ?? null,
+            currentStage: reserveStage?.awarded ?? null,
             remainingStage,
             remainingReserve: remainingStage,
             outcome,
-            exhausted: bossStage ? remainingStage === 0 : false,
+            exhausted: reserveStage ? remainingStage === 0 : false,
           }
         : {};
       const singleDrawProbability = Math.max(0, Math.min(1, threshold / 100));
@@ -1129,7 +1276,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const analyticsMeta: RollAnalyticsMeta = {
         successProbability,
         luckApplied,
-        drawResolution: vanillaBossContext || vanillaClueContext ? 10000 : 1000,
+        drawResolution: vanillaBossContext || vanillaClueContext || vanillaMinigameContext ? 10000 : 1000,
         standardKeysAwarded,
         rewardKind,
       };
@@ -1145,10 +1292,29 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       });
       const eventMeta = { roll, baseThreshold, threshold, ...meta, ...vanillaRollMeta, ...analyticsMeta };
 
+      const rollRules = resolveModeRules(state.gameModeId, state.customMode);
+      // What the run's rituals do to a miss's Fate (Tears, Guthan, Torag, the Pact's debt, Invocations).
+      const missBase = missFateBase(failureFate, minigameStage);
+      const missFate = success ? null : failFate(state.rituals, missBase, state.fatePoints, rollRules.pityEnabled, rollRules.pityThreshold);
+      const ritualNotes = [
+        ...(!success && missBase === 0 && failureFate > 0 ? [`No Fate on a miss under ${MINIGAME_MISS_FATE_MIN_RATE}%.`] : []),
+        ...(ritualRoll && ritualRoll.oddsBonus !== 0 ? [`Rituals ${ritualRoll.oddsBonus > 0 ? '+' : ''}${ritualRoll.oddsBonus}% odds.`] : []),
+        ...(success && ritualRoll?.hitThrough ? ['Verac hit through the miss.'] : []),
+        ...(secondKey && standardKeysAwarded === 2 ? ["Karil's bolt found a second Key."] : []),
+        ...(missFate?.notes.length ? [`${missFate.notes.join(', ')}.`] : []),
+      ];
+      const ritualText = ritualNotes.length > 0 ? ` ${ritualNotes.join(' ')}` : '';
+      const missMeta = missFate
+        ? { ...(missFate.lost > 0 ? { fatePointsLost: missFate.lost } : {}), ...(missFate.debtPaid > 0 ? { debtPaid: missFate.debtPaid } : {}) }
+        : {};
+
       let newState = {
         ...state,
         activeBuff: state.activeBuff === 'LUCK' || state.activeBuff === 'GREED' ? 'NONE' : state.activeBuff,
       } as GameState & { lastEvent: GameEvent | null };
+      const nextRituals = tidyRituals(afterRoll(state.rituals, { success, debtPaid: missFate?.debtPaid ?? 0 }));
+      if (nextRituals) newState.rituals = nextRituals;
+      else delete newState.rituals;
       const newHistory = [...state.history];
 
       if (vanillaBossContext && standardKeysAwarded > 0) {
@@ -1157,17 +1323,24 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           [vanillaBossContext.bossName]: bossStage!.awarded + standardKeysAwarded,
         };
       }
+      if (vanillaMinigameContext && standardKeysAwarded > 0) {
+        newState.minigameStandardKeysAwarded = {
+          ...(state.minigameStandardKeysAwarded ?? {}),
+          [vanillaMinigameContext.minigameName]: minigameStage!.awarded + standardKeysAwarded,
+        };
+      }
       if (vanillaClueContext && standardKeysAwarded > 0) {
         newState.clueStandardKeysAwarded = (state.clueStandardKeysAwarded ?? 0) + standardKeysAwarded;
       }
 
       if (success) {
         // "(Doubled)" is what the integrity replay counts as 2 Standard Keys.
+        // Karil's second Key says "(Second Key)", which the replay also counts as 2.
         const greedMessage = isGreed
           ? standardKeysAwarded === 2
             ? ' (Doubled)'
             : ` (Greed awarded ${standardKeysAwarded} Standard Key${standardKeysAwarded === 1 ? '' : 's'})`
-          : '';
+          : secondKey && standardKeysAwarded === 2 ? ' (Second Key)' : '';
         if (omni) {
           newState.specialKeys += 1;
           newState.keys += standardKeysAwarded;
@@ -1178,8 +1351,10 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
              type: 'ROLL_OMNI',
              message: isGreed && standardKeysAwarded === 2
                ? '2 Keys and an Omni-Key Found! (Doubled)'
-               : `Key and Omni-Key Found!${greedMessage}`,
-             details: `Rolled ${rollText} (≤ ${comparisonChanceText}), and an Omni-Key came with the ${standardKeysAwarded === 2 ? '2 Keys' : 'Key'}.`,
+               : secondKey && standardKeysAwarded === 2
+                 ? '2 Keys and an Omni-Key Found! (Second Key)'
+                 : `Key and Omni-Key Found!${greedMessage}`,
+             details: `Rolled ${rollText} (≤ ${comparisonChanceText}), and an Omni-Key came with the ${standardKeysAwarded === 2 ? '2 Keys' : 'Key'}.${ritualText}`,
              meta: entryMeta(0),
              result: 'SUCCESS',
              source,
@@ -1196,7 +1371,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
              timestamp: now,
              type: 'ROLL_SUCCESS',
              message: `Key Found!${greedMessage}`,
-             details: `Rolled ${rollText} (≤ ${comparisonChanceText}).`,
+             details: ritualRoll?.hitThrough
+               ? `Rolled ${rollText} (> ${comparisonChanceText}).${ritualText}`
+               : `Rolled ${rollText} (≤ ${comparisonChanceText}).${ritualText}`,
              meta: entryMeta(0),
              result: 'SUCCESS',
              source,
@@ -1209,17 +1386,16 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         newState.fatePoints = 0;
       } else if (pity) {
         newState.keys += standardKeysAwarded;
-        const pityThreshold = resolveModeRules(
-          state.gameModeId, state.customMode,
-        ).pityThreshold;
-        newState.fatePoints = state.fatePoints + failureFate - pityThreshold;
+        const pityThreshold = rollRules.pityThreshold;
+        const earned = missFate?.earned ?? failureFate;
+        newState.fatePoints = Math.max(0, state.fatePoints + earned - pityThreshold - (missFate?.lost ?? 0));
         newHistory.push({
             id: generateId(),
             timestamp: now,
             type: 'PITY',
             message: 'MAX FATE REACHED! Pity Key granted.',
-            details: `Rolled ${rollText} at ${inlineChanceText}, but Fate intervened.`,
-            meta: { ...entryMeta(failureFate), pityThreshold },
+            details: `Rolled ${rollText} at ${inlineChanceText}, but Fate intervened.${ritualText}`,
+            meta: { ...entryMeta(earned), ...missMeta, pityThreshold },
             result: 'SUCCESS',
             source,
             rollValue: roll,
@@ -1228,22 +1404,24 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         });
         newState.lastEvent = { id: generateId(), type: 'ROLL_PITY', x, y, meta: eventMeta };
       } else {
-        newState.fatePoints += failureFate;
+        const earned = missFate?.earned ?? failureFate;
+        newState.fatePoints += earned;
         // Greed's consolation: half the (scaled) ritual cost flows back,
         // so it's double-or-something rather than double-or-nothing.
         let greedRefund = 0;
         if (isGreed) {
-          const mult = resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier;
-          greedRefund = Math.ceil(ritualFateCost('GREED', mult) * GREED_REFUND_FRACTION);
+          greedRefund = Math.ceil(lastGreedCost(state) * GREED_REFUND_FRACTION);
           newState.fatePoints += greedRefund;
         }
+        // Blood Price takes its Fate after the miss has paid out.
+        newState.fatePoints -= missFate?.lost ?? 0;
         newHistory.push({
             id: generateId(),
             timestamp: now,
             type: 'ROLL_FAIL',
             message: `No Key.${isGreed ? ` (Greed refunded ${greedRefund} Fate)` : ''}`,
-            details: `Rolled ${rollText} (> ${comparisonChanceText}). Fate: ${newState.fatePoints}/${resolveModeRules(state.gameModeId, state.customMode).pityThreshold}`,
-            meta: entryMeta(failureFate + greedRefund),
+            details: `Rolled ${rollText} (> ${comparisonChanceText}). Fate: ${newState.fatePoints}/${rollRules.pityThreshold}${ritualText}`,
+            meta: { ...entryMeta(earned + greedRefund), ...missMeta },
             result: 'FAIL',
             source,
             rollValue: roll,
@@ -1260,6 +1438,10 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       if (action.payload.revealId && (state.pendingUnlock || costType === 'specialKey'
         || (costType === 'key' ? state.keys < cost : state.chaosKeys < 1)
         || !isRandomUnlockEligible(table, item, state.unlocks, state.gameModeId, costType))) return state;
+      // Saradomin's Ward: a random spend on a place (or a Chaos Key) must have been drawn
+      // from what the run can use now. rollUnlock filters the draw and marks it.
+      const warded = !!action.payload.revealId && state.rituals?.ward === true && costType !== 'specialKey' && wardApplies(costType, table);
+      if (warded && action.payload.ward !== true) return state;
       // Direct (Omni) unlocks must be paid for and still unlockable, or two
       // quick confirmations could spend one Omni-key twice.
       if (!action.payload.revealId && (
@@ -1297,6 +1479,11 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       else if (table === TableType.BANKS) newUnlocks.banks = pushOnce(newUnlocks.banks ?? []);
 
       let newState = { ...state, unlocks: newUnlocks };
+      if (warded) {
+        const rest = tidyRituals({ ...state.rituals, ward: false });
+        if (rest) newState.rituals = rest;
+        else delete newState.rituals;
+      }
       if (costType === 'key') newState.keys -= cost;
       else if (costType === 'specialKey') newState.specialKeys -= 1;
       else if (costType === 'chaosKey') newState.chaosKeys -= 1;
@@ -1309,7 +1496,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           type: 'UNLOCK',
           message: `Unlocked ${itemLabel}`,
           details: `Category: ${tableDisplayName(table)}`,
-          meta: { item, category: table, cost, costType }
+          meta: { item, category: table, cost, costType, ...(warded ? { ward: true } : {}) }
       };
 
       return {
@@ -1327,38 +1514,39 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return { ...rest, lastEvent: { id: generateId(), type: 'UNLOCK', meta: { item: pendingUnlock.item, cost: pendingUnlock.cost, category: pendingUnlock.table } } };
     }
 
-    case 'RITUAL_LUCK':
+    case 'RITUAL_LUCK': {
       // One buff waits for the next roll; a second would overwrite the first.
-      if (state.activeBuff !== 'NONE'
-        || state.fatePoints < ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier)) return state;
+      const price = ritualPrice(state, 'LUCK');
+      if (rollRitualActive(state.activeBuff, state.rituals) || state.fatePoints < price.cost) return state;
       return {
-        ...state,
-        fatePoints: state.fatePoints - ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
+        ...payRitual(state, price),
         activeBuff: 'LUCK',
-        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Clarity', details: 'Your next Key roll is made twice and the better result is kept.', meta: { ritual: 'LUCK', fateCost: ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier) } }],
+        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Clarity', details: `${freeNote(price)}Your next Key roll is made twice and the better result is kept.`, meta: { ritual: 'LUCK', fateCost: price.cost, ...freeMeta(price) } }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'LUCK' } }
       };
+    }
 
-    case 'RITUAL_GREED':
-      if (state.activeBuff !== 'NONE'
-        || state.fatePoints < ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier)) return state;
+    case 'RITUAL_GREED': {
+      const price = ritualPrice(state, 'GREED');
+      if (rollRitualActive(state.activeBuff, state.rituals) || state.fatePoints < price.cost) return state;
       return {
-        ...state,
-        fatePoints: state.fatePoints - ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
+        ...payRitual(state, price),
         activeBuff: 'GREED',
-        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Greed', details: 'Next success gives 2 Keys.', meta: { ritual: 'GREED', fateCost: ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier) } }],
+        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Greed', details: `${freeNote(price)}Next success gives 2 Keys.`, meta: { ritual: 'GREED', fateCost: price.cost, ...freeMeta(price) } }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'GREED' } }
       };
+    }
 
-    case 'RITUAL_CHAOS':
-      if (state.fatePoints < ritualFateCost('CHAOS', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier)) return state;
+    case 'RITUAL_CHAOS': {
+      const price = ritualPrice(state, 'CHAOS');
+      if (state.fatePoints < price.cost) return state;
       return {
-        ...state,
-        fatePoints: state.fatePoints - ritualFateCost('CHAOS', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
+        ...payRitual(state, price),
         chaosKeys: state.chaosKeys + 1,
-        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Chaos', details: 'Fate converted to Chaos Key.', meta: { ritual: 'CHAOS', fateCost: ritualFateCost('CHAOS', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier), chaosKeysAwarded: 1 } }],
+        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Chaos', details: `${freeNote(price)}Fate converted to Chaos Key.`, meta: { ritual: 'CHAOS', fateCost: price.cost, chaosKeysAwarded: 1, ...freeMeta(price) } }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'CHAOS' } }
       };
+    }
 
     case 'RITUAL_TRANSMUTE':
       if (state.keys < (getRitual('TRANSMUTE').keyCost ?? 5)) return state;
@@ -1394,19 +1582,91 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       // unlocks directly (candidates were drawn from the live frontier by
       // the Altar UI).
       const { chunkKey: chosen, label } = action.payload;
-      const cost = ritualFateCost('CARTOGRAPHER', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier);
+      const price = ritualPrice(state, 'CARTOGRAPHER');
+      const cost = price.cost;
       if (state.fatePoints < cost || (state.unlocks.chunks ?? []).includes(chosen)) return state;
       return {
-        ...state,
-        fatePoints: state.fatePoints - cost,
+        ...payRitual(state, price),
         unlocks: { ...state.unlocks, chunks: [...(state.unlocks.chunks ?? []), chosen] },
         history: [...state.history, {
           id: generateId(), timestamp: now, type: 'ALTAR',
           message: `Cartographer charted ${label}`,
-          meta: { ritual: 'CARTOGRAPHER', fateCost: cost, chunk: chosen },
-          details: `Chose a frontier chunk for ${cost} Fate.`,
+          meta: { ritual: 'CARTOGRAPHER', fateCost: cost, chunk: chosen, ...freeMeta(price) },
+          details: price.free ? `${freeNote(price)}Chose a frontier chunk.` : `Chose a frontier chunk for ${cost} Fate.`,
         }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'CARTOGRAPHER', chunk: chosen } }
+      };
+    }
+
+    case 'RITUAL_WARD':
+    case 'RITUAL_TEARS':
+    case 'RITUAL_PACT':
+    case 'RITUAL_INVOCATIONS':
+    case 'RITUAL_BARROWS':
+    case 'RITUAL_SACRIFICE': {
+      const id = action.type.slice('RITUAL_'.length) as NewRitualId;
+      const ritual = getRitual(id);
+      const price = ritualPrice(state, id);
+      const cost = price.cost;
+      // The Altar checks the same rules; this stops a stale click.
+      if (state.fatePoints < cost || !ritualAvailability(id, ritual.god, state).ok) return state;
+      let rituals: RitualState = { ...state.rituals };
+      let unlocks = state.unlocks;
+      let specialKeys = state.specialKeys;
+      let details = ritual.effect;
+      const meta: Record<string, unknown> = { ritual: id, fateCost: cost, ...freeMeta(price) };
+      const eventMeta: RitualEventMeta = { type: id };
+      if (action.type === 'RITUAL_WARD') rituals = { ...rituals, ward: true, wardCooldown: WARD_COOLDOWN_ROLLS };
+      else if (action.type === 'RITUAL_TEARS') rituals = castTears(rituals);
+      else if (action.type === 'RITUAL_PACT') rituals = castPact(rituals);
+      else if (action.type === 'RITUAL_INVOCATIONS') {
+        const ids = action.payload.ids;
+        const picked = INVOCATIONS.filter(v => ids.includes(v.id));
+        if (ids.length === 0 || new Set(ids).size !== ids.length || picked.length !== ids.length) return state;
+        if (!picked.every(v => invocationAllowed(v, state.fatePoints - cost))) return state;
+        rituals = castInvocations(rituals, ids);
+        details = `Invoked ${INVOCATIONS.filter(v => ids.includes(v.id)).map(v => v.name).join(', ')} for the next rolls.`;
+        meta.invocations = ids;
+        eventMeta.invocations = ids;
+      } else if (action.type === 'RITUAL_BARROWS') {
+        const brother = BARROWS_BROTHERS.find(b => b.id === action.payload.brother);
+        if (!brother) return state;
+        rituals = castBarrows(rituals, brother.id, cost);
+        details = `${brother.name}: ${brother.effect} for the next rolls.`;
+        meta.brother = brother.id;
+        eventMeta.brother = brother.id;
+      } else {
+        const taken = action.payload.taken;
+        const candidates = sacrificeCandidates(state.unlocks);
+        const valid = taken.length === SACRIFICE_TIERS
+          && new Set(taken.map(t => `${t.table}:${t.name}`)).size === taken.length
+          && taken.every(t => candidates.some(c => c.table === t.table && c.name === t.name && c.tier === t.tier));
+        if (!valid) return state;
+        const skills = { ...state.unlocks.skills };
+        const equipment = { ...state.unlocks.equipment };
+        for (const t of taken) {
+          if (t.table === 'skill') {
+            if (t.tier - 1 > 0) skills[t.name] = t.tier - 1;
+            else delete skills[t.name];
+          } else equipment[t.name] = t.tier - 1;
+        }
+        unlocks = { ...state.unlocks, skills, equipment };
+        specialKeys += 1;
+        rituals.sacrificesUsed = (rituals.sacrificesUsed ?? 0) + 1;
+        details = `Fate took ${taken.map(t => `${t.name} tier ${t.tier}`).join(', ')} for an Omni-Key.`;
+        meta.taken = taken;
+        meta.specialKeysAwarded = 1;
+        eventMeta.taken = taken;
+        eventMeta.usesLeft = SACRIFICE_USES_PER_RUN - rituals.sacrificesUsed;
+      }
+      const next: GameState & { lastEvent: GameEvent | null } = { ...payRitual(state, price), specialKeys, unlocks };
+      const tidy = tidyRituals(rituals);
+      if (tidy) next.rituals = tidy;
+      else delete next.rituals;
+      return {
+        ...next,
+        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: ritual.name, details: `${freeNote(price)}${details}`, meta }],
+        lastEvent: { id: generateId(), type: 'RITUAL', meta: eventMeta },
       };
     }
 
@@ -2597,21 +2857,39 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   }, [commitAction]);
 
   const rollUnlock = useCallback((table?: TableType) => {
-    const current = stateRef.current;
-    if (current.pendingUnlock) return;
     const costType = table === undefined ? 'chaosKey' : 'key';
-    if ((costType === 'key' ? current.keys : current.chaosKeys) < UNLOCK_COST) return;
-    if (authorizeOwnership().ok === false) {
-      showToast('Save ownership is unavailable. Restore save access before rolling.');
-      return;
-    }
-    const pool = randomUnlockPool(current.unlocks, current.gameModeId, costType, table, current.customMode);
-    const selection = pickRandomPoolEntry(pool, () => nextFloat(costType === 'key' ? 'gacha' : 'chaos'));
-    if (!selection) { showToast('No eligible unlocks remain. Open more locations or choose another category.'); return; }
-    const next = commitAction({ type: 'UNLOCK', payload: { ...selection, costType, cost: UNLOCK_COST, revealId: generateId() } });
-    stageCoordinatedSnapshot(serializeGameState(next));
-    if (coordinator) void settleCoordinatedFlush();
-    else flushCurrentSave();
+    const draw = (usable?: (candidate: { table: TableType; item: string }) => boolean) => {
+      const current = stateRef.current;
+      if (current.pendingUnlock) return;
+      if ((costType === 'key' ? current.keys : current.chaosKeys) < UNLOCK_COST) return;
+      if (authorizeOwnership().ok === false) {
+        showToast('Save ownership is unavailable. Restore save access before rolling.');
+        return;
+      }
+      // Saradomin's Ward: fate still picks, but only from what the run can use right now.
+      const warded = current.rituals?.ward === true && wardApplies(costType, table);
+      if (warded && !usable) return;
+      let pool = randomUnlockPool(current.unlocks, current.gameModeId, costType, table, current.customMode);
+      if (warded && usable) pool = pool.filter(usable);
+      const selection = pickRandomPoolEntry(pool, () => nextFloat(costType === 'key' ? 'gacha' : 'chaos'));
+      if (!selection) {
+        showToast(warded
+          ? "Saradomin's Ward finds nothing here you can use yet. Your Key is safe: try another category."
+          : 'No eligible unlocks remain. Open more locations or choose another category.');
+        return;
+      }
+      const next = commitAction({ type: 'UNLOCK', payload: { ...selection, costType, cost: UNLOCK_COST, revealId: generateId(), ...(warded ? { ward: true } : {}) } });
+      stageCoordinatedSnapshot(serializeGameState(next));
+      if (coordinator) void settleCoordinatedFlush();
+      else flushCurrentSave();
+    };
+    const current = stateRef.current;
+    if (current.rituals?.ward !== true || !wardApplies(costType, table)) { draw(); return; }
+    // The Ward's activity checks load with the first warded spend, not with the app.
+    import('../utils/ritualWard').then(({ wardUsable }) => {
+      if (!mountedRef.current) return;
+      draw(c => wardUsable(c.table, c.item, stateRef.current.unlocks, stateRef.current.gameModeId ?? DEFAULT_MODE_ID));
+    }, () => showToast("Saradomin's Ward couldn't load. Check your connection and try again; your Key is safe."));
   }, [authorizeOwnership, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
   const acknowledgeUnlock = useCallback((id: string) => {
     if (getPendingSave(storageKey) || (coordinator && coordinator.getSnapshot().primary !== 'saved')) return;
@@ -2636,6 +2914,21 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     const won = nextFloat('gambit') < 0.5;
     const keysWon = gambitKeys(stake, multiplier);
     commitAction({ type: 'RITUAL_GAMBIT', payload: { won, stake, keysWon } });
+  }, [commitAction, nextFloat]);
+
+  /** The newer rituals. Fate's picks (the brother, the tiers taken) are drawn here; the reducer stays pure. */
+  const castRitual = useCallback((id: NewRitualId, invocations?: Invocation['id'][]) => {
+    const current = stateRef.current;
+    if (id === 'WARD') commitAction({ type: 'RITUAL_WARD' });
+    else if (id === 'TEARS') commitAction({ type: 'RITUAL_TEARS' });
+    else if (id === 'PACT') commitAction({ type: 'RITUAL_PACT' });
+    else if (id === 'INVOCATIONS') commitAction({ type: 'RITUAL_INVOCATIONS', payload: { ids: invocations ?? [] } });
+    else if (id === 'BARROWS') {
+      const brother = BARROWS_BROTHERS[Math.min(BARROWS_BROTHERS.length - 1, Math.floor(nextFloat('barrows') * BARROWS_BROTHERS.length))];
+      commitAction({ type: 'RITUAL_BARROWS', payload: { brother: brother.id } });
+    } else if (id === 'SACRIFICE') {
+      commitAction({ type: 'RITUAL_SACRIFICE', payload: { taken: pickSacrifice(current.unlocks, i => nextFloat('sacrifice', i)) } });
+    }
   }, [commitAction, nextFloat]);
 
   /** Cartographer: unlock the chosen frontier chunk (Chunked mode only). */
@@ -2729,6 +3022,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   }), [commitAction]);
   const claimPet = useCallback((pet: { id: number; name: string }, x?: number, y?: number) =>
     commitAction({ type: 'CLAIM_PET', payload: { petId: pet.id, petName: pet.name, x, y } }), [commitAction]);
+  // Fate picks each free ritual here, so the reducer stays pure. Settled achievements draw nothing.
+  const settleAchievementsCallback = useCallback((earned: AchievementPayout[]) => {
+    const modeId = stateRef.current.gameModeId;
+    let draw = 0;
+    const claimed = stateRef.current.achievementsClaimed;
+    const payload = earned.map((a) => (a.freeRituals > 0 && !claimed?.includes(a.id)
+      ? { ...a, ritualPicks: Array.from({ length: a.freeRituals }, () => pickFreeRitual(modeId, nextFloat('achievement-ritual', draw++))) }
+      : a));
+    commitAction({ type: 'SETTLE_ACHIEVEMENTS', payload });
+  }, [commitAction, nextFloat]);
+  const setAchievementTitle = useCallback((id: string | null) =>
+    commitAction({ type: 'SET_ACHIEVEMENT_TITLE', payload: id }), [commitAction]);
   const setGameMode = useCallback((modeId: string, customRules?: GameModeRules) =>
     commitAction({ type: 'SET_GAME_MODE', payload: { modeId, customRules } }), [commitAction]);
   const toggleAnimations = useCallback(() => commitAction({ type: 'TOGGLE_ANIMATIONS' }), [commitAction]);
@@ -3174,6 +3479,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     performRitual,
     performGambit,
     performCartographer,
+    castRitual,
     levelUpSkill,
     toggleAnimations,
     toggleAdvisors,
@@ -3182,6 +3488,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     resolveFateCompensation,
     resolvePetCompensation,
     claimPet,
+    settleAchievements: settleAchievementsCallback,
+    setAchievementTitle,
     setGameMode,
     setSeed,
     nextFloat,
@@ -3225,6 +3533,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     performRitual,
     performGambit,
     performCartographer,
+    castRitual,
     levelUpSkill,
     toggleAnimations,
     toggleAdvisors,
@@ -3233,6 +3542,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     resolveFateCompensation,
     resolvePetCompensation,
     claimPet,
+    settleAchievementsCallback,
+    setAchievementTitle,
     setGameMode,
     setSeed,
     nextFloat,

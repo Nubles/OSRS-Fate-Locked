@@ -633,6 +633,122 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
     expect(next.bossStandardKeysAwarded).toEqual({ Zulrah: 1 });
     expect(next.clueStandardKeysAwarded).toBe(4);
   });
+
+  describe('minigame reserves', () => {
+    const minigameContext = {
+      kind: 'minigame' as const,
+      minigameName: 'Pest Control',
+    };
+
+    it('rolls each minigame at its reserve stage, with its own seeded purpose', () => {
+      const draws: string[] = [];
+      const action = prepareKeyRollAction(
+        { ...vanillaState(), minigameStandardKeysAwarded: { 'Pest Control': 1 } },
+        'Activity (Minigame)',
+        10,
+        1,
+        (purpose, index = 0, max = 100) => {
+          draws.push(purpose);
+          return index === 0 ? 300 : max;
+        },
+        undefined,
+        undefined,
+        undefined,
+        minigameContext,
+      );
+
+      expect(action?.payload).toMatchObject({ baseThreshold: 4, threshold: 4, success: true, context: minigameContext });
+      expect(draws[0]).toBe('roll:minigame:Pest Control:1');
+    });
+
+    it('returns before any draw once a minigame has paid all its Keys', () => {
+      let draws = 0;
+      const action = prepareKeyRollAction(
+        { ...vanillaState(), minigameStandardKeysAwarded: { 'Pest Control': 2 } },
+        'Activity (Minigame)',
+        10,
+        1,
+        () => { draws += 1; return 1; },
+        undefined,
+        undefined,
+        undefined,
+        minigameContext,
+      );
+      expect(action).toBeNull();
+      expect(draws).toBe(0);
+    });
+
+    it('counts a paid Key against the minigame and clamps Greed to what is left', () => {
+      const first = gameReducer(vanillaState(), roll({ success: true, context: minigameContext }));
+      expect(first.keys).toBe(initialState.keys + 1);
+      expect(first.minigameStandardKeysAwarded?.['Pest Control']).toBe(1);
+      expect(first.bossStandardKeysAwarded).toEqual({});
+
+      const greed = gameReducer(
+        { ...vanillaState(), activeBuff: 'GREED', minigameStandardKeysAwarded: { 'Pest Control': 1 } },
+        roll({ success: true, context: minigameContext }),
+      );
+      expect(greed.keys).toBe(initialState.keys + 1);
+      expect(greed.minigameStandardKeysAwarded?.['Pest Control']).toBe(2);
+      expect(greed.history.at(-1)?.meta).toMatchObject({
+        minigameName: 'Pest Control',
+        standardKeysAwarded: 1,
+        exhausted: true,
+      });
+    });
+
+    it('rejects a stale roll for an emptied minigame without touching the run', () => {
+      const state = { ...vanillaState(), minigameStandardKeysAwarded: { 'Castle Wars': 1 } };
+      const next = gameReducer(state, roll({
+        success: true,
+        context: { kind: 'minigame', minigameName: 'Castle Wars' },
+      }));
+      expect(next).toBe(state);
+    });
+
+    it('ignores a roll for a minigame that left the table', () => {
+      const state = vanillaState();
+      const next = gameReducer(state, roll({ success: true, context: { kind: 'minigame', minigameName: 'Rat Pits' } }));
+      expect(next).toBe(state);
+      const action = prepareKeyRollAction(state, 'Activity (Minigame)', 10, 1, () => 1, undefined, undefined, undefined,
+        { kind: 'minigame', minigameName: 'Rat Pits' });
+      expect(action).toBeNull();
+    });
+
+    it('pays Fate for a miss only at 5% or more', () => {
+      // Pest Control: 8% for its first Key, then 4%.
+      const first = gameReducer({ ...vanillaState(), fatePoints: 10 }, roll({ success: false, context: minigameContext }));
+      expect(first.fatePoints).toBe(11);
+
+      const second = gameReducer(
+        { ...vanillaState(), fatePoints: 10, minigameStandardKeysAwarded: { 'Pest Control': 1 } },
+        roll({ success: false, context: minigameContext }),
+      );
+      expect(second.fatePoints).toBe(10);
+      expect(second.history.at(-1)?.details).toContain('No Fate on a miss under 5%.');
+    });
+
+    it('never brings the Pity Key from a miss that pays no Fate', () => {
+      const action = prepareKeyRollAction(
+        { ...vanillaState(), fatePoints: 49, minigameStandardKeysAwarded: { 'Pest Control': 1 } },
+        'Activity (Minigame)',
+        10,
+        1,
+        (_purpose, _index = 0, max = 100) => max,
+        undefined,
+        undefined,
+        undefined,
+        minigameContext,
+      );
+      expect(action?.payload).toMatchObject({ success: false, pity: false });
+    });
+
+    it('leaves minigame rolls unlimited outside Vanilla', () => {
+      const next = gameReducer({ ...base(), gameModeId: 'chunked' }, roll({ success: true, context: minigameContext }));
+      expect(next.keys).toBe(initialState.keys + 1);
+      expect(next.minigameStandardKeysAwarded?.['Pest Control']).toBeUndefined();
+    });
+  });
 });
 // --- UNLOCK -----------------------------------------------------------------
 

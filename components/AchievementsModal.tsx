@@ -4,25 +4,46 @@ import { Trophy } from './OsrsIcon';
 import { ACHIEVEMENT_ICON } from './achievementIcons';
 import { useGame } from '../context/GameContext';
 import {
-  evaluateAchievements, EvaluatedAchievement, AchievementCategory,
+  evaluateAchievements, EvaluatedAchievement, AchievementCategory, fateDue, rewardLabel, ritualName,
 } from '../utils/achievements';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';
 import './osrs/osrs-windows-a.css';
+import { activeBoosts } from '../utils/achievementBoosts';
 
 interface Props {
   onClose: () => void;
 }
 
 const CATEGORY_ORDER: AchievementCategory[] = [
-  'Quests', 'Skills', 'Areas', 'Equipment', 'Diaries', 'Combat', 'Activities', 'Collection', 'Mastery',
+  'Quests', 'Skills', 'Areas', 'Equipment', 'Diaries', 'Combat', 'Activities', 'Collection',
+  'Fate', 'Void Altar', 'Unlocks', 'Pets', 'Mastery',
 ];
 
+const formatDate = (timestamp: number) =>
+  new Date(timestamp).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+
 export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
-  const { unlocks , gameModeId, customMode} = useGame();
+  const {
+    unlocks, gameModeId, customMode, history, petsClaimed, achievementTitle, setAchievementTitle, freeRituals, achievementsClaimed, runId,
+  } = useGame();
   useEscapeKey(onClose, true);
 
-  const all = useMemo(() => evaluateAchievements(unlocks, gameModeId, customMode), [unlocks, gameModeId, customMode]);
+  const all = useMemo(
+    () => evaluateAchievements({ unlocks, gameModeId, customMode, history, petsClaimed, claimed: achievementsClaimed }),
+    [unlocks, gameModeId, customMode, history, petsClaimed, achievementsClaimed],
+  );
+  // When each was earned, from the run's log (achievements earned before rewards have no date).
+  const earnedAt = useMemo(() => {
+    const at = new Map<string, number>();
+    for (const e of history) {
+      const id = e.type === 'ACHIEVEMENT' ? e.meta?.achievementId : undefined;
+      if (typeof id === 'string' && !at.has(id)) at.set(id, e.timestamp);
+    }
+    return at;
+  }, [history]);
+  const title = all.find((a) => a.id === achievementTitle && a.earned);
+  const boosts = activeBoosts(achievementsClaimed, gameModeId);
   const earnedCount = all.filter((a) => a.earned).length;
   const pct = all.length > 0 ? Math.round((earnedCount / all.length) * 100) : 0;
 
@@ -61,6 +82,20 @@ export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
             <p className="osrs-wa-sub text-[11px] text-gray-500 mt-1">
               {earnedCount} of {all.length} earned · {pct}% complete
             </p>
+            <p className="osrs-wa-sub osrs-wa-sub-full text-[11px] text-gray-400 mt-1">
+              {title ? (
+                <>Your title: <span className="text-[#ff981f] font-bold">{title.title}</span>{' '}
+                  <button onClick={() => setAchievementTitle(null)} className="underline text-gray-500 hover:text-gray-300">Take off</button></>
+              ) : 'Pick any earned achievement to wear as your title.'}
+              {(freeRituals?.length ?? 0) > 0 && (
+                <span className="text-cyan-300"> · Free at the Void Altar: {freeRituals!.map(ritualName).join(', ')}</span>
+              )}
+            </p>
+            {boosts.length > 0 && (
+              <p className="osrs-wa-sub osrs-wa-sub-full text-[11px] text-cyan-300 mt-1">
+                Key chance boosts: {boosts.map((b) => `+${b.percent}% ${b.label}`).join(', ')}
+              </p>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -108,7 +143,15 @@ export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
         <div className="osrs-wa-ach-list flex-1 overflow-y-auto custom-scrollbar px-4 pb-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {shown.map((a) => (
-              <AchievementCard key={a.id} a={a} />
+              <AchievementCard
+                key={a.id}
+                a={a}
+                earnedAt={earnedAt.get(a.id)}
+                runId={runId}
+                gameModeId={gameModeId}
+                worn={a.id === achievementTitle}
+                onWear={() => setAchievementTitle(a.id)}
+              />
             ))}
           </div>
         </div>
@@ -117,8 +160,19 @@ export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
   );
 };
 
-const AchievementCard: React.FC<{ a: EvaluatedAchievement }> = ({ a }) => {
+const AchievementCard: React.FC<{
+  a: EvaluatedAchievement;
+  earnedAt?: number;
+  worn: boolean;
+  onWear: () => void;
+  runId?: string;
+  gameModeId?: string;
+}> = ({ a, earnedAt, worn, onWear, runId, gameModeId }) => {
   const Icon = ACHIEVEMENT_ICON[a.icon] ?? Trophy;
+  // A hidden achievement stays a mystery until it is earned, like an unseen log slot.
+  const secret = a.hidden && !a.earned;
+  // An achievement with no set Fate shows what it pays on this run.
+  const reward = rewardLabel({ ...a, fate: fateDue(a, runId) }, gameModeId);
   return (
     <div
       data-osrs-earned={a.earned ? 'true' : 'false'}
@@ -140,7 +194,7 @@ const AchievementCard: React.FC<{ a: EvaluatedAchievement }> = ({ a }) => {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <span className={`osrs-wa-ach-title text-[12px] font-bold truncate ${a.earned ? 'text-amber-200' : 'text-gray-400'}`}>
-            {a.title}
+            {secret ? '???' : a.title}
           </span>
           {a.earned ? (
             <CheckCircle2 size={12} className="text-amber-400 shrink-0" aria-hidden />
@@ -148,8 +202,15 @@ const AchievementCard: React.FC<{ a: EvaluatedAchievement }> = ({ a }) => {
             <Lock size={10} className="text-gray-600 shrink-0" aria-hidden />
           )}
         </div>
-        <p className="osrs-wa-ach-desc text-[10px] text-gray-500 truncate">{a.description}</p>
-        {!a.earned && (
+        <p className="osrs-wa-ach-desc text-[10px] text-gray-500 truncate">{secret ? 'A hidden achievement' : a.description}</p>
+        <p className="text-[10px] text-gray-500 truncate">
+          <span className={a.earned ? 'text-cyan-300/80' : 'text-gray-600'}>{reward ? `${reward} · title` : 'Title'}</span>
+          {a.earned && earnedAt !== undefined && <span className="text-gray-600"> · earned {formatDate(earnedAt)}</span>}
+          {a.earned && (worn
+            ? <span className="text-[#ff981f]"> · worn</span>
+            : <> · <button onClick={onWear} className="underline text-gray-400 hover:text-white">Wear title</button></>)}
+        </p>
+        {!a.earned && !secret && (
           <div className="mt-1.5 flex items-center gap-2">
             <div className="osrs-wa-pbar flex-1 h-[3px] bg-black/50 rounded-full overflow-hidden">
               <div

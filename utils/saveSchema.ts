@@ -1,6 +1,6 @@
 import { CUSTOM_RULE_BOUNDS, resolveModeRules, type GameModeRules } from '../config/gameModes';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
-import { EQUIPMENT_SLOTS, RETIRED_BOSSES, RETIRED_POH_ITEMS, RETIRED_STORAGE_ITEMS } from '../data/items';
+import { EQUIPMENT_SLOTS, RETIRED_BOSSES, RETIRED_MINIGAMES, RETIRED_POH_ITEMS, RETIRED_STORAGE_ITEMS } from '../data/items';
 import { migrateAreaUnlocks } from './areaUnlockMigration';
 import { mergedBankId, settleMergedBanks } from './bankUnlockMerges';
 import { settleCanonicalAreaUnlocks } from '../data/areaMapPolicy';
@@ -15,11 +15,14 @@ import {
   normalizeBossStandardKeysAwarded,
   normalizeClueStandardKeysAwarded,
 } from './vanillaKeyProgress';
-import { vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
+import { isKnownVanillaMinigame, normalizeMinigameStandardKeysAwarded, vanillaBossKeyStage, vanillaMinigameKeyStage } from '../config/vanillaKeyEconomy';
 
 import { calculateLegacyFateCompensation, LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
 import { PET_COMPENSATION_ID, petCompensationOffer } from './petCompensation';
 import { isPetId, PET_IDS } from '../data/petIds';
+import { BARROWS_BROTHERS, BARROWS_ROLLS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, type Invocation } from '../config/economy';
+import { tidyRituals, type RitualState } from './ritualEffects';
+import { FREE_RITUAL_IDS } from './achievementRewards';
 /** Version 5 freezes the one-time pet offer and stores claimed pets and owed Keys. */
 export const CURRENT_SAVE_VERSION = 5;
 /**
@@ -486,7 +489,7 @@ const HISTORY_KEYS = new Set([
 ]);
 const HISTORY_TYPES = new Set([
   'UNLOCK', 'PITY', 'ALTAR', 'ROLL_SUCCESS', 'ROLL_FAIL', 'ROLL_OMNI',
-  'LEVEL_UP', 'XTREME_MILESTONE', 'COMPENSATION', 'PET',
+  'LEVEL_UP', 'XTREME_MILESTONE', 'COMPENSATION', 'PET', 'ACHIEVEMENT',
 ]);
 const HISTORY_RESULTS = new Set(['SUCCESS', 'FAIL']);
 const MAX_METADATA_DEPTH = 16;
@@ -790,6 +793,68 @@ const normalizePetCompensation = (value: unknown): Outcome<PetCompensationState>
   };
 };
 
+/** Settled achievement ids: short strings, each once. Unknown ids stay, for saves from a newer version. */
+const MAX_ACHIEVEMENT_IDS = 2_000;
+const normalizeAchievementsClaimed = (value: unknown): Outcome<string[]> => {
+  if (!Array.isArray(value) || value.length > MAX_ACHIEVEMENT_IDS) return invalid('invalid_field', 'achievementsClaimed');
+  const seen = new Set<string>();
+  for (const id of value) {
+    if (typeof id !== 'string' || id.length === 0 || id.length > MAX_IDENTIFIER_CHARS) {
+      return invalid('invalid_field', 'achievementsClaimed');
+    }
+    seen.add(id);
+  }
+  return { ok: true, value: [...seen] };
+};
+
+const RITUAL_KEYS = new Set(['ward', 'wardCooldown', 'tearsFailsLeft', 'tearsSpent', 'pactRollsLeft', 'pactDebt', 'invocations', 'barrows', 'sacrificesUsed']);
+
+/** The newer Void Altar rituals still running: each field bounded by what the rituals can set. */
+const normalizeRituals = (value: unknown): Outcome<RitualState | undefined> => {
+  const path = 'rituals';
+  const inspected = inspectRecord(value, RITUAL_KEYS, 'invalid_field', path);
+  if (inspected.ok === false) return inspected;
+  const raw = inspected.value;
+  const out: RitualState = {};
+  for (const key of ['ward', 'tearsSpent'] as const) {
+    if (!own(raw, key)) continue;
+    const checked = booleanValue(readOwn(raw, key), `${path}.${key}`);
+    if (checked.ok === false) return checked;
+    out[key] = checked.value;
+  }
+  for (const [key, max] of [['tearsFailsLeft', TEARS_FAILS], ['pactRollsLeft', PACT_ROLLS], ['pactDebt', PACT_DEBT], ['sacrificesUsed', SACRIFICE_USES_PER_RUN], ['wardCooldown', WARD_COOLDOWN_ROLLS]] as const) {
+    if (!own(raw, key)) continue;
+    const checked = boundedInteger(readOwn(raw, key), `${path}.${key}`, 0, max);
+    if (checked.ok === false) return checked;
+    out[key] = checked.value;
+  }
+  if (own(raw, 'invocations')) {
+    const sub = inspectRecord(readOwn(raw, 'invocations'), new Set(['ids', 'rollsLeft']), 'invalid_field', `${path}.invocations`);
+    if (sub.ok === false) return sub;
+    const ids = inspectArray(readOwn(sub.value, 'ids'), 'invalid_field', `${path}.invocations.ids`, INVOCATIONS.length);
+    if (ids.ok === false) return ids;
+    if (ids.value.length === 0 || new Set(ids.value).size !== ids.value.length
+      || !ids.value.every(id => INVOCATIONS.some(i => i.id === id))) return invalid('invalid_field', `${path}.invocations.ids`);
+    const left = boundedInteger(readOwn(sub.value, 'rollsLeft'), `${path}.invocations.rollsLeft`, 0, INVOCATION_ROLLS);
+    if (left.ok === false) return left;
+    out.invocations = { ids: ids.value as Invocation['id'][], rollsLeft: left.value };
+  }
+  if (own(raw, 'barrows')) {
+    const sub = inspectRecord(readOwn(raw, 'barrows'), new Set(['brother', 'rollsLeft', 'failed', 'fateCost']), 'invalid_field', `${path}.barrows`);
+    if (sub.ok === false) return sub;
+    const brother = BARROWS_BROTHERS.find(b => b.id === readOwn(sub.value, 'brother'));
+    if (!brother) return invalid('invalid_field', `${path}.barrows.brother`);
+    const left = boundedInteger(readOwn(sub.value, 'rollsLeft'), `${path}.barrows.rollsLeft`, 0, BARROWS_ROLLS);
+    if (left.ok === false) return left;
+    const failed = boundedInteger(readOwn(sub.value, 'failed'), `${path}.barrows.failed`, 0, BARROWS_ROLLS);
+    if (failed.ok === false) return failed;
+    const fateCost = boundedInteger(readOwn(sub.value, 'fateCost'), `${path}.barrows.fateCost`, 0, MAX_COUNTER);
+    if (fateCost.ok === false) return fateCost;
+    out.barrows = { brother: brother.id, rollsLeft: left.value, failed: failed.value, fateCost: fateCost.value };
+  }
+  return { ok: true, value: tidyRituals(out) };
+};
+
 /** Claimed pets: known pet ids, each once. */
 const normalizePetsClaimed = (value: unknown): Outcome<number[]> => {
   if (!Array.isArray(value) || value.length > PET_IDS.length) return invalid('invalid_field', 'petsClaimed');
@@ -958,12 +1023,13 @@ const TOP_LEVEL_KEYS = new Set([
   'collectionLogIdentity',
   'runeProofProgress',
   'version', 'runId', 'runRevision', 'keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'activeBuff',
-  'bossStandardKeysAwarded', 'clueStandardKeysAwarded',
+  'bossStandardKeysAwarded', 'clueStandardKeysAwarded', 'minigameStandardKeysAwarded',
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
   'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
   'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'fateCompensation',
-  'petCompensation', 'petsClaimed', 'keysOwed',
+  'petCompensation', 'petsClaimed', 'keysOwed', 'rituals',
+  'achievementsClaimed', 'achievementTitle', 'freeRituals', 'freeClarity',
 ]);
 
 export const parseAndMigrateSave = (
@@ -1097,6 +1163,35 @@ const normalizeState = (
     );
   }
 
+  // Added after save v5 without a version bump: a save without it starts every
+  // minigame's reserve full.
+  const selectedMinigameProgress = readPreferred(input, defaultRecord, 'minigameStandardKeysAwarded');
+  let minigameStandardKeysAwarded: Record<string, number> = {};
+  if (selectedMinigameProgress.present && sourceVersion >= 3) {
+    const strictMinigameProgress = inspectRecord(
+      selectedMinigameProgress.value,
+      null,
+      'invalid_field',
+      'minigameStandardKeysAwarded',
+    );
+    if (strictMinigameProgress.ok === false) return strictMinigameProgress;
+    for (const name of Object.getOwnPropertyNames(strictMinigameProgress.value)) {
+      const path = pathOf('minigameStandardKeysAwarded', name);
+      // A minigame that leaves the list has no reserve left to count.
+      if (!isKnownVanillaMinigame(name)) continue;
+      const awarded = boundedInteger(
+        readOwn(strictMinigameProgress.value, name),
+        path,
+        0,
+        vanillaMinigameKeyStage(name, 0).cap,
+      );
+      if (awarded.ok === false) return awarded;
+      minigameStandardKeysAwarded[name] = awarded.value;
+    }
+  } else if (selectedMinigameProgress.present) {
+    minigameStandardKeysAwarded = normalizeMinigameStandardKeysAwarded(selectedMinigameProgress.value);
+  }
+
   const selectedBuff = readPreferred(input, defaultRecord, 'activeBuff');
   if (!selectedBuff.present
     || (selectedBuff.value !== 'NONE' && selectedBuff.value !== 'LUCK' && selectedBuff.value !== 'GREED')) {
@@ -1166,6 +1261,7 @@ const normalizeState = (
     fateCompensation: storedCompensation ?? notEligibleFateCompensation(),
     petCompensation: storedPetCompensation ?? petCompensationOffer(history.value),
     bossStandardKeysAwarded,
+    minigameStandardKeysAwarded,
     clueStandardKeysAwarded,
     activeBuff: selectedBuff.value,
     unlocks: unlocks.value.value,
@@ -1236,8 +1332,9 @@ const normalizeState = (
         // valid in older saves, so the reveal must still load and complete.
         && !(p.table === TableType.POH && RETIRED_POH_ITEMS.includes(item))
         && !(p.table === TableType.STORAGE && RETIRED_STORAGE_ITEMS.includes(item))
-        // A retired boss's reveal loads so its refund can settle it.
-        && !(p.table === TableType.BOSSES && RETIRED_BOSSES.includes(item)))
+        // A retired boss's or minigame's reveal loads so its refund can settle it.
+        && !(p.table === TableType.BOSSES && RETIRED_BOSSES.includes(item))
+        && !(p.table === TableType.MINIGAMES && RETIRED_MINIGAMES.includes(item)))
       || (p.costType !== 'key' && p.costType !== 'chaosKey') || p.cost !== 1) return invalid('invalid_field', 'pendingUnlock');
     state.pendingUnlock = { id: p.id, table: p.table as TableType, item, costType: p.costType, cost: 1 };
     pendingMerged = item !== p.item;
@@ -1261,6 +1358,37 @@ const normalizeState = (
     const checked = normalizePetsClaimed(readOwn(input, 'petsClaimed'));
     if (checked.ok === false) return checked;
     if (checked.value.length > 0) state.petsClaimed = checked.value;
+  }
+  // Absent means the run predates achievement rewards (see GameState), so an
+  // empty list is kept rather than dropped.
+  if (own(input, 'achievementsClaimed') && readOwn(input, 'achievementsClaimed') !== undefined) {
+    const checked = normalizeAchievementsClaimed(readOwn(input, 'achievementsClaimed'));
+    if (checked.ok === false) return checked;
+    state.achievementsClaimed = checked.value;
+  }
+  if (own(input, 'achievementTitle') && readOwn(input, 'achievementTitle') !== undefined) {
+    const checked = stringValue(readOwn(input, 'achievementTitle'), 'achievementTitle', MAX_IDENTIFIER_CHARS);
+    if (checked.ok === false) return checked;
+    if (checked.value.length > 0) state.achievementTitle = checked.value;
+  }
+  if (own(input, 'freeRituals') && readOwn(input, 'freeRituals') !== undefined) {
+    const raw = readOwn(input, 'freeRituals');
+    if (!Array.isArray(raw) || raw.length > MAX_COUNTER
+      || !raw.every((id) => typeof id === 'string' && (FREE_RITUAL_IDS as readonly string[]).includes(id))) {
+      return invalid('invalid_field', 'freeRituals');
+    }
+    if (raw.length > 0) state.freeRituals = [...raw];
+  }
+  // A preview build of achievement rewards gave free Rituals of Clarity as a count.
+  if (own(input, 'freeClarity') && readOwn(input, 'freeClarity') !== undefined) {
+    const checked = boundedInteger(readOwn(input, 'freeClarity'), 'freeClarity', 0, MAX_COUNTER);
+    if (checked.ok === false) return checked;
+    if (checked.value > 0) state.freeRituals = [...(state.freeRituals ?? []), ...Array<string>(checked.value).fill('LUCK')];
+  }
+  if (own(input, 'rituals')) {
+    const checked = normalizeRituals(readOwn(input, 'rituals'));
+    if (checked.ok === false) return checked;
+    if (checked.value) state.rituals = checked.value;
   }
   if (own(input, 'keysOwed')) {
     const checked = boundedInteger(readOwn(input, 'keysOwed'), 'keysOwed', 0, MAX_COUNTER);

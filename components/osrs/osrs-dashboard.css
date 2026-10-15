@@ -18,6 +18,7 @@ html[data-ui="osrs"] .osrs-dash-badge {
   background: var(--osrs-inner, #2e271e); border: 1px solid #000; text-shadow: 1px 1px 0 #000; white-space: nowrap;
 }
 html[data-ui="osrs"] .osrs-dash-badge.is-omni { color: var(--osrs-purple, #c77dff); }
+html[data-ui="osrs"] .osrs-dash-badge.is-title { color: var(--osrs-orange, #ff981f); cursor: pointer; }
 html[data-ui="osrs"] .osrs-dash-tools { margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
 html[data-ui="osrs"] .osrs-dash-tools > .osrs-btn { height: 28px; padding: 0 9px; white-space: nowrap; }
 /* The Rival button arrives with its classic classes: draw it as a stone button. */

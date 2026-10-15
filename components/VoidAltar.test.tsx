@@ -30,6 +30,7 @@ beforeEach(() => {
     performRitual: vi.fn(),
     performGambit: vi.fn(),
     performCartographer: vi.fn(),
+    castRitual: vi.fn(),
   };
 });
 
@@ -68,7 +69,7 @@ describe('VoidAltar buffs', () => {
 
     const greed = screen.getByRole('button', { name: /Ritual of Greed/ });
     expect((greed as HTMLButtonElement).disabled).toBe(true);
-    expect(within(greed).getByText('Other buff active')).toBeTruthy();
+    expect(within(greed).getByText('Another roll ritual is active')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Close the Void Altar' })).toBeTruthy();
   });
 });
@@ -124,5 +125,63 @@ describe('VoidAltar unaffordable rituals', () => {
     const greed = screen.getByRole('button', { name: /Ritual of Greed/ });
     expect(greed.className).toContain('opacity-50');
     expect(within(greed).queryByText(/^Need /)).toBeNull();
+  });
+});
+
+describe('VoidAltar newer rituals', () => {
+  it('offers the Pact for free, and holds it back while Zamorak is still owed', async () => {
+    game.current = { ...game.current, gameModeId: 'vanilla', fatePoints: 0 };
+    const { VoidAltar } = await import('./VoidAltar');
+    const { unmount } = render(<VoidAltar onClose={vi.fn()} />);
+    const pact = screen.getByRole('button', { name: /Zamorak's Pact/ }) as HTMLButtonElement;
+    expect(within(pact).getByText('Free now, pay later')).toBeTruthy();
+    expect(pact.disabled).toBe(false);
+    fireEvent.click(pact);
+    expect(game.current.castRitual).toHaveBeenCalledWith('PACT');
+    unmount();
+
+    game.current = { ...game.current, rituals: { pactDebt: 25 } };
+    render(<VoidAltar onClose={vi.fn()} />);
+    const owed = screen.getByRole('button', { name: /Zamorak's Pact/ }) as HTMLButtonElement;
+    expect(owed.disabled).toBe(true);
+    expect(within(owed).getByText('Debt: 25 Fate')).toBeTruthy();
+    // The gods don't share: Saradomin waits while Zamorak is owed.
+    const ward = screen.getByRole('button', { name: /Saradomin's Ward/ }) as HTMLButtonElement;
+    expect(ward.disabled).toBe(true);
+    expect(within(ward).getByText('Zamorak is active')).toBeTruthy();
+  });
+
+  it('lets the player pick invocations before paying', async () => {
+    game.current = { ...game.current, gameModeId: 'vanilla', fatePoints: 30 };
+    const { VoidAltar } = await import('./VoidAltar');
+    render(<VoidAltar onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /Amascut's Invocations/ }));
+    const invoke = screen.getByRole('button', { name: /Invoke/ }) as HTMLButtonElement;
+    expect(invoke.disabled).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: /Blood Price/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Walk the Path/ }));
+    expect(screen.getByText('Omni-Key chance +2% on your next 3 rolls')).toBeTruthy();
+    fireEvent.click(invoke);
+    expect(game.current.castRitual).toHaveBeenCalledWith('INVOCATIONS', ['WALK_THE_PATH', 'BLOOD_PRICE']);
+  });
+
+  it('only offers Blood Price with 15 Fate left after the ritual', async () => {
+    game.current = { ...game.current, gameModeId: 'vanilla', fatePoints: 24 };
+    const { VoidAltar } = await import('./VoidAltar');
+    render(<VoidAltar onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /Amascut's Invocations/ }));
+    const blood = screen.getByRole('button', { name: /Blood Price/ }) as HTMLButtonElement;
+    expect(blood.disabled).toBe(true);
+    expect(within(blood).getByText('Needs 15 Fate left after the ritual')).toBeTruthy();
+    expect((screen.getByRole('button', { name: /Walk the Path/ }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('keeps Sacrifice locked until the run has made 200 rolls', async () => {
+    game.current = { ...game.current, gameModeId: 'vanilla', fatePoints: 30 };
+    const { VoidAltar } = await import('./VoidAltar');
+    render(<VoidAltar onClose={vi.fn()} />);
+    const sacrifice = screen.getByRole('button', { name: /Sacrifice/ }) as HTMLButtonElement;
+    expect(sacrifice.disabled).toBe(true);
+    expect(within(sacrifice).getByText('Opens after 200 rolls (0 so far)')).toBeTruthy();
   });
 });

@@ -47,6 +47,8 @@ export const POH_LIST = [
 export const RETIRED_POH_ITEMS = ['Aquarium'];
 /** Bosses taken off the boss table; a run that owned one gets its Key back (utils/areaUnlockMigration.ts). */
 export const RETIRED_BOSSES = ['Galvek'];
+/** Minigames taken off the minigame table because ironmen can't take part; a run that owned one gets its Key back (utils/areaUnlockMigration.ts). */
+export const RETIRED_MINIGAMES = ['Rat Pits'];
 export const ROLLABLE_POH_ITEMS = POH_LIST.filter(item => !RETIRED_POH_ITEMS.includes(item));
 
 export const MERCHANTS_LIST = [
@@ -161,7 +163,7 @@ export const MINIGAMES_LIST = [
   'Mahogany Homes', 'Mastering Mixology', 'Mess', 'Pyramid Plunder', 'Rogues\' Den', 
   'Sorceress\'s Garden', 'Stealing Artefacts', 'Tithe Farm', 'Trouble Brewing', 
   'Vale Totems', 'Volcanic Mine', 'Shades of Mort\'ton', 'Tai Bwo Wannai Cleanup', 
-  'Warriors\' Guild', 'Burthorpe Games Room', 'Forestry', 'Rat Pits', 'Tears of Guthix',
+  'Warriors\' Guild', 'Burthorpe Games Room', 'Forestry', 'Tears of Guthix',
   'Brimhaven Agility Arena', 'Hallowed Sepulchre', 'Barracuda Trials'
 ];
 

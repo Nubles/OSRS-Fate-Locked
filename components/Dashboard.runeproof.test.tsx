@@ -20,6 +20,7 @@ vi.mock('../context/GameContext', async () => {
   return {
     ...actual,
     useGame: () => ({
+      settleAchievements: () => {},
       ...actual.initialState,
       unlocks: freshUnlocks(),
       gameModeId: 'vanilla',

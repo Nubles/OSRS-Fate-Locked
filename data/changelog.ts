@@ -37,9 +37,9 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-13-osrs-layout',
+    id: '2026-10-15-osrs-layout',
     title: 'New OSRS layout',
-    date: '2026-10-13',
+    date: '2026-10-15',
     sections: {
       added: [
         "Turn on the OSRS layout in Settings to see the tracker as real game interfaces. The classic layout stays the default, and phones keep it.",
@@ -48,6 +48,63 @@ export const CHANGELOG_RELEASES = [
         "Unlocks pop up like a level-up message, and your history sits in a chatbox under the page.",
         "Right-click anything to Examine it. Pick the 2007 or 2010 interface, a fixed game window, or bigger text.",
         "Unlock reveals show the game's own 3D models, and OSRS reveals map each area and bank. The OSRS world map previews what an Omni-Key opens.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-15-achievement-rewards',
+    title: 'More achievements, now with rewards',
+    date: '2026-10-15',
+    sections: {
+      added: [
+        "There are now over 180 achievements, including ones for Key rolls, Void Altar rituals, pets, Slayer, clues, minigame stashes and unlock tables.",
+        "Every achievement is a title you can wear on your dashboard, and it stays earned even if a Sacrifice takes tiers away.",
+        "Every achievement gives 1 to 25 Fate. The hardest also give a Chaos Key, and the biggest a free ritual picked by fate.",
+        "Achievements raise their activity's Key chance by 0.2% to 0.5% each, from levels to bosses. Vanilla minigame stashes keep their own odds.",
+      ],
+      changed: [
+        "Achievements you'd already earned pay once when you open your run: their free rituals, and their Fate up to 50.",
+        "Apprentice now needs a skill you unlocked with a Key. Hitpoints doesn't count, since every run starts with it.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-15-minigame-keys',
+    title: 'Minigames hold a few Keys each',
+    date: '2026-10-15',
+    sections: {
+      balance: [
+        "In Vanilla, each minigame you've unlocked now holds 1 to 3 Keys, then stops rolling, like bosses.",
+        'Minigames with no Collection Log page hold 3 Keys, and ones with a big log page hold fewer.',
+        "Short runs roll at low odds and long runs at high odds, so each minigame's first Key takes about an hour.",
+        "Each Key a minigame gives halves the chance of its next one. A miss under 5% doesn't give Fate.",
+        "Rat Pits is off the minigame table, since ironmen can't take part. Mage Arena gives one guaranteed Key, Tears of Guthix one Key at 50%.",
+        'Minigames you haven\'t unlocked no longer roll. Chunked runs keep rolling every minigame at 10%.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-15-ritual-pictures',
+    title: 'Ritual pictures show up again',
+    date: '2026-10-15',
+    sections: {
+      fixed: [
+        "Ritual animations now show every picture, like the Barrows brother's armour and Tumeken's shadow, instead of leaving blank spaces.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-15-new-rituals',
+    title: 'Six new rituals at the Void Altar',
+    date: '2026-10-15',
+    sections: {
+      added: [
+        "Saradomin's Ward (30 Fate): your next Key on a boss, minigame, guild or bank only lands on one you can use right now. You can cast it again 25 rolls later.",
+        'Tears of Guthix (10 Fate): your next 10 failed rolls give double Fate, until a roll lands. Once per dry spell.',
+        "Zamorak's Pact (free): +15% odds on your next 3 rolls, then Zamorak takes the next 40 Fate you'd earn.",
+        "Amascut's Invocations (10 Fate): pick handicaps for your next 3 rolls, and each one raises your Omni-Key chance.",
+        'Barrows Chest (20 Fate): fate picks a brother, and his set effect powers your next 3 rolls.',
+        'Sacrifice (25 Fate): give up the top tier of 3 random skills or gear slots for an Omni-Key. Opens after 200 rolls, 3 uses per run.',
       ],
     },
   },

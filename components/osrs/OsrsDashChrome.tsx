@@ -19,6 +19,8 @@ export interface OsrsDashTab { id: string; label: string }
 interface HeaderProps {
   modeName: string;
   modeDescription?: string;
+  /** The achievement title the player wears, if any. */
+  wornTitle?: { title: string; description: string };
   specialKeys: number;
   goalPlanner: { label: string; title: string };
   onGoalPlanner: () => void;
@@ -33,7 +35,7 @@ interface HeaderProps {
 }
 
 export const OsrsDashHeader: React.FC<HeaderProps> = ({
-  modeName, modeDescription, specialKeys, goalPlanner, onGoalPlanner, onAchievements, onForecast,
+  modeName, modeDescription, wornTitle, specialKeys, goalPlanner, onGoalPlanner, onAchievements, onForecast,
   onFateThread, rival, onKillPlanner, onShareRun, completionPercent,
 }) => (
   <div className="osrs-dash-head shrink-0">
@@ -46,6 +48,16 @@ export const OsrsDashHeader: React.FC<HeaderProps> = ({
       Progression
     </h2>
     <span className="osrs-dash-badge" title={modeDescription}>{modeName}</span>
+    {wornTitle && (
+      <button
+        type="button"
+        className="osrs-dash-badge is-title"
+        onClick={onAchievements}
+        title={`Your title, from the achievement "${wornTitle.title}": ${wornTitle.description}`}
+      >
+        {wornTitle.title}
+      </button>
+    )}
     {specialKeys > 0 && (
       <span className="osrs-dash-badge is-omni">
         <img className="osrs-px" src={itemSrc('omni_key')} alt="" aria-hidden="true" width={18} height={16} />

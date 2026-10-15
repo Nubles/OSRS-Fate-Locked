@@ -1,6 +1,7 @@
 
 import type { GameModeRules } from './config/gameModes';
 import type { KeyRollContext } from './config/vanillaKeyEconomy';
+import type { RitualState } from './utils/ritualEffects';
 
 export enum DropSource {
   QUEST_NOVICE = 'Quest (Novice)',
@@ -118,7 +119,7 @@ export interface LogEntry {
   // outcomes; the bare 'ROLL' literal was a footgun (consumers filtered for
   // it expecting all rolls and got nothing). Use isRollEntry() in utils
   // instead of comparing to 'ROLL'.
-  type: 'UNLOCK' | 'PITY' | 'ALTAR' | 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'LEVEL_UP' | 'XTREME_MILESTONE' | 'COMPENSATION' | 'PET';
+  type: 'UNLOCK' | 'PITY' | 'ALTAR' | 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'LEVEL_UP' | 'XTREME_MILESTONE' | 'COMPENSATION' | 'PET' | 'ACHIEVEMENT';
   source?: string;
   result?: 'SUCCESS' | 'FAIL';
   rollValue?: number;
@@ -259,6 +260,8 @@ export interface GameState {
   chaosKeys: number;
   /** Vanilla boss standard keys already awarded, by canonical boss name. */
   bossStandardKeysAwarded?: Record<string, number>;
+  /** Vanilla minigame standard keys already awarded, by minigame name. */
+  minigameStandardKeysAwarded?: Record<string, number>;
   /** Vanilla clue standard keys already awarded across every clue tier. */
   clueStandardKeysAwarded?: number;
   fatePoints: number;
@@ -271,6 +274,8 @@ export interface GameState {
   /** Standard Keys the run gave up in the pet compensation: the next ones it earns pay these first. */
   keysOwed?: number;
   activeBuff: 'NONE' | 'LUCK' | 'GREED';
+  /** The newer Void Altar rituals still running (Ward, Tears, Pact, Invocations, Barrows, Mimic) and Sacrifices used. */
+  rituals?: RitualState;
   unlocks: UnlockState;
   history: LogEntry[];
   animationsEnabled?: boolean;
@@ -313,6 +318,16 @@ export interface GameState {
   xtremeMilestoneClaimed?: number;
   /** Same insurance as xtremeMilestoneClaimed, for the 'chunked' mode — see CHUNKED_MILESTONE_INTERVAL. */
   chunkedMilestoneClaimed?: number;
+  /**
+   * Achievement ids whose reward is settled (paid, or already earned when
+   * rewards arrived). Absent on a run from before achievement rewards: its
+   * first settlement records what it has earned so far and pays nothing.
+   */
+  achievementsClaimed?: string[];
+  /** The earned achievement the player shows as their title. */
+  achievementTitle?: string;
+  /** Free rituals from achievements, by ritual id (one entry each); a cast uses one before any Fate. */
+  freeRituals?: string[];
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

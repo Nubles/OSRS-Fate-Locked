@@ -119,6 +119,8 @@ export const GUIDES: Record<string, Guide> = {
       'Failed rolls build Fate; your next successful roll resets it to 0, so spend it first.',
       'Clarity rolls your next Key roll twice and keeps the better. Greed tries to double your next Key. Chaos buys a Chaos Key. Transmutation trades 5 Keys for an Omni-Key.',
       'The Void Gambit stakes all your Fate on a coin flip. In Chunked, the Cartographer lets you choose your next chunk.',
+      "Saradomin, Guthix and Zamorak each have a ritual, but the gods don't share: only one can be active at a time.",
+      'Invocations and the Barrows Chest power your next few rolls, and Sacrifice trades 3 top tiers for an Omni-Key once a run has 200 rolls.',
     ],
   },
   ACHIEVEMENTS: {
@@ -126,8 +128,10 @@ export const GUIDES: Record<string, Guide> = {
     blurb: 'Milestones that reward you for how your run unfolds.',
     bullets: [
       'Browse locked and unlocked achievements across categories.',
-      'They unlock by themselves as you reach gear, skill, area and luck milestones.',
-      'Track your overall completion at a glance.',
+      'They unlock by themselves as you reach quest, skill, area, gear, roll, ritual, unlock and pet milestones.',
+      'Each one is a title you can wear. Each also gives Fate (1 to 5 for first steps, up to 25 for the hardest), and the biggest a free random ritual.',
+      'Achievements for levels, quests, diaries, Combat Achievements, the collection log, Slayer, clues, bosses and minigames also raise that activity\'s Key chance: 0.2% for first steps, 0.3% or 0.5% for bigger ones. Vanilla minigame stashes keep their own odds.',
+      'Achievements earned before rewards arrived pay once: their free rituals, and their Fate up to the pity line.',
     ],
   },
   FORECAST: {

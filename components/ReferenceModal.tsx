@@ -6,7 +6,7 @@ import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
-import { andList, CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, ritualEffect, type Ritual } from '../config/economy';
+import { andList, CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, MINIGAME_MISS_FATE_MIN_RATE, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { DropSource, TableType } from '../types';
 import { DROP_RATES } from '../config/rules';
@@ -41,6 +41,12 @@ const ALTAR_UI: Record<string, { icon: any; color: string; border: string }> = {
   GAMBIT:       { icon: Skull,    color: 'text-fuchsia-400', border: 'border-fuchsia-500/30' },
   CARTOGRAPHER: { icon: Map,      color: 'text-emerald-400', border: 'border-emerald-500/30' },
   TRANSMUTE: { icon: Sparkles, color: 'text-purple-400', border: 'border-purple-500/30' },
+  WARD:        { icon: Shield,   color: 'text-sky-300',     border: 'border-sky-400/30' },
+  TEARS:       { icon: Activity, color: 'text-cyan-400',    border: 'border-cyan-500/30' },
+  PACT:        { icon: Zap,      color: 'text-red-500',     border: 'border-red-600/30' },
+  INVOCATIONS: { icon: Scroll,   color: 'text-amber-300',   border: 'border-amber-400/30' },
+  BARROWS:     { icon: Package,  color: 'text-stone-300',   border: 'border-stone-400/30' },
+  SACRIFICE:   { icon: Key,      color: 'text-rose-400',    border: 'border-rose-500/30' },
 };
 
 export const formatVanillaBossSchedule = (bossClass: string, rates: readonly number[]): string => {
@@ -351,7 +357,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         {RITUALS.map(r => (
                                             <li key={r.id} className="flex justify-between gap-2">
                                                 <span>{r.name}{r.chunkedOnly ? ' (Chunked only)' : ''}</span>
-                                                <span className="font-mono text-gray-300 shrink-0">{r.keyCost ? `${r.keyCost} Keys` : r.stakesAllFate ? `All Fate (min ${ritualCost(r.id)})` : `${ritualCost(r.id)} Fate`}</span>
+                                                <span className="font-mono text-gray-300 shrink-0">{r.keyCost ? `${r.keyCost} Keys` : r.stakesAllFate ? `All Fate (min ${ritualCost(r.id)})` : r.fateCost === 0 ? 'Free, pay later' : `${ritualCost(r.id)} Fate`}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -398,8 +404,8 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="bg-[#222] p-6 rounded-xl border border-white/5">
                                 <h3 className="text-gray-200 font-bold uppercase tracking-widest mb-4">What Differs Between the Modes</h3>
                                 <ul className="space-y-3 text-sm text-gray-400">
-                                    <li><b className="text-amber-300">Vanilla:</b> you unlock named areas, and all of Misthalin is free from the start. Each boss pays a few Keys and then stops, your first three clue Keys roll at no less than {andList(CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`))}, and Keys only unlock bosses and minigames you can reach.</li>
-                                    <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, next to land you hold. Every boss kill rolls, with no limit. While you hold only your start chunk, every {CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key.</li>
+                                    <li><b className="text-amber-300">Vanilla:</b> you unlock named areas, and all of Misthalin is free from the start. Each boss and each unlocked minigame pays a few Keys and then stops, your first three clue Keys roll at no less than {andList(CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`))}, and Keys only unlock bosses and minigames you can reach.</li>
+                                    <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, next to land you hold. Every boss kill and finished minigame rolls, with no limit. While you hold only your start chunk, every {CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key.</li>
                                     <li><b className="text-gray-200">Both:</b> a Pity Key at {SHARED_MODE_RULES.pityThreshold} Fate Points, a {SHARED_MODE_RULES.omniChanceBase}% base Omni-Key chance, the same ritual prices, and every bank locked until you unlock it.</li>
                                 </ul>
                             </div>
@@ -436,7 +442,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <ul className="text-sm text-gray-300 space-y-1">
                                     {Object.entries(VANILLA_BOSS_KEY_RATES).map(([bossClass, rates]) => <li key={bossClass}>{formatVanillaBossSchedule(bossClass, rates)}</li>)}
                                 </ul>
-                                <p className="text-xs text-gray-400 mt-3">Each boss pays its Keys in order, at these odds, then its kills stop rolling. Your first three clue Keys, from any tier, roll at no less than <b>{CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`).join(' → ')}</b>; after that each tier uses its normal rate.</p>
+                                <h3 className="font-bold text-amber-300 mt-4 mb-2">Vanilla: Keys per minigame</h3>
+                                <p className="text-sm text-gray-300">Each unlocked minigame holds 1 to 3 Keys: 3 with no Collection Log page, fewer when its log already pays a few. The first Key's chance per run is the run's length in minutes ÷ 60, so it takes about an hour of play, and each Key halves the next one's chance. A miss under {MINIGAME_MISS_FATE_MIN_RATE}% gives no Fate. Mage Arena pays one guaranteed Key, and Tears of Guthix one Key at 50% a visit. Farm Keys → Activities shows each minigame's odds.</p>
+                                <p className="text-xs text-gray-400 mt-3">Each boss and each unlocked minigame pays its Keys in order, at these odds, then it stops rolling. Your first three clue Keys, from any tier, roll at no less than <b>{CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`).join(' → ')}</b>; after that each tier uses its normal rate.</p>
                             </div>
 
                             <div className="bg-[#222] rounded-xl border border-white/5 overflow-hidden">
@@ -555,7 +563,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                             <h3 className={`${ui.color} font-bold text-lg mb-2`}>{r.name}</h3>
                                             <p className="text-sm text-gray-300 mb-4">{r.tagline}{r.chunkedOnly ? ' (Chunked mode only)' : ''}</p>
                                             <div className="text-xs font-mono bg-black/40 p-3 rounded border border-white/5 text-gray-400">
-                                                Cost: <span className="text-white font-bold">{r.fateCost ? `${ritualCost(r.id)} Fate Points` : `${r.keyCost} Keys`}</span>
+                                                Cost: <span className="text-white font-bold">{r.keyCost ? `${r.keyCost} Keys` : r.fateCost === 0 ? 'Free now, pay later' : `${ritualCost(r.id)} Fate Points`}</span>
                                                 <br/>
                                                 Effect: {ritualText(r.id)}
                                             </div>

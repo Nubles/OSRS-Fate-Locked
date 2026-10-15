@@ -123,6 +123,8 @@ export type ReplayRules = Pick<GameModeRules, 'pityEnabled' | 'pityThreshold'>;
 // rewrite consistently — but catches naive tampering and any inconsistency
 // introduced by hand-editing isolated fields. `rules` is the run's mode: with
 // pity off Fate has no cap, otherwise the cap is the mode's pity threshold.
+const NEWER_RITUALS = new Set(['WARD', 'TEARS', 'PACT', 'INVOCATIONS', 'BARROWS', 'SACRIFICE']);
+
 export const replayInvariants = (history: LogEntry[], startKeys = 3, rules?: ReplayRules): { violations: InvariantViolation[]; final: ReplayState } => {
   const recordedFateAward = (entry: LogEntry): number => {
     const award = entry.meta?.fatePointsEarned;
@@ -140,8 +142,14 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3, rules?: Rep
   const modeThreshold = validPityThreshold(rules?.pityThreshold);
   // A Greed success says "(Doubled)" when it paid 2 Standard Keys: a plain success
   // always could, an Omni-Key roll only since 2 October 2026.
+  // Karil's second Key (a Barrows Chest roll) says "(Second Key)".
   const successStandardKeys = (entry: LogEntry): number =>
-    entry.details && /\(Doubled\)/.test(entry.message) ? 2 : 1;
+    entry.details && /\((Doubled|Second Key)\)/.test(entry.message) ? 2 : 1;
+  // Blood Price (Amascut's Invocations) takes Fate from the bar after a miss.
+  const recordedFateLost = (entry: LogEntry): number => {
+    const lost = entry.meta?.fatePointsLost;
+    return typeof lost === 'number' && Number.isSafeInteger(lost) && lost >= 0 ? lost : 0;
+  };
   const recordedPityThreshold = (entry: LogEntry): number =>
     validPityThreshold(entry.meta?.pityThreshold) ?? modeThreshold ?? 50;
   // Without the mode (older callers), the first Pity Key's recorded threshold
@@ -210,12 +218,12 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3, rules?: Rep
       case 'PITY':
         s.chaosKeys += detectedSkillChaosAward(e);
         s.keys += 1;
-        s.fatePoints = Math.max(0, s.fatePoints + recordedFateAward(e) - recordedPityThreshold(e));
+        s.fatePoints = Math.max(0, s.fatePoints + recordedFateAward(e) - recordedPityThreshold(e) - recordedFateLost(e));
         s.rolls += 1; s.pities += 1;
         break;
       case 'ROLL_FAIL':
         s.chaosKeys += detectedSkillChaosAward(e);
-        s.fatePoints += recordedFateAward(e);
+        s.fatePoints += recordedFateAward(e) - recordedFateLost(e);
         s.rolls += 1;
         break;
       case 'UNLOCK': {
@@ -260,6 +268,10 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3, rules?: Rep
         } else if (isRitual('CARTOGRAPHER', /Cartographer/)) {
           s.fatePoints -= amount('fateCost', () => Number(e.details?.match(/for ([0-9]+) Fate/)?.[1] ?? legacyCost(40, 40)));
           s.unlocks += 1;
+        } else if (typeof ritual === 'string' && NEWER_RITUALS.has(ritual)) {
+          // The newer rituals always record what they cost; Sacrifice also pays an Omni-Key.
+          s.fatePoints -= amount('fateCost', 0);
+          if (ritual === 'SACRIFICE') s.specialKeys += amount('specialKeysAwarded', 1);
         }
         break;
       }
@@ -316,6 +328,17 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3, rules?: Rep
       case 'XTREME_MILESTONE':
         s.keys += typeof e.meta?.gained === 'number' ? e.meta.gained : 1;
         break;
+      // An achievement's Fate, filled up to the pity line at most; the entry records the balance after.
+      case 'ACHIEVEMENT': {
+        const chaosAwarded = e.meta?.chaosKeysAwarded;
+        if (typeof chaosAwarded === 'number' && Number.isSafeInteger(chaosAwarded) && chaosAwarded >= 0) s.chaosKeys += chaosAwarded;
+        const fateAfter = e.meta?.fatePointsAfter;
+        if (typeof fateAfter === 'number' && Number.isSafeInteger(fateAfter) && fateAfter >= 0) {
+          s.fatePoints = fateAfter;
+          fateEstimate = false;
+        }
+        break;
+      }
       // A new pet's Omni-Key. It isn't a roll: Fate stays as it was.
       case 'PET': {
         const awarded = e.meta?.specialKeysAwarded;

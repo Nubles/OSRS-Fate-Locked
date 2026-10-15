@@ -84,6 +84,8 @@ html[data-ui="osrs"] .osrs-wa-win .osrs-wa-sub {
   color: var(--osrs-tan);
   text-shadow: var(--osrs-shadow);
 }
+/* Extra header lines (worn title, Key chance boosts) run the full width under the first. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-sub-full { grid-column: 1 / -1; padding-top: 0; }
 html[data-ui="osrs"] .osrs-wa-win .osrs-wa-hchip {
   grid-column: 2;
   margin: 3px 6px;

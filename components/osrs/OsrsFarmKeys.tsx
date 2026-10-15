@@ -12,7 +12,10 @@ import {
   BRUTUS_BOSS_NAME,
   CLUE_ONBOARDING_MINIMUMS,
   effectiveVanillaClueRate,
+  minigameMissPaysFate,
+  MINIGAME_MISS_FATE_MIN_RATE,
   vanillaBossKeyStage,
+  vanillaMinigameKeyStage,
   type KeyRollContext,
 } from '../../config/vanillaKeyEconomy';
 import { VANILLA_BOSS_SEARCH_PLACEHOLDER, vanillaBossNote, vanillaBossSearchEmptyMessage } from '../vanillaBossSearchCopy';
@@ -105,6 +108,7 @@ const BLURBS: Record<FarmSubTab, string> = {
   ACTIVITIES: 'Every finished game rolls, with no limit.',
 };
 const VANILLA_BOSS_BLURB = 'Vanilla: each boss holds a small Key stash. Once it is empty, kills stop rolling.';
+const VANILLA_MINIGAME_BLURB = 'Vanilla: each minigame you unlock holds a small Key stash. Once it is empty, games stop rolling.';
 const LADDER_TITLES: Record<FarmSubTab, string> = {
   SLAYER: 'Slayer odds by tier', CLUES: 'Clue odds by tier', BOSSING: 'Boss odds, next Key', ACTIVITIES: 'Activity odds',
 };
@@ -175,7 +179,7 @@ interface CardModel {
 }
 
 const BonusTag: React.FC<{ bonus: number }> = ({ bonus }) =>
-  bonus ? <span title="Region passive modifier active" style={{ color: bonus > 0 ? '#00ff00' : '#ff3030', marginLeft: 3 }}>{bonus > 0 ? '+' : '−'}{Math.abs(bonus)}</span> : null;
+  bonus ? <span title="Bonus odds from region passives and achievements" style={{ color: bonus > 0 ? '#00ff00' : '#ff3030', marginLeft: 3 }}>{bonus > 0 ? '+' : '−'}{Math.abs(bonus)}</span> : null;
 
 /** Wide: the NPC card (FarmKeys-NPCs board). */
 const NpcCard: React.FC<{ card: CardModel }> = ({ card }) => {
@@ -559,7 +563,8 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   const { farmTab: subTab, bossQuery } = useKeysView();
   const [pending, setPending] = useState<PendingRoll | null>(null);
   const [otherOpen, setOtherOpen] = useState(false);
-  const { isVanilla, regionBonus, effectiveRate, handleRoll } = p;
+  const [minigameQuery, setMinigameQuery] = useState('');
+  const { isVanilla, boost, bonusFor, effectiveRate, handleRoll } = p;
 
   const roll = (speaker: Speaker, source: string, chance: number, context?: KeyRollContext) => (pt: RollPoint) => {
     setPending({ ...speaker, source, at: Date.now() });
@@ -594,7 +599,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       name: m.name,
       sub: m.subText,
       rate,
-      bonus: regionBonus,
+      bonus: bonusFor(m.source),
       art: isBossTask ? { kind: 'item', src: BOSS_TASK_IMG } : body ? { kind: 'body', src: body } : { kind: 'wiki', src: m.image },
       thumb: isBossTask ? { src: BOSS_TASK_IMG, item: true } : { src: head ?? m.image },
       status: ready,
@@ -608,10 +613,11 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
 
   const clueCards: CardModel[] = p.clues.map((c) => {
     const baseRate = DROP_RATES[c.source];
-    const rate = isVanilla ? effectiveVanillaClueRate(baseRate, p.clueKeysAwarded) : effectiveRate(c.source);
+    const vanillaRate = effectiveVanillaClueRate(baseRate, p.clueKeysAwarded);
+    const rate = isVanilla ? Math.min(100, vanillaRate + boost(c.source)) : effectiveRate(c.source);
     // The subline: the onboarding rate while it applies, else this tier's own
     // tally on the compact list (the wide card already shows it as its stats).
-    const onboarding = isVanilla && p.clueKeysAwarded < CLUE_ONBOARDING_MINIMUMS.length && rate > baseRate;
+    const onboarding = isVanilla && p.clueKeysAwarded < CLUE_ONBOARDING_MINIMUMS.length && vanillaRate > baseRate;
     const extra: CardModel['extra'] = onboarding
       ? { text: `${rate}% for your first Keys (${Math.min(p.clueKeysAwarded, CLUE_ONBOARDING_MINIMUMS.length)} of ${CLUE_ONBOARDING_MINIMUMS.length})`, color: '#00ff00' }
       : wide ? undefined : { text: tallyText(tally.get(c.source)), color: 'var(--osrs-tan, #c8b897)' };
@@ -622,7 +628,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       name,
       sub: 'Treasure Trails',
       rate,
-      bonus: isVanilla ? 0 : regionBonus,
+      bonus: isVanilla ? boost(c.source) : bonusFor(c.source),
       art: { kind: 'item', src: sprite },
       thumb: { src: sprite, item: true },
       status: ready,
@@ -645,7 +651,9 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       const bossClass = name === BRUTUS_BOSS_NAME ? 'brutus' as const : bossTier(name);
       const source = bossClass === 'brutus' ? TIER_SOURCE.low : TIER_SOURCE[bossClass];
       const stage = vanillaBossKeyStage(name, bossStandardKeysAwarded?.[name] ?? 0);
-      const rate = stage.currentRate ?? 0;
+      const baseRate = stage.currentRate ?? 0;
+      // Shown with achievement boosts; the roll passes the base rate and the reducer adds them.
+      const rate = stage.currentRate === null ? 0 : Math.min(100, stage.currentRate + boost(source));
       const note = vanillaBossNote(name, unlocks.quests);
       const body = npcBody(name);
       const head = npcHead(name);
@@ -660,7 +668,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
         name,
         sub: `${classLabel} boss · stash ${stage.cap} Key${stage.cap === 1 ? '' : 's'}`,
         rate: stage.capped ? (stage.rates[stage.rates.length - 1] ?? 0) : rate,
-        bonus: 0,
+        bonus: stage.capped ? 0 : boost(source),
         art: body ? { kind: 'body', src: body, big: isBigBody(name) } : { kind: 'wikiName', name },
         thumb: head ? { src: head } : { wikiName: name },
         status: stage.capped
@@ -680,18 +688,56 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
         examine: stage.capped
           ? `${classLabel} boss. All ${stage.cap} Key${stage.cap === 1 ? '' : 's'} paid: kills no longer roll for Keys or Fate.`
           : `${classLabel} boss. Stash of ${stage.cap} Key${stage.cap === 1 ? '' : 's'} at ${rates}. ${rate}% chance of a Key per kill now.`,
-        onRoll: roll({ who: name, head: head ?? KEY_IMG, headIsItem: !head }, source, rate, { kind: 'boss', bossName: name, bossClass }),
+        onRoll: roll({ who: name, head: head ?? KEY_IMG, headIsItem: !head }, source, baseRate, { kind: 'boss', bossName: name, bossClass }),
       };
     }) : [];
 
-  const activityCards: CardModel[] = p.activities.map((a) => {
+  // Vanilla: each unlocked minigame rolls from its own Key stash, like bosses.
+  const mq = minigameQuery.trim().toLowerCase();
+  const vanillaMinigameCards: CardModel[] = isVanilla ? p.vanillaMinigames
+    .filter((name) => name.toLowerCase().includes(mq))
+    .sort((left, right) => left.localeCompare(right))
+    .map((name) => {
+      const stage = vanillaMinigameKeyStage(name, p.minigameKeysAwarded?.[name] ?? 0);
+      const rate = stage.currentRate ?? 0;
+      const rates = stage.rates.map((r) => `${r}%`).join(', then ');
+      const noFate = !stage.capped && !minigameMissPaysFate(rate);
+      return {
+        id: name,
+        name,
+        sub: `Minigame · stash ${stage.cap} Key${stage.cap === 1 ? '' : 's'}`,
+        rate: stage.capped ? (stage.rates[stage.rates.length - 1] ?? 0) : rate,
+        bonus: 0,
+        art: { kind: 'item', src: MINIGAME_IMG },
+        thumb: { src: MINIGAME_IMG, item: true },
+        status: stage.capped
+          ? { text: 'Stash empty: games no longer roll', color: 'var(--osrs-muted, #8a7c66)' }
+          : ready,
+        extra: noFate ? { text: `Misses give no Fate under ${MINIGAME_MISS_FATE_MIN_RATE}%.`, color: '#ffff00' } : undefined,
+        stats: stage.capped
+          ? `${stage.awarded} of ${stage.cap} Keys paid`
+          : `Stash ${stage.cap} Key${stage.cap === 1 ? '' : 's'}: ${rates} · ${stage.awarded} paid`,
+        stash: { cap: stage.cap, awarded: stage.awarded },
+        disabled: stage.capped,
+        btn: stage.capped ? 'Spent' : 'Roll',
+        title: stage.capped
+          ? `${name}: This minigame no longer rolls for Keys or Fate. Its Collection Log items and pet still roll.`
+          : `${name}: ${gemFor(rate).label} (${gemFor(rate).name}), ${rate}% for the next Key`,
+        examine: stage.capped
+          ? `Minigame. All ${stage.cap} Key${stage.cap === 1 ? '' : 's'} paid: games no longer roll for Keys or Fate.`
+          : `Minigame. Stash of ${stage.cap} Key${stage.cap === 1 ? '' : 's'} at ${rates}. ${rate}% chance of a Key per game now.`,
+        onRoll: roll({ who: name, head: MINIGAME_IMG, headIsItem: true }, DropSource.ACTIVITY_MINIGAME, rate, { kind: 'minigame', minigameName: name }),
+      };
+    }) : [];
+
+  const activityCards: CardModel[] = isVanilla ? vanillaMinigameCards : p.activities.map((a) => {
     const rate = effectiveRate(a.source);
     return {
       id: a.name,
       name: a.name,
       sub: a.subText,
       rate,
-      bonus: regionBonus,
+      bonus: bonusFor(a.source),
       art: { kind: 'item', src: MINIGAME_IMG },
       thumb: { src: MINIGAME_IMG, item: true },
       status: ready,
@@ -707,7 +753,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
     SLAYER: p.slayers.length,
     CLUES: p.clues.length,
     BOSSING: isVanilla ? p.vanillaBosses.length : BOSSES_LIST.length,
-    ACTIVITIES: p.activities.length + 1,
+    ACTIVITIES: (isVanilla ? p.vanillaMinigames.length : p.activities.length) + 1,
   };
 
   const ladderRows: LadderRow[] = (() => {
@@ -717,7 +763,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       if (isVanilla) return buildLadder(vanillaBossCards.map((c) => ({ label: c.name, rate: c.rate, live: !c.disabled })));
       return TIER_ORDER.map((t) => ({ label: `${TIER_LABEL[t]}-tier`, rate: effectiveRate(TIER_SOURCE[t]), live: true })).sort((a, b) => a.rate - b.rate);
     }
-    return buildLadder(activityCards.map((c) => ({ label: c.name, rate: c.rate, live: true })));
+    return buildLadder(activityCards.map((c) => ({ label: c.name, rate: c.rate, live: !c.disabled })));
   })();
 
   const categoryButtons = (icons: Record<FarmSubTab, string>) => (
@@ -732,10 +778,13 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
     </div>
   );
 
-  const bossSearch = subTab === 'BOSSING' && (
+  const bossSearch = subTab === 'BOSSING' ? (
     <input className="okf-search" value={bossQuery} onChange={(e) => setBossQuery(e.target.value)}
       placeholder={isVanilla ? VANILLA_BOSS_SEARCH_PLACEHOLDER : 'Search bosses…'} aria-label="Search bosses" />
-  );
+  ) : subTab === 'ACTIVITIES' && isVanilla && p.vanillaMinigames.length > 0 ? (
+    <input className="okf-search" value={minigameQuery} onChange={(e) => setMinigameQuery(e.target.value)}
+      placeholder="Search your minigames…" aria-label="Search your minigames" />
+  ) : null;
 
   // The long all-boss list outside Vanilla, grouped by tier (both sizes).
   const tierGroups = !isVanilla && subTab === 'BOSSING' && (
@@ -757,7 +806,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
             </div>
             <div className={wide ? 'okf-group-rows' : undefined}>
               {list.map((name) => (
-                <BossRow key={name} name={name} rate={rate} bonus={regionBonus} tierLabel={TIER_LABEL[tier]}
+                <BossRow key={name} name={name} rate={rate} bonus={bonusFor(source)} tierLabel={TIER_LABEL[tier]}
                   onRoll={roll({ who: name, head: npcHead(name) ?? KEY_IMG, headIsItem: !npcHead(name) }, source, DROP_RATES[source])} />
               ))}
             </div>
@@ -772,7 +821,12 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
 
   const cards = subTab === 'SLAYER' ? slayerCards : subTab === 'CLUES' ? clueCards : subTab === 'BOSSING' ? vanillaBossCards : activityCards;
   const emptyBosses = subTab === 'BOSSING' && isVanilla && vanillaBossCards.length === 0
-    ? <div className="okf-empty">{vanillaBossSearchEmptyMessage(bossQuery)}</div> : null;
+    ? <div className="okf-empty">{vanillaBossSearchEmptyMessage(bossQuery)}</div>
+    : subTab === 'ACTIVITIES' && isVanilla && vanillaMinigameCards.length === 0
+      ? <div className="okf-empty">{p.vanillaMinigames.length === 0
+        ? 'Unlock a minigame from the Minigames table to give it a Key stash.'
+        : `No minigames match “${minigameQuery}”.`}</div>
+      : null;
   const petClaim = subTab === 'ACTIVITIES'
     ? <OsrsPetClaim claimed={petsClaimed} wide={wide} onClaim={(pet, e) => claimPet(pet, e.clientX, e.clientY)} /> : null;
   const other = otherOpen && (
@@ -811,7 +865,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
         <OsrsKeysTabs />
         {categoryButtons(WIDE_TAB_ICONS)}
         <div className="okf-blurb">
-          <span>{subTab === 'BOSSING' && isVanilla ? VANILLA_BOSS_BLURB : BLURBS[subTab]}</span>
+          <span>{subTab === 'BOSSING' && isVanilla ? VANILLA_BOSS_BLURB : subTab === 'ACTIVITIES' && isVanilla ? VANILLA_MINIGAME_BLURB : BLURBS[subTab]}</span>
           <span className="hint"><b>Gem = odds tier.</b> Same gem, same chance, on every tab.</span>
           {otherBtn}
         </div>

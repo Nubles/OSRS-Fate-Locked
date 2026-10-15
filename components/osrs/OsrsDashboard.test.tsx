@@ -30,6 +30,7 @@ vi.mock('../../context/GameContext', async () => {
       toggleRevealAll: vi.fn(),
       completeOnboarding: vi.fn(),
       saveNote: vi.fn(),
+      settleAchievements: () => {},
     }),
   };
 });

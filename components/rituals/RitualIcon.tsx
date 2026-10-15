@@ -9,6 +9,12 @@ const SPRITES: Record<Exclude<Ritual['id'], 'LUCK'>, SpriteName> = {
   GAMBIT: 'void_seal',
   CARTOGRAPHER: 'crandor_map',
   TRANSMUTE: 'omni_key',
+  WARD: 'saradomin_light',
+  TEARS: 'stone_bowl',
+  PACT: 'unholy_symbol',
+  INVOCATIONS: 'tumekens_shadow',
+  BARROWS: 'dharok_helm',
+  SACRIFICE: 'dragon_bones',
 };
 
 /** A ritual's picture on the Altar: an item sprite, or Clarity's hand-drawn die. */
