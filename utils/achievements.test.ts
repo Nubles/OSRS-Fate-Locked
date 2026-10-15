@@ -290,6 +290,23 @@ describe('achievements read from the run', () => {
     expect(earned.has('clues-100')).toBe(false);
   });
 
+  it('counts minigame runs, and Vanilla minigames whose Key reserve is empty', () => {
+    const run = (i: number, meta?: LogEntry['meta']): LogEntry =>
+      ({ id: `m${i}`, timestamp: i, type: 'ROLL_FAIL', message: 'Roll', source: 'Activity (Minigame)', ...(meta ? { meta } : {}) });
+    const history: LogEntry[] = [
+      ...Array.from({ length: 24 }, (_, i) => run(i)),
+      run(30, { minigameName: 'Castle Wars', exhausted: true }),
+      run(31, { minigameName: 'Pest Control', exhausted: false }),
+    ];
+    expect(runStats(history)).toMatchObject({ minigameRuns: 26 });
+    expect([...runStats(history).minigameReservesEmptied]).toEqual(['Castle Wars']);
+    const ids = (gameModeId: string) => new Set(evaluateRun({ unlocks: emptyUnlocks(), history, gameModeId }).filter((a) => a.earned).map((a) => a.id));
+    expect(ids('vanilla').has('minigame-runs-25')).toBe(true);
+    expect(ids('vanilla').has('minigame-reserves-1')).toBe(true);
+    expect(ids('vanilla').has('minigame-reserves-10')).toBe(false);
+    expect(ids('chunked').has('minigame-reserves-1')).toBe(false);
+  });
+
   it('counts gear tiers, diary tasks and tiers, and CA tasks', () => {
     const easy = Object.values(DIARY_DATA).filter((d) => d.tier === 'Easy').map((d) => d.id);
     const ardougne = ['Ardougne Easy', 'Ardougne Medium', 'Ardougne Hard', 'Ardougne Elite'];

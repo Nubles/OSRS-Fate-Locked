@@ -20,7 +20,7 @@ const BOOST_TENTHS: Readonly<Record<BoostActivity, Readonly<Record<number, reado
   slayer: { 2: ['slayer-tasks-1', 'slayer-tasks-10'], 3: ['slayer-tasks-25', 'slayer-tasks-50'], 5: ['slayer-tasks-100', 'slayer-tasks-200', 'slayer-tasks-350', 'slayer-tasks-500'] },
   clues: { 2: ['clues-1', 'clues-10'], 3: ['clues-25', 'clues-50'], 5: ['clues-100', 'clues-200', 'clues-300', 'clues-500'] },
   bosses: { 2: ['bosses-1', 'bosses-5'], 3: ['bosses-10', 'bosses-15'], 5: ['bosses-25', 'bosses-35', 'bosses-50', 'bosses-all'] },
-  minigames: { 2: ['minigames-1', 'minigames-3'], 3: ['minigames-5', 'minigames-10'], 5: ['minigames-15', 'minigames-20', 'minigames-30', 'minigames-all'] },
+  minigames: { 2: ['minigames-1', 'minigames-3', 'minigame-runs-1'], 3: ['minigames-5', 'minigames-10', 'minigame-runs-25'], 5: ['minigames-15', 'minigames-20', 'minigames-30', 'minigames-all', 'minigame-runs-100', 'minigame-runs-250'] },
 };
 
 /** Each activity's name in "+0.3% Slayer Key chance". */
@@ -51,6 +51,13 @@ export const boostActivityOf = (source: string): BoostActivity | null => {
   return null;
 };
 
+/**
+ * Vanilla minigames roll from their own Key reserves, paced at about an hour
+ * per Key, so minigame achievements don't speed them up (Alex, 2026-10-15).
+ */
+export const boostApplies = (activity: BoostActivity, gameModeId: string | undefined): boolean =>
+  !(activity === 'minigames' && gameModeId === 'vanilla');
+
 /** Summed in tenths so 0.2 + 0.3 stays 0.5. */
 const boostOf = (activity: BoostActivity, claimed: readonly string[] | undefined): number => {
   let tenths = 0;
@@ -73,14 +80,15 @@ export const achievementBoost = (achievementId: string): { activity: BoostActivi
   return b ? { activity: b.activity, percent: b.tenths / 10 } : null;
 };
 
-/** "+0.3% Slayer Key chance" for an achievement that boosts, else null. */
-export const boostLabel = (achievementId: string): string | null => {
+/** "+0.3% Slayer Key chance" for an achievement that boosts in this mode, else null. */
+export const boostLabel = (achievementId: string, gameModeId?: string): string | null => {
   const b = achievementBoost(achievementId);
-  return b ? `+${b.percent}% ${BOOST_LABELS[b.activity]} Key chance` : null;
+  return b && boostApplies(b.activity, gameModeId) ? `+${b.percent}% ${BOOST_LABELS[b.activity]} Key chance` : null;
 };
 
 /** Every activity the run has boosted, with its total. */
-export const activeBoosts = (claimed: readonly string[] | undefined): Array<{ activity: BoostActivity; label: string; percent: number }> =>
+export const activeBoosts = (claimed: readonly string[] | undefined, gameModeId?: string): Array<{ activity: BoostActivity; label: string; percent: number }> =>
   ACTIVITIES
+    .filter((activity) => boostApplies(activity, gameModeId))
     .map((activity) => ({ activity, label: BOOST_LABELS[activity], percent: boostOf(activity, claimed) }))
     .filter((b) => b.percent > 0);

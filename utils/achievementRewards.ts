@@ -62,10 +62,10 @@ export const fateDue = (a: Pick<AchievementPayout, 'id' | 'fate'>, runId: string
   (a.fate > 0 ? a.fate : smallFate(runId, a.id));
 
 /** "+10 Fate · +1% quest Key chance", or "+1 to 5 Fate" for one with no set Fate. */
-export function rewardLabel(a: Pick<AchievementPayout, 'fate' | 'freeRituals' | 'chaosKeys'> & { id?: string }): string | null {
+export function rewardLabel(a: Pick<AchievementPayout, 'fate' | 'freeRituals' | 'chaosKeys'> & { id?: string }, gameModeId?: string): string | null {
   const parts: string[] = [];
   parts.push(a.fate > 0 ? `+${a.fate} Fate` : `+${SMALL_FATE_MIN} to ${SMALL_FATE_MAX} Fate`);
-  const boost = a.id ? boostLabel(a.id) : null;
+  const boost = a.id ? boostLabel(a.id, gameModeId) : null;
   if (boost) parts.push(boost);
   if (a.chaosKeys > 0) parts.push(a.chaosKeys === 1 ? 'a Chaos Key' : `${a.chaosKeys} Chaos Keys`);
   if (a.freeRituals > 0) parts.push(a.freeRituals === 1 ? 'a free random ritual' : `${a.freeRituals} free random rituals`);
@@ -155,7 +155,7 @@ export const settleAchievements = (
     chaosKeys += chaosKeysAwarded;
     const chaosText = chaosKeysAwarded > 0 ? (chaosKeysAwarded === 1 ? 'a Chaos Key' : `${chaosKeysAwarded} Chaos Keys`) : null;
     const ritualText = ritualsAwarded.length > 0 ? `a free ${ritualsAwarded.map(ritualName).join(' and a free ')}` : null;
-    const reward = [fateText, chaosText, ritualText, boostLabel(a.id)].filter(Boolean).join(' · ');
+    const reward = [fateText, chaosText, ritualText, boostLabel(a.id, state.gameModeId)].filter(Boolean).join(' · ');
     return {
       id: newId(),
       timestamp: now,

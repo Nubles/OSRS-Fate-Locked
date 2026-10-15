@@ -42,7 +42,7 @@ export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
     return at;
   }, [history]);
   const title = all.find((a) => a.id === achievementTitle && a.earned);
-  const boosts = activeBoosts(achievementsClaimed);
+  const boosts = activeBoosts(achievementsClaimed, gameModeId);
   const earnedCount = all.filter((a) => a.earned).length;
   const pct = all.length > 0 ? Math.round((earnedCount / all.length) * 100) : 0;
 
@@ -145,6 +145,7 @@ export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
                 a={a}
                 earnedAt={earnedAt.get(a.id)}
                 runId={runId}
+                gameModeId={gameModeId}
                 worn={a.id === achievementTitle}
                 onWear={() => setAchievementTitle(a.id)}
               />
@@ -162,12 +163,13 @@ const AchievementCard: React.FC<{
   worn: boolean;
   onWear: () => void;
   runId?: string;
-}> = ({ a, earnedAt, worn, onWear, runId }) => {
+  gameModeId?: string;
+}> = ({ a, earnedAt, worn, onWear, runId, gameModeId }) => {
   const Icon = ACHIEVEMENT_ICON[a.icon] ?? Trophy;
   // A hidden achievement stays a mystery until it is earned, like an unseen log slot.
   const secret = a.hidden && !a.earned;
   // An achievement with no set Fate shows what it pays on this run.
-  const reward = rewardLabel({ ...a, fate: fateDue(a, runId) });
+  const reward = rewardLabel({ ...a, fate: fateDue(a, runId) }, gameModeId);
   return (
     <div
       className={`relative flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${

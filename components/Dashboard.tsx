@@ -1310,6 +1310,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         data={achievementReveal}
         onDismiss={dismissAchievementReveal}
         onView={() => setShowAchievements(true)}
+        gameModeId={gameModeId}
       />
     )}
 

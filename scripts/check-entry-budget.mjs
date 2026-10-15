@@ -14,7 +14,8 @@ import { gzipSync } from 'node:zlib';
 // 232: the Void Altar's newer rituals live in the reducer (2026-10-15); their activity checks load lazily.
 // 233: achievement rewards (free rituals, back pay) settle in the reducer; Vanilla minigame Key reserves load with the save.
 // 234: activity Key boosts from achievements apply in every Key roll, so their small table loads with the game.
-export const ENTRY_GZIP_BUDGET_KB = 234;
+// 236: both of the above together with main's minigame reserves (235.5 on 2026-10-15).
+export const ENTRY_GZIP_BUDGET_KB = 236;
 
 /** The entry script that dist/index.html loads, as a path inside distDir. */
 export const entryScriptPath = (distDir, indexHtml) => {

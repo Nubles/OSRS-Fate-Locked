@@ -22,6 +22,7 @@ import { QUEST_DATA, QUEST_CAPE_QUEST_IDS } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { CA_DATA } from '../data/caData';
+import { MINIGAME_KEY_RESERVES } from '../data/minigameKeyReserves';
 import { PETS } from '../data/pets';
 import { BANK_IDS, MERGED_BANKS } from '../data/banks';
 import { BARROWS_BROTHERS, INVOCATIONS, PACT_DEBT, RITUALS } from '../config/economy';
@@ -134,9 +135,12 @@ export interface RunStats {
   allInvocations: boolean;
   /** Barrows brothers the Barrows Chest has drawn. */
   barrowsBrothers: ReadonlySet<string>;
-  /** Slayer tasks and clue scrolls rolled for. */
+  /** Slayer tasks, clue scrolls and minigame runs rolled for. */
   slayerTasks: number;
   clues: number;
+  minigameRuns: number;
+  /** Vanilla minigames that have paid every Key in their reserve. */
+  minigameReservesEmptied: ReadonlySet<string>;
 }
 
 /** Which ritual an Altar entry was. Old entries carry no id, so their message says (as in utils/integrity). */
@@ -156,7 +160,8 @@ export const runStats = (history: readonly LogEntry[] = []): RunStats => {
   let rolls = 0, keysWon = 0, winStreak = 0, missStreak = 0, longestWinStreak = 0, longestMissStreak = 0;
   let luckiestWin = 1, omniRolls = 0, pityKeys = 0, chaosKeys = 0, greedDoubled = false;
   let gambitWins = 0, biggestGambitWin = 0, gambitLosses = 0, longestGambitLosingRun = 0;
-  let wardKeys = 0, pactDebtPaid = 0, allInvocations = false, slayerTasks = 0, clues = 0;
+  let wardKeys = 0, pactDebtPaid = 0, allInvocations = false, slayerTasks = 0, clues = 0, minigameRuns = 0;
+  const minigameReservesEmptied = new Set<string>();
   const rituals = new Set<string>();
   const barrowsBrothers = new Set<string>();
   for (const e of history) {
@@ -172,7 +177,9 @@ export const runStats = (history: readonly LogEntry[] = []): RunStats => {
       if (typeof source === 'string') {
         if (source.startsWith('Slayer (')) slayerTasks += 1;
         else if (source.startsWith('Clue Scroll (')) clues += 1;
+        else if (source === 'Activity (Minigame)') minigameRuns += 1;
       }
+      if (e.meta?.exhausted === true && typeof e.meta?.minigameName === 'string') minigameReservesEmptied.add(e.meta.minigameName);
       const won = e.type === 'ROLL_SUCCESS' || e.type === 'ROLL_OMNI';
       if (won) {
         winStreak += 1; missStreak = 0;
@@ -216,7 +223,7 @@ export const runStats = (history: readonly LogEntry[] = []): RunStats => {
   return {
     rolls, keysWon, longestWinStreak, longestMissStreak, luckiestWin, omniRolls, pityKeys,
     chaosKeys, greedDoubled, rituals, gambitWins, biggestGambitWin, longestGambitLosingRun,
-    wardKeys, pactDebtPaid, allInvocations, barrowsBrothers, slayerTasks, clues,
+    wardKeys, pactDebtPaid, allInvocations, barrowsBrothers, slayerTasks, clues, minigameRuns, minigameReservesEmptied,
   };
 };
 
@@ -288,6 +295,11 @@ interface Step {
   targetFor?: (c: AchievementContext) => number;
   available?: (c: AchievementContext) => boolean;
 }
+
+const isVanilla = (c: AchievementContext): boolean => c.mode === 'vanilla';
+/** Vanilla minigames that hold Keys (Rat Pits holds none). */
+const minigamesWithKeys = (c: AchievementContext): number =>
+  tablePool(TableType.MINIGAMES, c).filter((name) => MINIGAME_KEY_RESERVES[name] && !MINIGAME_KEY_RESERVES[name].noKeys).length;
 
 function tiers(
   baseId: string,
@@ -501,6 +513,23 @@ export const ACHIEVEMENTS: Achievement[] = [
     {
       id: 'minigames-all', title: 'Minigame Master', description: 'Unlock every minigame', target: 1, icon: 'crown', fate: 25,
       targetFor: (c) => tablePool(TableType.MINIGAMES, c).length,
+    },
+  ]),
+
+  // Minigame runs, read from the run's rolls, and Vanilla's minigame Key reserves
+  ...tiers('minigame-runs', 'Activities', 'minigame', ({ stats }) => stats.minigameRuns, [
+    { title: 'Game On', description: 'Roll for your first minigame run', target: 1 },
+    { title: 'Season Ticket', description: 'Roll for 25 minigame runs', target: 25, fate: 10 },
+    { title: 'Tournament Regular', description: 'Roll for 100 minigame runs', target: 100, fate: 15 },
+    { title: 'Minigame Grinder', description: 'Roll for 250 minigame runs', target: 250, fate: 15 },
+  ]),
+  ...tiers('minigame-reserves', 'Activities', 'minigame', ({ stats }) => stats.minigameReservesEmptied.size, [
+    { title: 'Picked Clean', description: 'Win every Key a minigame holds', target: 1, available: isVanilla },
+    { title: 'Stash Raider', description: 'Win every Key from 10 minigames', target: 10, fate: 10, available: isVanilla },
+    { title: 'Reserve Drainer', description: 'Win every Key from 25 minigames', target: 25, fate: 15, available: isVanilla },
+    {
+      id: 'minigame-reserves-all', title: 'Every Last Key', description: 'Win every Key from every minigame that holds them', target: 1,
+      icon: 'crown', fate: 25, available: isVanilla, targetFor: minigamesWithKeys,
     },
   ]),
 

@@ -569,8 +569,9 @@ export function prepareKeyRollAction(
     successBonus = bonuses.successBonus;
     omniBonus = bonuses.omniBonus;
   }
-  // Activity milestones the run has earned raise that activity's own rolls.
-  successBonus += achievementBoostFor(source, state.achievementsClaimed);
+  // Activity milestones the run has earned raise that activity's own rolls,
+  // apart from Vanilla minigame reserves, which keep their own pace.
+  if (!vanillaMinigameContext) successBonus += achievementBoostFor(source, state.achievementsClaimed);
 
   const clueAwarded = vanillaClueContext ? state.clueStandardKeysAwarded ?? 0 : 0;
   const isVanillaContext = vanillaBossContext !== null || vanillaClueContext !== null || vanillaMinigameContext !== null;
