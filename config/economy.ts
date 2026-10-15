@@ -435,7 +435,7 @@ export const RITUALS: Ritual[] = [
   { id: 'PACT',         name: "Zamorak's Pact",          tagline: 'Better odds now, pay later.', fateCost: 0, god: 'Zamorak',
     effect: 'Your next 3 rolls get +15% odds. Then Zamorak takes the next 40 Fate you would earn, and the debt stays even after a roll lands.' },
   { id: 'INVOCATIONS',  name: "Amascut's Invocations",   tagline: 'Take handicaps for Omni-Keys.', fateCost: 10,
-    effect: 'Pick handicaps for your next 5 rolls. Each one raises the Omni-Key chance on those rolls.' },
+    effect: 'Pick handicaps for your next 3 rolls. Each one raises the Omni-Key chance on those rolls.' },
   { id: 'BARROWS',      name: 'Barrows Chest',           tagline: 'A brother powers your next rolls.', fateCost: 20,
     effect: 'Fate picks a Barrows brother at random, and his set effect powers your next 3 rolls.' },
   { id: 'SACRIFICE',    name: 'Sacrifice',               tagline: 'Give up three tiers for an Omni-Key.', fateCost: 25,
@@ -449,7 +449,7 @@ export const PACT_ROLLS = 3;
 export const PACT_ODDS_BONUS = 15;
 export const PACT_DEBT = 40;
 export const TEARS_FAILS = 10;
-export const INVOCATION_ROLLS = 5;
+export const INVOCATION_ROLLS = 3;
 export const BARROWS_ROLLS = 3;
 export const SACRIFICE_TIERS = 3;
 export const SACRIFICE_USES_PER_RUN = 3;

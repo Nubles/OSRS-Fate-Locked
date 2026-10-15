@@ -129,7 +129,7 @@ describe("Amascut's Invocations", () => {
   it('Hardcore: the first fail ends every invocation', () => {
     let s = cast(funded(30), { type: 'RITUAL_INVOCATIONS', payload: { ids: ['HARDCORE', 'WALK_THE_PATH'] } });
     s = rollAt(s, HIT, 20, {}, 3);
-    expect(s.rituals?.invocations?.rollsLeft).toBe(4);
+    expect(s.rituals?.invocations?.rollsLeft).toBe(2);
     s = rollAt(s, MISS, 20, {}, 3);
     expect(s.rituals?.invocations).toBeUndefined();
     expect(s.history.at(-1)?.details).toContain('Hardcore ended the invocations');
@@ -147,9 +147,9 @@ describe("Amascut's Invocations", () => {
     expect(prepareKeyRollAction(s, 'Test', 20, 1, dice(HIT, { omni: 6 + rules.omniChanceBase })).payload.omni).toBe(false);
   });
 
-  it('wears off after 5 rolls', () => {
+  it('wears off after 3 rolls', () => {
     let s = cast(base({ fatePoints: 30 }), { type: 'RITUAL_INVOCATIONS', payload: { ids: ['WALK_THE_PATH'] } });
-    for (let i = 0; i < 5; i++) s = rollAt(s, MISS);
+    for (let i = 0; i < 3; i++) s = rollAt(s, MISS);
     expect(s.rituals).toBeUndefined();
     expect(s.fatePoints).toBe(20);
     s = rollAt(s, MISS);
