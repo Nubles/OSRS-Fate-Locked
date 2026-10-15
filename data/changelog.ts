@@ -47,7 +47,7 @@ export const CHANGELOG_RELEASES = [
         "Skills and gear tiers use one gem ladder, Opal to Zenyte. Keys you earn rise like XP drops.",
         "Unlocks pop up like a level-up message, and your history sits in a chatbox under the page.",
         "Right-click anything to Examine it. Pick the 2007 or 2010 interface, a fixed game window, or bigger text.",
-        "Unlock reveals show the game's own 3D models, most of them moving, in both layouts. The OSRS layout also maps each area and bank.",
+        "Unlock reveals show the game's own 3D models, and OSRS reveals map each area and bank. The OSRS world map previews what an Omni-Key opens.",
       ],
     },
   },

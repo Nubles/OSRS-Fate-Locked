@@ -20,11 +20,16 @@ import { CHUNKED_START, isChunkUnlocked, isFrontierChunk } from '../utils/chunkA
 import { rankFrontierChunks } from '../utils/frontierAdvisor';
 import { hasMixedAreaOwnership, isNamedAreaReachableViaChunks, isRegionUnlocked } from '../utils/reachability';
 import { displayAreaName, visibleAreaUnlocks } from '../data/areaMapPolicy';
+import { previewOmniArea } from '../utils/omniAreaPreview';
 
 type LensTone = 'good' | 'warn' | 'bad';
 const TONE_FILL: Record<LensTone, string> = { good: 'rgba(16,185,129,0.30)', warn: 'rgba(245,158,11,0.10)', bad: 'rgba(239,68,68,0.22)' };
 const TONE_STROKE: Record<LensTone, string> = { good: '#34d399', warn: '#f59e0b', bad: '#f87171' };
 // OSRS layout: the same lens tones in the game's green / yellow / red.
+// Omni-Key purple, as on the World list's Omni-Key legend.
+const OMNI_FILL = 'rgba(199,125,255,0.30)';
+const OMNI_STROKE = 'rgba(199,125,255,0.95)';
+const OMNI_KEY_SRC = `${import.meta.env.BASE_URL}osrs-ui/items/omni_key.png`;
 const OSRS_TONE_FILL: Record<LensTone, string> = { good: 'rgba(13,193,13,0.28)', warn: 'rgba(255,255,0,0.10)', bad: 'rgba(255,48,48,0.25)' };
 const OSRS_TONE_STROKE: Record<LensTone, string> = { good: '#0dc10d', warn: '#ffff00', bad: '#ff3030' };
 
@@ -411,7 +416,7 @@ interface GameSnapshot {
   bossStandardKeysAwarded?: Record<string, number>;
 }
 
-const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGameSnapshot, osrs = false, osrsSideFooter }: { regionUnlocks: string[]; chunkUnlocks: string[]; isChunked: boolean; getGameSnapshot: () => GameSnapshot; osrs?: boolean; osrsSideFooter?: React.MutableRefObject<React.ReactNode> }) => {
+const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGameSnapshot, osrs = false, osrsSideFooter, onOmniUnlockArea }: { regionUnlocks: string[]; chunkUnlocks: string[]; isChunked: boolean; getGameSnapshot: () => GameSnapshot; osrs?: boolean; osrsSideFooter?: React.MutableRefObject<React.ReactNode>; onOmniUnlockArea?: React.MutableRefObject<((area: string) => void) | undefined> }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapContentRef = useRef<HTMLDivElement>(null);
   // OSRS layout: place-name labels drawn over the map at a constant size,
@@ -509,7 +514,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
   // Highlight every chunk that holds a chosen resource / monster (e.g. "Coal
   // rocks", "Yew tree"), or the best training node for a skill — unlocked chunks
   // brighter, locked ones dim, with a jump-to-match.
-  const { unlocks } = useGame();
+  const { unlocks, specialKeys, gameModeId, customMode } = useGame();
   const [lensReady, setLensReady] = useState(chunkContentService.ready);
   useEffect(() => { if (!lensReady) chunkContentService.init().then(() => setLensReady(true)); }, [lensReady]);
   const [lensInput, setLensInput] = useState('');
@@ -854,6 +859,32 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     for (const [sub, chunks] of Object.entries(subDraft)) for (const c of chunks) m[chunkKey(c)] = sub;
     return m;
   }, [subDraft]);
+  // ── Omni-Key preview (OSRS layout) ─────────────────────────────────────────
+  // With an Omni-Key in hand, hovering an area paints the chunks spending the
+  // Key on it would open; clicking pins it, and the side panel offers the
+  // unlock, which goes through Dashboard's Omni-Key confirmation.
+  const canOmni = osrs && !isChunked && specialKeys > 0 && !!onOmniUnlockArea;
+  const [omniOn, setOmniOn] = useState(false);
+  const [omniPick, setOmniPick] = useState<string | null>(null);
+  useEffect(() => { if (!canOmni) { setOmniOn(false); setOmniPick(null); } }, [canOmni]);
+  const omniHoverKey = omniOn && !authoring && hoverTile ? chunkKey(tileToChunk(hoverTile)) : null;
+  const omniArea = omniOn ? (omniPick ?? (omniHoverKey ? chunkSubArea[omniHoverKey] ?? null : null)) : null;
+  const omniPreview = useMemo(
+    () => (omniArea ? previewOmniArea(omniArea, unlocks, gameModeId ?? 'vanilla', customMode) : null),
+    [omniArea, unlocks, gameModeId, customMode],
+  );
+  // The pinned area was unlocked (or became unavailable): let go of it.
+  useEffect(() => { if (omniPick && omniPreview && !omniPreview.eligible && omniPreview.area === omniPick) setOmniPick(null); }, [omniPick, omniPreview]);
+  const omniRects = useMemo(() => {
+    if (!omniPreview?.eligible) return [];
+    const chunkPx = CHUNK_TILES * (MAP_IMAGE.width / (MAP_BOUNDS.tileMaxX - MAP_BOUNDS.tileMinX));
+    const chunkPy = CHUNK_TILES * (MAP_IMAGE.height / (MAP_BOUNDS.tileMaxY - MAP_BOUNDS.tileMinY));
+    return omniPreview.chunks.map(c => {
+      const { px, py } = tileToPixel({ tx: c.cx * CHUNK_TILES, ty: (c.cy + 1) * CHUNK_TILES });
+      return { key: `${c.cx},${c.cy}`, x: px, y: py, w: chunkPx, h: chunkPy };
+    });
+  }, [omniPreview]);
+
   const chunkOnMap = (chunk: ChunkCoord) =>
     Object.values(draftChunks).some(list => list.some(c => c.cx === chunk.cx && c.cy === chunk.cy));
 
@@ -1059,6 +1090,10 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     if (authoring) {
       pushHistory();
       addChunkToActive(chunk);
+    } else if (omniOn) {
+      // Omni-Key preview: a click pins (or lets go of) the chunk's area.
+      const area = chunkSubArea[chunkKey(chunk)] ?? null;
+      setOmniPick(prev => (prev === area ? null : area));
     } else {
       // Open the activity panel for the clicked chunk ("what can I play here?").
       setSelectedChunk(prev => (prev && prev.cx === chunk.cx && prev.cy === chunk.cy ? null : chunk));
@@ -1502,6 +1537,22 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
             </svg>
           )}
 
+          {/* Omni-Key preview: the chunks an Omni-Key on the area would open. */}
+          {omniRects.length > 0 && (
+            <svg
+              className="absolute inset-0 pointer-events-none"
+              width={MAP_IMAGE.width}
+              height={MAP_IMAGE.height}
+              viewBox={`0 0 ${MAP_IMAGE.width} ${MAP_IMAGE.height}`}
+              data-testid="omni-preview"
+            >
+              {omniRects.map(r => (
+                <rect key={r.key} x={r.x} y={r.y} width={r.w} height={r.h}
+                  fill={OMNI_FILL} stroke={OMNI_STROKE} strokeWidth={omniPick ? 8 : 6} />
+              ))}
+            </svg>
+          )}
+
           {/* Map marker overlays (stars/implings/crop circles/crime/clues) —
               inside the transformed layer so they pan & zoom with the map.
               Owned-chunk markers bright, others dimmed. The <svg> stays
@@ -1830,7 +1881,11 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
         ? isChunkUnlocked(hoverKey, chunkUnlocks)
         : sub ? isRegionUnlocked(sub, regionUnlocks) : region ? isRegionUnlocked(region, regionUnlocks) : false;
       const lines = [`${displayAreaName(hoverName)}: ${unlocked ? 'unlocked' : 'locked'}`];
-      if (!unlocked && !isChunked) lines.push('Roll the Areas table to unlock');
+      if (omniOn && !omniPick && omniPreview && omniPreview.area === sub) {
+        lines.push(omniPreview.eligible
+          ? `Omni-Key opens ${omniPreview.chunks.length} chunk${omniPreview.chunks.length === 1 ? '' : 's'}. Click to choose it.`
+          : `Omni-Key: ${omniPreview.reason}`);
+      } else if (!unlocked && !isChunked) lines.push('Roll the Areas table to unlock');
       else if (!unlocked && isFrontierChunk(hoverKey, chunkUnlocks, unlocks)) lines.push('On your frontier');
       else if (lensReady) {
         const content = chunkContentService.contentFor(hoverChunk.cx, hoverChunk.cy);
@@ -1909,6 +1964,34 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
           <label className="owm-check" title="Highlight every chunk with a bank">
             <input className="owm-box" type="checkbox" checked={banksOn} disabled={!lensReady} onChange={(e) => (e.target.checked ? pickLens('category', 'bank', 'Bank') : clearLens())} />Banks
           </label>
+          {canOmni && (
+            <div className="owm-omni" data-testid="omni-panel">
+              <label className="owm-check" title="Show the chunks an Omni-Key would open">
+                <input className="owm-box" type="checkbox" checked={omniOn}
+                  onChange={(e) => { setOmniOn(e.target.checked); setOmniPick(null); }} />
+                <img className="osrs-px" src={OMNI_KEY_SRC} alt="" aria-hidden="true" width={18} height={16} />
+                Omni-Key areas <b className="owm-omni-count">{specialKeys}</b>
+              </label>
+              {omniOn && (omniPick && omniPreview ? (
+                <div className="owm-omni-pick">
+                  <span className="owm-omni-name">{displayAreaName(omniPick)}</span>
+                  <span className="owm-small owm-tan">{omniPreview.eligible
+                    ? `${omniPreview.chunks.length} chunk${omniPreview.chunks.length === 1 ? '' : 's'} would unlock.`
+                    : omniPreview.reason}</span>
+                  <div style={{ display: 'flex', gap: 3 }}>
+                    <button type="button" className="osrs-btn owm-omni-go" style={{ flex: 3, height: 24 }} disabled={!omniPreview.eligible}
+                      onClick={() => onOmniUnlockArea?.current?.(omniPick)} title={`Unlock ${displayAreaName(omniPick)} with an Omni-Key`}
+                      aria-label={`Unlock ${displayAreaName(omniPick)} with an Omni-Key`}>
+                      <img className="osrs-px" src={OMNI_KEY_SRC} alt="" aria-hidden="true" width={18} height={16} />Unlock
+                    </button>
+                    <button type="button" className="osrs-btn" style={{ flex: 1, height: 24 }} onClick={() => setOmniPick(null)}>Clear</button>
+                  </div>
+                </div>
+              ) : (
+                <span className="owm-small owm-muted">Hover an area to see the chunks an Omni-Key opens. Click it to choose.</span>
+              ))}
+            </div>
+          )}
           <span className="owm-h" style={{ marginTop: 4 }}>Overlays</span>
           <div className="owm-overlays">
             {overlayCategories.map(cat => {
@@ -2265,7 +2348,12 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
  * side panel, the framed map and its footer. Only the OSRS World tab passes
  * it; `osrsSideFooter` holds that tab's Map / List buttons for the panel.
  */
-export const RegionMap: React.FC<{ osrs?: boolean; osrsSideFooter?: React.MutableRefObject<React.ReactNode> }> = ({ osrs = false, osrsSideFooter }) => {
+export const RegionMap: React.FC<{
+  osrs?: boolean;
+  osrsSideFooter?: React.MutableRefObject<React.ReactNode>;
+  /** OSRS World tab: spend an Omni-Key on an area (Dashboard confirms first). */
+  onOmniUnlockArea?: React.MutableRefObject<((area: string) => void) | undefined>;
+}> = ({ osrs = false, osrsSideFooter, onOmniUnlockArea }) => {
   const { unlocks, runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode, bossStandardKeysAwarded } = useGame();
   const visibleRegionUnlocks = useMemo(
     () => visibleAreaUnlocks(unlocks.regions),
@@ -2276,5 +2364,5 @@ export const RegionMap: React.FC<{ osrs?: boolean; osrsSideFooter?: React.Mutabl
   const snapRef = useRef<GameSnapshot>({ runId, runRevision, keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [] as string[], gameModeId: gameModeId ?? 'vanilla' });
   snapRef.current = { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [], linkedAccount, equipment: unlocks.equipment, gameModeId: gameModeId ?? 'vanilla', customMode, bossStandardKeysAwarded };
   const getGameSnapshot = useCallback(() => snapRef.current, []);
-  return <MapContent regionUnlocks={visibleRegionUnlocks} chunkUnlocks={unlocks.chunks ?? []} isChunked={gameModeId === 'chunked'} getGameSnapshot={getGameSnapshot} osrs={osrs} osrsSideFooter={osrsSideFooter} />;
+  return <MapContent regionUnlocks={visibleRegionUnlocks} chunkUnlocks={unlocks.chunks ?? []} isChunked={gameModeId === 'chunked'} getGameSnapshot={getGameSnapshot} osrs={osrs} osrsSideFooter={osrsSideFooter} onOmniUnlockArea={onOmniUnlockArea} />;
 };

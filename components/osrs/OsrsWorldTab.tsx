@@ -31,16 +31,19 @@ export const OsrsWorldTab: React.FC<Props> = ({ worldView, onWorldView, searchQu
       <button type="button" className={`osrs-btn${worldView === 'LIST' ? ' is-on' : ''}`} aria-pressed={worldView === 'LIST'} onClick={() => onWorldView('LIST')} title="List View">List</button>
     </>
   );
-  // RegionMap is memoised on the run's unlocks; it reads the buttons from here.
+  // RegionMap is memoised on the run's unlocks; it reads the buttons and the
+  // Omni-Key unlock from here.
   const viewButtonsRef = useRef<React.ReactNode>(viewButtons);
   viewButtonsRef.current = viewButtons;
+  const unlockAreaRef = useRef<((area: string) => void) | undefined>(onUnlockArea);
+  unlockAreaRef.current = onUnlockArea;
 
   return (
     <div className="h-full" style={{ padding: '2px 3px 3px' }}>
       {worldView === 'MAP' ? (
         <PanelErrorBoundary name="Region map">
           <Suspense fallback={<PaneFallback />}>
-            <RegionMap osrs osrsSideFooter={viewButtonsRef} />
+            <RegionMap osrs osrsSideFooter={viewButtonsRef} onOmniUnlockArea={unlockAreaRef} />
           </Suspense>
         </PanelErrorBoundary>
       ) : (
