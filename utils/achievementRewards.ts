@@ -39,10 +39,29 @@ export const pickFreeRitual = (gameModeId: string | undefined, draw: number): Ri
 
 export const ritualName = (id: string): string => RITUALS.find((r) => r.id === id)?.name ?? id;
 
-/** "+10 Fate · a free random ritual", or null when the title is the whole reward. */
+/** Achievements with no set Fate pay a random 1 to 5, rolled on each run (Alex, 2026-10-15). */
+export const SMALL_FATE_MIN = 1;
+export const SMALL_FATE_MAX = 5;
+
+/**
+ * This run's 1 to 5 for an achievement with no set Fate. It comes from the
+ * run's id, so each run has its own fixed amounts, known before they're earned,
+ * and settling draws nothing from the gameplay dice.
+ */
+export const smallFate = (runId: string | undefined, achievementId: string): number => {
+  let h = 0x811c9dc5;
+  for (const ch of `${runId ?? ''}:${achievementId}`) h = Math.imul(h ^ ch.charCodeAt(0), 0x01000193) >>> 0;
+  return SMALL_FATE_MIN + (h % (SMALL_FATE_MAX - SMALL_FATE_MIN + 1));
+};
+
+/** The Fate an achievement pays on this run. */
+export const fateDue = (a: Pick<AchievementPayout, 'id' | 'fate'>, runId: string | undefined): number =>
+  (a.fate > 0 ? a.fate : smallFate(runId, a.id));
+
+/** "+10 Fate · a free random ritual", or "+1 to 5 Fate" for one with no set Fate. */
 export function rewardLabel(a: Pick<AchievementPayout, 'fate' | 'freeRituals'>): string | null {
   const parts: string[] = [];
-  if (a.fate > 0) parts.push(`+${a.fate} Fate`);
+  parts.push(a.fate > 0 ? `+${a.fate} Fate` : `+${SMALL_FATE_MIN} to ${SMALL_FATE_MAX} Fate`);
   if (a.freeRituals > 0) parts.push(a.freeRituals === 1 ? 'a free random ritual' : `${a.freeRituals} free random rituals`);
   return parts.length > 0 ? parts.join(' · ') : null;
 }
@@ -90,7 +109,7 @@ export const settleAchievements = (
     // up to the pity line at most, in one entry (Alex, 2026-10-15).
     const seen = new Set<string>();
     const already = earned.filter((a) => !seen.has(a.id) && seen.add(a.id));
-    const owed = already.reduce((n, a) => n + a.fate, 0);
+    const owed = already.reduce((n, a) => n + fateDue(a, state.runId), 0);
     const fatePoints = Math.max(state.fatePoints, Math.min(cap, state.fatePoints + owed));
     const ritualsAwarded = already.flatMap(awardRituals);
     const fateAwarded = fatePoints - state.fatePoints;
@@ -117,11 +136,11 @@ export const settleAchievements = (
   if (fresh.length === 0) return null;
   let fatePoints = state.fatePoints;
   const entries = fresh.map((a): LogEntry => {
-    const fateAwarded = Math.max(0, Math.min(a.fate, cap - fatePoints));
+    const due = fateDue(a, state.runId);
+    const fateAwarded = Math.max(0, Math.min(due, cap - fatePoints));
     fatePoints += fateAwarded;
     const ritualsAwarded = awardRituals(a);
-    const fateText = fateAwarded > 0 || a.fate > 0
-      ? `+${a.fate} Fate${fateAwarded < a.fate ? ` (Fate was full, so ${fateAwarded} was added)` : ''}` : null;
+    const fateText = `+${due} Fate${fateAwarded < due ? ` (Fate was full, so ${fateAwarded} was added)` : ''}`;
     const ritualText = ritualsAwarded.length > 0 ? `a free ${ritualsAwarded.map(ritualName).join(' and a free ')}` : null;
     const reward = [fateText, ritualText].filter(Boolean).join(' · ');
     return {

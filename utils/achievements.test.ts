@@ -289,12 +289,12 @@ describe('achievements read from the run', () => {
     expect(find(run, 'pets-all')?.target).toBe(PETS.length);
   });
 
-  it('gives every achievement a title, and Fate only in steps of 5, 10 or 25', () => {
+  it('gives every achievement a title, and Fate only as 10, 15 or 25 (or a roll of 1 to 5)', () => {
     const titles = new Set<string>();
     for (const a of ACHIEVEMENTS) {
       expect(titles.has(a.title)).toBe(false);
       titles.add(a.title);
-      expect([0, 5, 10, 25]).toContain(a.fate);
+      expect([0, 10, 15, 25]).toContain(a.fate);
       if (a.freeRituals > 0) expect(a.fate).toBe(25);
     }
   });

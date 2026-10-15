@@ -4,7 +4,7 @@ import { Trophy } from './OsrsIcon';
 import { ACHIEVEMENT_ICON } from './achievementIcons';
 import { useGame } from '../context/GameContext';
 import {
-  evaluateAchievements, EvaluatedAchievement, AchievementCategory, rewardLabel, ritualName,
+  evaluateAchievements, EvaluatedAchievement, AchievementCategory, fateDue, rewardLabel, ritualName,
 } from '../utils/achievements';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';
@@ -23,7 +23,7 @@ const formatDate = (timestamp: number) =>
 
 export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
   const {
-    unlocks, gameModeId, customMode, history, petsClaimed, achievementTitle, setAchievementTitle, freeRituals, achievementsClaimed,
+    unlocks, gameModeId, customMode, history, petsClaimed, achievementTitle, setAchievementTitle, freeRituals, achievementsClaimed, runId,
   } = useGame();
   useEscapeKey(onClose, true);
 
@@ -137,6 +137,7 @@ export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
                 key={a.id}
                 a={a}
                 earnedAt={earnedAt.get(a.id)}
+                runId={runId}
                 worn={a.id === achievementTitle}
                 onWear={() => setAchievementTitle(a.id)}
               />
@@ -153,11 +154,13 @@ const AchievementCard: React.FC<{
   earnedAt?: number;
   worn: boolean;
   onWear: () => void;
-}> = ({ a, earnedAt, worn, onWear }) => {
+  runId?: string;
+}> = ({ a, earnedAt, worn, onWear, runId }) => {
   const Icon = ACHIEVEMENT_ICON[a.icon] ?? Trophy;
   // A hidden achievement stays a mystery until it is earned, like an unseen log slot.
   const secret = a.hidden && !a.earned;
-  const reward = rewardLabel(a);
+  // An achievement with no set Fate shows what it pays on this run.
+  const reward = rewardLabel({ ...a, fate: fateDue(a, runId) });
   return (
     <div
       className={`relative flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${

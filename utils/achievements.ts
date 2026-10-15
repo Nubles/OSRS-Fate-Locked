@@ -29,7 +29,7 @@ import { unlockableAreas } from './freeAreas';
 import { getPoolAndStateKey } from './gameEngine';
 import { isRollEntry } from './logEntry';
 import { mergedBankId } from './bankUnlockMerges';
-import { AchievementPayout, rewardLabel, ritualName } from './achievementRewards';
+import { AchievementPayout, fateDue, rewardLabel, ritualName } from './achievementRewards';
 
 export type AchievementCategory =
   | 'Quests' | 'Skills' | 'Areas' | 'Equipment'
@@ -311,24 +311,24 @@ const didRitual = (id: string) => (c: AchievementContext) => c.stats.rituals.has
 const ritualsOffered = (c: AchievementContext) => RITUALS.filter((r) => r.id !== 'SACRIFICE' && ritualOffered(r.id, c));
 
 // ── The catalogue ──────────────────────────────────────────────────────────
-// Fate rewards: 0 for first steps (the title is the reward), 5, 10 or 25 by
+// Fate rewards: 0 for first steps (each run pays its own 1 to 5 for them, see smallFate), 10, 15 or 25 by
 // difficulty, and 25 with a free random ritual for the biggest few.
 export const ACHIEVEMENTS: Achievement[] = [
   // Quests
   ...tiers('quests', 'Quests', 'quest', questsDone, [
     { title: 'First Steps', description: 'Complete your first quest', target: 1 },
-    { title: 'Adventurer', description: 'Complete 10 quests', target: 10, fate: 5 },
-    { title: 'Seasoned Hero', description: 'Complete 25 quests', target: 25, fate: 5 },
-    { title: 'Veteran', description: 'Complete 50 quests', target: 50, fate: 10 },
-    { title: 'Centurion', description: 'Complete 100 quests', target: 100, fate: 10 },
+    { title: 'Adventurer', description: 'Complete 10 quests', target: 10, fate: 10 },
+    { title: 'Seasoned Hero', description: 'Complete 25 quests', target: 25, fate: 10 },
+    { title: 'Veteran', description: 'Complete 50 quests', target: 50, fate: 15 },
+    { title: 'Centurion', description: 'Complete 100 quests', target: 100, fate: 15 },
     { title: 'Loremaster', description: 'Complete 150 quests', target: 150, fate: 25 },
     { title: 'Quest Cape', description: 'Complete every quest', target: TOTAL_QUESTS, icon: 'crown', fate: 25, freeRituals: 1 },
   ]),
   ...tiers('qp', 'Quests', 'star', questPoints, [
     { title: "Champions' Guild", description: "Earn 32 Quest Points, enough to enter the Champions' Guild", target: 32 },
-    { title: 'Point Collector', description: 'Earn 50 Quest Points', target: 50, fate: 5 },
-    { title: "Legends' Guild", description: "Earn 107 Quest Points, enough for the Legends' Guild", target: 107, fate: 5 },
-    { title: 'Point Hoarder', description: 'Earn 150 Quest Points', target: 150, fate: 10 },
+    { title: 'Point Collector', description: 'Earn 50 Quest Points', target: 50, fate: 10 },
+    { title: "Legends' Guild", description: "Earn 107 Quest Points, enough for the Legends' Guild", target: 107, fate: 10 },
+    { title: 'Point Hoarder', description: 'Earn 150 Quest Points', target: 150, fate: 15 },
     { title: 'Sage', description: 'Earn 250 Quest Points', target: 250, fate: 25 },
   ]),
 
@@ -338,23 +338,23 @@ export const ACHIEVEMENTS: Achievement[] = [
   ]),
   ...tiers('skills-start', 'Skills', 'skill', skillsStarted, [
     { title: 'Dabbler', description: 'Have 5 skills unlocked', target: 5 },
-    { title: 'All-Rounder', description: 'Have 12 skills unlocked', target: 12, fate: 5 },
-    { title: 'Polymath', description: 'Unlock every skill', target: TOTAL_SKILLS, fate: 10 },
+    { title: 'All-Rounder', description: 'Have 12 skills unlocked', target: 12, fate: 10 },
+    { title: 'Polymath', description: 'Unlock every skill', target: TOTAL_SKILLS, fate: 15 },
   ]),
   ...tiers('total-level', 'Skills', 'skill', totalLevel, [
-    { title: 'Well Rounded', description: 'Reach 500 total level', target: 500, fate: 5 },
-    { title: 'Four Figures', description: 'Reach 1,000 total level', target: 1000, fate: 10 },
-    { title: 'Skiller', description: 'Reach 1,500 total level', target: 1500, fate: 10 },
+    { title: 'Well Rounded', description: 'Reach 500 total level', target: 500, fate: 10 },
+    { title: 'Four Figures', description: 'Reach 1,000 total level', target: 1000, fate: 15 },
+    { title: 'Skiller', description: 'Reach 1,500 total level', target: 1500, fate: 15 },
     { title: 'Two Thousand Club', description: 'Reach 2,000 total level', target: 2000, fate: 25 },
   ]),
   ...tiers('skill-tiers', 'Skills', 'flame', skillTiers, [
-    { title: 'Tier Climber', description: 'Reach 50 total skill tiers', target: 50, fate: 5 },
-    { title: 'Tier Scaler', description: 'Reach 100 total skill tiers', target: 100, fate: 10 },
-    { title: 'High Tiers', description: 'Reach 150 total skill tiers', target: 150, fate: 10 },
+    { title: 'Tier Climber', description: 'Reach 50 total skill tiers', target: 50, fate: 10 },
+    { title: 'Tier Scaler', description: 'Reach 100 total skill tiers', target: 100, fate: 15 },
+    { title: 'High Tiers', description: 'Reach 150 total skill tiers', target: 150, fate: 15 },
     { title: 'Uncapped', description: 'Get every skill to tier 10', target: TOTAL_SKILLS * 10, fate: 25 },
   ]),
   ...tiers('skills-99', 'Skills', 'crown', skillsAt99, [
-    { title: 'Ninety-Nine', description: 'Reach level 99 in any skill', target: 1, fate: 10 },
+    { title: 'Ninety-Nine', description: 'Reach level 99 in any skill', target: 1, fate: 15 },
     { title: 'Maxed', description: 'Reach level 99 in every skill', target: TOTAL_SKILLS, icon: 'trophy', fate: 25, freeRituals: 1 },
   ]),
 
@@ -362,10 +362,10 @@ export const ACHIEVEMENTS: Achievement[] = [
   ...tiers('regions', 'Areas', 'region', areasReached, [
     { title: 'Explorer', description: 'Unlock your first area', target: 1 },
     { title: 'Globetrotter', description: 'Unlock 5 areas', target: 5 },
-    { title: 'Wanderer', description: 'Unlock 10 areas', target: 10, fate: 5 },
-    { title: 'Traveller', description: 'Unlock 25 areas', target: 25, fate: 5 },
-    { title: 'Voyager', description: 'Unlock 50 areas', target: 50, fate: 10 },
-    { title: 'Far Flung', description: 'Unlock 100 areas', target: 100, fate: 10 },
+    { title: 'Wanderer', description: 'Unlock 10 areas', target: 10, fate: 10 },
+    { title: 'Traveller', description: 'Unlock 25 areas', target: 25, fate: 10 },
+    { title: 'Voyager', description: 'Unlock 50 areas', target: 50, fate: 15 },
+    { title: 'Far Flung', description: 'Unlock 100 areas', target: 100, fate: 15 },
     {
       title: 'World Tour', description: 'Unlock every area', target: TOTAL_REGIONS, icon: 'map', fate: 25, freeRituals: 1,
       targetFor: (c) => unlockableAreas(c.mode, c.custom).length,
@@ -375,36 +375,36 @@ export const ACHIEVEMENTS: Achievement[] = [
   // Equipment
   ...tiers('equip-unlock', 'Equipment', 'equipment', equipUnlocked, [
     { title: 'Geared Up', description: 'Unlock your first equipment slot', target: 1 },
-    { title: 'Fully Equipped', description: 'Unlock every equipment slot', target: TOTAL_EQUIP_SLOTS, fate: 5 },
+    { title: 'Fully Equipped', description: 'Unlock every equipment slot', target: TOTAL_EQUIP_SLOTS, fate: 10 },
   ]),
   ...tiers('equip-tier5', 'Equipment', 'equipment', equipAtLeast(5), [
-    { title: 'Rune Set', description: 'Get every equipment slot to tier 5', target: TOTAL_EQUIP_SLOTS, fate: 10, id: 'equip-tier5-all' },
+    { title: 'Rune Set', description: 'Get every equipment slot to tier 5', target: TOTAL_EQUIP_SLOTS, fate: 15, id: 'equip-tier5-all' },
   ]),
   ...tiers('equip-max', 'Equipment', 'equipment', equipAtLeast(EQUIPMENT_TIER_MAX), [
-    { title: 'Best in Slot', description: `Max a slot to Tier ${EQUIPMENT_TIER_MAX}`, target: 1, icon: 'star', fate: 10 },
+    { title: 'Best in Slot', description: `Max a slot to Tier ${EQUIPMENT_TIER_MAX}`, target: 1, icon: 'star', fate: 15 },
     { title: 'Maxed Gear', description: 'Max every equipment slot', target: TOTAL_EQUIP_SLOTS, icon: 'trophy', fate: 25 },
   ]),
 
   // Diaries
   ...tiers('diaries', 'Diaries', 'diary', ({ u }) => u.diaries.length, [
     { title: 'Diary Keeper', description: 'Complete your first diary tier', target: 1 },
-    { title: 'Diarist', description: 'Complete 12 diary tiers', target: 12, fate: 10 },
-    { title: 'Chronicler', description: 'Complete 24 diary tiers', target: 24, fate: 10 },
+    { title: 'Diarist', description: 'Complete 12 diary tiers', target: 12, fate: 15 },
+    { title: 'Chronicler', description: 'Complete 24 diary tiers', target: 24, fate: 15 },
     { title: 'Diary Master', description: 'Complete every diary tier', target: TOTAL_DIARIES, icon: 'crown', fate: 25, freeRituals: 1 },
   ]),
 
   // Combat Achievements
   ...tiers('ca', 'Combat', 'combat', ({ u }) => u.cas.length, [
-    { title: 'Combat Novice', description: 'Complete your first CA tier', target: 1, fate: 5 },
+    { title: 'Combat Novice', description: 'Complete your first CA tier', target: 1, fate: 10 },
     { title: 'Combat Master', description: 'Complete every CA tier', target: TOTAL_CA, icon: 'trophy', fate: 25, freeRituals: 1 },
   ]),
 
   // Activities
   ...tiers('bosses', 'Activities', 'boss', tableOwned(TableType.BOSSES, (u) => u.bosses), [
     { title: 'Boss Hunter', description: 'Unlock your first boss', target: 1 },
-    { title: 'Boss Slayer', description: 'Unlock 10 bosses', target: 10, fate: 5 },
-    { title: 'Headhunter', description: 'Unlock 25 bosses', target: 25, fate: 10 },
-    { title: 'Bane of Bosses', description: 'Unlock 50 bosses', target: 50, fate: 10 },
+    { title: 'Boss Slayer', description: 'Unlock 10 bosses', target: 10, fate: 10 },
+    { title: 'Headhunter', description: 'Unlock 25 bosses', target: 25, fate: 15 },
+    { title: 'Bane of Bosses', description: 'Unlock 50 bosses', target: 50, fate: 15 },
     {
       id: 'bosses-all', title: 'Every Boss', description: 'Unlock every boss', target: 1, icon: 'crown', fate: 25, freeRituals: 1,
       targetFor: (c) => tablePool(TableType.BOSSES, c).length,
@@ -412,8 +412,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   ]),
   ...tiers('minigames', 'Activities', 'minigame', tableOwned(TableType.MINIGAMES, (u) => u.minigames), [
     { title: 'Minigamer', description: 'Unlock your first minigame', target: 1 },
-    { title: 'Game Night', description: 'Unlock 5 minigames', target: 5, fate: 5 },
-    { title: 'Regular Player', description: 'Unlock 15 minigames', target: 15, fate: 10 },
+    { title: 'Game Night', description: 'Unlock 5 minigames', target: 5, fate: 10 },
+    { title: 'Regular Player', description: 'Unlock 15 minigames', target: 15, fate: 15 },
     {
       id: 'minigames-all', title: 'Minigame Master', description: 'Unlock every minigame', target: 1, icon: 'crown', fate: 25,
       targetFor: (c) => tablePool(TableType.MINIGAMES, c).length,
@@ -424,9 +424,9 @@ export const ACHIEVEMENTS: Achievement[] = [
   ...tiers('collection', 'Collection', 'collection', collectionItems, [
     { title: 'Collector', description: 'Log your first collection item', target: 1 },
     { title: 'Hoarder', description: 'Log 25 collection items', target: 25 },
-    { title: 'Curio Keeper', description: 'Log 100 collection items', target: 100, fate: 5 },
-    { title: 'Archivist', description: 'Log 250 collection items', target: 250, fate: 10 },
-    { title: 'Curator', description: 'Log 500 collection items', target: 500, fate: 10 },
+    { title: 'Curio Keeper', description: 'Log 100 collection items', target: 100, fate: 10 },
+    { title: 'Archivist', description: 'Log 250 collection items', target: 250, fate: 15 },
+    { title: 'Curator', description: 'Log 500 collection items', target: 500, fate: 15 },
     { title: 'Museum Piece', description: 'Log 1,000 collection items', target: 1000, fate: 25 },
   ]),
 
@@ -434,61 +434,61 @@ export const ACHIEVEMENTS: Achievement[] = [
   ...tiers('rolls', 'Fate', 'key', ({ stats }) => stats.rolls, [
     { title: 'Tempt Fate', description: 'Make your first Key roll', target: 1 },
     { title: 'Regular', description: 'Make 100 Key rolls', target: 100 },
-    { title: 'Devotee', description: 'Make 1,000 Key rolls', target: 1000, fate: 5 },
-    { title: 'Zealot', description: 'Make 2,500 Key rolls', target: 2500, fate: 5 },
-    { title: 'Fate-Bound', description: 'Make 4,000 Key rolls', target: 4000, fate: 10 },
-    { title: "Fate's Chosen", description: 'Make 7,500 Key rolls', target: 7500, fate: 10 },
+    { title: 'Devotee', description: 'Make 1,000 Key rolls', target: 1000, fate: 10 },
+    { title: 'Zealot', description: 'Make 2,500 Key rolls', target: 2500, fate: 10 },
+    { title: 'Fate-Bound', description: 'Make 4,000 Key rolls', target: 4000, fate: 15 },
+    { title: "Fate's Chosen", description: 'Make 7,500 Key rolls', target: 7500, fate: 15 },
   ]),
   ...tiers('keys-won', 'Fate', 'key', ({ stats }) => stats.keysWon, [
     { title: 'Key Ring', description: 'Win 10 Keys from rolls', target: 10 },
-    { title: 'Key Chain', description: 'Win 50 Keys from rolls', target: 50, fate: 5 },
-    { title: 'Keymaster', description: 'Win 250 Keys from rolls', target: 250, fate: 5 },
-    { title: 'Locksmith', description: 'Win 500 Keys from rolls', target: 500, fate: 10 },
-    { title: 'Gatekeeper', description: 'Win 1,000 Keys from rolls', target: 1000, fate: 10 },
+    { title: 'Key Chain', description: 'Win 50 Keys from rolls', target: 50, fate: 10 },
+    { title: 'Keymaster', description: 'Win 250 Keys from rolls', target: 250, fate: 10 },
+    { title: 'Locksmith', description: 'Win 500 Keys from rolls', target: 500, fate: 15 },
+    { title: 'Gatekeeper', description: 'Win 1,000 Keys from rolls', target: 1000, fate: 15 },
   ]),
   ...tiers('win-streak', 'Fate', 'flame', ({ stats }) => stats.longestWinStreak, [
-    { title: 'Lightning Strikes Twice', description: 'Win two Key rolls in a row', target: 2, fate: 5 },
-    { title: 'Hat-trick', description: 'Win three Key rolls in a row', target: 3, fate: 5 },
-    { title: 'On a Roll', description: 'Win five Key rolls in a row', target: 5, fate: 10 },
-    { title: "Fate's Favourite", description: 'Win eight Key rolls in a row', target: 8, fate: 10 },
+    { title: 'Lightning Strikes Twice', description: 'Win two Key rolls in a row', target: 2, fate: 10 },
+    { title: 'Hat-trick', description: 'Win three Key rolls in a row', target: 3, fate: 10 },
+    { title: 'On a Roll', description: 'Win five Key rolls in a row', target: 5, fate: 15 },
+    { title: "Fate's Favourite", description: 'Win eight Key rolls in a row', target: 8, fate: 15 },
   ]),
   once('roll-1pct', 'Fate', 'sparkles', 'One in a Hundred', 'Win a Key roll with a 1% chance or less',
-    ({ stats }) => stats.luckiestWin <= 0.01, { fate: 10 }),
-  once('roll-omni', 'Fate', 'sparkles', 'Omni!', 'Get an Omni-Key from a roll', ({ stats }) => stats.omniRolls > 0, { fate: 5 }),
+    ({ stats }) => stats.luckiestWin <= 0.01, { fate: 15 }),
+  once('roll-omni', 'Fate', 'sparkles', 'Omni!', 'Get an Omni-Key from a roll', ({ stats }) => stats.omniRolls > 0, { fate: 10 }),
   once('roll-pity', 'Fate', 'key', 'Patience Rewarded', 'Get a Pity Key', ({ stats }) => stats.pityKeys > 0),
   ...tiers('chaos-keys', 'Fate', 'chaos', ({ stats }) => stats.chaosKeys, [
     { title: 'Chaos Theory', description: 'Get your first Chaos Key', target: 1 },
-    { title: 'Agent of Chaos', description: 'Get 100 Chaos Keys', target: 100, fate: 5 },
-    { title: 'Avatar of Chaos', description: 'Get 200 Chaos Keys', target: 200, fate: 10 },
+    { title: 'Agent of Chaos', description: 'Get 100 Chaos Keys', target: 100, fate: 10 },
+    { title: 'Avatar of Chaos', description: 'Get 200 Chaos Keys', target: 200, fate: 15 },
   ]),
   ...tiers('miss-streak', 'Fate', 'flame', ({ stats }) => stats.longestMissStreak, [
     { title: 'Unlucky', description: 'Miss 100 Key rolls in a row', target: 100 },
-    { title: 'Cursed', description: 'Miss 200 Key rolls in a row', target: 200, fate: 10, hidden: true },
+    { title: 'Cursed', description: 'Miss 200 Key rolls in a row', target: 200, fate: 15, hidden: true },
   ]),
 
   // The Void Altar
   once('ritual-any', 'Void Altar', 'altar', 'Void Initiate', 'Perform your first ritual', ({ stats }) => stats.rituals.size > 0),
   once('ritual-luck', 'Void Altar', 'altar', 'Clear Sight', 'Perform the Ritual of Clarity', didRitual('LUCK')),
-  once('ritual-greed', 'Void Altar', 'altar', 'Double or Nothing', 'Get 2 Keys from the Ritual of Greed', ({ stats }) => stats.greedDoubled, { fate: 5 }),
+  once('ritual-greed', 'Void Altar', 'altar', 'Double or Nothing', 'Get 2 Keys from the Ritual of Greed', ({ stats }) => stats.greedDoubled, { fate: 10 }),
   once('ritual-chaos', 'Void Altar', 'chaos', 'Chaos Bringer', 'Perform the Ritual of Chaos', didRitual('CHAOS')),
   once('ritual-transmute', 'Void Altar', 'sparkles', 'Transmuter', 'Turn 5 Keys into an Omni-Key', didRitual('TRANSMUTE')),
   once('ritual-gambit', 'Void Altar', 'altar', 'High Roller', 'Win a Void Gambit', ({ stats }) => stats.gambitWins > 0),
-  once('ritual-gambit-3', 'Void Altar', 'altar', 'All In', 'Win 3 Keys or more from one Void Gambit', ({ stats }) => stats.biggestGambitWin >= 3, { fate: 10 }),
+  once('ritual-gambit-3', 'Void Altar', 'altar', 'All In', 'Win 3 Keys or more from one Void Gambit', ({ stats }) => stats.biggestGambitWin >= 3, { fate: 15 }),
   once('ritual-cartographer', 'Void Altar', 'map', 'Map Maker', 'Choose a chunk with the Ritual of the Cartographer', didRitual('CARTOGRAPHER'),
     { available: (c) => ritualOffered('CARTOGRAPHER', c) }),
   once('ritual-ward', 'Void Altar', 'altar', 'Blessed', "Let Saradomin's Ward guide a Key", ({ stats }) => stats.wardKeys > 0),
   once('ritual-tears', 'Void Altar', 'altar', "Juna's Favour", 'Perform Tears of Guthix', didRitual('TEARS')),
   once('ritual-pact', 'Void Altar', 'altar', 'Debt Paid', "Pay Zamorak's Blood Debt in full", ({ stats }) => stats.pactDebtPaid >= PACT_DEBT),
-  once('ritual-invocations', 'Void Altar', 'altar', 'Expert Mode', "Take all four of Amascut's Invocations at once", ({ stats }) => stats.allInvocations, { fate: 5 }),
+  once('ritual-invocations', 'Void Altar', 'altar', 'Expert Mode', "Take all four of Amascut's Invocations at once", ({ stats }) => stats.allInvocations, { fate: 10 }),
   ...tiers('ritual-barrows', 'Void Altar', 'altar', ({ stats }) => stats.barrowsBrothers.size, [
-    { id: 'ritual-barrows', title: 'Crypt Raider', description: 'Draw every brother from the Barrows Chest', target: BARROWS_BROTHERS.length, fate: 10 },
+    { id: 'ritual-barrows', title: 'Crypt Raider', description: 'Draw every brother from the Barrows Chest', target: BARROWS_BROTHERS.length, fate: 15 },
   ]),
   once('ritual-sacrifice', 'Void Altar', 'altar', "Fate's Offering", 'Make a Sacrifice', didRitual('SACRIFICE')),
   ...tiers('ritual-every', 'Void Altar', 'altar', (c) => ritualsOffered(c).filter((r) => c.stats.rituals.has(r.id)).length, [
-    { id: 'ritual-every', title: 'Void Priest', description: 'Perform every ritual your mode offers, apart from Sacrifice', target: 1, fate: 10, targetFor: (c) => ritualsOffered(c).length },
+    { id: 'ritual-every', title: 'Void Priest', description: 'Perform every ritual your mode offers, apart from Sacrifice', target: 1, fate: 15, targetFor: (c) => ritualsOffered(c).length },
   ]),
   ...tiers('gambit-losses', 'Void Altar', 'altar', ({ stats }) => stats.longestGambitLosingRun, [
-    { title: "Gambler's Ruin", description: 'Lose 8 Void Gambits in a row', target: 8, fate: 10, hidden: true },
+    { title: "Gambler's Ruin", description: 'Lose 8 Void Gambits in a row', target: 8, fate: 15, hidden: true },
   ]),
 
   // The other unlock tables
@@ -515,16 +515,16 @@ export const ACHIEVEMENTS: Achievement[] = [
   // Pets
   ...tiers('pets', 'Pets', 'pet', ({ petsClaimed }) => new Set(petsClaimed).size, [
     { title: 'Funny Feeling', description: 'Log your first pet', target: 1 },
-    { title: 'Pet Shop', description: 'Log 5 pets', target: 5, fate: 5 },
+    { title: 'Pet Shop', description: 'Log 5 pets', target: 5, fate: 10 },
     { title: 'Menagerie', description: 'Log 25 pets', target: 25, fate: 25 },
     { id: 'pets-all', title: 'Every Pet', description: 'Log every pet', target: TOTAL_PETS, icon: 'crown', fate: 25, freeRituals: 1 },
   ]),
 
   // Mastery (overall completion)
   ...tiers('mastery', 'Mastery', 'sparkles', ({ u, mode, custom }) => completionPercent(u, mode, custom), [
-    { title: 'Quarter Way', description: 'Reach 25% overall completion', target: 25, fate: 5 },
-    { title: 'Halfway There', description: 'Reach 50% overall completion', target: 50, fate: 10 },
-    { title: 'Three Quarters', description: 'Reach 75% overall completion', target: 75, fate: 10 },
+    { title: 'Quarter Way', description: 'Reach 25% overall completion', target: 25, fate: 10 },
+    { title: 'Halfway There', description: 'Reach 50% overall completion', target: 50, fate: 15 },
+    { title: 'Three Quarters', description: 'Reach 75% overall completion', target: 75, fate: 15 },
     { title: 'Almost There', description: 'Reach 90% overall completion', target: 90, fate: 25 },
     { title: 'Fate Conqueror', description: 'Reach 100% overall completion', target: 100, icon: 'trophy', fate: 25, freeRituals: 1 },
   ]),
@@ -566,4 +566,4 @@ export function achievementPayouts(run: AchievementRun): AchievementPayout[] {
     .map(({ id, title, description, fate, freeRituals }) => ({ id, title, description, fate, freeRituals }));
 }
 
-export { rewardLabel, ritualName };
+export { fateDue, rewardLabel, ritualName };

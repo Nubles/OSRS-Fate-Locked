@@ -2976,13 +2976,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   }), [commitAction]);
   const claimPet = useCallback((pet: { id: number; name: string }, x?: number, y?: number) =>
     commitAction({ type: 'CLAIM_PET', payload: { petId: pet.id, petName: pet.name, x, y } }), [commitAction]);
-  // Fate picks each free ritual here, so the reducer stays pure; picks for achievements already settled go unused.
+  // Fate picks each free ritual here, so the reducer stays pure. Settled achievements draw nothing.
   const settleAchievementsCallback = useCallback((earned: AchievementPayout[]) => {
     const modeId = stateRef.current.gameModeId;
     let draw = 0;
-    const payload = earned.map((a) => a.freeRituals > 0
+    const claimed = stateRef.current.achievementsClaimed;
+    const payload = earned.map((a) => (a.freeRituals > 0 && !claimed?.includes(a.id)
       ? { ...a, ritualPicks: Array.from({ length: a.freeRituals }, () => pickFreeRitual(modeId, nextFloat('achievement-ritual', draw++))) }
-      : a);
+      : a));
     commitAction({ type: 'SETTLE_ACHIEVEMENTS', payload });
   }, [commitAction, nextFloat]);
   const setAchievementTitle = useCallback((id: string | null) =>

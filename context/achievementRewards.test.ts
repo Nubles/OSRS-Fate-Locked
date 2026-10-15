@@ -5,7 +5,7 @@ import type { FailureFateAward, GameState } from '../types';
 import { replayInvariants } from '../utils/integrity';
 import { CURRENT_SAVE_VERSION, validateAndMigrateSave } from '../utils/saveSchema';
 import { achievementById, achievementPayouts } from '../utils/achievements';
-import { freeRitualPool, pickFreeRitual } from '../utils/achievementRewards';
+import { freeRitualPool, pickFreeRitual, smallFate } from '../utils/achievementRewards';
 
 /**
  * Achievements pay their reward once: Fate (filled up to the pity line at
@@ -58,8 +58,8 @@ describe('achievement rewards', () => {
     const after = settle(before);
 
     expect(after.achievementsClaimed).toEqual(expect.arrayContaining(['pets-1', 'pets-5', 'rolls-1']));
-    // Pet Shop pays 5 Fate; Funny Feeling and Tempt Fate are titles only.
-    expect(after.fatePoints).toBe(before.fatePoints + 5);
+    // Pet Shop pays 10 Fate; Funny Feeling and Tempt Fate have no set Fate and pay this run's 1 to 5.
+    expect(after.fatePoints).toBe(before.fatePoints + 10 + smallFate(RUN_ID, 'pets-1') + smallFate(RUN_ID, 'rolls-1'));
     const entries = after.history.slice(before.history.length);
     expect(entries.map((e) => e.meta?.achievementId)).toEqual(expect.arrayContaining(['pets-1', 'pets-5', 'rolls-1']));
     expect(entries.every((e) => e.type === 'ACHIEVEMENT')).toBe(true);
@@ -75,15 +75,16 @@ describe('achievement rewards', () => {
     const after = settle(before);
 
     expect(after.achievementsClaimed).toEqual(expect.arrayContaining(['pets-1', 'pets-5']));
-    // Pet Shop's 5 Fate, in one entry.
-    expect(after.fatePoints).toBe(12);
+    // Pet Shop's 10 Fate and Funny Feeling's 1 to 5, in one entry.
+    const paid = 10 + smallFate(RUN_ID, 'pets-1');
+    expect(after.fatePoints).toBe(7 + paid);
     expect(after.history.slice(before.history.length)).toEqual([
-      expect.objectContaining({ type: 'ACHIEVEMENT', message: 'Achievement back pay', meta: expect.objectContaining({ backPay: true, fateAwarded: 5, fatePointsAfter: 12 }) }),
+      expect.objectContaining({ type: 'ACHIEVEMENT', message: 'Achievement back pay', meta: expect.objectContaining({ backPay: true, fateAwarded: paid, fatePointsAfter: 7 + paid }) }),
     ]);
     expect(settle(after)).toBe(after);
     // The next one it earns is paid as usual.
     const later = settle(withPets(after, 25));
-    expect(later.fatePoints).toBe(12 + 25);
+    expect(later.fatePoints).toBe(7 + paid + 25);
     expect(later.achievementsClaimed).toContain('pets-25');
   });
 
@@ -97,11 +98,19 @@ describe('achievement rewards', () => {
     expect(replayFate(after).violations).toEqual([]);
   });
 
-  it('gives a run from before rewards nothing when it had earned nothing that pays', () => {
-    const before = withPets(legacy({ fatePoints: 7 }), 1);
+  it('pays each run its own 1 to 5 Fate for an achievement with no set Fate', () => {
+    expect(achievementById('pets-1')?.fate).toBe(0);
+    const before = withPets(fresh({ fatePoints: 7 }), 1);
     const after = settle(before);
-    expect(after.fatePoints).toBe(7);
-    expect(after.history).toEqual(before.history);
+    const due = smallFate(RUN_ID, 'pets-1');
+    expect(after.fatePoints).toBe(7 + due);
+    expect(after.history.at(-1)).toMatchObject({ meta: { achievementId: 'pets-1', fateAwarded: due } });
+    expect(replayFate(after).violations).toEqual([]);
+
+    // The same run always pays the same; across runs the amounts spread over 1 to 5.
+    expect(smallFate(RUN_ID, 'pets-1')).toBe(due);
+    const amounts = new Set(Array.from({ length: 200 }, (_, i) => smallFate(`run-${i}`, 'pets-1')));
+    expect([...amounts].sort()).toEqual([1, 2, 3, 4, 5]);
   });
 
   it('fills Fate up to the pity line at most', () => {
