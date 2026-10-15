@@ -3,12 +3,15 @@
  * so a new ritual in config/economy.ts doesn't typecheck until it has a scene.
  * Scene positions are in the 420x300 stage; FX positions are a third of that.
  */
-import { GREED_REFUND_FRACTION, getRitual, type Ritual } from '../../config/economy';
+import {
+  BARROWS_BROTHERS, BARROWS_ROLLS, GREED_REFUND_FRACTION, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ODDS_BONUS, PACT_ROLLS,
+  SACRIFICE_TIERS, TEARS_FAILS, getRitual, invocationOmniBonus, type BarrowsBrother, type Ritual,
+} from '../../config/economy';
 import { chunkLabel } from '../../utils/chunkAdjacency';
 import { MAP_IMAGE } from '../../utils/mapCoords';
 import { RITUAL_MAP_COLS, RITUAL_MAP_ROWS, ritualMapWindow } from '../../utils/ritualMapWindow';
-import { RS_BOLD, RS_SMALL, spriteImg, spriteUrl, SPRITE_H, SPRITE_W, type SpriteName } from './ritualAssets';
-import { makeCoin, makeDie, makePortal } from './ritualPixels';
+import { RS_BOLD, RS_SMALL, skillIcon, slotIcon, spriteImg, spriteUrl, SPRITE_H, SPRITE_W, type SpriteName } from './ritualAssets';
+import { makeCoin, makeDie, makePortal, pixelCanvas } from './ritualPixels';
 import type { SceneFactory } from './ritualStage';
 
 export interface RitualSceneInput {
@@ -424,6 +427,467 @@ const transmute: Scene = (k) => {
   };
 };
 
+/** A small text panel in the scene, e.g. the Pact's blood contract. */
+const panel = (className: string, text: string, font = RS_BOLD): HTMLDivElement => {
+  const d = document.createElement('div');
+  d.className = className;
+  d.style.fontFamily = font;
+  d.textContent = text;
+  return d;
+};
+
+/** Saradomin's Ward: Saradomin's light shines on your Key; places out of reach fall dark, the rest light up. */
+const ward: Scene = (k) => {
+  const cx = 210, cy = 168;
+  const halo = glow('rgba(140,210,255,.5)');
+  k.node(cx, cy, halo, 1);
+  const keyNode = k.node(cx, cy, k.slot(spriteImg('key', 2)), 4);
+  // One of each kind of place a Key can land on, near and far.
+  const places: Array<[SpriteName, boolean, string]> = [
+    ['baby_mole', false, 'Boss'], ['castle_wars_ticket', true, 'Minigame'], ['coins_10000', true, 'Shop'],
+    ['dragon_defender', true, 'Guild'], ['fire_cape', false, 'Minigame'], ['pet_snakeling', false, 'Boss'],
+  ];
+  const pos = places.map((_, i) => [(i < 3 ? 70 : 350) + [8, -12, 10][i % 3] * (i < 3 ? 1 : -1), 86 + (i % 3) * 84] as const);
+  const kinds: HTMLElement[] = [];
+  const nodes = places.map(([name, , kind], i) => {
+    const n = k.node(pos[i][0], pos[i][1], k.slot(spriteImg(name, 2)), 3);
+    n.style.opacity = '0';
+    const l = k.label(pos[i][0], pos[i][1] + 42, kind, { color: '#ffff00' }).node;
+    l.style.opacity = '0';
+    kinds.push(l);
+    return n;
+  });
+  const star = spriteImg('saradomin_light', 3);
+  const starNode = k.node(cx, -50, star, 6);
+  const beam = Object.assign(document.createElement('div'), { className: 'ritual-beam' });
+  k.node(cx, 112, beam, 2);
+  k.at(0, () => nodes.forEach((n, i) => {
+    k.anim(n, [{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 200, delay: i * 50, easing: 'steps(3, end)' });
+    k.anim(kinds[i], [{ opacity: 0 }, { opacity: 1 }], { duration: 160, delay: 120 + i * 50, easing: 'steps(4, end)' });
+  }));
+  k.at(400, () => k.anim(starNode, [{ transform: 'translateY(0)' }, { transform: 'translateY(100px)' }], { duration: 520, easing: 'ease-out' }));
+  const stopSparkle = k.fx.emitter(fx => {
+    if (Math.random() >= 0.5) return;
+    fx.add({ x: 60 + Math.random() * 20, y: 10 + Math.random() * 20, vy: 0.3, life: 14, color: Math.random() < 0.5 ? '#fff6c8' : '#9fd8ff', kind: 'plus' });
+  });
+  k.at(950, () => {
+    k.anim(beam, [{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: 'steps(4, end)' });
+    k.fx.ring(70, 56, '#fff6c8', 26, 1.5);
+  });
+  places.forEach(([, reachable], i) => {
+    const t = 1200 + (reachable ? 380 : 0) + (i % 3) * 90;
+    k.at(t, () => {
+      const slot = nodes[i].firstElementChild as HTMLElement;
+      k.hide(kinds[i], 80);
+      if (reachable) {
+        slot.style.outline = '2px solid #ffff00';
+        k.fx.burst(pos[i][0] / 3, pos[i][1] / 3, 8, ['#ffffff', '#fff6c8', '#ffd84a'], 1, { kind: 'plus' });
+        k.show(k.label(pos[i][0], pos[i][1] + 42, 'In reach', { color: '#00ff00' }).node, 160);
+      } else {
+        k.anim(slot, [{ filter: 'none', opacity: 1 }, { filter: 'grayscale(1) brightness(.6)', opacity: 0.75 }], { duration: 260, easing: 'steps(4, end)' });
+        k.show(k.label(pos[i][0], pos[i][1] + 42, 'Out of reach', { color: '#ff3a2a' }).node, 160);
+      }
+    });
+  });
+  k.at(2050, () => {
+    stopSparkle();
+    k.anim(halo, [{ opacity: 0 }, { opacity: 1, offset: 0.35 }, { opacity: 0.6 }], { duration: 700, easing: 'ease-out' });
+    k.pop(keyNode, 320);
+    k.fx.ring(70, 56, '#9fd8ff', 30, 1.6);
+    k.fx.burst(70, 56, 18, ['#ffffff', '#9fd8ff', '#ffd84a'], 1.5, { kind: 'plus' });
+  });
+  k.at(2300, () => k.ambient(star, [{ filter: 'brightness(1)' }, { filter: 'brightness(1.3)' }, { filter: 'brightness(1)' }], { duration: 1200, easing: 'steps(6, end)' }));
+  return {
+    end: 2400,
+    title: getRitual('WARD').name,
+    icon: () => spriteImg('saradomin_light', 2),
+    text: 'Saradomin wards your next Key. It can only land on something you can use right now.',
+  };
+};
+
+/**
+ * The weeping wall of the Tears of Guthix cave: rough rock hanging from the
+ * ceiling, with a crystal at each crack the tears run from (two blue, one green).
+ * `streams` are the cracks' x positions on the 110px-wide canvas.
+ */
+const makeWeepingWall = (scale: number, streams: Array<[number, 'blue' | 'green']>): HTMLCanvasElement => {
+  const W = 110, H = 26;
+  const { el, g } = pixelCanvas(W, H, scale);
+  if (!g) return el;
+  // Fixed jitter so the wall is the same rock every time.
+  const noise = (i: number) => { const v = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return v - Math.floor(v); };
+  const px = (x: number, y: number, c: string) => { g.fillStyle = c; g.fillRect(x, y, 1, 1); };
+  const bottom: number[] = [];
+  for (let x = 0; x < W; x++) {
+    let b = 15 + Math.round(Math.sin(x / 7) * 2 + noise(x) * 2);
+    for (const [sx] of streams) {
+      const d = Math.abs(x - sx);
+      if (d < 5) b = Math.max(b, 23 - d * 2);
+    }
+    // The ends fall away into the dark.
+    if (x < 4 || x > W - 5) b -= 4 - Math.min(x, W - 1 - x);
+    bottom.push(b);
+  }
+  const rock = ['#4a4238', '#433b32', '#524a3f', '#3a332b'];
+  for (let x = 0; x < W; x++) {
+    for (let y = 0; y <= bottom[x]; y++) {
+      const shade = y < 4 ? '#24201b' : y < 7 ? '#2f2923' : rock[Math.floor(noise(x * 31 + y * 7) * 4)];
+      px(x, y, shade);
+    }
+    px(x, bottom[x], '#1a1611');
+    if (bottom[x] - 1 > 7 && noise(x * 5) > 0.55) px(x, bottom[x] - 1, '#5c5244');
+  }
+  // Seams in the rock.
+  for (let i = 0; i < 9; i++) {
+    const x0 = Math.floor(noise(i * 91) * (W - 10)) + 4, y0 = 8 + Math.floor(noise(i * 17) * 5);
+    for (let j = 0; j < 4; j++) px(x0 + j, y0 + (j > 1 ? 1 : 0), '#2a241d');
+  }
+  const pal = {
+    blue: { lo: '#1f6fb0', mid: '#4fb3ff', hi: '#bfe6ff' },
+    green: { lo: '#1f8a1f', mid: '#3fd43f', hi: '#b6f5b6' },
+  };
+  for (const [sx, colour] of streams) {
+    const c = pal[colour];
+    const tip = bottom[sx];
+    // A small crystal cluster in the crack, lit from inside.
+    for (const [dx, dy, col] of [
+      [0, -5, c.lo], [0, -4, c.mid], [0, -3, c.hi], [0, -2, c.mid], [0, -1, c.mid], [0, 0, c.lo],
+      [-1, -3, c.lo], [-1, -2, c.mid], [1, -4, c.lo], [1, -3, c.mid], [1, -2, c.lo],
+      [-2, -1, c.lo], [2, -2, c.lo],
+    ] as Array<[number, number, string]>) px(sx + dx, tip + dy, col);
+  }
+  return el;
+};
+
+/** Tears of Guthix: blue tears run down the wall into your bowl; a green one misses. Ten fails will pay double. */
+const tears: Scene = (k) => {
+  const fails = TEARS_FAILS;
+  // Cracks at stage x 150, 210 and 270: canvas x = (stage x - 45) / 3.
+  k.node(210, 40, makeWeepingWall(3, [[35, 'blue'], [55, 'blue'], [75, 'green']]), 2);
+  const halo = glow('rgba(79,179,255,.45)');
+  k.node(210, 186, halo, 1);
+  const bowlNode = k.node(210, 186, spriteImg('stone_bowl', 3), 4);
+  const streams = [150, 210, 270];
+  // A tear falls from a crack in the wall into the bowl (FX units are a third of the stage).
+  const tear = (sx: number, color: string, miss = 0) => {
+    const x0 = sx / 3, y0 = 25, x1 = 70 + miss, y1 = 58;
+    const n = 14;
+    k.fx.add({ x: x0, y: y0, vx: (x1 - x0) / n, vy: (y1 - y0) / n, life: n, color, size: 2 });
+  };
+  const stopDrip = k.fx.emitter(fx => {
+    for (const sx of streams) if (Math.random() < 0.25) fx.add({ x: sx / 3, y: 24, vy: 0.4, life: 6, color: '#4fb3ff' });
+  });
+  let t = 250;
+  for (let i = 0; i < 9; i++) {
+    const sx = streams[i % 3];
+    k.at(t, () => tear(sx, i % 2 ? '#8fd3ff' : '#4fb3ff'));
+    k.at(t + 560, () => k.fx.burst(70, 58, 3, ['#4fb3ff', '#ffffff'], 0.7, { g: 0.05 }));
+    t += 120;
+  }
+  k.at(800, () => tear(270, '#3fd43f', 26));
+  k.at(1360, () => k.fx.burst(96, 60, 6, ['#3fd43f', '#1f8a1f'], 0.8, { g: 0.06 }));
+  k.at(1700, () => {
+    stopDrip();
+    k.anim(halo, [{ opacity: 0 }, { opacity: 1, offset: 0.35 }, { opacity: 0.5 }], { duration: 700, easing: 'ease-out' });
+    k.pop(bowlNode, 300);
+    k.fx.ring(70, 62, '#8fd3ff', 26, 1.4);
+    k.pop(k.label(310, 186, 'x2', { font: 'bold', big: true, color: '#4fb3ff' }).node, 280);
+  });
+  const pips: HTMLDivElement[] = [];
+  for (let i = 0; i < fails; i++) {
+    const p = document.createElement('div');
+    Object.assign(p.style, { width: '14px', height: '14px', background: '#4fb3ff', border: '2px solid #0b2a44', boxShadow: 'inset -2px -2px 0 #1f6fb0' });
+    const n = k.node(210 + (i - (fails - 1) / 2) * 22, 252, p, 3);
+    n.style.opacity = '0';
+    pips.push(n);
+  }
+  k.at(1950, () => k.ticker(45, fails, i => { pips[i].style.opacity = '1'; }, () => pips.forEach(p => { p.style.opacity = '1'; })));
+  k.at(2400, () => k.show(k.label(210, 280, `Next ${fails} failed rolls`).node, 160));
+  return {
+    end: 2600,
+    title: getRitual('TEARS').name,
+    icon: () => spriteImg('stone_bowl', 2),
+    text: `Your next ${fails} failed rolls give double Fate. It ends when a roll lands.`,
+  };
+};
+
+/** Zamorak's Pact: the unholy symbol burns, three rolls are marked +15%, and a blood contract names the debt. */
+const pact: Scene = (k) => {
+  const halo = glow('rgba(200,20,20,.55)');
+  k.node(210, 92, halo, 1);
+  const sym = k.node(210, 92, spriteImg('unholy_symbol', 3), 4);
+  sym.style.opacity = '0';
+  const embers = ['#ff2a1a', '#ff8a00', '#8a0000'];
+  const stopFire = k.fx.emitter(fx => {
+    for (let i = 0; i < 2; i++) {
+      fx.add({ x: 50 + Math.random() * 40, y: 46, vy: -0.5 - Math.random() * 0.6, vx: (Math.random() - 0.5) * 0.4,
+        life: 18 + Math.floor(Math.random() * 16), color: embers[Math.floor(Math.random() * 3)], flicker: true });
+    }
+  });
+  k.at(0, () => {
+    k.anim(sym, [{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 360, easing: 'steps(6, end)' });
+    k.anim(halo, [{ opacity: 0 }, { opacity: 0.8 }], { duration: 500, easing: 'steps(5, end)' });
+  });
+  const xs = [120, 210, 300];
+  xs.forEach((x, i) => {
+    const d = makeDie(4);
+    d.draw([6]);
+    const n = k.node(x, 196, d.el, 3);
+    n.style.opacity = '0';
+    const t = 550 + i * 230;
+    k.at(t, () => {
+      k.pop(n, 260);
+      k.fx.burst(x / 3, 65, 8, embers, 1.1);
+    });
+    k.at(t + 120, () => k.pop(k.label(x, 244, `+${PACT_ODDS_BONUS}%`, { font: 'bold', color: '#00ff00' }).node, 220));
+  });
+  const scroll = panel('ritual-scroll', `Blood Debt: ${PACT_DEBT} Fate`);
+  const scrollNode = k.node(210, 280, scroll, 6);
+  scrollNode.style.opacity = '0';
+  k.at(1500, () => {
+    k.anim(scrollNode, [{ opacity: 0, transform: 'scaleX(.1)' }, { opacity: 1, transform: 'scaleX(1)' }], { duration: 320, easing: 'steps(8, end)' });
+  });
+  k.at(1850, () => {
+    stopFire();
+    k.fx.ring(70, 31, '#ff2a1a', 30, 1.6);
+    k.fx.burst(70, 31, 16, ['#ff2a1a', '#8a0000', '#ffb000'], 1.5);
+    for (let i = 0; i < 10; i++) k.fx.add({ x: 46 + Math.random() * 48, y: 96, vy: 0.4 + Math.random() * 0.3, g: 0.03, life: 14, color: '#8a0000' });
+  });
+  k.at(1900, () => k.ambient(halo, [{ opacity: 0.8 }, { opacity: 0.45 }, { opacity: 0.8 }], { duration: 1100, easing: 'steps(5, end)' }));
+  return {
+    end: 2200,
+    title: getRitual('PACT').name,
+    icon: () => spriteImg('unholy_symbol', 2),
+    text: `Your next ${PACT_ROLLS} rolls get +${PACT_ODDS_BONUS}% odds. Then Zamorak takes the next ${PACT_DEBT} Fate you earn.`,
+  };
+};
+
+/** Amascut's Invocations: each chosen handicap lights up on the tablet and the Omni-Key chance climbs. */
+const invocations: Scene = (k, { meta }) => {
+  const chosen = Array.isArray(meta.invocations)
+    ? INVOCATIONS.filter(i => (meta.invocations as unknown[]).includes(i.id)).map(i => i.id)
+    : INVOCATIONS.map(i => i.id);
+  k.node(210, 34, spriteImg('tumekens_shadow', 2), 4);
+  const tablet = document.createElement('div');
+  tablet.className = 'ritual-tablet';
+  const rows = INVOCATIONS.map(inv => {
+    const row = document.createElement('div');
+    row.className = 'ritual-row';
+    row.style.fontFamily = RS_SMALL;
+    const tick = Object.assign(document.createElement('div'), { className: 'ritual-tick' });
+    const name = document.createElement('span');
+    name.textContent = `${inv.name}: ${inv.handicap}`;
+    const bonus = document.createElement('span');
+    bonus.textContent = `+${inv.omniBonus}%`;
+    bonus.style.visibility = 'hidden';
+    row.append(tick, name, bonus);
+    tablet.append(row);
+    return { inv, row, tick, bonus };
+  });
+  const tabletNode = k.node(210, 136, tablet, 3);
+  tabletNode.style.opacity = '0';
+  const halo = glow('rgba(255,200,80,.45)');
+  k.node(210, 252, halo, 1);
+  const counter = k.label(210, 252, 'Omni-Key chance +0%', { font: 'bold', color: '#ffff00' });
+  counter.node.style.opacity = '0';
+  k.at(0, () => { k.show(tabletNode, 240); k.show(counter.node, 240); });
+  const sand = ['#ffd84a', '#e8b54a', '#c48a00'];
+  let total = 0, t = 450;
+  rows.forEach(({ inv, row, tick, bonus }) => {
+    if (!chosen.includes(inv.id)) {
+      k.at(t - 100, () => { row.style.opacity = '0.45'; });
+      return;
+    }
+    total += inv.omniBonus;
+    const now = total;
+    const y = 136 - 52 + rows.findIndex(r => r.inv === inv) * 26 + 18;
+    k.at(t, () => {
+      tick.classList.add('ritual-on');
+      row.style.color = '#000';
+      bonus.style.visibility = 'visible';
+      counter.span.textContent = `Omni-Key chance +${now}%`;
+      k.fx.burst(32, y / 3, 10, sand, 1, { g: 0.05 });
+    });
+    t += 330;
+  });
+  const all = chosen.length === INVOCATIONS.length;
+  const final = invocationOmniBonus(chosen);
+  k.at(t + 50, () => {
+    counter.span.textContent = `Omni-Key chance +${final}%`;
+    k.anim(halo, [{ opacity: 0 }, { opacity: 1, offset: 0.35 }, { opacity: 0.5 }], { duration: 700, easing: 'ease-out' });
+    k.pop(counter.node, 300);
+    k.fx.ring(70, 84, '#ffd84a', 30, 1.6);
+    k.fx.burst(70, 84, all ? 22 : 12, ['#ffffff', ...sand], 1.5, { kind: 'plus' });
+  });
+  if (all) k.at(t + 300, () => k.pop(k.label(210, 282, 'All four invoked', { color: '#ff981f' }).node, 220));
+  else k.at(t + 300, () => k.show(k.label(210, 282, `Next ${INVOCATION_ROLLS} rolls`).node, 160));
+  return {
+    end: t + 500,
+    title: getRitual('INVOCATIONS').name,
+    icon: () => spriteImg('tumekens_shadow', 2),
+    text: `Your next ${INVOCATION_ROLLS} rolls carry your invocations. Successes get a ${final}% higher Omni-Key chance.`,
+  };
+};
+
+const BROTHER_SPRITES: Record<BarrowsBrother['id'], [SpriteName, SpriteName]> = {
+  AHRIM: ['ahrim_hood', 'ahrim_staff'],
+  DHAROK: ['dharok_helm', 'dharok_axe'],
+  GUTHAN: ['guthan_helm', 'guthan_spear'],
+  KARIL: ['karil_coif', 'karil_crossbow'],
+  TORAG: ['torag_helm', 'torag_hammers'],
+  VERAC: ['verac_helm', 'verac_flail'],
+};
+
+/** Barrows Chest: a spade breaks the mound, the selector runs the six crypts and stops on fate's brother. */
+const barrows: Scene = (k, { meta }) => {
+  const brother = BARROWS_BROTHERS.find(b => b.id === meta.brother) ?? BARROWS_BROTHERS[1];
+  const chosen = BARROWS_BROTHERS.indexOf(brother);
+  const cx = 210, cy = 132, R = 108;
+  const floor = document.createElement('div');
+  Object.assign(floor.style, { width: '400px', height: '290px', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(92,84,66,.7) 0%, rgba(58,52,40,.45) 55%, rgba(0,0,0,0) 72%)' });
+  k.node(cx, cy, floor, 0);
+  const halo = glow('rgba(120,200,80,.4)');
+  k.node(cx, cy, halo, 1);
+  const pos = BARROWS_BROTHERS.map((_, i) => {
+    const a = -Math.PI / 2 + i * Math.PI * 2 / BARROWS_BROTHERS.length;
+    return [cx + Math.cos(a) * R * 1.15, cy + Math.sin(a) * R * 0.92] as const;
+  });
+  const helms = BARROWS_BROTHERS.map((b, i) => {
+    const img = spriteImg(BROTHER_SPRITES[b.id][0], 2);
+    img.style.filter = 'brightness(1.5)';
+    const n = k.node(pos[i][0], pos[i][1], k.slot(img), 3);
+    n.style.opacity = '0';
+    return n;
+  });
+  const spade = k.node(cx, cy - 120, spriteImg('spade', 3), 6);
+  const sel = document.createElement('div');
+  sel.className = 'ritual-select';
+  const selNode = k.node(pos[0][0], pos[0][1], sel, 4);
+  selNode.style.opacity = '0';
+  const dirt = ['#5a3d1a', '#8a6332', '#3a2610'];
+  k.at(0, () => k.anim(spade, [{ transform: 'translateY(0) rotate(-20deg)' }, { transform: 'translateY(118px) rotate(0deg)' }], { duration: 300, easing: 'ease-in' }));
+  k.at(300, () => {
+    k.fx.burst(70, 50, 22, dirt, 1.3, { g: 0.08 });
+    k.anim(spade, [{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: 'steps(3, end)' });
+  });
+  k.at(420, () => helms.forEach((n, i) => k.anim(n, [{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1)' }],
+    { duration: 200, delay: i * 40, easing: 'steps(3, end)' })));
+  let t = 760, gap = 50;
+  const hops = 12 + chosen;
+  for (let hop = 0; hop <= hops; hop++) {
+    const [x, y] = pos[hop % pos.length];
+    k.at(t, () => {
+      selNode.style.opacity = '1';
+      selNode.style.left = `${x}px`;
+      selNode.style.top = `${y}px`;
+      k.fx.burst(x / 3, y / 3, 2, ['#8aff5a', '#3fd43f'], 0.8);
+    });
+    t += gap;
+    gap *= 1.1;
+  }
+  const reveal = t + 150;
+  const bright = (img: HTMLImageElement) => { img.style.filter = 'brightness(1.5)'; return img; };
+  const weapon = k.node(cx + 44, cy, bright(spriteImg(BROTHER_SPRITES[brother.id][1], 3)), 4);
+  weapon.style.opacity = '0';
+  const helm = k.node(cx - 44, cy, bright(spriteImg(BROTHER_SPRITES[brother.id][0], 3)), 5);
+  helm.style.opacity = '0';
+  k.at(reveal, () => {
+    selNode.style.opacity = '0';
+    helms.forEach((n, i) => k.anim(n, [{ opacity: 1 }, { opacity: i === chosen ? 0 : 0.12 }], { duration: 240, easing: 'steps(4, end)' }));
+    k.anim(halo, [{ opacity: 0 }, { opacity: 1, offset: 0.35 }, { opacity: 0.55 }], { duration: 700, easing: 'ease-out' });
+    k.pop(helm, 320);
+    k.fx.ring(70, 44, '#8aff5a', 30, 1.6);
+    k.fx.burst(70, 44, 18, ['#ffffff', '#8aff5a', '#3fd43f'], 1.5, { kind: 'plus' });
+  });
+  k.at(reveal + 160, () => k.pop(weapon, 280));
+  k.at(reveal + 300, () => k.pop(k.label(cx, 254, brother.name, { font: 'bold', color: '#ffff00' }).node, 240));
+  k.at(reveal + 480, () => k.show(k.label(cx, 280, brother.effect, { color: '#00ff00' }).node, 160));
+  return {
+    end: reveal + 650,
+    title: getRitual('BARROWS').name,
+    icon: () => spriteImg(BROTHER_SPRITES[brother.id][0], 2),
+    text: `${brother.name} powers your next ${BARROWS_ROLLS} rolls. ${brother.effect}.`,
+  };
+};
+
+/** A stone altar like the Chaos Altar's: a wide slab on a plinth, a red rune cut into the front. */
+const makeAltar = (scale: number): HTMLCanvasElement => {
+  const { el, g } = pixelCanvas(60, 22, scale);
+  if (!g) return el;
+  const box = (x: number, y: number, w: number, h: number, c: string) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+  box(0, 0, 60, 6, '#12100d');
+  box(1, 1, 58, 4, '#5d554b');
+  box(1, 1, 58, 1, '#7a7166');
+  box(1, 4, 58, 1, '#3a3530');
+  box(5, 6, 50, 16, '#12100d');
+  box(6, 6, 48, 15, '#3a3530');
+  box(6, 6, 2, 15, '#4a443c');
+  box(51, 6, 3, 15, '#24201b');
+  box(6, 19, 48, 2, '#24201b');
+  // The rune: a red ring with a cross through it.
+  g.fillStyle = '#a00000';
+  for (const [x, y] of [[28, 9], [29, 9], [30, 9], [31, 9], [27, 10], [32, 10], [26, 11], [33, 11], [26, 12], [33, 12], [26, 13], [33, 13], [27, 14], [32, 14], [28, 15], [29, 15], [30, 15], [31, 15]]) g.fillRect(x, y, 1, 1);
+  for (let i = 0; i < 9; i++) { g.fillRect(25 + i, 8 + i, 1, 1); g.fillRect(34 - i, 8 + i, 1, 1); }
+  g.fillStyle = '#5a0000';
+  g.fillRect(14, 1, 3, 1); g.fillRect(40, 2, 4, 1); g.fillRect(41, 3, 1, 1);
+  return el;
+};
+
+/** Sacrifice: three of your top tiers are laid on the altar and burn; an Omni-Key rises from the flames. */
+const sacrifice: Scene = (k, { meta }) => {
+  const taken = Array.isArray(meta.taken) && meta.taken.length
+    ? (meta.taken as Array<{ table?: string; name?: string; tier?: number }>).slice(0, SACRIFICE_TIERS)
+    : [{ table: 'skill', name: 'Woodcutting', tier: 5 }, { table: 'gear', name: 'Body', tier: 3 }, { table: 'skill', name: 'Fishing', tier: 4 }];
+  const usesLeft = typeof meta.usesLeft === 'number' ? meta.usesLeft : null;
+  const halo = glow('rgba(170,20,40,.5)');
+  k.node(210, 236, halo, 1);
+  k.node(210, 244, makeAltar(3), 2);
+  const xs = [110, 210, 310];
+  const offerings = taken.map((o, i) => {
+    // A skill shows its skill-tab icon; a gear slot shows its equipment-tab slot.
+    const n = k.node(xs[i], 70, o.table === 'gear' ? slotIcon(o.name ?? 'Body', 2) : k.slot(skillIcon(o.name ?? 'Attack', 2), 72, 72), 3);
+    n.style.opacity = '0';
+    const l = k.label(xs[i], 122, `${o.name ?? 'Tier'}${o.tier ? ` tier ${o.tier}` : ''}`);
+    l.node.style.opacity = '0';
+    return { n, l };
+  });
+  const flames = ['#ff2a1a', '#8a0000', '#ff8a00', '#2a0a0a'];
+  const stopFire = k.fx.emitter(fx => {
+    if (Math.random() >= 0.7) return;
+    fx.add({ x: 46 + Math.random() * 48, y: 76, vy: -0.4 - Math.random() * 0.5, life: 12 + Math.floor(Math.random() * 10), color: flames[Math.floor(Math.random() * 4)], flicker: true });
+  });
+  k.at(0, () => k.anim(halo, [{ opacity: 0 }, { opacity: 0.7 }], { duration: 500, easing: 'steps(5, end)' }));
+  offerings.forEach(({ n, l }, i) => {
+    k.at(150 + i * 140, () => { k.pop(n, 260); k.show(l.node, 160); });
+    const t = 900 + i * 280;
+    k.at(t, () => {
+      k.hide(l.node, 120);
+      k.anim(n, [{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: `translate(${210 - xs[i]}px,160px) scale(.3)`, opacity: 0 }], { duration: 360, easing: 'ease-in' });
+    });
+    k.at(t + 340, () => k.fx.burst(70, 78, 14, flames, 1.3, { g: -0.03 }));
+  });
+  const omni = spriteImg('omni_key', 3);
+  const omniNode = k.node(210, 214, omni, 5);
+  omniNode.style.opacity = '0';
+  const rise = 900 + offerings.length * 280 + 350;
+  k.at(rise, () => {
+    stopFire();
+    k.anim(omniNode, [{ opacity: 0, transform: 'translateY(20px) scale(.4)' }, { opacity: 1, transform: 'translateY(-70px) scale(1)' }], { duration: 520, easing: 'ease-out' });
+    k.anim(halo, [{ opacity: 0.7 }, { opacity: 1, offset: 0.3 }, { opacity: 0.5 }], { duration: 700, easing: 'ease-out' });
+  });
+  k.at(rise + 500, () => {
+    k.fx.ring(70, 48, '#e6ccff', 30, 1.6);
+    k.fx.burst(70, 48, 18, ['#ffffff', '#b77cf2', '#8fe8ff'], 1.5, { kind: 'plus' });
+  });
+  if (usesLeft !== null) k.at(rise + 650, () => k.show(k.label(210, 282, `Sacrifices left this run: ${usesLeft}`).node, 160));
+  return {
+    end: rise + 750,
+    title: getRitual('SACRIFICE').name,
+    icon: () => spriteImg('omni_key', 2),
+    text: `Fate takes ${taken.map(o => `${o.name ?? 'a tier'}${o.tier ? ` tier ${o.tier}` : ''}`).join(', ')}. You receive an Omni-Key.`,
+  };
+};
+
 export const RITUAL_SCENES: Record<Ritual['id'], Scene> = {
   LUCK: clarity,
   GREED: greed,
@@ -431,4 +895,10 @@ export const RITUAL_SCENES: Record<Ritual['id'], Scene> = {
   GAMBIT: gambit,
   CARTOGRAPHER: cartographer,
   TRANSMUTE: transmute,
+  WARD: ward,
+  TEARS: tears,
+  PACT: pact,
+  INVOCATIONS: invocations,
+  BARROWS: barrows,
+  SACRIFICE: sacrifice,
 };

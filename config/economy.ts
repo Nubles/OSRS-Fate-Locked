@@ -393,7 +393,8 @@ export const UNLOCK_KEY_COST = 1;
 // Transmute), a stake-it-all coin flip (Gambit), and Chunked mode's only
 // agency valve (Cartographer, priced just under the pity key).
 export interface Ritual {
-  id: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE' | 'GAMBIT' | 'CARTOGRAPHER';
+  id: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE' | 'GAMBIT' | 'CARTOGRAPHER'
+    | 'WARD' | 'TEARS' | 'PACT' | 'INVOCATIONS' | 'BARROWS' | 'SACRIFICE';
   name: string;
   tagline: string;
   /** Base cost before the mode multiplier (fate costs are scaled, key costs are not). */
@@ -404,6 +405,8 @@ export interface Ritual {
   stakesAllFate?: boolean;
   /** Only offered in Chunked mode (needs a chunk frontier to choose from). */
   chunkedOnly?: boolean;
+  /** The god behind it. The gods don't share: one god ritual is active at a time. */
+  god?: 'Saradomin' | 'Guthix' | 'Zamorak';
 }
 
 /**
@@ -425,9 +428,57 @@ export const RITUALS: Ritual[] = [
   { id: 'CARTOGRAPHER', name: 'Ritual of the Cartographer', tagline: 'Choose your next chunk.', fateCost: 40, chunkedOnly: true,
     effect: 'See up to 3 random frontier chunks and choose which one unlocks. The only way to choose land in Chunked.' },
   { id: 'TRANSMUTE',    name: 'Ritual of Transmutation', tagline: 'Trade Keys for an Omni-Key.', keyCost: 5, effect: 'Trade 5 Keys for 1 Omni-Key.' },
+  { id: 'WARD',         name: "Saradomin's Ward",        tagline: 'Only land on what you can use.', fateCost: 30, god: 'Saradomin',
+    effect: 'Your next Key can only land on something you can use right now. Fate still picks, just from places you can reach.' },
+  { id: 'TEARS',        name: 'Tears of Guthix',         tagline: 'Double Fate from fails.', fateCost: 10, god: 'Guthix',
+    effect: 'Your next 10 failed rolls give double Fate. It ends when a roll lands, and works once per dry spell.' },
+  { id: 'PACT',         name: "Zamorak's Pact",          tagline: 'Better odds now, pay later.', fateCost: 0, god: 'Zamorak',
+    effect: 'Your next 3 rolls get +15% odds. Then Zamorak takes the next 40 Fate you would earn, and the debt stays even after a roll lands.' },
+  { id: 'INVOCATIONS',  name: "Amascut's Invocations",   tagline: 'Take handicaps for Omni-Keys.', fateCost: 10,
+    effect: 'Pick handicaps for your next 5 rolls. Each one raises the Omni-Key chance on those rolls.' },
+  { id: 'BARROWS',      name: 'Barrows Chest',           tagline: 'A brother powers your next rolls.', fateCost: 20,
+    effect: 'Fate picks a Barrows brother at random, and his set effect powers your next 3 rolls.' },
+  { id: 'SACRIFICE',    name: 'Sacrifice',               tagline: 'Give up three tiers for an Omni-Key.', fateCost: 25,
+    effect: 'Fate takes back the top tier of 3 random skills or gear slots, and you get an Omni-Key. 3 uses per run.' },
 ];
 
 export const getRitual = (id: Ritual['id']): Ritual => RITUALS.find(r => r.id === id)!;
+
+/** Rolls a god ritual or the Barrows Chest lasts for, where it counts rolls. */
+export const PACT_ROLLS = 3;
+export const PACT_ODDS_BONUS = 15;
+export const PACT_DEBT = 40;
+export const TEARS_FAILS = 10;
+export const INVOCATION_ROLLS = 5;
+export const BARROWS_ROLLS = 3;
+export const SACRIFICE_TIERS = 3;
+export const SACRIFICE_USES_PER_RUN = 3;
+export const SACRIFICE_MIN_ROLLS = 200;
+
+/** Amascut's Invocations: each handicap adds to the Omni-Key chance; all four together add a bonus. */
+export interface Invocation { id: 'WALK_THE_PATH' | 'OVERLY_DRAINING' | 'BLOOD_PRICE' | 'NOT_JUST_A_HEAD'; name: string; handicap: string; omniBonus: number }
+export const INVOCATIONS: Invocation[] = [
+  { id: 'WALK_THE_PATH',   name: 'Walk the Path',   handicap: 'Fails give no Fate',     omniBonus: 2 },
+  { id: 'OVERLY_DRAINING', name: 'Overly Draining', handicap: '-5% odds',               omniBonus: 2 },
+  { id: 'BLOOD_PRICE',     name: 'Blood Price',     handicap: 'Each fail costs 5 Fate', omniBonus: 2 },
+  { id: 'NOT_JUST_A_HEAD', name: 'Not Just a Head', handicap: 'No Pity Key',            omniBonus: 2 },
+];
+export const ALL_INVOCATIONS_OMNI_BONUS = 10;
+export const invocationOmniBonus = (ids: readonly Invocation['id'][]): number =>
+  ids.length === INVOCATIONS.length
+    ? ALL_INVOCATIONS_OMNI_BONUS
+    : INVOCATIONS.filter(i => ids.includes(i.id)).reduce((sum, i) => sum + i.omniBonus, 0);
+
+/** The Barrows brothers and the set effect each puts on your next rolls. */
+export interface BarrowsBrother { id: 'AHRIM' | 'DHAROK' | 'GUTHAN' | 'KARIL' | 'TORAG' | 'VERAC'; name: string; effect: string }
+export const BARROWS_BROTHERS: BarrowsBrother[] = [
+  { id: 'AHRIM',  name: 'Ahrim the Blighted',  effect: '+10% odds' },
+  { id: 'DHAROK', name: 'Dharok the Wretched', effect: '+1% odds for every 2 Fate you hold (up to +25%)' },
+  { id: 'GUTHAN', name: 'Guthan the Infested', effect: 'Every fail heals 8 Fate back' },
+  { id: 'KARIL',  name: 'Karil the Tainted',   effect: 'Every success has a 50% chance of a second Key' },
+  { id: 'TORAG',  name: 'Torag the Corrupted', effect: '+5% odds, and the 20 Fate comes back if all 3 fail' },
+  { id: 'VERAC',  name: 'Verac the Defiled',   effect: 'Every fail has a 15% chance to become a success' },
+];
 
 /**
  * A ritual's Fate cost under the run's ritualCostMultiplier — for the Gambit,

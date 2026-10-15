@@ -1,6 +1,7 @@
 
 import type { GameModeRules } from './config/gameModes';
 import type { KeyRollContext } from './config/vanillaKeyEconomy';
+import type { RitualState } from './utils/ritualEffects';
 
 export enum DropSource {
   QUEST_NOVICE = 'Quest (Novice)',
@@ -271,6 +272,8 @@ export interface GameState {
   /** Standard Keys the run gave up in the pet compensation: the next ones it earns pay these first. */
   keysOwed?: number;
   activeBuff: 'NONE' | 'LUCK' | 'GREED';
+  /** The newer Void Altar rituals still running (Ward, Tears, Pact, Invocations, Barrows, Mimic) and Sacrifices used. */
+  rituals?: RitualState;
   unlocks: UnlockState;
   history: LogEntry[];
   animationsEnabled?: boolean;

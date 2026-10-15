@@ -37,6 +37,21 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-15-new-rituals',
+    title: 'Six new rituals at the Void Altar',
+    date: '2026-10-15',
+    sections: {
+      added: [
+        "Saradomin's Ward (30 Fate): your next Key on a boss, minigame, guild or bank only lands on one you can use right now.",
+        'Tears of Guthix (10 Fate): your next 10 failed rolls give double Fate, until a roll lands. Once per dry spell.',
+        "Zamorak's Pact (free): +15% odds on your next 3 rolls, then Zamorak takes the next 40 Fate you'd earn.",
+        "Amascut's Invocations (10 Fate): pick handicaps for your next 5 rolls, and each one raises your Omni-Key chance.",
+        'Barrows Chest (20 Fate): fate picks a brother, and his set effect powers your next 3 rolls.',
+        'Sacrifice (25 Fate): give up the top tier of 3 random skills or gear slots for an Omni-Key. Opens after 200 rolls, 3 uses per run.',
+      ],
+    },
+  },
+  {
     id: '2026-10-13-safer-saves',
     title: 'Safer saves and backups',
     date: '2026-10-13',

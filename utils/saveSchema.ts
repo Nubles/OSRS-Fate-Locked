@@ -20,6 +20,8 @@ import { vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
 import { calculateLegacyFateCompensation, LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
 import { PET_COMPENSATION_ID, petCompensationOffer } from './petCompensation';
 import { isPetId, PET_IDS } from '../data/petIds';
+import { BARROWS_BROTHERS, BARROWS_ROLLS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, type Invocation } from '../config/economy';
+import { tidyRituals, type RitualState } from './ritualEffects';
 /** Version 5 freezes the one-time pet offer and stores claimed pets and owed Keys. */
 export const CURRENT_SAVE_VERSION = 5;
 /**
@@ -790,6 +792,54 @@ const normalizePetCompensation = (value: unknown): Outcome<PetCompensationState>
   };
 };
 
+const RITUAL_KEYS = new Set(['ward', 'tearsFailsLeft', 'tearsSpent', 'pactRollsLeft', 'pactDebt', 'invocations', 'barrows', 'sacrificesUsed']);
+
+/** The newer Void Altar rituals still running: each field bounded by what the rituals can set. */
+const normalizeRituals = (value: unknown): Outcome<RitualState | undefined> => {
+  const path = 'rituals';
+  const inspected = inspectRecord(value, RITUAL_KEYS, 'invalid_field', path);
+  if (inspected.ok === false) return inspected;
+  const raw = inspected.value;
+  const out: RitualState = {};
+  for (const key of ['ward', 'tearsSpent'] as const) {
+    if (!own(raw, key)) continue;
+    const checked = booleanValue(readOwn(raw, key), `${path}.${key}`);
+    if (checked.ok === false) return checked;
+    out[key] = checked.value;
+  }
+  for (const [key, max] of [['tearsFailsLeft', TEARS_FAILS], ['pactRollsLeft', PACT_ROLLS], ['pactDebt', PACT_DEBT], ['sacrificesUsed', SACRIFICE_USES_PER_RUN]] as const) {
+    if (!own(raw, key)) continue;
+    const checked = boundedInteger(readOwn(raw, key), `${path}.${key}`, 0, max);
+    if (checked.ok === false) return checked;
+    out[key] = checked.value;
+  }
+  if (own(raw, 'invocations')) {
+    const sub = inspectRecord(readOwn(raw, 'invocations'), new Set(['ids', 'rollsLeft']), 'invalid_field', `${path}.invocations`);
+    if (sub.ok === false) return sub;
+    const ids = inspectArray(readOwn(sub.value, 'ids'), 'invalid_field', `${path}.invocations.ids`, INVOCATIONS.length);
+    if (ids.ok === false) return ids;
+    if (ids.value.length === 0 || new Set(ids.value).size !== ids.value.length
+      || !ids.value.every(id => INVOCATIONS.some(i => i.id === id))) return invalid('invalid_field', `${path}.invocations.ids`);
+    const left = boundedInteger(readOwn(sub.value, 'rollsLeft'), `${path}.invocations.rollsLeft`, 0, INVOCATION_ROLLS);
+    if (left.ok === false) return left;
+    out.invocations = { ids: ids.value as Invocation['id'][], rollsLeft: left.value };
+  }
+  if (own(raw, 'barrows')) {
+    const sub = inspectRecord(readOwn(raw, 'barrows'), new Set(['brother', 'rollsLeft', 'failed', 'fateCost']), 'invalid_field', `${path}.barrows`);
+    if (sub.ok === false) return sub;
+    const brother = BARROWS_BROTHERS.find(b => b.id === readOwn(sub.value, 'brother'));
+    if (!brother) return invalid('invalid_field', `${path}.barrows.brother`);
+    const left = boundedInteger(readOwn(sub.value, 'rollsLeft'), `${path}.barrows.rollsLeft`, 0, BARROWS_ROLLS);
+    if (left.ok === false) return left;
+    const failed = boundedInteger(readOwn(sub.value, 'failed'), `${path}.barrows.failed`, 0, BARROWS_ROLLS);
+    if (failed.ok === false) return failed;
+    const fateCost = boundedInteger(readOwn(sub.value, 'fateCost'), `${path}.barrows.fateCost`, 0, MAX_COUNTER);
+    if (fateCost.ok === false) return fateCost;
+    out.barrows = { brother: brother.id, rollsLeft: left.value, failed: failed.value, fateCost: fateCost.value };
+  }
+  return { ok: true, value: tidyRituals(out) };
+};
+
 /** Claimed pets: known pet ids, each once. */
 const normalizePetsClaimed = (value: unknown): Outcome<number[]> => {
   if (!Array.isArray(value) || value.length > PET_IDS.length) return invalid('invalid_field', 'petsClaimed');
@@ -963,7 +1013,7 @@ const TOP_LEVEL_KEYS = new Set([
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
   'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
   'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'fateCompensation',
-  'petCompensation', 'petsClaimed', 'keysOwed',
+  'petCompensation', 'petsClaimed', 'keysOwed', 'rituals',
 ]);
 
 export const parseAndMigrateSave = (
@@ -1261,6 +1311,11 @@ const normalizeState = (
     const checked = normalizePetsClaimed(readOwn(input, 'petsClaimed'));
     if (checked.ok === false) return checked;
     if (checked.value.length > 0) state.petsClaimed = checked.value;
+  }
+  if (own(input, 'rituals')) {
+    const checked = normalizeRituals(readOwn(input, 'rituals'));
+    if (checked.ok === false) return checked;
+    if (checked.value) state.rituals = checked.value;
   }
   if (own(input, 'keysOwed')) {
     const checked = boundedInteger(readOwn(input, 'keysOwed'), 'keysOwed', 0, MAX_COUNTER);
