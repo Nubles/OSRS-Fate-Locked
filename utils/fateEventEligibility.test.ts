@@ -278,8 +278,8 @@ describe('classifyFateEvent', () => {
       { minigameStandardKeysAwarded: awarded ? { 'Pest Control': awarded } : {} },
     ));
     const context = { kind: 'minigame', minigameName: 'Pest Control' };
-    expect(pestControl(0)).toMatchObject({ state: 'READY', intent: { source: DropSource.ACTIVITY_MINIGAME, threshold: 8.33, context } });
-    expect(pestControl(1)).toMatchObject({ state: 'READY', intent: { threshold: 4.17, context } });
+    expect(pestControl(0)).toMatchObject({ state: 'READY', intent: { source: DropSource.ACTIVITY_MINIGAME, threshold: 8, context } });
+    expect(pestControl(1)).toMatchObject({ state: 'READY', intent: { threshold: 4, context } });
     expect(pestControl(2)).toEqual({ state: 'BLOCKED', reason: 'This minigame has no Standard Keys left to award.' });
     expect(confirm('Rat Pits', withUnlocks({ minigames: ['Rat Pits'] })))
       .toEqual({ state: 'BLOCKED', reason: "Ironmen can't take part in Rat Pits, so it holds no Keys." });

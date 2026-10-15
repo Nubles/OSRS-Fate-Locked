@@ -657,7 +657,7 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
         minigameContext,
       );
 
-      expect(action?.payload).toMatchObject({ baseThreshold: 4.17, threshold: 4.17, success: true, context: minigameContext });
+      expect(action?.payload).toMatchObject({ baseThreshold: 4, threshold: 4, success: true, context: minigameContext });
       expect(draws[0]).toBe('roll:minigame:Pest Control:1');
     });
 
@@ -707,7 +707,7 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
     });
 
     it('pays Fate for a miss only at 5% or more', () => {
-      // Pest Control: 8.33% for its first Key, then 4.17%.
+      // Pest Control: 8% for its first Key, then 4%.
       const first = gameReducer({ ...vanillaState(), fatePoints: 10 }, roll({ success: false, context: minigameContext }));
       expect(first.fatePoints).toBe(11);
 

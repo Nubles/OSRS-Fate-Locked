@@ -9,6 +9,8 @@
 //   with no log page, fewer for a big one, never less than 1.
 // - The first Key's chance per run is minutes per run ÷ 60, capped at 50%, so
 //   it takes about an hour of play. Each Key won halves the next one's chance.
+//   Chances are whole percents, never below 1%, so the shortest minigames sit
+//   at 1% for every Key.
 // - Rat Pits holds none (ironmen can't take part). Mage Arena and Tears of
 //   Guthix pay one guaranteed Key.
 //
@@ -78,8 +80,10 @@ export const MINIGAME_KEY_VALUE_TARGET = 3;
 export const CLOG_SLOT_KEY_VALUE = 0.08;
 /** The first Key's chance never goes above this. */
 export const MINIGAME_FIRST_KEY_MAX_RATE = 50;
+/** No Key's chance goes below this. */
+export const MINIGAME_KEY_MIN_RATE = 1;
 
-const roundRate = (rate: number): number => Math.round(rate * 100) / 100;
+const wholeRate = (rate: number): number => Math.max(MINIGAME_KEY_MIN_RATE, Math.round(rate));
 
 /** The Keys a minigame's reserve holds, after its Collection Log's share. */
 export const minigameReserveSize = (spec: MinigameReserveSpec): number => {
@@ -92,6 +96,6 @@ export const minigameReserveSize = (spec: MinigameReserveSpec): number => {
 export const minigameReserveRates = (spec: MinigameReserveSpec): number[] => {
   const size = minigameReserveSize(spec);
   if (spec.guaranteed) return [100];
-  const first = Math.min(MINIGAME_FIRST_KEY_MAX_RATE, (spec.minutes / 60) * 100);
-  return Array.from({ length: size }, (_, index) => roundRate(first / 2 ** index));
+  const first = wholeRate(Math.min(MINIGAME_FIRST_KEY_MAX_RATE, (spec.minutes / 60) * 100));
+  return Array.from({ length: size }, (_, index) => wholeRate(first / 2 ** index));
 };
