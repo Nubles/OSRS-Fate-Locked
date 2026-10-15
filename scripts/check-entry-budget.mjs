@@ -11,7 +11,8 @@ import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
-export const ENTRY_GZIP_BUDGET_KB = 228;
+// 232: the Void Altar's newer rituals live in the reducer (2026-10-15); their activity checks load lazily.
+export const ENTRY_GZIP_BUDGET_KB = 232;
 
 /** The entry script that dist/index.html loads, as a path inside distDir. */
 export const entryScriptPath = (distDir, indexHtml) => {
