@@ -337,6 +337,7 @@ export const SPECIAL_ICONS: Record<string, string> = {
   'Brimhaven Agility Arena': 'Agility_arena_ticket.png',
   'Hallowed Sepulchre': 'Hallowed_mark.png',
   'Barracuda Trials': 'Barracuda_trials_icon.png',
+  "Pete Kayer's Challenges": "Pete's_vouchers.png",
   'Shooting Stars': 'Celestial_ring.png',
   'Barbarian Assault': 'Barbarian_Assault_logo.jpg',
   'Bounty Hunter': 'Skull_%28Bounty_Hunter%2C_skulled%29_icon_%285%29.png',

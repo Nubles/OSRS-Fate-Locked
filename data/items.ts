@@ -162,7 +162,7 @@ export const MINIGAMES_LIST = [
   'Sorceress\'s Garden', 'Stealing Artefacts', 'Tithe Farm', 'Trouble Brewing', 
   'Vale Totems', 'Volcanic Mine', 'Shades of Mort\'ton', 'Tai Bwo Wannai Cleanup', 
   'Warriors\' Guild', 'Burthorpe Games Room', 'Forestry', 'Rat Pits', 'Tears of Guthix',
-  'Brimhaven Agility Arena', 'Hallowed Sepulchre', 'Barracuda Trials'
+  'Brimhaven Agility Arena', 'Hallowed Sepulchre', 'Barracuda Trials', "Pete Kayer's Challenges"
 ];
 
 export const MISTHALIN_AREAS = [

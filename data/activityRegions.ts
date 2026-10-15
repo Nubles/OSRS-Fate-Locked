@@ -118,6 +118,7 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Brimhaven Agility Arena': 'Karamja',
   'Hallowed Sepulchre': 'Morytania',
   'Barracuda Trials': 'The Open Seas',
+  "Pete Kayer's Challenges": 'Wilderness',
   'Intelligence Gathering': 'Kourend & Kebos',
   'Archery Competition': 'Kandarin',
 

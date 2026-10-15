@@ -37,6 +37,18 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-15-pete-kayer',
+    title: 'Pete Kayer’s Challenges can be rolled',
+    date: '2026-10-15',
+    sections: {
+      added: [
+        'Pete Kayer’s Challenges from the 7 October update is a Minigame you can roll now. It needs Ferox Enclave unlocked.',
+        'Like in the game, its rewards need 750 total level.',
+        'Your completion total goes up by one to make room for it.',
+      ],
+    },
+  },
+  {
     id: '2026-10-13-safer-saves',
     title: 'Safer saves and backups',
     date: '2026-10-13',
