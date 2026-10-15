@@ -77,6 +77,8 @@ export interface Achievement {
   fate: number;
   /** Free random rituals paid when it is earned. */
   freeRituals: number;
+  /** Chaos Keys paid when it is earned: one for every top-tier (25 Fate) achievement. */
+  chaosKeys: number;
   /** Shown as ??? until earned. */
   hidden?: boolean;
   /** False when the run's mode can't earn it; it is then left out. */
@@ -274,6 +276,7 @@ function tiers(
     icon: s.icon ?? defaultIcon,
     fate: s.fate ?? 0,
     freeRituals: s.freeRituals ?? 0,
+    chaosKeys: (s.fate ?? 0) >= TOP_TIER_FATE ? 1 : 0,
     ...(s.hidden ? { hidden: true } : {}),
     ...(s.available ? { available: s.available } : {}),
     progress: (c: AchievementContext) => ({
@@ -312,7 +315,9 @@ const ritualsOffered = (c: AchievementContext) => RITUALS.filter((r) => r.id !==
 
 // ── The catalogue ──────────────────────────────────────────────────────────
 // Fate rewards: 0 for first steps (each run pays its own 1 to 5 for them, see smallFate), 10, 15 or 25 by
-// difficulty, and 25 with a free random ritual for the biggest few.
+// difficulty. Every 25 also gives a Chaos Key (fate picks what it opens),
+// and the biggest few a free random ritual.
+const TOP_TIER_FATE = 25;
 export const ACHIEVEMENTS: Achievement[] = [
   // Quests
   ...tiers('quests', 'Quests', 'quest', questsDone, [
@@ -563,7 +568,7 @@ export function earnedIds(run: AchievementRun): Set<string> {
 export function achievementPayouts(run: AchievementRun): AchievementPayout[] {
   return evaluateAchievements(run)
     .filter((a) => a.earned)
-    .map(({ id, title, description, fate, freeRituals }) => ({ id, title, description, fate, freeRituals }));
+    .map(({ id, title, description, fate, freeRituals, chaosKeys }) => ({ id, title, description, fate, freeRituals, chaosKeys }));
 }
 
 export { fateDue, rewardLabel, ritualName };

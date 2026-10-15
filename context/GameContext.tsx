@@ -1009,6 +1009,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         ...state,
         achievementsClaimed: settled.achievementsClaimed,
         fatePoints: settled.fatePoints,
+        chaosKeys: state.chaosKeys + settled.chaosKeys,
         ...(settled.freeRituals.length > 0 ? { freeRituals: settled.freeRituals } : {}),
         history: settled.entries.length > 0 ? [...state.history, ...settled.entries] : state.history,
       };

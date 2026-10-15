@@ -4,7 +4,7 @@ import { PETS } from '../data/pets';
 import type { FailureFateAward, GameState } from '../types';
 import { replayInvariants } from '../utils/integrity';
 import { CURRENT_SAVE_VERSION, validateAndMigrateSave } from '../utils/saveSchema';
-import { achievementById, achievementPayouts } from '../utils/achievements';
+import { ACHIEVEMENTS, achievementById, achievementPayouts } from '../utils/achievements';
 import { freeRitualPool, pickFreeRitual, smallFate } from '../utils/achievementRewards';
 
 /**
@@ -148,6 +148,25 @@ describe('achievement rewards', () => {
     const clarity = gameReducer(after, { type: 'RITUAL_LUCK' });
     expect(clarity.fatePoints).toBe(fate - 8);
     expect(clarity.freeRituals).toEqual(['BARROWS']);
+  });
+
+  it('gives a Chaos Key for every top-tier achievement, and replays it', () => {
+    expect(ACHIEVEMENTS.filter((a) => a.chaosKeys > 0).every((a) => a.fate === 25)).toBe(true);
+    expect(ACHIEVEMENTS.filter((a) => a.fate === 25).every((a) => a.chaosKeys === 1)).toBe(true);
+    const before = withPets(fresh(), PETS.length);
+    const after = settle(before);
+    const topTier = achievementPayouts(before).filter((a) => a.fate === 25).length;
+    expect(topTier).toBeGreaterThan(0);
+    expect(after.chaosKeys).toBe(before.chaosKeys + topTier);
+    const entry = after.history.find((e) => e.meta?.achievementId === 'pets-all');
+    expect(entry).toMatchObject({ meta: { chaosKeysAwarded: 1 } });
+    expect(entry?.details).toMatch(/a Chaos Key/);
+    expect(replayFate(after).final.chaosKeys).toBe(after.chaosKeys);
+  });
+
+  it("doesn't put Chaos Keys in an older run's back pay", () => {
+    const before = withPets(legacy(), PETS.length);
+    expect(settle(before).chaosKeys).toBe(before.chaosKeys);
   });
 
   it('never gives Sacrifice, Transmutation, the Pact or the Gambit, and the Cartographer only in Chunked', () => {

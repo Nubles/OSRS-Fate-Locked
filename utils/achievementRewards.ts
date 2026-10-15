@@ -16,6 +16,8 @@ export interface AchievementPayout {
   fate: number;
   /** Free rituals paid, each one picked at random from the pool below. */
   freeRituals: number;
+  /** Chaos Keys paid. */
+  chaosKeys: number;
   /** Fate's picks for those rituals, drawn by the caller so the reducer stays pure. */
   ritualPicks?: readonly string[];
 }
@@ -59,9 +61,10 @@ export const fateDue = (a: Pick<AchievementPayout, 'id' | 'fate'>, runId: string
   (a.fate > 0 ? a.fate : smallFate(runId, a.id));
 
 /** "+10 Fate · a free random ritual", or "+1 to 5 Fate" for one with no set Fate. */
-export function rewardLabel(a: Pick<AchievementPayout, 'fate' | 'freeRituals'>): string | null {
+export function rewardLabel(a: Pick<AchievementPayout, 'fate' | 'freeRituals' | 'chaosKeys'>): string | null {
   const parts: string[] = [];
   parts.push(a.fate > 0 ? `+${a.fate} Fate` : `+${SMALL_FATE_MIN} to ${SMALL_FATE_MAX} Fate`);
+  if (a.chaosKeys > 0) parts.push(a.chaosKeys === 1 ? 'a Chaos Key' : `${a.chaosKeys} Chaos Keys`);
   if (a.freeRituals > 0) parts.push(a.freeRituals === 1 ? 'a free random ritual' : `${a.freeRituals} free random rituals`);
   return parts.length > 0 ? parts.join(' · ') : null;
 }
@@ -76,6 +79,8 @@ export interface AchievementSettlement {
   achievementsClaimed: string[];
   fatePoints: number;
   freeRituals: string[];
+  /** Chaos Keys this settlement adds. */
+  chaosKeys: number;
   entries: LogEntry[];
 }
 
@@ -106,7 +111,8 @@ export const settleAchievements = (
   };
   if (state.achievementsClaimed === undefined) {
     // Back pay, once: the free rituals those achievements give, and their Fate
-    // up to the pity line at most, in one entry (Alex, 2026-10-15).
+    // up to the pity line at most, in one entry. No Chaos Keys, so a long run
+    // isn't handed a pile of unlocks on release day (Alex, 2026-10-15).
     const seen = new Set<string>();
     const already = earned.filter((a) => !seen.has(a.id) && seen.add(a.id));
     const owed = already.reduce((n, a) => n + fateDue(a, state.runId), 0);
@@ -125,7 +131,7 @@ export const settleAchievements = (
       details: `For the ${already.length} achievement${already.length === 1 ? '' : 's'} this run earned before rewards: ${parts.join(' · ')}.`,
       meta: { backPay: true, fateAwarded, ...(ritualsAwarded.length > 0 ? { ritualsAwarded } : {}), fatePointsAfter: fatePoints },
     }];
-    return { achievementsClaimed: [...seen], fatePoints, freeRituals, entries };
+    return { achievementsClaimed: [...seen], fatePoints, freeRituals, chaosKeys: 0, entries };
   }
   const claimed = new Set(state.achievementsClaimed);
   const fresh = earned.filter((a) => {
@@ -135,14 +141,18 @@ export const settleAchievements = (
   });
   if (fresh.length === 0) return null;
   let fatePoints = state.fatePoints;
+  let chaosKeys = 0;
   const entries = fresh.map((a): LogEntry => {
     const due = fateDue(a, state.runId);
     const fateAwarded = Math.max(0, Math.min(due, cap - fatePoints));
     fatePoints += fateAwarded;
     const ritualsAwarded = awardRituals(a);
     const fateText = `+${due} Fate${fateAwarded < due ? ` (Fate was full, so ${fateAwarded} was added)` : ''}`;
+    const chaosKeysAwarded = Math.max(0, Math.min(a.chaosKeys, maxCounter - state.chaosKeys - chaosKeys));
+    chaosKeys += chaosKeysAwarded;
+    const chaosText = chaosKeysAwarded > 0 ? (chaosKeysAwarded === 1 ? 'a Chaos Key' : `${chaosKeysAwarded} Chaos Keys`) : null;
     const ritualText = ritualsAwarded.length > 0 ? `a free ${ritualsAwarded.map(ritualName).join(' and a free ')}` : null;
-    const reward = [fateText, ritualText].filter(Boolean).join(' · ');
+    const reward = [fateText, chaosText, ritualText].filter(Boolean).join(' · ');
     return {
       id: newId(),
       timestamp: now,
@@ -151,13 +161,14 @@ export const settleAchievements = (
       details: reward
         ? `${a.description}. ${reward}, and a new title.`
         : `${a.description}. A new title.`,
-      meta: { achievementId: a.id, fateAwarded, ...(ritualsAwarded.length > 0 ? { ritualsAwarded } : {}), fatePointsAfter: fatePoints },
+      meta: { achievementId: a.id, fateAwarded, ...(chaosKeysAwarded > 0 ? { chaosKeysAwarded } : {}), ...(ritualsAwarded.length > 0 ? { ritualsAwarded } : {}), fatePointsAfter: fatePoints },
     };
   });
   return {
     achievementsClaimed: [...state.achievementsClaimed, ...fresh.map((a) => a.id)],
     fatePoints,
     freeRituals,
+    chaosKeys,
     entries,
   };
 };

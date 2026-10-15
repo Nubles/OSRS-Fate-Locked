@@ -330,6 +330,8 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3, rules?: Rep
         break;
       // An achievement's Fate, filled up to the pity line at most; the entry records the balance after.
       case 'ACHIEVEMENT': {
+        const chaosAwarded = e.meta?.chaosKeysAwarded;
+        if (typeof chaosAwarded === 'number' && Number.isSafeInteger(chaosAwarded) && chaosAwarded >= 0) s.chaosKeys += chaosAwarded;
         const fateAfter = e.meta?.fatePointsAfter;
         if (typeof fateAfter === 'number' && Number.isSafeInteger(fateAfter) && fateAfter >= 0) {
           s.fatePoints = fateAfter;
