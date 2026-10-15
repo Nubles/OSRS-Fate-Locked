@@ -128,6 +128,17 @@ describe('VoidAltar newer rituals', () => {
     expect(game.current.castRitual).toHaveBeenCalledWith('INVOCATIONS', ['WALK_THE_PATH', 'BLOOD_PRICE']);
   });
 
+  it('only offers Blood Price with 15 Fate left after the ritual', async () => {
+    game.current = { ...game.current, gameModeId: 'vanilla', fatePoints: 24 };
+    const { VoidAltar } = await import('./VoidAltar');
+    render(<VoidAltar onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /Amascut's Invocations/ }));
+    const blood = screen.getByRole('button', { name: /Blood Price/ }) as HTMLButtonElement;
+    expect(blood.disabled).toBe(true);
+    expect(within(blood).getByText('Needs 15 Fate left after the ritual')).toBeTruthy();
+    expect((screen.getByRole('button', { name: /Walk the Path/ }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
   it('keeps Sacrifice locked until the run has made 200 rolls', async () => {
     game.current = { ...game.current, gameModeId: 'vanilla', fatePoints: 30 };
     const { VoidAltar } = await import('./VoidAltar');

@@ -5,7 +5,7 @@
  * `rituals`; everything here is pure so vitest can pin the rules.
  */
 import {
-  BARROWS_ROLLS, INVOCATION_ROLLS, PACT_DEBT, PACT_ODDS_BONUS, PACT_ROLLS, SACRIFICE_MIN_ROLLS, SACRIFICE_TIERS,
+  BARROWS_ROLLS, BLOOD_PRICE_FATE, INVOCATION_ROLLS, PACT_DEBT, PACT_ODDS_BONUS, PACT_ROLLS, SACRIFICE_MIN_ROLLS, SACRIFICE_TIERS,
   SACRIFICE_USES_PER_RUN, TEARS_FAILS, invocationOmniBonus, type BarrowsBrother, type Invocation, type Ritual,
 } from '../config/economy';
 import { TableType, type LogEntry, type UnlockState } from '../types';
@@ -164,7 +164,7 @@ export const failFate = (
   const earned = gain - debtPaid;
   const pity = pityEnabled && fatePoints + earned >= pityThreshold;
   const afterGain = pity ? fatePoints + earned - pityThreshold : fatePoints + earned;
-  const lost = inv.includes('BLOOD_PRICE') ? Math.min(5, Math.max(0, afterGain)) : 0;
+  const lost = inv.includes('BLOOD_PRICE') ? Math.min(BLOOD_PRICE_FATE, Math.max(0, afterGain)) : 0;
   if (lost > 0) notes.push(`Blood Price took ${lost}`);
   if (inv.includes('HARDCORE')) notes.push('Hardcore ended the invocations');
   return { earned, lost, debtPaid, pity, notes };

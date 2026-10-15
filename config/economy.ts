@@ -456,14 +456,27 @@ export const SACRIFICE_USES_PER_RUN = 3;
 export const SACRIFICE_MIN_ROLLS = 200;
 
 /** Amascut's Invocations: each handicap adds to the Omni-Key chance; all four together add a bonus. */
-export interface Invocation { id: 'WALK_THE_PATH' | 'OVERLY_DRAINING' | 'BLOOD_PRICE' | 'HARDCORE'; name: string; handicap: string; omniBonus: number }
+export interface Invocation {
+  id: 'WALK_THE_PATH' | 'OVERLY_DRAINING' | 'BLOOD_PRICE' | 'HARDCORE';
+  name: string;
+  handicap: string;
+  omniBonus: number;
+  /** Fate you must still have after paying for the ritual to pick this one. */
+  minFateLeft?: number;
+}
+/** Blood Price takes up to this much per fail. */
+export const BLOOD_PRICE_FATE = 5;
 export const INVOCATIONS: Invocation[] = [
   { id: 'WALK_THE_PATH',   name: 'Walk the Path',   handicap: 'Fails give no Fate',       omniBonus: 1 },
   { id: 'OVERLY_DRAINING', name: 'Overly Draining', handicap: '-5% odds',                 omniBonus: 1 },
-  { id: 'BLOOD_PRICE',     name: 'Blood Price',     handicap: 'Each fail costs 5 Fate',   omniBonus: 1 },
+  { id: 'BLOOD_PRICE',     name: 'Blood Price',     handicap: `Each fail costs ${BLOOD_PRICE_FATE} Fate`, omniBonus: 1,
+    // Enough for every roll, so the price can't be dodged with an empty bar.
+    minFateLeft: BLOOD_PRICE_FATE * INVOCATION_ROLLS },
   { id: 'HARDCORE',        name: 'Hardcore',        handicap: 'Your first fail ends them', omniBonus: 1 },
 ];
 export const ALL_INVOCATIONS_OMNI_BONUS = 5;
+/** Whether a handicap can be picked with this much Fate left after paying for the ritual. */
+export const invocationAllowed = (inv: Invocation, fateLeft: number): boolean => fateLeft >= (inv.minFateLeft ?? 0);
 export const invocationOmniBonus = (ids: readonly Invocation['id'][]): number =>
   ids.length === INVOCATIONS.length
     ? ALL_INVOCATIONS_OMNI_BONUS

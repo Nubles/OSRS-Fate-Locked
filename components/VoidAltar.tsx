@@ -4,7 +4,7 @@ import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { resolveModeRules } from '../config/gameModes';
-import { BARROWS_BROTHERS, INVOCATIONS, INVOCATION_ROLLS, RITUALS, SACRIFICE_USES_PER_RUN, invocationOmniBonus, ritualEffect, ritualFateCost, type Invocation } from '../config/economy';
+import { BARROWS_BROTHERS, INVOCATIONS, INVOCATION_ROLLS, RITUALS, SACRIFICE_USES_PER_RUN, invocationAllowed, invocationOmniBonus, ritualEffect, ritualFateCost, type Invocation } from '../config/economy';
 import { ritualAvailability, rollRitualActive } from '../utils/ritualEffects';
 import type { NewRitualId } from '../context/GameContext';
 import { getChunkFrontier, chunkKey, chunkLabel } from '../utils/chunkAdjacency';
@@ -205,17 +205,20 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                 {INVOCATIONS.map((inv) => {
                   const on = invocationPick.includes(inv.id);
+                  const allowed = invocationAllowed(inv, fatePoints - ritualFateCost('INVOCATIONS', rules.ritualCostMultiplier));
                   return (
                     <button
                       key={inv.id}
                       aria-pressed={on}
+                      disabled={!allowed}
                       onClick={() => toggleInvocation(inv.id)}
-                      className={`text-left grid grid-cols-[22px_minmax(0,1fr)_auto] items-center gap-x-2.5 p-2 ${panel} hover:bg-[#352d22] ${on ? 'shadow-[inset_0_0_0_1px_#ffff00]' : ''}`}
+                      className={`text-left grid grid-cols-[22px_minmax(0,1fr)_auto] items-center gap-x-2.5 p-2 ${panel} hover:bg-[#352d22] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent ${on ? 'shadow-[inset_0_0_0_1px_#ffff00]' : ''}`}
                     >
                       <span className={`w-4 h-4 border-2 ${on ? 'bg-[#ffd84a] border-[#7a4a00]' : 'bg-[#1d1913] border-[#0d0b08]'}`} />
                       <span className="min-w-0">
                         <span className="block text-[#ff981f]" style={rsText(RS_BOLD)}>{inv.name}</span>
                         <span className="block text-xs text-[#d8ccb0]">{inv.handicap}</span>
+                        {!allowed && <span className="block text-xs text-[#ff7070]">Needs {inv.minFateLeft} Fate left after the ritual</span>}
                       </span>
                       <span className="text-[#ffff00]" style={rsText(RS_SMALL)}>+{inv.omniBonus}%</span>
                     </button>

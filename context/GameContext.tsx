@@ -10,7 +10,7 @@ import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, gambitKeys, STARTING_KEYS } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
-import { BARROWS_BROTHERS, INVOCATIONS, SACRIFICE_TIERS, SACRIFICE_USES_PER_RUN, type BarrowsBrother, type Invocation, type Ritual } from '../config/economy';
+import { BARROWS_BROTHERS, INVOCATIONS, SACRIFICE_TIERS, invocationAllowed, SACRIFICE_USES_PER_RUN, type BarrowsBrother, type Invocation, type Ritual } from '../config/economy';
 import {
   afterRoll, applyOddsBonus, castBarrows, castInvocations, castPact, castTears, failFate,
   pickSacrifice, ritualAvailability, rollRitualActive, rollRitualPlan, sacrificeCandidates, tidyRituals, wardApplies,
@@ -1516,7 +1516,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       else if (action.type === 'RITUAL_PACT') rituals = castPact(rituals);
       else if (action.type === 'RITUAL_INVOCATIONS') {
         const ids = action.payload.ids;
-        if (ids.length === 0 || new Set(ids).size !== ids.length || !ids.every(i => INVOCATIONS.some(v => v.id === i))) return state;
+        const picked = INVOCATIONS.filter(v => ids.includes(v.id));
+        if (ids.length === 0 || new Set(ids).size !== ids.length || picked.length !== ids.length) return state;
+        if (!picked.every(v => invocationAllowed(v, state.fatePoints - cost))) return state;
         rituals = castInvocations(rituals, ids);
         details = `Invoked ${INVOCATIONS.filter(v => ids.includes(v.id)).map(v => v.name).join(', ')} for the next rolls.`;
         meta.invocations = ids;

@@ -126,6 +126,14 @@ describe("Amascut's Invocations", () => {
     expectReplayMatches(s);
   });
 
+  it('Blood Price needs 15 Fate left after the ritual, so it can\'t be dodged at 0 Fate', () => {
+    const short = funded(24);
+    expect(cast(short, { type: 'RITUAL_INVOCATIONS', payload: { ids: ['WALK_THE_PATH', 'BLOOD_PRICE'] } })).toBe(short);
+    const s = cast(funded(25), { type: 'RITUAL_INVOCATIONS', payload: { ids: ['WALK_THE_PATH', 'BLOOD_PRICE'] } });
+    expect(s.fatePoints).toBe(15);
+    expect(s.rituals?.invocations?.ids).toEqual(['WALK_THE_PATH', 'BLOOD_PRICE']);
+  });
+
   it('Hardcore: the first fail ends every invocation', () => {
     let s = cast(funded(30), { type: 'RITUAL_INVOCATIONS', payload: { ids: ['HARDCORE', 'WALK_THE_PATH'] } });
     s = rollAt(s, HIT, 20, {}, 3);
