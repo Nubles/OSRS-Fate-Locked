@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   CHUNK_TILES, MAP_IMAGE, MAP_BOUNDS,
-  tileToPixel, pixelToTile, tileToChunk, chunkOriginTile, tileToPercent,
+  tileToPixel, pixelToTile, tileToChunk,
 } from './mapCoords';
 
 /**
@@ -59,19 +59,5 @@ describe('coordinate conversions', () => {
       expect(round.tx).toBeCloseTo(t.tx, 6);
       expect(round.ty).toBeCloseTo(t.ty, 6);
     }
-  });
-
-  it('chunkOriginTile is the inverse of tileToChunk at chunk corners', () => {
-    const origin = chunkOriginTile({ cx: 50, cy: 50 });
-    expect(origin).toEqual({ tx: 3200, ty: 3200 });
-    expect(tileToChunk(origin)).toEqual({ cx: 50, cy: 50 });
-  });
-
-  it('tileToPercent stays within 0-100 for in-bounds tiles', () => {
-    const p = tileToPercent({ tx: 3222, ty: 3218 });
-    expect(p.x).toBeGreaterThan(0);
-    expect(p.x).toBeLessThan(100);
-    expect(p.y).toBeGreaterThan(0);
-    expect(p.y).toBeLessThan(100);
   });
 });

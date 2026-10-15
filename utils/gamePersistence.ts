@@ -1,6 +1,7 @@
 import type { GameState } from '../types';
 import { sealRuneProofReplacement } from './runeProofProgress';
 import {
+  SAVE_APP_ID,
   validateAndMigrateSave,
   type SaveErrorCode,
   type SaveValidationResult,
@@ -97,11 +98,12 @@ export class SaveOwnershipConflictError extends SaveAuthorizationError {
   }
 }
 
+/** The bytes this tracker stores and exports for a run, stamped with SAVE_APP_ID. */
 export const serializeCurrent = (
   state: GameState & { lastEvent?: unknown },
 ): string => {
-  const { lastEvent: _lastEvent, ...persisted } = state;
-  return JSON.stringify(persisted);
+  const { lastEvent: _lastEvent, app: _app, ...persisted } = state as GameState & { lastEvent?: unknown; app?: unknown };
+  return JSON.stringify({ app: SAVE_APP_ID, ...persisted });
 };
 
 export const prepareReplacement = (

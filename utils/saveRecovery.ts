@@ -6,6 +6,7 @@ import {
 import {
   verifySaveChecksum,
 } from './saveIntegrity';
+import { lifecycleMarkMatches } from './lifecycleMark';
 import type {
   MirrorMetadata,
   RecoveryCheckpoint,
@@ -36,6 +37,8 @@ export interface SaveRecoveryInput {
   pendingRaw: string | null;
   primaryRaw: string | null;
   mirrorMetadataRaw: string | null;
+  /** utils/lifecycleMark.ts: proof that this app wrote the primary on page-hide. */
+  lifecycleMarkRaw?: string | null;
   head: RecoveryHead | null;
   checkpoints: readonly RecoveryCheckpoint[];
   defaults: GameState;
@@ -57,7 +60,7 @@ export type SaveRecoveryDecision =
       kind: 'recovery_required';
       primaryRaw: string | null;
       candidates: readonly ValidatedRecoveryCandidate[];
-      cause: 'corrupt_primary' | 'conflicting_runs' | 'unsequenced_primary';
+      cause: RecoveryCause;
       /** Highest verified durable journal/mirror/checkpoint revision at startup. */
       maxDurablePersistenceRevision: number;
     }
@@ -67,10 +70,24 @@ export type SaveRecoveryDecision =
     }
   | { kind: 'empty'; maxDurablePersistenceRevision: number };
 
+/**
+ * Why startup stopped for the player to choose. `unconfirmed_primary`: the
+ * browser save differs from the journal and this app can't prove it wrote
+ * it. `foreign_primary`: the browser save is stamped by a different app.
+ */
+export type RecoveryCause =
+  | 'corrupt_primary'
+  | 'conflicting_runs'
+  | 'unsequenced_primary'
+  | 'unconfirmed_primary'
+  | 'foreign_primary';
+
 type ValidatedResult = {
   candidate: ValidatedRecoveryCandidate;
 } | {
   unsupported: string;
+} | {
+  foreign: string;
 } | null;
 
 type CandidateValidationMetadata = {
@@ -174,6 +191,7 @@ const parseCandidate = async (
   if (typeof data !== 'string') return null;
   const parsed: SaveValidationResult = parseAndMigrateSave(data, defaults);
   if (parsed.ok === false) {
+    if (parsed.code === 'foreign_app') return { foreign: data };
     return parsed.code === 'unsupported_version'
       ? { unsupported: data }
       : null;
@@ -271,7 +289,7 @@ const readyDecision = (
 const recoveryRequired = (
   input: SaveRecoveryInput,
   candidates: readonly ValidatedRecoveryCandidate[],
-  cause: 'corrupt_primary' | 'conflicting_runs' | 'unsequenced_primary',
+  cause: RecoveryCause,
   maxDurablePersistenceRevision: number,
 ): SaveRecoveryDecision => ({
   kind: 'recovery_required',
@@ -344,8 +362,10 @@ export const resolveSaveRecovery = async (
   let primary: ValidatedRecoveryCandidate | null = null;
   let mirrorMetadata: ParsedMirrorMetadata | null = null;
   let sidecarMatchesPrimary = false;
+  let primaryIsForeign = false;
   if (input.primaryRaw !== null) {
     const parsedPrimary = await validateUnsequencedRaw('mirror', input.primaryRaw, input.defaults);
+    primaryIsForeign = parsedPrimary !== null && 'foreign' in parsedPrimary;
     if (parsedPrimary !== null && 'unsupported' in parsedPrimary) {
       addUnsupported(unsupported, parsedPrimary.unsupported);
     }
@@ -408,10 +428,11 @@ export const resolveSaveRecovery = async (
   const durableCandidates = candidates.filter(candidate => candidate.source !== 'pending');
   if (primary === null) {
     if (input.primaryRaw !== null) {
+      // Another app's save is kept as evidence; the player picks what loads.
       return recoveryRequired(
         input,
         durableCandidates,
-        'corrupt_primary',
+        primaryIsForeign ? 'foreign_primary' : 'corrupt_primary',
         maxDurablePersistenceRevision,
       );
     }
@@ -451,11 +472,21 @@ export const resolveSaveRecovery = async (
       && mirrorMetadata.capturedAt === head.capturedAt
       && mirrorMetadata.checksum === head.checksum;
 
-    // A pagehide mirror can finish after the journal commit but before its
-    // sidecar write. The sidecar still authenticates the head, so this is a
-    // lifecycle write rather than an unsequenced choice. Its next sequence is
-    // deterministic and does not consult wall-clock time.
+    // A pagehide mirror writes the primary without a sidecar, so the sidecar
+    // still authenticates the head. Another app rewriting the primary leaves
+    // exactly the same evidence (SAVE-1), so the newer primary is accepted
+    // only with the lifecycle mark this app wrote for those exact bytes.
+    // Without it the player chooses, and the head is offered first. The next
+    // sequence is deterministic and does not consult wall-clock time.
     if (!sidecarMatchesPrimary && sidecarMatchesHead) {
+      if (input.primaryRaw === null || !lifecycleMarkMatches(input.lifecycleMarkRaw, input.primaryRaw)) {
+        return recoveryRequired(
+          input,
+          [primary, head, ...sortedCheckpoints],
+          'unconfirmed_primary',
+          maxDurablePersistenceRevision,
+        );
+      }
       const lifecycle = {
         ...primary,
         persistenceRevision: nextRevision(head.persistenceRevision),

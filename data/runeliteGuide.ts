@@ -144,9 +144,6 @@ export interface GuideExternalResource {
   readonly href: string;
 }
 
-/** The sidebar's cards below the status card, top to bottom, as the plugin names them. */
-export const RUNELITE_SIDEBAR_CARD_TITLES = RUNELITE_SIDEBAR_CARDS;
-
 /** The OSRS Wiki picture beside the guide's title: the plugin's own crystal key. */
 export const RUNELITE_GUIDE_ICON = 'Crystal_key.png';
 

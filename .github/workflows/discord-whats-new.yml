@@ -1,7 +1,8 @@
 name: Announce What's New
 
 # Once a push to main is live on Pages, post its new What's New entries in the
-# Discord's #updates channel (scripts/send-whats-new-event.mjs).
+# Discord's #updates channel (scripts/send-whats-new-event.mjs). Entries the
+# last successful run already announced are not sent again.
 on:
   workflow_run:
     workflows: [Deploy to GitHub Pages]
@@ -9,6 +10,7 @@ on:
     branches: [main]
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
@@ -20,13 +22,28 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
+      - name: Find what was already announced
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          previous=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow discord-whats-new.yml \
+            --branch main --status success --limit 1 --json headSha --jq '.[0].headSha // empty')
+          if [ -z "$previous" ]; then
+            echo "No earlier announcement; the bot's own check stops repeats."
+          elif git show "$previous:data/changelog.ts" > "$RUNNER_TEMP/previous-changelog.ts"; then
+            echo "Leaving out entries already in $previous."
+            echo "PREVIOUS_CHANGELOG=$RUNNER_TEMP/previous-changelog.ts" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Could not read data/changelog.ts at $previous; the bot's own check stops repeats."
+          fi
       - name: Announce new What's New entries
         env:
           DISCORD_AUTOMATION_ENDPOINT: ${{ secrets.DISCORD_AUTOMATION_ENDPOINT }}

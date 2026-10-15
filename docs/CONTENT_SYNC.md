@@ -63,6 +63,11 @@ Two scheduled jobs keep the bundled data current. Neither touches `main`.
    New entry and opens one draft pull request. A maintainer reviews and
    merges; the merge deploys. Weeks with nothing to change open nothing.
 
+The install, sync, check and tests run in a read-only job that keeps no git
+credentials, from the lockfile (`npm ci`). Only the generated files, the CA
+evidence and the report pass to a second job, which runs no npm code and alone
+may write, and only to `bot/wiki-content-sync`.
+
 Run it locally any time:
 
 ```bash

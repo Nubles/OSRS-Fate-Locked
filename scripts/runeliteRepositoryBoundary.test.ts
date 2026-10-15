@@ -49,7 +49,6 @@ const retainedWebAppIntegrationPaths = [
   'components/RollInbox.tsx',
   'components/RollInboxDriver.tsx',
   'services/fateEventProtocol.ts',
-  'services/fateEventRelay.ts',
   'services/relaySync.ts',
   'utils/runeliteBundle.ts',
   'utils/runeliteExport.ts',

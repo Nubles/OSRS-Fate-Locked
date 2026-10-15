@@ -344,10 +344,6 @@ describe('preview strategy boundary', () => {
       questStrategyFor?: (questId: string) => QuestStrategyDefinition | undefined;
     };
     const loader = walkthroughLoader as {
-      loadQuestStrategyFor?: (
-        availability: 'OFF' | 'PREVIEW',
-        release: { readonly questId: string; readonly revision: string; readonly releaseStatus: 'PREVIEW_ONLY' | 'APPROVED' },
-      ) => Promise<QuestStrategyDefinition | undefined>;
       loadQuestStrategyCatalogue?: (
         availability: 'OFF' | 'PREVIEW',
       ) => Promise<readonly QuestStrategyDefinition[]>;
@@ -359,7 +355,6 @@ describe('preview strategy boundary', () => {
     const impCatcherRelease = publicQuestWalkthroughReleaseFor('Imp Catcher')!;
 
     expect(boundary.questStrategyFor).toBeTypeOf('function');
-    expect(loader.loadQuestStrategyFor).toBeTypeOf('function');
     expect(loader.loadQuestStrategyCatalogue).toBeTypeOf('function');
 
     expect(boundary.questStrategyCatalogue?.map(strategy => strategy.questId).sort()).toEqual(f2pQuestMembership.map(entry => entry.questId).sort());
@@ -370,31 +365,6 @@ describe('preview strategy boundary', () => {
     expect(boundary.questStrategyFor?.('Rune Mysteries')?.revision).toBe(runeMysteriesRelease.revision);
     expect(boundary.questStrategyFor?.('Imp Catcher')?.revision).toBe(impCatcherRelease.revision);
     expect(boundary.questStrategyFor?.("Daddy's Home")).toBeUndefined();
-    await expect(loader.loadQuestStrategyFor!('OFF', release)).resolves.toBeUndefined();
-    await expect(loader.loadQuestStrategyFor!('PREVIEW', release)).resolves.toMatchObject({
-      questId: release.questId,
-      revision: release.revision,
-    });
-    await expect(loader.loadQuestStrategyFor!('PREVIEW', sheepRelease)).resolves.toMatchObject({
-      questId: sheepRelease.questId,
-      revision: sheepRelease.revision,
-    });
-    await expect(loader.loadQuestStrategyFor!('PREVIEW', restlessRelease)).resolves.toMatchObject({
-      questId: restlessRelease.questId,
-      revision: restlessRelease.revision,
-    });
-    await expect(loader.loadQuestStrategyFor!('PREVIEW', runeMysteriesRelease)).resolves.toMatchObject({
-      questId: runeMysteriesRelease.questId,
-      revision: runeMysteriesRelease.revision,
-    });
-    await expect(loader.loadQuestStrategyFor!('PREVIEW', impCatcherRelease)).resolves.toMatchObject({
-      questId: impCatcherRelease.questId,
-      revision: impCatcherRelease.revision,
-    });
-    await expect(loader.loadQuestStrategyFor!('PREVIEW', {
-      ...release,
-      revision: 'stale-release-revision',
-    })).resolves.toBeUndefined();
     await expect(loader.loadQuestStrategyCatalogue!('OFF')).resolves.toEqual([]);
     await expect(loader.loadQuestStrategyCatalogue!('PREVIEW')).resolves.toEqual(
       boundary.questStrategyCatalogue,

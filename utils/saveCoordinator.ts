@@ -18,6 +18,7 @@ import {
   profileMirrorMetadataKey,
   removeDisposableCaches,
 } from './storageRecovery';
+import { createLifecycleMark, profileLifecycleMarkKey } from './lifecycleMark';
 
 const MAX_SAFE_REVISION = Number.MAX_SAFE_INTEGER;
 
@@ -708,6 +709,14 @@ export const createSaveCoordinator = (
     if (isWriteFailure(authorization)) {
       setSnapshot({ primary: 'failed', recovery: 'degraded', savedAt: snapshot.savedAt });
       return false;
+    }
+    // Written first, so a primary that lands is always covered. Recovery
+    // accepts a primary newer than the journal only with this mark (SAVE-1);
+    // if it can't be stored, the next load asks the player instead.
+    try {
+      options.storage.setItem(profileLifecycleMarkKey(options.storageKey), createLifecycleMark(data));
+    } catch {
+      // The save itself matters more than its mark.
     }
     const result = writeAndVerify(options.storage, options.storageKey, data);
     if (!result.verified) {

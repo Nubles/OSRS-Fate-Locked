@@ -3,6 +3,7 @@ import {
   profileCorruptArchiveKey,
   profileMirrorMetadataKey,
 } from './storageRecovery';
+import { profileLifecycleMarkKey } from './lifecycleMark';
 import { checksumSave } from './saveIntegrity';
 import { MAX_SAVE_BYTES } from './saveSchema';
 import type { SaveWriteAuthorization } from './profileWriterLease';
@@ -160,6 +161,7 @@ export const profileOwnedKeys = (profileId: string): readonly string[] => {
     profileFeatureSeenKey(profileId),
     writerLeaseKey(storageKey),
     profileMirrorMetadataKey(storageKey),
+    profileLifecycleMarkKey(storageKey),
     profileCorruptArchiveKey(storageKey),
   ];
 };

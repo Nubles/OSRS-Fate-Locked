@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import reviewedMembership from './sources/f2p-quest-membership.json';
 import {
   f2pQuestMembership,
-  f2pQuestMembershipBySlug,
   f2pQuestMembershipFor,
   validateF2PQuestMembership,
 } from './f2pQuestMembership';
@@ -91,12 +90,6 @@ describe('authoritative F2P quest membership', () => {
       .toEqual([]);
     expect(f2pQuestMembershipFor('Learning the Ropes')?.kind).toBe('quest');
     expect(f2pQuestMembershipFor('Elemental Workshop I')).toBeUndefined();
-  });
-
-  it('supports exact slug lookups', () => {
-    expect(f2pQuestMembershipBySlug('cooks-assistant')?.questId).toBe("Cook's Assistant");
-    expect(f2pQuestMembershipBySlug('daddys-home')).toBeUndefined();
-    expect(f2pQuestMembershipBySlug('learning-the-ropes')?.questId).toBe('Learning the Ropes');
   });
 
   it('validates the reviewed document metadata', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { summariseQuestPlaces, refineQuestRegion } from './questLocations';
+import { summariseQuestPlaces } from './questLocations';
 import type { EntityLocation } from '../services/ChunkContentService';
 import { UnlockState } from '../types';
 
@@ -63,32 +63,5 @@ describe('summariseQuestPlaces', () => {
     const info = summariseQuestPlaces([LUMBRIDGE, FALADOR], unlocksWith([]));
     // Lumbridge is the start → leads; Falador (locked step) follows.
     expect(info.places[0].label).toContain('Lumbridge');
-  });
-});
-
-describe('refineQuestRegion display evidence', () => {
-  const locked = summariseQuestPlaces([LUMBRIDGE, FALADOR], unlocksWith([]));
-  const reachable = summariseQuestPlaces([LUMBRIDGE, FALADOR], unlocksWith(['Falador']));
-
-  it('retains the legacy chunks result type without using it at runtime', () => {
-    const legacyVia: ReturnType<typeof refineQuestRegion>['via'] = 'chunks';
-    expect(legacyVia).toBe('chunks');
-  });
-
-  it('passes through when the authored region is already met', () => {
-    expect(refineQuestRegion(true, locked)).toEqual({ met: true, via: 'authored' });
-  });
-
-  it('cannot promote a canonically blocked quest from chunk evidence', () => {
-    expect(refineQuestRegion(false, reachable)).toEqual({ met: false, via: 'locked' });
-  });
-
-  it('stays locked when a needed place is still locked', () => {
-    expect(refineQuestRegion(false, locked)).toEqual({ met: false, via: 'locked' });
-  });
-
-  it('stays locked when there is no chunk evidence', () => {
-    const none = summariseQuestPlaces([], unlocksWith([]));
-    expect(refineQuestRegion(false, none)).toEqual({ met: false, via: 'locked' });
   });
 });

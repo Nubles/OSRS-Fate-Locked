@@ -15,6 +15,13 @@
 # curation, adds the What's New entry and opens one draft pull request for a
 # maintainer to merge. When nothing changed the branch is deleted, so its
 # existence alone means "something to review".
+#
+# Two jobs, so the step that runs third-party code never holds a write token:
+# `sync` installs the lockfile's dependencies, runs the wiki sync, the check
+# and the tests with read-only permissions and no stored git credentials, and
+# hands only the generated files plus the report to `push-branch` as an
+# artifact. `push-branch` runs no npm code; it alone may write, and only to
+# bot/wiki-content-sync.
 name: Sync content from the OSRS Wiki
 
 on:
@@ -23,7 +30,7 @@ on:
   workflow_dispatch: {}  # manual run from the Actions tab
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: wiki-content-sync
@@ -32,12 +39,18 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      changed: ${{ steps.report.outputs.changed }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
@@ -69,7 +82,7 @@ jobs:
           SYNC_OUTCOME: ${{ steps.sync.outcome }}
           TESTS_OUTCOME: ${{ steps.tests.outcome }}
         run: |
-          report="$RUNNER_TEMP/report.md"
+          report="sync-report.md"
           strip() { sed -E 's/\x1B\[[0-9;]*[A-Za-z]//g'; }
           {
             echo "Weekly game data check from the OSRS Wiki"
@@ -77,7 +90,7 @@ jobs:
             echo "Sync: $SYNC_OUTCOME. Tests: $TESTS_OUTCOME."
             echo ""
             echo "## Changed files"
-            git status --porcelain | sed 's/^/- /'
+            git status --porcelain -- data docs | sed 's/^/- /'
             echo ""
             echo "## Collection log"
             strip < "$RUNNER_TEMP/clog.txt" | grep -E '^\s*(RENAME|ADD|MOVE|\+|\?)|\[clog:sync\] (renames|failed|WARNING|[0-9]+ NEW)' || echo "(no changes)"
@@ -95,16 +108,50 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Push the result for review
+      # Only the generated data, the status report, the CA evidence and the
+      # report text cross to the job that can write. Never the scratch logs or
+      # anything else in the workspace.
+      - name: Hand the synced files to the push job
         if: steps.report.outputs.changed == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: wiki-content-sync
+          path: |
+            data/collectionLogData.ts
+            data/caTasks.ts
+            docs/SYNC_STATUS.md
+            docs/sync-evidence/
+            sync-report.md
+          if-no-files-found: error
+          retention-days: 1
+
+  push-branch:
+    needs: sync
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Take the synced files from the sync job
+        if: needs.sync.outputs.changed == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: wiki-content-sync
+          path: .
+
+      - name: Push the result for review
+        if: needs.sync.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B bot/wiki-content-sync
-          git add data docs/SYNC_STATUS.md
-          git commit -F "$RUNNER_TEMP/report.md"
+          git add data/collectionLogData.ts data/caTasks.ts docs/SYNC_STATUS.md
+          if [ -d docs/sync-evidence ]; then git add docs/sync-evidence; fi
+          git commit -F sync-report.md
           git push --force origin bot/wiki-content-sync
 
       - name: Clear the branch when nothing changed
-        if: steps.report.outputs.changed != 'true'
+        if: needs.sync.outputs.changed != 'true'
         run: git push origin --delete bot/wiki-content-sync 2>/dev/null || true

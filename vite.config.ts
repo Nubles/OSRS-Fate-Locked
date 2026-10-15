@@ -34,7 +34,11 @@ const runeProofPreviewBoundaryPlugin = (includePreview: boolean): Plugin => ({
 // sites live at /<repo-name>/, so CI injects the real repo name via VITE_BASE.
 export default defineConfig(({ mode }) => {
   const includeRuneProofPreview = mode === 'test' || mode === 'runeproof-preview';
-  const buildId = process.env.BUILD_ID || String(Date.now());
+  // CI and deploy builds stamp the commit SHA. Without one, a random id of the
+  // same shape: the id is in the entry chunk, so a shorter or less random one
+  // would make the entry budget check measure a smaller file than ships.
+  const buildId = process.env.BUILD_ID
+    || Array.from(crypto.getRandomValues(new Uint8Array(20)), (byte) => byte.toString(16).padStart(2, '0')).join('');
 
   return {
     plugins: [

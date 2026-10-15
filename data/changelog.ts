@@ -37,14 +37,67 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-10-pete-kayer',
+    id: '2026-10-15-pete-kayer',
     title: 'Pete Kayer’s Challenges can be rolled',
-    date: '2026-10-10',
+    date: '2026-10-15',
     sections: {
       added: [
         'Pete Kayer’s Challenges from the 7 October update is a Minigame you can roll now. It needs Ferox Enclave unlocked.',
-        'Like in the game, its rewards need 750 total level and the Easy Wilderness Diary.',
+        'Like in the game, its rewards need 750 total level.',
         'Your completion total goes up by one to make room for it.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-13-safer-saves',
+    title: 'Safer saves and backups',
+    date: '2026-10-13',
+    sections: {
+      fixed: [
+        "If another site changes your save in this browser, the tracker now asks which copy to keep instead of loading it.",
+        "Online backup now asks before replacing a backup of a different or longer run, like after a Reset.",
+        "If sending your rules to RuneLite fails, the tracker tries again on its own and tells you if it keeps failing.",
+      ],
+      changed: [
+        "Crashes are now reported automatically so they can be fixed faster. Reports never include your save.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-13-old-compensation-offer',
+    title: 'No more surprise compensation offer',
+    date: '2026-10-13',
+    sections: {
+      fixed: [
+        'Runs played since Weighted Fate no longer get its old compensation offer by mistake.',
+        'It could pop up after opening the RS3 tracker in the same browser as your OSRS run.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-12-faster-updates',
+    title: 'Faster updates',
+    date: '2026-10-12',
+    sections: {
+      changed: [
+        'New versions of the tracker now go live in about half the time.',
+        'We tidied up old code nothing used anymore. Your run and the app work the same as before.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-11-ritual-animations',
+    title: 'New Void Altar animations',
+    date: '2026-10-11',
+    sections: {
+      added: [
+        'Every ritual now has its own animation, drawn with real OSRS item sprites and the RuneScape font.',
+        'The Void Gambit flips a coin over a portal, and you see the Keys you won or the Fate you lost.',
+        'The Cartographer unrolls the world map and marks your new chunk with an X.',
+      ],
+      changed: [
+        'The Void Altar looks like an in-game window now.',
+        'Click or press Esc to skip an animation, or turn Animations off in Settings to hide them.',
       ],
     },
   },

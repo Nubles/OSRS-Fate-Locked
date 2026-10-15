@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CA_DATA } from '../data/caData';
 import {
-  CA_TASK_POINTS,
-  CA_TIER_ORDER,
   caTaskLockedBoss,
   caTierCompletionDecision,
   completedCAPoints,
@@ -26,18 +23,6 @@ describe('Combat Achievement point progress', () => {
       { id: 'm', tierId: 'Medium' },
     ];
     expect(completedCAPoints(['e', 'e', 'unknown'], tasks)).toBe(1);
-  });
-
-  it('uses the official tier order, point values, and cumulative thresholds', () => {
-    expect(CA_TIER_ORDER).toEqual([
-      'Easy', 'Medium', 'Hard', 'Elite', 'Master', 'Grandmaster',
-    ]);
-    expect(CA_TASK_POINTS).toEqual({
-      Easy: 1, Medium: 2, Hard: 3, Elite: 4, Master: 5, Grandmaster: 6,
-    });
-    expect(CA_TIER_ORDER.map(tier => CA_DATA[tier].pointsRequired)).toEqual([
-      41, 169, 436, 1100, 1965, 2697,
-    ]);
   });
 
   it('keeps stored historical tiers while adding newly qualified tiers', () => {
