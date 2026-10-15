@@ -456,14 +456,14 @@ export const SACRIFICE_USES_PER_RUN = 3;
 export const SACRIFICE_MIN_ROLLS = 200;
 
 /** Amascut's Invocations: each handicap adds to the Omni-Key chance; all four together add a bonus. */
-export interface Invocation { id: 'WALK_THE_PATH' | 'OVERLY_DRAINING' | 'BLOOD_PRICE' | 'NOT_JUST_A_HEAD'; name: string; handicap: string; omniBonus: number }
+export interface Invocation { id: 'WALK_THE_PATH' | 'OVERLY_DRAINING' | 'BLOOD_PRICE' | 'HARDCORE'; name: string; handicap: string; omniBonus: number }
 export const INVOCATIONS: Invocation[] = [
-  { id: 'WALK_THE_PATH',   name: 'Walk the Path',   handicap: 'Fails give no Fate',     omniBonus: 2 },
-  { id: 'OVERLY_DRAINING', name: 'Overly Draining', handicap: '-5% odds',               omniBonus: 2 },
-  { id: 'BLOOD_PRICE',     name: 'Blood Price',     handicap: 'Each fail costs 5 Fate', omniBonus: 2 },
-  { id: 'NOT_JUST_A_HEAD', name: 'Not Just a Head', handicap: 'No Pity Key',            omniBonus: 2 },
+  { id: 'WALK_THE_PATH',   name: 'Walk the Path',   handicap: 'Fails give no Fate',       omniBonus: 1 },
+  { id: 'OVERLY_DRAINING', name: 'Overly Draining', handicap: '-5% odds',                 omniBonus: 1 },
+  { id: 'BLOOD_PRICE',     name: 'Blood Price',     handicap: 'Each fail costs 5 Fate',   omniBonus: 1 },
+  { id: 'HARDCORE',        name: 'Hardcore',        handicap: 'Your first fail ends them', omniBonus: 1 },
 ];
-export const ALL_INVOCATIONS_OMNI_BONUS = 10;
+export const ALL_INVOCATIONS_OMNI_BONUS = 5;
 export const invocationOmniBonus = (ids: readonly Invocation['id'][]): number =>
   ids.length === INVOCATIONS.length
     ? ALL_INVOCATIONS_OMNI_BONUS

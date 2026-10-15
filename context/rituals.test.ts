@@ -126,22 +126,25 @@ describe("Amascut's Invocations", () => {
     expectReplayMatches(s);
   });
 
-  it('Not Just a Head: no Pity Key, and Fate stops at the threshold', () => {
-    let s = cast(funded(rules.pityThreshold), { type: 'RITUAL_INVOCATIONS', payload: { ids: ['NOT_JUST_A_HEAD'] } });
-    for (let i = 0; i < 5; i++) s = rollAt(s, MISS, 20, {}, 3);
-    expect(s.history.some(e => e.type === 'PITY')).toBe(false);
-    expect(s.history.at(-1)?.type).toBe('ROLL_FAIL');
-    expect(s.fatePoints).toBe(rules.pityThreshold);
+  it('Hardcore: the first fail ends every invocation', () => {
+    let s = cast(funded(30), { type: 'RITUAL_INVOCATIONS', payload: { ids: ['HARDCORE', 'WALK_THE_PATH'] } });
+    s = rollAt(s, HIT, 20, {}, 3);
+    expect(s.rituals?.invocations?.rollsLeft).toBe(4);
+    s = rollAt(s, MISS, 20, {}, 3);
+    expect(s.rituals?.invocations).toBeUndefined();
+    expect(s.history.at(-1)?.details).toContain('Hardcore ended the invocations');
+    // Walk the Path still applied to the fail that ended it.
+    expect(s.history.at(-1)?.meta).toMatchObject({ fatePointsEarned: 0 });
     expectReplayMatches(s);
   });
 
   it('Overly Draining lowers the odds and every handicap raises the Omni-Key chance', () => {
-    const s = cast(base({ fatePoints: 30 }), { type: 'RITUAL_INVOCATIONS', payload: { ids: ['WALK_THE_PATH', 'OVERLY_DRAINING', 'BLOOD_PRICE', 'NOT_JUST_A_HEAD'] } });
-    const action = prepareKeyRollAction(s, 'Test', 20, 1, dice(HIT, { omni: 10 + rules.omniChanceBase }));
+    const s = cast(base({ fatePoints: 30 }), { type: 'RITUAL_INVOCATIONS', payload: { ids: ['WALK_THE_PATH', 'OVERLY_DRAINING', 'BLOOD_PRICE', 'HARDCORE'] } });
+    const action = prepareKeyRollAction(s, 'Test', 20, 1, dice(HIT, { omni: 5 + rules.omniChanceBase }));
     expect(action.payload.threshold).toBe(15);
-    // All four add 10% to the Omni-Key chance.
+    // All four add 5% to the Omni-Key chance (1% each, plus 1% for the full set).
     expect(action.payload.omni).toBe(true);
-    expect(prepareKeyRollAction(s, 'Test', 20, 1, dice(HIT, { omni: 11 + rules.omniChanceBase })).payload.omni).toBe(false);
+    expect(prepareKeyRollAction(s, 'Test', 20, 1, dice(HIT, { omni: 6 + rules.omniChanceBase })).payload.omni).toBe(false);
   });
 
   it('wears off after 5 rolls', () => {

@@ -123,7 +123,7 @@ describe('VoidAltar newer rituals', () => {
     expect(invoke.disabled).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: /Blood Price/ }));
     fireEvent.click(screen.getByRole('button', { name: /Walk the Path/ }));
-    expect(screen.getByText('Omni-Key chance +4% on your next 5 rolls')).toBeTruthy();
+    expect(screen.getByText('Omni-Key chance +2% on your next 5 rolls')).toBeTruthy();
     fireEvent.click(invoke);
     expect(game.current.castRitual).toHaveBeenCalledWith('INVOCATIONS', ['WALK_THE_PATH', 'BLOOD_PRICE']);
   });

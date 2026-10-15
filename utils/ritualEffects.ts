@@ -91,11 +91,9 @@ export interface RollRitualPlan {
   hitThrough: number;
   /** % chance a success pays a second Key (Karil). */
   secondKey: number;
-  /** No Pity Key while this lasts (Not Just a Head); Fate stops at the threshold. */
-  noPity: boolean;
 }
 
-export const NO_PLAN: RollRitualPlan = { oddsBonus: 0, omniBonus: 0, hitThrough: 0, secondKey: 0, noPity: false };
+export const NO_PLAN: RollRitualPlan = { oddsBonus: 0, omniBonus: 0, hitThrough: 0, secondKey: 0 };
 
 /** Odds boosts stop at 95%, but never pull down a roll that is already higher. */
 export const BOOST_CAP = 95;
@@ -106,7 +104,6 @@ export const rollRitualPlan = (r: RitualState | undefined, fatePoints: number): 
   if ((r.pactRollsLeft ?? 0) > 0) plan.oddsBonus += PACT_ODDS_BONUS;
   const inv = r.invocations && r.invocations.rollsLeft > 0 ? r.invocations.ids : [];
   if (inv.includes('OVERLY_DRAINING')) plan.oddsBonus -= 5;
-  if (inv.includes('NOT_JUST_A_HEAD')) plan.noPity = true;
   plan.omniBonus += invocationOmniBonus(inv);
   const b = r.barrows && r.barrows.rollsLeft > 0 ? r.barrows.brother : null;
   if (b === 'AHRIM') plan.oddsBonus += 10;
@@ -141,8 +138,7 @@ export interface FailFate {
  * What a failed roll does to Fate under the run's rituals. `base` is the
  * source's Fate (plus Greed's refund). Order: Walk the Path, Tears, Guthan
  * and Torag add up what the fail would give, Zamorak takes his share of it,
- * then Blood Price takes Fate from the bar. Not Just a Head blocks the Pity
- * Key and stops Fate at the threshold.
+ * then Blood Price takes Fate from the bar.
  */
 export const failFate = (
   r: RitualState | undefined,
@@ -165,13 +161,12 @@ export const failFate = (
   const debt = (r?.pactRollsLeft ?? 0) > 0 ? 0 : r?.pactDebt ?? 0;
   const debtPaid = Math.min(debt, gain);
   if (debtPaid > 0) notes.push(`${debtPaid} to Zamorak`);
-  let earned = gain - debtPaid;
-  const noPity = inv.includes('NOT_JUST_A_HEAD');
-  const pity = pityEnabled && !noPity && fatePoints + earned >= pityThreshold;
-  if (noPity && pityEnabled) earned = Math.max(0, Math.min(earned, pityThreshold - fatePoints));
+  const earned = gain - debtPaid;
+  const pity = pityEnabled && fatePoints + earned >= pityThreshold;
   const afterGain = pity ? fatePoints + earned - pityThreshold : fatePoints + earned;
   const lost = inv.includes('BLOOD_PRICE') ? Math.min(5, Math.max(0, afterGain)) : 0;
   if (lost > 0) notes.push(`Blood Price took ${lost}`);
+  if (inv.includes('HARDCORE')) notes.push('Hardcore ended the invocations');
   return { earned, lost, debtPaid, pity, notes };
 };
 
@@ -187,7 +182,8 @@ export const afterRoll = (r: RitualState | undefined, outcome: { success: boolea
     if (next.pactDebt <= 0) delete next.pactDebt;
   }
   if (next.invocations) {
-    const left = next.invocations.rollsLeft - 1;
+    // Hardcore: the first fail ends every invocation at once.
+    const left = !outcome.success && next.invocations.ids.includes('HARDCORE') ? 0 : next.invocations.rollsLeft - 1;
     if (left > 0) next.invocations = { ...next.invocations, rollsLeft: left };
     else delete next.invocations;
   }
