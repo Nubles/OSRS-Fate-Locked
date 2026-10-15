@@ -324,8 +324,8 @@ export interface GameState {
   achievementsClaimed?: string[];
   /** The earned achievement the player shows as their title. */
   achievementTitle?: string;
-  /** Free Rituals of Clarity from achievements, used before Fate. */
-  freeClarity?: number;
+  /** Free rituals from achievements, by ritual id (one entry each); a cast uses one before any Fate. */
+  freeRituals?: string[];
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

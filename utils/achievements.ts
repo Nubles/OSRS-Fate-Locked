@@ -9,7 +9,7 @@ import type { GameModeRules } from '../config/gameModes';
  *
  * Each achievement exposes a `progress(context) -> { current, target }` so the
  * same definition drives both the earned/locked state AND a progress bar for
- * the ones still in flight. Its reward (Fate, a free Ritual of Clarity, and
+ * the ones still in flight. Its reward (Fate, a free random ritual, and
  * always its title) is paid once, by the SETTLE_ACHIEVEMENTS reducer case.
  */
 
@@ -29,7 +29,7 @@ import { unlockableAreas } from './freeAreas';
 import { getPoolAndStateKey } from './gameEngine';
 import { isRollEntry } from './logEntry';
 import { mergedBankId } from './bankUnlockMerges';
-import { AchievementPayout, rewardLabel } from './achievementRewards';
+import { AchievementPayout, rewardLabel, ritualName } from './achievementRewards';
 
 export type AchievementCategory =
   | 'Quests' | 'Skills' | 'Areas' | 'Equipment'
@@ -75,8 +75,8 @@ export interface Achievement {
   icon: AchievementIcon;
   /** Fate Points paid when it is earned (0: the title is the reward). */
   fate: number;
-  /** Free Rituals of Clarity paid when it is earned. */
-  clarity: number;
+  /** Free random rituals paid when it is earned. */
+  freeRituals: number;
   /** Shown as ??? until earned. */
   hidden?: boolean;
   /** False when the run's mode can't earn it; it is then left out. */
@@ -250,7 +250,7 @@ interface Step {
   target: number;
   icon?: AchievementIcon;
   fate?: number;
-  clarity?: number;
+  freeRituals?: number;
   hidden?: boolean;
   /** Overrides the default `${baseId}-${target}` id. */
   id?: string;
@@ -273,7 +273,7 @@ function tiers(
     category,
     icon: s.icon ?? defaultIcon,
     fate: s.fate ?? 0,
-    clarity: s.clarity ?? 0,
+    freeRituals: s.freeRituals ?? 0,
     ...(s.hidden ? { hidden: true } : {}),
     ...(s.available ? { available: s.available } : {}),
     progress: (c: AchievementContext) => ({
@@ -312,7 +312,7 @@ const ritualsOffered = (c: AchievementContext) => RITUALS.filter((r) => r.id !==
 
 // ── The catalogue ──────────────────────────────────────────────────────────
 // Fate rewards: 0 for first steps (the title is the reward), 5, 10 or 25 by
-// difficulty, and 25 with a free Ritual of Clarity for the biggest few.
+// difficulty, and 25 with a free random ritual for the biggest few.
 export const ACHIEVEMENTS: Achievement[] = [
   // Quests
   ...tiers('quests', 'Quests', 'quest', questsDone, [
@@ -322,7 +322,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     { title: 'Veteran', description: 'Complete 50 quests', target: 50, fate: 10 },
     { title: 'Centurion', description: 'Complete 100 quests', target: 100, fate: 10 },
     { title: 'Loremaster', description: 'Complete 150 quests', target: 150, fate: 25 },
-    { title: 'Quest Cape', description: 'Complete every quest', target: TOTAL_QUESTS, icon: 'crown', fate: 25, clarity: 1 },
+    { title: 'Quest Cape', description: 'Complete every quest', target: TOTAL_QUESTS, icon: 'crown', fate: 25, freeRituals: 1 },
   ]),
   ...tiers('qp', 'Quests', 'star', questPoints, [
     { title: "Champions' Guild", description: "Earn 32 Quest Points, enough to enter the Champions' Guild", target: 32 },
@@ -355,7 +355,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   ]),
   ...tiers('skills-99', 'Skills', 'crown', skillsAt99, [
     { title: 'Ninety-Nine', description: 'Reach level 99 in any skill', target: 1, fate: 10 },
-    { title: 'Maxed', description: 'Reach level 99 in every skill', target: TOTAL_SKILLS, icon: 'trophy', fate: 25, clarity: 1 },
+    { title: 'Maxed', description: 'Reach level 99 in every skill', target: TOTAL_SKILLS, icon: 'trophy', fate: 25, freeRituals: 1 },
   ]),
 
   // Areas (the ids keep their old 'regions' prefix, so earned achievements stay earned)
@@ -367,7 +367,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     { title: 'Voyager', description: 'Unlock 50 areas', target: 50, fate: 10 },
     { title: 'Far Flung', description: 'Unlock 100 areas', target: 100, fate: 10 },
     {
-      title: 'World Tour', description: 'Unlock every area', target: TOTAL_REGIONS, icon: 'map', fate: 25, clarity: 1,
+      title: 'World Tour', description: 'Unlock every area', target: TOTAL_REGIONS, icon: 'map', fate: 25, freeRituals: 1,
       targetFor: (c) => unlockableAreas(c.mode, c.custom).length,
     },
   ]),
@@ -390,13 +390,13 @@ export const ACHIEVEMENTS: Achievement[] = [
     { title: 'Diary Keeper', description: 'Complete your first diary tier', target: 1 },
     { title: 'Diarist', description: 'Complete 12 diary tiers', target: 12, fate: 10 },
     { title: 'Chronicler', description: 'Complete 24 diary tiers', target: 24, fate: 10 },
-    { title: 'Diary Master', description: 'Complete every diary tier', target: TOTAL_DIARIES, icon: 'crown', fate: 25, clarity: 1 },
+    { title: 'Diary Master', description: 'Complete every diary tier', target: TOTAL_DIARIES, icon: 'crown', fate: 25, freeRituals: 1 },
   ]),
 
   // Combat Achievements
   ...tiers('ca', 'Combat', 'combat', ({ u }) => u.cas.length, [
     { title: 'Combat Novice', description: 'Complete your first CA tier', target: 1, fate: 5 },
-    { title: 'Combat Master', description: 'Complete every CA tier', target: TOTAL_CA, icon: 'trophy', fate: 25, clarity: 1 },
+    { title: 'Combat Master', description: 'Complete every CA tier', target: TOTAL_CA, icon: 'trophy', fate: 25, freeRituals: 1 },
   ]),
 
   // Activities
@@ -406,7 +406,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     { title: 'Headhunter', description: 'Unlock 25 bosses', target: 25, fate: 10 },
     { title: 'Bane of Bosses', description: 'Unlock 50 bosses', target: 50, fate: 10 },
     {
-      id: 'bosses-all', title: 'Every Boss', description: 'Unlock every boss', target: 1, icon: 'crown', fate: 25, clarity: 1,
+      id: 'bosses-all', title: 'Every Boss', description: 'Unlock every boss', target: 1, icon: 'crown', fate: 25, freeRituals: 1,
       targetFor: (c) => tablePool(TableType.BOSSES, c).length,
     },
   ]),
@@ -517,7 +517,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     { title: 'Funny Feeling', description: 'Log your first pet', target: 1 },
     { title: 'Pet Shop', description: 'Log 5 pets', target: 5, fate: 5 },
     { title: 'Menagerie', description: 'Log 25 pets', target: 25, fate: 25 },
-    { id: 'pets-all', title: 'Every Pet', description: 'Log every pet', target: TOTAL_PETS, icon: 'crown', fate: 25, clarity: 1 },
+    { id: 'pets-all', title: 'Every Pet', description: 'Log every pet', target: TOTAL_PETS, icon: 'crown', fate: 25, freeRituals: 1 },
   ]),
 
   // Mastery (overall completion)
@@ -526,7 +526,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     { title: 'Halfway There', description: 'Reach 50% overall completion', target: 50, fate: 10 },
     { title: 'Three Quarters', description: 'Reach 75% overall completion', target: 75, fate: 10 },
     { title: 'Almost There', description: 'Reach 90% overall completion', target: 90, fate: 25 },
-    { title: 'Fate Conqueror', description: 'Reach 100% overall completion', target: 100, icon: 'trophy', fate: 25, clarity: 1 },
+    { title: 'Fate Conqueror', description: 'Reach 100% overall completion', target: 100, icon: 'trophy', fate: 25, freeRituals: 1 },
   ]),
 ];
 
@@ -563,7 +563,7 @@ export function earnedIds(run: AchievementRun): Set<string> {
 export function achievementPayouts(run: AchievementRun): AchievementPayout[] {
   return evaluateAchievements(run)
     .filter((a) => a.earned)
-    .map(({ id, title, description, fate, clarity }) => ({ id, title, description, fate, clarity }));
+    .map(({ id, title, description, fate, freeRituals }) => ({ id, title, description, fate, freeRituals }));
 }
 
-export { rewardLabel };
+export { rewardLabel, ritualName };

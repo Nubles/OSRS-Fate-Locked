@@ -22,6 +22,7 @@ import { PET_COMPENSATION_ID, petCompensationOffer } from './petCompensation';
 import { isPetId, PET_IDS } from '../data/petIds';
 import { BARROWS_BROTHERS, BARROWS_ROLLS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, type Invocation } from '../config/economy';
 import { tidyRituals, type RitualState } from './ritualEffects';
+import { FREE_RITUAL_IDS } from './achievementRewards';
 /** Version 5 freezes the one-time pet offer and stores claimed pets and owed Keys. */
 export const CURRENT_SAVE_VERSION = 5;
 /**
@@ -1028,7 +1029,7 @@ const TOP_LEVEL_KEYS = new Set([
   'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
   'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'fateCompensation',
   'petCompensation', 'petsClaimed', 'keysOwed', 'rituals',
-  'achievementsClaimed', 'achievementTitle', 'freeClarity',
+  'achievementsClaimed', 'achievementTitle', 'freeRituals', 'freeClarity',
 ]);
 
 export const parseAndMigrateSave = (
@@ -1339,10 +1340,19 @@ const normalizeState = (
     if (checked.ok === false) return checked;
     if (checked.value.length > 0) state.achievementTitle = checked.value;
   }
+  if (own(input, 'freeRituals') && readOwn(input, 'freeRituals') !== undefined) {
+    const raw = readOwn(input, 'freeRituals');
+    if (!Array.isArray(raw) || raw.length > MAX_COUNTER
+      || !raw.every((id) => typeof id === 'string' && (FREE_RITUAL_IDS as readonly string[]).includes(id))) {
+      return invalid('invalid_field', 'freeRituals');
+    }
+    if (raw.length > 0) state.freeRituals = [...raw];
+  }
+  // A preview build of achievement rewards gave free Rituals of Clarity as a count.
   if (own(input, 'freeClarity') && readOwn(input, 'freeClarity') !== undefined) {
     const checked = boundedInteger(readOwn(input, 'freeClarity'), 'freeClarity', 0, MAX_COUNTER);
     if (checked.ok === false) return checked;
-    if (checked.value > 0) state.freeClarity = checked.value;
+    if (checked.value > 0) state.freeRituals = [...(state.freeRituals ?? []), ...Array<string>(checked.value).fill('LUCK')];
   }
   if (own(input, 'rituals')) {
     const checked = normalizeRituals(readOwn(input, 'rituals'));

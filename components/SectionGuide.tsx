@@ -129,7 +129,7 @@ export const GUIDES: Record<string, Guide> = {
     bullets: [
       'Browse locked and unlocked achievements across categories.',
       'They unlock by themselves as you reach quest, skill, area, gear, roll, ritual, unlock and pet milestones.',
-      'Each one is a title you can wear. Harder ones also give Fate, and the biggest a free Ritual of Clarity.',
+      'Each one is a title you can wear. Harder ones also give Fate, and the biggest a free random ritual.',
       'Achievements earned before rewards arrived keep their title but pay nothing.',
     ],
   },

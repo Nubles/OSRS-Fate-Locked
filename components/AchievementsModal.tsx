@@ -4,7 +4,7 @@ import { Trophy } from './OsrsIcon';
 import { ACHIEVEMENT_ICON } from './achievementIcons';
 import { useGame } from '../context/GameContext';
 import {
-  evaluateAchievements, EvaluatedAchievement, AchievementCategory, rewardLabel,
+  evaluateAchievements, EvaluatedAchievement, AchievementCategory, rewardLabel, ritualName,
 } from '../utils/achievements';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';
@@ -23,7 +23,7 @@ const formatDate = (timestamp: number) =>
 
 export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
   const {
-    unlocks, gameModeId, customMode, history, petsClaimed, achievementTitle, setAchievementTitle, freeClarity, achievementsClaimed,
+    unlocks, gameModeId, customMode, history, petsClaimed, achievementTitle, setAchievementTitle, freeRituals, achievementsClaimed,
   } = useGame();
   useEscapeKey(onClose, true);
 
@@ -83,8 +83,8 @@ export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
                 <>Your title: <span className="text-[#ff981f] font-bold">{title.title}</span>{' '}
                   <button onClick={() => setAchievementTitle(null)} className="underline text-gray-500 hover:text-gray-300">Take off</button></>
               ) : 'Pick any earned achievement to wear as your title.'}
-              {(freeClarity ?? 0) > 0 && (
-                <span className="text-cyan-300"> · {freeClarity} free Ritual{freeClarity === 1 ? '' : 's'} of Clarity waiting at the Void Altar</span>
+              {(freeRituals?.length ?? 0) > 0 && (
+                <span className="text-cyan-300"> · Free at the Void Altar: {freeRituals!.map(ritualName).join(', ')}</span>
               )}
             </p>
           </div>

@@ -1,5 +1,6 @@
 import type { GameState, LogEntry } from '../types';
 import { resolveModeRules } from '../config/gameModes';
+import { RITUALS, type Ritual } from '../config/economy';
 
 /**
  * Achievement rewards, kept apart from the achievement list so the game can
@@ -13,14 +14,36 @@ export interface AchievementPayout {
   title: string;
   description: string;
   fate: number;
-  clarity: number;
+  /** Free rituals paid, each one picked at random from the pool below. */
+  freeRituals: number;
+  /** Fate's picks for those rituals, drawn by the caller so the reducer stays pure. */
+  ritualPicks?: readonly string[];
 }
 
-/** "+10 Fate · a free Ritual of Clarity", or null when the title is the whole reward. */
-export function rewardLabel(a: Pick<AchievementPayout, 'fate' | 'clarity'>): string | null {
+/**
+ * The rituals a free one can be. Sacrifice and Transmutation are left out
+ * (Alex, 2026-10-15), Zamorak's Pact is free already, and the Void Gambit
+ * stakes your own Fate, so a free one has nothing to stake.
+ */
+export const FREE_RITUAL_IDS: readonly Ritual['id'][] = ['LUCK', 'GREED', 'CHAOS', 'CARTOGRAPHER', 'WARD', 'TEARS', 'INVOCATIONS', 'BARROWS'];
+
+/** The free rituals this mode offers: the Cartographer only in Chunked. */
+export const freeRitualPool = (gameModeId: string | undefined): Ritual['id'][] =>
+  FREE_RITUAL_IDS.filter((id) => !RITUALS.find((r) => r.id === id)?.chunkedOnly || gameModeId === 'chunked');
+
+/** Fate's pick from the pool for a draw in [0, 1). */
+export const pickFreeRitual = (gameModeId: string | undefined, draw: number): Ritual['id'] => {
+  const pool = freeRitualPool(gameModeId);
+  return pool[Math.min(pool.length - 1, Math.max(0, Math.floor(draw * pool.length)))];
+};
+
+export const ritualName = (id: string): string => RITUALS.find((r) => r.id === id)?.name ?? id;
+
+/** "+10 Fate · a free random ritual", or null when the title is the whole reward. */
+export function rewardLabel(a: Pick<AchievementPayout, 'fate' | 'freeRituals'>): string | null {
   const parts: string[] = [];
   if (a.fate > 0) parts.push(`+${a.fate} Fate`);
-  if (a.clarity > 0) parts.push(a.clarity === 1 ? 'a free Ritual of Clarity' : `${a.clarity} free Rituals of Clarity`);
+  if (a.freeRituals > 0) parts.push(a.freeRituals === 1 ? 'a free random ritual' : `${a.freeRituals} free random rituals`);
   return parts.length > 0 ? parts.join(' · ') : null;
 }
 
@@ -33,7 +56,7 @@ export const achievementFateCap = (state: Pick<GameState, 'gameModeId' | 'custom
 export interface AchievementSettlement {
   achievementsClaimed: string[];
   fatePoints: number;
-  freeClarity: number;
+  freeRituals: string[];
   entries: LogEntry[];
 }
 
@@ -53,7 +76,7 @@ export const settleAchievements = (
   maxCounter: number,
 ): AchievementSettlement | null => {
   if (state.achievementsClaimed === undefined) {
-    return { achievementsClaimed: [...new Set(earned.map((a) => a.id))], fatePoints: state.fatePoints, freeClarity: state.freeClarity ?? 0, entries: [] };
+    return { achievementsClaimed: [...new Set(earned.map((a) => a.id))], fatePoints: state.fatePoints, freeRituals: [...(state.freeRituals ?? [])], entries: [] };
   }
   const claimed = new Set(state.achievementsClaimed);
   const fresh = earned.filter((a) => {
@@ -64,28 +87,34 @@ export const settleAchievements = (
   if (fresh.length === 0) return null;
   const cap = achievementFateCap(state, maxCounter);
   let fatePoints = state.fatePoints;
-  let freeClarity = state.freeClarity ?? 0;
+  const freeRituals = [...(state.freeRituals ?? [])];
+  const pool = freeRitualPool(state.gameModeId);
   const entries = fresh.map((a): LogEntry => {
     const fateAwarded = Math.max(0, Math.min(a.fate, cap - fatePoints));
-    const clarityAwarded = Math.max(0, Math.min(a.clarity, maxCounter - freeClarity));
     fatePoints += fateAwarded;
-    freeClarity += clarityAwarded;
-    const reward = rewardLabel(a);
+    // A pick that isn't in the pool (a stale or forged payload) falls back to the first.
+    const ritualsAwarded = Array.from({ length: Math.max(0, Math.min(a.freeRituals, maxCounter - freeRituals.length)) },
+      (_, i) => { const pick = a.ritualPicks?.[i]; return pick && pool.includes(pick as Ritual['id']) ? pick : pool[0]; });
+    freeRituals.push(...ritualsAwarded);
+    const fateText = fateAwarded > 0 || a.fate > 0
+      ? `+${a.fate} Fate${fateAwarded < a.fate ? ` (Fate was full, so ${fateAwarded} was added)` : ''}` : null;
+    const ritualText = ritualsAwarded.length > 0 ? `a free ${ritualsAwarded.map(ritualName).join(' and a free ')}` : null;
+    const reward = [fateText, ritualText].filter(Boolean).join(' · ');
     return {
       id: newId(),
       timestamp: now,
       type: 'ACHIEVEMENT',
       message: `Achievement: ${a.title}`,
       details: reward
-        ? `${a.description}. ${reward}${fateAwarded < a.fate ? ` (Fate was full, so ${fateAwarded} was added)` : ''}, and a new title.`
+        ? `${a.description}. ${reward}, and a new title.`
         : `${a.description}. A new title.`,
-      meta: { achievementId: a.id, fateAwarded, clarityAwarded, fatePointsAfter: fatePoints },
+      meta: { achievementId: a.id, fateAwarded, ...(ritualsAwarded.length > 0 ? { ritualsAwarded } : {}), fatePointsAfter: fatePoints },
     };
   });
   return {
     achievementsClaimed: [...state.achievementsClaimed, ...fresh.map((a) => a.id)],
     fatePoints,
-    freeClarity,
+    freeRituals,
     entries,
   };
 };

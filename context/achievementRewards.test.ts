@@ -5,10 +5,11 @@ import type { FailureFateAward, GameState } from '../types';
 import { replayInvariants } from '../utils/integrity';
 import { CURRENT_SAVE_VERSION, validateAndMigrateSave } from '../utils/saveSchema';
 import { achievementById, achievementPayouts } from '../utils/achievements';
+import { freeRitualPool, pickFreeRitual } from '../utils/achievementRewards';
 
 /**
  * Achievements pay their reward once: Fate (filled up to the pity line at
- * most), free Rituals of Clarity, and a title to wear. A run from before
+ * most), free rituals fate picks, and a title to wear. A run from before
  * rewards records what it has already earned and is paid nothing for it.
  * Each case checks the history still replays to the run's Fate.
  */
@@ -93,27 +94,57 @@ describe('achievement rewards', () => {
     expect(replayFate(after).violations).toEqual([]);
   });
 
-  it('gives a free Ritual of Clarity for the biggest ones, used before any Fate', () => {
-    const before = withPets(fresh(), PETS.length);
-    const after = settle(before);
-    expect(after.freeClarity).toBe(1);
-    expect(achievementById('pets-all')?.clarity).toBe(1);
+  /** Settle with fate's ritual picks given, as the provider draws them. */
+  const settleWith = (state: Run, picks: string[]) => gameReducer(state, {
+    type: 'SETTLE_ACHIEVEMENTS',
+    payload: achievementPayouts(state).map((a) => (a.freeRituals > 0 ? { ...a, ritualPicks: picks } : a)),
+  });
+
+  it('gives a free random ritual for the biggest ones, used before any Fate', () => {
+    expect(achievementById('pets-all')?.freeRituals).toBe(1);
+    const after = settleWith(withPets(fresh(), PETS.length), ['BARROWS']);
+    expect(after.freeRituals).toEqual(['BARROWS']);
+    expect(after.history.find((e) => e.meta?.achievementId === 'pets-all')?.details).toMatch(/a free Barrows Chest/);
 
     const fate = after.fatePoints;
-    const ritual = gameReducer(after, { type: 'RITUAL_LUCK' });
-    expect(ritual.activeBuff).toBe('LUCK');
-    expect(ritual.fatePoints).toBe(fate);
-    expect(ritual.freeClarity).toBe(0);
-    expect(ritual.history.at(-1)).toMatchObject({ type: 'ALTAR', meta: { ritual: 'LUCK', fateCost: 0 } });
-    expect(replayFate(ritual).final.fatePoints).toBe(ritual.fatePoints);
+    const cast = gameReducer(after, { type: 'RITUAL_BARROWS', payload: { brother: 'AHRIM' } });
+    expect(cast.rituals?.barrows).toMatchObject({ brother: 'AHRIM', fateCost: 0 });
+    expect(cast.fatePoints).toBe(fate);
+    expect(cast.freeRituals).toBeUndefined();
+    expect(cast.history.at(-1)).toMatchObject({ type: 'ALTAR', meta: { ritual: 'BARROWS', fateCost: 0, freeRitual: true } });
+    expect(replayFate(cast).final.fatePoints).toBe(cast.fatePoints);
+
+    // Only a ritual of the kind fate picked is free.
+    const clarity = gameReducer(after, { type: 'RITUAL_LUCK' });
+    expect(clarity.fatePoints).toBe(fate - 8);
+    expect(clarity.freeRituals).toEqual(['BARROWS']);
+  });
+
+  it('never gives Sacrifice, Transmutation, the Pact or the Gambit, and the Cartographer only in Chunked', () => {
+    expect(freeRitualPool('vanilla')).toEqual(['LUCK', 'GREED', 'CHAOS', 'WARD', 'TEARS', 'INVOCATIONS', 'BARROWS']);
+    expect(freeRitualPool('chunked')).toContain('CARTOGRAPHER');
+    for (const draw of [0, 0.3, 0.6, 0.999]) expect(freeRitualPool('vanilla')).toContain(pickFreeRitual('vanilla', draw));
+    // A pick outside the pool (a stale or forged payload) falls back to Clarity.
+    expect(settleWith(withPets(fresh(), PETS.length), ['SACRIFICE']).freeRituals).toEqual(['LUCK']);
+  });
+
+  it('refunds nothing when a free Ritual of Greed misses', () => {
+    const after = settleWith(withPets(fresh(), PETS.length), ['GREED']);
+    const greed = gameReducer(after, { type: 'RITUAL_GREED' });
+    expect(greed.activeBuff).toBe('GREED');
+    expect(greed.fatePoints).toBe(after.fatePoints);
+    const missed = fail(greed, 1);
+    expect(missed.fatePoints).toBe(greed.fatePoints + 1);
+    expect(replayFate(missed).final.fatePoints).toBe(missed.fatePoints);
   });
 
   it('keeps a free Ritual of Clarity while another roll ritual is running', () => {
     const after = settle(withPets(fresh(), PETS.length));
+    expect(after.freeRituals).toEqual(['LUCK']);
     const pact = gameReducer(after, { type: 'RITUAL_PACT' });
     expect(pact.rituals?.pactRollsLeft).toBe(3);
     const blocked = gameReducer(pact, { type: 'RITUAL_LUCK' });
-    expect(blocked.freeClarity).toBe(1);
+    expect(blocked.freeRituals).toEqual(['LUCK']);
     expect(blocked.activeBuff).toBe('NONE');
   });
 
@@ -136,9 +167,14 @@ describe('achievement rewards', () => {
     if (!loaded.ok) return;
     expect(loaded.state.achievementsClaimed).toEqual(state.achievementsClaimed);
     expect(loaded.state.achievementTitle).toBe('pets-all');
-    expect(loaded.state.freeClarity).toBe(1);
+    expect(loaded.state.freeRituals).toEqual(['LUCK']);
 
-    const { achievementsClaimed: _claimed, achievementTitle: _title, freeClarity: _free, ...old } = saved;
+    const preview = validateAndMigrateSave(JSON.parse(JSON.stringify({ ...saved, freeRituals: undefined, freeClarity: 2 })), createFreshState());
+    expect(preview.ok && preview.state.freeRituals).toEqual(['LUCK', 'LUCK']);
+    const forged = validateAndMigrateSave(JSON.parse(JSON.stringify({ ...saved, freeRituals: ['SACRIFICE'] })), createFreshState());
+    expect(forged.ok).toBe(false);
+
+    const { achievementsClaimed: _claimed, achievementTitle: _title, freeRituals: _free, ...old } = saved;
     const oldLoaded = validateAndMigrateSave(JSON.parse(JSON.stringify({ ...old, version: CURRENT_SAVE_VERSION })), createFreshState());
     expect(oldLoaded.ok).toBe(true);
     if (!oldLoaded.ok) return;

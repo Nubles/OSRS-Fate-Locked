@@ -44,7 +44,7 @@ export const CHANGELOG_RELEASES = [
       added: [
         "There are now over 100 achievements, including ones for Key rolls, every Void Altar ritual, pets and every unlock table.",
         "Every achievement is a title you can wear. Pick one in the Achievements window and it shows on your dashboard.",
-        "Harder achievements give 5, 10 or 25 Fate. The biggest also give a free Ritual of Clarity at the Void Altar.",
+        "Harder achievements give 5, 10 or 25 Fate. The biggest also give a free ritual at the Void Altar, picked by fate.",
         "Once you earn an achievement it stays earned, even if a Sacrifice later takes tiers away.",
       ],
       changed: [

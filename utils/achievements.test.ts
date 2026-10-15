@@ -295,7 +295,7 @@ describe('achievements read from the run', () => {
       expect(titles.has(a.title)).toBe(false);
       titles.add(a.title);
       expect([0, 5, 10, 25]).toContain(a.fate);
-      if (a.clarity > 0) expect(a.fate).toBe(25);
+      if (a.freeRituals > 0) expect(a.fate).toBe(25);
     }
   });
 });

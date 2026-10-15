@@ -35,7 +35,7 @@ let pinnedCartographerOffer: { tip: string; keys: string[] } | null = null;
 export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
-  const { fatePoints, keys, activeBuff, performRitual, performGambit, performCartographer, castRitual, rituals: running, unlocks, gameModeId, customMode, nextFloat, runId, history, freeClarity } = useGame();
+  const { fatePoints, keys, activeBuff, performRitual, performGambit, performCartographer, castRitual, rituals: running, unlocks, gameModeId, customMode, nextFloat, runId, history, freeRituals } = useGame();
 
   // The Gambit and Sacrifice can't be undone: arm on the first click, fire on
   // the second, disarm when anything else is touched.
@@ -113,6 +113,8 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
     return null;
   };
 
+  const invocationsCost = freeRituals?.includes('INVOCATIONS') ? 0 : ritualFateCost('INVOCATIONS', rules.ritualCostMultiplier);
+
   const rituals = RITUALS
     .filter((ritual) => !ritual.chunkedOnly || gameModeId === 'chunked')
     .map((ritual) => {
@@ -122,8 +124,8 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
       const isNew = ritual.god !== undefined || ritual.id === 'INVOCATIONS' || ritual.id === 'BARROWS' || ritual.id === 'SACRIFICE';
       const availability = isNew ? ritualAvailability(ritual.id, ritual.god, { activeBuff, rituals: r, history, unlocks }) : null;
       const status = runningText(ritual.id);
-      // Achievements can give free Rituals of Clarity; the engine uses one before any Fate.
-      const free = ritual.id === 'LUCK' ? freeClarity ?? 0 : 0;
+      // Achievements give free rituals; the engine uses one before any Fate.
+      const free = (freeRituals ?? []).filter((id) => id === ritual.id).length;
       const sacrificesLeft = SACRIFICE_USES_PER_RUN - (r?.sacrificesUsed ?? 0);
       return {
         id: ritual.id,
@@ -208,7 +210,7 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                 {INVOCATIONS.map((inv) => {
                   const on = invocationPick.includes(inv.id);
-                  const allowed = invocationAllowed(inv, fatePoints - ritualFateCost('INVOCATIONS', rules.ritualCostMultiplier));
+                  const allowed = invocationAllowed(inv, fatePoints - invocationsCost);
                   return (
                     <button
                       key={inv.id}
@@ -238,7 +240,7 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
                   className={`px-3 py-1 ${panel} text-[#ff981f] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#352d22]`}
                   style={rsText(RS_FONT)}
                 >
-                  Invoke ({ritualFateCost('INVOCATIONS', rules.ritualCostMultiplier)} Fate)
+                  Invoke ({invocationsCost > 0 ? `${invocationsCost} Fate` : 'free'})
                 </button>
                 <button onClick={() => setInvocationPick(null)} className="text-xs text-[#c9b993] hover:text-white underline underline-offset-2">
                   Walk away (no Fate spent)
