@@ -459,3 +459,5 @@ html[data-ui="osrs"] [data-testid="chunk-info-scroll-body"] .justify-between { f
 html[data-ui="osrs"] [data-testid="chunk-info-scroll-body"] .justify-between > .min-w-0 { flex: 1 1 auto; }
 html[data-ui="osrs"] [data-testid="chunk-info-scroll-body"] .justify-between > .shrink-0:last-child { margin-left: auto; flex-wrap: wrap; justify-content: flex-end; max-width: 100%; }
 html[data-ui="osrs"] .owm-omni-go { display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+/* Skill requirements in the chunk panel: the game's own 16px skill icon at its real size. */
+html[data-ui="osrs"] [data-testid="chunk-info-scroll-body"] .chunk-skill-icon { width: 16px; height: 16px; image-rendering: pixelated; }
