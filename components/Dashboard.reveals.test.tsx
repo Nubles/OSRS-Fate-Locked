@@ -1,7 +1,7 @@
 /* @vitest-environment jsdom */
 import React from 'react';
 import { act, cleanup, render } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { UnlockState } from '../types';
 
 const game = vi.hoisted(() => ({ unlocks: undefined as UnlockState | undefined }));
@@ -11,6 +11,7 @@ vi.mock('../context/GameContext', async () => {
   return {
     ...actual,
     useGame: () => ({
+      settleAchievements: () => {},
       ...actual.initialState,
       unlocks: game.unlocks ?? actual.initialState.unlocks,
       animationsEnabled: false,
@@ -33,6 +34,7 @@ vi.mock('../services/WikiService', () => ({
 
 import { initialState } from '../context/GameContext';
 import { Dashboard } from './Dashboard';
+import { loadAchievementCatalog } from '../hooks/useAchievementReveal';
 
 // A first quest earns "First Steps"; a first equipment slot earns "Geared Up".
 const progress = (quests: string[], equipment: Record<string, number> = {}): UnlockState => ({
@@ -42,6 +44,9 @@ const progress = (quests: string[], equipment: Record<string, number> = {}): Unl
 });
 
 let hosts: HTMLElement[] = [];
+
+// The achievement list loads after startup; have it ready before the first render.
+beforeAll(() => loadAchievementCatalog());
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });

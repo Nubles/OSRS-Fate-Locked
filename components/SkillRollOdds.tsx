@@ -6,13 +6,15 @@ interface Props {
   currentLevel: number;
   isUnlocked: boolean;
   descriptionId: string;
+  /** Extra Key chance from the run's level-up milestone achievements. */
+  boost?: number;
 }
 
-export const SkillRollOdds: React.FC<Props> = ({ currentLevel, isUnlocked, descriptionId }) => {
+export const SkillRollOdds: React.FC<Props> = ({ currentLevel, isUnlocked, descriptionId, boost = 0 }) => {
   if (!isUnlocked || currentLevel >= 99) return null;
 
   const nextLevel = currentLevel + 1;
-  const chance = formatKeyPercent(skillLevelKeyChance(nextLevel));
+  const chance = formatKeyPercent(Math.min(100, skillLevelKeyChance(nextLevel) + boost));
 
   return (
     <div
@@ -27,6 +29,7 @@ export const SkillRollOdds: React.FC<Props> = ({ currentLevel, isUnlocked, descr
         {isSkillChaosMilestone(nextLevel)
           ? `Level ${nextLevel} also gives a guaranteed Chaos Key, and a separate ${LEVEL_CHAOS_CHANCE}% chance of another.`
           : `Each level-up also has a separate ${LEVEL_CHAOS_CHANCE}% chance of a Chaos Key.`}
+        {boost > 0 && ` Your achievements add ${boost}% to the Key chance.`}
       </span>
     </div>
   );

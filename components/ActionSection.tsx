@@ -9,6 +9,7 @@ import { Crosshair } from 'lucide-react';
 import { wikiService } from '../services/WikiService';
 import { resolveModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
+import { achievementBoostFor } from '../utils/achievementBoosts';
 import { EARN_METHODS, failureFateForSource, LEVEL_ROLL_MAX } from '../config/economy';
 import { BRUTUS_BOSS_NAME, effectiveVanillaClueRate, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
 import { BossKeyProgress, ClueKeyProgress } from './VanillaKeyProgress';
@@ -383,7 +384,7 @@ const InfoChip: React.FC<{
 type FarmSubTab = 'SLAYER' | 'CLUES' | 'BOSSING' | 'ACTIVITIES';
 
 export const ActionSection: React.FC = () => {
-  const { rollForKey, claimPet, petsClaimed, unlocks, gameModeId, customMode, animationsEnabled, bossStandardKeysAwarded, minigameStandardKeysAwarded, clueStandardKeysAwarded } = useGame();
+  const { rollForKey, claimPet, petsClaimed, unlocks, gameModeId, customMode, animationsEnabled, bossStandardKeysAwarded, minigameStandardKeysAwarded, clueStandardKeysAwarded, achievementsClaimed } = useGame();
   const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
   const [bossQuery, setBossQuery] = useState('');
 
@@ -394,8 +395,11 @@ export const ActionSection: React.FC = () => {
   const regionBonus = mode.regionModifiers
     ? getActiveRegionBonuses(unlocks.regions).successBonus
     : 0;
+  // Activity milestone achievements raise their own activity's rolls too.
+  const boost = (source: string) => achievementBoostFor(source, achievementsClaimed);
+  const bonusFor = (source: string) => regionBonus + boost(source);
   const effectiveRate = (source: string) =>
-    Math.max(1, Math.min(100, (DROP_RATES[source] ?? 0) + regionBonus));
+    Math.max(1, Math.min(100, (DROP_RATES[source] ?? 0) + bonusFor(source)));
 
   const handleRoll = (source: string, chance: number, e: React.MouseEvent, context?: KeyRollContext) => {
     rollForKey(source, chance, failureFateForSource(source as DropSource), e.clientX, e.clientY, undefined, context);
@@ -532,7 +536,7 @@ export const ActionSection: React.FC = () => {
                   name={master.name}
                   subText={master.subText}
                   displayRate={effectiveRate(master.source)}
-                  bonus={regionBonus}
+                  bonus={bonusFor(master.source)}
                   image={master.image}
                   style={master.style}
                   onClick={(e) => handleRoll(master.source, DROP_RATES[master.source], e)}
@@ -546,7 +550,7 @@ export const ActionSection: React.FC = () => {
             {CLUE_SCROLLS.map((clue, i) => {
               const baseRate = DROP_RATES[clue.source];
               const displayRate = isVanilla
-                ? effectiveVanillaClueRate(baseRate, clueKeysAwarded)
+                ? Math.min(100, effectiveVanillaClueRate(baseRate, clueKeysAwarded) + boost(clue.source))
                 : effectiveRate(clue.source);
 
               return (
@@ -558,7 +562,7 @@ export const ActionSection: React.FC = () => {
                   <ClueScrollCard
                     tier={clue.tier}
                     displayRate={displayRate}
-                    bonus={isVanilla ? 0 : regionBonus}
+                    bonus={isVanilla ? boost(clue.source) : bonusFor(clue.source)}
                     itemId={clue.itemId}
                     onClick={(e) => handleRoll(
                       clue.source,
@@ -593,7 +597,7 @@ export const ActionSection: React.FC = () => {
                     <VanillaBossRollCard
                       key={name}
                       name={name}
-                      displayRate={stage.currentRate ?? 0}
+                      displayRate={stage.currentRate === null ? 0 : Math.min(100, stage.currentRate + boost(source))}
                       style={bossClass === 'brutus' ? TIER_STYLE.low : TIER_STYLE[bossClass]}
                       stage={stage}
                       note={vanillaBossNote(name, unlocks.quests)}
@@ -637,7 +641,7 @@ export const ActionSection: React.FC = () => {
                         key={name}
                         name={name}
                         displayRate={effectiveRate(source)}
-                        bonus={regionBonus}
+                        bonus={bonusFor(source)}
                         style={style}
                         onClick={(e) => handleRoll(source, DROP_RATES[source], e)}
                       />
@@ -672,7 +676,7 @@ export const ActionSection: React.FC = () => {
                   name={a.name}
                   subText={a.subText}
                   displayRate={effectiveRate(a.source)}
-                  bonus={regionBonus}
+                  bonus={bonusFor(a.source)}
                   image={a.image}
                   style={a.style}
                   onClick={(e) => handleRoll(a.source, DROP_RATES[a.source], e)}

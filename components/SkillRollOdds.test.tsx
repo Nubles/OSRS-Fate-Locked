@@ -25,6 +25,15 @@ describe('SkillRollOdds', () => {
     }
   });
 
+  it('adds the run\'s level-up boost from achievements', () => {
+    const html = renderToStaticMarkup(
+      <SkillRollOdds currentLevel={41} isUnlocked descriptionId="attack-key-roll-description" boost={2} />,
+    );
+
+    expect(html).toContain('10.4% Key');
+    expect(html).toContain('Your achievements add 2% to the Key chance.');
+  });
+
   it('shows the maximum eligible chance at level 98', () => {
     const html = renderToStaticMarkup(
       <SkillRollOdds currentLevel={98} isUnlocked descriptionId="attack-key-roll-description" />,

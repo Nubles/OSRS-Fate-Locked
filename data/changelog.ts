@@ -37,6 +37,23 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-15-achievement-rewards',
+    title: 'More achievements, now with rewards',
+    date: '2026-10-15',
+    sections: {
+      added: [
+        "There are now over 180 achievements, including ones for Key rolls, Void Altar rituals, pets, Slayer, clues, minigame stashes and unlock tables.",
+        "Every achievement is a title you can wear on your dashboard, and it stays earned even if a Sacrifice takes tiers away.",
+        "Every achievement gives 1 to 25 Fate. The hardest also give a Chaos Key, and the biggest a free ritual picked by fate.",
+        "Achievements raise their activity's Key chance by 0.2% to 0.5% each, from levels to bosses. Vanilla minigame stashes keep their own odds.",
+      ],
+      changed: [
+        "Achievements you'd already earned pay once when you open your run: their free rituals, and their Fate up to 50.",
+        "Apprentice now needs a skill you unlocked with a Key. Hitpoints doesn't count, since every run starts with it.",
+      ],
+    },
+  },
+  {
     id: '2026-10-15-minigame-keys',
     title: 'Minigames hold a few Keys each',
     date: '2026-10-15',

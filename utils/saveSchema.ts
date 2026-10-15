@@ -22,6 +22,7 @@ import { PET_COMPENSATION_ID, petCompensationOffer } from './petCompensation';
 import { isPetId, PET_IDS } from '../data/petIds';
 import { BARROWS_BROTHERS, BARROWS_ROLLS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, type Invocation } from '../config/economy';
 import { tidyRituals, type RitualState } from './ritualEffects';
+import { FREE_RITUAL_IDS } from './achievementRewards';
 /** Version 5 freezes the one-time pet offer and stores claimed pets and owed Keys. */
 export const CURRENT_SAVE_VERSION = 5;
 /**
@@ -488,7 +489,7 @@ const HISTORY_KEYS = new Set([
 ]);
 const HISTORY_TYPES = new Set([
   'UNLOCK', 'PITY', 'ALTAR', 'ROLL_SUCCESS', 'ROLL_FAIL', 'ROLL_OMNI',
-  'LEVEL_UP', 'XTREME_MILESTONE', 'COMPENSATION', 'PET',
+  'LEVEL_UP', 'XTREME_MILESTONE', 'COMPENSATION', 'PET', 'ACHIEVEMENT',
 ]);
 const HISTORY_RESULTS = new Set(['SUCCESS', 'FAIL']);
 const MAX_METADATA_DEPTH = 16;
@@ -792,6 +793,20 @@ const normalizePetCompensation = (value: unknown): Outcome<PetCompensationState>
   };
 };
 
+/** Settled achievement ids: short strings, each once. Unknown ids stay, for saves from a newer version. */
+const MAX_ACHIEVEMENT_IDS = 2_000;
+const normalizeAchievementsClaimed = (value: unknown): Outcome<string[]> => {
+  if (!Array.isArray(value) || value.length > MAX_ACHIEVEMENT_IDS) return invalid('invalid_field', 'achievementsClaimed');
+  const seen = new Set<string>();
+  for (const id of value) {
+    if (typeof id !== 'string' || id.length === 0 || id.length > MAX_IDENTIFIER_CHARS) {
+      return invalid('invalid_field', 'achievementsClaimed');
+    }
+    seen.add(id);
+  }
+  return { ok: true, value: [...seen] };
+};
+
 const RITUAL_KEYS = new Set(['ward', 'wardCooldown', 'tearsFailsLeft', 'tearsSpent', 'pactRollsLeft', 'pactDebt', 'invocations', 'barrows', 'sacrificesUsed']);
 
 /** The newer Void Altar rituals still running: each field bounded by what the rituals can set. */
@@ -1014,6 +1029,7 @@ const TOP_LEVEL_KEYS = new Set([
   'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
   'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'fateCompensation',
   'petCompensation', 'petsClaimed', 'keysOwed', 'rituals',
+  'achievementsClaimed', 'achievementTitle', 'freeRituals', 'freeClarity',
 ]);
 
 export const parseAndMigrateSave = (
@@ -1342,6 +1358,32 @@ const normalizeState = (
     const checked = normalizePetsClaimed(readOwn(input, 'petsClaimed'));
     if (checked.ok === false) return checked;
     if (checked.value.length > 0) state.petsClaimed = checked.value;
+  }
+  // Absent means the run predates achievement rewards (see GameState), so an
+  // empty list is kept rather than dropped.
+  if (own(input, 'achievementsClaimed') && readOwn(input, 'achievementsClaimed') !== undefined) {
+    const checked = normalizeAchievementsClaimed(readOwn(input, 'achievementsClaimed'));
+    if (checked.ok === false) return checked;
+    state.achievementsClaimed = checked.value;
+  }
+  if (own(input, 'achievementTitle') && readOwn(input, 'achievementTitle') !== undefined) {
+    const checked = stringValue(readOwn(input, 'achievementTitle'), 'achievementTitle', MAX_IDENTIFIER_CHARS);
+    if (checked.ok === false) return checked;
+    if (checked.value.length > 0) state.achievementTitle = checked.value;
+  }
+  if (own(input, 'freeRituals') && readOwn(input, 'freeRituals') !== undefined) {
+    const raw = readOwn(input, 'freeRituals');
+    if (!Array.isArray(raw) || raw.length > MAX_COUNTER
+      || !raw.every((id) => typeof id === 'string' && (FREE_RITUAL_IDS as readonly string[]).includes(id))) {
+      return invalid('invalid_field', 'freeRituals');
+    }
+    if (raw.length > 0) state.freeRituals = [...raw];
+  }
+  // A preview build of achievement rewards gave free Rituals of Clarity as a count.
+  if (own(input, 'freeClarity') && readOwn(input, 'freeClarity') !== undefined) {
+    const checked = boundedInteger(readOwn(input, 'freeClarity'), 'freeClarity', 0, MAX_COUNTER);
+    if (checked.ok === false) return checked;
+    if (checked.value > 0) state.freeRituals = [...(state.freeRituals ?? []), ...Array<string>(checked.value).fill('LUCK')];
   }
   if (own(input, 'rituals')) {
     const checked = normalizeRituals(readOwn(input, 'rituals'));

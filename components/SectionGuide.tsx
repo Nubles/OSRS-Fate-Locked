@@ -128,8 +128,10 @@ export const GUIDES: Record<string, Guide> = {
     blurb: 'Milestones that reward you for how your run unfolds.',
     bullets: [
       'Browse locked and unlocked achievements across categories.',
-      'They unlock by themselves as you reach gear, skill, area and luck milestones.',
-      'Track your overall completion at a glance.',
+      'They unlock by themselves as you reach quest, skill, area, gear, roll, ritual, unlock and pet milestones.',
+      'Each one is a title you can wear. Each also gives Fate (1 to 5 for first steps, up to 25 for the hardest), and the biggest a free random ritual.',
+      'Achievements for levels, quests, diaries, Combat Achievements, the collection log, Slayer, clues, bosses and minigames also raise that activity\'s Key chance: 0.2% for first steps, 0.3% or 0.5% for bigger ones. Vanilla minigame stashes keep their own odds.',
+      'Achievements earned before rewards arrived pay once: their free rituals, and their Fate up to the pity line.',
     ],
   },
   FORECAST: {

@@ -8,6 +8,7 @@ import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
+import { achievementBoostFor } from '../utils/achievementBoosts';
 import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, gambitKeys, STARTING_KEYS } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
 import { BARROWS_BROTHERS, INVOCATIONS, SACRIFICE_TIERS, WARD_COOLDOWN_ROLLS, invocationAllowed, SACRIFICE_USES_PER_RUN, type BarrowsBrother, type Invocation, type Ritual } from '../config/economy';
@@ -46,6 +47,7 @@ import {
   type ImportResult,
 } from '../utils/gamePersistence';
 import { CURRENT_SAVE_VERSION, MAX_COUNTER, parseAndMigrateSave, validateAndMigrateSave } from '../utils/saveSchema';
+import { AchievementPayout, pickFreeRitual, settleAchievements } from '../utils/achievementRewards';
 import { emptyRuneProofProgress, migrateLocalRuneProofProgress, updateRuneProofProgress, type RuneProofMutation } from '../utils/runeProofProgress';
 import { checksumSave } from '../utils/saveIntegrity';
 import { openRecoveryDatabase } from '../utils/recoveryDatabase';
@@ -251,6 +253,10 @@ interface GameContextType extends GameState {
   ) => void;
   /** A new pet: its Omni-Key, once per pet. It isn't a roll, so Fate and rituals stay as they are. */
   claimPet: (pet: { id: number; name: string }, x?: number, y?: number) => void;
+  /** Pay newly earned achievements once (a run from before rewards gets one back pay for what it has). `earned` is every earned achievement. */
+  settleAchievements: (earned: AchievementPayout[]) => void;
+  /** Wear an earned achievement as the run's title, or null to take it off. */
+  setAchievementTitle: (id: string | null) => void;
   setGameMode: (modeId: string, customRules?: GameModeRules) => void;
   /** Seeded runs — set/clear the seed (only while the run has no history). */
   setSeed: (seed: string) => void;
@@ -364,6 +370,8 @@ export const createFreshState = (): GameState => ({
   loadout: {},
   runId: newRunId(),
   runRevision: 0,
+  // A new run is paid for every achievement it earns (see GameState).
+  achievementsClaimed: [],
 });
 
 // --- Reducer ---
@@ -419,6 +427,8 @@ export type Action =
     };
   }
   | { type: 'CLAIM_PET'; payload: { petId: number; petName: string; x?: number; y?: number; meta?: DetectedGameEventMeta } }
+  | { type: 'SETTLE_ACHIEVEMENTS'; payload: AchievementPayout[] }
+  | { type: 'SET_ACHIEVEMENT_TITLE'; payload: string | null }
   | {
     type: 'ACCEPT_DETECTED_PET';
     payload: {
@@ -561,6 +571,9 @@ export function prepareKeyRollAction(
     successBonus = bonuses.successBonus;
     omniBonus = bonuses.omniBonus;
   }
+  // Activity milestones the run has earned raise that activity's own rolls,
+  // apart from Vanilla minigame reserves, which keep their own pace.
+  if (!vanillaMinigameContext) successBonus += achievementBoostFor(source, state.achievementsClaimed);
 
   const clueAwarded = vanillaClueContext ? state.clueStandardKeysAwarded ?? 0 : 0;
   const isVanillaContext = vanillaBossContext !== null || vanillaClueContext !== null || vanillaMinigameContext !== null;
@@ -875,6 +888,31 @@ const startMilestoneInsurance = (
   return { keys, xtremeMilestoneClaimed, chunkedMilestoneClaimed, entries };
 };
 
+/** What a ritual costs now: nothing when an achievement's free ritual of that kind is waiting. */
+interface RitualPrice { id: Ritual['id']; cost: number; free: boolean }
+const ritualPrice = (state: GameState, id: Ritual['id']): RitualPrice => (state.freeRituals?.includes(id)
+  ? { id, cost: 0, free: true }
+  : { id, cost: ritualFateCost(id, resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier), free: false });
+/** The run after paying a ritual's price: its Fate, or one waiting free ritual of that kind. */
+const payRitual = <S extends GameState>(state: S, price: RitualPrice): S => {
+  if (!price.free) return { ...state, fatePoints: state.fatePoints - price.cost };
+  const at = state.freeRituals?.indexOf(price.id) ?? -1;
+  const rest = (state.freeRituals ?? []).filter((_, j) => j !== at);
+  if (rest.length > 0) return { ...state, freeRituals: rest };
+  const { freeRituals: _used, ...run } = state;
+  return run as S;
+};
+const freeMeta = (price: RitualPrice) => (price.free ? { freeRitual: true } : {});
+const freeNote = (price: RitualPrice) => (price.free ? 'A free ritual from an achievement. ' : '');
+/** What the waiting Ritual of Greed was paid with, so a free one refunds nothing. */
+const lastGreedCost = (state: GameState): number => {
+  for (let i = state.history.length - 1; i >= 0; i--) {
+    const e = state.history[i];
+    if (e.type === 'ALTAR' && e.meta?.ritual === 'GREED' && typeof e.meta.fateCost === 'number') return e.meta.fateCost;
+  }
+  return ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier);
+};
+
 const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
   const now = Date.now();
 
@@ -986,6 +1024,31 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         petCompensation: { ...offer, status: choice },
         history: [...state.history, log],
       };
+    }
+
+    case 'SETTLE_ACHIEVEMENTS': {
+      const settled = settleAchievements(state, action.payload, now, generateId, MAX_COUNTER);
+      if (!settled) return state;
+      return {
+        ...state,
+        achievementsClaimed: settled.achievementsClaimed,
+        fatePoints: settled.fatePoints,
+        chaosKeys: state.chaosKeys + settled.chaosKeys,
+        ...(settled.freeRituals.length > 0 ? { freeRituals: settled.freeRituals } : {}),
+        history: settled.entries.length > 0 ? [...state.history, ...settled.entries] : state.history,
+      };
+    }
+
+    case 'SET_ACHIEVEMENT_TITLE': {
+      const id = action.payload;
+      if (id === null) {
+        if (state.achievementTitle === undefined) return state;
+        const { achievementTitle: _cleared, ...rest } = state;
+        return rest;
+      }
+      // Only an earned (settled) achievement can be worn.
+      if (id === state.achievementTitle || !state.achievementsClaimed?.includes(id)) return state;
+      return { ...state, achievementTitle: id };
     }
 
     case 'CLAIM_PET': {
@@ -1347,8 +1410,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         // so it's double-or-something rather than double-or-nothing.
         let greedRefund = 0;
         if (isGreed) {
-          const mult = resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier;
-          greedRefund = Math.ceil(ritualFateCost('GREED', mult) * GREED_REFUND_FRACTION);
+          greedRefund = Math.ceil(lastGreedCost(state) * GREED_REFUND_FRACTION);
           newState.fatePoints += greedRefund;
         }
         // Blood Price takes its Fate after the miss has paid out.
@@ -1452,38 +1514,39 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return { ...rest, lastEvent: { id: generateId(), type: 'UNLOCK', meta: { item: pendingUnlock.item, cost: pendingUnlock.cost, category: pendingUnlock.table } } };
     }
 
-    case 'RITUAL_LUCK':
+    case 'RITUAL_LUCK': {
       // One buff waits for the next roll; a second would overwrite the first.
-      if (rollRitualActive(state.activeBuff, state.rituals)
-        || state.fatePoints < ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier)) return state;
+      const price = ritualPrice(state, 'LUCK');
+      if (rollRitualActive(state.activeBuff, state.rituals) || state.fatePoints < price.cost) return state;
       return {
-        ...state,
-        fatePoints: state.fatePoints - ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
+        ...payRitual(state, price),
         activeBuff: 'LUCK',
-        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Clarity', details: 'Your next Key roll is made twice and the better result is kept.', meta: { ritual: 'LUCK', fateCost: ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier) } }],
+        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Clarity', details: `${freeNote(price)}Your next Key roll is made twice and the better result is kept.`, meta: { ritual: 'LUCK', fateCost: price.cost, ...freeMeta(price) } }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'LUCK' } }
       };
+    }
 
-    case 'RITUAL_GREED':
-      if (rollRitualActive(state.activeBuff, state.rituals)
-        || state.fatePoints < ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier)) return state;
+    case 'RITUAL_GREED': {
+      const price = ritualPrice(state, 'GREED');
+      if (rollRitualActive(state.activeBuff, state.rituals) || state.fatePoints < price.cost) return state;
       return {
-        ...state,
-        fatePoints: state.fatePoints - ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
+        ...payRitual(state, price),
         activeBuff: 'GREED',
-        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Greed', details: 'Next success gives 2 Keys.', meta: { ritual: 'GREED', fateCost: ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier) } }],
+        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Greed', details: `${freeNote(price)}Next success gives 2 Keys.`, meta: { ritual: 'GREED', fateCost: price.cost, ...freeMeta(price) } }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'GREED' } }
       };
+    }
 
-    case 'RITUAL_CHAOS':
-      if (state.fatePoints < ritualFateCost('CHAOS', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier)) return state;
+    case 'RITUAL_CHAOS': {
+      const price = ritualPrice(state, 'CHAOS');
+      if (state.fatePoints < price.cost) return state;
       return {
-        ...state,
-        fatePoints: state.fatePoints - ritualFateCost('CHAOS', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
+        ...payRitual(state, price),
         chaosKeys: state.chaosKeys + 1,
-        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Chaos', details: 'Fate converted to Chaos Key.', meta: { ritual: 'CHAOS', fateCost: ritualFateCost('CHAOS', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier), chaosKeysAwarded: 1 } }],
+        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Chaos', details: `${freeNote(price)}Fate converted to Chaos Key.`, meta: { ritual: 'CHAOS', fateCost: price.cost, chaosKeysAwarded: 1, ...freeMeta(price) } }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'CHAOS' } }
       };
+    }
 
     case 'RITUAL_TRANSMUTE':
       if (state.keys < (getRitual('TRANSMUTE').keyCost ?? 5)) return state;
@@ -1519,17 +1582,17 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       // unlocks directly (candidates were drawn from the live frontier by
       // the Altar UI).
       const { chunkKey: chosen, label } = action.payload;
-      const cost = ritualFateCost('CARTOGRAPHER', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier);
+      const price = ritualPrice(state, 'CARTOGRAPHER');
+      const cost = price.cost;
       if (state.fatePoints < cost || (state.unlocks.chunks ?? []).includes(chosen)) return state;
       return {
-        ...state,
-        fatePoints: state.fatePoints - cost,
+        ...payRitual(state, price),
         unlocks: { ...state.unlocks, chunks: [...(state.unlocks.chunks ?? []), chosen] },
         history: [...state.history, {
           id: generateId(), timestamp: now, type: 'ALTAR',
           message: `Cartographer charted ${label}`,
-          meta: { ritual: 'CARTOGRAPHER', fateCost: cost, chunk: chosen },
-          details: `Chose a frontier chunk for ${cost} Fate.`,
+          meta: { ritual: 'CARTOGRAPHER', fateCost: cost, chunk: chosen, ...freeMeta(price) },
+          details: price.free ? `${freeNote(price)}Chose a frontier chunk.` : `Chose a frontier chunk for ${cost} Fate.`,
         }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'CARTOGRAPHER', chunk: chosen } }
       };
@@ -1543,14 +1606,15 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     case 'RITUAL_SACRIFICE': {
       const id = action.type.slice('RITUAL_'.length) as NewRitualId;
       const ritual = getRitual(id);
-      const cost = ritualFateCost(id, resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier);
+      const price = ritualPrice(state, id);
+      const cost = price.cost;
       // The Altar checks the same rules; this stops a stale click.
       if (state.fatePoints < cost || !ritualAvailability(id, ritual.god, state).ok) return state;
       let rituals: RitualState = { ...state.rituals };
       let unlocks = state.unlocks;
       let specialKeys = state.specialKeys;
       let details = ritual.effect;
-      const meta: Record<string, unknown> = { ritual: id, fateCost: cost };
+      const meta: Record<string, unknown> = { ritual: id, fateCost: cost, ...freeMeta(price) };
       const eventMeta: RitualEventMeta = { type: id };
       if (action.type === 'RITUAL_WARD') rituals = { ...rituals, ward: true, wardCooldown: WARD_COOLDOWN_ROLLS };
       else if (action.type === 'RITUAL_TEARS') rituals = castTears(rituals);
@@ -1595,13 +1659,13 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         eventMeta.taken = taken;
         eventMeta.usesLeft = SACRIFICE_USES_PER_RUN - rituals.sacrificesUsed;
       }
-      const next: GameState & { lastEvent: GameEvent | null } = { ...state, fatePoints: state.fatePoints - cost, specialKeys, unlocks };
+      const next: GameState & { lastEvent: GameEvent | null } = { ...payRitual(state, price), specialKeys, unlocks };
       const tidy = tidyRituals(rituals);
       if (tidy) next.rituals = tidy;
       else delete next.rituals;
       return {
         ...next,
-        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: ritual.name, details, meta }],
+        history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: ritual.name, details: `${freeNote(price)}${details}`, meta }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: eventMeta },
       };
     }
@@ -2958,6 +3022,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   }), [commitAction]);
   const claimPet = useCallback((pet: { id: number; name: string }, x?: number, y?: number) =>
     commitAction({ type: 'CLAIM_PET', payload: { petId: pet.id, petName: pet.name, x, y } }), [commitAction]);
+  // Fate picks each free ritual here, so the reducer stays pure. Settled achievements draw nothing.
+  const settleAchievementsCallback = useCallback((earned: AchievementPayout[]) => {
+    const modeId = stateRef.current.gameModeId;
+    let draw = 0;
+    const claimed = stateRef.current.achievementsClaimed;
+    const payload = earned.map((a) => (a.freeRituals > 0 && !claimed?.includes(a.id)
+      ? { ...a, ritualPicks: Array.from({ length: a.freeRituals }, () => pickFreeRitual(modeId, nextFloat('achievement-ritual', draw++))) }
+      : a));
+    commitAction({ type: 'SETTLE_ACHIEVEMENTS', payload });
+  }, [commitAction, nextFloat]);
+  const setAchievementTitle = useCallback((id: string | null) =>
+    commitAction({ type: 'SET_ACHIEVEMENT_TITLE', payload: id }), [commitAction]);
   const setGameMode = useCallback((modeId: string, customRules?: GameModeRules) =>
     commitAction({ type: 'SET_GAME_MODE', payload: { modeId, customRules } }), [commitAction]);
   const toggleAnimations = useCallback(() => commitAction({ type: 'TOGGLE_ANIMATIONS' }), [commitAction]);
@@ -3412,6 +3488,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     resolveFateCompensation,
     resolvePetCompensation,
     claimPet,
+    settleAchievements: settleAchievementsCallback,
+    setAchievementTitle,
     setGameMode,
     setSeed,
     nextFloat,
@@ -3464,6 +3542,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     resolveFateCompensation,
     resolvePetCompensation,
     claimPet,
+    settleAchievementsCallback,
+    setAchievementTitle,
     setGameMode,
     setSeed,
     nextFloat,

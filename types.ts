@@ -119,7 +119,7 @@ export interface LogEntry {
   // outcomes; the bare 'ROLL' literal was a footgun (consumers filtered for
   // it expecting all rolls and got nothing). Use isRollEntry() in utils
   // instead of comparing to 'ROLL'.
-  type: 'UNLOCK' | 'PITY' | 'ALTAR' | 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'LEVEL_UP' | 'XTREME_MILESTONE' | 'COMPENSATION' | 'PET';
+  type: 'UNLOCK' | 'PITY' | 'ALTAR' | 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'LEVEL_UP' | 'XTREME_MILESTONE' | 'COMPENSATION' | 'PET' | 'ACHIEVEMENT';
   source?: string;
   result?: 'SUCCESS' | 'FAIL';
   rollValue?: number;
@@ -318,6 +318,16 @@ export interface GameState {
   xtremeMilestoneClaimed?: number;
   /** Same insurance as xtremeMilestoneClaimed, for the 'chunked' mode — see CHUNKED_MILESTONE_INTERVAL. */
   chunkedMilestoneClaimed?: number;
+  /**
+   * Achievement ids whose reward is settled (paid, or already earned when
+   * rewards arrived). Absent on a run from before achievement rewards: its
+   * first settlement records what it has earned so far and pays nothing.
+   */
+  achievementsClaimed?: string[];
+  /** The earned achievement the player shows as their title. */
+  achievementTitle?: string;
+  /** Free rituals from achievements, by ritual id (one entry each); a cast uses one before any Fate. */
+  freeRituals?: string[];
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */
