@@ -48,7 +48,7 @@ export const CHANGELOG_RELEASES = [
         "Once you earn an achievement it stays earned, even if a Sacrifice later takes tiers away.",
       ],
       changed: [
-        "Achievements you'd already earned keep their title but don't pay out. Rewards start with the next one you earn.",
+        "Achievements you'd already earned pay once when you open your run: their free rituals, and their Fate up to 50.",
         "Apprentice now needs a skill you unlocked with a Key. Hitpoints doesn't count, since every run starts with it.",
       ],
     },

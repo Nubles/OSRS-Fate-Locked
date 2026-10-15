@@ -10,7 +10,7 @@ import { freeRitualPool, pickFreeRitual } from '../utils/achievementRewards';
 /**
  * Achievements pay their reward once: Fate (filled up to the pity line at
  * most), free rituals fate picks, and a title to wear. A run from before
- * rewards records what it has already earned and is paid nothing for it.
+ * rewards records what it has already earned and gets one back pay for it.
  * Each case checks the history still replays to the run's Fate.
  */
 
@@ -70,17 +70,38 @@ describe('achievement rewards', () => {
     expect(settle(after)).toBe(after);
   });
 
-  it('records what a run from before rewards has already earned, and pays nothing for it', () => {
+  it('gives a run from before rewards one back pay for what it had already earned', () => {
     const before = withPets(legacy({ fatePoints: 7 }), 5);
     const after = settle(before);
 
     expect(after.achievementsClaimed).toEqual(expect.arrayContaining(['pets-1', 'pets-5']));
+    // Pet Shop's 5 Fate, in one entry.
+    expect(after.fatePoints).toBe(12);
+    expect(after.history.slice(before.history.length)).toEqual([
+      expect.objectContaining({ type: 'ACHIEVEMENT', message: 'Achievement back pay', meta: expect.objectContaining({ backPay: true, fateAwarded: 5, fatePointsAfter: 12 }) }),
+    ]);
+    expect(settle(after)).toBe(after);
+    // The next one it earns is paid as usual.
+    const later = settle(withPets(after, 25));
+    expect(later.fatePoints).toBe(12 + 25);
+    expect(later.achievementsClaimed).toContain('pets-25');
+  });
+
+  it("caps a back pay's Fate at the pity line and pays the free rituals in full", () => {
+    const before = withPets(legacy({ fatePoints: 7 }), PETS.length);
+    const after = settle(before);
+    expect(after.fatePoints).toBe(50);
+    expect(after.freeRituals).toEqual(['LUCK']);
+    const pay = after.history.at(-1);
+    expect(pay?.details).toMatch(/\+43 Fate \([0-9]+ earned; Fate fills to 50 at most\) · a free Ritual of Clarity/);
+    expect(replayFate(after).violations).toEqual([]);
+  });
+
+  it('gives a run from before rewards nothing when it had earned nothing that pays', () => {
+    const before = withPets(legacy({ fatePoints: 7 }), 1);
+    const after = settle(before);
     expect(after.fatePoints).toBe(7);
     expect(after.history).toEqual(before.history);
-    // The next one it earns is paid.
-    const later = settle(withPets(after, 25));
-    expect(later.fatePoints).toBe(7 + 25);
-    expect(later.achievementsClaimed).toContain('pets-25');
   });
 
   it('fills Fate up to the pity line at most', () => {

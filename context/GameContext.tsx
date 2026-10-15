@@ -252,7 +252,7 @@ interface GameContextType extends GameState {
   ) => void;
   /** A new pet: its Omni-Key, once per pet. It isn't a roll, so Fate and rituals stay as they are. */
   claimPet: (pet: { id: number; name: string }, x?: number, y?: number) => void;
-  /** Pay newly earned achievements once (a run from before rewards records what it has, unpaid). `earned` is every earned achievement. */
+  /** Pay newly earned achievements once (a run from before rewards gets one back pay for what it has). `earned` is every earned achievement. */
   settleAchievements: (earned: AchievementPayout[]) => void;
   /** Wear an earned achievement as the run's title, or null to take it off. */
   setAchievementTitle: (id: string | null) => void;

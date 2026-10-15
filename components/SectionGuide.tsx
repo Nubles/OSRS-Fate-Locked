@@ -130,7 +130,7 @@ export const GUIDES: Record<string, Guide> = {
       'Browse locked and unlocked achievements across categories.',
       'They unlock by themselves as you reach quest, skill, area, gear, roll, ritual, unlock and pet milestones.',
       'Each one is a title you can wear. Harder ones also give Fate, and the biggest a free random ritual.',
-      'Achievements earned before rewards arrived keep their title but pay nothing.',
+      'Achievements earned before rewards arrived pay once: their free rituals, and their Fate up to the pity line.',
     ],
   },
   FORECAST: {

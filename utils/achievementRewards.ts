@@ -63,8 +63,8 @@ export interface AchievementSettlement {
 /**
  * Pay each newly earned achievement once. `earned` is every achievement the
  * run has earned. A run from before achievement rewards (no
- * `achievementsClaimed`) records everything it has already earned and is paid
- * nothing for it. Fate fills up to the pity line at most, so the next missed
+ * `achievementsClaimed`) records everything it has already earned and gets
+ * one back pay for it: those free rituals, and their Fate up to the pity line. Fate fills up to the pity line at most, so the next missed
  * roll brings the Pity Key as usual; each entry records the balance after it
  * for the integrity replay. Returns null when nothing is due.
  */
@@ -75,8 +75,38 @@ export const settleAchievements = (
   newId: () => string,
   maxCounter: number,
 ): AchievementSettlement | null => {
+  const cap = achievementFateCap(state, maxCounter);
+  const pool = freeRitualPool(state.gameModeId);
+  const freeRituals = [...(state.freeRituals ?? [])];
+  // Fate's pick for each free ritual; a pick outside the pool (a stale or forged payload) falls back to the first.
+  const awardRituals = (a: AchievementPayout): string[] => {
+    const awarded = Array.from({ length: Math.max(0, Math.min(a.freeRituals, maxCounter - freeRituals.length)) },
+      (_, i) => { const pick = a.ritualPicks?.[i]; return pick && pool.includes(pick as Ritual['id']) ? pick : pool[0]; });
+    freeRituals.push(...awarded);
+    return awarded;
+  };
   if (state.achievementsClaimed === undefined) {
-    return { achievementsClaimed: [...new Set(earned.map((a) => a.id))], fatePoints: state.fatePoints, freeRituals: [...(state.freeRituals ?? [])], entries: [] };
+    // Back pay, once: the free rituals those achievements give, and their Fate
+    // up to the pity line at most, in one entry (Alex, 2026-10-15).
+    const seen = new Set<string>();
+    const already = earned.filter((a) => !seen.has(a.id) && seen.add(a.id));
+    const owed = already.reduce((n, a) => n + a.fate, 0);
+    const fatePoints = Math.max(state.fatePoints, Math.min(cap, state.fatePoints + owed));
+    const ritualsAwarded = already.flatMap(awardRituals);
+    const fateAwarded = fatePoints - state.fatePoints;
+    const parts = [
+      ...(fateAwarded > 0 ? [`+${fateAwarded} Fate${fateAwarded < owed ? ` (${owed} earned; Fate fills to ${cap} at most)` : ''}`] : []),
+      ...ritualsAwarded.map((id) => `a free ${ritualName(id)}`),
+    ];
+    const entries: LogEntry[] = parts.length === 0 ? [] : [{
+      id: newId(),
+      timestamp: now,
+      type: 'ACHIEVEMENT',
+      message: 'Achievement back pay',
+      details: `For the ${already.length} achievement${already.length === 1 ? '' : 's'} this run earned before rewards: ${parts.join(' · ')}.`,
+      meta: { backPay: true, fateAwarded, ...(ritualsAwarded.length > 0 ? { ritualsAwarded } : {}), fatePointsAfter: fatePoints },
+    }];
+    return { achievementsClaimed: [...seen], fatePoints, freeRituals, entries };
   }
   const claimed = new Set(state.achievementsClaimed);
   const fresh = earned.filter((a) => {
@@ -85,17 +115,11 @@ export const settleAchievements = (
     return true;
   });
   if (fresh.length === 0) return null;
-  const cap = achievementFateCap(state, maxCounter);
   let fatePoints = state.fatePoints;
-  const freeRituals = [...(state.freeRituals ?? [])];
-  const pool = freeRitualPool(state.gameModeId);
   const entries = fresh.map((a): LogEntry => {
     const fateAwarded = Math.max(0, Math.min(a.fate, cap - fatePoints));
     fatePoints += fateAwarded;
-    // A pick that isn't in the pool (a stale or forged payload) falls back to the first.
-    const ritualsAwarded = Array.from({ length: Math.max(0, Math.min(a.freeRituals, maxCounter - freeRituals.length)) },
-      (_, i) => { const pick = a.ritualPicks?.[i]; return pick && pool.includes(pick as Ritual['id']) ? pick : pool[0]; });
-    freeRituals.push(...ritualsAwarded);
+    const ritualsAwarded = awardRituals(a);
     const fateText = fateAwarded > 0 || a.fate > 0
       ? `+${a.fate} Fate${fateAwarded < a.fate ? ` (Fate was full, so ${fateAwarded} was added)` : ''}` : null;
     const ritualText = ritualsAwarded.length > 0 ? `a free ${ritualsAwarded.map(ritualName).join(' and a free ')}` : null;
