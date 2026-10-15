@@ -368,8 +368,6 @@ function classifyMinigame(label: string, state: GameState): EventClassification 
   if (!name) return needsConfirmation('Minigame is not in the current rules.');
   if (!state.unlocks.minigames.includes(name)) return blocked('Unlock this minigame before it can roll.');
   const stage = vanillaMinigameKeyStage(name, state.minigameStandardKeysAwarded?.[name] ?? 0);
-  const noKeys = MINIGAME_KEY_RESERVES[name].noKeys;
-  if (noKeys) return blocked(noKeys);
   if (stage.currentRate === null) return blocked('This minigame has no Standard Keys left to award.');
   return ready(DropSource.ACTIVITY_MINIGAME, name, { kind: 'NONE' }, {
     threshold: stage.currentRate,

@@ -176,7 +176,6 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Temple Trekking': { quests: ['In Aid of the Myreque'] },
   // Either way in is enough: a crop circle at 17 Hunter, or Zanaris's wheat-field portal.
   'Impetuous Impulses': { oneOf: [{ skills: { Hunter: 17 } }, { manualRequirements: ['Completed Lost City, for the portal in Zanaris'] }] },
-  'Rat Pits': { quests: ['Ratcatchers'] },
   'Vale Totems': { skills: { Fletching: 20 }, note: 'Vale Totems miniquest (Auburn Valley).' },
   'Barracuda Trials': { skills: { Sailing: 30 }, note: 'Trials at 30 / 55 / 72 Sailing; the 72 trial needs Regicide.' },
   'Blast Furnace': { note: '60 Smithing to use free; under 60, pay a fee.' },

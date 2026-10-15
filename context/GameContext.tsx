@@ -91,7 +91,7 @@ import {
   resolveKeyRoll,
   skillLevelKeyChance,
 } from '../utils/keyRoll';
-import { effectiveVanillaClueRate, MINIGAME_MISS_FATE_MIN_RATE, minigameMissPaysFate, vanillaBossKeyStage, vanillaMinigameKeyStage, type KeyReserveStage } from '../config/vanillaKeyEconomy';
+import { effectiveVanillaClueRate, isKnownVanillaMinigame, MINIGAME_MISS_FATE_MIN_RATE, minigameMissPaysFate, vanillaBossKeyStage, vanillaMinigameKeyStage, type KeyReserveStage } from '../config/vanillaKeyEconomy';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import {
   blockPendingSave,
@@ -539,6 +539,8 @@ export function prepareKeyRollAction(
   const vanillaMinigameContext = state.gameModeId === 'vanilla' && context?.kind === 'minigame'
     ? context
     : null;
+  // A minigame that left the table (Rat Pits) has nothing left to pay.
+  if (vanillaMinigameContext && !isKnownVanillaMinigame(vanillaMinigameContext.minigameName)) return null;
   const minigameStage = vanillaMinigameContext
     ? vanillaMinigameKeyStage(
       vanillaMinigameContext.minigameName,
@@ -1139,6 +1141,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const vanillaMinigameContext = state.gameModeId === 'vanilla' && context?.kind === 'minigame'
         ? context
         : null;
+      if (vanillaMinigameContext && !isKnownVanillaMinigame(vanillaMinigameContext.minigameName)) return state;
       const minigameStage = vanillaMinigameContext
         ? vanillaMinigameKeyStage(
           vanillaMinigameContext.minigameName,

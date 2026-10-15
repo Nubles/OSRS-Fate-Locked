@@ -16,8 +16,8 @@ const BOSS_CAPPED_TEXT = 'This boss no longer rolls for Keys or Fate. Its Combat
 export const BossKeyProgress: React.FC<BossKeyProgressProps> = ({ stage, cappedText = BOSS_CAPPED_TEXT }) => (
   <div className="mt-1.5 text-[9px] font-mono leading-snug text-gray-400">
     <div className="flex items-center justify-between gap-2">
-      <span>{stage.cap === 0 ? 'Holds no Keys' : `${stage.awarded} of ${stage.cap} Keys paid`}</span>
-      {stage.cap === 0 ? null : stage.capped ? (
+      <span>{stage.awarded} of {stage.cap} Keys paid</span>
+      {stage.capped ? (
         <span className="text-amber-300">All Keys paid</span>
       ) : (
         <span className="text-emerald-300">{stage.currentRate}% now</span>
