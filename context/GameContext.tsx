@@ -93,7 +93,7 @@ import {
   resolveKeyRoll,
   skillLevelKeyChance,
 } from '../utils/keyRoll';
-import { effectiveVanillaClueRate, vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
+import { effectiveVanillaClueRate, MINIGAME_MISS_FATE_MIN_RATE, minigameMissPaysFate, vanillaBossKeyStage, vanillaMinigameKeyStage, type KeyReserveStage } from '../config/vanillaKeyEconomy';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import {
   blockPendingSave,
@@ -347,6 +347,7 @@ export const initialState: GameState = {
   unlocks: getInitialUnlocks(),
   history: [],
   bossStandardKeysAwarded: {},
+  minigameStandardKeysAwarded: {},
   clueStandardKeysAwarded: 0,
   animationsEnabled: true,
   advisorsEnabled: false,
@@ -492,6 +493,10 @@ export type TransitionAction = Exclude<Action, { type: 'COMMIT_STATE' }>;
 type DiceRoller = (purpose: string, index?: number, max?: number) => number;
 type RollResultAction = Extract<TransitionAction, { type: 'ROLL_RESULT' }>;
 
+// A missed roll on a low-odds minigame pays no Fate (see MINIGAME_MISS_FATE_MIN_RATE).
+const missFateBase = (failureFate: number, minigameStage: KeyReserveStage | null): number =>
+  minigameStage?.currentRate != null && !minigameMissPaysFate(minigameStage.currentRate) ? 0 : failureFate;
+
 /**
  * Resolves a key roll exclusively from the supplied state snapshot.
  * The caller advances that snapshot atomically before resolving another roll.
@@ -541,9 +546,20 @@ export function prepareKeyRollAction(
   const bossStage = vanillaBossContext
     ? vanillaBossKeyStage(vanillaBossContext.bossName, recordedBossAwarded)
     : null;
+  const vanillaMinigameContext = state.gameModeId === 'vanilla' && context?.kind === 'minigame'
+    ? context
+    : null;
+  const minigameStage = vanillaMinigameContext
+    ? vanillaMinigameKeyStage(
+      vanillaMinigameContext.minigameName,
+      state.minigameStandardKeysAwarded?.[vanillaMinigameContext.minigameName] ?? 0,
+    )
+    : null;
+  // A boss or a minigame: both pay from a fixed Key reserve.
+  const reserveStage = bossStage ?? minigameStage;
 
-  // Do not advance seeded RNG (or consume a buff) after a boss reserve ends.
-  if (bossStage?.capped) return null;
+  // Do not advance seeded RNG (or consume a buff) after a boss or minigame reserve ends.
+  if (reserveStage?.capped) return null;
 
   const mode = resolveModeRules(state.gameModeId, state.customMode);
   let successBonus = 0;
@@ -557,9 +573,11 @@ export function prepareKeyRollAction(
   successBonus += achievementBoostFor(source, state.achievementsClaimed);
 
   const clueAwarded = vanillaClueContext ? state.clueStandardKeysAwarded ?? 0 : 0;
-  const isVanillaContext = vanillaBossContext !== null || vanillaClueContext !== null;
+  const isVanillaContext = vanillaBossContext !== null || vanillaClueContext !== null || vanillaMinigameContext !== null;
   const rollPurpose = vanillaBossContext
     ? `roll:boss:${vanillaBossContext.bossName}:${bossStage!.awarded}`
+    : vanillaMinigameContext
+    ? `roll:minigame:${vanillaMinigameContext.minigameName}:${minigameStage!.awarded}`
     : vanillaClueContext
       ? `roll:clue:${vanillaClueContext.clueTier}:${clueAwarded}`
       : 'roll';
@@ -572,7 +590,7 @@ export function prepareKeyRollAction(
   let effectiveThreshold: number;
   let success: boolean;
   if (isVanillaContext) {
-    baseThreshold = bossStage?.currentRate
+    baseThreshold = reserveStage?.currentRate
       ?? effectiveVanillaClueRate(threshold, clueAwarded);
     effectiveThreshold = normalizePercent(Math.max(0, Math.min(100, baseThreshold + successBonus)));
     const exactRoll = (index: number) => resolveKeyRoll(
@@ -629,7 +647,7 @@ export function prepareKeyRollAction(
     if (nextDice(rollPurpose, 2) <= omniChance) omni = true;
     if (plan.secondKey > 0 && nextDice(rollPurpose, 4) <= plan.secondKey) secondKey = true;
   } else {
-    pity = failFate(state.rituals, failureFate, state.fatePoints, mode.pityEnabled, mode.pityThreshold).pity;
+    pity = failFate(state.rituals, missFateBase(failureFate, minigameStage), state.fatePoints, mode.pityEnabled, mode.pityThreshold).pity;
   }
 
   return {
@@ -1180,10 +1198,20 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const bossStage = vanillaBossContext
         ? vanillaBossKeyStage(vanillaBossContext.bossName, recordedBossAwarded)
         : null;
+      const vanillaMinigameContext = state.gameModeId === 'vanilla' && context?.kind === 'minigame'
+        ? context
+        : null;
+      const minigameStage = vanillaMinigameContext
+        ? vanillaMinigameKeyStage(
+          vanillaMinigameContext.minigameName,
+          state.minigameStandardKeysAwarded?.[vanillaMinigameContext.minigameName] ?? 0,
+        )
+        : null;
+      const reserveStage = bossStage ?? minigameStage;
 
       // Callback work can race with an earlier accepted roll. This reducer-side
       // backstop rejects the stale action without changing buffs, history, or RNG state.
-      if (bossStage?.capped) return state;
+      if (reserveStage?.capped) return state;
 
       const rollText = formatKeyRollValue(roll);
       const thresholdsMatch = baseThreshold === threshold;
@@ -1203,11 +1231,11 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const requestedStandardKeys = success || pity
         ? success && isGreed ? 2 : secondKey ? 2 : 1
         : 0;
-      const standardKeysAwarded = bossStage
-        ? Math.min(requestedStandardKeys, bossStage.remaining)
+      const standardKeysAwarded = reserveStage
+        ? Math.min(requestedStandardKeys, reserveStage.remaining)
         : requestedStandardKeys;
-      const remainingStage = bossStage
-        ? bossStage.remaining - standardKeysAwarded
+      const remainingStage = reserveStage
+        ? reserveStage.remaining - standardKeysAwarded
         : null;
       const outcome = omni
         ? 'omni'
@@ -1221,14 +1249,16 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
             context,
             ...(context.kind === 'boss'
               ? { bossName: context.bossName, bossClass: context.bossClass }
-              : { clueTier: context.clueTier }),
+              : context.kind === 'minigame'
+                ? { minigameName: context.minigameName }
+                : { clueTier: context.clueTier }),
             effectiveRate: threshold,
             standardKeysAwarded,
-            currentStage: bossStage?.awarded ?? null,
+            currentStage: reserveStage?.awarded ?? null,
             remainingStage,
             remainingReserve: remainingStage,
             outcome,
-            exhausted: bossStage ? remainingStage === 0 : false,
+            exhausted: reserveStage ? remainingStage === 0 : false,
           }
         : {};
       const singleDrawProbability = Math.max(0, Math.min(1, threshold / 100));
@@ -1242,7 +1272,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const analyticsMeta: RollAnalyticsMeta = {
         successProbability,
         luckApplied,
-        drawResolution: vanillaBossContext || vanillaClueContext ? 10000 : 1000,
+        drawResolution: vanillaBossContext || vanillaClueContext || vanillaMinigameContext ? 10000 : 1000,
         standardKeysAwarded,
         rewardKind,
       };
@@ -1260,8 +1290,10 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
       const rollRules = resolveModeRules(state.gameModeId, state.customMode);
       // What the run's rituals do to a miss's Fate (Tears, Guthan, Torag, the Pact's debt, Invocations).
-      const missFate = success ? null : failFate(state.rituals, failureFate, state.fatePoints, rollRules.pityEnabled, rollRules.pityThreshold);
+      const missBase = missFateBase(failureFate, minigameStage);
+      const missFate = success ? null : failFate(state.rituals, missBase, state.fatePoints, rollRules.pityEnabled, rollRules.pityThreshold);
       const ritualNotes = [
+        ...(!success && missBase === 0 && failureFate > 0 ? [`No Fate on a miss under ${MINIGAME_MISS_FATE_MIN_RATE}%.`] : []),
         ...(ritualRoll && ritualRoll.oddsBonus !== 0 ? [`Rituals ${ritualRoll.oddsBonus > 0 ? '+' : ''}${ritualRoll.oddsBonus}% odds.`] : []),
         ...(success && ritualRoll?.hitThrough ? ['Verac hit through the miss.'] : []),
         ...(secondKey && standardKeysAwarded === 2 ? ["Karil's bolt found a second Key."] : []),
@@ -1285,6 +1317,12 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         newState.bossStandardKeysAwarded = {
           ...(state.bossStandardKeysAwarded ?? {}),
           [vanillaBossContext.bossName]: bossStage!.awarded + standardKeysAwarded,
+        };
+      }
+      if (vanillaMinigameContext && standardKeysAwarded > 0) {
+        newState.minigameStandardKeysAwarded = {
+          ...(state.minigameStandardKeysAwarded ?? {}),
+          [vanillaMinigameContext.minigameName]: minigameStage!.awarded + standardKeysAwarded,
         };
       }
       if (vanillaClueContext && standardKeysAwarded > 0) {
