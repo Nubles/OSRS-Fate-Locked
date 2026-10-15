@@ -297,9 +297,9 @@ interface Step {
 }
 
 const isVanilla = (c: AchievementContext): boolean => c.mode === 'vanilla';
-/** Vanilla minigames that hold Keys (Rat Pits holds none). */
+/** Vanilla minigames that hold Keys. */
 const minigamesWithKeys = (c: AchievementContext): number =>
-  tablePool(TableType.MINIGAMES, c).filter((name) => MINIGAME_KEY_RESERVES[name] && !MINIGAME_KEY_RESERVES[name].noKeys).length;
+  tablePool(TableType.MINIGAMES, c).filter((name) => MINIGAME_KEY_RESERVES[name]).length;
 
 function tiers(
   baseId: string,
