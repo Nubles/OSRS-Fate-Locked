@@ -479,8 +479,11 @@ export const ACHIEVEMENTS: Achievement[] = [
   // Activities
   ...tiers('bosses', 'Activities', 'boss', tableOwned(TableType.BOSSES, (u) => u.bosses), [
     { title: 'Boss Hunter', description: 'Unlock your first boss', target: 1 },
+    { title: 'Challenger', description: 'Unlock 5 bosses', target: 5 },
     { title: 'Boss Slayer', description: 'Unlock 10 bosses', target: 10, fate: 10 },
+    { title: 'Giant Killer', description: 'Unlock 15 bosses', target: 15, fate: 10 },
     { title: 'Headhunter', description: 'Unlock 25 bosses', target: 25, fate: 15 },
+    { title: 'Warlord', description: 'Unlock 35 bosses', target: 35, fate: 15 },
     { title: 'Bane of Bosses', description: 'Unlock 50 bosses', target: 50, fate: 15 },
     {
       id: 'bosses-all', title: 'Every Boss', description: 'Unlock every boss', target: 1, icon: 'crown', fate: 25, freeRituals: 1,
@@ -489,8 +492,12 @@ export const ACHIEVEMENTS: Achievement[] = [
   ]),
   ...tiers('minigames', 'Activities', 'minigame', tableOwned(TableType.MINIGAMES, (u) => u.minigames), [
     { title: 'Minigamer', description: 'Unlock your first minigame', target: 1 },
+    { title: 'Good Sport', description: 'Unlock 3 minigames', target: 3 },
     { title: 'Game Night', description: 'Unlock 5 minigames', target: 5, fate: 10 },
+    { title: 'Team Player', description: 'Unlock 10 minigames', target: 10, fate: 10 },
     { title: 'Regular Player', description: 'Unlock 15 minigames', target: 15, fate: 15 },
+    { title: 'Competitor', description: 'Unlock 20 minigames', target: 20, fate: 15 },
+    { title: 'Arena Veteran', description: 'Unlock 30 minigames', target: 30, fate: 15 },
     {
       id: 'minigames-all', title: 'Minigame Master', description: 'Unlock every minigame', target: 1, icon: 'crown', fate: 25,
       targetFor: (c) => tablePool(TableType.MINIGAMES, c).length,
@@ -500,24 +507,34 @@ export const ACHIEVEMENTS: Achievement[] = [
   // Slayer tasks and clue scrolls, read from the run's rolls
   ...tiers('slayer-tasks', 'Activities', 'slayer', ({ stats }) => stats.slayerTasks, [
     { title: 'On Assignment', description: 'Roll for your first Slayer task', target: 1 },
+    { title: 'Task Runner', description: 'Roll for 10 Slayer tasks', target: 10 },
+    { title: 'Slayer Apprentice', description: 'Roll for 25 Slayer tasks', target: 25, fate: 10 },
     { title: 'Monster Hunter', description: 'Roll for 50 Slayer tasks', target: 50, fate: 10 },
+    { title: 'Beast Hunter', description: 'Roll for 100 Slayer tasks', target: 100, fate: 15 },
     { title: 'Seasoned Slayer', description: 'Roll for 200 Slayer tasks', target: 200, fate: 15 },
+    { title: 'Superior Slayer', description: 'Roll for 350 Slayer tasks', target: 350, fate: 15 },
     { title: 'Slayer Legend', description: 'Roll for 500 Slayer tasks', target: 500, fate: 15 },
   ]),
   ...tiers('clues', 'Activities', 'map', ({ stats }) => stats.clues, [
     { title: 'Treasure Seeker', description: 'Roll for your first clue scroll', target: 1 },
+    { title: 'Puzzle Solver', description: 'Roll for 10 clue scrolls', target: 10 },
     { title: 'Clue Chaser', description: 'Roll for 25 clue scrolls', target: 25, fate: 10 },
+    { title: 'Map Reader', description: 'Roll for 50 clue scrolls', target: 50, fate: 10 },
     { title: 'Treasure Hunter', description: 'Roll for 100 clue scrolls', target: 100, fate: 15 },
+    { title: 'Casket Cracker', description: 'Roll for 200 clue scrolls', target: 200, fate: 15 },
     { title: 'Master Sleuth', description: 'Roll for 300 clue scrolls', target: 300, fate: 15 },
+    { title: "Uri's Favourite", description: 'Roll for 500 clue scrolls', target: 500, fate: 15 },
   ]),
 
   // Collection log
   ...tiers('collection', 'Collection', 'collection', collectionItems, [
     { title: 'Collector', description: 'Log your first collection item', target: 1 },
     { title: 'Hoarder', description: 'Log 25 collection items', target: 25 },
+    { title: 'Magpie', description: 'Log 50 collection items', target: 50, fate: 10 },
     { title: 'Curio Keeper', description: 'Log 100 collection items', target: 100, fate: 10 },
     { title: 'Archivist', description: 'Log 250 collection items', target: 250, fate: 15 },
     { title: 'Curator', description: 'Log 500 collection items', target: 500, fate: 15 },
+    { title: 'Gallery Owner', description: 'Log 750 collection items', target: 750, fate: 15 },
     { title: 'Museum Piece', description: 'Log 1,000 collection items', target: 1000, fate: 25 },
   ]),
 
