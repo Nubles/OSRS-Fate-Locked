@@ -2,7 +2,7 @@ import { DROP_RATES } from '../config/rules';
 import { policyFor } from '../config/detectorPolicies';
 import { failureFateForSkillLevel, failureFateForSource } from '../config/economy';
 import { BRUTUS_BOSS_NAME, vanillaBossKeyStage, vanillaMinigameKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
-import { MINIGAME_TIERS } from '../data/minigameKeyTiers';
+import { MINIGAME_KEY_RESERVES } from '../data/minigameKeyReserves';
 import { ALL_CA_TASKS, type CATask } from '../data/caTasks';
 import { BOSS_TIERS, TIER_SOURCE, type BossTier } from '../data/bossKeyTiers';
 import { COLLECTION_LOG_DATA, type CollectionLogItem } from '../data/collectionLogData';
@@ -87,7 +87,7 @@ const BOSS_INDEX = new Map(
 );
 
 const MINIGAME_INDEX = new Map(
-  Object.keys(MINIGAME_TIERS).map((name) => [normalize(name), name]),
+  Object.keys(MINIGAME_KEY_RESERVES).map((name) => [normalize(name), name]),
 );
 
 const SLAYER_SOURCES = [
@@ -368,10 +368,12 @@ function classifyMinigame(label: string, state: GameState): EventClassification 
   if (!name) return needsConfirmation('Minigame is not in the current rules.');
   if (!state.unlocks.minigames.includes(name)) return blocked('Unlock this minigame before it can roll.');
   const stage = vanillaMinigameKeyStage(name, state.minigameStandardKeysAwarded?.[name] ?? 0);
+  const noKeys = MINIGAME_KEY_RESERVES[name].noKeys;
+  if (noKeys) return blocked(noKeys);
   if (stage.currentRate === null) return blocked('This minigame has no Standard Keys left to award.');
   return ready(DropSource.ACTIVITY_MINIGAME, name, { kind: 'NONE' }, {
     threshold: stage.currentRate,
-    context: { kind: 'minigame', minigameName: name, minigameTier: MINIGAME_TIERS[name] },
+    context: { kind: 'minigame', minigameName: name },
   });
 }
 

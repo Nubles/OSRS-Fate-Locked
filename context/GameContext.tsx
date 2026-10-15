@@ -91,7 +91,7 @@ import {
   resolveKeyRoll,
   skillLevelKeyChance,
 } from '../utils/keyRoll';
-import { effectiveVanillaClueRate, vanillaBossKeyStage, vanillaMinigameKeyStage } from '../config/vanillaKeyEconomy';
+import { effectiveVanillaClueRate, MINIGAME_MISS_FATE_MIN_RATE, minigameMissPaysFate, vanillaBossKeyStage, vanillaMinigameKeyStage, type KeyReserveStage } from '../config/vanillaKeyEconomy';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import {
   blockPendingSave,
@@ -483,6 +483,10 @@ export type TransitionAction = Exclude<Action, { type: 'COMMIT_STATE' }>;
 type DiceRoller = (purpose: string, index?: number, max?: number) => number;
 type RollResultAction = Extract<TransitionAction, { type: 'ROLL_RESULT' }>;
 
+// A missed roll on a low-odds minigame pays no Fate (see MINIGAME_MISS_FATE_MIN_RATE).
+const missFateBase = (failureFate: number, minigameStage: KeyReserveStage | null): number =>
+  minigameStage?.currentRate != null && !minigameMissPaysFate(minigameStage.currentRate) ? 0 : failureFate;
+
 /**
  * Resolves a key roll exclusively from the supplied state snapshot.
  * The caller advances that snapshot atomically before resolving another roll.
@@ -631,7 +635,7 @@ export function prepareKeyRollAction(
     if (nextDice(rollPurpose, 2) <= omniChance) omni = true;
     if (plan.secondKey > 0 && nextDice(rollPurpose, 4) <= plan.secondKey) secondKey = true;
   } else {
-    pity = failFate(state.rituals, failureFate, state.fatePoints, mode.pityEnabled, mode.pityThreshold).pity;
+    pity = failFate(state.rituals, missFateBase(failureFate, minigameStage), state.fatePoints, mode.pityEnabled, mode.pityThreshold).pity;
   }
 
   return {
@@ -1184,7 +1188,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
             ...(context.kind === 'boss'
               ? { bossName: context.bossName, bossClass: context.bossClass }
               : context.kind === 'minigame'
-                ? { minigameName: context.minigameName, minigameTier: context.minigameTier }
+                ? { minigameName: context.minigameName }
                 : { clueTier: context.clueTier }),
             effectiveRate: threshold,
             standardKeysAwarded,
@@ -1224,8 +1228,10 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
       const rollRules = resolveModeRules(state.gameModeId, state.customMode);
       // What the run's rituals do to a miss's Fate (Tears, Guthan, Torag, the Pact's debt, Invocations).
-      const missFate = success ? null : failFate(state.rituals, failureFate, state.fatePoints, rollRules.pityEnabled, rollRules.pityThreshold);
+      const missBase = missFateBase(failureFate, minigameStage);
+      const missFate = success ? null : failFate(state.rituals, missBase, state.fatePoints, rollRules.pityEnabled, rollRules.pityThreshold);
       const ritualNotes = [
+        ...(!success && missBase === 0 && failureFate > 0 ? [`No Fate on a miss under ${MINIGAME_MISS_FATE_MIN_RATE}%.`] : []),
         ...(ritualRoll && ritualRoll.oddsBonus !== 0 ? [`Rituals ${ritualRoll.oddsBonus > 0 ? '+' : ''}${ritualRoll.oddsBonus}% odds.`] : []),
         ...(success && ritualRoll?.hitThrough ? ['Verac hit through the miss.'] : []),
         ...(secondKey && standardKeysAwarded === 2 ? ["Karil's bolt found a second Key."] : []),

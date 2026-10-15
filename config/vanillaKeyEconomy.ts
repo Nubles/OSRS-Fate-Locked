@@ -1,6 +1,6 @@
 import { BOSS_TIERS, bossTier, type BossTier } from '../data/bossKeyTiers';
 import { BOSSES_LIST, MINIGAMES_LIST } from '../data/items';
-import { MINIGAME_TIERS, minigameTier, type MinigameTier } from '../data/minigameKeyTiers';
+import { MINIGAME_KEY_RESERVES, minigameReserveRates } from '../data/minigameKeyReserves';
 
 export const BRUTUS_BOSS_NAME = 'Brutus' as const;
 
@@ -9,7 +9,7 @@ export type VanillaBossClass = BossTier | 'brutus';
 export type KeyRollContext =
   | { kind: 'boss'; bossName: string; bossClass: VanillaBossClass }
   | { kind: 'clue'; clueTier: string }
-  | { kind: 'minigame'; minigameName: string; minigameTier: MinigameTier };
+  | { kind: 'minigame'; minigameName: string };
 
 export const VANILLA_BOSS_KEY_RATES: Readonly<Record<VanillaBossClass, readonly number[]>> = {
   brutus: [10],
@@ -71,22 +71,17 @@ export const VANILLA_BOSS_STANDARD_KEY_TOTAL =
   1 + BOSSES_LIST.reduce((sum, name) => sum + vanillaBossKeySchedule(name).length, 0);
 
 // ── Minigames ───────────────────────────────────────────────────────────────
-// In Vanilla each unlocked minigame holds a few Standard Keys at falling odds,
-// like a boss, sized by how long one finished run takes (data/minigameKeyTiers).
-export const VANILLA_MINIGAME_KEY_RATES: Readonly<Record<MinigameTier, readonly number[]>> = {
-  quick: [10],
-  standard: [20, 10],
-  long: [30, 15],
-};
-
+// In Vanilla each unlocked minigame holds a few Standard Keys, like a boss: the
+// first at about an hour of play, each next one at half the chance
+// (data/minigameKeyReserves holds the numbers).
 export const isKnownVanillaMinigame = (name: string): boolean =>
-  Object.prototype.hasOwnProperty.call(MINIGAME_TIERS, name);
+  Object.prototype.hasOwnProperty.call(MINIGAME_KEY_RESERVES, name);
 
 export const vanillaMinigameKeySchedule = (name: string): readonly number[] => {
   if (!isKnownVanillaMinigame(name)) {
-    throw new Error(`Missing minigame key tier for "${name}".`);
+    throw new Error(`Missing minigame key reserve for "${name}".`);
   }
-  return VANILLA_MINIGAME_KEY_RATES[minigameTier(name)];
+  return minigameReserveRates(MINIGAME_KEY_RESERVES[name]);
 };
 
 export const vanillaMinigameKeyStage = (name: string, rawAwarded: number): KeyReserveStage =>
@@ -94,6 +89,15 @@ export const vanillaMinigameKeyStage = (name: string, rawAwarded: number): KeyRe
 
 export const VANILLA_MINIGAME_STANDARD_KEY_TOTAL =
   MINIGAMES_LIST.reduce((sum, name) => sum + vanillaMinigameKeySchedule(name).length, 0);
+
+/**
+ * A missed minigame roll pays Fate only at this chance or more. Short
+ * minigames roll at under 1%, and a Fate Point for each of their hundreds of
+ * misses would pay more Pity Keys than their reserves hold.
+ */
+export const MINIGAME_MISS_FATE_MIN_RATE = 5;
+
+export const minigameMissPaysFate = (rate: number): boolean => rate >= MINIGAME_MISS_FATE_MIN_RATE;
 
 /** Drops unknown names and bad counts, and clamps each count to its minigame's reserve. */
 export const normalizeMinigameStandardKeysAwarded = (value: unknown): Record<string, number> => {

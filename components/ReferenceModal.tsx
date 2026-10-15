@@ -6,7 +6,7 @@ import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
-import { andList, CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, VANILLA_MINIGAME_KEY_RATES, ritualEffect, type Ritual } from '../config/economy';
+import { andList, CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, MINIGAME_MISS_FATE_MIN_RATE, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { DropSource, TableType } from '../types';
 import { DROP_RATES } from '../config/rules';
@@ -441,9 +441,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     {Object.entries(VANILLA_BOSS_KEY_RATES).map(([bossClass, rates]) => <li key={bossClass}>{formatVanillaBossSchedule(bossClass, rates)}</li>)}
                                 </ul>
                                 <h3 className="font-bold text-amber-300 mt-4 mb-2">Vanilla: Keys per minigame</h3>
-                                <ul className="text-sm text-gray-300 space-y-1">
-                                    {Object.entries(VANILLA_MINIGAME_KEY_RATES).map(([tier, rates]) => <li key={tier}>{formatVanillaBossSchedule(tier, rates)}</li>)}
-                                </ul>
+                                <p className="text-sm text-gray-300">Each unlocked minigame holds 1 to 3 Keys: 3 with no Collection Log page, fewer when its log already pays a few. The first Key's chance per run is the run's length in minutes ÷ 60, so it takes about an hour of play, and each Key halves the next one's chance. A miss under {MINIGAME_MISS_FATE_MIN_RATE}% gives no Fate. Rat Pits holds none, since ironmen can't take part; Mage Arena and Tears of Guthix pay one guaranteed Key. Farm Keys → Activities shows each minigame's odds.</p>
                                 <p className="text-xs text-gray-400 mt-3">Each boss and each unlocked minigame pays its Keys in order, at these odds, then it stops rolling. Your first three clue Keys, from any tier, roll at no less than <b>{CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`).join(' → ')}</b>; after that each tier uses its normal rate.</p>
                             </div>
 

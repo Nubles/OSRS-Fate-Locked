@@ -37,6 +37,21 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-15-minigame-keys',
+    title: 'Minigames hold a few Keys each',
+    date: '2026-10-15',
+    sections: {
+      balance: [
+        "In Vanilla, each minigame you've unlocked now holds 1 to 3 Keys, then stops rolling, like bosses.",
+        'Minigames with no Collection Log page hold 3 Keys, and ones with a big log page hold fewer.',
+        "Short runs roll at low odds and long runs at high odds, so each minigame's first Key takes about an hour.",
+        "Each Key a minigame gives halves the chance of its next one. A miss under 5% doesn't give Fate.",
+        "Rat Pits holds no Keys, since ironmen can't take part. Mage Arena and Tears of Guthix give one guaranteed Key.",
+        'Minigames you haven\'t unlocked no longer roll. Chunked runs keep rolling every minigame at 10%.',
+      ],
+    },
+  },
+  {
     id: '2026-10-15-ritual-pictures',
     title: 'Ritual pictures show up again',
     date: '2026-10-15',
@@ -125,18 +140,6 @@ export const CHANGELOG_RELEASES = [
         'Pete Kayer shows up in the Ferox Enclave’s chunk info.',
         'The four Hunter shops list the new net trap in their stock.',
         'Goblins list Energy potion(3) in their drops.',
-      ],
-    },
-  },
-  {
-    id: '2026-10-09-minigame-keys',
-    title: 'Minigames Hold a Few Keys Each',
-    date: '2026-10-09',
-    sections: {
-      balance: [
-        'In Vanilla, minigames now work like bosses. Each minigame you’ve unlocked holds a few Keys at falling odds and stops rolling once it has paid them all. Quick ones like Rat Pits or Gnome Ball hold 1 Key at 10%. Standard ones like Pest Control or Guardians of the Rift hold 2 Keys at 20% then 10%. Long ones like Barbarian Assault or Hallowed Sepulchre hold 2 Keys at 30% then 15%.',
-        'Farm Keys → Activities now lists your unlocked minigames by name, each showing how many Keys it has paid. A minigame you haven’t unlocked no longer rolls, and every minigame starts with its full stash, including on runs already under way.',
-        'Chunked runs keep rolling every finished minigame at 10%, with no limit.',
       ],
     },
   },

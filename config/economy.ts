@@ -238,7 +238,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
     category: 'Activities',
     icon: `${WIKI}Minigames.png`,
     where: 'Farm Keys → Activities: roll each time you finish one.',
-    blurb: 'In Vanilla, each unlocked minigame pays a few Keys at falling odds, then stops: quick ones 1 Key, standard and long ones 2. In Chunked, every finished minigame rolls, with no limit.',
+    blurb: 'In Vanilla, each unlocked minigame pays 1 to 3 Keys, then stops. Short runs roll at low odds, long runs at high odds, and each Key halves the next one\'s chance. In Chunked, every finished minigame rolls, with no limit.',
     tiers: [
       { tier: 'Minigame', source: DropSource.ACTIVITY_MINIGAME, rate: DROP_RATES[DropSource.ACTIVITY_MINIGAME] },
     ],
@@ -525,7 +525,7 @@ export {
   VANILLA_BOSS_STANDARD_KEY_TOTAL,
   vanillaBossKeySchedule,
   vanillaBossKeyStage,
-  VANILLA_MINIGAME_KEY_RATES,
+  MINIGAME_MISS_FATE_MIN_RATE,
   VANILLA_MINIGAME_STANDARD_KEY_TOTAL,
   vanillaMinigameKeyStage,
 } from './vanillaKeyEconomy';

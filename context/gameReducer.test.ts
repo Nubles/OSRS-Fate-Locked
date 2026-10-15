@@ -638,7 +638,6 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
     const minigameContext = {
       kind: 'minigame' as const,
       minigameName: 'Pest Control',
-      minigameTier: 'standard' as const,
     };
 
     it('rolls each minigame at its reserve stage, with its own seeded purpose', () => {
@@ -650,7 +649,7 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
         1,
         (purpose, index = 0, max = 100) => {
           draws.push(purpose);
-          return index === 0 ? 900 : max;
+          return index === 0 ? 300 : max;
         },
         undefined,
         undefined,
@@ -658,7 +657,7 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
         minigameContext,
       );
 
-      expect(action?.payload).toMatchObject({ baseThreshold: 10, threshold: 10, success: true, context: minigameContext });
+      expect(action?.payload).toMatchObject({ baseThreshold: 4.17, threshold: 4.17, success: true, context: minigameContext });
       expect(draws[0]).toBe('roll:minigame:Pest Control:1');
     });
 
@@ -702,9 +701,37 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
       const state = { ...vanillaState(), minigameStandardKeysAwarded: { 'Rat Pits': 1 } };
       const next = gameReducer(state, roll({
         success: true,
-        context: { kind: 'minigame', minigameName: 'Rat Pits', minigameTier: 'quick' },
+        context: { kind: 'minigame', minigameName: 'Rat Pits' },
       }));
       expect(next).toBe(state);
+    });
+
+    it('pays Fate for a miss only at 5% or more', () => {
+      // Pest Control: 8.33% for its first Key, then 4.17%.
+      const first = gameReducer({ ...vanillaState(), fatePoints: 10 }, roll({ success: false, context: minigameContext }));
+      expect(first.fatePoints).toBe(11);
+
+      const second = gameReducer(
+        { ...vanillaState(), fatePoints: 10, minigameStandardKeysAwarded: { 'Pest Control': 1 } },
+        roll({ success: false, context: minigameContext }),
+      );
+      expect(second.fatePoints).toBe(10);
+      expect(second.history.at(-1)?.details).toContain('No Fate on a miss under 5%.');
+    });
+
+    it('never brings the Pity Key from a miss that pays no Fate', () => {
+      const action = prepareKeyRollAction(
+        { ...vanillaState(), fatePoints: 49, minigameStandardKeysAwarded: { 'Pest Control': 1 } },
+        'Activity (Minigame)',
+        10,
+        1,
+        (_purpose, _index = 0, max = 100) => max,
+        undefined,
+        undefined,
+        undefined,
+        minigameContext,
+      );
+      expect(action?.payload).toMatchObject({ success: false, pity: false });
     });
 
     it('leaves minigame rolls unlimited outside Vanilla', () => {
