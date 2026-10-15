@@ -8,6 +8,7 @@ import {
 } from '../utils/achievements';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';
+import { activeBoosts } from '../utils/achievementBoosts';
 
 interface Props {
   onClose: () => void;
@@ -41,6 +42,7 @@ export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
     return at;
   }, [history]);
   const title = all.find((a) => a.id === achievementTitle && a.earned);
+  const boosts = activeBoosts(achievementsClaimed);
   const earnedCount = all.filter((a) => a.earned).length;
   const pct = all.length > 0 ? Math.round((earnedCount / all.length) * 100) : 0;
 
@@ -87,6 +89,11 @@ export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
                 <span className="text-cyan-300"> · Free at the Void Altar: {freeRituals!.map(ritualName).join(', ')}</span>
               )}
             </p>
+            {boosts.length > 0 && (
+              <p className="text-[11px] text-cyan-300 mt-1">
+                Key chance boosts: {boosts.map((b) => `+${b.percent}% ${b.label}`).join(', ')}
+              </p>
+            )}
           </div>
           <button
             onClick={onClose}

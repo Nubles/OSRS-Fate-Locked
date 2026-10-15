@@ -272,6 +272,24 @@ describe('achievements read from the run', () => {
       .toBe(vanilla.find((a) => a.id === 'ritual-every')!.target + 1);
   });
 
+  it('counts Slayer tasks and clue scrolls from the run\'s rolls', () => {
+    const roll = (i: number, source: string | undefined, type: LogEntry['type'] = 'ROLL_FAIL'): LogEntry =>
+      ({ id: `r${i}`, timestamp: i, type, message: 'Roll', ...(source ? { source } : {}) });
+    const history: LogEntry[] = [
+      ...Array.from({ length: 50 }, (_, i) => roll(i, 'Slayer (Konar)')),
+      roll(50, 'Slayer (Boss Task)', 'ROLL_SUCCESS'),
+      ...Array.from({ length: 25 }, (_, i) => roll(100 + i, 'Clue Scroll (Hard)')),
+      roll(200, 'Quest (Novice)'),
+      roll(201, undefined),
+    ];
+    expect(runStats(history)).toMatchObject({ slayerTasks: 51, clues: 25 });
+    const earned = new Set(evaluateRun({ unlocks: emptyUnlocks(), history }).filter((a) => a.earned).map((a) => a.id));
+    expect(earned.has('slayer-tasks-50')).toBe(true);
+    expect(earned.has('slayer-tasks-200')).toBe(false);
+    expect(earned.has('clues-25')).toBe(true);
+    expect(earned.has('clues-100')).toBe(false);
+  });
+
   it('counts gear tiers, diary tasks and tiers, and CA tasks', () => {
     const easy = Object.values(DIARY_DATA).filter((d) => d.tier === 'Easy').map((d) => d.id);
     const ardougne = ['Ardougne Easy', 'Ardougne Medium', 'Ardougne Hard', 'Ardougne Elite'];

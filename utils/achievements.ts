@@ -134,6 +134,9 @@ export interface RunStats {
   allInvocations: boolean;
   /** Barrows brothers the Barrows Chest has drawn. */
   barrowsBrothers: ReadonlySet<string>;
+  /** Slayer tasks and clue scrolls rolled for. */
+  slayerTasks: number;
+  clues: number;
 }
 
 /** Which ritual an Altar entry was. Old entries carry no id, so their message says (as in utils/integrity). */
@@ -153,7 +156,7 @@ export const runStats = (history: readonly LogEntry[] = []): RunStats => {
   let rolls = 0, keysWon = 0, winStreak = 0, missStreak = 0, longestWinStreak = 0, longestMissStreak = 0;
   let luckiestWin = 1, omniRolls = 0, pityKeys = 0, chaosKeys = 0, greedDoubled = false;
   let gambitWins = 0, biggestGambitWin = 0, gambitLosses = 0, longestGambitLosingRun = 0;
-  let wardKeys = 0, pactDebtPaid = 0, allInvocations = false;
+  let wardKeys = 0, pactDebtPaid = 0, allInvocations = false, slayerTasks = 0, clues = 0;
   const rituals = new Set<string>();
   const barrowsBrothers = new Set<string>();
   for (const e of history) {
@@ -165,6 +168,11 @@ export const runStats = (history: readonly LogEntry[] = []): RunStats => {
     if (isRollEntry(e)) {
       rolls += 1;
       pactDebtPaid += count(e.meta?.debtPaid);
+      const source = typeof e.source === 'string' ? e.source : e.meta?.source;
+      if (typeof source === 'string') {
+        if (source.startsWith('Slayer (')) slayerTasks += 1;
+        else if (source.startsWith('Clue Scroll (')) clues += 1;
+      }
       const won = e.type === 'ROLL_SUCCESS' || e.type === 'ROLL_OMNI';
       if (won) {
         winStreak += 1; missStreak = 0;
@@ -208,7 +216,7 @@ export const runStats = (history: readonly LogEntry[] = []): RunStats => {
   return {
     rolls, keysWon, longestWinStreak, longestMissStreak, luckiestWin, omniRolls, pityKeys,
     chaosKeys, greedDoubled, rituals, gambitWins, biggestGambitWin, longestGambitLosingRun,
-    wardKeys, pactDebtPaid, allInvocations, barrowsBrothers,
+    wardKeys, pactDebtPaid, allInvocations, barrowsBrothers, slayerTasks, clues,
   };
 };
 
@@ -487,6 +495,20 @@ export const ACHIEVEMENTS: Achievement[] = [
       id: 'minigames-all', title: 'Minigame Master', description: 'Unlock every minigame', target: 1, icon: 'crown', fate: 25,
       targetFor: (c) => tablePool(TableType.MINIGAMES, c).length,
     },
+  ]),
+
+  // Slayer tasks and clue scrolls, read from the run's rolls
+  ...tiers('slayer-tasks', 'Activities', 'slayer', ({ stats }) => stats.slayerTasks, [
+    { title: 'On Assignment', description: 'Roll for your first Slayer task', target: 1 },
+    { title: 'Monster Hunter', description: 'Roll for 50 Slayer tasks', target: 50, fate: 10 },
+    { title: 'Seasoned Slayer', description: 'Roll for 200 Slayer tasks', target: 200, fate: 15 },
+    { title: 'Slayer Legend', description: 'Roll for 500 Slayer tasks', target: 500, fate: 15 },
+  ]),
+  ...tiers('clues', 'Activities', 'map', ({ stats }) => stats.clues, [
+    { title: 'Treasure Seeker', description: 'Roll for your first clue scroll', target: 1 },
+    { title: 'Clue Chaser', description: 'Roll for 25 clue scrolls', target: 25, fate: 10 },
+    { title: 'Treasure Hunter', description: 'Roll for 100 clue scrolls', target: 100, fate: 15 },
+    { title: 'Master Sleuth', description: 'Roll for 300 clue scrolls', target: 300, fate: 15 },
   ]),
 
   // Collection log

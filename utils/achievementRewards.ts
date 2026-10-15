@@ -1,6 +1,7 @@
 import type { GameState, LogEntry } from '../types';
 import { resolveModeRules } from '../config/gameModes';
 import { RITUALS, type Ritual } from '../config/economy';
+import { boostLabel } from './achievementBoosts';
 
 /**
  * Achievement rewards, kept apart from the achievement list so the game can
@@ -60,10 +61,12 @@ export const smallFate = (runId: string | undefined, achievementId: string): num
 export const fateDue = (a: Pick<AchievementPayout, 'id' | 'fate'>, runId: string | undefined): number =>
   (a.fate > 0 ? a.fate : smallFate(runId, a.id));
 
-/** "+10 Fate · a free random ritual", or "+1 to 5 Fate" for one with no set Fate. */
-export function rewardLabel(a: Pick<AchievementPayout, 'fate' | 'freeRituals' | 'chaosKeys'>): string | null {
+/** "+10 Fate · +1% quest Key chance", or "+1 to 5 Fate" for one with no set Fate. */
+export function rewardLabel(a: Pick<AchievementPayout, 'fate' | 'freeRituals' | 'chaosKeys'> & { id?: string }): string | null {
   const parts: string[] = [];
   parts.push(a.fate > 0 ? `+${a.fate} Fate` : `+${SMALL_FATE_MIN} to ${SMALL_FATE_MAX} Fate`);
+  const boost = a.id ? boostLabel(a.id) : null;
+  if (boost) parts.push(boost);
   if (a.chaosKeys > 0) parts.push(a.chaosKeys === 1 ? 'a Chaos Key' : `${a.chaosKeys} Chaos Keys`);
   if (a.freeRituals > 0) parts.push(a.freeRituals === 1 ? 'a free random ritual' : `${a.freeRituals} free random rituals`);
   return parts.length > 0 ? parts.join(' · ') : null;
@@ -152,7 +155,7 @@ export const settleAchievements = (
     chaosKeys += chaosKeysAwarded;
     const chaosText = chaosKeysAwarded > 0 ? (chaosKeysAwarded === 1 ? 'a Chaos Key' : `${chaosKeysAwarded} Chaos Keys`) : null;
     const ritualText = ritualsAwarded.length > 0 ? `a free ${ritualsAwarded.map(ritualName).join(' and a free ')}` : null;
-    const reward = [fateText, chaosText, ritualText].filter(Boolean).join(' · ');
+    const reward = [fateText, chaosText, ritualText, boostLabel(a.id)].filter(Boolean).join(' · ');
     return {
       id: newId(),
       timestamp: now,

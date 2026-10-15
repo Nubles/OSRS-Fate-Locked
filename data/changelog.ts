@@ -42,10 +42,10 @@ export const CHANGELOG_RELEASES = [
     date: '2026-10-15',
     sections: {
       added: [
-        "There are now over 100 achievements, including ones for Key rolls, every Void Altar ritual, pets and every unlock table.",
-        "Every achievement is a title you can wear. Pick one in the Achievements window and it shows on your dashboard.",
-        "Every achievement gives 1 to 25 Fate. The biggest also give a free ritual, picked by fate.",
-        "Once you earn an achievement it stays earned, even if a Sacrifice later takes tiers away.",
+        "There are now over 150 achievements, including ones for Key rolls, every Void Altar ritual, pets, Slayer, clues and every unlock table.",
+        "Every achievement is a title you can wear on your dashboard, and it stays earned even if a Sacrifice takes tiers away.",
+        "Every achievement gives 1 to 25 Fate. The hardest also give a Chaos Key, and the biggest a free ritual picked by fate.",
+        "Milestones in levels, quests, diaries, CAs, the collection log, Slayer, clues, bosses and minigames each add 1% to that activity's Key chance, up to 3%.",
       ],
       changed: [
         "Achievements you'd already earned pay once when you open your run: their free rituals, and their Fate up to 50.",
