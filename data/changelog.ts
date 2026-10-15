@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-15-ritual-pictures',
+    title: 'Ritual pictures show up again',
+    date: '2026-10-15',
+    sections: {
+      fixed: [
+        "Ritual animations now show every picture, like the Barrows brother's armour and Tumeken's shadow, instead of leaving blank spaces.",
+      ],
+    },
+  },
+  {
     id: '2026-10-15-new-rituals',
     title: 'Six new rituals at the Void Altar',
     date: '2026-10-15',

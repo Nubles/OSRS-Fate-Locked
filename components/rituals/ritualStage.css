@@ -7,6 +7,8 @@
 .ritual-fx { left: 0; top: 0; pointer-events: none; z-index: 5; }
 .ritual-node { width: 0; height: 0; display: flex; align-items: center; justify-content: center; overflow: visible; }
 .ritual-node > * { flex: none; }
+/* The app's base styles cap images at max-width: 100%, and a node is 0 wide, so a picture placed straight in a node would shrink to nothing. */
+.ritual-stage img { max-width: none; }
 .ritual-glow { width: 260px; height: 260px; border-radius: 50%; opacity: 0; }
 .ritual-label { white-space: nowrap; text-shadow: 1px 1px 0 #000; -webkit-font-smoothing: none; font-size: 16px; }
 .ritual-big { font-size: 32px; text-shadow: 2px 2px 0 #000; }
