@@ -7,6 +7,7 @@ import {
 } from '../constants';
 import { BANK_IDS } from '../data/banks';
 import { QUEST_DATA, QUEST_CAPE_QUEST_IDS } from '../data/questData';
+import { DIARY_DATA } from '../data/diaryData';
 import {
   ACHIEVEMENTS, evaluateAchievements as evaluateRun, earnedIds as earnedRunIds, completionPercent, runStats,
 } from './achievements';
@@ -269,6 +270,21 @@ describe('achievements read from the run', () => {
     expect(chunked.some((a) => a.id === 'ritual-cartographer')).toBe(true);
     expect(chunked.find((a) => a.id === 'ritual-every')!.target)
       .toBe(vanilla.find((a) => a.id === 'ritual-every')!.target + 1);
+  });
+
+  it('counts gear tiers, diary tasks and tiers, and CA tasks', () => {
+    const easy = Object.values(DIARY_DATA).filter((d) => d.tier === 'Easy').map((d) => d.id);
+    const ardougne = ['Ardougne Easy', 'Ardougne Medium', 'Ardougne Hard', 'Ardougne Elite'];
+    const unlocks = emptyUnlocks({
+      equipment: Object.fromEntries(EQUIPMENT_SLOTS.map((s) => [s, 3])),
+      diaries: [...new Set([...easy, ...ardougne])],
+      completedTasks: [...Array.from({ length: 50 }, (_, i) => `ca_${i}`), 'ard_easy_1'],
+    });
+    const earned = earnedIds(unlocks);
+    for (const id of ['equip-tiers-25', 'equip-tier3-all', 'diary-easy-all', 'diary-region-all', 'diary-tasks-25', 'ca-tasks-50']) {
+      expect(earned.has(id), id).toBe(true);
+    }
+    for (const id of ['equip-tiers-50', 'equip-tier5-all', 'diary-medium-all', 'ca-tasks-150']) expect(earned.has(id), id).toBe(false);
   });
 
   it('counts each unlock table against what the mode can roll', () => {

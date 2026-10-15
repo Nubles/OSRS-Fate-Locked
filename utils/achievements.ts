@@ -20,6 +20,7 @@ import {
 import { completionPercent } from './completion';
 import { QUEST_DATA, QUEST_CAPE_QUEST_IDS } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { CA_DATA } from '../data/caData';
 import { PETS } from '../data/pets';
 import { BANK_IDS, MERGED_BANKS } from '../data/banks';
@@ -224,6 +225,25 @@ const skillTiers: Metric = ({ u }) => sum(Object.values(u.skills));
 const totalLevel: Metric = ({ u }) => sum(SKILLS_LIST.map((s) => u.levels[s] ?? 1));
 const skillsAt99: Metric = ({ u }) => Object.values(u.levels).filter((l) => l >= 99).length;
 const equipUnlocked: Metric = ({ u }) => EQUIPMENT_SLOTS.filter((s) => (u.equipment[s] || 0) > 0).length;
+const gearTiers: Metric = ({ u }) => sum(EQUIPMENT_SLOTS.map((s) => Math.min(u.equipment[s] || 0, EQUIPMENT_TIER_MAX)));
+// A completed diary tier counts all its tasks, even on a run that logged the tier without them.
+const diaryTasksDone: Metric = ({ u }) => {
+  const done = new Set(u.completedTasks ?? []);
+  return ALL_DIARY_TASKS.filter((t) => done.has(t.id) || u.diaries.includes(t.tierId)).length;
+};
+const caTasksDone: Metric = ({ u }) => (u.completedTasks ?? []).filter((id) => id.startsWith('ca_')).length;
+const diaryTierIds = (tier: string) => Object.values(DIARY_DATA).filter((d) => d.tier === tier).map((d) => d.id);
+/** Diaries of one tier (Easy, Medium...) done, out of every diary of that tier. */
+const diaryTierDone = (tier: string): Metric => ({ u }) => diaryTierIds(tier).filter((id) => u.diaries.includes(id)).length;
+/** The most tiers done in any one diary (4 is the whole diary). */
+const bestDiary: Metric = ({ u }) => {
+  const done = new Map<string, number>();
+  for (const id of u.diaries) {
+    const name = id.replace(/ (Easy|Medium|Hard|Elite)$/, '');
+    done.set(name, (done.get(name) ?? 0) + 1);
+  }
+  return Math.max(0, ...done.values());
+};
 const equipAtLeast = (tier: number): Metric => ({ u }) => EQUIPMENT_SLOTS.filter((s) => (u.equipment[s] || 0) >= tier).length;
 const collectionItems: Metric = ({ u }) => Object.values(u.collectionLog || {}).filter((c) => c > 0).length;
 // Areas the run has opened, by the same reachability check as the map, so
@@ -382,8 +402,20 @@ export const ACHIEVEMENTS: Achievement[] = [
     { title: 'Geared Up', description: 'Unlock your first equipment slot', target: 1 },
     { title: 'Fully Equipped', description: 'Unlock every equipment slot', target: TOTAL_EQUIP_SLOTS, fate: 10 },
   ]),
+  ...tiers('equip-tiers', 'Equipment', 'equipment', gearTiers, [
+    { title: 'Kitted Out', description: 'Reach 10 gear tiers across your slots', target: 10 },
+    { title: 'Armsman', description: 'Reach 25 gear tiers across your slots', target: 25, fate: 10 },
+    { title: 'Quartermaster', description: 'Reach 50 gear tiers across your slots', target: 50, fate: 15 },
+    { title: 'Siege Ready', description: 'Reach 75 gear tiers across your slots', target: 75, fate: 15 },
+  ]),
+  ...tiers('equip-tier3', 'Equipment', 'equipment', equipAtLeast(3), [
+    { title: 'Well Armed', description: 'Get every equipment slot to tier 3', target: TOTAL_EQUIP_SLOTS, fate: 10, id: 'equip-tier3-all' },
+  ]),
   ...tiers('equip-tier5', 'Equipment', 'equipment', equipAtLeast(5), [
     { title: 'Rune Set', description: 'Get every equipment slot to tier 5', target: TOTAL_EQUIP_SLOTS, fate: 15, id: 'equip-tier5-all' },
+  ]),
+  ...tiers('equip-tier7', 'Equipment', 'equipment', equipAtLeast(7), [
+    { title: 'Elite Arsenal', description: 'Get every equipment slot to tier 7', target: TOTAL_EQUIP_SLOTS, fate: 15, id: 'equip-tier7-all' },
   ]),
   ...tiers('equip-max', 'Equipment', 'equipment', equipAtLeast(EQUIPMENT_TIER_MAX), [
     { title: 'Best in Slot', description: `Max a slot to Tier ${EQUIPMENT_TIER_MAX}`, target: 1, icon: 'star', fate: 15 },
@@ -397,11 +429,43 @@ export const ACHIEVEMENTS: Achievement[] = [
     { title: 'Chronicler', description: 'Complete 24 diary tiers', target: 24, fate: 15 },
     { title: 'Diary Master', description: 'Complete every diary tier', target: TOTAL_DIARIES, icon: 'crown', fate: 25, freeRituals: 1 },
   ]),
+  ...tiers('diary-tasks', 'Diaries', 'diary', diaryTasksDone, [
+    { title: 'Odd Jobs', description: 'Complete 25 diary tasks', target: 25 },
+    { title: 'Errand Runner', description: 'Complete 100 diary tasks', target: 100, fate: 10 },
+    { title: 'Seasoned Diarist', description: 'Complete 250 diary tasks', target: 250, fate: 15 },
+    { title: 'Lore Keeper', description: 'Complete 400 diary tasks', target: 400, fate: 15 },
+  ]),
+  ...tiers('diary-region', 'Diaries', 'diary', bestDiary, [
+    { title: 'Local Legend', description: 'Complete all four tiers of one diary', target: 4, fate: 10, id: 'diary-region-all' },
+  ]),
+  ...tiers('diary-easy', 'Diaries', 'diary', diaryTierDone('Easy'), [
+    { title: 'Easy Going', description: 'Complete every Easy diary', target: 1, fate: 10, id: 'diary-easy-all', targetFor: () => diaryTierIds('Easy').length },
+  ]),
+  ...tiers('diary-medium', 'Diaries', 'diary', diaryTierDone('Medium'), [
+    { title: 'Getting There', description: 'Complete every Medium diary', target: 1, fate: 10, id: 'diary-medium-all', targetFor: () => diaryTierIds('Medium').length },
+  ]),
+  ...tiers('diary-hard', 'Diaries', 'diary', diaryTierDone('Hard'), [
+    { title: 'Hard Earned', description: 'Complete every Hard diary', target: 1, fate: 15, id: 'diary-hard-all', targetFor: () => diaryTierIds('Hard').length },
+  ]),
+  ...tiers('diary-elite', 'Diaries', 'diary', diaryTierDone('Elite'), [
+    { title: 'Elite Adventurer', description: 'Complete every Elite diary', target: 1, fate: 15, id: 'diary-elite-all', targetFor: () => diaryTierIds('Elite').length },
+  ]),
 
   // Combat Achievements
   ...tiers('ca', 'Combat', 'combat', ({ u }) => u.cas.length, [
     { title: 'Combat Novice', description: 'Complete your first CA tier', target: 1, fate: 10 },
+    { title: 'Combat Adept', description: 'Complete 2 CA tiers', target: 2, fate: 10 },
+    { title: 'Combat Veteran', description: 'Complete 3 CA tiers', target: 3, fate: 15 },
+    { title: 'Combat Elite', description: 'Complete 4 CA tiers', target: 4, fate: 15 },
+    { title: 'Combat Expert', description: 'Complete 5 CA tiers', target: 5, fate: 15 },
     { title: 'Combat Master', description: 'Complete every CA tier', target: TOTAL_CA, icon: 'trophy', fate: 25, freeRituals: 1 },
+  ]),
+  ...tiers('ca-tasks', 'Combat', 'combat', caTasksDone, [
+    { title: 'Scrapper', description: 'Complete 10 Combat Achievement tasks', target: 10 },
+    { title: 'Brawler', description: 'Complete 50 Combat Achievement tasks', target: 50, fate: 10 },
+    { title: 'Gladiator', description: 'Complete 150 Combat Achievement tasks', target: 150, fate: 15 },
+    { title: 'Warmonger', description: 'Complete 300 Combat Achievement tasks', target: 300, fate: 15 },
+    { title: 'Battle-Scarred', description: 'Complete 500 Combat Achievement tasks', target: 500, fate: 15 },
   ]),
 
   // Activities
