@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { MINIGAMES_LIST } from './items';
+import { MINIGAMES_LIST, RETIRED_MINIGAMES } from './items';
+import { ACTIVITY_REQUIREMENTS } from './activityRequirements';
+import { createFreshState } from '../context/GameContext';
+import { TableType } from '../types';
+import { validateAndMigrateSave } from '../utils/saveSchema';
 import { MINIGAME_KEY_RESERVES, minigameReserveRates, minigameReserveSize } from './minigameKeyReserves';
 import {
   VANILLA_MINIGAME_STANDARD_KEY_TOTAL,
@@ -20,7 +24,6 @@ describe('minigame key reserves', () => {
     expect(minigameReserveSize(MINIGAME_KEY_RESERVES['Gnome Ball'])).toBe(3);
     expect(minigameReserveSize(MINIGAME_KEY_RESERVES['Pest Control'])).toBe(2);
     expect(minigameReserveSize(MINIGAME_KEY_RESERVES['Castle Wars'])).toBe(1);
-    expect(minigameReserveSize(MINIGAME_KEY_RESERVES['Rat Pits'])).toBe(0);
   });
 
   it('sets the first Key at about an hour of play and halves each next one, in whole percents from 1%', () => {
@@ -30,7 +33,6 @@ describe('minigame key reserves', () => {
     expect(vanillaMinigameKeySchedule('Nightmare Zone')).toEqual([50, 25, 13]);
     expect(vanillaMinigameKeySchedule('Mage Arena')).toEqual([100]);
     expect(vanillaMinigameKeySchedule('Tears of Guthix')).toEqual([100]);
-    expect(vanillaMinigameKeySchedule('Rat Pits')).toEqual([]);
     for (const spec of Object.values(MINIGAME_KEY_RESERVES)) {
       const rates = minigameReserveRates(spec);
       rates.forEach(rate => expect(Number.isInteger(rate) && rate >= 1).toBe(true));
@@ -50,7 +52,7 @@ describe('minigame key reserves', () => {
     expect(vanillaMinigameKeyStage('Pest Control', 0)).toMatchObject({ currentRate: 8, nextRate: 4, cap: 2, capped: false });
     expect(vanillaMinigameKeyStage('Pest Control', 1)).toMatchObject({ currentRate: 4, nextRate: null, remaining: 1 });
     expect(vanillaMinigameKeyStage('Pest Control', 5)).toMatchObject({ awarded: 2, currentRate: null, capped: true });
-    expect(vanillaMinigameKeyStage('Rat Pits', 0)).toMatchObject({ cap: 0, capped: true });
+    expect(() => vanillaMinigameKeyStage('Rat Pits', 0)).toThrow();
     expect(() => vanillaMinigameKeyStage('Not A Minigame', 0)).toThrow();
   });
 
@@ -58,5 +60,36 @@ describe('minigame key reserves', () => {
     expect(normalizeMinigameStandardKeysAwarded({ 'Castle Wars': 4, 'Pest Control': 1, Nope: 1, 'Soul Wars': -1, Mess: 1.5 }))
       .toEqual({ 'Castle Wars': 1, 'Pest Control': 1 });
     expect(normalizeMinigameStandardKeysAwarded(null)).toEqual({});
+  });
+});
+
+describe('Rat Pits leaves the minigame table', () => {
+  // Ironmen can't take part in Rat Pits (owner decision, 15 October 2026).
+  const migrate = (state: ReturnType<typeof createFreshState>) => {
+    const result = validateAndMigrateSave(state, createFreshState());
+    if (!result.ok) throw new Error(JSON.stringify(result));
+    return result.state;
+  };
+
+  it('is gone from every minigame table', () => {
+    expect(RETIRED_MINIGAMES).toEqual(['Rat Pits']);
+    for (const table of [MINIGAMES_LIST, Object.keys(MINIGAME_KEY_RESERVES), Object.keys(ACTIVITY_REQUIREMENTS)]) {
+      expect(table).not.toContain('Rat Pits');
+    }
+  });
+
+  it.each(['key', 'chaosKey'] as const)('gives a run that owned it back what it paid (%s), once, keeping its history', costType => {
+    const state = createFreshState();
+    state.unlocks.minigames = ['Pest Control', 'Rat Pits'];
+    state.history = [{ id: 'paid', timestamp: 100, type: 'UNLOCK', message: 'Unlocked Rat Pits', hash: 'untouched',
+      meta: { item: 'Rat Pits', category: TableType.MINIGAMES, cost: 1, costType } }];
+    state.pendingUnlock = { id: 'reveal', table: TableType.MINIGAMES, item: 'Rat Pits', costType, cost: 1 };
+    const counter = costType === 'key' ? 'keys' : 'chaosKeys';
+    const next = migrate(state);
+    expect(next[counter]).toBe(state[counter] + 1);
+    expect(next.unlocks.minigames).toEqual(['Pest Control']);
+    expect(next.pendingUnlock).toBeUndefined();
+    expect(next.history).toEqual(state.history);
+    expect(migrate(next)).toEqual(next);
   });
 });

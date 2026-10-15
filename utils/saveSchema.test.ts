@@ -820,8 +820,8 @@ describe('save schema compatibility', () => {
 
   it('rejects a minigame counter beyond its reserve and drops a minigame that left the list', () => {
     const over = clone(fullStateFixture()) as unknown as Record<string, unknown>;
-    over.minigameStandardKeysAwarded = { 'Rat Pits': 2 };
-    expectRejected(over, 'invalid_number', 'minigameStandardKeysAwarded.Rat Pits');
+    over.minigameStandardKeysAwarded = { 'Castle Wars': 2 };
+    expectRejected(over, 'invalid_number', 'minigameStandardKeysAwarded.Castle Wars');
 
     const retired = clone(fullStateFixture()) as unknown as Record<string, unknown>;
     retired.minigameStandardKeysAwarded = { 'Old Minigame': 1, 'Pest Control': 2 };

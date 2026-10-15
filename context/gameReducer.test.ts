@@ -698,12 +698,21 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
     });
 
     it('rejects a stale roll for an emptied minigame without touching the run', () => {
-      const state = { ...vanillaState(), minigameStandardKeysAwarded: { 'Rat Pits': 1 } };
+      const state = { ...vanillaState(), minigameStandardKeysAwarded: { 'Castle Wars': 1 } };
       const next = gameReducer(state, roll({
         success: true,
-        context: { kind: 'minigame', minigameName: 'Rat Pits' },
+        context: { kind: 'minigame', minigameName: 'Castle Wars' },
       }));
       expect(next).toBe(state);
+    });
+
+    it('ignores a roll for a minigame that left the table', () => {
+      const state = vanillaState();
+      const next = gameReducer(state, roll({ success: true, context: { kind: 'minigame', minigameName: 'Rat Pits' } }));
+      expect(next).toBe(state);
+      const action = prepareKeyRollAction(state, 'Activity (Minigame)', 10, 1, () => 1, undefined, undefined, undefined,
+        { kind: 'minigame', minigameName: 'Rat Pits' });
+      expect(action).toBeNull();
     });
 
     it('pays Fate for a miss only at 5% or more', () => {

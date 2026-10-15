@@ -94,7 +94,7 @@ describe('getActivityAccess', () => {
   it('keeps explicit non-gates eligible without any area unlocks', () => {
     setStartArea('none');
 
-    for (const activity of ['Mimic', 'Shooting Stars', 'Mahogany Homes', 'Forestry', 'Rat Pits']) {
+    for (const activity of ['Mimic', 'Shooting Stars', 'Mahogany Homes', 'Forestry']) {
       expect(getActivityAccess(activity, makeUnlocks(), 'vanilla')).toEqual({
         eligible: true,
         requiredAreas: [],
