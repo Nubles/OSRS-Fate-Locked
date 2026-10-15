@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { minigameMissPaysFate, MINIGAME_MISS_FATE_MIN_RATE, vanillaMinigameKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
-import { MINIGAME_KEY_RESERVES } from '../data/minigameKeyReserves';
 import { TIER_STYLES, VanillaBossRollCard } from './ActionSection';
 
 const MINIGAME_CAPPED_TEXT = 'This minigame no longer rolls for Keys or Fate. Its Collection Log items and pet still roll.';
@@ -33,7 +32,6 @@ export const VanillaMinigameRolls: React.FC<Props> = ({ minigames, awarded, onRo
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
           {matches.map(name => {
             const stage = vanillaMinigameKeyStage(name, awarded?.[name] ?? 0);
-            const noKeys = MINIGAME_KEY_RESERVES[name]?.noKeys;
             const rate = stage.currentRate ?? 0;
             const note = !stage.capped && !minigameMissPaysFate(rate)
               ? `Misses give no Fate under ${MINIGAME_MISS_FATE_MIN_RATE}%.`
@@ -46,7 +44,7 @@ export const VanillaMinigameRolls: React.FC<Props> = ({ minigames, awarded, onRo
                 style={TIER_STYLES.BLUE}
                 stage={stage}
                 note={note}
-                cappedText={noKeys ?? MINIGAME_CAPPED_TEXT}
+                cappedText={MINIGAME_CAPPED_TEXT}
                 onClick={(e) => onRoll({ kind: 'minigame', minigameName: name }, rate, e)}
               />
             );

@@ -282,7 +282,7 @@ describe('classifyFateEvent', () => {
     expect(pestControl(1)).toMatchObject({ state: 'READY', intent: { threshold: 4, context } });
     expect(pestControl(2)).toEqual({ state: 'BLOCKED', reason: 'This minigame has no Standard Keys left to award.' });
     expect(confirm('Rat Pits', withUnlocks({ minigames: ['Rat Pits'] })))
-      .toEqual({ state: 'BLOCKED', reason: "Ironmen can't take part in Rat Pits, so it holds no Keys." });
+      .toMatchObject({ state: 'NEEDS_CONFIRMATION' });
 
     const chunked = confirm('Tempoross', state({ gameModeId: 'chunked' }));
     expect(chunked).toMatchObject({ state: 'READY', intent: { source: DropSource.ACTIVITY_MINIGAME, threshold: DROP_RATES[DropSource.ACTIVITY_MINIGAME] } });

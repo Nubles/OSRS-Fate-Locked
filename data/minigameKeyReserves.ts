@@ -11,8 +11,8 @@
 //   it takes about an hour of play. Each Key won halves the next one's chance.
 //   Chances are whole percents, never below 1%, so the shortest minigames sit
 //   at 1% for every Key.
-// - Rat Pits holds none (ironmen can't take part). Mage Arena and Tears of
-//   Guthix pay one guaranteed Key.
+// - Mage Arena (a one-off) pays one guaranteed Key. Tears of Guthix (weekly)
+//   holds one Key at 50% a visit.
 //
 // A consistency test asserts every MINIGAMES_LIST entry is listed here.
 
@@ -21,10 +21,8 @@ export interface MinigameReserveSpec {
   minutes: number;
   /** Slots on its Collection Log page (0 when it has none). */
   clogSlots: number;
-  /** One guaranteed Key instead of a rolled reserve. */
-  guaranteed?: true;
-  /** Holds no Keys at all, with the reason shown on its card. */
-  noKeys?: string;
+  /** A single Key at this chance instead of the usual reserve. */
+  singleKeyRate?: number;
 }
 
 export const MINIGAME_KEY_RESERVES: Record<string, MinigameReserveSpec> = {
@@ -48,7 +46,7 @@ export const MINIGAME_KEY_RESERVES: Record<string, MinigameReserveSpec> = {
   'Impetuous Impulses': { minutes: 2, clogSlots: 0 },
   'Intelligence Gathering': { minutes: 5, clogSlots: 0 },
   'Last Man Standing': { minutes: 10, clogSlots: 32 },
-  'Mage Arena': { minutes: 60, clogSlots: 0, guaranteed: true },
+  'Mage Arena': { minutes: 60, clogSlots: 0, singleKeyRate: 100 },
   'Mage Training Arena': { minutes: 0.75, clogSlots: 11 },
   'Mahogany Homes': { minutes: 2, clogSlots: 8 },
   'Mastering Mixology': { minutes: 0.5, clogSlots: 7 },
@@ -56,7 +54,6 @@ export const MINIGAME_KEY_RESERVES: Record<string, MinigameReserveSpec> = {
   'Nightmare Zone': { minutes: 180, clogSlots: 0 },
   'Pest Control': { minutes: 5, clogSlots: 10 },
   'Pyramid Plunder': { minutes: 5, clogSlots: 0 },
-  'Rat Pits': { minutes: 2, clogSlots: 0, noKeys: "Ironmen can't take part in Rat Pits, so it holds no Keys." },
   "Rogues' Den": { minutes: 3, clogSlots: 5 },
   "Shades of Mort'ton": { minutes: 15, clogSlots: 14 },
   'Shooting Stars': { minutes: 50, clogSlots: 2 },
@@ -64,7 +61,7 @@ export const MINIGAME_KEY_RESERVES: Record<string, MinigameReserveSpec> = {
   'Soul Wars': { minutes: 18, clogSlots: 3 },
   'Stealing Artefacts': { minutes: 1.25, clogSlots: 0 },
   'Tai Bwo Wannai Cleanup': { minutes: 20, clogSlots: 0 },
-  'Tears of Guthix': { minutes: 5, clogSlots: 0, guaranteed: true },
+  'Tears of Guthix': { minutes: 5, clogSlots: 0, singleKeyRate: 50 },
   'Temple Trekking': { minutes: 2.4, clogSlots: 4 },
   'Tithe Farm': { minutes: 19, clogSlots: 7 },
   'Trouble Brewing': { minutes: 23, clogSlots: 30 },
@@ -87,15 +84,14 @@ const wholeRate = (rate: number): number => Math.max(MINIGAME_KEY_MIN_RATE, Math
 
 /** The Keys a minigame's reserve holds, after its Collection Log's share. */
 export const minigameReserveSize = (spec: MinigameReserveSpec): number => {
-  if (spec.noKeys) return 0;
-  if (spec.guaranteed) return 1;
+  if (spec.singleKeyRate !== undefined) return 1;
   return Math.max(1, Math.round(MINIGAME_KEY_VALUE_TARGET - spec.clogSlots * CLOG_SLOT_KEY_VALUE));
 };
 
 /** Its chance per run for each Key in order: about an hour of play for the first, then halving. */
 export const minigameReserveRates = (spec: MinigameReserveSpec): number[] => {
   const size = minigameReserveSize(spec);
-  if (spec.guaranteed) return [100];
+  if (spec.singleKeyRate !== undefined) return [spec.singleKeyRate];
   const first = wholeRate(Math.min(MINIGAME_FIRST_KEY_MAX_RATE, (spec.minutes / 60) * 100));
   return Array.from({ length: size }, (_, index) => wholeRate(first / 2 ** index));
 };

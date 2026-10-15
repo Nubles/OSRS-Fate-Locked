@@ -131,7 +131,6 @@ export const NO_HARD_LOCATION_GATE = new Set<string>([
   'Impetuous Impulses', // no tracked named-area gate (multiple crop-circle entrances)
   'Mahogany Homes', // no tracked named-area gate (distributed contracts)
   'Forestry', // no tracked named-area gate (world event)
-  'Rat Pits', // no tracked named-area gate (multiple venues)
   'Barracuda Trials', // no tracked named-area gate (untracked Sailing destinations)
 ]);
 
