@@ -729,6 +729,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     </tbody>
                                 </table>
                             </div>
+                            <p className="text-sm text-gray-400">Gear with no metal sits with the metal that needs the same level to wear, so level 50 Granite is Tier 5 like rune. Gear an activity hands you and takes back, like the Gauntlet's, is never locked.</p>
                         </div>
                     )}
 

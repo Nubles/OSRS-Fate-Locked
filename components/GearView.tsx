@@ -1,5 +1,4 @@
 import { createPortal } from 'react-dom';
-import { canonicalTierFromName } from '../utils/gearTiers';
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Search, Trash2, Lock, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Shirt } from './OsrsIcon';
@@ -105,7 +104,7 @@ export const GearView: React.FC<GearViewProps> = ({ suspendModals = false }) => 
                   />
                   {item && (
                     <div className={`absolute -bottom-3 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold border shadow-md ${equipTierColor(gearService.tierOf(item.id))} text-black/80 border-black/20`}>
-                      {canonicalTierFromName(item.name) == null ? 'Est. ' : ''}T{gearService.tierOf(item.id)}
+                      {gearService.isEstimated(item.id) ? 'Est. ' : ''}T{gearService.tierOf(item.id)}
                     </div>
                   )}
                 </button>
@@ -266,7 +265,7 @@ const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlock
               )}
               {shown.map((item) => {
                 const tier = gearService.tierOf(item.id);
-                const estimated = canonicalTierFromName(item.name) == null;
+                const estimated = gearService.isEstimated(item.id);
                 const tierLabel = `${estimated ? 'Est. ' : ''}T${tier}`;
                 const locked = tier > unlockedTier;
                 const isCurrent = item.id === currentItemId;

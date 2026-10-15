@@ -10,6 +10,7 @@
 import { GearItem, GearBonuses, ZERO_BONUSES, hasNoBonuses } from '../utils/gearStats';
 import { rangedDamageTypeForCategory } from '../utils/rangedDamage';
 import { canonicalTierFromName, buildTierAnchors, anchoredTier } from '../utils/gearTiers';
+import { importWithRetry } from '../utils/lazyRetry';
 import { EQUIPMENT_CATALOGUE, EQUIPMENT_CACHE_SOURCE, type EquipmentPermissionCoverage } from '../data/equipmentCatalogue';
 
 const CACHE_KEY = 'fate_osrs_gear_v3';
@@ -35,6 +36,8 @@ interface RawItem {
   offensive?: { stab?: number; slash?: number; crush?: number; magic?: number; ranged?: number };
   defensive?: { stab?: number; slash?: number; crush?: number; magic?: number; ranged?: number };
 }
+
+type ReviewedTierLookup = (item: { name: string; slot: string; category?: string }) => number | null;
 
 interface GearRecord extends GearItem {
   /** Kept for deterministic picker selection; every variant still has its own rule. */
@@ -71,6 +74,8 @@ class GearService {
   private bySlotMap = new Map<string, GearItem[]>();
   private tierMap = new Map<number, number>();
   private pinnedCatalogue = false;
+  /** Reviewed placements, loaded with the catalogue; until then only the Codex ladder applies. */
+  private reviewedTierOf: ReviewedTierLookup = item => canonicalTierFromName(item.name);
   private initialized = false;
   private initPromise: Promise<void> | null = null;
   private lastFailAt = 0;
@@ -96,6 +101,7 @@ class GearService {
   private async perform() {
     try {
       this.error = null;
+      const reviewLoad = this.loadReview();
       const cached = this.loadCache();
       let items: GearRecord[];
       if (cached && !cached.needsRefresh) {
@@ -115,6 +121,8 @@ class GearService {
           this.saveCache(cached);
         }
       }
+      const reviewed = await reviewLoad;
+      if (reviewed) this.reviewedTierOf = reviewed;
       this.ingest(items);
       this.initialized = true;
       this.ready = true;
@@ -125,6 +133,17 @@ class GearService {
       this.lastFailAt = Date.now();
       this.ready = false;
       throw e;
+    }
+  }
+
+  /** Kept out of the entry chunk. Without it, unreviewed gear stays estimated and unrestricted. */
+  private async loadReview(): Promise<ReviewedTierLookup | null> {
+    try {
+      const { reviewedTier } = await importWithRetry(() => import('../utils/equipmentReviewTiers'));
+      return item => reviewedTier(item);
+    } catch (error) {
+      console.warn('Equipment review data unavailable', error);
+      return null;
     }
   }
 
@@ -213,11 +232,12 @@ class GearService {
       this.bySlotMap.get(it.slot)!.push(it);
     }
 
-    // Pass 1: assign the canonical material/named tier (matches the Codex) to
-    // every item we recognise, and collect them as anchors.
+    // Pass 1: assign the reviewed tier (Codex material, named rule, reviewed
+    // placement or wield level) to every item we recognise, and collect them
+    // as anchors.
     const known: { tier: number; bonuses: GearBonuses }[] = [];
     for (const it of items) {
-      const canon = canonicalTierFromName(it.name);
+      const canon = this.reviewedTierOf(it);
       if (canon != null) {
         this.tierMap.set(it.id, canon);
       }
@@ -297,12 +317,17 @@ class GearService {
   tierOf(id: number): number {
     return this.tierMap.get(id) ?? 1;
   }
+  /** True for a stat-based guess that no reviewed rule covers yet. */
+  isEstimated(id: number): boolean {
+    const item = this.byIdMap.get(id);
+    return !item || this.reviewedTierOf(item) == null;
+  }
   /** Only reviewed rules from the release-pinned source may restrict gameplay. */
   itemRuleExport(): Record<string, { tier: number; slot: string }> {
     const out: Record<string, { tier: number; slot: string }> = {};
     if (!this.pinnedCatalogue) return out;
     for (const [id, item] of this.byIdMap) {
-      const tier = canonicalTierFromName(item.name);
+      const tier = this.reviewedTierOf(item);
       if (tier != null) out[id] = { tier, slot: item.slot };
     }
     return out;
@@ -320,7 +345,7 @@ class GearService {
       status: this.pinnedCatalogue ? 'pinned' : this.ready ? 'legacy-cache' : 'unavailable',
       localItemCount: this.byIdMap.size,
       reviewedItemCount: Object.keys(this.itemRuleExport()).length,
-      estimatedItemCount: [...this.byIdMap.values()].filter(item => canonicalTierFromName(item.name) == null).length,
+      estimatedItemCount: [...this.byIdMap.values()].filter(item => this.reviewedTierOf(item) == null).length,
     };
   }
 }

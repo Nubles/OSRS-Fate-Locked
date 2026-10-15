@@ -37,6 +37,23 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-15-equipment-tiers',
+    title: 'Every gear tier is checked now',
+    date: '2026-10-15',
+    sections: {
+      changed: [
+        "Every item in the gear picker has a checked tier now, so the Est. labels are gone.",
+        "Gear with no metal sits with the metal that needs the same level. Level 50 gear like Granite or Infinity is Tier 5, like rune.",
+        "Sets share one tier, so Lunar, Bloodbark and Granite pieces don't scatter across tiers any more.",
+        "Diary rewards match the metal they copy: Varrock armour 4 is adamant, Tier 4. Ardougne cloaks are Tier 1, like a plain cape.",
+        "RuneLite now checks about 1,000 more items against your slot tiers.",
+      ],
+      fixed: [
+        "Gear the Gauntlet, Castle Wars or Theatre of Blood hands you is never locked, and Frog-leather isn't basic Tier 1 leather.",
+      ],
+    },
+  },
+  {
     id: '2026-10-15-achievement-rewards',
     title: 'More achievements, now with rewards',
     date: '2026-10-15',
