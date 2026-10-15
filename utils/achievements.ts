@@ -23,7 +23,7 @@ import { DIARY_DATA } from '../data/diaryData';
 import { CA_DATA } from '../data/caData';
 import { PETS } from '../data/pets';
 import { BANK_IDS, MERGED_BANKS } from '../data/banks';
-import { RITUALS } from '../config/economy';
+import { BARROWS_BROTHERS, INVOCATIONS, PACT_DEBT, RITUALS } from '../config/economy';
 import { isAreaReachable, bankLocksActive } from './reachability';
 import { unlockableAreas } from './freeAreas';
 import { getPoolAndStateKey } from './gameEngine';
@@ -51,6 +51,11 @@ export interface AchievementRun {
   customMode?: GameModeRules;
   history?: readonly LogEntry[];
   petsClaimed?: readonly number[];
+  /**
+   * Achievements already settled (GameState.achievementsClaimed). They stay
+   * earned even when the run later drops below them, e.g. after a Sacrifice.
+   */
+  claimed?: readonly string[];
 }
 
 /** One evaluation's view of the run: the run itself plus its history summary, worked out once. */
@@ -118,6 +123,14 @@ export interface RunStats {
   gambitWins: number;
   biggestGambitWin: number;
   longestGambitLosingRun: number;
+  /** Keys Saradomin's Ward steered onto something usable. */
+  wardKeys: number;
+  /** Fate paid to Zamorak's Blood Debt. */
+  pactDebtPaid: number;
+  /** Whether Amascut's Invocations were ever cast with every handicap. */
+  allInvocations: boolean;
+  /** Barrows brothers the Barrows Chest has drawn. */
+  barrowsBrothers: ReadonlySet<string>;
 }
 
 /** Which ritual an Altar entry was. Old entries carry no id, so their message says (as in utils/integrity). */
@@ -137,14 +150,18 @@ export const runStats = (history: readonly LogEntry[] = []): RunStats => {
   let rolls = 0, keysWon = 0, winStreak = 0, missStreak = 0, longestWinStreak = 0, longestMissStreak = 0;
   let luckiestWin = 1, omniRolls = 0, pityKeys = 0, chaosKeys = 0, greedDoubled = false;
   let gambitWins = 0, biggestGambitWin = 0, gambitLosses = 0, longestGambitLosingRun = 0;
+  let wardKeys = 0, pactDebtPaid = 0, allInvocations = false;
   const rituals = new Set<string>();
+  const barrowsBrothers = new Set<string>();
   for (const e of history) {
     const chaos = e.meta?.chaosKeysAwarded;
     if (typeof chaos === 'number') chaosKeys += count(chaos);
     else if (e.type === 'LEVEL_UP' && /Chaos Key Drop/.test(e.message)) chaosKeys += 1;
 
+    if (e.meta?.ward === true) wardKeys += 1;
     if (isRollEntry(e)) {
       rolls += 1;
+      pactDebtPaid += count(e.meta?.debtPaid);
       const won = e.type === 'ROLL_SUCCESS' || e.type === 'ROLL_OMNI';
       if (won) {
         winStreak += 1; missStreak = 0;
@@ -153,7 +170,9 @@ export const runStats = (history: readonly LogEntry[] = []): RunStats => {
         const awarded = e.meta?.standardKeysAwarded;
         keysWon += typeof awarded === 'number' ? count(awarded) : doubled ? 2 : 1;
         const chance = e.meta?.successProbability;
-        if (typeof chance === 'number' && chance > 0 && chance < luckiestWin) luckiestWin = chance;
+        // Verac's hit-through wins a roll that missed its odds, so it isn't luck at those odds.
+        const hitThrough = typeof e.meta?.roll === 'number' && typeof e.meta?.threshold === 'number' && e.meta.roll > e.meta.threshold;
+        if (typeof chance === 'number' && chance > 0 && chance < luckiestWin && !hitThrough) luckiestWin = chance;
         if (e.type === 'ROLL_OMNI') omniRolls += 1;
       } else {
         missStreak += 1; winStreak = 0;
@@ -165,6 +184,9 @@ export const runStats = (history: readonly LogEntry[] = []): RunStats => {
       const ritual = ritualOf(e);
       if (!ritual) continue;
       rituals.add(ritual);
+      const invoked = e.meta?.invocations;
+      if (ritual === 'INVOCATIONS' && Array.isArray(invoked) && new Set(invoked).size >= INVOCATIONS.length) allInvocations = true;
+      if (ritual === 'BARROWS' && typeof e.meta?.brother === 'string') barrowsBrothers.add(e.meta.brother);
       if (ritual === 'CHAOS' && typeof chaos !== 'number') chaosKeys += 1;
       if (ritual === 'GAMBIT') {
         const keys = typeof e.meta?.keysAwarded === 'number'
@@ -183,6 +205,7 @@ export const runStats = (history: readonly LogEntry[] = []): RunStats => {
   return {
     rolls, keysWon, longestWinStreak, longestMissStreak, luckiestWin, omniRolls, pityKeys,
     chaosKeys, greedDoubled, rituals, gambitWins, biggestGambitWin, longestGambitLosingRun,
+    wardKeys, pactDebtPaid, allInvocations, barrowsBrothers,
   };
 };
 
@@ -284,7 +307,8 @@ const ritualOffered = (id: string, c: AchievementContext) => {
   return !!ritual && (!ritual.chunkedOnly || c.mode === 'chunked');
 };
 const didRitual = (id: string) => (c: AchievementContext) => c.stats.rituals.has(id);
-const ritualsOffered = (c: AchievementContext) => RITUALS.filter((r) => ritualOffered(r.id, c));
+// Void Priest leaves out Sacrifice: an achievement shouldn't ask a run to give up its own unlocks.
+const ritualsOffered = (c: AchievementContext) => RITUALS.filter((r) => r.id !== 'SACRIFICE' && ritualOffered(r.id, c));
 
 // ── The catalogue ──────────────────────────────────────────────────────────
 // Fate rewards: 0 for first steps (the title is the reward), 5, 10 or 25 by
@@ -452,8 +476,16 @@ export const ACHIEVEMENTS: Achievement[] = [
   once('ritual-gambit-3', 'Void Altar', 'altar', 'All In', 'Win 3 Keys or more from one Void Gambit', ({ stats }) => stats.biggestGambitWin >= 3, { fate: 10 }),
   once('ritual-cartographer', 'Void Altar', 'map', 'Map Maker', 'Choose a chunk with the Ritual of the Cartographer', didRitual('CARTOGRAPHER'),
     { available: (c) => ritualOffered('CARTOGRAPHER', c) }),
+  once('ritual-ward', 'Void Altar', 'altar', 'Blessed', "Let Saradomin's Ward guide a Key", ({ stats }) => stats.wardKeys > 0),
+  once('ritual-tears', 'Void Altar', 'altar', "Juna's Favour", 'Perform Tears of Guthix', didRitual('TEARS')),
+  once('ritual-pact', 'Void Altar', 'altar', 'Debt Paid', "Pay Zamorak's Blood Debt in full", ({ stats }) => stats.pactDebtPaid >= PACT_DEBT),
+  once('ritual-invocations', 'Void Altar', 'altar', 'Expert Mode', "Take all four of Amascut's Invocations at once", ({ stats }) => stats.allInvocations, { fate: 5 }),
+  ...tiers('ritual-barrows', 'Void Altar', 'altar', ({ stats }) => stats.barrowsBrothers.size, [
+    { id: 'ritual-barrows', title: 'Crypt Raider', description: 'Draw every brother from the Barrows Chest', target: BARROWS_BROTHERS.length, fate: 10 },
+  ]),
+  once('ritual-sacrifice', 'Void Altar', 'altar', "Fate's Offering", 'Make a Sacrifice', didRitual('SACRIFICE')),
   ...tiers('ritual-every', 'Void Altar', 'altar', (c) => ritualsOffered(c).filter((r) => c.stats.rituals.has(r.id)).length, [
-    { id: 'ritual-every', title: 'Void Priest', description: 'Perform every ritual your mode offers', target: 1, fate: 5, targetFor: (c) => ritualsOffered(c).length },
+    { id: 'ritual-every', title: 'Void Priest', description: 'Perform every ritual your mode offers, apart from Sacrifice', target: 1, fate: 10, targetFor: (c) => ritualsOffered(c).length },
   ]),
   ...tiers('gambit-losses', 'Void Altar', 'altar', ({ stats }) => stats.longestGambitLosingRun, [
     { title: "Gambler's Ruin", description: 'Lose 8 Void Gambits in a row', target: 8, fate: 10, hidden: true },
@@ -513,10 +545,11 @@ const contextOf = (run: AchievementRun): AchievementContext => ({
 /** Score every achievement the run's mode offers. Pure — safe in useMemo. */
 export function evaluateAchievements(run: AchievementRun): EvaluatedAchievement[] {
   const c = contextOf(run);
+  const claimed = new Set(run.claimed ?? []);
   return ACHIEVEMENTS.filter((a) => a.available?.(c) ?? true).map((a) => {
     const { current, target } = a.progress(c);
-    const earned = current >= target;
-    const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+    const earned = current >= target || claimed.has(a.id);
+    const pct = earned ? 100 : target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
     return { ...a, current, target, earned, pct };
   });
 }

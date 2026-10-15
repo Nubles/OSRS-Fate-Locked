@@ -218,6 +218,50 @@ describe('achievements read from the run', () => {
     expect(find(run, 'gambit-losses-8')?.hidden).toBe(true);
   });
 
+  it('reads the god rituals, the Barrows Chest, the Invocations and the Pact debt', () => {
+    const altar = (ritual: string, meta: Record<string, unknown> = {}) => entry('ALTAR', { message: ritual, meta: { ritual, ...meta } });
+    const brothers = ['AHRIM', 'DHAROK', 'GUTHAN', 'KARIL', 'TORAG'];
+    const history = [
+      altar('TEARS'),
+      altar('PACT'),
+      ...Array.from({ length: 20 }, () => entry('ROLL_FAIL', { meta: { debtPaid: 2 } })),
+      altar('INVOCATIONS', { invocations: ['WALK_THE_PATH', 'OVERLY_DRAINING', 'BLOOD_PRICE'] }),
+      ...brothers.map((brother) => altar('BARROWS', { brother })),
+      entry('UNLOCK', { message: 'Unlocked Castle Wars', meta: { ward: true } }),
+    ];
+    const run = { unlocks: emptyUnlocks(), history };
+    expect(runStats(history)).toMatchObject({ wardKeys: 1, pactDebtPaid: 40, allInvocations: false });
+    expect(find(run, 'ritual-ward')?.earned).toBe(true);
+    expect(find(run, 'ritual-tears')?.earned).toBe(true);
+    expect(find(run, 'ritual-pact')?.earned).toBe(true);
+    expect(find(run, 'ritual-invocations')?.earned).toBe(false);
+    expect(find(run, 'ritual-barrows')).toMatchObject({ earned: false, current: 5, target: 6 });
+
+    const more = [...history, altar('BARROWS', { brother: 'VERAC' }),
+      altar('INVOCATIONS', { invocations: ['WALK_THE_PATH', 'OVERLY_DRAINING', 'BLOOD_PRICE', 'HARDCORE'] })];
+    expect(find({ ...run, history: more }, 'ritual-barrows')?.earned).toBe(true);
+    expect(find({ ...run, history: more }, 'ritual-invocations')?.earned).toBe(true);
+  });
+
+  it("doesn't count a win Verac hit through as a lucky one", () => {
+    const history = [win({ roll: 60, threshold: 1, successProbability: 0.01 })];
+    expect(runStats(history).luckiestWin).toBe(1);
+    expect(find({ unlocks: emptyUnlocks(), history }, 'roll-1pct')?.earned).toBe(false);
+  });
+
+  it('keeps a settled achievement earned after the run drops below it', () => {
+    const run = { unlocks: emptyUnlocks(), claimed: ['skills-start-1'] };
+    expect(find(run, 'skills-start-1')).toMatchObject({ earned: true, pct: 100 });
+    expect(find({ unlocks: emptyUnlocks() }, 'skills-start-1')?.earned).toBe(false);
+  });
+
+  it('leaves Sacrifice out of Void Priest', () => {
+    const offered = ['LUCK', 'GREED', 'CHAOS', 'GAMBIT', 'TRANSMUTE', 'WARD', 'TEARS', 'PACT', 'INVOCATIONS', 'BARROWS'];
+    const history = offered.map((ritual) => entry('ALTAR', { message: ritual, meta: { ritual } }));
+    expect(find({ unlocks: emptyUnlocks(), gameModeId: 'vanilla', history }, 'ritual-every'))
+      .toMatchObject({ earned: true, target: offered.length });
+  });
+
   it('offers the Cartographer only in Chunked, and Void Priest asks for each ritual the mode offers', () => {
     const vanilla = evaluateRun({ unlocks: emptyUnlocks(), gameModeId: 'vanilla' });
     const chunked = evaluateRun({ unlocks: emptyUnlocks(), gameModeId: 'chunked' });

@@ -108,6 +108,15 @@ describe('achievement rewards', () => {
     expect(replayFate(ritual).final.fatePoints).toBe(ritual.fatePoints);
   });
 
+  it('keeps a free Ritual of Clarity while another roll ritual is running', () => {
+    const after = settle(withPets(fresh(), PETS.length));
+    const pact = gameReducer(after, { type: 'RITUAL_PACT' });
+    expect(pact.rituals?.pactRollsLeft).toBe(3);
+    const blocked = gameReducer(pact, { type: 'RITUAL_LUCK' });
+    expect(blocked.freeClarity).toBe(1);
+    expect(blocked.activeBuff).toBe('NONE');
+  });
+
   it('wears only an earned achievement as the title', () => {
     const state = settle(withPets(fresh(), 1));
     expect(gameReducer(state, { type: 'SET_ACHIEVEMENT_TITLE', payload: 'pets-5' })).toBe(state);

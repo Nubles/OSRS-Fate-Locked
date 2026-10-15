@@ -23,13 +23,13 @@ const formatDate = (timestamp: number) =>
 
 export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
   const {
-    unlocks, gameModeId, customMode, history, petsClaimed, achievementTitle, setAchievementTitle, freeClarity,
+    unlocks, gameModeId, customMode, history, petsClaimed, achievementTitle, setAchievementTitle, freeClarity, achievementsClaimed,
   } = useGame();
   useEscapeKey(onClose, true);
 
   const all = useMemo(
-    () => evaluateAchievements({ unlocks, gameModeId, customMode, history, petsClaimed }),
-    [unlocks, gameModeId, customMode, history, petsClaimed],
+    () => evaluateAchievements({ unlocks, gameModeId, customMode, history, petsClaimed, claimed: achievementsClaimed }),
+    [unlocks, gameModeId, customMode, history, petsClaimed, achievementsClaimed],
   );
   // When each was earned, from the run's log (achievements earned before rewards have no date).
   const earnedAt = useMemo(() => {

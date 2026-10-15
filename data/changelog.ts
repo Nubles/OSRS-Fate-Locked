@@ -37,19 +37,44 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-13-achievement-rewards',
+    id: '2026-10-15-achievement-rewards',
     title: 'More achievements, now with rewards',
-    date: '2026-10-13',
+    date: '2026-10-15',
     sections: {
       added: [
-        "There are now over 100 achievements, including ones for Key rolls, Void Altar rituals, pets and every unlock table.",
+        "There are now over 100 achievements, including ones for Key rolls, every Void Altar ritual, pets and every unlock table.",
         "Every achievement is a title you can wear. Pick one in the Achievements window and it shows on your dashboard.",
         "Harder achievements give 5, 10 or 25 Fate. The biggest also give a free Ritual of Clarity at the Void Altar.",
-        "A few achievements are hidden until you earn them.",
+        "Once you earn an achievement it stays earned, even if a Sacrifice later takes tiers away.",
       ],
       changed: [
         "Achievements you'd already earned keep their title but don't pay out. Rewards start with the next one you earn.",
         "Apprentice now needs a skill you unlocked with a Key. Hitpoints doesn't count, since every run starts with it.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-15-ritual-pictures',
+    title: 'Ritual pictures show up again',
+    date: '2026-10-15',
+    sections: {
+      fixed: [
+        "Ritual animations now show every picture, like the Barrows brother's armour and Tumeken's shadow, instead of leaving blank spaces.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-15-new-rituals',
+    title: 'Six new rituals at the Void Altar',
+    date: '2026-10-15',
+    sections: {
+      added: [
+        "Saradomin's Ward (30 Fate): your next Key on a boss, minigame, guild or bank only lands on one you can use right now. You can cast it again 25 rolls later.",
+        'Tears of Guthix (10 Fate): your next 10 failed rolls give double Fate, until a roll lands. Once per dry spell.',
+        "Zamorak's Pact (free): +15% odds on your next 3 rolls, then Zamorak takes the next 40 Fate you'd earn.",
+        "Amascut's Invocations (10 Fate): pick handicaps for your next 3 rolls, and each one raises your Omni-Key chance.",
+        'Barrows Chest (20 Fate): fate picks a brother, and his set effect powers your next 3 rolls.',
+        'Sacrifice (25 Fate): give up the top tier of 3 random skills or gear slots for an Omni-Key. Opens after 200 rolls, 3 uses per run.',
       ],
     },
   },

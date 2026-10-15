@@ -200,9 +200,20 @@ describe('economy ↔ engine consistency', () => {
     expect(equip?.tiers).toBe(EQUIPMENT_TIER_MAX);
   });
 
-  it('defines all six Void Altar rituals with a cost', () => {
-    expect(RITUALS.map(r => r.id).sort()).toEqual(['CARTOGRAPHER', 'CHAOS', 'GAMBIT', 'GREED', 'LUCK', 'TRANSMUTE']);
-    for (const r of RITUALS) expect((r.fateCost ?? 0) + (r.keyCost ?? 0)).toBeGreaterThan(0);
+  it('defines every Void Altar ritual with a cost, except the Pact that is paid later', () => {
+    expect(RITUALS.map(r => r.id).sort()).toEqual([
+      'BARROWS', 'CARTOGRAPHER', 'CHAOS', 'GAMBIT', 'GREED', 'INVOCATIONS', 'LUCK', 'PACT', 'SACRIFICE', 'TEARS', 'TRANSMUTE', 'WARD',
+    ]);
+    for (const r of RITUALS) {
+      if (r.id === 'PACT') expect(r.fateCost).toBe(0);
+      else expect((r.fateCost ?? 0) + (r.keyCost ?? 0)).toBeGreaterThan(0);
+    }
+  });
+
+  it('gives only the three god rituals a god', () => {
+    expect(RITUALS.filter(r => r.god).map(r => [r.id, r.god])).toEqual([
+      ['WARD', 'Saradomin'], ['TEARS', 'Guthix'], ['PACT', 'Zamorak'],
+    ]);
   });
 
   it("scales Fate ritual prices, including the Gambit's minimum stake, by the mode", () => {
