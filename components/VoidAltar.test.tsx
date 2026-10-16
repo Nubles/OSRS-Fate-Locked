@@ -176,6 +176,15 @@ describe('VoidAltar newer rituals', () => {
     expect((screen.getByRole('button', { name: /Walk the Path/ }) as HTMLButtonElement).disabled).toBe(false);
   });
 
+  it("says what the drawn Barrows brother does while his rolls last", async () => {
+    game.current = { ...game.current, gameModeId: 'vanilla', rituals: { barrows: { brother: 'VERAC', rollsLeft: 2, failed: 1, fateCost: 20 } } };
+    const { VoidAltar } = await import('./VoidAltar');
+    render(<VoidAltar onClose={vi.fn()} />);
+    const chest = screen.getByRole('button', { name: /Barrows Chest/ });
+    expect(within(chest).getByText('Verac the Defiled: Every fail has a 15% chance to become a success.')).toBeTruthy();
+    expect(within(chest).getByText('Verac: 2 rolls left')).toBeTruthy();
+  });
+
   it('keeps Sacrifice locked until the run has made 200 rolls', async () => {
     game.current = { ...game.current, gameModeId: 'vanilla', fatePoints: 30 };
     const { VoidAltar } = await import('./VoidAltar');

@@ -37,6 +37,18 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-16-ritual-results-stay',
+    title: 'Ritual results stay on screen',
+    date: '2026-10-16',
+    sections: {
+      fixed: [
+        "A ritual's result now stays up until you click to continue, so you can read what it did.",
+        "Click (or press Space) once to skip to the result, and again to close it.",
+        "While a Barrows brother powers your rolls, his card on the Void Altar says what his effect does.",
+      ],
+    },
+  },
+  {
     id: '2026-10-16-osrs-layout-speed',
     title: 'Smoother OSRS layout',
     date: '2026-10-16',

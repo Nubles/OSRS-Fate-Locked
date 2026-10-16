@@ -39,6 +39,42 @@ describe('ritual scenes', () => {
     expect(frame.dialog).toMatch(/Click here to continue$/);
   });
 
+  it('keeps the result up until the player clicks through', () => {
+    vi.useFakeTimers();
+    try {
+      const host = document.createElement('div');
+      document.body.append(host);
+      const onDone = vi.fn();
+      const player = playScene(host, RITUAL_SCENES.BARROWS, { meta: { type: 'BARROWS', brother: 'VERAC' }, ownedChunks: [] }, { reducedMotion: false, onDone });
+      vi.advanceTimersByTime(60_000);
+      expect(onDone).not.toHaveBeenCalled();
+      expect(host.querySelector('.ritual-dialog-text')?.textContent).toContain('Every fail has a 15% chance to become a success.');
+      player.skip();
+      expect(onDone).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('lands on the last frame when skipped mid-scene, and closes on the next click', () => {
+    vi.useFakeTimers();
+    try {
+      const host = document.createElement('div');
+      document.body.append(host);
+      const onDone = vi.fn();
+      const player = playScene(host, RITUAL_SCENES.BARROWS, { meta: { type: 'BARROWS', brother: 'KARIL' }, ownedChunks: [] }, { reducedMotion: false, onDone });
+      vi.advanceTimersByTime(100);
+      player.skip();
+      vi.advanceTimersByTime(60_000);
+      expect(onDone).not.toHaveBeenCalled();
+      expect(host.textContent).toContain('Karil the Tainted');
+      player.skip();
+      expect(onDone).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('shows what a Gambit won or lost', () => {
     expect(lastFrame('GAMBIT', { meta: { type: 'GAMBIT', won: true, stake: 48, keysWon: 3 }, ownedChunks: [] }).dialog)
       .toContain('The Void blinks. You win 3 Keys.');
