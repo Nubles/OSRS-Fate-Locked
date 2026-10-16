@@ -37,6 +37,17 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-16-name-changes',
+    title: 'Keep your run after a name change',
+    date: '2026-10-16',
+    sections: {
+      fixed: [
+        "Changed your OSRS name? Open Sync & Roll and press \"Changed your OSRS name?\" to move your run to the new name.",
+        "Wise Old Man checks it's the same character first, then RuneLite and hiscore syncing follow the new name.",
+      ],
+    },
+  },
+  {
     id: '2026-10-15-achievement-rewards',
     title: 'More achievements, now with rewards',
     date: '2026-10-15',

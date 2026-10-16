@@ -15,6 +15,7 @@ import {
   type AccountTitle,
   type GroupIronTitle,
 } from '../utils/accountTitle';
+import { checkCharacterRename, type RenameCheck } from '../utils/characterRename';
 
 /**
  * Auto-Roll (PROTOTYPE)
@@ -93,9 +94,15 @@ export async function fetchPlayer(name: string): Promise<Fetched> {
 }
 
 export function AutoRollPanel() {
-  const { unlocks, createBackup, levelUpSkill, keys, specialKeys, chaosKeys, linkedAccount, setLinkedAccount } = useGame() as any;
+  const { unlocks, createBackup, levelUpSkill, keys, specialKeys, chaosKeys, linkedAccount, setLinkedAccount, renameLinkedAccount } = useGame() as any;
   // Each run binds to one OSRS account: once set, the input is locked to it.
+  // Only a Wise Old Man approved name change of that account moves it.
   const [name, setName] = useState(linkedAccount ?? '');
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [renameChecking, setRenameChecking] = useState(false);
+  const [renameResult, setRenameResult] = useState<RenameCheck | null>(null);
+  const refetchAfterRename = useRef(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'loaded'>('idle');
   const [error, setError] = useState('');
   const [fetched, setFetched] = useState<Fetched | null>(null);
@@ -168,6 +175,31 @@ export function AutoRollPanel() {
 
   // If the run is already bound, pull that account's hiscores on open.
   useEffect(() => { if (linkedAccount) onFetch(); /* eslint-disable-line react-hooks/exhaustive-deps */ }, []);
+
+  const onCheckRename = useCallback(async () => {
+    if (!linkedAccount || !newName.trim() || renameChecking) return;
+    const from = linkedAccount;
+    setRenameChecking(true);
+    setRenameResult(null);
+    const result = await checkCharacterRename(from, newName);
+    setRenameChecking(false);
+    setRenameResult(result);
+    if (result.status !== 'approved') return;
+    // Keep the group title this browser remembers for the character.
+    const title = readGroupIronTitle(from);
+    if (title) saveGroupIronTitle(result.name, title);
+    refetchAfterRename.current = true;
+    renameLinkedAccount?.(from, result.name);
+    setName(result.name);
+    setNewName('');
+  }, [linkedAccount, newName, renameChecking, renameLinkedAccount]);
+
+  // Pull the new name's hiscores once the run has moved to it.
+  useEffect(() => {
+    if (!refetchAfterRename.current || !linkedAccount) return;
+    refetchAfterRename.current = false;
+    onFetch();
+  }, [linkedAccount, onFetch]);
 
   // "Auto-roll": walk each unlocked skill up to its real level through the LIVE
   // level-up engine — every level fires its exact level/5 Key roll,
@@ -252,7 +284,7 @@ export function AutoRollPanel() {
             onKeyDown={(e) => e.key === 'Enter' && onFetch()}
             placeholder="OSRS username…"
             readOnly={!!linkedAccount}
-            title={linkedAccount ? 'This run is permanently bound to this account' : undefined}
+            title={linkedAccount ? 'This run is bound to this account' : undefined}
             className={`flex-1 min-w-0 bg-transparent text-sm focus:outline-none ${linkedAccount ? 'text-gray-300 cursor-default' : 'text-gray-100 placeholder:text-gray-600'}`}
             maxLength={12}
           />
@@ -267,14 +299,81 @@ export function AutoRollPanel() {
         </button>
       </div>
       {linkedAccount && (
-        <p className="text-[10px] text-gray-500 -mt-2 flex items-center gap-1">
-          <Lock size={9} /> This run is bound to <span className="text-gray-300">{linkedAccount}</span> — the account can't be changed.
-        </p>
+        <div className="-mt-2 space-y-2 max-w-xl">
+          <p className="text-[10px] text-gray-500 flex items-center gap-1 flex-wrap">
+            <Lock size={9} /> This run is bound to <span className="text-gray-300">{linkedAccount}</span>
+            {!renameOpen && (
+              <button
+                type="button"
+                onClick={() => { setRenameOpen(true); setRenameResult(null); }}
+                className="text-fuchsia-300 hover:text-fuchsia-200 underline underline-offset-2"
+              >
+                Changed your OSRS name?
+              </button>
+            )}
+          </p>
+          {renameOpen && (
+            <div className="bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 space-y-2" data-testid="character-rename">
+              <p className="text-xs text-gray-400">
+                Move this run to your character's new name. Wise Old Man checks it is the same character first:
+                if it hasn't seen the name change yet, it is sent to them to review, so check again in a few minutes.
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && onCheckRename()}
+                  placeholder="New name…"
+                  aria-label="New OSRS name"
+                  maxLength={12}
+                  className="flex-1 min-w-0 bg-black/40 border border-white/15 focus:border-fuchsia-500/60 rounded-lg px-3 py-1.5 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={onCheckRename}
+                  disabled={renameChecking || !newName.trim()}
+                  className="px-3 py-1.5 rounded-lg bg-fuchsia-600 hover:bg-fuchsia-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold flex items-center gap-1.5 shrink-0"
+                >
+                  {renameChecking && <Loader2 size={12} className="animate-spin" />}
+                  Check name change
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setRenameOpen(false); setRenameResult(null); setNewName(''); }}
+                  className="px-2 py-1.5 text-xs text-gray-400 hover:text-gray-200 shrink-0"
+                >
+                  Cancel
+                </button>
+              </div>
+              {renameResult?.status === 'approved' && (
+                <p role="status" className="text-xs text-emerald-300 flex items-start gap-1.5">
+                  <CheckCircle2 size={13} className="shrink-0 mt-0.5" />
+                  <span>
+                    This run now uses {renameResult.name}. A paired RuneLite gets the new name within a minute or two;
+                    if it still shows the old one, log out and back in.
+                  </span>
+                </p>
+              )}
+              {renameResult?.status === 'pending' && (
+                <p role="status" className="text-xs text-amber-300">
+                  Wise Old Man is reviewing this name change. Check again in a few minutes.
+                </p>
+              )}
+              {(renameResult?.status === 'denied' || renameResult?.status === 'error') && (
+                <p role="alert" className="text-xs text-red-300">{renameResult.message}</p>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
       {status === 'error' && (
         <div className="flex items-start gap-2 text-sm text-red-300 bg-red-950/40 border border-red-900/60 rounded-lg px-3 py-2 max-w-xl">
-          <AlertTriangle size={15} className="shrink-0 mt-0.5" /> <span>{error}</span>
+          <AlertTriangle size={15} className="shrink-0 mt-0.5" />
+          <span>
+            {error}
+            {linkedAccount && !renameOpen && ' If you changed your OSRS name, use "Changed your OSRS name?" above.'}
+          </span>
         </div>
       )}
 

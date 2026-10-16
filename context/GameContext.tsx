@@ -290,6 +290,8 @@ interface GameContextType extends GameState {
   /** Equip (or clear, with itemId=null) a real item in a slot; optionally clear other slots (2h handling). */
   setLoadoutSlot: (slot: string, itemId: number | null, clearSlots?: string[]) => void;
   setLinkedAccount: (account: string) => void;
+  /** Move the run to its character's new name, once Wise Old Man has approved the name change. */
+  renameLinkedAccount: (from: string, to: string) => void;
   /** Rival Ghost controls. */
   setRival: (rival: RivalState) => void;
   clearRival: () => void;
@@ -482,6 +484,7 @@ export type Action =
   | { type: 'SET_GAME_MODE'; payload: { modeId: string; customRules?: GameModeRules } }
   | { type: 'SET_LOADOUT_SLOT'; payload: { slot: string; itemId: number | null; clearSlots?: string[] } }
   | { type: 'SET_LINKED_ACCOUNT'; payload: string }
+  | { type: 'RENAME_LINKED_ACCOUNT'; payload: { from: string; to: string } }
   | { type: 'SET_RIVAL'; payload: RivalState }
   | { type: 'CLEAR_RIVAL' }
   | { type: 'ACK_RIVAL'; payload: number }
@@ -1803,6 +1806,17 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return { ...state, linkedAccount: action.payload };
     }
 
+    case 'RENAME_LINKED_ACCOUNT': {
+      // The one way a bound run changes name: the same character after an OSRS
+      // name change, which the Sync & Roll tab has Wise Old Man confirm first.
+      // A run that moved on since the check was made stays as it is.
+      const { from, to } = action.payload;
+      const next = to.trim();
+      if (!state.linkedAccount || !next) return state;
+      if (normalizeAccountName(state.linkedAccount) !== normalizeAccountName(from)) return state;
+      return { ...state, linkedAccount: next };
+    }
+
     case 'LOG_ITEM': {
       const itemId = action.payload;
       if (collectionItemNeedsIdentityReview(state.unlocks.collectionLog, itemId, state.collectionLogIdentity)) return state;
@@ -2997,6 +3011,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     commitAction({ type: 'SET_LINKED_ACCOUNT', payload: account });
   }, [commitAction]);
 
+  const renameLinkedAccount = useCallback((from: string, to: string) => {
+    commitAction({ type: 'RENAME_LINKED_ACCOUNT', payload: { from, to } });
+  }, [commitAction]);
+
   const setRival = useCallback((rival: RivalState) =>
     commitAction({ type: 'SET_RIVAL', payload: rival }), [commitAction]);
   const clearRival = useCallback(() => commitAction({ type: 'CLEAR_RIVAL' }), [commitAction]);
@@ -3510,6 +3528,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     getExportData,
     setLoadoutSlot,
     setLinkedAccount,
+    renameLinkedAccount,
     setRival,
     clearRival,
     ackRival
@@ -3564,6 +3583,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     getExportData,
     setLoadoutSlot,
     setLinkedAccount,
+    renameLinkedAccount,
     setRival,
     clearRival,
     ackRival
