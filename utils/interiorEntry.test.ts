@@ -101,6 +101,16 @@ describe('interiorEntry', () => {
     expect(interiorEntry({ ...cave, entrances: cave.entrances.slice(0, 1) }, context(run({})))).toBe('LOCKED');
   });
 
+  it('opens the Abyss through the Mage of Zamorak, not through Kourend', () => {
+    // A player in Temple of the Eye was told the Abyss was locked: the source's rifts out to
+    // Kourend's Blood and Soul Altars were read as its only ways in.
+    const abyss = records.get('47,75')!;
+    expect(abyss.entrances.map(({ chunkId }) => chunkId)).toEqual([idOf({ cx: 48, cy: 55 })]);
+    // The ditch is open from the start in Vanilla, so Enter the Abyss is all the Abyss needs.
+    expect(interiorEntry(abyss, context(run({ quests: ['Enter the Abyss'] })))).toBe('ALLOWED');
+    expect(interiorEntry(abyss, context(run({})))).toBe('NOT_READY');
+  });
+
   it('knows nothing of an interior with no entrance, unless its area is locked', () => {
     expect(interiorEntry({ key: '1,1', name: 'Test Cave', entrances: [] }, context(run({})))).toBe('UNKNOWN');
     const keldagrim: InteriorRecord = { key: '1,1', name: 'Keldagrim', entrances: [] };

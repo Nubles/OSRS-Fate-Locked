@@ -45,6 +45,17 @@
         "Death to the Dorgeshuun Complete the quest"
       ]
     },
+    "Abyss": {
+      "anchors": [
+        "12343"
+      ],
+      "requirements": [
+        "Enter the Abyss Complete the quest"
+      ],
+      "coordinates": [{ "x": 3106, "y": 3556 }],
+      "source": "https://oldschool.runescape.wiki/w/Abyss?oldid=15228428",
+      "note": "Entered only through the Mage of Zamorak north of the Edgeville ditch once Enter the Abyss is complete. The source's Connect edges are the rifts out to the altars (Kourend's Blood and Soul Altars among them), which are exits, not ways in."
+    },
     "Keldagrim": {
       "requirements": [
         "Started The Giant Dwarf"

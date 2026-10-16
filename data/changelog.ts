@@ -37,6 +37,17 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-16-abyss-way-in',
+    title: 'The Abyss opens from Edgeville',
+    date: '2026-10-16',
+    sections: {
+      fixed: [
+        "RuneLite no longer calls the Abyss locked once you've done Enter the Abyss. It follows the Mage of Zamorak north of Edgeville, the Abyss's only way in.",
+        "The Abyss's creatures and rifts are listed with the Mage of Zamorak's chunk, not with Kourend's Blood and Soul Altars.",
+      ],
+    },
+  },
+  {
     id: '2026-10-16-osrs-layout-speed',
     title: 'Smoother OSRS layout',
     date: '2026-10-16',
