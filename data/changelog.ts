@@ -37,6 +37,19 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-16-slayer-fatigue',
+    title: 'Slayer gets tired',
+    date: '2026-10-16',
+    sections: {
+      balance: [
+        "Vanilla: each Slayer Key tires Slayer, taking 10% off every master's chance, never more than half its rate.",
+        "Rolling for anything else rests it: a level-up gives back 2%, any other roll 5%. Rolls under 5% don't count.",
+        "Mix Slayer with quests, diaries, clues or bossing and you keep the full rates. Only slaying settles near Duradel's pace.",
+        "Farm Keys shows how tired Slayer is on the Slayer tab and on each master.",
+      ],
+    },
+  },
+  {
     id: '2026-10-16-osrs-layout',
     title: 'New OSRS layout',
     date: '2026-10-16',

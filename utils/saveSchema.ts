@@ -23,6 +23,7 @@ import { isPetId, PET_IDS } from '../data/petIds';
 import { BARROWS_BROTHERS, BARROWS_ROLLS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, type Invocation } from '../config/economy';
 import { tidyRituals, type RitualState } from './ritualEffects';
 import { FREE_RITUAL_IDS } from './achievementRewards';
+import { SLAYER_FATIGUE_MAX } from './slayerFatigue';
 /** Version 5 freezes the one-time pet offer and stores claimed pets and owed Keys. */
 export const CURRENT_SAVE_VERSION = 5;
 /**
@@ -1029,7 +1030,7 @@ const TOP_LEVEL_KEYS = new Set([
   'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
   'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'fateCompensation',
   'petCompensation', 'petsClaimed', 'keysOwed', 'rituals',
-  'achievementsClaimed', 'achievementTitle', 'freeRituals', 'freeClarity',
+  'achievementsClaimed', 'achievementTitle', 'freeRituals', 'freeClarity', 'slayerFatigue',
 ]);
 
 export const parseAndMigrateSave = (
@@ -1389,6 +1390,11 @@ const normalizeState = (
     const checked = normalizeRituals(readOwn(input, 'rituals'));
     if (checked.ok === false) return checked;
     if (checked.value) state.rituals = checked.value;
+  }
+  if (own(input, 'slayerFatigue') && readOwn(input, 'slayerFatigue') !== undefined) {
+    const checked = boundedInteger(readOwn(input, 'slayerFatigue'), 'slayerFatigue', 0, SLAYER_FATIGUE_MAX);
+    if (checked.ok === false) return checked;
+    if (checked.value > 0) state.slayerFatigue = checked.value;
   }
   if (own(input, 'keysOwed')) {
     const checked = boundedInteger(readOwn(input, 'keysOwed'), 'keysOwed', 0, MAX_COUNTER);

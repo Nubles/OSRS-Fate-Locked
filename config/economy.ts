@@ -21,6 +21,7 @@ import {
 import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 
 import { skillLevelKeyChance } from '../utils/keyRoll';
+import { SLAYER_FATIGUE_LEVEL_REST, SLAYER_FATIGUE_OTHER_REST, SLAYER_FATIGUE_PER_KEY } from '../utils/slayerFatigue';
 const WIKI = 'https://oldschool.runescape.wiki/images/';
 
 /** Keys every new run starts with. GameContext's fresh state and the Rules text both read it. */
@@ -209,7 +210,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
     category: 'Slayer Tasks',
     icon: `${WIKI}Slayer_icon.png`,
     where: 'Farm Keys → Slayer: roll your master’s card for each task you finish.',
-    blurb: 'Every finished task rolls, with no limit, and higher masters roll better.',
+    blurb: `Every finished task rolls, with no limit, and higher masters roll better. In Vanilla, each Slayer Key tires Slayer by ${SLAYER_FATIGUE_PER_KEY}% on every master (half its rate at most); a level-up rests it by ${SLAYER_FATIGUE_LEVEL_REST}% and any other roll by ${SLAYER_FATIGUE_OTHER_REST}%.`,
     tiers: [
       { tier: 'Turael / Spria',     source: DropSource.SLAYER_BEGINNER,  rate: DROP_RATES[DropSource.SLAYER_BEGINNER] },
       { tier: 'Mazchna',            source: DropSource.SLAYER_MAZCHNA,    rate: DROP_RATES[DropSource.SLAYER_MAZCHNA] },

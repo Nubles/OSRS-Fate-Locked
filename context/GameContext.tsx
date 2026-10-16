@@ -9,6 +9,7 @@ import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { achievementBoostFor } from '../utils/achievementBoosts';
+import { nextSlayerFatigue, slayerFatigueCut } from '../utils/slayerFatigue';
 import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, gambitKeys, STARTING_KEYS } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
 import { BARROWS_BROTHERS, INVOCATIONS, SACRIFICE_TIERS, WARD_COOLDOWN_ROLLS, invocationAllowed, SACRIFICE_USES_PER_RUN, type BarrowsBrother, type Invocation, type Ritual } from '../config/economy';
@@ -577,6 +578,8 @@ export function prepareKeyRollAction(
   // Activity milestones the run has earned raise that activity's own rolls,
   // apart from Vanilla minigame reserves, which keep their own pace.
   if (!vanillaMinigameContext) successBonus += achievementBoostFor(source, state.achievementsClaimed);
+  // Vanilla Slayer tires with each Slayer Key (utils/slayerFatigue).
+  successBonus -= slayerFatigueCut(source, threshold, state.slayerFatigue, state.gameModeId);
 
   const clueAwarded = vanillaClueContext ? state.clueStandardKeysAwarded ?? 0 : 0;
   const isVanillaContext = vanillaBossContext !== null || vanillaClueContext !== null || vanillaMinigameContext !== null;
@@ -1299,7 +1302,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       // What the run's rituals do to a miss's Fate (Tears, Guthan, Torag, the Pact's debt, Invocations).
       const missBase = missFateBase(failureFate, minigameStage);
       const missFate = success ? null : failFate(state.rituals, missBase, state.fatePoints, rollRules.pityEnabled, rollRules.pityThreshold);
+      const fatigueCut = slayerFatigueCut(source, baseThreshold, state.slayerFatigue, state.gameModeId);
       const ritualNotes = [
+        ...(fatigueCut > 0 ? [`Slayer fatigue −${Number(fatigueCut.toFixed(1))}%.`] : []),
         ...(!success && missBase === 0 && failureFate > 0 ? [`No Fate on a miss under ${MINIGAME_MISS_FATE_MIN_RATE}%.`] : []),
         ...(ritualRoll && ritualRoll.oddsBonus !== 0 ? [`Rituals ${ritualRoll.oddsBonus > 0 ? '+' : ''}${ritualRoll.oddsBonus}% odds.`] : []),
         ...(success && ritualRoll?.hitThrough ? ['Verac hit through the miss.'] : []),
@@ -1315,6 +1320,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         ...state,
         activeBuff: state.activeBuff === 'LUCK' || state.activeBuff === 'GREED' ? 'NONE' : state.activeBuff,
       } as GameState & { lastEvent: GameEvent | null };
+      const fatigue = nextSlayerFatigue(state.slayerFatigue, { source, success, baseChance: baseThreshold }, state.gameModeId);
+      if (fatigue > 0) newState.slayerFatigue = fatigue;
+      else delete newState.slayerFatigue;
       const nextRituals = tidyRituals(afterRoll(state.rituals, { success, debtPaid: missFate?.debtPaid ?? 0 }));
       if (nextRituals) newState.rituals = nextRituals;
       else delete newState.rituals;

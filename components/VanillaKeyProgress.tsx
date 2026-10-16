@@ -4,6 +4,7 @@ import {
   effectiveVanillaClueRate,
   type vanillaBossKeyStage,
 } from '../config/vanillaKeyEconomy';
+import { SLAYER_FATIGUE_LEVEL_REST, SLAYER_FATIGUE_OTHER_REST, SLAYER_FATIGUE_PER_KEY } from '../utils/slayerFatigue';
 
 type BossKeyProgressProps = {
   stage: ReturnType<typeof vanillaBossKeyStage>;
@@ -56,3 +57,14 @@ export const ClueKeyProgress: React.FC<ClueKeyProgressProps> = ({ awarded, baseR
     </div>
   );
 };
+
+/** One line on the Slayer tab: how tired Slayer is, and how it rests (utils/slayerFatigue). */
+export const slayerFatigueText = (fatigue: number): string => (fatigue > 0
+  ? `Slayer fatigue −${fatigue}%, at most half a master's rate. Each Slayer Key adds ${SLAYER_FATIGUE_PER_KEY}%; a level-up rests ${SLAYER_FATIGUE_LEVEL_REST}%, any other roll ${SLAYER_FATIGUE_OTHER_REST}%.`
+  : `Slayer is rested. Each Slayer Key tires it by ${SLAYER_FATIGUE_PER_KEY}%; level-ups and other rolls rest it.`);
+
+export const SlayerFatigueNote: React.FC<{ fatigue: number }> = ({ fatigue }) => (
+  <p className={`mb-3 text-[10px] font-mono leading-snug ${fatigue > 0 ? 'text-amber-300' : 'text-gray-400'}`} data-slayer-fatigue={fatigue}>
+    {slayerFatigueText(fatigue)}
+  </p>
+);
