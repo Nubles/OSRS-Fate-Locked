@@ -142,7 +142,10 @@ html[data-ui="osrs"] .osrs-xp-drop {
 html[data-ui="osrs"] .osrs-chatdock { position: relative; display: flex; flex-direction: column; }
 /* The pet follower (PetFollower, fixed bottom-left in classic) would sit under
    the chatbox; here it idles in the empty right end of the chat parchment. */
-html[data-ui="osrs"] .osrs-shell [data-testid="pet-follower"] { left: auto; right: 34px; bottom: 62px; }
+/* The RuneScape font is wider than classic's 10px one, so the follower grows to
+   its name tag ("Little nightmare") instead of cutting it to "Baby ...". */
+html[data-ui="osrs"] .osrs-shell [data-testid="pet-follower"] { left: auto; right: 34px; bottom: 62px; width: auto; min-width: 6rem; max-width: 240px; }
+html[data-ui="osrs"] .osrs-shell [data-testid="pet-follower"] > :last-child { flex-shrink: 0; }
 /* Fixed client: the frame adds a page margin, a border and padding around the
    shell, so the pet moves in by the same amount to stay on the parchment. */
 @media (min-width: 900px) {
