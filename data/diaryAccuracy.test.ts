@@ -423,11 +423,12 @@ describe('Diary tasks in Zanaris', () => {
         { label: 'The Abyss', quests: ['Enter the Abyss'], regions: ['Edgeville'] },
       ],
     });
-    // The altar takes a cosmic or catalytic talisman or tiara, unless you arrive through the Abyss.
+    // The altar takes a cosmic or catalytic talisman or tiara, unless you arrive through the Abyss,
+    // whose rift skips Zanaris.
     expect(task('lum_hard_3')).toMatchObject({
-      quests: ['Lost City'], regions: ['Zanaris'],
+      quests: ['Lost City'],
       oneOf: [
-        { label: 'Zanaris', items: ['Cosmic or catalytic talisman or tiara'], equipmentRequirements: [STAFF] },
+        { label: 'Zanaris', regions: ['Zanaris'], items: ['Cosmic or catalytic talisman or tiara'], equipmentRequirements: [STAFF] },
         { label: 'The Abyss', quests: ['Enter the Abyss'], regions: ['Edgeville'] },
       ],
     });

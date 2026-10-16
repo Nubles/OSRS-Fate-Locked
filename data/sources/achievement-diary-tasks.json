@@ -9452,9 +9452,7 @@
       "quests": [
         "Lost City"
       ],
-      "regions": [
-        "Zanaris"
-      ],
+      "regions": [],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 56 Cosmic runes simultaneously.",
@@ -9462,6 +9460,9 @@
       "oneOf": [
         {
           "label": "Zanaris",
+          "regions": [
+            "Zanaris"
+          ],
           "items": [
             "Cosmic or catalytic talisman or tiara"
           ],

@@ -323,7 +323,7 @@ describe('deterministic current content baseline', () => {
       // Up from 27,654: the transform records each "F2P Only" tag it drops and each requirement it
       // rewrites or overrides (accuracy audit S11, G4, G5, U6).
       // Up from 28,083 with the 7 Oct 2026 Chunk Picker export (net +3 ledger events).
-      auditEvents: 28086,
+      auditEvents: 28087,
       unresolvedTaskUnlocks: 0,
     });
     expect(taskUnlockTotals.source).toBe(1958);

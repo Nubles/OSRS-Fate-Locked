@@ -177872,6 +177872,22 @@
     },
     {
       "category": "lite",
+      "sourceKey": "12343/mon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "lite-cap",
+      "targetKeys": [
+        "Abyssal guardian",
+        "Abyssal leech",
+        "Abyssal walker",
+        "Crawling Hand",
+        "Ghost",
+        "Skeleton"
+      ],
+      "detail": "10 source values capped at 6"
+    },
+    {
+      "category": "lite",
       "sourceKey": "12345/mon",
       "terminal": false,
       "disposition": "normalized",
