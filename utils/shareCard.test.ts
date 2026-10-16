@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { initialState } from '../context/GameContext';
-import { BOSSES_LIST, EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, SKILLS_LIST } from '../constants';
+import {
+  ARCANA_LIST, BOSSES_LIST, EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST,
+  MINIGAMES_LIST, MOBILITY_LIST, ROLLABLE_POH_ITEMS, ROLLABLE_STORAGE_ITEMS, SKILLS_LIST, SLAYER_UNLOCKS_LIST,
+} from '../constants';
+import { completionDenominator } from './completion';
+import { unlockableAreas } from './freeAreas';
 import { BANK_IDS } from '../data/banks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import type { LogEntry, UnlockState } from '../types';
@@ -51,10 +56,25 @@ describe('buildShareCardStats', () => {
 
   it('counts unlocked content as held/total, ignoring names no longer in a table', () => {
     const card = stats({ unlocks: run({ bosses: [BOSSES_LIST[0], BOSSES_LIST[1], 'Retired boss'], banks: [BANK_IDS[0]] }) });
-    expect(card.content.map(c => c.label)).toEqual(['Bosses', 'Minigames', 'Merchants', 'POH', 'Combat Powers', 'Storage', 'Banks']);
+    expect(card.content.map(c => c.label)).toEqual([
+      'Bosses', 'Minigames', 'Merchants', 'POH', 'Combat Powers', 'Storage', 'Banks', 'Mobility', 'Guilds', 'Farming', 'Slayer',
+    ]);
     expect(card.content[0]).toEqual({ label: 'Bosses', done: 2, total: BOSSES_LIST.length });
     expect(card.content[6]).toMatchObject({ done: 1, total: BANK_IDS.length });
     expect(unlockedContent(run(), false).map(c => c.label)).not.toContain('Banks');
+  });
+
+  it('covers every table completion counts besides areas, skill tiers and gear tiers', () => {
+    const full = run({
+      bosses: [...BOSSES_LIST], minigames: [...MINIGAMES_LIST], merchants: [...MERCHANTS_LIST], housing: [...ROLLABLE_POH_ITEMS],
+      arcana: [...ARCANA_LIST], storage: [...ROLLABLE_STORAGE_ITEMS], banks: [...BANK_IDS], mobility: [...MOBILITY_LIST],
+      guilds: [...GUILDS_LIST], farming: [...FARMING_PATCH_LIST], slayerUnlocks: [...SLAYER_UNLOCKS_LIST],
+    });
+    const content = unlockedContent(full, true);
+    expect(content.every(c => c.done === c.total)).toBe(true);
+    const card = stats({ unlocks: full });
+    const tiers = SKILLS_LIST.length * card.skillTierMax + EQUIPMENT_SLOTS.length * card.gearTierMax;
+    expect(content.reduce((sum, c) => sum + c.total, 0) + unlockableAreas('vanilla').length + tiers).toBe(completionDenominator('vanilla'));
   });
 
   it('shows held Keys and the mode’s pity threshold, or none when pity is off', () => {

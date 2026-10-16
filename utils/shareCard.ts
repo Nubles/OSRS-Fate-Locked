@@ -7,8 +7,8 @@
 import type { GameModeRules } from '../config/gameModes';
 import { getGameMode, resolveModeRules } from '../config/gameModes';
 import {
-  ARCANA_LIST, BOSSES_LIST, EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, MERCHANTS_LIST, MINIGAMES_LIST,
-  ROLLABLE_POH_ITEMS, ROLLABLE_STORAGE_ITEMS, SKILLS_LIST, SLOT_CONFIG,
+  ARCANA_LIST, BOSSES_LIST, EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST,
+  MINIGAMES_LIST, MOBILITY_LIST, ROLLABLE_POH_ITEMS, ROLLABLE_STORAGE_ITEMS, SKILLS_LIST, SLAYER_UNLOCKS_LIST, SLOT_CONFIG,
 } from '../constants';
 import { BANK_IDS } from '../data/banks';
 import { REGION_CHUNKS } from '../data/regionChunks';
@@ -120,7 +120,10 @@ const owned = (have: readonly string[] | undefined, all: readonly string[]) => {
   return all.filter(item => set.has(item)).length;
 };
 
-/** Bosses, minigames and the other content tables, as held/total. Banks only when the mode locks them. */
+/**
+ * Every unlock table completion counts besides areas, skills and gear, as held/total.
+ * Banks only when the mode locks them.
+ */
 export const unlockedContent = (unlocks: UnlockState, banksLocked: boolean): ShareCardStats['content'] => [
   { label: 'Bosses', done: owned(unlocks.bosses, BOSSES_LIST), total: BOSSES_LIST.length },
   { label: 'Minigames', done: owned(unlocks.minigames, MINIGAMES_LIST), total: MINIGAMES_LIST.length },
@@ -129,6 +132,10 @@ export const unlockedContent = (unlocks: UnlockState, banksLocked: boolean): Sha
   { label: COMBAT_POWERS_LABEL, done: owned(unlocks.arcana, ARCANA_LIST), total: ARCANA_LIST.length },
   { label: 'Storage', done: owned(unlocks.storage, ROLLABLE_STORAGE_ITEMS), total: ROLLABLE_STORAGE_ITEMS.length },
   ...(banksLocked ? [{ label: 'Banks', done: owned(unlocks.banks, BANK_IDS), total: BANK_IDS.length }] : []),
+  { label: 'Mobility', done: owned(unlocks.mobility, MOBILITY_LIST), total: MOBILITY_LIST.length },
+  { label: 'Guilds', done: owned(unlocks.guilds, GUILDS_LIST), total: GUILDS_LIST.length },
+  { label: 'Farming', done: owned(unlocks.farming, FARMING_PATCH_LIST), total: FARMING_PATCH_LIST.length },
+  { label: 'Slayer', done: owned(unlocks.slayerUnlocks, SLAYER_UNLOCKS_LIST), total: SLAYER_UNLOCKS_LIST.length },
 ];
 
 const DAY_MS = 86_400_000;
