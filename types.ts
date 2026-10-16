@@ -305,7 +305,7 @@ export interface GameState {
   rngVersion?: 1 | 2;
   loadout?: Record<string, number>; // equipment slot -> real item id (Gear mode)
   rival?: RivalState; // Rival Ghost the player is racing (optional)
-  /** OSRS account this run is bound to (Auto-Roll). Set once, then permanent. */
+  /** OSRS account this run is linked to (Sync & Roll's first fetch); the player can rename it. */
   linkedAccount?: string;
   /**
    * Xtreme Start anti-softlock insurance: how many 50-total-level milestones

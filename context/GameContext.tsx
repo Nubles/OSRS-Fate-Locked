@@ -290,7 +290,7 @@ interface GameContextType extends GameState {
   /** Equip (or clear, with itemId=null) a real item in a slot; optionally clear other slots (2h handling). */
   setLoadoutSlot: (slot: string, itemId: number | null, clearSlots?: string[]) => void;
   setLinkedAccount: (account: string) => void;
-  /** Move the run to its character's new name, once Wise Old Man has approved the name change. */
+  /** Change the linked character's name, as after an OSRS name change. */
   renameLinkedAccount: (from: string, to: string) => void;
   /** Rival Ghost controls. */
   setRival: (rival: RivalState) => void;
@@ -1801,15 +1801,15 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     }
 
     case 'SET_LINKED_ACCOUNT': {
-      // Bind the run to one OSRS account, permanently — once set it can't change.
+      // Link the run to one OSRS account on the first fetch; RENAME_LINKED_ACCOUNT changes it.
       if (state.linkedAccount) return state;
       return { ...state, linkedAccount: action.payload };
     }
 
     case 'RENAME_LINKED_ACCOUNT': {
-      // The one way a bound run changes name: the same character after an OSRS
-      // name change, which the Sync & Roll tab has Wise Old Man confirm first.
-      // A run that moved on since the check was made stays as it is.
+      // The player changing the linked character's name (an OSRS name change,
+      // a typo) from Sync & Roll. A run linked to another name since the
+      // player opened the form stays as it is.
       const { from, to } = action.payload;
       const next = to.trim();
       if (!state.linkedAccount || !next) return state;

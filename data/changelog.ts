@@ -42,8 +42,8 @@ export const CHANGELOG_RELEASES = [
     date: '2026-10-16',
     sections: {
       fixed: [
-        "Changed your OSRS name? Open Sync & Roll and press \"Changed your OSRS name?\" to move your run to the new name.",
-        "Wise Old Man checks it's the same character first, then RuneLite and hiscore syncing follow the new name.",
+        "Changed your OSRS name? Open Sync & Roll, press \"Change name\" and type the new one. Your run keeps going.",
+        "RuneLite and hiscore syncing follow the new name, so the plugin works with your run again.",
       ],
     },
   },
