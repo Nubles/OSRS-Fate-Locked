@@ -37,9 +37,9 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-15-share-card',
+    id: '2026-10-16-share-card',
     title: 'A new share card',
-    date: '2026-10-15',
+    date: '2026-10-16',
     sections: {
       changed: [
         "Share Run makes one new card with your map, completion, areas, quests, diary tasks, Keys, unlocked content, and every skill and gear slot with its tier.",
@@ -49,6 +49,17 @@ export const CHANGELOG_RELEASES = [
       ],
       fixed: [
         "Share cards no longer cut off text or draw stats under the map.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-16-name-changes',
+    title: 'Keep your run after a name change',
+    date: '2026-10-16',
+    sections: {
+      fixed: [
+        "Changed your OSRS name? Open Sync & Roll, press \"Change name\" and type the new one. Your run keeps going.",
+        "RuneLite and hiscore syncing follow the new name, so the plugin works with your run again.",
       ],
     },
   },
