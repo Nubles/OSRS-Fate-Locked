@@ -39,6 +39,9 @@ const mockGame = vi.hoisted(() => ({
       guilds: [] as string[],
       farming: [] as string[],
       slayerUnlocks: [] as string[],
+      quests: [] as string[],
+      completedTasks: [] as string[],
+      cas: [] as string[],
     },
   },
 }));
@@ -68,7 +71,7 @@ describe('ShareModal region summary', () => {
     Object.assign(mockGame.current.unlocks, {
       regions: [], chunks: [], skills: {}, equipment: {}, levels: {}, bosses: [],
       minigames: [], arcana: [], housing: [], merchants: [], storage: [], banks: [],
-      mobility: [], guilds: [], farming: [], slayerUnlocks: [],
+      mobility: [], guilds: [], farming: [], slayerUnlocks: [], quests: [], completedTasks: [], cas: [],
     });
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
@@ -129,7 +132,7 @@ describe('ShareModal region summary', () => {
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     expect(writeText.mock.calls[0][0]).toContain('Progression: 53%');
     expect(writeText.mock.calls[0][0]).toMatch(/^\*\*Fate Locked Ironman\*\* \(Vanilla mode\)\n/);
-    expect(view.getByText('53%')).toBeTruthy();
+    expect(view.getByRole('img', { name: /53% complete/ })).toBeTruthy();
     const ranks = /Lost Soul|Fate Wanderer|Iron Determinator|Void Champion|Master of Fate/;
     expect(writeText.mock.calls[0][0]).not.toMatch(ranks);
     expect(document.body.textContent).not.toMatch(ranks);
@@ -155,7 +158,7 @@ describe('ShareModal region summary', () => {
     expect(mockGame.current.unlocks.housing).not.toContain('Aquarium');
   });
 
-  it.each(['Stats card', 'Map card'])('keeps keyboard focus inside %s and returns it after Escape', async (cardStyle) => {
+  it('keeps keyboard focus inside the window and returns it after Escape', async () => {
     const user = userEvent.setup();
     const Harness = () => {
       const [open, setOpen] = React.useState(false);
@@ -167,13 +170,11 @@ describe('ShareModal region summary', () => {
     const view = render(<Harness />);
     const trigger = view.getByRole('button', { name: 'Share Run' });
     await user.click(trigger);
-    const first = view.getByRole('button', { name: 'Stats card' });
-    expect(document.activeElement).toBe(first);
-    await user.click(view.getByRole('button', { name: cardStyle }));
-    if (cardStyle === 'Map card') await user.tab({ shift: true });
+    const first = view.getByRole('button', { name: 'OSRS' });
     expect(document.activeElement).toBe(first);
     await user.tab({ shift: true });
-    expect(document.activeElement).toBe(view.getByRole('button', { name: /^Close$/ }));
+    const enabled = view.getAllByRole('button').filter(b => !(b as HTMLButtonElement).disabled && b !== trigger);
+    expect(document.activeElement).toBe(enabled[enabled.length - 1]);
     await user.tab();
     expect(document.activeElement).toBe(first);
     await user.keyboard('{Escape}');
@@ -181,16 +182,27 @@ describe('ShareModal region summary', () => {
     expect(document.activeElement).toBe(trigger);
   });
 
-  it('keeps the run identity stable when changing themes and copying a summary', async () => {
+  it('remembers the card style for this browser', () => {
+    const view = render(<ShareModal onClose={vi.fn()} />);
+    expect(view.getByRole('button', { name: 'OSRS' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(view.getByRole('button', { name: 'Tracker' }));
+    cleanup();
+    const again = render(<ShareModal onClose={vi.fn()} />);
+    expect(again.getByRole('button', { name: 'Tracker' }).getAttribute('aria-pressed')).toBe('true');
+    localStorage.clear();
+  });
+
+  it('keeps the run identity stable when changing styles and copying a summary', async () => {
     mockGame.current.history = [{
       id: 'first-event', type: 'LEVEL_UP', timestamp: 1234, message: 'Started run',
     }];
     const view = render(<ShareModal onClose={vi.fn()} />);
     const expected = `Run ID: ${computeRunId(mockGame.current.history)}`;
-    expect(view.getByText(expected)).toBeTruthy();
-    fireEvent.click(view.getByRole('button', { name: 'GILDED' }));
+    expect(view.getByText(new RegExp(expected))).toBeTruthy();
+    fireEvent.click(view.getByRole('button', { name: 'Tracker' }));
     fireEvent.click(view.getByRole('button', { name: 'Copy Summary' }));
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
-    expect(view.getByText(expected)).toBeTruthy();
+    expect(view.getByText(new RegExp(expected))).toBeTruthy();
+    localStorage.clear();
   });
 });

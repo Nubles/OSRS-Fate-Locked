@@ -221,9 +221,9 @@ export const GUIDES: Record<string, Guide> = {
     title: 'Share Run',
     blurb: 'Turn your run into a card to share.',
     bullets: [
-      'Switch between a Stats card and a Map card.',
-      'Download the image to share your progress.',
-      'The card shows whether your history passes the tracker’s own check in this browser. It isn’t proof for anyone else.',
+      'Pick the OSRS or Tracker look, and zoom the map to your land or show the whole world.',
+      'Download the picture, or copy it and paste it straight into Discord.',
+      'The card says “History checked” when your history passes the tracker’s own check in this browser. It isn’t proof for anyone else.',
     ],
   },
 

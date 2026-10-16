@@ -37,6 +37,22 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-16-share-card',
+    title: 'A new share card',
+    date: '2026-10-16',
+    sections: {
+      changed: [
+        "Share Run makes one new card with your map, completion, areas, quests, diary tasks, Keys, unlocked content, and every skill and gear slot with its tier.",
+        "Pick an OSRS or Tracker look. The map can zoom to your land, and your newest area gets its own outline.",
+        "The card comes out the same on a phone and a PC. Copy image pastes it straight into Discord.",
+        "It shows your linked RuneScape name, how many days your run has gone, and \"History checked\" only when that check passes.",
+      ],
+      fixed: [
+        "Share cards no longer cut off text or draw stats under the map.",
+      ],
+    },
+  },
+  {
     id: '2026-10-16-equipment-tiers',
     title: 'Every gear tier is checked now',
     date: '2026-10-16',
