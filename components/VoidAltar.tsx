@@ -115,6 +115,9 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
     return null;
   };
 
+  /** The Barrows brother fate drew is random, so his card says what he does while his rolls last. */
+  const runningBrother = r?.barrows ? BARROWS_BROTHERS.find(b => b.id === r.barrows!.brother) : undefined;
+
   const invocationsCost = freeRituals?.includes('INVOCATIONS') ? 0 : ritualFateCost('INVOCATIONS', rules.ritualCostMultiplier);
 
   const rituals = RITUALS
@@ -132,7 +135,9 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
       return {
         id: ritual.id,
         name: ritual.name,
-        desc: ritualEffect(ritual.id, rules.ritualCostMultiplier),
+        desc: ritual.id === 'BARROWS' && runningBrother
+          ? `${runningBrother.name}: ${runningBrother.effect}.`
+          : ritualEffect(ritual.id, rules.ritualCostMultiplier),
         cost: ritual.keyCost ? `${ritual.keyCost} Keys`
           : isGambit ? `ALL Fate (min ${fate})`
           : free > 0 ? `Free (${free} from achievements)`
