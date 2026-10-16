@@ -7,6 +7,7 @@ import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintb
 import { ChunkActivityPanel } from './ChunkActivityPanel';
 import { WikiIcon } from './WikiIcon';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
+import { OSRS_MAP_LABELS } from '../data/osrsMapLabels';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { exportRuneliteBundle } from '../utils/runeliteExport';
 import type { GameModeRules } from '../config/gameModes';
@@ -215,17 +216,6 @@ const OSRS_HOT_FRONTIER_FILL = 'rgba(255, 255, 0, 0.24)';
 const OSRS_GRID_LINE_COLOR = 'rgba(140, 170, 210, 0.42)';
 /** Height of the OSRS footer bar under the map, plus the gap above it. */
 const OSRS_FOOT_H = 38;
-/** Place names drawn on the OSRS map (the World board's set, plus Kourend and
- *  Varlamore for when the map is panned west). `at` pins a whole region's
- *  label to a chunk; otherwise the label sits at the centre of the area. */
-const OSRS_MAP_LABELS: { area: string; label?: string; at?: [number, number]; region?: boolean }[] = [
-  { area: 'Lumbridge' }, { area: 'Varrock' }, { area: 'Falador' }, { area: 'Taverley' },
-  { area: "Seers' Village" }, { area: 'Burthorpe' }, { area: 'Barrows' },
-  { area: 'Mort Myre Swamp', label: 'Mort Myre' }, { area: 'Edgeville' },
-  { area: 'Draynor Village', label: 'Draynor' },
-  { area: 'Karamja', at: [44, 47.5], region: true }, { area: 'Wilderness', at: [49.7, 59.3], region: true },
-  { area: 'Hosidius' }, { area: 'Arceuus' }, { area: 'Civitas illa Fortis' },
-];
 
 // ── Sub-area authoring layer ───────────────────────────────────────────────
 // The map has two paintable layers: continents (REGION_CHUNKS, the broad
@@ -1374,25 +1364,16 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     return m;
   }, [osrs, draftChunks]);
 
-  // Place-name labels: the centre of each named area's chunks; white when
-  // that area is unlocked, tan when it is not (Karamja and the Wilderness
-  // are whole regions, labelled at their own chunks).
+  // Place-name labels, each on its place; white when that area is unlocked,
+  // tan when it is not.
   const osrsLabels = useMemo(() => {
     if (!osrs) return [];
-    return OSRS_MAP_LABELS.map(({ area, label, at }) => {
-      let cx = at?.[0];
-      let cy = at?.[1];
-      if (cx === undefined || cy === undefined) {
-        const chunks = subDraft[area] ?? [];
-        if (!chunks.length) return null;
-        cx = chunks.reduce((a, c) => a + c.cx, 0) / chunks.length;
-        cy = chunks.reduce((a, c) => a + c.cy, 0) / chunks.length;
-      }
-      const { px, py } = tileToPixel({ tx: (cx + 0.5) * CHUNK_TILES, ty: (cy + 0.5) * CHUNK_TILES });
+    return OSRS_MAP_LABELS.map(({ area, label, tile }) => {
+      const { px, py } = tileToPixel({ tx: tile[0], ty: tile[1] });
       const owned = isChunked ? isNamedAreaReachableViaChunks(area, chunkUnlocks) : isRegionUnlocked(area, regionUnlocks);
       return { key: area, label: label ?? area, px, py, owned };
-    }).filter(Boolean) as { key: string; label: string; px: number; py: number; owned: boolean }[];
-  }, [osrs, subDraft, regionUnlocks, chunkUnlocks, isChunked]);
+    });
+  }, [osrs, regionUnlocks, chunkUnlocks, isChunked]);
 
   // The map box keeps the board's 896:608 shape at full width, shrinking in
   // height when the window is short; the footer sits right under it.
