@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { initialState } from '../context/GameContext';
-import { EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, SKILLS_LIST } from '../constants';
+import { BOSSES_LIST, EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, SKILLS_LIST } from '../constants';
+import { BANK_IDS } from '../data/banks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import type { LogEntry, UnlockState } from '../types';
 import { CHUNKED_START_KEY, chunkLabel } from './chunkAdjacency';
-import { GRID, buildShareCardStats, cellToChunk, chunkToCell, latestLandUnlock, mapWindow, ownedChunks } from './shareCard';
+import { GRID, buildShareCardStats, cellToChunk, chunkToCell, latestLandUnlock, mapWindow, ownedChunks, unlockedContent } from './shareCard';
 
 const run = (changes: Partial<UnlockState> = {}): UnlockState => ({ ...structuredClone(initialState.unlocks), ...changes });
 
@@ -46,6 +47,14 @@ describe('buildShareCardStats', () => {
     expect(card.gear.find(g => g.slot === 'Cape')).toMatchObject({ tier: 2, file: 'Cape_slot.png' });
     expect(card.skillTierMax).toBe(10);
     expect(card.gearTierMax).toBe(EQUIPMENT_TIER_MAX);
+  });
+
+  it('counts unlocked content as held/total, ignoring names no longer in a table', () => {
+    const card = stats({ unlocks: run({ bosses: [BOSSES_LIST[0], BOSSES_LIST[1], 'Retired boss'], banks: [BANK_IDS[0]] }) });
+    expect(card.content.map(c => c.label)).toEqual(['Bosses', 'Minigames', 'Merchants', 'POH', 'Combat Powers', 'Storage', 'Banks']);
+    expect(card.content[0]).toEqual({ label: 'Bosses', done: 2, total: BOSSES_LIST.length });
+    expect(card.content[6]).toMatchObject({ done: 1, total: BANK_IDS.length });
+    expect(unlockedContent(run(), false).map(c => c.label)).not.toContain('Banks');
   });
 
   it('shows held Keys and the mode’s pity threshold, or none when pity is off', () => {
@@ -95,15 +104,17 @@ describe('ownedChunks', () => {
 });
 
 describe('mapWindow', () => {
-  const aspect = 716 / 552;
+  const aspect = 716 / 463;
   const shape = (w: { x0: number; y0: number; x1: number; y1: number }) => (w.x1 - w.x0) / (w.y1 - w.y0);
 
-  it('shows the whole height of the world, trimmed at the sides to the panel', () => {
+  it('fills the panel with the world, trimmed to the panel’s shape and never showing the blank outer columns', () => {
     const whole = mapWindow(new Set(), aspect, true);
-    expect(whole.y0).toBe(0);
-    expect(whole.y1).toBe(GRID.h);
+    expect(whole).toMatchObject({ x0: 1, x1: GRID.w - 1 });
     expect(shape(whole)).toBeCloseTo(aspect);
-    expect(whole.x0).toBeCloseTo(GRID.w - whole.x1);
+    expect(whole.y0).toBeCloseTo(GRID.h - whole.y1);
+    const tall = mapWindow(new Set(), 1, true);
+    expect(tall).toMatchObject({ y0: 0, y1: GRID.h });
+    expect(tall.x0).toBeCloseTo(GRID.w - tall.x1);
   });
 
   it('zooms to a small run, keeping the panel shape and the land inside', () => {

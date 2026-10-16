@@ -6,7 +6,11 @@
  */
 import type { GameModeRules } from '../config/gameModes';
 import { getGameMode, resolveModeRules } from '../config/gameModes';
-import { EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, SKILLS_LIST, SLOT_CONFIG } from '../constants';
+import {
+  ARCANA_LIST, BOSSES_LIST, EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, MERCHANTS_LIST, MINIGAMES_LIST,
+  ROLLABLE_POH_ITEMS, ROLLABLE_STORAGE_ITEMS, SKILLS_LIST, SLOT_CONFIG,
+} from '../constants';
+import { BANK_IDS } from '../data/banks';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import type { LogEntry, UnlockState } from '../types';
@@ -14,6 +18,8 @@ import { TableType } from '../types';
 import { chunkLabel, parseChunkKey } from './chunkAdjacency';
 import { chunkUnlocked } from './chunkLocations';
 import { completionPercent } from './completion';
+import { bankLocksActive } from './reachability';
+import { COMBAT_POWERS_LABEL } from './tableDisplay';
 import { auditHistory, computeRunId } from './integrity';
 import { CHUNK_TILES, MAP_BOUNDS, type ChunkCoord } from './mapCoords';
 import { buildProgressSnapshot } from './progressSnapshot';
@@ -59,6 +65,8 @@ export interface ShareCardStats {
   skillTierMax: number;
   gear: { slot: string; file: string; tier: number }[];
   gearTierMax: number;
+  /** Unlocked content tables, counted the way completion counts them. */
+  content: { label: string; done: number; total: number }[];
   keys: number;
   omni: number;
   chaos: number;
@@ -107,6 +115,22 @@ export function ownedChunks(unlocks: UnlockState, gameModeId?: string): Set<stri
   return owned;
 }
 
+const owned = (have: readonly string[] | undefined, all: readonly string[]) => {
+  const set = new Set(have ?? []);
+  return all.filter(item => set.has(item)).length;
+};
+
+/** Bosses, minigames and the other content tables, as held/total. Banks only when the mode locks them. */
+export const unlockedContent = (unlocks: UnlockState, banksLocked: boolean): ShareCardStats['content'] => [
+  { label: 'Bosses', done: owned(unlocks.bosses, BOSSES_LIST), total: BOSSES_LIST.length },
+  { label: 'Minigames', done: owned(unlocks.minigames, MINIGAMES_LIST), total: MINIGAMES_LIST.length },
+  { label: 'Merchants', done: owned(unlocks.merchants, MERCHANTS_LIST), total: MERCHANTS_LIST.length },
+  { label: 'POH', done: owned(unlocks.housing, ROLLABLE_POH_ITEMS), total: ROLLABLE_POH_ITEMS.length },
+  { label: COMBAT_POWERS_LABEL, done: owned(unlocks.arcana, ARCANA_LIST), total: ARCANA_LIST.length },
+  { label: 'Storage', done: owned(unlocks.storage, ROLLABLE_STORAGE_ITEMS), total: ROLLABLE_STORAGE_ITEMS.length },
+  ...(banksLocked ? [{ label: 'Banks', done: owned(unlocks.banks, BANK_IDS), total: BANK_IDS.length }] : []),
+];
+
 const DAY_MS = 86_400_000;
 const SKILL_TIER_MAX = 10;
 
@@ -137,6 +161,7 @@ export function buildShareCardStats(source: ShareCardSource): ShareCardStats {
     skillTierMax: SKILL_TIER_MAX,
     gearTierMax: EQUIPMENT_TIER_MAX,
     gear: EQUIPMENT_SLOTS.map(slot => ({ slot, file: SLOT_CONFIG[slot]?.file ?? '', tier: unlocks.equipment[slot] || 0 })),
+    content: unlockedContent(unlocks, bankLocksActive(gameModeId, customMode)),
     keys: source.keys,
     omni: source.specialKeys,
     chaos: source.chaosKeys,
@@ -153,13 +178,15 @@ export interface MapWindow { x0: number; y0: number; x1: number; y1: number }
 
 /**
  * The part of the map grid the card shows, in grid cells, shaped to the
- * panel's `aspect` (width / height). The whole world keeps its full height
- * and trims open sea at the sides; zoomed, it frames the owned land with two
+ * panel's `aspect` (width / height). The whole world fills the panel,
+ * trimming open sea at the sides or top and bottom; zoomed, it frames the owned land with two
  * chunks of margin, never closer than 14 chunks across.
  */
 export function mapWindow(owned: ReadonlySet<string>, aspect: number, zoom: boolean): MapWindow {
   const fit = (w: number, h: number) => (w / h > aspect ? [w, w / aspect] : [h * aspect, h]);
-  const [fullW, fullH] = GRID.h * aspect <= GRID.w ? [GRID.h * aspect, GRID.h] : [GRID.w, GRID.w / aspect];
+  // The map picture's outer columns are blank, so a wide panel trims them too.
+  const usableW = GRID.w - 2;
+  const [fullW, fullH] = GRID.h * aspect <= usableW ? [GRID.h * aspect, GRID.h] : [usableW, usableW / aspect];
   const whole = { x0: (GRID.w - fullW) / 2, y0: (GRID.h - fullH) / 2, x1: (GRID.w + fullW) / 2, y1: (GRID.h + fullH) / 2 };
   if (!zoom || owned.size === 0) return whole;
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;

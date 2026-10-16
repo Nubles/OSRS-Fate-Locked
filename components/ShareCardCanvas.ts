@@ -15,7 +15,7 @@ export const SITE = 'nubles.github.io/OSRS-Fate-Locked';
 export interface ShareCardFonts { plain: string; bold: string; small: string }
 
 const CHUNK_PX = MAP_IMAGE.width / GRID.w;
-const MAP = { x: 20, y: 76, w: 716, h: 552 } as const;
+const MAP = { x: 20, y: 76, w: 716, h: 463 } as const;
 
 const wikiImage = (file: string) => `https://oldschool.runescape.wiki/images/${file}`;
 
@@ -227,6 +227,17 @@ const drawMap = async (ctx: Ctx, p: Paint, d: ShareCardStats, scale: number, zoo
   });
 };
 
+/** Wiki icons for the unlocked content row. */
+const CONTENT_ICONS: Record<string, string> = {
+  Bosses: 'Slayer_icon.png',
+  Minigames: 'Minigames.png',
+  Merchants: 'Coins_10000.png',
+  POH: 'Construction_icon.png',
+  'Combat Powers': 'Magic_icon.png',
+  Storage: 'Looting_bag.png',
+  Banks: 'Bank_icon.png',
+};
+
 const fmt = (n: number) => n.toLocaleString('en-GB');
 
 /** Short label for a skill whose icon could not load. */
@@ -241,11 +252,12 @@ export async function drawShareCard(canvas: HTMLCanvasElement, d: ShareCardStats
   if (!ctx) throw new Error('Canvas is unavailable');
   const p = paintFor(opts.style, opts.fonts);
 
-  const [skillImgs, gearImgs, keyImgs, rowImgs] = await Promise.all([
+  const [skillImgs, gearImgs, keyImgs, rowImgs, contentImgs] = await Promise.all([
     Promise.all(d.skills.map(s => loadImage(wikiImage(`${s.skill}_icon.png`)))),
     Promise.all(d.gear.map(g => (g.file ? loadImage(wikiImage(g.file)) : Promise.resolve(null)))),
     Promise.all(['Brass_key.png', 'Crystal_key.png', 'Sinister_key.png'].map(f => loadImage(wikiImage(f)))),
     Promise.all(['World_map_icon.png', 'Quest_point_icon.png', 'Achievement_Diaries_icon.png', 'Stats_icon.png'].map(f => loadImage(wikiImage(f)))),
+    Promise.all(d.content.map(c => (CONTENT_ICONS[c.label] ? loadImage(wikiImage(CONTENT_ICONS[c.label])) : Promise.resolve(null)))),
   ]);
 
   canvas.width = CARD_W * scale;
@@ -375,6 +387,33 @@ export async function drawShareCard(canvas: HTMLCanvasElement, d: ShareCardStats
     inset(ctx, p, x, y, gw, 50);
     icon(ctx, gearImgs[i], x + gw / 2, y + 19, 26, g.tier === 0);
     write(ctx, p, `T${g.tier}`, x + gw / 2, y + 45, p.osrs ? p.small(16) : p.num(10), g.tier === 0 ? p.muted : p.label, 'center');
+  });
+
+  // Unlocked content under the map: one box per table, held/total.
+  const cy = MAP.y + MAP.h + 12;
+  heading(ctx, p, 'Unlocked content', MAP.x, cy + 4);
+  const n = d.content.length;
+  const cw = (MAP.w - (n - 1) * 6) / n;
+  d.content.forEach((c, i) => {
+    const x = MAP.x + i * (cw + 6);
+    const top = cy + 12;
+    inset(ctx, p, x, top, cw, 48);
+    // Tracker labels are letter-spaced; a long one gets tighter and smaller rather than cut.
+    const label = p.osrs ? c.label : c.label.toUpperCase();
+    const fits = ([font, sp]: [string, number]) => { ctx.font = font; return ctx.measureText(label).width + sp * label.length <= cw - 6; };
+    const tries: [string, number][] = p.osrs ? [[p.small(16), 0]] : [[p.small(10), 1.5], [p.small(10), 0.5], [p.small(9), 0.5], [p.small(9), 0]];
+    const [labelFont, spacing] = tries.find(fits) ?? tries[tries.length - 1];
+    write(ctx, p, fitText(ctx, label, labelFont, cw - 6 - spacing * label.length), x + cw / 2, top + 18, labelFont,
+      p.osrs ? p.label : '#9ca3af', 'center', spacing);
+    const value = `${c.done}/${c.total}`;
+    const valueFont = p.osrs ? p.num(16) : p.num(14);
+    ctx.font = valueFont;
+    const vw = ctx.measureText(value).width;
+    const img = contentImgs[i];
+    const iconW = img && img.naturalWidth ? 24 : 0;
+    const start = x + (cw - vw - iconW) / 2;
+    if (iconW) icon(ctx, img, start + 9, top + 34, 18, c.done === 0);
+    write(ctx, p, value, start + iconW, top + 40, valueFont, c.done === 0 ? p.muted : p.value);
   });
 
   // Footer: run ID and the local history check (only when it passed), and where to find the tracker.

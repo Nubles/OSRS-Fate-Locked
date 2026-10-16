@@ -42,7 +42,7 @@ export const CHANGELOG_RELEASES = [
     date: '2026-10-15',
     sections: {
       changed: [
-        "Share Run makes one new card with your map, completion, areas, quests, diary tasks, Keys, and every skill and gear slot with its tier.",
+        "Share Run makes one new card with your map, completion, areas, quests, diary tasks, Keys, unlocked content, and every skill and gear slot with its tier.",
         "Pick an OSRS or Tracker look. The map can zoom to your land, and your newest area gets its own outline.",
         "The card comes out the same on a phone and a PC. Copy image pastes it straight into Discord.",
         "It shows your linked RuneScape name, how many days your run has gone, and \"History checked\" only when that check passes.",
