@@ -37,9 +37,9 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-15-equipment-tiers',
+    id: '2026-10-16-equipment-tiers',
     title: 'Every gear tier is checked now',
-    date: '2026-10-15',
+    date: '2026-10-16',
     sections: {
       changed: [
         "Every item in the gear picker has a checked tier now, so the Est. labels are gone.",
@@ -50,6 +50,17 @@ export const CHANGELOG_RELEASES = [
       ],
       fixed: [
         "Gear the Gauntlet, Castle Wars or Theatre of Blood hands you is never locked, and Frog-leather isn't basic Tier 1 leather.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-16-name-changes',
+    title: 'Keep your run after a name change',
+    date: '2026-10-16',
+    sections: {
+      fixed: [
+        "Changed your OSRS name? Open Sync & Roll, press \"Change name\" and type the new one. Your run keeps going.",
+        "RuneLite and hiscore syncing follow the new name, so the plugin works with your run again.",
       ],
     },
   },

@@ -19,8 +19,9 @@ const game = vi.hoisted(() => ({
   keys: 0,
   specialKeys: 0,
   chaosKeys: 0,
-  linkedAccount: null,
+  linkedAccount: null as string | null,
   setLinkedAccount: vi.fn(),
+  renameLinkedAccount: vi.fn(),
 }));
 
 vi.mock('../context/GameContext', () => ({ useGame: () => game }));
@@ -195,5 +196,44 @@ describe('Auto-Roll account titles', () => {
     expect(titleShown()).toBe('Ironman');
     expect(document.querySelector('[data-account-title] img')?.getAttribute('src')).toContain('Ironman_chat_badge.png');
     expect(screen.queryByRole('group', { name: 'Group ironman title' })).toBeNull();
+  });
+});
+
+describe('Auto-Roll name change', () => {
+  afterEach(() => { game.linkedAccount = null; });
+
+  it('lets the player change the name a linked run uses, and pulls the new hiscores', async () => {
+    game.linkedAccount = 'Old Name';
+    game.renameLinkedAccount.mockClear();
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 404, json: async () => ({ code: 'HISCORES_USERNAME_NOT_FOUND' }) })));
+
+    render(<AutoRollPanel />);
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    // The old name is gone from the hiscores: the error points at the fix.
+    expect(screen.getByText(/If you changed your OSRS name/)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Change name' }));
+    fireEvent.change(screen.getByLabelText('New OSRS name'), { target: { value: ' New  Name ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save name' }));
+
+    expect(game.renameLinkedAccount).toHaveBeenCalledWith('Old Name', 'New Name');
+    expect(screen.getByRole('status').textContent).toContain('This run now uses New Name');
+  });
+
+  it("turns away a name that can't exist in game", () => {
+    game.linkedAccount = 'Old Name';
+    game.renameLinkedAccount.mockClear();
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 404, json: async () => ({}) })));
+
+    render(<AutoRollPanel />);
+    fireEvent.click(screen.getByRole('button', { name: 'Change name' }));
+    fireEvent.change(screen.getByLabelText('New OSRS name'), { target: { value: 'bad!name' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save name' }));
+
+    expect(game.renameLinkedAccount).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert').textContent).toContain('as it shows in game');
   });
 });
