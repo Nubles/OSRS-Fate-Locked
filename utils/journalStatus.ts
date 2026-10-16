@@ -267,11 +267,20 @@ export const questRequirementOptionLabel = (
   ...(option.merchants ?? []),
 ].join(' + ');
 
-export const currentQuestPoints = (unlocks: { readonly quests: readonly string[] }): number =>
-  [...new Set(unlocks.quests)].reduce(
+// Quest eligibility asks for the total once per quest, so it is worked out
+// once per quests array (state is replaced, never edited in place). The length
+// check covers an array grown in place anyway.
+const questPointsCache = new WeakMap<readonly string[], { length: number; points: number }>();
+export const currentQuestPoints = (unlocks: { readonly quests: readonly string[] }): number => {
+  const hit = questPointsCache.get(unlocks.quests);
+  if (hit && hit.length === unlocks.quests.length) return hit.points;
+  const points = [...new Set(unlocks.quests)].reduce(
     (total, id) => total + (
       QUEST_DATA[id]?.kind === 'quest' ? QUEST_DATA[id].points : 0
     ), 0);
+  questPointsCache.set(unlocks.quests, { length: unlocks.quests.length, points });
+  return points;
+};
 
 /**
  * Whether a quest can be done now. Pass `areaRoutes` (from useAreaRoutes) so

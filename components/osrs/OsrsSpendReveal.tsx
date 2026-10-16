@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import './osrs-spend.css';
 import { getItemDescription } from '../VoidReveal';
-import { EntityModel } from '../EntityModel';
-import { orientationFor } from '../../data/entityModels';
+import { EntityModel, preloadModelViewer } from '../EntityModel';
+import { loadModelManifest, orientationFor } from '../../data/entityModels';
 import { useModelFor } from '../../hooks/useModelFor';
 import { bankFor } from '../../utils/bankPicture';
 import { OsrsBankReveal } from './OsrsBankPicture';
@@ -51,6 +51,10 @@ const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, i
   // Focus the window so a stray Space doesn't press buttons behind it.
   useEffect(() => { ref.current?.focus({ preventScroll: true }); }, [inDock]);
 
+  // Fetch the 3D viewer and model list as the roll starts, so the model is
+  // ready when the result shows instead of popping in after it.
+  useEffect(() => { loadModelManifest().catch(() => {}); preloadModelViewer(); }, []);
+
   // Same timeline lengths as the classic reveal: 2.4s for a Key, 2.7s for a Chaos Key.
   useEffect(() => {
     if (!animationsEnabled) { setPhase('reveal'); return; }
@@ -85,7 +89,9 @@ const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, i
   if (bank) {
     shown = <OsrsBankReveal bank={bank} animate={animationsEnabled} />;
   } else if (model) {
-    shown = <EntityModel src={model} poster={itemImage} alt={itemName} size={220} interactive autoRotate={animationsEnabled} orientation={orientationFor(itemName)} />;
+    // Skills show their skillcape: no skill-icon poster while the cape loads,
+    // so a roll never shows the icon on one skill and the cape on another.
+    shown = <EntityModel src={model} poster={isSkill ? undefined : itemImage} alt={itemName} size={220} interactive autoRotate={animationsEnabled} orientation={orientationFor(itemName)} />;
   } else if (isRegion && chunksForArea(itemName).length) {
     // An area has no single model: show its piece of the world map instead.
     shown = (
@@ -122,7 +128,7 @@ const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, i
         </div>
 
         {phase === 'altering' ? (
-          <div className="osrs-inner ospend-rv-body" style={{ minHeight: 420, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 22, background: '#120e0b' }}>
+          <div className="osrs-inner ospend-rv-body" style={{ position: 'relative', minHeight: 420, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 22, background: '#120e0b' }}>
             <div style={{ position: 'relative', width: 260, height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div className="ospend-ring-a" style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: `2px dashed ${isChaos ? '#6a1a1a' : '#4a2a66'}` }} />
               <div className="ospend-ring-b" style={{ position: 'absolute', inset: 26, borderRadius: '50%', border: `4px solid ${isChaos ? '#8a2020' : '#5e2f8a'}`, borderRightColor: '#000', borderBottomColor: isChaos ? '#331212' : '#2a1f33' }} />
@@ -131,6 +137,12 @@ const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, i
                 <img className="osrs-px" src={isChaos ? CHAOS_KEY_ICON : VOID_SEAL_ICON} alt="" aria-hidden="true" style={{ width: 54, height: 48 }} />
               </div>
             </div>
+            {/* The model loads and draws its first frame unseen while Fate is altered. */}
+            {model && !bank && (
+              <div aria-hidden="true" style={{ position: 'absolute', left: 0, top: 0, width: 220, height: 220, opacity: 0, pointerEvents: 'none' }}>
+                <EntityModel src={model} alt="" size={220} autoRotate={false} orientation={orientationFor(itemName)} />
+              </div>
+            )}
             <span style={{ ...RS(16, 'RSBold'), color: isChaos ? '#ff3030' : '#c77dff', ...sh }}>{isChaos ? 'Chaos roll' : 'Altering Fate...'}</span>
             <span style={{ ...RS(), color: 'var(--osrs-tan, #c8b897)', ...sh, textAlign: 'center', padding: '0 12px' }}>
               {isChaos ? 'Your Chaos Key is spent on every table at once.' : `Your Key is spent on the ${display} table.`}

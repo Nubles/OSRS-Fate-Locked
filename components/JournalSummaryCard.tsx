@@ -1,4 +1,4 @@
-import React, { Suspense, useMemo } from 'react';
+import React, { Suspense, useDeferredValue, useMemo } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { BookOpen, Map as MapIcon, Swords, Sparkles, Target, PartyPopper } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
@@ -186,7 +186,10 @@ export function questsReadyLabel(available: number, miniquests: number): string 
  * the OSRS layout's Journal window, so both always agree.
  */
 export function useJournalSummaryModel() {
-  const { unlocks, advisorsEnabled, gameModeId } = useGame();
+  const { unlocks: liveUnlocks, advisorsEnabled, gameModeId } = useGame();
+  // The counts walk every quest, diary and CA task. Working them out in a
+  // follow-up render lets an unlock's reveal draw first instead of waiting.
+  const unlocks = useDeferredValue(liveUnlocks);
   const areaRoutes = useAreaRoutes(unlocks, gameModeId);
 
   const stats = useMemo(() => {

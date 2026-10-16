@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Dumbbell } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
-import { rankSkillBottlenecks } from '../utils/skillAdvisor';
+import { rankSkillBottlenecksCached } from '../utils/skillAdvisor';
 import { AdvisorList, AdvisorItem } from './AdvisorList';
 
 /**
@@ -14,7 +14,7 @@ import { AdvisorList, AdvisorItem } from './AdvisorList';
 
 export const SkillAdvisorPanel: React.FC = () => {
   const { unlocks, gameModeId } = useGame();
-  const ranked = useMemo(() => rankSkillBottlenecks(unlocks, gameModeId), [unlocks, gameModeId]);
+  const ranked = useMemo(() => rankSkillBottlenecksCached(unlocks, gameModeId), [unlocks, gameModeId]);
 
   // Scroll the matching skill card into view + flash a highlight ring.
   const scrollToSkill = (id: string) => {

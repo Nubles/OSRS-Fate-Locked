@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useGame } from '../../context/GameContext';
-import { rankSkillBottlenecks } from '../../utils/skillAdvisor';
+import { rankSkillBottlenecksCached } from '../../utils/skillAdvisor';
 import { SKILLS_LIST } from '../../constants';
 import { TableType, type UnlockState } from '../../types';
 import { NoteTrigger } from '../NoteTrigger';
@@ -53,11 +53,16 @@ export const OsrsSkills: React.FC<Props> = ({
   const [showAdvisor, setShowAdvisor] = useState(false);
   const { gameModeId } = useGame();
   // With nothing to rank, the Advisor says so on its button instead of
-  // opening a panel over the skills just to say "nothing".
+  // opening a panel over the skills just to say "nothing". The ranking is
+  // slow (every quest and diary per skill level), so it is only worked out
+  // once the pointer or focus reaches the button, never on each unlock.
+  const [checkedFor, setCheckedFor] = useState<unknown>(null);
+  const checking = checkedFor === unlocks;
   const advisorEmpty = useMemo(
-    () => advisorsEnabled && rankSkillBottlenecks(unlocks, gameModeId).length === 0,
-    [advisorsEnabled, unlocks, gameModeId],
+    () => advisorsEnabled && checking && rankSkillBottlenecksCached(unlocks, gameModeId).length === 0,
+    [advisorsEnabled, checking, unlocks, gameModeId],
   );
+  const checkAdvisor = () => { if (!checking) setCheckedFor(unlocks); };
   const query = searchQuery.trim().toLowerCase();
   const noMatches = query !== '' && !SKILLS_LIST.some((s) => s.toLowerCase().includes(query));
 
@@ -76,7 +81,15 @@ export const OsrsSkills: React.FC<Props> = ({
               aria-pressed={showAdvisor && !advisorEmpty}
               aria-expanded={showAdvisor && !advisorEmpty}
               aria-disabled={advisorEmpty || undefined}
-              onClick={() => { if (!advisorEmpty) setShowAdvisor((v) => !v); }}
+              onPointerEnter={checkAdvisor}
+              onFocus={checkAdvisor}
+              onClick={() => {
+                if (!checking) {
+                  setCheckedFor(unlocks);
+                  if (rankSkillBottlenecksCached(unlocks, gameModeId).length === 0) return;
+                }
+                if (!advisorEmpty) setShowAdvisor((v) => !v);
+              }}
               title={advisorEmpty
                 ? 'Skill Advisor: no skill is holding back a quest or diary right now.'
                 : 'Skill Advisor: which skill to train next, ranked by the quests and diaries it opens'}

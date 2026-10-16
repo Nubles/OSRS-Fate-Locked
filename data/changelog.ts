@@ -37,6 +37,20 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-16-osrs-layout-speed',
+    title: 'Smoother OSRS layout',
+    date: '2026-10-16',
+    sections: {
+      fixed: [
+        "Spending a Key no longer freezes the page for a moment before the unlock shows.",
+        "Unlock models load while Fate is altered, so they're there when the result shows.",
+        "Every skill unlock shows its skillcape, never the skill icon.",
+        "Clue scrolls on Farm Keys sit in the middle of their cards instead of off the top.",
+        "Farm Keys cards keep their pictures level when one card has an extra line.",
+      ],
+    },
+  },
+  {
     id: '2026-10-16-osrs-layout',
     title: 'New OSRS layout',
     date: '2026-10-16',

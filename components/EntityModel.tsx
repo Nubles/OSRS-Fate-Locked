@@ -27,6 +27,9 @@ function ensureModelViewer(): Promise<boolean> {
   return scriptPromise;
 }
 
+/** Start loading the 3D viewer ahead of a model being shown (e.g. while a reveal plays). */
+export const preloadModelViewer = (): void => { void ensureModelViewer(); };
+
 interface Props {
   /** URL of a .glb/.gltf model, or null/undefined to just show the sprite. */
   src?: string | null;
