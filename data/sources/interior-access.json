@@ -96,10 +96,10 @@
     "Cosmic altar": {
       "entrances": [
         { "chunkId": "12849", "requirements": ["Lost City Complete the quest", "Lost City", "Dramen staff or lunar staff"] },
-        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest", "Lost City Complete the quest"] }
+        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest", "Lost City Complete the quest"], "outsideArea": true }
       ],
       "source": "https://oldschool.runescape.wiki/w/The_Abyss",
-      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The cosmic rift needs Lost City. The Zanaris entrance is kept as generated."
+      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The cosmic rift needs Lost City and skips Zanaris, so it opens the altar without the Zanaris area (owner call, 2026-10-16). The Zanaris entrance is kept as generated."
     },
     "Chaos altar": {
       "entrances": [

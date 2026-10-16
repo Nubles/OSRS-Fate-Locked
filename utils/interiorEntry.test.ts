@@ -125,6 +125,12 @@ describe('interiorEntry', () => {
     const law = records.get('38,75')!;
     expect(interiorEntry(law, context(run({ quests: ['Enter the Abyss'] })))).toBe('NOT_READY');
     expect(interiorEntry(law, context(run({ quests: ['Enter the Abyss', 'Troll Stronghold'] })))).toBe('ALLOWED');
+    // The cosmic rift needs Lost City and skips Zanaris, which the altar otherwise belongs to.
+    const cosmic = records.get('33,75')!;
+    expect(interiorEntry(cosmic, context(run({ quests: ['Enter the Abyss'] })))).toBe('NOT_READY');
+    expect(interiorEntry(cosmic, context(run({ quests: ['Enter the Abyss', 'Lost City'] })))).toBe('ALLOWED');
+    expect(interiorEntry({ ...cosmic, entrances: cosmic.entrances.filter((way) => !way.outsideArea) },
+      context(run({ quests: ['Enter the Abyss', 'Lost City'] })))).toBe('LOCKED');
     const blood = records.get('44,74')!;
     expect(interiorEntry(blood, context(run({ quests: ['Enter the Abyss'] })))).toBe('NOT_READY');
     expect(interiorEntry(blood, context(run({ quests: ['Enter the Abyss', 'Sins of the Father'] })))).toBe('ALLOWED');

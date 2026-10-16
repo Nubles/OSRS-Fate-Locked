@@ -45,6 +45,7 @@ export const CHANGELOG_RELEASES = [
         "RuneLite no longer calls the Abyss locked once you've done Enter the Abyss. It follows the Mage of Zamorak north of Edgeville, the Abyss's only way in.",
         "RuneLite counts the Abyss's rifts as a way into the rune altars, as Diary tasks already did. Leave by teleport, since the portal drops you at the ruins.",
         "The rifts ask what the game asks: Lost City for cosmic, Troll Stronghold for law, Mourning's End Part II for death, Sins of the Father for blood.",
+        "The cosmic rift opens the Cosmic altar without Zanaris, for RuneLite and the Lumbridge Hard cosmic rune task.",
         "The Abyss's creatures and rifts are listed with the Mage of Zamorak's chunk, not with Kourend's Blood and Soul Altars.",
       ],
     },

@@ -72,8 +72,13 @@ describe('Rune altars reached through the Abyss', () => {
     }
   });
 
-  it('keeps the Cosmic altar in Zanaris either way, as the map counts its interior there', () => {
-    expect(task('lum_hard_3')).toMatchObject({ quests: ['Lost City'], regions: ['Zanaris'] });
+  it('reaches the Cosmic altar through Zanaris or its rift, after Lost City either way', () => {
+    // The cosmic rift skips Zanaris (owner call, 16 October 2026), as the game does.
+    expect(task('lum_hard_3')).toMatchObject({ quests: ['Lost City'] });
+    expect(task('lum_hard_3').regions ?? []).not.toContain('Zanaris');
+    const lostCity = ['Lost City'];
+    expect(doable('lum_hard_3', account({ regions: ['Edgeville'], quests: ['Enter the Abyss', ...lostCity] })), 'Abyss').toBe(true);
+    expect(doable('lum_hard_3', account({ regions: ['Edgeville'], quests: ['Enter the Abyss'] })), 'no Lost City').toBe(false);
   });
 });
 

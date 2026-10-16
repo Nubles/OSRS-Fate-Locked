@@ -140,7 +140,7 @@ interface RawDoc {
   interiors?: Record<string, {
     name: string;
     content: RawEntry;
-    entrances: { chunkId: string; requirements: string[]; via?: string[] }[];
+    entrances: { chunkId: string; requirements: string[]; via?: string[]; outsideArea?: boolean }[];
     requirements: Partial<Record<EntityKind, Record<string, string[]>>>;
   }>;
   entrances?: Record<string, ChunkEntrance[]>;
@@ -366,7 +366,9 @@ export class ChunkContentService {
       .map(([id, entry]) => ({
         key: `${Math.floor(Number(id) / 256)},${Number(id) % 256}`,
         name: entry.name,
-        entrances: entry.entrances.map(({ chunkId, requirements }) => ({ chunkId, requirements: [...requirements] })),
+        entrances: entry.entrances.map(({ chunkId, requirements, outsideArea }) => ({
+          chunkId, requirements: [...requirements], ...(outsideArea ? { outsideArea } : {}),
+        })),
       }));
   }
 
@@ -503,10 +505,15 @@ export class ChunkContentService {
     // copy of that entity. Callers receive no positive access alternative.
     if (sourceId && !locations.length) return [];
     const alternatives: EntityLocation[] = locations.length ? locations : [{ cx, cy }];
-    return alternatives.map(loc => ({
-      requirements: this.requirementsForLocation(name, kind, loc),
-      ...(loc.sourceId ? { area: this.doc?.interiors?.[loc.sourceId]?.name } : {}),
-    }));
+    return alternatives.map(loc => {
+      const interior = loc.sourceId ? this.doc?.interiors?.[loc.sourceId] : undefined;
+      // A way in that skips the interior's area (the cosmic rift skips Zanaris) is held to its route alone.
+      const outsideArea = interior?.entrances.find(e => e.chunkId === String(loc.cx * 256 + loc.cy))?.outsideArea;
+      return {
+        requirements: this.requirementsForLocation(name, kind, loc),
+        ...(interior && !outsideArea ? { area: interior.name } : {}),
+      };
+    });
   }
 
   private requirementsForLocation(name: string, kind: EntityKind, loc: EntityLocation): RawRouteRequirement[] {
