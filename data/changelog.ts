@@ -38,11 +38,12 @@ export interface ChangelogRelease {
 export const CHANGELOG_RELEASES = [
   {
     id: '2026-10-16-abyss-way-in',
-    title: 'The Abyss opens from Edgeville',
+    title: 'The Abyss and its altars',
     date: '2026-10-16',
     sections: {
       fixed: [
         "RuneLite no longer calls the Abyss locked once you've done Enter the Abyss. It follows the Mage of Zamorak north of Edgeville, the Abyss's only way in.",
+        "RuneLite counts the Abyss's rifts as a way into the rune altars, as Diary tasks already did. Leave by teleport, since the portal drops you at the ruins.",
         "The Abyss's creatures and rifts are listed with the Mage of Zamorak's chunk, not with Kourend's Blood and Soul Altars.",
       ],
     },

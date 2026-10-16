@@ -15,7 +15,7 @@
     },
     "chunkRuntime": {
       "version": 9,
-      "sha256": "409b99af1ecdc56b214b2e04d1882ae0ad328550554b50835943e7dbb4fbdacb"
+      "sha256": "4c497e6c5a70bdebfff4c63334f7c836f3d3eaaab57938f31cc2406c9cc32627"
     }
   },
   "counts": {
@@ -39,7 +39,7 @@
     "tasksWithCandidates": 2104,
     "unresolvedTasks": 54,
     "tasksWithoutLocation": 60,
-    "candidateLocations": 4031,
+    "candidateLocations": 4045,
     "unresolvedReferences": 65
   },
   "unmatchedQuestGroups": [
@@ -4855,6 +4855,6 @@
       "coverage": "STATIC_PARTIAL"
     }
   ],
-  "catalogueSha256": "06656c7e8d2bcc411b306e36deac2dedc0edcb0fa8f5a8f7cc8756970a3c9cd5",
-  "catalogueBytes": 49097805
+  "catalogueSha256": "4b7c03acb531f1613e781bfe0e869d79c3cfaafca00db4189230cfc350f89469",
+  "catalogueBytes": 49117661
 }

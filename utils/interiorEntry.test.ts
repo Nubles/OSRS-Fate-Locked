@@ -111,6 +111,18 @@ describe('interiorEntry', () => {
     expect(interiorEntry(abyss, context(run({})))).toBe('NOT_READY');
   });
 
+  it("opens a rune altar through its rift in the Abyss, as the altar's Diary tasks do", () => {
+    // The Mind altar's ruins are in Goblin Village (46,54); its rift needs only Enter the Abyss.
+    const mind = records.get('43,75')!;
+    expect(interiorEntry(mind, context(run({})))).toBe('NOT_READY');
+    expect(interiorEntry(mind, context(run({ quests: ['Enter the Abyss'] })))).toBe('ALLOWED');
+    expect(interiorEntry(mind, context(run({ regions: ['Goblin Village'] })))).toBe('ALLOWED');
+    // The death rift also needs Mourning's End Part II.
+    const death = records.get('34,75')!;
+    expect(interiorEntry(death, context(run({ quests: ['Enter the Abyss'] })))).toBe('NOT_READY');
+    expect(interiorEntry(death, context(run({ quests: ['Enter the Abyss', "Mourning's End Part II"] })))).toBe('ALLOWED');
+  });
+
   it('knows nothing of an interior with no entrance, unless its area is locked', () => {
     expect(interiorEntry({ key: '1,1', name: 'Test Cave', entrances: [] }, context(run({})))).toBe('UNKNOWN');
     const keldagrim: InteriorRecord = { key: '1,1', name: 'Keldagrim', entrances: [] };

@@ -45,6 +45,86 @@
         "Death to the Dorgeshuun Complete the quest"
       ]
     },
+    "Air altar": {
+      "entrances": [
+        { "chunkId": "11827", "requirements": [] },
+        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest"] }
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Abyss?oldid=15228428",
+      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The ruins entrance is kept as generated."
+    },
+    "Mind altar": {
+      "entrances": [
+        { "chunkId": "11830", "requirements": [] },
+        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest"] }
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Abyss?oldid=15228428",
+      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The ruins entrance is kept as generated."
+    },
+    "Water altar": {
+      "entrances": [
+        { "chunkId": "12593", "requirements": [] },
+        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest"] }
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Abyss?oldid=15228428",
+      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The ruins entrance is kept as generated."
+    },
+    "Earth altar": {
+      "entrances": [
+        { "chunkId": "13110", "requirements": [] },
+        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest"] }
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Abyss?oldid=15228428",
+      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The ruins entrance is kept as generated."
+    },
+    "Fire altar": {
+      "entrances": [
+        { "chunkId": "13106", "requirements": [] },
+        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest"] }
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Abyss?oldid=15228428",
+      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The ruins entrance is kept as generated."
+    },
+    "Body altar": {
+      "entrances": [
+        { "chunkId": "12085", "requirements": [] },
+        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest"] }
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Abyss?oldid=15228428",
+      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The ruins entrance is kept as generated."
+    },
+    "Cosmic altar": {
+      "entrances": [
+        { "chunkId": "12849", "requirements": ["Lost City Complete the quest", "Lost City", "Dramen staff or lunar staff"] },
+        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest"] }
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Abyss?oldid=15228428",
+      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The ruins entrance is kept as generated."
+    },
+    "Chaos altar": {
+      "entrances": [
+        { "chunkId": "13110", "requirements": [] },
+        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest"] }
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Abyss?oldid=15228428",
+      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The ruins entrance is kept as generated."
+    },
+    "Nature altar": {
+      "entrances": [
+        { "chunkId": "11311", "requirements": [] },
+        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest"] }
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Abyss?oldid=15228428",
+      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The ruins entrance is kept as generated."
+    },
+    "Law altar": {
+      "entrances": [
+        { "chunkId": "11316", "requirements": [] },
+        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest"] }
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Abyss?oldid=15228428",
+      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The ruins entrance is kept as generated."
+    },
     "Abyss": {
       "anchors": [
         "12343"
@@ -310,15 +390,12 @@
       ]
     },
     "Death altar": {
-      "anchors": [
-        "10035"
-      ],
-      "requirements": [
-        "Mourning's End Part II: reached the Death Altar",
-        "Death Altar: talisman, tiara or an alternative entry method needs confirmation"
+      "entrances": [
+        { "chunkId": "10035", "requirements": ["Mourning's End Part II: reached the Death Altar", "Death Altar: talisman, tiara or an alternative entry method needs confirmation"] },
+        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest", "Mourning's End Part II Complete the quest"] }
       ],
       "source": "https://oldschool.runescape.wiki/w/Death_Altar?oldid=15347743",
-      "note": "This anchor describes the physical route through the Mourner Tunnels and Temple of Light. Abyss and Guardians of the Rift alternatives are not asserted by this record."
+      "note": "The first entrance is the physical route through the Mourner Tunnels and Temple of Light. The second is the death rift in the Abyss, entered through the Mage of Zamorak, which also needs Mourning's End Part II. Guardians of the Rift is not asserted."
     },
     "Rune essence mine": {
       "anchors": [
