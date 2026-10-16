@@ -2001,6 +2001,7 @@
    "kind": "interior",
    "name": "Chaos altar",
    "entrances": [
+    "47,56",
     "48,55",
     "51,54"
    ]
@@ -3939,6 +3940,7 @@
    "kind": "interior",
    "name": "Blood altar",
    "entrances": [
+    "48,55",
     "56,51"
    ]
   },
@@ -5921,6 +5923,7 @@
    "kind": "interior",
    "name": "Meiyerditch Laboratories",
    "entrances": [
+    "48,55",
     "56,51"
    ]
   },
@@ -5986,6 +5989,7 @@
    "kind": "interior",
    "name": "Meiyerditch Laboratories",
    "entrances": [
+    "48,55",
     "56,51"
    ]
   },

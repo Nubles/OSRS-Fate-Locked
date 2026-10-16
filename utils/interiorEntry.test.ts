@@ -121,6 +121,13 @@ describe('interiorEntry', () => {
     const death = records.get('34,75')!;
     expect(interiorEntry(death, context(run({ quests: ['Enter the Abyss'] })))).toBe('NOT_READY');
     expect(interiorEntry(death, context(run({ quests: ['Enter the Abyss', "Mourning's End Part II"] })))).toBe('ALLOWED');
+    // The law rift needs Troll Stronghold, and the blood rift Sins of the Father (to the True Blood Altar).
+    const law = records.get('38,75')!;
+    expect(interiorEntry(law, context(run({ quests: ['Enter the Abyss'] })))).toBe('NOT_READY');
+    expect(interiorEntry(law, context(run({ quests: ['Enter the Abyss', 'Troll Stronghold'] })))).toBe('ALLOWED');
+    const blood = records.get('44,74')!;
+    expect(interiorEntry(blood, context(run({ quests: ['Enter the Abyss'] })))).toBe('NOT_READY');
+    expect(interiorEntry(blood, context(run({ quests: ['Enter the Abyss', 'Sins of the Father'] })))).toBe('ALLOWED');
   });
 
   it('knows nothing of an interior with no entrance, unless its area is locked', () => {

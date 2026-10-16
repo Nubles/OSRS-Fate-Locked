@@ -177880,11 +177880,11 @@
         "Abyssal guardian",
         "Abyssal leech",
         "Abyssal walker",
-        "Bird",
+        "Crawling Hand",
         "Ghost",
         "Skeleton"
       ],
-      "detail": "7 source values capped at 6"
+      "detail": "10 source values capped at 6"
     },
     {
       "category": "lite",

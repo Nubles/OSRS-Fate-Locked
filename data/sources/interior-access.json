@@ -96,18 +96,19 @@
     "Cosmic altar": {
       "entrances": [
         { "chunkId": "12849", "requirements": ["Lost City Complete the quest", "Lost City", "Dramen staff or lunar staff"] },
-        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest"] }
+        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest", "Lost City Complete the quest"] }
       ],
-      "source": "https://oldschool.runescape.wiki/w/Abyss?oldid=15228428",
-      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The ruins entrance is kept as generated."
+      "source": "https://oldschool.runescape.wiki/w/The_Abyss",
+      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The cosmic rift needs Lost City. The Zanaris entrance is kept as generated."
     },
     "Chaos altar": {
       "entrances": [
+        { "chunkId": "12088", "requirements": [] },
         { "chunkId": "13110", "requirements": [] },
         { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest"] }
       ],
       "source": "https://oldschool.runescape.wiki/w/Abyss?oldid=15228428",
-      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The ruins entrance is kept as generated."
+      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. 12088 is the Chaos Temple ruins in the Wilderness (47,56), as the Wilderness Easy Diary task has it; 13110 is the generated route kept as it was."
     },
     "Nature altar": {
       "entrances": [
@@ -120,10 +121,10 @@
     "Law altar": {
       "entrances": [
         { "chunkId": "11316", "requirements": [] },
-        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest"] }
+        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest", "Troll Stronghold Complete the quest"] }
       ],
-      "source": "https://oldschool.runescape.wiki/w/Abyss?oldid=15228428",
-      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The ruins entrance is kept as generated."
+      "source": "https://oldschool.runescape.wiki/w/The_Abyss",
+      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. The law rift needs Troll Stronghold. The ruins entrance is kept as generated."
     },
     "Abyss": {
       "anchors": [
@@ -388,6 +389,14 @@
           "y": 3327
         }
       ]
+    },
+    "Blood altar": {
+      "entrances": [
+        { "chunkId": "14387", "requirements": [] },
+        { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest", "Sins of the Father Complete the quest"] }
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Blood_rift",
+      "note": "The True Blood Altar. The blood rift in the Abyss leads here once Sins of the Father is complete. The Meiyerditch entrance is kept as generated. Kourend's Blood Altar is a surface chunk of its own and is not changed."
     },
     "Death altar": {
       "entrances": [
