@@ -90,10 +90,25 @@ const ReqBadge: React.FC<{ reqs: string[] }> = ({ reqs }) => (
 );
 
 
+/** A skill requirement drawn as the skill's icon and level, like the game's skill guide. */
+const SkillReq: React.FC<{ skill: string; level: number; needed?: boolean }> = ({ skill, level, needed }) => (
+  <span className="inline-flex items-center gap-0.5 tabular-nums">
+    <img
+      src={`${import.meta.env.BASE_URL}osrs-ui/skills/small/${skill.toLowerCase()}.png`}
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+      className="chunk-skill-icon h-3 w-3 object-contain"
+    />
+    <span className="sr-only">{needed ? `Needs ${skill} ` : `${skill} `}</span>
+    {level}
+  </span>
+);
+
 const RequirementStateBadges: React.FC<{
   requirements: string[];
   state: ChunkInfoItemState;
-  label: string;
+  label: React.ReactNode;
 }> = ({ requirements, state, label }) => (
   <span className="flex shrink-0 items-center gap-1">
     {requirements.length > 0 && <ReqBadge reqs={requirements} />}
@@ -629,7 +644,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               className={`inline-flex items-center gap-0.5 text-[9px] px-1 rounded font-bold ${visibleState === 'mixed' ? 'bg-white/5 text-gray-300' : visibleState === 'available' ? 'bg-green-900/60 text-green-300' : isRequirementNeutral && met ? 'bg-white/5 text-gray-300' : met ? 'bg-red-950/70 text-red-300' : 'bg-amber-950/70 text-amber-200'}`}
               title={hasMixedScope ? `Slayer ${m.slayer} requirement` : visibleState === 'available' ? 'Slayer requirement met' : isRequirementNeutral ? 'Access requirements need evaluation' : met ? 'Chunk locked' : `Needs Slayer ${m.slayer} \u2014 you have ${slayerUnlocked ? slayerLevel : 'the skill locked'}`}
             >
-              {visibleState === 'mixed' || (isRequirementNeutral && met) ? `Slay ${m.slayer}` : visibleState === 'available' ? <><Check size={9} aria-hidden="true" />Slay {m.slayer}</> : met ? 'Locked' : `Needs Slay ${m.slayer}`}
+              {visibleState === 'mixed' || (isRequirementNeutral && met) ? <SkillReq skill="Slayer" level={m.slayer} /> : visibleState === 'available' ? <><Check size={9} aria-hidden="true" /><SkillReq skill="Slayer" level={m.slayer} /></> : met ? 'Locked' : <SkillReq skill="Slayer" level={m.slayer} needed />}
             </span>
           )}
           {m.slayer == null && reqs.length === 0 && visibleState === 'locked' && (
@@ -663,8 +678,8 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     const disclosureId = `chunk-info-resource-${index}`;
     const visibleState = r.state;
     const resourceLabel = r.state === 'mixed'
-      ? `${r.skill.slice(0, 4)} ${r.level}`
-      : r.state === 'available' ? 'Available' : r.usable ? 'Locked' : `Needs ${r.skill.slice(0, 4)} ${r.level}`;
+      ? <SkillReq skill={r.skill} level={r.level} />
+      : r.state === 'available' ? 'Available' : r.usable ? 'Locked' : <SkillReq skill={r.skill} level={r.level} needed />;
     return (
       <div key={r.name}>
         <div className="flex items-center justify-between gap-2 py-px"

@@ -37,6 +37,21 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-16-osrs-layout',
+    title: 'New OSRS layout',
+    date: '2026-10-16',
+    sections: {
+      added: [
+        "Turn on the OSRS layout in Settings to see the tracker as real game interfaces. The classic layout stays the default, and phones keep it.",
+        "Farm Keys shows each Slayer master and boss, with a gem for its odds, and answers your roll in a dialogue box.",
+        "Skills and gear tiers use one gem ladder, Opal to Zenyte. Keys you earn rise like XP drops.",
+        "Unlocks pop up like a level-up message, and your history sits in a chatbox under the page.",
+        "Right-click anything to Examine it. Pick the 2007 or 2010 interface, a fixed game window, or bigger text.",
+        "Unlock reveals show the game's own 3D models, and OSRS reveals map each area and bank. The OSRS world map previews what an Omni-Key opens.",
+      ],
+    },
+  },
+  {
     id: '2026-10-16-equipment-tiers',
     title: 'Every gear tier is checked now',
     date: '2026-10-16',

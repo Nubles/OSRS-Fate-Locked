@@ -44,8 +44,8 @@ export const FairnessCharts: React.FC<{ analytics: FateAnalyticsResult }> = ({ a
     <section aria-label="Fairness checks" className="space-y-3">
       <div>
         <div className="flex items-center gap-3">
-          <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400">Fairness checks</h3>
-          <div aria-hidden="true" className="h-px flex-1 bg-white/10" />
+          <h3 className="osrs-wa-h3 text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400">Fairness checks</h3>
+          <div aria-hidden="true" className="osrs-wa-rule h-px flex-1 bg-white/10" />
         </div>
         <p className="mt-1 text-xs text-gray-500">Are the dice honest? These look at the rolls themselves and don't change your luck score.</p>
       </div>

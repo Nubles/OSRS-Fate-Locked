@@ -191,14 +191,17 @@ export const questDoabilityRequirementLabels = (
   ...row.manualChecks.map(check => `Confirm: ${check}`),
   ...row.otherRequirements,
 ];
-export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
+/**
+ * Every quest's doability bucket (by chunk reachability in Chunked mode, by
+ * area unlocks otherwise), shared by this panel and the OSRS Journal window.
+ */
+export const useQuestDoabilityRows = () => {
   const { unlocks, gameModeId } = useGame();
   const isChunked = gameModeId === 'chunked';
   const [ready, setReady] = useState(() => isChunked && chunkContentService.ready);
   useEffect(() => {
     if (isChunked && !ready) chunkContentService.init().then(() => setReady(true));
   }, [isChunked, ready]);
-  const [open, setOpen] = useState<Record<string, boolean>>({ DOABLE: true, REQS: true, STRANDED: true, LOCKED: true });
 
   const rows = useMemo<Row[]>(() => {
     if (!isChunked) {
@@ -240,6 +243,17 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
       return { ...evaluation, strandedChunk };
     });
   }, [ready, unlocks, gameModeId, isChunked]);
+
+  return { rows, isChunked, ready };
+};
+
+export type QuestDoabilityRow = Row;
+export const QUEST_DOABILITY_BUCKET_LABEL = (bucket: DoabilityBucket, isChunked: boolean): string =>
+  !isChunked && bucket === 'REQS' ? 'Requirements remaining' : BUCKET_META[bucket].label;
+
+export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
+  const { rows, isChunked, ready } = useQuestDoabilityRows();
+  const [open, setOpen] = useState<Record<string, boolean>>({ DOABLE: true, REQS: true, STRANDED: true, LOCKED: true });
 
   const filtered = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();

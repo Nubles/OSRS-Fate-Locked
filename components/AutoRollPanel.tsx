@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, Search, CheckCircle2, AlertTriangle, RefreshCw, Lock } from 'lucide-react';
 import { Sparkles, Dice5 } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
@@ -6,6 +6,8 @@ import { RollInbox } from './RollInbox';
 import { RuneLiteOnboarding } from './RuneLiteOnboarding';
 import { WikiIcon } from './WikiIcon';
 import { SKILLS_LIST } from '../data/items';
+import { lazyWithRetry } from '../utils/lazyRetry';
+import { useIsOsrsUi } from '../utils/uiStyle';
 import {
   GROUP_IRON_TITLES,
   GROUP_TITLES,
@@ -95,7 +97,11 @@ export async function fetchPlayer(name: string): Promise<Fetched> {
   };
 }
 
-export function AutoRollPanel() {
+/**
+ * Everything Sync & Roll shows and does, shared by the classic panel and the
+ * OSRS layout so both bind, fetch and roll through the same handlers.
+ */
+export function useAutoRoll() {
   const { unlocks, createBackup, levelUpSkill, keys, specialKeys, chaosKeys, linkedAccount, setLinkedAccount, renameLinkedAccount } = useGame() as any;
   // Each run is linked to one OSRS character: the first fetch sets it, and the
   // player can change it (a name change, a typo) with Change name.
@@ -206,6 +212,9 @@ export function AutoRollPanel() {
     onFetch();
   }, [linkedAccount, onFetch]);
 
+  const openRename = useCallback(() => { setRenameOpen(true); setRenameError(''); setRenamedTo(null); }, []);
+  const cancelRename = useCallback(() => { setRenameOpen(false); setRenameError(''); setNewName(''); }, []);
+
   // "Auto-roll": walk each unlocked skill up to its real level through the LIVE
   // level-up engine — every level fires its exact level/5 Key roll,
   // the 2% chaos-key chance and the omni chance — so the run earns exactly the
@@ -261,6 +270,28 @@ export function AutoRollPanel() {
 
   const totalGain = gains.reduce((a, s) => a + (s.level - s.current), 0);
 
+  return {
+    linkedAccount: linkedAccount as string | null | undefined, name, setName, status, error, fetched, groupTitle, chooseGroupTitle, title,
+    rolledTo, applied, skillRolling, skillKeysGained, currentLevels, isUnlocked, gains, onFetch, autoRoll, totalGain,
+    renameOpen, newName, setNewName, renameError, renamedTo, onRename, openRename, cancelRename,
+  };
+}
+
+const OsrsSyncRoll = lazyWithRetry(() => import('./osrs/OsrsSyncRoll'));
+
+export function AutoRollPanel() {
+  return useIsOsrsUi()
+    ? <Suspense fallback={null}><OsrsSyncRoll /></Suspense>
+    : <ClassicAutoRollPanel />;
+}
+
+function ClassicAutoRollPanel() {
+  const {
+    linkedAccount, name, setName, status, error, fetched, groupTitle, chooseGroupTitle, title,
+    rolledTo, applied, skillRolling, skillKeysGained, currentLevels, isUnlocked, gains, onFetch, autoRoll, totalGain,
+    renameOpen, newName, setNewName, renameError, renamedTo, onRename, openRename, cancelRename,
+  } = useAutoRoll();
+
   return (
     <div className="h-full overflow-y-auto custom-scrollbar p-4 space-y-4">
       {/* Header */}
@@ -310,7 +341,7 @@ export function AutoRollPanel() {
             {!renameOpen && (
               <button
                 type="button"
-                onClick={() => { setRenameOpen(true); setRenameError(''); setRenamedTo(null); }}
+                onClick={openRename}
                 className="text-fuchsia-300 hover:text-fuchsia-200 underline underline-offset-2"
               >
                 Change name
@@ -343,7 +374,7 @@ export function AutoRollPanel() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setRenameOpen(false); setRenameError(''); setNewName(''); }}
+                  onClick={cancelRename}
                   className="px-2 py-1.5 text-xs text-gray-400 hover:text-gray-200 shrink-0"
                 >
                   Cancel

@@ -12,6 +12,7 @@ import { DropSource, TableType } from '../types';
 import { DROP_RATES } from '../config/rules';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { unlockableAreas } from '../utils/freeAreas';
+import './osrs/osrs-windows-a.css';
 
 interface ReferenceModalProps {
   onClose: () => void;
@@ -121,18 +122,18 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
   ];
 
   return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Rules" tabIndex={-1} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="bg-[#121212] border border-osrs-border w-full max-w-5xl rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col h-[85vh]">
-        
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Rules" tabIndex={-1} className="osrs-wa-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
+      <div data-osrs-win="rules" className="osrs-wa-win bg-[#121212] border border-osrs-border w-full max-w-5xl rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col h-[85vh]">
+
         {/* Header */}
-        <div className="bg-[#1a1a1a] p-4 border-b border-osrs-border flex justify-between items-center shrink-0">
-          <div className="flex items-center gap-3">
-             <div className="bg-osrs-gold/10 p-2 rounded-lg border border-osrs-gold/20">
+        <div className="osrs-wa-head bg-[#1a1a1a] p-4 border-b border-osrs-border flex justify-between items-center shrink-0">
+          <div className="osrs-wa-htext flex items-center gap-3">
+             <div className="osrs-wa-hicon bg-osrs-gold/10 p-2 rounded-lg border border-osrs-gold/20">
                 <HelpCircle className="w-5 h-5 text-osrs-gold" />
              </div>
-            <h2 className="text-xl font-bold text-gray-100 tracking-wide">Rules</h2>
+            <h2 className="osrs-wa-title text-xl font-bold text-gray-100 tracking-wide">Rules</h2>
             <span
-              className="text-[10px] font-bold uppercase tracking-wider text-amber-200 bg-amber-900/40 px-2 py-1 rounded border border-amber-500/30"
+              className="osrs-wa-sub osrs-wa-mode text-[10px] font-bold uppercase tracking-wider text-amber-200 bg-amber-900/40 px-2 py-1 rounded border border-amber-500/30"
               title={activeMode.description}
             >
               {activeMode.name} Mode
@@ -141,16 +142,16 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
           <button 
             onClick={onClose}
             aria-label="Close the Rules"
-            className="p-2 hover:bg-white/10 rounded-full transition-colors group"
+            className="osrs-wa-close p-2 hover:bg-white/10 rounded-full transition-colors group"
           >
             <X className="w-6 h-6 text-gray-400 group-hover:text-white" />
           </button>
         </div>
 
         {/* Main Content Layout */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="osrs-wa-split flex flex-1 overflow-hidden">
             {/* Sidebar Navigation */}
-            <div className="w-64 bg-[#161616] border-r border-osrs-border flex flex-col overflow-y-auto custom-scrollbar shrink-0">
+            <div className="osrs-wa-side w-64 bg-[#161616] border-r border-osrs-border flex flex-col overflow-y-auto custom-scrollbar shrink-0">
                 <div className="p-3 space-y-1">
                     {tabs.map(tab => {
                         const Icon = tab.icon;
@@ -159,8 +160,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
+                                data-osrs-on={isActive ? 'true' : undefined}
                                 className={`
-                                    w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200
+                                    osrs-wa-btn osrs-wa-nav w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200
                                     ${isActive 
                                         ? 'bg-[#252525] text-osrs-gold border border-osrs-gold/20 shadow-md translate-x-1' 
                                         : 'text-gray-400 hover:bg-[#202020] hover:text-gray-200 border border-transparent'}
@@ -180,7 +182,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
             </div>
 
             {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#1a1a1a] relative">
+            <div className="osrs-wa-content flex-1 overflow-y-auto custom-scrollbar bg-[#1a1a1a] relative">
                 <div className="p-8 max-w-4xl mx-auto">
                     
                     {activeTab === 'core' && (

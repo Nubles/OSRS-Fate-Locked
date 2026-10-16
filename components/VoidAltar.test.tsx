@@ -91,6 +91,43 @@ describe('VoidAltar Gambit minimum stake', () => {
   });
 });
 
+describe('VoidAltar unaffordable rituals', () => {
+  afterEach(async () => {
+    const { setUiStyle } = await import('../utils/uiStyle');
+    setUiStyle('classic');
+  });
+
+  it('greys them out with the shortfall in the OSRS layout, reading the same costs as the click guard', async () => {
+    const { setUiStyle } = await import('../utils/uiStyle');
+    setUiStyle('osrs');
+    game.current = { ...game.current, gameModeId: 'vanilla', fatePoints: 12, keys: 3 };
+    const { VoidAltar } = await import('./VoidAltar');
+    render(<VoidAltar onClose={vi.fn()} />);
+
+    const clarity = screen.getByRole('button', { name: /Ritual of Clarity/ }) as HTMLButtonElement;
+    expect(clarity.disabled).toBe(false);
+    expect(clarity.getAttribute('data-ritual-state')).toBeNull();
+    expect(within(clarity).queryByText(/^Need /)).toBeNull();
+
+    const greed = screen.getByRole('button', { name: /Ritual of Greed/ }) as HTMLButtonElement;
+    expect(greed.disabled).toBe(true);
+    expect(greed.getAttribute('data-ritual-state')).toBe('unaffordable');
+    expect(within(greed).getByText('Need 3 more Fate')).toBeTruthy();
+
+    const transmute = screen.getByRole('button', { name: /Ritual of Transmutation/ });
+    expect(within(transmute).getByText('Need 2 more Keys')).toBeTruthy();
+  });
+
+  it('keeps the classic look without a shortfall line', async () => {
+    game.current = { ...game.current, gameModeId: 'vanilla', fatePoints: 12, keys: 3 };
+    const { VoidAltar } = await import('./VoidAltar');
+    render(<VoidAltar onClose={vi.fn()} />);
+    const greed = screen.getByRole('button', { name: /Ritual of Greed/ });
+    expect(greed.className).toContain('opacity-50');
+    expect(within(greed).queryByText(/^Need /)).toBeNull();
+  });
+});
+
 describe('VoidAltar newer rituals', () => {
   it('offers the Pact for free, and holds it back while Zamorak is still owed', async () => {
     game.current = { ...game.current, gameModeId: 'vanilla', fatePoints: 0 };

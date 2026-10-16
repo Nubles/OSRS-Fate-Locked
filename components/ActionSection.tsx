@@ -19,6 +19,9 @@ const PetClaimCard = lazyWithRetry(() => import('./PetClaimCard').then(m => ({ d
 // Vanilla's per-minigame cards load when the Activities tab opens.
 const VanillaMinigameRolls = lazyWithRetry(() => import('./VanillaMinigameRolls').then(m => ({ default: m.VanillaMinigameRolls })));
 import { VANILLA_BOSS_SEARCH_PLACEHOLDER, vanillaBossNote, vanillaBossSearchEmptyMessage } from './vanillaBossSearchCopy';
+import { useIsOsrsUi } from '../utils/uiStyle';
+// The OSRS layout's Farm Keys loads only when that layout is on.
+const OsrsFarmKeys = lazyWithRetry(() => import('./osrs/OsrsFarmKeys'));
 
 // OSRS Wiki Icon URLs
 const WIKI_IMG = 'https://oldschool.runescape.wiki/images/';
@@ -29,6 +32,13 @@ const OSRS_ICONS = {
   CLUE: 'https://oldschool.runescape.wiki/images/Clue_scroll_%28master%29.png',
   BOSS: 'https://oldschool.runescape.wiki/images/Combat_icon.png',
   ACTIVITY: 'https://oldschool.runescape.wiki/images/Minigames.png',
+};
+
+// Local sprites for the OSRS layout (public/osrs-ui).
+const OSRS_UI_ICONS = {
+  SLAYER: `${import.meta.env.BASE_URL}osrs-ui/skills/slayer.png`,
+  STATS: `${import.meta.env.BASE_URL}osrs-ui/skills/overall.png`,
+  CLUE: `${import.meta.env.BASE_URL}osrs-ui/items/19835.png`,
 };
 
 // Live min/max of the journal (one-time) faucets, so the "Other Key Sources"
@@ -383,10 +393,13 @@ const InfoChip: React.FC<{
 
 type FarmSubTab = 'SLAYER' | 'CLUES' | 'BOSSING' | 'ACTIVITIES';
 
-export const ActionSection: React.FC = () => {
-  const { rollForKey, claimPet, petsClaimed, unlocks, gameModeId, customMode, animationsEnabled, bossStandardKeysAwarded, minigameStandardKeysAwarded, clueStandardKeysAwarded, achievementsClaimed } = useGame();
-  const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
-  const [bossQuery, setBossQuery] = useState('');
+/**
+ * Every Farm Keys source, rate and roll handler, shared by the classic cards
+ * and the OSRS layout (compact panel and wide Keys screen) so all of them read
+ * the same rules.
+ */
+export const useFarmModel = () => {
+  const { rollForKey, unlocks, gameModeId, customMode, clueStandardKeysAwarded, minigameStandardKeysAwarded, achievementsClaimed } = useGame();
 
   // When the run's mode enables region passives, rolls are boosted. rollForKey
   // applies the bonus internally, so handleRoll still passes the BASE rate —
@@ -401,7 +414,7 @@ export const ActionSection: React.FC = () => {
   const effectiveRate = (source: string) =>
     Math.max(1, Math.min(100, (DROP_RATES[source] ?? 0) + bonusFor(source)));
 
-  const handleRoll = (source: string, chance: number, e: React.MouseEvent, context?: KeyRollContext) => {
+  const handleRoll = (source: string, chance: number, e: { clientX: number; clientY: number }, context?: KeyRollContext) => {
     rollForKey(source, chance, failureFateForSource(source as DropSource), e.clientX, e.clientY, undefined, context);
   };
 
@@ -490,6 +503,42 @@ export const ActionSection: React.FC = () => {
       }
     ];
   }, [unlocks.quests]);
+
+  return {
+    slayers,
+    clues: CLUE_SCROLLS,
+    activities: ACTIVITY_ROLLS,
+    isVanilla,
+    vanillaBosses,
+    clueKeysAwarded,
+    vanillaMinigames,
+    minigameKeysAwarded: minigameStandardKeysAwarded,
+    regionBonus,
+    boost,
+    bonusFor,
+    effectiveRate,
+    handleRoll,
+    journalMin: JOURNAL_MIN,
+    journalMax: JOURNAL_MAX,
+    tabIcons: { SLAYER: OSRS_UI_ICONS.SLAYER, CLUES: OSRS_UI_ICONS.CLUE, BOSSING: OSRS_ICONS.BOSS, ACTIVITIES: OSRS_ICONS.ACTIVITY },
+    statsIcon: OSRS_UI_ICONS.STATS,
+    collLogIcon: OSRS_ICONS.COLL_LOG,
+  };
+};
+export type FarmModel = ReturnType<typeof useFarmModel>;
+
+/** Farm Keys: the classic cards, or the OSRS layout's panel when that layout is on. */
+export const ActionSection: React.FC = () => (
+  useIsOsrsUi()
+    ? <React.Suspense fallback={null}><OsrsFarmKeys /></React.Suspense>
+    : <ClassicActionSection />
+);
+
+const ClassicActionSection: React.FC = () => {
+  const { claimPet, petsClaimed, unlocks, animationsEnabled, bossStandardKeysAwarded } = useGame();
+  const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
+  const [bossQuery, setBossQuery] = useState('');
+  const { slayers, isVanilla, vanillaBosses, vanillaMinigames, minigameKeysAwarded, clueKeysAwarded, boost, bonusFor, effectiveRate, handleRoll } = useFarmModel();
 
   const tabs: { id: FarmSubTab; label: string; icon: string; count: number }[] = [
     { id: 'SLAYER', label: 'Slayer', icon: OSRS_ICONS.SLAYER, count: slayers.length },
@@ -659,7 +708,7 @@ export const ActionSection: React.FC = () => {
           <React.Suspense fallback={<div className="h-28 mb-3" />}>
             <VanillaMinigameRolls
               minigames={vanillaMinigames}
-              awarded={minigameStandardKeysAwarded}
+              awarded={minigameKeysAwarded}
               onRoll={(context, rate, e) => handleRoll(DropSource.ACTIVITY_MINIGAME, rate, e, context)}
             />
           </React.Suspense>

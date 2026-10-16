@@ -12,6 +12,7 @@ import { chunkContentService } from '../services/ChunkContentService';
 import { X } from 'lucide-react';
 import { RitualIcon } from './rituals/RitualIcon';
 import { loadRitualFonts, RS_BOLD, RS_FONT, RS_SMALL } from './rituals/ritualAssets';
+import { useIsOsrsUi } from '../utils/uiStyle';
 
 interface VoidAltarProps {
   onClose: () => void;
@@ -35,6 +36,7 @@ let pinnedCartographerOffer: { tip: string; keys: string[] } | null = null;
 export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
+  const osrs = useIsOsrsUi();
   const { fatePoints, keys, activeBuff, performRitual, performGambit, performCartographer, castRitual, rituals: running, unlocks, gameModeId, customMode, nextFloat, runId, history, freeRituals } = useGame();
 
   // The Gambit and Sacrifice can't be undone: arm on the first click, fire on
@@ -137,6 +139,10 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
           : ritual.id === 'PACT' ? 'Free now, pay later'
           : `${fate} Fate Points`,
         canAfford: ritual.keyCost ? keys >= ritual.keyCost : free > 0 || fatePoints >= fate,
+        // What the click guard above is short of, for the OSRS layout's red "Need N more" line.
+        shortfall: ritual.keyCost
+          ? (keys < ritual.keyCost ? `Need ${ritual.keyCost - keys} more Key${ritual.keyCost - keys === 1 ? '' : 's'}` : null)
+          : (free === 0 && fatePoints < fate ? `Need ${fate - fatePoints} more Fate` : null),
         active: status !== null,
         status: status ?? (ritual.id === 'SACRIFICE' && availability?.ok ? `${sacrificesLeft} left this run` : null),
         // Only one ritual can shape the next rolls; buying another would
@@ -285,6 +291,9 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
             {rituals.map((ritual) => {
                 const armed = armedId === ritual.id;
                 const usable = ritual.canAfford && !ritual.active && !ritual.blocked;
+                // OSRS layout: a ritual you can't afford greys out like a spell
+                // without its runes (dark icon, dim text) instead of fading the whole card.
+                const greyed = osrs && !ritual.canAfford && !ritual.active;
                 return (
                     <button
                         key={ritual.id}
@@ -298,12 +307,17 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
                               ? 'bg-[#3a2a12] shadow-[inset_0_0_0_2px_#ffff00] cursor-pointer'
                               : usable
                                 ? 'cursor-pointer hover:bg-[#352d22] hover:shadow-[inset_0_0_0_1px_#8f7f5f,inset_-1px_-1px_0_#000]'
-                                : 'opacity-50 grayscale cursor-not-allowed'
+                                : greyed ? 'cursor-not-allowed' : 'opacity-50 grayscale cursor-not-allowed'
                         }`}
+                        data-ritual-state={greyed ? 'unaffordable' : undefined}
                     >
-                        <div className={`row-span-3 ${slot}`}><RitualIcon id={ritual.id} /></div>
-                        <h3 className="text-[#ff981f] leading-[18px]" style={rsText(RS_BOLD)}>{ritual.name}</h3>
-                        <p className="text-[12.5px] leading-[1.45] text-[#d8ccb0] mt-1 mb-1.5">
+                        <div className={`row-span-3 ${slot}`}>
+                          {greyed
+                            ? <span className="inline-grid" style={{ filter: 'grayscale(1) brightness(0.6)', opacity: 0.6 }}><RitualIcon id={ritual.id} /></span>
+                            : <RitualIcon id={ritual.id} />}
+                        </div>
+                        <h3 className={greyed ? 'leading-[18px]' : 'text-[#ff981f] leading-[18px]'} style={{ ...rsText(RS_BOLD), ...(greyed ? { color: 'var(--osrs-text-dim, #8b8478)' } : null) }}>{ritual.name}</h3>
+                        <p className={`text-[12.5px] leading-[1.45] mt-1 mb-1.5 ${greyed ? '' : 'text-[#d8ccb0]'}`} style={greyed ? { color: 'var(--osrs-text-dim, #8b8478)', opacity: 0.8 } : undefined}>
                           {armed && ritual.id === 'GAMBIT'
                             ? `${fatePoints} Fate hangs over the Void. Click again to let it decide, or click anywhere else to step back.`
                             : armed
@@ -312,6 +326,7 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
                         </p>
                         <div className="flex flex-wrap items-baseline justify-between gap-x-2 border-t border-[#1a1611] pt-1 shadow-[0_-1px_0_#4a4034]" style={rsText(RS_FONT)}>
                             <span className={`whitespace-nowrap ${ritual.canAfford ? 'text-[#ffff00]' : 'text-[#8b8478]'}`}>{ritual.cost}</span>
+                            {greyed && ritual.shortfall && <span style={{ ...rsText(RS_SMALL), color: 'var(--osrs-red, #ff3030)' }}>{ritual.shortfall}</span>}
                             {ritual.status && <span className={ritual.active ? 'text-[#00ff00]' : 'text-[#c9b993]'} style={rsText(RS_SMALL)}>{ritual.status}</span>}
                             {armed && <span className="text-[#ff3a2a]" style={rsText(RS_SMALL)}>Armed</span>}
                             {ritual.blocked && <span className="text-[#8b8478] text-right" style={rsText(RS_SMALL)}>{ritual.blocked}</span>}

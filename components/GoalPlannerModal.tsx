@@ -15,6 +15,8 @@ import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { DIARY_DATA } from '../data/diaryData';
 import { SectionGuide } from './SectionGuide';
+import { useIsOsrsUi } from '../utils/uiStyle';
+import './osrs/osrs-windows-a.css';
 import { UnlockState } from '../types';
 import { QuestRoutePanel } from './questRoutes/QuestRoutePanel';
 import { RuneProofErrorBoundary } from './questRoutes/RuneProofErrorBoundary';
@@ -265,7 +267,8 @@ export const goalPlannerStepHasWikiLink = (step: PlanStep): boolean =>
 
 const StepRow: React.FC<{ step: PlanStep; index?: number }> = ({ step, index }) => (
   <div
-    className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md border text-left transition-colors ${step.kind === 'equipment' ? 'flex-wrap' : ''} ${
+    data-osrs-done={step.done ? 'true' : 'false'}
+    className={`osrs-wa-step flex items-center gap-2.5 px-2.5 py-1.5 rounded-md border text-left transition-colors ${step.kind === 'equipment' ? 'flex-wrap' : ''} ${
       step.done
         ? 'bg-emerald-950/20 border-emerald-500/15'
         : 'bg-[#1a1a1a] border-white/5'
@@ -322,7 +325,7 @@ const PlanSection: React.FC<{
     <div>
       <div className="flex items-center gap-2 mb-1.5 px-0.5">
         <span className="text-gray-400" aria-hidden>{icon}</span>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300">{title}</span>
+        <span className="osrs-wa-section text-[10px] font-bold uppercase tracking-widest text-gray-300">{title}</span>
         <span className="text-[9px] text-gray-600 font-mono">{doneCount}/{steps.length}</span>
         <div className="flex-1 h-px bg-white/5" />
       </div>
@@ -341,13 +344,13 @@ const AlternativeSection: React.FC<{ steps: AlternativePlanStep[] }> = ({ steps 
     <div>
       <div className="flex items-center gap-2 mb-1.5 px-0.5">
         <Route size={12} className="text-gray-400" aria-hidden />
-        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300">Alternative routes</span>
+        <span className="osrs-wa-section text-[10px] font-bold uppercase tracking-widest text-gray-300">Alternative routes</span>
         <span className="text-[9px] text-gray-600 font-mono">choose one</span>
         <div className="flex-1 h-px bg-white/5" />
       </div>
       <div className="space-y-1.5">
         {steps.map(step => (
-          <div key={step.id} className="rounded-md border border-white/5 bg-[#1a1a1a] px-2.5 py-2">
+          <div key={step.id} className="osrs-wa-step rounded-md border border-white/5 bg-[#1a1a1a] px-2.5 py-2">
             <div className="text-[10px] font-semibold text-gray-300 mb-1">{step.label}</div>
             <div className="space-y-1">
               {step.routes.map(route => (
@@ -877,31 +880,41 @@ export const GoalPlannerModal: React.FC<Props> = ({
     setFocusChangeObjective(false);
   }, [coachActive, focusChangeObjective]);
 
+  // OSRS layout: with no quest chosen, the window opens straight onto the
+  // quest list instead of an empty page behind "Choose another quest".
+  const osrsUi = useIsOsrsUi();
+  const osrsPickerInline = osrsUi && runeProofWorkspaceActive && !plan && !runeProofCatalogueFailed;
+  const pickerShown = objectivePickerOpen || osrsPickerInline;
+  useEffect(() => {
+    if (osrsPickerInline) questSearchRef.current?.focus();
+  }, [osrsPickerInline]);
+
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      className="osrs-wa-overlay fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
       onClick={handleClose}
       role="dialog"
       aria-modal="true"
       aria-label={runeProofEnabled ? 'RuneProof' : 'Goal Planner'}
     >
       <div
-        className={`bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full ${
+        data-osrs-win="runeproof"
+        className={`osrs-wa-win bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full ${
           runeProofWorkspaceActive ? 'max-w-7xl h-[94dvh]' : 'max-w-3xl h-[80vh]'
         } flex flex-col overflow-hidden`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 p-4 border-b border-white/10 bg-[#1b1b1b] shrink-0">
-          <div className="p-2 bg-cyan-900/20 rounded-lg border border-cyan-500/30 text-cyan-400">
+        <div className="osrs-wa-head flex items-center gap-3 p-4 border-b border-white/10 bg-[#1b1b1b] shrink-0">
+          <div className="osrs-wa-hicon p-2 bg-cyan-900/20 rounded-lg border border-cyan-500/30 text-cyan-400">
             <Route size={18} />
           </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-base font-bold text-white leading-none flex items-center gap-1.5">
+          <div className="osrs-wa-htext flex-1 min-w-0">
+            <h2 className="osrs-wa-title text-base font-bold text-white leading-none flex items-center gap-1.5">
               {runeProofEnabled ? 'RuneProof' : 'Goal Planner'}
               {!runeProofEnabled ? <SectionGuide id="GOAL_PLANNER" /> : null}
             </h2>
-            <p className="text-[11px] text-gray-500 mt-1">
+            <p className="osrs-wa-sub text-[11px] text-gray-500 mt-1">
               {runeProofEnabled
                 ? 'Read a quest guide and check what your run allows.'
                 : 'Pick a target — get the full ordered roadmap to unlock it.'}
@@ -909,30 +922,36 @@ export const GoalPlannerModal: React.FC<Props> = ({
           </div>
           <button
             onClick={handleClose}
-            className={`${runeProofEnabled ? 'h-11 w-11 inline-flex items-center justify-center' : 'p-1.5'} rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors`}
+            className={`osrs-wa-close ${runeProofEnabled ? 'h-11 w-11 inline-flex items-center justify-center' : 'p-1.5'} rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors`}
             aria-label="Close"
           >
             <X size={18} />
           </button>
         </div>
 
-        <div className="flex-1 flex flex-col sm:flex-row min-h-0">
+        <div className="osrs-wa-split flex-1 flex flex-col sm:flex-row min-h-0" data-osrs-picker={osrsPickerInline ? 'inline' : undefined}>
           {/* Picker column */}
           <div
             id={runeProofEnabled ? questCatalogueId : undefined}
             role={runeProofEnabled ? 'region' : undefined}
             aria-label={runeProofEnabled ? 'RuneProof quest catalogue' : undefined}
-            hidden={runeProofWorkspaceActive && !objectivePickerOpen} className={`${
+            hidden={runeProofWorkspaceActive && !pickerShown} className={`osrs-wa-side osrs-wa-picker ${
             runeProofWorkspaceActive
-              ? `${objectivePickerOpen ? 'flex' : 'hidden'} w-full h-[45%] sm:w-[28%] sm:h-auto`
+              ? `${pickerShown ? 'flex' : 'hidden'} w-full h-[45%] sm:w-[28%] sm:h-auto`
               : 'flex w-full h-[34%] sm:w-[44%] sm:h-auto'
           } border-b sm:border-b-0 sm:border-r border-white/10 flex-col min-h-0 shrink-0`}>
-            <div className="p-2.5 border-b border-white/5 shrink-0">
-              <div className="relative">
+            {osrsPickerInline && (
+              <div className="osrs-wa-pickhead">
+                <p className="osrs-wa-h3">Choose a RuneProof quest</p>
+                <p className="osrs-wa-small">Only quests with a RuneProof route appear here.</p>
+              </div>
+            )}
+            <div className="osrs-wa-searchrow p-2.5 border-b border-white/5 shrink-0">
+              <div className="osrs-wa-search relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-3.5 h-3.5" aria-hidden />
                 <input
                   ref={questSearchRef}
-                  autoFocus={!runeProofWorkspaceActive || objectivePickerOpen}
+                  autoFocus={!runeProofWorkspaceActive || pickerShown}
                   type="text"
                   placeholder={runeProofEnabled
                     ? 'Search RuneProof quests…'
@@ -943,10 +962,12 @@ export const GoalPlannerModal: React.FC<Props> = ({
                 />
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-1.5 space-y-0.5">
+            <div className="osrs-wa-results flex-1 overflow-y-auto custom-scrollbar p-1.5 space-y-0.5">
               {results.length === 0 && (
                 <p className="text-[11px] text-gray-600 italic text-center py-6">
-                  {runeProofCatalogueFailed ? 'RuneProof guides could not load.' : 'No matches.'}
+                  {runeProofCatalogueFailed
+                    ? 'RuneProof guides could not load.'
+                    : osrsPickerInline && !runeProofCatalogueLoaded ? 'Loading RuneProof guides…' : 'No matches.'}
                 </p>
               )}
               {results.map(({ t, state }) => {
@@ -956,11 +977,12 @@ export const GoalPlannerModal: React.FC<Props> = ({
                   <button
                     key={`${t.kind}:${t.id}`}
                     onClick={() => selectTarget({ kind: t.kind, id: t.id })}
-                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-left transition-colors group ${
+                    data-osrs-on={isSel ? 'true' : undefined}
+                    className={`osrs-wa-row w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-left transition-colors group ${
                       isSel ? 'bg-cyan-900/25 border border-cyan-500/30' : 'border border-transparent hover:bg-white/5'
                     }`}
                   >
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATE_DOT[state]}`} aria-hidden />
+                    <span className={`osrs-wa-dot w-1.5 h-1.5 rounded-full shrink-0 ${STATE_DOT[state]}`} aria-hidden />
                     <span className={`shrink-0 ${meta.color}`} aria-hidden>{meta.icon}</span>
                     <span className="flex-1 min-w-0">
                       <span className="block text-[11px] font-semibold text-gray-200 truncate">{t.label}</span>
@@ -973,13 +995,14 @@ export const GoalPlannerModal: React.FC<Props> = ({
           </div>
 
           {/* Plan column */}
-          <div className="flex-1 flex flex-col min-h-0 min-w-0">
+          <div className="osrs-wa-plan flex-1 flex flex-col min-h-0 min-w-0">
             {runeProofWorkspaceActive ? (
               <button
                 ref={changeObjectiveButtonRef}
                 type="button"
                 onClick={() => setObjectivePickerOpen(open => !open)}
-                className="mx-4 mt-3 min-h-11 self-start rounded border border-cyan-400/30 bg-cyan-950/30 px-3 py-2 text-xs font-semibold text-cyan-200"
+                data-osrs-on={objectivePickerOpen ? 'true' : undefined}
+                className="osrs-wa-btn osrs-wa-change mx-4 mt-3 min-h-11 self-start rounded border border-cyan-400/30 bg-cyan-950/30 px-3 py-2 text-xs font-semibold text-cyan-200"
                 aria-expanded={objectivePickerOpen}
                 aria-controls={questCatalogueId}
               >
@@ -1001,7 +1024,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
                     type="button"
                     onClick={retryRuneProofCatalogue}
                     disabled={runeProofCatalogueStatus === 'RETRYING'}
-                    className="min-h-11 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#252525] border border-white/10 hover:bg-[#2d2d2d] disabled:opacity-60 text-gray-200 text-[11px] font-bold"
+                    className="osrs-wa-btn min-h-11 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#252525] border border-white/10 hover:bg-[#2d2d2d] disabled:opacity-60 text-gray-200 text-[11px] font-bold"
                   >
                     <RefreshCw size={12} aria-hidden />
                     {runeProofCatalogueStatus === 'RETRYING' ? 'Retrying…' : 'Retry'}
@@ -1009,7 +1032,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
                   <button
                     type="button"
                     onClick={() => window.location.reload()}
-                    className="min-h-11 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-[11px] font-bold"
+                    className="osrs-wa-btn min-h-11 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-[11px] font-bold"
                   >
                     <RotateCcw size={12} aria-hidden />
                     Reload page
@@ -1088,7 +1111,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
                   {/* Progress bar */}
                   {totalSteps > 0 && (
                     <div className="mt-2">
-                      <div className="h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/5">
+                      <div className="osrs-wa-pbar h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/5">
                         <div
                           className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full transition-all duration-500"
                           style={{ width: `${pct}%` }}

@@ -1,0 +1,170 @@
+/* Farm Keys (components/osrs/OsrsFarmKeys.tsx) and the wide Keys screen's tab
+   strip (OsrsKeysTabs.tsx) in the OSRS layout. Compact = Main board, wide =
+   FarmKeys-NPCs board. Scoped under html[data-ui="osrs"] so nothing here
+   reaches the classic layout. */
+
+/* ── Keys screen tab strip (SpendRoll / History boards) ─────────────────── */
+html[data-ui="osrs"] .okeys-tabs { flex-shrink: 0; display: flex; align-items: flex-end; gap: 3px; padding: 2px 2px 0; border-bottom: 1px solid var(--osrs-rule, #5c5244); }
+html[data-ui="osrs"] .okeys-tab { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; height: 28px; line-height: 30px; font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #ff981f; text-shadow: 1px 1px 0 #000; border: 1px solid var(--osrs-rule, #5c5244); border-bottom: 0; background: var(--osrs-inner, #2e271e); white-space: nowrap; }
+html[data-ui="osrs"] .okeys-tab:hover { color: #fff; }
+html[data-ui="osrs"] .okeys-tab:focus-visible { outline: 1px solid #ffff00; }
+html[data-ui="osrs"] .okeys-tab[aria-selected="true"] { background: var(--osrs-selected, #5a4c3a); position: relative; top: 1px; color: #fff; }
+html[data-ui="osrs"] .okeys-hint { margin-left: auto; margin-bottom: 6px; padding-left: 8px; min-width: 0; font: var(--osrs-fs, 16px) 'RS', sans-serif; color: var(--osrs-tan, #c8b897); text-shadow: 1px 1px 0 #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .okeys-hint.small { font-family: 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .okeys-tabs-tools { position: relative; display: flex; gap: 4px; margin: 0 2px 3px 6px; flex-shrink: 0; }
+html[data-ui="osrs"] .okeys-hint + .okeys-tabs-tools { margin-left: 6px; }
+html[data-ui="osrs"] .okeys-tab + .okeys-tabs-tools { margin-left: auto; }
+html[data-ui="osrs"] .okeys-sq { width: 26px; height: 24px; padding: 0; }
+html[data-ui="osrs"] .okeys-guide { position: absolute; right: 0; top: 28px; z-index: 40; width: 300px; padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; font: var(--osrs-fs, 16px) 'RS', sans-serif; line-height: 18px; color: var(--osrs-tan, #c8b897); text-shadow: 1px 1px 0 #000; }
+html[data-ui="osrs"] .okeys-guide .t { font-family: 'RSBold', sans-serif; color: #ff981f; }
+html[data-ui="osrs"] .okeys-guide .b { color: #fff; }
+html[data-ui="osrs"] .okeys-guide ul { margin: 0; padding-left: 14px; list-style: square; }
+
+/* ── Shared ─────────────────────────────────────────────────────────────── */
+html[data-ui="osrs"] .okf { color: var(--osrs-tan, #c8b897); font: var(--osrs-fs, 16px) 'RS', sans-serif; text-shadow: 1px 1px 0 #000; }
+html[data-ui="osrs"] .okf-cats { flex-shrink: 0; display: flex; gap: 3px; }
+html[data-ui="osrs"] .okf-cat { all: unset; box-sizing: border-box; cursor: pointer; flex: 1 1 0; min-width: 0; height: 30px; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 0 2px; font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #ff981f; text-shadow: 1px 1px 0 #000; background: var(--osrs-btn, #4a4033); border: 1px solid #000; box-shadow: inset 1px 1px 0 var(--osrs-btn-hi, #6b5f4d), inset -1px -1px 0 var(--osrs-btn-lo, #2b241b); white-space: nowrap; overflow: hidden; }
+html[data-ui="osrs"] .okf-cat:hover { color: #fff; }
+html[data-ui="osrs"] .okf-cat:focus-visible { outline: 1px solid #ffff00; }
+html[data-ui="osrs"] .okf-cat[aria-selected="true"] { background: var(--osrs-selected, #5a4c3a); color: #fff; box-shadow: inset 1px 1px 0 var(--osrs-selected-sh, #2a231a); }
+html[data-ui="osrs"] .okf-cat img { width: 18px; height: 18px; object-fit: contain; flex-shrink: 0; }
+html[data-ui="osrs"] .okf-cat .count { font-family: 'RSSmall', sans-serif; color: #ffff00; }
+html[data-ui="osrs"] .okf-cats.wide .okf-cat { height: 32px; gap: 6px; }
+html[data-ui="osrs"] .okf-cats.wide .okf-cat img { width: 20px; height: 20px; }
+
+html[data-ui="osrs"] .okf-search { flex-shrink: 0; width: 100%; box-sizing: border-box; height: 26px; padding: 0 8px; border: 1px solid #000; background: var(--osrs-well, #1f1a14); color: #fff; font: var(--osrs-fs, 16px) 'RS', sans-serif; text-shadow: none; }
+html[data-ui="osrs"] .okf-search:focus { outline: 1px solid #ffff00; }
+html[data-ui="osrs"] .okf-empty { padding: 18px 6px; text-align: center; color: var(--osrs-muted, #8a7c66); }
+html[data-ui="osrs"] .okf-small-btn { height: 24px; padding: 0 8px; flex-shrink: 0; }
+html[data-ui="osrs"] .okf-link { all: unset; cursor: pointer; color: #ff981f; font-family: 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .okf-link:hover { color: #fff; }
+html[data-ui="osrs"] .okf-link:focus-visible { outline: 1px solid #ffff00; }
+html[data-ui="osrs"] .okf-wtitle { margin: 2px 0; text-align: center; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ff981f; text-shadow: 1px 1px 0 #000; }
+
+/* List rows (Main board): name over location, rate, Roll. */
+html[data-ui="osrs"] .okf-row { display: grid; grid-template-columns: minmax(0, 1fr) calc(54px * var(--osrs-ts, 1)) calc(64px * var(--osrs-ts, 1)); align-items: center; column-gap: 8px; padding: 4px 8px; border-bottom: 1px solid var(--osrs-well, #1f1a14); text-shadow: 1px 1px 0 #000; }
+html[data-ui="osrs"] .okf-row .who { min-width: 0; }
+html[data-ui="osrs"] .okf-row .name { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ff981f; line-height: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .okf-row .where { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); line-height: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .okf-row .rate { font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #ffff00; text-align: right; white-space: nowrap; display: flex; flex-direction: column; align-items: flex-end; line-height: 15px; font-variant-numeric: tabular-nums; }
+/* The bonus sits under the odds, so every row's % lines up on the right edge. */
+html[data-ui="osrs"] .okf-row .okf-bonus { font-family: 'RSSmall', sans-serif; line-height: 13px; }
+html[data-ui="osrs"] .okf-card-head .okf-bonus { margin-left: 3px; }
+html[data-ui="osrs"] .okf-row .osrs-btn { height: 28px; }
+/* A roll for something that isn't ready yet: still clickable, drawn greyed. */
+html[data-ui="osrs"] .osrs-btn.is-muted:not([disabled]) { color: var(--osrs-btn-off, #7d705c); background: var(--osrs-btn-off-bg, #3a3228); box-shadow: inset 1px 1px 0 var(--osrs-inner-ring, #4f4434); }
+html[data-ui="osrs"] .osrs-btn.is-muted:not([disabled]):hover { color: var(--osrs-tan, #c8b897); }
+/* Compact rows lead with the source's picture: a chathead in an inventory slot. */
+html[data-ui="osrs"] .okf-row.has-thumb { grid-template-columns: 38px minmax(0, 1fr) calc(54px * var(--osrs-ts, 1)) calc(64px * var(--osrs-ts, 1)); padding-left: 4px; }
+html[data-ui="osrs"] .okf-thumb { width: 38px; height: 36px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--osrs-well, #1f1a14); box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 var(--osrs-bevel-hi, #5c5244); }
+html[data-ui="osrs"] .okf-thumb img { width: 36px; height: 36px; object-fit: contain; }
+html[data-ui="osrs"] .okf-thumb img.is-item { width: auto; height: auto; max-width: 36px; max-height: 32px; }
+html[data-ui="osrs"] .okf-thumb.is-dim img { filter: grayscale(.9) brightness(.45); }
+
+/* Tier groups of the all-boss list outside Vanilla. */
+html[data-ui="osrs"] .okf-group-head { display: flex; align-items: center; gap: 5px; padding: 4px 8px 2px; border-bottom: 1px solid var(--osrs-well, #1f1a14); }
+html[data-ui="osrs"] .okf-group-head img { width: 22px; height: 20px; }
+html[data-ui="osrs"] .okf-group-head .small { font-family: 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); }
+html[data-ui="osrs"] .okf-group-rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+
+/* ── Compact panel (home screen) ────────────────────────────────────────── */
+html[data-ui="osrs"] .okf-compact { height: 100%; min-height: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; }
+html[data-ui="osrs"] .okf-list { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+html[data-ui="osrs"] .okf-list-scroll { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+/* Scrolling lists fade out at the bottom edge instead of cutting a row in
+   half, with room to scroll the last row clear of the fade. */
+html[data-ui="osrs"] :is(.okf-list-scroll, .okf-grid) { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent); padding-bottom: 22px; }
+html[data-ui="osrs"] .okf-list-scroll > .okf-search { margin: 4px; width: auto; }
+html[data-ui="osrs"] .okf-list-foot { flex-shrink: 0; display: flex; justify-content: flex-end; gap: 4px; padding: 4px; }
+
+/* Pet claim (Activities). */
+html[data-ui="osrs"] .okf-pet-body { padding: 6px 8px 8px; display: flex; flex-direction: column; gap: 5px; }
+html[data-ui="osrs"] .okf-pet-body .name { font-family: 'RSBold', sans-serif; color: #ff981f; }
+html[data-ui="osrs"] .okf-pet-body .small { font-family: 'RSSmall', sans-serif; line-height: 15px; }
+html[data-ui="osrs"] .okf-pet-body .osrs-btn { height: 28px; }
+html[data-ui="osrs"] .okf-pet-confirm { padding: 6px; display: flex; flex-direction: column; gap: 5px; }
+html[data-ui="osrs"] .okf-compact .okf-pet { border-bottom: 1px solid var(--osrs-well, #1f1a14); }
+
+/* Other Key Sources: a small window over the panel, opened by its button. */
+html[data-ui="osrs"] .okf-other { position: absolute; z-index: 30; padding: 4px; display: flex; flex-direction: column; gap: 4px; }
+html[data-ui="osrs"] .okf-other.at-compact { left: 4px; right: 4px; bottom: 34px; }
+html[data-ui="osrs"] .okf-other.at-wide { right: 8px; top: 96px; width: 380px; }
+html[data-ui="osrs"] .okf-other-head { position: relative; display: flex; justify-content: center; }
+html[data-ui="osrs"] .okf-other-head .osrs-btn { position: absolute; right: 0; top: 0; }
+html[data-ui="osrs"] .okf-other-row { display: grid; grid-template-columns: 26px minmax(0, 1fr); column-gap: 8px; align-items: start; padding: 4px 8px; border-bottom: 1px solid var(--osrs-well, #1f1a14); }
+html[data-ui="osrs"] .okf-other-row:last-child { border-bottom: 0; }
+html[data-ui="osrs"] .okf-other-row img { width: 25px; height: 25px; object-fit: contain; }
+html[data-ui="osrs"] .okf-other-row .label { color: #ff981f; }
+html[data-ui="osrs"] .okf-other-row .desc { font-family: 'RSSmall', sans-serif; line-height: 15px; color: var(--osrs-tan, #c8b897); }
+html[data-ui="osrs"] .okf-other-row .desc em { font-style: normal; color: #fff; }
+html[data-ui="osrs"] .okf-other-row .rate { font-family: 'RSSmall', sans-serif; line-height: 15px; color: #ffff00; }
+
+/* NPC dialogue (parchment, as in the game's chatbox). */
+html[data-ui="osrs"] .okf-dock { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; padding: 4px; background: var(--osrs-window, #3e3529); }
+html[data-ui="osrs"] .okf-dialogue { all: unset; box-sizing: border-box; cursor: pointer; position: relative; width: 100%; min-height: calc(104px * var(--osrs-ts, 1)); display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: center; column-gap: 6px; padding: 6px 10px 6px 6px; background: #c9b994; border: 2px solid #000; box-shadow: inset 1px 1px 0 #e0d3b2, inset -1px -1px 0 #8f8062; text-shadow: none; }
+html[data-ui="osrs"] .okf-dialogue:focus-visible { outline: 1px solid #ffff00; }
+html[data-ui="osrs"] .okf-dialogue .chathead { width: 80px; height: 80px; object-fit: contain; }
+html[data-ui="osrs"] .okf-dialogue .chathead.item { width: 54px; height: 48px; justify-self: center; }
+html[data-ui="osrs"] .okf-dialogue .text { display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; padding-right: 38px; }
+html[data-ui="osrs"] .okf-dialogue .who { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #800000; }
+html[data-ui="osrs"] .okf-dialogue .line { font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #000; line-height: 17px; }
+html[data-ui="osrs"] .okf-dialogue .cont { font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #0000ff; margin-top: 4px; }
+html[data-ui="osrs"] .okf-dialogue:hover .cont { color: #fff; text-shadow: 1px 1px 0 #000; }
+html[data-ui="osrs"] .okf-dialogue .won { position: absolute; right: 6px; top: 6px; width: 40px; height: 36px; }
+html[data-ui="osrs"] .okf-dialogue .won img { width: 36px; height: 32px; }
+html[data-ui="osrs"] .okf-dialogue .fate { position: absolute; right: 8px; top: 8px; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: #7f0000; }
+html[data-ui="osrs"] .okf-dialogue.big { height: calc(140px * var(--osrs-ts, 1)); min-height: 0; grid-template-columns: 104px minmax(0, 1fr); }
+html[data-ui="osrs"] .okf-dialogue.big .chathead { width: 100px; height: 100px; }
+html[data-ui="osrs"] .okf-dialogue.big .chathead.item { width: 72px; height: 64px; }
+html[data-ui="osrs"] .okf-dialogue.empty { cursor: default; }
+
+/* ── Wide Keys screen (FarmKeys-NPCs board) ─────────────────────────────── */
+html[data-ui="osrs"] .okf-wide { height: 100%; min-height: 0; box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 8px; }
+html[data-ui="osrs"] .okf-main { position: relative; min-height: 0; min-width: 0; padding: 4px; display: flex; flex-direction: column; gap: 5px; }
+html[data-ui="osrs"] .okf-blurb { flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 0 6px; color: var(--osrs-tan, #c8b897); white-space: nowrap; }
+html[data-ui="osrs"] .okf-blurb > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .okf-blurb .hint { margin-left: auto; font-family: 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .okf-blurb .hint b { font-weight: 400; color: #ffff00; }
+html[data-ui="osrs"] .okf-grid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-auto-rows: minmax(250px, 1fr); gap: 6px; }
+html[data-ui="osrs"] .okf-tiers { flex: 1; min-height: 0; overflow-y: auto; }
+html[data-ui="osrs"] .okf-card { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--osrs-window, #3e3529); border: 1px solid #000; }
+html[data-ui="osrs"] .okf-card-head { height: 26px; flex-shrink: 0; display: flex; align-items: center; gap: 5px; padding: 0 6px; background: var(--osrs-inner, #2e271e); border-bottom: 1px solid #000; }
+html[data-ui="osrs"] .okf-card-head img { width: 22px; height: 20px; flex-shrink: 0; }
+html[data-ui="osrs"] .okf-card-head .tier { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; white-space: nowrap; }
+html[data-ui="osrs"] .okf-card-head .rate { margin-left: auto; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ffff00; white-space: nowrap; }
+html[data-ui="osrs"] .okf-stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
+html[data-ui="osrs"] .okf-card:hover .okf-stage { filter: brightness(1.12); }
+html[data-ui="osrs"] .okf-stage .shadow { position: absolute; left: 50%; bottom: 8px; width: 70%; height: 14px; transform: translateX(-50%); border-radius: 50%; background: rgba(0, 0, 0, .45); }
+html[data-ui="osrs"] .okf-stage img.body { position: relative; height: 82%; max-width: 96%; object-fit: contain; object-position: bottom; margin-bottom: 10px; }
+html[data-ui="osrs"] .okf-stage img.big { height: 86%; margin-bottom: 6px; }
+html[data-ui="osrs"] .okf-stage img.item { position: relative; height: 54%; max-height: 96px; aspect-ratio: 36 / 32; max-width: 96%; object-fit: contain; margin-bottom: 22%; }
+html[data-ui="osrs"] .okf-stash { position: absolute; right: 5px; top: 5px; display: flex; gap: 2px; }
+html[data-ui="osrs"] .okf-stash .osrs-slot { width: 30px; height: 27px; }
+html[data-ui="osrs"] .okf-stash img { width: 27px; height: 24px; }
+html[data-ui="osrs"] .okf-stash .paid { opacity: .45; }
+html[data-ui="osrs"] .okf-stash .paid img { filter: grayscale(1); }
+html[data-ui="osrs"] .okf-card-foot { flex-shrink: 0; padding: 5px 7px 7px; display: flex; flex-direction: column; gap: 1px; border-top: 1px solid #000; background: var(--osrs-window, #3e3529); min-width: 0; }
+html[data-ui="osrs"] .okf-card-foot > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .okf-card-foot .name { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ff981f; }
+html[data-ui="osrs"] .okf-card-foot .small { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; }
+html[data-ui="osrs"] .okf-card-foot .osrs-btn { height: 28px; margin-top: 4px; }
+html[data-ui="osrs"] .okf-pet.wide .okf-pet-body { flex: 1; min-height: 0; overflow-y: auto; }
+
+html[data-ui="osrs"] .okf-col { min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+html[data-ui="osrs"] .okf-side { flex-shrink: 0; padding: 4px; display: flex; flex-direction: column; gap: 4px; }
+html[data-ui="osrs"] .okf-side.grow { flex: 1; min-height: 0; }
+html[data-ui="osrs"] .okf-ladder { display: flex; flex-direction: column; padding: 4px 0; }
+html[data-ui="osrs"] .okf-ladder-row { display: grid; grid-template-columns: 24px 118px minmax(0, 1fr) 40px; align-items: center; column-gap: 6px; padding: 2px 8px; }
+html[data-ui="osrs"] .okf-ladder-row img { width: 22px; height: 20px; }
+html[data-ui="osrs"] .okf-ladder-row .name { color: #ff981f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .okf-ladder-row .rate { color: #ffff00; text-align: right; }
+html[data-ui="osrs"] .okf-bar { position: relative; height: 10px; background: var(--osrs-well, #1f1a14); border: 1px solid #000; }
+html[data-ui="osrs"] .okf-bar > div { position: absolute; left: 0; top: 0; bottom: 0; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .35); }
+html[data-ui="osrs"] .okf-recent { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 1px; padding: 6px 8px; background: #c9b994; border: 2px solid #000; box-shadow: inset 1px 1px 0 #e0d3b2, inset -1px -1px 0 #8f8062; text-shadow: none; }
+html[data-ui="osrs"] .okf-recent .ln { flex-shrink: 0; font: var(--osrs-fs, 16px) 'RS', sans-serif; line-height: 18px; color: #000; padding-left: 12px; text-indent: -12px; }
+
+/* Narrow windows: the side column moves under the cards. */
+@media (max-width: 1100px) {
+  html[data-ui="osrs"] .okf-wide { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
+  html[data-ui="osrs"] .okf-wide .okf-main { min-height: 640px; }
+}

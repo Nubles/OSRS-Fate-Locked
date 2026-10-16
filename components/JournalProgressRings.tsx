@@ -1,8 +1,26 @@
-import React, { useMemo } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_CA_TASKS } from '../data/caTasks';
+import type { UnlockState } from '../types';
+import { useIsOsrsUi } from '../utils/uiStyle';
+import { lazyWithRetry } from '../utils/lazyRetry';
+
+// OSRS layout only: the Journal window's header strip.
+const OsrsJournalHeader = lazyWithRetry(() => import('./osrs/OsrsJournalHeader'));
+
+/** Completion across the whole journal: quests (and QP), diary tiers, CA tasks. */
+export const journalRingStats = (unlocks: UnlockState) => {
+  const questTotal = Object.keys(QUEST_DATA).length;
+  const questDone = unlocks.quests.length;
+  const qp = unlocks.quests.reduce((a, id) => a + (QUEST_DATA[id]?.points ?? 0), 0);
+  const diaryTotal = Object.keys(DIARY_DATA).length;
+  const diaryDone = unlocks.diaries.length;
+  const caTotal = ALL_CA_TASKS.length;
+  const caDone = ALL_CA_TASKS.filter(t => unlocks.completedTasks.includes(t.id)).length;
+  return { questTotal, questDone, qp, diaryTotal, diaryDone, caTotal, caDone };
+};
 
 /**
  * Journal hero — three radial completion rings (Quests / Diaries / Combat),
@@ -29,18 +47,16 @@ const Ring: React.FC<{ done: number; total: number; color: string; label: string
   );
 };
 
-export const JournalProgressRings: React.FC = () => {
+/** The Journal tab's completion header: OSRS header strip, or the classic rings. */
+export const JournalProgressRings: React.FC = () => (
+  useIsOsrsUi()
+    ? <Suspense fallback={null}><OsrsJournalHeader /></Suspense>
+    : <ClassicJournalProgressRings />
+);
+
+const ClassicJournalProgressRings: React.FC = () => {
   const { unlocks } = useGame();
-  const stats = useMemo(() => {
-    const questTotal = Object.keys(QUEST_DATA).length;
-    const questDone = unlocks.quests.length;
-    const qp = unlocks.quests.reduce((a, id) => a + (QUEST_DATA[id]?.points ?? 0), 0);
-    const diaryTotal = Object.keys(DIARY_DATA).length;
-    const diaryDone = unlocks.diaries.length;
-    const caTotal = ALL_CA_TASKS.length;
-    const caDone = ALL_CA_TASKS.filter(t => unlocks.completedTasks.includes(t.id)).length;
-    return { questTotal, questDone, qp, diaryTotal, diaryDone, caTotal, caDone };
-  }, [unlocks]);
+  const stats = useMemo(() => journalRingStats(unlocks), [unlocks]);
 
   return (
     <div className="shrink-0 flex gap-2 px-2 pt-2">

@@ -1,6 +1,6 @@
 
 import { lazyWithRetry } from './utils/lazyRetry';
-import React, { useState, useRef, useEffect, useLayoutEffect, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useLayoutEffect, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { GameProvider, useGame } from './context/GameContext';
 import { usePortalHost } from './hooks/usePortalHost';
@@ -98,6 +98,10 @@ const RitualAnimation = lazyWithRetry(() => import('./components/RitualAnimation
 const CommandPalette = lazyWithRetry(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
 const GuidedTour = lazyWithRetry(() => import('./components/GuidedTour').then(m => ({ default: m.GuidedTour })));
 const QuestCompleteOverlay = lazyWithRetry(() => import('./components/QuestCompleteOverlay').then(m => ({ default: m.QuestCompleteOverlay })));
+// The OSRS layout's shell (utils/uiStyle.ts): loaded only while that layout is on.
+const OsrsHeader = lazyWithRetry(() => import('./components/osrs/OsrsHeader').then(m => ({ default: m.OsrsHeader })));
+const OsrsShellFrame = lazyWithRetry(() => import('./components/osrs/OsrsShellFrame'));
+const OsrsContextMenu = lazyWithRetry(() => import('./components/osrs/OsrsContextMenu').then(m => ({ default: m.OsrsContextMenu })));
 const RunelitePluginGuide = lazyWithRetry(() =>
   import('./components/runelite-guide/RunelitePluginGuide').then(module => ({
     default: module.RunelitePluginGuide,
@@ -105,6 +109,8 @@ const RunelitePluginGuide = lazyWithRetry(() =>
 );
 import { deobfuscateFateSave, MAX_FATE_FILE_BYTES } from './utils/encryption';
 import { Download, Upload, RotateCcw, BarChart3, HelpCircle, PlayCircle, PauseCircle, Search, Database, SlidersHorizontal, Link2, Radio, Settings, MessageCircle } from 'lucide-react';
+import { OSRS_MIN_WIDTH, readUiStyle, setUiStyle, useIsOsrsUi, useIsWideEnoughForOsrs, useUiStyle } from './utils/uiStyle';
+import { openOsrsScreen, setOsrsKeysTab, useOsrsNav, type OsrsKeysTab } from './utils/osrsNav';
 import { Key, Sparkles, Dna, Swords, ShoppingBag, ScrollText, Compass, Lightbulb } from './components/OsrsIcon';
 import { exportRuneliteBundle } from './utils/runeliteExport';
 import { BookOpen } from './components/OsrsIcon';
@@ -170,6 +176,20 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
             >
               Reload Application
             </button>
+            {readUiStyle() === 'osrs' && (
+              /* A crash in the OSRS layout would come straight back after a
+                 reload (the choice is saved), and its only switch is in the
+                 header that just crashed. */
+              <button
+                onClick={() => {
+                  setUiStyle('classic');
+                  window.location.reload();
+                }}
+                className="block mx-auto mt-3 text-sm text-gray-400 hover:text-white underline"
+              >
+                Switch to the classic layout and reload
+              </button>
+            )}
           </div>
         </div>
       );
@@ -298,6 +318,9 @@ interface HeaderProps {
 }
 
 const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, onOpenRuneliteGuide, onOpenChangelog }: HeaderProps) => {
+  const uiStyle = useUiStyle();
+  const osrsFits = useIsWideEnoughForOsrs();
+  const osrsHeader = useIsOsrsUi();
   const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount, runId, runRevision, bossStandardKeysAwarded } = useGame();
   // Progressive disclosure — advanced tools stay hidden until the run earns them.
   const gates = useFeatureGates();
@@ -419,6 +442,24 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
       }
       showToast(FATE_EXPORT_DONE_MESSAGE);
   };
+  const exportRunelite = () => exportRuneliteBundle(unlocks, { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId: gameModeId ?? 'vanilla', customMode, bossStandardKeysAwarded });
+  // Accept .fate files and legacy .json files
+  const fileInput = <input type="file" ref={fileInputRef} className="hidden" accept=".json,.fate" onChange={handleFileChange} />;
+
+  if (osrsHeader) return (
+    <>
+      {fileInput}
+      <Suspense fallback={<div style={{ height: 64 }} />}>
+        <OsrsHeader
+          setShowAltar={setShowAltar} setShowStats={setShowStats} setShowReference={setShowReference}
+          setShowOracle={setShowOracle} setShowStrategy={setShowStrategy} setShowSupplyChain={setShowSupplyChain}
+          setShowGameMode={setShowGameMode} setShowSyncCode={setShowSyncCode} setShowDiscord={setShowDiscord}
+          onOpenRuneliteGuide={onOpenRuneliteGuide} onOpenChangelog={onOpenChangelog}
+          onImportSave={() => fileInputRef.current?.click()} onExportSave={handleExport} onRuneliteExport={exportRunelite}
+        />
+      </Suspense>
+    </>
+  );
 
   return (
       <header className="bg-[#1e1e1e] border-b border-white/10 sticky top-0 z-50 shadow-xl backdrop-blur-md bg-opacity-95">
@@ -470,8 +511,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
 
           {/* Controls */}
           <div className="flex flex-wrap items-center justify-center gap-2 min-w-0 max-w-full">
-             {/* Accept .fate files and legacy .json files */}
-             <input type="file" ref={fileInputRef} className="hidden" accept=".json,.fate" onChange={handleFileChange} />
+             {fileInput}
 
              {gates.has('tool:altar') && <button
                 data-tour="altar"
@@ -498,7 +538,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
              </button>
 
              <button
-               onClick={() => exportRuneliteBundle(unlocks, { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId: gameModeId ?? 'vanilla', customMode, bossStandardKeysAwarded })}
+               onClick={exportRunelite}
                className="h-8 px-2.5 rounded-lg border border-amber-500/40 bg-amber-900/30 hover:bg-amber-800/40 text-amber-200 hover:text-amber-100 flex items-center gap-2 transition-colors"
                title="Export your run for the RuneLite plugin (copies to clipboard + downloads). Then use 'Import from clipboard' in the plugin."
              >
@@ -574,6 +614,10 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                            {animationsEnabled ? <PlayCircle size={13} className="text-green-400" /> : <PauseCircle size={13} className="text-gray-500" />}
                            Animations <span className="ml-auto text-[10px] text-gray-500">{animationsEnabled ? 'on' : 'off'}</span>
                         </button>
+                        <button onClick={() => { setUiStyle(uiStyle === 'osrs' ? 'classic' : 'osrs'); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={uiStyle === 'osrs'} title={osrsFits ? undefined : `The OSRS layout shows on windows at least ${OSRS_MIN_WIDTH} pixels wide`}>
+                           <SlidersHorizontal size={13} className={uiStyle === 'osrs' ? 'text-amber-400' : 'text-gray-500'} />
+                           OSRS layout <span className="ml-auto text-[10px] text-gray-500">{uiStyle === 'osrs' ? (osrsFits ? 'on' : 'on, wide screens') : 'off'}</span>
+                        </button>
                         <button onClick={() => { toggleAdvisors(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={advisorsEnabled}>
                            <Lightbulb size={13} className={advisorsEnabled ? 'text-amber-400' : 'text-gray-500'} />
                            Advisor panels <span className="ml-auto text-[10px] text-gray-500">{advisorsEnabled ? 'on' : 'off'}</span>
@@ -606,8 +650,23 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
 };
 
 // --- New Control Panel Component ---
+const PANEL_TO_KEYS_TAB: Record<'FARM' | 'SPEND' | 'LOG', OsrsKeysTab> = { FARM: 'farm', SPEND: 'spend', LOG: 'history' };
+const KEYS_TAB_TO_PANEL: Record<OsrsKeysTab, 'FARM' | 'SPEND' | 'LOG'> = { farm: 'FARM', spend: 'SPEND', history: 'LOG' };
+
 const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = false }) => {
-  const [activeTab, setActiveTab] = useState<'FARM' | 'SPEND' | 'LOG'>('FARM');
+  const [classicTab, setClassicTab] = useState<'FARM' | 'SPEND' | 'LOG'>('FARM');
+  const isOsrs = useIsOsrsUi();
+  // OSRS layout: this panel's tab and the wide Keys screen's tab are one choice
+  // (utils/osrsNav.ts), so opening the Keys screen lands on the same tab and
+  // closing it brings the choice back here. The nav store is the only source
+  // of truth there; two effects syncing two copies could chase each other
+  // when they disagreed on mount.
+  const { keysTab } = useOsrsNav();
+  const activeTab = isOsrs ? KEYS_TAB_TO_PANEL[keysTab] : classicTab;
+  const setActiveTab = useCallback((tab: 'FARM' | 'SPEND' | 'LOG') => {
+    setClassicTab(tab);
+    setOsrsKeysTab(PANEL_TO_KEYS_TAB[tab]);
+  }, []);
   // History reveals with the first logged event (progressive disclosure).
   const gates = useFeatureGates();
   const showLogTab = gates.has('ctrl:LOG') || activeTab === 'LOG';
@@ -634,7 +693,32 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
   }, []);
 
   return (
-    <div ref={panelRef} className="flex flex-col h-full bg-[#1b1b1b] border border-[#333] rounded-lg overflow-hidden shadow-xl">
+    <div ref={panelRef} className={isOsrs ? 'osrs-win flex flex-col h-full overflow-hidden p-1 gap-1' : 'flex flex-col h-full bg-[#1b1b1b] border border-[#333] rounded-lg overflow-hidden shadow-xl'}>
+      {isOsrs ? <>
+      {/* OSRS layout: the Main board's tab strip, plus a small control that
+          opens the wide Keys screen on the same tab. The panel guide sits
+          beside it (the board has no row for it). */}
+      <div className="flex shrink-0 items-end" style={{ gap: 3, padding: '2px 2px 0', borderBottom: '1px solid var(--osrs-rule, #5c5244)' }}>
+        <div role="tablist" className="flex" style={{ flex: 1, minWidth: 0, gap: 3 }}>
+          <button type="button" role="tab" data-tour="farm" aria-selected={activeTab === 'FARM'} onClick={() => setActiveTab('FARM')} className="osrs-tab" style={{ flex: 1, textAlign: 'center' }}>Farm Keys</button>
+          <button type="button" role="tab" data-tour="spend" aria-selected={activeTab === 'SPEND'} onClick={() => setActiveTab('SPEND')} className="osrs-tab" style={{ flex: 1, textAlign: 'center' }}>Spend Keys</button>
+          {showLogTab && <button type="button" role="tab" aria-selected={activeTab === 'LOG'} onClick={() => setActiveTab('LOG')} className="osrs-tab" style={{ flex: 1, textAlign: 'center' }}>History</button>}
+        </div>
+        <span className="osrs-keys-guide flex items-center justify-center" style={{ width: 22, height: 26, marginBottom: 1 }}>
+          <SectionGuide id={activeTab} suspendModals={suspendModals} />
+        </span>
+        <button
+          type="button"
+          className="osrs-btn"
+          onClick={() => openOsrsScreen('keys', PANEL_TO_KEYS_TAB[activeTab])}
+          title={`Open the full ${activeTab === 'FARM' ? 'Farm Keys' : activeTab === 'SPEND' ? 'Spend Keys' : 'History'} window`}
+          aria-label={`Open the full ${activeTab === 'FARM' ? 'Farm Keys' : activeTab === 'SPEND' ? 'Spend Keys' : 'History'} window`}
+          style={{ width: 26, height: 26, padding: 0, marginBottom: 2, flexShrink: 0 }}
+        >
+          <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d="M7 1h4v4M11 1L6.5 5.5M5 11H1V7M1 11l4.5-4.5" fill="none" stroke="currentColor" strokeWidth="2" /></svg>
+        </button>
+      </div>
+      </> : <>
       {/* Tabs */}
       <div className="flex border-b border-[#333] bg-[#161616] shrink-0">
         <button
@@ -664,13 +748,14 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
         <span>{GUIDES[activeTab]?.title}</span>
         <SectionGuide id={activeTab} suspendModals={suspendModals} />
       </div>
+      </>}
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-1">
-        <div className={activeTab === 'FARM' ? 'block' : 'hidden'}>
+      {/* Content. The OSRS layout's compact Keys views fill a definite height and scroll inside themselves. */}
+      <div className={isOsrs ? 'flex-1 min-h-0 overflow-hidden' : 'flex-1 overflow-y-auto custom-scrollbar p-1'}>
+        <div className={activeTab === 'FARM' ? (isOsrs ? 'block h-full' : 'block') : 'hidden'}>
            <ActionSection />
         </div>
-        <div className={activeTab === 'SPEND' ? 'block' : 'hidden'}>
+        <div className={activeTab === 'SPEND' ? (isOsrs ? 'block h-full' : 'block') : 'hidden'}>
            <GachaSection />
         </div>
         <div className={activeTab === 'LOG' ? 'block h-full' : 'hidden'}>
@@ -695,6 +780,7 @@ const GameLayout = () => {
   } = useGame();
   // A pending offer from a balance change keeps What's New open until it's settled.
   const hasPendingOffer = fateCompensation.status === 'pending' || petCompensation.status === 'pending';
+  const isOsrs = useIsOsrsUi();
   const {
     recentlyCreatedId,
     activeProfileId,
@@ -1000,8 +1086,46 @@ const GameLayout = () => {
   }, shouldEnableUnderlyingModalEscape(anyModalOpen, topLevelGuideOpen));
   const modalRenderPolicy = resolveChangelogModalRenderPolicy(topLevelGuideOpen);
 
+  // Shared between the classic grid and the OSRS frame (same components, same props).
+  const headerEl = (
+    <Header
+      setShowAltar={setShowAltar}
+      setShowStats={setShowStats}
+      setShowReference={setShowReference}
+      setShowOracle={setShowOracle}
+      setShowStrategy={setShowStrategy}
+      setShowSupplyChain={setShowSupplyChain}
+      setShowGameMode={setShowGameMode}
+      setShowSyncCode={setShowSyncCode}
+      setShowDiscord={setShowDiscord}
+      onOpenRuneliteGuide={openRuneliteGuide}
+      onOpenChangelog={openChangelog}
+    />
+  );
+  const journalCardEl = (
+    <PanelErrorBoundary name="Journal summary">
+      <JournalSummaryCard
+        onNavClick={(tab) =>
+          window.dispatchEvent(new CustomEvent('navigate-journal', { detail: { tab } }))
+        }
+      />
+    </PanelErrorBoundary>
+  );
+  const controlPanelEl = (
+    <PanelErrorBoundary name="Control panel">
+      <ControlPanel suspendModals={modalRenderPolicy.suspendDashboardModals} />
+    </PanelErrorBoundary>
+  );
+  const dashboardEl = (
+    <PanelErrorBoundary name="Dashboard">
+      <Dashboard suspendModals={modalRenderPolicy.suspendDashboardModals} />
+    </PanelErrorBoundary>
+  );
+
   return (
-    <div className="min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative">
+    <div className={isOsrs
+      ? 'osrs-shell min-h-screen bg-osrs-bg text-osrs-text font-sans selection:bg-osrs-gold selection:text-black relative'
+      : 'min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative'}>
       <EffectsLayer />
       <OnlineSyncDriver />
       <Suspense fallback={null}><OnlineBackupDriver /></Suspense>
@@ -1010,6 +1134,8 @@ const GameLayout = () => {
       {/* Progressive-disclosure watcher — always mounted (same rule as
           RollInboxDriver): detected events must queue from every screen. */}
       <FeatureRevealDriver />
+      {/* OSRS layout: right-click menu (Examine), mounted once. */}
+      {isOsrs && <Suspense fallback={null}><OsrsContextMenu /></Suspense>}
 
 
       {/* Shared notification stacks: every toast/reveal portals into one of
@@ -1064,26 +1190,14 @@ const GameLayout = () => {
         )}
       </Suspense>
 
-      <Header
-        setShowAltar={setShowAltar}
-        setShowStats={setShowStats}
-        setShowReference={setShowReference}
-        setShowOracle={setShowOracle}
-        setShowStrategy={setShowStrategy}
-        setShowSupplyChain={setShowSupplyChain}
-        setShowGameMode={setShowGameMode}
-        setShowSyncCode={setShowSyncCode}
-        setShowDiscord={setShowDiscord}
-        onOpenRuneliteGuide={openRuneliteGuide}
-        onOpenChangelog={openChangelog}
-      />
+      {!isOsrs && headerEl}
 
-      <ProfileRecoveryBanner />
+      {!isOsrs && <ProfileRecoveryBanner />}
 
-      <SaveConflictBanner />
+      {!isOsrs && <SaveConflictBanner />}
 
       {/* Compact durability status for ordinary saves and degraded recovery. */}
-      {!dualStorageFailure && (
+      {!isOsrs && !dualStorageFailure && (
         <SaveDurabilityStatus
           snapshot={effectiveDurability}
           retrySave={retrySave}
@@ -1091,10 +1205,10 @@ const GameLayout = () => {
         />
       )}
 
-      <SaveFailureBanner />
+      {!isOsrs && <SaveFailureBanner />}
 
       {/* Says when the RuneLite profile couldn't be sent, and when it's tried again. */}
-      <Suspense fallback={null}><RelayPublishBanner /></Suspense>
+      {!isOsrs && <Suspense fallback={null}><RelayPublishBanner /></Suspense>}
 
       <Suspense fallback={null}>
         {/* Global ⌘K command palette — navigates via fate:nav events. */}
@@ -1141,18 +1255,35 @@ const GameLayout = () => {
       )}
 
       {/* One contextual "next step" hint under the header — teaches the loop. */}
-      <CoachStrip />
+      {!isOsrs && <CoachStrip />}
 
       {/* Asks once per run whether to turn on online backup. */}
-      <Suspense fallback={null}><OnlineBackupPrompt /></Suspense>
+      {!isOsrs && <Suspense fallback={null}><OnlineBackupPrompt /></Suspense>}
       {/* Dismissible "export a .fate backup" reminder for unbacked-up runs. */}
-      <Suspense fallback={null}><BackupNagBanner /></Suspense>
+      {!isOsrs && <Suspense fallback={null}><BackupNagBanner /></Suspense>}
       {/* Posts new unlocks to the profile's Discord webhook (if configured). */}
       <DiscordSyncDriver />
       {/* Keeps the run's shared progress current for the Discord bot's /progress (if sharing is on). */}
       <Suspense fallback={null}><ProgressShareDriver /></Suspense>
 
       {/* Main Command Center Layout */}
+      {isOsrs ? (
+        /* The OSRS layout: header, parchment line, one screen, docked chatbox,
+           all inside the window (components/osrs/OsrsShellFrame.tsx). */
+        <Suspense fallback={null}>
+          <OsrsShellFrame
+            header={headerEl}
+            criticalBanners={<><ProfileRecoveryBanner /><SaveConflictBanner /><SaveFailureBanner /></>}
+            journalCard={journalCardEl}
+            keysPanel={controlPanelEl}
+            progression={dashboardEl}
+            durability={effectiveDurability}
+            showDurability={!dualStorageFailure}
+            retrySave={retrySave}
+            exportBackup={exportBackup}
+          />
+        </Suspense>
+      ) : (
       <main className="max-w-[1600px] mx-auto px-4 py-4 h-[calc(100vh-80px)]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
 
@@ -1162,32 +1293,23 @@ const GameLayout = () => {
               `navigate-journal` event the Dashboard listens for. */}
           <div className="lg:col-span-4 h-full min-h-[500px] flex flex-col gap-4">
             <div className="shrink-0">
-              <PanelErrorBoundary name="Journal summary">
-                <JournalSummaryCard
-                  onNavClick={(tab) =>
-                    window.dispatchEvent(new CustomEvent('navigate-journal', { detail: { tab } }))
-                  }
-                />
-              </PanelErrorBoundary>
+              {journalCardEl}
             </div>
             <div className="flex-1 min-h-0">
-              <PanelErrorBoundary name="Control panel">
-                <ControlPanel suspendModals={modalRenderPolicy.suspendDashboardModals} />
-              </PanelErrorBoundary>
+              {controlPanelEl}
             </div>
           </div>
 
           {/* RIGHT: Dashboard Visualization (65%) */}
           <div className="lg:col-span-8 h-full min-h-[500px] flex flex-col gap-4">
              <div className="flex-1 overflow-hidden h-full">
-               <PanelErrorBoundary name="Dashboard">
-                 <Dashboard suspendModals={modalRenderPolicy.suspendDashboardModals} />
-               </PanelErrorBoundary>
+               {dashboardEl}
              </div>
           </div>
 
         </div>
       </main>
+      )}
     </div>
   );
 };

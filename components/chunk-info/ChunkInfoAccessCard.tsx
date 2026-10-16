@@ -18,6 +18,11 @@ interface Props {
 const rowClass = 'flex items-start gap-2 py-1.5 text-[10px] text-gray-300';
 const detailClass = 'mt-0.5 block text-[9px] text-gray-500';
 
+// Requirements that read like a lock but aren't one, with what players ask about them.
+const REQUIREMENT_NOTES: Record<string, string> = {
+  'Brass key': 'The key is reusable and lies inside the dungeon, north of the Hill Giants. The Edgeville trapdoor needs no key.',
+};
+
 export const ChunkInfoAccessCard: React.FC<Props> = ({
   previewLocked,
   entryRequirements,
@@ -86,6 +91,9 @@ export const ChunkInfoAccessCard: React.FC<Props> = ({
                 Also requires {entrance.requirements.join(', ')}
               </span>
             )}
+            {entrance.requirements.filter(req => REQUIREMENT_NOTES[req]).map(req => (
+              <span key={req} className={detailClass}>{REQUIREMENT_NOTES[req]}</span>
+            ))}
           </span>
         </div>
       ))}

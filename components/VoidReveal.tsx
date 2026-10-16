@@ -4,7 +4,8 @@ import { Copy, ExternalLink, Check, Loader2 } from 'lucide-react';
 import { Sparkles, Map, Box, Shield, BookOpen, Footprints, Zap, Home, Store, Gamepad2, Skull, Package, Dna, Flag } from './OsrsIcon';
 import { wikiUrlFor } from '../constants';
 import { EntityModel } from './EntityModel';
-import { modelFor, orientationFor } from '../data/entityModels';
+import { orientationFor } from '../data/entityModels';
+import { useModelFor } from '../hooks/useModelFor';
 import { categoryColor, categoryRarity, rarityRank } from '../utils/rarity';
 import { tableDisplayName } from '../utils/tableDisplay';
 
@@ -298,7 +299,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
   const isRegion = itemType.toLowerCase().includes('regions') || itemType.toLowerCase().includes('area');
   const RouletteIcon = rouletteIcons[rouletteIndex].icon;
   const description = getItemDescription(itemType, itemName, tier);
-  const entityModel = modelFor(itemName);
+  const entityModel = useModelFor(itemName);
 
   // Loot beam rising behind the revealed item — same rarity colour language as
   // the transient roll beams, but it lives inside the reveal so the pillar of
