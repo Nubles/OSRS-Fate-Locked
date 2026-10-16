@@ -16,7 +16,8 @@ import { gzipSync } from 'node:zlib';
 // 234: activity Key boosts from achievements apply in every Key roll, so their small table loads with the game.
 // 236: both of the above together with main's minigame reserves (235.5 on 2026-10-15).
 // 241: the OSRS layout's switch, frame and shared Farm Keys model joined main's rewards (240.4 on 2026-10-15).
-export const ENTRY_GZIP_BUDGET_KB = 241;
+// 242: caches in the reachability, quest points and Skill Advisor checks that stop an unlock freezing the page (240.9 on 2026-10-16).
+export const ENTRY_GZIP_BUDGET_KB = 242;
 
 /** The entry script that dist/index.html loads, as a path inside distDir. */
 export const entryScriptPath = (distDir, indexHtml) => {

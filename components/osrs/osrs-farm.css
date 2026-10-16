@@ -137,7 +137,9 @@ html[data-ui="osrs"] .okf-card:hover .okf-stage { filter: brightness(1.12); }
 html[data-ui="osrs"] .okf-stage .shadow { position: absolute; left: 50%; bottom: 8px; width: 70%; height: 14px; transform: translateX(-50%); border-radius: 50%; background: rgba(0, 0, 0, .45); }
 html[data-ui="osrs"] .okf-stage img.body { position: relative; height: 82%; max-width: 96%; object-fit: contain; object-position: bottom; margin-bottom: 10px; }
 html[data-ui="osrs"] .okf-stage img.big { height: 86%; margin-bottom: 6px; }
-html[data-ui="osrs"] .okf-stage img.item { position: relative; height: 54%; max-height: 96px; aspect-ratio: 36 / 32; max-width: 96%; object-fit: contain; margin-bottom: 22%; }
+/* Items float centred over the shadow. (A % margin is a share of the card's
+   width, so on wide cards it pushed the scroll off the top.) */
+html[data-ui="osrs"] .okf-stage img.item { position: relative; align-self: center; height: 54%; max-height: 96px; aspect-ratio: 36 / 32; max-width: 96%; object-fit: contain; }
 html[data-ui="osrs"] .okf-stash { position: absolute; right: 5px; top: 5px; display: flex; gap: 2px; }
 html[data-ui="osrs"] .okf-stash .osrs-slot { width: 30px; height: 27px; }
 html[data-ui="osrs"] .okf-stash img { width: 27px; height: 24px; }

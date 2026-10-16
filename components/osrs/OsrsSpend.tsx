@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import './osrs-spend.css';
 import { TableType, type LogEntry } from '../../types';
 import { useSpendModel, SpendCategory } from '../GachaSection';
@@ -18,6 +18,8 @@ import { setRevealHost, setSpendTable, useKeysView } from './OsrsKeysState';
 import { OsrsKeysTabs } from './OsrsKeysTabs';
 import { sentenceCaseLabel } from '../../utils/labelCase';
 import { useScrollMore } from '../../utils/scrollFade';
+import { preloadModelViewer } from '../EntityModel';
+import { loadModelManifest } from '../../data/entityModels';
 
 type Chip = { text: string; icon?: string; gem?: string | null; on: boolean; examine: string };
 
@@ -177,6 +179,8 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
   const stateOf = (c: SpendCategory) => cardState(c, !!rollable.get(c.type), keys, !!pendingUnlock);
   const selState = stateOf(sel);
   const [cardsRef, cardsMore] = useScrollMore<HTMLDivElement>();
+  // A Key spent here shows a 3D model: have the viewer ready before the first roll.
+  useEffect(() => { loadModelManifest().catch(() => {}); preloadModelViewer(); }, []);
 
   // What the player already owns from the chosen table, read from the same unlocks.
   const chips = useMemo((): Chip[] => {

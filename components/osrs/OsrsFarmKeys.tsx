@@ -91,6 +91,18 @@ const npcHead = (name: string): string | null => {
   const k = name.toLowerCase();
   return NPC_SPRITES[k] ? `${UI}npc/${NPC_SPRITES[k]}_chat.png` : BODY_ONLY[k] ? `${UI}npc/${BODY_ONLY[k]}_body.png` : null;
 };
+// The compact panel shows chatheads; fetch the full-body pictures the wide
+// Farm Keys window draws once the page is idle, so they are there on open.
+let farmArtWarmed = false;
+const warmFarmArt = () => {
+  if (farmArtWarmed || typeof window === 'undefined') return;
+  farmArtWarmed = true;
+  const load = () => {
+    for (const file of [...Object.values(NPC_SPRITES), ...Object.values(BODY_ONLY)]) new Image().src = `${UI}npc/${file}_body.png`;
+  };
+  if ('requestIdleCallback' in window) window.requestIdleCallback(load, { timeout: 4000 });
+  else setTimeout(load, 1500);
+};
 // Clue scrolls by tier (item ids of the scrolls themselves).
 const CLUE_SCROLL_IDS: Record<string, number> = { Beginner: 23182, Easy: 2677, Medium: 2801, Hard: 2722, Elite: 12073, Master: 19835 };
 const clueSprite = (tier: string) => `${UI}items/${CLUE_SCROLL_IDS[tier] ?? 19835}.png`;
@@ -183,7 +195,7 @@ const BonusTag: React.FC<{ bonus: number }> = ({ bonus }) =>
   bonus ? <span className="okf-bonus" title="Bonus odds from region passives and achievements" style={{ color: bonus > 0 ? '#00ff00' : '#ff3030' }}>{bonus > 0 ? '+' : '−'}{Number(Math.abs(bonus).toFixed(2))}</span> : null;
 
 /** Wide: the NPC card (FarmKeys-NPCs board). */
-const NpcCard: React.FC<{ card: CardModel }> = ({ card }) => {
+const NpcCard: React.FC<{ card: CardModel; reserveExtra?: boolean }> = ({ card, reserveExtra = false }) => {
   const { isRolling, trigger } = useRollSuspense(card.onRoll);
   const gem = gemFor(card.rate);
   const live = !card.disabled;
@@ -220,7 +232,8 @@ const NpcCard: React.FC<{ card: CardModel }> = ({ card }) => {
         <span className="name">{card.name}</span>
         <span className="small" style={{ color: 'var(--osrs-tan, #c8b897)' }}>{card.sub}</span>
         <span className="small" style={{ color: card.notReady ? '#ffff00' : card.status.color }}>{card.notReady ?? card.status.text}</span>
-        {card.extra && <span className="small" style={{ color: card.extra.color }}>{card.extra.text}</span>}
+        {card.extra ? <span className="small" style={{ color: card.extra.color }}>{card.extra.text}</span>
+          : reserveExtra && <span className="small" aria-hidden="true">&nbsp;</span>}
         <span className="small" style={{ color: '#ffffff' }}>{card.stats}</span>
         <button type="button" className={`osrs-btn${card.notReady ? ' is-muted' : ''}`} disabled={card.disabled || isRolling} onClick={trigger}>
           {isRolling ? 'Rolling...' : card.btn}
@@ -566,6 +579,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   const [otherOpen, setOtherOpen] = useState(false);
   const [minigameQuery, setMinigameQuery] = useState('');
   const { isVanilla, boost, bonusFor, effectiveRate, handleRoll } = p;
+  useEffect(warmFarmArt, []);
 
   const roll = (speaker: Speaker, source: string, chance: number, context?: KeyRollContext) => (pt: RollPoint) => {
     setPending({ ...speaker, source, at: Date.now() });
@@ -875,7 +889,9 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
           <div className="osrs-inner okf-tiers">{tierGroups}</div>
         ) : (
           <div className="okf-grid" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
-            {cards.map((c) => <NpcCard key={c.id} card={c} />)}
+            {/* One card with an extra line keeps a blank one on the rest, so
+                every picture in the grid sits at the same height. */}
+            {cards.map((c) => <NpcCard key={c.id} card={c} reserveExtra={cards.some((o) => o.extra)} />)}
             {petClaim}
             {emptyBosses}
           </div>

@@ -45,7 +45,20 @@ export const isAreaReachable = (name: string, unlocks: UnlockState, gameModeId?:
     return isNamedAreaReachableViaChunks(name, unlocks.chunks ?? []);
   }
   const canonical = canonicalAreaName(name);
-  return isRegionUnlocked(canonical, unlocks.regions.map(canonicalAreaName));
+  return isRegionUnlocked(canonical, canonicalRegions(unlocks.regions));
+};
+
+// The quest, diary and advisor checks call isAreaReachable thousands of times
+// for one unlock state, so the canonical names of its regions are worked out
+// once per regions array (state is replaced, never edited in place) instead
+// of on every call. The length check covers an array grown in place anyway.
+const canonicalCache = new WeakMap<readonly string[], { length: number; names: string[] }>();
+const canonicalRegions = (regions: readonly string[]): string[] => {
+  const hit = canonicalCache.get(regions);
+  if (hit && hit.length === regions.length) return hit.names;
+  const names = regions.map(canonicalAreaName);
+  canonicalCache.set(regions, { length: regions.length, names });
+  return names;
 };
 
 // Maps a leaf/sub-region back to its continent, derived once from
