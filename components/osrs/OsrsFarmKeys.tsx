@@ -178,8 +178,9 @@ interface CardModel {
   onRoll: (p: RollPoint) => void;
 }
 
+// Rounded so summed boosts never print as 0.30000000000000004.
 const BonusTag: React.FC<{ bonus: number }> = ({ bonus }) =>
-  bonus ? <span title="Bonus odds from region passives and achievements" style={{ color: bonus > 0 ? '#00ff00' : '#ff3030', marginLeft: 3 }}>{bonus > 0 ? '+' : '−'}{Math.abs(bonus)}</span> : null;
+  bonus ? <span className="okf-bonus" title="Bonus odds from region passives and achievements" style={{ color: bonus > 0 ? '#00ff00' : '#ff3030' }}>{bonus > 0 ? '+' : '−'}{Number(Math.abs(bonus).toFixed(2))}</span> : null;
 
 /** Wide: the NPC card (FarmKeys-NPCs board). */
 const NpcCard: React.FC<{ card: CardModel }> = ({ card }) => {

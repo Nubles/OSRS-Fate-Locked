@@ -46,7 +46,10 @@ html[data-ui="osrs"] .okf-row { display: grid; grid-template-columns: minmax(0, 
 html[data-ui="osrs"] .okf-row .who { min-width: 0; }
 html[data-ui="osrs"] .okf-row .name { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ff981f; line-height: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 html[data-ui="osrs"] .okf-row .where { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); line-height: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-html[data-ui="osrs"] .okf-row .rate { font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #ffff00; text-align: right; white-space: nowrap; }
+html[data-ui="osrs"] .okf-row .rate { font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #ffff00; text-align: right; white-space: nowrap; display: flex; flex-direction: column; align-items: flex-end; line-height: 15px; font-variant-numeric: tabular-nums; }
+/* The bonus sits under the odds, so every row's % lines up on the right edge. */
+html[data-ui="osrs"] .okf-row .okf-bonus { font-family: 'RSSmall', sans-serif; line-height: 13px; }
+html[data-ui="osrs"] .okf-card-head .okf-bonus { margin-left: 3px; }
 html[data-ui="osrs"] .okf-row .osrs-btn { height: 28px; }
 /* A roll for something that isn't ready yet: still clickable, drawn greyed. */
 html[data-ui="osrs"] .osrs-btn.is-muted:not([disabled]) { color: var(--osrs-btn-off, #7d705c); background: var(--osrs-btn-off-bg, #3a3228); box-shadow: inset 1px 1px 0 var(--osrs-inner-ring, #4f4434); }
