@@ -264,6 +264,8 @@ export interface GameState {
   minigameStandardKeysAwarded?: Record<string, number>;
   /** Vanilla clue standard keys already awarded across every clue tier. */
   clueStandardKeysAwarded?: number;
+  /** Vanilla Slayer fatigue, in percentage points off every Slayer roll (utils/slayerFatigue). Absent means none. */
+  slayerFatigue?: number;
   fatePoints: number;
   /** Frozen one-time offer for the weighted-Fate balance release. */
   fateCompensation: FateCompensationState;

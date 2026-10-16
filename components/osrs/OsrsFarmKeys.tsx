@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './osrs-farm.css';
 import { DropSource, TableType, type LogEntry } from '../../types';
+import { SLAYER_FATIGUE_PER_KEY } from '../../utils/slayerFatigue';
 import { DROP_RATES, BOSSES_LIST } from '../../constants';
 import { bossTier, TIER_SOURCE, TIER_LABEL, TIER_ORDER, type BossTier } from '../../data/bossKeyTiers';
 import { useGame } from '../../context/GameContext';
@@ -108,6 +109,9 @@ const BLURBS: Record<FarmSubTab, string> = {
   ACTIVITIES: 'Every finished game rolls, with no limit.',
 };
 const VANILLA_BOSS_BLURB = 'Vanilla: each boss holds a small Key stash. Once it is empty, kills stop rolling.';
+const vanillaSlayerBlurb = (fatigue: number) => (fatigue > 0
+  ? `Vanilla: Slayer is tired, −${fatigue}% on every master (half its rate at most). Other rolls rest it.`
+  : `Vanilla: each Slayer Key tires Slayer by ${SLAYER_FATIGUE_PER_KEY}%. Level-ups and other rolls rest it.`);
 const VANILLA_MINIGAME_BLURB = 'Vanilla: each minigame you unlock holds a small Key stash. Once it is empty, games stop rolling.';
 const LADDER_TITLES: Record<FarmSubTab, string> = {
   SLAYER: 'Slayer odds by tier', CLUES: 'Clue odds by tier', BOSSING: 'Boss odds, next Key', ACTIVITIES: 'Activity odds',
@@ -604,6 +608,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       art: isBossTask ? { kind: 'item', src: BOSS_TASK_IMG } : body ? { kind: 'body', src: body } : { kind: 'wiki', src: m.image },
       thumb: isBossTask ? { src: BOSS_TASK_IMG, item: true } : { src: head ?? m.image },
       status: ready,
+      extra: p.fatigueCut(m.source) > 0 ? { text: `Tired: −${p.fatigueCut(m.source)}%`, color: '#ffff00' } : undefined,
       stats: shared ? `Shares ${sharer!.name}’s odds` : tallyText(tally.get(m.source)),
       btn: 'Roll',
       title: `${m.name}: ${gemFor(rate).label} (${gemFor(rate).name}), ${rate}% per roll`,
@@ -866,7 +871,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
         <OsrsKeysTabs />
         {categoryButtons(WIDE_TAB_ICONS)}
         <div className="okf-blurb">
-          <span>{subTab === 'BOSSING' && isVanilla ? VANILLA_BOSS_BLURB : subTab === 'ACTIVITIES' && isVanilla ? VANILLA_MINIGAME_BLURB : BLURBS[subTab]}</span>
+          <span>{subTab === 'BOSSING' && isVanilla ? VANILLA_BOSS_BLURB : subTab === 'ACTIVITIES' && isVanilla ? VANILLA_MINIGAME_BLURB : subTab === 'SLAYER' && isVanilla ? vanillaSlayerBlurb(p.slayerFatigue) : BLURBS[subTab]}</span>
           <span className="hint"><b>Gem = odds tier.</b> Same gem, same chance, on every tab.</span>
           {otherBtn}
         </div>

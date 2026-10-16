@@ -10,9 +10,10 @@ import { wikiService } from '../services/WikiService';
 import { resolveModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { achievementBoostFor } from '../utils/achievementBoosts';
+import { slayerFatigueApplies, slayerFatigueCut } from '../utils/slayerFatigue';
 import { EARN_METHODS, failureFateForSource, LEVEL_ROLL_MAX } from '../config/economy';
 import { BRUTUS_BOSS_NAME, effectiveVanillaClueRate, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
-import { BossKeyProgress, ClueKeyProgress } from './VanillaKeyProgress';
+import { BossKeyProgress, ClueKeyProgress, SlayerFatigueNote } from './VanillaKeyProgress';
 import { lazyWithRetry } from '../utils/lazyRetry';
 // The pet card and the pet names load when the Activities tab opens.
 const PetClaimCard = lazyWithRetry(() => import('./PetClaimCard').then(m => ({ default: m.PetClaimCard })));
@@ -399,7 +400,7 @@ type FarmSubTab = 'SLAYER' | 'CLUES' | 'BOSSING' | 'ACTIVITIES';
  * the same rules.
  */
 export const useFarmModel = () => {
-  const { rollForKey, unlocks, gameModeId, customMode, clueStandardKeysAwarded, minigameStandardKeysAwarded, achievementsClaimed } = useGame();
+  const { rollForKey, unlocks, gameModeId, customMode, clueStandardKeysAwarded, minigameStandardKeysAwarded, achievementsClaimed, slayerFatigue } = useGame();
 
   // When the run's mode enables region passives, rolls are boosted. rollForKey
   // applies the bonus internally, so handleRoll still passes the BASE rate —
@@ -410,7 +411,9 @@ export const useFarmModel = () => {
     : 0;
   // Activity milestone achievements raise their own activity's rolls too.
   const boost = (source: string) => achievementBoostFor(source, achievementsClaimed);
-  const bonusFor = (source: string) => regionBonus + boost(source);
+  // Vanilla Slayer tires with each Slayer Key; other rolls rest it.
+  const fatigueCut = (source: string) => slayerFatigueCut(source, DROP_RATES[source] ?? 0, slayerFatigue, gameModeId);
+  const bonusFor = (source: string) => regionBonus + boost(source) - fatigueCut(source);
   const effectiveRate = (source: string) =>
     Math.max(1, Math.min(100, (DROP_RATES[source] ?? 0) + bonusFor(source)));
 
@@ -515,6 +518,8 @@ export const useFarmModel = () => {
     minigameKeysAwarded: minigameStandardKeysAwarded,
     regionBonus,
     boost,
+    fatigueCut,
+    slayerFatigue: slayerFatigueApplies(gameModeId) ? slayerFatigue ?? 0 : 0,
     bonusFor,
     effectiveRate,
     handleRoll,
@@ -538,7 +543,7 @@ const ClassicActionSection: React.FC = () => {
   const { claimPet, petsClaimed, unlocks, animationsEnabled, bossStandardKeysAwarded } = useGame();
   const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
   const [bossQuery, setBossQuery] = useState('');
-  const { slayers, isVanilla, vanillaBosses, vanillaMinigames, minigameKeysAwarded, clueKeysAwarded, boost, bonusFor, effectiveRate, handleRoll } = useFarmModel();
+  const { slayers, isVanilla, vanillaBosses, vanillaMinigames, minigameKeysAwarded, clueKeysAwarded, boost, bonusFor, effectiveRate, handleRoll, slayerFatigue } = useFarmModel();
 
   const tabs: { id: FarmSubTab; label: string; icon: string; count: number }[] = [
     { id: 'SLAYER', label: 'Slayer', icon: OSRS_ICONS.SLAYER, count: slayers.length },
@@ -573,6 +578,7 @@ const ClassicActionSection: React.FC = () => {
 
       {/* Active list — full-width 2-column grid */}
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar -mr-1 pr-1">
+        {subTab === 'SLAYER' && isVanilla && <SlayerFatigueNote fatigue={slayerFatigue} />}
         {subTab === 'SLAYER' && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
             {slayers.map((master, i) => (
