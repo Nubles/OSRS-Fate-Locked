@@ -288,6 +288,11 @@ html[data-ui="osrs"] .osync-head { display: flex; align-items: center; gap: 8px;
 html[data-ui="osrs"] .osync-head h2 { margin: 0; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); }
 html[data-ui="osrs"] .osync-tag { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; padding: 0 5px; border: 1px solid #000; line-height: 16px; }
 html[data-ui="osrs"] .osync-small { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; line-height: 16px; }
+html[data-ui="osrs"] .osync-link { all: unset; cursor: pointer; color: var(--osrs-orange, #ff981f); }
+html[data-ui="osrs"] .osync-link:hover { color: #ffffff; }
+html[data-ui="osrs"] .osync-link:focus-visible { outline: 1px solid #ffff00; }
+/* Change name: an NPC-dialogue style parchment box, as other OSRS prompts use. */
+html[data-ui="osrs"] .osync-rename { display: flex; flex-direction: column; gap: 6px; padding: 6px 8px; }
 html[data-ui="osrs"] .osync-input {
   flex: 1; min-width: 0; height: 30px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 8px;
   background: var(--osrs-well, #1f1a14); border: 1px solid #000; box-shadow: inset 1px 1px 0 #000;

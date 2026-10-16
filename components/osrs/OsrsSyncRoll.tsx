@@ -35,6 +35,7 @@ const OsrsSyncRoll: React.FC = () => {
   const {
     linkedAccount, name, setName, status, error, fetched, groupTitle, chooseGroupTitle, title,
     rolledTo, applied, skillRolling, skillKeysGained, currentLevels, isUnlocked, gains, onFetch, autoRoll, totalGain,
+    renameOpen, newName, setNewName, renameError, renamedTo, onRename, openRename, cancelRename,
   } = useAutoRoll();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -62,9 +63,9 @@ const OsrsSyncRoll: React.FC = () => {
         Powered by the Wise Old Man API. Currently syncs skill levels.
       </span>
 
-      {/* Username: locked to the bound account once set. */}
+      {/* Username: locked to the linked character once set (Change name moves it). */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <label className="osync-input" title={linkedAccount ? 'This run is permanently bound to this account' : undefined}>
+        <label className="osync-input" title={linkedAccount ? 'This run is linked to this account' : undefined}>
           {linkedAccount ? <LockGlyph /> : (
             <svg aria-hidden="true" width="13" height="13" viewBox="0 0 14 14"><circle cx="6" cy="6" r="4.5" fill="none" stroke="#c8b897" strokeWidth="2" /><path d="M9.5 9.5L13 13" stroke="#c8b897" strokeWidth="2" /></svg>
           )}
@@ -86,11 +87,47 @@ const OsrsSyncRoll: React.FC = () => {
       </div>
       {linkedAccount && (
         <span className="osync-small" style={{ color: 'var(--osrs-muted, #8a7c66)' }}>
-          This run is bound to <span style={{ color: '#ffffff' }}>{linkedAccount}</span>, the account can't be changed.
+          This run is linked to <span style={{ color: '#ffffff' }}>{linkedAccount}</span>
+          {!renameOpen && <>{' '}<button type="button" className="osync-link" onClick={openRename}>Change name</button></>}
+        </span>
+      )}
+      {linkedAccount && renameOpen && (
+        <div className="osrs-chat osync-rename" data-testid="character-rename">
+          <span className="osync-small">
+            Changed your OSRS name? Type the new one as it shows in game. RuneLite records your run on this
+            character, and Sync &amp; Roll pulls its hiscores.
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <label className="osync-input">
+              <input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && onRename()}
+                placeholder="New name..."
+                aria-label="New OSRS name"
+                maxLength={12}
+                style={{ color: '#ffffff' }}
+              />
+            </label>
+            <button type="button" className="osrs-btn" onClick={onRename} disabled={!newName.trim()} style={{ height: 30, padding: '0 12px' }}>Save name</button>
+            <button type="button" className="osrs-btn" onClick={cancelRename} style={{ height: 30, padding: '0 12px' }}>Cancel</button>
+          </div>
+          {renameError && <span role="alert" className="osync-small" style={{ color: '#800000' }}>{renameError}</span>}
+        </div>
+      )}
+      {renamedTo && !renameOpen && (
+        <span role="status" className="osync-small" style={{ color: '#00ff00' }}>
+          This run now uses {renamedTo}. A paired RuneLite gets the new name within a minute or two;
+          if it still shows the old one, log out and back in.
         </span>
       )}
 
-      {status === 'error' && <span role="alert" style={{ color: '#ff3030' }}>{error}</span>}
+      {status === 'error' && (
+        <span role="alert" style={{ color: '#ff3030' }}>
+          {error}
+          {linkedAccount && !renameOpen && ' If you changed your OSRS name, use "Change name" above.'}
+        </span>
+      )}
 
       {fetched && (
         <>
