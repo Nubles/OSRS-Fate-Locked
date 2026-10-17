@@ -1,6 +1,7 @@
 import { CUSTOM_RULE_BOUNDS, resolveModeRules, type GameModeRules } from '../config/gameModes';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, RETIRED_BOSSES, RETIRED_MINIGAMES, RETIRED_POH_ITEMS, RETIRED_STORAGE_ITEMS } from '../data/items';
+import { CHUNK_SKILL_FACTS } from '../data/chunkSkillNodes';
 import { migrateAreaUnlocks } from './areaUnlockMigration';
 import { mergedBankId, settleMergedBanks } from './bankUnlockMerges';
 import { settleCanonicalAreaUnlocks } from '../data/areaMapPolicy';
@@ -20,7 +21,7 @@ import { isKnownVanillaMinigame, normalizeMinigameStandardKeysAwarded, vanillaBo
 import { calculateLegacyFateCompensation, LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
 import { PET_COMPENSATION_ID, petCompensationOffer } from './petCompensation';
 import { isPetId, PET_IDS } from '../data/petIds';
-import { BARROWS_BROTHERS, BARROWS_ROLLS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, type Invocation } from '../config/economy';
+import { BARROWS_BROTHERS, BARROWS_ROLLS, CHUNK_EXPLORE_ROLLS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, type Invocation } from '../config/economy';
 import { tidyRituals, type RitualState } from './ritualEffects';
 import { FREE_RITUAL_IDS } from './achievementRewards';
 /** Version 5 freezes the one-time pet offer and stores claimed pets and owed Keys. */
@@ -1027,7 +1028,7 @@ const TOP_LEVEL_KEYS = new Set([
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
   'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
-  'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'chunkedBreakthroughs', 'fateCompensation',
+  'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'chunkedBreakthroughs', 'chunkExplore', 'fateCompensation',
   'petCompensation', 'petsClaimed', 'keysOwed', 'rituals',
   'achievementsClaimed', 'achievementTitle', 'freeRituals', 'freeClarity',
 ]);
@@ -1406,6 +1407,24 @@ const normalizeState = (
       breakthroughs[skill] = tier.value;
     }
     if (Object.keys(breakthroughs).length > 0) state.chunkedBreakthroughs = breakthroughs;
+  }
+  if (own(input, 'chunkExplore')) {
+    const inspected = inspectRecord(readOwn(input, 'chunkExplore'), new Set(['from', 'done']), 'invalid_field', 'chunkExplore');
+    if (inspected.ok === false) return inspected;
+    const from = boundedInteger(readOwn(inspected.value, 'from'), 'chunkExplore.from', 0, MAX_COUNTER);
+    if (from.ok === false) return from;
+    const doneRecord = inspectRecord(readOwn(inspected.value, 'done'), null, 'invalid_field', 'chunkExplore.done');
+    if (doneRecord.ok === false) return doneRecord;
+    const done: Record<string, string[]> = {};
+    for (const chunk of Object.getOwnPropertyNames(doneRecord.value)) {
+      const path = pathOf('chunkExplore.done', chunk);
+      const facts = readOwn(doneRecord.value, chunk);
+      if (!/^\d{1,3},\d{1,3}$/.test(chunk) || !Array.isArray(facts) || facts.length > CHUNK_EXPLORE_ROLLS
+        || facts.some(fact => typeof fact !== 'string' || !CHUNK_SKILL_FACTS.includes(fact))
+        || new Set(facts).size !== facts.length) return invalid('invalid_field', path);
+      done[chunk] = [...facts as string[]];
+    }
+    state.chunkExplore = { from: from.value, done };
   }
   for (const key of ['xtremeMilestoneClaimed', 'chunkedMilestoneClaimed'] as const) {
     const selected = readPreferred(input, defaultRecord, key);

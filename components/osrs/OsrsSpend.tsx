@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { Suspense, useEffect, useMemo } from 'react';
 import './osrs-spend.css';
 import { TableType, type LogEntry } from '../../types';
 import { useSpendModel, SpendCategory } from '../GachaSection';
@@ -20,6 +20,10 @@ import { sentenceCaseLabel } from '../../utils/labelCase';
 import { useScrollMore } from '../../utils/scrollFade';
 import { preloadModelViewer } from '../EntityModel';
 import { loadModelManifest } from '../../data/entityModels';
+import { lazyWithRetry } from '../../utils/lazyRetry';
+
+// Chunked's exploring rolls, Breakthroughs and Fate's Mercy (loads with the chunk content).
+const ChunkedFatePanel = lazyWithRetry(() => import('../ChunkedFatePanel').then(m => ({ default: m.ChunkedFatePanel })));
 
 type Chip = { text: string; icon?: string; gem?: string | null; on: boolean; examine: string };
 
@@ -223,6 +227,7 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
       <div className="ospend ospend-compact">
         <Notices specialKeys={specialKeys} keysOwed={keysOwed ?? 0} isChunked={isChunked} />
         <ChaosRow chaosKeys={chaosKeys} totalLevel={totalLevel} onSpend={handleChaosUnlock} wide={false} busy={!!pendingUnlock} />
+        {isChunked && <Suspense fallback={null}><ChunkedFatePanel osrs compact /></Suspense>}
         <div ref={cardsRef} className={`osrs-inner ospend-cards${cardsMore ? ' is-more' : ''}`}>
           {SPEND_CATEGORIES.map(c => (
             <TableCard key={c.label} c={c} st={stateOf(c)} onRoll={() => handleUnlock(c.type)}
@@ -254,6 +259,7 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
         <OsrsKeysTabs hint="Spend a Key on a table to unlock a random entry from it." small />
         <Notices specialKeys={specialKeys} keysOwed={keysOwed ?? 0} isChunked={isChunked} />
         <ChaosRow chaosKeys={chaosKeys} totalLevel={totalLevel} onSpend={handleChaosUnlock} wide busy={!!pendingUnlock} />
+        {isChunked && <Suspense fallback={null}><ChunkedFatePanel osrs /></Suspense>}
 
         {/* The unlock tables, one item slot each. */}
         <div className="osrs-inner ospend-tables">

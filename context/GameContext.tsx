@@ -4,10 +4,11 @@ import { PendingUnlockReveal } from '../components/PendingUnlockReveal';
 import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type FailureFateAward, type FateCompensationChoice, type PetCompensationChoice, type GameEventMeta as DetectedGameEventMeta, type RollAnalyticsMeta, type RollIntent } from '../types';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
-import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
+import { usesActivityKeyReserves, resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
+import { exploreBlocker, withExploreStart } from '../utils/chunkExplore';
 import { achievementBoostFor } from '../utils/achievementBoosts';
 import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, BREAKTHROUGH_CHANCE, GREED_REFUND_FRACTION, gambitKeys, STARTING_KEYS } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
@@ -246,6 +247,8 @@ interface GameContextType extends GameState {
   rollBreakthrough: (skill: string) => void;
   /** Chunked: Fate's Mercy, a random chunk or skill tier when the run has nothing left. */
   callOnFate: () => void;
+  /** Chunked: roll for the first time doing a thing in a newly unlocked chunk. */
+  exploreChunk: (chunk: string, fact: string, x?: number, y?: number) => void;
   levelUpSkill: (skill: string) => void;
   toggleAnimations: () => void;
   toggleAdvisors: () => void;
@@ -482,6 +485,7 @@ export type Action =
   | { type: 'RITUAL_SACRIFICE'; payload: { taken: SacrificeTier[] } }
   | { type: 'CHUNKED_BREAKTHROUGH'; payload: { skill: string; roll: number } }
   | { type: 'CALL_ON_FATE'; payload: { roll: number; revealId: string } }
+  | { type: 'CHUNK_EXPLORE'; payload: { chunk: string; fact: string } }
   | { type: 'LEVEL_UP'; payload: { skill: string; chaosRoll: number } }
   | { type: 'ADD_LOG'; payload: LogEntry }
   | { type: 'TOGGLE_PIN'; payload: string }
@@ -546,7 +550,7 @@ export function prepareKeyRollAction(
   meta?: DetectedGameEventMeta,
   context?: KeyRollContext,
 ): RollResultAction | null {
-  const vanillaBossContext = state.gameModeId === 'vanilla' && context?.kind === 'boss'
+  const vanillaBossContext = usesActivityKeyReserves(state.gameModeId) && context?.kind === 'boss'
     ? context
     : null;
   const vanillaClueContext = state.gameModeId === 'vanilla' && context?.kind === 'clue'
@@ -558,7 +562,7 @@ export function prepareKeyRollAction(
   const bossStage = vanillaBossContext
     ? vanillaBossKeyStage(vanillaBossContext.bossName, recordedBossAwarded)
     : null;
-  const vanillaMinigameContext = state.gameModeId === 'vanilla' && context?.kind === 'minigame'
+  const vanillaMinigameContext = usesActivityKeyReserves(state.gameModeId) && context?.kind === 'minigame'
     ? context
     : null;
   // A minigame that left the table (Rat Pits) has nothing left to pay.
@@ -1234,7 +1238,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
     case 'ROLL_RESULT': {
       const { success, omni, pity, roll, baseThreshold, threshold, source, failureFate = 1, x, y, meta, context, ritual: ritualRoll } = action.payload;
-      const vanillaBossContext = state.gameModeId === 'vanilla' && context?.kind === 'boss'
+      const vanillaBossContext = usesActivityKeyReserves(state.gameModeId) && context?.kind === 'boss'
         ? context
         : null;
       const vanillaClueContext = state.gameModeId === 'vanilla' && context?.kind === 'clue'
@@ -1246,7 +1250,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const bossStage = vanillaBossContext
         ? vanillaBossKeyStage(vanillaBossContext.bossName, recordedBossAwarded)
         : null;
-      const vanillaMinigameContext = state.gameModeId === 'vanilla' && context?.kind === 'minigame'
+      const vanillaMinigameContext = usesActivityKeyReserves(state.gameModeId) && context?.kind === 'minigame'
         ? context
         : null;
       if (vanillaMinigameContext && !isKnownVanillaMinigame(vanillaMinigameContext.minigameName)) return state;
@@ -1721,6 +1725,18 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       };
     }
 
+    case 'CHUNK_EXPLORE': {
+      // Chunked exploring: record the thing first; its Key roll follows as a
+      // ROLL_RESULT, the way a ticked quest rolls (utils/chunkExplore.ts).
+      const { chunk, fact } = action.payload;
+      if (exploreBlocker(state, chunk, fact) !== null) return state;
+      const record = state.chunkExplore!;
+      return {
+        ...state,
+        chunkExplore: { ...record, done: { ...record.done, [chunk]: [...(record.done[chunk] ?? []), fact] } },
+      };
+    }
+
     case 'CALL_ON_FATE': {
       // Fate's Mercy: only when the run has truly run dry. Fate draws from the
       // same Chunks and Skills pools a Key would roll; nothing is spent.
@@ -1945,7 +1961,8 @@ export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, 
   // A replacement brings its own history. Chaining it as an append would
   // splice in, or link to, entries of the run it replaces.
   if (action.type === 'LOAD_SAVE' || action.type === 'RESET') return rawNext;
-  const settled = settleKeysOwed(state, rawNext, action);
+  // A Chunked run's first chunk under the exploring rule starts its record.
+  const settled = withExploreStart(state, settleKeysOwed(state, rawNext, action));
   const next = settled.history === state.history
     ? settled
     : { ...settled, history: chainAppendedHistory(state.history, settled.history) };
@@ -3031,6 +3048,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     else flushCurrentSave();
   }, [authorizeOwnership, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
 
+  const exploreChunk = useCallback((chunk: string, fact: string, x?: number, y?: number) => {
+    if (exploreBlocker(stateRef.current, chunk, fact) !== null) return;
+    commitAction({ type: 'CHUNK_EXPLORE', payload: { chunk, fact } });
+    rollForKey(DropSource.CHUNK_EXPLORE, DROP_RATES[DropSource.CHUNK_EXPLORE], failureFateForSource(DropSource.CHUNK_EXPLORE), x, y);
+  }, [commitAction, rollForKey]);
+
   /** Cartographer: unlock the chosen frontier chunk (Chunked mode only). */
   const performCartographer = useCallback((chunkKey: string, label: string) => {
     commitAction({ type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey, label } });
@@ -3586,6 +3609,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     castRitual,
     rollBreakthrough,
     callOnFate,
+    exploreChunk,
     levelUpSkill,
     toggleAnimations,
     toggleAdvisors,
@@ -3643,6 +3667,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     castRitual,
     rollBreakthrough,
     callOnFate,
+    exploreChunk,
     levelUpSkill,
     toggleAnimations,
     toggleAdvisors,

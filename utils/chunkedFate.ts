@@ -8,6 +8,8 @@
  * - Fate's Mercy: when the run holds no Keys of any kind, no skill it can
  *   train has room below its cap, and no Breakthrough is waiting, fate draws
  *   one random entry from the Chunks and Skills pools a Key would roll.
+ *   An exploring roll the run can take now (utils/chunkExplore.ts) keeps it
+ *   shut too.
  *
  * The pools are the ones Keys use (randomUnlockPool), so Mercy can only open
  * a frontier chunk or a skill tier the run's chunks can train.
@@ -16,8 +18,9 @@ import { TableType, type GameState } from '../types';
 import { SKILLS_LIST } from '../data/items';
 import { chunkedTrainingTiers, chunkedSkillRollable } from './chunkedSkillPool';
 import { randomUnlockPool, type RandomUnlockCandidate } from './gameEngine';
+import { exploreWaiting } from './chunkExplore';
 
-type FateState = Pick<GameState, 'gameModeId' | 'unlocks' | 'keys' | 'specialKeys' | 'chaosKeys' | 'pendingUnlock' | 'chunkedBreakthroughs'>;
+type FateState = Pick<GameState, 'gameModeId' | 'unlocks' | 'keys' | 'specialKeys' | 'chaosKeys' | 'pendingUnlock' | 'chunkedBreakthroughs' | 'chunkExplore'>;
 
 /** The highest level a tier lets a skill reach. */
 export const tierCap = (tier: number): number => (tier >= 10 ? 99 : tier * 10);
@@ -45,7 +48,7 @@ export const breakthroughTier = (state: FateState, skill: string): number | null
 export const pendingBreakthroughs = (state: FateState): string[] =>
   SKILLS_LIST.filter(skill => breakthroughTier(state, skill) !== null);
 
-export type MercyBlocker = 'not_chunked' | 'keys' | 'pending_unlock' | 'skill_room' | 'breakthrough' | 'nothing_left';
+export type MercyBlocker = 'not_chunked' | 'keys' | 'pending_unlock' | 'skill_room' | 'breakthrough' | 'explore' | 'nothing_left';
 
 /** What Fate's Mercy could draw: the Chunks and Skills entries a Key could roll. */
 export const mercyPool = (state: FateState): RandomUnlockCandidate[] => [
@@ -60,6 +63,7 @@ export const mercyBlocker = (state: FateState): MercyBlocker | null => {
   if (state.pendingUnlock) return 'pending_unlock';
   if (SKILLS_LIST.some(skill => chunkedSkillHasRoom(skill, state.unlocks))) return 'skill_room';
   if (pendingBreakthroughs(state).length > 0) return 'breakthrough';
+  if (exploreWaiting(state)) return 'explore';
   if (mercyPool(state).length === 0) return 'nothing_left';
   return null;
 };

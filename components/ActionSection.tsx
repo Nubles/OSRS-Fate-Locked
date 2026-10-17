@@ -7,7 +7,7 @@ import { useGame } from '../context/GameContext';
 import { BookOpen, ScrollText, Dices } from './OsrsIcon';
 import { Crosshair } from 'lucide-react';
 import { wikiService } from '../services/WikiService';
-import { resolveModeRules } from '../config/gameModes';
+import { resolveModeRules, usesActivityKeyReserves } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { achievementBoostFor } from '../utils/achievementBoosts';
 import { EARN_METHODS, failureFateForSource, LEVEL_ROLL_MAX } from '../config/economy';
@@ -419,6 +419,8 @@ export const useFarmModel = () => {
   };
 
   const isVanilla = gameModeId === 'vanilla';
+  // Bosses and minigames pay from Key reserves in Vanilla and Chunked.
+  const reserves = usesActivityKeyReserves(gameModeId);
   const vanillaBosses = [
     BRUTUS_BOSS_NAME,
     ...unlocks.bosses.filter(name => BOSSES_LIST.includes(name)),
@@ -509,6 +511,7 @@ export const useFarmModel = () => {
     clues: CLUE_SCROLLS,
     activities: ACTIVITY_ROLLS,
     isVanilla,
+    reserves,
     vanillaBosses,
     clueKeysAwarded,
     vanillaMinigames,
@@ -538,13 +541,13 @@ const ClassicActionSection: React.FC = () => {
   const { claimPet, petsClaimed, unlocks, animationsEnabled, bossStandardKeysAwarded } = useGame();
   const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
   const [bossQuery, setBossQuery] = useState('');
-  const { slayers, isVanilla, vanillaBosses, vanillaMinigames, minigameKeysAwarded, clueKeysAwarded, boost, bonusFor, effectiveRate, handleRoll } = useFarmModel();
+  const { slayers, isVanilla, reserves, vanillaBosses, vanillaMinigames, minigameKeysAwarded, clueKeysAwarded, boost, bonusFor, effectiveRate, handleRoll } = useFarmModel();
 
   const tabs: { id: FarmSubTab; label: string; icon: string; count: number }[] = [
     { id: 'SLAYER', label: 'Slayer', icon: OSRS_ICONS.SLAYER, count: slayers.length },
     { id: 'CLUES', label: 'Clues', icon: OSRS_ICONS.CLUE, count: CLUE_SCROLLS.length },
-    { id: 'BOSSING', label: 'Bossing', icon: OSRS_ICONS.BOSS, count: isVanilla ? vanillaBosses.length : BOSSES_LIST.length },
-    { id: 'ACTIVITIES', label: 'Activities', icon: OSRS_ICONS.ACTIVITY, count: (isVanilla ? vanillaMinigames.length : ACTIVITY_ROLLS.length) + 1 },
+    { id: 'BOSSING', label: 'Bossing', icon: OSRS_ICONS.BOSS, count: reserves ? vanillaBosses.length : BOSSES_LIST.length },
+    { id: 'ACTIVITIES', label: 'Activities', icon: OSRS_ICONS.ACTIVITY, count: (reserves ? vanillaMinigames.length : ACTIVITY_ROLLS.length) + 1 },
   ];
 
   return (
@@ -626,7 +629,7 @@ const ClassicActionSection: React.FC = () => {
             })}
           </div>
         )}
-        {subTab === 'BOSSING' && isVanilla && (
+        {subTab === 'BOSSING' && reserves && (
           <div>
             <input
               value={bossQuery}
@@ -664,7 +667,7 @@ const ClassicActionSection: React.FC = () => {
             )}
           </div>
         )}
-        {subTab === 'BOSSING' && !isVanilla && (
+        {subTab === 'BOSSING' && !reserves && (
           <div>
             <input
               value={bossQuery}
@@ -704,7 +707,7 @@ const ClassicActionSection: React.FC = () => {
             )}
           </div>
         )}
-        {subTab === 'ACTIVITIES' && isVanilla && (
+        {subTab === 'ACTIVITIES' && reserves && (
           <React.Suspense fallback={<div className="h-28 mb-3" />}>
             <VanillaMinigameRolls
               minigames={vanillaMinigames}
@@ -715,7 +718,7 @@ const ClassicActionSection: React.FC = () => {
         )}
         {subTab === 'ACTIVITIES' && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-            {!isVanilla && ACTIVITY_ROLLS.map((a, i) => (
+            {!reserves && ACTIVITY_ROLLS.map((a, i) => (
               <div
                 key={a.name}
                 className={animationsEnabled ? 'animate-fade-in-up' : ''}

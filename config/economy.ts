@@ -75,6 +75,7 @@ export const FAILURE_FATE_BY_SOURCE: Partial<Record<DropSource, FailureFateAward
   [DropSource.ACTIVITY_MINIGAME]: 1,
   [DropSource.PET]: 1,
   [DropSource.COLLECTION_LOG]: 1,
+  [DropSource.CHUNK_EXPLORE]: 1,
 };
 
 /** Conservative fallback protects custom and future sources from being over-valued. */
@@ -125,11 +126,20 @@ export const CHUNKED_MILESTONE_INTERVAL = 25; // total-level gap between guarant
 // no run stuck, with Mercy needed about 14 times over an 80-chunk run.
 export const BREAKTHROUGH_CHANCE = 0.5;
 
+// Exploring (Alex picked "Every chunk pays", 2026-10-17): each chunk a Chunked
+// run unlocks gives a Key roll for each new thing done there for the first
+// time (training a skill it has, fighting its monsters, its Slayer master or
+// herb patch), up to this many rolls per chunk, at DROP_RATES' Exploring rate.
+// October 2026 simulation (100 runs, 1,000 hours, with Vanilla's boss and
+// minigame Key limits): about 16% slower than Vanilla to 100 quests and diary
+// tasks, with waits between unlocks no longer than before.
+export const CHUNK_EXPLORE_ROLLS = 3;
+
 // ── Earning ──────────────────────────────────────────────────────────────────
 export type EarnCategory =
   | 'Quests' | 'Achievement Diaries' | 'Combat Achievements'
   | 'Clue Scrolls' | 'Slayer Tasks' | 'Collection Log' | 'Level Ups'
-  | 'Bosses' | 'Activities' | 'Pets';
+  | 'Bosses' | 'Activities' | 'Pets' | 'Exploring';
 
 export interface EarnTier {
   /** Display label for the tier / Slayer master. */
@@ -235,7 +245,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
     category: 'Bosses',
     icon: `${WIKI}Boss.png`,
     where: 'Farm Keys → Bossing: pick the boss you killed and roll.',
-    blurb: 'In Vanilla, each boss pays a few Keys at falling odds, then stops: the list above shows how many. In Chunked, every kill rolls at its tier’s rate.',
+    blurb: 'In Vanilla and Chunked, each boss pays a few Keys at falling odds, then stops: the list above shows how many. In other modes, every kill rolls at its tier’s rate.',
     tiers: [
       { tier: 'Low boss',  source: DropSource.BOSS_LOW,  rate: DROP_RATES[DropSource.BOSS_LOW] },
       { tier: 'Mid boss',  source: DropSource.BOSS_MID,  rate: DROP_RATES[DropSource.BOSS_MID] },
@@ -247,7 +257,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
     category: 'Activities',
     icon: `${WIKI}Minigames.png`,
     where: 'Farm Keys → Activities: roll each time you finish one.',
-    blurb: 'In Vanilla, each unlocked minigame pays 1 to 3 Keys, then stops. Short runs roll at low odds, long runs at high odds, and each Key halves the next one\'s chance. In Chunked, every finished minigame rolls, with no limit.',
+    blurb: 'In Vanilla and Chunked, each unlocked minigame pays 1 to 3 Keys, then stops. Short runs roll at low odds, long runs at high odds, and each Key halves the next one\'s chance. In other modes, every finished minigame rolls, with no limit.',
     tiers: [
       { tier: 'Minigame', source: DropSource.ACTIVITY_MINIGAME, rate: DROP_RATES[DropSource.ACTIVITY_MINIGAME] },
     ],
@@ -259,6 +269,15 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
     blurb: 'Each new pet gives an Omni-Key, once per pet.',
     tiers: [
       { tier: 'Each new pet', source: DropSource.PET, rate: DROP_RATES[DropSource.PET], rateLabel: 'Omni-Key', bonus: 'An Omni-Key instead of a Key, once per pet. Claiming one isn’t a roll: Fate and rituals stay as they are.' },
+    ],
+  },
+  {
+    category: 'Exploring',
+    icon: `${WIKI}World_map_icon.png`,
+    where: 'Chunked only. Spend Keys: tick what you did in a chunk you unlocked.',
+    blurb: `Chunked only: the first time you do something new in a chunk you unlocked, roll once. Up to ${CHUNK_EXPLORE_ROLLS} rolls per chunk.`,
+    tiers: [
+      { tier: 'Each new thing in a chunk', source: DropSource.CHUNK_EXPLORE, rate: DROP_RATES[DropSource.CHUNK_EXPLORE] },
     ],
   },
   {

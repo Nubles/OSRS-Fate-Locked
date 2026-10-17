@@ -249,7 +249,10 @@ describe('buildRuneliteRulesManifest - spent bosses', () => {
 
   it('sends none for a mode that rolls every kill', async () => {
     expect(await build('xtreme', awarded)).toEqual([]);
-    expect(await build('chunked', awarded)).toEqual([]);
+  });
+
+  it('sends a Chunked run\'s spent bosses too, since Chunked keeps the same reserves', async () => {
+    expect(await build('chunked', awarded)).toEqual(['Brutus', 'Theatre of Blood']);
   });
 });
 

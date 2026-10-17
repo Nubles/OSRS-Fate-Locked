@@ -1,5 +1,6 @@
 
 import { UnlockState, TableType } from '../types';
+import { usesActivityKeyReserves } from '../config/gameModes';
 import { SKILLS_LIST, EQUIPMENT_SLOTS, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST } from '../data/items';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, isFrontierChunk } from './chunkAdjacency';
@@ -96,7 +97,7 @@ export const isRandomUnlockEligible = (
     if (!isValidUnlock(table, item, unlocks)) return false;
     // Chunked: random Skills rolls only land on skills the run's chunks can train.
     if (modeId === 'chunked' && table === TableType.SKILLS) return chunkedSkillRollable(item, unlocks);
-    if (modeId !== 'vanilla') return true;
+    if (!usesActivityKeyReserves(modeId)) return true;
     if (!policy.randomCosts.includes(randomCost)) return true;
     if (!policy.filteredTables.some(candidate => candidate === table)) return true;
     if (!policy.requiresTrackedHardGeography) return true;
@@ -111,7 +112,7 @@ export const isOmniDirectUnlockAvailable = (
     modeId: string,
     policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
 ): boolean => {
-    if (modeId !== 'vanilla') return true;
+    if (!usesActivityKeyReserves(modeId)) return true;
     if (!policy.filteredTables.some(candidate => candidate === table)) return true;
     if (!policy.requiresTrackedHardGeography || policy.omniDirect.allowsLocationIneligible) return true;
     return getActivityAccess(item, unlocks, modeId).eligible;

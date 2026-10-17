@@ -1,4 +1,5 @@
 import { TableType } from '../types';
+import { usesActivityKeyReserves } from '../config/gameModes';
 
 /**
  * Vanilla-mode hard geographic gates for activities.
@@ -175,7 +176,7 @@ export const validateEmptyRandomPoolHandling = (
   cost: 'key' | 'chaosKey',
   policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
 ): void => {
-  if (modeId === 'vanilla' && policy.randomCosts.includes(cost)) {
+  if (usesActivityKeyReserves(modeId) && policy.randomCosts.includes(cost)) {
     validateVanillaRandomAccessPolicy(policy);
   }
 };

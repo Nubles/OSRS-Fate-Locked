@@ -37,6 +37,23 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-17-chunked-fate',
+    title: 'Chunked gets its own fate rules',
+    date: '2026-10-17',
+    sections: {
+      added: [
+        'Exploring: the first new things you do in a chunk you unlock each roll for a Key, up to 3 per chunk. Tick them on Spend Keys.',
+        'Breakthroughs: a skill at its cap gets one 50% roll to open its next tier, if your chunks can train it there.',
+        'Fate’s Mercy: with no Keys, nothing to train and no doable quests, Call on Fate draws a nearby chunk or skill tier.',
+      ],
+      balance: [
+        'Chunked bosses and minigames now pay a few Keys each and then stop, like Vanilla, and need unlocking before they roll.',
+        'Boss and Minigame Keys only unlock ones inside your chunks, and a Skills Key only rolls skills your chunks can train.',
+        'Chunks you already hold don’t get exploring rolls. Every chunk you unlock from now on does.',
+      ],
+    },
+  },
+  {
     id: '2026-10-16-ritual-results-stay',
     title: 'Ritual results stay on screen',
     date: '2026-10-16',

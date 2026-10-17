@@ -5,8 +5,8 @@ import { Shield, Package, BookOpen, Dices, Sparkles, Map, Zap, Scroll, Skull, Ac
 import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
-import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
-import { andList, BREAKTHROUGH_CHANCE, CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, MINIGAME_MISS_FATE_MIN_RATE, ritualEffect, type Ritual } from '../config/economy';
+import { GAME_MODES, getGameMode, resolveModeRules, usesActivityKeyReserves } from '../config/gameModes';
+import { andList, BREAKTHROUGH_CHANCE, CHUNK_EXPLORE_ROLLS, CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, MINIGAME_MISS_FATE_MIN_RATE, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { DropSource, TableType } from '../types';
 import { DROP_RATES } from '../config/rules';
@@ -61,7 +61,7 @@ export const describeVanillaRandomAccessPolicy = (
   const tables = policy.filteredTables.map(table => table.toLowerCase()).join(' and ');
   const hasLocationFilter = policy.requiresTrackedHardGeography && tables.length > 0;
   const randomAccess = hasLocationFilter
-    ? `In Vanilla, ${keys} only unlock ${tables} you can reach with the areas you own.`
+    ? `In Vanilla and Chunked, ${keys} only unlock ${tables} you can reach with the areas or chunks you own.`
     : '';
   const emptyPool = policy.emptyEligiblePool.noUnlock
     ? [
@@ -93,9 +93,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
   const rules = resolveModeRules(gameModeId, customMode);
   const ritualCost = (id: Ritual['id']) => ritualFateCost(id, rules.ritualCostMultiplier);
   const ritualText = (id: Ritual['id']) => ritualEffect(id, rules.ritualCostMultiplier);
-  const vanillaPolicyLabel = gameModeId === 'vanilla'
-    ? 'Vanilla-only rules'
-    : 'Vanilla-only (not active for this run)';
+  const vanillaPolicyLabel = usesActivityKeyReserves(gameModeId)
+    ? 'Vanilla and Chunked rules'
+    : 'Vanilla and Chunked only (not active for this run)';
 
   // Chunked mode unlocks individual map chunks, not named regions — swap the
   // "Areas" entry for the real table/count/blurb so the Codex matches what
@@ -282,7 +282,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             </div>
 
                             <div className="bg-amber-950/20 p-4 rounded-xl border border-amber-500/30 text-sm text-gray-300">
-                                <b className="text-amber-300">Vanilla bosses pay {VANILLA_BOSS_STANDARD_KEY_TOTAL} Keys in all, then stop.</b> Each boss pays 1 to 3 Keys at falling odds (see RNG &amp; Drop Rates); after that, its kills no longer roll.
+                                <b className="text-amber-300">In Vanilla and Chunked, bosses pay {VANILLA_BOSS_STANDARD_KEY_TOTAL} Keys in all, then stop.</b> Each boss pays 1 to 3 Keys at falling odds (see RNG &amp; Drop Rates); after that, its kills no longer roll.
                             </div>
 
                             {/* The loop */}
@@ -405,7 +405,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <h3 className="text-gray-200 font-bold uppercase tracking-widest mb-4">What Differs Between the Modes</h3>
                                 <ul className="space-y-3 text-sm text-gray-400">
                                     <li><b className="text-amber-300">Vanilla:</b> you unlock named areas, and all of Misthalin is free from the start. Each boss and each unlocked minigame pays a few Keys and then stops, your first three clue Keys roll at no less than {andList(CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`))}, and Keys only unlock bosses and minigames you can reach.</li>
-                                    <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, next to land you hold. Every boss kill rolls, with no limit. While you hold only your start chunk, every {CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key. A Skills Key only rolls skills your chunks can train, a capped skill gets one {BREAKTHROUGH_CHANCE * 100}% Breakthrough roll for its next tier, and Fate's Mercy draws a chunk or skill tier when you have nothing left.</li>
+                                    <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, next to land you hold. Bosses and minigames pay a few Keys each and then stop, as in Vanilla, and Keys only unlock ones inside your chunks. The first time you do something new in a chunk you unlocked, it rolls once at {DROP_RATES[DropSource.CHUNK_EXPLORE]}%, up to {CHUNK_EXPLORE_ROLLS} times per chunk. While you hold only your start chunk, every {CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key. A Skills Key only rolls skills your chunks can train, a capped skill gets one {BREAKTHROUGH_CHANCE * 100}% Breakthrough roll for its next tier, and Fate's Mercy draws a chunk or skill tier when you have nothing left.</li>
                                     <li><b className="text-gray-200">Both:</b> a Pity Key at {SHARED_MODE_RULES.pityThreshold} Fate Points, a {SHARED_MODE_RULES.omniChanceBase}% base Omni-Key chance, the same ritual prices, and every bank locked until you unlock it.</li>
                                 </ul>
                             </div>
@@ -438,13 +438,13 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                              </div>
 
                             <div className="bg-amber-950/20 p-4 rounded-xl border border-amber-500/30">
-                                <h3 className="font-bold text-amber-300 mb-2">Vanilla: Keys per boss</h3>
+                                <h3 className="font-bold text-amber-300 mb-2">Vanilla and Chunked: Keys per boss</h3>
                                 <ul className="text-sm text-gray-300 space-y-1">
                                     {Object.entries(VANILLA_BOSS_KEY_RATES).map(([bossClass, rates]) => <li key={bossClass}>{formatVanillaBossSchedule(bossClass, rates)}</li>)}
                                 </ul>
-                                <h3 className="font-bold text-amber-300 mt-4 mb-2">Vanilla: Keys per minigame</h3>
+                                <h3 className="font-bold text-amber-300 mt-4 mb-2">Vanilla and Chunked: Keys per minigame</h3>
                                 <p className="text-sm text-gray-300">Each unlocked minigame holds 1 to 3 Keys: 3 with no Collection Log page, fewer when its log already pays a few. The first Key's chance per run is the run's length in minutes ÷ 60, so it takes about an hour of play, and each Key halves the next one's chance. A miss under {MINIGAME_MISS_FATE_MIN_RATE}% gives no Fate. Mage Arena pays one guaranteed Key, and Tears of Guthix one Key at 50% a visit. Farm Keys → Activities shows each minigame's odds.</p>
-                                <p className="text-xs text-gray-400 mt-3">Each boss and each unlocked minigame pays its Keys in order, at these odds, then it stops rolling. Your first three clue Keys, from any tier, roll at no less than <b>{CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`).join(' → ')}</b>; after that each tier uses its normal rate.</p>
+                                <p className="text-xs text-gray-400 mt-3">Each boss and each unlocked minigame pays its Keys in order, at these odds, then it stops rolling. In Vanilla, your first three clue Keys, from any tier, roll at no less than <b>{CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`).join(' → ')}</b>; after that each tier uses its normal rate.</p>
                             </div>
 
                             <div className="bg-[#222] rounded-xl border border-white/5 overflow-hidden">

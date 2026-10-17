@@ -70,7 +70,7 @@ export const GAME_MODES: GameMode[] = [
     id: 'chunked',
     name: 'Chunked',
     // CHUNKED_MILESTONE_INTERVAL (config/economy.ts) sets the 25; gameModes.test.ts pins it.
-    description: 'One chunk at a time, as in Chunk Locked ironman. You start in one chunk of Lumbridge and unlock land next to the chunks you hold. Once you have done Pandemonium and unlocked Sailing, land across open sea from your coast, and land a boat from your land sails to, count as next to your land too; the sea itself costs no unlock. While you hold only your start chunk, every 25 total levels gives you a guaranteed Key. A Skills Key only rolls skills your chunks can train. A skill at its cap gets one 50% Breakthrough roll to open its next tier, and if you ever run out of everything, Fate\'s Mercy draws a chunk or skill tier for you.',
+    description: 'One chunk at a time, as in Chunk Locked ironman. You start in one chunk of Lumbridge and unlock land next to the chunks you hold. Once you have done Pandemonium and unlocked Sailing, land across open sea from your coast, and land a boat from your land sails to, count as next to your land too; the sea itself costs no unlock. While you hold only your start chunk, every 25 total levels gives you a guaranteed Key. A Skills Key only rolls skills your chunks can train. Bosses and minigames pay a few Keys each and then stop, as in Vanilla. The first new things you do in each chunk you unlock roll for a Key. A skill at its cap gets one 50% Breakthrough roll to open its next tier, and if you ever run out of everything, Fate\'s Mercy draws a chunk or skill tier for you.',
     tagline: 'Adjacent land and Sailing frontiers',
     rules: {
       pityEnabled: true,
@@ -125,6 +125,14 @@ export const resolveModeRules = (id?: string, customRules?: GameModeRules): Game
   if (id === 'custom' && customRules) return customRules;
   return getGameMode(id).rules;
 };
+
+/**
+ * Modes where each boss and minigame pays from its own small Key reserve,
+ * rolls only once unlocked, and random Boss and Minigame Keys land only on
+ * ones the run can reach. Vanilla since October 2026; Chunked joined it on
+ * 17 October 2026 so short minigames stop flooding a chunk run with Keys.
+ */
+export const usesActivityKeyReserves = (id?: string): boolean => id === 'vanilla' || id === 'chunked';
 
 // Bounds for the Custom editor sliders.
 export const CUSTOM_RULE_BOUNDS = {

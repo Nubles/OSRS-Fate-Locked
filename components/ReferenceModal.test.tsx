@@ -184,16 +184,16 @@ describe('ReferenceModal Vanilla policy', () => {
     const drops = renderCodex('drops');
     const unlocks = renderCodex('unlocks');
 
-    expect(economy).toContain('Vanilla bosses pay 116 Keys in all, then stop.');
+    expect(economy).toContain('In Vanilla and Chunked, bosses pay 116 Keys in all, then stop.');
     expect(economy).not.toMatch(/safety-reserve|onboarding minimums/);
-    expect(drops).toContain('Your first three clue Keys, from any tier, roll at no less than');
+    expect(drops).toContain('In Vanilla, your first three clue Keys, from any tier, roll at no less than');
     expect(drops).toContain('Brutus: 10% (1 Key)');
     expect(drops).toContain('Low: 15% (1 Key)');
     expect(drops).toContain('Mid: 30% → 15% (2 Keys)');
     expect(drops).toContain('High: 50% → 25% (2 Keys)');
     expect(drops).toContain('Raid: 65% → 32.5% → 16.25% (3 Keys)');
     expect(drops).toContain('25% → 15% → 10%');
-    expect(unlocks).toContain('In Vanilla, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas you own.');
+    expect(unlocks).toContain('In Vanilla and Chunked, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas or chunks you own.');
     expect(unlocks).toContain('If none can be reached, nothing is unlocked. You keep the Key.');
     expect(unlocks).toContain('An Omni-Key can still pick one you can');
     expect(unlocks).toContain('In Vanilla the areas you roll don&#x27;t have to touch each other.');
@@ -203,8 +203,9 @@ describe('ReferenceModal Vanilla policy', () => {
     expect(renderCodex('unlocks', 'chunked')).toContain('so big tables such as Banks come up most.');
   });
 
-  it('labels the Vanilla policy as inactive outside Vanilla', () => {
-    expect(renderCodex('economy', 'chunked')).toContain('Vanilla-only (not active for this run)');
+  it('labels the reserve rules as active in Chunked and inactive elsewhere', () => {
+    expect(renderCodex('economy', 'chunked')).toContain('Vanilla and Chunked rules');
+    expect(renderCodex('economy', 'xtreme')).toContain('Vanilla and Chunked only (not active for this run)');
   });
 });
 

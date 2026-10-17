@@ -290,7 +290,7 @@ describe('achievements read from the run', () => {
     expect(earned.has('clues-100')).toBe(false);
   });
 
-  it('counts minigame runs, and Vanilla minigames whose Key reserve is empty', () => {
+  it('counts minigame runs, and Vanilla and Chunked minigames whose Key reserve is empty', () => {
     const run = (i: number, meta?: LogEntry['meta']): LogEntry =>
       ({ id: `m${i}`, timestamp: i, type: 'ROLL_FAIL', message: 'Roll', source: 'Activity (Minigame)', ...(meta ? { meta } : {}) });
     const history: LogEntry[] = [
@@ -304,7 +304,8 @@ describe('achievements read from the run', () => {
     expect(ids('vanilla').has('minigame-runs-25')).toBe(true);
     expect(ids('vanilla').has('minigame-reserves-1')).toBe(true);
     expect(ids('vanilla').has('minigame-reserves-10')).toBe(false);
-    expect(ids('chunked').has('minigame-reserves-1')).toBe(false);
+    expect(ids('chunked').has('minigame-reserves-1')).toBe(true);
+    expect(ids('xtreme').has('minigame-reserves-1')).toBe(false);
   });
 
   it('counts gear tiers, diary tasks and tiers, and CA tasks', () => {

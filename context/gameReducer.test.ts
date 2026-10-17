@@ -743,8 +743,16 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
       expect(action?.payload).toMatchObject({ success: false, pity: false });
     });
 
-    it('leaves minigame rolls unlimited outside Vanilla', () => {
-      const next = gameReducer({ ...base(), gameModeId: 'chunked' }, roll({ success: true, context: minigameContext }));
+    it('pays Chunked minigames from the same reserve as Vanilla', () => {
+      const next = gameReducer({ ...vanillaState(), gameModeId: 'chunked' }, roll({ success: true, context: minigameContext }));
+      expect(next.keys).toBe(initialState.keys + 1);
+      expect(next.minigameStandardKeysAwarded?.['Pest Control']).toBe(1);
+      const emptied = { ...vanillaState(), gameModeId: 'chunked', minigameStandardKeysAwarded: { 'Castle Wars': 1 } };
+      expect(gameReducer(emptied, roll({ success: true, context: { kind: 'minigame', minigameName: 'Castle Wars' } }))).toBe(emptied);
+    });
+
+    it('leaves minigame rolls unlimited in modes without reserves', () => {
+      const next = gameReducer({ ...base(), gameModeId: 'xtreme' }, roll({ success: true, context: minigameContext }));
       expect(next.keys).toBe(initialState.keys + 1);
       expect(next.minigameStandardKeysAwarded?.['Pest Control']).toBeUndefined();
     });

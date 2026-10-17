@@ -61,6 +61,8 @@ export const DROP_RATES: Record<string, number> = {
   [DropSource.RAID]: 65,
   [DropSource.ACTIVITY_MINIGAME]: 10,
   [DropSource.PET]: 100,
+  // Chunked: the first few new things you do in each chunk you unlock (config/economy.ts).
+  [DropSource.CHUNK_EXPLORE]: 10,
 
   [DropSource.CUSTOM]: 50,
 };

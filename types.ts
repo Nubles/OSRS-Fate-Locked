@@ -49,6 +49,7 @@ export enum DropSource {
   RAID = 'Raid',
   ACTIVITY_MINIGAME = 'Activity (Minigame)',
   PET = 'Pet Drop',
+  CHUNK_EXPLORE = 'Exploring (Chunked)',
 
   CUSTOM = 'Custom',
 }
@@ -333,6 +334,12 @@ export interface GameState {
    * for (utils/chunkedFate.ts). One roll per skill per tier, won or lost.
    */
   chunkedBreakthroughs?: Record<string, number>;
+  /**
+   * Chunked exploring rolls (utils/chunkExplore.ts): `from` is how many chunks
+   * the run held when it met the rule (older chunks pay nothing), and `done`
+   * lists the things already rolled in each chunk, by chunk key.
+   */
+  chunkExplore?: { from: number; done: Record<string, string[]> };
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

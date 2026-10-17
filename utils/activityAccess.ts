@@ -1,4 +1,5 @@
 import { UnlockState } from '../types';
+import { usesActivityKeyReserves } from '../config/gameModes';
 import { ACTIVITY_ACCESS_AREAS, NO_HARD_LOCATION_GATE } from '../data/activityAccess';
 import { isAreaReachable } from './reachability';
 
@@ -14,7 +15,7 @@ export const getActivityAccess = (
   unlocks: UnlockState,
   modeId: string,
 ): ActivityAccessResult => {
-  if (modeId !== 'vanilla' || NO_HARD_LOCATION_GATE.has(activity)) {
+  if (!usesActivityKeyReserves(modeId) || NO_HARD_LOCATION_GATE.has(activity)) {
     return { eligible: true, requiredAreas: [], explanation: '' };
   }
 

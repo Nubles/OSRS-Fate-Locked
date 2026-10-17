@@ -3,6 +3,7 @@ import { TableType, UnlockState } from '../types';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { MISTHALIN_AREAS, REGION_GROUPS, REGIONS_LIST } from '../data/items';
 import { setStartArea, unlockableAreas } from './freeAreas';
+import { namedAreaChunks } from './reachability';
 import {
   checkUnlockAvailability,
   getPoolAndStateKey,
@@ -56,8 +57,15 @@ describe('isRandomUnlockEligible', () => {
     expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', openOutpost, 'vanilla')).toBe(true);
   });
 
-  it('keeps activity rolls available outside vanilla', () => {
-    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', makeUnlocks(), 'chunked')).toBe(true);
+  it('keeps activity rolls available outside Vanilla and Chunked', () => {
+    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', makeUnlocks(), 'chunked')).toBe(false);
+    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', makeUnlocks(), 'xtreme')).toBe(true);
+  });
+
+  it('lets a Chunked run roll a minigame once it owns a chunk of its area', () => {
+    const [outpost] = namedAreaChunks("Void Knights' Outpost");
+    const owned = makeUnlocks({ chunks: [`${outpost.cx},${outpost.cy}`] });
+    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', owned, 'chunked')).toBe(true);
   });
 
   it('preserves normal validity behavior for tables outside the location policy', () => {

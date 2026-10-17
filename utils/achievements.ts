@@ -1,4 +1,4 @@
-import type { GameModeRules } from '../config/gameModes';
+import { usesActivityKeyReserves, type GameModeRules } from '../config/gameModes';
 /**
  * Achievements & milestones engine.
  *
@@ -296,8 +296,9 @@ interface Step {
   available?: (c: AchievementContext) => boolean;
 }
 
-const isVanilla = (c: AchievementContext): boolean => c.mode === 'vanilla';
-/** Vanilla minigames that hold Keys. */
+/** Modes whose minigames pay from Key reserves (Vanilla and Chunked). */
+const hasReserves = (c: AchievementContext): boolean => usesActivityKeyReserves(c.mode);
+/** Reserve-mode minigames that hold Keys. */
 const minigamesWithKeys = (c: AchievementContext): number =>
   tablePool(TableType.MINIGAMES, c).filter((name) => MINIGAME_KEY_RESERVES[name]).length;
 
@@ -524,12 +525,12 @@ export const ACHIEVEMENTS: Achievement[] = [
     { title: 'Minigame Grinder', description: 'Roll for 250 minigame runs', target: 250, fate: 15 },
   ]),
   ...tiers('minigame-reserves', 'Activities', 'minigame', ({ stats }) => stats.minigameReservesEmptied.size, [
-    { title: 'Picked Clean', description: 'Win every Key a minigame holds', target: 1, available: isVanilla },
-    { title: 'Stash Raider', description: 'Win every Key from 10 minigames', target: 10, fate: 10, available: isVanilla },
-    { title: 'Reserve Drainer', description: 'Win every Key from 25 minigames', target: 25, fate: 15, available: isVanilla },
+    { title: 'Picked Clean', description: 'Win every Key a minigame holds', target: 1, available: hasReserves },
+    { title: 'Stash Raider', description: 'Win every Key from 10 minigames', target: 10, fate: 10, available: hasReserves },
+    { title: 'Reserve Drainer', description: 'Win every Key from 25 minigames', target: 25, fate: 15, available: hasReserves },
     {
       id: 'minigame-reserves-all', title: 'Every Last Key', description: 'Win every Key from every minigame that holds them', target: 1,
-      icon: 'crown', fate: 25, available: isVanilla, targetFor: minigamesWithKeys,
+      icon: 'crown', fate: 25, available: hasReserves, targetFor: minigamesWithKeys,
     },
   ]),
 

@@ -126,10 +126,11 @@ describe('getActivityAccess', () => {
     expect(withOtherRequirements).toEqual(geographicOnly);
   });
 
-  it('preserves eligibility in non-vanilla modes', () => {
+  it('preserves eligibility in modes without Key reserves', () => {
     setStartArea('none');
 
-    expect(getActivityAccess('Pest Control', makeUnlocks(), 'chunked')).toEqual({
+    expect(getActivityAccess('Pest Control', makeUnlocks(), 'chunked').eligible).toBe(false);
+    expect(getActivityAccess('Pest Control', makeUnlocks(), 'xtreme')).toEqual({
       eligible: true,
       requiredAreas: [],
       explanation: '',

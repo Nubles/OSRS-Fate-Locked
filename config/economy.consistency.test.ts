@@ -268,7 +268,7 @@ describe('economy ↔ engine consistency', () => {
     const bosses = EARN_METHODS.find(m => m.category === 'Bosses')!;
     const text = [bosses.blurb, ...bosses.tiers.map(t => t.bonus ?? '')].join(' ');
     expect(text).not.toMatch(/repeatable/i);
-    expect(bosses.blurb).toMatch(/^In Vanilla, each boss pays a few Keys at falling odds, then stops/);
+    expect(bosses.blurb).toMatch(/^In Vanilla and Chunked, each boss pays a few Keys at falling odds, then stops/);
     // The schedule behind "a few Keys": every boss's runs out after 1 to 3.
     for (const boss of BOSSES_LIST) expect(vanillaBossKeySchedule(boss).length).toBeLessThanOrEqual(3);
   });
@@ -283,7 +283,7 @@ describe('economy ↔ engine consistency', () => {
   it('formats Codex policy directly from the shared Vanilla configuration', () => {
     expect(formatVanillaBossSchedule('Raid', VANILLA_BOSS_KEY_RATES.raid)).toBe('Raid: 65% → 32.5% → 16.25% (3 Keys)');
     expect(describeVanillaRandomAccessPolicy(VANILLA_RANDOM_ACCESS_POLICY)).toBe(
-      'In Vanilla, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas you own. '
+      'In Vanilla and Chunked, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas or chunks you own. '
       + "If none can be reached, nothing is unlocked. You keep the Key. A seeded run's next roll stays the same. "
       + "An Omni-Key can still pick one you can't reach yet, with a warning.",
     );
@@ -300,7 +300,7 @@ describe('economy ↔ engine consistency', () => {
     expect(formatted).not.toMatch(/hard location access|eligible pool|RNG progression|bypass/);
 
     const standardOnly: VanillaRandomAccessPolicy = { ...policy, randomCosts: ['key'] };
-    expect(describeVanillaRandomAccessPolicy(standardOnly)).toContain('In Vanilla, Keys only unlock bosses and minigames you can reach');
+    expect(describeVanillaRandomAccessPolicy(standardOnly)).toContain('In Vanilla and Chunked, Keys only unlock bosses and minigames you can reach');
     expect(describeVanillaRandomAccessPolicy(standardOnly)).not.toContain('Chaos Keys');
 
     const noGeography: VanillaRandomAccessPolicy = { ...policy, requiresTrackedHardGeography: false };

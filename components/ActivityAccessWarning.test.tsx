@@ -74,7 +74,7 @@ describe('ActivityAccessWarning', () => {
       />,
     );
     const nonVanilla = renderToStaticMarkup(
-      <ActivityAccessWarning activity="Giant Mole" table={TableType.BOSSES} unlocks={baseUnlocks} modeId="chunked" />,
+      <ActivityAccessWarning activity="Giant Mole" table={TableType.BOSSES} unlocks={baseUnlocks} modeId="xtreme" />,
     );
 
     expect(accessible).toBe('');

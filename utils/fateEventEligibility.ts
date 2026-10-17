@@ -1,4 +1,5 @@
 import { DROP_RATES } from '../config/rules';
+import { usesActivityKeyReserves } from '../config/gameModes';
 import { policyFor } from '../config/detectorPolicies';
 import { failureFateForSkillLevel, failureFateForSource } from '../config/economy';
 import { BRUTUS_BOSS_NAME, vanillaBossKeyStage, vanillaMinigameKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
@@ -349,9 +350,9 @@ function classifyBoss(event: FateEventEnvelope, state: GameState): EventClassifi
   if (event.eventType !== expectedType) {
     return needsConfirmation('The detected encounter type does not match this activity.');
   }
-  if (state.gameModeId !== 'vanilla') return ready(TIER_SOURCE[tier], bossName, { kind: 'NONE' });
-  // Vanilla's Bossing list rolls only unlocked bosses (Brutus is always
-  // there), each from its own key reserve.
+  if (!usesActivityKeyReserves(state.gameModeId)) return ready(TIER_SOURCE[tier], bossName, { kind: 'NONE' });
+  // Vanilla's and Chunked's Bossing lists roll only unlocked bosses (Brutus
+  // is always there), each from its own key reserve.
   if (!isBrutus && !state.unlocks.bosses.includes(bossName)) return blocked('Unlock this boss before its kills can roll.');
   const stage = vanillaBossKeyStage(bossName, state.bossStandardKeysAwarded?.[bossName] ?? 0);
   if (stage.currentRate === null) return blocked('This boss has no Standard Keys left to award.');
@@ -362,8 +363,8 @@ function classifyBoss(event: FateEventEnvelope, state: GameState): EventClassifi
 }
 
 function classifyMinigame(label: string, state: GameState): EventClassification {
-  if (state.gameModeId !== 'vanilla') return ready(DropSource.ACTIVITY_MINIGAME, label, { kind: 'NONE' });
-  // Vanilla's Activities list rolls only unlocked minigames, each from its own key reserve.
+  if (!usesActivityKeyReserves(state.gameModeId)) return ready(DropSource.ACTIVITY_MINIGAME, label, { kind: 'NONE' });
+  // Vanilla's and Chunked's Activities lists roll only unlocked minigames, each from its own key reserve.
   const name = MINIGAME_INDEX.get(normalize(label));
   if (!name) return needsConfirmation('Minigame is not in the current rules.');
   if (!state.unlocks.minigames.includes(name)) return blocked('Unlock this minigame before it can roll.');

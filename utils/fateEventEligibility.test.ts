@@ -228,9 +228,9 @@ describe('classifyFateEvent', () => {
     ['Vorkath', DropSource.BOSS_MID, 2],
     ['Nex', DropSource.BOSS_HIGH, 2],
     ['Chambers of Xeric', DropSource.RAID, 3],
-  ])('maps %s through the canonical boss tiers outside Vanilla', (label, source, failureFate) => {
+  ])('maps %s through the canonical boss tiers in modes without Key reserves', (label, source, failureFate) => {
     const type = source === DropSource.RAID ? 'RAID_COMPLETION' : 'BOSS_KILL';
-    const classified = classifyFateEvent(event(type, label), state({ gameModeId: 'chunked' }));
+    const classified = classifyFateEvent(event(type, label), state({ gameModeId: 'xtreme' }));
     expect(classified)
       .toMatchObject({ state: 'READY', intent: { source, threshold: DROP_RATES[source], failureFate } });
     expect(classified.state === 'READY' && classified.intent.context).toBeUndefined();
@@ -263,8 +263,21 @@ describe('classifyFateEvent', () => {
     });
     expect(brutus(1)).toEqual({ state: 'BLOCKED', reason: 'This boss has no Standard Keys left to award.' });
     const chunked = classifyFateEvent(event('BOSS_KILL', 'Brutus'), state({ gameModeId: 'chunked' }));
-    expect(chunked).toMatchObject({ state: 'READY', intent: { source: DropSource.BOSS_LOW } });
-    expect(chunked.state === 'READY' && chunked.intent.context).toBeUndefined();
+    expect(chunked).toMatchObject({ state: 'READY', intent: { threshold: 10, context: { kind: 'boss', bossName: 'Brutus', bossClass: 'brutus' } } });
+    const xtreme = classifyFateEvent(event('BOSS_KILL', 'Brutus'), state({ gameModeId: 'xtreme' }));
+    expect(xtreme).toMatchObject({ state: 'READY', intent: { source: DropSource.BOSS_LOW } });
+    expect(xtreme.state === 'READY' && xtreme.intent.context).toBeUndefined();
+  });
+
+  it('rolls Chunked bosses and minigames from the same reserves as Vanilla', () => {
+    expect(classifyFateEvent(event('BOSS_KILL', 'Zulrah'), state({ gameModeId: 'chunked' })))
+      .toEqual({ state: 'BLOCKED', reason: 'Unlock this boss before its kills can roll.' });
+    const vorkath = classifyFateEvent(event('BOSS_KILL', 'Vorkath'), withUnlocks({ bosses: ['Vorkath'] }, { gameModeId: 'chunked', bossStandardKeysAwarded: { Vorkath: 1 } }));
+    expect(vorkath).toMatchObject({ state: 'READY', intent: { threshold: 15, context: { kind: 'boss', bossName: 'Vorkath' } } });
+    const pest = classifyFateEventCandidate(event('MINIGAME_COMPLETION', 'Pest Control'), withUnlocks({ minigames: ['Pest Control'] }, { gameModeId: 'chunked' }), 'Pest Control');
+    expect(pest).toMatchObject({ state: 'READY', intent: { threshold: 8, context: { kind: 'minigame', minigameName: 'Pest Control' } } });
+    expect(classifyFateEventCandidate(event('MINIGAME_COMPLETION', 'Castle Wars'), withUnlocks({ minigames: ['Pest Control'] }, { gameModeId: 'chunked' }), 'Castle Wars'))
+      .toEqual({ state: 'BLOCKED', reason: 'Unlock this minigame before it can roll.' });
   });
 
   it('rolls a confirmed Vanilla minigame only while unlocked, from its own key reserve', () => {
@@ -284,9 +297,9 @@ describe('classifyFateEvent', () => {
     expect(confirm('Rat Pits', withUnlocks({ minigames: ['Rat Pits'] })))
       .toMatchObject({ state: 'NEEDS_CONFIRMATION' });
 
-    const chunked = confirm('Tempoross', state({ gameModeId: 'chunked' }));
-    expect(chunked).toMatchObject({ state: 'READY', intent: { source: DropSource.ACTIVITY_MINIGAME, threshold: DROP_RATES[DropSource.ACTIVITY_MINIGAME] } });
-    expect(chunked.state === 'READY' && chunked.intent.context).toBeUndefined();
+    const xtreme = confirm('Tempoross', state({ gameModeId: 'xtreme' }));
+    expect(xtreme).toMatchObject({ state: 'READY', intent: { source: DropSource.ACTIVITY_MINIGAME, threshold: DROP_RATES[DropSource.ACTIVITY_MINIGAME] } });
+    expect(xtreme.state === 'READY' && xtreme.intent.context).toBeUndefined();
   });
 
   it('rolls Vanilla clue caskets at the Clues card rates', () => {
