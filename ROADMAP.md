@@ -117,7 +117,9 @@ accepted.
 ### P0 — RuneProof Wave 1 release candidate (in progress)
 
 **Current testing scope (maintainer direction, 23 September 2026): Vanilla only.**
-Chunked mode is experimental and is not currently official. Use Vanilla for
+Chunked mode is a playable mode in the picker with its own fate rules (PR #120,
+October 2026: Key reserves, exploring, Breakthrough, Fate's Mercy), but this
+release candidate's verification scope stays Vanilla. Use Vanilla for
 ongoing feature verification and release evidence; earlier Chunked test results
 do not establish Vanilla readiness. The local preview now uses the separate
 `Vanilla Preview` profile, preserving the earlier profile. Cook's Assistant and
@@ -281,8 +283,9 @@ not visual acceptance, and visual acceptance is not permission to publish.
 
 ## 2b. Bank unlocks (shipped — web side) & follow-ups
 
-The bank pool contains 127 physical canonical bank/deposit chunks plus 1 virtual Forestry unlock.
-All 128 are individual `TableType.BANKS` entries in `unlocks.banks[]`: the 127 physical entries are keyed by
+The bank pool contains 125 physical canonical bank/deposit chunks plus 1 virtual Forestry unlock
+(`BANK_IDS.length` is 126, the count the Spend card and Codex show).
+All 126 are individual `TableType.BANKS` entries in `unlocks.banks[]`: the 125 physical entries are keyed by
 canonical chunk id cx*256+cy, while the virtual Forestry unlock is tracked separately,
 mirroring the STORAGE table pattern. Data: `data/banks.ts` (regen with
 `node scripts/gen-banks.mjs` from public/chunk-content.json's `banks`).

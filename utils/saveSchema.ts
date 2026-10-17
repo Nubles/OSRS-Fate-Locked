@@ -5,7 +5,7 @@ import { CHUNK_SKILL_FACTS } from '../data/chunkSkillNodes';
 import { migrateAreaUnlocks } from './areaUnlockMigration';
 import { mergedBankId, settleMergedBanks } from './bankUnlockMerges';
 import { settleCanonicalAreaUnlocks } from '../data/areaMapPolicy';
-import type { CollectionLogIdentity, FateCompensationState, GameState, PetCompensationState, LogEntry, RivalState, RuneProofProgress, UnlockState } from '../types';
+import type { CollectionLogIdentity, FateCompensationState, GameState, PetCompensationState, LogEntry, PendingUnlock, RivalState, RuneProofProgress, UnlockState } from '../types';
 import { captureCollectionLogIdentity } from '../services/CollectionLogSyncService';
 import { TableType } from '../types';
 import { getPoolAndStateKey } from './gameEngine';
@@ -350,6 +350,16 @@ const UNLOCK_ARRAY_KEYS = [
 const CURRENT_UNLOCK_KEYS = new Set([
   'equipment', 'skills', 'levels', ...UNLOCK_ARRAY_KEYS, 'collectionLog',
 ]);
+
+/**
+ * What a saved reveal may cost: 1 Key or 1 Chaos Key, or nothing for Chunked's
+ * free fate draws (Fate's Mercy draws a chunk or skill tier, a Breakthrough a
+ * skill tier). Saves from before the free draws stored Mercy as 1 Key; those stay valid.
+ */
+const pendingUnlockCostValid = (costType: unknown, cost: unknown, table: unknown): boolean =>
+  ((costType === 'key' || costType === 'chaosKey') && cost === 1)
+  || (costType === 'mercy' && cost === 0 && (table === TableType.CHUNKS || table === TableType.SKILLS))
+  || (costType === 'breakthrough' && cost === 0 && table === TableType.SKILLS);
 
 const normalizeUnlocks = (
   value: unknown,
@@ -1336,8 +1346,8 @@ const normalizeState = (
         // A retired boss's or minigame's reveal loads so its refund can settle it.
         && !(p.table === TableType.BOSSES && RETIRED_BOSSES.includes(item))
         && !(p.table === TableType.MINIGAMES && RETIRED_MINIGAMES.includes(item)))
-      || (p.costType !== 'key' && p.costType !== 'chaosKey') || p.cost !== 1) return invalid('invalid_field', 'pendingUnlock');
-    state.pendingUnlock = { id: p.id, table: p.table as TableType, item, costType: p.costType, cost: 1 };
+      || !pendingUnlockCostValid(p.costType, p.cost, p.table)) return invalid('invalid_field', 'pendingUnlock');
+    state.pendingUnlock = { id: p.id, table: p.table as TableType, item, costType: p.costType as PendingUnlock['costType'], cost: p.cost as number };
     pendingMerged = item !== p.item;
   }
   if (storedCompensation === undefined) {
@@ -1424,7 +1434,9 @@ const normalizeState = (
         || new Set(facts).size !== facts.length) return invalid('invalid_field', path);
       done[chunk] = [...facts as string[]];
     }
-    state.chunkExplore = { from: from.value, done };
+    // A start past the run's chunk count would silently turn exploring off;
+    // clamp it so the run's next chunks still pay.
+    state.chunkExplore = { from: Math.min(from.value, state.unlocks.chunks?.length ?? 0), done };
   }
   for (const key of ['xtremeMilestoneClaimed', 'chunkedMilestoneClaimed'] as const) {
     const selected = readPreferred(input, defaultRecord, key);

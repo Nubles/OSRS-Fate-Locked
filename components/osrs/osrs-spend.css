@@ -33,6 +33,7 @@ html[data-ui="osrs"] .ofate-things { display: flex; flex-wrap: wrap; gap: 4px; m
 html[data-ui="osrs"] .ofate-btn { height: 24px; padding: 0 8px; margin-left: auto; }
 html[data-ui="osrs"] .ofate-things .ofate-btn { margin-left: 0; }
 html[data-ui="osrs"] .ofate-more { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-muted, #8a7c66); }
+html[data-ui="osrs"] .ofate-why { flex-basis: 100%; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-muted, #8a7c66); }
 
 /* ── Compact (World board): 2-column table cards ────────────────────────── */
 html[data-ui="osrs"] .ospend-compact { height: 100%; min-height: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; }

@@ -8,6 +8,8 @@ import { SectionGuide } from '../SectionGuide';
 import { SkillAdvisorPanel } from '../SkillAdvisorPanel';
 import { formatKeyPercent, skillLevelKeyChance } from '../../utils/keyRoll';
 import { isSkillChaosMilestone, LEVEL_CHAOS_CHANCE } from '../../config/economy';
+import { levelPastTierCap, tierCap } from '../../utils/chunkedFate';
+import { chunkedPastCapText } from '../SkillRollOdds';
 import { skillIconSrc, itemSrc, gemColor, gemCropStyle, roman, TIER_GEMS } from './OsrsDashGems';
 import './osrs-char.css';
 import './osrs-dashboard.css';
@@ -139,7 +141,10 @@ export const OsrsSkills: React.FC<Props> = ({
             if (searchQuery && !skill.toLowerCase().includes(searchQuery.toLowerCase())) return null;
 
             const nextLevel = level + 1;
-            const odds = canLevel
+            const pastCap = canLevel && levelPastTierCap(gameModeId, unlocks, skill, nextLevel);
+            const odds = pastCap
+              ? `Next Lv ${nextLevel}: no Key roll. ${chunkedPastCapText(tierCap(tier))}`
+              : canLevel
               ? `Next Lv ${nextLevel}: ${formatKeyPercent(skillLevelKeyChance(nextLevel))} Key chance. ${isSkillChaosMilestone(nextLevel)
                 ? `Level ${nextLevel} also gives a guaranteed Chaos Key, and a separate ${LEVEL_CHAOS_CHANCE}% chance of another.`
                 : `Each level-up also has a separate ${LEVEL_CHAOS_CHANCE}% chance of a Chaos Key.`}`

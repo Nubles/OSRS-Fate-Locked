@@ -4,6 +4,7 @@ import { HelpCircle, X } from 'lucide-react';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SKILLS_LIST } from '../data/items';
 import { DROP_RATES } from '../config/rules';
+import { BREAKTHROUGH_CHANCE, CHUNK_EXPLORE_ROLLS } from '../config/economy';
 import { DropSource } from '../types';
 
 /**
@@ -92,6 +93,9 @@ export const GUIDES: Record<string, Guide> = {
       'Pick a table and spend a Key: it unlocks a random locked entry from that table.',
       'Omni-Keys (spent on the Dashboard) pick the exact unlock; Chaos Keys unlock at random from every table at once.',
       'Spend Fate Points on rituals at the Void Altar.',
+      `Chunked: each chunk you unlock pays up to ${CHUNK_EXPLORE_ROLLS} Key rolls for new things you first do there.`,
+      `Chunked: a skill at its tier cap (tier × 10) gets one ${BREAKTHROUGH_CHANCE * 100}% Breakthrough roll for its next tier. Levels past the cap roll nothing.`,
+      'Chunked: Fate\'s Mercy draws a free chunk or skill tier once you have no Keys, too little Fate for a ritual, and nothing left to train, roll or quest. Rules → Key Economy has the exact list.',
     ],
   },
   LOG: {

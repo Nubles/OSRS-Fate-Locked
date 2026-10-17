@@ -22,6 +22,7 @@ import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { SkillRollOdds } from './SkillRollOdds';
+import { levelPastTierCap, tierCap } from '../utils/chunkedFate';
 import { achievementBoostFor } from '../utils/achievementBoosts';
 // RegionMap is the single heaviest component in the app (map surface,
 // authoring tool, chunk overlays + their data). It only renders on the World
@@ -692,7 +693,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                                     <div className="text-[9px] text-gray-400 font-mono leading-none mt-0.5">
                                         {isUnlocked ? `Lvl ${level}/99` : 'Locked'}
                                     </div>
-                                    <SkillRollOdds currentLevel={level} isUnlocked={isUnlocked} descriptionId={oddsDescriptionId} boost={levelBoost} />
+                                    <SkillRollOdds currentLevel={level} isUnlocked={isUnlocked} descriptionId={oddsDescriptionId} boost={levelBoost}
+                                        pastCap={levelPastTierCap(gameModeId, unlocks, skill, level + 1) ? tierCap(tier) : undefined} />
                                     <div className="text-[8px] text-gray-500 mt-0.5 leading-none">
                                         Methods: <span className="text-gray-400">{methodRange}</span>
                                     </div>

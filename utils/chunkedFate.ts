@@ -5,11 +5,17 @@
  * - Breakthrough: a skill at the cap of its tier, whose next tier the run's
  *   chunks can train, gets one roll per tier at BREAKTHROUGH_CHANCE to open
  *   that tier.
- * - Fate's Mercy: when the run holds no Keys of any kind, no skill it can
- *   train has room below its cap, and no Breakthrough is waiting, fate draws
- *   one random entry from the Chunks and Skills pools a Key would roll.
- *   An exploring roll the run can take now (utils/chunkExplore.ts) keeps it
- *   shut too.
+ * - Fate's Mercy: when the run holds no Keys of any kind, not enough Fate for
+ *   a ritual that unlocks something (Chaos or the Cartographer), no skill it
+ *   can train has room below its cap, no Breakthrough or exploring roll is
+ *   waiting, and no quest in its chunks is doable, fate draws one random entry
+ *   from the Chunks and Skills pools a Key would roll.
+ *
+ * The tier cap (October 2026 review, economy finding 3): as in Vanilla, a
+ * tier caps the training methods, not the level, so a player may log levels
+ * past it. In Chunked, a level past the cap rolls nothing (no Key, no Chaos
+ * Key; see levelPastTierCap), so fate reads a skill's level as at most
+ * its cap: a skill at or past its cap has no room, and gets its Breakthrough.
  *
  * The pools are the ones Keys use (randomUnlockPool), so Mercy can only open
  * a frontier chunk or a skill tier the run's chunks can train.
@@ -19,8 +25,11 @@ import { SKILLS_LIST } from '../data/items';
 import { chunkedTrainingTiers, chunkedSkillRollable } from './chunkedSkillPool';
 import { randomUnlockPool, type RandomUnlockCandidate } from './gameEngine';
 import { exploreWaiting } from './chunkExplore';
+import { ritualFateCost } from '../config/economy';
+import { resolveModeRules } from '../config/gameModes';
 
-type FateState = Pick<GameState, 'gameModeId' | 'unlocks' | 'keys' | 'specialKeys' | 'chaosKeys' | 'pendingUnlock' | 'chunkedBreakthroughs' | 'chunkExplore'>;
+export type FateState = Pick<GameState, 'gameModeId' | 'unlocks' | 'keys' | 'specialKeys' | 'chaosKeys' | 'pendingUnlock' | 'chunkedBreakthroughs' | 'chunkExplore'>
+  & Partial<Pick<GameState, 'fatePoints' | 'freeRituals' | 'customMode'>>;
 
 /** The highest level a tier lets a skill reach. */
 export const tierCap = (tier: number): number => (tier >= 10 ? 99 : tier * 10);
@@ -48,7 +57,16 @@ export const breakthroughTier = (state: FateState, skill: string): number | null
 export const pendingBreakthroughs = (state: FateState): string[] =>
   SKILLS_LIST.filter(skill => breakthroughTier(state, skill) !== null);
 
-export type MercyBlocker = 'not_chunked' | 'keys' | 'pending_unlock' | 'skill_room' | 'breakthrough' | 'explore' | 'nothing_left';
+/**
+ * Whether a level-up to `level` is past the skill's tier cap in Chunked, so it
+ * rolls nothing: no Key, no Chaos Key. The level is still logged, as in
+ * Vanilla, and still counts toward total level. Every other mode rolls every
+ * level, so this is always false there.
+ */
+export const levelPastTierCap = (gameModeId: string | undefined, unlocks: Pick<GameState['unlocks'], 'skills'>, skill: string, level: number): boolean =>
+  gameModeId === 'chunked' && level > tierCap(unlocks.skills[skill] ?? 0);
+
+export type MercyBlocker = 'not_chunked' | 'keys' | 'pending_unlock' | 'fate' | 'skill_room' | 'breakthrough' | 'explore' | 'quest' | 'nothing_left';
 
 /** What Fate's Mercy could draw: the Chunks and Skills entries a Key could roll. */
 export const mercyPool = (state: FateState): RandomUnlockCandidate[] => [
@@ -56,14 +74,39 @@ export const mercyPool = (state: FateState): RandomUnlockCandidate[] => [
   ...randomUnlockPool(state.unlocks, 'chunked', 'key', TableType.SKILLS),
 ];
 
-/** Why Fate's Mercy is not available, or null when it is. */
-export const mercyBlocker = (state: FateState): MercyBlocker | null => {
+/** The rituals that unlock something without a Key: Chaos makes a Chaos Key, the Cartographer a chosen chunk. */
+const MERCY_RITUALS = ['CHAOS', 'CARTOGRAPHER'] as const;
+
+/** A ritual the run can pay for now that would unlock something, or null when its Fate is too low. */
+export const mercyRitualInReach = (state: FateState): { id: typeof MERCY_RITUALS[number]; cost: number; free: boolean } | null => {
+  const multiplier = resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier;
+  for (const id of MERCY_RITUALS) {
+    if (state.freeRituals?.includes(id)) return { id, cost: 0, free: true };
+    const cost = ritualFateCost(id, multiplier);
+    if ((state.fatePoints ?? 0) >= cost) return { id, cost, free: false };
+  }
+  return null;
+};
+
+/** Skills the run can still level for Keys, in the Skills table's order. */
+export const skillsWithRoom = (state: FateState): string[] =>
+  SKILLS_LIST.filter(skill => chunkedSkillHasRoom(skill, state.unlocks));
+
+/**
+ * Why Fate's Mercy is not available, or null when it is. `doableQuests` are
+ * the quests the run's chunks let it do now (chunkedQuestRows' DOABLE rows);
+ * they need the chunk content, so the caller passes them in. Without them the
+ * quest condition is not checked: the reducer refuses a call that brings none.
+ */
+export const mercyBlocker = (state: FateState, doableQuests?: readonly string[]): MercyBlocker | null => {
   if (state.gameModeId !== 'chunked') return 'not_chunked';
   if (state.keys > 0 || state.specialKeys > 0 || state.chaosKeys > 0) return 'keys';
   if (state.pendingUnlock) return 'pending_unlock';
-  if (SKILLS_LIST.some(skill => chunkedSkillHasRoom(skill, state.unlocks))) return 'skill_room';
+  if (mercyRitualInReach(state)) return 'fate';
+  if (skillsWithRoom(state).length > 0) return 'skill_room';
   if (pendingBreakthroughs(state).length > 0) return 'breakthrough';
   if (exploreWaiting(state)) return 'explore';
+  if (doableQuests && doableQuests.length > 0) return 'quest';
   if (mercyPool(state).length === 0) return 'nothing_left';
   return null;
 };

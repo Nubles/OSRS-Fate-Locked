@@ -7,7 +7,8 @@ import { unlockableAreas } from '../../utils/freeAreas';
 import { isAreaReachable } from '../../utils/reachability';
 import { BANK_BY_ID } from '../../data/banks';
 import { EQUIPMENT_SLOTS, SKILLS_LIST } from '../../constants';
-import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, chunkLabel } from '../../utils/chunkAdjacency';
+import { ALL_CHUNK_KEYS, CHUNKED_START_KEY } from '../../utils/chunkAdjacency';
+import { chunkPlaceLabel } from '../../utils/chunkPlaceLabel';
 import { andList, LEVEL_CHAOS_CHANCE, SKILL_CHAOS_MILESTONES } from '../../config/economy';
 import { categoryColor } from '../../utils/rarity';
 import { useGame } from '../../context/GameContext';
@@ -206,7 +207,7 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
       case TableType.REGIONS:
         return owned(unlockableAreas(gameModeId, customMode).filter(area => isAreaReachable(area, unlocks, gameModeId)));
       case TableType.CHUNKS:
-        return owned(ALL_CHUNK_KEYS.filter(key => key !== CHUNKED_START_KEY && (unlocks.chunks ?? []).includes(key)), chunkLabel);
+        return owned(ALL_CHUNK_KEYS.filter(key => key !== CHUNKED_START_KEY && (unlocks.chunks ?? []).includes(key)), chunkPlaceLabel);
       case TableType.MOBILITY: return owned(unlocks.mobility);
       case TableType.ARCANA: return owned(unlocks.arcana);
       case TableType.STORAGE: return owned(unlocks.storage);

@@ -141,7 +141,7 @@ describe('economy ↔ engine consistency', () => {
     };
     expect(tableSizes('vanilla').slice(0, 2)).toEqual([TableType.REGIONS, TableType.BANKS]);
     expect(tableSizes('chunked')[0]).toBe(TableType.BANKS);
-    expect(chaos.spend).toContain('Every eligible entry is equally likely, so big tables such as Banks come up most.');
+    expect(chaos.spend).toContain('Every eligible entry is equally likely, so the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.');
   });
 
   it('defines Chaos milestones exactly and recognizes only milestone levels', () => {
@@ -283,7 +283,8 @@ describe('economy ↔ engine consistency', () => {
   it('formats Codex policy directly from the shared Vanilla configuration', () => {
     expect(formatVanillaBossSchedule('Raid', VANILLA_BOSS_KEY_RATES.raid)).toBe('Raid: 65% → 32.5% → 16.25% (3 Keys)');
     expect(describeVanillaRandomAccessPolicy(VANILLA_RANDOM_ACCESS_POLICY)).toBe(
-      'In Vanilla and Chunked, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas or chunks you own. '
+      'In Vanilla, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas you own. '
+      + 'In Chunked, they only unlock bosses, minigames, banks and guilds inside a chunk you hold. '
       + "If none can be reached, nothing is unlocked. You keep the Key. A seeded run's next roll stays the same. "
       + "An Omni-Key can still pick one you can't reach yet, with a warning.",
     );
@@ -300,7 +301,7 @@ describe('economy ↔ engine consistency', () => {
     expect(formatted).not.toMatch(/hard location access|eligible pool|RNG progression|bypass/);
 
     const standardOnly: VanillaRandomAccessPolicy = { ...policy, randomCosts: ['key'] };
-    expect(describeVanillaRandomAccessPolicy(standardOnly)).toContain('In Vanilla and Chunked, Keys only unlock bosses and minigames you can reach');
+    expect(describeVanillaRandomAccessPolicy(standardOnly)).toContain('In Vanilla, Keys only unlock bosses and minigames you can reach');
     expect(describeVanillaRandomAccessPolicy(standardOnly)).not.toContain('Chaos Keys');
 
     const noGeography: VanillaRandomAccessPolicy = { ...policy, requiresTrackedHardGeography: false };

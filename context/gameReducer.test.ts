@@ -961,20 +961,30 @@ describe('rituals', () => {
   it('Cartographer unlocks the chosen chunk for 40 Fate (Chunked)', () => {
     const start = { ...base(), gameModeId: 'chunked', fatePoints: 50,
       unlocks: { ...initialState.unlocks, chunks: [] } };
-    const s = gameReducer(start, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '46,51', label: 'Falador' } });
+    const s = gameReducer(start, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: 'ignored' } });
     expect(s.fatePoints).toBe(10);
-    expect(s.unlocks.chunks).toContain('46,51');
-    expect(s.history[s.history.length - 1].message).toContain('Falador');
+    expect(s.unlocks.chunks).toContain('49,50');
+    // The reducer names the chunk itself: its own name and coordinates.
+    expect(s.history[s.history.length - 1].message).toBe('Cartographer charted Lumbridge (49, 50)');
+  });
+
+  it('Cartographer refuses a chunk off the frontier, the start chunk, and a run outside Chunked', () => {
+    const start = { ...base(), gameModeId: 'chunked', fatePoints: 50, unlocks: { ...initialState.unlocks, chunks: [] } };
+    for (const chunkKey of ['46,51', '41,40', '50,50']) {
+      expect(gameReducer(start, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey, label: 'x' } })).toBe(start);
+    }
+    const vanilla = { ...start, gameModeId: 'vanilla' };
+    expect(gameReducer(vanilla, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: 'x' } })).toBe(vanilla);
   });
 
   it('Cartographer refuses when fate is short or the chunk is already owned', () => {
     const poor = gameReducer({ ...base(), gameModeId: 'chunked', fatePoints: 10 },
-      { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '46,51', label: 'Falador' } });
-    expect(poor.unlocks.chunks ?? []).not.toContain('46,51');
+      { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: 'x' } });
+    expect(poor.unlocks.chunks ?? []).not.toContain('49,50');
 
     const owned = { ...base(), gameModeId: 'chunked', fatePoints: 50,
-      unlocks: { ...initialState.unlocks, chunks: ['46,51'] } };
-    const s = gameReducer(owned, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '46,51', label: 'Falador' } });
+      unlocks: { ...initialState.unlocks, chunks: ['49,50'] } };
+    const s = gameReducer(owned, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: 'x' } });
     expect(s.fatePoints).toBe(50); // untouched
   });
 

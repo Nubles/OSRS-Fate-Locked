@@ -69,8 +69,11 @@ const FILTERS: { id: HistoryFilter; label: string; icon: string }[] = [
   { id: 'PROGRESS', label: 'Level', icon: CHAOS_KEY_ICON },
 ];
 
+/** Unlocks fate drew for free in Chunked, by their recorded costType. */
+const FREE_DRAWS: Record<string, string> = { mercy: "Fate's Mercy", breakthrough: 'a Breakthrough' };
+
 /** The chosen entry in full: what kind it is, where it came from, its Key roll and its place in the chain. */
-const EntryDetail: React.FC<{ entry: LogEntry; num: number; total: number }> = ({ entry: e, num, total }) => {
+export const EntryDetail: React.FC<{ entry: LogEntry; num: number; total: number }> = ({ entry: e, num, total }) => {
   const l = look(e);
   const roll = isRollEntry(e) && e.rollValue !== undefined && e.threshold !== undefined;
   const hit = roll && e.rollValue! <= e.threshold!;
@@ -79,8 +82,15 @@ const EntryDetail: React.FC<{ entry: LogEntry; num: number; total: number }> = (
   if (e.type === 'UNLOCK' && e.meta?.category) {
     rows.push({ k: 'Table', v: tableDisplayName(e.meta.category) });
     const cost = e.meta.cost ?? 1;
-    const paid = e.meta.costType === 'chaosKey' ? `${cost} Chaos Key` : e.meta.costType === 'specialKey' ? `${cost} Omni-Key` : `${cost} Key${cost === 1 ? '' : 's'}`;
-    rows.push({ k: 'Paid with', v: paid, color: e.meta.costType === 'chaosKey' ? '#ff981f' : e.meta.costType === 'specialKey' ? '#c77dff' : '#ffff00' });
+    const free = FREE_DRAWS[e.meta.costType as string];
+    if (free) {
+      // Chunked's free fate draws: nothing was paid.
+      rows.push({ k: 'Paid with', v: `Nothing: ${free}`, color: '#c77dff' });
+      if (e.details) rows.push({ k: 'Details', v: e.details });
+    } else {
+      const paid = e.meta.costType === 'chaosKey' ? `${cost} Chaos Key` : e.meta.costType === 'specialKey' ? `${cost} Omni-Key` : `${cost} Key${cost === 1 ? '' : 's'}`;
+      rows.push({ k: 'Paid with', v: paid, color: e.meta.costType === 'chaosKey' ? '#ff981f' : e.meta.costType === 'specialKey' ? '#c77dff' : '#ffff00' });
+    }
   } else if (e.details) rows.push({ k: 'Details', v: e.details });
   const date = new Date(e.timestamp);
   return (

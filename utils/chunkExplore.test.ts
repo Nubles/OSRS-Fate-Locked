@@ -97,8 +97,12 @@ describe('Chunked exploring rolls', () => {
       return validateAndMigrateSave({ ...saved, chunkExplore } as never, initialState);
     };
     expect(save({ from: 0, done: {} }).ok).toBe(true);
-    const ok = save({ from: 2, done: { [WEST]: ['@monster', 'Woodcutting'] } });
-    expect(ok.ok && ok.state.chunkExplore).toEqual({ from: 2, done: { [WEST]: ['@monster', 'Woodcutting'] } });
+    const ok = save({ from: 1, done: { [WEST]: ['@monster', 'Woodcutting'] } });
+    expect(ok.ok && ok.state.chunkExplore).toEqual({ from: 1, done: { [WEST]: ['@monster', 'Woodcutting'] } });
+    // run() holds 1 chunk. A start past the chunk count would turn exploring
+    // off for good (October 2026 review), so it is clamped to the count.
+    const far = save({ from: 999, done: {} });
+    expect(far.ok && far.state.chunkExplore?.from).toBe(1);
     expect(save({ from: -1, done: {} }).ok).toBe(false);
     expect(save({ from: 0, done: { [WEST]: ['Sneezing'] } }).ok).toBe(false);
     expect(save({ from: 0, done: { [WEST]: ['@monster', '@monster'] } }).ok).toBe(false);

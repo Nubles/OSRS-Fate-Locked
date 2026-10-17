@@ -162,10 +162,13 @@ export type HistorySort = SortOrder;
 
 /** Which history entries a filter keeps; shared by the classic and OSRS timelines. */
 export const historyFilterMatches = (entry: LogEntry, filterType: FilterType): boolean => {
-  if (filterType === 'ROLLS') return isRollEntry(entry);
+  // A lost Chunked Breakthrough is stored as LEVEL_UP (so the audit's Key
+  // balances skip it) but is a fate roll: it files under Rolls, not Level.
+  const lostBreakthrough = entry.type === 'LEVEL_UP' && typeof entry.meta?.breakthrough === 'string';
+  if (filterType === 'ROLLS') return isRollEntry(entry) || lostBreakthrough;
   if (filterType === 'UNLOCKS') return entry.type === 'UNLOCK';
   if (filterType === 'RITUALS') return entry.type === 'ALTAR';
-  if (filterType === 'PROGRESS') return entry.type === 'LEVEL_UP' || entry.type === 'XTREME_MILESTONE' || entry.type === 'ACHIEVEMENT';
+  if (filterType === 'PROGRESS') return !lostBreakthrough && (entry.type === 'LEVEL_UP' || entry.type === 'XTREME_MILESTONE' || entry.type === 'ACHIEVEMENT');
   return true;
 };
 

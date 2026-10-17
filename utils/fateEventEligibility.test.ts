@@ -155,6 +155,19 @@ describe('classifyFateEvent', () => {
     }), state())).toEqual({ state: 'BLOCKED', reason: 'Unlock this skill before its levels can roll.' });
   });
 
+  it('in Chunked, rolls no detected level past the tier cap, as the level-up button does', () => {
+    const woodcutting = (gameModeId: string, level: number) => withUnlocks(
+      { skills: { Woodcutting: 1 }, levels: { ...initialState.unlocks.levels, Woodcutting: level } }, { gameModeId });
+    const levelEvent = (level: number) => event('SKILL_LEVEL', `Woodcutting Level ${level}`, { evidence: { skill: 'Woodcutting', level } });
+    expect(classifyFateEvent(levelEvent(11), woodcutting('chunked', 10))).toEqual({
+      state: 'BLOCKED',
+      reason: 'Woodcutting has reached its tier cap of level 10. In Chunked, levels past the cap roll no Keys until its next tier opens.',
+    });
+    // Up to the cap it rolls, and Vanilla rolls every level.
+    expect(classifyFateEvent(levelEvent(10), woodcutting('chunked', 9)).state).toBe('READY');
+    expect(classifyFateEvent(levelEvent(11), woodcutting('vanilla', 10)).state).toBe('READY');
+  });
+
   it('rolls a reviewed diary task only where the Journal would complete it', () => {
     const diary = event('DIARY_TASK', 'Karamja Elite', { confidence: 'UNCERTAIN', evidence: { tierId: 'Karamja Elite' } });
     const taskId = 'kar_elite_2';

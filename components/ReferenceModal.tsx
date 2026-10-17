@@ -6,7 +6,7 @@ import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { GAME_MODES, getGameMode, resolveModeRules, usesActivityKeyReserves } from '../config/gameModes';
-import { andList, BREAKTHROUGH_CHANCE, CHUNK_EXPLORE_ROLLS, CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, MINIGAME_MISS_FATE_MIN_RATE, ritualEffect, type Ritual } from '../config/economy';
+import { andList, BREAKTHROUGH_CHANCE, CHUNKED_OMNI_LAND_TEXT, CHUNK_EXPLORE_ROLLS, CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, MINIGAME_MISS_FATE_MIN_RATE, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { DropSource, TableType } from '../types';
 import { DROP_RATES } from '../config/rules';
@@ -60,8 +60,11 @@ export const describeVanillaRandomAccessPolicy = (
   const keys = policy.randomCosts.includes('chaosKey') ? 'Keys and Chaos Keys' : 'Keys';
   const tables = policy.filteredTables.map(table => table.toLowerCase()).join(' and ');
   const hasLocationFilter = policy.requiresTrackedHardGeography && tables.length > 0;
+  // Chunked counts content only in the exact chunk it sits in, and filters
+  // banks and guilds the same way (utils/gameEngine.ts isRandomUnlockEligible).
+  const chunkedTables = andList([...policy.filteredTables.map(table => table.toLowerCase()), 'banks', 'guilds']);
   const randomAccess = hasLocationFilter
-    ? `In Vanilla and Chunked, ${keys} only unlock ${tables} you can reach with the areas or chunks you own.`
+    ? `In Vanilla, ${keys} only unlock ${tables} you can reach with the areas you own. In Chunked, they only unlock ${chunkedTables} inside a chunk you hold.`
     : '';
   const emptyPool = policy.emptyEligiblePool.noUnlock
     ? [
@@ -80,6 +83,22 @@ export const describeVanillaRandomAccessPolicy = (
 
   return [randomAccess, emptyPool, omni].filter(Boolean).join(' ');
 };
+
+/**
+ * Chunked's own fate rules, with the exact conditions the code checks
+ * (utils/chunkedFate.ts, utils/chunkExplore.ts): the tier cap, exploring,
+ * Breakthrough, Fate's Mercy and the start-chunk milestone.
+ */
+export const ChunkedFateRules: React.FC<{ chaosCost: number; cartographerCost: number }> = ({ chaosCost, cartographerCost }) => (
+  <div className="bg-emerald-950/20 p-4 rounded-xl border border-emerald-500/30 text-sm text-gray-300 space-y-2">
+    <h3 className="font-bold text-emerald-300">Chunked only: tier caps, exploring, Breakthrough and Fate's Mercy</h3>
+    <p><b className="text-gray-100">Tier cap.</b> A skill's tier opens its training methods up to tier × 10, its cap (tier 10 opens all of them, to 99). As in Vanilla you may keep levelling past the cap with those methods, but in Chunked a level past the cap rolls no Key and no Chaos Key until its next tier opens.</p>
+    <p><b className="text-gray-100">Exploring.</b> Each chunk you unlock pays one {DROP_RATES[DropSource.CHUNK_EXPLORE]}% Key roll for each new thing you first do there: train a skill it has, fight something, take a task from its Slayer master or use its herb patch, once your unlocks allow it. Up to {CHUNK_EXPLORE_ROLLS} per chunk; your start chunk pays none.</p>
+    <p><b className="text-gray-100">Breakthrough.</b> A skill at or past its tier cap, when your chunks give you a way to train it at its next tier, gets one free {BREAKTHROUGH_CHANCE * 100}% roll to open that tier. Each tier rolls once, win or lose; a Key can still open it after a loss. Hitpoints starts at level 10, the cap of tier 1, so every run starts with a Hitpoints Breakthrough.</p>
+    <p><b className="text-gray-100">Fate's Mercy.</b> It opens only when all of these hold: you have no Keys, Omni-Keys or Chaos Keys; you have less than {chaosCost} Fate (the Ritual of Chaos; the Cartographer costs {cartographerCost}) and no free Chaos or Cartographer ritual waiting; no skill your chunks can train is below its tier cap; no Breakthrough or exploring roll is waiting; and no quest in your chunks is doable now. Then fate draws one frontier chunk or trainable skill tier, from what a Key could roll, and nothing is spent. The Keys screen says what keeps it shut.</p>
+    <p><b className="text-gray-100">Start-chunk Keys.</b> While you hold only your start chunk, every {CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key, levels past a tier cap included. A new run is at total level 33, so the first comes at {Math.ceil(34 / CHUNKED_MILESTONE_INTERVAL) * CHUNKED_MILESTONE_INTERVAL}; until a Key opens another skill, only Hitpoints can be levelled.</p>
+  </div>
+);
 
 export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initialTab = 'core' }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -265,7 +284,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         A successful roll has a <span className="text-white font-bold">{rules.omniChanceBase}% chance</span> in your mode to give a bonus Omni-Key as well as the Key.
                                         <br/><br/>
                                         Spend one to <span className="text-white font-bold">pick exactly what you unlock</span>, instead of a random entry.
-                                        {gameModeId === 'chunked' && ' In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.'}
+                                        {gameModeId === 'chunked' && ` ${CHUNKED_OMNI_LAND_TEXT}`}
                                     </p>
                                 </div>
                             </div>
@@ -284,6 +303,8 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="bg-amber-950/20 p-4 rounded-xl border border-amber-500/30 text-sm text-gray-300">
                                 <b className="text-amber-300">In Vanilla and Chunked, bosses pay {VANILLA_BOSS_STANDARD_KEY_TOTAL} Keys in all, then stop.</b> Each boss pays 1 to 3 Keys at falling odds (see RNG &amp; Drop Rates); after that, its kills no longer roll.
                             </div>
+
+                            <ChunkedFateRules cartographerCost={ritualCost('CARTOGRAPHER')} chaosCost={ritualCost('CHAOS')} />
 
                             {/* The loop */}
                             <div className="bg-[#222] p-6 rounded-xl border border-white/5">
@@ -405,7 +426,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <h3 className="text-gray-200 font-bold uppercase tracking-widest mb-4">What Differs Between the Modes</h3>
                                 <ul className="space-y-3 text-sm text-gray-400">
                                     <li><b className="text-amber-300">Vanilla:</b> you unlock named areas, and all of Misthalin is free from the start. Each boss and each unlocked minigame pays a few Keys and then stops, your first three clue Keys roll at no less than {andList(CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`))}, and Keys only unlock bosses and minigames you can reach.</li>
-                                    <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, next to land you hold. Bosses and minigames pay a few Keys each and then stop, as in Vanilla, and Keys only unlock ones inside your chunks. The first time you do something new in a chunk you unlocked, it rolls once at {DROP_RATES[DropSource.CHUNK_EXPLORE]}%, up to {CHUNK_EXPLORE_ROLLS} times per chunk. While you hold only your start chunk, every {CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key. A Skills Key only rolls skills your chunks can train, a capped skill gets one {BREAKTHROUGH_CHANCE * 100}% Breakthrough roll for its next tier, and Fate's Mercy draws a chunk or skill tier when you have nothing left.</li>
+                                    <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, one you can walk into from land you hold; islands need Sailing. Content counts only in the chunk it sits in: Keys only unlock bosses, minigames, banks and guilds inside your chunks, and quests, diaries and Slayer masters count only there. Bosses and minigames pay a few Keys each and then stop, as in Vanilla. The first time you do something new in a chunk you unlocked, it rolls once at {DROP_RATES[DropSource.CHUNK_EXPLORE]}%, up to {CHUNK_EXPLORE_ROLLS} times per chunk. While you hold only your start chunk, every {CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key. A Skills Key only rolls skills your chunks can train, and a skill a quest opens only after that quest. Levels past a skill's tier cap roll no Keys, a capped skill gets one {BREAKTHROUGH_CHANCE * 100}% Breakthrough roll for its next tier, and Fate's Mercy draws a chunk or skill tier when you have nothing left (see Key Economy).</li>
                                     <li><b className="text-gray-200">Both:</b> a Pity Key at {SHARED_MODE_RULES.pityThreshold} Fate Points, a {SHARED_MODE_RULES.omniChanceBase}% base Omni-Key chance, the same ritual prices, and every bank locked until you unlock it.</li>
                                 </ul>
                             </div>
@@ -601,14 +622,14 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     <p className="text-xs text-gray-400 leading-relaxed">
                                         Click a locked entry on the Dashboard to <b>pick exactly</b> what you unlock. You get them as a
                                         bonus on successful rolls, or for {getRitual('TRANSMUTE').keyCost} Keys at the Void Altar.
-                                        {gameModeId === 'chunked' && ' In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.'}
+                                        {gameModeId === 'chunked' && ` ${CHUNKED_OMNI_LAND_TEXT}`}
                                     </p>
                                 </div>
                                 <div className="bg-[#222] p-4 rounded-xl border border-red-500/30">
                                     <h4 className="font-bold text-red-400 mb-1 flex items-center gap-2"><Dna size={16}/> Chaos Key</h4>
                                     <p className="text-xs text-gray-400 leading-relaxed">
                                         Unlocks a <b>random entry from all the tables at once</b>. Every eligible entry is
-                                        equally likely, so big tables such as {gameModeId === 'chunked' ? 'Banks' : 'Areas and Banks'} come up most.
+                                        equally likely, so {gameModeId === 'chunked' ? 'the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.' : 'big tables such as Areas and Banks come up most.'}
                                         Guaranteed at skill levels {andList(SKILL_CHAOS_MILESTONES)}, a {LEVEL_CHAOS_CHANCE}% chance on
                                         every level-up, or the Ritual of Chaos.
                                     </p>

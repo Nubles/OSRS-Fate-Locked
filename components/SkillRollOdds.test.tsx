@@ -73,4 +73,12 @@ describe('SkillRollOdds', () => {
     expect(html).not.toContain('title=');
     expect(html).toContain('Each level-up also has a separate 2% chance of a Chaos Key.');
   });
+  it('says a Chunked level past the tier cap rolls nothing', () => {
+    const html = renderToStaticMarkup(
+      <SkillRollOdds currentLevel={10} isUnlocked descriptionId="wc" pastCap={10} />,
+    );
+    expect(html).toContain('Next Lv 11 · no roll');
+    expect(html).toContain('levels past the cap roll no Keys');
+    expect(html).not.toContain('% Key');
+  });
 });

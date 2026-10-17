@@ -12,6 +12,7 @@ import { lazyWithRetry } from '../../utils/lazyRetry';
 import { relaySync } from '../../services/relaySync';
 import { ProfileSwitcher } from '../ProfileSwitcher';
 import { OsrsXpDrops } from './OsrsXpDrops';
+import { CHUNKED_OMNI_LAND_TEXT } from '../../config/economy';
 import './osrs-shell.css';
 
 const OsrsInterfaceOptions = lazyWithRetry(() => import('./OsrsInterfaceOptions'));
@@ -122,7 +123,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
           <img className="osrs-px" src={sprite('key.png')} alt="Keys" width={36} height={32} />
           <span className="osrs-stack">{keys}</span>
         </div>
-        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Omni-Keys: ${specialKeys}. Click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ' In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.' : ''}`}>
+        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Omni-Keys: ${specialKeys}. Click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ` ${CHUNKED_OMNI_LAND_TEXT}` : ''}`}>
           <img className="osrs-px" src={sprite('omni_key.png')} alt="Omni-Keys" width={36} height={32} />
           <span className="osrs-stack">{specialKeys}</span>
         </div>

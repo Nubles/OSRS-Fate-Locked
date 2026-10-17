@@ -10,7 +10,7 @@ import { GAME_MODES } from '../config/gameModes';
 import { DropSource } from '../types';
 import { DROP_RATES } from '../config/rules';
 
-const CHUNKED_LAND = 'In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.';
+const CHUNKED_LAND = 'In Chunked an Omni-Key can&#x27;t pick land: chunks come from Chunks Keys, Chaos Keys that land on Chunks, the Ritual of the Cartographer and Fate&#x27;s Mercy.';
 
 /** The highest Omni die that still gives an Omni-Key: the chance the roll engine really uses. */
 const engineOmniChance = (source: DropSource): number => {
@@ -193,14 +193,14 @@ describe('ReferenceModal Vanilla policy', () => {
     expect(drops).toContain('High: 50% → 25% (2 Keys)');
     expect(drops).toContain('Raid: 65% → 32.5% → 16.25% (3 Keys)');
     expect(drops).toContain('25% → 15% → 10%');
-    expect(unlocks).toContain('In Vanilla and Chunked, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas or chunks you own.');
+    expect(unlocks).toContain('In Vanilla, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas you own. In Chunked, they only unlock bosses, minigames, banks and guilds inside a chunk you hold.');
     expect(unlocks).toContain('If none can be reached, nothing is unlocked. You keep the Key.');
     expect(unlocks).toContain('An Omni-Key can still pick one you can');
     expect(unlocks).toContain('In Vanilla the areas you roll don&#x27;t have to touch each other.');
     expect(unlocks).toContain('Only Chunked makes you grow out from land you hold.');
     expect(unlocks).toContain('Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99, a 2% chance on every level-up, or the Ritual of Chaos.');
     expect(unlocks).toContain('Every eligible entry is equally likely, so big tables such as Areas and Banks come up most.');
-    expect(renderCodex('unlocks', 'chunked')).toContain('so big tables such as Banks come up most.');
+    expect(renderCodex('unlocks', 'chunked')).toContain('so the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.');
   });
 
   it('labels the reserve rules as active in Chunked and inactive elsewhere', () => {

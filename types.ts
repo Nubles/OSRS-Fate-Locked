@@ -225,7 +225,8 @@ export interface PendingUnlock {
   id: string;
   table: TableType;
   item: string;
-  costType: 'key' | 'chaosKey';
+  /** 'mercy' and 'breakthrough' are Chunked's free fate draws: cost 0, nothing spent. */
+  costType: 'key' | 'chaosKey' | 'mercy' | 'breakthrough';
   cost: number;
 }
 

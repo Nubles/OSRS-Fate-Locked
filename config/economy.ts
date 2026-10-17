@@ -117,11 +117,14 @@ export const XTREME_MILESTONE_INTERVAL = 50; // total-level gap between guarante
 // 24 September 2026 release) were paid their first key on the first level-up.
 export const CHUNKED_MILESTONE_INTERVAL = 25; // total-level gap between guaranteed keys
 
-// Chunked Breakthrough: when a skill reaches the cap of its tier and the run's
-// chunks can train its next tier, fate rolls once (per skill, per tier) to open
-// that tier. Fate's Mercy: when a Chunked run has no Keys of any kind and every
-// skill its chunks can train is capped, fate draws one random neighbouring
-// chunk or trainable skill tier. Nothing is guaranteed and the player never
+// Chunked Breakthrough: when a skill reaches the cap of its tier (tier × 10;
+// levels past it are logged but roll nothing in Chunked) and the run's chunks
+// can train its next tier, fate rolls once (per skill, per tier) to open that
+// tier. Fate's Mercy: when a Chunked run has no Keys of any kind, too little
+// Fate for the Ritual of Chaos or the Cartographer, every skill its chunks can
+// train capped, no Breakthrough or exploring roll waiting and no quest doable,
+// fate draws one random neighbouring chunk or trainable skill tier
+// (utils/chunkedFate.ts). Nothing is guaranteed and the player never
 // picks what opens. October 2026 simulation (200 runs from Lumbridge Castle):
 // no run stuck, with Mercy needed about 14 times over an 80-chunk run.
 export const BREAKTHROUGH_CHANCE = 0.5;
@@ -275,7 +278,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
     category: 'Exploring',
     icon: `${WIKI}World_map_icon.png`,
     where: 'Chunked only. Spend Keys: tick what you did in a chunk you unlocked.',
-    blurb: `Chunked only: the first time you do something new in a chunk you unlocked, roll once. Up to ${CHUNK_EXPLORE_ROLLS} rolls per chunk.`,
+    blurb: `Chunked only: the first time you do something new in a chunk you unlocked, roll once: train a skill it has, fight something there, take a task from its Slayer master or use its herb patch, once your unlocks allow it. Up to ${CHUNK_EXPLORE_ROLLS} rolls per chunk.`,
     tiers: [
       { tier: 'Each new thing in a chunk', source: DropSource.CHUNK_EXPLORE, rate: DROP_RATES[DropSource.CHUNK_EXPLORE] },
     ],
@@ -293,7 +296,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
     category: 'Level Ups',
     icon: `${WIKI}Stats_icon.png`,
     where: 'Character tab: click an unlocked skill to log a level.',
-    blurb: 'Every level you gain rolls once, and higher levels roll better. Level-ups also give Chaos Keys.',
+    blurb: 'Every level you gain rolls once, and higher levels roll better. Level-ups also give Chaos Keys. In Chunked, a level past the skill\'s tier cap (tier × 10) rolls nothing until its next tier opens.',
     dynamic: true,
     tiers: [
       {
@@ -335,6 +338,9 @@ export interface KeyTypeInfo {
   spend: string;
 }
 
+/** Where land comes from in Chunked, since an Omni-Key can't pick it (the UNLOCK reducer refuses). */
+export const CHUNKED_OMNI_LAND_TEXT = "In Chunked an Omni-Key can't pick land: chunks come from Chunks Keys, Chaos Keys that land on Chunks, the Ritual of the Cartographer and Fate's Mercy.";
+
 export const KEY_TYPES: KeyTypeInfo[] = [
   {
     id: 'standard',
@@ -362,7 +368,7 @@ export const KEY_TYPES: KeyTypeInfo[] = [
       'Each new pet: an Omni-Key instead of a Key, once per pet.',
       'The Ritual of Transmutation: 5 Keys make 1 Omni-Key.',
     ],
-    spend: 'Click a locked skill, gear slot, area, boss or other entry on the Dashboard to unlock exactly that. In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.',
+    spend: `Click a locked skill, gear slot, area, boss or other entry on the Dashboard to unlock exactly that. ${CHUNKED_OMNI_LAND_TEXT}`,
   },
   {
     id: 'chaos',
@@ -375,7 +381,7 @@ export const KEY_TYPES: KeyTypeInfo[] = [
       `A separate ${LEVEL_CHAOS_CHANCE}% chance on every level-up, milestones included.`,
       'The Ritual of Chaos turns Fate Points into one.',
     ],
-    spend: 'Unlocks one random entry from all the tables at once. Every eligible entry is equally likely, so big tables such as Banks come up most.',
+    spend: 'Unlocks one random entry from all the tables at once. Every eligible entry is equally likely, so the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.',
   },
 ];
 

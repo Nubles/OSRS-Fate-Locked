@@ -104,8 +104,9 @@ export interface RuneliteRulesManifest {
   /** Stage 4: the app's ids for what RuneLite notices: bosses by kill-count name, quests and diary tiers. */
   detection?: RulesDetection;
   /**
-   * The bosses and raids, by the app's boss key, whose kills don't roll again this run: in Vanilla,
-   * each has given every Standard Key it holds. Every other mode rolls every kill, so sends none.
+   * The bosses and raids, by the app's boss key, whose kills don't roll again this run: in the
+   * modes with Key reserves (Vanilla and Chunked, usesActivityKeyReserves), each has given every
+   * Standard Key it holds. Every other mode rolls every kill, so sends none.
    */
   spentBosses?: string[];
   /** The Stage 2 sections this bundle has, by capability. */

@@ -2,7 +2,7 @@ import React, { Suspense } from 'react';
 import { PendingUnlock, TableType } from '../types';
 import { BANK_BY_ID } from '../data/banks';
 import { SLOT_CONFIG, SPECIAL_ICONS, UTILITY_ITEM_IDS } from '../constants';
-import { chunkLabel } from '../utils/chunkAdjacency';
+import { chunkLabelWithCoords } from '../utils/chunkLabelWithCoords';
 import { VoidReveal } from './VoidReveal';
 import { lazyWithRetry } from '../utils/lazyRetry';
 import { useIsOsrsUi } from '../utils/uiStyle';
@@ -21,7 +21,7 @@ export function PendingUnlockReveal({ pending, animationsEnabled, onAccept, tier
   const nav = useOsrsNav();
   const docked = nav.screen === 'keys' && nav.keysTab === 'spend';
   const label = pending.table === TableType.BANKS ? BANK_BY_ID[pending.item]?.name ?? pending.item
-    : pending.table === TableType.CHUNKS ? chunkLabel(pending.item) : pending.item;
+    : pending.table === TableType.CHUNKS ? chunkLabelWithCoords(pending.item) : pending.item;
   const file = pending.table === TableType.SKILLS ? `${pending.item}_icon.png`
     : pending.table === TableType.EQUIPMENT ? SLOT_CONFIG[pending.item]?.file
     : SPECIAL_ICONS[pending.item];
@@ -30,7 +30,9 @@ export function PendingUnlockReveal({ pending, animationsEnabled, onAccept, tier
     : file ? `https://oldschool.runescape.wiki/images/${file}` : undefined;
   const props = { itemName: label, itemType: pending.table, itemImage: image, isChaos: pending.costType === 'chaosKey',
     animationsEnabled, tier, onComplete: () => onAccept(pending.id) };
+  // Fate's Mercy and Breakthrough are free: the OSRS reveal names them instead of a cost.
+  const freeDraw = pending.costType === 'mercy' || pending.costType === 'breakthrough' ? pending.costType : undefined;
   // The OSRS layout draws the same roll as an OSRS interface window.
-  if (osrs) return <Suspense key={pending.id} fallback={null}><OsrsSpendReveal {...props} docked={docked} /></Suspense>;
+  if (osrs) return <Suspense key={pending.id} fallback={null}><OsrsSpendReveal {...props} freeDraw={freeDraw} docked={docked} /></Suspense>;
   return <VoidReveal key={pending.id} {...props} />;
 }

@@ -32,6 +32,7 @@ import {
   type CompletionAttestation,
 } from './journalCompletion';
 import { skillLevelKeyChance } from './keyRoll';
+import { levelPastTierCap, tierCap } from './chunkedFate';
 
 const normalize = (value: string): string =>
   value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-GB');
@@ -240,6 +241,11 @@ function classifySkill(event: FateEventEnvelope, state: GameState): EventClassif
   // A locked skill cannot be levelled, and a level already recorded rolls once.
   if ((state.unlocks.skills[skill] ?? 0) <= 0) return blocked('Unlock this skill before its levels can roll.');
   if ((level as number) <= (state.unlocks.levels[skill] ?? 1)) return blocked('This level is already recorded.');
+  // Chunked: as with the manual button, a level past the tier cap rolls nothing.
+  const recorded = state.unlocks.levels[skill] ?? 1;
+  if (levelPastTierCap(state.gameModeId, state.unlocks, skill, recorded + 1)) {
+    return blocked(`${skill} has reached its tier cap of level ${tierCap(state.unlocks.skills[skill] ?? 0)}. In Chunked, levels past the cap roll no Keys until its next tier opens.`);
+  }
   const target = `${skill} Level ${level}`;
   return {
     state: 'READY',
