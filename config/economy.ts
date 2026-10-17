@@ -116,6 +116,15 @@ export const XTREME_MILESTONE_INTERVAL = 50; // total-level gap between guarante
 // 24 September 2026 release) were paid their first key on the first level-up.
 export const CHUNKED_MILESTONE_INTERVAL = 25; // total-level gap between guaranteed keys
 
+// Chunked Breakthrough: when a skill reaches the cap of its tier and the run's
+// chunks can train its next tier, fate rolls once (per skill, per tier) to open
+// that tier. Fate's Mercy: when a Chunked run has no Keys of any kind and every
+// skill its chunks can train is capped, fate draws one random neighbouring
+// chunk or trainable skill tier. Nothing is guaranteed and the player never
+// picks what opens. October 2026 simulation (200 runs from Lumbridge Castle):
+// no run stuck, with Mercy needed about 14 times over an 80-chunk run.
+export const BREAKTHROUGH_CHANCE = 0.5;
+
 // ── Earning ──────────────────────────────────────────────────────────────────
 export type EarnCategory =
   | 'Quests' | 'Achievement Diaries' | 'Combat Achievements'

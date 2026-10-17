@@ -328,6 +328,11 @@ export interface GameState {
   achievementTitle?: string;
   /** Free rituals from achievements, by ritual id (one entry each); a cast uses one before any Fate. */
   freeRituals?: string[];
+  /**
+   * Chunked Breakthroughs already rolled: skill -> the tier its last roll was
+   * for (utils/chunkedFate.ts). One roll per skill per tier, won or lost.
+   */
+  chunkedBreakthroughs?: Record<string, number>;
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

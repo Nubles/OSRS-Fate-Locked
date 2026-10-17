@@ -175,7 +175,8 @@ const sailingReq = (name: string): Req | null => {
   return { skill: 'Sailing', level };
 };
 
-const reqFor = (name: string, kind: EntityKind): Req | null => {
+/** The skill and level an entity trains, if any. Also builds data/chunkSkillNodes.ts. */
+export const trainingReqFor = (name: string, kind: EntityKind): Req | null => {
   if (kind === 'object') {
     const r = resourceReqFor(name);
     if (r) return r;
@@ -193,7 +194,7 @@ export const skillChunkNodes = (skill: string): SkillChunkNode[] => {
   const out: SkillChunkNode[] = [];
   for (const kind of ['object', 'npc', 'monster'] as EntityKind[]) {
     for (const hit of chunkContentService.entitiesOfKind(kind)) {
-      const req = reqFor(hit.name, kind);
+      const req = trainingReqFor(hit.name, kind);
       if (!req || req.skill !== skill) continue;
       const key = hit.name.toLowerCase();
       if (seen.has(key)) continue;
