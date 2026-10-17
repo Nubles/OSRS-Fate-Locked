@@ -31,8 +31,10 @@ describe('Chunked Breakthrough', () => {
   it('waits on a skill at its cap whose next tier the chunks can train', () => {
     const state = dry();
     expect(breakthroughTier(state, 'Woodcutting')).toBe(3);
-    // Hitpoints starts at its tier 1 cap of 10, and every chunk with a monster trains it.
-    expect(pendingBreakthroughs(state)).toEqual(expect.arrayContaining(['Hitpoints', 'Woodcutting']));
+    // Hitpoints starts at its tier 1 cap of 10, but only a combat style trains it.
+    expect(pendingBreakthroughs(state)).toEqual(['Woodcutting']);
+    const fighter = { ...state, unlocks: { ...state.unlocks, skills: { ...state.unlocks.skills, Magic: 1 } } };
+    expect(pendingBreakthroughs(fighter)).toEqual(expect.arrayContaining(['Hitpoints', 'Woodcutting']));
   });
 
   it('does not wait below the cap, outside Chunked, or once rolled for that tier', () => {

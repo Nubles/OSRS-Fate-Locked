@@ -17,6 +17,7 @@
  *   reaches); Smithing needs ore (a rock the Mining tier reaches, or an ore
  *   shop); Cooking at a range needs food (a fishing spot the Fishing tier
  *   reaches, or something to fight); Prayer needs bones (something to fight);
+ *   Hitpoints only gains XP from combat, so it needs a combat style unlocked;
  * - a skill the game opens with a quest (SKILL_QUEST_GATES: Herblore with
  *   Druidic Ritual, Sailing with Pandemonium) has nothing to train until then.
  * Anything to fight also trains melee, Ranged, Magic and Hitpoints; a Slayer
@@ -30,6 +31,7 @@ import { CHUNKED_START_KEY } from './chunkAdjacency';
 import { SKILL_QUEST_GATES } from './journalStatus';
 
 const COMBAT_SKILLS = ['Attack', 'Strength', 'Defence', 'Hitpoints', 'Ranged', 'Magic', 'Prayer'];
+const COMBAT_STYLES = ['Attack', 'Strength', 'Defence', 'Ranged', 'Magic'];
 
 /** What of the run decides whether chunk content is usable. */
 export type TrainingRun = Pick<UnlockState, 'skills'> & Partial<Pick<UnlockState, 'farming' | 'quests' | 'guilds'>>;
@@ -55,7 +57,7 @@ let cachedTiers = new Map<string, number>();
 
 const signatureOf = (chunks: readonly string[], run?: TrainingRun): string => chunks.join(';') + (run ? `|${JSON.stringify([
   run.skills.Woodcutting ?? 0, run.skills.Mining ?? 0, run.skills.Fishing ?? 0, run.skills.Farming ?? 0,
-  run.farming ?? [], run.quests ?? [], run.guilds ?? [],
+  run.farming ?? [], run.quests ?? [], run.guilds ?? [], COMBAT_STYLES.some(skill => (run.skills[skill] ?? 0) >= 1),
 ])}` : '');
 
 /**
@@ -104,6 +106,8 @@ export const chunkedTrainingTiers = (chunks: readonly string[], run?: TrainingRu
   if (!raw.has('@monster')) levels.delete('Prayer');
   const noteLevel = (skill: string, tier: number) => levels.set(skill, Math.min(levels.get(skill) ?? tier, tier));
   if (raw.has('@monster')) COMBAT_SKILLS.forEach(skill => noteLevel(skill, 1));
+  // Hitpoints XP only comes with combat XP, so with a run it needs a combat style to train.
+  if (run && !COMBAT_STYLES.some(skill => (run.skills[skill] ?? 0) >= 1)) levels.delete('Hitpoints');
   if (raw.has('@slayer')) noteLevel('Slayer', 1);
   // A herb patch trains Herblore once the run can grow herbs in it.
   if (raw.has('@herb') && (!run || (run.skills.Farming ?? 0) >= raw.get('@herb')!)) noteLevel('Herblore', 1);

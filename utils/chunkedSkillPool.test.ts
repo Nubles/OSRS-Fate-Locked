@@ -66,6 +66,9 @@ describe('Chunked Skills rolls', () => {
     // Food and bones: Lumbridge's cows, goblins and chickens.
     expect(chunkedSkillRollable('Cooking', fresh())).toBe(true);
     expect(chunkedSkillRollable('Prayer', fresh())).toBe(true);
+    // Hitpoints only gains XP alongside a combat style (play review, strict runs).
+    expect(chunkedSkillRollable('Hitpoints', fresh())).toBe(false);
+    expect(chunkedSkillRollable('Hitpoints', withTiers({ Magic: 1 }))).toBe(true);
   });
 
   it('rolls Agility from a chunk holding a course start, at the course level (content review 1)', () => {

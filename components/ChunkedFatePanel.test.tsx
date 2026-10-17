@@ -25,7 +25,7 @@ const dry = (over: Record<string, unknown> = {}) => {
     keys: 0,
     specialKeys: 0,
     chaosKeys: 0,
-    unlocks: { ...fresh.unlocks, skills: { Hitpoints: 1, Woodcutting: 2 }, levels: { ...fresh.unlocks.levels, Woodcutting: 20 } },
+    unlocks: { ...fresh.unlocks, skills: { Attack: 1, Hitpoints: 1, Woodcutting: 2 }, levels: { ...fresh.unlocks.levels, Attack: 10, Woodcutting: 20 } },
     rollBreakthrough: vi.fn(),
     callOnFate: vi.fn(),
     exploreChunk: vi.fn(),
@@ -40,18 +40,18 @@ describe('Chunked fate panel', () => {
     render(<ChunkedFatePanel />);
     expect(screen.getByText(/Breakthroughs ready/)).toBeTruthy();
     expect(screen.getByText('Woodcutting reached level 20, its tier 2 cap. Roll for levels 21-30.')).toBeTruthy();
-    // Every run starts with this one; the panel says why.
+    // Every run starts with Hitpoints at its cap; once a combat style trains it, the panel says why.
     expect(screen.getByText(/Hitpoints starts at level 10, the cap of tier 1/)).toBeTruthy();
     // Mercy is shut by the waiting Breakthroughs, and the line says so.
     expect(screen.getByText("Fate's Mercy")).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Call on Fate' })).toBeNull();
-    expect(screen.getByText("Fate's Mercy waits until you roll the Breakthrough for Hitpoints.")).toBeTruthy();
-    fireEvent.click(screen.getAllByRole('button', { name: 'Roll' })[1]);
+    expect(screen.getByText("Fate's Mercy waits until you roll the Breakthrough for Attack.")).toBeTruthy();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Roll' })[2]);
     expect(game.current.rollBreakthrough).toHaveBeenCalledWith('Woodcutting');
   });
 
   it("offers Fate's Mercy once the run is dry", async () => {
-    dry({ chunkedBreakthroughs: { Hitpoints: 2, Woodcutting: 3 } });
+    dry({ chunkedBreakthroughs: { Attack: 2, Hitpoints: 2, Woodcutting: 3 } });
     const { ChunkedFatePanel } = await import('./ChunkedFatePanel');
     render(<ChunkedFatePanel />);
     const call = screen.getByRole('button', { name: 'Call on Fate' }) as HTMLButtonElement;
@@ -74,7 +74,7 @@ describe('Chunked fate panel', () => {
 
   it('keeps Mercy shut while a quest is doable, and says which', async () => {
     quests.rows = [{ id: "Cook's Assistant", bucket: 'DOABLE' }, { id: 'Dragon Slayer I', bucket: 'LOCKED' }];
-    dry({ chunkedBreakthroughs: { Hitpoints: 2, Woodcutting: 3 } });
+    dry({ chunkedBreakthroughs: { Attack: 2, Hitpoints: 2, Woodcutting: 3 } });
     const { ChunkedFatePanel } = await import('./ChunkedFatePanel');
     render(<ChunkedFatePanel />);
     expect((screen.getByRole('button', { name: 'Call on Fate' }) as HTMLButtonElement).disabled).toBe(true);
