@@ -85,13 +85,15 @@ interface TabsProps {
   showOnlyActionable: boolean;
   onToggleActionable: () => void;
   suspendModals: boolean;
+  /** The "?" guide to show; the active tab's own guide when left out. */
+  guideId?: string;
 }
 
 /** In-game tab names (the classic strip says "Collection Log"). */
 const TAB_LABEL: Record<string, string> = { COLLECTION: 'Collection' };
 
 export const OsrsDashTabs: React.FC<TabsProps> = ({
-  tabs, activeTab, onTab, searchQuery, onSearch, showOnlyActionable, onToggleActionable, suspendModals,
+  tabs, activeTab, onTab, searchQuery, onSearch, showOnlyActionable, onToggleActionable, suspendModals, guideId,
 }) => {
   const tabKey = tabs.map((t) => `${t.id}:${TAB_LABEL[t.id] ?? t.label}`).join('|');
   // The Journal screen draws the same tab row, so publish it.
@@ -132,7 +134,7 @@ export const OsrsDashTabs: React.FC<TabsProps> = ({
         <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14"><path d="M1 2h12L8.5 7.5V12l-3 1.5V7.5z" fill="none" stroke="currentColor" strokeWidth="1.6" /></svg>
         Actionable
       </button>
-      <SectionGuide id={activeTab} className="osrs-dash-guide" suspendModals={suspendModals} />
+      <SectionGuide id={guideId ?? activeTab} className="osrs-dash-guide" suspendModals={suspendModals} />
     </div>
   </div>
   );

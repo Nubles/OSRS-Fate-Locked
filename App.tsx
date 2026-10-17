@@ -1214,7 +1214,7 @@ const GameLayout = () => {
         {/* Global ⌘K command palette — navigates via fate:nav events. */}
         {modalRenderPolicy.renderGlobalDialogOverlays && <CommandPalette />}
         {/* Replayable spotlight tour — start via fate:start-tour. */}
-        {modalRenderPolicy.renderGlobalDialogOverlays && <GuidedTour />}
+        {modalRenderPolicy.renderGlobalDialogOverlays && <GuidedTour gameModeId={gameModeId} />}
         {/* Quest-complete celebration with the wiki reward scroll. */}
         {modalRenderPolicy.renderGlobalDialogOverlays && <QuestCompleteOverlay />}
       </Suspense>

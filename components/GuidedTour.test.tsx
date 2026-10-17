@@ -31,6 +31,26 @@ describe('GuidedTour copy', () => {
   });
 });
 
+describe('GuidedTour in Chunked', () => {
+  it('names the Chunks table, not areas, on the Spend Keys step', () => {
+    render(<GuidedTour gameModeId="chunked" />);
+    act(() => { window.dispatchEvent(new Event('fate:start-tour')); });
+    const next = () => fireEvent.click(screen.getByRole('button', { name: /Next/ }));
+    next(); next();
+    const spend = screen.getByText(/^Spend a Key on a table/).textContent ?? '';
+    expect(spend).toContain('(chunks, gear, bosses, skills and more)');
+    expect(spend).not.toContain('areas');
+  });
+
+  it('keeps the area wording in other modes', () => {
+    render(<GuidedTour gameModeId="vanilla" />);
+    act(() => { window.dispatchEvent(new Event('fate:start-tour')); });
+    const next = () => fireEvent.click(screen.getByRole('button', { name: /Next/ }));
+    next(); next();
+    expect(screen.getByText(/^Spend a Key on a table/).textContent).toContain('(gear, areas, bosses, skills and more)');
+  });
+});
+
 describe('GuidedTour keyboard', () => {
   it('advances one step when Enter activates the focused Next button', () => {
     render(<GuidedTour />);

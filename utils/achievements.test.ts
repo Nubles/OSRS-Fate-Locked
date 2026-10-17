@@ -148,13 +148,22 @@ describe('area achievements by mode', () => {
   const regionAchievement = (unlocks: UnlockState, mode: string, id: string) =>
     evaluateAchievements(unlocks, mode).find((a) => a.id === id);
 
-  it("counts the areas a Chunked run's chunks reach", () => {
-    // One chunk each in Falador, Port Sarim, Rimmington, Taverley and Burthorpe.
-    const unlocks = emptyUnlocks({ chunks: ['46,51', '46,49', '45,50', '45,53', '45,55'] });
+  it("counts a Chunked run's unlocked chunks, in chunk wording", () => {
+    // The review's mid run: 8 chunks, all in Misthalin and the Kharidian Desert,
+    // once read "Unlock your first area" and World Tour 2/178.
+    const unlocks = emptyUnlocks({ chunks: ['49,50', '49,49', '50,49', '48,50', '50,51', '51,50', '52,50', '51,49'] });
 
-    expect(regionAchievement(unlocks, 'chunked', 'regions-1')?.earned).toBe(true);
-    expect(regionAchievement(unlocks, 'chunked', 'regions-5')?.earned).toBe(true);
-    expect(regionAchievement(unlocks, 'chunked', 'regions-178')?.earned).toBe(false);
+    expect(regionAchievement(unlocks, 'chunked', 'regions-1')).toMatchObject({ earned: true, description: 'Unlock your first chunk' });
+    expect(regionAchievement(unlocks, 'chunked', 'regions-5')).toMatchObject({ current: 8, earned: true, description: 'Unlock 5 chunks' });
+    expect(regionAchievement(unlocks, 'chunked', 'regions-10')).toMatchObject({ current: 8, target: 10, earned: false });
+    expect(regionAchievement(unlocks, 'chunked', 'regions-178'))
+      .toMatchObject({ current: 8, target: 622, earned: false, description: 'Unlock every chunk' });
+  });
+
+  it('keeps the area wording and count outside Chunked', () => {
+    const unlocks = emptyUnlocks({ regions: ['Falador', 'Port Sarim'], chunks: ['49,50'] });
+    expect(regionAchievement(unlocks, 'vanilla', 'regions-1')).toMatchObject({ earned: true, description: 'Unlock your first area' });
+    expect(regionAchievement(unlocks, 'vanilla', 'regions-5')).toMatchObject({ current: 2, description: 'Unlock 5 areas' });
   });
 
   it('gives a fresh Chunked run no area achievement for its free start chunk', () => {

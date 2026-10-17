@@ -1890,8 +1890,8 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     const unlockedCount = isChunked ? chunkUnlocks.length : regionUnlocks.length;
     return (
       <div className="owm-root">
-        <aside className="osrs-inner owm-side" aria-label="Regions">
-          <span className="owm-h">Regions</span>
+        <aside className="osrs-inner owm-side" aria-label={isChunked ? 'Chunks' : 'Regions'}>
+          <span className="owm-h">{isChunked ? 'Chunks' : 'Regions'}</span>
           <div className="owm-searchwrap">
             <label className="owm-search">
               <svg aria-hidden="true" width="13" height="13" viewBox="0 0 14 14"><circle cx="6" cy="6" r="4.5" fill="none" stroke="#c8b897" strokeWidth="2" /><path d="M9.5 9.5l3.5 3.5" stroke="#c8b897" strokeWidth="2" /></svg>

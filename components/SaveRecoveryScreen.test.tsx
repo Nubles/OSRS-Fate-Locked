@@ -167,6 +167,19 @@ describe('SaveRecoveryScreen', () => {
     expect(screen.getByText('5 keys · 2 visible regions · 2 events')).toBeTruthy();
   });
 
+  it('counts a Chunked checkpoint in chunks, the start chunk included', () => {
+    const chunked = (revision: number, chunks: string[]) => {
+      const base = candidate(revision);
+      return { ...base, state: { ...base.state, gameModeId: 'chunked', unlocks: { ...base.state.unlocks, regions: [], chunks } } };
+    };
+    render(<SaveRecoveryScreen decision={corruptDecision({
+      candidates: [chunked(4, ['49,50', '51,50', '50,49']), chunked(2, [])],
+    })} {...actions()} />);
+
+    expect(screen.getByText('7 keys · 4 chunks · 4 events')).toBeTruthy();
+    expect(screen.queryByText(/visible region/)).toBeNull();
+  });
+
   it('supports keyboard activation of the recovery action', async () => {
     const current = actions();
     const user = userEvent.setup();

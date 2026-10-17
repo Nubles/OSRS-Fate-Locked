@@ -7,6 +7,7 @@ import { rankFrontierChunks } from '../../utils/frontierAdvisor';
 import { chunkRegion } from '../../utils/chunkAdjacency';
 import { chunkContentService } from '../../services/ChunkContentService';
 import { displayAreaName } from '../../data/areaMapPolicy';
+import { misthalinListName } from '../../utils/worldWording';
 import { NoteTrigger } from '../NoteTrigger';
 import { itemSrc } from './OsrsDashGems';
 import './osrs-world.css';
@@ -166,7 +167,7 @@ export const OsrsWorldList: React.FC<Props> = ({ searchQuery, showOnlyActionable
                   {g.got > 0
                     ? <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" style={{ flexShrink: 0 }}><path d="M1 6l3 3 7-7" fill="none" stroke="#0dc10d" strokeWidth="2" /></svg>
                     : <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" style={{ flexShrink: 0 }}><rect x="2" y="5" width="8" height="6" fill="#b83030" /><path d="M4 5V3.5a2 2 0 0 1 4 0V5" fill="none" stroke="#b83030" strokeWidth="1.5" /></svg>}
-                  <span className="owl-dir-name" style={{ color: g.got > 0 ? '#ffffff' : '#8a7c66' }}>{g.group === MISTHALIN ? 'Misthalin (Starter Area)' : g.group}</span>
+                  <span className="owl-dir-name" style={{ color: g.got > 0 ? '#ffffff' : '#8a7c66' }}>{g.group === MISTHALIN ? misthalinListName(gameModeId) : g.group}</span>
                   <span className="owl-dir-count" style={{ color: all ? '#0dc10d' : g.got > 0 ? '#ffff00' : '#6f6250' }}>{all ? 'Unlocked' : `${g.got}/${g.areas.length}`}</span>
                 </button>
               );
@@ -180,7 +181,7 @@ export const OsrsWorldList: React.FC<Props> = ({ searchQuery, showOnlyActionable
       {current && (
         <section className="osrs-win owl-areas" aria-label={current.group}>
           <div className="owl-areas-head">
-            <h3>{current.group === MISTHALIN ? 'Misthalin (Starter Area)' : current.group}</h3>
+            <h3>{current.group === MISTHALIN ? misthalinListName(gameModeId) : current.group}</h3>
             <span className="owl-yellow-s">{current.got} / {current.areas.length} unlocked</span>
             <span className="owl-legend"><span style={{ color: '#0dc10d' }}>Unlocked</span>{canOmni && <span style={{ color: '#c77dff' }}>Omni-Key</span>}<span style={{ color: '#ff3030' }}>Locked</span></span>
             <span className="oact-note"><NoteTrigger id={current.group} title={current.group} suspendModals={suspendModals} /></span>

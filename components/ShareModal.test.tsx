@@ -106,6 +106,26 @@ describe('ShareModal region summary', () => {
     expect(summary).not.toContain("Heroes' Guild");
   });
 
+  it("measures a Chunked run's World Mastery in owned chunks per region, Misthalin included", async () => {
+    // The review's mid run: 8 chunks around Lumbridge and Al Kharid once read
+    // "Islands & Others 20%, Kharidian Desert 7%" with no Misthalin.
+    mockGame.current.gameModeId = 'chunked';
+    mockGame.current.unlocks.chunks = ['49,50', '49,49', '50,49', '48,50', '50,51', '51,50', '52,50', '51,49'];
+    try {
+      const view = render(<ShareModal onClose={vi.fn()} />);
+      const world = document.querySelector('.owb-card-world')!;
+      expect(world.textContent).toContain('Misthalin6/32 chunks');
+      expect(world.textContent).toContain('Kharidian Desert3/44 chunks');
+      expect(world.textContent).not.toContain('Islands & Others');
+
+      fireEvent.click(view.getByRole('button', { name: 'Copy Summary' }));
+      await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
+      expect(writeText.mock.calls[0][0]).toContain('Chunks: 9 Unlocked');
+    } finally {
+      mockGame.current.gameModeId = 'vanilla';
+    }
+  });
+
   it('uses the generated bank pool size in the copied summary', async () => {
     mockGame.current.unlocks.banks = ['5678', '6454'];
     const view = render(<ShareModal onClose={vi.fn()} />);
