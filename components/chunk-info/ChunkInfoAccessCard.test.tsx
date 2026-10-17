@@ -71,6 +71,18 @@ describe('ChunkInfoAccessCard', () => {
       />,
     );
     expect(screen.getByText('Bank in this chunk')).toBeTruthy();
+
+    rerender(
+      <ChunkInfoAccessCard
+        previewLocked
+        entryRequirements={[]}
+        entrances={[]}
+        chunkUnlocked={false}
+        bankState="chunk-locked"
+      />,
+    );
+    expect(screen.getByText('Bank unlocked; unlock this chunk to use it')).toBeTruthy();
+    expect(screen.queryByText('Bank available')).toBeNull();
   });
 
   it('applies the chunk lock state to every entrance and hides absent route requirements', () => {

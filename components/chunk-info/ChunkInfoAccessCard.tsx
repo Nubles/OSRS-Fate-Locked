@@ -4,7 +4,8 @@ import { Landmark } from '../OsrsIcon';
 import type { ChunkEntrance } from '../../services/ChunkContentService';
 import { WikiLink } from '../WikiLink';
 
-export type ChunkInfoBankState = 'present' | 'available' | 'locked' | 'requirements' | null;
+/** 'chunk-locked': Chunked, the bank is unlocked but its chunk isn't owned yet. */
+export type ChunkInfoBankState = 'present' | 'available' | 'locked' | 'chunk-locked' | 'requirements' | null;
 
 interface Props {
   previewLocked: boolean;
@@ -102,11 +103,13 @@ export const ChunkInfoAccessCard: React.FC<Props> = ({
         <div className={rowClass}>
           <Landmark
             size={11}
-            className={`mt-px shrink-0 ${bankState === 'locked' ? 'text-rose-300' : bankState === 'requirements' ? 'text-amber-300' : 'text-emerald-300'}`}
+            className={`mt-px shrink-0 ${bankState === 'locked' ? 'text-rose-300' : bankState === 'requirements' || bankState === 'chunk-locked' ? 'text-amber-300' : 'text-emerald-300'}`}
           />
           <span>
             {bankState === 'locked'
               ? 'Bank needs its own unlock'
+              : bankState === 'chunk-locked'
+                ? 'Bank unlocked; unlock this chunk to use it'
               : bankState === 'requirements'
                 ? 'Bank access requirements'
                 : bankState === 'available'
