@@ -18,8 +18,8 @@ import { gzipSync } from 'node:zlib';
 // 241: the OSRS layout's switch, frame and shared Farm Keys model joined main's rewards (240.4 on 2026-10-15).
 // 242: caches in the reachability, quest points and Skill Advisor checks that stop an unlock freezing the page (240.9 on 2026-10-16).
 // 247: Chunked's fate rules (Breakthrough, Fate's Mercy, exploring rolls) and the chunk skill table its Key pool reads, about 3.2 kB of it (246.5 on 2026-10-17).
-// 249: the Chunked review's fixes: exact-chunk checks for bosses, minigames, guilds, banks and Slayer masters, Mercy's Fate and quest checks, the tier-cap rule, free-draw reveals and chunk labels (248.8 on 2026-10-17).
-export const ENTRY_GZIP_BUDGET_KB = 249;
+// 250: the Chunked review's fixes: exact-chunk checks for bosses, minigames, guilds, banks and Slayer masters, Mercy's Fate and quest checks, the tier-cap rule, free-draw reveals and chunk labels, and the Journal's exact-chunk hook (249.3 on 2026-10-17).
+export const ENTRY_GZIP_BUDGET_KB = 250;
 
 /** The entry script that dist/index.html loads, as a path inside distDir. */
 export const entryScriptPath = (distDir, indexHtml) => {
