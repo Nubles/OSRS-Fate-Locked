@@ -71,9 +71,11 @@ describe('Chunked fate panel', () => {
     const { ChunkedFatePanel } = await import('./ChunkedFatePanel');
     render(<ChunkedFatePanel />);
     expect(screen.getByText('Explore your new chunks')).toBeTruthy();
-    const hunter = screen.getByRole('button', { name: 'Trained Hunter' }) as HTMLButtonElement;
-    expect(hunter.disabled).toBe(true);
-    expect(hunter.title).toBe('Needs Hunter tier 2.');
+    const thieving = screen.getByRole('button', { name: 'Trained Thieving' }) as HTMLButtonElement;
+    expect(thieving.disabled).toBe(true);
+    expect(thieving.title).toBe('Needs Thieving tier 2.');
+    // The chunk's tree patch needs its patch type unlocked too.
+    expect((screen.getByRole('button', { name: 'Trained Farming' }) as HTMLButtonElement).title).toBe('Needs Farming tier 2.');
     fireEvent.click(screen.getByRole('button', { name: 'Fought something' }));
     expect(game.current.exploreChunk).toHaveBeenCalledWith('49,50', '@monster', expect.any(Number), expect.any(Number));
     expect(screen.queryByText("Fate's Mercy")).toBeNull();
