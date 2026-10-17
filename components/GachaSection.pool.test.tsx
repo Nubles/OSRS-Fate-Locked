@@ -86,7 +86,7 @@ describe('Spend Keys start-chunk milestone', () => {
     const { GachaSection } = await import('./GachaSection');
     render(<GachaSection />);
     const next = (Math.floor(total / 25) + 1) * 25;
-    expect(screen.getByTestId('start-chunk-milestone').textContent).toContain(`Next at total level ${next}: ${next - total} level`);
+    expect((await screen.findByTestId('start-chunk-milestone')).textContent).toContain(`Next at total level ${next}: ${next - total} level`);
   });
 
   it('goes away once another chunk is unlocked', async () => {

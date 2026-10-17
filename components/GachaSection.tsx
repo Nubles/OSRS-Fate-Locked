@@ -16,8 +16,8 @@ import { andList, LEVEL_CHAOS_CHANCE, SKILL_CHAOS_MILESTONES } from '../config/e
 import { openDashboardPool } from '../utils/dashboardPoolNavigation';
 import { chunkLabel } from '../utils/chunkAdjacency';
 import { chunkTotals } from '../utils/runProgress';
-import { startChunkMilestone, startChunkMilestoneText } from '../utils/startChunkMilestone';
 
+const StartChunkMilestoneLine = lazyWithRetry(() => import('./StartChunkMilestoneLine').then(m => ({ default: m.StartChunkMilestoneLine })));
 const ChunkedFatePanel = lazyWithRetry(() => import('./ChunkedFatePanel').then(m => ({ default: m.ChunkedFatePanel })));
 
 // --- Inner Components ---
@@ -234,9 +234,7 @@ export const useSpendModel = () => {
     ...(bankLocks ? [{ type: TableType.BANKS, label: 'Banks', subLabel: 'Bank Access', iconSrc: OSRS_GACHA_ICONS.BANKS, unlocked: (unlocks.banks ?? []).length, total: BANK_IDS.length, can: (canUnlock as any).banks as boolean }] : []),
   ];
 
-  const milestone = startChunkMilestone(gameModeId, unlocks, totalLevel);
-
-  return { keys, specialKeys, chaosKeys, keysOwed, unlocks, pendingUnlock, animationsEnabled, gameModeId, isChunked, rollable, totalLevel, milestone, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES };
+  return { keys, specialKeys, chaosKeys, keysOwed, unlocks, pendingUnlock, animationsEnabled, gameModeId, isChunked, rollable, totalLevel, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES };
 };
 
 const OsrsSpend = lazyWithRetry(() => import('./osrs/OsrsSpend'));
@@ -249,7 +247,7 @@ export const GachaSection: React.FC = () => (
 );
 
 const ClassicGachaSection: React.FC = () => {
-  const { keys, specialKeys, chaosKeys, keysOwed, pendingUnlock, animationsEnabled, isChunked, rollable, totalLevel, milestone, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES } = useSpendModel();
+  const { keys, specialKeys, chaosKeys, keysOwed, pendingUnlock, animationsEnabled, isChunked, rollable, totalLevel, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES } = useSpendModel();
 
   return (
     <div className="h-full flex flex-col relative p-4">
@@ -324,10 +322,10 @@ const ClassicGachaSection: React.FC = () => {
       </div>
 
       {/* Chunked: the start-chunk Key every 25 total levels, while it applies. */}
-      {milestone && (
-        <p data-testid="start-chunk-milestone" className="mb-3 rounded-lg border border-amber-500/30 bg-amber-950/20 px-3 py-2 text-[11px] font-mono leading-snug text-amber-200/80">
-          {startChunkMilestoneText(milestone)}
-        </p>
+      {isChunked && (
+        <Suspense fallback={null}>
+          <StartChunkMilestoneLine />
+        </Suspense>
       )}
 
       {/* Chunked: Breakthrough rolls and Fate's Mercy. */}

@@ -21,7 +21,7 @@ import { useScrollMore } from '../../utils/scrollFade';
 import { preloadModelViewer } from '../EntityModel';
 import { loadModelManifest } from '../../data/entityModels';
 import { lazyWithRetry } from '../../utils/lazyRetry';
-import { startChunkMilestoneText, type StartChunkMilestone } from '../../utils/startChunkMilestone';
+import { startChunkMilestone, startChunkMilestoneText, type StartChunkMilestone } from '../../utils/startChunkMilestone';
 
 // Chunked's exploring rolls, Breakthroughs and Fate's Mercy (loads with the chunk content).
 const ChunkedFatePanel = lazyWithRetry(() => import('../ChunkedFatePanel').then(m => ({ default: m.ChunkedFatePanel })));
@@ -188,7 +188,8 @@ const RecentChat: React.FC<{ history: readonly LogEntry[]; name: string }> = ({ 
  * from GachaSection's useSpendModel.
  */
 const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
-  const { keys, specialKeys, chaosKeys, keysOwed, unlocks, pendingUnlock, gameModeId, isChunked, rollable, totalLevel, milestone, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES } = useSpendModel();
+  const { keys, specialKeys, chaosKeys, keysOwed, unlocks, pendingUnlock, gameModeId, isChunked, rollable, totalLevel, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES } = useSpendModel();
+  const milestone = startChunkMilestone(gameModeId, unlocks, totalLevel);
   const { customMode, history, linkedAccount } = useGame();
   const { spendTable } = useKeysView();
   const sel = SPEND_CATEGORIES.find(c => c.type === spendTable) ?? SPEND_CATEGORIES.find(c => c.type === TableType.REGIONS || c.type === TableType.CHUNKS) ?? SPEND_CATEGORIES[0];

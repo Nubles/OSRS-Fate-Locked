@@ -9,7 +9,7 @@ import { skillChunkNodesByTier, skillStations } from '../utils/skillChunkNodes';
 import { chunkContentService } from '../services/ChunkContentService';
 import { summarisePlaces, showChunkOnMap } from '../utils/chunkLocations';
 import { useGame } from '../context/GameContext';
-import { skillGatherNote } from '../utils/worldWording';
+import { skillGatherNote } from '../utils/skillGatherNote';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { lazyWithRetry } from '../utils/lazyRetry';

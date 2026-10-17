@@ -5,7 +5,7 @@ import { skillChunkNodesByTier, skillStations } from '../../utils/skillChunkNode
 import { chunkContentService } from '../../services/ChunkContentService';
 import { summarisePlaces, showChunkOnMap } from '../../utils/chunkLocations';
 import { useGame } from '../../context/GameContext';
-import { skillGatherNote } from '../../utils/worldWording';
+import { skillGatherNote } from '../../utils/skillGatherNote';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatKeyPercent, skillLevelKeyChance } from '../../utils/keyRoll';
 import { isSkillChaosMilestone, LEVEL_CHAOS_CHANCE } from '../../config/economy';

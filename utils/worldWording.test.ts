@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { misthalinListName, skillGatherNote, tutorialIslandNote } from './worldWording';
+import { misthalinListName, tutorialIslandNote } from './worldWording';
+import { skillGatherNote } from './skillGatherNote';
 
 describe('World wording', () => {
   it('does not call Misthalin a free starter area in Chunked, or talk about area rolls', () => {
