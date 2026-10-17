@@ -32,7 +32,7 @@ import { JournalProgressRings } from './JournalProgressRings';
 import { EquipmentLab } from './EquipmentLab';
 import { WikiIcon } from './WikiIcon';
 import { getRivalImage } from '../data/wikiRivalIcons';
-import { SectionGuide } from './SectionGuide';
+import { SectionGuide, guideIdFor } from './SectionGuide';
 import { completionPercent as runCompletion } from '../utils/completion';
 import { rivalCompletion, standing as rivalStanding } from '../utils/rival';
 import { RIVAL_ENABLED } from '../config/rules';
@@ -72,6 +72,7 @@ import { SkillAdvisorPanel } from './SkillAdvisorPanel';
 import { showChunkOnMap } from '../utils/chunkLocations';
 import { runeProofAvailability } from '../utils/questRoutes/featureFlag';
 import { useIsOsrsUi } from '../utils/uiStyle';
+import { misthalinListName, tutorialIslandNote } from '../utils/worldWording';
 import { setOsrsProgressionWide } from '../utils/osrsNav';
 import { openOsrsJournal, type OsrsJournalTab } from './osrs/OsrsJournalNav';
 import type { OsrsLabView } from './osrs/OsrsEquipment';
@@ -807,7 +808,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const renderWorldTab = () => (
       <div className="flex flex-col h-full overflow-hidden">
           <div className="flex justify-between items-center mb-4 px-2 pt-2 shrink-0">
-               <h3 className="text-emerald-400 font-bold text-sm uppercase tracking-wide">Areas</h3>
+               <h3 className="text-emerald-400 font-bold text-sm uppercase tracking-wide">{gameModeId === 'chunked' ? 'Chunks' : 'Areas'}</h3>
                <div className="flex bg-[#1a1a1a] p-1 rounded-lg border border-white/10">
                    <button 
                      onClick={() => setWorldView('MAP')}
@@ -826,7 +827,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                </div>
           </div>
 
-          <p className="px-2 pb-2 text-[10px] text-gray-400 shrink-0">Tutorial Island is completed onboarding: always free, with no area roll required.</p>
+          <p className="px-2 pb-2 text-[10px] text-gray-400 shrink-0">{tutorialIslandNote(gameModeId)}</p>
           {worldView === 'MAP' ? (
               <div className="flex-1 bg-[#050505] rounded-lg border border-white/10 overflow-hidden relative">
                   <PanelErrorBoundary name="Region map">
@@ -855,7 +856,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                           <>
                             <div className="flex items-center gap-2 mb-2 relative z-10">
                                 <Compass className="w-5 h-5 text-emerald-400" />
-                                <span className="font-bold text-sm text-emerald-200">Misthalin (Starter Area)</span>
+                                <span className="font-bold text-sm text-emerald-200">{misthalinListName(gameModeId)}</span>
                                 <span className={`ml-auto text-xs font-mono flex items-center gap-1 ${allFree ? 'text-emerald-400' : 'text-amber-400'}`}>
                                     <Unlock size={10} /> {allFree ? 'Unlocked' : `${freeCount}/${MISTHALIN_AREAS.length}`}
                                 </span>
@@ -1205,6 +1206,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
             showOnlyActionable={showOnlyActionable}
             onToggleActionable={() => setShowOnlyActionable(!showOnlyActionable)}
             suspendModals={suspendModals}
+            guideId={guideIdFor(activeTab, gameModeId)}
           />
         </Suspense>
       ) : (<>
@@ -1348,7 +1350,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
               >
                   <Filter size={14} />
               </button>
-              <SectionGuide id={activeTab} className="p-1" suspendModals={suspendModals} />
+              <SectionGuide id={guideIdFor(activeTab, gameModeId)} className="p-1" suspendModals={suspendModals} />
           </div>
       </div>
       </>)}

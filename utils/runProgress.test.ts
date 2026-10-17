@@ -5,7 +5,7 @@ import { REGION_GROUPS } from '../data/items';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import type { UnlockState } from '../types';
 import { setStartArea } from './freeAreas';
-import { runProgress } from './runProgress';
+import { chunkRegionMastery, chunkTotals, runProgress } from './runProgress';
 
 const run = (changes: Partial<UnlockState>): UnlockState => ({ ...structuredClone(initialState.unlocks), ...changes });
 
@@ -46,5 +46,33 @@ describe('runProgress', () => {
     expect(fresh.unlocked).toBeGreaterThan(0);
     expect(runProgress(run({ regions: ['Falador'] }), 'vanilla').chunks.unlocked)
       .toBe(fresh.unlocked + SUB_AREA_CHUNKS.Falador.length);
+  });
+});
+
+// The review's mid run: 8 chunks around Lumbridge and Al Kharid.
+const MID_CHUNKS = ['49,50', '49,49', '50,49', '48,50', '50,51', '51,50', '52,50', '51,49'];
+
+describe('chunkTotals', () => {
+  it('counts owned land chunks with the start chunk, out of every land chunk, as runProgress does', () => {
+    expect(chunkTotals({ chunks: MID_CHUNKS })).toEqual({ unlocked: 9, total: 623 });
+    expect(chunkTotals({ chunks: [] })).toEqual({ unlocked: 1, total: 623 });
+    expect(runProgress(run({ chunks: MID_CHUNKS }), 'chunked')).toMatchObject({ unlocked: 9, total: 623 });
+  });
+
+  it('ignores duplicates, the start chunk and anything that is not a land chunk', () => {
+    expect(chunkTotals({ chunks: ['49,50', '49,50', '50,50', '0,0'] })).toEqual({ unlocked: 2, total: 623 });
+  });
+});
+
+describe('chunkRegionMastery', () => {
+  it("counts each region's owned chunks, Misthalin included, and nothing a chunk doesn't sit in", () => {
+    expect(chunkRegionMastery({ chunks: MID_CHUNKS })).toEqual([
+      { group: 'Misthalin', count: 6, total: 32, percent: 6 / 32 },
+      { group: 'Kharidian Desert', count: 3, total: 44, percent: 3 / 44 },
+    ]);
+  });
+
+  it('shows the start chunk on a fresh run', () => {
+    expect(chunkRegionMastery({ chunks: [] })).toEqual([{ group: 'Misthalin', count: 1, total: 32, percent: 1 / 32 }]);
   });
 });

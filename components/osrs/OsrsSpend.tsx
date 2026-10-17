@@ -21,6 +21,7 @@ import { useScrollMore } from '../../utils/scrollFade';
 import { preloadModelViewer } from '../EntityModel';
 import { loadModelManifest } from '../../data/entityModels';
 import { lazyWithRetry } from '../../utils/lazyRetry';
+import { startChunkMilestoneText, type StartChunkMilestone } from '../../utils/startChunkMilestone';
 
 // Chunked's exploring rolls, Breakthroughs and Fate's Mercy (loads with the chunk content).
 const ChunkedFatePanel = lazyWithRetry(() => import('../ChunkedFatePanel').then(m => ({ default: m.ChunkedFatePanel })));
@@ -43,8 +44,19 @@ const statusText = (st: CardState) =>
   st.complete ? 'Complete.' : st.blocked ? 'Blocked: no entry here is eligible yet.' : !st.keysAvailable ? 'Needs a Key to roll.' : 'Ready to roll for 1 Key.';
 
 /** Notices that only show when they apply: Omni-Keys ready and Keys owed. */
-const Notices: React.FC<{ specialKeys: number; keysOwed: number; isChunked: boolean }> = ({ specialKeys, keysOwed, isChunked }) => (
+const Notices: React.FC<{ specialKeys: number; keysOwed: number; isChunked: boolean; milestone?: StartChunkMilestone | null }> = ({ specialKeys, keysOwed, isChunked, milestone }) => (
   <>
+    {milestone && (
+      <div className="ospend-note" data-testid="start-chunk-milestone">
+        <div className="osrs-slot ospend-note-slot">
+          <img className="osrs-px" src={KEY_ICON} alt="" aria-hidden="true" />
+        </div>
+        <div className="ospend-note-words">
+          <span className="t">Start chunk: {milestone.levelsToGo} level{milestone.levelsToGo === 1 ? '' : 's'} to a Key</span>
+          <span className="s">{startChunkMilestoneText(milestone)}</span>
+        </div>
+      </div>
+    )}
     {specialKeys > 0 && (
       <div className="ospend-note">
         <div className="osrs-slot ospend-note-slot">
@@ -176,7 +188,7 @@ const RecentChat: React.FC<{ history: readonly LogEntry[]; name: string }> = ({ 
  * from GachaSection's useSpendModel.
  */
 const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
-  const { keys, specialKeys, chaosKeys, keysOwed, unlocks, pendingUnlock, gameModeId, isChunked, rollable, totalLevel, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES } = useSpendModel();
+  const { keys, specialKeys, chaosKeys, keysOwed, unlocks, pendingUnlock, gameModeId, isChunked, rollable, totalLevel, milestone, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES } = useSpendModel();
   const { customMode, history, linkedAccount } = useGame();
   const { spendTable } = useKeysView();
   const sel = SPEND_CATEGORIES.find(c => c.type === spendTable) ?? SPEND_CATEGORIES.find(c => c.type === TableType.REGIONS || c.type === TableType.CHUNKS) ?? SPEND_CATEGORIES[0];
@@ -225,7 +237,7 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
   if (!wide) {
     return (
       <div className="ospend ospend-compact">
-        <Notices specialKeys={specialKeys} keysOwed={keysOwed ?? 0} isChunked={isChunked} />
+        <Notices specialKeys={specialKeys} keysOwed={keysOwed ?? 0} isChunked={isChunked} milestone={milestone} />
         <ChaosRow chaosKeys={chaosKeys} totalLevel={totalLevel} onSpend={handleChaosUnlock} wide={false} busy={!!pendingUnlock} />
         {isChunked && <Suspense fallback={null}><ChunkedFatePanel osrs compact /></Suspense>}
         <div ref={cardsRef} className={`osrs-inner ospend-cards${cardsMore ? ' is-more' : ''}`}>
@@ -257,7 +269,7 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
     <div className="ospend ospend-wide">
       <div className="osrs-win ospend-main">
         <OsrsKeysTabs hint="Spend a Key on a table to unlock a random entry from it." small />
-        <Notices specialKeys={specialKeys} keysOwed={keysOwed ?? 0} isChunked={isChunked} />
+        <Notices specialKeys={specialKeys} keysOwed={keysOwed ?? 0} isChunked={isChunked} milestone={milestone} />
         <ChaosRow chaosKeys={chaosKeys} totalLevel={totalLevel} onSpend={handleChaosUnlock} wide busy={!!pendingUnlock} />
         {isChunked && <Suspense fallback={null}><ChunkedFatePanel osrs /></Suspense>}
 

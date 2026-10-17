@@ -50,6 +50,23 @@ describe('VoidAltar Cartographer', () => {
 
     expect(offeredKeys()).toEqual(first);
   });
+
+  it('keeps the same offer after a page reload on an unseeded run', async () => {
+    const offerAfterLoad = async () => {
+      vi.resetModules();
+      const { VoidAltar } = await import('./VoidAltar');
+      const view = render(<VoidAltar onClose={vi.fn()} />);
+      fireEvent.click(screen.getByRole('button', { name: /Ritual of the Cartographer/ }));
+      const keys = offeredKeys();
+      view.unmount();
+      return keys;
+    };
+    const random = vi.spyOn(Math, 'random');
+    const first = await offerAfterLoad();
+    expect(first).toHaveLength(3);
+    expect(await offerAfterLoad()).toEqual(first);
+    expect(random).not.toHaveBeenCalled();
+  });
 });
 
 describe('VoidAltar header', () => {

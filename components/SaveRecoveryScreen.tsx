@@ -1,6 +1,7 @@
 import { AlertTriangle, CheckCircle2, Download, ShieldAlert } from 'lucide-react';
 import { useMemo, useRef, useState, type FC } from 'react';
 import { visibleAreaUnlocks } from '../data/areaMapPolicy';
+import { chunkTotals } from '../utils/runProgress';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import type { SaveWriteAuthorization } from '../utils/profileWriterLease';
 import type { ValidatedRecoveryCandidate, SaveRecoveryDecision } from '../utils/saveRecovery';
@@ -81,10 +82,13 @@ const formatCapturedAt = (capturedAt: number | null): string => {
 };
 
 const candidateSummary = (candidate: ValidatedRecoveryCandidate): string => {
-  const regions = visibleAreaUnlocks(candidate.state.unlocks?.regions ?? []).length;
   const events = Array.isArray(candidate.state.history) ? candidate.state.history.length : 0;
   const keys = Number.isFinite(candidate.state.keys) ? candidate.state.keys : 0;
-  return `${keys} keys · ${regions} visible region${regions === 1 ? '' : 's'} · ${events} event${events === 1 ? '' : 's'}`;
+  // Chunked runs hold chunks, not named areas: count those instead.
+  const territory = candidate.state.gameModeId === 'chunked'
+    ? (n => `${n} chunk${n === 1 ? '' : 's'}`)(chunkTotals(candidate.state.unlocks).unlocked)
+    : (n => `${n} visible region${n === 1 ? '' : 's'}`)(visibleAreaUnlocks(candidate.state.unlocks?.regions ?? []).length);
+  return `${keys} keys · ${territory} · ${events} event${events === 1 ? '' : 's'}`;
 };
 
 const sourceLabel = (candidate: ValidatedRecoveryCandidate): string => {

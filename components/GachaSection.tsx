@@ -14,7 +14,9 @@ import { Sparkles, Dices, Dna, Sprout, Key } from './OsrsIcon';
 import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { andList, LEVEL_CHAOS_CHANCE, SKILL_CHAOS_MILESTONES } from '../config/economy';
 import { openDashboardPool } from '../utils/dashboardPoolNavigation';
-import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, chunkLabel } from '../utils/chunkAdjacency';
+import { chunkLabel } from '../utils/chunkAdjacency';
+import { chunkTotals } from '../utils/runProgress';
+import { startChunkMilestone, startChunkMilestoneText } from '../utils/startChunkMilestone';
 
 const ChunkedFatePanel = lazyWithRetry(() => import('./ChunkedFatePanel').then(m => ({ default: m.ChunkedFatePanel })));
 
@@ -197,7 +199,8 @@ export const useSpendModel = () => {
     }
     return result;
   }, [unlocks, gameModeId, customMode]);
-  const ownedChunks = ALL_CHUNK_KEYS.filter(key => key !== CHUNKED_START_KEY && (unlocks.chunks ?? []).includes(key)).length;
+  // One chunk count everywhere: owned land chunks, the start chunk included.
+  const chunkCount = chunkTotals(unlocks);
 
   // Calculate Total Level for Display
   const totalLevel = useMemo(() => {
@@ -216,7 +219,7 @@ export const useSpendModel = () => {
     { type: TableType.SKILLS, label: 'Skills', subLabel: 'Unlock next methods tier', iconSrc: OSRS_GACHA_ICONS.SKILLS, unlocked: tierCount(unlocks.skills), total: SKILLS_LIST.length, can: canUnlock.skills },
     isChunked
       // An empty frontier is not "Done": more land opens after Sailing.
-      ? { type: TableType.CHUNKS, label: 'Chunks', subLabel: 'Adjacent Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: ownedChunks, total: ALL_CHUNK_KEYS.length - 1, can: ownedChunks < ALL_CHUNK_KEYS.length - 1 }
+      ? { type: TableType.CHUNKS, label: 'Chunks', subLabel: 'Adjacent Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: chunkCount.unlocked, total: chunkCount.total, can: chunkCount.unlocked < chunkCount.total }
       : { type: TableType.REGIONS, label: 'Areas', subLabel: 'New Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: areaPool.filter(area => isAreaReachable(area, unlocks, gameModeId)).length, total: areaPool.length, can: canUnlock.regions },
     { type: TableType.MOBILITY, label: 'Mobility', subLabel: 'Travel Networks', iconSrc: OSRS_GACHA_ICONS.MOBILITY, unlocked: (unlocks.mobility ?? []).length, total: MOBILITY_LIST.length, can: canUnlock.mobility },
     { type: TableType.ARCANA, label: COMBAT_POWERS_LABEL, subLabel: COMBAT_POWERS_DESCRIPTION, iconSrc: OSRS_GACHA_ICONS.ARCANA, unlocked: (unlocks.arcana ?? []).length, total: ARCANA_LIST.length, can: canUnlock.arcana },
@@ -231,7 +234,9 @@ export const useSpendModel = () => {
     ...(bankLocks ? [{ type: TableType.BANKS, label: 'Banks', subLabel: 'Bank Access', iconSrc: OSRS_GACHA_ICONS.BANKS, unlocked: (unlocks.banks ?? []).length, total: BANK_IDS.length, can: (canUnlock as any).banks as boolean }] : []),
   ];
 
-  return { keys, specialKeys, chaosKeys, keysOwed, unlocks, pendingUnlock, animationsEnabled, gameModeId, isChunked, rollable, totalLevel, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES };
+  const milestone = startChunkMilestone(gameModeId, unlocks, totalLevel);
+
+  return { keys, specialKeys, chaosKeys, keysOwed, unlocks, pendingUnlock, animationsEnabled, gameModeId, isChunked, rollable, totalLevel, milestone, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES };
 };
 
 const OsrsSpend = lazyWithRetry(() => import('./osrs/OsrsSpend'));
@@ -244,7 +249,7 @@ export const GachaSection: React.FC = () => (
 );
 
 const ClassicGachaSection: React.FC = () => {
-  const { keys, specialKeys, chaosKeys, keysOwed, pendingUnlock, animationsEnabled, isChunked, rollable, totalLevel, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES } = useSpendModel();
+  const { keys, specialKeys, chaosKeys, keysOwed, pendingUnlock, animationsEnabled, isChunked, rollable, totalLevel, milestone, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES } = useSpendModel();
 
   return (
     <div className="h-full flex flex-col relative p-4">
@@ -317,6 +322,13 @@ const ClassicGachaSection: React.FC = () => {
             </div>
         )}
       </div>
+
+      {/* Chunked: the start-chunk Key every 25 total levels, while it applies. */}
+      {milestone && (
+        <p data-testid="start-chunk-milestone" className="mb-3 rounded-lg border border-amber-500/30 bg-amber-950/20 px-3 py-2 text-[11px] font-mono leading-snug text-amber-200/80">
+          {startChunkMilestoneText(milestone)}
+        </p>
+      )}
 
       {/* Chunked: Breakthrough rolls and Fate's Mercy. */}
       {isChunked && (

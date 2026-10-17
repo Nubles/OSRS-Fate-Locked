@@ -5,6 +5,7 @@ import { skillChunkNodesByTier, skillStations } from '../../utils/skillChunkNode
 import { chunkContentService } from '../../services/ChunkContentService';
 import { summarisePlaces, showChunkOnMap } from '../../utils/chunkLocations';
 import { useGame } from '../../context/GameContext';
+import { skillGatherNote } from '../../utils/worldWording';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatKeyPercent, skillLevelKeyChance } from '../../utils/keyRoll';
 import { isSkillChaosMilestone, LEVEL_CHAOS_CHANCE } from '../../config/economy';
@@ -77,7 +78,7 @@ const OsrsRegionPicker: React.FC<{ node: string; onJump: (cx: number, cy: number
 export const OsrsSkillGuide: React.FC<Props> = ({ skill, currentTier, onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
-  const { unlocks } = useGame();
+  const { unlocks, gameModeId } = useGame();
   const level = unlocks.levels[skill] || 1;
   const unlockData = SKILL_UNLOCK_DATA[skill] || {};
   const tiers = Array.from({ length: 10 }, (_, i) => i + 1);
@@ -270,7 +271,7 @@ export const OsrsSkillGuide: React.FC<Props> = ({ skill, currentTier, onClose })
 
         <div className="osrs-chat" style={{ flexShrink: 0, padding: '6px 10px', lineHeight: '18px' }}>
           {tab === 'gather'
-            ? 'Everything this skill can gather on the world map, grouped by the tier that unlocks it. Click a resource to pick a region and jump straight there.'
+            ? skillGatherNote(gameModeId)
             : 'Unlocking a tier grants access to training methods and equipment within that level range. You may train beyond your unlocked tier, but you can only use unlocked content.'}
         </div>
 

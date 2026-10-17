@@ -35,6 +35,16 @@ export const GUIDES: Record<string, Guide> = {
       'The list view counts the areas you hold in each region.',
     ],
   },
+  // Chunked's World tab: the player owns map chunks, not named areas.
+  WORLD_CHUNKED: {
+    title: 'World',
+    blurb: 'Where you can go, on the OSRS world map.',
+    bullets: [
+      'See the chunks you own, lit up on the world map; the chunks next to them can be rolled next.',
+      'Pan and zoom the map; hover for tile and chunk coordinates, and click a chunk to see what it holds.',
+      'The list view shows each region’s named areas you have a chunk in.',
+    ],
+  },
   ACTIVITIES: {
     title: 'Activities & Utility',
     blurb: 'Everything else Keys unlock: bosses, minigames, guilds, transport and more.',
@@ -237,6 +247,10 @@ export const GUIDES: Record<string, Guide> = {
     ],
   },
 };
+
+/** The guide a dashboard tab shows in this mode: Chunked has its own World guide. */
+export const guideIdFor = (tab: string, gameModeId: string | undefined): string =>
+  gameModeId === 'chunked' && GUIDES[`${tab}_CHUNKED`] ? `${tab}_CHUNKED` : tab;
 
 interface Props { id: string; className?: string; suspendModals?: boolean }
 

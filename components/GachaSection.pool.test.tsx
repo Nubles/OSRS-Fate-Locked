@@ -64,3 +64,33 @@ describe('Spend Keys Areas card', () => {
     expect(card('Areas').textContent).toContain(`0/${REGIONS_LIST.length}`);
   });
 });
+
+describe('Spend Keys Chunks card', () => {
+  it('counts the start chunk out of every land chunk, as the share card does', async () => {
+    const chunks = ['49,50', '49,49', '50,49', '48,50', '50,51', '51,50', '52,50', '51,49'];
+    await renderWith({ ...createFreshState().unlocks, regions: [], chunks }, 'chunked');
+
+    // Once read 8/622 here and 9/623 on the share map card.
+    const { runProgress } = await import('../utils/runProgress');
+    const shared = runProgress({ ...createFreshState().unlocks, chunks }, 'chunked');
+    expect(card('Chunks').textContent).toContain(`${shared.unlocked}/${shared.total}`);
+    expect(card('Chunks').textContent).toContain('9/623');
+  });
+});
+
+describe('Spend Keys start-chunk milestone', () => {
+  it('shows the levels to the next start-chunk Key while only the start chunk is held', async () => {
+    const fresh = createFreshState().unlocks;
+    game.current = { ...createFreshState(), keys: 0, unlocks: { ...fresh, regions: [], chunks: [], levels: { ...fresh.levels } }, gameModeId: 'chunked', rollUnlock: vi.fn() };
+    const total = Object.values(fresh.levels).reduce((a, b) => a + b, 0);
+    const { GachaSection } = await import('./GachaSection');
+    render(<GachaSection />);
+    const next = (Math.floor(total / 25) + 1) * 25;
+    expect(screen.getByTestId('start-chunk-milestone').textContent).toContain(`Next at total level ${next}: ${next - total} level`);
+  });
+
+  it('goes away once another chunk is unlocked', async () => {
+    await renderWith({ ...createFreshState().unlocks, regions: [], chunks: ['49,50'] }, 'chunked');
+    expect(screen.queryByTestId('start-chunk-milestone')).toBeNull();
+  });
+});

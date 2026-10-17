@@ -7,7 +7,8 @@ import { resolveModeRules } from '../config/gameModes';
 import { BARROWS_BROTHERS, INVOCATIONS, INVOCATION_ROLLS, RITUALS, SACRIFICE_USES_PER_RUN, invocationAllowed, invocationOmniBonus, ritualEffect, ritualFateCost, type Invocation } from '../config/economy';
 import { ritualAvailability, rollRitualActive } from '../utils/ritualEffects';
 import type { NewRitualId } from '../context/GameContext';
-import { getChunkFrontier, chunkKey, chunkLabel } from '../utils/chunkAdjacency';
+import { chunkKey, chunkLabel } from '../utils/chunkAdjacency';
+import { cartographerHint, cartographerOffer } from '../utils/cartographerOffer';
 import { chunkContentService } from '../services/ChunkContentService';
 import { X } from 'lucide-react';
 import { RitualIcon } from './rituals/RitualIcon';
@@ -25,19 +26,11 @@ interface ChunkChoice {
   hint: string | null;
 }
 
-/**
- * The last Cartographer offer, pinned to the run's history tip. Offers are
- * drawn when the chooser opens; on an unseeded run each draw is fresh, so
- * without this, walking away and reopening re-rolled them for free. Any
- * committed action moves the tip and allows a new draw.
- */
-let pinnedCartographerOffer: { tip: string; keys: string[] } | null = null;
-
 export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
   const osrs = useIsOsrsUi();
-  const { fatePoints, keys, activeBuff, performRitual, performGambit, performCartographer, castRitual, rituals: running, unlocks, gameModeId, customMode, nextFloat, runId, history, freeRituals } = useGame();
+  const { fatePoints, keys, activeBuff, performRitual, performGambit, performCartographer, castRitual, rituals: running, unlocks, gameModeId, customMode, runId, history, freeRituals, rngSeed, rngVersion } = useGame();
 
   // The Gambit and Sacrifice can't be undone: arm on the first click, fire on
   // the second, disarm when anything else is touched.
@@ -55,39 +48,19 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   useEffect(() => { void loadRitualFonts(); }, []);
 
   const openCartographer = () => {
-    // Draw 3 distinct candidates from the live frontier (fewer if it's small).
-    const frontier = getChunkFrontier(unlocks.chunks ?? [], unlocks);
-    const tip = `${runId}:${history.length}:${history[history.length - 1]?.hash ?? ''}`;
-    const pinned = pinnedCartographerOffer?.tip === tip
-      ? pinnedCartographerOffer.keys
-          .map(key => frontier.find(chunk => chunkKey(chunk) === key))
-          .filter((chunk): chunk is (typeof frontier)[number] => chunk !== undefined)
-      : [];
-    let shuffled: typeof frontier;
-    if (pinned.length > 0) {
-      shuffled = pinned;
-    } else {
-      // Partial Fisher–Yates through the seeded-run choke point: the 3 offered
-      // chunks are deterministic per chain tip on a seeded run. The count is
-      // fixed before the loop because splice shrinks the pool.
-      const pool = [...frontier];
-      shuffled = [];
-      const count = Math.min(3, pool.length);
-      for (let i = 0; i < count; i++) {
-        shuffled.push(pool.splice(Math.floor(nextFloat('cartographer', i) * pool.length), 1)[0]);
-      }
-      pinnedCartographerOffer = { tip, keys: shuffled.map(chunkKey) };
-    }
-    setChunkChoices(shuffled.map((c) => {
+    // The same 3 frontier chunks every time the chooser opens, reloads
+    // included, until the run logs something (utils/cartographerOffer.ts).
+    const offer = cartographerOffer({ unlocks, history, runId, rngSeed, rngVersion });
+    setChunkChoices(offer.map((c) => {
       const key = chunkKey(c);
       let hint: string | null = null;
       if (chunkContentService.ready) {
         const content = chunkContentService.contentFor(c.cx, c.cy);
-        const bits: string[] = [];
-        if (chunkContentService.hasBank(c.cx, c.cy)) bits.push('bank');
-        if (content && content.shops.length > 0) bits.push(`${content.shops.length} shops`);
-        if (content && content.monsters.length > 0) bits.push(`${content.monsters.length} monsters`);
-        hint = bits.length > 0 ? bits.join(' · ') : 'quiet terrain';
+        hint = cartographerHint({
+          bank: chunkContentService.hasBank(c.cx, c.cy),
+          shops: content?.shops.length ?? 0,
+          monsters: content?.monsters.length ?? 0,
+        });
       }
       return { key, label: chunkLabel(key), hint };
     }));
