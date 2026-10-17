@@ -89,6 +89,32 @@ describe("Fate's Mercy", () => {
     expect(gameReducer(drawn, { type: 'CALL_ON_FATE', payload: { roll: 0, revealId: 'reveal-2', doableQuests: [] } })).toBe(drawn);
   });
 
+  it('is not held shut by a skill the run cannot really train (play review 1 and 2)', () => {
+    const settled = { ...dry(), chunkedBreakthroughs: { Hitpoints: 2, Woodcutting: 3 } };
+    const withSkill = (skill: string, over: Record<string, unknown> = {}) => ({
+      ...settled,
+      unlocks: { ...settled.unlocks, ...over, skills: { ...settled.unlocks.skills, [skill]: 1 } },
+    });
+    // Herblore from Falador's herb patch, with the Herb patch and Farming open but no Druidic Ritual.
+    const opened = withSkill('Herblore', { chunks: ['47,51'], farming: ['Herb'], levels: { ...settled.unlocks.levels, Farming: 10 } });
+    const herblore = { ...opened, unlocks: { ...opened.unlocks, skills: { ...opened.unlocks.skills, Farming: 1 } } };
+    expect(chunkedSkillHasRoom('Herblore', herblore.unlocks)).toBe(false);
+    expect(mercyBlocker(herblore)).not.toBe('skill_room');
+    const ritual = { ...herblore, unlocks: { ...herblore.unlocks, quests: ['Druidic Ritual'] } };
+    expect(chunkedSkillHasRoom('Herblore', ritual.unlocks)).toBe(true);
+    expect(mercyBlocker(ritual)).toBe('skill_room');
+    // Smithing at the castle furnace with no ore anywhere.
+    const smithing = withSkill('Smithing');
+    expect(chunkedSkillHasRoom('Smithing', smithing.unlocks)).toBe(false);
+    expect(mercyBlocker(smithing)).toBeNull();
+    // Firemaking with Woodcutting open has logs to burn.
+    expect(chunkedSkillHasRoom('Firemaking', withSkill('Firemaking').unlocks)).toBe(true);
+    // Sailing before Pandemonium.
+    const sailing = withSkill('Sailing', { chunks: ['47,50'] });
+    expect(chunkedSkillHasRoom('Sailing', sailing.unlocks)).toBe(false);
+    expect(chunkedSkillHasRoom('Sailing', { ...sailing.unlocks, quests: ['Pandemonium'] })).toBe(true);
+  });
+
   it('refuses a call when the run is not dry', () => {
     const state = { ...dry(), keys: 1, chunkedBreakthroughs: { Hitpoints: 2, Woodcutting: 3 } };
     expect(gameReducer(state, { type: 'CALL_ON_FATE', payload: { roll: 0, revealId: 'x', doableQuests: [] } })).toBe(state);

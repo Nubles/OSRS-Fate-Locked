@@ -8,7 +8,8 @@ import { chunksToExplore, exploreBlocker, exploreRollsLeft, exploreThings, explo
 import { mercyBlocker } from './chunkedFate';
 
 // 49,50 (west of the Lumbridge Castle start chunk) has something to fight,
-// Hunter and Thieving from tier 2, and Woodcutting from tier 1.
+// a tree patch (Farming from tier 2, oak at 15), Thieving from tier 2, and
+// Woodcutting from tier 1.
 const WEST = '49,50';
 
 const run = (over: Record<string, unknown> = {}) => ({
@@ -31,7 +32,7 @@ const run = (over: Record<string, unknown> = {}) => ({
 describe('Chunked exploring rolls', () => {
   it('lists what a chunk offers and holds at most three rolls', () => {
     expect(exploreThings(WEST).map(thing => [thing.label, thing.tier])).toEqual([
-      ['Fought something', 1], ['Trained Hunter', 2], ['Trained Thieving', 2], ['Trained Woodcutting', 1],
+      ['Fought something', 1], ['Trained Farming', 2], ['Trained Thieving', 2], ['Trained Woodcutting', 1],
     ]);
     expect(CHUNK_EXPLORE_ROLLS).toBe(3);
     expect(DROP_RATES[DropSource.CHUNK_EXPLORE]).toBe(10);
@@ -43,7 +44,7 @@ describe('Chunked exploring rolls', () => {
   it('rolls only things the run can do, once each, and only in chunks unlocked since the rule', () => {
     const state = run();
     expect(exploreBlocker(state, WEST, '@monster')).toBeNull();
-    expect(exploreBlocker(state, WEST, 'Hunter')).toBe('Needs Hunter tier 2.');
+    expect(exploreBlocker(state, WEST, 'Thieving')).toBe('Needs Thieving tier 2.');
     expect(exploreBlocker(state, WEST, 'Mining')).toBe('That isn’t something this chunk offers.');
     expect(exploreBlocker({ ...state, chunkExplore: { from: 1, done: {} } }, WEST, '@monster')).toBe('This chunk has no exploring rolls left.');
     expect(exploreBlocker({ ...state, gameModeId: 'vanilla' }, WEST, '@monster')).toBe('This chunk has no exploring rolls left.');
@@ -51,12 +52,30 @@ describe('Chunked exploring rolls', () => {
     const once = gameReducer(state, { type: 'CHUNK_EXPLORE', payload: { chunk: WEST, fact: '@monster' } });
     expect(once.chunkExplore).toEqual({ from: 0, done: { [WEST]: ['@monster'] } });
     expect(gameReducer(once, { type: 'CHUNK_EXPLORE', payload: { chunk: WEST, fact: '@monster' } })).toBe(once);
-    expect(gameReducer(once, { type: 'CHUNK_EXPLORE', payload: { chunk: WEST, fact: 'Hunter' } })).toBe(once);
+    expect(gameReducer(once, { type: 'CHUNK_EXPLORE', payload: { chunk: WEST, fact: 'Thieving' } })).toBe(once);
 
-    const full = { ...state, unlocks: { ...state.unlocks, skills: { ...state.unlocks.skills, Hunter: 2, Thieving: 2 } }, chunkExplore: { from: 0, done: { [WEST]: ['@monster', 'Hunter', 'Woodcutting'] } } };
+    const full = { ...state, unlocks: { ...state.unlocks, skills: { ...state.unlocks.skills, Farming: 2, Thieving: 2 }, farming: ['Wood Tree'] }, chunkExplore: { from: 0, done: { [WEST]: ['@monster', 'Thieving', 'Woodcutting'] } } };
     expect(exploreRollsLeft(full, WEST)).toBe(0);
     expect(chunksToExplore(full)).toEqual([]);
-    expect(gameReducer(full, { type: 'CHUNK_EXPLORE', payload: { chunk: WEST, fact: 'Thieving' } })).toBe(full);
+    expect(gameReducer(full, { type: 'CHUNK_EXPLORE', payload: { chunk: WEST, fact: 'Farming' } })).toBe(full);
+  });
+
+  it('needs the patch type unlocked before a patch can be explored (economy review 6)', () => {
+    // 49,50's only patch is a tree patch.
+    const farmer = run({ unlocks: { ...run().unlocks, skills: { Hitpoints: 1, Farming: 2 }, farming: [] } });
+    expect(exploreBlocker(farmer, WEST, 'Farming')).toBe('Needs the Wood Tree patch unlocked.');
+    expect(exploreBlocker({ ...farmer, unlocks: { ...farmer.unlocks, farming: ['Wood Tree'] } }, WEST, 'Farming')).toBeNull();
+    expect(exploreBlocker({ ...farmer, unlocks: { ...farmer.unlocks, farming: ['Herb'] } }, WEST, 'Farming')).toBe('Needs the Wood Tree patch unlocked.');
+
+    // Falador's allotment patches (47,51): the herb patch needs the Herb unlock, whatever else is open.
+    const falador = run({ unlocks: { ...run().unlocks, chunks: ['47,51'], skills: { Hitpoints: 1, Farming: 1 }, farming: ['Allotment'] } });
+    expect(exploreBlocker(falador, '47,51', '@herb')).toBe('Needs the Herb patch unlocked.');
+    expect(exploreBlocker(falador, '47,51', 'Farming')).toBeNull();
+    expect(exploreBlocker({ ...falador, unlocks: { ...falador.unlocks, farming: ['Herb'] } }, '47,51', '@herb')).toBeNull();
+
+    // Port Sarim's only patch is the spirit tree patch, which needs 83 Farming (tier 9).
+    const sarim = run({ unlocks: { ...run().unlocks, chunks: ['47,50'], skills: { Hitpoints: 1, Farming: 1 }, farming: ['Spirit Tree'] } });
+    expect(exploreBlocker(sarim, '47,50', 'Farming')).toBe('Needs Farming tier 9.');
   });
 
   it('starts a run’s record on its next chunk, so chunks it already held pay nothing', () => {
@@ -86,7 +105,7 @@ describe('Chunked exploring rolls', () => {
     expect(exploreWaiting(capped)).toBe(true);
     expect(mercyBlocker(capped)).toBe('explore');
     const explored = { ...capped, chunkExplore: { from: 0, done: { [WEST]: ['@monster'] } } };
-    // Hunter, Thieving and Woodcutting are all locked, so nothing else can be explored yet.
+    // Farming, Thieving and Woodcutting are all locked, so nothing else can be explored yet.
     expect(exploreWaiting(explored)).toBe(false);
     expect(mercyBlocker(explored)).not.toBe('explore');
   });

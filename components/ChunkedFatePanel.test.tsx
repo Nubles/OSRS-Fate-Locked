@@ -113,11 +113,13 @@ describe('Chunked fate panel', () => {
     const { ChunkedFatePanel } = await import('./ChunkedFatePanel');
     render(<ChunkedFatePanel />);
     expect(screen.getByText('Explore your new chunks')).toBeTruthy();
-    const hunter = screen.getByRole('button', { name: 'Trained Hunter' }) as HTMLButtonElement;
-    expect(hunter.disabled).toBe(true);
-    expect(hunter.title).toBe('Needs Hunter tier 2.');
+    const thieving = screen.getByRole('button', { name: 'Trained Thieving' }) as HTMLButtonElement;
+    expect(thieving.disabled).toBe(true);
+    expect(thieving.title).toBe('Needs Thieving tier 2.');
     // The reason is printed too: phones have no hover.
-    expect(screen.getByText(/Trained Hunter: needs Hunter tier 2\./)).toBeTruthy();
+    expect(screen.getByText(/Trained Thieving: needs Thieving tier 2\./)).toBeTruthy();
+    // The chunk's tree patch needs its patch type unlocked too.
+    expect((screen.getByRole('button', { name: 'Trained Farming' }) as HTMLButtonElement).title).toBe('Needs Farming tier 2.');
     // Chunks read by their own name and coordinates, so two Lumbridge chunks read apart.
     expect(screen.getByText('Lumbridge Castle Backyard (49, 50)')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Fought something' }));

@@ -22,7 +22,7 @@
  */
 import { TableType, type GameState } from '../types';
 import { SKILLS_LIST } from '../data/items';
-import { chunkedTrainingTiers, chunkedSkillRollable } from './chunkedSkillPool';
+import { chunkedTrainableTier, chunkedSkillRollable } from './chunkedSkillPool';
 import { randomUnlockPool, type RandomUnlockCandidate } from './gameEngine';
 import { exploreWaiting } from './chunkExplore';
 import { ritualFateCost } from '../config/economy';
@@ -34,11 +34,16 @@ export type FateState = Pick<GameState, 'gameModeId' | 'unlocks' | 'keys' | 'spe
 /** The highest level a tier lets a skill reach. */
 export const tierCap = (tier: number): number => (tier >= 10 ? 99 : tier * 10);
 
-/** Whether the run's chunks can train this skill now and it has levels left below its cap. */
+/**
+ * Whether the run's chunks can train this skill now and it has levels left
+ * below its cap. "Can train" is chunkedTrainableTier's: the content must be
+ * usable (its opening quest done, its patch type or guild unlocked, its input
+ * reachable), so a skill the run can't really train never holds Mercy shut.
+ */
 export const chunkedSkillHasRoom = (skill: string, unlocks: GameState['unlocks']): boolean => {
   const tier = unlocks.skills[skill] ?? 0;
   if (tier < 1) return false;
-  const lowest = chunkedTrainingTiers(unlocks.chunks ?? []).get(skill);
+  const lowest = chunkedTrainableTier(skill, unlocks);
   if (lowest === undefined || lowest > tier) return false;
   return (unlocks.levels[skill] ?? 1) < tierCap(tier);
 };
