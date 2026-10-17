@@ -4,11 +4,10 @@ import { MapPin } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { QuestData, QUEST_DATA, EquipmentSlot } from '../data/questData';
 import { chunkContentService } from '../services/ChunkContentService';
-import { travelReachability } from '../utils/travelReach';
-import { CHUNKED_START } from '../utils/chunkAdjacency';
+import { cachedChunkedQuestReach } from '../utils/chunkedQuestReach';
 import { chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
-import { questLocations } from '../utils/questLocations';
-import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate, hasCanonicalQuestLocationEvidence, QuestChunkStatus } from '../utils/questDoability';
+import { chunkAreaLabelAt } from '../utils/chunkPlaceLabel';
+import { questChunkStatus, doabilityBucket, DoabilityBucket, hasCanonicalQuestLocationEvidence, QuestChunkStatus } from '../utils/questDoability';
 import {
   evaluateQuestEligibility, questRequirementOptionLabel, withSkillGateQuests,
 } from '../utils/journalStatus';
@@ -146,8 +145,10 @@ export const evaluateQuestDoability = (
   } else if (!isChunked) {
     bucket = reqsMet ? 'DOABLE' : 'REQS';
   } else {
+    // A catalogue quest with no place at all (Learning the Ropes, on
+    // Tutorial Island) reads as the Journal reads it, not as missing data.
     bucket = doabilityBucket(
-      false, reqsMet, chunk, hasCanonicalQuestLocationEvidence(quest),
+      false, reqsMet, chunk, hasCanonicalQuestLocationEvidence(quest) || !!QUEST_DATA[quest.id],
     );
   }
 
@@ -197,20 +198,20 @@ export const questDoabilityRequirementLabels = (
  * while a quest here is doable.
  */
 export const chunkedQuestRows = (unlocks: UnlockState, gameModeId: string): Row[] => {
-  // Gate reachability on per-chunk quest-entry requirements (questSections),
-  // so a quest whose step sits behind an un-done quest reads correctly.
-  const completed = new Set<string>(unlocks.quests as string[]);
-  const known = new Set<string>(Object.keys(QUEST_DATA));
-  const gate = entryBlockedGate(chunkContentService.questSections(), completed, known);
-  // Walk from the free start chunk the map and RuneLite export use; the
-  // Lumbridge place chunk is only corner-adjacent to it and starts locked.
-  const reach = travelReachability(chunkContentService.connectGraph(), unlocks, CHUNKED_START, gate, gameModeId);
+  // Walk from the free start chunk the map and RuneLite export use, gated on
+  // per-chunk quest-entry requirements (questSections), so a quest whose step
+  // sits behind an un-done quest reads correctly. The Journal walks the same.
+  const reach = cachedChunkedQuestReach(chunkContentService.connectGraph(), chunkContentService.questSections(), unlocks);
   const isUnlocked = (cx: number, cy: number) => chunkUnlocked(cx, cy, unlocks, gameModeId);
   return Object.values(QUEST_DATA).map((q) => {
     const hit = chunkContentService.entityLocations(q.id, ['quest']);
-    const chunk = hit ? questChunkStatus(hit.locations, reach.reachable, isUnlocked) : null;
+    let reachable = reach.reachable;
+    const extra = (hit?.locations ?? []).map(({ cx, cy }) => String(cx * 256 + cy))
+      .filter(id => !reachable.has(id) && reach.reaches(q.id, id));
+    if (extra.length) reachable = new Set([...reachable, ...extra]);
+    const chunk = hit ? questChunkStatus(hit.locations, reachable as Set<string>, isUnlocked) : null;
     const chunkLockedAreas = chunk?.access === 'LOCKED'
-      ? questLocations(q.id, unlocks, gameModeId).lockedPlaces.map(place => place.label)
+      ? chunk.blockers.filter(blocker => blocker.access === 'LOCKED').map(blocker => chunkAreaLabelAt(blocker.cx, blocker.cy))
       : [];
     const evaluation = evaluateQuestDoability(
       q, unlocks, chunk, chunkLockedAreas, gameModeId,

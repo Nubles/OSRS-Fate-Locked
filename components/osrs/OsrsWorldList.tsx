@@ -53,7 +53,7 @@ const useAdvisor = (): { heading: string; caption: string; sub: string; empty: s
       chunkContentService.ready ? (cx, cy) => chunkContentService.hasBank(cx, cy) : undefined,
     ).map((r) => {
       const bits: string[] = [];
-      if (r.newAreas.length > 0) bits.push(`opens ${r.newAreas.join(' · ')}`);
+      if (r.newSkills.length > 0) bits.push(`trains ${r.newSkills.join(', ')}`);
       if (r.content?.hasBank) bits.push('bank');
       if (r.content && r.content.shops > 0) bits.push(`${r.content.shops} shop${r.content.shops > 1 ? 's' : ''}`);
       if (r.content && r.content.monsters > 0) bits.push(`${r.content.monsters} monster${r.content.monsters > 1 ? 's' : ''}`);
@@ -65,7 +65,7 @@ const useAdvisor = (): { heading: string; caption: string; sub: string; empty: s
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unlocks, gameModeId, chunked, tick]);
   return chunked
-    ? { heading: 'Frontier Advisor', caption: 'by foothold impact', sub: 'What your rollable chunks are worth. Hope for the top ones.', empty: 'No frontier yet. Roll your first chunk to open one.', rows }
+    ? { heading: 'Frontier Advisor', caption: 'by what opens', sub: 'What your rollable chunks are worth. Hope for the top ones.', empty: 'No frontier yet. Roll your first chunk to open one.', rows }
     : { heading: 'Region Advisor', caption: 'by unlock chain', sub: 'Unlock these areas for the most forward progress.', empty: 'All areas unlocked. Impressive!', rows };
 };
 

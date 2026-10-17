@@ -1,3 +1,4 @@
+import { placeOf } from './chunkLocations';
 import { CHUNK_NAMES } from '../data/chunkNames';
 import { parseChunkKey } from './chunkAdjacency';
 import { chunkLabelWithCoords } from './chunkLabelWithCoords';
@@ -13,4 +14,11 @@ export const chunkPlaceLabel = (key: string): string => {
   if (!name) return chunkLabelWithCoords(key);
   const { cx, cy } = parseChunkKey(key);
   return `${name} (${cx}, ${cy})`;
+};
+
+/** "Draynor Village (48, 52)": a chunk's place with its coordinates, as Chunked blockers name it. */
+export const chunkAreaLabelAt = (cx: number, cy: number): string => {
+  const { label } = placeOf(cx, cy);
+  if (label.endsWith(')')) return label.charAt(0).toUpperCase() + label.slice(1);
+  return `${label.split(' · ')[0]} (${cx}, ${cy})`;
 };

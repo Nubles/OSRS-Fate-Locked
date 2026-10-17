@@ -525,6 +525,31 @@ const analyzeQuestItems = (
   };
 };
 
+/**
+ * Whether the quest's reviewed items can be got in the account's chunks now,
+ * and which can't: analyzeQuestPreparation's verdict from the routes the
+ * account has, without its missing-chunk routes, ranking or fingerprints.
+ * Chunked doability asks it for every quest nothing else blocks.
+ */
+export const questItemsObtainableNow = (
+  questId: string,
+  snapshot: QuestRouteAnalysisSnapshot,
+): { status: QuestRouteStatus; missing: string[] } => {
+  const reviewed = reviewedQuestRequirements(questId);
+  if (!reviewed) throw new Error(`RuneProof has no reviewed item catalogue for ${questId}.`);
+  const { resolution } = resolverSnapshotFrom(snapshot, `now\0${questId}`);
+  const items = reviewed.items.map(requirement => (
+    resolveItemRequirement(requirement, resolution, { currentOnly: true })
+  )) as unknown as QuestItemRouteAnalysis[];
+  return {
+    status: questRouteStatusForItems(items),
+    missing: items
+      .filter(item => item.requirement.supplyPolicy === 'PLAYER_OBTAINED'
+        && (item.state === 'ROUTE_BLOCKED' || item.state === 'NO_CURRENT_SOURCE'))
+      .map(item => item.requirement.item.name),
+  };
+};
+
 export const analyzeQuestPreparation = (
   questId: string,
   snapshot: QuestRouteAnalysisSnapshot,
