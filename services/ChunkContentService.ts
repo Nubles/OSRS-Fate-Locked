@@ -294,12 +294,10 @@ export class ChunkContentService {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), CHUNK_CONTENT_TIMEOUT_MS);
       // The walking sections and RuneLite's routes go with the transport graph.
-      const walking = Promise.all([loadWalkSections(), loadRunRoutes()]);
-      // Chunked mode's exact-chunk checks load alongside, off the critical path: until they
-      // arrive the named areas stand in, and the panels redraw once they do.
-      import('../utils/chunkedContentChecks')
-        .then(m => { m.install(this); if (this.ready) this.emit(); })
-        .catch(() => {});
+      // So do Chunked mode's exact-chunk checks; if they fail to load the named areas stand in,
+      // and the content still counts as loaded.
+      const checks = import('../utils/chunkedContentChecks').then(m => m.install(this)).catch(() => {});
+      const walking = Promise.all([loadWalkSections(), loadRunRoutes(), checks]);
       walking.catch(() => {}); // Reported once the content arrives.
       this.promise = fetch(`${base}chunk-content.json?v=${CHUNK_CONTENT_DATA_VERSION}`, { signal: controller.signal })
         .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })

@@ -42,14 +42,16 @@ export const CHANGELOG_RELEASES = [
     date: '2026-10-17',
     sections: {
       added: [
-        'Exploring: the first new things you do in a chunk you unlock each roll for a Key, up to 3 per chunk. Tick them on Spend Keys.',
-        'Breakthroughs: a skill at its cap gets one 50% roll to open its next tier, if your chunks can train it there.',
-        'Fate’s Mercy: with no Keys, nothing to train and no doable quests, Call on Fate draws a nearby chunk or skill tier.',
+        'Exploring: the first new things you do in a chunk you unlock each roll for a Key, up to 3 per chunk. Chunks you already hold don’t.',
+        'A capped skill gets a 50% Breakthrough roll at its next tier. With nothing left to do, Call on Fate draws a nearby chunk or skill tier.',
       ],
       balance: [
-        'Chunked bosses and minigames now pay a few Keys each and then stop, like Vanilla, and need unlocking before they roll.',
-        'Boss and Minigame Keys only unlock ones inside your chunks, and a Skills Key only rolls skills your chunks can train.',
-        'Chunks you already hold don’t get exploring rolls. Every chunk you unlock from now on does.',
+        'Bosses, minigames, banks, guilds, quests, diaries and Slayer masters count only when their exact chunk is yours.',
+        'Bosses and minigames pay a few Keys and then stop, like Vanilla. Levels past a skill’s tier cap no longer roll Keys.',
+      ],
+      fixed: [
+        'Skills Keys only open skills your chunks can really train. The map only offers chunks you can walk or sail to.',
+        'Unlocks, share cards, sync codes and achievements name and count chunks in Chunked runs.',
       ],
     },
   },
