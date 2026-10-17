@@ -112,36 +112,24 @@ describe('rankFrontierChunks', () => {
     expect(enriched!.contentScore).toBeCloseTo((3 + 1 + 0 + 0.2) / 4);
   });
 
-  it('never lets chunk content alone outrank a new-area foothold', () => {
-    const footholds = new Set(rankFrontierChunks(baseUnlocks([]), 'chunked').filter(r => r.newAreas.length > 0).map(r => r.key));
-    // The most content a chunk can score, on every chunk that is no foothold.
-    const rich = (cx: number, cy: number) => footholds.has(`${cx},${cy}`) ? null : {
-      monsters: Array.from({ length: 9 }, () => ({ name: 'Goblin' })),
-      shops: ['A', 'B', 'C', 'D'],
-      quests: { a: 1, b: 1, c: 1, d: 1 },
-    };
-    const ranked = rankFrontierChunks(baseUnlocks([]), 'chunked', rich, (cx, cy) => !footholds.has(`${cx},${cy}`));
-    const bare = ranked.filter(r => r.newAreas.length === 0);
-    expect(footholds.size).toBeGreaterThan(0);
-    expect(bare.length).toBeGreaterThan(0);
-    for (const foothold of ranked.filter(r => r.newAreas.length > 0)) {
-      for (const tile of bare.filter(r => r.cascadeScore <= foothold.cascadeScore)) {
-        expect(ranked.indexOf(foothold)).toBeLessThan(ranked.indexOf(tile));
-      }
+  it('gives a first chunk of a named area no bonus by itself', () => {
+    // In Chunked, content counts only in its own chunk: opening a corner of
+    // "Kharidian Desert" is worth what it actually opens, nothing more.
+    const ranked = rankFrontierChunks(baseUnlocks([]), 'chunked');
+    const footholds = ranked.filter(r => r.newAreas.length > 0);
+    expect(footholds.length).toBeGreaterThan(0);
+    for (const r of footholds) {
+      expect(r.sortScore).toBeCloseTo(r.cascadeScore + r.contentScore + r.newSkills.length * 3);
     }
-    for (const tile of bare) expect(tile.contentScore).toBeLessThan(3);
   });
 
-  it('sorts by sortScore (impact + content + per-foothold bonus), descending', () => {
+  it('sorts by sortScore (impact + content + per-new-skill bonus), descending', () => {
     const ranked = rankFrontierChunks(baseUnlocks([]), 'chunked');
     for (let i = 1; i < ranked.length; i++) {
       expect(ranked[i - 1].sortScore).toBeGreaterThanOrEqual(ranked[i].sortScore);
     }
-    // Every new-area foothold carries its flat bonus in the sort key — the
-    // impact engine can't see area-gated merchants/resources, so a foothold
-    // must never rank as if it were an empty tile.
     for (const r of ranked) {
-      expect(r.sortScore).toBeCloseTo(r.cascadeScore + r.contentScore + r.newAreas.length * 3);
+      expect(r.sortScore).toBeCloseTo(r.cascadeScore + r.contentScore + r.newSkills.length * 3);
     }
   });
 });

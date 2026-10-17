@@ -571,7 +571,7 @@ export const useQuestJournal = (externalSearch = '') => {
 
   const handleQuestToggle = (e: React.MouseEvent, quest: QuestData) => {
       e.stopPropagation();
-      const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId);
+      const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId, areaRoutes);
       const attestation = requestManualAttestation(
         quest.name,
         eligibility,

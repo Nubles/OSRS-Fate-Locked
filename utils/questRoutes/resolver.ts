@@ -64,6 +64,12 @@ export interface ResolverOptions {
   maxExactRouteCombinations?: number;
   /** Optional lower test/diagnostic ceiling; cannot raise the production hard boundary. */
   maxRouteSearchWorkUnits?: number;
+  /**
+   * Stop after the routes the account has now, without the missing-chunk
+   * routes. An item's state comes from those alone, so a yes/no check such
+   * as Chunked doability can skip the costlier half.
+   */
+  currentOnly?: boolean;
 }
 
 /** Exact complete combinations evaluated before a future data expansion fails closed. */
@@ -80,6 +86,7 @@ export const DEFAULT_RESOLVER_OPTIONS: Required<ResolverOptions> = {
   maxRoutesPerItem: 50,
   maxExactRouteCombinations: MAX_EXACT_ROUTE_COMBINATIONS,
   maxRouteSearchWorkUnits: MAX_ROUTE_SEARCH_WORK_UNITS,
+  currentOnly: false,
 };
 
 type ResolveKey = `${string}|${number}|${string}`;
@@ -1580,7 +1587,7 @@ export const resolveItemRequirement = (
     snapshotFingerprint: snapshotFingerprint(snapshot),
   };
   let analysis = resolveRequirement(requirement, snapshot, context, 0);
-  if (!context.currentSearchIncompleteMayHideUsable) {
+  if (!normalized.currentOnly && !context.currentSearchIncompleteMayHideUsable) {
     context.phase = 'advisory';
     context.active.clear();
     analysis = resolveRequirement(requirement, snapshot, context, 0);
