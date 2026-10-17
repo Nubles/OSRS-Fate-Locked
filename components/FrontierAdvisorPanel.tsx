@@ -70,7 +70,7 @@ export const FrontierAdvisorPanel: React.FC = () => {
       icon={<Compass size={13} />}
       maxShown={5}
       maxNames={3}
-      emptyLabel="No frontier yet — roll your first chunk to open one."
+      emptyLabel="Nothing left to roll next to your land."
       onItemClick={(key) => {
         // Same affordance as the Region Advisor: jump to the chunk's continent
         // card in the list below and flash it.

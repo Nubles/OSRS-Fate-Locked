@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { initialState } from '../context/GameContext';
+import { loadWalkSections } from './walkSections';
 import { MOBILITY_LIST } from '../data/items';
 import { getGameMode } from '../config/gameModes';
 import { TRAVEL_METHODS } from '../data/travelMethods';
@@ -158,6 +159,8 @@ describe('buildRuneliteRulesManifest', () => {
 });
 
 describe('buildRuneliteRulesManifest - frontier', () => {
+  // The export runs once the chunk content is in, and the walking data with it.
+  beforeAll(() => loadWalkSections());
   const build = (gameModeId: string, changes: Partial<typeof initialState.unlocks>) => buildRuneliteRulesManifest({
     unlocks: { ...structuredClone(initialState.unlocks), ...changes },
     run: { runId: 'frontier', runRevision: 1, gameModeId },
@@ -168,13 +171,17 @@ describe('buildRuneliteRulesManifest - frontier', () => {
 
   it("sends a Chunked run's next chunks, in chunk order", async () => {
     const manifest = await build('chunked', { regions: [], chunks: ['49,50', '49,49'] });
-    expect(manifest.frontier).toEqual(['48,49', '48,50', '49,51', '50,49', '50,51', '51,50']);
+    // Not 48,49: the Wizards' Tower is walked into from Draynor, never from Lumbridge Swamp.
+    expect(manifest.frontier).toEqual(['48,50', '49,51', '50,49', '50,51', '51,50']);
   });
 
   it('adds the land its Sailing reaches across the sea', async () => {
+    // Lumbridge Swamp touches the sea, and the sea is one sea: every port
+    // and coast across it joins, Catherby's and Rellekka's ports too.
     const manifest = await build('chunked', { regions: [], chunks: ['49,50', '49,49'], ...sailor });
-    expect(manifest.frontier).toEqual(expect.arrayContaining(['49,47', '50,48']));
-    expect(manifest.frontier).toHaveLength(8);
+    expect(manifest.frontier).toEqual(expect.arrayContaining(['49,47', '50,48', '43,53', '41,57', '28,57']));
+    expect(manifest.frontier).toHaveLength(180);
+    expect(manifest.frontier).not.toContain('48,49');
   });
 
   it('sends no frontier for other runs', async () => {

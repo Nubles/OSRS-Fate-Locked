@@ -17,11 +17,14 @@ import { chunkContentService, type OverlayPoint } from '../services/ChunkContent
 import { travelReachability } from '../utils/travelReach';
 import { entryBlockedGate } from '../utils/questDoability';
 import { QUEST_DATA } from '../data/questData';
-import { CHUNKED_START, isChunkUnlocked, isFrontierChunk } from '../utils/chunkAdjacency';
+import { CHUNKED_START, isChunkUnlocked } from '../utils/chunkAdjacency';
+import { chunkMapState, chunkMapStateLine, chunkedUnlockedCount, reachLensDetail } from '../utils/chunkMapState';
+import { canNavigateOcean, OCEAN_CHUNK_KEYS } from '../utils/oceanAccess';
 import { rankFrontierChunks } from '../utils/frontierAdvisor';
 import { hasMixedAreaOwnership, isNamedAreaReachableViaChunks, isRegionUnlocked } from '../utils/reachability';
 import { displayAreaName, visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { previewOmniArea } from '../utils/omniAreaPreview';
+import { mapAuthoringAvailable } from '../utils/mapAuthoring';
 
 type LensTone = 'good' | 'warn' | 'bad';
 const TONE_FILL: Record<LensTone, string> = { good: 'rgba(16,185,129,0.30)', warn: 'rgba(245,158,11,0.10)', bad: 'rgba(239,68,68,0.22)' };
@@ -208,11 +211,16 @@ const FRONTIER_FILL = 'rgba(245, 158, 11, 0.35)';
 /** The Frontier Advisor's top picks — "hope for these" tint (cyan). */
 const HOT_FRONTIER_FILL = 'rgba(34, 211, 238, 0.45)';
 const ACTIVE_STROKE = 'rgba(250, 204, 21, 0.9)';
+// Chunked mode only — owned chunks no route from the start chunk reaches.
+const CUT_OFF_FILL = 'rgba(168, 85, 247, 0.40)';
+// Chunked mode only — the sea, once the run sails it from a coast it reaches.
+const SEA_OPEN_FILL = 'rgba(56, 189, 248, 0.18)';
 // OSRS layout (World board): unlocked chunks show the map as it is, locked
 // chunks are darkened, chunked mode's frontier is a faint orange/yellow wash.
 const OSRS_DARK_FILL = 'rgba(6, 5, 4, 0.58)';
 const OSRS_FRONTIER_FILL = 'rgba(255, 152, 31, 0.16)';
 const OSRS_HOT_FRONTIER_FILL = 'rgba(255, 255, 0, 0.24)';
+const OSRS_CUT_OFF_FILL = 'rgba(255, 0, 0, 0.30)';
 const OSRS_GRID_LINE_COLOR = 'rgba(140, 170, 210, 0.42)';
 /** Height of the OSRS footer bar under the map, plus the gap above it. */
 const OSRS_FOOT_H = 38;
@@ -626,20 +634,54 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     return chunkContentService.tagList().filter(t => t.includes(q) && !HIDDEN_TAGS.has(t)).slice(0, 5);
   }, [lensInput, lensReady, lens]);
 
+  // The run's routes from its start, as RuneLite's "Not ready" and the
+  // Reachability lens use them. Chunked mode paints the owned chunks they
+  // don't reach, and the sea they do, without the lens; it needs the map data.
+  const runReachability = useMemo(() => {
+    if (!lensReady) return null;
+    const gate = entryBlockedGate(chunkContentService.questSections(), new Set(unlocks.quests as string[]), new Set(Object.keys(QUEST_DATA)));
+    return travelReachability(chunkContentService.connectGraph(), unlocks, isChunked ? CHUNKED_START : chunkForPlace('Lumbridge'), gate, isChunked ? 'chunked' : undefined);
+  }, [lensReady, unlocks, isChunked]);
+  const chunkedCutOff = useMemo(() => {
+    const cut = new Set<string>();
+    if (!isChunked || !runReachability) return cut;
+    for (const id of runReachability.stranded) {
+      const n = +id; const key = `${Math.floor(n / 256)},${n % 256}`;
+      // The sea is drawn open or not at all (chunkedOpenSea), never as cut-off land.
+      if (!OCEAN_CHUNK_KEYS.has(key)) cut.add(key);
+    }
+    return cut;
+  }, [isChunked, runReachability]);
+  /** The sea chunks a Chunked run sails, as "cx,cy": all of them once a route reaches a coast. */
+  const chunkedOpenSea = useMemo(() => {
+    const open: string[] = [];
+    if (!isChunked || !runReachability || !canNavigateOcean(unlocks)) return open;
+    for (const key of OCEAN_CHUNK_KEYS) {
+      const [cx, cy] = key.split(',').map(Number);
+      if (runReachability.reachable.has(String(cx * 256 + cy))) open.push(key);
+    }
+    return open;
+  }, [isChunked, runReachability, unlocks]);
+
   const lensResult = useMemo(() => {
     if (!lens || !lensReady) return null;
 
     // Reachability mode: paint your OWNED chunks by whether they connect to home.
     if (lens.kind === 'reach') {
-      const gate = entryBlockedGate(chunkContentService.questSections(), new Set(unlocks.quests as string[]), new Set(Object.keys(QUEST_DATA)));
-      const res = travelReachability(chunkContentService.connectGraph(), unlocks, isChunked ? CHUNKED_START : chunkForPlace('Lumbridge'), gate, isChunked ? 'chunked' : undefined);
+      const res = runReachability!;
       const chunks: { cx: number; cy: number; tone: LensTone }[] = [];
       for (const id of res.reachable) { const n = +id; chunks.push({ cx: Math.floor(n / 256), cy: n % 256, tone: 'good' }); }
-      for (const id of res.stranded) { const n = +id; chunks.push({ cx: Math.floor(n / 256), cy: n % 256, tone: 'bad' }); }
+      // Chunked runs own the sea once they can sail; until a route reaches a
+      // coast it is left out here rather than painted as hundreds of stranded chunks.
+      const stranded = [...res.stranded].filter(id => {
+        const n = +id;
+        return !isChunked || !OCEAN_CHUNK_KEYS.has(`${Math.floor(n / 256)},${n % 256}`);
+      });
+      for (const id of stranded) { const n = +id; chunks.push({ cx: Math.floor(n / 256), cy: n % 256, tone: 'bad' }); }
       return {
-        chunks, primary: res.reachable.size, total: res.ownedCount,
+        chunks, primary: res.reachable.size, total: res.reachable.size + stranded.length,
         primaryLabel: 'reachable', totalLabel: 'owned',
-        detail: res.stranded.size > 0 ? `${res.stranded.size} stranded (owned but no route from Lumbridge)` : 'Every owned chunk is reachable.',
+        detail: reachLensDetail(stranded.length, isChunked),
         mode: 'reach' as const,
       };
     }
@@ -673,7 +715,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
       chunks, primary: chunks.filter(c => c.tone === 'good').length, total: chunks.length,
       primaryLabel: 'unlocked', totalLabel: 'total', detail, mode: 'find' as const,
     };
-  }, [lens, lensReady, unlocks, isChunked]);
+  }, [lens, lensReady, unlocks, isChunked, runReachability]);
 
   const visibleLensChunks = useMemo(
     () => (lensResult ? (onlyUnlocked && lensResult.mode === 'find' ? lensResult.chunks.filter(c => c.tone === 'good') : lensResult.chunks) : []),
@@ -740,6 +782,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
   useEffect(() => () => { if (hoverRaf.current != null) cancelAnimationFrame(hoverRaf.current); }, []);
 
   const [authoring, setAuthoring] = useState(false);
+  const [canAuthor] = useState(mapAuthoringAvailable);
   const [activeRegion, setActiveRegion] = useState<string>(CONTINENT_NAMES[0] ?? '');
   const [soloView, setSoloView] = useState(false);
   // Seed-versioned drafts: untouched drafts auto-resync to new shipped data;
@@ -1308,8 +1351,10 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
           // Chunked mode ignores named-region unlock state entirely — the
           // real unlock unit is the individual chunk (see utils/chunkAdjacency.ts).
           const key = chunkKey({ cx, cy });
-          if (isChunkUnlocked(key, chunkUnlocks)) fill = osrs ? 'transparent' : UNLOCKED_FILL;
-          else if (isFrontierChunk(key, chunkUnlocks, unlocks)) fill = osrs ? (hotFrontier.has(key) ? OSRS_HOT_FRONTIER_FILL : OSRS_FRONTIER_FILL) : hotFrontier.has(key) ? HOT_FRONTIER_FILL : FRONTIER_FILL;
+          const state = chunkMapState(key, chunkUnlocks, unlocks, chunkedCutOff);
+          if (state === 'owned') fill = osrs ? 'transparent' : UNLOCKED_FILL;
+          else if (state === 'cut-off') fill = osrs ? OSRS_CUT_OFF_FILL : CUT_OFF_FILL;
+          else if (state === 'frontier') fill = osrs ? (hotFrontier.has(key) ? OSRS_HOT_FRONTIER_FILL : OSRS_FRONTIER_FILL) : hotFrontier.has(key) ? HOT_FRONTIER_FILL : FRONTIER_FILL;
           else fill = osrs ? 'transparent' : LOCKED_FILL;
         } else {
           const unlocked = subArea ? isRegionUnlocked(subArea, regionUnlocks) : continentUnlocked;
@@ -1320,8 +1365,14 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
         rects.push({ key: `${region}:${cx},${cy}`, region, x: px, y: py, w: chunkPx, h: chunkPy, fill, isActive });
       }
     }
+    // The sea is no region's land, so the loop above never draws it.
+    if (!authoring && !osrs) for (const key of chunkedOpenSea) {
+      const [cx, cy] = key.split(',').map(Number);
+      const { px, py } = tileToPixel({ tx: cx * CHUNK_TILES, ty: (cy + 1) * CHUNK_TILES });
+      rects.push({ key: `sea:${key}`, region: 'The Open Seas', x: px, y: py, w: chunkPx, h: chunkPy, fill: SEA_OPEN_FILL, isActive: false });
+    }
     return rects;
-  }, [draftChunks, chunkSubArea, regionUnlocks, chunkUnlocks, isChunked, authoring, authorLevel, activeRegion, activeSubArea, soloView, hotFrontier, osrs]);
+  }, [draftChunks, chunkSubArea, regionUnlocks, chunkUnlocks, isChunked, authoring, authorLevel, activeRegion, activeSubArea, soloView, hotFrontier, osrs, unlocks, chunkedCutOff, chunkedOpenSea]);
 
   const activeChunkCount = authorLevel === 'SUBAREA'
     ? (subDraft[activeSubArea]?.length ?? 0)
@@ -1353,8 +1404,15 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
         d += `M${px} ${py}h${size}v${size}h${-size}Z`;
       }
     }
+    // A Chunked run's sea shows as the map draws it once the run sails it.
+    for (const key of chunkedOpenSea) {
+      if (seen.has(key)) continue;
+      const [cx, cy] = key.split(',').map(Number);
+      const { px, py } = tileToPixel({ tx: cx * CHUNK_TILES, ty: (cy + 1) * CHUNK_TILES });
+      d += `M${px} ${py}h${size}v${size}h${-size}Z`;
+    }
     return d;
-  }, [osrs, draftChunks, chunkSubArea, regionUnlocks, chunkUnlocks, isChunked]);
+  }, [osrs, draftChunks, chunkSubArea, regionUnlocks, chunkUnlocks, isChunked, chunkedOpenSea]);
 
   // Chunk → its region, for the hover tooltip's place name.
   const osrsChunkRegion = useMemo(() => {
@@ -1867,8 +1925,9 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
           ? `Omni-Key opens ${omniPreview.chunks.length} chunk${omniPreview.chunks.length === 1 ? '' : 's'}. Click to choose it.`
           : `Omni-Key: ${omniPreview.reason}`);
       } else if (!unlocked && !isChunked) lines.push('Roll the Areas table to unlock');
-      else if (!unlocked && isFrontierChunk(hoverKey, chunkUnlocks, unlocks)) lines.push('On your frontier');
-      else if (lensReady) {
+      else if (isChunked && chunkMapStateLine(chunkMapState(hoverKey, chunkUnlocks, unlocks, chunkedCutOff))) {
+        lines.push(chunkMapStateLine(chunkMapState(hoverKey, chunkUnlocks, unlocks, chunkedCutOff))!);
+      } else if (lensReady) {
         const content = chunkContentService.contentFor(hoverChunk.cx, hoverChunk.cy);
         const bits: string[] = [];
         if (chunkContentService.hasBank(hoverChunk.cx, hoverChunk.cy)) bits.push('Bank');
@@ -1887,11 +1946,11 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     const lensSuggestOpen = lensSuggestions.length > 0 || lensItemSuggestions.length > 0 || lensTagSuggestions.length > 0;
     const reachOn = lens?.kind === 'reach';
     const banksOn = lens?.kind === 'category' && lens.key === 'bank';
-    const unlockedCount = isChunked ? chunkUnlocks.length : regionUnlocks.length;
+    const unlockedCount = isChunked ? chunkedUnlockedCount(chunkUnlocks) : regionUnlocks.length;
     return (
       <div className="owm-root">
-        <aside className="osrs-inner owm-side" aria-label="Regions">
-          <span className="owm-h">Regions</span>
+        <aside className="osrs-inner owm-side" aria-label={isChunked ? 'Chunks' : 'Regions'}>
+          <span className="owm-h">{isChunked ? 'Chunks' : 'Regions'}</span>
           <div className="owm-searchwrap">
             <label className="owm-search">
               <svg aria-hidden="true" width="13" height="13" viewBox="0 0 14 14"><circle cx="6" cy="6" r="4.5" fill="none" stroke="#c8b897" strokeWidth="2" /><path d="M9.5 9.5l3.5 3.5" stroke="#c8b897" strokeWidth="2" /></svg>
@@ -1937,6 +1996,8 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
           )}
           <div className="owm-legend">
             <span><i className="owm-sw" style={{ background: '#6f9a3c' }} />Unlocked<b>{unlockedCount}</b></span>
+            {isChunked && <span><i className="owm-sw" style={{ background: '#a8641c' }} />Frontier</span>}
+            {isChunked && chunkedCutOff.size > 0 && <span><i className="owm-sw" style={{ background: '#8a1f14' }} />Cut off<b>{chunkedCutOff.size}</b></span>}
             <span><i className="owm-sw" style={{ background: '#2a1d14' }} />Locked</span>
           </div>
           <label className="owm-check" title="Paint your unlocked chunks by whether they connect to your start">
@@ -2048,7 +2109,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
                 onClick={() => applyTransform({ ...transformRef.current, scale: Math.min(transformRef.current.scale + 0.1, 5) })}>+</button>
               <button type="button" className="osrs-btn" onClick={handleExport} disabled={isExporting} title="Export Map Image">{isExporting ? 'Saving...' : 'Download map'}</button>
               <button type="button" className={`osrs-btn${showGrid ? ' is-on' : ''}`} aria-pressed={showGrid} onClick={() => setShowGrid(g => !g)} title="Toggle chunk grid (64-tile)">Chunk grid</button>
-              <button type="button" className={`osrs-btn${authoring ? ' is-on' : ''}`} aria-pressed={authoring} onClick={() => setAuthoring(a => !a)} title="Toggle chunk authoring mode">Author</button>
+              {canAuthor && <button type="button" className={`osrs-btn${authoring ? ' is-on' : ''}`} aria-pressed={authoring} onClick={() => setAuthoring(a => !a)} title="Toggle chunk authoring mode">Author</button>}
             </span>
           </div>
         </div>
@@ -2254,8 +2315,8 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
 
       {mapLayer}
 
-      {/* Authoring toolbar (top-right) */}
-      <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 items-end">
+      {/* Authoring toolbar (top-right): maintainers only. */}
+      {canAuthor && <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 items-end">
         <button
           onClick={() => setAuthoring(a => !a)}
           className={`px-3 py-1.5 rounded border text-xs font-semibold shadow-lg flex items-center gap-1.5 transition-colors ${authoring ? 'bg-amber-500/90 border-amber-300 text-black' : 'bg-black/80 border-white/20 text-white hover:bg-white/10'}`}
@@ -2266,7 +2327,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
         </button>
 
         {authoringPanel}
-      </div>
+      </div>}
 
       {/* Navigation controls (bottom-right) */}
       <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-20">

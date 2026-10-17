@@ -3,7 +3,7 @@ import { isFreeArea } from './freeAreas';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
-import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
+import { chunkKey, chunkedWalk, isChunkUnlocked } from './chunkAdjacency';
 import { resolveModeRules } from '../config/gameModes';
 import type { GameModeRules } from '../config/gameModes';
 import { bankId } from '../data/banks';
@@ -20,6 +20,27 @@ import { AREA_ALIAS_POLICIES, AREA_REFERENCES, canonicalAreaName } from '../data
  */
 export const isNamedAreaReachableViaChunks = (name: string, unlockedChunkKeys: readonly string[]): boolean =>
   namedAreaChunks(name).some((chunk) => isChunkUnlocked(chunkKey(chunk), unlockedChunkKeys));
+
+/**
+ * Chunked mode: the owned chunks, as "cx,cy", the run can actually get to.
+ * Owning a chunk is not reaching it: a chunk behind a wall, a river or a
+ * missing boat is owned but cut off. This is the walk from the free start
+ * chunk through owned land (the walking data in utils/walkSections.ts), and
+ * with Sailing and Pandemonium the sea from any reached coast, the same walk
+ * Chunked mode's frontier grows from (utils/chunkWalkReach.ts). The start
+ * chunk is always in it. Transport (teleports, dungeons, boats outside
+ * Sailing) adds nothing here.
+ *
+ * `blocked` (a numeric chunk id, cx * 256 + cy) shuts chunks the run can't
+ * enter yet, such as utils/questDoability.ts's entryBlockedGate for a quest
+ * gate; without it a quest-gated chunk counts as reached. Until the walking
+ * data loads with the chunk content (utils/walkSections.ts's
+ * walkSectionsLoaded), owned land joined by the chunk grid counts as reached.
+ */
+export const reachedOwnedChunks = (
+  unlocks: Pick<UnlockState, 'chunks' | 'skills' | 'levels' | 'quests'>,
+  blocked?: (chunkId: string) => boolean,
+): ReadonlySet<string> => chunkedWalk(unlocks.chunks ?? [], unlocks, blocked).reached;
 
 /** The chunks that count as a named area in Chunked mode (empty when it has none). */
 export const namedAreaChunks = (name: string): readonly { cx: number; cy: number }[] => {
