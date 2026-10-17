@@ -26,7 +26,7 @@ import { PetPicker } from '../PetPicker';
 import { WikiIcon } from '../WikiIcon';
 import { isRollEntry } from '../../utils/logEntry';
 import { formatKeyPercent, formatKeyRollValue } from '../../utils/keyRoll';
-import { useFarmModel } from '../ActionSection';
+import { FARM_NO_BOSS, FARM_NO_SLAYER_MASTER, useFarmModel } from '../ActionSection';
 import { setBossQuery, setFarmTab, useKeysView, type FarmSubTab } from './OsrsKeysState';
 import { OsrsKeysTabs } from './OsrsKeysTabs';
 
@@ -835,8 +835,10 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   );
 
   const cards = subTab === 'SLAYER' ? slayerCards : subTab === 'CLUES' ? clueCards : subTab === 'BOSSING' ? vanillaBossCards : activityCards;
-  const emptyBosses = subTab === 'BOSSING' && reserves && vanillaBossCards.length === 0
-    ? <div className="okf-empty">{vanillaBossSearchEmptyMessage(bossQuery)}</div>
+  const emptyBosses = subTab === 'SLAYER' && slayerCards.length === 0
+    ? <div className="okf-empty">{FARM_NO_SLAYER_MASTER}</div>
+    : subTab === 'BOSSING' && reserves && vanillaBossCards.length === 0
+    ? <div className="okf-empty">{p.vanillaBosses.length === 0 ? FARM_NO_BOSS : vanillaBossSearchEmptyMessage(bossQuery)}</div>
     : subTab === 'ACTIVITIES' && reserves && vanillaMinigameCards.length === 0
       ? <div className="okf-empty">{p.vanillaMinigames.length === 0
         ? 'Unlock a minigame from the Minigames table to give it a Key stash.'

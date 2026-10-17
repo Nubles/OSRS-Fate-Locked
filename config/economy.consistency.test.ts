@@ -133,14 +133,16 @@ describe('economy ↔ engine consistency', () => {
     expect(chaos.earn[0]).toBe(`Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99: ${SKILL_CHAOS_MILESTONES.length} per skill.`);
     expect([...chaos.earn, chaos.spend].join(' ')).not.toMatch(/rare|ANY table/i);
     // A Chaos Key draws once from every eligible entry of every table, so a
-    // table's share is its size: on a fresh run Banks is among the biggest.
+    // table's share is its size: on a fresh Vanilla run Banks is among the biggest.
     const tableSizes = (mode: string) => {
       const sizes = new Map<TableType, number>();
       for (const { table } of randomUnlockPool(createFreshState().unlocks, mode, 'chaosKey')) sizes.set(table, (sizes.get(table) ?? 0) + 1);
       return [...sizes].sort((a, b) => b[1] - a[1]).map(([table]) => table);
     };
     expect(tableSizes('vanilla').slice(0, 2)).toEqual([TableType.REGIONS, TableType.BANKS]);
-    expect(tableSizes('chunked')[0]).toBe(TableType.BANKS);
+    // Chunked only offers banks in owned chunks, so a fresh run's biggest table is Merchants.
+    expect(tableSizes('chunked')[0]).toBe(TableType.MERCHANTS);
+    expect(tableSizes('chunked').slice(0, 5)).not.toContain(TableType.BANKS);
     expect(chaos.spend).toContain('Every eligible entry is equally likely, so the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.');
   });
 

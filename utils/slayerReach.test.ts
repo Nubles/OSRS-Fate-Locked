@@ -130,7 +130,7 @@ describe('slayerReachability', () => {
     const r = mortimerReach(mortimerUnlocks({ regions: ['Wyrmscraig'], chunks: [] }), 'chunked');
 
     expect(r.masters[0]).toMatchObject({
-      masterBlocker: { status: 'area-locked', label: 'Master: Wyrmscraig' },
+      masterBlocker: { status: 'area-locked', label: 'Master: Wyrmscraig (39, 34)' },
     });
     expect(r.masters[0].rows.map(row => row.status)).toEqual(['area-locked', 'area-locked']);
   });
@@ -191,11 +191,36 @@ describe('slayerReachability', () => {
     expect(r.masters[0].rows.map(row => row.status)).toEqual(['ready', 'ready']);
   });
 
-  it('uses the Wyrmscraig chunk foothold for Mortimer in Chunked mode', () => {
-    const r = mortimerReach(mortimerUnlocks({ regions: [], chunks: ['40,35'] }), 'chunked');
+  it("uses Mortimer's own chunk in Chunked mode, not any chunk of Wyrmscraig", () => {
+    const foothold = mortimerReach(mortimerUnlocks({ regions: [], chunks: ['40,35'] }), 'chunked');
+    expect(foothold.masters[0].masterBlocker).toEqual({ status: 'area-locked', label: 'Master: Wyrmscraig (39, 34)' });
 
+    const r = mortimerReach(mortimerUnlocks({ regions: [], chunks: ['39,34'] }), 'chunked');
     expect(r.masters[0]).not.toHaveProperty('masterBlocker');
     expect(r.masters[0].rows.map(row => row.status)).toEqual(['ready', 'ready']);
+  });
+
+  it('needs the exact chunk of Krystilia and Vannaka in Chunked (content review finding 7)', () => {
+    // Edgeville owned around 48,54 but not 48,54 itself: 48,53 is only the brass-key door.
+    const chunks = ['50,51', '50,52', '50,53', '49,53', '48,53', '47,53', '47,54'];
+    for (const master of ['Krystilia', 'Vannaka']) {
+      const blocked = standardMasterReach(master, base({
+        skills: { Slayer: 10 }, levels: { Slayer: 99 }, chunks,
+      }), 'chunked');
+      expect(blocked.masters[0].masterBlocker).toEqual({ status: 'area-locked', label: 'Master: Edgeville (48, 54)' });
+
+      const ready = standardMasterReach(master, base({
+        skills: { Slayer: 10 }, levels: { Slayer: 99 }, chunks: [...chunks, '48,54'],
+      }), 'chunked');
+      expect(ready.masters[0]).not.toHaveProperty('masterBlocker');
+    }
+  });
+
+  it('keeps the named-area master rule outside Chunked', () => {
+    const r = standardMasterReach('Krystilia', base({
+      skills: { Slayer: 1 }, levels: { Slayer: 1 }, regions: ['Edgeville'],
+    }), 'vanilla');
+    expect(r.masters[0]).not.toHaveProperty('masterBlocker');
   });
 
   it('allows a real combat-51 account to use Vannaka despite low combat method tiers', () => {
@@ -272,19 +297,27 @@ describe('slayerReachability', () => {
   });
 
   it.each([
-    ['Turael', 'Burthorpe', []],
-    ['Spria', 'Draynor Village', ['A Porcine of Interest']],
-    ['Krystilia', 'Edgeville', []],
-  ] as const)('requires access to %s at the master location', (master, area, quests) => {
+    ['Turael', 'Burthorpe', '45,55', []],
+    ['Spria', 'Draynor Village', '48,51', ['A Porcine of Interest']],
+    ['Krystilia', 'Edgeville', '48,54', []],
+  ] as const)('requires access to %s at the master location', (master, area, chunk, quests) => {
     const blocked = standardMasterReach(master, base({
       skills: { Slayer: 1 },
       levels: { Slayer: 1 },
       quests: [...quests],
     }), 'chunked');
+    const [cx, cy] = chunk.split(',');
     expect(blocked.masters[0].masterBlocker).toEqual({
       status: 'area-locked',
-      label: `Master: ${area}`,
+      label: `Master: ${area} (${cx}, ${cy})`,
     });
+    const atMaster = standardMasterReach(master, base({
+      skills: { Slayer: 1 },
+      levels: { Slayer: 1 },
+      quests: [...quests],
+      chunks: [chunk],
+    }), 'chunked');
+    expect(atMaster.masters[0]).not.toHaveProperty('masterBlocker');
 
     const ready = standardMasterReach(master, base({
       skills: { Slayer: 1 },

@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { UnlockState } from '../types';
 import { setStartArea } from './freeAreas';
-import { getActivityAccess } from './activityAccess';
+import { bankChunkKey, chunkedBankOwned, farmPlaceReachable, getActivityAccess } from './activityAccess';
+import { ACTIVITY_CHUNKS, FARM_SLAYER_CARD_CHUNKS } from '../data/activityChunks';
+import { BOSSES_LIST, GUILDS_LIST, MINIGAMES_LIST } from '../data/items';
+import { BANK_IDS } from '../data/banks';
 
 const baseUnlocks: UnlockState = {
   equipment: {},
@@ -159,3 +162,81 @@ describe('getActivityAccess', () => {
     }
   });
 });
+
+describe('getActivityAccess in Chunked', () => {
+  const chunked = (chunks: string[] = [], over: Partial<UnlockState> = {}) => makeUnlocks({ chunks, ...over });
+
+  it('counts only the exact entrance chunk, not a foothold in the named area (map review 5)', () => {
+    // Lumbridge's start chunk used to open Tormented Demons and Tears of Guthix (both entered from 49,49).
+    for (const activity of ['Tormented Demons', 'Tears of Guthix']) {
+      expect(getActivityAccess(activity, chunked(), 'chunked')).toEqual({
+        eligible: false,
+        requiredAreas: ['Lumbridge (49, 49)'],
+        explanation: 'Needs Lumbridge (49, 49)',
+      });
+      expect(getActivityAccess(activity, chunked(['49,49']), 'chunked').eligible).toBe(true);
+    }
+    // Two rolls toward Varrock's south fence used to open Scurrius and Bryophyta.
+    expect(getActivityAccess('Scurrius', chunked(['50,51', '50,52']), 'chunked').eligible).toBe(false);
+    expect(getActivityAccess('Scurrius', chunked(['50,51', '50,52', '50,53', '50,54']), 'chunked').eligible).toBe(true);
+    // Any one of several entrances is enough.
+    expect(getActivityAccess('Callisto', chunked(['51,58']), 'chunked').eligible).toBe(true);
+  });
+
+  it('opens nothing located from the start chunk alone', () => {
+    const start = chunked();
+    const located = [...BOSSES_LIST, ...MINIGAMES_LIST, ...GUILDS_LIST]
+      .filter(activity => getActivityAccess(activity, start, 'chunked').eligible);
+    expect(located).toEqual(['Forestry']);
+  });
+
+  it('follows the stated rule for places with no single chunk', () => {
+    expect(getActivityAccess('Forestry', chunked(), 'chunked').eligible).toBe(true);
+    expect(getActivityAccess('Mimic', chunked(), 'chunked')).toEqual({
+      eligible: false,
+      requiredAreas: ['a Mimic casket from an Elite or Master clue'],
+      explanation: 'Needs a Mimic casket from an Elite or Master clue',
+    });
+    expect(getActivityAccess('Barracuda Trials', chunked(), 'chunked').eligible).toBe(false);
+    expect(getActivityAccess('Barracuda Trials', chunked([], {
+      skills: { Sailing: 1 }, levels: { Sailing: 1 }, quests: ['Pandemonium'],
+    }), 'chunked').eligible).toBe(true);
+    // Shooting Stars: any crash site the run owns, Abyssal Sire: the Zanaris shed.
+    expect(getActivityAccess('Shooting Stars', chunked(), 'chunked').eligible).toBe(false);
+    expect(getActivityAccess('Shooting Stars', chunked(['50,49']), 'chunked').eligible).toBe(true);
+    expect(getActivityAccess('Abyssal Sire', chunked(['50,49']), 'chunked').eligible).toBe(true);
+    expect(getActivityAccess('Unknown activity', chunked(), 'chunked').eligible).toBe(false);
+  });
+
+  it('keeps Vanilla on its named areas', () => {
+    setStartArea('none');
+    expect(getActivityAccess('Tormented Demons', makeUnlocks({ regions: ['Lumbridge'] }), 'vanilla').eligible).toBe(true);
+    expect(getActivityAccess('Mimic', makeUnlocks(), 'vanilla').eligible).toBe(true);
+  });
+});
+
+describe('Chunked banks and Farm places', () => {
+  it('counts a bank only in an owned chunk, and the virtual Forestry entry anywhere', () => {
+    expect(bankChunkKey('12850')).toBe('50,50');
+    const start = makeUnlocks();
+    const owned = BANK_IDS.filter(bank => chunkedBankOwned(bank, start));
+    expect(owned.filter(bank => bankChunkKey(bank) !== undefined)).toEqual(['12850']);
+    expect(owned.filter(bank => bankChunkKey(bank) === undefined)).toHaveLength(BANK_IDS.length - 125);
+  });
+
+  it('offers Brutus and Slayer masters in Chunked only from their own chunk', () => {
+    const start = makeUnlocks();
+    const brutus = ACTIVITY_CHUNKS.Brutus;
+    expect(farmPlaceReachable(brutus, start, 'chunked')).toBe(false);
+    expect(farmPlaceReachable(brutus, makeUnlocks({ chunks: ['50,51'] }), 'chunked')).toBe(true);
+    expect(farmPlaceReachable(FARM_SLAYER_CARD_CHUNKS.Turael, start, 'chunked')).toBe(false);
+    expect(farmPlaceReachable(FARM_SLAYER_CARD_CHUNKS.Aya, makeUnlocks({ chunks: ['45,55'] }), 'chunked')).toBe(true);
+    // A Boss Task card shows with any master who gives boss tasks.
+    expect(farmPlaceReachable(FARM_SLAYER_CARD_CHUNKS['Boss Task'], makeUnlocks({ chunks: ['44,46'] }), 'chunked')).toBe(true);
+    expect(farmPlaceReachable(undefined, start, 'chunked')).toBe(false);
+    // Every other mode keeps the full Farm list.
+    expect(farmPlaceReachable(brutus, start, 'vanilla')).toBe(true);
+    expect(farmPlaceReachable(FARM_SLAYER_CARD_CHUNKS.Turael, start, 'vanilla')).toBe(true);
+  });
+});
+

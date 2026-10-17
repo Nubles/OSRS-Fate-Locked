@@ -135,6 +135,29 @@ export const NO_HARD_LOCATION_GATE = new Set<string>([
   'Barracuda Trials', // no tracked named-area gate (untracked Sailing destinations)
 ]);
 
+/**
+ * Chunked mode places each activity by the chunks it is entered from
+ * (data/activityChunks.ts, generated from the chunk data). These have no single
+ * entrance, so each follows its own rule instead.
+ */
+export type ChunkedActivityRule =
+  | { kind: 'anywhere'; reason: string }
+  | { kind: 'sailing'; reason: string }
+  | { kind: 'not-random'; needs: string; reason: string };
+
+export const CHUNKED_ACTIVITY_RULES: Readonly<Record<string, ChunkedActivityRule>> = {
+  Forestry: { kind: 'anywhere', reason: 'A world event that comes to any group of trees.' },
+  'Barracuda Trials': {
+    kind: 'sailing',
+    reason: 'Raced at sea in your own boat, so it counts once the run can sail (Sailing and Pandemonium).',
+  },
+  Mimic: {
+    kind: 'not-random',
+    needs: 'a Mimic casket from an Elite or Master clue',
+    reason: 'Fought from a casket out of an Elite or Master clue, which no chunk holds and the tracker does not follow, so random Keys skip it. An Omni-Key can still pick it.',
+  },
+};
+
 /** Policy metadata consumed by vanilla random-unlock and omni-direct flows. */
 export interface VanillaRandomAccessPolicy {
   readonly filteredTables: readonly TableType[];

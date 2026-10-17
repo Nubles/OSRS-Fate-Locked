@@ -4,10 +4,10 @@
  * the app's first screen.
  */
 import { getActivityReq } from '../data/activityRequirements';
-import { BANK_BY_ID } from '../data/banks';
 import { TableType, type UnlockState } from '../types';
 import { evaluateActivityReadiness } from './activityReadiness';
-import { chunkSubArea, isChunkUnlocked } from './chunkAdjacency';
+import { chunkSubArea } from './chunkAdjacency';
+import { bankChunkKey, chunkedBankOwned, getActivityAccess } from './activityAccess';
 import { isAreaReachable } from './reachability';
 
 /**
@@ -20,12 +20,13 @@ export const wardUsable = (table: TableType, item: string, unlocks: UnlockState,
     case TableType.BOSSES:
     case TableType.MINIGAMES:
     case TableType.GUILDS:
+      // Chunked: the entrance chunk itself must be owned.
+      if (modeId === 'chunked' && !getActivityAccess(item, unlocks, modeId).eligible) return false;
       return evaluateActivityReadiness(true, getActivityReq(item), unlocks, modeId).status !== 'NOT_READY';
     case TableType.BANKS: {
-      if (!BANK_BY_ID[item] || !/^\d+$/.test(item)) return true;
-      const id = Number(item);
-      const key = `${Math.floor(id / 256)},${id % 256}`;
-      if (modeId === 'chunked') return isChunkUnlocked(key, unlocks.chunks ?? []);
+      const key = bankChunkKey(item);
+      if (key === undefined) return true;
+      if (modeId === 'chunked') return chunkedBankOwned(item, unlocks);
       const area = chunkSubArea(key);
       return !area || isAreaReachable(area, unlocks, modeId);
     }

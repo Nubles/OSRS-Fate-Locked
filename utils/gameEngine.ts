@@ -6,7 +6,7 @@ import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, isFrontierChunk } from './chunkAdjacency';
 import { BANK_IDS } from '../data/banks';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
-import { getActivityAccess } from './activityAccess';
+import { chunkedBankOwned, getActivityAccess } from './activityAccess';
 import { canonicalAreaName } from '../data/areaMapPolicy';
 import { bankLocksActive, isAreaReachable } from './reachability';
 import { unlockableAreas } from './freeAreas';
@@ -83,8 +83,10 @@ export interface RandomUnlockCandidate {
 
 /**
  * Applies the Vanilla exact-area policy only to random boss and minigame
- * unlocks, and Chunked's trainable-skill rule to random Skills unlocks. All
- * other modes and tables retain their existing validity rules.
+ * unlocks, and Chunked's trainable-skill rule to random Skills unlocks. In
+ * Chunked, random Bosses, Minigames, Guilds and Banks also land only on places
+ * whose own chunk is owned. All other modes and tables retain their existing
+ * validity rules.
  */
 export const isRandomUnlockEligible = (
     table: TableType,
@@ -99,6 +101,9 @@ export const isRandomUnlockEligible = (
     if (modeId === 'chunked' && table === TableType.SKILLS) return chunkedSkillRollable(item, unlocks);
     if (!usesActivityKeyReserves(modeId)) return true;
     if (!policy.randomCosts.includes(randomCost)) return true;
+    // Chunked: a random bank or guild counts only in a chunk the run owns.
+    if (modeId === 'chunked' && table === TableType.BANKS) return chunkedBankOwned(item, unlocks);
+    if (modeId === 'chunked' && table === TableType.GUILDS) return getActivityAccess(item, unlocks, modeId).eligible;
     if (!policy.filteredTables.some(candidate => candidate === table)) return true;
     if (!policy.requiresTrackedHardGeography) return true;
     return getActivityAccess(item, unlocks, modeId).eligible;

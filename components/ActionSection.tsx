@@ -14,6 +14,8 @@ import { EARN_METHODS, failureFateForSource, LEVEL_ROLL_MAX } from '../config/ec
 import { BRUTUS_BOSS_NAME, effectiveVanillaClueRate, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
 import { BossKeyProgress, ClueKeyProgress } from './VanillaKeyProgress';
 import { lazyWithRetry } from '../utils/lazyRetry';
+import { farmPlaceReachable } from '../utils/activityAccess';
+import { ACTIVITY_CHUNKS, FARM_SLAYER_CARD_CHUNKS } from '../data/activityChunks';
 // The pet card and the pet names load when the Activities tab opens.
 const PetClaimCard = lazyWithRetry(() => import('./PetClaimCard').then(m => ({ default: m.PetClaimCard })));
 // Vanilla's per-minigame cards load when the Activities tab opens.
@@ -393,6 +395,11 @@ const InfoChip: React.FC<{
 
 type FarmSubTab = 'SLAYER' | 'CLUES' | 'BOSSING' | 'ACTIVITIES';
 
+/** Chunked: the Slayer list when no master stands in a chunk the run owns. */
+export const FARM_NO_SLAYER_MASTER = 'No Slayer master stands in a chunk you own yet.';
+/** Chunked: the boss list before any boss is unlocked or Brutus's chunk is owned. */
+export const FARM_NO_BOSS = 'Unlock a boss from the Bosses table to roll its Keys here.';
+
 /**
  * Every Farm Keys source, rate and roll handler, shared by the classic cards
  * and the OSRS layout (compact panel and wide Keys screen) so all of them read
@@ -421,8 +428,9 @@ export const useFarmModel = () => {
   const isVanilla = gameModeId === 'vanilla';
   // Bosses and minigames pay from Key reserves in Vanilla and Chunked.
   const reserves = usesActivityKeyReserves(gameModeId);
+  // Chunked: Brutus shows only when the run owns his arena's chunk.
   const vanillaBosses = [
-    BRUTUS_BOSS_NAME,
+    ...(farmPlaceReachable(ACTIVITY_CHUNKS[BRUTUS_BOSS_NAME], unlocks, gameModeId) ? [BRUTUS_BOSS_NAME] : []),
     ...unlocks.bosses.filter(name => BOSSES_LIST.includes(name)),
   ];
   const vanillaMinigames = unlocks.minigames.filter(name => MINIGAMES_LIST.includes(name));
@@ -503,8 +511,8 @@ export const useFarmModel = () => {
         image: "https://oldschool.runescape.wiki/images/Purple_slayer_helmet.png",
         style: TIER_STYLES.AMBER
       }
-    ];
-  }, [unlocks.quests]);
+    ].filter(card => farmPlaceReachable(FARM_SLAYER_CARD_CHUNKS[card.name], unlocks, gameModeId));
+  }, [unlocks, gameModeId]);
 
   return {
     slayers,
@@ -576,6 +584,9 @@ const ClassicActionSection: React.FC = () => {
 
       {/* Active list — full-width 2-column grid */}
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar -mr-1 pr-1">
+        {subTab === 'SLAYER' && slayers.length === 0 && (
+          <div className="text-center text-gray-600 text-xs py-6">{FARM_NO_SLAYER_MASTER}</div>
+        )}
         {subTab === 'SLAYER' && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
             {slayers.map((master, i) => (
@@ -663,7 +674,7 @@ const ClassicActionSection: React.FC = () => {
                 })}
             </div>
             {vanillaBosses.filter(name => name.toLowerCase().includes(bossQuery.trim().toLowerCase())).length === 0 && (
-              <div className="text-center text-gray-600 text-xs py-6">{vanillaBossSearchEmptyMessage(bossQuery)}</div>
+              <div className="text-center text-gray-600 text-xs py-6">{vanillaBosses.length === 0 ? FARM_NO_BOSS : vanillaBossSearchEmptyMessage(bossQuery)}</div>
             )}
           </div>
         )}
