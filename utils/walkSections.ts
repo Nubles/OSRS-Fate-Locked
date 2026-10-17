@@ -84,12 +84,69 @@ export function readWalkingGraph(graph: WalkingGraph): void {
   mainland = landmassOf.get((sectionsOf.get(idOfKey('50,50')) ?? [])[0] ?? '');
 }
 
+type Walker = typeof import('./chunkWalkReach').walkOwnedChunks;
+let walker: Walker | null = null;
 let loading: Promise<void> | null = null;
 
-/** Loads the sections, once; a failed load can be tried again. */
-export const loadWalkSections = (): Promise<void> => (loading ??= import('../data/questWalkingGraph.json')
-  .then(module => readWalkingGraph((module.default ?? module) as WalkingGraph))
-  .catch(error => { loading = null; throw error; }));
+/**
+ * Loads the sections, and the walk that reads them (utils/chunkWalkReach.ts),
+ * once; a failed load can be tried again. The walk loads with them, not with
+ * the app, because the entry chunk has no room for it and it has nothing to
+ * walk until they are in.
+ */
+export const loadWalkSections = (): Promise<void> => (loading ??= Promise.all([
+  import('../data/questWalkingGraph.json'),
+  import('./chunkWalkReach'),
+]).then(([graph, walk]) => {
+  readWalkingGraph((graph.default ?? graph) as WalkingGraph);
+  walker = walk.walkOwnedChunks;
+}).catch(error => { loading = null; throw error; }));
+
+/** Whether the sections (and the walk) have loaded; until then no chunk has any. */
+export const walkSectionsLoaded = (): boolean => walker !== null && chunkOf.size > 0;
+
+/** The walk over the sections (utils/chunkWalkReach.ts), once they have loaded. */
+export const sectionWalker = (): Walker | null => (walkSectionsLoaded() ? walker : null);
+
+const nextDoorIds = (id: string): string[] => {
+  const n = Number(id); const cx = Math.floor(n / 256); const cy = n % 256;
+  return [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => String((cx + dx) * 256 + cy + dy));
+};
+
+/**
+ * Before the sections load: routes walk the chunk grid through owned chunks,
+ * and the transport graph through anything, as they did before the sections
+ * existed. The frontier is the unowned `land` next door to a reached chunk;
+ * anything not `ownable` is a place with no chunk of its own.
+ */
+export function gridWalk(
+  connect: Readonly<Record<string, readonly string[]>>,
+  owned: ReadonlySet<string>,
+  homeId: string,
+  land: ReadonlySet<string>,
+  ownable: ReadonlySet<string>,
+  blocked?: (id: string) => boolean,
+): { reachable: Set<string>; frontier: Set<string>; sea: boolean } {
+  const reachable = new Set<string>();
+  const frontier = new Set<string>();
+  const seen = new Set([homeId]);
+  const queue = [homeId];
+  const visit = (id: string) => { if (!seen.has(id)) { seen.add(id); queue.push(id); } };
+  while (queue.length) {
+    const id = queue.shift()!;
+    if (id !== homeId && blocked?.(id)) continue;
+    if (owned.has(id)) {
+      reachable.add(id);
+      for (const next of nextDoorIds(id)) {
+        if (owned.has(next)) visit(next);
+        else if (land.has(next)) frontier.add(next);
+      }
+    }
+    // Owned chunks and places with no chunk of their own lead on by transport.
+    if (owned.has(id) || !ownable.has(id)) for (const next of connect[id] ?? []) visit(next);
+  }
+  return { reachable, frontier, sea: false };
+}
 
 /** The chunk's sections, or none when the source has no land there (the sea, or an unmapped chunk). */
 export const chunkSections = (chunkId: string): readonly string[] => sectionsOf.get(chunkId) ?? [];

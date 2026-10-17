@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { rankFrontierChunks } from './frontierAdvisor';
-import { ALL_CHUNK_KEYS, chunkKey, parseChunkKey, CHUNKED_START_KEY, getChunkFrontier, chunkSubArea } from './chunkAdjacency';
-import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
+import { chunkKey, CHUNKED_START_KEY, getChunkFrontier, chunkSubArea } from './chunkAdjacency';
 import { isNamedAreaReachableViaChunks } from './reachability';
 import { computeUnlockImpact } from './unlockImpact';
 import { QUEST_DATA } from '../data/questData';
@@ -46,26 +45,19 @@ describe('rankFrontierChunks', () => {
   });
 
   it('detects a first foothold in a new named sub-area and scores its impact', () => {
-    // Find a sub-area chunk whose orthogonal neighbor is on the map but in a
-    // DIFFERENT (or no) sub-area — unlocking the neighbor puts the sub-area
-    // chunk on the frontier as a first foothold.
-    const all = new Set(ALL_CHUNK_KEYS);
+    // Find a chunk one roll from the start whose own frontier holds a chunk
+    // of a named sub-area that nothing owned footholds yet: unlocking it puts
+    // that chunk on the frontier as a first foothold.
     let target: string | null = null;
     let neighbor: string | null = null;
     outer:
-    for (const [area, chunks] of Object.entries(SUB_AREA_CHUNKS)) {
-      for (const c of chunks) {
+    for (const near of getChunkFrontier([]).map(chunkKey)) {
+      for (const c of getChunkFrontier([near])) {
         const key = chunkKey(c);
-        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
-          const nKey = `${c.cx + dx},${c.cy + dy}`;
-          if (!all.has(nKey) || nKey === CHUNKED_START_KEY) continue;
-          if (chunkSubArea(nKey) === area) continue;
-          // The neighbor must not itself foothold the area, and the area must
-          // not be reachable from just the start chunk.
-          if (isNamedAreaReachableViaChunks(area, [nKey])) continue;
-          target = key; neighbor = nKey;
-          break outer;
-        }
+        const area = chunkSubArea(key);
+        if (!area || isNamedAreaReachableViaChunks(area, [near])) continue;
+        target = key; neighbor = near;
+        break outer;
       }
     }
     expect(target).not.toBeNull();
@@ -80,12 +72,14 @@ describe('rankFrontierChunks', () => {
   it('simulates frontier chunks that quest and diary locations name exactly', () => {
     // West Falador (46,52) is one of Black Knights' Fortress's exact-chunk
     // locations, but 46,53 already holds Falador, so it is no new foothold.
+    // The land from Lumbridge to 47,52 joins those chunks to the start: the
+    // frontier grows only from land the run reaches.
     const quests: string[] = [];
     for (const quest of Object.values(QUEST_DATA)) {
       if (quests.reduce((sum, id) => sum + QUEST_DATA[id].points, 0) >= 12) break;
       if (quest.kind === 'quest' && quest.id !== "Black Knights' Fortress") quests.push(quest.id);
     }
-    const unlocks = { ...baseUnlocks(['46,53', '47,54']), quests, equipment: { Head: 1, Body: 1 } };
+    const unlocks = { ...baseUnlocks(['49,50', '48,50', '47,50', '47,51', '47,52', '46,53', '47,54']), quests, equipment: { Head: 1, Body: 1 } };
     const expected = computeUnlockImpact(unlocks, { ...unlocks, chunks: [...unlocks.chunks, '46,52'] }, 'chunked');
     expect(expected.directQuestNames).toContain("Black Knights' Fortress");
 

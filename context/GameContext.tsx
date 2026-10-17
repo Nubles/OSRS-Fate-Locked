@@ -28,6 +28,7 @@ import { breakthroughTier, levelPastTierCap, mercyBlocker, mercyPool, tierCap } 
 import { chunkLabelWithCoords } from '../utils/chunkLabelWithCoords';
 import { tierBand } from '../utils/skillTiers';
 import { CHUNKED_START_KEY, isFrontierChunk } from '../utils/chunkAdjacency';
+import { loadWalkSections } from '../utils/walkSections';
 import { UNLOCK_COST, randomUnlockPool, pickRandomPoolEntry, isRandomUnlockEligible, isValidUnlock } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { drawFloat, seededContext } from '../utils/seededRng';
@@ -2292,6 +2293,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     initialLoadWarningRef.current = null;
     showToast(warning);
   }, []);
+
+  // Chunked mode's frontier walks the walking data (utils/walkSections.ts),
+  // which otherwise loads only with the map's chunk content. Load it with
+  // the run, so a Chunks roll uses it rather than the bare chunk grid.
+  const chunkedRun = state.gameModeId === 'chunked';
+  useEffect(() => {
+    if (chunkedRun) loadWalkSections().catch(() => { /* the grid stands in; the map retries */ });
+  }, [chunkedRun]);
 
   // Keep the free-area baseline in sync with the run's mode, synchronously so
   // the unlock helpers (chunkUnlocked, journal status, …) read the right set on

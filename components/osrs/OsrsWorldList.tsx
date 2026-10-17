@@ -65,7 +65,7 @@ const useAdvisor = (): { heading: string; caption: string; sub: string; empty: s
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unlocks, gameModeId, chunked, tick]);
   return chunked
-    ? { heading: 'Frontier Advisor', caption: 'by what opens', sub: 'What your rollable chunks are worth. Hope for the top ones.', empty: 'No frontier yet. Roll your first chunk to open one.', rows }
+    ? { heading: 'Frontier Advisor', caption: 'by what opens', sub: 'What your rollable chunks are worth. Hope for the top ones.', empty: 'Nothing left to roll next to your land.', rows }
     : { heading: 'Region Advisor', caption: 'by unlock chain', sub: 'Unlock these areas for the most forward progress.', empty: 'All areas unlocked. Impressive!', rows };
 };
 
@@ -153,9 +153,11 @@ export const OsrsWorldList: React.FC<Props> = ({ searchQuery, showOnlyActionable
           <div className="owl-sec-head" style={{ paddingBottom: 2 }}>
             <img className="osrs-px" src={itemSrc(1538)} alt="" aria-hidden="true" width={23} height={20} style={{ objectFit: 'contain' }} />
             <h3>Regions</h3>
-            <span className="owl-yellow-s" style={{ marginLeft: 'auto' }}>{groups.reduce((n, g) => n + g.got, 0)}/{groups.reduce((n, g) => n + g.areas.length, 0)} areas</span>
+            <span className="owl-yellow-s" style={{ marginLeft: 'auto' }}>{groups.reduce((n, g) => n + g.got, 0)}/{groups.reduce((n, g) => n + g.areas.length, 0)} {gameModeId === 'chunked' ? 'areas in your chunks' : 'areas'}</span>
           </div>
-          <p className="owl-sub" style={{ borderBottom: '1px solid var(--osrs-inner-ring, #4f4434)', paddingBottom: 5 }}>Tutorial Island is completed onboarding: always free, with no area roll required.</p>
+          <p className="owl-sub" style={{ borderBottom: '1px solid var(--osrs-inner-ring, #4f4434)', paddingBottom: 5 }}>{gameModeId === 'chunked'
+            ? 'Tutorial Island is completed onboarding: always free, no chunk needed.'
+            : 'Tutorial Island is completed onboarding: always free, with no area roll required.'}</p>
           <div className="owl-dir-list">
             {groups.map((g) => {
               const on = current?.group === g.group;
