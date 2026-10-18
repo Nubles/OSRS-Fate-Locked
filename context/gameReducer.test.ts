@@ -26,6 +26,8 @@ import { replayInvariants } from '../utils/integrity';
  */
 
 const base = () => ({ ...initialState, runId: 'test-run', runRevision: 0, lastEvent: null });
+// A Chunked run whose Fate's Thread is already tied, so an action logs only itself (utils/fateLand.ts).
+const TIED_THREAD = { thread: '62,40', fulfilled: 0, marks: {}, gilded: [] };
 
 const roll = (over: Partial<{
   success: boolean;
@@ -983,7 +985,7 @@ describe('rituals', () => {
   });
 
   it('Cartographer unlocks the chosen chunk of its offer for 40 Fate (Chunked)', () => {
-    const start = { ...base(), gameModeId: 'chunked', fatePoints: 50, cartographerOffer: ['49,50', '51,50'],
+    const start = { ...base(), gameModeId: 'chunked', fateLand: TIED_THREAD, fatePoints: 50, cartographerOffer: ['49,50', '51,50'],
       unlocks: { ...initialState.unlocks, chunks: [] } };
     const s = gameReducer(start, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: 'ignored' } });
     expect(s.fatePoints).toBe(10);
@@ -1167,7 +1169,7 @@ describe('LEVEL_UP — Xtreme milestone insurance', () => {
 // even paid for levels past a tier cap, which roll nothing). Fate's Mercy covers
 // a dry start now; the rule and its counter are retired.
 describe('LEVEL_UP — Chunked pays no start-chunk milestone Key', () => {
-  const chunkedIsolated = () => ({ ...base(), gameModeId: 'chunked', unlocks: { ...initialState.unlocks, chunks: [] as string[] } });
+  const chunkedIsolated = () => ({ ...base(), gameModeId: 'chunked', fateLand: TIED_THREAD, unlocks: { ...initialState.unlocks, chunks: [] as string[] } });
   const total = (levels: Record<string, number>) => Object.values(levels).reduce((a, b) => a + b, 0);
 
   it('crossing every multiple of 25 total levels on the start chunk pays nothing', () => {

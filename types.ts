@@ -50,6 +50,7 @@ export enum DropSource {
   ACTIVITY_MINIGAME = 'Activity (Minigame)',
   PET = 'Pet Drop',
   CHUNK_EXPLORE = 'Exploring (Chunked)',
+  FATE_MARK = 'Gilded chunk (Chunked)',
 
   CUSTOM = 'Custom',
 }
@@ -120,7 +121,7 @@ export interface LogEntry {
   // outcomes; the bare 'ROLL' literal was a footgun (consumers filtered for
   // it expecting all rolls and got nothing). Use isRollEntry() in utils
   // instead of comparing to 'ROLL'.
-  type: 'UNLOCK' | 'PITY' | 'ALTAR' | 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'LEVEL_UP' | 'XTREME_MILESTONE' | 'COMPENSATION' | 'PET' | 'ACHIEVEMENT';
+  type: 'UNLOCK' | 'PITY' | 'ALTAR' | 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'LEVEL_UP' | 'XTREME_MILESTONE' | 'COMPENSATION' | 'PET' | 'ACHIEVEMENT' | 'FATE';
   source?: string;
   result?: 'SUCCESS' | 'FAIL';
   rollValue?: number;
@@ -353,6 +354,22 @@ export interface GameState {
    * while the tracker thinks something is still left to do (utils/chunkedFate.ts).
    */
   chunkedProgressAt?: number;
+  /** Chunked: Fate's Thread and the marks fate left on the run's chunks (utils/fateLand.ts). */
+  fateLand?: FateLand;
+}
+
+export type FateMark = 'BLESSED' | 'GILDED' | 'CHAOTIC' | 'CURSED';
+
+/** Chunked's Fate's Thread and fate's marks (utils/fateLand.ts). */
+export interface FateLand {
+  /** The chunk fate tied its thread to; absent while there's nowhere to tie one. */
+  thread?: string;
+  /** How many threads fate has seen fulfilled. */
+  fulfilled: number;
+  /** The mark fate left on each chunk it marked, by chunk key. */
+  marks: Record<string, FateMark>;
+  /** Gilded chunks whose free Key roll is still waiting. */
+  gilded: string[];
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

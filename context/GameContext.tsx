@@ -9,6 +9,7 @@ import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { exploreBlocker, withExploreStart } from '../utils/chunkExplore';
+import { leanTowardThread, withFateLand } from '../utils/fateLand';
 import { achievementBoostFor } from '../utils/achievementBoosts';
 import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, BREAKTHROUGH_CHANCE, GREED_REFUND_FRACTION, gambitKeys, STARTING_KEYS } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
@@ -259,6 +260,8 @@ interface GameContextType extends GameState {
   callOnFate: () => void;
   /** Chunked: roll for the first time doing a thing in a newly unlocked chunk. */
   exploreChunk: (chunk: string, fact: string, x?: number, y?: number) => void;
+  /** Chunked: a Gilded chunk's free Key roll (utils/fateLand.ts). */
+  rollGilded: (chunk: string, x?: number, y?: number) => void;
   levelUpSkill: (skill: string) => void;
   toggleAnimations: () => void;
   toggleAdvisors: () => void;
@@ -500,6 +503,7 @@ export type Action =
   // has the chunk content to work them out, so the call must bring them.
   | { type: 'CALL_ON_FATE'; payload: { roll: number; revealId: string; doableQuests: readonly string[] } }
   | { type: 'CHUNK_EXPLORE'; payload: { chunk: string; fact: string } }
+  | { type: 'FATE_MARK_ROLL'; payload: { chunk: string } }
   | { type: 'LEVEL_UP'; payload: { skill: string; chaosRoll: number } }
   | { type: 'ADD_LOG'; payload: LogEntry }
   | { type: 'TOGGLE_PIN'; payload: string }
@@ -1774,6 +1778,14 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       };
     }
 
+    case 'FATE_MARK_ROLL': {
+      // A Gilded chunk's free Key roll: use it up first; the roll follows as a
+      // ROLL_RESULT, the way an exploring roll does (utils/fateLand.ts).
+      const land = state.fateLand;
+      if (!land || !land.gilded.includes(action.payload.chunk)) return state;
+      return { ...state, fateLand: { ...land, gilded: land.gilded.filter(key => key !== action.payload.chunk) } };
+    }
+
     case 'CALL_ON_FATE': {
       // Fate's Mercy: only when the run has truly run dry. Fate draws from the
       // same Chunks and Skills pools a Key would roll; nothing is spent.
@@ -2026,7 +2038,8 @@ export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, 
   // splice in, or link to, entries of the run it replaces.
   if (action.type === 'LOAD_SAVE' || action.type === 'RESET') return rawNext;
   // A Chunked run's first chunk under the exploring rule starts its record.
-  const settled = withExploreStart(state, settleKeysOwed(state, rawNext, action));
+  // Then fate has its say on any chunk the run just gained (utils/fateLand.ts).
+  const settled = withFateLand(state, withExploreStart(state, settleKeysOwed(state, rawNext, action)), Date.now(), generateId, MAX_COUNTER);
   const chained = settled.history === state.history
     ? settled
     : { ...settled, history: chainAppendedHistory(state.history, settled.history) };
@@ -3048,6 +3061,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       if (warded && !usable) return;
       let pool = randomUnlockPool(current.unlocks, current.gameModeId, costType, table, current.customMode);
       if (warded && usable) pool = pool.filter(usable);
+      // Chunked: a Chunks Key leans toward Fate's Thread (utils/fateLand.ts).
+      if (table === TableType.CHUNKS) pool = leanTowardThread(pool, current.fateLand?.thread);
       const selection = pickRandomPoolEntry(pool, () => nextFloat(costType === 'key' ? 'gacha' : 'chaos'));
       if (!selection) {
         showToast(warded
@@ -3154,6 +3169,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({
         else flushCurrentSave();
       }, () => showToast("Fate's Mercy couldn't load. Check your connection and try again."));
   }, [authorizeOwnership, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
+
+  const rollGilded = useCallback((chunk: string, x?: number, y?: number) => {
+    const before = stateRef.current;
+    if (before.pendingUnlock || !before.fateLand?.gilded.includes(chunk)) return;
+    const next = commitAction({ type: 'FATE_MARK_ROLL', payload: { chunk } });
+    if (next === before) return;
+    rollForKey(DropSource.FATE_MARK, DROP_RATES[DropSource.FATE_MARK], failureFateForSource(DropSource.FATE_MARK), x, y);
+  }, [commitAction, rollForKey]);
 
   const exploreChunk = useCallback((chunk: string, fact: string, x?: number, y?: number) => {
     if (exploreBlocker(stateRef.current, chunk, fact) !== null) return;
@@ -3724,6 +3747,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     rollBreakthrough,
     callOnFate,
     exploreChunk,
+    rollGilded,
     levelUpSkill,
     toggleAnimations,
     toggleAdvisors,
@@ -3783,6 +3807,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     rollBreakthrough,
     callOnFate,
     exploreChunk,
+    rollGilded,
     levelUpSkill,
     toggleAnimations,
     toggleAdvisors,

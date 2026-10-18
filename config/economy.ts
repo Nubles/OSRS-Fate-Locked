@@ -76,6 +76,7 @@ export const FAILURE_FATE_BY_SOURCE: Partial<Record<DropSource, FailureFateAward
   [DropSource.PET]: 1,
   [DropSource.COLLECTION_LOG]: 1,
   [DropSource.CHUNK_EXPLORE]: 1,
+  [DropSource.FATE_MARK]: 1,
 };
 
 /** Conservative fallback protects custom and future sources from being over-valued. */
@@ -131,6 +132,22 @@ export const BREAKTHROUGH_CHANCE = 0.5;
 // minigame Key limits): about 16% slower than Vanilla to 100 quests and diary
 // tasks, with waits between unlocks no longer than before.
 export const CHUNK_EXPLORE_ROLLS = 3;
+
+// Chunked: Fate's Thread and fate's marks (utils/fateLand.ts; Alex, 2026-10-18).
+/** Fate ties its thread to a chunk this many frontiers past the run's land, at least... */
+export const FATE_THREAD_MIN_STEPS = 3;
+/** ...and at most. */
+export const FATE_THREAD_MAX_STEPS = 5;
+/** The chance fate marks a chunk the run gains: about one in eight. */
+export const FATE_MARK_CHANCE = 0.125;
+/** Fate a Blessed chunk gives, filled up to the pity line at most. */
+export const FATE_MARK_BLESSED_FATE = 25;
+/** A Chaotic chunk's chance of a Chaos Key. */
+export const FATE_MARK_CHAOS_CHANCE = 0.1;
+/** Key rolls a Cursed chunk makes worse... */
+export const FATE_MARK_CURSED_ROLLS = 3;
+/** ...by this many percentage points. Each fail among them gives double Fate. */
+export const FATE_MARK_CURSED_ODDS = 5;
 
 // ── Earning ──────────────────────────────────────────────────────────────────
 export type EarnCategory =
@@ -275,6 +292,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
     blurb: `Chunked only: the first time you do something new in a chunk you unlocked, roll once: train a skill it has, fight something there, take a task from its Slayer master or use its herb patch, once your unlocks allow it. Up to ${CHUNK_EXPLORE_ROLLS} rolls per chunk.`,
     tiers: [
       { tier: 'Each new thing in a chunk', source: DropSource.CHUNK_EXPLORE, rate: DROP_RATES[DropSource.CHUNK_EXPLORE] },
+      { tier: 'Each Gilded chunk', source: DropSource.FATE_MARK, rate: DROP_RATES[DropSource.FATE_MARK], bonus: `About one chunk in ${Math.round(1 / FATE_MARK_CHANCE)} you gain is marked by fate; a Gilded one gives one free Key roll.` },
     ],
   },
   {

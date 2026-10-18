@@ -63,6 +63,8 @@ export const DROP_RATES: Record<string, number> = {
   [DropSource.PET]: 100,
   // Chunked: the first few new things you do in each chunk you unlock (config/economy.ts).
   [DropSource.CHUNK_EXPLORE]: 10,
+  // Chunked: a Gilded chunk's free Key roll (utils/fateLand.ts).
+  [DropSource.FATE_MARK]: 50,
 
   [DropSource.CUSTOM]: 50,
 };

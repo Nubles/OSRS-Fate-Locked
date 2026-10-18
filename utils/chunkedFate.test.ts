@@ -20,6 +20,8 @@ const dry = () => ({
   runRevision: 0,
   lastEvent: null,
   gameModeId: 'chunked',
+  // Fate's Thread is already tied, so an action logs only itself (utils/fateLand.ts).
+  fateLand: { thread: '62,40', fulfilled: 0, marks: {}, gilded: [] },
   keys: 0,
   specialKeys: 0,
   chaosKeys: 0,
