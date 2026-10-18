@@ -3870,7 +3870,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
           </div>
         </div>
       ) : state.pendingUnlock ? <PendingUnlockReveal pending={state.pendingUnlock} animationsEnabled={state.animationsEnabled} onAccept={acknowledgeUnlock}
-        tier={state.pendingUnlock.table === TableType.SKILLS ? state.unlocks.skills[state.pendingUnlock.item] : undefined} /> : null}
+        tier={state.pendingUnlock.table === TableType.SKILLS ? state.unlocks.skills[state.pendingUnlock.item] : undefined}
+        chunkedUnlocks={state.gameModeId === 'chunked' ? state.unlocks : undefined} /> : null}
     </GameContext.Provider>
   );
 };

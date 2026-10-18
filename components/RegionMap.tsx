@@ -17,7 +17,12 @@ import { chunkContentService, type OverlayPoint } from '../services/ChunkContent
 import { travelReachability } from '../utils/travelReach';
 import { entryBlockedGate } from '../utils/questDoability';
 import { QUEST_DATA } from '../data/questData';
-import { CHUNKED_START, isChunkUnlocked } from '../utils/chunkAdjacency';
+import { CHUNKED_START, CHUNKED_START_KEY, getChunkFrontier, isChunkUnlocked } from '../utils/chunkAdjacency';
+import { threadLeaning } from '../utils/fateLand';
+import { THREAD_GOLD, THREAD_LEANING_LINE, markLine, threadLines } from '../utils/fateMap';
+import { setFateMapPref, useFateMapPref } from '../utils/fateMapPrefsHook';
+import { chunkPlaceLabel } from '../utils/chunkPlaceLabel';
+import { FateLandLayer } from './FateLandLayer';
 import { chunkMapState, chunkMapStateLine, chunkedUnlockedCount, reachLensDetail } from '../utils/chunkMapState';
 import { canNavigateOcean, OCEAN_CHUNK_KEYS } from '../utils/oceanAccess';
 import { rankFrontierChunks } from '../utils/frontierAdvisor';
@@ -512,7 +517,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
   // Highlight every chunk that holds a chosen resource / monster (e.g. "Coal
   // rocks", "Yew tree"), or the best training node for a skill — unlocked chunks
   // brighter, locked ones dim, with a jump-to-match.
-  const { unlocks, specialKeys, gameModeId, customMode } = useGame();
+  const { unlocks, specialKeys, gameModeId, customMode, fateLand } = useGame();
   const [lensReady, setLensReady] = useState(chunkContentService.ready);
   useEffect(() => { if (!lensReady) chunkContentService.init().then(() => setLensReady(true)); }, [lensReady]);
   const [lensInput, setLensInput] = useState('');
@@ -662,6 +667,29 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     }
     return open;
   }, [isChunked, runReachability, unlocks]);
+
+  // Chunked: fate's hand on the map (components/FateLandLayer.tsx). Fog over
+  // the land the run neither holds nor has on its frontier, Fate's Thread and
+  // the frontier chunks nearest it, and fate's marks.
+  const fogPref = useFateMapPref('fog');
+  const fogOn = isChunked && fogPref;
+  const fateView = useMemo(() => {
+    if (!isChunked) return null;
+    const held = new Set([CHUNKED_START_KEY, ...chunkUnlocks, ...chunkedOpenSea]);
+    const frontier = new Set(getChunkFrontier(chunkUnlocks, unlocks).map(chunkKey));
+    const thread = fateLand?.thread && !held.has(fateLand.thread) ? fateLand.thread : undefined;
+    return { held, frontier, thread, leaning: threadLeaning([...frontier], thread), marks: fateLand?.marks ?? {} };
+    // lensReady: the walk that finds the frontier loads with the chunk data.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isChunked, chunkUnlocks, chunkedOpenSea, unlocks, fateLand, lensReady]);
+  /** The map's lines for a chunk fate has touched: its thread, its leaning frontier, its mark. */
+  const fateLines = (key: string): string[] => {
+    if (!fateView) return [];
+    const lines: string[] = key === fateView.thread ? threadLines(chunkPlaceLabel(key))
+      : fateView.leaning.includes(key) ? [THREAD_LEANING_LINE] : [];
+    const mark = fateView.marks[key];
+    return mark ? [...lines, markLine(mark)] : lines;
+  };
 
   const lensResult = useMemo(() => {
     if (!lens || !lensReady) return null;
@@ -1355,7 +1383,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
           if (state === 'owned') fill = osrs ? 'transparent' : UNLOCKED_FILL;
           else if (state === 'cut-off') fill = osrs ? OSRS_CUT_OFF_FILL : CUT_OFF_FILL;
           else if (state === 'frontier') fill = osrs ? (hotFrontier.has(key) ? OSRS_HOT_FRONTIER_FILL : OSRS_FRONTIER_FILL) : hotFrontier.has(key) ? HOT_FRONTIER_FILL : FRONTIER_FILL;
-          else fill = osrs ? 'transparent' : LOCKED_FILL;
+          else fill = osrs || fogOn ? 'transparent' : LOCKED_FILL;
         } else {
           const unlocked = subArea ? isRegionUnlocked(subArea, regionUnlocks) : continentUnlocked;
           // OSRS: the map stays as drawn; osrsDark darkens what is not unlocked.
@@ -1372,7 +1400,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
       rects.push({ key: `sea:${key}`, region: 'The Open Seas', x: px, y: py, w: chunkPx, h: chunkPy, fill: SEA_OPEN_FILL, isActive: false });
     }
     return rects;
-  }, [draftChunks, chunkSubArea, regionUnlocks, chunkUnlocks, isChunked, authoring, authorLevel, activeRegion, activeSubArea, soloView, hotFrontier, osrs, unlocks, chunkedCutOff, chunkedOpenSea]);
+  }, [draftChunks, chunkSubArea, regionUnlocks, chunkUnlocks, isChunked, authoring, authorLevel, activeRegion, activeSubArea, soloView, hotFrontier, osrs, unlocks, chunkedCutOff, chunkedOpenSea, fogOn]);
 
   const activeChunkCount = authorLevel === 'SUBAREA'
     ? (subDraft[activeSubArea]?.length ?? 0)
@@ -1538,6 +1566,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
             left: 0,
             willChange: 'transform',
             ['--marker-r' as string]: `${MARKER_SCREEN_R / transformRef.current.scale}px`,
+            ['--osrs-map-s' as string]: String(transformRef.current.scale),
           } as React.CSSProperties}
         >
           <MapSurface
@@ -1552,6 +1581,11 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
             osrs={osrs}
             osrsDark={osrsDark}
           />
+
+          {fateView && !authoring && (
+            <FateLandLayer osrs={osrs} fog={fogOn} held={fateView.held} frontier={fateView.frontier}
+              thread={fateView.thread} leaning={fateView.leaning} marks={fateView.marks} />
+          )}
 
           {/* Chunk-lens highlight overlay — inside the transformed layer so the
               glow pans & zooms with the map. Unlocked matches bright, locked dim. */}
@@ -1937,10 +1971,14 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
         if (quests) bits.push(`${quests} quest${quests === 1 ? '' : 's'}`);
         if (bits.length) lines.push(bits.join(' · '));
       }
+      if (isChunked) lines.push(...fateLines(hoverKey));
       const chunkPx = CHUNK_TILES * (MAP_IMAGE.width / (MAP_BOUNDS.tileMaxX - MAP_BOUNDS.tileMinX));
       const { px, py } = tileToPixel({ tx: (hoverChunk.cx + 1) * CHUNK_TILES, ty: (hoverChunk.cy + 1) * CHUNK_TILES });
       const right = t.x + px * t.scale;
-      const flip = right + 200 > osrsBox.w;
+      // Flip left when the tip (about 6px a character in RS) would run off the
+      // map on the right and there is more room on the left.
+      const tipW = Math.max(200, 12 + 6 * Math.max(...lines.map(l => l.length)));
+      const flip = right + tipW > osrsBox.w && right - chunkPx * t.scale > osrsBox.w - right;
       tip = { x: flip ? right - chunkPx * t.scale - 2 : right + 2, y: Math.max(0, t.y + py * t.scale), flip, lines };
     }
     const lensSuggestOpen = lensSuggestions.length > 0 || lensItemSuggestions.length > 0 || lensTagSuggestions.length > 0;
@@ -1997,6 +2035,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
           <div className="owm-legend">
             <span><i className="owm-sw" style={{ background: '#6f9a3c' }} />Unlocked<b>{unlockedCount}</b></span>
             {isChunked && <span><i className="owm-sw" style={{ background: '#a8641c' }} />Frontier</span>}
+            {fateView?.thread && <span title={threadLines(chunkPlaceLabel(fateView.thread)).join(' ')}><i className="owm-sw" style={{ background: THREAD_GOLD }} />Fate's Thread</span>}
             {isChunked && chunkedCutOff.size > 0 && <span><i className="owm-sw" style={{ background: '#8a1f14' }} />Cut off<b>{chunkedCutOff.size}</b></span>}
             <span><i className="owm-sw" style={{ background: '#2a1d14' }} />Locked</span>
           </div>
@@ -2109,6 +2148,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
                 onClick={() => applyTransform({ ...transformRef.current, scale: Math.min(transformRef.current.scale + 0.1, 5) })}>+</button>
               <button type="button" className="osrs-btn" onClick={handleExport} disabled={isExporting} title="Export Map Image">{isExporting ? 'Saving...' : 'Download map'}</button>
               <button type="button" className={`osrs-btn${showGrid ? ' is-on' : ''}`} aria-pressed={showGrid} onClick={() => setShowGrid(g => !g)} title="Toggle chunk grid (64-tile)">Chunk grid</button>
+              {isChunked && <button type="button" className={`osrs-btn${fogOn ? ' is-on' : ''}`} aria-pressed={fogOn} onClick={() => setFateMapPref('fog', !fogPref)} title="Fog over land you don't hold">Fog</button>}
               {canAuthor && <button type="button" className={`osrs-btn${authoring ? ' is-on' : ''}`} aria-pressed={authoring} onClick={() => setAuthoring(a => !a)} title="Toggle chunk authoring mode">Author</button>}
             </span>
           </div>
@@ -2346,6 +2386,15 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
         >
           <Grid3x3 size={20} />
         </button>
+        {isChunked && (
+          <button
+            onClick={() => setFateMapPref('fog', !fogPref)}
+            className={`p-2 border rounded text-white shadow-lg active:scale-95 transition-transform ${fogOn ? 'bg-emerald-900/80 border-emerald-500/60' : 'bg-black/80 border-white/20 hover:bg-white/10'}`}
+            title="Fog over land you don't hold" aria-pressed={fogOn}
+          >
+            {fogOn ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        )}
         <button
           onClick={() => applyTransform({ ...transformRef.current, scale: Math.min(transformRef.current.scale + 0.5, 5) })}
           className="p-2 bg-black/80 border border-white/20 rounded hover:bg-white/10 text-white shadow-lg active:scale-95 transition-transform"
@@ -2369,6 +2418,11 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
         {hoverTile && hoverChunk && (
           <div className="bg-black/80 px-3 py-1.5 rounded border border-white/10 text-[11px] font-mono text-emerald-300 shadow-lg backdrop-blur-sm">
             tile ({Math.round(hoverTile.tx)}, {Math.round(hoverTile.ty)}) · chunk ({hoverChunk.cx}, {hoverChunk.cy})
+          </div>
+        )}
+        {hoverChunk && fateLines(chunkKey(hoverChunk)).length > 0 && (
+          <div className="bg-black/85 px-3 py-1.5 rounded border border-amber-400/40 text-[11px] text-amber-200 shadow-lg max-w-[320px] flex flex-col gap-0.5">
+            {fateLines(chunkKey(hoverChunk)).map(line => <span key={line}>{line}</span>)}
           </div>
         )}
         {toast && (

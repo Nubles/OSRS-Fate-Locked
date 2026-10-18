@@ -1,5 +1,5 @@
-import React, { Suspense } from 'react';
-import { PendingUnlock, TableType } from '../types';
+import React, { Suspense, useState } from 'react';
+import { GameState, PendingUnlock, TableType } from '../types';
 import { BANK_BY_ID } from '../data/banks';
 import { SLOT_CONFIG, SPECIAL_ICONS, UTILITY_ITEM_IDS } from '../constants';
 import { chunkLabelWithCoords } from '../utils/chunkLabelWithCoords';
@@ -7,19 +7,31 @@ import { VoidReveal } from './VoidReveal';
 import { lazyWithRetry } from '../utils/lazyRetry';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { useOsrsNav } from '../utils/osrsNav';
+import { readFateMapPref } from '../utils/fateMapPrefs';
 
 const OsrsSpendReveal = lazyWithRetry(() => import('./osrs/OsrsSpendReveal'));
+const FateDrawsMap = lazyWithRetry(() => import('./FateDrawsMap'));
 
 /** Mounted for the whole run, so a saved reveal also resumes outside Spend Keys. */
-export function PendingUnlockReveal({ pending, animationsEnabled, onAccept, tier }: {
+export function PendingUnlockReveal({ pending, animationsEnabled, onAccept, tier, chunkedUnlocks }: {
   pending: PendingUnlock; animationsEnabled: boolean; onAccept: (id: string) => void;
   /** The skill's tier now that the unlock is applied. */
   tier?: number;
+  /** A Chunked run's unlocks, the drawn chunk among them: fate draws the map before a chunk's reveal. */
+  chunkedUnlocks?: GameState['unlocks'];
 }) {
   const osrs = useIsOsrsUi();
   // With the wide Spend Keys board open, the OSRS reveal draws in its reveal window.
   const nav = useOsrsNav();
   const docked = nav.screen === 'keys' && nav.keysTab === 'spend';
+  // Chunked: a chunk drawn by a Key, a Chaos Key or Fate's Mercy gets fate's
+  // spin first (components/FateDrawsMap.tsx), unless animations or the spin are off.
+  const [spun, setSpun] = useState<string | null>(null);
+  if (chunkedUnlocks && pending.table === TableType.CHUNKS && animationsEnabled && spun !== pending.id && readFateMapPref('spin')) {
+    return <Suspense key={`spin${pending.id}`} fallback={null}>
+      <FateDrawsMap chunk={pending.item} unlocks={chunkedUnlocks} osrs={osrs} docked={docked} onDone={() => setSpun(pending.id)} />
+    </Suspense>;
+  }
   const label = pending.table === TableType.BANKS ? BANK_BY_ID[pending.item]?.name ?? pending.item
     : pending.table === TableType.CHUNKS ? chunkLabelWithCoords(pending.item) : pending.item;
   const file = pending.table === TableType.SKILLS ? `${pending.item}_icon.png`

@@ -11,6 +11,7 @@ import { setUiStyle, useUiStyle } from '../../utils/uiStyle';
 import { lazyWithRetry } from '../../utils/lazyRetry';
 import { relaySync } from '../../services/relaySync';
 import { ProfileSwitcher } from '../ProfileSwitcher';
+import { FateMapOptions } from '../FateMapOptions';
 import { OsrsXpDrops } from './OsrsXpDrops';
 import { CHUNKED_OMNI_LAND_TEXT } from '../../config/economy';
 import './osrs-shell.css';
@@ -229,6 +230,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
                   <button type="button" className="osrs-menu-item" onClick={closeThen(() => onOpenChangelog(settingsRef.current))}>What's New</button>
                   <div className="osrs-menu-sep" />
                   <button type="button" className="osrs-menu-item" onClick={() => toggleAnimations()} aria-pressed={animationsEnabled}>Animations {onOff(animationsEnabled)}</button>
+                  {gameModeId === 'chunked' && <FateMapOptions osrs />}
                   <button type="button" className="osrs-menu-item" onClick={() => setUiStyle(uiStyle === 'osrs' ? 'classic' : 'osrs')} aria-pressed={uiStyle === 'osrs'}>OSRS layout {onOff(uiStyle === 'osrs')}</button>
                   {uiStyle === 'osrs' && <Suspense fallback={null}><OsrsInterfaceOptions /></Suspense>}
                   <button type="button" className="osrs-menu-item" onClick={() => toggleAdvisors()} aria-pressed={advisorsEnabled}>Advisor panels {onOff(advisorsEnabled)}</button>
