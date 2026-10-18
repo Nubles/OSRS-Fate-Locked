@@ -135,9 +135,16 @@ export const CHUNK_EXPLORE_ROLLS = 3;
 
 // Chunked: Fate's Thread and fate's marks (utils/fateLand.ts; Alex, 2026-10-18).
 /** Fate ties its thread to a chunk this many frontiers past the run's land, at least... */
-export const FATE_THREAD_MIN_STEPS = 3;
+export const FATE_THREAD_MIN_STEPS = 2;
 /** ...and at most. */
-export const FATE_THREAD_MAX_STEPS = 5;
+export const FATE_THREAD_MAX_STEPS = 4;
+/**
+ * The share of Chunks draws fate gives to the frontier chunks nearest its
+ * thread. A fixed share, not a weight: two doubled chunks on a border of 100
+ * or more barely moved the draw, so mid-game threads took about 50 chunks
+ * (play-test 2026-10-18); at 1 in 6 a thread falls about every 10-14 chunks.
+ */
+export const FATE_THREAD_LEAN_CHANCE = 1 / 6;
 /** The chance fate marks a chunk the run gains: about one in eight. */
 export const FATE_MARK_CHANCE = 0.125;
 /** Fate a Blessed chunk gives, filled up to the pity line at most. */

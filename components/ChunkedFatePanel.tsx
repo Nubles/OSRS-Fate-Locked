@@ -67,7 +67,7 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
   const cursed = rituals?.cursedRollsLeft ?? 0;
   const gildedChance = DROP_RATES[DropSource.FATE_MARK];
   const threadText = thread
-    ? `Fate has tied a thread to ${chunkPlaceLabel(thread)}. Your Chunks Keys lean toward it: the frontier chunks nearest it count twice. Gain it and fate grants you a free ritual.${fulfilled > 0 ? ` Threads fulfilled: ${fulfilled}.` : ''}`
+    ? `Fate has tied a thread to ${chunkPlaceLabel(thread)}. One Chunks draw in six goes to the frontier chunks nearest it. Gain it and fate grants you a free ritual.${fulfilled > 0 ? ` Threads fulfilled: ${fulfilled}.` : ''}`
     : null;
   const cursedText = cursed > 0
     ? `Cursed: your next ${cursed === 1 ? 'Key roll is' : `${cursed} Key rolls are`} ${FATE_MARK_CURSED_ODDS}% worse, but each fail among them gives double Fate.`

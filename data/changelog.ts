@@ -44,7 +44,7 @@ export const CHANGELOG_RELEASES = [
       added: [
         'Chunks draws now spin along your border, then fate sketches the chunk it picked like a map clue and fills it in. You can turn the spin off in Settings.',
         'Land you don’t hold sits under fog on the Chunked map. You can turn the fog off in Settings.',
-        'Fate’s Thread: fate ties a thread to a place past your border, and your Chunks draws lean toward it. Reach it for a free ritual fate picks.',
+        'Fate’s Thread: fate ties a thread to a boss, guild or bank past your border, and 1 Chunks draw in 6 heads its way. Reach it for a free ritual.',
         'Fate’s marks: about one chunk in eight comes marked Blessed (+25 Fate), Gilded (a free 50% Key roll), Chaotic or Cursed.',
         'Cursed chunks make your next 3 Key rolls 5% worse, but each fail among them gives double Fate.',
       ],

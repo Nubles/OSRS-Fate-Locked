@@ -6,7 +6,10 @@ import { leanTowardThread, threadCandidates, threadLeaning, withFateLand } from 
 import { validateAndMigrateSave } from './saveSchema';
 import { replayInvariants } from './integrity';
 import { afterRoll, failFate, rollRitualPlan } from './ritualEffects';
-import { FATE_MARK_BLESSED_FATE, FATE_MARK_CURSED_ODDS, FATE_MARK_CURSED_ROLLS, FATE_THREAD_MAX_STEPS, FATE_THREAD_MIN_STEPS } from '../config/economy';
+import { ACTIVITY_CHUNKS } from '../data/activityChunks';
+import { BANK_BY_ID } from '../data/banks';
+import { bankChunkKey } from './activityAccess';
+import { FATE_THREAD_LEAN_CHANCE, FATE_MARK_BLESSED_FATE, FATE_MARK_CURSED_ODDS, FATE_MARK_CURSED_ROLLS, FATE_THREAD_MAX_STEPS, FATE_THREAD_MIN_STEPS } from '../config/economy';
 
 type Run = ReturnType<typeof gameReducer>;
 const chunked = (over: Partial<GameState> = {}): Run => ({
@@ -26,20 +29,18 @@ const persists = (s: Run) => {
 };
 
 describe("Fate's Thread", () => {
-  it('is tied on a Chunked run\'s first action, to an unheld chunk 3 to 5 frontiers out', () => {
+  it('is tied on a Chunked run\'s first action, to an unheld chunk 2 to 4 frontiers out', () => {
     const s = gameReducer(chunked(), { type: 'TOGGLE_ANIMATIONS' });
     const thread = s.fateLand?.thread;
     expect(thread).toBeDefined();
     expect(threadCandidates([CHUNKED_START_KEY], s.unlocks)).toContain(thread);
-    // Not on the frontier, nor on the frontier after one more ring.
-    const one = frontier([CHUNKED_START_KEY]);
-    expect(one).not.toContain(thread);
-    expect(frontier([CHUNKED_START_KEY, ...one])).not.toContain(thread);
+    // Past the frontier, not on it.
+    expect(frontier([CHUNKED_START_KEY])).not.toContain(thread);
     expect(fateEntries(s).map(e => e.meta?.fate)).toEqual(['thread']);
     expect(persists(s).ok).toBe(true);
   });
 
-  it('draws its places from the right rings of the frontier', () => {
+  it('draws its places from the boss, minigame, guild and bank chunks in the right rings', () => {
     const rings: string[][] = [];
     const seen = new Set([CHUNKED_START_KEY]);
     for (let i = 0; i < FATE_THREAD_MAX_STEPS; i++) {
@@ -47,8 +48,10 @@ describe("Fate's Thread", () => {
       rings.push(ring);
       ring.forEach(k => seen.add(k));
     }
-    expect(threadCandidates([CHUNKED_START_KEY], initialState.unlocks).sort())
-      .toEqual(rings.slice(FATE_THREAD_MIN_STEPS - 1).flat().sort());
+    const places = new Set([...Object.values(ACTIVITY_CHUNKS).flat(), ...Object.keys(BANK_BY_ID).map(bankChunkKey)]);
+    const wanted = rings.slice(FATE_THREAD_MIN_STEPS - 1).flat().filter(k => places.has(k));
+    expect(wanted.length).toBeGreaterThan(0);
+    expect(threadCandidates([CHUNKED_START_KEY], initialState.unlocks)).toEqual(wanted.sort());
   });
 
   it('leaves Vanilla runs alone', () => {
@@ -57,12 +60,11 @@ describe("Fate's Thread", () => {
     expect(fateEntries(s)).toEqual([]);
   });
 
-  it('lists the frontier chunks nearest the thread twice in a Chunks draw', () => {
+  it('gives one Chunks draw in six to the frontier chunks nearest the thread', () => {
     const pool = ['49,50', '51,50', '50,51', '50,49'].map(item => ({ table: TableType.CHUNKS, item }));
-    const leaned = leanTowardThread(pool, '54,50');
-    expect(leaned.filter(c => c.item === '51,50')).toHaveLength(2);
-    expect(leaned).toHaveLength(5);
-    expect(leanTowardThread(pool, undefined)).toEqual(pool);
+    expect(leanTowardThread(pool, '54,50', FATE_THREAD_LEAN_CHANCE - 0.01).map(c => c.item)).toEqual(['51,50']);
+    expect(leanTowardThread(pool, '54,50', FATE_THREAD_LEAN_CHANCE)).toEqual(pool);
+    expect(leanTowardThread(pool, undefined, 0)).toEqual(pool);
     expect(threadLeaning(pool.map(c => c.item), '50,55')).toEqual(['50,51']);
   });
 

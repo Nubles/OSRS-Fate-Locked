@@ -3061,8 +3061,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       if (warded && !usable) return;
       let pool = randomUnlockPool(current.unlocks, current.gameModeId, costType, table, current.customMode);
       if (warded && usable) pool = pool.filter(usable);
-      // Chunked: a Chunks Key leans toward Fate's Thread (utils/fateLand.ts).
-      if (table === TableType.CHUNKS) pool = leanTowardThread(pool, current.fateLand?.thread);
+      // Chunked: one Chunks draw in six goes toward Fate's Thread (utils/fateLand.ts).
+      if (table === TableType.CHUNKS) pool = leanTowardThread(pool, current.fateLand?.thread, nextFloat('fate-thread-lean'));
       const selection = pickRandomPoolEntry(pool, () => nextFloat(costType === 'key' ? 'gacha' : 'chaos'));
       if (!selection) {
         showToast(warded

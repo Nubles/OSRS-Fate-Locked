@@ -1,8 +1,9 @@
 /**
  * Chunked's own fate (Alex picked these on 18 October 2026): Fate's Thread and
  * fate's marks. Fate ties a thread to a place a few chunks past the run's
- * border; a Chunks Key still draws from the whole frontier, but the frontier
- * chunks nearest the thread count twice. When the run gains the place, fate is
+ * border, on a boss, minigame, guild or bank chunk where it can; one Chunks
+ * draw in six goes to the frontier chunks nearest the thread, the rest to the
+ * whole frontier. When the run gains the place, fate is
  * fulfilled: a free ritual fate picks, and a new thread. Every chunk the run
  * gains may also be marked by fate: Blessed, Gilded, Chaotic or Cursed.
  *
@@ -15,7 +16,10 @@ import { CHUNKED_START_KEY, chunkKey, getChunkFrontier, parseChunkKey } from './
 import { chunkLabelWithCoords } from './chunkLabelWithCoords';
 import { drawFloat, seededContext } from './seededRng';
 import { pickFreeRitual, ritualName, achievementFateCap } from './achievementRewards';
-import { FATE_MARK_CHANCE, FATE_MARK_BLESSED_FATE, FATE_MARK_CHAOS_CHANCE, FATE_MARK_CURSED_ROLLS, FATE_THREAD_MIN_STEPS, FATE_THREAD_MAX_STEPS } from '../config/economy';
+import { FATE_MARK_CHANCE, FATE_MARK_BLESSED_FATE, FATE_MARK_CHAOS_CHANCE, FATE_MARK_CURSED_ROLLS, FATE_THREAD_LEAN_CHANCE, FATE_THREAD_MIN_STEPS, FATE_THREAD_MAX_STEPS } from '../config/economy';
+import { ACTIVITY_CHUNKS } from '../data/activityChunks';
+import { BANK_BY_ID } from '../data/banks';
+import { bankChunkKey } from './activityAccess';
 
 export type { FateLand, FateMark };
 export const FATE_MARKS: readonly FateMark[] = ['BLESSED', 'GILDED', 'CHAOTIC', 'CURSED'];
@@ -26,6 +30,13 @@ type FateLandRun = Pick<GameState, 'gameModeId' | 'unlocks' | 'history' | 'fateP
 
 const EMPTY: FateLand = { fulfilled: 0, marks: {}, gilded: [] };
 
+/** Places fate ties its thread to: chunks a boss, minigame or guild is entered from, and bank chunks. */
+let places: ReadonlySet<string> | null = null;
+const threadPlaces = (): ReadonlySet<string> => (places ??= new Set([
+  ...Object.values(ACTIVITY_CHUNKS).flat(),
+  ...Object.keys(BANK_BY_ID).map(bankChunkKey).filter((key): key is string => key !== undefined),
+]));
+
 /** The chunks a Chunked run holds, its free start chunk included. */
 const held = (run: Pick<GameState, 'unlocks'>): string[] => {
   const chunks = run.unlocks.chunks ?? [];
@@ -35,8 +46,9 @@ const held = (run: Pick<GameState, 'unlocks'>): string[] => {
 /**
  * The places fate may tie a thread to: chunks between FATE_THREAD_MIN_STEPS
  * and FATE_THREAD_MAX_STEPS frontiers past the run's land, walked by the same
- * rules as the frontier itself, so the run can always reach them. When the
- * map is nearly full, the farthest chunks still unheld stand in.
+ * rules as the frontier itself, so the run can always reach them: the boss,
+ * minigame, guild and bank chunks among them, or every one when none is.
+ * When the map is nearly full, the farthest chunks still unheld stand in.
  */
 export const threadCandidates = (owned: readonly string[], account: GameState['unlocks']): string[] => {
   const seen = new Set(owned);
@@ -48,7 +60,9 @@ export const threadCandidates = (owned: readonly string[], account: GameState['u
     for (const key of layer) seen.add(key);
   }
   const wanted = layers.slice(FATE_THREAD_MIN_STEPS - 1).flat();
-  return wanted.length > 0 ? wanted.sort() : (layers[layers.length - 1] ?? []).slice().sort();
+  const placed = wanted.filter(key => threadPlaces().has(key));
+  const chosen = placed.length > 0 ? placed : wanted.length > 0 ? wanted : layers[layers.length - 1] ?? [];
+  return chosen.slice().sort();
 };
 
 /** Grid steps between two chunks. */
@@ -59,14 +73,14 @@ const stepsBetween = (a: string, b: string): number => {
 };
 
 /**
- * A Chunks Key's pool with fate leaning toward its thread: the candidates
- * nearest the thread appear twice. Other tables, and runs with no thread,
- * keep their pool as it is.
+ * A Chunks Key's pool with fate leaning toward its thread: when the seeded
+ * `roll` falls under FATE_THREAD_LEAN_CHANCE, only the candidates nearest the
+ * thread; otherwise, and for runs with no thread, the pool as it is.
  */
-export const leanTowardThread = <T extends { item: string }>(pool: readonly T[], thread: string | undefined): T[] => {
-  if (!thread || pool.length === 0) return [...pool];
+export const leanTowardThread = <T extends { item: string }>(pool: readonly T[], thread: string | undefined, roll: number): T[] => {
+  if (!thread || pool.length === 0 || roll >= FATE_THREAD_LEAN_CHANCE) return [...pool];
   const nearest = Math.min(...pool.map(c => stepsBetween(c.item, thread)));
-  return pool.flatMap(c => (stepsBetween(c.item, thread) === nearest ? [c, c] : [c]));
+  return pool.filter(c => stepsBetween(c.item, thread) === nearest);
 };
 
 /** The frontier chunks fate leans toward: the ones nearest the thread. */
@@ -156,7 +170,7 @@ export const withFateLand = <S extends FateLandRun>(prev: FateLandRun, next: S, 
       : undefined;
     if (thread) {
       entries.push(entry(newId, now, `Fate has tied a thread to ${chunkLabelWithCoords(thread)}`,
-        'Your Chunks Keys still draw from your whole frontier, but the chunks nearest the thread count twice.',
+        'One Chunks draw in six goes to the frontier chunks nearest it; the rest draw from your whole frontier.',
         { fate: 'thread', chunk: thread }));
     }
   }
