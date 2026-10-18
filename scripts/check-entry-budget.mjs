@@ -22,7 +22,8 @@ import { gzipSync } from 'node:zlib';
 // 251: plus the walk-based Chunked frontier and sea reach, and the skill-training facts (courses, patches, altars, ports, quest gates) (250.1 on 2026-10-17).
 // 253: the Chunked audit's fixes: exact levels and services in the chunk skill rows, entry-quest gates for places, the kept Cartographer offer, Mercy's patch and guild draws and its quiet-spell way out (252.5 on 2026-10-18).
 // 255: Chunked's Fate's Thread and fate's marks in the game engine, which every save runs through (254.2 on 2026-10-18).
-export const ENTRY_GZIP_BUDGET_KB = 255;
+// 256: the build check behind chunk-error reloads, so a dropped connection doesn't reload onto the browser's error page (254.8 on 2026-10-18).
+export const ENTRY_GZIP_BUDGET_KB = 256;
 
 /** The entry script that dist/index.html loads, as a path inside distDir. */
 export const entryScriptPath = (distDir, indexHtml) => {
