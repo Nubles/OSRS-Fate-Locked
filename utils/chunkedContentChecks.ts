@@ -33,6 +33,8 @@ import { DIARY_DATA } from '../data/diaryData';
 import { chunkedTrainingTiers } from './chunkedSkillPool';
 import { materializeQuestRouteSnapshot, materializeRuneProofAccount } from './questRoutes/goalPlannerRuneProof';
 import { questItemsObtainableNow, type QuestRouteAnalysisSnapshot } from './questRoutes/analyzeQuest';
+import { classifyShop } from './shopClassification';
+import { MERCHANT_SERVICES } from '../data/merchantServices';
 
 type Coord = { cx: number; cy: number };
 interface QuestChunk extends Coord { key: string; id: string }
@@ -73,9 +75,11 @@ export function createChunkedChecks(service: ChunkContentService) {
   let itemContent = new Map<string, { snapshot: QuestRouteAnalysisSnapshot; chunks: string[] }>();
   let itemVerdicts = new Map<string, Map<string, string[]>>();
   let allContentChunks: Set<string> | null = null;
+  let merchantChunks: Map<string, Coord[]> | null = null;
   // A fresh dataset starts every cache afresh.
   service.subscribe(() => {
     questChunkCache = new Map(); diaryIndex = null; itemContent = new Map(); itemVerdicts = new Map(); allContentChunks = null;
+    merchantChunks = null;
   });
 
   /** The chunks a quest starts and has steps in; an interior's is its entrance. */
@@ -165,6 +169,32 @@ export function createChunkedChecks(service: ChunkContentService) {
     return missing.map(item => ({ kind: 'region', label: `${item} (no source in your chunks yet)`, item }));
   };
 
+  /** Where each merchant type's shops (and service NPCs, such as tanners) are, once per dataset. */
+  const shopsOf = (merchant: string): readonly Coord[] => {
+    if (!merchantChunks) {
+      merchantChunks = new Map();
+      const add = (category: string | null | undefined, locations: readonly Coord[]) => {
+        if (!category) return;
+        merchantChunks!.set(category, [...(merchantChunks!.get(category) ?? []), ...locations]);
+      };
+      for (const hit of service.entitiesOfKind('shop')) add(classifyShop(hit.name), hit.locations);
+      for (const hit of service.entitiesOfKind('npc')) add(MERCHANT_SERVICES[hit.name]?.category, hit.locations);
+    }
+    return merchantChunks.get(merchant) ?? [];
+  };
+
+  /**
+   * Whether one of a merchant type's shops is in the run's chunks: Prince Ali
+   * Rescue's pink skirt is sold only by clothes shops, so Clothes Shops counts
+   * for it once one is. A type the data places no shop of is left alone rather
+   * than shut for good.
+   */
+  const merchantInChunks = (merchant: string, unlocks: UnlockState): boolean => {
+    if (!service.ready) return true;
+    const shops = shopsOf(merchant);
+    return shops.length === 0 || shops.some(shop => chunkedChunkOpen(shop, unlocks));
+  };
+
   const diaryPlace = (taskId: string): DiaryLocationRequirement | null => {
     if (!service.ready) return null;
     const doc = service.rawDocument();
@@ -201,6 +231,7 @@ export function createChunkedChecks(service: ChunkContentService) {
       for (const q of Object.values(QUEST_DATA)) {
         for (const chunk of questChunks(q.id) ?? []) keys.add(chunk.key);
         if (reviewedQuestRequirements(q.id)) for (const key of itemRoutes(q.id).chunks) keys.add(key);
+        for (const merchant of q.merchants ?? []) for (const shop of shopsOf(merchant)) keys.add(keyOf(shop));
       }
       for (const task of ALL_DIARY_TASKS) for (const chunk of diaryPlace(task.id)?.chunkOptions ?? []) keys.add(keyOf(chunk));
       allContentChunks = keys;
@@ -234,7 +265,7 @@ export function createChunkedChecks(service: ChunkContentService) {
     };
   };
 
-  return { quest, questItems, diaryTask, diaryPlace, questChunks, contentChunks, frontier };
+  return { quest, questItems, merchantInChunks, diaryTask, diaryPlace, questChunks, contentChunks, frontier };
 }
 
 /** Tasks with a way of their own areas: their chunks are split between the ways. */

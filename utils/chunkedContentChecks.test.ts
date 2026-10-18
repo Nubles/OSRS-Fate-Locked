@@ -20,7 +20,9 @@ import { analyzeRequirement } from '../components/StrategyGuide';
 import { STRATEGY_DATABASE } from '../data/requirements';
 import { computeAreaRoutes } from './areaRoutes';
 import { buildDiaryIndex, chunkedChunkOpen, createChunkedChecks } from './chunkedContentChecks';
-import { getChunkFrontier, chunkKey } from './chunkAdjacency';
+import { ALL_CHUNK_KEYS, getChunkFrontier, chunkKey } from './chunkAdjacency';
+import { classifyShop } from './shopClassification';
+import { MERCHANT_SERVICES } from '../data/merchantServices';
 import { PANDEMONIUM_ROUTE } from './pandemoniumRoute';
 import { planForTarget } from './goalPlanner';
 import { rankFrontierChunks } from './frontierAdvisor';
@@ -217,6 +219,32 @@ describe('Chunked diary tasks with several ways check each way where it is (cont
     expect(pipe.oneOf!.map(way => way.regions)).toEqual([['Edgeville'], ['Varrock']]);
     expect(chunksOf(0)).toEqual([{ cx: 48, cy: 54 }]);
     expect(chunksOf(1)).toContainEqual({ cx: 50, cy: 54 });
+  });
+});
+
+describe('Chunked quests buy only from shops in the run\'s chunks (dead-ends item 9)', () => {
+  it("Prince Ali Rescue's Clothes Shops counts once a clothes shop is in the run's chunks", () => {
+    // Clothes shops, and Tenzing, who sells climbing boots as one.
+    const clothes = [
+      ...chunkContentService.entitiesOfKind('shop').filter(hit => classifyShop(hit.name) === 'Clothes Shops'),
+      ...chunkContentService.entitiesOfKind('npc').filter(hit => MERCHANT_SERVICES[hit.name]?.category === 'Clothes Shops'),
+    ].flatMap(hit => hit.locations.map(({ cx, cy }) => `${cx},${cy}`));
+    expect(clothes).toContain('50,53');
+    const elsewhere = ALL_CHUNK_KEYS.filter(key => !clothes.includes(key));
+    const merchants = ['Clothes Shops', 'Bars & Inns'];
+    const quest = QUEST_DATA['Prince Ali Rescue'];
+    const without = maxed(elsewhere, { merchants });
+    const blocked = evaluateQuestEligibility(quest, without, 'chunked');
+    expect(blocked.eligible).toBe(false);
+    expect(blocked.blockers.map(blocker => blocker.label)).toEqual(['Clothes Shops (no shop in your chunks yet)']);
+    expect(chunkedQuestRows(without, 'chunked').find(row => row.id === quest.id)!.bucket).not.toBe('DOABLE');
+    // Thessalia's in Varrock.
+    const withShop = maxed([...elsewhere, '50,53'], { merchants });
+    expect(evaluateQuestEligibility(quest, withShop, 'chunked').blockers).toEqual([]);
+    expect(chunkedQuestRows(withShop, 'chunked').find(row => row.id === quest.id)!.bucket).toBe('DOABLE');
+    // Vanilla keeps the merchant unlock alone.
+    expect(evaluateQuestEligibility(quest, { ...without, regions: ['Kharidian Desert', 'Misthalin', 'Al Kharid', 'Draynor Village'] }, 'vanilla')
+      .blockers.some(blocker => blocker.label.includes('no shop'))).toBe(false);
   });
 });
 
