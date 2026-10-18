@@ -1220,7 +1220,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                    className="text-[10px] font-normal text-amber-200 bg-amber-900/40 px-2 py-0.5 rounded border border-amber-500/30 whitespace-nowrap shrink-0"
                    title={activeMode.description}
                  >
-                    {activeMode.name} Mode
+                    {activeMode.name} Mode{activeMode.beta ? ' (Beta)' : ''}
                  </span>
                  {titleAchievement && (
                     <button

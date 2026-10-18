@@ -6,7 +6,7 @@ import { weeklySeed, randomSeed, normalizeSeed } from '../utils/seededRng';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import {
-  GAME_MODES, getGameMode, resolveModeRules, CUSTOM_RULE_BOUNDS,
+  BETA_MODE_NOTE, GAME_MODES, getGameMode, resolveModeRules, CUSTOM_RULE_BOUNDS,
 } from '../config/gameModes';
 import type { GameModeRules } from '../config/gameModes';
 
@@ -94,6 +94,11 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-white">{mode.name}</span>
+                    {mode.beta && (
+                      <span className="text-[9px] uppercase tracking-wider bg-amber-900/60 text-amber-300 px-1.5 py-0.5 rounded">
+                        Beta
+                      </span>
+                    )}
                     {isActive && (
                       <span className="text-[9px] uppercase tracking-wider bg-emerald-900/60 text-emerald-300 px-1.5 py-0.5 rounded">
                         Active
@@ -104,6 +109,7 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
                 </div>
                 <div className="text-[11px] text-amber-300/70 mt-0.5">{mode.tagline}</div>
                 <div className="text-[11px] text-gray-500 mt-1">{mode.description}</div>
+                {mode.beta && <div className="text-[11px] text-amber-300/70 mt-1">{BETA_MODE_NOTE}</div>}
               </button>
             );
           })}

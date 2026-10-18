@@ -38,7 +38,7 @@ export interface ChangelogRelease {
 export const CHANGELOG_RELEASES = [
   {
     id: '2026-10-18-chunked-fate-draws-the-map',
-    title: 'Fate draws your Chunked map',
+    title: 'Chunked beta: fate draws your map',
     date: '2026-10-18',
     sections: {
       added: [
@@ -47,6 +47,9 @@ export const CHANGELOG_RELEASES = [
         'Fate’s Thread: fate ties a thread to a boss, guild or bank past your border, and 1 Chunks draw in 6 heads its way. Reach it for a free ritual.',
         'Fate’s marks: about one chunk in eight comes marked Blessed (+25 Fate), Gilded (a free 50% Key roll), Chaotic or Cursed.',
         'Cursed chunks make your next 3 Key rolls 5% worse, but each fail among them gives double Fate.',
+      ],
+      changed: [
+        'Chunked is now marked as a beta. Its rules may still change while we tune it.',
       ],
     },
   },

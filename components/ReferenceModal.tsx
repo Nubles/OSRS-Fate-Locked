@@ -5,7 +5,7 @@ import { Shield, Package, BookOpen, Dices, Sparkles, Map, Zap, Scroll, Skull, Ac
 import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
-import { GAME_MODES, getGameMode, resolveModeRules, usesActivityKeyReserves } from '../config/gameModes';
+import { BETA_MODE_NOTE, GAME_MODES, getGameMode, resolveModeRules, usesActivityKeyReserves } from '../config/gameModes';
 import { andList, BREAKTHROUGH_CHANCE, FATE_THREAD_LEAN_CHANCE, FATE_MARK_BLESSED_FATE, FATE_MARK_CHANCE, FATE_MARK_CHAOS_CHANCE, FATE_MARK_CURSED_ODDS, FATE_MARK_CURSED_ROLLS, FATE_THREAD_MAX_STEPS, FATE_THREAD_MIN_STEPS, CHUNKED_OMNI_LAND_TEXT, CHUNK_EXPLORE_ROLLS, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, MINIGAME_MISS_FATE_MIN_RATE, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { DropSource, TableType } from '../types';
@@ -438,11 +438,12 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     return (
                                         <div key={mode.id} className={`bg-[#222] p-5 rounded-xl border ${isActive ? 'border-amber-500/60' : 'border-white/5'}`}>
                                             <div className="flex items-center justify-between mb-1">
-                                                <h4 className="font-bold text-white text-lg">{mode.name}</h4>
+                                                <h4 className="font-bold text-white text-lg flex items-center gap-2">{mode.name}{mode.beta && <span className="text-[9px] font-normal uppercase tracking-wider bg-amber-900/60 text-amber-300 px-1.5 py-0.5 rounded">Beta</span>}</h4>
                                                 {isActive && <span className="text-[9px] uppercase tracking-wider bg-emerald-900/60 text-emerald-300 px-1.5 py-0.5 rounded">Your run</span>}
                                             </div>
                                             <p className="text-xs text-amber-300/70 mb-2">{mode.tagline}</p>
                                             <p className="text-xs text-gray-400 leading-relaxed">{mode.description}</p>
+                                            {mode.beta && <p className="text-xs text-amber-300/70 mt-2">{BETA_MODE_NOTE}</p>}
                                         </div>
                                     );
                                 })}

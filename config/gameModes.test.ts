@@ -15,6 +15,10 @@ describe('the game modes a player can pick', () => {
     }
   });
 
+  it('tag Chunked, and only Chunked, as a beta', () => {
+    expect(GAME_MODES.filter(mode => mode.beta).map(mode => mode.id)).toEqual(['chunked']);
+  });
+
   it('describe Chunked as in Chunk Locked, with no guaranteed start-chunk Keys', () => {
     const chunked = getGameMode('chunked');
     expect(chunked.description).toMatch(/^One chunk at a time, as in Chunk Locked ironman\./);

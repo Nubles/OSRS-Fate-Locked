@@ -85,7 +85,8 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
   useEscapeKey(() => { setShowRlMenu(false); runeliteRef.current?.focus(); }, showRlMenu);
   const relayDot = useRelayDot();
   const settingsRef = useRef<HTMLButtonElement>(null);
-  const runName = [`${getGameMode(gameModeId).name} mode`, linkedAccount || activeProfileName].filter(Boolean).join(' · ');
+  const mode = getGameMode(gameModeId);
+  const runName = [`${mode.name} mode${mode.beta ? ' (Beta)' : ''}`, linkedAccount || activeProfileName].filter(Boolean).join(' · ');
 
   const fateTitle = pityRules.pityEnabled
     ? `Fate Points: failed rolls build these, and at ${pityRules.pityThreshold} you get a guaranteed Pity Key. You can also spend them on rituals at the Altar.`
