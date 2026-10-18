@@ -1789,10 +1789,11 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         || (state.rngSeed && roll !== drawFloat(state.rngSeed, seededContext(state), 'mercy'))) return state;
       const pool = mercyPool(state);
       const pick = pool[Math.min(pool.length - 1, Math.floor(roll * pool.length))];
-      // A chunk, a skill tier, or the patch type or guild a skill needs to train.
+      // A chunk, a skill tier, or the patch type, guild, merchant or gear slot a skill needs to train.
       const label = pick.table === TableType.CHUNKS ? chunkLabelWithCoords(pick.item)
         : pick.table === TableType.SKILLS ? `${pick.item} tier ${(state.unlocks.skills[pick.item] ?? 0) + 1}`
-        : pick.table === TableType.FARMING_LAYERS ? `${pick.item} patches` : pick.item;
+        : pick.table === TableType.FARMING_LAYERS ? `${pick.item} patches`
+        : pick.table === TableType.EQUIPMENT ? `${pick.item} tier ${(state.unlocks.equipment[pick.item] ?? 0) + 1}` : pick.item;
       return {
         ...state,
         unlocks: applyTableUnlock(state.unlocks, pick.table, pick.item),

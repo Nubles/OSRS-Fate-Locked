@@ -10,7 +10,7 @@
  *   can train has room below its cap, no Breakthrough or exploring roll is
  *   waiting, and no quest in its chunks is doable, fate draws one random entry
  *   from the Chunks and Skills pools a Key would roll, plus any Farming patch
- *   type or guild that alone keeps a skill from training (mercyEnablers).
+ *   type, guild, merchant or gear slot that keeps a skill from training (mercyEnablers).
  *
  * The tier cap (October 2026 review, economy finding 3): as in Vanilla, a
  * tier caps the training methods, not the level, so a player may log levels
@@ -109,39 +109,55 @@ export type MercyBlocker = 'not_chunked' | 'keys' | 'pending_unlock' | 'fate' | 
 const skillCanMove = (skill: string, unlocks: GameState['unlocks']): boolean =>
   chunkedSkillHasRoom(skill, unlocks) || chunkedSkillRollable(skill, unlocks);
 
+/** The tables whose entries can be all that keeps a skill from training in Chunked. */
+const ENABLER_TABLES = [TableType.FARMING_LAYERS, TableType.GUILDS, TableType.MERCHANTS, TableType.EQUIPMENT] as const;
+
+const withEntries = (unlocks: GameState['unlocks'], entries: readonly RandomUnlockCandidate[]): GameState['unlocks'] => {
+  const next = { ...unlocks, farming: [...unlocks.farming], guilds: [...unlocks.guilds], merchants: [...unlocks.merchants], equipment: { ...unlocks.equipment } };
+  for (const { table, item } of entries) {
+    if (table === TableType.FARMING_LAYERS) next.farming.push(item);
+    else if (table === TableType.GUILDS) next.guilds.push(item);
+    else if (table === TableType.MERCHANTS) next.merchants.push(item);
+    else if (table === TableType.EQUIPMENT) next.equipment[item] = (next.equipment[item] ?? 0) + 1;
+  }
+  return next;
+};
+
 /**
- * The Farming patch types and guilds a Key could roll that are all that keeps
- * a skill below 99 from training: with the entry unlocked, a skill that could
- * neither level nor roll a tier could do one of them (Herblore needs a herb
- * patch; the Fishing, Woodcutting and Farming Guilds hold their skills' top
- * spots). Without these in Mercy's pool a run that owned every chunk but no
- * Herb patch had nothing to draw (chunked-audit sim, October 2026).
+ * The Farming patch types, guilds, merchants and gear slots a Key could roll
+ * that keep a skill below 99 from training: Herblore needs a herb patch,
+ * Hunter a Hunter shop, Construction an estate agent and planks, Ranged a
+ * Weapon slot. An entry counts when it alone lets the skill level or roll a
+ * tier, or when the skill needs it even with every other such entry open (so
+ * Construction's estate agent comes up before its plank shop does). Without
+ * these in Mercy's pool a run that owned every chunk could still have nothing
+ * to draw (chunked-audit sims, October 2026).
  */
 export const mercyEnablers = (state: FateState): RandomUnlockCandidate[] => {
   const stuck = SKILLS_LIST.filter(skill => (state.unlocks.levels[skill] ?? 1) < 99 && !skillCanMove(skill, state.unlocks));
   if (stuck.length === 0) return [];
-  const opens = (candidate: RandomUnlockCandidate): boolean => {
-    const unlocks = candidate.table === TableType.FARMING_LAYERS
-      ? { ...state.unlocks, farming: [...state.unlocks.farming, candidate.item] }
-      : { ...state.unlocks, guilds: [...state.unlocks.guilds, candidate.item] };
-    return stuck.some(skill => skillCanMove(skill, unlocks));
-  };
-  return [
-    ...randomUnlockPool(state.unlocks, 'chunked', 'key', TableType.FARMING_LAYERS),
-    ...randomUnlockPool(state.unlocks, 'chunked', 'key', TableType.GUILDS),
-  ].filter(opens);
+  const candidates = ENABLER_TABLES.flatMap(table => randomUnlockPool(state.unlocks, 'chunked', 'key', table));
+  // Only skills that some mix of these entries would free are worth drawing for.
+  const freeable = stuck.filter(skill => skillCanMove(skill, withEntries(state.unlocks, candidates)));
+  if (freeable.length === 0) return [];
+  return candidates.filter(candidate =>
+    freeable.some(skill => skillCanMove(skill, withEntries(state.unlocks, [candidate]))
+      || !skillCanMove(skill, withEntries(state.unlocks, candidates.filter(other => other !== candidate)))));
 };
 
 /**
  * What Fate's Mercy could draw: the Chunks and Skills entries a Key could
- * roll, and any patch type or guild that alone keeps a skill from training
- * (mercyEnablers).
+ * roll. Once none is left, the patch type, guild, merchant or gear slot that
+ * keeps a skill from training (mercyEnablers), so a run never runs out of
+ * draws while a skill is still short of 99.
  */
-export const mercyPool = (state: FateState): RandomUnlockCandidate[] => [
-  ...randomUnlockPool(state.unlocks, 'chunked', 'key', TableType.CHUNKS),
-  ...randomUnlockPool(state.unlocks, 'chunked', 'key', TableType.SKILLS),
-  ...mercyEnablers(state),
-];
+export const mercyPool = (state: FateState): RandomUnlockCandidate[] => {
+  const land = [
+    ...randomUnlockPool(state.unlocks, 'chunked', 'key', TableType.CHUNKS),
+    ...randomUnlockPool(state.unlocks, 'chunked', 'key', TableType.SKILLS),
+  ];
+  return land.length > 0 ? land : mercyEnablers(state);
+};
 
 /** How long a Chunked run may go without a Key, unlock or level before Fate's Mercy opens anyway. */
 export const MERCY_QUIET_MS = 3 * 24 * 60 * 60 * 1000;

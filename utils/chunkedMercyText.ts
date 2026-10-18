@@ -58,7 +58,7 @@ export const mercyShutReason = (state: FateState, doableQuests?: readonly string
       // already means no frontier chunk is left).
       const unfinished = SKILLS_LIST.filter(skill => (state.unlocks.levels[skill] ?? 1) < 99);
       if (unfinished.length === 0) return "Fate's Mercy has nothing left to draw: every chunk and skill tier it could open is open.";
-      return `Fate's Mercy has nothing it can draw for you: no chunk, skill tier, patch type or guild it could open would let you train ${unfinished.length === 1 ? unfinished[0] : `${unfinished[0]} or ${unfinished.length - 1} other skill${unfinished.length === 2 ? '' : 's'}`} further.`;
+      return `Fate's Mercy has nothing it can draw for you: no chunk, skill tier, patch type, guild, merchant or gear slot it could open would let you train ${unfinished.length === 1 ? unfinished[0] : `${unfinished[0]} or ${unfinished.length - 1} other skill${unfinished.length === 2 ? '' : 's'}`} further.`;
     }
   }
 };

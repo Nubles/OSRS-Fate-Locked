@@ -44,7 +44,7 @@ export const CHANGELOG_RELEASES = [
       fixed: [
         'Fate’s Mercy no longer waits on things the game won’t let you do, like Ranged with no weapon or a course above your level.',
         'If 3 days pass with no new Key, unlock or level, Fate’s Mercy opens anyway, so a stuck run always gets out.',
-        'Fate’s Mercy can draw the patch type or guild a skill needs, so Herblore can’t get stuck with no Herb patch.',
+        'Fate’s Mercy can draw the patch, guild, shop or gear slot a skill needs, so Herblore, Hunter or Ranged can’t get stuck.',
       ],
       balance: [
         'The guaranteed start-chunk Key every 25 levels is gone. Every Key now comes from fate.',

@@ -358,7 +358,7 @@ const CURRENT_UNLOCK_KEYS = new Set([
  * or guild a skill needs to train; a Breakthrough a skill tier). Saves from
  * before the free draws stored Mercy as 1 Key; those stay valid.
  */
-const MERCY_TABLES: readonly unknown[] = [TableType.CHUNKS, TableType.SKILLS, TableType.FARMING_LAYERS, TableType.GUILDS];
+const MERCY_TABLES: readonly unknown[] = [TableType.CHUNKS, TableType.SKILLS, TableType.FARMING_LAYERS, TableType.GUILDS, TableType.MERCHANTS, TableType.EQUIPMENT];
 const pendingUnlockCostValid = (costType: unknown, cost: unknown, table: unknown): boolean =>
   ((costType === 'key' || costType === 'chaosKey') && cost === 1)
   || (costType === 'mercy' && cost === 0 && MERCY_TABLES.includes(table))

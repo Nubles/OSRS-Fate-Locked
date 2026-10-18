@@ -7,7 +7,7 @@ import { BREAKTHROUGH_CHANCE } from '../config/economy';
 import { validateAndMigrateSave } from './saveSchema';
 import { replayInvariants } from './integrity';
 import { breakthroughTier, chunkedSkillHasRoom, levelPastTierCap, MERCY_QUIET_MS, mercyBlocker, mercyEnablers, mercyPool, mercyQuietLeft, mercyRitualInReach, pendingBreakthroughs } from './chunkedFate';
-import { FARMING_PATCH_LIST, SKILLS_LIST } from '../data/items';
+import { FARMING_PATCH_LIST, MERCHANTS_LIST, SKILLS_LIST } from '../data/items';
 import { QUEST_DATA } from '../data/questData';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, getChunkFrontier } from './chunkAdjacency';
 import { drawFloat, seededContext } from './seededRng';
@@ -353,11 +353,38 @@ describe("Fate's Mercy: the patch type or guild a skill needs", () => {
     expect(saved.state.pendingUnlock?.item).toBe("Herb");
   });
 
+  // The full-run sim's endgame stops after the skill-truth fixes: a skill held
+  // back by a merchant or gear slot no chunk can stand in for.
+  const allBut = (skill: string, over: Record<string, unknown>) => {
+    const s = endgame(10, { farming: [...FARMING_PATCH_LIST], merchants: [...MERCHANTS_LIST], equipment: { ...dry().unlocks.equipment, Weapon: 1 }, ...over });
+    return { ...s, unlocks: { ...s.unlocks, skills: { ...s.unlocks.skills, [skill]: 1 }, levels: { ...s.unlocks.levels, Herblore: 99, [skill]: 1 } } };
+  };
+
+  it('draws the Hunter shop Hunter needs, and the Weapon slot Ranged needs', () => {
+    const hunter = allBut('Hunter', { merchants: MERCHANTS_LIST.filter(m => m !== 'Hunter Shops') });
+    expect(mercyEnablers(hunter)).toEqual([{ table: TableType.MERCHANTS, item: 'Hunter Shops' }]);
+    expect(mercyBlocker(hunter, [])).toBeNull();
+    const ranged = allBut('Ranged', { equipment: { ...dry().unlocks.equipment, Weapon: 0 } });
+    expect(mercyEnablers(ranged)).toEqual([{ table: TableType.EQUIPMENT, item: 'Weapon' }]);
+    const drawn = gameReducer(ranged, { type: 'CALL_ON_FATE', payload: { roll: 0, revealId: 'w', doableQuests: [] } });
+    expect(drawn.unlocks.equipment.Weapon).toBe(1);
+    expect(drawn.history.at(-1)?.message).toBe("Unlocked Weapon tier 1 · Fate's Mercy");
+    const { lastEvent: _lastEvent, ...persisted } = drawn;
+    expect(validateAndMigrateSave(persisted, initialState).ok).toBe(true);
+  });
+
+  it("draws Construction's estate agent first when it also lacks planks", () => {
+    const construction = allBut('Construction', { merchants: MERCHANTS_LIST.filter(m => m !== 'Real Estate Agents' && m !== 'Sawmill Operators') });
+    const enablers = mercyEnablers(construction).map(({ item }) => item);
+    expect(enablers).toContain('Real Estate Agents');
+    expect(mercyBlocker(construction, [])).toBeNull();
+  });
+
   it('says what is still unfinished instead of claiming everything is open', () => {
     // Herblore waits on Druidic Ritual, which no patch type or guild opens.
     const stuck = endgame(1, { farming: [...FARMING_PATCH_LIST], quests: Object.keys(QUEST_DATA).filter(quest => quest !== 'Druidic Ritual') });
     expect(mercyBlocker(stuck, [])).toBe('nothing_left');
-    expect(mercyShutReason(stuck, [])).toBe("Fate's Mercy has nothing it can draw for you: no chunk, skill tier, patch type or guild it could open would let you train Herblore further.");
+    expect(mercyShutReason(stuck, [])).toBe("Fate's Mercy has nothing it can draw for you: no chunk, skill tier, patch type, guild, merchant or gear slot it could open would let you train Herblore further.");
     const done = endgame(10, { farming: [...FARMING_PATCH_LIST], levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])) });
     expect(mercyBlocker(done, [])).toBe('nothing_left');
     expect(mercyShutReason(done, [])).toBe("Fate's Mercy has nothing left to draw: every chunk and skill tier it could open is open.");
