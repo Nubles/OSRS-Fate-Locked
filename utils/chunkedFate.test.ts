@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TableType } from '../types';
+import { TableType, type LogEntry } from '../types';
 import { gameReducer, initialState, prepareLevelUpActions } from '../context/GameContext';
 import { historyFilterMatches } from '../components/LogViewer';
 import { chunkLabelWithCoords } from './chunkLabelWithCoords';
@@ -14,9 +14,12 @@ import { drawFloat, seededContext } from './seededRng';
 import { mercyShutReason } from './chunkedMercyText';
 
 // A Chunked run on the Lumbridge Castle start chunk with no Keys left.
+// The run's own last entry; fate's mark on a gained chunk logs after it (utils/fateLand.ts).
+const lastLogged = (run: { history: LogEntry[] }) => run.history.filter(e => e.type !== 'FATE').at(-1);
 const dry = () => ({
   ...initialState,
-  runId: initialState.runId,
+  // A fixed run id keeps fate's seeded marks the same on every test run.
+  runId: '6f1c2a4e-8b3d-4c5e-9a7f-1b2c3d4e5f60',
   runRevision: 0,
   lastEvent: null,
   gameModeId: 'chunked',
@@ -57,13 +60,13 @@ describe('Chunked Breakthrough', () => {
     const won = gameReducer(dry(), { type: 'CHUNKED_BREAKTHROUGH', payload: { skill: 'Woodcutting', roll: BREAKTHROUGH_CHANCE - 0.01 } });
     expect(won.unlocks.skills.Woodcutting).toBe(3);
     expect(won.chunkedBreakthroughs).toEqual({ Woodcutting: 3 });
-    expect(won.history.at(-1)).toMatchObject({ type: 'UNLOCK', meta: { item: 'Woodcutting', costType: 'breakthrough', cost: 0 } });
+    expect(lastLogged(won)).toMatchObject({ type: 'UNLOCK', meta: { item: 'Woodcutting', costType: 'breakthrough', cost: 0 } });
     expect(won.keys).toBe(0);
 
     const lost = gameReducer(dry(), { type: 'CHUNKED_BREAKTHROUGH', payload: { skill: 'Woodcutting', roll: BREAKTHROUGH_CHANCE } });
     expect(lost.unlocks.skills.Woodcutting).toBe(2);
     expect(lost.chunkedBreakthroughs).toEqual({ Woodcutting: 3 });
-    expect(lost.history.at(-1)?.message).toBe('No Breakthrough for Woodcutting');
+    expect(lastLogged(lost)?.message).toBe('No Breakthrough for Woodcutting');
     // One roll per tier: a second dispatch changes nothing.
     expect(gameReducer(lost, { type: 'CHUNKED_BREAKTHROUGH', payload: { skill: 'Woodcutting', roll: 0 } })).toBe(lost);
   });
@@ -91,7 +94,7 @@ describe("Fate's Mercy", () => {
     const drawn = gameReducer(state, { type: 'CALL_ON_FATE', payload: { roll: 0, revealId: 'reveal-1', doableQuests: [] } });
     const pick = pool[0];
     expect(drawn.pendingUnlock).toMatchObject({ id: 'reveal-1', table: pick.table, item: pick.item });
-    expect(drawn.history.at(-1)).toMatchObject({ type: 'UNLOCK', meta: { item: pick.item, costType: 'mercy', cost: 0 } });
+    expect(lastLogged(drawn)).toMatchObject({ type: 'UNLOCK', meta: { item: pick.item, costType: 'mercy', cost: 0 } });
     expect(drawn.keys).toBe(0);
     // Not dry any more while the reveal is pending.
     expect(gameReducer(drawn, { type: 'CALL_ON_FATE', payload: { roll: 0, revealId: 'reveal-2', doableQuests: [] } })).toBe(drawn);
@@ -194,7 +197,7 @@ describe('Chunked tier caps: levels past the cap are logged but roll nothing', (
     expect(breakthroughTier(state, 'Woodcutting')).toBe(2);
     const lost = gameReducer(state, { type: 'CHUNKED_BREAKTHROUGH', payload: { skill: 'Woodcutting', roll: 0.99 } });
     expect(breakthroughTier(lost, 'Woodcutting')).toBeNull();
-    expect(lost.history.at(-1)?.details).toBe('Fate kept Woodcutting at tier 1 (methods to level 10). Levels past 10 roll nothing until a Key opens levels 11-20.');
+    expect(lastLogged(lost)?.details).toBe('Fate kept Woodcutting at tier 1 (methods to level 10). Levels past 10 roll nothing until a Key opens levels 11-20.');
   });
 });
 
@@ -258,7 +261,7 @@ describe("Fate's Mercy: Fate, quests and the shut reason", () => {
     const drawn = gameReducer(open(), { type: 'CALL_ON_FATE', payload: { roll: 0, revealId: 'reveal-1', doableQuests: [] } });
     expect(drawn.pendingUnlock).toMatchObject({ costType: 'mercy', cost: 0 });
     const pick = drawn.pendingUnlock!;
-    const entry = drawn.history.at(-1)!;
+    const entry = lastLogged(drawn)!;
     expect(entry.message).toBe(pick.table === TableType.CHUNKS
       ? `Unlocked ${chunkLabelWithCoords(pick.item)} · Fate's Mercy`
       : `Unlocked ${pick.item} tier ${drawn.unlocks.skills[pick.item]} · Fate's Mercy`);
@@ -280,7 +283,7 @@ describe("Fate's Mercy: Fate, quests and the shut reason", () => {
     const at = pool.findIndex(({ table, item }) => table === TableType.CHUNKS && item === '49,50');
     expect(at).toBeGreaterThanOrEqual(0);
     const drawn = gameReducer(chunkOnly, { type: 'CALL_ON_FATE', payload: { roll: (at + 0.5) / pool.length, revealId: 'r', doableQuests: [] } });
-    expect(drawn.history.at(-1)?.message).toBe("Unlocked Lumbridge (49, 50) · Fate's Mercy");
+    expect(lastLogged(drawn)?.message).toBe("Unlocked Lumbridge (49, 50) · Fate's Mercy");
   });
 });
 
@@ -288,7 +291,7 @@ describe('Breakthrough results', () => {
   it('shows a won Breakthrough as a free reveal that names the tier, and refuses while a reveal is open', () => {
     const won = gameReducer(dry(), { type: 'CHUNKED_BREAKTHROUGH', payload: { skill: 'Woodcutting', roll: 0, revealId: 'rv' } });
     expect(won.pendingUnlock).toEqual({ id: 'rv', table: TableType.SKILLS, item: 'Woodcutting', costType: 'breakthrough', cost: 0 });
-    expect(won.history.at(-1)?.message).toBe('Unlocked Woodcutting tier 3 · Breakthrough');
+    expect(lastLogged(won)?.message).toBe('Unlocked Woodcutting tier 3 · Breakthrough');
     // Hitpoints is waiting too, but the reveal must be acknowledged first.
     expect(gameReducer(won, { type: 'CHUNKED_BREAKTHROUGH', payload: { skill: 'Hitpoints', roll: 0, revealId: 'rv2' } })).toBe(won);
     const { lastEvent: _e, ...persisted } = won;
@@ -297,7 +300,7 @@ describe('Breakthrough results', () => {
 
   it('files a lost Breakthrough under Rolls, not Level', () => {
     const lost = gameReducer(dry(), { type: 'CHUNKED_BREAKTHROUGH', payload: { skill: 'Woodcutting', roll: 0.99 } });
-    const entry = lost.history.at(-1)!;
+    const entry = lastLogged(lost)!;
     expect(historyFilterMatches(entry, 'ROLLS')).toBe(true);
     expect(historyFilterMatches(entry, 'PROGRESS')).toBe(false);
   });
@@ -315,7 +318,7 @@ describe('the reducer checks what the UI checks', () => {
   it('logs a Key chunk unlock by name and coordinates, keeping the key in meta', () => {
     const state = { ...dry(), keys: 1 };
     const s = gameReducer(state, { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: '49,50', costType: 'key', cost: 1, revealId: 'r' } });
-    expect(s.history.at(-1)).toMatchObject({ message: 'Unlocked Lumbridge (49, 50)', meta: { item: '49,50' } });
+    expect(lastLogged(s)).toMatchObject({ message: 'Unlocked Lumbridge (49, 50)', meta: { item: '49,50' } });
   });
 });
 
@@ -347,7 +350,7 @@ describe("Fate's Mercy: the patch type or guild a skill needs", () => {
     const drawn = gameReducer(s, { type: 'CALL_ON_FATE', payload: { roll: 0.5, revealId: 'm', doableQuests: [] } });
     expect(drawn.unlocks.farming).toContain('Herb');
     expect(drawn.pendingUnlock).toMatchObject({ table: TableType.FARMING_LAYERS, item: 'Herb', costType: 'mercy', cost: 0 });
-    expect(drawn.history.at(-1)?.message).toBe("Unlocked Herb patches · Fate's Mercy");
+    expect(lastLogged(drawn)?.message).toBe("Unlocked Herb patches · Fate's Mercy");
     // The reveal survives a reload.
     const { lastEvent: _lastEvent, ...persisted } = drawn;
     const saved = validateAndMigrateSave(persisted, initialState);
@@ -370,7 +373,7 @@ describe("Fate's Mercy: the patch type or guild a skill needs", () => {
     expect(mercyEnablers(ranged)).toEqual([{ table: TableType.EQUIPMENT, item: 'Weapon' }]);
     const drawn = gameReducer(ranged, { type: 'CALL_ON_FATE', payload: { roll: 0, revealId: 'w', doableQuests: [] } });
     expect(drawn.unlocks.equipment.Weapon).toBe(1);
-    expect(drawn.history.at(-1)?.message).toBe("Unlocked Weapon tier 1 · Fate's Mercy");
+    expect(lastLogged(drawn)?.message).toBe("Unlocked Weapon tier 1 · Fate's Mercy");
     const { lastEvent: _lastEvent, ...persisted } = drawn;
     expect(validateAndMigrateSave(persisted, initialState).ok).toBe(true);
   });
