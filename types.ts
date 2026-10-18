@@ -318,7 +318,7 @@ export interface GameState {
    * key economy for any other mode.
    */
   xtremeMilestoneClaimed?: number;
-  /** Same insurance as xtremeMilestoneClaimed, for the 'chunked' mode — see CHUNKED_MILESTONE_INTERVAL. */
+  /** Retired: Chunked's start-chunk milestone counter (removed October 2026). Kept so old saves load; nothing reads it. */
   chunkedMilestoneClaimed?: number;
   /**
    * Achievement ids whose reward is settled (paid, or already earned when

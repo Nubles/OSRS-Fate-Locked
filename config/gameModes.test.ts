@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GAME_MODES, getGameMode } from './gameModes';
-import { BREAKTHROUGH_CHANCE, CHUNKED_MILESTONE_INTERVAL } from './economy';
+import { BREAKTHROUGH_CHANCE } from './economy';
 
 describe('the game modes a player can pick', () => {
   it('share the values the Rules page lists for both modes', () => {
@@ -15,12 +15,10 @@ describe('the game modes a player can pick', () => {
     }
   });
 
-  it('describe Chunked as in Chunk Locked, with its start-chunk milestone Keys', () => {
+  it('describe Chunked as in Chunk Locked, with no guaranteed start-chunk Keys', () => {
     const chunked = getGameMode('chunked');
     expect(chunked.description).toMatch(/^One chunk at a time, as in Chunk Locked ironman\./);
-    expect(chunked.description).toContain(
-      `While you hold only your start chunk, every ${CHUNKED_MILESTONE_INTERVAL} total levels gives you a guaranteed Key.`,
-    );
+    expect(chunked.description).not.toMatch(/guaranteed Key|total levels/);
     expect(chunked.description).toContain(
       `A skill at its cap gets one ${BREAKTHROUGH_CHANCE * 100}% Breakthrough roll to open its next tier`,
     );

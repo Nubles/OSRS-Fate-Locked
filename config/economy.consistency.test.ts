@@ -7,7 +7,7 @@ import {
   VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule,
   FAILURE_FATE_BY_SOURCE, SKILL_CHAOS_MILESTONES,
   failureFateForSkillLevel, failureFateForSource, isSkillChaosMilestone,
-  gambitKeys, getRitual, ritualEffect, ritualFateCost, STARTING_KEYS, CHUNKED_MILESTONE_INTERVAL,
+  gambitKeys, getRitual, ritualEffect, ritualFateCost, STARTING_KEYS,
 } from './economy';
 import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
@@ -74,7 +74,7 @@ describe('economy ↔ engine consistency', () => {
     expect(earn).toContain('Any successful roll, wherever you log it');
     expect(earn).not.toContain('Farm Key');
     expect(earn).toContain('A won Void Gambit.');
-    expect(earn).toContain(`Chunked: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels while you hold only your start chunk.`);
+    expect(earn).not.toMatch(/guaranteed Key every|total levels/); // Chunked's start-chunk Key is retired
     expect(earn).toContain(`The ${STARTING_KEYS} every run starts with.`);
   });
 

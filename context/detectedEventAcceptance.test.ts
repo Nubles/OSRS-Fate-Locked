@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { gameReducerForTest, migrateSaveForTest, prepareDetectedEventAcceptanceAction } from './GameContext';
 import { DROP_RATES } from '../config/rules';
-import { CHUNKED_MILESTONE_INTERVAL, failureFateForSkillLevel, failureFateForSource, XTREME_MILESTONE_INTERVAL } from '../config/economy';
+import { failureFateForSkillLevel, failureFateForSource, XTREME_MILESTONE_INTERVAL } from '../config/economy';
 import { resolveModeRules } from '../config/gameModes';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import { CA_DATA } from '../data/caData';
@@ -132,7 +132,6 @@ describe('detected event acceptance follows manual completion', () => {
 describe('detected level-ups and the start-area milestone Keys', () => {
   it.each([
     ['xtreme', XTREME_MILESTONE_INTERVAL, 'xtremeMilestoneClaimed', 'Xtreme milestone'],
-    ['chunked', CHUNKED_MILESTONE_INTERVAL, 'chunkedMilestoneClaimed', 'Chunked milestone'],
   ] as const)('pays a %s run the milestone Key a manual level-up pays', (gameModeId, interval, claimedKey, message) => {
     const fresh = run({ gameModeId });
     const others = Object.entries(fresh.unlocks.levels)

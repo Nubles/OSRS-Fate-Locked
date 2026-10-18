@@ -10,7 +10,7 @@ import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { exploreBlocker, withExploreStart } from '../utils/chunkExplore';
 import { achievementBoostFor } from '../utils/achievementBoosts';
-import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, BREAKTHROUGH_CHANCE, GREED_REFUND_FRACTION, gambitKeys, STARTING_KEYS } from '../config/economy';
+import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, BREAKTHROUGH_CHANCE, GREED_REFUND_FRACTION, gambitKeys, STARTING_KEYS } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
 import { BARROWS_BROTHERS, INVOCATIONS, SACRIFICE_TIERS, WARD_COOLDOWN_ROLLS, invocationAllowed, SACRIFICE_USES_PER_RUN, type BarrowsBrother, type Invocation, type Ritual } from '../config/economy';
 import {
@@ -862,12 +862,14 @@ const chainAppendedHistory = (prev: GameState['history'], next: GameState['histo
 };
 
 /**
- * Anti-softlock insurance for runs still stuck at their start: Xtreme Start
- * (see XTREME_MILESTONE_INTERVAL in config/economy.ts) before any area is
- * unlocked, and Chunked (CHUNKED_MILESTONE_INTERVAL, tighter because one
- * chunk is a much smaller training footprint than Lumbridge) before any
- * chunk is. A guaranteed Key every interval of total level; deterministic,
+ * Anti-softlock insurance for Xtreme Start runs still stuck at their start
+ * (see XTREME_MILESTONE_INTERVAL in config/economy.ts): before any area is
+ * unlocked, a guaranteed Key every interval of total level; deterministic,
  * not RNG. A manual level-up and a detected RuneLite level-up both pay it.
+ * Chunked had its own branch (a Key every 25 total levels on the start
+ * chunk) until October 2026; it was removed because a guaranteed Key whose
+ * table the player picks is not fate's pick, and Fate's Mercy now covers a
+ * dry start. Old saves keep their chunkedMilestoneClaimed counter, unread.
  */
 const startMilestoneInsurance = (
   state: GameState,
@@ -875,7 +877,6 @@ const startMilestoneInsurance = (
   now: number,
 ): Pick<GameState, 'keys'> & {
   xtremeMilestoneClaimed: number;
-  chunkedMilestoneClaimed: number;
   entries: LogEntry[];
 } => {
   let keys = state.keys;
@@ -898,24 +899,7 @@ const startMilestoneInsurance = (
     }
   }
 
-  let chunkedMilestoneClaimed = state.chunkedMilestoneClaimed ?? 0;
-  if (state.gameModeId === 'chunked' && (state.unlocks.chunks ?? []).length === 0) {
-    const eligible = Math.floor(totalLevel / CHUNKED_MILESTONE_INTERVAL);
-    if (eligible > chunkedMilestoneClaimed) {
-      const gained = eligible - chunkedMilestoneClaimed;
-      keys += gained;
-      chunkedMilestoneClaimed = eligible;
-      entries.push({
-        id: generateId(),
-        timestamp: now,
-        type: 'XTREME_MILESTONE',
-        message: `Chunked milestone: Total Level ${eligible * CHUNKED_MILESTONE_INTERVAL} gives ${gained === 1 ? 'a guaranteed Key' : `${gained} guaranteed Keys`}.`,
-        details: `Start-chunk milestone: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels until you unlock another chunk.`,
-        meta: { totalLevel, gained }
-      });
-    }
-  }
-  return { keys, xtremeMilestoneClaimed, chunkedMilestoneClaimed, entries };
+  return { keys, xtremeMilestoneClaimed, entries };
 };
 
 /** What a ritual costs now: nothing when an achievement's free ritual of that kind is waiting. */
@@ -1158,7 +1142,6 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         customMode: action.payload.customRules,
         gameModeLocked: true,
         xtremeMilestoneClaimed: Math.max(state.xtremeMilestoneClaimed ?? 0, Math.floor(startTotal / XTREME_MILESTONE_INTERVAL)),
-        chunkedMilestoneClaimed: Math.max(state.chunkedMilestoneClaimed ?? 0, Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL)),
       };
     }
 
@@ -1197,7 +1180,6 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           ...rolled,
           keys: insurance.keys,
           xtremeMilestoneClaimed: insurance.xtremeMilestoneClaimed,
-          chunkedMilestoneClaimed: insurance.chunkedMilestoneClaimed,
           history: [...rolled.history, ...insurance.entries],
         };
       }
@@ -1850,7 +1832,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         });
       }
 
-      const { keys, xtremeMilestoneClaimed, chunkedMilestoneClaimed, entries } =
+      const { keys, xtremeMilestoneClaimed, entries } =
         startMilestoneInsurance(state, totalLevel, now);
       logs.push(...entries);
 
@@ -1862,7 +1844,6 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         keys,
         chaosKeys,
         xtremeMilestoneClaimed,
-        chunkedMilestoneClaimed,
         history: logs,
         lastEvent: { id: generateId(), type: 'LEVEL_UP', meta: eventMeta }
       };

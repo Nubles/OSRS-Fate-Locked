@@ -78,19 +78,10 @@ describe('Spend Keys Chunks card', () => {
   });
 });
 
-describe('Spend Keys start-chunk milestone', () => {
-  it('shows the levels to the next start-chunk Key while only the start chunk is held', async () => {
-    const fresh = createFreshState().unlocks;
-    game.current = { ...createFreshState(), keys: 0, unlocks: { ...fresh, regions: [], chunks: [], levels: { ...fresh.levels } }, gameModeId: 'chunked', rollUnlock: vi.fn() };
-    const total = Object.values(fresh.levels).reduce((a, b) => a + b, 0);
-    const { GachaSection } = await import('./GachaSection');
-    render(<GachaSection />);
-    const next = (Math.floor(total / 25) + 1) * 25;
-    expect((await screen.findByTestId('start-chunk-milestone')).textContent).toContain(`Next at total level ${next}: ${next - total} level`);
-  });
-
-  it('goes away once another chunk is unlocked', async () => {
-    await renderWith({ ...createFreshState().unlocks, regions: [], chunks: ['49,50'] }, 'chunked');
+describe('Spend Keys has no start-chunk milestone line', () => {
+  it('shows no start-chunk Key countdown on the start chunk', async () => {
+    await renderWith({ ...createFreshState().unlocks, regions: [], chunks: [] }, 'chunked');
     expect(screen.queryByTestId('start-chunk-milestone')).toBeNull();
+    expect(document.body.textContent).not.toMatch(/to a Key|guaranteed Key/);
   });
 });

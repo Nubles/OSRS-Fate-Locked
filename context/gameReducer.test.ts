@@ -10,7 +10,7 @@ import {
 import { drawDice } from '../utils/seededRng';
 import { TableType, LogEntry, type FailureFateAward } from '../types';
 import { isRollEntry } from '../utils/logEntry';
-import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, LEVEL_CHAOS_CHANCE } from '../config/economy';
+import { XTREME_MILESTONE_INTERVAL, LEVEL_CHAOS_CHANCE } from '../config/economy';
 import { isValidUnlock } from '../utils/gameEngine';
 import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
 import { ALL_CA_TASKS } from '../data/caTasks';
@@ -1136,82 +1136,41 @@ describe('LEVEL_UP — Xtreme milestone insurance', () => {
   });
 });
 
-// --- Chunked milestone insurance ---------------------------------------------
+// --- Chunked has no start-chunk milestone ---------------------------------------
 
-describe('LEVEL_UP — Chunked milestone insurance', () => {
-  const chunkedIsolated = () => ({ ...base(), gameModeId: 'chunked', unlocks: { ...initialState.unlocks, chunks: [] } });
+// Chunked once paid a guaranteed Key every 25 total levels while a run held only
+// its start chunk: a Key whose table the player picks, so not fate's pick (it
+// even paid for levels past a tier cap, which roll nothing). Fate's Mercy covers
+// a dry start now; the rule and its counter are retired.
+describe('LEVEL_UP — Chunked pays no start-chunk milestone Key', () => {
+  const chunkedIsolated = () => ({ ...base(), gameModeId: 'chunked', unlocks: { ...initialState.unlocks, chunks: [] as string[] } });
+  const total = (levels: Record<string, number>) => Object.values(levels).reduce((a, b) => a + b, 0);
 
-  it('does nothing outside Chunked mode, even with no chunks unlocked', () => {
-    const state = { ...base(), gameModeId: 'vanilla', unlocks: { ...initialState.unlocks, chunks: [] } };
-    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
-    expect(s.keys).toBe(initialState.keys);
-    expect(s.chunkedMilestoneClaimed ?? 0).toBe(0);
+  it('crossing every multiple of 25 total levels on the start chunk pays nothing', () => {
+    let s: ReturnType<typeof gameReducer> = { ...chunkedIsolated(), keys: 0, unlocks: { ...chunkedIsolated().unlocks, skills: { Hitpoints: 10 } as Record<string, number> } };
+    const start = total(s.unlocks.levels);
+    for (let i = 0; i < 60; i++) s = gameReducer(s, { type: 'LEVEL_UP', payload: { skill: 'Hitpoints', chaosRoll: 0.99 } });
+    expect(total(s.unlocks.levels)).toBe(start + 60);
+    expect(s.keys).toBe(0);
+    expect(s.history.some(e => e.type === 'XTREME_MILESTONE')).toBe(false);
   });
 
-  it('does nothing in Chunked mode once a chunk has been unlocked', () => {
-    const target = chunkKey({ cx: CHUNKED_START.cx + 1, cy: CHUNKED_START.cy });
-    const state = { ...chunkedIsolated(), unlocks: { ...initialState.unlocks, chunks: [target] } };
-    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
-    expect(s.keys).toBe(initialState.keys);
+  it('a level past its tier cap logs "no roll" and pays no Key (audit V1)', () => {
+    const state = { ...chunkedIsolated(), keys: 0, chunkedMilestoneClaimed: 0,
+      unlocks: { ...chunkedIsolated().unlocks, skills: { Hitpoints: 1, Woodcutting: 1 }, levels: { ...initialState.unlocks.levels, Woodcutting: 10 } } };
+    // Old saves carry a counter far behind their total level; it is no longer read.
+    expect(total(state.unlocks.levels)).toBeGreaterThan(25);
+    const next = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Woodcutting', chaosRoll: 0.99 } });
+    expect(next.unlocks.levels.Woodcutting).toBe(11);
+    expect(next.history.at(-1)?.message).toBe('Woodcutting Level 11: no roll');
+    expect(next.keys).toBe(0);
   });
 
-  it('grants a guaranteed key the instant total level crosses the (tighter) interval, isolated in Chunked', () => {
-    const startingTotal = Object.values(initialState.unlocks.levels).reduce((a, b) => a + b, 0);
-    const state = {
-      ...chunkedIsolated(),
-      unlocks: { ...chunkedIsolated().unlocks, levels: { ...chunkedIsolated().unlocks.levels, Attack: CHUNKED_MILESTONE_INTERVAL - startingTotal } },
-    };
-    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
-    expect(s.keys).toBe(initialState.keys + 1);
-    expect(s.chunkedMilestoneClaimed).toBe(1);
-  });
-
-  it('does not re-grant the same milestone on a level-up that does not cross a new threshold', () => {
-    const already = { ...chunkedIsolated(), chunkedMilestoneClaimed: 1, keys: 10 };
-    const s = gameReducer(already, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
-    expect(s.keys).toBe(10);
-    expect(s.chunkedMilestoneClaimed).toBe(1);
-  });
-
-  describe('new runs', () => {
-    const startTotal = Object.values(initialState.unlocks.levels).reduce((a, b) => a + b, 0);
-    const levelUp = (state: ReturnType<typeof base>) =>
-      gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
-    const newChunkedRun = () =>
-      gameReducer(base(), { type: 'SET_GAME_MODE', payload: { modeId: 'chunked' } });
-
-    it('count milestones from the starting total level, so the first level-up pays nothing', () => {
-      const run = newChunkedRun();
-      expect(run.chunkedMilestoneClaimed).toBe(Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL));
-      expect(levelUp(run).keys).toBe(run.keys);
-    });
-
-    it('pay their first milestone key at the next multiple of the interval', () => {
-      let run = newChunkedRun();
-      const firstPayout = CHUNKED_MILESTONE_INTERVAL * (Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL) + 1);
-      for (let total = startTotal; total < firstPayout - 1; total++) run = levelUp(run);
-      expect(run.keys).toBe(initialState.keys);
-      run = levelUp(run);
-      expect(run.keys).toBe(initialState.keys + 1);
-      expect(run.history.at(-1)?.message).toContain(`Total Level ${firstPayout}`);
-      // The Key comes on total level alone; a start-chunk player can still roll other things.
-      expect(run.history.at(-1)?.details).toBe(
-        `Start-chunk milestone: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels until you unlock another chunk.`,
-      );
-    });
-
-    it('leave runs that chose their mode before this rule on their original schedule', () => {
-      const existing = { ...chunkedIsolated(), gameModeLocked: true, chunkedMilestoneClaimed: 0 };
-      expect(levelUp(existing).keys).toBe(initialState.keys + 1);
-    });
-  });
-
-  it('the two modes\' milestone counters are independent', () => {
+  it('a new Chunked run no longer starts a milestone counter, and Xtreme keeps its own', () => {
+    const run = gameReducer(base(), { type: 'SET_GAME_MODE', payload: { modeId: 'chunked' } });
+    expect(run.chunkedMilestoneClaimed).toBeUndefined();
     const state = { ...chunkedIsolated(), xtremeMilestoneClaimed: 3 };
-    const s = gameReducer(state, {
-      type: 'LEVEL_UP',
-      payload: { skill: 'Attack', chaosRoll: 0.5 },
-    });
+    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
     expect(s.xtremeMilestoneClaimed).toBe(3); // untouched — this run is Chunked, not Xtreme
   });
 });

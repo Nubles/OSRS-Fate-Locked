@@ -5,7 +5,7 @@ import { createFreshState, GameProvider, prepareKeyRollAction } from '../context
 import { ReferenceModal } from './ReferenceModal';
 import { unlockableAreas } from '../utils/freeAreas';
 import { MISTHALIN_AREAS } from '../constants';
-import { CHUNKED_MILESTONE_INTERVAL, STARTING_KEYS } from '../config/economy';
+import { STARTING_KEYS } from '../config/economy';
 import { GAME_MODES } from '../config/gameModes';
 import { DropSource } from '../types';
 import { DROP_RATES } from '../config/rules';
@@ -137,7 +137,7 @@ describe('ReferenceModal Game Modes', () => {
     expect(modes).toContain('What Differs Between the Modes');
     expect(modes).toContain('you unlock named areas, and all of Misthalin is free from the start');
     expect(modes).toContain('roll at no less than 25%, 15% and 10%');
-    expect(modes).toContain(`every ${CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key`);
+    expect(modes).not.toContain('total levels gives a guaranteed Key');
     expect(modes).toContain(`a Pity Key at ${shared.pityThreshold} Fate Points, a ${shared.omniChanceBase}% base Omni-Key chance`);
     expect(modes).toContain('Your mode is fixed as soon as you apply it.');
     expect(modes).not.toMatch(/Rule Knobs|Region Modifiers|Omni base|permanently locked|verified history/);

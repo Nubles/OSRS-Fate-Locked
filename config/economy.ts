@@ -107,15 +107,9 @@ export const isSkillChaosMilestone = (level: number): boolean =>
 // Crafting/Prayer/Thieving/Farming), not a freebie.
 export const XTREME_MILESTONE_INTERVAL = 50; // total-level gap between guaranteed keys
 
-// Chunked mode is the same anti-softlock problem, worse: the frontier can be
-// a single ~64x64-tile chunk with barely any trainable resources at all (vs.
-// Xtreme's whole 6-chunk Lumbridge). Same deterministic-key mechanic, gated
-// on gameModeId === 'chunked' && unlocks.chunks.length === 0 (still on the
-// free start chunk, nothing rolled yet), but a tighter interval since the
-// training footprint is so much smaller. A new run's first key comes at total
-// 50; runs that chose Chunked before SET_GAME_MODE counted the start (the
-// 24 September 2026 release) were paid their first key on the first level-up.
-export const CHUNKED_MILESTONE_INTERVAL = 25; // total-level gap between guaranteed keys
+// Chunked had the same milestone (a Key every 25 total levels on the start
+// chunk) until October 2026. It was removed: a guaranteed Key whose table the
+// player picks is not fate's pick, and Fate's Mercy now covers a dry start.
 
 // Chunked Breakthrough: when a skill reaches the cap of its tier (tier × 10;
 // levels past it are logged but roll nothing in Chunked) and the run's chunks
@@ -352,7 +346,6 @@ export const KEY_TYPES: KeyTypeInfo[] = [
       'Any successful roll, wherever you log it (+1, or +2 with the Ritual of Greed).',
       'A Pity Key when Fate Points hit your mode’s threshold.',
       'A won Void Gambit.',
-      `Chunked: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels while you hold only your start chunk.`,
       `The ${STARTING_KEYS} every run starts with.`,
     ],
     spend: 'Spend it on a table you choose to unlock a random entry from it.',
