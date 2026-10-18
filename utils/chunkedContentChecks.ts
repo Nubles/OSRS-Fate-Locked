@@ -33,6 +33,8 @@ import { DIARY_DATA } from '../data/diaryData';
 import { chunkedTrainingTiers } from './chunkedSkillPool';
 import { materializeQuestRouteSnapshot, materializeRuneProofAccount } from './questRoutes/goalPlannerRuneProof';
 import { questItemsObtainableNow, type QuestRouteAnalysisSnapshot } from './questRoutes/analyzeQuest';
+import { classifyShop } from './shopClassification';
+import { MERCHANT_SERVICES } from '../data/merchantServices';
 
 type Coord = { cx: number; cy: number };
 interface QuestChunk extends Coord { key: string; id: string }
@@ -73,9 +75,11 @@ export function createChunkedChecks(service: ChunkContentService) {
   let itemContent = new Map<string, { snapshot: QuestRouteAnalysisSnapshot; chunks: string[] }>();
   let itemVerdicts = new Map<string, Map<string, string[]>>();
   let allContentChunks: Set<string> | null = null;
+  let merchantChunks: Map<string, Coord[]> | null = null;
   // A fresh dataset starts every cache afresh.
   service.subscribe(() => {
     questChunkCache = new Map(); diaryIndex = null; itemContent = new Map(); itemVerdicts = new Map(); allContentChunks = null;
+    merchantChunks = null;
   });
 
   /** The chunks a quest starts and has steps in; an interior's is its entrance. */
@@ -165,22 +169,59 @@ export function createChunkedChecks(service: ChunkContentService) {
     return missing.map(item => ({ kind: 'region', label: `${item} (no source in your chunks yet)`, item }));
   };
 
+  /** Where each merchant type's shops (and service NPCs, such as tanners) are, once per dataset. */
+  const shopsOf = (merchant: string): readonly Coord[] => {
+    if (!merchantChunks) {
+      merchantChunks = new Map();
+      const add = (category: string | null | undefined, locations: readonly Coord[]) => {
+        if (!category) return;
+        merchantChunks!.set(category, [...(merchantChunks!.get(category) ?? []), ...locations]);
+      };
+      for (const hit of service.entitiesOfKind('shop')) add(classifyShop(hit.name), hit.locations);
+      for (const hit of service.entitiesOfKind('npc')) add(MERCHANT_SERVICES[hit.name]?.category, hit.locations);
+    }
+    return merchantChunks.get(merchant) ?? [];
+  };
+
+  /**
+   * Whether one of a merchant type's shops is in the run's chunks: Prince Ali
+   * Rescue's pink skirt is sold only by clothes shops, so Clothes Shops counts
+   * for it once one is. A type the data places no shop of is left alone rather
+   * than shut for good.
+   */
+  const merchantInChunks = (merchant: string, unlocks: UnlockState): boolean => {
+    if (!service.ready) return true;
+    const shops = shopsOf(merchant);
+    return shops.length === 0 || shops.some(shop => chunkedChunkOpen(shop, unlocks));
+  };
+
   const diaryPlace = (taskId: string): DiaryLocationRequirement | null => {
     if (!service.ready) return null;
-    diaryIndex ??= buildDiaryIndex(service.rawDocument()?.chunks ?? {}, service.rawDocument()?.interiors ?? {});
+    const doc = service.rawDocument();
+    diaryIndex ??= buildDiaryIndex(doc?.chunks ?? {}, doc?.interiors ?? {}, doc?.diaryChunks ?? {});
     return diaryIndex.get(taskId) ?? null;
   };
 
-  /** A task (or one of its ways) done in its own chunks rather than anywhere in its areas. */
+  /**
+   * A task (or one of its ways) done in its own chunks rather than anywhere in
+   * its areas. A task with ways in different areas has one set of chunks for
+   * all of them, so each way (and the part they share) takes only the chunks
+   * in or beside its own areas, and keeps its areas when none are: "Chop some
+   * Redwood logs" keeps its Farming Guild way, and the Dorgesh-Kaan train
+   * needs Keldagrim's chunk and still a way in from Lumbridge.
+   */
   const diaryTask = <R extends DiaryRequirement>(taskId: string, requirement: R): R | null => {
     const place = diaryPlace(taskId);
-    if (!place || !(requirement.regions?.length || requirement.anyOfRegions?.length)) return null;
-    const areas = [...(requirement.regions ?? []), ...(requirement.anyOfRegions ?? [])].join(' or ');
-    const { cx, cy } = place.chunkOptions[0];
-    const label = place.chunkOptions.length === 1 ? `${areas} (${cx}, ${cy})` : `${areas}: one of ${place.chunkOptions.length} chunks`;
+    const own = [...(requirement.regions ?? []), ...(requirement.anyOfRegions ?? [])];
+    if (!place || own.length === 0) return null;
+    const chunkOptions = waysWithAreas.has(taskId) ? chunksBeside(place.chunkOptions, own) : place.chunkOptions;
+    if (chunkOptions.length === 0) return null;
+    const areas = own.join(' or ');
+    const { cx, cy } = chunkOptions[0];
+    const label = chunkOptions.length === 1 ? `${areas} (${cx}, ${cy})` : `${areas}: one of ${chunkOptions.length} chunks`;
     return {
       ...requirement, regions: undefined, anyOfRegions: undefined,
-      locations: [...(requirement.locations ?? []), { ...place, label }],
+      locations: [...(requirement.locations ?? []), { label, chunkOptions }],
     };
   };
 
@@ -190,6 +231,7 @@ export function createChunkedChecks(service: ChunkContentService) {
       for (const q of Object.values(QUEST_DATA)) {
         for (const chunk of questChunks(q.id) ?? []) keys.add(chunk.key);
         if (reviewedQuestRequirements(q.id)) for (const key of itemRoutes(q.id).chunks) keys.add(key);
+        for (const merchant of q.merchants ?? []) for (const shop of shopsOf(merchant)) keys.add(keyOf(shop));
       }
       for (const task of ALL_DIARY_TASKS) for (const chunk of diaryPlace(task.id)?.chunkOptions ?? []) keys.add(keyOf(chunk));
       allContentChunks = keys;
@@ -223,8 +265,19 @@ export function createChunkedChecks(service: ChunkContentService) {
     };
   };
 
-  return { quest, questItems, diaryTask, diaryPlace, questChunks, contentChunks, frontier };
+  return { quest, questItems, merchantInChunks, diaryTask, diaryPlace, questChunks, contentChunks, frontier };
 }
+
+/** Tasks with a way of their own areas: their chunks are split between the ways. */
+const waysWithAreas = new Set(ALL_DIARY_TASKS
+  .filter(task => (task.oneOf ?? []).some(option => option.regions?.length))
+  .map(task => task.id));
+
+/** The chunks that lie in or beside one of these areas. */
+const chunksBeside = (chunks: readonly Coord[], areas: readonly string[]): Coord[] => {
+  const near = areas.flatMap(area => namedAreaChunks(area));
+  return chunks.filter(chunk => near.some(area => Math.abs(area.cx - chunk.cx) <= 1 && Math.abs(area.cy - chunk.cy) <= 1));
+};
 
 const EMPTY_ACCOUNT: UnlockState = {
   skills: {}, levels: {}, equipment: {}, regions: [], chunks: [], quests: [], guilds: [], merchants: [],
@@ -245,12 +298,16 @@ const PICKER_TIER: Readonly<Record<string, string>> = { Easy: 'EA', Medium: 'MD'
  * wiki's order ("EA5" is the fifth Easy task), which is the order
  * data/diaryTasks.ts lists them in (its ids are not always in order). An
  * interior's tasks are at its entrances, the ones with no requirement first.
- * A task keeps its named areas when none of its chunks lie in or beside them:
- * a few refs are stale (the Emblem Trader's points at the deep Wilderness).
+ * A task no chunk carries the code of is placed by the export's own chunks for
+ * it (`diaryChunks`, from challenges.Diary, made by the content sync), so it
+ * doesn't fall back to any chunk of its areas. Either way a task keeps its
+ * named areas when none of its chunks lie in or beside them: a few refs are
+ * stale (the Emblem Trader's points at the deep Wilderness).
  */
 export function buildDiaryIndex(
   chunks: Record<string, RawEntry>,
   interiors: Record<string, { content: RawEntry; entrances: { chunkId: string; requirements: string[] }[] }>,
+  diaryChunks: Readonly<Record<string, readonly string[]>> = {},
 ): Map<string, DiaryLocationRequirement> {
   const refChunks = new Map<string, Map<string, Coord>>();
   const add = (diaries: Record<string, string> | undefined, coords: Coord[]) => {
@@ -275,18 +332,20 @@ export function buildDiaryIndex(
     const n = (position.get(task.tierId) ?? 0) + 1;
     position.set(task.tierId, n);
     const [diary, tier] = task.tierId.split(' ');
-    const found = refChunks.get(`${PICKER_DIARY[diary]}|${PICKER_TIER[tier]}${n}`);
-    if (!found?.size) continue;
+    const code = `${PICKER_DIARY[diary]}|${PICKER_TIER[tier]}${n}`;
     const areas = [
       ...(task.regions ?? []), ...(task.anyOfRegions ?? []),
       ...(task.oneOf ?? []).flatMap(option => option.regions ?? []),
     ];
     const near = areas.flatMap(area => namedAreaChunks(area));
-    const chunkOptions = [...found.values()].sort((a, b) => a.cx - b.cx || a.cy - b.cy);
-    const matches = near.length === 0 || chunkOptions.some(chunk => near.some(area => (
+    const matches = (options: Coord[]) => options.length > 0 && (near.length === 0 || options.some(chunk => near.some(area => (
       Math.abs(area.cx - chunk.cx) <= 1 && Math.abs(area.cy - chunk.cy) <= 1
-    )));
-    if (matches) index.set(task.id, { label: task.description, chunkOptions });
+    ))));
+    const sorted = (options: Iterable<Coord>) => [...options].sort((a, b) => a.cx - b.cx || a.cy - b.cy);
+    const byRef = sorted(refChunks.get(code)?.values() ?? []);
+    const byTask = sorted(new Map((diaryChunks[code] ?? []).map(id => [String(id), coordOf(id)])).values());
+    const chunkOptions = matches(byRef) ? byRef : matches(byTask) ? byTask : null;
+    if (chunkOptions) index.set(task.id, { label: task.description, chunkOptions });
   }
   return index;
 }

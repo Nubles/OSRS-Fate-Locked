@@ -19,8 +19,10 @@ import { doableCATasks } from '../components/JournalSummaryCard';
 import { analyzeRequirement } from '../components/StrategyGuide';
 import { STRATEGY_DATABASE } from '../data/requirements';
 import { computeAreaRoutes } from './areaRoutes';
-import { buildDiaryIndex, chunkedChunkOpen } from './chunkedContentChecks';
-import { getChunkFrontier, chunkKey } from './chunkAdjacency';
+import { buildDiaryIndex, chunkedChunkOpen, createChunkedChecks } from './chunkedContentChecks';
+import { ALL_CHUNK_KEYS, getChunkFrontier, chunkKey } from './chunkAdjacency';
+import { classifyShop } from './shopClassification';
+import { MERCHANT_SERVICES } from '../data/merchantServices';
 import { PANDEMONIUM_ROUTE } from './pandemoniumRoute';
 import { planForTarget } from './goalPlanner';
 import { rankFrontierChunks } from './frontierAdvisor';
@@ -30,6 +32,7 @@ import { analyzeQuestPreparation, questItemsObtainableNow } from './questRoutes/
 import { materializeQuestRouteSnapshot, materializeRuneProofAccount } from './questRoutes/goalPlannerRuneProof';
 import { CHUNK_CONTENT_DATA_VERSION } from '../services/ChunkContentService';
 import { setStartArea } from './freeAreas';
+import { namedAreaChunks } from './reachability';
 
 beforeAll(async () => {
   vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => structuredClone(full) })));
@@ -157,6 +160,94 @@ describe('Chunked diary tasks use the Chunk Picker task refs', () => {
   });
 });
 
+describe("Chunked diary tasks with no chunk code use the export's own chunks (content audit fix 4)", () => {
+  const doc = () => chunkContentService.rawDocument()!;
+  const fallbackCount = (index: Map<string, unknown>) => ALL_DIARY_TASKS.filter(task => !index.has(task.id) && [
+    ...(task.regions ?? []), ...(task.anyOfRegions ?? []), ...(task.oneOf ?? []).flatMap(o => o.regions ?? []),
+  ].length > 0).length;
+
+  it('leaves 30 of 492 tasks on their areas, down from 106', () => {
+    expect(ALL_DIARY_TASKS).toHaveLength(492);
+    expect(fallbackCount(buildDiaryIndex(doc().chunks, doc().interiors as never))).toBe(106);
+    expect(fallbackCount(buildDiaryIndex(doc().chunks, doc().interiors as never, doc().diaryChunks))).toBe(30);
+  });
+
+  it('"Kill a Sandcrab" needs a sand crab chunk, not any chunk of Hosidius', () => {
+    const task = ALL_DIARY_TASKS.find(t => t.id === 'kou_easy_2')!;
+    const crabs = buildDiaryIndex(doc().chunks, doc().interiors as never, doc().diaryChunks).get(task.id)!.chunkOptions
+      .map(({ cx, cy }) => `${cx},${cy}`);
+    expect(crabs).toContain('26,54');
+    const elsewhere = namedAreaChunks('Hosidius').map(({ cx, cy }) => `${cx},${cy}`).filter(key => !crabs.includes(key));
+    expect(elsewhere.length).toBeGreaterThan(5);
+    expect(evaluateDiaryTaskEligibility(task, maxed(elsewhere), 'chunked').eligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task, maxed(['26,54']), 'chunked').eligible).toBe(true);
+  });
+
+  it("places the Emblem Trader in Edgeville, where the stale chunk code didn't", () => {
+    const place = buildDiaryIndex(doc().chunks, doc().interiors as never, doc().diaryChunks).get('wilderness_med_9');
+    expect(place?.chunkOptions).toContainEqual({ cx: 48, cy: 54 });
+  });
+});
+
+describe('Chunked diary tasks with several ways check each way where it is (content audit fix 5)', () => {
+  const task = (id: string) => ALL_DIARY_TASKS.find(t => t.id === id)!;
+
+  it('"Chop some Redwood logs" keeps its Farming Guild way', () => {
+    const redwood = task('kou_elite_2');
+    expect(evaluateDiaryTaskEligibility(redwood, maxed(['19,58'], { guilds: ['Farming Guild'], farming: ['Redwood'] }), 'chunked').eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(redwood, maxed(['24,54'], { guilds: ['Woodcutting Guild'] }), 'chunked').eligible).toBe(true);
+    // The Woodcutting Guild way still needs the redwoods' own chunk, not any of the guild's.
+    expect(evaluateDiaryTaskEligibility(redwood, maxed(['25,54'], { guilds: ['Woodcutting Guild'] }), 'chunked').eligible).toBe(false);
+  });
+
+  it('the Dorgesh-Kaan train needs Keldagrim\'s chunk and still a way in', () => {
+    const train = task('lum_hard_6');
+    const checks = createChunkedChecks(chunkContentService);
+    // The part both ways share is Keldagrim's own chunk...
+    expect(checks.diaryTask(train.id, train)?.locations?.flatMap(place => place.chunkOptions)).toEqual([{ cx: 43, cy: 58 }]);
+    // ...and neither way is swapped for it: each keeps its own areas.
+    for (const way of train.oneOf!) expect(checks.diaryTask(train.id, way)).toBeNull();
+    expect(evaluateDiaryTaskEligibility(train, maxed(['50,49'], { quests: ['Another Slice of H.A.M.'] }), 'chunked').eligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(train, maxed(['43,58'], { quests: ['Another Slice of H.A.M.'] }), 'chunked').eligible).toBe(true);
+  });
+
+  it('gives a way the chunks beside its own areas', () => {
+    // Edgeville dungeon's pipe: Edgeville's way at 48,54 only; Varrock's way at 50,54 (and 48,54, beside Varrock).
+    const pipe = task('var_hard_10');
+    const checks = createChunkedChecks(chunkContentService);
+    const chunksOf = (way: number) => checks.diaryTask(pipe.id, pipe.oneOf![way])?.locations?.flatMap(place => place.chunkOptions);
+    expect(pipe.oneOf!.map(way => way.regions)).toEqual([['Edgeville'], ['Varrock']]);
+    expect(chunksOf(0)).toEqual([{ cx: 48, cy: 54 }]);
+    expect(chunksOf(1)).toContainEqual({ cx: 50, cy: 54 });
+  });
+});
+
+describe('Chunked quests buy only from shops in the run\'s chunks (dead-ends item 9)', () => {
+  it("Prince Ali Rescue's Clothes Shops counts once a clothes shop is in the run's chunks", () => {
+    // Clothes shops, and Tenzing, who sells climbing boots as one.
+    const clothes = [
+      ...chunkContentService.entitiesOfKind('shop').filter(hit => classifyShop(hit.name) === 'Clothes Shops'),
+      ...chunkContentService.entitiesOfKind('npc').filter(hit => MERCHANT_SERVICES[hit.name]?.category === 'Clothes Shops'),
+    ].flatMap(hit => hit.locations.map(({ cx, cy }) => `${cx},${cy}`));
+    expect(clothes).toContain('50,53');
+    const elsewhere = ALL_CHUNK_KEYS.filter(key => !clothes.includes(key));
+    const merchants = ['Clothes Shops', 'Bars & Inns'];
+    const quest = QUEST_DATA['Prince Ali Rescue'];
+    const without = maxed(elsewhere, { merchants });
+    const blocked = evaluateQuestEligibility(quest, without, 'chunked');
+    expect(blocked.eligible).toBe(false);
+    expect(blocked.blockers.map(blocker => blocker.label)).toEqual(['Clothes Shops (no shop in your chunks yet)']);
+    expect(chunkedQuestRows(without, 'chunked').find(row => row.id === quest.id)!.bucket).not.toBe('DOABLE');
+    // Thessalia's in Varrock.
+    const withShop = maxed([...elsewhere, '50,53'], { merchants });
+    expect(evaluateQuestEligibility(quest, withShop, 'chunked').blockers).toEqual([]);
+    expect(chunkedQuestRows(withShop, 'chunked').find(row => row.id === quest.id)!.bucket).toBe('DOABLE');
+    // Vanilla keeps the merchant unlock alone.
+    expect(evaluateQuestEligibility(quest, { ...without, regions: ['Kharidian Desert', 'Misthalin', 'Al Kharid', 'Draynor Village'] }, 'vanilla')
+      .blockers.some(blocker => blocker.label.includes('no shop'))).toBe(false);
+  });
+});
+
 describe('Chunked combat achievements follow boss reachability', () => {
   it("counts no Obor task until Obor's chunk is reached", () => {
     const tasks = ALL_CA_TASKS.filter(task => task.monster === 'Obor');
@@ -164,6 +255,21 @@ describe('Chunked combat achievements follow boss reachability', () => {
     expect(doableCATasks(tasks, unlocks, 'chunked')).toEqual([]);
     // Vanilla keeps counting an unlocked boss.
     expect(doableCATasks(tasks, unlocks, 'vanilla').length).toBe(tasks.length);
+  });
+
+  it('counts the Mimic task once an Omni-Key unlocks the Mimic (content audit fix 2)', () => {
+    const tasks = ALL_CA_TASKS.filter(task => task.id === 'ca_176');
+    expect(doableCATasks(tasks, fresh(), 'chunked')).toEqual([]);
+    expect(doableCATasks(tasks, fresh({ bosses: ['Mimic'] }), 'chunked').map(task => task.id)).toEqual(['ca_176']);
+  });
+
+  it('counts no Barrows task before Priest in Peril (content audit fix 1)', () => {
+    const tasks = ALL_CA_TASKS.filter(task => task.monster === 'Barrows Brothers' || task.monster === 'Barrows');
+    expect(tasks.length).toBeGreaterThan(0);
+    const owned = fresh({ bosses: ['Barrows Brothers'], chunks: ['55,51'] });
+    expect(doableCATasks(tasks, owned, 'chunked')).toEqual([]);
+    const done = fresh({ bosses: ['Barrows Brothers'], chunks: ['55,51'], quests: ['Priest in Peril'] });
+    expect(doableCATasks(tasks, done, 'chunked').length).toBe(tasks.length);
   });
 });
 

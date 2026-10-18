@@ -216,7 +216,8 @@ export const questRequirementOptionMet = (
   Object.entries(option.skills ?? {}).every(([skill, level]) =>
     meetsSkillRequirement(unlocks, skill, level)) &&
   (option.quests ?? []).every(quest => unlocks.quests.includes(quest)) &&
-  (option.merchants ?? []).every(merchant => unlocks.merchants?.includes(merchant));
+  (option.merchants ?? []).every(merchant => unlocks.merchants?.includes(merchant)
+    && (gameModeId !== 'chunked' || (chunkedChecks?.merchantInChunks(merchant, unlocks) ?? true)));
 
 /** An owned area that no route reaches yet (utils/areaRoutes.ts). */
 const strandedArea = (area: string, areaRoutes?: AreaRoutes | null): boolean =>
@@ -295,6 +296,8 @@ export interface ChunkedChecks {
   quest(quest: QuestData, unlocks: UnlockState, areaRoutes?: AreaRoutes | null): { blockers: EligibilityBlocker[]; evidence: string[]; chunks: ReadonlySet<string> } | null;
   /** Items (RuneProof's reviewed lists) the run's chunks can't supply yet. */
   questItems(quest: QuestData, unlocks: UnlockState): EligibilityBlocker[];
+  /** Whether one of a merchant type's shops is in the run's chunks (true when the data places none). */
+  merchantInChunks(merchant: string, unlocks: UnlockState): boolean;
   /** A diary task (or one of its ways) with its areas swapped for the chunks it is done in, or null. */
   diaryTask<R extends DiaryRequirement>(taskId: string, requirement: R): R | null;
   /** What the Frontier Advisor needs to know about a run, or null while the content is missing. */
@@ -424,6 +427,14 @@ export function evaluateQuestEligibility(
     blockers.push(...unlocked.blockers);
     evidence.push(...unlocked.evidence);
     manualChecks.push(...unlocked.manualChecks);
+    // Chunked: a merchant type counts only with one of its shops in the run's chunks.
+    if (exact) {
+      for (const merchant of quest.merchants ?? []) {
+        if (unlocks.merchants?.includes(merchant) && !chunkedChecks!.merchantInChunks(merchant, unlocks)) {
+          blockers.push({ kind: 'region', label: `${merchant} (no shop in your chunks yet)` });
+        }
+      }
+    }
   }
   // Includes Druidic Ritual for a Herblore level, and Pandemonium for Sailing.
   for (const prereq of withSkillGateQuests(quest.prereqs, quest.skills, quest.id)) {

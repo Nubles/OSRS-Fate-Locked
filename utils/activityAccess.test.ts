@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { UnlockState } from '../types';
 import { setStartArea } from './freeAreas';
-import { bankChunkKey, chunkedBankOwned, farmPlaceReachable, getActivityAccess } from './activityAccess';
+import {
+  bankChunkKey, chunkEntryQuests, chunkedBankOwned, farmPlaceReachable, getActivityAccess, randomKeyActivityAccess,
+} from './activityAccess';
+import { CHUNK_ENTRY_QUESTS } from '../data/chunkSkillNodes';
 import { ACTIVITY_CHUNKS, FARM_SLAYER_CARD_CHUNKS } from '../data/activityChunks';
 import { BOSSES_LIST, GUILDS_LIST, MINIGAMES_LIST } from '../data/items';
 import { BANK_IDS } from '../data/banks';
@@ -187,16 +190,21 @@ describe('getActivityAccess in Chunked', () => {
     const start = chunked();
     const located = [...BOSSES_LIST, ...MINIGAMES_LIST, ...GUILDS_LIST]
       .filter(activity => getActivityAccess(activity, start, 'chunked').eligible);
-    expect(located).toEqual(['Forestry']);
+    // The Mimic is fought from a clue casket, so no chunk holds it back.
+    expect([...located].sort()).toEqual(['Forestry', 'Mimic']);
+    expect(located.filter(activity => randomKeyActivityAccess(activity, start, 'chunked').eligible)).toEqual(['Forestry']);
   });
 
   it('follows the stated rule for places with no single chunk', () => {
     expect(getActivityAccess('Forestry', chunked(), 'chunked').eligible).toBe(true);
-    expect(getActivityAccess('Mimic', chunked(), 'chunked')).toEqual({
+    // Random Keys skip the Mimic, but once an Omni-Key unlocks it, it can be fought (content audit fix 2).
+    expect(randomKeyActivityAccess('Mimic', chunked(), 'chunked')).toEqual({
       eligible: false,
       requiredAreas: ['a Mimic casket from an Elite or Master clue'],
       explanation: 'Needs a Mimic casket from an Elite or Master clue',
     });
+    expect(getActivityAccess('Mimic', chunked(), 'chunked').eligible).toBe(true);
+    expect(randomKeyActivityAccess('Mimic', makeUnlocks(), 'vanilla').eligible).toBe(true);
     expect(getActivityAccess('Barracuda Trials', chunked(), 'chunked').eligible).toBe(false);
     expect(getActivityAccess('Barracuda Trials', chunked([], {
       skills: { Sailing: 1 }, levels: { Sailing: 1 }, quests: ['Pandemonium'],
@@ -215,7 +223,62 @@ describe('getActivityAccess in Chunked', () => {
   });
 });
 
+describe('Chunked places behind an entry quest (content audit fix 1)', () => {
+  const chunked = (chunks: string[], quests: string[] = []) => makeUnlocks({ chunks, quests });
+
+  it('reads the four entry quests from the chunk content', () => {
+    expect(Object.keys(CHUNK_ENTRY_QUESTS).sort()).toEqual(['Bone Voyage', 'Cabin Fever', 'Children of the Sun', 'Priest in Peril']);
+    expect(chunkEntryQuests('55,51')).toEqual(['Priest in Peril']);
+    expect(chunkEntryQuests('59,59')).toEqual(['Bone Voyage']);
+    expect(chunkEntryQuests('50,50')).toEqual([]);
+  });
+
+  it.each([
+    ['Barrows Brothers', 'Priest in Peril'],
+    ['Theatre of Blood', 'Priest in Peril'],
+    ['Hallowed Sepulchre', 'Priest in Peril'],
+    ['Hunter Guild', 'Children of the Sun'],
+    ['Fortis Colosseum', 'Children of the Sun'],
+    ['Volcanic Mine', 'Bone Voyage'],
+    ['Trouble Brewing', 'Cabin Fever'],
+  ])('%s waits for %s as well as its own chunk', (activity, quest) => {
+    const chunks = [...ACTIVITY_CHUNKS[activity]];
+    expect(getActivityAccess(activity, chunked([]), 'chunked').eligible).toBe(false);
+    const before = getActivityAccess(activity, chunked(chunks), 'chunked');
+    expect(before.eligible).toBe(false);
+    expect(before.explanation).toBe(`Needs ${quest}`);
+    expect(before.requiredAreas[0]).toMatch(new RegExp(`, after ${quest}$`));
+    expect(randomKeyActivityAccess(activity, chunked(chunks), 'chunked').eligible).toBe(false);
+    expect(getActivityAccess(activity, chunked(chunks, [quest]), 'chunked').eligible).toBe(true);
+    // The quest alone opens nothing: the chunk must still be owned.
+    expect(getActivityAccess(activity, chunked([], [quest]), 'chunked').eligible).toBe(false);
+  });
+
+  it('leaves places outside the gates as they were', () => {
+    expect(getActivityAccess('Tormented Demons', chunked(['49,49']), 'chunked').eligible).toBe(true);
+    // Vanilla reads named areas, not entry quests.
+    setStartArea('none');
+    expect(getActivityAccess('Barrows Brothers', makeUnlocks({ regions: ['Barrows'] }), 'vanilla').eligible).toBe(true);
+  });
+
+  it("holds Mazchna's Farm card back until Priest in Peril", () => {
+    const canifis = FARM_SLAYER_CARD_CHUNKS.Mazchna;
+    expect(farmPlaceReachable(canifis, chunked([...canifis]), 'chunked')).toBe(false);
+    expect(farmPlaceReachable(canifis, chunked([...canifis], ['Priest in Peril']), 'chunked')).toBe(true);
+    expect(farmPlaceReachable(canifis, makeUnlocks(), 'vanilla')).toBe(true);
+  });
+});
+
 describe('Chunked banks and Farm places', () => {
+  it('counts the Bank boat at sea once the run can sail (content audit fix 3)', () => {
+    expect(bankChunkKey('8999')).toBe('35,39');
+    expect(chunkedBankOwned('8999', makeUnlocks())).toBe(false);
+    expect(chunkedBankOwned('8999', makeUnlocks({ quests: ['Pandemonium'] }))).toBe(false);
+    expect(chunkedBankOwned('8999', makeUnlocks({
+      skills: { Sailing: 1 }, levels: { Sailing: 1 }, quests: ['Pandemonium'],
+    }))).toBe(true);
+  });
+
   it('counts a bank only in an owned chunk, and the virtual Forestry entry anywhere', () => {
     expect(bankChunkKey('12850')).toBe('50,50');
     const start = makeUnlocks();

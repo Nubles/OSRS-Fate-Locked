@@ -225,6 +225,21 @@ describe('Chunked random pools hold only places in owned chunks (economy review 
     expect(items(TableType.GUILDS, makeUnlocks({ chunks: ['49,52'] }))).toEqual(["Champions' Guild"]);
   });
 
+  it('rolls the Bank boat once the run can sail (content audit fix 3)', () => {
+    expect(items(TableType.BANKS)).not.toContain('8999');
+    expect(items(TableType.BANKS, makeUnlocks({ skills: { Sailing: 1 }, levels: { Sailing: 1 }, quests: ['Pandemonium'] }))).toContain('8999');
+  });
+
+  it('keeps random Keys off places behind an unfinished entry quest, and off the Mimic (content audit fixes 1, 2)', () => {
+    const morytania = makeUnlocks({ chunks: ['55,51'] });
+    expect(items(TableType.BOSSES, morytania)).not.toContain('Barrows Brothers');
+    expect(items(TableType.BOSSES, { ...morytania, quests: ['Priest in Peril'] })).toContain('Barrows Brothers');
+    expect(isRandomUnlockEligible(TableType.BOSSES, 'Mimic', start, 'chunked')).toBe(false);
+    // An Omni-Key may still pick either.
+    expect(isOmniDirectUnlockAvailable(TableType.BOSSES, 'Mimic', start, 'chunked')).toBe(true);
+    expect(isOmniDirectUnlockAvailable(TableType.BOSSES, 'Barrows Brothers', morytania, 'chunked')).toBe(true);
+  });
+
   it('keeps Vanilla guild rolls unfiltered', () => {
     expect(randomUnlockPool(start, 'vanilla', 'key', TableType.GUILDS).length).toBe(getPoolAndStateKey(TableType.GUILDS).pool.length);
   });

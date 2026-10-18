@@ -6,7 +6,7 @@ import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, isFrontierChunk } from './chunkAdjacency';
 import { BANK_IDS } from '../data/banks';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
-import { chunkedBankOwned, getActivityAccess } from './activityAccess';
+import { chunkedBankOwned, getActivityAccess, randomKeyActivityAccess } from './activityAccess';
 import { canonicalAreaName } from '../data/areaMapPolicy';
 import { bankLocksActive, isAreaReachable } from './reachability';
 import { unlockableAreas } from './freeAreas';
@@ -103,10 +103,10 @@ export const isRandomUnlockEligible = (
     if (!policy.randomCosts.includes(randomCost)) return true;
     // Chunked: a random bank or guild counts only in a chunk the run owns.
     if (modeId === 'chunked' && table === TableType.BANKS) return chunkedBankOwned(item, unlocks);
-    if (modeId === 'chunked' && table === TableType.GUILDS) return getActivityAccess(item, unlocks, modeId).eligible;
+    if (modeId === 'chunked' && table === TableType.GUILDS) return randomKeyActivityAccess(item, unlocks, modeId).eligible;
     if (!policy.filteredTables.some(candidate => candidate === table)) return true;
     if (!policy.requiresTrackedHardGeography) return true;
-    return getActivityAccess(item, unlocks, modeId).eligible;
+    return randomKeyActivityAccess(item, unlocks, modeId).eligible;
 };
 
 /** Whether an Omni direct selection may be confirmed under the shared Vanilla policy. */
