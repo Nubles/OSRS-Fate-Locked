@@ -760,9 +760,15 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
 });
 // --- UNLOCK -----------------------------------------------------------------
 
+/** A Standard (or Chaos) Key spend as rollUnlock makes it: fate drew `item`, and its reveal is acknowledged. */
+const spendKey = (s: ReturnType<typeof base>, table: TableType, item: string, costType: 'key' | 'chaosKey' = 'key') => {
+  const next = gameReducer(s, { type: 'UNLOCK', payload: { table, item, costType, cost: 1, revealId: 'reveal' } });
+  return next.pendingUnlock ? gameReducer(next, { type: 'ACKNOWLEDGE_UNLOCK', payload: 'reveal' }) : next;
+};
+
 describe('UNLOCK', () => {
   it('adds a region and deducts a standard key', () => {
-    const s = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.REGIONS, item: 'Karamja', costType: 'key', cost: 1 } });
+    const s = spendKey(base(), TableType.REGIONS, 'Karamja');
     expect(s.unlocks.regions).toContain('Karamja');
     expect(s.keys).toBe(initialState.keys - 1);
   });
@@ -774,30 +780,27 @@ describe('UNLOCK', () => {
   });
 
   it('increments an equipment tier rather than appending', () => {
-    const s = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.EQUIPMENT, item: 'Head', costType: 'key', cost: 1 } });
+    const s = spendKey(base(), TableType.EQUIPMENT, 'Head');
     expect(s.unlocks.equipment['Head']).toBe(1);
   });
 
   it('does not duplicate an array unlock when the same item is unlocked twice', () => {
-    const once = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.REGIONS, item: 'Karamja', costType: 'key', cost: 1 } });
-    const twice = gameReducer(once, { type: 'UNLOCK', payload: { table: TableType.REGIONS, item: 'Karamja', costType: 'key', cost: 1 } });
+    const once = spendKey(base(), TableType.REGIONS, 'Karamja');
+    const twice = spendKey(once, TableType.REGIONS, 'Karamja');
     expect(twice.unlocks.regions.filter((r) => r === 'Karamja')).toHaveLength(1);
+    expect(twice.keys).toBe(once.keys);
   });
 
   it('caps the skill tier at 10 and charges nothing once dispatched past the cap', () => {
     let s = { ...base(), keys: 20 };
-    for (let i = 0; i < 15; i++) {
-      s = gameReducer(s, { type: 'UNLOCK', payload: { table: TableType.SKILLS, item: 'Mining', costType: 'key', cost: 1 } });
-    }
+    for (let i = 0; i < 15; i++) s = spendKey(s, TableType.SKILLS, 'Mining');
     expect(s.unlocks.skills['Mining']).toBe(10);
     expect(s.keys).toBe(10);
   });
 
   it('caps the equipment tier at EQUIPMENT_TIER_MAX', () => {
     let s = { ...base(), keys: 20 };
-    for (let i = 0; i < 20; i++) {
-      s = gameReducer(s, { type: 'UNLOCK', payload: { table: TableType.EQUIPMENT, item: 'Head', costType: 'key', cost: 1 } });
-    }
+    for (let i = 0; i < 20; i++) s = spendKey(s, TableType.EQUIPMENT, 'Head');
     // EQUIPMENT_TIER_MAX is 9 (see config/rules.ts); the reducer must not exceed it.
     expect(s.unlocks.equipment['Head']).toBeLessThanOrEqual(9);
   });
@@ -827,7 +830,7 @@ describe('UNLOCK', () => {
 
 describe('UNLOCK — Banks (bank-locked modes)', () => {
   it('unlocking a bank adds its chunk id and names it in history', () => {
-    const s = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.BANKS, item: '13618', costType: 'key', cost: 1 } });
+    const s = spendKey(base(), TableType.BANKS, '13618');
     expect(s.unlocks.banks).toContain('13618');
     // History message resolves the id to the place name, not the raw number.
     expect(s.history[s.history.length - 1].message).toBe('Unlocked Abandoned Mine');
@@ -838,16 +841,36 @@ describe('UNLOCK — Banks (bank-locked modes)', () => {
 describe('UNLOCK — Chunks (Chunked mode)', () => {
   it('adds a chunk key and deducts a standard key', () => {
     const target = chunkKey({ cx: CHUNKED_START.cx + 1, cy: CHUNKED_START.cy });
-    const s = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: target, costType: 'key', cost: 1 } });
+    const s = spendKey({ ...base(), gameModeId: 'chunked' }, TableType.CHUNKS, target);
     expect(s.unlocks.chunks).toContain(target);
     expect(s.keys).toBe(initialState.keys - 1);
   });
 
   it('does not duplicate a chunk unlocked twice', () => {
     const target = chunkKey({ cx: CHUNKED_START.cx + 1, cy: CHUNKED_START.cy });
-    const once = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: target, costType: 'key', cost: 1 } });
-    const twice = gameReducer(once, { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: target, costType: 'key', cost: 1 } });
+    const once = spendKey({ ...base(), gameModeId: 'chunked' }, TableType.CHUNKS, target);
+    const twice = spendKey(once, TableType.CHUNKS, target);
     expect(twice.unlocks.chunks!.filter((c) => c === target)).toHaveLength(1);
+  });
+
+  // Audit V2 (October 2026): with no revealId a Standard or Chaos Key unlocked
+  // the exact chunk named, past the Omni-Key land guard, and cost came from
+  // the payload, so cost 0 was free.
+  it('only an Omni-Key names the exact entry, and a Key spend always costs one Key', () => {
+    const target = chunkKey({ cx: CHUNKED_START.cx + 1, cy: CHUNKED_START.cy });
+    const run = { ...base(), gameModeId: 'chunked', keys: 1, chaosKeys: 1, specialKeys: 1, unlocks: { ...initialState.unlocks, chunks: [] as string[] } };
+    for (const costType of ['key', 'chaosKey', 'specialKey'] as const) {
+      expect(gameReducer(run, { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: target, costType, cost: 1 } })).toBe(run);
+    }
+    // Outside land too: a direct Standard Key spend names nothing.
+    expect(gameReducer(run, { type: 'UNLOCK', payload: { table: TableType.SKILLS, item: 'Hitpoints', costType: 'key', cost: 1 } })).toBe(run);
+    // A fate-drawn spend with cost 0 still costs a Key, and with no Key is refused.
+    const paid = gameReducer(run, { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: target, costType: 'key', cost: 0, revealId: 'r' } });
+    expect(paid.unlocks.chunks).toEqual([target]);
+    expect(paid.keys).toBe(0);
+    expect(paid.pendingUnlock?.cost).toBe(1);
+    const broke = { ...run, keys: 0 };
+    expect(gameReducer(broke, { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: target, costType: 'key', cost: 0, revealId: 'r' } })).toBe(broke);
   });
 
   it('isValidUnlock only allows chunks in the current frontier', () => {

@@ -120,7 +120,7 @@ describe('detected event acceptance follows manual completion', () => {
     expect(leveled.history.at(-1)?.type).toBe('PITY');
     expect(leveled.chaosKeys).toBe(state.chaosKeys + 1);
     const spent = gameReducerForTest(leveled, {
-      type: 'UNLOCK', payload: { table: TableType.SKILLS, item: 'Attack', costType: 'chaosKey', cost: 1 },
+      type: 'UNLOCK', payload: { table: TableType.SKILLS, item: 'Attack', costType: 'chaosKey', cost: 1, revealId: 'chaos' },
     });
 
     const audit = auditHistory(spent.history, resolveModeRules('vanilla'));

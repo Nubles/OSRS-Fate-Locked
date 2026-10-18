@@ -90,7 +90,7 @@ describe('Chunked exploring rolls', () => {
     expect(withExploreStart(old, run()).chunkExplore).toEqual({ from: 0, done: {} });
 
     // Through the reducer: a Key spent on a chunk starts the record.
-    const spent = gameReducer(old, { type: 'UNLOCK', payload: { table: 'Chunks' as never, item: '50,49', costType: 'key', cost: 1 } });
+    const spent = gameReducer(old, { type: 'UNLOCK', payload: { table: 'Chunks' as never, item: '50,49', costType: 'key', cost: 1, revealId: 'r' } });
     expect(spent.unlocks.chunks).toEqual([WEST, '50,49']);
     expect(spent.chunkExplore).toEqual({ from: 1, done: {} });
   });

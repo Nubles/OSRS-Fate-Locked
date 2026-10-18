@@ -479,7 +479,7 @@ export type Action =
     };
   }
   | { type: 'SYNC_DETECTED_PROGRESS'; payload: DetectedProgress }
-  | { type: 'UNLOCK'; payload: { table: TableType; item: string; costType: 'key' | 'specialKey' | 'chaosKey'; cost: number; revealId?: string; /** Drawn under Saradomin's Ward. */ ward?: boolean } }
+  | { type: 'UNLOCK'; payload: { table: TableType; item: string; costType: 'key' | 'specialKey' | 'chaosKey'; /** Not read: every spend costs UNLOCK_COST. */ cost: number; /** A fate-drawn spend (rollUnlock); without one only an Omni-Key may name the item. */ revealId?: string; /** Drawn under Saradomin's Ward. */ ward?: boolean } }
   | { type: 'ACKNOWLEDGE_UNLOCK'; payload: string }
   | { type: 'RITUAL_LUCK' }
   | { type: 'RITUAL_GREED' }
@@ -1484,11 +1484,16 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return { ...newState, history: newHistory };
     }
     case 'UNLOCK': {
-      const { table, item, costType, cost } = action.payload;
+      const { table, item, costType } = action.payload;
+      // Every Key spend costs UNLOCK_COST, whatever the caller says.
+      const cost = UNLOCK_COST;
       // Chunked has no Areas table, and an Omni-Key can't pick land there:
       // land comes from Chunk Keys, Chaos Keys, the Cartographer and Fate's Mercy.
       if (state.gameModeId === 'chunked'
         && (table === TableType.REGIONS || (table === TableType.CHUNKS && costType === 'specialKey'))) return state;
+      // Only an Omni-Key names the exact entry. A Standard or Chaos Key spend
+      // unlocks what fate drew (rollUnlock), which always comes with a reveal.
+      if (!action.payload.revealId && costType !== 'specialKey') return state;
       if (action.payload.revealId && (state.pendingUnlock || costType === 'specialKey'
         || (costType === 'key' ? state.keys < cost : state.chaosKeys < 1)
         || !isRandomUnlockEligible(table, item, state.unlocks, state.gameModeId, costType))) return state;
@@ -1498,10 +1503,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       if (warded && action.payload.ward !== true) return state;
       // Direct (Omni) unlocks must be paid for and still unlockable, or two
       // quick confirmations could spend one Omni-key twice.
-      if (!action.payload.revealId && (
-        (costType === 'specialKey' ? state.specialKeys < 1
-          : costType === 'key' ? state.keys < cost : state.chaosKeys < 1)
-        || !isValidUnlock(table, item, state.unlocks))) return state;
+      if (!action.payload.revealId && (state.specialKeys < 1 || !isValidUnlock(table, item, state.unlocks))) return state;
 
       const newUnlocks = applyTableUnlock(state.unlocks, table, item);
 
