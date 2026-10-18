@@ -72,6 +72,15 @@ export const pendingBreakthroughs = (state: FateState): string[] =>
 export const levelPastTierCap = (gameModeId: string | undefined, unlocks: Pick<GameState['unlocks'], 'skills'>, skill: string, level: number): boolean =>
   gameModeId === 'chunked' && level > tierCap(unlocks.skills[skill] ?? 0);
 
+/**
+ * The level whose odds a level-up to `level` rolls at. In Chunked a jump
+ * across the tier cap (a RuneLite level detected several levels on) rolls as
+ * the levels up to the cap would, at the capped level's odds, since the
+ * levels past it roll nothing. Every other mode rolls at `level`.
+ */
+export const levelRolledAt = (gameModeId: string | undefined, unlocks: Pick<GameState['unlocks'], 'skills'>, skill: string, level: number): number =>
+  gameModeId === 'chunked' ? Math.min(level, tierCap(unlocks.skills[skill] ?? 0)) : level;
+
 export type MercyBlocker = 'not_chunked' | 'keys' | 'pending_unlock' | 'fate' | 'skill_room' | 'breakthrough' | 'explore' | 'quest' | 'nothing_left';
 
 /** What Fate's Mercy could draw: the Chunks and Skills entries a Key could roll. */

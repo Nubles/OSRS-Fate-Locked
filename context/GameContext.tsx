@@ -731,7 +731,10 @@ export const prepareDetectedEventAcceptanceAction = (
       // Chunked: a milestone past the tier cap pays nothing, as a manual level-up there.
       .filter(level => isSkillChaosMilestone(level) && !levelPastTierCap(state.gameModeId, state.unlocks, progress.skill, level)).length
     : 0;
+  // The 2% Chaos chance rolls once, as a manual level-up's does, and not for
+  // a level past the Chunked tier cap (LEVEL_UP's rule).
   const randomChaosKeysAwarded = progress.kind === 'SKILL_LEVEL' && progress.level > currentSkillLevel
+    && !levelPastTierCap(state.gameModeId, state.unlocks, progress.skill, currentSkillLevel + 1)
     && nextDice('detected-skill-chaos', 0, 100) <= 2
     ? 1
     : 0;

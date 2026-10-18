@@ -32,7 +32,7 @@ import {
   type CompletionAttestation,
 } from './journalCompletion';
 import { skillLevelKeyChance } from './keyRoll';
-import { levelPastTierCap, tierCap } from './chunkedFate';
+import { levelPastTierCap, levelRolledAt, tierCap } from './chunkedFate';
 
 const normalize = (value: string): string =>
   value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-GB');
@@ -247,9 +247,12 @@ function classifySkill(event: FateEventEnvelope, state: GameState): EventClassif
     return blocked(`${skill} has reached its tier cap of level ${tierCap(state.unlocks.skills[skill] ?? 0)}. In Chunked, levels past the cap roll no Keys until its next tier opens.`);
   }
   const target = `${skill} Level ${level}`;
+  // A jump across the cap rolls at the capped level's odds, as the manual
+  // levels up to the cap would; the ones past it roll nothing.
+  const rolledAt = levelRolledAt(state.gameModeId, state.unlocks, skill, level as number);
   return {
     state: 'READY',
-    intent: { source: target, threshold: skillLevelKeyChance(level as number), failureFate: failureFateForSkillLevel(level as number), target },
+    intent: { source: target, threshold: skillLevelKeyChance(rolledAt), failureFate: failureFateForSkillLevel(rolledAt), target },
     progress: { kind: 'SKILL_LEVEL', skill, level: level as number },
   };
 }

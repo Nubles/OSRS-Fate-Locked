@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DROP_RATES } from '../config/rules';
+import { failureFateForSkillLevel } from '../config/economy';
+import { skillLevelKeyChance } from './keyRoll';
 import { initialState } from '../context/GameContext';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
 import { PETS } from '../data/pets';
@@ -166,6 +168,22 @@ describe('classifyFateEvent', () => {
     // Up to the cap it rolls, and Vanilla rolls every level.
     expect(classifyFateEvent(levelEvent(10), woodcutting('chunked', 9)).state).toBe('READY');
     expect(classifyFateEvent(levelEvent(11), woodcutting('vanilla', 10)).state).toBe('READY');
+  });
+
+  // Audit V6 (October 2026): a detected 9 -> 30 at tier 1 rolled at level 30's
+  // odds; a manual 9 -> 30 rolls only level 10, the cap.
+  it('in Chunked, rolls a detected jump across the tier cap at the capped level\'s odds', () => {
+    const woodcutting = (gameModeId: string) => withUnlocks(
+      { skills: { Woodcutting: 1 }, levels: { ...initialState.unlocks.levels, Woodcutting: 9 } }, { gameModeId });
+    const jump = event('SKILL_LEVEL', 'Woodcutting Level 30', { evidence: { skill: 'Woodcutting', level: 30 } });
+    const chunked = classifyFateEvent(jump, woodcutting('chunked'));
+    expect(chunked).toMatchObject({
+      state: 'READY',
+      intent: { threshold: skillLevelKeyChance(10), failureFate: failureFateForSkillLevel(10), target: 'Woodcutting Level 30' },
+      progress: { kind: 'SKILL_LEVEL', skill: 'Woodcutting', level: 30 },
+    });
+    expect(skillLevelKeyChance(10)).toBeLessThan(skillLevelKeyChance(30));
+    expect(classifyFateEvent(jump, woodcutting('vanilla'))).toMatchObject({ intent: { threshold: skillLevelKeyChance(30) } });
   });
 
   it('rolls a reviewed diary task only where the Journal would complete it', () => {
