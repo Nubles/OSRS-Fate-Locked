@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-18-dropped-connection',
+    title: 'A dropped connection keeps you in the tracker',
+    date: '2026-10-18',
+    sections: {
+      fixed: [
+        'If your connection drops while a panel loads, the tracker now stays open with a Reload button instead of sending you to "This site can’t be reached".',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-chunked-fate-draws-the-map',
     title: 'Chunked beta: fate draws your map',
     date: '2026-10-18',
