@@ -25,6 +25,7 @@ import { SKILLS_LIST } from '../data/items';
 import { chunkedTrainableTier, chunkedSkillRollable } from './chunkedSkillPool';
 import { randomUnlockPool, type RandomUnlockCandidate } from './gameEngine';
 import { exploreWaiting } from './chunkExplore';
+import { getChunkFrontier } from './chunkAdjacency';
 import { ritualFateCost } from '../config/economy';
 import { resolveModeRules } from '../config/gameModes';
 
@@ -82,10 +83,16 @@ export const mercyPool = (state: FateState): RandomUnlockCandidate[] => [
 /** The rituals that unlock something without a Key: Chaos makes a Chaos Key, the Cartographer a chosen chunk. */
 const MERCY_RITUALS = ['CHAOS', 'CARTOGRAPHER'] as const;
 
-/** A ritual the run can pay for now that would unlock something, or null when its Fate is too low. */
+/**
+ * A ritual the run can pay for now that would unlock something, or null when
+ * its Fate is too low. The Cartographer only counts while the frontier has a
+ * chunk to chart: with none, even a free one can do nothing, so it must not
+ * hold Mercy shut (dead-end audit, October 2026).
+ */
 export const mercyRitualInReach = (state: FateState): { id: typeof MERCY_RITUALS[number]; cost: number; free: boolean } | null => {
   const multiplier = resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier;
   for (const id of MERCY_RITUALS) {
+    if (id === 'CARTOGRAPHER' && getChunkFrontier(state.unlocks.chunks ?? [], state.unlocks).length === 0) continue;
     if (state.freeRituals?.includes(id)) return { id, cost: 0, free: true };
     const cost = ritualFateCost(id, multiplier);
     if ((state.fatePoints ?? 0) >= cost) return { id, cost, free: false };

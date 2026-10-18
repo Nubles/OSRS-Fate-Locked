@@ -6,7 +6,8 @@ import { chunkLabelWithCoords } from './chunkLabelWithCoords';
 import { BREAKTHROUGH_CHANCE } from '../config/economy';
 import { validateAndMigrateSave } from './saveSchema';
 import { replayInvariants } from './integrity';
-import { breakthroughTier, chunkedSkillHasRoom, levelPastTierCap, mercyBlocker, mercyPool, pendingBreakthroughs } from './chunkedFate';
+import { breakthroughTier, chunkedSkillHasRoom, levelPastTierCap, mercyBlocker, mercyPool, mercyRitualInReach, pendingBreakthroughs } from './chunkedFate';
+import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, getChunkFrontier } from './chunkAdjacency';
 import { mercyShutReason } from './chunkedMercyText';
 
 // A Chunked run on the Lumbridge Castle start chunk with no Keys left.
@@ -204,6 +205,18 @@ describe("Fate's Mercy: Fate, quests and the shut reason", () => {
     const rich = { ...open(), fatePoints: 45 };
     expect(gameReducer(rich, { type: 'CALL_ON_FATE', payload: { roll: 0, revealId: 'r', doableQuests: [] } })).toBe(rich);
     expect(mercyShutReason(rich)).toBe("Fate's Mercy waits while you have 45 Fate: enough for the Ritual of Chaos (25 Fate) at the Void Altar.");
+  });
+
+  it('a free Cartographer with no frontier chunk to chart does not hold Mercy shut (dead end 8)', () => {
+    const everywhere = { ...open(), freeRituals: ['CARTOGRAPHER'], unlocks: { ...open().unlocks, chunks: ALL_CHUNK_KEYS.filter(k => k !== CHUNKED_START_KEY) } };
+    expect(getChunkFrontier(everywhere.unlocks.chunks, everywhere.unlocks)).toEqual([]);
+    expect(mercyRitualInReach(everywhere)).toBeNull();
+    // The ritual could do nothing: the reducer refuses it.
+    const s = { ...everywhere, cartographerOffer: ['49,50'] };
+    expect(gameReducer(s, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: '' } })).toBe(s);
+    // With a frontier, a free Cartographer still counts; with none, Fate for Chaos still does.
+    expect(mercyRitualInReach({ ...open(), freeRituals: ['CARTOGRAPHER'] })).toEqual({ id: 'CARTOGRAPHER', cost: 0, free: true });
+    expect(mercyRitualInReach({ ...everywhere, freeRituals: [], fatePoints: 45 })?.id).toBe('CHAOS');
   });
 
   it('stays shut while a quest is doable, and the reducer refuses a call without the quest list', () => {
