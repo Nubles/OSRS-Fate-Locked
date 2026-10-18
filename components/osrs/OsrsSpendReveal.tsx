@@ -23,6 +23,8 @@ export interface OsrsSpendRevealProps {
   itemImage?: string;
   onComplete: () => void;
   isChaos?: boolean;
+  /** Chunked's free fate draws: no Key is spent, so the reveal shows no cost. */
+  freeDraw?: 'mercy' | 'breakthrough';
   animationsEnabled: boolean;
   tier?: number;
   /** Draw inside the wide Spend Keys board's reveal window (when it is open) instead of over the screen. */
@@ -30,6 +32,9 @@ export interface OsrsSpendRevealProps {
 }
 
 type Phase = 'altering' | 'reveal';
+
+/** What the reveal calls a free fate draw, in place of its cost. */
+const FREE_DRAW_NAME = { mercy: "Fate's Mercy", breakthrough: 'Breakthrough' } as const;
 
 const sh: React.CSSProperties = { textShadow: '1px 1px 0 #000' };
 const RS = (size = 16, family = 'RS'): React.CSSProperties => ({ font: `${size}px '${family}', sans-serif` });
@@ -39,7 +44,7 @@ const RS = (size = 16, family = 'RS'): React.CSSProperties => ({ font: `${size}p
  * the roll plays out, then a loot beam over the unlocked entry. The outcome is
  * already decided and saved by the time this mounts; the wait is only visual.
  */
-const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, itemImage, onComplete, isChaos = false, animationsEnabled, tier, docked = false }) => {
+const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, itemImage, onComplete, isChaos = false, freeDraw, animationsEnabled, tier, docked = false }) => {
   const host = useRevealHost();
   const inDock = docked && !!host;
   const [phase, setPhase] = useState<Phase>(animationsEnabled ? 'altering' : 'reveal');
@@ -145,7 +150,9 @@ const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, i
             )}
             <span style={{ ...RS(16, 'RSBold'), color: isChaos ? '#ff3030' : '#c77dff', ...sh }}>{isChaos ? 'Chaos roll' : 'Altering Fate...'}</span>
             <span style={{ ...RS(), color: 'var(--osrs-tan, #c8b897)', ...sh, textAlign: 'center', padding: '0 12px' }}>
-              {isChaos ? 'Your Chaos Key is spent on every table at once.' : `Your Key is spent on the ${display} table.`}
+              {isChaos ? 'Your Chaos Key is spent on every table at once.'
+                : freeDraw ? `${FREE_DRAW_NAME[freeDraw]}: fate draws for you, and nothing is spent.`
+                : `Your Key is spent on the ${display} table.`}
             </span>
           </div>
         ) : (
@@ -163,9 +170,15 @@ const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, i
               <span style={{ position: 'absolute', left: 10, top: 8, ...RS(16, 'RSSmall'), color: beam, ...sh }}>
                 {isChaos ? 'Chaos unlock' : `${rarity.charAt(0).toUpperCase()}${rarity.slice(1)} unlock`}
               </span>
-              <span style={{ position: 'absolute', right: 10, top: 8, display: 'flex', alignItems: 'center', gap: 4, ...RS(16, 'RSSmall'), color: '#ff3030', ...sh }}>
-                <img className="osrs-px" src={costIcon} alt="" aria-hidden="true" style={{ width: 22, height: 20 }} />-1 {isChaos ? 'Chaos Key' : 'Key'}
-              </span>
+              {freeDraw ? (
+                <span style={{ position: 'absolute', right: 10, top: 8, display: 'flex', alignItems: 'center', gap: 4, ...RS(16, 'RSSmall'), color: '#c77dff', ...sh }}>
+                  <img className="osrs-px" src={VOID_SEAL_ICON} alt="" aria-hidden="true" style={{ width: 22, height: 20 }} />{FREE_DRAW_NAME[freeDraw]}
+                </span>
+              ) : (
+                <span style={{ position: 'absolute', right: 10, top: 8, display: 'flex', alignItems: 'center', gap: 4, ...RS(16, 'RSSmall'), color: '#ff3030', ...sh }}>
+                  <img className="osrs-px" src={costIcon} alt="" aria-hidden="true" style={{ width: 22, height: 20 }} />-1 {isChaos ? 'Chaos Key' : 'Key'}
+                </span>
+              )}
             </div>
             <span style={{ ...RS(32, 'RSBold'), lineHeight: '30px', color: '#ffffff', textAlign: 'center', padding: '0 12px', overflowWrap: 'anywhere', ...sh }}>{itemName}</span>
             <span style={{ maxWidth: 460, ...RS(), lineHeight: '19px', color: 'var(--osrs-tan, #c8b897)', textAlign: 'center', padding: '0 12px', ...sh }}>{description}</span>

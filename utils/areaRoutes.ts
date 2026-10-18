@@ -21,7 +21,7 @@
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { AREA_ENTRY_ROUTES } from '../data/areaAccess';
-import { canonicalAreaName } from '../data/areaMapPolicy';
+import { AREA_REFERENCES, canonicalAreaName } from '../data/areaMapPolicy';
 import type { UnlockState } from '../types';
 import { CHUNKED_START } from './chunkAdjacency';
 import { chunkForPlace, chunkUnlocked } from './chunkLocations';
@@ -112,6 +112,16 @@ export function computeAreaRoutes(
     const chunks = areaChunks(name);
     if (!chunks.length || !isAreaReachable(name, unlocks, gameModeId)) continue;
     if (!mostlyReached(chunks, reach.reachable, unlocks, gameModeId)) strandedAreas.add(canonical);
+  }
+  // Chunked mode owns the places known only by their entrances (Keldagrim,
+  // Zanaris, the Kourend Catacombs and the rest of AREA_REFERENCES) through
+  // those chunks, so one is cut off when no owned entrance is reached.
+  if (gameModeId === 'chunked') {
+    for (const [name, reference] of Object.entries(AREA_REFERENCES)) {
+      if (!isAreaReachable(name, unlocks, gameModeId)) continue;
+      const entrances = reference.chunks.filter(chunk => chunkUnlocked(chunk.cx, chunk.cy, unlocks, gameModeId));
+      if (!entrances.some(chunk => reach.reachable.has(idOf(chunk)))) strandedAreas.add(canonicalAreaName(name));
+    }
   }
   // Chunked mode has no entry routes: its chunk reach is all it has.
   const leftToRoutes = gameModeId === 'chunked' ? new Set<string>() : ROUTED_CHUNKS;

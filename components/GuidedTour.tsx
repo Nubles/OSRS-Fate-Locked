@@ -16,13 +16,16 @@ interface Step {
   sel: string | null; // null = centered intro card
   title: string;
   body: string;
+  /** Chunked's wording, where a run owns map chunks rather than areas. */
+  chunkedBody?: string;
   place?: 'right' | 'bottom' | 'left' | 'top';
 }
 
 const STEPS: Step[] = [
   { sel: null, title: 'Welcome to Fate Locked', body: `You start with ${STARTING_KEYS} Keys, Misthalin (or one Lumbridge chunk in Chunked) and almost everything else locked. Here’s a short tour of where everything is.` },
   { sel: '[data-tour="farm"]', title: '1 · Farm Keys', body: 'Roll here when you finish a Slayer task, a clue, a boss kill or a minigame. Each roll has a chance at a Key, and Keys pay for unlocks. Failed rolls build Fate Points.', place: 'right' },
-  { sel: '[data-tour="spend"]', title: '2 · Spend Keys', body: 'Spend a Key on a table (gear, areas, bosses, skills and more) to unlock a random entry from it.', place: 'right' },
+  { sel: '[data-tour="spend"]', title: '2 · Spend Keys', body: 'Spend a Key on a table (gear, areas, bosses, skills and more) to unlock a random entry from it.',
+    chunkedBody: 'Spend a Key on a table (chunks, gear, bosses, skills and more) to unlock a random entry from it. The Chunks table opens a chunk next to the ones you own.', place: 'right' },
   { sel: '[data-tour="keys"]', title: 'Keys & Fate Points', body: 'Your Keys, Omni-Keys and Fate Points are shown here.', place: 'bottom' },
   { sel: '[data-tour="altar"]', title: '3 · The Void Altar', body: 'Spend Fate Points on rituals: roll twice and keep the better, try to double your next Key, buy a Chaos Key, or stake it all on a coin flip.', place: 'bottom' },
   { sel: '[data-tour="dashtabs"]', title: 'Your account', body: 'Everything you’ve unlocked lives on the right: gear & skills, the world map, activities, your journal and collection log. Each tab has a “?” for details.', place: 'bottom' },
@@ -33,7 +36,7 @@ const TIP_W = 330;
 const PAD = 8;
 const CARD_CONTROLS = 'button:not([disabled]), a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
-export const GuidedTour: React.FC = () => {
+export const GuidedTour: React.FC<{ gameModeId?: string }> = ({ gameModeId }) => {
   const [active, setActive] = useState(false);
   const [i, setI] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
@@ -172,7 +175,7 @@ export const GuidedTour: React.FC = () => {
           <h3 className="text-[15px] font-bold text-white leading-tight flex-1 pt-0.5">{step.title}</h3>
           <button onClick={close} className="text-gray-600 hover:text-gray-300 shrink-0" aria-label="End tour"><X size={16} /></button>
         </div>
-        <p className="text-[12.5px] text-gray-300 leading-relaxed mb-3.5">{step.body}</p>
+        <p className="text-[12.5px] text-gray-300 leading-relaxed mb-3.5">{gameModeId === 'chunked' && step.chunkedBody ? step.chunkedBody : step.body}</p>
         <div className="flex items-center justify-between">
           <div className="flex gap-1">
             {STEPS.map((_, n) => (

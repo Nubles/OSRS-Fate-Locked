@@ -81,10 +81,11 @@ describe('activity Key boosts', () => {
     expect(threshold(boosted, DropSource.QUEST_MASTER)).toBe(threshold(run, DropSource.QUEST_MASTER));
   });
 
-  it('leaves Vanilla minigame reserves at their own pace', () => {
+  it('leaves Vanilla and Chunked minigame reserves at their own pace', () => {
     const minigames = ['minigames-1', 'minigames-3', 'minigames-5'];
     expect(boostLabel('minigames-5', 'vanilla')).toBeNull();
-    expect(boostLabel('minigames-5', 'chunked')).toBe('+0.3% minigame Key chance');
+    expect(boostLabel('minigames-5', 'chunked')).toBeNull();
+    expect(boostLabel('minigames-5', 'xtreme')).toBe('+0.3% minigame Key chance');
     expect(activeBoosts([...minigames, 'quests-10'], 'vanilla')).toEqual([{ activity: 'quests', label: 'quest', percent: 0.3 }]);
     const vanilla = {
       ...initialState, runId: 'boost-run', runRevision: 0, lastEvent: null, gameModeId: 'vanilla',
@@ -93,7 +94,7 @@ describe('activity Key boosts', () => {
     const roll = (s: typeof vanilla) => prepareKeyRollAction(s, DropSource.ACTIVITY_MINIGAME, 0, 1, () => 5000, undefined, undefined, undefined,
       { kind: 'minigame', minigameName: 'Castle Wars' })!.payload.threshold;
     expect(roll({ ...vanilla, achievementsClaimed: minigames })).toBe(roll(vanilla));
-    const chunked = { ...initialState, runId: 'boost-run', runRevision: 0, lastEvent: null, gameModeId: 'chunked', achievementsClaimed: minigames };
-    expect(prepareKeyRollAction(chunked, DropSource.ACTIVITY_MINIGAME, 10, 1, () => 500).payload.threshold).toBe(10.7);
+    const xtreme = { ...initialState, runId: 'boost-run', runRevision: 0, lastEvent: null, gameModeId: 'xtreme', achievementsClaimed: minigames };
+    expect(prepareKeyRollAction(xtreme, DropSource.ACTIVITY_MINIGAME, 10, 1, () => 500).payload.threshold).toBe(10.7);
   });
 });

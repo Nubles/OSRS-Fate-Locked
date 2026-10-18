@@ -10,7 +10,7 @@ const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 /** One gem ladder for the whole app: Tier I..X. */
 const GEMS = ['opal', 'jade', 'red_topaz', 'sapphire', 'emerald', 'ruby', 'diamond', 'dragonstone', 'onyx', 'zenyte'];
 const GEM_NAMES = ['Opal', 'Jade', 'Red topaz', 'Sapphire', 'Emerald', 'Ruby', 'Diamond', 'Dragonstone', 'Onyx', 'Zenyte'];
-const KEY_SPRITE: Record<string, string> = { key: 'key.png', specialKey: 'omni_key.png', chaosKey: 'chaos_key.png', fate: 'void_seal.png' };
+const KEY_SPRITE: Record<string, string> = { key: 'key.png', specialKey: 'omni_key.png', chaosKey: 'chaos_key.png', fate: 'void_seal.png', mercy: 'void_seal.png', breakthrough: 'void_seal.png' };
 
 /** "a new …" for each table, as the game words its unlock messages. */
 const NOUN: Partial<Record<string, string>> = {

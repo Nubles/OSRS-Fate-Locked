@@ -37,6 +37,59 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-18-chunked-fate-draws-the-map',
+    title: 'Chunked beta: fate draws your map',
+    date: '2026-10-18',
+    sections: {
+      added: [
+        'Chunks draws now spin along your border, then fate sketches the chunk it picked like a map clue and fills it in. You can turn the spin off in Settings.',
+        'Land you don’t hold sits under fog on the Chunked map. You can turn the fog off in Settings.',
+        'Fate’s Thread: fate ties a thread to a boss, guild or bank past your border, and 1 Chunks draw in 6 heads its way. Reach it for a free ritual.',
+        'Fate’s marks: about one chunk in eight comes marked Blessed (+25 Fate), Gilded (a free 10% Key roll), Chaotic or Cursed.',
+        'Cursed chunks make your next 3 Key rolls 5% worse, but each fail among them gives double Fate.',
+      ],
+      changed: [
+        'Chunked is now marked as a beta. Its rules may still change while we tune it.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-18-chunked-no-dead-ends',
+    title: 'Chunked runs always find a way out',
+    date: '2026-10-18',
+    sections: {
+      fixed: [
+        'Fate’s Mercy no longer waits on things the game won’t let you do, like Ranged with no weapon or a course above your level.',
+        'If 3 days pass with no new Key, unlock or level, Fate’s Mercy opens anyway, so a stuck run always gets out.',
+        'Fate’s Mercy can draw the patch, guild, shop or gear slot a skill needs, so Herblore, Hunter or Ranged can’t get stuck.',
+      ],
+      balance: [
+        'The guaranteed start-chunk Key every 25 levels is gone. Every Key now comes from fate.',
+        'The Cartographer keeps its 3 chunks until you chart one, and places behind a quest, like Barrows, wait for that quest.',
+        '76 more diary tasks need their exact chunk, and a quest that needs a shop waits until that kind of shop is in your chunks.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-17-chunked-fate',
+    title: 'Chunked gets its own fate rules',
+    date: '2026-10-17',
+    sections: {
+      added: [
+        'Exploring: the first new things you do in a chunk you unlock each roll for a Key, up to 3 per chunk. Chunks you already hold don’t.',
+        'A capped skill gets a 50% Breakthrough roll at its next tier. With nothing left to do, Call on Fate draws a nearby chunk or skill tier.',
+      ],
+      balance: [
+        'Bosses, minigames, banks, guilds, quests, diaries and Slayer masters count only when their exact chunk is yours.',
+        'Bosses and minigames pay a few Keys and then stop, like Vanilla. Levels past a skill’s tier cap no longer roll Keys.',
+      ],
+      fixed: [
+        'Skills Keys only open skills your chunks can really train. The map only offers chunks you can walk or sail to.',
+        'Unlocks, share cards, sync codes and achievements name and count chunks in Chunked runs.',
+      ],
+    },
+  },
+  {
     id: '2026-10-16-ritual-results-stay',
     title: 'Ritual results stay on screen',
     date: '2026-10-16',

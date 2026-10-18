@@ -1,4 +1,4 @@
-import type { GameModeRules } from '../config/gameModes';
+import { usesActivityKeyReserves, type GameModeRules } from '../config/gameModes';
 /**
  * Achievements & milestones engine.
  *
@@ -28,6 +28,7 @@ import { BANK_IDS, MERGED_BANKS } from '../data/banks';
 import { BARROWS_BROTHERS, INVOCATIONS, PACT_DEBT, RITUALS } from '../config/economy';
 import { isAreaReachable, bankLocksActive } from './reachability';
 import { unlockableAreas } from './freeAreas';
+import { chunkTotals } from './runProgress';
 import { getPoolAndStateKey } from './gameEngine';
 import { isRollEntry } from './logEntry';
 import { mergedBankId } from './bankUnlockMerges';
@@ -83,6 +84,8 @@ export interface Achievement {
   chaosKeys: number;
   /** Shown as ??? until earned. */
   hidden?: boolean;
+  /** Wording for runs whose mode needs its own (Chunked's chunk tiers); `description` otherwise. */
+  describe?: (c: AchievementContext) => string;
   /** False when the run's mode can't earn it; it is then left out. */
   available?: (c: AchievementContext) => boolean;
   /** Current/target progress for this run. Earned when current >= target. */
@@ -263,8 +266,16 @@ const equipAtLeast = (tier: number): Metric => ({ u }) => EQUIPMENT_SLOTS.filter
 const collectionItems: Metric = ({ u }) => Object.values(u.collectionLog || {}).filter((c) => c > 0).length;
 // Areas the run has opened, by the same reachability check as the map, so
 // Chunked runs (which never fill `regions`) count the areas their chunks reach.
-const areasReached: Metric = ({ u, mode, custom }) =>
-  unlockableAreas(mode, custom).filter((area) => isAreaReachable(area, u, mode)).length;
+// Chunked runs own chunks, not areas: there the same tiers count the chunks
+// the run has unlocked (the free start chunk is not one), out of every
+// chunk it could unlock.
+const isChunked = (c: AchievementContext): boolean => c.mode === 'chunked';
+const areasReached: Metric = (c) => isChunked(c)
+  ? chunkTotals(c.u).unlocked - 1
+  : unlockableAreas(c.mode, c.custom).filter((area) => isAreaReachable(area, c.u, c.mode)).length;
+/** Chunked wording for an area tier: "Unlock 5 areas" reads "Unlock 5 chunks". */
+const inChunks = (areaText: string, chunkText: string) => (c: AchievementContext): string =>
+  isChunked(c) ? chunkText : areaText;
 
 /** A table's rollable pool in the run's mode, and how much of it the run owns. */
 const tablePool = (table: TableType, c: AchievementContext): readonly string[] =>
@@ -293,11 +304,14 @@ interface Step {
   id?: string;
   /** A target that depends on the run's mode; `target` still names the id. */
   targetFor?: (c: AchievementContext) => number;
+  /** A description that depends on the run's mode. */
+  describe?: (c: AchievementContext) => string;
   available?: (c: AchievementContext) => boolean;
 }
 
-const isVanilla = (c: AchievementContext): boolean => c.mode === 'vanilla';
-/** Vanilla minigames that hold Keys. */
+/** Modes whose minigames pay from Key reserves (Vanilla and Chunked). */
+const hasReserves = (c: AchievementContext): boolean => usesActivityKeyReserves(c.mode);
+/** Reserve-mode minigames that hold Keys. */
 const minigamesWithKeys = (c: AchievementContext): number =>
   tablePool(TableType.MINIGAMES, c).filter((name) => MINIGAME_KEY_RESERVES[name]).length;
 
@@ -319,6 +333,7 @@ function tiers(
     chaosKeys: (s.fate ?? 0) >= TOP_TIER_FATE ? 1 : 0,
     ...(s.hidden ? { hidden: true } : {}),
     ...(s.available ? { available: s.available } : {}),
+    ...(s.describe ? { describe: s.describe } : {}),
     progress: (c: AchievementContext) => ({
       current: metric(c),
       target: s.targetFor?.(c) ?? s.target,
@@ -405,15 +420,16 @@ export const ACHIEVEMENTS: Achievement[] = [
 
   // Areas (the ids keep their old 'regions' prefix, so earned achievements stay earned)
   ...tiers('regions', 'Areas', 'region', areasReached, [
-    { title: 'Explorer', description: 'Unlock your first area', target: 1 },
-    { title: 'Globetrotter', description: 'Unlock 5 areas', target: 5 },
-    { title: 'Wanderer', description: 'Unlock 10 areas', target: 10, fate: 10 },
-    { title: 'Traveller', description: 'Unlock 25 areas', target: 25, fate: 10 },
-    { title: 'Voyager', description: 'Unlock 50 areas', target: 50, fate: 15 },
-    { title: 'Far Flung', description: 'Unlock 100 areas', target: 100, fate: 15 },
+    { title: 'Explorer', description: 'Unlock your first area', target: 1, describe: inChunks('Unlock your first area', 'Unlock your first chunk') },
+    { title: 'Globetrotter', description: 'Unlock 5 areas', target: 5, describe: inChunks('Unlock 5 areas', 'Unlock 5 chunks') },
+    { title: 'Wanderer', description: 'Unlock 10 areas', target: 10, fate: 10, describe: inChunks('Unlock 10 areas', 'Unlock 10 chunks') },
+    { title: 'Traveller', description: 'Unlock 25 areas', target: 25, fate: 10, describe: inChunks('Unlock 25 areas', 'Unlock 25 chunks') },
+    { title: 'Voyager', description: 'Unlock 50 areas', target: 50, fate: 15, describe: inChunks('Unlock 50 areas', 'Unlock 50 chunks') },
+    { title: 'Far Flung', description: 'Unlock 100 areas', target: 100, fate: 15, describe: inChunks('Unlock 100 areas', 'Unlock 100 chunks') },
     {
       title: 'World Tour', description: 'Unlock every area', target: TOTAL_REGIONS, icon: 'map', fate: 25, freeRituals: 1,
-      targetFor: (c) => unlockableAreas(c.mode, c.custom).length,
+      targetFor: (c) => (isChunked(c) ? chunkTotals(c.u).total - 1 : unlockableAreas(c.mode, c.custom).length),
+      describe: inChunks('Unlock every area', 'Unlock every chunk'),
     },
   ]),
 
@@ -524,12 +540,12 @@ export const ACHIEVEMENTS: Achievement[] = [
     { title: 'Minigame Grinder', description: 'Roll for 250 minigame runs', target: 250, fate: 15 },
   ]),
   ...tiers('minigame-reserves', 'Activities', 'minigame', ({ stats }) => stats.minigameReservesEmptied.size, [
-    { title: 'Picked Clean', description: 'Win every Key a minigame holds', target: 1, available: isVanilla },
-    { title: 'Stash Raider', description: 'Win every Key from 10 minigames', target: 10, fate: 10, available: isVanilla },
-    { title: 'Reserve Drainer', description: 'Win every Key from 25 minigames', target: 25, fate: 15, available: isVanilla },
+    { title: 'Picked Clean', description: 'Win every Key a minigame holds', target: 1, available: hasReserves },
+    { title: 'Stash Raider', description: 'Win every Key from 10 minigames', target: 10, fate: 10, available: hasReserves },
+    { title: 'Reserve Drainer', description: 'Win every Key from 25 minigames', target: 25, fate: 15, available: hasReserves },
     {
       id: 'minigame-reserves-all', title: 'Every Last Key', description: 'Win every Key from every minigame that holds them', target: 1,
-      icon: 'crown', fate: 25, available: isVanilla, targetFor: minigamesWithKeys,
+      icon: 'crown', fate: 25, available: hasReserves, targetFor: minigamesWithKeys,
     },
   ]),
 
@@ -687,7 +703,7 @@ export function evaluateAchievements(run: AchievementRun): EvaluatedAchievement[
     const { current, target } = a.progress(c);
     const earned = current >= target || claimed.has(a.id);
     const pct = earned ? 100 : target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
-    return { ...a, current, target, earned, pct };
+    return { ...a, ...(a.describe ? { description: a.describe(c) } : {}), current, target, earned, pct };
   });
 }
 

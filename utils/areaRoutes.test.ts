@@ -9,6 +9,7 @@ import type { UnlockState } from '../types';
 import { computeAreaRoutes, type AreaRoutes } from './areaRoutes';
 import { countDoableTasks, evaluateDiaryTaskEligibility, getDiaryStatus } from './journalStatus';
 import { loadWalkSections } from './walkSections';
+import { OCEAN_CHUNK_KEYS } from './oceanAccess';
 
 // Routes walk the Chunk Picker sections, which load with the chunk content.
 beforeAll(() => loadWalkSections());
@@ -119,5 +120,35 @@ describe('diary tasks in an owned area with no route', () => {
     expect(evaluateDiaryTaskEligibility(row, unlocks, 'vanilla').blockers).toEqual([]);
     expect(evaluateDiaryTaskEligibility(row, unlocks, 'vanilla', stranded).blockers)
       .toEqual(row.locations!.map(location => noRoute(location.label)));
+  });
+});
+
+// map.md finding 7: Chunked mode owns Keldagrim, Zanaris and the other places
+// known only by their entrances through those chunks, so the Journal has to
+// call one cut off when its entrance is.
+describe('Chunked places known by their entrances', () => {
+  const chunked = (chunks: string[], connect = NO_TRANSPORT) => computeAreaRoutes(connect, account({ chunks }), 'chunked')!;
+
+  it('call Keldagrim cut off while no route reaches its owned entrance', () => {
+    const routes = chunked(['43,58']);
+    expect(routes.strandedChunks.has('43,58')).toBe(true);
+    expect(routes.strandedAreas.has('Keldagrim')).toBe(true);
+  });
+
+  it('and not once a route reaches it', () => {
+    expect(chunked(['43,58'], { [id(50, 50)]: [id(43, 58)] }).strandedAreas.has('Keldagrim')).toBe(false);
+  });
+
+  it('reach Zanaris through the Lumbridge Swamp shed next to the start chunk', () => {
+    const routes = chunked(['50,49']);
+    // This run can sail but reaches no coast yet, so only the sea is cut off.
+    expect([...routes.strandedChunks].filter(key => !OCEAN_CHUNK_KEYS.has(key))).toEqual([]);
+    expect(routes.strandedAreas.has('Zanaris')).toBe(false);
+  });
+
+  it('take any owned entrance a route reaches, of several', () => {
+    // The Kourend Catacombs have six entrances; one reached is enough.
+    expect(chunked(['25,57', '24,59'], { [id(50, 50)]: [id(25, 57)] }).strandedAreas.has('Catacombs of Kourend')).toBe(false);
+    expect(chunked(['25,57', '24,59']).strandedAreas.has('Catacombs of Kourend')).toBe(true);
   });
 });

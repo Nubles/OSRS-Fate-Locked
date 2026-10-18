@@ -42,7 +42,7 @@ import { isChunkLoadError, reloadOnceForChunkError } from './utils/chunkLoadErro
 import { reportError } from './utils/errorBeacon';
 import { useEscapeKey } from './hooks/useEscapeKey';
 import { resolveModeRules } from './config/gameModes';
-import { RITUALS, type Ritual } from './config/economy';
+import { CHUNKED_OMNI_LAND_TEXT, RITUALS, type Ritual } from './config/economy';
 import { showToast } from './utils/toast';
 import { importUiDecision, isCurrentImportRequest } from './utils/gamePersistence';
 import { prefetchHeavyChunks } from './utils/prefetch';
@@ -100,6 +100,7 @@ const GuidedTour = lazyWithRetry(() => import('./components/GuidedTour').then(m 
 const QuestCompleteOverlay = lazyWithRetry(() => import('./components/QuestCompleteOverlay').then(m => ({ default: m.QuestCompleteOverlay })));
 // The OSRS layout's shell (utils/uiStyle.ts): loaded only while that layout is on.
 const OsrsHeader = lazyWithRetry(() => import('./components/osrs/OsrsHeader').then(m => ({ default: m.OsrsHeader })));
+const FateMapOptions = lazyWithRetry(() => import('./components/FateMapOptions'));
 const OsrsShellFrame = lazyWithRetry(() => import('./components/osrs/OsrsShellFrame'));
 const OsrsContextMenu = lazyWithRetry(() => import('./components/osrs/OsrsContextMenu').then(m => ({ default: m.OsrsContextMenu })));
 const RunelitePluginGuide = lazyWithRetry(() =>
@@ -496,7 +497,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                    <WikiIcon file="Crystal_key.png" alt="Keys" Fallback={Key} size={17} className="drop-shadow" />
                    <span className="font-bold text-amber-100 text-lg leading-none"><PopOnChange value={keys} /></span>
                 </div>
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors min-w-[60px] justify-center ${specialKeys > 0 ? 'bg-purple-500/20 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'bg-white/5 border-white/10 opacity-50'}`} title={`Omni-Keys: click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ' In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.' : ''}`}>
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors min-w-[60px] justify-center ${specialKeys > 0 ? 'bg-purple-500/20 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'bg-white/5 border-white/10 opacity-50'}`} title={`Omni-Keys: click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ` ${CHUNKED_OMNI_LAND_TEXT}` : ''}`}>
                    <WikiIcon file="Enhanced_crystal_key.png" alt="Omni-Keys" Fallback={Sparkles} size={18} className={specialKeys > 0 ? 'animate-pulse' : 'opacity-50 grayscale'} />
                    <span className={`font-bold text-lg leading-none ${specialKeys > 0 ? 'text-purple-200' : 'text-gray-500'}`}><PopOnChange value={specialKeys} /></span>
                 </div>
@@ -614,6 +615,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                            {animationsEnabled ? <PlayCircle size={13} className="text-green-400" /> : <PauseCircle size={13} className="text-gray-500" />}
                            Animations <span className="ml-auto text-[10px] text-gray-500">{animationsEnabled ? 'on' : 'off'}</span>
                         </button>
+                        {gameModeId === 'chunked' && <Suspense fallback={null}><FateMapOptions /></Suspense>}
                         <button onClick={() => { setUiStyle(uiStyle === 'osrs' ? 'classic' : 'osrs'); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={uiStyle === 'osrs'} title={osrsFits ? undefined : `The OSRS layout shows on windows at least ${OSRS_MIN_WIDTH} pixels wide`}>
                            <SlidersHorizontal size={13} className={uiStyle === 'osrs' ? 'text-amber-400' : 'text-gray-500'} />
                            OSRS layout <span className="ml-auto text-[10px] text-gray-500">{uiStyle === 'osrs' ? (osrsFits ? 'on' : 'on, wide screens') : 'off'}</span>
@@ -1214,7 +1216,7 @@ const GameLayout = () => {
         {/* Global ⌘K command palette — navigates via fate:nav events. */}
         {modalRenderPolicy.renderGlobalDialogOverlays && <CommandPalette />}
         {/* Replayable spotlight tour — start via fate:start-tour. */}
-        {modalRenderPolicy.renderGlobalDialogOverlays && <GuidedTour />}
+        {modalRenderPolicy.renderGlobalDialogOverlays && <GuidedTour gameModeId={gameModeId} />}
         {/* Quest-complete celebration with the wiki reward scroll. */}
         {modalRenderPolicy.renderGlobalDialogOverlays && <QuestCompleteOverlay />}
       </Suspense>

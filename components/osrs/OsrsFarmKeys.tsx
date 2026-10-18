@@ -26,7 +26,7 @@ import { PetPicker } from '../PetPicker';
 import { WikiIcon } from '../WikiIcon';
 import { isRollEntry } from '../../utils/logEntry';
 import { formatKeyPercent, formatKeyRollValue } from '../../utils/keyRoll';
-import { useFarmModel } from '../ActionSection';
+import { FARM_NO_BOSS, FARM_NO_SLAYER_MASTER, useFarmModel } from '../ActionSection';
 import { setBossQuery, setFarmTab, useKeysView, type FarmSubTab } from './OsrsKeysState';
 import { OsrsKeysTabs } from './OsrsKeysTabs';
 
@@ -119,8 +119,8 @@ const BLURBS: Record<FarmSubTab, string> = {
   BOSSING: 'Roll the boss you killed. Its tier sets the odds.',
   ACTIVITIES: 'Every finished game rolls, with no limit.',
 };
-const VANILLA_BOSS_BLURB = 'Vanilla: each boss holds a small Key stash. Once it is empty, kills stop rolling.';
-const VANILLA_MINIGAME_BLURB = 'Vanilla: each minigame you unlock holds a small Key stash. Once it is empty, games stop rolling.';
+const VANILLA_BOSS_BLURB = 'Each boss holds a small Key stash. Once it is empty, kills stop rolling.';
+const VANILLA_MINIGAME_BLURB = 'Each minigame you unlock holds a small Key stash. Once it is empty, games stop rolling.';
 const LADDER_TITLES: Record<FarmSubTab, string> = {
   SLAYER: 'Slayer odds by tier', CLUES: 'Clue odds by tier', BOSSING: 'Boss odds, next Key', ACTIVITIES: 'Activity odds',
 };
@@ -267,7 +267,7 @@ const SourceRow: React.FC<{ card: CardModel }> = ({ card }) => {
   );
 };
 
-/** A row of the long all-boss list outside Vanilla (both sizes). */
+/** A row of the long all-boss list outside Vanilla and Chunked (both sizes). */
 const BossRow: React.FC<{ name: string; rate: number; bonus: number; tierLabel: string; onRoll: (p: RollPoint) => void }> = ({ name, rate, bonus, tierLabel, onRoll }) => {
   const { isRolling, trigger } = useRollSuspense(onRoll);
   const head = npcHead(name);
@@ -578,7 +578,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   const [pending, setPending] = useState<PendingRoll | null>(null);
   const [otherOpen, setOtherOpen] = useState(false);
   const [minigameQuery, setMinigameQuery] = useState('');
-  const { isVanilla, boost, bonusFor, effectiveRate, handleRoll } = p;
+  const { isVanilla, reserves, boost, bonusFor, effectiveRate, handleRoll } = p;
   useEffect(warmFarmArt, []);
 
   const roll = (speaker: Speaker, source: string, chance: number, context?: KeyRollContext) => (pt: RollPoint) => {
@@ -660,7 +660,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   });
 
   const q = bossQuery.trim().toLowerCase();
-  const vanillaBossCards: CardModel[] = isVanilla ? p.vanillaBosses
+  const vanillaBossCards: CardModel[] = reserves ? p.vanillaBosses
     .filter((name) => name.toLowerCase().includes(q))
     .map((name) => {
       const bossClass = name === BRUTUS_BOSS_NAME ? 'brutus' as const : bossTier(name);
@@ -707,9 +707,9 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       };
     }) : [];
 
-  // Vanilla: each unlocked minigame rolls from its own Key stash, like bosses.
+  // Vanilla and Chunked: each unlocked minigame rolls from its own Key stash, like bosses.
   const mq = minigameQuery.trim().toLowerCase();
-  const vanillaMinigameCards: CardModel[] = isVanilla ? p.vanillaMinigames
+  const vanillaMinigameCards: CardModel[] = reserves ? p.vanillaMinigames
     .filter((name) => name.toLowerCase().includes(mq))
     .sort((left, right) => left.localeCompare(right))
     .map((name) => {
@@ -745,7 +745,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       };
     }) : [];
 
-  const activityCards: CardModel[] = isVanilla ? vanillaMinigameCards : p.activities.map((a) => {
+  const activityCards: CardModel[] = reserves ? vanillaMinigameCards : p.activities.map((a) => {
     const rate = effectiveRate(a.source);
     return {
       id: a.name,
@@ -767,15 +767,15 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   const counts: Record<FarmSubTab, number> = {
     SLAYER: p.slayers.length,
     CLUES: p.clues.length,
-    BOSSING: isVanilla ? p.vanillaBosses.length : BOSSES_LIST.length,
-    ACTIVITIES: (isVanilla ? p.vanillaMinigames.length : p.activities.length) + 1,
+    BOSSING: reserves ? p.vanillaBosses.length : BOSSES_LIST.length,
+    ACTIVITIES: (reserves ? p.vanillaMinigames.length : p.activities.length) + 1,
   };
 
   const ladderRows: LadderRow[] = (() => {
     if (subTab === 'SLAYER') return buildLadder(slayerCards.map((c) => ({ label: c.name, rate: c.rate, live: true })));
     if (subTab === 'CLUES') return buildLadder(clueCards.map((c) => ({ label: c.name, rate: c.rate, live: true })));
     if (subTab === 'BOSSING') {
-      if (isVanilla) return buildLadder(vanillaBossCards.map((c) => ({ label: c.name, rate: c.rate, live: !c.disabled })));
+      if (reserves) return buildLadder(vanillaBossCards.map((c) => ({ label: c.name, rate: c.rate, live: !c.disabled })));
       return TIER_ORDER.map((t) => ({ label: `${TIER_LABEL[t]}-tier`, rate: effectiveRate(TIER_SOURCE[t]), live: true })).sort((a, b) => a.rate - b.rate);
     }
     return buildLadder(activityCards.map((c) => ({ label: c.name, rate: c.rate, live: !c.disabled })));
@@ -795,14 +795,14 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
 
   const bossSearch = subTab === 'BOSSING' ? (
     <input className="okf-search" value={bossQuery} onChange={(e) => setBossQuery(e.target.value)}
-      placeholder={isVanilla ? VANILLA_BOSS_SEARCH_PLACEHOLDER : 'Search bosses…'} aria-label="Search bosses" />
-  ) : subTab === 'ACTIVITIES' && isVanilla && p.vanillaMinigames.length > 0 ? (
+      placeholder={reserves ? VANILLA_BOSS_SEARCH_PLACEHOLDER : 'Search bosses…'} aria-label="Search bosses" />
+  ) : subTab === 'ACTIVITIES' && reserves && p.vanillaMinigames.length > 0 ? (
     <input className="okf-search" value={minigameQuery} onChange={(e) => setMinigameQuery(e.target.value)}
       placeholder="Search your minigames…" aria-label="Search your minigames" />
   ) : null;
 
-  // The long all-boss list outside Vanilla, grouped by tier (both sizes).
-  const tierGroups = !isVanilla && subTab === 'BOSSING' && (
+  // The long all-boss list outside Vanilla and Chunked, grouped by tier (both sizes).
+  const tierGroups = !reserves && subTab === 'BOSSING' && (
     <>
       {TIER_ORDER.map((tier: BossTier) => {
         const list = BOSSES_LIST.filter((b) => bossTier(b) === tier && b.toLowerCase().includes(q));
@@ -835,9 +835,11 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   );
 
   const cards = subTab === 'SLAYER' ? slayerCards : subTab === 'CLUES' ? clueCards : subTab === 'BOSSING' ? vanillaBossCards : activityCards;
-  const emptyBosses = subTab === 'BOSSING' && isVanilla && vanillaBossCards.length === 0
-    ? <div className="okf-empty">{vanillaBossSearchEmptyMessage(bossQuery)}</div>
-    : subTab === 'ACTIVITIES' && isVanilla && vanillaMinigameCards.length === 0
+  const emptyBosses = subTab === 'SLAYER' && slayerCards.length === 0
+    ? <div className="okf-empty">{FARM_NO_SLAYER_MASTER}</div>
+    : subTab === 'BOSSING' && reserves && vanillaBossCards.length === 0
+    ? <div className="okf-empty">{p.vanillaBosses.length === 0 ? FARM_NO_BOSS : vanillaBossSearchEmptyMessage(bossQuery)}</div>
+    : subTab === 'ACTIVITIES' && reserves && vanillaMinigameCards.length === 0
       ? <div className="okf-empty">{p.vanillaMinigames.length === 0
         ? 'Unlock a minigame from the Minigames table to give it a Key stash.'
         : `No minigames match “${minigameQuery}”.`}</div>
@@ -859,7 +861,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
         <div className="osrs-inner okf-list">
           <div className="okf-list-scroll">
             {bossSearch}
-            {subTab === 'BOSSING' && !isVanilla ? tierGroups : cards.map((c) => <SourceRow key={c.id} card={c} />)}
+            {subTab === 'BOSSING' && !reserves ? tierGroups : cards.map((c) => <SourceRow key={c.id} card={c} />)}
             {emptyBosses}
             {petClaim}
           </div>
@@ -880,12 +882,12 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
         <OsrsKeysTabs />
         {categoryButtons(WIDE_TAB_ICONS)}
         <div className="okf-blurb">
-          <span>{subTab === 'BOSSING' && isVanilla ? VANILLA_BOSS_BLURB : subTab === 'ACTIVITIES' && isVanilla ? VANILLA_MINIGAME_BLURB : BLURBS[subTab]}</span>
+          <span>{subTab === 'BOSSING' && reserves ? VANILLA_BOSS_BLURB : subTab === 'ACTIVITIES' && reserves ? VANILLA_MINIGAME_BLURB : BLURBS[subTab]}</span>
           <span className="hint"><b>Gem = odds tier.</b> Same gem, same chance, on every tab.</span>
           {otherBtn}
         </div>
         {bossSearch}
-        {subTab === 'BOSSING' && !isVanilla ? (
+        {subTab === 'BOSSING' && !reserves ? (
           <div className="osrs-inner okf-tiers">{tierGroups}</div>
         ) : (
           <div className="okf-grid" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>

@@ -5,12 +5,12 @@ import { createFreshState, GameProvider, prepareKeyRollAction } from '../context
 import { ReferenceModal } from './ReferenceModal';
 import { unlockableAreas } from '../utils/freeAreas';
 import { MISTHALIN_AREAS } from '../constants';
-import { CHUNKED_MILESTONE_INTERVAL, STARTING_KEYS } from '../config/economy';
+import { STARTING_KEYS } from '../config/economy';
 import { GAME_MODES } from '../config/gameModes';
 import { DropSource } from '../types';
 import { DROP_RATES } from '../config/rules';
 
-const CHUNKED_LAND = 'In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.';
+const CHUNKED_LAND = 'In Chunked an Omni-Key can&#x27;t pick land: chunks come from Chunks Keys, Chaos Keys that land on Chunks, the Ritual of the Cartographer and Fate&#x27;s Mercy.';
 
 /** The highest Omni die that still gives an Omni-Key: the chance the roll engine really uses. */
 const engineOmniChance = (source: DropSource): number => {
@@ -137,7 +137,7 @@ describe('ReferenceModal Game Modes', () => {
     expect(modes).toContain('What Differs Between the Modes');
     expect(modes).toContain('you unlock named areas, and all of Misthalin is free from the start');
     expect(modes).toContain('roll at no less than 25%, 15% and 10%');
-    expect(modes).toContain(`every ${CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key`);
+    expect(modes).not.toContain('total levels gives a guaranteed Key');
     expect(modes).toContain(`a Pity Key at ${shared.pityThreshold} Fate Points, a ${shared.omniChanceBase}% base Omni-Key chance`);
     expect(modes).toContain('Your mode is fixed as soon as you apply it.');
     expect(modes).not.toMatch(/Rule Knobs|Region Modifiers|Omni base|permanently locked|verified history/);
@@ -184,27 +184,28 @@ describe('ReferenceModal Vanilla policy', () => {
     const drops = renderCodex('drops');
     const unlocks = renderCodex('unlocks');
 
-    expect(economy).toContain('Vanilla bosses pay 116 Keys in all, then stop.');
+    expect(economy).toContain('In Vanilla and Chunked, bosses pay 116 Keys in all, then stop.');
     expect(economy).not.toMatch(/safety-reserve|onboarding minimums/);
-    expect(drops).toContain('Your first three clue Keys, from any tier, roll at no less than');
+    expect(drops).toContain('In Vanilla, your first three clue Keys, from any tier, roll at no less than');
     expect(drops).toContain('Brutus: 10% (1 Key)');
     expect(drops).toContain('Low: 15% (1 Key)');
     expect(drops).toContain('Mid: 30% → 15% (2 Keys)');
     expect(drops).toContain('High: 50% → 25% (2 Keys)');
     expect(drops).toContain('Raid: 65% → 32.5% → 16.25% (3 Keys)');
     expect(drops).toContain('25% → 15% → 10%');
-    expect(unlocks).toContain('In Vanilla, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas you own.');
+    expect(unlocks).toContain('In Vanilla, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas you own. In Chunked, they only unlock bosses, minigames, banks and guilds inside a chunk you hold.');
     expect(unlocks).toContain('If none can be reached, nothing is unlocked. You keep the Key.');
     expect(unlocks).toContain('An Omni-Key can still pick one you can');
     expect(unlocks).toContain('In Vanilla the areas you roll don&#x27;t have to touch each other.');
     expect(unlocks).toContain('Only Chunked makes you grow out from land you hold.');
     expect(unlocks).toContain('Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99, a 2% chance on every level-up, or the Ritual of Chaos.');
     expect(unlocks).toContain('Every eligible entry is equally likely, so big tables such as Areas and Banks come up most.');
-    expect(renderCodex('unlocks', 'chunked')).toContain('so big tables such as Banks come up most.');
+    expect(renderCodex('unlocks', 'chunked')).toContain('so the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.');
   });
 
-  it('labels the Vanilla policy as inactive outside Vanilla', () => {
-    expect(renderCodex('economy', 'chunked')).toContain('Vanilla-only (not active for this run)');
+  it('labels the reserve rules as active in Chunked and inactive elsewhere', () => {
+    expect(renderCodex('economy', 'chunked')).toContain('Vanilla and Chunked rules');
+    expect(renderCodex('economy', 'xtreme')).toContain('Vanilla and Chunked only (not active for this run)');
   });
 });
 

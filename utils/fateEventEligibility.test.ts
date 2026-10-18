@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { DROP_RATES } from '../config/rules';
+import { failureFateForSkillLevel } from '../config/economy';
+import { skillLevelKeyChance } from './keyRoll';
 import { initialState } from '../context/GameContext';
+import { ALL_CA_TASKS } from '../data/caTasks';
+import { activityEntranceChunks } from './activityAccess';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
 import { PETS } from '../data/pets';
 import type { FateEventEnvelope, FateEventType } from '../services/fateEventProtocol';
@@ -155,6 +159,35 @@ describe('classifyFateEvent', () => {
     }), state())).toEqual({ state: 'BLOCKED', reason: 'Unlock this skill before its levels can roll.' });
   });
 
+  it('in Chunked, rolls no detected level past the tier cap, as the level-up button does', () => {
+    const woodcutting = (gameModeId: string, level: number) => withUnlocks(
+      { skills: { Woodcutting: 1 }, levels: { ...initialState.unlocks.levels, Woodcutting: level } }, { gameModeId });
+    const levelEvent = (level: number) => event('SKILL_LEVEL', `Woodcutting Level ${level}`, { evidence: { skill: 'Woodcutting', level } });
+    expect(classifyFateEvent(levelEvent(11), woodcutting('chunked', 10))).toEqual({
+      state: 'BLOCKED',
+      reason: 'Woodcutting has reached its tier cap of level 10. In Chunked, levels past the cap roll no Keys until its next tier opens.',
+    });
+    // Up to the cap it rolls, and Vanilla rolls every level.
+    expect(classifyFateEvent(levelEvent(10), woodcutting('chunked', 9)).state).toBe('READY');
+    expect(classifyFateEvent(levelEvent(11), woodcutting('vanilla', 10)).state).toBe('READY');
+  });
+
+  // Audit V6 (October 2026): a detected 9 -> 30 at tier 1 rolled at level 30's
+  // odds; a manual 9 -> 30 rolls only level 10, the cap.
+  it('in Chunked, rolls a detected jump across the tier cap at the capped level\'s odds', () => {
+    const woodcutting = (gameModeId: string) => withUnlocks(
+      { skills: { Woodcutting: 1 }, levels: { ...initialState.unlocks.levels, Woodcutting: 9 } }, { gameModeId });
+    const jump = event('SKILL_LEVEL', 'Woodcutting Level 30', { evidence: { skill: 'Woodcutting', level: 30 } });
+    const chunked = classifyFateEvent(jump, woodcutting('chunked'));
+    expect(chunked).toMatchObject({
+      state: 'READY',
+      intent: { threshold: skillLevelKeyChance(10), failureFate: failureFateForSkillLevel(10), target: 'Woodcutting Level 30' },
+      progress: { kind: 'SKILL_LEVEL', skill: 'Woodcutting', level: 30 },
+    });
+    expect(skillLevelKeyChance(10)).toBeLessThan(skillLevelKeyChance(30));
+    expect(classifyFateEvent(jump, woodcutting('vanilla'))).toMatchObject({ intent: { threshold: skillLevelKeyChance(30) } });
+  });
+
   it('rolls a reviewed diary task only where the Journal would complete it', () => {
     const diary = event('DIARY_TASK', 'Karamja Elite', { confidence: 'UNCERTAIN', evidence: { tierId: 'Karamja Elite' } });
     const taskId = 'kar_elite_2';
@@ -210,6 +243,16 @@ describe('classifyFateEvent', () => {
       .toMatchObject({ state: 'READY', intent: { source, threshold: DROP_RATES[source], failureFate } });
   });
 
+  it('in Chunked, rolls a detected Combat Achievement task only at a boss in the run\'s chunks (audit V7)', () => {
+    const zulrahAdept = ALL_CA_TASKS.find(task => task.id === 'ca_224')!;
+    const detected = event('COMBAT_ACHIEVEMENT', zulrahAdept.name ?? zulrahAdept.description);
+    expect(classifyFateEvent(detected, withUnlocks({ chunks: [] }, { gameModeId: 'chunked' }))).toEqual({
+      state: 'BLOCKED', reason: 'Zulrah is not in your chunks. In Chunked, a Combat Achievement task only rolls where its boss is.',
+    });
+    expect(classifyFateEvent(detected, withUnlocks({ chunks: [...activityEntranceChunks('Zulrah')] }, { gameModeId: 'chunked' })).state).toBe('READY');
+    expect(classifyFateEvent(detected, state()).state).toBe('READY');
+  });
+
   it('maps a Combat Achievement task to its canonical tier', () => {
     expect(classifyFateEvent(event('COMBAT_ACHIEVEMENT', 'Noxious Foe'), state()))
       .toMatchObject({
@@ -228,9 +271,9 @@ describe('classifyFateEvent', () => {
     ['Vorkath', DropSource.BOSS_MID, 2],
     ['Nex', DropSource.BOSS_HIGH, 2],
     ['Chambers of Xeric', DropSource.RAID, 3],
-  ])('maps %s through the canonical boss tiers outside Vanilla', (label, source, failureFate) => {
+  ])('maps %s through the canonical boss tiers in modes without Key reserves', (label, source, failureFate) => {
     const type = source === DropSource.RAID ? 'RAID_COMPLETION' : 'BOSS_KILL';
-    const classified = classifyFateEvent(event(type, label), state({ gameModeId: 'chunked' }));
+    const classified = classifyFateEvent(event(type, label), state({ gameModeId: 'xtreme' }));
     expect(classified)
       .toMatchObject({ state: 'READY', intent: { source, threshold: DROP_RATES[source], failureFate } });
     expect(classified.state === 'READY' && classified.intent.context).toBeUndefined();
@@ -263,8 +306,21 @@ describe('classifyFateEvent', () => {
     });
     expect(brutus(1)).toEqual({ state: 'BLOCKED', reason: 'This boss has no Standard Keys left to award.' });
     const chunked = classifyFateEvent(event('BOSS_KILL', 'Brutus'), state({ gameModeId: 'chunked' }));
-    expect(chunked).toMatchObject({ state: 'READY', intent: { source: DropSource.BOSS_LOW } });
-    expect(chunked.state === 'READY' && chunked.intent.context).toBeUndefined();
+    expect(chunked).toMatchObject({ state: 'READY', intent: { threshold: 10, context: { kind: 'boss', bossName: 'Brutus', bossClass: 'brutus' } } });
+    const xtreme = classifyFateEvent(event('BOSS_KILL', 'Brutus'), state({ gameModeId: 'xtreme' }));
+    expect(xtreme).toMatchObject({ state: 'READY', intent: { source: DropSource.BOSS_LOW } });
+    expect(xtreme.state === 'READY' && xtreme.intent.context).toBeUndefined();
+  });
+
+  it('rolls Chunked bosses and minigames from the same reserves as Vanilla', () => {
+    expect(classifyFateEvent(event('BOSS_KILL', 'Zulrah'), state({ gameModeId: 'chunked' })))
+      .toEqual({ state: 'BLOCKED', reason: 'Unlock this boss before its kills can roll.' });
+    const vorkath = classifyFateEvent(event('BOSS_KILL', 'Vorkath'), withUnlocks({ bosses: ['Vorkath'] }, { gameModeId: 'chunked', bossStandardKeysAwarded: { Vorkath: 1 } }));
+    expect(vorkath).toMatchObject({ state: 'READY', intent: { threshold: 15, context: { kind: 'boss', bossName: 'Vorkath' } } });
+    const pest = classifyFateEventCandidate(event('MINIGAME_COMPLETION', 'Pest Control'), withUnlocks({ minigames: ['Pest Control'] }, { gameModeId: 'chunked' }), 'Pest Control');
+    expect(pest).toMatchObject({ state: 'READY', intent: { threshold: 8, context: { kind: 'minigame', minigameName: 'Pest Control' } } });
+    expect(classifyFateEventCandidate(event('MINIGAME_COMPLETION', 'Castle Wars'), withUnlocks({ minigames: ['Pest Control'] }, { gameModeId: 'chunked' }), 'Castle Wars'))
+      .toEqual({ state: 'BLOCKED', reason: 'Unlock this minigame before it can roll.' });
   });
 
   it('rolls a confirmed Vanilla minigame only while unlocked, from its own key reserve', () => {
@@ -284,9 +340,9 @@ describe('classifyFateEvent', () => {
     expect(confirm('Rat Pits', withUnlocks({ minigames: ['Rat Pits'] })))
       .toMatchObject({ state: 'NEEDS_CONFIRMATION' });
 
-    const chunked = confirm('Tempoross', state({ gameModeId: 'chunked' }));
-    expect(chunked).toMatchObject({ state: 'READY', intent: { source: DropSource.ACTIVITY_MINIGAME, threshold: DROP_RATES[DropSource.ACTIVITY_MINIGAME] } });
-    expect(chunked.state === 'READY' && chunked.intent.context).toBeUndefined();
+    const xtreme = confirm('Tempoross', state({ gameModeId: 'xtreme' }));
+    expect(xtreme).toMatchObject({ state: 'READY', intent: { source: DropSource.ACTIVITY_MINIGAME, threshold: DROP_RATES[DropSource.ACTIVITY_MINIGAME] } });
+    expect(xtreme.state === 'READY' && xtreme.intent.context).toBeUndefined();
   });
 
   it('rolls Vanilla clue caskets at the Clues card rates', () => {

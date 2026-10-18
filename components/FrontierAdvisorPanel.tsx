@@ -9,9 +9,9 @@ import { AdvisorList, AdvisorItem } from './AdvisorList';
 
 /**
  * Chunked mode's Region Advisor equivalent: ranks the chunks you could roll
- * next (the frontier) by what they'd actually be worth — first footholds in
- * new named areas (scored with the same impact engine as the Region Advisor)
- * plus chunk-local content (bank/shops/monsters) as a tie-breaker. Rolls are
+ * next (the frontier) by what they'd actually be worth — the quests and diary
+ * tiers they make doable (the same impact engine as the Region Advisor), the
+ * skills they make trainable, plus chunk-local content (bank/shops/monsters) as a tie-breaker. Rolls are
  * random-adjacent so you can't pick, but you CAN know what you're hoping for.
  *
  * Rendered in the World tab's list view where RegionAdvisorPanel sits for the
@@ -21,8 +21,8 @@ import { AdvisorList, AdvisorItem } from './AdvisorList';
 export const FrontierAdvisorPanel: React.FC = () => {
   const { unlocks, gameModeId } = useGame();
 
-  // Chunk content is lazily fetched; re-rank once it lands (the ranking is
-  // still useful without it — footholds don't need it).
+  // Chunk content is lazily fetched; re-rank once it lands (the Journal's
+  // exact-chunk checks and the content come with it).
   const [contentTick, setContentTick] = useState(0);
   useEffect(() => {
     if (!chunkContentService.ready) {
@@ -43,7 +43,7 @@ export const FrontierAdvisorPanel: React.FC = () => {
 
   const items: AdvisorItem[] = ranked.map((r) => {
     const bits: string[] = [];
-    if (r.newAreas.length > 0) bits.push(`opens ${r.newAreas.join(' · ')}`);
+    if (r.newSkills.length > 0) bits.push(`trains ${r.newSkills.join(', ')}`);
     if (r.content?.hasBank) bits.push('bank');
     if (r.content && r.content.shops > 0) bits.push(`${r.content.shops} shop${r.content.shops > 1 ? 's' : ''}`);
     if (r.content && r.content.monsters > 0) bits.push(`${r.content.monsters} monster${r.content.monsters > 1 ? 's' : ''}`);
@@ -66,11 +66,11 @@ export const FrontierAdvisorPanel: React.FC = () => {
       accent="cyan"
       heading="Frontier Advisor"
       subheading="What your rollable chunks are worth — hope for the top ones"
-      caption="by foothold impact"
+      caption="by what opens"
       icon={<Compass size={13} />}
       maxShown={5}
       maxNames={3}
-      emptyLabel="No frontier yet — roll your first chunk to open one."
+      emptyLabel="Nothing left to roll next to your land."
       onItemClick={(key) => {
         // Same affordance as the Region Advisor: jump to the chunk's continent
         // card in the list below and flash it.

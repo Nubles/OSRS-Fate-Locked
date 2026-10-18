@@ -2,7 +2,8 @@
 import React from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createFreshState } from '../context/GameContext';
+import { createFreshState, gameReducer } from '../context/GameContext';
+import { liveCartographerOffer } from '../utils/cartographerOffer';
 
 const game = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
 
@@ -18,13 +19,23 @@ vi.mock('../services/ChunkContentService', () => ({
 
 const offeredKeys = () => screen.getAllByText(/^\(\d+,\d+\)$/).map(node => node.textContent);
 
+// The run the Altar reads, kept between renders as the provider keeps it.
+const saved = vi.hoisted(() => ({ offer: undefined as string[] | undefined }));
+
 beforeEach(() => {
   const state = createFreshState();
   let draws = 0;
+  saved.offer = undefined;
   game.current = {
     ...state,
     fatePoints: 60,
     gameModeId: 'chunked',
+    // As the provider does: the reducer draws the offer once and the run keeps it.
+    drawCartographerChoices: () => {
+      const next = gameReducer({ ...state, gameModeId: 'chunked', cartographerOffer: saved.offer, lastEvent: null }, { type: 'CARTOGRAPHER_DRAW_OFFER' });
+      saved.offer = next.cartographerOffer;
+      return liveCartographerOffer(next);
+    },
     // An unseeded run: every draw is fresh.
     nextFloat: () => [0.9, 0.1, 0.5, 0.7, 0.3, 0.2][draws++ % 6],
     performRitual: vi.fn(),
@@ -49,6 +60,23 @@ describe('VoidAltar Cartographer', () => {
     fireEvent.click(screen.getByRole('button', { name: /Ritual of the Cartographer/ }));
 
     expect(offeredKeys()).toEqual(first);
+  });
+
+  it('keeps the same offer after a page reload on an unseeded run', async () => {
+    const offerAfterLoad = async () => {
+      vi.resetModules();
+      const { VoidAltar } = await import('./VoidAltar');
+      const view = render(<VoidAltar onClose={vi.fn()} />);
+      fireEvent.click(screen.getByRole('button', { name: /Ritual of the Cartographer/ }));
+      const keys = offeredKeys();
+      view.unmount();
+      return keys;
+    };
+    const random = vi.spyOn(Math, 'random');
+    const first = await offerAfterLoad();
+    expect(first).toHaveLength(3);
+    expect(await offerAfterLoad()).toEqual(first);
+    expect(random).not.toHaveBeenCalled();
   });
 });
 

@@ -250,19 +250,22 @@ describe('Sacrifice', () => {
 });
 
 describe("Saradomin's Ward", () => {
-  // Chunked draws bosses from anywhere, so the Ward is what keeps them in reach.
-  const far = BOSSES_LIST.find(b => !wardUsable(TableType.BOSSES, b, initialState.unlocks, 'chunked'))!;
-  const near = BOSSES_LIST.find(b => wardUsable(TableType.BOSSES, b, initialState.unlocks, 'chunked'))!;
+  // A Chunked run walked north to Varrock, whose sewer entrance (50,54) holds Scurrius and Bryophyta.
+  const walked = { ...initialState.unlocks, chunks: ['50,51', '50,52', '50,53', '50,54'] };
+  const far = BOSSES_LIST.find(b => !wardUsable(TableType.BOSSES, b, walked, 'chunked'))!;
+  const near = BOSSES_LIST.find(b => wardUsable(TableType.BOSSES, b, walked, 'chunked'))!;
   const unlock = (item: string, table = TableType.BOSSES, ward = true): Action =>
     ({ type: 'UNLOCK', payload: { table, item, costType: 'key', cost: 1, revealId: 'reveal', ward } });
 
   it('tells a boss in reach from one that is not', () => {
     expect(far).toBeDefined();
     expect(near).toBeDefined();
+    // Only the boss's own entrance chunk counts, not a foothold in its area.
+    expect(BOSSES_LIST.filter(b => wardUsable(TableType.BOSSES, b, initialState.unlocks, 'chunked'))).toEqual([]);
   });
 
   it('refuses a spend drawn without the Ward, and is used up by one drawn with it', () => {
-    const s = cast(base({ fatePoints: 30, keys: 5, gameModeId: 'chunked' }), { type: 'RITUAL_WARD' });
+    const s = cast(base({ fatePoints: 30, keys: 5, gameModeId: 'chunked', unlocks: walked }), { type: 'RITUAL_WARD' });
     expect(cast(s, unlock(near, TableType.BOSSES, false))).toBe(s);
     const landed = cast(s, unlock(near));
     expect(landed.unlocks.bosses).toContain(near);
@@ -271,7 +274,7 @@ describe("Saradomin's Ward", () => {
   });
 
   it('can only be cast again 25 rolls later', () => {
-    let s = cast(base({ fatePoints: 30, keys: 5, gameModeId: 'chunked' }), { type: 'RITUAL_WARD' });
+    let s = cast(base({ fatePoints: 30, keys: 5, gameModeId: 'chunked', unlocks: walked }), { type: 'RITUAL_WARD' });
     s = cast(s, unlock(near));
     s = { ...s, fatePoints: 60 };
     // The wait only holds back the Ward: Guthix is free once Saradomin's Key has landed.

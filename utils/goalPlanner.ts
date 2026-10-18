@@ -160,11 +160,13 @@ function skillCap(unlocks: any, skill: string): number {
 
 function areaPlanStep(name: string, gameModeId?: string): PlanStep {
   const canonical = canonicalAreaName(name);
-  // Chunked has no Areas table: any one of the area's chunks reaches it.
+  // Chunked has no Areas table, and players can't pick a chunk: a Key rolls
+  // one next to theirs. Only content the Journal can't place exactly asks
+  // for a whole area, which any one of its chunks then reaches.
   if (gameModeId === 'chunked') {
     return {
       kind: 'region', id: canonical, label: displayAreaName(name), unlockTable: TableType.CHUNKS,
-      relatedIds: namedAreaChunks(name).map(chunkKey), detail: 'Unlock any chunk in this area', done: false,
+      relatedIds: namedAreaChunks(name).map(chunkKey), detail: 'Roll chunks toward this area', done: false,
     };
   }
   return { kind: 'region', id: canonical, label: displayAreaName(name), unlockTable: TableType.REGIONS, done: false };
@@ -172,7 +174,15 @@ function areaPlanStep(name: string, gameModeId?: string): PlanStep {
 
 /** An exact chunk to roll on the Chunks table, as diary chunk routes plan it. */
 function chunkPlanStep({ cx, cy }: { cx: number; cy: number }): PlanStep {
-  return { kind: 'region', id: `${cx},${cy}`, label: `Chunk ${cx}, ${cy}`, unlockTable: TableType.CHUNKS, done: false };
+  return { kind: 'region', id: `${cx},${cy}`, label: `Chunk ${cx}, ${cy}`, unlockTable: TableType.CHUNKS, detail: 'Roll chunks toward it', done: false };
+}
+
+/** Chunked: a quest item none of the run's chunks has a source for yet. */
+function itemPlanStep(item: string): PlanStep {
+  return {
+    kind: 'region', id: `item:${item}`, label: item, unlockTable: TableType.CHUNKS,
+    detail: 'No source in your chunks yet: roll chunks toward one', done: false,
+  };
 }
 
 /**
@@ -258,6 +268,7 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any, gam
       unlockTable: TableType.REGIONS, relatedIds: areas, detail: 'Unlock any one', done: false,
     };
   }
+  if (blocker.kind === 'region' && blocker.item) return itemPlanStep(blocker.item);
   if (blocker.kind === 'region') return blocker.chunk
     ? { kind: 'region', id: `${blocker.chunk.cx},${blocker.chunk.cy}`, label: blocker.label, unlockTable: TableType.CHUNKS, done: false }
     : areaPlanStep(blocker.label, gameModeId);
@@ -399,6 +410,10 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
           tier: Math.max(previous?.tier ?? 0, blocker.tier),
           labels: new Set([...(previous?.labels ?? []), blocker.label]),
         });
+        continue;
+      }
+      if (blocker.kind === 'region' && blocker.item) {
+        manualSteps.set(`item:${blocker.item}`, itemPlanStep(blocker.item));
         continue;
       }
       if (blocker.kind === 'region') {

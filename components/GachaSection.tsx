@@ -14,7 +14,10 @@ import { Sparkles, Dices, Dna, Sprout, Key } from './OsrsIcon';
 import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { andList, LEVEL_CHAOS_CHANCE, SKILL_CHAOS_MILESTONES } from '../config/economy';
 import { openDashboardPool } from '../utils/dashboardPoolNavigation';
-import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, chunkLabel } from '../utils/chunkAdjacency';
+import { chunkLabel } from '../utils/chunkAdjacency';
+import { chunkTotals } from '../utils/runProgress';
+
+const ChunkedFatePanel = lazyWithRetry(() => import('./ChunkedFatePanel').then(m => ({ default: m.ChunkedFatePanel })));
 
 // --- Inner Components ---
 interface Accent {
@@ -195,7 +198,8 @@ export const useSpendModel = () => {
     }
     return result;
   }, [unlocks, gameModeId, customMode]);
-  const ownedChunks = ALL_CHUNK_KEYS.filter(key => key !== CHUNKED_START_KEY && (unlocks.chunks ?? []).includes(key)).length;
+  // One chunk count everywhere: owned land chunks, the start chunk included.
+  const chunkCount = chunkTotals(unlocks);
 
   // Calculate Total Level for Display
   const totalLevel = useMemo(() => {
@@ -214,7 +218,7 @@ export const useSpendModel = () => {
     { type: TableType.SKILLS, label: 'Skills', subLabel: 'Unlock next methods tier', iconSrc: OSRS_GACHA_ICONS.SKILLS, unlocked: tierCount(unlocks.skills), total: SKILLS_LIST.length, can: canUnlock.skills },
     isChunked
       // An empty frontier is not "Done": more land opens after Sailing.
-      ? { type: TableType.CHUNKS, label: 'Chunks', subLabel: 'Adjacent Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: ownedChunks, total: ALL_CHUNK_KEYS.length - 1, can: ownedChunks < ALL_CHUNK_KEYS.length - 1 }
+      ? { type: TableType.CHUNKS, label: 'Chunks', subLabel: 'Adjacent Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: chunkCount.unlocked, total: chunkCount.total, can: chunkCount.unlocked < chunkCount.total }
       : { type: TableType.REGIONS, label: 'Areas', subLabel: 'New Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: areaPool.filter(area => isAreaReachable(area, unlocks, gameModeId)).length, total: areaPool.length, can: canUnlock.regions },
     { type: TableType.MOBILITY, label: 'Mobility', subLabel: 'Travel Networks', iconSrc: OSRS_GACHA_ICONS.MOBILITY, unlocked: (unlocks.mobility ?? []).length, total: MOBILITY_LIST.length, can: canUnlock.mobility },
     { type: TableType.ARCANA, label: COMBAT_POWERS_LABEL, subLabel: COMBAT_POWERS_DESCRIPTION, iconSrc: OSRS_GACHA_ICONS.ARCANA, unlocked: (unlocks.arcana ?? []).length, total: ARCANA_LIST.length, can: canUnlock.arcana },
@@ -315,6 +319,13 @@ const ClassicGachaSection: React.FC = () => {
             </div>
         )}
       </div>
+
+      {/* Chunked: Breakthrough rolls and Fate's Mercy. */}
+      {isChunked && (
+        <Suspense fallback={null}>
+          <ChunkedFatePanel />
+        </Suspense>
+      )}
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2.5 custom-scrollbar content-start">

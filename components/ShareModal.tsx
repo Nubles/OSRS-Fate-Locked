@@ -16,6 +16,7 @@ import { isAreaReachable } from '../utils/reachability';
 import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { BANK_IDS } from '../data/banks';
 import { completionPercent } from '../utils/completion';
+import { chunkRegionMastery, chunkTotals } from '../utils/runProgress';
 import { computeRunId } from '../utils/integrity';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
@@ -59,17 +60,17 @@ const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ on
   const { unlocks, gameModeId, customMode } = gameState;
   const isChunked = gameModeId === 'chunked';
   // Chunked mode has no unlocks.regions — its "territory unlocked" stat is
-  // chunk count instead.
-  const totalRegions = isChunked ? (unlocks.chunks ?? []).length : visibleAreaUnlocks(unlocks.regions).length;
+  // the chunk count every screen shows (start chunk included).
+  const totalRegions = isChunked ? chunkTotals(unlocks).unlocked : visibleAreaUnlocks(unlocks.regions).length;
   const totalEquipTiers = (Object.values(unlocks.equipment) as number[]).reduce((a, b) => a + b, 0);
   const totalLevel = (Object.values(unlocks.levels) as number[]).reduce((a, b) => a + b, 0);
 
   const progressPercent = completionPercent(unlocks, gameModeId, customMode);
   const runId = useMemo(() => computeRunId(gameState.history ?? []), [gameState.history]);
 
-  // Region Mastery — chunk-aware: in Chunked mode an area counts once you
-  // hold a chunk foothold in it (same rule as the map and World tab).
-  const regionMastery = Object.entries(REGION_GROUPS).map(([group, areas]) => {
+  // Region Mastery. Chunked counts the chunks owned in each map region
+  // (Misthalin included); other modes count the named areas reached.
+  const regionMastery = isChunked ? chunkRegionMastery(unlocks) : Object.entries(REGION_GROUPS).map(([group, areas]) => {
       const unlockedCount = areas.filter(a => isAreaReachable(a, unlocks, gameModeId)).length;
       return { group, count: unlockedCount, total: areas.length, percent: unlockedCount / areas.length };
   }).filter(r => r.count > 0).sort((a, b) => b.percent - a.percent);
@@ -445,13 +446,13 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
                     <div className={`owb-card-world flex-1 ${ts.panel} rounded border ${ts.deco} p-4 overflow-hidden flex flex-col shadow-inner bg-black/20`}>
                         <div className="space-y-3">
                             {regionMastery.length === 0 && (
-                                <div className="text-center py-10 text-xs italic text-gray-600">No regions explored...</div>
+                                <div className="text-center py-10 text-xs italic text-gray-600">{isChunked ? 'No chunks explored...' : 'No regions explored...'}</div>
                             )}
                             {regionMastery.map(({ group, count, total, percent }) => (
                                 <div key={group} className="space-y-1">
                                     <div className="flex justify-between text-[10px] uppercase font-bold text-gray-300">
                                         <span>{group}</span>
-                                        <span className="opacity-70 font-mono">{Math.round(percent * 100)}%</span>
+                                        <span className="opacity-70 font-mono">{isChunked ? `${count}/${total} chunks` : `${Math.round(percent * 100)}%`}</span>
                                     </div>
                                     <div className="owb-card-track h-1.5 w-full bg-black/60 rounded-full overflow-hidden border border-white/5">
                                         <div className={`h-full ${ts.bar} transition-all shadow-[0_0_5px_currentColor]`} style={{ width: `${percent * 100}%` }}></div>

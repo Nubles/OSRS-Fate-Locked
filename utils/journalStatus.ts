@@ -54,6 +54,8 @@ export type DirectEligibilityBlocker =
       location?: LocationUnlockTargets;
       /** Any one of these areas clears it: a travel route's choice of departure. */
       anyOf?: string[];
+      /** Chunked: a quest item with no source in the run's chunks yet. */
+      item?: string;
     }
   | { kind: 'skill'; label: string; requirement?: SkillEligibilityRequirement }
   | { kind: 'combat'; label: string }
@@ -214,7 +216,8 @@ export const questRequirementOptionMet = (
   Object.entries(option.skills ?? {}).every(([skill, level]) =>
     meetsSkillRequirement(unlocks, skill, level)) &&
   (option.quests ?? []).every(quest => unlocks.quests.includes(quest)) &&
-  (option.merchants ?? []).every(merchant => unlocks.merchants?.includes(merchant));
+  (option.merchants ?? []).every(merchant => unlocks.merchants?.includes(merchant)
+    && (gameModeId !== 'chunked' || (chunkedChecks?.merchantInChunks(merchant, unlocks) ?? true)));
 
 /** An owned area that no route reaches yet (utils/areaRoutes.ts). */
 const strandedArea = (area: string, areaRoutes?: AreaRoutes | null): boolean =>
@@ -283,6 +286,36 @@ export const currentQuestPoints = (unlocks: { readonly quests: readonly string[]
 };
 
 /**
+ * Chunked mode's exact-chunk answers, from utils/chunkedContentChecks.ts. It
+ * loads with the chunk content (ChunkContentService.init), so this file stays
+ * small, and each answer is null while that content is missing; the checks
+ * then use the named areas, as before.
+ */
+export interface ChunkedChecks {
+  /** A quest's place blockers and evidence, from its start and step chunks. */
+  quest(quest: QuestData, unlocks: UnlockState, areaRoutes?: AreaRoutes | null): { blockers: EligibilityBlocker[]; evidence: string[]; chunks: ReadonlySet<string> } | null;
+  /** Items (RuneProof's reviewed lists) the run's chunks can't supply yet. */
+  questItems(quest: QuestData, unlocks: UnlockState): EligibilityBlocker[];
+  /** Whether one of a merchant type's shops is in the run's chunks (true when the data places none). */
+  merchantInChunks(merchant: string, unlocks: UnlockState): boolean;
+  /** A diary task (or one of its ways) with its areas swapped for the chunks it is done in, or null. */
+  diaryTask<R extends DiaryRequirement>(taskId: string, requirement: R): R | null;
+  /** What the Frontier Advisor needs to know about a run, or null while the content is missing. */
+  frontier(unlocks: UnlockState): ChunkedFrontier | null;
+}
+export interface ChunkedFrontier {
+  /** Every chunk the exact checks read ("cx,cy"): one outside them changes no quest or diary. */
+  contentChunks: ReadonlySet<string>;
+  /** Diary tiers that only places and quests hold back, so a chunk could open them. */
+  diaryIds: string[];
+  /** Skills this chunk would make trainable at the run's tiers (chunkedTrainingTiers). */
+  newSkills(key: string): string[];
+}
+let chunkedChecks: ChunkedChecks | null = null;
+export const installChunkedChecks = (checks: ChunkedChecks | null): void => { chunkedChecks = checks; };
+export const chunkedFrontier = (unlocks: UnlockState): ChunkedFrontier | null => chunkedChecks?.frontier(unlocks) ?? null;
+
+/**
  * Whether a quest can be done now. Pass `areaRoutes` (from useAreaRoutes) so
  * an owned area no route reaches reads "No route to", as in the Diary Journal.
  */
@@ -315,9 +348,12 @@ export function evaluateQuestEligibility(
   }
   const blockers: EligibilityBlocker[] = [];
   const evidence: string[] = [];
-  const enforceRegions =
+  // Chunked: the chunks the quest starts and has steps in replace its areas.
+  const exact = gameModeId === 'chunked' ? chunkedChecks?.quest(quest, unlocks, areaRoutes) ?? null : null;
+  if (exact) { blockers.push(...exact.blockers); evidence.push(...exact.evidence); }
+  const enforceRegions = !exact && (
     quest.accessPolicy === 'regions' ||
-    quest.accessPolicy === 'regions-and-locations';
+    quest.accessPolicy === 'regions-and-locations');
   const enforceLocations =
     quest.accessPolicy === 'locations' ||
     quest.accessPolicy === 'regions-and-locations';
@@ -327,6 +363,8 @@ export function evaluateQuestEligibility(
     else evidence.push(region);
   }
   for (const location of enforceLocations ? (quest.locations ?? []) : []) {
+    // A place among the quest's own chunks is already checked, chunk by chunk.
+    if (exact && location.chunkOptions.some(({ cx, cy }) => exact.chunks.has(`${cx},${cy}`))) continue;
     if (!locationRequirementMet(location, unlocks, gameModeId)) {
       blockers.push({ kind: 'region', label: location.label, location: locationUnlockTargets(location, unlocks, gameModeId) });
     } else if (strandedLocation(location, unlocks, gameModeId, areaRoutes)) {
@@ -389,12 +427,22 @@ export function evaluateQuestEligibility(
     blockers.push(...unlocked.blockers);
     evidence.push(...unlocked.evidence);
     manualChecks.push(...unlocked.manualChecks);
+    // Chunked: a merchant type counts only with one of its shops in the run's chunks.
+    if (exact) {
+      for (const merchant of quest.merchants ?? []) {
+        if (unlocks.merchants?.includes(merchant) && !chunkedChecks!.merchantInChunks(merchant, unlocks)) {
+          blockers.push({ kind: 'region', label: `${merchant} (no shop in your chunks yet)` });
+        }
+      }
+    }
   }
   // Includes Druidic Ritual for a Herblore level, and Pandemonium for Sailing.
   for (const prereq of withSkillGateQuests(quest.prereqs, quest.skills, quest.id)) {
     if (unlocks.quests.includes(prereq)) evidence.push(prereq);
-    else blockers.push({ kind: 'quest', label: prereq });
+    else if (!blockers.some(b => b.kind === 'quest' && b.label === prereq)) blockers.push({ kind: 'quest', label: prereq });
   }
+  // Only worth asking once nothing else stands in the way.
+  if (exact && blockers.length === 0) blockers.push(...chunkedChecks!.questItems(quest, unlocks));
   // "No route to" is a trip problem, as an island is in the Diary Journal.
   const status: QuestStatus = blockers.some(x => x.kind === 'region' || x.kind === 'alternative') ? 'LOCKED_REGION'
     : blockers.some(x => x.kind === 'skill' || x.kind === 'combat') ? 'LOCKED_SKILL'
@@ -658,8 +706,10 @@ const noRouteBlocker = (place: string): AlternativeBlocker => ({
   kind: 'alternative', label: `No route to ${place}`, travel: place, blockerKinds: [], routes: [],
 });
 
+export type DiaryRequirement = Omit<DoableTask, 'id' | 'oneOf'>;
+
 function evaluateDiaryRequirement(
-  requirement: Omit<DoableTask, 'id' | 'oneOf'>,
+  requirement: DiaryRequirement,
   unlocks: UnlockState,
   gameModeId?: string,
   visited: ReadonlySet<string> = NO_AREAS,
@@ -886,11 +936,14 @@ export function evaluateDiaryTaskEligibility(
   gameModeId?: string,
   areaRoutes?: AreaRoutes | null,
 ): DiaryTaskEligibility {
-  const shared = evaluateDiaryRequirement(task, unlocks, gameModeId, NO_AREAS, areaRoutes);
+  // Chunked: the task's own chunks stand in for its areas.
+  const checks = gameModeId === 'chunked' ? chunkedChecks : null;
+  const at = <R extends DiaryRequirement>(requirement: R): R => checks?.diaryTask(task.id, requirement) ?? requirement;
+  const shared = evaluateDiaryRequirement(at(task), unlocks, gameModeId, NO_AREAS, areaRoutes);
   if (!task.oneOf?.length) return shared;
 
   const routeResults = task.oneOf.map(option => (
-    evaluateDiaryRequirement(option, unlocks, gameModeId, NO_AREAS, areaRoutes)
+    evaluateDiaryRequirement(at(option), unlocks, gameModeId, NO_AREAS, areaRoutes)
   ));
   const eligibleRouteIndex = routeResults.findIndex(result => result.eligible);
   const confirmableRouteIndex = routeResults.findIndex(result => result.confirmable);

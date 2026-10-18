@@ -39,7 +39,7 @@ export interface ChunkContent {
 }
 
 /** Compact on-disk shape (see sync-chunk-content.mjs). */
-interface RawEntry {
+export interface RawEntry {
   n?: string;
   m?: [string, number, number?][];
   p?: string[];
@@ -124,7 +124,7 @@ const TASK_CATEGORY: Record<EntityKind, TaskUnlockCategory> = {
   monster: 'Monsters', npc: 'NPCs', object: 'Objects', shop: 'Shops', spawn: 'Spawns', quest: 'Items',
 };
 
-interface RawDoc {
+export interface RawDoc {
   version: number;
   source: string;
   sourceMeta?: {
@@ -159,6 +159,11 @@ interface RawDoc {
   taskUnlocks?: TaskUnlocks;
   /** Per-chunk ENTRY requirements: chunkId → quest(s) needed to enter at all. */
   questSections?: Record<string, string[]>;
+  /**
+   * Achievement Diary tasks the export places by chunk (challenges.Diary), keyed
+   * as the chunks' diary codes are ("Kourend & Kebos|EA2") → surface chunk ids.
+   */
+  diaryChunks?: Record<string, string[]>;
   /** Chunk ids that contain a bank. */
   banks?: string[];
   /** Faceted categories (food/boost/boss/…) → the chunk ids that contain them. */
@@ -278,6 +283,9 @@ export class ChunkContentService {
 
   shopInfo(name: string) { return this.doc?.shopInfo?.[name] ?? null; }
 
+  /** The dataset as loaded, for utils/chunkedContentChecks.ts. */
+  rawDocument(): RawDoc | null { return this.doc; }
+
   sourceMetadata(): RawDoc['sourceMeta'] | null {
     return this.doc?.sourceMeta ?? null;
   }
@@ -291,7 +299,10 @@ export class ChunkContentService {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), CHUNK_CONTENT_TIMEOUT_MS);
       // The walking sections and RuneLite's routes go with the transport graph.
-      const walking = Promise.all([loadWalkSections(), loadRunRoutes()]);
+      // So do Chunked mode's exact-chunk checks; if they fail to load the named areas stand in,
+      // and the content still counts as loaded.
+      const checks = import('../utils/chunkedContentChecks').then(m => m.install(this)).catch(() => {});
+      const walking = Promise.all([loadWalkSections(), loadRunRoutes(), checks]);
       walking.catch(() => {}); // Reported once the content arrives.
       this.promise = fetch(`${base}chunk-content.json?v=${CHUNK_CONTENT_DATA_VERSION}`, { signal: controller.signal })
         .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })

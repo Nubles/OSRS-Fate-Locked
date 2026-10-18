@@ -339,6 +339,18 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3, rules?: Rep
         }
         break;
       }
+      // Chunked: fate's marks (utils/fateLand.ts). A Blessed chunk records the
+      // Fate balance after it; a Chaotic one the Chaos Key it gave, if any.
+      case 'FATE': {
+        const chaosAwarded = e.meta?.chaosKeysAwarded;
+        if (typeof chaosAwarded === 'number' && Number.isSafeInteger(chaosAwarded) && chaosAwarded >= 0) s.chaosKeys += chaosAwarded;
+        const fateAfter = e.meta?.fatePointsAfter;
+        if (typeof fateAfter === 'number' && Number.isSafeInteger(fateAfter) && fateAfter >= 0) {
+          s.fatePoints = fateAfter;
+          fateEstimate = false;
+        }
+        break;
+      }
       // A new pet's Omni-Key. It isn't a roll: Fate stays as it was.
       case 'PET': {
         const awarded = e.meta?.specialKeysAwarded;

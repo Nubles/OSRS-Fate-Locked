@@ -22,6 +22,7 @@ import { classifyShop } from '../utils/merchantShops';
 import { resourceReqFor, resourceUsable } from '../utils/chunkResources';
 import { chunkTransportNodes, mobilityFor } from '../utils/chunkMobility';
 import { placeOf, chunkUnlocked, showChunkOnMap } from '../utils/chunkLocations';
+import { isChunkUnlocked } from '../utils/chunkAdjacency';
 import { isAreaReachable, isBankReachable, bankLocksActive } from '../utils/reachability';
 import { farmingPatchFor } from '../utils/farmingPatches';
 import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST, MOBILITY_LIST, BOSSES_LIST } from '../constants';
@@ -314,6 +315,23 @@ export const chunkQuestStatusLabel = (
   return visibleState === 'available' ? 'Ready' : 'Locked';
 };
 
+/**
+ * The chunk's bank row. A rolled bank is "available" only when the player can
+ * stand in it: in Chunked that also needs the bank's own chunk to be owned.
+ */
+export const chunkBankState = ({ bankUnlocked, chunkOwned, requirementsMet, bankLocks }: {
+  bankUnlocked: boolean;
+  /** Always true outside Chunked. */
+  chunkOwned: boolean;
+  requirementsMet: boolean;
+  bankLocks: boolean;
+}): Exclude<ChunkInfoBankState, null> => {
+  if (!bankUnlocked) return 'locked';
+  if (!chunkOwned) return 'chunk-locked';
+  if (!requirementsMet) return 'requirements';
+  return bankLocks ? 'available' : 'present';
+};
+
 export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, regionChunks, unlocked, wholeAreaOwnershipMixed, onClose }) => {
   const { unlocks, gameModeId, customMode } = useGame();
   const [mode, setMode] = useState<'chunk' | 'region'>('chunk');
@@ -357,11 +375,12 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     ? evaluateBankRequirements(content, chunk, unlocks, chunkContentService, gameModeId ?? 'vanilla') : null;
   const bankState: ChunkInfoBankState = mode !== 'chunk' || !chunkContentService.ready || !chunkContentService.hasBank(chunk.cx, chunk.cy)
     ? null
-    : !isBankReachable(chunk.cx, chunk.cy, unlocks, gameModeId, customMode)
-      ? 'locked'
-      : bankAccess?.status !== 'ALLOWED'
-        ? 'requirements'
-        : bankLocksActive(gameModeId, customMode) ? 'available' : 'present';
+    : chunkBankState({
+      bankUnlocked: isBankReachable(chunk.cx, chunk.cy, unlocks, gameModeId, customMode),
+      chunkOwned: gameModeId !== 'chunked' || isChunkUnlocked(`${chunk.cx},${chunk.cy}`, unlocks.chunks ?? []),
+      requirementsMet: bankAccess?.status === 'ALLOWED',
+      bankLocks: bankLocksActive(gameModeId, customMode),
+    });
 
   // Transport links grouped by network (fairy ring / canoe / boat / …). A link
   // is only usable if both the destination area AND its transport network are

@@ -68,3 +68,49 @@ describe('OSRS Farm Keys in Vanilla', () => {
     expect(within(card).getByText('Stash empty: games no longer roll')).toBeTruthy();
   });
 });
+
+describe('OSRS Farm Keys in Chunked (play review 8)', () => {
+  afterEach(() => { cleanup(); });
+
+  const start = async (chunks: string[]) => {
+    const { initialState } = await vi.importActual<typeof import('../../context/GameContext')>('../../context/GameContext');
+    game.current = {
+      ...initialState,
+      gameModeId: 'chunked',
+      unlocks: { ...initialState.unlocks, chunks },
+      history: [],
+      rollForKey,
+      claimPet: vi.fn(),
+    };
+  };
+
+  it('offers no Slayer master and no Brutus from the start chunk', async () => {
+    await start([]);
+    const { setFarmTab } = await import('./OsrsKeysState');
+    const { OsrsFarmKeys } = await import('./OsrsFarmKeys');
+    const { FARM_NO_BOSS, FARM_NO_SLAYER_MASTER } = await import('../ActionSection');
+    setFarmTab('SLAYER');
+    const { unmount } = render(<OsrsFarmKeys wide />);
+    expect(screen.getByText(FARM_NO_SLAYER_MASTER)).toBeTruthy();
+    expect(cardFor('Turael')).toBeNull();
+    unmount();
+    setFarmTab('BOSSING');
+    render(<OsrsFarmKeys wide />);
+    expect(cardFor('Brutus')).toBeNull();
+    expect(screen.getByText(FARM_NO_BOSS)).toBeTruthy();
+  });
+
+  it('offers a master or Brutus once their own chunk is owned', async () => {
+    await start(['50,51', '45,55']);
+    const { setFarmTab } = await import('./OsrsKeysState');
+    const { OsrsFarmKeys } = await import('./OsrsFarmKeys');
+    setFarmTab('SLAYER');
+    const { unmount } = render(<OsrsFarmKeys wide />);
+    expect(cardFor('Turael')).toBeTruthy();
+    expect(cardFor('Spria')).toBeNull();
+    unmount();
+    setFarmTab('BOSSING');
+    render(<OsrsFarmKeys wide />);
+    expect(cardFor('Brutus')).toBeTruthy();
+  });
+});

@@ -101,5 +101,7 @@ export function chunkEntryReason(
   }
   const unfinished = entryQuests.filter((quest) => KNOWN_QUESTS.has(quest) && !unlocks.quests.includes(quest));
   if (unfinished.length) return `Needs ${unfinished.join(' and ')}`;
+  // Chunked runs own the sea once they can sail, and reach it from a coast.
+  if (chunked && OCEAN_CHUNK_KEYS.has(key)) return 'Not reached from your coast';
   return chunked ? 'No route from your start chunk' : 'No route from Lumbridge';
 }

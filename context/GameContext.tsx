@@ -4,12 +4,14 @@ import { PendingUnlockReveal } from '../components/PendingUnlockReveal';
 import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type FailureFateAward, type FateCompensationChoice, type PetCompensationChoice, type GameEventMeta as DetectedGameEventMeta, type RollAnalyticsMeta, type RollIntent } from '../types';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
-import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
+import { usesActivityKeyReserves, resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
+import { exploreBlocker, withExploreStart } from '../utils/chunkExplore';
+import { leanTowardThread, withFateLand } from '../utils/fateLand';
 import { achievementBoostFor } from '../utils/achievementBoosts';
-import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, gambitKeys, STARTING_KEYS } from '../config/economy';
+import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, BREAKTHROUGH_CHANCE, GREED_REFUND_FRACTION, gambitKeys, STARTING_KEYS } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
 import { BARROWS_BROTHERS, INVOCATIONS, SACRIFICE_TIERS, WARD_COOLDOWN_ROLLS, invocationAllowed, SACRIFICE_USES_PER_RUN, type BarrowsBrother, type Invocation, type Ritual } from '../config/economy';
 import {
@@ -23,9 +25,16 @@ import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { CA_DATA } from '../data/caData';
 import { ALL_CA_TASKS, CATask } from '../data/caTasks';
 import { QUEST_DATA } from '../data/questData';
+import { breakthroughTier, chunkedCATaskBlocker, levelPastTierCap, mercyBlocker, mercyPool, tierCap } from '../utils/chunkedFate';
+import { chunkLabelWithCoords } from '../utils/chunkLabelWithCoords';
+import { tierBand } from '../utils/skillTiers';
+import { CHUNKED_START_KEY, chunkKey as chunkKeyOf, isFrontierChunk } from '../utils/chunkAdjacency';
+import { drawCartographerOffer, liveCartographerOffer } from '../utils/cartographerOffer';
+import { loadWalkSections } from '../utils/walkSections';
 import { UNLOCK_COST, randomUnlockPool, pickRandomPoolEntry, isRandomUnlockEligible, isValidUnlock } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { drawFloat, seededContext } from '../utils/seededRng';
+import { importWithRetry } from '../utils/lazyRetry';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import {
   getBackupDataById,
@@ -236,9 +245,23 @@ interface GameContextType extends GameState {
   acknowledgeUnlock: (id: string) => void;
   performRitual: (type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE') => void;
   performGambit: () => void;
+  /** The Cartographer's kept offer (drawn by fate the first time), as chunk keys. */
+  drawCartographerChoices: () => string[];
   performCartographer: (chunkKey: string, label: string) => void;
   /** The newer Void Altar rituals. Invocations take the handicaps the player picked. */
   castRitual: (id: NewRitualId, invocations?: Invocation['id'][]) => void;
+  /** Chunked: roll a waiting Breakthrough for a capped skill (utils/chunkedFate.ts). */
+  rollBreakthrough: (skill: string) => void;
+  /**
+   * Chunked: Fate's Mercy, a random chunk or skill tier when the run has nothing left.
+   * The provider lists the quests the run's chunks let it do now from the chunk
+   * content (Mercy stays shut while there are any) and draws the roll itself.
+   */
+  callOnFate: () => void;
+  /** Chunked: roll for the first time doing a thing in a newly unlocked chunk. */
+  exploreChunk: (chunk: string, fact: string, x?: number, y?: number) => void;
+  /** Chunked: a Gilded chunk's free Key roll (utils/fateLand.ts). */
+  rollGilded: (chunk: string, x?: number, y?: number) => void;
   levelUpSkill: (skill: string) => void;
   toggleAnimations: () => void;
   toggleAdvisors: () => void;
@@ -459,13 +482,14 @@ export type Action =
     };
   }
   | { type: 'SYNC_DETECTED_PROGRESS'; payload: DetectedProgress }
-  | { type: 'UNLOCK'; payload: { table: TableType; item: string; costType: 'key' | 'specialKey' | 'chaosKey'; cost: number; revealId?: string; /** Drawn under Saradomin's Ward. */ ward?: boolean } }
+  | { type: 'UNLOCK'; payload: { table: TableType; item: string; costType: 'key' | 'specialKey' | 'chaosKey'; /** Not read: every spend costs UNLOCK_COST. */ cost: number; /** A fate-drawn spend (rollUnlock); without one only an Omni-Key may name the item. */ revealId?: string; /** Drawn under Saradomin's Ward. */ ward?: boolean } }
   | { type: 'ACKNOWLEDGE_UNLOCK'; payload: string }
   | { type: 'RITUAL_LUCK' }
   | { type: 'RITUAL_GREED' }
   | { type: 'RITUAL_CHAOS' }
   | { type: 'RITUAL_TRANSMUTE' }
   | { type: 'RITUAL_GAMBIT'; payload: { won: boolean; stake: number; keysWon: number } }
+  | { type: 'CARTOGRAPHER_DRAW_OFFER' }
   | { type: 'RITUAL_CARTOGRAPHER'; payload: { chunkKey: string; label: string } }
   | { type: 'RITUAL_WARD' }
   | { type: 'RITUAL_TEARS' }
@@ -473,6 +497,13 @@ export type Action =
   | { type: 'RITUAL_INVOCATIONS'; payload: { ids: Invocation['id'][] } }
   | { type: 'RITUAL_BARROWS'; payload: { brother: BarrowsBrother['id'] } }
   | { type: 'RITUAL_SACRIFICE'; payload: { taken: SacrificeTier[] } }
+  // revealId: a won Breakthrough shows the unlock reveal, as a Key's unlock does.
+  | { type: 'CHUNKED_BREAKTHROUGH'; payload: { skill: string; roll: number; revealId?: string } }
+  // doableQuests: the quests the run's chunks let it do now. Only the panel
+  // has the chunk content to work them out, so the call must bring them.
+  | { type: 'CALL_ON_FATE'; payload: { roll: number; revealId: string; doableQuests: readonly string[] } }
+  | { type: 'CHUNK_EXPLORE'; payload: { chunk: string; fact: string } }
+  | { type: 'FATE_MARK_ROLL'; payload: { chunk: string } }
   | { type: 'LEVEL_UP'; payload: { skill: string; chaosRoll: number } }
   | { type: 'ADD_LOG'; payload: LogEntry }
   | { type: 'TOGGLE_PIN'; payload: string }
@@ -537,7 +568,7 @@ export function prepareKeyRollAction(
   meta?: DetectedGameEventMeta,
   context?: KeyRollContext,
 ): RollResultAction | null {
-  const vanillaBossContext = state.gameModeId === 'vanilla' && context?.kind === 'boss'
+  const vanillaBossContext = usesActivityKeyReserves(state.gameModeId) && context?.kind === 'boss'
     ? context
     : null;
   const vanillaClueContext = state.gameModeId === 'vanilla' && context?.kind === 'clue'
@@ -549,7 +580,7 @@ export function prepareKeyRollAction(
   const bossStage = vanillaBossContext
     ? vanillaBossKeyStage(vanillaBossContext.bossName, recordedBossAwarded)
     : null;
-  const vanillaMinigameContext = state.gameModeId === 'vanilla' && context?.kind === 'minigame'
+  const vanillaMinigameContext = usesActivityKeyReserves(state.gameModeId) && context?.kind === 'minigame'
     ? context
     : null;
   // A minigame that left the table (Rat Pits) has nothing left to pay.
@@ -701,9 +732,13 @@ export const prepareDetectedEventAcceptanceAction = (
     : 0;
   const guaranteedChaosKeysAwarded = progress.kind === 'SKILL_LEVEL' && progress.level > currentSkillLevel
     ? Array.from({ length: Math.min(99, progress.level) - currentSkillLevel }, (_, index) => currentSkillLevel + index + 1)
-      .filter(isSkillChaosMilestone).length
+      // Chunked: a milestone past the tier cap pays nothing, as a manual level-up there.
+      .filter(level => isSkillChaosMilestone(level) && !levelPastTierCap(state.gameModeId, state.unlocks, progress.skill, level)).length
     : 0;
+  // The 2% Chaos chance rolls once, as a manual level-up's does, and not for
+  // a level past the Chunked tier cap (LEVEL_UP's rule).
   const randomChaosKeysAwarded = progress.kind === 'SKILL_LEVEL' && progress.level > currentSkillLevel
+    && !levelPastTierCap(state.gameModeId, state.unlocks, progress.skill, currentSkillLevel + 1)
     && nextDice('detected-skill-chaos', 0, 100) <= 2
     ? 1
     : 0;
@@ -736,6 +771,9 @@ export const prepareCATaskCompletionActions = (
 } => {
   const decision = caTaskCompletionDecision(task, state.unlocks.completedTasks);
   if (decision.ok === false) return { result: decision, actions: [] };
+  // Chunked: only at a boss in the run's chunks (exact chunks).
+  const outsideChunks = chunkedCATaskBlocker(task, state.unlocks, state.gameModeId);
+  if (outsideChunks) return { result: { ok: false, reason: outsideChunks }, actions: [] };
   const tier = CA_DATA[task.tierId];
 
   const completedIds = [...state.unlocks.completedTasks, task.id];
@@ -767,6 +805,8 @@ type LevelUpAction = Extract<TransitionAction, { type: 'LEVEL_UP' }>;
 /**
  * Preserve the established level reward RNG context by deciding the reward
  * before LEVEL_UP can append history, while applying it after the level state.
+ * In Chunked, a level past the skill's tier cap has no reward to roll
+ * (utils/chunkedFate.ts levelPastTierCap), so rewardAction is null.
  */
 export const prepareLevelUpActions = (
   state: GameState,
@@ -775,12 +815,14 @@ export const prepareLevelUpActions = (
   nextDice: DiceRoller,
 ): {
   levelAction: LevelUpAction;
-  rewardAction: RollResultAction;
+  rewardAction: RollResultAction | null;
 } => {
   const newLevel = (state.unlocks.levels[skill] || 1) + 1;
   const rollChance = skillLevelKeyChance(newLevel);
+  const levelAction: LevelUpAction = { type: 'LEVEL_UP', payload: { skill, chaosRoll } };
+  if (levelPastTierCap(state.gameModeId, state.unlocks, skill, newLevel)) return { levelAction, rewardAction: null };
   return {
-    levelAction: { type: 'LEVEL_UP', payload: { skill, chaosRoll } },
+    levelAction,
     rewardAction: prepareKeyRollAction(
       state,
       `${skill} Level ${newLevel}`,
@@ -835,12 +877,14 @@ const chainAppendedHistory = (prev: GameState['history'], next: GameState['histo
 };
 
 /**
- * Anti-softlock insurance for runs still stuck at their start: Xtreme Start
- * (see XTREME_MILESTONE_INTERVAL in config/economy.ts) before any area is
- * unlocked, and Chunked (CHUNKED_MILESTONE_INTERVAL, tighter because one
- * chunk is a much smaller training footprint than Lumbridge) before any
- * chunk is. A guaranteed Key every interval of total level; deterministic,
+ * Anti-softlock insurance for Xtreme Start runs still stuck at their start
+ * (see XTREME_MILESTONE_INTERVAL in config/economy.ts): before any area is
+ * unlocked, a guaranteed Key every interval of total level; deterministic,
  * not RNG. A manual level-up and a detected RuneLite level-up both pay it.
+ * Chunked had its own branch (a Key every 25 total levels on the start
+ * chunk) until October 2026; it was removed because a guaranteed Key whose
+ * table the player picks is not fate's pick, and Fate's Mercy now covers a
+ * dry start. Old saves keep their chunkedMilestoneClaimed counter, unread.
  */
 const startMilestoneInsurance = (
   state: GameState,
@@ -848,7 +892,6 @@ const startMilestoneInsurance = (
   now: number,
 ): Pick<GameState, 'keys'> & {
   xtremeMilestoneClaimed: number;
-  chunkedMilestoneClaimed: number;
   entries: LogEntry[];
 } => {
   let keys = state.keys;
@@ -871,24 +914,7 @@ const startMilestoneInsurance = (
     }
   }
 
-  let chunkedMilestoneClaimed = state.chunkedMilestoneClaimed ?? 0;
-  if (state.gameModeId === 'chunked' && (state.unlocks.chunks ?? []).length === 0) {
-    const eligible = Math.floor(totalLevel / CHUNKED_MILESTONE_INTERVAL);
-    if (eligible > chunkedMilestoneClaimed) {
-      const gained = eligible - chunkedMilestoneClaimed;
-      keys += gained;
-      chunkedMilestoneClaimed = eligible;
-      entries.push({
-        id: generateId(),
-        timestamp: now,
-        type: 'XTREME_MILESTONE',
-        message: `Chunked milestone: Total Level ${eligible * CHUNKED_MILESTONE_INTERVAL} gives ${gained === 1 ? 'a guaranteed Key' : `${gained} guaranteed Keys`}.`,
-        details: `Start-chunk milestone: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels until you unlock another chunk.`,
-        meta: { totalLevel, gained }
-      });
-    }
-  }
-  return { keys, xtremeMilestoneClaimed, chunkedMilestoneClaimed, entries };
+  return { keys, xtremeMilestoneClaimed, entries };
 };
 
 /** What a ritual costs now: nothing when an achievement's free ritual of that kind is waiting. */
@@ -914,6 +940,39 @@ const lastGreedCost = (state: GameState): number => {
     if (e.type === 'ALTAR' && e.meta?.ritual === 'GREED' && typeof e.meta.fateCost === 'number') return e.meta.fateCost;
   }
   return ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier);
+};
+
+/** The unlock state with one entry of a table opened: a tier bumped or an item added. */
+const applyTableUnlock = (unlocks: UnlockState, table: TableType, item: string): UnlockState => {
+  const newUnlocks = { ...unlocks };
+  // Defensive helpers: pushing into an array category dedupes against the
+  // existing list so a corrupted save or duplicate dispatch can't end up
+  // with the same item unlocked twice. Tier categories clamp at the cap
+  // so an over-unlock can't exceed the rules.
+  const pushOnce = (list: string[]): string[] => list.includes(item) ? list : [...list, item];
+  const bumpTier = (current: number, max: number): number => Math.min(current + 1, max);
+
+  if (table === TableType.SKILLS) newUnlocks.skills = { ...newUnlocks.skills, [item]: bumpTier(newUnlocks.skills[item] || 0, 10) };
+  else if (table === TableType.EQUIPMENT) newUnlocks.equipment = { ...newUnlocks.equipment, [item]: bumpTier(newUnlocks.equipment[item] || 0, EQUIPMENT_TIER_MAX) };
+  else if (table === TableType.REGIONS) {
+    const canonical = canonicalAreaName(item);
+    if (!canonicalizeAreaUnlocks(newUnlocks.regions).regions.includes(canonical)) {
+      newUnlocks.regions = [...newUnlocks.regions, canonical];
+    }
+  }
+  else if (table === TableType.MOBILITY) newUnlocks.mobility = pushOnce(newUnlocks.mobility);
+  else if (table === TableType.ARCANA) newUnlocks.arcana = pushOnce(newUnlocks.arcana);
+  else if (table === TableType.POH) newUnlocks.housing = pushOnce(newUnlocks.housing);
+  else if (table === TableType.MERCHANTS) newUnlocks.merchants = pushOnce(newUnlocks.merchants);
+  else if (table === TableType.MINIGAMES) newUnlocks.minigames = pushOnce(newUnlocks.minigames);
+  else if (table === TableType.BOSSES) newUnlocks.bosses = pushOnce(newUnlocks.bosses);
+  else if (table === TableType.STORAGE) newUnlocks.storage = pushOnce(newUnlocks.storage);
+  else if (table === TableType.GUILDS) newUnlocks.guilds = pushOnce(newUnlocks.guilds);
+  else if (table === TableType.FARMING_LAYERS) newUnlocks.farming = pushOnce(newUnlocks.farming);
+  else if (table === TableType.SLAYER_UNLOCKS) newUnlocks.slayerUnlocks = pushOnce(newUnlocks.slayerUnlocks);
+  else if (table === TableType.CHUNKS) newUnlocks.chunks = pushOnce(newUnlocks.chunks ?? []);
+  else if (table === TableType.BANKS) newUnlocks.banks = pushOnce(newUnlocks.banks ?? []);
+  return newUnlocks;
 };
 
 const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
@@ -1098,7 +1157,6 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         customMode: action.payload.customRules,
         gameModeLocked: true,
         xtremeMilestoneClaimed: Math.max(state.xtremeMilestoneClaimed ?? 0, Math.floor(startTotal / XTREME_MILESTONE_INTERVAL)),
-        chunkedMilestoneClaimed: Math.max(state.chunkedMilestoneClaimed ?? 0, Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL)),
       };
     }
 
@@ -1137,7 +1195,6 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           ...rolled,
           keys: insurance.keys,
           xtremeMilestoneClaimed: insurance.xtremeMilestoneClaimed,
-          chunkedMilestoneClaimed: insurance.chunkedMilestoneClaimed,
           history: [...rolled.history, ...insurance.entries],
         };
       }
@@ -1192,7 +1249,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
     case 'ROLL_RESULT': {
       const { success, omni, pity, roll, baseThreshold, threshold, source, failureFate = 1, x, y, meta, context, ritual: ritualRoll } = action.payload;
-      const vanillaBossContext = state.gameModeId === 'vanilla' && context?.kind === 'boss'
+      const vanillaBossContext = usesActivityKeyReserves(state.gameModeId) && context?.kind === 'boss'
         ? context
         : null;
       const vanillaClueContext = state.gameModeId === 'vanilla' && context?.kind === 'clue'
@@ -1204,7 +1261,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const bossStage = vanillaBossContext
         ? vanillaBossKeyStage(vanillaBossContext.bossName, recordedBossAwarded)
         : null;
-      const vanillaMinigameContext = state.gameModeId === 'vanilla' && context?.kind === 'minigame'
+      const vanillaMinigameContext = usesActivityKeyReserves(state.gameModeId) && context?.kind === 'minigame'
         ? context
         : null;
       if (vanillaMinigameContext && !isKnownVanillaMinigame(vanillaMinigameContext.minigameName)) return state;
@@ -1437,7 +1494,16 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return { ...newState, history: newHistory };
     }
     case 'UNLOCK': {
-      const { table, item, costType, cost } = action.payload;
+      const { table, item, costType } = action.payload;
+      // Every Key spend costs UNLOCK_COST, whatever the caller says.
+      const cost = UNLOCK_COST;
+      // Chunked has no Areas table, and an Omni-Key can't pick land there:
+      // land comes from Chunk Keys, Chaos Keys, the Cartographer and Fate's Mercy.
+      if (state.gameModeId === 'chunked'
+        && (table === TableType.REGIONS || (table === TableType.CHUNKS && costType === 'specialKey'))) return state;
+      // Only an Omni-Key names the exact entry. A Standard or Chaos Key spend
+      // unlocks what fate drew (rollUnlock), which always comes with a reveal.
+      if (!action.payload.revealId && costType !== 'specialKey') return state;
       if (action.payload.revealId && (state.pendingUnlock || costType === 'specialKey'
         || (costType === 'key' ? state.keys < cost : state.chaosKeys < 1)
         || !isRandomUnlockEligible(table, item, state.unlocks, state.gameModeId, costType))) return state;
@@ -1447,39 +1513,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       if (warded && action.payload.ward !== true) return state;
       // Direct (Omni) unlocks must be paid for and still unlockable, or two
       // quick confirmations could spend one Omni-key twice.
-      if (!action.payload.revealId && (
-        (costType === 'specialKey' ? state.specialKeys < 1
-          : costType === 'key' ? state.keys < cost : state.chaosKeys < 1)
-        || !isValidUnlock(table, item, state.unlocks))) return state;
+      if (!action.payload.revealId && (state.specialKeys < 1 || !isValidUnlock(table, item, state.unlocks))) return state;
 
-      const newUnlocks = { ...state.unlocks };
-      // Defensive helpers: pushing into an array category dedupes against the
-      // existing list so a corrupted save or duplicate dispatch can't end up
-      // with the same item unlocked twice. Tier categories clamp at the cap
-      // so an over-unlock can't exceed the rules.
-      const pushOnce = (list: string[]): string[] => list.includes(item) ? list : [...list, item];
-      const bumpTier = (current: number, max: number): number => Math.min(current + 1, max);
-
-      if (table === TableType.SKILLS) newUnlocks.skills = { ...newUnlocks.skills, [item]: bumpTier(newUnlocks.skills[item] || 0, 10) };
-      else if (table === TableType.EQUIPMENT) newUnlocks.equipment = { ...newUnlocks.equipment, [item]: bumpTier(newUnlocks.equipment[item] || 0, EQUIPMENT_TIER_MAX) };
-      else if (table === TableType.REGIONS) {
-        const canonical = canonicalAreaName(item);
-        if (!canonicalizeAreaUnlocks(newUnlocks.regions).regions.includes(canonical)) {
-          newUnlocks.regions = [...newUnlocks.regions, canonical];
-        }
-      }
-      else if (table === TableType.MOBILITY) newUnlocks.mobility = pushOnce(newUnlocks.mobility);
-      else if (table === TableType.ARCANA) newUnlocks.arcana = pushOnce(newUnlocks.arcana);
-      else if (table === TableType.POH) newUnlocks.housing = pushOnce(newUnlocks.housing);
-      else if (table === TableType.MERCHANTS) newUnlocks.merchants = pushOnce(newUnlocks.merchants);
-      else if (table === TableType.MINIGAMES) newUnlocks.minigames = pushOnce(newUnlocks.minigames);
-      else if (table === TableType.BOSSES) newUnlocks.bosses = pushOnce(newUnlocks.bosses);
-      else if (table === TableType.STORAGE) newUnlocks.storage = pushOnce(newUnlocks.storage);
-      else if (table === TableType.GUILDS) newUnlocks.guilds = pushOnce(newUnlocks.guilds);
-      else if (table === TableType.FARMING_LAYERS) newUnlocks.farming = pushOnce(newUnlocks.farming);
-      else if (table === TableType.SLAYER_UNLOCKS) newUnlocks.slayerUnlocks = pushOnce(newUnlocks.slayerUnlocks);
-      else if (table === TableType.CHUNKS) newUnlocks.chunks = pushOnce(newUnlocks.chunks ?? []);
-      else if (table === TableType.BANKS) newUnlocks.banks = pushOnce(newUnlocks.banks ?? []);
+      const newUnlocks = applyTableUnlock(state.unlocks, table, item);
 
       let newState = { ...state, unlocks: newUnlocks };
       if (warded) {
@@ -1491,8 +1527,11 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       else if (costType === 'specialKey') newState.specialKeys -= 1;
       else if (costType === 'chaosKey') newState.chaosKeys -= 1;
 
-      // Banks are keyed by chunk id ("13618"); show the place name instead.
-      const itemLabel = table === TableType.BANKS ? (BANK_BY_ID[item]?.name ?? item) : item;
+      // Banks are keyed by chunk id ("13618") and chunks by "cx,cy"; show the
+      // place name instead. This text goes to Discord's #live-unlocks and /progress.
+      const itemLabel = table === TableType.BANKS ? (BANK_BY_ID[item]?.name ?? item)
+        : table === TableType.CHUNKS ? chunkLabelWithCoords(item)
+        : item;
       const log: LogEntry = {
           id: generateId(),
           timestamp: now,
@@ -1580,16 +1619,32 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       };
     }
 
+    case 'CARTOGRAPHER_DRAW_OFFER': {
+      // Fate draws the Cartographer's three frontier chunks once, the first
+      // time the chooser opens, and the run keeps them: logging more never
+      // reshuffles them. A new offer is drawn only after the ritual charts
+      // one, or once none of the kept chunks is on the frontier any more.
+      if (state.gameModeId !== 'chunked' || liveCartographerOffer(state).length > 0) return state;
+      const offer = drawCartographerOffer(state).map(chunkKeyOf);
+      return offer.length === 0 ? state : { ...state, cartographerOffer: offer };
+    }
+
     case 'RITUAL_CARTOGRAPHER': {
-      // Chunked mode's one moment of agency: the chosen frontier chunk
-      // unlocks directly (candidates were drawn from the live frontier by
-      // the Altar UI).
-      const { chunkKey: chosen, label } = action.payload;
+      // The player chooses one of the three frontier chunks fate drew for
+      // the offer (CARTOGRAPHER_DRAW_OFFER); the reducer refuses any other.
+      // It checks the frontier itself too: only a Chunked run, and only a
+      // chunk next to its land (never the start chunk or one it holds).
+      const { chunkKey: chosen } = action.payload;
       const price = ritualPrice(state, 'CARTOGRAPHER');
       const cost = price.cost;
-      if (state.fatePoints < cost || (state.unlocks.chunks ?? []).includes(chosen)) return state;
+      const held = state.unlocks.chunks ?? [];
+      if (state.gameModeId !== 'chunked' || state.fatePoints < cost || chosen === CHUNKED_START_KEY
+        || held.includes(chosen) || !isFrontierChunk(chosen, held, state.unlocks)
+        || !liveCartographerOffer(state).includes(chosen)) return state;
+      const label = chunkLabelWithCoords(chosen);
       return {
         ...payRitual(state, price),
+        cartographerOffer: undefined,
         unlocks: { ...state.unlocks, chunks: [...(state.unlocks.chunks ?? []), chosen] },
         history: [...state.history, {
           id: generateId(), timestamp: now, type: 'ALTAR',
@@ -1673,6 +1728,99 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       };
     }
 
+    case 'CHUNKED_BREAKTHROUGH': {
+      const { skill, roll } = action.payload;
+      // A reveal still showing must be acknowledged first, as the button says.
+      if (state.pendingUnlock) return state;
+      const tier = breakthroughTier(state, skill);
+      if (tier === null) return state;
+      const won = roll < BREAKTHROUGH_CHANCE;
+      const band = tierBand(tier);
+      const chunkedBreakthroughs = { ...(state.chunkedBreakthroughs ?? {}), [skill]: tier };
+      if (!won) {
+        return {
+          ...state,
+          chunkedBreakthroughs,
+          history: [...state.history, {
+            id: generateId(), timestamp: now, type: 'LEVEL_UP',
+            message: `No Breakthrough for ${skill}`,
+            details: `Fate kept ${skill} at tier ${tier - 1} (methods to level ${tierCap(tier - 1)}). Levels past ${tierCap(tier - 1)} roll nothing until a Key opens levels ${band.label}.`,
+            meta: { breakthrough: skill, tier, won: false },
+          }],
+        };
+      }
+      const { revealId } = action.payload;
+      return {
+        ...state,
+        chunkedBreakthroughs,
+        unlocks: applyTableUnlock(state.unlocks, TableType.SKILLS, skill),
+        // A free fate draw: the reveal shows no cost, and nothing is spent.
+        ...(revealId ? { pendingUnlock: { id: revealId, table: TableType.SKILLS, item: skill, costType: 'breakthrough' as const, cost: 0 } } : {}),
+        history: [...state.history, {
+          id: generateId(), timestamp: now, type: 'UNLOCK',
+          message: `Unlocked ${skill} tier ${tier} · Breakthrough`,
+          details: `Breakthrough: fate opened levels ${band.label}. Nothing was spent.`,
+          meta: { item: skill, category: TableType.SKILLS, cost: 0, costType: 'breakthrough', tier },
+        }],
+        lastEvent: revealId ? null : { id: generateId(), type: 'UNLOCK', meta: { item: skill, cost: 0, category: TableType.SKILLS } },
+      };
+    }
+
+    case 'CHUNK_EXPLORE': {
+      // Chunked exploring: record the thing first; its Key roll follows as a
+      // ROLL_RESULT, the way a ticked quest rolls (utils/chunkExplore.ts).
+      const { chunk, fact } = action.payload;
+      if (exploreBlocker(state, chunk, fact) !== null) return state;
+      const record = state.chunkExplore!;
+      return {
+        ...state,
+        chunkExplore: { ...record, done: { ...record.done, [chunk]: [...(record.done[chunk] ?? []), fact] } },
+      };
+    }
+
+    case 'FATE_MARK_ROLL': {
+      // A Gilded chunk's free Key roll: use it up first; the roll follows as a
+      // ROLL_RESULT, the way an exploring roll does (utils/fateLand.ts).
+      const land = state.fateLand;
+      if (!land || !land.gilded.includes(action.payload.chunk)) return state;
+      return { ...state, fateLand: { ...land, gilded: land.gilded.filter(key => key !== action.payload.chunk) } };
+    }
+
+    case 'CALL_ON_FATE': {
+      // Fate's Mercy: only when the run has truly run dry. Fate draws from the
+      // same Chunks and Skills pools a Key would roll; nothing is spent.
+      // The doable quests need the chunk content, which the provider loads
+      // and reads itself (callOnFate, utils/mercyQuests.ts); a call that
+      // brings none is refused (utils/chunkedFate.ts).
+      const { doableQuests, roll } = action.payload;
+      if (!Array.isArray(doableQuests) || mercyBlocker(state, doableQuests) !== null) return state;
+      // The roll is the provider's nextFloat('mercy'). On a seeded run the
+      // reducer can recompute that draw, so it refuses any other roll: a
+      // caller can't steer which chunk or skill fate opens (audit V3).
+      if (typeof roll !== 'number' || !(roll >= 0 && roll < 1)
+        || (state.rngSeed && roll !== drawFloat(state.rngSeed, seededContext(state), 'mercy'))) return state;
+      const pool = mercyPool(state);
+      const pick = pool[Math.min(pool.length - 1, Math.floor(roll * pool.length))];
+      // A chunk, a skill tier, or the patch type, guild, merchant or gear slot a skill needs to train.
+      const label = pick.table === TableType.CHUNKS ? chunkLabelWithCoords(pick.item)
+        : pick.table === TableType.SKILLS ? `${pick.item} tier ${(state.unlocks.skills[pick.item] ?? 0) + 1}`
+        : pick.table === TableType.FARMING_LAYERS ? `${pick.item} patches`
+        : pick.table === TableType.EQUIPMENT ? `${pick.item} tier ${(state.unlocks.equipment[pick.item] ?? 0) + 1}` : pick.item;
+      return {
+        ...state,
+        unlocks: applyTableUnlock(state.unlocks, pick.table, pick.item),
+        // A free fate draw: the reveal shows no cost, and nothing is spent.
+        pendingUnlock: { id: action.payload.revealId, table: pick.table, item: pick.item, costType: 'mercy', cost: 0 },
+        history: [...state.history, {
+          id: generateId(), timestamp: now, type: 'UNLOCK',
+          message: `Unlocked ${label} · Fate's Mercy`,
+          details: `Fate's Mercy: fate drew this from ${pool.length} ${pool.length === 1 ? 'entry' : 'entries'}. Nothing was spent.`,
+          meta: { item: pick.item, category: pick.table, cost: 0, costType: 'mercy' },
+        }],
+        lastEvent: null,
+      };
+    }
+
     case 'LEVEL_UP': {
       const { skill, chaosRoll } = action.payload;
 
@@ -1689,8 +1837,11 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
       const logs = [...state.history];
       const RNG_CHAOS_CHANCE = 0.02;
-      const randomChaosAwarded = chaosRoll < RNG_CHAOS_CHANCE;
-      const guaranteedChaosAwarded = isSkillChaosMilestone(newLevel);
+      // Chunked: a level past the tier cap is logged but rolls nothing, so
+      // Fate's Mercy and Breakthrough read the skill as capped.
+      const pastCap = levelPastTierCap(state.gameModeId, state.unlocks, skill, newLevel);
+      const randomChaosAwarded = !pastCap && chaosRoll < RNG_CHAOS_CHANCE;
+      const guaranteedChaosAwarded = !pastCap && isSkillChaosMilestone(newLevel);
       const chaosKeysAwarded =
         Number(randomChaosAwarded) + Number(guaranteedChaosAwarded);
       const chaosKeyAwarded = chaosKeysAwarded > 0;
@@ -1714,8 +1865,19 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           },
         });
       }
+      if (pastCap) {
+        const cap = tierCap(state.unlocks.skills[skill] ?? 0);
+        logs.push({
+          id: generateId(),
+          timestamp: now,
+          type: 'LEVEL_UP',
+          message: `${skill} Level ${newLevel}: no roll`,
+          details: `Past its tier cap of level ${cap}. In Chunked, levels past the cap roll no Keys until a Key or a Breakthrough opens the next tier.`,
+          meta: { skill, level: newLevel, totalLevel, pastTierCap: cap, chaosKeysAwarded: 0, chaosKeyAwarded: false },
+        });
+      }
 
-      const { keys, xtremeMilestoneClaimed, chunkedMilestoneClaimed, entries } =
+      const { keys, xtremeMilestoneClaimed, entries } =
         startMilestoneInsurance(state, totalLevel, now);
       logs.push(...entries);
 
@@ -1727,7 +1889,6 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         keys,
         chaosKeys,
         xtremeMilestoneClaimed,
-        chunkedMilestoneClaimed,
         history: logs,
         lastEvent: { id: generateId(), type: 'LEVEL_UP', meta: eventMeta }
       };
@@ -1876,10 +2037,17 @@ export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, 
   // A replacement brings its own history. Chaining it as an append would
   // splice in, or link to, entries of the run it replaces.
   if (action.type === 'LOAD_SAVE' || action.type === 'RESET') return rawNext;
-  const settled = settleKeysOwed(state, rawNext, action);
-  const next = settled.history === state.history
+  // A Chunked run's first chunk under the exploring rule starts its record.
+  // Then fate has its say on any chunk the run just gained (utils/fateLand.ts).
+  const settled = withFateLand(state, withExploreStart(state, settleKeysOwed(state, rawNext, action)), Date.now(), generateId, MAX_COUNTER);
+  const chained = settled.history === state.history
     ? settled
     : { ...settled, history: chainAppendedHistory(state.history, settled.history) };
+  // A Chunked run's last progress (a Key, an unlock or a level) times Fate's
+  // Mercy's quiet spell (utils/chunkedFate.ts mercyQuietLeft).
+  const progressed = chained.gameModeId === 'chunked' && (chained.unlocks !== state.unlocks
+    || chained.keys > state.keys || chained.specialKeys > state.specialKeys || chained.chaosKeys > state.chaosKeys);
+  const next = progressed ? { ...chained, chunkedProgressAt: Date.now() } : chained;
   return { ...next, runRevision: state.runRevision + 1 };
 };
 
@@ -2157,6 +2325,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     initialLoadWarningRef.current = null;
     showToast(warning);
   }, []);
+
+  // Chunked mode's frontier walks the walking data (utils/walkSections.ts),
+  // which otherwise loads only with the map's chunk content. Load it with
+  // the run, so a Chunks roll uses it rather than the bare chunk grid.
+  const chunkedRun = state.gameModeId === 'chunked';
+  useEffect(() => {
+    if (chunkedRun) loadWalkSections().catch(() => { /* the grid stands in; the map retries */ });
+  }, [chunkedRun]);
 
   // Keep the free-area baseline in sync with the run's mode, synchronously so
   // the unlock helpers (chunkUnlocked, journal status, …) read the right set on
@@ -2885,6 +3061,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       if (warded && !usable) return;
       let pool = randomUnlockPool(current.unlocks, current.gameModeId, costType, table, current.customMode);
       if (warded && usable) pool = pool.filter(usable);
+      // Chunked: one Chunks draw in six goes toward Fate's Thread (utils/fateLand.ts).
+      if (table === TableType.CHUNKS) pool = leanTowardThread(pool, current.fateLand?.thread, nextFloat('fate-thread-lean'));
       const selection = pickRandomPoolEntry(pool, () => nextFloat(costType === 'key' ? 'gacha' : 'chaos'));
       if (!selection) {
         showToast(warded
@@ -2945,7 +3123,74 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     }
   }, [commitAction, nextFloat]);
 
-  /** Cartographer: unlock the chosen frontier chunk (Chunked mode only). */
+  const rollBreakthrough = useCallback((skill: string) => {
+    const before = stateRef.current;
+    const tier = breakthroughTier(before, skill);
+    if (tier === null || before.pendingUnlock) return;
+    if (authorizeOwnership().ok === false) {
+      showToast('Save ownership is unavailable. Restore save access before rolling.');
+      return;
+    }
+    const next = commitAction({ type: 'CHUNKED_BREAKTHROUGH', payload: { skill, roll: nextFloat('breakthrough'), revealId: generateId() } });
+    if (next === before) return;
+    // A win plays the unlock reveal once saved, as a Key's unlock does; a loss
+    // says so, or the row would just vanish.
+    if (next.pendingUnlock) {
+      stageCoordinatedSnapshot(serializeGameState(next));
+      if (coordinator) void settleCoordinatedFlush();
+      else flushCurrentSave();
+    } else {
+      showToast(`No Breakthrough: ${skill} stays at tier ${tier - 1}. Levels past ${tierCap(tier - 1)} roll nothing until a Key opens its next tier.`);
+    }
+  }, [authorizeOwnership, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
+
+  const callOnFate = useCallback(() => {
+    if (mercyBlocker(stateRef.current) !== null) return;
+    if (authorizeOwnership().ok === false) {
+      showToast('Save ownership is unavailable. Restore save access before calling on fate.');
+      return;
+    }
+    // Mercy stays shut while a quest in the run's chunks is doable. That needs
+    // the chunk content, so the provider loads it and lists the quests itself
+    // rather than trusting the caller's list; without the content, no call.
+    importWithRetry(() => import('../utils/mercyQuests'))
+      .then(({ loadDoableChunkedQuests }) => loadDoableChunkedQuests(() => stateRef.current))
+      .then((doableQuests) => {
+        if (!mountedRef.current) return;
+        if (doableQuests === null) {
+          showToast("Fate's Mercy couldn't check your chunks for doable quests. Check your connection and try again.");
+          return;
+        }
+        const before = stateRef.current;
+        const next = commitAction({ type: 'CALL_ON_FATE', payload: { roll: nextFloat('mercy'), revealId: generateId(), doableQuests } });
+        if (next === before) return;
+        stageCoordinatedSnapshot(serializeGameState(next));
+        if (coordinator) void settleCoordinatedFlush();
+        else flushCurrentSave();
+      }, () => showToast("Fate's Mercy couldn't load. Check your connection and try again."));
+  }, [authorizeOwnership, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
+
+  const rollGilded = useCallback((chunk: string, x?: number, y?: number) => {
+    const before = stateRef.current;
+    if (before.pendingUnlock || !before.fateLand?.gilded.includes(chunk)) return;
+    const next = commitAction({ type: 'FATE_MARK_ROLL', payload: { chunk } });
+    if (next === before) return;
+    rollForKey(DropSource.FATE_MARK, DROP_RATES[DropSource.FATE_MARK], failureFateForSource(DropSource.FATE_MARK), x, y);
+  }, [commitAction, rollForKey]);
+
+  const exploreChunk = useCallback((chunk: string, fact: string, x?: number, y?: number) => {
+    if (exploreBlocker(stateRef.current, chunk, fact) !== null) return;
+    commitAction({ type: 'CHUNK_EXPLORE', payload: { chunk, fact } });
+    rollForKey(DropSource.CHUNK_EXPLORE, DROP_RATES[DropSource.CHUNK_EXPLORE], failureFateForSource(DropSource.CHUNK_EXPLORE), x, y);
+  }, [commitAction, rollForKey]);
+
+  /** Cartographer: the offer fate drew (drawing it now if none is kept), as chunk keys. */
+  const drawCartographerChoices = useCallback((): string[] => {
+    const next = commitAction({ type: 'CARTOGRAPHER_DRAW_OFFER' });
+    return liveCartographerOffer(next);
+  }, [commitAction]);
+
+  /** Cartographer: unlock the chosen chunk of the offer (Chunked mode only). */
   const performCartographer = useCallback((chunkKey: string, label: string) => {
     commitAction({ type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey, label } });
   }, [commitAction]);
@@ -2958,7 +3203,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     const chaosRoll = nextFloat('levelup');
     const prepared = prepareLevelUpActions(stateRef.current, skill, chaosRoll, nextDice);
     const levelState = commitAction(prepared.levelAction);
-    if ((levelState.unlocks.levels[skill] || 1) === levelBefore) return;
+    if ((levelState.unlocks.levels[skill] || 1) === levelBefore || !prepared.rewardAction) return;
     const levelUpMeta = levelState.lastEvent?.type === 'LEVEL_UP'
       ? levelState.lastEvent.meta
       : undefined;
@@ -3496,8 +3741,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     acknowledgeUnlock,
     performRitual,
     performGambit,
+    drawCartographerChoices,
     performCartographer,
     castRitual,
+    rollBreakthrough,
+    callOnFate,
+    exploreChunk,
+    rollGilded,
     levelUpSkill,
     toggleAnimations,
     toggleAdvisors,
@@ -3551,8 +3801,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     acknowledgeUnlock,
     performRitual,
     performGambit,
+    drawCartographerChoices,
     performCartographer,
     castRitual,
+    rollBreakthrough,
+    callOnFate,
+    exploreChunk,
+    rollGilded,
     levelUpSkill,
     toggleAnimations,
     toggleAdvisors,
@@ -3615,7 +3870,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
           </div>
         </div>
       ) : state.pendingUnlock ? <PendingUnlockReveal pending={state.pendingUnlock} animationsEnabled={state.animationsEnabled} onAccept={acknowledgeUnlock}
-        tier={state.pendingUnlock.table === TableType.SKILLS ? state.unlocks.skills[state.pendingUnlock.item] : undefined} /> : null}
+        tier={state.pendingUnlock.table === TableType.SKILLS ? state.unlocks.skills[state.pendingUnlock.item] : undefined}
+        chunkedUnlocks={state.gameModeId === 'chunked' ? state.unlocks : undefined} /> : null}
     </GameContext.Provider>
   );
 };

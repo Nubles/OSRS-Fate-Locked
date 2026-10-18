@@ -14,6 +14,7 @@
  */
 import { chunkContentService, EntityKind } from '../services/ChunkContentService';
 import { resourceReqFor } from './chunkResources';
+import { farmingPatchFor } from './farmingPatches';
 import { tierForLevel } from './skillTiers';
 
 export interface SkillChunkNode {
@@ -38,7 +39,6 @@ const STATION_RULES: [RegExp, string][] = [
   [/spinning wheel|\bloom\b|potter'?s wheel|pottery oven|potter'?s oven/i, 'Crafting'],
   [/\bbonfire\b|\bbrazier\b|^campfire$|fire pit/i, 'Firemaking'],
   [/gilded altar|chaos altar \(prayer\)|altar of (guthix|zamorak|saradomin)|exposed altar|ectofuntus|^altar$/i, 'Prayer'],
-  [/\bsawmill\b|workbench/i, 'Construction'],
 ];
 const NOT_STATION = /broken|space|half-built|rusted|cart wheel|experimental|\bbank\b/i;
 
@@ -48,10 +48,35 @@ const stationReq = (name: string): Req | null => {
   return null;
 };
 
-// Farming patches — usable from low levels (the crop sets the real level), so
-// they're surfaced at level 1. Excludes look-alikes like "Patched Wall".
-const FARMING_PATCH = /\b(allotment|herb|flower|hops|bush|tree|fruit tree|hardwood|cactus|mushroom|belladonna|seaweed|calquat|spirit tree|celastrus|redwood|hespori|anima|vine|grapevine|vinery)\b.*patch|^bush$|grapevine|giant seaweed/i;
-const NOT_PATCH = /wall|barren|dry patch|mud patch|muddy|soil patch|firm snow|weedy|new farming/i;
+// Farming patches, each at the level of the lowest crop it grows (OSRS Wiki
+// seed levels: potato 1, marigold 2, barley 3, guam 9, redberry 10, oak 15,
+// giant seaweed 23, apple 27, teak 35, grapes 36, bittercap 53, cactus 55,
+// nightshade 63, Hespori 65, calquat 72, crystal 74, anima 76, spirit tree 83,
+// celastrus 85, redwood 90). Keyed by the run's Farming patch unlock id
+// (utils/farmingPatches.ts). The Coral Nursery is left out: its level isn't
+// checked here. Look-alikes ("Patched Wall", a bare "Bush", "Grapevine"
+// scenery) name no patch type and train nothing.
+export const FARMING_PATCH_LEVELS: Readonly<Record<string, number>> = {
+  Allotment: 1, Flower: 2, Hops: 3, Herb: 9, Bush: 10, 'Wood Tree': 15, Seaweed: 23,
+  'Fruit Tree': 27, 'Hardwood Tree': 35, Vinery: 36, Mushroom: 53, Cactus: 55,
+  Belladonna: 63, 'Hespori Patch': 65, Calquat: 72, 'Crystal Tree': 74, Anima: 76,
+  'Spirit Tree': 83, Celastrus: 85, Redwood: 90,
+};
+const NOT_PATCH = /wall|barren|dry patch|mud patch|muddy|soil patch|firm snow|weedy|new farming|trashed/i;
+
+/** The Farming patch unlock id an object is, or null for anything else. */
+export const farmingPatchOf = (name: string): string | null => {
+  if (!/patch|nursery/i.test(name) || NOT_PATCH.test(name)) return null;
+  const patch = farmingPatchFor(name);
+  return patch && FARMING_PATCH_LEVELS[patch] !== undefined ? patch : null;
+};
+
+// Objects the resource rules read as a tree, rock or altar that nothing is
+// gathered from: Agility obstacles (Canifis' "Tall tree", the Gnome course's
+// "Tree branch"), POH hotspots, stumps, fruit trees picked by hand, the Dig
+// Site's museum specimen rocks, and rifts, which lead to altars rather than
+// being one (the altars count where their ruins stand).
+const NOT_TRAINING = /tall tree|tree branch|tree space|\bstump\b|\brocks \(|tree roots|banana tree|crab apple tree|sq'?irk tree|crossbow tree|dream tree|gourd tree|specimen|^rift$|\brift$/i;
 
 // Entities that trip the keyword rules but aren't real gathering targets:
 // combat/utility look-alikes (a "Butterfly ray" is a fish; a "Guard dog" is a
@@ -75,7 +100,7 @@ const NPC_RULES: [RegExp, Req][] = [
   [/black warlock/i, { skill: 'Hunter', level: 45 }],
   [/sunlight moth/i, { skill: 'Hunter', level: 65 }],
   [/moonlight moth/i, { skill: 'Hunter', level: 75 }],
-  [/\bbutterfly\b/i, { skill: 'Hunter', level: 15 }],
+  // A bare "Butterfly" is ambient scenery, not a catchable Hunter creature.
   // ── Hunter: kebbits ──
   [/common kebbit/i, { skill: 'Hunter', level: 3 }],
   [/feldip weasel/i, { skill: 'Hunter', level: 7 }],
@@ -175,11 +200,19 @@ const sailingReq = (name: string): Req | null => {
   return { skill: 'Sailing', level };
 };
 
-const reqFor = (name: string, kind: EntityKind): Req | null => {
+/** The skill and level an entity trains, if any. Also builds data/chunkSkillNodes.ts. */
+export const trainingReqFor = (name: string, kind: EntityKind): Req | null => {
   if (kind === 'object') {
+    // Patches first: "Tree patch" is Farming, not a tree to cut.
+    const patch = farmingPatchOf(name);
+    if (patch) return { skill: 'Farming', level: FARMING_PATCH_LEVELS[patch] };
+    if (NOT_TRAINING.test(name)) return null;
+    if (/bloodwood tree/i.test(name)) return { skill: 'Woodcutting', level: 85 };
+    if (/dramen tree/i.test(name)) return { skill: 'Woodcutting', level: 36 };
+    // Ourania's altar takes any level.
+    if (/^runecrafting altar$/i.test(name)) return { skill: 'Runecraft', level: 1 };
     const r = resourceReqFor(name);
     if (r) return r;
-    if (FARMING_PATCH.test(name) && !NOT_PATCH.test(name)) return { skill: 'Farming', level: 1 };
     for (const [re, level] of AGILITY_OBJ) if (re.test(name)) return { skill: 'Agility', level };
     return sailingReq(name) ?? stationReq(name);
   }
@@ -193,7 +226,7 @@ export const skillChunkNodes = (skill: string): SkillChunkNode[] => {
   const out: SkillChunkNode[] = [];
   for (const kind of ['object', 'npc', 'monster'] as EntityKind[]) {
     for (const hit of chunkContentService.entitiesOfKind(kind)) {
-      const req = reqFor(hit.name, kind);
+      const req = trainingReqFor(hit.name, kind);
       if (!req || req.skill !== skill) continue;
       const key = hit.name.toLowerCase();
       if (seen.has(key)) continue;

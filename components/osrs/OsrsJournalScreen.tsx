@@ -161,8 +161,8 @@ export const OsrsJournalScreen: React.FC = () => {
     .sort(byChanceThenName(questRate, q => q.name)), [quest.allQuests]);
   const readyTasks = useMemo(() => doableDiaryTasks(ALL_DIARY_TASKS, unlocks, gameModeId, areaRoutes)
     .sort(byChanceThenName(taskRate, t => t.description)), [unlocks, gameModeId, areaRoutes]);
-  const readyCA = useMemo(() => doableCATasks(ALL_CA_TASKS, unlocks)
-    .sort(byChanceThenName(caRate, t => t.name ?? t.description)), [unlocks]);
+  const readyCA = useMemo(() => doableCATasks(ALL_CA_TASKS, unlocks, gameModeId)
+    .sort(byChanceThenName(caRate, t => t.name ?? t.description)), [unlocks, gameModeId]);
 
   // Almost there: blocked by exactly one requirement (the classic "Almost" badge).
   const almostQuests = useMemo(() => quest.allQuests.flatMap(q => {
@@ -187,7 +187,7 @@ export const OsrsJournalScreen: React.FC = () => {
   const questTone = (q: QuestCardQuest) => q.status === 'COMPLETED' ? TONE.done : q.eligibility.eligible ? TONE.ready : TONE.locked;
   const caTaskTone = (t: CATask) => unlocks.completedTasks.includes(t.id) ? TONE.done
     : caTaskLockedBoss(t, unlocks.bosses) ? TONE.locked
-    : doableCATasks([t], unlocks).length > 0 ? TONE.ready : ORANGE;
+    : doableCATasks([t], unlocks, gameModeId).length > 0 ? TONE.ready : ORANGE;
 
   // The Combat tab's open tier: the selected entry's tier, else the classic log's expanded one.
   const combatSel = sel.combat;

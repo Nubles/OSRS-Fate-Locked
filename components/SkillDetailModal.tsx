@@ -9,6 +9,7 @@ import { skillChunkNodesByTier, skillStations } from '../utils/skillChunkNodes';
 import { chunkContentService } from '../services/ChunkContentService';
 import { summarisePlaces, showChunkOnMap } from '../utils/chunkLocations';
 import { useGame } from '../context/GameContext';
+import { skillGatherNote } from '../utils/skillGatherNote';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { lazyWithRetry } from '../utils/lazyRetry';
@@ -85,6 +86,7 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = (props) => (
 const ClassicSkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, currentTier, onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
+  const { gameModeId } = useGame();
   const unlockData = SKILL_UNLOCK_DATA[skill] || {};
   const tiers = Array.from({ length: 10 }, (_, i) => i + 1);
 
@@ -183,7 +185,7 @@ const ClassicSkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
             {tab === 'gather' ? <MapPin className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" /> : <WikiIcon file={`${skill}_icon.png`} alt="" size={20} className="shrink-0 mt-0.5" />}
             <p className="text-sm text-blue-200/80 leading-relaxed">
               {tab === 'gather'
-                ? 'Everything this skill can gather on the world map, grouped by the tier that unlocks it. Click a resource to pick a region and jump straight there.'
+                ? skillGatherNote(gameModeId)
                 : 'Unlocking a tier grants access to training methods and equipment within that level range. You may train beyond your unlocked tier, but you can only use unlocked content.'}
             </p>
           </div>
