@@ -12,10 +12,20 @@
  * no requirements.
  *
  * Next to the facts it writes what the roll engine checks against the run:
- *   CHUNK_FARMING_PATCHES  each chunk's patch types and the tier each needs,
+ *   CHUNK_SKILL_LEVELS     each fact's exact lowest level where it is above
+ *                          its tier's floor (Draynor rooftop is Agility 10, not
+ *                          1), so the roll engine compares levels, not tiers
+ *   CHUNK_FARMING_PATCHES  each chunk's patch types and the level each needs,
  *                          so Farming counts only for patch types the run has
  *   CHUNK_ORE_SHOPS        chunks with a shop selling ore or bars (Smithing's
- *                          input without Mining)
+ *                          input without Mining): the shop's merchant type and
+ *                          the Smithing level its stock first trains. Thieving
+ *                          stalls are left out: the player steals from them.
+ *   CHUNK_SKILL_SERVICES   what a skill needs from someone in the chunk, with
+ *                          the merchant type that must be unlocked ('' none):
+ *                          an essence mine teleport (Runecraft), an estate
+ *                          agent, a sawmill or a plank shop (Construction), a
+ *                          Hunter shop's traps (Hunter)
  *   CHUNK_ENTRY_QUESTS     the quest a chunk's entry needs (questSections),
  *                          so its content counts only once that quest is done
  *   CHUNK_GUILD_GATES      chunks whose skill content sits inside a guild, so
@@ -24,7 +34,8 @@
 import { farmingPatchOf, trainingReqFor } from './skillChunkNodes';
 import type { EntityKind } from '../services/ChunkContentService';
 import { ALL_CHUNK_KEYS } from './chunkAdjacency';
-import { tierForLevel } from './skillTiers';
+import { tierBand, tierForLevel } from './skillTiers';
+import { classifyShop } from './shopClassification';
 
 type RawEntry = { m?: [string, number, number?][]; p?: string[]; o?: [string, number][]; s?: string[] };
 interface RawDoc {
@@ -42,8 +53,10 @@ export interface ChunkSkillData {
   nodes: ChunkSkillNodes;
   /** Per chunk, each Farming patch type's level there. */
   patches: Record<string, Record<string, number>>;
-  /** Chunks with an ore or bar shop. */
-  oreShops: string[];
+  /** Per chunk with an ore or bar shop: each shop's merchant type and the lowest Smithing level its stock trains. */
+  oreShops: Record<string, Record<string, number>>;
+  /** Per service (SKILL_SERVICES), the chunks offering it and the merchant type it needs ('' for none). */
+  services: Record<string, Record<string, string>>;
   /** Per chunk with facts, the quests its entry needs. */
   entryQuests: Record<string, string[]>;
   /** Per chunk, the guild its skill's content needs: [skill, guild]. */
@@ -126,13 +139,54 @@ export const HOUSE_PORTAL_CHUNKS: readonly string[] = ['22,46', '27,54', '39,48'
 /** Sailing starts at a port: a dock the boat ties up at, or a shipwright. */
 const PORT_OBJECT = /^gangplank \(sailing\)$/i;
 const PORT_NPC = /^shipwright \w+$/i;
-const ORE_ITEM = /^(copper|tin|iron|silver|gold|mithril|adamantite|runite) ore$|^coal$|^(bronze|iron|steel|mithril|adamantite|runite|silver|gold) bar$/i;
+
+/**
+ * The Smithing level a shop's stock first trains (OSRS Wiki smelting and
+ * smithing levels): bronze is made from copper and tin together; coal, gold
+ * bars and silver bars alone train nothing at a furnace or anvil.
+ */
+export const oreShopSmithingLevel = (items: readonly string[]): number | null => {
+  const stock = new Set(items.map(item => item.toLowerCase()));
+  const levels = [
+    stock.has('bronze bar') || (stock.has('copper ore') && stock.has('tin ore')) ? 1 : null,
+    stock.has('iron ore') || stock.has('iron bar') ? 15 : null,
+    stock.has('silver ore') ? 20 : null,
+    stock.has('steel bar') ? 30 : null,
+    stock.has('gold ore') ? 40 : null,
+    stock.has('mithril ore') || stock.has('mithril bar') ? 50 : null,
+    stock.has('adamantite ore') || stock.has('adamantite bar') ? 70 : null,
+    stock.has('runite ore') || stock.has('runite bar') ? 85 : null,
+  ].filter((level): level is number => level !== null);
+  return levels.length > 0 ? Math.min(...levels) : null;
+};
+/** A Thieving stall in the data's shop list: "Ardougne Silver Stall" beside a "Silver stall" object. */
+const STALL_SHOP = /\bstall$/i;
+
+/**
+ * Who in a chunk gives a skill what it needs to be trained, by service:
+ *   essence      teleports to the Rune essence mine once Rune Mysteries is done
+ *                (Aubury, Wizard Cromperty, Archmage Sedridor, Brimstail;
+ *                Wizard Distentor is left out, he is inside the Wizards' Guild)
+ *   estateAgent  sells a house (Real Estate Agents)
+ *   sawmill      turns logs into planks (Sawmill Operators)
+ *   planks       a shop selling planks, by its merchant type
+ *   traps        a Hunter shop's snares and box traps (Hunter Shops)
+ */
+export const SKILL_SERVICES = ['essence', 'estateAgent', 'sawmill', 'planks', 'traps'] as const;
+const ESSENCE_NPC = /^(aubury|wizard cromperty|archmage sedridor|brimstail)$/i;
+const ESTATE_AGENT_NPC = /^estate agent$/i;
+const SAWMILL_NPC = /^sawmill operator$/i;
 
 interface Source { entry: RawEntry; interior?: string }
 
 export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
   const masters = new Set(Object.keys(doc.slayerMasters ?? {}));
-  const oreShopNames = new Set(Object.entries(doc.shopItems ?? {}).filter(([, items]) => items.some(item => ORE_ITEM.test(item))).map(([name]) => name));
+  const shopItems = doc.shopItems ?? {};
+  const oreShopLevels = new Map<string, number>();
+  for (const [name, items] of Object.entries(shopItems)) {
+    const level = oreShopSmithingLevel(items);
+    if (level !== null && !STALL_SHOP.test(name) && classifyShop(name)) oreShopLevels.set(name, level);
+  }
   const entriesById = new Map<string, Source[]>();
   const add = (id: string, source: Source) => entriesById.set(id, [...(entriesById.get(id) ?? []), source]);
   for (const [id, entry] of Object.entries(doc.chunks)) add(id, { entry });
@@ -142,7 +196,8 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
   const courses = new Map(AGILITY_COURSES.map(course => [course.chunk, course]));
   const nodes: ChunkSkillNodes = {};
   const patches: ChunkSkillData['patches'] = {};
-  const oreShops: string[] = [];
+  const oreShops: ChunkSkillData['oreShops'] = {};
+  const services: ChunkSkillData['services'] = Object.fromEntries(SKILL_SERVICES.map(service => [service, {}]));
   const entryQuests: ChunkSkillData['entryQuests'] = {};
   const guildGates: ChunkSkillData['guildGates'] = {};
   for (const id of [...entriesById.keys()].sort((a, b) => Number(a) - Number(b))) {
@@ -154,10 +209,26 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
     const note = (skill: string, level: number) => { facts[skill] = Math.min(facts[skill] ?? level, level); };
     const chunkPatches: Record<string, number> = {};
     const markers = new Set<string>();
-    let oreShop = false;
+    const chunkOreShops: Record<string, number> = {};
+    const offers: Record<string, string> = {};
+    const offer = (service: typeof SKILL_SERVICES[number], merchant: string) => {
+      // One that needs no merchant beats one that does.
+      if (offers[service] === undefined || merchant === '') offers[service] = merchant;
+    };
     for (const { entry, interior } of entriesById.get(id)!) {
       if (interior) markers.add(interior);
-      for (const shop of entry.s ?? []) if (oreShopNames.has(shop)) oreShop = true;
+      for (const shop of entry.s ?? []) {
+        const merchant = classifyShop(shop);
+        const level = oreShopLevels.get(shop);
+        if (merchant && level !== undefined) chunkOreShops[merchant] = Math.min(chunkOreShops[merchant] ?? level, level);
+        if (merchant === 'Hunter Shops') offer('traps', merchant);
+        if (merchant && (shopItems[shop] ?? []).some(item => /^plank$/i.test(item))) offer('planks', merchant);
+      }
+      for (const name of entry.p ?? []) {
+        if (ESSENCE_NPC.test(name)) offer('essence', '');
+        if (ESTATE_AGENT_NPC.test(name)) offer('estateAgent', 'Real Estate Agents');
+        if (SAWMILL_NPC.test(name)) offer('sawmill', 'Sawmill Operators');
+      }
       const named: [string, EntityKind][] = [
         ...(entry.o ?? []).map(([name]) => [name, 'object'] as [string, EntityKind]),
         ...(entry.p ?? []).map((name) => [name, 'npc'] as [string, EntityKind]),
@@ -184,15 +255,17 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
     const course = courses.get(chunk);
     if (course && markers.has(course.marker)) note('Agility', course.level);
     if (HOUSE_PORTAL_CHUNKS.includes(chunk) && markers.has('Portal')) note('Construction', 1);
-    if (Object.keys(facts).length === 0) continue;
-    nodes[chunk] = facts;
+    const hasShops = Object.keys(chunkOreShops).length > 0;
+    if (Object.keys(facts).length === 0 && !hasShops && Object.keys(offers).length === 0) continue;
+    if (Object.keys(facts).length > 0) nodes[chunk] = facts;
     if (Object.keys(chunkPatches).length > 0) patches[chunk] = chunkPatches;
-    if (oreShop) oreShops.push(chunk);
+    if (hasShops) oreShops[chunk] = chunkOreShops;
+    for (const [service, merchant] of Object.entries(offers)) services[service][chunk] = merchant;
     const quests = doc.questSections?.[id];
     if (quests?.length) entryQuests[chunk] = [...quests];
     if (guild && facts[guild.skill] !== undefined) guildGates[chunk] = [guild.skill, guild.guild];
   }
-  return { nodes, patches, oreShops, entryQuests, guildGates };
+  return { nodes, patches, oreShops, services, entryQuests, guildGates };
 }
 
 const LAND = new Set(ALL_CHUNK_KEYS);
@@ -208,11 +281,15 @@ export const chunkSkillNodesSource = (data: ChunkSkillData): string => {
   const facts = [...new Set(Object.values(nodes).flatMap(Object.keys))].sort();
   const rows = Object.fromEntries(Object.entries(nodes).map(([key, levels]) => [key,
     facts.map(fact => levels[fact] === undefined ? '.' : String(tierForLevel(levels[fact]) % 10)).join('').replace(/\.+$/, '')]));
-  // Patch types per chunk: one letter (its place in CHUNK_PATCH_TYPES) and its tier, per type.
+  // Exact levels, only where a fact's level is above its tier's floor: one letter (its place in CHUNK_SKILL_FACTS) and the level.
+  const exact = Object.fromEntries(Object.entries(nodes).map(([key, levels]) => [key,
+    facts.filter(fact => levels[fact] !== undefined && levels[fact] > tierBand(tierForLevel(levels[fact])).min)
+      .map(fact => `${String.fromCharCode(97 + facts.indexOf(fact))}${levels[fact]}`).join('')]).filter(([, row]) => row !== ''));
+  // Patch types per chunk: one letter (its place in CHUNK_PATCH_TYPES) and its level, per type.
   const patchTypes = [...new Set(Object.values(data.patches).flatMap(Object.keys))].sort();
   const patches = Object.fromEntries(Object.entries(data.patches).map(([key, types]) => [key,
     Object.entries(types).sort(([a], [b]) => a.localeCompare(b))
-      .map(([type, level]) => `${String.fromCharCode(97 + patchTypes.indexOf(type))}${tierForLevel(level) % 10}`).join('')]));
+      .map(([type, level]) => `${String.fromCharCode(97 + patchTypes.indexOf(type))}${level}`).join('')]));
   // Quest -> its chunks, as "cx:cy,cy-cy;cx:…" (runs of cy written as ranges).
   const questChunks: Record<string, string> = {};
   for (const quest of [...new Set(Object.values(data.entryQuests).flat())]) {
@@ -239,10 +316,15 @@ export const chunkSkillNodesSource = (data: ChunkSkillData): string => {
     + `// See utils/chunkSkillNodesBuild.ts.\n\n`
     + `export const CHUNK_SKILL_FACTS: readonly string[] = ${JSON.stringify(facts)};\n\n`
     + `export const CHUNK_SKILL_TIERS: Readonly<Record<string, string>> = ${JSON.stringify(rows)};\n\n`
+    + `// A fact's exact lowest level where it is above its tier's floor: a letter (a = CHUNK_SKILL_FACTS[0]) then the level.\n`
+    + `export const CHUNK_SKILL_LEVELS: Readonly<Record<string, string>> = ${JSON.stringify(exact)};\n\n`
     + `export const CHUNK_PATCH_TYPES: readonly string[] = ${JSON.stringify(patchTypes)};\n\n`
-    + `// Farming patch types per chunk: a letter (a = CHUNK_PATCH_TYPES[0]) then the tier it needs (0 = tier 10).\n`
+    + `// Farming patch types per chunk: a letter (a = CHUNK_PATCH_TYPES[0]) then the Farming level it needs.\n`
     + `export const CHUNK_FARMING_PATCHES: Readonly<Record<string, string>> = ${JSON.stringify(patches)};\n\n`
-    + `export const CHUNK_ORE_SHOPS: readonly string[] = ${JSON.stringify(data.oreShops)};\n\n`
+    + `// Chunk -> each ore or bar shop's merchant type and the Smithing level its stock first trains (no Thieving stalls).\n`
+    + `export const CHUNK_ORE_SHOPS: Readonly<Record<string, Readonly<Record<string, number>>>> = ${JSON.stringify(data.oreShops)};\n\n`
+    + `// Service -> chunk -> the merchant type it needs ("" for none): essence, estateAgent, sawmill, planks, traps.\n`
+    + `export const CHUNK_SKILL_SERVICES: Readonly<Record<string, Readonly<Record<string, string>>>> = ${JSON.stringify(data.services)};\n\n`
     + `// Quest -> the chunks whose entry needs it: "cx:cy,cy-cy;cx:…".\n`
     + `export const CHUNK_ENTRY_QUESTS: Readonly<Record<string, string>> = ${JSON.stringify(questChunks)};\n\n`
     + `// Chunk -> [skill, guild]: that skill's content there is inside the guild.\n`

@@ -29,7 +29,7 @@ export interface ExploreThing {
    * Farming things only: the chunk's patch types, each with the Farming tier
    * it needs. One of them must be among the run's Farming patch unlocks.
    */
-  patches?: readonly (readonly [string, number])[];
+  patches?: readonly (readonly [string, number, number])[];
 }
 
 const SPECIAL: Record<string, { label: string; skill: string }> = {
