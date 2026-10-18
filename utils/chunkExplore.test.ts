@@ -23,7 +23,7 @@ const run = (over: Record<string, unknown> = {}) => ({
   unlocks: {
     ...initialState.unlocks,
     chunks: [WEST],
-    skills: { Hitpoints: 1, Woodcutting: 1 },
+    skills: { Hitpoints: 1, Attack: 1, Woodcutting: 1 },
   },
   chunkExplore: { from: 0, done: {} as Record<string, string[]> },
   ...over,
@@ -54,7 +54,7 @@ describe('Chunked exploring rolls', () => {
     expect(gameReducer(once, { type: 'CHUNK_EXPLORE', payload: { chunk: WEST, fact: '@monster' } })).toBe(once);
     expect(gameReducer(once, { type: 'CHUNK_EXPLORE', payload: { chunk: WEST, fact: 'Thieving' } })).toBe(once);
 
-    const full = { ...state, unlocks: { ...state.unlocks, skills: { ...state.unlocks.skills, Farming: 2, Thieving: 2 }, farming: ['Wood Tree'] }, chunkExplore: { from: 0, done: { [WEST]: ['@monster', 'Thieving', 'Woodcutting'] } } };
+    const full = { ...state, unlocks: { ...state.unlocks, skills: { ...state.unlocks.skills, Farming: 2, Thieving: 2 }, levels: { ...state.unlocks.levels, Farming: 15, Thieving: 11 }, farming: ['Wood Tree'] }, chunkExplore: { from: 0, done: { [WEST]: ['@monster', 'Thieving', 'Woodcutting'] } } };
     expect(exploreRollsLeft(full, WEST)).toBe(0);
     expect(chunksToExplore(full)).toEqual([]);
     expect(gameReducer(full, { type: 'CHUNK_EXPLORE', payload: { chunk: WEST, fact: 'Farming' } })).toBe(full);
@@ -62,16 +62,21 @@ describe('Chunked exploring rolls', () => {
 
   it('needs the patch type unlocked before a patch can be explored (economy review 6)', () => {
     // 49,50's only patch is a tree patch.
-    const farmer = run({ unlocks: { ...run().unlocks, skills: { Hitpoints: 1, Farming: 2 }, farming: [] } });
+    const farmer = run({ unlocks: { ...run().unlocks, skills: { Hitpoints: 1, Farming: 2 }, levels: { ...initialState.unlocks.levels, Farming: 15 }, farming: [] } });
     expect(exploreBlocker(farmer, WEST, 'Farming')).toBe('Needs the Wood Tree patch unlocked.');
     expect(exploreBlocker({ ...farmer, unlocks: { ...farmer.unlocks, farming: ['Wood Tree'] } }, WEST, 'Farming')).toBeNull();
+    // An oak sapling needs Farming 15, not just tier 2 (deadlock audit, dead end 2).
+    const sapling = { ...farmer, unlocks: { ...farmer.unlocks, farming: ['Wood Tree'], levels: initialState.unlocks.levels } };
+    expect(exploreBlocker(sapling, WEST, 'Farming')).toBe('Needs Farming level 15.');
     expect(exploreBlocker({ ...farmer, unlocks: { ...farmer.unlocks, farming: ['Herb'] } }, WEST, 'Farming')).toBe('Needs the Wood Tree patch unlocked.');
 
     // Falador's allotment patches (47,51): the herb patch needs the Herb unlock, whatever else is open.
-    const falador = run({ unlocks: { ...run().unlocks, chunks: ['47,51'], skills: { Hitpoints: 1, Farming: 1 }, farming: ['Allotment'] } });
+    // Its herb patch needs Farming 9 (guam), its allotments Farming 1.
+    const falador = run({ unlocks: { ...run().unlocks, chunks: ['47,51'], skills: { Hitpoints: 1, Farming: 1 }, levels: { ...initialState.unlocks.levels, Farming: 9 }, farming: ['Allotment'] } });
     expect(exploreBlocker(falador, '47,51', '@herb')).toBe('Needs the Herb patch unlocked.');
     expect(exploreBlocker(falador, '47,51', 'Farming')).toBeNull();
     expect(exploreBlocker({ ...falador, unlocks: { ...falador.unlocks, farming: ['Herb'] } }, '47,51', '@herb')).toBeNull();
+    expect(exploreBlocker({ ...falador, unlocks: { ...falador.unlocks, farming: ['Herb'], levels: initialState.unlocks.levels } }, '47,51', '@herb')).toBe('Needs Farming level 9.');
 
     // Port Sarim's only patch is the spirit tree patch, which needs 83 Farming (tier 9).
     const sarim = run({ unlocks: { ...run().unlocks, chunks: ['47,50'], skills: { Hitpoints: 1, Farming: 1 }, farming: ['Spirit Tree'] } });
@@ -101,13 +106,54 @@ describe('Chunked exploring rolls', () => {
   });
 
   it("keeps Fate's Mercy shut while an exploring roll can be taken", () => {
-    const capped = run({ unlocks: { ...run().unlocks, skills: { Hitpoints: 1 }, levels: { ...initialState.unlocks.levels, Hitpoints: 10 } }, chunkedBreakthroughs: { Hitpoints: 2 } });
+    const capped = run({ unlocks: { ...run().unlocks, skills: { Hitpoints: 1, Attack: 1 }, levels: { ...initialState.unlocks.levels, Hitpoints: 10, Attack: 10 } }, chunkedBreakthroughs: { Hitpoints: 2, Attack: 2 } });
     expect(exploreWaiting(capped)).toBe(true);
     expect(mercyBlocker(capped)).toBe('explore');
     const explored = { ...capped, chunkExplore: { from: 0, done: { [WEST]: ['@monster'] } } };
     // Farming, Thieving and Woodcutting are all locked, so nothing else can be explored yet.
     expect(exploreWaiting(explored)).toBe(false);
     expect(mercyBlocker(explored)).not.toBe('explore');
+  });
+
+  it('needs a combat style the run can use to fight (fate review V5)', () => {
+    const fighter = (skills: Record<string, number>, Weapon = 0) =>
+      run({ unlocks: { ...run().unlocks, skills: { Hitpoints: 1, ...skills }, equipment: { ...initialState.unlocks.equipment, Weapon } } });
+    expect(exploreBlocker(fighter({}), WEST, '@monster')).toBe('Needs a combat style: Attack, Strength, Defence or Magic, or Ranged with a Weapon slot.');
+    // Ranged with no Weapon slot can hold no bow.
+    expect(exploreBlocker(fighter({ Ranged: 1 }), WEST, '@monster')).not.toBeNull();
+    expect(exploreBlocker(fighter({ Ranged: 1 }, 1), WEST, '@monster')).toBeNull();
+    expect(exploreBlocker(fighter({ Magic: 1 }), WEST, '@monster')).toBeNull();
+    // A run that can't fight has nothing to explore here, so it doesn't hold Fate's Mercy shut.
+    const unarmed = { ...fighter({}), chunkedBreakthroughs: { Hitpoints: 2 } };
+    expect(exploreWaiting(unarmed)).toBe(false);
+  });
+
+  it('checks each thing as the Skills rolls do: entry quest, guild, opening quest, level, and the skill itself (deadlock audit, dead end 4)', () => {
+    const at = (chunks: string[], skills: Record<string, number>, over: Record<string, unknown> = {}) =>
+      run({ unlocks: { ...run().unlocks, chunks, skills: { Hitpoints: 1, Attack: 1, ...skills }, ...over } });
+    // 53,50 joins the PvP Arena on the near bank of the Salve, but its monsters are past it, behind Priest in Peril.
+    const salve = at(['51,50', '52,50', '53,50'], {}, { levels: { ...initialState.unlocks.levels, Attack: 10 } });
+    const explored = { ...salve, chunkedBreakthroughs: { Hitpoints: 2, Attack: 2 }, chunkExplore: { from: 0, done: { '51,50': exploreThings('51,50').map(thing => thing.fact), '52,50': exploreThings('52,50').map(thing => thing.fact) } } };
+    expect(exploreBlocker(explored, '53,50', '@monster')).toBe('Needs Priest in Peril to get in.');
+    expect(exploreWaiting(explored)).toBe(false);
+    expect(mercyBlocker(explored, [])).not.toBe('explore');
+    expect(exploreBlocker({ ...explored, unlocks: { ...explored.unlocks, quests: ['Priest in Peril'] } }, '53,50', '@monster')).toBeNull();
+    // The Fishing Guild's spots are inside the guild.
+    const guild = at(['40,53'], { Fishing: 7 }, { levels: { ...initialState.unlocks.levels, Fishing: 68 } });
+    expect(exploreBlocker(guild, '40,53', 'Fishing')).toBe('Needs the Fishing Guild unlocked.');
+    expect(exploreBlocker({ ...guild, unlocks: { ...guild.unlocks, guilds: ['Fishing Guild'] } }, '40,53', 'Fishing')).toBeNull();
+    // Sailing opens with Pandemonium.
+    const port = at(['47,50'], { Sailing: 1 });
+    expect(exploreBlocker(port, '47,50', 'Sailing')).toBe('Needs Pandemonium done.');
+    expect(exploreBlocker({ ...port, unlocks: { ...port.unlocks, quests: ['Pandemonium'] } }, '47,50', 'Sailing')).toBeNull();
+    // Draynor rooftop needs Agility 10, not just tier 1.
+    const draynor = at(['49,50', '48,50', '48,51'], { Agility: 1 });
+    expect(exploreBlocker(draynor, '48,51', 'Agility')).toBe('Needs Agility level 10.');
+    // The Water altar needs essence as well as Runecraft 5.
+    const water = at(['50,49', '49,49'], { Runecraft: 1 }, { levels: { ...initialState.unlocks.levels, Runecraft: 5 } });
+    expect(exploreBlocker(water, '49,49', 'Runecraft')).toMatch(/^Needs rune essence: Rune Mysteries done/);
+    const essence = { ...water, unlocks: { ...water.unlocks, chunks: ['50,49', '49,49', '50,53'], quests: ['Rune Mysteries'], skills: { ...water.unlocks.skills, Mining: 1 } } };
+    expect(exploreBlocker(essence, '49,49', 'Runecraft')).toBeNull();
   });
 
   it('saves and loads the record, and rejects a broken one', () => {

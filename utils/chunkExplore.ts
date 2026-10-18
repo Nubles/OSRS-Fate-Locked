@@ -4,7 +4,11 @@
  * does there for the first time, up to CHUNK_EXPLORE_ROLLS per chunk. The
  * things come from data/chunkSkillNodes.ts (generated): the skills the chunk
  * trains, something to fight, a Slayer master, a herb patch. A thing counts
- * once the run's tier in its skill reaches the tier its lowest node needs.
+ * once the run's tier and level in its skill reach its lowest node, and the
+ * run can use it as the Skills rolls would (utils/chunkedSkillPool.ts): the
+ * chunk's entry quest done, its guild unlocked, the skill's opening quest
+ * done, and the skill trainable at all (a Weapon slot for Ranged, essence for
+ * Runecraft, and so on). Fighting needs a combat style the run can use.
  *
  * Only chunks unlocked after a run first meets this rule count: the reducer
  * records `chunkExplore.from` (how many chunks the run held then) on the
@@ -13,7 +17,11 @@
 import type { GameState, UnlockState } from '../types';
 import { CHUNK_EXPLORE_ROLLS } from '../config/economy';
 import { CHUNK_SKILL_FACTS, CHUNK_SKILL_TIERS } from '../data/chunkSkillNodes';
-import { chunkPatches } from './chunkedSkillPool';
+import {
+  chunkContentBlocker, chunkedCombatStyleUsable, chunkedSkillNeeds, chunkedSkillQuestOpen, chunkedTrainingLevels, chunkFactLevel, chunkPatches,
+  runLevel, type TrainingRun,
+} from './chunkedSkillPool';
+import { SKILL_QUEST_GATES } from './journalStatus';
 import { farmingPatchLabel } from './farmingPatches';
 
 export interface ExploreThing {
@@ -25,9 +33,13 @@ export interface ExploreThing {
   skill: string;
   /** The tier that skill needs (1 to 10). */
   tier: number;
+  /** The level that skill needs: the lowest node's exact level. */
+  level: number;
+  /** The chunk it is in. */
+  chunk: string;
   /**
    * Farming things only: the chunk's patch types, each with the Farming tier
-   * it needs. One of them must be among the run's Farming patch unlocks.
+   * and level it needs. One of them must be among the run's Farming patch unlocks.
    */
   patches?: readonly (readonly [string, number, number])[];
 }
@@ -47,10 +59,11 @@ export const exploreThings = (chunk: string): ExploreThing[] => {
     const fact = CHUNK_SKILL_FACTS[i];
     const tier = row[i] === '0' ? 10 : Number(row[i]);
     const special = SPECIAL[fact];
-    // Fighting needs no tier beyond the Hitpoints every run starts with.
+    const level = chunkFactLevel(chunk, fact)!;
+    // Fighting needs no tier beyond the Hitpoints every run starts with (and a combat style).
     const thing: ExploreThing = special
-      ? { fact, label: special.label, skill: special.skill, tier: fact === '@monster' ? 1 : tier }
-      : { fact, label: `Trained ${fact}`, skill: fact, tier };
+      ? { fact, label: special.label, skill: special.skill, tier: fact === '@monster' ? 1 : tier, level: fact === '@monster' ? 1 : level, chunk }
+      : { fact, label: `Trained ${fact}`, skill: fact, tier, level, chunk };
     // A patch is only usable once its type is unlocked (the Farming table).
     if (fact === 'Farming' || fact === '@herb') {
       const patches = chunkPatches(chunk);
@@ -62,16 +75,40 @@ export const exploreThings = (chunk: string): ExploreThing[] => {
   return things;
 };
 
-/** A patch type the run has unlocked and its Farming tier reaches, if the thing needs one. */
-const usablePatch = (thing: ExploreThing, unlocks: Pick<UnlockState, 'skills'> & Partial<Pick<UnlockState, 'farming'>>): boolean =>
-  !thing.patches || thing.patches.some(([type, need]) => (unlocks.farming ?? []).includes(type) && (unlocks.skills.Farming ?? 0) >= need);
+/** What of the run decides whether an exploring thing can be done. */
+export type ExploreUnlocks = TrainingRun & Partial<Pick<UnlockState, 'chunks'>>;
+
+const COMBAT_STYLE = 'a combat style: Attack, Strength, Defence or Magic, or Ranged with a Weapon slot';
+
+/** Why the run can't do this thing yet, or null when it can. */
+export const exploreThingBlocker = (thing: ExploreThing, unlocks: ExploreUnlocks): string | null => {
+  if ((unlocks.skills[thing.skill] ?? 0) < thing.tier) return `Needs ${thing.skill} tier ${thing.tier}.`;
+  const owned = unlocks.farming ?? [];
+  const farmingTier = unlocks.skills.Farming ?? 0;
+  const farmingLevel = runLevel(unlocks, 'Farming');
+  if (thing.patches && !thing.patches.some(([type, tier, level]) => owned.includes(type) && farmingTier >= tier && farmingLevel >= level)) {
+    const open = thing.patches.filter(([type]) => owned.includes(type));
+    if (open.length === 0) return `Needs the ${thing.patches.map(([type]) => farmingPatchLabel(type)).join(' or ')} unlocked.`;
+    const tier = Math.min(...open.map(([, need]) => need));
+    if (farmingTier < tier) return `Needs Farming tier ${tier}.`;
+    return `Needs Farming level ${Math.min(...open.map(([, , level]) => level))}.`;
+  }
+  const content = chunkContentBlocker(thing.chunk, thing.fact, unlocks);
+  if (content) return content;
+  if (runLevel(unlocks, thing.skill) < thing.level) return `Needs ${thing.skill} level ${thing.level}.`;
+  if (thing.fact === '@monster') return chunkedCombatStyleUsable(unlocks) ? null : `Needs ${COMBAT_STYLE}.`;
+  if (thing.fact.startsWith('@')) return null;
+  if (!chunkedSkillQuestOpen(thing.fact, unlocks.quests)) return `Needs ${SKILL_QUEST_GATES[thing.fact]} done.`;
+  const run = { ...unlocks, chunks: unlocks.chunks ?? [] };
+  if (!chunkedTrainingLevels(run.chunks, run).has(thing.fact)) return `Needs ${chunkedSkillNeeds(thing.fact, run) ?? `something to train ${thing.fact} with`}.`;
+  return null;
+};
 
 /** How many exploring rolls a chunk holds in all. */
 export const exploreRollsFor = (chunk: string): number => Math.min(CHUNK_EXPLORE_ROLLS, exploreThings(chunk).length);
 
-/** Whether the run's tiers let the player do this thing yet. */
-export const exploreThingReady = (thing: ExploreThing, unlocks: Pick<UnlockState, 'skills'> & Partial<Pick<UnlockState, 'farming'>>): boolean =>
-  (unlocks.skills[thing.skill] ?? 0) >= thing.tier && usablePatch(thing, unlocks);
+/** Whether the run lets the player do this thing yet. */
+export const exploreThingReady = (thing: ExploreThing, unlocks: ExploreUnlocks): boolean => exploreThingBlocker(thing, unlocks) === null;
 
 type ExploreRun = Pick<GameState, 'gameModeId' | 'unlocks' | 'chunkExplore'>;
 
@@ -96,14 +133,7 @@ export const exploreBlocker = (run: ExploreRun, chunk: string, fact: string): st
   const thing = exploreThings(chunk).find(candidate => candidate.fact === fact);
   if (!thing) return 'That isn’t something this chunk offers.';
   if (exploredIn(run, chunk).includes(fact)) return 'Already explored here.';
-  if ((run.unlocks.skills[thing.skill] ?? 0) < thing.tier) return `Needs ${thing.skill} tier ${thing.tier}.`;
-  if (!exploreThingReady(thing, run.unlocks)) {
-    const locked = thing.patches?.filter(([type]) => !(run.unlocks.farming ?? []).includes(type)) ?? [];
-    return locked.length === thing.patches?.length
-      ? `Needs the ${locked.map(([type]) => farmingPatchLabel(type)).join(' or ')} unlocked.`
-      : `Needs Farming tier ${Math.min(...(thing.patches ?? []).filter(([type]) => (run.unlocks.farming ?? []).includes(type)).map(([, need]) => need))}.`;
-  }
-  return null;
+  return exploreThingBlocker(thing, run.unlocks);
 };
 
 /** Eligible chunks that still hold rolls, newest first. */
