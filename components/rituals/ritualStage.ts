@@ -3,7 +3,9 @@
  * DOM nodes on a 420x300 stage, then a title and an in-game item dialog.
  * Skipping runs every remaining step at once and finishes every animation,
  * so a skipped scene and a reduced-motion scene land on the same last frame
- * the full one does.
+ * the full one does. The last frame stays up until the player clicks through
+ * (its dialog says "Click here to continue"): a result that closed itself
+ * hid what the ritual did before it could be read.
  */
 import './ritualStage.css';
 import { PixelFx } from './ritualPixels';
@@ -176,7 +178,6 @@ export const playScene = <I>(
   const run = (s: (typeof steps)[number]) => { if (!s.ran) { s.ran = true; s.fn(); } };
 
   let ended = false;
-  let closeTimer: ReturnType<typeof setTimeout> | null = null;
   let destroyed = false;
   const finishAll = () => {
     instant = true;
@@ -189,11 +190,7 @@ export const playScene = <I>(
     anims.forEach(a => { try { a.finish(); } catch { /* an animation with no end */ } });
     fx.clear();
   };
-  const markEnded = (lingerMs: number) => {
-    if (ended) return;
-    ended = true;
-    closeTimer = setTimeout(() => player.destroy(), lingerMs);
-  };
+  const markEnded = () => { ended = true; };
 
   const resize = () => {
     const r = host.getBoundingClientRect();
@@ -208,12 +205,11 @@ export const playScene = <I>(
     skip() {
       if (ended) { player.destroy(); return; }
       finishAll();
-      markEnded(1800);
+      markEnded();
     },
     destroy() {
       if (destroyed) return;
       destroyed = true;
-      if (closeTimer) clearTimeout(closeTimer);
       finishAll();
       ambients.forEach(a => a.cancel());
       fx.destroy();
@@ -225,10 +221,10 @@ export const playScene = <I>(
 
   if (instant) {
     steps.forEach(run);
-    markEnded(2200);
+    markEnded();
   } else {
     for (const s of steps) timeouts.push(setTimeout(() => run(s), s.t));
-    timeouts.push(setTimeout(() => markEnded(1800), result.end));
+    timeouts.push(setTimeout(markEnded, result.end));
   }
   return player;
 };

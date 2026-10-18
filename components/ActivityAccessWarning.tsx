@@ -1,4 +1,5 @@
 import React from 'react';
+import { usesActivityKeyReserves } from '../config/gameModes';
 import { TableType, UnlockState } from '../types';
 import { getActivityAccess } from '../utils/activityAccess';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
@@ -17,7 +18,7 @@ export const shouldShowActivityAccessWarning = (
   modeId: string,
   policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
 ): boolean =>
-  modeId === 'vanilla'
+  usesActivityKeyReserves(modeId)
   && isLocationInaccessible
   && policy.filteredTables.some(candidate => candidate === table)
   && policy.requiresTrackedHardGeography

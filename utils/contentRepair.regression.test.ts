@@ -207,7 +207,9 @@ describe('ocean navigation and the complete land frontier', () => {
       const next = getChunkFrontier(state.chunks, state).map(chunkKey);
       if (!next.length) break; state.chunks.push(...next);
     }
-    expect(state.chunks.length + 1).toBe(368);
+    // Walking alone: no island, no land a boat reaches (Kourend, Varlamore,
+    // Fossil Island), nothing behind a wall from the land you hold.
+    expect(state.chunks.length + 1).toBe(337);
     expect(checkUnlockAvailability(state).chunks).toBe(false);
     expect(chunkUnlocked(24, 41, state)).toBe(false);
     state.skills.Sailing = 10; state.levels.Sailing = 99; state.quests.push('Pandemonium');

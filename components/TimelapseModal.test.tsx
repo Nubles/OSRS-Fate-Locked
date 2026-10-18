@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ensureChain } from '../utils/integrity';
 import type { LogEntry } from '../types';
 import { TimelapseModal } from './TimelapseModal';
+import { UI_STYLE_KEY } from '../utils/uiStyle';
 
 const mode = vi.hoisted(() => ({ current: { gameModeId: 'vanilla', customMode: undefined as unknown } }));
 vi.mock('../context/GameContext', () => ({
@@ -50,5 +51,27 @@ describe('TimelapseModal replay under the run mode', () => {
 
     expect(screen.getByText('INTEGRITY: OK')).toBeTruthy();
     expect(screen.queryByText(/REPLAY WARNING/)).toBeNull();
+  });
+});
+
+describe('TimelapseModal in the OSRS layout', () => {
+  afterEach(() => localStorage.removeItem(UI_STYLE_KEY));
+
+  it('draws a stone window with the event on parchment and colours only the outcome word', () => {
+    localStorage.setItem(UI_STYLE_KEY, 'osrs');
+    const history = ensureChain([
+      { id: 'a', timestamp: 1, type: 'ROLL_SUCCESS', message: 'Key Found!' },
+      { id: 'b', timestamp: 2, type: 'ROLL_FAIL', message: 'No Key.' },
+    ]);
+    const onClose = vi.fn();
+    render(<TimelapseModal history={history} onClose={onClose} />);
+    expect(screen.getByRole('heading', { name: 'Timelapse' })).toBeTruthy();
+    expect(screen.getByText('INTEGRITY: OK')).toBeTruthy();
+    const outcome = screen.getByText('NO KEY');
+    expect(outcome.className).toContain('owb-tl-outcome');
+    expect(outcome.dataset.tone).toBe('bad');
+    expect(document.querySelector('.owb-tl-event')).toBeTruthy();
+    screen.getByRole('button', { name: 'Close timelapse' }).click();
+    expect(onClose).toHaveBeenCalled();
   });
 });

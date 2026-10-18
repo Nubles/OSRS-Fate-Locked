@@ -2,6 +2,7 @@ import type { ActivityReq } from '../data/activityRequirements';
 import type { UnlockState } from '../types';
 import { meetsSkillRequirement, withSkillGateQuests } from './journalStatus';
 import { isAreaReachable } from './reachability';
+import { chunkPlaceLabel, ownsAnyChunk } from './activityAccess';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 import { QUEST_DATA } from '../data/questData';
 import { pendingQuestProgress } from '../data/questProgress';
@@ -40,7 +41,13 @@ export function evaluateActivityReadiness(
     if (!oneAt99 && combined < 130) blockers.push({ kind: 'skill', label: '99 Attack or Strength, or 130 combined' });
   }
   const requiredAreas = requirement?.requiredAreas ?? [];
-  if (
+  // Chunked: the exact entrance chunk must be owned, not any chunk of the area.
+  const requiredChunks = gameModeId === 'chunked' ? requirement?.requiredChunks ?? [] : [];
+  if (requiredChunks.length > 0) {
+    if (!ownsAnyChunk(requiredChunks, unlocks)) {
+      blockers.push({ kind: 'area', label: requiredChunks.map(chunkPlaceLabel).join(' or ') });
+    }
+  } else if (
     requiredAreas.length > 0
     && !requiredAreas.some(area => isAreaReachable(area, unlocks, gameModeId))
   ) {

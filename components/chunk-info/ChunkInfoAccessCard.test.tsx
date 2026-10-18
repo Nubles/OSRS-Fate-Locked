@@ -71,6 +71,18 @@ describe('ChunkInfoAccessCard', () => {
       />,
     );
     expect(screen.getByText('Bank in this chunk')).toBeTruthy();
+
+    rerender(
+      <ChunkInfoAccessCard
+        previewLocked
+        entryRequirements={[]}
+        entrances={[]}
+        chunkUnlocked={false}
+        bankState="chunk-locked"
+      />,
+    );
+    expect(screen.getByText('Bank unlocked; unlock this chunk to use it')).toBeTruthy();
+    expect(screen.queryByText('Bank available')).toBeNull();
   });
 
   it('applies the chunk lock state to every entrance and hides absent route requirements', () => {
@@ -108,5 +120,12 @@ describe('ChunkInfoAccessCard', () => {
     );
 
     expect(container.firstChild).toBeNull();
+  });
+
+  it('notes that the Brass key is reusable and the trapdoor needs none', () => {
+    render(<ChunkInfoAccessCard previewLocked={false} entryRequirements={[]} chunkUnlocked bankState={null}
+      entrances={[{ location: 'Edgeville Dungeon', label: 'Varrock shed entrance to Edgeville Dungeon', wikiPage: 'Edgeville_Dungeon', requirements: ['Brass key'] }]} />);
+    expect(screen.getByText('Also requires Brass key')).toBeTruthy();
+    expect(screen.getByText(/key is reusable.*Edgeville trapdoor needs no key/)).toBeTruthy();
   });
 });

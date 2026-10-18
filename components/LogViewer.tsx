@@ -11,6 +11,7 @@ import { isRollEntry } from '../utils/logEntry';
 import { ModalFallback } from './LoadingFallback';
 import { formatKeyPercent, formatKeyRollValue } from '../utils/keyRoll';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useIsOsrsUi } from '../utils/uiStyle';
 
 const TimelapseModal = lazyWithRetry(() => import('./TimelapseModal').then(m => ({ default: m.TimelapseModal })));
 
@@ -69,6 +70,14 @@ const getLogStyle = (entry: LogEntry) => {
         border: 'border-l-cyan-500',
         bg: 'bg-cyan-900/10',
         glow: 'group-hover:shadow-[inset_0_0_20px_rgba(34,211,238,0.1)]'
+      };
+    case 'FATE':
+      return {
+        icon: Sparkles,
+        color: 'text-fuchsia-300',
+        border: 'border-l-fuchsia-500',
+        bg: 'bg-fuchsia-900/10',
+        glow: 'group-hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.1)]'
       };
     case 'XTREME_MILESTONE':
     case 'ACHIEVEMENT':
@@ -156,29 +165,28 @@ export const LogRow = ({ index, style, data }: ListChildComponentProps<{ entries
   );
 };
 
-export const LogViewer: React.FC = () => {
-  const { history } = useGame();
-  const listRef = useRef<List>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<FilterType>('ALL');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('ASC');
-  const [showTimelapse, setShowTimelapse] = useState(false);
+export type HistoryFilter = FilterType;
+export type HistorySort = SortOrder;
 
-  useEscapeKey(() => setShowTimelapse(false), showTimelapse);
+/** Which history entries a filter keeps; shared by the classic and OSRS timelines. */
+export const historyFilterMatches = (entry: LogEntry, filterType: FilterType): boolean => {
+  // A lost Chunked Breakthrough is stored as LEVEL_UP (so the audit's Key
+  // balances skip it) but is a fate roll: it files under Rolls, not Level.
+  const lostBreakthrough = entry.type === 'LEVEL_UP' && typeof entry.meta?.breakthrough === 'string';
+  if (filterType === 'ROLLS') return isRollEntry(entry) || lostBreakthrough;
+  if (filterType === 'UNLOCKS') return entry.type === 'UNLOCK';
+  if (filterType === 'RITUALS') return entry.type === 'ALTAR';
+  if (filterType === 'PROGRESS') return !lostBreakthrough && (entry.type === 'LEVEL_UP' || entry.type === 'XTREME_MILESTONE' || entry.type === 'ACHIEVEMENT' || entry.type === 'FATE');
+  return true;
+};
 
-  // Filtering Logic
-  const filteredHistory = useMemo(() => {
+/** The timeline after the category filter, the search and the sort. */
+export const filterHistory = (history: LogEntry[], filterType: FilterType, searchTerm: string, sortOrder: SortOrder): LogEntry[] => {
     let filtered = [...history]; // Copy to avoid mutation during sort
 
     // 1. Category Filter
     if (filterType !== 'ALL') {
-      filtered = filtered.filter(entry => {
-        if (filterType === 'ROLLS') return isRollEntry(entry);
-        if (filterType === 'UNLOCKS') return entry.type === 'UNLOCK';
-        if (filterType === 'RITUALS') return entry.type === 'ALTAR';
-        if (filterType === 'PROGRESS') return entry.type === 'LEVEL_UP' || entry.type === 'XTREME_MILESTONE' || entry.type === 'ACHIEVEMENT';
-        return true;
-      });
+      filtered = filtered.filter(entry => historyFilterMatches(entry, filterType));
     }
 
     // 2. Search Filter
@@ -199,7 +207,32 @@ export const LogViewer: React.FC = () => {
     });
 
     return filtered; 
-  }, [history, filterType, searchTerm, sortOrder]);
+};
+
+const OsrsHistory = lazyWithRetry(() => import('./osrs/OsrsHistory'));
+
+/** The Fate Timeline: classic rows, or an OSRS chatbox when that layout is on. */
+export const LogViewer: React.FC = () => (
+  useIsOsrsUi()
+    ? <Suspense fallback={null}><OsrsHistory /></Suspense>
+    : <ClassicLogViewer />
+);
+
+const ClassicLogViewer: React.FC = () => {
+  const { history } = useGame();
+  const listRef = useRef<List>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<FilterType>('ALL');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('ASC');
+  const [showTimelapse, setShowTimelapse] = useState(false);
+
+  useEscapeKey(() => setShowTimelapse(false), showTimelapse);
+
+  // Filtering Logic
+  const filteredHistory = useMemo(
+    () => filterHistory(history, filterType, searchTerm, sortOrder),
+    [history, filterType, searchTerm, sortOrder],
+  );
 
   // Auto-scroll logic
   useEffect(() => {

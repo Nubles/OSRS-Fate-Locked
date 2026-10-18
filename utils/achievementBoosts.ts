@@ -1,3 +1,4 @@
+import { usesActivityKeyReserves } from '../config/gameModes';
 /**
  * Activity Key boosts (Alex, 2026-10-15): every tier of an activity's
  * achievements adds a little to that activity's own Key rolls, by how hard
@@ -52,11 +53,12 @@ export const boostActivityOf = (source: string): BoostActivity | null => {
 };
 
 /**
- * Vanilla minigames roll from their own Key reserves, paced at about an hour
- * per Key, so minigame achievements don't speed them up (Alex, 2026-10-15).
+ * Vanilla and Chunked minigames roll from their own Key reserves, paced at
+ * about an hour per Key, so minigame achievements don't speed them up (Alex,
+ * 2026-10-15; Chunked since 2026-10-17).
  */
 export const boostApplies = (activity: BoostActivity, gameModeId: string | undefined): boolean =>
-  !(activity === 'minigames' && gameModeId === 'vanilla');
+  !(activity === 'minigames' && usesActivityKeyReserves(gameModeId));
 
 /** Summed in tenths so 0.2 + 0.3 stays 0.5. */
 const boostOf = (activity: BoostActivity, claimed: readonly string[] | undefined): number => {

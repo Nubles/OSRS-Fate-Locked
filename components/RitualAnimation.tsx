@@ -14,8 +14,9 @@ interface Props {
 
 /**
  * The full-screen moment after a Void Altar ritual. Each ritual has its own
- * scene (components/rituals/ritualScenes.ts). Click or Escape skips to the
- * last frame, a second click closes. Like the app's other reveals it follows
+ * scene (components/rituals/ritualScenes.ts). A click (or Space, like the
+ * game's dialogs) skips to the last frame, which stays up until a second
+ * click or Escape closes it. Like the app's other reveals it follows
  * the Animations setting only, not the system's reduced-motion setting:
  * Windows turns that on with "Animation effects" off, and the ritual then
  * showed only a still card for two seconds.
@@ -39,7 +40,13 @@ export const RitualAnimation: React.FC<Props> = ({ ritual, meta, ownedChunks, on
         onDone: () => completeRef.current(),
       });
     });
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') playerRef.current?.destroy(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') playerRef.current?.destroy();
+      else if ((e.key === ' ' || e.key === 'Enter') && playerRef.current) {
+        e.preventDefault();
+        playerRef.current.skip();
+      }
+    };
     window.addEventListener('keydown', onKey);
     return () => {
       cancelled = true;

@@ -81,6 +81,8 @@ class WikiService {
   public async fetchImage(itemName: string): Promise<string | null> {
     const term = this.normalize(itemName);
     if (!term) return null;
+    // The private preview can't reach the wiki API; it answers from its packed images instead.
+    if (import.meta.env.VITE_PREVIEW_IMAGE_PACK === '1') return `https://oldschool.runescape.wiki/images/${term}.png`;
 
     // Check Cache
     const cached = this.memoryCache.get(term);

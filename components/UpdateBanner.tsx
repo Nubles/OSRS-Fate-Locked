@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { RefreshCw, X } from 'lucide-react';
+import { checkLiveBuild } from '../utils/chunkLoadError';
 
 /**
  * "A new version is available — reload" banner.
@@ -17,15 +18,9 @@ export const UpdateBanner: React.FC = () => {
   const [dismissed, setDismissed] = useState(false);
 
   const check = useCallback(async () => {
-    try {
-      const base = (import.meta as any).env?.BASE_URL ?? '/';
-      const res = await fetch(`${base}version.json?t=${Date.now()}`, { cache: 'no-store' });
-      if (!res.ok) return;
-      const { build } = await res.json();
-      // Only flag when we have both ids and they differ. In dev there's no
-      // version.json (or it matches), so this stays quiet.
-      if (build && typeof __BUILD_ID__ !== 'undefined' && build !== __BUILD_ID__) setStale(true);
-    } catch { /* offline / missing file — ignore */ }
+    // Only flag when we have both ids and they differ. In dev there's no
+    // version.json, and offline the check comes back 'unknown', so this stays quiet.
+    if ((await checkLiveBuild()) === 'newer') setStale(true);
   }, []);
 
   useEffect(() => {

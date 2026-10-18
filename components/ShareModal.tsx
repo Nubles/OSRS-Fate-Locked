@@ -10,7 +10,10 @@ import { showToast } from '../utils/toast';
 import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { BANK_IDS } from '../data/banks';
 import { completionPercent } from '../utils/completion';
+import { chunkTotals } from '../utils/runProgress';
 import { buildShareCardStats } from '../utils/shareCard';
+import { useIsOsrsUi } from '../utils/uiStyle';
+import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
 import { RS_BOLD, RS_FONT, RS_SMALL, loadRitualFonts } from './rituals/ritualAssets';
 import { CARD_H, CARD_W, describeShareCard, drawShareCard, type ShareCardStyle } from './ShareCardCanvas';
 
@@ -33,6 +36,7 @@ const STYLES: { id: ShareCardStyle; label: string }[] = [
 export const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const game = useGame();
   const { activeProfileName } = useProfiles();
+  const osrs = useIsOsrsUi();
   const { unlocks, history, gameModeId, customMode, linkedAccount } = game;
   const dialogRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -105,7 +109,7 @@ export const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   // The copied text summary (Discord-friendly), unchanged from the old Stats card.
   const isChunked = gameModeId === 'chunked';
   const generateTextSummary = () => {
-    const totalRegions = isChunked ? (unlocks.chunks ?? []).length : visibleAreaUnlocks(unlocks.regions).length;
+    const totalRegions = isChunked ? chunkTotals(unlocks).unlocked : visibleAreaUnlocks(unlocks.regions).length;
     const totalEquipTiers = (Object.values(unlocks.equipment) as number[]).reduce((a, b) => a + b, 0);
     const totalLevel = (Object.values(unlocks.levels) as number[]).reduce((a, b) => a + b, 0);
     return `**Fate Locked Ironman** (${getGameMode(gameModeId).name} mode)
@@ -127,6 +131,78 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
       showToast('Copy failed. Your browser blocked the clipboard.');
     }
   };
+
+  const preview = (
+    <div className="relative w-full">
+      <canvas
+        ref={canvasRef}
+        width={CARD_W}
+        height={CARD_H}
+        role="img"
+        aria-label={`Share card: ${describeShareCard(stats)}`}
+        className={`block w-full h-auto ${osrs ? 'owb-share-card' : 'rounded-md border border-white/10 bg-black'} transition-opacity ${drawn ? 'opacity-100' : 'opacity-40'}`}
+        style={{ aspectRatio: `${CARD_W} / ${CARD_H}` }}
+      />
+      {!drawn && (
+        <div className={`absolute inset-0 flex items-center justify-center text-sm ${osrs ? 'owb-sub' : 'text-gray-300'}`} aria-live="polite">
+          {drawError ? 'The card could not be drawn.' : 'Drawing card…'}
+        </div>
+      )}
+    </div>
+  );
+
+  const footNote = (
+    <p className={`text-[11px] font-mono text-center ${osrs ? 'owb-sub' : 'text-gray-500'}`}>
+      Run ID: {stats.runId ?? 'not started'} · {stats.history.detail}
+      {stats.history.ok ? '' : ' (not shown on the card)'}
+    </p>
+  );
+
+  const zoomBox = (
+    <label className={`flex items-center gap-2 cursor-pointer select-none ${osrs ? 'owb-share-zoom' : 'text-xs text-gray-300'}`}>
+      <input id="share-card-zoom" type="checkbox" checked={zoom} onChange={toggleZoom} className="accent-amber-500" />
+      Zoom to my land
+    </label>
+  );
+
+  if (osrs) {
+    // OSRS layout: one stone window with the Journal's title bar and stone tabs for the two looks.
+    return (
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Share run"
+        tabIndex={-1}
+        onClick={onClose}
+        className="fixed inset-0 z-[100] owb-share-backdrop"
+      >
+        <div className="osrs-win owb-win owb-share" onClick={e => e.stopPropagation()}>
+          <OsrsTitleBar title="Share Run" onClose={onClose} tools={<SectionGuide id="SHARE" />} />
+          <div className="owb-tabs" role="group" aria-label="Card style">
+            {STYLES.map(s => (
+              <button key={s.id} type="button" className="owb-tab" aria-pressed={style === s.id} onClick={() => pickStyle(s.id)}>
+                {s.label}
+              </button>
+            ))}
+            <span className="ml-auto pb-1">{zoomBox}</span>
+          </div>
+          <div className="owb-share-body custom-scrollbar flex flex-col items-center gap-3">
+            {preview}
+            <div className="owb-share-actions">
+              <button type="button" className="osrs-btn" onClick={download} disabled={!drawn}>Download PNG</button>
+              <button type="button" className="osrs-btn" onClick={copyImage} disabled={!drawn}>Copy image</button>
+              <button type="button" className="osrs-btn" onClick={copySummary}>
+                {copyStatus === 'copied' ? <span className="owb-ok">Copied!</span> : 'Copy Summary'}
+              </button>
+              {drawError && <button type="button" className="osrs-btn" onClick={() => setRedraw(n => n + 1)}>Try again</button>}
+            </div>
+            {footNote}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const button = 'flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40';
 
@@ -159,10 +235,7 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
               </button>
             ))}
           </div>
-          <label className="flex items-center gap-2 text-xs text-gray-300 cursor-pointer select-none">
-            <input id="share-card-zoom" type="checkbox" checked={zoom} onChange={toggleZoom} className="accent-amber-500" />
-            Zoom to my land
-          </label>
+          {zoomBox}
           <SectionGuide id="SHARE" className="px-1" />
           <button type="button" onClick={onClose} aria-label="Close" className="ml-auto text-gray-500 hover:text-white">
             <X size={18} />
@@ -170,22 +243,7 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
         </div>
 
         <div className="p-3 sm:p-5 flex flex-col items-center gap-4">
-          <div className="relative w-full">
-            <canvas
-              ref={canvasRef}
-              width={CARD_W}
-              height={CARD_H}
-              role="img"
-              aria-label={`Share card: ${describeShareCard(stats)}`}
-              className={`block w-full h-auto rounded-md border border-white/10 bg-black transition-opacity ${drawn ? 'opacity-100' : 'opacity-40'}`}
-              style={{ aspectRatio: `${CARD_W} / ${CARD_H}` }}
-            />
-            {!drawn && (
-              <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-300" aria-live="polite">
-                {drawError ? 'The card could not be drawn.' : 'Drawing card…'}
-              </div>
-            )}
-          </div>
+          {preview}
 
           <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
             <button type="button" onClick={download} disabled={!drawn} className={`${button} bg-emerald-700 hover:bg-emerald-600 text-white`}>
@@ -204,10 +262,7 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
             )}
           </div>
 
-          <p className="text-[11px] font-mono text-gray-500 text-center">
-            Run ID: {stats.runId ?? 'not started'} · {stats.history.detail}
-            {stats.history.ok ? '' : ' (not shown on the card)'}
-          </p>
+          {footNote}
         </div>
       </div>
     </div>

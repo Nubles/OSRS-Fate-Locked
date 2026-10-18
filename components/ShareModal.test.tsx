@@ -13,6 +13,7 @@ import {
 import { ShareModal } from './ShareModal';
 import type { LogEntry } from '../types';
 import { computeRunId } from '../utils/integrity';
+import { UI_STYLE_KEY } from '../utils/uiStyle';
 
 const mockGame = vi.hoisted(() => ({
   current: {
@@ -106,6 +107,22 @@ describe('ShareModal region summary', () => {
     expect(summary).toContain(`Areas: ${expected} Unlocked`);
     expect(summary).not.toContain("Otto's Grotto");
     expect(summary).not.toContain("Heroes' Guild");
+  });
+
+  it("counts a Chunked run's chunks the same way on the card and in the summary, start chunk included", async () => {
+    // The review's mid run: 8 chunks around Lumbridge and Al Kharid plus the start chunk.
+    mockGame.current.gameModeId = 'chunked';
+    mockGame.current.unlocks.chunks = ['49,50', '49,49', '50,49', '48,50', '50,51', '51,50', '52,50', '51,49'];
+    try {
+      const view = render(<ShareModal onClose={vi.fn()} />);
+      expect(view.getByRole('img', { name: /9 of \d+ chunks/ })).toBeTruthy();
+
+      fireEvent.click(view.getByRole('button', { name: 'Copy Summary' }));
+      await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
+      expect(writeText.mock.calls[0][0]).toContain('Chunks: 9 Unlocked');
+    } finally {
+      mockGame.current.gameModeId = 'vanilla';
+    }
   });
 
   it('uses the generated bank pool size in the copied summary', async () => {
@@ -204,5 +221,27 @@ describe('ShareModal region summary', () => {
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     expect(view.getByText(new RegExp(expected))).toBeTruthy();
     localStorage.clear();
+  });
+});
+
+describe('ShareModal in the OSRS layout', () => {
+  afterEach(() => {
+    cleanup();
+    localStorage.removeItem(UI_STYLE_KEY);
+  });
+
+  it('opens in a stone window with OSRS and Tracker tabs', () => {
+    localStorage.setItem(UI_STYLE_KEY, 'osrs');
+    const onClose = vi.fn();
+    const view = render(<ShareModal onClose={onClose} />);
+    expect(view.getByRole('heading', { name: 'Share Run' })).toBeTruthy();
+    expect(document.querySelector('.owb-share')).toBeTruthy();
+    expect(view.getByRole('button', { name: 'OSRS' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(view.getByRole('button', { name: 'Tracker' }));
+    expect(view.getByRole('button', { name: 'Tracker' }).getAttribute('aria-pressed')).toBe('true');
+    expect(view.getByRole('img', { name: /Share card:/ })).toBeTruthy();
+    expect(view.getByRole('button', { name: 'Copy Summary' })).toBeTruthy();
+    fireEvent.click(view.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalled();
   });
 });

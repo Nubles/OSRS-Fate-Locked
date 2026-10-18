@@ -5,8 +5,8 @@ import { Boxes } from './OsrsIcon';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useGame } from '../context/GameContext';
 import { EntityModel } from './EntityModel';
-import { MODEL_FILES } from '../data/modelManifest';
-import { modelUrlBySlug, orientationForSlug } from '../data/entityModels';
+import { loadedModelFiles, modelUrlBySlug, orientationForSlug } from '../data/entityModels';
+import { useModelManifest } from '../hooks/useModelFor';
 
 /**
  * A review gallery for every generated 3D model. A list of all models on the
@@ -22,9 +22,11 @@ export const ModelGallery: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const { animationsEnabled } = useGame();
   useEscapeKey(onClose, true);
 
-  const slugs = useMemo(() => Object.keys(MODEL_FILES).sort(), []);
+  const ready = useModelManifest();
+  const slugs = useMemo(() => (ready ? Object.keys(loadedModelFiles()).sort() : []), [ready]);
   const [q, setQ] = useState('');
-  const [sel, setSel] = useState(slugs[0] ?? '');
+  const [picked, setSel] = useState('');
+  const sel = picked || slugs[0] || '';
 
   const filtered = useMemo(() => {
     const t = q.trim().toLowerCase();
@@ -90,7 +92,7 @@ export const ModelGallery: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             </div>
             <div className="mt-3 flex items-baseline justify-between">
               <h3 className="text-lg font-bold text-white">{prettify(sel)}</h3>
-              <span className="text-[11px] font-mono text-gray-600">{MODEL_FILES[sel]}</span>
+              <span className="text-[11px] font-mono text-gray-600">{loadedModelFiles()[sel]}</span>
             </div>
             <p className="text-[11px] text-gray-500 mt-1">Unlocked bosses render as rotatable 3D models.</p>
           </div>

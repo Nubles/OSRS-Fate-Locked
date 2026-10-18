@@ -252,6 +252,31 @@ describe('SyncCodeModal import verdict', () => {
     expect(await screen.findByText('Verified run')).toBeTruthy();
     expect(screen.queryByText('Loadable, with warnings')).toBeNull();
   });
+
+  it("previews a Chunked run's chunks and names its mode", async () => {
+    vi.mocked(decodeAndValidateSyncCode).mockResolvedValueOnce({
+      ok: true,
+      state: {
+        unlocks: { skills: {}, regions: [], quests: [], chunks: ['49,50', '51,50', '50,49'] },
+        keys: 6, specialKeys: 0, chaosKeys: 0, fatePoints: 0,
+        history: [],
+        gameModeId: 'chunked',
+      } as unknown as GameState,
+      checksumOk: true,
+      warnings: [],
+    });
+    const user = userEvent.setup();
+    render(<SyncCodeModal onClose={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Import' }));
+    fireEvent.change(screen.getByPlaceholderText('FLSYNC.g1.…'), { target: { value: 'chunked-code' } });
+    await user.click(screen.getByRole('button', { name: 'Verify code' }));
+
+    const tile = (await screen.findByText('Chunks')).parentElement!;
+    expect(tile.textContent).toBe('Chunks4');
+    expect(screen.queryByText('Regions')).toBeNull();
+    expect(screen.getByText(/0 logged events · Chunked mode/)).toBeTruthy();
+  });
 });
 
 describe('SyncCodeModal online backup tab', () => {

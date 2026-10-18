@@ -1,0 +1,658 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   OSRS layout: Fate Analytics, Rules, RuneProof, Achievements and Fate
+   Forecast drawn as OSRS interface windows (stone frame, orange RSBold title
+   bar with the orange square close button, square stone tabs and buttons,
+   inner wells). The classic modals keep their markup; they only carry the
+   osrs-wa-* hooks this file keys off. Everything is scoped to
+   html[data-ui="osrs"], so the classic layout never sees it.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── The window ─────────────────────────────────────────────────────────── */
+html[data-ui="osrs"] .osrs-wa-overlay { background-color: rgba(12, 10, 8, 0.7); }
+html[data-ui="osrs"] .osrs-wa-win {
+  padding: 3px;
+  background-color: var(--osrs-window);
+  border: 2px solid #000;
+  border-radius: 0;
+  color: var(--osrs-tan);
+  font-family: 'RS', sans-serif;
+  text-shadow: var(--osrs-shadow);
+  box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi), inset -1px -1px 0 var(--osrs-bevel-lo), inset 2px 2px 0 var(--osrs-bevel-hi2), inset -2px -2px 0 var(--osrs-bevel-lo2);
+}
+html[data-ui="osrs"][data-osrs-style="2010"] .osrs-wa-win {
+  --rv: radial-gradient(circle at 3.5px 3.5px, #dde1e5 0 0.9px, #a7adb4 0.9px 1.9px, #555b62 1.9px 2.5px, #000 2.5px 3.3px, transparent 3.5px);
+  background-image: var(--rv), var(--rv), var(--rv), var(--rv);
+  background-size: 7px 7px;
+  background-repeat: no-repeat;
+  background-position: left 0 top 0, right 0 top 0, left 0 bottom 0, right 0 bottom 0;
+}
+
+/* Everything inside is square, flat and free of web glows. */
+html[data-ui="osrs"] .osrs-wa-win .rounded-full:not(.osrs-wa-dot) { border-radius: 0; }
+html[data-ui="osrs"] .osrs-wa-win :where([class*="shadow-["], [class*="ring-"]):not(:focus-visible) { box-shadow: none; }
+html[data-ui="osrs"] .osrs-wa-win [class*="bg-gradient-to-"] { background-image: none; }
+html[data-ui="osrs"] .osrs-wa-win .font-mono { font-family: 'RS', sans-serif; }
+html[data-ui="osrs"] .osrs-wa-win .italic { font-style: normal; }
+
+/* Text accents: the web's sky, rose, cyan and fuchsia become interface colours. */
+html[data-ui="osrs"] .osrs-wa-win :is(.text-gray-50, .text-gray-100) { color: var(--osrs-white); }
+html[data-ui="osrs"] .osrs-wa-win :is(.text-sky-200, .text-sky-300, .text-cyan-200, .text-cyan-300, .text-cyan-400, .text-slate-300) { color: var(--osrs-text-soft); }
+html[data-ui="osrs"] .osrs-wa-win :is(.text-rose-200, .text-rose-300, .text-rose-400) { color: var(--osrs-red); }
+html[data-ui="osrs"] .osrs-wa-win :is(.text-fuchsia-200, .text-fuchsia-300, .text-fuchsia-400, .text-violet-300) { color: var(--osrs-purple); }
+html[data-ui="osrs"] .osrs-wa-win :is(.text-emerald-200, .text-green-300) { color: var(--osrs-green); }
+
+/* ── Title bar: the title centred in orange RSBold, the close button an
+   orange × on a square stone button, any subtitle on a line beneath. ──── */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-head {
+  position: relative;
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--osrs-rule);
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-hicon { display: none; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-htext { display: contents; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-title {
+  grid-column: 1 / -1;
+  box-sizing: border-box;
+  height: 30px;
+  margin: 0;
+  padding: 0 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font: var(--osrs-fs, 16px) 'RSBold', sans-serif;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--osrs-orange);
+  text-shadow: var(--osrs-shadow);
+  border-bottom: 1px solid #1d1812;
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-sub {
+  grid-column: 1;
+  margin: 0;
+  padding: 4px 10px 5px;
+  min-width: 0;
+  font: var(--osrs-fs, 16px) 'RSSmall', sans-serif;
+  line-height: 16px;
+  color: var(--osrs-tan);
+  text-shadow: var(--osrs-shadow);
+}
+/* Extra header lines (worn title, Key chance boosts) run the full width under the first. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-sub-full { grid-column: 1 / -1; padding-top: 0; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-hchip {
+  grid-column: 2;
+  margin: 3px 6px;
+  padding: 1px 8px;
+  border-radius: 0;
+  background: var(--osrs-well);
+  border: 1px solid #000;
+  font: var(--osrs-fs, 16px) 'RSSmall', sans-serif;
+  color: var(--osrs-yellow);
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-close {
+  all: unset;
+  box-sizing: border-box;
+  position: absolute;
+  right: 5px;
+  top: 4px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--osrs-orange);
+  background: var(--osrs-btn);
+  border: 1px solid;
+  border-color: var(--osrs-btn-hi) var(--osrs-btn-lo) var(--osrs-btn-lo) var(--osrs-btn-hi);
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-close svg { width: 16px; height: 16px; stroke-width: 3.75; stroke-linecap: butt; color: inherit; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-close:hover { color: var(--osrs-white); background: var(--osrs-btn); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-close:focus-visible { outline: 1px solid var(--osrs-yellow); }
+
+/* ── Tabs: the Journal's tab strip, the selected tab pressed in. ────────── */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-tabs {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  padding: 6px 8px 0;
+  background: none;
+  border-bottom: 1px solid var(--osrs-rule);
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-tab {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 14px;
+  line-height: 30px;
+  white-space: nowrap;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif;
+  color: var(--osrs-orange);
+  text-shadow: var(--osrs-shadow);
+  background: var(--osrs-inner);
+  border: 1px solid var(--osrs-rule);
+  border-bottom: 0;
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-tab > * { display: none; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-tab:hover { color: var(--osrs-white); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-tab[aria-selected="true"] { position: relative; top: 1px; background: var(--osrs-selected); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-tab:focus-visible { outline: 1px solid var(--osrs-yellow); outline-offset: -1px; }
+
+/* ── Building blocks ────────────────────────────────────────────────────── */
+/* Stone buttons, the selected one pressed in. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-btn {
+  box-sizing: border-box;
+  min-height: 28px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--osrs-orange);
+  text-shadow: var(--osrs-shadow);
+  background: var(--osrs-btn);
+  border: 1px solid #000;
+  border-radius: 0;
+  box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo);
+  opacity: 1;
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-btn:hover:not(:disabled) { color: var(--osrs-white); background: var(--osrs-btn); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-btn:focus-visible { outline: 1px solid var(--osrs-yellow); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-btn:disabled { cursor: default; color: var(--osrs-btn-off); background: var(--osrs-btn-off-bg); box-shadow: inset 1px 1px 0 var(--osrs-inner-ring); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-btn[data-osrs-on="true"] { color: var(--osrs-white); background: var(--osrs-selected); box-shadow: inset 1px 1px 0 var(--osrs-selected-sh); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-btn svg { color: inherit; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-sq { width: 26px; min-height: 26px; height: 26px; padding: 0; }
+
+/* Cards: an inner panel. Tiles: a stone block with a bevel. Wells: dark. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-card {
+  border-radius: 0;
+  background-color: var(--osrs-inner);
+  border: 1px solid #000;
+  box-shadow: inset 0 0 0 1px var(--osrs-inner-ring);
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-tile {
+  border-radius: 0;
+  background-color: var(--osrs-window);
+  border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi), inset -1px -1px 0 var(--osrs-bevel-lo);
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-well {
+  border-radius: 0;
+  background-color: var(--osrs-well);
+  border: 1px solid #000;
+  box-shadow: none;
+}
+/* Icon boxes become inventory slots. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-ico {
+  border-radius: 0;
+  background-color: var(--osrs-slot);
+  border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 var(--osrs-slot-hi), inset -1px -1px 0 var(--osrs-slot-lo);
+  color: var(--osrs-orange);
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-h3 { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; letter-spacing: 0; color: var(--osrs-orange); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-label { font: var(--osrs-fs, 16px) 'RS', sans-serif; letter-spacing: 0; color: var(--osrs-orange); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-small,
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-detail { font-family: 'RSSmall', sans-serif; color: var(--osrs-text-dim); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-value { font-family: 'RSBold', sans-serif; font-weight: 400; color: var(--osrs-yellow); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-rule { background: var(--osrs-rule); }
+
+/* Native controls: a dark well with an orange arrow, a square tick box. */
+html[data-ui="osrs"] .osrs-wa-win select,
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-select {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 26px 0 8px;
+  border-radius: 0;
+  border: 1px solid #000;
+  background-color: var(--osrs-well);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23ff981f'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  box-shadow: inset 1px 1px 0 #000;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--osrs-orange);
+  text-shadow: var(--osrs-shadow);
+  cursor: pointer;
+}
+html[data-ui="osrs"] .osrs-wa-win select:hover { color: var(--osrs-white); }
+html[data-ui="osrs"] .osrs-wa-win select:focus { outline: 1px solid var(--osrs-yellow); border-color: #000; }
+html[data-ui="osrs"] .osrs-wa-win select option,
+html[data-ui="osrs"] .osrs-wa-win select optgroup { background: var(--osrs-inner); color: var(--osrs-tan); text-shadow: none; }
+html[data-ui="osrs"] .osrs-wa-win input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  border: 1px solid #000;
+  border-radius: 0;
+  background: var(--osrs-well) no-repeat center;
+  box-shadow: inset 1px 1px 0 #000, 1px 1px 0 var(--osrs-bevel-hi);
+  cursor: pointer;
+}
+html[data-ui="osrs"] .osrs-wa-win input[type="checkbox"]:checked {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath d='M1 5l3 3 5-7' fill='none' stroke='%23ffff00' stroke-width='2'/%3E%3C/svg%3E");
+}
+html[data-ui="osrs"] .osrs-wa-win input[type="checkbox"]:disabled { cursor: default; opacity: 0.5; }
+html[data-ui="osrs"] .osrs-wa-win input[type="checkbox"]:focus-visible { outline: 1px solid var(--osrs-yellow); }
+/* A label wrapping a tick box reads as a stone button. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-checkbtn {
+  box-sizing: border-box;
+  min-height: 28px;
+  padding: 0 10px 0 7px;
+  gap: 7px;
+  border-radius: 0;
+  border: 1px solid #000;
+  background: var(--osrs-btn);
+  box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo);
+  font: var(--osrs-fs, 16px) 'RS', sans-serif;
+  letter-spacing: 0;
+  color: var(--osrs-orange);
+  text-shadow: var(--osrs-shadow);
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-checkbtn:hover { color: var(--osrs-white); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-checkbtn:has(input:disabled) { color: var(--osrs-btn-off); background: var(--osrs-btn-off-bg); box-shadow: inset 1px 1px 0 var(--osrs-inner-ring); }
+
+/* OSRS progress bars: green over dark red in a black frame. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-pbar {
+  box-sizing: border-box;
+  height: 10px;
+  border-radius: 0;
+  border: 1px solid #000;
+  background: #7f0000;
+  overflow: hidden;
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-pbar > div { height: 100%; border-radius: 0; background: var(--osrs-green); background-image: none; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.3); }
+
+/* Chart tooltips: the game's yellow examine box. */
+html[data-ui="osrs"] .osrs-wa-tip {
+  padding: 2px 5px;
+  border-radius: 0;
+  border: 1px solid #000;
+  background: #ffffa0;
+  box-shadow: none;
+  backdrop-filter: none;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif;
+  line-height: 17px;
+  text-shadow: none;
+}
+html[data-ui="osrs"] .osrs-wa-tip,
+html[data-ui="osrs"] .osrs-wa-tip * { color: #000; text-shadow: none; }
+
+/* ── Fate Analytics ─────────────────────────────────────────────────────── */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-filters { padding: 6px 8px; background: none; border-bottom: 1px solid var(--osrs-rule); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-filters label { letter-spacing: 0; text-transform: none; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-filters > div > label:not(.osrs-wa-checkbtn) { font: var(--osrs-fs, 16px) 'RS', sans-serif; color: var(--osrs-tan); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-filters [role="status"] { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-orange); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-quality {
+  box-sizing: border-box;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 0;
+  border: 1px solid #000;
+  background: var(--osrs-btn);
+  box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo);
+  font: var(--osrs-fs, 16px) 'RS', sans-serif;
+  color: var(--osrs-orange);
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-quality[data-osrs-clean="true"] { color: var(--osrs-green); }
+html[data-ui="osrs"] .osrs-wa-win details[open] > .osrs-wa-quality { background: var(--osrs-selected); box-shadow: inset 1px 1px 0 var(--osrs-selected-sh); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-pop {
+  border-radius: 0;
+  border: 2px solid #000;
+  background: var(--osrs-window);
+  box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi), inset -1px -1px 0 var(--osrs-bevel-lo);
+  font: var(--osrs-fs, 16px) 'RS', sans-serif;
+  color: var(--osrs-tan);
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-pop dl { border-color: var(--osrs-rule); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-pop dd { color: var(--osrs-yellow); }
+
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-body { background: none; padding: 8px; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-value-big { font-size: var(--osrs-fs-big, 32px); line-height: 30px; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-tile .osrs-wa-ico { width: 32px; height: 30px; }
+/* The luck card: an inner panel; the verdict in the game's colours. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-luckcard > [aria-hidden="true"]:first-child { display: none; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-verdict { font-family: 'RSBold', sans-serif; font-weight: 400; color: var(--osrs-white); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-verdict[data-osrs-verdict="Blessed by Fate"] { color: var(--osrs-yellow); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-verdict[data-osrs-verdict="Running hot"] { color: var(--osrs-green); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-verdict[data-osrs-verdict="Running cold"] { color: var(--osrs-text-soft); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-verdict[data-osrs-verdict="Forsaken by Fate"] { color: var(--osrs-red); }
+/* The luck meter: a framed bar of flat zones and a white marker. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-zones { border: 1px solid #000; border-radius: 0; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-zones > div { border-color: #000; }
+html[data-ui="osrs"] .osrs-wa-win [data-osrs-zone="forsaken"] { background-color: #7f0000; }
+html[data-ui="osrs"] .osrs-wa-win [data-osrs-zone="cold"] { background-color: var(--osrs-btn-off); }
+html[data-ui="osrs"] .osrs-wa-win [data-osrs-zone="fair"] { background-color: var(--osrs-well); }
+html[data-ui="osrs"] .osrs-wa-win [data-osrs-zone="hot"] { background-color: var(--osrs-green); }
+html[data-ui="osrs"] .osrs-wa-win [data-osrs-zone="blessed"] { background-color: var(--osrs-orange); }
+/* Zone labels sit under fixed-width zones, so they stay at the small
+   font's native size even with large text on (the narrow zones overlap
+   at 32px). */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-zonelabels { font: 16px 'RSSmall', sans-serif; letter-spacing: 0; text-transform: none; color: var(--osrs-tan); white-space: nowrap; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-thumb {
+  width: 7px;
+  height: 20px;
+  border-radius: 0;
+  border: 1px solid #000;
+  background: var(--osrs-white);
+  box-shadow: none;
+}
+/* Meters: a dark well; fills and ticks flat and square. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-meter { border-radius: 0; background-color: var(--osrs-well); box-shadow: 0 0 0 1px #000; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-meter-fill { border-radius: 0; background-color: var(--osrs-orange); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-meter-tick { border-radius: 0; background-color: var(--osrs-white); box-shadow: 0 0 0 1px #000; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-meter-mid { background-color: var(--osrs-rule); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-meter-fill[data-osrs-luck="up"] { background: var(--osrs-green) !important; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-meter-fill[data-osrs-luck="down"] { background: var(--osrs-red) !important; }
+/* Luck numbers and sample tags. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-luck { background: none; color: var(--osrs-tan); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-luck[data-osrs-luck="up"] { color: var(--osrs-green); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-luck[data-osrs-luck="down"] { color: var(--osrs-red); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-pill {
+  padding: 0 5px;
+  border-radius: 0;
+  border: 1px solid #000;
+  background: var(--osrs-well);
+  font: var(--osrs-fs, 16px) 'RSSmall', sans-serif;
+  line-height: 16px;
+  color: var(--osrs-tan);
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-pill[data-osrs-sample="developing"] { color: var(--osrs-white); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-pill[data-osrs-sample="limited"] { color: var(--osrs-orange); }
+/* Tables: an orange header row on stone, rows on the inner panel. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-table thead { background: var(--osrs-window); border-color: #000; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-table thead th,
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-table thead button { font: var(--osrs-fs, 16px) 'RS', sans-serif; letter-spacing: 0; text-transform: none; color: var(--osrs-orange); background-color: var(--osrs-window); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-table thead button:hover { color: var(--osrs-white); background-color: var(--osrs-window); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-table thead th[aria-sort="ascending"] button,
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-table thead th[aria-sort="descending"] button { color: var(--osrs-white); background-color: var(--osrs-selected); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-table tbody { font-family: 'RS', sans-serif; font-size: var(--osrs-fs, 16px); color: var(--osrs-tan); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-table tbody > tr { border-color: var(--osrs-well); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-table tbody > tr:hover { background: rgba(255, 236, 196, 0.06); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-table tbody th { background-color: var(--osrs-inner); color: var(--osrs-orange); font-family: 'RS', sans-serif; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-table td.text-white,
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-table td .text-white { color: var(--osrs-yellow); }
+/* Recharts: pixel-font axes, interface lines, series in the game's colours. */
+html[data-ui="osrs"] .osrs-wa-win .recharts-text { font-family: 'RSSmall', sans-serif; font-size: 16px; fill: var(--osrs-text-dim); text-shadow: none; }
+html[data-ui="osrs"] .osrs-wa-win .recharts-cartesian-grid line { stroke: var(--osrs-rule); stroke-opacity: 0.45; }
+html[data-ui="osrs"] .osrs-wa-win .recharts-cartesian-axis-line { stroke: #000; }
+html[data-ui="osrs"] .osrs-wa-win [stroke="#fbbf24"] { stroke: var(--osrs-yellow); }
+html[data-ui="osrs"] .osrs-wa-win [stroke="#93c5fd"] { stroke: var(--osrs-white); }
+html[data-ui="osrs"] .osrs-wa-win [fill="#fbbf24"] { fill: var(--osrs-yellow); }
+html[data-ui="osrs"] .osrs-wa-win [fill="#60a5fa"] { fill: var(--osrs-white); fill-opacity: 0.08; }
+html[data-ui="osrs"] .osrs-wa-win [fill="#d6a84b"] { fill: var(--osrs-orange); }
+html[data-ui="osrs"] .osrs-wa-win [fill="#f5f5f5"] { fill: var(--osrs-white); }
+html[data-ui="osrs"] .osrs-wa-win :is(#outcome-normal, #reward-normal) rect { fill: var(--osrs-green); }
+html[data-ui="osrs"] .osrs-wa-win :is(#outcome-omni, #reward-omni) rect { fill: var(--osrs-purple); }
+html[data-ui="osrs"] .osrs-wa-win #outcome-miss rect { fill: var(--osrs-btn-off); }
+html[data-ui="osrs"] .osrs-wa-win :is(#outcome-pity, #reward-greed) rect { fill: var(--osrs-yellow); }
+html[data-ui="osrs"] .osrs-wa-win #reward-pity rect { fill: var(--osrs-orange); }
+/* Outcome swatches, streak cells and legend blocks (colour set inline). */
+html[data-ui="osrs"] .osrs-wa-win [style*="background-color: rgb(52, 211, 153)"] { background-color: var(--osrs-green) !important; }
+html[data-ui="osrs"] .osrs-wa-win [style*="background-color: rgb(167, 139, 250)"] { background-color: var(--osrs-purple) !important; }
+html[data-ui="osrs"] .osrs-wa-win [style*="background-color: rgb(82, 82, 91)"] { background-color: var(--osrs-btn-off) !important; }
+html[data-ui="osrs"] .osrs-wa-win [style*="background-color: rgb(251, 191, 36)"] { background-color: var(--osrs-yellow) !important; }
+html[data-ui="osrs"] .osrs-wa-win [style*="background-color: rgb(251, 146, 60)"] { background-color: var(--osrs-orange) !important; }
+html[data-ui="osrs"] .osrs-wa-win [style*="background-color: rgb(36, 36, 36)"] { background-color: var(--osrs-well) !important; }
+html[data-ui="osrs"] .osrs-wa-win [style*="background-color: rgba(96, 165, 250"] { background-color: var(--osrs-btn) !important; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-seg { color: #000; text-shadow: none; font-family: 'RSSmall', sans-serif; font-weight: 400; font-size: var(--osrs-fs, 16px); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-seg[aria-current="true"],
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-cell:last-child { outline: 2px solid var(--osrs-white); outline-offset: -2px; }
+
+/* ── Rules ──────────────────────────────────────────────────────────────── */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-mode {
+  justify-self: start;
+  margin: 4px 8px 5px;
+  padding: 0 6px;
+  border-radius: 0;
+  border: 1px solid #000;
+  background: var(--osrs-well);
+  font: var(--osrs-fs, 16px) 'RSSmall', sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--osrs-yellow);
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-split { gap: 6px; padding: 6px; }
+/* The section list: a column of stone buttons, the open one pressed in. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-side {
+  background: var(--osrs-inner);
+  border: 1px solid #000;
+  box-shadow: inset 0 0 0 1px var(--osrs-inner-ring);
+}
+html[data-ui="osrs"] [data-osrs-win="rules"] .osrs-wa-side { width: 220px; }
+html[data-ui="osrs"] [data-osrs-win="rules"] .osrs-wa-side > div:first-child { padding: 4px; display: flex; flex-direction: column; gap: 3px; }
+html[data-ui="osrs"] [data-osrs-win="rules"] .osrs-wa-side > div:first-child > * + * { margin-top: 0; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-nav { display: grid; grid-template-columns: 20px minmax(0, 1fr); justify-content: stretch; justify-items: start; height: 32px; padding: 0 10px 0 6px; gap: 8px; transform: none; transition: none; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-nav > svg { visibility: hidden; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-nav > :first-child { justify-self: center; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-nav > img { width: auto; height: auto; max-width: 20px; max-height: 20px; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-side img.grayscale { width: auto; height: auto; }
+/* The page: stone, with each section on an inner panel. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-content {
+  background: var(--osrs-window);
+  border: 1px solid #000;
+  box-shadow: inset 0 0 0 1px var(--osrs-inner-ring);
+}
+html[data-ui="osrs"] [data-osrs-win="rules"] .osrs-wa-content > div { padding: 16px 20px; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-content h1 { font: var(--osrs-fs-big, 32px) 'RSBold', sans-serif; line-height: 30px; color: var(--osrs-orange); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-content h1 + p { font-size: var(--osrs-fs, 16px); color: var(--osrs-tan); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-content :is([class~="bg-[#222]"], [class~="bg-[#1a1a1a]"], [class~="bg-[#252525]"]) {
+  background-color: var(--osrs-inner);
+  border: 1px solid #000;
+  box-shadow: inset 0 0 0 1px var(--osrs-inner-ring);
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-content :is([class*="bg-amber-950"], [class*="bg-amber-900"], [class*="bg-purple-950"], [class*="bg-purple-900"], [class*="bg-emerald-950"], [class*="bg-emerald-900"], [class*="bg-blue-950"], [class*="bg-red-950"], [class*="bg-fuchsia-950"]):not(button) {
+  background-color: var(--osrs-well);
+  border-color: #000;
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-content h3 { letter-spacing: 0; text-transform: none; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-content thead { background: var(--osrs-window); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-content thead th { font: var(--osrs-fs, 16px) 'RS', sans-serif; color: var(--osrs-orange); letter-spacing: 0; text-transform: none; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-content tbody,
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-content tbody > tr { border-color: var(--osrs-well); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-content [class*="bg-black/"] { background-color: var(--osrs-well); }
+/* List rows (Fate Forecast categories, RuneProof quests): flat lines on the
+   inner panel, the chosen one on the selected-stone colour. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-row {
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid var(--osrs-well);
+  background: none;
+  box-shadow: none;
+  text-shadow: var(--osrs-shadow);
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-row:hover { background: rgba(255, 236, 196, 0.06); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-row[data-osrs-on="true"] { background: var(--osrs-selected); border-color: var(--osrs-well); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-row:focus-visible { outline: 1px solid var(--osrs-yellow); outline-offset: -1px; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-listhead {
+  font: var(--osrs-fs, 16px) 'RSSmall', sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--osrs-tan);
+  border-color: #000;
+}
+
+/* ── Fate Forecast ──────────────────────────────────────────────────────── */
+html[data-ui="osrs"] [data-osrs-win="forecast"] .osrs-wa-side > div:last-child { padding: 0; }
+html[data-ui="osrs"] [data-osrs-win="forecast"] .osrs-wa-side > div:last-child > * + * { margin-top: 0; }
+html[data-ui="osrs"] [data-osrs-win="forecast"] .osrs-wa-row > svg { display: none; }
+html[data-ui="osrs"] [data-osrs-win="forecast"] .osrs-wa-row .text-gray-200 { color: var(--osrs-orange); }
+html[data-ui="osrs"] [data-osrs-win="forecast"] .osrs-wa-row[data-osrs-on="true"] :is(.text-fuchsia-200, .text-gray-200) { color: var(--osrs-white); }
+html[data-ui="osrs"] [data-osrs-win="forecast"] .osrs-wa-row .text-amber-300 { color: var(--osrs-yellow); }
+html[data-ui="osrs"] [data-osrs-win="forecast"] :is(.text-fuchsia-200, .text-fuchsia-300) { color: var(--osrs-yellow); }
+html[data-ui="osrs"] [data-osrs-win="forecast"] .osrs-wa-content { padding: 10px 12px; }
+html[data-ui="osrs"] [data-osrs-win="forecast"] .osrs-wa-content h3 { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange); }
+html[data-ui="osrs"] [data-osrs-win="forecast"] .osrs-wa-content h3 + p { display: block; }
+html[data-ui="osrs"] [data-osrs-win="forecast"] .osrs-wa-content h3 + p > :first-child { display: inline-block; vertical-align: middle; margin-right: 4px; }
+html[data-ui="osrs"] [data-osrs-win="forecast"] .osrs-wa-content [class*="tracking-widest"] { font: var(--osrs-fs, 16px) 'RS', sans-serif; letter-spacing: 0; text-transform: none; color: var(--osrs-orange); }
+html[data-ui="osrs"] [data-osrs-win="forecast"] .osrs-wa-content svg { color: var(--osrs-muted); }
+html[data-ui="osrs"] [data-osrs-win="forecast"] .osrs-wa-meter { height: 10px; border: 0; }
+html[data-ui="osrs"] [data-osrs-win="forecast"] .osrs-wa-meter-tick { width: 2px; box-shadow: none; }
+
+/* ── Achievements ───────────────────────────────────────────────────────── */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-ach-progress { padding: 8px 8px 0; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-ach-progress .osrs-wa-pbar { height: 14px; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-chips { padding: 8px; gap: 3px; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-chip { min-height: 26px; height: auto; padding: 0 10px; line-height: 1.2; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-ach-list { margin: 0 8px 8px; padding: 4px; background: var(--osrs-inner); border: 1px solid #000; box-shadow: inset 0 0 0 1px var(--osrs-inner-ring); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-ach-list > div { gap: 4px; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-ach {
+  border-radius: 0;
+  border: 1px solid #000;
+  padding: 5px 8px 5px 5px;
+  background-color: var(--osrs-window);
+  box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi), inset -1px -1px 0 var(--osrs-bevel-lo);
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-ach[data-osrs-earned="false"] { background-color: var(--osrs-well); box-shadow: none; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-ach .osrs-wa-ico { width: 38px; height: 36px; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-ach[data-osrs-earned="false"] .osrs-wa-ico img { filter: grayscale(1) brightness(0.6); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-ach-title { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-ach[data-osrs-earned="true"] .osrs-wa-ach-title { color: var(--osrs-yellow); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-ach[data-osrs-earned="false"] .osrs-wa-ach-title { color: var(--osrs-orange); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-ach[data-osrs-earned="true"] .osrs-wa-ach-title + svg { color: var(--osrs-green); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-ach-desc { font-family: 'RSSmall', sans-serif; color: var(--osrs-tan); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-ach-count { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-white); }
+
+/* ── RuneProof ──────────────────────────────────────────────────────────── */
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .osrs-wa-split { gap: 6px; padding: 6px; }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .osrs-wa-picker { border: 1px solid #000; }
+/* No quest chosen: the quest list fills the window (no empty page). */
+html[data-ui="osrs"] [data-osrs-picker="inline"] > .osrs-wa-plan { display: none; }
+html[data-ui="osrs"] [data-osrs-picker="inline"] > .osrs-wa-picker { flex: 1 1 auto; width: 100%; height: auto; }
+html[data-ui="osrs"] [data-osrs-picker="inline"] .osrs-wa-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  align-content: start;
+  column-gap: 6px;
+  padding: 4px;
+}
+html[data-ui="osrs"] [data-osrs-picker="inline"] .osrs-wa-results > * + * { margin-top: 0; }
+html[data-ui="osrs"] [data-osrs-picker="inline"] .osrs-wa-results > p { grid-column: 1 / -1; }
+html[data-ui="osrs"] [data-osrs-picker="inline"] .osrs-wa-searchrow { align-self: center; width: min(420px, 100%); border: 0; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-pickhead { padding: 10px 10px 2px; text-align: center; display: flex; flex-direction: column; gap: 2px; }
+/* The quest search: an inset dark field, as in the Journal. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-searchrow { padding: 6px; border-color: #000; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-search input {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 8px 0 30px;
+  border-radius: 0;
+  border: 1px solid #000;
+  background: var(--osrs-well);
+  box-shadow: inset 1px 1px 0 #000, 1px 1px 0 var(--osrs-bevel-hi);
+  font: var(--osrs-fs, 16px) 'RS', sans-serif;
+  color: var(--osrs-white);
+  text-shadow: var(--osrs-shadow);
+  caret-color: var(--osrs-yellow);
+}
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-search input:focus { outline: none; border-color: var(--osrs-tan); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-search svg { color: var(--osrs-tan); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-results > p { font: var(--osrs-fs, 16px) 'RS', sans-serif; color: var(--osrs-muted); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .osrs-wa-row { padding: 4px 8px; gap: 8px; }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .osrs-wa-row span.block:first-child { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .osrs-wa-row[data-osrs-on="true"] span.block:first-child { color: var(--osrs-white); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .osrs-wa-row span.block + span.block { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .osrs-wa-dot { width: 7px; height: 7px; box-shadow: 0 0 0 1px #000; }
+/* The guide sits on an inner panel beside the list. */
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .osrs-wa-plan {
+  background: var(--osrs-inner);
+  border: 1px solid #000;
+  box-shadow: inset 0 0 0 1px var(--osrs-inner-ring);
+}
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .osrs-wa-change { min-height: 28px; margin: 6px 6px 0; padding: 0 10px; }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .osrs-wa-plan :is(.text-sm, .text-\[11px\]) { font-family: 'RS', sans-serif; }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .osrs-wa-plan [role="status"] svg,
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .osrs-wa-plan [role="alert"] svg { display: none; }
+/* Plan steps (when no guide is available). */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-section { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; letter-spacing: 0; text-transform: none; color: var(--osrs-orange); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-step { border-radius: 0; border: 1px solid #000; background: var(--osrs-well); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-step[data-osrs-done="true"] { background: var(--osrs-window); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-step a,
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-step > span { font-family: 'RS', sans-serif; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-step a:not(.line-through) { color: var(--osrs-orange); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-step a:hover { color: var(--osrs-white); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-step .text-emerald-500 { color: var(--osrs-green); }
+/* The RuneProof guide (RuneProofCoach.css) in interface fonts and colours. */
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide { color: var(--osrs-tan); font-family: 'RS', sans-serif; font-size: var(--osrs-fs, 16px); line-height: 1.35; text-shadow: var(--osrs-shadow); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide h2 { font: var(--osrs-fs-big, 32px) 'RSBold', sans-serif; line-height: 30px; color: var(--osrs-orange); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-article > section:not(.rp-disclosure) > h3 { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange); border-color: var(--osrs-rule); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide h4 { font-family: 'RSBold', sans-serif; font-weight: 400; color: var(--osrs-orange); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide :is(.rp-small, .rp-eyebrow, .rp-step-location, .rp-step-detail, .rp-walking-path, .rp-need-kind) { font-family: 'RSSmall', sans-serif; font-size: var(--osrs-fs, 16px); letter-spacing: 0; text-transform: none; }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide :is(.rp-muted, .rp-eyebrow, .rp-progress, .rp-step-number, .rp-step-location, .rp-step-detail, .rp-place-name) { color: var(--osrs-text-dim); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide :is(a, .rp-link-button, .rp-step-detail summary, .rp-next-label) { color: var(--osrs-orange); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide :is(a, .rp-link-button):hover { color: var(--osrs-white); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide :focus-visible { outline: 1px solid var(--osrs-yellow); outline-offset: 2px; }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide :is(.rp-instruction, .rp-readiness, .rp-disclosure-toggle) { color: var(--osrs-white); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-step-completed .rp-instruction { color: var(--osrs-text-soft); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-step-state { color: var(--osrs-green); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-step-number { color: var(--osrs-yellow); font-family: 'RS', sans-serif; }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide :is(.rp-toolbar, .rp-step, .rp-step-travel) { border-color: var(--osrs-rule); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-step-current { background: var(--osrs-window); border-left-color: var(--osrs-orange); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide progress {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 10px;
+  border: 1px solid #000;
+  background: #7f0000;
+}
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide progress::-webkit-progress-bar { background: #7f0000; }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide progress::-webkit-progress-value { background: var(--osrs-green); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide progress::-moz-progress-bar { background: var(--osrs-green); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-confirm {
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 0;
+  border: 1px solid #000;
+  background: var(--osrs-btn);
+  box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo);
+  font: var(--osrs-fs, 16px) 'RS', sans-serif;
+  color: var(--osrs-orange);
+  text-shadow: var(--osrs-shadow);
+}
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-confirm:hover { background: var(--osrs-btn); color: var(--osrs-white); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-details :is(th, td) { border-color: #000; font-size: var(--osrs-fs, 16px); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-details th { background: var(--osrs-window); font-family: 'RSBold', sans-serif; font-weight: 400; color: var(--osrs-orange); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-details td { background: var(--osrs-well); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-disclosure { border-radius: 0; border-color: #000; background: var(--osrs-window); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-disclosure-body { border-color: #000; background: var(--osrs-inner); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-inline-warning { color: var(--osrs-yellow); border-left-color: var(--osrs-orange); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-needs { border-radius: 0; border: 1px solid #000; border-left: 3px solid var(--osrs-orange); background: var(--osrs-well); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-needs-title { font-family: 'RSBold', sans-serif; font-weight: 400; color: var(--osrs-orange); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-needs-title > span { border-radius: 0; border: 1px solid #000; background: var(--osrs-inner); font-family: 'RSSmall', sans-serif; color: var(--osrs-yellow); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-need { border-radius: 0; border: 1px solid #000; background: var(--osrs-window); box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi), inset -1px -1px 0 var(--osrs-bevel-lo); color: var(--osrs-white); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-need-image { border-radius: 0; border: 1px solid #000; background: var(--osrs-slot); box-shadow: inset 1px 1px 0 var(--osrs-slot-hi), inset -1px -1px 0 var(--osrs-slot-lo); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-need-content > strong { font-family: 'RSBold', sans-serif; font-weight: 400; font-size: var(--osrs-fs, 16px); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-guide .rp-need-kind { color: var(--osrs-tan); }
+html[data-ui="osrs"] [data-osrs-win="runeproof"] .rp-preview-note { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-yellow); }
+
+/* Numbered steps: a dark slot with the number in yellow. */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-content .rounded-full.w-8 {
+  border-radius: 0;
+  background: var(--osrs-slot);
+  border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 var(--osrs-slot-hi), inset -1px -1px 0 var(--osrs-slot-lo);
+  color: var(--osrs-yellow);
+}

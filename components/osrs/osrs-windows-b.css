@@ -1,0 +1,182 @@
+/* OSRS layout for the modal windows that keep their classic component:
+   Fate Thread, Boss Kill Planner, Share Run, Timelapse and Your Pets (plus
+   the pet picker). Everything is scoped under html[data-ui="osrs"], so the
+   classic layout never sees it. Colours come from the osrs-skin.css tokens,
+   so the 2010 grey-stone style and the large text size carry through. */
+
+/* ── Shared window chrome (OsrsWindowChrome.tsx) ─────────────────────────── */
+html[data-ui="osrs"] .owb-win { position: relative; display: flex; flex-direction: column; min-height: 0; color: var(--osrs-tan); font: var(--osrs-fs, 16px) 'RS', sans-serif; line-height: var(--osrs-lh, 18px); text-shadow: var(--osrs-shadow); }
+html[data-ui="osrs"] .owb-titlebar { position: relative; flex-shrink: 0; min-height: 34px; display: flex; align-items: center; justify-content: center; padding: 2px 76px; box-sizing: border-box; border-bottom: 1px solid var(--osrs-bevel-lo); }
+html[data-ui="osrs"] .owb-title { margin: 0; display: flex; align-items: center; gap: 6px; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; line-height: var(--osrs-lh, 18px); color: var(--osrs-orange); text-shadow: var(--osrs-shadow); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .owb-titlebar-tools { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 4px; }
+html[data-ui="osrs"] .owb-close,
+html[data-ui="osrs"] .owb-sq { width: 26px; height: 24px; padding: 0; flex-shrink: 0; }
+html[data-ui="osrs"] .owb-sq { font-family: 'RSBold', sans-serif; }
+
+/* A row of stone buttons under the title bar. */
+html[data-ui="osrs"] .owb-toolbar { flex-shrink: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; padding: 5px 8px; border-bottom: 1px solid var(--osrs-bevel-lo); }
+html[data-ui="osrs"] .owb-toolbar .osrs-btn { height: 26px; }
+html[data-ui="osrs"] .owb-toolbar-end { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+html[data-ui="osrs"] .owb-sub { color: var(--osrs-tan); min-width: 0; }
+html[data-ui="osrs"] .owb-dim { color: var(--osrs-text-dim); }
+
+/* OSRS tick box: a dark inset square with a yellow tick, no native box. */
+html[data-ui="osrs"] .owb-check { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: var(--osrs-tan); }
+html[data-ui="osrs"] .owb-check input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+html[data-ui="osrs"] .owb-check .box { width: 16px; height: 16px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; background: var(--osrs-well); border: 1px solid #000; box-shadow: inset 1px 1px 0 #000, 1px 1px 0 var(--osrs-bevel-hi); color: var(--osrs-yellow); }
+html[data-ui="osrs"] .owb-check .box svg { display: none; }
+html[data-ui="osrs"] .owb-check input:checked + .box svg { display: block; }
+html[data-ui="osrs"] .owb-check input:focus-visible + .box { outline: 1px solid var(--osrs-yellow); }
+html[data-ui="osrs"] .owb-check:hover { color: var(--osrs-white); }
+
+/* Text on parchment uses the chatbox's own colours, which never change with
+   the interface style (see OsrsChatbox.tsx). */
+html[data-ui="osrs"] {
+  --owb-chat-green: #005f00;
+  --owb-chat-red: #7f0000;
+  --owb-chat-amber: #7a4400;
+  --owb-chat-blue: #000080;
+  --owb-chat-dim: #4d4129;
+}
+
+/* ── Fate Thread ─────────────────────────────────────────────────────────── */
+html[data-ui="osrs"] .owb-thread-backdrop { background: rgba(12, 10, 8, 0.85); padding: 12px; box-sizing: border-box; display: flex; }
+html[data-ui="osrs"] .owb-thread { flex: 1; min-width: 0; }
+html[data-ui="osrs"] .owb-thread-frame { position: relative; flex: 1; min-height: 0; display: flex; margin: 6px; }
+html[data-ui="osrs"] .owb-thread-well { background: var(--osrs-well); }
+html[data-ui="osrs"] .owb-thread-hub { font: 16px 'RSSmall', sans-serif; paint-order: stroke; stroke: #000; stroke-width: 3px; stroke-linejoin: round; }
+html[data-ui="osrs"] .owb-thread-tip { position: absolute; left: 10px; bottom: 10px; pointer-events: none; line-height: var(--osrs-lh, 18px); }
+html[data-ui="osrs"] .owb-thread-legend { position: absolute; top: 8px; right: 8px; min-width: 170px; max-height: 60%; overflow-y: auto; padding: 4px 8px 6px; pointer-events: none; }
+html[data-ui="osrs"] .owb-thread-legend-title { font-family: 'RSBold', sans-serif; color: var(--osrs-orange); text-align: center; padding-bottom: 3px; margin-bottom: 3px; border-bottom: 1px solid var(--osrs-rule); }
+html[data-ui="osrs"] .owb-thread-legend-row { display: flex; align-items: center; gap: 6px; line-height: var(--osrs-lh, 18px); }
+html[data-ui="osrs"] .owb-thread-legend-row .dot { width: 8px; height: 8px; flex-shrink: 0; border: 1px solid #000; }
+html[data-ui="osrs"] .owb-thread-legend-row .name { flex: 1; min-width: 0; color: var(--osrs-tan); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-ui="osrs"] .owb-thread-legend-row .n { color: var(--osrs-yellow); padding-left: 8px; }
+
+/* ── Boss Kill Planner ───────────────────────────────────────────────────── */
+html[data-ui="osrs"] .owb-bkp .owb-bkp-ranged { padding: 5px 8px; color: var(--osrs-tan); border-bottom: 1px solid var(--osrs-bevel-lo); }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-ranged select { height: 26px; padding: 0 6px; }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-body { gap: 6px; margin: 6px; }
+html[data-ui="osrs"] .owb-bkp :is(.owb-bkp-list, .owb-bkp-detail) { background: var(--osrs-inner); border: 1px solid #000; box-shadow: inset 0 0 0 1px var(--osrs-inner-ring); }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-list { padding: 2px; }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-list > * + * { margin-top: 0; }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-note { margin: 2px 2px 4px; padding: 5px 8px; background: var(--osrs-well); border: 1px solid #000; color: var(--osrs-yellow); }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-note .text-fuchsia-300 { color: var(--osrs-orange); }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-row { padding: 4px 8px; border: 0; border-bottom: 1px solid var(--osrs-well); background: transparent; }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-row:hover { background: rgba(255, 236, 196, 0.06); }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-row[data-active] { background: var(--osrs-selected); box-shadow: inset 1px 1px 0 var(--osrs-selected-sh); }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-row .font-semibold { color: var(--osrs-orange); }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-row[data-active] .font-semibold { color: var(--osrs-white); }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-row svg { color: var(--osrs-orange); }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-3d { background: var(--osrs-btn); border: 1px solid #000; box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo); color: var(--osrs-orange); padding: 2px 8px; }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-3d:hover { color: var(--osrs-white); }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-model { background: var(--osrs-well); border: 1px solid #000; box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 var(--osrs-bevel-hi); }
+html[data-ui="osrs"] .owb-bkp :is(.owb-bkp-banner, .owb-bkp-gap, .owb-bkp-stat) { background: var(--osrs-well); border: 1px solid #000; box-shadow: inset 0 0 0 1px var(--osrs-inner-ring); }
+html[data-ui="osrs"] .owb-bkp [class*="text-[8px]"] { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; line-height: 15px; letter-spacing: 0; text-transform: none; }
+html[data-ui="osrs"] .owb-bkp :is(.owb-bkp-stat, .owb-bkp-gap, .owb-bkp-detail) svg { color: var(--osrs-orange); }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-val { font-family: 'RSBold', sans-serif; font-size: var(--osrs-fs, 16px); line-height: var(--osrs-lh, 18px); color: var(--osrs-yellow); }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-gap-track { height: 10px; background: var(--osrs-red); border: 1px solid #000; border-radius: 0; }
+html[data-ui="osrs"] .owb-bkp .owb-bkp-gap-fill { background: var(--osrs-green); border-radius: 0; }
+
+/* ── Share Run ───────────────────────────────────────────────────────────── */
+html[data-ui="osrs"] .owb-share-backdrop { background: rgba(12, 10, 8, 0.85); display: flex; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box; }
+html[data-ui="osrs"] .owb-share { width: 100%; max-width: 900px; max-height: 100%; }
+html[data-ui="osrs"] .owb-tabs { flex-shrink: 0; display: flex; align-items: flex-end; gap: 3px; padding: 6px 8px 0; border-bottom: 1px solid var(--osrs-rule); }
+html[data-ui="osrs"] .owb-tab { all: unset; box-sizing: border-box; cursor: pointer; padding: 0 14px; min-height: 28px; line-height: 30px; font: var(--osrs-fs, 16px) 'RS', sans-serif; color: var(--osrs-orange); text-shadow: var(--osrs-shadow); border: 1px solid var(--osrs-rule); border-bottom: 0; background: var(--osrs-inner); white-space: nowrap; }
+html[data-ui="osrs"] .owb-tab:hover { color: var(--osrs-white); }
+html[data-ui="osrs"] .owb-tab:focus-visible { outline: 1px solid var(--osrs-yellow); outline-offset: -1px; }
+html[data-ui="osrs"] .owb-tab[aria-pressed="true"] { background: var(--osrs-selected); color: var(--osrs-white); position: relative; top: 1px; }
+html[data-ui="osrs"] .owb-share-body { flex: 1; min-height: 0; overflow-y: auto; padding: 10px; }
+html[data-ui="osrs"] .owb-share-body > * { gap: 10px; }
+html[data-ui="osrs"] .owb-share-actions { display: flex; justify-content: center; gap: 6px; width: 100%; max-width: 850px; }
+html[data-ui="osrs"] .owb-share-actions .osrs-btn { flex: 1; height: 32px; }
+html[data-ui="osrs"] .owb-ok { color: var(--osrs-green); }
+html[data-ui="osrs"] .owb-share-card { border: 1px solid #000; box-shadow: 1px 1px 0 var(--osrs-bevel-hi); background: var(--osrs-well); }
+html[data-ui="osrs"] .owb-share-zoom { font: var(--osrs-fs, 16px) 'RS', sans-serif; color: var(--osrs-tan); text-shadow: var(--osrs-shadow); }
+
+/* ── Timelapse ───────────────────────────────────────────────────────────── */
+html[data-ui="osrs"] .owb-tl-backdrop { background: rgba(12, 10, 8, 0.85); padding: 12px; box-sizing: border-box; }
+html[data-ui="osrs"] .owb-tl { flex: 1; min-width: 0; }
+html[data-ui="osrs"] .owb-tl-empty { width: min(440px, 100%); }
+html[data-ui="osrs"] .owb-tl-empty-text { margin: 0; padding: 18px 16px; text-align: center; }
+html[data-ui="osrs"] .owb-tl-banner { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 8px; border-bottom: 1px solid var(--osrs-bevel-lo); }
+html[data-ui="osrs"] .owb-tl-banner > div:first-child > svg { display: none; }
+html[data-ui="osrs"] .owb-tl-banner .text-sm { font-family: 'RSBold', sans-serif; }
+html[data-ui="osrs"] .owb-tl-banner [class*="text-[10px]"] { color: var(--osrs-text-dim); }
+html[data-ui="osrs"] .owb-tl-banner .text-gray-200 { color: var(--osrs-white); }
+html[data-ui="osrs"] .owb-tl-export { height: 26px; }
+html[data-ui="osrs"] .owb-tl-stats { flex-shrink: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 20px; margin: 6px 6px 0; padding: 5px 10px; background: var(--osrs-inner); border: 1px solid #000; box-shadow: inset 0 0 0 1px var(--osrs-inner-ring); }
+html[data-ui="osrs"] .owb-tl-stats .owb-tl-stat > span:first-child { color: var(--osrs-tan); }
+html[data-ui="osrs"] .owb-tl-stats .owb-tl-val { color: var(--osrs-yellow); }
+html[data-ui="osrs"] .owb-tl-stats > .ml-auto { color: var(--osrs-tan); }
+html[data-ui="osrs"] .owb-tl-stage { margin: 6px; background: var(--osrs-well); border: 1px solid #000; box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 var(--osrs-bevel-hi); }
+html[data-ui="osrs"] .owb-tl-trail { color: var(--osrs-tan); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; line-height: var(--osrs-lh, 18px); }
+html[data-ui="osrs"] .owb-tl-trail > span { color: var(--osrs-orange); }
+html[data-ui="osrs"] .owb-tl-event { box-sizing: border-box; width: 100%; max-width: 640px; padding: 10px 14px 8px; background: var(--osrs-parchment); border: 2px solid #000; box-shadow: inset 1px 1px 0 #e0d3b2, inset -1px -1px 0 #8f8062, 3px 3px 0 rgba(0, 0, 0, 0.45); color: #000; text-shadow: none; line-height: var(--osrs-lh, 18px); }
+html[data-ui="osrs"] .owb-tl-event > .flex:first-of-type { margin-bottom: 6px; }
+html[data-ui="osrs"] .owb-tl-milestone { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-family: 'RSBold', sans-serif; color: var(--owb-chat-blue); }
+html[data-ui="osrs"] .owb-tl-outcome { font-family: 'RSBold', sans-serif; color: #000; }
+html[data-ui="osrs"] .owb-tl-outcome[data-tone="good"] { color: var(--owb-chat-green); }
+html[data-ui="osrs"] .owb-tl-outcome[data-tone="bad"] { color: var(--owb-chat-red); }
+html[data-ui="osrs"] .owb-tl-num { font-family: 'RSSmall', sans-serif; color: var(--owb-chat-dim); }
+html[data-ui="osrs"] .owb-tl-msg { color: #000; }
+html[data-ui="osrs"] .owb-tl-details { color: var(--owb-chat-dim); margin-bottom: 6px; }
+html[data-ui="osrs"] .owb-tl-narr { color: #000; border-left: 2px solid #8f8062; padding-left: 8px; margin-top: 2px; }
+html[data-ui="osrs"] .owb-tl-meta { display: flex; align-items: center; gap: 12px; margin-top: 8px; padding-top: 4px; border-top: 1px solid #8f8062; font-family: 'RSSmall', sans-serif; color: var(--owb-chat-dim); }
+html[data-ui="osrs"] .owb-tl-meta .ml-auto { margin-left: auto; }
+html[data-ui="osrs"] .owb-tl-meta :is(.text-gray-500) { color: var(--owb-chat-dim); }
+html[data-ui="osrs"] .owb-tl-meta :is(.text-emerald-400) { color: var(--owb-chat-green); }
+html[data-ui="osrs"] .owb-tl-meta :is(.text-red-400) { color: var(--owb-chat-red); }
+html[data-ui="osrs"] .owb-tl-meta :is(.text-amber-400) { color: var(--owb-chat-amber); }
+html[data-ui="osrs"] .owb-tl-spark { position: absolute; left: 10px; right: 10px; bottom: 10px; height: 40px; display: flex; align-items: flex-end; gap: 0; }
+html[data-ui="osrs"] .owb-tl-bar { all: unset; flex: 1 1 0; min-width: 0; height: 14px; cursor: pointer; background: var(--osrs-inner-ring); }
+html[data-ui="osrs"] .owb-tl-bar[data-on] { background: var(--osrs-tan); }
+html[data-ui="osrs"] .owb-tl-bar[data-on][data-tone="good"] { background: var(--osrs-green); }
+html[data-ui="osrs"] .owb-tl-bar[data-on][data-tone="bad"] { background: var(--osrs-muted); }
+html[data-ui="osrs"] .owb-tl-bar[data-tone="broken"] { background: var(--osrs-red); }
+html[data-ui="osrs"] .owb-tl-bar:hover { height: 30px; }
+html[data-ui="osrs"] .owb-tl-spark .owb-tl-bar.is-cur[data-on] { height: 40px; min-width: 2px; background: var(--osrs-yellow); }
+html[data-ui="osrs"] .owb-tl-controls { flex-shrink: 0; display: flex; align-items: center; gap: 4px; padding: 0 6px 6px; }
+html[data-ui="osrs"] .owb-tl-ctl { height: 28px; min-width: 34px; padding: 0 6px; }
+html[data-ui="osrs"] .owb-tl-speed { margin-right: 2px; color: var(--osrs-tan); }
+html[data-ui="osrs"] .owb-tl-controls > .flex { gap: 4px; }
+/* An OSRS slider: a dark inset groove with a stone handle. */
+html[data-ui="osrs"] .owb-tl-range { -webkit-appearance: none; appearance: none; flex: 1; min-width: 80px; height: 10px; margin: 0 8px; background: var(--osrs-well); border: 1px solid #000; box-shadow: 1px 1px 0 var(--osrs-bevel-hi); cursor: pointer; }
+html[data-ui="osrs"] .owb-tl-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 24px; background: var(--osrs-btn); border: 1px solid #000; box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo); border-radius: 0; }
+html[data-ui="osrs"] .owb-tl-range::-moz-range-thumb { width: 12px; height: 22px; background: var(--osrs-btn); border: 1px solid #000; box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo); border-radius: 0; }
+html[data-ui="osrs"] .owb-tl-range:focus-visible { outline: 1px solid var(--osrs-yellow); }
+
+/* ── Your Pets: the collection log's All Pets page ───────────────────────── */
+html[data-ui="osrs"] .owb-pets-backdrop { background: rgba(12, 10, 8, 0.85); display: flex; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box; }
+html[data-ui="osrs"] .owb-pets { width: 100%; max-width: 760px; max-height: 100%; }
+html[data-ui="osrs"] .owb-pets-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; }
+html[data-ui="osrs"] .owb-pets-log { flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; }
+html[data-ui="osrs"] .owb-pets-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 8px; border-bottom: 1px solid var(--osrs-rule); color: var(--osrs-tan); }
+html[data-ui="osrs"] .owb-pets-heading { font-family: 'RSBold', sans-serif; color: var(--osrs-orange); }
+html[data-ui="osrs"] .owb-pets-grid { list-style: none; margin: 0; padding: 6px; display: grid; grid-template-columns: repeat(auto-fill, 42px); gap: 2px; justify-content: center; }
+html[data-ui="osrs"] .owb-pet-slot { all: unset; box-sizing: border-box; position: relative; width: 42px; height: 38px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+html[data-ui="osrs"] .owb-pet-slot:hover { background: rgba(255, 236, 196, 0.08); }
+html[data-ui="osrs"] .owb-pet-slot[aria-pressed="true"] { background: var(--osrs-selected); box-shadow: inset 1px 1px 0 var(--osrs-selected-sh); }
+html[data-ui="osrs"] .owb-pet-slot:focus-visible { outline: 1px solid var(--osrs-yellow); outline-offset: -1px; }
+/* The wiki picture at its own size, never scaled up. */
+html[data-ui="osrs"] .owb-pet-img { display: block; width: auto; height: auto; max-width: 36px; max-height: 34px; image-rendering: pixelated; }
+html[data-ui="osrs"] .owb-pet-img.is-locked { filter: brightness(0); opacity: 0.35; }
+html[data-ui="osrs"] .owb-pet-tip { position: absolute; left: 50%; top: calc(100% - 2px); transform: translateX(-50%); z-index: 5; white-space: nowrap; pointer-events: none; display: none; }
+html[data-ui="osrs"] .owb-pet-slot:hover .owb-pet-tip,
+html[data-ui="osrs"] .owb-pet-slot:focus-visible .owb-pet-tip { display: block; }
+html[data-ui="osrs"] .owb-pets-view { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px; }
+html[data-ui="osrs"] .owb-pets-name { font-family: 'RSBold', sans-serif; color: var(--osrs-orange); text-align: center; }
+html[data-ui="osrs"] .owb-pets-model { width: 100%; height: 240px; background: var(--osrs-well); border: 1px solid #000; box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 var(--osrs-bevel-hi); }
+html[data-ui="osrs"] .owb-pets-follow { height: 28px; }
+html[data-ui="osrs"] .owb-pets-locked { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 120px; text-align: center; color: var(--osrs-tan); }
+html[data-ui="osrs"] .owb-pets-note { margin: 0; padding: 8px 4px; text-align: center; color: var(--osrs-tan); }
+html[data-ui="osrs"] .owb-pets-show { margin-top: auto; }
+
+/* ── Pet picker (Farm Keys → Activities, the pet claim card) ─────────────── */
+html[data-ui="osrs"] .owb-petpick-box { background: var(--osrs-well); border: 1px solid #000; box-shadow: inset 1px 1px 0 #000, 1px 1px 0 var(--osrs-bevel-hi); }
+html[data-ui="osrs"] .owb-petpick-box input { color: var(--osrs-white); text-shadow: var(--osrs-shadow); }
+html[data-ui="osrs"] .owb-petpick-list { background: var(--osrs-inner); border: 1px solid #000; box-shadow: inset 0 0 0 1px var(--osrs-inner-ring); }
+html[data-ui="osrs"] .owb-petpick-list [role="option"] { color: var(--osrs-orange); }
+html[data-ui="osrs"] .owb-petpick-list [role="option"].is-active { background: var(--osrs-selected); color: var(--osrs-white); }
+html[data-ui="osrs"] .owb-petpick-list [role="option"] .owb-petpick-src { color: var(--osrs-text-dim); }
+html[data-ui="osrs"] .owb-petpick-list .owb-petpick-group { color: var(--osrs-yellow); font-family: 'RSBold', sans-serif; }

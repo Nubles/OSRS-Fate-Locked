@@ -230,3 +230,14 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
       a.id.localeCompare(b.id),
   );
 }
+
+// The Skills panel's Advisor button and the open Advisor panel ask for the
+// same ranking, which walks every quest and diary for each skill threshold,
+// so the last answer is kept for the same unlocks object.
+let lastRanking: { unlocks: unknown; gameModeId?: string; ranked: RankedSkill[] } | null = null;
+export function rankSkillBottlenecksCached(unlocks: any, gameModeId?: string): RankedSkill[] {
+  if (lastRanking && lastRanking.unlocks === unlocks && lastRanking.gameModeId === gameModeId) return lastRanking.ranked;
+  const ranked = rankSkillBottlenecks(unlocks, gameModeId);
+  lastRanking = { unlocks, gameModeId, ranked };
+  return ranked;
+}

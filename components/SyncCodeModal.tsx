@@ -10,7 +10,8 @@ import { SectionGuide } from './SectionGuide';
 import { encodeSyncCode, decodeAndValidateSyncCode } from '../utils/syncCode';
 import { makeQrSvg } from '../utils/qr';
 import { auditHistory, RunVerdict } from '../utils/integrity';
-import { resolveModeRules } from '../config/gameModes';
+import { getGameMode, resolveModeRules } from '../config/gameModes';
+import { chunkTotals } from '../utils/runProgress';
 import { BackupMeta } from '../utils/backups';
 import type { GameState } from '../types';
 import {
@@ -53,12 +54,21 @@ interface RunPreview {
   keys: number;
   specialKeys: number;
   chaosKeys: number;
+  /** Named areas, or in Chunked the chunks owned (start chunk included). */
   regions: number;
+  regionsLabel: 'Regions' | 'Chunks';
   quests: number;
   skillTiers: number;
   events: number;
   mode?: string;
 }
+
+/** The mode's display name ("Chunked"), or the raw id when it isn't a known mode. */
+const modeName = (id: string | undefined): string | undefined => {
+  if (!id) return undefined;
+  const mode = getGameMode(id);
+  return mode.id === id ? mode.name : id;
+};
 
 const previewOf = (state: GameState): RunPreview => {
   const skillTiers = Object.values(state.unlocks.skills)
@@ -67,11 +77,14 @@ const previewOf = (state: GameState): RunPreview => {
     keys: state.keys,
     specialKeys: state.specialKeys,
     chaosKeys: state.chaosKeys,
-    regions: canonicalizeAreaUnlocks(state.unlocks.regions).regions.length,
+    regions: state.gameModeId === 'chunked'
+      ? chunkTotals(state.unlocks).unlocked
+      : canonicalizeAreaUnlocks(state.unlocks.regions).regions.length,
+    regionsLabel: state.gameModeId === 'chunked' ? 'Chunks' : 'Regions',
     quests: state.unlocks.quests.length,
     skillTiers,
     events: state.history.length,
-    mode: state.gameModeId,
+    mode: modeName(state.gameModeId),
   };
 };
 
@@ -592,7 +605,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode, ini
                         { label: 'Keys', value: preview.keys },
                         { label: 'Omni', value: preview.specialKeys },
                         { label: 'Chaos', value: preview.chaosKeys },
-                        { label: 'Regions', value: preview.regions },
+                        { label: preview.regionsLabel, value: preview.regions },
                         { label: 'Quests', value: preview.quests },
                         { label: 'Skill tiers', value: preview.skillTiers },
                       ].map((stat) => (

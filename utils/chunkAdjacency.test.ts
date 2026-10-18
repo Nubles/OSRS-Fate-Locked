@@ -67,3 +67,13 @@ describe('isFrontierChunk / getChunkFrontier', () => {
     expect(isFrontierChunk(chunkKey(farAway!), [])).toBe(false);
   });
 });
+
+// Before the walking data loads (it loads with the chunk content, and with a
+// Chunked run), the frontier walks the chunk grid, but only from owned land
+// the grid joins to the start chunk (map.md finding 1).
+describe('the frontier before the walking data loads', () => {
+  it('does not grow from an owned chunk nothing joins to the start', () => {
+    expect(getChunkFrontier(['48,49']).map(chunkKey).sort()).toEqual(getChunkFrontier([]).map(chunkKey).sort());
+    expect(isFrontierChunk('47,49', ['48,49'])).toBe(false);
+  });
+});

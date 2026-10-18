@@ -397,6 +397,35 @@ describe('transformChunkContent', () => {
     ]);
     expect(new Set(terminalKeys)).toHaveLength(terminalKeys.length);
   });
+  it("carries the export's own Diary task chunks, resolved to surface chunks, and accounts for each (content audit fix 4)", () => {
+    const task = (diary: string, n: number) => `~|${diary} Diary#Easy|~ Task ${n}`;
+    const result = transformChunkContent({
+      walkableChunks: [256, 513, 10547], chunks: {}, slayerMonsters: {},
+      codeItems: { chunksPlus: { 'Crabs[+]': ['256-1', 'Example Cave', 'Player-owned house'] } },
+      challenges: { Diary: {
+        [task('Ardougne', 1)]: { Chunks: ['10547-1'] },
+        [task('Ardougne', 2)]: { Chunks: ['10547'] },
+        [task('Kourend and Kebos', 1)]: { Chunks: ['Crabs[+]'] },
+        [task('Desert', 1)]: { Chunks: ['Player-owned house'] },
+        [task('Desert', 2)]: { NPCs: ['Someone'] },
+        '~|Sea Charting#Some Sea|~ Task 1': { Chunks: ['10547-W1'] },
+      } },
+    }, manifest, mappedRegistry);
+    // Free entrances first, as an interior's chunk refs are; the house has no entrance.
+    expect(result.full.diaryChunks).toEqual({
+      'Ardougne|EA1': ['10547'], 'Ardougne|EA2': ['10547'], 'Kourend & Kebos|EA1': ['256'],
+    });
+    const event = (name: string) => result.audit.events.find(e => e.terminal && e.sourceKey === `Diary/${name}`);
+    expect(event(task('Ardougne', 1))).toMatchObject({ disposition: 'normalized', reason: 'diary-place-resolved' });
+    expect(event(task('Ardougne', 2))).toMatchObject({ disposition: 'imported', reason: 'base-record', targetKeys: ['diaryChunks/Ardougne|EA2'] });
+    expect(event(task('Kourend and Kebos', 1))).toMatchObject({
+      disposition: 'normalized', reason: 'diary-place-partly-resolved', detail: 'No entrance for Player-owned house',
+    });
+    expect(event(task('Desert', 1))).toMatchObject({ disposition: 'unresolved', reason: 'named-location-unmappable' });
+    expect(event(task('Desert', 2))).toMatchObject({ disposition: 'excluded', reason: 'non-walkable-content' });
+    expect(event('~|Sea Charting#Some Sea|~ Task 1')).toMatchObject({ disposition: 'excluded' });
+    expect(result.audit.categoryTotals.challenges).toEqual({ source: 6, imported: 1, normalized: 2, excluded: 2, unresolved: 1 });
+  });
   it('merges normalized drop tables before tags are derived and audits every raw source', () => {
     const result = transformChunkContent({
       walkableChunks: [256],

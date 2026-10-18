@@ -9,6 +9,7 @@
 // Hard gates use structured fields; notes are descriptive only.
 
 import { ACTIVITY_ACCESS_AREAS } from './activityAccess';
+import { ACTIVITY_CHUNKS } from './activityChunks';
 import type { QuestProgressRequirement } from './questProgress';
 
 export interface ActivityReq {
@@ -18,6 +19,8 @@ export interface ActivityReq {
   quests?: string[];
   /** Named areas that must be reachable in the selected game mode. */
   requiredAreas?: string[];
+  /** Chunked mode only: the entrance chunks ("cx,cy"), one of which must be owned. Replaces requiredAreas there. */
+  requiredChunks?: string[];
   /** Minimum real OSRS combat level. */
   combatLevel?: number;
   /** Minimum real OSRS total level. */
@@ -336,9 +339,11 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
 export const getActivityReq = (item: string): ActivityReq | undefined => {
   const requirement = ACTIVITY_REQUIREMENTS[item];
   const requiredAreas = ACTIVITY_ACCESS_AREAS[item];
+  const requiredChunks = Object.prototype.hasOwnProperty.call(ACTIVITY_CHUNKS, item) ? ACTIVITY_CHUNKS[item] : undefined;
   if (!requirement && !requiredAreas) return undefined;
   return {
     ...requirement,
     ...(requiredAreas ? { requiredAreas: [...requiredAreas] } : {}),
+    ...(requiredChunks ? { requiredChunks: [...requiredChunks] } : {}),
   };
 };

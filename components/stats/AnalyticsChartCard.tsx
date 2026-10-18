@@ -22,13 +22,13 @@ export const AnalyticsChartCard: React.FC<AnalyticsChartCardProps> = ({
   action,
   children,
 }) => (
-  <article aria-label={title} className="flex h-full min-h-[280px] flex-col rounded-xl border border-white/[0.06] bg-[#1a1a1a] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-    <header className="flex items-start justify-between gap-3">
+  <article aria-label={title} className="osrs-wa-card flex h-full min-h-[280px] flex-col rounded-xl border border-white/[0.06] bg-[#1a1a1a] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+    <header className="osrs-wa-cardhead flex items-start justify-between gap-3">
       <div className="flex min-w-0 items-start gap-2.5">
-        {icon && <span aria-hidden="true" className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white/[0.04] text-gray-300">{icon}</span>}
+        {icon && <span aria-hidden="true" className="osrs-wa-ico mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white/[0.04] text-gray-300">{icon}</span>}
         <div className="min-w-0">
-          <h3 className="text-sm font-bold text-gray-100">{title}</h3>
-          <p className="mt-0.5 text-[11px] leading-4 text-gray-500">{subtitle}</p>
+          <h3 className="osrs-wa-h3 text-sm font-bold text-gray-100">{title}</h3>
+          <p className="osrs-wa-small mt-0.5 text-[11px] leading-4 text-gray-500">{subtitle}</p>
         </div>
       </div>
       {action}

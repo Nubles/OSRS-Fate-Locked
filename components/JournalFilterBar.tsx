@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, ChevronDown } from 'lucide-react';
+import { useIsOsrsUi } from '../utils/uiStyle';
 
 /**
  * Status common to every Journal sub-tab. Diaries / CAs previously had no
@@ -51,7 +52,60 @@ export const JournalFilterBar: React.FC<JournalFilterBarProps> = ({
   tiers, activeTier, onTierChange,
   rightExtras,
 }) => {
+  const isOsrs = useIsOsrsUi();
   const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+  if (isOsrs) {
+    // OSRS layout: the same controls as stone buttons and dark inset fields.
+    return (
+      <div className="ojr-bar">
+        <div className="ojr-bar-row">
+          <h2 className="ojr-bar-title">{title}</h2>
+          <span className="ojr-bar-count"><b>{completed}/{total}</b> done ({pct}%)</span>
+          <div style={{ marginLeft: 'auto' }}>{rightExtras}</div>
+        </div>
+        <div className="ojr-bar-row">
+          <label className="ojr-search">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14"><circle cx="6" cy="6" r="4.5" fill="none" stroke="#c8b897" strokeWidth="2" /><path d="M9.5 9.5l3.5 3.5" stroke="#c8b897" strokeWidth="2" /></svg>
+            <input
+              type="text"
+              placeholder={searchPlaceholder || 'Search...'}
+              value={searchValue}
+              onChange={(e) => onSearchChange(e.target.value)}
+            />
+          </label>
+          <div className="ojr-seg">
+            {STATUSES.map((s) => (
+              <button
+                key={s.value}
+                type="button"
+                onClick={() => onStatusChange(s.value)}
+                className={`osrs-btn${status === s.value ? ' is-on' : ''}`}
+                aria-pressed={status === s.value}
+              >
+                {s.label}
+                {typeof statusCounts?.[s.value] === 'number' && <span className="ojr-n">{statusCounts[s.value]}</span>}
+              </button>
+            ))}
+          </div>
+          {regions && regions.length > 1 && onRegionChange && (
+            <select aria-label="Filter by region" value={activeRegion ?? 'ALL'} onChange={(e) => onRegionChange(e.target.value)}
+              className={`ojr-select${activeRegion && activeRegion !== 'ALL' ? ' is-on' : ''}`}>
+              <option value="ALL">All regions</option>
+              {regions.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+          )}
+          {tiers && tiers.length > 0 && onTierChange && (
+            <select aria-label="Filter by tier" value={activeTier ?? 'ALL'} onChange={(e) => onTierChange(e.target.value)}
+              className={`ojr-select${activeTier && activeTier !== 'ALL' ? ' is-on' : ''}`}>
+              <option value="ALL">All tiers</option>
+              {tiers.map((t) => <option key={t.id} value={t.id}>{t.label || t.id}</option>)}
+            </select>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-3 border-b border-white/10 bg-[#1a1a1a] shrink-0 space-y-2">

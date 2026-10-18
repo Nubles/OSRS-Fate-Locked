@@ -1323,3 +1323,18 @@ describe('persisted Collection Log identity metadata', () => {
     expect(accessed).toBe(false);
   });
 });
+
+describe('the kept Cartographer offer', () => {
+  it('round-trips, and a save without one loads with none', () => {
+    const kept = expectAccepted(validateAndMigrateSave(candidate({ cartographerOffer: ['49,50', '51,50'] }), defaultsFixture()));
+    expect(kept.state.cartographerOffer).toEqual(['49,50', '51,50']);
+    const none = expectAccepted(validateAndMigrateSave(candidate({}), defaultsFixture()));
+    expect(none.state.cartographerOffer).toBeUndefined();
+  });
+
+  it('rejects an offer that is not up to 3 distinct chunk keys', () => {
+    for (const bad of ['49,50', ['49,50', '49,50'], ['a,b'], ['1,1', '1,2', '1,3', '1,4'], [7]]) {
+      expectRejected(candidate({ cartographerOffer: bad }), 'invalid_field', 'cartographerOffer');
+    }
+  });
+});

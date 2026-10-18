@@ -5,7 +5,7 @@
  * `rituals`; everything here is pure so vitest can pin the rules.
  */
 import {
-  BARROWS_ROLLS, BLOOD_PRICE_FATE, INVOCATION_ROLLS, PACT_DEBT, PACT_ODDS_BONUS, PACT_ROLLS, SACRIFICE_MIN_ROLLS, SACRIFICE_TIERS,
+  FATE_MARK_CURSED_ODDS, BARROWS_ROLLS, BLOOD_PRICE_FATE, INVOCATION_ROLLS, PACT_DEBT, PACT_ODDS_BONUS, PACT_ROLLS, SACRIFICE_MIN_ROLLS, SACRIFICE_TIERS,
   SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, invocationOmniBonus, type BarrowsBrother, type Invocation, type Ritual,
 } from '../config/economy';
 import { TableType, type LogEntry, type UnlockState } from '../types';
@@ -27,6 +27,8 @@ export interface RitualState {
   /** `fateCost` is what was paid, for Torag's refund. */
   barrows?: { brother: BarrowsBrother['id']; rollsLeft: number; failed: number; fateCost: number };
   sacrificesUsed?: number;
+  /** Chunked: Key rolls a Cursed chunk still makes worse (utils/fateLand.ts). */
+  cursedRollsLeft?: number;
 }
 
 export type GodName = NonNullable<Ritual['god']>;
@@ -105,6 +107,7 @@ export const rollRitualPlan = (r: RitualState | undefined, fatePoints: number): 
   if (!r) return NO_PLAN;
   const plan = { ...NO_PLAN };
   if ((r.pactRollsLeft ?? 0) > 0) plan.oddsBonus += PACT_ODDS_BONUS;
+  if ((r.cursedRollsLeft ?? 0) > 0) plan.oddsBonus -= FATE_MARK_CURSED_ODDS;
   const inv = r.invocations && r.invocations.rollsLeft > 0 ? r.invocations.ids : [];
   if (inv.includes('OVERLY_DRAINING')) plan.oddsBonus -= 5;
   plan.omniBonus += invocationOmniBonus(inv);
@@ -155,6 +158,7 @@ export const failFate = (
   let gain = base;
   if (inv.includes('WALK_THE_PATH')) { gain = 0; notes.push('Walk the Path'); }
   if ((r?.tearsFailsLeft ?? 0) > 0 && gain > 0) { gain *= 2; notes.push('Tears doubled'); }
+  if ((r?.cursedRollsLeft ?? 0) > 0 && gain > 0) { gain *= 2; notes.push('The curse doubled'); }
   const b = r?.barrows && r.barrows.rollsLeft > 0 ? r.barrows : null;
   if (b?.brother === 'GUTHAN') { gain += 8; notes.push('Guthan healed 8'); }
   if (b?.brother === 'TORAG' && b.rollsLeft === 1 && b.failed === BARROWS_ROLLS - 1) {
@@ -178,6 +182,10 @@ export const afterRoll = (r: RitualState | undefined, outcome: { success: boolea
   if (!r) return r;
   const next: RitualState = { ...r };
   if ((next.wardCooldown ?? 0) > 0) next.wardCooldown = next.wardCooldown! - 1;
+  if ((next.cursedRollsLeft ?? 0) > 0) {
+    next.cursedRollsLeft = next.cursedRollsLeft! - 1;
+    if (next.cursedRollsLeft === 0) delete next.cursedRollsLeft;
+  }
   if ((next.pactRollsLeft ?? 0) > 0) {
     next.pactRollsLeft = next.pactRollsLeft! - 1;
     if (next.pactRollsLeft === 0) { delete next.pactRollsLeft; next.pactDebt = PACT_DEBT; }
@@ -267,5 +275,6 @@ export const tidyRituals = (r: RitualState | undefined): RitualState | undefined
   if (r.invocations && r.invocations.rollsLeft > 0) out.invocations = r.invocations;
   if (r.barrows && r.barrows.rollsLeft > 0) out.barrows = r.barrows;
   if ((r.sacrificesUsed ?? 0) > 0) out.sacrificesUsed = r.sacrificesUsed;
+  if ((r.cursedRollsLeft ?? 0) > 0) out.cursedRollsLeft = r.cursedRollsLeft;
   return Object.keys(out).length > 0 ? out : undefined;
 };

@@ -2,7 +2,8 @@
 import React from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createFreshState } from '../context/GameContext';
+import { createFreshState, gameReducer } from '../context/GameContext';
+import { liveCartographerOffer } from '../utils/cartographerOffer';
 
 const game = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
 
@@ -18,13 +19,23 @@ vi.mock('../services/ChunkContentService', () => ({
 
 const offeredKeys = () => screen.getAllByText(/^\(\d+,\d+\)$/).map(node => node.textContent);
 
+// The run the Altar reads, kept between renders as the provider keeps it.
+const saved = vi.hoisted(() => ({ offer: undefined as string[] | undefined }));
+
 beforeEach(() => {
   const state = createFreshState();
   let draws = 0;
+  saved.offer = undefined;
   game.current = {
     ...state,
     fatePoints: 60,
     gameModeId: 'chunked',
+    // As the provider does: the reducer draws the offer once and the run keeps it.
+    drawCartographerChoices: () => {
+      const next = gameReducer({ ...state, gameModeId: 'chunked', cartographerOffer: saved.offer, lastEvent: null }, { type: 'CARTOGRAPHER_DRAW_OFFER' });
+      saved.offer = next.cartographerOffer;
+      return liveCartographerOffer(next);
+    },
     // An unseeded run: every draw is fresh.
     nextFloat: () => [0.9, 0.1, 0.5, 0.7, 0.3, 0.2][draws++ % 6],
     performRitual: vi.fn(),
@@ -49,6 +60,23 @@ describe('VoidAltar Cartographer', () => {
     fireEvent.click(screen.getByRole('button', { name: /Ritual of the Cartographer/ }));
 
     expect(offeredKeys()).toEqual(first);
+  });
+
+  it('keeps the same offer after a page reload on an unseeded run', async () => {
+    const offerAfterLoad = async () => {
+      vi.resetModules();
+      const { VoidAltar } = await import('./VoidAltar');
+      const view = render(<VoidAltar onClose={vi.fn()} />);
+      fireEvent.click(screen.getByRole('button', { name: /Ritual of the Cartographer/ }));
+      const keys = offeredKeys();
+      view.unmount();
+      return keys;
+    };
+    const random = vi.spyOn(Math, 'random');
+    const first = await offerAfterLoad();
+    expect(first).toHaveLength(3);
+    expect(await offerAfterLoad()).toEqual(first);
+    expect(random).not.toHaveBeenCalled();
   });
 });
 
@@ -88,6 +116,43 @@ describe('VoidAltar Gambit minimum stake', () => {
     expect(within(gambit).getByText(`ALL Fate (min ${minimum})`)).toBeTruthy();
     expect(within(gambit).getByText(new RegExp(`Win: 1 Key per ${minimum} staked`))).toBeTruthy();
     expect(gambit.disabled).toBe(disabled);
+  });
+});
+
+describe('VoidAltar unaffordable rituals', () => {
+  afterEach(async () => {
+    const { setUiStyle } = await import('../utils/uiStyle');
+    setUiStyle('classic');
+  });
+
+  it('greys them out with the shortfall in the OSRS layout, reading the same costs as the click guard', async () => {
+    const { setUiStyle } = await import('../utils/uiStyle');
+    setUiStyle('osrs');
+    game.current = { ...game.current, gameModeId: 'vanilla', fatePoints: 12, keys: 3 };
+    const { VoidAltar } = await import('./VoidAltar');
+    render(<VoidAltar onClose={vi.fn()} />);
+
+    const clarity = screen.getByRole('button', { name: /Ritual of Clarity/ }) as HTMLButtonElement;
+    expect(clarity.disabled).toBe(false);
+    expect(clarity.getAttribute('data-ritual-state')).toBeNull();
+    expect(within(clarity).queryByText(/^Need /)).toBeNull();
+
+    const greed = screen.getByRole('button', { name: /Ritual of Greed/ }) as HTMLButtonElement;
+    expect(greed.disabled).toBe(true);
+    expect(greed.getAttribute('data-ritual-state')).toBe('unaffordable');
+    expect(within(greed).getByText('Need 3 more Fate')).toBeTruthy();
+
+    const transmute = screen.getByRole('button', { name: /Ritual of Transmutation/ });
+    expect(within(transmute).getByText('Need 2 more Keys')).toBeTruthy();
+  });
+
+  it('keeps the classic look without a shortfall line', async () => {
+    game.current = { ...game.current, gameModeId: 'vanilla', fatePoints: 12, keys: 3 };
+    const { VoidAltar } = await import('./VoidAltar');
+    render(<VoidAltar onClose={vi.fn()} />);
+    const greed = screen.getByRole('button', { name: /Ritual of Greed/ });
+    expect(greed.className).toContain('opacity-50');
+    expect(within(greed).queryByText(/^Need /)).toBeNull();
   });
 });
 
@@ -137,6 +202,15 @@ describe('VoidAltar newer rituals', () => {
     expect(blood.disabled).toBe(true);
     expect(within(blood).getByText('Needs 15 Fate left after the ritual')).toBeTruthy();
     expect((screen.getByRole('button', { name: /Walk the Path/ }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("says what the drawn Barrows brother does while his rolls last", async () => {
+    game.current = { ...game.current, gameModeId: 'vanilla', rituals: { barrows: { brother: 'VERAC', rollsLeft: 2, failed: 1, fateCost: 20 } } };
+    const { VoidAltar } = await import('./VoidAltar');
+    render(<VoidAltar onClose={vi.fn()} />);
+    const chest = screen.getByRole('button', { name: /Barrows Chest/ });
+    expect(within(chest).getByText('Verac the Defiled: Every fail has a 15% chance to become a success.')).toBeTruthy();
+    expect(within(chest).getByText('Verac: 2 rolls left')).toBeTruthy();
   });
 
   it('keeps Sacrifice locked until the run has made 200 rolls', async () => {

@@ -12,6 +12,7 @@ import { UnlockState } from '../types';
 import { SlayerMasters, SlayerAssignment } from '../services/ChunkContentService';
 import { SLAYER_MASTER_REQUIREMENTS, type SlayerMasterRequirementOption } from '../data/slayerMasterRequirements';
 import { isAreaReachable } from './reachability';
+import { chunkPlaceLabel, ownsAnyChunk, slayerMasterChunks } from './activityAccess';
 import { canonicalBossId } from './contentIdentity';
 import { pendingQuestProgress } from '../data/questProgress';
 
@@ -99,10 +100,18 @@ const masterBlocker = (
   questSet: Set<string>,
   combat: number,
 ): SlayerMasterBlocker | undefined => {
+  // Chunked: the master's own chunk must be owned, not any chunk of the area.
+  const masterChunks = gameModeId === 'chunked' ? slayerMasterChunks(master) : [];
+  if (masterChunks.length > 0 && !ownsAnyChunk(masterChunks, unlocks)) {
+    return { status: 'area-locked', label: `Master: ${masterChunks.map(chunkPlaceLabel).join(' or ')}` };
+  }
+
   const requirements = SLAYER_MASTER_REQUIREMENTS[master];
   if (!requirements) return undefined;
 
-  const missingArea = requirements.areas?.find(area => !isAreaReachable(area, unlocks, gameModeId));
+  const missingArea = masterChunks.length > 0
+    ? undefined
+    : requirements.areas?.find(area => !isAreaReachable(area, unlocks, gameModeId));
   if (missingArea) return { status: 'area-locked', label: `Master: ${missingArea}` };
 
   const missingQuest = requirements.quests?.find(quest => !questSet.has(quest));

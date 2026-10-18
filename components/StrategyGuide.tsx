@@ -6,7 +6,8 @@ import { STRATEGY_DATABASE, ContentRequirement } from '../data/requirements';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { TableType } from '../types';
-import { isAreaReachable } from '../utils/reachability';
+import { isAreaReachable, namedAreaChunks } from '../utils/reachability';
+import { chunkKey, isChunkUnlocked } from '../utils/chunkAdjacency';
 import { 
     EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, 
     POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, 
@@ -42,6 +43,12 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
         : null;
     const missingRegions = canonical ? canonical.blockers.filter(b => b.kind === 'region').map(b => b.label)
         : req.regions.filter(r => !isAreaReachable(r, unlocks, gameModeId));
+    // Chunked: one chunk of a big area ("Kharidian Desert") says nothing about
+    // where this content is, so an area held only in part is a check to make.
+    const partlyHeld = gameModeId === 'chunked' && !canonical
+        ? req.regions.filter(r => !missingRegions.includes(r) && namedAreaChunks(r)
+            .some(chunk => !isChunkUnlocked(chunkKey(chunk), unlocks.chunks ?? [])))
+        : [];
     const missingSkills = Object.entries(req.skills).filter(([skill, level]) => canonical
         ? canonical.blockers.some(b => b.kind === 'skill' && (b.label === `${skill} ${level}` || (b.requirement?.type === 'single' && b.requirement.skill === skill && b.requirement.level === level)))
         : !meetsSkillRequirement(unlocks, skill, level)).map(([skill, level]) => ({ skill, reqLevel: level,
@@ -53,6 +60,7 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
     const readiness = canonical || req.category === TableType.DIARIES || !activityRequirement ? null : evaluateActivityReadiness(true, activityRequirement, unlocks, gameModeId);
     const missingChecks = [...new Set([
         ...(req.manualRequirements ?? []),
+        ...partlyHeld.map(area => `Check it is in your chunks: ${area}`),
         ...(req.diaries ?? []).filter(d => !unlocks.diaries.includes(d)).map(d => `${d} diary`),
         ...(req.accessRoutes?.length && !req.accessRoutes.some(route =>
             (route.diaries ?? []).every(d => unlocks.diaries.includes(d))
