@@ -172,16 +172,26 @@ export function createChunkedChecks(service: ChunkContentService) {
     return diaryIndex.get(taskId) ?? null;
   };
 
-  /** A task (or one of its ways) done in its own chunks rather than anywhere in its areas. */
+  /**
+   * A task (or one of its ways) done in its own chunks rather than anywhere in
+   * its areas. A task with ways in different areas has one set of chunks for
+   * all of them, so each way (and the part they share) takes only the chunks
+   * in or beside its own areas, and keeps its areas when none are: "Chop some
+   * Redwood logs" keeps its Farming Guild way, and the Dorgesh-Kaan train
+   * needs Keldagrim's chunk and still a way in from Lumbridge.
+   */
   const diaryTask = <R extends DiaryRequirement>(taskId: string, requirement: R): R | null => {
     const place = diaryPlace(taskId);
-    if (!place || !(requirement.regions?.length || requirement.anyOfRegions?.length)) return null;
-    const areas = [...(requirement.regions ?? []), ...(requirement.anyOfRegions ?? [])].join(' or ');
-    const { cx, cy } = place.chunkOptions[0];
-    const label = place.chunkOptions.length === 1 ? `${areas} (${cx}, ${cy})` : `${areas}: one of ${place.chunkOptions.length} chunks`;
+    const own = [...(requirement.regions ?? []), ...(requirement.anyOfRegions ?? [])];
+    if (!place || own.length === 0) return null;
+    const chunkOptions = waysWithAreas.has(taskId) ? chunksBeside(place.chunkOptions, own) : place.chunkOptions;
+    if (chunkOptions.length === 0) return null;
+    const areas = own.join(' or ');
+    const { cx, cy } = chunkOptions[0];
+    const label = chunkOptions.length === 1 ? `${areas} (${cx}, ${cy})` : `${areas}: one of ${chunkOptions.length} chunks`;
     return {
       ...requirement, regions: undefined, anyOfRegions: undefined,
-      locations: [...(requirement.locations ?? []), { ...place, label }],
+      locations: [...(requirement.locations ?? []), { label, chunkOptions }],
     };
   };
 
@@ -226,6 +236,17 @@ export function createChunkedChecks(service: ChunkContentService) {
 
   return { quest, questItems, diaryTask, diaryPlace, questChunks, contentChunks, frontier };
 }
+
+/** Tasks with a way of their own areas: their chunks are split between the ways. */
+const waysWithAreas = new Set(ALL_DIARY_TASKS
+  .filter(task => (task.oneOf ?? []).some(option => option.regions?.length))
+  .map(task => task.id));
+
+/** The chunks that lie in or beside one of these areas. */
+const chunksBeside = (chunks: readonly Coord[], areas: readonly string[]): Coord[] => {
+  const near = areas.flatMap(area => namedAreaChunks(area));
+  return chunks.filter(chunk => near.some(area => Math.abs(area.cx - chunk.cx) <= 1 && Math.abs(area.cy - chunk.cy) <= 1));
+};
 
 const EMPTY_ACCOUNT: UnlockState = {
   skills: {}, levels: {}, equipment: {}, regions: [], chunks: [], quests: [], guilds: [], merchants: [],

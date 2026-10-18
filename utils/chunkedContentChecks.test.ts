@@ -19,7 +19,7 @@ import { doableCATasks } from '../components/JournalSummaryCard';
 import { analyzeRequirement } from '../components/StrategyGuide';
 import { STRATEGY_DATABASE } from '../data/requirements';
 import { computeAreaRoutes } from './areaRoutes';
-import { buildDiaryIndex, chunkedChunkOpen } from './chunkedContentChecks';
+import { buildDiaryIndex, chunkedChunkOpen, createChunkedChecks } from './chunkedContentChecks';
 import { getChunkFrontier, chunkKey } from './chunkAdjacency';
 import { PANDEMONIUM_ROUTE } from './pandemoniumRoute';
 import { planForTarget } from './goalPlanner';
@@ -184,6 +184,39 @@ describe("Chunked diary tasks with no chunk code use the export's own chunks (co
   it("places the Emblem Trader in Edgeville, where the stale chunk code didn't", () => {
     const place = buildDiaryIndex(doc().chunks, doc().interiors as never, doc().diaryChunks).get('wilderness_med_9');
     expect(place?.chunkOptions).toContainEqual({ cx: 48, cy: 54 });
+  });
+});
+
+describe('Chunked diary tasks with several ways check each way where it is (content audit fix 5)', () => {
+  const task = (id: string) => ALL_DIARY_TASKS.find(t => t.id === id)!;
+
+  it('"Chop some Redwood logs" keeps its Farming Guild way', () => {
+    const redwood = task('kou_elite_2');
+    expect(evaluateDiaryTaskEligibility(redwood, maxed(['19,58'], { guilds: ['Farming Guild'], farming: ['Redwood'] }), 'chunked').eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(redwood, maxed(['24,54'], { guilds: ['Woodcutting Guild'] }), 'chunked').eligible).toBe(true);
+    // The Woodcutting Guild way still needs the redwoods' own chunk, not any of the guild's.
+    expect(evaluateDiaryTaskEligibility(redwood, maxed(['25,54'], { guilds: ['Woodcutting Guild'] }), 'chunked').eligible).toBe(false);
+  });
+
+  it('the Dorgesh-Kaan train needs Keldagrim\'s chunk and still a way in', () => {
+    const train = task('lum_hard_6');
+    const checks = createChunkedChecks(chunkContentService);
+    // The part both ways share is Keldagrim's own chunk...
+    expect(checks.diaryTask(train.id, train)?.locations?.flatMap(place => place.chunkOptions)).toEqual([{ cx: 43, cy: 58 }]);
+    // ...and neither way is swapped for it: each keeps its own areas.
+    for (const way of train.oneOf!) expect(checks.diaryTask(train.id, way)).toBeNull();
+    expect(evaluateDiaryTaskEligibility(train, maxed(['50,49'], { quests: ['Another Slice of H.A.M.'] }), 'chunked').eligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(train, maxed(['43,58'], { quests: ['Another Slice of H.A.M.'] }), 'chunked').eligible).toBe(true);
+  });
+
+  it('gives a way the chunks beside its own areas', () => {
+    // Edgeville dungeon's pipe: Edgeville's way at 48,54 only; Varrock's way at 50,54 (and 48,54, beside Varrock).
+    const pipe = task('var_hard_10');
+    const checks = createChunkedChecks(chunkContentService);
+    const chunksOf = (way: number) => checks.diaryTask(pipe.id, pipe.oneOf![way])?.locations?.flatMap(place => place.chunkOptions);
+    expect(pipe.oneOf!.map(way => way.regions)).toEqual([['Edgeville'], ['Varrock']]);
+    expect(chunksOf(0)).toEqual([{ cx: 48, cy: 54 }]);
+    expect(chunksOf(1)).toContainEqual({ cx: 50, cy: 54 });
   });
 });
 
