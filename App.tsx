@@ -100,6 +100,7 @@ const GuidedTour = lazyWithRetry(() => import('./components/GuidedTour').then(m 
 const QuestCompleteOverlay = lazyWithRetry(() => import('./components/QuestCompleteOverlay').then(m => ({ default: m.QuestCompleteOverlay })));
 // The OSRS layout's shell (utils/uiStyle.ts): loaded only while that layout is on.
 const OsrsHeader = lazyWithRetry(() => import('./components/osrs/OsrsHeader').then(m => ({ default: m.OsrsHeader })));
+const FateMapOptions = lazyWithRetry(() => import('./components/FateMapOptions'));
 const OsrsShellFrame = lazyWithRetry(() => import('./components/osrs/OsrsShellFrame'));
 const OsrsContextMenu = lazyWithRetry(() => import('./components/osrs/OsrsContextMenu').then(m => ({ default: m.OsrsContextMenu })));
 const RunelitePluginGuide = lazyWithRetry(() =>
@@ -614,6 +615,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                            {animationsEnabled ? <PlayCircle size={13} className="text-green-400" /> : <PauseCircle size={13} className="text-gray-500" />}
                            Animations <span className="ml-auto text-[10px] text-gray-500">{animationsEnabled ? 'on' : 'off'}</span>
                         </button>
+                        {gameModeId === 'chunked' && <Suspense fallback={null}><FateMapOptions /></Suspense>}
                         <button onClick={() => { setUiStyle(uiStyle === 'osrs' ? 'classic' : 'osrs'); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={uiStyle === 'osrs'} title={osrsFits ? undefined : `The OSRS layout shows on windows at least ${OSRS_MIN_WIDTH} pixels wide`}>
                            <SlidersHorizontal size={13} className={uiStyle === 'osrs' ? 'text-amber-400' : 'text-gray-500'} />
                            OSRS layout <span className="ml-auto text-[10px] text-gray-500">{uiStyle === 'osrs' ? (osrsFits ? 'on' : 'on, wide screens') : 'off'}</span>
