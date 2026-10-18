@@ -28,7 +28,7 @@
  * run, these count too:
  * - levels, not just tiers: content counts once the player's level reaches
  *   it (Draynor rooftop needs Agility 10, the Water altar Runecraft 5), from
- *   the exact levels in CHUNK_SKILL_LEVELS;
+ *   the exact levels the generator keeps (chunkFacts);
  * - Ranged needs the Weapon slot at tier 1 to hold a bow or darts, and only
  *   then counts as a combat style; fighting (and so Hitpoints, Prayer's
  *   bones, Slayer tasks and Cooking's meat) needs a combat style;
@@ -43,7 +43,7 @@
 import type { UnlockState } from '../types';
 import {
   CHUNK_ENTRY_QUESTS, CHUNK_FARMING_PATCHES, CHUNK_GUILD_GATES, CHUNK_ORE_SHOPS, CHUNK_PATCH_TYPES, CHUNK_SKILL_FACTS,
-  CHUNK_SKILL_LEVELS, CHUNK_SKILL_SERVICES, CHUNK_SKILL_TIERS,
+  CHUNK_SKILL_SERVICES, CHUNK_SKILL_TIERS,
 } from '../data/chunkSkillNodes';
 import { CHUNKED_START_KEY } from './chunkAdjacency';
 import { SKILL_QUEST_GATES } from './journalStatus';
@@ -83,19 +83,38 @@ export const chunkPatches = (chunk: string): [string, number, number][] =>
   [...(CHUNK_FARMING_PATCHES[chunk] ?? '').matchAll(/([a-z])(\d+)/g)]
     .map(([, letter, level]): [string, number, number] => [CHUNK_PATCH_TYPES[letter.charCodeAt(0) - 97], tierForLevel(Number(level)), Number(level)]);
 
-const EXACT_LEVELS = new Map<string, Map<string, number>>(Object.entries(CHUNK_SKILL_LEVELS).map(([chunk, row]) => [chunk,
-  new Map([...row.matchAll(/([a-z])(\d+)/g)].map(([, letter, level]) => [CHUNK_SKILL_FACTS[letter.charCodeAt(0) - 97], Number(level)]))]));
+const NO_FACTS: ReadonlyMap<string, number> = new Map();
+const FACT_LEVELS = new Map<string, ReadonlyMap<string, number>>();
 
-/** The lowest level a chunk's fact needs (its exact level, else its tier's floor), or undefined when it has none. */
-export const chunkFactLevel = (chunk: string, fact: string): number | undefined => {
-  const cell = CHUNK_SKILL_TIERS[chunk]?.[CHUNK_SKILL_FACTS.indexOf(fact)];
-  if (cell === undefined || cell === '.') return undefined;
-  return EXACT_LEVELS.get(chunk)?.get(fact) ?? tierBand(cell === '0' ? 10 : Number(cell)).min;
+/**
+ * A chunk's facts in CHUNK_SKILL_FACTS order, each with the lowest level it
+ * needs: a row's cell is a tier digit (its floor level) or a tier letter and
+ * how far above the floor (utils/chunkSkillNodesBuild.ts factCell).
+ */
+export const chunkFacts = (chunk: string): ReadonlyMap<string, number> => {
+  let facts = FACT_LEVELS.get(chunk);
+  if (facts) return facts;
+  const row = CHUNK_SKILL_TIERS[chunk];
+  if (!row) return NO_FACTS;
+  const parsed = new Map<string, number>();
+  [...row.matchAll(/[.\d]|[A-J]\d/g)].forEach(([cell], i) => {
+    if (cell === '.') return;
+    const digit = cell.length > 1 ? cell.charCodeAt(0) - 65 : Number(cell);
+    parsed.set(CHUNK_SKILL_FACTS[i], tierBand(digit || 10).min + Number(cell[1] ?? 0));
+  });
+  FACT_LEVELS.set(chunk, facts = parsed);
+  return facts;
 };
+
+/** The lowest level a chunk's fact needs, or undefined when it has none. */
+export const chunkFactLevel = (chunk: string, fact: string): number | undefined => chunkFacts(chunk).get(fact);
 
 /** The run's current level in a skill (a fresh run has Hitpoints 10, the rest 1). */
 export const runLevel = (run: TrainingRun, skill: string): number =>
   run.levels?.[skill] ?? (skill === 'Hitpoints' ? 10 : 1);
+
+/** What a run that can't fight needs. */
+export const COMBAT_STYLE = 'a combat style (melee, Magic, or Ranged with a Weapon slot)';
 
 /** Ranged needs the Weapon slot open (tier 1 or higher) to hold a bow, darts or knives. */
 const rangedWeapon = (run: TrainingRun): boolean => (run.equipment?.Weapon ?? 0) >= 1;
@@ -148,13 +167,11 @@ const training = (chunks: readonly string[], run?: TrainingRun): Training => {
     if (run && chunkEntryQuests(key).some(quest => !quests.has(quest))) continue;
     const gate = CHUNK_GUILD_GATES[key];
     const gated = run && gate && !guilds.has(gate[1]) ? gate[0] : null;
-    const row = CHUNK_SKILL_TIERS[key] ?? '';
-    for (let i = 0; i < row.length; i++) {
-      const fact = CHUNK_SKILL_FACTS[i];
-      if (row[i] === '.' || fact === gated || (gated === 'Farming' && fact === '@herb')) continue;
+    for (const [fact, level] of chunkFacts(key)) {
+      if (fact === gated || (gated === 'Farming' && fact === '@herb')) continue;
       // With a run, Farming comes from the unlocked patch types below.
       if (run && (fact === 'Farming' || fact === '@herb')) continue;
-      note(fact, chunkFactLevel(key, fact)!);
+      note(fact, level);
     }
     if (run && gated !== 'Farming') {
       for (const [type, , level] of chunkPatches(key)) {
@@ -181,36 +198,37 @@ const training = (chunks: readonly string[], run?: TrainingRun): Training => {
   const drop = (skill: string, needs: string) => { levels.delete(skill); missing.set(skill, needs); };
   const noteLevel = (skill: string, level: number) => levels.set(skill, Math.min(levels.get(skill) ?? level, level));
   // Logs: Firemaking and Fletching start at the lowest log the run can cut (normal logs 1, oak 15, willow 30).
-  if (usable('Woodcutting')) { levels.set('Firemaking', raw.get('Woodcutting')!); levels.set('Fletching', raw.get('Woodcutting')!); }
-  else { drop('Firemaking', 'logs from a tree your Woodcutting can cut'); drop('Fletching', 'logs from a tree your Woodcutting can cut'); }
+  for (const skill of ['Firemaking', 'Fletching']) {
+    if (usable('Woodcutting')) levels.set(skill, raw.get('Woodcutting')!);
+    else drop(skill, 'logs your Woodcutting can cut');
+  }
   if (levels.has('Smithing')) {
     const input = usable('Mining') ? 1 : oreShopLevel;
-    if (input === undefined) drop('Smithing', 'ore from a rock your Mining can mine, or an ore shop you have unlocked');
+    if (input === undefined) drop('Smithing', 'ore your Mining can mine, or an ore shop');
     else levels.set('Smithing', Math.max(levels.get('Smithing')!, input));
   }
   const fight = raw.has('@monster') && (!run || chunkedCombatStyleUsable(run));
-  if (!usable('Fishing') && !fight && levels.has('Cooking')) drop('Cooking', 'food: fish your Fishing can catch, or something you can fight');
+  if (!usable('Fishing') && !fight && levels.has('Cooking')) drop('Cooking', 'fish your Fishing can catch, or something to fight');
   if (raw.has('@monster')) COMBAT_SKILLS.forEach(skill => noteLevel(skill, 1));
-  const combatStyle = 'a combat style: Attack, Strength, Defence or Magic, or Ranged with a Weapon slot';
-  if (run && !rangedWeapon(run) && levels.has('Ranged')) drop('Ranged', 'the Weapon slot at tier 1, to hold a bow or darts');
+  if (run && !rangedWeapon(run) && levels.has('Ranged')) drop('Ranged', 'a Weapon slot to hold a bow');
   // Hitpoints XP only comes with combat XP, and bones come from kills.
   if (run && !chunkedCombatStyleUsable(run)) {
-    if (levels.has('Hitpoints')) drop('Hitpoints', combatStyle);
-    if (levels.has('Prayer')) drop('Prayer', `bones, which need ${combatStyle}`);
+    if (levels.has('Hitpoints')) drop('Hitpoints', COMBAT_STYLE);
+    if (levels.has('Prayer')) drop('Prayer', `bones, so ${COMBAT_STYLE}`);
   }
   if (!raw.has('@monster')) levels.delete('Prayer');
   if (raw.has('@slayer')) {
     if (!run || chunkedCombatStyleUsable(run)) noteLevel('Slayer', 1);
-    else drop('Slayer', combatStyle);
+    else drop('Slayer', COMBAT_STYLE);
   }
   if (run && levels.has('Runecraft') && !(quests.has('Rune Mysteries') && (run.skills.Mining ?? 0) >= 1 && services.has('essence'))) {
-    drop('Runecraft', 'rune essence: Rune Mysteries done, Mining unlocked, and Aubury, Wizard Cromperty, Archmage Sedridor or Brimstail in your chunks');
+    drop('Runecraft', 'essence: Rune Mysteries, Mining and an essence mine teleport (Aubury, Cromperty, Sedridor or Brimstail)');
   }
   if (run && levels.has('Construction')
     && !(services.has('estateAgent') && (services.has('planks') || (services.has('sawmill') && usable('Woodcutting'))))) {
-    drop('Construction', 'a house from an estate agent and planks from a sawmill (with logs) or a plank shop, in your chunks with their merchants unlocked');
+    drop('Construction', 'a house from an estate agent and planks (a sawmill and logs, or a plank shop)');
   }
-  if (run && levels.has('Hunter') && !services.has('traps')) drop('Hunter', 'traps from a Hunter shop in your chunks, with Hunter Shops unlocked');
+  if (run && levels.has('Hunter') && !services.has('traps')) drop('Hunter', 'traps from a Hunter shop');
   // A herb patch trains Herblore once the run can grow herbs in it.
   const herb = raw.get('@herb');
   if (herb !== undefined && (!run || ((run.skills.Farming ?? 0) >= tierForLevel(herb) && runLevel(run, 'Farming') >= herb))) noteLevel('Herblore', 1);

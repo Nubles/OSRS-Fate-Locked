@@ -138,7 +138,7 @@ describe('Chunked fate panel', () => {
     render(<ChunkedFatePanel />);
     const fought = screen.getByRole('button', { name: 'Fought something' }) as HTMLButtonElement;
     expect(fought.disabled).toBe(true);
-    expect(fought.title).toBe('Needs a combat style: Attack, Strength, Defence or Magic, or Ranged with a Weapon slot.');
+    expect(fought.title).toBe('Needs a combat style (melee, Magic, or Ranged with a Weapon slot).');
   });
 
   it('draws the same rolls in the OSRS layout, one chunk when compact', async () => {

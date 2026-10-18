@@ -118,7 +118,7 @@ describe('Chunked exploring rolls', () => {
   it('needs a combat style the run can use to fight (fate review V5)', () => {
     const fighter = (skills: Record<string, number>, Weapon = 0) =>
       run({ unlocks: { ...run().unlocks, skills: { Hitpoints: 1, ...skills }, equipment: { ...initialState.unlocks.equipment, Weapon } } });
-    expect(exploreBlocker(fighter({}), WEST, '@monster')).toBe('Needs a combat style: Attack, Strength, Defence or Magic, or Ranged with a Weapon slot.');
+    expect(exploreBlocker(fighter({}), WEST, '@monster')).toBe('Needs a combat style (melee, Magic, or Ranged with a Weapon slot).');
     // Ranged with no Weapon slot can hold no bow.
     expect(exploreBlocker(fighter({ Ranged: 1 }), WEST, '@monster')).not.toBeNull();
     expect(exploreBlocker(fighter({ Ranged: 1 }, 1), WEST, '@monster')).toBeNull();
@@ -151,7 +151,7 @@ describe('Chunked exploring rolls', () => {
     expect(exploreBlocker(draynor, '48,51', 'Agility')).toBe('Needs Agility level 10.');
     // The Water altar needs essence as well as Runecraft 5.
     const water = at(['50,49', '49,49'], { Runecraft: 1 }, { levels: { ...initialState.unlocks.levels, Runecraft: 5 } });
-    expect(exploreBlocker(water, '49,49', 'Runecraft')).toMatch(/^Needs rune essence: Rune Mysteries done/);
+    expect(exploreBlocker(water, '49,49', 'Runecraft')).toMatch(/^Needs essence: Rune Mysteries, Mining and an essence mine teleport/);
     const essence = { ...water, unlocks: { ...water.unlocks, chunks: ['50,49', '49,49', '50,53'], quests: ['Rune Mysteries'], skills: { ...water.unlocks.skills, Mining: 1 } } };
     expect(exploreBlocker(essence, '49,49', 'Runecraft')).toBeNull();
   });

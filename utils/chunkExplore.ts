@@ -16,12 +16,12 @@
  */
 import type { GameState, UnlockState } from '../types';
 import { CHUNK_EXPLORE_ROLLS } from '../config/economy';
-import { CHUNK_SKILL_FACTS, CHUNK_SKILL_TIERS } from '../data/chunkSkillNodes';
 import {
-  chunkContentBlocker, chunkedCombatStyleUsable, chunkedSkillNeeds, chunkedSkillQuestOpen, chunkedTrainingLevels, chunkFactLevel, chunkPatches,
+  COMBAT_STYLE, chunkContentBlocker, chunkedCombatStyleUsable, chunkedSkillNeeds, chunkedSkillQuestOpen, chunkedTrainingLevels, chunkFacts, chunkPatches,
   runLevel, type TrainingRun,
 } from './chunkedSkillPool';
 import { SKILL_QUEST_GATES } from './journalStatus';
+import { tierForLevel } from './skillTiers';
 import { farmingPatchLabel } from './farmingPatches';
 
 export interface ExploreThing {
@@ -52,14 +52,10 @@ const SPECIAL: Record<string, { label: string; skill: string }> = {
 
 /** Everything new a chunk offers to explore, in data order. */
 export const exploreThings = (chunk: string): ExploreThing[] => {
-  const row = CHUNK_SKILL_TIERS[chunk] ?? '';
   const things: ExploreThing[] = [];
-  for (let i = 0; i < row.length; i++) {
-    if (row[i] === '.') continue;
-    const fact = CHUNK_SKILL_FACTS[i];
-    const tier = row[i] === '0' ? 10 : Number(row[i]);
+  for (const [fact, level] of chunkFacts(chunk)) {
+    const tier = tierForLevel(level);
     const special = SPECIAL[fact];
-    const level = chunkFactLevel(chunk, fact)!;
     // Fighting needs no tier beyond the Hitpoints every run starts with (and a combat style).
     const thing: ExploreThing = special
       ? { fact, label: special.label, skill: special.skill, tier: fact === '@monster' ? 1 : tier, level: fact === '@monster' ? 1 : level, chunk }
@@ -77,8 +73,6 @@ export const exploreThings = (chunk: string): ExploreThing[] => {
 
 /** What of the run decides whether an exploring thing can be done. */
 export type ExploreUnlocks = TrainingRun & Partial<Pick<UnlockState, 'chunks'>>;
-
-const COMBAT_STYLE = 'a combat style: Attack, Strength, Defence or Magic, or Ranged with a Weapon slot';
 
 /** Why the run can't do this thing yet, or null when it can. */
 export const exploreThingBlocker = (thing: ExploreThing, unlocks: ExploreUnlocks): string | null => {

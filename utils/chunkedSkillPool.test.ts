@@ -3,8 +3,8 @@ import { TableType } from '../types';
 import { initialState } from '../context/GameContext';
 // @ts-expect-error Node types are intentionally excluded from the browser app.
 import { readFileSync } from 'node:fs';
-import { AGILITY_COURSES, buildChunkSkillNodes, chunkSkillNodesSource, GUILD_CHUNKS, oreShopSmithingLevel, RUNE_ALTAR_RUINS } from './chunkSkillNodesBuild';
-import { CHUNK_SKILL_LEVELS, CHUNK_SKILL_SERVICES } from '../data/chunkSkillNodes';
+import { AGILITY_COURSES, buildChunkSkillNodes, chunkSkillNodesSource, factCell, GUILD_CHUNKS, oreShopSmithingLevel, RUNE_ALTAR_RUINS } from './chunkSkillNodesBuild';
+import { CHUNK_SKILL_SERVICES, CHUNK_SKILL_TIERS } from '../data/chunkSkillNodes';
 import chunkDoc from '../public/chunk-content.json';
 import { chunkedSkillNeeds, chunkedSkillRollable, chunkedTrainingTiers, chunkFactLevel } from './chunkedSkillPool';
 import { chunkedSkillHasRoom, mercyBlocker, skillsWithRoom } from './chunkedFate';
@@ -215,7 +215,7 @@ describe('Chunked deadlock audit (18 October 2026): nothing counts as trainable 
     // Ranged drawn by Mercy on a fresh run used to hold Mercy shut for good.
     const ranged = withTiers({ Ranged: 1 });
     expect(chunkedSkillHasRoom('Ranged', ranged)).toBe(false);
-    expect(chunkedSkillNeeds('Ranged', ranged)).toBe('the Weapon slot at tier 1, to hold a bow or darts');
+    expect(chunkedSkillNeeds('Ranged', ranged)).toBe('a Weapon slot to hold a bow');
     expect(chunkedSkillRollable('Hitpoints', ranged)).toBe(false);
     expect(skillsWithRoom(dry(ranged))).toEqual([]);
     expect(mercyBlocker(dry(ranged), [])).toBeNull();
@@ -245,7 +245,8 @@ describe('Chunked deadlock audit (18 October 2026): nothing counts as trainable 
     expect(chunkedSkillRollable('Farming', withTiers({}, bush))).toBe(false);
     expect(chunkedSkillRollable('Farming', withTiers({}, { ...bush, levels: levels({ Farming: 10 }) }))).toBe(true);
     // The generator keeps the exact level only above the tier's floor: 10 for Draynor, none for Gnome's level 1.
-    expect(CHUNK_SKILL_LEVELS['48,51']).toMatch(/\d/);
+    expect(CHUNK_SKILL_TIERS['48,51']).toContain('B9'); // tier 1, nine levels above its floor
+    expect([1, 10, 11, 20, 87, 91, 95].map(factCell)).toEqual(['1', 'B9', '2', 'C9', 'J6', '0', 'A4']);
     expect(levelsIn('38,53').Agility).toBe(1);
     for (const [chunk, facts] of Object.entries(built.nodes)) {
       for (const [fact, level] of Object.entries(facts)) expect(chunkFactLevel(chunk, fact), `${chunk} ${fact}`).toBe(level);
