@@ -32,7 +32,7 @@ import {
   type CompletionAttestation,
 } from './journalCompletion';
 import { skillLevelKeyChance } from './keyRoll';
-import { levelPastTierCap, levelRolledAt, tierCap } from './chunkedFate';
+import { chunkedCATaskBlocker, levelPastTierCap, levelRolledAt, tierCap } from './chunkedFate';
 
 const normalize = (value: string): string =>
   value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-GB');
@@ -298,6 +298,8 @@ function classifyCombatAchievement(event: FateEventEnvelope, state: GameState): 
   if (!source) return { state: 'BLOCKED', reason: 'Combat task tier is not supported.' };
   const decision = caTaskCompletionDecision(task, state.unlocks.completedTasks);
   if (decision.ok === false) return blocked(decision.reason);
+  const outsideChunks = chunkedCATaskBlocker(task, state.unlocks, state.gameModeId);
+  if (outsideChunks) return blocked(outsideChunks);
   return ready(source, task.name ?? task.description, { kind: 'CA_TASK', taskId: task.id });
 }
 

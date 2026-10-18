@@ -14,6 +14,7 @@ import { XTREME_MILESTONE_INTERVAL, LEVEL_CHAOS_CHANCE } from '../config/economy
 import { isValidUnlock } from '../utils/gameEngine';
 import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
 import { ALL_CA_TASKS } from '../data/caTasks';
+import { activityEntranceChunks } from '../utils/activityAccess';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import { MAX_COUNTER, validateAndMigrateSave } from '../utils/saveSchema';
 import { replayInvariants } from '../utils/integrity';
@@ -1509,5 +1510,32 @@ describe('reducer purity', () => {
     gameReducer(state, roll({ success: true }));
     gameReducer(state, { type: 'UNLOCK', payload: { table: TableType.REGIONS, item: 'Karamja', costType: 'key', cost: 1 } });
     expect(JSON.stringify(state)).toBe(snapshot);
+  });
+});
+
+// Audit V7 (October 2026): in Chunked a Combat Achievement task rolled a Key
+// for a boss outside the run's chunks ("Exact chunks").
+describe('Chunked Combat Achievement tasks roll only at a boss in the run\'s chunks', () => {
+  const zulrahAdept = ALL_CA_TASKS.find(task => task.id === 'ca_224')!;
+  const run = (gameModeId: string, chunks: string[] = []) =>
+    ({ ...base(), gameModeId, keys: 0, unlocks: { ...initialState.unlocks, chunks } });
+  const complete = (state: ReturnType<typeof run>) => {
+    const prepared = prepareCATaskCompletionActions(state, zulrahAdept, () => 1);
+    return { prepared, next: prepared.actions.reduce<ReturnType<typeof gameReducer>>((s, action) => gameReducer(s, action as never), state) };
+  };
+
+  it('refuses Zulrah Adept on a start-chunk run, with the reason', () => {
+    expect(zulrahAdept.monster).toMatch(/Zulrah/);
+    const { prepared, next } = complete(run('chunked'));
+    expect(prepared.result).toEqual({ ok: false, reason: 'Zulrah is not in your chunks. In Chunked, a Combat Achievement task only rolls where its boss is.' });
+    expect(next.keys).toBe(0);
+    expect(next.unlocks.completedTasks).not.toContain('ca_224');
+  });
+
+  it('rolls once the boss\'s chunk is held, and in Vanilla as before', () => {
+    const owned = complete(run('chunked', [...activityEntranceChunks('Zulrah')]));
+    expect(owned.prepared.result).toEqual({ ok: true });
+    expect(owned.next.keys).toBe(1);
+    expect(complete(run('vanilla')).next.keys).toBe(1);
   });
 });

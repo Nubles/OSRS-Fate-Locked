@@ -3,6 +3,8 @@ import { DROP_RATES } from '../config/rules';
 import { failureFateForSkillLevel } from '../config/economy';
 import { skillLevelKeyChance } from './keyRoll';
 import { initialState } from '../context/GameContext';
+import { ALL_CA_TASKS } from '../data/caTasks';
+import { activityEntranceChunks } from './activityAccess';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
 import { PETS } from '../data/pets';
 import type { FateEventEnvelope, FateEventType } from '../services/fateEventProtocol';
@@ -239,6 +241,16 @@ describe('classifyFateEvent', () => {
   ])('maps %s to its clue rate', (label, source, failureFate) => {
     expect(classifyFateEvent(event('CLUE_CASKET', label), state()))
       .toMatchObject({ state: 'READY', intent: { source, threshold: DROP_RATES[source], failureFate } });
+  });
+
+  it('in Chunked, rolls a detected Combat Achievement task only at a boss in the run\'s chunks (audit V7)', () => {
+    const zulrahAdept = ALL_CA_TASKS.find(task => task.id === 'ca_224')!;
+    const detected = event('COMBAT_ACHIEVEMENT', zulrahAdept.name ?? zulrahAdept.description);
+    expect(classifyFateEvent(detected, withUnlocks({ chunks: [] }, { gameModeId: 'chunked' }))).toEqual({
+      state: 'BLOCKED', reason: 'Zulrah is not in your chunks. In Chunked, a Combat Achievement task only rolls where its boss is.',
+    });
+    expect(classifyFateEvent(detected, withUnlocks({ chunks: [...activityEntranceChunks('Zulrah')] }, { gameModeId: 'chunked' })).state).toBe('READY');
+    expect(classifyFateEvent(detected, state()).state).toBe('READY');
   });
 
   it('maps a Combat Achievement task to its canonical tier', () => {

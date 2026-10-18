@@ -24,7 +24,7 @@ import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { CA_DATA } from '../data/caData';
 import { ALL_CA_TASKS, CATask } from '../data/caTasks';
 import { QUEST_DATA } from '../data/questData';
-import { breakthroughTier, levelPastTierCap, mercyBlocker, mercyPool, tierCap } from '../utils/chunkedFate';
+import { breakthroughTier, chunkedCATaskBlocker, levelPastTierCap, mercyBlocker, mercyPool, tierCap } from '../utils/chunkedFate';
 import { chunkLabelWithCoords } from '../utils/chunkLabelWithCoords';
 import { tierBand } from '../utils/skillTiers';
 import { CHUNKED_START_KEY, chunkKey as chunkKeyOf, isFrontierChunk } from '../utils/chunkAdjacency';
@@ -767,6 +767,9 @@ export const prepareCATaskCompletionActions = (
 } => {
   const decision = caTaskCompletionDecision(task, state.unlocks.completedTasks);
   if (decision.ok === false) return { result: decision, actions: [] };
+  // Chunked: only at a boss in the run's chunks (exact chunks).
+  const outsideChunks = chunkedCATaskBlocker(task, state.unlocks, state.gameModeId);
+  if (outsideChunks) return { result: { ok: false, reason: outsideChunks }, actions: [] };
   const tier = CA_DATA[task.tierId];
 
   const completedIds = [...state.unlocks.completedTasks, task.id];
