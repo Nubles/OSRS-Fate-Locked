@@ -159,6 +159,11 @@ export interface RawDoc {
   taskUnlocks?: TaskUnlocks;
   /** Per-chunk ENTRY requirements: chunkId → quest(s) needed to enter at all. */
   questSections?: Record<string, string[]>;
+  /**
+   * Achievement Diary tasks the export places by chunk (challenges.Diary), keyed
+   * as the chunks' diary codes are ("Kourend & Kebos|EA2") → surface chunk ids.
+   */
+  diaryChunks?: Record<string, string[]>;
   /** Chunk ids that contain a bank. */
   banks?: string[];
   /** Faceted categories (food/boost/boss/…) → the chunk ids that contain them. */

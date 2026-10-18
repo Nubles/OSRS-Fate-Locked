@@ -13,7 +13,7 @@ const REASONS = new Set([
   'empty-walkable-chunk', 'broad-quest-gate-suppressed', 'lite-cap',
   'duplicate-deduped', 'role-promoted-to-first', 'variant-collision-merged',
   'named-location-mapped', 'named-location-instance-only', 'named-location-non-purchasable',
-  'reviewed-requirement-rewritten',
+  'reviewed-requirement-rewritten', 'diary-place-resolved', 'diary-place-partly-resolved',
 ]);
 
 const cleanName = (value) => String(value).split('#')[0].trim();
@@ -187,11 +187,14 @@ function applySlayerCorrections(masters) {
   }
 }
 
-function buildShortcuts(data, audit) {
+function buildShortcuts(data, audit, accounted = new Set()) {
   const out = [];
   for (const [skill, challenges] of Object.entries(data.challenges ?? {})) for (const [name, info] of Object.entries(challenges)) {
     const sourceKey = `${skill}/${name}`;
-    if (!(info.Category ?? []).includes('Shortcut')) { audit.add('challenges', sourceKey, 'excluded', 'non-walkable-content', []); continue; }
+    if (!(info.Category ?? []).includes('Shortcut')) {
+      if (!accounted.has(sourceKey)) audit.add('challenges', sourceKey, 'excluded', 'non-walkable-content', []);
+      continue;
+    }
     const target = `${skill}/${stripWiki(name)}`;
     out.push({ name: stripWiki(name), skill, level: info.Level ?? 1, objects: (info.Objects ?? []).map(cleanName), chunks: info.Chunks ?? [] });
     audit.add('challenges', sourceKey, name.includes('#') ? 'normalized' : 'imported', name.includes('#') ? 'variant-name-cleaned' : 'base-record', [target]);
@@ -523,6 +526,69 @@ function buildTaskUnlocks(data, audit, namedLocationIndex) {
   }
   return out;
 }
+const DIARY_TASK = /^~\|(.+) Diary#(Easy|Medium|Hard|Elite)\|~ Task (\d+)$/;
+const DIARY_TIER_CODE = { Easy: 'EA', Medium: 'MD', Hard: 'HD', Elite: 'EL' };
+
+/**
+ * Where the export places each Achievement Diary task (challenges.Diary[*].Chunks),
+ * keyed as the chunks' own diary codes are ("Kourend & Kebos|EA2"), as surface
+ * chunk ids. A chunk id keeps its base ("10547-1" is 10547); a "[+]" group
+ * (codeItems.chunksPlus) is expanded; an interior or named location (a
+ * dungeon, "Barrows Crypts") stands for its entrances, the ones with no
+ * requirement first, as the chunk refs of an interior do. A name with no
+ * entrance (a player-owned house) is left out and noted in the ledger.
+ */
+function buildDiaryChunks(data, interiors, namedLocationIndex, audit) {
+  const walkable = new Set((data.walkableChunks ?? []).map(String));
+  const groups = data.codeItems?.chunksPlus ?? {};
+  const interiorsByName = new Map();
+  for (const interior of Object.values(interiors)) {
+    const key = interior.name.toLowerCase();
+    interiorsByName.set(key, [...(interiorsByName.get(key) ?? []), interior]);
+  }
+  const entrancesOf = (entrances) => {
+    const free = entrances.filter((entrance) => !entrance.requirements?.length);
+    return [...new Set((free.length ? free : entrances).map((entrance) => String(entrance.chunkId)))];
+  };
+  const resolve = (raw, seen) => {
+    const value = String(raw);
+    const numeric = /^(\d+)(?:-\w+)?$/.exec(value);
+    if (numeric && walkable.has(numeric[1])) return { chunks: [numeric[1]], normalized: value !== numeric[1] };
+    if (value.endsWith('[+]')) {
+      if (seen.has(value) || !Array.isArray(groups[value])) return { chunks: [], unresolved: [value] };
+      const parts = groups[value].map((member) => resolve(member, new Set([...seen, value])));
+      return { chunks: parts.flatMap((part) => part.chunks), unresolved: parts.flatMap((part) => part.unresolved ?? []), normalized: true };
+    }
+    const base = value.split('#')[0];
+    const named = namedLocationIndex.get(value) ?? namedLocationIndex.get(base);
+    if (named?.disposition === 'mapped' && named.entrances?.length) return { chunks: entrancesOf(named.entrances), normalized: true };
+    const interior = [interiors[numeric?.[1] ?? value], interiors[base]].filter(Boolean);
+    const byName = interior.length ? interior : interiorsByName.get(value.toLowerCase()) ?? interiorsByName.get(base.toLowerCase()) ?? [];
+    const entrances = byName.flatMap((record) => record.entrances);
+    if (entrances.length) return { chunks: entrancesOf(entrances), normalized: true };
+    return { chunks: [], unresolved: [value] };
+  };
+  const out = {};
+  const accounted = new Set();
+  for (const [name, info] of Object.entries(data.challenges?.Diary ?? {})) {
+    const task = DIARY_TASK.exec(name);
+    if (!task || !Array.isArray(info.Chunks) || !info.Chunks.length) continue;
+    const sourceKey = `Diary/${name}`;
+    const key = `${task[1].replace(' and ', ' & ')}|${DIARY_TIER_CODE[task[2]]}${task[3]}`;
+    const parts = info.Chunks.map((raw) => resolve(raw, new Set()));
+    const chunks = [...new Set(parts.flatMap((part) => part.chunks))].sort(numericSort);
+    const unresolved = [...new Set(parts.flatMap((part) => part.unresolved ?? []))].sort();
+    accounted.add(sourceKey);
+    if (!chunks.length) { audit.add('challenges', sourceKey, 'unresolved', 'named-location-unmappable', [], true, `No entrance for ${unresolved.join(', ')}`); continue; }
+    out[key] = chunks;
+    const target = [`diaryChunks/${key}`];
+    if (unresolved.length) audit.add('challenges', sourceKey, 'normalized', 'diary-place-partly-resolved', target, true, `No entrance for ${unresolved.join(', ')}`);
+    else if (parts.some((part) => part.normalized)) audit.add('challenges', sourceKey, 'normalized', 'diary-place-resolved', target);
+    else audit.add('challenges', sourceKey, 'imported', 'base-record', target);
+  }
+  return { diaryChunks: Object.fromEntries(Object.entries(out).sort(([a], [b]) => a.localeCompare(b))), accounted };
+}
+
 function addBaseRecords(audit, category, value) {
   const entries = Array.isArray(value) ? value.map((item, index) => [String(index), item]) : Object.entries(value ?? {});
   for (const [key] of entries) audit.add(category, key, 'imported', 'base-record', [key]);
@@ -590,7 +656,7 @@ export function transformChunkContent(data, sourceManifest, namedLocationRegistr
     const normalized = Object.values(chunk.Sections ?? {}).length > 0;
     audit.add('chunks', id, normalized ? 'normalized' : 'imported', normalized ? 'section-merged' : 'base-record', [id]);
   }
-  const connect = buildConnect(data), slayerMasters = buildSlayerMasters(data, audit), shortcuts = buildShortcuts(data, audit), shopItems = buildShopItems(data, audit), drops = buildDrops(data, audit), overlays = buildOverlays(data, audit), skillItems = buildSkillItems(data, audit), taskUnlocks = buildTaskUnlocks(data, audit, namedLocationIndex), questSections = buildQuestSections(data, audit);
+  const connect = buildConnect(data), slayerMasters = buildSlayerMasters(data, audit), { diaryChunks, accounted: diaryAccounted } = buildDiaryChunks(data, interiors, namedLocationIndex, audit), shortcuts = buildShortcuts(data, audit, diaryAccounted), shopItems = buildShopItems(data, audit), drops = buildDrops(data, audit), overlays = buildOverlays(data, audit), skillItems = buildSkillItems(data, audit), taskUnlocks = buildTaskUnlocks(data, audit, namedLocationIndex), questSections = buildQuestSections(data, audit);
   const { banks, upstreamCount: upstreamBankCount } = buildBanks(data, audit, bankLocationRegistry);
   addBaseRecords(audit, 'searchTerms', data.searchTerms ?? {});
   const sourceMeta = { repository: sourceManifest.repository, commit: sourceManifest.commit, blobSha: sourceManifest.blobSha, rawSha256: sourceManifest.rawSha256, policyVersion: sourceManifest.policyVersion, namedLocationPolicyVersion: namedLocationRegistry?.policyVersion, namedLocationReviewedAt: namedLocationRegistry?.reviewedAt };
@@ -629,7 +695,7 @@ export function transformChunkContent(data, sourceManifest, namedLocationRegistr
       `${evidence.diaryReferences} diary references and ${evidence.clueSteps} clue steps conserved across physical peers and named supplements`);
   }
   const tags = buildTags(data, chunks, interiors, shopItems, drops);
-  const full = { version: 9, source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)', sourceMeta, entrances, chunks, interiors, shopInfo, connect, slayerMasters, shortcuts, shopItems, drops, overlays, skillItems, taskUnlocks, questSections, banks, tags };
+  const full = { version: 9, source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)', sourceMeta, entrances, chunks, interiors, shopInfo, connect, slayerMasters, shortcuts, shopItems, drops, overlays, skillItems, taskUnlocks, questSections, diaryChunks, banks, tags };
   const liteSource = buildLite(full, audit); const finalAudit = audit.finish();
   return { full, liteSource, audit: finalAudit, upstreamBankCount };
 }

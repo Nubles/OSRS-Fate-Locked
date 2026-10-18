@@ -167,7 +167,8 @@ export function createChunkedChecks(service: ChunkContentService) {
 
   const diaryPlace = (taskId: string): DiaryLocationRequirement | null => {
     if (!service.ready) return null;
-    diaryIndex ??= buildDiaryIndex(service.rawDocument()?.chunks ?? {}, service.rawDocument()?.interiors ?? {});
+    const doc = service.rawDocument();
+    diaryIndex ??= buildDiaryIndex(doc?.chunks ?? {}, doc?.interiors ?? {}, doc?.diaryChunks ?? {});
     return diaryIndex.get(taskId) ?? null;
   };
 
@@ -245,12 +246,16 @@ const PICKER_TIER: Readonly<Record<string, string>> = { Easy: 'EA', Medium: 'MD'
  * wiki's order ("EA5" is the fifth Easy task), which is the order
  * data/diaryTasks.ts lists them in (its ids are not always in order). An
  * interior's tasks are at its entrances, the ones with no requirement first.
- * A task keeps its named areas when none of its chunks lie in or beside them:
- * a few refs are stale (the Emblem Trader's points at the deep Wilderness).
+ * A task no chunk carries the code of is placed by the export's own chunks for
+ * it (`diaryChunks`, from challenges.Diary, made by the content sync), so it
+ * doesn't fall back to any chunk of its areas. Either way a task keeps its
+ * named areas when none of its chunks lie in or beside them: a few refs are
+ * stale (the Emblem Trader's points at the deep Wilderness).
  */
 export function buildDiaryIndex(
   chunks: Record<string, RawEntry>,
   interiors: Record<string, { content: RawEntry; entrances: { chunkId: string; requirements: string[] }[] }>,
+  diaryChunks: Readonly<Record<string, readonly string[]>> = {},
 ): Map<string, DiaryLocationRequirement> {
   const refChunks = new Map<string, Map<string, Coord>>();
   const add = (diaries: Record<string, string> | undefined, coords: Coord[]) => {
@@ -275,18 +280,20 @@ export function buildDiaryIndex(
     const n = (position.get(task.tierId) ?? 0) + 1;
     position.set(task.tierId, n);
     const [diary, tier] = task.tierId.split(' ');
-    const found = refChunks.get(`${PICKER_DIARY[diary]}|${PICKER_TIER[tier]}${n}`);
-    if (!found?.size) continue;
+    const code = `${PICKER_DIARY[diary]}|${PICKER_TIER[tier]}${n}`;
     const areas = [
       ...(task.regions ?? []), ...(task.anyOfRegions ?? []),
       ...(task.oneOf ?? []).flatMap(option => option.regions ?? []),
     ];
     const near = areas.flatMap(area => namedAreaChunks(area));
-    const chunkOptions = [...found.values()].sort((a, b) => a.cx - b.cx || a.cy - b.cy);
-    const matches = near.length === 0 || chunkOptions.some(chunk => near.some(area => (
+    const matches = (options: Coord[]) => options.length > 0 && (near.length === 0 || options.some(chunk => near.some(area => (
       Math.abs(area.cx - chunk.cx) <= 1 && Math.abs(area.cy - chunk.cy) <= 1
-    )));
-    if (matches) index.set(task.id, { label: task.description, chunkOptions });
+    ))));
+    const sorted = (options: Iterable<Coord>) => [...options].sort((a, b) => a.cx - b.cx || a.cy - b.cy);
+    const byRef = sorted(refChunks.get(code)?.values() ?? []);
+    const byTask = sorted(new Map((diaryChunks[code] ?? []).map(id => [String(id), coordOf(id)])).values());
+    const chunkOptions = matches(byRef) ? byRef : matches(byTask) ? byTask : null;
+    if (chunkOptions) index.set(task.id, { label: task.description, chunkOptions });
   }
   return index;
 }

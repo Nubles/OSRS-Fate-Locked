@@ -30,6 +30,7 @@ import { analyzeQuestPreparation, questItemsObtainableNow } from './questRoutes/
 import { materializeQuestRouteSnapshot, materializeRuneProofAccount } from './questRoutes/goalPlannerRuneProof';
 import { CHUNK_CONTENT_DATA_VERSION } from '../services/ChunkContentService';
 import { setStartArea } from './freeAreas';
+import { namedAreaChunks } from './reachability';
 
 beforeAll(async () => {
   vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => structuredClone(full) })));
@@ -157,6 +158,35 @@ describe('Chunked diary tasks use the Chunk Picker task refs', () => {
   });
 });
 
+describe("Chunked diary tasks with no chunk code use the export's own chunks (content audit fix 4)", () => {
+  const doc = () => chunkContentService.rawDocument()!;
+  const fallbackCount = (index: Map<string, unknown>) => ALL_DIARY_TASKS.filter(task => !index.has(task.id) && [
+    ...(task.regions ?? []), ...(task.anyOfRegions ?? []), ...(task.oneOf ?? []).flatMap(o => o.regions ?? []),
+  ].length > 0).length;
+
+  it('leaves 30 of 492 tasks on their areas, down from 106', () => {
+    expect(ALL_DIARY_TASKS).toHaveLength(492);
+    expect(fallbackCount(buildDiaryIndex(doc().chunks, doc().interiors as never))).toBe(106);
+    expect(fallbackCount(buildDiaryIndex(doc().chunks, doc().interiors as never, doc().diaryChunks))).toBe(30);
+  });
+
+  it('"Kill a Sandcrab" needs a sand crab chunk, not any chunk of Hosidius', () => {
+    const task = ALL_DIARY_TASKS.find(t => t.id === 'kou_easy_2')!;
+    const crabs = buildDiaryIndex(doc().chunks, doc().interiors as never, doc().diaryChunks).get(task.id)!.chunkOptions
+      .map(({ cx, cy }) => `${cx},${cy}`);
+    expect(crabs).toContain('26,54');
+    const elsewhere = namedAreaChunks('Hosidius').map(({ cx, cy }) => `${cx},${cy}`).filter(key => !crabs.includes(key));
+    expect(elsewhere.length).toBeGreaterThan(5);
+    expect(evaluateDiaryTaskEligibility(task, maxed(elsewhere), 'chunked').eligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task, maxed(['26,54']), 'chunked').eligible).toBe(true);
+  });
+
+  it("places the Emblem Trader in Edgeville, where the stale chunk code didn't", () => {
+    const place = buildDiaryIndex(doc().chunks, doc().interiors as never, doc().diaryChunks).get('wilderness_med_9');
+    expect(place?.chunkOptions).toContainEqual({ cx: 48, cy: 54 });
+  });
+});
+
 describe('Chunked combat achievements follow boss reachability', () => {
   it("counts no Obor task until Obor's chunk is reached", () => {
     const tasks = ALL_CA_TASKS.filter(task => task.monster === 'Obor');
@@ -177,7 +207,8 @@ describe('Chunked combat achievements follow boss reachability', () => {
     expect(tasks.length).toBeGreaterThan(0);
     const owned = fresh({ bosses: ['Barrows Brothers'], chunks: ['55,51'] });
     expect(doableCATasks(tasks, owned, 'chunked')).toEqual([]);
-    expect(doableCATasks(tasks, { ...owned, quests: ['Priest in Peril'] }, 'chunked').length).toBe(tasks.length);
+    const done = fresh({ bosses: ['Barrows Brothers'], chunks: ['55,51'], quests: ['Priest in Peril'] });
+    expect(doableCATasks(tasks, done, 'chunked').length).toBe(tasks.length);
   });
 });
 
