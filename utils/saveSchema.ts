@@ -354,12 +354,14 @@ const CURRENT_UNLOCK_KEYS = new Set([
 
 /**
  * What a saved reveal may cost: 1 Key or 1 Chaos Key, or nothing for Chunked's
- * free fate draws (Fate's Mercy draws a chunk or skill tier, a Breakthrough a
- * skill tier). Saves from before the free draws stored Mercy as 1 Key; those stay valid.
+ * free fate draws (Fate's Mercy draws a chunk, a skill tier, or the patch type
+ * or guild a skill needs to train; a Breakthrough a skill tier). Saves from
+ * before the free draws stored Mercy as 1 Key; those stay valid.
  */
+const MERCY_TABLES: readonly unknown[] = [TableType.CHUNKS, TableType.SKILLS, TableType.FARMING_LAYERS, TableType.GUILDS];
 const pendingUnlockCostValid = (costType: unknown, cost: unknown, table: unknown): boolean =>
   ((costType === 'key' || costType === 'chaosKey') && cost === 1)
-  || (costType === 'mercy' && cost === 0 && (table === TableType.CHUNKS || table === TableType.SKILLS))
+  || (costType === 'mercy' && cost === 0 && MERCY_TABLES.includes(table))
   || (costType === 'breakthrough' && cost === 0 && table === TableType.SKILLS);
 
 const normalizeUnlocks = (
