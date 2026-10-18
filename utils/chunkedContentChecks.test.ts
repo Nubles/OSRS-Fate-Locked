@@ -165,6 +165,20 @@ describe('Chunked combat achievements follow boss reachability', () => {
     // Vanilla keeps counting an unlocked boss.
     expect(doableCATasks(tasks, unlocks, 'vanilla').length).toBe(tasks.length);
   });
+
+  it('counts the Mimic task once an Omni-Key unlocks the Mimic (content audit fix 2)', () => {
+    const tasks = ALL_CA_TASKS.filter(task => task.id === 'ca_176');
+    expect(doableCATasks(tasks, fresh(), 'chunked')).toEqual([]);
+    expect(doableCATasks(tasks, fresh({ bosses: ['Mimic'] }), 'chunked').map(task => task.id)).toEqual(['ca_176']);
+  });
+
+  it('counts no Barrows task before Priest in Peril (content audit fix 1)', () => {
+    const tasks = ALL_CA_TASKS.filter(task => task.monster === 'Barrows Brothers' || task.monster === 'Barrows');
+    expect(tasks.length).toBeGreaterThan(0);
+    const owned = fresh({ bosses: ['Barrows Brothers'], chunks: ['55,51'] });
+    expect(doableCATasks(tasks, owned, 'chunked')).toEqual([]);
+    expect(doableCATasks(tasks, { ...owned, quests: ['Priest in Peril'] }, 'chunked').length).toBe(tasks.length);
+  });
 });
 
 describe('Chunked advisors and guides', () => {

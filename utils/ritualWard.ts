@@ -7,7 +7,7 @@ import { getActivityReq } from '../data/activityRequirements';
 import { TableType, type UnlockState } from '../types';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { chunkSubArea } from './chunkAdjacency';
-import { bankChunkKey, chunkedBankOwned, getActivityAccess } from './activityAccess';
+import { bankChunkKey, chunkedBankOwned, randomKeyActivityAccess } from './activityAccess';
 import { isAreaReachable } from './reachability';
 
 /**
@@ -20,8 +20,8 @@ export const wardUsable = (table: TableType, item: string, unlocks: UnlockState,
     case TableType.BOSSES:
     case TableType.MINIGAMES:
     case TableType.GUILDS:
-      // Chunked: the entrance chunk itself must be owned.
-      if (modeId === 'chunked' && !getActivityAccess(item, unlocks, modeId).eligible) return false;
+      // Chunked: a place a Key may land on whose entrance chunk is owned (and its entry quest done).
+      if (modeId === 'chunked' && !randomKeyActivityAccess(item, unlocks, modeId).eligible) return false;
       return evaluateActivityReadiness(true, getActivityReq(item), unlocks, modeId).status !== 'NOT_READY';
     case TableType.BANKS: {
       const key = bankChunkKey(item);
