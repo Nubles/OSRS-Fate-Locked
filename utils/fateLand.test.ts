@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { TableType, type GameState } from '../types';
+import { DropSource, TableType, type GameState } from '../types';
+import { DROP_RATES } from '../config/rules';
 import { gameReducer, initialState } from '../context/GameContext';
 import { CHUNKED_START_KEY, chunkKey, getChunkFrontier } from './chunkAdjacency';
 import { leanTowardThread, threadCandidates, threadLeaning, withFateLand } from './fateLand';
@@ -111,6 +112,7 @@ describe("Fate's marks", () => {
   });
 
   it('Gilded waits as a free roll that is used up once', () => {
+    expect(DROP_RATES[DropSource.FATE_MARK]).toBe(DROP_RATES[DropSource.CHUNK_EXPLORE]);
     const s = markedRun('GILDED');
     expect(s.fateLand?.gilded).toEqual(['49,50']);
     const rolled = gameReducer(s, { type: 'FATE_MARK_ROLL', payload: { chunk: '49,50' } });
