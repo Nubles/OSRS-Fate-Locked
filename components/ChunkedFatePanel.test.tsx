@@ -107,7 +107,7 @@ describe('Chunked fate panel', () => {
     const fresh = createFreshState();
     dry({
       keys: 1,
-      unlocks: { ...fresh.unlocks, chunks: ['49,50'], skills: { Hitpoints: 1, Woodcutting: 1 } },
+      unlocks: { ...fresh.unlocks, chunks: ['49,50'], skills: { Hitpoints: 1, Attack: 1, Woodcutting: 1 } },
       chunkExplore: { from: 0, done: {} },
     });
     const { ChunkedFatePanel } = await import('./ChunkedFatePanel');
@@ -125,6 +125,20 @@ describe('Chunked fate panel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fought something' }));
     expect(game.current.exploreChunk).toHaveBeenCalledWith('49,50', '@monster', expect.any(Number), expect.any(Number));
     expect(screen.queryByText("Fate's Mercy")).toBeNull();
+  });
+
+  it('says a run with no combat style has nothing to fight with (fate review V5)', async () => {
+    const fresh = createFreshState();
+    dry({
+      keys: 1,
+      unlocks: { ...fresh.unlocks, chunks: ['49,50'], skills: { Hitpoints: 1, Woodcutting: 1 } },
+      chunkExplore: { from: 0, done: {} },
+    });
+    const { ChunkedFatePanel } = await import('./ChunkedFatePanel');
+    render(<ChunkedFatePanel />);
+    const fought = screen.getByRole('button', { name: 'Fought something' }) as HTMLButtonElement;
+    expect(fought.disabled).toBe(true);
+    expect(fought.title).toBe('Needs a combat style: Attack, Strength, Defence or Magic, or Ranged with a Weapon slot.');
   });
 
   it('draws the same rolls in the OSRS layout, one chunk when compact', async () => {
