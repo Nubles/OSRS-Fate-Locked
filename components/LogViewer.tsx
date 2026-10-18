@@ -71,6 +71,14 @@ const getLogStyle = (entry: LogEntry) => {
         bg: 'bg-cyan-900/10',
         glow: 'group-hover:shadow-[inset_0_0_20px_rgba(34,211,238,0.1)]'
       };
+    case 'FATE':
+      return {
+        icon: Sparkles,
+        color: 'text-fuchsia-300',
+        border: 'border-l-fuchsia-500',
+        bg: 'bg-fuchsia-900/10',
+        glow: 'group-hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.1)]'
+      };
     case 'XTREME_MILESTONE':
     case 'ACHIEVEMENT':
       return {
@@ -168,7 +176,7 @@ export const historyFilterMatches = (entry: LogEntry, filterType: FilterType): b
   if (filterType === 'ROLLS') return isRollEntry(entry) || lostBreakthrough;
   if (filterType === 'UNLOCKS') return entry.type === 'UNLOCK';
   if (filterType === 'RITUALS') return entry.type === 'ALTAR';
-  if (filterType === 'PROGRESS') return !lostBreakthrough && (entry.type === 'LEVEL_UP' || entry.type === 'XTREME_MILESTONE' || entry.type === 'ACHIEVEMENT');
+  if (filterType === 'PROGRESS') return !lostBreakthrough && (entry.type === 'LEVEL_UP' || entry.type === 'XTREME_MILESTONE' || entry.type === 'ACHIEVEMENT' || entry.type === 'FATE');
   return true;
 };
 

@@ -1,4 +1,4 @@
-import type { LogEntry } from '../../types';
+import { TableType, type LogEntry } from '../../types';
 import { isRollEntry } from '../../utils/logEntry';
 import { formatKeyPercent, formatKeyRollValue } from '../../utils/keyRoll';
 import { tableDisplayName } from '../../utils/tableDisplay';
@@ -26,6 +26,7 @@ export const look = (e: LogEntry): { tone: Tone; icon: string; dim: boolean; kin
     case 'LEVEL_UP': return { tone: 'level', icon: CHAOS_KEY_ICON, dim: false, kind: 'Level up' };
     case 'XTREME_MILESTONE': return { tone: 'success', icon: CHAOS_KEY_ICON, dim: false, kind: 'Xtreme milestone' };
     case 'COMPENSATION': return { tone: 'void', icon: OMNI_KEY_ICON, dim: false, kind: 'Compensation' };
+    case 'FATE': return { tone: 'void', icon: tableSprite(TableType.CHUNKS), dim: false, kind: e.meta?.fate === 'mark' ? "Fate's mark" : "Fate's Thread" };
     default: return { tone: 'plain', icon: CASKET_ICON, dim: false, kind: e.type };
   }
 };
@@ -36,6 +37,7 @@ export const speaker = (e: LogEntry): string => {
   if (e.type === 'UNLOCK' && e.meta?.category) return tableDisplayName(e.meta.category);
   if (e.type === 'ALTAR') return 'Void Altar';
   if (e.type === 'LEVEL_UP') return 'Level up';
+  if (e.type === 'FATE') return 'Fate';
   return '';
 };
 

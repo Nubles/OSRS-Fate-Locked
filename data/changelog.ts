@@ -37,6 +37,20 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-18-chunked-fate-draws-the-map',
+    title: 'Fate draws your Chunked map',
+    date: '2026-10-18',
+    sections: {
+      added: [
+        'Chunks draws now spin along your border, then fate sketches the chunk it picked like a map clue and fills it in. You can turn the spin off in Settings.',
+        'Land you don’t hold sits under fog on the Chunked map. You can turn the fog off in Settings.',
+        'Fate’s Thread: fate ties a thread to a place past your border, and your Chunks draws lean toward it. Reach it for a free ritual fate picks.',
+        'Fate’s marks: about one chunk in eight comes marked Blessed (+25 Fate), Gilded (a free 50% Key roll), Chaotic or Cursed.',
+        'Cursed chunks make your next 3 Key rolls 5% worse, but each fail among them gives double Fate.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-chunked-no-dead-ends',
     title: 'Chunked runs always find a way out',
     date: '2026-10-18',

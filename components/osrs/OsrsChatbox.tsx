@@ -18,7 +18,7 @@ type ChatTab = 'All' | 'Game' | 'Rolls' | 'Unlocks' | 'Rituals';
 const TABS: ChatTab[] = ['All', 'Game', 'Rolls', 'Unlocks', 'Rituals'];
 const MATCH: Record<ChatTab, (entry: LogEntry) => boolean> = {
   All: () => true,
-  Game: entry => entry.type === 'LEVEL_UP' || entry.type === 'XTREME_MILESTONE',
+  Game: entry => entry.type === 'LEVEL_UP' || entry.type === 'XTREME_MILESTONE' || entry.type === 'FATE',
   Rolls: isRollEntry,
   Unlocks: entry => entry.type === 'UNLOCK',
   Rituals: entry => entry.type === 'ALTAR',
@@ -44,6 +44,7 @@ const toneOf = (entry: LogEntry): string => {
     case 'ALTAR': return entry.meta?.won === false ? '#7f0000' : '#6a0090';
     case 'LEVEL_UP': return Number(entry.meta?.chaosKeysAwarded ?? 0) > 0 ? '#ef1020' : '#000000';
     case 'COMPENSATION': return '#000080';
+    case 'FATE': return '#6a0090';
     default: return '#000000';
   }
 };
@@ -51,7 +52,7 @@ const toneOf = (entry: LogEntry): string => {
 /** One history entry as a chat line: who, what (coloured), and the details. */
 const ChatLine: React.FC<{ entry: LogEntry }> = ({ entry }) => {
   const lead = isRollEntry(entry) && entry.source ? `${entry.source}: `
-    : entry.type === 'ALTAR' ? 'Void Altar: ' : '';
+    : entry.type === 'ALTAR' ? 'Void Altar: ' : entry.type === 'FATE' ? 'Fate: ' : '';
   const unlocked = entry.type === 'UNLOCK' && entry.message.startsWith('Unlocked ');
   const what = unlocked ? entry.message.slice('Unlocked '.length) : entry.message;
   const gap = /[.!?:]$/.test(entry.message) ? ' ' : '. ';

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { Sparkles } from './OsrsIcon';
-import { BREAKTHROUGH_CHANCE } from '../config/economy';
+import { BREAKTHROUGH_CHANCE, FATE_MARK_CURSED_ODDS } from '../config/economy';
 import { DROP_RATES } from '../constants';
 import { DropSource } from '../types';
 import { breakthroughTier, mercyBlocker, pendingBreakthroughs, tierCap } from '../utils/chunkedFate';
@@ -35,7 +35,7 @@ export const breakthroughRowText = (skill: string, level: number, tier: number):
  */
 export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> = ({ osrs = false, compact = false }) => {
   const game = useGame();
-  const { unlocks, gameModeId, pendingUnlock, rollBreakthrough, callOnFate, exploreChunk } = game;
+  const { unlocks, gameModeId, pendingUnlock, rollBreakthrough, callOnFate, exploreChunk, rollGilded, fateLand, rituals } = game;
   const waiting = pendingBreakthroughs(game);
   // Everything but the quest check, which needs the chunk content.
   const needsQuestCheck = mercyBlocker(game) === null;
@@ -60,7 +60,20 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
     ? (ready ? mercyShutReason(game, doableQuests) : null)
     : mercyShutReason(game);
 
-  if (waiting.length === 0 && !showMercy && !shutReason && explore.length === 0) return null;
+  // Fate's Thread and fate's marks (utils/fateLand.ts).
+  const thread = fateLand?.thread;
+  const fulfilled = fateLand?.fulfilled ?? 0;
+  const gilded = fateLand?.gilded ?? [];
+  const cursed = rituals?.cursedRollsLeft ?? 0;
+  const gildedChance = DROP_RATES[DropSource.FATE_MARK];
+  const threadText = thread
+    ? `Fate has tied a thread to ${chunkPlaceLabel(thread)}. Your Chunks Keys lean toward it: the frontier chunks nearest it count twice. Gain it and fate grants you a free ritual.${fulfilled > 0 ? ` Threads fulfilled: ${fulfilled}.` : ''}`
+    : null;
+  const cursedText = cursed > 0
+    ? `Cursed: your next ${cursed === 1 ? 'Key roll is' : `${cursed} Key rolls are`} ${FATE_MARK_CURSED_ODDS}% worse, but each fail among them gives double Fate.`
+    : null;
+
+  if (waiting.length === 0 && !showMercy && !shutReason && explore.length === 0 && !threadText && gilded.length === 0 && !cursedText) return null;
   const chance = Math.round(BREAKTHROUGH_CHANCE * 100);
   const exploreChance = DROP_RATES[DropSource.CHUNK_EXPLORE];
   const mercyText = needsQuestCheck && !ready
@@ -101,6 +114,22 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
   if (osrs) {
     return (
       <div className="ofate">
+        {(threadText || gilded.length > 0 || cursedText) && (
+          <div className="ospend-note ofate-block">
+            <div className="ospend-note-words">
+              <span className="t">Fate's Thread</span>
+              {threadText && <span className="s">{threadText}</span>}
+            </div>
+            {gilded.map(chunk => (
+              <div key={chunk} className="ofate-row">
+                <span className="ofate-name">{chunkPlaceLabel(chunk)}</span>
+                <span className="ofate-left">Gilded by fate: one free Key roll at {gildedChance}%.</span>
+                <button type="button" className="osrs-btn ofate-btn" disabled={!!pendingUnlock} onClick={e => rollGilded(chunk, e.clientX, e.clientY)}>Roll</button>
+              </div>
+            ))}
+            {cursedText && <span className="ofate-more">{cursedText}</span>}
+          </div>
+        )}
         {shown.length > 0 && (
           <div className="ospend-note ofate-block">
             <div className="ospend-note-words">
@@ -159,6 +188,32 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
 
   return (
     <div className="pb-3 grid gap-2">
+      {(threadText || gilded.length > 0 || cursedText) && (
+        <div className="w-full rounded-lg border border-yellow-500/40 bg-yellow-950/20 p-3 grid gap-2">
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-widest text-yellow-300">Fate's Thread</h3>
+            {threadText && <p className="text-[11px] font-mono leading-snug text-yellow-200/70">{threadText}</p>}
+          </div>
+          {gilded.length > 0 && (
+            <ul className="grid gap-1.5">
+              {gilded.map(chunk => (
+                <li key={chunk} className="flex items-center justify-between gap-3 rounded border border-white/10 bg-black/30 px-3 py-2">
+                  <span className="text-xs text-gray-200 min-w-0"><b className="text-yellow-200">{chunkPlaceLabel(chunk)}</b> is Gilded by fate: one free Key roll at {gildedChance}%.</span>
+                  <button
+                    type="button"
+                    onClick={e => rollGilded(chunk, e.clientX, e.clientY)}
+                    disabled={!!pendingUnlock}
+                    className="shrink-0 rounded border border-yellow-400/60 bg-yellow-500/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-yellow-200 hover:bg-yellow-500/25 disabled:opacity-40"
+                  >
+                    Roll
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {cursedText && <p className="text-[11px] text-red-300/80">{cursedText}</p>}
+        </div>
+      )}
       {shown.length > 0 && (
         <div className="w-full rounded-lg border border-emerald-500/40 bg-emerald-950/20 p-3 grid gap-2">
           <div>
