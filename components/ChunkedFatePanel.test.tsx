@@ -57,8 +57,8 @@ describe('Chunked fate panel', () => {
     const call = screen.getByRole('button', { name: 'Call on Fate' }) as HTMLButtonElement;
     expect(call.disabled).toBe(false);
     fireEvent.click(call);
-    // The call brings the doable quests, which the reducer checks again.
-    expect(game.current.callOnFate).toHaveBeenCalledWith([]);
+    // The panel sends nothing: the provider lists the doable quests and draws the roll itself.
+    expect(game.current.callOnFate).toHaveBeenCalledWith();
   });
 
   it('says why Mercy is shut without waiting for the chunk content', async () => {

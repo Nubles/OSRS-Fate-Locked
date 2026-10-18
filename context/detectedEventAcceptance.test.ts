@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { gameReducerForTest, migrateSaveForTest, prepareDetectedEventAcceptanceAction } from './GameContext';
 import { DROP_RATES } from '../config/rules';
-import { CHUNKED_MILESTONE_INTERVAL, failureFateForSkillLevel, failureFateForSource, XTREME_MILESTONE_INTERVAL } from '../config/economy';
+import { failureFateForSkillLevel, failureFateForSource, XTREME_MILESTONE_INTERVAL } from '../config/economy';
 import { resolveModeRules } from '../config/gameModes';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import { CA_DATA } from '../data/caData';
@@ -120,7 +120,7 @@ describe('detected event acceptance follows manual completion', () => {
     expect(leveled.history.at(-1)?.type).toBe('PITY');
     expect(leveled.chaosKeys).toBe(state.chaosKeys + 1);
     const spent = gameReducerForTest(leveled, {
-      type: 'UNLOCK', payload: { table: TableType.SKILLS, item: 'Attack', costType: 'chaosKey', cost: 1 },
+      type: 'UNLOCK', payload: { table: TableType.SKILLS, item: 'Attack', costType: 'chaosKey', cost: 1, revealId: 'chaos' },
     });
 
     const audit = auditHistory(spent.history, resolveModeRules('vanilla'));
@@ -132,7 +132,6 @@ describe('detected event acceptance follows manual completion', () => {
 describe('detected level-ups and the start-area milestone Keys', () => {
   it.each([
     ['xtreme', XTREME_MILESTONE_INTERVAL, 'xtremeMilestoneClaimed', 'Xtreme milestone'],
-    ['chunked', CHUNKED_MILESTONE_INTERVAL, 'chunkedMilestoneClaimed', 'Chunked milestone'],
   ] as const)('pays a %s run the milestone Key a manual level-up pays', (gameModeId, interval, claimedKey, message) => {
     const fresh = run({ gameModeId });
     const others = Object.entries(fresh.unlocks.levels)
@@ -189,5 +188,37 @@ describe('detected level-ups and the start-area milestone Keys', () => {
 
     expect(detected.keys).toBe(state.keys);
     expect(detected.history.some(entry => entry.type === 'XTREME_MILESTONE')).toBe(false);
+  });
+});
+
+// Audit V6 (October 2026): a detected level jump across the Chunked tier cap
+// gave the 2% Chaos Key chance and milestone Keys a manual level past the cap
+// does not.
+describe('detected Chunked level-ups and the tier cap', () => {
+  const woodcutting = (level: number) => run({
+    gameModeId: 'chunked',
+    unlocks: { chunks: [], skills: { Hitpoints: 1, Woodcutting: 1 }, levels: { ...run().unlocks.levels, Woodcutting: level } },
+  });
+  const intent = (level: number): RollIntent => ({
+    source: `Woodcutting Level ${level}`, threshold: 2, failureFate: failureFateForSkillLevel(10), target: `Woodcutting Level ${level}`,
+  });
+
+  it('a jump from below the cap pays its one Key roll and one 2% Chaos chance, as the manual level to the cap does', () => {
+    const state = woodcutting(9);
+    const next = accept(state, { kind: 'SKILL_LEVEL', skill: 'Woodcutting', level: 30 }, intent(30), succeed);
+    expect(next.unlocks.levels.Woodcutting).toBe(30);
+    expect(next.chaosKeys).toBe(state.chaosKeys + 1); // the level-10 roll's 2% chance; level 30's guaranteed one is past the cap
+    expect(next.keys).toBe(state.keys + 1); // the one Key roll, and no start-chunk milestone Keys
+    expect(next.history.some(entry => entry.type === 'XTREME_MILESTONE')).toBe(false);
+  });
+
+  it('no 2% Chaos chance once the recorded level is at the cap', () => {
+    const state = woodcutting(10);
+    const action = prepareDetectedEventAcceptanceAction(
+      state, { kind: 'SKILL_LEVEL', skill: 'Woodcutting', level: 30 }, intent(30), succeed,
+      { fateEventId: 'evt', detectorId: 'skill-level-v1', detectorVersion: 1 },
+      { runId: state.runId, account: 'Nubles', runRevision: state.runRevision },
+    );
+    expect(action.payload.skillChaos).toBeUndefined();
   });
 });

@@ -17,7 +17,6 @@ import { openDashboardPool } from '../utils/dashboardPoolNavigation';
 import { chunkLabel } from '../utils/chunkAdjacency';
 import { chunkTotals } from '../utils/runProgress';
 
-const StartChunkMilestoneLine = lazyWithRetry(() => import('./StartChunkMilestoneLine').then(m => ({ default: m.StartChunkMilestoneLine })));
 const ChunkedFatePanel = lazyWithRetry(() => import('./ChunkedFatePanel').then(m => ({ default: m.ChunkedFatePanel })));
 
 // --- Inner Components ---
@@ -320,13 +319,6 @@ const ClassicGachaSection: React.FC = () => {
             </div>
         )}
       </div>
-
-      {/* Chunked: the start-chunk Key every 25 total levels, while it applies. */}
-      {isChunked && (
-        <Suspense fallback={null}>
-          <StartChunkMilestoneLine />
-        </Suspense>
-      )}
 
       {/* Chunked: Breakthrough rolls and Fate's Mercy. */}
       {isChunked && (

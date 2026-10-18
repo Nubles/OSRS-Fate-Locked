@@ -10,10 +10,11 @@ import {
 import { drawDice } from '../utils/seededRng';
 import { TableType, LogEntry, type FailureFateAward } from '../types';
 import { isRollEntry } from '../utils/logEntry';
-import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, LEVEL_CHAOS_CHANCE } from '../config/economy';
+import { XTREME_MILESTONE_INTERVAL, LEVEL_CHAOS_CHANCE } from '../config/economy';
 import { isValidUnlock } from '../utils/gameEngine';
 import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
 import { ALL_CA_TASKS } from '../data/caTasks';
+import { activityEntranceChunks } from '../utils/activityAccess';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import { MAX_COUNTER, validateAndMigrateSave } from '../utils/saveSchema';
 import { replayInvariants } from '../utils/integrity';
@@ -760,9 +761,15 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
 });
 // --- UNLOCK -----------------------------------------------------------------
 
+/** A Standard (or Chaos) Key spend as rollUnlock makes it: fate drew `item`, and its reveal is acknowledged. */
+const spendKey = (s: ReturnType<typeof base>, table: TableType, item: string, costType: 'key' | 'chaosKey' = 'key') => {
+  const next = gameReducer(s, { type: 'UNLOCK', payload: { table, item, costType, cost: 1, revealId: 'reveal' } });
+  return next.pendingUnlock ? gameReducer(next, { type: 'ACKNOWLEDGE_UNLOCK', payload: 'reveal' }) : next;
+};
+
 describe('UNLOCK', () => {
   it('adds a region and deducts a standard key', () => {
-    const s = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.REGIONS, item: 'Karamja', costType: 'key', cost: 1 } });
+    const s = spendKey(base(), TableType.REGIONS, 'Karamja');
     expect(s.unlocks.regions).toContain('Karamja');
     expect(s.keys).toBe(initialState.keys - 1);
   });
@@ -774,30 +781,27 @@ describe('UNLOCK', () => {
   });
 
   it('increments an equipment tier rather than appending', () => {
-    const s = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.EQUIPMENT, item: 'Head', costType: 'key', cost: 1 } });
+    const s = spendKey(base(), TableType.EQUIPMENT, 'Head');
     expect(s.unlocks.equipment['Head']).toBe(1);
   });
 
   it('does not duplicate an array unlock when the same item is unlocked twice', () => {
-    const once = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.REGIONS, item: 'Karamja', costType: 'key', cost: 1 } });
-    const twice = gameReducer(once, { type: 'UNLOCK', payload: { table: TableType.REGIONS, item: 'Karamja', costType: 'key', cost: 1 } });
+    const once = spendKey(base(), TableType.REGIONS, 'Karamja');
+    const twice = spendKey(once, TableType.REGIONS, 'Karamja');
     expect(twice.unlocks.regions.filter((r) => r === 'Karamja')).toHaveLength(1);
+    expect(twice.keys).toBe(once.keys);
   });
 
   it('caps the skill tier at 10 and charges nothing once dispatched past the cap', () => {
     let s = { ...base(), keys: 20 };
-    for (let i = 0; i < 15; i++) {
-      s = gameReducer(s, { type: 'UNLOCK', payload: { table: TableType.SKILLS, item: 'Mining', costType: 'key', cost: 1 } });
-    }
+    for (let i = 0; i < 15; i++) s = spendKey(s, TableType.SKILLS, 'Mining');
     expect(s.unlocks.skills['Mining']).toBe(10);
     expect(s.keys).toBe(10);
   });
 
   it('caps the equipment tier at EQUIPMENT_TIER_MAX', () => {
     let s = { ...base(), keys: 20 };
-    for (let i = 0; i < 20; i++) {
-      s = gameReducer(s, { type: 'UNLOCK', payload: { table: TableType.EQUIPMENT, item: 'Head', costType: 'key', cost: 1 } });
-    }
+    for (let i = 0; i < 20; i++) s = spendKey(s, TableType.EQUIPMENT, 'Head');
     // EQUIPMENT_TIER_MAX is 9 (see config/rules.ts); the reducer must not exceed it.
     expect(s.unlocks.equipment['Head']).toBeLessThanOrEqual(9);
   });
@@ -827,7 +831,7 @@ describe('UNLOCK', () => {
 
 describe('UNLOCK — Banks (bank-locked modes)', () => {
   it('unlocking a bank adds its chunk id and names it in history', () => {
-    const s = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.BANKS, item: '13618', costType: 'key', cost: 1 } });
+    const s = spendKey(base(), TableType.BANKS, '13618');
     expect(s.unlocks.banks).toContain('13618');
     // History message resolves the id to the place name, not the raw number.
     expect(s.history[s.history.length - 1].message).toBe('Unlocked Abandoned Mine');
@@ -838,16 +842,36 @@ describe('UNLOCK — Banks (bank-locked modes)', () => {
 describe('UNLOCK — Chunks (Chunked mode)', () => {
   it('adds a chunk key and deducts a standard key', () => {
     const target = chunkKey({ cx: CHUNKED_START.cx + 1, cy: CHUNKED_START.cy });
-    const s = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: target, costType: 'key', cost: 1 } });
+    const s = spendKey({ ...base(), gameModeId: 'chunked' }, TableType.CHUNKS, target);
     expect(s.unlocks.chunks).toContain(target);
     expect(s.keys).toBe(initialState.keys - 1);
   });
 
   it('does not duplicate a chunk unlocked twice', () => {
     const target = chunkKey({ cx: CHUNKED_START.cx + 1, cy: CHUNKED_START.cy });
-    const once = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: target, costType: 'key', cost: 1 } });
-    const twice = gameReducer(once, { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: target, costType: 'key', cost: 1 } });
+    const once = spendKey({ ...base(), gameModeId: 'chunked' }, TableType.CHUNKS, target);
+    const twice = spendKey(once, TableType.CHUNKS, target);
     expect(twice.unlocks.chunks!.filter((c) => c === target)).toHaveLength(1);
+  });
+
+  // Audit V2 (October 2026): with no revealId a Standard or Chaos Key unlocked
+  // the exact chunk named, past the Omni-Key land guard, and cost came from
+  // the payload, so cost 0 was free.
+  it('only an Omni-Key names the exact entry, and a Key spend always costs one Key', () => {
+    const target = chunkKey({ cx: CHUNKED_START.cx + 1, cy: CHUNKED_START.cy });
+    const run = { ...base(), gameModeId: 'chunked', keys: 1, chaosKeys: 1, specialKeys: 1, unlocks: { ...initialState.unlocks, chunks: [] as string[] } };
+    for (const costType of ['key', 'chaosKey', 'specialKey'] as const) {
+      expect(gameReducer(run, { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: target, costType, cost: 1 } })).toBe(run);
+    }
+    // Outside land too: a direct Standard Key spend names nothing.
+    expect(gameReducer(run, { type: 'UNLOCK', payload: { table: TableType.SKILLS, item: 'Hitpoints', costType: 'key', cost: 1 } })).toBe(run);
+    // A fate-drawn spend with cost 0 still costs a Key, and with no Key is refused.
+    const paid = gameReducer(run, { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: target, costType: 'key', cost: 0, revealId: 'r' } });
+    expect(paid.unlocks.chunks).toEqual([target]);
+    expect(paid.keys).toBe(0);
+    expect(paid.pendingUnlock?.cost).toBe(1);
+    const broke = { ...run, keys: 0 };
+    expect(gameReducer(broke, { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: target, costType: 'key', cost: 0, revealId: 'r' } })).toBe(broke);
   });
 
   it('isValidUnlock only allows chunks in the current frontier', () => {
@@ -958,8 +982,8 @@ describe('rituals', () => {
     expect(s.fatePoints).toBe(0);
   });
 
-  it('Cartographer unlocks the chosen chunk for 40 Fate (Chunked)', () => {
-    const start = { ...base(), gameModeId: 'chunked', fatePoints: 50,
+  it('Cartographer unlocks the chosen chunk of its offer for 40 Fate (Chunked)', () => {
+    const start = { ...base(), gameModeId: 'chunked', fatePoints: 50, cartographerOffer: ['49,50', '51,50'],
       unlocks: { ...initialState.unlocks, chunks: [] } };
     const s = gameReducer(start, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: 'ignored' } });
     expect(s.fatePoints).toBe(10);
@@ -969,7 +993,7 @@ describe('rituals', () => {
   });
 
   it('Cartographer refuses a chunk off the frontier, the start chunk, and a run outside Chunked', () => {
-    const start = { ...base(), gameModeId: 'chunked', fatePoints: 50, unlocks: { ...initialState.unlocks, chunks: [] } };
+    const start = { ...base(), gameModeId: 'chunked', fatePoints: 50, cartographerOffer: ['49,50', '46,51', '41,40'], unlocks: { ...initialState.unlocks, chunks: [] } };
     for (const chunkKey of ['46,51', '41,40', '50,50']) {
       expect(gameReducer(start, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey, label: 'x' } })).toBe(start);
     }
@@ -978,11 +1002,11 @@ describe('rituals', () => {
   });
 
   it('Cartographer refuses when fate is short or the chunk is already owned', () => {
-    const poor = gameReducer({ ...base(), gameModeId: 'chunked', fatePoints: 10 },
+    const poor = gameReducer({ ...base(), gameModeId: 'chunked', fatePoints: 10, cartographerOffer: ['49,50'] },
       { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: 'x' } });
     expect(poor.unlocks.chunks ?? []).not.toContain('49,50');
 
-    const owned = { ...base(), gameModeId: 'chunked', fatePoints: 50,
+    const owned = { ...base(), gameModeId: 'chunked', fatePoints: 50, cartographerOffer: ['49,50'],
       unlocks: { ...initialState.unlocks, chunks: ['49,50'] } };
     const s = gameReducer(owned, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: 'x' } });
     expect(s.fatePoints).toBe(50); // untouched
@@ -1136,82 +1160,41 @@ describe('LEVEL_UP — Xtreme milestone insurance', () => {
   });
 });
 
-// --- Chunked milestone insurance ---------------------------------------------
+// --- Chunked has no start-chunk milestone ---------------------------------------
 
-describe('LEVEL_UP — Chunked milestone insurance', () => {
-  const chunkedIsolated = () => ({ ...base(), gameModeId: 'chunked', unlocks: { ...initialState.unlocks, chunks: [] } });
+// Chunked once paid a guaranteed Key every 25 total levels while a run held only
+// its start chunk: a Key whose table the player picks, so not fate's pick (it
+// even paid for levels past a tier cap, which roll nothing). Fate's Mercy covers
+// a dry start now; the rule and its counter are retired.
+describe('LEVEL_UP — Chunked pays no start-chunk milestone Key', () => {
+  const chunkedIsolated = () => ({ ...base(), gameModeId: 'chunked', unlocks: { ...initialState.unlocks, chunks: [] as string[] } });
+  const total = (levels: Record<string, number>) => Object.values(levels).reduce((a, b) => a + b, 0);
 
-  it('does nothing outside Chunked mode, even with no chunks unlocked', () => {
-    const state = { ...base(), gameModeId: 'vanilla', unlocks: { ...initialState.unlocks, chunks: [] } };
-    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
-    expect(s.keys).toBe(initialState.keys);
-    expect(s.chunkedMilestoneClaimed ?? 0).toBe(0);
+  it('crossing every multiple of 25 total levels on the start chunk pays nothing', () => {
+    let s: ReturnType<typeof gameReducer> = { ...chunkedIsolated(), keys: 0, unlocks: { ...chunkedIsolated().unlocks, skills: { Hitpoints: 10 } as Record<string, number> } };
+    const start = total(s.unlocks.levels);
+    for (let i = 0; i < 60; i++) s = gameReducer(s, { type: 'LEVEL_UP', payload: { skill: 'Hitpoints', chaosRoll: 0.99 } });
+    expect(total(s.unlocks.levels)).toBe(start + 60);
+    expect(s.keys).toBe(0);
+    expect(s.history.some(e => e.type === 'XTREME_MILESTONE')).toBe(false);
   });
 
-  it('does nothing in Chunked mode once a chunk has been unlocked', () => {
-    const target = chunkKey({ cx: CHUNKED_START.cx + 1, cy: CHUNKED_START.cy });
-    const state = { ...chunkedIsolated(), unlocks: { ...initialState.unlocks, chunks: [target] } };
-    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
-    expect(s.keys).toBe(initialState.keys);
+  it('a level past its tier cap logs "no roll" and pays no Key (audit V1)', () => {
+    const state = { ...chunkedIsolated(), keys: 0, chunkedMilestoneClaimed: 0,
+      unlocks: { ...chunkedIsolated().unlocks, skills: { Hitpoints: 1, Woodcutting: 1 }, levels: { ...initialState.unlocks.levels, Woodcutting: 10 } } };
+    // Old saves carry a counter far behind their total level; it is no longer read.
+    expect(total(state.unlocks.levels)).toBeGreaterThan(25);
+    const next = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Woodcutting', chaosRoll: 0.99 } });
+    expect(next.unlocks.levels.Woodcutting).toBe(11);
+    expect(next.history.at(-1)?.message).toBe('Woodcutting Level 11: no roll');
+    expect(next.keys).toBe(0);
   });
 
-  it('grants a guaranteed key the instant total level crosses the (tighter) interval, isolated in Chunked', () => {
-    const startingTotal = Object.values(initialState.unlocks.levels).reduce((a, b) => a + b, 0);
-    const state = {
-      ...chunkedIsolated(),
-      unlocks: { ...chunkedIsolated().unlocks, levels: { ...chunkedIsolated().unlocks.levels, Attack: CHUNKED_MILESTONE_INTERVAL - startingTotal } },
-    };
-    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
-    expect(s.keys).toBe(initialState.keys + 1);
-    expect(s.chunkedMilestoneClaimed).toBe(1);
-  });
-
-  it('does not re-grant the same milestone on a level-up that does not cross a new threshold', () => {
-    const already = { ...chunkedIsolated(), chunkedMilestoneClaimed: 1, keys: 10 };
-    const s = gameReducer(already, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
-    expect(s.keys).toBe(10);
-    expect(s.chunkedMilestoneClaimed).toBe(1);
-  });
-
-  describe('new runs', () => {
-    const startTotal = Object.values(initialState.unlocks.levels).reduce((a, b) => a + b, 0);
-    const levelUp = (state: ReturnType<typeof base>) =>
-      gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
-    const newChunkedRun = () =>
-      gameReducer(base(), { type: 'SET_GAME_MODE', payload: { modeId: 'chunked' } });
-
-    it('count milestones from the starting total level, so the first level-up pays nothing', () => {
-      const run = newChunkedRun();
-      expect(run.chunkedMilestoneClaimed).toBe(Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL));
-      expect(levelUp(run).keys).toBe(run.keys);
-    });
-
-    it('pay their first milestone key at the next multiple of the interval', () => {
-      let run = newChunkedRun();
-      const firstPayout = CHUNKED_MILESTONE_INTERVAL * (Math.floor(startTotal / CHUNKED_MILESTONE_INTERVAL) + 1);
-      for (let total = startTotal; total < firstPayout - 1; total++) run = levelUp(run);
-      expect(run.keys).toBe(initialState.keys);
-      run = levelUp(run);
-      expect(run.keys).toBe(initialState.keys + 1);
-      expect(run.history.at(-1)?.message).toContain(`Total Level ${firstPayout}`);
-      // The Key comes on total level alone; a start-chunk player can still roll other things.
-      expect(run.history.at(-1)?.details).toBe(
-        `Start-chunk milestone: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels until you unlock another chunk.`,
-      );
-    });
-
-    it('leave runs that chose their mode before this rule on their original schedule', () => {
-      const existing = { ...chunkedIsolated(), gameModeLocked: true, chunkedMilestoneClaimed: 0 };
-      expect(levelUp(existing).keys).toBe(initialState.keys + 1);
-    });
-  });
-
-  it('the two modes\' milestone counters are independent', () => {
+  it('a new Chunked run no longer starts a milestone counter, and Xtreme keeps its own', () => {
+    const run = gameReducer(base(), { type: 'SET_GAME_MODE', payload: { modeId: 'chunked' } });
+    expect(run.chunkedMilestoneClaimed).toBeUndefined();
     const state = { ...chunkedIsolated(), xtremeMilestoneClaimed: 3 };
-    const s = gameReducer(state, {
-      type: 'LEVEL_UP',
-      payload: { skill: 'Attack', chaosRoll: 0.5 },
-    });
+    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
     expect(s.xtremeMilestoneClaimed).toBe(3); // untouched — this run is Chunked, not Xtreme
   });
 });
@@ -1527,5 +1510,32 @@ describe('reducer purity', () => {
     gameReducer(state, roll({ success: true }));
     gameReducer(state, { type: 'UNLOCK', payload: { table: TableType.REGIONS, item: 'Karamja', costType: 'key', cost: 1 } });
     expect(JSON.stringify(state)).toBe(snapshot);
+  });
+});
+
+// Audit V7 (October 2026): in Chunked a Combat Achievement task rolled a Key
+// for a boss outside the run's chunks ("Exact chunks").
+describe('Chunked Combat Achievement tasks roll only at a boss in the run\'s chunks', () => {
+  const zulrahAdept = ALL_CA_TASKS.find(task => task.id === 'ca_224')!;
+  const run = (gameModeId: string, chunks: string[] = []) =>
+    ({ ...base(), gameModeId, keys: 0, unlocks: { ...initialState.unlocks, chunks } });
+  const complete = (state: ReturnType<typeof run>) => {
+    const prepared = prepareCATaskCompletionActions(state, zulrahAdept, () => 1);
+    return { prepared, next: prepared.actions.reduce<ReturnType<typeof gameReducer>>((s, action) => gameReducer(s, action as never), state) };
+  };
+
+  it('refuses Zulrah Adept on a start-chunk run, with the reason', () => {
+    expect(zulrahAdept.monster).toMatch(/Zulrah/);
+    const { prepared, next } = complete(run('chunked'));
+    expect(prepared.result).toEqual({ ok: false, reason: 'Zulrah is not in your chunks. In Chunked, a Combat Achievement task only rolls where its boss is.' });
+    expect(next.keys).toBe(0);
+    expect(next.unlocks.completedTasks).not.toContain('ca_224');
+  });
+
+  it('rolls once the boss\'s chunk is held, and in Vanilla as before', () => {
+    const owned = complete(run('chunked', [...activityEntranceChunks('Zulrah')]));
+    expect(owned.prepared.result).toEqual({ ok: true });
+    expect(owned.next.keys).toBe(1);
+    expect(complete(run('vanilla')).next.keys).toBe(1);
   });
 });

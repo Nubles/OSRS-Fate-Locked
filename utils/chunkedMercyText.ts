@@ -3,6 +3,7 @@
  * no Keys, saying what keeps it shut. Only the lazily loaded Chunked panel
  * uses it, so its wording stays out of the entry chunk.
  */
+import { SKILLS_LIST } from '../data/items';
 import { mercyBlocker, mercyRitualInReach, pendingBreakthroughs, skillsWithRoom, tierCap, type FateState } from './chunkedFate';
 
 const RITUAL_NAMES = { CHAOS: 'the Ritual of Chaos', CARTOGRAPHER: 'the Ritual of the Cartographer' } as const;
@@ -39,7 +40,12 @@ export const mercyShutReason = (state: FateState, doableQuests?: readonly string
       return `${waits} until you take the exploring rolls your new chunks still offer.`;
     case 'quest':
       return `${waits} while ${doableQuests!.length === 1 ? `${doableQuests![0]} is` : `${doableQuests!.length} quests are`} doable in your chunks.`;
-    case 'nothing_left':
-      return "Fate's Mercy has nothing left to draw: every chunk and skill tier it could open is open.";
+    case 'nothing_left': {
+      // "Everything is open" only when it is: every skill at 99 (an empty pool
+      // already means no frontier chunk is left).
+      const unfinished = SKILLS_LIST.filter(skill => (state.unlocks.levels[skill] ?? 1) < 99);
+      if (unfinished.length === 0) return "Fate's Mercy has nothing left to draw: every chunk and skill tier it could open is open.";
+      return `Fate's Mercy has nothing it can draw for you: no chunk, skill tier, patch type or guild it could open would let you train ${unfinished.length === 1 ? unfinished[0] : `${unfinished[0]} or ${unfinished.length - 1} other skill${unfinished.length === 2 ? '' : 's'}`} further.`;
+    }
   }
 };

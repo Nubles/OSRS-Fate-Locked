@@ -318,7 +318,7 @@ export interface GameState {
    * key economy for any other mode.
    */
   xtremeMilestoneClaimed?: number;
-  /** Same insurance as xtremeMilestoneClaimed, for the 'chunked' mode — see CHUNKED_MILESTONE_INTERVAL. */
+  /** Retired: Chunked's start-chunk milestone counter (removed October 2026). Kept so old saves load; nothing reads it. */
   chunkedMilestoneClaimed?: number;
   /**
    * Achievement ids whose reward is settled (paid, or already earned when
@@ -341,6 +341,12 @@ export interface GameState {
    * lists the things already rolled in each chunk, by chunk key.
    */
   chunkExplore?: { from: number; done: Record<string, string[]> };
+  /**
+   * The Ritual of the Cartographer's offer (chunk keys), drawn by fate when
+   * the Altar's chooser first opens and kept until the ritual charts one, or
+   * until none is on the frontier any more (utils/cartographerOffer.ts).
+   */
+  cartographerOffer?: string[];
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

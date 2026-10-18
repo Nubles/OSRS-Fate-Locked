@@ -7,8 +7,8 @@ import { resolveModeRules } from '../config/gameModes';
 import { BARROWS_BROTHERS, INVOCATIONS, INVOCATION_ROLLS, RITUALS, SACRIFICE_USES_PER_RUN, invocationAllowed, invocationOmniBonus, ritualEffect, ritualFateCost, type Invocation } from '../config/economy';
 import { ritualAvailability, rollRitualActive } from '../utils/ritualEffects';
 import type { NewRitualId } from '../context/GameContext';
-import { chunkKey, chunkLabel } from '../utils/chunkAdjacency';
-import { cartographerHint, cartographerOffer } from '../utils/cartographerOffer';
+import { chunkLabel, parseChunkKey } from '../utils/chunkAdjacency';
+import { cartographerHint } from '../utils/cartographerOffer';
 import { chunkContentService } from '../services/ChunkContentService';
 import { X } from 'lucide-react';
 import { RitualIcon } from './rituals/RitualIcon';
@@ -30,7 +30,7 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
   const osrs = useIsOsrsUi();
-  const { fatePoints, keys, activeBuff, performRitual, performGambit, performCartographer, castRitual, rituals: running, unlocks, gameModeId, customMode, runId, history, freeRituals, rngSeed, rngVersion } = useGame();
+  const { fatePoints, keys, activeBuff, performRitual, performGambit, drawCartographerChoices, performCartographer, castRitual, rituals: running, unlocks, gameModeId, customMode, history, freeRituals } = useGame();
 
   // The Gambit and Sacrifice can't be undone: arm on the first click, fire on
   // the second, disarm when anything else is touched.
@@ -48,11 +48,12 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   useEffect(() => { void loadRitualFonts(); }, []);
 
   const openCartographer = () => {
-    // The same 3 frontier chunks every time the chooser opens, reloads
-    // included, until the run logs something (utils/cartographerOffer.ts).
-    const offer = cartographerOffer({ unlocks, history, runId, rngSeed, rngVersion });
-    setChunkChoices(offer.map((c) => {
-      const key = chunkKey(c);
+    // Fate draws 3 frontier chunks the first time the chooser opens and the
+    // run keeps them, reloads included, until the ritual charts one
+    // (utils/cartographerOffer.ts); the reducer charts nothing else.
+    const offer = drawCartographerChoices();
+    setChunkChoices(offer.map((key) => {
+      const c = parseChunkKey(key);
       let hint: string | null = null;
       if (chunkContentService.ready) {
         const content = chunkContentService.contentFor(c.cx, c.cy);

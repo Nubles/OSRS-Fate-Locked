@@ -24,6 +24,7 @@ import { isPetId, PET_IDS } from '../data/petIds';
 import { BARROWS_BROTHERS, BARROWS_ROLLS, CHUNK_EXPLORE_ROLLS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, type Invocation } from '../config/economy';
 import { tidyRituals, type RitualState } from './ritualEffects';
 import { FREE_RITUAL_IDS } from './achievementRewards';
+import { CARTOGRAPHER_OFFER_SIZE } from './cartographerOffer';
 /** Version 5 freezes the one-time pet offer and stores claimed pets and owed Keys. */
 export const CURRENT_SAVE_VERSION = 5;
 /**
@@ -353,12 +354,14 @@ const CURRENT_UNLOCK_KEYS = new Set([
 
 /**
  * What a saved reveal may cost: 1 Key or 1 Chaos Key, or nothing for Chunked's
- * free fate draws (Fate's Mercy draws a chunk or skill tier, a Breakthrough a
- * skill tier). Saves from before the free draws stored Mercy as 1 Key; those stay valid.
+ * free fate draws (Fate's Mercy draws a chunk, a skill tier, or the patch type
+ * or guild a skill needs to train; a Breakthrough a skill tier). Saves from
+ * before the free draws stored Mercy as 1 Key; those stay valid.
  */
+const MERCY_TABLES: readonly unknown[] = [TableType.CHUNKS, TableType.SKILLS, TableType.FARMING_LAYERS, TableType.GUILDS];
 const pendingUnlockCostValid = (costType: unknown, cost: unknown, table: unknown): boolean =>
   ((costType === 'key' || costType === 'chaosKey') && cost === 1)
-  || (costType === 'mercy' && cost === 0 && (table === TableType.CHUNKS || table === TableType.SKILLS))
+  || (costType === 'mercy' && cost === 0 && MERCY_TABLES.includes(table))
   || (costType === 'breakthrough' && cost === 0 && table === TableType.SKILLS);
 
 const normalizeUnlocks = (
@@ -1038,7 +1041,7 @@ const TOP_LEVEL_KEYS = new Set([
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
   'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
-  'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'chunkedBreakthroughs', 'chunkExplore', 'fateCompensation',
+  'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'chunkedBreakthroughs', 'chunkExplore', 'cartographerOffer', 'fateCompensation',
   'petCompensation', 'petsClaimed', 'keysOwed', 'rituals',
   'achievementsClaimed', 'achievementTitle', 'freeRituals', 'freeClarity',
 ]);
@@ -1437,6 +1440,13 @@ const normalizeState = (
     // A start past the run's chunk count would silently turn exploring off;
     // clamp it so the run's next chunks still pay.
     state.chunkExplore = { from: Math.min(from.value, state.unlocks.chunks?.length ?? 0), done };
+  }
+  if (own(input, 'cartographerOffer') && readOwn(input, 'cartographerOffer') !== undefined) {
+    const raw = readOwn(input, 'cartographerOffer');
+    if (!Array.isArray(raw) || raw.length > CARTOGRAPHER_OFFER_SIZE
+      || !raw.every(key => typeof key === 'string' && /^\d{1,3},\d{1,3}$/.test(key))
+      || new Set(raw).size !== raw.length) return invalid('invalid_field', 'cartographerOffer');
+    if (raw.length > 0) state.cartographerOffer = [...raw as string[]];
   }
   for (const key of ['xtremeMilestoneClaimed', 'chunkedMilestoneClaimed'] as const) {
     const selected = readPreferred(input, defaultRecord, key);

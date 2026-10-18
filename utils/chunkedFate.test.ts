@@ -6,7 +6,11 @@ import { chunkLabelWithCoords } from './chunkLabelWithCoords';
 import { BREAKTHROUGH_CHANCE } from '../config/economy';
 import { validateAndMigrateSave } from './saveSchema';
 import { replayInvariants } from './integrity';
-import { breakthroughTier, chunkedSkillHasRoom, levelPastTierCap, mercyBlocker, mercyPool, pendingBreakthroughs } from './chunkedFate';
+import { breakthroughTier, chunkedSkillHasRoom, levelPastTierCap, mercyBlocker, mercyEnablers, mercyPool, mercyRitualInReach, pendingBreakthroughs } from './chunkedFate';
+import { FARMING_PATCH_LIST, SKILLS_LIST } from '../data/items';
+import { QUEST_DATA } from '../data/questData';
+import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, getChunkFrontier } from './chunkAdjacency';
+import { drawFloat, seededContext } from './seededRng';
 import { mercyShutReason } from './chunkedMercyText';
 
 // A Chunked run on the Lumbridge Castle start chunk with no Keys left.
@@ -206,6 +210,32 @@ describe("Fate's Mercy: Fate, quests and the shut reason", () => {
     expect(mercyShutReason(rich)).toBe("Fate's Mercy waits while you have 45 Fate: enough for the Ritual of Chaos (25 Fate) at the Void Altar.");
   });
 
+  it('a free Cartographer with no frontier chunk to chart does not hold Mercy shut (dead end 8)', () => {
+    const everywhere = { ...open(), freeRituals: ['CARTOGRAPHER'], unlocks: { ...open().unlocks, chunks: ALL_CHUNK_KEYS.filter(k => k !== CHUNKED_START_KEY) } };
+    expect(getChunkFrontier(everywhere.unlocks.chunks, everywhere.unlocks)).toEqual([]);
+    expect(mercyRitualInReach(everywhere)).toBeNull();
+    // The ritual could do nothing: the reducer refuses it.
+    const s = { ...everywhere, cartographerOffer: ['49,50'] };
+    expect(gameReducer(s, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: '' } })).toBe(s);
+    // With a frontier, a free Cartographer still counts; with none, Fate for Chaos still does.
+    expect(mercyRitualInReach({ ...open(), freeRituals: ['CARTOGRAPHER'] })).toEqual({ id: 'CARTOGRAPHER', cost: 0, free: true });
+    expect(mercyRitualInReach({ ...everywhere, freeRituals: [], fatePoints: 45 })?.id).toBe('CHAOS');
+  });
+
+  it('takes only the seeded draw on a seeded run, so a caller cannot pick the entry (audit V3)', () => {
+    const call = (roll: number) => ({ type: 'CALL_ON_FATE' as const, payload: { roll, revealId: 'r', doableQuests: [] } });
+    const s = { ...open(), rngSeed: 'FATE-2026-W42', rngVersion: 2 as const };
+    const pool = mercyPool(s);
+    expect(pool.length).toBeGreaterThan(1);
+    const fair = drawFloat('FATE-2026-W42', seededContext(s), 'mercy');
+    const wanted = (Math.floor(fair * pool.length) + 1) % pool.length;
+    expect(gameReducer(s, call(wanted / pool.length))).toBe(s);
+    expect(gameReducer(s, call(fair)).pendingUnlock?.item).toBe(pool[Math.floor(fair * pool.length)].item);
+    // A roll outside [0, 1) is refused on any run.
+    const unseeded = open();
+    for (const roll of [1, -0.1, Number.NaN]) expect(gameReducer(unseeded, call(roll))).toBe(unseeded);
+  });
+
   it('stays shut while a quest is doable, and the reducer refuses a call without the quest list', () => {
     expect(mercyBlocker(open(), ["Cook's Assistant"])).toBe('quest');
     expect(gameReducer(open(), { type: 'CALL_ON_FATE', payload: { roll: 0, revealId: 'r', doableQuests: ["Cook's Assistant"] } })).toEqual(open());
@@ -284,5 +314,52 @@ describe('the reducer checks what the UI checks', () => {
     const state = { ...dry(), keys: 1 };
     const s = gameReducer(state, { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: '49,50', costType: 'key', cost: 1, revealId: 'r' } });
     expect(s.history.at(-1)).toMatchObject({ message: 'Unlocked Lumbridge (49, 50)', meta: { item: '49,50' } });
+  });
+});
+
+// The full-run sim (chunked-audit sim, October 2026) ended runs that owned
+// every chunk, with every skill at 99 but Herblore, and no Herb patch type:
+// patch types come only from the Farming Patches table, Mercy drew only
+// Chunks and Skills, so its pool was empty and it said everything was open.
+describe("Fate's Mercy: the patch type or guild a skill needs", () => {
+  const endgame = (herbloreTier: number, over: Record<string, unknown> = {}) => {
+    const skills: Record<string, number> = Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10]));
+    const levels = Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99]));
+    skills.Herblore = herbloreTier; levels.Herblore = 1;
+    return { ...dry(), fatePoints: 0, unlocks: {
+      // Every skill trains to 99 here, so Breakthroughs no longer apply.
+      ...dry().unlocks, skills, levels,
+      chunks: ALL_CHUNK_KEYS.filter(key => key !== CHUNKED_START_KEY),
+      quests: Object.keys(QUEST_DATA),
+      farming: FARMING_PATCH_LIST.filter(patch => patch !== 'Herb'),
+      ...over,
+    } };
+  };
+
+  it.each([0, 1])('draws the Herb patch type when it alone keeps Herblore (tier %i) at level 1', tier => {
+    const s = endgame(tier);
+    expect(getChunkFrontier(s.unlocks.chunks, s.unlocks)).toEqual([]);
+    expect(mercyEnablers(s)).toEqual([{ table: TableType.FARMING_LAYERS, item: 'Herb' }]);
+    expect(mercyPool(s)).toEqual([{ table: TableType.FARMING_LAYERS, item: 'Herb' }]);
+    expect(mercyBlocker(s, [])).toBeNull();
+    const drawn = gameReducer(s, { type: 'CALL_ON_FATE', payload: { roll: 0.5, revealId: 'm', doableQuests: [] } });
+    expect(drawn.unlocks.farming).toContain('Herb');
+    expect(drawn.pendingUnlock).toMatchObject({ table: TableType.FARMING_LAYERS, item: 'Herb', costType: 'mercy', cost: 0 });
+    expect(drawn.history.at(-1)?.message).toBe("Unlocked Herb patches · Fate's Mercy");
+    // The reveal survives a reload.
+    const { lastEvent: _lastEvent, ...persisted } = drawn;
+    const saved = validateAndMigrateSave(persisted, initialState);
+    if (saved.ok === false) throw new Error(`${saved.code} ${saved.path}`);
+    expect(saved.state.pendingUnlock?.item).toBe("Herb");
+  });
+
+  it('says what is still unfinished instead of claiming everything is open', () => {
+    // Herblore waits on Druidic Ritual, which no patch type or guild opens.
+    const stuck = endgame(1, { farming: [...FARMING_PATCH_LIST], quests: Object.keys(QUEST_DATA).filter(quest => quest !== 'Druidic Ritual') });
+    expect(mercyBlocker(stuck, [])).toBe('nothing_left');
+    expect(mercyShutReason(stuck, [])).toBe("Fate's Mercy has nothing it can draw for you: no chunk, skill tier, patch type or guild it could open would let you train Herblore further.");
+    const done = endgame(10, { farming: [...FARMING_PATCH_LIST], levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])) });
+    expect(mercyBlocker(done, [])).toBe('nothing_left');
+    expect(mercyShutReason(done, [])).toBe("Fate's Mercy has nothing left to draw: every chunk and skill tier it could open is open.");
   });
 });

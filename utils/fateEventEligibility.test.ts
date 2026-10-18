@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { DROP_RATES } from '../config/rules';
+import { failureFateForSkillLevel } from '../config/economy';
+import { skillLevelKeyChance } from './keyRoll';
 import { initialState } from '../context/GameContext';
+import { ALL_CA_TASKS } from '../data/caTasks';
+import { activityEntranceChunks } from './activityAccess';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
 import { PETS } from '../data/pets';
 import type { FateEventEnvelope, FateEventType } from '../services/fateEventProtocol';
@@ -168,6 +172,22 @@ describe('classifyFateEvent', () => {
     expect(classifyFateEvent(levelEvent(11), woodcutting('vanilla', 10)).state).toBe('READY');
   });
 
+  // Audit V6 (October 2026): a detected 9 -> 30 at tier 1 rolled at level 30's
+  // odds; a manual 9 -> 30 rolls only level 10, the cap.
+  it('in Chunked, rolls a detected jump across the tier cap at the capped level\'s odds', () => {
+    const woodcutting = (gameModeId: string) => withUnlocks(
+      { skills: { Woodcutting: 1 }, levels: { ...initialState.unlocks.levels, Woodcutting: 9 } }, { gameModeId });
+    const jump = event('SKILL_LEVEL', 'Woodcutting Level 30', { evidence: { skill: 'Woodcutting', level: 30 } });
+    const chunked = classifyFateEvent(jump, woodcutting('chunked'));
+    expect(chunked).toMatchObject({
+      state: 'READY',
+      intent: { threshold: skillLevelKeyChance(10), failureFate: failureFateForSkillLevel(10), target: 'Woodcutting Level 30' },
+      progress: { kind: 'SKILL_LEVEL', skill: 'Woodcutting', level: 30 },
+    });
+    expect(skillLevelKeyChance(10)).toBeLessThan(skillLevelKeyChance(30));
+    expect(classifyFateEvent(jump, woodcutting('vanilla'))).toMatchObject({ intent: { threshold: skillLevelKeyChance(30) } });
+  });
+
   it('rolls a reviewed diary task only where the Journal would complete it', () => {
     const diary = event('DIARY_TASK', 'Karamja Elite', { confidence: 'UNCERTAIN', evidence: { tierId: 'Karamja Elite' } });
     const taskId = 'kar_elite_2';
@@ -221,6 +241,16 @@ describe('classifyFateEvent', () => {
   ])('maps %s to its clue rate', (label, source, failureFate) => {
     expect(classifyFateEvent(event('CLUE_CASKET', label), state()))
       .toMatchObject({ state: 'READY', intent: { source, threshold: DROP_RATES[source], failureFate } });
+  });
+
+  it('in Chunked, rolls a detected Combat Achievement task only at a boss in the run\'s chunks (audit V7)', () => {
+    const zulrahAdept = ALL_CA_TASKS.find(task => task.id === 'ca_224')!;
+    const detected = event('COMBAT_ACHIEVEMENT', zulrahAdept.name ?? zulrahAdept.description);
+    expect(classifyFateEvent(detected, withUnlocks({ chunks: [] }, { gameModeId: 'chunked' }))).toEqual({
+      state: 'BLOCKED', reason: 'Zulrah is not in your chunks. In Chunked, a Combat Achievement task only rolls where its boss is.',
+    });
+    expect(classifyFateEvent(detected, withUnlocks({ chunks: [...activityEntranceChunks('Zulrah')] }, { gameModeId: 'chunked' })).state).toBe('READY');
+    expect(classifyFateEvent(detected, state()).state).toBe('READY');
   });
 
   it('maps a Combat Achievement task to its canonical tier', () => {

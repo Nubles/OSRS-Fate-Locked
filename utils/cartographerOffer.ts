@@ -1,7 +1,10 @@
 /**
  * The Ritual of the Cartographer's offer: up to three frontier chunks, drawn
- * deterministically from the run itself, so reopening the altar or reloading
- * the page shows the same three until something is logged.
+ * by fate once and then kept in GameState.cartographerOffer until the ritual
+ * charts one of them, or until none of them is still on the frontier. The
+ * reducer draws it (CARTOGRAPHER_DRAW_OFFER, when the Altar's chooser opens)
+ * and RITUAL_CARTOGRAPHER only charts a chunk from it, so logging more never
+ * reshuffles it and no other chunk can be named (audit V4, October 2026).
  *
  * A seeded run draws exactly what GameContext.nextFloat('cartographer', i)
  * would (its seed and versioned history context). An unseeded run has no
@@ -10,14 +13,26 @@
  */
 import type { GameState } from '../types';
 import type { ChunkCoord } from './mapCoords';
-import { getChunkFrontier } from './chunkAdjacency';
+import { CHUNKED_START_KEY, getChunkFrontier, isFrontierChunk } from './chunkAdjacency';
 import { drawFloat, seededContext } from './seededRng';
 
 export const CARTOGRAPHER_OFFER_SIZE = 3;
 
 type OfferState = Pick<GameState, 'unlocks' | 'history' | 'runId' | 'rngSeed' | 'rngVersion'>;
 
-export function cartographerOffer(state: OfferState): ChunkCoord[] {
+/**
+ * The kept offer's chunks that can still be charted: on the frontier, not
+ * held. Empty when nothing is kept, or every kept chunk has left the frontier
+ * (another unlock took it); only then does the next draw make a new offer.
+ */
+export function liveCartographerOffer(state: Pick<GameState, 'unlocks' | 'cartographerOffer'>): string[] {
+  const held = state.unlocks.chunks ?? [];
+  return (state.cartographerOffer ?? []).filter(key =>
+    key !== CHUNKED_START_KEY && !held.includes(key) && isFrontierChunk(key, held, state.unlocks));
+}
+
+/** A fresh draw of the offer from the run as it is now. Only the reducer calls it to keep. */
+export function drawCartographerOffer(state: OfferState): ChunkCoord[] {
   // Partial Fisher–Yates over the live frontier. The count is fixed before
   // the loop because splice shrinks the pool.
   const pool = getChunkFrontier(state.unlocks.chunks ?? [], state.unlocks);

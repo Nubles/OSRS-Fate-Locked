@@ -82,7 +82,7 @@ export const TestSuiteRunner: React.FC<TestSuiteRunnerProps> = ({ onComplete }) 
         case 2: // Verify Reset & Inject Test Data
           if (game.keys === 3 && game.fatePoints === 0) {
             updateLastLog('success');
-            addLog("Injecting Test Parameters (Keys=10, Fate=49)...");
+            addLog("Injecting Test Parameters (Keys=10, Omni-Keys=1, Fate=49)...");
             const currentState = readVisibleState();
             const currentUnlocks = currentState?.unlocks;
             if (!currentState || !isRecord(currentUnlocks)) {
@@ -94,7 +94,8 @@ export const TestSuiteRunner: React.FC<TestSuiteRunnerProps> = ({ onComplete }) 
               ...currentState,
               keys: 10,
               fatePoints: 49,
-              specialKeys: 0,
+              // Only an Omni-Key names the exact entry it unlocks (step 4).
+              specialKeys: 1,
               chaosKeys: 0,
               unlocks: {
                 ...currentUnlocks,
@@ -134,8 +135,8 @@ export const TestSuiteRunner: React.FC<TestSuiteRunnerProps> = ({ onComplete }) 
               updateLastLog('success');
               addLog("Pity System Verified (+1 Key, Fate Reset).");
               
-              addLog("Testing Content Unlock (Skill: Strength)...");
-              game.unlockContent(TableType.SKILLS, 'Strength', 'key', 1);
+              addLog("Testing Content Unlock (Skill: Strength, Omni-Key)...");
+              game.unlockContent(TableType.SKILLS, 'Strength', 'specialKey', 1);
               timeout = window.setTimeout(() => setStep(5), 1000);
           } else {
               updateLastLog('error');
@@ -144,7 +145,7 @@ export const TestSuiteRunner: React.FC<TestSuiteRunnerProps> = ({ onComplete }) 
           break;
 
         case 5: // Verify Unlock & Test Level Up
-          if (game.unlocks.skills['Strength'] && game.unlocks.skills['Strength'] > 0 && game.keys === 10) {
+          if (game.unlocks.skills['Strength'] && game.unlocks.skills['Strength'] > 0 && game.specialKeys === 0 && game.keys === 11) {
               updateLastLog('success');
               addLog("Unlock Mechanism Verified.");
               

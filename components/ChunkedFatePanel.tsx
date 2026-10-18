@@ -45,8 +45,9 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
   useEffect(() => {
     if (needsQuestCheck && !ready) chunkContentService.init().then(() => setReady(true));
   }, [needsQuestCheck, ready]);
-  // Mercy stays shut while a quest in the run's chunks is doable now. The
-  // reducer refuses a call that doesn't bring this list (CALL_ON_FATE).
+  // Mercy stays shut while a quest in the run's chunks is doable now. This
+  // list only shows why; the call lists the quests again from the chunk
+  // content itself (GameContext's callOnFate, utils/mercyQuests.ts).
   const doableQuests = useMemo(
     () => (needsQuestCheck && ready ? chunkedQuestRows(unlocks, gameModeId).filter(row => row.bucket === 'DOABLE').map(row => row.id) : []),
     [needsQuestCheck, ready, unlocks, gameModeId],
@@ -147,7 +148,7 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
                 <span className="s">{mercyText}</span>
               </span>
               {showMercy && (
-                <button type="button" className="osrs-btn ofate-btn" onClick={() => callOnFate(doableQuests)} disabled={!mercyOpen}>Call on Fate</button>
+                <button type="button" className="osrs-btn ofate-btn" onClick={() => callOnFate()} disabled={!mercyOpen}>Call on Fate</button>
               )}
             </div>
           </div>
@@ -226,7 +227,7 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
           {showMercy && (
             <button
               type="button"
-              onClick={() => callOnFate(doableQuests)}
+              onClick={() => callOnFate()}
               disabled={!mercyOpen}
               className="shrink-0 rounded border border-sky-400/60 bg-sky-500/15 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-sky-200 hover:bg-sky-500/25 disabled:opacity-40"
             >
