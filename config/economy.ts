@@ -453,7 +453,7 @@ export const RITUALS: Ritual[] = [
   { id: 'GAMBIT',       name: 'Void Gambit',             tagline: 'A coin flip for Keys.', fateCost: GAMBIT_STAKE, stakesAllFate: true,
     effect: gambitText(GAMBIT_STAKE) },
   { id: 'CARTOGRAPHER', name: 'Ritual of the Cartographer', tagline: 'Choose your next chunk.', fateCost: 40, chunkedOnly: true,
-    effect: 'See up to 3 random frontier chunks and choose which one unlocks. The only way to choose land in Chunked.' },
+    effect: 'Fate draws up to 3 frontier chunks and keeps them until you chart one; choose which of them unlocks. The only way to choose land in Chunked.' },
   { id: 'TRANSMUTE',    name: 'Ritual of Transmutation', tagline: 'Trade Keys for an Omni-Key.', keyCost: 5, effect: 'Trade 5 Keys for 1 Omni-Key.' },
   { id: 'WARD',         name: "Saradomin's Ward",        tagline: 'Only land on what you can use.', fateCost: 30, god: 'Saradomin',
     effect: 'Your next Key can only land on something you can use right now. Fate still picks, just from places you can reach. You can cast it again 25 rolls later.' },

@@ -33,7 +33,7 @@ describe('audited process repairs', () => {
   });
 
   it('replays Cartographer spending and a granted chunk', () => {
-    const state = gameReducer({ ...failures(40), gameModeId: 'chunked' }, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: 'x' } });
+    const state = gameReducer({ ...failures(40), gameModeId: 'chunked', cartographerOffer: ['49,50'] }, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: 'x' } });
     expect(auditHistory(state.history)).toMatchObject({ verdict: 'verified', final: { fatePoints: 0, unlocks: 1 } });
     expect(state.unlocks.chunks).toContain('49,50');
     expect(state.history.at(-1)?.meta).toMatchObject({ ritual: 'CARTOGRAPHER', fateCost: 40, chunk: '49,50' });
@@ -61,7 +61,7 @@ describe('audited process repairs', () => {
   it('replays a Cartographer chart of Chaos Temple as Cartographer, not a Ritual of Chaos', () => {
     // A run whose land reaches up to Varrock Ditch, so Chaos Temple is on its frontier.
     const base = fresh();
-    const start = { ...base, gameModeId: 'chunked', fatePoints: 40,
+    const start = { ...base, gameModeId: 'chunked', fatePoints: 40, cartographerOffer: ['50,56'],
       unlocks: { ...base.unlocks, chunks: ['50,51', '50,52', '50,53', '50,54', '50,55'] } };
     const charted = gameReducer(start, {
       type: 'RITUAL_CARTOGRAPHER',

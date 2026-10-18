@@ -341,6 +341,12 @@ export interface GameState {
    * lists the things already rolled in each chunk, by chunk key.
    */
   chunkExplore?: { from: number; done: Record<string, string[]> };
+  /**
+   * The Ritual of the Cartographer's offer (chunk keys), drawn by fate when
+   * the Altar's chooser first opens and kept until the ritual charts one, or
+   * until none is on the frontier any more (utils/cartographerOffer.ts).
+   */
+  cartographerOffer?: string[];
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

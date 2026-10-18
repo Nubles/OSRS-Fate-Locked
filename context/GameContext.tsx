@@ -27,7 +27,8 @@ import { QUEST_DATA } from '../data/questData';
 import { breakthroughTier, levelPastTierCap, mercyBlocker, mercyPool, tierCap } from '../utils/chunkedFate';
 import { chunkLabelWithCoords } from '../utils/chunkLabelWithCoords';
 import { tierBand } from '../utils/skillTiers';
-import { CHUNKED_START_KEY, isFrontierChunk } from '../utils/chunkAdjacency';
+import { CHUNKED_START_KEY, chunkKey as chunkKeyOf, isFrontierChunk } from '../utils/chunkAdjacency';
+import { drawCartographerOffer, liveCartographerOffer } from '../utils/cartographerOffer';
 import { loadWalkSections } from '../utils/walkSections';
 import { UNLOCK_COST, randomUnlockPool, pickRandomPoolEntry, isRandomUnlockEligible, isValidUnlock } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
@@ -242,6 +243,8 @@ interface GameContextType extends GameState {
   acknowledgeUnlock: (id: string) => void;
   performRitual: (type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE') => void;
   performGambit: () => void;
+  /** The Cartographer's kept offer (drawn by fate the first time), as chunk keys. */
+  drawCartographerChoices: () => string[];
   performCartographer: (chunkKey: string, label: string) => void;
   /** The newer Void Altar rituals. Invocations take the handicaps the player picked. */
   castRitual: (id: NewRitualId, invocations?: Invocation['id'][]) => void;
@@ -482,6 +485,7 @@ export type Action =
   | { type: 'RITUAL_CHAOS' }
   | { type: 'RITUAL_TRANSMUTE' }
   | { type: 'RITUAL_GAMBIT'; payload: { won: boolean; stake: number; keysWon: number } }
+  | { type: 'CARTOGRAPHER_DRAW_OFFER' }
   | { type: 'RITUAL_CARTOGRAPHER'; payload: { chunkKey: string; label: string } }
   | { type: 'RITUAL_WARD' }
   | { type: 'RITUAL_TEARS' }
@@ -1602,21 +1606,32 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       };
     }
 
+    case 'CARTOGRAPHER_DRAW_OFFER': {
+      // Fate draws the Cartographer's three frontier chunks once, the first
+      // time the chooser opens, and the run keeps them: logging more never
+      // reshuffles them. A new offer is drawn only after the ritual charts
+      // one, or once none of the kept chunks is on the frontier any more.
+      if (state.gameModeId !== 'chunked' || liveCartographerOffer(state).length > 0) return state;
+      const offer = drawCartographerOffer(state).map(chunkKeyOf);
+      return offer.length === 0 ? state : { ...state, cartographerOffer: offer };
+    }
+
     case 'RITUAL_CARTOGRAPHER': {
-      // Chunked mode's one moment of agency: the chosen frontier chunk
-      // unlocks directly (candidates were drawn from the live frontier by
-      // the Altar UI).
-      // The reducer checks the frontier itself: only a Chunked run, and only
-      // a chunk next to its land (never the start chunk or one it holds).
+      // The player chooses one of the three frontier chunks fate drew for
+      // the offer (CARTOGRAPHER_DRAW_OFFER); the reducer refuses any other.
+      // It checks the frontier itself too: only a Chunked run, and only a
+      // chunk next to its land (never the start chunk or one it holds).
       const { chunkKey: chosen } = action.payload;
       const price = ritualPrice(state, 'CARTOGRAPHER');
       const cost = price.cost;
       const held = state.unlocks.chunks ?? [];
       if (state.gameModeId !== 'chunked' || state.fatePoints < cost || chosen === CHUNKED_START_KEY
-        || held.includes(chosen) || !isFrontierChunk(chosen, held, state.unlocks)) return state;
+        || held.includes(chosen) || !isFrontierChunk(chosen, held, state.unlocks)
+        || !liveCartographerOffer(state).includes(chosen)) return state;
       const label = chunkLabelWithCoords(chosen);
       return {
         ...payRitual(state, price),
+        cartographerOffer: undefined,
         unlocks: { ...state.unlocks, chunks: [...(state.unlocks.chunks ?? []), chosen] },
         history: [...state.history, {
           id: generateId(), timestamp: now, type: 'ALTAR',
@@ -3109,7 +3124,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     rollForKey(DropSource.CHUNK_EXPLORE, DROP_RATES[DropSource.CHUNK_EXPLORE], failureFateForSource(DropSource.CHUNK_EXPLORE), x, y);
   }, [commitAction, rollForKey]);
 
-  /** Cartographer: unlock the chosen frontier chunk (Chunked mode only). */
+  /** Cartographer: the offer fate drew (drawing it now if none is kept), as chunk keys. */
+  const drawCartographerChoices = useCallback((): string[] => {
+    const next = commitAction({ type: 'CARTOGRAPHER_DRAW_OFFER' });
+    return liveCartographerOffer(next);
+  }, [commitAction]);
+
+  /** Cartographer: unlock the chosen chunk of the offer (Chunked mode only). */
   const performCartographer = useCallback((chunkKey: string, label: string) => {
     commitAction({ type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey, label } });
   }, [commitAction]);
@@ -3660,6 +3681,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     acknowledgeUnlock,
     performRitual,
     performGambit,
+    drawCartographerChoices,
     performCartographer,
     castRitual,
     rollBreakthrough,
@@ -3718,6 +3740,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     acknowledgeUnlock,
     performRitual,
     performGambit,
+    drawCartographerChoices,
     performCartographer,
     castRitual,
     rollBreakthrough,

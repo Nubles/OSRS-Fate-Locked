@@ -958,8 +958,8 @@ describe('rituals', () => {
     expect(s.fatePoints).toBe(0);
   });
 
-  it('Cartographer unlocks the chosen chunk for 40 Fate (Chunked)', () => {
-    const start = { ...base(), gameModeId: 'chunked', fatePoints: 50,
+  it('Cartographer unlocks the chosen chunk of its offer for 40 Fate (Chunked)', () => {
+    const start = { ...base(), gameModeId: 'chunked', fatePoints: 50, cartographerOffer: ['49,50', '51,50'],
       unlocks: { ...initialState.unlocks, chunks: [] } };
     const s = gameReducer(start, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: 'ignored' } });
     expect(s.fatePoints).toBe(10);
@@ -969,7 +969,7 @@ describe('rituals', () => {
   });
 
   it('Cartographer refuses a chunk off the frontier, the start chunk, and a run outside Chunked', () => {
-    const start = { ...base(), gameModeId: 'chunked', fatePoints: 50, unlocks: { ...initialState.unlocks, chunks: [] } };
+    const start = { ...base(), gameModeId: 'chunked', fatePoints: 50, cartographerOffer: ['49,50', '46,51', '41,40'], unlocks: { ...initialState.unlocks, chunks: [] } };
     for (const chunkKey of ['46,51', '41,40', '50,50']) {
       expect(gameReducer(start, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey, label: 'x' } })).toBe(start);
     }
@@ -978,11 +978,11 @@ describe('rituals', () => {
   });
 
   it('Cartographer refuses when fate is short or the chunk is already owned', () => {
-    const poor = gameReducer({ ...base(), gameModeId: 'chunked', fatePoints: 10 },
+    const poor = gameReducer({ ...base(), gameModeId: 'chunked', fatePoints: 10, cartographerOffer: ['49,50'] },
       { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: 'x' } });
     expect(poor.unlocks.chunks ?? []).not.toContain('49,50');
 
-    const owned = { ...base(), gameModeId: 'chunked', fatePoints: 50,
+    const owned = { ...base(), gameModeId: 'chunked', fatePoints: 50, cartographerOffer: ['49,50'],
       unlocks: { ...initialState.unlocks, chunks: ['49,50'] } };
     const s = gameReducer(owned, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: 'x' } });
     expect(s.fatePoints).toBe(50); // untouched
