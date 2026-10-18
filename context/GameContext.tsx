@@ -33,6 +33,7 @@ import { loadWalkSections } from '../utils/walkSections';
 import { UNLOCK_COST, randomUnlockPool, pickRandomPoolEntry, isRandomUnlockEligible, isValidUnlock } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { drawFloat, seededContext } from '../utils/seededRng';
+import { importWithRetry } from '../utils/lazyRetry';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import {
   getBackupDataById,
@@ -252,10 +253,10 @@ interface GameContextType extends GameState {
   rollBreakthrough: (skill: string) => void;
   /**
    * Chunked: Fate's Mercy, a random chunk or skill tier when the run has nothing left.
-   * `doableQuests` are the quests the run's chunks let it do now (the panel reads
-   * them from the chunk content); Mercy stays shut while there are any.
+   * The provider lists the quests the run's chunks let it do now from the chunk
+   * content (Mercy stays shut while there are any) and draws the roll itself.
    */
-  callOnFate: (doableQuests: readonly string[]) => void;
+  callOnFate: () => void;
   /** Chunked: roll for the first time doing a thing in a newly unlocked chunk. */
   exploreChunk: (chunk: string, fact: string, x?: number, y?: number) => void;
   levelUpSkill: (skill: string) => void;
@@ -1768,12 +1769,18 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     case 'CALL_ON_FATE': {
       // Fate's Mercy: only when the run has truly run dry. Fate draws from the
       // same Chunks and Skills pools a Key would roll; nothing is spent.
-      // The doable quests need the chunk content, which only the caller has
-      // loaded; a call that brings none is refused (utils/chunkedFate.ts).
-      const { doableQuests } = action.payload;
+      // The doable quests need the chunk content, which the provider loads
+      // and reads itself (callOnFate, utils/mercyQuests.ts); a call that
+      // brings none is refused (utils/chunkedFate.ts).
+      const { doableQuests, roll } = action.payload;
       if (!Array.isArray(doableQuests) || mercyBlocker(state, doableQuests) !== null) return state;
+      // The roll is the provider's nextFloat('mercy'). On a seeded run the
+      // reducer can recompute that draw, so it refuses any other roll: a
+      // caller can't steer which chunk or skill fate opens (audit V3).
+      if (typeof roll !== 'number' || !(roll >= 0 && roll < 1)
+        || (state.rngSeed && roll !== drawFloat(state.rngSeed, seededContext(state), 'mercy'))) return state;
       const pool = mercyPool(state);
-      const pick = pool[Math.min(pool.length - 1, Math.floor(action.payload.roll * pool.length))];
+      const pick = pool[Math.min(pool.length - 1, Math.floor(roll * pool.length))];
       const label = pick.table === TableType.CHUNKS ? chunkLabelWithCoords(pick.item)
         : `${pick.item} tier ${(state.unlocks.skills[pick.item] ?? 0) + 1}`;
       return {
@@ -3106,16 +3113,30 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     }
   }, [authorizeOwnership, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
 
-  const callOnFate = useCallback((doableQuests: readonly string[]) => {
-    if (mercyBlocker(stateRef.current, doableQuests) !== null) return;
+  const callOnFate = useCallback(() => {
+    if (mercyBlocker(stateRef.current) !== null) return;
     if (authorizeOwnership().ok === false) {
       showToast('Save ownership is unavailable. Restore save access before calling on fate.');
       return;
     }
-    const next = commitAction({ type: 'CALL_ON_FATE', payload: { roll: nextFloat('mercy'), revealId: generateId(), doableQuests } });
-    stageCoordinatedSnapshot(serializeGameState(next));
-    if (coordinator) void settleCoordinatedFlush();
-    else flushCurrentSave();
+    // Mercy stays shut while a quest in the run's chunks is doable. That needs
+    // the chunk content, so the provider loads it and lists the quests itself
+    // rather than trusting the caller's list; without the content, no call.
+    importWithRetry(() => import('../utils/mercyQuests'))
+      .then(({ loadDoableChunkedQuests }) => loadDoableChunkedQuests(() => stateRef.current))
+      .then((doableQuests) => {
+        if (!mountedRef.current) return;
+        if (doableQuests === null) {
+          showToast("Fate's Mercy couldn't check your chunks for doable quests. Check your connection and try again.");
+          return;
+        }
+        const before = stateRef.current;
+        const next = commitAction({ type: 'CALL_ON_FATE', payload: { roll: nextFloat('mercy'), revealId: generateId(), doableQuests } });
+        if (next === before) return;
+        stageCoordinatedSnapshot(serializeGameState(next));
+        if (coordinator) void settleCoordinatedFlush();
+        else flushCurrentSave();
+      }, () => showToast("Fate's Mercy couldn't load. Check your connection and try again."));
   }, [authorizeOwnership, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
 
   const exploreChunk = useCallback((chunk: string, fact: string, x?: number, y?: number) => {

@@ -8,6 +8,7 @@ import { validateAndMigrateSave } from './saveSchema';
 import { replayInvariants } from './integrity';
 import { breakthroughTier, chunkedSkillHasRoom, levelPastTierCap, mercyBlocker, mercyPool, mercyRitualInReach, pendingBreakthroughs } from './chunkedFate';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, getChunkFrontier } from './chunkAdjacency';
+import { drawFloat, seededContext } from './seededRng';
 import { mercyShutReason } from './chunkedMercyText';
 
 // A Chunked run on the Lumbridge Castle start chunk with no Keys left.
@@ -217,6 +218,20 @@ describe("Fate's Mercy: Fate, quests and the shut reason", () => {
     // With a frontier, a free Cartographer still counts; with none, Fate for Chaos still does.
     expect(mercyRitualInReach({ ...open(), freeRituals: ['CARTOGRAPHER'] })).toEqual({ id: 'CARTOGRAPHER', cost: 0, free: true });
     expect(mercyRitualInReach({ ...everywhere, freeRituals: [], fatePoints: 45 })?.id).toBe('CHAOS');
+  });
+
+  it('takes only the seeded draw on a seeded run, so a caller cannot pick the entry (audit V3)', () => {
+    const call = (roll: number) => ({ type: 'CALL_ON_FATE' as const, payload: { roll, revealId: 'r', doableQuests: [] } });
+    const s = { ...open(), rngSeed: 'FATE-2026-W42', rngVersion: 2 as const };
+    const pool = mercyPool(s);
+    expect(pool.length).toBeGreaterThan(1);
+    const fair = drawFloat('FATE-2026-W42', seededContext(s), 'mercy');
+    const wanted = (Math.floor(fair * pool.length) + 1) % pool.length;
+    expect(gameReducer(s, call(wanted / pool.length))).toBe(s);
+    expect(gameReducer(s, call(fair)).pendingUnlock?.item).toBe(pool[Math.floor(fair * pool.length)].item);
+    // A roll outside [0, 1) is refused on any run.
+    const unseeded = open();
+    for (const roll of [1, -0.1, Number.NaN]) expect(gameReducer(unseeded, call(roll))).toBe(unseeded);
   });
 
   it('stays shut while a quest is doable, and the reducer refuses a call without the quest list', () => {
