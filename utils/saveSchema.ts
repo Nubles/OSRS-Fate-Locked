@@ -1041,7 +1041,7 @@ const TOP_LEVEL_KEYS = new Set([
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
   'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
-  'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'chunkedBreakthroughs', 'chunkExplore', 'cartographerOffer', 'fateCompensation',
+  'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'chunkedBreakthroughs', 'chunkExplore', 'cartographerOffer', 'chunkedProgressAt', 'fateCompensation',
   'petCompensation', 'petsClaimed', 'keysOwed', 'rituals',
   'achievementsClaimed', 'achievementTitle', 'freeRituals', 'freeClarity',
 ]);
@@ -1408,6 +1408,11 @@ const normalizeState = (
     const checked = boundedInteger(readOwn(input, 'keysOwed'), 'keysOwed', 0, MAX_COUNTER);
     if (checked.ok === false) return checked;
     if (checked.value > 0) state.keysOwed = checked.value;
+  }
+  if (own(input, 'chunkedProgressAt')) {
+    const checked = boundedInteger(readOwn(input, 'chunkedProgressAt'), 'chunkedProgressAt', 0, Number.MAX_SAFE_INTEGER);
+    if (checked.ok === false) return checked;
+    if (checked.value > 0) state.chunkedProgressAt = checked.value;
   }
   if (own(input, 'chunkedBreakthroughs')) {
     const inspected = inspectRecord(readOwn(input, 'chunkedBreakthroughs'), null, 'invalid_field', 'chunkedBreakthroughs');

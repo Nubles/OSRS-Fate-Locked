@@ -37,6 +37,23 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-18-chunked-no-dead-ends',
+    title: 'Chunked runs always find a way out',
+    date: '2026-10-18',
+    sections: {
+      fixed: [
+        'Fate’s Mercy no longer waits on things the game won’t let you do, like Ranged with no weapon or a course above your level.',
+        'If 3 days pass with no new Key, unlock or level, Fate’s Mercy opens anyway, so a stuck run always gets out.',
+        'Fate’s Mercy can draw the patch type or guild a skill needs, so Herblore can’t get stuck with no Herb patch.',
+      ],
+      balance: [
+        'The guaranteed start-chunk Key every 25 levels is gone. Every Key now comes from fate.',
+        'The Cartographer keeps its 3 chunks until you chart one, and places behind a quest, like Barrows, wait for that quest.',
+        '76 more diary tasks need their exact chunk, and a quest that needs a shop waits until that kind of shop is in your chunks.',
+      ],
+    },
+  },
+  {
     id: '2026-10-17-chunked-fate',
     title: 'Chunked gets its own fate rules',
     date: '2026-10-17',

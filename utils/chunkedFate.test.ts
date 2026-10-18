@@ -6,7 +6,7 @@ import { chunkLabelWithCoords } from './chunkLabelWithCoords';
 import { BREAKTHROUGH_CHANCE } from '../config/economy';
 import { validateAndMigrateSave } from './saveSchema';
 import { replayInvariants } from './integrity';
-import { breakthroughTier, chunkedSkillHasRoom, levelPastTierCap, mercyBlocker, mercyEnablers, mercyPool, mercyRitualInReach, pendingBreakthroughs } from './chunkedFate';
+import { breakthroughTier, chunkedSkillHasRoom, levelPastTierCap, MERCY_QUIET_MS, mercyBlocker, mercyEnablers, mercyPool, mercyQuietLeft, mercyRitualInReach, pendingBreakthroughs } from './chunkedFate';
 import { FARMING_PATCH_LIST, SKILLS_LIST } from '../data/items';
 import { QUEST_DATA } from '../data/questData';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, getChunkFrontier } from './chunkAdjacency';
@@ -241,12 +241,12 @@ describe("Fate's Mercy: Fate, quests and the shut reason", () => {
     expect(gameReducer(open(), { type: 'CALL_ON_FATE', payload: { roll: 0, revealId: 'r', doableQuests: ["Cook's Assistant"] } })).toEqual(open());
     const noList = { type: 'CALL_ON_FATE', payload: { roll: 0, revealId: 'r' } } as unknown as Parameters<typeof gameReducer>[1];
     expect(gameReducer(open(), noList)).toEqual(open());
-    expect(mercyShutReason(open(), ["Cook's Assistant", 'Sheep Shearer'])).toBe("Fate's Mercy waits while 2 quests are doable in your chunks.");
+    expect(mercyShutReason(open(), ["Cook's Assistant", 'Sheep Shearer'])).toBe("Fate's Mercy waits while 2 quests are doable in your chunks. If you can't, and nothing new comes for 3 days, it opens anyway.");
   });
 
   it('names the skill with room, says nothing while a Standard Key is held, and nothing when open', () => {
     const room = { ...open(), unlocks: { ...open().unlocks, levels: { ...open().unlocks.levels, Woodcutting: 15 } } };
-    expect(mercyShutReason(room)).toBe("Fate's Mercy waits while Woodcutting can still level in your chunks: level 15 of its tier cap 20.");
+    expect(mercyShutReason(room)).toBe("Fate's Mercy waits while Woodcutting can still level in your chunks: level 15 of its tier cap 20. If you can't, and nothing new comes for 3 days, it opens anyway.");
     expect(mercyShutReason({ ...room, keys: 1 })).toBeNull();
     expect(mercyShutReason({ ...open(), chaosKeys: 1 })).toBe("Fate's Mercy waits while you hold a Chaos Key. Spend it first.");
     expect(mercyShutReason(open(), [])).toBeNull();
@@ -361,5 +361,46 @@ describe("Fate's Mercy: the patch type or guild a skill needs", () => {
     const done = endgame(10, { farming: [...FARMING_PATCH_LIST], levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])) });
     expect(mercyBlocker(done, [])).toBe('nothing_left');
     expect(mercyShutReason(done, [])).toBe("Fate's Mercy has nothing left to draw: every chunk and skill tier it could open is open.");
+  });
+});
+
+describe("Fate's Mercy after a quiet spell (chunked-audit dead ends)", () => {
+  // A skill the tracker thinks has room, which the real game may not let the run train.
+  const stuck = (progressAt: number) => ({
+    ...dry(), chunkedBreakthroughs: { Hitpoints: 2, Woodcutting: 3 }, chunkedProgressAt: progressAt,
+    unlocks: { ...dry().unlocks, levels: { ...dry().unlocks.levels, Woodcutting: 15 } },
+  });
+  const t0 = 1_700_000_000_000;
+
+  it("opens after 3 days with no new Key, unlock or level, past the tracker's guesses", () => {
+    expect(mercyBlocker(stuck(t0), ['Cook\'s Assistant'], t0 + MERCY_QUIET_MS - 1)).toBe('skill_room');
+    expect(mercyBlocker(stuck(t0), ['Cook\'s Assistant'], t0 + MERCY_QUIET_MS)).toBeNull();
+    expect(mercyQuietLeft(stuck(t0), t0 + MERCY_QUIET_MS - 3_600_000)).toBe(3_600_000);
+    expect(mercyShutReason(stuck(t0), [], t0 + MERCY_QUIET_MS - 3_600_000)).toMatch(/nothing new comes for 1 hour, it opens anyway\.$/);
+  });
+
+  it('still waits on what always works: Keys, Fate for a ritual and Breakthroughs', () => {
+    const late = t0 + 10 * MERCY_QUIET_MS;
+    expect(mercyBlocker({ ...stuck(t0), keys: 1 }, [], late)).toBe('keys');
+    expect(mercyBlocker({ ...stuck(t0), fatePoints: 25 }, [], late)).toBe('fate');
+    const capped = stuck(t0);
+    expect(mercyBlocker({ ...capped, chunkedBreakthroughs: {}, unlocks: { ...capped.unlocks, levels: { ...capped.unlocks.levels, Woodcutting: 20 } } }, [], late)).toBe('breakthrough');
+  });
+
+  it('falls back to the newest log entry on saves without a stamp, and never opens on an empty one', () => {
+    const old = { ...stuck(t0), chunkedProgressAt: undefined, history: [{ id: 'h', timestamp: t0, type: 'LEVEL_UP', message: 'x' }] as never };
+    expect(mercyBlocker(old, [], t0 + MERCY_QUIET_MS)).toBeNull();
+    expect(mercyBlocker({ ...old, history: [] }, [], t0 + 10 * MERCY_QUIET_MS)).toBe('skill_room');
+  });
+
+  it('is restarted by the reducer whenever a Chunked run gains a Key, an unlock or a level, and survives a save', () => {
+    const before = stuck(Date.now() - 1000);
+    const next = gameReducer(before, { type: 'CALL_ON_FATE', payload: { roll: 0, revealId: 'r', doableQuests: [] } });
+    expect(next).toBe(before); // still shut: not quiet yet
+    const levelled = gameReducer(before, { type: 'LEVEL_UP', payload: { skill: 'Woodcutting', chaosRoll: 0.99 } });
+    expect(levelled.chunkedProgressAt).toBeGreaterThan(before.chunkedProgressAt);
+    const { lastEvent: _lastEvent, ...persisted } = levelled;
+    const saved = validateAndMigrateSave(persisted, initialState);
+    expect(saved.ok && saved.state.chunkedProgressAt).toBe(levelled.chunkedProgressAt);
   });
 });

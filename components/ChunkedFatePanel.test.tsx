@@ -78,7 +78,7 @@ describe('Chunked fate panel', () => {
     const { ChunkedFatePanel } = await import('./ChunkedFatePanel');
     render(<ChunkedFatePanel />);
     expect((screen.getByRole('button', { name: 'Call on Fate' }) as HTMLButtonElement).disabled).toBe(true);
-    expect(screen.getByText("Fate's Mercy waits while Cook's Assistant is doable in your chunks.")).toBeTruthy();
+    expect(screen.getByText("Fate's Mercy waits while Cook's Assistant is doable in your chunks. If you can't, and nothing new comes for 3 days, it opens anyway.")).toBeTruthy();
   });
 
   it('says what keeps Mercy shut when the run has no Keys: a skill with room, or Fate for a ritual', async () => {
@@ -87,7 +87,7 @@ describe('Chunked fate panel', () => {
       unlocks: { ...fresh.unlocks, skills: { Hitpoints: 1, Woodcutting: 2 }, levels: { ...fresh.unlocks.levels, Woodcutting: 15 } } });
     const { ChunkedFatePanel } = await import('./ChunkedFatePanel');
     const first = render(<ChunkedFatePanel />);
-    expect(screen.getByText("Fate's Mercy waits while Woodcutting can still level in your chunks: level 15 of its tier cap 20.")).toBeTruthy();
+    expect(screen.getByText("Fate's Mercy waits while Woodcutting can still level in your chunks: level 15 of its tier cap 20. If you can't, and nothing new comes for 3 days, it opens anyway.")).toBeTruthy();
     first.unmount();
     dry({ chunkedBreakthroughs: { Hitpoints: 2, Woodcutting: 3 }, fatePoints: 30 });
     render(<ChunkedFatePanel osrs />);

@@ -34,7 +34,7 @@ import { ritualFateCost } from '../config/economy';
 import { resolveModeRules } from '../config/gameModes';
 
 export type FateState = Pick<GameState, 'gameModeId' | 'unlocks' | 'keys' | 'specialKeys' | 'chaosKeys' | 'pendingUnlock' | 'chunkedBreakthroughs' | 'chunkExplore'>
-  & Partial<Pick<GameState, 'fatePoints' | 'freeRituals' | 'customMode'>>;
+  & Partial<Pick<GameState, 'fatePoints' | 'freeRituals' | 'customMode' | 'chunkedProgressAt' | 'history'>>;
 
 /** The highest level a tier lets a skill reach. */
 export const tierCap = (tier: number): number => (tier >= 10 ? 99 : tier * 10);
@@ -143,6 +143,25 @@ export const mercyPool = (state: FateState): RandomUnlockCandidate[] => [
   ...mercyEnablers(state),
 ];
 
+/** How long a Chunked run may go without a Key, unlock or level before Fate's Mercy opens anyway. */
+export const MERCY_QUIET_MS = 3 * 24 * 60 * 60 * 1000;
+
+/** When the run last made progress: its stamp, else its newest log entry (older saves). */
+const lastProgressAt = (state: FateState): number | null =>
+  state.chunkedProgressAt ?? (state.history?.length ? state.history[state.history.length - 1].timestamp : null);
+
+/**
+ * How long until Fate's Mercy opens anyway, or 0 once the run has gone
+ * MERCY_QUIET_MS with no new Key, unlock or level. The tracker's "still
+ * something to do" checks are guesses about the real game; this is the
+ * guarantee that a run stuck on one it can't really do still gets out.
+ */
+export const mercyQuietLeft = (state: FateState, now: number = Date.now()): number => {
+  const since = lastProgressAt(state);
+  if (since == null) return MERCY_QUIET_MS;
+  return Math.max(0, MERCY_QUIET_MS - (now - since));
+};
+
 /** The rituals that unlock something without a Key: Chaos makes a Chaos Key, the Cartographer a chosen chunk. */
 const MERCY_RITUALS = ['CHAOS', 'CARTOGRAPHER'] as const;
 
@@ -173,15 +192,18 @@ export const skillsWithRoom = (state: FateState): string[] =>
  * they need the chunk content, so the caller passes them in. Without them the
  * quest condition is not checked: the reducer refuses a call that brings none.
  */
-export const mercyBlocker = (state: FateState, doableQuests?: readonly string[]): MercyBlocker | null => {
+export const mercyBlocker = (state: FateState, doableQuests?: readonly string[], now: number = Date.now()): MercyBlocker | null => {
   if (state.gameModeId !== 'chunked') return 'not_chunked';
   if (state.keys > 0 || state.specialKeys > 0 || state.chaosKeys > 0) return 'keys';
   if (state.pendingUnlock) return 'pending_unlock';
   if (mercyRitualInReach(state)) return 'fate';
-  if (skillsWithRoom(state).length > 0) return 'skill_room';
+  // Keys, Fate and a Breakthrough always do something. The rest are the
+  // tracker's guesses at what the run can still do, so a quiet spell outlasts them.
+  const quiet = mercyQuietLeft(state, now) === 0;
+  if (!quiet && skillsWithRoom(state).length > 0) return 'skill_room';
   if (pendingBreakthroughs(state).length > 0) return 'breakthrough';
-  if (exploreWaiting(state)) return 'explore';
-  if (doableQuests && doableQuests.length > 0) return 'quest';
+  if (!quiet && exploreWaiting(state)) return 'explore';
+  if (!quiet && doableQuests && doableQuests.length > 0) return 'quest';
   if (mercyPool(state).length === 0) return 'nothing_left';
   return null;
 };

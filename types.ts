@@ -347,6 +347,12 @@ export interface GameState {
    * until none is on the frontier any more (utils/cartographerOffer.ts).
    */
   cartographerOffer?: string[];
+  /**
+   * When a Chunked run last gained a Key, an unlock or a level (set by
+   * gameReducer). Fate's Mercy opens after MERCY_QUIET_MS without one, even
+   * while the tracker thinks something is still left to do (utils/chunkedFate.ts).
+   */
+  chunkedProgressAt?: number;
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

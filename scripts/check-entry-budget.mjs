@@ -20,7 +20,8 @@ import { gzipSync } from 'node:zlib';
 // 247: Chunked's fate rules (Breakthrough, Fate's Mercy, exploring rolls) and the chunk skill table its Key pool reads, about 3.2 kB of it (246.5 on 2026-10-17).
 // 250: the Chunked review's fixes: exact-chunk checks for bosses, minigames, guilds, banks and Slayer masters, Mercy's Fate and quest checks, the tier-cap rule, free-draw reveals and chunk labels, and the Journal's exact-chunk hook (249.3 on 2026-10-17).
 // 251: plus the walk-based Chunked frontier and sea reach, and the skill-training facts (courses, patches, altars, ports, quest gates) (250.1 on 2026-10-17).
-export const ENTRY_GZIP_BUDGET_KB = 251;
+// 253: the Chunked audit's fixes: exact levels and services in the chunk skill rows, entry-quest gates for places, the kept Cartographer offer, Mercy's patch and guild draws and its quiet-spell way out (252.5 on 2026-10-18).
+export const ENTRY_GZIP_BUDGET_KB = 253;
 
 /** The entry script that dist/index.html loads, as a path inside distDir. */
 export const entryScriptPath = (distDir, indexHtml) => {

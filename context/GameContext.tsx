@@ -2026,9 +2026,14 @@ export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, 
   if (action.type === 'LOAD_SAVE' || action.type === 'RESET') return rawNext;
   // A Chunked run's first chunk under the exploring rule starts its record.
   const settled = withExploreStart(state, settleKeysOwed(state, rawNext, action));
-  const next = settled.history === state.history
+  const chained = settled.history === state.history
     ? settled
     : { ...settled, history: chainAppendedHistory(state.history, settled.history) };
+  // A Chunked run's last progress (a Key, an unlock or a level) times Fate's
+  // Mercy's quiet spell (utils/chunkedFate.ts mercyQuietLeft).
+  const progressed = chained.gameModeId === 'chunked' && (chained.unlocks !== state.unlocks
+    || chained.keys > state.keys || chained.specialKeys > state.specialKeys || chained.chaosKeys > state.chaosKeys);
+  const next = progressed ? { ...chained, chunkedProgressAt: Date.now() } : chained;
   return { ...next, runRevision: state.runRevision + 1 };
 };
 
