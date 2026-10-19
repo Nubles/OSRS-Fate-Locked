@@ -37,6 +37,17 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-send-to-tracker',
+    title: 'Send to tracker fills your Roll Inbox',
+    date: '2026-10-19',
+    sections: {
+      added: [
+        'RuneLite’s new Send to tracker button puts what it noticed straight into your Roll Inbox. Nothing rolls until you choose Roll.',
+        'It needs the plugin update, with RuneLite connected to the tracker. Copy for tracker and Paste from RuneLite still work as before.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-dropped-connection',
     title: 'A dropped connection keeps you in the tracker',
     date: '2026-10-18',
