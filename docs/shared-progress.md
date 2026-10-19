@@ -83,4 +83,5 @@ Vercel project and register its commands.
 
 Summaries are self-reported, like everything else in the browser. They show
 progress; Verified Runner remains the only mark that a run was checked, which
-is why milestone roles wait for it.
+is why new milestone roles wait for it. Members keep milestone roles they
+already hold.
