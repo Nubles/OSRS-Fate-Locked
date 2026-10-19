@@ -371,7 +371,8 @@ Follow-ups:
   MB) is the master; `_4608`, `_2304` and the `_lo` placeholder are copies of
   it made by `python3 scripts/gen-map-sizes.py` (Pillow). Every view picks a
   copy through `utils/mapImageSize.ts` from how wide it draws the map and the
-  screen's pixel ratio, moving up a size on zoom, so new map code should use
+  screen's pixel ratio, moving up a size on zoom (windows under 720 px stop
+  at 4608 for iOS memory; "Download map" always uses the full image), so new map code should use
   `MAP_IMAGE.sizes` through that file, not `MAP_IMAGE.src`. After replacing
   the master, rerun the script; `utils/mapImageSize.test.ts` fails if a copy
   is missing or the wrong size.

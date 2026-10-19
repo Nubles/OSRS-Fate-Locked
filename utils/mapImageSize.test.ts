@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 // @ts-expect-error Node types are intentionally excluded from the browser app.
 import { readFileSync } from 'node:fs';
 import { MAP_IMAGE } from './mapCoords';
-import { MAP_DPR_CAP, MAP_UPSCALE_TOLERANCE, mapImageIndexForScale, mapImageSrcForScale, pickMapImageSize } from './mapImageSize';
+import { MAP_DPR_CAP, MAP_FULL_MIN_VIEWPORT, MAP_UPSCALE_TOLERANCE, mapImageIndexForScale, mapImageSrcForScale, pickMapImageSize } from './mapImageSize';
 
 const SIZES = [{ width: 2304 }, { width: 4608 }, { width: 9216 }];
 const file = (src: string) => src.split('/').pop()!;
@@ -55,6 +55,19 @@ describe('pickMapImageSize', () => {
     expect(pickMapImageSize(SIZES, 9216 * 5, 2)).toBe(2);
   });
 
+  it('never gives a window under 720 px the full map, however far it zooms', () => {
+    expect(MAP_FULL_MIN_VIEWPORT).toBe(720);
+    // A 390 px phone at 3x zoomed right in stops at the 4608 copy.
+    expect(pickMapImageSize(SIZES, 9216 * 0.7, 3, 390)).toBe(1);
+    expect(pickMapImageSize(SIZES, 9216 * 5, 3, 719)).toBe(1);
+    // It still gets the smaller copies as usual.
+    expect(pickMapImageSize(SIZES, 9216 * 0.2, 1, 390)).toBe(0);
+    expect(pickMapImageSize(SIZES, 9216 * 0.2, 3, 390)).toBe(1);
+    // From 720 px up the full map loads when zoomed in.
+    expect(pickMapImageSize(SIZES, 9216 * 0.7, 3, 720)).toBe(2);
+    expect(pickMapImageSize(SIZES, 9216 * 0.7, 3)).toBe(2);
+  });
+
   it('falls back to the smallest copy for bad input, and to a 1x screen for a bad dpr', () => {
     expect(pickMapImageSize(SIZES, Number.NaN, 1)).toBe(0);
     expect(pickMapImageSize(SIZES, -50, 1)).toBe(0);
@@ -92,7 +105,8 @@ describe('MAP_IMAGE.sizes', () => {
   it('picks by drawn scale through the real size list', () => {
     expect(file(mapImageSrcForScale(0.2, 1))).toBe('osrs_world_map_2304.webp');
     expect(file(mapImageSrcForScale(0.2, 2))).toBe('osrs_world_map_4608.webp');
-    expect(file(mapImageSrcForScale(1, 1))).toBe('osrs_world_map.webp');
+    expect(file(mapImageSrcForScale(1, 1, 1366))).toBe('osrs_world_map.webp');
+    expect(file(mapImageSrcForScale(1, 3, 390))).toBe('osrs_world_map_4608.webp');
     expect(mapImageIndexForScale(0.2, 1)).toBe(0);
   });
 });
