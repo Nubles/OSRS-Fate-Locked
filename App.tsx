@@ -494,16 +494,16 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
             </div>
             <div className="hidden md:block w-px h-8 bg-white/5"></div>
             <div data-tour="keys" className="flex items-center gap-3 justify-center">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg min-w-[60px] justify-center" title="Keys: spend one on a table in Spend Keys for a random unlock">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg min-w-[60px] justify-center" title="Keys: spend one on a table in Spend Keys for a random unlock" role="img" aria-label={`Keys: ${keys}`}>
                    <WikiIcon file="Crystal_key.png" alt="Keys" Fallback={Key} size={17} className="drop-shadow" />
                    <span className="font-bold text-amber-100 text-lg leading-none"><PopOnChange value={keys} /></span>
                 </div>
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors min-w-[60px] justify-center ${specialKeys > 0 ? 'bg-purple-500/20 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'bg-white/5 border-white/10 opacity-50'}`} title={`Omni-Keys: click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ` ${CHUNKED_OMNI_LAND_TEXT}` : ''}`}>
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors min-w-[60px] justify-center ${specialKeys > 0 ? 'bg-purple-500/20 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'bg-white/5 border-white/10 opacity-50'}`} title={`Omni-Keys: click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ` ${CHUNKED_OMNI_LAND_TEXT}` : ''}`} role="img" aria-label={`Omni-Keys: ${specialKeys}`}>
                    <WikiIcon file="Enhanced_crystal_key.png" alt="Omni-Keys" Fallback={Sparkles} size={18} className={specialKeys > 0 ? 'animate-pulse' : 'opacity-50 grayscale'} />
                    <span className={`font-bold text-lg leading-none ${specialKeys > 0 ? 'text-purple-200' : 'text-gray-500'}`}><PopOnChange value={specialKeys} /></span>
                 </div>
                 {chaosKeys > 0 && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 border border-red-500/40 rounded-lg animate-in fade-in slide-in-from-right-4 min-w-[60px] justify-center" title="Chaos Keys: each one unlocks a random entry from all the tables at once">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 border border-red-500/40 rounded-lg animate-in fade-in slide-in-from-right-4 min-w-[60px] justify-center" title="Chaos Keys: each one unlocks a random entry from all the tables at once" role="img" aria-label={`Chaos Keys: ${chaosKeys}`}>
                      <WikiIcon file="Sinister_key.png" alt="Chaos Keys" Fallback={Dna} size={17} className="animate-pulse drop-shadow" />
                      <span className="font-bold text-red-100 text-lg leading-none"><PopOnChange value={chaosKeys} /></span>
                   </div>
@@ -723,26 +723,29 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
       </div>
       </> : <>
       {/* Tabs */}
-      <div className="flex border-b border-[#333] bg-[#161616] shrink-0">
+      <div role="tablist" className="flex border-b border-[#333] bg-[#161616] shrink-0">
         <button
+          type="button" role="tab" aria-selected={activeTab === 'FARM'}
           data-tour="farm"
           onClick={() => setActiveTab('FARM')}
           className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'FARM' ? 'bg-[#252525] text-green-400 border-b-2 border-green-400' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]'}`}
         >
-          <WikiIcon file="Slayer_icon.png" alt="Farm Keys" Fallback={Swords} size={15} className={activeTab === 'FARM' ? '' : 'opacity-60 grayscale'} /> Farm Keys
+          <WikiIcon file="Slayer_icon.png" alt="" Fallback={Swords} size={15} className={activeTab === 'FARM' ? '' : 'opacity-60 grayscale'} /> Farm Keys
         </button>
         <button
+          type="button" role="tab" aria-selected={activeTab === 'SPEND'}
           data-tour="spend"
           onClick={() => setActiveTab('SPEND')}
           className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'SPEND' ? 'bg-[#252525] text-osrs-gold border-b-2 border-osrs-gold' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]'}`}
         >
-          <WikiIcon file="Mystery_box.png" alt="Spend Keys" Fallback={ShoppingBag} size={15} className={activeTab === 'SPEND' ? '' : 'opacity-60 grayscale'} /> Spend Keys
+          <WikiIcon file="Mystery_box.png" alt="" Fallback={ShoppingBag} size={15} className={activeTab === 'SPEND' ? '' : 'opacity-60 grayscale'} /> Spend Keys
         </button>
         {showLogTab && <button
+          type="button" role="tab" aria-selected={activeTab === 'LOG'}
           onClick={() => setActiveTab('LOG')}
           className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'LOG' ? 'bg-[#252525] text-blue-400 border-b-2 border-blue-400' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]'}`}
         >
-          <WikiIcon file="Watch.png" alt="History" Fallback={ScrollText} size={15} className={activeTab === 'LOG' ? '' : 'opacity-60 grayscale'} /> History
+          <WikiIcon file="Watch.png" alt="" Fallback={ScrollText} size={15} className={activeTab === 'LOG' ? '' : 'opacity-60 grayscale'} /> History
         </button>}
       </div>
 

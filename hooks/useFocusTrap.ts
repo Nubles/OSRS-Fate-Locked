@@ -1,4 +1,4 @@
-import { RefObject, useEffect } from 'react';
+import { RefObject, useEffect, useRef } from 'react';
 
 const FOCUSABLE_SELECTOR = [
   'a[href]',
@@ -17,7 +17,8 @@ export const resolveFocusRestorationTarget = <Target>(
 
 /**
  * Traps keyboard focus inside the referenced element while `active` is true:
- *  - focuses the first focusable child on mount,
+ *  - focuses the first focusable child on mount, unless a child already took
+ *    focus (an `autoFocus` search box keeps it),
  *  - cycles Tab / Shift+Tab within the element instead of escaping behind it,
  *  - restores focus to an explicit persistent target, or the previously-focused element, on unmount.
  *
@@ -29,12 +30,23 @@ export const useFocusTrap = (
   active = true,
   returnFocusTarget?: HTMLElement | null,
 ): void => {
+  // Read during render, before a child's `autoFocus` runs at commit, so focus
+  // can still go back to the control that opened the dialog.
+  const trapping = useRef(false);
+  const focusBeforeCommit = useRef<HTMLElement | null>(null);
+  if (!trapping.current && typeof document !== 'undefined') {
+    focusBeforeCommit.current = document.activeElement as HTMLElement | null;
+  }
+
   useEffect(() => {
     if (!active) return;
     const node = ref.current;
     if (!node) return;
+    trapping.current = true;
 
-    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const current = document.activeElement as HTMLElement | null;
+    const focusAlreadyInside = !!current && current !== node && node.contains(current);
+    const previouslyFocused = focusAlreadyInside ? focusBeforeCommit.current : current;
     // Capture the target while the trap activates: a menu item can disappear
     // before this effect runs, but a persistent trigger remains focusable.
     const focusRestoreTarget = resolveFocusRestorationTarget(returnFocusTarget, previouslyFocused);
@@ -43,9 +55,11 @@ export const useFocusTrap = (
       Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
         .filter(el => el.offsetParent !== null || el === document.activeElement);
 
-    const initial = focusable();
-    if (initial.length > 0) initial[0].focus();
-    else node.focus();
+    if (!focusAlreadyInside) {
+      const initial = focusable();
+      if (initial.length > 0) initial[0].focus();
+      else node.focus();
+    }
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
@@ -69,6 +83,7 @@ export const useFocusTrap = (
 
     node.addEventListener('keydown', onKeyDown);
     return () => {
+      trapping.current = false;
       node.removeEventListener('keydown', onKeyDown);
       if (focusRestoreTarget && typeof focusRestoreTarget.focus === 'function') {
         focusRestoreTarget.focus();

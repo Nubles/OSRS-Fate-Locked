@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { X, Clock, Gauge, TrendingUp, ChevronRight } from 'lucide-react';
 import { Sparkles, Key, Dices } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { SectionGuide } from './SectionGuide';
 import { TableType } from '../types';
 import { randomUnlockPool, randomUnlockTables } from '../utils/gameEngine';
@@ -43,6 +44,8 @@ const fmtDays = (d: number): string => {
 export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
   const { unlocks, keys, history, gameModeId, customMode } = useGame();
   useEscapeKey(onClose, true);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
 
   const velocity = useMemo(() => keyVelocity(history), [history]);
 
@@ -76,6 +79,8 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
     <div
       className="osrs-wa-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
       onClick={onClose}
+      ref={dialogRef}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-label="Fate Forecast"
@@ -122,6 +127,7 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
                     <button
                       key={c.table}
                       onClick={() => setSelected(c.table)}
+                      aria-pressed={isActive}
                       data-osrs-on={isActive ? 'true' : undefined}
                       className={`osrs-wa-row w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors ${
                         isActive ? 'bg-fuchsia-950/40 border border-fuchsia-500/40' : 'border border-transparent hover:bg-white/5'

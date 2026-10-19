@@ -1,6 +1,7 @@
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { STARTING_KEYS } from '../config/economy';
 import { DEFAULT_MODE_ID, getGameMode } from '../config/gameModes';
@@ -335,6 +336,8 @@ const AltarVisual: React.FC = () => {
 export const OnboardingWizard: React.FC = () => {
   const { completeOnboarding } = useGame();
   const [step, setStep] = useState(0);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
 
   const STEPS = [
     {
@@ -390,7 +393,7 @@ export const OnboardingWizard: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 animate-in fade-in duration-500">
+    <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="onboarding-title" className="fixed inset-0 z-[300] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 animate-in fade-in duration-500">
       
       {/* Background Ambience */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -426,7 +429,7 @@ export const OnboardingWizard: React.FC = () => {
                     Step {step + 1} / {STEPS.length}
                 </span>
                 
-                <h1 className="text-3xl md:text-4xl font-black text-white mb-2 tracking-tight">
+                <h1 id="onboarding-title" className="text-3xl md:text-4xl font-black text-white mb-2 tracking-tight">
                     {currentStep.title}
                 </h1>
                 <h2 className="text-lg md:text-xl text-gray-500 font-light mb-4 md:mb-6">

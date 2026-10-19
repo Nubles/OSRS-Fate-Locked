@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createFreshState } from '../context/GameContext';
 import { randomUnlockPool, randomUnlockTables } from '../utils/gameEngine';
@@ -34,5 +34,46 @@ describe('FateForecastModal', () => {
     expect(text).toContain(`${forecast.p50}Keys or fewer: a ${Math.round(chanceWithin(forecast, forecast.p50) * 100)}% chance`);
     expect(text).toContain(`A ${Math.round(rangeShare(forecast) * 100)}% chance within ${forecast.p10}–${forecast.p90} Keys`);
     expect(text).not.toContain('most likely');
+  });
+});
+
+describe('FateForecastModal keyboard access', () => {
+  it('takes focus on open, keeps Tab inside, closes on Escape and hands focus back', async () => {
+    // jsdom has no layout; count attached elements as visible for the trap.
+    const offsetParent = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetParent');
+    Object.defineProperty(HTMLElement.prototype, 'offsetParent', {
+      configurable: true,
+      get() { return (this as HTMLElement).parentNode; },
+    });
+    try {
+      game.current = { ...createFreshState(), gameModeId: 'vanilla', keys: 0 };
+      const { FateForecastModal } = await import('./FateForecastModal');
+      const opener = document.createElement('button');
+      opener.textContent = 'Forecast';
+      document.body.appendChild(opener);
+      opener.focus();
+      const onClose = vi.fn();
+      const { unmount } = render(<FateForecastModal onClose={onClose} />);
+
+      const dialog = screen.getByRole('dialog', { name: 'Fate Forecast' });
+      expect(dialog.contains(document.activeElement)).toBe(true);
+
+      const buttons = Array.from(dialog.querySelectorAll<HTMLElement>('button'));
+      const last = buttons[buttons.length - 1];
+      last.focus();
+      fireEvent.keyDown(last, { key: 'Tab' });
+      expect(document.activeElement).toBe(buttons[0]);
+      fireEvent.keyDown(buttons[0], { key: 'Tab', shiftKey: true });
+      expect(document.activeElement).toBe(last);
+
+      fireEvent.keyDown(window, { key: 'Escape' });
+      expect(onClose).toHaveBeenCalledTimes(1);
+
+      unmount();
+      expect(document.activeElement).toBe(opener);
+      opener.remove();
+    } finally {
+      if (offsetParent) Object.defineProperty(HTMLElement.prototype, 'offsetParent', offsetParent);
+    }
   });
 });

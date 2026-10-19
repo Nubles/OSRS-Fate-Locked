@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { AlertTriangle, CheckCircle2, Link2, Loader2, XCircle } from 'lucide-react';
 import { RUNELITE_PAIRING_SUCCESS_COPY, runelitePairCodeHint } from '../utils/runelitePairing';
 import { canDismissRunelitePairing, type RunelitePairingPhase } from './runelitePairingPhase';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 export { canDismissRunelitePairing, type RunelitePairingPhase };
 
@@ -31,6 +32,8 @@ export const RunelitePairingDialog: React.FC<
   onClose,
 }) => {
   const canDismiss = canDismissRunelitePairing(phase);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
 
   return (
     <div
@@ -38,6 +41,8 @@ export const RunelitePairingDialog: React.FC<
       onClick={() => {
         if (canDismiss) onClose();
       }}
+      ref={dialogRef}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-label="Connect RuneLite tracker"

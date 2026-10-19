@@ -50,4 +50,18 @@ describe('Dashboard skill cards', () => {
     expect(levelUpSkill).toHaveBeenCalledTimes(2);
     expect(levelUpSkill).toHaveBeenCalledWith('Attack');
   });
+
+  it('names the card for screen readers and leaves locked cards out of the Tab order', () => {
+    render(<Dashboard suspendModals />);
+    const card = document.querySelector<HTMLElement>('[data-skill-card="Attack"]')!;
+    expect(card.tabIndex).toBe(0);
+    expect(card.getAttribute('aria-label')).toBe('Attack, level 5, tier 1, methods 1-10, level up');
+
+    // Strength is locked and there is no Omni-Key: nothing to press, so it is
+    // a labelled group rather than a button that does nothing.
+    const locked = document.querySelector<HTMLElement>('[data-skill-card="Strength"]')!;
+    expect(locked.getAttribute('role')).toBe('group');
+    expect(locked.hasAttribute('tabindex')).toBe(false);
+    expect(locked.getAttribute('aria-label')).toBe('Strength, locked');
+  });
 });

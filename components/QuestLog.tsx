@@ -383,10 +383,11 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                           : 'bg-black/40 border-gray-700 hover:border-gray-500 hover:text-gray-400 cursor-pointer'}
                   `}
                   title={isCompleted ? "Completed" : needsConfirmation ? "Confirm & Complete" : "Complete & Roll"}
+                  aria-label={isCompleted ? `${quest.name}: completed` : needsConfirmation ? `Confirm and complete ${quest.name}` : `Complete ${quest.name} and roll for a Key`}
               >
                   <img
                       src="https://oldschool.runescape.wiki/images/Quests.png"
-                      alt="Quest Icon"
+                      alt=""
                       className={`w-5 h-5 object-contain transition-all ${isCompleted ? '' : 'grayscale opacity-40'}`}
                   />
               </button>
