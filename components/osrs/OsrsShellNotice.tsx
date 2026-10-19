@@ -3,11 +3,12 @@ import { useGame } from '../../context/GameContext';
 import { useProfiles } from '../../context/ProfileContext';
 import { usePersistentStorage, type PersistentStorageStatus } from '../../hooks/usePersistentStorage';
 import { relaySync } from '../../services/relaySync';
-import { shouldNag, snoozeNag, lastExportLabel } from '../../utils/backupNag';
+import { shouldNag, snoozeNag } from '../../utils/backupNag';
+import { OFF_DEVICE_COPY_LABEL, offDeviceCopyLabel, readOffDeviceCopyAt } from '../../utils/persistentStorage';
 import {
   ONLINE_BACKUP_EVENT, onlineBackupHoldsReminder, readOnlineBackupRecord, writeOnlineBackupRecord, type OnlineBackupEventDetail,
 } from '../../utils/onlineBackupRecord';
-import { ONLINE_BACKUP_PROMPT_MIN_HISTORY } from '../OnlineBackupPrompt';
+import { useOnlineBackupPromptTiming } from '../OnlineBackupPrompt';
 import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE, type FateSaveDownloadResult } from '../../utils/fateSaveFile';
 import type { SaveDurabilitySnapshot, SaveRetryResult } from '../../utils/recoveryTypes';
 import { showToast } from '../../utils/toast';
@@ -26,6 +27,7 @@ import './osrs-shell.css';
  *   3. online backup paused (OnlineBackupPrompt's paused state: Choose)
  *   4. online backup question (OnlineBackupPrompt: Set up, Not now)
  *   5. backup reminder (BackupNagBanner: Export backup, persistent storage, snooze)
+ *      It says when the run last left the device (a .fate file or an online upload).
  * (4 and 5 never show together: the reminder waits for the question.)
  * The everyday "Saved just now" status is announced to screen readers only.
  */
@@ -130,7 +132,8 @@ export const OsrsShellNotice: React.FC<OsrsShellNoticeProps> = ({ durability, sh
     return () => window.removeEventListener(ONLINE_BACKUP_EVENT, onChange);
   }, [storageKey]);
   const backupPaused = !!(backupRecord.code && backupRecord.held);
-  const askBackup = !backupRecord.code && !backupRecord.promptAnsweredAt && history.length >= ONLINE_BACKUP_PROMPT_MIN_HISTORY;
+  const backupPromptTiming = useOnlineBackupPromptTiming(storageKey);
+  const askBackup = !backupRecord.code && !backupRecord.promptAnsweredAt && history.length >= backupPromptTiming.minHistory;
   const openOnlineBackup = () => window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: 'open:online-backup' } }));
   const answerBackupNotNow = () => writeOnlineBackupRecord(storageKey, { ...readOnlineBackupRecord(storageKey), promptAnsweredAt: Date.now() });
 
@@ -200,7 +203,7 @@ export const OsrsShellNotice: React.FC<OsrsShellNoticeProps> = ({ durability, sh
       </>
     );
   } else if (askBackup) {
-    title = 'Keep this run safe if this browser\u2019s data is ever cleared: back it up online, encrypted with a code only you keep.';
+    title = backupPromptTiming.text;
     line = (
       <>
         <span className="osrs-parch-text">{title}</span>
@@ -209,11 +212,11 @@ export const OsrsShellNotice: React.FC<OsrsShellNoticeProps> = ({ durability, sh
       </>
     );
   } else if (nagVisible) {
-    const last = lastExportLabel(storageKey, now);
+    const last = offDeviceCopyLabel(readOffDeviceCopyAt(storageKey), now);
     title = `Your run only lives in this browser: clearing site data would erase it. ${PERSISTENCE_COPY[persistence]}`;
     line = (
       <>
-        <span className="osrs-parch-text">Your run only lives in this browser. Last backup file:</span>
+        <span className="osrs-parch-text">Your run only lives in this browser. {OFF_DEVICE_COPY_LABEL}:</span>
         <span style={{ color: last === 'never' ? '#ff0000' : '#000000', whiteSpace: 'nowrap' }}>{last}.</span>
         <Link onClick={handleNagExport}>Export backup</Link>
         {persistence === 'unknown' && (

@@ -73,6 +73,8 @@ const SupplyChainCalculator = lazyWithRetry(() => import('./components/SupplyCha
 const GameModePicker = lazyWithRetry(() => import('./components/GameModePicker').then(m => ({ default: m.GameModePicker })));
 const SyncCodeModal = lazyWithRetry(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
 const OnlineBackupDriver = lazyWithRetry(() => import('./components/OnlineBackupDriver').then(m => ({ default: m.OnlineBackupDriver })));
+const OffDeviceCopyStatus = lazyWithRetry(() => import('./components/OffDeviceCopyStatus').then(m => ({ default: m.OffDeviceCopyStatus })));
+const PersistentStorageDriver = lazyWithRetry(() => import('./components/PersistentStorageDriver').then(m => ({ default: m.PersistentStorageDriver })));
 const ProgressShareDriver = lazyWithRetry(() => import('./components/ProgressShareDriver').then(m => ({ default: m.ProgressShareDriver })));
 const OnlineBackupPrompt = lazyWithRetry(() => import('./components/OnlineBackupPrompt').then(m => ({ default: m.OnlineBackupPrompt })));
 const BackupNagBanner = lazyWithRetry(() => import('./components/BackupNagBanner').then(m => ({ default: m.BackupNagBanner })));
@@ -626,6 +628,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                            Advisor panels <span className="ml-auto text-[10px] text-gray-500">{advisorsEnabled ? 'on' : 'off'}</span>
                         </button>
                         <div className="my-1 border-t border-white/10" />
+                        <Suspense fallback={null}><OffDeviceCopyStatus /></Suspense>
                         <button onClick={() => { setShowUtilMenu(false); fileInputRef.current?.click(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
                            <Upload size={13} /> Import save
                         </button>
@@ -1132,6 +1135,8 @@ const GameLayout = () => {
       <EffectsLayer />
       <OnlineSyncDriver />
       <Suspense fallback={null}><OnlineBackupDriver /></Suspense>
+      {/* Quietly asks the browser to keep site storage at the run's first roll. */}
+      <Suspense fallback={null}><PersistentStorageDriver /></Suspense>
       <Suspense fallback={null}><RollInboxDriver /></Suspense>
       {(petsClaimed?.length ?? 0) > 0 && <Suspense fallback={null}><PetFollower /></Suspense>}
       {/* Progressive-disclosure watcher — always mounted (same rule as

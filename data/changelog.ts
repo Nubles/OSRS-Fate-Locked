@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-keep-your-run',
+    title: 'Your browser keeps your run',
+    date: '2026-10-19',
+    sections: {
+      changed: [
+        'The tracker now asks your browser not to clear your run, and Settings shows when it was last backed up outside this browser.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-dropped-connection',
     title: 'A dropped connection keeps you in the tracker',
     date: '2026-10-18',
