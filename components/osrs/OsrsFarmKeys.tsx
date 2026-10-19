@@ -29,6 +29,7 @@ import { formatKeyPercent, formatKeyRollValue } from '../../utils/keyRoll';
 import { FARM_NO_BOSS, FARM_NO_SLAYER_MASTER, useFarmModel } from '../ActionSection';
 import { setBossQuery, setFarmTab, useKeysView, type FarmSubTab } from './OsrsKeysState';
 import { OsrsKeysTabs } from './OsrsKeysTabs';
+import { askBeforeRoll, rollCheckOn } from '../../utils/rollCheck';
 
 /**
  * Farm Keys in the OSRS layout, in two sizes:
@@ -139,6 +140,8 @@ const useRollSuspense = (onRoll: (p: RollPoint) => void) => {
   const trigger = async (e: React.MouseEvent) => {
     if (isRolling) return;
     const point = { clientX: e.clientX, clientY: e.clientY };
+    // A new run's first rolls ask first (utils/rollCheck.ts).
+    if (rollCheckOn() && !(await askBeforeRoll())) return;
     setIsRolling(true);
     await new Promise((resolve) => setTimeout(resolve, 600));
     if (mounted.current) setIsRolling(false);

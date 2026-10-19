@@ -166,6 +166,17 @@ export const nextAnnouncement = (
 export const firstHourActive = (record: FirstHourRecord, enabled: boolean): boolean =>
   enabled && !record.skipped && !record.graduated && !record.finished;
 
+/** A new run's first this-many rolls ask "Did you finish this in game?" first. */
+export const FIRST_ROLL_CHECKS = 3;
+
+/**
+ * Whether the next roll asks first: on for a run's first few rolls, with the
+ * guide on and not skipped for the run. Older runs (graduated) never ask.
+ */
+export const rollCheckActive = (record: FirstHourRecord, enabled: boolean, history: readonly LogEntry[]): boolean =>
+  enabled && !record.skipped && !record.graduated
+  && history.reduce((n, h) => n + (isRollEntry(h) ? 1 : 0), 0) < FIRST_ROLL_CHECKS;
+
 /**
  * The record to start from the first time the guide meets a run: a run that
  * is already well under way graduates silently, as imports and older runs do.

@@ -77,6 +77,7 @@ import { misthalinListName, tutorialIslandNote } from '../utils/worldWording';
 import { setOsrsProgressionWide } from '../utils/osrsNav';
 import { openOsrsJournal, type OsrsJournalTab } from './osrs/OsrsJournalNav';
 import type { OsrsLabView } from './osrs/OsrsEquipment';
+import { askBeforeRoll, rollCheckOn } from '../utils/rollCheck';
 
 const OSRS_JOURNAL_TAB: Record<'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE', OsrsJournalTab> = {
   QUESTS: 'quests', DIARIES: 'diaries', CA: 'combat', DOABLE: 'ready',
@@ -536,7 +537,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const completionPercent = useMemo(() => runCompletion(unlocks, gameModeId, customMode), [unlocks, gameModeId, customMode]);
 
   // --- Handlers ---
-  const handleLevelUp = (skill: string) => {
+  const handleLevelUp = async (skill: string) => {
+    // A new run's first rolls ask first (utils/rollCheck.ts); otherwise this stays synchronous.
+    if (rollCheckOn() && !(await askBeforeRoll(`Did you reach ${skill} level ${(unlocks.levels[skill] || 1) + 1} in game?`))) return;
     if (animationsEnabled) {
         setLevelingSkill(skill);
         setTimeout(() => setLevelingSkill(null), 500);

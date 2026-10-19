@@ -6,11 +6,12 @@ import { resolveModeRules } from '../config/gameModes';
 import { STARTING_KEYS } from '../config/economy';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import {
-  EMPTY_RECORD, firstHourActive, firstHourProgress, firstSightRecord, markSeen, nextAnnouncement,
-  readFirstHourEnabled, readFirstHourRecord, writeFirstHourRecord,
+  EMPTY_RECORD, FIRST_ROLL_CHECKS, firstHourActive, firstHourProgress, firstSightRecord, markSeen, nextAnnouncement,
+  readFirstHourEnabled, readFirstHourRecord, rollCheckActive, writeFirstHourRecord,
   type FirstHourRecord, type FirstHourStep, type FirstHourStepId, type FirstHourTarget,
 } from '../utils/firstHour';
 import { setFirstHourView, type FirstHourView } from '../utils/firstHourStore';
+import { setRollCheckOn, useRollCheck, type RollCheck } from '../utils/rollCheck';
 import type { LogEntry } from '../types';
 
 /**
@@ -24,6 +25,8 @@ import type { LogEntry } from '../types';
  *     click; the instruction itself is spoken in the chatbox
  *     (components/osrs/OsrsChatbox.tsx reads utils/firstHourStore.ts);
  *   - both: a quest-complete scroll at the end.
+ * It also asks "Did you finish this in game?" before a new run's first few
+ * rolls (utils/rollCheck.ts), since a roll can't be undone.
  * Skip guide stops it for this run; Settings → Guided first hour turns it off
  * everywhere, or back on (which restarts it for the current run).
  */
@@ -145,6 +148,11 @@ export const FirstHourGuide: React.FC = () => {
   const progress = useMemo(() => firstHourProgress(input, record), [input, record]);
   const active = hasSeenOnboarding && firstHourActive(record, enabled);
 
+  const checking = hasSeenOnboarding && rollCheckActive(record, enabled, history);
+  useEffect(() => { setRollCheckOn(checking); }, [checking]);
+  useEffect(() => () => setRollCheckOn(false), []);
+  const rollCheck = useRollCheck();
+
   // "Done" beats: each step finished while the guide watches says what it
   // taught, in order, even when one roll finishes two steps at once. Steps
   // already done when the guide first sees the run are not announced.
@@ -251,20 +259,21 @@ export const FirstHourGuide: React.FC = () => {
     el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   };
 
-  if (!active) return null;
+  if (!active && !rollCheck) return null;
 
   return (
     <>
       <style>{GUIDE_CSS}</style>
-      {!isOsrs && step && !finishedNow && (
+      {rollCheck && createPortal(<RollCheckDialog check={rollCheck} osrs={isOsrs} />, document.body)}
+      {active && !isOsrs && step && !finishedNow && (
         <ClassicCard
           step={step} phase={phase} here={atTarget} index={stepIndex} count={progress.steps.length} percent={progress.percent}
           counter={step.id === 'spend' && phase === 'doing' ? `${progress.spent}/${STARTING_KEYS} spent` : undefined}
           onNext={next} onShowMe={showMe} onSkipStep={skipStep} onSkipGuide={skipGuide}
         />
       )}
-      {targetRect && phase === 'doing' && createPortal(<Pointer rect={targetRect} osrs={isOsrs} />, document.body)}
-      {finishedNow && createPortal(<FinishScroll osrs={isOsrs} onClose={finish} />, document.body)}
+      {active && targetRect && phase === 'doing' && createPortal(<Pointer rect={targetRect} osrs={isOsrs} />, document.body)}
+      {active && finishedNow && createPortal(<FinishScroll osrs={isOsrs} onClose={finish} />, document.body)}
     </>
   );
 };
@@ -364,6 +373,47 @@ const Pointer: React.FC<{ rect: DOMRect; osrs: boolean }> = ({ rect, osrs }) => 
   );
 };
 
+// ── Before a new run's first rolls: "Did you finish this in game?" ─────────
+
+const RollCheckDialog: React.FC<{ check: RollCheck; osrs: boolean }> = ({ check, osrs }) => {
+  const yesRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    yesRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') check.answer(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [check]);
+  const note = `A roll can't be undone, so only roll what you really did. This check stops after your first ${FIRST_ROLL_CHECKS} rolls.`;
+  if (osrs) {
+    return (
+      <div className="fh-scrim" onClick={() => check.answer(false)}>
+        <div className="fh-scroll fh-ask" role="alertdialog" aria-modal="true" aria-labelledby="fh-ask-q" onClick={(e) => e.stopPropagation()}>
+          <div className="fh-scroll-head">Select an Option</div>
+          <div id="fh-ask-q" className="fh-ask-q">{check.question}</div>
+          <button ref={yesRef} type="button" className="fh-scroll-close fh-ask-opt" onClick={() => check.answer(true)}>Yes, roll it.</button>
+          <button type="button" className="fh-scroll-close fh-ask-opt" onClick={() => check.answer(false)}>No, not yet.</button>
+          <div className="fh-ask-note">{note}</div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60" onClick={() => check.answer(false)}>
+      <div role="alertdialog" aria-modal="true" aria-labelledby="fh-ask-q" className="w-[380px] max-w-[calc(100vw-32px)] rounded-xl border border-amber-500/30 bg-[#1b1b1b] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+        <div className="px-5 pt-4 pb-3">
+          <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-amber-400">Before you roll</div>
+          <h2 id="fh-ask-q" className="text-[15px] font-bold text-white mt-1">{check.question}</h2>
+          <p className="text-[12px] text-gray-400 leading-snug mt-1.5">{note}</p>
+        </div>
+        <div className="px-5 py-3 border-t border-white/5 bg-black/20 flex items-center justify-end gap-2">
+          <button type="button" onClick={() => check.answer(false)} className="text-[12px] px-3 py-1.5 rounded-md border border-white/10 text-gray-300 hover:text-white hover:bg-white/5">Not yet</button>
+          <button ref={yesRef} type="button" onClick={() => check.answer(true)} className="text-[12px] font-bold px-3 py-1.5 rounded-md bg-amber-600/80 hover:bg-amber-500 text-white">Yes, roll it</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── The end: a quest-complete scroll ───────────────────────────────────────
 
 const LEARNED = [
@@ -449,6 +499,10 @@ html[data-ui="osrs"] [data-first-hour-flash] { animation: fh-flash 1.2s steps(1)
 .fh-scroll-head { color: #800000; }
 .fh-scroll-close { all: unset; cursor: pointer; display: inline-block; margin-top: 16px; color: #0000ff; font: 16px 'RS', sans-serif; }
 .fh-scroll-close:hover, .fh-scroll-close:focus-visible { color: #fff; }
+.fh-ask { width: 400px; padding: 16px 24px 14px; }
+.fh-ask-q { margin: 6px 0 10px; }
+.fh-ask-opt { display: block; margin: 6px auto 0; }
+.fh-ask-note { margin-top: 12px; font: 14px 'RS', sans-serif; line-height: 17px; color: #3a2a10; }
 `;
 
 export default FirstHourGuide;

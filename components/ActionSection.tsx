@@ -22,6 +22,7 @@ const PetClaimCard = lazyWithRetry(() => import('./PetClaimCard').then(m => ({ d
 const VanillaMinigameRolls = lazyWithRetry(() => import('./VanillaMinigameRolls').then(m => ({ default: m.VanillaMinigameRolls })));
 import { VANILLA_BOSS_SEARCH_PLACEHOLDER, vanillaBossNote, vanillaBossSearchEmptyMessage } from './vanillaBossSearchCopy';
 import { useIsOsrsUi } from '../utils/uiStyle';
+import { askBeforeRoll, rollCheckOn } from '../utils/rollCheck';
 // The OSRS layout's Farm Keys loads only when that layout is on.
 const OsrsFarmKeys = lazyWithRetry(() => import('./osrs/OsrsFarmKeys'));
 
@@ -158,7 +159,9 @@ const useRollSuspense = (onClick: (e: any) => void) => {
         
         // Capture event data since synthetic event is reused
         const eventData = { clientX: e.clientX, clientY: e.clientY };
-        
+
+        // A new run's first rolls ask first (utils/rollCheck.ts).
+        if (rollCheckOn() && !(await askBeforeRoll())) return;
         setIsRolling(true);
         
         // Suspense duration (0.6s to match loading bar animation)

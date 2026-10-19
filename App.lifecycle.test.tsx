@@ -263,6 +263,8 @@ describe('App changelog lifecycle', () => {
     readyState.unlocks.levels.Attack = currentLevel;
     storage.setItem(profileKey, JSON.stringify(readyState));
     storage.setItem(changelogStorageKey, latestChangelogId);
+    // This run has rolled once, so First Steps would ask before the level-up roll.
+    storage.setItem('fate_first_hour_enabled_v1', '0');
     vi.spyOn(Math, 'random')
       .mockReturnValueOnce(0.01)
       .mockReturnValue(0.99);
@@ -277,6 +279,30 @@ describe('App changelog lifecycle', () => {
 
     expect(await screen.findByText(expectedMessage)).toBeTruthy();
   });
+
+  it('asks before a new run\'s level-up roll, and Not yet leaves the level alone', async () => {
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    readyState.animationsEnabled = false;
+    readyState.unlocks.skills.Attack = 1;
+    readyState.unlocks.levels.Attack = 5;
+    storage.setItem(profileBaseKey(PROFILE_ID), JSON.stringify(readyState));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    render(<App />);
+
+    // First Steps loads lazily and turns the check on for this run's first rolls.
+    await screen.findByRole('region', { name: 'Guided first hour' }, { timeout: 10_000 });
+    const attackCard = document.querySelector<HTMLElement>('[data-skill-card="Attack"]')!;
+    fireEvent.click(attackCard);
+    const ask = await screen.findByRole('alertdialog', { name: 'Did you reach Attack level 6 in game?' });
+    fireEvent.click(within(ask).getByRole('button', { name: 'Not yet' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+    expect(attackCard.textContent).toContain('5/99');
+
+    fireEvent.click(attackCard);
+    fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Yes, roll it' }));
+    await waitFor(() => expect(attackCard.textContent).toContain('6/99'));
+  }, 25_000);
 
   it('recovers a structurally malformed profile registry without blanking the dashboard', async () => {
     const recoveredId = 'recovered-run';

@@ -2,8 +2,8 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import type { LogEntry } from '../types';
 import {
-  EMPTY_RECORD, GRADUATE_AT_HISTORY, firstHourActive, firstHourProgress, firstHourSteps, firstSightRecord,
-  markSeen, nextAnnouncement, readFirstHourEnabled, readFirstHourRecord, writeFirstHourEnabled, writeFirstHourRecord,
+  EMPTY_RECORD, FIRST_ROLL_CHECKS, GRADUATE_AT_HISTORY, firstHourActive, firstHourProgress, firstHourSteps, firstSightRecord,
+  markSeen, nextAnnouncement, readFirstHourEnabled, rollCheckActive, readFirstHourRecord, writeFirstHourEnabled, writeFirstHourRecord,
   type FirstHourInput,
 } from './firstHour';
 
@@ -108,6 +108,19 @@ describe('first sight and activity', () => {
     expect(firstHourActive({ seen: [], skipped: true }, true)).toBe(false);
     expect(firstHourActive({ seen: [], graduated: true }, true)).toBe(false);
     expect(firstHourActive({ seen: [], finished: true }, true)).toBe(false);
+  });
+
+  it('asks before a run\'s first few rolls only', () => {
+    const rolls = (k: number) => Array.from({ length: k }, (_, i) => entry(i % 2 ? 'ROLL_FAIL' : 'ROLL_SUCCESS'));
+    expect(rollCheckActive(EMPTY_RECORD, true, [unlock(), unlock()])).toBe(true);
+    expect(rollCheckActive(EMPTY_RECORD, true, rolls(FIRST_ROLL_CHECKS - 1))).toBe(true);
+    expect(rollCheckActive(EMPTY_RECORD, true, rolls(FIRST_ROLL_CHECKS))).toBe(false);
+    // Off with the guide, and for runs that skipped it or were already under way.
+    expect(rollCheckActive(EMPTY_RECORD, false, [])).toBe(false);
+    expect(rollCheckActive({ seen: [], skipped: true }, true, [])).toBe(false);
+    expect(rollCheckActive({ seen: [], graduated: true }, true, [])).toBe(false);
+    // Finishing the guide early doesn't stop the check before the third roll.
+    expect(rollCheckActive({ seen: [], finished: true }, true, rolls(1))).toBe(true);
   });
 
   it('markSeen keeps the same record when nothing changes', () => {

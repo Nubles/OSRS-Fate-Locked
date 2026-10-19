@@ -47,6 +47,7 @@ export const CHANGELOG_RELEASES = [
         'It gives nothing away. Skip it any time, or turn it on or off in Settings.',
       ],
       changed: [
+        'A new run’s first 3 rolls ask “Did you finish this in game?” first, since a roll can’t be undone.',
         'What’s New no longer opens on top of a brand-new player’s first look at the tracker.',
       ],
     },
