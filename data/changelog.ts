@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-intro-back-and-skip',
+    title: 'Go back or skip the intro',
+    date: '2026-10-19',
+    sections: {
+      changed: [
+        'The intro for a new run now has Back and Skip intro buttons. Skipping takes you straight to picking your game mode.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-dropped-connection',
     title: 'A dropped connection keeps you in the tracker',
     date: '2026-10-18',
