@@ -6,10 +6,11 @@ import { TableType, type UnlockState } from '../../types';
 import { NoteTrigger } from '../NoteTrigger';
 import { SectionGuide } from '../SectionGuide';
 import { SkillAdvisorPanel } from '../SkillAdvisorPanel';
-import { formatKeyPercent, skillLevelKeyChance } from '../../utils/keyRoll';
+import { formatKeyPercent } from '../../utils/keyRoll';
+import { levelUpKeyChance } from '../../utils/keyChance';
 import { isSkillChaosMilestone, LEVEL_CHAOS_CHANCE } from '../../config/economy';
 import { levelPastTierCap, tierCap } from '../../utils/chunkedFate';
-import { chunkedPastCapText } from '../SkillRollOdds';
+import { chunkedPastCapText, levelBoostNote } from '../SkillRollOdds';
 import { skillIconSrc, itemSrc, gemColor, gemCropStyle, roman, TIER_GEMS } from './OsrsDashGems';
 import './osrs-char.css';
 import './osrs-dashboard.css';
@@ -53,7 +54,8 @@ export const OsrsSkills: React.FC<Props> = ({
 }) => {
   const totalLevel = SKILLS_LIST.reduce((sum, s) => sum + (unlocks.levels[s] || 1), 0);
   const [showAdvisor, setShowAdvisor] = useState(false);
-  const { gameModeId } = useGame();
+  const game = useGame();
+  const { gameModeId } = game;
   // With nothing to rank, the Advisor says so on its button instead of
   // opening a panel over the skills just to say "nothing". The ranking is
   // slow (every quest and diary per skill level), so it is only worked out
@@ -142,10 +144,12 @@ export const OsrsSkills: React.FC<Props> = ({
 
             const nextLevel = level + 1;
             const pastCap = canLevel && levelPastTierCap(gameModeId, unlocks, skill, nextLevel);
+            // The chance the level-up rolls against, boosts included (utils/keyChance.ts).
+            const chance = canLevel ? levelUpKeyChance(game, skill) : null;
             const odds = pastCap
               ? `Next Lv ${nextLevel}: no Key roll. ${chunkedPastCapText(tierCap(tier))}`
-              : canLevel
-              ? `Next Lv ${nextLevel}: ${formatKeyPercent(skillLevelKeyChance(nextLevel))} Key chance. ${isSkillChaosMilestone(nextLevel)
+              : chance !== null
+              ? `Next Lv ${nextLevel}: ${formatKeyPercent(chance)} Key chance.${levelBoostNote(chance, nextLevel)} ${isSkillChaosMilestone(nextLevel)
                 ? `Level ${nextLevel} also gives a guaranteed Chaos Key, and a separate ${LEVEL_CHAOS_CHANCE}% chance of another.`
                 : `Each level-up also has a separate ${LEVEL_CHAOS_CHANCE}% chance of a Chaos Key.`}`
               : '';

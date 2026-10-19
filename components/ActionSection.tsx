@@ -7,11 +7,11 @@ import { useGame } from '../context/GameContext';
 import { BookOpen, ScrollText, Dices } from './OsrsIcon';
 import { Crosshair } from 'lucide-react';
 import { wikiService } from '../services/WikiService';
-import { resolveModeRules, usesActivityKeyReserves } from '../config/gameModes';
-import { getActiveRegionBonuses } from '../config/regionModifiers';
-import { achievementBoostFor } from '../utils/achievementBoosts';
+import { usesActivityKeyReserves } from '../config/gameModes';
+import { keyChance, keyChanceBonus } from '../utils/keyChance';
+import { formatKeyPercent } from '../utils/keyRoll';
 import { EARN_METHODS, failureFateForSource, LEVEL_ROLL_MAX } from '../config/economy';
-import { BRUTUS_BOSS_NAME, effectiveVanillaClueRate, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
+import { BRUTUS_BOSS_NAME, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
 import { BossKeyProgress, ClueKeyProgress } from './VanillaKeyProgress';
 import { lazyWithRetry } from '../utils/lazyRetry';
 import { farmPlaceReachable } from '../utils/activityAccess';
@@ -366,7 +366,7 @@ export const VanillaBossRollCard: React.FC<{
       <div className="min-w-0 flex-1">
         <span className={`block text-xs font-semibold truncate ${style.text}`}>{name}</span>
         {note && <span className="block text-[10px] text-amber-300/90">{note}</span>}
-        <BossKeyProgress stage={stage} cappedText={cappedText} />
+        <BossKeyProgress stage={stage} cappedText={cappedText} nowRate={displayRate} />
       </div>
       <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border shrink-0 ${style.pill}`}>
         {capped ? 'CAPPED' : `${displayRate}%`}
@@ -406,20 +406,24 @@ export const FARM_NO_BOSS = 'Unlock a boss from the Bosses table to roll its Key
  * the same rules.
  */
 export const useFarmModel = () => {
-  const { rollForKey, unlocks, gameModeId, customMode, clueStandardKeysAwarded, minigameStandardKeysAwarded, achievementsClaimed } = useGame();
+  const game = useGame();
+  const { rollForKey, unlocks, gameModeId, clueStandardKeysAwarded, minigameStandardKeysAwarded } = game;
 
-  // When the run's mode enables region passives, rolls are boosted. rollForKey
-  // applies the bonus internally, so handleRoll still passes the BASE rate —
-  // this is purely for an honest on-card display.
-  const mode = resolveModeRules(gameModeId, customMode);
-  const regionBonus = mode.regionModifiers
-    ? getActiveRegionBonuses(unlocks.regions).successBonus
-    : 0;
-  // Activity milestone achievements raise their own activity's rolls too.
-  const boost = (source: string) => achievementBoostFor(source, achievementsClaimed);
-  const bonusFor = (source: string) => regionBonus + boost(source);
-  const effectiveRate = (source: string) =>
-    Math.max(1, Math.min(100, (DROP_RATES[source] ?? 0) + bonusFor(source)));
+  // handleRoll passes the BASE rate and the roll adds the run's boosts (region
+  // passives, achievements, rituals). The cards show the chance the roll is
+  // made against, read from the same function the roll uses (utils/keyChance.ts).
+  // Pass the same rate and context as the roll; a roll that would not happen shows 0.
+  const effectiveRate = (source: string, rate: number = DROP_RATES[source] ?? 0, context?: KeyRollContext) =>
+    keyChance(game, source, rate, context) ?? 0;
+  /** What the boosts add to (or a curse takes from) the base rate, in points. */
+  const bonusFor = (source: string, rate: number = DROP_RATES[source] ?? 0, context?: KeyRollContext) =>
+    keyChanceBonus(game, source, rate, context);
+  const levelBonus = keyChanceBonus(game, 'Level Up', LEVEL_ROLL_MAX);
+  // "Chance = Level / 5 (up to 19.8%)", with the run's boosts when it has any.
+  const skillRateText = levelBonus === 0
+    ? `Chance = Level / 5 (up to ${LEVEL_ROLL_MAX.toFixed(1)}%)`
+    : `Chance = Level / 5 ${levelBonus > 0 ? '+' : '−'} ${Math.abs(levelBonus)}% (up to ${formatKeyPercent(LEVEL_ROLL_MAX + levelBonus)})`;
+  const collectionRate = effectiveRate(DropSource.COLLECTION_LOG);
 
   const handleRoll = (source: string, chance: number, e: { clientX: number; clientY: number }, context?: KeyRollContext) => {
     rollForKey(source, chance, failureFateForSource(source as DropSource), e.clientX, e.clientY, undefined, context);
@@ -524,10 +528,10 @@ export const useFarmModel = () => {
     clueKeysAwarded,
     vanillaMinigames,
     minigameKeysAwarded: minigameStandardKeysAwarded,
-    regionBonus,
-    boost,
     bonusFor,
     effectiveRate,
+    skillRateText,
+    collectionRate,
     handleRoll,
     journalMin: JOURNAL_MIN,
     journalMax: JOURNAL_MAX,
@@ -549,7 +553,7 @@ const ClassicActionSection: React.FC = () => {
   const { claimPet, petsClaimed, unlocks, animationsEnabled, bossStandardKeysAwarded } = useGame();
   const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
   const [bossQuery, setBossQuery] = useState('');
-  const { slayers, isVanilla, reserves, vanillaBosses, vanillaMinigames, minigameKeysAwarded, clueKeysAwarded, boost, bonusFor, effectiveRate, handleRoll } = useFarmModel();
+  const { slayers, isVanilla, reserves, vanillaBosses, vanillaMinigames, minigameKeysAwarded, clueKeysAwarded, bonusFor, effectiveRate, skillRateText, collectionRate, handleRoll } = useFarmModel();
 
   const tabs: { id: FarmSubTab; label: string; icon: string; count: number }[] = [
     { id: 'SLAYER', label: 'Slayer', icon: OSRS_ICONS.SLAYER, count: slayers.length },
@@ -612,9 +616,8 @@ const ClassicActionSection: React.FC = () => {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
             {CLUE_SCROLLS.map((clue, i) => {
               const baseRate = DROP_RATES[clue.source];
-              const displayRate = isVanilla
-                ? Math.min(100, effectiveVanillaClueRate(baseRate, clueKeysAwarded) + boost(clue.source))
-                : effectiveRate(clue.source);
+              const clueContext: KeyRollContext | undefined = isVanilla ? { kind: 'clue', clueTier: clue.tier } : undefined;
+              const displayRate = effectiveRate(clue.source, baseRate, clueContext);
 
               return (
                 <div
@@ -625,16 +628,11 @@ const ClassicActionSection: React.FC = () => {
                   <ClueScrollCard
                     tier={clue.tier}
                     displayRate={displayRate}
-                    bonus={isVanilla ? boost(clue.source) : bonusFor(clue.source)}
+                    bonus={bonusFor(clue.source, baseRate, clueContext)}
                     itemId={clue.itemId}
-                    onClick={(e) => handleRoll(
-                      clue.source,
-                      baseRate,
-                      e,
-                      isVanilla ? { kind: 'clue', clueTier: clue.tier } : undefined,
-                    )}
+                    onClick={(e) => handleRoll(clue.source, baseRate, e, clueContext)}
                   />
-                  {isVanilla && <ClueKeyProgress awarded={clueKeysAwarded} baseRate={baseRate} />}
+                  {isVanilla && <ClueKeyProgress awarded={clueKeysAwarded} baseRate={baseRate} chance={displayRate} />}
                 </div>
               );
             })}
@@ -655,20 +653,17 @@ const ClassicActionSection: React.FC = () => {
                   const bossClass = name === BRUTUS_BOSS_NAME ? 'brutus' : bossTier(name);
                   const source = bossClass === 'brutus' ? TIER_SOURCE.low : TIER_SOURCE[bossClass];
                   const stage = vanillaBossKeyStage(name, bossStandardKeysAwarded?.[name] ?? 0);
+                  const bossContext: KeyRollContext = { kind: 'boss', bossName: name, bossClass };
 
                   return (
                     <VanillaBossRollCard
                       key={name}
                       name={name}
-                      displayRate={stage.currentRate === null ? 0 : Math.min(100, stage.currentRate + boost(source))}
+                      displayRate={effectiveRate(source, stage.currentRate ?? 0, bossContext)}
                       style={bossClass === 'brutus' ? TIER_STYLE.low : TIER_STYLE[bossClass]}
                       stage={stage}
                       note={vanillaBossNote(name, unlocks.quests)}
-                      onClick={(e) => handleRoll(source, stage.currentRate ?? 0, e, {
-                        kind: 'boss',
-                        bossName: name,
-                        bossClass,
-                      })}
+                      onClick={(e) => handleRoll(source, stage.currentRate ?? 0, e, bossContext)}
                     />
                   );
                 })}
@@ -723,6 +718,7 @@ const ClassicActionSection: React.FC = () => {
             <VanillaMinigameRolls
               minigames={vanillaMinigames}
               awarded={minigameKeysAwarded}
+              chanceFor={(context, rate) => effectiveRate(DropSource.ACTIVITY_MINIGAME, rate, context)}
               onRoll={(context, rate, e) => handleRoll(DropSource.ACTIVITY_MINIGAME, rate, e, context)}
             />
           </React.Suspense>
@@ -767,7 +763,7 @@ const ClassicActionSection: React.FC = () => {
             label="Skill Rolling"
             accent="text-blue-500"
             desc={<>Click unlocked skills in the <span className="text-blue-200">Dashboard</span> to roll.</>}
-            rate={`Chance = Level / 5 (up to ${LEVEL_ROLL_MAX.toFixed(1)}%)`}
+            rate={skillRateText}
             badge="bg-blue-900/20 border-blue-900/30 text-blue-400"
           />
           <InfoChip
@@ -783,7 +779,7 @@ const ClassicActionSection: React.FC = () => {
             label="Collection Log"
             accent="text-amber-500"
             desc={<>Log new unique items in the <span className="text-amber-200">Collection Log Tab</span> to roll.</>}
-            rate={`${DROP_RATES[DropSource.COLLECTION_LOG]}% Drop Chance`}
+            rate={`${collectionRate}% Drop Chance`}
             badge="bg-amber-900/20 border-amber-900/30 text-amber-400"
           />
         </div>

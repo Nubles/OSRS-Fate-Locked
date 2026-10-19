@@ -58,6 +58,19 @@ export const formatKeyPercent = (percent: number): string =>
 export const formatKeyRollValue = (roll: number): string =>
   roll.toFixed(decimalPlaces(roll));
 
+/**
+ * A standard roll's base and effective thresholds (one decimal place), before
+ * rituals. resolveKeyRoll and utils/keyChance.ts both use it, so the odds a
+ * screen shows are rounded the way the roll rounds them.
+ */
+export const keyRollThresholds = (
+  baseRate: number,
+  successBonus: number,
+): { baseThreshold: number; effectiveThreshold: number } => {
+  const baseThreshold = roundToTenth(clamp(baseRate, 0, 100));
+  return { baseThreshold, effectiveThreshold: roundToTenth(clamp(baseThreshold + successBonus, 0, 100)) };
+};
+
 /** Standard level and mode-aware roll resolution (one decimal place). */
 export function resolveKeyRoll(input: KeyRollInput): KeyRollResolution;
 /** Exact two-decimal resolution for contextual Vanilla boss and clue rolls. */
@@ -72,10 +85,7 @@ export function resolveKeyRoll(
   }
 
   const input = inputOrRandomFloat;
-  const baseThreshold = roundToTenth(clamp(input.baseThreshold, 0, 100));
-  const effectiveThreshold = roundToTenth(
-    clamp(baseThreshold + input.successBonus, 0, 100),
-  );
+  const { baseThreshold, effectiveThreshold } = keyRollThresholds(input.baseThreshold, input.successBonus);
   const primaryRoll = rollFromFloat(input.primaryFloat);
   const advantageRoll = rollFromFloat(input.advantageFloat);
   const roll = input.luck ? Math.min(primaryRoll, advantageRoll) : primaryRoll;
