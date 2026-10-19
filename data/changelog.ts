@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-quest-pause',
+    title: 'Smoother quest completions',
+    date: '2026-10-19',
+    sections: {
+      fixed: [
+        'Completing a quest on a long run no longer freezes the tracker for a couple of seconds.',
+      ],
+    },
+  },
+  {
     id: '2026-10-19-quicker-start-and-journal',
     title: 'Quicker start and a lighter Journal',
     date: '2026-10-19',
