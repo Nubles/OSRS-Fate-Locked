@@ -28,7 +28,7 @@ const DEPLOY_PAGES = 'actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c
 const UPLOAD_ARTIFACT = 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02';
 const DOWNLOAD_ARTIFACT = 'actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093';
 const CREATE_PULL_REQUEST = 'peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c';
-const WORKFLOWS = ['ci.yml', 'deploy.yml', 'sync-content.yml', 'discord-release.yml', 'discord-whats-new.yml'];
+const WORKFLOWS = ['ci.yml', 'deploy.yml', 'sync-content.yml', 'discord-release.yml', 'discord-whats-new.yml', 'relay-kv-usage.yml'];
 const shardedTestCommand = `npm test -- --shard=\${{ matrix.shard }}/${TEST_SHARDS}`;
 
 const pullRequestCommandOrder = [
