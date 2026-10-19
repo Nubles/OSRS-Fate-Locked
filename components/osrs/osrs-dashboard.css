@@ -6,330 +6,330 @@
    ───────────────────────────────────────────────────────────────────────── */
 
 /* ── Progression window (Main board) ────────────────────────────────────── */
-html[data-ui="osrs"] .osrs-dash-win { padding: 4px; gap: 6px; }
-html[data-ui="osrs"] .osrs-dash-body { min-height: 0; padding: 0 4px 4px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-win { padding: 4px; gap: 6px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-body { min-height: 0; padding: 0 4px 4px; }
 
 /* Title row */
-html[data-ui="osrs"] .osrs-dash-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 2px 6px; }
-html[data-ui="osrs"] .osrs-dash-headtitle { margin: 0; white-space: nowrap; cursor: default; }
-html[data-ui="osrs"] .osrs-dash-badge {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 2px 6px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-headtitle { margin: 0; white-space: nowrap; cursor: default; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-badge {
   display: inline-flex; align-items: center; gap: 4px; padding: 1px 6px;
   font: 16px 'RSSmall', sans-serif; line-height: 16px; color: var(--osrs-yellow, #ff0);
   background: var(--osrs-inner, #2e271e); border: 1px solid #000; text-shadow: 1px 1px 0 #000; white-space: nowrap;
 }
-html[data-ui="osrs"] .osrs-dash-badge.is-omni { color: var(--osrs-purple, #c77dff); }
-html[data-ui="osrs"] .osrs-dash-badge.is-title { color: var(--osrs-orange, #ff981f); cursor: pointer; }
-html[data-ui="osrs"] .osrs-dash-tools { margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
-html[data-ui="osrs"] .osrs-dash-tools > .osrs-btn { height: 28px; padding: 0 9px; white-space: nowrap; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-badge.is-omni { color: var(--osrs-purple, #c77dff); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-badge.is-title { color: var(--osrs-orange, #ff981f); cursor: pointer; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-tools { margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-tools > .osrs-btn { height: 28px; padding: 0 9px; white-space: nowrap; }
 /* The Rival button arrives with its classic classes: draw it as a stone button. */
-html[data-ui="osrs"] .osrs-dash-tools > button:not(.osrs-btn) {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-tools > button:not(.osrs-btn) {
   height: 28px; padding: 0 9px; border: 1px solid #000; border-radius: 0; gap: 6px;
   background: var(--osrs-btn, #4a4033); box-shadow: inset 1px 1px 0 var(--osrs-btn-hi, #6b5f4d), inset -1px -1px 0 var(--osrs-btn-lo, #2b241b);
   color: var(--osrs-orange, #ff981f); font: 16px 'RS', sans-serif; text-shadow: 1px 1px 0 #000;
 }
-html[data-ui="osrs"] .osrs-dash-tools > button:not(.osrs-btn):hover { color: #fff; }
-html[data-ui="osrs"] .osrs-dash-tools > button:not(.osrs-btn) svg { display: none; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-tools > button:not(.osrs-btn):hover { color: #fff; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-tools > button:not(.osrs-btn) svg { display: none; }
 
 /* Tab strip */
-html[data-ui="osrs"] .osrs-dash-tabrow {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-tabrow {
   display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px 8px; padding: 0 4px;
   border-bottom: 1px solid var(--osrs-rule, #5c5244);
 }
-html[data-ui="osrs"] .osrs-dash-tablist { display: flex; align-items: flex-end; gap: 3px; overflow-x: auto; min-width: 0; flex: 0 1 auto; }
-html[data-ui="osrs"] .osrs-dash-tablist .osrs-tab { white-space: nowrap; flex-shrink: 0; }
-html[data-ui="osrs"] .osrs-dash-tablist .osrs-tab:hover { color: #fff; }
-html[data-ui="osrs"] .osrs-dash-filter { display: flex; align-items: center; gap: 4px; margin: 0 0 3px auto; }
-html[data-ui="osrs"] .osrs-dash-search {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-tablist { display: flex; align-items: flex-end; gap: 3px; overflow-x: auto; min-width: 0; flex: 0 1 auto; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-tablist .osrs-tab { white-space: nowrap; flex-shrink: 0; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-tablist .osrs-tab:hover { color: #fff; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-filter { display: flex; align-items: center; gap: 4px; margin: 0 0 3px auto; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-search {
   display: flex; align-items: center; gap: 6px; height: 26px; width: 210px; box-sizing: border-box; padding: 0 8px; flex-shrink: 0;
   background: var(--osrs-well, #1f1a14); border: 1px solid #000;
 }
-html[data-ui="osrs"] .osrs-dash-search.is-wide { width: auto; height: 30px; box-shadow: inset 1px 1px 0 #000; }
-html[data-ui="osrs"] .osrs-dash-search input { all: unset; flex: 1; width: 100%; min-width: 0; font: 16px 'RS', sans-serif; color: #fff; }
-html[data-ui="osrs"] .osrs-dash-search input::placeholder { color: var(--osrs-muted, #8a7c66); }
-html[data-ui="osrs"] .osrs-dash-search:focus-within { box-shadow: inset 0 0 0 1px var(--osrs-orange, #ff981f); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-search.is-wide { width: auto; height: 30px; box-shadow: inset 1px 1px 0 #000; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-search input { all: unset; flex: 1; width: 100%; min-width: 0; font: 16px 'RS', sans-serif; color: #fff; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-search input::placeholder { color: var(--osrs-muted, #8a7c66); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-search:focus-within { box-shadow: inset 0 0 0 1px var(--osrs-orange, #ff981f); }
 /* Section guides: a stone "?" button in the tab strip, a bare "?" beside panel titles. */
-html[data-ui="osrs"] .osrs-dash-guide {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-guide {
   box-sizing: border-box; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; padding: 0;
   background: var(--osrs-btn, #4a4033); border: 1px solid #000; box-shadow: inset 1px 1px 0 var(--osrs-btn-hi, #6b5f4d), inset -1px -1px 0 var(--osrs-btn-lo, #2b241b);
   color: var(--osrs-orange, #ff981f); font: 16px 'RS', sans-serif; text-shadow: 1px 1px 0 #000;
 }
-html[data-ui="osrs"] .osrs-dash-qmark { padding: 0 2px; color: var(--osrs-muted, #8a7c66); font: 16px 'RS', sans-serif; line-height: 16px; text-shadow: 1px 1px 0 #000; }
-html[data-ui="osrs"] .osrs-dash-guide svg, html[data-ui="osrs"] .osrs-dash-qmark svg { display: none; }
-html[data-ui="osrs"] .osrs-dash-guide::after, html[data-ui="osrs"] .osrs-dash-qmark::after { content: '?'; }
-html[data-ui="osrs"] .osrs-dash-guide:hover, html[data-ui="osrs"] .osrs-dash-qmark:hover { color: #fff; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-qmark { padding: 0 2px; color: var(--osrs-muted, #8a7c66); font: 16px 'RS', sans-serif; line-height: 16px; text-shadow: 1px 1px 0 #000; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-guide svg, :is(html[data-ui="osrs"], .osrs-island) .osrs-dash-qmark svg { display: none; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-guide::after, :is(html[data-ui="osrs"], .osrs-island) .osrs-dash-qmark::after { content: '?'; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-guide:hover, :is(html[data-ui="osrs"], .osrs-island) .osrs-dash-qmark:hover { color: #fff; }
 
 /* ── Shared panel bits ──────────────────────────────────────────────────── */
-html[data-ui="osrs"] .osrs-dash-panelhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 6px; }
-html[data-ui="osrs"] .osrs-dash-yellow-s { font: 16px 'RSSmall', sans-serif; color: var(--osrs-yellow, #ff0); text-shadow: 1px 1px 0 #000; white-space: nowrap; }
-html[data-ui="osrs"] .osrs-dash-muted-s { font: 16px 'RSSmall', sans-serif; color: var(--osrs-muted, #8a7c66); text-shadow: 1px 1px 0 #000; }
-html[data-ui="osrs"] .osrs-dash-tan-s { font: 16px 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); text-shadow: 1px 1px 0 #000; }
-html[data-ui="osrs"] .osrs-dash-lbl { font: 16px 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); text-shadow: 1px 1px 0 #000; }
-html[data-ui="osrs"] .osrs-dash-wintitle {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-panelhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 6px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-yellow-s { font: 16px 'RSSmall', sans-serif; color: var(--osrs-yellow, #ff0); text-shadow: 1px 1px 0 #000; white-space: nowrap; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-muted-s { font: 16px 'RSSmall', sans-serif; color: var(--osrs-muted, #8a7c66); text-shadow: 1px 1px 0 #000; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-tan-s { font: 16px 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); text-shadow: 1px 1px 0 #000; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-lbl { font: 16px 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); text-shadow: 1px 1px 0 #000; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-wintitle {
   position: relative; height: 30px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
   border-bottom: 1px solid #1d1812;
 }
-html[data-ui="osrs"] .osrs-dash-wintitle h3, html[data-ui="osrs"] .osrs-dash-wintitle h2 { margin: 0; }
-html[data-ui="osrs"] .osrs-dash-close {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-wintitle h3, :is(html[data-ui="osrs"], .osrs-island) .osrs-dash-wintitle h2 { margin: 0; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-close {
   all: unset; box-sizing: border-box; cursor: pointer; position: absolute; right: 5px; top: 4px; width: 22px; height: 22px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center; background: #4a3f30;
   border-top: 1px solid #7a6a52; border-left: 1px solid #7a6a52; border-bottom: 1px solid #120f0b; border-right: 1px solid #120f0b; color: var(--osrs-orange, #ff981f);
 }
-html[data-ui="osrs"] .osrs-dash-close.is-static { position: static; }
-html[data-ui="osrs"] .osrs-dash-close:hover { color: #fff; }
-html[data-ui="osrs"] .osrs-dash-close:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
-html[data-ui="osrs"] .osrs-dash-textbtn {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-close.is-static { position: static; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-close:hover { color: #fff; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-close:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-textbtn {
   all: unset; box-sizing: border-box; cursor: pointer; height: 20px; padding: 0 6px; display: inline-flex; align-items: center;
   font: 16px 'RSSmall', sans-serif; line-height: 16px; color: var(--osrs-orange, #ff981f); text-shadow: 1px 1px 0 #000;
   background: var(--osrs-btn, #4a4033); border: 1px solid #000; box-shadow: inset 1px 1px 0 var(--osrs-btn-hi, #6b5f4d), inset -1px -1px 0 var(--osrs-btn-lo, #2b241b);
 }
-html[data-ui="osrs"] .osrs-dash-textbtn:hover { color: #fff; }
-html[data-ui="osrs"] .osrs-dash-textbtn.is-empty { cursor: help; color: var(--osrs-btn-off, #7d705c); background: var(--osrs-btn-off-bg, #3a3228); box-shadow: inset 1px 1px 0 var(--osrs-inner-ring, #4f4434); }
-html[data-ui="osrs"] .osrs-dash-nomatch { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 18px 8px; color: var(--osrs-tan, #c8b897); text-shadow: var(--osrs-shadow, 1px 1px 0 #000); }
-html[data-ui="osrs"] .osrs-dash-nomatch .osrs-btn { height: 24px; }
-html[data-ui="osrs"] .osrs-dash-textbtn.is-on { background: var(--osrs-selected, #5a4c3a); color: #fff; box-shadow: inset 1px 1px 0 var(--osrs-selected-sh, #2a231a); }
-html[data-ui="osrs"] .osrs-dash-textbtn:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-textbtn:hover { color: #fff; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-textbtn.is-empty { cursor: help; color: var(--osrs-btn-off, #7d705c); background: var(--osrs-btn-off-bg, #3a3228); box-shadow: inset 1px 1px 0 var(--osrs-inner-ring, #4f4434); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-nomatch { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 18px 8px; color: var(--osrs-tan, #c8b897); text-shadow: var(--osrs-shadow, 1px 1px 0 #000); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-nomatch .osrs-btn { height: 24px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-textbtn.is-on { background: var(--osrs-selected, #5a4c3a); color: #fff; box-shadow: inset 1px 1px 0 var(--osrs-selected-sh, #2a231a); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-textbtn:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
 /* Note buttons (NoteTrigger) show on hover, or always once a note exists. */
-html[data-ui="osrs"] .osrs-dash-note { display: inline-flex; opacity: 0; }
-html[data-ui="osrs"] .osrs-dash-note > button { padding: 2px; border-radius: 0; box-shadow: none; }
-html[data-ui="osrs"] .osrs-dash-note:focus-within,
-html[data-ui="osrs"] .osrs-dash-note:has(button[title="View Note"]),
-html[data-ui="osrs"] .osrs-dash-skill:hover .osrs-dash-note,
-html[data-ui="osrs"] .osrs-char-dollcell:hover .osrs-dash-note { opacity: 1; }
-html[data-ui="osrs"] .osrs-dash-note.is-corner { position: absolute; right: -1px; bottom: -1px; z-index: 3; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-note { display: inline-flex; opacity: 0; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-note > button { padding: 2px; border-radius: 0; box-shadow: none; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-note:focus-within,
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-note:has(button[title="View Note"]),
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill:hover .osrs-dash-note,
+:is(html[data-ui="osrs"], .osrs-island) .osrs-char-dollcell:hover .osrs-dash-note { opacity: 1; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-note.is-corner { position: absolute; right: -1px; bottom: -1px; z-index: 3; }
 
 /* ── Character tab: compact Equipment Lab beside Skills (Main board) ─────── */
 /* Equipment takes what the Skills panel (capped at three 236px columns) leaves. */
-html[data-ui="osrs"] .osrs-dash-chartab { height: 100%; min-height: 0; display: grid; grid-template-columns: minmax(300px, 1fr) minmax(0, 742px); grid-template-rows: minmax(0, 1fr); gap: 8px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-chartab { height: 100%; min-height: 0; display: grid; grid-template-columns: minmax(300px, 1fr) minmax(0, 742px); grid-template-rows: minmax(0, 1fr); gap: 8px; }
 @media (max-width: 860px) {
-  html[data-ui="osrs"] .osrs-dash-chartab { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; grid-auto-rows: auto; overflow-y: auto; }
+  :is(html[data-ui="osrs"], .osrs-island) .osrs-dash-chartab { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; grid-auto-rows: auto; overflow-y: auto; }
 }
 
 /* Skills */
-html[data-ui="osrs"] .osrs-dash-skills { padding: 8px; display: flex; flex-direction: column; gap: 6px; min-width: 0; min-height: 0; }
-html[data-ui="osrs"] .osrs-dash-skills > .osrs-dash-panelhead { padding: 0; }
-html[data-ui="osrs"] .osrs-dash-skillwrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
-html[data-ui="osrs"] .osrs-dash-skillgrid {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skills { padding: 8px; display: flex; flex-direction: column; gap: 6px; min-width: 0; min-height: 0; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skills > .osrs-dash-panelhead { padding: 0; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skillwrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skillgrid {
   flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-auto-rows: minmax(39px, 76px); gap: 3px 4px;
 }
-html[data-ui="osrs"] .osrs-dash-skill {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill {
   position: relative; display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0; min-height: 0; padding: 2px 8px;
   background: var(--osrs-window, #3e3529); border: 1px solid #000;
   box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi, #5c5244), inset -1px -1px 0 var(--osrs-bevel-lo, #14110d);
   text-shadow: 1px 1px 0 #000; cursor: default; outline: none;
 }
-html[data-ui="osrs"] .osrs-dash-skill.can-level,
-html[data-ui="osrs"] .osrs-dash-skill.can-start { cursor: pointer; }
-html[data-ui="osrs"] .osrs-dash-skill.can-level:hover,
-html[data-ui="osrs"] .osrs-dash-skill.can-level:focus-visible { background: var(--osrs-selected, #5a4c3a); }
-html[data-ui="osrs"] .osrs-dash-skill.can-start { box-shadow: inset 0 0 0 1px var(--osrs-purple, #c77dff); }
-html[data-ui="osrs"] .osrs-dash-skill.can-start:hover,
-html[data-ui="osrs"] .osrs-dash-skill.can-start:focus-visible { background: #4a3a52; }
-html[data-ui="osrs"] .osrs-dash-skill.is-leveling { background: #1f3a1f; box-shadow: inset 0 0 0 1px var(--osrs-green, #0dc10d); }
-html[data-ui="osrs"] .osrs-dash-skill:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill.can-level,
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill.can-start { cursor: pointer; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill.can-level:hover,
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill.can-level:focus-visible { background: var(--osrs-selected, #5a4c3a); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill.can-start { box-shadow: inset 0 0 0 1px var(--osrs-purple, #c77dff); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill.can-start:hover,
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill.can-start:focus-visible { background: #4a3a52; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill.is-leveling { background: #1f3a1f; box-shadow: inset 0 0 0 1px var(--osrs-green, #0dc10d); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
 /* Skill Advisor "show me" flash (it adds ring-2 to the card). */
-html[data-ui="osrs"] .osrs-dash-skill.ring-2 { outline: 2px solid var(--osrs-yellow, #ff0); outline-offset: -2px; }
-html[data-ui="osrs"] .osrs-dash-skill-icon {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill.ring-2 { outline: 2px solid var(--osrs-yellow, #ff0); outline-offset: -2px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill-icon {
   all: unset; box-sizing: border-box; cursor: pointer; width: 29px; height: 27px; margin: -1px 0 -1px -3px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center; border: 1px solid transparent;
 }
-html[data-ui="osrs"] .osrs-dash-skill-icon:hover,
-html[data-ui="osrs"] .osrs-dash-skill-icon:focus-visible { background: var(--osrs-inner, #2e271e); border-color: #000; box-shadow: inset 0 0 0 1px var(--osrs-orange, #ff981f); }
-html[data-ui="osrs"] .osrs-dash-skill.is-locked .osrs-dash-skill-icon img { filter: grayscale(1) brightness(.6); }
-html[data-ui="osrs"] .osrs-dash-skill-lvl { font: 16px 'RSBold', sans-serif; line-height: 16px; color: var(--osrs-yellow, #ff0); }
-html[data-ui="osrs"] .osrs-dash-skill.is-locked .osrs-dash-skill-lvl { color: var(--osrs-muted, #8a7c66); }
-html[data-ui="osrs"] .osrs-dash-skill-tools { margin-left: auto; display: flex; align-items: center; gap: 2px; }
-html[data-ui="osrs"] .osrs-dash-omni {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill-icon:hover,
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill-icon:focus-visible { background: var(--osrs-inner, #2e271e); border-color: #000; box-shadow: inset 0 0 0 1px var(--osrs-orange, #ff981f); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill.is-locked .osrs-dash-skill-icon img { filter: grayscale(1) brightness(.6); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill-lvl { font: 16px 'RSBold', sans-serif; line-height: 16px; color: var(--osrs-yellow, #ff0); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill.is-locked .osrs-dash-skill-lvl { color: var(--osrs-muted, #8a7c66); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skill-tools { margin-left: auto; display: flex; align-items: center; gap: 2px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-omni {
   all: unset; box-sizing: border-box; cursor: pointer; width: 22px; height: 20px; display: flex; align-items: center; justify-content: center;
   background: var(--osrs-btn, #4a4033); border: 1px solid #000; box-shadow: inset 1px 1px 0 var(--osrs-btn-hi, #6b5f4d), inset -1px -1px 0 var(--osrs-btn-lo, #2b241b);
 }
-html[data-ui="osrs"] .osrs-dash-omni:hover, html[data-ui="osrs"] .osrs-dash-omni:focus-visible { box-shadow: inset 0 0 0 1px var(--osrs-purple, #c77dff); }
-html[data-ui="osrs"] .osrs-dash-advisor { position: absolute; left: 0; right: 0; top: 0; z-index: 20; max-height: 100%; overflow-y: auto; padding: 30px 4px 4px; }
-html[data-ui="osrs"] .osrs-dash-skillfoot {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-omni:hover, :is(html[data-ui="osrs"], .osrs-island) .osrs-dash-omni:focus-visible { box-shadow: inset 0 0 0 1px var(--osrs-purple, #c77dff); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-advisor { position: absolute; left: 0; right: 0; top: 0; z-index: 20; max-height: 100%; overflow-y: auto; padding: 30px 4px 4px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-skillfoot {
   display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; padding: 4px 10px; flex-shrink: 0;
   background: var(--osrs-slot, #3b3226); border: 1px solid #000; text-shadow: 1px 1px 0 #000;
 }
 
 /* ── Equipment Lab panel (beside Skills) ────────────────────────────────── */
 /* Every view opens inside the panel; its body (osrs-char.css) scrolls. */
-html[data-ui="osrs"] .osrs-dash-labmini { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 8px; }
-@media (min-width: 861px) { html[data-ui="osrs"] .osrs-dash-labmini { overflow: hidden; } }
-html[data-ui="osrs"] .osrs-dash-labempty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 20px; text-align: center; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-labmini { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 8px; }
+@media (min-width: 861px) { :is(html[data-ui="osrs"], .osrs-island) .osrs-dash-labmini { overflow: hidden; } }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-labempty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 20px; text-align: center; }
 
 /* Plan: one row per slot */
-html[data-ui="osrs"] .osrs-dash-tierrow { display: flex; align-items: center; gap: 6px; min-height: 22px; padding: 0 4px; text-shadow: 1px 1px 0 #000; }
-html[data-ui="osrs"] .osrs-dash-tierrow-name { width: 58px; flex-shrink: 0; font: 16px 'RS', sans-serif; line-height: 16px; }
-html[data-ui="osrs"] .osrs-dash-cells {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-tierrow { display: flex; align-items: center; gap: 6px; min-height: 22px; padding: 0 4px; text-shadow: 1px 1px 0 #000; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-tierrow-name { width: 58px; flex-shrink: 0; font: 16px 'RS', sans-serif; line-height: 16px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-cells {
   flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 2px; height: 10px; box-sizing: content-box; padding: 1px;
   background: var(--osrs-well, #1f1a14); border: 1px solid #000;
 }
-html[data-ui="osrs"] .osrs-dash-step { width: 22px; height: 22px; padding: 0; font-family: 'RSBold', sans-serif; flex-shrink: 0; }
-html[data-ui="osrs"] .osrs-dash-plancost {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-step { width: 22px; height: 22px; padding: 0; font-family: 'RSBold', sans-serif; flex-shrink: 0; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-plancost {
   flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 3px 6px 3px 3px;
   background: var(--osrs-inner, #2e271e); border: 1px solid #000; text-shadow: 1px 1px 0 #000; white-space: nowrap;
 }
-html[data-ui="osrs"] .osrs-dash-plancost .osrs-btn { height: 24px; padding: 0 8px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-plancost .osrs-btn { height: 24px; padding: 0 8px; }
 
 /* Gear: the item picker */
-html[data-ui="osrs"] .osrs-dash-pickbody { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 5px; }
-html[data-ui="osrs"] .osrs-dash-pickhead { display: flex; align-items: center; gap: 6px; height: 26px; flex-shrink: 0; font: 16px 'RS', sans-serif; color: var(--osrs-tan, #c8b897); white-space: nowrap; }
-html[data-ui="osrs"] .osrs-dash-pickhead .osrs-btn { height: 24px; padding: 0 7px; }
-html[data-ui="osrs"] .osrs-dash-picklist { flex: 1; min-height: 84px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; padding: 3px; }
-html[data-ui="osrs"] .osrs-dash-pickmsg { margin: 0; padding: 24px 0; text-align: center; }
-html[data-ui="osrs"] .osrs-dash-pickrow {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-pickbody { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 5px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-pickhead { display: flex; align-items: center; gap: 6px; height: 26px; flex-shrink: 0; font: 16px 'RS', sans-serif; color: var(--osrs-tan, #c8b897); white-space: nowrap; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-pickhead .osrs-btn { height: 24px; padding: 0 7px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-picklist { flex: 1; min-height: 84px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; padding: 3px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-pickmsg { margin: 0; padding: 24px 0; text-align: center; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-pickrow {
   all: unset; box-sizing: border-box; width: 100%; flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 2px 6px 2px 2px;
   border: 1px solid transparent; text-shadow: 1px 1px 0 #000; cursor: pointer;
 }
-html[data-ui="osrs"] .osrs-dash-pickrow:hover:not([disabled]) { background: var(--osrs-slot, #3b3226); }
-html[data-ui="osrs"] .osrs-dash-pickrow:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); outline-offset: -1px; }
-html[data-ui="osrs"] .osrs-dash-pickrow.is-on { background: var(--osrs-selected, #5a4c3a); border-color: #000; box-shadow: inset 0 0 0 1px var(--osrs-yellow, #ff0); }
-html[data-ui="osrs"] .osrs-dash-pickrow.is-on .osrs-dash-pickrow-name { color: var(--osrs-yellow, #ff0); }
-html[data-ui="osrs"] .osrs-dash-pickrow.is-locked { cursor: not-allowed; }
-html[data-ui="osrs"] .osrs-dash-pickrow.is-locked img { filter: grayscale(1) brightness(.55); }
-html[data-ui="osrs"] .osrs-dash-pickrow.is-locked .osrs-dash-pickrow-name { color: var(--osrs-muted, #8a7c66); }
-html[data-ui="osrs"] .osrs-dash-pickrow-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 17px; }
-html[data-ui="osrs"] .osrs-dash-pickrow-name { min-width: 0; font: 16px 'RS', sans-serif; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-html[data-ui="osrs"] .osrs-dash-pickrow-name a { color: inherit; text-decoration: none; }
-html[data-ui="osrs"] .osrs-dash-pickrow-sub { font: 16px 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-html[data-ui="osrs"] .osrs-dash-tierbadge {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-pickrow:hover:not([disabled]) { background: var(--osrs-slot, #3b3226); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-pickrow:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); outline-offset: -1px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-pickrow.is-on { background: var(--osrs-selected, #5a4c3a); border-color: #000; box-shadow: inset 0 0 0 1px var(--osrs-yellow, #ff0); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-pickrow.is-on .osrs-dash-pickrow-name { color: var(--osrs-yellow, #ff0); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-pickrow.is-locked { cursor: not-allowed; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-pickrow.is-locked img { filter: grayscale(1) brightness(.55); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-pickrow.is-locked .osrs-dash-pickrow-name { color: var(--osrs-muted, #8a7c66); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-pickrow-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 17px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-pickrow-name { min-width: 0; font: 16px 'RS', sans-serif; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-pickrow-name a { color: inherit; text-decoration: none; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-pickrow-sub { font: 16px 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-tierbadge {
   flex-shrink: 0; display: flex; align-items: center; gap: 3px; height: 20px; box-sizing: border-box; padding: 0 5px 0 3px;
   border: 1px solid #000; font: 16px 'RSSmall', sans-serif; line-height: 16px; text-shadow: 1px 1px 0 #000;
 }
 
 /* DPS: one column in the narrow panel, two when it is wide (osrs-char.css) */
-html[data-ui="osrs"] .osrs-dash-dpsgrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
-html[data-ui="osrs"] .osrs-dash-dpscol { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-html[data-ui="osrs"] .osrs-dash-dpsstyles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; }
-html[data-ui="osrs"] .osrs-dash-dpsstyle { height: 30px; width: 100%; padding: 0 4px; gap: 4px; }
-html[data-ui="osrs"] .osrs-btn.is-red, html[data-ui="osrs"] .osrs-dash-stance.is-red { background: #6b2a1c; color: #fff; box-shadow: inset 0 0 0 1px var(--osrs-red, #ff3030); }
-html[data-ui="osrs"] .osrs-dash-stances { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; }
-html[data-ui="osrs"] .osrs-dash-stance {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-dpsgrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-dpscol { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-dpsstyles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-dpsstyle { height: 30px; width: 100%; padding: 0 4px; gap: 4px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-btn.is-red, :is(html[data-ui="osrs"], .osrs-island) .osrs-dash-stance.is-red { background: #6b2a1c; color: #fff; box-shadow: inset 0 0 0 1px var(--osrs-red, #ff3030); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-stances { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-stance {
   all: unset; box-sizing: border-box; cursor: pointer; min-height: 40px; padding: 2px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center;
   text-align: center; line-height: 17px; text-shadow: 1px 1px 0 #000; border: 1px solid #000;
   background: var(--osrs-btn, #4a4033); box-shadow: inset 1px 1px 0 var(--osrs-btn-hi, #6b5f4d), inset -1px -1px 0 var(--osrs-btn-lo, #2b241b);
 }
-html[data-ui="osrs"] .osrs-dash-stance.is-red { background: #6b2a1c; box-shadow: inset 0 0 0 1px var(--osrs-red, #ff3030); }
-html[data-ui="osrs"] .osrs-dash-stance:hover { filter: brightness(1.15); }
-html[data-ui="osrs"] .osrs-dash-stance:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
-html[data-ui="osrs"] .osrs-dash-dpsfields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 8px; }
-html[data-ui="osrs"] .osrs-dash-field { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-html[data-ui="osrs"] .osrs-dash-sel, html[data-ui="osrs"] .osrs-dash-num {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-stance.is-red { background: #6b2a1c; box-shadow: inset 0 0 0 1px var(--osrs-red, #ff3030); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-stance:hover { filter: brightness(1.15); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-stance:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-dpsfields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 8px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-field { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-sel, :is(html[data-ui="osrs"], .osrs-island) .osrs-dash-num {
   box-sizing: border-box; width: 100%; height: 26px; padding: 0 4px; background: var(--osrs-well, #1f1a14); border: 1px solid #000; border-radius: 0;
   box-shadow: inset 1px 1px 0 #000; color: #fff; font: 16px 'RS', sans-serif; outline: none;
 }
-html[data-ui="osrs"] .osrs-dash-num { padding: 0 8px; color: var(--osrs-yellow, #ff0); }
-html[data-ui="osrs"] .osrs-dash-sel:focus, html[data-ui="osrs"] .osrs-dash-num:focus { box-shadow: inset 0 0 0 1px var(--osrs-orange, #ff981f); }
-html[data-ui="osrs"] .osrs-dash-infoline {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-num { padding: 0 8px; color: var(--osrs-yellow, #ff0); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-sel:focus, :is(html[data-ui="osrs"], .osrs-island) .osrs-dash-num:focus { box-shadow: inset 0 0 0 1px var(--osrs-orange, #ff981f); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-infoline {
   display: flex; align-items: flex-start; gap: 6px; padding: 4px 6px; background: var(--osrs-inner, #2e271e); border: 1px solid #000;
   font: 16px 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); line-height: 16px; text-shadow: 1px 1px 0 #000;
 }
-html[data-ui="osrs"] .osrs-dash-targets { height: 132px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; padding: 3px; }
-html[data-ui="osrs"] .osrs-dash-dpsresult { display: flex; flex-direction: column; gap: 8px; padding: 8px; box-shadow: inset 0 0 0 1px #6b2a1c; }
-html[data-ui="osrs"] .osrs-dash-dpstiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
-html[data-ui="osrs"] .osrs-dash-dpstile {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-targets { height: 132px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; padding: 3px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-dpsresult { display: flex; flex-direction: column; gap: 8px; padding: 8px; box-shadow: inset 0 0 0 1px #6b2a1c; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-dpstiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-dpstile {
   min-width: 0; display: flex; flex-direction: column; gap: 3px; padding: 5px 8px; background: var(--osrs-slot, #3b3226); border: 1px solid #000;
   box-shadow: inset 1px 1px 0 var(--osrs-slot-hi, #2a231a), inset -1px -1px 0 var(--osrs-slot-lo, #5c5244);
 }
-html[data-ui="osrs"] .osrs-dash-dpsminis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding-top: 6px; border-top: 1px solid var(--osrs-inner-ring, #4f4434); text-align: center; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-dpsminis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding-top: 6px; border-top: 1px solid var(--osrs-inner-ring, #4f4434); text-align: center; }
 
 /* ── Skill guide window ─────────────────────────────────────────────────── */
-html[data-ui="osrs"] .osrs-dash-guide-win {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-guide-win {
   width: 860px; max-width: 100%; height: 804px; max-height: calc(100vh - 16px); box-sizing: border-box;
   padding: 4px; display: flex; flex-direction: column; gap: 6px; text-shadow: 1px 1px 0 #000;
 }
 /* SkillDetail board: on a full-size window the guide sits to the right, over the Progression window. */
 @media (min-width: 1300px) and (min-height: 890px) {
-  html[data-ui="osrs"] .osrs-dash-guide-win { margin: 77px 7px auto auto; }
+  :is(html[data-ui="osrs"], .osrs-island) .osrs-dash-guide-win { margin: 77px 7px auto auto; }
 }
-html[data-ui="osrs"] .osrs-dash-guidehero { flex-shrink: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 6px 10px; }
-html[data-ui="osrs"] .osrs-dash-guidehero-tier { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-html[data-ui="osrs"] .osrs-dash-odds {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-guidehero { flex-shrink: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 6px 10px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-guidehero-tier { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-odds {
   position: relative; padding: 3px 8px; background: var(--osrs-well, #1f1a14); border: 1px solid #000; color: #8fb0ff; cursor: help; white-space: nowrap;
 }
-html[data-ui="osrs"] .osrs-dash-odds-tip { visibility: hidden; position: absolute; right: 0; top: calc(100% + 4px); z-index: 5; width: 260px; white-space: normal; line-height: 17px; }
-html[data-ui="osrs"] .osrs-dash-odds:hover .osrs-dash-odds-tip,
-html[data-ui="osrs"] .osrs-dash-odds:focus .osrs-dash-odds-tip { visibility: visible; }
-html[data-ui="osrs"] .osrs-dash-guidebody { flex: 1; min-height: 0; display: grid; grid-template-columns: 262px minmax(0, 1fr); gap: 6px; }
-html[data-ui="osrs"] .osrs-dash-rungs { display: flex; flex-direction: column; padding: 3px; min-height: 0; overflow-y: auto; }
-html[data-ui="osrs"] .osrs-dash-rung {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-odds-tip { visibility: hidden; position: absolute; right: 0; top: calc(100% + 4px); z-index: 5; width: 260px; white-space: normal; line-height: 17px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-odds:hover .osrs-dash-odds-tip,
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-odds:focus .osrs-dash-odds-tip { visibility: visible; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-guidebody { flex: 1; min-height: 0; display: grid; grid-template-columns: 262px minmax(0, 1fr); gap: 6px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-rungs { display: flex; flex-direction: column; padding: 3px; min-height: 0; overflow-y: auto; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-rung {
   all: unset; box-sizing: border-box; cursor: pointer; flex: 1; min-height: 40px; display: flex; align-items: center; gap: 8px;
   padding: 0 8px; border-bottom: 1px solid var(--osrs-well, #1f1a14); text-shadow: 1px 1px 0 #000;
 }
-html[data-ui="osrs"] .osrs-dash-rung:hover:not([disabled]) { filter: brightness(1.2); }
-html[data-ui="osrs"] .osrs-dash-rung:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
-html[data-ui="osrs"] .osrs-dash-rung[disabled] { cursor: default; }
-html[data-ui="osrs"] .osrs-dash-guiderow { border-bottom: 1px solid var(--osrs-well, #1f1a14); text-shadow: 1px 1px 0 #000; }
-html[data-ui="osrs"] .osrs-dash-benefit { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 2px 10px; }
-html[data-ui="osrs"] .osrs-dash-node { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 8px; padding: 3px 10px; }
-html[data-ui="osrs"] .osrs-dash-node:hover { background: var(--osrs-slot, #3b3226); }
-html[data-ui="osrs"] .osrs-dash-node:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); outline-offset: -1px; }
-html[data-ui="osrs"] .osrs-dash-node-name { flex: 1; min-width: 0; font: 16px 'RS', sans-serif; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-html[data-ui="osrs"] .osrs-dash-places { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; }
-html[data-ui="osrs"] .osrs-dash-place {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-rung:hover:not([disabled]) { filter: brightness(1.2); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-rung:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-rung[disabled] { cursor: default; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-guiderow { border-bottom: 1px solid var(--osrs-well, #1f1a14); text-shadow: 1px 1px 0 #000; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-benefit { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 2px 10px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-node { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 8px; padding: 3px 10px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-node:hover { background: var(--osrs-slot, #3b3226); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-node:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); outline-offset: -1px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-node-name { flex: 1; min-width: 0; font: 16px 'RS', sans-serif; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-places { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-place {
   all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; min-width: 0;
   background: var(--osrs-well, #1f1a14); border: 1px solid #000; font: 16px 'RS', sans-serif; color: var(--osrs-muted, #8a7c66);
 }
-html[data-ui="osrs"] .osrs-dash-place.is-on { background: #1f3a1f; box-shadow: inset 0 0 0 1px #2f6a2f; color: var(--osrs-green, #0dc10d); }
-html[data-ui="osrs"] .osrs-dash-place:hover { filter: brightness(1.2); }
-html[data-ui="osrs"] .osrs-dash-linkbtn { all: unset; cursor: pointer; font: 16px 'RSSmall', sans-serif; color: #8fb0ff; }
-html[data-ui="osrs"] .osrs-dash-linkbtn:hover { color: #fff; }
-html[data-ui="osrs"] .osrs-dash-empty { padding: 14px; font: 16px 'RS', sans-serif; color: var(--osrs-tan, #c8b897); text-shadow: 1px 1px 0 #000; }
-html[data-ui="osrs"] .osrs-dash-uo.is-on { background: #1f3a1f; color: var(--osrs-green, #0dc10d); box-shadow: inset 0 0 0 1px #2f6a2f; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-place.is-on { background: #1f3a1f; box-shadow: inset 0 0 0 1px #2f6a2f; color: var(--osrs-green, #0dc10d); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-place:hover { filter: brightness(1.2); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-linkbtn { all: unset; cursor: pointer; font: 16px 'RSSmall', sans-serif; color: #8fb0ff; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-linkbtn:hover { color: #fff; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-empty { padding: 14px; font: 16px 'RS', sans-serif; color: var(--osrs-tan, #c8b897); text-shadow: 1px 1px 0 #000; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-uo.is-on { background: #1f3a1f; color: var(--osrs-green, #0dc10d); box-shadow: inset 0 0 0 1px #2f6a2f; }
 @media (max-width: 700px) {
-  html[data-ui="osrs"] .osrs-dash-guidebody { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
-  html[data-ui="osrs"] .osrs-dash-rungs { max-height: 180px; }
+  :is(html[data-ui="osrs"], .osrs-island) .osrs-dash-guidebody { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  :is(html[data-ui="osrs"], .osrs-island) .osrs-dash-rungs { max-height: 180px; }
 }
 
 /* ── World tab ──────────────────────────────────────────────────────────── */
-html[data-ui="osrs"] .osrs-dash-worldbar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 4px 8px; }
-html[data-ui="osrs"] .osrs-dash-mapframe { border: 2px solid #000; box-shadow: 0 0 0 1px var(--osrs-bevel-hi, #5c5244); background: #0e0c0a; }
-html[data-ui="osrs"] .osrs-dash-region { padding: 4px; display: flex; flex-direction: column; gap: 4px; }
-html[data-ui="osrs"] .osrs-dash-region.ring-2 { outline: 2px solid var(--osrs-yellow, #ff0); outline-offset: 1px; }
-html[data-ui="osrs"] .osrs-dash-region-head { display: flex; align-items: center; gap: 8px; padding: 2px 4px; }
-html[data-ui="osrs"] .osrs-dash-areas { display: flex; flex-wrap: wrap; gap: 3px; padding: 4px; }
-html[data-ui="osrs"] .osrs-dash-area {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-worldbar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 4px 8px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-mapframe { border: 2px solid #000; box-shadow: 0 0 0 1px var(--osrs-bevel-hi, #5c5244); background: #0e0c0a; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-region { padding: 4px; display: flex; flex-direction: column; gap: 4px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-region.ring-2 { outline: 2px solid var(--osrs-yellow, #ff0); outline-offset: 1px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-region-head { display: flex; align-items: center; gap: 8px; padding: 2px 4px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-areas { display: flex; flex-wrap: wrap; gap: 3px; padding: 4px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-area {
   all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 7px;
   border: 1px solid #000; font: 16px 'RS', sans-serif; text-shadow: 1px 1px 0 #000; text-decoration: none; cursor: default;
 }
-html[data-ui="osrs"] .osrs-dash-area.is-free { background: #1f3a1f; box-shadow: inset 0 0 0 1px #2f6a2f; color: var(--osrs-green, #0dc10d); cursor: pointer; }
-html[data-ui="osrs"] .osrs-dash-area.is-free:hover { color: #fff; }
-html[data-ui="osrs"] .osrs-dash-area.is-buy {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-area.is-free { background: #1f3a1f; box-shadow: inset 0 0 0 1px #2f6a2f; color: var(--osrs-green, #0dc10d); cursor: pointer; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-area.is-free:hover { color: #fff; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-area.is-buy {
   background: var(--osrs-btn, #4a4033); box-shadow: inset 1px 1px 0 var(--osrs-btn-hi, #6b5f4d), inset -1px -1px 0 var(--osrs-btn-lo, #2b241b);
   color: var(--osrs-purple, #c77dff); cursor: pointer;
 }
-html[data-ui="osrs"] .osrs-dash-area.is-buy:hover { color: #fff; }
-html[data-ui="osrs"] .osrs-dash-area.is-locked { background: var(--osrs-well, #1f1a14); color: #6f6250; }
-html[data-ui="osrs"] .osrs-dash-area:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-area.is-buy:hover { color: #fff; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-area.is-locked { background: var(--osrs-well, #1f1a14); color: #6f6250; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-area:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
 
 /* ── Activities & Utility ───────────────────────────────────────────────── */
-html[data-ui="osrs"] .osrs-dash-activities { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 6px; }
-@media (max-width: 900px) { html[data-ui="osrs"] .osrs-dash-activities { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); } }
-html[data-ui="osrs"] .osrs-dash-cats { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; padding: 4px; }
-html[data-ui="osrs"] .osrs-dash-cat {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-activities { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 6px; }
+@media (max-width: 900px) { :is(html[data-ui="osrs"], .osrs-island) .osrs-dash-activities { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); } }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-cats { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; padding: 4px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-cat {
   all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 3px 6px 3px 3px;
   background: var(--osrs-window, #3e3529); border: 1px solid #000;
   box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi, #5c5244), inset -1px -1px 0 var(--osrs-bevel-lo, #14110d); text-shadow: 1px 1px 0 #000;
 }
-html[data-ui="osrs"] .osrs-dash-cat:hover { filter: brightness(1.12); }
-html[data-ui="osrs"] .osrs-dash-cat.is-on { background: var(--osrs-selected, #5a4c3a); box-shadow: inset 0 0 0 1px var(--osrs-yellow, #ff0); }
-html[data-ui="osrs"] .osrs-dash-cat:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
-html[data-ui="osrs"] .osrs-dash-cat-label { min-width: 0; font: 16px 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-html[data-ui="osrs"] .osrs-dash-catbar { position: relative; display: block; height: 7px; background: var(--osrs-well, #1f1a14); border: 1px solid #000; }
-html[data-ui="osrs"] .osrs-dash-catbar > span { position: absolute; left: 0; top: 0; bottom: 0; background: var(--osrs-green, #0dc10d); box-shadow: inset 0 -2px 0 rgba(0,0,0,.35); }
-html[data-ui="osrs"] .osrs-dash-actlist { min-height: 0; min-width: 0; display: flex; flex-direction: column; }
-html[data-ui="osrs"] .osrs-dash-acthead {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-cat:hover { filter: brightness(1.12); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-cat.is-on { background: var(--osrs-selected, #5a4c3a); box-shadow: inset 0 0 0 1px var(--osrs-yellow, #ff0); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-cat:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-cat-label { min-width: 0; font: 16px 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-catbar { position: relative; display: block; height: 7px; background: var(--osrs-well, #1f1a14); border: 1px solid #000; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-catbar > span { position: absolute; left: 0; top: 0; bottom: 0; background: var(--osrs-green, #0dc10d); box-shadow: inset 0 -2px 0 rgba(0,0,0,.35); }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-actlist { min-height: 0; min-width: 0; display: flex; flex-direction: column; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-acthead {
   display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 5px 10px;
   background: var(--osrs-slot, #3b3226); border-bottom: 1px solid #000; text-shadow: 1px 1px 0 #000;
 }
-html[data-ui="osrs"] .osrs-dash-actfoot { display: flex; align-items: center; gap: 8px; padding: 5px 10px; flex-shrink: 0; line-height: 18px; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-actfoot { display: flex; align-items: center; gap: 8px; padding: 5px 10px; flex-shrink: 0; line-height: 18px; }
 /* The classic unlock cards, drawn as OSRS item rows. */
-html[data-ui="osrs"] .osrs-dash-cards [class~="min-h-[60px]"] { border-color: #000; }
-html[data-ui="osrs"] .osrs-dash-cards [class~="min-h-[60px]"]:hover { transform: none; }
-html[data-ui="osrs"] .osrs-dash-cards [class~="min-h-[60px]"][class*="bg-purple-900"] {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-cards [class~="min-h-[60px]"] { border-color: #000; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-cards [class~="min-h-[60px]"]:hover { transform: none; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-cards [class~="min-h-[60px]"][class*="bg-purple-900"] {
   background: #3a2f42; box-shadow: inset 0 0 0 1px var(--osrs-purple, #c77dff);
 }
-html[data-ui="osrs"] .osrs-dash-cards [class~="min-h-[60px]"][class*="opacity-60"] { opacity: .75; }
-html[data-ui="osrs"] .osrs-dash-cards [class~="w-10"][class~="h-10"] {
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-cards [class~="min-h-[60px]"][class*="opacity-60"] { opacity: .75; }
+:is(html[data-ui="osrs"], .osrs-island) .osrs-dash-cards [class~="w-10"][class~="h-10"] {
   width: 44px; height: 40px; background: var(--osrs-slot, #3b3226); border: 1px solid #000;
   box-shadow: inset 1px 1px 0 var(--osrs-slot-hi, #2a231a), inset -1px -1px 0 var(--osrs-bevel-hi, #5c5244);
 }

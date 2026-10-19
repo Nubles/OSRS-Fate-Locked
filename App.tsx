@@ -111,6 +111,7 @@ const RunelitePluginGuide = lazyWithRetry(() =>
 import { deobfuscateFateSave, MAX_FATE_FILE_BYTES } from './utils/encryption';
 import { Download, Upload, RotateCcw, BarChart3, HelpCircle, PlayCircle, PauseCircle, Search, Database, SlidersHorizontal, Link2, Radio, Settings, MessageCircle } from 'lucide-react';
 import { OSRS_MIN_WIDTH, readUiStyle, setUiStyle, useIsOsrsUi, useIsWideEnoughForOsrs, useUiStyle } from './utils/uiStyle';
+import { setJournalLayout, useJournalLayout } from './utils/journalLayout';
 import { openOsrsScreen, setOsrsKeysTab, useOsrsNav, type OsrsKeysTab } from './utils/osrsNav';
 import { Key, Sparkles, Dna, Swords, ShoppingBag, ScrollText, Compass, Lightbulb } from './components/OsrsIcon';
 import { exportRuneliteBundle } from './utils/runeliteExport';
@@ -321,6 +322,7 @@ interface HeaderProps {
 
 const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, onOpenRuneliteGuide, onOpenChangelog }: HeaderProps) => {
   const uiStyle = useUiStyle();
+  const journalLayout = useJournalLayout();
   const osrsFits = useIsWideEnoughForOsrs();
   const osrsHeader = useIsOsrsUi();
   const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount, runId, runRevision, bossStandardKeysAwarded } = useGame();
@@ -621,6 +623,13 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                            <SlidersHorizontal size={13} className={uiStyle === 'osrs' ? 'text-amber-400' : 'text-gray-500'} />
                            OSRS layout <span className="ml-auto text-[10px] text-gray-500">{uiStyle === 'osrs' ? (osrsFits ? 'on' : 'on, wide screens') : 'off'}</span>
                         </button>
+                        {uiStyle !== 'osrs' || !osrsFits ? (
+                          <button onClick={() => { setJournalLayout(journalLayout === 'ready' ? 'classic' : 'ready'); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white"
+                            title={journalLayout === 'ready' ? 'The Journal opens on everything you can tick off now. Full lists are under Quest list, Diaries and Combat.' : 'Quests, Diaries, Combat Achievements and Doable tabs, as before.'}>
+                             <ScrollText size={13} className={journalLayout === 'ready' ? 'text-amber-400' : 'text-gray-500'} />
+                             Journal <span className="ml-auto text-[10px] text-gray-500">{journalLayout === 'ready' ? 'ready now' : 'classic'}</span>
+                          </button>
+                        ) : null}
                         <button onClick={() => { toggleAdvisors(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={advisorsEnabled}>
                            <Lightbulb size={13} className={advisorsEnabled ? 'text-amber-400' : 'text-gray-500'} />
                            Advisor panels <span className="ml-auto text-[10px] text-gray-500">{advisorsEnabled ? 'on' : 'off'}</span>
@@ -1304,7 +1313,7 @@ const GameLayout = () => {
           </div>
 
           {/* RIGHT: Dashboard Visualization (65%) */}
-          <div className="lg:col-span-8 h-full min-h-[500px] flex flex-col gap-4">
+          <div className="lg:col-span-8 h-full min-h-[500px] flex flex-col gap-4 classic-dash-col">
              <div className="flex-1 overflow-hidden h-full">
                {dashboardEl}
              </div>

@@ -1,6 +1,6 @@
 import { getUtilityActivityReq } from '../utils/utilityReadiness';
 import { lazyWithRetry } from '../utils/lazyRetry';
-import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { 
   EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, MISTHALIN_AREAS, 
   MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, ROLLABLE_POH_ITEMS,
@@ -44,6 +44,8 @@ const GoalTracker = lazyWithRetry(() => import('./GoalTracker').then(m => ({ def
 const QuestLog = lazyWithRetry(() => import('./QuestLog').then(m => ({ default: m.QuestLog })));
 const DiaryLog = lazyWithRetry(() => import('./DiaryLog').then(m => ({ default: m.DiaryLog })));
 const CALog = lazyWithRetry(() => import('./CALog').then(m => ({ default: m.CALog })));
+// The "Ready now" Journal (utils/journalLayout.ts): the OSRS layout's Journal window.
+const OsrsJournalIsland = lazyWithRetry(() => import('./osrs/OsrsJournalIsland'));
 const QuestDoabilityPanel = lazyWithRetry(() => import('./QuestDoabilityPanel').then(m => ({ default: m.QuestDoabilityPanel })));
 const CollectionLog = lazyWithRetry(() => import('./CollectionLog').then(m => ({ default: m.CollectionLog })));
 const SkillDetailModal = lazyWithRetry(() => import('./SkillDetailModal').then(m => ({ default: m.SkillDetailModal })));
@@ -75,7 +77,8 @@ import { runeProofAvailability } from '../utils/questRoutes/featureFlag';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { misthalinListName, tutorialIslandNote } from '../utils/worldWording';
 import { setOsrsProgressionWide } from '../utils/osrsNav';
-import { openOsrsJournal, type OsrsJournalTab } from './osrs/OsrsJournalNav';
+import { openOsrsJournal, setOsrsJournalTab, type OsrsJournalTab } from './osrs/OsrsJournalNav';
+import { useJournalLayout } from '../utils/journalLayout';
 import type { OsrsLabView } from './osrs/OsrsEquipment';
 
 const OSRS_JOURNAL_TAB: Record<'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE', OsrsJournalTab> = {
@@ -387,7 +390,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   // OSRS layout: the Equipment Lab view open inside its Character-tab panel
   // (Tiers, Gear, DPS or Plan); null shows the panel's overview.
   const [osrsLab, setOsrsLab] = useState<OsrsLabView | null>(null);
-  const [journalSubTab, setJournalSubTab] = useLocalStorage<'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE'>('jrnl:subtab', 'QUESTS');
+  const [journalSubTab, setJournalSubTabState] = useLocalStorage<'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE'>('jrnl:subtab', 'QUESTS');
+  const journalLayout = useJournalLayout();
+  // A jump to a Journal sub-tab also picks the matching tab of the "Ready now" window.
+  const setJournalSubTab = useCallback((sub: 'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE') => {
+    setJournalSubTabState(sub);
+    setOsrsJournalTab(OSRS_JOURNAL_TAB[sub]);
+  }, [setJournalSubTabState]);
   useEffect(() => { setOsrsLab(null); }, [activeTab]);
   // OSRS layout: the Journal is its own full screen, so any route to the
   // Journal tab (the tab itself, palette jumps, unlock reveals) opens it.
@@ -1073,7 +1082,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       );
   };
 
-  const renderJournalTab = () => (
+  const renderJournalTab = () => journalLayout === 'ready' ? (
+      <Suspense fallback={<PaneFallback />}><OsrsJournalIsland /></Suspense>
+  ) : (
       <div className="h-full flex flex-col">
           <JournalProgressRings />
           <div className="flex bg-[#1a1a1a] border-b border-white/10 shrink-0">
