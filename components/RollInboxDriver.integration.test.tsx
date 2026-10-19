@@ -34,7 +34,7 @@ afterEach(() => {
 });
 
 describe('RollInboxDriver current relay boundary', () => {
-  it('never polls or acknowledges the legacy relay while mounted', async () => {
+  it('never asks the relay while RuneLite isn’t paired', async () => {
     vi.useFakeTimers();
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
 

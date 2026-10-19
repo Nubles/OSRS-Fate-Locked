@@ -1,4 +1,5 @@
 import { parseFateEvent, type FateEventEnvelope } from '../services/fateEventProtocol';
+import type { RollInboxStore } from '../services/rollInboxStore';
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -53,6 +54,31 @@ function listed(names: readonly string[]): string {
 }
 
 /**
+ * RuneLite's events, added to the Roll Inbox: the one way they get there,
+ * from Paste from RuneLite and from Send to tracker alike. The inbox skips
+ * any event id it already has, and nothing rolls until the player says so.
+ * A run linked to no one takes any character's events (plan decision 9), so
+ * the characters are named for the line that says what was added.
+ */
+export function addRuneliteEvents(
+  store: Pick<RollInboxStore, 'ingest'>,
+  pasted: PastedEvents,
+  linkedAccount: string | null | undefined,
+): { added: number; characters: string[] } {
+  const added = store.ingest(pasted.events);
+  const characters = linkedAccount ? [] : [...new Set(pasted.events.map((event) => event.account))];
+  return { added, characters };
+}
+
+/** "1 was too old." and "1 couldn’t be read.", for what a paste or a send left out. */
+function leftOut(tooOld: number, unreadable: number): string[] {
+  const parts: string[] = [];
+  if (tooOld > 0) parts.push(`${tooOld} ${were(tooOld)} too old.`);
+  if (unreadable > 0) parts.push(`${unreadable} couldn’t be read.`);
+  return parts;
+}
+
+/**
  * What a paste from RuneLite did, in a line (Stage 4): "Added 5. 2 were already here. 1 was too
  * old." A run linked to no one takes any character's events, so the line names whose they were.
  */
@@ -60,7 +86,35 @@ export function pasteSummary(pasted: PastedEvents, added: number, characters: re
   const already = pasted.events.length - added;
   const parts = [`Added ${added}${characters.length > 0 ? ` from ${listed(characters)}` : ''}.`];
   if (already > 0) parts.push(`${already} ${were(already)} already here.`);
-  if (pasted.tooOld > 0) parts.push(`${pasted.tooOld} ${were(pasted.tooOld)} too old.`);
-  if (pasted.unreadable > 0) parts.push(`${pasted.unreadable} couldn’t be read.`);
+  parts.push(...leftOut(pasted.tooOld, pasted.unreadable));
   return parts.join(' ');
+}
+
+/** What RuneLite's Send to tracker brought into the Roll Inbox, since the player last saw it. */
+export interface SentEvents {
+  added: number;
+  tooOld: number;
+  unreadable: number;
+  /** Whose events they were, for a run linked to no one. */
+  characters: string[];
+}
+
+/** Two arrivals the player hasn't seen yet, told as one. */
+export function mergeSentEvents(earlier: SentEvents, later: SentEvents): SentEvents {
+  return {
+    added: earlier.added + later.added,
+    tooOld: earlier.tooOld + later.tooOld,
+    unreadable: earlier.unreadable + later.unreadable,
+    characters: [...new Set([...earlier.characters, ...later.characters])],
+  };
+}
+
+/**
+ * What Send to tracker added, in a line like a paste's: "Added 3 from RuneLite." or, for a run
+ * linked to no one, "Added 3 from RuneLite (Player One)." Events that were already here aren't
+ * mentioned: the tracker takes them again only when it couldn't empty the relay last time.
+ */
+export function sentSummary(sent: SentEvents): string {
+  const whose = sent.characters.length > 0 ? ` (${listed(sent.characters)})` : '';
+  return [`Added ${sent.added} from RuneLite${whose}.`, ...leftOut(sent.tooOld, sent.unreadable)].join(' ');
 }

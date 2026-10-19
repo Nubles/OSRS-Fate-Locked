@@ -13,8 +13,10 @@ contributor. Last updated: 3 October 2026.
 2. **A ritual and Key balance pass**: Clarity against Void Gambit, the pity
    line and Greed's price, from player feedback and a simulation of the
    current rules. It changes the rules, so it waits for a decision.
-3. **An opt-in Fate Locked key next to players' names in game.** It needs an
-   opt-in public list on the web and the relay first, then the plugin.
+3. **An opt-in Fate Locked key next to players' names in game.** The relay's
+   public badge list (`/r/<code>/badge`, `GET /badges`) is written and waits
+   for the relay deploy (`workers/fate-relay/DEPLOY-NOTES.md`); the plugin
+   side follows.
 4. **The Corporeal Beast by games necklace** (accuracy review call B7). It
    needs the map to handle teleports into interiors.
 5. **RuneProof quest guides** (P0 and P1 below).
@@ -363,6 +365,13 @@ Follow-ups:
 - **Legacy relay resources removed:** `/r/:code/state`, `/events`, `/acks`
   and `/suggest` answer 404. No app, plugin `main` or Plugin Hub build
   (`0ae842d`) requested them.
+- **Send to tracker and badges (relay deploy pending):** RuneLite posts its
+  events to `/r/<code>/inbox`; the paired tracker tab takes them into the
+  Roll Inbox through `addRuneliteEvents` (the paste path) and acknowledges
+  them; nothing rolls. Badges live as metadata of `bd:<code>` and
+  `GET /badges` lists them. Until the relay is deployed these answer
+  `404 not found` and both clients fall back quietly. See "Send to tracker"
+  and "Badges" in `docs/online-relay.md`.
 - **Error reports:** `POST /e` on the relay takes `{build, kind, message,
   stack, path}` (8 KiB), always answers 204, stores nothing, and posts to
   the `ERROR_WEBHOOK_URL` Discord webhook secret when set (once per message
