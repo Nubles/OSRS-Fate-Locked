@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-set-level',
+    title: 'Log many levels at once',
+    date: '2026-10-19',
+    sections: {
+      added: [
+        'Click a skill’s icon and type the level you reached: every level in between still rolls, with one summary instead of a popup per level.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-dropped-connection',
     title: 'A dropped connection keeps you in the tracker',
     date: '2026-10-18',

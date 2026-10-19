@@ -34,6 +34,7 @@ import { loadWalkSections } from '../utils/walkSections';
 import { UNLOCK_COST, randomUnlockPool, pickRandomPoolEntry, isRandomUnlockEligible, isValidUnlock } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { drawFloat, seededContext } from '../utils/seededRng';
+import { levelsToLog, summarizeLevelBatch, type LevelBatchSummary } from '../utils/setLevel';
 import { importWithRetry } from '../utils/lazyRetry';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import {
@@ -263,6 +264,14 @@ interface GameContextType extends GameState {
   /** Chunked: a Gilded chunk's free Key roll (utils/fateLand.ts). */
   rollGilded: (chunk: string, x?: number, y?: number) => void;
   levelUpSkill: (skill: string) => void;
+  /**
+   * Set level: log every level from the skill's current level up to `level`,
+   * each rolled exactly as one levelUpSkill click would (same actions, same
+   * nextFloat draws in the same order), committed at once with no per-level
+   * popup. Returns what the levels brought, or null when nothing was logged
+   * (utils/setLevel.ts levelsToLog; utils/setLevelText.ts says why).
+   */
+  setSkillLevel: (skill: string, level: number) => LevelBatchSummary | null;
   toggleAnimations: () => void;
   toggleAdvisors: () => void;
   toggleRevealAll: () => void;
@@ -831,6 +840,39 @@ export const prepareLevelUpActions = (
       nextDice,
     ),
   };
+};
+
+/**
+ * One level-up, as a click on the skill logs it: draw the Chaos roll, decide
+ * the Key roll against the run before the level, apply the level, then the
+ * roll with the level's meta. levelUpSkill commits each action as it goes;
+ * setSkillLevel runs this step once per level and commits once at the end.
+ */
+export const stepLevelUp = (
+  getState: () => GameState & { lastEvent: GameEvent | null },
+  skill: string,
+  nextFloat: (purpose: string) => number,
+  nextDice: DiceRoller,
+  commit: (action: TransitionAction) => GameState & { lastEvent: GameEvent | null },
+): void => {
+  const levelBefore = getState().unlocks.levels[skill] || 1;
+  // Level 99 is the cap; a level-up that changes nothing earns no roll.
+  if (levelBefore >= 99) return;
+  // Pre-compute RNG outside reducer to maintain reducer purity
+  const chaosRoll = nextFloat('levelup');
+  const prepared = prepareLevelUpActions(getState(), skill, chaosRoll, nextDice);
+  const levelState = commit(prepared.levelAction);
+  if ((levelState.unlocks.levels[skill] || 1) === levelBefore || !prepared.rewardAction) return;
+  const levelUpMeta = levelState.lastEvent?.type === 'LEVEL_UP'
+    ? levelState.lastEvent.meta
+    : undefined;
+  commit({
+    ...prepared.rewardAction,
+    payload: {
+      ...prepared.rewardAction.payload,
+      meta: { ...prepared.rewardAction.payload.meta, ...levelUpMeta },
+    },
+  });
 };
 
 // Wrap the raw reducer so any history entries appended during a dispatch
@@ -3196,25 +3238,32 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   }, [commitAction]);
 
   const levelUpSkill = useCallback((skill: string) => {
-    const levelBefore = stateRef.current.unlocks.levels[skill] || 1;
-    // Level 99 is the cap; a level-up that changes nothing earns no roll.
-    if (levelBefore >= 99) return;
-    // Pre-compute RNG outside reducer to maintain reducer purity
-    const chaosRoll = nextFloat('levelup');
-    const prepared = prepareLevelUpActions(stateRef.current, skill, chaosRoll, nextDice);
-    const levelState = commitAction(prepared.levelAction);
-    if ((levelState.unlocks.levels[skill] || 1) === levelBefore || !prepared.rewardAction) return;
-    const levelUpMeta = levelState.lastEvent?.type === 'LEVEL_UP'
-      ? levelState.lastEvent.meta
-      : undefined;
-    commitAction({
-      ...prepared.rewardAction,
-      payload: {
-        ...prepared.rewardAction.payload,
-        meta: { ...prepared.rewardAction.payload.meta, ...levelUpMeta },
-      },
-    });
+    stepLevelUp(() => stateRef.current, skill, nextFloat, nextDice, commitAction);
   }, [commitAction, nextDice, nextFloat]);
+
+  const setSkillLevel = useCallback((skill: string, level: number): LevelBatchSummary | null => {
+    const before = stateRef.current;
+    const count = levelsToLog(before.unlocks.levels[skill] || 1, before.unlocks.skills[skill] || 0, level);
+    if (count === 0) return null;
+    // Each level runs the click's own step against stateRef, so nextFloat and
+    // nextDice draw from the same chain tips in the same order as N clicks.
+    // Nothing reaches React until the last level: one commit, one render,
+    // one save, and no popup or animation per level.
+    let after = before;
+    try {
+      const reduceOnly = (action: TransitionAction) => (stateRef.current = gameReducer(stateRef.current, action));
+      for (let i = 0; i < count; i++) stepLevelUp(() => stateRef.current, skill, nextFloat, nextDice, reduceOnly);
+      after = stateRef.current;
+    } finally {
+      stateRef.current = before;
+    }
+    if (after === before) return null;
+    const committed = { ...after, lastEvent: null };
+    stateMutationRef.current += 1;
+    stateRef.current = committed;
+    dispatch({ type: 'COMMIT_STATE', payload: committed });
+    return summarizeLevelBatch(before, committed, skill);
+  }, [nextDice, nextFloat]);
 
   const acceptDetectedEvent = useCallback((
     progress: DetectedProgress,
@@ -3749,6 +3798,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     exploreChunk,
     rollGilded,
     levelUpSkill,
+    setSkillLevel,
     toggleAnimations,
     toggleAdvisors,
     toggleRevealAll,
@@ -3809,6 +3859,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     exploreChunk,
     rollGilded,
     levelUpSkill,
+    setSkillLevel,
     toggleAnimations,
     toggleAdvisors,
     toggleRevealAll,

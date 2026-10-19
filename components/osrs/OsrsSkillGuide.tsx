@@ -10,6 +10,7 @@ import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatKeyPercent, skillLevelKeyChance } from '../../utils/keyRoll';
 import { isSkillChaosMilestone, LEVEL_CHAOS_CHANCE } from '../../config/economy';
 import { TIER_GEMS, gemSrc, roman, skillIconSrc, tint } from './OsrsDashGems';
+import { SetLevelControl } from '../SetLevelControl';
 import './osrs-dashboard.css';
 
 /**
@@ -246,6 +247,8 @@ export const OsrsSkillGuide: React.FC<Props> = ({ skill, currentTier, onClose })
             )}
           </span>
         </div>
+
+        <SetLevelControl skill={skill} variant="osrs" />
 
         <div role="tablist" aria-label="Skill detail sections" className="osrs-dash-tabrow" style={{ padding: '0 4px', flexShrink: 0 }}>
           <div className="osrs-dash-tablist">
