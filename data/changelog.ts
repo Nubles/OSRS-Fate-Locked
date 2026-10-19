@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-smoother-level-ups',
+    title: 'Smoother level-ups',
+    date: '2026-10-19',
+    sections: {
+      fixed: [
+        'Levelling up no longer stutters on slower devices, even deep into a long run.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-dropped-connection',
     title: 'A dropped connection keeps you in the tracker',
     date: '2026-10-18',
