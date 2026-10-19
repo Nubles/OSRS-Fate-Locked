@@ -9,6 +9,7 @@
 // Same module specifiers the lazy() call sites use, so they resolve to the
 // exact same chunks (no duplicate fetch).
 const IMPORTERS: Array<() => Promise<unknown>> = [
+  () => import('../components/HeaderSettingsMenu'), // the classic gear menu, small and opened by click
   () => import('../components/RegionMap'),
   () => import('../components/StatsModal'),
   () => import('../components/StatsChartsView'), // pulls recharts in advance
