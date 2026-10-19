@@ -36,6 +36,7 @@ export const RUNELITE_SETTING_SECTIONS = [
   'Strict Mode',
   'Alerts',
   'Display',
+  'Badges',
   'Custom colours',
   'Backup',
 ] as const;
@@ -61,6 +62,7 @@ export interface RuneliteSetting {
 export const RUNELITE_SETTINGS: readonly RuneliteSetting[] = [
   { key: 'trackerNetworkAccess', section: 'Tracker', name: 'Online sync', defaultValue: 'Off' },
   { key: 'strictMode', section: 'Strict Mode', name: 'Strict Mode', defaultValue: 'Off' },
+  { key: 'blockNetworks', section: 'Strict Mode', name: 'Block networks and boats', defaultValue: 'Off' },
   { key: 'pauseStrictModeHotkey', section: 'Strict Mode', name: 'Pause hotkey', defaultValue: 'Not set' },
   {
     key: 'lockedAreaAlert',
@@ -75,6 +77,7 @@ export const RUNELITE_SETTINGS: readonly RuneliteSetting[] = [
   { key: 'rollNudges', section: 'Alerts', name: 'Roll reminders', defaultValue: 'On' },
   { key: 'useNotifier', section: 'Alerts', name: 'Also send RuneLite notifications', defaultValue: 'Off' },
   { key: 'announceUnlocks', section: 'Alerts', name: 'Announce new unlocks', defaultValue: 'On' },
+  { key: 'fairyRingDialStatus', section: 'Alerts', name: 'Fairy ring dial status', defaultValue: 'On' },
   {
     key: 'hudMode',
     section: 'Display',
@@ -119,6 +122,9 @@ export const RUNELITE_SETTINGS: readonly RuneliteSetting[] = [
     defaultValue: 'Default',
     options: ['Default', 'Colour-blind safe', 'Custom'],
   },
+  { key: 'badgesInChat', section: 'Badges', name: 'Show badges in chat', defaultValue: 'On' },
+  { key: 'badgesAboveHeads', section: 'Badges', name: 'Show badges above heads', defaultValue: 'On' },
+  { key: 'shareBadge', section: 'Badges', name: 'Share my badge', defaultValue: 'Off' },
   { key: 'unlockedColor', section: 'Custom colours', name: 'Unlocked', defaultValue: '#6e10b981' },
   { key: 'frontierColor', section: 'Custom colours', name: 'Frontier', defaultValue: '#64f59e0b' },
   { key: 'lockedColor', section: 'Custom colours', name: 'Locked', defaultValue: '#6eef4444' },

@@ -217,8 +217,8 @@ describe('RuneLite guide, as the plugin does it', () => {
   });
 
   it('says what the sidebar and the settings keep and change (P-29, P-30, P-31)', () => {
-    expect(chapter('settings')).toContain('Its sections are Tracker, Strict Mode, Alerts, Display, Custom colours and Backup.');
-    expect(chapter('settings')).toContain('Apart from Online sync and Strict Mode');
+    expect(chapter('settings')).toContain('Its sections are Tracker, Strict Mode, Alerts, Display, Badges, Custom colours and Backup.');
+    expect(chapter('settings')).toContain('Apart from Online sync, Strict Mode and Share my badge');
     expect(chapter('sidebar')).toContain('Here remembers which of its categories you left open.');
     expect(callout('here', 'skills')).toContain('the level the tracker has for you');
   });
