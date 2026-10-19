@@ -119,14 +119,26 @@ stops asking until the page is reloaded.
 Off by default in the plugin. With **Share my badge** on, the plugin posts
 `{ name, tier }` to `POST /r/<code>/badge` (a live profile is needed): the
 character name, 1 to 12 letters, digits, spaces, `-` and `_`, and the
-milestone, 0 (under 25%) to 4 (Fate Unbound, 100%). The relay keeps one badge
-per code as the metadata of an empty `bd:<code>` record for 30 days; the
-plugin resends it at least daily while it is on. `DELETE` removes it at once,
-even for a gone code. `GET /badges` is public: `{"badges":[{"n","t"}]}`,
-built from KV `list()` metadata alone, one entry per name (its newest badge),
-sorted by name, at most 5000, rebuilt at most every 10 minutes per Worker
-isolate and location (`caches.default`), with `Cache-Control: public,
-max-age=600` and an `ETag` of its body for `If-None-Match`.
+milestone, 0 (under 25%) to 4 (Fate Unbound, 100%). Every badge lives in
+one KV record, `badges`: `{"v":1,"byCode":{"<code>":{"n","t","at"}}}`. A
+post or `DELETE` (allowed even for a gone code) rewrites it, one KV write
+per change, dropping badges over 30 days old; the plugin resends its badge
+at least daily while sharing is on, and the same badge again within an hour
+writes nothing. KV takes about one write a second per key, so a write can
+fail: the relay then answers `503` with `Retry-After: 60`, and the plugin
+tries again later. Two changes at once can also read the same record, and
+the later write wins; the lost one comes back with that player's next
+resend. With 5000 live badges held, a new code gets `503` and nobody is
+dropped for it.
+
+`GET /badges` is public: `{"badges":[{"n","t"}]}`, live badges only, one
+entry per name (its newest badge, names compared as the plugin compares
+them), sorted by name, at most 5000. It reads the one record through the
+location's KV cache (`cacheTtl` 5 minutes) and each Worker isolate keeps
+the list it built for 5 minutes, so serving it never lists KV (the free plan
+allows 1,000 list operations a day, and Cloudflare's Cache API does nothing
+on a `*.workers.dev` address). It has `Cache-Control: public, max-age=600`
+and an `ETag` of its body for `If-None-Match`.
 
 ## What “Profile sent” means
 

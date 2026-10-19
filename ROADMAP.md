@@ -368,8 +368,8 @@ Follow-ups:
 - **Send to tracker and badges (relay deploy pending):** RuneLite posts its
   events to `/r/<code>/inbox`; the paired tracker tab takes them into the
   Roll Inbox through `addRuneliteEvents` (the paste path) and acknowledges
-  them; nothing rolls. Badges live as metadata of `bd:<code>` and
-  `GET /badges` lists them. Until the relay is deployed these answer
+  them; nothing rolls. Badges live in one KV record, `badges`, which
+  `GET /badges` reads (never a KV list). Until the relay is deployed these answer
   `404 not found` and both clients fall back quietly. See "Send to tracker"
   and "Badges" in `docs/online-relay.md`.
 - **Error reports:** `POST /e` on the relay takes `{build, kind, message,

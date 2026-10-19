@@ -12,7 +12,6 @@ import {
   BACKUP_ROTATE_MS,
   BACKUP_TTL_SECONDS,
   BADGES_CACHE_SECONDS,
-  BADGE_TTL_SECONDS,
   DISCORD_ID_RE,
   INBOX_MAX_AGE_MS,
   INBOX_TTL_SECONDS,
@@ -34,7 +33,7 @@ import {
   validInboxAck,
   validInboxBatch,
 } from './protocol.js';
-import { currentBadgeList, matchesEtag } from './badges.js';
+import { BadgeWriteRefused, changeBadge, currentBadgeList, matchesEtag } from './badges.js';
 import {
   LINK_CODE_TTL_SECONDS,
   MAX_PROGRESS_BYTES,
@@ -705,15 +704,30 @@ async function inboxRoute(request, env, headers, code, ack) {
 }
 
 /**
- * A Fate Locked badge: the plugin's character name and milestone, kept as
- * the metadata of an empty `bd:<code>` record for 30 days after the plugin
- * last sent it. One badge per code; a new one replaces it. Posting needs a
- * live profile; removing it (sharing turned off, or Disconnect) never does.
+ * The badge list's record couldn't take a change (KV was busy or failed, or
+ * the list is full): 503, which the plugin reads as "try again later".
+ */
+function badgeNotStored(headers) {
+  return new Response('relay busy', {
+    status: 503,
+    headers: { ...headers, 'Retry-After': String(RATE_LIMIT_RETRY_AFTER_SECONDS) },
+  });
+}
+
+/**
+ * A Fate Locked badge: the plugin's character name and milestone, kept in
+ * the one badge list record (badges.js) for 30 days after the plugin last
+ * sent it. One badge per code; a new one replaces it. Posting needs a live
+ * profile; removing it (sharing turned off, or Disconnect) never does.
  */
 async function badgeRoute(request, env, headers, code) {
-  const key = `bd:${code}`;
   if (request.method === 'DELETE') {
-    await env.RELAY.delete(key);
+    try {
+      await changeBadge(env.RELAY, code, null, Date.now());
+    } catch (error) {
+      if (error instanceof BadgeWriteRefused) return badgeNotStored(headers);
+      throw error;
+    }
     return json({ deleted: true }, headers);
   }
   if (request.method !== 'POST') return methodNotAllowed(headers);
@@ -727,17 +741,23 @@ async function badgeRoute(request, env, headers, code) {
   }
   if (!badge) return badRequest(headers);
   if (await liveProfile(env, code) === null) return noProfile(headers);
-  await env.RELAY.put(key, '', { expirationTtl: BADGE_TTL_SECONDS, metadata: { ...badge, at: Date.now() } });
+  try {
+    await changeBadge(env.RELAY, code, badge, Date.now());
+  } catch (error) {
+    if (error instanceof BadgeWriteRefused) return badgeNotStored(headers);
+    throw error;
+  }
   return json({ ok: true }, headers);
 }
 
 /**
  * The public badge list (badges.js), the same for everyone, so caches may
- * keep it: 10 minutes, with an ETag of its body for If-None-Match.
+ * keep it: 10 minutes, with an ETag of its body for If-None-Match. One KV
+ * read at most, never a list operation.
  */
-async function badgesRoute(request, env, headers, url, ctx) {
+async function badgesRoute(request, env, headers) {
   if (request.method !== 'GET') return methodNotAllowed(headers);
-  const { body, etag } = await currentBadgeList(env, `${url.origin}/badges`, ctx);
+  const { body, etag } = await currentBadgeList(env);
   const cacheable = {
     ...headers,
     'Cache-Control': `public, max-age=${BADGES_CACHE_SECONDS}`,
@@ -788,7 +808,7 @@ const routes = {
       return discordLinkRoute(request, env, headers, discordLink[1]);
     }
 
-    if (url.pathname === '/badges') return badgesRoute(request, env, headers, url, ctx);
+    if (url.pathname === '/badges') return badgesRoute(request, env, headers);
 
     const profile = url.pathname.match(PROFILE_ROUTE);
     const inbox = url.pathname.match(INBOX_ROUTE);

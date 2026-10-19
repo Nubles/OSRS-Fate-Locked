@@ -94,7 +94,7 @@ describe('relay GET contract', () => {
   }
 });
 
-/** A KV that keeps what it is given, with metadata and list(), as the routes below use it. */
+/** A KV that keeps what it is given, with metadata, as the routes below use it. */
 class ContractKv {
   values = new Map<string, string>();
   metadata = new Map<string, unknown>();
@@ -113,12 +113,6 @@ class ContractKv {
   async delete(key: string) {
     this.values.delete(key);
     this.metadata.delete(key);
-  }
-
-  async list({ prefix = '' }: { prefix?: string } = {}) {
-    const keys = [...this.values.keys()].filter(name => name.startsWith(prefix)).sort()
-      .map(name => ({ name, metadata: this.metadata.get(name) }));
-    return { keys, list_complete: true };
   }
 }
 
@@ -190,7 +184,6 @@ describe('relay contract for Send to tracker and badges', () => {
 
     expect(await reply(await call('DELETE', `/r/${code}/badge`)))
       .toEqual({ status: 200, body: '{"deleted":true}' });
-    resetBadgeCache(); // a new isolate, or 10 minutes later
     expect(await reply(await call('GET', '/badges'))).toEqual({ status: 200, body: '{"badges":[]}' });
   });
 });

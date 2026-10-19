@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import worker from './worker.js';
 import { MAX_BACKUP_BYTES } from './protocol.js';
 import { resetErrorDedupe } from './errors.js';
-import { resetBadgeCache } from './badges.js';
+import { BADGES_KEY, resetBadgeCache } from './badges.js';
 
 class MemoryKv {
   records = new Map<string, string>();
@@ -11,7 +11,10 @@ class MemoryKv {
   puts: string[] = [];
   failNextPut = false;
 
-  async get(key: string, options?: { type?: string }) {
+  getOptions: Array<{ key: string; options?: unknown }> = [];
+
+  async get(key: string, options?: { type?: string; cacheTtl?: number }) {
+    this.getOptions.push({ key, options });
     const value = this.records.get(key);
     if (value === undefined) return null;
     if (options?.type === 'arrayBuffer') return new TextEncoder().encode(value).buffer;
@@ -43,21 +46,6 @@ class MemoryKv {
     this.metadata.delete(key);
   }
 
-  lists = 0;
-
-  /** KV list(): keys in name order with their metadata, a page at a time. */
-  async list({ prefix = '', limit = 1000, cursor }: { prefix?: string; limit?: number; cursor?: string } = {}) {
-    this.lists += 1;
-    const names = [...this.records.keys()].filter(name => name.startsWith(prefix)).sort();
-    const start = cursor ? Number(cursor) : 0;
-    const page = names.slice(start, start + limit);
-    const complete = start + limit >= names.length;
-    return {
-      keys: page.map(name => ({ name, metadata: this.metadata.get(name) })),
-      list_complete: complete,
-      ...(complete ? {} : { cursor: String(start + limit) }),
-    };
-  }
 }
 
 const sha256Hex = async (value: string) => [...new Uint8Array(
@@ -1357,50 +1345,90 @@ describe('Fate relay badges', () => {
   let env: Record<string, unknown> & { RELAY: MemoryKv };
   let token: string;
   const BADGE = `/r/${CODE}/badge`;
+  const codeFor = (index: number) => index.toString(16).padStart(32, '0');
 
   beforeEach(async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(NOW);
     resetBadgeCache();
     kv = new MemoryKv();
+    // Serving or changing badges never lists KV.
+    (kv as unknown as { list: () => never }).list = () => {
+      throw new Error('the relay listed KV');
+    };
     env = { RELAY: kv };
     ({ token } = await (await call('POST', `/r/${CODE}`, { body: { payload: flgz('rules') } })).json());
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.unstubAllGlobals();
     vi.restoreAllMocks();
     resetBadgeCache();
   });
 
-  function call(method: string, path: string, { body, headers = {}, ctx }: { body?: unknown; headers?: Record<string, string>; ctx?: unknown } = {}) {
+  function call(method: string, path: string, { body, headers = {} }: { body?: unknown; headers?: Record<string, string> } = {}) {
     return worker.fetch(new Request(`https://relay.test${path}`, {
       method,
       headers: { 'Content-Type': 'application/json', ...headers },
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-    }), env, ctx);
+    }), env);
   }
   const postBadge = (body: unknown, code = CODE) => call('POST', `/r/${code}/badge`, { body });
   const list = async (headers: Record<string, string> = {}) => call('GET', '/badges', { headers });
-  /** A badge stored as the relay stores one, for a code of its own. */
-  const storeBadge = (index: number, n: string, t: number, at = NOW) => {
-    const key = `bd:${index.toString(16).padStart(32, '0')}`;
-    kv.records.set(key, '');
-    kv.metadata.set(key, { n, t, at });
+  const snapshot = () => JSON.parse(kv.records.get(BADGES_KEY)!);
+  /** The badge list's record, as the relay writes it. */
+  const storeSnapshot = (byCode: Record<string, unknown>) => {
+    kv.records.set(BADGES_KEY, JSON.stringify({ v: 1, byCode }));
   };
+  const badgePuts = () => kv.puts.filter(key => key === BADGES_KEY).length;
 
-  it('keeps one badge per code as metadata of an empty record, for 30 days', async () => {
+  it('keeps one badge per code in the one list record, for 30 days, one write per change', async () => {
+    kv.puts.length = 0;
     const response = await postBadge({ name: ' Player One ', tier: 2 });
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ ok: true });
-    expect(kv.records.get(`bd:${CODE}`)).toBe('');
-    expect(kv.metadata.get(`bd:${CODE}`)).toEqual({ n: 'Player One', t: 2, at: NOW });
-    expect(kv.ttls.get(`bd:${CODE}`)).toBe(30 * 86_400);
+    expect(snapshot()).toEqual({ v: 1, byCode: { [CODE]: { n: 'Player One', t: 2, at: NOW } } });
+    expect(kv.ttls.get(BADGES_KEY)).toBe(30 * 86_400);
+    expect(kv.puts).toEqual([BADGES_KEY]);
+    expect([...kv.records.keys()].some(key => key.startsWith('bd:'))).toBe(false);
 
     vi.setSystemTime(NOW + MINUTE);
     await postBadge({ name: 'Player One', tier: 3 });
-    expect(kv.metadata.get(`bd:${CODE}`)).toEqual({ n: 'Player One', t: 3, at: NOW + MINUTE });
+    expect(snapshot().byCode[CODE]).toEqual({ n: 'Player One', t: 3, at: NOW + MINUTE });
+    expect(badgePuts()).toBe(2);
+  });
+
+  it('keeps other codes’ badges when one changes', async () => {
+    storeSnapshot({ [codeFor(1)]: { n: 'Other', t: 1, at: NOW - DAY } });
+    await postBadge({ name: 'Player One', tier: 2 });
+    expect(Object.keys(snapshot().byCode).sort()).toEqual([codeFor(1), CODE].sort());
+  });
+
+  it('writes nothing for the same badge sent again within the hour, and refreshes it after', async () => {
+    await postBadge({ name: 'Player One', tier: 2 });
+    vi.setSystemTime(NOW + 30 * MINUTE);
+    expect((await postBadge({ name: 'Player One', tier: 2 })).status).toBe(200);
+    expect(badgePuts()).toBe(1);
+    vi.setSystemTime(NOW + DAY);
+    await postBadge({ name: 'Player One', tier: 2 });
+    expect(badgePuts()).toBe(2);
+    expect(snapshot().byCode[CODE].at).toBe(NOW + DAY);
+  });
+
+  it('drops badges over 30 days old when it rewrites the record', async () => {
+    storeSnapshot({
+      [codeFor(1)]: { n: 'Stale', t: 1, at: NOW - 31 * DAY },
+      [codeFor(2)]: { n: 'Fresh', t: 1, at: NOW - 29 * DAY },
+      [codeFor(3)]: { n: 'bad<name>', t: 1, at: NOW },
+    });
+    await postBadge({ name: 'Player One', tier: 0 });
+    expect(Object.keys(snapshot().byCode).sort()).toEqual([codeFor(2), CODE].sort());
+  });
+
+  it('starts a new record over one it can’t read', async () => {
+    kv.records.set(BADGES_KEY, 'not json');
+    await postBadge({ name: 'Player One', tier: 4 });
+    expect(snapshot()).toEqual({ v: 1, byCode: { [CODE]: { n: 'Player One', t: 4, at: NOW } } });
   });
 
   it.each([
@@ -1440,17 +1468,57 @@ describe('Fate relay badges', () => {
     await call('POST', `/r/${CODE}`, { body: { token, gone: true } });
     const gone = await postBadge({ name: 'Player', tier: 1 });
     expect(gone.status).toBe(404);
-    expect(kv.records.has(`bd:${CODE}`)).toBe(false);
+    expect(kv.records.has(BADGES_KEY)).toBe(false);
   });
 
-  it('removes the badge, even once the profile is gone or never was', async () => {
+  it('removes the badge, even once the profile is gone or never was, writing only when it held one', async () => {
+    storeSnapshot({ [codeFor(1)]: { n: 'Other', t: 1, at: NOW } });
     await postBadge({ name: 'Player', tier: 1 });
     await call('POST', `/r/${CODE}`, { body: { token, gone: true } });
     const removed = await call('DELETE', BADGE);
     expect(removed.status).toBe(200);
     expect(await removed.json()).toEqual({ deleted: true });
-    expect(kv.records.has(`bd:${CODE}`)).toBe(false);
+    expect(Object.keys(snapshot().byCode)).toEqual([codeFor(1)]);
+
+    const writes = badgePuts();
     expect((await call('DELETE', `/r/${'d'.repeat(32)}/badge`)).status).toBe(200);
+    expect((await call('DELETE', BADGE)).status).toBe(200);
+    expect(badgePuts()).toBe(writes);
+  });
+
+  it('answers 503 with Retry-After when KV refuses the write, so the plugin sends it again', async () => {
+    kv.failNextPut = true;
+    const posted = await postBadge({ name: 'Player', tier: 1 });
+    expect(posted.status).toBe(503);
+    expect(posted.headers.get('Retry-After')).toBe('60');
+    expect(kv.records.has(BADGES_KEY)).toBe(false);
+    expect((await postBadge({ name: 'Player', tier: 1 })).status).toBe(200);
+
+    kv.failNextPut = true;
+    expect((await call('DELETE', BADGE)).status).toBe(503);
+    expect(snapshot().byCode[CODE]).toBeDefined();
+  });
+
+  it('refuses a new code with 503 once 5000 live badges are held, without dropping any', async () => {
+    const full = Object.fromEntries(Array.from({ length: 5000 }, (_, index) =>
+      [codeFor(index + 1), { n: `p${index}`, t: 1, at: NOW }]));
+    storeSnapshot(full);
+    const refused = await postBadge({ name: 'Player', tier: 1 });
+    expect(refused.status).toBe(503);
+    expect(Object.keys(snapshot().byCode)).toHaveLength(5000);
+    expect(snapshot().byCode[CODE]).toBeUndefined();
+
+    // A badge over 30 days old makes room.
+    full[codeFor(1)] = { n: 'p0', t: 1, at: NOW - 31 * DAY };
+    storeSnapshot(full);
+    expect((await postBadge({ name: 'Player', tier: 1 })).status).toBe(200);
+    expect(Object.keys(snapshot().byCode)).toHaveLength(5000);
+    expect(snapshot().byCode[codeFor(1)]).toBeUndefined();
+
+    // A code already listed can still change while the list is full.
+    vi.setSystemTime(NOW + 2 * 60 * MINUTE);
+    expect((await postBadge({ name: 'Player', tier: 3 })).status).toBe(200);
+    expect(snapshot().byCode[CODE].t).toBe(3);
   });
 
   it('counts badge posts and removals toward the write limit, before touching KV', async () => {
@@ -1465,40 +1533,50 @@ describe('Fate relay badges', () => {
     expect((await call('GET', '/r/ABCD/badge')).status).toBe(400);
   });
 
-  it('lists every badge by name from metadata alone, cacheable for 10 minutes', async () => {
-    storeBadge(1, 'zed', 1);
-    storeBadge(2, 'Alpha', 4);
-    storeBadge(3, 'mid name', 0);
-    kv.get = async () => {
-      throw new Error('the list must not read values');
-    };
+  it('lists every live badge by name from one read of the record, cacheable for 10 minutes', async () => {
+    storeSnapshot({
+      [codeFor(1)]: { n: 'zed', t: 1, at: NOW },
+      [codeFor(2)]: { n: 'Alpha', t: 4, at: NOW },
+      [codeFor(3)]: { n: 'mid name', t: 0, at: NOW },
+      [codeFor(4)]: { n: 'Expired', t: 2, at: NOW - 31 * DAY },
+    });
+    kv.getOptions.length = 0;
     const response = await list();
     expect(response.status).toBe(200);
     expect(response.headers.get('Content-Type')).toBe('application/json');
     expect(response.headers.get('Cache-Control')).toBe('public, max-age=600');
     expect(response.headers.get('ETag')).toMatch(/^"[0-9a-f]{32}"$/);
     expect(await response.text()).toBe('{"badges":[{"n":"Alpha","t":4},{"n":"mid name","t":0},{"n":"zed","t":1}]}');
+    // Read through the location's KV cache for 5 minutes.
+    expect(kv.getOptions).toEqual([{ key: BADGES_KEY, options: { cacheTtl: 300 } }]);
   });
 
-  it('lists a name once, with its newest badge, and skips metadata that is not a badge', async () => {
-    storeBadge(1, 'Player One', 1, NOW - DAY);
-    storeBadge(2, 'player_one', 3, NOW);
-    storeBadge(3, 'Other', 9);
-    kv.records.set('bd:nometa', '');
-    const { badges } = await (await list()).json();
-    // 'Other' has tier 9, which no badge has.
-    expect(badges).toEqual([{ n: 'player_one', t: 3 }]);
+  it('lists a name once, with its newest badge, and skips entries that are not badges', async () => {
+    storeSnapshot({
+      [codeFor(1)]: { n: 'Player One', t: 1, at: NOW - DAY },
+      [codeFor(2)]: { n: 'player_one', t: 3, at: NOW },
+      [codeFor(3)]: { n: 'Other', t: 9, at: NOW },
+      [codeFor(4)]: { n: 'No time', t: 1 },
+      [codeFor(5)]: 'not a badge',
+    });
+    expect((await (await list()).json()).badges).toEqual([{ n: 'player_one', t: 3 }]);
   });
 
-  it('follows list pages and stops at 5000 badges', async () => {
-    for (let index = 0; index < 5100; index += 1) storeBadge(index, `p${index}`, index % 5);
-    const { badges } = await (await list()).json();
-    expect(badges).toHaveLength(5000);
-    expect(kv.lists).toBe(5);
+  it('lists nothing for a missing record, or one of another version', async () => {
+    expect(await (await list()).text()).toBe('{"badges":[]}');
+    resetBadgeCache();
+    kv.records.set(BADGES_KEY, JSON.stringify({ v: 2, byCode: { [CODE]: { n: 'Player', t: 1, at: NOW } } }));
+    expect(await (await list()).text()).toBe('{"badges":[]}');
+  });
+
+  it('lists at most 5000 badges', async () => {
+    storeSnapshot(Object.fromEntries(Array.from({ length: 5100 }, (_, index) =>
+      [codeFor(index), { n: `p${index}`, t: index % 5, at: NOW }])));
+    expect((await (await list()).json()).badges).toHaveLength(5000);
   });
 
   it('answers 304 to its ETag, quoted, weak or among others', async () => {
-    storeBadge(1, 'Player', 2);
+    storeSnapshot({ [codeFor(1)]: { n: 'Player', t: 2, at: NOW } });
     const etag = (await list()).headers.get('ETag')!;
     for (const validator of [etag, `W/${etag}`, etag.slice(1, -1), `"other", ${etag}`, '*']) {
       const response = await list({ 'If-None-Match': validator });
@@ -1509,56 +1587,17 @@ describe('Fate relay badges', () => {
     expect((await list({ 'If-None-Match': '"other"' })).status).toBe(200);
   });
 
-  it('builds the list at most every 10 minutes', async () => {
-    storeBadge(1, 'Player', 2);
+  it('reads the record at most every 5 minutes per isolate, sooner after a change it made', async () => {
+    storeSnapshot({ [codeFor(1)]: { n: 'Player', t: 2, at: NOW } });
     await list();
-    storeBadge(2, 'Newcomer', 1);
-    vi.setSystemTime(NOW + 9 * MINUTE);
+    storeSnapshot({ [codeFor(1)]: { n: 'Player', t: 2, at: NOW }, [codeFor(2)]: { n: 'Newcomer', t: 1, at: NOW } });
+    vi.setSystemTime(NOW + 4 * MINUTE);
     expect((await (await list()).json()).badges).toHaveLength(1);
-    expect(kv.lists).toBe(1);
-    vi.setSystemTime(NOW + 10 * MINUTE);
+    vi.setSystemTime(NOW + 5 * MINUTE);
     expect((await (await list()).json()).badges).toHaveLength(2);
-    expect(kv.lists).toBe(2);
-  });
 
-  it('shares a built list through the Cache API, after the response', async () => {
-    const cached = new Map<string, Response>();
-    const cache = {
-      match: vi.fn(async (request: Request) => cached.get(request.url)?.clone()),
-      put: vi.fn(async (request: Request, response: Response) => { cached.set(request.url, response); }),
-    };
-    vi.stubGlobal('caches', { default: cache });
-    storeBadge(1, 'Player', 2);
-    const waited: Promise<unknown>[] = [];
-    const ctx = { waitUntil: (work: Promise<unknown>) => { waited.push(work); } };
-
-    const first = await call('GET', '/badges', { ctx });
-    await Promise.all(waited);
-    expect(cache.put).toHaveBeenCalledTimes(1);
-    const [key, stored] = cache.put.mock.calls[0];
-    expect(key.url).toBe('https://relay.test/badges');
-    expect(stored.headers.get('Cache-Control')).toBe('public, max-age=600');
-
-    // Another isolate in the same location: served from the cache, not KV.
-    resetBadgeCache();
-    const second = await call('GET', '/badges', { ctx });
-    expect(await second.text()).toBe(await first.text());
-    expect(second.headers.get('ETag')).toBe(first.headers.get('ETag'));
-    expect(kv.lists).toBe(1);
-
-    // A cached list older than 10 minutes is built again.
-    resetBadgeCache();
-    vi.setSystemTime(NOW + 11 * MINUTE);
-    await call('GET', '/badges', { ctx });
-    expect(kv.lists).toBe(2);
-  });
-
-  it('builds the list when the Cache API fails', async () => {
-    vi.stubGlobal('caches', { default: { match: async () => { throw new Error('cache down'); }, put: async () => { throw new Error('cache down'); } } });
-    storeBadge(1, 'Player', 2);
-    const response = await list();
-    expect(response.status).toBe(200);
-    expect((await response.json()).badges).toEqual([{ n: 'Player', t: 2 }]);
+    await postBadge({ name: 'Player One', tier: 2 });
+    expect((await (await list()).json()).badges).toHaveLength(3);
   });
 
   it('is never limited, and lets any page read it', async () => {

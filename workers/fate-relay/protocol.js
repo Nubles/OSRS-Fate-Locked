@@ -173,11 +173,11 @@ export const MAX_BADGE_TIER = 4;
 /** An OSRS display name as the plugin sends it: up to 12 letters, digits, spaces, '-' and '_'. */
 export const BADGE_NAME_RE = /^[A-Za-z0-9 _-]{1,12}$/;
 export const MAX_BADGE_REQUEST_BYTES = 1024;
-/** A badge lasts this long after the plugin last sent it (it resends at least daily). */
+/** A badge lasts this long after the plugin last sent it (it resends at least daily), and so does the list's record after its last change. */
 export const BADGE_TTL_SECONDS = 30 * 86400;
-/** GET /badges lists at most this many. */
+/** The badge list holds, and GET /badges lists, at most this many. */
 export const MAX_BADGES = 5000;
-/** How long a built badge list is served before it is built again. */
+/** How long clients may keep the badge list (Cache-Control: max-age); the relay's own caches together stay within it. */
 export const BADGES_CACHE_SECONDS = 600;
 
 /** A badge `{ n, t }` from a POST /r/<code>/badge body `{ name, tier }`, or null. The name is trimmed. */

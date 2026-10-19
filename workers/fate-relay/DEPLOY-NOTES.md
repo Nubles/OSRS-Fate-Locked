@@ -24,15 +24,19 @@ npx wrangler@latest deploy
   Nothing rolls by itself; the player still chooses Roll.
 - `POST` and `DELETE /r/<code>/badge`: the plugin's opt-in badge (character
   name and milestone).
-- `GET /badges`: the public badge list, rebuilt at most every 10 minutes.
-- Free-plan cost: one KV write per Send to tracker and per take, at most
-  one per player a day for badges, and KV list operations (1,000 a day on
-  the free plan) for each rebuild of the badge list.
+- `GET /badges`: the public badge list. Every badge lives in one KV record,
+  `badges`; the list is that record's contents, rebuilt at most every 10
+  minutes.
+- Free-plan cost: one KV write per Send to tracker and per take, and at most
+  about one per sharing player a day for badges. No KV list operations at
+  all: the badge list is one KV read, cached.
+- Nothing to migrate: none of this was deployed before, so the relay
+  starts with no waiting events and an empty badge list.
 
 ## Checking it
 
 On Windows type `curl.exe`; on macOS or Linux, `curl`. Each check writes
-nothing that matters (the last removes a badge nobody has).
+nothing (the last removes a badge nobody has, which changes nothing).
 
 ```sh
 curl.exe -s https://fate-relay.fatelocked.workers.dev/badges
