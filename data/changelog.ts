@@ -42,7 +42,7 @@ export const CHANGELOG_RELEASES = [
     date: '2026-10-19',
     sections: {
       fixed: [
-        'Completing a quest on a long run no longer freezes the tracker for a couple of seconds.',
+        'Completing a quest on a long run no longer freezes the tracker, and Journal jumps no longer hide the quest under the Quests header.',
       ],
     },
   },
