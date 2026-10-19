@@ -24,8 +24,17 @@ fragment. After the player approves the current profile, the browser:
 3. publishes it to the fixed relay endpoint at once; and
 4. republishes when that profile's authored state changes. Each publish is a
    full KV write, so changes are coalesced: the newest state is sent once they
-   pause for 5 seconds, or after a minute if they never pause, with one
-   request in flight at a time. Retry publishes at once.
+   pause for 15 seconds, or after 2 minutes if they never pause, with one
+   request in flight at a time, and at once when the tab is hidden (switching
+   to the game client). A profile the relay already holds is not sent again:
+   every action raises the run's revision, but a note, a ticked task or a
+   setting changes nothing RuneLite uses. The publisher fingerprints the
+   profile without its export time and revision
+   (`utils/relayPublishFingerprint.ts`) and skips it when the last publish
+   for the pairing that worked had the same fingerprint, from the same or an
+   earlier revision, under a day ago (remembered in `fate_relay_published_v1`,
+   so a reload or a new tab doesn't send it again either). Retry and pairing
+   publish at once, whatever the relay holds.
 
 A publish that fails is tried again by itself after 15 seconds, then 1
 minute, then every 5 minutes until one works (`relayRetryDelayMs` in
@@ -108,8 +117,8 @@ replace the same record.
 
 The Worker also keeps a separate owner record, `own:r:<code>`, that holds
 only a SHA-256 hash of the token and the time it was last refreshed. It lasts
-90 days from the last refresh, and publishes refresh it at most once a day to
-spare KV writes. A code therefore stays claimed after its 30-day profile
+90 days from the last refresh, and publishes refresh it at most once a week
+to spare KV writes. A code therefore stays claimed after its 30-day profile
 record expires; after 90 days without a publish it can be claimed again,
 which is safe for random 128-bit codes. Codes published before owner records
 existed are adopted on their owner's next publish.
@@ -221,6 +230,75 @@ about half an hour, and many addresses faster. Moving the relay to Workers
 Paid (1 million writes a day) is what makes the quota hard to exhaust.
 The owner chose on 13 October 2026 to stay on the free plan for now and
 revisit the upgrade later.
+
+## Daily KV quota
+
+Everything the relay stores shares one Cloudflare account's free-plan KV
+limits: **1,000 writes, 1,000 deletes and 1,000 lists a day** for every
+player together, and 100,000 reads, reset at 00:00 UTC. Past a limit, every
+KV call of that kind fails until midnight UTC: the relay answers `503`, so
+RuneLite keeps the rules it last received, the tracker tries its publish and
+backup again later, and shared progress goes out with the run's next change.
+The saves themselves are in the browser and are not affected. In October
+2026 the owner chose to stay on the free plan, cut writes, and be alerted
+near the limit.
+
+### What writes, and how often
+
+| Write (KV key) | Who causes it | How often |
+|---|---|---|
+| Profile publish (`r:<code>`) | The tracker tab saving a paired profile | When something RuneLite uses changes: after 15 s of quiet, at most every 2 min while changes never pause, at once when the tab is hidden; an unchanged profile is not re-sent for a day (see step 4 above) |
+| Owner record (`own:r:<code>`) | A publish or Disconnect | At most once a week per code |
+| Tombstone (`r:<code>`, `gone`) | Disconnect | Once |
+| Backup (`b:<id>`) | `OnlineBackupDriver` | Changed runs only: at most every 30 min, or every 15 min when the tab is hidden with a change waiting; Back up now at once |
+| Previous backup copy (`b:<id>:previous`) | The first upload each day, or from another browser | At most about once a day |
+| Shared progress (`p:<id>`) | `ProgressShareDriver` | When the summary changes: after a minute of quiet, at least 3 min apart; the relay skips an unchanged summary |
+| Link code (`lc:<code>`) | Asking for a Discord link code | Once per code |
+| Discord link (`l:<id>`, `ld:<run>`; deletes `lc:`, old links) | The bot's `/link` and `/unlink` | Once per link; `ld:` once more for a link made before it existed |
+| Deletes (`b:`, `p:`) | Turning backup or sharing off | Once |
+
+Error reports (`/e`) store nothing, and the rate limits count in Workers Rate
+Limiting, not KV; nothing on the relay keeps a per-request counter in KV.
+
+Estimated writes for one active player-day (a 2-hour session with online
+backup, RuneLite and Discord sharing on; modelled from these timings, not
+measured):
+
+| Player | Before (Oct 2026) | After |
+|---|---:|---:|
+| Busy: 20 rolls an hour in bursts of 3, 10 other actions an hour, switching to the game every few minutes | about 88 | about 36 |
+| Steady: 12 rolls an hour one at a time, 6 other actions an hour | about 70 | about 46 |
+| The same busy player without Discord sharing | about 74 | about 24 |
+
+So the free plan covers roughly 20 to 40 such player-days a day, up from 11
+to 14. Each roll that changes the rules or the counts RuneLite and the
+stream overlay show still costs a publish; Workers Paid ($5 a month, a
+million writes a day) is what removes the limit.
+
+### The alert
+
+The Worker can't see the account's KV totals, so a scheduled GitHub
+Actions workflow does: `.github/workflows/relay-kv-usage.yml` runs every
+hour at :17 and `scripts/relay-kv-usage.mjs` asks Cloudflare's GraphQL
+Analytics API (`kvOperationsAdaptiveGroups`, the whole account, today in
+UTC) for the day's operations by type. Every run writes the counts to its
+job summary. When writes, deletes or lists reach 80% of their daily limit,
+it opens one GitHub issue, "Relay is near the free plan's daily KV limit",
+or comments on the open one, at most once per UTC day; close it by hand.
+With the optional `RELAY_ALERT_DISCORD_WEBHOOK` secret (a channel webhook)
+it also posts there, once a day.
+
+Repository secrets (Settings, Secrets and variables, Actions):
+
+| Secret | What it is | Without it |
+|---|---|---|
+| `CLOUDFLARE_ANALYTICS_TOKEN` | A Cloudflare API token with one permission, Account, Account Analytics, Read | The workflow only leaves a notice and succeeds |
+| `CLOUDFLARE_ACCOUNT_ID` | The account id (Workers & Pages, Account details) | Found with the token, when it reads exactly one account |
+| `RELAY_ALERT_DISCORD_WEBHOOK` | A Discord channel webhook URL | The alert is only the issue |
+
+A token Cloudflare refuses, or an account it can't find, fails the run, so
+GitHub's failed-workflow email says so. Scheduled workflows run only from
+the default branch, and GitHub may start them some minutes late.
 
 ## Error reports
 
