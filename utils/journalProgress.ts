@@ -15,6 +15,7 @@ import {
   EligibilityBlocker, evaluateDiaryTaskEligibility, evaluateDiaryTierEligibility,
   evaluateQuestEligibility,
 } from './journalStatus';
+import type { AreaRoutes } from './areaRoutes';
 
 export interface Unmet {
   kind: 'region' | 'skill' | 'equipment' | 'merchant' | 'mobility' | 'arcana' | 'minigame' | 'boss'
@@ -38,9 +39,15 @@ const manualChecksToUnmet = (checks: readonly string[]): Unmet[] =>
     label: `Confirm: ${label}`,
   }));
 
-/** Everything blocking a quest right now (empty ⇒ automatically doable). */
-export const questUnmet = (q: QuestData, unlocks: UnlockState, gameModeId?: string): Unmet[] => {
-  const eligibility = evaluateQuestEligibility(q, unlocks, gameModeId);
+/**
+ * Everything blocking a quest right now (empty ⇒ automatically doable, the
+ * same quests isQuestReady calls ready). Pass `areaRoutes` (from
+ * useAreaRoutes) so an owned area no route reaches reads "No route to".
+ */
+export const questUnmet = (
+  q: QuestData, unlocks: UnlockState, gameModeId?: string, areaRoutes?: AreaRoutes | null,
+): Unmet[] => {
+  const eligibility = evaluateQuestEligibility(q, unlocks, gameModeId, areaRoutes);
   return [
     ...eligibility.blockers.map(eligibilityBlockerToUnmet),
     ...manualChecksToUnmet(eligibility.manualChecks),
@@ -48,11 +55,13 @@ export const questUnmet = (q: QuestData, unlocks: UnlockState, gameModeId?: stri
 };
 
 /** Everything blocking a diary tier right now (empty ⇒ automatically doable). */
-export const diaryUnmet = (d: DiaryTier, unlocks: UnlockState, gameModeId?: string): Unmet[] => {
-  const eligibility = evaluateDiaryTierEligibility(d, unlocks, gameModeId);
+export const diaryUnmet = (
+  d: DiaryTier, unlocks: UnlockState, gameModeId?: string, areaRoutes?: AreaRoutes | null,
+): Unmet[] => {
+  const eligibility = evaluateDiaryTierEligibility(d, unlocks, gameModeId, areaRoutes);
   const manualChecks = ALL_DIARY_TASKS
     .filter(task => task.tierId === d.id && !unlocks.completedTasks.includes(task.id))
-    .flatMap(task => evaluateDiaryTaskEligibility(task, unlocks, gameModeId).manualChecks);
+    .flatMap(task => evaluateDiaryTaskEligibility(task, unlocks, gameModeId, areaRoutes).manualChecks);
   return [
     ...eligibility.blockers.map(eligibilityBlockerToUnmet),
     ...manualChecksToUnmet(manualChecks),

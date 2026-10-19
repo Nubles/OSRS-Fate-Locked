@@ -25,7 +25,7 @@ const chunkMocks = vi.hoisted(() => ({
   reachability: vi.fn(() => ({ reachable: new Set() })),
 }));
 vi.mock('../services/ChunkContentService', () => ({
-  chunkContentService: { ready: false, ...chunkMocks },
+  chunkContentService: { ready: false, subscribe: () => () => {}, ...chunkMocks },
 }));
 vi.mock('../utils/chunkReach', () => ({ chunkReachability: chunkMocks.reachability }));
 beforeEach(() => vi.clearAllMocks());
@@ -85,12 +85,16 @@ describe('Vanilla doability uses canonical area requirements', () => {
     }
   });
 
-  it('renders immediately without loading or consulting a cold chunk service', () => {
+  it('renders immediately without waiting on or walking a cold chunk service', () => {
     const view = render(<QuestDoabilityPanel searchTerm="Sheep Shearer" />);
     expect(view.getByText('Sheep Shearer')).toBeTruthy();
     expect(view.queryByText(/Loading chunk data/)).toBeNull();
     expect(view.queryByText(/chunk reachability|transport links|Stranded|no chunk data/i)).toBeNull();
-    for (const fn of Object.values(chunkMocks)) expect(fn).not.toHaveBeenCalled();
+    // The routes (useAreaRoutes) ask the service to load, as the Quest Log
+    // does, so "Doable now" counts what the Quest Log does; until it has
+    // loaded nothing reads the chunk graph.
+    const { init: _routesLoad, ...walk } = chunkMocks;
+    for (const fn of Object.values(walk)) expect(fn).not.toHaveBeenCalled();
   });
 
   it('retains canonical locked areas and confirmation checks while ignoring unrelated chunk evidence', () => {

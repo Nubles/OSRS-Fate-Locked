@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { useGame } from '../../context/GameContext';
 import { openOsrsProgressionTab, openOsrsScreen, useOsrsNav } from '../../utils/osrsNav';
 import { QUEST_DATA, type QuestData } from '../../data/questData';
-import { DIARY_DATA } from '../../data/diaryData';
+import { DIARY_DATA, DIARY_TIER_ORDER } from '../../data/diaryData';
 import { ALL_DIARY_TASKS, type DiaryTask } from '../../data/diaryTasks';
 import { CA_DATA } from '../../data/caData';
 import { ALL_CA_TASKS, type CATask } from '../../data/caTasks';
@@ -23,6 +23,7 @@ import { JournalFilterBar } from '../JournalFilterBar';
 import { QuestInsights, DiaryInsights, CAInsights } from '../JournalInsights';
 import { QuestAdvisorPanel } from '../QuestAdvisorPanel';
 import { SkillTrainingPopover } from '../SkillTrainingPopover';
+import { setJournalLayout } from '../../utils/journalLayout';
 import { JournalIcon, type JournalKind, osrsAsset } from './OsrsJournalParts';
 import { useOsrsJournalNav, setOsrsJournalTab, type OsrsJournalTab } from './OsrsJournalNav';
 import {
@@ -49,6 +50,12 @@ import './osrs-journal.css';
  * the hooks the classic Quest, Diary and Combat Achievement logs use
  * (useQuestJournal, useDiaryJournal, useCAJournal), the counts from the
  * home Journal card's model, and the route check from the Doable panel.
+ *
+ * The classic layout shows the same window as its Journal tab (shell
+ * 'classic', utils/journalLayout.ts), inside an .osrs-island wrapper that
+ * the OSRS stylesheets also match: no summary bar (the classic Journal
+ * Summary card is beside it), Progression row or close button. Narrower than PHONE_WIDTH, the selected
+ * entry opens under its row and the options menu is a sheet (held on touch).
  */
 
 const TABS: Array<[OsrsJournalTab, string]> = [
@@ -121,7 +128,16 @@ const pct = (n: number | undefined) => (n === undefined ? '' : `${n}%`);
 const byChanceThenName = <T,>(rate: (x: T) => number, name: (x: T) => string) =>
   (a: T, b: T) => rate(b) - rate(a) || name(a).localeCompare(name(b));
 
-export const OsrsJournalScreen: React.FC = () => {
+/** Below this width the window is one column: entries open in place (the B5 phone board). */
+const PHONE_WIDTH = 640;
+const HOLD_MS = 500;
+
+const isCoarsePointer = (): boolean => {
+  try { return typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches; } catch { return false; }
+};
+
+export const OsrsJournalScreen: React.FC<{ shell?: 'osrs' | 'classic' }> = ({ shell = 'osrs' }) => {
+  const classic = shell === 'classic';
   const { keys } = useGame();
   const { tab } = useOsrsJournalNav();
   const { progressionTabs } = useOsrsNav();
@@ -138,6 +154,22 @@ export const OsrsJournalScreen: React.FC = () => {
   const [menu, setMenu] = useState<{ sel: JournalSel; name: string; top: number; left: number } | null>(null);
   const [menuNote, setMenuNote] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [narrow, setNarrow] = useState(false);
+  // Phone: the open entry can be closed again by tapping its row.
+  const [folded, setFolded] = useState(true);
+  const coarse = useMemo(isCoarsePointer, []);
+  const holdRef = useRef<{ timer: number; x: number; y: number } | null>(null);
+  useLayoutEffect(() => {
+    const el = rootRef.current;
+    if (!el) return undefined;
+    const measure = () => setNarrow(el.clientWidth > 0 && el.clientWidth < PHONE_WIDTH);
+    measure();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const scrollRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -384,6 +416,7 @@ export const OsrsJournalScreen: React.FC = () => {
   }, [cursorKey]);
 
   const openRow = (r: Extract<Item, { t: 'row' }>) => {
+    if (narrow) setFolded(r.key === currentKey ? !folded : false);
     select(tab, r.sel);
     if (r.sel.kind === 'caTier') ca.setExpandedId(r.sel.id);
   };
@@ -469,16 +502,48 @@ export const OsrsJournalScreen: React.FC = () => {
 
   const openMenu = (e: React.MouseEvent<HTMLElement>, s: JournalSel, name: string) => {
     e.preventDefault();
+    openMenuAt(e.currentTarget, s, name);
+  };
+  const openMenuAt = (row: HTMLElement, s: JournalSel, name: string) => {
     const list = listRef.current;
     if (!list) return;
     const lr = list.getBoundingClientRect();
-    const rr = e.currentTarget.getBoundingClientRect();
+    const rr = row.getBoundingClientRect();
     const menuH = 140;
     let top = rr.top - lr.top + 14;
     if (top + menuH > lr.height) top = Math.max(0, rr.top - lr.top - menuH + 4);
     setMenuNote(null);
     setMenu({ sel: s, name, top, left: Math.min(150, Math.max(0, lr.width - 250)) });
   };
+
+  // Touch: holding an entry opens its options, as right-click does.
+  const cancelHold = () => { if (holdRef.current) { window.clearTimeout(holdRef.current.timer); holdRef.current = null; } };
+  const holdProps = (s: JournalSel, name: string) => ({
+    onPointerDown: (e: React.PointerEvent<HTMLElement>) => {
+      if (e.pointerType === 'mouse') return;
+      cancelHold();
+      const el = e.currentTarget;
+      holdRef.current = {
+        x: e.clientX, y: e.clientY,
+        timer: window.setTimeout(() => {
+          holdRef.current = null;
+          // Lifting the finger must not also tap the row, or the menu item now under it.
+          const swallow = (ev: Event) => { ev.preventDefault(); ev.stopPropagation(); };
+          document.addEventListener('click', swallow, { capture: true, once: true });
+          document.addEventListener('pointerup', () => window.setTimeout(() => document.removeEventListener('click', swallow, true), 400), { once: true });
+          select(tab, s);
+          openMenuAt(el, s, name);
+        }, HOLD_MS),
+      };
+    },
+    onPointerMove: (e: React.PointerEvent<HTMLElement>) => {
+      const h = holdRef.current;
+      if (h && Math.hypot(e.clientX - h.x, e.clientY - h.y) > 10) cancelHold();
+    },
+    onPointerUp: cancelHold,
+    onPointerCancel: cancelHold,
+  });
+  useEffect(() => cancelHold, []);
 
   const showInList = (s: JournalSel) => {
     if (s.kind === 'quest') { quest.focusCard(s.id); return; }
@@ -565,11 +630,12 @@ export const OsrsJournalScreen: React.FC = () => {
     : tab === 'combat' ? ca.filterStatus !== 'ALL' || ca.filterTier !== 'ALL' : false;
 
   const menuActions = menu ? actionsFor(menu.sel) : null;
+  const optionsHint = coarse ? 'Hold an entry for options' : 'Right-click an entry for options';
 
   return (
-    <div className="ojs-root">
+    <div className={`ojs-root${narrow ? ' is-narrow' : ''}${classic ? ' is-classic' : ''}`} ref={rootRef}>
       {/* The Progression tab row, so every other tab is one click away. */}
-      {progressionTabs.length > 0 && (
+      {!classic && progressionTabs.length > 0 && (
         <div role="tablist" aria-label="Dashboard sections" className="osrs-dash-tablist ojs-navtabs no-scrollbar">
           {progressionTabs.map((t) => (
             <button
@@ -585,7 +651,8 @@ export const OsrsJournalScreen: React.FC = () => {
           ))}
         </div>
       )}
-      {/* Summary bar */}
+      {/* Summary bar. The classic layout has none: its Journal Summary card beside the window shows the same counts. */}
+      {!classic && (
       <div className="osrs-win ojs-bar">
         <span className="ojs-bar-title"><JournalIcon kind="quest" />Journal</span>
         <span className="ojs-stat" data-examine={`${stats.quests.done} of ${stats.quests.total} quests and miniquests done, ${stats.quests.available} ready to complete.`} data-examine-name="Quests">
@@ -605,20 +672,28 @@ export const OsrsJournalScreen: React.FC = () => {
           </div>
         </div>
       </div>
+      )}
 
       <section aria-label="Journal" className="osrs-win ojs-win">
         <div className="ojs-titlebar">
           <h2>Journal</h2>
-          <button type="button" className="ojs-close" aria-label="Close" title="Close" onClick={() => openOsrsScreen('home')}>
-            <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d="M2 2l8 8M10 2l-8 8" stroke="#ff981f" strokeWidth="2.5" /></svg>
-          </button>
+          {classic ? (
+            <button type="button" className="ojs-cswitch" onClick={() => setJournalLayout('classic')}
+              title="Show the Quests, Diaries, Combat Achievements and Doable tabs instead. The Settings menu has the same switch.">Classic view</button>
+          ) : (
+            <button type="button" className="ojs-close" aria-label="Close" title="Close" onClick={() => openOsrsScreen('home')}>
+              <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d="M2 2l8 8M10 2l-8 8" stroke="#ff981f" strokeWidth="2.5" /></svg>
+            </button>
+          )}
         </div>
 
         <div role="tablist" className="ojs-tabs">
           {TABS.map(([id, label]) => (
-            <button key={id} type="button" role="tab" aria-selected={tab === id} className="ojs-tab" onClick={() => setOsrsJournalTab(id)}>{label}</button>
+            <button key={id} type="button" role="tab" aria-selected={tab === id} className="ojs-tab" onClick={() => setOsrsJournalTab(id)}>
+              {narrow ? NARROW_LABEL[id](readyCount, almostQuests.length + almostTasks.length) : label}
+            </button>
           ))}
-          <label className="ojs-search" title={'Search quests, series and start points, diary tasks and areas, combat tasks, bosses and tiers.\nPress / to search, Up and Down to move, Enter to open, Escape to clear.\nRight-click an entry for options.'}>
+          <label className="ojs-search" title={`Search quests, series and start points, diary tasks and areas, combat tasks, bosses and tiers.\nPress / to search, Up and Down to move, Enter to open, Escape to clear.\n${optionsHint}.`}>
             <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14"><circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M9.5 9.5l3.5 3.5" stroke="currentColor" strokeWidth="2" /></svg>
             <input
               ref={searchRef}
@@ -666,7 +741,12 @@ export const OsrsJournalScreen: React.FC = () => {
               )}
               {tab === 'diaries' && !searching
                 ? <DiaryGrid d={diary} unlocks={unlocks} currentKey={currentKey}
-                    onPick={(id) => { diary.setExpandedId(id); select('diaries', { kind: 'tier', id }); }}
+                    inline={narrow && !folded ? detail : null}
+                    onPick={(id) => {
+                      if (narrow) setFolded(currentKey === `tier:${id}` ? !folded : false);
+                      diary.setExpandedId(id);
+                      select('diaries', { kind: 'tier', id });
+                    }}
                     onMenu={(e, id) => openMenu(e, { kind: 'tier', id }, id)} />
                 : items.map(item => {
                   if (item.t === 'head') {
@@ -679,23 +759,29 @@ export const OsrsJournalScreen: React.FC = () => {
                   }
                   if (item.t === 'empty') return <div key={item.key} className="ojs-empty" style={{ paddingLeft: tab === 'quests' || tab === 'combat' ? 10 : 34 }}>{item.text}</div>;
                   const isSel = item.key === currentKey;
+                  const open = narrow && isSel && !folded;
+                  const lit = narrow ? open : isSel;
                   return (
+                    <React.Fragment key={item.key}>
                     <button
-                      key={item.key}
                       id={rowDomId(item.key)}
                       type="button"
                       data-sel-key={item.key}
-                      className={`ojs-row${isSel ? ' is-sel' : ''}${item.bold ? ' is-bold' : ''}${item.key === cursorKey ? ' is-cursor' : ''}`}
-                      style={{ paddingLeft: item.pad, color: isSel && item.color === ORANGE ? '#ffffff' : item.color }}
+                      className={`ojs-row${lit ? ' is-sel' : ''}${item.bold ? ' is-bold' : ''}${item.key === cursorKey ? ' is-cursor' : ''}`}
+                      style={{ paddingLeft: item.pad, color: lit && item.color === ORANGE ? '#ffffff' : item.color }}
                       title={item.tip}
-                      aria-current={isSel ? 'true' : undefined}
+                      aria-current={lit ? 'true' : undefined}
                       onClick={() => openRow(item)}
-                      onContextMenu={(e) => { select(tab, item.sel); openMenu(e, item.sel, item.name); }}
+                      aria-expanded={narrow ? open : undefined}
+                      onContextMenu={(e) => { cancelHold(); select(tab, item.sel); openMenu(e, item.sel, item.name); }}
+                      {...holdProps(item.sel, item.name)}
                     >
                       <span className="ojs-row-name"><Hl text={item.title} hits={item.hits} /></span>
                       {item.via && <span className="ojs-row-via"><Hl text={item.via.text} hits={item.via.hits} /></span>}
                       {item.keyText && <span className="ojs-row-key" style={{ color: item.keyColor }}><Hl text={item.keyText} hits={item.keyHits} /></span>}
                     </button>
+                    {open && <div className="ojs-inline">{detail}</div>}
+                    </React.Fragment>
                   );
                 })}
             </div>
@@ -704,7 +790,7 @@ export const OsrsJournalScreen: React.FC = () => {
             )}
 
             {menu && menuActions && (
-              <div className="ojs-menu" role="menu" aria-label={`Options for ${menu.name}`} style={{ top: menu.top, left: menu.left }}>
+              <div className={`ojs-menu${narrow ? ' is-sheet' : ''}`} role="menu" aria-label={`Options for ${menu.name}`} style={narrow ? undefined : { top: menu.top, left: menu.left }}>
                 <div className="ojs-menu-title">Choose Option</div>
                 <div className="ojs-menu-body">
                   <MenuItem verb={menuActions.verb} target={menu.name} disabled={!menuActions.complete}
@@ -740,14 +826,14 @@ export const OsrsJournalScreen: React.FC = () => {
             )}
           </div>
 
-          {detail}
+          {!narrow && detail}
         </div>
 
         <div className="ojs-foot">
           <span>Quest Points: <span style={{ color: '#ffffff' }}>{quest.currentQP}/{quest.maxQP}</span></span>
           <span>Ready: <span style={{ color: '#ffffff' }}>{readyCount}</span></span>
           <span>Keys waiting: <span style={{ color: YELLOW }}>{keysWaitingText}</span></span>
-          <span className="ojs-foot-note">Right-click an entry for options. A missed quest roll still gives a Fate Point.</span>
+          <span className="ojs-foot-note">{optionsHint}. A missed quest roll still gives a Fate Point.</span>
         </div>
       </section>
 
@@ -757,6 +843,10 @@ export const OsrsJournalScreen: React.FC = () => {
 };
 
 const TAB_LABEL: Record<OsrsJournalTab, string> = Object.fromEntries(TABS) as Record<OsrsJournalTab, string>;
+/** Shorter tab labels for a phone, with the Ready and Almost counts (the B5 phone board). */
+const NARROW_LABEL: Record<OsrsJournalTab, (ready: number, almost: number) => string> = {
+  ready: (n) => `Ready ${n}`, almost: (_, n) => `Almost ${n}`, quests: () => 'Quests', diaries: () => 'Diaries', combat: () => 'Combat',
+};
 const listTabFor = (s: JournalSel): OsrsJournalTab =>
   s.kind === 'quest' ? 'quests' : s.kind === 'task' || s.kind === 'tier' ? 'diaries' : 'combat';
 
@@ -769,7 +859,7 @@ const MenuItem: React.FC<{ verb: string; target: string; disabled?: boolean; kee
 
 /* ── Diaries: one line per area, the four tiers as columns, as in game. ───── */
 
-const TIERS = ['Easy', 'Medium', 'Hard', 'Elite'] as const;
+const TIERS = DIARY_TIER_ORDER;
 const SHORT: Record<string, string> = { Easy: 'Easy', Medium: 'Med', Hard: 'Hard', Elite: 'Elite' };
 const areaOf = (tierId: string): string => tierId.replace(/ (Easy|Medium|Hard|Elite)$/, '');
 
@@ -777,9 +867,11 @@ const DiaryGrid: React.FC<{
   d: ReturnType<typeof useDiaryJournal>;
   unlocks: ReturnType<typeof useGame>['unlocks'];
   currentKey: string;
+  /** Phone: the open tier's journal, drawn under its line. */
+  inline?: React.ReactNode;
   onPick: (id: string) => void;
   onMenu: (e: React.MouseEvent<HTMLElement>, id: string) => void;
-}> = ({ d, unlocks, currentKey, onPick, onMenu }) => {
+}> = ({ d, unlocks, currentKey, inline, onPick, onMenu }) => {
   const views = useMemo(() => d.sortedDiaries.map(diary => {
     const tasks = tasksOfTier(diary.id);
     const complete = diary.status === 'COMPLETED';
@@ -796,11 +888,14 @@ const DiaryGrid: React.FC<{
     return <>{views.map(v => {
       const key = `tier:${v.diary.id}`;
       return (
-        <button key={key} type="button" data-sel-key={key} className={`ojs-row${currentKey === key ? ' is-sel' : ''}`}
-          style={{ paddingLeft: 10, color: v.tone }} onClick={() => onPick(v.diary.id)} onContextMenu={(e) => { onPick(v.diary.id); onMenu(e, v.diary.id); }}>
-          <span className="ojs-row-name">{v.diary.id}</span>
-          <span className="ojs-row-key" style={{ color: v.tone }}>{v.done}/{v.tasks.length}</span>
-        </button>
+        <React.Fragment key={key}>
+          <button type="button" data-sel-key={key} className={`ojs-row${currentKey === key ? ' is-sel' : ''}`}
+            style={{ paddingLeft: 10, color: v.tone }} onClick={() => onPick(v.diary.id)} onContextMenu={(e) => { onPick(v.diary.id); onMenu(e, v.diary.id); }}>
+            <span className="ojs-row-name">{v.diary.id}</span>
+            <span className="ojs-row-key" style={{ color: v.tone }}>{v.done}/{v.tasks.length}</span>
+          </button>
+          {inline && currentKey === key && <div className="ojs-inline">{inline}</div>}
+        </React.Fragment>
       );
     })}</>;
   }
@@ -808,7 +903,8 @@ const DiaryGrid: React.FC<{
     <>
       <div className="ojs-dgrid"><span />{TIERS.map(t => <span key={t} className="ojs-dhdr">{SHORT[t]}</span>)}</div>
       {areas.map(area => (
-        <div key={area} className="ojs-dgrid">
+        <React.Fragment key={area}>
+        <div className="ojs-dgrid">
           <span className="ojs-darea">{area}</span>
           {TIERS.map(tier => {
             const v = byId.get(`${area} ${tier}`);
@@ -823,6 +919,8 @@ const DiaryGrid: React.FC<{
             );
           })}
         </div>
+        {inline && currentKey.startsWith(`tier:${area} `) && TIERS.some(t => currentKey === `tier:${area} ${t}`) && <div className="ojs-inline">{inline}</div>}
+        </React.Fragment>
       ))}
     </>
   );
@@ -882,8 +980,8 @@ const DiaryFilters: React.FC<{ d: ReturnType<typeof useDiaryJournal> }> = ({ d }
       status={d.filterStatus}
       onStatusChange={d.setFilterStatus}
       statusCounts={d.statusCounts}
-      completed={d.unlocks.diaries.length}
-      total={Object.keys(DIARY_DATA).length}
+      completed={d.diaryProgress.done}
+      total={d.diaryProgress.total}
       regions={d.regions}
       activeRegion={d.filterRegion}
       onRegionChange={d.setFilterRegion}
