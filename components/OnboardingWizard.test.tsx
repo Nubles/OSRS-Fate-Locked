@@ -5,9 +5,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { STARTING_KEYS } from '../config/economy';
 import { GAME_MODES } from '../config/gameModes';
 import { OnboardingWizard } from './OnboardingWizard';
+import { LATEST_CHANGELOG_ID } from '../data/changelogLatest';
+import { CHANGELOG_STORAGE_KEY } from '../utils/changelogState';
 
+const completeOnboarding = vi.fn();
+let history: unknown[] = [];
 vi.mock('../context/GameContext', () => ({
-  useGame: () => ({ completeOnboarding: vi.fn() }),
+  useGame: () => ({ completeOnboarding, history }),
 }));
 
 afterEach(() => cleanup());
@@ -49,5 +53,34 @@ describe('OnboardingWizard copy', () => {
     expect(altar).toContain('Every rate, Key and ritual is on the Rules page: the ? in the top bar.');
     expect(texts.join(' ')).not.toMatch(/Advantage|Codex|Enter The Void|Cruel Fate|Bending Luck|Fate Decides All|hard-earned/);
     expect(screen.getByRole('button', { name: 'Start' })).toBeTruthy();
+  });
+});
+
+describe('OnboardingWizard finish', () => {
+  it('marks What\'s New read up to the latest entry before completing onboarding', () => {
+    localStorage.clear();
+    completeOnboarding.mockImplementation(() => {
+      expect(localStorage.getItem(CHANGELOG_STORAGE_KEY)).toBe(LATEST_CHANGELOG_ID);
+    });
+    stepTexts();
+    expect(localStorage.getItem(CHANGELOG_STORAGE_KEY)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+    expect(completeOnboarding).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem(CHANGELOG_STORAGE_KEY)).toBe(LATEST_CHANGELOG_ID);
+  });
+
+  it('leaves the marker alone for an old save that already has rolls', () => {
+    localStorage.clear();
+    localStorage.setItem(CHANGELOG_STORAGE_KEY, '2026-09-01-older');
+    history = [{ id: 'roll-1' }];
+    completeOnboarding.mockReset();
+    try {
+      stepTexts();
+      fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+    } finally {
+      history = [];
+    }
+    expect(completeOnboarding).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem(CHANGELOG_STORAGE_KEY)).toBe('2026-09-01-older');
   });
 });

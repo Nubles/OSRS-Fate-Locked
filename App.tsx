@@ -52,7 +52,7 @@ import { earlierPetRollTimes, gambitStakeFor } from './utils/petCompensation';
 import {
   changelogVisibilityReducer, markChangelogSeen, mayAutoOpenChangelogAgain,
   resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
-  shouldEnableUnderlyingModalEscape, shouldShowChangelog,
+  shouldEnableUnderlyingModalEscape, hasUnseenReleaseForRun, readSeenChangelog,
 } from './utils/changelogState';
 import { relaySync } from './services/relaySync';
 import { parseRunelitePairFragment } from './utils/runelitePairing';
@@ -826,7 +826,7 @@ const GameLayout = () => {
     undefined,
     () => shouldAutoOpenChangelog({
       hasSeenOnboarding,
-      releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG_ID),
+      releaseIsUnseen: hasUnseenReleaseForRun(readSeenChangelog(), LATEST_CHANGELOG_ID, history.length),
       startupHash: typeof window === 'undefined' ? '' : window.location.hash,
       hasPendingGameModePrompt: recentlyCreatedId === activeProfileId,
       hasPendingGuidePrompt: directGuideRequested,
@@ -1045,7 +1045,9 @@ const GameLayout = () => {
       || !mayAutoOpenChangelogAgain(changelogAutoOpenedRelease.current === changelogAutoOpenKey, hasPendingOffer)
       || !shouldAutoOpenChangelog({
         hasSeenOnboarding,
-        releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG_ID),
+        // history.length is deliberately not a dependency: a first roll mid-visit
+        // shouldn't pop What's New over the roll; it waits for the next visit.
+        releaseIsUnseen: hasUnseenReleaseForRun(readSeenChangelog(), LATEST_CHANGELOG_ID, history.length),
         startupHash,
         hasPendingGameModePrompt,
         hasPendingSyncPrompt,

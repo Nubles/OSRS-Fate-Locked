@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-new-player-whats-new',
+    title: 'A quieter first visit',
+    date: '2026-10-19',
+    sections: {
+      changed: [
+        'New players no longer get the full update list right after setting up. What’s New only shows updates that come out after you start.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-dropped-connection',
     title: 'A dropped connection keeps you in the tracker',
     date: '2026-10-18',
