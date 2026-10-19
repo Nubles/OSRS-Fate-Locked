@@ -33,6 +33,7 @@ import {
 } from './journalCompletion';
 import { skillLevelKeyChance } from './keyRoll';
 import { chunkedCATaskBlocker, levelPastTierCap, levelRolledAt, tierCap } from './chunkedFate';
+import { planDetectedLevel, skillBaseline } from './syncBaseline';
 
 const normalize = (value: string): string =>
   value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-GB');
@@ -231,7 +232,10 @@ function ready(
 const blocked = (reason: string): EventClassification => ({ state: 'BLOCKED', reason });
 
 // Detected progress follows the same rules as the manual Journal, Farm and
-// skill buttons: it rolls only where a manual completion would.
+// skill buttons: it rolls only where a manual completion would. A detected
+// level also takes Sync & Roll's baseline (critique GP-1,
+// utils/syncBaseline.ts): a level the account had when the run was linked
+// never rolls.
 function classifySkill(event: FateEventEnvelope, state: GameState): EventClassification {
   const skill = typeof event.evidence.skill === 'string' ? event.evidence.skill.trim() : '';
   const level = event.evidence.level;
@@ -240,10 +244,12 @@ function classifySkill(event: FateEventEnvelope, state: GameState): EventClassif
   }
   // A locked skill cannot be levelled, and a level already recorded rolls once.
   if ((state.unlocks.skills[skill] ?? 0) <= 0) return blocked('Unlock this skill before its levels can roll.');
-  if ((level as number) <= (state.unlocks.levels[skill] ?? 1)) return blocked('This level is already recorded.');
+  const baseline = skillBaseline(state.syncBaseline, state.linkedAccount, skill);
+  const plan = planDetectedLevel({ tracker: state.unlocks.levels[skill] ?? 1, level: level as number, baseline });
+  if (plan.hold === 'recorded') return blocked('This level is already recorded.');
+  if (plan.hold === 'linked') return blocked(`Your account was already level ${baseline} in ${skill} when this run was linked. Only new levels roll.`);
   // Chunked: as with the manual button, a level past the tier cap rolls nothing.
-  const recorded = state.unlocks.levels[skill] ?? 1;
-  if (levelPastTierCap(state.gameModeId, state.unlocks, skill, recorded + 1)) {
+  if (levelPastTierCap(state.gameModeId, state.unlocks, skill, plan.from + 1)) {
     return blocked(`${skill} has reached its tier cap of level ${tierCap(state.unlocks.skills[skill] ?? 0)}. In Chunked, levels past the cap roll no Keys until its next tier opens.`);
   }
   const target = `${skill} Level ${level}`;

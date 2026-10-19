@@ -8,6 +8,8 @@ import { WikiIcon } from './WikiIcon';
 import { SKILLS_LIST } from '../data/items';
 import { lazyWithRetry } from '../utils/lazyRetry';
 import { useIsOsrsUi } from '../utils/uiStyle';
+import { planSkillSync, skillBaseline, type SyncSkillPlan } from '../utils/syncBaseline';
+import { baselineFromReading, readHiscoreOverall, readHiscoreSkill, type HiscoreReading } from '../utils/hiscoreReading';
 import {
   GROUP_IRON_TITLES,
   GROUP_TITLES,
@@ -64,6 +66,8 @@ interface Fetched {
   totalLevel: number;
   combatLevel: number | null;
   skills: FetchedSkill[];
+  /** Each skill as ranked, unranked or missing, for the Sync & Roll baseline (utils/syncBaseline.ts). */
+  reading: HiscoreReading;
   updatedAt: string | null;
 }
 
@@ -82,12 +86,17 @@ export async function fetchPlayer(name: string): Promise<Fetched> {
   const snap = data?.latestSnapshot?.data?.skills;
   if (!snap) throw new Error(`No hiscores snapshot available for "${name}" yet — try again in a moment.`);
 
+  const reading: HiscoreReading = {
+    skills: Object.fromEntries(SKILLS.map(s => [s, readHiscoreSkill(snap[womMetric(s)])])),
+    overall: readHiscoreOverall(snap.overall),
+  };
+  // Shown levels: an unranked or missing skill shows its minimum, and never rolls.
   const skills: FetchedSkill[] = SKILLS.map(s => {
-    const entry = snap[womMetric(s)];
-    const level = entry && typeof entry.level === 'number' && entry.level > 0 ? entry.level : 1;
-    return { skill: s, level };
+    const level = reading.skills[s];
+    return { skill: s, level: typeof level === 'number' ? level : 1 };
   });
   return {
+    reading,
     displayName: data.displayName ?? name,
     accountType: typeof data.type === 'string' ? data.type : 'unknown',
     totalLevel: snap.overall?.level ?? skills.reduce((a, s) => a + s.level, 0),
@@ -102,7 +111,10 @@ export async function fetchPlayer(name: string): Promise<Fetched> {
  * OSRS layout so both bind, fetch and roll through the same handlers.
  */
 export function useAutoRoll() {
-  const { unlocks, createBackup, levelUpSkill, keys, specialKeys, chaosKeys, linkedAccount, setLinkedAccount, renameLinkedAccount } = useGame() as any;
+  const {
+    unlocks, createBackup, levelUpSkill, keys, specialKeys, chaosKeys, linkedAccount, setLinkedAccount, renameLinkedAccount,
+    syncBaseline, recordSyncBaseline, catchUpSyncLevel,
+  } = useGame() as any;
   // Each run is linked to one OSRS character: the first fetch sets it, and the
   // player can change it (a name change, a typo) with Change name.
   const [name, setName] = useState(linkedAccount ?? '');
@@ -128,6 +140,8 @@ export function useAutoRoll() {
   const [skillRolling, setSkillRolling] = useState(false);
   const skillRollingRef = useRef(false);
   const [skillKeysGained, setSkillKeysGained] = useState<{ keys: number; special: number; chaos: number } | null>(null);
+  // Set when this fetch took the run's baseline (a first link or a name change), for the one-time note.
+  const [baselineTaken, setBaselineTaken] = useState(false);
   const setSkillRollingState = useCallback((value: boolean) => {
     skillRollingRef.current = value;
     setSkillRolling(value);
@@ -142,6 +156,8 @@ export function useAutoRoll() {
   // per-level key rate ramping correctly. Counts let us tally what was earned.
   const levelUpRef = useRef(levelUpSkill);
   levelUpRef.current = levelUpSkill;
+  const catchUpRef = useRef(catchUpSyncLevel);
+  catchUpRef.current = catchUpSyncLevel;
   const countsRef = useRef({ keys, specialKeys, chaosKeys });
   countsRef.current = { keys, specialKeys, chaosKeys };
   const skillTimer = useRef<number | null>(null);
@@ -153,33 +169,57 @@ export function useAutoRoll() {
     if (skillTimer.current) window.clearInterval(skillTimer.current);
   }, []);
 
-  // Skills where the real account is ahead AND the skill is unlocked in the run.
-  // Locked skills can't be levelled, so they're never rolled.
+  // What each skill rolls (utils/syncBaseline.ts planSkillSync): only levels
+  // above both the run's and the baseline's (the levels the account had when
+  // linked). Locked skills never roll.
+  const plans = useMemo<Record<string, SyncSkillPlan>>(() => {
+    if (!fetched) return {};
+    return Object.fromEntries(fetched.skills.map(s => [s.skill, planSkillSync({
+      tracker: currentLevels[s.skill] ?? 1,
+      tier: unlockedSkills[s.skill] ?? 0,
+      hiscore: fetched.reading.skills[s.skill] ?? null,
+      baseline: skillBaseline(syncBaseline, linkedAccount ?? undefined, s.skill),
+    })]));
+  }, [fetched, currentLevels, unlockedSkills, syncBaseline, linkedAccount]);
   const gains = useMemo(() => {
     if (!fetched) return [];
     return fetched.skills
-      .map(s => ({ ...s, current: currentLevels[s.skill] ?? 1 }))
-      .filter(s => s.level > s.current && isUnlocked(s.skill));
-  }, [fetched, currentLevels, isUnlocked]);
+      .filter(s => (plans[s.skill]?.count ?? 0) > 0)
+      .map(s => {
+        const plan = plans[s.skill];
+        return { skill: s.skill, level: plan.to, current: plan.current, from: plan.from, catchUpTo: plan.catchUpTo, count: plan.count };
+      });
+  }, [fetched, plans]);
+  const holds = useMemo(() => {
+    const out = { linked: 0, locked: 0 };
+    for (const plan of Object.values(plans)) if (plan.hold === 'linked' || plan.hold === 'locked') out[plan.hold]++;
+    return out;
+  }, [plans]);
 
   const onFetch = useCallback(async () => {
     // Once bound, only that account can be fetched for this run.
     const query = (linkedAccount ?? name).trim();
     if (!query) return;
     setStatus('loading'); setError(''); setFetched(null); setRolledTo(0); setApplied(false);
-    setSkillRollingState(false); setSkillKeysGained(null);
+    setSkillRollingState(false); setSkillKeysGained(null); setBaselineTaken(false);
     if (skillTimer.current) window.clearInterval(skillTimer.current);
     try {
       const data = await fetchPlayer(query);
+      // Bind the run to this account on the first successful fetch. This
+      // reading becomes its baseline: levels it already has never roll.
+      // A failed fetch binds nothing and takes no baseline.
+      const account = linkedAccount ?? data.displayName;
+      const pending = !linkedAccount || (!!syncBaseline && !syncBaseline.levels);
+      if (!linkedAccount) { setLinkedAccount?.(data.displayName); setName(data.displayName); }
+      recordSyncBaseline?.(account, baselineFromReading(data.reading));
+      setBaselineTaken(pending);
       setFetched(data);
       setStatus('loaded');
-      // Bind the run to this account on the first successful fetch.
-      if (!linkedAccount) { setLinkedAccount?.(data.displayName); setName(data.displayName); }
     } catch (e: any) {
       setError(e?.message ?? 'Failed to reach the hiscores API.');
       setStatus('error');
     }
-  }, [name, linkedAccount, setLinkedAccount, setSkillRollingState]);
+  }, [name, linkedAccount, setLinkedAccount, recordSyncBaseline, syncBaseline, setSkillRollingState]);
 
   // If the run is already bound, pull that account's hiscores on open.
   useEffect(() => { if (linkedAccount) onFetch(); /* eslint-disable-line react-hooks/exhaustive-deps */ }, []);
@@ -233,11 +273,14 @@ export function useAutoRoll() {
     }
     const before = { ...countsRef.current };
 
-    // One queue entry per level still to gain, plus per-skill reveal boundaries.
-    const queue: string[] = [];
+    // One queue entry per level still to gain, plus per-skill reveal
+    // boundaries. A skill behind its baseline first records the baseline,
+    // without a roll, so only the levels above it roll.
+    const queue: Array<{ skill: string; catchUpTo?: number }> = [];
     const bounds: number[] = [];
     for (const g of gains) {
-      for (let lvl = g.current; lvl < g.level; lvl++) queue.push(g.skill);
+      if (g.catchUpTo) queue.push({ skill: g.skill, catchUpTo: g.catchUpTo });
+      for (let n = 0; n < g.count; n++) queue.push({ skill: g.skill });
       bounds.push(queue.length);
     }
     const total = queue.length;
@@ -249,10 +292,19 @@ export function useAutoRoll() {
     setRolledTo(0); setApplied(false); setSkillKeysGained(null);
     const BATCH = Math.min(25, Math.max(1, Math.ceil(total / 50)));
     let i = 0;
+    // A skill whose baseline the run refused to record (the run changed since
+    // the plan, as after a name change) rolls nothing more this sync.
+    const refused = new Set<string>();
     if (skillTimer.current) window.clearInterval(skillTimer.current);
     skillTimer.current = window.setInterval(() => {
       const levelUp = levelUpRef.current;
-      for (let b = 0; b < BATCH && i < total; b++, i++) levelUp(queue[i]);
+      for (let b = 0; b < BATCH && i < total; b++, i++) {
+        const step = queue[i];
+        if (refused.has(step.skill)) continue;
+        if (step.catchUpTo) {
+          if (catchUpRef.current?.(step.skill, step.catchUpTo) !== true) refused.add(step.skill);
+        } else levelUp(step.skill);
+      }
       let revealed = 0;
       for (const bnd of bounds) if (bnd <= i) revealed++;
       setRolledTo(revealed);
@@ -268,14 +320,34 @@ export function useAutoRoll() {
     }, 70);
   }, [fetched, gains, createBackup, setSkillRollingState]);
 
-  const totalGain = gains.reduce((a, s) => a + (s.level - s.current), 0);
+  const totalGain = gains.reduce((a, s) => a + s.count, 0);
 
   return {
     linkedAccount: linkedAccount as string | null | undefined, name, setName, status, error, fetched, groupTitle, chooseGroupTitle, title,
     rolledTo, applied, skillRolling, skillKeysGained, currentLevels, isUnlocked, gains, onFetch, autoRoll, totalGain,
+    plans, holds, baselineTaken,
     renameOpen, newName, setNewName, renameError, renamedTo, onRename, openRename, cancelRename,
   };
 }
+
+/** Why a skill's hiscores level doesn't (all) roll, for its tile's tooltip. */
+export function syncHoldText(skill: string, plan: SyncSkillPlan | undefined): string | undefined {
+  if (!plan) return undefined;
+  if (plan.hold === 'locked') return `${skill} isn't unlocked yet. Unlock it in the run before it can be rolled.`;
+  if (plan.hold === 'linked') return `${skill}: your account already had this level when the run was linked, so it doesn't roll. New levels do.`;
+  if (plan.hold === 'unranked') return `${skill} isn't on the hiscores yet, so there's nothing to sync.`;
+  return undefined;
+}
+
+/** What the panel says when nothing rolls now. */
+export function syncIdleText(holds: { linked: number; locked: number }): string {
+  if (holds.linked > 0) return "Nothing new to roll. Levels your account had when this run was linked don't roll; only new ones do.";
+  if (holds.locked > 0) return 'No unlocked skills to roll. Unlock more skills in the run first.';
+  return 'Your unlocked skills already match or exceed this account.';
+}
+
+/** The one-time note after a run takes its baseline (its first link, or a name change). */
+export const BASELINE_NOTE = "Linked. Levels this account already has don't roll; only the levels you gain from now on do.";
 
 const OsrsSyncRoll = lazyWithRetry(() => import('./osrs/OsrsSyncRoll'));
 
@@ -289,6 +361,7 @@ function ClassicAutoRollPanel() {
   const {
     linkedAccount, name, setName, status, error, fetched, groupTitle, chooseGroupTitle, title,
     rolledTo, applied, skillRolling, skillKeysGained, currentLevels, isUnlocked, gains, onFetch, autoRoll, totalGain,
+    plans, holds, baselineTaken,
     renameOpen, newName, setNewName, renameError, renamedTo, onRename, openRename, cancelRename,
   } = useAutoRoll();
 
@@ -302,7 +375,7 @@ function ClassicAutoRollPanel() {
             <span className="text-[10px] uppercase tracking-wide bg-fuchsia-500/20 text-fuchsia-300 px-1.5 py-0.5 rounded">Prototype</span>
           </h2>
           <p className="text-xs text-gray-500 mt-1 max-w-xl">
-            Pull your real account from the OSRS hiscores and roll every level you've already gained, as if you logged each one.
+            Pull your account from the OSRS hiscores and roll every level you've gained since you linked it, as if you logged each one.
             Powered by the <span className="text-gray-400">Wise Old Man</span> API. Currently syncs skill levels.
           </p>
         </div>
@@ -352,7 +425,7 @@ function ClassicAutoRollPanel() {
             <div className="bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 space-y-2" data-testid="character-rename">
               <p className="text-xs text-gray-400">
                 Changed your OSRS name? Type the new one as it shows in game. RuneLite records your run on this
-                character, and Sync &amp; Roll pulls its hiscores.
+                character, and Sync &amp; Roll pulls its hiscores. Roll any new levels first: the new name's levels count as already had.
               </p>
               <div className="flex items-center gap-2">
                 <input
@@ -408,6 +481,12 @@ function ClassicAutoRollPanel() {
       {/* Result */}
       {fetched && (
         <div className="space-y-4">
+          {baselineTaken && (
+            <p role="status" data-testid="sync-baseline-note" className="text-xs text-sky-200 bg-sky-950/40 border border-sky-800/60 rounded-lg px-3 py-2 max-w-xl flex items-start gap-1.5">
+              <CheckCircle2 size={13} className="shrink-0 mt-0.5" />
+              <span>{BASELINE_NOTE}</span>
+            </p>
+          )}
           <div className="flex items-center gap-4 flex-wrap bg-white/5 border border-white/10 rounded-lg px-4 py-3">
             <div>
               <div className="text-base font-bold text-white flex items-center gap-2">
@@ -483,11 +562,7 @@ function ClassicAutoRollPanel() {
               </div>
             )}
             {!applied && !skillRolling && gains.length === 0 && (
-              <div className="text-sm text-gray-400">
-                {fetched.skills.some(s => !isUnlocked(s.skill) && s.level > (currentLevels[s.skill] ?? 1))
-                  ? 'No unlocked skills to roll — unlock more skills in the run first.'
-                  : 'Your unlocked skills already match or exceed this account.'}
-              </div>
+              <div className="text-sm text-gray-400 max-w-xs">{syncIdleText(holds)}</div>
             )}
           </div>
 
@@ -496,13 +571,16 @@ function ClassicAutoRollPanel() {
             {fetched.skills.map((s) => {
               const current = currentLevels[s.skill] ?? 1;
               const unlocked = isUnlocked(s.skill);
-              const isGain = s.level > current && unlocked;
               const gainIdx = gains.findIndex(g => g.skill === s.skill);
-              const revealed = !isGain || applied || (gainIdx > -1 && gainIdx < rolledTo);
+              const isGain = gainIdx > -1;
+              const revealed = !isGain || applied || gainIdx < rolledTo;
+              const held = plans[s.skill]?.hold === 'linked';
+              const shown = isGain ? gains[gainIdx].level : s.level;
               return (
                 <div
                   key={s.skill}
-                  title={!unlocked ? `${s.skill} isn't unlocked yet — unlock it in the run before it can be rolled` : undefined}
+                  title={syncHoldText(s.skill, plans[s.skill])}
+                  data-sync-hold={plans[s.skill]?.hold ?? undefined}
                   className={`flex items-center justify-between px-2.5 py-1.5 rounded border text-xs transition-colors ${
                     !unlocked
                       ? 'border-white/5 bg-black/20 opacity-50'
@@ -526,9 +604,10 @@ function ClassicAutoRollPanel() {
                             <span className="text-gray-600">→</span>
                           </>
                         )}
-                        <span className={isGain ? (revealed ? 'text-emerald-300 font-bold' : 'text-gray-600') : 'text-gray-400'}>
-                          {revealed ? s.level : '··'}
+                        <span className={isGain ? (revealed ? 'text-emerald-300 font-bold' : 'text-gray-600') : held ? 'text-gray-500' : 'text-gray-400'}>
+                          {revealed ? shown : '··'}
                         </span>
+                        {held && !isGain && <Lock size={9} className="text-gray-600 shrink-0" aria-label="Had when linked" />}
                       </>
                     )}
                   </span>
@@ -539,14 +618,14 @@ function ClassicAutoRollPanel() {
 
           <p className="text-[10px] text-gray-600">
             Hiscores data via Wise Old Man · each synced level runs through the live RNG engine, so it awards keys, Omni and
-            Chaos exactly as levelling it would — all logged to History · a backup is created first.
+            Chaos exactly as levelling it would — all logged to History · levels the account had when linked don't roll · a backup is created first.
           </p>
         </div>
       )}
 
       {status === 'idle' && !linkedAccount && (
         <div className="text-xs text-gray-600 max-w-xl border border-dashed border-white/10 rounded-lg px-4 py-6 text-center">
-          Enter your OSRS username to bind this run to your account. It's saved permanently to the run and can't be changed afterward.
+          Enter your OSRS username to bind this run to your account. Levels it already has don't roll; only the ones you gain from now on.
         </div>
       )}
 

@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-sync-roll-baseline',
+    title: 'Sync & Roll rolls only new levels',
+    date: '2026-10-19',
+    sections: {
+      fixed: [
+        'Linking an account to Sync & Roll no longer pays out levels it already had. Only levels you gain after linking roll.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-dropped-connection',
     title: 'A dropped connection keeps you in the tracker',
     date: '2026-10-18',

@@ -20,8 +20,11 @@ const game = vi.hoisted(() => ({
   specialKeys: 0,
   chaosKeys: 0,
   linkedAccount: null as string | null,
+  syncBaseline: undefined as { account: string; levels?: Record<string, number | null> } | undefined,
   setLinkedAccount: vi.fn(),
   renameLinkedAccount: vi.fn(),
+  recordSyncBaseline: vi.fn(),
+  catchUpSyncLevel: vi.fn((_skill: string, _level: number) => true),
 }));
 
 vi.mock('../context/GameContext', () => ({ useGame: () => game }));
@@ -235,5 +238,102 @@ describe('Auto-Roll name change', () => {
 
     expect(game.renameLinkedAccount).not.toHaveBeenCalled();
     expect(screen.getByRole('alert').textContent).toContain('as it shows in game');
+  });
+});
+
+// Critique GP-1 (October 2026): levels the account had when the run linked it
+// never roll, and nothing rolls past a skill's tier band.
+describe('Auto-Roll baseline', () => {
+  const hiscores = (skills: Record<string, unknown>) => vi.fn(async () => ({
+    ok: true,
+    json: async () => ({ displayName: 'Levelled', type: 'ironman', latestSnapshot: { data: { skills } } }),
+  }));
+  const settle = () => act(async () => { await Promise.resolve(); await Promise.resolve(); });
+  beforeEach(() => { game.recordSyncBaseline.mockClear(); });
+  afterEach(() => {
+    game.linkedAccount = null;
+    game.syncBaseline = undefined;
+    game.unlocks = { levels: { Attack: 1 }, skills: { Attack: 1 } };
+    game.recordSyncBaseline.mockClear();
+    game.catchUpSyncLevel.mockClear();
+    game.levelUpSkill.mockClear();
+  });
+
+  it('takes the first fetch as the baseline and says so once', async () => {
+    vi.stubGlobal('fetch', hiscores({ attack: { rank: 10, level: 99, experience: 13_034_431 }, hunter: { rank: -1, level: 1, experience: -1 } }));
+    render(<AutoRollPanel />);
+    fireEvent.change(screen.getByPlaceholderText('OSRS username…'), { target: { value: 'Levelled' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Fetch' }));
+    await settle();
+
+    expect(game.setLinkedAccount).toHaveBeenLastCalledWith('Levelled');
+    expect(game.recordSyncBaseline).toHaveBeenCalledTimes(1);
+    const [account, levels] = game.recordSyncBaseline.mock.calls[0];
+    expect(account).toBe('Levelled');
+    expect(levels.Attack).toBe(99);
+    // Unranked with no overall rank (a new account): its minimum. Missing: unknown.
+    expect(levels.Hunter).toBe(1);
+    expect(levels.Sailing).toBeNull();
+    expect(screen.getByTestId('sync-baseline-note').textContent).toContain("Levels this account already has don't roll");
+  });
+
+  it('rolls nothing the account had when linked', async () => {
+    game.linkedAccount = 'Levelled';
+    game.syncBaseline = { account: 'Levelled', levels: { Attack: 99 } };
+    game.unlocks = { levels: { Attack: 1 }, skills: { Attack: 10 } };
+    vi.stubGlobal('fetch', hiscores({ attack: { rank: 10, level: 99, experience: 13_034_431 } }));
+    render(<AutoRollPanel />);
+    await settle();
+
+    expect(screen.queryByRole('button', { name: /Auto-roll/ })).toBeNull();
+    expect(screen.getByText(/Levels your account had when this run was linked don't roll/)).toBeTruthy();
+    expect(screen.queryByTestId('sync-baseline-note')).toBeNull();
+    expect(document.querySelector('[data-sync-hold="linked"]')?.getAttribute('title')).toContain('already had this level');
+  });
+
+  it('records the baseline without a roll, then rolls only the new levels', async () => {
+    vi.useFakeTimers();
+    try {
+      game.linkedAccount = 'Levelled';
+      game.syncBaseline = { account: 'Levelled', levels: { Attack: 40 } };
+      game.unlocks = { levels: { Attack: 1 }, skills: { Attack: 5 } };
+      game.createBackup.mockResolvedValue({ stored: true });
+      vi.stubGlobal('fetch', hiscores({ attack: { rank: 10, level: 60, experience: 300_000 } }));
+      render(<AutoRollPanel />);
+      await settle();
+
+      // 41 to 60 roll, past the tier band as the manual button allows.
+      fireEvent.click(screen.getByRole('button', { name: 'Auto-roll 1 skill (+20)' }));
+      await act(async () => { await Promise.resolve(); });
+      act(() => { vi.advanceTimersByTime(5_000); });
+
+      expect(game.catchUpSyncLevel).toHaveBeenCalledWith('Attack', 40);
+      expect(game.levelUpSkill).toHaveBeenCalledTimes(20);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("rolls nothing for a skill whose baseline the run refuses to record", async () => {
+    vi.useFakeTimers();
+    try {
+      game.linkedAccount = 'Levelled';
+      game.syncBaseline = { account: 'Levelled', levels: { Attack: 40 } };
+      game.unlocks = { levels: { Attack: 1 }, skills: { Attack: 5 } };
+      game.createBackup.mockResolvedValue({ stored: true });
+      game.catchUpSyncLevel.mockReturnValueOnce(false);
+      vi.stubGlobal('fetch', hiscores({ attack: { rank: 10, level: 45, experience: 61_512 } }));
+      render(<AutoRollPanel />);
+      await settle();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Auto-roll 1 skill (+5)' }));
+      await act(async () => { await Promise.resolve(); });
+      act(() => { vi.advanceTimersByTime(1_000); });
+
+      expect(game.catchUpSyncLevel).toHaveBeenCalledTimes(1);
+      expect(game.levelUpSkill).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
