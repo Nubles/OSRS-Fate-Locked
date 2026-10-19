@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-lighter-world-map',
+    title: 'The world map loads faster',
+    date: '2026-10-19',
+    sections: {
+      changed: [
+        'The world map loads much faster, especially on phones. It downloads a smaller picture first and only gets the full-size one when you zoom right in.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-dropped-connection',
     title: 'A dropped connection keeps you in the tracker',
     date: '2026-10-18',
