@@ -103,3 +103,88 @@ export function validBundlePayload(payload) {
     return false;
   }
 }
+
+/** What RuneLite's Copy for tracker and Send to tracker send: `{ format, events }`. */
+export const RUNELITE_EVENTS_FORMAT = 'fate-locked-runelite-events';
+/** Send to tracker: the largest POST /r/<code>/inbox body, and how many events it may carry. */
+export const MAX_INBOX_REQUEST_BYTES = 64 * 1024;
+export const MAX_INBOX_EVENTS_PER_REQUEST = 100;
+/**
+ * The relay holds the newest this many events per code, as many as the
+ * tracker's Paste from RuneLite takes (MAX_PASTED_EVENTS, utils/runelitePaste.ts).
+ */
+export const MAX_INBOX_HELD_EVENTS = 250;
+/**
+ * The most the held events may take together, oldest dropped first. A real
+ * event is well under 1 KiB, so 250 of them fit; the bound keeps every read
+ * and rewrite of the inbox small enough for the free plan's 10 ms of CPU.
+ */
+export const MAX_INBOX_HELD_BYTES = 256 * 1024;
+/** The largest event kept: the tracker can't read a bigger one (MAX_EVENT_BYTES, services/fateEventProtocol.ts). */
+export const MAX_INBOX_EVENT_BYTES = 8 * 1024;
+export const MAX_INBOX_EVENT_ID_CHARS = 128;
+/** Waiting events last this long after the last Send to tracker; the tracker refuses older events anyway. */
+export const INBOX_TTL_SECONDS = 30 * 86400;
+export const INBOX_MAX_AGE_MS = 30 * 86400 * 1000;
+export const INBOX_MAX_AHEAD_MS = 10 * 60 * 1000;
+/** The largest POST /r/<code>/inbox/ack body: 250 ids of 128 characters, quoted, with room to spare. */
+export const MAX_INBOX_ACK_BYTES = 40 * 1024;
+
+const isPlainObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+/**
+ * An event's id. RuneLite's events carry it as `eventId` (FateEvent.java and
+ * services/fateEventProtocol.ts); `id` is read when an event has no
+ * `eventId`, so a client that names it `id` is understood too.
+ */
+export function inboxEventId(event) {
+  return isPlainObject(event) ? ('eventId' in event ? event.eventId : event.id) : undefined;
+}
+
+const validEventId = id => typeof id === 'string' && id.length >= 1 && id.length <= MAX_INBOX_EVENT_ID_CHARS;
+
+/**
+ * The events of a Send to tracker, or null when the body isn't one: the
+ * format RuneLite copies, 1 to 100 events, each an object with an id of 1 to
+ * 128 characters and an `occurredAt` in ms that is at most 30 days old and
+ * at most 10 minutes ahead of `now`. Every other field passes through as it
+ * came; the tracker checks each event as it checks a paste.
+ */
+export function validInboxBatch(body, now) {
+  if (!isPlainObject(body) || body.format !== RUNELITE_EVENTS_FORMAT || !Array.isArray(body.events)) return null;
+  const { events } = body;
+  if (events.length < 1 || events.length > MAX_INBOX_EVENTS_PER_REQUEST) return null;
+  for (const event of events) {
+    if (!validEventId(inboxEventId(event))) return null;
+    const at = event.occurredAt;
+    if (!Number.isSafeInteger(at) || at < now - INBOX_MAX_AGE_MS || at > now + INBOX_MAX_AHEAD_MS) return null;
+  }
+  return events;
+}
+
+/** The ids an acknowledgement names, `{ ids: [...] }` with up to 250 ids, or null. */
+export function validInboxAck(body) {
+  if (!isPlainObject(body) || !Array.isArray(body.ids) || body.ids.length > MAX_INBOX_HELD_EVENTS) return null;
+  return body.ids.every(validEventId) ? body.ids : null;
+}
+
+/** Fate Locked badges: the milestones, 0 (under 25%) to 4 (Fate Unbound, 100%). */
+export const MAX_BADGE_TIER = 4;
+/** An OSRS display name as the plugin sends it: up to 12 letters, digits, spaces, '-' and '_'. */
+export const BADGE_NAME_RE = /^[A-Za-z0-9 _-]{1,12}$/;
+export const MAX_BADGE_REQUEST_BYTES = 1024;
+/** A badge lasts this long after the plugin last sent it (it resends at least daily). */
+export const BADGE_TTL_SECONDS = 30 * 86400;
+/** GET /badges lists at most this many. */
+export const MAX_BADGES = 5000;
+/** How long a built badge list is served before it is built again. */
+export const BADGES_CACHE_SECONDS = 600;
+
+/** A badge `{ n, t }` from a POST /r/<code>/badge body `{ name, tier }`, or null. The name is trimmed. */
+export function validBadgeBody(body) {
+  if (!isPlainObject(body) || typeof body.name !== 'string') return null;
+  const n = body.name.trim();
+  const t = body.tier;
+  if (!BADGE_NAME_RE.test(n) || !Number.isInteger(t) || t < 0 || t > MAX_BADGE_TIER) return null;
+  return { n, t };
+}

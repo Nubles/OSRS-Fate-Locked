@@ -1,5 +1,7 @@
 /**
- * Fate Locked online relay: the RuneLite profile (/r/), online backups (/b/),
+ * Fate Locked online relay: the RuneLite profile (/r/), RuneLite's Send to
+ * tracker events waiting for the tracker's Roll Inbox (/r/<code>/inbox),
+ * Fate Locked badges (/r/<code>/badge, /badges), online backups (/b/),
  * shared progress for the Discord bot (/p/, /l/) and the web app's error
  * reports (/e). Every route id must have the exact shape its client makes,
  * and writes are rate-limited per IP, before any KV access.
@@ -9,14 +11,30 @@ import {
   BACKUP_MIN_INTERVAL_MS,
   BACKUP_ROTATE_MS,
   BACKUP_TTL_SECONDS,
+  BADGES_CACHE_SECONDS,
+  BADGE_TTL_SECONDS,
   DISCORD_ID_RE,
+  INBOX_MAX_AGE_MS,
+  INBOX_TTL_SECONDS,
   MAX_BACKUP_BYTES,
+  MAX_BADGE_REQUEST_BYTES,
+  MAX_INBOX_ACK_BYTES,
+  MAX_INBOX_EVENT_BYTES,
+  MAX_INBOX_HELD_BYTES,
+  MAX_INBOX_HELD_EVENTS,
+  MAX_INBOX_REQUEST_BYTES,
   MAX_REQUEST_BYTES,
   PAIRING_CODE_RE,
   PROGRESS_ID_RE,
+  RUNELITE_EVENTS_FORMAT,
+  inboxEventId,
   validBackupBody,
+  validBadgeBody,
   validBundlePayload,
+  validInboxAck,
+  validInboxBatch,
 } from './protocol.js';
+import { currentBadgeList, matchesEtag } from './badges.js';
 import {
   LINK_CODE_TTL_SECONDS,
   MAX_PROGRESS_BYTES,
@@ -42,6 +60,8 @@ const RELAY_VERSION_EPOCH_MS = Date.UTC(2026, 0, 1);
 // Route shapes. The id each one names is checked against the exact form its
 // client makes (protocol.js) before anything else.
 const PROFILE_ROUTE = /^\/r\/([^/]*)$/;
+const INBOX_ROUTE = /^\/r\/([^/]*)\/inbox(\/ack)?$/;
+const BADGE_ROUTE = /^\/r\/([^/]*)\/badge$/;
 const BACKUP_ROUTE = /^\/b\/([^/]*)(\/previous)?$/;
 const PROGRESS_ROUTE = /^\/p\/([^/]*)(\/link-code)?$/;
 const DISCORD_LINK_ROUTE = /^\/l\/([^/]*)$/;
@@ -519,6 +539,217 @@ async function profileRoute(request, env, headers, code) {
   return json({ version, token: owner.token }, headers);
 }
 
+/** The tracker's write token for a pairing code, as it sends it to read or empty the code's inbox. */
+const PROFILE_BEARER_RE = /^Bearer ([A-Za-z0-9_-]{1,128})$/;
+/** A tombstone is about 100 bytes; anything longer is a profile, whose text needn't be parsed. */
+const MAX_TOMBSTONE_CHARS = 1024;
+
+const noProfile = headers => json({ error: 'no profile' }, headers, 404);
+const forbidden = headers => new Response('forbidden', { status: 403, headers });
+const methodNotAllowed = headers => new Response('method not allowed', { status: 405, headers });
+const tooLarge = headers => new Response('payload too large', { status: 413, headers });
+const byteLength = text => new TextEncoder().encode(text).byteLength;
+
+/**
+ * The stored profile record of a pairing code as text, or null when it has
+ * none or its owner marked it gone. Sends and badges need a live profile.
+ * The large profile text is never parsed here: only a record short enough
+ * to be a tombstone is.
+ */
+async function liveProfile(env, code) {
+  const text = await env.RELAY.get(`r:${code}`);
+  if (text === null) return null;
+  if (text.length <= MAX_TOMBSTONE_CHARS) {
+    try {
+      if (JSON.parse(text)?.gone === true) return null;
+    } catch {
+      return null;
+    }
+  }
+  return text;
+}
+
+/**
+ * Whether `presented` is the code's write token, as authorizeWrite checks a
+ * publish: against the owner record's hash, or, for a code published before
+ * owner records existed, the token in the profile record. Reads nothing new.
+ */
+async function ownsCode(env, code, profileText, presented) {
+  const owner = await env.RELAY.get(`own:r:${code}`);
+  if (owner) return await tokenHash(presented) === owner.split(':')[0];
+  try {
+    const token = JSON.parse(profileText)?.token;
+    return typeof token === 'string' && token === presented;
+  } catch {
+    return false;
+  }
+}
+
+/** The events held in an inbox record `{"events":[...]}`; none when it is missing or unreadable. */
+function heldEvents(stored) {
+  if (stored === null) return [];
+  try {
+    const events = JSON.parse(stored)?.events;
+    return Array.isArray(events) ? events : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Whether a held event is still young enough for the tracker to take. */
+const stillTakeable = (event, now) => Number.isSafeInteger(event?.occurredAt)
+  && event.occurredAt >= now - INBOX_MAX_AGE_MS;
+
+/**
+ * Send to tracker: RuneLite's events wait under `ri:<code>` until the
+ * tracker takes them into its Roll Inbox, where the player still chooses to
+ * roll. RuneLite sends what Copy for tracker copies; anyone holding the code
+ * can add to it, but only the code's write token (the tracker) can read or
+ * empty it. Events merge by id, a re-sent id replacing the held copy; the
+ * newest 250 are kept, within 256 KiB, for 30 days after the last send.
+ */
+async function inboxRoute(request, env, headers, code, ack) {
+  const allowed = ack ? request.method === 'POST' : request.method === 'POST' || request.method === 'GET';
+  if (!allowed) return methodNotAllowed(headers);
+  const key = `ri:${code}`;
+
+  if (request.method === 'POST' && !ack) {
+    // The batch is checked in full before the relay looks anything up.
+    const raw = await readBodyWithin(request, MAX_INBOX_REQUEST_BYTES);
+    if (raw === null) return tooLarge(headers);
+    const now = Date.now();
+    let events = null;
+    try {
+      events = validInboxBatch(JSON.parse(raw), now);
+    } catch {
+      events = null;
+    }
+    if (!events) return badRequest(headers);
+    if (await liveProfile(env, code) === null) return noProfile(headers);
+
+    const sent = new Map();
+    for (const event of events) {
+      const text = JSON.stringify(event);
+      const bytes = byteLength(text);
+      // One the tracker can't read is never held. A repeated id: the last copy counts.
+      if (bytes <= MAX_INBOX_EVENT_BYTES) sent.set(inboxEventId(event), { event, text, bytes });
+      else sent.delete(inboxEventId(event));
+    }
+    const stored = await env.RELAY.get(key);
+    const merged = new Map();
+    for (const event of heldEvents(stored)) {
+      const id = inboxEventId(event);
+      if (typeof id !== 'string' || sent.has(id) || !stillTakeable(event, now)) continue;
+      const text = JSON.stringify(event);
+      merged.set(id, { event, text, bytes: byteLength(text) });
+    }
+    for (const [id, entry] of sent) merged.set(id, entry);
+
+    // The newest first, until the count or the size is reached; then oldest first again.
+    const kept = [];
+    let total = 0;
+    for (const entry of [...merged.values()].sort((a, b) => b.event.occurredAt - a.event.occurredAt)) {
+      if (kept.length >= MAX_INBOX_HELD_EVENTS || total + entry.bytes + 1 > MAX_INBOX_HELD_BYTES) break;
+      total += entry.bytes + 1;
+      kept.push(entry);
+    }
+    kept.reverse();
+    const accepted = kept.filter(entry => sent.get(inboxEventId(entry.event)) === entry).length;
+    if (kept.length > 0) {
+      await env.RELAY.put(key, `{"events":[${kept.map(entry => entry.text).join(',')}]}`,
+        { expirationTtl: INBOX_TTL_SECONDS });
+    } else if (stored !== null) {
+      await env.RELAY.delete(key);
+    }
+    return json({ accepted, held: kept.length }, headers);
+  }
+
+  // Reading and emptying the inbox are the tracker's, with the code's write token.
+  const token = (request.headers.get('Authorization') || '').match(PROFILE_BEARER_RE)?.[1];
+  if (!token) return forbidden(headers);
+  let ids = null;
+  if (ack) {
+    const raw = await readBodyWithin(request, MAX_INBOX_ACK_BYTES);
+    if (raw === null) return tooLarge(headers);
+    try {
+      ids = validInboxAck(JSON.parse(raw));
+    } catch {
+      ids = null;
+    }
+    if (!ids) return badRequest(headers);
+  }
+  const profile = await liveProfile(env, code);
+  if (profile === null) return noProfile(headers);
+  if (!await ownsCode(env, code, profile, token)) return forbidden(headers);
+  const stored = await env.RELAY.get(key);
+
+  if (!ack) {
+    // Served as stored, `{"events":[...]}` with the format in front, without parsing it.
+    const body = stored !== null && stored.startsWith('{"events":')
+      ? `{"format":"${RUNELITE_EVENTS_FORMAT}",${stored.slice(1)}`
+      : JSON.stringify({ format: RUNELITE_EVENTS_FORMAT, events: [] });
+    return new Response(body, { headers: { ...headers, 'Content-Type': 'application/json' } });
+  }
+
+  if (stored === null) return json({ held: 0 }, headers);
+  const taken = new Set(ids);
+  const now = Date.now();
+  const events = heldEvents(stored);
+  const left = events.filter(event => !taken.has(inboxEventId(event)) && stillTakeable(event, now));
+  if (left.length === 0) {
+    await env.RELAY.delete(key);
+  } else if (left.length < events.length) {
+    await env.RELAY.put(key, JSON.stringify({ events: left }), { expirationTtl: INBOX_TTL_SECONDS });
+  }
+  return json({ held: left.length }, headers);
+}
+
+/**
+ * A Fate Locked badge: the plugin's character name and milestone, kept as
+ * the metadata of an empty `bd:<code>` record for 30 days after the plugin
+ * last sent it. One badge per code; a new one replaces it. Posting needs a
+ * live profile; removing it (sharing turned off, or Disconnect) never does.
+ */
+async function badgeRoute(request, env, headers, code) {
+  const key = `bd:${code}`;
+  if (request.method === 'DELETE') {
+    await env.RELAY.delete(key);
+    return json({ deleted: true }, headers);
+  }
+  if (request.method !== 'POST') return methodNotAllowed(headers);
+  const raw = await readBodyWithin(request, MAX_BADGE_REQUEST_BYTES);
+  if (raw === null) return tooLarge(headers);
+  let badge = null;
+  try {
+    badge = validBadgeBody(JSON.parse(raw));
+  } catch {
+    badge = null;
+  }
+  if (!badge) return badRequest(headers);
+  if (await liveProfile(env, code) === null) return noProfile(headers);
+  await env.RELAY.put(key, '', { expirationTtl: BADGE_TTL_SECONDS, metadata: { ...badge, at: Date.now() } });
+  return json({ ok: true }, headers);
+}
+
+/**
+ * The public badge list (badges.js), the same for everyone, so caches may
+ * keep it: 10 minutes, with an ETag of its body for If-None-Match.
+ */
+async function badgesRoute(request, env, headers, url, ctx) {
+  if (request.method !== 'GET') return methodNotAllowed(headers);
+  const { body, etag } = await currentBadgeList(env, `${url.origin}/badges`, ctx);
+  const cacheable = {
+    ...headers,
+    'Cache-Control': `public, max-age=${BADGES_CACHE_SECONDS}`,
+    ETag: etag,
+    Vary: 'Origin',
+  };
+  if (matchesEtag(request.headers.get('If-None-Match'), etag)) {
+    return new Response(null, { status: 304, headers: cacheable });
+  }
+  return new Response(body, { headers: { ...cacheable, 'Content-Type': 'application/json' } });
+}
+
 /**
  * Error reports from the web app: always 204 at once, whatever the body, and
  * nothing stored. A report is forwarded after the response, at most once per
@@ -535,7 +766,11 @@ async function errorRoute(request, env, headers, ctx) {
   return accepted;
 }
 
-/** Whether a request changes something on the relay, and so counts toward the write limit. */
+/**
+ * Whether a request changes something on the relay, and so counts toward the
+ * write limit: publishes, sends to the tracker and their acknowledgements,
+ * badges, backups and shared progress.
+ */
 const isWrite = method => method === 'POST' || method === 'DELETE';
 
 const routes = {
@@ -553,11 +788,16 @@ const routes = {
       return discordLinkRoute(request, env, headers, discordLink[1]);
     }
 
+    if (url.pathname === '/badges') return badgesRoute(request, env, headers, url, ctx);
+
     const profile = url.pathname.match(PROFILE_ROUTE);
+    const inbox = url.pathname.match(INBOX_ROUTE);
+    const badge = url.pathname.match(BADGE_ROUTE);
     const backup = url.pathname.match(BACKUP_ROUTE);
     const progress = url.pathname.match(PROGRESS_ROUTE);
-    if (!profile && !backup && !progress) return new Response('not found', { status: 404, headers });
-    if ((profile && !PAIRING_CODE_RE.test(profile[1]))
+    const code = (profile || inbox || badge)?.[1];
+    if (code === undefined && !backup && !progress) return new Response('not found', { status: 404, headers });
+    if ((code !== undefined && !PAIRING_CODE_RE.test(code))
       || (backup && !BACKUP_ID_RE.test(backup[1]))
       || (progress && !PROGRESS_ID_RE.test(progress[1]))) {
       return badRequest(headers);
@@ -566,7 +806,9 @@ const routes = {
 
     if (backup) return backupRoute(request, env, headers, backup[1], Boolean(backup[2]));
     if (progress) return progressRoute(request, env, headers, progress[1], Boolean(progress[2]), ctx);
-    return profileRoute(request, env, headers, profile[1]);
+    if (inbox) return inboxRoute(request, env, headers, code, Boolean(inbox[2]));
+    if (badge) return badgeRoute(request, env, headers, code);
+    return profileRoute(request, env, headers, code);
   },
 };
 
